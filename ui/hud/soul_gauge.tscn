@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/hud/soul_gauge.gd" id="1_sg"]
+
+[node name="SoulGauge" type="Control"]
+layout_mode = 3
+script = ExtResource("1_sg")
+
+[node name="Eyebrow" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+offset_bottom = 16.0
+theme_type_variation = &"EyebrowLabel"
+text = "SOUL GAUGE"
+
+[node name="Value" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -60.0
+offset_bottom = 16.0
+theme_type_variation = &"StatLabel"
+horizontal_alignment = 2
+text = "50%"

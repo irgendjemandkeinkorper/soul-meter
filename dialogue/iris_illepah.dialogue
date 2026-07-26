@@ -1,0 +1,27 @@
+~ start
+Iris Illepah: You walk like the Registry counts your steps. Stand easy. The grove does not bill for shade.
+=> hub
+
+~ hub
+Iris Illepah: Ask, then. The light is long and the sweeping is done.
+- "The Bloom isn't finished, is it?" [#tag=SSAE-SEEDERS] [#consequence=The groves will know your name.]
+	do Reputation.record("player", "ssae-seeders", 8.0, "Spoke of the Bloom as unfinished", "field")
+	Iris Illepah: No. It is still deciding what it grows. We only argue about whether to help it decide.
+	=> hub
+- "This grove is unregistered. That will be recorded." [#tag=REGISTRY] [#consequence=The Ledger will hold your name.]
+	do Reputation.record("player", "ssae-seeders", -6.0, "Threatened the grove with a Registry writ", "field")
+	do Reputation.record("player", "the-registry", 4.0, "Reported an unregistered grove", "field")
+	Iris Illepah: Then record it. The Loam keeps a longer ledger than Rennen, and it forgives less.
+	=> hub
+- "Show me what the Loam remembers." [#tag=COMMUNION] [#cost=-6 soul] [#consequence=Some of you stays in the Loam.]
+	do GameState.set_soul_meter(GameState.soul_meter - 6.0)
+	do Reputation.record("player", "ssae-seeders", 3.0, "Opened a vein to the Loam and did not flinch", "field")
+	Iris Illepah: Put your hand under the moss. There. Everything returns, and lately it returns hungry. The Loam is hungry and cannot eat.
+	Iris Illepah: You felt it take its fee. The needle on your little dial is honest. That is the problem with it.
+	=> hub
+- "Teach me the Seeders' rite." [#tag=SSAE-SEEDERS] [#consequence=There is no returning from knowing this.] [if Reputation.standing("ssae-seeders") >= 15.0 /]
+	Iris Illepah: Not here. Come to the overhang in the Zwarten Bos when the Green Pulse sounds. Bring bread. He eats it out of politeness.
+	=> END
+- "I should go."
+	Iris Illepah: Go, then. Keep off the new moss. It is younger than it looks, and it remembers feet.
+	=> END

@@ -1,0 +1,35 @@
+:root{
+  --font-display:"Cinzel",'Times New Roman',serif;
+  --font-display-alt:"Metamorphous","Cinzel",serif;
+  --font-flourish:"Cinzel Decorative","Cinzel",serif;
+  /* the elegant workhorse: labels, body, dialogue */
+  --font-elegant:"Cormorant Garamond","Cinzel",Georgia,serif;
+  --font-ui:"Cormorant Garamond",Georgia,serif;
+  --font-ui-condensed:"Cinzel","Cormorant Garamond",serif;
+  --font-numeric:"Fira Code",ui-monospace,monospace;
+  --font-sans:"Barlow",system-ui,sans-serif;
+
+  --fs-100:12px; --fs-200:13px; --fs-300:15px; --fs-400:17px; --fs-500:19px;
+  --fs-600:22px; --fs-700:26px; --fs-800:32px; --fs-900:42px; --fs-1000:58px;
+
+  --fw-light:300; --fw-regular:400; --fw-medium:500;
+  --fw-semibold:600; --fw-bold:700; --fw-black:900;
+
+  --lh-tight:1.08; --lh-snug:1.24; --lh-normal:1.45; --lh-loose:1.6;
+
+  --tracking-display:.06em; --tracking-title:.03em; --tracking-eyebrow:.2em;
+  --tracking-label:.09em; --tracking-body:.005em; --tracking-numeric:.02em;
+
+  /* composed roles — labels and eyebrows are inscriptional serif, not condensed sans */
+  --type-hero:var(--fw-black) var(--fs-1000)/var(--lh-tight) var(--font-display);
+  --type-title:var(--fw-bold) var(--fs-800)/var(--lh-tight) var(--font-display);
+  --type-heading:var(--fw-semibold) var(--fs-600)/var(--lh-snug) var(--font-display);
+  --type-subheading:var(--fw-semibold) var(--fs-400)/var(--lh-snug) var(--font-display);
+  --type-body:var(--fw-regular) var(--fs-400)/var(--lh-loose) var(--font-elegant);
+  --type-body-sm:var(--fw-regular) var(--fs-300)/var(--lh-normal) var(--font-elegant);
+  --type-quote:italic var(--fw-regular) var(--fs-500)/var(--lh-loose) var(--font-elegant);
+  --type-label:var(--fw-semibold) var(--fs-200)/var(--lh-snug) var(--font-display);
+  --type-eyebrow:var(--fw-semibold) var(--fs-100)/var(--lh-snug) var(--font-display);
+  --type-stat:var(--fw-medium) var(--fs-200)/1 var(--font-numeric);
+  --type-stat-lg:var(--fw-bold) var(--fs-700)/1 var(--font-numeric);
+}

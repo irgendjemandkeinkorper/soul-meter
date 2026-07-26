@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://sffgx5feur6w"
+path="res://.godot/imported/iris_illepah.dialogue-fbe9d50ec4c37cbb139008cfb81b411c.tres"
+
+[deps]
+
+source_file="res://dialogue/iris_illepah.dialogue"
+dest_files=["res://.godot/imported/iris_illepah.dialogue-fbe9d50ec4c37cbb139008cfb81b411c.tres"]
+
+[params]
+
+defaults=true

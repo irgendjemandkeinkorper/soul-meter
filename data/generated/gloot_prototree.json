@@ -1,0 +1,57 @@
+{
+  "consumables/loam_bread": {
+    "name": "Loam Bread",
+    "description": "Dense composting-city fare from Loamgate. Restores a little vigor.",
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.4,
+    "rarity": "common",
+    "flavour": "Everything returns. Some of it returns as bread."
+  },
+  "materials/cinder_ink_vial": {
+    "name": "Cinder-Ink Vial",
+    "description": "Ash-Bound tattoo ink; names written in it resist the Waning's slow erasure.",
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 5,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "The soul is a held line. Hold it."
+  },
+  "relics/captured_reflection": {
+    "name": "Captured Reflection",
+    "description": "An obsidian shard that shows a room lit by a sky that does not exist.",
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 1,
+    "weight": 0.3,
+    "rarity": "rare",
+    "flavour": "Do not name what you see in it. Under the Vow, a named Seat must abdicate."
+  },
+  "relics/quine_shard": {
+    "name": "QUINE Shard",
+    "description": "A fragment of pre-Bloom machine, one cyan light still faintly alive.",
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 1,
+    "weight": 1.1,
+    "rarity": "mythic",
+    "flavour": "It is still counting. No one knows what."
+  },
+  "tools/soul_gauge": {
+    "name": "Soul Gauge",
+    "description": "A brass-and-glass dial that reads a soul's integrity — and what magic has spent.",
+    "size": "Vector2i(1, 2)",
+    "max_stack_size": 1,
+    "weight": 0.8,
+    "rarity": "rare",
+    "flavour": "The needle is honest. That is the problem."
+  },
+  "weapons/taubstummer_axe": {
+    "name": "Taubstummer Axe",
+    "description": "A sealed soul-weapon of the Last Great War; its edge remembers what it unmade.",
+    "size": "Vector2i(2, 3)",
+    "max_stack_size": 1,
+    "weight": 6.0,
+    "rarity": "mythic",
+    "flavour": "It does not ring when struck. Nothing it touches does.",
+    "equip_slot": "main_hand"
+  }
+}
