@@ -1,0 +1,2507 @@
+{
+	"_entity_data": {
+		"_categories": [
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "1",
+				"_index": 0,
+				"_name": "Elements"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "17",
+				"_index": 0,
+				"_name": "Classes"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "32",
+				"_index": 0,
+				"_name": "Peoples"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "46",
+				"_index": 0,
+				"_name": "Items"
+			},
+			{
+				"_category_id": "46",
+				"_icon_color": "ffffff00",
+				"_id": "55",
+				"_index": 0,
+				"_name": "Weapons"
+			},
+			{
+				"_category_id": "46",
+				"_icon_color": "ffffff00",
+				"_id": "56",
+				"_index": 0,
+				"_name": "Relics"
+			},
+			{
+				"_category_id": "46",
+				"_icon_color": "ffffff00",
+				"_id": "57",
+				"_index": 0,
+				"_name": "Tools"
+			},
+			{
+				"_category_id": "46",
+				"_icon_color": "ffffff00",
+				"_id": "58",
+				"_index": 0,
+				"_name": "Consumables"
+			},
+			{
+				"_category_id": "46",
+				"_icon_color": "ffffff00",
+				"_id": "59",
+				"_index": 0,
+				"_name": "Materials"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "66",
+				"_index": 0,
+				"_name": "Spells"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "75",
+				"_index": 0,
+				"_name": "Effects"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "84",
+				"_index": 0,
+				"_name": "Factions"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "96",
+				"_index": 0,
+				"_name": "NPCs"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "106",
+				"_index": 0,
+				"_name": "Locations"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "124",
+				"_index": 0,
+				"_name": "Lore"
+			}
+		],
+		"_entities": [
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "7",
+				"_index": 0,
+				"_name": "Suul",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "12",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "e8c46aff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Suul"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "ffe7a8ff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "✷"
+					}
+				}
+			},
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "8",
+				"_index": 0,
+				"_name": "Bloei",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "13",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "4fa96aff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Bloei"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "8fe0a4ff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "⚘"
+					}
+				}
+			},
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "9",
+				"_index": 0,
+				"_name": "Aqua",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "14",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "2e8fb8ff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Aqua"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "7fcde8ff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "≈"
+					}
+				}
+			},
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "10",
+				"_index": 0,
+				"_name": "Khor",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "15",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "a855f7ff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Khor"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "d6b4ffff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "♫"
+					}
+				}
+			},
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "11",
+				"_index": 0,
+				"_name": "Terra",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "16",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "8c7a5bff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Terra"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "c4ae85ff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "▲"
+					}
+				}
+			},
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "12",
+				"_index": 0,
+				"_name": "Daar",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "7",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "4b3f72ff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Daar"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "8577c4ff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "◑"
+					}
+				}
+			},
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "13",
+				"_index": 0,
+				"_name": "Molm",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "8",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "7a8b3cff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Molm"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "b4c46bff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "⁂"
+					}
+				}
+			},
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "14",
+				"_index": 0,
+				"_name": "Scor",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "9",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "e0522fff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Scor"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "ff9a6eff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "☲"
+					}
+				}
+			},
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "15",
+				"_index": 0,
+				"_name": "Nul",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "10",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "b8c0ccff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Nul"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "edf2f8ff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "○"
+					}
+				}
+			},
+			{
+				"_category_id": "1",
+				"_icon_color": "ffffff00",
+				"_id": "16",
+				"_index": 0,
+				"_name": "Strom",
+				"_property_overrides": {
+					"Clash": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "11",
+							"_type": 0
+						}
+					},
+					"Color": {
+						"type": "color",
+						"value": "22d3eeff"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Strom"
+					},
+					"Glow": {
+						"type": "color",
+						"value": "a6f0faff"
+					},
+					"Sigil": {
+						"type": "string",
+						"value": "☇"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "22",
+				"_index": 0,
+				"_name": "Mirrorblade",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Mirrorblade"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Maiiam"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "Balance"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "23",
+				"_index": 0,
+				"_name": "River-Mother",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "River-Mother"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Haeren"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "The Name-Ledger"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "24",
+				"_index": 0,
+				"_name": "Ironbrand",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Ironbrand"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Kero"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "Scars"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "25",
+				"_index": 0,
+				"_name": "Lensbearer",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Lensbearer"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Stuid"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "Fading"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "26",
+				"_index": 0,
+				"_name": "Husk-bearer",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Husk-bearer"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Vhorr"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "The Table"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "27",
+				"_index": 0,
+				"_name": "Flamebinder",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Flamebinder"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Vicoar"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "Instructive Failure"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "28",
+				"_index": 0,
+				"_name": "Stormbearer",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Stormbearer"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Ofshütje"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "Attribution"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "29",
+				"_index": 0,
+				"_name": "Oathclock",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Oathclock"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Pazzah"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "The Ledger"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "30",
+				"_index": 0,
+				"_name": "Locksmirk",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Locksmirk"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Fickah"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "Jammed Gears"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "17",
+				"_icon_color": "ffffff00",
+				"_id": "31",
+				"_index": 0,
+				"_name": "Threadwalker",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Threadwalker"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Izhakel"
+					},
+					"Resource Name": {
+						"type": "string",
+						"value": "Threads"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ten-patron-classes"
+					}
+				}
+			},
+			{
+				"_category_id": "32",
+				"_icon_color": "ffffff00",
+				"_id": "37",
+				"_index": 0,
+				"_name": "Kes'reth",
+				"_property_overrides": {
+					"Analogue": {
+						"type": "string",
+						"value": "Tiefling"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Kes'reth"
+					},
+					"Homeland": {
+						"type": "string",
+						"value": "Vervulling / Karrn-Vash"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "kes-reth"
+					}
+				}
+			},
+			{
+				"_category_id": "32",
+				"_icon_color": "ffffff00",
+				"_id": "38",
+				"_index": 0,
+				"_name": "Vael",
+				"_property_overrides": {
+					"Analogue": {
+						"type": "string",
+						"value": "Human"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Vael"
+					},
+					"Homeland": {
+						"type": "string",
+						"value": "Deivel Zeit / Solmarch"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "vael"
+					}
+				}
+			},
+			{
+				"_category_id": "32",
+				"_icon_color": "ffffff00",
+				"_id": "39",
+				"_index": 0,
+				"_name": "Ghorr",
+				"_property_overrides": {
+					"Analogue": {
+						"type": "string",
+						"value": "Orc"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Ghorr"
+					},
+					"Homeland": {
+						"type": "string",
+						"value": "Dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ghorr"
+					}
+				}
+			},
+			{
+				"_category_id": "32",
+				"_icon_color": "ffffff00",
+				"_id": "40",
+				"_index": 0,
+				"_name": "Vaerin",
+				"_property_overrides": {
+					"Analogue": {
+						"type": "string",
+						"value": "Elf"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Vaerin"
+					},
+					"Homeland": {
+						"type": "string",
+						"value": "Pozor"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "vaerin"
+					}
+				}
+			},
+			{
+				"_category_id": "32",
+				"_icon_color": "ffffff00",
+				"_id": "41",
+				"_index": 0,
+				"_name": "Kaan",
+				"_property_overrides": {
+					"Analogue": {
+						"type": "string",
+						"value": "Dwarf"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Kaan"
+					},
+					"Homeland": {
+						"type": "string",
+						"value": "Tweede / Grundvault"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "kaan"
+					}
+				}
+			},
+			{
+				"_category_id": "32",
+				"_icon_color": "ffffff00",
+				"_id": "42",
+				"_index": 0,
+				"_name": "Orthos",
+				"_property_overrides": {
+					"Analogue": {
+						"type": "string",
+						"value": "Dragonborn"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Orthos"
+					},
+					"Homeland": {
+						"type": "string",
+						"value": "Rennen"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "orthos"
+					}
+				}
+			},
+			{
+				"_category_id": "32",
+				"_icon_color": "ffffff00",
+				"_id": "43",
+				"_index": 0,
+				"_name": "Shimari",
+				"_property_overrides": {
+					"Analogue": {
+						"type": "string",
+						"value": "Genasi"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Shimari"
+					},
+					"Homeland": {
+						"type": "string",
+						"value": "Milinel"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "shimari"
+					}
+				}
+			},
+			{
+				"_category_id": "32",
+				"_icon_color": "ffffff00",
+				"_id": "44",
+				"_index": 0,
+				"_name": "Weftkin",
+				"_property_overrides": {
+					"Analogue": {
+						"type": "string",
+						"value": "Sporeborn"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Weftkin"
+					},
+					"Homeland": {
+						"type": "string",
+						"value": "Loamgate / Ashscar"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "weftkin"
+					}
+				}
+			},
+			{
+				"_category_id": "32",
+				"_icon_color": "ffffff00",
+				"_id": "45",
+				"_index": 0,
+				"_name": "Fiel",
+				"_property_overrides": {
+					"Analogue": {
+						"type": "string",
+						"value": "Smallfolk"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Fiel"
+					},
+					"Homeland": {
+						"type": "string",
+						"value": "Lefren"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "fiel"
+					}
+				}
+			},
+			{
+				"_category_id": "55",
+				"_icon_color": "ffffff00",
+				"_id": "60",
+				"_index": 0,
+				"_name": "Taubstummer Axe",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "A sealed soul-weapon of the Last Great War; its edge remembers what it unmade."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Taubstummer Axe"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": "main_hand"
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "It does not ring when struck. Nothing it touches does."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(2,3)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "mythic"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 6.0
+					}
+				}
+			},
+			{
+				"_category_id": "56",
+				"_icon_color": "ffffff00",
+				"_id": "61",
+				"_index": 0,
+				"_name": "Captured Reflection",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "An obsidian shard that shows a room lit by a sky that does not exist."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Captured Reflection"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Do not name what you see in it. Under the Vow, a named Seat must abdicate."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "rare"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.3
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "62",
+				"_index": 0,
+				"_name": "Soul Gauge",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "A brass-and-glass dial that reads a soul's integrity — and what magic has spent."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Soul Gauge"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "The needle is honest. That is the problem."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,2)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "rare"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.8
+					}
+				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "63",
+				"_index": 0,
+				"_name": "Loam Bread",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Dense composting-city fare from Loamgate. Restores a little vigor."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loam Bread"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Everything returns. Some of it returns as bread."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.4
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "64",
+				"_index": 0,
+				"_name": "Cinder-Ink Vial",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Ash-Bound tattoo ink; names written in it resist the Waning's slow erasure."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Cinder-Ink Vial"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "The soul is a held line. Hold it."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "56",
+				"_icon_color": "ffffff00",
+				"_id": "65",
+				"_index": 0,
+				"_name": "QUINE Shard",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "A fragment of pre-Bloom machine, one cyan light still faintly alive."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "QUINE Shard"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "It is still counting. No one knows what."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "mythic"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 1.1
+					}
+				}
+			},
+			{
+				"_category_id": "66",
+				"_icon_color": "ffffff00",
+				"_id": "72",
+				"_index": 0,
+				"_name": "Ember Chord",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "A struck chord of fire; louder if Suul or Molm sounded this measure."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Ember Chord"
+					},
+					"Element": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "14",
+							"_type": 0
+						}
+					},
+					"Placeholder": {
+						"type": "bool",
+						"value": true
+					},
+					"Soul Cost": {
+						"type": "int",
+						"value": 4
+					}
+				}
+			},
+			{
+				"_category_id": "66",
+				"_icon_color": "ffffff00",
+				"_id": "73",
+				"_index": 0,
+				"_name": "Still Water",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Quiets one surface to mirror-calm; suppressed while Scor rings."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Still Water"
+					},
+					"Element": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "9",
+							"_type": 0
+						}
+					},
+					"Placeholder": {
+						"type": "bool",
+						"value": true
+					},
+					"Soul Cost": {
+						"type": "int",
+						"value": 3
+					}
+				}
+			},
+			{
+				"_category_id": "66",
+				"_icon_color": "ffffff00",
+				"_id": "74",
+				"_index": 0,
+				"_name": "Hushfall",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "A hole with edges: silences a zone's tone for one measure."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Hushfall"
+					},
+					"Element": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "15",
+							"_type": 0
+						}
+					},
+					"Placeholder": {
+						"type": "bool",
+						"value": true
+					},
+					"Soul Cost": {
+						"type": "int",
+						"value": 6
+					}
+				}
+			},
+			{
+				"_category_id": "75",
+				"_icon_color": "ffffff00",
+				"_id": "80",
+				"_index": 0,
+				"_name": "Burning",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Scor damage over time; ends early if Aqua sounds."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Burning"
+					},
+					"Duration Type": {
+						"type": "string",
+						"value": "duration"
+					},
+					"Placeholder": {
+						"type": "bool",
+						"value": true
+					}
+				}
+			},
+			{
+				"_category_id": "75",
+				"_icon_color": "ffffff00",
+				"_id": "81",
+				"_index": 0,
+				"_name": "Detuned",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "The Waning's fizzle-state: next casting rolls against a worse Agreement."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Detuned"
+					},
+					"Duration Type": {
+						"type": "string",
+						"value": "duration"
+					},
+					"Placeholder": {
+						"type": "bool",
+						"value": true
+					}
+				}
+			},
+			{
+				"_category_id": "75",
+				"_icon_color": "ffffff00",
+				"_id": "82",
+				"_index": 0,
+				"_name": "Soul Drain",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "The Gauge only goes down. This makes it go down faster."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Soul Drain"
+					},
+					"Duration Type": {
+						"type": "string",
+						"value": "duration"
+					},
+					"Placeholder": {
+						"type": "bool",
+						"value": true
+					}
+				}
+			},
+			{
+				"_category_id": "75",
+				"_icon_color": "ffffff00",
+				"_id": "83",
+				"_index": 0,
+				"_name": "Warded",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "A held line against one named element."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Warded"
+					},
+					"Duration Type": {
+						"type": "string",
+						"value": "duration"
+					},
+					"Placeholder": {
+						"type": "bool",
+						"value": true
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "89",
+				"_index": 0,
+				"_name": "The Mirror Choir",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Mirror Choir"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Vervulling"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Maiiam's supreme order at Vervulling; 300 silent dancers and an Unnamed Seat."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "vervulling"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "90",
+				"_index": 0,
+				"_name": "The Registry",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Registry"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Rennen"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Pazzah's Warden-mask bureaucracy; audits every act of magic on the continent."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "rennen"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "91",
+				"_index": 0,
+				"_name": "The Noon Court",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Noon Court"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Solmarch"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Solmarch's state church of certainty — unknowingly worshipping a mask."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "solmarch"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "92",
+				"_index": 0,
+				"_name": "The Reckoning",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Reckoning"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Karrn-Vash"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Karrn-Vash's radical sect, hunting the lost Taubstummers."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "karrn-vash"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "93",
+				"_index": 0,
+				"_name": "The Backface",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Backface"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Vervulling"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "The Undermirror's smuggling network; trades in captured reflections."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "vervulling"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "94",
+				"_index": 0,
+				"_name": "The Ssae-Seeders",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Ssae-Seeders"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Zwarten Bos"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Radical Weftkin who treat the Bloom as ongoing and incomplete."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "zwarten-bos"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "95",
+				"_index": 0,
+				"_name": "The Mourning Dawn",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Mourning Dawn"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "(roaming)"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Rag-As-Res's cells; coffins packed for Gnaal's children."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "mourning-dawn"
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "102",
+				"_index": 0,
+				"_name": "Vex",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "A horned reaver of Karrn-Vash; her soul is a held line, sealed against the Loam and tattooed in cinder-ink."
+					},
+					"Class": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "24",
+							"_type": 0
+						}
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Vex"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "the Unbowed"
+					},
+					"Race": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "37",
+							"_type": 0
+						}
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "103",
+				"_index": 0,
+				"_name": "Serai-Lun",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "A mirror-dancer of Vervulling who fights in paired, reflected forms and speaks in balanced halves."
+					},
+					"Class": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "22",
+							"_type": 0
+						}
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Serai-Lun"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Race": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "37",
+							"_type": 0
+						}
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "104",
+				"_index": 0,
+				"_name": "Old Grumbrand",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "A soot-stained salvager who reads Age-of-Stars machines for a price and trusts nothing that hums."
+					},
+					"Class": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "25",
+							"_type": 0
+						}
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Old Grumbrand"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Race": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "41",
+							"_type": 0
+						}
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "105",
+				"_index": 0,
+				"_name": "Iris Illepah",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Ssae-Seeder cultivator of Loamgate's groves; keeps the overhang swept for Schutte."
+					},
+					"Class": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "26",
+							"_type": 0
+						}
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Iris Illepah"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Race": {
+						"type": "reference",
+						"value": {
+							"_entity_id": "44",
+							"_type": 0
+						}
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "112",
+				"_index": 0,
+				"_name": "Vervulling",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": "91–93%"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Vervulling"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "The Twinfire Capital"
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Maiiam"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "vervulling"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "113",
+				"_index": 0,
+				"_name": "Deivel Zeit",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": "90–92%"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Deivel Zeit"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Haeren"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "deivel"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "114",
+				"_index": 0,
+				"_name": "Dom",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Dom"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Kero"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "dom"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "115",
+				"_index": 0,
+				"_name": "Karrn-Vash",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Karrn-Vash"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Blidnisch"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "karrn-vash"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "116",
+				"_index": 0,
+				"_name": "Solmarch",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Solmarch"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Suulmae (the mask)"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "solmarch"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "117",
+				"_index": 0,
+				"_name": "Rennen",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Rennen"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Pazzah"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "rennen"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "118",
+				"_index": 0,
+				"_name": "Tweede",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Tweede"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Vicoar"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "tweede"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "119",
+				"_index": 0,
+				"_name": "Pozor",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Pozor"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Stuid"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "pozor"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "120",
+				"_index": 0,
+				"_name": "Lefren",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Lefren"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Fickah"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "lefren"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "121",
+				"_index": 0,
+				"_name": "Milinel",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Milinel"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Izhakel"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "milinel"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "122",
+				"_index": 0,
+				"_name": "Verspch",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Verspch"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Ofshütje"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "verspch"
+					}
+				}
+			},
+			{
+				"_category_id": "106",
+				"_icon_color": "ffffff00",
+				"_id": "123",
+				"_index": 0,
+				"_name": "Loamgate",
+				"_property_overrides": {
+					"Agreement": {
+						"type": "string",
+						"value": "84–87%"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loamgate"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Patron": {
+						"type": "string",
+						"value": "Vhorr"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "loamgate"
+					}
+				}
+			},
+			{
+				"_category_id": "124",
+				"_icon_color": "ffffff00",
+				"_id": "129",
+				"_index": 0,
+				"_name": "The Waning",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Waning"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Maiiam is withdrawing; magic is dying; the Agreement loosens."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "the-waning"
+					},
+					"Vault Path": {
+						"type": "string",
+						"value": "cosmology/the-waning.md"
+					}
+				}
+			},
+			{
+				"_category_id": "124",
+				"_icon_color": "ffffff00",
+				"_id": "130",
+				"_index": 0,
+				"_name": "The Bloom",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Bloom"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Year 0: Kronos unmade into the Mycosphere. The world composted — literally."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "the-bloom"
+					},
+					"Vault Path": {
+						"type": "string",
+						"value": "eras/the-bloom.md"
+					}
+				}
+			},
+			{
+				"_category_id": "124",
+				"_icon_color": "ffffff00",
+				"_id": "131",
+				"_index": 0,
+				"_name": "The Soul Gauge",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Soul Gauge"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Souls are Weft-anchored patterns; magic spends them, mostly downward."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "souls"
+					},
+					"Vault Path": {
+						"type": "string",
+						"value": "cosmology/souls.md"
+					}
+				}
+			},
+			{
+				"_category_id": "124",
+				"_icon_color": "ffffff00",
+				"_id": "132",
+				"_index": 0,
+				"_name": "Verleidenlot",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Verleidenlot"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "The Kes'reth mass-emergence — the Waning's true, unrecognized origin."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "verleidenlot"
+					},
+					"Vault Path": {
+						"type": "string",
+						"value": "locations/verleidenlot.md"
+					}
+				}
+			},
+			{
+				"_category_id": "124",
+				"_icon_color": "ffffff00",
+				"_id": "133",
+				"_index": 0,
+				"_name": "The Taubstummers",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Taubstummers"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "The sealed soul-weapons that broke the Tidal Dominion."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "last-great-war"
+					},
+					"Vault Path": {
+						"type": "string",
+						"value": "eras/last-great-war.md"
+					}
+				}
+			},
+			{
+				"_category_id": "124",
+				"_icon_color": "ffffff00",
+				"_id": "134",
+				"_index": 0,
+				"_name": "The Wheel of Ten",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Wheel of Ten"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Ten elements; adjacency is Chord, opposition is Clash."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					},
+					"Vault Path": {
+						"type": "string",
+						"value": "systems/magic-system.md"
+					}
+				}
+			}
+		],
+		"_properties": [
+			{
+				"_category_id": "1",
+				"_default_value": "",
+				"_id": "2",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": "",
+				"_id": "3",
+				"_name": "Sigil",
+				"_type": "string"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": "ffffffff",
+				"_id": "4",
+				"_name": "Color",
+				"_type": "color"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": "ffffffff",
+				"_id": "5",
+				"_name": "Glow",
+				"_type": "color"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": null,
+				"_id": "6",
+				"_name": "Clash",
+				"_type": "reference"
+			},
+			{
+				"_category_id": "17",
+				"_default_value": "",
+				"_id": "18",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "17",
+				"_default_value": "",
+				"_id": "19",
+				"_name": "Patron",
+				"_type": "string"
+			},
+			{
+				"_category_id": "17",
+				"_default_value": "",
+				"_id": "20",
+				"_name": "Resource Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "17",
+				"_default_value": "",
+				"_id": "21",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "32",
+				"_default_value": "",
+				"_id": "33",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "32",
+				"_default_value": "",
+				"_id": "34",
+				"_name": "Analogue",
+				"_type": "string"
+			},
+			{
+				"_category_id": "32",
+				"_default_value": "",
+				"_id": "35",
+				"_name": "Homeland",
+				"_type": "string"
+			},
+			{
+				"_category_id": "32",
+				"_default_value": "",
+				"_id": "36",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": "",
+				"_id": "47",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": "",
+				"_id": "48",
+				"_name": "Description",
+				"_type": "string"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": 0,
+				"_id": "49",
+				"_name": "Max Stack Size",
+				"_type": "int"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": 0.0,
+				"_id": "50",
+				"_name": "Weight",
+				"_type": "float"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": "(0,0)",
+				"_id": "51",
+				"_name": "Grid Size",
+				"_type": "vector2i"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": "",
+				"_id": "52",
+				"_name": "Equip Slot",
+				"_type": "string"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": "",
+				"_id": "53",
+				"_name": "Rarity",
+				"_type": "string"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": "",
+				"_id": "54",
+				"_name": "Flavour",
+				"_type": "string"
+			},
+			{
+				"_category_id": "66",
+				"_default_value": "",
+				"_id": "67",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "66",
+				"_default_value": "",
+				"_id": "68",
+				"_name": "Description",
+				"_type": "string"
+			},
+			{
+				"_category_id": "66",
+				"_default_value": null,
+				"_id": "69",
+				"_name": "Element",
+				"_type": "reference"
+			},
+			{
+				"_category_id": "66",
+				"_default_value": 0,
+				"_id": "70",
+				"_name": "Soul Cost",
+				"_type": "int"
+			},
+			{
+				"_category_id": "66",
+				"_default_value": false,
+				"_id": "71",
+				"_name": "Placeholder",
+				"_type": "bool"
+			},
+			{
+				"_category_id": "75",
+				"_default_value": "",
+				"_id": "76",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "75",
+				"_default_value": "",
+				"_id": "77",
+				"_name": "Description",
+				"_type": "string"
+			},
+			{
+				"_category_id": "75",
+				"_default_value": "",
+				"_id": "78",
+				"_name": "Duration Type",
+				"_type": "string"
+			},
+			{
+				"_category_id": "75",
+				"_default_value": false,
+				"_id": "79",
+				"_name": "Placeholder",
+				"_type": "bool"
+			},
+			{
+				"_category_id": "84",
+				"_default_value": "",
+				"_id": "85",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "84",
+				"_default_value": "",
+				"_id": "86",
+				"_name": "Summary",
+				"_type": "string"
+			},
+			{
+				"_category_id": "84",
+				"_default_value": "",
+				"_id": "87",
+				"_name": "Seat",
+				"_type": "string"
+			},
+			{
+				"_category_id": "84",
+				"_default_value": "",
+				"_id": "88",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "97",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "98",
+				"_name": "Epithet",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": null,
+				"_id": "99",
+				"_name": "Race",
+				"_type": "reference"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": null,
+				"_id": "100",
+				"_name": "Class",
+				"_type": "reference"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "101",
+				"_name": "Bio",
+				"_type": "string"
+			},
+			{
+				"_category_id": "106",
+				"_default_value": "",
+				"_id": "107",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "106",
+				"_default_value": "",
+				"_id": "108",
+				"_name": "Epithet",
+				"_type": "string"
+			},
+			{
+				"_category_id": "106",
+				"_default_value": "",
+				"_id": "109",
+				"_name": "Patron",
+				"_type": "string"
+			},
+			{
+				"_category_id": "106",
+				"_default_value": "",
+				"_id": "110",
+				"_name": "Agreement",
+				"_type": "string"
+			},
+			{
+				"_category_id": "106",
+				"_default_value": "",
+				"_id": "111",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "124",
+				"_default_value": "",
+				"_id": "125",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "124",
+				"_default_value": "",
+				"_id": "126",
+				"_name": "Summary",
+				"_type": "string"
+			},
+			{
+				"_category_id": "124",
+				"_default_value": "",
+				"_id": "127",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "124",
+				"_default_value": "",
+				"_id": "128",
+				"_name": "Vault Path",
+				"_type": "string"
+			}
+		]
+	},
+	"_id_generator": {
+		"_ids_by_context": {
+			"default": 134
+		}
+	},
+	"_version": 1
+}

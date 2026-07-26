@@ -44,3 +44,16 @@ clean on 4.7.1 headless, Linux).
 - The template's audio-bus install was auto-disabled headless
   (`disable_install_audio_busses=true`); `Music`/`SFX` buses are created at runtime by
   `GameState._ensure_audio_buses()`.
+
+## Pandora data
+
+- `data.pandora` is the committed Pandora database (install-order step 4 done). Seeded by
+  `tools/seed_pandora.gd` (idempotent — aborts if roots exist; to re-seed from scratch,
+  delete `data.pandora`, register the script as a temp autoload, run headless once).
+- Trees: the handoff's six (Items+Weapons/Relics/Tools/Consumables/Materials · Spells ·
+  Effects · Factions · NPCs · Lore) **plus four lore-driven roots**: Elements (the Wheel of
+  Ten, closed set, Clash references) · Classes (Ten Patron Classes) · Peoples (9 playable) ·
+  Locations (the 12 cities). 71 entities, 48 properties.
+- `Lore`/`Factions`/`Locations`/`Peoples`/`Classes` entities carry a **`Vault Id`** property
+  bridging to `~/projects/dramgid-vault` — Pandora owns *game data*, the vault owns *lore
+  prose*. Spells/Effects are `Placeholder = true` mechanics sketches, not canon.
