@@ -4,9 +4,12 @@ Handoff document (the standing architecture spec; `CLAUDE.md` summarizes it — 
 full text). Game shape: lore-heavy RPG with faction/reputation consequence tracking and an
 open magic system built on combinable spell effects.
 
-> Status note (2026-07-26): stack installed & pinned — see `DEPENDENCIES.md`. The root state
-> chart exists at `ui/flow/game_flow.tscn`. Maaack's setup wizard, Pandora category trees,
-> localization, and the sync tools are still to do. GodotGAS awaits a store download.
+> Status note (2026-07-26): stack installed & pinned — see `DEPENDENCIES.md`. Done: root
+> state chart (`ui/flow/game_flow.tscn`), Pandora trees seeded (`tools/seed_pandora.gd`),
+> Pandora→GLoot generator + ItemIds + items.pot (`tools/generate_gloot.gd`, drift-check
+> mode), reputation ledger (`globals/reputation.gd`). Still to do: Maaack's setup wizard
+> (editor, Windows), POT project-settings enablement, GodotGAS (store download) + its
+> generator, CI hook for the drift check.
 
 ---
 
