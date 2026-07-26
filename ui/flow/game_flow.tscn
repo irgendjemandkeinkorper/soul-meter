@@ -1,0 +1,70 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/flow/game_flow.gd" id="1_flow"]
+[ext_resource type="Script" path="res://addons/godot_state_charts/state_chart.gd" id="2_chart"]
+[ext_resource type="Script" path="res://addons/godot_state_charts/compound_state.gd" id="3_compound"]
+[ext_resource type="Script" path="res://addons/godot_state_charts/atomic_state.gd" id="4_atomic"]
+[ext_resource type="Script" path="res://addons/godot_state_charts/transition.gd" id="5_transition"]
+
+[node name="GameFlow" type="Node"]
+script = ExtResource("1_flow")
+
+[node name="StateChart" type="Node" parent="."]
+script = ExtResource("2_chart")
+
+[node name="Root" type="Node" parent="StateChart"]
+script = ExtResource("3_compound")
+initial_state = NodePath("Boot")
+
+[node name="Boot" type="Node" parent="StateChart/Root"]
+script = ExtResource("4_atomic")
+
+[node name="ToMenus" type="Node" parent="StateChart/Root/Boot"]
+script = ExtResource("5_transition")
+to = NodePath("../../Menus")
+event = &"boot_done"
+
+[node name="Menus" type="Node" parent="StateChart/Root"]
+script = ExtResource("3_compound")
+initial_state = NodePath("Title")
+
+[node name="Title" type="Node" parent="StateChart/Root/Menus"]
+script = ExtResource("4_atomic")
+
+[node name="ToPlaying" type="Node" parent="StateChart/Root/Menus/Title"]
+script = ExtResource("5_transition")
+to = NodePath("../../../Playing")
+event = &"new_game"
+
+[node name="Playing" type="Node" parent="StateChart/Root"]
+script = ExtResource("3_compound")
+initial_state = NodePath("Loading")
+
+[node name="Loading" type="Node" parent="StateChart/Root/Playing"]
+script = ExtResource("4_atomic")
+
+[node name="ToActive" type="Node" parent="StateChart/Root/Playing/Loading"]
+script = ExtResource("5_transition")
+to = NodePath("../../Active")
+event = &"level_ready"
+
+[node name="Active" type="Node" parent="StateChart/Root/Playing"]
+script = ExtResource("4_atomic")
+
+[node name="ToPaused" type="Node" parent="StateChart/Root/Playing/Active"]
+script = ExtResource("5_transition")
+to = NodePath("../../Paused")
+event = &"pause"
+
+[node name="Paused" type="Node" parent="StateChart/Root/Playing"]
+script = ExtResource("4_atomic")
+
+[node name="ToActive" type="Node" parent="StateChart/Root/Playing/Paused"]
+script = ExtResource("5_transition")
+to = NodePath("../../Active")
+event = &"resume"
+
+[node name="ToMenus" type="Node" parent="StateChart/Root/Playing/Paused"]
+script = ExtResource("5_transition")
+to = NodePath("../../../Menus")
+event = &"to_main_menu"
