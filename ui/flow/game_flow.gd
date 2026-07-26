@@ -33,6 +33,10 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	SceneLoader.set_loading_screen(LOADING_SCREEN)
 	SceneLoader.scene_loaded.connect(_on_scene_loaded)
+	# Mirror derived standings into chart expression properties so transition
+	# GUARDS (not if-blocks) can read them: e.g. expression `rep_mirror_choir >= 15`.
+	Reputation.reputation_changed.connect(func(faction: String, standing: float, _e: ReputationEvent) -> void:
+		chart.set_expression_property("rep_" + faction.replace("-", "_"), standing))
 
 	$StateChart/Root/Menus/Title.state_entered.connect(_on_title_entered)
 	$StateChart/Root/Playing/Loading.state_entered.connect(_on_loading_entered)

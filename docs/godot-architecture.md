@@ -141,6 +141,10 @@ extension and ignores the rest. If two addons register parsers for `.tres`, one 
 
 ## Reputation and consequence tracking (in-house, no plugin)
 
+> Status: ✅ implemented — `globals/reputation.gd` (autoload `Reputation`, single append API
+> `record()`, derived standings + bands, `why()` query, serialize round-trip) with standings
+> mirrored into statechart expression properties (`rep_<faction>`) for guards. Smoke-tested.
+
 **Model reputation as an append-only event log, not a bag of mutable integers.**
 
 ```
