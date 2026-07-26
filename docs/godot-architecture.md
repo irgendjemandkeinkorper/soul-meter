@@ -214,11 +214,17 @@ mode is four needing patches from four maintainers simultaneously. Mitigations: 
 ## Open questions for the human
 
 1. ~~2D or 3D~~ — **2D, isometric from 3D models** (answered).
-2. Translation format: PO/gettext or CSV? (Blocks localization setup.)
-3. Target platforms — must gamepad-only work at ship?
-4. Multiplayer on the roadmap? (Affects GodotGAS scope and Talo.)
-5. Grid-based or list-based inventory? (Decides whether `Grid Size` is required in Pandora.)
-6. gdUnit4 or GUT — yes or no?
+2. ~~Translation format~~ — **PO/gettext** ("whatever is scalable"; native fuzzy/stale
+   marking, translator-standard tooling). (answered 2026-07-26)
+3. Target platforms — must gamepad-only work at ship? (open)
+4. ~~Multiplayer~~ — **maybe: BG3-style co-op is a live possibility.** Consequences:
+   GodotGAS is single-player-scoped today (its networking is roadmap — re-verify before deep
+   dependence, or keep abilities behind our own seam); `StateChartSerializer` matters early;
+   keep game logic deterministic and GameState serializable. Do not build netcode now; do
+   avoid single-player-only architecture. (answered 2026-07-26)
+5. ~~Inventory~~ — **grid-based.** `Grid Size` is a REQUIRED Pandora property on the `Items`
+   root; GLoot grid constraints are in scope. (answered 2026-07-26)
+6. gdUnit4 or GUT — yes or no? (open — the riskiest omission)
 
 ## Sources
 

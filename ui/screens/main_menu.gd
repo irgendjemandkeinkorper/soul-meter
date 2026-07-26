@@ -3,7 +3,7 @@ extends Screen
 
 func _build() -> void:
 	var bg := ColorRect.new()
-	bg.color = Color(0.07, 0.07, 0.09)
+	bg.color = DS.STONE_0  # --bg-app; the vignette/grain pass comes with the notch nine-patches
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
@@ -16,16 +16,17 @@ func _build() -> void:
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(vbox)
 
+	# Wordmark treatment (no mark supplied): the name in Cinzel, uppercase, tracked.
 	var title := Label.new()
 	title.text = "SOUL METER"
-	title.add_theme_font_size_override("font_size", 64)
+	title.theme_type_variation = "HeroLabel"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 
 	var sub := Label.new()
-	sub.text = "A Dramgid CRPG"
+	sub.text = "The Loom is fraying. The ledger is exact."
+	sub.theme_type_variation = "QuoteLabel"
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.modulate = Color(1, 1, 1, 0.55)
 	vbox.add_child(sub)
 
 	var spacer := Control.new()

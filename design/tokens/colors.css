@@ -1,0 +1,96 @@
+:root{
+  /* ---- base surfaces: carved stone, obsidian, the inset slot ---- */
+  --void-0:#07080B;
+  --void-1:#0C0E12;
+  --stone-0:#12151B;
+  --stone-1:#1B1F27;
+  --stone-2:#232833;
+  --stone-3:#2C323F;
+
+  /* ---- metal trims ---- */
+  --iron-0:#2A303A;
+  --iron-1:#3A414D;
+  --iron-2:#4E5665;
+  --iron-3:#6B7484;
+  --bronze-0:#5E4415;
+  --bronze-1:#946B2D;
+  --bronze-2:#B8860B;
+  --bronze-3:#D9AB45;
+  --bronze-4:#F0D089;
+
+  /* ---- runic / arcane accents ---- */
+  --violet-1:#6B1FB0;
+  --violet-2:#8A2BE2;
+  --violet-3:#A855F7;
+  --violet-4:#C99BFF;
+  --cinder-1:#7A1414;
+  --cinder-2:#991B1B;
+  --cinder-3:#EF4444;
+  --cinder-4:#FF8A75;
+  --mote-1:#0A7A8C;
+  --mote-2:#06B6D4;
+  --mote-3:#22D3EE;
+  --mote-4:#8FE9F5;
+  --gild-1:#B4801F;
+  --gild-2:#F59E0B;
+  --gild-3:#FCD34D;
+
+  /* ---- ink (foreground) ---- */
+  --parchment:#E2E8F0;
+  --ash:#94A3B8;
+  --ash-dim:#64748B;
+  --ash-faint:#475569;
+
+  /* ================= semantic aliases ================= */
+  --bg-app:var(--stone-0);
+  --surface-panel:var(--stone-1);
+  --surface-raised:var(--stone-2);
+  --surface-inset:var(--void-1);
+  --surface-scrim:rgba(7,8,11,.78);
+
+  --border-default:var(--iron-1);
+  --border-strong:var(--iron-2);
+  --border-trim:var(--bronze-1);
+  --border-trim-bright:var(--bronze-2);
+  --border-inset:var(--void-0);
+
+  --text-primary:var(--parchment);
+  --text-muted:var(--ash);
+  --text-faint:var(--ash-dim);
+  --text-disabled:var(--ash-faint);
+  --text-on-metal:#100D07;
+  --text-arcane:var(--violet-4);
+  --text-danger:var(--cinder-3);
+
+  --accent-primary:var(--violet-2);
+  --accent-primary-bright:var(--violet-3);
+  --accent-danger:var(--cinder-2);
+  --accent-danger-bright:var(--cinder-3);
+  --accent-energy:var(--mote-2);
+  --accent-energy-bright:var(--mote-3);
+  --focus-ring:var(--violet-3);
+  --link:var(--bronze-3);
+  --link-hover:var(--bronze-4);
+
+  /* meters */
+  --meter-health-a:var(--cinder-1);
+  --meter-health-b:var(--cinder-3);
+  --meter-mana-a:var(--violet-1);
+  --meter-mana-b:var(--violet-3);
+  --meter-energy-a:var(--mote-1);
+  --meter-energy-b:var(--mote-3);
+  --meter-soul-a:#7C6A2E;
+  --meter-soul-b:var(--bronze-4);
+  --meter-track:var(--void-1);
+
+  /* item rarity */
+  --rarity-common:#64748B;
+  --rarity-rare:#8B5CF6;
+  --rarity-mythic:#F59E0B;
+
+  /* agreement integrity states (Module 8 canon) */
+  --state-constant:#4FA96A;
+  --state-skip:var(--gild-2);
+  --state-feedback:var(--cinder-3);
+  --state-hush:#B8C0CC;
+}

@@ -1,0 +1,19 @@
+:root{
+  --space-0:0px; --space-1:2px; --space-2:4px; --space-3:6px; --space-4:8px;
+  --space-5:12px; --space-6:16px; --space-7:20px; --space-8:24px; --space-9:32px;
+  --space-10:40px; --space-11:56px; --space-12:72px;
+
+  /* carved stone barely rounds: radii stay tight, notches do the work */
+  --radius-0:0px; --radius-1:2px; --radius-2:3px; --radius-3:5px; --radius-4:8px;
+  --radius-pill:999px;
+  --notch-sm:6px; --notch-md:10px; --notch-lg:16px;
+
+  --border-hairline:1px; --border-trim-w:2px; --border-heavy:3px; --border-carved:4px;
+
+  --slot-size:64px; --slot-size-sm:48px; --slot-size-lg:80px;
+  --meter-h:14px; --meter-h-lg:20px; --meter-h-sm:8px;
+  --control-h:36px; --control-h-sm:28px; --control-h-lg:44px;
+  --hit-min:44px;
+  --panel-pad:var(--space-7);
+  --rail-w:320px;
+}

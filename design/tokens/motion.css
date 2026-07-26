@@ -1,0 +1,12 @@
+:root{
+  /* stone is heavy: nothing bounces, nothing springs. things settle. */
+  --dur-instant:80ms; --dur-fast:140ms; --dur-base:220ms; --dur-slow:400ms; --dur-ambient:2400ms;
+  --ease-settle:cubic-bezier(.22,.61,.36,1);
+  --ease-carve:cubic-bezier(.4,0,.2,1);
+  --ease-snap:cubic-bezier(.16,1,.3,1);
+  --ease-linear:linear;
+  --transition-control:background var(--dur-fast) var(--ease-carve),box-shadow var(--dur-base) var(--ease-settle),color var(--dur-fast) var(--ease-carve),border-color var(--dur-fast) var(--ease-carve);
+}
+@keyframes sm-pulse-glow{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes sm-meter-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes sm-tick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.72)}}

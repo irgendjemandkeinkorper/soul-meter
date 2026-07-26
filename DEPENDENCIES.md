@@ -26,7 +26,9 @@ clean on 4.7.1 headless, Linux).
 
 - **GodotGAS** — abilities/attributes/effects. **No public repo**; distributed via
   store.godotengine.org (login-walled). → Download from the store and drop the zip in
-  `plugins/`; read the source before depending on it (per handoff).
+  `plugins/`; read the source before depending on it (per handoff). ⚠ Co-op multiplayer is
+  now a live maybe — GodotGAS is single-player-scoped today (networking is roadmap); wrap it
+  behind our own ability seam so it can be replaced if co-op lands.
 - **LimboAI** — NPC/enemy behavior trees. Deferred until the first agent exists. The
   `plugins/limboai-master.zip` on the Desktop copy is *engine source*; when the time comes,
   fetch a **GDExtension release** instead (no engine build).

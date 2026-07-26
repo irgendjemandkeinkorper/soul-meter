@@ -49,7 +49,7 @@ func _make_window(title_text: String, min_size: Vector2 = Vector2(520, 420)) -> 
 
 	var title := Label.new()
 	title.text = title_text
-	title.add_theme_font_size_override("font_size", 32)
+	title.theme_type_variation = "TitleLabel"
 	vbox.add_child(title)
 	vbox.add_child(HSeparator.new())
 	return vbox
@@ -67,8 +67,7 @@ func _menu_button(box: Container, text: String, cb: Callable) -> Button:
 func _section(text: String) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", 22)
-	l.modulate = Color(0.8, 0.85, 1.0)
+	l.theme_type_variation = "HeadingLabel"
 	return l
 
 

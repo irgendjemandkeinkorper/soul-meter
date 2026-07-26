@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(2000, 40)
@@ -57,3 +58,5 @@ shape = SubResource("shape_v")
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(1000, 600)
+
+[node name="FieldHUD" parent="." instance=ExtResource("2_hud")]

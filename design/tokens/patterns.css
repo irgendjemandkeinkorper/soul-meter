@@ -1,0 +1,11 @@
+/* Engraved surface patterns. Each is a background-image value laid OVER a surface
+   fill, at 3–5% white so it reads as tooling in stone, never as decoration.
+   Use exactly one pattern per block, and never two adjoining blocks with the same one. */
+:root{
+  --pattern-etch:repeating-linear-gradient(135deg,rgba(255,255,255,.058) 0 1px,transparent 1px 7px);
+  --pattern-lattice:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 18px),repeating-linear-gradient(-45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 18px);
+  --pattern-measure:repeating-linear-gradient(90deg,rgba(255,255,255,.065) 0 1px,transparent 1px 14px);
+  --pattern-resonance:repeating-radial-gradient(circle at 50% 0%,transparent 0 26px,rgba(255,255,255,.045) 26px 27px);
+  --pattern-brocade:repeating-linear-gradient(45deg,rgba(217,171,69,.08) 0 1px,transparent 1px 14px),repeating-linear-gradient(-45deg,rgba(217,171,69,.08) 0 1px,transparent 1px 14px),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 5px);
+  --pattern-weave:repeating-linear-gradient(0deg,rgba(255,255,255,.032) 0 1px,transparent 1px 6px),repeating-linear-gradient(90deg,rgba(255,255,255,.032) 0 1px,transparent 1px 6px);
+}

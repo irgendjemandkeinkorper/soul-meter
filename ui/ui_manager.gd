@@ -23,11 +23,8 @@ func _ready() -> void:
 
 
 func _build_theme() -> void:
-	ui_theme = Theme.new()
-	var font: Font = load("res://assets/kenney/fonts/kenney/Kenney Blocks.ttf")
-	if font:
-		ui_theme.default_font = font
-	ui_theme.default_font_size = 18
+	# The Soul Meter Design System theme (see design/DESIGN_SYSTEM.md, ui/theme/).
+	ui_theme = ThemeBuilder.build()
 	get_tree().root.theme = ui_theme
 
 
@@ -39,6 +36,7 @@ func open(scene: PackedScene, pause: bool = false, flow_owned: bool = false) -> 
 		get_tree().paused = true
 	var inst: Control = scene.instantiate()
 	inst.flow_owned = flow_owned
+	inst.theme = ui_theme  # CanvasLayer children don't inherit the root Window theme
 	add_child(inst)
 	_stack.append(inst)
 	return inst
