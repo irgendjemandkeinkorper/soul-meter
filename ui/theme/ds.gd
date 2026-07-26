@@ -85,7 +85,8 @@ const FS_500 := 19; const FS_600 := 22; const FS_700 := 26; const FS_800 := 32
 const FS_900 := 42; const FS_1000 := 58
 
 # ---- spacing / dimensions ----
-const SPACE_2 := 4; const SPACE_4 := 8; const SPACE_5 := 12; const SPACE_6 := 16
+const SPACE_1 := 2; const SPACE_2 := 4; const SPACE_3 := 6
+const SPACE_4 := 8; const SPACE_5 := 12; const SPACE_6 := 16
 const SPACE_7 := 20; const SPACE_8 := 24; const SPACE_9 := 32
 const PANEL_PAD := SPACE_7          # panel padding 20
 const CONTROL_GAP := SPACE_5        # control gaps 12

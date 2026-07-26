@@ -57,3 +57,12 @@ clean on 4.7.1 headless, Linux).
 - `Lore`/`Factions`/`Locations`/`Peoples`/`Classes` entities carry a **`Vault Id`** property
   bridging to `~/projects/dramgid-vault` — Pandora owns *game data*, the vault owns *lore
   prose*. Spells/Effects are `Placeholder = true` mechanics sketches, not canon.
+
+## Dialogue Manager quirks
+
+- Response conditions use the SELF-CLOSING bracket form: `[if expression /]` — a plain
+  `[if expression]` is silently ignored (WRAPPED_CONDITION_REGEX requires the ` /]`).
+- Choice metadata rides on response tags: `[#tag=X] [#cost=-6 soul] [#consequence=...]`
+  (no commas inside a tag value — commas split tags). The balloon parses these.
+- Autoloads (GameState, Reputation) are callable from conditions/mutations with no setup.
+- Our balloon: `ui/dialogue/dialogue_balloon.tscn` via `dialogue_manager/runtime/balloon_path`.

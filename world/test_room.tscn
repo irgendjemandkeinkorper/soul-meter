@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="3_npc"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(2000, 40)
@@ -60,3 +61,8 @@ shape = SubResource("shape_v")
 position = Vector2(1000, 600)
 
 [node name="FieldHUD" parent="." instance=ExtResource("2_hud")]
+
+[node name="IrisIllepah" parent="." instance=ExtResource("3_npc")]
+position = Vector2(1350, 480)
+npc_name = "Iris Illepah"
+dialogue_path = "res://dialogue/iris_illepah.dialogue"
