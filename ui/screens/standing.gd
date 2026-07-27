@@ -3,7 +3,6 @@ extends Screen
 
 var _name_lbl: Label
 var _band_lbl: Label
-var _history_lbl: Label
 var _history_vbox: VBoxContainer
 var _factions: Array[String] = []
 
