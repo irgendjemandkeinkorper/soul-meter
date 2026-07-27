@@ -120,7 +120,7 @@ rerun `build_index.py` + `validate.py` (venv at `dramgid-vault/.venv`).
 - Use the map + specs above before searching; a named file/scene/symbol is your pivot.
 - Prefer signatures/headings over full bodies; whole-file reads only when editing.
 - Side investigations go to a subagent.
-- End-of-Task: learned something durable → vault note or CLAUDE.md edit (between tasks).
+- End-of-task: learned something durable → vault note or CLAUDE.md edit (between tasks).
 
 ## Do NOT
 
