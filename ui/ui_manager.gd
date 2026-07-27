@@ -10,6 +10,7 @@ extends CanvasLayer
 
 const INVENTORY := preload("res://ui/screens/inventory.tscn")
 const PARTY := preload("res://ui/screens/party.tscn")
+const STANDING := preload("res://ui/screens/standing.tscn")
 
 var ui_theme: Theme
 var _stack: Array[Control] = []
@@ -79,6 +80,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("open_party") and _in_gameplay() and not is_open():
 		open(PARTY, true)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("open_standing") and _in_gameplay() and not is_open():
+		open(STANDING, true)
 		get_viewport().set_input_as_handled()
 
 
