@@ -17,8 +17,8 @@ config name `SoulMeter`.
 The dialogue-and-consequence LOOP IS CLOSED end-to-end: lore vault → Pandora → reputation
 ledger → dialogue → visible in-game consequence. Playable: launch, walk the field room
 (WASD), talk to Iris Illepah (E) — her choices spend the Soul Meter and write the ledger live.
-**Still open / next candidates:** GLoot grid inventory screen (pipeline is ready, just not
-wired to the UI), Maaack's setup wizard (editor-interactive, do on the Windows machine),
+GLoot-based grid inventory is fully integrated into GameState and wired to the UI inventory screen.
+**Still open / next candidates:** Maaack's setup wizard (editor-interactive, do on the Windows machine),
 GodotGAS (store download, no public repo), portrait art
 PNGs from the DS project, localization POT enablement, `docs/godot-architecture.md`'s open
 human questions (gamepad-at-ship, gdUnit4/GUT).
@@ -36,8 +36,8 @@ human questions (gamepad-at-ship, gdUnit4/GUT).
   GameFlow also mirrors `Reputation` standings into chart expression properties
   (`rep_<faction>`) so transitions can use guards.
 - **Global state:** `globals/game_state.gd` (`GameState`) — flags, Soul Meter, party,
-  inventory, settings (persisted). `globals/item.gd`, `item_stack.gd`, `party_member.gd` are
-  its resources. `globals/reputation.gd` (`Reputation`, separate autoload) — the append-only
+  inventory (GLoot-based), settings (persisted). `party_member.gd` is its resource.
+  `globals/reputation.gd` (`Reputation`, separate autoload) — the append-only
   consequence ledger: `record(actor, faction, delta, cause, scene)` is the ONLY write path;
   `standing()`/`band()`/`why()` are derived reads. See `globals/reputation_event.gd`.
 - **UI:** `ui/ui_manager.gd` (`UIManager`, mechanism-only screen stack) + `ui/screens/*`
@@ -54,8 +54,7 @@ human questions (gamepad-at-ship, gdUnit4/GUT).
   `tools/seed_pandora.gd` (idempotent). `tools/generate_gloot.gd` is the one-way Pandora→GLoot
   generator (`data/generated/`: prototree JSON, `ItemIds` constants, `items.pot`); run via
   `Project → Tools → Regenerate GLoot prototypes` (our own `addons/soul_meter_tools`) or
-  headless with `SOUL_METER_DRIFT_CHECK=1` for CI. **GLoot is cleared for use** — not yet
-  wired to a UI screen.
+  headless with `SOUL_METER_DRIFT_CHECK=1` for CI. **GLoot is fully wired to GameState and the inventory screen.**
 - **Dialogue content:** `dialogue/*.dialogue` (Dialogue Manager text format). Response
   conditions need the self-closing form `[if expr /]` — plain `[if expr]` silently no-ops
   (see DEPENDENCIES.md). Metadata rides tags: `[#tag=X] [#cost=-6 soul] [#consequence=...]`.
@@ -121,7 +120,7 @@ rerun `build_index.py` + `validate.py` (venv at `dramgid-vault/.venv`).
 - Use the map + specs above before searching; a named file/scene/symbol is your pivot.
 - Prefer signatures/headings over full bodies; whole-file reads only when editing.
 - Side investigations go to a subagent.
-- End-of-task: learned something durable → vault note or CLAUDE.md edit (between tasks).
+- End-of-Task: learned something durable → vault note or CLAUDE.md edit (between tasks).
 
 ## Do NOT
 
