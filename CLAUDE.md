@@ -19,7 +19,7 @@ ledger → dialogue → visible in-game consequence. Playable: launch, walk the 
 (WASD), talk to Iris Illepah (E) — her choices spend the Soul Meter and write the ledger live.
 **Still open / next candidates:** GLoot grid inventory screen (pipeline is ready, just not
 wired to the UI), Maaack's setup wizard (editor-interactive, do on the Windows machine),
-Standing screen (`Reputation.why()`), GodotGAS (store download, no public repo), portrait art
+GodotGAS (store download, no public repo), portrait art
 PNGs from the DS project, localization POT enablement, `docs/godot-architecture.md`'s open
 human questions (gamepad-at-ship, gdUnit4/GUT).
 
