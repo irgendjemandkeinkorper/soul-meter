@@ -15,7 +15,7 @@ clean on 4.7.1 headless, Linux).
 | Pandora | `d78b99e` | github.com/bitbrain/pandora | Canonical game data (items/spells/factions/NPCs/lore) — category trees not yet defined. ⚠ pre-1.0; verify stability before deep dependence. |
 | Dialogue Manager | `09b82d6` (v4, needs 4.6+) | github.com/nathanhoad/godot_dialogue_manager | Branching dialogue; `DialogueManager` autoload (registered manually). |
 | QuestSystem | `853276e` | github.com/shomykohai/quest-system | Quest lifecycle; `QuestSystem` autoload. |
-| GLoot | `6b09b87` | github.com/peter-kish/gloot | Inventory backend. **Do not author item prototypes by hand — blocked on the Pandora→GLoot sync tool.** |
+| GLoot | `6b09b87` | github.com/peter-kish/gloot | Inventory backend. Fully wired to GameState and ui/screens/inventory.gd. |
 | Phantom Camera | `dbf15ee` | github.com/ramokz/phantom-camera | Camera behaviors; `PhantomCameraManager` autoload (registered manually). |
 | Anima | `f28a1be` | github.com/ceceppa/anima | UI/menu motion; `ANIMA` autoload. |
 | Juicee | `eb66d35` | github.com/Kelpekk/Juicee | Game-feel FX; `Juicee` autoload. |
