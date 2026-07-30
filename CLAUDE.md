@@ -17,11 +17,16 @@ config name `SoulMeter`.
 The dialogue-and-consequence LOOP IS CLOSED end-to-end: lore vault → Pandora → reputation
 ledger → dialogue → visible in-game consequence. Playable: launch, walk the field room
 (WASD), talk to Iris Illepah (E) — her choices spend the Soul Meter and write the ledger live.
+**Testing is now set up:** gdUnit4 (see `docs/testing.md`) — automated suites in `test/unit/`
+and `test/integration/` (reputation ledger, field-room movement/collision/NPC range), plus a
+manual-checklist convention in `test/manual/`. Run via
+`GODOT_BIN=~/.local/bin/godot bash addons/gdUnit4/runtest.sh -a test`.
+
 **Still open / next candidates:** GLoot grid inventory screen (pipeline is ready, just not
 wired to the UI), Maaack's setup wizard (editor-interactive, do on the Windows machine),
 Standing screen (`Reputation.why()`), GodotGAS (store download, no public repo), portrait art
-PNGs from the DS project, localization POT enablement, `docs/godot-architecture.md`'s open
-human questions (gamepad-at-ship, gdUnit4/GUT).
+PNGs from the DS project, localization POT enablement, CI wiring for gdUnit4,
+`docs/godot-architecture.md`'s one remaining open human question (gamepad-at-ship).
 
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
@@ -59,10 +64,12 @@ human questions (gamepad-at-ship, gdUnit4/GUT).
 - **Dialogue content:** `dialogue/*.dialogue` (Dialogue Manager text format). Response
   conditions need the self-closing form `[if expr /]` — plain `[if expr]` silently no-ops
   (see DEPENDENCIES.md). Metadata rides tags: `[#tag=X] [#cost=-6 soul] [#consequence=...]`.
-- **Addons (13):** see `DEPENDENCIES.md` for pins & quirks — Maaack's template, State Charts,
+- **Addons (14):** see `DEPENDENCIES.md` for pins & quirks — Maaack's template, State Charts,
   Pandora, Dialogue Manager, QuestSystem, GLoot, Phantom Camera, Anima, Juicee, SmartShape2D,
-  PixelPen (parked on Linux). **Never edit anything under `addons/`** (except our own
+  PixelPen (parked on Linux), gdUnit4. **Never edit anything under `addons/`** (except our own
   `addons/soul_meter_tools`, which is project-owned).
+- **Testing:** `docs/testing.md` — gdUnit4, `test/unit/` + `test/integration/` (automated) and
+  `test/manual/` (human checklists). Read it before adding either kind.
 - **Art:** `assets/kenney/` (CC0, curated; see its ATTRIBUTION.md).
 - **Where NOT to look:** `.godot/`, `.git/`, `*.import`, `dramgid-lore-dump.md` (superseded).
 
