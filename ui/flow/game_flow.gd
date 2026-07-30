@@ -13,16 +13,22 @@ extends Node
 ##   ├── Menus
 ##   │   └── Title                 (Options/Credits states land with Maaack's menus)
 ##   └── Playing
-##       ├── Loading               calls loader; leaves on "level_ready"
-##       ├── Active
+##       ├── Loading               calls loader for `_target_scene`; leaves on "level_ready"
+##       ├── Active                re-enters Loading on "travel" (see travel())
 ##       ├── Paused                pause overlay + tree pause live here
 ##       └── Battle                battle overlay + tree pause live here (combat scaffold)
 ##
 ## Events: boot_done · new_game · level_ready · pause · resume · to_main_menu ·
-##         enter_battle · battle_end
+##         enter_battle · battle_end · travel
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
-const FIELD_SCENE := "res://world/test_room.tscn"
+## The starting town (Dom) — the first gameplay scene loaded on a new game.
+const TOWN_SCENE := "res://world/starting_town.tscn"
+## The original field/wilds vertical slice (Iris, Bog Wight, the Loamroot fetch
+## quest) — now reached from the town via a TravelExit, not booted directly.
+const WILDS_SCENE := "res://world/test_room.tscn"
+## Every scene UIManager should treat as "in gameplay" (see _in_gameplay()).
+const GAMEPLAY_SCENES: Array[String] = [TOWN_SCENE, WILDS_SCENE]
 const LOADING_SCREEN := "res://addons/maaacks_game_template/base/nodes/loading_screen/loading_screen.tscn"
 const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
 const BATTLE_SCREEN := preload("res://ui/screens/battle.tscn")
@@ -30,6 +36,9 @@ const BATTLE_SCREEN := preload("res://ui/screens/battle.tscn")
 @onready var chart: StateChart = $StateChart
 
 var _waiting_for_level := false
+## Which scene Loading loads next — TOWN_SCENE on the initial new_game, or
+## whatever travel() set it to on a re-entry.
+var _target_scene := TOWN_SCENE
 
 
 func _ready() -> void:
@@ -57,6 +66,14 @@ func send_event(event: StringName) -> void:
 	chart.send_event(event)
 
 
+## The single entry point for moving between gameplay scenes (e.g. a
+## TravelExit) — never call SceneLoader or change_scene_to_file() directly
+## from game code (see the header note above).
+func travel(scene_path: String) -> void:
+	_target_scene = scene_path
+	send_event("travel")
+
+
 # --- state handlers (policy → mechanism) --------------------------------------
 
 func _on_title_entered() -> void:
@@ -68,7 +85,7 @@ func _on_title_entered() -> void:
 
 func _on_loading_entered() -> void:
 	_waiting_for_level = true
-	SceneLoader.load_scene(FIELD_SCENE)
+	SceneLoader.load_scene(_target_scene)
 
 
 func _on_scene_loaded() -> void:

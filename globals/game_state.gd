@@ -137,3 +137,30 @@ func _make_member(n: String, race: String, cls: String, lvl: int, hp: int, maxhp
 	m.max_hp = maxhp
 	m.bio = bio
 	return m
+
+
+# --- Party assembly (the tavern screen; see ui/screens/tavern.gd) ------------
+
+## Fresh PartyMember instances every call — same convention as _seed_demo_data(),
+## so picking a party twice in one session never hands out aliased Resources.
+func recruitable_candidates() -> Array[PartyMember]:
+	var out: Array[PartyMember] = []
+	out.append(_make_member("Vex the Unbowed", "Ash-Bound Kes'reth", "Ironbrand (Kero)", 4, 38, 44,
+		"A horned reaver of Karrn-Vash; her soul is a held line, sealed against the Loam and tattooed in cinder-ink."))
+	out.append(_make_member("Serai-Lun", "Mirror-Veil Kes'reth", "Mirrorblade (Maiiam)", 3, 26, 30,
+		"A mirror-dancer of Vervulling who fights in paired, reflected forms and speaks in balanced halves."))
+	out.append(_make_member("Old Grumbrand", "Kaan Deepkin", "Lensbearer (Stuid)", 3, 31, 34,
+		"A soot-stained salvager who reads Age-of-Stars machines for a price and trusts nothing that hums."))
+	out.append(_make_member("Wyneth Hallow-Tide", "Ghorr", "River-Mother (Haeren)", 3, 28, 32,
+		"A storm-stranded Haeren pilgrim, still in Dom three sailings later, tending Iron Company wounds for coin she calls tribute."))
+	out.append(_make_member("Ressa Quickfingers", "Vael", "Locksmirk (Fickah)", 3, 24, 28,
+		"Runs card games two tables from the Trial Council's own bench-holders and has never once been caught counting."))
+	return out
+
+
+## Replace the party wholesale — the tavern's "confirm" action. Anything else
+## mutating GameState.party directly must emit party_changed itself; this is
+## the one place that does it for you.
+func set_party(members: Array[PartyMember]) -> void:
+	party = members
+	party_changed.emit()

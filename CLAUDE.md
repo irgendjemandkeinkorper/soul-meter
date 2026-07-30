@@ -15,12 +15,17 @@ config name `SoulMeter`.
 <!-- What actually exists, so a fresh session doesn't re-discover or re-litigate it. -->
 
 The dialogue-and-consequence LOOP IS CLOSED end-to-end: lore vault → Pandora → reputation
-ledger → dialogue → visible in-game consequence. Playable: launch, walk the field room
-(WASD), talk to Iris Illepah (E) — her choices spend the Soul Meter and write the ledger live.
-GLoot-based grid inventory is fully integrated into GameState and wired to the UI inventory screen.
-A minimal turn-based Battle scaffold (`globals/battle.gd`) is wired into GameFlow, with two field
-encounters (Bog Wight, Loam-Maddened Boar) and the first fetch quest (Loamroot Sprig, via
-`QuestRegistry`) — battle wins/losses write to the reputation ledger the same way dialogue does.
+ledger → dialogue → visible in-game consequence. Playable: launch, "New Game" now boots into
+`world/starting_town.tscn` (Dom, the City of the Four Arms) instead of the field room directly.
+Walk up to the tavern facade (E) to open the party-picker (`ui/screens/tavern.gd`) — pick up to
+3 of 5 recruits, re-visitable any time. Walk through the gap in the town's east wall to travel
+(`GameFlow.travel()`) to `world/test_room.tscn`, the original field-room vertical slice — Iris
+Illepah (E to talk) is there unchanged, her choices still spend the Soul Meter and write the
+ledger live. GLoot-based grid inventory is fully integrated into GameState and wired to the UI
+inventory screen. A minimal turn-based Battle scaffold (`globals/battle.gd`) is wired into
+GameFlow, with two field encounters (Bog Wight, Loam-Maddened Boar) and the first fetch quest
+(Loamroot Sprig, via `QuestRegistry`) — battle wins/losses write to the reputation ledger the
+same way dialogue does.
 **Testing is now set up:** gdUnit4 (see `docs/testing.md`) — automated suites in `test/unit/`
 and `test/integration/` (reputation ledger, inventory screen, field-room movement/collision/NPC
 range), plus a manual-checklist convention in `test/manual/`. Run via
@@ -39,25 +44,36 @@ question (gamepad-at-ship).
   under xvfb — see DEPENDENCIES.md for the window-size gotcha).
 - **Entry:** `run/main_scene` = `ui/screens/main_menu.tscn`.
 - **Flow (POLICY):** `ui/flow/game_flow.tscn` — the **Godot State Charts** root chart
-  (Boot / Menus / Playing:Loading·Active·Paused). UI sends `GameFlow.send_event("...")`;
+  (Boot / Menus / Playing:Loading·Active·Paused·Battle). UI sends `GameFlow.send_event("...")`;
   **no `change_scene_to_file()` in game code, ever.** SceneLoader (Maaack) is the mechanism.
-  GameFlow also mirrors `Reputation` standings into chart expression properties
-  (`rep_<faction>`) so transitions can use guards.
+  Moving between gameplay scenes (town ↔ wilds) goes through `GameFlow.travel(scene_path)`
+  (Active → Loading → Active on the `"travel"` event), never called directly by an actor —
+  see `actors/travel_exit/`. `GameFlow.TOWN_SCENE`/`WILDS_SCENE`/`GAMEPLAY_SCENES` are the
+  scene-path constants; `UIManager._in_gameplay()` checks membership in `GAMEPLAY_SCENES`, not
+  equality to one scene. GameFlow also mirrors `Reputation` standings into chart expression
+  properties (`rep_<faction>`) so transitions can use guards.
 - **Global state:** `globals/game_state.gd` (`GameState`) — flags, Soul Meter, party,
   inventory (GLoot-based), settings (persisted). `party_member.gd` is its resource.
-  `globals/reputation.gd` (`Reputation`, separate autoload) — the append-only
-  consequence ledger: `record(actor, faction, delta, cause, scene)` is the ONLY write path;
-  `standing()`/`band()`/`why()` are derived reads. See `globals/reputation_event.gd`.
+  `GameState.recruitable_candidates()` / `set_party()` back the tavern's party-picker (the
+  only place `party` is meant to be replaced wholesale — anything else mutating it directly
+  must emit `party_changed` itself). `globals/reputation.gd` (`Reputation`, separate autoload)
+  — the append-only consequence ledger: `record(actor, faction, delta, cause, scene)` is the
+  ONLY write path; `standing()`/`band()`/`why()` are derived reads. See
+  `globals/reputation_event.gd`.
 - **UI:** `ui/ui_manager.gd` (`UIManager`, mechanism-only screen stack) + `ui/screens/*`
-  (Screen base + main_menu/pause/inventory/party/settings) + `ui/hud/` (`SoulGauge`,
+  (Screen base + main_menu/pause/inventory/party/settings/tavern) + `ui/hud/` (`SoulGauge`,
   `field_hud.tscn`) + `ui/dialogue/` (`SMPortrait`, `SMDialogueChoice`, the Echo Gate
   balloon — Dialogue Manager's registered runtime balloon).
 - **Design system:** `ui/theme/ds.gd` (token constants) + `theme_builder.gd` (the Theme —
   type variations only, e.g. `HeroLabel`/`DangerButton`; never per-node overrides). Source of
   truth is the synced Claude design-system project — see `design/DESIGN_SYSTEM.md`. Fonts in
   `assets/fonts/soul-meter/` (Cinzel/Cormorant/Fira, OFL).
-- **World:** `world/test_room.tscn` (field room, has `FieldHUD` + an NPC) + `actors/player/`
-  (CharacterBody2D) + `actors/npc/` (interactable, E to talk — see `dialogue/*.dialogue`).
+- **World:** `world/starting_town.tscn` (Dom, the starting town — `GameFlow.TOWN_SCENE`, the
+  actual boot destination) + `world/test_room.tscn` (the original field room vertical slice —
+  `GameFlow.WILDS_SCENE`, reached via a `TravelExit`, has `FieldHUD` + an NPC) + `actors/player/`
+  (CharacterBody2D) + `actors/npc/` (interactable, E to talk — see `dialogue/*.dialogue`) +
+  `actors/tavern_door/` (interactable, E opens the tavern) + `actors/travel_exit/` (walk-over,
+  scene-to-scene via `GameFlow.travel()`).
 - **Data:** `data.pandora` (committed) — canonical game data, seeded from the lore vault by
   `tools/seed_pandora.gd` (idempotent). `tools/generate_gloot.gd` is the one-way Pandora→GLoot
   generator (`data/generated/`: prototree JSON, `ItemIds` constants, `items.pot`); run via

@@ -11,6 +11,7 @@ extends CanvasLayer
 const INVENTORY := preload("res://ui/screens/inventory.tscn")
 const PARTY := preload("res://ui/screens/party.tscn")
 const STANDING := preload("res://ui/screens/standing.tscn")
+const TAVERN := preload("res://ui/screens/tavern.tscn")
 
 var ui_theme: Theme
 var _stack: Array[Control] = []
@@ -88,4 +89,4 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _in_gameplay() -> bool:
 	var cur := get_tree().current_scene
-	return cur != null and cur.scene_file_path == GameFlow.FIELD_SCENE
+	return cur != null and GameFlow.GAMEPLAY_SCENES.has(cur.scene_file_path)

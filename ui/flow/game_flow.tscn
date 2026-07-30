@@ -61,6 +61,11 @@ script = ExtResource("5_transition")
 to = NodePath("../../Battle")
 event = &"enter_battle"
 
+[node name="ToLoading" type="Node" parent="StateChart/Root/Playing/Active"]
+script = ExtResource("5_transition")
+to = NodePath("../../Loading")
+event = &"travel"
+
 [node name="Paused" type="Node" parent="StateChart/Root/Playing"]
 script = ExtResource("4_atomic")
 
