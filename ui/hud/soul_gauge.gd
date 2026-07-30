@@ -9,6 +9,7 @@ extends Control
 @export_enum("constant", "skip", "feedback", "hush") var state: String = "constant":
 	set(v):
 		state = v
+		set_process(state == "feedback")
 		queue_redraw()
 ## The Crystalline Registry's foreclosure floor (0-100); shown whenever a writ is in force.
 ## Negative = no writ.
@@ -27,13 +28,13 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(220, DS.METER_H_LG + 22)
 	_value = GameState.soul_meter
 	GameState.soul_meter_changed.connect(_on_meter_changed)
+	set_process(state == "feedback")
 	_refresh_label()
 
 
 func _process(delta: float) -> void:
-	if state == "feedback":  # feedback pulses (--dur-ambient); other states rest
-		_pulse_time += delta
-		queue_redraw()
+	_pulse_time += delta
+	queue_redraw()
 
 
 func _on_meter_changed(value: float) -> void:
