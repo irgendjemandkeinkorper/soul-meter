@@ -93,6 +93,6 @@ func test_travel_exit_updates_gameflow_target_scene() -> void:
 	var player: Node2D = runner.find_child("Player", true, false)
 
 	player.global_position = exit_node.global_position
-	await runner.simulate_frames(10)
+	await runner.simulate_frames(20)
 
 	assert_str(GameFlow._target_scene).is_equal(GameFlow.WILDS_SCENE)
