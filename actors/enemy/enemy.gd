@@ -14,6 +14,15 @@ extends StaticBody2D
 @export var defense: int = 1
 @export var defeated_flag: String = ""
 
+## Passed straight through to the ephemeral BattleActor — see its matching
+## fields for why these are here instead of on the Enemy scene alone.
+@export var win_faction: String = ""
+@export var win_delta: float = 0.0
+@export var win_cause: String = ""
+@export var loss_faction: String = ""
+@export var loss_delta: float = 0.0
+@export var loss_cause: String = ""
+
 var _player_in_range := false
 var _prompt: Label
 
@@ -57,6 +66,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		actor.attack = attack
 		actor.defense = defense
 		actor.defeated_flag = defeated_flag
+		actor.win_faction = win_faction
+		actor.win_delta = win_delta
+		actor.win_cause = win_cause
+		actor.loss_faction = loss_faction
+		actor.loss_delta = loss_delta
+		actor.loss_cause = loss_cause
 		Battle.battle_ended.connect(_on_battle_ended, CONNECT_ONE_SHOT)
 		Battle.start(actor)
 		GameFlow.send_event("enter_battle")

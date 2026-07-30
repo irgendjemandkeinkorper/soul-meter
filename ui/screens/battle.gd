@@ -83,10 +83,14 @@ func _on_battle_ended(won: bool, fled: bool) -> void:
 		_log_lbl.text = "%s is defeated." % Battle.enemy.display_name
 		if not Battle.enemy.defeated_flag.is_empty():
 			GameState.set_flag(Battle.enemy.defeated_flag, true)
+		if not Battle.enemy.win_faction.is_empty():
+			Reputation.record("player", Battle.enemy.win_faction, Battle.enemy.win_delta, Battle.enemy.win_cause, "field")
 	elif fled:
 		_log_lbl.text = "You disengage and fall back."
 	else:
 		_log_lbl.text = "%s falls. The fight is over." % _player_name()
+		if not Battle.enemy.loss_faction.is_empty():
+			Reputation.record("player", Battle.enemy.loss_faction, Battle.enemy.loss_delta, Battle.enemy.loss_cause, "field")
 
 	_outcome_box.visible = true
 	_menu_button(_outcome_box, "Continue", func() -> void:

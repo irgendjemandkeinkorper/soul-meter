@@ -12,3 +12,14 @@ extends Resource
 ## GameState flag to set on a win, so a defeated enemy actor doesn't respawn
 ## a fight. Empty for the player's own BattleActor.
 @export var defeated_flag: String = ""
+
+## Reputation consequence for beating/losing to this actor. Mirrors
+## FetchQuest's reward_* fields (quests/fetch_quest.gd) — empty faction means
+## no-op, so most BattleActors (including the player's own) can leave these
+## unset. Fleeing has no consequence here; only a clean win or loss does.
+@export var win_faction: String = ""
+@export var win_delta: float = 0.0
+@export var win_cause: String = ""
+@export var loss_faction: String = ""
+@export var loss_delta: float = 0.0
+@export var loss_cause: String = ""

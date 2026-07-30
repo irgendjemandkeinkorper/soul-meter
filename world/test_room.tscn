@@ -89,3 +89,24 @@ max_hp = 20
 attack = 4
 defense = 1
 defeated_flag = "defeated_bog_wight"
+win_faction = "ssae-seeders"
+win_delta = 6.0
+win_cause = "Cleared the Bog Wight from the grove margins"
+loss_faction = "ssae-seeders"
+loss_delta = -3.0
+loss_cause = "The Bog Wight still haunts the grove's edge"
+
+[node name="LoamBoar" parent="." instance=ExtResource("5_enemy")]
+position = Vector2(1600, 750)
+enemy_name = "Loam-Maddened Boar"
+hp = 14
+max_hp = 14
+attack = 6
+defense = 0
+defeated_flag = "defeated_loam_boar"
+win_faction = "ssae-seeders"
+win_delta = 5.0
+win_cause = "Culled a Loam-maddened boar before it reached the grove"
+loss_faction = "ssae-seeders"
+loss_delta = -3.0
+loss_cause = "A Loam-maddened boar broke loose near the grove"
