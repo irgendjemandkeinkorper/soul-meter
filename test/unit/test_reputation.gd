@@ -25,6 +25,8 @@ func test_record_returns_event_with_expected_fields() -> void:
 	assert_float(e.delta).is_equal(10.0)
 	assert_str(e.cause).is_equal("Returned the lost relic")
 	assert_str(e.scene).is_equal("test_room")
+	assert_int(e.order).is_equal(0)
+	assert_int(e.at).is_greater(0)
 
 
 func test_standing_is_the_sum_of_deltas() -> void:

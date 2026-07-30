@@ -17,7 +17,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
       - name: Scan for overlapping changes
         run: |
-          npx -y --package=@google/jules-merge jules-merge scan --json '{"prs":[${{ github.event.pull_request.number }}],"repo":"${{ github.repository }}","base":"${{ github.event.pull_request.base.ref }}"}'
+          npm install -g @modelcontextprotocol/sdk @google/jules-sdk @google/jules-merge
+          jules-merge scan --json '{"prs":[${{ github.event.pull_request.number }}],"repo":"${{ github.repository }}","base":"${{ github.event.pull_request.base.ref }}"}'
