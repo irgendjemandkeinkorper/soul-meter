@@ -51,7 +51,7 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/anima/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/gloot/plugin.cfg", "res://addons/godot_state_charts/plugin.cfg", "res://addons/juicee/plugin.cfg", "res://addons/maaacks_game_template/plugin.cfg", "res://addons/pandora/plugin.cfg", "res://addons/phantom_camera/plugin.cfg", "res://addons/quest_system/plugin.cfg", "res://addons/rmsmartshape/plugin.cfg", "res://addons/soul_meter_tools/plugin.cfg")
+enabled=PackedStringArray("res://addons/anima/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/gloot/plugin.cfg", "res://addons/godot_state_charts/plugin.cfg", "res://addons/juicee/plugin.cfg", "res://addons/maaacks_game_template/plugin.cfg", "res://addons/pandora/plugin.cfg", "res://addons/phantom_camera/plugin.cfg", "res://addons/quest_system/plugin.cfg", "res://addons/rmsmartshape/plugin.cfg", "res://addons/soul_meter_tools/plugin.cfg")
 
 [input]
 

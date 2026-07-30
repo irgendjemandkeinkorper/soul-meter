@@ -1,5 +1,6 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
-addons/gdUnit4
-reports/
+
+# gdUnit4 test run output (regenerated every run, see docs/testing.md)
+/reports/

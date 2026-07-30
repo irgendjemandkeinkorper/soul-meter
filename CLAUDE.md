@@ -11,17 +11,25 @@ A dialogue-and-consequence-first CRPG built solo in **Godot 4.7** — a conseque
 in Era 3 of the Dramgid Cycle. **2D, isometric, rendered from 3D models.** Design-doc-first;
 config name `SoulMeter`.
 
-## Status (2026-07-26)
+## Status (2026-07-30)
 <!-- What actually exists, so a fresh session doesn't re-discover or re-litigate it. -->
 
 The dialogue-and-consequence LOOP IS CLOSED end-to-end: lore vault → Pandora → reputation
 ledger → dialogue → visible in-game consequence. Playable: launch, walk the field room
 (WASD), talk to Iris Illepah (E) — her choices spend the Soul Meter and write the ledger live.
 GLoot-based grid inventory is fully integrated into GameState and wired to the UI inventory screen.
-**Still open / next candidates:** Maaack's setup wizard (editor-interactive, do on the Windows machine),
-GodotGAS (store download, no public repo), portrait art
-PNGs from the DS project, localization POT enablement, `docs/godot-architecture.md`'s open
-human questions (gamepad-at-ship, gdUnit4/GUT).
+A minimal turn-based Battle scaffold (`globals/battle.gd`) is wired into GameFlow, with two field
+encounters (Bog Wight, Loam-Maddened Boar) and the first fetch quest (Loamroot Sprig, via
+`QuestRegistry`) — battle wins/losses write to the reputation ledger the same way dialogue does.
+**Testing is now set up:** gdUnit4 (see `docs/testing.md`) — automated suites in `test/unit/`
+and `test/integration/` (reputation ledger, inventory screen, field-room movement/collision/NPC
+range), plus a manual-checklist convention in `test/manual/`. Run via
+`GODOT_BIN=~/.local/bin/godot bash addons/gdUnit4/runtest.sh -a test`.
+**Still open / next candidates:** Maaack's setup wizard (editor-interactive, do on the Windows
+machine), GodotGAS (store download, no public repo), portrait art PNGs from the DS project,
+localization POT enablement, CI wiring for gdUnit4, the unratified Balance Gauge / Defining
+Strikes combat identity (design doc §6), `docs/godot-architecture.md`'s one remaining open human
+question (gamepad-at-ship).
 
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
@@ -58,10 +66,12 @@ human questions (gamepad-at-ship, gdUnit4/GUT).
 - **Dialogue content:** `dialogue/*.dialogue` (Dialogue Manager text format). Response
   conditions need the self-closing form `[if expr /]` — plain `[if expr]` silently no-ops
   (see DEPENDENCIES.md). Metadata rides tags: `[#tag=X] [#cost=-6 soul] [#consequence=...]`.
-- **Addons (13):** see `DEPENDENCIES.md` for pins & quirks — Maaack's template, State Charts,
+- **Addons (14):** see `DEPENDENCIES.md` for pins & quirks — Maaack's template, State Charts,
   Pandora, Dialogue Manager, QuestSystem, GLoot, Phantom Camera, Anima, Juicee, SmartShape2D,
-  PixelPen (parked on Linux). **Never edit anything under `addons/`** (except our own
+  PixelPen (parked on Linux), gdUnit4. **Never edit anything under `addons/`** (except our own
   `addons/soul_meter_tools`, which is project-owned).
+- **Testing:** `docs/testing.md` — gdUnit4, `test/unit/` + `test/integration/` (automated) and
+  `test/manual/` (human checklists). Read it before adding either kind.
 - **Art:** `assets/kenney/` (CC0, curated; see its ATTRIBUTION.md).
 - **Where NOT to look:** `.godot/`, `.git/`, `*.import`, `dramgid-lore-dump.md` (superseded).
 

@@ -204,13 +204,15 @@ template's example scenes so upstream updates still apply.
 - **Talo** — self-hostable backend; only if anything goes online.
 - **Panku Console** — in-game console; valuable once reputation/spell state needs live poking.
 
-## Recommended but not currently selected
+## Testing
 
-**gdUnit4 or GUT** — the riskiest omission in the plan. A combinatorial magic system has a
-combinatorial bug surface; property-based tests over the effect-pairing matrix (no negative
-durations, damage ceilings, commutativity or explicit flags) catch degenerate combos before
-players do. Same applies to the reputation derivation. Human call, recorded so it's a
-decision rather than an oversight.
+**gdUnit4** — chosen over GUT 2026-07-26; see `docs/testing.md` for the full rationale, how to
+run/write tests, and the manual-test checklist convention. Installed and pinned
+(`DEPENDENCIES.md`); example suites exist for the reputation ledger (unit) and the field room
+(integration, via `SceneRunner`). What's still missing: property-based tests over the
+reputation derivation and the (future) combinatorial magic-system effect matrix — this was the
+reason testing was flagged as the riskiest omission in the first place, and still is until
+those exist.
 
 ## Dependency risk
 
@@ -231,7 +233,7 @@ mode is four needing patches from four maintainers simultaneously. Mitigations: 
    avoid single-player-only architecture. (answered 2026-07-26)
 5. ~~Inventory~~ — **grid-based.** `Grid Size` is a REQUIRED Pandora property on the `Items`
    root; GLoot grid constraints are in scope. (answered 2026-07-26)
-6. gdUnit4 or GUT — yes or no? (open — the riskiest omission)
+6. ~~gdUnit4 or GUT~~ — **gdUnit4.** See `docs/testing.md`. (answered 2026-07-26)
 
 ## Sources
 
