@@ -56,6 +56,11 @@ script = ExtResource("5_transition")
 to = NodePath("../../Paused")
 event = &"pause"
 
+[node name="ToBattle" type="Node" parent="StateChart/Root/Playing/Active"]
+script = ExtResource("5_transition")
+to = NodePath("../../Battle")
+event = &"enter_battle"
+
 [node name="Paused" type="Node" parent="StateChart/Root/Playing"]
 script = ExtResource("4_atomic")
 
@@ -68,3 +73,11 @@ event = &"resume"
 script = ExtResource("5_transition")
 to = NodePath("../../../Menus")
 event = &"to_main_menu"
+
+[node name="Battle" type="Node" parent="StateChart/Root/Playing"]
+script = ExtResource("4_atomic")
+
+[node name="ToActive" type="Node" parent="StateChart/Root/Playing/Battle"]
+script = ExtResource("5_transition")
+to = NodePath("../../Active")
+event = &"battle_end"

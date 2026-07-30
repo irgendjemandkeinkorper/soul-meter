@@ -2157,6 +2157,47 @@
 						"value": "systems/magic-system.md"
 					}
 				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "135.0",
+				"_index": 0,
+				"_name": "Loamroot Sprig",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "A pale root cutting, still warm from the Loam. Iris wants a few for the grove."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loamroot Sprig"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "It roots wherever it lands. That is the trouble with it."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -2500,7 +2541,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 134
+			"default": 135.0
 		}
 	},
 	"_version": 1

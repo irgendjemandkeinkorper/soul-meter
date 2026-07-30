@@ -3,6 +3,7 @@ class_name ItemIds
 
 const CONSUMABLES_LOAM_BREAD := "consumables/loam_bread"
 const MATERIALS_CINDER_INK_VIAL := "materials/cinder_ink_vial"
+const MATERIALS_LOAMROOT_SPRIG := "materials/loamroot_sprig"
 const RELICS_CAPTURED_REFLECTION := "relics/captured_reflection"
 const RELICS_QUINE_SHARD := "relics/quine_shard"
 const TOOLS_SOUL_GAUGE := "tools/soul_gauge"

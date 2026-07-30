@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="FetchQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/fetch_quest.gd" id="1_fetch"]
+
+[resource]
+script = ExtResource("1_fetch")
+id = 1
+quest_name = "Loamroot Sprigs"
+quest_description = "Iris wants a few loamroot sprigs from the grove for her work."
+quest_objective = "Bring Iris 3 Loamroot Sprigs."
+item_id = "materials/loamroot_sprig"
+required_amount = 3
+reward_faction = "ssae-seeders"
+reward_amount = 10.0
+reward_cause = "Brought the Loam what it asked for"

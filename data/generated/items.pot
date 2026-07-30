@@ -24,6 +24,16 @@ msgctxt "ITEM_MATERIALS_CINDER_INK_VIAL_DESC"
 msgid "Ash-Bound tattoo ink; names written in it resist the Waning's slow erasure."
 msgstr ""
 
+#. materials/loamroot_sprig — display name
+msgctxt "ITEM_MATERIALS_LOAMROOT_SPRIG_NAME"
+msgid "Loamroot Sprig"
+msgstr ""
+
+#. materials/loamroot_sprig — description
+msgctxt "ITEM_MATERIALS_LOAMROOT_SPRIG_DESC"
+msgid "A pale root cutting, still warm from the Loam. Iris wants a few for the grove."
+msgstr ""
+
 #. relics/captured_reflection — display name
 msgctxt "ITEM_RELICS_CAPTURED_REFLECTION_NAME"
 msgid "Captured Reflection"

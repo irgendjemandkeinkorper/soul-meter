@@ -9,5 +9,7 @@ extends Resource
 @export var level: int = 1
 @export var hp: int = 10
 @export var max_hp: int = 10
+@export var attack: int = 5
+@export var defense: int = 2
 @export_multiline var bio: String = ""
 @export var portrait: Texture2D

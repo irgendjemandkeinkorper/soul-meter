@@ -17,6 +17,15 @@
     "rarity": "common",
     "flavour": "The soul is a held line. Hold it."
   },
+  "materials/loamroot_sprig": {
+    "name": "Loamroot Sprig",
+    "description": "A pale root cutting, still warm from the Loam. Iris wants a few for the grove.",
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 5,
+    "weight": 0.1,
+    "rarity": "common",
+    "flavour": "It roots wherever it lands. That is the trouble with it."
+  },
   "relics/captured_reflection": {
     "name": "Captured Reflection",
     "description": "An obsidian shard that shows a room lit by a sky that does not exist.",

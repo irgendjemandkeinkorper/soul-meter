@@ -22,6 +22,17 @@ Iris Illepah: Ask, then. The light is long and the sweeping is done.
 - "Teach me the Seeders' rite." [#tag=SSAE-SEEDERS] [#consequence=There is no returning from knowing this.] [if Reputation.standing("ssae-seeders") >= 15.0 /]
 	Iris Illepah: Not here. Come to the overhang in the Zwarten Bos when the Green Pulse sounds. Bring bread. He eats it out of politeness.
 	=> END
+- "Is there work I could do for the grove?" [#tag=SSAE-SEEDERS] [if not QuestRegistry.is_active(QuestRegistry.LOAMROOT_SPRIGS) and not QuestRegistry.is_done(QuestRegistry.LOAMROOT_SPRIGS) /]
+	do QuestRegistry.offer(QuestRegistry.LOAMROOT_SPRIGS)
+	Iris Illepah: Three loamroot sprigs have rooted wrong, out past the treeline. Bring them here before they take hold proper.
+	=> hub
+- "Still gathering the loamroot sprigs." [if QuestRegistry.is_active(QuestRegistry.LOAMROOT_SPRIGS) and not QuestRegistry.LOAMROOT_SPRIGS.objective_completed /]
+	Iris Illepah: Take your time. They do not rot, only wait.
+	=> hub
+- "I have the loamroot sprigs." [#tag=SSAE-SEEDERS] [#consequence=Brought the Loam what it asked for.] [if QuestRegistry.is_active(QuestRegistry.LOAMROOT_SPRIGS) and QuestRegistry.LOAMROOT_SPRIGS.objective_completed /]
+	do QuestRegistry.turn_in(QuestRegistry.LOAMROOT_SPRIGS)
+	Iris Illepah: Good hands. The grove will remember these came back to it, not just away from it.
+	=> hub
 - "I should go."
 	Iris Illepah: Go, then. Keep off the new moss. It is younger than it looks, and it remembers feet.
 	=> END

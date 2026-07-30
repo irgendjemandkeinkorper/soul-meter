@@ -15,14 +15,17 @@ extends Node
 ##   └── Playing
 ##       ├── Loading               calls loader; leaves on "level_ready"
 ##       ├── Active
-##       └── Paused                pause overlay + tree pause live here
+##       ├── Paused                pause overlay + tree pause live here
+##       └── Battle                battle overlay + tree pause live here (combat scaffold)
 ##
-## Events: boot_done · new_game · level_ready · pause · resume · to_main_menu
+## Events: boot_done · new_game · level_ready · pause · resume · to_main_menu ·
+##         enter_battle · battle_end
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
 const FIELD_SCENE := "res://world/test_room.tscn"
 const LOADING_SCREEN := "res://addons/maaacks_game_template/base/nodes/loading_screen/loading_screen.tscn"
 const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
+const BATTLE_SCREEN := preload("res://ui/screens/battle.tscn")
 
 @onready var chart: StateChart = $StateChart
 
@@ -42,6 +45,8 @@ func _ready() -> void:
 	$StateChart/Root/Playing/Loading.state_entered.connect(_on_loading_entered)
 	$StateChart/Root/Playing/Paused.state_entered.connect(_on_paused_entered)
 	$StateChart/Root/Playing/Paused.state_exited.connect(_on_paused_exited)
+	$StateChart/Root/Playing/Battle.state_entered.connect(_on_battle_entered)
+	$StateChart/Root/Playing/Battle.state_exited.connect(_on_battle_exited)
 
 	# Boot is where splash/config-load will live; nothing to wait on yet.
 	send_event.call_deferred("boot_done")
@@ -78,5 +83,15 @@ func _on_paused_entered() -> void:
 
 
 func _on_paused_exited() -> void:
+	UIManager.close_all()
+	get_tree().paused = false
+
+
+func _on_battle_entered() -> void:
+	get_tree().paused = true
+	UIManager.open(BATTLE_SCREEN, false, true)
+
+
+func _on_battle_exited() -> void:
 	UIManager.close_all()
 	get_tree().paused = false
