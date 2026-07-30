@@ -23,5 +23,5 @@ jobs:
 
       - name: Scan for overlapping changes
         run: |
-          npm install -g @google/jules-sdk @google/jules-merge
+          npm install -g @modelcontextprotocol/sdk @google/jules-sdk @google/jules-merge
           jules-merge scan --json '{"prs":[${{ github.event.pull_request.number }}],"repo":"${{ github.repository }}","base":"${{ github.event.pull_request.base.ref }}"}'
