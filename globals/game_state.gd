@@ -127,7 +127,8 @@ func _seed_demo_data() -> void:
 	var shard := inventory.create_and_add_item(ItemIds.RELICS_QUINE_SHARD)
 
 
-func _make_member(n: String, race: String, cls: String, lvl: int, hp: int, maxhp: int, bio: String) -> PartyMember:
+func _make_member(n: String, race: String, cls: String, lvl: int, hp: int, maxhp: int, bio: String,
+		min_rep: float = 0.0, min_infamy: float = 0.0) -> PartyMember:
 	var m := PartyMember.new()
 	m.display_name = n
 	m.race = race
@@ -136,6 +137,8 @@ func _make_member(n: String, race: String, cls: String, lvl: int, hp: int, maxhp
 	m.hp = hp
 	m.max_hp = maxhp
 	m.bio = bio
+	m.min_reputation = min_rep
+	m.min_infamy = min_infamy
 	return m
 
 
@@ -143,18 +146,79 @@ func _make_member(n: String, race: String, cls: String, lvl: int, hp: int, maxhp
 
 ## Fresh PartyMember instances every call — same convention as _seed_demo_data(),
 ## so picking a party twice in one session never hands out aliased Resources.
+## Two per patron class (see systems/ten-patron-classes.md), varied races and
+## genders — races beyond the original five are pulled from the vault's
+## character-creation.md "expansion point" roster (Dragons, Dwermo, Giants,
+## Khurnathi, Lunari, Naolune, Nkhalu, Orthos, Snarlin, Thysari, Velbrass,
+## Zindari, Weftkin, Vaerin, Fiel), grounded in Dom flavor (Steel Day dueling
+## honor, Trial Council bench culture, the Deep Salvage rings' corpse-armor
+## trade as the city's one real underworld — see cities/dom.md).
 func recruitable_candidates() -> Array[PartyMember]:
 	var out: Array[PartyMember] = []
+
+	# Ironbrand (Kero)
 	out.append(_make_member("Vex the Unbowed", "Ash-Bound Kes'reth", "Ironbrand (Kero)", 4, 38, 44,
 		"A horned reaver of Karrn-Vash; her soul is a held line, sealed against the Loam and tattooed in cinder-ink."))
+	out.append(_make_member("Korrath Ninefold", "Orthos", "Ironbrand (Kero)", 4, 36, 40,
+		"An Orthos brawler who's fought every Steel Day since his branding; won't fall in beside anyone the Trial Council hasn't at least heard of.",
+		10.0))
+
+	# Mirrorblade (Maiiam)
 	out.append(_make_member("Serai-Lun", "Mirror-Veil Kes'reth", "Mirrorblade (Maiiam)", 3, 26, 30,
 		"A mirror-dancer of Vervulling who fights in paired, reflected forms and speaks in balanced halves."))
+	out.append(_make_member("Vey Ashinel", "Weftkin", "Mirrorblade (Maiiam)", 3, 26, 30,
+		"A Weftkin whose Weft-sense reads a duel's outcome half a breath before it lands; fights already knowing which reflection wins."))
+
+	# Lensbearer (Stuid)
 	out.append(_make_member("Old Grumbrand", "Kaan Deepkin", "Lensbearer (Stuid)", 3, 31, 34,
 		"A soot-stained salvager who reads Age-of-Stars machines for a price and trusts nothing that hums."))
+	out.append(_make_member("Mirela Osk", "Naolune", "Lensbearer (Stuid)", 3, 24, 28,
+		"A Naolune archivist who catalogs Dom's Age-of-Stars wreckage for the Trial Council, and reads a stranger's tells the way she reads a machine's wiring."))
+
+	# River-Mother (Haeren)
 	out.append(_make_member("Wyneth Hallow-Tide", "Ghorr", "River-Mother (Haeren)", 3, 28, 32,
 		"A storm-stranded Haeren pilgrim, still in Dom three sailings later, tending Iron Company wounds for coin she calls tribute."))
+	out.append(_make_member("Bram Kettlewell", "Dwermo", "River-Mother (Haeren)", 3, 30, 34,
+		"A Dwermo field-medic who followed the Iron Companies home from three campaigns and never once put down the bandage roll."))
+
+	# Locksmirk (Fickah)
 	out.append(_make_member("Ressa Quickfingers", "Vael", "Locksmirk (Fickah)", 3, 24, 28,
 		"Runs card games two tables from the Trial Council's own bench-holders and has never once been caught counting."))
+	out.append(_make_member("Vesh Cutlow", "Zindari", "Locksmirk (Fickah)", 3, 22, 26,
+		"A forger of Trial Council seals who's never met a brand she couldn't fake, or a debt she couldn't misplace."))
+
+	# Husk-bearer (Vhorr)
+	out.append(_make_member("Maura Greyfen", "Snarlin", "Husk-bearer (Vhorr)", 3, 27, 30,
+		"Runs a Deep Salvage ring under the chasm rim, stripping armor off the called dead — she won't work with anyone the honest half of Dom hasn't already written off.",
+		0.0, 8.0))
+	out.append(_make_member("Dobrusk", "Thysari", "Husk-bearer (Vhorr)", 3, 29, 32,
+		"A mortuary-rite keeper who tends what the Deep Salvage rings bring up, and insists every stripped corpse still gets a name spoken over it."))
+
+	# Flamebinder (Vicoar)
+	out.append(_make_member("Cinderjaw", "Dragon", "Flamebinder (Vicoar)", 4, 32, 36,
+		"A young dragon apprenticed to Dom's forge-guild out of sheer boredom with hoarding; builds engines that breathe better than he does."))
+	out.append(_make_member("Yorna Deephammer", "Giant", "Flamebinder (Vicoar)", 3, 34, 38,
+		"A Giant artificer who rebuilt half the Trial Hall's furnace grates and charges the other half in favors, not coin."))
+
+	# Stormbearer (Ofshütje)
+	out.append(_make_member("Ilse Moonshear", "Lunari", "Stormbearer (Ofshütje)", 3, 24, 28,
+		"A skirmisher who reads Dom's storm-fronts better than the harbor pilots, and times every raid to the lull before landfall."))
+	out.append(_make_member("Kaddo Farrow", "Khurnathi", "Stormbearer (Ofshütje)", 3, 26, 30,
+		"An outrunner who scouts ahead of the Iron Companies and has never once been caught by the same storm twice."))
+
+	# Oathclock (Pazzah)
+	out.append(_make_member("Sohvi Lastbell", "Vaerin", "Oathclock (Pazzah)", 3, 23, 26,
+		"An oath-broker whose own Fading is nearly spent; won't stake a bargain-clock on someone whose name means nothing yet.",
+		8.0))
+	out.append(_make_member("Perrin Tallowdue", "Velbrass", "Oathclock (Pazzah)", 3, 25, 28,
+		"A debt-clerk for the Trial Council who collects promises the way other men collect coin, and never once forgets a due date."))
+
+	# Threadwalker (Izhakel)
+	out.append(_make_member("Aeyin Farsdottir", "Fiel", "Threadwalker (Izhakel)", 3, 22, 25,
+		"A relic-binder who keeps three borrowed spirits on a leash of her own hair, and swears all three behave better than she does."))
+	out.append(_make_member("Duskhollow", "Nkhalu", "Threadwalker (Izhakel)", 3, 24, 27,
+		"A summoner who inherited his threadbound court from a dead uncle, and still isn't sure which of them is in charge."))
+
 	return out
 
 

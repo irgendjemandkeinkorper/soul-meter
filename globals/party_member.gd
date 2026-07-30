@@ -13,3 +13,8 @@ extends Resource
 @export var defense: int = 2
 @export_multiline var bio: String = ""
 @export var portrait: Texture2D
+
+## Tavern recruitment gates (see ui/screens/tavern.gd and globals/renown.gd).
+## 0 means "open to anyone" — most candidates leave these at the default.
+@export var min_reputation: float = 0.0
+@export var min_infamy: float = 0.0

@@ -73,18 +73,74 @@ func test_choosing_candidates_and_confirming_replaces_party() -> void:
 	var screen = UIManager.open(UIManager.TAVERN, true)
 	await runner.simulate_frames(5)
 
-	screen._checks[0].button_pressed = true
-	screen._checks[2].button_pressed = true
+	screen._checks[_candidate_index(screen, "Vex the Unbowed")].button_pressed = true
+	screen._checks[_candidate_index(screen, "Old Grumbrand")].button_pressed = true
 	screen._on_confirm()
 	await runner.simulate_frames(5)
 
 	assert_int(GameState.party.size()).is_equal(2)
-	assert_str(GameState.party[0].display_name).is_equal("Vex the Unbowed")
-	assert_str(GameState.party[1].display_name).is_equal("Old Grumbrand")
+	var names := [GameState.party[0].display_name, GameState.party[1].display_name]
+	assert_array(names).contains("Vex the Unbowed", "Old Grumbrand")
 	assert_bool(UIManager.is_open()).is_false()
 
 	# Restore the default demo party/inventory so later test runs aren't affected.
 	GameState._seed_demo_data()
+
+
+func test_candidate_requiring_reputation_is_locked_until_earned() -> void:
+	Renown.from_dict({})  # clean slate so this test doesn't depend on run order
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(5)
+
+	var screen = UIManager.open(UIManager.TAVERN, true)
+	await runner.simulate_frames(5)
+	var idx := _candidate_index(screen, "Korrath Ninefold")
+	assert_bool(screen._checks[idx].disabled).is_true()
+	UIManager.close_all()
+	await runner.simulate_frames(5)
+
+	Renown.gain_reputation("player", 10.0, "test setup", "test_room")
+
+	screen = UIManager.open(UIManager.TAVERN, true)
+	await runner.simulate_frames(5)
+	idx = _candidate_index(screen, "Korrath Ninefold")
+	assert_bool(screen._checks[idx].disabled).is_false()
+	UIManager.close_all()
+	await runner.simulate_frames(5)
+
+	Renown.from_dict({})  # don't leak into later tests
+
+
+func test_candidate_requiring_infamy_is_locked_until_earned() -> void:
+	Renown.from_dict({})
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(5)
+
+	var screen = UIManager.open(UIManager.TAVERN, true)
+	await runner.simulate_frames(5)
+	var idx := _candidate_index(screen, "Maura Greyfen")
+	assert_bool(screen._checks[idx].disabled).is_true()
+	UIManager.close_all()
+	await runner.simulate_frames(5)
+
+	Renown.gain_infamy("player", 8.0, "test setup", "test_room")
+
+	screen = UIManager.open(UIManager.TAVERN, true)
+	await runner.simulate_frames(5)
+	idx = _candidate_index(screen, "Maura Greyfen")
+	assert_bool(screen._checks[idx].disabled).is_false()
+	UIManager.close_all()
+	await runner.simulate_frames(5)
+
+	Renown.from_dict({})
+
+
+func _candidate_index(screen, display_name: String) -> int:
+	for i in screen._candidates.size():
+		if screen._candidates[i].display_name == display_name:
+			return i
+	fail("no candidate named '%s'" % display_name)
+	return -1
 
 
 func test_travel_exit_updates_gameflow_target_scene() -> void:

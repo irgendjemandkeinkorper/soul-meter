@@ -85,6 +85,7 @@ func _on_battle_ended(won: bool, fled: bool) -> void:
 			GameState.set_flag(Battle.enemy.defeated_flag, true)
 		if not Battle.enemy.win_faction.is_empty():
 			Reputation.record("player", Battle.enemy.win_faction, Battle.enemy.win_delta, Battle.enemy.win_cause, "field")
+		Renown.gain_reputation("player", 3.0, "Defeated %s" % Battle.enemy.display_name, "field")
 	elif fled:
 		_log_lbl.text = "You disengage and fall back."
 	else:

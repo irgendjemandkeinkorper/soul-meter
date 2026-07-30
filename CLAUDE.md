@@ -18,7 +18,10 @@ The dialogue-and-consequence LOOP IS CLOSED end-to-end: lore vault → Pandora �
 ledger → dialogue → visible in-game consequence. Playable: launch, "New Game" now boots into
 `world/starting_town.tscn` (Dom, the City of the Four Arms) instead of the field room directly.
 Walk up to the tavern facade (E) to open the party-picker (`ui/screens/tavern.gd`) — pick up to
-3 of 5 recruits, re-visitable any time. Walk through the gap in the town's east wall to travel
+3 of 20 recruits (2 per patron class), re-visitable any time. Some recruits gate on
+`globals/renown.gd` (`Renown`, a global reputation/infamy pair, separate from the per-faction
+`Reputation` ledger and from the Soul Gauge — see its header comment for why): battle wins and
+some dialogue/quest outcomes feed one or the other. Walk through the gap in the town's east wall to travel
 (`GameFlow.travel()`) to `world/test_room.tscn`, the original field-room vertical slice — Iris
 Illepah (E to talk) is there unchanged, her choices still spend the Soul Meter and write the
 ledger live. GLoot-based grid inventory is fully integrated into GameState and wired to the UI
@@ -59,7 +62,10 @@ question (gamepad-at-ship).
   must emit `party_changed` itself). `globals/reputation.gd` (`Reputation`, separate autoload)
   — the append-only consequence ledger: `record(actor, faction, delta, cause, scene)` is the
   ONLY write path; `standing()`/`band()`/`why()` are derived reads. See
-  `globals/reputation_event.gd`.
+  `globals/reputation_event.gd`. `globals/renown.gd` (`Renown`, separate autoload) — the
+  second, faction-independent consequence ledger (global reputation + infamy, not per-faction
+  standing and not the Soul Gauge): `gain_reputation()`/`gain_infamy()` are the only write
+  paths; `reputation()`/`infamy()`/`why(kind)` are derived reads.
 - **UI:** `ui/ui_manager.gd` (`UIManager`, mechanism-only screen stack) + `ui/screens/*`
   (Screen base + main_menu/pause/inventory/party/settings/tavern) + `ui/hud/` (`SoulGauge`,
   `field_hud.tscn`) + `ui/dialogue/` (`SMPortrait`, `SMDialogueChoice`, the Echo Gate

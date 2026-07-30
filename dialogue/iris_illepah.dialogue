@@ -11,6 +11,7 @@ Iris Illepah: Ask, then. The light is long and the sweeping is done.
 - "This grove is unregistered. That will be recorded." [#tag=REGISTRY] [#consequence=The Ledger will hold your name.]
 	do Reputation.record("player", "ssae-seeders", -6.0, "Threatened the grove with a Registry writ", "field")
 	do Reputation.record("player", "the-registry", 4.0, "Reported an unregistered grove", "field")
+	do Renown.gain_infamy("player", 5.0, "Threatened a grove-tender with the Registry's writ", "field")
 	Iris Illepah: Then record it. The Loam keeps a longer ledger than Rennen, and it forgives less.
 	=> hub
 - "Show me what the Loam remembers." [#tag=COMMUNION] [#cost=-6 soul] [#consequence=Some of you stays in the Loam.]
@@ -31,6 +32,7 @@ Iris Illepah: Ask, then. The light is long and the sweeping is done.
 	=> hub
 - "I have the loamroot sprigs." [#tag=SSAE-SEEDERS] [#consequence=Brought the Loam what it asked for.] [if QuestRegistry.is_active(QuestRegistry.LOAMROOT_SPRIGS) and QuestRegistry.LOAMROOT_SPRIGS.objective_completed /]
 	do QuestRegistry.turn_in(QuestRegistry.LOAMROOT_SPRIGS)
+	do Renown.gain_reputation("player", 5.0, "Returned lost loamroot sprigs to the grove", "field")
 	Iris Illepah: Good hands. The grove will remember these came back to it, not just away from it.
 	=> hub
 - "I should go."

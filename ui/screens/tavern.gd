@@ -15,9 +15,14 @@ var _hint_lbl: Label
 func _build() -> void:
 	var vbox := _make_window("The Four Arms — Choose Your Party", Vector2(640, 560))
 
+	var renown_lbl := Label.new()
+	renown_lbl.text = "Renown %d  •  Infamy %d" % [roundi(Renown.reputation()), roundi(Renown.infamy())]
+	vbox.add_child(renown_lbl)
+
 	var hint := Label.new()
-	hint.text = "Pick up to %d to set out with." % MAX_PARTY_SIZE
+	hint.text = "Pick up to %d to set out with. Some of Dom's own won't run with a nobody — or with someone too clean." % MAX_PARTY_SIZE
 	hint.modulate = Color(1, 1, 1, 0.6)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(hint)
 
 	var scroll := ScrollContainer.new()
@@ -48,12 +53,17 @@ func _build_row(member: PartyMember) -> Control:
 	row.add_theme_constant_override("separation", 12)
 
 	var check := CheckBox.new()
+	var lock_reason := _lock_reason(member)
+	if not lock_reason.is_empty():
+		check.disabled = true
 	check.toggled.connect(_on_toggled.bind(check))
 	_checks.append(check)
 	row.add_child(check)
 
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if not lock_reason.is_empty():
+		info.modulate = Color(1, 1, 1, 0.5)
 	row.add_child(info)
 
 	var name_lbl := Label.new()
@@ -66,11 +76,23 @@ func _build_row(member: PartyMember) -> Control:
 	info.add_child(sub_lbl)
 
 	var bio_lbl := Label.new()
-	bio_lbl.text = member.bio
+	bio_lbl.text = lock_reason if not lock_reason.is_empty() else member.bio
 	bio_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_child(bio_lbl)
 
 	return row
+
+
+## Empty means recruitable right now. Non-empty replaces the bio with why not,
+## same spirit as Reputation's "say what the world will remember" cause text.
+func _lock_reason(member: PartyMember) -> String:
+	if member.min_reputation > Renown.reputation():
+		return "Won't talk to you yet — needs Renown %d (you have %d)." % [
+			roundi(member.min_reputation), roundi(Renown.reputation())]
+	if member.min_infamy > Renown.infamy():
+		return "Doesn't trust anyone this clean — needs Infamy %d (you have %d)." % [
+			roundi(member.min_infamy), roundi(Renown.infamy())]
+	return ""
 
 
 func _on_toggled(pressed: bool, check: CheckBox) -> void:
