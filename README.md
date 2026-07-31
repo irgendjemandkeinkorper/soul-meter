@@ -29,7 +29,7 @@ project uses the Compatibility renderer and a 1280×720 reference viewport.
 Run all automated tests:
 
 ```bash
-GODOT_BIN=~/.local/bin/godot bash addons/gdUnit4/runtest.sh -a test
+GODOT_BIN=~/.local/bin/godot bash scripts/test.sh
 ```
 
 Run the external-playtest checklist in
@@ -68,4 +68,5 @@ Pandora is canonical game data; `data/generated/` is regenerated, never hand-edi
 flow routes through the State Chart and `GameFlow`. The isometric graybox uses a project-owned
 64×32 blockout atlas; character/UI sprites and sounds are CC0 Kenney assets. See
 [`DEPENDENCIES.md`](DEPENDENCIES.md), [`assets/kenney/ATTRIBUTION.md`](assets/kenney/ATTRIBUTION.md),
-and [`design/DESIGN_SYSTEM.md`](design/DESIGN_SYSTEM.md).
+[`design/DESIGN_PILLARS.md`](design/DESIGN_PILLARS.md), and
+[`design/DESIGN_SYSTEM.md`](design/DESIGN_SYSTEM.md).

@@ -1,7 +1,7 @@
 class_name BattleResult
 extends Resource
-## Typed handoff from combat to the field/UI. `outcome_id` distinguishes the
-## Bloodbellow's three valid resolutions without teaching callers combat rules.
+## Typed handoff from combat to the field/UI. `outcome_id` distinguishes a
+## victory, defeat, or retreat without teaching callers combat rules.
 
 enum State { VICTORY, DEFEAT, FLED }
 

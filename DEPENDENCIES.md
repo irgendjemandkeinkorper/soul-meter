@@ -21,7 +21,7 @@ clean on 4.7.1 headless, Linux).
 | Juicee | `eb66d35` | github.com/Kelpekk/Juicee | Game-feel FX; `Juicee` autoload. |
 | SmartShape2D | `b52ea53` (ss2d 3.3.1) | github.com/SirRamEsq/SmartShape2D | 2D organic terrain authoring. |
 | PixelPen | v1.1.4 release | github.com/pixelpen-dev/pixelpen | Pixel-art authoring. **Parked with a `.gdignore` on Linux/WSL (prebuilt .so needs glibc ≥2.38). On Windows: delete `addons/net.yarvis.pixel_pen/.gdignore` and re-enable the plugin.** |
-| gdUnit4 | `v6.1.3` (`1579130`) | github.com/godot-gdunit-labs/gdUnit4 | Test framework — see `docs/testing.md`. Requires Godot 4.5+; editor plugin only (no autoload). Run via `GODOT_BIN=~/.local/bin/godot bash addons/gdUnit4/runtest.sh -a test`. |
+| gdUnit4 | `v6.1.3` (`1579130`) | github.com/godot-gdunit-labs/gdUnit4 | Test framework — see `docs/testing.md`. Requires Godot 4.5+; editor plugin only (no autoload). Run via `GODOT_BIN=~/.local/bin/godot bash scripts/test.sh`. |
 
 ## Pending / deferred
 

@@ -79,7 +79,9 @@ func _bind_quest(quest: Quest, label: Label) -> void:
 
 
 func _refresh_objective(label: Label) -> void:
-	label.text = "%s  —  %s" % [ChapterOneProgress.title(), ChapterOneProgress.objective()]
+	label.text = "NEXT OBJECTIVE  ·  %s  —  %s" % [
+		ChapterOneProgress.title(), ChapterOneProgress.objective()
+	]
 
 
 func _refresh_party(label: Label) -> void:

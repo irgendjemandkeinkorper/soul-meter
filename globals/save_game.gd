@@ -35,21 +35,23 @@ func save() -> bool:
 	var temp_path := ProjectSettings.globalize_path(TEMP_PATH)
 	var save_path := ProjectSettings.globalize_path(SAVE_PATH)
 	var backup_path := ProjectSettings.globalize_path(BACKUP_PATH)
-	if FileAccess.file_exists(BACKUP_PATH):
-		DirAccess.remove_absolute(backup_path)
+	var moved_previous_save := false
 	if FileAccess.file_exists(SAVE_PATH):
+		# Keep the last known-good payload around after a successful save. The
+		# next save replaces this backup only after the current save is moved.
+		if FileAccess.file_exists(BACKUP_PATH):
+			DirAccess.remove_absolute(backup_path)
 		var backup_err := DirAccess.rename_absolute(save_path, backup_path)
 		if backup_err != OK:
 			DirAccess.remove_absolute(temp_path)
 			return _fail("Could not protect the previous save before writing.")
+		moved_previous_save = true
 	var err := DirAccess.rename_absolute(temp_path, save_path)
 	if err != OK:
 		DirAccess.remove_absolute(temp_path)
-		if FileAccess.file_exists(BACKUP_PATH):
+		if moved_previous_save and FileAccess.file_exists(BACKUP_PATH):
 			DirAccess.rename_absolute(backup_path, save_path)
 		return _fail("Could not finish writing the save file.")
-	if FileAccess.file_exists(BACKUP_PATH):
-		DirAccess.remove_absolute(backup_path)
 	saved.emit()
 	return true
 
@@ -76,13 +78,17 @@ func elapsed_seconds() -> int:
 
 
 func load_save() -> bool:
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file == null:
-		return _fail("No readable save file was found.")
-	var payload: Variant = file.get_var()
-	file.close()
+	var source_path := SAVE_PATH
+	var payload: Variant = _read_payload(source_path)
 	if not validate_payload(payload):
-		return _fail("This save file uses an unsupported format.")
+		# A save is intentionally recoverable: a failed write or interrupted
+		# replacement should fall back to the persistent last-known-good copy.
+		source_path = BACKUP_PATH
+		payload = _read_payload(source_path)
+	if not validate_payload(payload):
+		return _fail("No readable, supported save file was found.")
+	if source_path == BACKUP_PATH:
+		push_warning("Primary save was invalid; loading the backup save instead.")
 	var game_state_backup := GameState.to_dict()
 	var reputation_backup := Reputation.to_dict()
 	var renown_backup := Renown.to_dict()
@@ -186,6 +192,15 @@ func _fail(message: String) -> bool:
 	push_warning(message)
 	save_failed.emit(message)
 	return false
+
+
+func _read_payload(path: String) -> Variant:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return null
+	var payload: Variant = file.get_var()
+	file.close()
+	return payload
 
 
 func _in_gameplay_scene() -> bool:

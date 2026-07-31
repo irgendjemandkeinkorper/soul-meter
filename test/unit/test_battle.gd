@@ -94,6 +94,25 @@ func test_flee_commits_combat_hp_to_party() -> void:
 
 	assert_int(GameState.party[0].hp).is_equal(battle.allies[0].hp)
 	assert_int(GameState.party[0].hp).is_less(20)
+	assert_str(battle.last_result.outcome_id).is_equal("fled")
+	assert_str(battle.last_result.cause).contains("withdraw")
+	assert_float(Reputation.standing("ssae-seeders")).is_equal_approx(0.0, 0.001)
+
+
+func test_defeat_records_authored_loss_consequence_once() -> void:
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.DEFEAT, BattleScript.OUTCOME_DEFEAT)
+
+	assert_str(battle.last_result.outcome_id).is_equal("defeat")
+	assert_str(battle.last_result.cause).contains("still haunts")
+	assert_float(Reputation.standing("ssae-seeders")).is_equal_approx(-3.0, 0.001)
+	assert_str(GameState.get_flag("encounter_bog_wight_outcome")).is_equal("defeat")
+	assert_bool(GameState.get_flag("encounter_bog_wight_defeat_consequence")).is_true()
+
+	# A retry can still happen, but the authored loss must not compound forever.
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.DEFEAT, BattleScript.OUTCOME_DEFEAT)
+	assert_float(Reputation.standing("ssae-seeders")).is_equal_approx(-3.0, 0.001)
 
 
 func test_player_can_select_between_multiple_living_enemies() -> void:

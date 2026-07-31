@@ -44,3 +44,9 @@ func test_format_two_is_an_intentional_clean_break() -> void:
 
 func test_named_spawn_ids_map_to_scene_marker_names() -> void:
 	assert_str(saves._pascal_case("from_dorthkor")).is_equal("FromDorthkor")
+
+
+func test_invalid_primary_payload_can_be_rejected_before_fallback() -> void:
+	var invalid := {"version": SaveGameScript.FORMAT_VERSION, "scene": "user://broken"}
+	assert_bool(saves.validate_payload(invalid)).is_false()
+	assert_object(saves._read_payload("user://file-that-does-not-exist.save")).is_null()

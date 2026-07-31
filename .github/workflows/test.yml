@@ -32,7 +32,7 @@ jobs:
           fi
 
       - name: Run gdUnit4 suite
-        run: xvfb-run -a godot --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd -a test
+        run: GODOT_BIN=godot bash scripts/test.sh -a test
 
   package-windows:
     needs: test

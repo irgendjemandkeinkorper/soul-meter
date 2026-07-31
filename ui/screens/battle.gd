@@ -130,6 +130,8 @@ func _on_battle_ended(result: BattleResult) -> void:
 	_refresh()
 	_actions_box.visible = false
 	_log_lbl.text = result.message
+	if not result.cause.is_empty():
+		_log_lbl.text += "\n" + result.cause
 	_sfx.stream = load("res://assets/kenney/ui/ui-pack/Sounds/switch-b.ogg")
 	_sfx.play()
 	_outcome_box.visible = true

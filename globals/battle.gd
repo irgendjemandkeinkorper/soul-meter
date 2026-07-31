@@ -17,6 +17,8 @@ const ACTION_GUARD := &"guard"
 const ACTION_STABILIZE := &"stabilize"
 const ACTION_DEFINITION := &"definition"
 const ACTION_PARADOX := &"paradox"
+const OUTCOME_DEFEAT := &"defeat"
+const OUTCOME_FLED := &"fled"
 
 var allies: Array[BattleActor] = []
 var enemies: Array[BattleActor] = []
@@ -171,7 +173,7 @@ func player_defend() -> void:
 func flee() -> void:
 	if not ended:
 		last_message = "The party disengages. Current wounds are preserved."
-		_finish(BattleResult.State.FLED, &"fled")
+		_finish(BattleResult.State.FLED, OUTCOME_FLED)
 
 
 func current_ally() -> BattleActor:
@@ -266,12 +268,17 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 	result.state = state
 	result.encounter_id = encounter_id
 	result.outcome_id = outcome_id
+	_record_last_outcome(result)
 	if state == BattleResult.State.VICTORY:
 		_apply_victory(result)
 	elif state == BattleResult.State.DEFEAT:
 		result.message = "The company falls back and recovers to half strength."
+		result.cause = _loss_cause()
+		_apply_loss_consequence(result)
 	else:
 		result.message = "The company disengages without reward or resolution."
+		result.cause = _flee_cause()
+		SaveGame.request_autosave("encounter-" + String(encounter_id) + "-fled")
 	last_result = result
 	battle_ended.emit(result)
 
@@ -302,6 +309,61 @@ func _apply_victory(result: BattleResult) -> void:
 		"player", float(outcome.get("renown", 3.0)), "Won a field encounter", "field"
 	)
 	SaveGame.request_autosave("encounter-" + String(encounter_id) + "-" + String(result.outcome_id))
+
+
+func _apply_loss_consequence(result: BattleResult) -> void:
+	var consequence_flag := _consequence_flag(result.outcome_id)
+	if not consequence_flag.is_empty() and bool(GameState.get_flag(consequence_flag)):
+		return
+	if not consequence_flag.is_empty():
+		GameState.set_flag(consequence_flag, true)
+
+	var faction := ""
+	var delta := 0.0
+	if not enemies.is_empty():
+		faction = enemies[0].loss_faction
+		delta = enemies[0].loss_delta
+	if not faction.is_empty():
+		Reputation.record("player", faction, delta, result.cause, "field")
+	SaveGame.request_autosave("encounter-" + String(encounter_id) + "-defeat")
+
+
+func _record_last_outcome(result: BattleResult) -> void:
+	var outcome_flag := _outcome_flag()
+	if not outcome_flag.is_empty():
+		GameState.set_flag(outcome_flag, String(result.outcome_id))
+
+
+func _loss_cause() -> String:
+	var configured := str(_definition.get("loss_cause", ""))
+	if not configured.is_empty():
+		return configured
+	if not enemies.is_empty() and not enemies[0].loss_cause.is_empty():
+		return enemies[0].loss_cause
+	return "The company was driven back by the opposition."
+
+
+func _flee_cause() -> String:
+	var outcome := EncounterCatalog.outcome(encounter_id, OUTCOME_FLED)
+	var configured := str(outcome.get("cause", ""))
+	if not configured.is_empty():
+		return configured
+	return "The company chose to preserve its strength and withdraw."
+
+
+func _outcome_flag() -> String:
+	if encounter_id.is_empty():
+		return ""
+	return "encounter_" + String(encounter_id).replace("-", "_") + "_outcome"
+
+
+func _consequence_flag(outcome_id: StringName) -> String:
+	if encounter_id.is_empty():
+		return ""
+	return (
+		"encounter_" + String(encounter_id).replace("-", "_") + "_"
+		+ String(outcome_id) + "_consequence"
+	)
 
 
 func _sync_party_hp() -> void:

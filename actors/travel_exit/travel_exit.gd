@@ -39,7 +39,7 @@ func _on_body_entered(body: Node2D) -> void:
 		if _is_unlocked():
 			GameFlow.travel(target_scene, spawn_id)
 		else:
-			_label.text = locked_message
+			_label.text = _locked_prompt()
 
 
 func _on_flag_changed(flag: String, _value: Variant) -> void:
@@ -49,7 +49,7 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 
 func _refresh_lock() -> void:
 	var unlocked := _is_unlocked()
-	_label.text = label_text if unlocked else "LOCKED — " + label_text
+	_label.text = label_text if unlocked else _locked_prompt()
 	modulate = Color.WHITE if unlocked else Color(0.65, 0.65, 0.65, 1.0)
 	monitoring = true
 	monitorable = true
@@ -57,3 +57,7 @@ func _refresh_lock() -> void:
 
 func _is_unlocked() -> bool:
 	return required_flag.is_empty() or bool(GameState.get_flag(required_flag))
+
+
+func _locked_prompt() -> String:
+	return "LOCKED — " + locked_message

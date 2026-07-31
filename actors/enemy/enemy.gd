@@ -60,7 +60,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _player_in_range and event.is_action_pressed("interact") and not get_tree().paused:
 		get_viewport().set_input_as_handled()
 		if not _is_unlocked():
-			_prompt.text = locked_message
+			_prompt.text = _locked_prompt()
 			return
 		Battle.battle_ended.connect(_on_battle_ended, CONNECT_ONE_SHOT)
 		Battle.start(encounter_id)
@@ -84,13 +84,17 @@ func _refresh_lock() -> void:
 		EncounterCatalog.definition(encounter_id).get("display_name", "FIGHT")
 	)
 	_prompt.text = (
-		"E — " + encounter_name.to_upper() if _is_unlocked() else "LOCKED — " + locked_message
+		"E — " + encounter_name.to_upper() if _is_unlocked() else _locked_prompt()
 	)
 	modulate = Color.WHITE if _is_unlocked() else Color(0.6, 0.6, 0.6, 1.0)
 
 
 func _is_unlocked() -> bool:
 	return required_flag.is_empty() or bool(GameState.get_flag(required_flag))
+
+
+func _locked_prompt() -> String:
+	return "LOCKED — " + locked_message
 
 
 func _apply_visual_identity() -> void:

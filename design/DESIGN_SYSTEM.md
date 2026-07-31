@@ -4,6 +4,9 @@
 (https://claude.ai/design/p/241acfb5-f8a3-4283-89c2-d5090b297c43) — synced via the
 claude_design MCP on 2026-07-26. Keep it front of mind for every menu, screen, and entity.
 
+The project-level gameplay review sheet is [`DESIGN_PILLARS.md`](DESIGN_PILLARS.md). Use it
+alongside these visual tokens when deciding whether a feature belongs in Soul Meter.
+
 **In this repo:**
 - `design/tokens/*.css` — the 9 token files, vendored **verbatim**. The DS wins; re-sync
   rather than hand-edit.
