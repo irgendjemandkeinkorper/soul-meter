@@ -40,7 +40,15 @@ func _build() -> void:
 	scroll.add_child(list_box)
 
 	_candidates = GameState.recruitable_candidates()
+	var last_class := ""
 	for member in _candidates:
+		if member.char_class != last_class:
+			last_class = member.char_class
+			if list_box.get_child_count() > 0:
+				var sep := HSeparator.new()
+				list_box.add_child(sep)
+			var heading := _section(last_class)
+			list_box.add_child(heading)
 		list_box.add_child(_build_row(member))
 		if GameState.has_party_member(member.display_name):
 			_checks.back().set_pressed_no_signal(true)
@@ -54,13 +62,21 @@ func _build() -> void:
 	_update_hint()
 
 	_add_back_button(vbox, "Leave without choosing")
+	var back_btn := vbox.get_child(-1) as Button
+	if back_btn:
+		back_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 
 func _build_row(member: PartyMember) -> Control:
+	var margin_container := MarginContainer.new()
+	margin_container.add_theme_constant_override("margin_left", 16)
+
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
+	margin_container.add_child(row)
 
 	var check := CheckBox.new()
+	check.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	var lock_reason := _lock_reason(member)
 	if not lock_reason.is_empty():
 		check.disabled = true
@@ -80,9 +96,7 @@ func _build_row(member: PartyMember) -> Control:
 
 	var sub_lbl := Label.new()
 	sub_lbl.modulate = Color(1, 1, 1, 0.6)
-	sub_lbl.text = (
-		"%s  •  %s  •  HP %d/%d" % [member.race, member.char_class, member.hp, member.max_hp]
-	)
+	sub_lbl.text = format_recruit_subtext(member.race, member.char_class, member.hp, member.max_hp)
 	info.add_child(sub_lbl)
 
 	var bio_lbl := Label.new()
@@ -90,23 +104,27 @@ func _build_row(member: PartyMember) -> Control:
 	bio_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_child(bio_lbl)
 
-	return row
+	return margin_container
+
+
+static func format_recruit_subtext(race: String, char_class: String, hp: int, max_hp: int) -> String:
+	return "%s  •  %s  •  HP %d/%d" % [race, char_class, hp, max_hp]
+
+
+static func get_lock_reason_text(min_rep: float, current_rep: float, min_infamy: float, current_infamy: float) -> String:
+	if min_rep > current_rep:
+		return "Won't talk to you yet — needs Renown %d (you have %d)." % [
+			roundi(min_rep), roundi(current_rep)]
+	if min_infamy > current_infamy:
+		return "Doesn't trust anyone this clean — needs Infamy %d (you have %d)." % [
+			roundi(min_infamy), roundi(current_infamy)]
+	return ""
 
 
 ## Empty means recruitable right now. Non-empty replaces the bio with why not,
 ## same spirit as Reputation's "say what the world will remember" cause text.
 func _lock_reason(member: PartyMember) -> String:
-	if member.min_reputation > Renown.reputation():
-		return (
-			"Won't talk to you yet — needs Renown %d (you have %d)."
-			% [roundi(member.min_reputation), roundi(Renown.reputation())]
-		)
-	if member.min_infamy > Renown.infamy():
-		return (
-			"Doesn't trust anyone this clean — needs Infamy %d (you have %d)."
-			% [roundi(member.min_infamy), roundi(Renown.infamy())]
-		)
-	return ""
+	return get_lock_reason_text(member.min_reputation, Renown.reputation(), member.min_infamy, Renown.infamy())
 
 
 func _on_toggled(pressed: bool, check: CheckBox) -> void:

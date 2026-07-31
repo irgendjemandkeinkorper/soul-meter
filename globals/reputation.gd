@@ -25,6 +25,8 @@ var _log: Array[ReputationEvent] = []
 var _next_order: int = 0
 ## Derived cache: faction -> standing. Rebuilt from the log; never authoritative.
 var _standings: Dictionary = {}
+## Derived cache: faction -> array of events. Speeds up why() and events_for().
+var _events_by_faction: Dictionary = {}
 
 
 # --- the single append API ----------------------------------------------------
@@ -42,7 +44,13 @@ func record(actor: String, faction: String, delta: float, cause: String, scene: 
 	e.order = _next_order
 	_next_order += 1
 	_log.append(e)
-	_standings[faction] = _derive(events_for(faction))
+
+	if not _events_by_faction.has(faction):
+		_events_by_faction[faction] = [] as Array[ReputationEvent]
+	var faction_events: Array[ReputationEvent] = _events_by_faction[faction]
+	faction_events.append(e)
+
+	_standings[faction] = _derive(faction_events)
 	reputation_changed.emit(faction, _standings[faction], e)
 	return e
 
@@ -74,17 +82,18 @@ func all_standings() -> Dictionary:
 
 ## The query the whole design exists for: the most recent reasons, newest first.
 func why(faction: String, limit: int = 5) -> Array[ReputationEvent]:
-	var events := events_for(faction)
-	events.reverse()
-	return events.slice(0, limit)
+	var events: Array[ReputationEvent] = _events_by_faction.get(faction, [] as Array[ReputationEvent])
+	var out: Array[ReputationEvent] = []
+	var total := events.size()
+	var count := mini(limit, total)
+	for i in range(count):
+		out.append(events[total - 1 - i])
+	return out
 
 
 func events_for(faction: String) -> Array[ReputationEvent]:
-	var out: Array[ReputationEvent] = []
-	for e in _log:
-		if e.faction == faction:
-			out.append(e)
-	return out
+	var events: Array[ReputationEvent] = _events_by_faction.get(faction, [] as Array[ReputationEvent])
+	return events.duplicate()
 
 
 func event_count() -> int:
@@ -115,6 +124,7 @@ func to_dict() -> Dictionary:
 func from_dict(d: Dictionary) -> void:
 	_log.clear()
 	_standings.clear()
+	_events_by_faction.clear()
 	for row in d.get("log", []):
 		_log.append(ReputationEvent.from_dict(row))
 	_next_order = int(d.get("next_order", _log.size()))
@@ -123,11 +133,13 @@ func from_dict(d: Dictionary) -> void:
 
 func _rebuild() -> void:
 	_standings.clear()
-	var by_faction: Dictionary = {}
+	_events_by_faction.clear()
 	for e in _log:
-		by_faction.get_or_add(e.faction, [] as Array[ReputationEvent]).append(e)
-	for faction in by_faction:
-		_standings[faction] = _derive(by_faction[faction])
+		if not _events_by_faction.has(e.faction):
+			_events_by_faction[e.faction] = [] as Array[ReputationEvent]
+		_events_by_faction[e.faction].append(e)
+	for faction in _events_by_faction:
+		_standings[faction] = _derive(_events_by_faction[faction])
 
 
 func _current_scene_id() -> String:

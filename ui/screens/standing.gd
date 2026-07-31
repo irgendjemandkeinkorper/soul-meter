@@ -7,7 +7,66 @@ var _history_vbox: VBoxContainer
 var _factions: Array[String] = []
 
 func _build() -> void:
-	var vbox := _make_window("Standing", Vector2(720, 480))
+	# Increased default window height to 540 to accommodate global overview cleanly
+	var vbox := _make_window("Standing", Vector2(720, 540))
+
+	# Global overview section
+	var global_row := HBoxContainer.new()
+	global_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	global_row.add_theme_constant_override("separation", 16)
+	vbox.add_child(global_row)
+
+	# Column 1: Global Renown
+	var renown_vbox := VBoxContainer.new()
+	renown_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	global_row.add_child(renown_vbox)
+
+	var renown_title := Label.new()
+	renown_title.text = "Global Renown: %s" % str(Renown.reputation())
+	renown_title.theme_type_variation = "HeadingLabel"
+	renown_title.modulate = DS.GILD_2
+	renown_vbox.add_child(renown_title)
+
+	var renown_events := Renown.why(&"reputation", 2)
+	if renown_events.is_empty():
+		var empty_lbl := Label.new()
+		empty_lbl.text = "(No Renown accumulated yet)"
+		empty_lbl.modulate = DS.ASH
+		renown_vbox.add_child(empty_lbl)
+	else:
+		for e in renown_events:
+			var event_lbl := Label.new()
+			event_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			event_lbl.text = format_renown_event(e)
+			event_lbl.modulate = DS.STATE_CONSTANT
+			renown_vbox.add_child(event_lbl)
+
+	# Column 2: Global Infamy
+	var infamy_vbox := VBoxContainer.new()
+	infamy_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	global_row.add_child(infamy_vbox)
+
+	var infamy_title := Label.new()
+	infamy_title.text = "Global Infamy: %s" % str(Renown.infamy())
+	infamy_title.theme_type_variation = "HeadingLabel"
+	infamy_title.modulate = DS.CINDER_3
+	infamy_vbox.add_child(infamy_title)
+
+	var infamy_events := Renown.why(&"infamy", 2)
+	if infamy_events.is_empty():
+		var empty_lbl := Label.new()
+		empty_lbl.text = "(No Infamy accumulated yet)"
+		empty_lbl.modulate = DS.ASH
+		infamy_vbox.add_child(empty_lbl)
+	else:
+		for e in infamy_events:
+			var event_lbl := Label.new()
+			event_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			event_lbl.text = format_renown_event(e)
+			event_lbl.modulate = DS.CINDER_3
+			infamy_vbox.add_child(event_lbl)
+
+	vbox.add_child(HSeparator.new())
 
 	var row := HBoxContainer.new()
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -59,6 +118,11 @@ func _build() -> void:
 		_on_selected(0)
 	else:
 		_name_lbl.text = "(No reputation changes yet)"
+		_band_lbl.text = ""
+		var empty_lbl := Label.new()
+		empty_lbl.text = "(No faction events yet)"
+		empty_lbl.modulate = DS.ASH
+		_history_vbox.add_child(empty_lbl)
 
 	_add_back_button(vbox)
 
@@ -87,21 +151,31 @@ func _on_selected(idx: int) -> void:
 		child.queue_free()
 
 	var events: Array[ReputationEvent] = Reputation.why(faction)
-	for event in events:
-		var event_lbl := Label.new()
-		event_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		event_lbl.text = format_event(event)
+	if events.is_empty():
+		var empty_lbl := Label.new()
+		empty_lbl.text = "(No faction events yet)"
+		empty_lbl.modulate = DS.ASH
+		_history_vbox.add_child(empty_lbl)
+	else:
+		for event in events:
+			var event_lbl := Label.new()
+			event_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			event_lbl.text = format_event(event)
 
-		# Color coding the delta
-		if event.delta > 0:
-			event_lbl.modulate = DS.STATE_CONSTANT
-		elif event.delta < 0:
-			event_lbl.modulate = DS.CINDER_3
-		else:
-			event_lbl.modulate = DS.ASH
+			# Color coding the delta
+			if event.delta > 0:
+				event_lbl.modulate = DS.STATE_CONSTANT
+			elif event.delta < 0:
+				event_lbl.modulate = DS.CINDER_3
+			else:
+				event_lbl.modulate = DS.ASH
 
-		_history_vbox.add_child(event_lbl)
+			_history_vbox.add_child(event_lbl)
 
 static func format_event(e: ReputationEvent) -> String:
+	var sign_str := "+" if e.delta > 0 else ""
+	return "%s%s: %s" % [sign_str, str(e.delta), e.cause]
+
+static func format_renown_event(e: RenownEvent) -> String:
 	var sign_str := "+" if e.delta > 0 else ""
 	return "%s%s: %s" % [sign_str, str(e.delta), e.cause]

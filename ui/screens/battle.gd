@@ -14,7 +14,6 @@ var _action_buttons: Array[Button] = []
 var _action_labels: PackedStringArray = []
 var _sfx: AudioStreamPlayer
 
-
 func _build() -> void:
 	var vbox := _make_window("Battle", Vector2(680, 560))
 	var help := Label.new()
@@ -135,3 +134,64 @@ func _on_battle_ended(result: BattleResult) -> void:
 	_sfx.play()
 	_outcome_box.visible = true
 	_menu_button(_outcome_box, "Continue", func() -> void: GameFlow.send_event("battle_end"))
+
+
+static func format_attack(
+	player_name: String,
+	enemy_name: String,
+	enemy_hp_before: int,
+	enemy_hp_after: int,
+	enemy_max_hp: int,
+	player_hp_before: int,
+	player_hp_after: int,
+	player_max_hp: int
+) -> String:
+	var dmg_to_enemy := enemy_hp_before - enemy_hp_after
+	var lines: Array[String] = []
+
+	lines.append("%s attacks %s, dealing %d damage (%s HP: %d/%d)." % [
+		player_name, enemy_name, dmg_to_enemy, enemy_name, enemy_hp_after, enemy_max_hp
+	])
+
+	if enemy_hp_after <= 0:
+		lines.append("%s is defeated." % enemy_name)
+	else:
+		var dmg_to_player := player_hp_before - player_hp_after
+		lines.append("%s counterattacks, dealing %d damage (%s HP: %d/%d)." % [
+			enemy_name, dmg_to_player, player_name, player_hp_after, player_max_hp
+		])
+		if player_hp_after <= 0:
+			lines.append("%s falls. The fight is over." % player_name)
+
+	return "\n".join(lines)
+
+
+static func format_defend(
+	player_name: String,
+	enemy_name: String,
+	player_hp_before: int,
+	player_hp_after: int,
+	player_max_hp: int,
+	enemy_attack: int,
+	player_defense: int
+) -> String:
+	var dmg_taken := player_hp_before - player_hp_after
+	var unmitigated := maxi(1, enemy_attack - player_defense)
+	var mitigated_amount := unmitigated - dmg_taken
+
+	var lines: Array[String] = []
+	lines.append("%s braces! Mitigates incoming damage from %s." % [player_name, enemy_name])
+
+	if mitigated_amount > 0:
+		lines.append("%s takes %d damage (blocked %d) (%s HP: %d/%d)." % [
+			player_name, dmg_taken, mitigated_amount, player_name, player_hp_after, player_max_hp
+		])
+	else:
+		lines.append("%s takes %d damage (mitigated to minimum) (%s HP: %d/%d)." % [
+			player_name, dmg_taken, player_name, player_hp_after, player_max_hp
+		])
+
+	if player_hp_after <= 0:
+		lines.append("%s falls. The fight is over." % player_name)
+
+	return "\n".join(lines)
