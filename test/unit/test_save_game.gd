@@ -1,0 +1,46 @@
+extends GdUnitTestSuite
+
+const SaveGameScript := preload("res://globals/save_game.gd")
+var saves
+
+
+func before_test() -> void:
+	saves = auto_free(SaveGameScript.new())
+
+
+func test_validation_accepts_a_complete_current_payload() -> void:
+	var payload := {
+		"version": SaveGameScript.FORMAT_VERSION,
+		"scene": GameFlow.TOWN_SCENE,
+		"game_state": {},
+		"reputation": {},
+		"renown": {},
+		"quests": {},
+	}
+	assert_bool(saves.validate_payload(payload)).is_true()
+
+
+func test_validation_rejects_unknown_versions_and_partial_payloads() -> void:
+	assert_bool(saves.validate_payload({"version": 999})).is_false()
+	assert_bool(saves.validate_payload({"version": 1})).is_false()
+	assert_bool(saves.validate_payload(null)).is_false()
+
+
+func test_validation_rejects_non_gameplay_scene_injection() -> void:
+	var payload := {
+		"version": SaveGameScript.FORMAT_VERSION,
+		"scene": "res://ui/screens/main_menu.tscn",
+		"game_state": {},
+		"reputation": {},
+		"renown": {},
+		"quests": {},
+	}
+	assert_bool(saves.validate_payload(payload)).is_false()
+
+
+func test_format_two_is_an_intentional_clean_break() -> void:
+	assert_int(SaveGameScript.FORMAT_VERSION).is_equal(2)
+
+
+func test_named_spawn_ids_map_to_scene_marker_names() -> void:
+	assert_str(saves._pascal_case("from_dorthkor")).is_equal("FromDorthkor")

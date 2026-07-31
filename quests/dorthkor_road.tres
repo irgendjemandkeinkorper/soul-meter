@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 2
+quest_name = "The Broken Muster"
+quest_description = "A demon breach has silenced Dorthkor Road. The Trial Council needs proof of what crossed the stones—and why the dead are mustering with it."
+quest_objective = "Reach Dorthkor Road."
+required_flags = PackedStringArray("chapter_dorthkor_reached", "defeated_breach_hound", "defeated_mustered_dead")
+objectives = PackedStringArray("Reach Dorthkor Road.", "Break the demon vanguard.", "Confront the soldier answering the dead muster.", "Return to Marshal Coiljaw in Dom.")

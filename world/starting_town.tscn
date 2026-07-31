@@ -1,9 +1,11 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" path="res://actors/tavern_door/tavern_door.tscn" id="3_tavern"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="4_exit"]
+[ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="5_npc"]
+[ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_iso"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1600, 40)
@@ -15,6 +17,7 @@ size = Vector2(40, 1000)
 size = Vector2(40, 390)
 
 [node name="StartingTown" type="Node2D"]
+y_sort_enabled = true
 ## Dom, the City of the Four Arms — a storm-port meritocracy and the first
 ## town the player starts in. See ui/screens/tavern.gd for the tavern's
 ## starting-party picker and actors/travel_exit for the road out to
@@ -24,24 +27,36 @@ size = Vector2(40, 390)
 offset_right = 1600.0
 offset_bottom = 1000.0
 color = Color(0.16, 0.15, 0.19, 1)
+z_index = -20
+
+[node name="IsometricGround" type="TileMapLayer" parent="."]
+position = Vector2(800, 70)
+script = ExtResource("6_iso")
+map_size = Vector2i(25, 25)
+ground_style = 0
+road_axis = 3
 
 [node name="WallTop" type="ColorRect" parent="."]
+visible = false
 offset_right = 1600.0
 offset_bottom = 40.0
 color = Color(0.32, 0.3, 0.38, 1)
 
 [node name="WallBottom" type="ColorRect" parent="."]
+visible = false
 offset_top = 960.0
 offset_right = 1600.0
 offset_bottom = 1000.0
 color = Color(0.32, 0.3, 0.38, 1)
 
 [node name="WallLeft" type="ColorRect" parent="."]
+visible = false
 offset_right = 40.0
 offset_bottom = 1000.0
 color = Color(0.32, 0.3, 0.38, 1)
 
 [node name="WallRightTop" type="ColorRect" parent="."]
+visible = false
 offset_left = 1560.0
 offset_top = 40.0
 offset_right = 1600.0
@@ -49,6 +64,7 @@ offset_bottom = 430.0
 color = Color(0.32, 0.3, 0.38, 1)
 
 [node name="WallRightBottom" type="ColorRect" parent="."]
+visible = false
 offset_left = 1560.0
 offset_top = 570.0
 offset_right = 1600.0
@@ -78,11 +94,21 @@ position = Vector2(1580, 765)
 shape = SubResource("shape_v_gapped")
 
 [node name="TrialHall" type="ColorRect" parent="."]
+visible = false
 offset_left = 1150.0
 offset_top = 120.0
 offset_right = 1450.0
 offset_bottom = 320.0
 color = Color(0.24, 0.26, 0.3, 1)
+
+[node name="TrialHallBlock" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(1150, 210, 1300, 125, 1450, 210, 1450, 315, 1300, 400, 1150, 315)
+color = Color(0.2, 0.22, 0.28, 1)
+
+[node name="TrialHallTrim" type="Line2D" parent="."]
+points = PackedVector2Array(1150, 210, 1300, 125, 1450, 210)
+width = 6.0
+default_color = Color(0.47, 0.35, 0.2, 1)
 
 [node name="TrialHallSign" type="Label" parent="."]
 offset_left = 1150.0
@@ -94,13 +120,50 @@ text = "TRIAL COUNCIL HALL"
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(700, 700)
+camera_bounds = Rect2i(0, 0, 1600, 1000)
+
+[node name="SpawnDefault" type="Marker2D" parent="."]
+position = Vector2(700, 700)
+
+[node name="SpawnNewGame" type="Marker2D" parent="."]
+position = Vector2(700, 700)
+
+[node name="SpawnFromDorthkor" type="Marker2D" parent="."]
+position = Vector2(1200, 150)
+
+[node name="SpawnFromWilds" type="Marker2D" parent="."]
+position = Vector2(1470, 500)
 
 [node name="FieldHUD" parent="." instance=ExtResource("2_hud")]
 
 [node name="TavernDoor" parent="." instance=ExtResource("3_tavern")]
 position = Vector2(700, 400)
 
+[node name="MarshalCoiljaw" parent="." instance=ExtResource("5_npc")]
+position = Vector2(1050, 420)
+npc_name = "Marshal Coiljaw"
+dialogue_path = "res://dialogue/marshal_coiljaw.dialogue"
+
 [node name="RoadToTheWilds" parent="." instance=ExtResource("4_exit")]
 position = Vector2(1580, 500)
 target_scene = "res://world/test_room.tscn"
 label_text = "TO THE WILDS"
+required_flag = "chapter_one_free_roam"
+locked_message = "The east road opens after Coiljaw's ruling."
+spawn_id = &"from_dom"
+
+[node name="NorthRoad" parent="." instance=ExtResource("4_exit")]
+position = Vector2(1200, 60)
+target_scene = "res://world/dorthkor_road.tscn"
+label_text = "DORTHKOR ROAD"
+required_flag = "chapter_dorthkor_commissioned"
+locked_message = "Marshal Coiljaw must issue the road commission."
+spawn_id = &"from_dom"
+
+[node name="WoundLip" parent="." instance=ExtResource("4_exit")]
+position = Vector2(400, 60)
+target_scene = "res://world/wound_lip.tscn"
+label_text = "TO THE JAWBRACE"
+required_flag = "deep_trial_open"
+locked_message = "The Jawbrace is outside this prototype path."
+spawn_id = &"from_dom"

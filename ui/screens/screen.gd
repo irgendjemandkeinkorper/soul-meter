@@ -6,6 +6,8 @@ extends Control
 ## Set by UIManager when this screen was opened by the state chart (e.g. the pause menu).
 ## Flow-owned screens close via a chart event, not a direct stack pop.
 var flow_owned := false
+var allow_back := true
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS

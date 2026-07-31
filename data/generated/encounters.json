@@ -1,0 +1,171 @@
+{
+  "bog-wight": {
+    "display_name": "Bog Wight",
+    "defeated_flag": "defeated_bog_wight",
+    "win_faction": "ssae-seeders",
+    "win_delta": 6.0,
+    "win_cause": "Cleared the Bog Wight from the grove margins",
+    "loss_faction": "ssae-seeders",
+    "loss_delta": -3.0,
+    "loss_cause": "The Bog Wight still haunts the grove's edge",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {},
+    "enemies": [
+      {
+        "id": "bog-wight",
+        "display_name": "Bog Wight",
+        "max_hp": 20,
+        "attack": 4,
+        "defense": 1,
+        "balance_affinity": 1,
+        "balance_pressure": 18
+      }
+    ]
+  },
+  "dorthkor-muster": {
+    "display_name": "Dorthkor Dead Muster",
+    "defeated_flag": "defeated_mustered_dead",
+    "win_faction": "ironbrand-sentinels",
+    "win_delta": 5.0,
+    "win_cause": "Stopped a dead soldier answering Dom's muster",
+    "loss_faction": "",
+    "loss_delta": 0.0,
+    "loss_cause": "",
+    "default_outcome": "slain",
+    "context_actions": [
+      {
+        "display_name": "Speak Its Muster-Name",
+        "id": "speak-muster-name",
+        "lock_reason": "Requires Order +50 and 3 Soul to break the binding.",
+        "maximum_balance": 100.0,
+        "minimum_balance": 50.0,
+        "minimum_enemy_rounds": 0.0,
+        "outcome_id": "named",
+        "soul_cost": 3.0
+      },
+      {
+        "display_name": "Release the Bound Soldier",
+        "id": "release-bound-soldier",
+        "lock_reason": "Survive one enemy round, then hold Balance between -20 and +20.",
+        "maximum_balance": 20.0,
+        "minimum_balance": -20.0,
+        "minimum_enemy_rounds": 1.0,
+        "outcome_id": "released",
+        "soul_cost": 0.0
+      }
+    ],
+    "outcomes": {
+      "named": {
+        "cause": "Broke the Bloodbellow binding by speaking its muster-name",
+        "delta": 5.0,
+        "faction": "ironbrand-sentinels",
+        "message": "Its muster-name answers. The binding splits and the armor empties."
+      },
+      "released": {
+        "cause": "Released the soldier bound inside the Bloodbellow muster",
+        "delta": 5.0,
+        "faction": "ironbrand-sentinels",
+        "message": "The held center opens a way out. The soldier's soul leaves the armor."
+      },
+      "slain": {
+        "cause": "Destroyed the Mustered Bloodbellow by force",
+        "delta": 5.0,
+        "faction": "ironbrand-sentinels",
+        "message": "The Bloodbellow falls, its borrowed cadence cut short."
+      }
+    },
+    "enemies": [
+      {
+        "id": "mustered-bloodbellow",
+        "display_name": "Mustered Bloodbellow",
+        "max_hp": 32,
+        "attack": 6,
+        "defense": 3,
+        "balance_affinity": 1,
+        "balance_pressure": 22
+      }
+    ]
+  },
+  "dorthkor-vanguard": {
+    "display_name": "Dorthkor Demon Vanguard",
+    "defeated_flag": "defeated_breach_hound",
+    "win_faction": "iron-companies",
+    "win_delta": 5.0,
+    "win_cause": "Broke the demon vanguard at Dorthkor",
+    "loss_faction": "",
+    "loss_delta": 0.0,
+    "loss_cause": "",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {},
+    "enemies": [
+      {
+        "id": "gnaal-breach-hound",
+        "display_name": "Gnaal Breach-Hound",
+        "max_hp": 28,
+        "attack": 7,
+        "defense": 1,
+        "balance_affinity": -1,
+        "balance_pressure": 22
+      },
+      {
+        "id": "gnaal-rift-scavenger",
+        "display_name": "Gnaal Rift-Scavenger",
+        "max_hp": 16,
+        "attack": 5,
+        "defense": 0,
+        "balance_affinity": -1,
+        "balance_pressure": 16
+      }
+    ]
+  },
+  "jawbrace-empty-post": {
+    "display_name": "The Empty Post",
+    "defeated_flag": "defeated_cleaned_jawbrace_guard",
+    "win_faction": "ironbrand-sentinels",
+    "win_delta": 6.0,
+    "win_cause": "Stopped the cleaned armor standing watch at the Jawbrace",
+    "loss_faction": "ironbrand-sentinels",
+    "loss_delta": -3.0,
+    "loss_cause": "The empty guard still holds the first gate",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {},
+    "enemies": [
+      {
+        "id": "cleaned-jawbrace-guard",
+        "display_name": "Cleaned Jawbrace Guard",
+        "max_hp": 36,
+        "attack": 7,
+        "defense": 4,
+        "balance_affinity": 1,
+        "balance_pressure": 24
+      }
+    ]
+  },
+  "loam-boar": {
+    "display_name": "Loam-Maddened Boar",
+    "defeated_flag": "defeated_loam_boar",
+    "win_faction": "ssae-seeders",
+    "win_delta": 5.0,
+    "win_cause": "Culled a Loam-maddened boar before it reached the grove",
+    "loss_faction": "ssae-seeders",
+    "loss_delta": -3.0,
+    "loss_cause": "A Loam-maddened boar broke loose near the grove",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {},
+    "enemies": [
+      {
+        "id": "loam-maddened-boar",
+        "display_name": "Loam-Maddened Boar",
+        "max_hp": 14,
+        "attack": 6,
+        "defense": 0,
+        "balance_affinity": -1,
+        "balance_pressure": 18
+      }
+    ]
+  }
+}

@@ -12,6 +12,7 @@ const INVENTORY := preload("res://ui/screens/inventory.tscn")
 const PARTY := preload("res://ui/screens/party.tscn")
 const STANDING := preload("res://ui/screens/standing.tscn")
 const TAVERN := preload("res://ui/screens/tavern.tscn")
+const JOURNAL := preload("res://ui/screens/journal.tscn")
 
 var ui_theme: Theme
 var _stack: Array[Control] = []
@@ -48,6 +49,8 @@ func back() -> void:
 	if _stack.is_empty():
 		return
 	if _stack.back().flow_owned:
+		if not _stack.back().allow_back:
+			return
 		GameFlow.send_event("resume")  # chart exit closes it via close_all()
 		return
 	var top: Control = _stack.pop_back()
@@ -84,6 +87,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("open_standing") and _in_gameplay() and not is_open():
 		open(STANDING, true)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("open_journal") and _in_gameplay() and not is_open():
+		open(JOURNAL, true)
 		get_viewport().set_input_as_handled()
 
 

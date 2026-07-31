@@ -125,9 +125,8 @@ frames (physics included) and must be `await`ed. `find_child(name, recursive, ow
 
 ### What isn't covered yet
 
-No CI wiring — running the suite is a manual step (`bash addons/gdUnit4/runtest.sh ...`) until
-a workflow is added. The GLoot generator's `SOUL_METER_DRIFT_CHECK=1` headless pattern
-(`DEPENDENCIES.md`) is the template to copy when that happens. Property-based tests over the
+CI imports with the pinned engine, runs the full suite, checks generated-data drift through
+the unit suite, and packages the Windows playtest artifact only after tests pass. Property-based tests over the
 reputation derivation and the (future) magic-system effect matrix — flagged as the reason
 testing was worth doing at all (`docs/godot-architecture.md`) — don't exist yet; write them
 once there's more than `_derive()`'s simple sum to get wrong.

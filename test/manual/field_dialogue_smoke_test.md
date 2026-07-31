@@ -1,7 +1,7 @@
 # Manual smoke test — field room + Iris Illepah dialogue
 
-Covers the currently-playable loop end to end: boot → menu → field → talk → reputation
-consequence. Run this after any change to `ui/flow/`, `actors/`, `ui/dialogue/`,
+Covers the post-chapter Loamroot free-roam loop: travel → talk → reputation consequence. Run
+this after any change to `ui/flow/`, `actors/`, `ui/dialogue/`,
 `globals/reputation.gd`, `globals/game_state.gd`, or `dialogue/iris_illepah.dialogue`.
 
 What this checklist does NOT try to cover: exact wording quality of the prose (that's a
@@ -17,7 +17,7 @@ automated suite disagree.
 | Do | Expect |
 |---|---|
 | Launch the project (editor Play, or the built binary) | Main menu appears, no console errors |
-| Select "New Game" (or equivalent) | Field room loads — no loading-screen hang, no `change_scene_to_file` warnings in the console |
+| Complete The Broken Muster and choose Continue Exploring | Loamroot grove opens — no loading-screen hang, no `change_scene_to_file` warnings in the console |
 
 ## 2. Field movement
 

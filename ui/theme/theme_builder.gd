@@ -4,9 +4,9 @@ extends RefCounted
 ## Per the architecture guardrails: type variations, never per-node overrides.
 ## Variations provided: TitleLabel, HeadingLabel, EyebrowLabel, QuoteLabel, StatLabel,
 ## MutedLabel, DangerButton, BronzeButton.
-## Known DS gaps in StyleBoxFlat (documented, not faked): 45° corner notches and gradient
-## bevels need StyleBoxTexture nine-patches — a later pass; until then edges are sharp (r=0)
-## and fills are the bevel's mid-stop.
+## Panels use a project-owned notched nine-patch. Controls that do not need the silhouette
+## use token-driven StyleBoxFlat treatments so the prototype remains easy to reskin.
+
 
 static func build() -> Theme:
 	var t := Theme.new()
@@ -21,15 +21,13 @@ static func build() -> Theme:
 	t.default_font_size = DS.FS_400
 
 	# ---- Panels: stone slab, iron trim, sharp corners, heavy shadow ----
-	var panel := StyleBoxFlat.new()
-	panel.bg_color = DS.STONE_1
-	panel.border_color = DS.IRON_1
-	panel.set_border_width_all(DS.BORDER_TRIM_W)
-	panel.set_corner_radius_all(DS.RADIUS)
+	var panel := StyleBoxTexture.new()
+	panel.texture = load("res://assets/blockout/notched_panel.svg")
+	panel.texture_margin_left = 16.0
+	panel.texture_margin_top = 16.0
+	panel.texture_margin_right = 16.0
+	panel.texture_margin_bottom = 16.0
 	panel.set_content_margin_all(DS.PANEL_PAD)
-	panel.shadow_color = Color(0, 0, 0, 0.85)
-	panel.shadow_size = 18
-	panel.shadow_offset = Vector2(0, 6)
 	t.set_stylebox("panel", "PanelContainer", panel)
 
 	# ---- Buttons: iron bevel (mid-stop fill), hover = edge lights up, press = inset ----
@@ -42,7 +40,7 @@ static func build() -> Theme:
 	t.set_color("font_disabled_color", "Button", DS.ASH_FAINT)
 
 	var btn := StyleBoxFlat.new()
-	btn.bg_color = Color("#252B35")            # --bevel-iron mid stop
+	btn.bg_color = Color("#252B35")  # --bevel-iron mid stop
 	btn.border_color = DS.IRON_1
 	btn.set_border_width_all(1)
 	btn.set_corner_radius_all(DS.RADIUS)
@@ -53,16 +51,16 @@ static func build() -> Theme:
 	t.set_stylebox("normal", "Button", btn)
 
 	var btn_hover := btn.duplicate()
-	btn_hover.border_color = DS.VIOLET_3       # hover: the metal edge lights up; no fill lift
+	btn_hover.border_color = DS.VIOLET_3  # hover: the metal edge lights up; no fill lift
 	t.set_stylebox("hover", "Button", btn_hover)
 
 	var btn_pressed := btn.duplicate()
-	btn_pressed.bg_color = Color("#161A21")    # --bevel-iron-pressed top stop
+	btn_pressed.bg_color = Color("#161A21")  # --bevel-iron-pressed top stop
 	btn_pressed.border_color = DS.IRON_0
 	t.set_stylebox("pressed", "Button", btn_pressed)
 
 	var btn_focus := btn.duplicate()
-	btn_focus.border_color = DS.VIOLET_3       # --glow-focus ring
+	btn_focus.border_color = DS.VIOLET_3  # --glow-focus ring
 	btn_focus.set_border_width_all(2)
 	t.set_stylebox("focus", "Button", btn_focus)
 
@@ -97,12 +95,12 @@ static func build() -> Theme:
 	# ---- Labels ----
 	t.set_color("font_color", "Label", DS.PARCHMENT)
 
-	t.add_type("HeroLabel")    # --type-hero: Cinzel black 58 — the title screen wordmark
+	t.add_type("HeroLabel")  # --type-hero: Cinzel black 58 — the title screen wordmark
 	t.set_type_variation("HeroLabel", "Label")
 	t.set_font("font", "HeroLabel", display)
 	t.set_font_size("font_size", "HeroLabel", DS.FS_1000)
 
-	t.add_type("TitleLabel")   # --type-title: Cinzel bold 32
+	t.add_type("TitleLabel")  # --type-title: Cinzel bold 32
 	t.set_type_variation("TitleLabel", "Label")
 	t.set_font("font", "TitleLabel", display)
 	t.set_font_size("font_size", "TitleLabel", DS.FS_800)
@@ -118,13 +116,13 @@ static func build() -> Theme:
 	t.set_font_size("font_size", "EyebrowLabel", DS.FS_100)
 	t.set_color("font_color", "EyebrowLabel", DS.ASH)
 
-	t.add_type("QuoteLabel")    # --type-quote: Cormorant italic 19 — flavour text
+	t.add_type("QuoteLabel")  # --type-quote: Cormorant italic 19 — flavour text
 	t.set_type_variation("QuoteLabel", "Label")
 	t.set_font("font", "QuoteLabel", quote)
 	t.set_font_size("font_size", "QuoteLabel", DS.FS_500)
 	t.set_color("font_color", "QuoteLabel", DS.ASH)
 
-	t.add_type("StatLabel")     # --type-stat: Fira Code — numbers only, exact, uncomfortable
+	t.add_type("StatLabel")  # --type-stat: Fira Code — numbers only, exact, uncomfortable
 	t.set_type_variation("StatLabel", "Label")
 	t.set_font("font", "StatLabel", numeric)
 	t.set_font_size("font_size", "StatLabel", DS.FS_200)
@@ -145,7 +143,7 @@ static func build() -> Theme:
 	t.set_color("font_color", "ItemList", DS.ASH)
 	t.set_color("font_selected_color", "ItemList", DS.PARCHMENT)
 	var sel := StyleBoxFlat.new()
-	sel.bg_color = Color(DS.VIOLET_2, 0.25)   # selected: violet, over any rarity colour
+	sel.bg_color = Color(DS.VIOLET_2, 0.25)  # selected: violet, over any rarity colour
 	sel.border_color = DS.VIOLET_3
 	sel.set_border_width_all(1)
 	t.set_stylebox("selected", "ItemList", sel)
@@ -163,5 +161,14 @@ static func build() -> Theme:
 	var slider_track := inset.duplicate()
 	slider_track.set_content_margin_all(2)
 	t.set_stylebox("slider", "HSlider", slider_track)
+
+	# Tooltips are carved annotations, not browser-default bubbles.
+	var tooltip := inset.duplicate()
+	tooltip.border_color = DS.BRONZE_1
+	tooltip.set_border_width_all(1)
+	t.set_stylebox("panel", "TooltipPanel", tooltip)
+	t.set_font("font", "TooltipLabel", body)
+	t.set_font_size("font_size", "TooltipLabel", DS.FS_200)
+	t.set_color("font_color", "TooltipLabel", DS.PARCHMENT)
 
 	return t

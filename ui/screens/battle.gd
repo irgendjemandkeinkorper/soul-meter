@@ -1,98 +1,137 @@
 extends Screen
-## Battle screen — menu-driven Attack/Defend/Flee against Battle's current
-## encounter. Opened by GameFlow as a flow-owned, paused overlay (see
-## game_flow.gd's Battle state handlers), the same way Pause is.
+## Party combat view. Battle owns the rules; this screen only renders state
+## and submits action IDs.
 
-var _player_lbl: Label
-var _player_bar: ProgressBar
+var _party_lbl: Label
 var _enemy_lbl: Label
-var _enemy_bar: ProgressBar
+var _balance_lbl: Label
+var _balance_bar: ProgressBar
 var _log_lbl: Label
 var _actions_box: VBoxContainer
+var _target_button: Button
 var _outcome_box: VBoxContainer
+var _action_buttons: Array[Button] = []
+var _action_labels: PackedStringArray = []
+var _sfx: AudioStreamPlayer
 
 
 func _build() -> void:
-	var vbox := _make_window("Battle: %s" % Battle.enemy.display_name, Vector2(560, 420))
-
-	_player_lbl = Label.new()
-	vbox.add_child(_player_lbl)
-	_player_bar = ProgressBar.new()
-	_player_bar.show_percentage = false
-	_player_bar.custom_minimum_size = Vector2(0, 18)
-	vbox.add_child(_player_bar)
-
+	var vbox := _make_window("Battle", Vector2(680, 560))
+	var help := Label.new()
+	help.text = (
+		"Defining pushes +25 Order. Paradox pushes -25 Chaos. Stabilize pulls 30 toward "
+		+ "center. Matching extremes (±60) empower aligned strikes."
+	)
+	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	help.theme_type_variation = "MutedLabel"
+	vbox.add_child(help)
+	_party_lbl = Label.new()
+	_party_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_party_lbl)
 	vbox.add_child(HSeparator.new())
-
 	_enemy_lbl = Label.new()
+	_enemy_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_enemy_lbl)
-	_enemy_bar = ProgressBar.new()
-	_enemy_bar.show_percentage = false
-	_enemy_bar.custom_minimum_size = Vector2(0, 18)
-	vbox.add_child(_enemy_bar)
-
 	vbox.add_child(HSeparator.new())
+
+	_balance_lbl = Label.new()
+	_balance_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(_balance_lbl)
+	_balance_bar = ProgressBar.new()
+	_balance_bar.min_value = Battle.BALANCE_MIN
+	_balance_bar.max_value = Battle.BALANCE_MAX
+	_balance_bar.show_percentage = false
+	_balance_bar.custom_minimum_size = Vector2(0, 22)
+	vbox.add_child(_balance_bar)
 
 	_log_lbl = Label.new()
 	_log_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_log_lbl.custom_minimum_size = Vector2(0, 40)
+	_log_lbl.custom_minimum_size = Vector2(0, 52)
 	vbox.add_child(_log_lbl)
 
 	_actions_box = VBoxContainer.new()
 	vbox.add_child(_actions_box)
-	_menu_button(_actions_box, "Attack", func() -> void:
-		_log_lbl.text = "%s attacks!" % _player_name()
-		Battle.player_attack())
-	_menu_button(_actions_box, "Defend", func() -> void:
-		_log_lbl.text = "%s braces for the next blow." % _player_name()
-		Battle.player_defend())
-	_menu_button(_actions_box, "Flee", func() -> void:
-		_log_lbl.text = "%s flees!" % _player_name()
-		Battle.flee())
+	_target_button = _menu_button(_actions_box, "", Battle.select_next_enemy)
+	for action in Battle.available_actions():
+		var label := action.display_name
+		if action.soul_cost > 0.0:
+			label += "  (%d Soul)" % int(action.soul_cost)
+		var button := _menu_button(_actions_box, label, _use_action.bind(action.id))
+		button.tooltip_text = action.lock_reason
+		_action_buttons.append(button)
+		_action_labels.append(label)
+	_menu_button(_actions_box, "Flee", Battle.flee)
 
 	_outcome_box = VBoxContainer.new()
 	_outcome_box.visible = false
 	vbox.add_child(_outcome_box)
-
 	Battle.turn_resolved.connect(_refresh)
+	Battle.balance_changed.connect(func(_value: int) -> void: _refresh())
 	Battle.battle_ended.connect(_on_battle_ended)
-
+	_sfx = AudioStreamPlayer.new()
+	_sfx.bus = "SFX"
+	add_child(_sfx)
 	_refresh()
 
 
-func _player_name() -> String:
-	return Battle.player.display_name if Battle.player else "You"
+func _use_action(action_id: StringName) -> void:
+	if Battle.use_action(action_id):
+		_sfx.stream = load("res://assets/kenney/ui/ui-pack/Sounds/tap-a.ogg")
+		_sfx.play()
 
 
 func _refresh() -> void:
-	if Battle.player == null or Battle.enemy == null:
-		return
-	_player_lbl.text = "%s   HP  %d / %d" % [Battle.player.display_name, Battle.player.hp, Battle.player.max_hp]
-	_player_bar.max_value = Battle.player.max_hp
-	_player_bar.value = Battle.player.hp
-	_enemy_lbl.text = "%s   HP  %d / %d" % [Battle.enemy.display_name, Battle.enemy.hp, Battle.enemy.max_hp]
-	_enemy_bar.max_value = Battle.enemy.max_hp
-	_enemy_bar.value = Battle.enemy.hp
+	_party_lbl.text = "PARTY\n" + _actor_summary(Battle.allies, Battle.current_ally())
+	_enemy_lbl.text = "OPPOSITION\n" + _actor_summary(Battle.enemies)
+	var target := Battle.current_target()
+	_target_button.text = "Target: %s  (change)" % (target.display_name if target else "None")
+	_target_button.disabled = Battle.living_enemies().size() <= 1
+	_balance_bar.value = Battle.balance
+	_balance_lbl.text = _balance_text()
+	_log_lbl.text = Battle.last_message
+	var actions := Battle.available_actions()
+	for i in _action_buttons.size():
+		if i >= actions.size():
+			_action_buttons[i].disabled = true
+			continue
+		var reason := Battle.action_lock_reason(actions[i])
+		_action_buttons[i].disabled = not reason.is_empty()
+		_action_buttons[i].tooltip_text = reason
+		_action_buttons[i].text = _action_labels[i]
+		if not reason.is_empty() and actions[i].kind == CombatAction.Kind.RESOLUTION:
+			_action_buttons[i].text += "  —  LOCKED: " + reason
 
 
-func _on_battle_ended(won: bool, fled: bool) -> void:
+func _actor_summary(actors: Array[BattleActor], active: BattleActor = null) -> String:
+	var lines: PackedStringArray = []
+	for actor in actors:
+		var marker := "▶ " if actor == active else "  "
+		var state := "FALLEN" if not actor.is_alive() else "%d/%d HP" % [actor.hp, actor.max_hp]
+		var affinity := ""
+		if actor.balance_affinity < 0:
+			affinity = "  [CHAOS-PRESSURED]"
+		elif actor.balance_affinity > 0:
+			affinity = "  [ORDER-PRESSURED]"
+		lines.append("%s%s — %s%s" % [marker, actor.display_name, state, affinity])
+	return "\n".join(lines)
+
+
+func _balance_text() -> String:
+	if Battle.balance <= -Battle.EXTREME_THRESHOLD:
+		return "CHAOS ASCENDANT   %d" % Battle.balance
+	if Battle.balance >= Battle.EXTREME_THRESHOLD:
+		return "ORDER ASCENDANT   +%d" % Battle.balance
+	return (
+		"CHAOS  ←   EQUILIBRIUM %s   →  ORDER"
+		% ("+%d" % Battle.balance if Battle.balance > 0 else str(Battle.balance))
+	)
+
+
+func _on_battle_ended(result: BattleResult) -> void:
 	_refresh()
 	_actions_box.visible = false
-
-	if won:
-		_log_lbl.text = "%s is defeated." % Battle.enemy.display_name
-		if not Battle.enemy.defeated_flag.is_empty():
-			GameState.set_flag(Battle.enemy.defeated_flag, true)
-		if not Battle.enemy.win_faction.is_empty():
-			Reputation.record("player", Battle.enemy.win_faction, Battle.enemy.win_delta, Battle.enemy.win_cause, "field")
-		Renown.gain_reputation("player", 3.0, "Defeated %s" % Battle.enemy.display_name, "field")
-	elif fled:
-		_log_lbl.text = "You disengage and fall back."
-	else:
-		_log_lbl.text = "%s falls. The fight is over." % _player_name()
-		if not Battle.enemy.loss_faction.is_empty():
-			Reputation.record("player", Battle.enemy.loss_faction, Battle.enemy.loss_delta, Battle.enemy.loss_cause, "field")
-
+	_log_lbl.text = result.message
+	_sfx.stream = load("res://assets/kenney/ui/ui-pack/Sounds/switch-b.ogg")
+	_sfx.play()
 	_outcome_box.visible = true
-	_menu_button(_outcome_box, "Continue", func() -> void:
-		GameFlow.send_event("battle_end"))
+	_menu_button(_outcome_box, "Continue", func() -> void: GameFlow.send_event("battle_end"))

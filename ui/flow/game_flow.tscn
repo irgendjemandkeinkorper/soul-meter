@@ -66,6 +66,11 @@ script = ExtResource("5_transition")
 to = NodePath("../../Loading")
 event = &"travel"
 
+[node name="ToChapterComplete" type="Node" parent="StateChart/Root/Playing/Active"]
+script = ExtResource("5_transition")
+to = NodePath("../../ChapterComplete")
+event = &"chapter_complete"
+
 [node name="Paused" type="Node" parent="StateChart/Root/Playing"]
 script = ExtResource("4_atomic")
 
@@ -86,3 +91,16 @@ script = ExtResource("4_atomic")
 script = ExtResource("5_transition")
 to = NodePath("../../Active")
 event = &"battle_end"
+
+[node name="ChapterComplete" type="Node" parent="StateChart/Root/Playing"]
+script = ExtResource("4_atomic")
+
+[node name="ToActive" type="Node" parent="StateChart/Root/Playing/ChapterComplete"]
+script = ExtResource("5_transition")
+to = NodePath("../../Active")
+event = &"continue_exploring"
+
+[node name="ToMenus" type="Node" parent="StateChart/Root/Playing/ChapterComplete"]
+script = ExtResource("5_transition")
+to = NodePath("../../../Menus")
+event = &"to_main_menu"

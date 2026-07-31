@@ -18,3 +18,41 @@ extends Resource
 ## 0 means "open to anyone" — most candidates leave these at the default.
 @export var min_reputation: float = 0.0
 @export var min_infamy: float = 0.0
+
+
+func to_dict() -> Dictionary:
+	return {
+		"id": id,
+		"display_name": display_name,
+		"race": race,
+		"char_class": char_class,
+		"level": level,
+		"hp": hp,
+		"max_hp": max_hp,
+		"attack": attack,
+		"defense": defense,
+		"bio": bio,
+		"portrait_path": portrait.resource_path if portrait else "",
+		"min_reputation": min_reputation,
+		"min_infamy": min_infamy,
+	}
+
+
+static func from_dict(data: Dictionary) -> PartyMember:
+	var member := PartyMember.new()
+	member.id = str(data.get("id", ""))
+	member.display_name = str(data.get("display_name", "Unnamed"))
+	member.race = str(data.get("race", ""))
+	member.char_class = str(data.get("char_class", ""))
+	member.level = int(data.get("level", 1))
+	member.hp = int(data.get("hp", 10))
+	member.max_hp = int(data.get("max_hp", 10))
+	member.attack = int(data.get("attack", 5))
+	member.defense = int(data.get("defense", 2))
+	member.bio = str(data.get("bio", ""))
+	var portrait_path := str(data.get("portrait_path", ""))
+	if not portrait_path.is_empty():
+		member.portrait = load(portrait_path)
+	member.min_reputation = float(data.get("min_reputation", 0.0))
+	member.min_infamy = float(data.get("min_infamy", 0.0))
+	return member
