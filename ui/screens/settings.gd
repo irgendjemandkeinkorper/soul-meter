@@ -8,6 +8,7 @@ func _build() -> void:
 	var fs := CheckButton.new()
 	fs.text = "Fullscreen"
 	fs.button_pressed = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+	fs.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	fs.toggled.connect(_on_fullscreen_toggled)
 	vbox.add_child(fs)
 
