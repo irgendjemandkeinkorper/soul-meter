@@ -30,6 +30,7 @@ func _ready() -> void:
 	focus_mode = FOCUS_ALL
 	disabled = locked
 	custom_minimum_size = Vector2(0, DS.CONTROL_H_LG)
+	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	# the 3px bronze→violet left edge — the DS's one allowed left-border accent
 	_edge = ColorRect.new()
 	_edge.custom_minimum_size = Vector2(3, 0)

@@ -59,6 +59,7 @@ func _menu_button(box: Container, text: String, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(220, 36)
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.pressed.connect(cb)
 	box.add_child(b)
 	return b
