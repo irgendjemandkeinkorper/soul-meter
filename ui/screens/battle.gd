@@ -11,6 +11,10 @@ var _log_lbl: Label
 var _actions_box: VBoxContainer
 var _outcome_box: VBoxContainer
 
+var _p_hp_before := 0
+var _e_hp_before := 0
+var _last_action := ""
+
 
 func _build() -> void:
 	var vbox := _make_window("Battle: %s" % Battle.enemy.display_name, Vector2(560, 420))
@@ -41,12 +45,19 @@ func _build() -> void:
 	_actions_box = VBoxContainer.new()
 	vbox.add_child(_actions_box)
 	_menu_button(_actions_box, "Attack", func() -> void:
-		_log_lbl.text = "%s attacks!" % _player_name()
-		Battle.player_attack())
+		_last_action = "attack"
+		_p_hp_before = Battle.player.hp if Battle.player else 0
+		_e_hp_before = Battle.enemy.hp if Battle.enemy else 0
+		Battle.player_attack()
+		_update_outcome_log())
 	_menu_button(_actions_box, "Defend", func() -> void:
-		_log_lbl.text = "%s braces for the next blow." % _player_name()
-		Battle.player_defend())
+		_last_action = "defend"
+		_p_hp_before = Battle.player.hp if Battle.player else 0
+		_e_hp_before = Battle.enemy.hp if Battle.enemy else 0
+		Battle.player_defend()
+		_update_outcome_log())
 	_menu_button(_actions_box, "Flee", func() -> void:
+		_last_action = "flee"
 		_log_lbl.text = "%s flees!" % _player_name()
 		Battle.flee())
 
@@ -96,3 +107,90 @@ func _on_battle_ended(won: bool, fled: bool) -> void:
 	_outcome_box.visible = true
 	_menu_button(_outcome_box, "Continue", func() -> void:
 		GameFlow.send_event("battle_end"))
+
+
+func _update_outcome_log() -> void:
+	if Battle.player == null or Battle.enemy == null:
+		return
+	if _last_action == "attack":
+		_log_lbl.text = format_attack(
+			_player_name(),
+			Battle.enemy.display_name,
+			_e_hp_before,
+			Battle.enemy.hp,
+			Battle.enemy.max_hp,
+			_p_hp_before,
+			Battle.player.hp,
+			Battle.player.max_hp
+		)
+	elif _last_action == "defend":
+		_log_lbl.text = format_defend(
+			_player_name(),
+			Battle.enemy.display_name,
+			_p_hp_before,
+			Battle.player.hp,
+			Battle.player.max_hp,
+			Battle.enemy.attack,
+			Battle.player.defense
+		)
+
+
+static func format_attack(
+	player_name: String,
+	enemy_name: String,
+	enemy_hp_before: int,
+	enemy_hp_after: int,
+	enemy_max_hp: int,
+	player_hp_before: int,
+	player_hp_after: int,
+	player_max_hp: int
+) -> String:
+	var dmg_to_enemy := enemy_hp_before - enemy_hp_after
+	var lines: Array[String] = []
+
+	lines.append("%s attacks %s, dealing %d damage (%s HP: %d/%d)." % [
+		player_name, enemy_name, dmg_to_enemy, enemy_name, enemy_hp_after, enemy_max_hp
+	])
+
+	if enemy_hp_after <= 0:
+		lines.append("%s is defeated." % enemy_name)
+	else:
+		var dmg_to_player := player_hp_before - player_hp_after
+		lines.append("%s counterattacks, dealing %d damage (%s HP: %d/%d)." % [
+			enemy_name, dmg_to_player, player_name, player_hp_after, player_max_hp
+		])
+		if player_hp_after <= 0:
+			lines.append("%s falls. The fight is over." % player_name)
+
+	return "\n".join(lines)
+
+
+static func format_defend(
+	player_name: String,
+	enemy_name: String,
+	player_hp_before: int,
+	player_hp_after: int,
+	player_max_hp: int,
+	enemy_attack: int,
+	player_defense: int
+) -> String:
+	var dmg_taken := player_hp_before - player_hp_after
+	var unmitigated := maxi(1, enemy_attack - player_defense)
+	var mitigated_amount := unmitigated - dmg_taken
+
+	var lines: Array[String] = []
+	lines.append("%s braces! Mitigates incoming damage from %s." % [player_name, enemy_name])
+
+	if mitigated_amount > 0:
+		lines.append("%s takes %d damage (blocked %d) (%s HP: %d/%d)." % [
+			player_name, dmg_taken, mitigated_amount, player_name, player_hp_after, player_max_hp
+		])
+	else:
+		lines.append("%s takes %d damage (mitigated to minimum) (%s HP: %d/%d)." % [
+			player_name, dmg_taken, player_name, player_hp_after, player_max_hp
+		])
+
+	if player_hp_after <= 0:
+		lines.append("%s falls. The fight is over." % player_name)
+
+	return "\n".join(lines)
