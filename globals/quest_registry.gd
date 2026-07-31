@@ -26,9 +26,16 @@ func is_done(quest: Quest) -> bool:
 	return QuestSystem.is_quest_completed(quest)
 
 
-func turn_in(quest: Quest) -> void:
+func turn_in(quest: Quest, resolution: String = "returned", grant_default_reward: bool = true) -> void:
 	QuestSystem.update_quest(quest)
-	QuestSystem.complete_quest(quest)
+	if not quest.objective_completed:
+		return
+	QuestSystem.complete_quest(quest, {
+		"resolution": resolution,
+		"grant_default_reward": grant_default_reward,
+	})
+	if is_done(quest) and quest is FetchQuest:
+		GameState.remove_items(quest.item_id, quest.required_amount)
 
 
 func _on_inventory_changed() -> void:

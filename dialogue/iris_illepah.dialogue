@@ -30,10 +30,24 @@ Iris Illepah: Ask, then. The light is long and the sweeping is done.
 - "Still gathering the loamroot sprigs." [if QuestRegistry.is_active(QuestRegistry.LOAMROOT_SPRIGS) and not QuestRegistry.LOAMROOT_SPRIGS.objective_completed /]
 	Iris Illepah: Take your time. They do not rot, only wait.
 	=> hub
-- "I have the loamroot sprigs." [#tag=SSAE-SEEDERS] [#consequence=Brought the Loam what it asked for.] [if QuestRegistry.is_active(QuestRegistry.LOAMROOT_SPRIGS) and QuestRegistry.LOAMROOT_SPRIGS.objective_completed /]
-	do QuestRegistry.turn_in(QuestRegistry.LOAMROOT_SPRIGS)
+- "I brought the loamroot sprigs. Put them back where they belong." [#tag=SSAE-SEEDERS] [#consequence=Brought the Loam what it asked for.] [if QuestRegistry.is_active(QuestRegistry.LOAMROOT_SPRIGS) and QuestRegistry.LOAMROOT_SPRIGS.objective_completed /]
+	do QuestRegistry.turn_in(QuestRegistry.LOAMROOT_SPRIGS, "returned", true)
 	do Renown.gain_reputation("player", 5.0, "Returned lost loamroot sprigs to the grove", "field")
 	Iris Illepah: Good hands. The grove will remember these came back to it, not just away from it.
+	=> hub
+- "Use my pattern to root them. I can bear the cost." [#tag=COMMUNION] [#cost=-8 soul] [#consequence=The grove is anchored with a thread of your soul.] [if QuestRegistry.is_active(QuestRegistry.LOAMROOT_SPRIGS) and QuestRegistry.LOAMROOT_SPRIGS.objective_completed and GameState.soul_meter >= 8.0 /]
+	do GameState.set_soul_meter(GameState.soul_meter - 8.0)
+	do QuestRegistry.turn_in(QuestRegistry.LOAMROOT_SPRIGS, "communion", true)
+	do Reputation.record("player", "ssae-seeders", 5.0, "Anchored the wrong-rooted sprigs with their own soul", "field")
+	do Renown.gain_reputation("player", 8.0, "Spent soul to return the loamroot sprigs alive", "field")
+	Iris Illepah: Easy. Do not pull away when they know your name. There — three roots held, and one soul a little less certain of its edges.
+	=> hub
+- "The Registry will take custody of these specimens." [#tag=REGISTRY] [#consequence=The grove's sickness enters a numbered drawer.] [if QuestRegistry.is_active(QuestRegistry.LOAMROOT_SPRIGS) and QuestRegistry.LOAMROOT_SPRIGS.objective_completed /]
+	do QuestRegistry.turn_in(QuestRegistry.LOAMROOT_SPRIGS, "registry", false)
+	do Reputation.record("player", "ssae-seeders", -8.0, "Seized wrong-rooted sprigs from the grove", "field")
+	do Reputation.record("player", "the-registry", 8.0, "Delivered living Loam specimens for classification", "field")
+	do Renown.gain_infamy("player", 4.0, "Took living Loam specimens under a Registry claim", "field")
+	Iris Illepah: Custody. A clean word for a locked drawer. Take them, then. When the drawer begins to root, tell your clerks I warned them.
 	=> hub
 - "I should go."
 	Iris Illepah: Go, then. Keep off the new moss. It is younger than it looks, and it remembers feet.

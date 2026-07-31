@@ -49,14 +49,26 @@ confirm the delta lands.
 | "Teach me the Seeders' rite." | Should be **hidden** until `ssae-seeders` standing ≥ 15 | Pick the "Bloom isn't finished" choice twice (+16 total) to cross the gate, re-open dialogue, confirm the option is now present and selectable, and that it ends the conversation |
 | "I should go." | Pick it | Conversation ends cleanly, balloon closes, control returns to the field, no leftover paused state |
 
-## 5. Ledger integrity (why the append-only design exists)
+## 5. Loamroot resolution
+
+Start a fresh run for each branch. Accept Iris's work, collect all three green loamroot
+pickups, then choose one resolution. All three branches must remove the sprigs from inventory,
+complete the quest, and disappear from later conversations.
+
+| Resolution | Expect |
+|---|---|
+| Return them intact | `ssae-seeders` **+10**, Renown **+5**, flag `quest_1_resolution = "returned"` |
+| Anchor them with your pattern | Soul Gauge **-8**, `ssae-seeders` **+15** total, Renown **+8**, flag `quest_1_resolution = "communion"` |
+| Give them to the Registry | `ssae-seeders` **-8**, `the-registry` **+8**, Infamy **+4**, flag `quest_1_resolution = "registry"` |
+
+## 6. Ledger integrity (why the append-only design exists)
 
 | Do | Expect |
 |---|---|
 | Make two or three choices in one sitting, then reopen the standing/debug view | Every prior delta is still reflected — nothing got overwritten by the latest choice |
 | (If save/load exists yet) Save, reload, reopen the standing view | Standings match pre-save exactly — `to_dict()`/`from_dict()` round-trip, see `test/unit/test_reputation.gd` for the automated version of this check |
 
-## 6. Console hygiene
+## 7. Console hygiene
 
 | Do | Expect |
 |---|---|

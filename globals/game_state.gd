@@ -53,6 +53,37 @@ func get_flag(flag: String, default: Variant = false) -> Variant:
 	return flags.get(flag, default)
 
 
+# --- Inventory queries & transactions ----------------------------------------
+
+func item_count(item_id: String) -> int:
+	var total := 0
+	for item in inventory.get_items_with_prototype_id(item_id):
+		total += item.get_stack_size()
+	return total
+
+
+## Removes up to `amount` items across every matching stack. Returns false and
+## changes nothing when the full amount is not available.
+func remove_items(item_id: String, amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if item_count(item_id) < amount:
+		return false
+
+	var remaining := amount
+	for item in inventory.get_items_with_prototype_id(item_id):
+		var stack_size: int = item.get_stack_size()
+		var taken := mini(stack_size, remaining)
+		if taken == stack_size:
+			inventory.remove_item(item)
+		else:
+			item.set_stack_size(stack_size - taken)
+		remaining -= taken
+		if remaining == 0:
+			break
+	return true
+
+
 # --- Settings (persisted to user://settings.cfg) ------------------------------
 
 func set_setting(section: String, key: String, value: Variant) -> void:
