@@ -1,0 +1,53 @@
+# Godot 4.7 POT output target.
+# Generated from the files listed in
+# internationalization/locale/translations_pot_files via
+# Project Settings → Localization → Template Generation → Generate.
+msgid ""
+msgstr ""
+"Project-Id-Version: SoulMeter\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: dialogue/marshal_coiljaw.dialogue
+msgctxt "dialogue"
+msgid "Dorthkor's road-drum stopped halfway through the breach warning. Demons first. Then one clean beat in a dead company's cadence."
+msgstr ""
+
+#: dialogue/marshal_coiljaw.dialogue
+msgctxt "dialogue"
+msgid "The Four Arms keeps six names on its slate. Choose two. I need a company, not a funeral procession with one set of boots."
+msgstr ""
+
+#: dialogue/marshal_coiljaw.dialogue
+msgctxt "dialogue"
+msgid "Break the vanguard, count what came through, and look at anything wearing our colors twice. The North Road is open to you."
+msgstr ""
+
+#: dialogue/iris_illepah.dialogue
+msgctxt "dialogue"
+msgid "You walk like the Registry counts your steps. Stand easy. The grove does not bill for shade."
+msgstr ""
+
+#: dialogue/iris_illepah.dialogue
+msgctxt "dialogue"
+msgid "A pale root cutting, still warm from the Loam. Iris wants a few for the grove."
+msgstr ""
+
+#: quests/dorthkor_road.tres
+msgctxt "quest_2/quest_name"
+msgid "The Broken Muster"
+msgstr ""
+
+#: quests/dorthkor_road.tres
+msgctxt "quest_2/quest_description"
+msgid "A demon breach has silenced Dorthkor Road. The Trial Council needs proof of what crossed the stones—and why the dead are mustering with it."
+msgstr ""
+
+#: quests/loamroot_sprigs.tres
+msgctxt "quest_1/quest_name"
+msgid "Loamroot Sprigs"
+msgstr ""
+
+#: quests/loamroot_sprigs.tres
+msgctxt "quest_1/quest_description"
+msgid "Iris wants a few loamroot sprigs from the grove for her work."
+msgstr ""

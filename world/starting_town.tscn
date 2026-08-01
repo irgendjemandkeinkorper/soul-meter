@@ -143,6 +143,8 @@ position = Vector2(700, 400)
 position = Vector2(1050, 420)
 npc_name = "Marshal Coiljaw"
 dialogue_path = "res://dialogue/marshal_coiljaw.dialogue"
+visual_region = Rect2(17, 102, 16, 16)
+visual_modulate = Color(0.82, 0.68, 0.43, 1)
 
 [node name="RoadToTheWilds" parent="." instance=ExtResource("4_exit")]
 position = Vector2(1580, 500)

@@ -26,13 +26,13 @@ jobs:
         run: |
           set -o pipefail
           godot --headless --path . --import --quit 2>&1 | tee /tmp/godot-import.log
-          if rg -n 'SCRIPT ERROR: (Parse|Compile) Error|ERROR: Failed to load script' /tmp/godot-import.log; then
+          if grep -En 'SCRIPT ERROR: (Parse|Compile) Error|ERROR: Failed to load script' /tmp/godot-import.log; then
             echo "Godot reported a script parse/compile failure during import."
             exit 1
           fi
 
-      - name: Run gdUnit4 suite
-        run: GODOT_BIN=godot bash scripts/test.sh -a test
+      - name: Run art-free acceptance gate
+        run: GODOT_BIN=godot bash scripts/acceptance_gate.sh
 
   package-windows:
     needs: test

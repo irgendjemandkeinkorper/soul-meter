@@ -10,7 +10,14 @@
     "loss_cause": "The Bog Wight still haunts the grove's edge",
     "default_outcome": "slain",
     "context_actions": [],
-    "outcomes": {},
+    "outcomes": {
+      "slain": {
+        "cause": "Cleared the Bog Wight from the grove margins",
+        "delta": 6.0,
+        "faction": "ssae-seeders",
+        "message": "The opposition is defeated."
+      }
+    },
     "enemies": [
       {
         "id": "bog-wight",
@@ -60,18 +67,30 @@
         "cause": "Broke the Bloodbellow binding by speaking its muster-name",
         "delta": 5.0,
         "faction": "ironbrand-sentinels",
+        "flags": {
+          "dorthkor_muster_cause": "$cause",
+          "dorthkor_muster_outcome": "$outcome_id"
+        },
         "message": "Its muster-name answers. The binding splits and the armor empties."
       },
       "released": {
         "cause": "Released the soldier bound inside the Bloodbellow muster",
         "delta": 5.0,
         "faction": "ironbrand-sentinels",
+        "flags": {
+          "dorthkor_muster_cause": "$cause",
+          "dorthkor_muster_outcome": "$outcome_id"
+        },
         "message": "The held center opens a way out. The soldier's soul leaves the armor."
       },
       "slain": {
         "cause": "Destroyed the Mustered Bloodbellow by force",
         "delta": 5.0,
         "faction": "ironbrand-sentinels",
+        "flags": {
+          "dorthkor_muster_cause": "$cause",
+          "dorthkor_muster_outcome": "$outcome_id"
+        },
         "message": "The Bloodbellow falls, its borrowed cadence cut short."
       }
     },
@@ -98,7 +117,14 @@
     "loss_cause": "",
     "default_outcome": "slain",
     "context_actions": [],
-    "outcomes": {},
+    "outcomes": {
+      "slain": {
+        "cause": "Broke the demon vanguard at Dorthkor",
+        "delta": 5.0,
+        "faction": "iron-companies",
+        "message": "The opposition is defeated."
+      }
+    },
     "enemies": [
       {
         "id": "gnaal-breach-hound",
@@ -131,7 +157,14 @@
     "loss_cause": "The empty guard still holds the first gate",
     "default_outcome": "slain",
     "context_actions": [],
-    "outcomes": {},
+    "outcomes": {
+      "slain": {
+        "cause": "Stopped the cleaned armor standing watch at the Jawbrace",
+        "delta": 6.0,
+        "faction": "ironbrand-sentinels",
+        "message": "The opposition is defeated."
+      }
+    },
     "enemies": [
       {
         "id": "cleaned-jawbrace-guard",
@@ -155,7 +188,14 @@
     "loss_cause": "A Loam-maddened boar broke loose near the grove",
     "default_outcome": "slain",
     "context_actions": [],
-    "outcomes": {},
+    "outcomes": {
+      "slain": {
+        "cause": "Culled a Loam-maddened boar before it reached the grove",
+        "delta": 5.0,
+        "faction": "ssae-seeders",
+        "message": "The opposition is defeated."
+      }
+    },
     "enemies": [
       {
         "id": "loam-maddened-boar",

@@ -13,11 +13,39 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build()
+	call_deferred("_focus_first_control")
 
 
 ## Override: build this screen's UI here.
 func _build() -> void:
 	pass
+
+
+func _focus_first_control() -> void:
+	var focus_target := _find_first_focusable(self)
+	if focus_target != null:
+		focus_target.grab_focus()
+
+
+func _find_first_focusable(node: Node) -> Control:
+	for child in node.get_children():
+		var control := child as Control
+		if (
+			control != null
+			and control.visible
+			and control.focus_mode != Control.FOCUS_NONE
+			and (
+				control is BaseButton
+				or control is ItemList
+				or control is LineEdit
+				or control is Slider
+			)
+		):
+			return control
+		var nested := _find_first_focusable(child)
+		if nested != null:
+			return nested
+	return null
 
 
 ## Default Back action — pop this screen off the UIManager stack.

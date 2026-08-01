@@ -6,17 +6,21 @@ signal soul_meter_changed(value: float)
 signal flag_changed(flag: String, value: Variant)
 signal inventory_changed
 signal party_changed
+signal locale_changed(locale: String)
 
 const SETTINGS_PATH := "user://settings.cfg"
 const PROTAGONIST_ID := "vex"
 const PROTAGONIST_NAME := "Vex the Unbowed"
 const REQUIRED_COMPANIONS := 2
+const DEFAULT_LOCALE := "en"
+const SUPPORTED_LOCALES := ["en", "es"]
 
 var flags: Dictionary = {}
 var soul_meter: float = 50.0:
 	set = set_soul_meter
 var party: Array[PartyMember] = []
 var inventory: Inventory
+var current_locale := DEFAULT_LOCALE
 
 var _settings := ConfigFile.new()
 
@@ -99,6 +103,7 @@ func get_setting(section: String, key: String, default: Variant) -> Variant:
 func _load_settings() -> void:
 	_settings.load(SETTINGS_PATH)
 	apply_fullscreen(_settings.get_value("display", "fullscreen", false))
+	apply_locale(str(_settings.get_value("display", "locale", DEFAULT_LOCALE)))
 	for bus in ["Master", "Music", "SFX"]:
 		set_bus_volume(bus, _settings.get_value("audio", bus, 1.0))
 
@@ -106,6 +111,24 @@ func _load_settings() -> void:
 func apply_fullscreen(on: bool) -> void:
 	var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if on else DisplayServer.WINDOW_MODE_WINDOWED
 	DisplayServer.window_set_mode(mode)
+
+
+func apply_locale(locale: String) -> void:
+	var resolved := locale if locale in SUPPORTED_LOCALES else DEFAULT_LOCALE
+	if current_locale == resolved and TranslationServer.get_locale() == resolved:
+		return
+	current_locale = resolved
+	TranslationServer.set_locale(current_locale)
+	locale_changed.emit(current_locale)
+
+
+func set_locale(locale: String) -> void:
+	apply_locale(locale)
+	set_setting("display", "locale", current_locale)
+
+
+func get_locale() -> String:
+	return current_locale
 
 
 func set_bus_volume(bus: String, linear: float) -> void:
@@ -296,7 +319,7 @@ func set_companions(members: Array[PartyMember]) -> bool:
 	party = [lead, members[0], members[1]]
 	set_flag("chapter_party_formed", true)
 	party_changed.emit()
-	SaveGame.request_autosave("party-formed")
+	SaveGame.request_checkpoint(SaveGame.Checkpoint.PARTY_FORMED)
 	return true
 
 

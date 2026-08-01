@@ -21,6 +21,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+MusicDirector="*res://audio/music_director.gd"
 AppConfig="*res://addons/maaacks_game_template/base/nodes/autoloads/app_config/app_config.tscn"
 SceneLoader="*res://addons/maaacks_game_template/base/nodes/autoloads/scene_loader/scene_loader.tscn"
 ProjectMusicController="*res://addons/maaacks_game_template/base/nodes/autoloads/music_controller/project_music_controller.tscn"
@@ -109,7 +110,7 @@ interact={
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://addons/maaacks_game_template/base/translations/menus_translations.en.translation", "res://addons/maaacks_game_template/base/translations/menus_translations.fr.translation")
+locale/translations=PackedStringArray("res://addons/maaacks_game_template/base/translations/menus_translations.en.translation", "res://addons/maaacks_game_template/base/translations/menus_translations.fr.translation", "res://locale/es.po")
 locale/translations_pot_files=PackedStringArray("res://dialogue/iris_illepah.dialogue", "res://dialogue/marshal_coiljaw.dialogue", "res://quests/loamroot_sprigs.tres", "res://quests/dorthkor_road.tres", "res://quests/deep_trial.tres")
 
 [maaacks_game_template]

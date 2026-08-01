@@ -115,6 +115,16 @@ func test_defeat_records_authored_loss_consequence_once() -> void:
 	assert_float(Reputation.standing("ssae-seeders")).is_equal_approx(-3.0, 0.001)
 
 
+func test_non_story_encounter_uses_the_same_authored_outcome_path() -> void:
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle.enemies[0].hp = 1
+	battle.use_action(BattleScript.ACTION_STRIKE)
+
+	assert_str(battle.last_result.outcome_id).is_equal("slain")
+	assert_str(battle.last_result.cause).contains("grove margins")
+	assert_float(Reputation.standing("ssae-seeders")).is_equal_approx(6.0, 0.001)
+
+
 func test_player_can_select_between_multiple_living_enemies() -> void:
 	var foes: Array[BattleActor] = [_enemy("Wight", 20, 4, 1), _enemy("Boar", 20, 4, 1)]
 	battle.start(foes)

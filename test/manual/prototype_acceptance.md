@@ -12,6 +12,7 @@
 | Enter the Four Arms | Six candidates appear; Vex is shown as fixed lead; Korrath (Renown 10) and Maura (Infamy 8) explain their locks |
 | Try one or three selections | Confirmation remains disabled; a third checked box is rejected |
 | Choose two open companions | Party becomes `[Vex, companion, companion]`, objective changes to Coiljaw, and AUTOSAVED appears |
+| Open Inventory | Items appear as 64px three-column slots; selecting a slot shows its full name, stack count, and description |
 
 ## 2. Commission and Dorthkor
 
@@ -46,6 +47,8 @@
 
 ## 5. Release hygiene
 
+- Before sharing a build, run `GODOT_BIN=godot bash scripts/acceptance_gate.sh`; it verifies
+  generated-data drift and the full headless journey suite without requiring art assets.
 - Complete one route without console script errors.
 - Confirm 1280×720 text and disabled-action explanations are readable.
 - Confirm UI click/combat resolution sounds honor the SFX setting.

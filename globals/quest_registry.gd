@@ -27,7 +27,7 @@ func offer(quest: Quest) -> void:
 		return
 	if quest == DORTHKOR_ROAD:
 		GameState.set_flag("chapter_dorthkor_commissioned", true)
-		SaveGame.request_autosave("commission-accepted")
+		SaveGame.request_checkpoint(SaveGame.Checkpoint.COMMISSION)
 	elif quest == DEEP_TRIAL:
 		GameState.set_flag("deep_trial_open", true)
 		SaveGame.request_autosave("deep-trial-accepted")
@@ -92,7 +92,7 @@ func tracked_quest() -> Quest:
 	for quest in STORY_QUESTS:
 		if is_active(quest):
 			return quest
-	var active := QuestSystem.get_active_quests()
+	var active: Array[Quest] = QuestSystem.get_active_quests()
 	return active[0] if not active.is_empty() else null
 
 

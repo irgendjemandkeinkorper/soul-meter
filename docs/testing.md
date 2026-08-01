@@ -55,6 +55,19 @@ XML, gitignored) is regenerated each run.
 On a machine without a working X display, set `SOUL_METER_HEADLESS=1`. This is useful for unit
 tests, but integration tests that depend on transported input should run with Xvfb normally.
 
+### Generated-data drift
+
+Pandora is the source of truth for generated runtime artifacts. Run the same guard used by CI
+after changing `data.pandora` or `tools/generate_gloot.gd`:
+
+```bash
+GODOT_BIN=~/.local/bin/godot bash scripts/check_generated_data.sh
+```
+
+The check temporarily registers the generator as an autoload, compares every generated artifact
+without writing it, and restores the project configuration before exiting. A non-zero exit means
+regenerate locally and commit the resulting files.
+
 You can also run tests from inside the editor: the gdUnit4 dock (bottom panel, once the addon
 is enabled — it's already registered in `project.godot`) shows the same suites with a
 run/debug button per test. Useful for stepping through a failure; the CLI is what CI would use.
@@ -130,8 +143,8 @@ frames (physics included) and must be `await`ed. `find_child(name, recursive, ow
 
 ### What isn't covered yet
 
-CI imports with the pinned engine, runs the full suite, checks generated-data drift through
-the unit suite, and packages the Windows playtest artifact only after tests pass. Property-based tests over the
+CI imports with the pinned engine, runs the full suite, checks generated-data drift with the dedicated
+generator guard, and packages the Windows playtest artifact only after tests pass. Property-based tests over the
 reputation derivation and the (future) magic-system effect matrix — flagged as the reason
 testing was worth doing at all (`docs/godot-architecture.md`) — don't exist yet; write them
 once there's more than `_derive()`'s simple sum to get wrong.

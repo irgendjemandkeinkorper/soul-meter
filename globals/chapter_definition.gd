@@ -51,6 +51,13 @@ func get_objective(stage: Resource) -> String:
 	return stage.objective
 
 
+func get_destination(stage: Resource) -> String:
+	return "" if stage == null else stage.destination_hint
+
+
+func get_action_hint(stage: Resource) -> String:
+	return "" if stage == null else stage.action_hint
+
 func is_complete(stage: Resource) -> bool:
 	return stage != null and stage.id == completion_stage_id
 
