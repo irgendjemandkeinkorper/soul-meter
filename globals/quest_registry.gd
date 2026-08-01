@@ -92,7 +92,7 @@ func tracked_quest() -> Quest:
 	for quest in STORY_QUESTS:
 		if is_active(quest):
 			return quest
-	var active := QuestSystem.get_active_quests()
+	var active: Array[Quest] = QuestSystem.get_active_quests()
 	return active[0] if not active.is_empty() else null
 
 

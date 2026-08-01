@@ -16,7 +16,7 @@ func _build() -> void:
 	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(explanation)
 	vbox.add_child(HSeparator.new())
-	var active := QuestSystem.get_active_quests()
+	var active: Array[Quest] = QuestSystem.get_active_quests()
 	if active.is_empty():
 		var empty := Label.new()
 		empty.text = "No active commissions. Follow the next objective above."

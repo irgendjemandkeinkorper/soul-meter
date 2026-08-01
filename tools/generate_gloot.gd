@@ -78,7 +78,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		if ent is PandoraCategory:
 			continue
 		var chain := PackedStringArray()
-		var cat := Pandora.get_category(ent.get_category_id())
+		var cat: PandoraCategory = Pandora.get_category(ent.get_category_id())
 		while cat != null and cat.get_entity_id() != items_root.get_entity_id():
 			chain.insert(0, _slug(cat.get_entity_name()))
 			cat = Pandora.get_category(cat.get_category_id()) if cat.get_category_id() else null
