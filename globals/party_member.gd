@@ -51,8 +51,18 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.defense = int(data.get("defense", 2))
 	member.bio = str(data.get("bio", ""))
 	var portrait_path := str(data.get("portrait_path", ""))
-	if not portrait_path.is_empty():
-		member.portrait = load(portrait_path)
+	if not portrait_path.is_empty() and portrait_path.begins_with("res://") and not ".." in portrait_path:
+		# SECURITY: Prevent arbitrary resource loading vulnerability.
+		# A maliciously crafted save file could specify a .gd script, .tscn scene,
+		# or .tres resource file with executable code, which gets parsed/run during load().
+		# We restrict paths to res://, deny traversal (..), check that the file exists,
+		# and restrict the file extension to safe texture/image extensions before loading.
+		var ext := portrait_path.get_extension().to_lower()
+		if ext in ["png", "jpg", "jpeg", "svg", "webp", "tga", "import", "ctex"]:
+			if FileAccess.file_exists(portrait_path):
+				var res = load(portrait_path)
+				if res is Texture2D:
+					member.portrait = res
 	member.min_reputation = float(data.get("min_reputation", 0.0))
 	member.min_infamy = float(data.get("min_infamy", 0.0))
 	return member
