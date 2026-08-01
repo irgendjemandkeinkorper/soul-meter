@@ -37,7 +37,7 @@ func play_context(context_id: String) -> void:
 ## Pushes a new music context onto the stack and transitions to it.
 func push_context(context_id: String) -> void:
 	if not context_stack.is_empty():
-		var current := context_stack.back()
+		var current: String = context_stack.back()
 		if current == context_id:
 			# Idempotent push of the same context
 			return
@@ -89,13 +89,13 @@ func _transition_to_context(context_id: String) -> void:
 		push_warning("MusicDirector: Track file not found for context '%s' at '%s'. Falling back to silence." % [context_id, path])
 		return
 
-	var stream: AudioStream = load(path)
+	var stream: AudioStream = load(path) as AudioStream
 	if not stream:
 		push_warning("MusicDirector: Failed to load stream for context '%s' at '%s'. Falling back to silence." % [context_id, path])
 		return
 
 	# Setup the new player
-	var player := AudioStreamPlayer.new()
+	var player: AudioStreamPlayer = AudioStreamPlayer.new()
 	player.stream = stream
 	player.bus = &"Music"
 	player.volume_db = -80.0
@@ -107,12 +107,12 @@ func _transition_to_context(context_id: String) -> void:
 
 
 func _fade_out_and_free(player: AudioStreamPlayer) -> void:
-	var tween := create_tween()
+	var tween: Tween = create_tween()
 	tween.tween_property(player, "volume_db", -80.0, FADE_DURATION)
 	tween.tween_callback(player.queue_free)
 
 
 func _fade_in(player: AudioStreamPlayer) -> void:
-	var tween := create_tween()
+	var tween: Tween = create_tween()
 	# Reset to standard 0.0 dB
 	tween.tween_property(player, "volume_db", 0.0, FADE_DURATION)
