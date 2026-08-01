@@ -92,6 +92,7 @@ func test_open_inventory_screen() -> void:
 
 	# Assert that all 6 starting items are visible as 64px inventory slots.
 	assert_int(item_grid.get_child_count()).is_equal(6)
+	assert_bool((item_grid.get_child(0) as Button).has_focus()).is_true()
 
 	# Verify specific item names through each slot's full tooltip.
 	var expected_titles := [
