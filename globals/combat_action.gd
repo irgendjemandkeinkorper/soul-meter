@@ -49,3 +49,28 @@ static func from_context_row(row: Dictionary) -> CombatAction:
 	action.maximum_balance = int(row.get("maximum_balance", 100))
 	action.lock_reason = str(row.get("lock_reason", "Requirements not met."))
 	return action
+
+
+func summary() -> String:
+	var target := "Enemy target"
+	var effect := balance_effect_summary()
+	match kind:
+		Kind.GUARD:
+			target = "Self"
+			effect = "Reduces the next hit"
+		Kind.STABILIZE:
+			target = "Self"
+			effect = "Pulls Balance 30 toward Equilibrium"
+		Kind.RESOLUTION:
+			target = "Encounter"
+			effect = "Ends the encounter"
+	var cost := "Free" if is_zero_approx(soul_cost) else "%d Soul" % int(soul_cost)
+	return "%s · %s · %s" % [target, effect, cost]
+
+
+func balance_effect_summary() -> String:
+	if balance_shift > 0:
+		return "+%d Order" % balance_shift
+	if balance_shift < 0:
+		return "%d Chaos" % balance_shift
+	return "Pulls Balance 10 toward Equilibrium"

@@ -152,7 +152,7 @@ func _candidate_index(screen, display_name: String) -> int:
 
 func test_travel_exit_updates_gameflow_target_scene() -> void:
 	var original_flags := GameState.flags.duplicate(true)
-	var original_target := GameFlow._target_scene
+	var original_target: String = GameFlow._target_scene
 	GameState.flags.clear()
 	GameFlow._target_scene = GameFlow.TOWN_SCENE
 	var runner := scene_runner("res://world/starting_town.tscn")

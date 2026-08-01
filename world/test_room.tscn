@@ -106,10 +106,14 @@ item_id = "materials/loamroot_sprig"
 [node name="BogWight" parent="." instance=ExtResource("5_enemy")]
 position = Vector2(650, 750)
 encounter_id = &"bog-wight"
+visual_region = Rect2(0, 68, 16, 16)
+visual_modulate = Color(0.4, 0.78, 0.55, 1)
 
 [node name="LoamBoar" parent="." instance=ExtResource("5_enemy")]
 position = Vector2(1600, 750)
 encounter_id = &"loam-boar"
+visual_region = Rect2(34, 68, 16, 16)
+visual_modulate = Color(0.66, 0.45, 0.28, 1)
 
 [node name="ReturnToDom" parent="." instance=ExtResource("6_exit")]
 position = Vector2(70, 600)

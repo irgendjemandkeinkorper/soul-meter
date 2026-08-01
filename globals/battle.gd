@@ -278,7 +278,9 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 	else:
 		result.message = "The company disengages without reward or resolution."
 		result.cause = _flee_cause()
-		SaveGame.request_autosave("encounter-" + String(encounter_id) + "-fled")
+		SaveGame.request_checkpoint(
+			SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, String(encounter_id) + "-fled"
+		)
 	last_result = result
 	battle_ended.emit(result)
 
@@ -287,15 +289,13 @@ func _apply_victory(result: BattleResult) -> void:
 	var outcome := EncounterCatalog.outcome(encounter_id, result.outcome_id)
 	result.message = str(outcome.get("message", "The opposition is defeated."))
 	result.cause = str(outcome.get("cause", _definition.get("win_cause", "Won a field encounter")))
+	_apply_authored_flags(outcome.get("flags", {}), result)
 	var defeated_flag := str(_definition.get("defeated_flag", ""))
 	if defeated_flag.is_empty() and not enemies.is_empty():
 		defeated_flag = enemies[0].defeated_flag
 	var already_resolved := not defeated_flag.is_empty() and bool(GameState.get_flag(defeated_flag))
 	if not defeated_flag.is_empty():
 		GameState.set_flag(defeated_flag, true)
-	if encounter_id == &"dorthkor-muster":
-		GameState.set_flag("dorthkor_muster_outcome", String(result.outcome_id))
-		GameState.set_flag("dorthkor_muster_cause", result.cause)
 	if already_resolved:
 		return
 	var faction := str(outcome.get("faction", _definition.get("win_faction", "")))
@@ -308,24 +308,47 @@ func _apply_victory(result: BattleResult) -> void:
 	Renown.gain_reputation(
 		"player", float(outcome.get("renown", 3.0)), "Won a field encounter", "field"
 	)
-	SaveGame.request_autosave("encounter-" + String(encounter_id) + "-" + String(result.outcome_id))
+	var checkpoint := SaveGame.Checkpoint.RULING if result.outcome_id != &"slain" else SaveGame.Checkpoint.ENCOUNTER_RESOLUTION
+	SaveGame.request_checkpoint(checkpoint, String(encounter_id) + "-" + String(result.outcome_id))
 
 
 func _apply_loss_consequence(result: BattleResult) -> void:
+	var authored_loss := EncounterCatalog.loss(encounter_id)
+	_apply_authored_flags(authored_loss.get("flags", {}), result)
 	var consequence_flag := _consequence_flag(result.outcome_id)
 	if not consequence_flag.is_empty() and bool(GameState.get_flag(consequence_flag)):
 		return
 	if not consequence_flag.is_empty():
 		GameState.set_flag(consequence_flag, true)
 
-	var faction := ""
-	var delta := 0.0
+	var faction := str(authored_loss.get("faction", ""))
+	var delta := float(authored_loss.get("delta", 0.0))
+	var cause := str(authored_loss.get("cause", result.cause))
 	if not enemies.is_empty():
-		faction = enemies[0].loss_faction
-		delta = enemies[0].loss_delta
+		faction = faction if not faction.is_empty() else enemies[0].loss_faction
+		delta = delta if delta != 0.0 else enemies[0].loss_delta
+		cause = cause if not cause.is_empty() else enemies[0].loss_cause
 	if not faction.is_empty():
-		Reputation.record("player", faction, delta, result.cause, "field")
-	SaveGame.request_autosave("encounter-" + String(encounter_id) + "-defeat")
+		Reputation.record("player", faction, delta, cause, "field")
+		SaveGame.request_checkpoint(
+			SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, String(encounter_id) + "-defeat"
+		)
+
+
+func _apply_authored_flags(raw_flags: Variant, result: BattleResult) -> void:
+	if not raw_flags is Dictionary:
+		return
+	for flag_key: Variant in raw_flags:
+		var value: Variant = raw_flags[flag_key]
+		if value is String:
+			match value:
+				"$outcome_id":
+					value = String(result.outcome_id)
+				"$cause":
+					value = result.cause
+				"$message":
+					value = result.message
+		GameState.set_flag(str(flag_key), value)
 
 
 func _record_last_outcome(result: BattleResult) -> void:

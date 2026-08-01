@@ -67,6 +67,18 @@ static func outcome(encounter_id: StringName, outcome_id: StringName) -> Diction
 	return {}
 
 
+static func loss(encounter_id: StringName) -> Dictionary:
+	var row := definition(encounter_id)
+	var authored: Variant = row.get("loss", {})
+	if authored is Dictionary and not authored.is_empty():
+		return authored.duplicate(true)
+	return {
+		"faction": row.get("loss_faction", ""),
+		"delta": row.get("loss_delta", 0.0),
+		"cause": row.get("loss_cause", ""),
+	}
+
+
 static func default_outcome(encounter_id: StringName) -> StringName:
 	return StringName(definition(encounter_id).get("default_outcome", "slain"))
 

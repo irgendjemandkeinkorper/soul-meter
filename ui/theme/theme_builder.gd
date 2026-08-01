@@ -149,6 +149,29 @@ static func build() -> Theme:
 	t.set_stylebox("selected", "ItemList", sel)
 	t.set_stylebox("selected_focus", "ItemList", sel.duplicate())
 
+	# ItemSlot — 64px inventory cells: inset stone, violet selection edge.
+	t.add_type("ItemSlot")
+	t.set_type_variation("ItemSlot", "Button")
+	var item_slot := btn.duplicate()
+	item_slot.bg_color = DS.VOID_1
+	item_slot.border_color = DS.IRON_1
+	item_slot.content_margin_left = 2
+	item_slot.content_margin_right = 2
+	item_slot.content_margin_top = 2
+	item_slot.content_margin_bottom = 2
+	t.set_stylebox("normal", "ItemSlot", item_slot)
+	var item_slot_hover := item_slot.duplicate()
+	item_slot_hover.border_color = DS.VIOLET_3
+	t.set_stylebox("hover", "ItemSlot", item_slot_hover)
+	var item_slot_pressed := item_slot.duplicate()
+	item_slot_pressed.bg_color = Color(DS.VIOLET_2, 0.25)
+	item_slot_pressed.border_color = DS.VIOLET_3
+	t.set_stylebox("pressed", "ItemSlot", item_slot_pressed)
+	t.set_stylebox("focus", "ItemSlot", item_slot_pressed.duplicate())
+	t.set_color("font_color", "ItemSlot", DS.ASH)
+	t.set_color("font_hover_color", "ItemSlot", DS.PARCHMENT)
+	t.set_color("font_pressed_color", "ItemSlot", DS.PARCHMENT)
+
 	var track := inset.duplicate()
 	track.set_content_margin_all(0)
 	t.set_stylebox("background", "ProgressBar", track)

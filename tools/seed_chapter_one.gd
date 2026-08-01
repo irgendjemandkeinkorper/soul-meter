@@ -252,7 +252,16 @@ func _encounter(
 		"Loss Cause": loss_cause,
 		"Default Outcome": "slain",
 		"Context Actions": "[]",
-		"Outcomes": "{}",
+		"Outcomes": JSON.stringify(
+			{
+				"slain": {
+					"message": "The opposition is defeated.",
+					"cause": win_cause,
+					"faction": win_faction,
+					"delta": win_delta,
+				}
+			}
+		),
 	}
 
 
@@ -304,6 +313,10 @@ func _muster_encounter() -> Dictionary:
 					"cause": "Destroyed the Mustered Bloodbellow by force",
 					"faction": "ironbrand-sentinels",
 					"delta": 5.0,
+					"flags": {
+						"dorthkor_muster_outcome": "$outcome_id",
+						"dorthkor_muster_cause": "$cause",
+					},
 				},
 				"named":
 				{
@@ -311,6 +324,10 @@ func _muster_encounter() -> Dictionary:
 					"cause": "Broke the Bloodbellow binding by speaking its muster-name",
 					"faction": "ironbrand-sentinels",
 					"delta": 5.0,
+					"flags": {
+						"dorthkor_muster_outcome": "$outcome_id",
+						"dorthkor_muster_cause": "$cause",
+					},
 				},
 				"released":
 				{
@@ -319,6 +336,10 @@ func _muster_encounter() -> Dictionary:
 					"cause": "Released the soldier bound inside the Bloodbellow muster",
 					"faction": "ironbrand-sentinels",
 					"delta": 5.0,
+					"flags": {
+						"dorthkor_muster_outcome": "$outcome_id",
+						"dorthkor_muster_cause": "$cause",
+					},
 				},
 			}
 		)

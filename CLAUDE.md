@@ -35,9 +35,8 @@ range), plus a manual-checklist convention in `test/manual/`. Run via
 `GODOT_BIN=~/.local/bin/godot bash addons/gdUnit4/runtest.sh -a test`.
 **Still open / next candidates:** Maaack's setup wizard (editor-interactive, do on the Windows
 machine), GodotGAS (store download, no public repo), portrait art PNGs from the DS project,
-localization POT enablement, CI wiring for gdUnit4, the unratified Balance Gauge / Defining
-Strikes combat identity (design doc §6), `docs/godot-architecture.md`'s one remaining open human
-question (gamepad-at-ship).
+CI wiring for gdUnit4, the unratified Balance Gauge / Defining Strikes combat identity (design
+doc §6), and `docs/godot-architecture.md`'s one remaining open human question (gamepad-at-ship).
 
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
@@ -120,7 +119,7 @@ Load-bearing rules:
   required on Pandora `Items`); multiplayer = co-op is a live maybe (keep GameState
   serializable, wrap GAS behind a seam, `StateChartSerializer` matters).
 - Also read `docs/godot-flow-handoff.md` (statechart tree detail) and `DEPENDENCIES.md`
-  (pins; what's pending: Maaack wizard, localization POT enablement, GodotGAS, CI drift hook).
+  (pins; what's pending: Maaack wizard, GodotGAS, and CI drift-hook follow-through).
 
 ## The design doc is the spec (game design)
 

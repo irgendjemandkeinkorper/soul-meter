@@ -8,6 +8,11 @@ extends StaticBody2D
 @export var encounter_id: StringName
 @export var required_flag: String = ""
 @export var locked_message: String = "Resolve the threat before this one."
+@export_group("Placeholder presentation")
+## Scene-owned presentation keeps encounter content from branching on lore IDs.
+@export var visual_region := Rect2(0, 102, 16, 16)
+@export var visual_modulate := Color(1.0, 0.4, 0.4, 1.0)
+@export var visual_scale := Vector2(3.5, 3.5)
 
 var _player_in_range := false
 var _prompt: Label
@@ -99,17 +104,8 @@ func _locked_prompt() -> String:
 
 func _apply_visual_identity() -> void:
 	var sprite := $Sprite2D as Sprite2D
-	match encounter_id:
-		&"dorthkor-vanguard":
-			sprite.region_rect = Rect2(0, 68, 16, 16)
-			sprite.modulate = Color(0.96, 0.28, 0.22, 1)
-		&"dorthkor-muster":
-			sprite.region_rect = Rect2(17, 102, 16, 16)
-			sprite.modulate = Color(0.7, 0.62, 0.85, 1)
-			sprite.scale = Vector2(4.25, 4.25)
-		&"bog-wight":
-			sprite.region_rect = Rect2(0, 68, 16, 16)
-			sprite.modulate = Color(0.4, 0.78, 0.55, 1)
-		&"loam-boar":
-			sprite.region_rect = Rect2(34, 68, 16, 16)
-			sprite.modulate = Color(0.66, 0.45, 0.28, 1)
+	if sprite == null:
+		return
+	sprite.region_rect = visual_region
+	sprite.modulate = visual_modulate
+	sprite.scale = visual_scale

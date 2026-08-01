@@ -19,6 +19,8 @@ var _log: Array[RenownEvent] = []
 var _next_order: int = 0
 var _reputation: float = 0.0
 var _infamy: float = 0.0
+## Derived cache: kind -> array of events. Speeds up why().
+var _events_by_kind: Dictionary = {}
 
 
 func gain_reputation(actor: String, delta: float, cause: String, scene: String = "") -> RenownEvent:
@@ -40,12 +42,13 @@ func infamy() -> float:
 ## The most recent reasons behind one meter, newest first — same shape as
 ## Reputation.why().
 func why(kind: StringName, limit: int = 5) -> Array[RenownEvent]:
-	var events: Array[RenownEvent] = []
-	for e in _log:
-		if e.kind == kind:
-			events.append(e)
-	events.reverse()
-	return events.slice(0, limit)
+	var events: Array[RenownEvent] = _events_by_kind.get(kind, [] as Array[RenownEvent])
+	var out: Array[RenownEvent] = []
+	var total := events.size()
+	var count := mini(limit, total)
+	for i in range(count):
+		out.append(events[total - 1 - i])
+	return out
 
 
 func _record(actor: String, kind: StringName, delta: float, cause: String, scene: String) -> RenownEvent:
@@ -59,6 +62,11 @@ func _record(actor: String, kind: StringName, delta: float, cause: String, scene
 	e.order = _next_order
 	_next_order += 1
 	_log.append(e)
+
+	if not _events_by_kind.has(kind):
+		_events_by_kind[kind] = [] as Array[RenownEvent]
+	var kind_events: Array[RenownEvent] = _events_by_kind[kind]
+	kind_events.append(e)
 
 	if kind == &"infamy":
 		_infamy += delta
@@ -80,10 +88,15 @@ func from_dict(d: Dictionary) -> void:
 	_log.clear()
 	_reputation = 0.0
 	_infamy = 0.0
+	_events_by_kind.clear()
 	for row in d.get("log", []):
 		_log.append(RenownEvent.from_dict(row))
 	_next_order = int(d.get("next_order", _log.size()))
 	for e in _log:
+		if not _events_by_kind.has(e.kind):
+			_events_by_kind[e.kind] = [] as Array[RenownEvent]
+		_events_by_kind[e.kind].append(e)
+
 		if e.kind == &"infamy":
 			_infamy += e.delta
 		else:

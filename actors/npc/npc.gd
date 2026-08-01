@@ -6,6 +6,11 @@ extends StaticBody2D
 @export var npc_name: String = "NPC"
 @export_file("*.dialogue") var dialogue_path: String
 @export var dialogue_start: String = "start"
+@export_group("Placeholder presentation")
+## Scene-owned presentation keeps NPC content from branching on lore names.
+@export var visual_region := Rect2(0, 68, 16, 16)
+@export var visual_modulate := Color(0.55, 0.78, 0.64, 1.0)
+@export var visual_scale := Vector2(3.5, 3.5)
 
 var _player_in_range := false
 var _prompt: Label
@@ -47,9 +52,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _apply_visual_identity() -> void:
 	var sprite := $Sprite2D as Sprite2D
-	if npc_name == "Marshal Coiljaw":
-		sprite.region_rect = Rect2(17, 102, 16, 16)
-		sprite.modulate = Color(0.82, 0.68, 0.43, 1)
-	else:
-		sprite.region_rect = Rect2(0, 68, 16, 16)
-		sprite.modulate = Color(0.55, 0.78, 0.64, 1)
+	if sprite == null:
+		return
+	sprite.region_rect = visual_region
+	sprite.modulate = visual_modulate
+	sprite.scale = visual_scale

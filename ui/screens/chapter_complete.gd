@@ -48,7 +48,7 @@ func _build() -> void:
 
 func _continue() -> void:
 	GameState.set_flag("chapter_one_free_roam", true)
-	SaveGame.request_autosave("free-roam-unlocked")
+	SaveGame.request_checkpoint(SaveGame.Checkpoint.FREE_ROAM_UNLOCK)
 	GameFlow.send_event("continue_exploring")
 
 
