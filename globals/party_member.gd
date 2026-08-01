@@ -56,10 +56,10 @@ static func from_dict(data: Dictionary) -> PartyMember:
 		# A maliciously crafted save file could specify a .gd script, .tscn scene,
 		# or .tres resource file with executable code, which gets parsed/run during load().
 		# We restrict paths to res://, deny traversal (..), verify existence, and
-		# check that the type is a Texture2D before loading.
+		# check that the type is an allowed built-in texture type before loading.
 		if ResourceLoader.exists(portrait_path):
 			var res_type := ResourceLoader.get_resource_type(portrait_path)
-			if res_type == "Texture2D" or ClassDB.is_parent_class(res_type, "Texture2D"):
+			if res_type in ["CompressedTexture2D", "PortableCompressedTexture2D", "AtlasTexture", "ImageTexture", "Texture2D"]:
 				member.portrait = load(portrait_path)
 	member.min_reputation = float(data.get("min_reputation", 0.0))
 	member.min_infamy = float(data.get("min_infamy", 0.0))
