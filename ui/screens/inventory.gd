@@ -73,6 +73,7 @@ func _rebuild_list() -> void:
 		slot.theme_type_variation = "ItemSlot"
 		slot.toggle_mode = true
 		slot.focus_mode = Control.FOCUS_ALL
+		slot.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		slot.text = _slot_text(item)
 		slot.tooltip_text = _tooltip_text(item)
 		var icon := item.get_texture()

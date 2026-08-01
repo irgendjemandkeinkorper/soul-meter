@@ -17,6 +17,7 @@ func _build() -> void:
 	vbox.add_child(row)
 
 	var list := ItemList.new()
+	list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	list.custom_minimum_size = Vector2(260, 0)
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(list)
