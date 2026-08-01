@@ -11,7 +11,6 @@ var _actions_box: VBoxContainer
 var _target_button: Button
 var _outcome_box: VBoxContainer
 var _action_buttons: Array[Button] = []
-var _action_labels: PackedStringArray = []
 var _sfx: AudioStreamPlayer
 
 func _build() -> void:
@@ -52,13 +51,10 @@ func _build() -> void:
 	vbox.add_child(_actions_box)
 	_target_button = _menu_button(_actions_box, "", Battle.select_next_enemy)
 	for action in Battle.available_actions():
-		var label := action.display_name
-		if action.soul_cost > 0.0:
-			label += "  (%d Soul)" % int(action.soul_cost)
-		var button := _menu_button(_actions_box, label, _use_action.bind(action.id))
-		button.tooltip_text = action.lock_reason
+		var button := _menu_button(_actions_box, _action_text(action), _use_action.bind(action.id))
+		button.tooltip_text = _action_tooltip(action)
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_action_buttons.append(button)
-		_action_labels.append(label)
 	_menu_button(_actions_box, "Flee", Battle.flee)
 
 	_outcome_box = VBoxContainer.new()
@@ -95,10 +91,22 @@ func _refresh() -> void:
 			continue
 		var reason := Battle.action_lock_reason(actions[i])
 		_action_buttons[i].disabled = not reason.is_empty()
-		_action_buttons[i].tooltip_text = reason
-		_action_buttons[i].text = _action_labels[i]
-		if not reason.is_empty() and actions[i].kind == CombatAction.Kind.RESOLUTION:
-			_action_buttons[i].text += "  —  LOCKED: " + reason
+		_action_buttons[i].tooltip_text = _action_tooltip(actions[i], reason)
+		_action_buttons[i].text = _action_text(actions[i], reason)
+
+
+func _action_text(action: CombatAction, reason: String = "") -> String:
+	var text := action.display_name + "  —  " + action.summary()
+	if not reason.is_empty() and action.kind == CombatAction.Kind.RESOLUTION:
+		text += "  —  LOCKED: " + reason
+	return text
+
+
+func _action_tooltip(action: CombatAction, reason: String = "") -> String:
+	var text := action.summary()
+	if not reason.is_empty():
+		text += "\nLocked: " + reason
+	return text
 
 
 func _actor_summary(actors: Array[BattleActor], active: BattleActor = null) -> String:

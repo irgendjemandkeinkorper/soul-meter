@@ -80,12 +80,17 @@ position = Vector2(180, 450)
 [node name="BreachHound" parent="." instance=ExtResource("4_enemy")]
 position = Vector2(720, 430)
 encounter_id = &"dorthkor-vanguard"
+visual_region = Rect2(0, 68, 16, 16)
+visual_modulate = Color(0.96, 0.28, 0.22, 1)
 
 [node name="MusteredDead" parent="." instance=ExtResource("4_enemy")]
 position = Vector2(1280, 470)
 encounter_id = &"dorthkor-muster"
 required_flag = "defeated_breach_hound"
 locked_message = "Break the demon vanguard first."
+visual_region = Rect2(17, 102, 16, 16)
+visual_modulate = Color(0.7, 0.62, 0.85, 1)
+visual_scale = Vector2(4.25, 4.25)
 
 [node name="ReturnToDom" parent="." instance=ExtResource("5_exit")]
 position = Vector2(70, 450)
