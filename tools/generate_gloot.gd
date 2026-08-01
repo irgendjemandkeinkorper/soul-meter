@@ -195,7 +195,7 @@ static func _merge_locale_po(path: String, entries: Array[Dictionary]) -> String
 		)
 		var fuzzy := bool(previous.get("fuzzy", false)) or source_changed
 		po += _po_entry(entry, translation, fuzzy)
-	return po
+	return po.trim_suffix("\n").trim_suffix("\n") + "\n"
 
 
 static func _po_needs_merge(path: String, entries: Array[Dictionary]) -> bool:

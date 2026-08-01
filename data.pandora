@@ -2605,7 +2605,7 @@
 					},
 					"Outcomes": {
 						"type": "string",
-						"value": "{}"
+						"value": "{\"slain\":{\"cause\":\"Cleared the Bog Wight from the grove margins\",\"delta\":6.0,\"faction\":\"ssae-seeders\",\"message\":\"The opposition is defeated.\"}}"
 					},
 					"Win Cause": {
 						"type": "string",
@@ -2666,7 +2666,7 @@
 					},
 					"Outcomes": {
 						"type": "string",
-						"value": "{}"
+						"value": "{\"slain\":{\"cause\":\"Culled a Loam-maddened boar before it reached the grove\",\"delta\":5.0,\"faction\":\"ssae-seeders\",\"message\":\"The opposition is defeated.\"}}"
 					},
 					"Win Cause": {
 						"type": "string",
@@ -2727,7 +2727,7 @@
 					},
 					"Outcomes": {
 						"type": "string",
-						"value": "{}"
+						"value": "{\"slain\":{\"cause\":\"Broke the demon vanguard at Dorthkor\",\"delta\":5.0,\"faction\":\"iron-companies\",\"message\":\"The opposition is defeated.\"}}"
 					},
 					"Win Cause": {
 						"type": "string",
@@ -2788,7 +2788,7 @@
 					},
 					"Outcomes": {
 						"type": "string",
-						"value": "{\"named\":{\"cause\":\"Broke the Bloodbellow binding by speaking its muster-name\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"message\":\"Its muster-name answers. The binding splits and the armor empties.\"},\"released\":{\"cause\":\"Released the soldier bound inside the Bloodbellow muster\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"message\":\"The held center opens a way out. The soldier's soul leaves the armor.\"},\"slain\":{\"cause\":\"Destroyed the Mustered Bloodbellow by force\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"message\":\"The Bloodbellow falls, its borrowed cadence cut short.\"}}"
+						"value": "{\"named\":{\"cause\":\"Broke the Bloodbellow binding by speaking its muster-name\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"flags\":{\"dorthkor_muster_cause\":\"$cause\",\"dorthkor_muster_outcome\":\"$outcome_id\"},\"message\":\"Its muster-name answers. The binding splits and the armor empties.\"},\"released\":{\"cause\":\"Released the soldier bound inside the Bloodbellow muster\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"flags\":{\"dorthkor_muster_cause\":\"$cause\",\"dorthkor_muster_outcome\":\"$outcome_id\"},\"message\":\"The held center opens a way out. The soldier's soul leaves the armor.\"},\"slain\":{\"cause\":\"Destroyed the Mustered Bloodbellow by force\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"flags\":{\"dorthkor_muster_cause\":\"$cause\",\"dorthkor_muster_outcome\":\"$outcome_id\"},\"message\":\"The Bloodbellow falls, its borrowed cadence cut short.\"}}"
 					},
 					"Win Cause": {
 						"type": "string",
@@ -2849,7 +2849,7 @@
 					},
 					"Outcomes": {
 						"type": "string",
-						"value": "{}"
+						"value": "{\"slain\":{\"cause\":\"Stopped the cleaned armor standing watch at the Jawbrace\",\"delta\":6.0,\"faction\":\"ironbrand-sentinels\",\"message\":\"The opposition is defeated.\"}}"
 					},
 					"Win Cause": {
 						"type": "string",

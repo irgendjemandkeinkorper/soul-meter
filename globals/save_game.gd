@@ -12,6 +12,26 @@ const TEMP_PATH := "user://chapter_one.save.tmp"
 const BACKUP_PATH := "user://chapter_one.save.bak"
 const FORMAT_VERSION := 2
 
+enum Checkpoint {
+	NEW_GAME,
+	PARTY_FORMED,
+	COMMISSION,
+	LOCATION_ARRIVAL,
+	ENCOUNTER_RESOLUTION,
+	RULING,
+	FREE_ROAM_UNLOCK,
+}
+
+const CHECKPOINT_NAMES := {
+	Checkpoint.NEW_GAME: "initial-spawn",
+	Checkpoint.PARTY_FORMED: "party-formed",
+	Checkpoint.COMMISSION: "commission-accepted",
+	Checkpoint.LOCATION_ARRIVAL: "arrived",
+	Checkpoint.ENCOUNTER_RESOLUTION: "encounter",
+	Checkpoint.RULING: "ruling",
+	Checkpoint.FREE_ROAM_UNLOCK: "free-roam-unlocked",
+}
+
 var pending_player_position := Vector2.ZERO
 var has_pending_player_position := false
 var pending_spawn_id: StringName = &"default"
@@ -59,6 +79,16 @@ func save() -> bool:
 func request_autosave(reason: String) -> void:
 	_pending_autosave_reason = reason
 	call_deferred("flush_pending_autosave")
+
+
+func request_checkpoint(checkpoint: Checkpoint, detail: String = "") -> void:
+	if not CHECKPOINT_NAMES.has(checkpoint):
+		push_warning("Unknown save checkpoint: %s" % checkpoint)
+		return
+	var reason: String = CHECKPOINT_NAMES[checkpoint]
+	if not detail.is_empty():
+		reason += "-" + detail
+	request_autosave(reason)
 
 
 func flush_pending_autosave() -> bool:
@@ -142,7 +172,7 @@ func new_game() -> void:
 	has_pending_player_position = false
 	_elapsed_before_load = 0
 	_run_started_unix = int(Time.get_unix_time_from_system())
-	_pending_autosave_reason = "initial-spawn"
+	_pending_autosave_reason = CHECKPOINT_NAMES[Checkpoint.NEW_GAME]
 
 
 func apply_pending_location(scene: Node) -> void:
@@ -204,6 +234,8 @@ func _read_payload(path: String) -> Variant:
 
 
 func _in_gameplay_scene() -> bool:
+	if not is_inside_tree():
+		return false
 	var scene := get_tree().current_scene
 	return scene != null and scene.scene_file_path in GameFlow.GAMEPLAY_SCENES
 

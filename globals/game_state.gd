@@ -319,7 +319,7 @@ func set_companions(members: Array[PartyMember]) -> bool:
 	party = [lead, members[0], members[1]]
 	set_flag("chapter_party_formed", true)
 	party_changed.emit()
-	SaveGame.request_autosave("party-formed")
+	SaveGame.request_checkpoint(SaveGame.Checkpoint.PARTY_FORMED)
 	return true
 
 

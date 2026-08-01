@@ -5,15 +5,21 @@ extends Area2D
 ## in game code, per docs/godot-architecture.md's Flow policy.
 
 @export var target_scene: String = ""
+@export var target_location_id: StringName = &""
 @export var label_text: String = "Leave"
 @export var required_flag: String = ""
 @export var locked_message: String = "This route is not open yet."
 @export var spawn_id: StringName = &"default"
 
 var _label: Label
+var _location: LocationDefinition
 
 
 func _ready() -> void:
+	_location = LocationRegistry.resolve(target_scene, target_location_id)
+	if _location == null:
+		push_error("TravelExit has no registered gameplay location: %s" % target_scene)
+		target_scene = ""
 	var shape := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
 	rect.size = Vector2(60, 100)
@@ -35,9 +41,9 @@ func _ready() -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
-	if body is Player and not target_scene.is_empty():
+	if body is Player and _location != null:
 		if _is_unlocked():
-			GameFlow.travel(target_scene, spawn_id)
+			GameFlow.travel(_location.scene_path, _location.resolve_spawn(spawn_id))
 		else:
 			_label.text = _locked_prompt()
 

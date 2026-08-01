@@ -27,7 +27,7 @@ func offer(quest: Quest) -> void:
 		return
 	if quest == DORTHKOR_ROAD:
 		GameState.set_flag("chapter_dorthkor_commissioned", true)
-		SaveGame.request_autosave("commission-accepted")
+		SaveGame.request_checkpoint(SaveGame.Checkpoint.COMMISSION)
 	elif quest == DEEP_TRIAL:
 		GameState.set_flag("deep_trial_open", true)
 		SaveGame.request_autosave("deep-trial-accepted")

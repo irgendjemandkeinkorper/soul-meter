@@ -47,23 +47,23 @@ static func get_definition() -> Resource:
 	def.follow_up_condition_flag = "prototype_extended_content"
 
 	# Create standard stages in chronological order
-	var recruit: Resource = _create_stage("RECRUIT", "THE BROKEN MUSTER", "Enter the Four Arms and choose exactly two companions.", [])
+	var recruit: Resource = _create_stage("RECRUIT", "THE BROKEN MUSTER", "Enter the Four Arms and choose exactly two companions.", [], null, "The Four Arms in Dom", "Choose exactly two companions.")
 
 	var report_req: Resource = _create_req(FactRequirementScript.Type.COMPANIONS_SELECTED)
-	var report: Resource = _create_stage("REPORT", "THE BROKEN MUSTER", "Report to Marshal Coiljaw at the Trial Hall.", [report_req])
+	var report: Resource = _create_stage("REPORT", "THE BROKEN MUSTER", "Report to Marshal Coiljaw at the Trial Hall.", [report_req], null, "Trial Council Hall in Dom", "Speak with Marshal Coiljaw.")
 
 	var secure_req: Resource = _create_req(FactRequirementScript.Type.QUEST_ACTIVE, QuestRegistry.DORTHKOR_ROAD)
-	var secure_road: Resource = _create_stage("SECURE_ROAD", "THE BROKEN MUSTER", "", [secure_req], QuestRegistry.DORTHKOR_ROAD)
+	var secure_road: Resource = _create_stage("SECURE_ROAD", "THE BROKEN MUSTER", "", [secure_req], QuestRegistry.DORTHKOR_ROAD, "North Road → Dorthkor", "Break the demon vanguard, then face the dead muster.")
 
 	var return_req_active: Resource = _create_req(FactRequirementScript.Type.QUEST_ACTIVE, QuestRegistry.DORTHKOR_ROAD)
 	var return_req_flags: Resource = _create_req(FactRequirementScript.Type.QUEST_FLAGS_MET, QuestRegistry.DORTHKOR_ROAD)
-	var return_stage: Resource = _create_stage("RETURN", "THE BROKEN MUSTER", "Return to Marshal Coiljaw and rule on Dom's response.", [return_req_active, return_req_flags])
+	var return_stage: Resource = _create_stage("RETURN", "THE BROKEN MUSTER", "Return to Marshal Coiljaw and rule on Dom's response.", [return_req_active, return_req_flags], null, "Trial Council Hall in Dom", "Choose a ruling after both encounters.")
 
 	var complete_req: Resource = _create_req(FactRequirementScript.Type.FLAG_NON_EMPTY, null, "chapter_one_resolution")
-	var complete: Resource = _create_stage("COMPLETE", "THE BROKEN MUSTER", "Review the consequence ledger for The Broken Muster.", [complete_req])
+	var complete: Resource = _create_stage("COMPLETE", "THE BROKEN MUSTER", "Review the consequence ledger for The Broken Muster.", [complete_req], null, "Chapter recap", "Review the ledger, then continue exploring.")
 
 	var free_roam_req: Resource = _create_req(FactRequirementScript.Type.FLAG_TRUE, null, "chapter_one_free_roam")
-	var free_roam: Resource = _create_stage("FREE_ROAM", "THE BROKEN MUSTER", "Free roam: the Loamroot grove is now open east of Dom.", [free_roam_req])
+	var free_roam: Resource = _create_stage("FREE_ROAM", "THE BROKEN MUSTER", "Free roam: the Loamroot grove is now open east of Dom.", [free_roam_req], null, "East Road → Loamroot Grove", "Explore freely or take the next available quest.")
 
 	# Assign standard stages explicitly to the typed array
 	var standard_stages: Array[Resource] = []
@@ -119,6 +119,16 @@ static func objective() -> String:
 	return def.get_objective(stage_def)
 
 
+static func destination() -> String:
+	var def: Resource = get_definition()
+	return def.get_destination(def.get_current_stage())
+
+
+static func action_hint() -> String:
+	var def: Resource = get_definition()
+	return def.get_action_hint(def.get_current_stage())
+
+
 static func title() -> String:
 	var def: Resource = get_definition()
 	var stage_def: Resource = def.get_current_stage()
@@ -136,11 +146,21 @@ static func loamroot_unlocked() -> bool:
 	return bool(GameState.get_flag("chapter_one_free_roam"))
 
 
-static func _create_stage(id: String, title_text: String, objective_text: String, reqs: Array[Resource], dynamic_quest: Quest = null) -> Resource:
+static func _create_stage(
+	id: String,
+	title_text: String,
+	objective_text: String,
+	reqs: Array[Resource],
+	dynamic_quest: Quest = null,
+	destination_hint: String = "",
+	action_hint: String = ""
+) -> Resource:
 	var stage: Resource = ChapterStageDefinitionScript.new()
 	stage.id = id
 	stage.title = title_text
 	stage.objective = objective_text
+	stage.destination_hint = destination_hint
+	stage.action_hint = action_hint
 	var requirements_typed: Array[Resource] = []
 	for r in reqs:
 		requirements_typed.append(r)

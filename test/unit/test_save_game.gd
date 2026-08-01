@@ -46,6 +46,33 @@ func test_named_spawn_ids_map_to_scene_marker_names() -> void:
 	assert_str(saves._pascal_case("from_dorthkor")).is_equal("FromDorthkor")
 
 
+func test_checkpoint_contract_names_player_visible_recovery_moments() -> void:
+	assert_str(saves.CHECKPOINT_NAMES[SaveGameScript.Checkpoint.NEW_GAME]).is_equal(
+		"initial-spawn"
+	)
+	assert_str(saves.CHECKPOINT_NAMES[SaveGameScript.Checkpoint.PARTY_FORMED]).is_equal(
+		"party-formed"
+	)
+	assert_str(saves.CHECKPOINT_NAMES[SaveGameScript.Checkpoint.COMMISSION]).is_equal(
+		"commission-accepted"
+	)
+	assert_str(
+		saves.CHECKPOINT_NAMES[SaveGameScript.Checkpoint.LOCATION_ARRIVAL]
+	).is_equal("arrived")
+	assert_str(saves.CHECKPOINT_NAMES[SaveGameScript.Checkpoint.ENCOUNTER_RESOLUTION]).is_equal(
+		"encounter"
+	)
+	assert_str(saves.CHECKPOINT_NAMES[SaveGameScript.Checkpoint.RULING]).is_equal("ruling")
+	assert_str(saves.CHECKPOINT_NAMES[SaveGameScript.Checkpoint.FREE_ROAM_UNLOCK]).is_equal(
+		"free-roam-unlocked"
+	)
+
+
+func test_checkpoint_request_keeps_detail_in_autosave_reason() -> void:
+	saves.request_checkpoint(SaveGameScript.Checkpoint.LOCATION_ARRIVAL, "dorthkor_reached")
+	assert_str(saves._pending_autosave_reason).is_equal("arrived-dorthkor_reached")
+
+
 func test_invalid_primary_payload_can_be_rejected_before_fallback() -> void:
 	var invalid := {"version": SaveGameScript.FORMAT_VERSION, "scene": "user://broken"}
 	assert_bool(saves.validate_payload(invalid)).is_false()

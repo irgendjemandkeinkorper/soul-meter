@@ -9,7 +9,7 @@ open magic system built on combinable spell effects.
 > Pandora→GLoot generator + ItemIds + items.pot (`tools/generate_gloot.gd`, drift-check
 > mode), reputation ledger (`globals/reputation.gd`), and PO item fallback/merge support.
 > Still to do: Maaack's setup wizard (editor, Windows), GodotGAS (store download) + its
-> generator, and CI hook for the drift check.
+> generator. The localization and Pandora drift-check seams below are implemented.
 
 ---
 
@@ -236,8 +236,11 @@ mode is four needing patches from four maintainers simultaneously. Mitigations: 
 ## Open questions for the human
 
 1. ~~2D or 3D~~ — **2D, isometric from 3D models** (answered).
-2. ~~Translation format~~ — **PO/gettext** ("whatever is scalable"; native fuzzy/stale
-   marking, translator-standard tooling). (answered 2026-07-26)
+2. ~~Translation format and POT enablement~~ — **PO/gettext** ("whatever is scalable"; native
+   fuzzy/stale marking, translator-standard tooling). Godot's source list is enabled, the
+   engine-owned `locale/project.pot` is checked in, and Pandora item text uses the separate
+   merged `data/generated/items.pot` / `locale/es.po` pipeline. (answered 2026-07-26; enabled
+   and verified 2026-08-01)
 3. Target platforms — must gamepad-only work at ship? (open)
 4. ~~Multiplayer~~ — **maybe: BG3-style co-op is a live possibility.** Consequences:
    GodotGAS is single-player-scoped today (its networking is roadmap — re-verify before deep

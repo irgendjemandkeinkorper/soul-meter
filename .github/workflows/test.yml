@@ -31,11 +31,8 @@ jobs:
             exit 1
           fi
 
-      - name: Check Pandora generated artifacts
-        run: GODOT_BIN=godot bash scripts/check_generated_data.sh
-
-      - name: Run gdUnit4 suite
-        run: GODOT_BIN=godot bash scripts/test.sh -a test
+      - name: Run art-free acceptance gate
+        run: GODOT_BIN=godot bash scripts/acceptance_gate.sh
 
   package-windows:
     needs: test

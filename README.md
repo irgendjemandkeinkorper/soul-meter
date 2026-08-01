@@ -32,6 +32,12 @@ Run all automated tests:
 GODOT_BIN=~/.local/bin/godot bash scripts/test.sh
 ```
 
+Run the release-oriented, art-free gate (generated-data drift plus the deterministic suite):
+
+```bash
+GODOT_BIN=~/.local/bin/godot bash scripts/acceptance_gate.sh
+```
+
 Run the external-playtest checklist in
 [`test/manual/prototype_acceptance.md`](test/manual/prototype_acceptance.md) before sharing a
 build.

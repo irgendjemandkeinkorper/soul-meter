@@ -79,9 +79,16 @@ func _bind_quest(quest: Quest, label: Label) -> void:
 
 
 func _refresh_objective(label: Label) -> void:
-	label.text = "NEXT OBJECTIVE  ·  %s  —  %s" % [
+	var text := "NEXT OBJECTIVE  ·  %s  —  %s" % [
 		ChapterOneProgress.title(), ChapterOneProgress.objective()
 	]
+	var destination := ChapterOneProgress.destination()
+	if not destination.is_empty():
+		text += "\nGO TO  ·  " + destination
+	var action_hint := ChapterOneProgress.action_hint()
+	if not action_hint.is_empty():
+		text += "  ·  " + action_hint
+	label.text = text
 
 
 func _refresh_party(label: Label) -> void:

@@ -81,6 +81,8 @@ func test_free_roam_objective_opens_loamroot() -> void:
 
 	assert_bool(ChapterOneProgress.loamroot_unlocked()).is_true()
 	assert_str(ChapterOneProgress.objective()).contains("Free roam: the Loamroot grove is now open east of Dom.")
+	assert_str(ChapterOneProgress.destination()).contains("Loamroot Grove")
+	assert_str(ChapterOneProgress.action_hint()).contains("Explore")
 
 
 ## New progression tests for the extracted chapter progression contract:
