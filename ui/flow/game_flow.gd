@@ -109,6 +109,7 @@ func notify_dialogue_closed() -> void:
 
 func _on_title_entered() -> void:
 	UIManager.close_all()
+	MusicDirector.play_context("title")
 	var cur := get_tree().current_scene
 	if cur == null or cur.scene_file_path != MAIN_MENU_SCENE:
 		SceneLoader.load_scene(MAIN_MENU_SCENE)
@@ -124,6 +125,7 @@ func _on_scene_loaded() -> void:
 		SaveGame.apply_pending_location(get_tree().current_scene)
 		_waiting_for_level = false
 		send_event("level_ready")
+		MusicDirector.play_context("field")
 		SaveGame.flush_pending_autosave.call_deferred()
 		if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
 			notify_dialogue_closed()
@@ -141,20 +143,24 @@ func _on_paused_exited() -> void:
 
 func _on_battle_entered() -> void:
 	get_tree().paused = true
+	MusicDirector.push_context("battle")
 	UIManager.open(BATTLE_SCREEN, false, true)
 
 
 func _on_battle_exited() -> void:
 	UIManager.close_all()
 	get_tree().paused = false
+	MusicDirector.pop_context()
 	SaveGame.flush_pending_autosave.call_deferred()
 
 
 func _on_chapter_complete_entered() -> void:
 	get_tree().paused = true
+	MusicDirector.push_context("chapter_complete")
 	UIManager.open(CHAPTER_COMPLETE_SCREEN, false, true)
 
 
 func _on_chapter_complete_exited() -> void:
 	UIManager.close_all()
 	get_tree().paused = false
+	MusicDirector.pop_context()
