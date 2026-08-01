@@ -12,6 +12,7 @@
 | Enter the Four Arms | Six candidates appear; Vex is shown as fixed lead; Korrath (Renown 10) and Maura (Infamy 8) explain their locks |
 | Try one or three selections | Confirmation remains disabled; a third checked box is rejected |
 | Choose two open companions | Party becomes `[Vex, companion, companion]`, objective changes to Coiljaw, and AUTOSAVED appears |
+| Open Inventory | Items appear as 64px three-column slots; selecting a slot shows its full name, stack count, and description |
 
 ## 2. Commission and Dorthkor
 

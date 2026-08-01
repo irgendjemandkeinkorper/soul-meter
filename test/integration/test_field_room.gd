@@ -86,14 +86,14 @@ func test_open_inventory_screen() -> void:
 
 	assert_object(inventory_screen).is_not_null()
 
-	# Find the ItemList inside the screen to verify items are visible
-	var item_list: ItemList = _find_child_by_type(inventory_screen, "ItemList")
-	assert_object(item_list).is_not_null()
+	# Find the slot grid inside the screen to verify items are visible
+	var item_grid: GridContainer = _find_child_by_type(inventory_screen, "GridContainer")
+	assert_object(item_grid).is_not_null()
 
-	# Assert that all 6 starting items are visible in the ItemList
-	assert_int(item_list.item_count).is_equal(6)
+	# Assert that all 6 starting items are visible as 64px inventory slots.
+	assert_int(item_grid.get_child_count()).is_equal(6)
 
-	# Verify specific item names are in the ItemList
+	# Verify specific item names through each slot's full tooltip.
 	var expected_titles := [
 		"Taubstummer Axe",
 		"Captured Reflection",
@@ -104,7 +104,11 @@ func test_open_inventory_screen() -> void:
 	]
 
 	for i in range(6):
-		assert_str(item_list.get_item_text(i)).is_equal(expected_titles[i])
+		var slot: Button = item_grid.get_child(i)
+		assert_str(slot.tooltip_text).is_equal(expected_titles[i])
+
+	assert_str((item_grid.get_child(3) as Button).text).contains("×5")
+	assert_str((item_grid.get_child(4) as Button).text).contains("×2")
 
 	# Programmatically close the screen
 	UIManager.back()
