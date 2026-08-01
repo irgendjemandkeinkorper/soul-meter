@@ -9,12 +9,12 @@ msgstr ""
 #. consumables/loam_bread — display name
 #. English source: Loam Bread
 msgid "ITEM_CONSUMABLES_LOAM_BREAD_NAME"
-msgstr ""
+msgstr "Pan de Loam"
 
 #. consumables/loam_bread — description
 #. English source: Dense composting-city fare from Loamgate. Restores a little vigor.
 msgid "ITEM_CONSUMABLES_LOAM_BREAD_DESC"
-msgstr ""
+msgstr "Comida densa de la ciudad compostera de Loamgate. Devuelve un poco de vigor."
 
 #. materials/cinder_ink_vial — display name
 #. English source: Cinder-Ink Vial

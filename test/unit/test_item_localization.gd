@@ -19,3 +19,14 @@ func test_untranslated_item_text_falls_back_to_pandora_source() -> void:
 	assert_str(ItemLocalization.text("materials/loamroot_sprig", "description", "Source text")).is_equal(
 		"Source text"
 	)
+
+
+func test_supported_locale_translates_a_registered_item_key() -> void:
+	var original_locale := TranslationServer.get_locale()
+	TranslationServer.set_locale("es")
+	assert_str(
+		ItemLocalization.text(
+			"consumables/loam_bread", "name", "Loam Bread"
+		)
+	).is_equal("Pan de Loam")
+	TranslationServer.set_locale(original_locale)

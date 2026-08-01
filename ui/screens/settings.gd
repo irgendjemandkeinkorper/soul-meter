@@ -16,6 +16,18 @@ func _build() -> void:
 	for bus in ["Master", "Music", "SFX"]:
 		vbox.add_child(_volume_row(bus))
 
+	vbox.add_child(_section("Language"))
+	var locale := OptionButton.new()
+	locale.custom_minimum_size = Vector2(220, 36)
+	locale.add_item("English", 0)
+	locale.add_item("Español", 1)
+	locale.select(GameState.SUPPORTED_LOCALES.find(GameState.get_locale()))
+	locale.item_selected.connect(
+		func(index: int) -> void:
+			GameState.set_locale(GameState.SUPPORTED_LOCALES[index])
+	)
+	vbox.add_child(locale)
+
 	_add_back_button(vbox)
 
 
