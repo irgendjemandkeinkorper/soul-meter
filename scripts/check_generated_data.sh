@@ -18,7 +18,7 @@ cleanup() {
 trap cleanup EXIT
 
 cp "$project_file" "$project_backup"
-if ! rg -q '^Pandora=' "$project_file"; then
+if ! grep -Eq '^Pandora=' "$project_file"; then
 	echo "Pandora autoload is missing from $project_file." >&2
 	exit 1
 fi
@@ -27,7 +27,7 @@ sed -i '/^Pandora=/a GeneratorDriftCheck="*res://tools/generate_gloot.gd"' "$pro
 XDG_DATA_HOME="$data_dir" SOUL_METER_DRIFT_CHECK=1 "$godot_bin" \
 	--headless --path . --quit-after 30 2>&1 | tee "$log_file"
 
-if ! rg -q 'GLOOT-GEN: no drift\.' "$log_file"; then
+if ! grep -Eq 'GLOOT-GEN: no drift\.' "$log_file"; then
 	echo "Generator drift check did not complete successfully." >&2
 	exit 1
 fi
