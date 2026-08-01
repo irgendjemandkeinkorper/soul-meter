@@ -4,12 +4,12 @@ Handoff document (the standing architecture spec; `CLAUDE.md` summarizes it — 
 full text). Game shape: lore-heavy RPG with faction/reputation consequence tracking and an
 open magic system built on combinable spell effects.
 
-> Status note (2026-07-26): stack installed & pinned — see `DEPENDENCIES.md`. Done: root
+> Status note (2026-07-31): stack installed & pinned — see `DEPENDENCIES.md`. Done: root
 > state chart (`ui/flow/game_flow.tscn`), Pandora trees seeded (`tools/seed_pandora.gd`),
 > Pandora→GLoot generator + ItemIds + items.pot (`tools/generate_gloot.gd`, drift-check
-> mode), reputation ledger (`globals/reputation.gd`). Still to do: Maaack's setup wizard
-> (editor, Windows), POT project-settings enablement, GodotGAS (store download) + its
-> generator, CI hook for the drift check.
+> mode), reputation ledger (`globals/reputation.gd`), and PO item fallback/merge support.
+> Still to do: Maaack's setup wizard (editor, Windows), GodotGAS (store download) + its
+> generator, and CI hook for the drift check.
 
 ---
 
@@ -81,7 +81,7 @@ terrain).
    at `ui/flow/game_flow.tscn`
 4. **Pandora** — define category trees first (`Items`, `Spells`, `Effects`, `Factions`,
    `NPCs`, `Lore`) with a handful of real entities each. ✅ installed / ⬜ trees
-5. **Localization / POT** — before content exists, not after. ⬜ (blocked on PO-vs-CSV call)
+5. **Localization / POT** — before content exists, not after. ✅ PO/gettext pipeline enabled
 6. **Dialogue Manager** ✅ installed
 7. **QuestSystem** ✅ installed
 8. **GodotGAS + GLoot + the Pandora sync tool.** GLoot must not be used until the sync tool
@@ -119,8 +119,18 @@ holds runtime effect definitions. Generate the linkage.
 
 ## Localization / POT setup (step 5 — before content)
 
-- Enable POT generation (`Project Settings > Localization > POT Generation`)
-- Add Dialogue Manager `.dialogue` files and QuestSystem quest resources to the POT sources
+- Godot 4.7 has no separate enable switch for POT generation. The
+  `internationalization/locale/translations_pot_files` project setting is the source list;
+  use `Project Settings > Localization > Template Generation > Generate` to write the
+  engine-owned template. This project keeps that output at `locale/project.pot` and lists
+  Dialogue Manager `.dialogue` files plus QuestSystem quest resources as its sources.
+- The generated item template is intentionally separate at `data/generated/items.pot`.
+  Pandora owns item source text and `tools/generate_gloot.gd` owns those entries; Godot's
+  scanner owns dialogue/quest/script strings. Do not merge the two templates.
+- `locale/es.po` is a checked-in non-English scaffold loaded through
+  `internationalization/locale/translations`. It is updated by the Pandora generator and
+  keeps existing `msgstr` values. When an English source comment changes, the row is retained
+  and marked `#, fuzzy` for translator review.
 
 **Where strings live — decided:** English source strings live in Pandora (`Display Name`,
 `Description` as authoring fields). Localized strings do NOT — they live downstream in the
@@ -129,16 +139,19 @@ Pandora avoids merge collisions between translation batches and balance passes).
 
 **Mechanism:** the same generator that emits GLoot prototypes extracts the English strings
 into translation source files. Keys are *derived*, never stored: `ITEM_` + entity id,
-uppercased. Runtime resolves via `tr(derived_key)`. **The generator must merge, not
-overwrite** — update English rows, preserve translated rows, and flag rows whose English
-changed as stale (fuzzy).
+uppercased. Runtime resolves via `tr(derived_key)` in `globals/item_localization.gd`, then
+falls back to the raw Pandora string when no translation exists. The generator merges the
+locale scaffold instead of overwriting it: it preserves translated rows and flags rows whose
+English source comment changed as stale (`fuzzy`).
 
-Format: **PO/gettext** if real translators will be involved; CSV with a `source_hash` column
-if localization stays small in-house. Pick before authoring content.
+Format: **PO/gettext**. The engine-owned `locale/project.pot` and Pandora-owned
+`data/generated/items.pot` are separate by design.
 
-**Known conflict:** Godot uses the first `EditorTranslationParserPlugin` matching a file
-extension and ignores the rest. If two addons register parsers for `.tres`, one silently wins
-— if quest/entity strings vanish from the POT, this is why.
+**Parser audit (2026-07-31):** the installed addon set has one parser for each relevant
+extension: Dialogue Manager registers `.dialogue`, and QuestSystem registers `.tres`.
+Pandora and GLoot do not register an `EditorTranslationParserPlugin`, so the known first-parser
+collision is not active in this checkout. Re-audit if another addon adds a `.tres` or
+`.dialogue` parser.
 
 ---
 

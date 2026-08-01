@@ -4,6 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SoulMeter\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Language: es\n"
 
 #. consumables/loam_bread — display name
 #. English source: Loam Bread
@@ -74,4 +75,3 @@ msgstr ""
 #. English source: A sealed soul-weapon of the Last Great War; its edge remembers what it unmade.
 msgid "ITEM_WEAPONS_TAUBSTUMMER_AXE_DESC"
 msgstr ""
-

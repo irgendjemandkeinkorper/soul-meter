@@ -34,6 +34,9 @@ clean on 4.7.1 headless, Linux).
   `plugins/limboai-master.zip` on the Desktop copy is *engine source*; when the time comes,
   fetch a **GDExtension release** instead (no engine build).
 - **Godot Shaders** — not a plugin; copy shaders in per-need, checking each shader's license.
+- **Localization** — Godot's engine-owned POT source list and a checked-in `locale/es.po`
+  scaffold are enabled. Pandora item strings are generated separately into
+  `data/generated/items.pot`; regenerate to merge new rows and flag changed source text.
 - **CI and Windows packaging** — `.github/workflows/test.yml` imports with the pinned engine,
   runs the full suite under Xvfb, fails on Pandora artifact drift, then exports and uploads a
   zipped Windows x64 Compatibility build.

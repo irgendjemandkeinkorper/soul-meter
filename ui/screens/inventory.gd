@@ -82,8 +82,13 @@ func _on_selected(idx: int) -> void:
 	if idx < 0 or idx >= items.size():
 		return
 	var item: InventoryItem = items[idx]
-	_name_lbl.text = item.get_title()
 	var proto_id := item.get_prototype().get_prototype_id()
+	var name_key := ItemLocalization.key_for(proto_id, "name")
+	_name_lbl.text = ItemLocalization.with_fallback(tr(name_key), name_key, item.get_title())
 	var category := proto_id.split("/")[0]
 	_cat_lbl.text = category.capitalize()
-	_desc_lbl.text = item.get_property("description", "")
+	var desc_key := ItemLocalization.key_for(proto_id, "description")
+	var fallback_description := str(item.get_property("description", ""))
+	_desc_lbl.text = ItemLocalization.with_fallback(
+		tr(desc_key), desc_key, fallback_description
+	)
