@@ -12,6 +12,7 @@ var _prompt: Label
 
 
 func _ready() -> void:
+	_apply_visual_identity()
 	var range_area := Area2D.new()
 	var shape := CollisionShape2D.new()
 	var circle := CircleShape2D.new()
@@ -25,7 +26,9 @@ func _ready() -> void:
 	_prompt = Label.new()
 	_prompt.text = "E — TALK"
 	_prompt.theme_type_variation = "EyebrowLabel"
-	_prompt.position = Vector2(-36, -84)
+	_prompt.position = Vector2(-100, -108)
+	_prompt.size = Vector2(200, 32)
+	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.visible = false
 	add_child(_prompt)
 
@@ -40,3 +43,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _player_in_range and event.is_action_pressed("interact") and not get_tree().paused:
 		get_viewport().set_input_as_handled()
 		DialogueManager.show_dialogue_balloon(load(dialogue_path), dialogue_start)
+
+
+func _apply_visual_identity() -> void:
+	var sprite := $Sprite2D as Sprite2D
+	if npc_name == "Marshal Coiljaw":
+		sprite.region_rect = Rect2(17, 102, 16, 16)
+		sprite.modulate = Color(0.82, 0.68, 0.43, 1)
+	else:
+		sprite.region_rect = Rect2(0, 68, 16, 16)
+		sprite.modulate = Color(0.55, 0.78, 0.64, 1)

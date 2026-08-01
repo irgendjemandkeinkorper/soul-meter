@@ -20,6 +20,7 @@ const SOUL_GAUGE := preload("res://ui/hud/soul_gauge.tscn")
 ## later this generates from Pandora NPCs.
 const SPEAKERS := {
 	"Iris Illepah": {"subtitle": "Ssae-Seeder of the Groves", "element": "molm"},
+	"Marshal Coiljaw": {"subtitle": "the Road-Bench", "element": ""},
 }
 
 var dialogue_resource: DialogueResource
@@ -41,10 +42,13 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	get_tree().paused = false
+	GameFlow.notify_dialogue_closed()
 
 
 ## Dialogue Manager entry point.
-func start(with_resource: DialogueResource, cue: String = "", extra_game_states: Array = []) -> void:
+func start(
+	with_resource: DialogueResource, cue: String = "", extra_game_states: Array = []
+) -> void:
 	dialogue_resource = with_resource
 	_next(cue if not cue.is_empty() else "start", extra_game_states)
 
@@ -75,12 +79,15 @@ func _apply_line() -> void:
 	_continue_hint.visible = _is_waiting_for_input
 	for response in dialogue_line.responses:
 		var choice: SMDialogueChoice = DialogueChoiceScript.new()
-		choice.setup(
-			response.text,
-			_tag_value(response.tags, "tag"),
-			_tag_value(response.tags, "cost"),
-			_tag_value(response.tags, "consequence"),
-			not response.is_allowed,
+		(
+			choice
+			. setup(
+				response.text,
+				_tag_value(response.tags, "tag"),
+				_tag_value(response.tags, "cost"),
+				_tag_value(response.tags, "consequence"),
+				not response.is_allowed,
+			)
 		)
 		choice.pressed.connect(_on_choice.bind(response))
 		_choices_box.add_child(choice)
@@ -96,7 +103,10 @@ func _on_choice(response: DialogueResponse) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _is_waiting_for_input and (event.is_action_pressed("ui_accept") or event.is_action_pressed("interact")):
+	if (
+		_is_waiting_for_input
+		and (event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"))
+	):
 		get_viewport().set_input_as_handled()
 		_next(dialogue_line.next_id)
 
@@ -109,6 +119,7 @@ static func _tag_value(tags: PackedStringArray, key: String) -> String:
 
 
 # --- layout (the Echo Gate) ---------------------------------------------------
+
 
 func _build_ui() -> void:
 	_root = Control.new()
@@ -156,7 +167,7 @@ func _build_ui() -> void:
 	var line_panel := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = DS.STONE_1
-	sb.border_color = DS.BRONZE_1          # the one bronze-trimmed panel on this screen
+	sb.border_color = DS.BRONZE_1  # the one bronze-trimmed panel on this screen
 	sb.set_border_width_all(DS.BORDER_TRIM_W)
 	sb.set_corner_radius_all(DS.RADIUS)
 	sb.set_content_margin_all(DS.PANEL_PAD)

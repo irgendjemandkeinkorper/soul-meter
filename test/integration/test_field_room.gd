@@ -20,14 +20,25 @@ func test_player_moves_right_when_holding_move_right() -> void:
 func test_player_stops_at_the_left_wall() -> void:
 	var runner := scene_runner("res://world/test_room.tscn")
 	var player: Node2D = runner.find_child("Player", true, false)
+	var player_shape := player.find_child("CollisionShape2D", true, false) as CollisionShape2D
+	var left_wall := runner.find_child("ColLeft", true, false) as CollisionShape2D
+	var wall_shape := left_wall.shape as RectangleShape2D
+	var player_rect := player_shape.shape as RectangleShape2D
 
 	runner.simulate_action_press("move_left")
-	# Long enough to reach the wall (start x=1000, wall collision face ~x=40) well before frame 200.
-	await runner.simulate_frames(200)
+	# Long enough to reach the wall from the scene's starting position.
+	await runner.simulate_frames(2000)
+	var at_boundary := player.global_position.x
+	await runner.simulate_frames(30)
 	runner.simulate_action_release("move_left")
 
-	# Half the player's 84px collision box short of the wall's collision face.
-	assert_float(player.global_position.x).is_greater_equal(40.0 + 42.0)
+	# Derive the legal center position from the actual scene colliders instead of
+	# baking in dimensions that change when the blockout or player art changes.
+	var wall_face_x := left_wall.global_position.x + wall_shape.size.x / 2.0
+	var player_half_width := player_rect.size.x / 2.0
+	var legal_min_x := wall_face_x + player_half_width
+	assert_float(player.global_position.x).is_greater_equal(legal_min_x - 1.0)
+	assert_float(player.global_position.x).is_equal_approx(at_boundary, 1.0)
 
 
 func test_npc_talk_prompt_only_shows_when_player_is_in_range() -> void:

@@ -99,11 +99,11 @@ The player crosses the rift to the second imprisonment — **outside spacetime**
 | **The Baes cults** | Fringe sects worshipping the Ascended One's *human* life; garbled crew-relics; comic and tragic by turns | **[PROPOSAL]** |
 | **Free settlements** | The player's home context; hubs; the stakes made local | — |
 
-## 6. Gameplay Chassis — DECIDED (structure) / PROPOSED (combat identity)
+## 6. Gameplay Chassis — DECIDED
 
 **Structure [DECIDED]:** Real-time 2D field exploration → transition into a dedicated 2D battle scene → turn-based combat → return to field. This is the Tales of Symphonia *encounter architecture* without ToS's real-time combat or 3D — fully proven in 2D (Chrono Trigger, Grandia, Sea of Stars, Octopath). Field maps keep the living-world feel; battles stay authorable and solo-buildable. Fallout is vibe, not blueprint. **[CANON direction: turn-based, hybrid]**
 
-**Combat identity [PROPOSAL — the signature mechanic]:**
+**Combat identity [DECIDED 2026-07-31 — the signature mechanic]:**
 - **The Balance Gauge.** Every battle displays an order↔chaos axis that actions push. Demons drag it chaosward (wild surges, crits, mutations strengthen); undead and devil-forces drag it orderward (turns rigidify, effects become predictable, bindings strengthen); the player's Definition powers push order, Paradox powers push chaos, mundane actions pull toward center. Extremes are dangerous *for everyone*; mixed-force fights whipsaw. The cosmological thesis becomes a tactical resource — the player literally manages balance in every fight. A RESTORE-path player who refuses both trees is the party's *stabilizer*: the refusal build is mechanically real in combat, not just narratively.
 - **Defining strikes.** Called shots, reflavored as the setting's own magic: Lore/insight lets the player *name* a weakness ("the knee," "the oath that binds it") for targeted effects. Fallout's targeting *feel*, entirely this world's fiction.
 - **Speech is a combat verb.** Fights can be ended, split, or turned mid-battle through dialogue checks — essential against Harem Stet's forces, where every soldier was somebody's rescued dead.

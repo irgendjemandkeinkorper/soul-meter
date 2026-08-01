@@ -105,6 +105,20 @@
 				"_id": "124",
 				"_index": 0,
 				"_name": "Lore"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "142.0",
+				"_index": 0,
+				"_name": "Combatants"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "150.0",
+				"_index": 0,
+				"_name": "Encounters"
 			}
 		],
 		"_entities": [
@@ -2198,6 +2212,658 @@
 						"value": 0.1
 					}
 				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "137.0",
+				"_index": 0,
+				"_name": "The Iron Companies",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Iron Companies"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Dom"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Dom's contracted companies, guild and regiment together."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "iron-companies"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "138.0",
+				"_index": 0,
+				"_name": "The Ironbrand Sentinels",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Ironbrand Sentinels"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Dom"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Branded wardens of Dom's Wound and its dead muster."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "139.0",
+				"_index": 0,
+				"_name": "The Lords of the Breach",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Lords of the Breach"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "The Breach"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Extraplanar demon lords of consumption."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "lords-of-the-breach"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "140.0",
+				"_index": 0,
+				"_name": "The Cold Consensus",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Cold Consensus"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Wintervast"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Undead sovereigns who preserve souls against release."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "cold-consensus"
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "141.0",
+				"_index": 0,
+				"_name": "Marshal Coiljaw",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "A Trial Council road marshal charged with the broken muster at Dorthkor."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Marshal Coiljaw"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "the Road-Bench"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "branek-coiljaw"
+					}
+				}
+			},
+			{
+				"_category_id": "142.0",
+				"_icon_color": "ffffff00",
+				"_id": "161.0",
+				"_index": 0,
+				"_name": "Bog Wight",
+				"_property_overrides": {
+					"Attack": {
+						"type": "int",
+						"value": 4
+					},
+					"Balance Affinity": {
+						"type": "int",
+						"value": 1
+					},
+					"Balance Pressure": {
+						"type": "int",
+						"value": 18
+					},
+					"Combatant Id": {
+						"type": "string",
+						"value": "bog-wight"
+					},
+					"Defense": {
+						"type": "int",
+						"value": 1
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Bog Wight"
+					},
+					"Max HP": {
+						"type": "int",
+						"value": 20
+					}
+				}
+			},
+			{
+				"_category_id": "142.0",
+				"_icon_color": "ffffff00",
+				"_id": "162.0",
+				"_index": 0,
+				"_name": "Loam-Maddened Boar",
+				"_property_overrides": {
+					"Attack": {
+						"type": "int",
+						"value": 6
+					},
+					"Balance Affinity": {
+						"type": "int",
+						"value": -1
+					},
+					"Balance Pressure": {
+						"type": "int",
+						"value": 18
+					},
+					"Combatant Id": {
+						"type": "string",
+						"value": "loam-maddened-boar"
+					},
+					"Defense": {
+						"type": "int",
+						"value": 0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loam-Maddened Boar"
+					},
+					"Max HP": {
+						"type": "int",
+						"value": 14
+					}
+				}
+			},
+			{
+				"_category_id": "142.0",
+				"_icon_color": "ffffff00",
+				"_id": "163.0",
+				"_index": 0,
+				"_name": "Gnaal Breach-Hound",
+				"_property_overrides": {
+					"Attack": {
+						"type": "int",
+						"value": 7
+					},
+					"Balance Affinity": {
+						"type": "int",
+						"value": -1
+					},
+					"Balance Pressure": {
+						"type": "int",
+						"value": 22
+					},
+					"Combatant Id": {
+						"type": "string",
+						"value": "gnaal-breach-hound"
+					},
+					"Defense": {
+						"type": "int",
+						"value": 1
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Gnaal Breach-Hound"
+					},
+					"Max HP": {
+						"type": "int",
+						"value": 28
+					}
+				}
+			},
+			{
+				"_category_id": "142.0",
+				"_icon_color": "ffffff00",
+				"_id": "164.0",
+				"_index": 0,
+				"_name": "Gnaal Rift-Scavenger",
+				"_property_overrides": {
+					"Attack": {
+						"type": "int",
+						"value": 5
+					},
+					"Balance Affinity": {
+						"type": "int",
+						"value": -1
+					},
+					"Balance Pressure": {
+						"type": "int",
+						"value": 16
+					},
+					"Combatant Id": {
+						"type": "string",
+						"value": "gnaal-rift-scavenger"
+					},
+					"Defense": {
+						"type": "int",
+						"value": 0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Gnaal Rift-Scavenger"
+					},
+					"Max HP": {
+						"type": "int",
+						"value": 16
+					}
+				}
+			},
+			{
+				"_category_id": "142.0",
+				"_icon_color": "ffffff00",
+				"_id": "165.0",
+				"_index": 0,
+				"_name": "Mustered Bloodbellow",
+				"_property_overrides": {
+					"Attack": {
+						"type": "int",
+						"value": 6
+					},
+					"Balance Affinity": {
+						"type": "int",
+						"value": 1
+					},
+					"Balance Pressure": {
+						"type": "int",
+						"value": 22
+					},
+					"Combatant Id": {
+						"type": "string",
+						"value": "mustered-bloodbellow"
+					},
+					"Defense": {
+						"type": "int",
+						"value": 3
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Mustered Bloodbellow"
+					},
+					"Max HP": {
+						"type": "int",
+						"value": 32
+					}
+				}
+			},
+			{
+				"_category_id": "142.0",
+				"_icon_color": "ffffff00",
+				"_id": "166.0",
+				"_index": 0,
+				"_name": "Cleaned Jawbrace Guard",
+				"_property_overrides": {
+					"Attack": {
+						"type": "int",
+						"value": 7
+					},
+					"Balance Affinity": {
+						"type": "int",
+						"value": 1
+					},
+					"Balance Pressure": {
+						"type": "int",
+						"value": 24
+					},
+					"Combatant Id": {
+						"type": "string",
+						"value": "cleaned-jawbrace-guard"
+					},
+					"Defense": {
+						"type": "int",
+						"value": 4
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Cleaned Jawbrace Guard"
+					},
+					"Max HP": {
+						"type": "int",
+						"value": 36
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "167.0",
+				"_index": 0,
+				"_name": "Bog Wight",
+				"_property_overrides": {
+					"Combatant Ids": {
+						"type": "string",
+						"value": "bog-wight"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": "defeated_bog_wight"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Bog Wight"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "bog-wight"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": "The Bog Wight still haunts the grove's edge"
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": -3.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": "ssae-seeders"
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{}"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": "Cleared the Bog Wight from the grove margins"
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 6.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": "ssae-seeders"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "168.0",
+				"_index": 0,
+				"_name": "Loam-Maddened Boar",
+				"_property_overrides": {
+					"Combatant Ids": {
+						"type": "string",
+						"value": "loam-maddened-boar"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": "defeated_loam_boar"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loam-Maddened Boar"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "loam-boar"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": "A Loam-maddened boar broke loose near the grove"
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": -3.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": "ssae-seeders"
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{}"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": "Culled a Loam-maddened boar before it reached the grove"
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 5.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": "ssae-seeders"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "169.0",
+				"_index": 0,
+				"_name": "Dorthkor Demon Vanguard",
+				"_property_overrides": {
+					"Combatant Ids": {
+						"type": "string",
+						"value": "gnaal-breach-hound,gnaal-rift-scavenger"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": "defeated_breach_hound"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Dorthkor Demon Vanguard"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "dorthkor-vanguard"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{}"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": "Broke the demon vanguard at Dorthkor"
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 5.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": "iron-companies"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "170.0",
+				"_index": 0,
+				"_name": "Dorthkor Dead Muster",
+				"_property_overrides": {
+					"Combatant Ids": {
+						"type": "string",
+						"value": "mustered-bloodbellow"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[{\"display_name\":\"Speak Its Muster-Name\",\"id\":\"speak-muster-name\",\"lock_reason\":\"Requires Order +50 and 3 Soul to break the binding.\",\"maximum_balance\":100,\"minimum_balance\":50,\"minimum_enemy_rounds\":0,\"outcome_id\":\"named\",\"soul_cost\":3.0},{\"display_name\":\"Release the Bound Soldier\",\"id\":\"release-bound-soldier\",\"lock_reason\":\"Survive one enemy round, then hold Balance between -20 and +20.\",\"maximum_balance\":20,\"minimum_balance\":-20,\"minimum_enemy_rounds\":1,\"outcome_id\":\"released\",\"soul_cost\":0.0}]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": "defeated_mustered_dead"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Dorthkor Dead Muster"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "dorthkor-muster"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"named\":{\"cause\":\"Broke the Bloodbellow binding by speaking its muster-name\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"message\":\"Its muster-name answers. The binding splits and the armor empties.\"},\"released\":{\"cause\":\"Released the soldier bound inside the Bloodbellow muster\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"message\":\"The held center opens a way out. The soldier's soul leaves the armor.\"},\"slain\":{\"cause\":\"Destroyed the Mustered Bloodbellow by force\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"message\":\"The Bloodbellow falls, its borrowed cadence cut short.\"}}"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": "Stopped a dead soldier answering Dom's muster"
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 5.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "171.0",
+				"_index": 0,
+				"_name": "The Empty Post",
+				"_property_overrides": {
+					"Combatant Ids": {
+						"type": "string",
+						"value": "cleaned-jawbrace-guard"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": "defeated_cleaned_jawbrace_guard"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "The Empty Post"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "jawbrace-empty-post"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": "The empty guard still holds the first gate"
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": -3.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{}"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": "Stopped the cleaned armor standing watch at the Jawbrace"
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 6.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -2536,12 +3202,159 @@
 				"_id": "128",
 				"_name": "Vault Path",
 				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "136.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": "",
+				"_id": "143.0",
+				"_name": "Combatant Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": "",
+				"_id": "144.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "145.0",
+				"_name": "Max HP",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "146.0",
+				"_name": "Attack",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "147.0",
+				"_name": "Defense",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "148.0",
+				"_name": "Balance Affinity",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "149.0",
+				"_name": "Balance Pressure",
+				"_type": "int"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "151.0",
+				"_name": "Encounter Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "152.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "153.0",
+				"_name": "Combatant Ids",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "154.0",
+				"_name": "Defeated Flag",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "155.0",
+				"_name": "Win Faction",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": 0.0,
+				"_id": "156.0",
+				"_name": "Win Delta",
+				"_type": "float"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "157.0",
+				"_name": "Win Cause",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "158.0",
+				"_name": "Loss Faction",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": 0.0,
+				"_id": "159.0",
+				"_name": "Loss Delta",
+				"_type": "float"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "160.0",
+				"_name": "Loss Cause",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "172.0",
+				"_name": "Default Outcome",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "173.0",
+				"_name": "Context Actions",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "174.0",
+				"_name": "Outcomes",
+				"_type": "string"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 135.0
+			"default": 174.0
 		}
 	},
 	"_version": 1

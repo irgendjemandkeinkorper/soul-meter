@@ -38,17 +38,22 @@ The project's headless Godot binary runs the suite via gdUnit4's own CLI wrapper
 and pattern as the `--import` headless-verify step in `DEPENDENCIES.md`):
 
 ```bash
-GODOT_BIN=~/.local/bin/godot bash addons/gdUnit4/runtest.sh -a test
+GODOT_BIN=~/.local/bin/godot bash scripts/test.sh
 ```
 
 Narrow to one directory or one file the same way:
 
 ```bash
-GODOT_BIN=~/.local/bin/godot bash addons/gdUnit4/runtest.sh -a test/unit/test_reputation.gd
+GODOT_BIN=~/.local/bin/godot bash scripts/test.sh -a test/unit/test_reputation.gd
 ```
 
-Exit code `0` means every test passed — that's the signal to check in CI or a pre-push hook
-later. `reports/` (HTML + JUnit XML, gitignored) is regenerated each run.
+Exit code `0` means every test passed — that's the signal to check in CI or a pre-push hook.
+`scripts/test.sh` intentionally invokes `GdUnitCmdTool.gd` directly: the addon wrapper's
+remote-debug `tcp://127.0.0.1:0` mode is not accepted by Godot 4.7.1. `reports/` (HTML + JUnit
+XML, gitignored) is regenerated each run.
+
+On a machine without a working X display, set `SOUL_METER_HEADLESS=1`. This is useful for unit
+tests, but integration tests that depend on transported input should run with Xvfb normally.
 
 You can also run tests from inside the editor: the gdUnit4 dock (bottom panel, once the addon
 is enabled — it's already registered in `project.godot`) shows the same suites with a
@@ -125,9 +130,8 @@ frames (physics included) and must be `await`ed. `find_child(name, recursive, ow
 
 ### What isn't covered yet
 
-No CI wiring — running the suite is a manual step (`bash addons/gdUnit4/runtest.sh ...`) until
-a workflow is added. The GLoot generator's `SOUL_METER_DRIFT_CHECK=1` headless pattern
-(`DEPENDENCIES.md`) is the template to copy when that happens. Property-based tests over the
+CI imports with the pinned engine, runs the full suite, checks generated-data drift through
+the unit suite, and packages the Windows playtest artifact only after tests pass. Property-based tests over the
 reputation derivation and the (future) magic-system effect matrix — flagged as the reason
 testing was worth doing at all (`docs/godot-architecture.md`) — don't exist yet; write them
 once there's more than `_derive()`'s simple sum to get wrong.

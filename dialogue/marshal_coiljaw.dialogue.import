@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://we1t6tq6mhc1"
+path="res://.godot/imported/marshal_coiljaw.dialogue-0533d8767430b7ee98c6e6cf82988f18.tres"
+
+[deps]
+
+source_file="res://dialogue/marshal_coiljaw.dialogue"
+dest_files=["res://.godot/imported/marshal_coiljaw.dialogue-0533d8767430b7ee98c6e6cf82988f18.tres"]
+
+[params]
+
+defaults=true

@@ -1,19 +1,20 @@
 extends Node
-## GameState — the serialized game-state singleton the design doc (§9) calls for: the global
-## flag store, the Soul Meter, the party, and the inventory. Every menu is a *view* of this.
-## Autoloaded, so it survives scene changes. Save/load and richer systems build on top of it.
+## Serialized global state: durable flags, Soul, the Vex-led party, inventory,
+## and local settings. Menus are views over this singleton.
 
 signal soul_meter_changed(value: float)
 signal flag_changed(flag: String, value: Variant)
-signal inventory_changed()
-signal party_changed()
+signal inventory_changed
+signal party_changed
 
 const SETTINGS_PATH := "user://settings.cfg"
+const PROTAGONIST_ID := "vex"
+const PROTAGONIST_NAME := "Vex the Unbowed"
+const REQUIRED_COMPANIONS := 2
 
-## Global reactivity spine — every location reads/writes this.
 var flags: Dictionary = {}
-## The Soul Meter (0–100). Magic spends it; it mostly only goes down (see the vault: souls).
-var soul_meter: float = 50.0: set = set_soul_meter
+var soul_meter: float = 50.0:
+	set = set_soul_meter
 var party: Array[PartyMember] = []
 var inventory: Inventory
 
@@ -23,21 +24,20 @@ var _settings := ConfigFile.new()
 func _ready() -> void:
 	_ensure_audio_buses()
 	_load_settings()
-
 	inventory = Inventory.new()
 	inventory.protoset = load("res://data/generated/gloot_prototree.json")
 	add_child(inventory)
-
-	# Proxy GLoot signals to the unified inventory_changed signal
-	inventory.item_added.connect(func(_item): inventory_changed.emit())
-	inventory.item_removed.connect(func(_item): inventory_changed.emit())
-	inventory.item_property_changed.connect(func(_item, _property): inventory_changed.emit())
-	inventory.item_moved.connect(func(): inventory_changed.emit())
-
+	inventory.item_added.connect(func(_item: InventoryItem) -> void: inventory_changed.emit())
+	inventory.item_removed.connect(func(_item: InventoryItem) -> void: inventory_changed.emit())
+	inventory.item_property_changed.connect(
+		func(_item: InventoryItem, _property: String) -> void: inventory_changed.emit()
+	)
+	inventory.item_moved.connect(func() -> void: inventory_changed.emit())
 	_seed_demo_data()
 
 
-# --- Soul Meter & flags -------------------------------------------------------
+# --- Soul Meter and facts ----------------------------------------------------
+
 
 func set_soul_meter(value: float) -> void:
 	soul_meter = clampf(value, 0.0, 100.0)
@@ -45,6 +45,8 @@ func set_soul_meter(value: float) -> void:
 
 
 func set_flag(flag: String, value: Variant = true) -> void:
+	if flags.get(flag) == value:
+		return
 	flags[flag] = value
 	flag_changed.emit(flag, value)
 
@@ -53,7 +55,37 @@ func get_flag(flag: String, default: Variant = false) -> Variant:
 	return flags.get(flag, default)
 
 
-# --- Settings (persisted to user://settings.cfg) ------------------------------
+# --- Inventory ---------------------------------------------------------------
+
+
+func item_count(item_id: String) -> int:
+	var total := 0
+	for item in inventory.get_items_with_prototype_id(item_id):
+		total += item.get_stack_size()
+	return total
+
+
+func remove_items(item_id: String, amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if item_count(item_id) < amount:
+		return false
+	var remaining := amount
+	for item in inventory.get_items_with_prototype_id(item_id):
+		var stack_size: int = item.get_stack_size()
+		var taken := mini(stack_size, remaining)
+		if taken == stack_size:
+			inventory.remove_item(item)
+		else:
+			item.set_stack_size(stack_size - taken)
+		remaining -= taken
+		if remaining == 0:
+			break
+	return true
+
+
+# --- Settings ---------------------------------------------------------------
+
 
 func set_setting(section: String, key: String, value: Variant) -> void:
 	_settings.set_value(section, key, value)
@@ -65,7 +97,7 @@ func get_setting(section: String, key: String, default: Variant) -> Variant:
 
 
 func _load_settings() -> void:
-	_settings.load(SETTINGS_PATH)  # missing file is fine; values just fall back to defaults
+	_settings.load(SETTINGS_PATH)
 	apply_fullscreen(_settings.get_value("display", "fullscreen", false))
 	for bus in ["Master", "Music", "SFX"]:
 		set_bus_volume(bus, _settings.get_value("audio", bus, 1.0))
@@ -84,9 +116,7 @@ func set_bus_volume(bus: String, linear: float) -> void:
 
 func get_bus_volume(bus: String) -> float:
 	var idx := AudioServer.get_bus_index(bus)
-	if idx < 0:
-		return 1.0
-	return db_to_linear(AudioServer.get_bus_volume_db(idx))
+	return 1.0 if idx < 0 else db_to_linear(AudioServer.get_bus_volume_db(idx))
 
 
 func _ensure_audio_buses() -> void:
@@ -98,133 +128,216 @@ func _ensure_audio_buses() -> void:
 			AudioServer.set_bus_send(idx, "Master")
 
 
-# --- Demo content (until real data/saves exist) -------------------------------
+# --- Prototype party and inventory ------------------------------------------
+
 
 func _seed_demo_data() -> void:
-	party.clear()
-	party.append(_make_member("Vex the Unbowed", "Ash-Bound Kes'reth", "Ironbrand (Kero)", 4, 38, 44,
-		"A horned reaver of Karrn-Vash; her soul is a held line, sealed against the Loam and tattooed in cinder-ink."))
-	party.append(_make_member("Serai-Lun", "Mirror-Veil Kes'reth", "Mirrorblade (Maiiam)", 3, 26, 30,
-		"A mirror-dancer of Vervulling who fights in paired, reflected forms and speaks in balanced halves."))
-	party.append(_make_member("Old Grumbrand", "Kaan Deepkin", "Lensbearer (Stuid)", 3, 31, 34,
-		"A soot-stained salvager who reads Age-of-Stars machines for a price and trusts nothing that hums."))
+	party = [_make_vex()]
 	party_changed.emit()
-
 	inventory.clear()
-
-	var axe := inventory.create_and_add_item(ItemIds.WEAPONS_TAUBSTUMMER_AXE)
-	var reflection := inventory.create_and_add_item(ItemIds.RELICS_CAPTURED_REFLECTION)
-	var gauge := inventory.create_and_add_item(ItemIds.TOOLS_SOUL_GAUGE)
-
+	inventory.create_and_add_item(ItemIds.WEAPONS_TAUBSTUMMER_AXE)
+	inventory.create_and_add_item(ItemIds.RELICS_CAPTURED_REFLECTION)
+	inventory.create_and_add_item(ItemIds.TOOLS_SOUL_GAUGE)
 	var bread := inventory.create_and_add_item(ItemIds.CONSUMABLES_LOAM_BREAD)
 	if bread:
 		bread.set_stack_size(5)
-
 	var ink := inventory.create_and_add_item(ItemIds.MATERIALS_CINDER_INK_VIAL)
 	if ink:
 		ink.set_stack_size(2)
-
-	var shard := inventory.create_and_add_item(ItemIds.RELICS_QUINE_SHARD)
-
-
-func _make_member(n: String, race: String, cls: String, lvl: int, hp: int, maxhp: int, bio: String,
-		min_rep: float = 0.0, min_infamy: float = 0.0) -> PartyMember:
-	var m := PartyMember.new()
-	m.display_name = n
-	m.race = race
-	m.char_class = cls
-	m.level = lvl
-	m.hp = hp
-	m.max_hp = maxhp
-	m.bio = bio
-	m.min_reputation = min_rep
-	m.min_infamy = min_infamy
-	return m
+	inventory.create_and_add_item(ItemIds.RELICS_QUINE_SHARD)
 
 
-# --- Party assembly (the tavern screen; see ui/screens/tavern.gd) ------------
+func _make_member(
+	member_id: String,
+	display_name: String,
+	race: String,
+	char_class: String,
+	stats: Vector4i,
+	bio: String,
+	min_reputation: float = 0.0,
+	min_infamy: float = 0.0
+) -> PartyMember:
+	var member := PartyMember.new()
+	member.id = member_id
+	member.display_name = display_name
+	member.race = race
+	member.char_class = char_class
+	member.level = stats.x
+	member.hp = stats.y
+	member.max_hp = stats.y
+	member.attack = stats.z
+	member.defense = stats.w
+	member.bio = bio
+	member.min_reputation = min_reputation
+	member.min_infamy = min_infamy
+	return member
 
-## Fresh PartyMember instances every call — same convention as _seed_demo_data(),
-## so picking a party twice in one session never hands out aliased Resources.
-## Two per patron class (see systems/ten-patron-classes.md), varied races and
-## genders — races beyond the original five are pulled from the vault's
-## character-creation.md "expansion point" roster (Dragons, Dwermo, Giants,
-## Khurnathi, Lunari, Naolune, Nkhalu, Orthos, Snarlin, Thysari, Velbrass,
-## Zindari, Weftkin, Vaerin, Fiel), grounded in Dom flavor (Steel Day dueling
-## honor, Trial Council bench culture, the Deep Salvage rings' corpse-armor
-## trade as the city's one real underworld — see cities/dom.md).
+
+func _make_vex() -> PartyMember:
+	return _make_member(
+		PROTAGONIST_ID,
+		PROTAGONIST_NAME,
+		"Ash-Bound Kes'reth",
+		"Ironbrand (Kero)",
+		Vector4i(4, 44, 9, 5),
+		"A horned reaver of Karrn-Vash; her soul is a held line, sealed in cinder-ink."
+	)
+
+
 func recruitable_candidates() -> Array[PartyMember]:
-	var out: Array[PartyMember] = []
+	var result: Array[PartyMember] = []
+	result.append(
+		_make_member(
+			"serai-lun",
+			"Serai-Lun",
+			"Mirror-Veil Kes'reth",
+			"Mirrorblade (Maiiam)",
+			Vector4i(3, 30, 8, 2),
+			"A precise duelist who turns Balance into a weapon."
+		)
+	)
+	result.append(
+		_make_member(
+			"old-grumbrand",
+			"Old Grumbrand",
+			"Kaan Deepkin",
+			"Lensbearer (Stuid)",
+			Vector4i(3, 38, 5, 6),
+			"A soot-stained salvager built to hold a dangerous line."
+		)
+	)
+	result.append(
+		_make_member(
+			"wyneth-hallow-tide",
+			"Wyneth Hallow-Tide",
+			"Ghorr",
+			"River-Mother (Haeren)",
+			Vector4i(3, 34, 4, 5),
+			"A field-medic whose steady presence makes mistakes survivable."
+		)
+	)
+	result.append(
+		_make_member(
+			"ressa-quickfingers",
+			"Ressa Quickfingers",
+			"Vael",
+			"Locksmirk (Fickah)",
+			Vector4i(3, 28, 9, 1),
+			"A fast, fragile opportunist with an eye for a weak flank."
+		)
+	)
+	result.append(
+		_make_member(
+			"korrath-ninefold",
+			"Korrath Ninefold",
+			"Orthos",
+			"Ironbrand (Kero)",
+			Vector4i(4, 42, 7, 6),
+			"A renowned Steel Day bruiser who demands a proven leader.",
+			10.0
+		)
+	)
+	result.append(
+		_make_member(
+			"maura-greyfen",
+			"Maura Greyfen",
+			"Snarlin",
+			"Husk-bearer (Vhorr)",
+			Vector4i(3, 34, 6, 5),
+			"A Deep Salvage veteran who only trusts a notorious name.",
+			0.0,
+			8.0
+		)
+	)
+	return result
 
-	# Ironbrand (Kero)
-	out.append(_make_member("Vex the Unbowed", "Ash-Bound Kes'reth", "Ironbrand (Kero)", 4, 38, 44,
-		"A horned reaver of Karrn-Vash; her soul is a held line, sealed against the Loam and tattooed in cinder-ink."))
-	out.append(_make_member("Korrath Ninefold", "Orthos", "Ironbrand (Kero)", 4, 36, 40,
-		"An Orthos brawler who's fought every Steel Day since his branding; won't fall in beside anyone the Trial Council hasn't at least heard of.",
-		10.0))
 
-	# Mirrorblade (Maiiam)
-	out.append(_make_member("Serai-Lun", "Mirror-Veil Kes'reth", "Mirrorblade (Maiiam)", 3, 26, 30,
-		"A mirror-dancer of Vervulling who fights in paired, reflected forms and speaks in balanced halves."))
-	out.append(_make_member("Vey Ashinel", "Weftkin", "Mirrorblade (Maiiam)", 3, 26, 30,
-		"A Weftkin whose Weft-sense reads a duel's outcome half a breath before it lands; fights already knowing which reflection wins."))
-
-	# Lensbearer (Stuid)
-	out.append(_make_member("Old Grumbrand", "Kaan Deepkin", "Lensbearer (Stuid)", 3, 31, 34,
-		"A soot-stained salvager who reads Age-of-Stars machines for a price and trusts nothing that hums."))
-	out.append(_make_member("Mirela Osk", "Naolune", "Lensbearer (Stuid)", 3, 24, 28,
-		"A Naolune archivist who catalogs Dom's Age-of-Stars wreckage for the Trial Council, and reads a stranger's tells the way she reads a machine's wiring."))
-
-	# River-Mother (Haeren)
-	out.append(_make_member("Wyneth Hallow-Tide", "Ghorr", "River-Mother (Haeren)", 3, 28, 32,
-		"A storm-stranded Haeren pilgrim, still in Dom three sailings later, tending Iron Company wounds for coin she calls tribute."))
-	out.append(_make_member("Bram Kettlewell", "Dwermo", "River-Mother (Haeren)", 3, 30, 34,
-		"A Dwermo field-medic who followed the Iron Companies home from three campaigns and never once put down the bandage roll."))
-
-	# Locksmirk (Fickah)
-	out.append(_make_member("Ressa Quickfingers", "Vael", "Locksmirk (Fickah)", 3, 24, 28,
-		"Runs card games two tables from the Trial Council's own bench-holders and has never once been caught counting."))
-	out.append(_make_member("Vesh Cutlow", "Zindari", "Locksmirk (Fickah)", 3, 22, 26,
-		"A forger of Trial Council seals who's never met a brand she couldn't fake, or a debt she couldn't misplace."))
-
-	# Husk-bearer (Vhorr)
-	out.append(_make_member("Maura Greyfen", "Snarlin", "Husk-bearer (Vhorr)", 3, 27, 30,
-		"Runs a Deep Salvage ring under the chasm rim, stripping armor off the called dead — she won't work with anyone the honest half of Dom hasn't already written off.",
-		0.0, 8.0))
-	out.append(_make_member("Dobrusk", "Thysari", "Husk-bearer (Vhorr)", 3, 29, 32,
-		"A mortuary-rite keeper who tends what the Deep Salvage rings bring up, and insists every stripped corpse still gets a name spoken over it."))
-
-	# Flamebinder (Vicoar)
-	out.append(_make_member("Cinderjaw", "Dragon", "Flamebinder (Vicoar)", 4, 32, 36,
-		"A young dragon apprenticed to Dom's forge-guild out of sheer boredom with hoarding; builds engines that breathe better than he does."))
-	out.append(_make_member("Yorna Deephammer", "Giant", "Flamebinder (Vicoar)", 3, 34, 38,
-		"A Giant artificer who rebuilt half the Trial Hall's furnace grates and charges the other half in favors, not coin."))
-
-	# Stormbearer (Ofshütje)
-	out.append(_make_member("Ilse Moonshear", "Lunari", "Stormbearer (Ofshütje)", 3, 24, 28,
-		"A skirmisher who reads Dom's storm-fronts better than the harbor pilots, and times every raid to the lull before landfall."))
-	out.append(_make_member("Kaddo Farrow", "Khurnathi", "Stormbearer (Ofshütje)", 3, 26, 30,
-		"An outrunner who scouts ahead of the Iron Companies and has never once been caught by the same storm twice."))
-
-	# Oathclock (Pazzah)
-	out.append(_make_member("Sohvi Lastbell", "Vaerin", "Oathclock (Pazzah)", 3, 23, 26,
-		"An oath-broker whose own Fading is nearly spent; won't stake a bargain-clock on someone whose name means nothing yet.",
-		8.0))
-	out.append(_make_member("Perrin Tallowdue", "Velbrass", "Oathclock (Pazzah)", 3, 25, 28,
-		"A debt-clerk for the Trial Council who collects promises the way other men collect coin, and never once forgets a due date."))
-
-	# Threadwalker (Izhakel)
-	out.append(_make_member("Aeyin Farsdottir", "Fiel", "Threadwalker (Izhakel)", 3, 22, 25,
-		"A relic-binder who keeps three borrowed spirits on a leash of her own hair, and swears all three behave better than she does."))
-	out.append(_make_member("Duskhollow", "Nkhalu", "Threadwalker (Izhakel)", 3, 24, 27,
-		"A summoner who inherited his threadbound court from a dead uncle, and still isn't sure which of them is in charge."))
-
-	return out
+func protagonist() -> PartyMember:
+	for member in party:
+		if member.id == PROTAGONIST_ID or member.display_name == PROTAGONIST_NAME:
+			return member
+	return null
 
 
-## Replace the party wholesale — the tavern's "confirm" action. Anything else
-## mutating GameState.party directly must emit party_changed itself; this is
-## the one place that does it for you.
-func set_party(members: Array[PartyMember]) -> void:
-	party = members
+func companions() -> Array[PartyMember]:
+	var result: Array[PartyMember] = []
+	var lead := protagonist()
+	for member in party:
+		if member != lead:
+			result.append(member)
+	return result
+
+
+func has_selected_companions() -> bool:
+	return protagonist() != null and companions().size() == REQUIRED_COMPANIONS
+
+
+func set_companions(members: Array[PartyMember]) -> bool:
+	if members.size() != REQUIRED_COMPANIONS:
+		return false
+	var allowed_ids := {}
+	for candidate in recruitable_candidates():
+		allowed_ids[candidate.id] = true
+	var seen := {}
+	for member in members:
+		if (
+			member == null
+			or not allowed_ids.has(member.id)
+			or member.id == PROTAGONIST_ID
+			or seen.has(member.id)
+			or member.min_reputation > Renown.reputation()
+			or member.min_infamy > Renown.infamy()
+		):
+			return false
+		seen[member.id] = true
+	var lead := protagonist()
+	if lead == null:
+		lead = _make_vex()
+	party = [lead, members[0], members[1]]
+	set_flag("chapter_party_formed", true)
 	party_changed.emit()
+	SaveGame.request_autosave("party-formed")
+	return true
+
+
+## Compatibility seam for tests/tools; gameplay party assembly uses set_companions().
+func set_party(members: Array[PartyMember]) -> void:
+	party = members.duplicate()
+	party_changed.emit()
+
+
+func has_party_member(display_name: String) -> bool:
+	for member in party:
+		if member.display_name == display_name:
+			return true
+	return false
+
+
+# --- Save data ---------------------------------------------------------------
+
+
+func to_dict() -> Dictionary:
+	var party_rows: Array[Dictionary] = []
+	for member in party:
+		party_rows.append(member.to_dict())
+	return {
+		"flags": flags.duplicate(true),
+		"soul_meter": soul_meter,
+		"party": party_rows,
+		"inventory": inventory.serialize(),
+	}
+
+
+func from_dict(data: Dictionary) -> bool:
+	var inventory_data: Variant = data.get("inventory", {})
+	if not inventory_data is Dictionary or not inventory.deserialize(inventory_data):
+		return false
+	flags = data.get("flags", {}).duplicate(true)
+	soul_meter = float(data.get("soul_meter", 50.0))
+	party.clear()
+	for row in data.get("party", []):
+		if row is Dictionary:
+			party.append(PartyMember.from_dict(row))
+	inventory_changed.emit()
+	party_changed.emit()
+	return true

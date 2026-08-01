@@ -19,7 +19,9 @@ func update(_args: Dictionary = {}) -> void:
 	super.update(_args)
 
 
-func complete(_args: Dictionary = {}) -> void:
-	if not reward_faction.is_empty():
+func complete(args: Dictionary = {}) -> void:
+	var resolution: String = args.get("resolution", "returned")
+	GameState.set_flag("quest_%d_resolution" % id, resolution)
+	if args.get("grant_default_reward", true) and not reward_faction.is_empty():
 		Reputation.record("player", reward_faction, reward_amount, reward_cause, "field")
-	super.complete(_args)
+	super.complete(args)

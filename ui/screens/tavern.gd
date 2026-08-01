@@ -1,10 +1,8 @@
 extends Screen
-## The Four Arms tavern in Dom, the starting town — pick up to MAX_PARTY_SIZE
-## recruits from GameState.recruitable_candidates() and set out. Reopenable
-## any time the player is back in the tavern, so it doubles as a re-recruit
-## screen, not just a one-time chargen step.
+## Vex is the fixed lead. The Four Arms supplies exactly two companions from a
+## deliberately small prototype roster.
 
-const MAX_PARTY_SIZE := 3
+const MAX_COMPANIONS := 2
 
 var _checks: Array[CheckBox] = []
 var _candidates: Array[PartyMember] = []
@@ -13,14 +11,21 @@ var _hint_lbl: Label
 
 
 func _build() -> void:
-	var vbox := _make_window("The Four Arms — Choose Your Party", Vector2(640, 560))
+	var vbox := _make_window("The Four Arms — Choose Two Companions", Vector2(700, 620))
+
+	var lead_lbl := Label.new()
+	lead_lbl.text = "LEAD  •  Vex the Unbowed  •  Ironbrand  •  44 HP"
+	lead_lbl.theme_type_variation = "HeadingLabel"
+	vbox.add_child(lead_lbl)
 
 	var renown_lbl := Label.new()
-	renown_lbl.text = "Renown %d  •  Infamy %d" % [roundi(Renown.reputation()), roundi(Renown.infamy())]
+	renown_lbl.text = (
+		"Renown %d  •  Infamy %d" % [roundi(Renown.reputation()), roundi(Renown.infamy())]
+	)
 	vbox.add_child(renown_lbl)
 
 	var hint := Label.new()
-	hint.text = "Pick up to %d to set out with. Some of Dom's own won't run with a nobody — or with someone too clean." % MAX_PARTY_SIZE
+	hint.text = "Choose exactly two. Vex always leads; locked recruits explain what must be earned."
 	hint.modulate = Color(1, 1, 1, 0.6)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(hint)
@@ -45,13 +50,15 @@ func _build() -> void:
 			var heading := _section(last_class)
 			list_box.add_child(heading)
 		list_box.add_child(_build_row(member))
+		if GameState.has_party_member(member.display_name):
+			_checks.back().set_pressed_no_signal(true)
 
 	_hint_lbl = Label.new()
 	_hint_lbl.modulate = Color(1, 1, 1, 0.6)
 	vbox.add_child(_hint_lbl)
 
-	_confirm_btn = _menu_button(vbox, "Set out", _on_confirm)
-	_confirm_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_confirm_btn = _menu_button(vbox, "Confirm Vex's Company", _on_confirm)
+	_confirm_btn.theme_type_variation = "BronzeButton"
 	_update_hint()
 
 	_add_back_button(vbox, "Leave without choosing")
@@ -121,7 +128,7 @@ func _lock_reason(member: PartyMember) -> String:
 
 
 func _on_toggled(pressed: bool, check: CheckBox) -> void:
-	if pressed and _selected_count() > MAX_PARTY_SIZE:
+	if pressed and _selected_count() > MAX_COMPANIONS:
 		check.set_pressed_no_signal(false)
 	_update_hint()
 
@@ -135,8 +142,8 @@ func _selected_count() -> int:
 
 
 func _update_hint() -> void:
-	_hint_lbl.text = "%d / %d chosen" % [_selected_count(), MAX_PARTY_SIZE]
-	_confirm_btn.disabled = _selected_count() == 0
+	_hint_lbl.text = "%d / %d companions chosen" % [_selected_count(), MAX_COMPANIONS]
+	_confirm_btn.disabled = _selected_count() != MAX_COMPANIONS
 
 
 func _on_confirm() -> void:
@@ -144,5 +151,5 @@ func _on_confirm() -> void:
 	for i in _checks.size():
 		if _checks[i].button_pressed:
 			chosen.append(_candidates[i])
-	GameState.set_party(chosen)
-	close()
+	if GameState.set_companions(chosen):
+		close()

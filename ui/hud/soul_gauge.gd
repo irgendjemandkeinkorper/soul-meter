@@ -21,6 +21,7 @@ extends Control
 var _value: float = 50.0
 var _pulse_time := 0.0
 
+@onready var _eyebrow: Label = $Eyebrow
 @onready var _label: Label = $Value
 
 
@@ -45,6 +46,39 @@ func _on_meter_changed(value: float) -> void:
 
 func _refresh_label() -> void:
 	_label.text = "%d%%" % roundi(_value)
+	var condition := condition_for(_value)
+	_eyebrow.text = "SOUL GAUGE · %s" % condition.to_upper()
+	tooltip_text = condition_description(condition)
+
+
+## These bands are presentation language, not five separate resources. They translate the
+## canon's bright/whole/frayed/guttering/husked vocabulary into an at-a-glance reading while
+## the exact percentage remains authoritative for rules and dialogue checks.
+static func condition_for(value: float) -> String:
+	var clamped := clampf(value, 0.0, 100.0)
+	if clamped >= 75.0:
+		return "bright"
+	if clamped >= 50.0:
+		return "whole"
+	if clamped >= 25.0:
+		return "frayed"
+	if clamped > 0.0:
+		return "guttering"
+	return "husked"
+
+
+static func condition_description(condition: String) -> String:
+	match condition:
+		"bright":
+			return "Your pattern is bright and strongly held in the Weft."
+		"whole":
+			return "Your soul remains whole, though every working leaves its mark."
+		"frayed":
+			return "Your pattern is fraying. Memory, color, and feeling begin to thin."
+		"guttering":
+			return "Your soul gutters near unmaking. Another working may take more than strength."
+		_:
+			return "The Gauge reads no stable pattern. Nothing remains to spend."
 
 
 func _state_color() -> Color:

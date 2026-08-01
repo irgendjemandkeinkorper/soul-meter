@@ -1,6 +1,7 @@
 extends Screen
 ## The entry scene. New Game loads the field room; Settings stacks over this via UIManager.
 
+
 func _build() -> void:
 	var bg := ColorRect.new()
 	bg.color = DS.STONE_0  # --bg-app; the vignette/grain pass comes with the notch nine-patches
@@ -34,7 +35,29 @@ func _build() -> void:
 	vbox.add_child(spacer)
 
 	# Buttons send flow events — they never name a destination scene (see GameFlow).
-	_menu_button(vbox, "New Game", func() -> void: GameFlow.send_event("new_game"))
-	_menu_button(vbox, "Continue", func() -> void: GameFlow.send_event("new_game"))  # no saves yet
-	_menu_button(vbox, "Settings", func() -> void: UIManager.open(load("res://ui/screens/settings.tscn")))
+	var overwrite_armed := false
+	var new_game_button: Button
+	new_game_button = _menu_button(
+		vbox,
+		"New Game",
+		func() -> void:
+			if SaveGame.has_save() and not overwrite_armed:
+				overwrite_armed = true
+				new_game_button.text = "Confirm New Game — Overwrite Save"
+				new_game_button.theme_type_variation = "DangerButton"
+				return
+			SaveGame.new_game()
+			GameFlow.send_event("new_game")
+	)
+	var continue_button := _menu_button(
+		vbox,
+		"Continue",
+		func() -> void:
+			if SaveGame.load_save():
+				GameFlow.send_event("new_game")
+	)
+	continue_button.disabled = not SaveGame.has_save()
+	_menu_button(
+		vbox, "Settings", func() -> void: UIManager.open(load("res://ui/screens/settings.tscn"))
+	)
 	_menu_button(vbox, "Quit", func() -> void: get_tree().quit())

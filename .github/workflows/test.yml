@@ -1,0 +1,76 @@
+name: Godot tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GODOT_VERSION: 4.7.1-stable
+      GODOT_BIN: /usr/local/bin/godot
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot and virtual display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip xvfb
+          wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip" -O /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          sudo install -m 0755 "/tmp/godot/Godot_v${GODOT_VERSION}_linux.x86_64" "$GODOT_BIN"
+
+      - name: Import project
+        run: |
+          set -o pipefail
+          godot --headless --path . --import --quit 2>&1 | tee /tmp/godot-import.log
+          if rg -n 'SCRIPT ERROR: (Parse|Compile) Error|ERROR: Failed to load script' /tmp/godot-import.log; then
+            echo "Godot reported a script parse/compile failure during import."
+            exit 1
+          fi
+
+      - name: Run gdUnit4 suite
+        run: GODOT_BIN=godot bash scripts/test.sh -a test
+
+  package-windows:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GODOT_VERSION: 4.7.1-stable
+      GODOT_TEMPLATE_DIR: 4.7.1.stable
+      GODOT_BIN: /usr/local/bin/godot
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot, export templates, and zip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip zip
+          wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip" -O /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          sudo install -m 0755 "/tmp/godot/Godot_v${GODOT_VERSION}_linux.x86_64" "$GODOT_BIN"
+          wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz" -O /tmp/templates.tpz
+          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_TEMPLATE_DIR}"
+          cp /tmp/godot-templates/templates/* "$HOME/.local/share/godot/export_templates/${GODOT_TEMPLATE_DIR}/"
+
+      - name: Import and export Windows x64
+        run: |
+          godot --headless --path . --import --quit
+          mkdir -p dist/SoulMeter
+          # Pandora's upstream release hook ASCII-compresses its JSON and drops Unicode lore.
+          # Recovery mode skips editor-only hooks; the preset explicitly includes raw data.pandora.
+          godot --headless --recovery-mode --path . --export-release "Windows Desktop" dist/SoulMeter/SoulMeter.exe
+          cp README.md DEPENDENCIES.md dist/SoulMeter/
+          cd dist
+          zip -r SoulMeter-windows-x86_64.zip SoulMeter
+
+      - name: Upload Windows playtest build
+        uses: actions/upload-artifact@v4
+        with:
+          name: SoulMeter-windows-x86_64
+          path: dist/SoulMeter-windows-x86_64.zip
+          if-no-files-found: error

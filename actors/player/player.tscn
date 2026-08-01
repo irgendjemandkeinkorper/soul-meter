@@ -1,20 +1,31 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://actors/player/player.gd" id="1_player"]
-[ext_resource type="Texture2D" uid="uid://dhyj2bproive6" path="res://icon.svg" id="2_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney/characters/roguelike-characters/Spritesheet/roguelikeChar_transparent.png" id="2_sheet"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(84, 84)
+size = Vector2(30, 22)
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_player")
+y_sort_enabled = true
+
+[node name="Shadow" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-24, -4, 0, -12, 24, -4, 0, 4)
+color = Color(0, 0, 0, 0.35)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_icon")
-scale = Vector2(0.66, 0.66)
+position = Vector2(0, -30)
+texture = ExtResource("2_sheet")
+region_enabled = true
+region_rect = Rect2(0, 102, 16, 16)
+scale = Vector2(4, 4)
+modulate = Color(0.95, 0.63, 0.3, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -7)
 shape = SubResource("RectangleShape2D_body")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
+position_smoothing_speed = 7.0

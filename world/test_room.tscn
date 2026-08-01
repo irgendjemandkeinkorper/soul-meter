@@ -1,10 +1,12 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="3_npc"]
 [ext_resource type="PackedScene" path="res://actors/pickup/pickup.tscn" id="4_pickup"]
 [ext_resource type="PackedScene" path="res://actors/enemy/enemy.tscn" id="5_enemy"]
+[ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="6_exit"]
+[ext_resource type="Script" path="res://world/isometric_blockout.gd" id="7_iso"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(2000, 40)
@@ -13,29 +15,42 @@ size = Vector2(2000, 40)
 size = Vector2(40, 1200)
 
 [node name="TestRoom" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Floor" type="ColorRect" parent="."]
 offset_right = 2000.0
 offset_bottom = 1200.0
 color = Color(0.11, 0.12, 0.15, 1)
+z_index = -20
+
+[node name="IsometricGround" type="TileMapLayer" parent="."]
+position = Vector2(1000, 40)
+script = ExtResource("7_iso")
+map_size = Vector2i(30, 26)
+ground_style = 2
+road_axis = 2
 
 [node name="WallTop" type="ColorRect" parent="."]
+visible = false
 offset_right = 2000.0
 offset_bottom = 40.0
 color = Color(0.32, 0.3, 0.38, 1)
 
 [node name="WallBottom" type="ColorRect" parent="."]
+visible = false
 offset_top = 1160.0
 offset_right = 2000.0
 offset_bottom = 1200.0
 color = Color(0.32, 0.3, 0.38, 1)
 
 [node name="WallLeft" type="ColorRect" parent="."]
+visible = false
 offset_right = 40.0
 offset_bottom = 1200.0
 color = Color(0.32, 0.3, 0.38, 1)
 
 [node name="WallRight" type="ColorRect" parent="."]
+visible = false
 offset_left = 1960.0
 offset_right = 2000.0
 offset_bottom = 1200.0
@@ -61,6 +76,13 @@ shape = SubResource("shape_v")
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(1000, 600)
+camera_bounds = Rect2i(0, 0, 2000, 1200)
+
+[node name="SpawnDefault" type="Marker2D" parent="."]
+position = Vector2(180, 600)
+
+[node name="SpawnFromDom" type="Marker2D" parent="."]
+position = Vector2(180, 600)
 
 [node name="FieldHUD" parent="." instance=ExtResource("2_hud")]
 
@@ -83,30 +105,14 @@ item_id = "materials/loamroot_sprig"
 
 [node name="BogWight" parent="." instance=ExtResource("5_enemy")]
 position = Vector2(650, 750)
-enemy_name = "Bog Wight"
-hp = 20
-max_hp = 20
-attack = 4
-defense = 1
-defeated_flag = "defeated_bog_wight"
-win_faction = "ssae-seeders"
-win_delta = 6.0
-win_cause = "Cleared the Bog Wight from the grove margins"
-loss_faction = "ssae-seeders"
-loss_delta = -3.0
-loss_cause = "The Bog Wight still haunts the grove's edge"
+encounter_id = &"bog-wight"
 
 [node name="LoamBoar" parent="." instance=ExtResource("5_enemy")]
 position = Vector2(1600, 750)
-enemy_name = "Loam-Maddened Boar"
-hp = 14
-max_hp = 14
-attack = 6
-defense = 0
-defeated_flag = "defeated_loam_boar"
-win_faction = "ssae-seeders"
-win_delta = 5.0
-win_cause = "Culled a Loam-maddened boar before it reached the grove"
-loss_faction = "ssae-seeders"
-loss_delta = -3.0
-loss_cause = "A Loam-maddened boar broke loose near the grove"
+encounter_id = &"loam-boar"
+
+[node name="ReturnToDom" parent="." instance=ExtResource("6_exit")]
+position = Vector2(70, 600)
+target_scene = "res://world/starting_town.tscn"
+label_text = "RETURN TO DOM"
+spawn_id = &"from_wilds"

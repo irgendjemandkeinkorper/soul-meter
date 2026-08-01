@@ -1,0 +1,89 @@
+~ start
+Marshal Coiljaw: Dorthkor's road-drum stopped halfway through the breach warning. Demons first. Then one clean beat in a dead company's cadence.
+=> hub
+
+~ hub
+- "I need a company before I take the road." [if not GameState.has_selected_companions() /]
+	Marshal Coiljaw: The Four Arms keeps six names on its slate. Choose two. I need a company, not a funeral procession with one set of boots.
+	=> END
+- "Give me the road commission." [if GameState.has_selected_companions() and not QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and not QuestRegistry.is_done(QuestRegistry.DORTHKOR_ROAD) /]
+	do QuestRegistry.offer(QuestRegistry.DORTHKOR_ROAD)
+	Marshal Coiljaw: Break the vanguard, count what came through, and look at anything wearing our colors twice. The North Road is open to you.
+	=> END
+- "The road still isn't secure." [if QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and not QuestRegistry.flags_met(QuestRegistry.DORTHKOR_ROAD) /]
+	Marshal Coiljaw: Then don't bring me comfort. Bring me the next true thing. Your journal has the order of work.
+	=> END
+- "I spoke its stolen muster-name. The binding broke." [if QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and QuestRegistry.flags_met(QuestRegistry.DORTHKOR_ROAD) and GameState.get_flag("dorthkor_muster_outcome") == "named" and not GameState.get_flag("reported_bloodbellow") /]
+	do GameState.set_flag("reported_bloodbellow", true)
+	Marshal Coiljaw: Then someone taught the dead our roll before they chained it. A clean victory and an uglier question. Give me your ruling.
+	=> hub
+- "I held the Gauge at center and released the soldier inside." [if QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and QuestRegistry.flags_met(QuestRegistry.DORTHKOR_ROAD) and GameState.get_flag("dorthkor_muster_outcome") == "released" and not GameState.get_flag("reported_bloodbellow") /]
+	do GameState.set_flag("reported_bloodbellow", true)
+	Marshal Coiljaw: Mercy with proof behind it. The Sentinels will want the empty armor—and the Companies will want to know who filled it. Give me your ruling.
+	=> hub
+- "I destroyed the Bloodbellow before it could answer again." [if QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and QuestRegistry.flags_met(QuestRegistry.DORTHKOR_ROAD) and GameState.get_flag("dorthkor_muster_outcome") == "slain" and not GameState.get_flag("reported_bloodbellow") /]
+	do GameState.set_flag("reported_bloodbellow", true)
+	Marshal Coiljaw: The road is quieter. The missing answer remains. We work with what survived—give me your ruling.
+	=> hub
+- "The demons are the immediate threat. Fortify the road first." [#tag=IRON-COMPANIES] [#consequence=Dom turns its shield toward the Breach.] [if QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and QuestRegistry.flags_met(QuestRegistry.DORTHKOR_ROAD) and GameState.get_flag("reported_bloodbellow") /]
+	do QuestRegistry.turn_in(QuestRegistry.DORTHKOR_ROAD, "demons-first", false)
+	do GameState.set_flag("chapter_one_resolution", "demons-first")
+	do Reputation.record("player", "iron-companies", 12.0, "Called Dom to meet the demon vanguard first", "dom")
+	do Reputation.record("player", "ironbrand-sentinels", -2.0, "Put the dead muster behind the immediate breach", "dom")
+	do Renown.gain_reputation("player", 10.0, "Brought Dom proof of the broken muster", "dom")
+	Marshal Coiljaw: Right priority. Not the whole truth—but the wall deals with what reaches it first. The Companies march tonight.
+	=> END
+- "The dead knew a living muster. The Sentinels must take command." [#tag=IRONBRAND-SENTINELS] [#consequence=Dom turns inward toward the Wound.] [if QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and QuestRegistry.flags_met(QuestRegistry.DORTHKOR_ROAD) and GameState.get_flag("reported_bloodbellow") /]
+	do QuestRegistry.turn_in(QuestRegistry.DORTHKOR_ROAD, "dead-first", false)
+	do GameState.set_flag("chapter_one_resolution", "dead-first")
+	do Reputation.record("player", "ironbrand-sentinels", 12.0, "Recognized the dead muster as Dom's deeper threat", "dom")
+	do Reputation.record("player", "iron-companies", -2.0, "Diverted soldiers from the immediate demon road", "dom")
+	do Renown.gain_reputation("player", 10.0, "Brought Dom proof of the broken muster", "dom")
+	Marshal Coiljaw: A dead soldier knew tomorrow's roll. That is no straggler. I will give the chart to the Sentinels—and pray the road holds without us.
+	=> END
+- "Split the Companies. Neither front is a feint." [#tag=EQUILIBRIUM] [#consequence=Dom accepts the cost of holding both lines.] [if QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and QuestRegistry.flags_met(QuestRegistry.DORTHKOR_ROAD) and GameState.get_flag("reported_bloodbellow") and GameState.soul_meter >= 40.0 and GameState.soul_meter <= 60.0 /]
+	do QuestRegistry.turn_in(QuestRegistry.DORTHKOR_ROAD, "hold-both", false)
+	do GameState.set_flag("chapter_one_resolution", "hold-both")
+	do Reputation.record("player", "iron-companies", 7.0, "Persuaded Dom to hold both advancing fronts", "dom")
+	do Reputation.record("player", "ironbrand-sentinels", 7.0, "Persuaded Dom to hold both advancing fronts", "dom")
+	do Renown.gain_reputation("player", 14.0, "Made Dom bear the honest cost of two fronts", "dom")
+	Marshal Coiljaw: Two half-strength lines. Twice the funerals if you are wrong. But you stood on that road, and your Gauge holds center. Both lines, then.
+	=> END
+- "What follows the broken muster?" [if GameState.get_flag("prototype_extended_content") and QuestRegistry.is_done(QuestRegistry.DORTHKOR_ROAD) and not QuestRegistry.is_active(QuestRegistry.DEEP_TRIAL) and not QuestRegistry.is_done(QuestRegistry.DEEP_TRIAL) /]
+	do GameState.set_flag("deep_trial_open", true)
+	do QuestRegistry.offer(QuestRegistry.DEEP_TRIAL)
+	Marshal Coiljaw: An empty Bloodbellow suit walked home and took its old post at the Jawbrace. Break it without feeding the Wound. If the first ledge can be held, I will ask the Council for the Deep Trial.
+	=> END
+- "The first ledge still holds us out." [if GameState.get_flag("prototype_extended_content") and QuestRegistry.is_active(QuestRegistry.DEEP_TRIAL) and not QuestRegistry.DEEP_TRIAL.objective_completed /]
+	Marshal Coiljaw: Then the Hush has made its first honest statement. Go answer it.
+	=> END
+- "The empty guard is down. Authorize the Sentinel descent." [#tag=IRONBRAND-SENTINELS] [#consequence=The first sanctioned descent into the Hush begins under Sentinel command.] [if GameState.get_flag("prototype_extended_content") and QuestRegistry.is_active(QuestRegistry.DEEP_TRIAL) and QuestRegistry.DEEP_TRIAL.objective_completed /]
+	do QuestRegistry.turn_in(QuestRegistry.DEEP_TRIAL, "sentinel-descent", false)
+	do GameState.set_flag("deep_trial_resolution", "sentinel-descent")
+	do Reputation.record("player", "ironbrand-sentinels", 10.0, "Won Coiljaw sanction for the Deep Trial", "dom")
+	do Reputation.record("player", "iron-companies", -2.0, "Put the Deep Trial above the living Companies", "dom")
+	do Renown.gain_reputation("player", 8.0, "Cleared the first ledge for the Deep Trial", "dom")
+	Marshal Coiljaw: A wound left foul kills the body. Sentinels take the chain at first hammer. I will be at their head.
+	=> END
+- "Seal the ledge. The living Companies come first." [#tag=IRON-COMPANIES] [#consequence=Dom fortifies the Jawbrace and delays the descent.] [if GameState.get_flag("prototype_extended_content") and QuestRegistry.is_active(QuestRegistry.DEEP_TRIAL) and QuestRegistry.DEEP_TRIAL.objective_completed /]
+	do QuestRegistry.turn_in(QuestRegistry.DEEP_TRIAL, "seal-the-ledge", false)
+	do GameState.set_flag("deep_trial_resolution", "seal-the-ledge")
+	do Reputation.record("player", "iron-companies", 10.0, "Kept Dom's living Companies above the Hush", "dom")
+	do Reputation.record("player", "ironbrand-sentinels", -2.0, "Delayed the sanctioned descent", "dom")
+	do Renown.gain_reputation("player", 8.0, "Cleared the first ledge and ordered it sealed", "dom")
+	Marshal Coiljaw: A held gate is not a healed wound. But the living get the first debt. I will make the brace a wall.
+	=> END
+- "Send Sentinels below and Company witnesses behind them." [#tag=EQUILIBRIUM] [#consequence=The Deep Trial carries both the Wound's law and the living muster.] [if GameState.get_flag("prototype_extended_content") and QuestRegistry.is_active(QuestRegistry.DEEP_TRIAL) and QuestRegistry.DEEP_TRIAL.objective_completed and GameState.soul_meter >= 40.0 and GameState.soul_meter <= 60.0 /]
+	do QuestRegistry.turn_in(QuestRegistry.DEEP_TRIAL, "witnessed-descent", false)
+	do GameState.set_flag("deep_trial_resolution", "witnessed-descent")
+	do Reputation.record("player", "ironbrand-sentinels", 6.0, "Joined the Sentinels and Companies for the Deep Trial", "dom")
+	do Reputation.record("player", "iron-companies", 6.0, "Joined the Sentinels and Companies for the Deep Trial", "dom")
+	do Renown.gain_reputation("player", 12.0, "Made the Deep Trial answer to both lines", "dom")
+	Marshal Coiljaw: The Sentinels know the Wound. The Bloodbellows know the names it stole. Both go, and neither gets to call the other expendable.
+	=> END
+- "What did the first ledge buy us?" [if GameState.get_flag("prototype_extended_content") and QuestRegistry.is_done(QuestRegistry.DEEP_TRIAL) /]
+	Marshal Coiljaw: One true step toward the Hush. In Dom, one true step is enough to found a road—or a grave.
+	=> END
+- "Nothing yet."
+	Marshal Coiljaw: Nothing is what the road-drum said. I already know how that sounds.
+	=> END

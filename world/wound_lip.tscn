@@ -1,0 +1,77 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
+[ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://actors/enemy/enemy.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="5_exit"]
+
+[sub_resource type="RectangleShape2D" id="shape_h"]
+size = Vector2(1800, 40)
+
+[sub_resource type="RectangleShape2D" id="shape_v"]
+size = Vector2(40, 900)
+
+[node name="WoundLip" type="Node2D"]
+script = ExtResource("1_location")
+arrival_flag = "chapter_wound_lip_reached"
+
+[node name="Hush" type="ColorRect" parent="."]
+offset_right = 1800.0
+offset_bottom = 900.0
+color = Color(0.035, 0.035, 0.05, 1)
+
+[node name="FirstLedge" type="ColorRect" parent="."]
+offset_left = 80.0
+offset_top = 300.0
+offset_right = 1720.0
+offset_bottom = 610.0
+color = Color(0.18, 0.16, 0.19, 1)
+
+[node name="JawbraceLabel" type="Label" parent="."]
+offset_left = 620.0
+offset_top = 80.0
+offset_right = 1180.0
+offset_bottom = 130.0
+text = "THE JAWBRACE — FIRST LEDGE"
+horizontal_alignment = 1
+
+[node name="Warning" type="Label" parent="."]
+offset_left = 560.0
+offset_top = 690.0
+offset_right = 1240.0
+offset_bottom = 750.0
+text = "IF IT CALLS YOUR NAME, YOU DID NOT HEAR IT"
+horizontal_alignment = 1
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="Top" type="CollisionShape2D" parent="Walls"]
+position = Vector2(900, 20)
+shape = SubResource("shape_h")
+
+[node name="Bottom" type="CollisionShape2D" parent="Walls"]
+position = Vector2(900, 880)
+shape = SubResource("shape_h")
+
+[node name="Left" type="CollisionShape2D" parent="Walls"]
+position = Vector2(20, 450)
+shape = SubResource("shape_v")
+
+[node name="Right" type="CollisionShape2D" parent="Walls"]
+position = Vector2(1780, 450)
+shape = SubResource("shape_v")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(180, 450)
+
+[node name="FieldHUD" parent="." instance=ExtResource("3_hud")]
+
+[node name="CleanedGuard" parent="." instance=ExtResource("4_enemy")]
+position = Vector2(1050, 450)
+encounter_id = &"jawbrace-empty-post"
+
+[node name="ReturnToDom" parent="." instance=ExtResource("5_exit")]
+position = Vector2(70, 450)
+target_scene = "res://world/starting_town.tscn"
+label_text = "RETURN TO DOM"

@@ -12,6 +12,8 @@ const FACTIONS = "84"
 const NPCS = "96"
 const LOCATIONS = "106"
 const LORE = "124"
+const COMBATANTS = "142.0"
+const ENCOUNTERS = "150.0"
 
 
 class ItemsCategories:
