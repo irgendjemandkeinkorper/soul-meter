@@ -34,6 +34,7 @@ func _volume_row(bus: String) -> HBoxContainer:
 	row.add_child(label)
 
 	var slider := HSlider.new()
+	slider.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	slider.min_value = 0.0
 	slider.max_value = 1.0
 	slider.step = 0.01
