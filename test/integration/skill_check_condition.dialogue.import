@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://cptokuna8pjxj"
+path="res://.godot/imported/skill_check_condition.dialogue-10a37a88bf0af32c3fc180d2635e874d.tres"
+
+[deps]
+
+source_file="res://test/integration/skill_check_condition.dialogue"
+dest_files=["res://.godot/imported/skill_check_condition.dialogue-10a37a88bf0af32c3fc180d2635e874d.tres"]
+
+[params]
+
+defaults=true

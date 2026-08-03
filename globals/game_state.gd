@@ -16,6 +16,7 @@ const REQUIRED_COMPANIONS := 2
 const DEFAULT_LOCALE := "en"
 const SUPPORTED_LOCALES := ["en", "es"]
 const DEFAULT_GP := 250
+const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
 
 var flags: Dictionary = {}
 var soul_meter: float = 50.0:
@@ -25,6 +26,10 @@ var gp: int = DEFAULT_GP:
 var party: Array[PartyMember] = []
 var inventory: Inventory
 var current_locale := DEFAULT_LOCALE
+## actor id -> skill id -> { percentage, tier, advancement_points_spent }
+var skills: Dictionary = {}
+## actor id -> integer Vär harmony in the ratified -5…+5 range.
+var var_harmony: Dictionary = {}
 
 var _settings := ConfigFile.new()
 
@@ -182,6 +187,8 @@ func _ensure_audio_buses() -> void:
 func _seed_demo_data() -> void:
 	gp = DEFAULT_GP
 	party = [_make_vex()]
+	skills = {}
+	var_harmony = {}
 	party_changed.emit()
 	inventory.clear()
 	inventory.create_and_add_item(ItemIds.WEAPONS_TAUBSTUMMER_AXE)
@@ -375,20 +382,70 @@ func to_dict() -> Dictionary:
 		"gp": gp,
 		"party": party_rows,
 		"inventory": inventory.serialize(),
+		"skills": skills.duplicate(true),
+		"var_harmony": var_harmony.duplicate(true),
 	}
 
 
 func from_dict(data: Dictionary) -> bool:
+	if not _validate_save_data(data):
+		return false
 	var inventory_data: Variant = data.get("inventory", {})
 	if not inventory_data is Dictionary or not inventory.deserialize(inventory_data):
 		return false
 	flags = data.get("flags", {}).duplicate(true)
 	soul_meter = float(data.get("soul_meter", 50.0))
 	gp = maxi(0, int(data.get("gp", DEFAULT_GP)))
+	skills = data.get("skills", {}).duplicate(true)
+	var_harmony = data.get("var_harmony", {}).duplicate(true)
 	party.clear()
 	for row in data.get("party", []):
-		if row is Dictionary:
-			party.append(PartyMember.from_dict(row))
+		party.append(PartyMember.from_dict(row))
 	inventory_changed.emit()
 	party_changed.emit()
 	return true
+
+
+func _validate_save_data(data: Dictionary) -> bool:
+	for key in ["flags", "skills", "var_harmony", "inventory"]:
+		if data.has(key) and not data[key] is Dictionary:
+			return false
+	if data.has("party") and not data["party"] is Array:
+		return false
+	for row: Variant in data.get("party", []):
+		if not row is Dictionary:
+			return false
+	var harmony: Dictionary = data.get("var_harmony", {})
+	for value: Variant in harmony.values():
+		if typeof(value) != TYPE_INT or int(value) < -5 or int(value) > 5:
+			return false
+	var skill_map: Dictionary = data.get("skills", {})
+	for actor_id: Variant in skill_map:
+		if (
+			not actor_id is String
+			or not StableIds.is_valid(StableIds.ACTOR, actor_id)
+			or not skill_map[actor_id] is Dictionary
+		):
+			return false
+		for skill_id: Variant in skill_map[actor_id]:
+			var skill_data: Variant = skill_map[actor_id][skill_id]
+			if (
+				not skill_id is String
+				or not StableIds.is_valid(StableIds.SKILL, skill_id)
+				or not skill_data is Dictionary
+			):
+				return false
+			if skill_data.has("percentage"):
+				if typeof(skill_data["percentage"]) not in [TYPE_INT, TYPE_FLOAT] or float(skill_data["percentage"]) < 0.0 or float(skill_data["percentage"]) > 100.0:
+					return false
+			if skill_data.has("tier"):
+				if not skill_data["tier"] is String or skill_data["tier"] not in SKILL_TIERS:
+					return false
+			if skill_data.has("advancement_points_spent"):
+				if typeof(skill_data["advancement_points_spent"]) != TYPE_INT or int(skill_data["advancement_points_spent"]) < 0:
+					return false
+	return true
+
+
+func validate_save_data(data: Dictionary) -> bool:
+	return _validate_save_data(data)

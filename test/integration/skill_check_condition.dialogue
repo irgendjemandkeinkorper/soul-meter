@@ -1,0 +1,11 @@
+~ start
+- "The lore gate opens." [if check("lore", 45) /]
+	=> passed
+- "The lore gate remains shut."
+	=> failed
+
+~ passed
+Archivist: The response was available.
+
+~ failed
+Archivist: The response was hidden.

@@ -22,6 +22,13 @@ for path in "${required_paths[@]}"; do
 	fi
 done
 
+# CI runs the runtime checks as named steps so gdUnit4 reports can be uploaded
+# even when the suite fails. Keep the local gate's combined behavior unchanged.
+if [[ "${SOUL_METER_ACCEPTANCE_ARTIFACTS_ONLY:-0}" = "1" ]]; then
+	echo "ACCEPTANCE: required artifacts present"
+	exit 0
+fi
+
 echo "ACCEPTANCE: checking Pandora/generated-data drift"
 GODOT_BIN="$godot_bin" bash scripts/check_generated_data.sh
 

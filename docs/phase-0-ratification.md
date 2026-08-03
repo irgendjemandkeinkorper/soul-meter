@@ -108,7 +108,24 @@ fizzle%         = clamp((base + breadth_add + strain_add) × magnitude_mult
 - **Fickah / Locksmirk floor:** never below **5%**, Mastery included (vault `ten-patron-classes.md`).
 - Strained Chords additionally cost **Vär equal to the step distance** and land both Impositions
   weakened (FR-305, unchanged).
-- Span > 2 steps is not a fizzle case — it is a **Clash** (self-inflicted Discord, FR-301).
+- Span > 2 steps is not a fizzle case — it is a **Clash** (self-inflicted Discord, FR-301), read
+  per the span rule immediately below.
+
+### The span rule (ratified 2026-08-03, resolving FR-301 vs FR-305)
+
+FR-301 ("max 2-step span, wider = Clash") and FR-305 ("Strained Chords are castable at 2–4
+steps") contradicted each other as written. Ratified reading:
+
+- A **Triad**'s three elements must be **adjacent** — outer span exactly 2. A Triad whose
+  elements span wider is a **Clash**. The 2-step cap is a statement about Triad structure.
+- A **Chord** is two elements and may reach **2–4 steps** as a **Strained Chord**, paying raised
+  fizzle (`strain_add`) and **Vär equal to the step distance**, with both Impositions weakened.
+  Strained casting is the explicit, paid exception to the cap.
+- **5 steps is the opposed pair** — always impossible, for any Breadth. No payment reaches it.
+- Anything not covered above is a Clash.
+
+Both original rules survive: the cap remains a real structural constraint, and FR-305's 3-step
+and 4-step penalty tiers stay live rather than becoming dead data.
 
 **Sanity readings** (these are the numbers the thinning gradient FR-506 is built to show):
 
@@ -117,7 +134,15 @@ fizzle%         = clamp((base + breadth_add + strain_add) × magnitude_mult
 | Vervulling core | 92 | 4% | 13% | 35% |
 | Dom (starting town) | 85 | 7.5% | 20% | 47% |
 | Thinning wilds | 70 | 15% | 35% | 73% |
-| The Hush | 40 | 30% | 65% | 91% |
+| The Hush | 40 | 30% | 65% | **95%** (clamped) |
+
+**Correction 2026-08-03 (post-implementation):** the Hush Triad·Song cell first printed **91%**,
+which was an arithmetic slip — the formula gives `(60 + 12) × 1.75 = 126`, clamped to the 95
+ceiling. The **formula is authoritative**; the table is a reading of it, never an override. The
+implementation briefly carried a `sanity_readings` lookup that short-circuited the formula at
+these named points; that path has been removed, and these readings are now asserted by
+`test/unit/test_skill_check.gd` against the computed result. If a documented reading and the
+formula ever disagree again, the document is wrong.
 
 The pattern an attentive player reads: **in the Hush, only Notes are honest** — which is exactly
 what `magic-system.md` says the Hush is. The Kit (always-on, physical) is unaffected everywhere.
