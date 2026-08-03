@@ -6,11 +6,18 @@ signal saved
 signal loaded
 signal save_failed(message: String)
 signal autosave_finished(reason: String, succeeded: bool)
+signal spawn_marker_diagnostic(severity: String, marker_name: String, scene_path: String)
 
 const SAVE_PATH := "user://chapter_one.save"
 const TEMP_PATH := "user://chapter_one.save.tmp"
 const BACKUP_PATH := "user://chapter_one.save.bak"
 const FORMAT_VERSION := 2
+
+# Instance paths keep the production slot as the default while allowing tests
+# to exercise disk-level rotation without touching a developer's real save.
+var save_path := SAVE_PATH
+var temp_path := TEMP_PATH
+var backup_path := BACKUP_PATH
 
 enum Checkpoint {
 	NEW_GAME,
@@ -42,35 +49,35 @@ var _elapsed_before_load := 0
 
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(save_path)
 
 
 func save() -> bool:
-	var file := FileAccess.open(TEMP_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(temp_path, FileAccess.WRITE)
 	if file == null:
 		return _fail("Could not open the save file for writing.")
 	file.store_var(_build_payload())
 	file.close()
 
-	var temp_path := ProjectSettings.globalize_path(TEMP_PATH)
-	var save_path := ProjectSettings.globalize_path(SAVE_PATH)
-	var backup_path := ProjectSettings.globalize_path(BACKUP_PATH)
+	var absolute_temp_path := ProjectSettings.globalize_path(temp_path)
+	var absolute_save_path := ProjectSettings.globalize_path(save_path)
+	var absolute_backup_path := ProjectSettings.globalize_path(backup_path)
 	var moved_previous_save := false
-	if FileAccess.file_exists(SAVE_PATH):
+	if FileAccess.file_exists(save_path):
 		# Keep the last known-good payload around after a successful save. The
 		# next save replaces this backup only after the current save is moved.
-		if FileAccess.file_exists(BACKUP_PATH):
-			DirAccess.remove_absolute(backup_path)
-		var backup_err := DirAccess.rename_absolute(save_path, backup_path)
+		if FileAccess.file_exists(backup_path):
+			DirAccess.remove_absolute(absolute_backup_path)
+		var backup_err := DirAccess.rename_absolute(absolute_save_path, absolute_backup_path)
 		if backup_err != OK:
-			DirAccess.remove_absolute(temp_path)
+			DirAccess.remove_absolute(absolute_temp_path)
 			return _fail("Could not protect the previous save before writing.")
 		moved_previous_save = true
-	var err := DirAccess.rename_absolute(temp_path, save_path)
+	var err := DirAccess.rename_absolute(absolute_temp_path, absolute_save_path)
 	if err != OK:
-		DirAccess.remove_absolute(temp_path)
-		if moved_previous_save and FileAccess.file_exists(BACKUP_PATH):
-			DirAccess.rename_absolute(backup_path, save_path)
+		DirAccess.remove_absolute(absolute_temp_path)
+		if moved_previous_save and FileAccess.file_exists(backup_path):
+			DirAccess.rename_absolute(absolute_backup_path, absolute_save_path)
 		return _fail("Could not finish writing the save file.")
 	saved.emit()
 	return true
@@ -108,16 +115,16 @@ func elapsed_seconds() -> int:
 
 
 func load_save() -> bool:
-	var source_path := SAVE_PATH
+	var source_path := save_path
 	var payload: Variant = _read_payload(source_path)
 	if not validate_payload(payload):
 		# A save is intentionally recoverable: a failed write or interrupted
 		# replacement should fall back to the persistent last-known-good copy.
-		source_path = BACKUP_PATH
+		source_path = backup_path
 		payload = _read_payload(source_path)
 	if not validate_payload(payload):
 		return _fail("No readable, supported save file was found.")
-	if source_path == BACKUP_PATH:
+	if source_path == backup_path:
 		push_warning("Primary save was invalid; loading the backup save instead.")
 	var game_state_backup := GameState.to_dict()
 	var reputation_backup := Reputation.to_dict()
@@ -183,9 +190,7 @@ func apply_pending_location(scene: Node) -> void:
 		player.global_position = pending_player_position
 	else:
 		var marker_name := "Spawn" + _pascal_case(String(pending_spawn_id))
-		var marker := scene.find_child(marker_name, true, false) as Marker2D
-		if marker == null:
-			marker = scene.find_child("SpawnDefault", true, false) as Marker2D
+		var marker := _resolve_spawn_marker(scene, marker_name)
 		if marker:
 			player.global_position = marker.global_position
 	has_pending_player_position = false
@@ -196,8 +201,29 @@ func apply_pending_position(scene: Node) -> void:
 	apply_pending_location(scene)
 
 
+func _resolve_spawn_marker(scene: Node, marker_name: String) -> Marker2D:
+	var marker := scene.find_child(marker_name, true, false) as Marker2D
+	if marker:
+		return marker
+	var scene_path := _scene_label(scene)
+	push_warning(
+		"Missing spawn marker '%s' in scene '%s'; falling back to SpawnDefault."
+		% [marker_name, scene_path]
+	)
+	spawn_marker_diagnostic.emit("warning", marker_name, scene_path)
+	marker = scene.find_child("SpawnDefault", true, false) as Marker2D
+	if marker == null:
+		push_error(
+			"Missing SpawnDefault marker in scene '%s'; player position was not applied."
+			% scene_path
+		)
+		spawn_marker_diagnostic.emit("error", "SpawnDefault", scene_path)
+	return marker
+
+
 func _build_payload() -> Dictionary:
-	var scene := get_tree().current_scene
+	var tree := get_tree()
+	var scene := tree.current_scene if tree else null
 	var scene_path: String = GameFlow.TOWN_SCENE
 	var payload := {
 		"version": FORMAT_VERSION,
@@ -231,6 +257,12 @@ func _read_payload(path: String) -> Variant:
 	var payload: Variant = file.get_var()
 	file.close()
 	return payload
+
+
+func _scene_label(scene: Node) -> String:
+	if not scene.scene_file_path.is_empty():
+		return scene.scene_file_path
+	return scene.name
 
 
 func _in_gameplay_scene() -> bool:

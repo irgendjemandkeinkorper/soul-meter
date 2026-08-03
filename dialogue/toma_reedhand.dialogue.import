@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://cfkxsi7g6pbym"
+path="res://.godot/imported/toma_reedhand.dialogue-060b5f94f4d6f496c956388bddba131e.tres"
+
+[deps]
+
+source_file="res://dialogue/toma_reedhand.dialogue"
+dest_files=["res://.godot/imported/toma_reedhand.dialogue-060b5f94f4d6f496c956388bddba131e.tres"]
+
+[params]
+
+defaults=true

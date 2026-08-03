@@ -65,7 +65,18 @@ func _make_window(title_text: String, min_size: Vector2 = Vector2(520, 420)) -> 
 	add_child(center)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = min_size
+	# The design sizes are the preferred desktop sizes, not a hard requirement. A
+	# small window must still leave room for the panel margins and a usable scroll
+	# area instead of letting content spill outside the panel.
+	var viewport_size := get_viewport_rect().size
+	if viewport_size.x < 1.0 or viewport_size.y < 1.0:
+		viewport_size = Vector2(1280, 720)
+	var available_size := Vector2(
+		maxf(320.0, viewport_size.x - 48.0), maxf(240.0, viewport_size.y - 48.0)
+	)
+	panel.custom_minimum_size = Vector2(
+		minf(min_size.x, available_size.x), minf(min_size.y, available_size.y)
+	)
 	center.add_child(panel)
 
 	var margin := MarginContainer.new()
@@ -73,9 +84,16 @@ func _make_window(title_text: String, min_size: Vector2 = Vector2(520, 420)) -> 
 		margin.add_theme_constant_override(side, 20)
 	panel.add_child(margin)
 
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_child(scroll)
+
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 12)
-	margin.add_child(vbox)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(vbox)
 
 	var title := Label.new()
 	title.text = title_text

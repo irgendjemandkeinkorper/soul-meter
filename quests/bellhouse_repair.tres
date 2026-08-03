@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 4
+quest_name = "The Bell That Won't Ring"
+quest_description = "Sella Varn's district bell has gone silent. Inspect the bell house and decide what its silence means before the Registry names it a failure."
+quest_objective = "Inspect the bell house in Dom."
+required_flags = PackedStringArray("dom_bellhouse_inspected")
+objectives = PackedStringArray("Inspect the bell house in Dom.", "Return to Sella Varn with what you found.")

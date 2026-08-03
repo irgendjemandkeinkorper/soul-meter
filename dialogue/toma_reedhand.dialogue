@@ -1,0 +1,16 @@
+~ start
+Toma Reedhand: The river is two streets below us, but the shrine still gets wet when the tide turns. Dom pretends not to notice. The shrine does not pretend.
+=> hub
+
+~ hub
+- "What does the shrine remember?" [if not GameState.get_flag("dom_shrine_visited") /]
+	do GameState.set_flag("dom_shrine_asked", true)
+	do Renown.gain_reputation("player", 1.0, "Asked after the river shrine's memory", "dom")
+	Toma Reedhand: Every promise carried downstream, and every name spoken over still water. If you visit, leave something honest behind. A word is enough.
+	=> END
+- "I left a word at the shrine." [if GameState.get_flag("dom_shrine_visited") /]
+	Toma Reedhand: Then the river has one more thing to carry. Try not to make it carry you.
+	=> END
+- "Is there work at the docks?"
+	Toma Reedhand: There is always work at the docks. The difficult part is finding out who gets paid for it.
+	=> END

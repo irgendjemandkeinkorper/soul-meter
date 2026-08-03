@@ -8,6 +8,7 @@ extends Area2D
 @export var target_location_id: StringName = &""
 @export var label_text: String = "Leave"
 @export var required_flag: String = ""
+@export var required_flags: PackedStringArray = []
 @export var locked_message: String = "This route is not open yet."
 @export var spawn_id: StringName = &"default"
 
@@ -35,7 +36,7 @@ func _ready() -> void:
 	add_child(_label)
 
 	body_entered.connect(_on_body_entered)
-	if not required_flag.is_empty():
+	if not required_flag.is_empty() or not required_flags.is_empty():
 		GameState.flag_changed.connect(_on_flag_changed)
 	_refresh_lock()
 
@@ -49,7 +50,7 @@ func _on_body_entered(body: Node2D) -> void:
 
 
 func _on_flag_changed(flag: String, _value: Variant) -> void:
-	if flag == required_flag:
+	if flag == required_flag or required_flags.has(flag):
 		_refresh_lock()
 
 
@@ -62,6 +63,11 @@ func _refresh_lock() -> void:
 
 
 func _is_unlocked() -> bool:
+	if not required_flags.is_empty():
+		for flag in required_flags:
+			if bool(GameState.get_flag(flag)):
+				return true
+		return false
 	return required_flag.is_empty() or bool(GameState.get_flag(required_flag))
 
 

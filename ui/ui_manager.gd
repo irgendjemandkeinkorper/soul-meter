@@ -13,6 +13,7 @@ const PARTY := preload("res://ui/screens/party.tscn")
 const STANDING := preload("res://ui/screens/standing.tscn")
 const TAVERN := preload("res://ui/screens/tavern.tscn")
 const JOURNAL := preload("res://ui/screens/journal.tscn")
+const SHOP := preload("res://ui/screens/shop.tscn")
 
 var ui_theme: Theme
 var _stack: Array[Control] = []
@@ -76,6 +77,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		if is_open():
 			back()
+		elif get_tree().paused:
+			# Dialogue balloons pause gameplay but are not UIManager stack entries.
+			# Let the balloon consume Esc instead of opening the pause menu behind it.
+			return
 		elif _in_gameplay():
 			GameFlow.send_event("pause")
 		get_viewport().set_input_as_handled()

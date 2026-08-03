@@ -25,5 +25,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm install -g @modelcontextprotocol/sdk @google/jules-sdk @google/jules-merge
+          npm install -g @modelcontextprotocol/sdk@1.30.0 @google/jules-sdk@0.2.0 @google/jules-merge@0.1.0
           jules-merge scan --json '{"prs":[${{ github.event.pull_request.number }}],"repo":"${{ github.repository }}","base":"${{ github.event.pull_request.base.ref }}"}'

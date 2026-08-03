@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 5
+quest_name = "The First Field Debt"
+quest_description = "Marshal Coiljaw needs proof that the thing haunting the grove can be stopped. Bring back the loamroot token it leaves behind."
+quest_objective = "Defeat the Bog Wight and loot its loamroot token."
+required_flags = PackedStringArray("defeated_bog_wight", "field_debt_proof_looted")
+objectives = PackedStringArray("Defeat the Bog Wight at the grove edge.", "Loot the loamroot token.", "Return to Marshal Coiljaw in Dom.")

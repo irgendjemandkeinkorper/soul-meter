@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://4bq5gob8ovbq"
+path="res://.godot/imported/sella_varn.dialogue-8327a47bc1da6a7dfba750460c1704db.tres"
+
+[deps]
+
+source_file="res://dialogue/sella_varn.dialogue"
+dest_files=["res://.godot/imported/sella_varn.dialogue-8327a47bc1da6a7dfba750460c1704db.tres"]
+
+[params]
+
+defaults=true

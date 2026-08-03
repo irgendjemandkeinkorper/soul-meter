@@ -2,10 +2,23 @@ extends GdUnitTestSuite
 
 const SaveGameScript := preload("res://globals/save_game.gd")
 var saves
+var test_save_paths: Array[String] = []
+var diagnostics: Array[Dictionary] = []
 
 
 func before_test() -> void:
 	saves = auto_free(SaveGameScript.new())
+	saves.save_path = "user://gdunit_save_game_fallback.save"
+	saves.temp_path = "user://gdunit_save_game_fallback.save.tmp"
+	saves.backup_path = "user://gdunit_save_game_fallback.save.bak"
+	test_save_paths = [saves.save_path, saves.temp_path, saves.backup_path]
+	diagnostics.clear()
+	saves.spawn_marker_diagnostic.connect(_record_spawn_diagnostic)
+	_remove_test_saves()
+
+
+func after_test() -> void:
+	_remove_test_saves()
 
 
 func test_validation_accepts_a_complete_current_payload() -> void:
@@ -77,3 +90,55 @@ func test_invalid_primary_payload_can_be_rejected_before_fallback() -> void:
 	var invalid := {"version": SaveGameScript.FORMAT_VERSION, "scene": "user://broken"}
 	assert_bool(saves.validate_payload(invalid)).is_false()
 	assert_object(saves._read_payload("user://file-that-does-not-exist.save")).is_null()
+
+
+func test_corrupted_primary_save_loads_from_last_known_good_backup() -> void:
+	assert_bool(saves.save()).is_true()
+	assert_bool(saves.save()).is_true()
+	assert_bool(FileAccess.file_exists(saves.backup_path)).is_true()
+
+	var corrupted := FileAccess.open(saves.save_path, FileAccess.WRITE)
+	assert_object(corrupted).is_not_null()
+	corrupted.store_string("truncated save")
+	corrupted.close()
+
+	assert_bool(saves.load_save()).is_true()
+
+
+func test_missing_spawn_markers_are_resolved_as_a_diagnostic_failure() -> void:
+	var scene := Node2D.new()
+	scene.name = "MissingSpawnScene"
+	var player := Node2D.new()
+	player.name = "Player"
+	scene.add_child(player)
+	add_child(scene)
+	saves.has_pending_player_position = false
+	saves.pending_spawn_id = &"missing_arrival"
+
+	assert_object(saves._resolve_spawn_marker(scene, "SpawnMissingArrival")).is_null()
+	assert_int(diagnostics.size()).is_equal(2)
+	assert_str(diagnostics[0]["severity"]).is_equal("warning")
+	assert_str(diagnostics[0]["marker_name"]).is_equal("SpawnMissingArrival")
+	assert_str(diagnostics[0]["scene_path"]).is_equal("MissingSpawnScene")
+	assert_str(diagnostics[1]["severity"]).is_equal("error")
+	assert_str(diagnostics[1]["marker_name"]).is_equal("SpawnDefault")
+	assert_str(diagnostics[1]["scene_path"]).is_equal("MissingSpawnScene")
+	saves.apply_pending_location(scene)
+	assert_vector(player.global_position).is_equal(Vector2.ZERO)
+
+
+func _remove_test_saves() -> void:
+	for path in test_save_paths:
+		var absolute_path := ProjectSettings.globalize_path(path)
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(absolute_path)
+
+
+func _record_spawn_diagnostic(severity: String, marker_name: String, scene_path: String) -> void:
+	diagnostics.append(
+		{
+			"severity": severity,
+			"marker_name": marker_name,
+			"scene_path": scene_path,
+		}
+	)

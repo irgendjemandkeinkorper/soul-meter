@@ -45,12 +45,30 @@ jobs:
     permissions:
       contents: read
       issues: write
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npx -y --package=@google/jules-fleet jules-fleet dispatch --milestone ${{ matrix.milestone }}
+      - name: Skip milestone with an open in-flight PR
+        id: guard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          open_prs=$(gh api --paginate --slurp \
+            "repos/${{ github.repository }}/pulls?state=open&per_page=100" \
+            --jq 'add | map(select(.milestone != null and .milestone.number == '${{ matrix.milestone }}')) | length')
+          if [ "$open_prs" -gt 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Milestone ${{ matrix.milestone }} already has $open_prs open PR(s); skipping duplicate dispatch."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch milestone
+        if: steps.guard.outputs.skip != 'true'
+        run: npx -y --package=@google/jules-fleet@0.0.1-experimental.35 jules-fleet dispatch --milestone ${{ matrix.milestone }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JULES_API_KEY: ${{ secrets.JULES_API_KEY }}

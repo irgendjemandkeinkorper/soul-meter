@@ -167,3 +167,112 @@ func test_travel_exit_updates_gameflow_target_scene() -> void:
 	assert_str(GameFlow._target_scene).is_equal(GameFlow.WILDS_SCENE)
 	GameState.flags = original_flags
 	GameFlow._target_scene = original_target
+
+
+func test_dom_contains_new_buildings_npcs_and_interactive_events() -> void:
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(5)
+
+	for node_name in [
+		"RegistryArchive",
+		"BellHouse",
+		"RiverShrine",
+		"IronCompaniesBarracks",
+		"ItemShop",
+		"EquipmentShop",
+		"TownHall",
+		"ChefsHouse",
+		"PlayersHouse",
+		"HadrikVale",
+		"TomaReedhand",
+		"SellaVarn",
+		"NoticeBoard",
+		"BellHouseDoor",
+		"RiverShrineMarker",
+		"ItemShopDoor",
+		"EquipmentShopDoor",
+		"GarrisonDoor",
+		"TownHallDoor",
+		"ChefsHouseDoor",
+		"PlayersHouseDoor",
+		"SavePoint",
+		"BuildingBoundaries",
+	]:
+		assert_object(runner.find_child(node_name, true, false)).is_not_null()
+
+
+func test_dom_shops_and_home_save_point_are_repeatable_interactions() -> void:
+	var original_flags := GameState.flags.duplicate(true)
+	var original_inventory := GameState.inventory.serialize()
+	var original_gp := GameState.gp
+	var original_autosave_reason := SaveGame._pending_autosave_reason
+	GameState.flags.clear()
+	SaveGame._pending_autosave_reason = ""
+
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(5)
+	var player: Node2D = runner.find_child("Player", true, false)
+	var item_shop: SMInteractable = runner.find_child("ItemShopDoor", true, false)
+	var save_point: SMInteractable = runner.find_child("SavePoint", true, false)
+	var interact := InputEventAction.new()
+	interact.action = &"interact"
+	interact.pressed = true
+
+	item_shop._on_body(player, true)
+	item_shop._unhandled_input(interact)
+	assert_bool(UIManager.is_open()).is_true()
+	await runner.simulate_frames(2)
+	var shop: ShopScreen = UIManager._stack.back()
+	var bread_before := GameState.item_count(ItemIds.CONSUMABLES_LOAM_BREAD)
+	shop._buy(ShopScreen.ITEM_STOCK[0])
+	assert_int(GameState.gp).is_equal(original_gp - int(ShopScreen.ITEM_STOCK[0]["price"]))
+	assert_int(GameState.item_count(ItemIds.CONSUMABLES_LOAM_BREAD)).is_equal(bread_before + 1)
+	UIManager.close_all()
+	await runner.simulate_frames(2)
+	item_shop._unhandled_input(interact)
+	assert_bool(GameState.get_flag("dom_item_shop_visited")).is_true()
+	assert_bool(item_shop._used).is_false()
+	UIManager.close_all()
+
+	save_point._on_body(player, true)
+	save_point._unhandled_input(interact)
+	assert_bool(GameState.get_flag("dom_save_point_used")).is_true()
+	assert_str(SaveGame._pending_autosave_reason).is_equal("save-point-save_point")
+
+	GameState.flags = original_flags
+	SaveGame._pending_autosave_reason = original_autosave_reason
+	GameState.inventory.clear()
+	GameState.inventory.deserialize(original_inventory)
+	GameState.inventory_changed.emit()
+	GameState.gp = original_gp
+
+
+func test_bellhouse_quest_opens_the_inspection_event_and_can_be_completed() -> void:
+	var original_flags := GameState.flags.duplicate(true)
+	var original_quests := QuestRegistry.to_dict().duplicate(true)
+	GameState.flags.clear()
+	QuestRegistry.reset()
+
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(5)
+	var bell: SMInteractable = runner.find_child("BellHouseDoor", true, false)
+	var player: Node2D = runner.find_child("Player", true, false)
+
+	# The bell cannot be inspected before Sella offers the quest.
+	bell._on_body(player, true)
+	var interact := InputEventAction.new()
+	interact.action = &"interact"
+	interact.pressed = true
+	bell._unhandled_input(interact)
+	assert_bool(GameState.get_flag("dom_bellhouse_inspected")).is_false()
+
+	QuestRegistry.offer(QuestRegistry.BELLHOUSE_REPAIR)
+	bell._unhandled_input(interact)
+	assert_bool(GameState.get_flag("dom_bellhouse_inspected")).is_true()
+
+	QuestRegistry.turn_in(QuestRegistry.BELLHOUSE_REPAIR, "heard-the-silence", false)
+	assert_bool(QuestRegistry.is_done(QuestRegistry.BELLHOUSE_REPAIR)).is_true()
+
+	QuestRegistry.reset()
+	QuestRegistry.from_dict(original_quests)
+	GameState.flags = original_flags

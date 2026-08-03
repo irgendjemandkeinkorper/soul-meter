@@ -35,9 +35,24 @@ func test_remove_items_is_atomic_when_inventory_is_short() -> void:
 	assert_int(state.item_count(ItemIds.MATERIALS_LOAMROOT_SPRIG)).is_equal(1)
 
 
+func test_gp_spending_rejects_shortfall_and_clamps_earnings() -> void:
+	state.gp = 20
+
+	assert_bool(state.spend_gp(12)).is_true()
+	assert_int(state.gp).is_equal(8)
+	assert_bool(state.spend_gp(9)).is_false()
+	assert_int(state.gp).is_equal(8)
+
+	state.earn_gp(7)
+	assert_int(state.gp).is_equal(15)
+	state.gp = -4
+	assert_int(state.gp).is_equal(0)
+
+
 func test_save_round_trip_restores_inventory_flags_soul_and_party() -> void:
 	state.flags = {"bog_wight_defeated": true}
 	state.soul_meter = 27.5
+	state.gp = 37
 	var member := PartyMember.new()
 	member.display_name = "Vex"
 	member.hp = 17
@@ -56,6 +71,7 @@ func test_save_round_trip_restores_inventory_flags_soul_and_party() -> void:
 	assert_bool(state.from_dict(snapshot)).is_true()
 	assert_bool(state.get_flag("bog_wight_defeated")).is_true()
 	assert_float(state.soul_meter).is_equal_approx(27.5, 0.001)
+	assert_int(state.gp).is_equal(37)
 	assert_int(state.party.size()).is_equal(1)
 	assert_str(state.party[0].display_name).is_equal("Vex")
 	assert_int(state.party[0].hp).is_equal(17)

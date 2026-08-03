@@ -1,0 +1,21 @@
+~ start
+Sella Varn: The district bell used to tell the harbor when the roads were safe. Now it refuses the rope, and the Registry has already written FAILURE beside my name.
+=> hub
+
+~ hub
+- "What happened to the bell?" [if not QuestRegistry.is_active(QuestRegistry.BELLHOUSE_REPAIR) and not QuestRegistry.is_done(QuestRegistry.BELLHOUSE_REPAIR) /]
+	do QuestRegistry.offer(QuestRegistry.BELLHOUSE_REPAIR)
+	Sella Varn: The rope is sound. The bronze is warm. Something inside the house is holding its breath. Look at the striker and come back before the clerks seal the door.
+	=> hub
+- "I inspected the bell house. The silence is not a simple break." [if QuestRegistry.is_active(QuestRegistry.BELLHOUSE_REPAIR) and QuestRegistry.flags_met(QuestRegistry.BELLHOUSE_REPAIR) /]
+	do QuestRegistry.turn_in(QuestRegistry.BELLHOUSE_REPAIR, "heard-the-silence", false)
+	do Reputation.record("player", "dom", 3.0, "Returned a true account of the silent district bell", "dom")
+	do Renown.gain_reputation("player", 2.0, "Investigated the bell house before the Registry closed it", "dom")
+	Sella Varn: Then it chose not to ring. That is worse than a snapped pin, but it is useful truth. I will keep the door open one more night and tell the clerks the district still has a witness.
+	=> END
+- "The bell is still waiting on an answer." [if QuestRegistry.is_done(QuestRegistry.BELLHOUSE_REPAIR) /]
+	Sella Varn: So are we all. If it rings, the whole ward will hear what it thinks of us.
+	=> END
+- "I am only passing through."
+	Sella Varn: Then pass slowly. Dom has a way of charging interest on anything you fail to notice.
+	=> END

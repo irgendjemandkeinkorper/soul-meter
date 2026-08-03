@@ -21,6 +21,9 @@ const SOUL_GAUGE := preload("res://ui/hud/soul_gauge.tscn")
 const SPEAKERS := {
 	"Iris Illepah": {"subtitle": "Ssae-Seeder of the Groves", "element": "molm"},
 	"Marshal Coiljaw": {"subtitle": "the Road-Bench", "element": ""},
+	"Sella Varn": {"subtitle": "Bell Warden of the Lower Ward", "element": "strom"},
+	"Hadrik Vale": {"subtitle": "Registry Archive Clerk", "element": "nul"},
+	"Toma Reedhand": {"subtitle": "Dockhand and Shrine-Keeper", "element": "aqua"},
 }
 
 var dialogue_resource: DialogueResource
@@ -29,6 +32,8 @@ var _root: Control
 var _portrait: SMPortrait
 var _line_label: RichTextLabel
 var _choices_box: VBoxContainer
+var _choices_scroll: ScrollContainer
+var _content: VBoxContainer
 var _continue_hint: Label
 var _is_waiting_for_input := false
 
@@ -76,7 +81,10 @@ func _apply_line() -> void:
 	for child in _choices_box.get_children():
 		child.queue_free()
 	_is_waiting_for_input = dialogue_line.responses.is_empty()
-	_continue_hint.visible = _is_waiting_for_input
+	_continue_hint.visible = true
+	_continue_hint.text = (
+		"CONTINUE  ·  ESC CLOSE" if _is_waiting_for_input else "SELECT  ·  ESC CLOSE"
+	)
 	for response in dialogue_line.responses:
 		var choice: SMDialogueChoice = DialogueChoiceScript.new()
 		(
@@ -103,7 +111,10 @@ func _on_choice(response: DialogueResponse) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if (
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		queue_free()
+	elif (
 		_is_waiting_for_input
 		and (event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"))
 	):
@@ -136,24 +147,25 @@ func _build_ui() -> void:
 
 	var column := VBoxContainer.new()
 	column.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	column.anchor_top = 0.44
-	column.offset_left = 0
-	column.offset_right = 0
+	column.anchor_top = 0.34
+	column.offset_left = 24
+	column.offset_right = -24
+	column.offset_bottom = -24
 	column.alignment = BoxContainer.ALIGNMENT_END
 	column.add_theme_constant_override("separation", DS.SPACE_5)
 	_root.add_child(column)
 
-	var center := CenterContainer.new()
-	column.add_child(center)
-	var content := VBoxContainer.new()
-	content.custom_minimum_size = Vector2(860, 0)  # content column cap
-	content.add_theme_constant_override("separation", DS.SPACE_5)
-	center.add_child(content)
+	_content = VBoxContainer.new()
+	_content.custom_minimum_size = Vector2(860, 0)  # desktop content column cap
+	_content.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content.add_theme_constant_override("separation", DS.SPACE_5)
+	column.add_child(_content)
 
 	# --- top row: portrait left, soul gauge right ---
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", DS.SPACE_7)
-	content.add_child(top)
+	_content.add_child(top)
 	_portrait = PortraitScript.new()
 	top.add_child(_portrait)
 	var spacer := Control.new()
@@ -172,26 +184,41 @@ func _build_ui() -> void:
 	sb.set_corner_radius_all(DS.RADIUS)
 	sb.set_content_margin_all(DS.PANEL_PAD)
 	line_panel.add_theme_stylebox_override("panel", sb)
-	content.add_child(line_panel)
+	line_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_content.add_child(line_panel)
 	_line_label = RichTextLabel.new()
 	_line_label.bbcode_enabled = false
 	_line_label.fit_content = true
+	_line_label.scroll_active = false
+	_line_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_line_label.add_theme_font_size_override("normal_font_size", DS.FS_500)
-	_line_label.custom_minimum_size = Vector2(0, 56)
 	line_panel.add_child(_line_label)
 
 	_continue_hint = Label.new()
 	_continue_hint.text = "CONTINUE"
 	_continue_hint.theme_type_variation = "EyebrowLabel"
 	_continue_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	content.add_child(_continue_hint)
+	_content.add_child(_continue_hint)
 
 	# --- bottom row: the choice stack ---
+	_choices_scroll = ScrollContainer.new()
+	_choices_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_choices_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_choices_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_content.add_child(_choices_scroll)
 	_choices_box = VBoxContainer.new()
 	_choices_box.add_theme_constant_override("separation", DS.SPACE_3)
-	content.add_child(_choices_box)
+	_choices_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_choices_scroll.add_child(_choices_box)
 
-	# breathing room from the screen edge
-	var pad := Control.new()
-	pad.custom_minimum_size = Vector2(0, DS.SPACE_8)
-	column.add_child(pad)
+	# Keep the content capped on a wide monitor while allowing it to shrink with
+	# the window. This is also reapplied when the player resizes the window.
+	_update_content_width()
+	_root.resized.connect(_update_content_width)
+
+
+func _update_content_width() -> void:
+	if _content == null or _root == null:
+		return
+	var available_width := maxf(320.0, _root.size.x - 48.0)
+	_content.custom_minimum_size.x = minf(860.0, available_width)

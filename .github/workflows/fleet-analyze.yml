@@ -33,7 +33,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npx -y --package=@google/jules-fleet jules-fleet analyze --goal "${{ inputs.goal }}" --milestone "${{ inputs.milestone }}"
+      - run: npx -y --package=@google/jules-fleet@0.0.1-experimental.35 jules-fleet analyze --goal "${{ inputs.goal }}" --milestone "${{ inputs.milestone }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JULES_API_KEY: ${{ secrets.JULES_API_KEY }}

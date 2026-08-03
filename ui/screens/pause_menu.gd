@@ -3,7 +3,10 @@ extends Screen
 
 
 func _build() -> void:
-	var vbox := _make_window("Paused", Vector2(360, 120))
+	# This menu has enough entries to need a real panel. A tiny minimum height
+	# lets the ScrollContainer collapse to the title row, which made Pause look
+	# shrunken and put most of the controls outside the visible panel.
+	var vbox := _make_window("Paused", Vector2(520, 620))
 	# Flow buttons send chart events; overlay buttons stack views above this screen.
 	_menu_button(vbox, "Resume", func() -> void: GameFlow.send_event("resume"))
 	_menu_button(

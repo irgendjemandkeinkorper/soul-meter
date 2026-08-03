@@ -4,3 +4,6 @@
 
 # gdUnit4 test run output (regenerated every run, see docs/testing.md)
 /reports/
+
+# Claude Octopus session state (local tool scratch)
+.claude-octopus/

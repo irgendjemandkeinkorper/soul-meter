@@ -56,6 +56,13 @@ func test_from_dict_rejects_unsafe_portrait_paths() -> void:
 	var restored_invalid := PartyMember.from_dict(dict_invalid_type)
 	assert_object(restored_invalid.portrait).is_null()
 
+	for extension in ["import", "ctex"]:
+		var dict_generated_resource := {
+			"portrait_path": "res://icon." + extension
+		}
+		var restored_generated := PartyMember.from_dict(dict_generated_resource)
+		assert_object(restored_generated.portrait).is_null()
+
 
 func test_from_dict_accepts_safe_portrait_paths() -> void:
 	# Test with a valid texture resource (res://icon.svg is a CompressedTexture2D or Texture2D)

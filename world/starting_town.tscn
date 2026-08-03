@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="4_exit"]
 [ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="5_npc"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_iso"]
+[ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="7_interactable"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1600, 40)
@@ -15,6 +16,33 @@ size = Vector2(40, 1000)
 
 [sub_resource type="RectangleShape2D" id="shape_v_gapped"]
 size = Vector2(40, 390)
+
+[sub_resource type="RectangleShape2D" id="shape_registry"]
+size = Vector2(250, 170)
+
+[sub_resource type="RectangleShape2D" id="shape_bellhouse"]
+size = Vector2(240, 170)
+
+[sub_resource type="RectangleShape2D" id="shape_shrine"]
+size = Vector2(170, 120)
+
+[sub_resource type="RectangleShape2D" id="shape_barracks"]
+size = Vector2(280, 170)
+
+[sub_resource type="RectangleShape2D" id="shape_item_shop"]
+size = Vector2(190, 135)
+
+[sub_resource type="RectangleShape2D" id="shape_equipment_shop"]
+size = Vector2(210, 145)
+
+[sub_resource type="RectangleShape2D" id="shape_town_hall"]
+size = Vector2(230, 155)
+
+[sub_resource type="RectangleShape2D" id="shape_chefs_house"]
+size = Vector2(180, 135)
+
+[sub_resource type="RectangleShape2D" id="shape_players_house"]
+size = Vector2(220, 150)
 
 [node name="StartingTown" type="Node2D"]
 y_sort_enabled = true
@@ -93,6 +121,44 @@ shape = SubResource("shape_v_gapped")
 position = Vector2(1580, 765)
 shape = SubResource("shape_v_gapped")
 
+[node name="BuildingBoundaries" type="StaticBody2D" parent="."]
+
+[node name="RegistryArchiveBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(300, 250)
+shape = SubResource("shape_registry")
+
+[node name="BellHouseBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(900, 760)
+shape = SubResource("shape_bellhouse")
+
+[node name="RiverShrineBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(420, 720)
+shape = SubResource("shape_shrine")
+
+[node name="IronCompaniesBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(1260, 650)
+shape = SubResource("shape_barracks")
+
+[node name="ItemShopBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(610, 470)
+shape = SubResource("shape_item_shop")
+
+[node name="EquipmentShopBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(900, 470)
+shape = SubResource("shape_equipment_shop")
+
+[node name="TownHallBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(1000, 230)
+shape = SubResource("shape_town_hall")
+
+[node name="ChefsHouseBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(260, 570)
+shape = SubResource("shape_chefs_house")
+
+[node name="PlayersHouseBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(760, 870)
+shape = SubResource("shape_players_house")
+
 [node name="TrialHall" type="ColorRect" parent="."]
 visible = false
 offset_left = 1150.0
@@ -117,6 +183,240 @@ offset_right = 1450.0
 offset_bottom = 180.0
 horizontal_alignment = 1
 text = "TRIAL COUNCIL HALL"
+
+[node name="RegistryArchive" type="Node2D" parent="."]
+position = Vector2(300, 250)
+
+[node name="Block" type="Polygon2D" parent="RegistryArchive"]
+polygon = PackedVector2Array(-125, -70, 125, -70, 125, 70, -125, 70)
+color = Color(0.13, 0.16, 0.2, 1)
+
+[node name="Roof" type="Polygon2D" parent="RegistryArchive"]
+polygon = PackedVector2Array(-145, -70, 0, -125, 145, -70)
+color = Color(0.28, 0.23, 0.17, 1)
+
+[node name="Trim" type="Line2D" parent="RegistryArchive"]
+points = PackedVector2Array(-145, -70, 0, -125, 145, -70)
+width = 5.0
+default_color = Color(0.68, 0.45, 0.22, 1)
+
+[node name="Sign" type="Label" parent="RegistryArchive"]
+offset_left = -120.0
+offset_top = -48.0
+offset_right = 120.0
+offset_bottom = -12.0
+horizontal_alignment = 1
+text = "REGISTRY ARCHIVE"
+
+[node name="BellHouse" type="Node2D" parent="."]
+position = Vector2(900, 760)
+
+[node name="Block" type="Polygon2D" parent="BellHouse"]
+polygon = PackedVector2Array(-120, -70, 120, -70, 120, 75, -120, 75)
+color = Color(0.25, 0.2, 0.2, 1)
+
+[node name="Roof" type="Polygon2D" parent="BellHouse"]
+polygon = PackedVector2Array(-135, -70, 0, -125, 135, -70)
+color = Color(0.34, 0.23, 0.14, 1)
+
+[node name="Bell" type="Polygon2D" parent="BellHouse"]
+polygon = PackedVector2Array(-24, -72, 24, -72, 38, -35, -38, -35)
+color = Color(0.72, 0.52, 0.2, 1)
+
+[node name="Trim" type="Line2D" parent="BellHouse"]
+points = PackedVector2Array(-135, -70, 0, -125, 135, -70)
+width = 5.0
+default_color = Color(0.94, 0.78, 0.38, 1)
+
+[node name="Sign" type="Label" parent="BellHouse"]
+offset_left = -110.0
+offset_top = -45.0
+offset_right = 110.0
+offset_bottom = -12.0
+horizontal_alignment = 1
+text = "LOWER WARD BELL"
+
+[node name="RiverShrine" type="Node2D" parent="."]
+position = Vector2(420, 720)
+
+[node name="Base" type="Polygon2D" parent="RiverShrine"]
+polygon = PackedVector2Array(-85, -48, 85, -48, 85, 50, -85, 50)
+color = Color(0.12, 0.22, 0.25, 1)
+
+[node name="Canopy" type="Polygon2D" parent="RiverShrine"]
+polygon = PackedVector2Array(-100, -48, 0, -98, 100, -48)
+color = Color(0.16, 0.34, 0.34, 1)
+
+[node name="Water" type="Line2D" parent="RiverShrine"]
+points = PackedVector2Array(-55, 8, -18, -2, 18, 8, 55, -2)
+width = 5.0
+default_color = Color(0.13, 0.62, 0.7, 1)
+
+[node name="Sign" type="Label" parent="RiverShrine"]
+offset_left = -90.0
+offset_top = -35.0
+offset_right = 90.0
+offset_bottom = -4.0
+horizontal_alignment = 1
+text = "RIVER SHRINE"
+
+[node name="IronCompaniesBarracks" type="Node2D" parent="."]
+position = Vector2(1260, 650)
+
+[node name="Block" type="Polygon2D" parent="IronCompaniesBarracks"]
+polygon = PackedVector2Array(-140, -70, 140, -70, 140, 70, -140, 70)
+color = Color(0.18, 0.19, 0.22, 1)
+
+[node name="Roof" type="Polygon2D" parent="IronCompaniesBarracks"]
+polygon = PackedVector2Array(-155, -70, 0, -120, 155, -70)
+color = Color(0.23, 0.25, 0.29, 1)
+
+[node name="Trim" type="Line2D" parent="IronCompaniesBarracks"]
+points = PackedVector2Array(-155, -70, 0, -120, 155, -70)
+width = 5.0
+default_color = Color(0.52, 0.55, 0.62, 1)
+
+[node name="Sign" type="Label" parent="IronCompaniesBarracks"]
+offset_left = -130.0
+offset_top = -45.0
+offset_right = 130.0
+offset_bottom = -12.0
+horizontal_alignment = 1
+text = "IRON COMPANIES GARRISON"
+
+[node name="LowerMarket" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(520, 510, 700, 510, 700, 590, 520, 590)
+color = Color(0.27, 0.18, 0.15, 1)
+
+[node name="LowerMarketCanopy" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(500, 510, 610, 450, 720, 510)
+color = Color(0.48, 0.24, 0.18, 1)
+
+[node name="LowerMarketSign" type="Label" parent="."]
+offset_left = 520.0
+offset_top = 525.0
+offset_right = 700.0
+offset_bottom = 560.0
+horizontal_alignment = 1
+text = "LOWER MARKET"
+
+[node name="ItemShop" type="Node2D" parent="."]
+position = Vector2(610, 470)
+
+[node name="Block" type="Polygon2D" parent="ItemShop"]
+polygon = PackedVector2Array(-95, -55, 95, -55, 95, 60, -95, 60)
+color = Color(0.25, 0.2, 0.14, 1)
+
+[node name="Awning" type="Polygon2D" parent="ItemShop"]
+polygon = PackedVector2Array(-105, -55, 0, -100, 105, -55)
+color = Color(0.62, 0.32, 0.16, 1)
+
+[node name="Crates" type="Line2D" parent="ItemShop"]
+points = PackedVector2Array(-62, 24, -30, 8, 2, 24, 34, 8, 66, 24)
+width = 5.0
+default_color = Color(0.83, 0.61, 0.29, 1)
+
+[node name="Sign" type="Label" parent="ItemShop"]
+offset_left = -90.0
+offset_top = -33.0
+offset_right = 90.0
+offset_bottom = -4.0
+horizontal_alignment = 1
+text = "LOAM & LANTERN"
+
+[node name="EquipmentShop" type="Node2D" parent="."]
+position = Vector2(900, 470)
+
+[node name="Block" type="Polygon2D" parent="EquipmentShop"]
+polygon = PackedVector2Array(-105, -60, 105, -60, 105, 65, -105, 65)
+color = Color(0.16, 0.19, 0.22, 1)
+
+[node name="Awning" type="Polygon2D" parent="EquipmentShop"]
+polygon = PackedVector2Array(-115, -60, 0, -108, 115, -60)
+color = Color(0.28, 0.34, 0.39, 1)
+
+[node name="Rack" type="Line2D" parent="EquipmentShop"]
+points = PackedVector2Array(-74, 25, -38, -5, 0, 25, 38, -5, 74, 25)
+width = 5.0
+default_color = Color(0.62, 0.67, 0.73, 1)
+
+[node name="Sign" type="Label" parent="EquipmentShop"]
+offset_left = -100.0
+offset_top = -38.0
+offset_right = 100.0
+offset_bottom = -7.0
+horizontal_alignment = 1
+text = "IRON & THREAD"
+
+[node name="TownHall" type="Node2D" parent="."]
+position = Vector2(1000, 230)
+
+[node name="Block" type="Polygon2D" parent="TownHall"]
+polygon = PackedVector2Array(-115, -65, 115, -65, 115, 70, -115, 70)
+color = Color(0.21, 0.22, 0.27, 1)
+
+[node name="Roof" type="Polygon2D" parent="TownHall"]
+polygon = PackedVector2Array(-128, -65, 0, -112, 128, -65)
+color = Color(0.38, 0.3, 0.19, 1)
+
+[node name="Seal" type="Polygon2D" parent="TownHall"]
+polygon = PackedVector2Array(0, -38, 24, -14, 0, 10, -24, -14)
+color = Color(0.77, 0.57, 0.23, 1)
+
+[node name="Sign" type="Label" parent="TownHall"]
+offset_left = -105.0
+offset_top = -38.0
+offset_right = 105.0
+offset_bottom = -7.0
+horizontal_alignment = 1
+text = "TOWN HALL"
+
+[node name="ChefsHouse" type="Node2D" parent="."]
+position = Vector2(260, 570)
+
+[node name="Block" type="Polygon2D" parent="ChefsHouse"]
+polygon = PackedVector2Array(-90, -55, 90, -55, 90, 55, -90, 55)
+color = Color(0.29, 0.2, 0.17, 1)
+
+[node name="Roof" type="Polygon2D" parent="ChefsHouse"]
+polygon = PackedVector2Array(-102, -55, 0, -100, 102, -55)
+color = Color(0.52, 0.27, 0.18, 1)
+
+[node name="ChimneySmoke" type="Line2D" parent="ChefsHouse"]
+points = PackedVector2Array(54, -78, 65, -92, 58, -106)
+width = 4.0
+default_color = Color(0.55, 0.57, 0.61, 0.7)
+
+[node name="Sign" type="Label" parent="ChefsHouse"]
+offset_left = -82.0
+offset_top = -33.0
+offset_right = 82.0
+offset_bottom = -4.0
+horizontal_alignment = 1
+text = "CHEF'S HOUSE"
+
+[node name="PlayersHouse" type="Node2D" parent="."]
+position = Vector2(760, 870)
+
+[node name="Block" type="Polygon2D" parent="PlayersHouse"]
+polygon = PackedVector2Array(-110, -65, 110, -65, 110, 65, -110, 65)
+color = Color(0.2, 0.24, 0.27, 1)
+
+[node name="Roof" type="Polygon2D" parent="PlayersHouse"]
+polygon = PackedVector2Array(-122, -65, 0, -112, 122, -65)
+color = Color(0.24, 0.34, 0.34, 1)
+
+[node name="Window" type="Polygon2D" parent="PlayersHouse"]
+polygon = PackedVector2Array(-22, -25, 22, -25, 22, 18, -22, 18)
+color = Color(0.2, 0.68, 0.72, 1)
+
+[node name="Sign" type="Label" parent="PlayersHouse"]
+offset_left = -100.0
+offset_top = -40.0
+offset_right = 100.0
+offset_bottom = -9.0
+horizontal_alignment = 1
+text = "VEX'S HOUSE"
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(700, 700)
@@ -146,12 +446,124 @@ dialogue_path = "res://dialogue/marshal_coiljaw.dialogue"
 visual_region = Rect2(17, 102, 16, 16)
 visual_modulate = Color(0.82, 0.68, 0.43, 1)
 
+[node name="HadrikVale" parent="." instance=ExtResource("5_npc")]
+position = Vector2(500, 370)
+npc_name = "Hadrik Vale"
+dialogue_path = "res://dialogue/hadrik_vale.dialogue"
+visual_region = Rect2(0, 102, 16, 16)
+visual_modulate = Color(0.65, 0.72, 0.82, 1)
+
+[node name="TomaReedhand" parent="." instance=ExtResource("5_npc")]
+position = Vector2(560, 740)
+npc_name = "Toma Reedhand"
+dialogue_path = "res://dialogue/toma_reedhand.dialogue"
+visual_region = Rect2(34, 102, 16, 16)
+visual_modulate = Color(0.28, 0.68, 0.75, 1)
+
+[node name="SellaVarn" parent="." instance=ExtResource("5_npc")]
+position = Vector2(1080, 760)
+npc_name = "Sella Varn"
+dialogue_path = "res://dialogue/sella_varn.dialogue"
+visual_region = Rect2(17, 68, 16, 16)
+visual_modulate = Color(0.83, 0.56, 0.25, 1)
+
+[node name="NoticeBoard" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(470, 420)
+display_name = "NOTICE BOARD"
+prompt_text = "READ NOTICE"
+interaction_text = "The latest notice names the silent bell house and the east road."
+interaction_flag = "dom_notice_read"
+marker_color = Color(0.55, 0.33, 0.16, 1)
+
+[node name="BellHouseDoor" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(900, 640)
+display_name = "BELL HOUSE"
+prompt_text = "INSPECT BELL"
+interaction_text = "The striker is warm. Something inside the bell is holding the next sound."
+interaction_flag = "dom_bellhouse_inspected"
+required_flag = "dom_bell_quest_open"
+locked_message = "Sella has not asked you to examine the bell."
+marker_color = Color(0.72, 0.52, 0.2, 1)
+
+[node name="RiverShrineMarker" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(420, 610)
+display_name = "RIVER SHRINE"
+prompt_text = "LEAVE A WORD"
+interaction_text = "You leave one honest word in the water. The current carries it below Dom."
+interaction_flag = "dom_shrine_visited"
+marker_color = Color(0.13, 0.55, 0.65, 1)
+
+[node name="ItemShopDoor" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(610, 565)
+display_name = "ITEM SHOP"
+prompt_text = "BROWSE STOCK"
+interaction_text = "Loam Bread, Cinder-Ink Vials, and field supplies are stacked behind the counter."
+interaction_flag = "dom_item_shop_visited"
+repeatable = true
+shop_type = "items"
+marker_color = Color(0.74, 0.42, 0.18, 1)
+
+[node name="EquipmentShopDoor" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(900, 570)
+display_name = "EQUIPMENT SHOP"
+prompt_text = "CHECK GEAR"
+interaction_text = "Iron & Thread carries weapon repairs, field tools, and fittings for a soul-bound party."
+interaction_flag = "dom_equipment_shop_visited"
+repeatable = true
+shop_type = "equipment"
+marker_color = Color(0.46, 0.59, 0.72, 1)
+
+[node name="GarrisonDoor" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(1260, 755)
+display_name = "GARRISON"
+prompt_text = "REPORT IN"
+interaction_text = "The Iron Companies keep a roster of every blade allowed to leave Dom."
+interaction_flag = "dom_garrison_visited"
+repeatable = true
+marker_color = Color(0.52, 0.55, 0.62, 1)
+
+[node name="TownHallDoor" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(1000, 330)
+display_name = "TOWN HALL"
+prompt_text = "READ THE LEDGER"
+interaction_text = "The public ledger records road commissions, ward debts, and the names of those who failed to return."
+interaction_flag = "dom_town_hall_visited"
+repeatable = true
+marker_color = Color(0.77, 0.57, 0.23, 1)
+
+[node name="ChefsHouseDoor" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(260, 665)
+display_name = "CHEF'S HOUSE"
+prompt_text = "KNOCK"
+interaction_text = "A pot simmers inside. Someone has left a bowl on the sill with a note: EAT BEFORE YOU ARGUE."
+interaction_flag = "dom_chefs_house_visited"
+repeatable = true
+marker_color = Color(0.75, 0.39, 0.22, 1)
+
+[node name="PlayersHouseDoor" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(760, 770)
+display_name = "VEX'S HOUSE"
+prompt_text = "ENTER HOME"
+interaction_text = "The room is small, dry, and yours for as long as Dom permits."
+interaction_flag = "dom_players_house_visited"
+repeatable = true
+marker_color = Color(0.2, 0.68, 0.72, 1)
+
+[node name="SavePoint" parent="." instance=ExtResource("7_interactable")]
+position = Vector2(900, 770)
+display_name = "HOME SAVE POINT"
+prompt_text = "SAVE GAME"
+interaction_text = "Your name is entered in the household ledger. The run is safe here."
+interaction_flag = "dom_save_point_used"
+save_point = true
+marker_color = Color(0.22, 0.8, 0.58, 1)
+
 [node name="RoadToTheWilds" parent="." instance=ExtResource("4_exit")]
 position = Vector2(1580, 500)
 target_scene = "res://world/test_room.tscn"
 label_text = "TO THE WILDS"
-required_flag = "chapter_one_free_roam"
-locked_message = "The east road opens after Coiljaw's ruling."
+required_flags = PackedStringArray("tutorial_road_open", "chapter_one_free_roam")
+locked_message = "Marshal Coiljaw must issue a field commission."
 spawn_id = &"from_dom"
 
 [node name="NorthRoad" parent="." instance=ExtResource("4_exit")]

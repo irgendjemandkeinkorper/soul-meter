@@ -58,7 +58,10 @@ static func from_dict(data: Dictionary) -> PartyMember:
 		# We restrict paths to res://, deny traversal (..), check that the file exists,
 		# and restrict the file extension to safe texture/image extensions before loading.
 		var ext := portrait_path.get_extension().to_lower()
-		if ext in ["png", "jpg", "jpeg", "svg", "webp", "tga", "import", "ctex"]:
+		# Portrait paths are authored as source image resources by the game. Godot's
+		# .import metadata and .ctex cache files are generated implementation details,
+		# not portrait paths emitted by PartyMember.to_dict(), so they stay rejected.
+		if ext in ["png", "jpg", "jpeg", "svg", "webp", "tga"]:
 			if FileAccess.file_exists(portrait_path):
 				var res = load(portrait_path)
 				if res is Texture2D:

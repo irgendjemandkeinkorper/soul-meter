@@ -10,29 +10,37 @@ jobs:
     timeout-minutes: 15
     env:
       GODOT_VERSION: 4.7.1-stable
-      GODOT_BIN: /usr/local/bin/godot
+      GODOT_BIN: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache Godot engine
+        uses: actions/cache@v4
+        with:
+          path: /tmp/godot
+          key: godot-${{ runner.os }}-${{ env.GODOT_VERSION }}-engine
 
       - name: Install Godot and virtual display
         run: |
           sudo apt-get update
           sudo apt-get install -y unzip xvfb
-          wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip" -O /tmp/godot.zip
-          unzip -q /tmp/godot.zip -d /tmp/godot
-          sudo install -m 0755 "/tmp/godot/Godot_v${GODOT_VERSION}_linux.x86_64" "$GODOT_BIN"
+          if [ ! -x "$GODOT_BIN" ]; then
+            wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip" -O /tmp/godot.zip
+            unzip -q /tmp/godot.zip -d /tmp/godot
+            chmod +x "$GODOT_BIN"
+          fi
 
       - name: Import project
         run: |
           set -o pipefail
-          godot --headless --path . --import --quit 2>&1 | tee /tmp/godot-import.log
+          "$GODOT_BIN" --headless --path . --import --quit 2>&1 | tee /tmp/godot-import.log
           if grep -En 'SCRIPT ERROR: (Parse|Compile) Error|ERROR: Failed to load script' /tmp/godot-import.log; then
             echo "Godot reported a script parse/compile failure during import."
             exit 1
           fi
 
       - name: Run art-free acceptance gate
-        run: GODOT_BIN=godot bash scripts/acceptance_gate.sh
+        run: GODOT_BIN="$GODOT_BIN" bash scripts/acceptance_gate.sh
 
   package-windows:
     needs: test
@@ -41,29 +49,46 @@ jobs:
     env:
       GODOT_VERSION: 4.7.1-stable
       GODOT_TEMPLATE_DIR: 4.7.1.stable
-      GODOT_BIN: /usr/local/bin/godot
+      GODOT_BIN: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache Godot engine
+        uses: actions/cache@v4
+        with:
+          path: /tmp/godot
+          key: godot-${{ runner.os }}-${{ env.GODOT_VERSION }}-engine
+
+      - name: Cache Godot export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.GODOT_TEMPLATE_DIR }}
+          key: godot-${{ runner.os }}-${{ env.GODOT_VERSION }}-templates-${{ env.GODOT_TEMPLATE_DIR }}
 
       - name: Install Godot, export templates, and zip
         run: |
           sudo apt-get update
           sudo apt-get install -y unzip zip
-          wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip" -O /tmp/godot.zip
-          unzip -q /tmp/godot.zip -d /tmp/godot
-          sudo install -m 0755 "/tmp/godot/Godot_v${GODOT_VERSION}_linux.x86_64" "$GODOT_BIN"
-          wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz" -O /tmp/templates.tpz
-          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
-          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_TEMPLATE_DIR}"
-          cp /tmp/godot-templates/templates/* "$HOME/.local/share/godot/export_templates/${GODOT_TEMPLATE_DIR}/"
+          if [ ! -x "$GODOT_BIN" ]; then
+            wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip" -O /tmp/godot.zip
+            unzip -q /tmp/godot.zip -d /tmp/godot
+            chmod +x "$GODOT_BIN"
+          fi
+          template_dir="$HOME/.local/share/godot/export_templates/${GODOT_TEMPLATE_DIR}"
+          if [ ! -f "$template_dir/windows_release.x86_64" ]; then
+            wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz" -O /tmp/templates.tpz
+            unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+            mkdir -p "$template_dir"
+            cp /tmp/godot-templates/templates/* "$template_dir/"
+          fi
 
       - name: Import and export Windows x64
         run: |
-          godot --headless --path . --import --quit
+          "$GODOT_BIN" --headless --path . --import --quit
           mkdir -p dist/SoulMeter
           # Pandora's upstream release hook ASCII-compresses its JSON and drops Unicode lore.
           # Recovery mode skips editor-only hooks; the preset explicitly includes raw data.pandora.
-          godot --headless --recovery-mode --path . --export-release "Windows Desktop" dist/SoulMeter/SoulMeter.exe
+          "$GODOT_BIN" --headless --recovery-mode --path . --export-release "Windows Desktop" dist/SoulMeter/SoulMeter.exe
           cp README.md DEPENDENCIES.md dist/SoulMeter/
           cd dist
           zip -r SoulMeter-windows-x86_64.zip SoulMeter

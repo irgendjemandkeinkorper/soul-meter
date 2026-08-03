@@ -87,3 +87,29 @@ Marshal Coiljaw: Dorthkor's road-drum stopped halfway through the breach warning
 - "Nothing yet."
 	Marshal Coiljaw: Nothing is what the road-drum said. I already know how that sounds.
 	=> END
+- "Take the Iron Companies' field commission." [if QuestRegistry.is_active(QuestRegistry.FIELD_DEBT) and QuestRegistry.flags_met(QuestRegistry.FIELD_DEBT) /]
+	Marshal Coiljaw: You brought back proof. Choose what the proof is worth to you, and Dom will remember the answer.
+	=> field_debt_rewards
+- "Accept the field debt and open the east road." [if not QuestRegistry.is_active(QuestRegistry.FIELD_DEBT) and not QuestRegistry.is_done(QuestRegistry.FIELD_DEBT) /]
+	do QuestRegistry.offer(QuestRegistry.FIELD_DEBT)
+	Marshal Coiljaw: Then take the east road. A Bog Wight has been feeding on the grove's edge. Bring me the loamroot token it leaves behind, and we will decide who gets the credit.
+	=> END
+
+~ field_debt_rewards
+Marshal Coiljaw: Four ledgers are open. Pick one reward; each answer strengthens a different hand in Dom.
+- "Take the Iron Companies contract." [#tag=IRON-COMPANIES] [#consequence=Iron Companies +12 · Registry -3] [if QuestRegistry.is_active(QuestRegistry.FIELD_DEBT) and QuestRegistry.flags_met(QuestRegistry.FIELD_DEBT) /]
+	do QuestRegistry.resolve_field_debt("companies")
+	Marshal Coiljaw: The Companies will put your name on the road roster. The Registry will call it an omission. Both records are true.
+	=> END
+- "Accept the Ssae-Seeder field rite." [#tag=SSAE-SEEDERS] [#consequence=Ssae-Seeders +10 · Iron Companies -2] [if QuestRegistry.is_active(QuestRegistry.FIELD_DEBT) and QuestRegistry.flags_met(QuestRegistry.FIELD_DEBT) /]
+	do QuestRegistry.resolve_field_debt("seeders")
+	Marshal Coiljaw: The grove will teach you what it charges for a living answer. The Companies can wait one night.
+	=> END
+- "File the proof with the Registry." [#tag=REGISTRY] [#consequence=Registry +10 · Ssae-Seeders -4] [if QuestRegistry.is_active(QuestRegistry.FIELD_DEBT) and QuestRegistry.flags_met(QuestRegistry.FIELD_DEBT) /]
+	do QuestRegistry.resolve_field_debt("registry")
+	Marshal Coiljaw: A numbered drawer is still a kind of shelter. Do not mistake it for mercy.
+	=> END
+- "Split the credit honestly." [#tag=EQUILIBRIUM] [#consequence=Iron Companies +5 · Ssae-Seeders +5 · Registry +5] [if QuestRegistry.is_active(QuestRegistry.FIELD_DEBT) and QuestRegistry.flags_met(QuestRegistry.FIELD_DEBT) /]
+	do QuestRegistry.resolve_field_debt("balance")
+	Marshal Coiljaw: No faction gets the whole story. For once, that is the honest reward.
+	=> END

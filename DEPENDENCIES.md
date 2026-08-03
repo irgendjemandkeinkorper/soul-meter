@@ -50,6 +50,22 @@ clean on 4.7.1 headless, Linux).
   (`disable_install_audio_busses=true`); `Music`/`SFX` buses are created at runtime by
   `GameState._ensure_audio_buses()`.
 
+## CI automation pins
+
+The Fleet and merge-conflict workflows execute third-party npm packages with repository
+credentials. Keep these versions explicit and review upgrades as dependency changes rather
+than allowing scheduled runs to resolve the moving `latest` tag:
+
+| Package | Pin | Used by |
+|---|---|---|
+| `@google/jules-fleet` | `0.0.1-experimental.35` | `.github/workflows/fleet-*.yml` |
+| `@modelcontextprotocol/sdk` | `1.30.0` | `.github/workflows/jules-merge-conflicts.yml` |
+| `@google/jules-sdk` | `0.2.0` | `.github/workflows/jules-merge-conflicts.yml` |
+| `@google/jules-merge` | `0.1.0` | `.github/workflows/jules-merge-conflicts.yml` |
+
+To upgrade one, verify the release in a branch, update this table and every workflow
+reference, then run the affected workflow manually before merging.
+
 ## Pandora data
 
 - `data.pandora` is the committed Pandora database (install-order step 4 done). Seeded by

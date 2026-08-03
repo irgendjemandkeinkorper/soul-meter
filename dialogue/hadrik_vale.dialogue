@@ -1,0 +1,18 @@
+~ start
+Hadrik Vale: The Registry Archive has three doors, two locks, and one clerk on duty. The third door is for things that have not happened yet.
+=> hub
+
+~ hub
+- "What is the Registry watching in this district?" [if not GameState.get_flag("dom_registry_notice_seen") /]
+	do GameState.set_flag("dom_registry_notice_seen", true)
+	do Reputation.record("player", "the-registry", 1.0, "Asked what the Registry was watching in Dom", "dom")
+	Hadrik Vale: Names, thresholds, missing cargo, and any object that survives an explanation. The bell house is on the list now. So is the east road.
+	=> END
+- "The bell house is not a failure." [if GameState.get_flag("dom_bellhouse_inspected") and not GameState.get_flag("dom_registry_challenged") /]
+	do GameState.set_flag("dom_registry_challenged", true)
+	do Reputation.record("player", "the-registry", -2.0, "Challenged the Registry's failure mark on the Dom bell house", "dom")
+	Hadrik Vale: Then submit a better word before someone else submits a final one. We do not punish accuracy. We punish unfiled accuracy.
+	=> END
+- "I need a quiet place to read."
+	Hadrik Vale: Quiet is available by appointment. Reading is available if you do not touch the numbered drawers.
+	=> END

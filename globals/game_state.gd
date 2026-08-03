@@ -3,6 +3,7 @@ extends Node
 ## and local settings. Menus are views over this singleton.
 
 signal soul_meter_changed(value: float)
+signal gp_changed(value: int)
 signal flag_changed(flag: String, value: Variant)
 signal inventory_changed
 signal party_changed
@@ -14,10 +15,13 @@ const PROTAGONIST_NAME := "Vex the Unbowed"
 const REQUIRED_COMPANIONS := 2
 const DEFAULT_LOCALE := "en"
 const SUPPORTED_LOCALES := ["en", "es"]
+const DEFAULT_GP := 250
 
 var flags: Dictionary = {}
 var soul_meter: float = 50.0:
 	set = set_soul_meter
+var gp: int = DEFAULT_GP:
+	set = set_gp
 var party: Array[PartyMember] = []
 var inventory: Inventory
 var current_locale := DEFAULT_LOCALE
@@ -46,6 +50,27 @@ func _ready() -> void:
 func set_soul_meter(value: float) -> void:
 	soul_meter = clampf(value, 0.0, 100.0)
 	soul_meter_changed.emit(soul_meter)
+
+
+func set_gp(value: int) -> void:
+	gp = maxi(0, value)
+	gp_changed.emit(gp)
+
+
+func can_afford(amount: int) -> bool:
+	return amount >= 0 and gp >= amount
+
+
+func spend_gp(amount: int) -> bool:
+	if amount < 0 or not can_afford(amount):
+		return false
+	set_gp(gp - amount)
+	return true
+
+
+func earn_gp(amount: int) -> void:
+	if amount > 0:
+		set_gp(gp + amount)
 
 
 func set_flag(flag: String, value: Variant = true) -> void:
@@ -155,6 +180,7 @@ func _ensure_audio_buses() -> void:
 
 
 func _seed_demo_data() -> void:
+	gp = DEFAULT_GP
 	party = [_make_vex()]
 	party_changed.emit()
 	inventory.clear()
@@ -346,6 +372,7 @@ func to_dict() -> Dictionary:
 	return {
 		"flags": flags.duplicate(true),
 		"soul_meter": soul_meter,
+		"gp": gp,
 		"party": party_rows,
 		"inventory": inventory.serialize(),
 	}
@@ -357,6 +384,7 @@ func from_dict(data: Dictionary) -> bool:
 		return false
 	flags = data.get("flags", {}).duplicate(true)
 	soul_meter = float(data.get("soul_meter", 50.0))
+	gp = maxi(0, int(data.get("gp", DEFAULT_GP)))
 	party.clear()
 	for row in data.get("party", []):
 		if row is Dictionary:
