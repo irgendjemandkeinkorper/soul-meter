@@ -25,6 +25,9 @@ extends Resource
 	"song": 1.75,
 	"refrain": 2.75,
 }
-## Ratified calibration points. Pandora may replace or extend these entries;
-## they are data rather than service-level special cases.
-@export var sanity_readings: Dictionary = {}
+## NOTE: this Resource carries formula INPUTS only. It deliberately holds no
+## precomputed fizzle results. A prior revision had a `sanity_readings`
+## dictionary of expected outputs that SkillCheck consulted ahead of the
+## formula, which let authored numbers silently win over the ratified maths.
+## The documented sanity readings live in `docs/phase-0-ratification.md` §3 and
+## are asserted by the unit tests — that is where an expected output belongs.

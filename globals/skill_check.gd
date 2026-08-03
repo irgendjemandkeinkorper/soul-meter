@@ -123,6 +123,14 @@ func reset_scene_rerolls(scene_id: String = "") -> void:
 
 
 ## Calculate the casting-side fizzle chance from the tunable Resource table.
+##
+## The FORMULA IS THE SINGLE SOURCE OF TRUTH (ratified 2026-08-03). The table
+## supplies inputs only — it must never carry precomputed outputs that could
+## disagree with the formula. An earlier revision short-circuited to a stored
+## `sanity_readings` lookup, which silently overrode the formula at named points;
+## that path is deliberately gone. If a documented reading and the formula ever
+## disagree again, the documentation is wrong, not the code.
+##
 ## Percentages are rounded to the nearest integer; exact .5 values use the
 ## authored table's display convention (small Note values round upward, while
 ## larger Song/Refrain values truncate) so the ratified readings remain exact.
@@ -137,15 +145,6 @@ func fizzle_percent(
 ) -> float:
 	var breadth_key := breadth.to_lower()
 	var magnitude_key := magnitude.to_lower()
-	var calibration_key := "%s|%s|%s|%s|%s" % [
-		str(int(agreement_integrity)), breadth_key, strain_steps, magnitude_key, pitch
-	]
-	if (not mastery or magnitude_key not in ["note", "phrase"]) \
-			and fizzle_table.sanity_readings.has(calibration_key):
-		var calibrated := float(fizzle_table.sanity_readings[calibration_key])
-		if _is_fickah_or_locksmirk(patron):
-			return maxf(5.0, calibrated)
-		return calibrated
 	var base := clampf(100.0 - agreement_integrity, 0.0, 100.0)
 	var breadth_add := float(fizzle_table.breadth_add.get(breadth_key, 0.0))
 	var strain_add := float(fizzle_table.strain_add.get(str(strain_steps), 0.0))

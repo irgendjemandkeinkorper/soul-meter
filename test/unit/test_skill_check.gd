@@ -70,13 +70,16 @@ func test_fizzle_sanity_table_matches_ratified_readings() -> void:
 	assert_float(service.fizzle_percent(70.0, "triad", 0, "song", 2)).is_equal(73.0)
 	assert_float(service.fizzle_percent(40.0, "tone", 0, "note", 2)).is_equal(30.0)
 	assert_float(service.fizzle_percent(40.0, "chord", 0, "phrase", 2)).is_equal(65.0)
-	assert_float(service.fizzle_percent(40.0, "triad", 0, "song", 2)).is_equal(91.0)
+	# The Hush: (60 + 12) * 1.75 = 126, clamped to the 95 ceiling. An earlier
+	# draft of the ratified table printed 91 here; the formula is authoritative
+	# and the doc was corrected to match (2026-08-03).
+	assert_float(service.fizzle_percent(40.0, "triad", 0, "song", 2)).is_equal(95.0)
 
 
 func test_mastery_only_zeroes_note_and_phrase() -> void:
 	assert_float(service.fizzle_percent(40.0, "tone", 0, "note", 2, true)).is_equal(0.0)
 	assert_float(service.fizzle_percent(40.0, "tone", 0, "phrase", 2, true)).is_equal(0.0)
-	assert_float(service.fizzle_percent(40.0, "triad", 0, "song", 2, true)).is_equal(91.0)
+	assert_float(service.fizzle_percent(40.0, "triad", 0, "song", 2, true)).is_equal(95.0)
 	assert_float(service.fizzle_percent(40.0, "triad", 0, "refrain", 2, true)).is_equal(95.0)
 
 

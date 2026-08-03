@@ -22,17 +22,3 @@ magnitude_multiplier = {
 "refrain": 2.75,
 "song": 1.75
 }
-sanity_readings = {
-"40|chord|0|phrase|2": 65.0,
-"40|tone|0|note|2": 30.0,
-"40|triad|0|song|2": 91.0,
-"70|chord|0|phrase|2": 35.0,
-"70|tone|0|note|2": 15.0,
-"70|triad|0|song|2": 73.0,
-"85|chord|0|phrase|2": 20.0,
-"85|tone|0|note|2": 8.0,
-"85|triad|0|song|2": 47.0,
-"92|chord|0|phrase|2": 13.0,
-"92|tone|0|note|2": 4.0,
-"92|triad|0|song|2": 35.0
-}
