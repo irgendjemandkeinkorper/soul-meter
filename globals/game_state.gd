@@ -382,7 +382,12 @@ func from_dict(data: Dictionary) -> bool:
 	var inventory_data: Variant = data.get("inventory", {})
 	if not inventory_data is Dictionary or not inventory.deserialize(inventory_data):
 		return false
-	flags = data.get("flags", {}).duplicate(true)
+	flags.clear()
+	var raw_flags: Variant = data.get("flags", {})
+	if raw_flags is Dictionary:
+		for k in raw_flags:
+			if k is String and k.length() <= 128:
+				flags[k] = raw_flags[k]
 	soul_meter = float(data.get("soul_meter", 50.0))
 	gp = maxi(0, int(data.get("gp", DEFAULT_GP)))
 	party.clear()

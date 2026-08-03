@@ -159,8 +159,14 @@ func validate_payload(payload: Variant) -> bool:
 			return false
 	if payload.has("player_position") and not payload.get("player_position") is Vector2:
 		return false
-	if payload.has("spawn_id") and not payload.get("spawn_id") is String:
-		return false
+	if payload.has("spawn_id"):
+		var spawn_id = payload.get("spawn_id")
+		if not spawn_id is String or spawn_id.length() > 64:
+			return false
+	if payload.has("elapsed_seconds"):
+		var elapsed = payload.get("elapsed_seconds")
+		if not (elapsed is int or elapsed is float):
+			return false
 	var scene := str(payload.get("scene", ""))
 	return scene in GameFlow.GAMEPLAY_SCENES
 
@@ -254,7 +260,8 @@ func _read_payload(path: String) -> Variant:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return null
-	var payload: Variant = file.get_var()
+	# SECURITY: Pass false explicitly to deny deserialization of arbitrary objects/resources.
+	var payload: Variant = file.get_var(false)
 	file.close()
 	return payload
 
