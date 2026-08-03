@@ -1,6 +1,8 @@
 # PRD — Soul Meter: Chapter 1 Complete ("Finished State" v1)
 
-**Status:** Draft for ratification · **Owner:** Adam (solo dev) · **Date:** 2026-08-02
+**Status:** **RATIFIED 2026-08-03** — Phase 0 gate passed, zero ⚑ remaining (see
+`docs/phase-0-ratification.md`; Appendix A below is the closure record) · **Owner:** Adam (solo
+dev) · **Date:** 2026-08-02
 **Scope decision (user, 2026-08-02):** Chapter 1 complete — a polished, shippable first chapter.
 **Combat decision (user, 2026-08-02):** Evolve within design-doc §6 chassis (field → battle scene → turn-based); Fallout 2 is vibe and reference, not blueprint. §6's Defining Strikes ARE the called-shot system; §6's Balance Gauge IS the balance pillar.
 **Elements decision (user, 2026-08-02):** The Elements & Music spec (below, §FR-300 block) is the updated canonical magic-mechanics layer, grounded in the vault's Wheel/ten-patron-classes lore. It supersedes prior mechanical sketches where they conflict; lore prose in the vault remains source of truth for fiction.
@@ -172,7 +174,8 @@ Format: `FR-xxx (Pn) — requirement. ⚑ = touches open canon; needs human rati
 
 Each phase ends at an acceptance gate (tests green + manual checklist + design-doc/vault write-back of anything ratified). Phases 2 and 3 can overlap once 2's data schemas freeze.
 
-**Phase 0 — Ratification & canon sync (human-led, ~agent-light).**
+**Phase 0 — Ratification & canon sync (human-led, ~agent-light). ✅ COMPLETE 2026-08-03 —
+gate passed; see `docs/phase-0-ratification.md`. Phase 1 may begin.**
 Also produce a **person-hour estimate per phase** (solo capacity is currently unestimated — "no deadline" is not a plan; the estimate sizes the cut list) and ratify the added ⚑s: controller-at-ship (FR-607), respec (FR-907), playtime floor (G1). Resolve every ⚑ in this PRD: skill taxonomy (FR-202), advancement model (FR-204), fizzle table (FR-203), ten Triad-unique effects (FR-304), Vär/Zhavar renames + Elements & Music spec written INTO the vault (rerun `build_index.py`/`validate.py`), playable ancestries pick (FR-701), fast travel (FR-503). Amend design doc §4/§6/§7; mark this PRD's combat/element sections as the ratified spec. **Gate:** vault validates; design doc updated; zero ⚑ remaining.
 
 **Phase 1 — Resolution spine (Codex-heavy).**
@@ -228,16 +231,35 @@ All handoffs: objective, branch, allowed scope, deliverables, acceptance checks,
 
 ---
 
-## Appendix A — Open questions carried (⚑ ledger)
+## Appendix A — Open questions carried (⚑ ledger) — **CLOSED 2026-08-03**
 
-1. Skill taxonomy final list (FR-202) — Phase 0
-2. Advancement: use-based vs point-buy (FR-204) — Phase 0
-3. Fizzle table numbers (FR-203) — Phase 0 proposal, Phase 2 tuning
-4. Ten Triad-unique effects (FR-304) — Phase 0
-5. Playable-ancestry pick (FR-701) — Phase 0
-6. Fast travel (FR-503) — Phase 0
-7. Vär/Zhavar renames written to vault (FR-306/308) — Phase 0
-8. Design-doc §10 canon questions — remain open by design; nothing here resolves them
+Every ⚑ below was ratified in the Phase 0 session. The decisions, the reasoning, and the
+proposals they generated live in **`docs/phase-0-ratification.md`**, which is normative.
+
+| # | ⚑ item | Resolution |
+|---|---|---|
+| 1 | Skill taxonomy (FR-202) | ~~open~~ **Twelve skills, 4 per domain; Lore stays one tagged skill.** Percentile surface derived from the vault's Untrained/Trained/Expert tiers (`attr × 8 + tier_bonus + points`). |
+| 2 | Advancement (FR-204) | ~~open~~ **Point-buy at level.** No use-based drift. Costs scale 1/2/3 points per +5% across the 50%/75% bands; Ch1 cap 95%. |
+| 3 | Fizzle table (FR-203) | ~~open~~ **Ratified formula + starting table** (Integrity base × magnitude multiplier, breadth and strain adds, Pitch and Mastery reductions, Fickah's 5% floor). TUNABLE in Phase 2. |
+| 4 | Ten Triad-unique effects (FR-304) | ~~open~~ **All ten designed and ratified** — every one structural, none damage; Stillpoint is the Balance-Gauge stabilizer payoff. |
+| 5 | Playable ancestries (FR-701) | ~~open~~ **Vael, Kaan, Vaerin, Weftkin, Kes'reth.** Kes'reth's Voice/Anchor leaning + *Mirrored Scars* is new canon, written to the vault. |
+| 6 | Fast travel (FR-503) | ~~open~~ **Yes — discovered hubs only, at a cost** (time passes / resource spent). |
+| 7 | Vär/Zhavar (FR-306/308) | ~~open~~ **Additions, not renames** — neither "Galm" nor "Carry"/"Overtone" existed in the vault. Both written into the new `systems/elements-and-music.md`. |
+| 8 | Design-doc §10 canon questions | **Remain open by design.** Nothing here resolves them. |
+
+Three ⚑s added by the adversarial review are also closed: **controller-at-ship** (FR-607 —
+keyboard/mouse first, gamepad post-Ch1; `docs/godot-architecture.md` Q3 now answered),
+**respec** (FR-907 — partial, one Mirror Rewriting per chapter), and the **playtime floor**
+(G1 — 8–12 dense hours is the acceptance bar; 15–25h is a stretch, never a requirement).
+
+One conflict the PRD had not surfaced was also resolved: FR-302/309 assume a **Breath** pool,
+which vault `magic-system.md` had declined as contradicting canon fact 8. Ratified as the
+**boundary model** — Breath is per-scene; casting past empty Breath spends the Soul Meter
+permanently, so "magic spends the Gauge and it mostly only goes down" stays literally true.
+
+**Person-hour estimate (Phase 0 deliverable): ~350–510 person-hours total across Phases 1–5**
+— 35–51 weeks at 10 h/week, 18–26 weeks at 20 h/week. Per-phase breakdown and the pre-agreed
+cut list are in `docs/phase-0-ratification.md` §8.
 
 ## Appendix B — Traceability
 

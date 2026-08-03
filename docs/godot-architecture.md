@@ -241,7 +241,13 @@ mode is four needing patches from four maintainers simultaneously. Mitigations: 
    engine-owned `locale/project.pot` is checked in, and Pandora item text uses the separate
    merged `data/generated/items.pot` / `locale/es.po` pipeline. (answered 2026-07-26; enabled
    and verified 2026-08-01)
-3. Target platforms — must gamepad-only work at ship? (open)
+3. ~~Target platforms — must gamepad-only work at ship?~~ — **No: keyboard/mouse first for
+   Chapter 1; gamepad is post-Chapter-1.** The input map stays action-based (never hardcode a
+   key), and input remapping ships as part of the accessibility baseline (PRD FR-607), so
+   adding a controller later is a config-and-focus pass rather than a rewrite. The
+   `grab_focus()`-on-menu-entry discipline above stays mandatory *now* — it is what keeps that
+   pass cheap. (answered 2026-08-03, Phase 0 ratification D7 — see
+   `docs/phase-0-ratification.md`; closes #47)
 4. ~~Multiplayer~~ — **maybe: BG3-style co-op is a live possibility.** Consequences:
    GodotGAS is single-player-scoped today (its networking is roadmap — re-verify before deep
    dependence, or keep abilities behind our own seam); `StateChartSerializer` matters early;

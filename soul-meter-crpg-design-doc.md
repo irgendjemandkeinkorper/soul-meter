@@ -67,9 +67,24 @@ The player crosses the rift to the second imprisonment — **outside spacetime**
 
 ## 4. Character System
 
-### 4.1 Skills & Ancestries
-- A compact skill layer (combat styles, Speech, Lore, Wards, Craft, Relic-Tech, etc. — final list after chassis decision, §6).
-- **Race = ancestry + magical inheritance. [CANON]** God-keyed inheritances as distinct mechanical hooks: Orc pain-magic, Dragonborn oath-magic, Halfling liberation-magic, Elvish insight, Dwarven purpose-forging, Genasi fate-threading, Gnomish chaos-tech, Goliath endurance, Human life-magic, Tiefling mirror-magic. v1 launches with 4–5 playable; the rest are NPC cultures first (§8).
+### 4.1 Skills & Ancestries — **RATIFIED 2026-08-03** (Phase 0; see `docs/phase-0-ratification.md`)
+- **Skills are percentile. [CANON, ratified]** Twelve skills across three domains, resolved by one
+  path: `d100 ≤ effective%`, rolled on commitment. The percentage derives from the vault Ledger's
+  Untrained/Trained/Expert tiers (`attribute × 8 + tier_bonus + advancement_points`). Body:
+  Athletics, Stealth, Sleight of Hand, Beast Handling. Mind: Lore (tagged), Survival,
+  Investigation, Alchemy. Soul: Persuasion, Weft-Sensing, Performance, Insight.
+- **Advancement is point-buy at level. [CANON, ratified]** No use-based drift. One partial respec
+  per chapter (the **Mirror Rewriting**) reaches advancement points only — ancestry, patron,
+  Background, and Mastery are permanent.
+- **Race = ancestry + magical inheritance. [CANON]** ⚠ **The god-keyed D&D-analogue list this
+  section originally carried (Orc/Dragonborn/Halfling/Elvish/…) is superseded by the lore vault's
+  `peoples/`** — the vault wins per the CLAUDE.md conflict rule, and the PRD forbids D&D stand-ins
+  in presentation. Chapter 1 ships **five playable ancestries**: **Vael** (generalist), **Kaan**
+  (Forge/Anchor martial), **Vaerin** (Spark/Pitch caster, carries the Fading track), **Weftkin**
+  (Pitch/Voice, innate Weft-Sensing), **Kes'reth** (Voice/Anchor, *Mirrored Scars* — the
+  centre-holding build). Each gets one mechanical inheritance, one dialogue-reactivity package, and
+  a Wheel affinity nudge (never a hard lock). Every other people remains playable in the ruleset and
+  appears as NPC culture first (§8).
 
 ### 4.2 The Soul Meter (the measure of a soul)
 - **The Meter is an axis of principle-resonance. [CANON]** Kronos-resonant conduct and powers pull one way (weighting **REDEFINE**); Maiiam-resonant conduct and powers pull the other (weighting **REPLACE**); a soul near equilibrium walks the mortal road (**RESTORE**). The Meter weights and unlocks endings rather than silently forcing them.
@@ -110,11 +125,30 @@ The player crosses the rift to the second imprisonment — **outside spacetime**
 - **Zones, not grids (v1).** Front/back/flank positioning delivers most tactical decisions at a fraction of a full tactics-grid's build cost. Race inheritances + the two ability trees carry build diversity.
 - **Consequence-permanence.** Fleeing, sparing, and slaughtering all write flags. Combat outcomes are story outcomes.
 
+**Combat spec status [RATIFIED 2026-08-03]:** the five bullets above are no longer direction-only.
+`docs/prd-chapter-one.md` §6.1 (FR-101–110) is **the ratified build spec** for this chassis — AP
+economy, `BattlefieldModel` zone interface, Pandora-driven Balance thresholds, the Defining Strikes
+weakness tables, and speech-in-battle. Anything in §6 and the PRD that disagrees resolves to the
+PRD. The zones-vs-grid question is settled at the Phase 2 gate, not deferred to v2.
+
 ## 7. Systems Notes
 
 - **Dialogue engine is the product.** Tree-based, with skill/meter/race/faction checks visible. Build first, build well.
 - **Global flag store from day one** — the reactivity spine; every location module reads/writes it; design flags for cross-location echoes explicitly.
-- **Magic thinning zones [PROPOSAL]** — environmental storytelling of the failing balance; difficulty by geography.
+- **Casting is Elements & Music [CANON, ratified 2026-08-03].** Two independent axes — Breadth
+  (Tone/Chord/Triad) × Magnitude (Note/Phrase/Song/Refrain) — over the vault's ten-element Wheel,
+  each element carrying a fixed Imposition and Rule-Bend, ten Triads with structural (never
+  damage) effects, Strained Chords at penalty, and the **Vär** harmony gauge gating Breadth. Spec:
+  `docs/prd-chapter-one.md` §6.3 and vault `systems/elements-and-music.md`.
+- **Casting fuel: the boundary model [CANON, ratified 2026-08-03].** **Breath** is the per-scene
+  pool; casting past empty Breath spends the **Soul Meter**, permanently. This keeps canon fact 8
+  ("magic spends the Gauge, and it mostly only goes down") literally true while giving routine
+  casting a floor. It is the only route from casting to Meter loss, and it is always knowing.
+- **Magic thinning zones [CANON, ratified 2026-08-03]** — environmental storytelling of the failing
+  balance; difficulty by geography, now with numbers: fizzle scales off local Agreement Integrity
+  (see vault `systems/magic-system.md` §fizzle math), so in the Hush only Notes are honest. The
+  **Zhavar** ladder is the other half — banking harmony makes a zone reliable *and* audible, up to
+  a dragon noticing. Chapter 1 telegraphs the ladder and scripts one tolling event.
 - **Relic-tech [CANON]** — pre-spore items as rare, lore-bearing loot; reading relics is how the deep-lore layer physically enters play; QUINE shards double as Definition-tree fuel.
 - **Epilogue slides** per location/faction/companion — the cheapest high-impact reactivity in the genre; write them alongside quests, not after.
 
