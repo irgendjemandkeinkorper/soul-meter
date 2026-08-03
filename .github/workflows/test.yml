@@ -2,7 +2,11 @@ name: Godot tests
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   test:
@@ -39,8 +43,49 @@ jobs:
             exit 1
           fi
 
-      - name: Run art-free acceptance gate
-        run: GODOT_BIN="$GODOT_BIN" bash scripts/acceptance_gate.sh
+      - name: Check art-free acceptance artifacts
+        run: SOUL_METER_ACCEPTANCE_ARTIFACTS_ONLY=1 GODOT_BIN="$GODOT_BIN" bash scripts/acceptance_gate.sh
+
+      - name: Check Pandora/generated-data drift
+        run: SOUL_METER_DRIFT_CHECK=1 GODOT_BIN="$GODOT_BIN" bash scripts/check_generated_data.sh
+
+      - name: Run gdUnit4 headless suite
+        run: SOUL_METER_HEADLESS=1 GODOT_BIN="$GODOT_BIN" bash scripts/test.sh -a test
+
+      - name: Summarize gdUnit4 results
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import xml.etree.ElementTree as ET
+
+          reports = sorted(glob.glob("reports/**/results.xml", recursive=True))
+          if not reports:
+              print("gdUnit4: no JUnit XML report was generated")
+              raise SystemExit(0)
+
+          root = ET.parse(reports[-1]).getroot()
+          summary = (
+              f"gdUnit4: {root.get('tests', '0')} tests, "
+              f"{root.get('failures', '0')} failures, "
+              f"{root.get('errors', '0')} errors, "
+              f"{root.get('skipped', '0')} skipped"
+          )
+          print(summary)
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary_path:
+              with open(summary_path, "a", encoding="utf-8") as summary_file:
+                  summary_file.write(f"### gdUnit4\n\n{summary}\n")
+          PY
+
+      - name: Upload gdUnit4 reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdunit4-reports
+          path: reports/
+          if-no-files-found: warn
 
   package-windows:
     needs: test
