@@ -12,6 +12,8 @@ const SAVE_PATH := "user://chapter_one.save"
 const TEMP_PATH := "user://chapter_one.save.tmp"
 const BACKUP_PATH := "user://chapter_one.save.bak"
 const FORMAT_VERSION := 2
+const SCHEMA_VERSION := SaveMigrations.CURRENT_SCHEMA_VERSION
+const ZHAVAR_RUNGS := ["low", "rising", "tolling", "ringing", "unprecedented"]
 
 # Instance paths keep the production slot as the default while allowing tests
 # to exercise disk-level rotation without touching a developer's real save.
@@ -46,6 +48,9 @@ var pending_spawn_id: StringName = &"default"
 var _pending_autosave_reason := ""
 var _run_started_unix := 0
 var _elapsed_before_load := 0
+var ng_plus: Dictionary = NGPlus.default_block()
+var zhavar: Dictionary = {}
+var last_error := ""
 
 
 func has_save() -> bool:
@@ -116,30 +121,32 @@ func elapsed_seconds() -> int:
 
 func load_save() -> bool:
 	var source_path := save_path
-	var payload: Variant = _read_payload(source_path)
-	if not validate_payload(payload):
+	var prepared := _prepare_for_load(_read_payload(source_path))
+	if not bool(prepared.get("ok", false)):
 		# A save is intentionally recoverable: a failed write or interrupted
 		# replacement should fall back to the persistent last-known-good copy.
 		source_path = backup_path
-		payload = _read_payload(source_path)
-	if not validate_payload(payload):
-		return _fail("No readable, supported save file was found.")
+		prepared = _prepare_for_load(_read_payload(source_path))
+	if not bool(prepared.get("ok", false)):
+		return _fail("Could not load save: %s" % prepared.get("error", "corrupt payload"))
 	if source_path == backup_path:
 		push_warning("Primary save was invalid; loading the backup save instead.")
+	var payload: Dictionary = prepared["payload"]
 	var game_state_backup := GameState.to_dict()
 	var reputation_backup := Reputation.to_dict()
 	var renown_backup := Renown.to_dict()
 	var quests_backup := QuestRegistry.to_dict()
+	var ng_plus_backup := ng_plus.duplicate(true)
+	var zhavar_backup := zhavar.duplicate(true)
 	if not GameState.from_dict(payload.get("game_state", {})):
-		GameState.from_dict(game_state_backup)
-		Reputation.from_dict(reputation_backup)
-		Renown.from_dict(renown_backup)
-		QuestRegistry.from_dict(quests_backup)
-		return _fail("The inventory in this save file is invalid.")
+		_restore_runtime_state(game_state_backup, reputation_backup, renown_backup, quests_backup, ng_plus_backup, zhavar_backup)
+		return _fail("The game_state section in this save file is invalid.")
 	_apply_runtime_feature_flags()
 	Reputation.from_dict(payload.get("reputation", {}))
 	Renown.from_dict(payload.get("renown", {}))
 	QuestRegistry.from_dict(payload.get("quests", {}))
+	ng_plus = NGPlus.normalize(payload.get("ng_plus", {}))
+	zhavar = payload.get("zhavar", {}).duplicate(true)
 	GameFlow._target_scene = str(payload.get("scene", GameFlow.TOWN_SCENE))
 	GameFlow._target_spawn_id = StringName(payload.get("spawn_id", "default"))
 	pending_player_position = payload.get("player_position", Vector2.ZERO)
@@ -152,17 +159,100 @@ func load_save() -> bool:
 
 
 func validate_payload(payload: Variant) -> bool:
-	if not payload is Dictionary or int(payload.get("version", -1)) != FORMAT_VERSION:
-		return false
+	var prepared := _prepare_for_load(payload)
+	return bool(prepared.get("ok", false))
+
+
+func _prepare_for_load(payload: Variant) -> Dictionary:
+	var migration := SaveMigrations.prepare(payload)
+	if not bool(migration.get("ok", false)):
+		return migration
+	var migrated: Dictionary = migration["payload"]
 	for section in ["game_state", "reputation", "renown", "quests"]:
-		if not payload.get(section) is Dictionary:
+		if not migrated.get(section) is Dictionary:
+			return _load_failure("Save section '%s' is not a dictionary." % section)
+	if not GameState.validate_save_data(migrated["game_state"]):
+		return _load_failure("Save game_state data is corrupt.")
+	if not _validate_ledger(migrated["reputation"], "reputation"):
+		return _load_failure("Save reputation ledger is corrupt.")
+	if not _validate_ledger(migrated["renown"], "renown"):
+		return _load_failure("Save renown ledger is corrupt.")
+	if not _validate_quests(migrated["quests"]):
+		return _load_failure("Save quest data is corrupt.")
+	if migrated.has("player_position") and not migrated.get("player_position") is Vector2:
+		return _load_failure("Save player_position is corrupt.")
+	if migrated.has("spawn_id") and not migrated.get("spawn_id") is String:
+		return _load_failure("Save spawn_id is corrupt.")
+	if migrated.has("zhavar") and not _validate_zhavar(migrated["zhavar"]):
+		return _load_failure("Save Zhavar data is corrupt.")
+	if migrated.has("ng_plus") and not _validate_ng_plus(migrated["ng_plus"]):
+		return _load_failure("Save ng_plus data is corrupt.")
+	if migrated.has("id_schemas") and migrated["id_schemas"] != StableIds.schema_manifest():
+		return _load_failure("Save stable-ID schema manifest is incompatible.")
+	var scene := str(migrated.get("scene", ""))
+	if scene not in GameFlow.GAMEPLAY_SCENES:
+		return _load_failure("Save scene is not a gameplay scene.")
+	return {"ok": true, "payload": migrated, "error": ""}
+
+
+func _load_failure(message: String) -> Dictionary:
+	return {"ok": false, "payload": {}, "error": message}
+
+
+func _validate_zhavar(value: Variant) -> bool:
+	if not value is Dictionary:
+		return false
+	for rung: Variant in value.values():
+		if not rung is String or rung not in ZHAVAR_RUNGS:
 			return false
-	if payload.has("player_position") and not payload.get("player_position") is Vector2:
+	return true
+
+
+func _validate_ledger(value: Dictionary, _label: String) -> bool:
+	if value.has("log") and not value["log"] is Array:
 		return false
-	if payload.has("spawn_id") and not payload.get("spawn_id") is String:
+	for row: Variant in value.get("log", []):
+		if not row is Dictionary:
+			return false
+	return true
+
+
+func _validate_quests(value: Dictionary) -> bool:
+	for pool_name in ["available", "active", "completed"]:
+		if value.has(pool_name) and not value[pool_name] is Array:
+			return false
+		for row: Variant in value.get(pool_name, []):
+			if not row is Dictionary or not row.get("data", {}) is Dictionary:
+				return false
+	return true
+
+
+func _validate_ng_plus(value: Variant) -> bool:
+	if not value is Dictionary:
 		return false
-	var scene := str(payload.get("scene", ""))
-	return scene in GameFlow.GAMEPLAY_SCENES
+	var normalized := NGPlus.normalize(value)
+	return (
+		typeof(value.get("style_points", 0)) == TYPE_INT
+		and value.get("purchased_carry_overs", []) is Array
+		and value.get("completion_metadata", {}) is Dictionary
+		and normalized["purchased_carry_overs"].size() == value.get("purchased_carry_overs", []).size()
+	)
+
+
+func _restore_runtime_state(
+	game_state_data: Dictionary,
+	reputation_data: Dictionary,
+	renown_data: Dictionary,
+	quests_data: Dictionary,
+	ng_plus_data: Dictionary,
+	zhavar_data: Dictionary
+) -> void:
+	GameState.from_dict(game_state_data)
+	Reputation.from_dict(reputation_data)
+	Renown.from_dict(renown_data)
+	QuestRegistry.from_dict(quests_data)
+	ng_plus = ng_plus_data.duplicate(true)
+	zhavar = zhavar_data.duplicate(true)
 
 
 func new_game() -> void:
@@ -173,6 +263,8 @@ func new_game() -> void:
 	Reputation.from_dict({})
 	Renown.from_dict({})
 	QuestRegistry.reset()
+	ng_plus = NGPlus.default_block()
+	zhavar = {}
 	GameFlow._target_scene = GameFlow.TOWN_SCENE
 	GameFlow._target_spawn_id = &"new_game"
 	pending_spawn_id = &"new_game"
@@ -227,11 +319,15 @@ func _build_payload() -> Dictionary:
 	var scene_path: String = GameFlow.TOWN_SCENE
 	var payload := {
 		"version": FORMAT_VERSION,
+		"schema_version": SCHEMA_VERSION,
+		"id_schemas": StableIds.schema_manifest(),
 		"saved_at": int(Time.get_unix_time_from_system()),
 		"game_state": GameState.to_dict(),
 		"reputation": Reputation.to_dict(),
 		"renown": Renown.to_dict(),
 		"quests": QuestRegistry.to_dict(),
+		"zhavar": zhavar.duplicate(true),
+		"ng_plus": NGPlus.normalize(ng_plus),
 		"elapsed_seconds": elapsed_seconds(),
 		"spawn_id": String(GameFlow._target_spawn_id),
 	}
@@ -245,6 +341,7 @@ func _build_payload() -> Dictionary:
 
 
 func _fail(message: String) -> bool:
+	last_error = message
 	push_warning(message)
 	save_failed.emit(message)
 	return false
@@ -257,6 +354,14 @@ func _read_payload(path: String) -> Variant:
 	var payload: Variant = file.get_var()
 	file.close()
 	return payload
+
+
+func apply_ng_plus_to_new_game(initial_state: Dictionary, block: Dictionary) -> Dictionary:
+	return NGPlus.apply_to_new_game(initial_state, block)
+
+
+func apply_carry_over(initial_state: Dictionary, block: Dictionary) -> Dictionary:
+	return apply_ng_plus_to_new_game(initial_state, block)
 
 
 func _scene_label(scene: Node) -> String:
