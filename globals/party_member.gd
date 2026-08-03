@@ -14,6 +14,12 @@ extends Resource
 @export_multiline var bio: String = ""
 @export var portrait: Texture2D
 
+## Governing attributes and advancement contributions for the twelve ratified
+## skills. Keys are lower-case canonical ids; SkillCheck owns the derivation.
+@export var attributes: Dictionary = {}
+@export var skill_percentages: Dictionary = {}
+@export var skill_tiers: Dictionary = {}
+
 ## Tavern recruitment gates (see ui/screens/tavern.gd and globals/renown.gd).
 ## 0 means "open to anyone" — most candidates leave these at the default.
 @export var min_reputation: float = 0.0
@@ -33,6 +39,9 @@ func to_dict() -> Dictionary:
 		"defense": defense,
 		"bio": bio,
 		"portrait_path": portrait.resource_path if portrait else "",
+		"attributes": attributes.duplicate(true),
+		"skill_percentages": skill_percentages.duplicate(true),
+		"skill_tiers": skill_tiers.duplicate(true),
 		"min_reputation": min_reputation,
 		"min_infamy": min_infamy,
 	}
@@ -50,6 +59,9 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.attack = int(data.get("attack", 5))
 	member.defense = int(data.get("defense", 2))
 	member.bio = str(data.get("bio", ""))
+	member.attributes = _dictionary_from_save(data.get("attributes", {}))
+	member.skill_percentages = _dictionary_from_save(data.get("skill_percentages", {}))
+	member.skill_tiers = _dictionary_from_save(data.get("skill_tiers", {}))
 	var portrait_path := str(data.get("portrait_path", ""))
 	if not portrait_path.is_empty() and portrait_path.begins_with("res://") and not ".." in portrait_path:
 		# SECURITY: Prevent arbitrary resource loading vulnerability.
@@ -69,3 +81,7 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.min_reputation = float(data.get("min_reputation", 0.0))
 	member.min_infamy = float(data.get("min_infamy", 0.0))
 	return member
+
+
+static func _dictionary_from_save(value: Variant) -> Dictionary:
+	return value.duplicate(true) if value is Dictionary else {}

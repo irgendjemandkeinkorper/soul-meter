@@ -14,6 +14,9 @@ func test_save_round_trip_preserves_gameplay_fields() -> void:
 	original.defense = 5
 	original.bio = "A held line."
 	original.min_reputation = 10.0
+	original.attributes = {"spark": 4}
+	original.skill_percentages = {"lore": 5.0}
+	original.skill_tiers = {"lore": "trained"}
 
 	var restored := PartyMember.from_dict(original.to_dict())
 
@@ -25,6 +28,9 @@ func test_save_round_trip_preserves_gameplay_fields() -> void:
 	assert_int(restored.attack).is_equal(9)
 	assert_int(restored.defense).is_equal(5)
 	assert_float(restored.min_reputation).is_equal(10.0)
+	assert_int(restored.attributes["spark"]).is_equal(4)
+	assert_float(restored.skill_percentages["lore"]).is_equal(5.0)
+	assert_str(restored.skill_tiers["lore"]).is_equal("trained")
 
 
 func test_from_dict_rejects_unsafe_portrait_paths() -> void:
