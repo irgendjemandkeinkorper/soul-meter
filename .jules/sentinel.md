@@ -9,3 +9,8 @@
 3. Restrict file extensions strictly to safe, known texture/image extensions (e.g., `png`, `jpg`, `jpeg`, `svg`, `webp`, `tga`, `import`, `ctex`). This completely prevents the engine from parsing them as script, scene, or text resource files.
 4. Ensure the file actually exists using `FileAccess.file_exists()`.
 5. Finally, verify that the loaded resource is of type `Texture2D` using the `is` keyword before assignment.
+
+## 2026-08-02 - [Save File Object Deserialization & Type Confusion]
+**Vulnerability:** Untrusted save game payload loading did not explicitly restrict Godot's built-in `FileAccess.get_var()` object deserialization. By default, standard `get_var()` can deserialize instantiated script objects/nodes, opening a door to remote code execution (RCE) via custom payload properties. In addition, nested dictionary/event serialization (like flags, reputation, and renown) lacked key length validation and strong type-safety checks, which could lead to type confusion, reference errors, or out-of-bounds/DoS behavior when parsed.
+**Learning:** Defensive deserialization in Godot requires a multi-layered approach: (1) Explicitly passing `false` to `file.get_var(false)` blocks the parser from instantiating any objects or custom classes. (2) String length constraints on dynamic fields (e.g. `spawn_id`, `flags` keys) prevent memory exhaustion DoS. (3) Manual coercion using `str()`, `int()`, or `float()` on untrusted properties protects type-safe static variables from runtime crashes due to unexpected structure mismatch.
+**Prevention:** Always use `get_var(false)` for loading user/network payloads, enforce max string lengths during payload validation, and coerce primitive types on load rather than trusting raw dictionary value layouts.

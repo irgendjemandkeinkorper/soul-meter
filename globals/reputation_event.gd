@@ -23,11 +23,12 @@ func to_dict() -> Dictionary:
 
 static func from_dict(d: Dictionary) -> ReputationEvent:
 	var e := ReputationEvent.new()
-	e.actor = d.get("actor", "")
-	e.faction = d.get("faction", "")
-	e.delta = d.get("delta", 0.0)
-	e.cause = d.get("cause", "")
-	e.scene = d.get("scene", "")
+	# SECURITY: Coerce values to expected types to avoid casting or reference issues with arbitrary payloads.
+	e.actor = str(d.get("actor", ""))
+	e.faction = str(d.get("faction", ""))
+	e.delta = float(d.get("delta", 0.0))
+	e.cause = str(d.get("cause", ""))
+	e.scene = str(d.get("scene", ""))
 	e.at = int(d.get("at", 0))
 	e.order = int(d.get("order", 0))
 	return e
