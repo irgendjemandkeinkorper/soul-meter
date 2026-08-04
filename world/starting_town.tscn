@@ -1,4 +1,4 @@
-[gd_scene load_steps=50 format=3]
+[gd_scene load_steps=51 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -36,6 +36,7 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/sign.png" id="33_sign_sprite"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/pot_large.png" id="34_pot_sprite"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="35_bench_sprite"]
+[ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="36_town_npcs"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1600, 40)
@@ -78,15 +79,6 @@ size = Vector2(280, 170)
 
 [node name="StartingTown" type="Node2D"]
 y_sort_enabled = true
-## Dom, the City of the Four Arms — a storm-port meritocracy and the first
-## town the player starts in. See ui/screens/tavern.gd for the tavern's
-## starting-party picker and actors/travel_exit for the road out to
-## world/test_room.tscn (the original field/wilds vertical slice).
-
-[node name="Floor" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(0, 0, 1600, 0, 1600, 1000, 0, 1000)
-color = Color(0.035, 0.25, 0.34, 1)
-z_index = -20
 
 [node name="Shoreline" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(800, -182, 2080, 454, 800, 1090, -480, 454)
@@ -99,6 +91,11 @@ width = 5.0
 default_color = Color(0.12, 0.56, 0.68, 0.72)
 closed = true
 z_index = -14
+
+[node name="WaterBackdrop" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-1280, -720, 2880, -720, 2880, 1720, -1280, 1720)
+color = Color(0.035, 0.25, 0.34, 1)
+z_index = -20
 
 [node name="IsometricGround" type="TileMapLayer" parent="."]
 position = Vector2(800, -154)
@@ -619,6 +616,91 @@ position = Vector2(1170, 780)
 texture = ExtResource("30_flower")
 offset = Vector2(0, -50.596)
 
+[node name="NorthEdgeTree01" type="Sprite2D" parent="."]
+position = Vector2(40, 70)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="NorthEdgePine02" type="Sprite2D" parent="."]
+position = Vector2(200, 55)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="NorthEdgeBush03" type="Sprite2D" parent="."]
+position = Vector2(300, 75)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="NorthEdgeOak04" type="Sprite2D" parent="."]
+position = Vector2(520, 60)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="NorthEdgeTree05" type="Sprite2D" parent="."]
+position = Vector2(800, 55)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="NorthEdgePine06" type="Sprite2D" parent="."]
+position = Vector2(960, 70)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="NorthEdgeBush07" type="Sprite2D" parent="."]
+position = Vector2(1080, 55)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="NorthEdgeOak08" type="Sprite2D" parent="."]
+position = Vector2(1320, 70)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="NorthEdgePine09" type="Sprite2D" parent="."]
+position = Vector2(1460, 60)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="NorthEdgeTree10" type="Sprite2D" parent="."]
+position = Vector2(1580, 75)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="EastEdgeOak01" type="Sprite2D" parent="."]
+position = Vector2(1550, 150)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="EastEdgeTree02" type="Sprite2D" parent="."]
+position = Vector2(1570, 280)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="EastEdgePine03" type="Sprite2D" parent="."]
+position = Vector2(1550, 400)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="EastEdgeTree04" type="Sprite2D" parent="."]
+position = Vector2(1560, 610)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="EastEdgeOak05" type="Sprite2D" parent="."]
+position = Vector2(1550, 740)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="EastEdgePine06" type="Sprite2D" parent="."]
+position = Vector2(1570, 880)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="EastEdgeBush07" type="Sprite2D" parent="."]
+position = Vector2(1550, 980)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
 [node name="FourArmsTavern" type="Node2D" parent="."]
 position = Vector2(700, 432)
 
@@ -934,29 +1016,24 @@ offset = Vector2(0, -50.596)
 position = Vector2(1050, 420)
 npc_name = "Marshal Coiljaw"
 dialogue_path = "res://dialogue/marshal_coiljaw.dialogue"
-visual_region = Rect2(17, 102, 16, 16)
-visual_modulate = Color(0.82, 0.68, 0.43, 1)
 
 [node name="HadrikVale" parent="." instance=ExtResource("5_npc")]
 position = Vector2(500, 370)
 npc_name = "Hadrik Vale"
 dialogue_path = "res://dialogue/hadrik_vale.dialogue"
-visual_region = Rect2(0, 102, 16, 16)
-visual_modulate = Color(0.65, 0.72, 0.82, 1)
 
 [node name="TomaReedhand" parent="." instance=ExtResource("5_npc")]
 position = Vector2(560, 740)
 npc_name = "Toma Reedhand"
 dialogue_path = "res://dialogue/toma_reedhand.dialogue"
-visual_region = Rect2(34, 102, 16, 16)
-visual_modulate = Color(0.28, 0.68, 0.75, 1)
 
 [node name="SellaVarn" parent="." instance=ExtResource("5_npc")]
 position = Vector2(1080, 760)
 npc_name = "Sella Varn"
 dialogue_path = "res://dialogue/sella_varn.dialogue"
-visual_region = Rect2(17, 68, 16, 16)
-visual_modulate = Color(0.83, 0.56, 0.25, 1)
+
+[node name="OutdoorTownsfolk" type="Node" parent="."]
+script = ExtResource("36_town_npcs")
 
 [node name="NoticeBoard" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(470, 420)

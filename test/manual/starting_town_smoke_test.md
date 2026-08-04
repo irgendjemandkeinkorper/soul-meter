@@ -29,6 +29,8 @@ short checklist is for changes limited to Dom/tavern/travel wiring.
 | Inspect the Bell House after accepting Sella's quest | The bell event records `dom_bellhouse_inspected`, updates the quest, and makes Sella's return line available |
 | Return to Sella after inspecting the bell | The quest completes, the report is recorded in the ledgers, and the bell remains visibly present but unresolved |
 | Speak with Marshal Coiljaw and choose the final conversation option | “Accept the field debt and open the east road” starts the commission and unlocks **TO THE WILDS** |
+| Walk the full outdoor loop and approach several townsfolk in every district | Thirty generated townsfolk are visible as varied isometric characters; each shows **E — TALK** in range and opens dialogue under that person's name with their matching monogram portrait |
+| Walk to the north and east limits, including both road gaps | Water remains behind the playable land at the screen edge and the nature-kit tree line continues to each road opening; no grey void appears at the default camera zoom |
 | Take the east road, approach the Bog Wight, and press E | The field transitions to the combat overlay with one enemy and the party action buttons |
 | Complete several combat rounds and defeat the Bog Wight | The combat outcome appears; returning to the field reveals the loamroot proof at the enemy's position |
 | Walk over the loamroot proof and return to Marshal Coiljaw in Dom | The proof is added to Inventory, the turn-in conversation opens four reward choices, and selecting one records its advertised reputation deltas |
