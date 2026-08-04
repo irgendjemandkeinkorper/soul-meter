@@ -100,6 +100,9 @@ func test_legacy_schema_migrates_without_losing_existing_values() -> void:
 	assert_int(migrated["game_state"]["skills"]["vex"]["persuasion"]["advancement_points_spent"]).is_equal(4)
 	assert_int(migrated["game_state"]["var_harmony"]["vex"]).is_equal(-3)
 	assert_bool(migrated["game_state"]["combat_knowledge"].is_empty()).is_true()
+	assert_bool(migrated["game_state"]["vendor_stock"].is_empty()).is_true()
+	assert_bool(migrated["game_state"]["vendor_restock_cycles"].is_empty()).is_true()
+	assert_bool(migrated["id_schemas"].has("vendor")).is_true()
 	assert_str(migrated["zhavar"]["dom"]).is_equal("tolling")
 	assert_int(migrated["ng_plus"]["style_points"]).is_equal(17)
 
@@ -150,6 +153,21 @@ func test_envelope_round_trip_preserves_all_ratified_save_sections() -> void:
 	assert_str(restored["renown"]["log"][0]["kind"]).is_equal("infamy")
 	assert_str(restored["zhavar"]["dorthkor"]).is_equal("unprecedented")
 	assert_int(restored["ng_plus"]["style_points"]).is_equal(31)
+
+
+func test_schema_four_save_migrates_vendor_state_and_stable_id_manifest() -> void:
+	var payload: Dictionary = saves._build_payload()
+	payload["schema_version"] = 4
+	payload["id_schemas"].erase("vendor")
+	payload["game_state"].erase("vendor_stock")
+	payload["game_state"].erase("vendor_restock_cycles")
+	var prepared: Dictionary = saves._prepare_for_load(payload)
+	assert_bool(prepared["ok"]).is_true()
+	var migrated: Dictionary = prepared["payload"]
+	assert_int(migrated["schema_version"]).is_equal(SaveGameScript.SCHEMA_VERSION)
+	assert_bool(migrated["id_schemas"].has("vendor")).is_true()
+	assert_bool(migrated["game_state"]["vendor_stock"].is_empty()).is_true()
+	assert_bool(migrated["game_state"]["vendor_restock_cycles"].is_empty()).is_true()
 
 
 func test_envelope_round_trip_preserves_var_harmony_boundaries() -> void:

@@ -8,6 +8,18 @@ func test_committed_generated_data_matches_pandora() -> void:
 		Pandora.load_data()
 	var result: Dictionary = Generator.generate(true)
 	assert_bool(result.drift).is_false()
+	assert_int(result.vendor_count).is_equal(12)
+	assert_int(result.count).is_equal(22)
+
+
+func test_drift_probe_reports_both_matching_and_changed_content() -> void:
+	var path := "user://generated-data-drift-probe.txt"
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string("committed\n")
+	file.close()
+	assert_bool(Generator._differs(path, "committed\n")).is_false()
+	assert_bool(Generator._differs(path, "regenerated\n")).is_true()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
 func test_item_po_merge_preserves_translations_and_marks_changed_sources_fuzzy() -> void:

@@ -1,34 +1,128 @@
 {
+  "consumables/bitterleaf_poultice": {
+    "name": "Bitterleaf Poultice",
+    "description": "A sharp-smelling leaf pack used to bind small field wounds.",
+    "base_price": 14,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 5,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "Bitter first. Better second."
+  },
+  "consumables/hearthloaf": {
+    "name": "Hearthloaf",
+    "description": "A soft brown loaf baked for the same-day market.",
+    "base_price": 5,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.4,
+    "rarity": "common",
+    "flavour": "Best before the bells finish arguing with one another."
+  },
   "consumables/loam_bread": {
     "name": "Loam Bread",
     "description": "Dense composting-city fare from Loamgate. Restores a little vigor.",
+    "base_price": 8,
     "size": "Vector2i(1, 1)",
     "max_stack_size": 10,
     "weight": 0.4,
     "rarity": "common",
     "flavour": "Everything returns. Some of it returns as bread."
   },
+  "consumables/loam_smoked_eel": {
+    "name": "Loam-Smoked Eel",
+    "description": "River eel cured over damp loamwood for a long road ration.",
+    "base_price": 10,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 5,
+    "weight": 0.4,
+    "rarity": "common",
+    "flavour": "Smoke, salt, and a trace of the city beneath the city."
+  },
+  "consumables/salted_riverfish": {
+    "name": "Salted Riverfish",
+    "description": "A small riverfish packed in coarse salt and market paper.",
+    "base_price": 7,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.3,
+    "rarity": "common",
+    "flavour": "The Four Arms feed more people than the roads do."
+  },
+  "materials/binding_thread": {
+    "name": "Binding Thread",
+    "description": "Waxed thread for repairs, bindings, and light field stitching.",
+    "base_price": 6,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.1,
+    "rarity": "common",
+    "flavour": "Strong enough to hold leather; not promises."
+  },
   "materials/cinder_ink_vial": {
     "name": "Cinder-Ink Vial",
     "description": "Ash-Bound tattoo ink; names written in it resist the Waning's slow erasure.",
+    "base_price": 24,
     "size": "Vector2i(1, 1)",
     "max_stack_size": 5,
     "weight": 0.2,
     "rarity": "common",
     "flavour": "The soul is a held line. Hold it."
   },
+  "materials/grave_salt": {
+    "name": "Grave Salt",
+    "description": "Dark mineral salt used to preserve herbs and mark uneasy thresholds.",
+    "base_price": 18,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 5,
+    "weight": 0.2,
+    "rarity": "uncommon",
+    "flavour": "It clumps near the recently dead."
+  },
+  "materials/iron_rivets": {
+    "name": "Iron Rivets",
+    "description": "A counted packet of uniform rivets from Dom's company forges.",
+    "base_price": 11,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.5,
+    "rarity": "common",
+    "flavour": "Every head bears four shallow strikes."
+  },
+  "materials/lamp_oil": {
+    "name": "Lamp Oil",
+    "description": "A stoppered flask of clean-burning oil for road lanterns.",
+    "base_price": 7,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.5,
+    "rarity": "common",
+    "flavour": "The bottle promises six hours. Wind negotiates."
+  },
   "materials/loamroot_sprig": {
     "name": "Loamroot Sprig",
     "description": "A pale root cutting, still warm from the Loam. Iris wants a few for the grove.",
+    "base_price": 6,
     "size": "Vector2i(1, 1)",
     "max_stack_size": 5,
     "weight": 0.1,
     "rarity": "common",
     "flavour": "It roots wherever it lands. That is the trouble with it."
   },
+  "materials/scribes_vellum": {
+    "name": "Scribe's Vellum",
+    "description": "A trimmed vellum folio sized for contracts and field notes.",
+    "base_price": 9,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.1,
+    "rarity": "common",
+    "flavour": "Margins cost extra. Consequences do not."
+  },
   "relics/captured_reflection": {
     "name": "Captured Reflection",
     "description": "An obsidian shard that shows a room lit by a sky that does not exist.",
+    "base_price": 70,
     "size": "Vector2i(1, 1)",
     "max_stack_size": 1,
     "weight": 0.3,
@@ -38,24 +132,89 @@
   "relics/quine_shard": {
     "name": "QUINE Shard",
     "description": "A fragment of pre-Bloom machine, one cyan light still faintly alive.",
+    "base_price": 120,
     "size": "Vector2i(1, 1)",
     "max_stack_size": 1,
     "weight": 1.1,
     "rarity": "mythic",
     "flavour": "It is still counting. No one knows what."
   },
+  "relics/votive_cinder": {
+    "name": "Votive Cinder",
+    "description": "A shrine cinder sealed in wax after an offering is witnessed.",
+    "base_price": 12,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.1,
+    "rarity": "uncommon",
+    "flavour": "Not bought. Not quite given."
+  },
+  "tools/field_needle": {
+    "name": "Field Needle",
+    "description": "A heavy repair needle kept in a fitted wooden case.",
+    "base_price": 13,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 1,
+    "weight": 0.1,
+    "rarity": "common",
+    "flavour": "For canvas, hide, and emergencies no one describes at supper."
+  },
+  "tools/lockpick_roll": {
+    "name": "Lockpick Roll",
+    "description": "A compact roll of picks, shims, and a narrow tension bar.",
+    "base_price": 22,
+    "size": "Vector2i(1, 2)",
+    "max_stack_size": 1,
+    "weight": 0.4,
+    "rarity": "uncommon",
+    "flavour": "Sold for lawful doors, naturally."
+  },
   "tools/soul_gauge": {
     "name": "Soul Gauge",
     "description": "A brass-and-glass dial that reads a soul's integrity — and what magic has spent.",
+    "base_price": 60,
     "size": "Vector2i(1, 2)",
     "max_stack_size": 1,
     "weight": 0.8,
     "rarity": "rare",
     "flavour": "The needle is honest. That is the problem."
   },
+  "tools/surveyors_chalk": {
+    "name": "Surveyor's Chalk",
+    "description": "Weather-resistant chalk for route marks and measured circles.",
+    "base_price": 9,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 5,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "A line is only useful if someone agrees where it begins."
+  },
+  "weapons/forge_hammer": {
+    "name": "Forge Hammer",
+    "description": "A balanced smith's hammer heavy enough for desperate field use.",
+    "base_price": 42,
+    "size": "Vector2i(2, 2)",
+    "max_stack_size": 1,
+    "weight": 2.5,
+    "rarity": "common",
+    "flavour": "A tool until the moment it is not.",
+    "equip_slot": "main_hand"
+  },
+  "weapons/roadwarden_spear": {
+    "name": "Roadwarden Spear",
+    "description": "A practical ash-shaft spear with an Iron Company pattern head.",
+    "base_price": 55,
+    "size": "Vector2i(1, 3)",
+    "max_stack_size": 1,
+    "weight": 3.0,
+    "rarity": "common",
+    "flavour": "Long enough to make a roadside disagreement reconsider.",
+    "equip_slot": "main_hand"
+  },
   "weapons/taubstummer_axe": {
     "name": "Taubstummer Axe",
     "description": "A sealed soul-weapon of the Last Great War; its edge remembers what it unmade.",
+    "base_price": 90,
     "size": "Vector2i(2, 3)",
     "max_stack_size": 1,
     "weight": 6.0,

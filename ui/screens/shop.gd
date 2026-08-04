@@ -1,58 +1,15 @@
 class_name ShopScreen
 extends Screen
-## Responsive storefront catalog for Dom's first-area shops.
-## GP is a placeholder ledger for the first purchase flow. Each button buys one
-## unit, immediately updates the carry count, and leaves the player in the shop.
+## Pandora-backed storefront for Dom's vendor economy.
 
-const ITEM_STOCK := [
-	{
-		"id": ItemIds.CONSUMABLES_LOAM_BREAD,
-		"name": "Loam Bread",
-		"description": "Dense compost-city fare from Loamgate. Restores a little vigor.",
-		"use": "field food / consumable",
-		"price": 8,
-	},
-	{
-		"id": ItemIds.MATERIALS_CINDER_INK_VIAL,
-		"name": "Cinder-Ink Vial",
-		"description": "Ash-bound tattoo ink; names written in it resist the Waning's slow erasure.",
-		"use": "ritual material / writing",
-		"price": 24,
-	},
-	{
-		"id": ItemIds.TOOLS_SOUL_GAUGE,
-		"name": "Soul Gauge",
-		"description": "A brass-and-glass dial that reads a soul's integrity — and what magic has spent.",
-		"use": "field tool / soul reading",
-		"price": 60,
-	},
-]
+const VendorData := preload("res://globals/vendor_registry.gd")
+const VendorIdsData := preload("res://data/generated/vendor_ids.gd")
+const LEGACY_SHOPS := {
+	"items": VendorIdsData.LOAM_AND_LANTERN,
+	"equipment": VendorIdsData.IRON_AND_THREAD,
+}
 
-const EQUIPMENT_STOCK := [
-	{
-		"id": ItemIds.WEAPONS_TAUBSTUMMER_AXE,
-		"name": "Taubstummer Axe",
-		"description": "A sealed soul-weapon of the Last Great War; its edge remembers what it unmade.",
-		"use": "main-hand weapon",
-		"price": 90,
-	},
-	{
-		"id": ItemIds.TOOLS_SOUL_GAUGE,
-		"name": "Soul Gauge",
-		"description": "A brass-and-glass dial that reads a soul's integrity — and what magic has spent.",
-		"use": "field tool / soul reading",
-		"price": 60,
-	},
-	{
-		"id": ItemIds.RELICS_CAPTURED_REFLECTION,
-		"name": "Captured Reflection",
-		"description": "An obsidian shard that shows a room lit by a sky that does not exist.",
-		"use": "relic / unknown function",
-		"price": 70,
-	},
-]
-
-var _shop_type := "items"
+var _vendor_id := VendorIdsData.LOAM_AND_LANTERN
 var _catalog: VBoxContainer
 var _gp_label: Label
 var _status_label: Label
@@ -64,7 +21,7 @@ func _build() -> void:
 	header.add_theme_constant_override("separation", DS.SPACE_5)
 	vbox.add_child(header)
 	var header_note := Label.new()
-	header_note.text = "PLACEHOLDER LEDGER"
+	header_note.text = "VENDOR LEDGER"
 	header_note.theme_type_variation = "EyebrowLabel"
 	header.add_child(header_note)
 	var header_spacer := Control.new()
@@ -89,10 +46,28 @@ func _build() -> void:
 	_render_catalog()
 
 
+## Keeps the two existing starting-town doors compatible without hardcoded stock.
 func configure_shop(shop_type: String) -> void:
-	_shop_type = shop_type if shop_type in ["items", "equipment"] else "items"
+	if LEGACY_SHOPS.has(shop_type):
+		_vendor_id = LEGACY_SHOPS[shop_type]
+	elif not VendorData.vendor(shop_type).is_empty():
+		_vendor_id = shop_type
+	else:
+		_vendor_id = VendorIdsData.LOAM_AND_LANTERN
 	if _catalog != null:
 		_render_catalog()
+
+
+func configure_vendor(vendor_id: String) -> void:
+	configure_shop(vendor_id)
+
+
+func vendor_id() -> String:
+	return _vendor_id
+
+
+func catalog_entries() -> Array[Dictionary]:
+	return GameState.available_vendor_stock(_vendor_id)
 
 
 func _render_catalog() -> void:
@@ -102,31 +77,48 @@ func _render_catalog() -> void:
 		_catalog.remove_child(child)
 		child.queue_free()
 
-	var is_equipment := _shop_type == "equipment"
-	var shop_name := "IRON & THREAD" if is_equipment else "LOAM & LANTERN"
-	var subtitle := (
-		"Equipment, fittings, and field tools for a soul-bound party."
-		if is_equipment
-		else "Provisions, ritual supplies, and practical goods for the road."
-	)
-	_catalog.add_child(_section(shop_name))
+	var vendor := VendorData.vendor(_vendor_id)
+	if vendor.is_empty():
+		_catalog.add_child(_section("VENDOR UNAVAILABLE"))
+		return
+	var band := VendorData.current_band(_vendor_id)
+	var status := GameState.vendor_trade_status(_vendor_id)
+	_catalog.add_child(_section(str(vendor["display_name"]).to_upper()))
 	var intro := Label.new()
-	intro.text = subtitle
+	intro.text = "%s  ·  %s STANDING" % [str(vendor["site_name"]), String(band).to_upper()]
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_catalog.add_child(intro)
+	var restock: Dictionary = vendor.get("restock", {})
 	var note := Label.new()
-	note.text = "ONE UNIT PER PURCHASE  ·  GP is a temporary currency for this menu pass"
+	note.text = "%s  ·  RESTOCK %s" % [
+		"OFFERINGS" if str(vendor.get("trade_mode", "")) == "offering" else "BUY / SELL",
+		str(restock.get("mode", "unknown")).replace("_", " ").to_upper(),
+	]
 	note.theme_type_variation = "MutedLabel"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_catalog.add_child(note)
 	_catalog.add_child(HSeparator.new())
 
-	var stock: Array = EQUIPMENT_STOCK if is_equipment else ITEM_STOCK
-	for entry in stock:
-		_add_stock_entry(entry)
+	if not bool(status.get("open", false)):
+		var refusal := Label.new()
+		refusal.text = str(status.get("reason", "TRADE UNAVAILABLE"))
+		refusal.theme_type_variation = "MutedLabel"
+		refusal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_catalog.add_child(refusal)
+		return
+
+	var stock := catalog_entries()
+	if stock.is_empty():
+		var empty := Label.new()
+		empty.text = "NO STOCK IS AVAILABLE AT THIS STANDING."
+		empty.theme_type_variation = "MutedLabel"
+		_catalog.add_child(empty)
+		return
+	for entry: Dictionary in stock:
+		_add_stock_entry(entry, str(vendor.get("trade_mode", "commerce")))
 
 
-func _add_stock_entry(entry: Dictionary) -> void:
+func _add_stock_entry(entry: Dictionary, trade_mode: String) -> void:
 	var row := VBoxContainer.new()
 	row.add_theme_constant_override("separation", 3)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -138,15 +130,27 @@ func _add_stock_entry(entry: Dictionary) -> void:
 	title.theme_type_variation = "HeadingLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(title)
-	var price := int(entry["price"])
-	var buy := _menu_button(top, "BUY  ·  %d GP" % price, _buy.bind(entry))
-	buy.custom_minimum_size = Vector2(170, DS.CONTROL_H)
-	buy.disabled = not GameState.can_afford(price)
+
+	var item_id := str(entry["id"])
+	var quantity := int(entry["quantity"])
+	var buy_price := int(entry["buy_price"])
+	var buy_verb := "OFFER" if trade_mode == "offering" else "BUY"
+	var buy := _menu_button(top, "%s  ·  %d GP" % [buy_verb, buy_price], _buy.bind(entry))
+	buy.custom_minimum_size = Vector2(155, DS.CONTROL_H)
+	buy.disabled = quantity <= 0 or not GameState.can_afford(buy_price)
+
+	var sell_price := int(entry["sell_price"])
+	if trade_mode == "commerce" and VendorData.accepts_sales(_vendor_id, item_id):
+		var sell := _menu_button(top, "SELL  ·  %d GP" % sell_price, _sell.bind(entry))
+		sell.custom_minimum_size = Vector2(155, DS.CONTROL_H)
+		sell.disabled = GameState.item_count(item_id) <= 0
+
+	var use_label := str(entry.get("equip_slot", entry.get("rarity", "item"))).replace("_", " ")
 	var meta := Label.new()
-	meta.text = "%s  ·  CARRY %d  ·  %d GP" % [
-		str(entry["use"]).to_upper(),
-		GameState.item_count(str(entry["id"])),
-		price,
+	meta.text = "%s  ·  STOCK %d  ·  CARRY %d" % [
+		use_label.to_upper(),
+		quantity,
+		GameState.item_count(item_id),
 	]
 	meta.theme_type_variation = "MutedLabel"
 	row.add_child(meta)
@@ -158,21 +162,34 @@ func _add_stock_entry(entry: Dictionary) -> void:
 
 
 func _buy(entry: Dictionary) -> void:
-	var price := int(entry["price"])
-	if not GameState.can_afford(price):
-		_status_label.text = "INSUFFICIENT GP  ·  NEED %d  ·  HAVE %d" % [price, GameState.gp]
+	var result := GameState.buy_from_vendor(_vendor_id, str(entry["id"]))
+	if not bool(result.get("ok", false)):
+		_status_label.text = _failure_text(result)
 		_render_catalog()
 		return
-	var item: InventoryItem = GameState.inventory.create_and_add_item(str(entry["id"]))
-	if item == null:
-		_status_label.text = "PURCHASE FAILED  ·  THE INVENTORY CANNOT HOLD THIS ITEM"
-		return
-	if not GameState.spend_gp(price):
-		GameState.remove_items(str(entry["id"]), 1)
-		_status_label.text = "PURCHASE FAILED  ·  GP LEDGER UNCHANGED"
-		return
-	_status_label.text = "PURCHASED  ·  %s  ·  -%d GP" % [str(entry["name"]).to_upper(), price]
+	_status_label.text = "PURCHASED  ·  %s  ·  -%d GP" % [
+		str(entry["name"]).to_upper(), int(result["price"])
+	]
 	_render_catalog()
+
+
+func _sell(entry: Dictionary) -> void:
+	var result := GameState.sell_to_vendor(_vendor_id, str(entry["id"]))
+	if not bool(result.get("ok", false)):
+		_status_label.text = _failure_text(result)
+		_render_catalog()
+		return
+	_status_label.text = "SOLD  ·  %s  ·  +%d GP" % [
+		str(entry["name"]).to_upper(), int(result["price"])
+	]
+	_render_catalog()
+
+
+func _failure_text(result: Dictionary) -> String:
+	var message := str(result.get("message", ""))
+	if not message.is_empty():
+		return "%s  ·  %s" % [str(result.get("reason", "FAILED")).to_upper(), message]
+	return str(result.get("reason", "TRANSACTION FAILED")).replace("_", " ").to_upper()
 
 
 func _update_gp_label(value: int) -> void:
