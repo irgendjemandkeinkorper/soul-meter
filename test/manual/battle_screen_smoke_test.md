@@ -45,3 +45,26 @@ Covers the turn-based Battle screen end-to-end: actions (Attack, Defend, Flee), 
 | Do | Expect |
 |---|---|
 | Inspect the layout, text wrapping, and controls | • No hardcoded color overrides are used.<br>• No per-node style overrides exist; fits perfectly within the design system.<br>• Custom minimum sizes prevent text from clipping. |
+
+## 8. Combat Feedback and Turn Flow
+
+| Do | Expect |
+|---|---|
+| Use a normal damaging attack | The target flashes once, the tableau shakes briefly in proportion to the damage, and a readable damage number rises from the target. Input remains responsive while the feedback plays. |
+| Begin a party turn, spend AP, then let the enemy round begin | A shape marker identifies the active combatant, the turn banner names the acting side/member, and the AP cost appears at the actor when the action resolves. |
+| Move between front, back, and flank | The combatant travels between the two zone positions instead of teleporting, and the source/destination zone names appear. |
+| Reduce a combatant to 0 HP | The combatant has a short fall/sink beat, remains legible on the field as defeated, and receives a text-plus-cross defeat cue. |
+
+## 9. Signature and Global Cues
+
+| Do | Expect |
+|---|---|
+| Attempt a Defining Strike, including a failed check | Gold double rings and a `DEFINING STRIKE` banner name the weakness; the cue is visibly distinct from a normal attack even when it deals 0 damage. |
+| Push the Balance Gauge into either extreme | A full-tableau mirrored border/arc cue states `ORDER EXTREME` or `CHAOS EXTREME` and explicitly says the whole field shifts. It lands with the existing Balance-extreme sound. |
+
+## 10. Reduced Motion
+
+| Do | Expect |
+|---|---|
+| Open Settings, enable `Reduced motion`, return to battle, and repeat the checks above | Shake, actor travel, squash/pulse, and floating motion are absent. Damage/AP/zone text, hit highlight, Defining Strike rings/banner, Balance-extreme border/banner, active marker, and defeat cross remain visible. |
+| Disable `Reduced motion` and return to battle | Motion feedback resumes on the next combat event without restarting the battle. |

@@ -10,6 +10,7 @@ signal party_changed
 signal locale_changed(locale: String)
 signal var_harmony_changed(actor_id: String, value: int, delta: int, source: StringName)
 signal combat_knowledge_changed(archetype_id: String)
+signal setting_changed(section: String, key: String, value: Variant)
 
 const SETTINGS_PATH := "user://settings.cfg"
 const PROTAGONIST_ID := "vex"
@@ -230,6 +231,7 @@ func remove_items(item_id: String, amount: int) -> bool:
 func set_setting(section: String, key: String, value: Variant) -> void:
 	_settings.set_value(section, key, value)
 	_settings.save(settings_path)
+	setting_changed.emit(section, key, value)
 
 
 func get_setting(section: String, key: String, default: Variant) -> Variant:
