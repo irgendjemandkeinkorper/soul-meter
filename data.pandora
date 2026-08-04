@@ -119,6 +119,48 @@
 				"_id": "150.0",
 				"_index": 0,
 				"_name": "Encounters"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "182.0",
+				"_index": 0,
+				"_name": "Triads"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "201.0",
+				"_index": 0,
+				"_name": "Impositions"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "213.0",
+				"_index": 0,
+				"_name": "Rule-Bends"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "228.0",
+				"_index": 0,
+				"_name": "Breadth"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "237.0",
+				"_index": 0,
+				"_name": "Magnitude"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "246.0",
+				"_index": 0,
+				"_name": "Fizzle Tables"
 			}
 		],
 		"_entities": [
@@ -140,17 +182,45 @@
 						"type": "color",
 						"value": "e8c46aff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": true
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Suul"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "suul"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "ffe7a8ff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": "Exposed"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "exposed"
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "Reveals Aftertones, Discord signatures, and illusions."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "reveals_aftertones"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "✷"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -172,17 +242,45 @@
 						"type": "color",
 						"value": "4fa96aff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": true
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Bloei"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "bloei"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "8fe0a4ff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": "Overgrown"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "overgrown"
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "Extends the duration of your own buffs."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "extends_own_buff_duration"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "⚘"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -204,17 +302,45 @@
 						"type": "color",
 						"value": "2e8fb8ff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": true
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Aqua"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "aqua"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "7fcde8ff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": "Soaked"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "soaked"
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "The only element that restores Breath."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "restores_breath"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "≈"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -236,17 +362,45 @@
 						"type": "color",
 						"value": "a855f7ff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": false
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Khor"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "khor"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "d6b4ffff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": ""
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "Extends durations and holds Notes across rounds."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "extends_durations_holds_notes"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "♫"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -268,17 +422,45 @@
 						"type": "color",
 						"value": "8c7a5bff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": true
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Terra"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "terra"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "c4ae85ff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": "Weighted"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "weighted"
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "Creates cover and anchors Aftertones."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "creates_cover_anchors_aftertones"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "▲"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -300,17 +482,45 @@
 						"type": "color",
 						"value": "4b3f72ff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": true
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Daar"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "daar"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "8577c4ff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": "Blinded"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "blinded"
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "Conceals Discord signatures."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "conceals_discord_signatures"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "◑"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -332,17 +542,45 @@
 						"type": "color",
 						"value": "7a8b3cff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": true
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Molm"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "molm"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "b4c46bff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": "Decaying"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "decaying"
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "Converts corpses and objects into Breath."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "converts_to_breath"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "⁂"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -364,17 +602,45 @@
 						"type": "color",
 						"value": "e0522fff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": true
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Scor"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "scor"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "ff9a6eff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": "Burning"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "burning"
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "Consumes an Aftertone for burst power."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "consumes_aftertone_for_burst"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "☲"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -396,17 +662,45 @@
 						"type": "color",
 						"value": "b8c0ccff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": false
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Nul"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "nul"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "edf2f8ff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": "Muted"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "muted"
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "Cancels buffs, ends Aftertones, and zeroes Tempo."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "cancels_and_zeroes_tempo"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "○"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -428,17 +722,45 @@
 						"type": "color",
 						"value": "22d3eeff"
 					},
+					"Deals Damage": {
+						"type": "bool",
+						"value": true
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Strom"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "strom"
 					},
 					"Glow": {
 						"type": "color",
 						"value": "a6f0faff"
 					},
+					"Imposition Display Name": {
+						"type": "string",
+						"value": "Shocked"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "shocked"
+					},
+					"Rule Bend Description": {
+						"type": "string",
+						"value": "Ignores the Instability die."
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "ignores_instability_die"
+					},
 					"Sigil": {
 						"type": "string",
 						"value": "☇"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
 					}
 				}
 			},
@@ -2567,9 +2889,17 @@
 				"_index": 0,
 				"_name": "Bog Wight",
 				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
 					"Combatant Ids": {
 						"type": "string",
 						"value": "bog-wight"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{}"
 					},
 					"Context Actions": {
 						"type": "string",
@@ -2607,6 +2937,10 @@
 						"type": "string",
 						"value": "{\"slain\":{\"cause\":\"Cleared the Bog Wight from the grove margins\",\"delta\":6.0,\"faction\":\"ssae-seeders\",\"message\":\"The opposition is defeated.\"}}"
 					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
 					"Win Cause": {
 						"type": "string",
 						"value": "Cleared the Bog Wight from the grove margins"
@@ -2618,6 +2952,10 @@
 					"Win Faction": {
 						"type": "string",
 						"value": "ssae-seeders"
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[]"
 					}
 				}
 			},
@@ -2628,9 +2966,17 @@
 				"_index": 0,
 				"_name": "Loam-Maddened Boar",
 				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
 					"Combatant Ids": {
 						"type": "string",
 						"value": "loam-maddened-boar"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{}"
 					},
 					"Context Actions": {
 						"type": "string",
@@ -2668,6 +3014,10 @@
 						"type": "string",
 						"value": "{\"slain\":{\"cause\":\"Culled a Loam-maddened boar before it reached the grove\",\"delta\":5.0,\"faction\":\"ssae-seeders\",\"message\":\"The opposition is defeated.\"}}"
 					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
 					"Win Cause": {
 						"type": "string",
 						"value": "Culled a Loam-maddened boar before it reached the grove"
@@ -2679,6 +3029,10 @@
 					"Win Faction": {
 						"type": "string",
 						"value": "ssae-seeders"
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[]"
 					}
 				}
 			},
@@ -2689,9 +3043,17 @@
 				"_index": 0,
 				"_name": "Dorthkor Demon Vanguard",
 				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
 					"Combatant Ids": {
 						"type": "string",
 						"value": "gnaal-breach-hound,gnaal-rift-scavenger"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{}"
 					},
 					"Context Actions": {
 						"type": "string",
@@ -2729,6 +3091,10 @@
 						"type": "string",
 						"value": "{\"slain\":{\"cause\":\"Broke the demon vanguard at Dorthkor\",\"delta\":5.0,\"faction\":\"iron-companies\",\"message\":\"The opposition is defeated.\"}}"
 					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
 					"Win Cause": {
 						"type": "string",
 						"value": "Broke the demon vanguard at Dorthkor"
@@ -2740,6 +3106,10 @@
 					"Win Faction": {
 						"type": "string",
 						"value": "iron-companies"
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[]"
 					}
 				}
 			},
@@ -2750,9 +3120,17 @@
 				"_index": 0,
 				"_name": "Dorthkor Dead Muster",
 				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
 					"Combatant Ids": {
 						"type": "string",
 						"value": "mustered-bloodbellow"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{}"
 					},
 					"Context Actions": {
 						"type": "string",
@@ -2790,6 +3168,10 @@
 						"type": "string",
 						"value": "{\"named\":{\"cause\":\"Broke the Bloodbellow binding by speaking its muster-name\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"flags\":{\"dorthkor_muster_cause\":\"$cause\",\"dorthkor_muster_outcome\":\"$outcome_id\"},\"message\":\"Its muster-name answers. The binding splits and the armor empties.\"},\"released\":{\"cause\":\"Released the soldier bound inside the Bloodbellow muster\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"flags\":{\"dorthkor_muster_cause\":\"$cause\",\"dorthkor_muster_outcome\":\"$outcome_id\"},\"message\":\"The held center opens a way out. The soldier's soul leaves the armor.\"},\"slain\":{\"cause\":\"Destroyed the Mustered Bloodbellow by force\",\"delta\":5.0,\"faction\":\"ironbrand-sentinels\",\"flags\":{\"dorthkor_muster_cause\":\"$cause\",\"dorthkor_muster_outcome\":\"$outcome_id\"},\"message\":\"The Bloodbellow falls, its borrowed cadence cut short.\"}}"
 					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
 					"Win Cause": {
 						"type": "string",
 						"value": "Stopped a dead soldier answering Dom's muster"
@@ -2801,6 +3183,10 @@
 					"Win Faction": {
 						"type": "string",
 						"value": "ironbrand-sentinels"
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[]"
 					}
 				}
 			},
@@ -2811,9 +3197,17 @@
 				"_index": 0,
 				"_name": "The Empty Post",
 				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
 					"Combatant Ids": {
 						"type": "string",
 						"value": "cleaned-jawbrace-guard"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{}"
 					},
 					"Context Actions": {
 						"type": "string",
@@ -2851,6 +3245,10 @@
 						"type": "string",
 						"value": "{\"slain\":{\"cause\":\"Stopped the cleaned armor standing watch at the Jawbrace\",\"delta\":6.0,\"faction\":\"ironbrand-sentinels\",\"message\":\"The opposition is defeated.\"}}"
 					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
 					"Win Cause": {
 						"type": "string",
 						"value": "Stopped the cleaned armor standing watch at the Jawbrace"
@@ -2862,6 +3260,1058 @@
 					"Win Faction": {
 						"type": "string",
 						"value": "ironbrand-sentinels"
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[]"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "191.0",
+				"_index": 0,
+				"_name": "Dayspring",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "suul"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Dayspring"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "strom,suul,bloei"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "dayspring"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "First Light"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "first_light"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"defining_strike_cost\":0,\"duration\":\"round\",\"reveals\":[\"aftertones\",\"discord_signatures\",\"queued_effects\",\"discovered_weaknesses\"]}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "192.0",
+				"_index": 0,
+				"_name": "Fruiting",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "bloei"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Fruiting"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "suul,bloei,aqua"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "fruiting"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "Second Season"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "second_season"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"copy_active_friendly_buffs\":true,\"targets_per_new_buff\":2}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "193.0",
+				"_index": 0,
+				"_name": "Rivermouth",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "aqua"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Rivermouth"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "bloei,aqua,khor"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "rivermouth"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "The Mouth Opens"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "the_mouth_opens"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"aoe_ignores_zone_boundaries\":true,\"duration\":\"round\",\"zone_change_ap\":0}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "194.0",
+				"_index": 0,
+				"_name": "Founding",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "khor"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Founding"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "aqua,khor,terra"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "founding"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "Cornerstone"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "cornerstone"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"freeze_remaining_durations\":true,\"until\":\"end_of_next_turn\"}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "195.0",
+				"_index": 0,
+				"_name": "Vault",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "terra"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Vault"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "khor,terra,daar"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "vault"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "Sealed Ground"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "sealed_ground"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"anchored_aftertones_enemy_consumption\":false,\"encounter_scope\":true,\"entry_ap_add\":1,\"fortify_zone\":true,\"ranged_attacks_apply_weighted\":true}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "196.0",
+				"_index": 0,
+				"_name": "Barrow",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "daar"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Barrow"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "terra,daar,molm"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "barrow"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "Unlisted"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "unlisted"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"duration\":\"round\",\"enemy_back_zone_targetable\":false,\"enemy_reveal_effects\":false,\"hide_friendly_positions\":true,\"hide_friendly_queued_effects\":true,\"hide_friendly_signatures\":true}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "197.0",
+				"_index": 0,
+				"_name": "Pyre",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "molm"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Pyre"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "daar,molm,scor"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "pyre"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "The Rendering"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "the_rendering"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"convert_corpses\":true,\"convert_destroyed_objects\":true,\"convert_expired_aftertones\":true,\"shared_corpse_applies_decaying\":true,\"split_breath_across_side\":true}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "198.0",
+				"_index": 0,
+				"_name": "Cinderfall",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "scor"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Cinderfall"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "molm,scor,nul"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "cinderfall"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "Everything Burns At Once"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "everything_burns_at_once"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"consume_all_aftertones\":true,\"include_both_sides\":true,\"yield_bursts_to_caster_side\":true}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "199.0",
+				"_index": 0,
+				"_name": "Stillpoint",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "nul"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Stillpoint"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "scor,nul,strom"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "stillpoint"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "The Held Silence"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "the_held_silence"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"balance_gauge\":\"exact_center\",\"lock_until\":\"end_of_next_round\",\"suppress_threshold_effects\":true}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "182.0",
+				"_icon_color": "ffffff00",
+				"_id": "200.0",
+				"_index": 0,
+				"_name": "Thunderhead",
+				"_property_overrides": {
+					"Center": {
+						"type": "string",
+						"value": "strom"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Thunderhead"
+					},
+					"Elements": {
+						"type": "string",
+						"value": "nul,strom,suul"
+					},
+					"Triad Id": {
+						"type": "string",
+						"value": "thunderhead"
+					},
+					"Unique Effect Display Name": {
+						"type": "string",
+						"value": "Nothing Is Uncertain"
+					},
+					"Unique Effect Id": {
+						"type": "string",
+						"value": "nothing_is_uncertain"
+					},
+					"Unique Effect Parameters": {
+						"type": "string",
+						"value": "{\"duration\":\"round\",\"out_of_turn_allies\":1,\"skip_instability_die\":true}"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "201.0",
+				"_icon_color": "ffffff00",
+				"_id": "205.0",
+				"_index": 0,
+				"_name": "Exposed",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Exposed"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "exposed"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "201.0",
+				"_icon_color": "ffffff00",
+				"_id": "206.0",
+				"_index": 0,
+				"_name": "Overgrown",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Overgrown"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "overgrown"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "201.0",
+				"_icon_color": "ffffff00",
+				"_id": "207.0",
+				"_index": 0,
+				"_name": "Soaked",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Soaked"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "soaked"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "201.0",
+				"_icon_color": "ffffff00",
+				"_id": "208.0",
+				"_index": 0,
+				"_name": "Weighted",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Weighted"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "weighted"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "201.0",
+				"_icon_color": "ffffff00",
+				"_id": "209.0",
+				"_index": 0,
+				"_name": "Blinded",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Blinded"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "blinded"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "201.0",
+				"_icon_color": "ffffff00",
+				"_id": "210.0",
+				"_index": 0,
+				"_name": "Decaying",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Decaying"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "decaying"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "201.0",
+				"_icon_color": "ffffff00",
+				"_id": "211.0",
+				"_index": 0,
+				"_name": "Burning",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Burning"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "burning"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "201.0",
+				"_icon_color": "ffffff00",
+				"_id": "212.0",
+				"_index": 0,
+				"_name": "Muted",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Muted"
+					},
+					"Imposition Id": {
+						"type": "string",
+						"value": "muted"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "218.0",
+				"_index": 0,
+				"_name": "Reveals Aftertones",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Reveals Aftertones, Discord signatures, and illusions."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Reveals Aftertones"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "reveals_aftertones"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "219.0",
+				"_index": 0,
+				"_name": "Extends Own Buff Duration",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Extends the duration of your own buffs."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Extends Own Buff Duration"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "extends_own_buff_duration"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "220.0",
+				"_index": 0,
+				"_name": "Restores Breath",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "The only element that restores Breath."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Restores Breath"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "restores_breath"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "221.0",
+				"_index": 0,
+				"_name": "Extends Durations and Holds Notes",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Extends durations and holds Notes across rounds."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Extends Durations and Holds Notes"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "extends_durations_holds_notes"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "222.0",
+				"_index": 0,
+				"_name": "Creates Cover and Anchors Aftertones",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Creates cover and anchors Aftertones."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Creates Cover and Anchors Aftertones"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "creates_cover_anchors_aftertones"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "223.0",
+				"_index": 0,
+				"_name": "Conceals Discord Signatures",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Conceals Discord signatures."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Conceals Discord Signatures"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "conceals_discord_signatures"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "224.0",
+				"_index": 0,
+				"_name": "Converts to Breath",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Converts corpses and objects into Breath."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Converts to Breath"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "converts_to_breath"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "225.0",
+				"_index": 0,
+				"_name": "Consumes Aftertone for Burst",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Consumes an Aftertone for burst power."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Consumes Aftertone for Burst"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "consumes_aftertone_for_burst"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "226.0",
+				"_index": 0,
+				"_name": "Cancels and Zeroes Tempo",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Cancels buffs, ends Aftertones, and zeroes Tempo."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Cancels and Zeroes Tempo"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "cancels_and_zeroes_tempo"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "213.0",
+				"_icon_color": "ffffff00",
+				"_id": "227.0",
+				"_index": 0,
+				"_name": "Ignores Instability Die",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "Ignores the Instability die."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Ignores Instability Die"
+					},
+					"Rule Bend Id": {
+						"type": "string",
+						"value": "ignores_instability_die"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "228.0",
+				"_icon_color": "ffffff00",
+				"_id": "234.0",
+				"_index": 0,
+				"_name": "Tone",
+				"_property_overrides": {
+					"Breadth Id": {
+						"type": "string",
+						"value": "tone"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Tone"
+					},
+					"Element Count": {
+						"type": "int",
+						"value": 1
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "228.0",
+				"_icon_color": "ffffff00",
+				"_id": "235.0",
+				"_index": 0,
+				"_name": "Chord",
+				"_property_overrides": {
+					"Breadth Id": {
+						"type": "string",
+						"value": "chord"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Chord"
+					},
+					"Element Count": {
+						"type": "int",
+						"value": 2
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 5.0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "228.0",
+				"_icon_color": "ffffff00",
+				"_id": "236.0",
+				"_index": 0,
+				"_name": "Triad",
+				"_property_overrides": {
+					"Breadth Id": {
+						"type": "string",
+						"value": "triad"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Triad"
+					},
+					"Element Count": {
+						"type": "int",
+						"value": 3
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 12.0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "237.0",
+				"_icon_color": "ffffff00",
+				"_id": "242.0",
+				"_index": 0,
+				"_name": "Note",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Note"
+					},
+					"Magnitude Id": {
+						"type": "string",
+						"value": "note"
+					},
+					"Multiplier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "237.0",
+				"_icon_color": "ffffff00",
+				"_id": "243.0",
+				"_index": 0,
+				"_name": "Phrase",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Phrase"
+					},
+					"Magnitude Id": {
+						"type": "string",
+						"value": "phrase"
+					},
+					"Multiplier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "237.0",
+				"_icon_color": "ffffff00",
+				"_id": "244.0",
+				"_index": 0,
+				"_name": "Song",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Song"
+					},
+					"Magnitude Id": {
+						"type": "string",
+						"value": "song"
+					},
+					"Multiplier": {
+						"type": "float",
+						"value": 1.75
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "237.0",
+				"_icon_color": "ffffff00",
+				"_id": "245.0",
+				"_index": 0,
+				"_name": "Refrain",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "Refrain"
+					},
+					"Magnitude Id": {
+						"type": "string",
+						"value": "refrain"
+					},
+					"Multiplier": {
+						"type": "float",
+						"value": 2.75
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					}
+				}
+			},
+			{
+				"_category_id": "246.0",
+				"_icon_color": "ffffff00",
+				"_id": "253.0",
+				"_index": 0,
+				"_name": "Default Fizzle Table",
+				"_property_overrides": {
+					"Breadth Add": {
+						"type": "string",
+						"value": "{\"chord\":5.0,\"tone\":0.0,\"triad\":12.0}"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Default Fizzle Table"
+					},
+					"Magnitude Multiplier": {
+						"type": "string",
+						"value": "{\"note\":0.5,\"phrase\":1.0,\"refrain\":2.75,\"song\":1.75}"
+					},
+					"Strain Add": {
+						"type": "string",
+						"value": "{\"0\":0.0,\"1\":0.0,\"2\":6.0,\"3\":12.0,\"4\":18.0}"
+					},
+					"Table Id": {
+						"type": "string",
+						"value": "default"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
 					}
 				}
 			}
@@ -3349,12 +4799,299 @@
 				"_id": "174.0",
 				"_name": "Outcomes",
 				"_type": "string"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": "",
+				"_id": "175.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": "",
+				"_id": "176.0",
+				"_name": "Element Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": "",
+				"_id": "177.0",
+				"_name": "Imposition Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": "",
+				"_id": "178.0",
+				"_name": "Imposition Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": "",
+				"_id": "179.0",
+				"_name": "Rule Bend Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": "",
+				"_id": "180.0",
+				"_name": "Rule Bend Description",
+				"_type": "string"
+			},
+			{
+				"_category_id": "1",
+				"_default_value": false,
+				"_id": "181.0",
+				"_name": "Deals Damage",
+				"_type": "bool"
+			},
+			{
+				"_category_id": "182.0",
+				"_default_value": "",
+				"_id": "183.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "182.0",
+				"_default_value": "",
+				"_id": "184.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "182.0",
+				"_default_value": "",
+				"_id": "185.0",
+				"_name": "Triad Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "182.0",
+				"_default_value": "",
+				"_id": "186.0",
+				"_name": "Elements",
+				"_type": "string"
+			},
+			{
+				"_category_id": "182.0",
+				"_default_value": "",
+				"_id": "187.0",
+				"_name": "Center",
+				"_type": "string"
+			},
+			{
+				"_category_id": "182.0",
+				"_default_value": "",
+				"_id": "188.0",
+				"_name": "Unique Effect Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "182.0",
+				"_default_value": "",
+				"_id": "189.0",
+				"_name": "Unique Effect Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "182.0",
+				"_default_value": "",
+				"_id": "190.0",
+				"_name": "Unique Effect Parameters",
+				"_type": "string"
+			},
+			{
+				"_category_id": "201.0",
+				"_default_value": "",
+				"_id": "202.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "201.0",
+				"_default_value": "",
+				"_id": "203.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "201.0",
+				"_default_value": "",
+				"_id": "204.0",
+				"_name": "Imposition Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "213.0",
+				"_default_value": "",
+				"_id": "214.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "213.0",
+				"_default_value": "",
+				"_id": "215.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "213.0",
+				"_default_value": "",
+				"_id": "216.0",
+				"_name": "Rule Bend Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "213.0",
+				"_default_value": "",
+				"_id": "217.0",
+				"_name": "Description",
+				"_type": "string"
+			},
+			{
+				"_category_id": "228.0",
+				"_default_value": "",
+				"_id": "229.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "228.0",
+				"_default_value": "",
+				"_id": "230.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "228.0",
+				"_default_value": "",
+				"_id": "231.0",
+				"_name": "Breadth Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "228.0",
+				"_default_value": 0,
+				"_id": "232.0",
+				"_name": "Element Count",
+				"_type": "int"
+			},
+			{
+				"_category_id": "228.0",
+				"_default_value": 0.0,
+				"_id": "233.0",
+				"_name": "Fizzle Add",
+				"_type": "float"
+			},
+			{
+				"_category_id": "237.0",
+				"_default_value": "",
+				"_id": "238.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "237.0",
+				"_default_value": "",
+				"_id": "239.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "237.0",
+				"_default_value": "",
+				"_id": "240.0",
+				"_name": "Magnitude Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "237.0",
+				"_default_value": 0.0,
+				"_id": "241.0",
+				"_name": "Multiplier",
+				"_type": "float"
+			},
+			{
+				"_category_id": "246.0",
+				"_default_value": "",
+				"_id": "247.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "246.0",
+				"_default_value": "",
+				"_id": "248.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "246.0",
+				"_default_value": "",
+				"_id": "249.0",
+				"_name": "Table Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "246.0",
+				"_default_value": "",
+				"_id": "250.0",
+				"_name": "Breadth Add",
+				"_type": "string"
+			},
+			{
+				"_category_id": "246.0",
+				"_default_value": "",
+				"_id": "251.0",
+				"_name": "Strain Add",
+				"_type": "string"
+			},
+			{
+				"_category_id": "246.0",
+				"_default_value": "",
+				"_id": "252.0",
+				"_name": "Magnitude Multiplier",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "254.0",
+				"_name": "Composition",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "255.0",
+				"_name": "Zone Layout",
+				"_type": "string"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": 0.0,
+				"_id": "256.0",
+				"_name": "Balance Bias",
+				"_type": "float"
+			},
+			{
+				"_category_id": "150.0",
+				"_default_value": "",
+				"_id": "257.0",
+				"_name": "Speech Hooks",
+				"_type": "string"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 174.0
+			"default": 257.0
 		}
 	},
 	"_version": 1
