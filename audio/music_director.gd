@@ -6,10 +6,12 @@ extends Node
 
 const FADE_DURATION: float = 1.0
 const TRACK_MAP: Dictionary = {
-	"title": "res://assets/audio/music/title.ogg",
-	"field": "res://assets/audio/music/field.ogg",
-	"battle": "res://assets/audio/music/battle.ogg",
-	"chapter_complete": "res://assets/audio/music/chapter_complete.ogg",
+	# Restrained plucked-string cues keep the score somber and avoid the pack's
+	# brighter NES, sax, and steel-drum arrangements.
+	"title": "res://assets/audio/music/jingles_PIZZI07.ogg",
+	"field": "res://assets/audio/music/jingles_PIZZI02.ogg",
+	"battle": "res://assets/audio/music/jingles_PIZZI11.ogg",
+	"chapter_complete": "res://assets/audio/music/jingles_PIZZI14.ogg",
 }
 
 var context_stack: Array[String] = []
@@ -50,6 +52,10 @@ func get_context_stack() -> Array[String]:
 	return context_stack.duplicate()
 
 
+static func track_path_for_context(context_id: String) -> String:
+	return str(TRACK_MAP.get(context_id, ""))
+
+
 func _transition_to_context(context_id: String) -> void:
 	if _current_context == context_id:
 		return
@@ -64,7 +70,7 @@ func _transition_to_context(context_id: String) -> void:
 			push_warning("MusicDirector: unknown context '%s'; falling back to silence." % context_id)
 		return
 
-	var path: String = str(TRACK_MAP[context_id])
+	var path := track_path_for_context(context_id)
 	if not ResourceLoader.exists(path):
 		push_warning(
 			"MusicDirector: missing track for context '%s' at '%s'; falling back to silence."
