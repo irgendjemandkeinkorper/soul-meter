@@ -36,65 +36,39 @@ const TRIAD_ROWS: Array[Dictionary] = [
 	{"id": &"thunderhead", "display_name": "Thunderhead", "elements": [&"nul", &"strom", &"suul"], "center": &"strom", "unique_effect": {"id": &"nothing_is_uncertain", "display_name": "Nothing Is Uncertain", "parameters": {"skip_instability_die": true, "out_of_turn_allies": 1, "duration": "round"}}},
 ]
 
-static var _initialized: bool = false
-static var _elements_cache: Dictionary = {}
-static var _triads_cache: Dictionary = {}
-static var _all_elements_cache: Array[ElementDefinition] = []
-static var _all_triads_cache: Array[TriadDefinition] = []
-
-
-static func _init_caches() -> void:
-	if _initialized:
-		return
-
-	_elements_cache.clear()
-	_all_elements_cache.clear()
-	for row: Dictionary in ELEMENT_ROWS:
-		var def := ElementDefinition.from_row(row)
-		_elements_cache[def.id] = def
-		_all_elements_cache.append(def)
-
-	_triads_cache.clear()
-	_all_triads_cache.clear()
-	for row: Dictionary in TRIAD_ROWS:
-		var def := TriadDefinition.from_row(row)
-		_triads_cache[def.id] = def
-		_all_triads_cache.append(def)
-
-	_initialized = true
-
 
 static func element(element_id: Variant) -> ElementDefinition:
-	_init_caches()
 	var requested := ElementWheel.normalize(element_id)
-	var cached: Variant = _elements_cache.get(requested)
-	if cached != null:
-		return cached
+	for row: Dictionary in ELEMENT_ROWS:
+		if StringName(row.get("id", "")) == requested:
+			return ElementDefinition.from_row(row)
 	return ElementDefinition.new()
 
 
 static func all_elements() -> Array[ElementDefinition]:
-	_init_caches()
-	return _all_elements_cache.duplicate()
+	var definitions: Array[ElementDefinition] = []
+	for row: Dictionary in ELEMENT_ROWS:
+		definitions.append(ElementDefinition.from_row(row))
+	return definitions
 
 
 static func triad(triad_id: Variant) -> TriadDefinition:
-	_init_caches()
 	var requested := ElementWheel.normalize(triad_id)
-	var cached: Variant = _triads_cache.get(requested)
-	if cached != null:
-		return cached
+	for row: Dictionary in TRIAD_ROWS:
+		if StringName(row.get("id", "")) == requested:
+			return TriadDefinition.from_row(row)
 	return TriadDefinition.new()
 
 
 static func all_triads() -> Array[TriadDefinition]:
-	_init_caches()
-	return _all_triads_cache.duplicate()
+	var definitions: Array[TriadDefinition] = []
+	for row: Dictionary in TRIAD_ROWS:
+		definitions.append(TriadDefinition.from_row(row))
+	return definitions
 
 
 static func triad_for_elements(elements: Array[StringName]) -> TriadDefinition:
-	_init_caches()
-	for candidate in _all_triads_cache:
+	for candidate in all_triads():
 		if candidate.elements.size() != elements.size():
 			continue
 		var matches := true
