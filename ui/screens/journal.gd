@@ -214,6 +214,14 @@ static func quest_state(quest: Quest) -> String:
 
 
 static func quest_giver(quest: Quest) -> String:
+	# Dom side quests name their giver by NPC stable id rather than repeating the
+	# display name, so resolve through the authored roster — one source of truth
+	# for who a person is. Checked before FlagQuest because DomSideQuest extends it.
+	if quest is DomSideQuest:
+		var dom_quest := quest as DomSideQuest
+		var row := NpcRoster.get_npc(dom_quest.giver_actor_id)
+		if not row.is_empty():
+			return str(row.get("display_name", "Unentered"))
 	if quest is FlagQuest:
 		var flag_quest := quest as FlagQuest
 		return flag_quest.quest_giver if not flag_quest.quest_giver.is_empty() else "Unentered"
@@ -224,6 +232,17 @@ static func quest_giver(quest: Quest) -> String:
 
 
 static func quest_location(quest: Quest) -> String:
+	if quest is DomSideQuest:
+		var dom_quest := quest as DomSideQuest
+		var row := NpcRoster.get_npc(dom_quest.giver_actor_id)
+		if not row.is_empty():
+			# Where the giver is found: their building if they have one, else their district.
+			var home := str(row.get("home", ""))
+			if not home.is_empty():
+				return home
+			var district := str(row.get("district", ""))
+			if not district.is_empty():
+				return district
 	if quest is FlagQuest:
 		var flag_quest := quest as FlagQuest
 		return flag_quest.quest_location if not flag_quest.quest_location.is_empty() else "Unentered"
