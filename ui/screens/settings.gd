@@ -2,7 +2,7 @@ extends Screen
 ## Display + Audio settings. Applies live and persists to user://settings.cfg via GameState.
 
 func _build() -> void:
-	var vbox := _make_window("Settings", Vector2(560, 440))
+	var vbox := _make_window("Settings", Vector2(560, 500))
 
 	vbox.add_child(_section("Display"))
 	var fs := CheckButton.new()
@@ -11,6 +11,20 @@ func _build() -> void:
 	fs.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	fs.toggled.connect(_on_fullscreen_toggled)
 	vbox.add_child(fs)
+
+	vbox.add_child(_section("Accessibility"))
+	var reduced_motion := CheckButton.new()
+	reduced_motion.name = "ReducedMotion"
+	reduced_motion.text = "Reduced motion"
+	reduced_motion.tooltip_text = (
+		"Keeps combat cues and numbers while removing shake, travel, and squash motion."
+	)
+	reduced_motion.button_pressed = bool(
+		GameState.get_setting("accessibility", "reduced_motion", false)
+	)
+	reduced_motion.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	reduced_motion.toggled.connect(_on_reduced_motion_toggled)
+	vbox.add_child(reduced_motion)
 
 	vbox.add_child(_section("Audio"))
 	for bus: StringName in GameState.AUDIO_BUSES:
@@ -35,6 +49,11 @@ func _build() -> void:
 func _on_fullscreen_toggled(on: bool) -> void:
 	GameState.apply_fullscreen(on)
 	GameState.set_setting("display", "fullscreen", on)
+
+
+func _on_reduced_motion_toggled(enabled: bool) -> void:
+	GameState.set_setting("accessibility", "reduced_motion", enabled)
+	Juicee.accessibility.reduced_motion = enabled
 
 
 func _volume_row(bus: StringName) -> HBoxContainer:

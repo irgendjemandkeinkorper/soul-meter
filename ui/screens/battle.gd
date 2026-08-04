@@ -26,6 +26,8 @@ func _build() -> void:
 	_stage = BATTLE_STAGE.new()
 	_stage.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_stage)
+	Battle.combat_event.connect(Callable(_stage, "consume_event"))
+	Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
 
 	var safe_frame := MarginContainer.new()
 	safe_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -220,7 +222,6 @@ func _use_action(action_id: StringName) -> void:
 func _refresh() -> void:
 	if not is_instance_valid(_stage):
 		return
-	_stage.set_battle_state(Battle.allies, Battle.enemies, Battle.target_enemy_index, Battle.current_ally(), Battle.balance)
 	_balance_bar.value = Battle.balance
 	_balance_lbl.text = _balance_text()
 	_update_enemy_status()
