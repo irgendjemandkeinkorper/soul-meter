@@ -110,6 +110,18 @@ func test_envelope_round_trip_preserves_all_ratified_save_sections() -> void:
 	assert_int(restored["ng_plus"]["style_points"]).is_equal(31)
 
 
+func test_envelope_round_trip_preserves_var_harmony_boundaries() -> void:
+	for boundary in [-5, 5]:
+		var payload: Dictionary = saves._build_payload()
+		payload["game_state"]["var_harmony"] = {"vex": boundary}
+
+		var prepared: Dictionary = saves._prepare_for_load(payload)
+		assert_bool(prepared["ok"]).is_true()
+		assert_int(prepared["payload"]["game_state"]["var_harmony"]["vex"]).is_equal(
+			boundary
+		)
+
+
 func test_corrupt_payload_fails_loudly_before_state_application() -> void:
 	var corrupt: Dictionary = saves._build_payload()
 	corrupt["game_state"]["skills"] = ["not-a-skill-map"]

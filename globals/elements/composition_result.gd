@@ -23,10 +23,18 @@ var self_inflicted_discord: bool = false
 var rejected: bool = false
 var failure_id: StringName = &""
 var caster_context: Dictionary = {}
+var allowed: bool = true
+var blocked_by: StringName = &""
+var nearest_unblock: Dictionary = {}
+var casting_gate: Dictionary = {}
 
 
 func is_resolved() -> bool:
 	return kind == Kind.TONE or kind == Kind.CHORD or kind == Kind.STRAINED_CHORD or kind == Kind.TRIAD
+
+
+func is_castable() -> bool:
+	return is_resolved() and allowed
 
 
 func is_clash() -> bool:
@@ -58,4 +66,7 @@ func to_dict() -> Dictionary:
 		"self_inflicted_discord": self_inflicted_discord,
 		"rejected": rejected,
 		"failure_id": failure_id,
+		"allowed": allowed,
+		"blocked_by": blocked_by,
+		"nearest_unblock": nearest_unblock.duplicate(true),
 	}
