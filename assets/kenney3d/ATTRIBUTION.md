@@ -9,6 +9,7 @@ it is recorded here as good practice and so the provenance of every asset is tra
 | `fantasy-town-kit` | https://kenney.nl/assets/fantasy-town-kit | 167 | Town buildings, market stalls, carts, banners, doors |
 | `nature-kit` | https://kenney.nl/assets/nature-kit | 329 | Trees, grass, rocks, bridges, terrain dressing |
 | `castle-kit` | https://kenney.nl/assets/castle-kit | 76 | Walls, gates, towers, the Trial Hall and civic structures |
+| `mini-characters` | https://kenney.nl/assets/mini-characters | 26 | Townsfolk and party sprites, rendered through the same fixed-angle pipeline |
 
 Downloaded 2026-08-04. Only the **GLB** format is vendored; the FBX/OBJ/DAE duplicates that
 ship in the same archives were dropped to keep the repository lean.
