@@ -21,6 +21,7 @@ const FIFTH_ECHO: DomSideQuest = preload("res://quests/dom_fifth_echo.tres")
 const MARCHING_KNOTS: DomSideQuest = preload("res://quests/dom_marching_knots.tres")
 const ASH_IN_THE_RAIN: DomSideQuest = preload("res://quests/dom_ash_in_the_rain.tres")
 const SMOOTHED_WEIGHTS: DomSideQuest = preload("res://quests/dom_smoothed_weights.tres")
+const DOM_SIDE_QUEST_DIALOGUE_PATH := "res://dialogue/dom_side_quests.dialogue"
 const DOM_SIDE_QUESTS: Array[DomSideQuest] = [
 	DISHONEST_CASKS,
 	LIVING_TAG,
@@ -51,6 +52,58 @@ const ALL_QUESTS: Array[Quest] = [
 	SMOOTHED_WEIGHTS,
 ]
 const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD]
+
+const BROKEN_MUSTER_RULINGS := {
+	"demons-first": {
+		"reputation": [
+			{
+				"faction": "iron-companies",
+				"delta": 12.0,
+				"cause": "Called Dom to meet the demon vanguard first",
+			},
+			{
+				"faction": "ironbrand-sentinels",
+				"delta": -2.0,
+				"cause": "Put the dead muster behind the immediate breach",
+			},
+		],
+		"renown": 10.0,
+		"renown_cause": "Brought Dom proof of the broken muster",
+	},
+	"dead-first": {
+		"reputation": [
+			{
+				"faction": "ironbrand-sentinels",
+				"delta": 12.0,
+				"cause": "Recognized the dead muster as Dom's deeper threat",
+			},
+			{
+				"faction": "iron-companies",
+				"delta": -2.0,
+				"cause": "Diverted soldiers from the immediate demon road",
+			},
+		],
+		"renown": 10.0,
+		"renown_cause": "Brought Dom proof of the broken muster",
+	},
+	"hold-both": {
+		"requires_centered_soul": true,
+		"reputation": [
+			{
+				"faction": "iron-companies",
+				"delta": 7.0,
+				"cause": "Persuaded Dom to hold both advancing fronts",
+			},
+			{
+				"faction": "ironbrand-sentinels",
+				"delta": 7.0,
+				"cause": "Persuaded Dom to hold both advancing fronts",
+			},
+		],
+		"renown": 14.0,
+		"renown_cause": "Made Dom bear the honest cost of two fronts",
+	},
+}
 
 const FIELD_DEBT_REWARDS := {
 	"companies": {
@@ -120,6 +173,17 @@ func is_done(quest: Quest) -> bool:
 func turn_in(
 	quest: Quest, resolution: String = "returned", grant_default_reward: bool = true
 ) -> void:
+	# The chapter ruling is one atomic operation. Refuse a bare quest completion
+	# so a caller cannot leave a save with The Broken Muster completed but no
+	# ruling flag (and therefore no dialogue route that can finish the chapter).
+	if (
+		quest == DORTHKOR_ROAD
+		and (
+			not BROKEN_MUSTER_RULINGS.has(resolution)
+			or str(GameState.get_flag("chapter_one_resolution", "")) != resolution
+		)
+	):
+		return
 	QuestSystem.update_quest(quest)
 	if quest is FlagQuest:
 		quest.objective_completed = flags_met(quest)
@@ -141,6 +205,66 @@ func turn_in(
 		GameState.remove_items("materials/loamroot_sprig", 1)
 	if is_done(quest):
 		SaveGame.request_autosave("quest-completed")
+
+
+func resolve_broken_muster(ruling_id: StringName) -> bool:
+	## Completes the chapter quest, ruling flag, and consequence ledgers as one
+	## synchronous operation. Dialogue calls this seam instead of ordering those
+	## writes itself, preventing a completed-quest/no-ruling soft lock.
+	var ruling_key := String(ruling_id)
+	var ruling_value: Variant = BROKEN_MUSTER_RULINGS.get(ruling_key, {})
+	if (
+		not ruling_value is Dictionary
+		or (ruling_value as Dictionary).is_empty()
+		or not is_active(DORTHKOR_ROAD)
+		or not flags_met(DORTHKOR_ROAD)
+		or not bool(GameState.get_flag("reported_bloodbellow", false))
+		or not str(GameState.get_flag("chapter_one_resolution", "")).is_empty()
+	):
+		return false
+	var ruling := ruling_value as Dictionary
+	if (
+		bool(ruling.get("requires_centered_soul", false))
+		and (GameState.soul_meter < 40.0 or GameState.soul_meter > 60.0)
+	):
+		return false
+
+	var active_quest: Quest = null
+	for quest: Quest in QuestSystem.get_active_quests():
+		if quest.id == DORTHKOR_ROAD.id:
+			active_quest = quest
+			break
+	if active_quest == null:
+		return false
+
+	# Set the ruling first so turn_in() can enforce the invariant. Both calls are
+	# synchronous; the checkpoint remains deferred until the full outcome lands.
+	GameState.set_flag("chapter_one_resolution", ruling_key)
+	active_quest.objective_completed = true
+	turn_in(active_quest, ruling_key, false)
+	if not is_done(DORTHKOR_ROAD):
+		GameState.set_flag("chapter_one_resolution", "")
+		return false
+
+	for row_value: Variant in ruling.get("reputation", []):
+		if not row_value is Dictionary:
+			continue
+		var row := row_value as Dictionary
+		Reputation.record(
+			"player",
+			str(row.get("faction", "")),
+			float(row.get("delta", 0.0)),
+			str(row.get("cause", "")),
+			"dom"
+		)
+	Renown.gain_reputation(
+		"player",
+		float(ruling.get("renown", 0.0)),
+		str(ruling.get("renown_cause", "")),
+		"dom"
+	)
+	SaveGame.request_checkpoint(SaveGame.Checkpoint.RULING, ruling_key)
+	return true
 
 
 func resolve_field_debt(reward_id: StringName) -> bool:
@@ -225,10 +349,42 @@ func side_quest_for_giver(actor_id: String) -> DomSideQuest:
 	return null
 
 
+func dialogue_route_for_actor(
+	actor_id: String, fallback_path: String, fallback_title: String
+) -> Dictionary:
+	## Generated roster prose remains the fallback for every townsfolk. The ten
+	## authored givers route through their quest resources at interaction time so
+	## generated data stays untouched and the quests cannot be orphaned by a stale
+	## roster dialogue title.
+	var side_quest := side_quest_for_giver(actor_id)
+	if side_quest != null:
+		return {
+			"path": DOM_SIDE_QUEST_DIALOGUE_PATH,
+			"title": side_quest.dialogue_title,
+		}
+	return {"path": fallback_path, "title": fallback_title}
+
+
 func side_quest_readback(quest: DomSideQuest) -> String:
 	var outcome_id := str(GameState.get_flag(quest.resolution_flag, ""))
 	var outcome := quest.outcome_for(outcome_id)
 	return str(outcome.get("readback", ""))
+
+
+func active_side_quests() -> Array[DomSideQuest]:
+	var result: Array[DomSideQuest] = []
+	for quest: DomSideQuest in DOM_SIDE_QUESTS:
+		if is_active(quest):
+			result.append(quest)
+	return result
+
+
+func completed_side_quests() -> Array[DomSideQuest]:
+	var result: Array[DomSideQuest] = []
+	for quest: DomSideQuest in DOM_SIDE_QUESTS:
+		if is_done(quest):
+			result.append(quest)
+	return result
 
 
 func _on_inventory_changed() -> void:

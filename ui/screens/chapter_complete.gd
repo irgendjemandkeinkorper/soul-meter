@@ -19,6 +19,14 @@ func _build() -> void:
 	ledger.theme_type_variation = "StatLabel"
 	vbox.add_child(ledger)
 
+	vbox.add_child(_section("Dom threads carried into the ruling"))
+	var side_ledger := Label.new()
+	side_ledger.name = "SideQuestLedger"
+	side_ledger.text = _side_quest_ledger_text()
+	side_ledger.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	side_ledger.theme_type_variation = "QuoteLabel"
+	vbox.add_child(side_ledger)
+
 	vbox.add_child(_section("Playtest handoff"))
 	_summary = _playtest_summary()
 	var summary_box := TextEdit.new()
@@ -79,6 +87,29 @@ func _ledger_text() -> String:
 
 func _verdict_text() -> String:
 	return "%s %s" % [_outcome_sentence(), _ruling_sentence()]
+
+
+func _side_quest_ledger_text() -> String:
+	var completed := QuestRegistry.completed_side_quests()
+	var lines := PackedStringArray(
+		[
+			"RESOLVED  %d / %d"
+			% [completed.size(), QuestRegistry.DOM_SIDE_QUESTS.size()]
+		]
+	)
+	if completed.is_empty():
+		lines.append("No Dom side commission was resolved before the road ruling.")
+	else:
+		for quest: DomSideQuest in completed:
+			lines.append(
+				"%s  ·  %s" % [quest.quest_name.to_upper(), QuestRegistry.side_quest_readback(quest)]
+			)
+	var active := QuestRegistry.active_side_quests()
+	if not active.is_empty():
+		lines.append("OPEN THREADS")
+		for quest: DomSideQuest in active:
+			lines.append("%s  ·  %s" % [quest.quest_name.to_upper(), QuestRegistry.objective_for(quest)])
+	return "\n".join(lines)
 
 
 func _outcome_label() -> String:
