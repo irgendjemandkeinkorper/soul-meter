@@ -6,12 +6,43 @@ const DOM: LocationDefinition = preload("res://world/locations/dom.tres")
 const WILDS: LocationDefinition = preload("res://world/locations/wilds.tres")
 const DORTHKOR: LocationDefinition = preload("res://world/locations/dorthkor_road.tres")
 const WOUND_LIP: LocationDefinition = preload("res://world/locations/wound_lip.tres")
-const ALL: Array[LocationDefinition] = [DOM, WILDS, DORTHKOR, WOUND_LIP]
-const GAMEPLAY_SCENES: Array[String] = [
-	"res://world/starting_town.tscn",
-	"res://world/test_room.tscn",
-	"res://world/dorthkor_road.tscn",
-	"res://world/wound_lip.tscn",
+const REGISTRY_ARCHIVE: LocationDefinition = preload(
+	"res://world/locations/interiors/registry_archive.tres"
+)
+const BELL_HOUSE: LocationDefinition = preload("res://world/locations/interiors/bell_house.tres")
+const RIVER_SHRINE: LocationDefinition = preload(
+	"res://world/locations/interiors/river_shrine.tres"
+)
+const IRON_COMPANIES: LocationDefinition = preload(
+	"res://world/locations/interiors/iron_companies.tres"
+)
+const ITEM_SHOP: LocationDefinition = preload("res://world/locations/interiors/item_shop.tres")
+const EQUIPMENT_SHOP: LocationDefinition = preload(
+	"res://world/locations/interiors/equipment_shop.tres"
+)
+const TOWN_HALL: LocationDefinition = preload("res://world/locations/interiors/town_hall.tres")
+const CHEFS_HOUSE: LocationDefinition = preload(
+	"res://world/locations/interiors/chefs_house.tres"
+)
+const PLAYERS_HOUSE: LocationDefinition = preload(
+	"res://world/locations/interiors/players_house.tres"
+)
+const TRIAL_HALL: LocationDefinition = preload("res://world/locations/interiors/trial_hall.tres")
+const ALL: Array[LocationDefinition] = [
+	DOM,
+	WILDS,
+	DORTHKOR,
+	WOUND_LIP,
+	REGISTRY_ARCHIVE,
+	BELL_HOUSE,
+	RIVER_SHRINE,
+	IRON_COMPANIES,
+	ITEM_SHOP,
+	EQUIPMENT_SHOP,
+	TOWN_HALL,
+	CHEFS_HOUSE,
+	PLAYERS_HOUSE,
+	TRIAL_HALL,
 ]
 
 static func by_id(location_id: StringName) -> LocationDefinition:
@@ -39,3 +70,11 @@ static func resolve(scene_path: String, location_id: StringName = &"") -> Locati
 static func is_gameplay_scene(scene_path: String) -> bool:
 	var location := by_scene(scene_path)
 	return location != null and location.allowed_gameplay
+
+
+static func gameplay_scenes() -> Array[String]:
+	var scenes: Array[String] = []
+	for location in ALL:
+		if location.allowed_gameplay:
+			scenes.append(location.scene_path)
+	return scenes

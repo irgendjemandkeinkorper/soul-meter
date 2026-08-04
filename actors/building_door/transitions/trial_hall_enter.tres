@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"trial_hall_enter"
+building_id = &"trial_hall"
+building_name = "Trial Hall"
+direction = "enter"
+source_scene = "res://world/starting_town.tscn"
+source_anchor = &"TrialHall"
+source_position = Vector2(1300, 420)
+destination_scene = "res://world/interiors/trial_hall.tscn"
+destination_location_id = &"trial_hall_interior"
+spawn_id = &"entry"
+destination_spawn_position = Vector2(480, 500)
+prompt_text = "E — ENTER"

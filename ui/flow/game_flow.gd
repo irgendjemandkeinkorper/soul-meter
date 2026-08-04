@@ -30,7 +30,7 @@ const WILDS_SCENE := "res://world/test_room.tscn"
 const DORTHKOR_SCENE := "res://world/dorthkor_road.tscn"
 const WOUND_LIP_SCENE := "res://world/wound_lip.tscn"
 ## Every scene UIManager should treat as "in gameplay" (see _in_gameplay()).
-var GAMEPLAY_SCENES: Array[String] = LocationRegistry.GAMEPLAY_SCENES
+var GAMEPLAY_SCENES: Array[String] = LocationRegistry.gameplay_scenes()
 const LOADING_SCREEN := (
 	"res://addons/maaacks_game_template/base/nodes/loading_screen/" + "loading_screen.tscn"
 )

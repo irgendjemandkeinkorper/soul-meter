@@ -1,0 +1,108 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://world/interiors/building_interior.gd" id="1_interior"]
+[ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="3_door"]
+[ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="4_hud"]
+
+[sub_resource type="RectangleShape2D" id="wall_horizontal"]
+size = Vector2(960, 40)
+
+[sub_resource type="RectangleShape2D" id="wall_vertical"]
+size = Vector2(40, 640)
+
+[sub_resource type="RectangleShape2D" id="counter_shape"]
+size = Vector2(360, 54)
+
+[node name="BuildingInterior" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_interior")
+
+[node name="Floor" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 0, 960, 0, 960, 640, 0, 640)
+color = Color(0.12, 0.12, 0.14, 1)
+z_index = -20
+
+[node name="AccentRug" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(300, 350, 660, 350, 720, 500, 240, 500)
+color = Color(0.55, 0.4, 0.22, 1)
+z_index = -10
+
+[node name="WallTop" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 0, 960, 0, 960, 40, 0, 40)
+color = Color(0.24, 0.24, 0.27, 1)
+z_index = -5
+
+[node name="WallBottom" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 600, 960, 600, 960, 640, 0, 640)
+color = Color(0.24, 0.24, 0.27, 1)
+z_index = -5
+
+[node name="WallLeft" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 40, 40, 40, 40, 600, 0, 600)
+color = Color(0.24, 0.24, 0.27, 1)
+z_index = -5
+
+[node name="WallRight" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(920, 40, 960, 40, 960, 600, 920, 600)
+color = Color(0.24, 0.24, 0.27, 1)
+z_index = -5
+
+[node name="Title" type="Label" parent="."]
+offset_left = 280.0
+offset_top = 64.0
+offset_right = 680.0
+offset_bottom = 112.0
+theme_type_variation = &"HeadingLabel"
+text = "BUILDING"
+horizontal_alignment = 1
+
+[node name="Counter" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(300, 235, 660, 235, 660, 289, 300, 289)
+color = Color(0.3, 0.22, 0.16, 1)
+
+[node name="FurnitureCollision" type="StaticBody2D" parent="."]
+
+[node name="CounterShape" type="CollisionShape2D" parent="FurnitureCollision"]
+position = Vector2(480, 262)
+shape = SubResource("counter_shape")
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="Top" type="CollisionShape2D" parent="Walls"]
+position = Vector2(480, 20)
+shape = SubResource("wall_horizontal")
+
+[node name="Bottom" type="CollisionShape2D" parent="Walls"]
+position = Vector2(480, 620)
+shape = SubResource("wall_horizontal")
+
+[node name="Left" type="CollisionShape2D" parent="Walls"]
+position = Vector2(20, 320)
+shape = SubResource("wall_vertical")
+
+[node name="Right" type="CollisionShape2D" parent="Walls"]
+position = Vector2(940, 320)
+shape = SubResource("wall_vertical")
+
+[node name="ExitDoor" parent="." instance=ExtResource("3_door")]
+position = Vector2(480, 600)
+prompt_text = "E — EXIT"
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(480, 500)
+camera_bounds = Rect2i(0, 0, 960, 640)
+
+[node name="SpawnDefault" type="Marker2D" parent="."]
+position = Vector2(480, 500)
+
+[node name="SpawnEntry" type="Marker2D" parent="."]
+position = Vector2(480, 500)
+
+[node name="VendorSpot" type="Marker2D" parent="."]
+position = Vector2(720, 185)
+
+[node name="NpcSpot" type="Marker2D" parent="."]
+position = Vector2(240, 185)
+
+[node name="FieldHUD" parent="." instance=ExtResource("4_hud")]

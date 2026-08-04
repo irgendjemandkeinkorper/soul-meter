@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="LocationDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/location_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"players_house_interior"
+scene_path = "res://world/interiors/players_house.tscn"
+default_spawn_id = &"entry"
+spawns = {
+"entry": "entry"
+}
