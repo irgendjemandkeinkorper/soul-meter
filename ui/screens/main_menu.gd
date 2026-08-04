@@ -1,6 +1,9 @@
 extends Screen
 ## The entry scene. New Game loads the field room; Settings stacks over this via UIManager.
 
+var _overwrite_armed := false
+var _new_game_button: Button
+
 
 func _build() -> void:
 	var bg := ColorRect.new()
@@ -35,19 +38,11 @@ func _build() -> void:
 	vbox.add_child(spacer)
 
 	# Buttons send flow events — they never name a destination scene (see GameFlow).
-	var overwrite_armed := false
-	var new_game_button: Button
-	new_game_button = _menu_button(
+	_overwrite_armed = false
+	_new_game_button = _menu_button(
 		vbox,
 		"New Game",
-		func() -> void:
-			if SaveGame.has_save() and not overwrite_armed:
-				overwrite_armed = true
-				new_game_button.text = "Confirm New Game — Overwrite Save"
-				new_game_button.theme_type_variation = "DangerButton"
-				return
-			SaveGame.new_game()
-			GameFlow.send_event("new_game")
+		_on_new_game_pressed
 	)
 	var continue_button := _menu_button(
 		vbox,
@@ -61,3 +56,13 @@ func _build() -> void:
 		vbox, "Settings", func() -> void: UIManager.open(load("res://ui/screens/settings.tscn"))
 	)
 	_menu_button(vbox, "Quit", func() -> void: get_tree().quit())
+
+
+func _on_new_game_pressed() -> void:
+	if SaveGame.has_save() and not _overwrite_armed:
+		_overwrite_armed = true
+		_new_game_button.text = "Confirm New Game — Overwrite Save"
+		_new_game_button.theme_type_variation = "DangerButton"
+		return
+	SaveGame.new_game()
+	GameFlow.send_event("new_game")
