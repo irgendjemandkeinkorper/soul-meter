@@ -1,0 +1,485 @@
+{
+  "town_id": "dom",
+  "placements": {
+    "aela-quietforge": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "WoundLip",
+      "offset": [
+        100.0,
+        90.0
+      ]
+    },
+    "arvek-stormcup": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "TrialHall",
+      "offset": [
+        -100.0,
+        70.0
+      ]
+    },
+    "branek-coiljaw": {
+      "scene": "res://world/interiors/trial_hall.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "brannic-lowdrum": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "TownHall",
+      "offset": [
+        -100.0,
+        70.0
+      ]
+    },
+    "brek-saltjaw": {
+      "scene": "res://world/interiors/equipment_shop.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "brinna-fourbells": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "RegistryArchive",
+      "offset": [
+        -100.0,
+        70.0
+      ]
+    },
+    "daska-threeknots": {
+      "scene": "res://world/interiors/iron_companies.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "dorran-rask": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "WoundLip",
+      "offset": [
+        -100.0,
+        90.0
+      ]
+    },
+    "drann-wetiron": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "LowerMarket",
+      "offset": [
+        -100.0,
+        70.0
+      ]
+    },
+    "drel-gaunt": {
+      "scene": "res://world/interiors/players_house.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "droma-flintjaw": {
+      "scene": "res://world/interiors/town_hall.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "edda-broadmark": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "LowerMarket",
+      "offset": [
+        0.0,
+        78.0
+      ]
+    },
+    "enna-grayscar": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "RegistryArchive",
+      "offset": [
+        100.0,
+        70.0
+      ]
+    },
+    "gerren-pike": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "FourArmsTavern",
+      "offset": [
+        100.0,
+        70.0
+      ]
+    },
+    "hadrik-vale": {
+      "scene": "res://world/interiors/town_hall.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "hennik-coalvein": {
+      "scene": "res://world/interiors/iron_companies.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    },
+    "holst-brinevein": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "LowerMarket",
+      "offset": [
+        100.0,
+        70.0
+      ]
+    },
+    "irka-stonebreath": {
+      "scene": "res://world/interiors/bell_house.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    },
+    "istra-hearthscar": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "TrialHall",
+      "offset": [
+        0.0,
+        78.0
+      ]
+    },
+    "jessa-longbrace": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "EquipmentShop",
+      "offset": [
+        100.0,
+        70.0
+      ]
+    },
+    "jorun-ashmantle": {
+      "scene": "res://world/interiors/river_shrine.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    },
+    "kadrin-stoneyield": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "IronCompaniesBarracks",
+      "offset": [
+        0.0,
+        78.0
+      ]
+    },
+    "kaelra-pikehand": {
+      "scene": "res://world/interiors/item_shop.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "kelm-rook": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "TrialHall",
+      "offset": [
+        100.0,
+        70.0
+      ]
+    },
+    "kessa-nightrail": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "BellHouse",
+      "offset": [
+        100.0,
+        70.0
+      ]
+    },
+    "keth-varr": {
+      "scene": "res://world/interiors/bell_house.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "kiva-saltbrand": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "NorthRoad",
+      "offset": [
+        -90.0,
+        90.0
+      ]
+    },
+    "korrin-blackrail": {
+      "scene": "res://world/interiors/players_house.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "loa-flintthread": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "BellHouse",
+      "offset": [
+        0.0,
+        78.0
+      ]
+    },
+    "maela-drumscar": {
+      "scene": "res://world/interiors/registry_archive.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "marn-veld": {
+      "scene": "res://world/interiors/chefs_house.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    },
+    "mera-voss": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "IronCompaniesBarracks",
+      "offset": [
+        -100.0,
+        70.0
+      ]
+    },
+    "nalla-gatebeat": {
+      "scene": "res://world/interiors/item_shop.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "nym-vara": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "FourArmsTavern",
+      "offset": [
+        -100.0,
+        70.0
+      ]
+    },
+    "orenna-caskbrand": {
+      "scene": "res://world/interiors/chefs_house.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "orm-redtongs": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "RiverShrine",
+      "offset": [
+        -100.0,
+        70.0
+      ]
+    },
+    "orren-chainwake": {
+      "scene": "res://world/interiors/registry_archive.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    },
+    "orrik-cinderjaw": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "TownHall",
+      "offset": [
+        100.0,
+        70.0
+      ]
+    },
+    "pell-hammersong": {
+      "scene": "res://world/interiors/bell_house.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "raika-toll": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "EquipmentShop",
+      "offset": [
+        -100.0,
+        70.0
+      ]
+    },
+    "ressa-ironmouth": {
+      "scene": "res://world/interiors/iron_companies.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "saela-windscar": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "TownHall",
+      "offset": [
+        0.0,
+        78.0
+      ]
+    },
+    "sava-mor": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "IronCompaniesBarracks",
+      "offset": [
+        100.0,
+        70.0
+      ]
+    },
+    "sella-varn": {
+      "scene": "res://world/interiors/trial_hall.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "senn-brinehook": {
+      "scene": "res://world/interiors/river_shrine.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "sorek-hushward": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "RegistryArchive",
+      "offset": [
+        0.0,
+        78.0
+      ]
+    },
+    "tern-hollowbeat": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "RiverShrine",
+      "offset": [
+        100.0,
+        70.0
+      ]
+    },
+    "themka-gaath": {
+      "scene": "res://world/interiors/trial_hall.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    },
+    "thessa-drumline": {
+      "scene": "res://world/interiors/chefs_house.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        64.0,
+        0.0
+      ]
+    },
+    "thora-bellmark": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "FourArmsTavern",
+      "offset": [
+        0.0,
+        78.0
+      ]
+    },
+    "toma-reedhand": {
+      "scene": "res://world/interiors/town_hall.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    },
+    "torv-bellowskin": {
+      "scene": "res://world/interiors/equipment_shop.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "umber-dhor": {
+      "scene": "res://world/interiors/item_shop.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    },
+    "vaara-cisternhand": {
+      "scene": "res://world/interiors/river_shrine.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "varrik-deepchalk": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "BellHouse",
+      "offset": [
+        -100.0,
+        70.0
+      ]
+    },
+    "venn-ashcord": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "EquipmentShop",
+      "offset": [
+        0.0,
+        78.0
+      ]
+    },
+    "veska-ruun": {
+      "scene": "res://world/interiors/registry_archive.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        -64.0,
+        0.0
+      ]
+    },
+    "veyra-sootlace": {
+      "scene": "res://world/interiors/players_house.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    },
+    "yara-chainstep": {
+      "scene": "res://world/starting_town.tscn",
+      "anchor": "RiverShrine",
+      "offset": [
+        0.0,
+        78.0
+      ]
+    },
+    "yssra-coldnet": {
+      "scene": "res://world/interiors/equipment_shop.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://dwiqjqb3gfa26"
+path="res://.godot/imported/dom_townsfolk.dialogue-21f0f45ea1f9a85b6abef455382b0bb2.tres"
+
+[deps]
+
+source_file="res://dialogue/dom_townsfolk.dialogue"
+dest_files=["res://.godot/imported/dom_townsfolk.dialogue-21f0f45ea1f9a85b6abef455382b0bb2.tres"]
+
+[params]
+
+defaults=true

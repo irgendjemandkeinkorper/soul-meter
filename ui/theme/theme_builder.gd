@@ -3,7 +3,7 @@ extends RefCounted
 ## Builds the runtime Theme from the DS tokens (ui/theme/ds.gd).
 ## Per the architecture guardrails: type variations, never per-node overrides.
 ## Variations provided: TitleLabel, HeadingLabel, EyebrowLabel, QuoteLabel, StatLabel,
-## MutedLabel, DangerButton, BronzeButton, and BattleHud layout variations.
+## MutedLabel, NPC portrait variations, DangerButton, BronzeButton, and BattleHud layouts.
 ## Panels use a project-owned notched nine-patch. Controls that do not need the silhouette
 ## use token-driven StyleBoxFlat treatments so the prototype remains easy to reskin.
 
@@ -29,6 +29,38 @@ static func build() -> Theme:
 	panel.texture_margin_bottom = 16.0
 	panel.set_content_margin_all(DS.PANEL_PAD)
 	t.set_stylebox("panel", "PanelContainer", panel)
+
+	# NPC placeholder portraits. The generated roster picks one of the ten
+	# Wheel-backed variants from the stable portrait id; controls only select a
+	# type variation and never carry task-local theme overrides.
+	t.add_type("NpcPortraitColumn")
+	t.set_type_variation("NpcPortraitColumn", "VBoxContainer")
+	t.set_constant("separation", "NpcPortraitColumn", DS.SPACE_2)
+	for index: int in DS.WHEEL.size():
+		var accent: Color = DS.WHEEL[index]["color"]
+		var frame_type := "NpcPortraitFrame%d" % index
+		t.add_type(frame_type)
+		t.set_type_variation(frame_type, "PanelContainer")
+		var portrait_frame := StyleBoxFlat.new()
+		portrait_frame.bg_color = DS.VOID_1
+		portrait_frame.border_color = accent
+		portrait_frame.set_border_width_all(DS.BORDER_TRIM_W)
+		portrait_frame.set_corner_radius_all(DS.RADIUS)
+		portrait_frame.set_content_margin_all(DS.SPACE_2)
+		t.set_stylebox("panel", frame_type, portrait_frame)
+
+		var monogram_type := "NpcPortraitMonogram%d" % index
+		t.add_type(monogram_type)
+		t.set_type_variation(monogram_type, "Label")
+		t.set_font("font", monogram_type, display)
+		t.set_font_size("font_size", monogram_type, DS.FS_700)
+		t.set_color("font_color", monogram_type, accent)
+
+	t.add_type("NpcPortraitMark")
+	t.set_type_variation("NpcPortraitMark", "Label")
+	t.set_font("font", "NpcPortraitMark", numeric)
+	t.set_font_size("font_size", "NpcPortraitMark", DS.FS_100)
+	t.set_color("font_color", "NpcPortraitMark", DS.ASH_DIM)
 
 	# Battle HUD layout — mirror-paired columns around a fixed centre axis.
 	t.add_type("BattleHudPanel")
