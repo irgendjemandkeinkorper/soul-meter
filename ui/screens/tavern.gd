@@ -2,6 +2,9 @@ extends Screen
 ## Vex is the fixed lead. The Four Arms supplies exactly two companions from a
 ## deliberately small prototype roster.
 
+const PartyMemberVisualsScript := preload(
+	"res://actors/party_followers/party_member_visuals.gd"
+)
 const MAX_COMPANIONS := 2
 
 var _checks: Array[CheckBox] = []
@@ -83,6 +86,15 @@ func _build_row(member: PartyMember) -> Control:
 	check.toggled.connect(_on_toggled.bind(check))
 	_checks.append(check)
 	row.add_child(check)
+
+	var portrait := TextureRect.new()
+	portrait.texture = PartyMemberVisualsScript.ensure_portrait(member)
+	portrait.custom_minimum_size = Vector2(56, 56)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(portrait)
 
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL

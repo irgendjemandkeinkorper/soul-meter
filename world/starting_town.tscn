@@ -1,4 +1,4 @@
-[gd_scene load_steps=43 format=3]
+[gd_scene load_steps=44 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -30,6 +30,7 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/grass_large.png" id="28_grass"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/plant_bushDetailed.png" id="29_bush"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/flower_yellowA.png" id="30_flower"]
+[ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1600, 40)
@@ -524,6 +525,8 @@ offset = Vector2(0, -82.596)
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(700, 700)
 camera_bounds = Rect2i(0, 0, 1600, 1000)
+
+[node name="PartyFollowers" parent="." instance=ExtResource("8_followers")]
 
 [node name="SpawnDefault" type="Marker2D" parent="."]
 position = Vector2(700, 700)
