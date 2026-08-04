@@ -4,6 +4,7 @@ extends Node
 
 signal saved
 signal loaded
+signal load_requested(destination: LoadDestination)
 signal save_failed(message: String)
 signal autosave_finished(reason: String, succeeded: bool)
 signal spawn_marker_diagnostic(severity: String, marker_name: String, scene_path: String)
@@ -148,14 +149,22 @@ func load_save() -> bool:
 	QuestRegistry.from_dict(payload.get("quests", {}))
 	ng_plus = NGPlus.normalize(payload.get("ng_plus", {}))
 	zhavar = payload.get("zhavar", {}).duplicate(true)
-	GameFlow._target_scene = str(payload.get("scene", GameFlow.TOWN_SCENE))
-	GameFlow._target_spawn_id = StringName(payload.get("spawn_id", "default"))
-	pending_player_position = payload.get("player_position", Vector2.ZERO)
-	has_pending_player_position = payload.has("player_position")
-	pending_spawn_id = GameFlow._target_spawn_id
+	var destination := _destination_from_payload(payload)
+	if destination == null:
+		_restore_runtime_state(
+			game_state_backup,
+			reputation_backup,
+			renown_backup,
+			quests_backup,
+			ng_plus_backup,
+			zhavar_backup
+		)
+		return _fail("The save destination is invalid.")
+	_set_pending_destination(destination)
 	_elapsed_before_load = int(payload.get("elapsed_seconds", 0))
 	_run_started_unix = int(Time.get_unix_time_from_system())
 	loaded.emit()
+	load_requested.emit(destination)
 	return true
 
 
@@ -198,10 +207,35 @@ func _prepare_for_load(payload: Variant) -> Dictionary:
 		return _load_failure("Save ng_plus data is corrupt.")
 	if migrated.has("id_schemas") and migrated["id_schemas"] != StableIds.schema_manifest():
 		return _load_failure("Save stable-ID schema manifest is incompatible.")
-	var scene := str(migrated.get("scene", ""))
-	if scene not in GameFlow.GAMEPLAY_SCENES:
+	if migrated.has("location_id"):
+		var location_id: Variant = migrated.get("location_id")
+		if not location_id is String or (location_id as String).length() > 64:
+			return _load_failure("Save location_id is corrupt.")
+	var destination := _destination_from_payload(migrated)
+	if destination == null:
 		return _load_failure("Save scene is not a gameplay scene.")
+	# Schema 5 originally persisted only scene paths. Canonicalize those payloads
+	# to the stable registry id without changing their schema version.
+	migrated["location_id"] = String(destination.location_id)
+	migrated["spawn_id"] = String(destination.spawn_id)
 	return {"ok": true, "payload": migrated, "error": ""}
+
+
+func _destination_from_payload(payload: Dictionary) -> LoadDestination:
+	var scene_path := str(payload.get("scene", ""))
+	var location_id := StringName(payload.get("location_id", ""))
+	var location := LocationRegistry.resolve(scene_path, location_id)
+	if location == null or not location.allowed_gameplay:
+		return null
+	var spawn_id := location.resolve_spawn(StringName(payload.get("spawn_id", "default")))
+	var position: Vector2 = payload.get("player_position", Vector2.ZERO)
+	return LoadDestination.new(location.id, spawn_id, position, payload.has("player_position"))
+
+
+func _set_pending_destination(destination: LoadDestination) -> void:
+	pending_spawn_id = destination.spawn_id
+	pending_player_position = destination.position
+	has_pending_player_position = destination.has_position
 
 
 func _load_failure(message: String) -> Dictionary:
@@ -274,13 +308,15 @@ func new_game() -> void:
 	QuestRegistry.reset()
 	ng_plus = NGPlus.default_block()
 	zhavar = {}
-	GameFlow._target_scene = GameFlow.TOWN_SCENE
-	GameFlow._target_spawn_id = &"new_game"
-	pending_spawn_id = &"new_game"
-	has_pending_player_position = false
+	var destination := LoadDestination.new(
+		LocationRegistry.DOM.id,
+		LocationRegistry.DOM.resolve_spawn(&"new_game")
+	)
+	_set_pending_destination(destination)
 	_elapsed_before_load = 0
 	_run_started_unix = int(Time.get_unix_time_from_system())
 	_pending_autosave_reason = CHECKPOINT_NAMES[Checkpoint.NEW_GAME]
+	load_requested.emit(destination)
 
 
 func apply_pending_location(scene: Node) -> void:
@@ -323,9 +359,9 @@ func _resolve_spawn_marker(scene: Node, marker_name: String) -> Marker2D:
 
 
 func _build_payload() -> Dictionary:
-	var tree := get_tree()
+	var tree := get_tree() if is_inside_tree() else null
 	var scene := tree.current_scene if tree else null
-	var scene_path: String = GameFlow.TOWN_SCENE
+	var location: LocationDefinition = LocationRegistry.DOM
 	var payload := {
 		"version": FORMAT_VERSION,
 		"schema_version": SCHEMA_VERSION,
@@ -338,14 +374,17 @@ func _build_payload() -> Dictionary:
 		"zhavar": zhavar.duplicate(true),
 		"ng_plus": NGPlus.normalize(ng_plus),
 		"elapsed_seconds": elapsed_seconds(),
-		"spawn_id": String(GameFlow._target_spawn_id),
+		"spawn_id": String(pending_spawn_id),
 	}
-	if scene and scene.scene_file_path in GameFlow.GAMEPLAY_SCENES:
-		scene_path = scene.scene_file_path
-		var player := scene.find_child("Player", true, false) as Node2D
-		if player:
-			payload["player_position"] = player.global_position
-	payload["scene"] = scene_path
+	if scene:
+		var current_location := LocationRegistry.by_scene(scene.scene_file_path)
+		if current_location != null and current_location.allowed_gameplay:
+			location = current_location
+			var player := scene.find_child("Player", true, false) as Node2D
+			if player:
+				payload["player_position"] = player.global_position
+	payload["location_id"] = String(location.id)
+	payload["scene"] = location.scene_path
 	return payload
 
 
@@ -389,7 +428,7 @@ func _in_gameplay_scene() -> bool:
 	if not is_inside_tree():
 		return false
 	var scene := get_tree().current_scene
-	return scene != null and scene.scene_file_path in GameFlow.GAMEPLAY_SCENES
+	return scene != null and LocationRegistry.is_gameplay_scene(scene.scene_file_path)
 
 
 func _pascal_case(value: String) -> String:

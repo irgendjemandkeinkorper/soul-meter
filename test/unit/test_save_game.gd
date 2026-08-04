@@ -1,6 +1,8 @@
 extends GdUnitTestSuite
 
 const SaveGameScript := preload("res://globals/save_game.gd")
+const SAVE_GAME_SOURCE_PATH := "res://globals/save_game.gd"
+const SCHEMA_FIVE_FIXTURE_PATH := "res://test/fixtures/save_game_schema_5.json"
 var saves
 var test_save_paths: Array[String] = []
 var diagnostics: Array[Dictionary] = []
@@ -67,10 +69,48 @@ func test_validation_rejects_unknown_versions_and_partial_payloads() -> void:
 func test_current_envelope_has_schema_manifest_and_ng_plus_defaults() -> void:
 	var payload: Dictionary = saves._build_payload()
 	assert_int(payload["schema_version"]).is_equal(SaveGameScript.SCHEMA_VERSION)
+	assert_str(payload["location_id"]).is_equal("dom")
 	assert_bool(payload.has("id_schemas")).is_true()
 	assert_int(payload["ng_plus"]["style_points"]).is_equal(0)
 	assert_array(payload["ng_plus"]["purchased_carry_overs"]).is_empty()
 	assert_bool(payload["zhavar"] is Dictionary).is_true()
+
+
+func test_save_game_does_not_access_private_game_flow_members() -> void:
+	var source_file := FileAccess.open(SAVE_GAME_SOURCE_PATH, FileAccess.READ)
+	assert_object(source_file).is_not_null()
+	var source := source_file.get_as_text()
+	source_file.close()
+	assert_str(source).not_contains("GameFlow._")
+
+
+func test_schema_five_scene_path_fixture_round_trips_with_stable_location_id() -> void:
+	var fixture_file := FileAccess.open(SCHEMA_FIVE_FIXTURE_PATH, FileAccess.READ)
+	assert_object(fixture_file).is_not_null()
+	var fixture: Variant = JSON.parse_string(fixture_file.get_as_text())
+	fixture_file.close()
+	assert_bool(fixture is Dictionary).is_true()
+	# JSON represents every number as a float; restore the integer fields used
+	# by the binary save envelope before exercising the compatibility adapter.
+	fixture["version"] = int(fixture["version"])
+	fixture["schema_version"] = int(fixture["schema_version"])
+	fixture["elapsed_seconds"] = int(fixture["elapsed_seconds"])
+	fixture["ng_plus"]["style_points"] = int(fixture["ng_plus"]["style_points"])
+
+	var prepared: Dictionary = saves._prepare_for_load(fixture)
+	assert_bool(prepared["ok"]).is_true()
+	assert_int(prepared["payload"]["schema_version"]).is_equal(5)
+	assert_str(prepared["payload"]["location_id"]).is_equal("wilds")
+
+	var round_trip_file := FileAccess.open(saves.save_path, FileAccess.WRITE)
+	assert_object(round_trip_file).is_not_null()
+	round_trip_file.store_var(prepared["payload"])
+	round_trip_file.close()
+	var round_trip: Dictionary = saves._prepare_for_load(saves._read_payload(saves.save_path))
+	assert_bool(round_trip["ok"]).is_true()
+	assert_str(round_trip["payload"]["location_id"]).is_equal("wilds")
+	assert_str(round_trip["payload"]["scene"]).is_equal("res://world/test_room.tscn")
+	assert_str(round_trip["payload"]["spawn_id"]).is_equal("from_dom")
 
 
 func test_legacy_schema_migrates_without_losing_existing_values() -> void:

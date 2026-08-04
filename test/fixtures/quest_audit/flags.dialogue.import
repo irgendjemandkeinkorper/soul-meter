@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://cu6jdk353uprh"
+path="res://.godot/imported/flags.dialogue-7fa6877766287227cc75abb0a2247d45.tres"
+
+[deps]
+
+source_file="res://test/fixtures/quest_audit/flags.dialogue"
+dest_files=["res://.godot/imported/flags.dialogue-7fa6877766287227cc75abb0a2247d45.tres"]
+
+[params]
+
+defaults=true
