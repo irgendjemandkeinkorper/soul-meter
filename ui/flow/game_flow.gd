@@ -55,6 +55,8 @@ func _ready() -> void:
 		return
 	SceneLoader.set_loading_screen(LOADING_SCREEN)
 	SceneLoader.scene_loaded.connect(_on_scene_loaded)
+	if not SaveGame.load_requested.is_connected(load_destination):
+		SaveGame.load_requested.connect(load_destination)
 	# Mirror derived standings into chart expression properties so transition
 	# GUARDS (not if-blocks) can read them: e.g. expression `rep_mirror_choir >= 15`.
 	Reputation.reputation_changed.connect(
@@ -88,10 +90,21 @@ func travel(scene_path: String, spawn_id: StringName = &"default") -> void:
 	if location == null or not location.allowed_gameplay:
 		push_error("Refusing travel to non-gameplay scene: %s" % scene_path)
 		return
-	_target_scene = location.scene_path
-	_target_spawn_id = location.resolve_spawn(spawn_id)
-	SaveGame.pending_spawn_id = _target_spawn_id
+	var destination := LoadDestination.new(location.id, location.resolve_spawn(spawn_id))
+	SaveGame.pending_spawn_id = destination.spawn_id
 	SaveGame.has_pending_player_position = false
+	load_destination(destination)
+
+
+## Resolves a stable destination into GameFlow-owned scene state and asks the
+## chart to enter its existing loading transition.
+func load_destination(destination: LoadDestination) -> void:
+	var location := LocationRegistry.by_id(destination.location_id)
+	if location == null or not location.allowed_gameplay:
+		push_error("Refusing load of unknown gameplay location: %s" % destination.location_id)
+		return
+	_target_scene = location.scene_path
+	_target_spawn_id = location.resolve_spawn(destination.spawn_id)
 	send_event("travel")
 
 

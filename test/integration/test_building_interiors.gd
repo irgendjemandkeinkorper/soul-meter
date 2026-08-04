@@ -271,6 +271,10 @@ func test_save_load_inside_an_interior_restores_scene_and_player_position() -> v
 	var saves = auto_free(SaveGameScript.new())
 	add_child(saves)
 	_configure_test_paths(saves)
+	# SaveGame no longer writes GameFlow's private target state; it emits a
+	# LoadDestination that GameFlow resolves. The autoload wires this in _ready(),
+	# so a detached instance must mirror that wiring to exercise the same path.
+	saves.load_requested.connect(GameFlow.load_destination)
 	assert_bool(saves.save()).is_true()
 	GameFlow._target_scene = GameFlow.TOWN_SCENE
 	GameFlow._target_spawn_id = &"default"

@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "schema_version": 5,
+  "scene": "res://world/test_room.tscn",
+  "spawn_id": "from_dom",
+  "elapsed_seconds": 127,
+  "game_state": {},
+  "reputation": {},
+  "renown": {},
+  "quests": {},
+  "zhavar": {},
+  "ng_plus": {
+    "style_points": 0,
+    "purchased_carry_overs": [],
+    "completion_metadata": {}
+  }
+}
