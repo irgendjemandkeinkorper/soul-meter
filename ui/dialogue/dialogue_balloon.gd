@@ -13,6 +13,7 @@ extends CanvasLayer
 
 const DialogueChoiceScript := preload("res://ui/dialogue/dialogue_choice.gd")
 const PortraitScript := preload("res://ui/dialogue/portrait.gd")
+const NpcRosterScript := preload("res://globals/npc_roster.gd")
 const SOUL_GAUGE := preload("res://ui/hud/soul_gauge.tscn")
 
 ## Speaker registry: dialogue `character` name -> portrait config.
@@ -69,10 +70,20 @@ func _next(id: String, extra_states: Array = []) -> void:
 func _apply_line() -> void:
 	# speaker
 	var who := dialogue_line.character
+	var roster_row := NpcRosterScript.by_display_name(who)
 	var cfg: Dictionary = SPEAKERS.get(who, {})
+	if not roster_row.is_empty():
+		var portrait: Dictionary = roster_row.get("portrait", {})
+		cfg = {
+			"subtitle": roster_row.get("role", ""),
+			"portrait_id": portrait.get("id", roster_row.get("id", "")),
+			"portrait_path": portrait.get("asset_path", ""),
+		}
 	_portrait.character_name = who
 	_portrait.subtitle = cfg.get("subtitle", "")
 	_portrait.element = cfg.get("element", "")
+	_portrait.portrait_id = cfg.get("portrait_id", "")
+	_portrait.portrait_path = cfg.get("portrait_path", "")
 
 	# the spoken line (Cormorant body at fs-500)
 	_line_label.text = dialogue_line.text

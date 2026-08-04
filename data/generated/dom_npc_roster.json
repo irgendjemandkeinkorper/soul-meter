@@ -1,0 +1,3016 @@
+{
+  "town_id": "dom",
+  "dialogue_path": "res://dialogue/dom_townsfolk.dialogue",
+  "npcs": {
+    "aela-quietforge": {
+      "id": "aela-quietforge",
+      "stable_id": {
+        "kind": "actor",
+        "id": "aela-quietforge"
+      },
+      "display_name": "Aela Quietforge",
+      "role": "Household tool-mender",
+      "home": "Player's House",
+      "district": "East Arm",
+      "faction_id": "shattersteel-concord",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "aela-quietforge",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "AQ",
+        "mark": "061E",
+        "palette_index": 6
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_aela_quietforge",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_aela_quietforge"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Aela works only hand tools at home, quiet enough that the East Arm hammers remain the loudest truth.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "WoundLip",
+        "offset": [
+          100.0,
+          90.0
+        ]
+      }
+    },
+    "arvek-stormcup": {
+      "id": "arvek-stormcup",
+      "stable_id": {
+        "kind": "actor",
+        "id": "arvek-stormcup"
+      },
+      "display_name": "Arvek Stormcup",
+      "role": "Storm-water cooper",
+      "home": "Lower Market",
+      "district": "West Arm",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/arvek-stormcup/information",
+          "state_source": "QuestRegistry",
+          "summary": "Identifies the source warehouse for tampered cooling water.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/arvek-stormcup/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "arvek-stormcup",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "AS",
+        "mark": "83F4",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_arvek_stormcup",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_arvek_stormcup"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Arvek recognizes the cooper's mark that was burned off Keth Varr's suspect casks.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "TrialHall",
+        "offset": [
+          -100.0,
+          70.0
+        ]
+      }
+    },
+    "branek-coiljaw": {
+      "id": "branek-coiljaw",
+      "stable_id": {
+        "kind": "actor",
+        "id": "branek-coiljaw"
+      },
+      "display_name": "Marshal Coiljaw",
+      "role": "East Arm bench-holder and road marshal",
+      "home": "Trial Hall",
+      "district": "East Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/branek-coiljaw/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Commissions a witness to audit the broken Dorthkor muster.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/branek-coiljaw/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "branek-coiljaw",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "MC",
+        "mark": "61AE",
+        "palette_index": 2
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_branek_coiljaw",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_branek_coiljaw"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "The Road-Bench keeps Dorthkor's broken drumbeat beside every open commission.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/interiors/trial_hall.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "brannic-lowdrum": {
+      "id": "brannic-lowdrum",
+      "stable_id": {
+        "kind": "actor",
+        "id": "brannic-lowdrum"
+      },
+      "display_name": "Brannic Lowdrum",
+      "role": "Tavern drummer",
+      "home": "Four Arms Tavern",
+      "district": "South Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "brannic-lowdrum",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "BL",
+        "mark": "1CFD",
+        "palette_index": 1
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_brannic_lowdrum",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_brannic_lowdrum"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "Brannic plays beneath the Hammer Roar by feeling the mugs walk across the table.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "TownHall",
+        "offset": [
+          -100.0,
+          70.0
+        ]
+      }
+    },
+    "brek-saltjaw": {
+      "id": "brek-saltjaw",
+      "stable_id": {
+        "kind": "actor",
+        "id": "brek-saltjaw"
+      },
+      "display_name": "Brek Saltjaw",
+      "role": "Sea-mouth chain hand",
+      "home": "Drownedmouth Chainhouse",
+      "district": "West Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/brek-saltjaw/target",
+          "state_source": "QuestRegistry",
+          "summary": "Is the missing chain hand named in the harbor watch report.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/brek-saltjaw/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "brek-saltjaw",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "BS",
+        "mark": "256E",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_brek_saltjaw",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_brek_saltjaw"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Brek did not report after the outer harbor chain tightened itself during the night watch.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/interiors/equipment_shop.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "brinna-fourbells": {
+      "id": "brinna-fourbells",
+      "stable_id": {
+        "kind": "actor",
+        "id": "brinna-fourbells"
+      },
+      "display_name": "Brinna Fourbells",
+      "role": "Crossing census keeper",
+      "home": "Town Hall",
+      "district": "North Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/brinna-fourbells/information",
+          "state_source": "QuestRegistry",
+          "summary": "Provides the missing name from the Crossing census.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/brinna-fourbells/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "brinna-fourbells",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "BF",
+        "mark": "CD65",
+        "palette_index": 2
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_brinna_fourbells",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_brinna_fourbells"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Brinna's midwinter census contains one crossed-out name that still answers at each gate.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "RegistryArchive",
+        "offset": [
+          -100.0,
+          70.0
+        ]
+      }
+    },
+    "daska-threeknots": {
+      "id": "daska-threeknots",
+      "stable_id": {
+        "kind": "actor",
+        "id": "daska-threeknots"
+      },
+      "display_name": "Daska Threeknots",
+      "role": "Deep Salvage broker",
+      "home": "Howlpath Lodging",
+      "district": "North Arm",
+      "faction_id": "kord-rite",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/daska-threeknots/target",
+          "state_source": "QuestRegistry",
+          "summary": "Must be confronted about a suit taken from a forbidden ledge.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/daska-threeknots/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "daska-threeknots",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "DT",
+        "mark": "4670",
+        "palette_index": 1
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_daska_threeknots",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_daska_threeknots"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Daska prices cleaned armor by the grief of the family asking and calls that brutal honesty.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/interiors/iron_companies.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "dorran-rask": {
+      "id": "dorran-rask",
+      "stable_id": {
+        "kind": "actor",
+        "id": "dorran-rask"
+      },
+      "display_name": "Dorran Rask",
+      "role": "Road cobbler",
+      "home": "North Arm Gatehouse",
+      "district": "North Arm",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "dorran-rask",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "DR",
+        "mark": "76E3",
+        "palette_index": 7
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_dorran_rask",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_dorran_rask"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Dorran soles road boots differently for the Trial Roads, where every climb leans the same way.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "WoundLip",
+        "offset": [
+          -100.0,
+          90.0
+        ]
+      }
+    },
+    "drann-wetiron": {
+      "id": "drann-wetiron",
+      "stable_id": {
+        "kind": "actor",
+        "id": "drann-wetiron"
+      },
+      "display_name": "Drann Wetiron",
+      "role": "Shattersteel smith",
+      "home": "Equipment Shop",
+      "district": "East Arm",
+      "faction_id": "shattersteel-concord",
+      "quest_hooks": [
+        {
+          "band": "warm",
+          "faction_id": "shattersteel-concord",
+          "involvement": "reputation_reaction",
+          "quest_id": "dom/drann-wetiron/reputation-reaction",
+          "state_source": "Reputation.band",
+          "summary": "Offers forge access at a warm Shattersteel Concord reputation band.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/drann-wetiron/reputation-reaction"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "drann-wetiron",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "DW",
+        "mark": "B265",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_drann_wetiron",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_drann_wetiron"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Drann reserves the honest forge for names the Concord already speaks warmly.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "LowerMarket",
+        "offset": [
+          -100.0,
+          70.0
+        ]
+      }
+    },
+    "drel-gaunt": {
+      "id": "drel-gaunt",
+      "stable_id": {
+        "kind": "actor",
+        "id": "drel-gaunt"
+      },
+      "display_name": "Drel Gaunt",
+      "role": "Gauntlet scorekeeper",
+      "home": "Trial Hall",
+      "district": "South Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/drel-gaunt/information",
+          "state_source": "QuestRegistry",
+          "summary": "Supplies the official score from the broken-yield duel.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/drel-gaunt/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "drel-gaunt",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "DG",
+        "mark": "8F8E",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_drel_gaunt",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_drel_gaunt"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "Drel's slate proves the yielded duelist was struck three times after the surrender beat.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/interiors/players_house.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "droma-flintjaw": {
+      "id": "droma-flintjaw",
+      "stable_id": {
+        "kind": "actor",
+        "id": "droma-flintjaw"
+      },
+      "display_name": "Droma Flintjaw",
+      "role": "Wound-Watch quartermaster",
+      "home": "Town Hall",
+      "district": "Jawbrace",
+      "faction_id": "ironbrand-sentinels",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/droma-flintjaw/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Seeks proof of how a living guard's tag reached cleaned armor.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/droma-flintjaw/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "droma-flintjaw",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "DF",
+        "mark": "4811",
+        "palette_index": 4
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_droma_flintjaw",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_droma_flintjaw"
+        },
+        "greeting": "Hold at the brace and state your business.",
+        "context": "Droma's armor tags include one clean plate whose owner still answers morning roll.",
+        "farewell": "Cross unarmed or do not cross."
+      },
+      "placement": {
+        "scene": "res://world/interiors/town_hall.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "edda-broadmark": {
+      "id": "edda-broadmark",
+      "stable_id": {
+        "kind": "actor",
+        "id": "edda-broadmark"
+      },
+      "display_name": "Edda Broadmark",
+      "role": "Company recruiter",
+      "home": "Iron Companies Barracks",
+      "district": "South Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [
+        {
+          "band": "warm",
+          "faction_id": "iron-companies",
+          "involvement": "reputation_reaction",
+          "quest_id": "dom/edda-broadmark/reputation-reaction",
+          "state_source": "Reputation.band",
+          "summary": "Offers a veteran escort at a warm Iron Companies reputation band.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/edda-broadmark/reputation-reaction"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "edda-broadmark",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "EB",
+        "mark": "A701",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_edda_broadmark",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_edda_broadmark"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "Edda reads the Company's standing before she reads a volunteer's scars.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "LowerMarket",
+        "offset": [
+          0.0,
+          78.0
+        ]
+      }
+    },
+    "enna-grayscar": {
+      "id": "enna-grayscar",
+      "stable_id": {
+        "kind": "actor",
+        "id": "enna-grayscar"
+      },
+      "display_name": "Enna Grayscar",
+      "role": "Archive seal clerk",
+      "home": "Registry Archive",
+      "district": "North Arm",
+      "faction_id": "rennen",
+      "quest_hooks": [
+        {
+          "involvement": "gate",
+          "quest_id": "dom/enna-grayscar/gate",
+          "state_source": "GameState",
+          "summary": "Gates access to the sealed road archive behind verified watch proof.",
+          "world_fact_id": "dom/enna-grayscar/gate-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/enna-grayscar/gate-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/enna-grayscar/gate"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "enna-grayscar",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "EG",
+        "mark": "D045",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_enna_grayscar",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_enna_grayscar"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Enna opens sealed road records only for someone carrying proof from the matching watch.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "RegistryArchive",
+        "offset": [
+          100.0,
+          70.0
+        ]
+      }
+    },
+    "gerren-pike": {
+      "id": "gerren-pike",
+      "stable_id": {
+        "kind": "actor",
+        "id": "gerren-pike"
+      },
+      "display_name": "Gerren Pike",
+      "role": "Company pike polisher",
+      "home": "Iron Companies Barracks",
+      "district": "East Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "gerren-pike",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "GP",
+        "mark": "F9EA",
+        "palette_index": 4
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_gerren_pike",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_gerren_pike"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Gerren judges a pike by whether the bearer can see their scar in its edge.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "FourArmsTavern",
+        "offset": [
+          100.0,
+          70.0
+        ]
+      }
+    },
+    "hadrik-vale": {
+      "id": "hadrik-vale",
+      "stable_id": {
+        "kind": "actor",
+        "id": "hadrik-vale"
+      },
+      "display_name": "Hadrik Vale",
+      "role": "Archive clerk",
+      "home": "Registry Archive",
+      "district": "North Arm",
+      "faction_id": "rennen",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/hadrik-vale/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Requests recovery of a storm-damaged road register.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/hadrik-vale/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "hadrik-vale",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "HV",
+        "mark": "2546",
+        "palette_index": 1
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_hadrik_vale",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_hadrik_vale"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Hadrik can account for every road ledger except the one that returned with rain inside its seals.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/interiors/town_hall.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "hennik-coalvein": {
+      "id": "hennik-coalvein",
+      "stable_id": {
+        "kind": "actor",
+        "id": "hennik-coalvein"
+      },
+      "display_name": "Hennik Coalvein",
+      "role": "Chasm-wall miner",
+      "home": "East Arm Scarred Hall",
+      "district": "East Arm",
+      "faction_id": "shattersteel-concord",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/hennik-coalvein/target",
+          "state_source": "QuestRegistry",
+          "summary": "Is the missing miner sought by the lift crew.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/hennik-coalvein/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "hennik-coalvein",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "HC",
+        "mark": "C300",
+        "palette_index": 0
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_hennik_coalvein",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_hennik_coalvein"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Hennik missed shift after chalking a name that no foreman remembers onto the lift cage.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/interiors/iron_companies.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "holst-brinevein": {
+      "id": "holst-brinevein",
+      "stable_id": {
+        "kind": "actor",
+        "id": "holst-brinevein"
+      },
+      "display_name": "Holst Brinevein",
+      "role": "Harbor pilot",
+      "home": "Pilot Lodge",
+      "district": "West Arm",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [
+        {
+          "band": "warm",
+          "faction_id": "wayfare-menders",
+          "involvement": "reputation_reaction",
+          "quest_id": "dom/holst-brinevein/reputation-reaction",
+          "state_source": "Reputation.band",
+          "summary": "Shares a safe sea-mouth route at a warm Wayfare-Mender reputation band.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/holst-brinevein/reputation-reaction"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "holst-brinevein",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "HB",
+        "mark": "6257",
+        "palette_index": 4
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_holst_brinevein",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_holst_brinevein"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Holst saves his storm-proof route for travelers the Mender lodges trust.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "LowerMarket",
+        "offset": [
+          100.0,
+          70.0
+        ]
+      }
+    },
+    "irka-stonebreath": {
+      "id": "irka-stonebreath",
+      "stable_id": {
+        "kind": "actor",
+        "id": "irka-stonebreath"
+      },
+      "display_name": "Irka Stonebreath",
+      "role": "Hospice scar keeper",
+      "home": "River Shrine Hospice",
+      "district": "West Arm",
+      "faction_id": "hospice-chain",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/irka-stonebreath/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Seeks the hall that abandoned an unidentified trial-broken veteran.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/irka-stonebreath/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "irka-stonebreath",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "IS",
+        "mark": "24B1",
+        "palette_index": 0
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_irka_stonebreath",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_irka_stonebreath"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Irka keeps the trial-broken names and has one patient no hall admits sending.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/interiors/bell_house.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "istra-hearthscar": {
+      "id": "istra-hearthscar",
+      "stable_id": {
+        "kind": "actor",
+        "id": "istra-hearthscar"
+      },
+      "display_name": "Istra Hearthscar",
+      "role": "Scarred Hall matron",
+      "home": "Iron Companies Barracks",
+      "district": "East Arm",
+      "faction_id": "hospice-chain",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/istra-hearthscar/information",
+          "state_source": "QuestRegistry",
+          "summary": "Names the veteran connected to a cold place at the charfire table.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/istra-hearthscar/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "istra-hearthscar",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "IH",
+        "mark": "AC42",
+        "palette_index": 4
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_istra_hearthscar",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_istra_hearthscar"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Istra remembers which missing veteran stopped eating when the Wound began using Company voices.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "TrialHall",
+        "offset": [
+          0.0,
+          78.0
+        ]
+      }
+    },
+    "jessa-longbrace": {
+      "id": "jessa-longbrace",
+      "stable_id": {
+        "kind": "actor",
+        "id": "jessa-longbrace"
+      },
+      "display_name": "Jessa Longbrace",
+      "role": "Bridge rope-splicer",
+      "home": "Jawbrace Watchroom",
+      "district": "North Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "jessa-longbrace",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "JL",
+        "mark": "68D7",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_jessa_longbrace",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_jessa_longbrace"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Jessa splices every brace rope with four turns and cuts any sailor who adds a fifth.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "EquipmentShop",
+        "offset": [
+          100.0,
+          70.0
+        ]
+      }
+    },
+    "jorun-ashmantle": {
+      "id": "jorun-ashmantle",
+      "stable_id": {
+        "kind": "actor",
+        "id": "jorun-ashmantle"
+      },
+      "display_name": "Jorun Ashmantle",
+      "role": "Charfire hall steward",
+      "home": "Chef's House",
+      "district": "East Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/jorun-ashmantle/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Asks someone to find a missing Company veteran without shaming them.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/jorun-ashmantle/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "jorun-ashmantle",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "JA",
+        "mark": "E44A",
+        "palette_index": 3
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_jorun_ashmantle",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_jorun_ashmantle"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Jorun keeps the charfire table open, but one veteran's bowl has gone cold for six nights.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/interiors/river_shrine.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "kadrin-stoneyield": {
+      "id": "kadrin-stoneyield",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kadrin-stoneyield"
+      },
+      "display_name": "Kadrin Stoneyield",
+      "role": "Trial Pillar porter",
+      "home": "Trial Hall",
+      "district": "South Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "state_change",
+          "quest_id": "dom/kadrin-stoneyield/state-change",
+          "state_source": "GameState",
+          "summary": "Removes the Pillar barricade after its burden pins are repaired.",
+          "world_fact_id": "dom/kadrin-stoneyield/state-change-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/kadrin-stoneyield/state-change-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/kadrin-stoneyield/state-change"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "kadrin-stoneyield",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "KS",
+        "mark": "B085",
+        "palette_index": 3
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_kadrin_stoneyield",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_kadrin_stoneyield"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "Kadrin keeps the damaged ascent roped off and counts every candidate turned away.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "IronCompaniesBarracks",
+        "offset": [
+          0.0,
+          78.0
+        ]
+      }
+    },
+    "kaelra-pikehand": {
+      "id": "kaelra-pikehand",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kaelra-pikehand"
+      },
+      "display_name": "Kaelra Pikehand",
+      "role": "Three-legged war-dog trainer",
+      "home": "Iron Companies Barracks",
+      "district": "South Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/kaelra-pikehand/target",
+          "state_source": "QuestRegistry",
+          "summary": "Holds the hound needed to follow an absent Company soldier.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/kaelra-pikehand/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "kaelra-pikehand",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "KP",
+        "mark": "C7BC",
+        "palette_index": 4
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_kaelra_pikehand",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_kaelra_pikehand"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "Kaelra's oldest hound tracks one absent Bloodbellow and refuses every other scent.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/interiors/item_shop.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "kelm-rook": {
+      "id": "kelm-rook",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kelm-rook"
+      },
+      "display_name": "Kelm Rook",
+      "role": "Company contract reader",
+      "home": "Iron Companies Barracks",
+      "district": "East Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/kelm-rook/information",
+          "state_source": "QuestRegistry",
+          "summary": "Explains the hidden condition in a Restoration contract.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/kelm-rook/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "kelm-rook",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "KR",
+        "mark": "DAC7",
+        "palette_index": 4
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_kelm_rook",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_kelm_rook"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Kelm found a Restoration clause that hires a Company by the dead names on its old roll.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "TrialHall",
+        "offset": [
+          100.0,
+          70.0
+        ]
+      }
+    },
+    "kessa-nightrail": {
+      "id": "kessa-nightrail",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kessa-nightrail"
+      },
+      "display_name": "Kessa Nightrail",
+      "role": "North-road sentry",
+      "home": "North Arm Gatehouse",
+      "district": "North Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [
+        {
+          "involvement": "gate",
+          "quest_id": "dom/kessa-nightrail/gate",
+          "state_source": "GameState",
+          "summary": "Gates the night road behind matching warning and Council clearance.",
+          "world_fact_id": "dom/kessa-nightrail/gate-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/kessa-nightrail/gate-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/kessa-nightrail/gate"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "kessa-nightrail",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "KN",
+        "mark": "C0D6",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_kessa_nightrail",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_kessa_nightrail"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Kessa opens the night road only when the Dorthkor warning and the Council seal agree.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "BellHouse",
+        "offset": [
+          100.0,
+          70.0
+        ]
+      }
+    },
+    "keth-varr": {
+      "id": "keth-varr",
+      "stable_id": {
+        "kind": "actor",
+        "id": "keth-varr"
+      },
+      "display_name": "Keth Varr",
+      "role": "Shattersteel assay clerk",
+      "home": "Equipment Shop",
+      "district": "East Arm",
+      "faction_id": "shattersteel-concord",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/keth-varr/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Requests samples from a suspect storm-water delivery.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/keth-varr/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "keth-varr",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "KV",
+        "mark": "817A",
+        "palette_index": 9
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_keth_varr",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_keth_varr"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Keth says the newest cooling-water seals are honest bronze wrapped around dishonest water.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/interiors/bell_house.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "kiva-saltbrand": {
+      "id": "kiva-saltbrand",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kiva-saltbrand"
+      },
+      "display_name": "Kiva Saltbrand",
+      "role": "Harbor salt seller",
+      "home": "Drownedmouth Berthhouse",
+      "district": "West Arm",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "kiva-saltbrand",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "KS",
+        "mark": "8A42",
+        "palette_index": 2
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_kiva_saltbrand",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_kiva_saltbrand"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Kiva keeps storm salt dry in retired drumskins and labels every skin by cadence.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "NorthRoad",
+        "offset": [
+          -90.0,
+          90.0
+        ]
+      }
+    },
+    "korrin-blackrail": {
+      "id": "korrin-blackrail",
+      "stable_id": {
+        "kind": "actor",
+        "id": "korrin-blackrail"
+      },
+      "display_name": "Korrin Blackrail",
+      "role": "Jawbrace rail inspector",
+      "home": "Jawbrace Watchroom",
+      "district": "North Arm",
+      "faction_id": "ironbrand-sentinels",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/korrin-blackrail/information",
+          "state_source": "QuestRegistry",
+          "summary": "Provides the guard's original posture and direction.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/korrin-blackrail/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "korrin-blackrail",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "KB",
+        "mark": "160C",
+        "palette_index": 0
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_korrin_blackrail",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_korrin_blackrail"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Korrin saw the cleaned guard face outward before the first gate opened.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/interiors/players_house.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "loa-flintthread": {
+      "id": "loa-flintthread",
+      "stable_id": {
+        "kind": "actor",
+        "id": "loa-flintthread"
+      },
+      "display_name": "Loa Flintthread",
+      "role": "Hospice intake keeper",
+      "home": "River Shrine Hospice",
+      "district": "West Arm",
+      "faction_id": "hospice-chain",
+      "quest_hooks": [
+        {
+          "involvement": "gate",
+          "quest_id": "dom/loa-flintthread/gate",
+          "state_source": "GameState",
+          "summary": "Gates access to an unidentified hospice patient behind a hall token.",
+          "world_fact_id": "dom/loa-flintthread/gate-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/loa-flintthread/gate-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/loa-flintthread/gate"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "loa-flintthread",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "LF",
+        "mark": "2364",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_loa_flintthread",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_loa_flintthread"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Loa keeps patient names private until a scarred-hall token proves honest concern.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "BellHouse",
+        "offset": [
+          0.0,
+          78.0
+        ]
+      }
+    },
+    "maela-drumscar": {
+      "id": "maela-drumscar",
+      "stable_id": {
+        "kind": "actor",
+        "id": "maela-drumscar"
+      },
+      "display_name": "Maela Drumscar",
+      "role": "Company muster drummer",
+      "home": "Iron Companies Barracks",
+      "district": "East Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/maela-drumscar/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Asks the player to compare an impossible cadence against old muster notation.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/maela-drumscar/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "maela-drumscar",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "MD",
+        "mark": "E803",
+        "palette_index": 9
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_maela_drumscar",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_maela_drumscar"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Maela heard a dead Company's cadence answer between two beats of the spring muster.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/interiors/registry_archive.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "marn-veld": {
+      "id": "marn-veld",
+      "stable_id": {
+        "kind": "actor",
+        "id": "marn-veld"
+      },
+      "display_name": "Marn Veld",
+      "role": "Council runner",
+      "home": "Town Hall",
+      "district": "North Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/marn-veld/information",
+          "state_source": "QuestRegistry",
+          "summary": "Provides required information about a compromised Council message.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/marn-veld/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "marn-veld",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "MV",
+        "mark": "982A",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_marn_veld",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_marn_veld"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Marn carried the sealed vote between the four benches and knows which seal arrived warm.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/interiors/chefs_house.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "mera-voss": {
+      "id": "mera-voss",
+      "stable_id": {
+        "kind": "actor",
+        "id": "mera-voss"
+      },
+      "display_name": "Mera Voss",
+      "role": "Hospice cook",
+      "home": "Chef's House",
+      "district": "West Arm",
+      "faction_id": "hospice-chain",
+      "quest_hooks": [
+        {
+          "involvement": "state_change",
+          "quest_id": "dom/mera-voss/state-change",
+          "state_source": "GameState",
+          "summary": "Reopens the hospice charfire table after the medicine delivery.",
+          "world_fact_id": "dom/mera-voss/state-change-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/mera-voss/state-change-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/mera-voss/state-change"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "mera-voss",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "MV",
+        "mark": "8441",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_mera_voss",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_mera_voss"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Mera has banked the charfire until medicine reaches the trial-broken ward.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "IronCompaniesBarracks",
+        "offset": [
+          -100.0,
+          70.0
+        ]
+      }
+    },
+    "nalla-gatebeat": {
+      "id": "nalla-gatebeat",
+      "stable_id": {
+        "kind": "actor",
+        "id": "nalla-gatebeat"
+      },
+      "display_name": "Nalla Gatebeat",
+      "role": "Jawbrace signaler",
+      "home": "Jawbrace Watchroom",
+      "district": "North Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/nalla-gatebeat/target",
+          "state_source": "QuestRegistry",
+          "summary": "Is the signaler who can reproduce the unknown gate reply.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/nalla-gatebeat/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "nalla-gatebeat",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "NG",
+        "mark": "EDC9",
+        "palette_index": 9
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_nalla_gatebeat",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_nalla_gatebeat"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Nalla stopped the third gate's drum after it answered with a signal no living watch uses.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/interiors/item_shop.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "nym-vara": {
+      "id": "nym-vara",
+      "stable_id": {
+        "kind": "actor",
+        "id": "nym-vara"
+      },
+      "display_name": "Nym Vara",
+      "role": "Storm-cup seller",
+      "home": "Lower Market",
+      "district": "West Arm",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "nym-vara",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "NV",
+        "mark": "701B",
+        "palette_index": 6
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_nym_vara",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_nym_vara"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Nym sells cups broad enough to catch rain and narrow enough not to lose it to the wind.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "FourArmsTavern",
+        "offset": [
+          -100.0,
+          70.0
+        ]
+      }
+    },
+    "orenna-caskbrand": {
+      "id": "orenna-caskbrand",
+      "stable_id": {
+        "kind": "actor",
+        "id": "orenna-caskbrand"
+      },
+      "display_name": "Orenna Caskbrand",
+      "role": "Charfire brewer",
+      "home": "Chef's House",
+      "district": "East Arm",
+      "faction_id": "hospice-chain",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/orenna-caskbrand/target",
+          "state_source": "QuestRegistry",
+          "summary": "Holds access needed to inspect an abandoned charfire place.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/orenna-caskbrand/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "orenna-caskbrand",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "OC",
+        "mark": "269E",
+        "palette_index": 4
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_orenna_caskbrand",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_orenna_caskbrand"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Orenna holds the only kitchen key to the scarred hall where an unnamed bowl remains set.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/interiors/chefs_house.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "orm-redtongs": {
+      "id": "orm-redtongs",
+      "stable_id": {
+        "kind": "actor",
+        "id": "orm-redtongs"
+      },
+      "display_name": "Orm Redtongs",
+      "role": "Forge safety master",
+      "home": "Equipment Shop",
+      "district": "East Arm",
+      "faction_id": "shattersteel-concord",
+      "quest_hooks": [
+        {
+          "involvement": "gate",
+          "quest_id": "dom/orm-redtongs/gate",
+          "state_source": "GameState",
+          "summary": "Gates a controlled forge-silence behind a replacement cadence.",
+          "world_fact_id": "dom/orm-redtongs/gate-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/orm-redtongs/gate-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/orm-redtongs/gate"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "orm-redtongs",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "OR",
+        "mark": "4D88",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_orm_redtongs",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_orm_redtongs"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Orm permits a forge shutdown only after a replacement hammer cadence is proven.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "RiverShrine",
+        "offset": [
+          -100.0,
+          70.0
+        ]
+      }
+    },
+    "orren-chainwake": {
+      "id": "orren-chainwake",
+      "stable_id": {
+        "kind": "actor",
+        "id": "orren-chainwake"
+      },
+      "display_name": "Orren Chainwake",
+      "role": "Drownedmouth pilot",
+      "home": "Pilot Lodge",
+      "district": "West Arm",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/orren-chainwake/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Needs a route marker carried to a storm-stranded crew.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/orren-chainwake/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "orren-chainwake",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "OC",
+        "mark": "CB37",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_orren_chainwake",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_orren_chainwake"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Orren has a storm-stranded crew below the sea-mouth and one safe course left unmarked.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/interiors/registry_archive.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "orrik-cinderjaw": {
+      "id": "orrik-cinderjaw",
+      "stable_id": {
+        "kind": "actor",
+        "id": "orrik-cinderjaw"
+      },
+      "display_name": "Orrik Cinderjaw",
+      "role": "Charfire barber",
+      "home": "Lower Market Loft",
+      "district": "East Arm",
+      "faction_id": "shattersteel-concord",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "orrik-cinderjaw",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "OC",
+        "mark": "3A99",
+        "palette_index": 2
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_orrik_cinderjaw",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_orrik_cinderjaw"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Orrik trims hair with forge shears and never lets their hinge lose the hammer rhythm.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "TownHall",
+        "offset": [
+          100.0,
+          70.0
+        ]
+      }
+    },
+    "pell-hammersong": {
+      "id": "pell-hammersong",
+      "stable_id": {
+        "kind": "actor",
+        "id": "pell-hammersong"
+      },
+      "display_name": "Pell Hammersong",
+      "role": "Jaw-drum tuner",
+      "home": "Bell House",
+      "district": "North Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/pell-hammersong/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Needs the brace drums tested from both sides of the chasm.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/pell-hammersong/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "pell-hammersong",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "PH",
+        "mark": "C1C2",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_pell_hammersong",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_pell_hammersong"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Pell hears a fifth echo under a four-beat Jawbrace signal whenever the western storm turns.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/interiors/bell_house.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "raika-toll": {
+      "id": "raika-toll",
+      "stable_id": {
+        "kind": "actor",
+        "id": "raika-toll"
+      },
+      "display_name": "Raika Toll",
+      "role": "Sentinel toll keeper",
+      "home": "Jawbrace Watchroom",
+      "district": "North Arm",
+      "faction_id": "ironbrand-sentinels",
+      "quest_hooks": [
+        {
+          "band": "warm",
+          "faction_id": "ironbrand-sentinels",
+          "involvement": "reputation_reaction",
+          "quest_id": "dom/raika-toll/reputation-reaction",
+          "state_source": "Reputation.band",
+          "summary": "Reveals a Wound-Watch ledger entry at a warm Sentinel reputation band.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/raika-toll/reputation-reaction"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "raika-toll",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "RT",
+        "mark": "7A81",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_raika_toll",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_raika_toll"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Raika answers respect for the Sentinels with one more true entry from the Wound ledger.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "EquipmentShop",
+        "offset": [
+          -100.0,
+          70.0
+        ]
+      }
+    },
+    "ressa-ironmouth": {
+      "id": "ressa-ironmouth",
+      "stable_id": {
+        "kind": "actor",
+        "id": "ressa-ironmouth"
+      },
+      "display_name": "Ressa Ironmouth",
+      "role": "Brand artist",
+      "home": "Equipment Shop",
+      "district": "East Arm",
+      "faction_id": "ironbrand-sentinels",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/ressa-ironmouth/target",
+          "state_source": "QuestRegistry",
+          "summary": "Must inspect a suspect veteran's counterfeit brand.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/ressa-ironmouth/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "ressa-ironmouth",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "RI",
+        "mark": "857E",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_ressa_ironmouth",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_ressa_ironmouth"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Ressa can spot a false Ironbrand by the way its scar fails to pull when the bearer speaks.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/interiors/iron_companies.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "saela-windscar": {
+      "id": "saela-windscar",
+      "stable_id": {
+        "kind": "actor",
+        "id": "saela-windscar"
+      },
+      "display_name": "Saela Windscar",
+      "role": "Roof-flag mender",
+      "home": "Town Hall",
+      "district": "North Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "saela-windscar",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "SW",
+        "mark": "E029",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_saela_windscar",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_saela_windscar"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Saela reads tomorrow's western wall by which roof flag tears first.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "TownHall",
+        "offset": [
+          0.0,
+          78.0
+        ]
+      }
+    },
+    "sava-mor": {
+      "id": "sava-mor",
+      "stable_id": {
+        "kind": "actor",
+        "id": "sava-mor"
+      },
+      "display_name": "Sava Mor",
+      "role": "Salvager's widow",
+      "home": "Lower Market Loft",
+      "district": "East Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [
+        {
+          "involvement": "state_change",
+          "quest_id": "dom/sava-mor/state-change",
+          "state_source": "GameState",
+          "summary": "Changes the market display when the recovered suit's fate is decided.",
+          "world_fact_id": "dom/sava-mor/state-change-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/sava-mor/state-change-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/sava-mor/state-change"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "sava-mor",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "SM",
+        "mark": "92AB",
+        "palette_index": 9
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_sava_mor",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_sava_mor"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Sava leaves an empty armor stand in her window until the ledge suit is returned or condemned.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "IronCompaniesBarracks",
+        "offset": [
+          100.0,
+          70.0
+        ]
+      }
+    },
+    "sella-varn": {
+      "id": "sella-varn",
+      "stable_id": {
+        "kind": "actor",
+        "id": "sella-varn"
+      },
+      "display_name": "Sella Varn",
+      "role": "Bell warden",
+      "home": "Bell House",
+      "district": "South Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/sella-varn/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Opens the silent bell-house investigation.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/sella-varn/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "sella-varn",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "SV",
+        "mark": "E977",
+        "palette_index": 4
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_sella_varn",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_sella_varn"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "The district bell is warm, the rope is sound, and Sella refuses to call its silence a simple break.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/interiors/trial_hall.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "senn-brinehook": {
+      "id": "senn-brinehook",
+      "stable_id": {
+        "kind": "actor",
+        "id": "senn-brinehook"
+      },
+      "display_name": "Senn Brinehook",
+      "role": "Deep-cold net mender",
+      "home": "River Shrine",
+      "district": "West Arm",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/senn-brinehook/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Offers the cut net for investigation at the sea-mouth.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/senn-brinehook/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "senn-brinehook",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "SB",
+        "mark": "3D8A",
+        "palette_index": 9
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_senn_brinehook",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_senn_brinehook"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Senn's newest net came back cut from below, with every knot retied in marching order.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/interiors/river_shrine.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "sorek-hushward": {
+      "id": "sorek-hushward",
+      "stable_id": {
+        "kind": "actor",
+        "id": "sorek-hushward"
+      },
+      "display_name": "Sorek Hushward",
+      "role": "Lip-shrine sweeper",
+      "home": "Howlpath Lodge",
+      "district": "North Arm",
+      "faction_id": "kord-rite",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/sorek-hushward/information",
+          "state_source": "QuestRegistry",
+          "summary": "Distinguishes a living caller from the dead muster echoes.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/sorek-hushward/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "sorek-hushward",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "SH",
+        "mark": "A140",
+        "palette_index": 0
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_sorek_hushward",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_sorek_hushward"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Sorek hears the calls before dawn and knows which ones come in a living voice.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "RegistryArchive",
+        "offset": [
+          0.0,
+          78.0
+        ]
+      }
+    },
+    "tern-hollowbeat": {
+      "id": "tern-hollowbeat",
+      "stable_id": {
+        "kind": "actor",
+        "id": "tern-hollowbeat"
+      },
+      "display_name": "Tern Hollowbeat",
+      "role": "Dorthkor memorial drummer",
+      "home": "Trial Hall",
+      "district": "North Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "state_change",
+          "quest_id": "dom/tern-hollowbeat/state-change",
+          "state_source": "GameState",
+          "summary": "Restores the memorial cadence after the missing roll is recovered.",
+          "world_fact_id": "dom/tern-hollowbeat/state-change-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/tern-hollowbeat/state-change-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/tern-hollowbeat/state-change"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "tern-hollowbeat",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "TH",
+        "mark": "DE3A",
+        "palette_index": 0
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_tern_hollowbeat",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_tern_hollowbeat"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Tern holds a deliberate silence where the lost road roll should have sounded.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "RiverShrine",
+        "offset": [
+          100.0,
+          70.0
+        ]
+      }
+    },
+    "themka-gaath": {
+      "id": "themka-gaath",
+      "stable_id": {
+        "kind": "actor",
+        "id": "themka-gaath"
+      },
+      "display_name": "Themka Gaath",
+      "role": "High Warlord and Bridgeholder",
+      "home": "Town Hall",
+      "district": "North Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/themka-gaath/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Requests an independent account before ruling on the living muster.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/themka-gaath/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "themka-gaath",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "TG",
+        "mark": "FC79",
+        "palette_index": 7
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_themka_gaath",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_themka_gaath"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "The Bridgeholder weighs the Wound-Watch ledger before any voice on the Council floor.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/interiors/trial_hall.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "thessa-drumline": {
+      "id": "thessa-drumline",
+      "stable_id": {
+        "kind": "actor",
+        "id": "thessa-drumline"
+      },
+      "display_name": "Thessa Drumline",
+      "role": "Muster copyist",
+      "home": "Bell House",
+      "district": "South Arm",
+      "faction_id": "iron-companies",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/thessa-drumline/information",
+          "state_source": "QuestRegistry",
+          "summary": "Decodes the break between dead and living muster rolls.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/thessa-drumline/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "thessa-drumline",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "TD",
+        "mark": "7249",
+        "palette_index": 6
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_thessa_drumline",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_thessa_drumline"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "Thessa can point to the exact beat where a living roll enters the cadence of the unremembered.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/interiors/chefs_house.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          64.0,
+          0.0
+        ]
+      }
+    },
+    "thora-bellmark": {
+      "id": "thora-bellmark",
+      "stable_id": {
+        "kind": "actor",
+        "id": "thora-bellmark"
+      },
+      "display_name": "Thora Bellmark",
+      "role": "Scar tattooist",
+      "home": "Bell House",
+      "district": "South Arm",
+      "faction_id": "ironbrand-sentinels",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "thora-bellmark",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "TB",
+        "mark": "A00F",
+        "palette_index": 6
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_thora_bellmark",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_thora_bellmark"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "Thora inks no promise until the speaker can say its price without lowering their voice.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "FourArmsTavern",
+        "offset": [
+          0.0,
+          78.0
+        ]
+      }
+    },
+    "toma-reedhand": {
+      "id": "toma-reedhand",
+      "stable_id": {
+        "kind": "actor",
+        "id": "toma-reedhand"
+      },
+      "display_name": "Toma Reedhand",
+      "role": "Dockhand and shrine-keeper",
+      "home": "River Shrine",
+      "district": "West Arm",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/toma-reedhand/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Asks for the missing offerings from the Drownedmouth tide-chain.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/toma-reedhand/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "toma-reedhand",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "TR",
+        "mark": "983E",
+        "palette_index": 2
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_toma_reedhand",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_toma_reedhand"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Toma tends the river shrine between harbor shifts and knows which tide-chain offerings have gone missing.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/interiors/town_hall.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "torv-bellowskin": {
+      "id": "torv-bellowskin",
+      "stable_id": {
+        "kind": "actor",
+        "id": "torv-bellowskin"
+      },
+      "display_name": "Torv Bellowskin",
+      "role": "Forge bellows master",
+      "home": "Equipment Shop",
+      "district": "East Arm",
+      "faction_id": "shattersteel-concord",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/torv-bellowskin/target",
+          "state_source": "QuestRegistry",
+          "summary": "Keeps the resonant hammer required for a forge-silence inquiry.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/torv-bellowskin/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "torv-bellowskin",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "TB",
+        "mark": "2486",
+        "palette_index": 3
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_torv_bellowskin",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_torv_bellowskin"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Torv locked away a hammer that rings after the forge around it has fallen silent.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/interiors/equipment_shop.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "umber-dhor": {
+      "id": "umber-dhor",
+      "stable_id": {
+        "kind": "actor",
+        "id": "umber-dhor"
+      },
+      "display_name": "Umber Dhor",
+      "role": "Grain porter",
+      "home": "Lower Market Loft",
+      "district": "West Arm",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/umber-dhor/target",
+          "state_source": "QuestRegistry",
+          "summary": "Carries the disputed manifest needed by the market factors.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/umber-dhor/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "umber-dhor",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "UD",
+        "mark": "971D",
+        "palette_index": 0
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_umber_dhor",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_umber_dhor"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Umber carries a manifest for grain that reached Dom twice on paper and not once by sack.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/interiors/item_shop.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "vaara-cisternhand": {
+      "id": "vaara-cisternhand",
+      "stable_id": {
+        "kind": "actor",
+        "id": "vaara-cisternhand"
+      },
+      "display_name": "Vaara Cisternhand",
+      "role": "Storm-cistern warden",
+      "home": "Cistern Wardens Hall",
+      "district": "South Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/vaara-cisternhand/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Requests a source trace for ash entering a storm cistern.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/vaara-cisternhand/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "vaara-cisternhand",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "VC",
+        "mark": "CDE8",
+        "palette_index": 0
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_vaara_cisternhand",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_vaara_cisternhand"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "Vaara has sealed a cistern whose rain tastes of forge ash before it reaches the East Arm.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/interiors/river_shrine.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "varrik-deepchalk": {
+      "id": "varrik-deepchalk",
+      "stable_id": {
+        "kind": "actor",
+        "id": "varrik-deepchalk"
+      },
+      "display_name": "Varrik Deepchalk",
+      "role": "Mining-lift chalker",
+      "home": "Equipment Shop",
+      "district": "East Arm",
+      "faction_id": "shattersteel-concord",
+      "quest_hooks": [
+        {
+          "involvement": "gate",
+          "quest_id": "dom/varrik-deepchalk/gate",
+          "state_source": "GameState",
+          "summary": "Gates use of a chasm-wall lift behind the completed safety tally.",
+          "world_fact_id": "dom/varrik-deepchalk/gate-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/varrik-deepchalk/gate-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/varrik-deepchalk/gate"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "varrik-deepchalk",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "VD",
+        "mark": "7B1E",
+        "palette_index": 6
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_varrik_deepchalk",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_varrik_deepchalk"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Varrik will not mark a descent cage until the lift crew's safety tally is complete.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "BellHouse",
+        "offset": [
+          -100.0,
+          70.0
+        ]
+      }
+    },
+    "venn-ashcord": {
+      "id": "venn-ashcord",
+      "stable_id": {
+        "kind": "actor",
+        "id": "venn-ashcord"
+      },
+      "display_name": "Venn Ashcord",
+      "role": "Registry tallyman",
+      "home": "Registry Archive",
+      "district": "North Arm",
+      "faction_id": "rennen",
+      "quest_hooks": [
+        {
+          "band": "warm",
+          "faction_id": "rennen",
+          "involvement": "reputation_reaction",
+          "quest_id": "dom/venn-ashcord/reputation-reaction",
+          "state_source": "Reputation.band",
+          "summary": "Prioritizes a needed archive drawer at a warm Registry reputation band.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/venn-ashcord/reputation-reaction"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "venn-ashcord",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "VA",
+        "mark": "2EF6",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_venn_ashcord",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_venn_ashcord"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Venn waives no line, but a warm Registry record earns the useful drawer first.",
+        "farewell": "Leave me a true count when you return."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "EquipmentShop",
+        "offset": [
+          0.0,
+          78.0
+        ]
+      }
+    },
+    "veska-ruun": {
+      "id": "veska-ruun",
+      "stable_id": {
+        "kind": "actor",
+        "id": "veska-ruun"
+      },
+      "display_name": "Veska Ruun",
+      "role": "Trial examiner",
+      "home": "Trial Hall",
+      "district": "South Arm",
+      "faction_id": "trial-council",
+      "quest_hooks": [
+        {
+          "involvement": "giver",
+          "quest_id": "dom/veska-ruun/giver",
+          "state_source": "QuestRegistry",
+          "summary": "Commissions an inquiry into altered Trial Pillar weights.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/veska-ruun/giver"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "veska-ruun",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "VR",
+        "mark": "1EE9",
+        "palette_index": 2
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_veska_ruun",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_veska_ruun"
+        },
+        "greeting": "Yield is an honest word here.",
+        "context": "Veska found three Pillar weights filed smooth where a candidate's name should be cut.",
+        "farewell": "Stand straight when the drum sounds."
+      },
+      "placement": {
+        "scene": "res://world/interiors/registry_archive.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          -64.0,
+          0.0
+        ]
+      }
+    },
+    "veyra-sootlace": {
+      "id": "veyra-sootlace",
+      "stable_id": {
+        "kind": "actor",
+        "id": "veyra-sootlace"
+      },
+      "display_name": "Veyra Sootlace",
+      "role": "Salvage-cloth merchant",
+      "home": "Lower Market Loft",
+      "district": "East Arm",
+      "faction_id": "shattersteel-concord",
+      "quest_hooks": [
+        {
+          "involvement": "information",
+          "quest_id": "dom/veyra-sootlace/information",
+          "state_source": "QuestRegistry",
+          "summary": "Identifies the ash on recovered salvage cloth.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/veyra-sootlace/information"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "veyra-sootlace",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "VS",
+        "mark": "4A0C",
+        "palette_index": 7
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_veyra_sootlace",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_veyra_sootlace"
+        },
+        "greeting": "Mind the sparks, traveler.",
+        "context": "Veyra knows whether ash came from forge coal, charfire, or a suit scoured below the ledges.",
+        "farewell": "Go before the next hammer fall."
+      },
+      "placement": {
+        "scene": "res://world/interiors/players_house.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "yara-chainstep": {
+      "id": "yara-chainstep",
+      "stable_id": {
+        "kind": "actor",
+        "id": "yara-chainstep"
+      },
+      "display_name": "Yara Chainstep",
+      "role": "Harbor-chain inspector",
+      "home": "Drownedmouth Chainhouse",
+      "district": "West Arm",
+      "faction_id": "ironbrand-sentinels",
+      "quest_hooks": [
+        {
+          "involvement": "state_change",
+          "quest_id": "dom/yara-chainstep/state-change",
+          "state_source": "GameState",
+          "summary": "Moves from the shrine to the outer chain after the watch-hand search resolves.",
+          "world_fact_id": "dom/yara-chainstep/state-change-state",
+          "world_fact_stable_id": {
+            "kind": "world_fact",
+            "id": "dom/yara-chainstep/state-change-state"
+          },
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/yara-chainstep/state-change"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "yara-chainstep",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "YC",
+        "mark": "FD69",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_yara_chainstep",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_yara_chainstep"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Yara will return to the outer chain when the missing watch hand is accounted for.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/starting_town.tscn",
+        "anchor": "RiverShrine",
+        "offset": [
+          0.0,
+          78.0
+        ]
+      }
+    },
+    "yssra-coldnet": {
+      "id": "yssra-coldnet",
+      "stable_id": {
+        "kind": "actor",
+        "id": "yssra-coldnet"
+      },
+      "display_name": "Yssra Coldnet",
+      "role": "Deep-cold fisher",
+      "home": "Drownedmouth Berthhouse",
+      "district": "West Arm",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [
+        {
+          "involvement": "target",
+          "quest_id": "dom/yssra-coldnet/target",
+          "state_source": "QuestRegistry",
+          "summary": "Is the harbor witness another quest must locate.",
+          "stable_id": {
+            "kind": "quest",
+            "id": "dom/yssra-coldnet/target"
+          }
+        }
+      ],
+      "portrait": {
+        "id": "yssra-coldnet",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "YC",
+        "mark": "4659",
+        "palette_index": 7
+      },
+      "dialogue": {
+        "path": "res://dialogue/dom_townsfolk.dialogue",
+        "title": "dom_yssra_coldnet",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "dom_yssra_coldnet"
+        },
+        "greeting": "Keep above the harbor spray.",
+        "context": "Yssra saw lights climbing the harbor wall against the rain and will speak only beside calm water.",
+        "farewell": "Watch the chain on your way out."
+      },
+      "placement": {
+        "scene": "res://world/interiors/equipment_shop.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ]
+      }
+    }
+  }
+}
