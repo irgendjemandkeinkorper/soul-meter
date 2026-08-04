@@ -51,11 +51,13 @@ func test_start_builds_the_whole_party() -> void:
 func test_each_party_member_acts_before_the_enemy_round() -> void:
 	battle.start(_enemy("Wight", 40, 4, 1))
 	battle.use_action(BattleScript.ACTION_STRIKE)
+	battle.end_turn()
 
 	assert_str(battle.current_ally().display_name).is_equal("Serai")
 	assert_int(battle.allies[0].hp).is_equal(20)
 
 	battle.use_action(BattleScript.ACTION_STRIKE)
+	battle.end_turn()
 	assert_str(battle.current_ally().display_name).is_equal("Vex")
 	assert_int(battle.allies[0].hp).is_equal(18)
 
@@ -90,6 +92,7 @@ func test_flee_commits_combat_hp_to_party() -> void:
 	battle.start(_enemy("Wight", 40, 6, 1))
 	battle.use_action(BattleScript.ACTION_GUARD)
 	battle.use_action(BattleScript.ACTION_STRIKE)
+	battle.end_turn()
 	battle.flee()
 
 	assert_int(GameState.party[0].hp).is_equal(battle.allies[0].hp)

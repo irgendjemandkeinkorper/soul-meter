@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CombatRules" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat/combat_rules.gd" id="1_rules"]
+
+[resource]
+script = ExtResource("1_rules")
+base_action_points = 4
+action_point_attribute = &"edge"
+attribute_points_per_ap = 2
+minimum_action_points = 2
+maximum_action_points = 8
+context_resolution_ap_cost = 2
+cover_defense_bonus = 2
+flank_power_bonus = 2

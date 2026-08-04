@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"enemy-strike"
+display_name = "Strike"
+kind = 0
+verb = 1
+ap_cost = 4
+target_profile = &"melee"
+center_pull = 0
+player_available = false
