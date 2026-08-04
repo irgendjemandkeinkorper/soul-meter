@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=43 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -7,6 +7,29 @@
 [ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="5_npc"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_iso"]
 [ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="7_interactable"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-slant-roof.png" id="8_house"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-square-roof.png" id="9_tower"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-square.png" id="10_tower_base"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-square-mid-door.png" id="11_tower_door"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/gate.png" id="12_gate"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-square-top-roof-high.png" id="13_high_roof"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/wall.png" id="14_wall"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/siege-tower.png" id="15_siege_tower"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-green.png" id="16_stall_green"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-red.png" id="17_stall_red"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/fountain-round-detail.png" id="18_fountain"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/banner-green.png" id="19_banner_green"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/banner-red.png" id="20_banner_red"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/lantern.png" id="21_lantern"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/cart-high.png" id="22_cart"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_oak.png" id="23_tree_oak"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_default.png" id="24_tree_default"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_pineTallA.png" id="25_tree_pine"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/rock_largeA.png" id="26_rock_large"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/rock_smallB.png" id="27_rock_small"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/grass_large.png" id="28_grass"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/plant_bushDetailed.png" id="29_bush"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/flower_yellowA.png" id="30_flower"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1600, 40)
@@ -51,9 +74,8 @@ y_sort_enabled = true
 ## starting-party picker and actors/travel_exit for the road out to
 ## world/test_room.tscn (the original field/wilds vertical slice).
 
-[node name="Floor" type="ColorRect" parent="."]
-offset_right = 1600.0
-offset_bottom = 1000.0
+[node name="Floor" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 0, 1600, 0, 1600, 1000, 0, 1000)
 color = Color(0.16, 0.15, 0.19, 1)
 z_index = -20
 
@@ -63,41 +85,6 @@ script = ExtResource("6_iso")
 map_size = Vector2i(25, 25)
 ground_style = 0
 road_axis = 3
-
-[node name="WallTop" type="ColorRect" parent="."]
-visible = false
-offset_right = 1600.0
-offset_bottom = 40.0
-color = Color(0.32, 0.3, 0.38, 1)
-
-[node name="WallBottom" type="ColorRect" parent="."]
-visible = false
-offset_top = 960.0
-offset_right = 1600.0
-offset_bottom = 1000.0
-color = Color(0.32, 0.3, 0.38, 1)
-
-[node name="WallLeft" type="ColorRect" parent="."]
-visible = false
-offset_right = 40.0
-offset_bottom = 1000.0
-color = Color(0.32, 0.3, 0.38, 1)
-
-[node name="WallRightTop" type="ColorRect" parent="."]
-visible = false
-offset_left = 1560.0
-offset_top = 40.0
-offset_right = 1600.0
-offset_bottom = 430.0
-color = Color(0.32, 0.3, 0.38, 1)
-
-[node name="WallRightBottom" type="ColorRect" parent="."]
-visible = false
-offset_left = 1560.0
-offset_top = 570.0
-offset_right = 1600.0
-offset_bottom = 960.0
-color = Color(0.32, 0.3, 0.38, 1)
 
 [node name="Walls" type="StaticBody2D" parent="."]
 
@@ -159,264 +146,380 @@ shape = SubResource("shape_chefs_house")
 position = Vector2(760, 870)
 shape = SubResource("shape_players_house")
 
-[node name="TrialHall" type="ColorRect" parent="."]
-visible = false
-offset_left = 1150.0
-offset_top = 120.0
-offset_right = 1450.0
-offset_bottom = 320.0
-color = Color(0.24, 0.26, 0.3, 1)
+[node name="TrialHall" type="Node2D" parent="."]
+position = Vector2(1300, 400)
 
-[node name="TrialHallBlock" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(1150, 210, 1300, 125, 1450, 210, 1450, 315, 1300, 400, 1150, 315)
-color = Color(0.2, 0.22, 0.28, 1)
+[node name="BackLeft" type="Sprite2D" parent="TrialHall"]
+position = Vector2(-48, -24)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -150.596)
 
-[node name="TrialHallTrim" type="Line2D" parent="."]
-points = PackedVector2Array(1150, 210, 1300, 125, 1450, 210)
-width = 6.0
-default_color = Color(0.47, 0.35, 0.2, 1)
+[node name="BackRight" type="Sprite2D" parent="TrialHall"]
+position = Vector2(48, -24)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -150.596)
 
-[node name="TrialHallSign" type="Label" parent="."]
-offset_left = 1150.0
-offset_top = 140.0
-offset_right = 1450.0
-offset_bottom = 180.0
-horizontal_alignment = 1
-text = "TRIAL COUNCIL HALL"
+[node name="CouncilTower" type="Sprite2D" parent="TrialHall"]
+position = Vector2(0, 8)
+texture = ExtResource("8_house")
+offset = Vector2(0, -150.596)
+
+[node name="CouncilGate" type="Sprite2D" parent="TrialHall"]
+position = Vector2(0, 38)
+texture = ExtResource("12_gate")
+offset = Vector2(0, -150.596)
+
+[node name="CouncilBannerLeft" type="Sprite2D" parent="TrialHall"]
+position = Vector2(-36, 18)
+texture = ExtResource("20_banner_red")
+offset = Vector2(0, -150.596)
+
+[node name="CouncilBannerRight" type="Sprite2D" parent="TrialHall"]
+position = Vector2(36, 18)
+texture = ExtResource("19_banner_green")
+offset = Vector2(0, -150.596)
 
 [node name="RegistryArchive" type="Node2D" parent="."]
-position = Vector2(300, 250)
+position = Vector2(300, 335)
 
-[node name="Block" type="Polygon2D" parent="RegistryArchive"]
-polygon = PackedVector2Array(-125, -70, 125, -70, 125, 70, -125, 70)
-color = Color(0.13, 0.16, 0.2, 1)
+[node name="BackLeft" type="Sprite2D" parent="RegistryArchive"]
+position = Vector2(-48, -24)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -135.596)
 
-[node name="Roof" type="Polygon2D" parent="RegistryArchive"]
-polygon = PackedVector2Array(-145, -70, 0, -125, 145, -70)
-color = Color(0.28, 0.23, 0.17, 1)
+[node name="BackRight" type="Sprite2D" parent="RegistryArchive"]
+position = Vector2(48, -24)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -135.596)
 
-[node name="Trim" type="Line2D" parent="RegistryArchive"]
-points = PackedVector2Array(-145, -70, 0, -125, 145, -70)
-width = 5.0
-default_color = Color(0.68, 0.45, 0.22, 1)
+[node name="LedgerTower" type="Sprite2D" parent="RegistryArchive"]
+position = Vector2(0, 8)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -135.596)
 
-[node name="Sign" type="Label" parent="RegistryArchive"]
-offset_left = -120.0
-offset_top = -48.0
-offset_right = 120.0
-offset_bottom = -12.0
-horizontal_alignment = 1
-text = "REGISTRY ARCHIVE"
+[node name="ArchiveDoor" type="Sprite2D" parent="RegistryArchive"]
+position = Vector2(0, 35)
+texture = ExtResource("11_tower_door")
+offset = Vector2(0, -135.596)
+
+[node name="ArchiveBanner" type="Sprite2D" parent="RegistryArchive"]
+position = Vector2(-28, 24)
+texture = ExtResource("19_banner_green")
+offset = Vector2(0, -135.596)
 
 [node name="BellHouse" type="Node2D" parent="."]
-position = Vector2(900, 760)
+position = Vector2(900, 845)
 
-[node name="Block" type="Polygon2D" parent="BellHouse"]
-polygon = PackedVector2Array(-120, -70, 120, -70, 120, 75, -120, 75)
-color = Color(0.25, 0.2, 0.2, 1)
+[node name="BellWingLeft" type="Sprite2D" parent="BellHouse"]
+position = Vector2(-42, -20)
+texture = ExtResource("10_tower_base")
+offset = Vector2(0, -135.596)
 
-[node name="Roof" type="Polygon2D" parent="BellHouse"]
-polygon = PackedVector2Array(-135, -70, 0, -125, 135, -70)
-color = Color(0.34, 0.23, 0.14, 1)
+[node name="BellWingRight" type="Sprite2D" parent="BellHouse"]
+position = Vector2(42, -20)
+texture = ExtResource("10_tower_base")
+offset = Vector2(0, -135.596)
 
-[node name="Bell" type="Polygon2D" parent="BellHouse"]
-polygon = PackedVector2Array(-24, -72, 24, -72, 38, -35, -38, -35)
-color = Color(0.72, 0.52, 0.2, 1)
+[node name="BellTower" type="Sprite2D" parent="BellHouse"]
+position = Vector2(0, 10)
+texture = ExtResource("8_house")
+offset = Vector2(0, -135.596)
 
-[node name="Trim" type="Line2D" parent="BellHouse"]
-points = PackedVector2Array(-135, -70, 0, -125, 135, -70)
-width = 5.0
-default_color = Color(0.94, 0.78, 0.38, 1)
+[node name="BellRoof" type="Sprite2D" parent="BellHouse"]
+position = Vector2(0, -38)
+texture = ExtResource("13_high_roof")
+offset = Vector2(0, -135.596)
 
-[node name="Sign" type="Label" parent="BellHouse"]
-offset_left = -110.0
-offset_top = -45.0
-offset_right = 110.0
-offset_bottom = -12.0
-horizontal_alignment = 1
-text = "LOWER WARD BELL"
+[node name="BellLantern" type="Sprite2D" parent="BellHouse"]
+position = Vector2(0, 38)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -135.596)
 
 [node name="RiverShrine" type="Node2D" parent="."]
-position = Vector2(420, 720)
+position = Vector2(420, 780)
 
-[node name="Base" type="Polygon2D" parent="RiverShrine"]
-polygon = PackedVector2Array(-85, -48, 85, -48, 85, 50, -85, 50)
-color = Color(0.12, 0.22, 0.25, 1)
+[node name="ShrineBasin" type="Sprite2D" parent="RiverShrine"]
+texture = ExtResource("18_fountain")
+offset = Vector2(0, -110.596)
 
-[node name="Canopy" type="Polygon2D" parent="RiverShrine"]
-polygon = PackedVector2Array(-100, -48, 0, -98, 100, -48)
-color = Color(0.16, 0.34, 0.34, 1)
+[node name="ShrineLanternLeft" type="Sprite2D" parent="RiverShrine"]
+position = Vector2(-45, 12)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -110.596)
 
-[node name="Water" type="Line2D" parent="RiverShrine"]
-points = PackedVector2Array(-55, 8, -18, -2, 18, 8, 55, -2)
-width = 5.0
-default_color = Color(0.13, 0.62, 0.7, 1)
-
-[node name="Sign" type="Label" parent="RiverShrine"]
-offset_left = -90.0
-offset_top = -35.0
-offset_right = 90.0
-offset_bottom = -4.0
-horizontal_alignment = 1
-text = "RIVER SHRINE"
+[node name="ShrineLanternRight" type="Sprite2D" parent="RiverShrine"]
+position = Vector2(45, 12)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -110.596)
 
 [node name="IronCompaniesBarracks" type="Node2D" parent="."]
-position = Vector2(1260, 650)
+position = Vector2(1260, 735)
 
-[node name="Block" type="Polygon2D" parent="IronCompaniesBarracks"]
-polygon = PackedVector2Array(-140, -70, 140, -70, 140, 70, -140, 70)
-color = Color(0.18, 0.19, 0.22, 1)
+[node name="GarrisonTowerLeft" type="Sprite2D" parent="IronCompaniesBarracks"]
+position = Vector2(-54, -24)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -135.596)
 
-[node name="Roof" type="Polygon2D" parent="IronCompaniesBarracks"]
-polygon = PackedVector2Array(-155, -70, 0, -120, 155, -70)
-color = Color(0.23, 0.25, 0.29, 1)
+[node name="GarrisonTowerRight" type="Sprite2D" parent="IronCompaniesBarracks"]
+position = Vector2(54, -24)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -135.596)
 
-[node name="Trim" type="Line2D" parent="IronCompaniesBarracks"]
-points = PackedVector2Array(-155, -70, 0, -120, 155, -70)
-width = 5.0
-default_color = Color(0.52, 0.55, 0.62, 1)
+[node name="GarrisonWallLeft" type="Sprite2D" parent="IronCompaniesBarracks"]
+position = Vector2(-58, 22)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
 
-[node name="Sign" type="Label" parent="IronCompaniesBarracks"]
-offset_left = -130.0
-offset_top = -45.0
-offset_right = 130.0
-offset_bottom = -12.0
-horizontal_alignment = 1
-text = "IRON COMPANIES GARRISON"
+[node name="GarrisonWallRight" type="Sprite2D" parent="IronCompaniesBarracks"]
+position = Vector2(58, 22)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
 
-[node name="LowerMarket" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(520, 510, 700, 510, 700, 590, 520, 590)
-color = Color(0.27, 0.18, 0.15, 1)
+[node name="GarrisonSiegeTower" type="Sprite2D" parent="IronCompaniesBarracks"]
+position = Vector2(0, 8)
+texture = ExtResource("15_siege_tower")
+offset = Vector2(0, -135.596)
 
-[node name="LowerMarketCanopy" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(500, 510, 610, 450, 720, 510)
-color = Color(0.48, 0.24, 0.18, 1)
+[node name="GarrisonGate" type="Sprite2D" parent="IronCompaniesBarracks"]
+position = Vector2(0, 42)
+texture = ExtResource("12_gate")
+offset = Vector2(0, -135.596)
 
-[node name="LowerMarketSign" type="Label" parent="."]
-offset_left = 520.0
-offset_top = 525.0
-offset_right = 700.0
-offset_bottom = 560.0
-horizontal_alignment = 1
-text = "LOWER MARKET"
+[node name="LowerMarket" type="Node2D" parent="."]
+position = Vector2(610, 590)
+
+[node name="GreenStall" type="Sprite2D" parent="LowerMarket"]
+position = Vector2(-42, -12)
+texture = ExtResource("16_stall_green")
+offset = Vector2(0, -90.596)
+
+[node name="RedStall" type="Sprite2D" parent="LowerMarket"]
+position = Vector2(42, -12)
+texture = ExtResource("17_stall_red")
+offset = Vector2(0, -90.596)
+
+[node name="MarketCart" type="Sprite2D" parent="LowerMarket"]
+position = Vector2(0, 26)
+texture = ExtResource("22_cart")
+offset = Vector2(0, -90.596)
 
 [node name="ItemShop" type="Node2D" parent="."]
-position = Vector2(610, 470)
+position = Vector2(610, 537.5)
 
-[node name="Block" type="Polygon2D" parent="ItemShop"]
-polygon = PackedVector2Array(-95, -55, 95, -55, 95, 60, -95, 60)
-color = Color(0.25, 0.2, 0.14, 1)
+[node name="StockStallLeft" type="Sprite2D" parent="ItemShop"]
+position = Vector2(-34, -14)
+texture = ExtResource("16_stall_green")
+offset = Vector2(0, -118.096)
 
-[node name="Awning" type="Polygon2D" parent="ItemShop"]
-polygon = PackedVector2Array(-105, -55, 0, -100, 105, -55)
-color = Color(0.62, 0.32, 0.16, 1)
+[node name="StockStallRight" type="Sprite2D" parent="ItemShop"]
+position = Vector2(34, -14)
+texture = ExtResource("16_stall_green")
+offset = Vector2(0, -118.096)
 
-[node name="Crates" type="Line2D" parent="ItemShop"]
-points = PackedVector2Array(-62, 24, -30, 8, 2, 24, 34, 8, 66, 24)
-width = 5.0
-default_color = Color(0.83, 0.61, 0.29, 1)
-
-[node name="Sign" type="Label" parent="ItemShop"]
-offset_left = -90.0
-offset_top = -33.0
-offset_right = 90.0
-offset_bottom = -4.0
-horizontal_alignment = 1
-text = "LOAM & LANTERN"
+[node name="ShopLantern" type="Sprite2D" parent="ItemShop"]
+position = Vector2(0, 30)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -118.096)
 
 [node name="EquipmentShop" type="Node2D" parent="."]
-position = Vector2(900, 470)
+position = Vector2(900, 542.5)
 
-[node name="Block" type="Polygon2D" parent="EquipmentShop"]
-polygon = PackedVector2Array(-105, -60, 105, -60, 105, 65, -105, 65)
-color = Color(0.16, 0.19, 0.22, 1)
+[node name="ForgeHouse" type="Sprite2D" parent="EquipmentShop"]
+position = Vector2(-22, -16)
+texture = ExtResource("8_house")
+offset = Vector2(0, -123.096)
 
-[node name="Awning" type="Polygon2D" parent="EquipmentShop"]
-polygon = PackedVector2Array(-115, -60, 0, -108, 115, -60)
-color = Color(0.28, 0.34, 0.39, 1)
+[node name="ForgeStall" type="Sprite2D" parent="EquipmentShop"]
+position = Vector2(32, 16)
+texture = ExtResource("17_stall_red")
+offset = Vector2(0, -123.096)
 
-[node name="Rack" type="Line2D" parent="EquipmentShop"]
-points = PackedVector2Array(-74, 25, -38, -5, 0, 25, 38, -5, 74, 25)
-width = 5.0
-default_color = Color(0.62, 0.67, 0.73, 1)
-
-[node name="Sign" type="Label" parent="EquipmentShop"]
-offset_left = -100.0
-offset_top = -38.0
-offset_right = 100.0
-offset_bottom = -7.0
-horizontal_alignment = 1
-text = "IRON & THREAD"
+[node name="ForgeBanner" type="Sprite2D" parent="EquipmentShop"]
+position = Vector2(-38, 24)
+texture = ExtResource("20_banner_red")
+offset = Vector2(0, -123.096)
 
 [node name="TownHall" type="Node2D" parent="."]
-position = Vector2(1000, 230)
+position = Vector2(1000, 307.5)
 
-[node name="Block" type="Polygon2D" parent="TownHall"]
-polygon = PackedVector2Array(-115, -65, 115, -65, 115, 70, -115, 70)
-color = Color(0.21, 0.22, 0.27, 1)
+[node name="HallWingLeft" type="Sprite2D" parent="TownHall"]
+position = Vector2(-46, -22)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -128.096)
 
-[node name="Roof" type="Polygon2D" parent="TownHall"]
-polygon = PackedVector2Array(-128, -65, 0, -112, 128, -65)
-color = Color(0.38, 0.3, 0.19, 1)
+[node name="HallWingRight" type="Sprite2D" parent="TownHall"]
+position = Vector2(46, -22)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -128.096)
 
-[node name="Seal" type="Polygon2D" parent="TownHall"]
-polygon = PackedVector2Array(0, -38, 24, -14, 0, 10, -24, -14)
-color = Color(0.77, 0.57, 0.23, 1)
+[node name="HallCenter" type="Sprite2D" parent="TownHall"]
+position = Vector2(0, 8)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -128.096)
 
-[node name="Sign" type="Label" parent="TownHall"]
-offset_left = -105.0
-offset_top = -38.0
-offset_right = 105.0
-offset_bottom = -7.0
-horizontal_alignment = 1
-text = "TOWN HALL"
+[node name="HallGate" type="Sprite2D" parent="TownHall"]
+position = Vector2(0, 38)
+texture = ExtResource("12_gate")
+offset = Vector2(0, -128.096)
+
+[node name="HallBannerLeft" type="Sprite2D" parent="TownHall"]
+position = Vector2(-32, 24)
+texture = ExtResource("19_banner_green")
+offset = Vector2(0, -128.096)
+
+[node name="HallBannerRight" type="Sprite2D" parent="TownHall"]
+position = Vector2(32, 24)
+texture = ExtResource("20_banner_red")
+offset = Vector2(0, -128.096)
 
 [node name="ChefsHouse" type="Node2D" parent="."]
-position = Vector2(260, 570)
+position = Vector2(260, 637.5)
 
-[node name="Block" type="Polygon2D" parent="ChefsHouse"]
-polygon = PackedVector2Array(-90, -55, 90, -55, 90, 55, -90, 55)
-color = Color(0.29, 0.2, 0.17, 1)
+[node name="KitchenLeft" type="Sprite2D" parent="ChefsHouse"]
+position = Vector2(-30, -12)
+texture = ExtResource("8_house")
+offset = Vector2(0, -118.096)
 
-[node name="Roof" type="Polygon2D" parent="ChefsHouse"]
-polygon = PackedVector2Array(-102, -55, 0, -100, 102, -55)
-color = Color(0.52, 0.27, 0.18, 1)
+[node name="KitchenRight" type="Sprite2D" parent="ChefsHouse"]
+position = Vector2(30, -12)
+texture = ExtResource("8_house")
+offset = Vector2(0, -118.096)
 
-[node name="ChimneySmoke" type="Line2D" parent="ChefsHouse"]
-points = PackedVector2Array(54, -78, 65, -92, 58, -106)
-width = 4.0
-default_color = Color(0.55, 0.57, 0.61, 0.7)
-
-[node name="Sign" type="Label" parent="ChefsHouse"]
-offset_left = -82.0
-offset_top = -33.0
-offset_right = 82.0
-offset_bottom = -4.0
-horizontal_alignment = 1
-text = "CHEF'S HOUSE"
+[node name="KitchenLantern" type="Sprite2D" parent="ChefsHouse"]
+position = Vector2(0, 34)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -118.096)
 
 [node name="PlayersHouse" type="Node2D" parent="."]
-position = Vector2(760, 870)
+position = Vector2(760, 945)
 
-[node name="Block" type="Polygon2D" parent="PlayersHouse"]
-polygon = PackedVector2Array(-110, -65, 110, -65, 110, 65, -110, 65)
-color = Color(0.2, 0.24, 0.27, 1)
+[node name="HomeLeft" type="Sprite2D" parent="PlayersHouse"]
+position = Vector2(-34, -14)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -125.596)
 
-[node name="Roof" type="Polygon2D" parent="PlayersHouse"]
-polygon = PackedVector2Array(-122, -65, 0, -112, 122, -65)
-color = Color(0.24, 0.34, 0.34, 1)
+[node name="HomeRight" type="Sprite2D" parent="PlayersHouse"]
+position = Vector2(34, -14)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -125.596)
 
-[node name="Window" type="Polygon2D" parent="PlayersHouse"]
-polygon = PackedVector2Array(-22, -25, 22, -25, 22, 18, -22, 18)
-color = Color(0.2, 0.68, 0.72, 1)
+[node name="HomeDoor" type="Sprite2D" parent="PlayersHouse"]
+position = Vector2(0, 34)
+texture = ExtResource("11_tower_door")
+offset = Vector2(0, -125.596)
 
-[node name="Sign" type="Label" parent="PlayersHouse"]
-offset_left = -100.0
-offset_top = -40.0
-offset_right = 100.0
-offset_bottom = -9.0
-horizontal_alignment = 1
-text = "VEX'S HOUSE"
+[node name="HomeLantern" type="Sprite2D" parent="PlayersHouse"]
+position = Vector2(30, 38)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -125.596)
+
+[node name="OakNorthWest" type="Sprite2D" parent="."]
+position = Vector2(95, 155)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="TreeWest" type="Sprite2D" parent="."]
+position = Vector2(90, 455)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="OakSouthWest" type="Sprite2D" parent="."]
+position = Vector2(115, 885)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="PineNorth" type="Sprite2D" parent="."]
+position = Vector2(650, 115)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="OakNorthEast" type="Sprite2D" parent="."]
+position = Vector2(1490, 155)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="TreeEast" type="Sprite2D" parent="."]
+position = Vector2(1490, 790)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="PineSouth" type="Sprite2D" parent="."]
+position = Vector2(1130, 905)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="RockWest" type="Sprite2D" parent="."]
+position = Vector2(345, 880)
+texture = ExtResource("26_rock_large")
+offset = Vector2(0, -50.596)
+
+[node name="RockEast" type="Sprite2D" parent="."]
+position = Vector2(1410, 455)
+texture = ExtResource("26_rock_large")
+offset = Vector2(0, -50.596)
+
+[node name="RockNorth" type="Sprite2D" parent="."]
+position = Vector2(1120, 105)
+texture = ExtResource("27_rock_small")
+offset = Vector2(0, -50.596)
+
+[node name="BushRegistry" type="Sprite2D" parent="."]
+position = Vector2(160, 300)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="BushTownHall" type="Sprite2D" parent="."]
+position = Vector2(1115, 330)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="GrassShrine" type="Sprite2D" parent="."]
+position = Vector2(325, 705)
+texture = ExtResource("28_grass")
+offset = Vector2(0, -50.596)
+
+[node name="GrassGarrison" type="Sprite2D" parent="."]
+position = Vector2(1385, 705)
+texture = ExtResource("28_grass")
+offset = Vector2(0, -50.596)
+
+[node name="FlowersWest" type="Sprite2D" parent="."]
+position = Vector2(180, 760)
+texture = ExtResource("30_flower")
+offset = Vector2(0, -50.596)
+
+[node name="FlowersEast" type="Sprite2D" parent="."]
+position = Vector2(1170, 780)
+texture = ExtResource("30_flower")
+offset = Vector2(0, -50.596)
+
+[node name="FourArmsTavern" type="Node2D" parent="."]
+position = Vector2(700, 432)
+
+[node name="TavernWingLeft" type="Sprite2D" parent="FourArmsTavern"]
+position = Vector2(-42, -20)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -82.596)
+
+[node name="TavernWingRight" type="Sprite2D" parent="FourArmsTavern"]
+position = Vector2(42, -20)
+texture = ExtResource("9_tower")
+offset = Vector2(0, -82.596)
+
+[node name="TavernCenter" type="Sprite2D" parent="FourArmsTavern"]
+position = Vector2(0, 4)
+texture = ExtResource("8_house")
+offset = Vector2(0, -82.596)
+
+[node name="TavernStallLeft" type="Sprite2D" parent="FourArmsTavern"]
+position = Vector2(-34, 26)
+texture = ExtResource("17_stall_red")
+offset = Vector2(0, -82.596)
+
+[node name="TavernStallRight" type="Sprite2D" parent="FourArmsTavern"]
+position = Vector2(34, 26)
+texture = ExtResource("16_stall_green")
+offset = Vector2(0, -82.596)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(700, 700)
@@ -438,6 +541,16 @@ position = Vector2(1470, 500)
 
 [node name="TavernDoor" parent="." instance=ExtResource("3_tavern")]
 position = Vector2(700, 400)
+editable_children = true
+
+[node name="Facade" parent="TavernDoor"]
+visible = false
+
+[node name="RoofTrim" parent="TavernDoor"]
+visible = false
+
+[node name="Sign" parent="TavernDoor"]
+visible = false
 
 [node name="MarshalCoiljaw" parent="." instance=ExtResource("5_npc")]
 position = Vector2(1050, 420)
