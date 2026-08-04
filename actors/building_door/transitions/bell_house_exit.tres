@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"bell_house_exit"
+building_id = &"bell_house"
+building_name = "Bell House"
+direction = "exit"
+source_scene = "res://world/interiors/bell_house.tscn"
+source_anchor = &"ExitDoor"
+source_position = Vector2(480, 600)
+destination_scene = "res://world/starting_town.tscn"
+destination_location_id = &"dom"
+spawn_id = &"from_bell_house"
+destination_spawn_position = Vector2(900, 560)
+prompt_text = "E — EXIT"

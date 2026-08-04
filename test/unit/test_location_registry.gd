@@ -2,10 +2,11 @@ extends GdUnitTestSuite
 
 
 func test_current_locations_are_registered_as_gameplay_only() -> void:
-	assert_int(LocationRegistry.ALL.size()).is_equal(4)
+	assert_int(LocationRegistry.ALL.size()).is_equal(14)
 	for location in LocationRegistry.ALL:
 		assert_bool(location.allowed_gameplay).is_true()
 		assert_bool(LocationRegistry.is_gameplay_scene(location.scene_path)).is_true()
+	assert_array(GameFlow.GAMEPLAY_SCENES).contains_exactly(LocationRegistry.gameplay_scenes())
 
 
 func test_named_arrivals_resolve_to_valid_spawn_markers() -> void:

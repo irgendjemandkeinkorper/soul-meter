@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"item_shop_exit"
+building_id = &"item_shop"
+building_name = "Item Shop"
+direction = "exit"
+source_scene = "res://world/interiors/item_shop.tscn"
+source_anchor = &"ExitDoor"
+source_position = Vector2(480, 600)
+destination_scene = "res://world/starting_town.tscn"
+destination_location_id = &"dom"
+spawn_id = &"from_item_shop"
+destination_spawn_position = Vector2(610, 645)
+prompt_text = "E — EXIT"

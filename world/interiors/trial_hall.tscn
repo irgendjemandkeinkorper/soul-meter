@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+
+[node name="TrialHallInterior" type="Node2D"]
+
+[node name="Room" parent="." instance=ExtResource("1_interior")]
+building_name = "Trial Hall"
+exit_transition_id = &"trial_hall_exit"
+floor_color = Color(0.14, 0.15, 0.18, 1)
+accent_color = Color(0.47, 0.35, 0.2, 1)

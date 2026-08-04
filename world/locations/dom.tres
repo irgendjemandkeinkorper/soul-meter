@@ -8,7 +8,17 @@ id = &"dom"
 scene_path = "res://world/starting_town.tscn"
 default_spawn_id = &"default"
 spawns = {
+"from_bell_house": "from_bell_house",
+"from_chefs_house": "from_chefs_house",
 "from_dorthkor": "from_dorthkor",
+"from_equipment_shop": "from_equipment_shop",
+"from_iron_companies": "from_iron_companies",
+"from_item_shop": "from_item_shop",
+"from_players_house": "from_players_house",
+"from_registry_archive": "from_registry_archive",
+"from_river_shrine": "from_river_shrine",
+"from_town_hall": "from_town_hall",
+"from_trial_hall": "from_trial_hall",
 "from_wilds": "from_wilds",
 "new_game": "new_game"
 }
