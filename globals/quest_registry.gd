@@ -11,8 +11,44 @@ const DORTHKOR_ROAD: FlagQuest = preload("res://quests/dorthkor_road.tres")
 const DEEP_TRIAL: FlagQuest = preload("res://quests/deep_trial.tres")
 const BELLHOUSE_REPAIR: FlagQuest = preload("res://quests/bellhouse_repair.tres")
 const FIELD_DEBT: FlagQuest = preload("res://quests/field_debt.tres")
+const DISHONEST_CASKS: DomSideQuest = preload("res://quests/dom_dishonest_casks.tres")
+const LIVING_TAG: DomSideQuest = preload("res://quests/dom_living_tag.tres")
+const UNCLAIMED_BED: DomSideQuest = preload("res://quests/dom_unclaimed_bed.tres")
+const COLD_BOWL: DomSideQuest = preload("res://quests/dom_cold_bowl.tres")
+const RAINBOUND_REGISTER: DomSideQuest = preload("res://quests/dom_rainbound_register.tres")
+const LAST_SAFE_COURSE: DomSideQuest = preload("res://quests/dom_last_safe_course.tres")
+const FIFTH_ECHO: DomSideQuest = preload("res://quests/dom_fifth_echo.tres")
+const MARCHING_KNOTS: DomSideQuest = preload("res://quests/dom_marching_knots.tres")
+const ASH_IN_THE_RAIN: DomSideQuest = preload("res://quests/dom_ash_in_the_rain.tres")
+const SMOOTHED_WEIGHTS: DomSideQuest = preload("res://quests/dom_smoothed_weights.tres")
+const DOM_SIDE_QUESTS: Array[DomSideQuest] = [
+	DISHONEST_CASKS,
+	LIVING_TAG,
+	UNCLAIMED_BED,
+	COLD_BOWL,
+	RAINBOUND_REGISTER,
+	LAST_SAFE_COURSE,
+	FIFTH_ECHO,
+	MARCHING_KNOTS,
+	ASH_IN_THE_RAIN,
+	SMOOTHED_WEIGHTS,
+]
 const ALL_QUESTS: Array[Quest] = [
-	LOAMROOT_SPRIGS, DORTHKOR_ROAD, DEEP_TRIAL, BELLHOUSE_REPAIR, FIELD_DEBT
+	LOAMROOT_SPRIGS,
+	DORTHKOR_ROAD,
+	DEEP_TRIAL,
+	BELLHOUSE_REPAIR,
+	FIELD_DEBT,
+	DISHONEST_CASKS,
+	LIVING_TAG,
+	UNCLAIMED_BED,
+	COLD_BOWL,
+	RAINBOUND_REGISTER,
+	LAST_SAFE_COURSE,
+	FIFTH_ECHO,
+	MARCHING_KNOTS,
+	ASH_IN_THE_RAIN,
+	SMOOTHED_WEIGHTS,
 ]
 const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD]
 
@@ -69,6 +105,8 @@ func offer(quest: Quest) -> void:
 		GameState.set_flag("field_debt_open", true)
 		GameState.set_flag("tutorial_road_open", true)
 		SaveGame.request_autosave("field-debt-accepted")
+	elif quest is DomSideQuest:
+		SaveGame.request_autosave("dom-side-quest-accepted")
 
 
 func is_active(quest: Quest) -> bool:
@@ -141,6 +179,58 @@ func resolve_field_debt(reward_id: StringName) -> bool:
 	return true
 
 
+func offer_side_quest(quest: DomSideQuest) -> bool:
+	if not DOM_SIDE_QUESTS.has(quest) or is_active(quest) or is_done(quest):
+		return false
+	offer(quest)
+	return is_active(quest)
+
+
+func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
+	## Apply one authored choice exactly once. Dialogue supplies the choice, but
+	## this method owns completion, the durable resolution flag, and the only
+	## faction-ledger write used by Dom side quests.
+	if not DOM_SIDE_QUESTS.has(quest) or not is_active(quest) or not flags_met(quest):
+		return false
+	var outcome: Dictionary = quest.outcome_for(String(outcome_id))
+	if outcome.is_empty():
+		return false
+	var active_quest: DomSideQuest = null
+	for candidate: Quest in QuestSystem.get_active_quests():
+		if candidate.id == quest.id and candidate is DomSideQuest:
+			active_quest = candidate
+			break
+	if active_quest == null:
+		return false
+	active_quest.objective_completed = true
+	turn_in(active_quest, str(outcome["id"]), false)
+	if not is_done(quest):
+		return false
+	Reputation.record(
+		"player",
+		str(outcome["faction_id"]),
+		float(outcome["reputation_delta"]),
+		str(outcome["cause"]),
+		"dom"
+	)
+	GameState.set_flag(quest.resolution_flag, str(outcome["id"]))
+	SaveGame.request_autosave("dom-side-quest-resolved")
+	return true
+
+
+func side_quest_for_giver(actor_id: String) -> DomSideQuest:
+	for quest in DOM_SIDE_QUESTS:
+		if quest.giver_actor_id == actor_id:
+			return quest
+	return null
+
+
+func side_quest_readback(quest: DomSideQuest) -> String:
+	var outcome_id := str(GameState.get_flag(quest.resolution_flag, ""))
+	var outcome := quest.outcome_for(outcome_id)
+	return str(outcome.get("readback", ""))
+
+
 func _on_inventory_changed() -> void:
 	for quest in QuestSystem.get_active_quests():
 		if quest is FetchQuest:
@@ -198,6 +288,8 @@ func reset() -> void:
 	QuestSystem.completed.reset()
 	for quest in ALL_QUESTS:
 		quest.objective_completed = false
+		if quest is FlagQuest:
+			quest.current_stage = 0
 
 
 func _serialize_pool(quests: Array[Quest]) -> Array[Dictionary]:

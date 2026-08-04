@@ -4,6 +4,7 @@ extends GdUnitTestSuite
 const RenderGenerator := preload("res://tools/render_isometric_sprites.gd")
 const GROUND_ATLAS_PATH := "res://assets/generated/sprites/ground/ground_tiles.png"
 const GROUND_TILESET_PATH := "res://assets/generated/sprites/ground/ground_tileset.tres"
+const MANIFEST_PATH := "res://assets/generated/sprites/manifest.json"
 
 
 func test_camera_contract_is_fixed_dimetric_orthographic() -> void:
@@ -14,11 +15,29 @@ func test_camera_contract_is_fixed_dimetric_orthographic() -> void:
 	assert_bool(RenderGenerator.TILE_SIZE == Vector2i(64, 32)).is_true()
 
 
-func test_committed_sprite_manifest_matches_all_572_source_models() -> void:
+func test_committed_sprite_manifest_matches_all_598_source_models() -> void:
 	var result: Dictionary = RenderGenerator.check_drift()
 	assert_array(Array(result["errors"])).is_empty()
 	assert_bool(result["drift"]).is_false()
-	assert_int(result["count"]).is_equal(572)
+	assert_int(result["count"]).is_equal(598)
+
+
+func test_all_twenty_six_mini_characters_have_generated_sprites() -> void:
+	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(MANIFEST_PATH))
+	var records: Dictionary = manifest["kits"]["mini-characters"]
+	assert_int(records.size()).is_equal(26)
+	var composite_count := 0
+	for model_name: String in records:
+		var output_path := str(records[model_name]["output"])
+		assert_bool(FileAccess.file_exists(output_path)).is_true()
+		var texture := load(output_path) as Texture2D
+		assert_object(texture).is_not_null()
+		var used_rect := texture.get_image().get_used_rect()
+		assert_int(used_rect.size.x).is_greater_equal(15)
+		assert_int(used_rect.size.y).is_greater_equal(20)
+		if records[model_name].has("composite_base"):
+			composite_count += 1
+	assert_int(composite_count).is_equal(14)
 
 
 func test_generated_ground_tileset_uses_64_by_32_diamond_cells() -> void:

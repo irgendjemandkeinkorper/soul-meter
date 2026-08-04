@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 8
+quest_name = "The Unclaimed Bed"
+quest_description = "Irka Stonebreath shelters a trial-broken veteran whom no hall admits sending. Naming the patient restores a public debt; honoring their silence leaves that debt with the hospice."
+quest_objective = "Identify the unclaimed veteran without breaking hospice trust."
+required_flags = PackedStringArray("dom_unclaimed_bed_identified")
+objectives = PackedStringArray("Bring Loa a Scarred Hall token and compare Istra's account.", "Return to Irka Stonebreath and decide who carries the veteran's name.")
+stable_id = "dom/side/unclaimed-bed"
+giver_actor_id = "irka-stonebreath"
+participant_actor_ids = PackedStringArray("irka-stonebreath", "loa-flintthread", "istra-hearthscar")
+hook_ids = PackedStringArray("dom/irka-stonebreath/giver", "dom/loa-flintthread/gate", "dom/istra-hearthscar/information")
+dialogue_title = "dom_side_unclaimed_bed"
+decision_prompt = "Decide whether to return the veteran's name to the Company hall or preserve the refuge of an unnamed hospice bed."
+resolution_flag = "dom_unclaimed_bed_resolution"
+outcome_ids = PackedStringArray("return-the-name", "keep-the-confidence")
+outcome_labels = PackedStringArray("Return the veteran's name and debt to the Company hall.", "Keep the veteran's confidence under hospice protection.")
+outcome_faction_ids = PackedStringArray("iron-companies", "hospice-chain")
+outcome_reputation_deltas = PackedFloat32Array(5.0, 6.0)
+outcome_causes = PackedStringArray("Made an Iron Company answer for the veteran it left unnamed", "Protected an unclaimed veteran's chosen silence at the Drownedmouth hospice")
+outcome_readbacks = PackedStringArray("A Company chair waits beside the bed now; the hall sends meals under the veteran's restored name.", "The bed remains unnamed in public, and every hospice keeper knows exactly whose privacy they guard.")

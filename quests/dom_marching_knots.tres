@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 13
+quest_name = "Marching Knots"
+quest_description = "Senn Brinehook's net returned cut from below and retied in marching order while a chain hand vanished. The pattern can become watch evidence or a shrine warning kept in public memory."
+quest_objective = "Trace the retied net and account for the missing chain hand."
+required_flags = PackedStringArray("dom_marching_knots_traced")
+objectives = PackedStringArray("Match Brek's watch report to Yssra's lights and Toma's missing offerings.", "Return to Senn Brinehook and decide where the net belongs.")
+stable_id = "dom/side/marching-knots"
+giver_actor_id = "senn-brinehook"
+participant_actor_ids = PackedStringArray("senn-brinehook", "brek-saltjaw", "toma-reedhand", "yssra-coldnet", "yara-chainstep")
+hook_ids = PackedStringArray("dom/senn-brinehook/giver", "dom/brek-saltjaw/target", "dom/toma-reedhand/giver", "dom/yssra-coldnet/target", "dom/yara-chainstep/state-change")
+dialogue_title = "dom_side_marching_knots"
+decision_prompt = "Decide whether the retied net is restricted Wound-Watch evidence or a warning displayed at the river shrine."
+resolution_flag = "dom_marching_knots_resolution"
+outcome_ids = PackedStringArray("give-it-to-the-watch", "hang-it-at-the-shrine")
+outcome_labels = PackedStringArray("Give the marching net to the outer-chain watch.", "Hang the net at the river shrine where every harbor hand can read it.")
+outcome_faction_ids = PackedStringArray("ironbrand-sentinels", "wayfare-menders")
+outcome_reputation_deltas = PackedFloat32Array(6.0, 6.0)
+outcome_causes = PackedStringArray("Placed the marching-knotted net in Wound-Watch evidence", "Made the marching knots a public river-shrine warning instead of a sealed report")
+outcome_readbacks = PackedStringArray("The net lies flat beneath watch glass, each marching knot numbered beside Brek's recovered report.", "The retied net hangs over the river shrine; dockhands touch one knot before taking the chain.")

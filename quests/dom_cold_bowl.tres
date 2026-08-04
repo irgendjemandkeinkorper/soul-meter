@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 9
+quest_name = "The Cold Bowl"
+quest_description = "Jorun Ashmantle has kept a missing veteran's place at the charfire table. Finding them is simple; deciding whether absence is desertion or a wound is not."
+quest_objective = "Follow the veteran's trail from the cold bowl."
+required_flags = PackedStringArray("dom_cold_bowl_veteran_found")
+objectives = PackedStringArray("Use Kaelra's old hound and Orenna's hall key to find the veteran.", "Return to Jorun Ashmantle and decide how the hall records the absence.")
+stable_id = "dom/side/cold-bowl"
+giver_actor_id = "jorun-ashmantle"
+participant_actor_ids = PackedStringArray("jorun-ashmantle", "kaelra-pikehand", "orenna-caskbrand")
+hook_ids = PackedStringArray("dom/jorun-ashmantle/giver", "dom/kaelra-pikehand/target", "dom/orenna-caskbrand/target")
+dialogue_title = "dom_side_cold_bowl"
+decision_prompt = "Decide whether the veteran returns to the Company roll or leaves it without being branded a deserter."
+resolution_flag = "dom_cold_bowl_resolution"
+outcome_ids = PackedStringArray("bring-them-home", "release-the-roll")
+outcome_labels = PackedStringArray("Bring the veteran home without a desertion charge.", "Release the veteran from the roll and keep the table place open.")
+outcome_faction_ids = PackedStringArray("iron-companies", "hospice-chain")
+outcome_reputation_deltas = PackedFloat32Array(6.0, 5.0)
+outcome_causes = PackedStringArray("Returned a missing Company veteran without turning grief into a charge", "Let a wounded veteran leave the Company roll without erasing their place at Dom's table")
+outcome_readbacks = PackedStringArray("The veteran eats at the charfire table again; nobody asks where the six nights went.", "The bowl stays warm for any veteran now, while the old name is absent from the duty roll by consent.")

@@ -8,5 +8,7 @@ id = 4
 quest_name = "The Bell That Won't Ring"
 quest_description = "Sella Varn's district bell has gone silent. Inspect the bell house and decide what its silence means before the Registry names it a failure."
 quest_objective = "Inspect the bell house in Dom."
+quest_giver = "Sella Varn"
+quest_location = "Dom bell house"
 required_flags = PackedStringArray("dom_bellhouse_inspected")
 objectives = PackedStringArray("Inspect the bell house in Dom.", "Return to Sella Varn with what you found.")
