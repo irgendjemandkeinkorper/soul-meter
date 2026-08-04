@@ -44,4 +44,4 @@ run_tool \
 run_tool \
 	"TownNpcGenerator" \
 	"res://tools/generate_gloot.gd" \
-	"DATA-GEN: wrote [0-9]+ item prototypes, [0-9]+ encounters, and 60 Dom NPCs\."
+	"DATA-GEN: wrote [0-9]+ item prototypes, [0-9]+ vendors, [0-9]+ encounters, and 60 Dom NPCs\."

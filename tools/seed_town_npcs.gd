@@ -5,6 +5,14 @@ extends Node
 ## script runs; tools/generate_gloot.gd is the one-way path to runtime data.
 
 const TOWN_SCENE := "res://world/starting_town.tscn"
+const TOWNSFOLK_MODEL_COUNT := 26
+const DEFAULT_OUTDOOR_JITTER := Vector2i(26, 20)
+const OUTDOOR_JITTER_BY_PLACEMENT := {
+	"town_market": Vector2i(36, 16),
+	"town_shrine": Vector2i(30, 26),
+	"town_north_road": Vector2i(22, 32),
+	"town_wound_lip": Vector2i(34, 16),
+}
 const NPC_PROPERTIES := [
 	["Display Name", "string"],
 	["Epithet", "string"],
@@ -26,6 +34,9 @@ const NPC_PROPERTIES := [
 	["Placement Anchor", "string"],
 	["Placement X", "float"],
 	["Placement Y", "float"],
+	["Facing", "string"],
+	["Idle Phase", "float"],
+	["Model Index", "int"],
 ]
 const FACTION_PROPERTIES := [
 	["Display Name", "string"],
@@ -166,7 +177,8 @@ func _townsfolk_rows() -> Array[Dictionary]:
 		["aela-quietforge", "Aela Quietforge", "Household tool-mender", "Player's House", "East Arm", "shattersteel-concord", "Aela works only hand tools at home, quiet enough that the East Arm hammers remain the loudest truth.", "town_wound_lip", Vector2(100, 90), "", ""],
 	]
 	var result: Array[Dictionary] = []
-	for row: Array in authored:
+	for authored_index: int in authored.size():
+		var row: Array = authored[authored_index]
 		result.append(
 			_npc(
 				str(row[0]),
@@ -181,6 +193,7 @@ func _townsfolk_rows() -> Array[Dictionary]:
 				str(row[9]),
 				str(row[10]),
 				str(row[11]) if row.size() > 11 else "",
+				authored_index,
 			)
 		)
 	return result
@@ -199,8 +212,12 @@ func _npc(
 	involvement: String,
 	hook_summary: String,
 	vault_id: String,
+	authored_index: int,
 ) -> Dictionary:
 	var placement: Dictionary = PLACEMENT_ANCHORS[placement_key]
+	var placement_offset := offset
+	if placement["scene"] == TOWN_SCENE:
+		placement_offset = _organic_outdoor_offset(npc_id, district, placement_key, offset)
 	var hooks: Array[Dictionary] = []
 	if not involvement.is_empty():
 		var hook := {
@@ -236,9 +253,60 @@ func _npc(
 		"Dialogue Farewell": _farewell(district),
 		"Placement Scene": placement["scene"],
 		"Placement Anchor": placement["anchor"],
-		"Placement X": offset.x,
-		"Placement Y": offset.y,
+		"Placement X": placement_offset.x,
+		"Placement Y": placement_offset.y,
+		"Facing": _plausible_facing(npc_id, placement_key, offset),
+		"Idle Phase": _idle_phase(npc_id),
+		"Model Index": (authored_index * 11) % TOWNSFOLK_MODEL_COUNT,
 	}
+
+
+static func _organic_outdoor_offset(
+	npc_id: String,
+	district: String,
+	placement_key: String,
+	authored_offset: Vector2,
+) -> Vector2:
+	var spread: Vector2i = OUTDOOR_JITTER_BY_PLACEMENT.get(
+		placement_key, DEFAULT_OUTDOOR_JITTER
+	)
+	var x_seed := (npc_id + ":placement-x").hash() & 0x7fffffff
+	var y_seed := (npc_id + ":placement-y").hash() & 0x7fffffff
+	var jitter := Vector2(
+		float(x_seed % (spread.x * 2 + 1) - spread.x),
+		float(y_seed % (spread.y * 2 + 1) - spread.y),
+	)
+	# Bias the local scatter toward each Arm's street without moving anyone
+	# away from their authored building, stall, shrine, road, or watch post.
+	match district:
+		"East Arm":
+			jitter.x += 6.0
+		"West Arm":
+			jitter.x -= 6.0
+		"North Arm":
+			jitter.y -= 4.0
+		"South Arm":
+			jitter.y += 4.0
+	return authored_offset + jitter
+
+
+static func _plausible_facing(
+	npc_id: String, placement_key: String, authored_offset: Vector2
+) -> String:
+	# The paired Wound-Lip posts watch outward; groups around buildings and
+	# stalls look inward, so outer NPCs face one another instead of the camera.
+	if placement_key == "town_wound_lip":
+		return "west" if authored_offset.x < 0.0 else "east"
+	if authored_offset.x < -8.0:
+		return "east"
+	if authored_offset.x > 8.0:
+		return "west"
+	return "east" if ((npc_id + ":facing").hash() & 1) == 0 else "west"
+
+
+static func _idle_phase(npc_id: String) -> float:
+	var phase_seed := (npc_id + ":idle").hash() & 0x7fffffff
+	return float(phase_seed % 6283) / 1000.0
 
 
 func _greeting(district: String) -> String:
