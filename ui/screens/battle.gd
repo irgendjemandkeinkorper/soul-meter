@@ -2,7 +2,7 @@ extends Screen
 ## Full-screen party combat view. Battle owns the rules; this screen is the
 ## presentation layer and submits action IDs to the autoload.
 
-const BATTLE_STAGE := preload("res://ui/screens/battle_stage.gd")
+const BATTLE_STAGE_SCENE := preload("res://ui/screens/battle_stage.tscn")
 const BATTLE_HUD_SCENE := preload("res://ui/hud/battle_hud.tscn")
 const COMBAT_AUDIO := preload("res://audio/combat_audio.gd")
 
@@ -16,6 +16,7 @@ var _balance_bar: ProgressBar
 var _log_lbl: Label
 var _actions_box: GridContainer
 var _target_button: Button
+var _tactical_data_button: Button
 var _outcome_box: VBoxContainer
 var _action_buttons: Array[Button] = []
 var _battle_hud: BattleHUD
@@ -23,12 +24,6 @@ var _combat_audio: Node
 
 
 func _build() -> void:
-	_stage = BATTLE_STAGE.new()
-	_stage.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_stage)
-	Battle.combat_event.connect(Callable(_stage, "consume_event"))
-	Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
-
 	var safe_frame := MarginContainer.new()
 	safe_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
 	safe_frame.theme_type_variation = "BattleSafeFrame"
@@ -39,18 +34,32 @@ func _build() -> void:
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	safe_frame.add_child(layout)
 	layout.add_child(_make_header())
+
+	var stage_space := Control.new()
+	stage_space.name = "BattlefieldViewport"
+	stage_space.custom_minimum_size = Vector2(0, 230)
+	stage_space.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	stage_space.clip_contents = true
+	layout.add_child(stage_space)
+
+	_stage = BATTLE_STAGE_SCENE.instantiate() as Control
+	_stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stage_space.add_child(_stage)
+	Battle.combat_event.connect(Callable(_stage, "consume_event"))
+	Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
+
 	_battle_hud = BATTLE_HUD_SCENE.instantiate() as BattleHUD
-	layout.add_child(_battle_hud)
+	_battle_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_battle_hud.z_index = 5
+	_battle_hud.visible = false
+	stage_space.add_child(_battle_hud)
 	Battle.combat_event.connect(_battle_hud.consume_event)
 	Battle.replay_combat_events(_battle_hud.consume_event)
+
 	_combat_audio = COMBAT_AUDIO.new() as Node
 	add_child(_combat_audio)
 	Battle.combat_event.connect(Callable(_combat_audio, "consume_event"))
 
-	# The stage occupies the breathing room between the title rail and command rail.
-	var stage_space := Control.new()
-	stage_space.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_child(stage_space)
 	layout.add_child(_make_command_rail())
 
 	Battle.turn_resolved.connect(_refresh)
@@ -76,11 +85,12 @@ func _make_header() -> Control:
 	title_stack.add_child(subtitle)
 	header.add_child(title_stack)
 
-	var round_label := Label.new()
-	round_label.text = "ROUND-BASED\nTACTICS"
-	round_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	round_label.theme_type_variation = "EyebrowLabel"
-	header.add_child(round_label)
+	_tactical_data_button = _menu_button(
+		header, "TACTICAL DATA", _toggle_tactical_data
+	)
+	_tactical_data_button.custom_minimum_size = Vector2(118, 36)
+	_tactical_data_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_tactical_data_button.theme_type_variation = "BronzeButton"
 
 	var balance_stack := VBoxContainer.new()
 	balance_stack.custom_minimum_size = Vector2(240, 0)
@@ -148,16 +158,16 @@ func _make_command_rail() -> Control:
 	_actions_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	command_column.add_child(_actions_box)
 	_target_button = _menu_button(command_column, "", Battle.select_next_enemy)
-	_target_button.custom_minimum_size = Vector2(0, 32)
+	_target_button.custom_minimum_size = Vector2(0, 30)
 	_target_button.theme_type_variation = "BronzeButton"
 	for action in Battle.available_actions():
 		var button := _menu_button(_actions_box, _short_action_text(action), _use_action.bind(action.id))
-		button.custom_minimum_size = Vector2(155, 42)
+		button.custom_minimum_size = Vector2(155, 34)
 		button.tooltip_text = _action_tooltip(action)
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_action_buttons.append(button)
 	var flee := _menu_button(command_column, "WITHDRAW", Battle.flee)
-	flee.custom_minimum_size = Vector2(0, 32)
+	flee.custom_minimum_size = Vector2(0, 30)
 	flee.theme_type_variation = "DangerButton"
 
 	var log_panel := PanelContainer.new()
@@ -217,6 +227,16 @@ func _make_meter(fill_color: Color) -> ProgressBar:
 
 func _use_action(action_id: StringName) -> void:
 	Battle.use_action(action_id)
+
+
+func _toggle_tactical_data() -> void:
+	if not is_instance_valid(_battle_hud):
+		return
+	_battle_hud.visible = not _battle_hud.visible
+	if is_instance_valid(_tactical_data_button):
+		_tactical_data_button.text = (
+			"CLOSE TACTICAL DATA" if _battle_hud.visible else "TACTICAL DATA"
+		)
 
 
 func _refresh() -> void:

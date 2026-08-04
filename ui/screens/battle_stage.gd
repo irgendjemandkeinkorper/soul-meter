@@ -21,6 +21,93 @@ const DEFINING_COLOR := Color("#D9AB45")
 const ORDER_COLOR := Color("#22D3EE")
 const CHAOS_COLOR := Color("#B39AF5")
 
+const ENVIRONMENT_NATURE := &"nature"
+const ENVIRONMENT_TOWN := &"fantasy-town"
+const ENVIRONMENT_CASTLE := &"castle"
+const SPRITE_ROOT := "res://assets/generated/sprites"
+const SPRITE_PIVOT_OFFSET := Vector2(0.0, -50.596443)
+const GROUND_ATLAS := preload("res://assets/generated/sprites/ground/ground_tiles.png")
+
+const ENVIRONMENT_TITLES := {
+	ENVIRONMENT_NATURE: "WILDS  •  BROKEN GROUND",
+	ENVIRONMENT_TOWN: "DOM OUTSKIRTS  •  CONTESTED STREET",
+	ENVIRONMENT_CASTLE: "FORTIFIED APPROACH  •  STONE LINE",
+}
+const ENVIRONMENT_COLORS := {
+	ENVIRONMENT_NATURE: Color("#101B1B"),
+	ENVIRONMENT_TOWN: Color("#1A171B"),
+	ENVIRONMENT_CASTLE: Color("#111621"),
+}
+const ENVIRONMENT_TILE_REGIONS := {
+	ENVIRONMENT_NATURE: Rect2(0, 0, 64, 32),
+	ENVIRONMENT_TOWN: Rect2(192, 0, 64, 32),
+	ENVIRONMENT_CASTLE: Rect2(128, 0, 64, 32),
+}
+const ENVIRONMENT_PROPS := {
+	ENVIRONMENT_NATURE: [
+		{"texture": "nature-kit/tree_pineTallA_detailed.png", "position": Vector2(0.06, 0.36), "scale": 1.55},
+		{"texture": "nature-kit/tree_oak_dark.png", "position": Vector2(0.94, 0.35), "scale": 1.35, "flip_h": true},
+		{"texture": "nature-kit/tent_detailedOpen.png", "position": Vector2(0.10, 0.57), "scale": 1.15},
+		{"texture": "nature-kit/rock_largeE.png", "position": Vector2(0.90, 0.57), "scale": 1.25},
+		{"texture": "nature-kit/plant_bushLarge.png", "position": Vector2(0.80, 0.50), "scale": 1.0},
+	],
+	ENVIRONMENT_TOWN: [
+		{"texture": "fantasy-town-kit/wall-wood-door.png", "position": Vector2(0.06, 0.39), "scale": 1.35},
+		{"texture": "fantasy-town-kit/wall-broken.png", "position": Vector2(0.94, 0.39), "scale": 1.30, "flip_h": true},
+		{"texture": "fantasy-town-kit/stall-green.png", "position": Vector2(0.10, 0.57), "scale": 1.15},
+		{"texture": "fantasy-town-kit/fountain-round-detail.png", "position": Vector2(0.89, 0.57), "scale": 1.10},
+		{"texture": "fantasy-town-kit/tree-high-round.png", "position": Vector2(0.84, 0.34), "scale": 1.10},
+	],
+	ENVIRONMENT_CASTLE: [
+		{"texture": "castle-kit/tower-square.png", "position": Vector2(0.06, 0.38), "scale": 1.45},
+		{"texture": "castle-kit/wall-half.png", "position": Vector2(0.18, 0.48), "scale": 1.30},
+		{"texture": "castle-kit/gate.png", "position": Vector2(0.94, 0.40), "scale": 1.45, "flip_h": true},
+		{"texture": "castle-kit/flag-banner-long.png", "position": Vector2(0.84, 0.28), "scale": 1.15},
+		{"texture": "castle-kit/rocks-large.png", "position": Vector2(0.89, 0.57), "scale": 1.20},
+	],
+}
+
+const ALLY_SPRITES_BY_NAME := {
+	"Vex": "mini-characters/character-female-a.png",
+	"Vex the Unbowed": "mini-characters/character-female-a.png",
+	"Serai-Lun": "mini-characters/character-female-b.png",
+	"Old Grumbrand": "mini-characters/character-male-a.png",
+	"Wyneth Hallow-Tide": "mini-characters/character-female-c.png",
+	"Ressa Quickfingers": "mini-characters/character-female-d.png",
+	"Korrath Ninefold": "mini-characters/character-male-b.png",
+	"Maura Greyfen": "mini-characters/character-female-f.png",
+}
+const ALLY_FALLBACK_SPRITES := [
+	"mini-characters/character-female-a.png",
+	"mini-characters/character-female-b.png",
+	"mini-characters/character-female-c.png",
+	"mini-characters/character-female-d.png",
+	"mini-characters/character-female-e.png",
+	"mini-characters/character-female-f.png",
+	"mini-characters/character-male-a.png",
+	"mini-characters/character-male-b.png",
+	"mini-characters/character-male-c.png",
+	"mini-characters/character-male-d.png",
+	"mini-characters/character-male-e.png",
+	"mini-characters/character-male-f.png",
+]
+const ENEMY_SPRITES_BY_ARCHETYPE := {
+	&"bog-wight": "mini-characters/character-male-b.png",
+	&"loam-maddened-boar": "mini-characters/character-male-e.png",
+	&"mustered-bloodbellow": "mini-characters/character-male-f.png",
+	&"gnaal-breach-hound": "mini-characters/character-female-e.png",
+	&"gnaal-rift-scavenger": "mini-characters/character-male-d.png",
+	&"cleaned-jawbrace-guard": "mini-characters/character-male-c.png",
+}
+const ENEMY_TINTS_BY_ARCHETYPE := {
+	&"bog-wight": Color("#B8A5D4"),
+	&"loam-maddened-boar": Color("#C99D72"),
+	&"mustered-bloodbellow": Color("#D88878"),
+	&"gnaal-breach-hound": Color("#8FC7B2"),
+	&"gnaal-rift-scavenger": Color("#9AA0D4"),
+	&"cleaned-jawbrace-guard": Color("#B8C8D6"),
+}
+
 var _snapshot: Dictionary = {}
 var _target_id: StringName = &""
 var _active_actor_id: StringName = &""
@@ -48,15 +135,36 @@ var _channel_generations: Dictionary = {}
 var _global_cue_sequence := -1
 var _global_cue_balance := 0
 
+var _art_root: Control
+var _backdrop: ColorRect
+var _environment_layer: Control
+var _zone_layer: Control
+var _combatant_layer: Control
+var _balance_overlay: ColorRect
+var _environment_label: Label
+var _environment_id: StringName = &""
+var _environment_prop_nodes: Array[Sprite2D] = []
+var _zone_nodes: Dictionary = {}
+var _zone_tiles: Dictionary = {}
+var _zone_labels: Dictionary = {}
+var _occupied_zones: Dictionary = {}
+var _actor_nodes: Dictionary = {}
+var _actor_texture_paths: Dictionary = {}
+
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	clip_contents = true
+	_build_art_layers()
 	_build_cue_layer()
 	set_reduced_motion(
 		bool(GameState.get_setting(SETTING_SECTION, REDUCED_MOTION_KEY, false))
 	)
 	if not GameState.setting_changed.is_connected(_on_setting_changed):
 		GameState.setting_changed.connect(_on_setting_changed)
+	if not resized.is_connected(_layout_stage_art):
+		resized.connect(_layout_stage_art)
+	_sync_stage_art()
 
 
 func consume_event(event: CombatEvent, present_feedback: bool = true) -> void:
@@ -75,7 +183,7 @@ func consume_event(event: CombatEvent, present_feedback: bool = true) -> void:
 
 	if not present_feedback:
 		_sync_defeated_state()
-		queue_redraw()
+		_sync_stage_art()
 		return
 
 	match event.type:
@@ -91,7 +199,7 @@ func consume_event(event: CombatEvent, present_feedback: bool = true) -> void:
 			_present_battle_finished(event)
 
 	_present_new_defeats(event, previous_snapshot)
-	queue_redraw()
+	_sync_stage_art()
 
 
 func set_reduced_motion(enabled: bool) -> void:
@@ -108,7 +216,7 @@ func set_reduced_motion(enabled: bool) -> void:
 		var last_text := _latest_feedback_text()
 		if not last_text.is_empty():
 			_show_static_information(last_text, _active_actor_id, INFORMATION_SECONDS)
-	queue_redraw()
+	_sync_stage_art()
 
 
 func is_reduced_motion_enabled() -> bool:
@@ -138,6 +246,298 @@ func actor_draw_position(actor_id: StringName) -> Vector2:
 	return _center_for_snapshot(_snapshot, actor_id) + Vector2(
 		_movement_offsets.get(actor_id, Vector2.ZERO)
 	)
+
+
+func environment_id() -> StringName:
+	return _environment_id
+
+
+func combatant_texture_path(actor_id: StringName) -> String:
+	return str(_actor_texture_paths.get(actor_id, ""))
+
+
+func environment_sprite_count() -> int:
+	return _environment_prop_nodes.size()
+
+
+func zone_marker_count() -> int:
+	return _zone_nodes.size()
+
+
+func zone_is_occupied(side: StringName, zone: StringName) -> bool:
+	return bool(_occupied_zones.get(_zone_key(side, zone), false))
+
+
+func zone_marker_position(side: StringName, zone: StringName) -> Vector2:
+	return _zone_center(side, zone)
+
+
+func _build_art_layers() -> void:
+	_art_root = Control.new()
+	_art_root.name = "BattleArt"
+	_art_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_art_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Actor y-sorting stays relative inside this deep band, so every art sprite
+	# remains behind the independently-built battle HUD and command rail.
+	_art_root.z_index = -1000
+	add_child(_art_root)
+
+	_backdrop = ColorRect.new()
+	_backdrop.name = "EnvironmentBackdrop"
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_art_root.add_child(_backdrop)
+
+	_environment_layer = _new_art_layer("EnvironmentSprites", 0)
+	_zone_layer = _new_art_layer("BattleZones", 1)
+	_combatant_layer = _new_art_layer("CombatantSprites", 2)
+
+	_balance_overlay = ColorRect.new()
+	_balance_overlay.name = "BalanceFieldOverlay"
+	_balance_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_balance_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_balance_overlay.z_index = 3
+	_balance_overlay.visible = false
+	_art_root.add_child(_balance_overlay)
+
+	_environment_label = Label.new()
+	_environment_label.name = "EnvironmentName"
+	_environment_label.theme_type_variation = &"EyebrowLabel"
+	_environment_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_environment_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_environment_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_environment_label.z_index = 3
+	_art_root.add_child(_environment_label)
+	_build_zone_nodes()
+
+
+func _new_art_layer(layer_name: String, layer_z_index: int) -> Control:
+	var layer := Control.new()
+	layer.name = layer_name
+	layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	layer.z_index = layer_z_index
+	_art_root.add_child(layer)
+	return layer
+
+
+func _build_zone_nodes() -> void:
+	var tile_offsets := [
+		Vector2(-64, 0),
+		Vector2.ZERO,
+		Vector2(64, 0),
+		Vector2(-32, 20),
+		Vector2(32, 20),
+	]
+	for side: StringName in [&"ally", &"enemy"]:
+		for zone: StringName in [&"back", &"front", &"flank"]:
+			var key := _zone_key(side, zone)
+			var zone_node := Node2D.new()
+			zone_node.name = "Zone%s%s" % [
+				String(side).capitalize(), String(zone).capitalize()
+			]
+			_zone_layer.add_child(zone_node)
+			_zone_nodes[key] = zone_node
+
+			var tiles: Array[Sprite2D] = []
+			for tile_offset: Vector2 in tile_offsets:
+				var tile := Sprite2D.new()
+				tile.name = "GroundTile"
+				tile.position = tile_offset
+				tile.scale = Vector2(1.35, 1.35)
+				tile.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				zone_node.add_child(tile)
+				tiles.append(tile)
+			_zone_tiles[key] = tiles
+
+			var label := Label.new()
+			label.name = "ZoneLabel"
+			label.position = Vector2(-90, 43)
+			label.size = Vector2(180, 28)
+			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			label.theme_type_variation = &"EyebrowLabel"
+			label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			label.z_index = 2
+			zone_node.add_child(label)
+			_zone_labels[key] = label
+
+
+func _sync_stage_art() -> void:
+	if not is_instance_valid(_art_root):
+		return
+	var next_environment := _environment_for_snapshot(_snapshot)
+	if next_environment != _environment_id:
+		_environment_id = next_environment
+		_rebuild_environment()
+	_sync_zone_occupancy()
+	_sync_combatant_nodes()
+	_sync_balance_overlay()
+	_layout_stage_art()
+
+
+func _environment_for_snapshot(source: Dictionary) -> StringName:
+	var archetypes: Array[StringName] = []
+	var raw_enemies: Variant = source.get("enemies", [])
+	if raw_enemies is Array:
+		for raw_enemy: Variant in raw_enemies:
+			if not raw_enemy is Dictionary:
+				continue
+			var archetype_id := StringName(raw_enemy.get("archetype_id", ""))
+			if not archetype_id.is_empty():
+				archetypes.append(archetype_id)
+	if &"cleaned-jawbrace-guard" in archetypes:
+		return ENVIRONMENT_CASTLE
+	if &"mustered-bloodbellow" in archetypes:
+		return ENVIRONMENT_TOWN
+	return ENVIRONMENT_NATURE
+
+
+func _rebuild_environment() -> void:
+	for child: Node in _environment_layer.get_children():
+		child.free()
+	_environment_prop_nodes.clear()
+	_backdrop.color = Color(ENVIRONMENT_COLORS.get(_environment_id, Color("#101B1B")))
+	_environment_label.text = str(
+		ENVIRONMENT_TITLES.get(_environment_id, ENVIRONMENT_TITLES[ENVIRONMENT_NATURE])
+	)
+	_set_zone_textures()
+
+	var definitions: Variant = ENVIRONMENT_PROPS.get(
+		_environment_id, ENVIRONMENT_PROPS[ENVIRONMENT_NATURE]
+	)
+	if not definitions is Array:
+		return
+	for raw_definition: Variant in definitions:
+		if not raw_definition is Dictionary:
+			continue
+		var relative_path := str(raw_definition.get("texture", ""))
+		var texture := load("%s/%s" % [SPRITE_ROOT, relative_path]) as Texture2D
+		if texture == null:
+			push_warning("Battle environment sprite is missing: %s" % relative_path)
+			continue
+		var prop := Sprite2D.new()
+		prop.name = relative_path.get_file().get_basename().to_pascal_case()
+		prop.texture = texture
+		prop.offset = SPRITE_PIVOT_OFFSET
+		prop.flip_h = bool(raw_definition.get("flip_h", false))
+		prop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		prop.set_meta("normalized_position", raw_definition.get("position", Vector2.ZERO))
+		prop.set_meta("base_scale", float(raw_definition.get("scale", 1.0)))
+		_environment_layer.add_child(prop)
+		_environment_prop_nodes.append(prop)
+
+
+func _set_zone_textures() -> void:
+	var atlas_texture := AtlasTexture.new()
+	atlas_texture.atlas = GROUND_ATLAS
+	atlas_texture.region = Rect2(
+		ENVIRONMENT_TILE_REGIONS.get(
+			_environment_id, ENVIRONMENT_TILE_REGIONS[ENVIRONMENT_NATURE]
+		)
+	)
+	for key: Variant in _zone_tiles:
+		var raw_tiles: Variant = _zone_tiles[key]
+		if not raw_tiles is Array:
+			continue
+		for raw_tile: Variant in raw_tiles:
+			var tile := raw_tile as Sprite2D
+			if tile != null:
+				tile.texture = atlas_texture
+
+
+func _sync_zone_occupancy() -> void:
+	_occupied_zones.clear()
+	for row: Dictionary in _combatant_rows():
+		var side := StringName(row.get("side", ""))
+		var zone := StringName(row.get("position", "front"))
+		if side.is_empty():
+			continue
+		_occupied_zones[_zone_key(side, zone)] = true
+
+	for key: Variant in _zone_nodes:
+		var occupied := bool(_occupied_zones.get(key, false))
+		var parts := str(key).split(":")
+		var side := StringName(parts[0]) if parts.size() > 0 else &"ally"
+		var zone := StringName(parts[1]) if parts.size() > 1 else &"front"
+		var color := _zone_color(side, zone, occupied)
+		var raw_tiles: Variant = _zone_tiles.get(key, [])
+		if raw_tiles is Array:
+			for raw_tile: Variant in raw_tiles:
+				var tile := raw_tile as Sprite2D
+				if tile != null:
+					tile.modulate = color
+		var label := _zone_labels.get(key) as Label
+		if label != null:
+			label.text = "%s%s  /  %s" % [
+				"◆  " if occupied else "",
+				String(side).to_upper(),
+				String(zone).to_upper(),
+			]
+			label.modulate = Color.WHITE if occupied else Color(0.78, 0.78, 0.82, 0.72)
+
+
+func _zone_color(side: StringName, zone: StringName, occupied: bool) -> Color:
+	var color := Color("#496A72") if side == &"ally" else Color("#725064")
+	match zone:
+		&"back":
+			color = Color("#40566E") if side == &"ally" else Color("#67465F")
+		&"flank":
+			color = Color("#7A633C") if side == &"ally" else Color("#76513D")
+	var alpha := 0.90 if occupied else 0.48
+	return Color(color.r, color.g, color.b, alpha)
+
+
+func _layout_stage_art() -> void:
+	if not is_instance_valid(_art_root):
+		return
+	_environment_label.position = Vector2(28, clampf(size.y * 0.11, 18.0, 80.0))
+	_environment_label.size = Vector2(minf(420.0, size.x * 0.42), 34)
+	var scale_factor := _art_scale()
+	for prop: Sprite2D in _environment_prop_nodes:
+		var normalized := Vector2(prop.get_meta("normalized_position", Vector2.ZERO))
+		prop.position = Vector2(size.x * normalized.x, size.y * normalized.y)
+		prop.scale = Vector2.ONE * float(prop.get_meta("base_scale", 1.0)) * scale_factor
+	for key: Variant in _zone_nodes:
+		var node := _zone_nodes.get(key) as Node2D
+		if node == null:
+			continue
+		var parts := str(key).split(":")
+		var side := StringName(parts[0]) if parts.size() > 0 else &"ally"
+		var zone := StringName(parts[1]) if parts.size() > 1 else &"front"
+		node.position = _zone_center(side, zone)
+		node.scale = Vector2.ONE * scale_factor
+	_sync_combatant_nodes()
+
+
+func _art_scale() -> float:
+	var width_scale := size.x / 1280.0 if size.x > 1.0 else 1.0
+	var height_scale := size.y / 720.0 if size.y > 1.0 else 1.0
+	return clampf(minf(width_scale, height_scale), 0.72, 1.25)
+
+
+func _zone_key(side: StringName, zone: StringName) -> StringName:
+	return StringName("%s:%s" % [String(side), String(zone)])
+
+
+func _zone_center(side: StringName, zone: StringName) -> Vector2:
+	var w := size.x if size.x > 1.0 else 960.0
+	var h := size.y if size.y > 1.0 else 540.0
+	if side == &"ally":
+		match zone:
+			&"back":
+				return Vector2(w * 0.17, h * 0.54)
+			&"flank":
+				return Vector2(w * 0.29, h * 0.37)
+			_:
+				return Vector2(w * 0.36, h * 0.55)
+	match zone:
+		&"back":
+			return Vector2(w * 0.83, h * 0.52)
+		&"flank":
+			return Vector2(w * 0.71, h * 0.35)
+		_:
+			return Vector2(w * 0.64, h * 0.53)
 
 
 func _build_cue_layer() -> void:
@@ -502,35 +902,35 @@ func _stop_motion() -> void:
 
 func _set_movement_offset(offset: Vector2, actor_id: StringName) -> void:
 	_movement_offsets[actor_id] = offset
-	queue_redraw()
+	_sync_combatant_nodes()
 
 
 func _clear_movement_offset(actor_id: StringName) -> void:
 	_movement_offsets.erase(actor_id)
-	queue_redraw()
+	_sync_combatant_nodes()
 
 
 func _set_defeat_progress(progress: float, actor_id: StringName) -> void:
 	_defeat_progress[actor_id] = progress
-	queue_redraw()
+	_sync_combatant_nodes()
 
 
 func _clear_hit_flash(actor_id: StringName, sequence: int) -> void:
 	if int(_hit_flash_sequences.get(actor_id, -1)) == sequence:
 		_hit_flash_sequences.erase(actor_id)
-		queue_redraw()
+		_sync_combatant_nodes()
 
 
 func _clear_defining_cue(actor_id: StringName, sequence: int) -> void:
 	if int(_defining_sequences.get(actor_id, -1)) == sequence:
 		_defining_sequences.erase(actor_id)
-		queue_redraw()
+		_sync_combatant_nodes()
 
 
 func _clear_global_cue(sequence: int) -> void:
 	if _global_cue_sequence == sequence:
 		_global_cue_sequence = -1
-		queue_redraw()
+		_sync_balance_overlay()
 
 
 func _hide_channel_label(
@@ -636,209 +1036,197 @@ func _center_for_snapshot(source: Dictionary, actor_id: StringName) -> Vector2:
 		var raw_rows: Variant = source.get(key, [])
 		if not raw_rows is Array:
 			continue
-		for i in raw_rows.size():
-			var raw_row: Variant = raw_rows[i]
-			if raw_row is Dictionary and StringName(raw_row.get("id", "")) == actor_id:
-				return _base_actor_center(raw_row, i, raw_rows.size())
+		for raw_row: Variant in raw_rows:
+			if not raw_row is Dictionary or StringName(raw_row.get("id", "")) != actor_id:
+				continue
+			var zone := StringName(raw_row.get("position", "front"))
+			var zone_index := 0
+			var zone_count := 0
+			for candidate: Variant in raw_rows:
+				if not candidate is Dictionary:
+					continue
+				if StringName(candidate.get("position", "front")) != zone:
+					continue
+				if StringName(candidate.get("id", "")) == actor_id:
+					zone_index = zone_count
+				zone_count += 1
+			return _base_actor_center(raw_row, zone_index, zone_count)
 	return Vector2(size.x * 0.5, size.y * 0.5)
 
 
 func _base_actor_center(row: Dictionary, index: int, count: int) -> Vector2:
-	var w := size.x if size.x > 1.0 else 960.0
+	var side := StringName(row.get("side", "ally"))
+	var zone := StringName(row.get("position", "front"))
+	var center := _zone_center(side, zone)
 	var h := size.y if size.y > 1.0 else 540.0
-	var side := str(row.get("side", "ally"))
-	var zone := str(row.get("position", "front"))
-	var center := Vector2.ZERO
-	if side == "ally":
-		match zone:
-			"back":
-				center = Vector2(w * 0.18, h * 0.56)
-			"flank":
-				center = Vector2(w * 0.29, h * 0.42)
-			_:
-				center = Vector2(w * 0.34, h * 0.54)
-	else:
-		match zone:
-			"back":
-				center = Vector2(w * 0.82, h * 0.52)
-			"flank":
-				center = Vector2(w * 0.71, h * 0.40)
-			_:
-				center = Vector2(w * 0.66, h * 0.50)
-	var spread := (float(index) - float(count - 1) * 0.5) * minf(72.0, h * 0.08)
+	var zone_spread := clampf(h * 0.20, 60.0, 76.0)
+	var spread := (float(index) - float(maxi(count, 1) - 1) * 0.5) * zone_spread
 	center.y += spread
-	center.x += absf(spread) * (-0.08 if side == "ally" else 0.08)
+	center.x += absf(spread) * (-0.08 if side == &"ally" else 0.08)
 	return center
 
 
-func _draw() -> void:
-	var w := size.x
-	var h := size.y
-	if w < 2.0 or h < 2.0:
+func _sync_combatant_nodes() -> void:
+	if not is_instance_valid(_combatant_layer):
 		return
-
-	for band in range(12):
-		var t := float(band) / 11.0
-		var color := Color("#17152D").lerp(Color("#07080B"), t)
-		draw_rect(Rect2(0, h * 0.72 * t, w, h * 0.72 / 12.0 + 2.0), color)
-
-	var moon := Vector2(w * 0.73, h * 0.24)
-	for ring in range(6, 0, -1):
-		draw_circle(moon, 42.0 + ring * 18.0, Color(0.45, 0.32, 0.78, 0.015 * ring))
-	draw_circle(moon, 42.0, Color("#D9D0FF"))
-	draw_circle(moon + Vector2(-10, -8), 34.0, Color("#9E91C9"))
-
-	for mote in range(18):
-		var x := fmod(float(mote * 113 + 37), w * 0.78) + w * 0.08
-		var y := fmod(float(mote * 67 + 41), h * 0.58) + h * 0.10
-		var radius := 1.0 + float(mote % 3) * 0.7
-		draw_circle(Vector2(x, y), radius, Color(0.66, 0.55, 0.92, 0.18))
-
-	var horizon := h * 0.48
-	draw_colored_polygon(
-		PackedVector2Array([
-			Vector2(0, horizon), Vector2(w, horizon), Vector2(w, h), Vector2(0, h)
-		]),
-		Color("#0D101B"),
-	)
-	for row_index in range(7):
-		var row_y := horizon + pow(float(row_index + 1) / 7.0, 1.8) * h * 0.62
-		draw_line(Vector2(0, row_y), Vector2(w, row_y), Color(0.35, 0.31, 0.56, 0.16), 1.0)
-	for column in range(-8, 14):
-		var top_x := w * 0.5 + column * w * 0.055
-		var bottom_x := w * 0.5 + column * w * 0.16
-		draw_line(
-			Vector2(top_x, horizon), Vector2(bottom_x, h), Color(0.35, 0.31, 0.56, 0.13), 1.0
-		)
-
-	_draw_battle_ellipse(
-		Vector2(w * 0.73, h * 0.55), Vector2(w * 0.20, h * 0.055), Color(0.48, 0.30, 0.84, 0.16)
-	)
-	_draw_battle_ellipse(
-		Vector2(w * 0.25, h * 0.55), Vector2(w * 0.24, h * 0.07), Color(0.10, 0.55, 0.67, 0.11)
-	)
-
-	_draw_side("enemy")
-	_draw_side("ally")
-	_draw_global_cue(w, h)
-
-
-func _draw_side(side: String) -> void:
-	var rows := _rows_for_side(side)
-	for i in rows.size():
-		var row := rows[i]
+	var visible_actor_ids: Dictionary = {}
+	for row: Dictionary in _combatant_rows():
 		var actor_id := StringName(row.get("id", ""))
-		var center := _base_actor_center(row, i, rows.size()) + Vector2(
-			_movement_offsets.get(actor_id, Vector2.ZERO)
-		)
-		var defeat := float(_defeat_progress.get(actor_id, 0.0))
-		center.y += defeat * 18.0
-		if side == "enemy":
-			_draw_enemy(center, row, actor_id)
-		else:
-			_draw_ally(center, row, actor_id)
-		_draw_actor_cues(center, row, actor_id, defeat)
+		if actor_id.is_empty():
+			continue
+		visible_actor_ids[actor_id] = true
+		var node := _actor_nodes.get(actor_id) as Node2D
+		if node == null:
+			node = _create_combatant_node(actor_id)
+			_actor_nodes[actor_id] = node
+		_update_combatant_node(node, row, actor_id)
+
+	for raw_actor_id: Variant in _actor_nodes.keys():
+		if visible_actor_ids.has(raw_actor_id):
+			continue
+		var stale_node := _actor_nodes.get(raw_actor_id) as Node2D
+		if stale_node != null:
+			stale_node.free()
+		_actor_nodes.erase(raw_actor_id)
+		_actor_texture_paths.erase(raw_actor_id)
 
 
-func _draw_enemy(center: Vector2, foe: Dictionary, actor_id: StringName) -> void:
-	var alive := int(foe.get("hp", 0)) > 0
-	var display_name := str(foe.get("display_name", ""))
-	var body_color := Color("#5F426D") if "wight" in display_name.to_lower() else Color("#604D45")
-	if not alive:
-		body_color = Color("#2B2A3A")
-	elif _hit_flash_sequences.has(actor_id):
-		body_color = HIT_COLOR
-	var actor_scale := clampf(0.82 + float(foe.get("max_hp", 1)) / 100.0, 0.82, 1.28)
-	var c := center + Vector2(0, -34.0 * actor_scale)
+func _create_combatant_node(actor_id: StringName) -> Node2D:
+	var node := Node2D.new()
+	node.name = "Combatant_%s" % String(actor_id).replace("-", "_").to_pascal_case()
+	_combatant_layer.add_child(node)
 
-	if actor_id == _target_id and alive:
-		draw_arc(center + Vector2(0, 14), 78.0 * actor_scale, PI * 0.12, PI * 0.88, 28, DEFINING_COLOR, 3.0, true)
-		draw_arc(
-			center + Vector2(0, 14), 88.0 * actor_scale, PI * 0.18, PI * 0.82,
-			24, Color(0.85, 0.67, 0.27, 0.24), 2.0, true
-		)
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite"
+	sprite.offset = SPRITE_PIVOT_OFFSET
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	node.add_child(sprite)
 
-	var head_color := Color("#B8A5C9") if alive else body_color
-	if _hit_flash_sequences.has(actor_id):
-		head_color = HIT_COLOR
-	draw_circle(c + Vector2(0, -42) * actor_scale, 25.0 * actor_scale, head_color)
-	draw_line(c + Vector2(-12, -62) * actor_scale, c + Vector2(-35, -92) * actor_scale, body_color, 5.0 * actor_scale)
-	draw_line(c + Vector2(12, -62) * actor_scale, c + Vector2(35, -92) * actor_scale, body_color, 5.0 * actor_scale)
-	draw_colored_polygon(
-		PackedVector2Array([
-			c + Vector2(-40, -18) * actor_scale, c + Vector2(40, -18) * actor_scale,
-			c + Vector2(60, 72) * actor_scale, c + Vector2(-62, 72) * actor_scale
-		]),
-		body_color,
-	)
-	draw_colored_polygon(
-		PackedVector2Array([
-			c + Vector2(-10, -18) * actor_scale, c + Vector2(10, -18) * actor_scale,
-			c + Vector2(6, 72) * actor_scale, c + Vector2(-6, 72) * actor_scale
-		]),
-		Color(0.10, 0.08, 0.16, 0.8),
-	)
-	draw_circle(c + Vector2(-9, -45) * actor_scale, 4.0 * actor_scale, Color("#EF4444") if alive else Color("#343144"))
-	draw_circle(c + Vector2(9, -45) * actor_scale, 4.0 * actor_scale, Color("#EF4444") if alive else Color("#343144"))
+	var identity := Label.new()
+	identity.name = "Identity"
+	identity.position = Vector2(-105, -146)
+	identity.size = Vector2(210, 42)
+	identity.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	identity.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	identity.theme_type_variation = &"EyebrowLabel"
+	identity.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	identity.z_index = 2
+	node.add_child(identity)
+
+	var marker := Label.new()
+	marker.name = "StateMarker"
+	marker.position = Vector2(-105, -178)
+	marker.size = Vector2(210, 32)
+	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	marker.theme_type_variation = &"StatLabel"
+	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	marker.z_index = 3
+	node.add_child(marker)
+	return node
 
 
-func _draw_ally(center: Vector2, ally: Dictionary, actor_id: StringName) -> void:
-	var alive := int(ally.get("hp", 0)) > 0
-	var selected := actor_id == _active_actor_id
-	var accent := ORDER_COLOR if selected else Color("#607A96")
-	if not alive:
-		accent = Color("#303542")
-	elif _hit_flash_sequences.has(actor_id):
-		accent = HIT_COLOR
-	if selected and alive:
-		draw_arc(center + Vector2(0, 14), 52.0, PI * 0.18, PI * 0.82, 24, ORDER_COLOR, 3.0, true)
-	var head_color := Color("#C2CCD8") if alive else Color("#3A3D49")
-	if _hit_flash_sequences.has(actor_id):
-		head_color = HIT_COLOR
-	draw_circle(center + Vector2(0, -47), 17.0, head_color)
-	draw_colored_polygon(
-		PackedVector2Array([
-			center + Vector2(-24, -29), center + Vector2(20, -29),
-			center + Vector2(37, 58), center + Vector2(-38, 58)
-		]),
-		Color("#283B51") if alive else Color("#20232D"),
-	)
-	draw_line(center + Vector2(18, -18), center + Vector2(48, 34), accent, 5.0 if selected else 3.0)
-	draw_line(center + Vector2(48, 34), center + Vector2(64, 27), accent, 3.0)
-
-
-func _draw_actor_cues(
-	center: Vector2, row: Dictionary, actor_id: StringName, defeat: float
+func _update_combatant_node(
+	node: Node2D, row: Dictionary, actor_id: StringName
 ) -> void:
-	if actor_id == _active_actor_id and int(row.get("hp", 0)) > 0:
-		var marker := center + Vector2(0, -128)
-		draw_colored_polygon(PackedVector2Array([
-			marker + Vector2(0, -9), marker + Vector2(9, 0),
-			marker + Vector2(0, 9), marker + Vector2(-9, 0),
-		]), ORDER_COLOR)
-		draw_line(marker + Vector2(0, 11), center + Vector2(0, -82), ORDER_COLOR, 2.0)
+	var side := StringName(row.get("side", "ally"))
+	var alive := int(row.get("hp", 0)) > 0
+	var texture_path := _sprite_path_for(row)
+	var sprite := node.get_node_or_null("Sprite") as Sprite2D
+	var visual_scale := _art_scale()
+	if sprite != null and str(_actor_texture_paths.get(actor_id, "")) != texture_path:
+		sprite.texture = load(texture_path) as Texture2D
+		_actor_texture_paths[actor_id] = texture_path
+	if sprite != null:
+		sprite.flip_h = side == &"enemy"
+		var defeat := float(_defeat_progress.get(actor_id, 0.0))
+		var base_scale := _combatant_scale(row) * visual_scale
+		sprite.scale = Vector2(base_scale, base_scale * (1.0 - defeat * 0.34))
+		sprite.rotation = (0.42 if side == &"enemy" else -0.42) * defeat
+		var tint := _combatant_tint(row)
+		if _hit_flash_sequences.has(actor_id) and alive:
+			tint = HIT_COLOR
+		elif not alive:
+			tint = Color("#777884")
+			tint.a = 0.52
+		sprite.modulate = tint
+
+	var center := _center_for_snapshot(_snapshot, actor_id)
+	center += Vector2(_movement_offsets.get(actor_id, Vector2.ZERO))
+	center.y += float(_defeat_progress.get(actor_id, 0.0)) * 18.0
+	node.position = center
+	node.z_index = clampi(int(center.y), 0, 1000)
+
+	var identity := node.get_node_or_null("Identity") as Label
+	if identity != null:
+		identity.position.y = -146.0 * visual_scale
+		identity.text = "%s\n%s" % [
+			str(row.get("display_name", actor_id)).to_upper(),
+			str(row.get("position", "front")).to_upper(),
+		]
+		identity.modulate = Color.WHITE if alive else Color(0.65, 0.65, 0.70, 0.62)
+
+	var markers: Array[String] = []
+	if actor_id == _active_actor_id and alive:
+		markers.append("◆ ACTIVE")
+	if actor_id == _target_id and alive:
+		markers.append("◎ TARGET")
 	if _defining_sequences.has(actor_id):
-		draw_arc(center + Vector2(0, -20), 84.0, 0.0, TAU, 40, DEFINING_COLOR, 4.0, true)
-		draw_arc(center + Vector2(0, -20), 98.0, 0.0, TAU, 40, Color(0.85, 0.67, 0.27, 0.45), 2.0, true)
-	if defeat > 0.0:
-		var width := 34.0 * defeat
-		draw_line(center + Vector2(-width, -50), center + Vector2(width, 18), Color("#A9A1B8"), 3.0)
-		draw_line(center + Vector2(width, -50), center + Vector2(-width, 18), Color("#A9A1B8"), 3.0)
+		markers.append("✦ DEFINED")
+	var marker := node.get_node_or_null("StateMarker") as Label
+	if marker != null:
+		marker.position.y = -178.0 * visual_scale
+		if center.y + marker.position.y < 2.0:
+			marker.position.y = 2.0 - center.y
+			if identity != null:
+				identity.position.y = 30.0 - center.y
+		marker.text = "   ".join(markers)
+		marker.modulate = (
+			DEFINING_COLOR
+			if _defining_sequences.has(actor_id)
+			else (ORDER_COLOR if side == &"ally" else Color("#E8B5CD"))
+		)
 
 
-func _draw_global_cue(w: float, h: float) -> void:
-	if _global_cue_sequence < 0:
+func _sprite_path_for(row: Dictionary) -> String:
+	var side := StringName(row.get("side", "ally"))
+	var relative_path := ""
+	if side == &"enemy":
+		var archetype_id := StringName(row.get("archetype_id", ""))
+		relative_path = str(ENEMY_SPRITES_BY_ARCHETYPE.get(archetype_id, ""))
+		if relative_path.is_empty():
+			var enemy_seed := str(row.get("display_name", archetype_id)).hash()
+			relative_path = ALLY_FALLBACK_SPRITES[
+				posmod(enemy_seed + 6, ALLY_FALLBACK_SPRITES.size())
+			]
+	else:
+		var display_name := str(row.get("display_name", ""))
+		relative_path = str(ALLY_SPRITES_BY_NAME.get(display_name, ""))
+		if relative_path.is_empty():
+			relative_path = ALLY_FALLBACK_SPRITES[
+				posmod(display_name.hash(), ALLY_FALLBACK_SPRITES.size())
+			]
+	return "%s/%s" % [SPRITE_ROOT, relative_path]
+
+
+func _combatant_scale(row: Dictionary) -> float:
+	if StringName(row.get("side", "ally")) == &"ally":
+		return 2.70
+	return clampf(2.68 + float(row.get("max_hp", 1)) / 180.0, 2.72, 3.15)
+
+
+func _combatant_tint(row: Dictionary) -> Color:
+	if StringName(row.get("side", "ally")) == &"ally":
+		return Color.WHITE
+	var archetype_id := StringName(row.get("archetype_id", ""))
+	return Color(ENEMY_TINTS_BY_ARCHETYPE.get(archetype_id, Color("#C3B7CA")))
+
+
+func _sync_balance_overlay() -> void:
+	if not is_instance_valid(_balance_overlay):
+		return
+	_balance_overlay.visible = _global_cue_sequence >= 0
+	if not _balance_overlay.visible:
 		return
 	var color := ORDER_COLOR if _global_cue_balance > 0 else CHAOS_COLOR
-	draw_rect(Rect2(Vector2.ZERO, Vector2(w, h)), Color(color.r, color.g, color.b, 0.08))
-	draw_rect(Rect2(8, 8, w - 16, h - 16), Color(color.r, color.g, color.b, 0.72), false, 5.0)
-	draw_arc(Vector2(w * 0.5, h * 0.48), minf(w, h) * 0.34, 0.0, PI, 56, color, 3.0, true)
-	draw_arc(Vector2(w * 0.5, h * 0.48), minf(w, h) * 0.34, PI, TAU, 56, color, 3.0, true)
-
-
-func _draw_battle_ellipse(center: Vector2, radii: Vector2, color: Color) -> void:
-	var points := PackedVector2Array()
-	for i in 32:
-		var angle := TAU * float(i) / 32.0
-		points.append(center + Vector2(cos(angle) * radii.x, sin(angle) * radii.y))
-	draw_colored_polygon(points, color)
+	_balance_overlay.color = Color(color.r, color.g, color.b, 0.10)
