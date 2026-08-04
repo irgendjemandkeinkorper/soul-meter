@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 10
+quest_name = "Rain in the Register"
+quest_description = "A road register came home with rain inside its seals and one Crossing name struck out. Restoring the name preserves a witness; retiring it lets the night road open."
+quest_objective = "Reconstruct the storm-damaged road register."
+required_flags = PackedStringArray("dom_rainbound_register_reconstructed")
+objectives = PackedStringArray("Match Brinna's census name to Enna's watch proof and Kessa's warning.", "Return to Hadrik Vale and rule on the disputed entry.")
+stable_id = "dom/side/rainbound-register"
+giver_actor_id = "hadrik-vale"
+participant_actor_ids = PackedStringArray("hadrik-vale", "brinna-fourbells", "enna-grayscar", "kessa-nightrail")
+hook_ids = PackedStringArray("dom/hadrik-vale/giver", "dom/brinna-fourbells/information", "dom/enna-grayscar/gate", "dom/kessa-nightrail/gate")
+dialogue_title = "dom_side_rainbound_register"
+decision_prompt = "Decide whether the crossed-out traveler remains an active witness or becomes a closed entry so the road can reopen."
+resolution_flag = "dom_rainbound_register_resolution"
+outcome_ids = PackedStringArray("restore-the-entry", "close-the-road-name")
+outcome_labels = PackedStringArray("Restore the crossed-out name as an active witness.", "Close the disputed entry and release the night road.")
+outcome_faction_ids = PackedStringArray("rennen", "trial-council")
+outcome_reputation_deltas = PackedFloat32Array(6.0, 5.0)
+outcome_causes = PackedStringArray("Restored a storm-damaged witness entry to the Rennen road register", "Closed a disputed road name so Dom could reopen the night gate")
+outcome_readbacks = PackedStringArray("The restored name remains on every gate copy, marked WITNESS rather than MISSING.", "The night road opens under a fresh seal; the retired name remains in the margin, not the active count.")

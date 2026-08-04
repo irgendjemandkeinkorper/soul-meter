@@ -1,0 +1,309 @@
+~ dom_side_dishonest_casks
+Keth Varr: Honest bronze seals can still close around dishonest water. I need the casks traced before the East Arm drinks its own forge ash.
+=> dom_side_dishonest_casks_hub
+
+~ dom_side_dishonest_casks_hub
+- "Take the cooling-water inquiry." [if not QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and not QuestRegistry.is_done(QuestRegistry.DISHONEST_CASKS) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.DISHONEST_CASKS)
+	Keth Varr: Arvek knows the burned cooper mark. Orm and Torv can tell you what one stopped cadence costs. Bring me all three truths.
+	=> END
+- "Arvek's mark and the forge tally agree." [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and not GameState.get_flag("dom_dishonest_casks_traced") /]
+	do GameState.set_flag("dom_dishonest_casks_traced", true)
+	Keth Varr: Then choose the danger Dom carries: a brief silence now or guarded water beneath every hammer.
+	=> END
+- "Seal the suspect casks until clean water arrives." [#consequence=Council safety before an uninterrupted Hammer Roar] [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and QuestRegistry.flags_met(QuestRegistry.DISHONEST_CASKS) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.DISHONEST_CASKS, "halt-the-water")
+	Keth Varr: The seals stay shut. Let every shortened shift remember why.
+	=> END
+- "Keep the forges sounding under a guarded water rotation." [#consequence=Concord watch keeps the Hammer Roar alive] [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and QuestRegistry.flags_met(QuestRegistry.DISHONEST_CASKS) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.DISHONEST_CASKS, "keep-the-roar")
+	Keth Varr: Every cask gets a watcher and every watcher signs twice. The Roar holds.
+	=> END
+- "What changed after the casks were sealed?" [if QuestRegistry.is_done(QuestRegistry.DISHONEST_CASKS) and GameState.get_flag("dom_dishonest_casks_resolution") == "halt-the-water" /]
+	Keth Varr: The suspect casks remain under Council seal; the East Arm works shorter shifts on clean reserves.
+	=> END
+- "What changed after the guarded rotation?" [if QuestRegistry.is_done(QuestRegistry.DISHONEST_CASKS) and GameState.get_flag("dom_dishonest_casks_resolution") == "keep-the-roar" /]
+	Keth Varr: Every cooling cask now carries a Concord watcher; the Hammer Roar never stopped.
+	=> END
+- "Leave the seals with you."
+	Keth Varr: I trust metal more than promises. Today I have both.
+	=> END
+
+~ dom_side_living_tag
+Droma Flintjaw: A clean plate came off the Jawbrace with a living guard's tag still tied to it. Either the report lies or the armor does.
+=> dom_side_living_tag_hub
+
+~ dom_side_living_tag_hub
+- "Take the armor-tag inquiry." [if not QuestRegistry.is_active(QuestRegistry.LIVING_TAG) and not QuestRegistry.is_done(QuestRegistry.LIVING_TAG) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.LIVING_TAG)
+	Droma Flintjaw: Korrin remembers how the guard stood. Ressa can read the brand. Bring me proof that survives both accounts.
+	=> END
+- "Korrin's posture and Ressa's brand identify the living owner." [if QuestRegistry.is_active(QuestRegistry.LIVING_TAG) and not GameState.get_flag("dom_living_tag_verified") /]
+	do GameState.set_flag("dom_living_tag_verified", true)
+	Droma Flintjaw: Then the tag is true and the casualty line is false. Decide which truth touches the plate first.
+	=> END
+- "Quarantine the plate as Wound-Watch evidence." [#consequence=The Sentinels chain the empty armor away] [if QuestRegistry.is_active(QuestRegistry.LIVING_TAG) and QuestRegistry.flags_met(QuestRegistry.LIVING_TAG) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.LIVING_TAG, "quarantine-the-plate")
+	Droma Flintjaw: Chained screen and double watch. No living body goes inside that iron.
+	=> END
+- "Strike the false death entry and return the guard's name." [#consequence=The Council restores a living name to morning roll] [if QuestRegistry.is_active(QuestRegistry.LIVING_TAG) and QuestRegistry.flags_met(QuestRegistry.LIVING_TAG) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.LIVING_TAG, "restore-the-name")
+	Droma Flintjaw: The tag goes back. The plate does not. That is as close to balance as this report permits.
+	=> END
+- "What became of the quarantined plate?" [if QuestRegistry.is_done(QuestRegistry.LIVING_TAG) and GameState.get_flag("dom_living_tag_resolution") == "quarantine-the-plate" /]
+	Droma Flintjaw: The clean plate stands behind a chained screen now; no watch hand is asked to wear it.
+	=> END
+- "Does morning roll carry the guard again?" [if QuestRegistry.is_done(QuestRegistry.LIVING_TAG) and GameState.get_flag("dom_living_tag_resolution") == "restore-the-name" /]
+	Droma Flintjaw: Morning roll speaks the guard's name again, and the false casualty line has been cut away.
+	=> END
+- "I have no ruling yet."
+	Droma Flintjaw: Then do not let the plate make one for you.
+	=> END
+
+~ dom_side_unclaimed_bed
+Irka Stonebreath: One veteran lies in my ward without a hall name. Mercy keeps the bed; truth decides who owes for it.
+=> dom_side_unclaimed_bed_hub
+
+~ dom_side_unclaimed_bed_hub
+- "Ask after the unclaimed veteran." [if not QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and not QuestRegistry.is_done(QuestRegistry.UNCLAIMED_BED) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.UNCLAIMED_BED)
+	Irka Stonebreath: Loa will open the curtain for an honest token. Istra remembers the scar that the Company stopped naming.
+	=> END
+- "Loa's token and Istra's account identify the veteran." [if QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and not GameState.get_flag("dom_unclaimed_bed_identified") /]
+	do GameState.set_flag("dom_unclaimed_bed_identified", true)
+	Irka Stonebreath: Knowing a name does not grant the right to spend it. Decide where that debt belongs.
+	=> END
+- "Return the veteran's name and debt to the Company hall." [#consequence=The Company must answer for the bed it left unnamed] [if QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and QuestRegistry.flags_met(QuestRegistry.UNCLAIMED_BED) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.UNCLAIMED_BED, "return-the-name")
+	Irka Stonebreath: I will speak the name once to the hall and never as a spectacle.
+	=> END
+- "Keep the veteran's confidence under hospice protection." [#consequence=The hospice keeps the name and the debt] [if QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and QuestRegistry.flags_met(QuestRegistry.UNCLAIMED_BED) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.UNCLAIMED_BED, "keep-the-confidence")
+	Irka Stonebreath: Then the Chain carries the debt without demanding the patient's story as payment.
+	=> END
+- "Did the Company claim its debt?" [if QuestRegistry.is_done(QuestRegistry.UNCLAIMED_BED) and GameState.get_flag("dom_unclaimed_bed_resolution") == "return-the-name" /]
+	Irka Stonebreath: A Company chair waits beside the bed now; the hall sends meals under the veteran's restored name.
+	=> END
+- "Does the bed remain unnamed?" [if QuestRegistry.is_done(QuestRegistry.UNCLAIMED_BED) and GameState.get_flag("dom_unclaimed_bed_resolution") == "keep-the-confidence" /]
+	Irka Stonebreath: The bed remains unnamed in public, and every hospice keeper knows exactly whose privacy they guard.
+	=> END
+- "Leave the ward quiet."
+	Irka Stonebreath: Quiet can be medicine when nobody mistakes it for forgetting.
+	=> END
+
+~ dom_side_cold_bowl
+Jorun Ashmantle: One bowl has gone cold for six nights. The veteran who owns it is alive; the Company has not decided whether that makes the absence better.
+=> dom_side_cold_bowl_hub
+
+~ dom_side_cold_bowl_hub
+- "Find the veteran behind the cold bowl." [if not QuestRegistry.is_active(QuestRegistry.COLD_BOWL) and not QuestRegistry.is_done(QuestRegistry.COLD_BOWL) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.COLD_BOWL)
+	Jorun Ashmantle: Kaelra's oldest hound keeps the scent. Orenna has the key to the last place the veteran ate alone.
+	=> END
+- "The hound found the veteran beyond the locked hall." [if QuestRegistry.is_active(QuestRegistry.COLD_BOWL) and not GameState.get_flag("dom_cold_bowl_veteran_found") /]
+	do GameState.set_flag("dom_cold_bowl_veteran_found", true)
+	Jorun Ashmantle: Found is not returned. Decide whether the roll needs the veteran more than the veteran needs distance from it.
+	=> END
+- "Bring the veteran home without a desertion charge." [#consequence=The Company makes room without punishment] [if QuestRegistry.is_active(QuestRegistry.COLD_BOWL) and QuestRegistry.flags_met(QuestRegistry.COLD_BOWL) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.COLD_BOWL, "bring-them-home")
+	Jorun Ashmantle: The bowl will be warm. No questions until the veteran chooses to answer one.
+	=> END
+- "Release the veteran from the roll and keep the table place open." [#consequence=The hall remembers without conscripting grief] [if QuestRegistry.is_active(QuestRegistry.COLD_BOWL) and QuestRegistry.flags_met(QuestRegistry.COLD_BOWL) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.COLD_BOWL, "release-the-roll")
+	Jorun Ashmantle: A place can remain without becoming a chain. I will make the copyist understand that.
+	=> END
+- "Is the bowl warm again?" [if QuestRegistry.is_done(QuestRegistry.COLD_BOWL) and GameState.get_flag("dom_cold_bowl_resolution") == "bring-them-home" /]
+	Jorun Ashmantle: The veteran eats at the charfire table again; nobody asks where the six nights went.
+	=> END
+- "What remains after the roll released them?" [if QuestRegistry.is_done(QuestRegistry.COLD_BOWL) and GameState.get_flag("dom_cold_bowl_resolution") == "release-the-roll" /]
+	Jorun Ashmantle: The bowl stays warm for any veteran now, while the old name is absent from the duty roll by consent.
+	=> END
+- "Keep the place for now."
+	Jorun Ashmantle: A kept place is a promise. Do not confuse it with an order.
+	=> END
+
+~ dom_side_rainbound_register
+Hadrik Vale: A road register returned with rain inside three intact seals. One crossed-out name is still answering at Dom's gates.
+=> dom_side_rainbound_register_hub
+
+~ dom_side_rainbound_register_hub
+- "Reconstruct the rainbound register." [if not QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and not QuestRegistry.is_done(QuestRegistry.RAINBOUND_REGISTER) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.RAINBOUND_REGISTER)
+	Hadrik Vale: Brinna has the Crossing count. Enna has the sealed watch proof. Kessa has the road warning that must agree with both.
+	=> END
+- "The census name matches both watch records." [if QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and not GameState.get_flag("dom_rainbound_register_reconstructed") /]
+	do GameState.set_flag("dom_rainbound_register_reconstructed", true)
+	Hadrik Vale: Then the evidence is complete and the meaning remains disputed. Choose which column bears the name.
+	=> END
+- "Restore the crossed-out name as an active witness." [#consequence=The Registry preserves a living witness] [if QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and QuestRegistry.flags_met(QuestRegistry.RAINBOUND_REGISTER) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.RAINBOUND_REGISTER, "restore-the-entry")
+	Hadrik Vale: WITNESS is an available classification. For once it is also the humane one.
+	=> END
+- "Close the disputed entry and release the night road." [#consequence=The Council opens the gate under a clean count] [if QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and QuestRegistry.flags_met(QuestRegistry.RAINBOUND_REGISTER) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.RAINBOUND_REGISTER, "close-the-road-name")
+	Hadrik Vale: The active count closes. I will preserve the name in the margin where closure cannot become erasure.
+	=> END
+- "How is the restored witness recorded?" [if QuestRegistry.is_done(QuestRegistry.RAINBOUND_REGISTER) and GameState.get_flag("dom_rainbound_register_resolution") == "restore-the-entry" /]
+	Hadrik Vale: The restored name remains on every gate copy, marked WITNESS rather than MISSING.
+	=> END
+- "Did the night road reopen?" [if QuestRegistry.is_done(QuestRegistry.RAINBOUND_REGISTER) and GameState.get_flag("dom_rainbound_register_resolution") == "close-the-road-name" /]
+	Hadrik Vale: The night road opens under a fresh seal; the retired name remains in the margin, not the active count.
+	=> END
+- "Close the drawer."
+	Hadrik Vale: Closed is not gone. That distinction keeps this building standing.
+	=> END
+
+~ dom_side_last_safe_course
+Orren Chainwake: One safe course remains below the sea-mouth and a crew is waiting at its far end. A route can save lives or attract enough hulls to kill them.
+=> dom_side_last_safe_course_hub
+
+~ dom_side_last_safe_course_hub
+- "Verify the last safe course." [if not QuestRegistry.is_active(QuestRegistry.LAST_SAFE_COURSE) and not QuestRegistry.is_done(QuestRegistry.LAST_SAFE_COURSE) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.LAST_SAFE_COURSE)
+	Orren Chainwake: Holst has the old line. Yssra saw the new storm lights. Yara knows how far the outer chain can yield.
+	=> END
+- "The pilot line and outer-chain report agree." [if QuestRegistry.is_active(QuestRegistry.LAST_SAFE_COURSE) and not GameState.get_flag("dom_last_safe_course_verified") /]
+	do GameState.set_flag("dom_last_safe_course_verified", true)
+	Orren Chainwake: Then the course is true today. Decide how many tomorrows get to spend it.
+	=> END
+- "Publish the course to every Drownedmouth pilot." [#consequence=Every pilot may carry stranded crews home] [if QuestRegistry.is_active(QuestRegistry.LAST_SAFE_COURSE) and QuestRegistry.flags_met(QuestRegistry.LAST_SAFE_COURSE) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.LAST_SAFE_COURSE, "publish-the-course")
+	Orren Chainwake: I will cut the marks before the tide turns. Shared danger is still shared knowledge.
+	=> END
+- "Reserve the course for rescue crews and the outer-chain watch." [#consequence=The last lane stays guarded and clear] [if QuestRegistry.is_active(QuestRegistry.LAST_SAFE_COURSE) and QuestRegistry.flags_met(QuestRegistry.LAST_SAFE_COURSE) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.LAST_SAFE_COURSE, "guard-the-course")
+	Orren Chainwake: Rescue hulls only. A secret route is ugly; a crowded grave is uglier.
+	=> END
+- "What followed publication?" [if QuestRegistry.is_done(QuestRegistry.LAST_SAFE_COURSE) and GameState.get_flag("dom_last_safe_course_resolution") == "publish-the-course" /]
+	Orren Chainwake: Fresh route marks hang in every pilot lodge; stranded crews can now name their way home.
+	=> END
+- "How is the guarded course used?" [if QuestRegistry.is_done(QuestRegistry.LAST_SAFE_COURSE) and GameState.get_flag("dom_last_safe_course_resolution") == "guard-the-course" /]
+	Orren Chainwake: Only rescue hulls carry the guarded marks, and Yara keeps the outer chain clear for them.
+	=> END
+- "Wait for calmer water."
+	Orren Chainwake: Calm is a rumor here. A verified course is better.
+	=> END
+
+~ dom_side_fifth_echo
+Pell Hammersong: Four Arms answer in four beats. The western storm keeps sending me a fifth, soft enough to deny and too regular to ignore.
+=> dom_side_fifth_echo_hub
+
+~ dom_side_fifth_echo_hub
+- "Test the fifth echo." [if not QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and not QuestRegistry.is_done(QuestRegistry.FIFTH_ECHO) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.FIFTH_ECHO)
+	Pell Hammersong: Nalla knows the unknown reply. Tern knows the memorial silence. Sorek can tell a living call from the rest.
+	=> END
+- "The fifth beat survives every test." [if QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and not GameState.get_flag("dom_fifth_echo_tested") /]
+	do GameState.set_flag("dom_fifth_echo_tested", true)
+	Pell Hammersong: Then it is not bad tuning. Decide whether civic speech excludes it or learns to warn with it.
+	=> END
+- "Damp the fifth echo and restore the four-beat signal." [#consequence=The Jawbrace returns to one unambiguous cadence] [if QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and QuestRegistry.flags_met(QuestRegistry.FIFTH_ECHO) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.FIFTH_ECHO, "damp-the-echo")
+	Pell Hammersong: Cloth under the western skin. Four beats will mean four beats again.
+	=> END
+- "Keep the fifth echo as a public warning beat." [#consequence=Dom makes room for a warning its old rhythm missed] [if QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and QuestRegistry.flags_met(QuestRegistry.FIFTH_ECHO) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.FIFTH_ECHO, "keep-the-warning")
+	Pell Hammersong: Then the pause becomes speech. Everyone crossing the brace will learn why it is there.
+	=> END
+- "Does the brace answer cleanly now?" [if QuestRegistry.is_done(QuestRegistry.FIFTH_ECHO) and GameState.get_flag("dom_fifth_echo_resolution") == "damp-the-echo" /]
+	Pell Hammersong: The Jawbrace answers in four clean beats again, with a dampening cloth under the western drum.
+	=> END
+- "Has Dom learned the warning beat?" [if QuestRegistry.is_done(QuestRegistry.FIFTH_ECHO) and GameState.get_flag("dom_fifth_echo_resolution") == "keep-the-warning" /]
+	Pell Hammersong: Every gate signal now leaves room for a fifth warning beat; nobody calls the pause an accident.
+	=> END
+- "Let the echo wait."
+	Pell Hammersong: It has waited longer than either of us.
+	=> END
+
+~ dom_side_marching_knots
+Senn Brinehook: My net came back cut from below and every knot was retied in marching order. Brek vanished from the same watch.
+=> dom_side_marching_knots_hub
+
+~ dom_side_marching_knots_hub
+- "Trace the marching knots." [if not QuestRegistry.is_active(QuestRegistry.MARCHING_KNOTS) and not QuestRegistry.is_done(QuestRegistry.MARCHING_KNOTS) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.MARCHING_KNOTS)
+	Senn Brinehook: Start with Brek's report. Toma knows which offerings are gone. Yssra saw the wall lights when the net rose.
+	=> END
+- "The missing report and shrine count match the knots." [if QuestRegistry.is_active(QuestRegistry.MARCHING_KNOTS) and not GameState.get_flag("dom_marching_knots_traced") /]
+	do GameState.set_flag("dom_marching_knots_traced", true)
+	Senn Brinehook: Then the pattern belongs to everyone in danger or only the watch trying to name it. Choose.
+	=> END
+- "Give the marching net to the outer-chain watch." [#consequence=The net becomes numbered Wound-Watch evidence] [if QuestRegistry.is_active(QuestRegistry.MARCHING_KNOTS) and QuestRegistry.flags_met(QuestRegistry.MARCHING_KNOTS) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.MARCHING_KNOTS, "give-it-to-the-watch")
+	Senn Brinehook: Yara gets the whole net. I keep one sketch so sealed evidence cannot become forgotten evidence.
+	=> END
+- "Hang the net at the river shrine where every harbor hand can read it." [#consequence=The harbor carries the warning in public] [if QuestRegistry.is_active(QuestRegistry.MARCHING_KNOTS) and QuestRegistry.flags_met(QuestRegistry.MARCHING_KNOTS) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.MARCHING_KNOTS, "hang-it-at-the-shrine")
+	Senn Brinehook: Toma will hang it above reach but not beyond sight. That is where a warning belongs.
+	=> END
+- "What did the watch learn from the net?" [if QuestRegistry.is_done(QuestRegistry.MARCHING_KNOTS) and GameState.get_flag("dom_marching_knots_resolution") == "give-it-to-the-watch" /]
+	Senn Brinehook: The net lies flat beneath watch glass, each marching knot numbered beside Brek's recovered report.
+	=> END
+- "Do harbor hands heed the shrine net?" [if QuestRegistry.is_done(QuestRegistry.MARCHING_KNOTS) and GameState.get_flag("dom_marching_knots_resolution") == "hang-it-at-the-shrine" /]
+	Senn Brinehook: The retied net hangs over the river shrine; dockhands touch one knot before taking the chain.
+	=> END
+- "Keep the net rolled."
+	Senn Brinehook: Rolled rope still remembers every hand that tied it.
+	=> END
+
+~ dom_side_ash_in_the_rain
+Vaara Cisternhand: Forge ash reached my cistern before the rain crossed East Arm. One clean reserve cannot answer every cup held under it.
+=> dom_side_ash_in_the_rain_hub
+
+~ dom_side_ash_in_the_rain_hub
+- "Trace the ash and count the clean reserve." [if not QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and not QuestRegistry.is_done(QuestRegistry.ASH_IN_THE_RAIN) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.ASH_IN_THE_RAIN)
+	Vaara Cisternhand: Veyra can name the ash. Umber carries the market manifest. Mera can tell you what a banked hospice fire costs.
+	=> END
+- "The ash source and both ration counts are verified." [if QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and not GameState.get_flag("dom_ash_in_the_rain_traced") /]
+	do GameState.set_flag("dom_ash_in_the_rain_traced", true)
+	Vaara Cisternhand: Good. There is not enough clean water to make the choice disappear. Put one line first.
+	=> END
+- "Reserve the clean water for the hospice and its charfire table." [#consequence=The trial-broken ward drinks first] [if QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and QuestRegistry.flags_met(QuestRegistry.ASH_IN_THE_RAIN) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.ASH_IN_THE_RAIN, "hospice-first")
+	Vaara Cisternhand: The ward gets the fixed pipe. The market gets carried casks and an honest apology.
+	=> END
+- "Send the clean reserve through the lower-market ration line." [#consequence=The broadest queue drinks first] [if QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and QuestRegistry.flags_met(QuestRegistry.ASH_IN_THE_RAIN) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.ASH_IN_THE_RAIN, "market-first")
+	Vaara Cisternhand: The market line opens at dawn. I will carry the hospice share myself if I must.
+	=> END
+- "Did the hospice fire reopen?" [if QuestRegistry.is_done(QuestRegistry.ASH_IN_THE_RAIN) and GameState.get_flag("dom_ash_in_the_rain_resolution") == "hospice-first" /]
+	Vaara Cisternhand: The hospice charfire burns again, and every cup beside it comes from Vaara's clean reserve.
+	=> END
+- "How does the market ration hold?" [if QuestRegistry.is_done(QuestRegistry.ASH_IN_THE_RAIN) and GameState.get_flag("dom_ash_in_the_rain_resolution") == "market-first" /]
+	Vaara Cisternhand: The lower-market ration line runs at dawn; hospice meals still boil from smaller carried casks.
+	=> END
+- "Keep the cistern sealed."
+	Vaara Cisternhand: Sealed water buys time. It does not choose who drinks.
+	=> END
+
+~ dom_side_smoothed_weights
+Veska Ruun: Three Pillar weights were filed smooth where candidate names should be cut. Honest burden built those ranks; dishonest weight now stains them.
+=> dom_side_smoothed_weights_hub
+
+~ dom_side_smoothed_weights_hub
+- "Audit the altered Trial weights." [if not QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and not QuestRegistry.is_done(QuestRegistry.SMOOTHED_WEIGHTS) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.SMOOTHED_WEIGHTS)
+	Veska Ruun: Drel has the official scores. Kadrin has the broken burden pins. Make the arithmetic agree before the Council makes it convenient.
+	=> END
+- "The scores prove three trials used altered weight." [if QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and not GameState.get_flag("dom_smoothed_weights_audited") /]
+	do GameState.set_flag("dom_smoothed_weights_audited", true)
+	Veska Ruun: Then innocence and legitimacy no longer fit on the same line. Decide which debt the Pillar pays first.
+	=> END
+- "Void every trial touched by the altered weights." [#consequence=Compromised ranks fall before the measure] [if QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and QuestRegistry.flags_met(QuestRegistry.SMOOTHED_WEIGHTS) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.SMOOTHED_WEIGHTS, "void-the-trials")
+	Veska Ruun: Clean cuts through old names. Every candidate gets the same burden and no inherited excuse.
+	=> END
+- "Preserve the ranks but repeat the Pillar in public with honest weights." [#consequence=Candidates keep rank until a public retest] [if QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and QuestRegistry.flags_met(QuestRegistry.SMOOTHED_WEIGHTS) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.SMOOTHED_WEIGHTS, "repeat-with-ranks-held")
+	Veska Ruun: Mercy for candidates and a wound in the Council's authority. We will show both in daylight.
+	=> END
+- "Were the compromised trials voided?" [if QuestRegistry.is_done(QuestRegistry.SMOOTHED_WEIGHTS) and GameState.get_flag("dom_smoothed_weights_resolution") == "void-the-trials" /]
+	Veska Ruun: The altered names have been struck from the Pillar slate; every affected candidate receives a clean attempt.
+	=> END
+- "When is the public repeat?" [if QuestRegistry.is_done(QuestRegistry.SMOOTHED_WEIGHTS) and GameState.get_flag("dom_smoothed_weights_resolution") == "repeat-with-ranks-held" /]
+	Veska Ruun: The old ranks stand provisionally, and the whole South Arm gathers to watch the honest repeat.
+	=> END
+- "Leave the weights where they are."
+	Veska Ruun: Weight waits. Judgment is what tires.
+	=> END

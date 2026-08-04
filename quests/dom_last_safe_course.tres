@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 11
+quest_name = "The Last Safe Course"
+quest_description = "Orren Chainwake has one route to a storm-stranded crew. Publishing it may save future ships; reserving it for the watch keeps a fragile passage from becoming crowded."
+quest_objective = "Verify the last safe course below the sea-mouth."
+required_flags = PackedStringArray("dom_last_safe_course_verified")
+objectives = PackedStringArray("Compare Holst's route with Yssra's storm lights and Yara's chain report.", "Return to Orren Chainwake and decide who may know the course.")
+stable_id = "dom/side/last-safe-course"
+giver_actor_id = "orren-chainwake"
+participant_actor_ids = PackedStringArray("orren-chainwake", "holst-brinevein", "yssra-coldnet", "yara-chainstep")
+hook_ids = PackedStringArray("dom/orren-chainwake/giver", "dom/holst-brinevein/reputation-reaction", "dom/yssra-coldnet/target", "dom/yara-chainstep/state-change")
+dialogue_title = "dom_side_last_safe_course"
+decision_prompt = "Decide whether the verified route becomes common harbor knowledge or remains a guarded rescue lane."
+resolution_flag = "dom_last_safe_course_resolution"
+outcome_ids = PackedStringArray("publish-the-course", "guard-the-course")
+outcome_labels = PackedStringArray("Publish the course to every Drownedmouth pilot.", "Reserve the course for rescue crews and the outer-chain watch.")
+outcome_faction_ids = PackedStringArray("wayfare-menders", "ironbrand-sentinels")
+outcome_reputation_deltas = PackedFloat32Array(6.0, 6.0)
+outcome_causes = PackedStringArray("Made the last verified sea-mouth course common knowledge among Dom's pilots", "Kept the last safe sea-mouth course under rescue-watch control")
+outcome_readbacks = PackedStringArray("Fresh route marks hang in every pilot lodge; stranded crews can now name their way home.", "Only rescue hulls carry the guarded marks, and Yara keeps the outer chain clear for them.")

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 14
+quest_name = "Ash in the Rain"
+quest_description = "Forge ash has reached a storm cistern before the water crosses the East Arm. One clean reserve cannot serve the hospice, the market, and the forges at once."
+quest_objective = "Trace the ash and count who depends on the clean reserve."
+required_flags = PackedStringArray("dom_ash_in_the_rain_traced")
+objectives = PackedStringArray("Use Veyra's ash reading, Umber's manifest, and Mera's closed table to trace the demand.", "Return to Vaara Cisternhand and ration the clean reserve.")
+stable_id = "dom/side/ash-in-the-rain"
+giver_actor_id = "vaara-cisternhand"
+participant_actor_ids = PackedStringArray("vaara-cisternhand", "veyra-sootlace", "umber-dhor", "mera-voss")
+hook_ids = PackedStringArray("dom/vaara-cisternhand/giver", "dom/veyra-sootlace/information", "dom/umber-dhor/target", "dom/mera-voss/state-change")
+dialogue_title = "dom_side_ash_in_the_rain"
+decision_prompt = "Decide whether the clean cistern first reopens the hospice table or steadies the lower-market ration."
+resolution_flag = "dom_ash_in_the_rain_resolution"
+outcome_ids = PackedStringArray("hospice-first", "market-first")
+outcome_labels = PackedStringArray("Reserve the clean water for the hospice and its charfire table.", "Send the clean reserve through the lower-market ration line.")
+outcome_faction_ids = PackedStringArray("hospice-chain", "grain-factors-table")
+outcome_reputation_deltas = PackedFloat32Array(6.0, 6.0)
+outcome_causes = PackedStringArray("Put Dom's trial-broken hospice first in the clean-water ration", "Put the lower-market ration first in Dom's clean-water allocation")
+outcome_readbacks = PackedStringArray("The hospice charfire burns again, and every cup beside it comes from Vaara's clean reserve.", "The lower-market ration line runs at dawn; hospice meals still boil from smaller carried casks.")
