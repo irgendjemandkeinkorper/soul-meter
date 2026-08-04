@@ -1,0 +1,6 @@
+~ start
+do GameState.set_flag("written_and_read", true)
+- "Visible consequence" [if GameState.get_flag("written_and_read") /]
+do GameState.set_flag("write_only", true)
+- "Broken condition" [if GameState.get_flag("read_only") /]
+=> END
