@@ -182,8 +182,16 @@ func _prepare_for_load(payload: Variant) -> Dictionary:
 		return _load_failure("Save quest data is corrupt.")
 	if migrated.has("player_position") and not migrated.get("player_position") is Vector2:
 		return _load_failure("Save player_position is corrupt.")
-	if migrated.has("spawn_id") and not migrated.get("spawn_id") is String:
-		return _load_failure("Save spawn_id is corrupt.")
+	if migrated.has("spawn_id"):
+		# Bound the length as well as the type (PR #107): a spawn id is a scene
+		# marker name, so anything long is malformed or hostile, not a real save.
+		var spawn_id: Variant = migrated.get("spawn_id")
+		if not spawn_id is String or (spawn_id as String).length() > 64:
+			return _load_failure("Save spawn_id is corrupt.")
+	if migrated.has("elapsed_seconds"):
+		var elapsed: Variant = migrated.get("elapsed_seconds")
+		if not (elapsed is int or elapsed is float):
+			return _load_failure("Save elapsed_seconds is corrupt.")
 	if migrated.has("zhavar") and not _validate_zhavar(migrated["zhavar"]):
 		return _load_failure("Save Zhavar data is corrupt.")
 	if migrated.has("ng_plus") and not _validate_ng_plus(migrated["ng_plus"]):
@@ -357,7 +365,8 @@ func _read_payload(path: String) -> Variant:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return null
-	var payload: Variant = file.get_var()
+	# SECURITY: Pass false explicitly to deny deserialization of arbitrary objects/resources.
+	var payload: Variant = file.get_var(false)
 	file.close()
 	return payload
 

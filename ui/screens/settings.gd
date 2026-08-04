@@ -18,6 +18,7 @@ func _build() -> void:
 
 	vbox.add_child(_section("Language"))
 	var locale := OptionButton.new()
+	locale.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	locale.custom_minimum_size = Vector2(220, 36)
 	locale.add_item("English", 0)
 	locale.add_item("Español", 1)
