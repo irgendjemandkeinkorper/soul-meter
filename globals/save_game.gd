@@ -7,6 +7,7 @@ signal loaded
 signal save_failed(message: String)
 signal autosave_finished(reason: String, succeeded: bool)
 signal spawn_marker_diagnostic(severity: String, marker_name: String, scene_path: String)
+signal save_diagnostic(severity: String, message: String)
 
 const SAVE_PATH := "user://chapter_one.save"
 const TEMP_PATH := "user://chapter_one.save.tmp"
@@ -130,7 +131,7 @@ func load_save() -> bool:
 	if not bool(prepared.get("ok", false)):
 		return _fail("Could not load save: %s" % prepared.get("error", "corrupt payload"))
 	if source_path == backup_path:
-		push_warning("Primary save was invalid; loading the backup save instead.")
+		_warn("Primary save was invalid; loading the backup save instead.")
 	var payload: Dictionary = prepared["payload"]
 	var game_state_backup := GameState.to_dict()
 	var reputation_backup := Reputation.to_dict()
@@ -342,9 +343,14 @@ func _build_payload() -> Dictionary:
 
 func _fail(message: String) -> bool:
 	last_error = message
-	push_warning(message)
+	_warn(message)
 	save_failed.emit(message)
 	return false
+
+
+func _warn(message: String) -> void:
+	push_warning(message)
+	save_diagnostic.emit("warning", message)
 
 
 func _read_payload(path: String) -> Variant:
