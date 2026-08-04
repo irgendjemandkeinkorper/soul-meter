@@ -6,6 +6,7 @@ signal battle_started
 signal turn_resolved
 signal balance_changed(value: int)
 signal battle_ended(result: BattleResult)
+signal combat_event(event: CombatEvent)
 
 const BALANCE_MIN := -100
 const BALANCE_MAX := 100
@@ -30,6 +31,7 @@ var last_message := ""
 var ended := false
 var encounter_id: StringName = &""
 var last_result: BattleResult
+var controller: CombatController
 
 var player: BattleActor:
 	get:
@@ -54,6 +56,7 @@ func start(encounter: Variant) -> void:
 		actor.max_hp = member.max_hp
 		actor.attack = member.attack
 		actor.defense = member.defense
+		actor.attributes = member.attributes.duplicate(true)
 		actor.party_index = i
 		allies.append(actor)
 	if allies.is_empty():
@@ -78,88 +81,79 @@ func start(encounter: Variant) -> void:
 	if ended:
 		push_error("Cannot start an empty encounter: %s" % encounter_id)
 		return
+	var rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	controller = CombatController.new()
+	controller.event_emitted.connect(_on_combat_event)
+	controller.battle_finished.connect(_on_controller_finished)
+	controller.configure(available_actions(true), BattlefieldModel.create_default(rules), rules)
+	controller.start(allies, enemies)
 	battle_started.emit()
 	balance_changed.emit(balance)
 
 
-func available_actions() -> Array[CombatAction]:
-	var result: Array[CombatAction] = [
-		CombatAction.make(ACTION_STRIKE, "Strike", CombatAction.Kind.ATTACK),
-		CombatAction.make(ACTION_GUARD, "Guard", CombatAction.Kind.GUARD),
-		CombatAction.make(ACTION_STABILIZE, "Stabilize", CombatAction.Kind.STABILIZE),
-		CombatAction.make(
-			ACTION_DEFINITION, "Defining Strike", CombatAction.Kind.ATTACK, 2, 25, 3.0
-		),
-		CombatAction.make(ACTION_PARADOX, "Paradox Strike", CombatAction.Kind.ATTACK, 2, -25, 3.0),
-	]
+func available_actions(include_enemy_actions: bool = false) -> Array[CombatAction]:
+	var result: Array[CombatAction] = (
+		CombatActionCatalog.all() if include_enemy_actions else CombatActionCatalog.player_actions()
+	)
+	var rules := load("res://data/combat/combat_rules.tres") as CombatRules
 	for row in EncounterCatalog.context_actions(encounter_id):
-		result.append(CombatAction.from_context_row(row))
+		var action := CombatAction.from_context_row(row)
+		if action.ap_cost <= 0:
+			action.ap_cost = rules.context_resolution_ap_cost
+		result.append(action)
 	return result
 
 
 func can_use(action: CombatAction) -> bool:
-	return action_lock_reason(action).is_empty()
+	return bool(action_refusal(action).get("allowed", false))
 
 
 func action_lock_reason(action: CombatAction) -> String:
+	var refusal := action_refusal(action)
+	return "" if bool(refusal.get("allowed", false)) else str(refusal.get("message", "Action unavailable."))
+
+
+func action_refusal(action: CombatAction, target: BattleActor = null) -> Dictionary:
 	if ended or current_ally() == null:
-		return "Battle has ended."
+		return _blocked_reason(&"battle_state", "Battle has ended.", {})
 	if GameState.soul_meter < action.soul_cost:
-		return "Requires %d Soul." % int(action.soul_cost)
+		return _blocked_reason(
+			&"soul",
+			"Requires %d Soul." % int(action.soul_cost),
+			{"type": &"soul", "minimum": action.soul_cost, "delta": action.soul_cost - GameState.soul_meter},
+		)
 	if action.kind == CombatAction.Kind.RESOLUTION:
 		if enemy_rounds < action.minimum_enemy_rounds:
-			return action.lock_reason
+			return _blocked_reason(&"enemy_rounds", action.lock_reason, {
+				"type": &"enemy_rounds",
+				"minimum": action.minimum_enemy_rounds,
+				"delta": action.minimum_enemy_rounds - enemy_rounds,
+			})
 		if balance < action.minimum_balance or balance > action.maximum_balance:
-			return action.lock_reason
-	return ""
+			return _blocked_reason(&"balance", action.lock_reason, {
+				"type": &"balance_range",
+				"minimum": action.minimum_balance,
+				"maximum": action.maximum_balance,
+			})
+	if controller == null:
+		return {"allowed": true, "blocked_by": &"", "nearest_unblock": {}, "message": ""}
+	if target == null and action.kind == CombatAction.Kind.ATTACK:
+		target = current_target()
+	return controller.query_action(action, target)
 
 
 func use_action(action_id: StringName, target_index: int = -1) -> bool:
 	var action := _action_by_id(action_id)
 	var actor := current_ally()
-	if action == null or actor == null or not can_use(action):
-		return false
 	var target: BattleActor = null
-	if action.kind == CombatAction.Kind.ATTACK:
+	if action != null and action.kind == CombatAction.Kind.ATTACK:
 		target = _living_enemy(target_enemy_index if target_index < 0 else target_index)
-		if target == null:
-			return false
+	if action == null or actor == null or not bool(action_refusal(action, target).get("allowed", false)):
+		return false
 	if action.soul_cost > 0.0:
 		GameState.set_soul_meter(GameState.soul_meter - action.soul_cost)
-
-	match action.kind:
-		CombatAction.Kind.ATTACK:
-			var damage := calculate_damage(
-				actor, target, action.power_bonus, action.balance_shift, balance
-			)
-			target.hp = maxi(0, target.hp - damage)
-			last_message = (
-				"%s uses %s on %s for %d damage."
-				% [actor.display_name, action.display_name, target.display_name, damage]
-			)
-		CombatAction.Kind.GUARD:
-			actor.guarding = true
-			last_message = "%s guards; incoming damage is reduced." % actor.display_name
-		CombatAction.Kind.STABILIZE:
-			actor.guarding = true
-			last_message = "%s steadies the field toward equilibrium." % actor.display_name
-		CombatAction.Kind.RESOLUTION:
-			last_message = "%s chooses %s." % [actor.display_name, action.display_name]
-			_finish(BattleResult.State.VICTORY, action.outcome_id)
-
-	if action.kind != CombatAction.Kind.RESOLUTION:
-		if action.balance_shift == 0:
-			_shift_toward_center(30 if action.kind == CombatAction.Kind.STABILIZE else 10)
-		else:
-			shift_balance(action.balance_shift)
-		if not _has_living(enemies):
-			_finish(BattleResult.State.VICTORY, _default_outcome())
-		else:
-			if current_target() == null or not current_target().is_alive():
-				target_enemy_index = _next_living_index(enemies, -1)
-			_advance_party_turn()
-	turn_resolved.emit()
-	return true
+	var outcome := controller.submit_action(action_id, target)
+	return bool(outcome.get("allowed", false))
 
 
 func player_attack() -> void:
@@ -173,7 +167,15 @@ func player_defend() -> void:
 func flee() -> void:
 	if not ended:
 		last_message = "The party disengages. Current wounds are preserved."
-		_finish(BattleResult.State.FLED, OUTCOME_FLED)
+		if controller != null:
+			controller.force_finish(CombatController.ResultState.FLED, OUTCOME_FLED)
+		else:
+			_finish(BattleResult.State.FLED, OUTCOME_FLED)
+
+
+func end_turn() -> void:
+	if controller != null:
+		controller.end_turn()
 
 
 func current_ally() -> BattleActor:
@@ -206,8 +208,11 @@ func select_next_enemy() -> void:
 
 
 func shift_balance(amount: int) -> void:
-	balance = clampi(balance + amount, BALANCE_MIN, BALANCE_MAX)
-	balance_changed.emit(balance)
+	if controller != null:
+		controller.shift_balance(amount)
+	else:
+		balance = clampi(balance + amount, BALANCE_MIN, BALANCE_MAX)
+		balance_changed.emit(balance)
 
 
 static func calculate_damage(
@@ -217,12 +222,9 @@ static func calculate_damage(
 	alignment_shift: int,
 	current_balance: int
 ) -> int:
-	var damage := maxi(1, attacker.attack + power_bonus - target.defense)
-	if alignment_shift > 0 and current_balance >= EXTREME_THRESHOLD:
-		damage += EXTREME_POWER_BONUS
-	elif alignment_shift < 0 and current_balance <= -EXTREME_THRESHOLD:
-		damage += EXTREME_POWER_BONUS
-	return damage
+	return CombatController.calculate_damage(
+		attacker, target, power_bonus, alignment_shift, current_balance
+	)
 
 
 func _advance_party_turn() -> void:
@@ -434,3 +436,51 @@ func _default_outcome() -> StringName:
 	if encounter_id.is_empty():
 		return &"slain"
 	return EncounterCatalog.default_outcome(encounter_id)
+
+
+func _on_combat_event(event: CombatEvent) -> void:
+	combat_event.emit(event)
+	var snapshot: Dictionary = event.data.get("snapshot", {})
+	balance = int(snapshot.get("balance", balance))
+	if event.type == &"balance_changed":
+		balance_changed.emit(balance)
+	if event.type == &"enemy_turn_started":
+		enemy_rounds += 1
+	if event.data.has("message"):
+		last_message = str(event.data["message"])
+	if controller != null:
+		var active := controller.active_actor()
+		active_ally_index = allies.find(active) if active != null else -1
+	if current_target() == null or not current_target().is_alive():
+		target_enemy_index = _next_living_index(enemies, -1)
+	if event.type in [
+		&"action_resolved", &"action_refused", &"turn_started", &"turn_ended",
+		&"round_started", &"round_ended", &"ap_refreshed",
+	]:
+		turn_resolved.emit()
+
+
+func _on_controller_finished(
+	state: CombatController.ResultState, outcome_id: StringName
+) -> void:
+	match state:
+		CombatController.ResultState.VICTORY:
+			_finish(
+				BattleResult.State.VICTORY,
+				_default_outcome() if outcome_id == &"slain" else outcome_id,
+			)
+		CombatController.ResultState.DEFEAT:
+			_finish(BattleResult.State.DEFEAT, OUTCOME_DEFEAT)
+		CombatController.ResultState.FLED:
+			_finish(BattleResult.State.FLED, OUTCOME_FLED)
+
+
+static func _blocked_reason(
+	blocked_by: StringName, message: String, nearest_unblock: Dictionary
+) -> Dictionary:
+	return {
+		"allowed": false,
+		"blocked_by": blocked_by,
+		"nearest_unblock": nearest_unblock.duplicate(true),
+		"message": message,
+	}

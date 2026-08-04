@@ -8,6 +8,7 @@ extends Resource
 @export var max_hp: int = 10
 @export var attack: int = 5
 @export var defense: int = 2
+@export var attributes: Dictionary = {}
 @export_range(-1, 1) var balance_affinity: int = 0
 @export var balance_pressure: int = 12
 ## GameState flag to set on a win, so a defeated enemy actor doesn't respawn
@@ -27,7 +28,14 @@ extends Resource
 
 var party_index: int = -1
 var guarding := false
+var combat_id: StringName = &""
+var action_points: int = 0
+var max_action_points: int = 0
 
 
 func is_alive() -> bool:
 	return hp > 0
+
+
+func attribute_value(attribute_id: StringName) -> int:
+	return int(attributes.get(String(attribute_id), attributes.get(attribute_id, 0)))

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"definition"
+display_name = "Defining Strike"
+kind = 0
+verb = 1
+ap_cost = 3
+power_bonus = 2
+balance_shift = 25
+soul_cost = 3.0
+target_profile = &"melee"

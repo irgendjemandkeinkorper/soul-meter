@@ -1,0 +1,142 @@
+extends BattlefieldModel
+## FR-105 zone implementation. No consumer names this concrete type; creation
+## and all queries go through BattlefieldModel.
+
+const FRONT := &"front"
+const BACK := &"back"
+const FLANK := &"flank"
+const ALLY := &"ally"
+const ENEMY := &"enemy"
+const VALID_POSITIONS: Array[StringName] = [FRONT, BACK, FLANK]
+
+var _positions: Dictionary = {}
+var _sides: Dictionary = {}
+var _groups: Dictionary = {ALLY: [], ENEMY: []}
+var _cover_bonus := 2
+var _flank_bonus := 2
+
+
+func configure(rules: CombatRules) -> void:
+	_cover_bonus = rules.cover_defense_bonus
+	_flank_bonus = rules.flank_power_bonus
+
+
+func setup(allies: Array[BattleActor], enemies: Array[BattleActor]) -> void:
+	_positions.clear()
+	_sides.clear()
+	_groups = {ALLY: allies.duplicate(), ENEMY: enemies.duplicate()}
+	for actor in allies:
+		_register(actor, ALLY, FRONT)
+	for actor in enemies:
+		_register(actor, ENEMY, FRONT)
+
+
+func position_of(actor: BattleActor) -> StringName:
+	return StringName(_positions.get(actor.get_instance_id(), &""))
+
+
+func side_of(actor: BattleActor) -> StringName:
+	return StringName(_sides.get(actor.get_instance_id(), &""))
+
+
+func move(actor: BattleActor, destination: StringName) -> Dictionary:
+	var query := move_query(actor, destination)
+	if not bool(query.get("allowed", false)):
+		return query
+	var previous := position_of(actor)
+	_positions[actor.get_instance_id()] = destination
+	return _allowed({"from": previous, "to": destination})
+
+
+func move_query(actor: BattleActor, destination: StringName) -> Dictionary:
+	if not VALID_POSITIONS.has(destination):
+		return _blocked(
+			&"position",
+			"Unknown battlefield position: %s." % destination,
+			{"type": &"position", "valid": VALID_POSITIONS.duplicate()},
+		)
+	if position_of(actor) == destination:
+		return _blocked(
+			&"position",
+			"Combatant is already in %s." % destination,
+			{"type": &"different_position"},
+		)
+	return _allowed({"from": position_of(actor), "to": destination})
+
+
+func target_query(actor: BattleActor, target: BattleActor, profile: StringName) -> Dictionary:
+	if actor == null or target == null or not target.is_alive():
+		return _blocked(&"target", "Target is not available.", {"type": &"living_target"})
+	if profile == &"self":
+		return _allowed() if actor == target else _blocked(
+			&"target", "This action targets only its user.", {"type": &"self"}
+		)
+	if side_of(actor) == side_of(target):
+		return _blocked(&"target", "This action requires an opposing target.", {"type": &"enemy"})
+	if profile == &"encounter" or profile == &"ranged" or profile == &"any_enemy":
+		return _allowed()
+	if profile == &"melee":
+		if position_of(actor) == BACK:
+			return _blocked(
+				&"position",
+				"Move out of the back position to make a melee attack.",
+				{"type": &"position", "one_of": [FRONT, FLANK]},
+			)
+		if position_of(target) == BACK and _has_living_front(side_of(target), target):
+			return _blocked(
+				&"cover",
+				"A living front position protects that back-line target.",
+				{"type": &"remove_front_cover"},
+			)
+		return _allowed()
+	return _blocked(
+		&"target_profile",
+		"Unknown targeting profile: %s." % profile,
+		{"type": &"target_profile"},
+	)
+
+
+func cover_bonus(_actor: BattleActor, target: BattleActor) -> int:
+	if position_of(target) == BACK and _has_living_front(side_of(target), target):
+		return _cover_bonus
+	return 0
+
+
+func flank_bonus(actor: BattleActor, target: BattleActor) -> int:
+	if position_of(actor) == FLANK and position_of(target) != FLANK:
+		return _flank_bonus
+	return 0
+
+
+func targets_for(
+	actor: BattleActor, primary: BattleActor, shape: StringName
+) -> Array[BattleActor]:
+	var result: Array[BattleActor] = []
+	if primary == null:
+		return result
+	if shape == &"single":
+		if primary.is_alive():
+			result.append(primary)
+		return result
+	for candidate: BattleActor in _groups.get(side_of(primary), []):
+		if not candidate.is_alive():
+			continue
+		if shape == &"side" or (shape == &"position" and position_of(candidate) == position_of(primary)):
+			result.append(candidate)
+	if shape != &"side" and shape != &"position":
+		var query := target_query(actor, primary, &"any_enemy")
+		if bool(query.get("allowed", false)):
+			result.append(primary)
+	return result
+
+
+func _register(actor: BattleActor, side: StringName, position: StringName) -> void:
+	_sides[actor.get_instance_id()] = side
+	_positions[actor.get_instance_id()] = position
+
+
+func _has_living_front(side: StringName, excluded: BattleActor) -> bool:
+	for actor: BattleActor in _groups.get(side, []):
+		if actor != excluded and actor.is_alive() and position_of(actor) == FRONT:
+			return true
+	return false
