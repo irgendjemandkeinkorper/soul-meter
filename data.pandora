@@ -175,6 +175,13 @@
 				"_id": "276.0",
 				"_index": 0,
 				"_name": "Defining Weaknesses"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "316.0",
+				"_index": 0,
+				"_name": "Vendors"
 			}
 		],
 		"_entities": [
@@ -1260,6 +1267,10 @@
 				"_index": 0,
 				"_name": "Taubstummer Axe",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 90
+					},
 					"Description": {
 						"type": "string",
 						"value": "A sealed soul-weapon of the Last Great War; its edge remembers what it unmade."
@@ -1301,6 +1312,10 @@
 				"_index": 0,
 				"_name": "Captured Reflection",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 70
+					},
 					"Description": {
 						"type": "string",
 						"value": "An obsidian shard that shows a room lit by a sky that does not exist."
@@ -1342,6 +1357,10 @@
 				"_index": 0,
 				"_name": "Soul Gauge",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 60
+					},
 					"Description": {
 						"type": "string",
 						"value": "A brass-and-glass dial that reads a soul's integrity — and what magic has spent."
@@ -1383,6 +1402,10 @@
 				"_index": 0,
 				"_name": "Loam Bread",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 8
+					},
 					"Description": {
 						"type": "string",
 						"value": "Dense composting-city fare from Loamgate. Restores a little vigor."
@@ -1424,6 +1447,10 @@
 				"_index": 0,
 				"_name": "Cinder-Ink Vial",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 24
+					},
 					"Description": {
 						"type": "string",
 						"value": "Ash-Bound tattoo ink; names written in it resist the Waning's slow erasure."
@@ -1465,6 +1492,10 @@
 				"_index": 0,
 				"_name": "QUINE Shard",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 120
+					},
 					"Description": {
 						"type": "string",
 						"value": "A fragment of pre-Bloom machine, one cyan light still faintly alive."
@@ -2515,6 +2546,10 @@
 				"_index": 0,
 				"_name": "Loamroot Sprig",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
 					"Description": {
 						"type": "string",
 						"value": "A pale root cutting, still warm from the Loam. Iris wants a few for the grove."
@@ -5600,9 +5635,1512 @@
 				}
 			},
 			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "301.0",
+				"_index": 0,
+				"_name": "Bitterleaf Poultice",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 14
+					},
+					"Description": {
+						"type": "string",
+						"value": "A sharp-smelling leaf pack used to bind small field wounds."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Bitterleaf Poultice"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Bitter first. Better second."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "302.0",
+				"_index": 0,
+				"_name": "Loam-Smoked Eel",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 10
+					},
+					"Description": {
+						"type": "string",
+						"value": "River eel cured over damp loamwood for a long road ration."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loam-Smoked Eel"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Smoke, salt, and a trace of the city beneath the city."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.4
+					}
+				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "303.0",
+				"_index": 0,
+				"_name": "Salted Riverfish",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 7
+					},
+					"Description": {
+						"type": "string",
+						"value": "A small riverfish packed in coarse salt and market paper."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Salted Riverfish"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "The Four Arms feed more people than the roads do."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.3
+					}
+				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "304.0",
+				"_index": 0,
+				"_name": "Hearthloaf",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 5
+					},
+					"Description": {
+						"type": "string",
+						"value": "A soft brown loaf baked for the same-day market."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Hearthloaf"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Best before the bells finish arguing with one another."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.4
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "305.0",
+				"_index": 0,
+				"_name": "Scribe's Vellum",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 9
+					},
+					"Description": {
+						"type": "string",
+						"value": "A trimmed vellum folio sized for contracts and field notes."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Scribe's Vellum"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Margins cost extra. Consequences do not."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "306.0",
+				"_index": 0,
+				"_name": "Binding Thread",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "Waxed thread for repairs, bindings, and light field stitching."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Binding Thread"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Strong enough to hold leather; not promises."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "307.0",
+				"_index": 0,
+				"_name": "Iron Rivets",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 11
+					},
+					"Description": {
+						"type": "string",
+						"value": "A counted packet of uniform rivets from Dom's company forges."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Iron Rivets"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Every head bears four shallow strikes."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.5
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "308.0",
+				"_index": 0,
+				"_name": "Grave Salt",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 18
+					},
+					"Description": {
+						"type": "string",
+						"value": "Dark mineral salt used to preserve herbs and mark uneasy thresholds."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Grave Salt"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "It clumps near the recently dead."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "uncommon"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "309.0",
+				"_index": 0,
+				"_name": "Lamp Oil",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 7
+					},
+					"Description": {
+						"type": "string",
+						"value": "A stoppered flask of clean-burning oil for road lanterns."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Lamp Oil"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "The bottle promises six hours. Wind negotiates."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.5
+					}
+				}
+			},
+			{
+				"_category_id": "56",
+				"_icon_color": "ffffff00",
+				"_id": "310.0",
+				"_index": 0,
+				"_name": "Votive Cinder",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 12
+					},
+					"Description": {
+						"type": "string",
+						"value": "A shrine cinder sealed in wax after an offering is witnessed."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Votive Cinder"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Not bought. Not quite given."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "uncommon"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "311.0",
+				"_index": 0,
+				"_name": "Lockpick Roll",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 22
+					},
+					"Description": {
+						"type": "string",
+						"value": "A compact roll of picks, shims, and a narrow tension bar."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Lockpick Roll"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Sold for lawful doors, naturally."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,2)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "uncommon"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.4
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "312.0",
+				"_index": 0,
+				"_name": "Surveyor's Chalk",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 9
+					},
+					"Description": {
+						"type": "string",
+						"value": "Weather-resistant chalk for route marks and measured circles."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Surveyor's Chalk"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "A line is only useful if someone agrees where it begins."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "313.0",
+				"_index": 0,
+				"_name": "Field Needle",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 13
+					},
+					"Description": {
+						"type": "string",
+						"value": "A heavy repair needle kept in a fitted wooden case."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Field Needle"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "For canvas, hide, and emergencies no one describes at supper."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "55",
+				"_icon_color": "ffffff00",
+				"_id": "314.0",
+				"_index": 0,
+				"_name": "Roadwarden Spear",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 55
+					},
+					"Description": {
+						"type": "string",
+						"value": "A practical ash-shaft spear with an Iron Company pattern head."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Roadwarden Spear"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": "main_hand"
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Long enough to make a roadside disagreement reconsider."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,3)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 3.0
+					}
+				}
+			},
+			{
+				"_category_id": "55",
+				"_icon_color": "ffffff00",
+				"_id": "315.0",
+				"_index": 0,
+				"_name": "Forge Hammer",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 42
+					},
+					"Description": {
+						"type": "string",
+						"value": "A balanced smith's hammer heavy enough for desperate field use."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Forge Hammer"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": "main_hand"
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "A tool until the moment it is not."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(2,2)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 2.5
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "332.0",
+				"_index": 0,
+				"_name": "Loam & Lantern",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"pricing\",\"maximum_band\":\"cold\",\"message\":\"Cold standing adds the company-risk markup.\",\"minimum_band\":\"\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loam & Lantern"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/loam_bread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":12},{\"item_id\":\"materials/cinder_ink_vial\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":5},{\"item_id\":\"materials/lamp_oil\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"tools/soul_gauge\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-general-store-keeper"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":1,\"mode\":\"daily\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.45
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/item-shop"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "ItemShop building"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "loam-and-lantern"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "333.0",
+				"_index": 0,
+				"_name": "Iron & Thread",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"refusal\",\"maximum_band\":\"cold\",\"message\":\"Iron & Thread requires neutral company standing.\",\"minimum_band\":\"\"},{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Allied standing opens the sealed-weapon case.\",\"minimum_band\":\"allied\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.05
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Iron & Thread"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"weapons/roadwarden_spear\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":3},{\"item_id\":\"weapons/forge_hammer\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":2},{\"item_id\":\"materials/iron_rivets\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"weapons/taubstummer_axe\",\"maximum_band\":\"\",\"minimum_band\":\"allied\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-smith"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":7,\"mode\":\"weekly\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/equipment-shop"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "EquipmentShop building"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "iron-and-thread"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "334.0",
+				"_index": 0,
+				"_name": "Root & Reed",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Warm standing opens the grave-salt drawer.\",\"minimum_band\":\"warm\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 0.95
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Root & Reed"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/bitterleaf_poultice\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"materials/loamroot_sprig\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"materials/grave_salt\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":3}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-herbalist"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":2,\"mode\":\"every_two_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.4
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/east-market-herbs"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "East Market herb stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "root-and-reed"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "335.0",
+				"_index": 0,
+				"_name": "Four Arms Fish",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 0.9
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Four Arms Fish"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/salted_riverfish\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":16},{\"item_id\":\"consumables/loam_smoked_eel\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "hostile"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-fishmonger"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":1,\"mode\":\"daily\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.35
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/south-market-fish"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "South Market fish stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "four-arms-fish"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "336.0",
+				"_index": 0,
+				"_name": "Ashline Scriptorium",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Warm standing releases reserved cinder-ink.\",\"minimum_band\":\"warm\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Ashline Scriptorium"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"materials/scribes_vellum\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":10},{\"item_id\":\"materials/cinder_ink_vial\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":4},{\"item_id\":\"tools/surveyors_chalk\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":5}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-scribe"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":3,\"mode\":\"every_three_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/town-hall-scribe"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Town Hall arcade scribe stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "ashline-scriptorium"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "337.0",
+				"_index": 0,
+				"_name": "Understep Exchange",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":1.4,\"sell\":0.5},\"cold\":{\"buy\":0.95,\"sell\":1.0},\"hostile\":{\"buy\":0.85,\"sell\":1.1},\"neutral\":{\"buy\":1.2,\"sell\":0.7},\"warm\":{\"buy\":1.3,\"sell\":0.6}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"refusal\",\"maximum_band\":\"\",\"message\":\"The Exchange closes once company standing reaches neutral.\",\"minimum_band\":\"neutral\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.1
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Understep Exchange"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"tools/lockpick_roll\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":2},{\"item_id\":\"relics/captured_reflection\",\"maximum_band\":\"hostile\",\"minimum_band\":\"hostile\",\"quantity\":1},{\"item_id\":\"relics/quine_shard\",\"maximum_band\":\"hostile\",\"minimum_band\":\"hostile\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "hostile"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-fence"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":0,\"mode\":\"never\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.65
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/understep-night-stall"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Understep Alley night stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "understep-exchange"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "338.0",
+				"_index": 0,
+				"_name": "Shrine of the Held Flame",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"opening\",\"maximum_band\":\"\",\"message\":\"The offering shelf opens at warm Sentinel standing.\",\"minimum_band\":\"warm\"},{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Allied standing opens the witnessed-relic niche.\",\"minimum_band\":\"allied\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Shrine of the Held Flame"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"relics/votive_cinder\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":3},{\"item_id\":\"relics/captured_reflection\",\"maximum_band\":\"\",\"minimum_band\":\"allied\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "warm"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-shrine-keeper"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":7,\"mode\":\"weekly\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/central-shrine"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Central shrine"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "offering"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "held-flame-shrine"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "339.0",
+				"_index": 0,
+				"_name": "Hearthloaf Bakery",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 0.85
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Hearthloaf Bakery"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/hearthloaf\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":18},{\"item_id\":\"consumables/loam_bread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "hostile"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-baker"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":1,\"mode\":\"daily\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.3
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/west-market-bakery"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "West Market bakery stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "hearthloaf-bakery"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "340.0",
+				"_index": 0,
+				"_name": "Rivet & Spur",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Warm standing opens the fitted-tool rack.\",\"minimum_band\":\"warm\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Rivet & Spur"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"materials/iron_rivets\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":12},{\"item_id\":\"weapons/roadwarden_spear\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":2},{\"item_id\":\"weapons/forge_hammer\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-armorer"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":7,\"mode\":\"weekly\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/garrison-armorer"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Garrison forecourt armorer stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "rivet-and-spur"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "341.0",
+				"_index": 0,
+				"_name": "Needle & Hide",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 0.95
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Needle & Hide"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"materials/binding_thread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":12},{\"item_id\":\"tools/field_needle\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":5},{\"item_id\":\"materials/cinder_ink_vial\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":2}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-clothier"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":3,\"mode\":\"every_three_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.45
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/market-row-clothier"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Market Row clothier stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "needle-and-hide"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "342.0",
+				"_index": 0,
+				"_name": "Quiet Gear",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"cold\",\"message\":\"Cold standing exposes an unregistered tool roll.\",\"minimum_band\":\"cold\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.05
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Quiet Gear"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"tools/field_needle\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":3},{\"item_id\":\"tools/surveyors_chalk\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"tools/soul_gauge\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":1},{\"item_id\":\"tools/lockpick_roll\",\"maximum_band\":\"cold\",\"minimum_band\":\"cold\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-tinker"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":3,\"mode\":\"every_three_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/south-market-tinker"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "South Market tinker stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "quiet-gear"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "343.0",
+				"_index": 0,
+				"_name": "Wayfarer's Measure",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Wayfarer's Measure"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/hearthloaf\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"consumables/loam_smoked_eel\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":5},{\"item_id\":\"materials/lamp_oil\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"tools/surveyors_chalk\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":4}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-provisioner"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":2,\"mode\":\"every_two_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.4
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/east-gate-provisioner"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "East Gate provisioner stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "wayfarers-measure"
+					}
+				}
+			},
+			{
 				"_category_id": "84",
 				"_icon_color": "ffffff00",
-				"_id": "300.0",
+				"_id": "344.0",
 				"_index": 0,
 				"_name": "The Trial Council",
 				"_property_overrides": {
@@ -5627,7 +7165,7 @@
 			{
 				"_category_id": "84",
 				"_icon_color": "ffffff00",
-				"_id": "301.0",
+				"_id": "345.0",
 				"_index": 0,
 				"_name": "The Kord Rite",
 				"_property_overrides": {
@@ -5652,7 +7190,7 @@
 			{
 				"_category_id": "84",
 				"_icon_color": "ffffff00",
-				"_id": "302.0",
+				"_id": "346.0",
 				"_index": 0,
 				"_name": "The Shattersteel Concord",
 				"_property_overrides": {
@@ -5677,7 +7215,7 @@
 			{
 				"_category_id": "84",
 				"_icon_color": "ffffff00",
-				"_id": "303.0",
+				"_id": "347.0",
 				"_index": 0,
 				"_name": "The Hospice Chain",
 				"_property_overrides": {
@@ -5702,7 +7240,7 @@
 			{
 				"_category_id": "84",
 				"_icon_color": "ffffff00",
-				"_id": "304.0",
+				"_id": "348.0",
 				"_index": 0,
 				"_name": "The Wayfare-Menders",
 				"_property_overrides": {
@@ -5727,7 +7265,7 @@
 			{
 				"_category_id": "84",
 				"_icon_color": "ffffff00",
-				"_id": "305.0",
+				"_id": "349.0",
 				"_index": 0,
 				"_name": "The Grain Factors' Table",
 				"_property_overrides": {
@@ -5752,7 +7290,7 @@
 			{
 				"_category_id": "84",
 				"_icon_color": "ffffff00",
-				"_id": "306.0",
+				"_id": "350.0",
 				"_index": 0,
 				"_name": "The Restoration",
 				"_property_overrides": {
@@ -5777,7 +7315,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "323.0",
+				"_id": "367.0",
 				"_index": 0,
 				"_name": "Themka Gaath",
 				"_property_overrides": {
@@ -5866,7 +7404,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "324.0",
+				"_id": "368.0",
 				"_index": 0,
 				"_name": "Sella Varn",
 				"_property_overrides": {
@@ -5955,7 +7493,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "325.0",
+				"_id": "369.0",
 				"_index": 0,
 				"_name": "Hadrik Vale",
 				"_property_overrides": {
@@ -6044,7 +7582,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "326.0",
+				"_id": "370.0",
 				"_index": 0,
 				"_name": "Toma Reedhand",
 				"_property_overrides": {
@@ -6133,7 +7671,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "327.0",
+				"_id": "371.0",
 				"_index": 0,
 				"_name": "Droma Flintjaw",
 				"_property_overrides": {
@@ -6222,7 +7760,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "328.0",
+				"_id": "372.0",
 				"_index": 0,
 				"_name": "Veska Ruun",
 				"_property_overrides": {
@@ -6311,7 +7849,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "329.0",
+				"_id": "373.0",
 				"_index": 0,
 				"_name": "Orren Chainwake",
 				"_property_overrides": {
@@ -6400,7 +7938,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "330.0",
+				"_id": "374.0",
 				"_index": 0,
 				"_name": "Maela Drumscar",
 				"_property_overrides": {
@@ -6489,7 +8027,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "331.0",
+				"_id": "375.0",
 				"_index": 0,
 				"_name": "Keth Varr",
 				"_property_overrides": {
@@ -6578,7 +8116,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "332.0",
+				"_id": "376.0",
 				"_index": 0,
 				"_name": "Irka Stonebreath",
 				"_property_overrides": {
@@ -6667,7 +8205,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "333.0",
+				"_id": "377.0",
 				"_index": 0,
 				"_name": "Pell Hammersong",
 				"_property_overrides": {
@@ -6756,7 +8294,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "334.0",
+				"_id": "378.0",
 				"_index": 0,
 				"_name": "Vaara Cisternhand",
 				"_property_overrides": {
@@ -6845,7 +8383,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "335.0",
+				"_id": "379.0",
 				"_index": 0,
 				"_name": "Jorun Ashmantle",
 				"_property_overrides": {
@@ -6934,7 +8472,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "336.0",
+				"_id": "380.0",
 				"_index": 0,
 				"_name": "Senn Brinehook",
 				"_property_overrides": {
@@ -7023,7 +8561,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "337.0",
+				"_id": "381.0",
 				"_index": 0,
 				"_name": "Daska Threeknots",
 				"_property_overrides": {
@@ -7112,7 +8650,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "338.0",
+				"_id": "382.0",
 				"_index": 0,
 				"_name": "Hennik Coalvein",
 				"_property_overrides": {
@@ -7201,7 +8739,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "339.0",
+				"_id": "383.0",
 				"_index": 0,
 				"_name": "Ressa Ironmouth",
 				"_property_overrides": {
@@ -7290,7 +8828,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "340.0",
+				"_id": "384.0",
 				"_index": 0,
 				"_name": "Kaelra Pikehand",
 				"_property_overrides": {
@@ -7379,7 +8917,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "341.0",
+				"_id": "385.0",
 				"_index": 0,
 				"_name": "Umber Dhor",
 				"_property_overrides": {
@@ -7468,7 +9006,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "342.0",
+				"_id": "386.0",
 				"_index": 0,
 				"_name": "Nalla Gatebeat",
 				"_property_overrides": {
@@ -7557,7 +9095,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "343.0",
+				"_id": "387.0",
 				"_index": 0,
 				"_name": "Torv Bellowskin",
 				"_property_overrides": {
@@ -7646,7 +9184,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "344.0",
+				"_id": "388.0",
 				"_index": 0,
 				"_name": "Yssra Coldnet",
 				"_property_overrides": {
@@ -7735,7 +9273,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "345.0",
+				"_id": "389.0",
 				"_index": 0,
 				"_name": "Brek Saltjaw",
 				"_property_overrides": {
@@ -7824,7 +9362,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "346.0",
+				"_id": "390.0",
 				"_index": 0,
 				"_name": "Orenna Caskbrand",
 				"_property_overrides": {
@@ -7913,7 +9451,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "347.0",
+				"_id": "391.0",
 				"_index": 0,
 				"_name": "Marn Veld",
 				"_property_overrides": {
@@ -8002,7 +9540,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "348.0",
+				"_id": "392.0",
 				"_index": 0,
 				"_name": "Thessa Drumline",
 				"_property_overrides": {
@@ -8091,7 +9629,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "349.0",
+				"_id": "393.0",
 				"_index": 0,
 				"_name": "Korrin Blackrail",
 				"_property_overrides": {
@@ -8180,7 +9718,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "350.0",
+				"_id": "394.0",
 				"_index": 0,
 				"_name": "Veyra Sootlace",
 				"_property_overrides": {
@@ -8269,7 +9807,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "351.0",
+				"_id": "395.0",
 				"_index": 0,
 				"_name": "Drel Gaunt",
 				"_property_overrides": {
@@ -8358,7 +9896,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "352.0",
+				"_id": "396.0",
 				"_index": 0,
 				"_name": "Arvek Stormcup",
 				"_property_overrides": {
@@ -8447,7 +9985,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "353.0",
+				"_id": "397.0",
 				"_index": 0,
 				"_name": "Istra Hearthscar",
 				"_property_overrides": {
@@ -8536,7 +10074,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "354.0",
+				"_id": "398.0",
 				"_index": 0,
 				"_name": "Kelm Rook",
 				"_property_overrides": {
@@ -8625,7 +10163,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "355.0",
+				"_id": "399.0",
 				"_index": 0,
 				"_name": "Brinna Fourbells",
 				"_property_overrides": {
@@ -8714,7 +10252,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "356.0",
+				"_id": "400.0",
 				"_index": 0,
 				"_name": "Sorek Hushward",
 				"_property_overrides": {
@@ -8803,7 +10341,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "357.0",
+				"_id": "401.0",
 				"_index": 0,
 				"_name": "Enna Grayscar",
 				"_property_overrides": {
@@ -8892,7 +10430,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "358.0",
+				"_id": "402.0",
 				"_index": 0,
 				"_name": "Varrik Deepchalk",
 				"_property_overrides": {
@@ -8981,7 +10519,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "359.0",
+				"_id": "403.0",
 				"_index": 0,
 				"_name": "Loa Flintthread",
 				"_property_overrides": {
@@ -9070,7 +10608,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "360.0",
+				"_id": "404.0",
 				"_index": 0,
 				"_name": "Kessa Nightrail",
 				"_property_overrides": {
@@ -9159,7 +10697,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "361.0",
+				"_id": "405.0",
 				"_index": 0,
 				"_name": "Orm Redtongs",
 				"_property_overrides": {
@@ -9248,7 +10786,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "362.0",
+				"_id": "406.0",
 				"_index": 0,
 				"_name": "Yara Chainstep",
 				"_property_overrides": {
@@ -9337,7 +10875,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "363.0",
+				"_id": "407.0",
 				"_index": 0,
 				"_name": "Tern Hollowbeat",
 				"_property_overrides": {
@@ -9426,7 +10964,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "364.0",
+				"_id": "408.0",
 				"_index": 0,
 				"_name": "Mera Voss",
 				"_property_overrides": {
@@ -9515,7 +11053,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "365.0",
+				"_id": "409.0",
 				"_index": 0,
 				"_name": "Kadrin Stoneyield",
 				"_property_overrides": {
@@ -9604,7 +11142,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "366.0",
+				"_id": "410.0",
 				"_index": 0,
 				"_name": "Sava Mor",
 				"_property_overrides": {
@@ -9693,7 +11231,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "367.0",
+				"_id": "411.0",
 				"_index": 0,
 				"_name": "Drann Wetiron",
 				"_property_overrides": {
@@ -9782,7 +11320,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "368.0",
+				"_id": "412.0",
 				"_index": 0,
 				"_name": "Edda Broadmark",
 				"_property_overrides": {
@@ -9871,7 +11409,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "369.0",
+				"_id": "413.0",
 				"_index": 0,
 				"_name": "Holst Brinevein",
 				"_property_overrides": {
@@ -9960,7 +11498,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "370.0",
+				"_id": "414.0",
 				"_index": 0,
 				"_name": "Raika Toll",
 				"_property_overrides": {
@@ -10049,7 +11587,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "371.0",
+				"_id": "415.0",
 				"_index": 0,
 				"_name": "Venn Ashcord",
 				"_property_overrides": {
@@ -10138,7 +11676,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "372.0",
+				"_id": "416.0",
 				"_index": 0,
 				"_name": "Jessa Longbrace",
 				"_property_overrides": {
@@ -10227,7 +11765,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "373.0",
+				"_id": "417.0",
 				"_index": 0,
 				"_name": "Brannic Lowdrum",
 				"_property_overrides": {
@@ -10316,7 +11854,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "374.0",
+				"_id": "418.0",
 				"_index": 0,
 				"_name": "Saela Windscar",
 				"_property_overrides": {
@@ -10405,7 +11943,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "375.0",
+				"_id": "419.0",
 				"_index": 0,
 				"_name": "Orrik Cinderjaw",
 				"_property_overrides": {
@@ -10494,7 +12032,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "376.0",
+				"_id": "420.0",
 				"_index": 0,
 				"_name": "Nym Vara",
 				"_property_overrides": {
@@ -10583,7 +12121,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "377.0",
+				"_id": "421.0",
 				"_index": 0,
 				"_name": "Thora Bellmark",
 				"_property_overrides": {
@@ -10672,7 +12210,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "378.0",
+				"_id": "422.0",
 				"_index": 0,
 				"_name": "Gerren Pike",
 				"_property_overrides": {
@@ -10761,7 +12299,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "379.0",
+				"_id": "423.0",
 				"_index": 0,
 				"_name": "Kiva Saltbrand",
 				"_property_overrides": {
@@ -10850,7 +12388,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "380.0",
+				"_id": "424.0",
 				"_index": 0,
 				"_name": "Dorran Rask",
 				"_property_overrides": {
@@ -10939,7 +12477,7 @@
 			{
 				"_category_id": "96",
 				"_icon_color": "ffffff00",
-				"_id": "381.0",
+				"_id": "425.0",
 				"_index": 0,
 				"_name": "Aela Quietforge",
 				"_property_overrides": {
@@ -11924,114 +13462,226 @@
 				"_type": "int"
 			},
 			{
+				"_category_id": "46",
+				"_default_value": 0,
+				"_id": "300.0",
+				"_name": "Base Price",
+				"_type": "int"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "317.0",
+				"_name": "Vendor Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "318.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "319.0",
+				"_name": "NPC Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "320.0",
+				"_name": "Site Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "321.0",
+				"_name": "Site Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "322.0",
+				"_name": "Faction Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "323.0",
+				"_name": "Trade Mode",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": 0.0,
+				"_id": "324.0",
+				"_name": "Buy Modifier",
+				"_type": "float"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": 0.0,
+				"_id": "325.0",
+				"_name": "Sell Modifier",
+				"_type": "float"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "326.0",
+				"_name": "Minimum Band",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "327.0",
+				"_name": "Maximum Band",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "328.0",
+				"_name": "Band Price Modifiers",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "329.0",
+				"_name": "Inventory",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "330.0",
+				"_name": "Restock",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "331.0",
+				"_name": "Band Reactions",
+				"_type": "string"
+			},
+			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "307.0",
+				"_id": "351.0",
 				"_name": "NPC Id",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "308.0",
+				"_id": "352.0",
 				"_name": "Town Id",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "309.0",
+				"_id": "353.0",
 				"_name": "Role",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "310.0",
+				"_id": "354.0",
 				"_name": "Home",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "311.0",
+				"_id": "355.0",
 				"_name": "District",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "312.0",
+				"_id": "356.0",
 				"_name": "Faction Id",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "313.0",
+				"_id": "357.0",
 				"_name": "Quest Hooks",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "314.0",
+				"_id": "358.0",
 				"_name": "Portrait Id",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "315.0",
+				"_id": "359.0",
 				"_name": "Portrait Path",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "316.0",
+				"_id": "360.0",
 				"_name": "Dialogue Greeting",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "317.0",
+				"_id": "361.0",
 				"_name": "Dialogue Context",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "318.0",
+				"_id": "362.0",
 				"_name": "Dialogue Farewell",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "319.0",
+				"_id": "363.0",
 				"_name": "Placement Scene",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": "",
-				"_id": "320.0",
+				"_id": "364.0",
 				"_name": "Placement Anchor",
 				"_type": "string"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": 0.0,
-				"_id": "321.0",
+				"_id": "365.0",
 				"_name": "Placement X",
 				"_type": "float"
 			},
 			{
 				"_category_id": "96",
 				"_default_value": 0.0,
-				"_id": "322.0",
+				"_id": "366.0",
 				"_name": "Placement Y",
 				"_type": "float"
 			}
@@ -12039,7 +13689,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 381.0
+			"default": 425.0
 		}
 	},
 	"_version": 1

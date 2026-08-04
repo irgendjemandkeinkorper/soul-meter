@@ -13,6 +13,9 @@ extends Node
 ##   res://data/generated/items.pot             — gettext template for generated
 ##       item keys. English source text is retained as an extracted comment;
 ##       runtime falls back to Pandora when a key is untranslated.
+##   res://data/generated/vendors.json          — Dom vendor catalogs, standing
+##       gates, price modifiers, and restock policies
+##   res://data/generated/vendor_ids.gd         — stable VendorIds constants
 ##   res://locale/es.po                         — starter locale, merged on each
 ##       regeneration so translated rows survive data changes.
 ##   res://data/generated/encounters.json        — expanded encounter groups
@@ -39,6 +42,8 @@ const NPC_IDS_PATH := OUT_DIR + "/npc_ids.gd"
 const DOM_NPC_ROSTER_PATH := OUT_DIR + "/dom_npc_roster.json"
 const DOM_NPC_PLACEMENTS_PATH := OUT_DIR + "/dom_npc_placements.json"
 const DOM_NPC_DIALOGUE_PATH := "res://dialogue/dom_townsfolk.dialogue"
+const VENDORS_PATH := OUT_DIR + "/vendors.json"
+const VENDOR_IDS_PATH := OUT_DIR + "/vendor_ids.gd"
 const ENCOUNTERS_PATH := OUT_DIR + "/encounters.json"
 const ENCOUNTER_IDS_PATH := OUT_DIR + "/encounter_ids.gd"
 const ELEMENTS_JSON_PATH := OUT_DIR + "/elements.json"
@@ -78,8 +83,13 @@ func _ready() -> void:
 	else:
 		print(
 			(
-				"DATA-GEN: wrote %d item prototypes, %d encounters, and %d Dom NPCs."
-				% [result["count"], result["encounter_count"], result["npc_count"]]
+				"DATA-GEN: wrote %d item prototypes, %d vendors, %d encounters, and %d Dom NPCs."
+				% [
+					result["count"],
+					result["vendor_count"],
+					result["encounter_count"],
+					result["npc_count"],
+				]
 			)
 		)
 	get_tree().quit()
@@ -111,6 +121,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		var props := {
 			"name": ent.get_string("Display Name"),
 			"description": ent.get_string("Description"),
+			"base_price": ent.get_integer("Base Price") if ent.has_entity_property("Base Price") else 0,
 			"size": var_to_str(ent.get_vector2i("Grid Size")),
 			"max_stack_size": ent.get_integer("Max Stack Size"),
 			"weight": ent.get_float("Weight"),
@@ -141,6 +152,9 @@ static func generate(check_only: bool = false) -> Dictionary:
 	var npc_roster_text: String = npc_artifacts["roster_json"]
 	var npc_placements_text: String = npc_artifacts["placements_json"]
 	var npc_dialogue_text: String = npc_artifacts["dialogue"]
+	var vendor_artifacts := _vendor_artifacts(protos)
+	var vendors_text: String = vendor_artifacts["json"]
+	var vendor_ids_text: String = vendor_artifacts["ids"]
 	var encounter_artifacts := _encounter_artifacts()
 	var encounters_text: String = encounter_artifacts["json"]
 	var encounter_ids_text: String = encounter_artifacts["ids"]
@@ -165,6 +179,8 @@ static func generate(check_only: bool = false) -> Dictionary:
 		or _differs(DOM_NPC_ROSTER_PATH, npc_roster_text)
 		or _differs(DOM_NPC_PLACEMENTS_PATH, npc_placements_text)
 		or _differs(DOM_NPC_DIALOGUE_PATH, npc_dialogue_text)
+		or _differs(VENDORS_PATH, vendors_text)
+		or _differs(VENDOR_IDS_PATH, vendor_ids_text)
 		or _differs(ENCOUNTERS_PATH, encounters_text)
 		or _differs(ENCOUNTER_IDS_PATH, encounter_ids_text)
 		or _differs(ELEMENTS_JSON_PATH, elements_text)
@@ -188,6 +204,8 @@ static func generate(check_only: bool = false) -> Dictionary:
 			ProjectSettings.globalize_path(DOM_NPC_DIALOGUE_PATH.get_base_dir())
 		)
 		_write(DOM_NPC_DIALOGUE_PATH, npc_dialogue_text)
+		_write(VENDORS_PATH, vendors_text)
+		_write(VENDOR_IDS_PATH, vendor_ids_text)
 		_write(ENCOUNTERS_PATH, encounters_text)
 		_write(ENCOUNTER_IDS_PATH, encounter_ids_text)
 		_write(ELEMENTS_JSON_PATH, elements_text)
@@ -201,6 +219,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 
 	return {
 		"count": paths.size(),
+		"vendor_count": vendor_artifacts["count"],
 		"encounter_count": encounter_artifacts["count"],
 		"npc_count": npc_artifacts["count"],
 		"drift": drift,
@@ -402,6 +421,122 @@ static func _is_safe_portrait_path(path: String) -> bool:
 		and not ".." in path
 		and path.get_extension().to_lower() in SAFE_PORTRAIT_EXTENSIONS
 	)
+static func _vendor_artifacts(protos: Dictionary) -> Dictionary:
+	var root := _root_by_name("Vendors")
+	var vendors := {}
+	var bands := ["hostile", "cold", "neutral", "warm", "allied"]
+	for entity: PandoraEntity in Pandora.get_all_entities(root):
+		if entity is PandoraCategory:
+			continue
+		var vendor_id := entity.get_string("Vendor Id")
+		var npc_id := entity.get_string("NPC Id")
+		var site_id := entity.get_string("Site Id")
+		assert(StableIds.is_valid(StableIds.VENDOR, vendor_id), "Invalid vendor id '%s'" % vendor_id)
+		assert(StableIds.is_valid(StableIds.ACTOR, npc_id), "Invalid vendor NPC id '%s'" % npc_id)
+		assert(StableIds.is_valid(StableIds.ZONE, site_id), "Invalid vendor site id '%s'" % site_id)
+		assert(not vendors.has(vendor_id), "Duplicate vendor id '%s'" % vendor_id)
+
+		var minimum_band := entity.get_string("Minimum Band")
+		var maximum_band := entity.get_string("Maximum Band")
+		assert(_valid_band(minimum_band, bands), "Vendor '%s' has invalid minimum band" % vendor_id)
+		assert(_valid_band(maximum_band, bands), "Vendor '%s' has invalid maximum band" % vendor_id)
+		var stock := _vendor_json_array(entity.get_string("Inventory"), "Inventory", vendor_id)
+		var normalized_stock: Array[Dictionary] = []
+		var seen_items := {}
+		for stock_value: Variant in stock:
+			assert(stock_value is Dictionary, "Vendor '%s' has a non-dictionary stock row" % vendor_id)
+			var stock_row: Dictionary = stock_value
+			var item_id := str(stock_row.get("item_id", ""))
+			var quantity := int(stock_row.get("quantity", 0))
+			var stock_minimum := str(stock_row.get("minimum_band", ""))
+			var stock_maximum := str(stock_row.get("maximum_band", ""))
+			assert(StableIds.is_valid(StableIds.ITEM, item_id), "Vendor '%s' has invalid item id" % vendor_id)
+			assert(protos.has(item_id), "Vendor '%s' references unknown item '%s'" % [vendor_id, item_id])
+			assert(not seen_items.has(item_id), "Vendor '%s' repeats item '%s'" % [vendor_id, item_id])
+			assert(quantity > 0, "Vendor '%s' has non-positive stock for '%s'" % [vendor_id, item_id])
+			assert(_valid_band(stock_minimum, bands), "Vendor '%s' has invalid stock minimum" % vendor_id)
+			assert(_valid_band(stock_maximum, bands), "Vendor '%s' has invalid stock maximum" % vendor_id)
+			seen_items[item_id] = true
+			normalized_stock.append(
+				{
+					"item_id": item_id,
+					"quantity": quantity,
+					"minimum_band": stock_minimum,
+					"maximum_band": stock_maximum,
+				}
+			)
+
+		var band_prices := _vendor_json_object(
+			entity.get_string("Band Price Modifiers"), "Band Price Modifiers", vendor_id
+		)
+		for band: String in bands:
+			assert(band_prices.get(band) is Dictionary, "Vendor '%s' lacks '%s' prices" % [vendor_id, band])
+			var price_row: Dictionary = band_prices[band]
+			assert(float(price_row.get("buy", 0.0)) > 0.0, "Vendor '%s' has invalid buy modifier" % vendor_id)
+			assert(float(price_row.get("sell", 0.0)) >= 0.0, "Vendor '%s' has invalid sell modifier" % vendor_id)
+
+		var restock := _vendor_json_object(entity.get_string("Restock"), "Restock", vendor_id)
+		assert(not str(restock.get("mode", "")).is_empty(), "Vendor '%s' lacks a restock mode" % vendor_id)
+		assert(int(restock.get("interval", -1)) >= 0, "Vendor '%s' has invalid restock interval" % vendor_id)
+		var reactions := _vendor_json_array(
+			entity.get_string("Band Reactions"), "Band Reactions", vendor_id
+		)
+		for reaction_value: Variant in reactions:
+			assert(reaction_value is Dictionary, "Vendor '%s' has a non-dictionary reaction" % vendor_id)
+			var reaction: Dictionary = reaction_value
+			assert(
+				_valid_band(str(reaction.get("minimum_band", "")), bands),
+				"Vendor '%s' has invalid reaction minimum" % vendor_id
+			)
+			assert(
+				_valid_band(str(reaction.get("maximum_band", "")), bands),
+				"Vendor '%s' has invalid reaction maximum" % vendor_id
+			)
+
+		vendors[vendor_id] = {
+			"id": vendor_id,
+			"display_name": entity.get_string("Display Name"),
+			"npc_id": npc_id,
+			"site_id": site_id,
+			"site_name": entity.get_string("Site Name"),
+			"faction_id": entity.get_string("Faction Id"),
+			"trade_mode": entity.get_string("Trade Mode"),
+			"buy_modifier": entity.get_float("Buy Modifier"),
+			"sell_modifier": entity.get_float("Sell Modifier"),
+			"minimum_band": minimum_band,
+			"maximum_band": maximum_band,
+			"band_price_modifiers": band_prices,
+			"stock": normalized_stock,
+			"restock": restock,
+			"band_reactions": reactions,
+		}
+
+	var vendor_ids: Array = vendors.keys()
+	vendor_ids.sort()
+	var ordered := {}
+	for vendor_id: String in vendor_ids:
+		ordered[vendor_id] = vendors[vendor_id]
+	return {
+		"json": JSON.stringify(ordered, "  ", false) + "\n",
+		"ids": _ids_source("VendorIds", vendor_ids),
+		"count": vendor_ids.size(),
+	}
+
+
+static func _vendor_json_array(value: String, field: String, vendor_id: String) -> Array:
+	var parsed: Variant = JSON.parse_string(value)
+	assert(parsed is Array, "Vendor '%s' has invalid %s JSON" % [vendor_id, field])
+	return parsed
+
+
+static func _vendor_json_object(value: String, field: String, vendor_id: String) -> Dictionary:
+	var parsed: Variant = JSON.parse_string(value)
+	assert(parsed is Dictionary, "Vendor '%s' has invalid %s JSON" % [vendor_id, field])
+	return parsed
+
+
+static func _valid_band(value: String, bands: Array) -> bool:
+	return value.is_empty() or value in bands
 
 
 static func _item_entries(protos: Dictionary, paths: Array) -> Array[Dictionary]:

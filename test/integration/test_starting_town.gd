@@ -258,6 +258,7 @@ func test_dom_buildings_use_rendered_sprites_and_y_sorting() -> void:
 func test_dom_shops_and_home_save_point_are_repeatable_interactions() -> void:
 	var original_flags := GameState.flags.duplicate(true)
 	var original_inventory := GameState.inventory.serialize()
+	var original_vendor_stock := GameState.vendor_stock.duplicate(true)
 	var original_gp := GameState.gp
 	var original_autosave_reason := SaveGame._pending_autosave_reason
 	GameState.flags.clear()
@@ -278,8 +279,14 @@ func test_dom_shops_and_home_save_point_are_repeatable_interactions() -> void:
 	await runner.simulate_frames(2)
 	var shop: ShopScreen = UIManager._stack.back()
 	var bread_before := GameState.item_count(ItemIds.CONSUMABLES_LOAM_BREAD)
-	shop._buy(ShopScreen.ITEM_STOCK[0])
-	assert_int(GameState.gp).is_equal(original_gp - int(ShopScreen.ITEM_STOCK[0]["price"]))
+	var bread_entry: Dictionary = {}
+	for entry: Dictionary in shop.catalog_entries():
+		if entry["id"] == ItemIds.CONSUMABLES_LOAM_BREAD:
+			bread_entry = entry
+			break
+	assert_bool(bread_entry.is_empty()).is_false()
+	shop._buy(bread_entry)
+	assert_int(GameState.gp).is_equal(original_gp - int(bread_entry["buy_price"]))
 	assert_int(GameState.item_count(ItemIds.CONSUMABLES_LOAM_BREAD)).is_equal(bread_before + 1)
 	UIManager.close_all()
 	await runner.simulate_frames(2)
@@ -298,6 +305,7 @@ func test_dom_shops_and_home_save_point_are_repeatable_interactions() -> void:
 	GameState.inventory.clear()
 	GameState.inventory.deserialize(original_inventory)
 	GameState.inventory_changed.emit()
+	GameState.vendor_stock = original_vendor_stock
 	GameState.gp = original_gp
 
 

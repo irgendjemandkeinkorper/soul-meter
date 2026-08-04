@@ -1,0 +1,796 @@
+{
+  "ashline-scriptorium": {
+    "id": "ashline-scriptorium",
+    "display_name": "Ashline Scriptorium",
+    "npc_id": "dom-scribe",
+    "site_id": "dom/town-hall-scribe",
+    "site_name": "Town Hall arcade scribe stall",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 1.0,
+    "sell_modifier": 0.5,
+    "minimum_band": "neutral",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "materials/scribes_vellum",
+        "quantity": 10,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/cinder_ink_vial",
+        "quantity": 4,
+        "minimum_band": "warm",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "tools/surveyors_chalk",
+        "quantity": 5,
+        "minimum_band": "",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 3.0,
+      "mode": "every_three_days"
+    },
+    "band_reactions": [
+      {
+        "kind": "stock",
+        "maximum_band": "",
+        "message": "Warm standing releases reserved cinder-ink.",
+        "minimum_band": "warm"
+      }
+    ]
+  },
+  "four-arms-fish": {
+    "id": "four-arms-fish",
+    "display_name": "Four Arms Fish",
+    "npc_id": "dom-fishmonger",
+    "site_id": "dom/south-market-fish",
+    "site_name": "South Market fish stall",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 0.9,
+    "sell_modifier": 0.35,
+    "minimum_band": "hostile",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "consumables/salted_riverfish",
+        "quantity": 16,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "consumables/loam_smoked_eel",
+        "quantity": 8,
+        "minimum_band": "",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 1.0,
+      "mode": "daily"
+    },
+    "band_reactions": []
+  },
+  "hearthloaf-bakery": {
+    "id": "hearthloaf-bakery",
+    "display_name": "Hearthloaf Bakery",
+    "npc_id": "dom-baker",
+    "site_id": "dom/west-market-bakery",
+    "site_name": "West Market bakery stall",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 0.85,
+    "sell_modifier": 0.3,
+    "minimum_band": "hostile",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "consumables/hearthloaf",
+        "quantity": 18,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "consumables/loam_bread",
+        "quantity": 8,
+        "minimum_band": "",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 1.0,
+      "mode": "daily"
+    },
+    "band_reactions": []
+  },
+  "held-flame-shrine": {
+    "id": "held-flame-shrine",
+    "display_name": "Shrine of the Held Flame",
+    "npc_id": "dom-shrine-keeper",
+    "site_id": "dom/central-shrine",
+    "site_name": "Central shrine",
+    "faction_id": "ironbrand-sentinels",
+    "trade_mode": "offering",
+    "buy_modifier": 1.0,
+    "sell_modifier": 0.0,
+    "minimum_band": "warm",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "relics/votive_cinder",
+        "quantity": 3,
+        "minimum_band": "warm",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "relics/captured_reflection",
+        "quantity": 1,
+        "minimum_band": "allied",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 7.0,
+      "mode": "weekly"
+    },
+    "band_reactions": [
+      {
+        "kind": "opening",
+        "maximum_band": "",
+        "message": "The offering shelf opens at warm Sentinel standing.",
+        "minimum_band": "warm"
+      },
+      {
+        "kind": "stock",
+        "maximum_band": "",
+        "message": "Allied standing opens the witnessed-relic niche.",
+        "minimum_band": "allied"
+      }
+    ]
+  },
+  "iron-and-thread": {
+    "id": "iron-and-thread",
+    "display_name": "Iron & Thread",
+    "npc_id": "dom-smith",
+    "site_id": "dom/equipment-shop",
+    "site_name": "EquipmentShop building",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 1.05,
+    "sell_modifier": 0.5,
+    "minimum_band": "neutral",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "weapons/roadwarden_spear",
+        "quantity": 3,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "weapons/forge_hammer",
+        "quantity": 2,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/iron_rivets",
+        "quantity": 8,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "weapons/taubstummer_axe",
+        "quantity": 1,
+        "minimum_band": "allied",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 7.0,
+      "mode": "weekly"
+    },
+    "band_reactions": [
+      {
+        "kind": "refusal",
+        "maximum_band": "cold",
+        "message": "Iron & Thread requires neutral company standing.",
+        "minimum_band": ""
+      },
+      {
+        "kind": "stock",
+        "maximum_band": "",
+        "message": "Allied standing opens the sealed-weapon case.",
+        "minimum_band": "allied"
+      }
+    ]
+  },
+  "loam-and-lantern": {
+    "id": "loam-and-lantern",
+    "display_name": "Loam & Lantern",
+    "npc_id": "dom-general-store-keeper",
+    "site_id": "dom/item-shop",
+    "site_name": "ItemShop building",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 1.0,
+    "sell_modifier": 0.45,
+    "minimum_band": "cold",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "consumables/loam_bread",
+        "quantity": 12,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/cinder_ink_vial",
+        "quantity": 5,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/lamp_oil",
+        "quantity": 8,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "tools/soul_gauge",
+        "quantity": 1,
+        "minimum_band": "warm",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 1.0,
+      "mode": "daily"
+    },
+    "band_reactions": [
+      {
+        "kind": "pricing",
+        "maximum_band": "cold",
+        "message": "Cold standing adds the company-risk markup.",
+        "minimum_band": ""
+      }
+    ]
+  },
+  "needle-and-hide": {
+    "id": "needle-and-hide",
+    "display_name": "Needle & Hide",
+    "npc_id": "dom-clothier",
+    "site_id": "dom/market-row-clothier",
+    "site_name": "Market Row clothier stall",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 0.95,
+    "sell_modifier": 0.45,
+    "minimum_band": "cold",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "materials/binding_thread",
+        "quantity": 12,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "tools/field_needle",
+        "quantity": 5,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/cinder_ink_vial",
+        "quantity": 2,
+        "minimum_band": "warm",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 3.0,
+      "mode": "every_three_days"
+    },
+    "band_reactions": []
+  },
+  "quiet-gear": {
+    "id": "quiet-gear",
+    "display_name": "Quiet Gear",
+    "npc_id": "dom-tinker",
+    "site_id": "dom/south-market-tinker",
+    "site_name": "South Market tinker stall",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 1.05,
+    "sell_modifier": 0.5,
+    "minimum_band": "cold",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "tools/field_needle",
+        "quantity": 3,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "tools/surveyors_chalk",
+        "quantity": 6,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "tools/soul_gauge",
+        "quantity": 1,
+        "minimum_band": "warm",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "tools/lockpick_roll",
+        "quantity": 1,
+        "minimum_band": "cold",
+        "maximum_band": "cold"
+      }
+    ],
+    "restock": {
+      "interval": 3.0,
+      "mode": "every_three_days"
+    },
+    "band_reactions": [
+      {
+        "kind": "stock",
+        "maximum_band": "cold",
+        "message": "Cold standing exposes an unregistered tool roll.",
+        "minimum_band": "cold"
+      }
+    ]
+  },
+  "rivet-and-spur": {
+    "id": "rivet-and-spur",
+    "display_name": "Rivet & Spur",
+    "npc_id": "dom-armorer",
+    "site_id": "dom/garrison-armorer",
+    "site_name": "Garrison forecourt armorer stall",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 1.0,
+    "sell_modifier": 0.5,
+    "minimum_band": "neutral",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "materials/iron_rivets",
+        "quantity": 12,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "weapons/roadwarden_spear",
+        "quantity": 2,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "weapons/forge_hammer",
+        "quantity": 1,
+        "minimum_band": "warm",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 7.0,
+      "mode": "weekly"
+    },
+    "band_reactions": [
+      {
+        "kind": "stock",
+        "maximum_band": "",
+        "message": "Warm standing opens the fitted-tool rack.",
+        "minimum_band": "warm"
+      }
+    ]
+  },
+  "root-and-reed": {
+    "id": "root-and-reed",
+    "display_name": "Root & Reed",
+    "npc_id": "dom-herbalist",
+    "site_id": "dom/east-market-herbs",
+    "site_name": "East Market herb stall",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 0.95,
+    "sell_modifier": 0.4,
+    "minimum_band": "cold",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "consumables/bitterleaf_poultice",
+        "quantity": 8,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/loamroot_sprig",
+        "quantity": 6,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/grave_salt",
+        "quantity": 3,
+        "minimum_band": "warm",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 2.0,
+      "mode": "every_two_days"
+    },
+    "band_reactions": [
+      {
+        "kind": "stock",
+        "maximum_band": "",
+        "message": "Warm standing opens the grave-salt drawer.",
+        "minimum_band": "warm"
+      }
+    ]
+  },
+  "understep-exchange": {
+    "id": "understep-exchange",
+    "display_name": "Understep Exchange",
+    "npc_id": "dom-fence",
+    "site_id": "dom/understep-night-stall",
+    "site_name": "Understep Alley night stall",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 1.1,
+    "sell_modifier": 0.65,
+    "minimum_band": "hostile",
+    "maximum_band": "cold",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 1.4,
+        "sell": 0.5
+      },
+      "cold": {
+        "buy": 0.95,
+        "sell": 1.0
+      },
+      "hostile": {
+        "buy": 0.85,
+        "sell": 1.1
+      },
+      "neutral": {
+        "buy": 1.2,
+        "sell": 0.7
+      },
+      "warm": {
+        "buy": 1.3,
+        "sell": 0.6
+      }
+    },
+    "stock": [
+      {
+        "item_id": "tools/lockpick_roll",
+        "quantity": 2,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "relics/captured_reflection",
+        "quantity": 1,
+        "minimum_band": "hostile",
+        "maximum_band": "hostile"
+      },
+      {
+        "item_id": "relics/quine_shard",
+        "quantity": 1,
+        "minimum_band": "hostile",
+        "maximum_band": "hostile"
+      }
+    ],
+    "restock": {
+      "interval": 0.0,
+      "mode": "never"
+    },
+    "band_reactions": [
+      {
+        "kind": "refusal",
+        "maximum_band": "",
+        "message": "The Exchange closes once company standing reaches neutral.",
+        "minimum_band": "neutral"
+      }
+    ]
+  },
+  "wayfarers-measure": {
+    "id": "wayfarers-measure",
+    "display_name": "Wayfarer's Measure",
+    "npc_id": "dom-provisioner",
+    "site_id": "dom/east-gate-provisioner",
+    "site_name": "East Gate provisioner stall",
+    "faction_id": "iron-companies",
+    "trade_mode": "commerce",
+    "buy_modifier": 1.0,
+    "sell_modifier": 0.4,
+    "minimum_band": "neutral",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "consumables/hearthloaf",
+        "quantity": 8,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "consumables/loam_smoked_eel",
+        "quantity": 5,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/lamp_oil",
+        "quantity": 6,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "tools/surveyors_chalk",
+        "quantity": 4,
+        "minimum_band": "",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 2.0,
+      "mode": "every_two_days"
+    },
+    "band_reactions": []
+  }
+}
