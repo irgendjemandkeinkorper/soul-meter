@@ -165,14 +165,14 @@
 			{
 				"_category_id": "",
 				"_icon_color": "ffffff00",
-				"_id": "258.0",
+				"_id": "263.0",
 				"_index": 0,
 				"_name": "Balance Bands"
 			},
 			{
 				"_category_id": "",
 				"_icon_color": "ffffff00",
-				"_id": "271.0",
+				"_id": "276.0",
 				"_index": 0,
 				"_name": "Defining Weaknesses"
 			}
@@ -4330,9 +4330,394 @@
 				}
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "150.0",
 				"_icon_color": "ffffff00",
-				"_id": "266.0",
+				"_id": "258.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Demon",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": -1.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "gnaal-breach-hound,gnaal-rift-scavenger"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"demon\"],\"members\":[{\"combatant_id\":\"gnaal-breach-hound\",\"count\":1},{\"combatant_id\":\"gnaal-rift-scavenger\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Demon"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-demon"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"gnaal-breach-hound\"],\"side\":\"enemy\",\"zone\":\"front\"},{\"combatant_ids\":[\"gnaal-rift-scavenger\"],\"side\":\"enemy\",\"zone\":\"flank\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "259.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Undead",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "cleaned-jawbrace-guard,mustered-bloodbellow"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"undead\"],\"members\":[{\"combatant_id\":\"cleaned-jawbrace-guard\",\"count\":1},{\"combatant_id\":\"mustered-bloodbellow\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Undead"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-undead"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"cleaned-jawbrace-guard\"],\"side\":\"enemy\",\"zone\":\"front\"},{\"combatant_ids\":[\"mustered-bloodbellow\"],\"side\":\"enemy\",\"zone\":\"back\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "260.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Mixed Whipsaw",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "mustered-bloodbellow,gnaal-breach-hound"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"demon\",\"undead\"],\"members\":[{\"combatant_id\":\"mustered-bloodbellow\",\"count\":1},{\"combatant_id\":\"gnaal-breach-hound\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Mixed Whipsaw"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-mixed-whipsaw"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"mustered-bloodbellow\"],\"side\":\"enemy\",\"zone\":\"front\"},{\"combatant_ids\":[\"gnaal-breach-hound\"],\"side\":\"enemy\",\"zone\":\"flank\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "261.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Speech Winnable",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "mustered-bloodbellow"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"undead\"],\"members\":[{\"combatant_id\":\"mustered-bloodbellow\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[{\"ap_cost\":1,\"display_name\":\"Release the Binding\",\"id\":\"phase2-release-binding\",\"lock_reason\":\"Hold Balance between -20 and +20 to release the binding.\",\"maximum_balance\":20,\"minimum_balance\":-20,\"minimum_enemy_rounds\":0,\"outcome_id\":\"released\",\"soul_cost\":0.0}]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Speech Winnable"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-speech-winnable"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"released\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The binding releases.\"},\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved by force.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[{\"action_id\":\"phase2-release-binding\",\"id\":\"phase2-release-binding-hook\",\"outcome_id\":\"released\",\"trigger\":\"combat_action\"}]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"mustered-bloodbellow\"],\"side\":\"enemy\",\"zone\":\"front\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "262.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Stabilizer Showcase",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "cleaned-jawbrace-guard,gnaal-rift-scavenger"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"demon\",\"undead\"],\"members\":[{\"combatant_id\":\"cleaned-jawbrace-guard\",\"count\":1},{\"combatant_id\":\"gnaal-rift-scavenger\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Stabilizer Showcase"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-stabilizer-showcase"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"cleaned-jawbrace-guard\"],\"side\":\"enemy\",\"zone\":\"front\"},{\"combatant_ids\":[\"gnaal-rift-scavenger\"],\"side\":\"enemy\",\"zone\":\"flank\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "263.0",
+				"_icon_color": "ffffff00",
+				"_id": "271.0",
 				"_index": 0,
 				"_name": "Chaos Extreme",
 				"_property_overrides": {
@@ -4367,9 +4752,9 @@
 				}
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_icon_color": "ffffff00",
-				"_id": "267.0",
+				"_id": "272.0",
 				"_index": 0,
 				"_name": "Chaosward",
 				"_property_overrides": {
@@ -4404,9 +4789,9 @@
 				}
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_icon_color": "ffffff00",
-				"_id": "268.0",
+				"_id": "273.0",
 				"_index": 0,
 				"_name": "Held Centre",
 				"_property_overrides": {
@@ -4441,9 +4826,9 @@
 				}
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_icon_color": "ffffff00",
-				"_id": "269.0",
+				"_id": "274.0",
 				"_index": 0,
 				"_name": "Orderward",
 				"_property_overrides": {
@@ -4478,9 +4863,9 @@
 				}
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_icon_color": "ffffff00",
-				"_id": "270.0",
+				"_id": "275.0",
 				"_index": 0,
 				"_name": "Order Extreme",
 				"_property_overrides": {
@@ -4515,9 +4900,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "283.0",
+				"_id": "288.0",
 				"_index": 0,
 				"_name": "Bog Wight — Hidden Shape",
 				"_property_overrides": {
@@ -4568,9 +4953,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "284.0",
+				"_id": "289.0",
 				"_index": 0,
 				"_name": "Bog Wight — Knee",
 				"_property_overrides": {
@@ -4621,9 +5006,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "285.0",
+				"_id": "290.0",
 				"_index": 0,
 				"_name": "Loam Boar — Knee",
 				"_property_overrides": {
@@ -4674,9 +5059,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "286.0",
+				"_id": "291.0",
 				"_index": 0,
 				"_name": "Loam Boar — Buried Rage",
 				"_property_overrides": {
@@ -4727,9 +5112,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "287.0",
+				"_id": "292.0",
 				"_index": 0,
 				"_name": "Gnaal Breach-Hound — Knee",
 				"_property_overrides": {
@@ -4780,9 +5165,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "288.0",
+				"_id": "293.0",
 				"_index": 0,
 				"_name": "Gnaal Breach-Hound — Breach Name",
 				"_property_overrides": {
@@ -4833,9 +5218,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "289.0",
+				"_id": "294.0",
 				"_index": 0,
 				"_name": "Gnaal Rift-Scavenger — Grasp",
 				"_property_overrides": {
@@ -4886,9 +5271,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "290.0",
+				"_id": "295.0",
 				"_index": 0,
 				"_name": "Gnaal Rift-Scavenger — Rift Path",
 				"_property_overrides": {
@@ -4939,9 +5324,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "291.0",
+				"_id": "296.0",
 				"_index": 0,
 				"_name": "Mustered Bloodbellow — Binding Oath",
 				"_property_overrides": {
@@ -4992,9 +5377,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "292.0",
+				"_id": "297.0",
 				"_index": 0,
 				"_name": "Mustered Bloodbellow — Mustered Weapon",
 				"_property_overrides": {
@@ -5045,9 +5430,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "293.0",
+				"_id": "298.0",
 				"_index": 0,
 				"_name": "Cleaned Guard — Binding Oath",
 				"_property_overrides": {
@@ -5098,9 +5483,9 @@
 				}
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_icon_color": "ffffff00",
-				"_id": "294.0",
+				"_id": "299.0",
 				"_index": 0,
 				"_name": "Cleaned Guard — Gripping Hand",
 				"_property_overrides": {
@@ -5923,128 +6308,128 @@
 				"_type": "string"
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_default_value": "",
-				"_id": "259.0",
+				"_id": "264.0",
 				"_name": "Display Name",
 				"_type": "string"
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_default_value": "",
-				"_id": "260.0",
+				"_id": "265.0",
 				"_name": "Band Id",
 				"_type": "string"
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_default_value": 0,
-				"_id": "261.0",
+				"_id": "266.0",
 				"_name": "Minimum",
 				"_type": "int"
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_default_value": 0,
-				"_id": "262.0",
+				"_id": "267.0",
 				"_name": "Maximum",
 				"_type": "int"
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_default_value": false,
-				"_id": "263.0",
+				"_id": "268.0",
 				"_name": "Global",
 				"_type": "bool"
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_default_value": "",
-				"_id": "264.0",
+				"_id": "269.0",
 				"_name": "Effect Parameters",
 				"_type": "string"
 			},
 			{
-				"_category_id": "258.0",
+				"_category_id": "263.0",
 				"_default_value": false,
-				"_id": "265.0",
+				"_id": "270.0",
 				"_name": "Tunable",
 				"_type": "bool"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": "",
-				"_id": "272.0",
+				"_id": "277.0",
 				"_name": "Display Name",
 				"_type": "string"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": "",
-				"_id": "273.0",
+				"_id": "278.0",
 				"_name": "Archetype Id",
 				"_type": "string"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": "",
-				"_id": "274.0",
+				"_id": "279.0",
 				"_name": "Weakness Id",
 				"_type": "string"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": "",
-				"_id": "275.0",
+				"_id": "280.0",
 				"_name": "Check Skill",
 				"_type": "string"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": 0.0,
-				"_id": "276.0",
+				"_id": "281.0",
 				"_name": "Check Modifier",
 				"_type": "float"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": 0.0,
-				"_id": "277.0",
+				"_id": "282.0",
 				"_name": "Lore Minimum",
 				"_type": "float"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": 0,
-				"_id": "278.0",
+				"_id": "283.0",
 				"_name": "Prior Encounters",
 				"_type": "int"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": "",
-				"_id": "279.0",
+				"_id": "284.0",
 				"_name": "Effect Id",
 				"_type": "string"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": "",
-				"_id": "280.0",
+				"_id": "285.0",
 				"_name": "Effect Parameters",
 				"_type": "string"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": "",
-				"_id": "281.0",
+				"_id": "286.0",
 				"_name": "Resistance Stat",
 				"_type": "string"
 			},
 			{
-				"_category_id": "271.0",
+				"_category_id": "276.0",
 				"_default_value": 0,
-				"_id": "282.0",
+				"_id": "287.0",
 				"_name": "Resistance Threshold",
 				"_type": "int"
 			}
@@ -6052,7 +6437,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 294.0
+			"default": 299.0
 		}
 	},
 	"_version": 1

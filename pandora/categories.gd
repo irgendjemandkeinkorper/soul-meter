@@ -20,8 +20,8 @@ const RULE_BENDS = "213.0"
 const BREADTH = "228.0"
 const MAGNITUDE = "237.0"
 const FIZZLE_TABLES = "246.0"
-const BALANCE_BANDS = "258.0"
-const DEFINING_WEAKNESSES = "271.0"
+const BALANCE_BANDS = "263.0"
+const DEFINING_WEAKNESSES = "276.0"
 
 
 class ItemsCategories:

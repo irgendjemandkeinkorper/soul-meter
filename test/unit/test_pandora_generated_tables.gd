@@ -21,7 +21,7 @@ func test_fizzle_artifact_has_formula_inputs_and_vault_bridge() -> void:
 	assert_float(data["magnitude_multiplier"]["refrain"]).is_equal(2.75)
 
 
-func test_encounter_artifact_exposes_schema_without_authored_phase_two_content() -> void:
+func test_encounter_artifact_exposes_schema_and_authored_phase_two_content() -> void:
 	var data := _json("res://data/generated/encounters.json")
 	for encounter_id: String in data:
 		var row: Dictionary = data[encounter_id]
@@ -29,9 +29,19 @@ func test_encounter_artifact_exposes_schema_without_authored_phase_two_content()
 		assert_bool(row.has("zone_layout")).is_true()
 		assert_bool(row.has("balance_bias")).is_true()
 		assert_bool(row.has("speech_hooks")).is_true()
-		assert_bool(row["composition"].is_empty()).is_true()
-		assert_bool(row["zone_layout"].is_empty()).is_true()
-		assert_bool(row["speech_hooks"].is_empty()).is_true()
+
+	var gate_ids: Array[String] = [
+		"phase2-demon",
+		"phase2-undead",
+		"phase2-mixed-whipsaw",
+		"phase2-speech-winnable",
+		"phase2-stabilizer-showcase",
+	]
+	for encounter_id: String in gate_ids:
+		assert_bool(data.has(encounter_id)).is_true()
+		var row: Dictionary = data[encounter_id]
+		assert_bool(row["composition"].is_empty()).is_false()
+		assert_bool(row["zone_layout"].is_empty()).is_false()
 
 
 func _json(path: String) -> Dictionary:

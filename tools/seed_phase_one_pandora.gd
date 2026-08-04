@@ -263,6 +263,7 @@ func _seed_encounter_schema() -> void:
 		_assign(entity, "Zone Layout", "[]")
 		_assign(entity, "Balance Bias", 0.0)
 		_assign(entity, "Speech Hooks", "[]")
+	_seed_phase_two_encounters(root)
 
 
 func _seed_balance_bands() -> void:
@@ -333,3 +334,187 @@ func _weakness_row(
 		"Resistance Stat": "defense",
 		"Resistance Threshold": 6,
 	}
+
+
+func _seed_phase_two_encounters(root: PandoraCategory) -> void:
+	var fixtures: Array[Dictionary] = [
+		_encounter_fixture(
+			"Phase 2 Gate - Demon",
+			"phase2-demon",
+			["demon"],
+			["gnaal-breach-hound", "gnaal-rift-scavenger"],
+			[
+				{
+					"side": "enemy",
+					"zone": "front",
+					"combatant_ids": ["gnaal-breach-hound"],
+				},
+				{
+					"side": "enemy",
+					"zone": "flank",
+					"combatant_ids": ["gnaal-rift-scavenger"],
+				},
+			],
+			-1.0,
+		),
+		_encounter_fixture(
+			"Phase 2 Gate - Undead",
+			"phase2-undead",
+			["undead"],
+			["cleaned-jawbrace-guard", "mustered-bloodbellow"],
+			[
+				{
+					"side": "enemy",
+					"zone": "front",
+					"combatant_ids": ["cleaned-jawbrace-guard"],
+				},
+				{
+					"side": "enemy",
+					"zone": "back",
+					"combatant_ids": ["mustered-bloodbellow"],
+				},
+			],
+			1.0,
+		),
+		_encounter_fixture(
+			"Phase 2 Gate - Mixed Whipsaw",
+			"phase2-mixed-whipsaw",
+			["demon", "undead"],
+			["mustered-bloodbellow", "gnaal-breach-hound"],
+			[
+				{
+					"side": "enemy",
+					"zone": "front",
+					"combatant_ids": ["mustered-bloodbellow"],
+				},
+				{
+					"side": "enemy",
+					"zone": "flank",
+					"combatant_ids": ["gnaal-breach-hound"],
+				},
+			],
+			0.0,
+		),
+		_speech_fixture(),
+		_encounter_fixture(
+			"Phase 2 Gate - Stabilizer Showcase",
+			"phase2-stabilizer-showcase",
+			["demon", "undead"],
+			["cleaned-jawbrace-guard", "gnaal-rift-scavenger"],
+			[
+				{
+					"side": "enemy",
+					"zone": "front",
+					"combatant_ids": ["cleaned-jawbrace-guard"],
+				},
+				{
+					"side": "enemy",
+					"zone": "flank",
+					"combatant_ids": ["gnaal-rift-scavenger"],
+				},
+			],
+			0.0,
+		),
+	]
+	for fixture: Dictionary in fixtures:
+		var entity_name := str(fixture.get("entity_name", ""))
+		fixture.erase("entity_name")
+		_upsert(root, entity_name, fixture)
+
+
+func _encounter_fixture(
+	entity_name: String,
+	encounter_id: String,
+	archetypes: Array[String],
+	combatant_ids: Array[String],
+	zone_layout: Array[Dictionary],
+	balance_bias: float,
+	speech_hooks: Array[Dictionary] = [],
+	context_actions: Array[Dictionary] = [],
+	outcomes: Dictionary = {},
+) -> Dictionary:
+	var members: Array[Dictionary] = []
+	for combatant_id: String in combatant_ids:
+		members.append({"combatant_id": combatant_id, "count": 1})
+	var resolved_outcomes := outcomes.duplicate(true)
+	if resolved_outcomes.is_empty():
+		resolved_outcomes = {
+			"slain": {
+				"message": "The gate fixture is resolved.",
+				"cause": "",
+				"faction": "",
+				"delta": 0.0,
+			}
+		}
+	return {
+		"entity_name": entity_name,
+		"Encounter Id": encounter_id,
+		"Display Name": entity_name,
+		"Combatant Ids": ",".join(combatant_ids),
+		"Composition": JSON.stringify({"archetypes": archetypes, "members": members}),
+		"Zone Layout": JSON.stringify(zone_layout),
+		"Balance Bias": balance_bias,
+		"Speech Hooks": JSON.stringify(speech_hooks),
+		"Defeated Flag": "",
+		"Win Faction": "",
+		"Win Delta": 0.0,
+		"Win Cause": "",
+		"Loss Faction": "",
+		"Loss Delta": 0.0,
+		"Loss Cause": "",
+		"Default Outcome": "slain",
+		"Context Actions": JSON.stringify(context_actions),
+		"Outcomes": JSON.stringify(resolved_outcomes),
+	}
+
+
+func _speech_fixture() -> Dictionary:
+	return _encounter_fixture(
+		"Phase 2 Gate - Speech Winnable",
+		"phase2-speech-winnable",
+		["undead"],
+		["mustered-bloodbellow"],
+		[
+			{
+				"side": "enemy",
+				"zone": "front",
+				"combatant_ids": ["mustered-bloodbellow"],
+			}
+		],
+		1.0,
+		[
+			{
+				"id": "phase2-release-binding-hook",
+				"trigger": "combat_action",
+				"action_id": "phase2-release-binding",
+				"outcome_id": "released",
+			}
+		],
+		[
+			{
+				"id": "phase2-release-binding",
+				"display_name": "Release the Binding",
+				"outcome_id": "released",
+				"ap_cost": 1,
+				"soul_cost": 0.0,
+				"minimum_enemy_rounds": 0,
+				"minimum_balance": -20,
+				"maximum_balance": 20,
+				"lock_reason": "Hold Balance between -20 and +20 to release the binding.",
+			}
+		],
+		{
+			"slain": {
+				"message": "The gate fixture is resolved by force.",
+				"cause": "",
+				"faction": "",
+				"delta": 0.0,
+			},
+			"released": {
+				"message": "The binding releases.",
+				"cause": "",
+				"faction": "",
+				"delta": 0.0,
+			},
+		},
+	)
