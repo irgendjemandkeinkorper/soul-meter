@@ -8,6 +8,7 @@ signal flag_changed(flag: String, value: Variant)
 signal inventory_changed
 signal party_changed
 signal locale_changed(locale: String)
+signal var_harmony_changed(actor_id: String, value: int, delta: int, source: StringName)
 
 const SETTINGS_PATH := "user://settings.cfg"
 const PROTAGONIST_ID := "vex"
@@ -16,6 +17,8 @@ const REQUIRED_COMPANIONS := 2
 const DEFAULT_LOCALE := "en"
 const SUPPORTED_LOCALES := ["en", "es"]
 const DEFAULT_GP := 250
+const MIN_VAR_HARMONY := -5
+const MAX_VAR_HARMONY := 5
 const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
 
 var flags: Dictionary = {}
@@ -87,6 +90,45 @@ func set_flag(flag: String, value: Variant = true) -> void:
 
 func get_flag(flag: String, default: Variant = false) -> Variant:
 	return flags.get(flag, default)
+
+
+# --- Vär (personal harmony) --------------------------------------------------
+
+
+## Return one actor's Vär. Unknown actors begin at the neutral midpoint.
+func get_var_harmony(actor_id: String) -> int:
+	return clampi(int(var_harmony.get(actor_id, 0)), MIN_VAR_HARMONY, MAX_VAR_HARMONY)
+
+
+func var_harmony_for(actor_id: String) -> int:
+	return get_var_harmony(actor_id)
+
+
+## Set Vär through the bounded store and report the actual clamped value.
+func set_var_harmony(actor_id: String, value: int, source: StringName = &"manual") -> int:
+	if actor_id.is_empty():
+		return 0
+	var previous := get_var_harmony(actor_id)
+	var next := clampi(value, MIN_VAR_HARMONY, MAX_VAR_HARMONY)
+	var_harmony[actor_id] = next
+	if next != previous:
+		var_harmony_changed.emit(actor_id, next, next - previous, source)
+	return next
+
+
+## Story and system effects may move Vär in either direction.
+func adjust_var_harmony(actor_id: String, delta: int, source: StringName = &"adjust") -> int:
+	return set_var_harmony(actor_id, get_var_harmony(actor_id) + delta, source)
+
+
+## Combat and field actions use a positive-only recovery seam. Keeping this
+## separate from adjust_var_harmony makes recovery-through-play structural.
+func raise_var_harmony_from_play(
+	actor_id: String, amount: int = 1, action_id: StringName = &"play"
+) -> int:
+	if amount <= 0:
+		return get_var_harmony(actor_id)
+	return adjust_var_harmony(actor_id, amount, action_id)
 
 
 # --- Inventory ---------------------------------------------------------------

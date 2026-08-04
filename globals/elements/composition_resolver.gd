@@ -4,7 +4,8 @@ extends RefCounted
 ## Pure Elements & Music composition algebra.
 ##
 ## This layer describes effects only. It never rolls fizzle, spends Vär, applies
-## statuses, or executes a Triad effect. Those are consumers of CompositionResult.
+## statuses, or executes a Triad effect. It does query the optional casting gate
+## when caster_context includes the caster's harmony and gate prerequisites.
 ##
 ## The ratified notes use "span" for the hard two-step composition cap while
 ## also defining 2–4-step Strained Chords. Chord distance is therefore kept as
@@ -44,11 +45,11 @@ static func resolve(
 
 	match result.elements.size():
 		1:
-			return _resolve_tone(result)
+			return _apply_casting_gate(_resolve_tone(result))
 		2:
-			return _resolve_chord(result)
+			return _apply_casting_gate(_resolve_chord(result))
 		3:
-			return _resolve_triad(result)
+			return _apply_casting_gate(_resolve_triad(result))
 	return _reject(result, &"invalid_element_count")
 
 
@@ -124,6 +125,47 @@ static func _reject(result: CompositionResult, reason: StringName) -> Compositio
 	result.rejected = true
 	result.failure_id = reason
 	return result
+
+
+static func _apply_casting_gate(result: CompositionResult) -> CompositionResult:
+	if not result.is_resolved() or not _has_gate_context(result.caster_context):
+		return result
+	var harmony := int(
+		result.caster_context.get(
+			"var_harmony", result.caster_context.get("harmony", _harmony_from_game_state(result))
+		)
+	)
+	var gate := CastingGate.query(result, harmony, result.caster_context)
+	result.casting_gate = gate.duplicate(true)
+	result.allowed = bool(gate.get("allowed", false))
+	result.blocked_by = StringName(gate.get("blocked_by", ""))
+	result.nearest_unblock = gate.get("nearest_unblock", {}).duplicate(true)
+	if not result.allowed:
+		result.rejected = true
+		result.failure_id = &"casting_gate"
+	return result
+
+
+static func _has_gate_context(context: Dictionary) -> bool:
+	for key in [
+		"var_harmony", "harmony", "caster_id", "solo", "mastery", "highest_mastery",
+		"is_solo", "has_mastery", "has_highest_mastery", "mastery_is_highest",
+		"breath_tier", "breath_cost_tier", "breath_cost"
+	]:
+		if context.has(key):
+			return true
+	return false
+
+
+static func _harmony_from_game_state(result: CompositionResult) -> int:
+	if not result.caster_context.has("caster_id"):
+		return 0
+	var main_loop := Engine.get_main_loop()
+	if main_loop is SceneTree:
+		var state: Node = main_loop.root.get_node_or_null("GameState")
+		if state != null and state.has_method("get_var_harmony"):
+			return int(state.call("get_var_harmony", str(result.caster_context["caster_id"])))
+	return 0
 
 
 static func _selected_chord_imposition(result: CompositionResult) -> StringName:

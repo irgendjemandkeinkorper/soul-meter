@@ -1,0 +1,469 @@
+{
+  "elements": [
+    {
+      "id": "suul",
+      "display_name": "Suul",
+      "vault_id": "elements-and-music",
+      "imposition_id": "exposed",
+      "imposition_display_name": "Exposed",
+      "rule_bend_id": "reveals_aftertones",
+      "rule_bend_description": "Reveals Aftertones, Discord signatures, and illusions.",
+      "deals_damage": true
+    },
+    {
+      "id": "bloei",
+      "display_name": "Bloei",
+      "vault_id": "elements-and-music",
+      "imposition_id": "overgrown",
+      "imposition_display_name": "Overgrown",
+      "rule_bend_id": "extends_own_buff_duration",
+      "rule_bend_description": "Extends the duration of your own buffs.",
+      "deals_damage": true
+    },
+    {
+      "id": "aqua",
+      "display_name": "Aqua",
+      "vault_id": "elements-and-music",
+      "imposition_id": "soaked",
+      "imposition_display_name": "Soaked",
+      "rule_bend_id": "restores_breath",
+      "rule_bend_description": "The only element that restores Breath.",
+      "deals_damage": true
+    },
+    {
+      "id": "khor",
+      "display_name": "Khor",
+      "vault_id": "elements-and-music",
+      "imposition_id": "",
+      "imposition_display_name": "",
+      "rule_bend_id": "extends_durations_holds_notes",
+      "rule_bend_description": "Extends durations and holds Notes across rounds.",
+      "deals_damage": false
+    },
+    {
+      "id": "terra",
+      "display_name": "Terra",
+      "vault_id": "elements-and-music",
+      "imposition_id": "weighted",
+      "imposition_display_name": "Weighted",
+      "rule_bend_id": "creates_cover_anchors_aftertones",
+      "rule_bend_description": "Creates cover and anchors Aftertones.",
+      "deals_damage": true
+    },
+    {
+      "id": "daar",
+      "display_name": "Daar",
+      "vault_id": "elements-and-music",
+      "imposition_id": "blinded",
+      "imposition_display_name": "Blinded",
+      "rule_bend_id": "conceals_discord_signatures",
+      "rule_bend_description": "Conceals Discord signatures.",
+      "deals_damage": true
+    },
+    {
+      "id": "molm",
+      "display_name": "Molm",
+      "vault_id": "elements-and-music",
+      "imposition_id": "decaying",
+      "imposition_display_name": "Decaying",
+      "rule_bend_id": "converts_to_breath",
+      "rule_bend_description": "Converts corpses and objects into Breath.",
+      "deals_damage": true
+    },
+    {
+      "id": "scor",
+      "display_name": "Scor",
+      "vault_id": "elements-and-music",
+      "imposition_id": "burning",
+      "imposition_display_name": "Burning",
+      "rule_bend_id": "consumes_aftertone_for_burst",
+      "rule_bend_description": "Consumes an Aftertone for burst power.",
+      "deals_damage": true
+    },
+    {
+      "id": "nul",
+      "display_name": "Nul",
+      "vault_id": "elements-and-music",
+      "imposition_id": "muted",
+      "imposition_display_name": "Muted",
+      "rule_bend_id": "cancels_and_zeroes_tempo",
+      "rule_bend_description": "Cancels buffs, ends Aftertones, and zeroes Tempo.",
+      "deals_damage": false
+    },
+    {
+      "id": "strom",
+      "display_name": "Strom",
+      "vault_id": "elements-and-music",
+      "imposition_id": "shocked",
+      "imposition_display_name": "Shocked",
+      "rule_bend_id": "ignores_instability_die",
+      "rule_bend_description": "Ignores the Instability die.",
+      "deals_damage": true
+    }
+  ],
+  "triads": [
+    {
+      "id": "dayspring",
+      "display_name": "Dayspring",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "strom",
+        "suul",
+        "bloei"
+      ],
+      "center": "suul",
+      "unique_effect": {
+        "id": "first_light",
+        "display_name": "First Light",
+        "parameters": {
+          "defining_strike_cost": 0.0,
+          "duration": "round",
+          "reveals": [
+            "aftertones",
+            "discord_signatures",
+            "queued_effects",
+            "discovered_weaknesses"
+          ]
+        }
+      }
+    },
+    {
+      "id": "fruiting",
+      "display_name": "Fruiting",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "suul",
+        "bloei",
+        "aqua"
+      ],
+      "center": "bloei",
+      "unique_effect": {
+        "id": "second_season",
+        "display_name": "Second Season",
+        "parameters": {
+          "copy_active_friendly_buffs": true,
+          "targets_per_new_buff": 2.0
+        }
+      }
+    },
+    {
+      "id": "rivermouth",
+      "display_name": "Rivermouth",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "bloei",
+        "aqua",
+        "khor"
+      ],
+      "center": "aqua",
+      "unique_effect": {
+        "id": "the_mouth_opens",
+        "display_name": "The Mouth Opens",
+        "parameters": {
+          "aoe_ignores_zone_boundaries": true,
+          "duration": "round",
+          "zone_change_ap": 0.0
+        }
+      }
+    },
+    {
+      "id": "founding",
+      "display_name": "Founding",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "aqua",
+        "khor",
+        "terra"
+      ],
+      "center": "khor",
+      "unique_effect": {
+        "id": "cornerstone",
+        "display_name": "Cornerstone",
+        "parameters": {
+          "freeze_remaining_durations": true,
+          "until": "end_of_next_turn"
+        }
+      }
+    },
+    {
+      "id": "vault",
+      "display_name": "Vault",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "khor",
+        "terra",
+        "daar"
+      ],
+      "center": "terra",
+      "unique_effect": {
+        "id": "sealed_ground",
+        "display_name": "Sealed Ground",
+        "parameters": {
+          "anchored_aftertones_enemy_consumption": false,
+          "encounter_scope": true,
+          "entry_ap_add": 1.0,
+          "fortify_zone": true,
+          "ranged_attacks_apply_weighted": true
+        }
+      }
+    },
+    {
+      "id": "barrow",
+      "display_name": "Barrow",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "terra",
+        "daar",
+        "molm"
+      ],
+      "center": "daar",
+      "unique_effect": {
+        "id": "unlisted",
+        "display_name": "Unlisted",
+        "parameters": {
+          "duration": "round",
+          "enemy_back_zone_targetable": false,
+          "enemy_reveal_effects": false,
+          "hide_friendly_positions": true,
+          "hide_friendly_queued_effects": true,
+          "hide_friendly_signatures": true
+        }
+      }
+    },
+    {
+      "id": "pyre",
+      "display_name": "Pyre",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "daar",
+        "molm",
+        "scor"
+      ],
+      "center": "molm",
+      "unique_effect": {
+        "id": "the_rendering",
+        "display_name": "The Rendering",
+        "parameters": {
+          "convert_corpses": true,
+          "convert_destroyed_objects": true,
+          "convert_expired_aftertones": true,
+          "shared_corpse_applies_decaying": true,
+          "split_breath_across_side": true
+        }
+      }
+    },
+    {
+      "id": "cinderfall",
+      "display_name": "Cinderfall",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "molm",
+        "scor",
+        "nul"
+      ],
+      "center": "scor",
+      "unique_effect": {
+        "id": "everything_burns_at_once",
+        "display_name": "Everything Burns At Once",
+        "parameters": {
+          "consume_all_aftertones": true,
+          "include_both_sides": true,
+          "yield_bursts_to_caster_side": true
+        }
+      }
+    },
+    {
+      "id": "stillpoint",
+      "display_name": "Stillpoint",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "scor",
+        "nul",
+        "strom"
+      ],
+      "center": "nul",
+      "unique_effect": {
+        "id": "the_held_silence",
+        "display_name": "The Held Silence",
+        "parameters": {
+          "balance_gauge": "exact_center",
+          "lock_until": "end_of_next_round",
+          "suppress_threshold_effects": true
+        }
+      }
+    },
+    {
+      "id": "thunderhead",
+      "display_name": "Thunderhead",
+      "vault_id": "elements-and-music",
+      "elements": [
+        "nul",
+        "strom",
+        "suul"
+      ],
+      "center": "strom",
+      "unique_effect": {
+        "id": "nothing_is_uncertain",
+        "display_name": "Nothing Is Uncertain",
+        "parameters": {
+          "duration": "round",
+          "out_of_turn_allies": 1.0,
+          "skip_instability_die": true
+        }
+      }
+    }
+  ],
+  "impositions": [
+    {
+      "id": "blinded",
+      "display_name": "Blinded",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "burning",
+      "display_name": "Burning",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "decaying",
+      "display_name": "Decaying",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "exposed",
+      "display_name": "Exposed",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "muted",
+      "display_name": "Muted",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "overgrown",
+      "display_name": "Overgrown",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "soaked",
+      "display_name": "Soaked",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "weighted",
+      "display_name": "Weighted",
+      "vault_id": "elements-and-music"
+    }
+  ],
+  "rule_bends": [
+    {
+      "id": "cancels_and_zeroes_tempo",
+      "display_name": "Cancels and Zeroes Tempo",
+      "description": "Cancels buffs, ends Aftertones, and zeroes Tempo.",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "conceals_discord_signatures",
+      "display_name": "Conceals Discord Signatures",
+      "description": "Conceals Discord signatures.",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "consumes_aftertone_for_burst",
+      "display_name": "Consumes Aftertone for Burst",
+      "description": "Consumes an Aftertone for burst power.",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "converts_to_breath",
+      "display_name": "Converts to Breath",
+      "description": "Converts corpses and objects into Breath.",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "creates_cover_anchors_aftertones",
+      "display_name": "Creates Cover and Anchors Aftertones",
+      "description": "Creates cover and anchors Aftertones.",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "extends_durations_holds_notes",
+      "display_name": "Extends Durations and Holds Notes",
+      "description": "Extends durations and holds Notes across rounds.",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "extends_own_buff_duration",
+      "display_name": "Extends Own Buff Duration",
+      "description": "Extends the duration of your own buffs.",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "ignores_instability_die",
+      "display_name": "Ignores Instability Die",
+      "description": "Ignores the Instability die.",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "restores_breath",
+      "display_name": "Restores Breath",
+      "description": "The only element that restores Breath.",
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "reveals_aftertones",
+      "display_name": "Reveals Aftertones",
+      "description": "Reveals Aftertones, Discord signatures, and illusions.",
+      "vault_id": "elements-and-music"
+    }
+  ],
+  "breadths": [
+    {
+      "id": "chord",
+      "display_name": "Chord",
+      "element_count": 2,
+      "fizzle_add": 5.0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "tone",
+      "display_name": "Tone",
+      "element_count": 1,
+      "fizzle_add": 0.0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "triad",
+      "display_name": "Triad",
+      "element_count": 3,
+      "fizzle_add": 12.0,
+      "vault_id": "elements-and-music"
+    }
+  ],
+  "magnitudes": [
+    {
+      "id": "note",
+      "display_name": "Note",
+      "multiplier": 0.5,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "phrase",
+      "display_name": "Phrase",
+      "multiplier": 1.0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "refrain",
+      "display_name": "Refrain",
+      "multiplier": 2.75,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "song",
+      "display_name": "Song",
+      "multiplier": 1.75,
+      "vault_id": "elements-and-music"
+    }
+  ]
+}
