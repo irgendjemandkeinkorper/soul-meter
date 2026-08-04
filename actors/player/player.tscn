@@ -29,3 +29,6 @@ shape = SubResource("RectangleShape2D_body")
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
 position_smoothing_speed = 7.0
+
+[node name="FootstepPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"

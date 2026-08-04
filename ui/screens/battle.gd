@@ -4,6 +4,7 @@ extends Screen
 
 const BATTLE_STAGE := preload("res://ui/screens/battle_stage.gd")
 const BATTLE_HUD_SCENE := preload("res://ui/hud/battle_hud.tscn")
+const COMBAT_AUDIO := preload("res://audio/combat_audio.gd")
 
 var _stage: Control
 var _party_box: VBoxContainer
@@ -17,8 +18,8 @@ var _actions_box: GridContainer
 var _target_button: Button
 var _outcome_box: VBoxContainer
 var _action_buttons: Array[Button] = []
-var _sfx: AudioStreamPlayer
 var _battle_hud: BattleHUD
+var _combat_audio: Node
 
 
 func _build() -> void:
@@ -40,6 +41,9 @@ func _build() -> void:
 	layout.add_child(_battle_hud)
 	Battle.combat_event.connect(_battle_hud.consume_event)
 	Battle.replay_combat_events(_battle_hud.consume_event)
+	_combat_audio = COMBAT_AUDIO.new() as Node
+	add_child(_combat_audio)
+	Battle.combat_event.connect(Callable(_combat_audio, "consume_event"))
 
 	# The stage occupies the breathing room between the title rail and command rail.
 	var stage_space := Control.new()
@@ -47,9 +51,6 @@ func _build() -> void:
 	layout.add_child(stage_space)
 	layout.add_child(_make_command_rail())
 
-	_sfx = AudioStreamPlayer.new()
-	_sfx.bus = "SFX"
-	add_child(_sfx)
 	Battle.turn_resolved.connect(_refresh)
 	Battle.balance_changed.connect(func(_value: int) -> void: _refresh())
 	Battle.battle_ended.connect(_on_battle_ended)
@@ -213,9 +214,7 @@ func _make_meter(fill_color: Color) -> ProgressBar:
 
 
 func _use_action(action_id: StringName) -> void:
-	if Battle.use_action(action_id):
-		_sfx.stream = load("res://assets/kenney/ui/ui-pack/Sounds/tap-a.ogg")
-		_sfx.play()
+	Battle.use_action(action_id)
 
 
 func _refresh() -> void:
@@ -334,8 +333,6 @@ func _on_battle_ended(result: BattleResult) -> void:
 	_log_lbl.text = result.message
 	if not result.cause.is_empty():
 		_log_lbl.text += "\n" + result.cause
-	_sfx.stream = load("res://assets/kenney/ui/ui-pack/Sounds/switch-b.ogg")
-	_sfx.play()
 	_outcome_box.visible = true
 	var outcome := Label.new()
 	outcome.text = "ENCOUNTER RESOLVED"

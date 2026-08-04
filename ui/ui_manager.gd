@@ -14,6 +14,10 @@ const STANDING := preload("res://ui/screens/standing.tscn")
 const TAVERN := preload("res://ui/screens/tavern.tscn")
 const JOURNAL := preload("res://ui/screens/journal.tscn")
 const SHOP := preload("res://ui/screens/shop.tscn")
+const BUTTON_PRESS_SOUND := preload("res://assets/audio/sfx/metalClick.ogg")
+const SCREEN_OPEN_SOUND := preload("res://assets/audio/sfx/bookOpen.ogg")
+const SCREEN_CLOSE_SOUND := preload("res://assets/audio/sfx/bookClose.ogg")
+const INVENTORY_MOVE_SOUND := preload("res://assets/audio/sfx/handleSmallLeather2.ogg")
 
 var ui_theme: Theme
 var _stack: Array[Control] = []
@@ -24,6 +28,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 10
 	_build_theme()
+	get_tree().node_added.connect(_on_node_added)
+	if GameState.inventory != null:
+		GameState.inventory.item_moved.connect(_on_inventory_moved)
 
 
 func _build_theme() -> void:
@@ -43,6 +50,7 @@ func open(scene: PackedScene, pause: bool = false, flow_owned: bool = false) -> 
 	inst.theme = ui_theme  # CanvasLayer children don't inherit the root Window theme
 	add_child(inst)
 	_stack.append(inst)
+	_play_ui_sound(SCREEN_OPEN_SOUND)
 	return inst
 
 
@@ -56,14 +64,18 @@ func back() -> void:
 		return
 	var top: Control = _stack.pop_back()
 	top.queue_free()
+	_play_ui_sound(SCREEN_CLOSE_SOUND)
 	if _stack.is_empty() and _paused_by_ui:
 		_paused_by_ui = false
 		get_tree().paused = false
 
 
 func close_all() -> void:
+	var had_open_screen := not _stack.is_empty()
 	while not _stack.is_empty():
 		_stack.pop_back().queue_free()
+	if had_open_screen:
+		_play_ui_sound(SCREEN_CLOSE_SOUND)
 	if _paused_by_ui:
 		_paused_by_ui = false
 		get_tree().paused = false
@@ -101,3 +113,27 @@ func _unhandled_input(event: InputEvent) -> void:
 func _in_gameplay() -> bool:
 	var cur := get_tree().current_scene
 	return cur != null and GameFlow.GAMEPLAY_SCENES.has(cur.scene_file_path)
+
+
+func _on_node_added(node: Node) -> void:
+	if node is BaseButton:
+		var button := node as BaseButton
+		if not button.pressed.is_connected(_on_button_pressed):
+			button.pressed.connect(_on_button_pressed)
+
+
+func _on_button_pressed() -> void:
+	_play_ui_sound(BUTTON_PRESS_SOUND)
+
+
+func _on_inventory_moved() -> void:
+	_play_ui_sound(INVENTORY_MOVE_SOUND)
+
+
+func _play_ui_sound(stream: AudioStream) -> void:
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.bus = &"SFX"
+	player.finished.connect(player.queue_free)
+	add_child(player)
+	player.play()
