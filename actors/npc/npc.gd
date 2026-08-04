@@ -54,14 +54,25 @@ func _unhandled_input(event: InputEvent) -> void:
 			var shop_screen := UIManager.open(UIManager.SHOP, true)
 			shop_screen.call("configure_vendor", vendor_id)
 			return
-		if dialogue_path.is_empty():
+		var route := QuestRegistry.dialogue_route_for_actor(
+			_stable_actor_id(), dialogue_path, dialogue_start
+		)
+		var resolved_path := str(route.get("path", ""))
+		var resolved_title := str(route.get("title", "start"))
+		if resolved_path.is_empty():
 			push_error("NPC '%s' has no dialogue resource." % npc_name)
 			return
-		var dialogue := load(dialogue_path) as DialogueResource
+		var dialogue := load(resolved_path) as DialogueResource
 		if dialogue == null:
-			push_error("NPC '%s' could not load dialogue '%s'." % [npc_name, dialogue_path])
+			push_error("NPC '%s' could not load dialogue '%s'." % [npc_name, resolved_path])
 			return
-		DialogueManager.show_dialogue_balloon(dialogue, dialogue_start)
+		DialogueManager.show_dialogue_balloon(dialogue, resolved_title)
+
+
+func _stable_actor_id() -> String:
+	if not npc_id.is_empty():
+		return npc_id
+	return str(get_meta(&"npc_id", ""))
 
 
 func _apply_visual_identity() -> void:
