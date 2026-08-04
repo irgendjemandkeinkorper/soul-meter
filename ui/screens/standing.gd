@@ -1,91 +1,60 @@
 extends Screen
-## Standing Screen: A view of Reputation.all_standings() and Reputation.why(faction)
+## Standing Screen: the full faction-band view and the in-fiction read-back of
+## Reputation.why() and Renown.why(). Journal links here for the complete ledger.
 
 var _name_lbl: Label
 var _band_lbl: Label
 var _history_vbox: VBoxContainer
 var _factions: Array[String] = []
 
+
 func _build() -> void:
-	# Increased default window height to 540 to accommodate global overview cleanly
 	var vbox := _make_window("Standing", Vector2(720, 540))
 
-	# Global overview section
 	var global_row := HBoxContainer.new()
+	global_row.theme_type_variation = "MirrorPairRow"
 	global_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	global_row.add_theme_constant_override("separation", 16)
 	vbox.add_child(global_row)
 
-	# Column 1: Global Renown
 	var renown_vbox := VBoxContainer.new()
+	renown_vbox.theme_type_variation = "LedgerColumn"
 	renown_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	renown_vbox.size_flags_stretch_ratio = 1.0
 	global_row.add_child(renown_vbox)
+	_add_renown_readback(renown_vbox, &"reputation", 2)
 
-	var renown_title := Label.new()
-	renown_title.text = "Global Renown: %s" % str(Renown.reputation())
-	renown_title.theme_type_variation = "HeadingLabel"
-	renown_title.modulate = DS.GILD_2
-	renown_vbox.add_child(renown_title)
-
-	var renown_events := Renown.why(&"reputation", 2)
-	if renown_events.is_empty():
-		var empty_lbl := Label.new()
-		empty_lbl.text = "(No Renown accumulated yet)"
-		empty_lbl.modulate = DS.ASH
-		renown_vbox.add_child(empty_lbl)
-	else:
-		for e in renown_events:
-			var event_lbl := Label.new()
-			event_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			event_lbl.text = format_renown_event(e)
-			event_lbl.modulate = DS.STATE_CONSTANT
-			renown_vbox.add_child(event_lbl)
-
-	# Column 2: Global Infamy
 	var infamy_vbox := VBoxContainer.new()
+	infamy_vbox.theme_type_variation = "LedgerColumn"
 	infamy_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	infamy_vbox.size_flags_stretch_ratio = 1.0
 	global_row.add_child(infamy_vbox)
-
-	var infamy_title := Label.new()
-	infamy_title.text = "Global Infamy: %s" % str(Renown.infamy())
-	infamy_title.theme_type_variation = "HeadingLabel"
-	infamy_title.modulate = DS.CINDER_3
-	infamy_vbox.add_child(infamy_title)
-
-	var infamy_events := Renown.why(&"infamy", 2)
-	if infamy_events.is_empty():
-		var empty_lbl := Label.new()
-		empty_lbl.text = "(No Infamy accumulated yet)"
-		empty_lbl.modulate = DS.ASH
-		infamy_vbox.add_child(empty_lbl)
-	else:
-		for e in infamy_events:
-			var event_lbl := Label.new()
-			event_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			event_lbl.text = format_renown_event(e)
-			event_lbl.modulate = DS.CINDER_3
-			infamy_vbox.add_child(event_lbl)
+	_add_renown_readback(infamy_vbox, &"infamy", 2)
 
 	vbox.add_child(HSeparator.new())
 
 	var row := HBoxContainer.new()
+	row.theme_type_variation = "MirrorPairRow"
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 16)
 	vbox.add_child(row)
 
 	var list := ItemList.new()
+	list.name = "FactionList"
 	list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	list.custom_minimum_size = Vector2(260, 0)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list.size_flags_stretch_ratio = 1.0
 	row.add_child(list)
 
 	var sheet := VBoxContainer.new()
+	sheet.theme_type_variation = "LedgerColumn"
 	sheet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sheet.add_theme_constant_override("separation", 8)
+	sheet.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sheet.size_flags_stretch_ratio = 1.0
 	row.add_child(sheet)
 
 	_name_lbl = Label.new()
-	_name_lbl.add_theme_font_size_override("font_size", 24)
+	_name_lbl.theme_type_variation = "HeadingLabel"
 	sheet.add_child(_name_lbl)
 
 	_band_lbl = Label.new()
@@ -98,85 +67,161 @@ func _build() -> void:
 	sheet.add_child(scroll)
 
 	_history_vbox = VBoxContainer.new()
+	_history_vbox.name = "FactionHistory"
+	_history_vbox.theme_type_variation = "LedgerHistory"
 	_history_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_history_vbox.add_theme_constant_override("separation", 12)
 	scroll.add_child(_history_vbox)
 
 	var standings: Dictionary = Reputation.all_standings()
 	_factions = []
-	for f in standings.keys():
-		_factions.append(f)
+	for faction_value: Variant in standings.keys():
+		_factions.append(str(faction_value))
 	_factions.sort()
 
-	for faction in _factions:
-		var display_name := faction.capitalize().replace("-", " ")
-		var band_str: String = Reputation.band(faction)
-		list.add_item("%s (%s)" % [display_name, band_str.capitalize()])
+	for faction: String in _factions:
+		var display_name := format_faction_name(faction)
+		var band_str: String = String(Reputation.band(faction)).capitalize()
+		list.add_item("%s (%s)" % [display_name, band_str])
 
 	list.item_selected.connect(_on_selected)
-	if _factions.size() > 0:
+	if not _factions.is_empty():
 		list.select(0)
 		_on_selected(0)
 	else:
-		_name_lbl.text = "(No reputation changes yet)"
-		_band_lbl.text = ""
-		var empty_lbl := Label.new()
-		empty_lbl.text = "(No faction events yet)"
-		empty_lbl.modulate = DS.ASH
-		_history_vbox.add_child(empty_lbl)
+		_name_lbl.text = "No faction has entered your name"
+		_band_lbl.text = "Standing: Unrecorded"
+		_band_lbl.theme_type_variation = "MutedLabel"
+		_add_empty_label(_history_vbox, "No faction causes have been recorded yet.")
 
 	_add_back_button(vbox)
 
+
 func _on_selected(idx: int) -> void:
-	var faction: String = _factions[idx]
-	var display_name := faction.capitalize().replace("-", " ")
-	_name_lbl.text = display_name
+	if idx < 0 or idx >= _factions.size():
+		return
+	var faction := _factions[idx]
+	_name_lbl.text = "%s remembers" % format_faction_name(faction)
 
 	var band: StringName = Reputation.band(faction)
-	var band_str := String(band).capitalize()
-	_band_lbl.text = "Standing: %s" % band_str
+	_band_lbl.text = "Standing: %s (%s)" % [
+		String(band).capitalize(), str(Reputation.standing(faction))
+	]
+	_band_lbl.theme_type_variation = band_theme_type(band)
 
-	# Apply color based on the design system band tokens
-	if band == &"hostile":
-		_band_lbl.modulate = DS.CINDER_3
-	elif band == &"cold":
-		_band_lbl.modulate = DS.ASH
-	elif band == &"allied":
-		_band_lbl.modulate = DS.GILD_2
-	elif band == &"warm":
-		_band_lbl.modulate = DS.STATE_CONSTANT
-	else:
-		_band_lbl.modulate = DS.PARCHMENT
-
-	for child in _history_vbox.get_children():
+	for child: Node in _history_vbox.get_children():
 		child.queue_free()
+	add_faction_readback(_history_vbox, faction)
 
-	var events: Array[ReputationEvent] = Reputation.why(faction)
+
+static func add_faction_readback(
+	container: VBoxContainer, faction: String, limit: int = 5
+) -> void:
+	var events: Array[ReputationEvent] = Reputation.why(faction, limit)
 	if events.is_empty():
-		var empty_lbl := Label.new()
-		empty_lbl.text = "(No faction events yet)"
-		empty_lbl.modulate = DS.ASH
-		_history_vbox.add_child(empty_lbl)
-	else:
-		for event in events:
-			var event_lbl := Label.new()
-			event_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			event_lbl.text = format_event(event)
+		_add_empty_label(container, "No faction causes have been recorded yet.")
+		return
+	for event: ReputationEvent in events:
+		var event_lbl := Label.new()
+		event_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		event_lbl.text = format_event(event)
+		event_lbl.theme_type_variation = delta_theme_type(event.delta)
+		container.add_child(event_lbl)
 
-			# Color coding the delta
-			if event.delta > 0:
-				event_lbl.modulate = DS.STATE_CONSTANT
-			elif event.delta < 0:
-				event_lbl.modulate = DS.CINDER_3
-			else:
-				event_lbl.modulate = DS.ASH
 
-			_history_vbox.add_child(event_lbl)
+func _add_renown_readback(
+	container: VBoxContainer, kind: StringName, limit: int
+) -> void:
+	var is_infamy := kind == &"infamy"
+	var total := Renown.infamy() if is_infamy else Renown.reputation()
+	var title := Label.new()
+	title.text = "Global %s: %s" % ["Infamy" if is_infamy else "Renown", str(total)]
+	title.theme_type_variation = "InfamyHeadingLabel" if is_infamy else "RenownHeadingLabel"
+	container.add_child(title)
 
-static func format_event(e: ReputationEvent) -> String:
-	var sign_str := "+" if e.delta > 0 else ""
-	return "%s%s: %s" % [sign_str, str(e.delta), e.cause]
+	var events: Array[RenownEvent] = Renown.why(kind, limit)
+	if events.is_empty():
+		_add_empty_label(
+			container,
+			"No Infamy has followed you yet." if is_infamy else "No Renown has followed you yet."
+		)
+		return
+	for event: RenownEvent in events:
+		var event_lbl := Label.new()
+		event_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		event_lbl.text = format_renown_event(event)
+		event_lbl.theme_type_variation = delta_theme_type(event.delta)
+		container.add_child(event_lbl)
 
-static func format_renown_event(e: RenownEvent) -> String:
-	var sign_str := "+" if e.delta > 0 else ""
-	return "%s%s: %s" % [sign_str, str(e.delta), e.cause]
+
+static func _add_empty_label(container: Container, text: String) -> void:
+	var empty_lbl := Label.new()
+	empty_lbl.text = text
+	empty_lbl.theme_type_variation = "MutedLabel"
+	empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	container.add_child(empty_lbl)
+
+
+static func format_event(event: ReputationEvent) -> String:
+	return "%s remembers: %s. Standing %s. Entered at %s." % [
+		format_faction_name(event.faction),
+		_trim_terminal_punctuation(event.cause),
+		format_delta(event.delta),
+		format_scene(event.scene),
+	]
+
+
+static func format_renown_event(event: RenownEvent) -> String:
+	var kind_name := "Infamy" if event.kind == &"infamy" else "Renown"
+	var lead := "Your name darkened because" if event.kind == &"infamy" else "Your name carried farther because"
+	return "%s %s. %s %s. Entered at %s." % [
+		lead,
+		_trim_terminal_punctuation(event.cause),
+		kind_name,
+		format_delta(event.delta),
+		format_scene(event.scene),
+	]
+
+
+static func format_delta(delta: float) -> String:
+	return ("+" if delta > 0.0 else "") + str(delta)
+
+
+static func format_faction_name(faction: String) -> String:
+	return faction.replace("-", " ").replace("_", " ").capitalize()
+
+
+static func format_scene(scene: String) -> String:
+	var place := scene.strip_edges()
+	if place.begins_with("res://"):
+		place = place.get_file().get_basename()
+	place = place.replace("-", " ").replace("_", " ").strip_edges()
+	return "an unentered place" if place.is_empty() else place.capitalize()
+
+
+static func delta_theme_type(delta: float) -> StringName:
+	if delta > 0.0:
+		return &"PositiveLabel"
+	if delta < 0.0:
+		return &"NegativeLabel"
+	return &"MutedLabel"
+
+
+static func band_theme_type(band: StringName) -> StringName:
+	match band:
+		&"hostile":
+			return &"StandingHostileLabel"
+		&"cold":
+			return &"StandingColdLabel"
+		&"warm":
+			return &"StandingWarmLabel"
+		&"allied":
+			return &"StandingAlliedLabel"
+		_:
+			return &"StandingNeutralLabel"
+
+
+static func _trim_terminal_punctuation(text: String) -> String:
+	var trimmed := text.strip_edges()
+	while trimmed.ends_with(".") or trimmed.ends_with("!") or trimmed.ends_with("?"):
+		trimmed = trimmed.substr(0, trimmed.length() - 1).strip_edges()
+	return trimmed

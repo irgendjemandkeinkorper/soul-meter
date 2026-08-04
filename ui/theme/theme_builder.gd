@@ -123,6 +123,25 @@ static func build() -> Theme:
 	t.set_type_variation("BattlePartyRow", "HBoxContainer")
 	t.set_constant("separation", "BattlePartyRow", DS.SPACE_5)
 
+	# Shared screen and ledger layouts. Screen scripts select these variations;
+	# all visual values remain centralized here and come from DS tokens.
+	t.add_type("ScreenWindowMargin")
+	t.set_type_variation("ScreenWindowMargin", "MarginContainer")
+	for margin_name in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
+		t.set_constant(margin_name, "ScreenWindowMargin", DS.PANEL_PAD)
+	t.add_type("ScreenContentColumn")
+	t.set_type_variation("ScreenContentColumn", "VBoxContainer")
+	t.set_constant("separation", "ScreenContentColumn", DS.CONTROL_GAP)
+	t.add_type("MirrorPairRow")
+	t.set_type_variation("MirrorPairRow", "HBoxContainer")
+	t.set_constant("separation", "MirrorPairRow", DS.SPACE_6)
+	t.add_type("LedgerColumn")
+	t.set_type_variation("LedgerColumn", "VBoxContainer")
+	t.set_constant("separation", "LedgerColumn", DS.SPACE_4)
+	t.add_type("LedgerHistory")
+	t.set_type_variation("LedgerHistory", "VBoxContainer")
+	t.set_constant("separation", "LedgerHistory", DS.SPACE_5)
+
 	# ---- Buttons: iron bevel (mid-stop fill), hover = edge lights up, press = inset ----
 	t.set_font("font", "Button", display)
 	t.set_font_size("font_size", "Button", DS.FS_200)
@@ -223,6 +242,34 @@ static func build() -> Theme:
 	t.add_type("MutedLabel")
 	t.set_type_variation("MutedLabel", "Label")
 	t.set_color("font_color", "MutedLabel", DS.ASH_DIM)
+
+	# Journal and Standing use semantic label variations so state remains
+	# color-independent in text while accents still follow the shared palette.
+	t.add_type("PositiveLabel")
+	t.set_type_variation("PositiveLabel", "Label")
+	t.set_color("font_color", "PositiveLabel", DS.STATE_CONSTANT)
+	t.add_type("NegativeLabel")
+	t.set_type_variation("NegativeLabel", "Label")
+	t.set_color("font_color", "NegativeLabel", DS.CINDER_3)
+	t.add_type("RenownHeadingLabel")
+	t.set_type_variation("RenownHeadingLabel", "Label")
+	t.set_font("font", "RenownHeadingLabel", display)
+	t.set_font_size("font_size", "RenownHeadingLabel", DS.FS_600)
+	t.set_color("font_color", "RenownHeadingLabel", DS.GILD_2)
+	t.add_type("InfamyHeadingLabel")
+	t.set_type_variation("InfamyHeadingLabel", "Label")
+	t.set_font("font", "InfamyHeadingLabel", display)
+	t.set_font_size("font_size", "InfamyHeadingLabel", DS.FS_600)
+	t.set_color("font_color", "InfamyHeadingLabel", DS.CINDER_3)
+	for band_name: String in ["Hostile", "Cold", "Neutral", "Warm", "Allied"]:
+		var type_name := "Standing%sLabel" % band_name
+		t.add_type(type_name)
+		t.set_type_variation(type_name, "Label")
+	t.set_color("font_color", "StandingHostileLabel", DS.CINDER_3)
+	t.set_color("font_color", "StandingColdLabel", DS.ASH)
+	t.set_color("font_color", "StandingNeutralLabel", DS.PARCHMENT)
+	t.set_color("font_color", "StandingWarmLabel", DS.STATE_CONSTANT)
+	t.set_color("font_color", "StandingAlliedLabel", DS.GILD_2)
 
 	# ---- Inset wells: ItemList, ProgressBar track, LineEdit ----
 	var inset := StyleBoxFlat.new()

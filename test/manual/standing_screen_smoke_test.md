@@ -22,6 +22,6 @@
    - It should display the newest two causes for Renown and Infamy (if any have been earned).
    - Verify that the causes are listed newest-first.
 5. Verify **Empty States**:
-   - If no Renown has been gained yet, confirm it displays a clear empty state: `(No Renown accumulated yet)` under the Renown total.
-   - If no Infamy has been gained yet, confirm it displays a clear empty state: `(No Infamy accumulated yet)` under the Infamy total.
-   - For factions, if there are no faction-specific events, verify that the screen displays `(No faction events yet)`.
+   - If no Renown has been gained yet, confirm it displays a clear empty state: `No Renown has followed you yet.` under the Renown total.
+   - If no Infamy has been gained yet, confirm it displays a clear empty state: `No Infamy has followed you yet.` under the Infamy total.
+   - For factions, if there are no faction-specific events, verify that the screen displays `No faction causes have been recorded yet.`

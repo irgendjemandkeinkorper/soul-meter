@@ -8,5 +8,7 @@ id = 5
 quest_name = "The First Field Debt"
 quest_description = "Marshal Coiljaw needs proof that the thing haunting the grove can be stopped. Bring back the loamroot token it leaves behind."
 quest_objective = "Defeat the Bog Wight and loot its loamroot token."
+quest_giver = "Marshal Coiljaw"
+quest_location = "The grove edge outside Dom"
 required_flags = PackedStringArray("defeated_bog_wight", "field_debt_proof_looted")
 objectives = PackedStringArray("Defeat the Bog Wight at the grove edge.", "Loot the loamroot token.", "Return to Marshal Coiljaw in Dom.")

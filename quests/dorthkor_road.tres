@@ -8,5 +8,7 @@ id = 2
 quest_name = "The Broken Muster"
 quest_description = "A demon breach has silenced Dorthkor Road. The Trial Council needs proof of what crossed the stones—and why the dead are mustering with it."
 quest_objective = "Reach Dorthkor Road."
+quest_giver = "Marshal Coiljaw"
+quest_location = "Dorthkor Road"
 required_flags = PackedStringArray("chapter_dorthkor_reached", "defeated_breach_hound", "defeated_mustered_dead")
 objectives = PackedStringArray("Reach Dorthkor Road.", "Break the demon vanguard.", "Confront the soldier answering the dead muster.", "Return to Marshal Coiljaw in Dom.")
