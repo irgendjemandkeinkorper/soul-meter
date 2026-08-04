@@ -88,6 +88,10 @@ func summary() -> String:
 		Kind.RESOLUTION:
 			target = "Encounter"
 			effect = "Ends the encounter"
+		Kind.PASS:
+			if verb == Verb.SPEECH:
+				target = "Encounter"
+				effect = "Opens combat dialogue"
 	var costs: Array[String] = ["%d AP" % ap_cost]
 	if not is_zero_approx(soul_cost):
 		costs.append("%d Soul" % int(soul_cost))

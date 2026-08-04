@@ -27,6 +27,22 @@ func side_of(_actor: BattleActor) -> StringName:
 	return &""
 
 
+func has_combatant(_actor: BattleActor) -> bool:
+	return false
+
+
+func combatants_on_side(_side: StringName) -> Array[BattleActor]:
+	return []
+
+
+func remove_combatant(_actor: BattleActor) -> Dictionary:
+	return _blocked(&"composition", "Positioning model cannot remove combatants.", {})
+
+
+func transfer_combatant(_actor: BattleActor, _new_side: StringName) -> Dictionary:
+	return _blocked(&"composition", "Positioning model cannot transfer combatants.", {})
+
+
 func move(_actor: BattleActor, _destination: StringName) -> Dictionary:
 	return _blocked(&"position", "Positioning model does not support movement.", {})
 

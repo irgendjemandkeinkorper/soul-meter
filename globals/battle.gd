@@ -7,6 +7,7 @@ signal turn_resolved
 signal balance_changed(value: int)
 signal battle_ended(result: BattleResult)
 signal combat_event(event: CombatEvent)
+signal speech_requested(dialogue_path: String, dialogue_start: String)
 
 const BALANCE_MIN := -100
 const BALANCE_MAX := 100
@@ -18,6 +19,7 @@ const ACTION_GUARD := &"guard"
 const ACTION_STABILIZE := &"stabilize"
 const ACTION_DEFINITION := &"definition"
 const ACTION_PARADOX := &"paradox"
+const ACTION_SPEECH := &"speech-seam"
 const OUTCOME_DEFEAT := &"defeat"
 const OUTCOME_FLED := &"fled"
 
@@ -32,6 +34,9 @@ var ended := false
 var encounter_id: StringName = &""
 var last_result: BattleResult
 var controller: CombatController
+var last_speech_check: Dictionary = {}
+var last_speech_option: StringName = &""
+var last_speech_succeeded := false
 
 var player: BattleActor:
 	get:
@@ -48,6 +53,9 @@ func start(encounter: Variant) -> void:
 	enemies.clear()
 	_definition.clear()
 	encounter_id = &""
+	last_speech_check.clear()
+	last_speech_option = &""
+	last_speech_succeeded = false
 	for i in GameState.party.size():
 		var member: PartyMember = GameState.party[i]
 		var actor := BattleActor.new()
@@ -101,6 +109,11 @@ func available_actions(include_enemy_actions: bool = false) -> Array[CombatActio
 		if action.ap_cost <= 0:
 			action.ap_cost = rules.context_resolution_ap_cost
 		result.append(action)
+	if not include_enemy_actions and not _speech_hook().is_empty():
+		var speech := CombatActionCatalog.by_id(ACTION_SPEECH)
+		if speech != null:
+			speech.player_available = true
+			result.append(speech)
 	return result
 
 
@@ -116,6 +129,8 @@ func action_lock_reason(action: CombatAction) -> String:
 func action_refusal(action: CombatAction, target: BattleActor = null) -> Dictionary:
 	if ended or current_ally() == null:
 		return _blocked_reason(&"battle_state", "Battle has ended.", {})
+	if action == null:
+		return _blocked_reason(&"action", "Unknown combat action.", {"type": &"known_action"})
 	if GameState.soul_meter < action.soul_cost:
 		return _blocked_reason(
 			&"soul",
@@ -135,6 +150,20 @@ func action_refusal(action: CombatAction, target: BattleActor = null) -> Diction
 				"minimum": action.minimum_balance,
 				"maximum": action.maximum_balance,
 			})
+	if action.id == ACTION_SPEECH:
+		var hook := _speech_hook()
+		if hook.is_empty():
+			return _blocked_reason(
+				&"speech_context",
+				"This encounter has no authored combat speech hook.",
+				{"type": &"speech_hook"},
+			)
+		if str(hook.get("dialogue_path", "")).is_empty():
+			return _blocked_reason(
+				&"speech_dialogue",
+				"The combat speech hook has no dialogue resource.",
+				{"type": &"dialogue_path"},
+			)
 	if controller == null:
 		return {"allowed": true, "blocked_by": &"", "nearest_unblock": {}, "message": ""}
 	if target == null and action.kind == CombatAction.Kind.ATTACK:
@@ -150,10 +179,57 @@ func use_action(action_id: StringName, target_index: int = -1) -> bool:
 		target = _living_enemy(target_enemy_index if target_index < 0 else target_index)
 	if action == null or actor == null or not bool(action_refusal(action, target).get("allowed", false)):
 		return false
+	if action.id == ACTION_SPEECH:
+		var hook := _speech_hook()
+		last_message = "%s opens a parley without leaving the field." % actor.display_name
+		speech_requested.emit(
+			str(hook.get("dialogue_path", "")), str(hook.get("dialogue_start", "start"))
+		)
+		turn_resolved.emit()
+		return true
 	if action.soul_cost > 0.0:
 		GameState.set_soul_meter(GameState.soul_meter - action.soul_cost)
 	var outcome := controller.submit_action(action_id, target)
 	return bool(outcome.get("allowed", false))
+
+
+func commit_speech(
+	option_id: StringName, forced_rolls: Array = []
+) -> Dictionary:
+	var action := _action_by_id(ACTION_SPEECH)
+	var refusal := action_refusal(action)
+	if not bool(refusal.get("allowed", false)):
+		return refusal
+	var option := _speech_option(option_id)
+	var option_refusal := option.validation_refusal() if option != null else _blocked_reason(
+		&"speech_option", "Unknown combat speech option.", {"type": &"known_speech_option"}
+	)
+	if not bool(option_refusal.get("allowed", false)):
+		return option_refusal
+	var actor := current_ally()
+	if actor.party_index < 0 or actor.party_index >= GameState.party.size():
+		return _blocked_reason(
+			&"speaker",
+			"Only a party member can commit a combat speech check.",
+			{"type": &"party_member"},
+		)
+	var member: PartyMember = GameState.party[actor.party_index]
+	var typed_rolls: Array[int] = []
+	for roll: Variant in forced_rolls:
+		typed_rolls.append(int(roll))
+	var check: Dictionary = SkillCheck.resolve(
+		String(option.skill),
+		member,
+		option.situational_modifier,
+		String(encounter_id),
+		typed_rolls,
+	)
+	var result := controller.submit_speech(ACTION_SPEECH, check, option)
+	if bool(result.get("allowed", false)):
+		last_speech_check = check.duplicate(true)
+		last_speech_option = option.id
+		last_speech_succeeded = bool(check.get("success", false))
+	return result
 
 
 func player_attack() -> void:
@@ -278,11 +354,12 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 		result.cause = _loss_cause()
 		_apply_loss_consequence(result)
 	else:
-		result.message = "The company disengages without reward or resolution."
-		result.cause = _flee_cause()
-		SaveGame.request_checkpoint(
-			SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, String(encounter_id) + "-fled"
+		var flee_outcome := EncounterCatalog.outcome(encounter_id, OUTCOME_FLED)
+		result.message = str(
+			flee_outcome.get("message", "The company disengages without reward or resolution.")
 		)
+		result.cause = _flee_cause()
+		_apply_flee_consequence(result, flee_outcome)
 	last_result = result
 	battle_ended.emit(result)
 
@@ -295,9 +372,15 @@ func _apply_victory(result: BattleResult) -> void:
 	var defeated_flag := str(_definition.get("defeated_flag", ""))
 	if defeated_flag.is_empty() and not enemies.is_empty():
 		defeated_flag = enemies[0].defeated_flag
-	var already_resolved := not defeated_flag.is_empty() and bool(GameState.get_flag(defeated_flag))
+	var consequence_flag := _consequence_flag(result.outcome_id)
+	var already_resolved := (
+		(not defeated_flag.is_empty() and bool(GameState.get_flag(defeated_flag)))
+		or (not consequence_flag.is_empty() and bool(GameState.get_flag(consequence_flag)))
+	)
 	if not defeated_flag.is_empty():
 		GameState.set_flag(defeated_flag, true)
+	if not consequence_flag.is_empty():
+		GameState.set_flag(consequence_flag, true)
 	if already_resolved:
 		return
 	var faction := str(outcome.get("faction", _definition.get("win_faction", "")))
@@ -305,13 +388,59 @@ func _apply_victory(result: BattleResult) -> void:
 	if faction.is_empty() and not enemies.is_empty():
 		faction = enemies[0].win_faction
 		delta = enemies[0].win_delta
+	var scene := _outcome_scene(outcome)
 	if not faction.is_empty():
-		Reputation.record("player", faction, delta, result.cause, "field")
-	Renown.gain_reputation(
-		"player", float(outcome.get("renown", 3.0)), "Won a field encounter", "field"
-	)
+		Reputation.record("player", faction, delta, result.cause, scene)
+	_record_renown(outcome, &"reputation", 3.0, result.cause, scene)
 	var checkpoint := SaveGame.Checkpoint.RULING if result.outcome_id != &"slain" else SaveGame.Checkpoint.ENCOUNTER_RESOLUTION
 	SaveGame.request_checkpoint(checkpoint, String(encounter_id) + "-" + String(result.outcome_id))
+
+
+func _apply_flee_consequence(result: BattleResult, outcome: Dictionary) -> void:
+	_apply_authored_flags(outcome.get("flags", {}), result)
+	var consequence_flag := _consequence_flag(result.outcome_id)
+	var already_recorded := (
+		not consequence_flag.is_empty() and bool(GameState.get_flag(consequence_flag))
+	)
+	if not consequence_flag.is_empty():
+		GameState.set_flag(consequence_flag, true)
+	if already_recorded:
+		return
+
+	var faction := str(outcome.get("faction", _definition.get("loss_faction", "")))
+	var delta := float(outcome.get("delta", _definition.get("loss_delta", 0.0)))
+	if faction.is_empty() and not enemies.is_empty():
+		faction = enemies[0].loss_faction
+		delta = enemies[0].loss_delta
+	var scene := _outcome_scene(outcome)
+	if not faction.is_empty():
+		Reputation.record("player", faction, delta, result.cause, scene)
+	_record_renown(outcome, &"infamy", absf(delta), result.cause, scene)
+	SaveGame.request_checkpoint(
+		SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, String(encounter_id) + "-fled"
+	)
+
+
+func _record_renown(
+	outcome: Dictionary,
+	fallback_kind: StringName,
+	fallback_delta: float,
+	fallback_cause: String,
+	scene: String,
+) -> void:
+	var delta := float(outcome.get("renown", fallback_delta))
+	if is_zero_approx(delta):
+		return
+	var kind := StringName(outcome.get("renown_kind", fallback_kind))
+	var cause := str(outcome.get("renown_cause", fallback_cause))
+	if kind == &"infamy":
+		Renown.gain_infamy("player", delta, cause, scene)
+	else:
+		Renown.gain_reputation("player", delta, cause, scene)
+
+
+func _outcome_scene(outcome: Dictionary) -> String:
+	return str(outcome.get("scene", _definition.get("scene", "field")))
 
 
 func _apply_loss_consequence(result: BattleResult) -> void:
@@ -396,6 +525,27 @@ func _sync_party_hp() -> void:
 		if actor.party_index >= 0 and actor.party_index < GameState.party.size():
 			GameState.party[actor.party_index].hp = actor.hp
 	GameState.party_changed.emit()
+
+
+func _speech_hook() -> Dictionary:
+	var raw_hooks: Variant = _definition.get("speech_hooks", [])
+	if raw_hooks is Dictionary:
+		return raw_hooks.duplicate(true)
+	if raw_hooks is Array:
+		for raw_hook: Variant in raw_hooks:
+			if raw_hook is Dictionary:
+				return raw_hook.duplicate(true)
+	return {}
+
+
+func _speech_option(option_id: StringName) -> CombatSpeechOption:
+	var raw_options: Variant = _speech_hook().get("options", [])
+	if not raw_options is Array:
+		return null
+	for raw_option: Variant in raw_options:
+		if raw_option is Dictionary and StringName(raw_option.get("id", "")) == option_id:
+			return CombatSpeechOption.from_dict(raw_option)
+	return null
 
 
 func _action_by_id(action_id: StringName) -> CombatAction:

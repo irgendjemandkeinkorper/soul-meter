@@ -1,0 +1,116 @@
+{
+  "id": "undertakers-parley-test",
+  "display_name": "Undertakers' Parley",
+  "harem_stet_aligned": true,
+  "scene": "wintervast-road",
+  "defeated_flag": "defeated_undertakers_parley_test",
+  "win_faction": "undertakers-communion",
+  "win_delta": -6.0,
+  "win_cause": "Slaughtered the Communion's rescued dead on the Wintervast road",
+  "loss_faction": "undertakers-communion",
+  "loss_delta": -2.0,
+  "loss_cause": "Left the rescued dead holding the Wintervast road",
+  "default_outcome": "slain",
+  "speech_hooks": [
+    {
+      "dialogue_path": "res://test/integration/harem_stet_combat.dialogue",
+      "dialogue_start": "start",
+      "options": [
+        {
+          "id": "remembered-name",
+          "skill": "insight",
+          "situational_modifier": 0.0,
+          "outcome": "end",
+          "target_count": 0,
+          "outcome_id": "spared",
+          "success_message": "The rescued dead lower their hands when their living names are remembered.",
+          "failure_message": "The name reaches them, but the Preservation still holds. The fight continues."
+        },
+        {
+          "id": "divide-the-offer",
+          "skill": "persuasion",
+          "situational_modifier": 0.0,
+          "outcome": "split",
+          "target_count": 1,
+          "outcome_id": "split",
+          "success_message": "One of the rescued dead accepts that preservation was not consent and leaves the line.",
+          "failure_message": "The line hears the appeal and closes ranks. The fight continues."
+        },
+        {
+          "id": "turn-the-ledger",
+          "skill": "insight",
+          "situational_modifier": 0.0,
+          "outcome": "turn",
+          "target_count": 1,
+          "outcome_id": "turned",
+          "success_message": "One rescued soldier turns on the keeper who reduced a life to a holding.",
+          "failure_message": "The rescued soldier cannot yet look past Stet's ledger. The fight continues."
+        }
+      ]
+    }
+  ],
+  "outcomes": {
+    "spared": {
+      "faction": "undertakers-communion",
+      "delta": 4.0,
+      "cause": "Spared the Communion's rescued dead after calling them by their living names",
+      "scene": "wintervast-road",
+      "renown_kind": "reputation",
+      "renown": 3.0,
+      "renown_cause": "Won safe passage without striking the rescued dead",
+      "message": "The rescued dead stand aside without another wound.",
+      "flags": {"undertakers_parley_spared": true}
+    },
+    "slain": {
+      "faction": "undertakers-communion",
+      "delta": -6.0,
+      "cause": "Slaughtered the Communion's rescued dead on the Wintervast road",
+      "scene": "wintervast-road",
+      "renown_kind": "infamy",
+      "renown": 5.0,
+      "renown_cause": "Cut down the rescued dead after the parley opened",
+      "message": "The rescued dead are destroyed by force.",
+      "flags": {"undertakers_parley_slain": true}
+    },
+    "fled": {
+      "faction": "undertakers-communion",
+      "delta": -2.0,
+      "cause": "Abandoned the parley and left the rescued dead holding the Wintervast road",
+      "scene": "wintervast-road",
+      "renown_kind": "infamy",
+      "renown": 2.0,
+      "renown_cause": "Withdrew after asking the rescued dead to remember themselves",
+      "message": "The company yields the road to the rescued dead.",
+      "flags": {"undertakers_parley_fled": true}
+    }
+  },
+  "enemies": [
+    {
+      "id": "rescued-dead-one",
+      "display_name": "Rescued Dead",
+      "max_hp": 18,
+      "attack": 5,
+      "defense": 1,
+      "balance_affinity": 1,
+      "balance_pressure": 10
+    },
+    {
+      "id": "rescued-dead-two",
+      "display_name": "Preserved Keeper",
+      "max_hp": 20,
+      "attack": 5,
+      "defense": 2,
+      "balance_affinity": 1,
+      "balance_pressure": 10
+    },
+    {
+      "id": "rescued-dead-three",
+      "display_name": "Rimewalker",
+      "max_hp": 16,
+      "attack": 4,
+      "defense": 1,
+      "balance_affinity": 1,
+      "balance_pressure": 10
+    }
+  ]
+}

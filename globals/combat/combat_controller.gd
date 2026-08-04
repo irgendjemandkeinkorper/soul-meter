@@ -121,6 +121,69 @@ func submit_action(action_id: StringName, target: BattleActor = null) -> Diction
 	return _allowed(outcome)
 
 
+func submit_speech(
+	action_id: StringName, check_result: Dictionary, option: CombatSpeechOption
+) -> Dictionary:
+	var action := action_by_id(action_id)
+	var query := query_action(action)
+	if not bool(query.get("allowed", false)):
+		last_refusal = query.duplicate(true)
+		_emit_event(&"action_refused", active_actor(), null, {"action_id": action_id, "reason": query})
+		return query
+	if action.verb != CombatAction.Verb.SPEECH:
+		var wrong_verb := _blocked(
+			&"action_verb",
+			"Only a declared speech verb can resolve a combat speech check.",
+			{"type": &"verb", "required": CombatAction.Verb.SPEECH},
+		)
+		last_refusal = wrong_verb.duplicate(true)
+		_emit_event(
+			&"action_refused", active_actor(), null, {"action_id": action_id, "reason": wrong_verb}
+		)
+		return wrong_verb
+	var option_refusal := option.validation_refusal() if option != null else _blocked(
+		&"speech_option", "Unknown combat speech option.", {"type": &"known_speech_option"}
+	)
+	if not bool(option_refusal.get("allowed", false)):
+		last_refusal = option_refusal.duplicate(true)
+		_emit_event(
+			&"action_refused",
+			active_actor(),
+			null,
+			{"action_id": action_id, "reason": option_refusal},
+		)
+		return option_refusal
+
+	var actor := active_actor()
+	actor.action_points -= action.ap_cost
+	var succeeded := bool(check_result.get("success", false))
+	var outcome: Dictionary = {
+		"action_id": action.id,
+		"verb": action.verb,
+		"ap_cost": action.ap_cost,
+		"ap_remaining": actor.action_points,
+		"speech_option_id": option.id,
+		"speech_outcome": option.outcome_name(),
+		"outcome_id": option.outcome_id,
+		"check": check_result.duplicate(true),
+		"success": succeeded,
+		"damage": 0,
+		"message": option.success_message if succeeded else option.failure_message,
+	}
+	if succeeded:
+		outcome.merge(_apply_speech_composition(actor, option), true)
+	_emit_event(&"action_resolved", actor, null, outcome)
+	last_refusal.clear()
+
+	if succeeded and (
+		option.outcome == CombatSpeechOption.Outcome.END or not _has_living(enemies)
+	):
+		_finish(ResultState.VICTORY, option.outcome_id)
+	elif actor.action_points == 0:
+		end_turn()
+	return _allowed(outcome)
+
+
 func end_turn() -> bool:
 	if state != State.ALLY_TURN or active_actor() == null:
 		return false
@@ -269,6 +332,43 @@ func _apply_action(
 	return result
 
 
+func _apply_speech_composition(
+	actor: BattleActor, option: CombatSpeechOption
+) -> Dictionary:
+	var candidates: Array[BattleActor] = []
+	for foe in enemies:
+		if foe.is_alive() and battlefield.has_combatant(foe):
+			candidates.append(foe)
+	var count := candidates.size()
+	if option.outcome != CombatSpeechOption.Outcome.END:
+		count = mini(option.target_count, candidates.size())
+	var removed_ids: Array[StringName] = []
+	var turned_ids: Array[StringName] = []
+	var ally_side := battlefield.side_of(actor)
+	for i in count:
+		var target := candidates[i]
+		if option.outcome == CombatSpeechOption.Outcome.TURN:
+			var transfer := battlefield.transfer_combatant(target, ally_side)
+			if not bool(transfer.get("allowed", false)):
+				continue
+			enemies.erase(target)
+			allies.append(target)
+			turned_ids.append(target.combat_id)
+		else:
+			var removal := battlefield.remove_combatant(target)
+			if not bool(removal.get("allowed", false)):
+				continue
+			enemies.erase(target)
+			removed_ids.append(target.combat_id)
+	var result := {
+		"removed_ids": removed_ids,
+		"turned_ids": turned_ids,
+		"remaining_enemies": _living_count(enemies),
+	}
+	_emit_event(&"battlefield_changed", actor, null, result)
+	return result
+
+
 func _change_balance(amount: int, actor: BattleActor = null) -> void:
 	if amount == 0:
 		return
@@ -330,6 +430,14 @@ func _assign_combat_ids(group: Array[BattleActor], prefix: StringName) -> void:
 
 func _has_living(group: Array[BattleActor]) -> bool:
 	return _first_living(group) != null
+
+
+func _living_count(group: Array[BattleActor]) -> int:
+	var count := 0
+	for actor in group:
+		if actor.is_alive():
+			count += 1
+	return count
 
 
 func _first_living(group: Array[BattleActor]) -> BattleActor:
