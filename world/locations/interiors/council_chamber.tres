@@ -4,10 +4,9 @@
 
 [resource]
 script = ExtResource("1_definition")
-id = &"chefs_house_interior"
-scene_path = "res://world/interiors/chefs_house.tscn"
+id = &"council_chamber_interior"
+scene_path = "res://world/interiors/council_chamber.tscn"
 default_spawn_id = &"entry"
 spawns = {
-"entry": "entry",
-"from_chefs_pantry": "from_chefs_pantry"
+"entry": "entry"
 }

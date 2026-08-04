@@ -62,6 +62,66 @@ const TRIAL_HALL_ENTER: BuildingTransitionDefinition = preload(
 const TRIAL_HALL_EXIT: BuildingTransitionDefinition = preload(
 	"res://actors/building_door/transitions/trial_hall_exit.tres"
 )
+const REGISTRY_STACKS_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/registry_stacks_enter.tres"
+)
+const REGISTRY_STACKS_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/registry_stacks_exit.tres"
+)
+const BELL_LOFT_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/bell_loft_enter.tres"
+)
+const BELL_LOFT_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/bell_loft_exit.tres"
+)
+const SHRINE_UNDERCROFT_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/shrine_undercroft_enter.tres"
+)
+const SHRINE_UNDERCROFT_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/shrine_undercroft_exit.tres"
+)
+const GARRISON_YARD_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/garrison_yard_enter.tres"
+)
+const GARRISON_YARD_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/garrison_yard_exit.tres"
+)
+const CASK_WAREHOUSE_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/cask_warehouse_enter.tres"
+)
+const CASK_WAREHOUSE_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/cask_warehouse_exit.tres"
+)
+const EQUIPMENT_FORGE_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/equipment_forge_enter.tres"
+)
+const EQUIPMENT_FORGE_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/equipment_forge_exit.tres"
+)
+const COUNCIL_CHAMBER_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/council_chamber_enter.tres"
+)
+const COUNCIL_CHAMBER_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/council_chamber_exit.tres"
+)
+const CHEFS_PANTRY_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/chefs_pantry_enter.tres"
+)
+const CHEFS_PANTRY_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/chefs_pantry_exit.tres"
+)
+const PLAYERS_LOFT_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/players_loft_enter.tres"
+)
+const PLAYERS_LOFT_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/players_loft_exit.tres"
+)
+const LOWER_TRIAL_HALL_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/lower_trial_hall_enter.tres"
+)
+const LOWER_TRIAL_HALL_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/lower_trial_hall_exit.tres"
+)
 
 const ENTRIES: Array[BuildingTransitionDefinition] = [
 	REGISTRY_ARCHIVE_ENTER,
@@ -74,6 +134,16 @@ const ENTRIES: Array[BuildingTransitionDefinition] = [
 	CHEFS_HOUSE_ENTER,
 	PLAYERS_HOUSE_ENTER,
 	TRIAL_HALL_ENTER,
+	REGISTRY_STACKS_ENTER,
+	BELL_LOFT_ENTER,
+	SHRINE_UNDERCROFT_ENTER,
+	GARRISON_YARD_ENTER,
+	CASK_WAREHOUSE_ENTER,
+	EQUIPMENT_FORGE_ENTER,
+	COUNCIL_CHAMBER_ENTER,
+	CHEFS_PANTRY_ENTER,
+	PLAYERS_LOFT_ENTER,
+	LOWER_TRIAL_HALL_ENTER,
 ]
 const EXITS: Array[BuildingTransitionDefinition] = [
 	REGISTRY_ARCHIVE_EXIT,
@@ -86,6 +156,16 @@ const EXITS: Array[BuildingTransitionDefinition] = [
 	CHEFS_HOUSE_EXIT,
 	PLAYERS_HOUSE_EXIT,
 	TRIAL_HALL_EXIT,
+	REGISTRY_STACKS_EXIT,
+	BELL_LOFT_EXIT,
+	SHRINE_UNDERCROFT_EXIT,
+	GARRISON_YARD_EXIT,
+	CASK_WAREHOUSE_EXIT,
+	EQUIPMENT_FORGE_EXIT,
+	COUNCIL_CHAMBER_EXIT,
+	CHEFS_PANTRY_EXIT,
+	PLAYERS_LOFT_EXIT,
+	LOWER_TRIAL_HALL_EXIT,
 ]
 const ALL: Array[BuildingTransitionDefinition] = [
 	REGISTRY_ARCHIVE_ENTER,
@@ -108,6 +188,26 @@ const ALL: Array[BuildingTransitionDefinition] = [
 	PLAYERS_HOUSE_EXIT,
 	TRIAL_HALL_ENTER,
 	TRIAL_HALL_EXIT,
+	REGISTRY_STACKS_ENTER,
+	REGISTRY_STACKS_EXIT,
+	BELL_LOFT_ENTER,
+	BELL_LOFT_EXIT,
+	SHRINE_UNDERCROFT_ENTER,
+	SHRINE_UNDERCROFT_EXIT,
+	GARRISON_YARD_ENTER,
+	GARRISON_YARD_EXIT,
+	CASK_WAREHOUSE_ENTER,
+	CASK_WAREHOUSE_EXIT,
+	EQUIPMENT_FORGE_ENTER,
+	EQUIPMENT_FORGE_EXIT,
+	COUNCIL_CHAMBER_ENTER,
+	COUNCIL_CHAMBER_EXIT,
+	CHEFS_PANTRY_ENTER,
+	CHEFS_PANTRY_EXIT,
+	PLAYERS_LOFT_ENTER,
+	PLAYERS_LOFT_EXIT,
+	LOWER_TRIAL_HALL_ENTER,
+	LOWER_TRIAL_HALL_EXIT,
 ]
 
 
@@ -130,3 +230,11 @@ static func exit_for(building_id: StringName) -> BuildingTransitionDefinition:
 		if transition.building_id == building_id:
 			return transition
 	return null
+
+
+static func entries_from(scene_path: String) -> Array[BuildingTransitionDefinition]:
+	var matches: Array[BuildingTransitionDefinition] = []
+	for transition in ENTRIES:
+		if transition.source_scene == scene_path:
+			matches.append(transition)
+	return matches

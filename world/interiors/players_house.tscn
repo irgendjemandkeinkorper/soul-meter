@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
 
 [node name="PlayersHouseInterior" type="Node2D"]
 
@@ -9,3 +10,10 @@ building_name = "Player's House"
 exit_transition_id = &"players_house_exit"
 floor_color = Color(0.11, 0.15, 0.16, 1)
 accent_color = Color(0.2, 0.68, 0.72, 1)
+
+[node name="PlayersLoftDoor" parent="." instance=ExtResource("2_door")]
+position = Vector2(800, 40)
+transition_id = &"players_loft_enter"
+
+[node name="SpawnFromPlayersLoft" type="Marker2D" parent="."]
+position = Vector2(800, 150)

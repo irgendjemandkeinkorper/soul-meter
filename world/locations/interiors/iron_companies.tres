@@ -8,5 +8,6 @@ id = &"iron_companies_interior"
 scene_path = "res://world/interiors/iron_companies.tscn"
 default_spawn_id = &"entry"
 spawns = {
-"entry": "entry"
+"entry": "entry",
+"from_garrison_yard": "from_garrison_yard"
 }
