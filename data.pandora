@@ -4314,6 +4314,391 @@
 						"value": "magic-system"
 					}
 				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "258.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Demon",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": -1.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "gnaal-breach-hound,gnaal-rift-scavenger"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"demon\"],\"members\":[{\"combatant_id\":\"gnaal-breach-hound\",\"count\":1},{\"combatant_id\":\"gnaal-rift-scavenger\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Demon"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-demon"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"gnaal-breach-hound\"],\"side\":\"enemy\",\"zone\":\"front\"},{\"combatant_ids\":[\"gnaal-rift-scavenger\"],\"side\":\"enemy\",\"zone\":\"flank\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "259.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Undead",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "cleaned-jawbrace-guard,mustered-bloodbellow"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"undead\"],\"members\":[{\"combatant_id\":\"cleaned-jawbrace-guard\",\"count\":1},{\"combatant_id\":\"mustered-bloodbellow\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Undead"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-undead"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"cleaned-jawbrace-guard\"],\"side\":\"enemy\",\"zone\":\"front\"},{\"combatant_ids\":[\"mustered-bloodbellow\"],\"side\":\"enemy\",\"zone\":\"back\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "260.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Mixed Whipsaw",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "mustered-bloodbellow,gnaal-breach-hound"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"demon\",\"undead\"],\"members\":[{\"combatant_id\":\"mustered-bloodbellow\",\"count\":1},{\"combatant_id\":\"gnaal-breach-hound\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Mixed Whipsaw"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-mixed-whipsaw"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"mustered-bloodbellow\"],\"side\":\"enemy\",\"zone\":\"front\"},{\"combatant_ids\":[\"gnaal-breach-hound\"],\"side\":\"enemy\",\"zone\":\"flank\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "261.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Speech Winnable",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "mustered-bloodbellow"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"undead\"],\"members\":[{\"combatant_id\":\"mustered-bloodbellow\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[{\"ap_cost\":1,\"display_name\":\"Release the Binding\",\"id\":\"phase2-release-binding\",\"lock_reason\":\"Hold Balance between -20 and +20 to release the binding.\",\"maximum_balance\":20,\"minimum_balance\":-20,\"minimum_enemy_rounds\":0,\"outcome_id\":\"released\",\"soul_cost\":0.0}]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Speech Winnable"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-speech-winnable"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"released\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The binding releases.\"},\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved by force.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[{\"action_id\":\"phase2-release-binding\",\"id\":\"phase2-release-binding-hook\",\"outcome_id\":\"released\",\"trigger\":\"combat_action\"}]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"mustered-bloodbellow\"],\"side\":\"enemy\",\"zone\":\"front\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "262.0",
+				"_index": 0,
+				"_name": "Phase 2 Gate - Stabilizer Showcase",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "cleaned-jawbrace-guard,gnaal-rift-scavenger"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"demon\",\"undead\"],\"members\":[{\"combatant_id\":\"cleaned-jawbrace-guard\",\"count\":1},{\"combatant_id\":\"gnaal-rift-scavenger\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Phase 2 Gate - Stabilizer Showcase"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "phase2-stabilizer-showcase"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The gate fixture is resolved.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"cleaned-jawbrace-guard\"],\"side\":\"enemy\",\"zone\":\"front\"},{\"combatant_ids\":[\"gnaal-rift-scavenger\"],\"side\":\"enemy\",\"zone\":\"flank\"}]"
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -5091,7 +5476,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 257.0
+			"default": 262.0
 		}
 	},
 	"_version": 1

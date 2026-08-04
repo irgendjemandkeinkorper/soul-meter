@@ -227,5 +227,377 @@
         "balance_pressure": 18
       }
     ]
+  },
+  "phase2-demon": {
+    "display_name": "Phase 2 Gate - Demon",
+    "composition": {
+      "archetypes": [
+        "demon"
+      ],
+      "members": [
+        {
+          "combatant_id": "gnaal-breach-hound",
+          "count": 1.0
+        },
+        {
+          "combatant_id": "gnaal-rift-scavenger",
+          "count": 1.0
+        }
+      ]
+    },
+    "zone_layout": [
+      {
+        "combatant_ids": [
+          "gnaal-breach-hound"
+        ],
+        "side": "enemy",
+        "zone": "front"
+      },
+      {
+        "combatant_ids": [
+          "gnaal-rift-scavenger"
+        ],
+        "side": "enemy",
+        "zone": "flank"
+      }
+    ],
+    "balance_bias": -1.0,
+    "speech_hooks": [],
+    "defeated_flag": "",
+    "win_faction": "",
+    "win_delta": 0.0,
+    "win_cause": "",
+    "loss_faction": "",
+    "loss_delta": 0.0,
+    "loss_cause": "",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {
+      "slain": {
+        "cause": "",
+        "delta": 0.0,
+        "faction": "",
+        "message": "The gate fixture is resolved."
+      }
+    },
+    "enemies": [
+      {
+        "id": "gnaal-breach-hound",
+        "display_name": "Gnaal Breach-Hound",
+        "max_hp": 28,
+        "attack": 7,
+        "defense": 1,
+        "balance_affinity": -1,
+        "balance_pressure": 22
+      },
+      {
+        "id": "gnaal-rift-scavenger",
+        "display_name": "Gnaal Rift-Scavenger",
+        "max_hp": 16,
+        "attack": 5,
+        "defense": 0,
+        "balance_affinity": -1,
+        "balance_pressure": 16
+      }
+    ]
+  },
+  "phase2-mixed-whipsaw": {
+    "display_name": "Phase 2 Gate - Mixed Whipsaw",
+    "composition": {
+      "archetypes": [
+        "demon",
+        "undead"
+      ],
+      "members": [
+        {
+          "combatant_id": "mustered-bloodbellow",
+          "count": 1.0
+        },
+        {
+          "combatant_id": "gnaal-breach-hound",
+          "count": 1.0
+        }
+      ]
+    },
+    "zone_layout": [
+      {
+        "combatant_ids": [
+          "mustered-bloodbellow"
+        ],
+        "side": "enemy",
+        "zone": "front"
+      },
+      {
+        "combatant_ids": [
+          "gnaal-breach-hound"
+        ],
+        "side": "enemy",
+        "zone": "flank"
+      }
+    ],
+    "balance_bias": 0.0,
+    "speech_hooks": [],
+    "defeated_flag": "",
+    "win_faction": "",
+    "win_delta": 0.0,
+    "win_cause": "",
+    "loss_faction": "",
+    "loss_delta": 0.0,
+    "loss_cause": "",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {
+      "slain": {
+        "cause": "",
+        "delta": 0.0,
+        "faction": "",
+        "message": "The gate fixture is resolved."
+      }
+    },
+    "enemies": [
+      {
+        "id": "mustered-bloodbellow",
+        "display_name": "Mustered Bloodbellow",
+        "max_hp": 32,
+        "attack": 6,
+        "defense": 3,
+        "balance_affinity": 1,
+        "balance_pressure": 22
+      },
+      {
+        "id": "gnaal-breach-hound",
+        "display_name": "Gnaal Breach-Hound",
+        "max_hp": 28,
+        "attack": 7,
+        "defense": 1,
+        "balance_affinity": -1,
+        "balance_pressure": 22
+      }
+    ]
+  },
+  "phase2-speech-winnable": {
+    "display_name": "Phase 2 Gate - Speech Winnable",
+    "composition": {
+      "archetypes": [
+        "undead"
+      ],
+      "members": [
+        {
+          "combatant_id": "mustered-bloodbellow",
+          "count": 1.0
+        }
+      ]
+    },
+    "zone_layout": [
+      {
+        "combatant_ids": [
+          "mustered-bloodbellow"
+        ],
+        "side": "enemy",
+        "zone": "front"
+      }
+    ],
+    "balance_bias": 1.0,
+    "speech_hooks": [
+      {
+        "action_id": "phase2-release-binding",
+        "id": "phase2-release-binding-hook",
+        "outcome_id": "released",
+        "trigger": "combat_action"
+      }
+    ],
+    "defeated_flag": "",
+    "win_faction": "",
+    "win_delta": 0.0,
+    "win_cause": "",
+    "loss_faction": "",
+    "loss_delta": 0.0,
+    "loss_cause": "",
+    "default_outcome": "slain",
+    "context_actions": [
+      {
+        "ap_cost": 1.0,
+        "display_name": "Release the Binding",
+        "id": "phase2-release-binding",
+        "lock_reason": "Hold Balance between -20 and +20 to release the binding.",
+        "maximum_balance": 20.0,
+        "minimum_balance": -20.0,
+        "minimum_enemy_rounds": 0.0,
+        "outcome_id": "released",
+        "soul_cost": 0.0
+      }
+    ],
+    "outcomes": {
+      "released": {
+        "cause": "",
+        "delta": 0.0,
+        "faction": "",
+        "message": "The binding releases."
+      },
+      "slain": {
+        "cause": "",
+        "delta": 0.0,
+        "faction": "",
+        "message": "The gate fixture is resolved by force."
+      }
+    },
+    "enemies": [
+      {
+        "id": "mustered-bloodbellow",
+        "display_name": "Mustered Bloodbellow",
+        "max_hp": 32,
+        "attack": 6,
+        "defense": 3,
+        "balance_affinity": 1,
+        "balance_pressure": 22
+      }
+    ]
+  },
+  "phase2-stabilizer-showcase": {
+    "display_name": "Phase 2 Gate - Stabilizer Showcase",
+    "composition": {
+      "archetypes": [
+        "demon",
+        "undead"
+      ],
+      "members": [
+        {
+          "combatant_id": "cleaned-jawbrace-guard",
+          "count": 1.0
+        },
+        {
+          "combatant_id": "gnaal-rift-scavenger",
+          "count": 1.0
+        }
+      ]
+    },
+    "zone_layout": [
+      {
+        "combatant_ids": [
+          "cleaned-jawbrace-guard"
+        ],
+        "side": "enemy",
+        "zone": "front"
+      },
+      {
+        "combatant_ids": [
+          "gnaal-rift-scavenger"
+        ],
+        "side": "enemy",
+        "zone": "flank"
+      }
+    ],
+    "balance_bias": 0.0,
+    "speech_hooks": [],
+    "defeated_flag": "",
+    "win_faction": "",
+    "win_delta": 0.0,
+    "win_cause": "",
+    "loss_faction": "",
+    "loss_delta": 0.0,
+    "loss_cause": "",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {
+      "slain": {
+        "cause": "",
+        "delta": 0.0,
+        "faction": "",
+        "message": "The gate fixture is resolved."
+      }
+    },
+    "enemies": [
+      {
+        "id": "cleaned-jawbrace-guard",
+        "display_name": "Cleaned Jawbrace Guard",
+        "max_hp": 36,
+        "attack": 7,
+        "defense": 4,
+        "balance_affinity": 1,
+        "balance_pressure": 24
+      },
+      {
+        "id": "gnaal-rift-scavenger",
+        "display_name": "Gnaal Rift-Scavenger",
+        "max_hp": 16,
+        "attack": 5,
+        "defense": 0,
+        "balance_affinity": -1,
+        "balance_pressure": 16
+      }
+    ]
+  },
+  "phase2-undead": {
+    "display_name": "Phase 2 Gate - Undead",
+    "composition": {
+      "archetypes": [
+        "undead"
+      ],
+      "members": [
+        {
+          "combatant_id": "cleaned-jawbrace-guard",
+          "count": 1.0
+        },
+        {
+          "combatant_id": "mustered-bloodbellow",
+          "count": 1.0
+        }
+      ]
+    },
+    "zone_layout": [
+      {
+        "combatant_ids": [
+          "cleaned-jawbrace-guard"
+        ],
+        "side": "enemy",
+        "zone": "front"
+      },
+      {
+        "combatant_ids": [
+          "mustered-bloodbellow"
+        ],
+        "side": "enemy",
+        "zone": "back"
+      }
+    ],
+    "balance_bias": 1.0,
+    "speech_hooks": [],
+    "defeated_flag": "",
+    "win_faction": "",
+    "win_delta": 0.0,
+    "win_cause": "",
+    "loss_faction": "",
+    "loss_delta": 0.0,
+    "loss_cause": "",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {
+      "slain": {
+        "cause": "",
+        "delta": 0.0,
+        "faction": "",
+        "message": "The gate fixture is resolved."
+      }
+    },
+    "enemies": [
+      {
+        "id": "cleaned-jawbrace-guard",
+        "display_name": "Cleaned Jawbrace Guard",
+        "max_hp": 36,
+        "attack": 7,
+        "defense": 4,
+        "balance_affinity": 1,
+        "balance_pressure": 24
+      },
+      {
+        "id": "mustered-bloodbellow",
+        "display_name": "Mustered Bloodbellow",
+        "max_hp": 32,
+        "attack": 6,
+        "defense": 3,
+        "balance_affinity": 1,
+        "balance_pressure": 22
+      }
+    ]
   }
 }

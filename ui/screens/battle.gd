@@ -3,6 +3,7 @@ extends Screen
 ## presentation layer and submits action IDs to the autoload.
 
 const BATTLE_STAGE := preload("res://ui/screens/battle_stage.gd")
+const BATTLE_HUD_SCENE := preload("res://ui/hud/battle_hud.tscn")
 
 var _stage: Control
 var _party_box: VBoxContainer
@@ -17,6 +18,7 @@ var _target_button: Button
 var _outcome_box: VBoxContainer
 var _action_buttons: Array[Button] = []
 var _sfx: AudioStreamPlayer
+var _battle_hud: BattleHUD
 
 
 func _build() -> void:
@@ -26,17 +28,18 @@ func _build() -> void:
 
 	var safe_frame := MarginContainer.new()
 	safe_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	safe_frame.add_theme_constant_override("margin_left", 28)
-	safe_frame.add_theme_constant_override("margin_right", 28)
-	safe_frame.add_theme_constant_override("margin_top", 24)
-	safe_frame.add_theme_constant_override("margin_bottom", 22)
+	safe_frame.theme_type_variation = "BattleSafeFrame"
 	add_child(safe_frame)
 
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.theme_type_variation = "BattleLayout"
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	safe_frame.add_child(layout)
 	layout.add_child(_make_header())
+	_battle_hud = BATTLE_HUD_SCENE.instantiate() as BattleHUD
+	layout.add_child(_battle_hud)
+	Battle.combat_event.connect(_battle_hud.consume_event)
+	Battle.replay_combat_events(_battle_hud.consume_event)
 
 	# The stage occupies the breathing room between the title rail and command rail.
 	var stage_space := Control.new()
@@ -56,7 +59,7 @@ func _build() -> void:
 func _make_header() -> Control:
 	var header := HBoxContainer.new()
 	header.custom_minimum_size = Vector2(0, 60)
-	header.add_theme_constant_override("separation", 18)
+	header.theme_type_variation = "BattleHeader"
 
 	var title_stack := VBoxContainer.new()
 	title_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -93,10 +96,7 @@ func _make_header() -> Control:
 	var target_panel := PanelContainer.new()
 	target_panel.custom_minimum_size = Vector2(265, 0)
 	var target_margin := MarginContainer.new()
-	target_margin.add_theme_constant_override("margin_left", 14)
-	target_margin.add_theme_constant_override("margin_right", 14)
-	target_margin.add_theme_constant_override("margin_top", 8)
-	target_margin.add_theme_constant_override("margin_bottom", 8)
+	target_margin.theme_type_variation = "BattleHeaderMargin"
 	target_panel.add_child(target_margin)
 	var target_stack := VBoxContainer.new()
 	target_margin.add_child(target_stack)
@@ -121,7 +121,7 @@ func _make_header() -> Control:
 func _make_command_rail() -> Control:
 	var rail := HBoxContainer.new()
 	rail.custom_minimum_size = Vector2(0, 276)
-	rail.add_theme_constant_override("separation", 12)
+	rail.theme_type_variation = "BattleRail"
 	rail.size_flags_vertical = Control.SIZE_SHRINK_END
 
 	var command_panel := PanelContainer.new()
@@ -129,7 +129,7 @@ func _make_command_rail() -> Control:
 	rail.add_child(command_panel)
 	var command_margin := _panel_margin(command_panel)
 	var command_column := VBoxContainer.new()
-	command_column.add_theme_constant_override("separation", 8)
+	command_column.theme_type_variation = "BattleColumn"
 	command_margin.add_child(command_column)
 	var command_title := Label.new()
 	command_title.text = "COMMAND"
@@ -141,8 +141,7 @@ func _make_command_rail() -> Control:
 	command_column.add_child(acting)
 	_actions_box = GridContainer.new()
 	_actions_box.columns = 2
-	_actions_box.add_theme_constant_override("h_separation", 8)
-	_actions_box.add_theme_constant_override("v_separation", 8)
+	_actions_box.theme_type_variation = "BattleActionGrid"
 	_actions_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	command_column.add_child(_actions_box)
 	_target_button = _menu_button(command_column, "", Battle.select_next_enemy)
@@ -164,7 +163,7 @@ func _make_command_rail() -> Control:
 	rail.add_child(log_panel)
 	var log_margin := _panel_margin(log_panel)
 	var log_column := VBoxContainer.new()
-	log_column.add_theme_constant_override("separation", 8)
+	log_column.theme_type_variation = "BattleColumn"
 	log_margin.add_child(log_column)
 	var log_title := Label.new()
 	log_title.text = "BATTLE LOG"
@@ -185,14 +184,14 @@ func _make_command_rail() -> Control:
 	rail.add_child(party_panel)
 	var party_margin := _panel_margin(party_panel)
 	var party_column := VBoxContainer.new()
-	party_column.add_theme_constant_override("separation", 8)
+	party_column.theme_type_variation = "BattleColumn"
 	party_margin.add_child(party_column)
 	var party_title := Label.new()
 	party_title.text = "PARTY STATUS"
 	party_title.theme_type_variation = "HeadingLabel"
 	party_column.add_child(party_title)
 	_party_box = VBoxContainer.new()
-	_party_box.add_theme_constant_override("separation", 6)
+	_party_box.theme_type_variation = "BattleTightColumn"
 	_party_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	party_column.add_child(_party_box)
 
@@ -201,10 +200,7 @@ func _make_command_rail() -> Control:
 
 func _panel_margin(panel: PanelContainer) -> MarginContainer:
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 14)
-	margin.add_theme_constant_override("margin_right", 14)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_bottom", 12)
+	margin.theme_type_variation = "BattlePanelMargin"
 	panel.add_child(margin)
 	return margin
 
@@ -212,16 +208,7 @@ func _panel_margin(panel: PanelContainer) -> MarginContainer:
 func _make_meter(fill_color: Color) -> ProgressBar:
 	var meter := ProgressBar.new()
 	meter.show_percentage = false
-	var track := StyleBoxFlat.new()
-	track.bg_color = DS.VOID_0
-	track.border_color = DS.IRON_0
-	track.set_border_width_all(1)
-	track.set_corner_radius_all(0)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = fill_color
-	fill.set_corner_radius_all(0)
-	meter.add_theme_stylebox_override("background", track)
-	meter.add_theme_stylebox_override("fill", fill)
+	meter.theme_type_variation = "HealthProgressBar" if fill_color == DS.METER_HEALTH_B else "ProgressBar"
 	return meter
 
 
@@ -277,13 +264,10 @@ func _update_party_status() -> void:
 		card.custom_minimum_size = Vector2(0, 52)
 		_party_box.add_child(card)
 		var margin := MarginContainer.new()
-		margin.add_theme_constant_override("margin_left", 10)
-		margin.add_theme_constant_override("margin_right", 10)
-		margin.add_theme_constant_override("margin_top", 6)
-		margin.add_theme_constant_override("margin_bottom", 6)
+		margin.theme_type_variation = "BattlePartyMargin"
 		card.add_child(margin)
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
+		row.theme_type_variation = "BattlePartyRow"
 		margin.add_child(row)
 		var marker := Label.new()
 		marker.text = "▶" if actor == Battle.current_ally() and actor.is_alive() else "·"

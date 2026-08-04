@@ -41,6 +41,7 @@ QuestRegistry="*res://globals/quest_registry.gd"
 Battle="*res://globals/battle.gd"
 SaveGame="*res://globals/save_game.gd"
 SkillCheck="*res://globals/skill_check.gd"
+CombatStylePoints="*res://globals/combat_style_tracker.gd"
 
 [dialogue_manager]
 

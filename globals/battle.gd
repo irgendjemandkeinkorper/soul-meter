@@ -32,6 +32,7 @@ var ended := false
 var encounter_id: StringName = &""
 var last_result: BattleResult
 var controller: CombatController
+var _combat_history: Array[CombatEvent] = []
 
 var player: BattleActor:
 	get:
@@ -44,6 +45,7 @@ var _definition: Dictionary = {}
 
 
 func start(encounter: Variant) -> void:
+	_combat_history.clear()
 	allies.clear()
 	enemies.clear()
 	_definition.clear()
@@ -89,6 +91,15 @@ func start(encounter: Variant) -> void:
 	controller.start(allies, enemies)
 	battle_started.emit()
 	balance_changed.emit(balance)
+
+
+func replay_combat_events(receiver: Callable) -> void:
+	## Late-created presentation receives the same immutable event stream without
+	## querying resolver state or causing global observers to process events twice.
+	if not receiver.is_valid():
+		return
+	for event: CombatEvent in _combat_history:
+		receiver.call(event)
 
 
 func available_actions(include_enemy_actions: bool = false) -> Array[CombatAction]:
@@ -439,6 +450,7 @@ func _default_outcome() -> StringName:
 
 
 func _on_combat_event(event: CombatEvent) -> void:
+	_combat_history.append(event)
 	combat_event.emit(event)
 	var snapshot: Dictionary = event.data.get("snapshot", {})
 	balance = int(snapshot.get("balance", balance))
