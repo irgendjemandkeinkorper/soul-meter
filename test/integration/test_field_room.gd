@@ -119,6 +119,83 @@ func test_open_inventory_screen() -> void:
 	assert_bool(UIManager.is_open()).is_false()
 
 
+func test_autosave_status_is_visible_without_blocking_field_input() -> void:
+	var runner := scene_runner("res://world/test_room.tscn")
+	await runner.simulate_frames(10)
+	var status := runner.find_child("AutosaveStatus", true, false) as Label
+	var player: Node2D = runner.find_child("Player", true, false)
+	assert_object(status).is_not_null()
+	assert_int(status.focus_mode).is_equal(Control.FOCUS_NONE)
+	assert_int(status.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+	assert_bool(get_tree().paused).is_false()
+
+	SaveGame.autosave_finished.emit("test-success", true)
+	assert_str(status.text).is_equal("AUTOSAVED")
+	SaveGame.autosave_finished.emit("test-failure", false)
+	assert_str(status.text).is_equal("AUTOSAVE FAILED")
+	assert_bool(status.text.contains("test-failure")).is_false()
+	assert_bool(get_tree().paused).is_false()
+
+	var start_x: float = player.global_position.x
+	runner.simulate_action_press("move_right")
+	await runner.simulate_frames(15)
+	runner.simulate_action_release("move_right")
+	assert_float(player.global_position.x).is_greater(start_x)
+
+
+func test_pause_menu_shows_player_friendly_manual_save_failure() -> void:
+	var runner := scene_runner("res://world/test_room.tscn")
+	await runner.simulate_frames(10)
+	var screen := UIManager.open(GameFlow.PAUSE_MENU, false, true)
+	await runner.simulate_frames(5)
+	var status := screen.find_child("SaveStatus", true, false) as Label
+	assert_object(status).is_not_null()
+	assert_str(status.theme_type_variation).is_equal("EyebrowLabel")
+
+	SaveGame.save_failed.emit("Could not open the save file for writing.")
+	assert_str(status.text).is_equal(
+		"Could not save your progress. Please check your available storage and try again."
+	)
+	assert_bool(status.text.contains("Could not open")).is_false()
+
+	UIManager.close_all()
+	await runner.simulate_frames(5)
+
+
+func test_pause_menu_confirms_manual_save_success() -> void:
+	var original_save_path := SaveGame.save_path
+	var original_temp_path := SaveGame.temp_path
+	var original_backup_path := SaveGame.backup_path
+	SaveGame.save_path = "user://gdunit_save_visibility.save"
+	SaveGame.temp_path = "user://gdunit_save_visibility.save.tmp"
+	SaveGame.backup_path = "user://gdunit_save_visibility.save.bak"
+	for path in [SaveGame.save_path, SaveGame.temp_path, SaveGame.backup_path]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+	var runner := scene_runner("res://world/test_room.tscn")
+	await runner.simulate_frames(10)
+	var screen := UIManager.open(GameFlow.PAUSE_MENU, false, true)
+	await runner.simulate_frames(5)
+	var status := screen.find_child("SaveStatus", true, false) as Label
+	var save_button := screen.find_child("ManualSaveButton", true, false) as Button
+	assert_object(status).is_not_null()
+	assert_object(save_button).is_not_null()
+
+	save_button.pressed.emit()
+	assert_str(status.text).is_equal("Chapter saved.")
+	assert_bool(FileAccess.file_exists(SaveGame.save_path)).is_true()
+
+	UIManager.close_all()
+	await runner.simulate_frames(5)
+	for path in [SaveGame.save_path, SaveGame.temp_path, SaveGame.backup_path]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	SaveGame.save_path = original_save_path
+	SaveGame.temp_path = original_temp_path
+	SaveGame.backup_path = original_backup_path
+
+
 func _find_child_by_type(parent: Node, type_name: String) -> Node:
 	for child in parent.get_children():
 		if child.get_class() == type_name:

@@ -54,3 +54,9 @@
 - Confirm UI click/combat resolution sounds honor the SFX setting.
 - Confirm the Windows artifact contains `SoulMeter.exe`, its `.pck`, README, and dependencies.
 - Run the complete gdUnit4 suite and require zero failures before sharing.
+
+## 6. Save-failure visibility
+
+| Do | Expect |
+|---|---|
+| Simulate a save failure by making the save directory read-only, then trigger Manual Save and an autosave checkpoint | The pause menu says the progress could not be saved and suggests checking available storage; the field HUD shows `AUTOSAVE FAILED`; no raw OS error is shown to the player, and field input remains available |

@@ -47,6 +47,8 @@ func _ready() -> void:
 	autosave.size = Vector2(280, 30)
 	autosave.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	autosave.theme_type_variation = "EyebrowLabel"
+	autosave.focus_mode = Control.FOCUS_NONE
+	autosave.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(autosave)
 	QuestSystem.quest_accepted.connect(
 		func(quest: Quest) -> void:
