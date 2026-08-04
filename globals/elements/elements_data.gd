@@ -29,38 +29,67 @@ const TRIAD_ROWS: Array[Dictionary] = [
 	{"id": &"thunderhead", "display_name": "Thunderhead", "elements": [&"nul", &"strom", &"suul"], "center": &"strom", "unique_effect": {"id": &"nothing_is_uncertain", "display_name": "Nothing Is Uncertain", "parameters": {"duration": "round", "out_of_turn_allies": 1.0, "skip_instability_die": true}}},
 ]
 
-static func element(element_id: Variant) -> ElementDefinition:
-	var requested := ElementWheel.normalize(element_id)
+## Definitions are built once and reused. ElementDefinition and TriadDefinition
+## are read-only value objects, so sharing an instance is safe — but that makes
+## it an INVARIANT: never mutate a definition returned from here. Mutating one
+## would corrupt every other caller. (Optimization from PR #109, implemented in
+## the generator so it survives regeneration.)
+static var _cache_built := false
+static var _elements_by_id: Dictionary = {}
+static var _triads_by_id: Dictionary = {}
+static var _all_elements: Array[ElementDefinition] = []
+static var _all_triads: Array[TriadDefinition] = []
+
+
+static func _build_cache() -> void:
+	if _cache_built:
+		return
+	_elements_by_id.clear()
+	_all_elements.clear()
 	for row: Dictionary in ELEMENT_ROWS:
-		if StringName(row.get("id", "")) == requested:
-			return ElementDefinition.from_row(row)
+		var element_definition := ElementDefinition.from_row(row)
+		_elements_by_id[element_definition.id] = element_definition
+		_all_elements.append(element_definition)
+	_triads_by_id.clear()
+	_all_triads.clear()
+	for row: Dictionary in TRIAD_ROWS:
+		var triad_definition := TriadDefinition.from_row(row)
+		_triads_by_id[triad_definition.id] = triad_definition
+		_all_triads.append(triad_definition)
+	_cache_built = true
+
+
+static func element(element_id: Variant) -> ElementDefinition:
+	_build_cache()
+	var requested := ElementWheel.normalize(element_id)
+	var cached: Variant = _elements_by_id.get(requested)
+	if cached != null:
+		return cached
 	return ElementDefinition.new()
 
 
 static func all_elements() -> Array[ElementDefinition]:
-	var definitions: Array[ElementDefinition] = []
-	for row: Dictionary in ELEMENT_ROWS:
-		definitions.append(ElementDefinition.from_row(row))
-	return definitions
+	_build_cache()
+	return _all_elements.duplicate()
 
 
 static func triad(triad_id: Variant) -> TriadDefinition:
+	_build_cache()
 	var requested := ElementWheel.normalize(triad_id)
-	for row: Dictionary in TRIAD_ROWS:
-		if StringName(row.get("id", "")) == requested:
-			return TriadDefinition.from_row(row)
+	var cached: Variant = _triads_by_id.get(requested)
+	if cached != null:
+		return cached
 	return TriadDefinition.new()
 
 
 static func all_triads() -> Array[TriadDefinition]:
-	var definitions: Array[TriadDefinition] = []
-	for row: Dictionary in TRIAD_ROWS:
-		definitions.append(TriadDefinition.from_row(row))
-	return definitions
+	_build_cache()
+	return _all_triads.duplicate()
 
 
 static func triad_for_elements(elements: Array[StringName]) -> TriadDefinition:
-	for candidate in all_triads():
+	_build_cache()
+	for candidate in _all_triads:
 		if candidate.elements.size() != elements.size():
 			continue
 		var matches := true
