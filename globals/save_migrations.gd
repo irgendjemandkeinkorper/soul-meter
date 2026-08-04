@@ -3,7 +3,7 @@ extends RefCounted
 ## Version transitions for the serialized save envelope.
 
 const LEGACY_SCHEMA_VERSION := 2
-const CURRENT_SCHEMA_VERSION := 4
+const CURRENT_SCHEMA_VERSION := 5
 
 
 static func prepare(payload: Variant) -> Dictionary:
@@ -26,6 +26,8 @@ static func prepare(payload: Variant) -> Dictionary:
 		migrated = _migrate_v2_to_v3(migrated)
 	if source_version <= 3:
 		migrated = _migrate_v3_to_v4(migrated)
+	if source_version <= 4:
+		migrated = _migrate_v4_to_v5(migrated)
 	migrated["schema_version"] = CURRENT_SCHEMA_VERSION
 	return {"ok": true, "payload": migrated, "error": ""}
 
@@ -61,6 +63,20 @@ static func _migrate_v3_to_v4(source: Dictionary) -> Dictionary:
 		game_state = migrated.get("game_state", {}).duplicate(true)
 	game_state["combat_knowledge"] = game_state.get("combat_knowledge", {})
 	migrated["game_state"] = game_state
+	return migrated
+
+
+static func _migrate_v4_to_v5(source: Dictionary) -> Dictionary:
+	var migrated := source.duplicate(true)
+	var game_state: Dictionary = {}
+	if migrated.get("game_state", {}) is Dictionary:
+		game_state = migrated.get("game_state", {}).duplicate(true)
+	game_state["vendor_stock"] = game_state.get("vendor_stock", {})
+	game_state["vendor_restock_cycles"] = game_state.get("vendor_restock_cycles", {})
+	migrated["game_state"] = game_state
+	# Vendor is a new stable-id domain in schema 5. Refreshing the manifest is
+	# the compatibility bridge for otherwise-valid schema-4 saves.
+	migrated["id_schemas"] = StableIds.schema_manifest()
 	return migrated
 
 

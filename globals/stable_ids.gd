@@ -10,12 +10,13 @@ const ACTOR := &"actor"
 const QUEST := &"quest"
 const SKILL := &"skill"
 const ITEM := &"item"
+const VENDOR := &"vendor"
 const ZONE := &"zone"
 const WORLD_FACT := &"world_fact"
 const DIALOGUE_NODE := &"dialogue_node"
 
 const KINDS: Array[StringName] = [
-	ACTOR, QUEST, SKILL, ITEM, ZONE, WORLD_FACT, DIALOGUE_NODE
+	ACTOR, QUEST, SKILL, ITEM, VENDOR, ZONE, WORLD_FACT, DIALOGUE_NODE
 ]
 
 const _ID_PATTERN := "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
@@ -76,6 +77,10 @@ static func skill(identifier: String) -> Dictionary:
 
 static func item(identifier: String) -> Dictionary:
 	return make(ITEM, identifier)
+
+
+static func vendor(identifier: String) -> Dictionary:
+	return make(VENDOR, identifier)
 
 
 static func zone(identifier: String) -> Dictionary:

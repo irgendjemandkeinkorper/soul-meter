@@ -175,6 +175,13 @@
 				"_id": "276.0",
 				"_index": 0,
 				"_name": "Defining Weaknesses"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "316.0",
+				"_index": 0,
+				"_name": "Vendors"
 			}
 		],
 		"_entities": [
@@ -1260,6 +1267,10 @@
 				"_index": 0,
 				"_name": "Taubstummer Axe",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 90
+					},
 					"Description": {
 						"type": "string",
 						"value": "A sealed soul-weapon of the Last Great War; its edge remembers what it unmade."
@@ -1301,6 +1312,10 @@
 				"_index": 0,
 				"_name": "Captured Reflection",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 70
+					},
 					"Description": {
 						"type": "string",
 						"value": "An obsidian shard that shows a room lit by a sky that does not exist."
@@ -1342,6 +1357,10 @@
 				"_index": 0,
 				"_name": "Soul Gauge",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 60
+					},
 					"Description": {
 						"type": "string",
 						"value": "A brass-and-glass dial that reads a soul's integrity — and what magic has spent."
@@ -1383,6 +1402,10 @@
 				"_index": 0,
 				"_name": "Loam Bread",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 8
+					},
 					"Description": {
 						"type": "string",
 						"value": "Dense composting-city fare from Loamgate. Restores a little vigor."
@@ -1424,6 +1447,10 @@
 				"_index": 0,
 				"_name": "Cinder-Ink Vial",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 24
+					},
 					"Description": {
 						"type": "string",
 						"value": "Ash-Bound tattoo ink; names written in it resist the Waning's slow erasure."
@@ -1465,6 +1492,10 @@
 				"_index": 0,
 				"_name": "QUINE Shard",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 120
+					},
 					"Description": {
 						"type": "string",
 						"value": "A fragment of pre-Bloom machine, one cyan light still faintly alive."
@@ -2515,6 +2546,10 @@
 				"_index": 0,
 				"_name": "Loamroot Sprig",
 				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
 					"Description": {
 						"type": "string",
 						"value": "A pale root cutting, still warm from the Loam. Iris wants a few for the grove."
@@ -2658,15 +2693,79 @@
 				"_property_overrides": {
 					"Bio": {
 						"type": "string",
-						"value": "A Trial Council road marshal charged with the broken muster at Dorthkor."
+						"value": "East Arm bench-holder and road marshal of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "The Road-Bench keeps Dorthkor's broken drumbeat beside every open commission."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
 					},
 					"Display Name": {
 						"type": "string",
 						"value": "Marshal Coiljaw"
 					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
 					"Epithet": {
 						"type": "string",
-						"value": "the Road-Bench"
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Trial Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "branek-coiljaw"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/trial_hall.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "branek-coiljaw"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/branek-coiljaw/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Commissions a witness to audit the broken Dorthkor muster.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "East Arm bench-holder and road marshal"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
 					},
 					"Vault Id": {
 						"type": "string",
@@ -5534,6 +5633,6935 @@
 						"value": "cleaned-jawbrace-guard/disarm"
 					}
 				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "301.0",
+				"_index": 0,
+				"_name": "Bitterleaf Poultice",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 14
+					},
+					"Description": {
+						"type": "string",
+						"value": "A sharp-smelling leaf pack used to bind small field wounds."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Bitterleaf Poultice"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Bitter first. Better second."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "302.0",
+				"_index": 0,
+				"_name": "Loam-Smoked Eel",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 10
+					},
+					"Description": {
+						"type": "string",
+						"value": "River eel cured over damp loamwood for a long road ration."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loam-Smoked Eel"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Smoke, salt, and a trace of the city beneath the city."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.4
+					}
+				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "303.0",
+				"_index": 0,
+				"_name": "Salted Riverfish",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 7
+					},
+					"Description": {
+						"type": "string",
+						"value": "A small riverfish packed in coarse salt and market paper."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Salted Riverfish"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "The Four Arms feed more people than the roads do."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.3
+					}
+				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "304.0",
+				"_index": 0,
+				"_name": "Hearthloaf",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 5
+					},
+					"Description": {
+						"type": "string",
+						"value": "A soft brown loaf baked for the same-day market."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Hearthloaf"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Best before the bells finish arguing with one another."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.4
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "305.0",
+				"_index": 0,
+				"_name": "Scribe's Vellum",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 9
+					},
+					"Description": {
+						"type": "string",
+						"value": "A trimmed vellum folio sized for contracts and field notes."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Scribe's Vellum"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Margins cost extra. Consequences do not."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "306.0",
+				"_index": 0,
+				"_name": "Binding Thread",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "Waxed thread for repairs, bindings, and light field stitching."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Binding Thread"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Strong enough to hold leather; not promises."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "307.0",
+				"_index": 0,
+				"_name": "Iron Rivets",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 11
+					},
+					"Description": {
+						"type": "string",
+						"value": "A counted packet of uniform rivets from Dom's company forges."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Iron Rivets"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Every head bears four shallow strikes."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.5
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "308.0",
+				"_index": 0,
+				"_name": "Grave Salt",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 18
+					},
+					"Description": {
+						"type": "string",
+						"value": "Dark mineral salt used to preserve herbs and mark uneasy thresholds."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Grave Salt"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "It clumps near the recently dead."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "uncommon"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "309.0",
+				"_index": 0,
+				"_name": "Lamp Oil",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 7
+					},
+					"Description": {
+						"type": "string",
+						"value": "A stoppered flask of clean-burning oil for road lanterns."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Lamp Oil"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "The bottle promises six hours. Wind negotiates."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.5
+					}
+				}
+			},
+			{
+				"_category_id": "56",
+				"_icon_color": "ffffff00",
+				"_id": "310.0",
+				"_index": 0,
+				"_name": "Votive Cinder",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 12
+					},
+					"Description": {
+						"type": "string",
+						"value": "A shrine cinder sealed in wax after an offering is witnessed."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Votive Cinder"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Not bought. Not quite given."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "uncommon"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "311.0",
+				"_index": 0,
+				"_name": "Lockpick Roll",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 22
+					},
+					"Description": {
+						"type": "string",
+						"value": "A compact roll of picks, shims, and a narrow tension bar."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Lockpick Roll"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Sold for lawful doors, naturally."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,2)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "uncommon"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.4
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "312.0",
+				"_index": 0,
+				"_name": "Surveyor's Chalk",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 9
+					},
+					"Description": {
+						"type": "string",
+						"value": "Weather-resistant chalk for route marks and measured circles."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Surveyor's Chalk"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "A line is only useful if someone agrees where it begins."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "313.0",
+				"_index": 0,
+				"_name": "Field Needle",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 13
+					},
+					"Description": {
+						"type": "string",
+						"value": "A heavy repair needle kept in a fitted wooden case."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Field Needle"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "For canvas, hide, and emergencies no one describes at supper."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "55",
+				"_icon_color": "ffffff00",
+				"_id": "314.0",
+				"_index": 0,
+				"_name": "Roadwarden Spear",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 55
+					},
+					"Description": {
+						"type": "string",
+						"value": "A practical ash-shaft spear with an Iron Company pattern head."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Roadwarden Spear"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": "main_hand"
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "Long enough to make a roadside disagreement reconsider."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,3)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 3.0
+					}
+				}
+			},
+			{
+				"_category_id": "55",
+				"_icon_color": "ffffff00",
+				"_id": "315.0",
+				"_index": 0,
+				"_name": "Forge Hammer",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 42
+					},
+					"Description": {
+						"type": "string",
+						"value": "A balanced smith's hammer heavy enough for desperate field use."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Forge Hammer"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": "main_hand"
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "A tool until the moment it is not."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(2,2)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 2.5
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "332.0",
+				"_index": 0,
+				"_name": "Loam & Lantern",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"pricing\",\"maximum_band\":\"cold\",\"message\":\"Cold standing adds the company-risk markup.\",\"minimum_band\":\"\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loam & Lantern"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/loam_bread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":12},{\"item_id\":\"materials/cinder_ink_vial\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":5},{\"item_id\":\"materials/lamp_oil\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"tools/soul_gauge\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-general-store-keeper"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":1,\"mode\":\"daily\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.45
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/item-shop"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "ItemShop building"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "loam-and-lantern"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "333.0",
+				"_index": 0,
+				"_name": "Iron & Thread",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"refusal\",\"maximum_band\":\"cold\",\"message\":\"Iron & Thread requires neutral company standing.\",\"minimum_band\":\"\"},{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Allied standing opens the sealed-weapon case.\",\"minimum_band\":\"allied\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.05
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Iron & Thread"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"weapons/roadwarden_spear\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":3},{\"item_id\":\"weapons/forge_hammer\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":2},{\"item_id\":\"materials/iron_rivets\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"weapons/taubstummer_axe\",\"maximum_band\":\"\",\"minimum_band\":\"allied\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-smith"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":7,\"mode\":\"weekly\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/equipment-shop"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "EquipmentShop building"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "iron-and-thread"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "334.0",
+				"_index": 0,
+				"_name": "Root & Reed",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Warm standing opens the grave-salt drawer.\",\"minimum_band\":\"warm\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 0.95
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Root & Reed"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/bitterleaf_poultice\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"materials/loamroot_sprig\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"materials/grave_salt\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":3}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-herbalist"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":2,\"mode\":\"every_two_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.4
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/east-market-herbs"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "East Market herb stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "root-and-reed"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "335.0",
+				"_index": 0,
+				"_name": "Four Arms Fish",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 0.9
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Four Arms Fish"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/salted_riverfish\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":16},{\"item_id\":\"consumables/loam_smoked_eel\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "hostile"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-fishmonger"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":1,\"mode\":\"daily\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.35
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/south-market-fish"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "South Market fish stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "four-arms-fish"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "336.0",
+				"_index": 0,
+				"_name": "Ashline Scriptorium",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Warm standing releases reserved cinder-ink.\",\"minimum_band\":\"warm\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Ashline Scriptorium"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"materials/scribes_vellum\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":10},{\"item_id\":\"materials/cinder_ink_vial\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":4},{\"item_id\":\"tools/surveyors_chalk\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":5}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-scribe"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":3,\"mode\":\"every_three_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/town-hall-scribe"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Town Hall arcade scribe stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "ashline-scriptorium"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "337.0",
+				"_index": 0,
+				"_name": "Understep Exchange",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":1.4,\"sell\":0.5},\"cold\":{\"buy\":0.95,\"sell\":1.0},\"hostile\":{\"buy\":0.85,\"sell\":1.1},\"neutral\":{\"buy\":1.2,\"sell\":0.7},\"warm\":{\"buy\":1.3,\"sell\":0.6}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"refusal\",\"maximum_band\":\"\",\"message\":\"The Exchange closes once company standing reaches neutral.\",\"minimum_band\":\"neutral\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.1
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Understep Exchange"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"tools/lockpick_roll\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":2},{\"item_id\":\"relics/captured_reflection\",\"maximum_band\":\"hostile\",\"minimum_band\":\"hostile\",\"quantity\":1},{\"item_id\":\"relics/quine_shard\",\"maximum_band\":\"hostile\",\"minimum_band\":\"hostile\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "hostile"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-fence"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":0,\"mode\":\"never\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.65
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/understep-night-stall"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Understep Alley night stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "understep-exchange"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "338.0",
+				"_index": 0,
+				"_name": "Shrine of the Held Flame",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"opening\",\"maximum_band\":\"\",\"message\":\"The offering shelf opens at warm Sentinel standing.\",\"minimum_band\":\"warm\"},{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Allied standing opens the witnessed-relic niche.\",\"minimum_band\":\"allied\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Shrine of the Held Flame"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"relics/votive_cinder\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":3},{\"item_id\":\"relics/captured_reflection\",\"maximum_band\":\"\",\"minimum_band\":\"allied\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "warm"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-shrine-keeper"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":7,\"mode\":\"weekly\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/central-shrine"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Central shrine"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "offering"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "held-flame-shrine"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "339.0",
+				"_index": 0,
+				"_name": "Hearthloaf Bakery",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 0.85
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Hearthloaf Bakery"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/hearthloaf\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":18},{\"item_id\":\"consumables/loam_bread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "hostile"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-baker"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":1,\"mode\":\"daily\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.3
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/west-market-bakery"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "West Market bakery stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "hearthloaf-bakery"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "340.0",
+				"_index": 0,
+				"_name": "Rivet & Spur",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Warm standing opens the fitted-tool rack.\",\"minimum_band\":\"warm\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Rivet & Spur"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"materials/iron_rivets\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":12},{\"item_id\":\"weapons/roadwarden_spear\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":2},{\"item_id\":\"weapons/forge_hammer\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-armorer"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":7,\"mode\":\"weekly\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/garrison-armorer"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Garrison forecourt armorer stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "rivet-and-spur"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "341.0",
+				"_index": 0,
+				"_name": "Needle & Hide",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 0.95
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Needle & Hide"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"materials/binding_thread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":12},{\"item_id\":\"tools/field_needle\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":5},{\"item_id\":\"materials/cinder_ink_vial\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":2}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-clothier"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":3,\"mode\":\"every_three_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.45
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/market-row-clothier"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Market Row clothier stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "needle-and-hide"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "342.0",
+				"_index": 0,
+				"_name": "Quiet Gear",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"cold\",\"message\":\"Cold standing exposes an unregistered tool roll.\",\"minimum_band\":\"cold\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.05
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Quiet Gear"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"tools/field_needle\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":3},{\"item_id\":\"tools/surveyors_chalk\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"tools/soul_gauge\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":1},{\"item_id\":\"tools/lockpick_roll\",\"maximum_band\":\"cold\",\"minimum_band\":\"cold\",\"quantity\":1}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-tinker"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":3,\"mode\":\"every_three_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/south-market-tinker"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "South Market tinker stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "quiet-gear"
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "343.0",
+				"_index": 0,
+				"_name": "Wayfarer's Measure",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Wayfarer's Measure"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/hearthloaf\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"consumables/loam_smoked_eel\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":5},{\"item_id\":\"materials/lamp_oil\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"tools/surveyors_chalk\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":4}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dom-provisioner"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":2,\"mode\":\"every_two_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.4
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "dom/east-gate-provisioner"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "East Gate provisioner stall"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "wayfarers-measure"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "344.0",
+				"_index": 0,
+				"_name": "The Trial Council",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Trial Council"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Dom"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Dom's four Arm benches, earned through the graded trials."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "trial-council"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "345.0",
+				"_index": 0,
+				"_name": "The Kord Rite",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Kord Rite"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Dom"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Dom's tolerated old-believers at the chasm-lip shrines."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "kord-rite"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "346.0",
+				"_index": 0,
+				"_name": "The Shattersteel Concord",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Shattersteel Concord"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Dom"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "The East Arm's joint shattersteel charter with Tweede."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "347.0",
+				"_index": 0,
+				"_name": "The Hospice Chain",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Hospice Chain"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Dom"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Haeren's protected chain of hospices and keepers."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "hospice-chain"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "348.0",
+				"_index": 0,
+				"_name": "The Wayfare-Menders",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Wayfare-Menders"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Dom"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Road and harbor lodges serving travelers under Ofshutje."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "349.0",
+				"_index": 0,
+				"_name": "The Grain Factors' Table",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Grain Factors' Table"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Deivel Zeit"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "The factors who provision Dom through Deivel's grain trade."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "350.0",
+				"_index": 0,
+				"_name": "The Restoration",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Restoration"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Deivel Zeit"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Deivel's Restoration, recruiting among Dom's Company halls."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "the-restoration"
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "367.0",
+				"_index": 0,
+				"_name": "Themka Gaath",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "High Warlord and Bridgeholder of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "The Bridgeholder weighs the Wound-Watch ledger before any voice on the Council floor."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Themka Gaath"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Town Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "themka-gaath"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/trial_hall.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "themka-gaath"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/themka-gaath/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Requests an independent account before ruling on the living muster.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "High Warlord and Bridgeholder"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "themka-gaath"
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "368.0",
+				"_index": 0,
+				"_name": "Sella Varn",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Bell warden of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "The district bell is warm, the rope is sound, and Sella refuses to call its silence a simple break."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Sella Varn"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Bell House"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "sella-varn"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/trial_hall.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "sella-varn"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/sella-varn/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Opens the silent bell-house investigation.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Bell warden"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "369.0",
+				"_index": 0,
+				"_name": "Hadrik Vale",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Archive clerk of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Hadrik can account for every road ledger except the one that returned with rain inside its seals."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Hadrik Vale"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "rennen"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Registry Archive"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "hadrik-vale"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/town_hall.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "hadrik-vale"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/hadrik-vale/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Requests recovery of a storm-damaged road register.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Archive clerk"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "370.0",
+				"_index": 0,
+				"_name": "Toma Reedhand",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Dockhand and shrine-keeper of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Toma tends the river shrine between harbor shifts and knows which tide-chain offerings have gone missing."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Toma Reedhand"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "River Shrine"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "toma-reedhand"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/town_hall.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "toma-reedhand"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/toma-reedhand/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Asks for the missing offerings from the Drownedmouth tide-chain.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Dockhand and shrine-keeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "371.0",
+				"_index": 0,
+				"_name": "Droma Flintjaw",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Wound-Watch quartermaster of Dom's Jawbrace."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Droma's armor tags include one clean plate whose owner still answers morning roll."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross unarmed or do not cross."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Hold at the brace and state your business."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Droma Flintjaw"
+					},
+					"District": {
+						"type": "string",
+						"value": "Jawbrace"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Town Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "droma-flintjaw"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/town_hall.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "droma-flintjaw"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/droma-flintjaw/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Seeks proof of how a living guard's tag reached cleaned armor.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Wound-Watch quartermaster"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "372.0",
+				"_index": 0,
+				"_name": "Veska Ruun",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Trial examiner of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Veska found three Pillar weights filed smooth where a candidate's name should be cut."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Veska Ruun"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Trial Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "veska-ruun"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/registry_archive.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "veska-ruun"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/veska-ruun/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Commissions an inquiry into altered Trial Pillar weights.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Trial examiner"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "373.0",
+				"_index": 0,
+				"_name": "Orren Chainwake",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Drownedmouth pilot of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Orren has a storm-stranded crew below the sea-mouth and one safe course left unmarked."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Orren Chainwake"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Pilot Lodge"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "orren-chainwake"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/registry_archive.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "orren-chainwake"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/orren-chainwake/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Needs a route marker carried to a storm-stranded crew.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Drownedmouth pilot"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "374.0",
+				"_index": 0,
+				"_name": "Maela Drumscar",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Company muster drummer of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Maela heard a dead Company's cadence answer between two beats of the spring muster."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Maela Drumscar"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Iron Companies Barracks"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "maela-drumscar"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/registry_archive.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "maela-drumscar"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/maela-drumscar/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Asks the player to compare an impossible cadence against old muster notation.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Company muster drummer"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "375.0",
+				"_index": 0,
+				"_name": "Keth Varr",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Shattersteel assay clerk of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Keth says the newest cooling-water seals are honest bronze wrapped around dishonest water."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Keth Varr"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Equipment Shop"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "keth-varr"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/bell_house.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "keth-varr"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/keth-varr/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Requests samples from a suspect storm-water delivery.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Shattersteel assay clerk"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "376.0",
+				"_index": 0,
+				"_name": "Irka Stonebreath",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Hospice scar keeper of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Irka keeps the trial-broken names and has one patient no hall admits sending."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Irka Stonebreath"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "hospice-chain"
+					},
+					"Home": {
+						"type": "string",
+						"value": "River Shrine Hospice"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "irka-stonebreath"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/bell_house.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "irka-stonebreath"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/irka-stonebreath/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Seeks the hall that abandoned an unidentified trial-broken veteran.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Hospice scar keeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "377.0",
+				"_index": 0,
+				"_name": "Pell Hammersong",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Jaw-drum tuner of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Pell hears a fifth echo under a four-beat Jawbrace signal whenever the western storm turns."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Pell Hammersong"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Bell House"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "pell-hammersong"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/bell_house.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "pell-hammersong"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/pell-hammersong/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Needs the brace drums tested from both sides of the chasm.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Jaw-drum tuner"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "378.0",
+				"_index": 0,
+				"_name": "Vaara Cisternhand",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Storm-cistern warden of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Vaara has sealed a cistern whose rain tastes of forge ash before it reaches the East Arm."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Vaara Cisternhand"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Cistern Wardens Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "vaara-cisternhand"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/river_shrine.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "vaara-cisternhand"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/vaara-cisternhand/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Requests a source trace for ash entering a storm cistern.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Storm-cistern warden"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "379.0",
+				"_index": 0,
+				"_name": "Jorun Ashmantle",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Charfire hall steward of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Jorun keeps the charfire table open, but one veteran's bowl has gone cold for six nights."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Jorun Ashmantle"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Chef's House"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "jorun-ashmantle"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/river_shrine.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "jorun-ashmantle"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/jorun-ashmantle/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Asks someone to find a missing Company veteran without shaming them.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Charfire hall steward"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "380.0",
+				"_index": 0,
+				"_name": "Senn Brinehook",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Deep-cold net mender of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Senn's newest net came back cut from below, with every knot retied in marching order."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Senn Brinehook"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "River Shrine"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "senn-brinehook"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/river_shrine.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "senn-brinehook"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/senn-brinehook/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Offers the cut net for investigation at the sea-mouth.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Deep-cold net mender"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "381.0",
+				"_index": 0,
+				"_name": "Daska Threeknots",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Deep Salvage broker of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Daska prices cleaned armor by the grief of the family asking and calls that brutal honesty."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Daska Threeknots"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "kord-rite"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Howlpath Lodging"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "daska-threeknots"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/iron_companies.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "daska-threeknots"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/daska-threeknots/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Must be confronted about a suit taken from a forbidden ledge.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Deep Salvage broker"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "382.0",
+				"_index": 0,
+				"_name": "Hennik Coalvein",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Chasm-wall miner of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Hennik missed shift after chalking a name that no foreman remembers onto the lift cage."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Hennik Coalvein"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					},
+					"Home": {
+						"type": "string",
+						"value": "East Arm Scarred Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "hennik-coalvein"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/iron_companies.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "hennik-coalvein"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/hennik-coalvein/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Is the missing miner sought by the lift crew.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Chasm-wall miner"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "383.0",
+				"_index": 0,
+				"_name": "Ressa Ironmouth",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Brand artist of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Ressa can spot a false Ironbrand by the way its scar fails to pull when the bearer speaks."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Ressa Ironmouth"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Equipment Shop"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "ressa-ironmouth"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/iron_companies.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "ressa-ironmouth"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/ressa-ironmouth/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Must inspect a suspect veteran's counterfeit brand.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Brand artist"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "384.0",
+				"_index": 0,
+				"_name": "Kaelra Pikehand",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Three-legged war-dog trainer of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Kaelra's oldest hound tracks one absent Bloodbellow and refuses every other scent."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Kaelra Pikehand"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Iron Companies Barracks"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kaelra-pikehand"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/item_shop.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kaelra-pikehand"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/kaelra-pikehand/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Holds the hound needed to follow an absent Company soldier.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Three-legged war-dog trainer"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "385.0",
+				"_index": 0,
+				"_name": "Umber Dhor",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Grain porter of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Umber carries a manifest for grain that reached Dom twice on paper and not once by sack."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Umber Dhor"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Lower Market Loft"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "umber-dhor"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/item_shop.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "umber-dhor"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/umber-dhor/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Carries the disputed manifest needed by the market factors.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Grain porter"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "386.0",
+				"_index": 0,
+				"_name": "Nalla Gatebeat",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Jawbrace signaler of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Nalla stopped the third gate's drum after it answered with a signal no living watch uses."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Nalla Gatebeat"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Jawbrace Watchroom"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "nalla-gatebeat"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/item_shop.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "nalla-gatebeat"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/nalla-gatebeat/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Is the signaler who can reproduce the unknown gate reply.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Jawbrace signaler"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "387.0",
+				"_index": 0,
+				"_name": "Torv Bellowskin",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Forge bellows master of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Torv locked away a hammer that rings after the forge around it has fallen silent."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Torv Bellowskin"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Equipment Shop"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "torv-bellowskin"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/equipment_shop.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "torv-bellowskin"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/torv-bellowskin/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Keeps the resonant hammer required for a forge-silence inquiry.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Forge bellows master"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "388.0",
+				"_index": 0,
+				"_name": "Yssra Coldnet",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Deep-cold fisher of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Yssra saw lights climbing the harbor wall against the rain and will speak only beside calm water."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Yssra Coldnet"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Drownedmouth Berthhouse"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "yssra-coldnet"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/equipment_shop.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "yssra-coldnet"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/yssra-coldnet/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Is the harbor witness another quest must locate.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Deep-cold fisher"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "389.0",
+				"_index": 0,
+				"_name": "Brek Saltjaw",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Sea-mouth chain hand of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Brek did not report after the outer harbor chain tightened itself during the night watch."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Brek Saltjaw"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Drownedmouth Chainhouse"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "brek-saltjaw"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/equipment_shop.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "brek-saltjaw"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/brek-saltjaw/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Is the missing chain hand named in the harbor watch report.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Sea-mouth chain hand"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "390.0",
+				"_index": 0,
+				"_name": "Orenna Caskbrand",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Charfire brewer of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Orenna holds the only kitchen key to the scarred hall where an unnamed bowl remains set."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Orenna Caskbrand"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "hospice-chain"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Chef's House"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "orenna-caskbrand"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/chefs_house.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "orenna-caskbrand"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"target\",\"quest_id\":\"dom/orenna-caskbrand/target\",\"state_source\":\"QuestRegistry\",\"summary\":\"Holds access needed to inspect an abandoned charfire place.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Charfire brewer"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "391.0",
+				"_index": 0,
+				"_name": "Marn Veld",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Council runner of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Marn carried the sealed vote between the four benches and knows which seal arrived warm."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Marn Veld"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Town Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "marn-veld"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/chefs_house.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "marn-veld"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/marn-veld/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Provides required information about a compromised Council message.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Council runner"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "392.0",
+				"_index": 0,
+				"_name": "Thessa Drumline",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Muster copyist of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Thessa can point to the exact beat where a living roll enters the cadence of the unremembered."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Thessa Drumline"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Bell House"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "thessa-drumline"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/chefs_house.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "thessa-drumline"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/thessa-drumline/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Decodes the break between dead and living muster rolls.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Muster copyist"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "393.0",
+				"_index": 0,
+				"_name": "Korrin Blackrail",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Jawbrace rail inspector of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Korrin saw the cleaned guard face outward before the first gate opened."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Korrin Blackrail"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Jawbrace Watchroom"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "korrin-blackrail"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/players_house.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "korrin-blackrail"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/korrin-blackrail/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Provides the guard's original posture and direction.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Jawbrace rail inspector"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "394.0",
+				"_index": 0,
+				"_name": "Veyra Sootlace",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Salvage-cloth merchant of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Veyra knows whether ash came from forge coal, charfire, or a suit scoured below the ledges."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Veyra Sootlace"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Lower Market Loft"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "veyra-sootlace"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/players_house.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "veyra-sootlace"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/veyra-sootlace/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Identifies the ash on recovered salvage cloth.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Salvage-cloth merchant"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "395.0",
+				"_index": 0,
+				"_name": "Drel Gaunt",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Gauntlet scorekeeper of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Drel's slate proves the yielded duelist was struck three times after the surrender beat."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Drel Gaunt"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Trial Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "drel-gaunt"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/players_house.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "drel-gaunt"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/drel-gaunt/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Supplies the official score from the broken-yield duel.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Gauntlet scorekeeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "396.0",
+				"_index": 0,
+				"_name": "Arvek Stormcup",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Storm-water cooper of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Arvek recognizes the cooper's mark that was burned off Keth Varr's suspect casks."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Arvek Stormcup"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Lower Market"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "arvek-stormcup"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "TrialHall"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "arvek-stormcup"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/arvek-stormcup/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Identifies the source warehouse for tampered cooling water.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Storm-water cooper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "397.0",
+				"_index": 0,
+				"_name": "Istra Hearthscar",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Scarred Hall matron of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Istra remembers which missing veteran stopped eating when the Wound began using Company voices."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Istra Hearthscar"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "hospice-chain"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Iron Companies Barracks"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "istra-hearthscar"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "TrialHall"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 78.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "istra-hearthscar"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/istra-hearthscar/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Names the veteran connected to a cold place at the charfire table.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Scarred Hall matron"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "398.0",
+				"_index": 0,
+				"_name": "Kelm Rook",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Company contract reader of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Kelm found a Restoration clause that hires a Company by the dead names on its old roll."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Kelm Rook"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Iron Companies Barracks"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kelm-rook"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "TrialHall"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kelm-rook"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/kelm-rook/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Explains the hidden condition in a Restoration contract.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Company contract reader"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "399.0",
+				"_index": 0,
+				"_name": "Brinna Fourbells",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Crossing census keeper of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Brinna's midwinter census contains one crossed-out name that still answers at each gate."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Brinna Fourbells"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Town Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "brinna-fourbells"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "RegistryArchive"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "brinna-fourbells"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/brinna-fourbells/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Provides the missing name from the Crossing census.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Crossing census keeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "400.0",
+				"_index": 0,
+				"_name": "Sorek Hushward",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Lip-shrine sweeper of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Sorek hears the calls before dawn and knows which ones come in a living voice."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Sorek Hushward"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "kord-rite"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Howlpath Lodge"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "sorek-hushward"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "RegistryArchive"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 78.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "sorek-hushward"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"information\",\"quest_id\":\"dom/sorek-hushward/information\",\"state_source\":\"QuestRegistry\",\"summary\":\"Distinguishes a living caller from the dead muster echoes.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Lip-shrine sweeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "401.0",
+				"_index": 0,
+				"_name": "Enna Grayscar",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Archive seal clerk of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Enna opens sealed road records only for someone carrying proof from the matching watch."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Enna Grayscar"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "rennen"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Registry Archive"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "enna-grayscar"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "RegistryArchive"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "enna-grayscar"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"gate\",\"quest_id\":\"dom/enna-grayscar/gate\",\"state_source\":\"GameState\",\"summary\":\"Gates access to the sealed road archive behind verified watch proof.\",\"world_fact_id\":\"dom/enna-grayscar/gate-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Archive seal clerk"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "402.0",
+				"_index": 0,
+				"_name": "Varrik Deepchalk",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Mining-lift chalker of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Varrik will not mark a descent cage until the lift crew's safety tally is complete."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Varrik Deepchalk"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Equipment Shop"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "varrik-deepchalk"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "BellHouse"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "varrik-deepchalk"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"gate\",\"quest_id\":\"dom/varrik-deepchalk/gate\",\"state_source\":\"GameState\",\"summary\":\"Gates use of a chasm-wall lift behind the completed safety tally.\",\"world_fact_id\":\"dom/varrik-deepchalk/gate-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Mining-lift chalker"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "403.0",
+				"_index": 0,
+				"_name": "Loa Flintthread",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Hospice intake keeper of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Loa keeps patient names private until a scarred-hall token proves honest concern."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Loa Flintthread"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "hospice-chain"
+					},
+					"Home": {
+						"type": "string",
+						"value": "River Shrine Hospice"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "loa-flintthread"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "BellHouse"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 78.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "loa-flintthread"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"gate\",\"quest_id\":\"dom/loa-flintthread/gate\",\"state_source\":\"GameState\",\"summary\":\"Gates access to an unidentified hospice patient behind a hall token.\",\"world_fact_id\":\"dom/loa-flintthread/gate-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Hospice intake keeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "404.0",
+				"_index": 0,
+				"_name": "Kessa Nightrail",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "North-road sentry of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Kessa opens the night road only when the Dorthkor warning and the Council seal agree."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Kessa Nightrail"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "North Arm Gatehouse"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kessa-nightrail"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "BellHouse"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kessa-nightrail"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"gate\",\"quest_id\":\"dom/kessa-nightrail/gate\",\"state_source\":\"GameState\",\"summary\":\"Gates the night road behind matching warning and Council clearance.\",\"world_fact_id\":\"dom/kessa-nightrail/gate-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "North-road sentry"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "405.0",
+				"_index": 0,
+				"_name": "Orm Redtongs",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Forge safety master of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Orm permits a forge shutdown only after a replacement hammer cadence is proven."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Orm Redtongs"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Equipment Shop"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "orm-redtongs"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "RiverShrine"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "orm-redtongs"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"gate\",\"quest_id\":\"dom/orm-redtongs/gate\",\"state_source\":\"GameState\",\"summary\":\"Gates a controlled forge-silence behind a replacement cadence.\",\"world_fact_id\":\"dom/orm-redtongs/gate-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Forge safety master"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "406.0",
+				"_index": 0,
+				"_name": "Yara Chainstep",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Harbor-chain inspector of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Yara will return to the outer chain when the missing watch hand is accounted for."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Yara Chainstep"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Drownedmouth Chainhouse"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "yara-chainstep"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "RiverShrine"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 78.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "yara-chainstep"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"state_change\",\"quest_id\":\"dom/yara-chainstep/state-change\",\"state_source\":\"GameState\",\"summary\":\"Moves from the shrine to the outer chain after the watch-hand search resolves.\",\"world_fact_id\":\"dom/yara-chainstep/state-change-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Harbor-chain inspector"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "407.0",
+				"_index": 0,
+				"_name": "Tern Hollowbeat",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Dorthkor memorial drummer of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Tern holds a deliberate silence where the lost road roll should have sounded."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Tern Hollowbeat"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Trial Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "tern-hollowbeat"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "RiverShrine"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "tern-hollowbeat"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"state_change\",\"quest_id\":\"dom/tern-hollowbeat/state-change\",\"state_source\":\"GameState\",\"summary\":\"Restores the memorial cadence after the missing roll is recovered.\",\"world_fact_id\":\"dom/tern-hollowbeat/state-change-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Dorthkor memorial drummer"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "408.0",
+				"_index": 0,
+				"_name": "Mera Voss",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Hospice cook of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Mera has banked the charfire until medicine reaches the trial-broken ward."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Mera Voss"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "hospice-chain"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Chef's House"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "mera-voss"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "IronCompaniesBarracks"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "mera-voss"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"state_change\",\"quest_id\":\"dom/mera-voss/state-change\",\"state_source\":\"GameState\",\"summary\":\"Reopens the hospice charfire table after the medicine delivery.\",\"world_fact_id\":\"dom/mera-voss/state-change-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Hospice cook"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "409.0",
+				"_index": 0,
+				"_name": "Kadrin Stoneyield",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Trial Pillar porter of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Kadrin keeps the damaged ascent roped off and counts every candidate turned away."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Kadrin Stoneyield"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Trial Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kadrin-stoneyield"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "IronCompaniesBarracks"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 78.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kadrin-stoneyield"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"state_change\",\"quest_id\":\"dom/kadrin-stoneyield/state-change\",\"state_source\":\"GameState\",\"summary\":\"Removes the Pillar barricade after its burden pins are repaired.\",\"world_fact_id\":\"dom/kadrin-stoneyield/state-change-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Trial Pillar porter"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "410.0",
+				"_index": 0,
+				"_name": "Sava Mor",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Salvager's widow of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Sava leaves an empty armor stand in her window until the ledge suit is returned or condemned."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Sava Mor"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Lower Market Loft"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "sava-mor"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "IronCompaniesBarracks"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "sava-mor"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"involvement\":\"state_change\",\"quest_id\":\"dom/sava-mor/state-change\",\"state_source\":\"GameState\",\"summary\":\"Changes the market display when the recovered suit's fate is decided.\",\"world_fact_id\":\"dom/sava-mor/state-change-state\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Salvager's widow"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "411.0",
+				"_index": 0,
+				"_name": "Drann Wetiron",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Shattersteel smith of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Drann reserves the honest forge for names the Concord already speaks warmly."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Drann Wetiron"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Equipment Shop"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "drann-wetiron"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "LowerMarket"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "drann-wetiron"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"band\":\"warm\",\"faction_id\":\"shattersteel-concord\",\"involvement\":\"reputation_reaction\",\"quest_id\":\"dom/drann-wetiron/reputation-reaction\",\"state_source\":\"Reputation.band\",\"summary\":\"Offers forge access at a warm Shattersteel Concord reputation band.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Shattersteel smith"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "412.0",
+				"_index": 0,
+				"_name": "Edda Broadmark",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Company recruiter of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Edda reads the Company's standing before she reads a volunteer's scars."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Edda Broadmark"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Iron Companies Barracks"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "edda-broadmark"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "LowerMarket"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 78.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "edda-broadmark"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"band\":\"warm\",\"faction_id\":\"iron-companies\",\"involvement\":\"reputation_reaction\",\"quest_id\":\"dom/edda-broadmark/reputation-reaction\",\"state_source\":\"Reputation.band\",\"summary\":\"Offers a veteran escort at a warm Iron Companies reputation band.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Company recruiter"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "413.0",
+				"_index": 0,
+				"_name": "Holst Brinevein",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Harbor pilot of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Holst saves his storm-proof route for travelers the Mender lodges trust."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Holst Brinevein"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Pilot Lodge"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "holst-brinevein"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "LowerMarket"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "holst-brinevein"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"band\":\"warm\",\"faction_id\":\"wayfare-menders\",\"involvement\":\"reputation_reaction\",\"quest_id\":\"dom/holst-brinevein/reputation-reaction\",\"state_source\":\"Reputation.band\",\"summary\":\"Shares a safe sea-mouth route at a warm Wayfare-Mender reputation band.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Harbor pilot"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "414.0",
+				"_index": 0,
+				"_name": "Raika Toll",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Sentinel toll keeper of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Raika answers respect for the Sentinels with one more true entry from the Wound ledger."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Raika Toll"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Jawbrace Watchroom"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "raika-toll"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "EquipmentShop"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "raika-toll"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"band\":\"warm\",\"faction_id\":\"ironbrand-sentinels\",\"involvement\":\"reputation_reaction\",\"quest_id\":\"dom/raika-toll/reputation-reaction\",\"state_source\":\"Reputation.band\",\"summary\":\"Reveals a Wound-Watch ledger entry at a warm Sentinel reputation band.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Sentinel toll keeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "415.0",
+				"_index": 0,
+				"_name": "Venn Ashcord",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Registry tallyman of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Venn waives no line, but a warm Registry record earns the useful drawer first."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Venn Ashcord"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "rennen"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Registry Archive"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "venn-ashcord"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "EquipmentShop"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 78.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "venn-ashcord"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[{\"band\":\"warm\",\"faction_id\":\"rennen\",\"involvement\":\"reputation_reaction\",\"quest_id\":\"dom/venn-ashcord/reputation-reaction\",\"state_source\":\"Reputation.band\",\"summary\":\"Prioritizes a needed archive drawer at a warm Registry reputation band.\"}]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Registry tallyman"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "416.0",
+				"_index": 0,
+				"_name": "Jessa Longbrace",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Bridge rope-splicer of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Jessa splices every brace rope with four turns and cuts any sailor who adds a fifth."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Jessa Longbrace"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Jawbrace Watchroom"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "jessa-longbrace"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "EquipmentShop"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "jessa-longbrace"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Bridge rope-splicer"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "417.0",
+				"_index": 0,
+				"_name": "Brannic Lowdrum",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Tavern drummer of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Brannic plays beneath the Hammer Roar by feeling the mugs walk across the table."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Brannic Lowdrum"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Four Arms Tavern"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "brannic-lowdrum"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "TownHall"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "brannic-lowdrum"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Tavern drummer"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "418.0",
+				"_index": 0,
+				"_name": "Saela Windscar",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Roof-flag mender of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Saela reads tomorrow's western wall by which roof flag tears first."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Saela Windscar"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "trial-council"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Town Hall"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "saela-windscar"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "TownHall"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 78.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "saela-windscar"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Roof-flag mender"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "419.0",
+				"_index": 0,
+				"_name": "Orrik Cinderjaw",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Charfire barber of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Orrik trims hair with forge shears and never lets their hinge lose the hammer rhythm."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Orrik Cinderjaw"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Lower Market Loft"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "orrik-cinderjaw"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "TownHall"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "orrik-cinderjaw"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Charfire barber"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "420.0",
+				"_index": 0,
+				"_name": "Nym Vara",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Storm-cup seller of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Nym sells cups broad enough to catch rain and narrow enough not to lose it to the wind."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Nym Vara"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Lower Market"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "nym-vara"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "FourArmsTavern"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "nym-vara"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Storm-cup seller"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "421.0",
+				"_index": 0,
+				"_name": "Thora Bellmark",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Scar tattooist of Dom's South Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Thora inks no promise until the speaker can say its price without lowering their voice."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Stand straight when the drum sounds."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Yield is an honest word here."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Thora Bellmark"
+					},
+					"District": {
+						"type": "string",
+						"value": "South Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "ironbrand-sentinels"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Bell House"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "thora-bellmark"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "FourArmsTavern"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 78.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "thora-bellmark"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Scar tattooist"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "422.0",
+				"_index": 0,
+				"_name": "Gerren Pike",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Company pike polisher of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Gerren judges a pike by whether the bearer can see their scar in its edge."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Gerren Pike"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Iron Companies Barracks"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "gerren-pike"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "FourArmsTavern"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 70.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "gerren-pike"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Company pike polisher"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "423.0",
+				"_index": 0,
+				"_name": "Kiva Saltbrand",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Harbor salt seller of Dom's West Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Kiva keeps storm salt dry in retired drumskins and labels every skin by cadence."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Watch the chain on your way out."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep above the harbor spray."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Kiva Saltbrand"
+					},
+					"District": {
+						"type": "string",
+						"value": "West Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Drownedmouth Berthhouse"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kiva-saltbrand"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NorthRoad"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -90.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 90.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kiva-saltbrand"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Harbor salt seller"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "424.0",
+				"_index": 0,
+				"_name": "Dorran Rask",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Road cobbler of Dom's North Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Dorran soles road boots differently for the Trial Roads, where every climb leans the same way."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Dorran Rask"
+					},
+					"District": {
+						"type": "string",
+						"value": "North Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "North Arm Gatehouse"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "dorran-rask"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "WoundLip"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 90.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "dorran-rask"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Road cobbler"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "425.0",
+				"_index": 0,
+				"_name": "Aela Quietforge",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Household tool-mender of Dom's East Arm."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Aela works only hand tools at home, quiet enough that the East Arm hammers remain the loudest truth."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Go before the next hammer fall."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the sparks, traveler."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Aela Quietforge"
+					},
+					"District": {
+						"type": "string",
+						"value": "East Arm"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "shattersteel-concord"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Player's House"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "aela-quietforge"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "WoundLip"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/starting_town.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 100.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 90.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "aela-quietforge"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Household tool-mender"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "dom"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -6432,12 +13460,236 @@
 				"_id": "287.0",
 				"_name": "Resistance Threshold",
 				"_type": "int"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": 0,
+				"_id": "300.0",
+				"_name": "Base Price",
+				"_type": "int"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "317.0",
+				"_name": "Vendor Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "318.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "319.0",
+				"_name": "NPC Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "320.0",
+				"_name": "Site Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "321.0",
+				"_name": "Site Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "322.0",
+				"_name": "Faction Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "323.0",
+				"_name": "Trade Mode",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": 0.0,
+				"_id": "324.0",
+				"_name": "Buy Modifier",
+				"_type": "float"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": 0.0,
+				"_id": "325.0",
+				"_name": "Sell Modifier",
+				"_type": "float"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "326.0",
+				"_name": "Minimum Band",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "327.0",
+				"_name": "Maximum Band",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "328.0",
+				"_name": "Band Price Modifiers",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "329.0",
+				"_name": "Inventory",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "330.0",
+				"_name": "Restock",
+				"_type": "string"
+			},
+			{
+				"_category_id": "316.0",
+				"_default_value": "",
+				"_id": "331.0",
+				"_name": "Band Reactions",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "351.0",
+				"_name": "NPC Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "352.0",
+				"_name": "Town Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "353.0",
+				"_name": "Role",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "354.0",
+				"_name": "Home",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "355.0",
+				"_name": "District",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "356.0",
+				"_name": "Faction Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "357.0",
+				"_name": "Quest Hooks",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "358.0",
+				"_name": "Portrait Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "359.0",
+				"_name": "Portrait Path",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "360.0",
+				"_name": "Dialogue Greeting",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "361.0",
+				"_name": "Dialogue Context",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "362.0",
+				"_name": "Dialogue Farewell",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "363.0",
+				"_name": "Placement Scene",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "364.0",
+				"_name": "Placement Anchor",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": 0.0,
+				"_id": "365.0",
+				"_name": "Placement X",
+				"_type": "float"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": 0.0,
+				"_id": "366.0",
+				"_name": "Placement Y",
+				"_type": "float"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 299.0
+			"default": 425.0
 		}
 	},
 	"_version": 1

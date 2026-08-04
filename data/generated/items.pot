@@ -5,6 +5,26 @@ msgstr ""
 "Project-Id-Version: SoulMeter\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
+#. consumables/bitterleaf_poultice — display name
+#. English source: Bitterleaf Poultice
+msgid "ITEM_CONSUMABLES_BITTERLEAF_POULTICE_NAME"
+msgstr ""
+
+#. consumables/bitterleaf_poultice — description
+#. English source: A sharp-smelling leaf pack used to bind small field wounds.
+msgid "ITEM_CONSUMABLES_BITTERLEAF_POULTICE_DESC"
+msgstr ""
+
+#. consumables/hearthloaf — display name
+#. English source: Hearthloaf
+msgid "ITEM_CONSUMABLES_HEARTHLOAF_NAME"
+msgstr ""
+
+#. consumables/hearthloaf — description
+#. English source: A soft brown loaf baked for the same-day market.
+msgid "ITEM_CONSUMABLES_HEARTHLOAF_DESC"
+msgstr ""
+
 #. consumables/loam_bread — display name
 #. English source: Loam Bread
 msgid "ITEM_CONSUMABLES_LOAM_BREAD_NAME"
@@ -13,6 +33,36 @@ msgstr ""
 #. consumables/loam_bread — description
 #. English source: Dense composting-city fare from Loamgate. Restores a little vigor.
 msgid "ITEM_CONSUMABLES_LOAM_BREAD_DESC"
+msgstr ""
+
+#. consumables/loam_smoked_eel — display name
+#. English source: Loam-Smoked Eel
+msgid "ITEM_CONSUMABLES_LOAM_SMOKED_EEL_NAME"
+msgstr ""
+
+#. consumables/loam_smoked_eel — description
+#. English source: River eel cured over damp loamwood for a long road ration.
+msgid "ITEM_CONSUMABLES_LOAM_SMOKED_EEL_DESC"
+msgstr ""
+
+#. consumables/salted_riverfish — display name
+#. English source: Salted Riverfish
+msgid "ITEM_CONSUMABLES_SALTED_RIVERFISH_NAME"
+msgstr ""
+
+#. consumables/salted_riverfish — description
+#. English source: A small riverfish packed in coarse salt and market paper.
+msgid "ITEM_CONSUMABLES_SALTED_RIVERFISH_DESC"
+msgstr ""
+
+#. materials/binding_thread — display name
+#. English source: Binding Thread
+msgid "ITEM_MATERIALS_BINDING_THREAD_NAME"
+msgstr ""
+
+#. materials/binding_thread — description
+#. English source: Waxed thread for repairs, bindings, and light field stitching.
+msgid "ITEM_MATERIALS_BINDING_THREAD_DESC"
 msgstr ""
 
 #. materials/cinder_ink_vial — display name
@@ -25,6 +75,36 @@ msgstr ""
 msgid "ITEM_MATERIALS_CINDER_INK_VIAL_DESC"
 msgstr ""
 
+#. materials/grave_salt — display name
+#. English source: Grave Salt
+msgid "ITEM_MATERIALS_GRAVE_SALT_NAME"
+msgstr ""
+
+#. materials/grave_salt — description
+#. English source: Dark mineral salt used to preserve herbs and mark uneasy thresholds.
+msgid "ITEM_MATERIALS_GRAVE_SALT_DESC"
+msgstr ""
+
+#. materials/iron_rivets — display name
+#. English source: Iron Rivets
+msgid "ITEM_MATERIALS_IRON_RIVETS_NAME"
+msgstr ""
+
+#. materials/iron_rivets — description
+#. English source: A counted packet of uniform rivets from Dom's company forges.
+msgid "ITEM_MATERIALS_IRON_RIVETS_DESC"
+msgstr ""
+
+#. materials/lamp_oil — display name
+#. English source: Lamp Oil
+msgid "ITEM_MATERIALS_LAMP_OIL_NAME"
+msgstr ""
+
+#. materials/lamp_oil — description
+#. English source: A stoppered flask of clean-burning oil for road lanterns.
+msgid "ITEM_MATERIALS_LAMP_OIL_DESC"
+msgstr ""
+
 #. materials/loamroot_sprig — display name
 #. English source: Loamroot Sprig
 msgid "ITEM_MATERIALS_LOAMROOT_SPRIG_NAME"
@@ -33,6 +113,16 @@ msgstr ""
 #. materials/loamroot_sprig — description
 #. English source: A pale root cutting, still warm from the Loam. Iris wants a few for the grove.
 msgid "ITEM_MATERIALS_LOAMROOT_SPRIG_DESC"
+msgstr ""
+
+#. materials/scribes_vellum — display name
+#. English source: Scribe's Vellum
+msgid "ITEM_MATERIALS_SCRIBES_VELLUM_NAME"
+msgstr ""
+
+#. materials/scribes_vellum — description
+#. English source: A trimmed vellum folio sized for contracts and field notes.
+msgid "ITEM_MATERIALS_SCRIBES_VELLUM_DESC"
 msgstr ""
 
 #. relics/captured_reflection — display name
@@ -55,6 +145,36 @@ msgstr ""
 msgid "ITEM_RELICS_QUINE_SHARD_DESC"
 msgstr ""
 
+#. relics/votive_cinder — display name
+#. English source: Votive Cinder
+msgid "ITEM_RELICS_VOTIVE_CINDER_NAME"
+msgstr ""
+
+#. relics/votive_cinder — description
+#. English source: A shrine cinder sealed in wax after an offering is witnessed.
+msgid "ITEM_RELICS_VOTIVE_CINDER_DESC"
+msgstr ""
+
+#. tools/field_needle — display name
+#. English source: Field Needle
+msgid "ITEM_TOOLS_FIELD_NEEDLE_NAME"
+msgstr ""
+
+#. tools/field_needle — description
+#. English source: A heavy repair needle kept in a fitted wooden case.
+msgid "ITEM_TOOLS_FIELD_NEEDLE_DESC"
+msgstr ""
+
+#. tools/lockpick_roll — display name
+#. English source: Lockpick Roll
+msgid "ITEM_TOOLS_LOCKPICK_ROLL_NAME"
+msgstr ""
+
+#. tools/lockpick_roll — description
+#. English source: A compact roll of picks, shims, and a narrow tension bar.
+msgid "ITEM_TOOLS_LOCKPICK_ROLL_DESC"
+msgstr ""
+
 #. tools/soul_gauge — display name
 #. English source: Soul Gauge
 msgid "ITEM_TOOLS_SOUL_GAUGE_NAME"
@@ -63,6 +183,36 @@ msgstr ""
 #. tools/soul_gauge — description
 #. English source: A brass-and-glass dial that reads a soul's integrity — and what magic has spent.
 msgid "ITEM_TOOLS_SOUL_GAUGE_DESC"
+msgstr ""
+
+#. tools/surveyors_chalk — display name
+#. English source: Surveyor's Chalk
+msgid "ITEM_TOOLS_SURVEYORS_CHALK_NAME"
+msgstr ""
+
+#. tools/surveyors_chalk — description
+#. English source: Weather-resistant chalk for route marks and measured circles.
+msgid "ITEM_TOOLS_SURVEYORS_CHALK_DESC"
+msgstr ""
+
+#. weapons/forge_hammer — display name
+#. English source: Forge Hammer
+msgid "ITEM_WEAPONS_FORGE_HAMMER_NAME"
+msgstr ""
+
+#. weapons/forge_hammer — description
+#. English source: A balanced smith's hammer heavy enough for desperate field use.
+msgid "ITEM_WEAPONS_FORGE_HAMMER_DESC"
+msgstr ""
+
+#. weapons/roadwarden_spear — display name
+#. English source: Roadwarden Spear
+msgid "ITEM_WEAPONS_ROADWARDEN_SPEAR_NAME"
+msgstr ""
+
+#. weapons/roadwarden_spear — description
+#. English source: A practical ash-shaft spear with an Iron Company pattern head.
+msgid "ITEM_WEAPONS_ROADWARDEN_SPEAR_DESC"
 msgstr ""
 
 #. weapons/taubstummer_axe — display name

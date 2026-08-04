@@ -2,14 +2,18 @@ extends Node
 ## Serialized global state: durable flags, Soul, the Vex-led party, inventory,
 ## and local settings. Menus are views over this singleton.
 
+const VendorData := preload("res://globals/vendor_registry.gd")
+
 signal soul_meter_changed(value: float)
 signal gp_changed(value: int)
 signal flag_changed(flag: String, value: Variant)
 signal inventory_changed
+signal vendor_stock_changed(vendor_id: String, item_id: String, quantity: int)
 signal party_changed
 signal locale_changed(locale: String)
 signal var_harmony_changed(actor_id: String, value: int, delta: int, source: StringName)
 signal combat_knowledge_changed(archetype_id: String)
+signal setting_changed(section: String, key: String, value: Variant)
 
 const SETTINGS_PATH := "user://settings.cfg"
 const PROTAGONIST_ID := "vex"
@@ -30,6 +34,10 @@ var gp: int = DEFAULT_GP:
 	set = set_gp
 var party: Array[PartyMember] = []
 var inventory: Inventory
+## Stable vendor id -> stable item id -> current quantity.
+var vendor_stock: Dictionary = {}
+## Stable vendor id -> most recent world-time restock cycle applied.
+var vendor_restock_cycles: Dictionary = {}
 var current_locale := DEFAULT_LOCALE
 ## actor id -> skill id -> { percentage, tier, advancement_points_spent }
 var skills: Dictionary = {}
@@ -224,12 +232,141 @@ func remove_items(item_id: String, amount: int) -> bool:
 	return true
 
 
+# --- Vendor economy ----------------------------------------------------------
+
+
+func vendor_trade_status(vendor_id: String) -> Dictionary:
+	return VendorData.trade_status(vendor_id)
+
+
+func available_vendor_stock(vendor_id: String) -> Array[Dictionary]:
+	var status := vendor_trade_status(vendor_id)
+	if not bool(status.get("open", false)):
+		return []
+	_ensure_vendor_stock(vendor_id)
+	var result: Array[Dictionary] = []
+	for row: Dictionary in VendorData.stock_for(vendor_id):
+		var item_id := str(row.get("id", ""))
+		row["quantity"] = vendor_item_quantity(vendor_id, item_id)
+		row["buy_price"] = VendorData.price_for(vendor_id, item_id, true)
+		row["sell_price"] = VendorData.price_for(vendor_id, item_id, false)
+		result.append(row)
+	return result
+
+
+func vendor_item_quantity(vendor_id: String, item_id: String) -> int:
+	_ensure_vendor_stock(vendor_id)
+	var stock: Dictionary = vendor_stock.get(vendor_id, {})
+	return int(stock.get(item_id, 0))
+
+
+func buy_from_vendor(vendor_id: String, item_id: String) -> Dictionary:
+	if (
+		not StableIds.is_valid(StableIds.VENDOR, vendor_id)
+		or not StableIds.is_valid(StableIds.ITEM, item_id)
+	):
+		return _trade_failure("invalid_id")
+	var status := vendor_trade_status(vendor_id)
+	if not bool(status.get("open", false)):
+		return _trade_failure("trade_refused", str(status.get("reason", "")))
+	if not _vendor_stock_is_available(vendor_id, item_id):
+		return _trade_failure("stock_unavailable")
+	if vendor_item_quantity(vendor_id, item_id) <= 0:
+		return _trade_failure("sold_out")
+	var price := VendorData.price_for(vendor_id, item_id, true)
+	if price <= 0:
+		return _trade_failure("invalid_price")
+	if not can_afford(price):
+		return _trade_failure("insufficient_gp", "NEED %d  ·  HAVE %d" % [price, gp], price)
+
+	# Add first: a full GLoot grid must leave GP and vendor stock untouched.
+	var added_item: InventoryItem = inventory.create_and_add_item(item_id)
+	if added_item == null:
+		return _trade_failure("inventory_full", "THE INVENTORY CANNOT HOLD THIS ITEM", price)
+	if not spend_gp(price):
+		inventory.remove_item(added_item)
+		return _trade_failure("insufficient_gp", "GP LEDGER UNCHANGED", price)
+	_set_vendor_item_quantity(vendor_id, item_id, vendor_item_quantity(vendor_id, item_id) - 1)
+	return {"ok": true, "reason": "", "message": "", "price": price}
+
+
+func sell_to_vendor(vendor_id: String, item_id: String) -> Dictionary:
+	if (
+		not StableIds.is_valid(StableIds.VENDOR, vendor_id)
+		or not StableIds.is_valid(StableIds.ITEM, item_id)
+	):
+		return _trade_failure("invalid_id")
+	var status := vendor_trade_status(vendor_id)
+	if not bool(status.get("open", false)):
+		return _trade_failure("trade_refused", str(status.get("reason", "")))
+	if not _vendor_stock_is_available(vendor_id, item_id):
+		return _trade_failure("stock_unavailable")
+	if not VendorData.accepts_sales(vendor_id, item_id):
+		return _trade_failure("sales_not_accepted")
+	if item_count(item_id) <= 0:
+		return _trade_failure("item_missing")
+	var price := VendorData.price_for(vendor_id, item_id, false)
+	if price <= 0:
+		return _trade_failure("invalid_price")
+	if not remove_items(item_id, 1):
+		return _trade_failure("item_missing")
+	earn_gp(price)
+	_set_vendor_item_quantity(vendor_id, item_id, vendor_item_quantity(vendor_id, item_id) + 1)
+	return {"ok": true, "reason": "", "message": "", "price": price}
+
+
+func restock_vendor(vendor_id: String, restock_cycle: int) -> bool:
+	var policy := VendorData.restock_policy(vendor_id)
+	if policy.is_empty() or str(policy.get("mode", "")) == "never":
+		return false
+	var interval := maxi(1, int(policy.get("interval", 1)))
+	var previous_cycle := int(vendor_restock_cycles.get(vendor_id, 0))
+	if restock_cycle <= previous_cycle or restock_cycle - previous_cycle < interval:
+		return false
+	_ensure_vendor_stock(vendor_id)
+	var target := VendorData.base_stock(vendor_id)
+	for item_id: String in target:
+		_set_vendor_item_quantity(vendor_id, item_id, int(target[item_id]))
+	vendor_restock_cycles[vendor_id] = restock_cycle
+	return true
+
+
+func _ensure_vendor_stock(vendor_id: String) -> void:
+	if vendor_stock.has(vendor_id):
+		return
+	var initial := VendorData.base_stock(vendor_id)
+	if not initial.is_empty():
+		vendor_stock[vendor_id] = initial
+
+
+func _vendor_stock_is_available(vendor_id: String, item_id: String) -> bool:
+	for row: Dictionary in VendorData.stock_for(vendor_id):
+		if str(row.get("id", "")) == item_id:
+			return true
+	return false
+
+
+func _set_vendor_item_quantity(vendor_id: String, item_id: String, quantity: int) -> void:
+	_ensure_vendor_stock(vendor_id)
+	if not vendor_stock.has(vendor_id):
+		return
+	var stock: Dictionary = vendor_stock[vendor_id]
+	stock[item_id] = maxi(0, quantity)
+	vendor_stock[vendor_id] = stock
+	vendor_stock_changed.emit(vendor_id, item_id, int(stock[item_id]))
+
+
+func _trade_failure(reason: String, message: String = "", price: int = 0) -> Dictionary:
+	return {"ok": false, "reason": reason, "message": message, "price": price}
+
+
 # --- Settings ---------------------------------------------------------------
 
 
 func set_setting(section: String, key: String, value: Variant) -> void:
 	_settings.set_value(section, key, value)
 	_settings.save(settings_path)
+	setting_changed.emit(section, key, value)
 
 
 func get_setting(section: String, key: String, default: Variant) -> Variant:
@@ -300,6 +437,8 @@ func _ensure_audio_buses() -> void:
 
 func _seed_demo_data() -> void:
 	gp = DEFAULT_GP
+	vendor_stock.clear()
+	vendor_restock_cycles.clear()
 	party = [_make_vex()]
 	skills = {}
 	var_harmony = {}
@@ -497,6 +636,8 @@ func to_dict() -> Dictionary:
 		"gp": gp,
 		"party": party_rows,
 		"inventory": inventory.serialize(),
+		"vendor_stock": vendor_stock.duplicate(true),
+		"vendor_restock_cycles": vendor_restock_cycles.duplicate(true),
 		"skills": skills.duplicate(true),
 		"var_harmony": var_harmony.duplicate(true),
 		"combat_knowledge": combat_knowledge.duplicate(true),
@@ -517,6 +658,8 @@ func from_dict(data: Dictionary) -> bool:
 				flags[k] = raw_flags[k]
 	soul_meter = float(data.get("soul_meter", 50.0))
 	gp = maxi(0, int(data.get("gp", DEFAULT_GP)))
+	vendor_stock = data.get("vendor_stock", {}).duplicate(true)
+	vendor_restock_cycles = data.get("vendor_restock_cycles", {}).duplicate(true)
 	skills = data.get("skills", {}).duplicate(true)
 	var_harmony = data.get("var_harmony", {}).duplicate(true)
 	combat_knowledge = data.get("combat_knowledge", {}).duplicate(true)
@@ -529,8 +672,42 @@ func from_dict(data: Dictionary) -> bool:
 
 
 func _validate_save_data(data: Dictionary) -> bool:
-	for key in ["flags", "skills", "var_harmony", "combat_knowledge", "inventory"]:
+	for key in [
+		"flags",
+		"skills",
+		"var_harmony",
+		"combat_knowledge",
+		"inventory",
+		"vendor_stock",
+		"vendor_restock_cycles",
+	]:
 		if data.has(key) and not data[key] is Dictionary:
+			return false
+	var saved_vendor_stock: Dictionary = data.get("vendor_stock", {})
+	for vendor_id: Variant in saved_vendor_stock:
+		if (
+			not vendor_id is String
+			or not StableIds.is_valid(StableIds.VENDOR, str(vendor_id))
+			or not saved_vendor_stock[vendor_id] is Dictionary
+		):
+			return false
+		for item_id: Variant in saved_vendor_stock[vendor_id]:
+			var quantity: Variant = saved_vendor_stock[vendor_id][item_id]
+			if (
+				not item_id is String
+				or not StableIds.is_valid(StableIds.ITEM, str(item_id))
+				or typeof(quantity) != TYPE_INT
+				or int(quantity) < 0
+			):
+				return false
+	var saved_restock_cycles: Dictionary = data.get("vendor_restock_cycles", {})
+	for vendor_id: Variant in saved_restock_cycles:
+		if (
+			not vendor_id is String
+			or not StableIds.is_valid(StableIds.VENDOR, str(vendor_id))
+			or typeof(saved_restock_cycles[vendor_id]) != TYPE_INT
+			or int(saved_restock_cycles[vendor_id]) < 0
+		):
 			return false
 	if data.has("party") and not data["party"] is Array:
 		return false

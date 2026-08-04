@@ -1,4 +1,4 @@
-[gd_scene load_steps=44 format=3]
+[gd_scene load_steps=50 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -31,6 +31,11 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/plant_bushDetailed.png" id="29_bush"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/flower_yellowA.png" id="30_flower"]
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
+[ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="31_building_door"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/door.png" id="32_door_sprite"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/sign.png" id="33_sign_sprite"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/pot_large.png" id="34_pot_sprite"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="35_bench_sprite"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1600, 40)
@@ -68,6 +73,9 @@ size = Vector2(180, 135)
 [sub_resource type="RectangleShape2D" id="shape_players_house"]
 size = Vector2(220, 150)
 
+[sub_resource type="RectangleShape2D" id="shape_trial_hall"]
+size = Vector2(280, 170)
+
 [node name="StartingTown" type="Node2D"]
 y_sort_enabled = true
 ## Dom, the City of the Four Arms — a storm-port meritocracy and the first
@@ -77,13 +85,25 @@ y_sort_enabled = true
 
 [node name="Floor" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(0, 0, 1600, 0, 1600, 1000, 0, 1000)
-color = Color(0.16, 0.15, 0.19, 1)
+color = Color(0.035, 0.25, 0.34, 1)
 z_index = -20
 
+[node name="Shoreline" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(800, -182, 2080, 454, 800, 1090, -480, 454)
+color = Color(0.39, 0.35, 0.26, 1)
+z_index = -15
+
+[node name="Waterline" type="Line2D" parent="."]
+points = PackedVector2Array(800, -182, 2080, 454, 800, 1090, -480, 454)
+width = 5.0
+default_color = Color(0.12, 0.56, 0.68, 0.72)
+closed = true
+z_index = -14
+
 [node name="IsometricGround" type="TileMapLayer" parent="."]
-position = Vector2(800, 70)
+position = Vector2(800, -154)
 script = ExtResource("6_iso")
-map_size = Vector2i(25, 25)
+map_size = Vector2i(39, 39)
 ground_style = 0
 road_axis = 3
 
@@ -147,8 +167,22 @@ shape = SubResource("shape_chefs_house")
 position = Vector2(760, 870)
 shape = SubResource("shape_players_house")
 
+[node name="TrialHallBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
+position = Vector2(1300, 315)
+shape = SubResource("shape_trial_hall")
+
 [node name="TrialHall" type="Node2D" parent="."]
 position = Vector2(1300, 400)
+
+[node name="LocationLabel" type="Label" parent="TrialHall"]
+z_index = 20
+offset_left = -120.0
+offset_top = -245.0
+offset_right = 120.0
+offset_bottom = -215.0
+theme_type_variation = &"EyebrowLabel"
+text = "TRIAL HALL"
+horizontal_alignment = 1
 
 [node name="BackLeft" type="Sprite2D" parent="TrialHall"]
 position = Vector2(-48, -24)
@@ -183,6 +217,16 @@ offset = Vector2(0, -150.596)
 [node name="RegistryArchive" type="Node2D" parent="."]
 position = Vector2(300, 335)
 
+[node name="LocationLabel" type="Label" parent="RegistryArchive"]
+z_index = 20
+offset_left = -130.0
+offset_top = -205.0
+offset_right = 130.0
+offset_bottom = -175.0
+theme_type_variation = &"EyebrowLabel"
+text = "REGISTRY ARCHIVE"
+horizontal_alignment = 1
+
 [node name="BackLeft" type="Sprite2D" parent="RegistryArchive"]
 position = Vector2(-48, -24)
 texture = ExtResource("9_tower")
@@ -210,6 +254,16 @@ offset = Vector2(0, -135.596)
 
 [node name="BellHouse" type="Node2D" parent="."]
 position = Vector2(900, 845)
+
+[node name="LocationLabel" type="Label" parent="BellHouse"]
+z_index = 20
+offset_left = -120.0
+offset_top = -255.0
+offset_right = 120.0
+offset_bottom = -225.0
+theme_type_variation = &"EyebrowLabel"
+text = "BELL HOUSE"
+horizontal_alignment = 1
 
 [node name="BellWingLeft" type="Sprite2D" parent="BellHouse"]
 position = Vector2(-42, -20)
@@ -239,7 +293,18 @@ offset = Vector2(0, -135.596)
 [node name="RiverShrine" type="Node2D" parent="."]
 position = Vector2(420, 780)
 
+[node name="LocationLabel" type="Label" parent="RiverShrine"]
+z_index = 20
+offset_left = -120.0
+offset_top = -205.0
+offset_right = 120.0
+offset_bottom = -175.0
+theme_type_variation = &"EyebrowLabel"
+text = "RIVER SHRINE"
+horizontal_alignment = 1
+
 [node name="ShrineBasin" type="Sprite2D" parent="RiverShrine"]
+scale = Vector2(0.65, 0.65)
 texture = ExtResource("18_fountain")
 offset = Vector2(0, -110.596)
 
@@ -255,6 +320,16 @@ offset = Vector2(0, -110.596)
 
 [node name="IronCompaniesBarracks" type="Node2D" parent="."]
 position = Vector2(1260, 735)
+
+[node name="LocationLabel" type="Label" parent="IronCompaniesBarracks"]
+z_index = 20
+offset_left = -120.0
+offset_top = -235.0
+offset_right = 120.0
+offset_bottom = -205.0
+theme_type_variation = &"EyebrowLabel"
+text = "GARRISON"
+horizontal_alignment = 1
 
 [node name="GarrisonTowerLeft" type="Sprite2D" parent="IronCompaniesBarracks"]
 position = Vector2(-54, -24)
@@ -307,6 +382,16 @@ offset = Vector2(0, -90.596)
 [node name="ItemShop" type="Node2D" parent="."]
 position = Vector2(610, 537.5)
 
+[node name="LocationLabel" type="Label" parent="ItemShop"]
+z_index = 20
+offset_left = -220.0
+offset_top = -175.0
+offset_right = 20.0
+offset_bottom = -145.0
+theme_type_variation = &"EyebrowLabel"
+text = "ITEM SHOP"
+horizontal_alignment = 1
+
 [node name="StockStallLeft" type="Sprite2D" parent="ItemShop"]
 position = Vector2(-34, -14)
 texture = ExtResource("16_stall_green")
@@ -325,6 +410,16 @@ offset = Vector2(0, -118.096)
 [node name="EquipmentShop" type="Node2D" parent="."]
 position = Vector2(900, 542.5)
 
+[node name="LocationLabel" type="Label" parent="EquipmentShop"]
+z_index = 20
+offset_left = -130.0
+offset_top = -235.0
+offset_right = 130.0
+offset_bottom = -205.0
+theme_type_variation = &"EyebrowLabel"
+text = "EQUIPMENT SHOP"
+horizontal_alignment = 1
+
 [node name="ForgeHouse" type="Sprite2D" parent="EquipmentShop"]
 position = Vector2(-22, -16)
 texture = ExtResource("8_house")
@@ -342,6 +437,16 @@ offset = Vector2(0, -123.096)
 
 [node name="TownHall" type="Node2D" parent="."]
 position = Vector2(1000, 307.5)
+
+[node name="LocationLabel" type="Label" parent="TownHall"]
+z_index = 20
+offset_left = -120.0
+offset_top = -235.0
+offset_right = 120.0
+offset_bottom = -205.0
+theme_type_variation = &"EyebrowLabel"
+text = "TOWN HALL"
+horizontal_alignment = 1
 
 [node name="HallWingLeft" type="Sprite2D" parent="TownHall"]
 position = Vector2(-46, -22)
@@ -376,6 +481,16 @@ offset = Vector2(0, -128.096)
 [node name="ChefsHouse" type="Node2D" parent="."]
 position = Vector2(260, 637.5)
 
+[node name="LocationLabel" type="Label" parent="ChefsHouse"]
+z_index = 20
+offset_left = -120.0
+offset_top = -225.0
+offset_right = 120.0
+offset_bottom = -195.0
+theme_type_variation = &"EyebrowLabel"
+text = "CHEF'S HOUSE"
+horizontal_alignment = 1
+
 [node name="KitchenLeft" type="Sprite2D" parent="ChefsHouse"]
 position = Vector2(-30, -12)
 texture = ExtResource("8_house")
@@ -393,6 +508,16 @@ offset = Vector2(0, -118.096)
 
 [node name="PlayersHouse" type="Node2D" parent="."]
 position = Vector2(760, 945)
+
+[node name="LocationLabel" type="Label" parent="PlayersHouse"]
+z_index = 20
+offset_left = -120.0
+offset_top = -225.0
+offset_right = 120.0
+offset_bottom = -195.0
+theme_type_variation = &"EyebrowLabel"
+text = "VEX'S HOUSE"
+horizontal_alignment = 1
 
 [node name="HomeLeft" type="Sprite2D" parent="PlayersHouse"]
 position = Vector2(-34, -14)
@@ -497,6 +622,16 @@ offset = Vector2(0, -50.596)
 [node name="FourArmsTavern" type="Node2D" parent="."]
 position = Vector2(700, 432)
 
+[node name="LocationLabel" type="Label" parent="FourArmsTavern"]
+z_index = 20
+offset_left = -140.0
+offset_top = -205.0
+offset_right = 140.0
+offset_bottom = -175.0
+theme_type_variation = &"EyebrowLabel"
+text = "FOUR ARMS TAVERN"
+horizontal_alignment = 1
+
 [node name="TavernWingLeft" type="Sprite2D" parent="FourArmsTavern"]
 position = Vector2(-42, -20)
 texture = ExtResource("9_tower")
@@ -540,6 +675,36 @@ position = Vector2(1200, 150)
 [node name="SpawnFromWilds" type="Marker2D" parent="."]
 position = Vector2(1470, 500)
 
+[node name="SpawnFromRegistryArchive" type="Marker2D" parent="."]
+position = Vector2(300, 430)
+
+[node name="SpawnFromBellHouse" type="Marker2D" parent="."]
+position = Vector2(900, 560)
+
+[node name="SpawnFromRiverShrine" type="Marker2D" parent="."]
+position = Vector2(420, 530)
+
+[node name="SpawnFromIronCompanies" type="Marker2D" parent="."]
+position = Vector2(1260, 835)
+
+[node name="SpawnFromItemShop" type="Marker2D" parent="."]
+position = Vector2(610, 645)
+
+[node name="SpawnFromEquipmentShop" type="Marker2D" parent="."]
+position = Vector2(900, 650)
+
+[node name="SpawnFromTownHall" type="Marker2D" parent="."]
+position = Vector2(1000, 410)
+
+[node name="SpawnFromChefsHouse" type="Marker2D" parent="."]
+position = Vector2(260, 745)
+
+[node name="SpawnFromPlayersHouse" type="Marker2D" parent="."]
+position = Vector2(760, 690)
+
+[node name="SpawnFromTrialHall" type="Marker2D" parent="."]
+position = Vector2(1300, 500)
+
 [node name="FieldHUD" parent="." instance=ExtResource("2_hud")]
 
 [node name="TavernDoor" parent="." instance=ExtResource("3_tavern")]
@@ -554,6 +719,216 @@ visible = false
 
 [node name="Sign" parent="TavernDoor"]
 visible = false
+
+[node name="RegistryArchiveEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(300, 350)
+transition_id = &"registry_archive_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="RegistryArchiveEntrance"]
+visible = false
+
+[node name="Threshold" parent="RegistryArchiveEntrance"]
+visible = false
+
+[node name="Prompt" parent="RegistryArchiveEntrance"]
+z_index = 21
+
+[node name="RegistryArchiveDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(300, 350)
+z_index = 2
+texture = ExtResource("32_door_sprite")
+offset = Vector2(0, -50.596)
+
+[node name="BellHouseEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(900, 640)
+transition_id = &"bell_house_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="BellHouseEntrance"]
+visible = false
+
+[node name="Threshold" parent="BellHouseEntrance"]
+visible = false
+
+[node name="Prompt" parent="BellHouseEntrance"]
+z_index = 21
+
+[node name="BellHouseDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(900, 640)
+z_index = 2
+texture = ExtResource("32_door_sprite")
+offset = Vector2(0, -50.596)
+
+[node name="RiverShrineEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(420, 610)
+transition_id = &"river_shrine_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="RiverShrineEntrance"]
+visible = false
+
+[node name="Threshold" parent="RiverShrineEntrance"]
+visible = false
+
+[node name="Prompt" parent="RiverShrineEntrance"]
+z_index = 21
+
+[node name="RiverShrineDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(420, 610)
+z_index = 2
+texture = ExtResource("32_door_sprite")
+offset = Vector2(0, -50.596)
+
+[node name="IronCompaniesEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(1260, 755)
+transition_id = &"iron_companies_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="IronCompaniesEntrance"]
+visible = false
+
+[node name="Threshold" parent="IronCompaniesEntrance"]
+visible = false
+
+[node name="Prompt" parent="IronCompaniesEntrance"]
+z_index = 21
+
+[node name="IronCompaniesDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(1260, 755)
+z_index = 2
+texture = ExtResource("12_gate")
+offset = Vector2(0, -50.596)
+
+[node name="ItemShopEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(610, 565)
+transition_id = &"item_shop_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="ItemShopEntrance"]
+visible = false
+
+[node name="Threshold" parent="ItemShopEntrance"]
+visible = false
+
+[node name="Prompt" parent="ItemShopEntrance"]
+z_index = 21
+
+[node name="ItemShopDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(610, 565)
+z_index = 2
+texture = ExtResource("32_door_sprite")
+offset = Vector2(0, -50.596)
+
+[node name="EquipmentShopEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(900, 570)
+transition_id = &"equipment_shop_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="EquipmentShopEntrance"]
+visible = false
+
+[node name="Threshold" parent="EquipmentShopEntrance"]
+visible = false
+
+[node name="Prompt" parent="EquipmentShopEntrance"]
+z_index = 21
+
+[node name="EquipmentShopDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(900, 570)
+z_index = 2
+texture = ExtResource("32_door_sprite")
+offset = Vector2(0, -50.596)
+
+[node name="TownHallEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(1000, 330)
+transition_id = &"town_hall_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="TownHallEntrance"]
+visible = false
+
+[node name="Threshold" parent="TownHallEntrance"]
+visible = false
+
+[node name="Prompt" parent="TownHallEntrance"]
+z_index = 21
+
+[node name="TownHallDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(1000, 330)
+z_index = 2
+texture = ExtResource("32_door_sprite")
+offset = Vector2(0, -50.596)
+
+[node name="ChefsHouseEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(260, 665)
+transition_id = &"chefs_house_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="ChefsHouseEntrance"]
+visible = false
+
+[node name="Threshold" parent="ChefsHouseEntrance"]
+visible = false
+
+[node name="Prompt" parent="ChefsHouseEntrance"]
+z_index = 21
+
+[node name="ChefsHouseDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(260, 665)
+z_index = 2
+texture = ExtResource("32_door_sprite")
+offset = Vector2(0, -50.596)
+
+[node name="PlayersHouseEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(760, 770)
+transition_id = &"players_house_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="PlayersHouseEntrance"]
+visible = false
+
+[node name="Threshold" parent="PlayersHouseEntrance"]
+visible = false
+
+[node name="Prompt" parent="PlayersHouseEntrance"]
+z_index = 21
+
+[node name="PlayersHouseDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(760, 770)
+z_index = 2
+texture = ExtResource("32_door_sprite")
+offset = Vector2(0, -50.596)
+
+[node name="TrialHallEntrance" parent="." instance=ExtResource("31_building_door")]
+position = Vector2(1300, 420)
+transition_id = &"trial_hall_enter"
+interaction_radius = 48.0
+editable_children = true
+
+[node name="DoorPanel" parent="TrialHallEntrance"]
+visible = false
+
+[node name="Threshold" parent="TrialHallEntrance"]
+visible = false
+
+[node name="Prompt" parent="TrialHallEntrance"]
+z_index = 21
+
+[node name="TrialHallDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(1300, 420)
+z_index = 2
+texture = ExtResource("12_gate")
+offset = Vector2(0, -50.596)
 
 [node name="MarshalCoiljaw" parent="." instance=ExtResource("5_npc")]
 position = Vector2(1050, 420)
@@ -590,9 +965,31 @@ prompt_text = "READ NOTICE"
 interaction_text = "The latest notice names the silent bell house and the east road."
 interaction_flag = "dom_notice_read"
 marker_color = Color(0.55, 0.33, 0.16, 1)
+editable_children = true
+
+[node name="Marker" parent="NoticeBoard"]
+visible = false
+
+[node name="Accent" parent="NoticeBoard"]
+visible = false
+
+[node name="Sign" parent="NoticeBoard"]
+z_index = 20
+offset_top = -90.0
+offset_bottom = -60.0
+
+[node name="Prompt" parent="NoticeBoard"]
+z_index = 21
+
+[node name="NoticeBoardSprite" type="Sprite2D" parent="."]
+position = Vector2(470, 420)
+scale = Vector2(1.8, 1.8)
+z_index = 2
+texture = ExtResource("33_sign_sprite")
+offset = Vector2(0, -50.596)
 
 [node name="BellHouseDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(900, 640)
+position = Vector2(820, 640)
 display_name = "BELL HOUSE"
 prompt_text = "INSPECT BELL"
 interaction_text = "The striker is warm. Something inside the bell is holding the next sound."
@@ -600,17 +997,55 @@ interaction_flag = "dom_bellhouse_inspected"
 required_flag = "dom_bell_quest_open"
 locked_message = "Sella has not asked you to examine the bell."
 marker_color = Color(0.72, 0.52, 0.2, 1)
+editable_children = true
+
+[node name="Marker" parent="BellHouseDoor"]
+visible = false
+
+[node name="Accent" parent="BellHouseDoor"]
+visible = false
+
+[node name="Sign" parent="BellHouseDoor"]
+visible = false
+
+[node name="Prompt" parent="BellHouseDoor"]
+z_index = 21
+
+[node name="BellInspectionLantern" type="Sprite2D" parent="."]
+position = Vector2(820, 640)
+z_index = 2
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -50.596)
 
 [node name="RiverShrineMarker" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(420, 610)
+position = Vector2(350, 610)
 display_name = "RIVER SHRINE"
 prompt_text = "LEAVE A WORD"
 interaction_text = "You leave one honest word in the water. The current carries it below Dom."
 interaction_flag = "dom_shrine_visited"
 marker_color = Color(0.13, 0.55, 0.65, 1)
+editable_children = true
+
+[node name="Marker" parent="RiverShrineMarker"]
+visible = false
+
+[node name="Accent" parent="RiverShrineMarker"]
+visible = false
+
+[node name="Sign" parent="RiverShrineMarker"]
+visible = false
+
+[node name="Prompt" parent="RiverShrineMarker"]
+z_index = 21
+
+[node name="RiverShrineLantern" type="Sprite2D" parent="."]
+position = Vector2(350, 610)
+z_index = 2
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -50.596)
 
 [node name="ItemShopDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(610, 565)
+position = Vector2(540, 590)
 display_name = "ITEM SHOP"
 prompt_text = "BROWSE STOCK"
 interaction_text = "Loam Bread, Cinder-Ink Vials, and field supplies are stacked behind the counter."
@@ -618,9 +1053,28 @@ interaction_flag = "dom_item_shop_visited"
 repeatable = true
 shop_type = "items"
 marker_color = Color(0.74, 0.42, 0.18, 1)
+editable_children = true
+
+[node name="Marker" parent="ItemShopDoor"]
+visible = false
+
+[node name="Accent" parent="ItemShopDoor"]
+visible = false
+
+[node name="Sign" parent="ItemShopDoor"]
+visible = false
+
+[node name="Prompt" parent="ItemShopDoor"]
+z_index = 21
+
+[node name="ItemShopBench" type="Sprite2D" parent="."]
+position = Vector2(540, 590)
+z_index = 2
+texture = ExtResource("35_bench_sprite")
+offset = Vector2(0, -50.596)
 
 [node name="EquipmentShopDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(900, 570)
+position = Vector2(830, 590)
 display_name = "EQUIPMENT SHOP"
 prompt_text = "CHECK GEAR"
 interaction_text = "Iron & Thread carries weapon repairs, field tools, and fittings for a soul-bound party."
@@ -628,42 +1082,140 @@ interaction_flag = "dom_equipment_shop_visited"
 repeatable = true
 shop_type = "equipment"
 marker_color = Color(0.46, 0.59, 0.72, 1)
+editable_children = true
+
+[node name="Marker" parent="EquipmentShopDoor"]
+visible = false
+
+[node name="Accent" parent="EquipmentShopDoor"]
+visible = false
+
+[node name="Sign" parent="EquipmentShopDoor"]
+visible = false
+
+[node name="Prompt" parent="EquipmentShopDoor"]
+z_index = 21
+
+[node name="EquipmentShopBanner" type="Sprite2D" parent="."]
+position = Vector2(830, 590)
+z_index = 2
+texture = ExtResource("20_banner_red")
+offset = Vector2(0, -50.596)
 
 [node name="GarrisonDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(1260, 755)
+position = Vector2(1180, 755)
 display_name = "GARRISON"
 prompt_text = "REPORT IN"
 interaction_text = "The Iron Companies keep a roster of every blade allowed to leave Dom."
 interaction_flag = "dom_garrison_visited"
 repeatable = true
 marker_color = Color(0.52, 0.55, 0.62, 1)
+editable_children = true
+
+[node name="Marker" parent="GarrisonDoor"]
+visible = false
+
+[node name="Accent" parent="GarrisonDoor"]
+visible = false
+
+[node name="Sign" parent="GarrisonDoor"]
+visible = false
+
+[node name="Prompt" parent="GarrisonDoor"]
+z_index = 21
+
+[node name="GarrisonBanner" type="Sprite2D" parent="."]
+position = Vector2(1180, 755)
+z_index = 2
+texture = ExtResource("20_banner_red")
+offset = Vector2(0, -50.596)
 
 [node name="TownHallDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(1000, 330)
+position = Vector2(920, 330)
 display_name = "TOWN HALL"
 prompt_text = "READ THE LEDGER"
 interaction_text = "The public ledger records road commissions, ward debts, and the names of those who failed to return."
 interaction_flag = "dom_town_hall_visited"
 repeatable = true
 marker_color = Color(0.77, 0.57, 0.23, 1)
+editable_children = true
+
+[node name="Marker" parent="TownHallDoor"]
+visible = false
+
+[node name="Accent" parent="TownHallDoor"]
+visible = false
+
+[node name="Sign" parent="TownHallDoor"]
+visible = false
+
+[node name="Prompt" parent="TownHallDoor"]
+z_index = 21
+
+[node name="TownHallBanner" type="Sprite2D" parent="."]
+position = Vector2(920, 330)
+z_index = 2
+texture = ExtResource("19_banner_green")
+offset = Vector2(0, -50.596)
 
 [node name="ChefsHouseDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(260, 665)
+position = Vector2(190, 665)
 display_name = "CHEF'S HOUSE"
 prompt_text = "KNOCK"
 interaction_text = "A pot simmers inside. Someone has left a bowl on the sill with a note: EAT BEFORE YOU ARGUE."
 interaction_flag = "dom_chefs_house_visited"
 repeatable = true
 marker_color = Color(0.75, 0.39, 0.22, 1)
+editable_children = true
+
+[node name="Marker" parent="ChefsHouseDoor"]
+visible = false
+
+[node name="Accent" parent="ChefsHouseDoor"]
+visible = false
+
+[node name="Sign" parent="ChefsHouseDoor"]
+visible = false
+
+[node name="Prompt" parent="ChefsHouseDoor"]
+z_index = 21
+
+[node name="ChefsHousePot" type="Sprite2D" parent="."]
+position = Vector2(190, 665)
+z_index = 2
+texture = ExtResource("34_pot_sprite")
+offset = Vector2(0, -50.596)
 
 [node name="PlayersHouseDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(760, 770)
+process_mode = 4
+position = Vector2(690, 770)
+monitoring = false
+monitorable = false
 display_name = "VEX'S HOUSE"
 prompt_text = "ENTER HOME"
 interaction_text = "The room is small, dry, and yours for as long as Dom permits."
 interaction_flag = "dom_players_house_visited"
 repeatable = true
 marker_color = Color(0.2, 0.68, 0.72, 1)
+editable_children = true
+
+[node name="Marker" parent="PlayersHouseDoor"]
+visible = false
+
+[node name="Accent" parent="PlayersHouseDoor"]
+visible = false
+
+[node name="Sign" parent="PlayersHouseDoor"]
+visible = false
+
+[node name="Prompt" parent="PlayersHouseDoor"]
+z_index = 21
+
+[node name="PlayersHouseLantern" type="Sprite2D" parent="."]
+position = Vector2(690, 770)
+z_index = 2
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -50.596)
 
 [node name="SavePoint" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(900, 770)
@@ -673,6 +1225,26 @@ interaction_text = "Your name is entered in the household ledger. The run is saf
 interaction_flag = "dom_save_point_used"
 save_point = true
 marker_color = Color(0.22, 0.8, 0.58, 1)
+editable_children = true
+
+[node name="Marker" parent="SavePoint"]
+visible = false
+
+[node name="Accent" parent="SavePoint"]
+visible = false
+
+[node name="Sign" parent="SavePoint"]
+visible = false
+
+[node name="Prompt" parent="SavePoint"]
+z_index = 21
+
+[node name="SavePointLantern" type="Sprite2D" parent="."]
+position = Vector2(900, 770)
+z_index = 2
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -50.596)
+modulate = Color(0.45, 1, 0.72, 1)
 
 [node name="RoadToTheWilds" parent="." instance=ExtResource("4_exit")]
 position = Vector2(1580, 500)
