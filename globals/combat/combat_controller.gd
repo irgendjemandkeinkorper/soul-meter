@@ -10,33 +10,44 @@ signal battle_finished(state: ResultState, outcome_id: StringName)
 enum State { IDLE, ROUND_START, ALLY_TURN, ENEMY_TURN, FINISHED }
 enum ResultState { VICTORY, DEFEAT, FLED }
 
-const BALANCE_MIN := -100
-const BALANCE_MAX := 100
-const EXTREME_THRESHOLD := 60
-const EXTREME_POWER_BONUS := 2
-
 var state: State = State.IDLE
 var allies: Array[BattleActor] = []
 var enemies: Array[BattleActor] = []
 var active_ally_index := -1
 var round_number := 0
 var balance := 0
+var balance_band_id: StringName = &""
+var balance_lock_until_round := 0
+var threshold_effects_suppressed := false
 var last_refusal: Dictionary = {}
 var battlefield: BattlefieldModel
 var rules: CombatRules
+var skill_check_service: SkillCheckService
 
 var _actions: Dictionary = {}
 var _sequence := 0
 
 
 func configure(
-	actions: Array[CombatAction], positioning: BattlefieldModel, combat_rules: CombatRules
+	actions: Array[CombatAction],
+	positioning: BattlefieldModel,
+	combat_rules: CombatRules,
+	check_service: SkillCheckService = null
 ) -> void:
 	_actions.clear()
 	for action in actions:
 		_actions[action.id] = action
 	battlefield = positioning
 	rules = combat_rules
+	skill_check_service = check_service
+	if skill_check_service == null:
+		var main_loop := Engine.get_main_loop()
+		if main_loop is SceneTree:
+			skill_check_service = (
+				(main_loop as SceneTree).root.get_node_or_null("SkillCheck") as SkillCheckService
+			)
+	if skill_check_service == null:
+		skill_check_service = SkillCheckService.new()
 
 
 func start(ally_group: Array[BattleActor], enemy_group: Array[BattleActor]) -> void:
@@ -45,10 +56,14 @@ func start(ally_group: Array[BattleActor], enemy_group: Array[BattleActor]) -> v
 	_sequence = 0
 	round_number = 0
 	balance = 0
+	balance_band_id = &""
+	balance_lock_until_round = 0
+	threshold_effects_suppressed = false
 	last_refusal.clear()
 	_assign_combat_ids(allies, &"ally")
 	_assign_combat_ids(enemies, &"enemy")
 	battlefield.setup(allies, enemies)
+	_apply_balance_band(false)
 	state = State.ROUND_START
 	_emit_event(&"battle_started", null, null, {})
 	if not _has_living(enemies):
@@ -67,7 +82,9 @@ func action_by_id(action_id: StringName) -> CombatAction:
 	return _actions.get(action_id) as CombatAction
 
 
-func query_action(action: CombatAction, target: BattleActor = null) -> Dictionary:
+func query_action(
+	action: CombatAction, target: BattleActor = null, options: Dictionary = {}
+) -> Dictionary:
 	var actor := active_actor()
 	if state != State.ALLY_TURN or actor == null or not actor.is_alive():
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
@@ -88,16 +105,22 @@ func query_action(action: CombatAction, target: BattleActor = null) -> Dictionar
 		}
 	if action.kind == CombatAction.Kind.MOVE:
 		return battlefield.move_query(actor, action.destination)
-	if action.kind == CombatAction.Kind.ATTACK:
-		return battlefield.target_query(actor, target, action.target_profile)
+	if action.requires_enemy_target():
+		var targeting := battlefield.target_query(actor, target, action.target_profile)
+		if not bool(targeting.get("allowed", false)):
+			return targeting
+	if action.kind == CombatAction.Kind.DEFINING_STRIKE:
+		return _query_defining_strike(target, StringName(options.get("weakness_id", "")))
 	return _allowed()
 
 
-func submit_action(action_id: StringName, target: BattleActor = null) -> Dictionary:
+func submit_action(
+	action_id: StringName, target: BattleActor = null, options: Dictionary = {}
+) -> Dictionary:
 	var action := action_by_id(action_id)
-	if action != null and action.kind == CombatAction.Kind.ATTACK and target == null:
+	if action != null and action.requires_enemy_target() and target == null:
 		target = _first_living(enemies)
-	var query := query_action(action, target)
+	var query := query_action(action, target, options)
 	if not bool(query.get("allowed", false)):
 		last_refusal = query.duplicate(true)
 		_emit_event(&"action_refused", active_actor(), target, {"action_id": action_id, "reason": query})
@@ -105,7 +128,7 @@ func submit_action(action_id: StringName, target: BattleActor = null) -> Diction
 
 	var actor := active_actor()
 	actor.action_points -= action.ap_cost
-	var outcome := _apply_action(actor, target, action)
+	var outcome := _apply_action(actor, target, action, options)
 	outcome["action_id"] = action.id
 	outcome["verb"] = action.verb
 	outcome["ap_cost"] = action.ap_cost
@@ -116,6 +139,69 @@ func submit_action(action_id: StringName, target: BattleActor = null) -> Diction
 		_finish(ResultState.VICTORY, action.outcome_id)
 	elif not _has_living(enemies):
 		_finish(ResultState.VICTORY, &"slain")
+	elif actor.action_points == 0:
+		end_turn()
+	return _allowed(outcome)
+
+
+func submit_speech(
+	action_id: StringName, check_result: Dictionary, option: CombatSpeechOption
+) -> Dictionary:
+	var action := action_by_id(action_id)
+	var query := query_action(action)
+	if not bool(query.get("allowed", false)):
+		last_refusal = query.duplicate(true)
+		_emit_event(&"action_refused", active_actor(), null, {"action_id": action_id, "reason": query})
+		return query
+	if action.verb != CombatAction.Verb.SPEECH:
+		var wrong_verb := _blocked(
+			&"action_verb",
+			"Only a declared speech verb can resolve a combat speech check.",
+			{"type": &"verb", "required": CombatAction.Verb.SPEECH},
+		)
+		last_refusal = wrong_verb.duplicate(true)
+		_emit_event(
+			&"action_refused", active_actor(), null, {"action_id": action_id, "reason": wrong_verb}
+		)
+		return wrong_verb
+	var option_refusal := option.validation_refusal() if option != null else _blocked(
+		&"speech_option", "Unknown combat speech option.", {"type": &"known_speech_option"}
+	)
+	if not bool(option_refusal.get("allowed", false)):
+		last_refusal = option_refusal.duplicate(true)
+		_emit_event(
+			&"action_refused",
+			active_actor(),
+			null,
+			{"action_id": action_id, "reason": option_refusal},
+		)
+		return option_refusal
+
+	var actor := active_actor()
+	actor.action_points -= action.ap_cost
+	var succeeded := bool(check_result.get("success", false))
+	var outcome: Dictionary = {
+		"action_id": action.id,
+		"verb": action.verb,
+		"ap_cost": action.ap_cost,
+		"ap_remaining": actor.action_points,
+		"speech_option_id": option.id,
+		"speech_outcome": option.outcome_name(),
+		"outcome_id": option.outcome_id,
+		"check": check_result.duplicate(true),
+		"success": succeeded,
+		"damage": 0,
+		"message": option.success_message if succeeded else option.failure_message,
+	}
+	if succeeded:
+		outcome.merge(_apply_speech_composition(actor, option), true)
+	_emit_event(&"action_resolved", actor, null, outcome)
+	last_refusal.clear()
+
+	if succeeded and (
+		option.outcome == CombatSpeechOption.Outcome.END or not _has_living(enemies)
+	):
+		_finish(ResultState.VICTORY, option.outcome_id)
 	elif actor.action_points == 0:
 		end_turn()
 	return _allowed(outcome)
@@ -143,11 +229,45 @@ func shift_balance(amount: int) -> void:
 	_change_balance(amount)
 
 
+func apply_balance_effect(parameters: Dictionary, actor: BattleActor = null) -> Dictionary:
+	if (
+		str(parameters.get("balance_gauge", "")) != "exact_center"
+		or str(parameters.get("lock_until", "")) != "end_of_next_round"
+	):
+		return _blocked(&"balance_effect", "Unsupported Balance Gauge effect.", {})
+	var previous := balance
+	balance = 0
+	threshold_effects_suppressed = bool(parameters.get("suppress_threshold_effects", false))
+	balance_lock_until_round = round_number + 1
+	_apply_balance_band()
+	if previous != balance:
+		_emit_event(
+			&"balance_changed",
+			actor,
+			null,
+			{"balance": balance, "delta": balance - previous, "band_id": balance_band_id},
+		)
+	_emit_event(
+		&"balance_locked",
+		actor,
+		null,
+		{
+			"balance": balance,
+			"until_round": balance_lock_until_round,
+			"threshold_effects_suppressed": threshold_effects_suppressed,
+		},
+	)
+	return _allowed({"balance": balance, "until_round": balance_lock_until_round})
+
+
 func snapshot() -> Dictionary:
 	return {
 		"state": state,
 		"round": round_number,
 		"balance": balance,
+		"balance_band_id": balance_band_id,
+		"balance_lock_until_round": balance_lock_until_round,
+		"threshold_effects_suppressed": threshold_effects_suppressed,
 		"active_actor_id": active_actor().combat_id if active_actor() else &"",
 		"allies": _actor_snapshots(allies),
 		"enemies": _actor_snapshots(enemies),
@@ -158,17 +278,21 @@ static func calculate_damage(
 	attacker: BattleActor,
 	target: BattleActor,
 	power_bonus: int,
-	alignment_shift: int,
-	current_balance: int,
+	_alignment_shift: int,
+	_current_balance: int,
 	flank_bonus: int = 0,
 	cover_bonus: int = 0
 ) -> int:
-	var damage := maxi(1, attacker.attack + power_bonus + flank_bonus - target.defense - cover_bonus)
-	if alignment_shift > 0 and current_balance >= EXTREME_THRESHOLD:
-		damage += EXTREME_POWER_BONUS
-	elif alignment_shift < 0 and current_balance <= -EXTREME_THRESHOLD:
-		damage += EXTREME_POWER_BONUS
-	return damage
+	return maxi(
+		1,
+		attacker.effective_attack()
+		+ power_bonus
+		+ flank_bonus
+		+ int(attacker.balance_effects.get("damage_bonus", 0))
+		- target.effective_defense()
+		- int(target.balance_effects.get("defense_bonus", 0))
+		- cover_bonus,
+	)
 
 
 func _begin_round() -> void:
@@ -204,6 +328,23 @@ func _resolve_enemy_turn() -> void:
 		var target := _first_living(allies)
 		if target == null:
 			break
+		if foe.action_points < enemy_action.ap_cost:
+			var reason := _blocked(
+				&"action_points",
+				"%s cannot afford %s." % [foe.display_name, enemy_action.display_name],
+				{
+					"type": &"action_points",
+					"minimum": enemy_action.ap_cost,
+					"delta": enemy_action.ap_cost - foe.action_points,
+				},
+			)
+			_emit_event(
+				&"action_refused",
+				foe,
+				target,
+				{"action_id": enemy_action.id, "reason": reason},
+			)
+			continue
 		var query := battlefield.target_query(foe, target, enemy_action.target_profile)
 		if not bool(query.get("allowed", false)):
 			continue
@@ -218,33 +359,19 @@ func _resolve_enemy_turn() -> void:
 			_finish(ResultState.DEFEAT, &"defeat")
 			return
 	_emit_event(&"round_ended", null, null, {"round": round_number})
+	_release_balance_lock_if_due()
 	_begin_round()
 
 
 func _apply_action(
-	actor: BattleActor, target: BattleActor, action: CombatAction
+	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary = {}
 ) -> Dictionary:
 	var result: Dictionary = {"message": "%s uses %s." % [actor.display_name, action.display_name]}
 	match action.kind:
 		CombatAction.Kind.ATTACK:
-			var total_damage := 0
-			var hit_targets := battlefield.targets_for(actor, target, action.aoe_shape)
-			for hit_target in hit_targets:
-				var damage := calculate_damage(
-					actor,
-					hit_target,
-					action.power_bonus,
-					action.balance_shift,
-					balance,
-					battlefield.flank_bonus(actor, hit_target),
-					battlefield.cover_bonus(actor, hit_target),
-				)
-				hit_target.hp = maxi(0, hit_target.hp - damage)
-				total_damage += damage
-			result["damage"] = total_damage
-			result["message"] = "%s uses %s for %d damage." % [
-				actor.display_name, action.display_name, total_damage
-			]
+			result.merge(_resolve_attack(actor, target, action), true)
+		CombatAction.Kind.DEFINING_STRIKE:
+			result.merge(_resolve_defining_strike(actor, target, action, options), true)
 		CombatAction.Kind.GUARD:
 			actor.guarding = true
 			result["message"] = "%s guards; incoming damage is reduced." % actor.display_name
@@ -269,11 +396,193 @@ func _apply_action(
 	return result
 
 
+func _query_defining_strike(target: BattleActor, weakness_id: StringName) -> Dictionary:
+	if target == null or target.archetype_id.is_empty():
+		return _blocked(
+			&"archetype", "This enemy has no authored Defining Strike table.", {"type": &"archetype"}
+		)
+	if weakness_id.is_empty():
+		return _blocked(
+			&"weakness",
+			"Choose a discovered weakness to name.",
+			{"type": &"discovered_weakness", "available": target.discovered_weakness_ids.size()},
+		)
+	var weakness := CombatIdentityCatalog.weakness(target.archetype_id, weakness_id)
+	if weakness.is_empty():
+		return _blocked(
+			&"weakness", "Unknown weakness for this archetype.", {"type": &"authored_weakness"}
+		)
+	if weakness_id not in target.discovered_weakness_ids:
+		return _blocked(
+			&"weakness",
+			"That weakness has not been discovered.",
+			{"type": &"discovered_weakness", "weakness_id": weakness_id},
+		)
+	return _allowed({"weakness": weakness})
+
+
+func _resolve_attack(
+	actor: BattleActor, target: BattleActor, action: CombatAction
+) -> Dictionary:
+	var total_damage := 0
+	var hit_targets := battlefield.targets_for(actor, target, action.aoe_shape)
+	for hit_target: BattleActor in hit_targets:
+		var cover_bonus := battlefield.cover_bonus(actor, hit_target)
+		if bool(hit_target.defining_effects.get("revealed", false)):
+			cover_bonus = 0
+		var damage := calculate_damage(
+			actor,
+			hit_target,
+			action.power_bonus,
+			action.balance_shift,
+			balance,
+			battlefield.flank_bonus(actor, hit_target),
+			cover_bonus,
+		)
+		hit_target.hp = maxi(0, hit_target.hp - damage)
+		total_damage += damage
+	return {
+		"damage": total_damage,
+		"message": "%s uses %s for %d damage."
+		% [actor.display_name, action.display_name, total_damage],
+	}
+
+
+func _resolve_defining_strike(
+	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary
+) -> Dictionary:
+	var weakness_id := StringName(options.get("weakness_id", ""))
+	var weakness := CombatIdentityCatalog.weakness(target.archetype_id, weakness_id)
+	var forced_rolls: Array[int] = []
+	var authored_rolls: Variant = options.get("forced_rolls", [])
+	if authored_rolls is Array:
+		for roll: Variant in authored_rolls:
+			if typeof(roll) == TYPE_INT:
+				forced_rolls.append(int(roll))
+	var check_skill := str(weakness.get("check_skill", "lore"))
+	var check := skill_check_service.resolve(
+		check_skill,
+		actor.source_member,
+		float(weakness.get("check_modifier", 0.0)),
+		"combat-%d" % get_instance_id(),
+		forced_rolls,
+	)
+	var result := {
+		"defining_strike": true,
+		"weakness_id": weakness_id,
+		"weakness_name": str(weakness.get("display_name", weakness_id)),
+		"check_skill": check_skill,
+		"check": check,
+		"effect_id": StringName(weakness.get("effect_id", "")),
+		"effect_applied": false,
+		"resisted": false,
+		"damage": 0,
+	}
+	if not bool(check.get("success", false)):
+		result["message"] = (
+			"%s names %s, but the strike misses."
+			% [actor.display_name, result["weakness_name"]]
+		)
+		return result
+
+	result.merge(_resolve_attack(actor, target, action), true)
+	var resistance: Variant = weakness.get("resistance", {})
+	var resisted := false
+	if resistance is Dictionary:
+		var threshold := int(resistance.get("threshold", 0))
+		var stat_id := StringName(resistance.get("stat", ""))
+		resisted = threshold > 0 and target.combat_stat(stat_id) >= threshold
+	result["resisted"] = resisted
+	if resisted:
+		result["message"] = (
+			"%s names %s, but %s resists the targeted effect."
+			% [actor.display_name, result["weakness_name"], target.display_name]
+		)
+		return result
+
+	var effect_parameters: Variant = weakness.get("effect_parameters", {})
+	if effect_parameters is Dictionary:
+		target.apply_defining_effect(effect_parameters)
+		var updated_max_ap := rules.action_points_for(target)
+		if target.max_action_points > 0:
+			target.max_action_points = mini(target.max_action_points, updated_max_ap)
+			target.action_points = mini(target.action_points, target.max_action_points)
+		result["effect_applied"] = true
+	result["message"] = (
+		"%s names %s; %s is %s."
+		% [
+			actor.display_name,
+			result["weakness_name"],
+			target.display_name,
+			str(result["effect_id"]).replace("_", " "),
+		]
+	)
+	return result
+
+
+func _apply_speech_composition(
+	actor: BattleActor, option: CombatSpeechOption
+) -> Dictionary:
+	var candidates: Array[BattleActor] = []
+	for foe in enemies:
+		if foe.is_alive() and battlefield.has_combatant(foe):
+			candidates.append(foe)
+	var count := candidates.size()
+	if option.outcome != CombatSpeechOption.Outcome.END:
+		count = mini(option.target_count, candidates.size())
+	var removed_ids: Array[StringName] = []
+	var turned_ids: Array[StringName] = []
+	var ally_side := battlefield.side_of(actor)
+	for i in count:
+		var target := candidates[i]
+		if option.outcome == CombatSpeechOption.Outcome.TURN:
+			var transfer := battlefield.transfer_combatant(target, ally_side)
+			if not bool(transfer.get("allowed", false)):
+				continue
+			enemies.erase(target)
+			allies.append(target)
+			turned_ids.append(target.combat_id)
+		else:
+			var removal := battlefield.remove_combatant(target)
+			if not bool(removal.get("allowed", false)):
+				continue
+			enemies.erase(target)
+			removed_ids.append(target.combat_id)
+	var result := {
+		"removed_ids": removed_ids,
+		"turned_ids": turned_ids,
+		"remaining_enemies": _living_count(enemies),
+	}
+	_emit_event(&"battlefield_changed", actor, null, result)
+	return result
+
+
 func _change_balance(amount: int, actor: BattleActor = null) -> void:
 	if amount == 0:
 		return
-	balance = clampi(balance + amount, BALANCE_MIN, BALANCE_MAX)
-	_emit_event(&"balance_changed", actor, null, {"balance": balance, "delta": amount})
+	if balance_lock_until_round > 0:
+		_emit_event(
+			&"balance_shift_suppressed",
+			actor,
+			null,
+			{"attempted_delta": amount, "until_round": balance_lock_until_round},
+		)
+		return
+	var previous := balance
+	balance = clampi(
+		balance + amount,
+		CombatIdentityCatalog.balance_minimum(),
+		CombatIdentityCatalog.balance_maximum(),
+	)
+	if balance == previous:
+		return
+	_apply_balance_band()
+	_emit_event(
+		&"balance_changed",
+		actor,
+		null,
+		{"balance": balance, "delta": balance - previous, "band_id": balance_band_id},
+	)
 
 
 func _shift_toward_center(amount: int, actor: BattleActor) -> void:
@@ -281,6 +590,41 @@ func _shift_toward_center(amount: int, actor: BattleActor) -> void:
 		_change_balance(-mini(balance, amount), actor)
 	elif balance < 0:
 		_change_balance(mini(-balance, amount), actor)
+
+
+func _apply_balance_band(emit_change: bool = true) -> void:
+	var band := CombatIdentityCatalog.balance_band(balance)
+	var next_band_id := StringName(band.get("id", ""))
+	var previous_band_id := balance_band_id
+	balance_band_id = next_band_id
+	var effects := CombatIdentityCatalog.balance_effects(balance, threshold_effects_suppressed)
+	var affected_ids: Array[StringName] = []
+	for actor: BattleActor in allies + enemies:
+		var actor_effects := effects
+		if not bool(band.get("global", false)) and actor not in allies:
+			actor_effects = {}
+		actor.apply_balance_band(balance_band_id, actor_effects)
+		affected_ids.append(actor.combat_id)
+	if emit_change and next_band_id != previous_band_id:
+		_emit_event(
+			&"balance_band_changed",
+			null,
+			null,
+			{
+				"band_id": balance_band_id,
+				"effects": effects.duplicate(true),
+				"affected_actor_ids": affected_ids,
+			},
+		)
+
+
+func _release_balance_lock_if_due() -> void:
+	if balance_lock_until_round <= 0 or round_number < balance_lock_until_round:
+		return
+	balance_lock_until_round = 0
+	threshold_effects_suppressed = false
+	_apply_balance_band()
+	_emit_event(&"balance_unlocked", null, null, {"balance": balance})
 
 
 func _finish(result_state: ResultState, outcome_id: StringName) -> void:
@@ -318,6 +662,11 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"position": battlefield.position_of(actor),
 			"side": battlefield.side_of(actor),
 			"guarding": actor.guarding,
+			"archetype_id": actor.archetype_id,
+			"balance_band_id": actor.balance_band_id,
+			"balance_effects": actor.balance_effects.duplicate(true),
+			"defining_effects": actor.defining_effects.duplicate(true),
+			"discovered_weakness_ids": actor.discovered_weakness_ids.duplicate(),
 		})
 	return result
 
@@ -330,6 +679,14 @@ func _assign_combat_ids(group: Array[BattleActor], prefix: StringName) -> void:
 
 func _has_living(group: Array[BattleActor]) -> bool:
 	return _first_living(group) != null
+
+
+func _living_count(group: Array[BattleActor]) -> int:
+	var count := 0
+	for actor in group:
+		if actor.is_alive():
+			count += 1
+	return count
 
 
 func _first_living(group: Array[BattleActor]) -> BattleActor:

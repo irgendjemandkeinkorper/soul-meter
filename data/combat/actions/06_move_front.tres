@@ -11,4 +11,3 @@ verb = 0
 ap_cost = 1
 target_profile = &"self"
 destination = &"front"
-center_pull = 0

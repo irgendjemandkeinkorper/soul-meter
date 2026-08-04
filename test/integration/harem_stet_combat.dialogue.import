@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://kxlbwq28mwey"
+path="res://.godot/imported/harem_stet_combat.dialogue-f9ceba254519caeae6e00e054aafce9d.tres"
+
+[deps]
+
+source_file="res://test/integration/harem_stet_combat.dialogue"
+dest_files=["res://.godot/imported/harem_stet_combat.dialogue-f9ceba254519caeae6e00e054aafce9d.tres"]
+
+[params]
+
+defaults=true

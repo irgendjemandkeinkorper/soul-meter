@@ -6,6 +6,7 @@ var battle
 var original_party: Array[PartyMember] = []
 var original_soul := 0.0
 var original_flags: Dictionary
+var original_combat_knowledge: Dictionary
 var original_reputation: Dictionary
 var original_renown: Dictionary
 var original_autosave_reason: String
@@ -15,10 +16,12 @@ func before_test() -> void:
 	original_party = GameState.party.duplicate()
 	original_soul = GameState.soul_meter
 	original_flags = GameState.flags.duplicate(true)
+	original_combat_knowledge = GameState.combat_knowledge.duplicate(true)
 	original_reputation = Reputation.to_dict().duplicate(true)
 	original_renown = Renown.to_dict().duplicate(true)
 	original_autosave_reason = SaveGame._pending_autosave_reason
 	GameState.flags.clear()
+	GameState.combat_knowledge.clear()
 	Reputation.from_dict({})
 	Renown.from_dict({})
 	SaveGame._pending_autosave_reason = ""
@@ -35,6 +38,7 @@ func after_test() -> void:
 		GameState.party.append(member)
 	GameState.soul_meter = original_soul
 	GameState.flags = original_flags
+	GameState.combat_knowledge = original_combat_knowledge
 	Reputation.from_dict(original_reputation)
 	Renown.from_dict(original_renown)
 	SaveGame._pending_autosave_reason = original_autosave_reason
@@ -57,17 +61,20 @@ func test_each_party_member_acts_before_the_enemy_round() -> void:
 	assert_int(battle.allies[0].hp).is_equal(20)
 
 	battle.use_action(BattleScript.ACTION_STRIKE)
+	var expected_enemy_damage := BattleScript.calculate_damage(
+		battle.enemies[0], battle.allies[0], 0, 0, battle.balance
+	)
 	battle.end_turn()
 	assert_str(battle.current_ally().display_name).is_equal("Vex")
-	assert_int(battle.allies[0].hp).is_equal(18)
+	assert_int(battle.allies[0].hp).is_equal(20 - expected_enemy_damage)
 
 
-func test_aligned_actions_shift_balance_and_spend_soul() -> void:
-	battle.start(_enemy("Wight", 40, 4, 1))
+func test_defining_strike_shifts_balance_without_an_unratified_soul_cost() -> void:
+	battle.start(EncounterIds.BOG_WIGHT)
 	battle.use_action(BattleScript.ACTION_DEFINITION)
 
 	assert_int(battle.balance).is_equal(25)
-	assert_float(GameState.soul_meter).is_equal_approx(47.0, 0.001)
+	assert_float(GameState.soul_meter).is_equal_approx(50.0, 0.001)
 
 
 func test_mundane_actions_pull_balance_toward_center() -> void:
@@ -78,14 +85,28 @@ func test_mundane_actions_pull_balance_toward_center() -> void:
 	assert_int(battle.balance).is_equal(-40)
 
 
-func test_extreme_balance_empowers_matching_action_only() -> void:
+func test_extreme_balance_empowers_every_attacker_regardless_of_alignment() -> void:
 	var attacker := BattleActor.new()
 	attacker.attack = 7
 	var target := BattleActor.new()
 	target.defense = 2
+	var extreme: Dictionary = {}
+	for band: Dictionary in CombatIdentityCatalog.balance_bands():
+		var effects: Variant = band.get("effects", {})
+		if effects is Dictionary and int(effects.get("damage_bonus", 0)) > 0:
+			extreme = band
+			break
+	attacker.apply_balance_band(StringName(extreme["id"]), extreme["effects"])
+	var neutral_damage := attacker.attack + 2 - target.defense
+	var order_damage := BattleScript.calculate_damage(
+		attacker, target, 2, 25, int(extreme["minimum"])
+	)
+	var chaos_damage := BattleScript.calculate_damage(
+		attacker, target, 2, -25, int(extreme["minimum"])
+	)
 
-	assert_int(BattleScript.calculate_damage(attacker, target, 2, 25, 60)).is_equal(9)
-	assert_int(BattleScript.calculate_damage(attacker, target, 2, -25, 60)).is_equal(7)
+	assert_int(order_damage).is_equal(neutral_damage + int(extreme["effects"]["damage_bonus"]))
+	assert_int(chaos_damage).is_equal(order_damage)
 
 
 func test_flee_commits_combat_hp_to_party() -> void:
@@ -139,6 +160,21 @@ func test_player_can_select_between_multiple_living_enemies() -> void:
 	assert_str(battle.current_target().display_name).is_equal("Boar")
 	assert_int(foes[0].hp).is_equal(20)
 	assert_int(foes[1].hp).is_less(20)
+
+
+func test_weakness_list_expands_from_lore_and_prior_encounters() -> void:
+	battle.start(EncounterIds.BOG_WIGHT)
+	var first_encounter_count: int = battle.available_weaknesses().size()
+	battle.start(EncounterIds.BOG_WIGHT)
+	var prior_encounter_count: int = battle.available_weaknesses().size()
+
+	GameState.combat_knowledge.clear()
+	GameState.party[0].attributes["spark"] = 5
+	battle.start(EncounterIds.BOG_WIGHT)
+	var lore_count: int = battle.available_weaknesses().size()
+
+	assert_int(prior_encounter_count).is_greater(first_encounter_count)
+	assert_int(lore_count).is_equal(prior_encounter_count)
 
 
 func test_bloodbellow_named_resolution_requires_order_and_spends_soul() -> void:

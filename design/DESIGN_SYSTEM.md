@@ -20,6 +20,9 @@ alongside these visual tokens when deciding whether a feature belongs in Soul Me
 - `ui/hud/soul_gauge.gd` — the DS's flagship component ported: bronze fill (never violet —
   "ledgered, not magical"), canon agreement states (constant/skip/feedback/hush; feedback
   pulses), the Registry audit-floor mark.
+- `ui/hud/battle_hud.tscn` — the FR-603 event-stream HUD: initiative/AP and zones/weaknesses
+  are mirror-paired around the centre Balance arcs; AP uses eclipse-phase pips and check math
+  is an explicit toggle. It composes existing tokens and type variations only.
 
 ## The rules that bind Godot work
 

@@ -36,7 +36,56 @@ func position_of(actor: BattleActor) -> StringName:
 
 
 func side_of(actor: BattleActor) -> StringName:
+	if actor == null:
+		return &""
 	return StringName(_sides.get(actor.get_instance_id(), &""))
+
+
+func has_combatant(actor: BattleActor) -> bool:
+	return actor != null and _sides.has(actor.get_instance_id())
+
+
+func combatants_on_side(side: StringName) -> Array[BattleActor]:
+	var result: Array[BattleActor] = []
+	for actor: BattleActor in _groups.get(side, []):
+		result.append(actor)
+	return result
+
+
+func remove_combatant(actor: BattleActor) -> Dictionary:
+	if not has_combatant(actor):
+		return _blocked(
+			&"composition", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
+		)
+	var previous_side := side_of(actor)
+	var previous_position := position_of(actor)
+	var group: Array = _groups.get(previous_side, [])
+	group.erase(actor)
+	_sides.erase(actor.get_instance_id())
+	_positions.erase(actor.get_instance_id())
+	return _allowed({"from_side": previous_side, "from_position": previous_position})
+
+
+func transfer_combatant(actor: BattleActor, new_side: StringName) -> Dictionary:
+	if not has_combatant(actor):
+		return _blocked(
+			&"composition", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
+		)
+	if not _groups.has(new_side):
+		return _blocked(
+			&"composition", "Unknown battlefield side: %s." % new_side, {"type": &"known_side"}
+		)
+	var previous_side := side_of(actor)
+	if previous_side == new_side:
+		return _blocked(
+			&"composition", "Combatant is already on that side.", {"type": &"different_side"}
+		)
+	var previous_group: Array = _groups.get(previous_side, [])
+	previous_group.erase(actor)
+	var new_group: Array = _groups.get(new_side, [])
+	new_group.append(actor)
+	_sides[actor.get_instance_id()] = new_side
+	return _allowed({"from_side": previous_side, "to_side": new_side})
 
 
 func move(actor: BattleActor, destination: StringName) -> Dictionary:
@@ -65,7 +114,9 @@ func move_query(actor: BattleActor, destination: StringName) -> Dictionary:
 
 
 func target_query(actor: BattleActor, target: BattleActor, profile: StringName) -> Dictionary:
-	if actor == null or target == null or not target.is_alive():
+	if not has_combatant(actor):
+		return _blocked(&"target", "Acting combatant is not on the battlefield.", {"type": &"present_actor"})
+	if not has_combatant(target) or not target.is_alive():
 		return _blocked(&"target", "Target is not available.", {"type": &"living_target"})
 	if profile == &"self":
 		return _allowed() if actor == target else _blocked(

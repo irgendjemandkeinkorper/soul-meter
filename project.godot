@@ -41,6 +41,8 @@ QuestRegistry="*res://globals/quest_registry.gd"
 Battle="*res://globals/battle.gd"
 SaveGame="*res://globals/save_game.gd"
 SkillCheck="*res://globals/skill_check.gd"
+CombatSpeechPresenter="*res://ui/dialogue/combat_speech_presenter.gd"
+CombatStylePoints="*res://globals/combat_style_tracker.gd"
 
 [dialogue_manager]
 
@@ -117,7 +119,7 @@ interact={
 [internationalization]
 
 locale/translations=PackedStringArray("res://addons/maaacks_game_template/base/translations/menus_translations.en.translation", "res://addons/maaacks_game_template/base/translations/menus_translations.fr.translation", "res://locale/es.po")
-locale/translations_pot_files=PackedStringArray("res://dialogue/iris_illepah.dialogue", "res://dialogue/marshal_coiljaw.dialogue", "res://quests/loamroot_sprigs.tres", "res://quests/dorthkor_road.tres", "res://quests/deep_trial.tres", "res://quests/field_debt.tres", "res://dialogue/sella_varn.dialogue", "res://dialogue/toma_reedhand.dialogue", "res://dialogue/hadrik_vale.dialogue", "res://test/integration/skill_check_condition.dialogue")
+locale/translations_pot_files=PackedStringArray("res://dialogue/iris_illepah.dialogue", "res://dialogue/marshal_coiljaw.dialogue", "res://quests/loamroot_sprigs.tres", "res://quests/dorthkor_road.tres", "res://quests/deep_trial.tres", "res://quests/field_debt.tres", "res://dialogue/sella_varn.dialogue", "res://dialogue/toma_reedhand.dialogue", "res://dialogue/hadrik_vale.dialogue", "res://test/integration/skill_check_condition.dialogue", "res://test/integration/harem_stet_combat.dialogue")
 
 [maaacks_game_template]
 

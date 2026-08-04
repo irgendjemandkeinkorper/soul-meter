@@ -37,6 +37,7 @@ const ENCOUNTERS_PATH := OUT_DIR + "/encounters.json"
 const ENCOUNTER_IDS_PATH := OUT_DIR + "/encounter_ids.gd"
 const ELEMENTS_JSON_PATH := OUT_DIR + "/elements.json"
 const FIZZLE_JSON_PATH := OUT_DIR + "/fizzle_table.json"
+const COMBAT_IDENTITY_PATH := OUT_DIR + "/combat_identity.json"
 const ELEMENTS_DATA_PATH := "res://globals/elements/elements_data.gd"
 const FIZZLE_TABLE_PATH := "res://globals/default_fizzle_table.tres"
 const POT_PATH := OUT_DIR + "/items.pot"
@@ -133,6 +134,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 	var fizzle_artifacts := _fizzle_artifacts()
 	var fizzle_text: String = fizzle_artifacts["json"]
 	var fizzle_resource_text: String = fizzle_artifacts["tres"]
+	var combat_identity_text := _combat_identity_artifact()
 
 	# --- artifact 3: gettext template of generated item keys ---
 	var item_entries := _item_entries(protos, paths)
@@ -150,6 +152,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		or _differs(ELEMENTS_DATA_PATH, elements_data_text)
 		or _differs(FIZZLE_JSON_PATH, fizzle_text)
 		or _differs(FIZZLE_TABLE_PATH, fizzle_resource_text)
+		or _differs(COMBAT_IDENTITY_PATH, combat_identity_text)
 		or _differs(POT_PATH, pot)
 		or _po_needs_merge(LOCALE_PO_PATH, item_entries)
 	)
@@ -166,6 +169,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		_write(ELEMENTS_DATA_PATH, elements_data_text)
 		_write(FIZZLE_JSON_PATH, fizzle_text)
 		_write(FIZZLE_TABLE_PATH, fizzle_resource_text)
+		_write(COMBAT_IDENTITY_PATH, combat_identity_text)
 		_write(POT_PATH, pot)
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://locale"))
 		_write(LOCALE_PO_PATH, locale_po)
@@ -371,6 +375,107 @@ static func _encounter_artifacts() -> Dictionary:
 		"ids": _ids_source("EncounterIds", encounter_ids),
 		"count": encounter_ids.size(),
 	}
+
+
+static func _combat_identity_artifact() -> String:
+	var balance_root := _root_by_name("Balance Bands")
+	var weakness_root := _root_by_name("Defining Weaknesses")
+	var combatants_root := _root_by_name("Combatants")
+	var combatant_ids := {}
+	for entity: PandoraEntity in Pandora.get_all_entities(combatants_root):
+		if entity is PandoraCategory:
+			continue
+		var combatant_id := entity.get_string("Combatant Id")
+		assert(not combatant_id.is_empty(), "Combatant is missing Combatant Id")
+		combatant_ids[combatant_id] = true
+
+	var bands: Array[Dictionary] = []
+	var band_ids := {}
+	for entity: PandoraEntity in Pandora.get_all_entities(balance_root):
+		if entity is PandoraCategory:
+			continue
+		var band_id := entity.get_string("Band Id")
+		assert(not band_id.is_empty(), "Balance band is missing Band Id")
+		assert(not band_ids.has(band_id), "Duplicate balance band ID: %s" % band_id)
+		band_ids[band_id] = true
+		var minimum := entity.get_integer("Minimum")
+		var maximum := entity.get_integer("Maximum")
+		assert(minimum <= maximum, "Balance band '%s' has an inverted range" % band_id)
+		bands.append({
+			"id": band_id,
+			"display_name": entity.get_string("Display Name"),
+			"minimum": minimum,
+			"maximum": maximum,
+			"global": entity.get_bool("Global"),
+			"effects": _parse_json_object_value(
+				entity.get_string("Effect Parameters"), "Effect Parameters", band_id
+			),
+			"tunable": entity.get_bool("Tunable"),
+		})
+	bands.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool: return int(a["minimum"]) < int(b["minimum"])
+	)
+	assert(not bands.is_empty(), "Pandora has no Balance Bands")
+	for index in range(1, bands.size()):
+		assert(
+			int(bands[index - 1]["maximum"]) + 1 == int(bands[index]["minimum"]),
+			"Balance bands must cover a contiguous integer range"
+		)
+
+	var archetypes := {}
+	for entity: PandoraEntity in Pandora.get_all_entities(weakness_root):
+		if entity is PandoraCategory:
+			continue
+		var archetype_id := entity.get_string("Archetype Id")
+		var weakness_id := entity.get_string("Weakness Id")
+		var check_skill := entity.get_string("Check Skill")
+		var effect_id := entity.get_string("Effect Id")
+		assert(combatant_ids.has(archetype_id), "Unknown weakness archetype: %s" % archetype_id)
+		assert(not weakness_id.is_empty() and not " " in weakness_id, "Invalid weakness ID")
+		assert(check_skill in ["lore", "insight"], "Invalid Defining Strike skill: %s" % check_skill)
+		assert(
+			effect_id in ["cripple", "disarm", "bind_break", "reveal"],
+			"Invalid Defining Strike effect: %s" % effect_id
+		)
+		var rows: Array = archetypes.get(archetype_id, [])
+		rows.append({
+			"id": weakness_id,
+			"display_name": entity.get_string("Display Name"),
+			"check_skill": check_skill,
+			"check_modifier": entity.get_float("Check Modifier"),
+			"lore_minimum": entity.get_float("Lore Minimum"),
+			"prior_encounters": entity.get_integer("Prior Encounters"),
+			"effect_id": effect_id,
+			"effect_parameters": _parse_json_object_value(
+				entity.get_string("Effect Parameters"), "Effect Parameters", weakness_id
+			),
+			"resistance": {
+				"stat": entity.get_string("Resistance Stat"),
+				"threshold": entity.get_integer("Resistance Threshold"),
+			},
+		})
+		archetypes[archetype_id] = rows
+	for combatant_id: String in combatant_ids:
+		assert(archetypes.has(combatant_id), "Combatant has no Defining Strike table: %s" % combatant_id)
+
+	var ordered_archetypes := {}
+	var archetype_ids: Array = archetypes.keys()
+	archetype_ids.sort()
+	for archetype_id: String in archetype_ids:
+		var rows: Array = archetypes[archetype_id]
+		rows.sort_custom(
+			func(a: Dictionary, b: Dictionary) -> bool: return str(a["id"]) < str(b["id"])
+		)
+		ordered_archetypes[archetype_id] = rows
+	var data := {
+		"balance": {
+			"minimum": bands[0]["minimum"],
+			"maximum": bands[-1]["maximum"],
+			"bands": bands,
+		},
+		"defining_strikes": {"archetypes": ordered_archetypes},
+	}
+	return JSON.stringify(data, "  ", false) + "\n"
 
 
 static func _element_artifacts() -> Dictionary:

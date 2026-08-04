@@ -1,0 +1,275 @@
+{
+  "balance": {
+    "minimum": -100,
+    "maximum": 100,
+    "bands": [
+      {
+        "id": "chaos_extreme",
+        "display_name": "Chaos Extreme",
+        "minimum": -100,
+        "maximum": -60,
+        "global": true,
+        "effects": {
+          "damage_bonus": 2.0
+        },
+        "tunable": true
+      },
+      {
+        "id": "chaosward",
+        "display_name": "Chaosward",
+        "minimum": -59,
+        "maximum": -21,
+        "global": true,
+        "effects": {},
+        "tunable": true
+      },
+      {
+        "id": "center",
+        "display_name": "Held Centre",
+        "minimum": -20,
+        "maximum": 20,
+        "global": false,
+        "effects": {
+          "defense_bonus": 2.0
+        },
+        "tunable": true
+      },
+      {
+        "id": "orderward",
+        "display_name": "Orderward",
+        "minimum": 21,
+        "maximum": 59,
+        "global": true,
+        "effects": {},
+        "tunable": true
+      },
+      {
+        "id": "order_extreme",
+        "display_name": "Order Extreme",
+        "minimum": 60,
+        "maximum": 100,
+        "global": true,
+        "effects": {
+          "damage_bonus": 2.0
+        },
+        "tunable": true
+      }
+    ]
+  },
+  "defining_strikes": {
+    "archetypes": {
+      "bog-wight": [
+        {
+          "id": "bog-wight/knee",
+          "display_name": "the knee",
+          "check_skill": "lore",
+          "check_modifier": 0.0,
+          "lore_minimum": 40.0,
+          "prior_encounters": 1,
+          "effect_id": "cripple",
+          "effect_parameters": {
+            "crippled": true,
+            "max_ap_delta": -1.0
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        },
+        {
+          "id": "bog-wight/reveal",
+          "display_name": "what it conceals",
+          "check_skill": "insight",
+          "check_modifier": 0.0,
+          "lore_minimum": 0.0,
+          "prior_encounters": 0,
+          "effect_id": "reveal",
+          "effect_parameters": {
+            "revealed": true
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        }
+      ],
+      "cleaned-jawbrace-guard": [
+        {
+          "id": "cleaned-jawbrace-guard/binding-oath",
+          "display_name": "the oath that binds it",
+          "check_skill": "lore",
+          "check_modifier": 0.0,
+          "lore_minimum": 0.0,
+          "prior_encounters": 0,
+          "effect_id": "bind_break",
+          "effect_parameters": {
+            "binding_broken": true,
+            "defense_delta": -2.0
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        },
+        {
+          "id": "cleaned-jawbrace-guard/disarm",
+          "display_name": "the hand that holds it",
+          "check_skill": "insight",
+          "check_modifier": 0.0,
+          "lore_minimum": 40.0,
+          "prior_encounters": 1,
+          "effect_id": "disarm",
+          "effect_parameters": {
+            "attack_delta": -2.0,
+            "disarmed": true
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        }
+      ],
+      "gnaal-breach-hound": [
+        {
+          "id": "gnaal-breach-hound/knee",
+          "display_name": "the knee",
+          "check_skill": "lore",
+          "check_modifier": 0.0,
+          "lore_minimum": 0.0,
+          "prior_encounters": 0,
+          "effect_id": "cripple",
+          "effect_parameters": {
+            "crippled": true,
+            "max_ap_delta": -1.0
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        },
+        {
+          "id": "gnaal-breach-hound/reveal",
+          "display_name": "what it conceals",
+          "check_skill": "insight",
+          "check_modifier": 0.0,
+          "lore_minimum": 40.0,
+          "prior_encounters": 1,
+          "effect_id": "reveal",
+          "effect_parameters": {
+            "revealed": true
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        }
+      ],
+      "gnaal-rift-scavenger": [
+        {
+          "id": "gnaal-rift-scavenger/disarm",
+          "display_name": "the hand that holds it",
+          "check_skill": "lore",
+          "check_modifier": 0.0,
+          "lore_minimum": 0.0,
+          "prior_encounters": 0,
+          "effect_id": "disarm",
+          "effect_parameters": {
+            "attack_delta": -2.0,
+            "disarmed": true
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        },
+        {
+          "id": "gnaal-rift-scavenger/reveal",
+          "display_name": "what it conceals",
+          "check_skill": "insight",
+          "check_modifier": 0.0,
+          "lore_minimum": 40.0,
+          "prior_encounters": 1,
+          "effect_id": "reveal",
+          "effect_parameters": {
+            "revealed": true
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        }
+      ],
+      "loam-maddened-boar": [
+        {
+          "id": "loam-maddened-boar/knee",
+          "display_name": "the knee",
+          "check_skill": "lore",
+          "check_modifier": 0.0,
+          "lore_minimum": 0.0,
+          "prior_encounters": 0,
+          "effect_id": "cripple",
+          "effect_parameters": {
+            "crippled": true,
+            "max_ap_delta": -1.0
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        },
+        {
+          "id": "loam-maddened-boar/reveal",
+          "display_name": "what it conceals",
+          "check_skill": "insight",
+          "check_modifier": 0.0,
+          "lore_minimum": 40.0,
+          "prior_encounters": 1,
+          "effect_id": "reveal",
+          "effect_parameters": {
+            "revealed": true
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        }
+      ],
+      "mustered-bloodbellow": [
+        {
+          "id": "mustered-bloodbellow/binding-oath",
+          "display_name": "the oath that binds it",
+          "check_skill": "lore",
+          "check_modifier": 0.0,
+          "lore_minimum": 0.0,
+          "prior_encounters": 0,
+          "effect_id": "bind_break",
+          "effect_parameters": {
+            "binding_broken": true,
+            "defense_delta": -2.0
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        },
+        {
+          "id": "mustered-bloodbellow/disarm",
+          "display_name": "the hand that holds it",
+          "check_skill": "insight",
+          "check_modifier": 0.0,
+          "lore_minimum": 40.0,
+          "prior_encounters": 1,
+          "effect_id": "disarm",
+          "effect_parameters": {
+            "attack_delta": -2.0,
+            "disarmed": true
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,148 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://ui/hud/battle_hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://ui/hud/balance_arcs.gd" id="2_balance"]
+[ext_resource type="Script" path="res://ui/hud/eclipse_pips.gd" id="3_pips"]
+
+[node name="BattleHUD" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 210)
+theme_type_variation = &"BattleHudPanel"
+script = ExtResource("1_hud")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_type_variation = &"BattleHudMargin"
+
+[node name="Columns" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_type_variation = &"BattleHudColumn"
+
+[node name="PrimaryRow" type="HBoxContainer" parent="Margin/Columns"]
+layout_mode = 2
+theme_type_variation = &"BattleHudRow"
+
+[node name="InitiativeColumn" type="VBoxContainer" parent="Margin/Columns/PrimaryRow"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"BattleHudColumn"
+
+[node name="Title" type="Label" parent="Margin/Columns/PrimaryRow/InitiativeColumn"]
+layout_mode = 2
+theme_type_variation = &"EyebrowLabel"
+text = "INITIATIVE"
+
+[node name="Initiative" type="Label" parent="Margin/Columns/PrimaryRow/InitiativeColumn"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = "Awaiting event"
+
+[node name="BalanceColumn" type="VBoxContainer" parent="Margin/Columns/PrimaryRow"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"BattleHudColumn"
+
+[node name="Title" type="Label" parent="Margin/Columns/PrimaryRow/BalanceColumn"]
+layout_mode = 2
+theme_type_variation = &"EyebrowLabel"
+text = "CHAOS  /  BALANCE  /  ORDER"
+horizontal_alignment = 1
+
+[node name="BalanceValue" type="Label" parent="Margin/Columns/PrimaryRow/BalanceColumn"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = "BALANCE  0"
+horizontal_alignment = 1
+
+[node name="BalanceArcs" type="Control" parent="Margin/Columns/PrimaryRow/BalanceColumn"]
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_balance")
+
+[node name="APColumn" type="VBoxContainer" parent="Margin/Columns/PrimaryRow"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"BattleHudColumn"
+
+[node name="Title" type="Label" parent="Margin/Columns/PrimaryRow/APColumn"]
+layout_mode = 2
+theme_type_variation = &"EyebrowLabel"
+text = "ACTION POINTS"
+horizontal_alignment = 2
+
+[node name="APPips" type="Control" parent="Margin/Columns/PrimaryRow/APColumn"]
+custom_minimum_size = Vector2(240, 28)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("3_pips")
+
+[node name="APValue" type="Label" parent="Margin/Columns/PrimaryRow/APColumn"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = "AP  0 / 0"
+horizontal_alignment = 2
+
+[node name="SecondaryRow" type="HBoxContainer" parent="Margin/Columns"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"BattleHudRow"
+
+[node name="ZonesColumn" type="VBoxContainer" parent="Margin/Columns/SecondaryRow"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"BattleHudColumn"
+
+[node name="Title" type="Label" parent="Margin/Columns/SecondaryRow/ZonesColumn"]
+layout_mode = 2
+theme_type_variation = &"EyebrowLabel"
+text = "ZONES"
+
+[node name="Zones" type="Label" parent="Margin/Columns/SecondaryRow/ZonesColumn"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Awaiting zone event"
+
+[node name="CheckColumn" type="VBoxContainer" parent="Margin/Columns/SecondaryRow"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"BattleHudColumn"
+alignment = 1
+
+[node name="CheckMathToggle" type="Button" parent="Margin/Columns/SecondaryRow/CheckColumn"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+focus_mode = 2
+theme_type_variation = &"BronzeButton"
+toggle_mode = true
+button_pressed = true
+text = "CHECK MATH  ON"
+
+[node name="CheckMath" type="Label" parent="Margin/Columns/SecondaryRow/CheckColumn"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="WeaknessesColumn" type="VBoxContainer" parent="Margin/Columns/SecondaryRow"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"BattleHudColumn"
+
+[node name="Title" type="Label" parent="Margin/Columns/SecondaryRow/WeaknessesColumn"]
+layout_mode = 2
+theme_type_variation = &"EyebrowLabel"
+text = "DISCOVERED WEAKNESSES"
+horizontal_alignment = 2
+
+[node name="Weaknesses" type="Label" parent="Margin/Columns/SecondaryRow/WeaknessesColumn"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "None discovered"
+horizontal_alignment = 2

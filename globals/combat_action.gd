@@ -3,7 +3,7 @@ extends Resource
 ## Data carried by the combat engine. GodotGAS can implement the effects
 ## behind this seam later without making battle flow depend on that addon.
 
-enum Kind { ATTACK, GUARD, STABILIZE, RESOLUTION, MOVE, PASS }
+enum Kind { ATTACK, GUARD, STABILIZE, RESOLUTION, MOVE, PASS, DEFINING_STRIKE }
 enum Verb { MOVE, ATTACK, CAST, ITEM, SPEECH, DEFEND }
 
 @export var id: StringName
@@ -79,6 +79,9 @@ func summary() -> String:
 	var target := "Enemy target"
 	var effect := balance_effect_summary()
 	match kind:
+		Kind.DEFINING_STRIKE:
+			target = "Named weakness"
+			effect = "Lore/Insight check applies a targeted effect"
 		Kind.GUARD:
 			target = "Self"
 			effect = "Reduces the next hit"
@@ -88,6 +91,10 @@ func summary() -> String:
 		Kind.RESOLUTION:
 			target = "Encounter"
 			effect = "Ends the encounter"
+		Kind.PASS:
+			if verb == Verb.SPEECH:
+				target = "Encounter"
+				effect = "Opens combat dialogue"
 	var costs: Array[String] = ["%d AP" % ap_cost]
 	if not is_zero_approx(soul_cost):
 		costs.append("%d Soul" % int(soul_cost))
@@ -100,3 +107,7 @@ func balance_effect_summary() -> String:
 	if balance_shift < 0:
 		return "%d Chaos" % balance_shift
 	return "Pulls Balance 10 toward Equilibrium"
+
+
+func requires_enemy_target() -> bool:
+	return kind in [Kind.ATTACK, Kind.DEFINING_STRIKE]

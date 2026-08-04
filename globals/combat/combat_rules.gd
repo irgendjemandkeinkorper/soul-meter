@@ -16,4 +16,6 @@ extends Resource
 func action_points_for(actor: BattleActor) -> int:
 	var divisor := maxi(1, attribute_points_per_ap)
 	var derived := base_action_points + actor.attribute_value(action_point_attribute) / divisor
-	return clampi(derived, minimum_action_points, maximum_action_points)
+	return clampi(
+		actor.effective_max_action_points(derived), minimum_action_points, maximum_action_points
+	)
