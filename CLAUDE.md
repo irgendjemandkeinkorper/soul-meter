@@ -35,8 +35,49 @@ range), plus a manual-checklist convention in `test/manual/`. Run via
 `GODOT_BIN=~/.local/bin/godot bash addons/gdUnit4/runtest.sh -a test`.
 **Still open / next candidates:** Maaack's setup wizard (editor-interactive, do on the Windows
 machine), GodotGAS (store download, no public repo), portrait art PNGs from the DS project,
-CI wiring for gdUnit4, the unratified Balance Gauge / Defining Strikes combat identity (design
-doc §6), and `docs/godot-architecture.md`'s one remaining open human question (gamepad-at-ship).
+and `docs/godot-architecture.md`'s one remaining open human question (gamepad-at-ship).
+
+## Status addendum (2026-08-04) — supersedes the 2026-07-30 section above where they conflict
+<!-- The section above understates the repo badly. Verified against the tree, not assumed. -->
+
+**Chapter 1 PRD is RATIFIED** (`docs/prd-chapter-one.md`, 2026-08-03, zero ⚑ — see
+`docs/phase-0-ratification.md`). Much of what that PRD lists as "remaining" already EXISTS:
+
+- **Phase 1 resolution spine is built:** `globals/skill_check.gd`, `fizzle_table.gd` +
+  `default_fizzle_table.tres`, `globals/elements/` (wheel, triads, composition resolver,
+  casting gate), `save_game.gd` + `save_migrations.gd`, `ng_plus.gd` (data-only; the Mirror
+  Shop is deliberately NOT in it).
+- **Most of the Phase 2 combat vertical is built:** `globals/combat/combat_controller.gd`,
+  `battlefield_model.gd` + `zone_battlefield_model.gd` (the FR-105 grid-swap seam is honored),
+  `combat_style_tracker.gd`, `combat_speech_presenter.gd`, `encounter_catalog.gd`,
+  `ui/hud/battle_hud.tscn` + `balance_arcs.gd` + `eclipse_pips.gd`. Battle is an **overlay**,
+  not a scene swap.
+- **CI is wired** (FR-903 is NOT open): `.github/workflows/test.yml` runs import, acceptance
+  gate, Pandora drift check, headless gdUnit4, and a Windows export.
+
+**Implemented ≠ accepted.** Two gates are unproven, and no amount of code closes them:
+- **Phase 1.5 comprehension gate has NEVER been run** (PRD line 185 — ratified: it is the
+  go/no-go for content production). It needs **3–5 outside human playtesters**; an agent fleet
+  cannot execute it. Protocol + evidence template now exist at `docs/playtest-protocol.md`.
+  Region content must not merge into `world/locations/` or `LocationRegistry.ALL` until it passes.
+- **FR-904 is instrumented but NOT satisfied** — see `docs/performance-benchmark.md`.
+
+**Wave 1 (2026-08-04) landed:** `globals/load_destination.gd` + a `SaveGame.load_requested`
+signal removed SaveGame's 6-site reach into `GameFlow` private state (save schema still 5, legacy
+adapter, fixture at `test/fixtures/save_game_schema_5.json`); `tools/quest_audit.gd` (FR-501/403,
+reporting-only by default, `SOUL_METER_QUEST_AUDIT_STRICT=1` to enforce — **read its header
+limitations before trusting a green result**); FR-904 harness `tools/performance_benchmark.gd` +
+`scripts/benchmark_performance.sh`. Suite: **305 cases / 54 suites / 0 failures**.
+
+**Two environment gotchas worth knowing:**
+- `godot --headless --script` aborts with **exit 134 at teardown ~20–30% of the time** here,
+  even for a 3-line script. Never gate CI on a tool script's raw exit code — judge the output.
+- Applying patches without `--import` leaves new `class_name` globals unregistered; re-import
+  after adding a script with a `class_name`.
+
+**Real remaining Chapter 1 gaps:** locations 4 of 8–12 and hubs 1 of 3; companions (FR-505,
+no `personal_quest` anywhere); region map / fast travel (FR-503 — ratified as "discovered hubs
+only, at a cost", so implement, don't redesign); Mirror Shop (FR-801); 9-patch pass (FR-605).
 
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
