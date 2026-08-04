@@ -104,6 +104,10 @@ func test_players_house_round_trip_returns_to_its_matching_town_spawn() -> void:
 	_round_trip(&"players_house")
 
 
+func test_item_shop_round_trip_returns_to_its_matching_town_spawn() -> void:
+	_round_trip(&"item_shop")
+
+
 func test_bell_house_stays_locked_until_its_existing_quest_flag_then_round_trips() -> void:
 	GameState.flags.erase("dom_bell_quest_open")
 	var original_target: String = GameFlow._target_scene
@@ -116,6 +120,75 @@ func test_bell_house_stays_locked_until_its_existing_quest_flag_then_round_trips
 	GameState.set_flag("dom_bell_quest_open", true)
 	assert_bool(door._is_unlocked()).is_true()
 	_round_trip(&"bell_house")
+
+
+func test_starting_town_wires_all_ten_registry_entries_and_return_spawns() -> void:
+	var town := _make_town()
+	var entrance_count := 0
+	for child: Node in town.get_children():
+		var candidate := child as BuildingDoor
+		if candidate != null and String(candidate.transition_id).ends_with("_enter"):
+			entrance_count += 1
+	assert_int(entrance_count).is_equal(BuildingTransitionRegistry.ENTRIES.size())
+
+	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
+		var door := _find_town_door(town, entry.id)
+		var anchor := town.find_child(String(entry.source_anchor), true, false)
+		var exit := BuildingTransitionRegistry.exit_for(entry.building_id)
+		var marker := town.find_child(_spawn_marker_name(exit.spawn_id), true, false) as Marker2D
+		assert_object(door).is_not_null()
+		assert_object(anchor).is_not_null()
+		assert_vector(door.position).is_equal(entry.source_position)
+		assert_object(marker).is_not_null()
+		assert_vector(marker.position).is_equal(exit.destination_spawn_position)
+
+
+func test_all_ten_wired_town_doors_complete_a_real_scene_round_trip() -> void:
+	GameState.set_flag("dom_bell_quest_open", true)
+	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
+		_round_trip(entry.building_id)
+
+
+func test_starting_town_hides_debug_markers_behind_rendered_props() -> void:
+	var town := _make_town()
+	var interactable_count := 0
+	for child: Node in town.get_children():
+		var interactable := child as SMInteractable
+		if interactable == null:
+			continue
+		interactable_count += 1
+		var marker := interactable.get_node("Marker") as CanvasItem
+		var accent := interactable.get_node("Accent") as CanvasItem
+		assert_bool(marker.visible).is_false()
+		assert_bool(accent.visible).is_false()
+	assert_int(interactable_count).is_equal(10)
+
+	for sprite_name in [
+		"NoticeBoardSprite",
+		"BellInspectionLantern",
+		"RiverShrineLantern",
+		"ItemShopBench",
+		"EquipmentShopBanner",
+		"GarrisonBanner",
+		"TownHallBanner",
+		"ChefsHousePot",
+		"PlayersHouseLantern",
+		"SavePointLantern",
+	]:
+		var prop := town.find_child(sprite_name, true, false) as Sprite2D
+		assert_object(prop).is_not_null()
+		assert_object(prop.texture).is_not_null()
+
+	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
+		var door := _find_town_door(town, entry.id)
+		var panel := door.get_node("DoorPanel") as CanvasItem
+		var threshold := door.get_node("Threshold") as CanvasItem
+		assert_bool(panel.visible).is_false()
+		assert_bool(threshold.visible).is_false()
+		var sprite_name := String(entry.building_id).to_pascal_case() + "DoorSprite"
+		var sprite := town.find_child(sprite_name, true, false) as Sprite2D
+		assert_object(sprite).is_not_null()
+		assert_object(sprite.texture).is_not_null()
 
 
 func test_direct_door_supports_a_minimum_reputation_band_gate() -> void:
@@ -165,8 +238,10 @@ func test_save_load_inside_an_interior_restores_scene_and_player_position() -> v
 func _round_trip(building_id: StringName) -> void:
 	var entry := BuildingTransitionRegistry.entry_for(building_id)
 	var exit := BuildingTransitionRegistry.exit_for(building_id)
-	var door := _make_door(entry.id)
-	var player := auto_free(PlayerScene.instantiate()) as Player
+	var town := _make_town()
+	var door := _find_town_door(town, entry.id)
+	var player := town.find_child("Player", true, false) as Player
+	assert_vector(door.position).is_equal(entry.source_position)
 	door._on_body(player, true)
 	assert_bool(door._try_travel()).is_true()
 	assert_str(GameFlow._target_scene).is_equal(entry.destination_scene)
@@ -186,21 +261,26 @@ func _round_trip(building_id: StringName) -> void:
 	assert_str(GameFlow._target_scene).is_equal(GameFlow.TOWN_SCENE)
 	assert_str(GameFlow._target_spawn_id).is_equal(String(exit.spawn_id))
 
-	var town: Node2D = auto_free(Node2D.new())
-	town.name = "ProgrammaticTown"
-	var town_player := PlayerScene.instantiate() as Player
-	town_player.name = "Player"
-	town.add_child(town_player)
-	var default_marker := Marker2D.new()
-	default_marker.name = "SpawnDefault"
-	default_marker.position = Vector2(80, 80)
-	town.add_child(default_marker)
-	var return_marker := Marker2D.new()
-	return_marker.name = _spawn_marker_name(exit.spawn_id)
-	return_marker.position = exit.destination_spawn_position
-	town.add_child(return_marker)
+	var town_player := town.find_child("Player", true, false) as Player
+	var return_marker := town.find_child(_spawn_marker_name(exit.spawn_id), true, false) as Marker2D
 	SaveGame.apply_pending_location(town)
-	assert_vector(town_player.global_position).is_equal(exit.destination_spawn_position)
+	assert_vector(town_player.global_position).is_equal(return_marker.global_position)
+
+
+func _make_town() -> Node2D:
+	var packed := load(GameFlow.TOWN_SCENE) as PackedScene
+	var town := auto_free(packed.instantiate()) as Node2D
+	add_child(town)
+	return town
+
+
+func _find_town_door(town: Node, transition_id: StringName) -> BuildingDoor:
+	for child: Node in town.get_children():
+		var door := child as BuildingDoor
+		if door != null and door.transition_id == transition_id:
+			return door
+	fail("no town BuildingDoor with transition id '%s'" % transition_id)
+	return null
 
 
 func _make_door(transition_id: StringName) -> BuildingDoor:
