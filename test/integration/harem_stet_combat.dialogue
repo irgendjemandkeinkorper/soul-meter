@@ -1,0 +1,11 @@
+~ start
+Communion Rimewalker: The frost kept our names. Why should we leave it?
+- "Because someone still speaks those names warm." [#tag=INSIGHT] [#consequence=The rescued dead may stand aside.] [if check("insight", 0) /]
+	do commit_speech("remembered-name")
+	=> END
+- "Preservation was not consent. Any of you may leave the line." [#tag=PERSUASION] [#consequence=The enemy line may split.] [if check("persuasion", 0) /]
+	do commit_speech("divide-the-offer")
+	=> END
+- "Read Stet's ledger again. It calls a person a holding." [#tag=INSIGHT] [#consequence=One rescued soldier may turn.] [if check("insight", 0) /]
+	do commit_speech("turn-the-ledger")
+	=> END
