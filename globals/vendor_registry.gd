@@ -49,18 +49,55 @@ static func current_band(vendor_id: String) -> StringName:
 static func trade_status(vendor_id: String, band: StringName = &"") -> Dictionary:
 	var row := vendor(vendor_id)
 	if row.is_empty():
-		return {"open": false, "reason": "UNKNOWN VENDOR", "band": "neutral"}
+		return {
+			"allowed": false,
+			"blocked_by": &"vendor",
+			"nearest_unblock": {"type": &"known_vendor"},
+			"open": false,
+			"reason": "UNKNOWN VENDOR",
+			"message": "UNKNOWN VENDOR",
+			"band": &"neutral",
+			"faction_id": &"",
+		}
 	var resolved_band := String(band if not band.is_empty() else current_band(vendor_id))
 	var minimum_band := str(row.get("minimum_band", ""))
 	var maximum_band := str(row.get("maximum_band", ""))
+	var faction_id := str(row.get("faction_id", ""))
 	if not _band_allows(resolved_band, minimum_band, maximum_band):
 		var reason := "TRADE UNAVAILABLE AT %s STANDING" % resolved_band.to_upper()
+		var nearest_unblock := {
+			"type": &"reputation_band",
+			"faction_id": StringName(faction_id),
+			"current": StringName(resolved_band),
+		}
 		if not minimum_band.is_empty() and _rank(resolved_band) < _rank(minimum_band):
 			reason = "TRADE REQUIRES %s STANDING" % minimum_band.to_upper()
+			nearest_unblock["minimum"] = StringName(minimum_band)
+			nearest_unblock["delta"] = _rank(minimum_band) - _rank(resolved_band)
 		elif not maximum_band.is_empty() and _rank(resolved_band) > _rank(maximum_band):
 			reason = "TRADE CLOSES ABOVE %s STANDING" % maximum_band.to_upper()
-		return {"open": false, "reason": reason, "band": resolved_band}
-	return {"open": true, "reason": "", "band": resolved_band}
+			nearest_unblock["maximum"] = StringName(maximum_band)
+			nearest_unblock["delta"] = _rank(resolved_band) - _rank(maximum_band)
+		return {
+			"allowed": false,
+			"blocked_by": &"reputation_band",
+			"nearest_unblock": nearest_unblock,
+			"open": false,
+			"reason": reason,
+			"message": reason,
+			"band": StringName(resolved_band),
+			"faction_id": StringName(faction_id),
+		}
+	return {
+		"allowed": true,
+		"blocked_by": &"",
+		"nearest_unblock": {},
+		"open": true,
+		"reason": "",
+		"message": "",
+		"band": StringName(resolved_band),
+		"faction_id": StringName(faction_id),
+	}
 
 
 static func stock_entry(vendor_id: String, item_id: String) -> Dictionary:

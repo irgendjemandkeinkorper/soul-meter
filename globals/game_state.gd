@@ -241,7 +241,7 @@ func vendor_trade_status(vendor_id: String) -> Dictionary:
 
 func available_vendor_stock(vendor_id: String) -> Array[Dictionary]:
 	var status := vendor_trade_status(vendor_id)
-	if not bool(status.get("open", false)):
+	if not bool(status.get("allowed", false)):
 		return []
 	_ensure_vendor_stock(vendor_id)
 	var result: Array[Dictionary] = []
@@ -267,8 +267,8 @@ func buy_from_vendor(vendor_id: String, item_id: String) -> Dictionary:
 	):
 		return _trade_failure("invalid_id")
 	var status := vendor_trade_status(vendor_id)
-	if not bool(status.get("open", false)):
-		return _trade_failure("trade_refused", str(status.get("reason", "")))
+	if not bool(status.get("allowed", false)):
+		return _trade_failure("trade_refused", str(status.get("reason", "")), 0, status)
 	if not _vendor_stock_is_available(vendor_id, item_id):
 		return _trade_failure("stock_unavailable")
 	if vendor_item_quantity(vendor_id, item_id) <= 0:
@@ -287,7 +287,7 @@ func buy_from_vendor(vendor_id: String, item_id: String) -> Dictionary:
 		inventory.remove_item(added_item)
 		return _trade_failure("insufficient_gp", "GP LEDGER UNCHANGED", price)
 	_set_vendor_item_quantity(vendor_id, item_id, vendor_item_quantity(vendor_id, item_id) - 1)
-	return {"ok": true, "reason": "", "message": "", "price": price}
+	return _trade_success(price)
 
 
 func sell_to_vendor(vendor_id: String, item_id: String) -> Dictionary:
@@ -297,8 +297,8 @@ func sell_to_vendor(vendor_id: String, item_id: String) -> Dictionary:
 	):
 		return _trade_failure("invalid_id")
 	var status := vendor_trade_status(vendor_id)
-	if not bool(status.get("open", false)):
-		return _trade_failure("trade_refused", str(status.get("reason", "")))
+	if not bool(status.get("allowed", false)):
+		return _trade_failure("trade_refused", str(status.get("reason", "")), 0, status)
 	if not _vendor_stock_is_available(vendor_id, item_id):
 		return _trade_failure("stock_unavailable")
 	if not VendorData.accepts_sales(vendor_id, item_id):
@@ -312,7 +312,7 @@ func sell_to_vendor(vendor_id: String, item_id: String) -> Dictionary:
 		return _trade_failure("item_missing")
 	earn_gp(price)
 	_set_vendor_item_quantity(vendor_id, item_id, vendor_item_quantity(vendor_id, item_id) + 1)
-	return {"ok": true, "reason": "", "message": "", "price": price}
+	return _trade_success(price)
 
 
 func restock_vendor(vendor_id: String, restock_cycle: int) -> bool:
@@ -356,8 +356,37 @@ func _set_vendor_item_quantity(vendor_id: String, item_id: String, quantity: int
 	vendor_stock_changed.emit(vendor_id, item_id, int(stock[item_id]))
 
 
-func _trade_failure(reason: String, message: String = "", price: int = 0) -> Dictionary:
-	return {"ok": false, "reason": reason, "message": message, "price": price}
+func _trade_success(price: int) -> Dictionary:
+	return {
+		"ok": true,
+		"allowed": true,
+		"blocked_by": &"",
+		"nearest_unblock": {},
+		"reason": "",
+		"message": "",
+		"price": price,
+	}
+
+
+func _trade_failure(
+	reason: String, message: String = "", price: int = 0, gate: Dictionary = {}
+) -> Dictionary:
+	var blocked_by := StringName(reason)
+	var nearest_unblock: Dictionary = {}
+	if not gate.is_empty():
+		blocked_by = StringName(gate.get("blocked_by", blocked_by))
+		var nearest_value: Variant = gate.get("nearest_unblock", {})
+		if nearest_value is Dictionary:
+			nearest_unblock = nearest_value.duplicate(true)
+	return {
+		"ok": false,
+		"allowed": false,
+		"blocked_by": blocked_by,
+		"nearest_unblock": nearest_unblock,
+		"reason": reason,
+		"message": message,
+		"price": price,
+	}
 
 
 # --- Settings ---------------------------------------------------------------

@@ -158,7 +158,16 @@ func test_band_gated_shrine_refuses_then_accepts_after_standing_changes() -> voi
 	var item_id := ItemIds.RELICS_VOTIVE_CINDER
 	var refused := GameState.buy_from_vendor(vendor_id, item_id)
 	assert_bool(refused["ok"]).is_false()
+	assert_bool(refused["allowed"]).is_false()
 	assert_str(refused["reason"]).is_equal("trade_refused")
+	assert_str(refused["blocked_by"]).is_equal("reputation_band")
+	assert_str(refused["nearest_unblock"]["type"]).is_equal("reputation_band")
+	assert_str(refused["nearest_unblock"]["faction_id"]).is_equal(
+		FactionIds.IRONBRAND_SENTINELS
+	)
+	assert_str(refused["nearest_unblock"]["current"]).is_equal("neutral")
+	assert_str(refused["nearest_unblock"]["minimum"]).is_equal("warm")
+	assert_int(refused["nearest_unblock"]["delta"]).is_equal(1)
 	Reputation.record(
 		"vex", FactionIds.IRONBRAND_SENTINELS, Reputation.BAND_WARM,
 		"Honored the Sentinel watch", "test"
@@ -166,14 +175,24 @@ func test_band_gated_shrine_refuses_then_accepts_after_standing_changes() -> voi
 	assert_str(Reputation.band(FactionIds.IRONBRAND_SENTINELS)).is_equal("warm")
 	var accepted := GameState.buy_from_vendor(vendor_id, item_id)
 	assert_bool(accepted["ok"]).is_true()
+	assert_bool(accepted["allowed"]).is_true()
+	assert_str(accepted["blocked_by"]).is_empty()
+	assert_dict(accepted["nearest_unblock"]).is_empty()
 
 
 func test_low_standing_fence_closes_when_company_standing_recovers() -> void:
 	Reputation.record("vex", FactionIds.IRON_COMPANIES, -20.0, "Broke company trust", "test")
-	assert_bool(VendorData.trade_status(VendorIdsData.UNDERSTEP_EXCHANGE)["open"]).is_true()
+	var open_status := VendorData.trade_status(VendorIdsData.UNDERSTEP_EXCHANGE)
+	assert_bool(open_status["allowed"]).is_true()
+	assert_bool(open_status["open"]).is_true()
 	Reputation.record("vex", FactionIds.IRON_COMPANIES, 20.0, "Repaid the company debt", "test")
 	assert_str(Reputation.band(FactionIds.IRON_COMPANIES)).is_equal("neutral")
-	assert_bool(VendorData.trade_status(VendorIdsData.UNDERSTEP_EXCHANGE)["open"]).is_false()
+	var closed_status := VendorData.trade_status(VendorIdsData.UNDERSTEP_EXCHANGE)
+	assert_bool(closed_status["allowed"]).is_false()
+	assert_bool(closed_status["open"]).is_false()
+	assert_str(closed_status["blocked_by"]).is_equal("reputation_band")
+	assert_str(closed_status["nearest_unblock"]["maximum"]).is_equal("cold")
+	assert_int(closed_status["nearest_unblock"]["delta"]).is_equal(1)
 
 
 func test_gp_inventory_and_vendor_stock_round_trip_through_save_envelope() -> void:
