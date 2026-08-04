@@ -13,7 +13,7 @@ func _build() -> void:
 	vbox.add_child(fs)
 
 	vbox.add_child(_section("Audio"))
-	for bus in ["Master", "Music", "SFX"]:
+	for bus: StringName in GameState.AUDIO_BUSES:
 		vbox.add_child(_volume_row(bus))
 
 	vbox.add_child(_section("Language"))
@@ -37,12 +37,12 @@ func _on_fullscreen_toggled(on: bool) -> void:
 	GameState.set_setting("display", "fullscreen", on)
 
 
-func _volume_row(bus: String) -> HBoxContainer:
+func _volume_row(bus: StringName) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 
 	var label := Label.new()
-	label.text = bus
+	label.text = String(bus)
 	label.custom_minimum_size = Vector2(90, 0)
 	row.add_child(label)
 
@@ -54,7 +54,6 @@ func _volume_row(bus: String) -> HBoxContainer:
 	slider.value = GameState.get_bus_volume(bus)
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slider.value_changed.connect(func(v: float) -> void:
-		GameState.set_bus_volume(bus, v)
-		GameState.set_setting("audio", bus, v))
+		GameState.set_bus_volume(bus, v, true))
 	row.add_child(slider)
 	return row

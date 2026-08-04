@@ -1,0 +1,42 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_door.gd" id="1_door"]
+
+[sub_resource type="RectangleShape2D" id="door_shape"]
+size = Vector2(72, 34)
+
+[sub_resource type="CircleShape2D" id="range_shape"]
+resource_local_to_scene = true
+radius = 100.0
+
+[node name="BuildingDoor" type="StaticBody2D"]
+script = ExtResource("1_door")
+
+[node name="DoorPanel" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-36, -34, 36, -34, 36, 0, -36, 0)
+color = Color(0.25, 0.17, 0.12, 1)
+
+[node name="Threshold" type="Line2D" parent="."]
+points = PackedVector2Array(-42, 1, 42, 1)
+width = 4.0
+default_color = Color(0.69, 0.5, 0.25, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -17)
+shape = SubResource("door_shape")
+
+[node name="InteractionRange" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionRange"]
+shape = SubResource("range_shape")
+
+[node name="Prompt" type="Label" parent="."]
+offset_left = -100.0
+offset_top = -88.0
+offset_right = 100.0
+offset_bottom = -32.0
+theme_type_variation = &"EyebrowLabel"
+text = "E — ENTER"
+horizontal_alignment = 1
+autowrap_mode = 2
+visible = false

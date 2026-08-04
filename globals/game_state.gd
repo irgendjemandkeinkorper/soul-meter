@@ -21,6 +21,7 @@ const DEFAULT_GP := 250
 const MIN_VAR_HARMONY := -5
 const MAX_VAR_HARMONY := 5
 const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
+const AUDIO_BUSES: Array[StringName] = [&"Master", &"Music", &"SFX"]
 
 var flags: Dictionary = {}
 var soul_meter: float = 50.0:
@@ -37,6 +38,7 @@ var var_harmony: Dictionary = {}
 ## Stable Pandora Combatant Id -> {encounters, weaknesses}. Weakness IDs are
 ## stable world-fact IDs from the generated Defining Strike table.
 var combat_knowledge: Dictionary = {}
+var settings_path: String = SETTINGS_PATH
 
 var _settings := ConfigFile.new()
 
@@ -227,7 +229,7 @@ func remove_items(item_id: String, amount: int) -> bool:
 
 func set_setting(section: String, key: String, value: Variant) -> void:
 	_settings.set_value(section, key, value)
-	_settings.save(SETTINGS_PATH)
+	_settings.save(settings_path)
 
 
 func get_setting(section: String, key: String, default: Variant) -> Variant:
@@ -235,10 +237,10 @@ func get_setting(section: String, key: String, default: Variant) -> Variant:
 
 
 func _load_settings() -> void:
-	_settings.load(SETTINGS_PATH)
+	_settings.load(settings_path)
 	apply_fullscreen(_settings.get_value("display", "fullscreen", false))
 	apply_locale(str(_settings.get_value("display", "locale", DEFAULT_LOCALE)))
-	for bus in ["Master", "Music", "SFX"]:
+	for bus: StringName in AUDIO_BUSES:
 		set_bus_volume(bus, _settings.get_value("audio", bus, 1.0))
 
 
@@ -265,24 +267,32 @@ func get_locale() -> String:
 	return current_locale
 
 
-func set_bus_volume(bus: String, linear: float) -> void:
+func set_bus_volume(bus: StringName, linear: float, persist: bool = false) -> void:
 	var idx := AudioServer.get_bus_index(bus)
 	if idx >= 0:
-		AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(linear, 0.0001)))
+		var clamped := clampf(linear, 0.0, 1.0)
+		AudioServer.set_bus_mute(idx, is_zero_approx(clamped))
+		AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(clamped, 0.0001)))
+		if persist:
+			set_setting("audio", String(bus), clamped)
 
 
-func get_bus_volume(bus: String) -> float:
+func get_bus_volume(bus: StringName) -> float:
 	var idx := AudioServer.get_bus_index(bus)
-	return 1.0 if idx < 0 else db_to_linear(AudioServer.get_bus_volume_db(idx))
+	if idx < 0:
+		return 1.0
+	return 0.0 if AudioServer.is_bus_mute(idx) else db_to_linear(AudioServer.get_bus_volume_db(idx))
 
 
 func _ensure_audio_buses() -> void:
-	for bus in ["Music", "SFX"]:
+	for bus: StringName in AUDIO_BUSES:
+		if bus == &"Master":
+			continue
 		if AudioServer.get_bus_index(bus) == -1:
 			var idx := AudioServer.bus_count
 			AudioServer.add_bus(idx)
 			AudioServer.set_bus_name(idx, bus)
-			AudioServer.set_bus_send(idx, "Master")
+			AudioServer.set_bus_send(idx, &"Master")
 
 
 # --- Prototype party and inventory ------------------------------------------

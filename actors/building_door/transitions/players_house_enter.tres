@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"players_house_enter"
+building_id = &"players_house"
+building_name = "Player's House"
+direction = "enter"
+source_scene = "res://world/starting_town.tscn"
+source_anchor = &"PlayersHouseBoundary"
+source_position = Vector2(760, 770)
+destination_scene = "res://world/interiors/players_house.tscn"
+destination_location_id = &"players_house_interior"
+spawn_id = &"entry"
+destination_spawn_position = Vector2(480, 500)
+prompt_text = "E — ENTER"

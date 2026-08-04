@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://actors/enemy/enemy.tscn" id="5_enemy"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="6_exit"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="7_iso"]
+[ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(2000, 40)
@@ -77,6 +78,8 @@ shape = SubResource("shape_v")
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(1000, 600)
 camera_bounds = Rect2i(0, 0, 2000, 1200)
+
+[node name="PartyFollowers" parent="." instance=ExtResource("8_followers")]
 
 [node name="SpawnDefault" type="Marker2D" parent="."]
 position = Vector2(180, 600)

@@ -1,13 +1,17 @@
 class_name IsometricBlockout
 extends TileMapLayer
-## Runtime-built project-owned graybox atlas. The map is a real isometric
-## TileMapLayer (64x32 cells), giving later environment art a stable seam.
+## Real generated isometric ground. The public script/class name stays stable
+## for the existing world scenes, but the runtime graybox atlas is gone.
 
 enum GroundStyle { DOM, DORTHKOR, GROVE }
 enum RoadAxis { NONE, X, Y, CROSS }
 
 const TILE_SIZE := Vector2i(64, 32)
-const ATLAS := preload("res://assets/blockout/isometric_tiles.svg")
+const GROUND_TILESET := preload("res://assets/generated/sprites/ground/ground_tileset.tres")
+const TILE_GRASS := Vector2i(0, 0)
+const TILE_DIRT := Vector2i(1, 0)
+const TILE_STONE := Vector2i(2, 0)
+const TILE_ROAD := Vector2i(3, 0)
 
 @export var map_size := Vector2i(25, 25)
 @export var ground_style: GroundStyle = GroundStyle.DOM
@@ -17,30 +21,16 @@ const ATLAS := preload("res://assets/blockout/isometric_tiles.svg")
 
 func _ready() -> void:
 	z_index = -10
-	_build_tileset()
+	tile_set = GROUND_TILESET
 	_fill_map()
 
 
-func _build_tileset() -> void:
-	var tileset := TileSet.new()
-	tileset.tile_shape = TileSet.TILE_SHAPE_ISOMETRIC
-	tileset.tile_layout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
-	tileset.tile_size = TILE_SIZE
-	var source := TileSetAtlasSource.new()
-	source.texture = ATLAS
-	source.texture_region_size = TILE_SIZE
-	for atlas_x in 4:
-		source.create_tile(Vector2i(atlas_x, 0))
-	tileset.add_source(source, 0)
-	tile_set = tileset
-
-
 func _fill_map() -> void:
-	var base_tile := 0
+	var base_tile := TILE_GRASS
 	if ground_style == GroundStyle.DORTHKOR:
-		base_tile = 3
+		base_tile = TILE_STONE
 	elif ground_style == GroundStyle.GROVE:
-		base_tile = 2
+		base_tile = TILE_DIRT
 	var center := map_size / 2
 	for y in map_size.y:
 		for x in map_size.x:
@@ -52,5 +42,5 @@ func _fill_map() -> void:
 				road_axis in [RoadAxis.Y, RoadAxis.CROSS] and absi(x - center.x) <= road_half_width
 			)
 			if on_x_road or on_y_road:
-				tile = 1
-			set_cell(Vector2i(x, y), 0, Vector2i(tile, 0), 0)
+				tile = TILE_ROAD
+			set_cell(Vector2i(x, y), 0, tile, 0)

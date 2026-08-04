@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/party_followers/party_followers.gd" id="1_followers"]
+
+[node name="PartyFollowers" type="Node"]
+script = ExtResource("1_followers")

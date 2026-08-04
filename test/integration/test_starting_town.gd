@@ -201,6 +201,60 @@ func test_dom_contains_new_buildings_npcs_and_interactive_events() -> void:
 		assert_object(runner.find_child(node_name, true, false)).is_not_null()
 
 
+func test_dom_buildings_use_rendered_sprites_and_y_sorting() -> void:
+	var packed := load("res://world/starting_town.tscn") as PackedScene
+	var town := packed.instantiate() as Node2D
+	auto_free(town)
+
+	assert_bool(town.y_sort_enabled).is_true()
+	assert_int(town.find_children("*", "ColorRect", true, false).size()).is_equal(0)
+	for building_name in [
+		"TrialHall",
+		"RegistryArchive",
+		"BellHouse",
+		"RiverShrine",
+		"IronCompaniesBarracks",
+		"LowerMarket",
+		"ItemShop",
+		"EquipmentShop",
+		"TownHall",
+		"ChefsHouse",
+		"PlayersHouse",
+		"FourArmsTavern",
+	]:
+		var building := town.find_child(building_name, true, false) as Node2D
+		assert_object(building).is_not_null()
+		var sprites := building.find_children("*", "Sprite2D", true, false)
+		assert_int(sprites.size()).is_greater(0)
+		for sprite: Sprite2D in sprites:
+			assert_object(sprite.texture).is_not_null()
+			assert_float(sprite.offset.y).is_less(-50.596)
+
+	var boundary_pairs := {
+		"RegistryArchive": "RegistryArchiveBoundary",
+		"BellHouse": "BellHouseBoundary",
+		"RiverShrine": "RiverShrineBoundary",
+		"IronCompaniesBarracks": "IronCompaniesBoundary",
+		"ItemShop": "ItemShopBoundary",
+		"EquipmentShop": "EquipmentShopBoundary",
+		"TownHall": "TownHallBoundary",
+		"ChefsHouse": "ChefsHouseBoundary",
+		"PlayersHouse": "PlayersHouseBoundary",
+	}
+	for building_name: String in boundary_pairs:
+		var building := town.find_child(building_name, true, false) as Node2D
+		var boundary := town.find_child(boundary_pairs[building_name], true, false) as CollisionShape2D
+		var footprint := boundary.shape as RectangleShape2D
+		assert_float(building.position.y).is_equal_approx(
+			boundary.position.y + footprint.size.y * 0.5, 0.001
+		)
+
+	for dressing_name in ["OakNorthWest", "PineNorth", "RockEast", "GrassShrine"]:
+		assert_object(town.find_child(dressing_name, true, false)).is_not_null()
+	var old_tavern_facade := town.get_node("TavernDoor/Facade") as Polygon2D
+	assert_bool(old_tavern_facade.visible).is_false()
+
+
 func test_dom_shops_and_home_save_point_are_repeatable_interactions() -> void:
 	var original_flags := GameState.flags.duplicate(true)
 	var original_inventory := GameState.inventory.serialize()
