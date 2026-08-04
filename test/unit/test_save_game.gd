@@ -78,6 +78,11 @@ func test_legacy_schema_migrates_without_losing_existing_values() -> void:
 	current["version"] = SaveGameScript.FORMAT_VERSION
 	current.erase("schema_version")
 	current.erase("id_schemas")
+	# A genuine v2/v3 payload predates Defining Strikes, so it cannot carry
+	# combat_knowledge. _build_payload() snapshots the LIVE GameState, which an
+	# earlier suite may have populated — without erasing this the assertion below
+	# becomes order-dependent and passes or fails on suite ordering alone.
+	current["game_state"].erase("combat_knowledge")
 	current["game_state"]["skills"] = {
 		"vex": {"persuasion": {"percentage": 61, "tier": "Expert", "advancement_points_spent": 4}}
 	}
