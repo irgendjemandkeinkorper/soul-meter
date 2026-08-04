@@ -83,6 +83,112 @@ func test_data_only_focus_action_uses_existing_pipeline() -> void:
 	assert_int(ally.action_points).is_equal(3)
 
 
+func test_extreme_band_flips_runtime_state_for_both_sides() -> void:
+	controller.start([ally], [enemy])
+	var extreme := _extreme_band()
+	controller.shift_balance(int(extreme["minimum"]))
+
+	assert_str(ally.balance_band_id).is_equal(str(extreme["id"]))
+	assert_str(enemy.balance_band_id).is_equal(str(extreme["id"]))
+	assert_int(int(ally.balance_effects["damage_bonus"])).is_equal(
+		int(extreme["effects"]["damage_bonus"])
+	)
+	assert_int(int(enemy.balance_effects["damage_bonus"])).is_equal(
+		int(extreme["effects"]["damage_bonus"])
+	)
+	var snapshot := controller.snapshot()
+	assert_bool(
+		snapshot["allies"][0]["balance_effects"] == snapshot["enemies"][0]["balance_effects"]
+	).is_true()
+
+
+func test_stillpoint_center_lock_produces_better_outcome_than_ignoring_extreme() -> void:
+	var ignored := _enemy_attack_outcome(false)
+	var stabilized := _enemy_attack_outcome(true)
+
+	assert_int(stabilized["damage_taken"]).is_less(ignored["damage_taken"])
+	assert_int(stabilized["balance"]).is_equal(0)
+	assert_bool(stabilized["locked"]).is_true()
+	assert_bool(stabilized["suppressed"]).is_true()
+
+
+func test_defining_strike_uses_skill_check_and_applies_authored_effect() -> void:
+	var weakness_id := &"loam-maddened-boar/knee"
+	ally.source_member = _skilled_member()
+	enemy.archetype_id = &"loam-maddened-boar"
+	enemy.discovered_weakness_ids = [weakness_id]
+	controller.start([ally], [enemy])
+	var definition := CombatActionCatalog.by_id(&"definition")
+	var strike := CombatActionCatalog.by_id(&"strike")
+	var ap_before := ally.action_points
+	var hp_before := ally.hp
+
+	var result := controller.submit_action(
+		definition.id, enemy, {"weakness_id": weakness_id, "forced_rolls": [1]}
+	)
+
+	assert_bool(result["allowed"]).is_true()
+	assert_bool(result["check"]["success"]).is_true()
+	assert_int(result["check"]["roll"]).is_equal(1)
+	assert_float(result["check"]["effective_percent"]).is_equal(
+		SkillCheck.preview("lore", ally.source_member)
+	)
+	assert_bool(result["effect_applied"]).is_true()
+	assert_bool(enemy.defining_effects["crippled"]).is_true()
+	assert_int(ally.action_points).is_equal(ap_before - definition.ap_cost)
+	assert_int(definition.ap_cost).is_greater(strike.ap_cost)
+	assert_int(enemy.action_points).is_less(
+		CombatActionCatalog.by_id(&"enemy-strike").ap_cost
+	)
+	controller.end_turn()
+	assert_int(ally.hp).is_equal(hp_before)
+	var controller_source := FileAccess.get_file_as_string(
+		"res://globals/combat/combat_controller.gd"
+	)
+	assert_str(controller_source).contains("skill_check_service.resolve")
+	assert_bool(controller_source.contains("randi_range(")).is_false()
+
+
+func test_failed_defining_check_still_consumes_extra_ap() -> void:
+	var weakness_id := &"loam-maddened-boar/knee"
+	ally.source_member = _skilled_member()
+	enemy.archetype_id = &"loam-maddened-boar"
+	enemy.discovered_weakness_ids = [weakness_id]
+	controller.start([ally], [enemy])
+	var definition := CombatActionCatalog.by_id(&"definition")
+	var hp_before := enemy.hp
+	var ap_before := ally.action_points
+
+	var result := controller.submit_action(
+		definition.id, enemy, {"weakness_id": weakness_id, "forced_rolls": [100]}
+	)
+
+	assert_bool(result["allowed"]).is_true()
+	assert_bool(result["check"]["success"]).is_false()
+	assert_int(ally.action_points).is_equal(ap_before - definition.ap_cost)
+	assert_int(enemy.hp).is_equal(hp_before)
+	assert_bool(enemy.defining_effects.is_empty()).is_true()
+
+
+func test_successful_defining_check_can_be_resisted_without_second_roll() -> void:
+	var weakness_id := &"gnaal-rift-scavenger/disarm"
+	var weakness := CombatIdentityCatalog.weakness(&"gnaal-rift-scavenger", weakness_id)
+	ally.source_member = _skilled_member()
+	enemy.archetype_id = &"gnaal-rift-scavenger"
+	enemy.defense = int(weakness["resistance"]["threshold"])
+	enemy.discovered_weakness_ids = [weakness_id]
+	controller.start([ally], [enemy])
+
+	var result := controller.submit_action(
+		&"definition", enemy, {"weakness_id": weakness_id, "forced_rolls": [1]}
+	)
+
+	assert_bool(result["check"]["success"]).is_true()
+	assert_bool(result["resisted"]).is_true()
+	assert_bool(result["effect_applied"]).is_false()
+	assert_bool(enemy.defining_effects.has("disarmed")).is_false()
+
+
 func test_all_six_verbs_declare_positive_ap_costs_in_data() -> void:
 	var verbs: Dictionary = {}
 	for action in CombatActionCatalog.all():
@@ -117,3 +223,49 @@ func _actor(name: String, hp: int, attack: int, defense: int) -> BattleActor:
 	actor.attack = attack
 	actor.defense = defense
 	return actor
+
+
+func _extreme_band() -> Dictionary:
+	for band: Dictionary in CombatIdentityCatalog.balance_bands():
+		var effects: Variant = band.get("effects", {})
+		if (
+			int(band.get("minimum", 0)) > 0
+			and effects is Dictionary
+			and int(effects.get("damage_bonus", 0)) > 0
+		):
+			return band
+	return {}
+
+
+func _enemy_attack_outcome(use_stillpoint: bool) -> Dictionary:
+	var local_ally := _actor("Ally", 30, 7, 2)
+	var local_enemy := _actor("Enemy", 30, 5, 1)
+	var local_rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	var local_controller := CombatController.new()
+	local_controller.configure(
+		CombatActionCatalog.all(), BattlefieldModel.create_default(local_rules), local_rules
+	)
+	local_controller.start([local_ally], [local_enemy])
+	var extreme := _extreme_band()
+	local_controller.shift_balance(int(extreme["minimum"]))
+	if use_stillpoint:
+		var stillpoint := ElementsData.triad(&"stillpoint")
+		local_controller.apply_balance_effect(stillpoint.unique_effect_parameters, local_ally)
+		var before_shift := local_controller.balance
+		local_controller.shift_balance(int(extreme["minimum"]))
+		assert_int(local_controller.balance).is_equal(before_shift)
+	local_controller.end_turn()
+	return {
+		"damage_taken": local_ally.max_hp - local_ally.hp,
+		"balance": local_controller.balance,
+		"locked": local_controller.balance_lock_until_round > 0,
+		"suppressed": local_controller.threshold_effects_suppressed,
+	}
+
+
+func _skilled_member() -> PartyMember:
+	var member := PartyMember.new()
+	member.id = "test-definer"
+	member.attributes = {"spark": 5, "pitch": 5}
+	member.skill_tiers = {"lore": "untrained", "insight": "untrained"}
+	return member

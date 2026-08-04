@@ -8,11 +8,6 @@ signal balance_changed(value: int)
 signal battle_ended(result: BattleResult)
 signal combat_event(event: CombatEvent)
 
-const BALANCE_MIN := -100
-const BALANCE_MAX := 100
-const EXTREME_THRESHOLD := 60
-const EXTREME_POWER_BONUS := 2
-
 const ACTION_STRIKE := &"strike"
 const ACTION_GUARD := &"guard"
 const ACTION_STABILIZE := &"stabilize"
@@ -32,6 +27,20 @@ var ended := false
 var encounter_id: StringName = &""
 var last_result: BattleResult
 var controller: CombatController
+
+var BALANCE_MIN: int:
+	get:
+		return CombatIdentityCatalog.balance_minimum()
+var BALANCE_MAX: int:
+	get:
+		return CombatIdentityCatalog.balance_maximum()
+var EXTREME_THRESHOLD: int:
+	get:
+		for band: Dictionary in CombatIdentityCatalog.balance_bands():
+			var effects: Variant = band.get("effects", {})
+			if effects is Dictionary and int(effects.get("damage_bonus", 0)) > 0:
+				return mini(abs(int(band.get("minimum", 0))), abs(int(band.get("maximum", 0))))
+		return 0
 
 var player: BattleActor:
 	get:
@@ -58,6 +67,7 @@ func start(encounter: Variant) -> void:
 		actor.defense = member.defense
 		actor.attributes = member.attributes.duplicate(true)
 		actor.party_index = i
+		actor.source_member = member
 		allies.append(actor)
 	if allies.is_empty():
 		allies.append(BattleActor.new())
@@ -71,6 +81,7 @@ func start(encounter: Variant) -> void:
 		for actor in encounter:
 			if actor is BattleActor:
 				enemies.append(actor)
+	_prepare_enemy_knowledge()
 	active_ally_index = _next_living_index(allies, -1)
 	target_enemy_index = _next_living_index(enemies, -1)
 	balance = 0
@@ -113,7 +124,9 @@ func action_lock_reason(action: CombatAction) -> String:
 	return "" if bool(refusal.get("allowed", false)) else str(refusal.get("message", "Action unavailable."))
 
 
-func action_refusal(action: CombatAction, target: BattleActor = null) -> Dictionary:
+func action_refusal(
+	action: CombatAction, target: BattleActor = null, options: Dictionary = {}
+) -> Dictionary:
 	if ended or current_ally() == null:
 		return _blocked_reason(&"battle_state", "Battle has ended.", {})
 	if GameState.soul_meter < action.soul_cost:
@@ -137,23 +150,58 @@ func action_refusal(action: CombatAction, target: BattleActor = null) -> Diction
 			})
 	if controller == null:
 		return {"allowed": true, "blocked_by": &"", "nearest_unblock": {}, "message": ""}
-	if target == null and action.kind == CombatAction.Kind.ATTACK:
+	if target == null and action.requires_enemy_target():
 		target = current_target()
-	return controller.query_action(action, target)
+	return controller.query_action(action, target, _resolved_action_options(action, target, options))
 
 
-func use_action(action_id: StringName, target_index: int = -1) -> bool:
+func use_action(
+	action_id: StringName, target_index: int = -1, options: Dictionary = {}
+) -> bool:
 	var action := _action_by_id(action_id)
 	var actor := current_ally()
 	var target: BattleActor = null
-	if action != null and action.kind == CombatAction.Kind.ATTACK:
+	if action != null and action.requires_enemy_target():
 		target = _living_enemy(target_enemy_index if target_index < 0 else target_index)
-	if action == null or actor == null or not bool(action_refusal(action, target).get("allowed", false)):
+	var resolved_options := _resolved_action_options(action, target, options)
+	if (
+		action == null
+		or actor == null
+		or not bool(action_refusal(action, target, resolved_options).get("allowed", false))
+	):
 		return false
 	if action.soul_cost > 0.0:
 		GameState.set_soul_meter(GameState.soul_meter - action.soul_cost)
-	var outcome := controller.submit_action(action_id, target)
+	var outcome := controller.submit_action(action_id, target, resolved_options)
 	return bool(outcome.get("allowed", false))
+
+
+func use_defining_strike(
+	weakness_id: StringName, target_index: int = -1, forced_rolls: Array[int] = []
+) -> bool:
+	return use_action(
+		ACTION_DEFINITION,
+		target_index,
+		{"weakness_id": weakness_id, "forced_rolls": forced_rolls.duplicate()},
+	)
+
+
+func available_weaknesses(target_index: int = -1) -> Array[Dictionary]:
+	var target := _living_enemy(target_enemy_index if target_index < 0 else target_index)
+	var result: Array[Dictionary] = []
+	if target == null:
+		return result
+	for weakness_id: StringName in target.discovered_weakness_ids:
+		var row := CombatIdentityCatalog.weakness(target.archetype_id, weakness_id)
+		if not row.is_empty():
+			result.append(row)
+	return result
+
+
+func apply_balance_effect(parameters: Dictionary) -> Dictionary:
+	if controller == null:
+		return _blocked_reason(&"battle_state", "Battle has not started.", {})
+	return controller.apply_balance_effect(parameters, current_ally())
 
 
 func player_attack() -> void:
@@ -211,7 +259,11 @@ func shift_balance(amount: int) -> void:
 	if controller != null:
 		controller.shift_balance(amount)
 	else:
-		balance = clampi(balance + amount, BALANCE_MIN, BALANCE_MAX)
+		balance = clampi(
+			balance + amount,
+			CombatIdentityCatalog.balance_minimum(),
+			CombatIdentityCatalog.balance_maximum(),
+		)
 		balance_changed.emit(balance)
 
 
@@ -396,6 +448,43 @@ func _sync_party_hp() -> void:
 		if actor.party_index >= 0 and actor.party_index < GameState.party.size():
 			GameState.party[actor.party_index].hp = actor.hp
 	GameState.party_changed.emit()
+
+
+func _prepare_enemy_knowledge() -> void:
+	var lore_percent := 0.0
+	for member: PartyMember in GameState.party:
+		lore_percent = maxf(lore_percent, SkillCheck.preview("lore", member))
+	var recorded_archetypes := {}
+	for target: BattleActor in enemies:
+		if target.archetype_id.is_empty():
+			continue
+		var archetype_key := String(target.archetype_id)
+		if not recorded_archetypes.has(archetype_key):
+			var prior_encounters := GameState.prior_archetype_encounters(target.archetype_id)
+			for weakness: Dictionary in CombatIdentityCatalog.discovery_candidates(
+				target.archetype_id, lore_percent, prior_encounters
+			):
+				GameState.discover_weakness(
+					target.archetype_id, StringName(weakness.get("id", ""))
+				)
+			GameState.record_archetype_encounter(target.archetype_id)
+			recorded_archetypes[archetype_key] = true
+		target.discovered_weakness_ids = GameState.discovered_weaknesses(target.archetype_id)
+
+
+func _resolved_action_options(
+	action: CombatAction, target: BattleActor, options: Dictionary
+) -> Dictionary:
+	var resolved := options.duplicate(true)
+	if (
+		action != null
+		and action.kind == CombatAction.Kind.DEFINING_STRIKE
+		and not resolved.has("weakness_id")
+		and target != null
+		and not target.discovered_weakness_ids.is_empty()
+	):
+		resolved["weakness_id"] = target.discovered_weakness_ids[0]
+	return resolved
 
 
 func _action_by_id(action_id: StringName) -> CombatAction:

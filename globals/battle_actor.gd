@@ -9,6 +9,9 @@ extends Resource
 @export var attack: int = 5
 @export var defense: int = 2
 @export var attributes: Dictionary = {}
+## Stable Combatant Id from Pandora. This is the enemy-archetype key used by
+## Defining Strike knowledge; ad-hoc test actors may leave it empty.
+@export var archetype_id: StringName = &""
 @export_range(-1, 1) var balance_affinity: int = 0
 @export var balance_pressure: int = 12
 ## GameState flag to set on a win, so a defeated enemy actor doesn't respawn
@@ -31,6 +34,11 @@ var guarding := false
 var combat_id: StringName = &""
 var action_points: int = 0
 var max_action_points: int = 0
+var source_member: PartyMember
+var discovered_weakness_ids: Array[StringName] = []
+var defining_effects: Dictionary = {}
+var balance_band_id: StringName = &""
+var balance_effects: Dictionary = {}
 
 
 func is_alive() -> bool:
@@ -39,3 +47,42 @@ func is_alive() -> bool:
 
 func attribute_value(attribute_id: StringName) -> int:
 	return int(attributes.get(String(attribute_id), attributes.get(attribute_id, 0)))
+
+
+func effective_attack() -> int:
+	return maxi(0, attack + int(defining_effects.get("attack_delta", 0)))
+
+
+func effective_defense() -> int:
+	return maxi(0, defense + int(defining_effects.get("defense_delta", 0)))
+
+
+func effective_max_action_points(base_value: int) -> int:
+	return maxi(0, base_value + int(defining_effects.get("max_ap_delta", 0)))
+
+
+func combat_stat(stat_id: StringName) -> int:
+	match stat_id:
+		&"attack":
+			return effective_attack()
+		&"defense":
+			return effective_defense()
+		&"max_ap":
+			return max_action_points
+		_:
+			return attribute_value(stat_id)
+
+
+func apply_defining_effect(parameters: Dictionary) -> void:
+	for key: Variant in parameters:
+		var effect_key := str(key)
+		var value: Variant = parameters[key]
+		if effect_key.ends_with("_delta") and typeof(value) in [TYPE_INT, TYPE_FLOAT]:
+			defining_effects[effect_key] = int(defining_effects.get(effect_key, 0)) + int(value)
+		else:
+			defining_effects[effect_key] = value
+
+
+func apply_balance_band(band_id: StringName, effects: Dictionary) -> void:
+	balance_band_id = band_id
+	balance_effects = effects.duplicate(true)

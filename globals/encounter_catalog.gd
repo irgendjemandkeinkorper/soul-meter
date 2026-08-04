@@ -30,6 +30,7 @@ static func make_actors(encounter_id: StringName) -> Array[BattleActor]:
 		if not row is Dictionary:
 			continue
 		var actor := BattleActor.new()
+		actor.archetype_id = StringName(row.get("id", ""))
 		actor.display_name = str(row.get("display_name", "Enemy"))
 		actor.max_hp = int(row.get("max_hp", 10))
 		actor.hp = actor.max_hp

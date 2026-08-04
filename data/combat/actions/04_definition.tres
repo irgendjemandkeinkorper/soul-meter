@@ -6,10 +6,9 @@
 script = ExtResource("1_action")
 id = &"definition"
 display_name = "Defining Strike"
-kind = 0
+kind = 6
 verb = 1
 ap_cost = 3
 power_bonus = 2
 balance_shift = 25
-soul_cost = 3.0
 target_profile = &"melee"

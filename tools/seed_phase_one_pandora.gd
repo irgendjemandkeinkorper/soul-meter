@@ -61,6 +61,28 @@ const ENCOUNTER_SCHEMA_PROPERTIES := [
 	["Balance Bias", "float"],
 	["Speech Hooks", "string"],
 ]
+const BALANCE_BAND_PROPERTIES := [
+	["Display Name", "string"],
+	["Band Id", "string"],
+	["Minimum", "int"],
+	["Maximum", "int"],
+	["Global", "bool"],
+	["Effect Parameters", "string"],
+	["Tunable", "bool"],
+]
+const DEFINING_WEAKNESS_PROPERTIES := [
+	["Display Name", "string"],
+	["Archetype Id", "string"],
+	["Weakness Id", "string"],
+	["Check Skill", "string"],
+	["Check Modifier", "float"],
+	["Lore Minimum", "float"],
+	["Prior Encounters", "int"],
+	["Effect Id", "string"],
+	["Effect Parameters", "string"],
+	["Resistance Stat", "string"],
+	["Resistance Threshold", "int"],
+]
 
 
 func _ready() -> void:
@@ -75,8 +97,10 @@ func _ready() -> void:
 	_seed_magnitudes()
 	_seed_fizzle()
 	_seed_encounter_schema()
+	_seed_balance_bands()
+	_seed_defining_weaknesses()
 	Pandora.save_data()
-	print("PHASE-1-SEED: casting data and encounter schema present.")
+	print("PHASE-1-SEED: casting, encounter, and combat-identity data present.")
 	get_tree().quit()
 
 
@@ -239,3 +263,73 @@ func _seed_encounter_schema() -> void:
 		_assign(entity, "Zone Layout", "[]")
 		_assign(entity, "Balance Bias", 0.0)
 		_assign(entity, "Speech Hooks", "[]")
+
+
+func _seed_balance_bands() -> void:
+	var root := _ensure_root("Balance Bands", BALANCE_BAND_PROPERTIES)
+	var rows := [
+		["Chaos Extreme", "chaos_extreme", -100, -60, true, {"damage_bonus": 2}],
+		["Chaosward", "chaosward", -59, -21, true, {}],
+		["Held Centre", "center", -20, 20, false, {"defense_bonus": 2}],
+		["Orderward", "orderward", 21, 59, true, {}],
+		["Order Extreme", "order_extreme", 60, 100, true, {"damage_bonus": 2}],
+	]
+	for row: Array in rows:
+		_upsert(root, row[0], {
+			"Display Name": row[0],
+			"Band Id": row[1],
+			"Minimum": row[2],
+			"Maximum": row[3],
+			"Global": row[4],
+			"Effect Parameters": JSON.stringify(row[5]),
+			"Tunable": true,
+		})
+
+
+func _seed_defining_weaknesses() -> void:
+	var root := _ensure_root("Defining Weaknesses", DEFINING_WEAKNESS_PROPERTIES)
+	var rows: Array[Dictionary] = [
+		_weakness_row("Bog Wight — Hidden Shape", "bog-wight", "bog-wight/reveal", "what it conceals", "insight", 0.0, 0, "reveal", {"revealed": true}),
+		_weakness_row("Bog Wight — Knee", "bog-wight", "bog-wight/knee", "the knee", "lore", 40.0, 1, "cripple", {"crippled": true, "max_ap_delta": -1}),
+		_weakness_row("Loam Boar — Knee", "loam-maddened-boar", "loam-maddened-boar/knee", "the knee", "lore", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
+		_weakness_row("Loam Boar — Buried Rage", "loam-maddened-boar", "loam-maddened-boar/reveal", "what it conceals", "insight", 40.0, 1, "reveal", {"revealed": true}),
+		_weakness_row("Gnaal Breach-Hound — Knee", "gnaal-breach-hound", "gnaal-breach-hound/knee", "the knee", "lore", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
+		_weakness_row("Gnaal Breach-Hound — Breach Name", "gnaal-breach-hound", "gnaal-breach-hound/reveal", "what it conceals", "insight", 40.0, 1, "reveal", {"revealed": true}),
+		_weakness_row("Gnaal Rift-Scavenger — Grasp", "gnaal-rift-scavenger", "gnaal-rift-scavenger/disarm", "the hand that holds it", "lore", 0.0, 0, "disarm", {"attack_delta": -2, "disarmed": true}),
+		_weakness_row("Gnaal Rift-Scavenger — Rift Path", "gnaal-rift-scavenger", "gnaal-rift-scavenger/reveal", "what it conceals", "insight", 40.0, 1, "reveal", {"revealed": true}),
+		_weakness_row("Mustered Bloodbellow — Binding Oath", "mustered-bloodbellow", "mustered-bloodbellow/binding-oath", "the oath that binds it", "lore", 0.0, 0, "bind_break", {"binding_broken": true, "defense_delta": -2}),
+		_weakness_row("Mustered Bloodbellow — Mustered Weapon", "mustered-bloodbellow", "mustered-bloodbellow/disarm", "the hand that holds it", "insight", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
+		_weakness_row("Cleaned Guard — Binding Oath", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/binding-oath", "the oath that binds it", "lore", 0.0, 0, "bind_break", {"binding_broken": true, "defense_delta": -2}),
+		_weakness_row("Cleaned Guard — Gripping Hand", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/disarm", "the hand that holds it", "insight", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
+	]
+	for row: Dictionary in rows:
+		var entity_name := str(row.get("Entity Name", ""))
+		row.erase("Entity Name")
+		_upsert(root, entity_name, row)
+
+
+func _weakness_row(
+	entity_name: String,
+	archetype_id: String,
+	weakness_id: String,
+	display_name: String,
+	check_skill: String,
+	lore_minimum: float,
+	prior_encounters: int,
+	effect_id: String,
+	effect_parameters: Dictionary
+) -> Dictionary:
+	return {
+		"Entity Name": entity_name,
+		"Display Name": display_name,
+		"Archetype Id": archetype_id,
+		"Weakness Id": weakness_id,
+		"Check Skill": check_skill,
+		"Check Modifier": 0.0,
+		"Lore Minimum": lore_minimum,
+		"Prior Encounters": prior_encounters,
+		"Effect Id": effect_id,
+		"Effect Parameters": JSON.stringify(effect_parameters),
+		"Resistance Stat": "defense",
+		"Resistance Threshold": 6,
+	}

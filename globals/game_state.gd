@@ -9,6 +9,7 @@ signal inventory_changed
 signal party_changed
 signal locale_changed(locale: String)
 signal var_harmony_changed(actor_id: String, value: int, delta: int, source: StringName)
+signal combat_knowledge_changed(archetype_id: String)
 
 const SETTINGS_PATH := "user://settings.cfg"
 const PROTAGONIST_ID := "vex"
@@ -33,6 +34,9 @@ var current_locale := DEFAULT_LOCALE
 var skills: Dictionary = {}
 ## actor id -> integer Vär harmony in the ratified -5…+5 range.
 var var_harmony: Dictionary = {}
+## Stable Pandora Combatant Id -> {encounters, weaknesses}. Weakness IDs are
+## stable world-fact IDs from the generated Defining Strike table.
+var combat_knowledge: Dictionary = {}
 
 var _settings := ConfigFile.new()
 
@@ -90,6 +94,64 @@ func set_flag(flag: String, value: Variant = true) -> void:
 
 func get_flag(flag: String, default: Variant = false) -> Variant:
 	return flags.get(flag, default)
+
+
+# --- Defining Strike knowledge ----------------------------------------------
+
+
+func prior_archetype_encounters(archetype_id: StringName) -> int:
+	var row: Variant = combat_knowledge.get(String(archetype_id), {})
+	return int(row.get("encounters", 0)) if row is Dictionary else 0
+
+
+func record_archetype_encounter(archetype_id: StringName) -> int:
+	var key := String(archetype_id)
+	if not StableIds.is_valid(StableIds.ACTOR, key):
+		return 0
+	var row: Dictionary = combat_knowledge.get(key, {}).duplicate(true)
+	row["encounters"] = int(row.get("encounters", 0)) + 1
+	if not row.get("weaknesses", []) is Array:
+		row["weaknesses"] = []
+	combat_knowledge[key] = row
+	combat_knowledge_changed.emit(key)
+	return int(row["encounters"])
+
+
+func discover_weakness(archetype_id: StringName, weakness_id: StringName) -> bool:
+	var archetype_key := String(archetype_id)
+	var weakness_key := String(weakness_id)
+	if (
+		not StableIds.is_valid(StableIds.ACTOR, archetype_key)
+		or not StableIds.is_valid(StableIds.WORLD_FACT, weakness_key)
+	):
+		return false
+	var row: Dictionary = combat_knowledge.get(archetype_key, {}).duplicate(true)
+	var weaknesses: Array = row.get("weaknesses", []).duplicate()
+	if weakness_key in weaknesses:
+		return false
+	weaknesses.append(weakness_key)
+	row["weaknesses"] = weaknesses
+	row["encounters"] = int(row.get("encounters", 0))
+	combat_knowledge[archetype_key] = row
+	combat_knowledge_changed.emit(archetype_key)
+	return true
+
+
+func discovered_weaknesses(archetype_id: StringName) -> Array[StringName]:
+	var result: Array[StringName] = []
+	var row: Variant = combat_knowledge.get(String(archetype_id), {})
+	if not row is Dictionary:
+		return result
+	var values: Variant = row.get("weaknesses", [])
+	if values is Array:
+		for weakness_id: Variant in values:
+			if weakness_id is String:
+				result.append(StringName(weakness_id))
+	return result
+
+
+func has_discovered_weakness(archetype_id: StringName, weakness_id: StringName) -> bool:
+	return weakness_id in discovered_weaknesses(archetype_id)
 
 
 # --- Vär (personal harmony) --------------------------------------------------
@@ -231,6 +293,7 @@ func _seed_demo_data() -> void:
 	party = [_make_vex()]
 	skills = {}
 	var_harmony = {}
+	combat_knowledge = {}
 	party_changed.emit()
 	inventory.clear()
 	inventory.create_and_add_item(ItemIds.WEAPONS_TAUBSTUMMER_AXE)
@@ -426,6 +489,7 @@ func to_dict() -> Dictionary:
 		"inventory": inventory.serialize(),
 		"skills": skills.duplicate(true),
 		"var_harmony": var_harmony.duplicate(true),
+		"combat_knowledge": combat_knowledge.duplicate(true),
 	}
 
 
@@ -440,6 +504,7 @@ func from_dict(data: Dictionary) -> bool:
 	gp = maxi(0, int(data.get("gp", DEFAULT_GP)))
 	skills = data.get("skills", {}).duplicate(true)
 	var_harmony = data.get("var_harmony", {}).duplicate(true)
+	combat_knowledge = data.get("combat_knowledge", {}).duplicate(true)
 	party.clear()
 	for row in data.get("party", []):
 		party.append(PartyMember.from_dict(row))
@@ -449,7 +514,7 @@ func from_dict(data: Dictionary) -> bool:
 
 
 func _validate_save_data(data: Dictionary) -> bool:
-	for key in ["flags", "skills", "var_harmony", "inventory"]:
+	for key in ["flags", "skills", "var_harmony", "combat_knowledge", "inventory"]:
 		if data.has(key) and not data[key] is Dictionary:
 			return false
 	if data.has("party") and not data["party"] is Array:
@@ -461,6 +526,24 @@ func _validate_save_data(data: Dictionary) -> bool:
 	for value: Variant in harmony.values():
 		if typeof(value) != TYPE_INT or int(value) < -5 or int(value) > 5:
 			return false
+	var knowledge: Dictionary = data.get("combat_knowledge", {})
+	for archetype_id: Variant in knowledge:
+		var knowledge_row: Variant = knowledge[archetype_id]
+		if (
+			not archetype_id is String
+			or not StableIds.is_valid(StableIds.ACTOR, str(archetype_id))
+			or not knowledge_row is Dictionary
+			or typeof(knowledge_row.get("encounters", 0)) != TYPE_INT
+			or int(knowledge_row.get("encounters", 0)) < 0
+			or not knowledge_row.get("weaknesses", []) is Array
+		):
+			return false
+		for weakness_id: Variant in knowledge_row.get("weaknesses", []):
+			if (
+				not weakness_id is String
+				or not StableIds.is_valid(StableIds.WORLD_FACT, str(weakness_id))
+			):
+				return false
 	var skill_map: Dictionary = data.get("skills", {})
 	for actor_id: Variant in skill_map:
 		if (

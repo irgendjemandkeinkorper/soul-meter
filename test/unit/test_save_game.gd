@@ -94,6 +94,7 @@ func test_legacy_schema_migrates_without_losing_existing_values() -> void:
 	assert_int(migrated["schema_version"]).is_equal(SaveGameScript.SCHEMA_VERSION)
 	assert_int(migrated["game_state"]["skills"]["vex"]["persuasion"]["advancement_points_spent"]).is_equal(4)
 	assert_int(migrated["game_state"]["var_harmony"]["vex"]).is_equal(-3)
+	assert_bool(migrated["game_state"]["combat_knowledge"].is_empty()).is_true()
 	assert_str(migrated["zhavar"]["dom"]).is_equal("tolling")
 	assert_int(migrated["ng_plus"]["style_points"]).is_equal(17)
 
@@ -105,6 +106,12 @@ func test_envelope_round_trip_preserves_all_ratified_save_sections() -> void:
 		"vex": {"persuasion": {"percentage": 74.5, "tier": "Trained", "advancement_points_spent": 9}}
 	}
 	payload["game_state"]["var_harmony"] = {"vex": 5}
+	payload["game_state"]["combat_knowledge"] = {
+		"mustered-bloodbellow": {
+			"encounters": 2,
+			"weaknesses": ["mustered-bloodbellow/binding-oath"],
+		}
+	}
 	payload["reputation"] = {
 		"log": [{"actor": "player", "faction": "mirror-choir", "delta": 12.0}],
 		"next_order": 1,
@@ -128,6 +135,12 @@ func test_envelope_round_trip_preserves_all_ratified_save_sections() -> void:
 	assert_str(restored["game_state"]["skills"]["vex"]["persuasion"]["tier"]).is_equal("Trained")
 	assert_int(restored["game_state"]["skills"]["vex"]["persuasion"]["advancement_points_spent"]).is_equal(9)
 	assert_int(restored["game_state"]["var_harmony"]["vex"]).is_equal(5)
+	assert_int(
+		restored["game_state"]["combat_knowledge"]["mustered-bloodbellow"]["encounters"]
+	).is_equal(2)
+	assert_array(
+		restored["game_state"]["combat_knowledge"]["mustered-bloodbellow"]["weaknesses"]
+	).contains("mustered-bloodbellow/binding-oath")
 	assert_float(restored["reputation"]["log"][0]["delta"]).is_equal_approx(12.0, 0.001)
 	assert_str(restored["renown"]["log"][0]["kind"]).is_equal("infamy")
 	assert_str(restored["zhavar"]["dorthkor"]).is_equal("unprecedented")
@@ -144,6 +157,28 @@ func test_envelope_round_trip_preserves_var_harmony_boundaries() -> void:
 		assert_int(prepared["payload"]["game_state"]["var_harmony"]["vex"]).is_equal(
 			boundary
 		)
+
+
+func test_weakness_discovery_survives_a_save_round_trip() -> void:
+	GameState.combat_knowledge.clear()
+	assert_bool(
+		GameState.discover_weakness(
+			&"mustered-bloodbellow", &"mustered-bloodbellow/binding-oath"
+		)
+	).is_true()
+	GameState.record_archetype_encounter(&"mustered-bloodbellow")
+	var payload: Dictionary = saves._build_payload()
+	var prepared: Dictionary = saves._prepare_for_load(payload)
+	assert_bool(prepared["ok"]).is_true()
+
+	GameState.combat_knowledge.clear()
+	assert_bool(GameState.from_dict(prepared["payload"]["game_state"])).is_true()
+	assert_bool(
+		GameState.has_discovered_weakness(
+			&"mustered-bloodbellow", &"mustered-bloodbellow/binding-oath"
+		)
+	).is_true()
+	assert_int(GameState.prior_archetype_encounters(&"mustered-bloodbellow")).is_equal(1)
 
 
 func test_corrupt_payload_fails_loudly_before_state_application() -> void:
