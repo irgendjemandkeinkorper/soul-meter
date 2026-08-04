@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
 
 [node name="ItemShopInterior" type="Node2D"]
 
@@ -9,3 +10,10 @@ building_name = "Item Shop"
 exit_transition_id = &"item_shop_exit"
 floor_color = Color(0.17, 0.13, 0.09, 1)
 accent_color = Color(0.74, 0.42, 0.18, 1)
+
+[node name="CaskWarehouseDoor" parent="." instance=ExtResource("2_door")]
+position = Vector2(800, 40)
+transition_id = &"cask_warehouse_enter"
+
+[node name="SpawnFromCaskWarehouse" type="Marker2D" parent="."]
+position = Vector2(800, 150)

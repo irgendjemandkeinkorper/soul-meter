@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"shrine_undercroft_enter"
+building_id = &"shrine_undercroft"
+building_name = "Shrine Undercroft"
+direction = "enter"
+source_scene = "res://world/interiors/river_shrine.tscn"
+source_anchor = &"ShrineUndercroftDoor"
+source_position = Vector2(800, 40)
+destination_scene = "res://world/interiors/shrine_undercroft.tscn"
+destination_location_id = &"shrine_undercroft_interior"
+spawn_id = &"entry"
+destination_spawn_position = Vector2(480, 500)
+prompt_text = "E — ENTER"

@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+
+[node name="CouncilChamberInterior" type="Node2D"]
+
+[node name="Room" parent="." instance=ExtResource("1_interior")]
+building_name = "Council Chamber"
+exit_transition_id = &"council_chamber_exit"
+floor_color = Color(0.14, 0.14, 0.17, 1)
+accent_color = Color(0.77, 0.57, 0.23, 1)

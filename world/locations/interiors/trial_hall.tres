@@ -8,5 +8,6 @@ id = &"trial_hall_interior"
 scene_path = "res://world/interiors/trial_hall.tscn"
 default_spawn_id = &"entry"
 spawns = {
-"entry": "entry"
+"entry": "entry",
+"from_lower_trial_hall": "from_lower_trial_hall"
 }
