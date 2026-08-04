@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"guard"
+display_name = "Guard"
+kind = 1
+verb = 5
+ap_cost = 2
+target_profile = &"self"
+center_pull = 10
