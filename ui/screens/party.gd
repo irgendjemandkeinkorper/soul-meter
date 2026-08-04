@@ -1,6 +1,10 @@
 extends Screen
 ## A view of GameState.party: member list on the left, sheet on the right.
 
+const PartyMemberVisualsScript := preload(
+	"res://actors/party_followers/party_member_visuals.gd"
+)
+
 var _name_lbl: Label
 var _sub_lbl: Label
 var _hp_bar: ProgressBar
@@ -20,6 +24,8 @@ func _build() -> void:
 	list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	list.custom_minimum_size = Vector2(260, 0)
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list.fixed_icon_size = Vector2i(48, 48)
+	list.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	row.add_child(list)
 
 	var sheet := VBoxContainer.new()
@@ -48,7 +54,10 @@ func _build() -> void:
 	sheet.add_child(_bio_lbl)
 
 	for member in GameState.party:
-		list.add_item("%s  (Lv %d)" % [member.display_name, member.level])
+		list.add_item(
+			"%s  (Lv %d)" % [member.display_name, member.level],
+			PartyMemberVisualsScript.ensure_portrait(member)
+		)
 
 	list.item_selected.connect(_on_selected)
 	if GameState.party.size() > 0:
