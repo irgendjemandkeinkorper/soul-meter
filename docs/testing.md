@@ -119,6 +119,16 @@ func test_player_moves_right_when_holding_move_right() -> void:
 frames (physics included) and must be `await`ed. `find_child(name, recursive, owned)` — pass
 `owned: false`, or nodes created at runtime in code (not part of the `.tscn`) won't be found.
 
+### Filesystem-I/O exception: save rotation tests
+
+Most unit tests instantiate a fresh autoload script and avoid filesystem I/O. Save rotation and
+recovery are the deliberate exception: the write-to-temp, backup rename, primary corruption, and
+load fallback only make sense when exercised against real files. These tests still instantiate a
+fresh `SaveGame`, override its three paths with unique files under `OS.get_temp_dir()`, and remove
+those files before and after each test. They must never use the production `user://chapter_one.save`
+paths, because that would make a test alter a developer's real save and could make a second run
+depend on the first.
+
 ### Gotchas (hit while writing the examples above — save yourself the debugging)
 
 - **Nodes built with `Foo.new()` at runtime don't keep the name you'd expect.** `npc.gd`

@@ -4,21 +4,45 @@ const SaveGameScript := preload("res://globals/save_game.gd")
 var saves
 var test_save_paths: Array[String] = []
 var diagnostics: Array[Dictionary] = []
+var save_diagnostics: Array[Dictionary] = []
+var game_state_before_test: Dictionary = {}
+var reputation_before_test: Dictionary = {}
+var renown_before_test: Dictionary = {}
+var quests_before_test: Dictionary = {}
+var target_scene_before_test := ""
+var target_spawn_id_before_test: StringName = &"default"
 
 
 func before_test() -> void:
+	game_state_before_test = GameState.to_dict()
+	reputation_before_test = Reputation.to_dict()
+	renown_before_test = Renown.to_dict()
+	quests_before_test = QuestRegistry.to_dict()
+	target_scene_before_test = GameFlow._target_scene
+	target_spawn_id_before_test = GameFlow._target_spawn_id
 	saves = auto_free(SaveGameScript.new())
-	saves.save_path = "user://gdunit_save_game_fallback.save"
-	saves.temp_path = "user://gdunit_save_game_fallback.save.tmp"
-	saves.backup_path = "user://gdunit_save_game_fallback.save.bak"
+	var test_save_prefix := OS.get_temp_dir().path_join(
+		"soul-meter-gdunit-save-%s" % Time.get_ticks_usec()
+	)
+	saves.save_path = test_save_prefix + ".save"
+	saves.temp_path = test_save_prefix + ".save.tmp"
+	saves.backup_path = test_save_prefix + ".save.bak"
 	test_save_paths = [saves.save_path, saves.temp_path, saves.backup_path]
 	diagnostics.clear()
+	save_diagnostics.clear()
 	saves.spawn_marker_diagnostic.connect(_record_spawn_diagnostic)
+	saves.save_diagnostic.connect(_record_save_diagnostic)
 	_remove_test_saves()
 
 
 func after_test() -> void:
 	_remove_test_saves()
+	GameState.from_dict(game_state_before_test)
+	Reputation.from_dict(reputation_before_test)
+	Renown.from_dict(renown_before_test)
+	QuestRegistry.from_dict(quests_before_test)
+	GameFlow._target_scene = target_scene_before_test
+	GameFlow._target_spawn_id = target_spawn_id_before_test
 
 
 func test_validation_accepts_a_complete_current_payload() -> void:
@@ -192,19 +216,45 @@ func test_invalid_primary_payload_can_be_rejected_before_fallback() -> void:
 
 
 func test_corrupted_primary_save_loads_from_last_known_good_backup() -> void:
+	GameState.flags = {"save_generation": "first"}
+	GameState.soul_meter = 17.5
+	GameState.gp = 111
 	assert_bool(saves.save()).is_true()
+	GameState.flags = {"save_generation": "second"}
+	GameState.soul_meter = 82.5
+	GameState.gp = 222
 	assert_bool(saves.save()).is_true()
 	assert_bool(FileAccess.file_exists(saves.backup_path)).is_true()
 
-	var corrupted := FileAccess.open(saves.save_path, FileAccess.WRITE)
-	assert_object(corrupted).is_not_null()
-	corrupted.store_string("truncated save")
-	corrupted.close()
+	_corrupt_save(saves.save_path)
 
 	assert_bool(saves.load_save()).is_true()
+	assert_int(save_diagnostics.size()).is_equal(1)
+	assert_str(save_diagnostics[0]["severity"]).is_equal("warning")
+	assert_str(save_diagnostics[0]["message"]).contains("Primary save was invalid")
+	assert_str(save_diagnostics[0]["message"]).contains("backup save")
+	assert_str(GameState.flags["save_generation"]).is_equal("first")
+	assert_float(GameState.soul_meter).is_equal_approx(17.5, 0.001)
+	assert_int(GameState.gp).is_equal(111)
+	assert_bool(FileAccess.file_exists(saves.save_path)).is_true()
+	assert_bool(FileAccess.file_exists(saves.backup_path)).is_true()
 
 
-func test_missing_spawn_markers_are_resolved_as_a_diagnostic_failure() -> void:
+func test_corrupted_primary_and_backup_fail_cleanly_without_rotating_files() -> void:
+	assert_bool(saves.save()).is_true()
+	assert_bool(saves.save()).is_true()
+	_corrupt_save(saves.save_path)
+	_corrupt_save(saves.backup_path)
+	monitor_signals(saves)
+
+	assert_bool(saves.load_save()).is_false()
+	await assert_signal(saves).is_emitted("save_failed", any())
+	assert_str(saves.last_error).contains("Could not load save")
+	assert_bool(FileAccess.file_exists(saves.save_path)).is_true()
+	assert_bool(FileAccess.file_exists(saves.backup_path)).is_true()
+
+
+func test_missing_spawn_markers_emit_warning_and_error_diagnostics() -> void:
 	var scene := Node2D.new()
 	scene.name = "MissingSpawnScene"
 	var player := Node2D.new()
@@ -214,7 +264,8 @@ func test_missing_spawn_markers_are_resolved_as_a_diagnostic_failure() -> void:
 	saves.has_pending_player_position = false
 	saves.pending_spawn_id = &"missing_arrival"
 
-	assert_object(saves._resolve_spawn_marker(scene, "SpawnMissingArrival")).is_null()
+	saves.apply_pending_location(scene)
+	assert_vector(player.global_position).is_equal(Vector2.ZERO)
 	assert_int(diagnostics.size()).is_equal(2)
 	assert_str(diagnostics[0]["severity"]).is_equal("warning")
 	assert_str(diagnostics[0]["marker_name"]).is_equal("SpawnMissingArrival")
@@ -222,15 +273,19 @@ func test_missing_spawn_markers_are_resolved_as_a_diagnostic_failure() -> void:
 	assert_str(diagnostics[1]["severity"]).is_equal("error")
 	assert_str(diagnostics[1]["marker_name"]).is_equal("SpawnDefault")
 	assert_str(diagnostics[1]["scene_path"]).is_equal("MissingSpawnScene")
-	saves.apply_pending_location(scene)
-	assert_vector(player.global_position).is_equal(Vector2.ZERO)
+
+
+func _corrupt_save(path: String) -> void:
+	var corrupted := FileAccess.open(path, FileAccess.WRITE)
+	assert_object(corrupted).is_not_null()
+	corrupted.store_string("truncated save")
+	corrupted.close()
 
 
 func _remove_test_saves() -> void:
 	for path in test_save_paths:
-		var absolute_path := ProjectSettings.globalize_path(path)
 		if FileAccess.file_exists(path):
-			DirAccess.remove_absolute(absolute_path)
+			DirAccess.remove_absolute(path)
 
 
 func _record_spawn_diagnostic(severity: String, marker_name: String, scene_path: String) -> void:
@@ -241,3 +296,7 @@ func _record_spawn_diagnostic(severity: String, marker_name: String, scene_path:
 			"scene_path": scene_path,
 		}
 	)
+
+
+func _record_save_diagnostic(severity: String, message: String) -> void:
+	save_diagnostics.append({"severity": severity, "message": message})
