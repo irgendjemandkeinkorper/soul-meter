@@ -241,24 +241,24 @@ func test_validation_rejects_malicious_or_invalid_payload_fields() -> void:
 
 
 func test_flags_validation_and_coercion() -> void:
-	# Test that game state successfully filters malicious or overly long flags
-	var raw_data := {
-		"inventory": {},
-		"flags": {
-			"safe_flag": true,
-			"a".repeat(200): true, # overly long key
-			"123": "number_as_key" # non-string key (integer) if parsed/deserialized
-		},
-		"soul_meter": 50.0,
-		"gp": 100
+	# Test that game state successfully filters malicious or overly long flags.
+	# Build on a REAL serialized GameState rather than a hand-rolled minimal
+	# dictionary: from_dict deserializes the inventory, and GLoot rejects an
+	# empty {} payload, so a minimal literal fails for reasons unrelated to the
+	# security property under test.
+	var raw_data: Dictionary = GameState.to_dict()
+	raw_data["flags"] = {
+		"safe_flag": true,
+		"a".repeat(200): true, # overly long key — filtered
 	}
-	# Set non-string key inside raw flags
+	# A non-String key (integer) — filtered. Note "123" as a *String* key would
+	# be kept and should be: it is a legal short string, not an attack.
 	raw_data["flags"][123] = "invalid_key_type"
 
 	assert_bool(GameState.from_dict(raw_data)).is_true()
 	assert_bool(GameState.get_flag("safe_flag", false)).is_true()
 	assert_bool(GameState.get_flag("a".repeat(200), false)).is_false()
-	assert_bool(GameState.get_flag("123", false)).is_false()
+	assert_bool(GameState.flags.has(123)).is_false()
 
 
 func test_validation_rejects_non_gameplay_scene_injection() -> void:
