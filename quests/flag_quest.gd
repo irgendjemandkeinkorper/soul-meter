@@ -4,6 +4,8 @@ extends Quest
 
 @export var required_flags: PackedStringArray = []
 @export var objectives: PackedStringArray = []
+@export var quest_giver: String = ""
+@export var quest_location: String = ""
 var current_stage := 0
 
 

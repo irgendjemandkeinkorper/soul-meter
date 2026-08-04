@@ -80,8 +80,7 @@ func _make_window(title_text: String, min_size: Vector2 = Vector2(520, 420)) -> 
 	center.add_child(panel)
 
 	var margin := MarginContainer.new()
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 20)
+	margin.theme_type_variation = "ScreenWindowMargin"
 	panel.add_child(margin)
 
 	var scroll := ScrollContainer.new()
@@ -90,7 +89,7 @@ func _make_window(title_text: String, min_size: Vector2 = Vector2(520, 420)) -> 
 	margin.add_child(scroll)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 12)
+	vbox.theme_type_variation = "ScreenContentColumn"
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(vbox)

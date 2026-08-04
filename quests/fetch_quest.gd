@@ -9,6 +9,8 @@ class_name FetchQuest
 @export var reward_faction: String = ""
 @export var reward_amount: float = 0.0
 @export var reward_cause: String = ""
+@export var quest_giver: String = ""
+@export var quest_location: String = ""
 
 
 func update(_args: Dictionary = {}) -> void:

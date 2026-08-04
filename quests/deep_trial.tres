@@ -8,5 +8,7 @@ id = 3
 quest_name = "The Deep Trial"
 quest_description = "An empty suit has returned to its old Jawbrace post. Coiljaw needs proof that the first ledge can be held before he asks Dom to descend into the Hush."
 quest_objective = "Reach the Wound lip below the Jawbrace."
+quest_giver = "Marshal Coiljaw"
+quest_location = "The Wound lip below the Jawbrace"
 required_flags = PackedStringArray("chapter_wound_lip_reached", "defeated_cleaned_jawbrace_guard")
 objectives = PackedStringArray("Reach the Wound lip below the Jawbrace.", "Break the cleaned armor holding the old post.", "Return to Marshal Coiljaw with proof from the first ledge.")
