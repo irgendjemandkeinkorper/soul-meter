@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 7
+quest_name = "The Living Tag"
+quest_description = "Droma Flintjaw found a living guard's tag on cleaned armor. The plate can be quarantined as dangerous evidence or returned after the false death record is struck."
+quest_objective = "Verify the owner and the armor's original watch posture."
+required_flags = PackedStringArray("dom_living_tag_verified")
+objectives = PackedStringArray("Compare Korrin's watch account with Ressa's brand inspection.", "Return to Droma Flintjaw and decide the armor's fate.")
+stable_id = "dom/side/living-tag"
+giver_actor_id = "droma-flintjaw"
+participant_actor_ids = PackedStringArray("droma-flintjaw", "korrin-blackrail", "ressa-ironmouth")
+hook_ids = PackedStringArray("dom/droma-flintjaw/giver", "dom/korrin-blackrail/information", "dom/ressa-ironmouth/target")
+dialogue_title = "dom_side_living_tag"
+decision_prompt = "Decide whether the empty plate belongs in Wound-Watch quarantine or the living guard's name belongs back on it."
+resolution_flag = "dom_living_tag_resolution"
+outcome_ids = PackedStringArray("quarantine-the-plate", "restore-the-name")
+outcome_labels = PackedStringArray("Quarantine the plate as Wound-Watch evidence.", "Strike the false death entry and return the guard's name.")
+outcome_faction_ids = PackedStringArray("ironbrand-sentinels", "trial-council")
+outcome_reputation_deltas = PackedFloat32Array(6.0, 5.0)
+outcome_causes = PackedStringArray("Placed the living guard's cleaned armor under Sentinel quarantine", "Cleared a living guard from Dom's casualty record before returning the armor tag")
+outcome_readbacks = PackedStringArray("The clean plate stands behind a chained screen now; no watch hand is asked to wear it.", "Morning roll speaks the guard's name again, and the false casualty line has been cut away.")

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 15
+quest_name = "The Smoothed Weights"
+quest_description = "Veska Ruun found Trial Pillar weights filed where candidate names should be cut. Voiding the affected trials restores the measure; preserving ranks avoids punishing candidates for an examiner's fraud."
+quest_objective = "Audit the altered Trial Pillar weights."
+required_flags = PackedStringArray("dom_smoothed_weights_audited")
+objectives = PackedStringArray("Compare Drel's official scores with Kadrin's damaged burden pins.", "Return to Veska Ruun and rule on the affected ranks.")
+stable_id = "dom/side/smoothed-weights"
+giver_actor_id = "veska-ruun"
+participant_actor_ids = PackedStringArray("veska-ruun", "drel-gaunt", "kadrin-stoneyield")
+hook_ids = PackedStringArray("dom/veska-ruun/giver", "dom/drel-gaunt/information", "dom/kadrin-stoneyield/state-change")
+dialogue_title = "dom_side_smoothed_weights"
+decision_prompt = "Decide whether to void the altered trials or preserve the candidates' ranks and repeat the Pillar publicly."
+resolution_flag = "dom_smoothed_weights_resolution"
+outcome_ids = PackedStringArray("void-the-trials", "repeat-with-ranks-held")
+outcome_labels = PackedStringArray("Void every trial touched by the altered weights.", "Preserve the ranks but repeat the Pillar in public with honest weights.")
+outcome_faction_ids = PackedStringArray("trial-council", "trial-council")
+outcome_reputation_deltas = PackedFloat32Array(6.0, -4.0)
+outcome_causes = PackedStringArray("Voided compromised Trial Pillar results despite the cost to sitting ranks", "Preserved disputed Trial ranks while ordering a public repeat under honest weight")
+outcome_readbacks = PackedStringArray("The altered names have been struck from the Pillar slate; every affected candidate receives a clean attempt.", "The old ranks stand provisionally, and the whole South Arm gathers to watch the honest repeat.")

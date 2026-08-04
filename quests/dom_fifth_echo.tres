@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 12
+quest_name = "The Fifth Echo"
+quest_description = "Pell Hammersong hears a fifth reply beneath Dom's four-beat brace signal. It can be damped as interference or preserved as a warning that the city's old rhythm no longer balances every voice."
+quest_objective = "Test the Jawbrace drums from both sides of the chasm."
+required_flags = PackedStringArray("dom_fifth_echo_tested")
+objectives = PackedStringArray("Compare Nalla's unknown reply with Tern's silence and Sorek's living calls.", "Return to Pell Hammersong and decide what the fifth echo means for the civic signal.")
+stable_id = "dom/side/fifth-echo"
+giver_actor_id = "pell-hammersong"
+participant_actor_ids = PackedStringArray("pell-hammersong", "nalla-gatebeat", "tern-hollowbeat", "sorek-hushward")
+hook_ids = PackedStringArray("dom/pell-hammersong/giver", "dom/nalla-gatebeat/target", "dom/tern-hollowbeat/state-change", "dom/sorek-hushward/information")
+dialogue_title = "dom_side_fifth_echo"
+decision_prompt = "Decide whether to damp the extra reply or write it into Dom's warning cadence."
+resolution_flag = "dom_fifth_echo_resolution"
+outcome_ids = PackedStringArray("damp-the-echo", "keep-the-warning")
+outcome_labels = PackedStringArray("Damp the fifth echo and restore the four-beat signal.", "Keep the fifth echo as a public warning beat.")
+outcome_faction_ids = PackedStringArray("trial-council", "kord-rite")
+outcome_reputation_deltas = PackedFloat32Array(6.0, 5.0)
+outcome_causes = PackedStringArray("Restored Dom's Jawbrace drums to an unambiguous four-beat signal", "Preserved the fifth echo as a warning that Dom's old cadence no longer answers alone")
+outcome_readbacks = PackedStringArray("The Jawbrace answers in four clean beats again, with a dampening cloth under the western drum.", "Every gate signal now leaves room for a fifth warning beat; nobody calls the pause an accident.")

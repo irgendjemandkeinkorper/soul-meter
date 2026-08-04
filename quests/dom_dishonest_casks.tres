@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 6
+quest_name = "Dishonest Water"
+quest_description = "Keth Varr found honest seals around cooling water that carries the wrong residue. Dom must choose between stopping the East Arm forges and keeping the Hammer Roar alive under watch."
+quest_objective = "Trace the suspect cooling-water casks."
+required_flags = PackedStringArray("dom_dishonest_casks_traced")
+objectives = PackedStringArray("Compare Arvek's cooper mark with the forge shutdown tally.", "Return to Keth Varr and rule on the suspect casks.")
+stable_id = "dom/side/dishonest-casks"
+giver_actor_id = "keth-varr"
+participant_actor_ids = PackedStringArray("keth-varr", "arvek-stormcup", "orm-redtongs", "torv-bellowskin")
+hook_ids = PackedStringArray("dom/keth-varr/giver", "dom/arvek-stormcup/information", "dom/orm-redtongs/gate", "dom/torv-bellowskin/target")
+dialogue_title = "dom_side_dishonest_casks"
+decision_prompt = "Decide whether to seal the water immediately or keep the forges sounding under Concord watch."
+resolution_flag = "dom_dishonest_casks_resolution"
+outcome_ids = PackedStringArray("halt-the-water", "keep-the-roar")
+outcome_labels = PackedStringArray("Seal the suspect casks until clean water arrives.", "Keep the forges sounding under a guarded water rotation.")
+outcome_faction_ids = PackedStringArray("trial-council", "shattersteel-concord")
+outcome_reputation_deltas = PackedFloat32Array(6.0, 6.0)
+outcome_causes = PackedStringArray("Put East Arm safety ahead of an uninterrupted Hammer Roar", "Kept the Hammer Roar alive while the Concord replaced suspect cooling water")
+outcome_readbacks = PackedStringArray("The suspect casks remain under Council seal; the East Arm works shorter shifts on clean reserves.", "Every cooling cask now carries a Concord watcher; the Hammer Roar never stopped.")

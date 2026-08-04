@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://yk1nifd30nxx"
+path="res://.godot/imported/dom_side_quests.dialogue-ba1eb7e7aafae325528a5d0cf9b6dd01.tres"
+
+[deps]
+
+source_file="res://dialogue/dom_side_quests.dialogue"
+dest_files=["res://.godot/imported/dom_side_quests.dialogue-ba1eb7e7aafae325528a5d0cf9b6dd01.tres"]
+
+[params]
+
+defaults=true
