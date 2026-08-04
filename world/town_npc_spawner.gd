@@ -2,7 +2,7 @@ class_name TownNpcSpawner
 extends Node
 ## Populates Dom's outdoor townsfolk from the generated roster and placement data.
 ## Positions and dialogue routes stay downstream of Pandora; this scene owns only
-## the runtime wiring and the deterministic 3D-rendered sprite assignment.
+## the runtime wiring for deterministic 3D-rendered sprite presentation.
 
 const NPC_SCENE: PackedScene = preload("res://actors/npc/npc.tscn")
 const SpriteCatalog := preload("res://assets/generated/sprites/isometric_sprite_catalog.gd")
@@ -14,15 +14,33 @@ const TOWN_SCENE_PATH := "res://world/starting_town.tscn"
 const CHARACTER_KIT := "mini-characters"
 const GENERATED_GROUP := &"generated_townsfolk"
 const GENERATED_INTERACTION_RADIUS := 48.0
+const IDLE_AMPLITUDE := 1.25
+const IDLE_PERIOD := 2.8
+const IDLE_ROTATION_DEGREES := 0.4
 
 var _spawned_npcs: Array[NPC] = []
+var _idle_sprites: Array[Sprite2D] = []
+var _idle_origins: Array[Vector2] = []
+var _idle_phases: Array[float] = []
+var _idle_elapsed := 0.0
 
 
 func _ready() -> void:
 	# All pre-authored siblings must finish _ready() before their flat placeholder
 	# presentation is replaced. The deferred call also keeps scene instantiation
 	# deterministic for SceneRunner integration tests.
+	set_process(false)
 	call_deferred(&"_populate_town")
+
+
+func _process(delta: float) -> void:
+	_idle_elapsed = fposmod(_idle_elapsed + delta, IDLE_PERIOD)
+	var base_phase := (_idle_elapsed / IDLE_PERIOD) * TAU
+	for index: int in _idle_sprites.size():
+		var sprite := _idle_sprites[index]
+		var wave := sin(base_phase + _idle_phases[index])
+		sprite.position = _idle_origins[index] + Vector2(0.0, wave * IDLE_AMPLITUDE)
+		sprite.rotation = deg_to_rad(wave * IDLE_ROTATION_DEGREES)
 
 
 func spawned_npcs() -> Array[NPC]:
@@ -58,6 +76,7 @@ func _populate_town() -> void:
 
 	_upgrade_legacy_townsfolk(town, models)
 	_spawn_generated_townsfolk(town, models)
+	set_process(not _idle_sprites.is_empty())
 
 
 func _upgrade_legacy_townsfolk(town: Node2D, models: PackedStringArray) -> void:
@@ -117,7 +136,10 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray) -> void
 			continue
 		var dialogue := dialogue_value as Dictionary
 		var portrait := portrait_value as Dictionary
-		var model_name := models[index % models.size()]
+		var model_index := int(placement.get("model_index", index))
+		var model_name := models[posmod(model_index, models.size())]
+		var facing := str(placement.get("facing", "east"))
+		var idle_phase := float(placement.get("idle_phase", 0.0))
 		npc.name = _node_name(npc_id)
 		npc.npc_name = str(row.get("display_name", npc_id))
 		npc.dialogue_path = str(dialogue.get("path", ""))
@@ -127,14 +149,18 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray) -> void
 		)
 		npc.set_meta(&"npc_id", npc_id)
 		npc.set_meta(&"portrait_id", str(portrait.get("id", "")))
-		_apply_isometric_visual(npc, model_name)
+		npc.set_meta(&"facing", facing)
+		npc.set_meta(&"idle_phase", idle_phase)
+		npc.set_meta(&"model_index", model_index)
+		_apply_isometric_visual(npc, model_name, facing)
 		town.add_child(npc)
 		_set_generated_interaction_radius(npc)
+		_register_idle(npc, idle_phase)
 		npc.add_to_group(GENERATED_GROUP)
 		_spawned_npcs.append(npc)
 
 
-func _apply_isometric_visual(npc: NPC, model_name: String) -> void:
+func _apply_isometric_visual(npc: NPC, model_name: String, facing: String = "east") -> void:
 	var texture_path := SpriteCatalog.texture_path(CHARACTER_KIT, model_name)
 	var texture := load(texture_path) as Texture2D
 	if texture == null:
@@ -152,8 +178,18 @@ func _apply_isometric_visual(npc: NPC, model_name: String) -> void:
 	sprite.offset = SpriteCatalog.SPRITE_PIVOT_OFFSET
 	sprite.scale = Vector2.ONE
 	sprite.modulate = Color.WHITE
+	sprite.flip_h = facing == "west"
 	npc.set_meta(&"sprite_model", model_name)
 	npc.set_meta(&"sprite_path", texture_path)
+
+
+func _register_idle(npc: NPC, idle_phase: float) -> void:
+	var sprite := npc.get_node_or_null("Sprite2D") as Sprite2D
+	if sprite == null:
+		return
+	_idle_sprites.append(sprite)
+	_idle_origins.append(sprite.position)
+	_idle_phases.append(fposmod(idle_phase, TAU))
 
 
 static func _set_generated_interaction_radius(npc: NPC) -> void:

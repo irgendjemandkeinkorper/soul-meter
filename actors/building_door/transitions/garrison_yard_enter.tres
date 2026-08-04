@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"garrison_yard_enter"
+building_id = &"garrison_yard"
+building_name = "Garrison Yard"
+direction = "enter"
+source_scene = "res://world/interiors/iron_companies.tscn"
+source_anchor = &"GarrisonYardDoor"
+source_position = Vector2(800, 40)
+destination_scene = "res://world/interiors/garrison_yard.tscn"
+destination_location_id = &"garrison_yard_interior"
+spawn_id = &"entry"
+destination_spawn_position = Vector2(480, 500)
+prompt_text = "E — ENTER"
+reputation_faction = "iron-companies"
+minimum_reputation_band = &"warm"
+locked_message = "Earn warm standing with the Iron Companies to enter."

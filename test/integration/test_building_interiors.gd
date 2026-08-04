@@ -48,7 +48,7 @@ func after_test() -> void:
 	SaveGame.pending_spawn_id = _pending_spawn_before
 
 
-func test_all_ten_interiors_load_with_collision_spawns_exit_and_placement_markers() -> void:
+func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement_markers() -> void:
 	var saves = auto_free(SaveGameScript.new())
 	var diagnostics: Array[String] = []
 	saves.spawn_marker_diagnostic.connect(
@@ -122,17 +122,51 @@ func test_bell_house_stays_locked_until_its_existing_quest_flag_then_round_trips
 	_round_trip(&"bell_house")
 
 
+func test_cask_warehouse_stays_locked_until_the_casks_are_traced_then_round_trips() -> void:
+	GameState.flags.erase("dom_dishonest_casks_traced")
+	var entry := BuildingTransitionRegistry.entry_for(&"cask_warehouse")
+	var source := _make_scene(entry.source_scene)
+	var door := _find_transition_door(source, entry.id)
+	var player := source.find_child("Player", true, false) as Player
+	var original_target: String = GameFlow._target_scene
+	door._on_body(player, true)
+	assert_bool(door._is_unlocked()).is_false()
+	assert_bool(door._try_travel()).is_false()
+	assert_str(GameFlow._target_scene).is_equal(original_target)
+	GameState.set_flag("dom_dishonest_casks_traced", true)
+	assert_bool(door._is_unlocked()).is_true()
+	_round_trip(&"cask_warehouse")
+
+
+func test_garrison_yard_stays_locked_until_iron_companies_standing_is_warm() -> void:
+	Reputation.from_dict({})
+	var entry := BuildingTransitionRegistry.entry_for(&"garrison_yard")
+	var source := _make_scene(entry.source_scene)
+	var door := _find_transition_door(source, entry.id)
+	var player := source.find_child("Player", true, false) as Player
+	var original_target: String = GameFlow._target_scene
+	door._on_body(player, true)
+	assert_bool(door._is_unlocked()).is_false()
+	assert_bool(door._try_travel()).is_false()
+	assert_str(GameFlow._target_scene).is_equal(original_target)
+	Reputation.record("player", "iron-companies", 15.0, "test gate", "dom")
+	assert_bool(door._is_unlocked()).is_true()
+	_round_trip(&"garrison_yard")
+
+
 func test_starting_town_wires_all_ten_registry_entries_and_return_spawns() -> void:
 	var town := _make_town()
+	var town_entries := BuildingTransitionRegistry.entries_from(GameFlow.TOWN_SCENE)
 	var entrance_count := 0
 	for child: Node in town.get_children():
 		var candidate := child as BuildingDoor
 		if candidate != null and String(candidate.transition_id).ends_with("_enter"):
 			entrance_count += 1
-	assert_int(entrance_count).is_equal(BuildingTransitionRegistry.ENTRIES.size())
+	assert_int(town_entries.size()).is_equal(10)
+	assert_int(entrance_count).is_equal(town_entries.size())
 
-	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
-		var door := _find_town_door(town, entry.id)
+	for entry: BuildingTransitionDefinition in town_entries:
+		var door := _find_transition_door(town, entry.id)
 		var anchor := town.find_child(String(entry.source_anchor), true, false)
 		var exit := BuildingTransitionRegistry.exit_for(entry.building_id)
 		var marker := town.find_child(_spawn_marker_name(exit.spawn_id), true, false) as Marker2D
@@ -145,8 +179,24 @@ func test_starting_town_wires_all_ten_registry_entries_and_return_spawns() -> vo
 
 func test_all_ten_wired_town_doors_complete_a_real_scene_round_trip() -> void:
 	GameState.set_flag("dom_bell_quest_open", true)
-	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
+	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.entries_from(
+		GameFlow.TOWN_SCENE
+	):
 		_round_trip(entry.building_id)
+
+
+func test_all_ten_additional_transitions_complete_a_real_scene_round_trip() -> void:
+	GameState.set_flag("dom_dishonest_casks_traced", true)
+	GameState.set_flag("deep_trial_open", true)
+	Reputation.from_dict({})
+	Reputation.record("player", "iron-companies", 15.0, "test gate", "dom")
+	var round_trip_count := 0
+	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
+		if entry.source_scene == GameFlow.TOWN_SCENE:
+			continue
+		_round_trip(entry.building_id)
+		round_trip_count += 1
+	assert_int(round_trip_count).is_equal(10)
 
 
 func test_starting_town_hides_debug_markers_behind_rendered_props() -> void:
@@ -179,8 +229,10 @@ func test_starting_town_hides_debug_markers_behind_rendered_props() -> void:
 		assert_object(prop).is_not_null()
 		assert_object(prop.texture).is_not_null()
 
-	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
-		var door := _find_town_door(town, entry.id)
+	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.entries_from(
+		GameFlow.TOWN_SCENE
+	):
+		var door := _find_transition_door(town, entry.id)
 		var panel := door.get_node("DoorPanel") as CanvasItem
 		var threshold := door.get_node("Threshold") as CanvasItem
 		assert_bool(panel.visible).is_false()
@@ -205,7 +257,7 @@ func test_direct_door_supports_a_minimum_reputation_band_gate() -> void:
 
 
 func test_save_load_inside_an_interior_restores_scene_and_player_position() -> void:
-	var entry := BuildingTransitionRegistry.entry_for(&"registry_archive")
+	var entry := BuildingTransitionRegistry.entry_for(&"registry_stacks")
 	var packed := load(entry.destination_scene) as PackedScene
 	var interior := auto_free(packed.instantiate()) as Node2D
 	get_tree().root.add_child(interior)
@@ -238,9 +290,9 @@ func test_save_load_inside_an_interior_restores_scene_and_player_position() -> v
 func _round_trip(building_id: StringName) -> void:
 	var entry := BuildingTransitionRegistry.entry_for(building_id)
 	var exit := BuildingTransitionRegistry.exit_for(building_id)
-	var town := _make_town()
-	var door := _find_town_door(town, entry.id)
-	var player := town.find_child("Player", true, false) as Player
+	var source := _make_scene(entry.source_scene)
+	var door := _find_transition_door(source, entry.id)
+	var player := source.find_child("Player", true, false) as Player
 	assert_vector(door.position).is_equal(entry.source_position)
 	door._on_body(player, true)
 	assert_bool(door._try_travel()).is_true()
@@ -258,28 +310,37 @@ func _round_trip(building_id: StringName) -> void:
 	var exit_door := interior.find_child("ExitDoor", true, false) as BuildingDoor
 	exit_door._on_body(interior_player, true)
 	assert_bool(exit_door._try_travel()).is_true()
-	assert_str(GameFlow._target_scene).is_equal(GameFlow.TOWN_SCENE)
+	assert_str(GameFlow._target_scene).is_equal(exit.destination_scene)
 	assert_str(GameFlow._target_spawn_id).is_equal(String(exit.spawn_id))
 
-	var town_player := town.find_child("Player", true, false) as Player
-	var return_marker := town.find_child(_spawn_marker_name(exit.spawn_id), true, false) as Marker2D
-	SaveGame.apply_pending_location(town)
-	assert_vector(town_player.global_position).is_equal(return_marker.global_position)
+	var source_player := source.find_child("Player", true, false) as Player
+	var return_marker := source.find_child(
+		_spawn_marker_name(exit.spawn_id), true, false
+	) as Marker2D
+	assert_object(return_marker).is_not_null()
+	assert_vector(return_marker.position).is_equal(exit.destination_spawn_position)
+	SaveGame.apply_pending_location(source)
+	assert_vector(source_player.global_position).is_equal(return_marker.global_position)
 
 
 func _make_town() -> Node2D:
-	var packed := load(GameFlow.TOWN_SCENE) as PackedScene
-	var town := auto_free(packed.instantiate()) as Node2D
-	add_child(town)
-	return town
+	return _make_scene(GameFlow.TOWN_SCENE)
 
 
-func _find_town_door(town: Node, transition_id: StringName) -> BuildingDoor:
-	for child: Node in town.get_children():
+func _make_scene(scene_path: String) -> Node2D:
+	var packed := load(scene_path) as PackedScene
+	assert_object(packed).is_not_null()
+	var scene := auto_free(packed.instantiate()) as Node2D
+	add_child(scene)
+	return scene
+
+
+func _find_transition_door(scene: Node, transition_id: StringName) -> BuildingDoor:
+	for child: Node in scene.find_children("*", "", true, false):
 		var door := child as BuildingDoor
 		if door != null and door.transition_id == transition_id:
 			return door
-	fail("no town BuildingDoor with transition id '%s'" % transition_id)
+	fail("no BuildingDoor with transition id '%s'" % transition_id)
 	return null
 
 

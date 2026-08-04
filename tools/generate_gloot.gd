@@ -59,6 +59,7 @@ const GENERATED_INSTRUCTION := "Change the Pandora entity and regenerate."
 const ELEMENT_ORDER := ["suul", "bloei", "aqua", "khor", "terra", "daar", "molm", "scor", "nul", "strom"]
 const TRIAD_ORDER := ["dayspring", "fruiting", "rivermouth", "founding", "vault", "barrow", "pyre", "cinderfall", "stillpoint", "thunderhead"]
 const PORTRAIT_VARIANT_COUNT := 10
+const TOWNSFOLK_MODEL_COUNT := 26
 const SAFE_PORTRAIT_EXTENSIONS := ["png", "jpg", "jpeg", "svg", "webp", "tga"]
 const QUEST_INVOLVEMENT_TYPES := [
 	"giver", "target", "information", "gate", "state_change", "reputation_reaction"
@@ -323,9 +324,25 @@ static func _npc_artifacts() -> Dictionary:
 			"scene": entity.get_string("Placement Scene"),
 			"anchor": entity.get_string("Placement Anchor"),
 			"offset": [entity.get_float("Placement X"), entity.get_float("Placement Y")],
+			"facing": entity.get_string("Facing"),
+			"idle_phase": entity.get_float("Idle Phase"),
+			"model_index": entity.get_integer("Model Index"),
 		}
 		assert(FileAccess.file_exists(placement["scene"]), "Missing placement scene for %s" % npc_id)
 		assert(not str(placement["anchor"]).is_empty(), "Missing placement anchor for %s" % npc_id)
+		assert(
+			placement["facing"] in ["east", "west"],
+			"Dom NPC '%s' has invalid facing '%s'" % [npc_id, placement["facing"]]
+		)
+		assert(
+			float(placement["idle_phase"]) >= 0.0 and float(placement["idle_phase"]) < TAU,
+			"Dom NPC '%s' has an invalid idle phase" % npc_id
+		)
+		assert(
+			int(placement["model_index"]) >= 0
+			and int(placement["model_index"]) < TOWNSFOLK_MODEL_COUNT,
+			"Dom NPC '%s' has an invalid model index" % npc_id
+		)
 
 		var dialogue := {
 			"path": DOM_NPC_DIALOGUE_PATH,

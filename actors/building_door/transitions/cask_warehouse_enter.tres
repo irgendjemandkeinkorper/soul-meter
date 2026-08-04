@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"cask_warehouse_enter"
+building_id = &"cask_warehouse"
+building_name = "Cask Warehouse"
+direction = "enter"
+source_scene = "res://world/interiors/item_shop.tscn"
+source_anchor = &"CaskWarehouseDoor"
+source_position = Vector2(800, 40)
+destination_scene = "res://world/interiors/cask_warehouse.tscn"
+destination_location_id = &"cask_warehouse_interior"
+spawn_id = &"entry"
+destination_spawn_position = Vector2(480, 500)
+prompt_text = "E — ENTER"
+required_flag = "dom_dishonest_casks_traced"
+locked_message = "Trace the dishonest casks before entering the warehouse."

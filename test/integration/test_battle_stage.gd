@@ -124,16 +124,115 @@ func test_turn_ap_zone_and_defeat_beats_are_all_event_driven() -> void:
 	assert_str(stage.feedback_text(&"defeated")).contains("DEFEATED")
 
 
+func test_event_snapshot_selects_environment_combatant_art_and_occupied_zones() -> void:
+	stage.consume_event(_event(
+		&"battle_started",
+		8,
+		&"",
+		&"",
+		{},
+		_snapshot(30, 30, &"front", 0, &"loam-maddened-boar", &"flank"),
+	))
+
+	assert_str(stage.environment_id()).is_equal("nature")
+	assert_int(stage.environment_sprite_count()).is_equal(5)
+	assert_int(stage.zone_marker_count()).is_equal(6)
+	assert_str(stage.combatant_texture_path(&"ally-0")).contains(
+		"mini-characters/character-female-a.png"
+	)
+	assert_str(stage.combatant_texture_path(&"enemy-0")).contains(
+		"mini-characters/character-male-e.png"
+	)
+	assert_bool(stage.zone_is_occupied(&"ally", &"front")).is_true()
+	assert_bool(stage.zone_is_occupied(&"enemy", &"flank")).is_true()
+	assert_bool(stage.zone_is_occupied(&"enemy", &"front")).is_false()
+
+	stage.consume_event(_event(
+		&"battle_started",
+		9,
+		&"",
+		&"",
+		{},
+		_snapshot(30, 30, &"back", 0, &"cleaned-jawbrace-guard", &"front"),
+	))
+	assert_str(stage.environment_id()).is_equal("castle")
+	assert_str(stage.combatant_texture_path(&"enemy-0")).contains(
+		"mini-characters/character-male-c.png"
+	)
+
+	stage.consume_event(_event(
+		&"battle_started",
+		10,
+		&"",
+		&"",
+		{},
+		_snapshot(30, 30, &"front", 0, &"mustered-bloodbellow", &"back"),
+	))
+	assert_str(stage.environment_id()).is_equal("fantasy-town")
+
+
+func test_party_identity_and_enemy_archetype_are_stable_sprite_keys() -> void:
+	stage.consume_event(_event(
+		&"battle_started",
+		11,
+		&"",
+		&"",
+		{},
+		_snapshot(30, 30, &"front", 0, &"bog-wight", &"front", "Vex the Unbowed"),
+	))
+	var vex_texture: String = stage.combatant_texture_path(&"ally-0")
+	var wight_texture: String = stage.combatant_texture_path(&"enemy-0")
+
+	stage.consume_event(_event(
+		&"battle_started",
+		12,
+		&"",
+		&"",
+		{},
+		_snapshot(30, 30, &"front", 0, &"gnaal-rift-scavenger", &"front", "Serai-Lun"),
+	))
+	assert_str(stage.combatant_texture_path(&"ally-0")).is_not_equal(vex_texture)
+	assert_str(stage.combatant_texture_path(&"enemy-0")).is_not_equal(wight_texture)
+
+
+func test_zone_markers_are_spatial_and_procedural_figures_are_gone() -> void:
+	var ally_front: Vector2 = stage.zone_marker_position(&"ally", &"front")
+	var ally_back: Vector2 = stage.zone_marker_position(&"ally", &"back")
+	var ally_flank: Vector2 = stage.zone_marker_position(&"ally", &"flank")
+	var enemy_front: Vector2 = stage.zone_marker_position(&"enemy", &"front")
+
+	assert_bool(ally_front != ally_back).is_true()
+	assert_bool(ally_front != ally_flank).is_true()
+	assert_bool(ally_front.x < enemy_front.x).is_true()
+	assert_bool(ally_flank.y < ally_front.y).is_true()
+	assert_bool(ally_back.x < ally_front.x).is_true()
+
+	var source := FileAccess.get_file_as_string("res://ui/screens/battle_stage.gd")
+	for primitive in [
+		"func _draw(",
+		"draw_rect(",
+		"draw_circle(",
+		"draw_colored_polygon(",
+		"draw_line(",
+		"draw_arc(",
+	]:
+		assert_bool(source.contains(primitive)).is_false()
+
+
 func test_presentation_source_has_no_direct_combat_domain_reads() -> void:
 	var source := FileAccess.get_file_as_string("res://ui/screens/battle_stage.gd")
 	var screen_source := FileAccess.get_file_as_string("res://ui/screens/battle.gd")
 
 	assert_bool(source.contains("Battle.")).is_false()
 	assert_bool(source.contains("controller.")).is_false()
+	assert_bool(source.contains("EncounterCatalog")).is_false()
 	assert_bool(source.contains("BattleActor")).is_false()
 	assert_bool(source.contains("set_battle_state")).is_false()
 	assert_bool(source.contains("func consume_event(event: CombatEvent")).is_true()
+	assert_bool(source.contains("event.data.get(\"snapshot\"")).is_true()
 	assert_bool(screen_source.contains("combat_event.connect(Callable(_stage")).is_true()
+	assert_bool(screen_source.contains("stage_space.name = \"BattlefieldViewport\"")).is_true()
+	assert_bool(screen_source.contains("_battle_hud.visible = false")).is_true()
 	assert_bool(screen_source.contains("_stage.set_battle_state")).is_false()
 
 
@@ -190,6 +289,9 @@ func _snapshot(
 	enemy_hp: int = 30,
 	ally_zone: StringName = &"front",
 	balance: int = 0,
+	enemy_archetype: StringName = &"bog-wight",
+	enemy_zone: StringName = &"front",
+	ally_name: String = "Vex",
 ) -> Dictionary:
 	return {
 		"round": 1,
@@ -197,7 +299,7 @@ func _snapshot(
 		"active_actor_id": &"ally-0",
 		"allies": [{
 			"id": &"ally-0",
-			"display_name": "Vex",
+			"display_name": ally_name,
 			"hp": ally_hp,
 			"max_hp": 30,
 			"ap": 4,
@@ -212,8 +314,9 @@ func _snapshot(
 			"max_hp": 30,
 			"ap": 3,
 			"max_ap": 3,
-			"position": &"front",
+			"position": enemy_zone,
 			"side": &"enemy",
+			"archetype_id": enemy_archetype,
 		}],
 	}
 

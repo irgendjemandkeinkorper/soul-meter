@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"cask_warehouse_exit"
+building_id = &"cask_warehouse"
+building_name = "Cask Warehouse"
+direction = "exit"
+source_scene = "res://world/interiors/cask_warehouse.tscn"
+source_anchor = &"ExitDoor"
+source_position = Vector2(480, 600)
+destination_scene = "res://world/interiors/item_shop.tscn"
+destination_location_id = &"item_shop_interior"
+spawn_id = &"from_cask_warehouse"
+destination_spawn_position = Vector2(800, 150)
+prompt_text = "E — RETURN"

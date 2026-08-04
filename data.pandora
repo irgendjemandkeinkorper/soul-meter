@@ -2719,6 +2719,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -2726,6 +2730,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Trial Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.592
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 0
 					},
 					"NPC Id": {
 						"type": "string",
@@ -7347,6 +7359,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -7354,6 +7370,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Town Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.982
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 11
 					},
 					"NPC Id": {
 						"type": "string",
@@ -7436,6 +7460,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -7443,6 +7471,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Bell House"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 6.254
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 22
 					},
 					"NPC Id": {
 						"type": "string",
@@ -7525,6 +7561,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "rennen"
@@ -7532,6 +7572,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Registry Archive"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.312
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 7
 					},
 					"NPC Id": {
 						"type": "string",
@@ -7614,6 +7662,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "wayfare-menders"
@@ -7621,6 +7673,14 @@
 					"Home": {
 						"type": "string",
 						"value": "River Shrine"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.871
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 18
 					},
 					"NPC Id": {
 						"type": "string",
@@ -7703,6 +7763,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "ironbrand-sentinels"
@@ -7710,6 +7774,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Town Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.949
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 3
 					},
 					"NPC Id": {
 						"type": "string",
@@ -7792,6 +7864,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -7799,6 +7875,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Trial Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.819
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 14
 					},
 					"NPC Id": {
 						"type": "string",
@@ -7881,6 +7965,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "wayfare-menders"
@@ -7888,6 +7976,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Pilot Lodge"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.327
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 25
 					},
 					"NPC Id": {
 						"type": "string",
@@ -7970,6 +8066,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -7977,6 +8077,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Iron Companies Barracks"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.16
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 10
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8059,6 +8167,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "shattersteel-concord"
@@ -8066,6 +8178,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Equipment Shop"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.334
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 21
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8148,6 +8268,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "hospice-chain"
@@ -8155,6 +8279,14 @@
 					"Home": {
 						"type": "string",
 						"value": "River Shrine Hospice"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.414
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 6
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8237,6 +8369,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -8244,6 +8380,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Bell House"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.748
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 17
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8326,6 +8470,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -8333,6 +8481,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Cistern Wardens Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.681
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 2
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8415,6 +8571,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -8422,6 +8582,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Chef's House"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.536
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 13
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8504,6 +8672,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "wayfare-menders"
@@ -8511,6 +8683,14 @@
 					"Home": {
 						"type": "string",
 						"value": "River Shrine"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.547
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 24
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8593,6 +8773,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "kord-rite"
@@ -8600,6 +8784,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Howlpath Lodging"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.473
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 9
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8682,6 +8874,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "shattersteel-concord"
@@ -8689,6 +8885,14 @@
 					"Home": {
 						"type": "string",
 						"value": "East Arm Scarred Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 0.319
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 20
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8771,6 +8975,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "ironbrand-sentinels"
@@ -8778,6 +8986,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Equipment Shop"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.845
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 5
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8860,6 +9076,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -8867,6 +9087,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Iron Companies Barracks"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.53
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 16
 					},
 					"NPC Id": {
 						"type": "string",
@@ -8949,6 +9177,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "grain-factors-table"
@@ -8956,6 +9188,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Lower Market Loft"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.995
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 1
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9038,6 +9278,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -9045,6 +9289,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Jawbrace Watchroom"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.945
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 12
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9127,6 +9379,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "shattersteel-concord"
@@ -9134,6 +9390,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Equipment Shop"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.968
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 23
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9216,6 +9480,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "wayfare-menders"
@@ -9223,6 +9491,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Drownedmouth Berthhouse"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 0.913
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 8
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9305,6 +9581,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -9312,6 +9592,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Drownedmouth Chainhouse"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 0.411
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 19
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9394,6 +9682,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "hospice-chain"
@@ -9401,6 +9693,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Chef's House"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.312
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 4
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9483,6 +9783,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -9490,6 +9794,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Town Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.731
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 15
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9572,6 +9884,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -9579,6 +9895,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Bell House"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 0.248
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 0
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9661,6 +9985,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "ironbrand-sentinels"
@@ -9668,6 +9996,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Jawbrace Watchroom"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.149
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 11
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9750,6 +10086,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "shattersteel-concord"
@@ -9757,6 +10097,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Lower Market Loft"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 0.101
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 22
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9839,6 +10187,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -9846,6 +10198,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Trial Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.17
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 7
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9928,6 +10288,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "grain-factors-table"
@@ -9935,6 +10299,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Lower Market"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.919
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 18
 					},
 					"NPC Id": {
 						"type": "string",
@@ -9950,11 +10322,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -127.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 83.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10017,6 +10389,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "hospice-chain"
@@ -10024,6 +10400,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Iron Companies Barracks"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.593
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 3
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10039,11 +10423,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 0.0
+						"value": 7.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 78.0
+						"value": 97.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10106,6 +10490,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -10113,6 +10501,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Iron Companies Barracks"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.102
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 14
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10128,11 +10524,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 107.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 90.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10195,6 +10591,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -10202,6 +10602,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Town Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.339
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 25
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10217,11 +10625,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -118.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 51.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10284,6 +10692,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "kord-rite"
@@ -10291,6 +10703,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Howlpath Lodge"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.606
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 10
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10306,11 +10726,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 0.0
+						"value": 18.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 78.0
+						"value": 86.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10373,6 +10793,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "rennen"
@@ -10380,6 +10804,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Registry Archive"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.681
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 21
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10395,11 +10827,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 95.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 76.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10462,6 +10894,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "shattersteel-concord"
@@ -10469,6 +10905,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Equipment Shop"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.953
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 6
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10484,11 +10928,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -108.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 58.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10551,6 +10995,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "hospice-chain"
@@ -10558,6 +11006,14 @@
 					"Home": {
 						"type": "string",
 						"value": "River Shrine Hospice"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.171
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 17
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10573,11 +11029,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 0.0
+						"value": -12.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 78.0
+						"value": 98.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10640,6 +11096,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -10647,6 +11107,14 @@
 					"Home": {
 						"type": "string",
 						"value": "North Arm Gatehouse"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.077
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 2
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10662,11 +11130,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 121.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 73.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10729,6 +11197,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "shattersteel-concord"
@@ -10736,6 +11208,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Equipment Shop"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.371
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 13
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10751,11 +11231,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -115.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 63.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10818,6 +11298,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "ironbrand-sentinels"
@@ -10825,6 +11309,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Drownedmouth Chainhouse"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 6.099
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 24
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10840,11 +11332,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 0.0
+						"value": -3.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 78.0
+						"value": 91.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10907,6 +11399,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -10914,6 +11410,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Trial Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.611
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 9
 					},
 					"NPC Id": {
 						"type": "string",
@@ -10929,11 +11433,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 83.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 85.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -10996,6 +11500,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "hospice-chain"
@@ -11003,6 +11511,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Chef's House"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.901
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 20
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11018,11 +11534,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -105.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 86.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11085,6 +11601,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -11092,6 +11612,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Trial Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.63
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 5
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11107,11 +11635,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 0.0
+						"value": -5.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 78.0
+						"value": 85.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11174,6 +11702,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -11181,6 +11713,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Lower Market Loft"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.617
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 16
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11196,11 +11736,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 118.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 85.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11263,6 +11803,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "shattersteel-concord"
@@ -11270,6 +11814,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Equipment Shop"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.749
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 1
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11285,11 +11837,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -65.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 79.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11352,6 +11904,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -11359,6 +11915,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Iron Companies Barracks"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.776
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 12
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11374,7 +11938,7 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 0.0
+						"value": 19.0
 					},
 					"Placement Y": {
 						"type": "float",
@@ -11441,6 +12005,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "wayfare-menders"
@@ -11448,6 +12016,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Pilot Lodge"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.831
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 23
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11463,11 +12039,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 86.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 66.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11530,6 +12106,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "ironbrand-sentinels"
@@ -11537,6 +12117,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Jawbrace Watchroom"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.666
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 8
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11552,11 +12140,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -88.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 47.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11619,6 +12207,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "rennen"
@@ -11626,6 +12218,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Registry Archive"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.133
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 19
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11641,11 +12241,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 0.0
+						"value": -18.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 78.0
+						"value": 68.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11708,6 +12308,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -11715,6 +12319,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Jawbrace Watchroom"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.049
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 4
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11730,11 +12342,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 124.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 77.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11797,6 +12409,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -11804,6 +12420,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Four Arms Tavern"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.216
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 15
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11819,11 +12443,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -92.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 76.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11886,6 +12510,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "trial-council"
@@ -11893,6 +12521,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Town Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.305
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 0
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11908,11 +12544,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 0.0
+						"value": 22.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 78.0
+						"value": 87.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -11975,6 +12611,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "shattersteel-concord"
@@ -11982,6 +12622,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Lower Market Loft"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.376
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 11
 					},
 					"NPC Id": {
 						"type": "string",
@@ -11997,11 +12645,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 85.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 67.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -12064,6 +12712,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "grain-factors-table"
@@ -12071,6 +12723,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Lower Market"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.322
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 22
 					},
 					"NPC Id": {
 						"type": "string",
@@ -12086,11 +12746,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -119.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 63.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -12153,6 +12813,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "ironbrand-sentinels"
@@ -12160,6 +12824,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Bell House"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.532
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 7
 					},
 					"NPC Id": {
 						"type": "string",
@@ -12175,11 +12847,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 0.0
+						"value": -25.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 78.0
+						"value": 98.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -12242,6 +12914,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "iron-companies"
@@ -12249,6 +12925,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Iron Companies Barracks"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.447
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 18
 					},
 					"NPC Id": {
 						"type": "string",
@@ -12264,11 +12948,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 116.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 70.0
+						"value": 50.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -12331,6 +13015,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "grain-factors-table"
@@ -12338,6 +13026,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Drownedmouth Berthhouse"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.987
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 3
 					},
 					"NPC Id": {
 						"type": "string",
@@ -12353,11 +13049,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -90.0
+						"value": -86.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 90.0
+						"value": 76.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -12420,6 +13116,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "wayfare-menders"
@@ -12427,6 +13127,14 @@
 					"Home": {
 						"type": "string",
 						"value": "North Arm Gatehouse"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 0.553
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 14
 					},
 					"NPC Id": {
 						"type": "string",
@@ -12442,11 +13150,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": -100.0
+						"value": -80.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 90.0
+						"value": 92.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -12509,6 +13217,10 @@
 						"type": "string",
 						"value": ""
 					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
 					"Faction Id": {
 						"type": "string",
 						"value": "shattersteel-concord"
@@ -12516,6 +13228,14 @@
 					"Home": {
 						"type": "string",
 						"value": "Player's House"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.658
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 25
 					},
 					"NPC Id": {
 						"type": "string",
@@ -12531,11 +13251,11 @@
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 100.0
+						"value": 122.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 90.0
+						"value": 80.0
 					},
 					"Portrait Id": {
 						"type": "string",
@@ -13684,12 +14404,33 @@
 				"_id": "366.0",
 				"_name": "Placement Y",
 				"_type": "float"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "426.0",
+				"_name": "Facing",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": 0.0,
+				"_id": "427.0",
+				"_name": "Idle Phase",
+				"_type": "float"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": 0,
+				"_id": "428.0",
+				"_name": "Model Index",
+				"_type": "int"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 425.0
+			"default": 428.0
 		}
 	},
 	"_version": 1

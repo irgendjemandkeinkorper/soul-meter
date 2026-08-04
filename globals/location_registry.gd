@@ -28,6 +28,34 @@ const PLAYERS_HOUSE: LocationDefinition = preload(
 	"res://world/locations/interiors/players_house.tres"
 )
 const TRIAL_HALL: LocationDefinition = preload("res://world/locations/interiors/trial_hall.tres")
+const REGISTRY_STACKS: LocationDefinition = preload(
+	"res://world/locations/interiors/registry_stacks.tres"
+)
+const BELL_LOFT: LocationDefinition = preload("res://world/locations/interiors/bell_loft.tres")
+const SHRINE_UNDERCROFT: LocationDefinition = preload(
+	"res://world/locations/interiors/shrine_undercroft.tres"
+)
+const GARRISON_YARD: LocationDefinition = preload(
+	"res://world/locations/interiors/garrison_yard.tres"
+)
+const CASK_WAREHOUSE: LocationDefinition = preload(
+	"res://world/locations/interiors/cask_warehouse.tres"
+)
+const EQUIPMENT_FORGE: LocationDefinition = preload(
+	"res://world/locations/interiors/equipment_forge.tres"
+)
+const COUNCIL_CHAMBER: LocationDefinition = preload(
+	"res://world/locations/interiors/council_chamber.tres"
+)
+const CHEFS_PANTRY: LocationDefinition = preload(
+	"res://world/locations/interiors/chefs_pantry.tres"
+)
+const PLAYERS_LOFT: LocationDefinition = preload(
+	"res://world/locations/interiors/players_loft.tres"
+)
+const LOWER_TRIAL_HALL: LocationDefinition = preload(
+	"res://world/locations/interiors/lower_trial_hall.tres"
+)
 const ALL: Array[LocationDefinition] = [
 	DOM,
 	WILDS,
@@ -43,6 +71,16 @@ const ALL: Array[LocationDefinition] = [
 	CHEFS_HOUSE,
 	PLAYERS_HOUSE,
 	TRIAL_HALL,
+	REGISTRY_STACKS,
+	BELL_LOFT,
+	SHRINE_UNDERCROFT,
+	GARRISON_YARD,
+	CASK_WAREHOUSE,
+	EQUIPMENT_FORGE,
+	COUNCIL_CHAMBER,
+	CHEFS_PANTRY,
+	PLAYERS_LOFT,
+	LOWER_TRIAL_HALL,
 ]
 
 static func by_id(location_id: StringName) -> LocationDefinition:
