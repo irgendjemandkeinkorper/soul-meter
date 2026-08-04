@@ -99,7 +99,7 @@ func _render_catalog() -> void:
 	_catalog.add_child(note)
 	_catalog.add_child(HSeparator.new())
 
-	if not bool(status.get("open", false)):
+	if not bool(status.get("allowed", false)):
 		var refusal := Label.new()
 		refusal.text = str(status.get("reason", "TRADE UNAVAILABLE"))
 		refusal.theme_type_variation = "MutedLabel"

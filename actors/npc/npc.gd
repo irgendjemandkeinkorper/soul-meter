@@ -4,8 +4,11 @@ extends StaticBody2D
 ## the configured dialogue starts via Dialogue Manager (which loads our balloon).
 
 @export var npc_name: String = "NPC"
+@export var npc_id: String = ""
 @export_file("*.dialogue") var dialogue_path: String
 @export var dialogue_start: String = "start"
+@export var vendor_id: String = ""
+@export_range(32.0, 240.0, 1.0) var interaction_radius: float = 120.0
 @export_group("Placeholder presentation")
 ## Scene-owned presentation keeps NPC content from branching on lore names.
 @export var visual_region := Rect2(0, 68, 16, 16)
@@ -21,7 +24,7 @@ func _ready() -> void:
 	var range_area := Area2D.new()
 	var shape := CollisionShape2D.new()
 	var circle := CircleShape2D.new()
-	circle.radius = 120.0
+	circle.radius = interaction_radius
 	shape.shape = circle
 	range_area.add_child(shape)
 	add_child(range_area)
@@ -29,7 +32,7 @@ func _ready() -> void:
 	range_area.body_exited.connect(_on_body.bind(false))
 
 	_prompt = Label.new()
-	_prompt.text = "E — TALK"
+	_prompt.text = "E — TRADE" if not vendor_id.is_empty() else "E — TALK"
 	_prompt.theme_type_variation = "EyebrowLabel"
 	_prompt.position = Vector2(-100, -108)
 	_prompt.size = Vector2(200, 32)
@@ -47,7 +50,18 @@ func _on_body(body: Node2D, entered: bool) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _player_in_range and event.is_action_pressed("interact") and not get_tree().paused:
 		get_viewport().set_input_as_handled()
-		DialogueManager.show_dialogue_balloon(load(dialogue_path), dialogue_start)
+		if not vendor_id.is_empty():
+			var shop_screen := UIManager.open(UIManager.SHOP, true)
+			shop_screen.call("configure_vendor", vendor_id)
+			return
+		if dialogue_path.is_empty():
+			push_error("NPC '%s' has no dialogue resource." % npc_name)
+			return
+		var dialogue := load(dialogue_path) as DialogueResource
+		if dialogue == null:
+			push_error("NPC '%s' could not load dialogue '%s'." % [npc_name, dialogue_path])
+			return
+		DialogueManager.show_dialogue_balloon(dialogue, dialogue_start)
 
 
 func _apply_visual_identity() -> void:
