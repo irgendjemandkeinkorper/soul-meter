@@ -21,6 +21,10 @@ const ELEV_STEPS := [0, 1, 2, 3]     # elevation 0-3
 ## #133 gamble curve, indexed by wheel distance 0-5.
 const RELATION_DAMAGE := [0.50, 0.75, 1.00, 1.10, 1.20, 1.35]
 const RELATION_FIZZLE := [0, 3, 6, 9, 12, 15]
+## Soul spent when a cast at this distance FAILS (ratified 2026-08-05). Nothing is charged when
+## it lands. This is the term that makes the curve a wager instead of a ramp: it is the only
+## cost that does not shrink as a zone's Agreement Integrity rises.
+const RELATION_SOUL_ON_FAIL := [0, 0, 1, 2, 3, 5]
 const RELATION_NAME := ["SAME", "NEIGHBOUR", "d2", "d3", "d4", "OPPOSED"]
 
 ## Reference combatant. Deliberately plain: the point is the multiplier stack, not stat design.
@@ -37,8 +41,77 @@ func _init() -> void:
 	_report_stack_concern()
 	_report_ttk_bands()
 	_report_expected_ttk()
+	_report_soul_price()
 	print("\n=== END SWEEP ===")
 	quit()
+
+
+## Soul spent to reach one kill at each distance. This is the axis that decides whether the
+## curve is a wager or a ramp: if reaching further costs nothing extra, it is a ramp.
+func _soul_per_kill(mult: float, distance: int) -> float:
+	var fizzle := clampf(BASE_FIZZLE + float(RELATION_FIZZLE[distance]), 0.0, 95.0)
+	var land_rate := (100.0 - fizzle) / 100.0
+	var per_hit := BASE_POWER * mult
+	if per_hit <= 0.0 or land_rate <= 0.0:
+		return 9999.0
+	var casts_needed := TARGET_HP / (per_hit * land_rate)
+	var failures := casts_needed * (1.0 - land_rate) / land_rate
+	return failures * float(RELATION_SOUL_ON_FAIL[distance])
+
+
+func _report_soul_price() -> void:
+	print("\n--- SOUL SPENT PER KILL (the wager) ---")
+	var header := "  %-16s" % "facing/elev"
+	for name in RELATION_NAME:
+		header += "%10s" % name
+	print(header)
+	for facing in FACING:
+		for elev in ELEV_STEPS:
+			var row := "  %-16s" % ("%s+%d" % [facing, elev])
+			for distance in RELATION_DAMAGE.size():
+				row += "%10.2f" % _soul_per_kill(_multiplier(facing, elev, distance), distance)
+			print(row)
+
+	print("\n--- IS IT A WAGER OR A RAMP? ---")
+	print("  A ramp = the fastest kill also costs the least. A wager = speed costs Soul.")
+	var ramps := 0
+	var rows := 0
+	for facing in FACING:
+		for elev in ELEV_STEPS:
+			rows += 1
+			var fastest := 9999.0
+			var fastest_distance := 0
+			var cheapest := 9999.0
+			var cheapest_distance := 0
+			for distance in RELATION_DAMAGE.size():
+				var mult := _multiplier(facing, elev, distance)
+				var ttk := _expected_ttk(mult, distance)
+				var soul := _soul_per_kill(mult, distance)
+				if ttk < fastest:
+					fastest = ttk
+					fastest_distance = distance
+				if soul < cheapest:
+					cheapest = soul
+					cheapest_distance = distance
+			if fastest_distance == cheapest_distance:
+				ramps += 1
+	if ramps == 0:
+		print("  WAGER in all %d rows: the fastest line is never also the cheapest." % rows)
+	else:
+		print("  RAMP in %d of %d rows -- fastest and cheapest coincide. Not a real choice."
+			% [ramps, rows])
+	# Cost of the extremes, so the trade is legible as a sentence.
+	var opposed := _multiplier("FRONT", 0, 5)
+	var mid := _multiplier("FRONT", 0, 2)
+	print("\n  FRONT/flat, distance 2 : %.2f turns, %.2f soul"
+		% [_expected_ttk(mid, 2), _soul_per_kill(mid, 2)])
+	print("  FRONT/flat, OPPOSED    : %.2f turns, %.2f soul"
+		% [_expected_ttk(opposed, 5), _soul_per_kill(opposed, 5)])
+	print("  -> buys %.2f turns for %.2f soul."
+		% [
+			_expected_ttk(mid, 2) - _expected_ttk(opposed, 5),
+			_soul_per_kill(opposed, 5) - _soul_per_kill(mid, 2),
+		])
 
 
 func _multiplier(facing: String, elev: int, distance: int) -> float:

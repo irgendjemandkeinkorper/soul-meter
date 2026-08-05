@@ -1,6 +1,7 @@
 # Discipline × Patron compatibility sheet — 3 × 10
 
-**Status:** DRAFTED 2026-08-05 by agent · **8 cells await the owner's ruling**
+**Status:** DRAFTED and **SIGNED OFF 2026-08-05** · 22 PASS · 8 SOFT-FAIL · **0 HARD-FAIL**
+The abort criterion did not fire. Ability authoring (#141) is unblocked.
 **Gates:** authoring any discipline or patron ability content (#141). This sheet is the ratified
 abort criterion for the Combat Disciplines layering — see `prd-amendment-tactical-layer.md` §9.1
 and GitHub #132.
@@ -18,22 +19,40 @@ patron) and the Combat Disciplines section added to the same file 2026-08-05.
 
 ---
 
-## The finding that matters most
+## Owner rulings, 2026-08-05 — no HARD-FAILs remain
 
-**"Hush" is undefined, and that one definition decides two cells.** Does a Hushwarden field
-*prevent* casting, or *tax its fizzle*?
+Both blocking definitions are settled, and **the abort criterion does not fire.**
 
-Four of the eight flagged cells involve Hushwarden, and it holds the only HARD-FAIL candidate.
-Answer this before ruling on anything else:
+1. **A Hushwarden field TAXES, it does not prevent.** It raises fizzle and Soul cost inside the
+   field. Silence here is weight, not a wall — consistent with the vault's own use of "the Hush"
+   as a 95% fizzle ceiling rather than a prohibition.
+   → **Locksmirk × Hushwarden drops from HARD-FAIL to SOFT-FAIL.** An in-progress Song still
+   exists to jam; the Discipline makes casting expensive, not impossible, so it does not displace
+   Jam the Gears — it overlaps it thematically.
+   → It also **dissolves the Flamebinder question**: a taxed cast that fails is a genuine failed
+   cast, so Instructive Failure banks its token normally. There is no "prevented" category to
+   exploit.
 
-- **If Hush prevents casting** → Locksmirk × Hushwarden is a **HARD-FAIL** and the abort
-  criterion fires.
-- **If Hush taxes fizzle** → it drops to SOFT-FAIL and the layering survives intact.
+2. **Binding a Thread requires physical contact** — whip-dagger reach, never ranged. *The
+   Unspoken Term* cashes in Threads bound earlier one at a time; it does not bind three at range
+   at once.
+   → This **inverts** the cell that was flagged. See below.
 
-Note the vault already uses "the Hush" for a *zone integrity floor* (`magic-system.md`: "a zone
-so thin that Note/Phrase casting becomes the only dependable tier" — a 95% fizzle ceiling, not a
-prohibition). If the Hushwarden field inherits that meaning, it **taxes** rather than prevents,
-and the layering is clean. That is the reading I would recommend, and it has canon behind it.
+3. **The six SOFT-FAILs stand as drafted.** Playable, ship without support content.
+
+### Consequence of ruling 2 — it moved the problem, it did not remove it
+
+Touch-binding makes **Threadwalker × Chordblade a good pairing**, not a risky one: a short-reach,
+high-mobility melee Discipline is exactly what a binder who must close to touch wants. That cell
+goes CONDITIONAL → **PASS (strong)**.
+
+The cost lands one row over. **Threadwalker × Terrashaper** was drafted PASS on the reasoning that
+*"across the field works better from a held position."* Under touch-binding that reasoning is
+backwards — an engineer's stance that holds ground and shapes elevation is the *worst* platform
+for a class that has to reach every target physically. That cell moves **PASS → SOFT-FAIL**, and
+it is a **new** non-PASS cell that did not exist when this sheet was drafted.
+
+Threadwalker × Hushwarden is unaffected: denial fields can be laid without standing still.
 
 ---
 
@@ -50,7 +69,7 @@ and the layering is clean. That is the reading I would recommend, and it has can
 | Stormbearer | PASS | Skirmisher role, greatclub, mobility all agree. Attribution is random but position-free. |
 | **Oathclock** | **SOFT-FAIL** | Halberd is explicitly a reach/control weapon and Oathclock is a *Controller*. A controller who keeps repositioning stops controlling. |
 | Locksmirk | PASS | Blowgun is ranged, which sits oddly on melee — but trap poetry and lockpicking-as-combat are close work. Net PASS. |
-| **Threadwalker** | **CONDITIONAL** | Signature binds three Threads *"across the field."* If binding requires physical reach, short-reach caps it at melee and the Signature breaks as written. **Recommend PASS:** Threads are contractual, not physical — binding should be line-of-sight, not reach. |
+| Threadwalker | **PASS (strong)** | *Resolved 2026-08-05: binding requires physical contact.* A short-reach, high-mobility melee Discipline is the best platform there is for a binder who must close to touch. The Signature cashes in Threads bound earlier, one at a time. |
 
 ## Terrashaper — elevation-holding, zone control, Terra weight
 
@@ -65,7 +84,7 @@ and the layering is clean. That is the reading I would recommend, and it has can
 | **Stormbearer** | **SOFT-FAIL** | **Terra ↔ Strom are a canonically opposed pair.** Discipline association is flavour-only so this is not a mechanical bar — but the Vow of the Unspoken Name shows opposed pairs carry real weight in this ruleset. |
 | Oathclock | PASS (strong) | Controller, halberd reach, held ground, delayed verdicts. Excellent. |
 | Locksmirk | PASS | Traps are emplacements; terrain shaping complements them. |
-| Threadwalker | PASS | "Across the field" reads better from a held position than a moving one. |
+| **Threadwalker** | **SOFT-FAIL** *(new, 2026-08-05)* | Drafted PASS on the reasoning that "across the field reads better from a held position." Touch-binding inverts that: an engineer's stance that holds ground is the worst platform for a class that must physically reach every target. |
 
 ## Hushwarden — denial and stillness, strips tile charge, Nul quiet
 
@@ -79,30 +98,38 @@ and the layering is clean. That is the reading I would recommend, and it has can
 | Flamebinder | PASS (rules note) | Instructive Failure banks a token on a **failed cast**. Hushwarden silences casting. **Define "failed" vs "prevented"** or this farms tokens off silence fields. |
 | **Stormbearer** | **SOFT-FAIL** | Attribution is doctrinally about the storm being *heard*; Tuned Thunder chains loudly and randomly. Stillness is the tonal opposite. |
 | **Oathclock** | **SOFT-FAIL** | *Lore check resolved the named suspect:* nothing in the vault requires an oath be spoken. The Ledger fires "regardless of what happens between now and then," and the Kit is a halberd and a **metronome** — timing, not voice. **No mechanical contradiction.** But Oathclock's suggested pair is **Nul/Scor, "Emberquiet — silence and the banked coal"** — it is *already* the silence patron. Hushwarden duplicates its territory rather than contradicting it. **Redundant, not broken.** |
-| **Locksmirk** | **HARD-FAIL (conditional)** | Jam the Gears force-breaks an enemy's **in-progress** Song or Refrain — the party's dedicated anti-caster tech and the class's whole mechanical identity. If Hushwarden fields *prevent* casting, there is no in-progress Song to jam: the Discipline **displaces the Patron's signature loop** in exactly the situations that loop exists for. See the finding above. |
+| **Locksmirk** | **SOFT-FAIL** | *Resolved 2026-08-05: Hush taxes rather than prevents.* An in-progress Song still exists to jam, so Jam the Gears is not displaced and this is not a HARD-FAIL. It remains thematically crowded — both class and Discipline are "shut the caster down," one by breaking the working and one by making it expensive. |
 | Threadwalker | PASS (strong) | Hidden contracts, "you agree first, the veil is doctrine." Secrecy and silence align well. |
 
 ---
 
-## Owner rulings required — 8 cells
+## Final tally — signed off 2026-08-05
 
-**Six SOFT-FAIL** (playable, ships without support content — confirm or overturn):
-Flamebinder × Chordblade · Oathclock × Chordblade · Stormbearer × Terrashaper ·
-River-Mother × Hushwarden · Stormbearer × Hushwarden · Oathclock × Hushwarden
+**No HARD-FAILs. The abort criterion does not fire and the Combat Disciplines layering stands.**
 
-**Two conditional**, each collapsing to a single question:
+| Verdict | Count | Cells |
+|---|---|---|
+| PASS | 22 | — |
+| SOFT-FAIL | 8 | Flamebinder × Chordblade · Oathclock × Chordblade · Stormbearer × Terrashaper · **Threadwalker × Terrashaper** · River-Mother × Hushwarden · Stormbearer × Hushwarden · Oathclock × Hushwarden · Locksmirk × Hushwarden |
+| HARD-FAIL | 0 | — |
 
-1. **Locksmirk × Hushwarden** — does Hush *prevent* casting or *tax* fizzle?
-   Prevent → HARD-FAIL, abort criterion fires. Tax → SOFT-FAIL, layering survives.
-   *Recommend: tax, consistent with the vault's existing use of "the Hush."*
-2. **Threadwalker × Chordblade** — does Thread-binding require physical reach or line of sight?
-   Reach → HARD-FAIL. Line of sight → PASS.
-   *Recommend: line of sight — Threads are contractual, not physical.*
+Eight SOFT-FAILs, not the six originally drafted: Locksmirk × Hushwarden came *down* from
+HARD-FAIL when Hush was defined as a tax, and Threadwalker × Terrashaper came *up* from PASS when
+Thread-binding was defined as physical.
 
-**22 of 30 cells are PASS** and need no ruling.
+**What SOFT-FAIL means in practice:** the combination is legal and playable, and ships with no
+dedicated art, barks, or ability variants. Nothing needs to be blocked in code.
 
-## Two definitions to write down regardless of the rulings
+**Note the shape of the result.** Six of the eight sit on Hushwarden or Terrashaper, and five of
+those are thematic crowding rather than mechanical friction — a denial Discipline keeps landing
+on classes whose identity already involves shutting something down (Locksmirk jams, Oathclock is
+Emberquiet), and a hold-ground Discipline keeps landing on classes that want to move. If a fourth
+Discipline is ever added, a mobile *support* profile would clear more of this list than another
+control profile.
 
-- **Hush semantics** — prevent vs tax. Decides Locksmirk, and changes Flamebinder's token loop.
-- **"Failed cast" vs "prevented cast"** — decides whether Instructive Failure banks a token when
-  silenced. Affects Flamebinder × Hushwarden and anything else keyed on cast failure.
+**Definitions now settled** and recorded in the vault (`ten-patron-classes.md`):
+
+- **Hush taxes, it does not prevent.** Raises fizzle and Soul cost inside the field.
+- **"Failed" vs "prevented" is moot** — since Hush never prevents, a taxed cast that fails is a
+  genuine failure and Instructive Failure banks its token normally. No exploit loop.
+- **Thread-binding requires physical contact**, whip-dagger reach, never ranged.

@@ -95,7 +95,41 @@ fizzle falls. To make OPPOSED merely break even with distance 2 at 15% base fizz
 (~40% base) break-even needs about +20. A single flat ladder cannot hold the tradeoff steady
 across zones — which is itself an argument that the risk should not live entirely in fizzle.
 
-**Three ways out, owner's call — this is a canon-values decision, not an implementation one:**
+### RESOLVED 2026-08-05 — the risk moved to Soul, and the structure now works
+
+Owner ruled option 3: **a cast that reaches across the Wheel and fails spends Soul.** Nothing is
+charged when it lands. Ladder (provisional): `0 / 0 / 1 / 2 / 3 / 5` by distance. Landed in the
+vault at `magic-system.md` §"What a failed reach costs".
+
+Re-running the sweep with the Soul term added:
+
+```
+--- IS IT A WAGER OR A RAMP? ---
+  WAGER in all 12 rows: the fastest line is never also the cheapest.
+```
+
+**The structural problem is fixed.** Soul cost does not shrink as Agreement Integrity rises, so
+the tradeoff holds steady across zones in a way the additive fizzle penalty could not.
+
+**But the magnitudes now overshoot the other way, and this needs a second ruling.** At FRONT/flat,
+distance 2 costs 3.95 turns and 1.05 soul; OPPOSED costs 3.30 turns and **7.07 soul**. That is
+**0.65 turns bought for 6.02 soul** — and a heavy dialogue choice in this game costs about 6 soul.
+An opposed cast is currently priced like a major moral decision for a marginal tactical gain,
+which makes it a trap option rather than a wager. "Always take opposed" became "never take
+opposed"; neither is a choice.
+
+Two knobs, either works:
+
+- **Halve the top of the Soul ladder** to roughly `0 / 0 / 0 / 1 / 2 / 3`. Cheapest fix.
+- **Flatten `relation_add` fizzle** now that Soul carries the risk — say `+0/+1/+2/+3/+4/+5`.
+  Opposed casts then land more often, so the Soul price is incurred less. This is arguably more
+  correct: with two risk terms stacked, the fizzle ladder is now doing work it no longer needs to.
+
+Left provisional deliberately — the numbers are tunable by play and the canon shape is settled.
+
+---
+
+**The three options as originally presented, retained as the record:**
 
 1. **Steepen the fizzle ladder** to roughly `+0 / +5 / +11 / +16 / +21 / +27`. Cheapest; keeps
    the structure exactly as ratified. Still zone-sensitive.
