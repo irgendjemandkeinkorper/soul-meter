@@ -11,6 +11,11 @@ enum Verb { MOVE, ATTACK, CAST, ITEM, SPEECH, DEFEND }
 @export var kind: Kind = Kind.ATTACK
 @export var verb: Verb = Verb.ATTACK
 @export_range(0, 20) var ap_cost: int = 1
+## FR-102a charge-time cost. -1 means "not authored yet" and falls back to a conversion from
+## `ap_cost` in CombatRules.charge_cost_for() — a migration shim, not a permanent mapping.
+## `ap_cost` stays until the CT chassis clears Gate T (amendment §8.1: AP compatibility is not
+## removed in the same change that first makes CT authoritative).
+@export_range(-1, 200) var ct_cost: int = -1
 @export var power_bonus: int = 0
 ## Negative pushes Chaos; positive pushes Order.
 @export_range(-100, 100) var balance_shift: int = 0

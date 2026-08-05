@@ -7,6 +7,31 @@ dev) · **Date:** 2026-08-02
 **Combat decision (user, 2026-08-02):** Evolve within design-doc §6 chassis (field → battle scene → turn-based); Fallout 2 is vibe and reference, not blueprint. §6's Defining Strikes ARE the called-shot system; §6's Balance Gauge IS the balance pillar.
 **Elements decision (user, 2026-08-02):** The Elements & Music spec (below, §FR-300 block) is the updated canonical magic-mechanics layer, grounded in the vault's Wheel/ten-patron-classes lore. It supersedes prior mechanical sketches where they conflict; lore prose in the vault remains source of truth for fiction.
 
+**Tactical-layer decision (user, 2026-08-04; RATIFIED 2026-08-05):** adopt the `Elemental
+Architecture` design — grid with elevation and facing, charge-time turn order, per-tile element
+charge, global weather. **See [`prd-amendment-tactical-layer.md`](prd-amendment-tactical-layer.md),
+which supersedes parts of §6.1 below.**
+
+> ### ⚑ §6.1 IS PARTLY SUPERSEDED — read the amendment before implementing any FR-100
+>
+> **RETIRED:** **FR-102** (AP economy → charge time, now FR-102a) · **FR-105** (zones → grid with
+> elevation and facing, now FR-105a).
+> **KEPT but changed:** **FR-103** (repriced AP→CT) · **FR-104** (re-homed onto the weather/charge
+> bias axis — note it is *not* cut: Stillpoint's `the_held_silence` depends on
+> `apply_balance_effect`) · **FR-106** (needs a new CT-queue interrupt contract).
+> **AMENDED:** **FR-601** (pips → CT) · **FR-603** (HUD) · **FR-606** (its blocking-system list
+> names "AP" inline) · **FR-108** (zone layout → map/tile/elevation authoring).
+> The original text of all of these is retained below as the historical record.
+>
+> This **pre-empted the Phase 2 gate rather than deferring it** — the zones-depth playtest §7
+> below describes was never run. **Gate T** (amendment §5, 12 criteria) replaces it and inherits
+> Phase 1.5's go/no-go authority.
+>
+> **Applied:** design frame is now **1920×1080** (#111). **Still open:** whether NEIGHBOUR/SAME
+> enter canon as damage relations (§9.2, **#133**) — this blocks `element_matrix` authoring only.
+> **Decided 2026-08-05:** the three tactical jobs become **combat disciplines**; Patron remains
+> the class (§9.1, #132).
+
 ---
 
 ## 1. Executive Summary

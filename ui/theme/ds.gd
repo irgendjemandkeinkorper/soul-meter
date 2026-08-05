@@ -66,16 +66,23 @@ const STATE_HUSH := Color("#B8C0CC")
 
 # ---- the Wheel of Ten (canon order; adjacency = Chord, diametric = Clash) ----
 # Clashes: Suul/Daar, Bloei/Molm, Aqua/Scor, Khor/Nul, Terra/Strom. Never reorder.
+#
+# Sigils carry U+FE0E (VARIATION SELECTOR-15) where the DS marks them, forcing TEXT
+# presentation. Without it these codepoints render as colour emoji on some platforms, which
+# would break the DS's "no emoji, ever" rule at runtime rather than at authoring time.
+# The five marked here are exactly the five the DS marks — do not add or remove selectors
+# without changing the DS first.
+const VS_TEXT := "︎"
 const WHEEL: Array[Dictionary] = [
 	{"id": "suul",  "name": "Suul",  "sigil": "✷", "color": Color("#E8C46A"), "glow": Color("#FFE7A8")},
-	{"id": "bloei", "name": "Bloei", "sigil": "⚘", "color": Color("#4FA96A"), "glow": Color("#8FE0A4")},
+	{"id": "bloei", "name": "Bloei", "sigil": "⚘︎", "color": Color("#4FA96A"), "glow": Color("#8FE0A4")},
 	{"id": "aqua",  "name": "Aqua",  "sigil": "≈", "color": Color("#2E8FB8"), "glow": Color("#7FCDE8")},
-	{"id": "khor",  "name": "Khor",  "sigil": "♫", "color": Color("#A855F7"), "glow": Color("#D6B4FF")},
+	{"id": "khor",  "name": "Khor",  "sigil": "♫︎", "color": Color("#A855F7"), "glow": Color("#D6B4FF")},
 	{"id": "terra", "name": "Terra", "sigil": "▲", "color": Color("#8C7A5B"), "glow": Color("#C4AE85")},
-	{"id": "daar",  "name": "Daar",  "sigil": "◑", "color": Color("#4B3F72"), "glow": Color("#8577C4")},
+	{"id": "daar",  "name": "Daar",  "sigil": "◑︎", "color": Color("#4B3F72"), "glow": Color("#8577C4")},
 	{"id": "molm",  "name": "Molm",  "sigil": "⁂", "color": Color("#7A8B3C"), "glow": Color("#B4C46B")},
-	{"id": "scor",  "name": "Scor",  "sigil": "☲", "color": Color("#E0522F"), "glow": Color("#FF9A6E")},
-	{"id": "nul",   "name": "Nul",   "sigil": "○", "color": Color("#B8C0CC"), "glow": Color("#EDF2F8")},
+	{"id": "scor",  "name": "Scor",  "sigil": "☲︎", "color": Color("#E0522F"), "glow": Color("#FF9A6E")},
+	{"id": "nul",   "name": "Nul",   "sigil": "○︎", "color": Color("#B8C0CC"), "glow": Color("#EDF2F8")},
 	{"id": "strom", "name": "Strom", "sigil": "☇", "color": Color("#22D3EE"), "glow": Color("#A6F0FA")},
 ]
 
@@ -104,6 +111,55 @@ const NOTCH_SM := 6; const NOTCH_MD := 10; const NOTCH_LG := 16
 # ---- motion (seconds; stone settles, nothing springs) ----
 const DUR_INSTANT := 0.08; const DUR_FAST := 0.14; const DUR_BASE := 0.22
 const DUR_SLOW := 0.4; const DUR_AMBIENT := 2.4
+
+# ---- tactical layer: isometric board geometry ----
+# Ported from the DS "Elemental Architecture" Developer Annex (rev 0.2, 2026-08-04); ratified
+# by docs/prd-amendment-tactical-layer.md. 2:1 dimetric.
+#   screenX = originX + (x - y) * TILE_W/2
+#   screenY = originY + (x + y) * TILE_H/2 - h * ELEV_PX
+#   zIndex  = (x + y) * 2 + 1        # painter's order; a unit stands at tile.z + 1
+# Use iso_project()/iso_z() rather than re-deriving these — Battle Map v2 was authored at a
+# different scale (a ~141x71 diamond) and hand-rolled maths will silently disagree with it.
+const TILE_W := 56
+const TILE_H := 28
+const ELEV_PX := 12
+const ELEVATION_MAX := 3
+
+# Per-tile element charge (0-3). Tint alpha is 0.20 + 0.14 x level; charge 0 draws nothing.
+const CHARGE_MAX := 3
+const CHARGE_ALPHA_BASE := 0.20
+const CHARGE_ALPHA_STEP := 0.14
+const TILE_SELECT_RIM := Color("#D6B4FF")  # = the khor glow; the DS reuses it as the cursor rim
+
+# RESOLVED 2026-08-05 — the Annex's `linear-gradient(180deg,#1B202A,#12151B)` fill is a STALE
+# SNAPSHOT, not a missing token. The token file is the single source of truth; use
+# `--bevel-stone: linear-gradient(180deg,#20242D,#171A21)` for that surface. #1B202A is
+# superseded and must not be reintroduced.
+# Revisit only if a side-by-side render shows two genuinely distinct surfaces are wanted — and
+# then mint `--bevel-stone-deep` in the DS first, never a literal here.
+
+
+## Projects grid coordinates to screen space. `origin` is the board's screen anchor.
+static func iso_project(x: int, y: int, height: int, origin: Vector2 = Vector2.ZERO) -> Vector2:
+	return Vector2(
+		origin.x + float(x - y) * float(TILE_W) * 0.5,
+		origin.y + float(x + y) * float(TILE_H) * 0.5 - float(height) * float(ELEV_PX),
+	)
+
+
+## Painter's-order z-index for a tile. A unit standing on it uses this + 1.
+static func iso_z(x: int, y: int) -> int:
+	return (x + y) * 2 + 1
+
+
+## Tint for a tile carrying `level` charge of `element_color`. Level 0 is fully transparent.
+static func charge_tint(element_color: Color, level: int) -> Color:
+	if level <= 0:
+		return Color(element_color.r, element_color.g, element_color.b, 0.0)
+	var clamped := mini(level, CHARGE_MAX)
+	var alpha := CHARGE_ALPHA_BASE + CHARGE_ALPHA_STEP * float(clamped)
+	return Color(element_color.r, element_color.g, element_color.b, alpha)
+
 
 # ---- fonts (local OFL files; DS-specified substitutions) ----
 const FONT_DISPLAY := "res://assets/fonts/soul-meter/Cinzel.ttf"            # titles, labels, buttons (UPPERCASE, tracked)
