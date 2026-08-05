@@ -22,6 +22,7 @@ var _spawned_npcs: Array[NPC] = []
 var _idle_sprites: Array[Sprite2D] = []
 var _idle_origins: Array[Vector2] = []
 var _idle_phases: Array[float] = []
+var _visible_idle_indices: Array[int] = []
 var _idle_elapsed := 0.0
 
 
@@ -36,7 +37,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_idle_elapsed = fposmod(_idle_elapsed + delta, IDLE_PERIOD)
 	var base_phase := (_idle_elapsed / IDLE_PERIOD) * TAU
-	for index: int in _idle_sprites.size():
+	for index: int in _visible_idle_indices:
 		var sprite := _idle_sprites[index]
 		var wave := sin(base_phase + _idle_phases[index])
 		sprite.position = _idle_origins[index] + Vector2(0.0, wave * IDLE_AMPLITUDE)
@@ -187,9 +188,27 @@ func _register_idle(npc: NPC, idle_phase: float) -> void:
 	var sprite := npc.get_node_or_null("Sprite2D") as Sprite2D
 	if sprite == null:
 		return
+	var index := _idle_sprites.size()
 	_idle_sprites.append(sprite)
 	_idle_origins.append(sprite.position)
 	_idle_phases.append(fposmod(idle_phase, TAU))
+
+	var notifier := VisibleOnScreenNotifier2D.new()
+	notifier.rect = Rect2(-32, -32, 64, 64)
+	sprite.add_child(notifier)
+	notifier.screen_entered.connect(_on_sprite_screen_entered.bind(index))
+	notifier.screen_exited.connect(_on_sprite_screen_exited.bind(index))
+
+
+func _on_sprite_screen_entered(index: int) -> void:
+	if not _visible_idle_indices.has(index):
+		_visible_idle_indices.append(index)
+
+
+func _on_sprite_screen_exited(index: int) -> void:
+	var pos := _visible_idle_indices.find(index)
+	if pos != -1:
+		_visible_idle_indices.remove_at(pos)
 
 
 static func _set_generated_interaction_radius(npc: NPC) -> void:
