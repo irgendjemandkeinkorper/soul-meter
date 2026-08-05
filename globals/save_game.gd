@@ -245,7 +245,11 @@ func _load_failure(message: String) -> Dictionary:
 func _validate_zhavar(value: Variant) -> bool:
 	if not value is Dictionary:
 		return false
-	for rung: Variant in value.values():
+	for zone_id: Variant in value:
+		# SECURITY ENHANCEMENT: Validate the key format and length using StableIds
+		if not zone_id is String or (zone_id as String).length() > 64 or not StableIds.is_valid(StableIds.ZONE, str(zone_id)):
+			return false
+		var rung: Variant = value[zone_id]
 		if not rung is String or rung not in ZHAVAR_RUNGS:
 			return false
 	return true
@@ -256,6 +260,22 @@ func _validate_ledger(value: Dictionary, _label: String) -> bool:
 		return false
 	for row: Variant in value.get("log", []):
 		if not row is Dictionary:
+			return false
+		# SECURITY ENHANCEMENT: Restrict string field lengths in ledger log rows to prevent memory exhaustion / DoS
+		var actor: Variant = row.get("actor")
+		if actor != null and (not actor is String or (actor as String).length() > 64):
+			return false
+		var faction: Variant = row.get("faction")
+		if faction != null and (not faction is String or (faction as String).length() > 64):
+			return false
+		var kind: Variant = row.get("kind")
+		if kind != null and (not kind is String or (kind as String).length() > 64):
+			return false
+		var cause: Variant = row.get("cause")
+		if cause != null and (not cause is String or (cause as String).length() > 256):
+			return false
+		var scene: Variant = row.get("scene")
+		if scene != null and (not scene is String or (scene as String).length() > 256):
 			return false
 	return true
 

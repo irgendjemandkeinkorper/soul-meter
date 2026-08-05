@@ -298,6 +298,61 @@ func test_validation_rejects_malicious_or_invalid_payload_fields() -> void:
 	assert_bool(saves.validate_payload(payload_invalid_elapsed)).is_false()
 
 
+func test_security_validation_rejects_malicious_keys_and_field_lengths() -> void:
+	var base_payload := {
+		"version": SaveGameScript.FORMAT_VERSION,
+		"scene": GameFlow.TOWN_SCENE,
+		"game_state": {},
+		"reputation": {},
+		"renown": {},
+		"quests": {},
+	}
+
+	# 1. Test overly long ledger fields
+	var payload_bad_ledger := base_payload.duplicate()
+	payload_bad_ledger["reputation"] = {
+		"log": [{
+			"actor": "player",
+			"faction": "mirror-choir",
+			"delta": 10.0,
+			"cause": "a".repeat(300), # too long
+			"scene": "dom",
+			"at": 1234567,
+			"order": 1
+		}],
+		"next_order": 1
+	}
+	assert_bool(saves.validate_payload(payload_bad_ledger)).is_false()
+
+	# 2. Test invalid / malicious Zhavar keys (Zone ID not in stable format or too long)
+	var payload_bad_zhavar_key := base_payload.duplicate()
+	payload_bad_zhavar_key["zhavar"] = {
+		"a".repeat(100): "rising"
+	}
+	assert_bool(saves.validate_payload(payload_bad_zhavar_key)).is_false()
+
+	# 3. Test invalid Zhavar value
+	var payload_bad_zhavar_val := base_payload.duplicate()
+	payload_bad_zhavar_val["zhavar"] = {
+		"dom": "invalid_rung"
+	}
+	assert_bool(saves.validate_payload(payload_bad_zhavar_val)).is_false()
+
+	# 4. Test invalid Var Harmony keys (Actor ID too long / not stable format)
+	var raw_data: Dictionary = GameState.to_dict()
+	raw_data["var_harmony"] = {
+		"a".repeat(100): 3
+	}
+	assert_bool(GameState.validate_save_data(raw_data)).is_false()
+
+	# 5. Test invalid Var Harmony values
+	var raw_data_val: Dictionary = GameState.to_dict()
+	raw_data_val["var_harmony"] = {
+		"vex": 99 # too high
+	}
+	assert_bool(GameState.validate_save_data(raw_data_val)).is_false()
+
+
 func test_flags_validation_and_coercion() -> void:
 	# Test that game state successfully filters malicious or overly long flags.
 	# Build on a REAL serialized GameState rather than a hand-rolled minimal

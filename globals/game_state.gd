@@ -744,7 +744,11 @@ func _validate_save_data(data: Dictionary) -> bool:
 		if not row is Dictionary:
 			return false
 	var harmony: Dictionary = data.get("var_harmony", {})
-	for value: Variant in harmony.values():
+	for actor_id: Variant in harmony:
+		# SECURITY ENHANCEMENT: Validate actor_id format/length using StableIds
+		if not actor_id is String or (actor_id as String).length() > 64 or not StableIds.is_valid(StableIds.ACTOR, str(actor_id)):
+			return false
+		var value: Variant = harmony[actor_id]
 		if typeof(value) != TYPE_INT or int(value) < -5 or int(value) > 5:
 			return false
 	var knowledge: Dictionary = data.get("combat_knowledge", {})
