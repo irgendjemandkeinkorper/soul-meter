@@ -37,6 +37,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_idle_elapsed = fposmod(_idle_elapsed + delta, IDLE_PERIOD)
 	var base_phase := (_idle_elapsed / IDLE_PERIOD) * TAU
+	# Viewport Culling Optimization:
+	# Only update transform properties (sin wave position/rotation) for NPCs that are currently visible on screen.
 	for index: int in _visible_idle_indices:
 		var sprite := _idle_sprites[index]
 		var wave := sin(base_phase + _idle_phases[index])
