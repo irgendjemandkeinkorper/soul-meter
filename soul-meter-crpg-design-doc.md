@@ -122,7 +122,7 @@ The player crosses the rift to the second imprisonment — **outside spacetime**
 - **The Balance Gauge.** Every battle displays an order↔chaos axis that actions push. Demons drag it chaosward (wild surges, crits, mutations strengthen); undead and devil-forces drag it orderward (turns rigidify, effects become predictable, bindings strengthen); the player's Definition powers push order, Paradox powers push chaos, mundane actions pull toward center. Extremes are dangerous *for everyone*; mixed-force fights whipsaw. The cosmological thesis becomes a tactical resource — the player literally manages balance in every fight. A RESTORE-path player who refuses both trees is the party's *stabilizer*: the refusal build is mechanically real in combat, not just narratively.
 - **Defining strikes.** Called shots, reflavored as the setting's own magic: Lore/insight lets the player *name* a weakness ("the knee," "the oath that binds it") for targeted effects. Fallout's targeting *feel*, entirely this world's fiction.
 - **Speech is a combat verb.** Fights can be ended, split, or turned mid-battle through dialogue checks — essential against Harem Stet's forces, where every soldier was somebody's rescued dead.
-- **Zones, not grids (v1).** Front/back/flank positioning delivers most tactical decisions at a fraction of a full tactics-grid's build cost. Race inheritances + the two ability trees carry build diversity.
+- **Zones, not grids (v1).** Front/back/flank positioning delivers most tactical decisions at a fraction of a full tactics-grid's build cost. Race inheritances + the two ability trees carry build diversity. ⚑ **Under amendment — see the note below this section.**
 - **Consequence-permanence.** Fleeing, sparing, and slaughtering all write flags. Combat outcomes are story outcomes.
 
 **Combat spec status [RATIFIED 2026-08-03]:** the five bullets above are no longer direction-only.
@@ -130,6 +130,18 @@ The player crosses the rift to the second imprisonment — **outside spacetime**
 economy, `BattlefieldModel` zone interface, Pandora-driven Balance thresholds, the Defining Strikes
 weakness tables, and speech-in-battle. Anything in §6 and the PRD that disagrees resolves to the
 PRD. The zones-vs-grid question is settled at the Phase 2 gate, not deferred to v2.
+
+⚑ **Amendment pending (2026-08-05).** The owner set a tactical-layer direction on 2026-08-04
+that supersedes two of the five bullets above: **zones become a grid with elevation and facing**,
+and the **AP economy becomes charge-time turn order**. Defining Strikes, the Balance Gauge, and
+speech-as-a-verb are all **kept** (repriced/re-homed, not cut). See
+`docs/prd-amendment-tactical-layer.md`; it is DRAFT and not yet ratified, so the text above
+remains in force until it is.
+
+Note what this does to the sentence directly above: the zones-vs-grid question is now being
+answered **ahead of** the Phase 2 gate rather than by it. The gate's evidentiary bar is replaced,
+not removed — amendment §5 (Gate T) restates it for the new chassis, and §8 records what triggers
+a reversal.
 
 ## 7. Systems Notes
 
