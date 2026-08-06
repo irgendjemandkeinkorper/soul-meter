@@ -338,6 +338,34 @@ func test_security_validation_rejects_malicious_keys_and_field_lengths() -> void
 	}
 	assert_bool(saves.validate_payload(payload_bad_zhavar_val)).is_false()
 
+
+## RenownEvent.kind is a StringName, and `StringName is String` is false in
+## GDScript — a length check written only against String rejects every genuine
+## renown row, so any save carrying renown history stops loading. The bad
+## version of this passed in isolation and only broke in a full run, where an
+## earlier suite had already put rows in the ledger; assert on a real
+## Renown.to_dict() so the trap cannot come back unnoticed.
+func test_ledger_validation_accepts_real_renown_rows_with_stringname_kind() -> void:
+	Renown.gain_infamy("player", 3.0, "Broke the compact", "dom")
+	var renown_payload := Renown.to_dict()
+	assert_int(renown_payload["log"].size()).is_greater(0)
+	assert_bool(renown_payload["log"][0]["kind"] is StringName).is_true()
+
+	var payload := {
+		"version": SaveGameScript.FORMAT_VERSION,
+		"scene": GameFlow.TOWN_SCENE,
+		"game_state": {},
+		"reputation": {},
+		"renown": renown_payload,
+		"quests": {},
+	}
+	assert_bool(saves.validate_payload(payload)).is_true()
+
+	# The length bound still has to bite on an oversized kind.
+	var oversized := payload.duplicate(true)
+	oversized["renown"]["log"][0]["kind"] = "a".repeat(100)
+	assert_bool(saves.validate_payload(oversized)).is_false()
+
 	# 4. Test invalid Var Harmony keys (Actor ID too long / not stable format)
 	var raw_data: Dictionary = GameState.to_dict()
 	raw_data["var_harmony"] = {
