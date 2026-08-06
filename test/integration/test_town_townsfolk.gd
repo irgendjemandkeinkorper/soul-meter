@@ -117,6 +117,15 @@ func test_idle_sway_is_subtle_and_phase_offset_per_townsfolk() -> void:
 	await runner.simulate_frames(20)
 	var spawner := runner.find_child("OutdoorTownsfolk", true, false) as TownNpcSpawner
 	assert_bool(spawner.is_processing()).is_true()
+
+	var all_indices: Array[int] = []
+	var idle_sprites_value: Variant = spawner.get("_idle_sprites")
+	if idle_sprites_value is Array:
+		for i in range((idle_sprites_value as Array).size()):
+			all_indices.append(i)
+	spawner.set("_visible_idle_indices", all_indices)
+	await runner.simulate_frames(1)
+
 	var sprite_heights := {}
 	var sprite_rotations := {}
 	for npc: NPC in spawner.spawned_npcs():
