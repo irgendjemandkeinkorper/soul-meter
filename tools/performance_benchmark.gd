@@ -342,7 +342,7 @@ func _build_spawner_report() -> Dictionary:
 			"position_write",
 			"rotation_write",
 		],
-		"viewport_culling_present": false,
+		"viewport_culling_present": true,
 	}
 
 

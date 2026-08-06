@@ -44,7 +44,13 @@ alongside these visual tokens when deciding whether a feature belongs in Soul Me
   selected = violet edge; disabled = 42% opacity, still visible (locked dialogue options must
   be seen).
 - **Motion:** stone settles — 80/140/220/400ms + 2.4s ambient; no bounce, no overshoot.
-- **Layout:** fixed-frame 1440×900 thinking; HUD pinned bottom with 2px bronze rule;
+- **Layout:** fixed-frame **1920×1080** — the canonical design frame, matching every authored
+  mockup. Spec pixel values map **1:1** to `ds.gd` constants and scene layout; never hand-divide
+  a spec value. `project.godot` uses `canvas_items` + aspect `keep`, so Godot applies one uniform
+  scale `s = min(window_w / 1920, window_h / 1080)`; the 1280×720 window override is a launch
+  size, not a design frame. (Was "1440×900 thinking" — stale, and 16:10 against the mockups'
+  16:9; corrected 2026-08-05, see `docs/prd-amendment-tactical-layer.md` §7.)
+  HUD pinned bottom with 2px bronze rule;
   **SoulGauge is always the rightmost HUD element**; 64px item slots; grids use gap.
 - **No emoji, ever.** Element sigils are text-presentation unicode (✷⚘≈♫▲◑⁂☲○☇).
 
