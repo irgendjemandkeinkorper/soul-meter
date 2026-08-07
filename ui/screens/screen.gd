@@ -53,6 +53,73 @@ func close() -> void:
 	UIManager.back()
 
 
+## The M2 full-screen shell: Screen -> MarginContainer -> VBox with exactly three
+## children, Header / Body / HudBar (see design/ui-shell-conventions.md).
+##
+## Additive on purpose. `_make_window()` below builds the older centered-panel
+## window that the ten existing screens use; migrating them is tracked separately
+## rather than done here, so both shells coexist until that lands. New M2 screens
+## use this one.
+##
+## Returns the three containers in order. `HudBar` is empty and the caller fills
+## it left-to-right; whatever else goes in, SoulGauge is always added LAST so it
+## stays rightmost (DS rule).
+func _make_shell() -> Array[Control]:
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.theme_type_variation = "ScreenShellMargin"
+	add_child(margin)
+
+	var column := VBoxContainer.new()
+	column.theme_type_variation = "ScreenShellColumn"
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_child(column)
+
+	var header := HBoxContainer.new()
+	header.name = "Header"
+	header.theme_type_variation = "ScreenHeader"
+	column.add_child(header)
+
+	var body := MarginContainer.new()
+	body.name = "Body"
+	# The Body is the only child that grows; Header and HudBar keep their heights.
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(body)
+
+	var hud_bar := HBoxContainer.new()
+	hud_bar.name = "HudBar"
+	hud_bar.theme_type_variation = "ScreenHudBar"
+	column.add_child(hud_bar)
+
+	return [header, body, hud_bar] as Array[Control]
+
+
+## Enter/exit per the shell conventions: fade + settle down 8px, never scale, never
+## bounce. Driven from the state chart's `state_entered` / `state_exited` so the
+## animation can never disagree with the flow state.
+func play_enter() -> void:
+	_play_shell_transition(true)
+
+
+func play_exit() -> void:
+	_play_shell_transition(false)
+
+
+func _play_shell_transition(entering: bool) -> void:
+	var duration := DS.DUR_BASE if entering else DS.DUR_FAST
+	var settle := 8.0
+	modulate.a = 0.0 if entering else 1.0
+	position.y = -settle if entering else 0.0
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.tween_property(self, "modulate:a", 1.0 if entering else 0.0, duration)
+	tween.tween_property(self, "position:y", 0.0 if entering else settle, duration)
+
+
 ## Dimmed full-screen backdrop + a centered panel. Returns the VBox to fill with content.
 func _make_window(title_text: String, min_size: Vector2 = Vector2(520, 420)) -> VBoxContainer:
 	var dim := ColorRect.new()

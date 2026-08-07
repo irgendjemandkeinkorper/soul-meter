@@ -20,9 +20,11 @@ alongside these visual tokens when deciding whether a feature belongs in Soul Me
 - `ui/hud/soul_gauge.gd` — the DS's flagship component ported: bronze fill (never violet —
   "ledgered, not magical"), canon agreement states (constant/skip/feedback/hush; feedback
   pulses), the Registry audit-floor mark.
-- `ui/hud/battle_hud.tscn` — the FR-603 event-stream HUD: initiative/AP and zones/weaknesses
-  are mirror-paired around the centre Balance arcs; AP uses eclipse-phase pips and check math
-  is an explicit toggle. It composes existing tokens and type variations only.
+- `ui/hud/battle_hud.tscn` — the event-stream HUD: initiative and zones/weaknesses are
+  mirror-paired around the centre Balance arcs, and check math is an explicit toggle. It
+  composes existing tokens and type variations only. ⚠ Built against FR-603, which
+  `docs/prd-amendment-tactical-layer.md` **supersedes** (region model); its AP pips become CT —
+  see [The Balance UI language](#the-balance-ui-language-fr-601--fr-602--fr-606) below.
 
 ## The rules that bind Godot work
 
@@ -53,6 +55,125 @@ alongside these visual tokens when deciding whether a feature belongs in Soul Me
   HUD pinned bottom with 2px bronze rule;
   **SoulGauge is always the rightmost HUD element**; 64px item slots; grids use gap.
 - **No emoji, ever.** Element sigils are text-presentation unicode (✷⚘≈♫▲◑⁂☲○☇).
+
+## The Balance UI language (FR-601 / FR-602 / FR-606)
+
+Repo-side extension, authored here rather than synced — **closes #99**. FR-601 requires this
+document to be extended *before* the code changes: the doc is the spec, code follows it.
+Cross-check: `design/ui-shell-conventions.md` (#125) owns the screen shell; this section owns
+what goes *inside* the gauges.
+
+> ⚠ **Read the amendment first.** `docs/prd-amendment-tactical-layer.md` **amends FR-601**
+> (pips are no longer AP), **supersedes FR-603**, and **extends FR-606**'s blocking list. The
+> ratified FR text in `docs/prd-chapter-one.md` is retained there as historical record and is
+> *not* current. Anything below that contradicts the original FR prose does so deliberately.
+
+### The compositional rule: bilateral mirror symmetry
+
+HUD elements pair left/right around a fixed centre axis. The axis is the Balance Gauge, because
+Balance is the thing that is literally two-sided. Everything else arranges around it as a matched
+pair — never a lone element floating off-centre, never three-across.
+
+This is not decoration. Mirror symmetry means *the player reads deviation as meaning*: when the
+composition is symmetric, the fight is even; asymmetry is the signal.
+
+### The motif: eclipse — occlusion, corona, phase
+
+One motif carries every state display. A disc is occluded to some degree; the corona is what
+remains visible.
+
+- **Occlusion** = the resource is spent / unavailable.
+- **Corona** = what is left, and it is always *visible* — never a dark hole. A fully spent gauge
+  still reads as a ring, so "empty" and "broken" never look alike.
+- **Phase** = progress through a cycle.
+
+### The three gauges are one grammar at three zooms
+
+FR-602's requirement is that a player should *see* that the game is one thesis at three scales.
+Same family, different scale — and each owns exactly one decision, so they never become
+interchangeable soup:
+
+| Gauge | Scale | The decision it owns | Form |
+|---|---|---|---|
+| **Soul Meter** | self / story | what a permanent spend is worth | progressively occluded disc, bronze fill |
+| **Vär (Harmony)** | personal / casting | whether a cast is legal | mirrored disc, −5 kesh ↔ +5 sēl about a centre |
+| **Balance Gauge** | battle / tactical | which side the fight is tilting to | twin mirrored arcs meeting at centre |
+
+Shared: the disc/arc family, the centre axis, corona-not-hole, mono numerals, and occlusion as
+the spend language. Distinct: **scale and silhouette** — full disc (self), mirrored disc
+(harmony), twin arcs (battle). Distinguishable at a glance by shape alone, at any size.
+
+Bronze stays reserved for the Soul Meter: it is *ledgered, not magical*. Vär and Balance never
+take bronze — that is what keeps the title mechanic the most valuable pixel on screen.
+
+### Charge time takes the eclipse phase — not AP
+
+**AP is retired** (amendment §6). The eclipse phase now encodes **CT progress toward 100** —
+"how close am I to acting" — which the motif fits far better than discrete AP ever did, and which
+therefore *strengthens* FR-602 rather than straining it.
+
+`ui/hud/eclipse_pips.gd` is a pure view over two ints with no AP-specific logic, so it survives
+the change — but **not as a rename**. CT is continuous and the current `_draw()` renders N
+discrete discs. Two legitimate readings, and this is the open call for implementation:
+
+1. a single **filling disc** (a true percentage), or
+2. **discrete pips as a deliberate stylisation** of continuous CT (e.g. 10 pips × 10 CT).
+
+Budget a `_draw()` rewrite either way. Option 2 keeps the existing silhouette and reads faster at
+small sizes; option 1 is more honest about a continuous quantity. **Not resolved here** — it
+wants a screenshot review against the mockups, which is the FR-601 acceptance gate.
+
+### FR-606 — a refusal must name its system and its remedy
+
+Any greyed-out or failed-to-start action states **inline** which system blocked it and the
+nearest condition that would unblock it. This is the single mechanism the PRD promises for
+answering *"why did that cast fail?"* — one of the comprehension questions the gate tests.
+
+**The amended blocking list** (AP removed, grid axes added):
+
+> **Vär · Breath · CT · span cap · elevation · facing · occupancy · range · weather/Balance bias**
+
+These must stay **distinguishable**. Collapsing them into a generic "invalid move" destroys the
+property, and the axes are precisely what a player needs to learn a tactical grid.
+
+The typed taxonomy already exists in code and the UI's job is to surface it, not re-derive it:
+
+- `globals/combat/zone_battlefield_model.gd` → `{allowed, blocked_by, nearest_unblock, message}`
+- `globals/elements/casting_gate.gd` → `{blocked_by, nearest_unblock, …}`
+
+**Presentation:** the refusal reads as one line in the game's administrative voice — the system
+named, then the remedy, with the number exact and mono.
+
+> *Vär too low — Chord needs +0, you are at −3.*
+> *Not charged — 62 / 100.*
+
+Never a bare "Can't do that." Never colour alone to mark the disabled control: per the DS's
+own state rules, disabled is 42% opacity and **still visible**, because a locked option the
+player cannot see is an option they cannot learn from.
+
+### Colour-independent encoding (FR-607)
+
+State is encoded by **shape and position**, never hue alone. The eclipse and mirror motifs give
+this natively and it must not regress:
+
+- Occlusion **fraction** carries the value; the tint only reinforces it.
+- Balance uses **which side** the arc fills and **how far** — a monochrome screenshot still reads.
+- CT uses fill, not colour temperature.
+- Chaos/Order are distinguished by side-of-centre first, colour second.
+
+The existing `balance_arcs.gd` and `eclipse_pips.gd` already state this property in their headers
+("without relying on the Chaos/Order colours", "availability is encoded by fill as well as
+colour"). Any rewrite keeps it.
+
+### Binding rules
+
+All of the above ships via `ds.gd` tokens + theme type variations. **Zero per-node overrides** —
+the standing DS rule, no exception for gauges.
+
+### Acceptance (Phase 3 gate)
+
+All three gauges in one visual grammar, confirmed by design-doc screenshot review. Open call
+carried into implementation: the CT disc-vs-pips question above.
 
 ## Not yet ported (tracked gaps)
 
