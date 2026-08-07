@@ -12,6 +12,12 @@ extends Resource
 @export var cover_defense_bonus: int = 2
 @export var flank_power_bonus: int = 2
 
+## FR-105a seam (architecture doc §1.5). Selects which BattlefieldModel
+## `create_default()` builds. False keeps the zone model live; grid support
+## (#137) flips this once Gate T passes. The flag is the only activation path —
+## `create_default()` must not hardcode a concrete model path.
+@export var use_grid_battlefield: bool = false
+
 # ---- FR-102a charge time (amendment §2.1: CT values are balance data, never controller
 # literals). The AP block above is retained deliberately — amendment §8.1 forbids removing AP
 # compatibility in the same change that first makes CT authoritative. ----
