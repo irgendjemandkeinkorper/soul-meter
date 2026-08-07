@@ -395,16 +395,23 @@ you start wave N+1.
 FR-504 is ratified. Its text says: "No full NPC schedules in v1." D6 asks for a day/night clock
 and hand-authored routines for the hub NPCs.
 
-**Write `docs/prd-amendment-living-world.md` first.** The tactical amendment set the precedent:
-retire a ratified requirement in writing, with the reason recorded. Do not widen scope by
-silence.
+**`docs/prd-amendment-living-world.md` is WRITTEN as of 2026-08-07. It is NOT ratified.** It
+proposes FR-504a, tier 1.5, and it fixes the boundary that makes the widening safe: routines are
+a lookup table, with no pathfinding, no simulation and a hard cap of 15 NPCs. Read §2 before
+starting any of this work; §2.2 lists what stays cut.
+
+**Work must not start until the owner signs §8 of that amendment.** Rejecting it is cheap and
+recorded: FR-504 stands, M8 leaves the roadmap, and the schedule shortens by 1.4 to 2.2 weeks.
 
 Definition of done:
-- [ ] The amendment exists. It gives FR-504 an explicit disposition.
-- [ ] A world clock exists. The clock serializes into the save.
-- [ ] 10 to 15 named hub NPCs follow authored routines.
+- [ ] The owner ratifies the amendment. Until then this milestone does not start.
+- [ ] A world clock exists with four phases. It advances on declared events, never on a timer.
+- [ ] The clock serializes into the save. Schema 5 becomes 6, with a migration and a fixture.
+- [ ] A schema 5 save still loads and receives the default phase.
+- [ ] 10 to 15 named hub NPCs follow authored routines. A count above 15 fails.
 - [ ] Every other NPC keeps flag-keyed and rep-keyed reactivity only.
 - [ ] Dialogue can read the time of day.
+- [ ] No quest-critical interaction is reachable in fewer than two phases (FR-905).
 - [ ] The clock does not break quest flags, encounters, or save migration.
 
 ---
@@ -594,7 +601,7 @@ Each divergence is listed. Nothing changes by silence.
 |---|---|---|---|
 | ~~Phase 1.5 slice content~~ | ~~"AP + zone facing"~~ | **WITHDRAWN.** Amendment §5 already superseded Phase 1.5 with Gate T | None. See §1.3 |
 | ~~Phase 1.5 and Gate T~~ | ~~Two separate gates~~ | **WITHDRAWN.** The amendment already merged them | None. See §1.3 |
-| FR-504 NPC schedules | "No full NPC schedules in v1" | Clock plus hub-only routines | Write `docs/prd-amendment-living-world.md` (M8) |
+| FR-504 NPC schedules | "No full NPC schedules in v1" | Clock plus hub-only routines | Amendment WRITTEN 2026-08-07 as FR-504a. **Owner must ratify §8 before M8 starts** |
 | Phase ordering | Phase 2 combat, then Phase 4 content | Navigation first, then the seam, then the gate | This document. Ratify or reject it |
 | FR-502 side quests | "≥ 10 side quests" | 10 Dom side quests may already satisfy this | Audit before you author more (M7) |
 
