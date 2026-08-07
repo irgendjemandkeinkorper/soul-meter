@@ -32,6 +32,9 @@ fi
 echo "ACCEPTANCE: checking Pandora/generated-data drift"
 GODOT_BIN="$godot_bin" bash scripts/check_generated_data.sh
 
+echo "ACCEPTANCE: checking PixelPen Linux parking guard"
+bash scripts/check_pixelpen_linux_guard.sh
+
 echo "ACCEPTANCE: running deterministic headless suite"
 SOUL_METER_HEADLESS=1 GODOT_BIN="$godot_bin" bash scripts/test.sh -a test
 
