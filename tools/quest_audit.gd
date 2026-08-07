@@ -37,6 +37,61 @@ const QUEST_DIRECTORY := "res://quests"
 const DIALOGUE_DIRECTORY := "res://dialogue"
 const SIDE_READBACK_THRESHOLD := 0.6
 
+## Flag grammar: <domain>_<subject>_<predicate>, lower snake case.
+##
+## Underscores, not dots. Every shipped flag is already underscore-separated and
+## is written into save files, quest `.tres` resources, `data.pandora` and scene
+## files. A shipped flag id is permanent: renaming one is a save migration, not
+## an edit. The grammar therefore describes what the content already does.
+##
+## A domain must appear here before content may use it. That is the whole point:
+## the check catches a typo (`dom_` against `domm_`) and a missing namespace,
+## both of which currently fail silently.
+const FLAG_DOMAINS := [
+	"chapter",
+	"deep_trial",
+	"dom",
+	"dorthkor",
+	"encounter",
+	"field_debt",
+	"tutorial",
+	"undertakers",
+]
+
+## Flags that predate the grammar. Each one ships in saves already, so it is
+## grandfathered rather than renamed. Do NOT add to this list to silence a new
+## flag: a new flag has no save to protect, so it must satisfy the grammar.
+const LEGACY_FLAGS := {
+	"defeated_bog_wight": "verb-first; encounter defeat flags predate the domain rule",
+	"defeated_breach_hound": "verb-first; encounter defeat flags predate the domain rule",
+	"defeated_mustered_dead": "verb-first; encounter defeat flags predate the domain rule",
+	"prototype_extended_content": "build toggle, not quest state; no domain applies",
+	"reached": "chapter-stage shorthand written by seed tooling",
+	"read_only": "audit self-test fixture name",
+	"reported_bloodbellow": "predates the domain rule; ships in Chapter One saves",
+	"safe_flag": "audit self-test fixture name",
+	"write_only": "audit self-test fixture name",
+	"written_and_read": "audit self-test fixture name",
+}
+
+## Directories scanned for the grammar check.
+##
+## SCOPE, stated because it is not self-evident: this is deliberately a WIDER
+## scan than the orphan check, which only reads the quest registry and the
+## dialogue files. Grammar findings are reported in their own category and never
+## feed the orphan metrics, so widening the scan here cannot move the existing
+## numbers. `test/` is excluded: test fixtures use throwaway names on purpose.
+const GRAMMAR_SCAN_DIRECTORIES := [
+	"res://actors",
+	"res://dialogue",
+	"res://globals",
+	"res://quests",
+	"res://ui",
+	"res://world",
+]
+
+const GRAMMAR_SCAN_EXTENSIONS := ["gd", "dialogue"]
+
 
 func _initialize() -> void:
 	var strict := strict_mode_from_value(OS.get_environment(STRICT_ENV))
@@ -91,17 +146,21 @@ static func audit_project(strict: bool = false) -> Dictionary:
 	var readback_sources := _readback_sources(dialogue_sources)
 	_classify_readbacks(quest_results, readback_sources)
 	var flag_access := _project_flag_access(quest_results, dialogue_sources, readback_sources)
-	return build_report(quest_results, flag_access, strict)
+	return build_report(quest_results, flag_access, strict, scan_grammar_flags())
 
 
 static func build_report(
-	quest_results: Array[Dictionary], flag_access: Dictionary, strict: bool
+	quest_results: Array[Dictionary],
+	flag_access: Dictionary,
+	strict: bool,
+	grammar_flags: PackedStringArray = PackedStringArray()
 ) -> Dictionary:
 	var categories := {
 		"outcome_count": _category(),
 		"resolution_writes": _category(),
 		"readbacks": _category(),
 		"orphaned_flags": _category(),
+		"flag_grammar": _category(),
 	}
 	var main_read := 0
 	var main_total := 0
@@ -187,6 +246,15 @@ static func build_report(
 			{"flag": flag, "direction": "read_never_written"}
 		)
 
+	var grammar_violations := flag_grammar_violations(grammar_flags)
+	for violation: Dictionary in grammar_violations:
+		_add_finding(
+			categories["flag_grammar"],
+			"warning",
+			"flag_violates_grammar",
+			violation
+		)
+
 	var severity := {"error": 0, "warning": 0, "info": 0}
 	var findings_total := 0
 	for category_value: Variant in categories.values():
@@ -227,9 +295,108 @@ static func build_report(
 				"written": int(flag_access.get("written_count", 0)),
 				"read": int(flag_access.get("read_count", 0)),
 			},
+			"flag_grammar": {
+				"scanned": grammar_flags.size(),
+				"violations": grammar_violations.size(),
+				"grandfathered": LEGACY_FLAGS.size(),
+				"registered_domains": PackedStringArray(FLAG_DOMAINS),
+				"passes": grammar_violations.is_empty(),
+			},
 		},
 		"categories": categories,
 	}
+
+
+## Split a flag into <domain>_[<subject>_]<predicate>, or return an empty
+## dictionary when no registered domain matches.
+##
+## The subject is OPTIONAL, because shipped content uses both shapes and neither
+## is wrong: `dom_dishonest_casks_resolution` names a subject, `field_debt_open`
+## does not need one. Requiring a subject would have made four shipped flags
+## violations, and the only honest fix for a shipped flag is a save migration.
+##
+## Domains are matched longest-first so that `deep_trial` wins over a shorter
+## domain that happens to prefix it.
+static func split_flag(flag: String) -> Dictionary:
+	var sorted := FLAG_DOMAINS.duplicate()
+	sorted.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	for domain_value: Variant in sorted:
+		var domain := str(domain_value)
+		if not flag.begins_with(domain + "_"):
+			continue
+		var remainder := flag.substr(domain.length() + 1)
+		if remainder.is_empty():
+			return {}
+		var separator := remainder.rfind("_")
+		if separator <= 0 or separator >= remainder.length() - 1:
+			return {"domain": domain, "subject": "", "predicate": remainder}
+		return {
+			"domain": domain,
+			"subject": remainder.left(separator),
+			"predicate": remainder.substr(separator + 1),
+		}
+	return {}
+
+
+## Report every flag that does not satisfy the grammar and is not grandfathered.
+##
+## Returns findings-shaped dictionaries so the caller can add them directly.
+static func flag_grammar_violations(flags: PackedStringArray) -> Array[Dictionary]:
+	var violations: Array[Dictionary] = []
+	var seen := {}
+	for flag: String in flags:
+		if seen.has(flag):
+			continue
+		seen[flag] = true
+		if LEGACY_FLAGS.has(flag):
+			continue
+		# Limitation 2 in the header: a flag built by format string is captured
+		# as its unsubstituted template. Reporting `quest_%d_resolution` as a
+		# grammar violation would be blaming content for a scanner artifact.
+		if flag.contains("%"):
+			continue
+		if flag != flag.to_lower() or flag.contains("."):
+			violations.append(
+				{
+					"flag": flag,
+					"reason": "flag must be lower snake case with underscores, not dots",
+				}
+			)
+			continue
+		var parts := split_flag(flag)
+		if parts.is_empty():
+			violations.append(
+				{
+					"flag": flag,
+					"reason": (
+						"expected <domain>_<subject>_<predicate> with a registered domain; "
+						+ "registered domains are %s" % ", ".join(PackedStringArray(FLAG_DOMAINS))
+					),
+				}
+			)
+	violations.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool: return str(a["flag"]) < str(b["flag"])
+	)
+	return violations
+
+
+## Collect every flag literal in GRAMMAR_SCAN_DIRECTORIES for the grammar check.
+static func scan_grammar_flags() -> PackedStringArray:
+	var paths := PackedStringArray()
+	for directory_value: Variant in GRAMMAR_SCAN_DIRECTORIES:
+		var directory := str(directory_value)
+		paths.append_array(
+			PackedStringArray(_source_files(directory, PackedStringArray(GRAMMAR_SCAN_EXTENSIONS)).keys())
+		)
+	var access := scan_flag_sources(paths)
+	var flags := {}
+	for flag: String in access["written"]:
+		flags[flag] = true
+	for flag: String in access["read"]:
+		flags[flag] = true
+	var result := PackedStringArray(flags.keys())
+	result.sort()
+	return result
 
 
 static func scan_flag_sources(paths: PackedStringArray) -> Dictionary:
