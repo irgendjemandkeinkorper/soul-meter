@@ -132,6 +132,23 @@ static func build() -> Theme:
 	t.add_type("ScreenContentColumn")
 	t.set_type_variation("ScreenContentColumn", "VBoxContainer")
 	t.set_constant("separation", "ScreenContentColumn", DS.CONTROL_GAP)
+
+	# M2 full-screen shell — Screen > MarginContainer(20) > VBox(16) with exactly
+	# Header / Body / HudBar. See design/ui-shell-conventions.md. Separate from the
+	# ScreenWindow* variations above, which style the older centred-panel window.
+	t.add_type("ScreenShellMargin")
+	t.set_type_variation("ScreenShellMargin", "MarginContainer")
+	for margin_name in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
+		t.set_constant(margin_name, "ScreenShellMargin", DS.PANEL_PAD)
+	t.add_type("ScreenShellColumn")
+	t.set_type_variation("ScreenShellColumn", "VBoxContainer")
+	t.set_constant("separation", "ScreenShellColumn", DS.SPACE_6)
+	t.add_type("ScreenHeader")
+	t.set_type_variation("ScreenHeader", "HBoxContainer")
+	t.set_constant("separation", "ScreenHeader", DS.SPACE_6)
+	t.add_type("ScreenHudBar")
+	t.set_type_variation("ScreenHudBar", "HBoxContainer")
+	t.set_constant("separation", "ScreenHudBar", DS.SPACE_6)
 	t.add_type("MirrorPairRow")
 	t.set_type_variation("MirrorPairRow", "HBoxContainer")
 	t.set_constant("separation", "MirrorPairRow", DS.SPACE_6)
