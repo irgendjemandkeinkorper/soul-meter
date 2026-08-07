@@ -18,6 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Runs before Godot is even installed: pure Python, no engine, fast fail.
+      # `[if expr]` without the trailing slash silently no-ops, so a dead
+      # consequence check is otherwise indistinguishable from a working one.
+      - name: Lint dialogue response conditions
+        run: |
+          python3 tools/lint_dialogue_conditions.py --self-test
+          bash scripts/check_dialogue_conditions.sh
+
       - name: Cache Godot engine
         uses: actions/cache@v4
         with:

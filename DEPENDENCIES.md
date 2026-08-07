@@ -90,6 +90,10 @@ reference, then run the affected workflow manually before merging.
 
 - Response conditions use the SELF-CLOSING bracket form: `[if expression /]` — a plain
   `[if expression]` is silently ignored (WRAPPED_CONDITION_REGEX requires the ` /]`).
+  **Guarded since 2026-08-07:** `scripts/check_dialogue_conditions.sh` fails CI on the plain
+  form, and on a condition that is not the last tag on its response line. It is pure Python
+  and never launches Godot, so its exit code is trustworthy. Run
+  `python3 tools/lint_dialogue_conditions.py --self-test` to verify the lint itself.
 - Choice metadata rides on response tags: `[#tag=X] [#cost=-6 soul] [#consequence=...]`
   (no commas inside a tag value — commas split tags). The balloon parses these.
 - Autoloads (GameState, Reputation) are callable from conditions/mutations with no setup.
