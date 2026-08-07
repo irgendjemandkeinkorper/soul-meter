@@ -198,3 +198,12 @@ Launch the game the normal way (editor Play, or `godot --path .` from the built 
 there is one) and work the checklist top to bottom. Note the Godot version and date at the top
 of the file when you run it — that's what tells the next person whether a checklist is stale
 relative to the current build.
+
+### Manual run logs
+
+The two release-facing checklists, [`prototype_acceptance.md`](../test/manual/prototype_acceptance.md)
+and [`localization_smoke_test.md`](../test/manual/localization_smoke_test.md), each keep an
+append-only run log with the date, build or commit, runner, and pass/fail summary. Record `NOT
+RUN` when an interactive pass was not performed; never turn automated CI results into a claimed
+human playtest. Backfill a prior entry only when its date and result can be reconstructed from
+repository evidence.
