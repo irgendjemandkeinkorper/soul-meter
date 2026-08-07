@@ -298,6 +298,89 @@ func test_validation_rejects_malicious_or_invalid_payload_fields() -> void:
 	assert_bool(saves.validate_payload(payload_invalid_elapsed)).is_false()
 
 
+func test_security_validation_rejects_malicious_keys_and_field_lengths() -> void:
+	var base_payload := {
+		"version": SaveGameScript.FORMAT_VERSION,
+		"scene": GameFlow.TOWN_SCENE,
+		"game_state": {},
+		"reputation": {},
+		"renown": {},
+		"quests": {},
+	}
+
+	# 1. Test overly long ledger fields
+	var payload_bad_ledger := base_payload.duplicate()
+	payload_bad_ledger["reputation"] = {
+		"log": [{
+			"actor": "player",
+			"faction": "mirror-choir",
+			"delta": 10.0,
+			"cause": "a".repeat(300), # too long
+			"scene": "dom",
+			"at": 1234567,
+			"order": 1
+		}],
+		"next_order": 1
+	}
+	assert_bool(saves.validate_payload(payload_bad_ledger)).is_false()
+
+	# 2. Test invalid / malicious Zhavar keys (Zone ID not in stable format or too long)
+	var payload_bad_zhavar_key := base_payload.duplicate()
+	payload_bad_zhavar_key["zhavar"] = {
+		"a".repeat(100): "rising"
+	}
+	assert_bool(saves.validate_payload(payload_bad_zhavar_key)).is_false()
+
+	# 3. Test invalid Zhavar value
+	var payload_bad_zhavar_val := base_payload.duplicate()
+	payload_bad_zhavar_val["zhavar"] = {
+		"dom": "invalid_rung"
+	}
+	assert_bool(saves.validate_payload(payload_bad_zhavar_val)).is_false()
+
+
+## RenownEvent.kind is a StringName, and `StringName is String` is false in
+## GDScript — a length check written only against String rejects every genuine
+## renown row, so any save carrying renown history stops loading. The bad
+## version of this passed in isolation and only broke in a full run, where an
+## earlier suite had already put rows in the ledger; assert on a real
+## Renown.to_dict() so the trap cannot come back unnoticed.
+func test_ledger_validation_accepts_real_renown_rows_with_stringname_kind() -> void:
+	Renown.gain_infamy("player", 3.0, "Broke the compact", "dom")
+	var renown_payload := Renown.to_dict()
+	assert_int(renown_payload["log"].size()).is_greater(0)
+	assert_bool(renown_payload["log"][0]["kind"] is StringName).is_true()
+
+	var payload := {
+		"version": SaveGameScript.FORMAT_VERSION,
+		"scene": GameFlow.TOWN_SCENE,
+		"game_state": {},
+		"reputation": {},
+		"renown": renown_payload,
+		"quests": {},
+	}
+	assert_bool(saves.validate_payload(payload)).is_true()
+
+	# The length bound still has to bite on an oversized kind.
+	var oversized := payload.duplicate(true)
+	oversized["renown"]["log"][0]["kind"] = "a".repeat(100)
+	assert_bool(saves.validate_payload(oversized)).is_false()
+
+	# 4. Test invalid Var Harmony keys (Actor ID too long / not stable format)
+	var raw_data: Dictionary = GameState.to_dict()
+	raw_data["var_harmony"] = {
+		"a".repeat(100): 3
+	}
+	assert_bool(GameState.validate_save_data(raw_data)).is_false()
+
+	# 5. Test invalid Var Harmony values
+	var raw_data_val: Dictionary = GameState.to_dict()
+	raw_data_val["var_harmony"] = {
+		"vex": 99 # too high
+	}
+	assert_bool(GameState.validate_save_data(raw_data_val)).is_false()
+
+
 func test_flags_validation_and_coercion() -> void:
 	# Test that game state successfully filters malicious or overly long flags.
 	# Build on a REAL serialized GameState rather than a hand-rolled minimal

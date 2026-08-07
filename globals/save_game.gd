@@ -245,7 +245,14 @@ func _load_failure(message: String) -> Dictionary:
 func _validate_zhavar(value: Variant) -> bool:
 	if not value is Dictionary:
 		return false
-	for rung: Variant in value.values():
+	for zone_id: Variant in value:
+		# Zone keys are ids: bounded in length and spelled the way StableIds says.
+		# is_valid() constrains the character set but not the size, so both matter.
+		if zone_id == null or not _is_bounded_text(zone_id, 64):
+			return false
+		if not StableIds.is_valid(StableIds.ZONE, String(zone_id)):
+			return false
+		var rung: Variant = value[zone_id]
 		if not rung is String or rung not in ZHAVAR_RUNGS:
 			return false
 	return true
@@ -257,7 +264,34 @@ func _validate_ledger(value: Dictionary, _label: String) -> bool:
 	for row: Variant in value.get("log", []):
 		if not row is Dictionary:
 			return false
+		# Bound the free-text fields so an untrusted save cannot exhaust memory.
+		# Ids stay short; cause/scene are prose and scene paths, so they get more room.
+		if not _is_bounded_text(row.get("actor"), 64):
+			return false
+		if not _is_bounded_text(row.get("faction"), 64):
+			return false
+		if not _is_bounded_text(row.get("kind"), 64):
+			return false
+		if not _is_bounded_text(row.get("cause"), 256):
+			return false
+		if not _is_bounded_text(row.get("scene"), 256):
+			return false
 	return true
+
+
+## True when `value` is absent, or is text within `max_length`.
+## StringName counts as text: RenownEvent.kind is a StringName (&"reputation" /
+## &"infamy") and serializes as one, and `StringName is String` is false in
+## GDScript — checking only for String would reject every real renown row and
+## make any save carrying renown history unloadable. Both ledgers' from_dict()
+## coerce with str(), so accepting either type here loses no safety; the length
+## bound is what does the work.
+func _is_bounded_text(value: Variant, max_length: int) -> bool:
+	if value == null:
+		return true
+	if not (value is String or value is StringName):
+		return false
+	return String(value).length() <= max_length
 
 
 func _validate_quests(value: Dictionary) -> bool:
