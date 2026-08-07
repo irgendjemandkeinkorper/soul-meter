@@ -1,6 +1,6 @@
 # Roadmap — Chapter One to Ship Quality
 
-**Status:** DRAFT — proposed, not ratified
+**Status:** **RATIFIED 2026-08-07** — owner sign-off. The milestone order is binding
 **Date:** 2026-08-07 · **Owner:** Adam (solo dev)
 **Language rule:** ASD-STE100. Game content is excluded. See
 `docs/architecture-tactical-and-navigation.md` §7.
@@ -106,18 +106,19 @@ M1 Navigation        S   ~1 wk    no gate
 M2 Battlefield seam  M   ~1.5 wk  no gate
 M3 Consequence tools S   ~0.5 wk  no gate
 T1 Elemental layer   L   3-4 wk   tile_state, weather, jobs, pure resolution
-M4 Slice assembly    M   ~1 wk    design decision required
+M4 Slice assembly    M   ~1 wk    incl. Soul zero state (decided 2026-08-07)
 ─────────────────────────────────────────────────────────
 M5 GATE T            L   3-4 wk   BLOCKING. 10 criteria. 1 needs outside humans
 ─────────────────────────────────────────────────────────
-M6 Companions        L   ~3 wk    after M5
+M6 Companions        L   ~3 wk    after M5. Needs the 3x10 sheet first
 M7 Region content    XL  7-11 wk  after M5
-M8 Living world      M   ~2 wk    needs an amendment first
+M8 Living world      M   ~2 wk    FR-504a RATIFIED 2026-08-07
+M12 World-state evo  M   3-4 wk   FR-507 RATIFIED. Blocked on vault lore
 M9 Region map        S   ~0.5 wk  after M5
 M10 Polish and NG+   M   ~2 wk    after M7
 M11 Acceptance       S   ~1 wk    last
 ─────────────────────────────────────────────────────────
-TOTAL                    17-26 wk at 28 h/week
+TOTAL                    25-38 wk at 28 h/week
 ```
 
 M1 to M4 need no gate. They carry low risk. Together they are **3.5 to 5 weeks** of de-risked
@@ -288,19 +289,30 @@ Definition of done:
 - [ ] Each refusal states the nearest unblock condition.
 - [ ] A blocked cast that lacks Soul reports `blocked_by = &"soul"`.
 
-### Epic M4.3 — Soul zero state ⚠ DESIGN DECISION FIRST
+### Epic M4.3 — Soul zero state ✅ DECIDED 2026-08-07
 
-**This epic is blocked. Do not start it.** Canon defines a catastrophe at Gauge zero: death,
-or husking-while-alive. No code implements either. FR-905 forbids a soft-lock and requires a
-failure-forward route.
+**This epic is unblocked.** The owner ruled: **husking-while-alive is a playable state.** Death
+is not the outcome at zero.
 
-`CLAUDE.md` forbids a silent resolution of a canon question. The owner must decide first.
+Canon offered two readings — death, or husking-while-alive. The second was chosen because
+FR-905 requires a failure-forward route, and because death at zero makes the Gauge a health bar
+with extra steps. That teaches the player to hoard a resource the design intends them to spend.
+
+The vault is the source of truth for this, so `cosmology/souls.md` carries the ruling. Read it
+before implementing.
 
 Definition of done:
-- [ ] The owner ratifies the zero-state design.
-- [ ] The route from zero leads to authored content. It does not lead to a dead end.
-- [ ] The design is written into the vault, or the vault confirms it needs no change.
-- [ ] Implementation follows ratification. It does not precede it.
+- [ ] The ruling is written into the vault. `build_index.py` and `validate.py` are green.
+- [ ] Reaching zero sets a husked state. It does not end the run.
+- [ ] Casting is refused while husked, with `blocked_by = &"husked"`. FR-606 applies: the
+      refusal names the system and the nearest unblock condition.
+- [ ] A subset of NPCs reacts to the husked state. The reaction is authored, not generic.
+- [ ] A recovery route exists. It is slow, partial and social, which is what canon says
+      recovery is. It is not a potion.
+- [ ] Recovery is partial by construction. The Gauge does not return to its pre-zero value.
+- [ ] The husked state survives save and load.
+- [ ] **No husked state can soft-lock the main quest.** FR-905. This is the criterion most
+      likely to fail, because quest authoring can break it silently.
 
 ---
 
@@ -389,22 +401,28 @@ you start wave N+1.
 
 ## M8 — Living world ⚠ AMENDMENT FIRST
 
-**Size:** M · **Risk:** Medium · **Gate:** an amendment blocks the start
-**Requirements:** D6. FR-504, which this milestone partly overturns.
+**Size:** M · **Risk:** Medium · **Gate:** none. The amendment is ratified
+**Requirements:** **FR-504a, RATIFIED 2026-08-07.** Supersedes FR-504.
 
-FR-504 is ratified. Its text says: "No full NPC schedules in v1." D6 asks for a day/night clock
-and hand-authored routines for the hub NPCs.
+FR-504 said "No full NPC schedules in v1." FR-504a replaces it with tier 1.5: a four-phase
+clock plus hand-authored lookup routines for 10 to 15 hub NPCs.
 
-**Write `docs/prd-amendment-living-world.md` first.** The tactical amendment set the precedent:
-retire a ratified requirement in writing, with the reason recorded. Do not widen scope by
-silence.
+**`docs/prd-amendment-living-world.md` is RATIFIED as of 2026-08-07.** Read §2 before starting
+any of this work. §2.2 lists what stays cut, and the boundary there is binding, not advisory:
+routines are a lookup table, with no pathfinding, no continuous simulation, and a hard cap of 15
+NPCs. Routine 16 needs a further amendment.
+
+**Tracker note: issue #104 is written against the retired FR-504 text.** Update its scope to
+FR-504a before starting it.
 
 Definition of done:
-- [ ] The amendment exists. It gives FR-504 an explicit disposition.
-- [ ] A world clock exists. The clock serializes into the save.
-- [ ] 10 to 15 named hub NPCs follow authored routines.
+- [ ] A world clock exists with four phases. It advances on declared events, never on a timer.
+- [ ] The clock serializes into the save. Schema 5 becomes 6, with a migration and a fixture.
+- [ ] A schema 5 save still loads and receives the default phase.
+- [ ] 10 to 15 named hub NPCs follow authored routines. A count above 15 fails.
 - [ ] Every other NPC keeps flag-keyed and rep-keyed reactivity only.
 - [ ] Dialogue can read the time of day.
+- [ ] No quest-critical interaction is reachable in fewer than two phases (FR-905).
 - [ ] The clock does not break quest flags, encounters, or save migration.
 
 ---
@@ -516,15 +534,21 @@ hours and reserves nothing, so any week that loses a day still lands inside the 
 | M9 Region map | 12 to 18 | 0.4 to 0.6 | High. The design is ratified |
 | M10 Polish and NG+ | 45 to 65 | 1.6 to 2.3 | Medium |
 | M11 Acceptance | 20 to 30 | 0.7 to 1.1 | Medium. Playthroughs are wall-clock heavy |
-| **Total** | **630 to 960** | **23 to 34 weeks** | — |
+| FR-507 world-state evolution | 72 to 114 | 2.6 to 4.1 | Low. Ratified 2026-08-07. Blocked on vault lore |
+| **Total** | **702 to 1074** | **25 to 38 weeks** | — |
 
-**Chapter One ships in approximately 5.5 to 8 months at this capacity.**
+**Chapter One ships in approximately 6 to 9 months at this capacity.**
 
-This total is higher than the figure this document carried before 2026-08-07. Two corrections
-raised it: the elemental tactical layer was missing entirely (§1.4), and Gate T was estimated as
-a scheduling wait rather than as ten criteria of real work (§5.3). Neither is new scope. Both
-were already ratified and already on the issue tracker; this document had simply not counted
-them.
+This total rose twice on 2026-08-07, and the two rises are different in kind.
+
+**First rise, 480-730 to 630-960 hours: corrections, not new scope.** The elemental tactical
+layer was missing entirely (§1.4), and Gate T was estimated as a scheduling wait rather than as
+ten criteria of real work (§5.3). Both were already ratified and already on the issue tracker;
+this document had simply not counted them.
+
+**Second rise, 630-960 to 702-1074 hours: genuinely new scope.** FR-507 world-state evolution
+was ratified on 2026-08-07 and adds 72 to 114 hours. That is a deliberate purchase, not a
+correction. Its authoring row dominates and grows fastest if the three-state cap slips.
 
 ### 5.2 The de-risked block you can start today
 
@@ -594,7 +618,7 @@ Each divergence is listed. Nothing changes by silence.
 |---|---|---|---|
 | ~~Phase 1.5 slice content~~ | ~~"AP + zone facing"~~ | **WITHDRAWN.** Amendment §5 already superseded Phase 1.5 with Gate T | None. See §1.3 |
 | ~~Phase 1.5 and Gate T~~ | ~~Two separate gates~~ | **WITHDRAWN.** The amendment already merged them | None. See §1.3 |
-| FR-504 NPC schedules | "No full NPC schedules in v1" | Clock plus hub-only routines | Write `docs/prd-amendment-living-world.md` (M8) |
+| FR-504 NPC schedules | "No full NPC schedules in v1" | Clock plus hub-only routines | Amendment WRITTEN 2026-08-07 as FR-504a. **Owner must ratify §8 before M8 starts** |
 | Phase ordering | Phase 2 combat, then Phase 4 content | Navigation first, then the seam, then the gate | This document. Ratify or reject it |
 | FR-502 side quests | "≥ 10 side quests" | 10 Dom side quests may already satisfy this | Audit before you author more (M7) |
 
