@@ -15,6 +15,9 @@ extends StaticBody2D
 @export var visual_modulate := Color(0.55, 0.78, 0.64, 1.0)
 @export var visual_scale := Vector2(3.5, 3.5)
 
+const SpriteCatalog := preload("res://assets/generated/sprites/isometric_sprite_catalog.gd")
+const CHARACTER_KIT := "mini-characters"
+
 var _player_in_range := false
 var _prompt: Label
 
@@ -82,3 +85,24 @@ func _apply_visual_identity() -> void:
 	sprite.region_rect = visual_region
 	sprite.modulate = visual_modulate
 	sprite.scale = visual_scale
+
+
+func apply_isometric_visual(model_name: String, facing: String = "east") -> bool:
+	var texture := load(SpriteCatalog.texture_path(CHARACTER_KIT, model_name)) as Texture2D
+	if texture == null:
+		push_error("Could not load generated NPC sprite for '%s'." % model_name)
+		return false
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+	if sprite == null:
+		push_error("NPC '%s' is missing its Sprite2D presentation node." % npc_name)
+		return false
+	visual_modulate = Color.WHITE
+	visual_scale = Vector2.ONE
+	sprite.texture = texture
+	sprite.region_enabled = false
+	sprite.position = Vector2.ZERO
+	sprite.offset = SpriteCatalog.SPRITE_PIVOT_OFFSET
+	sprite.scale = Vector2.ONE
+	sprite.modulate = Color.WHITE
+	sprite.flip_h = facing == "west"
+	return true

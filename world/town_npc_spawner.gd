@@ -164,24 +164,9 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray) -> void
 
 
 func _apply_isometric_visual(npc: NPC, model_name: String, facing: String = "east") -> void:
+	if not npc.apply_isometric_visual(model_name, facing):
+		return
 	var texture_path := SpriteCatalog.texture_path(CHARACTER_KIT, model_name)
-	var texture := load(texture_path) as Texture2D
-	if texture == null:
-		push_error("Could not load generated townsfolk sprite: " + texture_path)
-		return
-	var sprite := npc.get_node_or_null("Sprite2D") as Sprite2D
-	if sprite == null:
-		push_error("NPC '%s' is missing its Sprite2D presentation node." % npc.name)
-		return
-	npc.visual_modulate = Color.WHITE
-	npc.visual_scale = Vector2.ONE
-	sprite.texture = texture
-	sprite.region_enabled = false
-	sprite.position = Vector2.ZERO
-	sprite.offset = SpriteCatalog.SPRITE_PIVOT_OFFSET
-	sprite.scale = Vector2.ONE
-	sprite.modulate = Color.WHITE
-	sprite.flip_h = facing == "west"
 	npc.set_meta(&"sprite_model", model_name)
 	npc.set_meta(&"sprite_path", texture_path)
 

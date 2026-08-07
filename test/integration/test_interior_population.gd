@@ -54,6 +54,40 @@ func test_all_thirty_indoor_npcs_use_generated_positions_and_dialogue_titles() -
 	assert_int(placed_ids.size()).is_equal(30)
 
 
+func test_marshal_uses_story_dialogue_and_generated_isometric_model() -> void:
+	var interior := _instantiate_interior("res://world/interiors/trial_hall.tscn")
+	var marshal := _npc_by_id(_indoor_npcs(interior), "branek-coiljaw")
+	assert_object(marshal).is_not_null()
+	if marshal == null:
+		_free_interior(interior)
+		return
+	var route := QuestRegistry.dialogue_route_for_actor(
+		marshal.npc_id, marshal.dialogue_path, marshal.dialogue_start
+	)
+	assert_str(str(route["path"])).is_equal(QuestRegistry.MARSHAL_DIALOGUE_PATH)
+	assert_str(str(route["title"])).is_equal("start")
+	var sprite := marshal.get_node("Sprite2D") as Sprite2D
+	assert_bool(sprite.region_enabled).is_false()
+	assert_str(sprite.texture.resource_path).starts_with(
+		"res://assets/generated/sprites/mini-characters/"
+	)
+	assert_bool(sprite.offset.is_equal_approx(
+		preload("res://assets/generated/sprites/isometric_sprite_catalog.gd").SPRITE_PIVOT_OFFSET
+	)).is_true()
+	_free_interior(interior)
+
+
+func test_npc_body_collision_matches_the_character_feet_footprint() -> void:
+	var npc_scene := load("res://actors/npc/npc.tscn") as PackedScene
+	var npc := npc_scene.instantiate() as NPC
+	add_child(npc)
+	var shape_node := npc.get_node("CollisionShape2D") as CollisionShape2D
+	var shape := shape_node.shape as RectangleShape2D
+	assert_vector(shape.size).is_equal(Vector2(18, 10))
+	assert_vector(shape_node.position).is_equal(Vector2(0, -4))
+	npc.queue_free()
+
+
 func test_all_twelve_generated_vendors_are_reachable_in_interiors() -> void:
 	var placed_ids := {}
 	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
