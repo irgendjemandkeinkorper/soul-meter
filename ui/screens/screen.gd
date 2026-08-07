@@ -7,6 +7,8 @@ extends Control
 ## Flow-owned screens close via a chart event, not a direct stack pop.
 var flow_owned := false
 var allow_back := true
+signal transition_finished
+var _transition_tween: Tween
 
 
 func _ready() -> void:
@@ -109,15 +111,18 @@ func play_exit() -> void:
 func _play_shell_transition(entering: bool) -> void:
 	var duration := DS.DUR_BASE if entering else DS.DUR_FAST
 	var settle := 8.0
+	if is_instance_valid(_transition_tween):
+		_transition_tween.kill()
 	modulate.a = 0.0 if entering else 1.0
 	position.y = -settle if entering else 0.0
 
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.tween_property(self, "modulate:a", 1.0 if entering else 0.0, duration)
-	tween.tween_property(self, "position:y", 0.0 if entering else settle, duration)
+	_transition_tween = create_tween()
+	_transition_tween.set_parallel(true)
+	_transition_tween.set_ease(Tween.EASE_OUT)
+	_transition_tween.set_trans(Tween.TRANS_SINE)
+	_transition_tween.tween_property(self, "modulate:a", 1.0 if entering else 0.0, duration)
+	_transition_tween.tween_property(self, "position:y", 0.0 if entering else settle, duration)
+	_transition_tween.finished.connect(transition_finished.emit, CONNECT_ONE_SHOT)
 
 
 ## Dimmed full-screen backdrop + a centered panel. Returns the VBox to fill with content.

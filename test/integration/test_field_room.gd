@@ -113,6 +113,9 @@ func test_open_inventory_screen() -> void:
 
 	# Programmatically close the screen
 	UIManager.back()
+	# The stack entry is removed immediately, but the node remains during its
+	# exit transition so it cannot disappear mid-fade.
+	assert_bool(is_instance_valid(inventory_screen)).is_true()
 	await runner.simulate_frames(10)
 
 	# Assert that it is closed

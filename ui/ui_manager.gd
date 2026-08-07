@@ -50,6 +50,8 @@ func open(scene: PackedScene, pause: bool = false, flow_owned: bool = false) -> 
 	inst.theme = ui_theme  # CanvasLayer children don't inherit the root Window theme
 	add_child(inst)
 	_stack.append(inst)
+	if inst is Screen:
+		(inst as Screen).play_enter()
 	_play_ui_sound(SCREEN_OPEN_SOUND)
 	return inst
 
@@ -63,20 +65,32 @@ func back() -> void:
 		GameFlow.send_event("resume")  # chart exit closes it via close_all()
 		return
 	var top: Control = _stack.pop_back()
-	top.queue_free()
+	_release_pause_if_empty()
+	await _finish_screen_close(top)
 	_play_ui_sound(SCREEN_CLOSE_SOUND)
-	if _stack.is_empty() and _paused_by_ui:
-		_paused_by_ui = false
-		get_tree().paused = false
 
 
 func close_all() -> void:
 	var had_open_screen := not _stack.is_empty()
-	while not _stack.is_empty():
-		_stack.pop_back().queue_free()
+	var screens_to_close: Array[Control] = _stack.duplicate()
+	_stack.clear()
+	_release_pause_if_empty()
+	for index in range(screens_to_close.size() - 1, -1, -1):
+		await _finish_screen_close(screens_to_close[index])
 	if had_open_screen:
 		_play_ui_sound(SCREEN_CLOSE_SOUND)
-	if _paused_by_ui:
+
+
+func _finish_screen_close(screen: Control) -> void:
+	if screen is Screen:
+		(screen as Screen).play_exit()
+		await (screen as Screen).transition_finished
+	if is_instance_valid(screen):
+		screen.queue_free()
+
+
+func _release_pause_if_empty() -> void:
+	if _stack.is_empty() and _paused_by_ui:
 		_paused_by_ui = false
 		get_tree().paused = false
 
