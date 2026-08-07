@@ -22,6 +22,7 @@ const MARCHING_KNOTS: DomSideQuest = preload("res://quests/dom_marching_knots.tr
 const ASH_IN_THE_RAIN: DomSideQuest = preload("res://quests/dom_ash_in_the_rain.tres")
 const SMOOTHED_WEIGHTS: DomSideQuest = preload("res://quests/dom_smoothed_weights.tres")
 const DOM_SIDE_QUEST_DIALOGUE_PATH := "res://dialogue/dom_side_quests.dialogue"
+const MARSHAL_DIALOGUE_PATH := "res://dialogue/marshal_coiljaw.dialogue"
 const DOM_SIDE_QUESTS: Array[DomSideQuest] = [
 	DISHONEST_CASKS,
 	LIVING_TAG,
@@ -352,6 +353,8 @@ func side_quest_for_giver(actor_id: String) -> DomSideQuest:
 func dialogue_route_for_actor(
 	actor_id: String, fallback_path: String, fallback_title: String
 ) -> Dictionary:
+	if actor_id == "branek-coiljaw":
+		return {"path": MARSHAL_DIALOGUE_PATH, "title": "start"}
 	## Generated roster prose remains the fallback for every townsfolk. The ten
 	## authored givers route through their quest resources at interaction time so
 	## generated data stays untouched and the quests cannot be orphaned by a stale

@@ -3,6 +3,7 @@ extends Node2D
 ## Shared structural room used by each named building interior.
 
 const NpcScene := preload("res://actors/npc/npc.tscn")
+const TownNpcSpawnerScript := preload("res://world/town_npc_spawner.gd")
 const NpcPlacementsData: JSON = preload("res://data/generated/dom_npc_placements.json")
 const VendorData := preload("res://globals/vendor_registry.gd")
 const VendorIdsData := preload("res://data/generated/vendor_ids.gd")
@@ -87,6 +88,13 @@ func _populate_townsfolk() -> void:
 		npc.dialogue_start = str(dialogue.get("title", "start"))
 		npc.interaction_radius = INTERIOR_INTERACTION_RADIUS
 		npc.position = anchor.position + _placement_offset(placement.get("offset", []))
+		var models := TownNpcSpawnerScript.sprite_models()
+		var model_index := int(placement.get("model_index", 0))
+		if not models.is_empty() and npc.apply_isometric_visual(
+			models[posmod(model_index, models.size())], str(placement.get("facing", "east"))
+		):
+			npc.set_meta(&"model_index", model_index)
+			npc.set_meta(&"sprite_model", models[posmod(model_index, models.size())])
 		npc.add_to_group(&"indoor_npc")
 		add_child(npc)
 
