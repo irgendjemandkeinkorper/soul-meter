@@ -285,7 +285,12 @@ func resolve_field_debt(reward_id: StringName) -> bool:
 		return false
 	active_quest.objective_completed = true
 	var reward: Variant = FIELD_DEBT_REWARDS.get(String(reward_id), {})
-	if not reward is Dictionary:
+	# `.get(key, {})` returns a Dictionary on a MISS too, so an `is Dictionary`
+	# test alone can never reject an unknown id. Without the emptiness check an
+	# unrecognised reward completed the quest and wrote nothing to the ledgers —
+	# a dead consequence, and the exact failure the quest audit hunts for.
+	# `resolve_broken_muster()` below already guards both conditions.
+	if not reward is Dictionary or (reward as Dictionary).is_empty():
 		return false
 	turn_in(active_quest, String(reward_id), false)
 	if not is_done(FIELD_DEBT):
