@@ -438,21 +438,45 @@ flags it becomes a collision surface with no diagnostics.
 Adopt this grammar. Make it mandatory.
 
 ```
-<domain>.<subject>.<predicate>
-quest.loamroot.delivered
-npc.iris.met
-world.dom.wall_breached
-chapter.one.act_i_complete
+<domain>_[<subject>_]<predicate>
+dom_dishonest_casks_resolution
+chapter_dorthkor_commissioned
+encounter_bog_wight_outcome
+field_debt_open                 # the subject is optional
 ```
 
-`tools/quest_audit.gd` already checks orphaned flags and read-backs. Extend it. Make it enforce
-the grammar. Make it reject two conditions:
+**Corrected 2026-08-07. An earlier version of this section proposed a dotted form
+(`<domain>.<subject>.<predicate>`). That was wrong, and §3.3 below says why.**
+
+Every shipped flag is underscore-separated. Those names are written into save files, quest
+`.tres` resources, `data.pandora`, and scene files. Adopting dots would have renamed about 55
+shipped flags. §3.3 states that a rename is a save migration, never an edit. The dotted form
+therefore proposed a migration that buys nothing a player can see, in a document that also
+forbids exactly that. The grammar now describes what the content already does.
+
+The subject is **optional**, for the same reason. Content uses both shapes, and neither is
+wrong: `dom_dishonest_casks_resolution` names a subject, `field_debt_open` does not need one.
+
+A domain must be registered in `FLAG_DOMAINS` before content may use it. That is the point of
+the rule: it catches a typo (`dom_` against `domm_`) and a missing namespace, which both fail
+silently today.
+
+`tools/quest_audit.gd` already checks orphaned flags and read-backs. It now also enforces the
+grammar, in a separate `flag_grammar` category, and rejects three conditions:
 
 - A flag that the code writes but never reads. This is a dead consequence.
 - A flag that the code reads but never writes. This is a broken branch.
+- A flag with no registered domain, or with wrong case. This is a namespace violation.
+
+Flags that predate the rule sit in a `LEGACY_FLAGS` list with a recorded reason for each. That
+list protects existing saves. **Do not add to it to silence a new flag:** a new flag has no save
+to protect, so it must satisfy the grammar.
 
 **Read the header of `quest_audit.gd` before you trust a green result.** `CLAUDE.md` gives this
-warning. The warning applies to the extension also.
+warning. The warning applies to the extension also. Two limits are specific to the grammar
+check: it reads `.gd` and `.dialogue` sources only, so a flag named solely in a `.tscn` or
+`.tres` is unscanned, and a flag built by format string is skipped rather than reported, because
+the scanner sees the unsubstituted template.
 
 ### 3.3 Discipline 2 — stable IDs are a save contract
 

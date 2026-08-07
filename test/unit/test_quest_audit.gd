@@ -91,6 +91,79 @@ func test_exit_code_is_zero_by_default_and_nonzero_only_for_strict_findings() ->
 	assert_bool(QuestAuditScript.strict_mode_from_value("true")).is_false()
 
 
+func test_flag_grammar_splits_domain_optional_subject_and_predicate() -> void:
+	var full: Dictionary = QuestAuditScript.split_flag("dom_dishonest_casks_resolution")
+	assert_str(full["domain"]).is_equal("dom")
+	assert_str(full["subject"]).is_equal("dishonest_casks")
+	assert_str(full["predicate"]).is_equal("resolution")
+
+	# The subject is optional: shipped content uses both shapes.
+	var short: Dictionary = QuestAuditScript.split_flag("field_debt_open")
+	assert_str(short["domain"]).is_equal("field_debt")
+	assert_str(short["subject"]).is_equal("")
+	assert_str(short["predicate"]).is_equal("open")
+
+	# Longest domain wins, so `deep_trial` is not mistaken for a shorter prefix.
+	assert_str(
+		str(QuestAuditScript.split_flag("deep_trial_resolution")["domain"])
+	).is_equal("deep_trial")
+
+	# No registered domain means no split.
+	assert_bool(QuestAuditScript.split_flag("wibble_thing_done").is_empty()).is_true()
+
+
+func test_flag_grammar_flags_unregistered_domains_and_wrong_case() -> void:
+	var violations: Array[Dictionary] = QuestAuditScript.flag_grammar_violations(
+		PackedStringArray(
+			[
+				"dom_shrine_visited",
+				"field_debt_open",
+				"wibble_thing_done",
+				"Dom_Shrine_Visited",
+				"dom.shrine.visited",
+			]
+		)
+	)
+	var flagged := PackedStringArray()
+	for violation: Dictionary in violations:
+		flagged.append(str(violation["flag"]))
+
+	assert_int(violations.size()).is_equal(3)
+	assert_bool(flagged.has("wibble_thing_done")).is_true()
+	assert_bool(flagged.has("Dom_Shrine_Visited")).is_true()
+	assert_bool(flagged.has("dom.shrine.visited")).is_true()
+	assert_bool(flagged.has("dom_shrine_visited")).is_false()
+	assert_bool(flagged.has("field_debt_open")).is_false()
+
+
+func test_flag_grammar_exempts_legacy_flags_and_format_string_artifacts() -> void:
+	# A shipped flag id is permanent; renaming one is a save migration.
+	var legacy: Array[Dictionary] = QuestAuditScript.flag_grammar_violations(
+		PackedStringArray(["reported_bloodbellow", "defeated_bog_wight"])
+	)
+	assert_int(legacy.size()).is_equal(0)
+
+	# Limitation 2: a format-string flag is a scanner artifact, not content debt.
+	var artifact: Array[Dictionary] = QuestAuditScript.flag_grammar_violations(
+		PackedStringArray(["quest_%d_resolution"])
+	)
+	assert_int(artifact.size()).is_equal(0)
+
+
+func test_report_carries_a_flag_grammar_category_and_metric() -> void:
+	var quest_results: Array[Dictionary] = []
+	var flags := QuestAuditScript.scan_flag_sources(PackedStringArray([FLAG_FIXTURE]))
+	var report := QuestAuditScript.build_report(
+		quest_results, flags, false, PackedStringArray(["dom_shrine_visited", "wibble_thing_done"])
+	)
+
+	assert_bool(report["categories"].has("flag_grammar")).is_true()
+	assert_int(report["categories"]["flag_grammar"]["count"]).is_equal(1)
+	assert_int(report["metrics"]["flag_grammar"]["scanned"]).is_equal(2)
+	assert_int(report["metrics"]["flag_grammar"]["violations"]).is_equal(1)
+	assert_bool(report["metrics"]["flag_grammar"]["passes"]).is_false()
+
+
 func _outcome(outcome_id: String, writes_state: bool, read_back: bool) -> Dictionary:
 	return {
 		"id": outcome_id,
