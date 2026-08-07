@@ -131,6 +131,34 @@ depend on the first.
 
 ### Gotchas (hit while writing the examples above — save yourself the debugging)
 
+- **⚠ `Autoload.CONST.mutable_property` reads a STALE value in GDScript.** Found 2026-08-07.
+  `QuestRegistry.LOAMROOT_SPRIGS` is a `const`, so GDScript folds the whole member-access
+  expression at parse time. The read returns the property's authored default forever, no matter
+  what the game did to it at runtime. It is the same object — `get_instance_id()` matches — and
+  the write succeeded; only the folded read lies.
+
+  ```gdscript
+  var quest: FetchQuest = QuestRegistry.LOAMROOT_SPRIGS
+  quest.objective_completed = true
+  quest.objective_completed                              # true   — correct
+  QuestRegistry.LOAMROOT_SPRIGS.objective_completed      # FALSE  — folded, wrong
+  ```
+
+  **Fix: bind the const to a local typed variable, then read the property off that.** Method
+  calls through the same chain (`QuestRegistry.is_active(...)`, `quest.update()`) are
+  unaffected, as are never-mutated authored fields such as `required_flags`.
+
+  **Two things this does NOT affect, both verified rather than assumed:**
+  - **Dialogue conditions are safe.** Dialogue Manager resolves expressions at runtime instead
+    of through the GDScript compiler. Eight shipped conditions read
+    `QuestRegistry.LOAMROOT_SPRIGS.objective_completed`, and they evaluate correctly — checked
+    against `DialogueResponse.is_allowed`, not by inspection.
+  - **Production `.gd` code is clean.** The only chained read outside tests is
+    `QuestRegistry.DOM_SIDE_QUESTS.size()`, a method call on an array that is never mutated.
+
+  So the blast radius is test code. It is listed here because a test written the natural way
+  fails for a reason that looks impossible, and the debugging cost is high.
+
 - **Nodes built with `Foo.new()` at runtime don't keep the name you'd expect.** `npc.gd`
   builds its talk-prompt with `Label.new()` — Godot auto-names it `@Label@21` (id varies), not
   `"Label"`. `find_child("@Label@*", true, false)` (wildcard) finds it; `find_child("Label", ...)`
