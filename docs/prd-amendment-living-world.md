@@ -4,6 +4,8 @@
 **Date:** 2026-08-07 · **Author:** Claude · **Owner:** Adam
 **Amends:** `docs/prd-chapter-one.md` (RATIFIED 2026-08-03) — FR-504, and G9 which cites it.
 **Precedent:** `docs/prd-amendment-tactical-layer.md` (RATIFIED 2026-08-05).
+**Depended on by:** `docs/prd-amendment-world-state-evolution.md` (FR-507). Its time term needs
+this clock. **If this amendment is rejected, FR-507 still works with `TIME_WEIGHT = 0`.**
 **Origin:** session decision D6, `.claude/session-intent.md`.
 **Language rule:** ASD-STE100. Game narrative content is excluded.
 
@@ -89,7 +91,12 @@ Authoring a routine is filling in that table. Nothing computes it.
 - **No pathfinding to routine targets.** An NPC does not walk from the bell house to the market.
   It is in one place before the phase change and in the other after it. The player never watches
   a commute.
-- **No simulation while the player is elsewhere.** The routine is a lookup, not a running agent.
+- **No _continuous_ simulation while the player is elsewhere.** The routine is a lookup, not a
+  running agent. NPCs do not path, hold needs, or react to each other off screen.
+  **Explicit exception:** `docs/prd-amendment-world-state-evolution.md` (FR-507) evaluates zone
+  state at named moments — chapter-stage boundaries and declared quest beats. That is discrete,
+  not continuous: between evaluation moments nothing runs. The word "continuous" carries the
+  whole distinction, so do not drop it when quoting this clause.
 - **No needs, no schedules that react to each other, no emergent behaviour.**
 - **No routines outside hubs.** Wilds and road NPCs are unaffected.
 - **No routine for an unnamed NPC.** The cap is 10 to 15, and it is a cap, not a target.
