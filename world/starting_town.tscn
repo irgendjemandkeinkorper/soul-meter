@@ -819,7 +819,6 @@ z_index = 21
 
 [node name="RegistryArchiveDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(300, 350)
-z_index = 2
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
@@ -840,7 +839,6 @@ z_index = 21
 
 [node name="BellHouseDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(900, 640)
-z_index = 2
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
@@ -861,7 +859,6 @@ z_index = 21
 
 [node name="RiverShrineDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(420, 610)
-z_index = 2
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
@@ -882,7 +879,6 @@ z_index = 21
 
 [node name="IronCompaniesDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(1260, 755)
-z_index = 2
 texture = ExtResource("12_gate")
 offset = Vector2(0, -50.596)
 
@@ -903,7 +899,6 @@ z_index = 21
 
 [node name="ItemShopDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(610, 565)
-z_index = 2
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
@@ -924,7 +919,6 @@ z_index = 21
 
 [node name="EquipmentShopDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(900, 570)
-z_index = 2
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
@@ -945,7 +939,6 @@ z_index = 21
 
 [node name="TownHallDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(1000, 330)
-z_index = 2
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
@@ -966,7 +959,6 @@ z_index = 21
 
 [node name="ChefsHouseDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(260, 665)
-z_index = 2
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
@@ -987,7 +979,6 @@ z_index = 21
 
 [node name="PlayersHouseDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(760, 770)
-z_index = 2
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
@@ -1008,7 +999,6 @@ z_index = 21
 
 [node name="TrialHallDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(1300, 420)
-z_index = 2
 texture = ExtResource("12_gate")
 offset = Vector2(0, -50.596)
 
@@ -1061,7 +1051,6 @@ z_index = 21
 [node name="NoticeBoardSprite" type="Sprite2D" parent="."]
 position = Vector2(470, 420)
 scale = Vector2(1.8, 1.8)
-z_index = 2
 texture = ExtResource("33_sign_sprite")
 offset = Vector2(0, -50.596)
 
@@ -1090,7 +1079,6 @@ z_index = 21
 
 [node name="BellInspectionLantern" type="Sprite2D" parent="."]
 position = Vector2(820, 640)
-z_index = 2
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -50.596)
 
@@ -1117,7 +1105,6 @@ z_index = 21
 
 [node name="RiverShrineLantern" type="Sprite2D" parent="."]
 position = Vector2(350, 610)
-z_index = 2
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -50.596)
 
@@ -1146,7 +1133,6 @@ z_index = 21
 
 [node name="ItemShopBench" type="Sprite2D" parent="."]
 position = Vector2(540, 590)
-z_index = 2
 texture = ExtResource("35_bench_sprite")
 offset = Vector2(0, -50.596)
 
@@ -1175,7 +1161,6 @@ z_index = 21
 
 [node name="EquipmentShopBanner" type="Sprite2D" parent="."]
 position = Vector2(830, 590)
-z_index = 2
 texture = ExtResource("20_banner_red")
 offset = Vector2(0, -50.596)
 
@@ -1203,7 +1188,6 @@ z_index = 21
 
 [node name="GarrisonBanner" type="Sprite2D" parent="."]
 position = Vector2(1180, 755)
-z_index = 2
 texture = ExtResource("20_banner_red")
 offset = Vector2(0, -50.596)
 
@@ -1231,7 +1215,6 @@ z_index = 21
 
 [node name="TownHallBanner" type="Sprite2D" parent="."]
 position = Vector2(920, 330)
-z_index = 2
 texture = ExtResource("19_banner_green")
 offset = Vector2(0, -50.596)
 
@@ -1259,7 +1242,6 @@ z_index = 21
 
 [node name="ChefsHousePot" type="Sprite2D" parent="."]
 position = Vector2(190, 665)
-z_index = 2
 texture = ExtResource("34_pot_sprite")
 offset = Vector2(0, -50.596)
 
@@ -1290,7 +1272,6 @@ z_index = 21
 
 [node name="PlayersHouseLantern" type="Sprite2D" parent="."]
 position = Vector2(690, 770)
-z_index = 2
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -50.596)
 
@@ -1318,7 +1299,6 @@ z_index = 21
 
 [node name="SavePointLantern" type="Sprite2D" parent="."]
 position = Vector2(900, 770)
-z_index = 2
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -50.596)
 modulate = Color(0.45, 1, 0.72, 1)
