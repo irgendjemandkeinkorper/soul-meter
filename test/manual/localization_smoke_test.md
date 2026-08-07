@@ -17,3 +17,12 @@
   locale and the item returns to its English source text.
 - Change an English item source in Pandora, regenerate, and confirm the corresponding Spanish
   row is retained and marked `#, fuzzy` in `locale/es.po`.
+
+## Run log
+
+Append one row after each manual execution. Automated localization checks do
+not substitute for opening the editor and switching locales.
+
+| Date | Build / commit | Runner | Result |
+|---|---|---|---|
+| 2026-08-07 | `18ffeab` | Codex review | NOT RUN — interactive editor localization pass not available in this environment |

@@ -55,6 +55,15 @@
 - Confirm the Windows artifact contains `SoulMeter.exe`, its `.pck`, README, and dependencies.
 - Run the complete gdUnit4 suite and require zero failures before sharing.
 
+## Run log
+
+Append one row after each manual execution. Automated CI is evidence for the
+machine-checkable parts only and must not be recorded as a human playtest.
+
+| Date | Build / commit | Runner | Result |
+|---|---|---|---|
+| 2026-08-07 | `18ffeab` | Codex review | NOT RUN — interactive Windows playtest not available in this environment |
+
 ## 6. Save-failure visibility
 
 | Do | Expect |
