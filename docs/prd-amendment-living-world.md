@@ -1,6 +1,6 @@
 # PRD Amendment 2 — The Living World
 
-**Status:** **DRAFT — proposed, not ratified.** Owner sign-off required before any work starts.
+**Status:** **RATIFIED 2026-08-07** — owner sign-off. FR-504a is binding.
 **Date:** 2026-08-07 · **Author:** Claude · **Owner:** Adam
 **Amends:** `docs/prd-chapter-one.md` (RATIFIED 2026-08-03) — FR-504, and G9 which cites it.
 **Precedent:** `docs/prd-amendment-tactical-layer.md` (RATIFIED 2026-08-05).
@@ -273,21 +273,16 @@ to widen the schedule.
 
 ## 8. Ratification
 
-This amendment is **NOT ratified**. It takes effect only when the owner signs the block below.
+**RATIFIED 2026-08-07.** Owner decision: **ACCEPT FR-504a as written.**
 
-Work on GitHub issue **#104** must not start before that signature. Issue #104 is currently
-written against the ratified FR-504 text and will need its scope updated to FR-504a.
+FR-504 is superseded by FR-504a. G9's parenthetical now points at FR-504a. The M8 milestone is
+authorized, subject to its own ordering in `docs/roadmap-chapter-one.md`.
 
-```
-RATIFIED BY: ______________________   DATE: ____________
+**GitHub issue #104 is written against the retired FR-504 text and must have its scope updated
+to FR-504a before work starts on it.** That is a tracker edit, not a design decision.
 
-DECISION (circle one):
-  ACCEPT FR-504a as written
-  ACCEPT with the changes noted below
-  REJECT — FR-504 stands, M8 leaves the roadmap, schedule shortens by 1.4 to 2.2 weeks
-
-NOTES:
-```
+The boundary in §2 is binding, not advisory. In particular: the cap of 15 routine NPCs is a
+number, and routine 16 requires a further amendment.
 
 ---
 

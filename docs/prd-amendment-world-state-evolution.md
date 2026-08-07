@@ -1,6 +1,6 @@
 # PRD Amendment 3 — World-State Evolution
 
-**Status:** **DRAFT — proposed, not ratified.** Owner sign-off required before any work starts.
+**Status:** **RATIFIED 2026-08-07** — owner sign-off. FR-507 is binding.
 **Date:** 2026-08-07 · **Author:** Claude · **Owner:** Adam
 **Adds:** FR-507 to `docs/prd-chapter-one.md` (RATIFIED 2026-08-03).
 **Extends:** FR-308 (the Zhavar). **Depends on:** `docs/prd-amendment-living-world.md` (FR-504a).
@@ -120,6 +120,34 @@ It is `zones × states × content`.
 
 **Rule: three states per zone, maximum, in Chapter One.** `steady`, `strained`, `raided`. A
 fourth state is an amendment, not a judgement call in a content wave.
+
+**DECIDED 2026-08-07 — the Zhavar IS the zone state. There is no second meter.**
+
+FR-308's ladder and the three zone states are the same thing, seen from two ends. Chapter One
+reaches the first three rungs only, which is already what FR-308 says:
+
+| Zhavar rung | Zone state | Chapter |
+|---|---|---|
+| low | `steady` | One |
+| rising | `strained` | One |
+| tolling — one Nul dragon | `raided` | One. This is FR-308's scripted tolling event |
+| ringing — regional delegation | — | Two and later |
+| unprecedented | — | Two and later |
+
+**Why this and not two meters.** Two meters over one zone's condition is two authorities over
+one question, which the tactical amendment §8.1 names as a stop condition. It would also make a
+fifth world-state axis on top of the four the tactical amendment §3 already flagged as near the
+complexity ceiling.
+
+**Consequences of the decision, which are all simplifications:**
+
+- There is **no mapping table** to write, maintain or test. The rung *is* the state.
+- FR-308's telegraphing requirement (§3.1) is satisfied by construction, because `strained`
+  **is** the `rising` rung that FR-308 already requires rumors for.
+- `zone_score` writes the Zhavar. Nothing else does.
+- The Chapter Two rungs need no Chapter One code. They are values the ladder can hold later.
+
+The score therefore selects a rung, and the rung names the authored content.
 
 Chapter One has four zones. Three states each is up to 12 authored zone states, of which
 `steady` is what already exists. So the real new authoring is **8 zone states**, and fewer if a
@@ -288,9 +316,8 @@ to widen the schedule.
 
 1. **The threat-affinity table.** New vault lore. §2.5. Blocking.
 2. **All weights and thresholds.** Provisional until a sweep passes. §2.1.
-3. **Does the Zhavar ladder map onto the three zone states, or run beside them?** FR-308's ladder
-   has five steps; §2.3 caps zone states at three. Mapping them is a design decision, and the
-   wrong answer creates two authorities over one zone's condition.
+3. ~~**Does the Zhavar ladder map onto the three zone states?**~~ **DECIDED 2026-08-07 — the
+   Zhavar IS the zone state. One meter, no mapping table.** See §2.3.
 4. **Which Chapter One quest becomes unavailable?** Gate criterion 5 requires at least one. The
    choice is content design, made during M7.
 5. **Does world state feed NG+ carry-over?** `ng_plus.gd` is the natural place. Not decided here.
@@ -320,19 +347,22 @@ The authoring row dominates, and it is the row that grows fastest if the three-s
 
 ## 11. Ratification
 
-**NOT ratified.** Work must not start before the signature below. The vault lore in §2.5 and the
-FR-504a decision both gate it.
+**RATIFIED 2026-08-07.** Owner decision: **ACCEPT FR-507 as written**, with the §9.3 open
+question resolved in the same sitting: **the Zhavar IS the zone state.** See §2.3.
 
-```
-RATIFIED BY: ______________________   DATE: ____________
+FR-504a was ratified on the same date, so `TIME_WEIGHT` is live rather than zero.
 
-DECISION (circle one):
-  ACCEPT FR-507 as written
-  ACCEPT with the changes noted below
-  REJECT — no world-state evolution in Chapter One; FR-308 telegraphing stands alone
+**Two prerequisites still gate implementation, and ratification does not clear them:**
 
-NOTES:
-```
+1. **The threat-affinity table does not exist in the vault.** §2.5. It is authored there first,
+   with `build_index.py` and `validate.py` rerun. Until it exists, `threat_affinity()` has no
+   data and FR-507 cannot be built.
+2. **Every weight and threshold is PROVISIONAL** until a simulation sweep passes. §2.1. The
+   tactical amendment §1.1 records what happens when magnitudes are ratified without a sweep.
+
+**Accepted cost.** 72 to 114 hours of new scope. Chapter One moves to approximately 700 to 1075
+hours, or 25 to 38 weeks at 28 hours per week. `docs/roadmap-chapter-one.md` is updated to carry
+this figure.
 
 ---
 
