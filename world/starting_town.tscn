@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3]
+[gd_scene load_steps=52 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -77,6 +77,70 @@ size = Vector2(220, 150)
 [sub_resource type="RectangleShape2D" id="shape_trial_hall"]
 size = Vector2(280, 170)
 
+[sub_resource type="GDScript" id="blocking_script"]
+script/source = "extends TileMapLayer
+## Single source of truth for Dom's building obstacles
+## (docs/architecture-tactical-and-navigation.md section 2.3, GH #161). Both
+## the AStarGrid2D bake (world/nav/iso_grid.gd, via IsoGrid.build(ground,
+## blocking)) and physics collision (this layer's own TileSet physics layer)
+## derive from the SAME cell list below - painted once, in one place, so the
+## two can never drift apart. Hidden (visible = false): it exists to be
+## occupied, not seen. Cell coordinates approximate each building's footprint
+## in the shared isometric grid (IsometricGround, 64x32 tiles, DIAMOND_DOWN),
+## shrunk about 20 percent from the legacy BuildingBoundaries rectangles so
+## doorways stay walkable.
+
+const BLOCKING_CELLS: Array[Vector2i] = [
+	# RegistryArchive
+	Vector2i(3, 17), Vector2i(2, 18), Vector2i(3, 18), Vector2i(4, 18), Vector2i(1, 19), Vector2i(2, 19), Vector2i(3, 19), Vector2i(4, 19), Vector2i(5, 19), Vector2i(1, 20), Vector2i(2, 20), Vector2i(3, 20), Vector2i(4, 20), Vector2i(5, 20), Vector2i(6, 20), Vector2i(2, 21), Vector2i(3, 21), Vector2i(4, 21), Vector2i(5, 21), Vector2i(6, 21), Vector2i(7, 21), Vector2i(3, 22), Vector2i(4, 22), Vector2i(5, 22), Vector2i(6, 22), Vector2i(4, 23), Vector2i(5, 23),
+	# BellHouse
+	Vector2i(28, 24), Vector2i(29, 24), Vector2i(27, 25), Vector2i(28, 25), Vector2i(29, 25), Vector2i(30, 25), Vector2i(26, 26), Vector2i(27, 26), Vector2i(28, 26), Vector2i(29, 26), Vector2i(30, 26), Vector2i(31, 26), Vector2i(27, 27), Vector2i(28, 27), Vector2i(29, 27), Vector2i(30, 27), Vector2i(31, 27), Vector2i(32, 27), Vector2i(28, 28), Vector2i(29, 28), Vector2i(30, 28), Vector2i(31, 28), Vector2i(32, 28), Vector2i(29, 29), Vector2i(30, 29), Vector2i(31, 29), Vector2i(30, 30),
+	# RiverShrine
+	Vector2i(20, 31), Vector2i(19, 32), Vector2i(20, 32), Vector2i(21, 32), Vector2i(18, 33), Vector2i(19, 33), Vector2i(20, 33), Vector2i(21, 33), Vector2i(22, 33), Vector2i(19, 34), Vector2i(20, 34), Vector2i(21, 34), Vector2i(22, 34), Vector2i(20, 35), Vector2i(21, 35),
+	# IronCompanies
+	Vector2i(30, 15), Vector2i(31, 15), Vector2i(29, 16), Vector2i(30, 16), Vector2i(31, 16), Vector2i(32, 16), Vector2i(28, 17), Vector2i(29, 17), Vector2i(30, 17), Vector2i(31, 17), Vector2i(32, 17), Vector2i(33, 17), Vector2i(28, 18), Vector2i(29, 18), Vector2i(30, 18), Vector2i(31, 18), Vector2i(32, 18), Vector2i(33, 18), Vector2i(34, 18), Vector2i(29, 19), Vector2i(30, 19), Vector2i(31, 19), Vector2i(32, 19), Vector2i(33, 19), Vector2i(34, 19), Vector2i(30, 20), Vector2i(31, 20), Vector2i(32, 20), Vector2i(33, 20), Vector2i(31, 21), Vector2i(32, 21),
+	# ItemShop
+	Vector2i(15, 20), Vector2i(14, 21), Vector2i(15, 21), Vector2i(16, 21), Vector2i(13, 22), Vector2i(14, 22), Vector2i(15, 22), Vector2i(16, 22), Vector2i(17, 22), Vector2i(14, 23), Vector2i(15, 23), Vector2i(16, 23), Vector2i(17, 23), Vector2i(18, 23), Vector2i(15, 24), Vector2i(16, 24), Vector2i(17, 24), Vector2i(16, 25),
+	# EquipmentShop
+	Vector2i(19, 16), Vector2i(20, 16), Vector2i(18, 17), Vector2i(19, 17), Vector2i(20, 17), Vector2i(21, 17), Vector2i(18, 18), Vector2i(19, 18), Vector2i(20, 18), Vector2i(21, 18), Vector2i(22, 18), Vector2i(19, 19), Vector2i(20, 19), Vector2i(21, 19), Vector2i(22, 19), Vector2i(20, 20), Vector2i(21, 20),
+	# TownHall
+	Vector2i(14, 6), Vector2i(13, 7), Vector2i(14, 7), Vector2i(15, 7), Vector2i(12, 8), Vector2i(13, 8), Vector2i(14, 8), Vector2i(15, 8), Vector2i(16, 8), Vector2i(12, 9), Vector2i(13, 9), Vector2i(14, 9), Vector2i(15, 9), Vector2i(16, 9), Vector2i(17, 9), Vector2i(13, 10), Vector2i(14, 10), Vector2i(15, 10), Vector2i(16, 10), Vector2i(14, 11), Vector2i(15, 11),
+	# ChefsHouse
+	Vector2i(12, 29), Vector2i(13, 29), Vector2i(11, 30), Vector2i(12, 30), Vector2i(13, 30), Vector2i(14, 30), Vector2i(11, 31), Vector2i(12, 31), Vector2i(13, 31), Vector2i(14, 31), Vector2i(15, 31), Vector2i(12, 32), Vector2i(13, 32), Vector2i(14, 32), Vector2i(15, 32), Vector2i(13, 33), Vector2i(14, 33),
+	# PlayersHouse
+	Vector2i(30, 30), Vector2i(29, 31), Vector2i(30, 31), Vector2i(31, 31), Vector2i(28, 32), Vector2i(29, 32), Vector2i(30, 32), Vector2i(31, 32), Vector2i(32, 32), Vector2i(28, 33), Vector2i(29, 33), Vector2i(30, 33), Vector2i(31, 33), Vector2i(32, 33), Vector2i(33, 33), Vector2i(29, 34), Vector2i(30, 34), Vector2i(31, 34), Vector2i(32, 34), Vector2i(30, 35), Vector2i(31, 35),
+	# TrialHall
+	Vector2i(21, 4), Vector2i(22, 4), Vector2i(20, 5), Vector2i(21, 5), Vector2i(22, 5), Vector2i(23, 5), Vector2i(19, 6), Vector2i(20, 6), Vector2i(21, 6), Vector2i(22, 6), Vector2i(23, 6), Vector2i(24, 6), Vector2i(19, 7), Vector2i(20, 7), Vector2i(21, 7), Vector2i(22, 7), Vector2i(23, 7), Vector2i(24, 7), Vector2i(25, 7), Vector2i(20, 8), Vector2i(21, 8), Vector2i(22, 8), Vector2i(23, 8), Vector2i(24, 8), Vector2i(21, 9), Vector2i(22, 9), Vector2i(23, 9), Vector2i(22, 10),
+]
+
+
+func _ready() -> void:
+	tile_set = _build_tile_set()
+	for cell in BLOCKING_CELLS:
+		set_cell(cell, 0, Vector2i(0, 0), 0)
+
+
+func _build_tile_set() -> TileSet:
+	var ts := TileSet.new()
+	ts.tile_shape = TileSet.TILE_SHAPE_ISOMETRIC
+	ts.tile_layout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
+	ts.tile_size = Vector2i(64, 32)
+	ts.add_physics_layer()
+	var atlas := TileSetAtlasSource.new()
+	# Reuse an already-loaded generated texture; this layer is never visible,
+	# so the art is irrelevant, only the tile's solidity matters.
+	atlas.texture = load(\"res://assets/generated/sprites/ground/ground_tiles.png\")
+	atlas.texture_region_size = Vector2i(64, 32)
+	ts.add_source(atlas, 0)
+	atlas.create_tile(Vector2i(0, 0))
+	var tile_data := atlas.get_tile_data(Vector2i(0, 0), 0)
+	tile_data.add_collision_polygon(0)
+	tile_data.set_collision_polygon_points(0, 0, PackedVector2Array([
+		Vector2(0, -16), Vector2(32, 0), Vector2(0, 16), Vector2(-32, 0),
+	]))
+	return ts
+"
+
 [node name="StartingTown" type="Node2D"]
 y_sort_enabled = true
 
@@ -104,6 +168,11 @@ map_size = Vector2i(39, 39)
 ground_style = 0
 road_axis = 3
 
+[node name="Blocking" type="TileMapLayer" parent="."]
+position = Vector2(800, -154)
+visible = false
+script = SubResource("blocking_script")
+
 [node name="Walls" type="StaticBody2D" parent="."]
 
 [node name="ColTop" type="CollisionShape2D" parent="Walls"]
@@ -126,47 +195,63 @@ shape = SubResource("shape_v_gapped")
 position = Vector2(1580, 765)
 shape = SubResource("shape_v_gapped")
 
+; Legacy per-building shapes. `Blocking` (a sibling of `IsometricGround` below)
+; is now the single source of truth for both the AStarGrid2D bake and physics
+; collision (docs/architecture-tactical-and-navigation.md section 2.3, GH #161).
+; These stay present, with position/shape untouched, only so the shapes keep
+; existing for anything still reading them; every child is `disabled` so they
+; no longer participate in physics and cannot drift against the Blocking layer.
 [node name="BuildingBoundaries" type="StaticBody2D" parent="."]
 
 [node name="RegistryArchiveBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(300, 250)
 shape = SubResource("shape_registry")
+disabled = true
 
 [node name="BellHouseBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(900, 760)
 shape = SubResource("shape_bellhouse")
+disabled = true
 
 [node name="RiverShrineBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(420, 720)
 shape = SubResource("shape_shrine")
+disabled = true
 
 [node name="IronCompaniesBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(1260, 650)
 shape = SubResource("shape_barracks")
+disabled = true
 
 [node name="ItemShopBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(610, 470)
 shape = SubResource("shape_item_shop")
+disabled = true
 
 [node name="EquipmentShopBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(900, 470)
 shape = SubResource("shape_equipment_shop")
+disabled = true
 
 [node name="TownHallBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(1000, 230)
 shape = SubResource("shape_town_hall")
+disabled = true
 
 [node name="ChefsHouseBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(260, 570)
 shape = SubResource("shape_chefs_house")
+disabled = true
 
 [node name="PlayersHouseBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(760, 870)
 shape = SubResource("shape_players_house")
+disabled = true
 
 [node name="TrialHallBoundary" type="CollisionShape2D" parent="BuildingBoundaries"]
 position = Vector2(1300, 315)
 shape = SubResource("shape_trial_hall")
+disabled = true
 
 [node name="TrialHall" type="Node2D" parent="."]
 position = Vector2(1300, 400)

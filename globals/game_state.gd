@@ -5,6 +5,7 @@ extends Node
 const VendorData := preload("res://globals/vendor_registry.gd")
 
 signal soul_meter_changed(value: float)
+signal husked_state_changed(husked: bool)
 signal gp_changed(value: int)
 signal flag_changed(flag: String, value: Variant)
 signal inventory_changed
@@ -26,6 +27,23 @@ const MIN_VAR_HARMONY := -5
 const MAX_VAR_HARMONY := 5
 const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
 const AUDIO_BUSES: Array[StringName] = [&"Master", &"Music", &"SFX"]
+
+## M4.3 — husking-while-alive (cosmology/souls.md, "Reaching zero", ratified
+## 2026-08-07). Reaching Gauge zero does NOT end the run: it sets a husked
+## flag that CastingGate refuses casting against. Stored as flags (see
+## globals/game_state.gd `flags`) rather than new save fields, so this needs
+## no schema bump. `soul` is a registered FLAG_DOMAINS entry (tools/quest_audit.gd).
+const HUSKED_FLAG := "soul_husked"
+## Set once, the first time the Gauge reaches zero, and never cleared — it is
+## the permanent scar canon describes ("never reads as bright again"), kept
+## even after HUSKED_FLAG clears from partial recovery.
+const HUSKED_RECOVERY_CEILING_FLAG := "soul_husked_recovery_ceiling"
+## Fraction of the pre-zero Gauge that recovery may ever reach again.
+## **PROVISIONAL — not ratified.** Canon fixes only the SHAPE: recovery is slow,
+## partial, and never complete. This ratio is the first number that satisfies
+## that shape and has had no balance sweep. The tactical amendment §1.1 records
+## what happens when a magnitude is treated as settled without one.
+const HUSKED_CEILING_RATIO := 0.5
 
 var flags: Dictionary = {}
 var soul_meter: float = 50.0:
@@ -70,8 +88,57 @@ func _ready() -> void:
 
 
 func set_soul_meter(value: float) -> void:
-	soul_meter = clampf(value, 0.0, 100.0)
+	var pre_zero_value := soul_meter
+	var ceiling := husked_recovery_ceiling() if has_been_husked() else 100.0
+	soul_meter = clampf(value, 0.0, ceiling)
 	soul_meter_changed.emit(soul_meter)
+	if is_zero_approx(soul_meter):
+		if not is_husked():
+			_enter_husked_state(pre_zero_value)
+	elif is_husked():
+		_exit_husked_state()
+
+
+## True while the Soul Gauge is husked — casting is refused (see CastingGate).
+## This clears once the Gauge is raised back above zero by partial recovery;
+## the permanent ceiling on that recovery does not (see has_been_husked()).
+func is_husked() -> bool:
+	return bool(get_flag(HUSKED_FLAG, false))
+
+
+## True once a soul has ever been husked, even after recovery clears
+## is_husked(). Drives the permanent recovery ceiling.
+func has_been_husked() -> bool:
+	return flags.has(HUSKED_RECOVERY_CEILING_FLAG)
+
+
+## The most the Gauge may ever read again after a husking. Recovery is
+## partial by construction: capped at half of whatever the Gauge read the
+## instant before it hit zero, so it structurally cannot return to its
+## pre-zero value. The mechanism that actually raises the Gauge after
+## husking (a quest, dialogue, being witnessed and remembered) is authored
+## later — this only models the ceiling that mechanism must respect.
+func husked_recovery_ceiling() -> float:
+	return float(get_flag(HUSKED_RECOVERY_CEILING_FLAG, 100.0))
+
+
+## Casting-gate context describing the current husked state, in the shape
+## CastingGate.query()/query_breadth() expect from caster_context.
+func husked_casting_context() -> Dictionary:
+	return {"husked": is_husked(), "husked_recovery_ceiling": husked_recovery_ceiling()}
+
+
+func _enter_husked_state(pre_zero_value: float) -> void:
+	set_flag(HUSKED_FLAG, true)
+	if not has_been_husked():
+		var ceiling := clampf(pre_zero_value, 0.0, 100.0) * HUSKED_CEILING_RATIO
+		set_flag(HUSKED_RECOVERY_CEILING_FLAG, ceiling)
+	husked_state_changed.emit(true)
+
+
+func _exit_husked_state() -> void:
+	set_flag(HUSKED_FLAG, false)
+	husked_state_changed.emit(false)
 
 
 func set_gp(value: int) -> void:
