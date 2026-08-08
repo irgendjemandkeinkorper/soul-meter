@@ -128,6 +128,105 @@ func test_is_complete_matches_only_the_designated_completion_stage_id() -> void:
 	assert_bool(def.is_complete(null)).is_false()
 
 
+func test_a_null_requirement_blocks_a_stage_from_becoming_current() -> void:
+	# A requirements array with a hole in it (an unassigned export slot in an
+	# authored .tres) must refuse the stage, not crash and not pass it through.
+	var reqs: Array[Resource] = [null]
+	var stage_a := _stage("A")
+	var stage_b := _stage("B", reqs)
+	var def := _chapter([stage_a, stage_b])
+
+	assert_str(def.get_current_stage().id).is_equal("A")
+
+
+func test_a_null_requirement_makes_the_objective_unclear() -> void:
+	var def := _chapter([_stage("A")])
+	var stage := _stage("B")
+	stage.objective = "Should not be shown"
+	var reqs: Array[Resource] = [null]
+	stage.requirements = reqs
+
+	assert_str(def.get_objective(stage)).is_equal("Objective status unclear. Check journal.")
+
+
+func test_a_partially_met_requirement_set_refuses_the_stage() -> void:
+	# All requirements must hold, not any: one unmet entry disqualifies the stage.
+	var reqs: Array[Resource] = [_flag_req("met_one"), _flag_req("unmet_one")]
+	var def := _chapter([_stage("A"), _stage("B", reqs)])
+	GameState.set_flag("met_one", true)
+
+	assert_str(def.get_current_stage().id).is_equal("A")
+
+	GameState.set_flag("unmet_one", true)
+	assert_str(def.get_current_stage().id).is_equal("B")
+
+
+func test_follow_up_stages_are_evaluated_in_reverse_order_too() -> void:
+	var early := _stage("EARLY_FOLLOW_UP")
+	var late := _stage("LATE_FOLLOW_UP", [_flag_req("reached_late")])
+	var def := _chapter([_stage("STANDARD")], [early, late])
+	def.follow_up_condition_flag = "extended"
+	GameState.set_flag("extended", true)
+
+	assert_str(def.get_current_stage().id).is_equal("EARLY_FOLLOW_UP")
+
+	GameState.set_flag("reached_late", true)
+	assert_str(def.get_current_stage().id).is_equal("LATE_FOLLOW_UP")
+
+
+func test_an_active_follow_up_flag_with_no_matching_follow_up_stage_falls_through() -> void:
+	var unreachable := _stage("UNREACHABLE", [_flag_req("never_set")])
+	var def := _chapter([_stage("STANDARD")], [unreachable])
+	def.follow_up_condition_flag = "extended"
+	GameState.set_flag("extended", true)
+
+	assert_str(def.get_current_stage().id).is_equal("STANDARD")
+
+
+func test_an_active_follow_up_flag_with_an_empty_follow_up_list_falls_through() -> void:
+	var def := _chapter([_stage("STANDARD")])
+	def.follow_up_condition_flag = "extended"
+	GameState.set_flag("extended", true)
+
+	assert_str(def.get_current_stage().id).is_equal("STANDARD")
+
+
+func test_a_follow_up_flag_holding_a_numeric_value_is_read_as_truthiness() -> void:
+	# ⚠ NOT COVERED, DELIBERATELY: a String-valued follow-up condition flag.
+	# get_current_stage() calls bool(GameState.get_flag(...)) and Godot 4 has
+	# no bool(String) constructor, so a string-valued flag raises
+	# "Nonexistent 'bool' constructor" and the whole method returns null.
+	# Reported for a decision rather than encoded here as expected behaviour.
+	var extended := _stage("EXTENDED")
+	var def := _chapter([_stage("STANDARD")], [extended])
+	def.follow_up_condition_flag = "extended"
+
+	GameState.set_flag("extended", 0)
+	assert_str(def.get_current_stage().id).is_equal("STANDARD")
+
+	GameState.set_flag("extended", 1)
+	assert_str(def.get_current_stage().id).is_equal("EXTENDED")
+
+
+func test_an_empty_completion_stage_id_matches_a_blank_stage_id() -> void:
+	# ⚠ DOCUMENTS CURRENT BEHAVIOUR, NOT AN ENDORSEMENT.
+	# is_complete() compares ids without requiring completion_stage_id to be
+	# configured, so an unconfigured chapter reports a blank-id stage as
+	# complete. Every authored stage carries a non-empty id today, so this is
+	# latent rather than live. Reported rather than fixed: adding an
+	# is_empty() guard changes the contract's public behaviour.
+	var def := _chapter([_stage("")])
+	assert_str(def.completion_stage_id).is_equal("")
+	assert_bool(def.is_complete(_stage(""))).is_true()
+	assert_bool(def.is_complete(_stage("A"))).is_false()
+
+
+func test_get_title_falls_back_when_the_chapter_has_no_default_title_either() -> void:
+	var def := _chapter([_stage("A")])
+	assert_str(def.default_title).is_equal("")
+	assert_str(def.get_title(null)).is_equal("")
+
+
 func _chapter(
 	stages: Array[Resource], follow_up_stages: Array[Resource] = []
 ) -> ChapterDefinition:
