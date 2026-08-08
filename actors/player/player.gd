@@ -1,16 +1,25 @@
 class_name Player
 extends CharacterBody2D
 ## Field-exploration avatar for the 2D overworld (design doc §6: real-time 2D field).
-## Top-down 8-direction movement. Deliberately minimal — the game-state singleton,
-## interaction, and battle transition hang off this later.
+## Top-down 8-direction movement, plus Fallout-2-style click-to-move (D4, GH #162,
+## docs/architecture-tactical-and-navigation.md §2.5). `ClickMoveController` (a sibling
+## component, `$ClickMoveController`) owns the path queue; this script stays the only
+## thing that touches `velocity` and calls `move_and_slide()` — the controller supplies
+## a direction, never movement itself. WASD always wins over an in-progress click path
+## (FR-607: keyboard is a debug AND accessibility path, not just a fallback).
 
 ## Movement speed in pixels/second.
 @export var speed: float = 260.0
 @export var camera_bounds := Rect2i(0, 0, 1600, 1000)
 
+## Re-emits `ClickMoveController.move_refused` so a HUD/UI layer can surface an
+## unreachable click without knowing anything about pathfinding.
+signal move_refused(refusal: Dictionary)
+
 var facing_direction: Vector2 = Vector2.DOWN
 
 @onready var _sprite := $Sprite2D as Sprite2D
+@onready var _click_controller := $ClickMoveController as ClickMoveController
 
 const FOOTSTEP_SPACING: float = 78.0
 const FOOTSTEP_STREAMS: Array[AudioStream] = [
@@ -36,10 +45,17 @@ func _ready() -> void:
 	camera.limit_bottom = camera_bounds.end.y
 	camera.position_smoothing_speed = 7.0
 	_footstep_rng.randomize()
+	_click_controller.move_refused.connect(func(refusal: Dictionary) -> void: move_refused.emit(refusal))
 
 
-func _physics_process(_delta: float) -> void:
-	var direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+func _physics_process(delta: float) -> void:
+	var keyboard_direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var direction := keyboard_direction
+	if not keyboard_direction.is_zero_approx():
+		# WASD always wins: cancel any in-progress click path (FR-607).
+		_click_controller.cancel_path()
+	else:
+		direction = _click_controller.get_steering_direction(global_position, delta)
 	if not direction.is_zero_approx():
 		facing_direction = direction.normalized()
 		if absf(facing_direction.x) > 0.01:

@@ -31,6 +31,13 @@ extends Resource
 
 var party_index: int = -1
 var guarding := false
+## FR-802 stable id (globals/stable_ids.gd, StableIds.ACTOR kind). Unique per combatant WITHIN
+## one encounter — NOT unique per archetype, since two identical enemies (e.g. two Bog Wights)
+## share `display_name` and `archetype_id` but must not share this. Assigned deterministically
+## by `CombatController._assign_combat_ids()` at encounter setup, before the battlefield model
+## is built, so it is stable across two runs with identical inputs and safe to key persistent
+## battlefield state on. Never derive from `get_instance_id()`, allocation order, or a
+## scene-tree path — see issue #186.
 var combat_id: StringName = &""
 var action_points: int = 0
 var max_action_points: int = 0

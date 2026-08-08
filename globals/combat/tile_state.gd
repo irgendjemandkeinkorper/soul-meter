@@ -166,6 +166,30 @@ func clear_charge() -> void:
 	charge_element_id = UNCHARGED
 
 
+## Remove `amount` charge without detonating, clearing the element at zero.
+##
+## WHY this exists separately from `strike()`: a strike DETONATES — it pays bonus
+## damage and always zeroes the tile. Weather's clash drain is not a detonation;
+## it shaves one level and leaves the rest standing. Without this operation
+## `Weather` reached into `charge_level` and `charge_element_id` directly, which
+## put the cap, the Hush guard and the clear-at-zero rule in two places.
+func drain_charge(amount: int = 1) -> Dictionary:
+	if hush:
+		return _blocked(
+			&"hush",
+			"Hushwarden field suppresses charge; it cannot be drained.",
+			{"requires": "hush_lifted"}
+		)
+	if not is_charged():
+		return _allowed({"drained": 0, "cleared": false})
+	var before := charge_level
+	charge_level = maxi(charge_level - maxi(amount, 0), 0)
+	var cleared := charge_level <= 0
+	if cleared:
+		clear_charge()
+	return _allowed({"drained": before - charge_level, "cleared": cleared})
+
+
 func to_dict() -> Dictionary:
 	return {
 		"battle_id": String(battle_id),

@@ -50,7 +50,11 @@ func configure(
 		skill_check_service = SkillCheckService.new()
 
 
-func start(ally_group: Array[BattleActor], enemy_group: Array[BattleActor]) -> void:
+func start(
+	ally_group: Array[BattleActor],
+	enemy_group: Array[BattleActor],
+	encounter_id: StringName = &""
+) -> void:
 	allies = ally_group
 	enemies = enemy_group
 	_sequence = 0
@@ -60,8 +64,8 @@ func start(ally_group: Array[BattleActor], enemy_group: Array[BattleActor]) -> v
 	balance_lock_until_round = 0
 	threshold_effects_suppressed = false
 	last_refusal.clear()
-	_assign_combat_ids(allies, &"ally")
-	_assign_combat_ids(enemies, &"enemy")
+	_assign_combat_ids(allies, &"ally", encounter_id)
+	_assign_combat_ids(enemies, &"enemy", encounter_id)
 	battlefield.setup(allies, enemies)
 	_apply_balance_band(false)
 	state = State.ROUND_START
@@ -460,11 +464,18 @@ func _resolve_defining_strike(
 			if typeof(roll) == TYPE_INT:
 				forced_rolls.append(int(roll))
 	var check_skill := str(weakness.get("check_skill", "lore"))
+	# Was `"combat-%d" % get_instance_id()` — CombatController's own instance id is
+	# process-local and allocation-order dependent (issue #186). `actor.combat_id` is the
+	# FR-802 stable id assigned deterministically at encounter setup, so the same encounter
+	# produces the same scene_id/reroll-dedup key on every run and across a mid-battle
+	# save/load. Note: skill_check.gd's own `_reroll_key()` still folds in
+	# `member.get_instance_id()` (the PartyMember, not this actor) — that is a separate,
+	# out-of-scope defect in a file this issue does not own; see the report.
 	var check := skill_check_service.resolve(
 		check_skill,
 		actor.source_member,
 		float(weakness.get("check_modifier", 0.0)),
-		"combat-%d" % get_instance_id(),
+		"combat-%s" % actor.combat_id,
 		forced_rolls,
 	)
 	var result := {
@@ -671,10 +682,30 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 	return result
 
 
-func _assign_combat_ids(group: Array[BattleActor], prefix: StringName) -> void:
+## FR-802 (globals/stable_ids.gd). Builds `BattleActor.combat_id` from stable inputs only —
+## `encounter_id` (if the caller has one), `archetype_id`, and the actor's ordinal position
+## within its side's array — never from `get_instance_id()` or allocation order. Two runs with
+## identical `ally_group`/`enemy_group`/`encounter_id` inputs therefore produce identical ids,
+## and the trailing ordinal guarantees uniqueness even when two combatants share both
+## `display_name` and `archetype_id` (e.g. two Bog Wights). Must run before
+## `battlefield.setup()` (see `start()`) so the battlefield never sees an unassigned id.
+func _assign_combat_ids(
+	group: Array[BattleActor], prefix: StringName, encounter_id: StringName = &""
+) -> void:
 	for i in group.size():
-		if group[i].combat_id.is_empty():
-			group[i].combat_id = StringName("%s-%d" % [prefix, i])
+		var actor := group[i]
+		if not actor.combat_id.is_empty():
+			continue
+		var parts: Array[String] = [String(prefix)]
+		if not String(encounter_id).is_empty():
+			parts.append(String(encounter_id))
+		var archetype := String(actor.archetype_id)
+		if not archetype.is_empty() and StableIds.is_valid(StableIds.ACTOR, archetype):
+			parts.append(archetype)
+		parts.append(str(i))
+		var candidate := "-".join(parts)
+		var record := StableIds.actor(candidate)
+		actor.combat_id = StringName(record.get("id", candidate))
 
 
 func _has_living(group: Array[BattleActor]) -> bool:

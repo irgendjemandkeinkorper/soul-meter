@@ -52,9 +52,13 @@ var _elevation: Dictionary = {}  ## Vector2i -> int
 ## Cells explicitly authored impassable, independent of elevation weight.
 var _cliffs: Dictionary = {}  ## Vector2i -> bool
 
-var _cells: Dictionary = {}  ## int (actor instance id) -> Vector2i
-var _sides: Dictionary = {}  ## int -> StringName
-var _facings: Dictionary = {}  ## int -> StringName
+## Keyed on `BattleActor.combat_id` (StringName) — the FR-802 stable id assigned by
+## `CombatController._assign_combat_ids()` at encounter setup (issue #186). Deliberately NOT
+## `actor.get_instance_id()`: that is process-local, does not survive a save round trip, and is
+## allocation-order dependent rather than deterministic across two runs with identical inputs.
+var _cells: Dictionary = {}  ## StringName (combat_id) -> Vector2i
+var _sides: Dictionary = {}  ## StringName (combat_id) -> StringName
+var _facings: Dictionary = {}  ## StringName (combat_id) -> StringName
 var _occupancy: Dictionary = {}  ## Vector2i -> BattleActor
 var _groups: Dictionary = {ALLY: [], ENEMY: []}
 
@@ -95,7 +99,7 @@ func set_cliff(cell: Vector2i, is_cliff: bool = true) -> void:
 
 
 func setup(allies: Array[BattleActor], enemies: Array[BattleActor]) -> void:
-	for id: int in _cells.keys():
+	for id: StringName in _cells.keys():
 		_release_solid(_cells[id])
 	_cells.clear()
 	_sides.clear()
@@ -103,9 +107,9 @@ func setup(allies: Array[BattleActor], enemies: Array[BattleActor]) -> void:
 	_occupancy.clear()
 	_groups = {ALLY: allies.duplicate(), ENEMY: enemies.duplicate()}
 	for actor in allies:
-		_sides[actor.get_instance_id()] = ALLY
+		_sides[actor.combat_id] = ALLY
 	for actor in enemies:
-		_sides[actor.get_instance_id()] = ENEMY
+		_sides[actor.combat_id] = ENEMY
 	if _grid == null:
 		return
 	var rect := _grid.get_used_rect()
@@ -116,19 +120,19 @@ func setup(allies: Array[BattleActor], enemies: Array[BattleActor]) -> void:
 
 
 func position_of(actor: BattleActor) -> StringName:
-	if actor == null or not _cells.has(actor.get_instance_id()):
+	if actor == null or not _cells.has(actor.combat_id):
 		return &""
-	return _handle_for_cell(_cells[actor.get_instance_id()])
+	return _handle_for_cell(_cells[actor.combat_id])
 
 
 func side_of(actor: BattleActor) -> StringName:
 	if actor == null:
 		return &""
-	return StringName(_sides.get(actor.get_instance_id(), &""))
+	return StringName(_sides.get(actor.combat_id, &""))
 
 
 func has_combatant(actor: BattleActor) -> bool:
-	return actor != null and _sides.has(actor.get_instance_id())
+	return actor != null and _sides.has(actor.combat_id)
 
 
 func combatants_on_side(side: StringName) -> Array[BattleActor]:
@@ -145,7 +149,7 @@ func remove_combatant(actor: BattleActor) -> Dictionary:
 		)
 	var previous_side := side_of(actor)
 	var previous_position := position_of(actor)
-	var id := actor.get_instance_id()
+	var id := actor.combat_id
 	if _cells.has(id):
 		var cell: Vector2i = _cells[id]
 		_occupancy.erase(cell)
@@ -176,7 +180,7 @@ func transfer_combatant(actor: BattleActor, new_side: StringName) -> Dictionary:
 	previous_group.erase(actor)
 	var new_group: Array = _groups.get(new_side, [])
 	new_group.append(actor)
-	_sides[actor.get_instance_id()] = new_side
+	_sides[actor.combat_id] = new_side
 	return _allowed({"from_side": previous_side, "to_side": new_side})
 
 
@@ -186,13 +190,13 @@ func move(actor: BattleActor, destination: StringName) -> Dictionary:
 		return query
 	var parsed := _parse_handle(destination)
 	var dest_cell: Vector2i = parsed["cell"]
-	var origin_cell: Vector2i = _cells[actor.get_instance_id()]
+	var origin_cell: Vector2i = _cells[actor.combat_id]
 	_occupancy.erase(origin_cell)
 	_release_solid(origin_cell)
 	_occupancy[dest_cell] = actor
 	_grid.set_point_solid(dest_cell, true)
 	var previous := position_of(actor)
-	_cells[actor.get_instance_id()] = dest_cell
+	_cells[actor.combat_id] = dest_cell
 	return _allowed({"from": previous, "to": position_of(actor)})
 
 
@@ -221,7 +225,7 @@ func target_query(actor: BattleActor, target: BattleActor, profile: StringName) 
 	if profile == &"encounter" or profile == &"ranged" or profile == &"any_enemy":
 		return _allowed()
 	if profile == &"melee":
-		if _chebyshev(_cells[actor.get_instance_id()], _cells[target.get_instance_id()]) > 1:
+		if _chebyshev(_cells[actor.combat_id], _cells[target.combat_id]) > 1:
 			return _blocked(
 				&"position", "Move adjacent to make a melee attack.", {"type": &"adjacency"}
 			)
@@ -248,7 +252,7 @@ func flank_bonus(actor: BattleActor, target: BattleActor) -> int:
 	if target_facing == &"":
 		return 0
 	var attack_dir := _direction_of(
-		_cells[actor.get_instance_id()] - _cells[target.get_instance_id()]
+		_cells[actor.combat_id] - _cells[target.combat_id]
 	)
 	if attack_dir != &"" and attack_dir == _opposite(target_facing):
 		return _rules.flank_power_bonus
@@ -301,7 +305,7 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 	var result: Array[StringName] = []
 	if _grid == null or not has_combatant(actor):
 		return result
-	var id := actor.get_instance_id()
+	var id := actor.combat_id
 	if not _cells.has(id):
 		return result
 	var origin: Vector2i = _cells[id]
@@ -351,7 +355,7 @@ func path_query(actor: BattleActor, destination: StringName) -> Dictionary:
 	var occupant: BattleActor = _occupancy.get(dest_cell)
 	if occupant != null and occupant != actor:
 		return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
-	var origin_cell: Vector2i = _cells[actor.get_instance_id()]
+	var origin_cell: Vector2i = _cells[actor.combat_id]
 	if origin_cell == dest_cell:
 		return _blocked(&"position", "Combatant is already there.", {"type": &"different_position"})
 	var was_solid := _grid.is_point_solid(origin_cell)
@@ -369,7 +373,7 @@ func path_query(actor: BattleActor, destination: StringName) -> Dictionary:
 func facing_of(actor: BattleActor) -> StringName:
 	if actor == null:
 		return &""
-	return StringName(_facings.get(actor.get_instance_id(), &""))
+	return StringName(_facings.get(actor.combat_id, &""))
 
 
 func set_facing(actor: BattleActor, facing: StringName) -> Dictionary:
@@ -381,7 +385,7 @@ func set_facing(actor: BattleActor, facing: StringName) -> Dictionary:
 		return _blocked(
 			&"facing", "Unknown facing: %s." % facing, {"type": &"facing", "valid": _ORDER.duplicate()}
 		)
-	_facings[actor.get_instance_id()] = facing
+	_facings[actor.combat_id] = facing
 	return _allowed({"facing": facing})
 
 
@@ -394,8 +398,8 @@ func line_of_sight(actor: BattleActor, target: BattleActor) -> Dictionary:
 		return _blocked(
 			&"blocked_by_range", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
 		)
-	var from_cell: Vector2i = _cells[actor.get_instance_id()]
-	var to_cell: Vector2i = _cells[target.get_instance_id()]
+	var from_cell: Vector2i = _cells[actor.combat_id]
+	var to_cell: Vector2i = _cells[target.combat_id]
 	if _chebyshev(from_cell, to_cell) > _LOS_MAX_RANGE:
 		return _blocked(
 			&"blocked_by_range",
@@ -437,7 +441,7 @@ func occupant_of(position: StringName) -> BattleActor:
 func elevation_delta(actor: BattleActor, target: BattleActor) -> int:
 	if not has_combatant(actor) or not has_combatant(target):
 		return 0
-	return elevation_at(_cells[target.get_instance_id()]) - elevation_at(_cells[actor.get_instance_id()])
+	return elevation_at(_cells[target.combat_id]) - elevation_at(_cells[actor.combat_id])
 
 
 # ---- internal: the only code in the project allowed to build or parse a position handle ----
@@ -473,7 +477,7 @@ func _place(actor: BattleActor, cell: Vector2i, facing: StringName) -> void:
 		clampi(cell.x, rect.position.x, rect.end.x - 1),
 		clampi(cell.y, rect.position.y, rect.end.y - 1),
 	)
-	var id := actor.get_instance_id()
+	var id := actor.combat_id
 	_cells[id] = clamped
 	_facings[id] = facing
 	_occupancy[clamped] = actor

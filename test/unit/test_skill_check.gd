@@ -93,3 +93,36 @@ func _member() -> PartyMember:
 	var member := PartyMember.new()
 	member.id = "test-vex"
 	return member
+
+
+func test_expert_reroll_key_is_deterministic_across_runs() -> void:
+	# Regression: the key folded in member.get_instance_id(), which is
+	# process-local and allocation-order dependent, so the same encounter with
+	# the same inputs produced a different key on a second run. Gate T criterion
+	# 7 requires identical inputs to give identical results.
+	var first := PartyMember.new()
+	first.id = "iris_illepah"
+	first.display_name = "Iris Illepah"
+
+	var second := PartyMember.new()
+	second.id = "iris_illepah"
+	second.display_name = "Iris Illepah"
+
+	assert_bool(first.get_instance_id() != second.get_instance_id()).is_true()
+	assert_str(
+		SkillCheck._reroll_key(first, "lore", "scene")
+	).is_equal(SkillCheck._reroll_key(second, "lore", "scene"))
+
+
+func test_expert_reroll_key_separates_two_members_sharing_a_display_name() -> void:
+	var a := PartyMember.new()
+	a.id = "guard_a"
+	a.display_name = "Iron Companies Guard"
+
+	var b := PartyMember.new()
+	b.id = "guard_b"
+	b.display_name = "Iron Companies Guard"
+
+	assert_str(
+		SkillCheck._reroll_key(a, "lore", "scene")
+	).is_not_equal(SkillCheck._reroll_key(b, "lore", "scene"))
