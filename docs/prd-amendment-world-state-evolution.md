@@ -187,6 +187,37 @@ the vault wins, and canon questions are not resolved silently.
 
 **This is a blocking prerequisite.** FR-507 cannot be implemented before the table exists.
 
+#### 2.5.1 Measured 2026-08-07 — the prerequisite is larger than stated above
+
+The section above assumed the Chapter One zones exist in the vault and merely lack a threat
+axis. They do not. Measured against `world/locations/*.tres`:
+
+| Zone | Vault entity |
+|---|---|
+| `dom` | `cities/dom.md` |
+| `dorthkor_road` | **none** |
+| `wilds` | **none** |
+| `wound_lip` | **none** |
+
+**Three of the four Chapter One zones have no lore entity at all.** They exist only as game
+resources. A threat-affinity table cannot describe places the vault has never described.
+
+**A second gap, found in the same check.** `docs/godot-architecture.md` requires entities to
+carry a `Vault Id` property bridging game data to lore prose. **No location resource carries
+one.** Even `dom`, which does exist in the vault, is not linked to it from the game side.
+
+**Revised prerequisite, in order:**
+
+1. Author vault entities for `dorthkor_road`, `wilds` and `wound_lip`. This is **new canon about
+   the owner's world** and must not be invented by an agent or by this document.
+2. Add the threat-family axis to those three plus `dom`.
+3. Add the `Vault Id` bridge to all four location resources.
+4. Only then author the affinity values as game data.
+
+**Note the split this reveals.** The *lore* — what threatens a place, and why — belongs in the
+vault. The *numbers* belong in game data, under the same "Pandora is canonical, nothing writes
+back" rule as everything else. §2.5 above was imprecise in calling the whole table vault lore.
+
 ---
 
 ## 3. Evaluation moments
