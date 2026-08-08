@@ -54,6 +54,16 @@ var ng_plus: Dictionary = NGPlus.default_block()
 var zhavar: Dictionary = {}
 var last_error := ""
 
+## Tactical-layer per-unit state (issue #141), persisted as the `tactical` envelope
+## section from schema 6 on.
+##
+## PROVISIONAL HOME. This state conceptually belongs beside the party in GameState, but
+## globals/game_state.gd is owned by another workstream right now, so the roster is
+## parked on the save owner — the one module that already has to build and validate it.
+## It is deliberately NOT read by combat yet; moving it to GameState is a follow-up and
+## needs no schema change, since the payload shape is the same either way.
+var unit_roster := UnitRoster.new()
+
 
 func has_save() -> bool:
 	return FileAccess.file_exists(save_path)
@@ -140,8 +150,9 @@ func load_save() -> bool:
 	var quests_backup := QuestRegistry.to_dict()
 	var ng_plus_backup := ng_plus.duplicate(true)
 	var zhavar_backup := zhavar.duplicate(true)
+	var unit_roster_backup := unit_roster.to_dict()
 	if not GameState.from_dict(payload.get("game_state", {})):
-		_restore_runtime_state(game_state_backup, reputation_backup, renown_backup, quests_backup, ng_plus_backup, zhavar_backup)
+		_restore_runtime_state(game_state_backup, reputation_backup, renown_backup, quests_backup, ng_plus_backup, zhavar_backup, unit_roster_backup)
 		return _fail("The game_state section in this save file is invalid.")
 	_apply_runtime_feature_flags()
 	Reputation.from_dict(payload.get("reputation", {}))
@@ -149,6 +160,9 @@ func load_save() -> bool:
 	QuestRegistry.from_dict(payload.get("quests", {}))
 	ng_plus = NGPlus.normalize(payload.get("ng_plus", {}))
 	zhavar = payload.get("zhavar", {}).duplicate(true)
+	# _prepare_for_load already proved this parses; the migration guarantees the key.
+	var loaded_roster := UnitRoster.from_dict(payload.get("tactical", {}))
+	unit_roster = loaded_roster if loaded_roster != null else UnitRoster.new()
 	var destination := _destination_from_payload(payload)
 	if destination == null:
 		_restore_runtime_state(
@@ -157,7 +171,8 @@ func load_save() -> bool:
 			renown_backup,
 			quests_backup,
 			ng_plus_backup,
-			zhavar_backup
+			zhavar_backup,
+			unit_roster_backup
 		)
 		return _fail("The save destination is invalid.")
 	_set_pending_destination(destination)
@@ -207,6 +222,11 @@ func _prepare_for_load(payload: Variant) -> Dictionary:
 		return _load_failure("Save ng_plus data is corrupt.")
 	if migrated.has("id_schemas") and migrated["id_schemas"] != StableIds.schema_manifest():
 		return _load_failure("Save stable-ID schema manifest is incompatible.")
+	if migrated.has("tactical") and UnitRoster.from_dict(migrated["tactical"]) == null:
+		# UnitRoster.from_dict rejects rather than clamps: an attunement value outside
+		# -3 .. +3, an element outside the Wheel of Ten, or a per-unit row with no unit
+		# fails the whole payload instead of being quietly repaired.
+		return _load_failure("Save tactical data is corrupt.")
 	if migrated.has("location_id"):
 		var location_id: Variant = migrated.get("location_id")
 		if not location_id is String or (location_id as String).length() > 64:
@@ -322,7 +342,8 @@ func _restore_runtime_state(
 	renown_data: Dictionary,
 	quests_data: Dictionary,
 	ng_plus_data: Dictionary,
-	zhavar_data: Dictionary
+	zhavar_data: Dictionary,
+	unit_roster_data: Dictionary
 ) -> void:
 	GameState.from_dict(game_state_data)
 	Reputation.from_dict(reputation_data)
@@ -330,6 +351,8 @@ func _restore_runtime_state(
 	QuestRegistry.from_dict(quests_data)
 	ng_plus = ng_plus_data.duplicate(true)
 	zhavar = zhavar_data.duplicate(true)
+	var restored := UnitRoster.from_dict(unit_roster_data)
+	unit_roster = restored if restored != null else UnitRoster.new()
 
 
 func new_game() -> void:
@@ -342,6 +365,7 @@ func new_game() -> void:
 	QuestRegistry.reset()
 	ng_plus = NGPlus.default_block()
 	zhavar = {}
+	unit_roster = UnitMigration.roster_from_party(GameState.party)
 	var destination := LoadDestination.new(
 		LocationRegistry.DOM.id,
 		LocationRegistry.DOM.resolve_spawn(&"new_game")
@@ -409,6 +433,7 @@ func _build_payload() -> Dictionary:
 		"ng_plus": NGPlus.normalize(ng_plus),
 		"elapsed_seconds": elapsed_seconds(),
 		"spawn_id": String(pending_spawn_id),
+		"tactical": _snapshot_unit_roster(),
 	}
 	if scene:
 		var current_location := LocationRegistry.by_scene(scene.scene_file_path)
@@ -420,6 +445,14 @@ func _build_payload() -> Dictionary:
 	payload["location_id"] = String(location.id)
 	payload["scene"] = location.scene_path
 	return payload
+
+
+## Reconciles the roster against the live party before serializing it, so a party
+## change made since the last load is reflected without any caller having to remember
+## to do it. Surviving units keep their JP, mastery, attunement and loadout.
+func _snapshot_unit_roster() -> Dictionary:
+	unit_roster = UnitMigration.reconcile(unit_roster, GameState.party)
+	return unit_roster.to_dict()
 
 
 func _fail(message: String) -> bool:

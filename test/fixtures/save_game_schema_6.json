@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "schema_version": 6,
+  "scene": "res://world/test_room.tscn",
+  "spawn_id": "from_dom",
+  "elapsed_seconds": 127,
+  "game_state": {},
+  "reputation": {},
+  "renown": {},
+  "quests": {},
+  "zhavar": {},
+  "ng_plus": {
+    "style_points": 0,
+    "purchased_carry_overs": [],
+    "completion_metadata": {}
+  },
+  "tactical": {
+    "units": {
+      "fixture-unit": {
+        "id": "fixture-unit",
+        "display_name": "Fixture Unit",
+        "epithet": "",
+        "base_hp": 24,
+        "base_mp": 0,
+        "base_spd": 0,
+        "move": 0,
+        "jump": 0,
+        "portrait_ref": "",
+        "vault_id": ""
+      }
+    },
+    "unit_jobs": {
+      "fixture-unit": {}
+    },
+    "unit_attunement": {
+      "fixture-unit": {
+        "unit_id": "fixture-unit",
+        "values": {
+          "suul": 3,
+          "bloei": 1,
+          "aqua": 0,
+          "khor": -1,
+          "terra": 2,
+          "daar": -3,
+          "molm": 0,
+          "scor": 0,
+          "nul": -2,
+          "strom": 1
+        }
+      }
+    },
+    "unit_loadout": {
+      "fixture-unit": {
+        "unit_id": "fixture-unit",
+        "primary_job_id": "",
+        "secondary_job_id": "",
+        "reaction_ability_id": "",
+        "passive_ability_id": "",
+        "equip": {}
+      }
+    }
+  }
+}
