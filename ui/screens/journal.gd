@@ -8,7 +8,7 @@ const RECENT_CONSEQUENCE_LIMIT := 6
 
 
 func _build() -> void:
-	var vbox := _make_window("Journal", Vector2(920, 620))
+	var vbox := _make_shell_window("Journal")
 
 	var thread := _section("Current thread  ·  " + ChapterOneProgress.title())
 	vbox.add_child(thread)

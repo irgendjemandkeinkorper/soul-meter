@@ -16,20 +16,20 @@ var _status_label: Label
 
 
 func _build() -> void:
-	var vbox := _make_window("Shop", Vector2(760, 560))
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", DS.SPACE_5)
-	vbox.add_child(header)
+	var vbox := _make_shell_window("Shop")
+	# The vendor eyebrow and the purse were already a header row; they belong in the
+	# shell's Header rather than a hand-spaced row at the top of the body.
 	var header_note := Label.new()
 	header_note.text = "VENDOR LEDGER"
 	header_note.theme_type_variation = "EyebrowLabel"
-	header.add_child(header_note)
+	shell_header.add_child(header_note)
 	var header_spacer := Control.new()
 	header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(header_spacer)
+	header_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shell_header.add_child(header_spacer)
 	_gp_label = Label.new()
 	_gp_label.theme_type_variation = "StatLabel"
-	header.add_child(_gp_label)
+	shell_header.add_child(_gp_label)
 	_update_gp_label(GameState.gp)
 	GameState.gp_changed.connect(_update_gp_label)
 
@@ -39,7 +39,7 @@ func _build() -> void:
 	vbox.add_child(_status_label)
 
 	_catalog = VBoxContainer.new()
-	_catalog.add_theme_constant_override("separation", 12)
+	_catalog.theme_type_variation = "ScreenContentColumn"
 	_catalog.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(_catalog)
 	_add_back_button(vbox)

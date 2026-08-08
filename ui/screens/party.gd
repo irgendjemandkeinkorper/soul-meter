@@ -13,11 +13,11 @@ var _bio_lbl: Label
 
 
 func _build() -> void:
-	var vbox := _make_window("Party", Vector2(720, 480))
+	var vbox := _make_shell_window("Party")
 
 	var row := HBoxContainer.new()
+	row.theme_type_variation = "MirrorPairRow"
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 16)
 	vbox.add_child(row)
 
 	var list := ItemList.new()
@@ -29,12 +29,12 @@ func _build() -> void:
 	row.add_child(list)
 
 	var sheet := VBoxContainer.new()
+	sheet.theme_type_variation = "LedgerColumn"
 	sheet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sheet.add_theme_constant_override("separation", 8)
 	row.add_child(sheet)
 
 	_name_lbl = Label.new()
-	_name_lbl.add_theme_font_size_override("font_size", 24)
+	_name_lbl.theme_type_variation = "HeadingLabel"
 	sheet.add_child(_name_lbl)
 
 	_sub_lbl = Label.new()
