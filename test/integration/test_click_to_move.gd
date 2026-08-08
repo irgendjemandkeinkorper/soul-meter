@@ -137,8 +137,8 @@ func test_unreachable_click_refusal_reaches_the_player_seam() -> void:
 	var grid := IsoGrid.new()
 	grid.build(ground, blocking)
 
-	# A cell inside TrialHall's painted footprint (see the inline
-	# blocking_script's BLOCKING_CELLS for TrialHall in starting_town.tscn).
+	# A cell inside TrialHall's painted footprint (see the Blocking layer's
+	# tile_map_data in starting_town.tscn).
 	var inside_trial_hall := Vector2i(21, 6)
 	assert_bool(grid.is_point_solid(inside_trial_hall)).is_true()
 	var target_world := grid.cell_to_world(inside_trial_hall)
@@ -278,3 +278,78 @@ func _silence_root_controls(scene_under_test: Node) -> void:
 		var control := child as Control
 		control.visible = false
 		control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+func test_click_path_routes_around_a_standing_npc_rather_than_into_it() -> void:
+	# GH #190. The building test above deliberately excludes the town's actors; this one adds
+	# exactly one back, because an NPC is the case that was broken: AStarGrid2D saw open ground,
+	# move_and_slide() hit a body, and the player ground into a shopkeeper.
+	var fixture := await _isolated_town_fixture()
+	var runner: GdUnitSceneRunner = fixture["runner"]
+	var player: CharacterBody2D = fixture["player"]
+	var controller: ClickMoveController = fixture["controller"]
+	var grid: IsoGrid = fixture["grid"]
+	var root: Node = player.get_parent()
+
+	# An open east-west run between ItemShop and BellHouse. Asserted, not assumed — if someone
+	# paints a building here the failure should say so rather than pass vacuously.
+	var start_cell := Vector2i(18, 25)
+	var blocked_cell := Vector2i(22, 25)
+	var destination_cell := Vector2i(26, 25)
+	for x in range(start_cell.x, destination_cell.x + 1):
+		assert_bool(grid.is_point_solid(Vector2i(x, start_cell.y))) \
+			.override_failure_message(
+				"test fixture regression: cell (%d, %d) is no longer open ground" % [x, start_cell.y]
+			) \
+			.is_false()
+
+	player.global_position = grid.cell_to_world(start_cell)
+	var npc := (load("res://actors/npc/npc.tscn") as PackedScene).instantiate() as NPC
+	npc.name = "BlockingTownsperson"
+	root.add_child(npc)
+	npc.global_position = grid.cell_to_world(blocked_cell)
+	await runner.simulate_frames(3)
+
+	assert_bool(npc.is_in_group(NavOccupancy.GROUP)) \
+		.override_failure_message("an NPC must register itself as a nav blocker") \
+		.is_true()
+
+	var destination_world := grid.cell_to_world(destination_cell)
+	var result := controller.request_move_to(destination_world)
+	assert_bool(result.get("allowed")).is_true()
+
+	# The load-bearing assertion: not one waypoint lands on the NPC's cell.
+	var waypoints: Array = result.get("path", [])
+	assert_int(waypoints.size()).is_greater(0)
+	var npc_cell_world := grid.cell_to_world(blocked_cell)
+	for point in waypoints:
+		assert_vector(Vector2(point)) \
+			.override_failure_message(
+				"path waypoint %s lands on the NPC's cell %s" % [point, npc_cell_world]
+			) \
+			.is_not_equal(npc_cell_world)
+
+	# And the detour actually works: the player reaches the far side, it does not wedge and
+	# rely on #162's stuck-recovery to bail it out.
+	await runner.simulate_frames(400)
+	assert_float(player.global_position.distance_to(destination_world)).is_less(24.0)
+
+
+func test_the_player_is_never_an_obstacle_to_their_own_path() -> void:
+	# Trivially true to state, easy to break: if the player registered as an occupant, their own
+	# starting cell would be solid and every click would refuse.
+	var fixture := await _isolated_town_fixture()
+	var runner: GdUnitSceneRunner = fixture["runner"]
+	var player: CharacterBody2D = fixture["player"]
+	var controller: ClickMoveController = fixture["controller"]
+	var grid: IsoGrid = fixture["grid"]
+
+	var start_cell := Vector2i(18, 25)
+	player.global_position = grid.cell_to_world(start_cell)
+	await runner.simulate_frames(3)
+
+	var result := controller.request_move_to(grid.cell_to_world(Vector2i(24, 25)))
+	assert_bool(result.get("allowed")) \
+		.override_failure_message("the player blocked their own path: %s" % result) \
+		.is_true()
+	assert_bool(controller.has_path()).is_true()

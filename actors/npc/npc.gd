@@ -23,6 +23,9 @@ var _prompt: Label
 
 
 func _ready() -> void:
+	# A standing NPC is a solid body. Overworld click-paths must route around it rather than
+	# grind into it (GH #190) — see world/nav/nav_occupancy.gd.
+	NavOccupancy.register(self)
 	_apply_visual_identity()
 	var range_area := Area2D.new()
 	var shape := CollisionShape2D.new()
