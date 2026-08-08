@@ -278,7 +278,7 @@
       "pixel_dimensions": [64, 32],
       "pivot_px": [0, 0],
       "direction_contract": null,
-      "nine_patch_margins_px": {"left": 8, "top": 8, "right": 8, "bottom": 8},
+      "nine_patch_margins_px": {"left": 8, "top": 7, "right": 8, "bottom": 7},
       "source_path": "procedural",
       "source_sha256": "procedural",
       "output_path": "res://assets/placeholders/ui/frames/button_frame.png",
