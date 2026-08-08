@@ -137,3 +137,44 @@ func test_determinism_repeated_runs_produce_identical_results() -> void:
 	for _iteration in range(10):
 		var repeat: Dictionary = operations.call()
 		assert_that(repeat).is_equal(first)
+
+
+func test_drain_charge_shaves_one_level_without_detonating() -> void:
+	var tile := TileState.new()
+	tile.apply_residue(&"suul")
+	tile.apply_residue(&"suul")
+	assert_int(tile.charge_level).is_equal(2)
+
+	var result: Dictionary = tile.drain_charge(1)
+
+	# A drain is not a strike: no detonation, no bonus damage, charge survives.
+	assert_bool(bool(result.get("allowed", false))).is_true()
+	assert_int(int(result.get("drained", 0))).is_equal(1)
+	assert_bool(bool(result.get("cleared", true))).is_false()
+	assert_int(tile.charge_level).is_equal(1)
+	assert_str(String(tile.charge_element_id)).is_equal("suul")
+
+
+func test_drain_charge_clears_the_element_at_zero() -> void:
+	var tile := TileState.new()
+	tile.apply_residue(&"suul")
+
+	var result: Dictionary = tile.drain_charge(1)
+
+	assert_bool(bool(result.get("cleared", false))).is_true()
+	assert_bool(tile.is_charged()).is_false()
+
+
+func test_drain_charge_is_refused_under_a_hushwarden_field() -> void:
+	# Hush suspends ALL charge movement, drains included. Weather's clash drain
+	# reaches tiles through this method, so the guard has to live here rather
+	# than in every caller.
+	var tile := TileState.new()
+	tile.apply_residue(&"suul")
+	tile.hush = true
+
+	var result: Dictionary = tile.drain_charge(1)
+
+	assert_bool(bool(result.get("allowed", true))).is_false()
+	assert_str(String(result.get("blocked_by", ""))).is_equal("hush")
+	assert_int(tile.charge_level).is_equal(1)

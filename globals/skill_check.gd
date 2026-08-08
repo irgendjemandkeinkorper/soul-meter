@@ -203,7 +203,14 @@ func _reroll_key(member: PartyMember, skill_name: String, scene_id: String) -> S
 		resolved_scene = get_tree().current_scene.scene_file_path
 	if resolved_scene.is_empty():
 		resolved_scene = "default"
-	return "%s:%s:%s" % [resolved_scene, member.get_instance_id(), skill_name]
+	# `member.id` and NOT `get_instance_id()`: the latter is process-local and
+	# allocation-order dependent, so the same encounter with the same inputs
+	# produces a different key on a second run. Gate T criterion 7 requires
+	# identical inputs to give identical results. `GameState` populates `id` for
+	# every recruit; the display-name fallback only covers a hand-built member in
+	# a test fixture.
+	var member_key := member.id if not member.id.is_empty() else member.display_name
+	return "%s:%s:%s" % [resolved_scene, member_key, skill_name]
 
 
 func _normalize_skill_name(skill_name: String) -> String:
