@@ -182,6 +182,55 @@
 				"_id": "316.0",
 				"_index": 0,
 				"_name": "Vendors"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "429.0",
+				"_index": 0,
+				"_name": "Element Relations"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "451.0",
+				"_index": 0,
+				"_name": "Jobs"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "461.0",
+				"_index": 0,
+				"_name": "Abilities"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "474.0",
+				"_index": 0,
+				"_name": "Units"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "485.0",
+				"_index": 0,
+				"_name": "Unit Jobs"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "491.0",
+				"_index": 0,
+				"_name": "Unit Attunement"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "496.0",
+				"_index": 0,
+				"_name": "Unit Loadout"
 			}
 		],
 		"_entities": [
@@ -13282,6 +13331,546 @@
 						"value": ""
 					}
 				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "439.0",
+				"_index": 0,
+				"_name": "Same",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "target"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Same"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 0
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "same"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "440.0",
+				"_index": 0,
+				"_name": "Neighbour",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "target"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 0.75
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Neighbour"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 1
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 3.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "neighbour"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "441.0",
+				"_index": 0,
+				"_name": "Neutral (2 Steps)",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "target"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Neutral (2 Steps)"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 2
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 6.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 1
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "442.0",
+				"_index": 0,
+				"_name": "Neutral (3 Steps)",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "target"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.1
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Neutral (3 Steps)"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 3
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 9.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 2
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "443.0",
+				"_index": 0,
+				"_name": "Neutral (4 Steps)",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "target"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.2
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Neutral (4 Steps)"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 4
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 12.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "neutral"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 3
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "444.0",
+				"_index": 0,
+				"_name": "Clash (Opposed)",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "target"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.35
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Clash (Opposed)"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 5
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 15.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "clash"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 5
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "445.0",
+				"_index": 0,
+				"_name": "Caster Same",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "caster"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Caster Same"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 0
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "none"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "446.0",
+				"_index": 0,
+				"_name": "Caster Chord",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "caster"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.15
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Caster Chord"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 1
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "chord"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "447.0",
+				"_index": 0,
+				"_name": "Caster Neutral (2 Steps)",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "caster"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Caster Neutral (2 Steps)"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 2
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "none"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "448.0",
+				"_index": 0,
+				"_name": "Caster Neutral (3 Steps)",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "caster"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Caster Neutral (3 Steps)"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 3
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "none"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "449.0",
+				"_index": 0,
+				"_name": "Caster Neutral (4 Steps)",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "caster"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Caster Neutral (4 Steps)"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 4
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "none"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
+			},
+			{
+				"_category_id": "429.0",
+				"_icon_color": "ffffff00",
+				"_id": "450.0",
+				"_index": 0,
+				"_name": "Caster Opposed",
+				"_property_overrides": {
+					"Axis": {
+						"type": "string",
+						"value": "caster"
+					},
+					"Damage Multiplier": {
+						"type": "float",
+						"value": 1.0
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Caster Opposed"
+					},
+					"Distance": {
+						"type": "int",
+						"value": 5
+					},
+					"Fizzle Add": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Provisional": {
+						"type": "bool",
+						"value": true
+					},
+					"Relation Id": {
+						"type": "string",
+						"value": "none"
+					},
+					"Soul On Failure": {
+						"type": "int",
+						"value": 0
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "magic-system"
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -14425,12 +15014,404 @@
 				"_id": "428.0",
 				"_name": "Model Index",
 				"_type": "int"
+			},
+			{
+				"_category_id": "429.0",
+				"_default_value": "",
+				"_id": "430.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "429.0",
+				"_default_value": "",
+				"_id": "431.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "429.0",
+				"_default_value": "",
+				"_id": "432.0",
+				"_name": "Relation Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "429.0",
+				"_default_value": "",
+				"_id": "433.0",
+				"_name": "Axis",
+				"_type": "string"
+			},
+			{
+				"_category_id": "429.0",
+				"_default_value": 0,
+				"_id": "434.0",
+				"_name": "Distance",
+				"_type": "int"
+			},
+			{
+				"_category_id": "429.0",
+				"_default_value": 0.0,
+				"_id": "435.0",
+				"_name": "Damage Multiplier",
+				"_type": "float"
+			},
+			{
+				"_category_id": "429.0",
+				"_default_value": 0.0,
+				"_id": "436.0",
+				"_name": "Fizzle Add",
+				"_type": "float"
+			},
+			{
+				"_category_id": "429.0",
+				"_default_value": 0,
+				"_id": "437.0",
+				"_name": "Soul On Failure",
+				"_type": "int"
+			},
+			{
+				"_category_id": "429.0",
+				"_default_value": false,
+				"_id": "438.0",
+				"_name": "Provisional",
+				"_type": "bool"
+			},
+			{
+				"_category_id": "451.0",
+				"_default_value": "",
+				"_id": "452.0",
+				"_name": "Job Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "451.0",
+				"_default_value": "",
+				"_id": "453.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "451.0",
+				"_default_value": 0,
+				"_id": "454.0",
+				"_name": "Tier",
+				"_type": "int"
+			},
+			{
+				"_category_id": "451.0",
+				"_default_value": "",
+				"_id": "455.0",
+				"_name": "Element Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "451.0",
+				"_default_value": "",
+				"_id": "456.0",
+				"_name": "Requires Job Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "451.0",
+				"_default_value": 0.0,
+				"_id": "457.0",
+				"_name": "Growth HP",
+				"_type": "float"
+			},
+			{
+				"_category_id": "451.0",
+				"_default_value": 0.0,
+				"_id": "458.0",
+				"_name": "Growth MP",
+				"_type": "float"
+			},
+			{
+				"_category_id": "451.0",
+				"_default_value": 0.0,
+				"_id": "459.0",
+				"_name": "Growth SPD",
+				"_type": "float"
+			},
+			{
+				"_category_id": "451.0",
+				"_default_value": "",
+				"_id": "460.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": "",
+				"_id": "462.0",
+				"_name": "Ability Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": "",
+				"_id": "463.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": "",
+				"_id": "464.0",
+				"_name": "Job Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": "",
+				"_id": "465.0",
+				"_name": "Slot",
+				"_type": "string"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": "",
+				"_id": "466.0",
+				"_name": "Element Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": 0,
+				"_id": "467.0",
+				"_name": "Power",
+				"_type": "int"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": 0,
+				"_id": "468.0",
+				"_name": "MP Cost",
+				"_type": "int"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": 0,
+				"_id": "469.0",
+				"_name": "CT Cost",
+				"_type": "int"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": 0,
+				"_id": "470.0",
+				"_name": "Range",
+				"_type": "int"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": 0,
+				"_id": "471.0",
+				"_name": "AoE",
+				"_type": "int"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": 0,
+				"_id": "472.0",
+				"_name": "Vertical",
+				"_type": "int"
+			},
+			{
+				"_category_id": "461.0",
+				"_default_value": "",
+				"_id": "473.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": "",
+				"_id": "475.0",
+				"_name": "Unit Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": "",
+				"_id": "476.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": "",
+				"_id": "477.0",
+				"_name": "Epithet",
+				"_type": "string"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": 0,
+				"_id": "478.0",
+				"_name": "Base HP",
+				"_type": "int"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": 0,
+				"_id": "479.0",
+				"_name": "Base MP",
+				"_type": "int"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": 0,
+				"_id": "480.0",
+				"_name": "Base SPD",
+				"_type": "int"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": 0,
+				"_id": "481.0",
+				"_name": "Move",
+				"_type": "int"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": 0,
+				"_id": "482.0",
+				"_name": "Jump",
+				"_type": "int"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": "",
+				"_id": "483.0",
+				"_name": "Portrait Ref",
+				"_type": "string"
+			},
+			{
+				"_category_id": "474.0",
+				"_default_value": "",
+				"_id": "484.0",
+				"_name": "Vault Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "485.0",
+				"_default_value": "",
+				"_id": "486.0",
+				"_name": "Row Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "485.0",
+				"_default_value": "",
+				"_id": "487.0",
+				"_name": "Unit Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "485.0",
+				"_default_value": "",
+				"_id": "488.0",
+				"_name": "Job Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "485.0",
+				"_default_value": 0,
+				"_id": "489.0",
+				"_name": "JP",
+				"_type": "int"
+			},
+			{
+				"_category_id": "485.0",
+				"_default_value": "",
+				"_id": "490.0",
+				"_name": "Mastered",
+				"_type": "string"
+			},
+			{
+				"_category_id": "491.0",
+				"_default_value": "",
+				"_id": "492.0",
+				"_name": "Row Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "491.0",
+				"_default_value": "",
+				"_id": "493.0",
+				"_name": "Unit Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "491.0",
+				"_default_value": "",
+				"_id": "494.0",
+				"_name": "Element Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "491.0",
+				"_default_value": 0,
+				"_id": "495.0",
+				"_name": "Value",
+				"_type": "int"
+			},
+			{
+				"_category_id": "496.0",
+				"_default_value": "",
+				"_id": "497.0",
+				"_name": "Row Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "496.0",
+				"_default_value": "",
+				"_id": "498.0",
+				"_name": "Unit Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "496.0",
+				"_default_value": "",
+				"_id": "499.0",
+				"_name": "Primary Job Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "496.0",
+				"_default_value": "",
+				"_id": "500.0",
+				"_name": "Secondary Job Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "496.0",
+				"_default_value": "",
+				"_id": "501.0",
+				"_name": "Reaction Ability Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "496.0",
+				"_default_value": "",
+				"_id": "502.0",
+				"_name": "Passive Ability Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "496.0",
+				"_default_value": "",
+				"_id": "503.0",
+				"_name": "Equip",
+				"_type": "string"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 428.0
+			"default": 503.0
 		}
 	},
 	"_version": 1
