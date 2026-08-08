@@ -150,7 +150,12 @@ static func _has_gate_context(context: Dictionary) -> bool:
 	for key in [
 		"var_harmony", "harmony", "caster_id", "solo", "mastery", "highest_mastery",
 		"is_solo", "has_mastery", "has_highest_mastery", "mastery_is_highest",
-		"breath_tier", "breath_cost_tier", "breath_cost"
+		"breath_tier", "breath_cost_tier", "breath_cost",
+		# Without this key the gate is never consulted for a husked caster, so the
+		# `blocked_by = &"husked"` refusal would pass every test and never fire in a
+		# real cast. Any new refusal reason must be added here as well as to the
+		# gate, or it is dead on arrival.
+		"husked"
 	]:
 		if context.has(key):
 			return true

@@ -110,14 +110,25 @@ func test_zone_model_new_methods_behave_as_documented_defaults() -> void:
 	assert_int(model.elevation_delta(allies[0], enemies[0])).is_equal(0)
 
 
-func test_grid_flag_falls_back_when_the_grid_model_does_not_exist_yet() -> void:
-	# Issue #137 has not landed. Flipping the flag must not crash: amendment
-	# §8.1 requires the zone model to remain the working fallback, and a
-	# fallback that only works in one direction is not a fallback.
-	var rules := CombatRules.new()
-	rules.use_grid_battlefield = true
+func test_the_flag_selects_the_grid_model_and_false_selects_the_zone_model() -> void:
+	# This test previously asserted a FALLBACK, because grid_battlefield_model.gd
+	# did not exist yet and flipping the flag would have crashed on a null script.
+	# #137 landed, so the real selection is now assertable. The fallback in
+	# create_default() is kept as defence: amendment §8.1 requires the zone model
+	# to stay reachable, and a missing script must degrade loudly, not crash.
+	var zone_rules := CombatRules.new()
+	zone_rules.use_grid_battlefield = false
+	var zone_model := BattlefieldModel.create_default(zone_rules)
+	assert_bool(
+		zone_model.get_script().resource_path.ends_with("zone_battlefield_model.gd")
+	).is_true()
 
-	var model := BattlefieldModel.create_default(rules)
+	var grid_rules := CombatRules.new()
+	grid_rules.use_grid_battlefield = true
+	var grid_model := BattlefieldModel.create_default(grid_rules)
+	assert_bool(
+		grid_model.get_script().resource_path.ends_with("grid_battlefield_model.gd")
+	).is_true()
 
-	assert_object(model).is_not_null()
-	assert_bool(model.get_script().resource_path.ends_with("zone_battlefield_model.gd")).is_true()
+	# The abort path §8.1 depends on: setting the flag back must restore zones.
+	assert_bool(zone_model.get_script() != grid_model.get_script()).is_true()

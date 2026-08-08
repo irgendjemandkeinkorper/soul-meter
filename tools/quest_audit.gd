@@ -54,6 +54,7 @@ const FLAG_DOMAINS := [
 	"dorthkor",
 	"encounter",
 	"field_debt",
+	"soul",
 	"tutorial",
 	"undertakers",
 ]
