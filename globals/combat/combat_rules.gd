@@ -39,6 +39,15 @@ extends Resource
 ## Fraction of spent CT returned when a committed action is cancelled or a wait is refunded.
 @export_range(0.0, 1.0) var cancel_refund_ratio: float = 1.0
 
+## Selects which TurnScheduler `create_default()` builds, exactly as `use_grid_battlefield` does
+## for the battlefield. False keeps the AP round economy authoritative.
+##
+## This flag IS the abort path amendment §8 requires: reverting charge time must be a flag flip,
+## not a revert of a controller rewrite. That only holds while `ApRoundScheduler` stays behind the
+## seam, which is why §8.1 forbids deleting AP compatibility in the same change that makes CT
+## authoritative. Gate T criterion 10 retires both the flag and the AP scheduler together.
+@export var use_charge_time: bool = false
+
 
 func action_points_for(actor: BattleActor) -> int:
 	var divisor := maxi(1, attribute_points_per_ap)

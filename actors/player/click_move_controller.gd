@@ -98,6 +98,16 @@ func _rebuild_grid() -> void:
 		return
 	_iso_grid = IsoGrid.new()
 	_iso_grid.build(_ground, _blocking)
+	_sync_occupancy()
+
+
+## Refreshes the grid's view of where standing actors are (GH #190). Static geometry comes from
+## the painted `Blocking` layer; NPCs are not in it and never will be. Both go into the same
+## `IsoGrid`, so this controller still asks exactly one question about passability.
+func _sync_occupancy() -> void:
+	if _iso_grid == null or _ground == null:
+		return
+	NavOccupancy.sync(_iso_grid, _ground.get_parent(), _player)
 
 
 ## Requests a path to `target_world`. Returns the allowed shape
@@ -111,12 +121,21 @@ func request_move_to(target_world: Vector2) -> Dictionary:
 	if _iso_grid == null:
 		return _refuse(&"blocked_by_no_navigation", null, "No navigation grid is available here.")
 
+	# Standing actors move between clicks, so their cells are re-read here rather than only on
+	# the repath timer — a click is exactly when the answer has to be current.
+	_sync_occupancy()
+
 	var target_cell := _iso_grid.world_to_cell(target_world)
-	if _iso_grid.is_point_solid(target_cell):
+	# Out of the map entirely is "unreachable", not "obstructed" — two different causes must
+	# keep two different `blocked_by` tags (amendment §2.2's refusal taxonomy). `is_blocked_for`
+	# answers true for both, so bounds are checked first.
+	if not _iso_grid.is_in_bounds(target_cell):
+		return _refuse(&"blocked_by_unreachable", null, "There is no route to that spot.")
+	if _iso_grid.is_blocked_for(target_cell, _player):
 		var nearest: Variant = _find_nearest_open_cell(target_cell)
 		return _refuse(&"blocked_by_obstacle", nearest, "Something is in the way.")
 
-	var path := _iso_grid.path_world(_player.global_position, target_world)
+	var path := _iso_grid.path_world(_player.global_position, target_world, _player)
 	if path.is_empty():
 		return _refuse(&"blocked_by_unreachable", null, "There is no route to that spot.")
 
@@ -239,7 +258,7 @@ func _find_nearest_open_cell(center: Vector2i) -> Variant:
 				if maxi(absi(dx), absi(dy)) != radius:
 					continue
 				var candidate := center + Vector2i(dx, dy)
-				if not _iso_grid.is_point_solid(candidate):
+				if not _iso_grid.is_blocked_for(candidate, _player):
 					return _iso_grid.cell_to_world(candidate)
 	return null
 

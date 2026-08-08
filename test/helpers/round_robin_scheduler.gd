@@ -139,6 +139,15 @@ func release(actor: BattleActor) -> void:
 	_cursor += 1
 
 
+func yield_turn(actor: BattleActor) -> Dictionary:
+	var gate := can_act(actor)
+	if not bool(gate.get("allowed", false)):
+		return gate
+	_cursor += 1
+	_phase = Phase.IDLE
+	return _allowed({"actor": actor, "ct_spent": 0, "charge": 0})
+
+
 func cancel_committed(actor: BattleActor, refund: bool) -> Dictionary:
 	if _committed_actor != actor or _phase != Phase.COMMITTED:
 		return _blocked(&"nothing_committed", "No committed action.", {})

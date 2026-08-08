@@ -129,3 +129,176 @@ func test_equal_cost_path_query_is_deterministic_across_repeated_calls() -> void
 	for i in 5:
 		var again := grid.path_cells(from, to)
 		assert_array(Array(again)).is_equal(Array(first))
+
+
+# --- dynamic occupancy (GH #190) ---
+
+
+func test_an_occupied_cell_blocks_another_actor_but_not_its_own_occupant() -> void:
+	var ground := _make_ground(Vector2i(5, 5))
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+
+	var npc: Node = auto_free(Node.new())
+	var player: Node = auto_free(Node.new())
+	grid.set_occupant(npc, Vector2i(2, 2))
+
+	assert_bool(grid.is_blocked_for(Vector2i(2, 2), player)).is_true()
+	# The obvious-but-easy-to-break half: an actor's own cell never blocks itself.
+	assert_bool(grid.is_blocked_for(Vector2i(2, 2), npc)).is_false()
+	assert_object(grid.occupant_of(Vector2i(2, 2))).is_same(npc)
+
+
+func test_a_path_routes_around_an_occupied_cell() -> void:
+	# A 3-wide corridor with (1, 0) and (1, 2) painted solid: the ONLY way through column 1
+	# is (1, 1). Put an actor there and the straight route must become impossible.
+	var ground := _make_ground(Vector2i(3, 3))
+	var blocking := _make_blocking(
+		[Vector2i(1, 0), Vector2i(1, 2)] as Array[Vector2i], ground.tile_set
+	)
+	var grid := IsoGridScript.new()
+	grid.build(ground, blocking)
+
+	var player: Node = auto_free(Node.new())
+	var npc: Node = auto_free(Node.new())
+
+	var open_path := grid.path_cells(Vector2i(0, 1), Vector2i(2, 1), player)
+	assert_int(open_path.size()).is_greater(0)
+	assert_array(Array(open_path)).contains([Vector2(1, 1)])
+
+	grid.set_occupant(npc, Vector2i(1, 1))
+	var blocked_path := grid.path_cells(Vector2i(0, 1), Vector2i(2, 1), player)
+	# The only gap is occupied, so there is no route at all — the path certainly does not
+	# walk through the NPC.
+	assert_int(blocked_path.size()).is_equal(0)
+
+	# ...and the moment the NPC steps aside, the route is back.
+	grid.set_occupant(npc, Vector2i(0, 0))
+	var reopened := grid.path_cells(Vector2i(0, 1), Vector2i(2, 1), player)
+	assert_array(Array(reopened)).contains([Vector2(1, 1)])
+
+
+func test_a_path_detours_around_an_occupant_when_a_detour_exists() -> void:
+	var ground := _make_ground(Vector2i(5, 5))
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+
+	var player: Node = auto_free(Node.new())
+	var npc: Node = auto_free(Node.new())
+	grid.set_occupant(npc, Vector2i(2, 2))
+
+	var path := grid.path_cells(Vector2i(0, 2), Vector2i(4, 2), player)
+	assert_int(path.size()).is_greater(0)
+	assert_array(Array(path)).not_contains([Vector2(2, 2)])
+
+
+func test_a_mover_standing_on_an_occupied_cell_can_still_leave_it() -> void:
+	var ground := _make_ground(Vector2i(5, 5))
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+
+	var walker: Node = auto_free(Node.new())
+	grid.set_occupant(walker, Vector2i(0, 0))
+
+	var path := grid.path_cells(Vector2i(0, 0), Vector2i(4, 4), walker)
+	assert_int(path.size()).is_greater(0)
+
+
+func test_a_start_cell_occupied_by_someone_else_does_not_trap_the_mover() -> void:
+	# Bodies overlap. If another actor's cell is where we are standing, we must still be able
+	# to walk away — occupancy is lifted for the start cell, but a painted wall never is.
+	var ground := _make_ground(Vector2i(5, 5))
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+
+	var player: Node = auto_free(Node.new())
+	var npc: Node = auto_free(Node.new())
+	grid.set_occupant(npc, Vector2i(0, 0))
+
+	var path := grid.path_cells(Vector2i(0, 0), Vector2i(4, 4), player)
+	assert_int(path.size()).is_greater(0)
+
+
+func test_vacating_a_cell_restores_the_painted_map_rather_than_punching_a_hole() -> void:
+	var ground := _make_ground(Vector2i(3, 3))
+	var blocking := _make_blocking([Vector2i(1, 1)] as Array[Vector2i], ground.tile_set)
+	var grid := IsoGridScript.new()
+	grid.build(ground, blocking)
+
+	var npc: Node = auto_free(Node.new())
+	# An actor registered onto a painted wall cell (shouldn't happen, but must not corrupt
+	# the map when it clears).
+	grid.set_occupant(npc, Vector2i(1, 1))
+	grid.clear_occupant(npc)
+	assert_bool(grid.is_point_solid(Vector2i(1, 1))).is_true()
+	assert_bool(grid.is_blocked_for(Vector2i(1, 1), npc)).is_true()
+
+	# And a plain occupied cell clears back to walkable.
+	grid.set_occupant(npc, Vector2i(0, 2))
+	assert_bool(grid.is_blocked_for(Vector2i(0, 2), null)).is_true()
+	grid.clear_occupant(npc)
+	assert_bool(grid.is_blocked_for(Vector2i(0, 2), null)).is_false()
+
+
+func test_occupancy_survives_a_rebuild_of_the_static_layer() -> void:
+	# ClickMoveController re-bakes the grid every 0.35s. If build() silently dropped occupancy,
+	# NPCs would blink out of the pathfinder's view between rebakes.
+	var ground := _make_ground(Vector2i(5, 5))
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+
+	var npc: Node = auto_free(Node.new())
+	grid.set_occupant(npc, Vector2i(2, 2))
+	grid.build(ground)
+
+	assert_bool(grid.is_blocked_for(Vector2i(2, 2), null)).is_true()
+	assert_object(grid.occupant_of(Vector2i(2, 2))).is_same(npc)
+
+
+func test_moving_an_occupant_vacates_the_cell_it_left() -> void:
+	var ground := _make_ground(Vector2i(5, 5))
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+
+	var npc: Node = auto_free(Node.new())
+	grid.set_occupant(npc, Vector2i(1, 1))
+	grid.set_occupant(npc, Vector2i(3, 3))
+
+	assert_bool(grid.is_blocked_for(Vector2i(1, 1), null)).is_false()
+	assert_bool(grid.is_blocked_for(Vector2i(3, 3), null)).is_true()
+	assert_object(grid.occupant_of(Vector2i(1, 1))).is_null()
+
+
+func test_nav_occupancy_sync_reads_live_actor_positions_and_is_scoped_to_its_root() -> void:
+	var ground := _make_ground(Vector2i(6, 6))
+	var root: Node2D = auto_free(Node2D.new())
+	add_child(root)
+
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+
+	var inside: Node2D = auto_free(Node2D.new())
+	inside.global_position = grid.cell_to_world(Vector2i(2, 2))
+	root.add_child(inside)
+	NavOccupancy.register(inside)
+
+	# A node in the group but OUTSIDE `root` — a leaked fixture from another suite. It must
+	# not leak into this scene's passability.
+	var outside: Node2D = auto_free(Node2D.new())
+	add_child(outside)
+	outside.global_position = grid.cell_to_world(Vector2i(4, 4))
+	NavOccupancy.register(outside)
+
+	NavOccupancy.sync(grid, root)
+	assert_bool(grid.is_blocked_for(Vector2i(2, 2), null)).is_true()
+	assert_bool(grid.is_blocked_for(Vector2i(4, 4), null)).is_false()
+
+	# The actor walks. A resync must follow it, not remember where it was.
+	inside.global_position = grid.cell_to_world(Vector2i(5, 1))
+	NavOccupancy.sync(grid, root)
+	assert_bool(grid.is_blocked_for(Vector2i(2, 2), null)).is_false()
+	assert_bool(grid.is_blocked_for(Vector2i(5, 1), null)).is_true()
+
+	# `exclude` keeps the asking actor out of the map entirely.
+	NavOccupancy.sync(grid, root, inside)
+	assert_bool(grid.is_blocked_for(Vector2i(5, 1), null)).is_false()

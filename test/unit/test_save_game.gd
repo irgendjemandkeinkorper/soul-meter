@@ -99,7 +99,9 @@ func test_schema_five_scene_path_fixture_round_trips_with_stable_location_id() -
 
 	var prepared: Dictionary = saves._prepare_for_load(fixture)
 	assert_bool(prepared["ok"]).is_true()
-	assert_int(prepared["payload"]["schema_version"]).is_equal(5)
+	# The schema-5 fixture still loads; it is now migrated forward to the current
+	# schema rather than staying at 5 (issue #141 added the schema-6 tactical section).
+	assert_int(prepared["payload"]["schema_version"]).is_equal(SaveGameScript.SCHEMA_VERSION)
 	assert_str(prepared["payload"]["location_id"]).is_equal("wilds")
 
 	var round_trip_file := FileAccess.open(saves.save_path, FileAccess.WRITE)

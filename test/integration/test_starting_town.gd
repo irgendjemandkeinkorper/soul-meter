@@ -196,7 +196,6 @@ func test_dom_contains_new_buildings_npcs_and_interactive_events() -> void:
 		"ChefsHouseDoor",
 		"PlayersHouseDoor",
 		"SavePoint",
-		"BuildingBoundaries",
 	]:
 		assert_object(runner.find_child(node_name, true, false)).is_not_null()
 
@@ -230,24 +229,13 @@ func test_dom_buildings_use_rendered_sprites_and_y_sorting() -> void:
 			assert_object(sprite.texture).is_not_null()
 			assert_float(sprite.offset.y).is_less(-50.596)
 
-	var boundary_pairs := {
-		"RegistryArchive": "RegistryArchiveBoundary",
-		"BellHouse": "BellHouseBoundary",
-		"RiverShrine": "RiverShrineBoundary",
-		"IronCompaniesBarracks": "IronCompaniesBoundary",
-		"ItemShop": "ItemShopBoundary",
-		"EquipmentShop": "EquipmentShopBoundary",
-		"TownHall": "TownHallBoundary",
-		"ChefsHouse": "ChefsHouseBoundary",
-		"PlayersHouse": "PlayersHouseBoundary",
-	}
-	for building_name: String in boundary_pairs:
-		var building := town.find_child(building_name, true, false) as Node2D
-		var boundary := town.find_child(boundary_pairs[building_name], true, false) as CollisionShape2D
-		var footprint := boundary.shape as RectangleShape2D
-		assert_float(building.position.y).is_equal_approx(
-			boundary.position.y + footprint.size.y * 0.5, 0.001
-		)
+	# The block that used to live here asserted each building's y-position against its
+	# `BuildingBoundaries` rectangle. Those rectangles were the second, drifting source of truth
+	# for passability and are deleted (GH #187) — the assertion went with them. It is NOT
+	# reconstructable against the `Blocking` layer: painted cells are a set, not a rectangle,
+	# with no "bottom edge" to compare a sprite origin to. What it was really protecting (a
+	# sortable sprite's origin sits at its feet, §2.4 rule 3) is covered by
+	# test/integration/test_y_sort.gd.
 
 	for dressing_name in ["OakNorthWest", "PineNorth", "RockEast", "GrassShrine"]:
 		assert_object(town.find_child(dressing_name, true, false)).is_not_null()
@@ -338,3 +326,32 @@ func test_bellhouse_quest_opens_the_inspection_event_and_can_be_completed() -> v
 	QuestRegistry.reset()
 	QuestRegistry.from_dict(original_quests)
 	GameState.flags = original_flags
+
+
+func test_blocking_cells_are_authored_data_not_painted_by_code() -> void:
+	# GH #187. The whole point is that the layer can be OPENED AND PAINTED. Instantiating
+	# without adding to the tree means no `_ready()` has run — anything present here is data
+	# that came out of the .tscn, which is exactly what an editor would show an author.
+	var town := (load("res://world/starting_town.tscn") as PackedScene).instantiate() as Node2D
+	auto_free(town)
+
+	var blocking := town.find_child("Blocking", true, false) as TileMapLayer
+	assert_object(blocking).is_not_null()
+	assert_int(blocking.get_used_cells().size()) \
+		.override_failure_message(
+			"Blocking has no authored cells — they must live in tile_map_data, not in code"
+		) \
+		.is_greater(200)
+
+	# The TileSet is a real resource on disk, not built at runtime.
+	assert_object(blocking.tile_set).is_not_null()
+	assert_str(blocking.tile_set.resource_path).is_equal("res://world/nav/blocking_tiles.tres")
+	assert_int(blocking.tile_set.get_physics_layers_count()).is_greater(0)
+
+	# The script is a file under world/nav/, not an embedded SubResource.
+	assert_str(blocking.get_script().resource_path).is_equal("res://world/nav/blocking_layer.gd")
+
+	# The legacy duplicate obstacle authoring path is gone (#187) — `Blocking` is the only one.
+	assert_object(town.find_child("BuildingBoundaries", true, false)) \
+		.override_failure_message("BuildingBoundaries is a second source of truth; it must stay deleted") \
+		.is_null()

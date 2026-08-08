@@ -14,7 +14,7 @@ var _hint_lbl: Label
 
 
 func _build() -> void:
-	var vbox := _make_window("The Four Arms — Choose Two Companions", Vector2(700, 620))
+	var vbox := _make_shell_window("The Four Arms — Choose Two Companions")
 
 	var lead_lbl := Label.new()
 	lead_lbl.text = "LEAD  •  Vex the Unbowed  •  Ironbrand  •  44 HP"
@@ -38,7 +38,7 @@ func _build() -> void:
 	vbox.add_child(scroll)
 
 	var list_box := VBoxContainer.new()
-	list_box.add_theme_constant_override("separation", 10)
+	list_box.theme_type_variation = "ScreenContentColumn"
 	list_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list_box)
 

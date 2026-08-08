@@ -3,7 +3,7 @@ extends RefCounted
 ## Version transitions for the serialized save envelope.
 
 const LEGACY_SCHEMA_VERSION := 2
-const CURRENT_SCHEMA_VERSION := 5
+const CURRENT_SCHEMA_VERSION := 6
 
 
 static func prepare(payload: Variant) -> Dictionary:
@@ -28,6 +28,8 @@ static func prepare(payload: Variant) -> Dictionary:
 		migrated = _migrate_v3_to_v4(migrated)
 	if source_version <= 4:
 		migrated = _migrate_v4_to_v5(migrated)
+	if source_version <= 5:
+		migrated = _migrate_v5_to_v6(migrated)
 	migrated["schema_version"] = CURRENT_SCHEMA_VERSION
 	return {"ok": true, "payload": migrated, "error": ""}
 
@@ -77,6 +79,30 @@ static func _migrate_v4_to_v5(source: Dictionary) -> Dictionary:
 	# Vendor is a new stable-id domain in schema 5. Refreshing the manifest is
 	# the compatibility bridge for otherwise-valid schema-4 saves.
 	migrated["id_schemas"] = StableIds.schema_manifest()
+	return migrated
+
+
+## Schema 6 adds the tactical layer's per-unit state (issue #141): the `tactical`
+## envelope section carrying `units`, `unit_jobs`, `unit_attunement` and `unit_loadout`.
+##
+## It lives at the TOP LEVEL of the envelope, not inside `game_state`, because the
+## authored side of these tables belongs to Pandora and only the per-unit state is
+## save data — mixing them into GameState's flag/soul/inventory block would blur that.
+##
+## The migration is derived, not empty: a schema-5 save already knows its party, so the
+## unit rows are projected from `game_state.party` through UnitMigration. That keeps the
+## PartyMember roster the single source of who is in the party, and means an old save
+## loads with a populated roster instead of an empty one. Jobs, abilities, attunement
+## values and loadouts all start at their neutral defaults because no job or ability
+## content exists yet (canon is owned by GitHub #132).
+static func _migrate_v5_to_v6(source: Dictionary) -> Dictionary:
+	var migrated := source.duplicate(true)
+	if migrated.get("tactical") is Dictionary:
+		return migrated
+	var game_state: Dictionary = {}
+	if migrated.get("game_state", {}) is Dictionary:
+		game_state = migrated.get("game_state", {})
+	migrated["tactical"] = UnitMigration.roster_from_party_rows(game_state.get("party", [])).to_dict()
 	return migrated
 
 

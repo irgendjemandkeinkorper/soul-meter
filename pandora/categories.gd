@@ -23,6 +23,7 @@ const FIZZLE_TABLES = "246.0"
 const BALANCE_BANDS = "263.0"
 const DEFINING_WEAKNESSES = "276.0"
 const VENDORS = "316.0"
+const ELEMENT_RELATIONS = "429.0"
 
 
 class ItemsCategories:

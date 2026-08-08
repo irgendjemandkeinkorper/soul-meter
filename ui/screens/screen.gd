@@ -10,6 +10,14 @@ var allow_back := true
 signal transition_finished
 var _transition_tween: Tween
 
+const SOUL_GAUGE_SCENE := preload("res://ui/hud/soul_gauge.tscn")
+
+## The three M2 shell containers, populated by `_make_shell_window()` so a screen can
+## add to the Header or the HudBar without rebuilding the shell itself.
+var shell_header: HBoxContainer
+var shell_body: MarginContainer
+var shell_hud_bar: HBoxContainer
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -58,10 +66,9 @@ func close() -> void:
 ## The M2 full-screen shell: Screen -> MarginContainer -> VBox with exactly three
 ## children, Header / Body / HudBar (see design/ui-shell-conventions.md).
 ##
-## Additive on purpose. `_make_window()` below builds the older centered-panel
-## window that the ten existing screens use; migrating them is tracked separately
-## rather than done here, so both shells coexist until that lands. New M2 screens
-## use this one.
+## Every screen except `inventory` now builds on this (#149). `_make_window()` below
+## survives only because `inventory` still calls it; #126 rebuilds that screen and
+## removes the helper with it.
 ##
 ## Returns the three containers in order. `HudBar` is empty and the caller fills
 ## it left-to-right; whatever else goes in, SoulGauge is always added LAST so it
@@ -97,6 +104,53 @@ func _make_shell() -> Array[Control]:
 	return [header, body, hud_bar] as Array[Control]
 
 
+## `_make_shell()` plus the three pieces every migrated window-screen needs: a
+## `TitleLabel` in the Header, a scrolling `ScreenContentColumn` in the Body, and the
+## SoulGauge pinned rightmost in the HudBar. Returns the content column to fill, so a
+## migrating screen keeps its existing body code and its existing focus order.
+##
+## `shell_header` / `shell_body` / `shell_hud_bar` are left set for screens that need
+## to reach the Header or the bar. A screen adding to the HudBar must `move_child()`
+## the SoulGauge back to last: it is always the rightmost element (DS rule).
+##
+## No per-node overrides here on purpose — all spacing comes from the type variations
+## registered in `ui/theme/theme_builder.gd`.
+func _make_shell_window(title_text: String) -> VBoxContainer:
+	var shell := _make_shell()
+	shell_header = shell[0] as HBoxContainer
+	shell_body = shell[1] as MarginContainer
+	shell_hud_bar = shell[2] as HBoxContainer
+
+	var title := Label.new()
+	title.name = "ScreenTitle"
+	title.text = title_text
+	title.theme_type_variation = "TitleLabel"
+	shell_header.add_child(title)
+
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	shell_body.add_child(scroll)
+
+	var column := VBoxContainer.new()
+	column.name = "ScreenContent"
+	column.theme_type_variation = "ScreenContentColumn"
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(column)
+
+	# An expanding spacer is what makes the gauge rightmost in an HBox; the gauge is
+	# added last so anything a screen inserts later still lands to its left.
+	var spacer := Control.new()
+	spacer.name = "HudBarSpacer"
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shell_hud_bar.add_child(spacer)
+	shell_hud_bar.add_child(SOUL_GAUGE_SCENE.instantiate())
+
+	return column
+
+
 ## Enter/exit per the shell conventions: fade + settle down 8px, never scale, never
 ## bounce. Driven from the state chart's `state_entered` / `state_exited` so the
 ## animation can never disagree with the flow state.
@@ -126,6 +180,11 @@ func _play_shell_transition(entering: bool) -> void:
 
 
 ## Dimmed full-screen backdrop + a centered panel. Returns the VBox to fill with content.
+##
+## DEPRECATED by the M2 shell (#125/#149). `ui/screens/inventory.gd` is the only
+## remaining caller — deliberately kept rather than deleted so #126 can migrate that
+## screen once, on its own rebuild. Delete this helper with that migration; do not add
+## new callers.
 func _make_window(title_text: String, min_size: Vector2 = Vector2(520, 420)) -> VBoxContainer:
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.65)

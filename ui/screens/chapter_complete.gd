@@ -6,7 +6,7 @@ var _summary := ""
 
 func _build() -> void:
 	allow_back = false
-	var vbox := _make_window("Chapter One Complete — The Broken Muster", Vector2(820, 700))
+	var vbox := _make_shell_window("Chapter One Complete — The Broken Muster")
 	var verdict := Label.new()
 	verdict.text = _verdict_text()
 	verdict.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

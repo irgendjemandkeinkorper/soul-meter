@@ -2,7 +2,7 @@ extends Screen
 ## Display + Audio settings. Applies live and persists to user://settings.cfg via GameState.
 
 func _build() -> void:
-	var vbox := _make_window("Settings", Vector2(560, 500))
+	var vbox := _make_shell_window("Settings")
 
 	vbox.add_child(_section("Display"))
 	var fs := CheckButton.new()

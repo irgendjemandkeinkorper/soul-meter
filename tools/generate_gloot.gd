@@ -22,6 +22,8 @@ extends Node
 ##   res://data/generated/encounter_ids.gd       — stable EncounterIds constants
 ##   res://data/generated/elements.json          — elements, Triads, and casting tables
 ##   res://data/generated/fizzle_table.json      — fizzle formula inputs
+##   res://data/generated/element_matrix.json     — #136 element interaction table
+##   res://data/generated/element_matrix_rows.gd  — ElementMatrixRows runtime tables
 ##   res://globals/elements/elements_data.gd     — generated #89 runtime table
 ##   res://globals/default_fizzle_table.tres     — generated #88 runtime resource
 ##   res://data/generated/dom_npc_roster.json    — Dom's 60 authored townsfolk
@@ -48,6 +50,8 @@ const ENCOUNTERS_PATH := OUT_DIR + "/encounters.json"
 const ENCOUNTER_IDS_PATH := OUT_DIR + "/encounter_ids.gd"
 const ELEMENTS_JSON_PATH := OUT_DIR + "/elements.json"
 const FIZZLE_JSON_PATH := OUT_DIR + "/fizzle_table.json"
+const ELEMENT_MATRIX_JSON_PATH := OUT_DIR + "/element_matrix.json"
+const ELEMENT_MATRIX_ROWS_PATH := OUT_DIR + "/element_matrix_rows.gd"
 const COMBAT_IDENTITY_PATH := OUT_DIR + "/combat_identity.json"
 const ELEMENTS_DATA_PATH := "res://globals/elements/elements_data.gd"
 const FIZZLE_TABLE_PATH := "res://globals/default_fizzle_table.tres"
@@ -65,6 +69,10 @@ const QUEST_INVOLVEMENT_TYPES := [
 	"giver", "target", "information", "gate", "state_change", "reputation_reaction"
 ]
 const StableIdsScript := preload("res://globals/stable_ids.gd")
+## #136's element interaction table. Kept in its own file so the matrix logic is
+## reviewable on its own, but folded into this generator's single drift check so
+## CI covers it like every other Pandora-derived artifact.
+const ElementMatrixGenerator := preload("res://tools/generate_element_matrix.gd")
 
 
 func _ready() -> void:
@@ -165,6 +173,9 @@ static func generate(check_only: bool = false) -> Dictionary:
 	var fizzle_artifacts := _fizzle_artifacts()
 	var fizzle_text: String = fizzle_artifacts["json"]
 	var fizzle_resource_text: String = fizzle_artifacts["tres"]
+	var element_matrix_artifacts := ElementMatrixGenerator.artifacts()
+	var element_matrix_text: String = element_matrix_artifacts["json"]
+	var element_matrix_rows_text: String = element_matrix_artifacts["gd"]
 	var combat_identity_text := _combat_identity_artifact()
 
 	# --- artifact 3: gettext template of generated item keys ---
@@ -188,6 +199,8 @@ static func generate(check_only: bool = false) -> Dictionary:
 		or _differs(ELEMENTS_DATA_PATH, elements_data_text)
 		or _differs(FIZZLE_JSON_PATH, fizzle_text)
 		or _differs(FIZZLE_TABLE_PATH, fizzle_resource_text)
+		or _differs(ELEMENT_MATRIX_JSON_PATH, element_matrix_text)
+		or _differs(ELEMENT_MATRIX_ROWS_PATH, element_matrix_rows_text)
 		or _differs(COMBAT_IDENTITY_PATH, combat_identity_text)
 		or _differs(POT_PATH, pot)
 		or _po_needs_merge(LOCALE_PO_PATH, item_entries)
@@ -213,6 +226,8 @@ static func generate(check_only: bool = false) -> Dictionary:
 		_write(ELEMENTS_DATA_PATH, elements_data_text)
 		_write(FIZZLE_JSON_PATH, fizzle_text)
 		_write(FIZZLE_TABLE_PATH, fizzle_resource_text)
+		_write(ELEMENT_MATRIX_JSON_PATH, element_matrix_text)
+		_write(ELEMENT_MATRIX_ROWS_PATH, element_matrix_rows_text)
 		_write(COMBAT_IDENTITY_PATH, combat_identity_text)
 		_write(POT_PATH, pot)
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://locale"))

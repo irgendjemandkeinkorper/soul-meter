@@ -24,9 +24,9 @@ func test_pathfinding_cannot_cross_a_blocking_cell() -> void:
 	var grid := IsoGrid.new()
 	grid.build(ground, blocking)
 
-	# TrialHall's footprint sits between these two cells (see the inline
-	# blocking_script's BLOCKING_CELLS for TrialHall) — a straight line
-	# between them cuts straight through the building.
+	# TrialHall's footprint sits between these two cells (see the cells painted
+	# into the Blocking layer's tile_map_data in starting_town.tscn) — a straight
+	# line between them cuts straight through the building.
 	var from_cell := Vector2i(18, 7)
 	var to_cell := Vector2i(27, 7)
 	assert_int(blocking.get_cell_source_id(from_cell)).is_equal(-1)

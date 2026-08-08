@@ -699,8 +699,8 @@ someone will eventually implement them additively.
 ## 10. Ratification
 
 **RATIFIED by the owner on 2026-08-05.** FR-102 and FR-105 are superseded as of this date;
-`docs/prd-chapter-one.md` §6.1 is amended accordingly. Implementation may proceed on everything
-except what §9.2 still gates.
+`docs/prd-chapter-one.md` §6.1 is amended accordingly. Implementation may proceed on the whole
+amendment: §9.2, the last open gate, was decided the same day.
 
 | Item | Status |
 |---|---|
@@ -711,17 +711,25 @@ except what §9.2 still gates.
 | §7 design frame | **APPLIED** 2026-08-05 — resolves #111 |
 | §8 abort criteria | **RATIFIED** — two axes, attribution before revert |
 | §9.1 disciplines vs classes | **DECIDED 2026-08-05** — owner adopted combat disciplines with Patron remaining the class. Vault amendment required; see #132 |
-| §9.2 NEIGHBOUR / SAME | **STILL OPEN — owner decision (#133)** |
+| §9.2 NEIGHBOUR / SAME | **DECIDED 2026-08-05** — canon as a full wheel-distance gamble curve; see §9.2 for the table. Values PROVISIONAL, shape canon. #133 closed |
 
-### 10.1 What §9.2 still blocks
+### 10.1 What §9.2 blocked, and what released it
 
-Ratification does **not** unblock the element matrix. Until #133 is settled:
+**Superseded 2026-08-07.** This section previously read "`element_matrix` authoring (#136) stays
+blocked." That was correct when written and stale within hours: #133 was decided and closed on
+2026-08-05, the same day this amendment was ratified, and §9.2 was updated to say so while this
+section was not. For two days the document told a reader of §9.2 to proceed and a reader of
+§10.1 to stop. **§9.2 is the live text; #136 is unblocked.**
 
-- **`element_matrix` authoring (#136) stays blocked.** Do not author multipliers.
-- Everything else in T1 and T2 may proceed — the matrix is a content-layer addition, not a
-  chassis requirement, and Gate T's pass/fail must not become hostage to it (§4.5).
-- If damage resolution needs a target-relation term before #133 lands, stub it as an explicit
-  identity multiplier (×1.00) with a `TODO(#133)`, never as a guessed value. A guessed
+Two constraints from the blocked period survive the decision, because they are properties of the
+design and not of the wait:
+
+- **The two axes must never share a lookup table or a `distance` variable.** `strain_add` prices
+  the caster's composition span and needs no target. `relation_add` prices the target. Both apply
+  to the same cast, they are never the same number. See §9.2 for why stacking them makes off-tone
+  attacks strictly bad, contradicting *wider is not stronger, wider is different*.
+- **Never guess a multiplier.** If a term is needed before its value is ratified, stub it as an
+  explicit identity multiplier (×1.00) with a `TODO`, never as a plausible number. A guessed
   multiplier that ships is a balance decision made by accident.
 
 ---

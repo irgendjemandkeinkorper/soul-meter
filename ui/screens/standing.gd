@@ -9,7 +9,7 @@ var _factions: Array[String] = []
 
 
 func _build() -> void:
-	var vbox := _make_window("Standing", Vector2(720, 540))
+	var vbox := _make_shell_window("Standing")
 
 	var global_row := HBoxContainer.new()
 	global_row.theme_type_variation = "MirrorPairRow"
