@@ -34,8 +34,22 @@ enum Phase {
 }
 
 
+## `use_charge_time` is the only activation path for charge time, mirroring
+## `use_grid_battlefield` on the battlefield seam. It stays a one-line switch on data so that
+## reverting to the AP round economy is a flag flip (amendment §8), never a code change.
 static func create_default(rules: CombatRules) -> TurnScheduler:
-	var script := load("res://globals/combat/charge_time_scheduler.gd") as Script
+	const AP_PATH := "res://globals/combat/ap_round_scheduler.gd"
+	const CHARGE_PATH := "res://globals/combat/charge_time_scheduler.gd"
+	var path := AP_PATH
+	if rules != null and rules.use_charge_time:
+		path = CHARGE_PATH
+	var script := load(path) as Script
+	# Fall back loudly rather than returning null and crashing on `.new()`. §8.1 requires the AP
+	# model to remain the working fallback, and a fallback that only works in one direction is not
+	# a fallback.
+	if script == null:
+		push_warning("TurnScheduler: %s is missing; falling back to the AP round model." % path)
+		script = load(AP_PATH) as Script
 	var scheduler := script.new() as TurnScheduler
 	scheduler.configure(rules)
 	return scheduler
@@ -125,6 +139,20 @@ func release(_actor: BattleActor) -> void:
 ## rule and a cancelled cast both route through here rather than reaching into charge state.
 func cancel_committed(_actor: BattleActor, _refund: bool) -> Dictionary:
 	return _blocked(&"unimplemented", "TurnScheduler.cancel_committed() must be implemented.", {})
+
+
+## Gives up the rest of this turn voluntarily, with resources still in hand.
+##
+## ADDED 2026-08-07 while extracting the AP round model behind this interface. The contract had
+## no way to express it, and two separate features need it: `CombatController.end_turn()` lets a
+## player stop with AP remaining today, and FR-102a's "waiting refunds" rule is the same verb in
+## charge time. Without it a caller has to reach past the interface and zero the actor's
+## resource by hand, which is precisely the leak this seam exists to prevent.
+##
+## This is NOT cancel_committed(). Nothing is committed here; the actor simply declines to spend
+## what it still has. Returns the refusal shape when the actor is not the active one.
+func yield_turn(_actor: BattleActor) -> Dictionary:
+	return _blocked(&"unimplemented", "TurnScheduler.yield_turn() must be implemented.", {})
 
 
 ## Halts the queue — a speech check ending or splitting a battle mid-resolution.

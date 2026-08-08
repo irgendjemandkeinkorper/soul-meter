@@ -39,6 +39,16 @@ var guarding := false
 ## battlefield state on. Never derive from `get_instance_id()`, allocation order, or a
 ## scene-tree path — see issue #186.
 var combat_id: StringName = &""
+
+## Which side this combatant fights on — &"ally" or &"enemy". Assigned beside `combat_id` when
+## the battle starts.
+##
+## It is stored explicitly because the side was previously recoverable ONLY by reading the prefix
+## of `combat_id` ("ally-0", "enemy-1"). Anything needing to know a side therefore had to parse an
+## identifier, and an id whose substrings carry meaning stops being opaque the moment one caller
+## does that. TurnScheduler needs sides to order a round, so this makes the fact a field rather
+## than a naming convention.
+var side: StringName = &""
 var action_points: int = 0
 var max_action_points: int = 0
 var source_member: PartyMember

@@ -694,6 +694,10 @@ func _assign_combat_ids(
 ) -> void:
 	for i in group.size():
 		var actor := group[i]
+		# Set the side BEFORE the already-assigned check below. An actor reused across battles
+		# keeps its combat_id and would otherwise skip the loop body entirely and end up with no
+		# side, which reads to a scheduler as "on neither side" and drops it from the order.
+		actor.side = prefix
 		if not actor.combat_id.is_empty():
 			continue
 		var parts: Array[String] = [String(prefix)]

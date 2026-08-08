@@ -13,6 +13,9 @@ func _rules() -> CombatRules:
 	var rules := CombatRules.new()
 	rules.base_charge_speed = 6
 	rules.attribute_points_per_speed = 2
+	# create_default() defaults to the AP round model — amendment §8 makes charge time opt-in so
+	# that aborting it is a flag flip. This suite is about charge time, so it opts in explicitly.
+	rules.use_charge_time = true
 	return rules
 
 

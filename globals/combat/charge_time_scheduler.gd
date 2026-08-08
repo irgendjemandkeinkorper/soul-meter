@@ -261,6 +261,25 @@ func release(actor: BattleActor) -> void:
 	_phase = Phase.RESOLVED
 
 
+## Spends readiness and takes no action. Overflow above READY_AT is preserved, exactly as it is
+## in commit() — a fast unit that waits stays fast.
+##
+## ⚠ FR-102a also ratifies that **waiting refunds**, and that discount is deliberately NOT
+## implemented here. The size of the refund is a balance value and it has not been authored:
+## `CombatRules` prices actions, movement and cancellation, but has no wait cost. Shipping a
+## plausible number would be a balance decision made by accident, which the tactical amendment
+## forbids in §10.1. This is therefore the neutral baseline — waiting costs one readiness and
+## returns nothing — and the discount is an owner decision tracked on #138.
+func yield_turn(actor: BattleActor) -> Dictionary:
+	var gate := can_act(actor)
+	if not bool(gate.get("allowed", false)):
+		return gate
+	var key := _key(actor)
+	_charge[key] = int(_charge[key]) - READY_AT
+	_phase = Phase.IDLE
+	return _allowed({"actor": actor, "ct_spent": READY_AT, "charge": int(_charge[key])})
+
+
 func cancel_committed(actor: BattleActor, refund: bool) -> Dictionary:
 	if _committed_actor != actor or _phase != Phase.COMMITTED:
 		return _blocked(&"nothing_committed", "That combatant has no committed action.", {})
