@@ -6,6 +6,11 @@ already exist in the project. The current build uses colored rectangles, initial
 graybox isometric atlas, and a Kenney placeholder spritesheet. These requests replace
 those placeholders without changing the gameplay data model.
 
+**Visual style reference:** `docs/art-aesthetics-bible.md` — ratified 2026-08-09 from the
+approved Vex/Bog Wight/Dom calibration batch. Read it alongside the palette/material cues
+below before producing new art; it is the concrete "what good looks like" this brief's
+prose is describing.
+
 ## Creative direction
 
 Soul Meter is a mature-fantasy, dialogue-and-consequence-first 2D RPG set in Dramgid.
