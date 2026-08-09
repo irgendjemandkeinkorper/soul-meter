@@ -1,0 +1,21 @@
+{
+  "set_id": "dom-calibration-micro-set",
+  "provenance": "OpenAI image_gen built-in generation tool, gpt-image-2; agent-generated artwork, not Kenney CC0.",
+  "camera_contract": {
+    "projection": "orthographic",
+    "yaw_degrees": 45.0,
+    "pitch_degrees": 26.565051177078,
+    "sprite_size": [256, 256],
+    "tile_size": [64, 32],
+    "transparent_background": true
+  },
+  "assets": [
+    {"presentation_id": "dom-stone-paving", "prompt_role": "dark blue-black stone paving ground tile"},
+    {"presentation_id": "dom-wet-road", "prompt_role": "wet iron road ground tile"},
+    {"presentation_id": "dom-mud-edge", "prompt_role": "mud-to-stone transition ground tile"},
+    {"presentation_id": "dom-puddle", "prompt_role": "shallow puddle ground tile"},
+    {"presentation_id": "dom-wall-brick", "prompt_role": "Dom civic wall/building facade"},
+    {"presentation_id": "dom-crate-wood", "prompt_role": "stacked patched shipping crates"},
+    {"presentation_id": "dom-brazier-iron", "prompt_role": "institutional iron street brazier"}
+  ]
+}
