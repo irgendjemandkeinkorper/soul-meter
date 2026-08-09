@@ -1,0 +1,17 @@
+{
+  "set_id": "jawbrace-wave2-family",
+  "provenance": "OpenAI image_gen built-in generation tool, gpt-image-2; agent-generated artwork, not Kenney CC0.",
+  "camera_contract": {"projection": "orthographic", "yaw_degrees": 45.0, "pitch_degrees": 26.565051177078, "sprite_size": [256, 256], "tile_size": [64, 32], "transparent_background": true},
+  "assets": [
+    {"presentation_id": "jawbrace-fractured-ledge", "prompt_role": "Jawbrace fractured ledge tile"},
+    {"presentation_id": "jawbrace-void-cut", "prompt_role": "Jawbrace void cut tile"},
+    {"presentation_id": "jawbrace-metal", "prompt_role": "Jawbrace retaining metal tile"},
+    {"presentation_id": "jawbrace-ash", "prompt_role": "Jawbrace chalk ash tile"},
+    {"presentation_id": "jawbrace-seam", "prompt_role": "Jawbrace Wound seam tile"},
+    {"presentation_id": "jawbrace-damp-stone", "prompt_role": "Jawbrace damp stone tile"},
+    {"presentation_id": "jawbrace-retaining-structure", "prompt_role": "Jawbrace retaining structure"},
+    {"presentation_id": "jawbrace-chain-post", "prompt_role": "Jawbrace chain hammer post"},
+    {"presentation_id": "jawbrace-empty-guard-post", "prompt_role": "Jawbrace empty guard station"},
+    {"presentation_id": "jawbrace-warning-plate", "prompt_role": "Jawbrace warning plate"}
+  ]
+}
