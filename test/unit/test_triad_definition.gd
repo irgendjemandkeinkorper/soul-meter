@@ -22,4 +22,3 @@ func test_missing_or_malformed_optional_fields_use_empty_defaults() -> void:
 	assert_str(definition.display_name).is_equal("12")
 	assert_array(definition.elements).is_empty()
 	assert_str(String(definition.unique_effect_id)).is_equal("")
-

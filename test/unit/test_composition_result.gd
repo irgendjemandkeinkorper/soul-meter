@@ -24,4 +24,3 @@ func test_to_dict_deep_copies_nested_payloads() -> void:
 	serialized["nearest_unblock"]["nested"]["minimum"] = 8
 	assert_int(result.imposition_entries[0]["parameters"]["power"]).is_equal(2)
 	assert_int(result.nearest_unblock["nested"]["minimum"]).is_equal(2)
-

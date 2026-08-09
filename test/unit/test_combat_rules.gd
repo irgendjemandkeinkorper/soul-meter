@@ -41,4 +41,3 @@ func test_charge_cost_handles_null_move_authored_and_ap_fallback() -> void:
 	var fallback := CombatAction.new()
 	fallback.ap_cost = 5
 	assert_int(rules.charge_cost_for(fallback)).is_equal(60)
-

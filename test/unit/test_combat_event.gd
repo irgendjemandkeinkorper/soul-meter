@@ -13,4 +13,3 @@ func test_to_dict_contains_fields_and_deep_copies_data() -> void:
 	assert_dict(result["data"]).is_equal({"hits": [{"amount": 3}]})
 	result["data"]["hits"][0]["amount"] = 99
 	assert_int(event.data["hits"][0]["amount"]).is_equal(3)
-
