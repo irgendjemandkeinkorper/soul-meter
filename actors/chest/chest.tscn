@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/chest/chest.gd" id="1_chest"]
+
+[sub_resource type="RectangleShape2D" id="body_shape"]
+size = Vector2(40, 40)
+
+[node name="Chest" type="Area2D"]
+script = ExtResource("1_chest")
+display_name = "CHEST"
+prompt_text = "OPEN"
+interaction_flag = "chest_opened"
+
+[node name="ClosedSprite" type="Sprite2D" parent="."]
+scale = Vector2(0.35, 0.35)
+
+[node name="OpenSprite" type="Sprite2D" parent="."]
+scale = Vector2(0.35, 0.35)
+visible = false
+
+[node name="Marker" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-18, 18, -18, -20, 18, -20, 18, 18)
+color = Color(0.58, 0.42, 0.1, 1)
+
+[node name="Sign" type="Label" parent="."]
+offset_left = -110.0
+offset_top = -58.0
+offset_right = 110.0
+offset_bottom = -28.0
+horizontal_alignment = 1
+
+[node name="Prompt" type="Label" parent="."]
+offset_left = -150.0
+offset_top = 28.0
+offset_right = 150.0
+offset_bottom = 74.0
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("body_shape")
