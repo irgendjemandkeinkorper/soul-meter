@@ -1,0 +1,22 @@
+{
+  "set_id": "dom-wave2-family",
+  "provenance": "OpenAI image_gen built-in generation tool, gpt-image-2; agent-generated artwork, not Kenney CC0.",
+  "camera_contract": {
+    "projection": "orthographic",
+    "yaw_degrees": 45.0,
+    "pitch_degrees": 26.565051177078,
+    "sprite_size": [256, 256],
+    "tile_size": [64, 32],
+    "transparent_background": true
+  },
+  "assets": [
+    {"presentation_id": "dom-cobble-corner", "prompt_role": "Dom cobblestone corner ground tile"},
+    {"presentation_id": "dom-cobble-edge", "prompt_role": "Dom cobblestone edge ground tile"},
+    {"presentation_id": "dom-market-stall", "prompt_role": "Dom lower-market stall"},
+    {"presentation_id": "dom-hanging-lantern", "prompt_role": "Dom civic hanging lantern"},
+    {"presentation_id": "dom-laundry-line", "prompt_role": "Dom residential laundry line"},
+    {"presentation_id": "dom-notice-board", "prompt_role": "Dom road-commission notice board"},
+    {"presentation_id": "dom-drainage-grate", "prompt_role": "Dom street drainage grate"},
+    {"presentation_id": "dom-moss-statue-fragment", "prompt_role": "Dom moss-grown civic statue fragment"}
+  ]
+}
