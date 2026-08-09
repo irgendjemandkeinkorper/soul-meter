@@ -1,0 +1,17 @@
+{
+  "set_id": "loamroot-grove-wave2-family",
+  "provenance": "OpenAI image_gen built-in generation tool, gpt-image-2; agent-generated artwork, not Kenney CC0.",
+  "camera_contract": {"projection": "orthographic", "yaw_degrees": 45.0, "pitch_degrees": 26.565051177078, "sprite_size": [256, 256], "tile_size": [64, 32], "transparent_background": true},
+  "assets": [
+    {"presentation_id": "loamroot-grove-grass", "prompt_role": "Loamroot wet grass tile"},
+    {"presentation_id": "loamroot-grove-mud", "prompt_role": "Loamroot wet loam tile"},
+    {"presentation_id": "loamroot-grove-root-transition", "prompt_role": "Loamroot root transition tile"},
+    {"presentation_id": "loamroot-grove-water", "prompt_role": "Loamroot shallow water tile"},
+    {"presentation_id": "loamroot-grove-bloom-bed", "prompt_role": "Loamroot Bloom bed tile"},
+    {"presentation_id": "loamroot-grove-shadow", "prompt_role": "Loamroot tree-shadow tile"},
+    {"presentation_id": "loamroot-fallen-log", "prompt_role": "Loamroot fallen log"},
+    {"presentation_id": "loamroot-root-archway", "prompt_role": "Loamroot root archway"},
+    {"presentation_id": "loamroot-bloom-cluster", "prompt_role": "Loamroot Bloom growth cluster"},
+    {"presentation_id": "loamroot-standing-stone", "prompt_role": "Loamroot standing stone"}
+  ]
+}
