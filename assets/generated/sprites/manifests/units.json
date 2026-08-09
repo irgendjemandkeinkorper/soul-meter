@@ -1,0 +1,44 @@
+{
+  "_generated": "CALIBRATION BATCH — agent-generated unit art; do not label as Kenney CC0.",
+  "generator_version": 2,
+  "generator": "built-in imagegen + headless Godot chroma-key/resize pass",
+  "camera": {
+    "projection": "orthographic",
+    "yaw_degrees": 45.0,
+    "pitch_degrees": 26.565051177078,
+    "pitch_radians": 0.463647609000806,
+    "transparent_background": true,
+    "sprite_size": [256, 256],
+    "tile_size": [64, 32],
+    "world_units_per_tile": 1.0,
+    "pivot": "bottom-center feet contact"
+  },
+  "assets": [
+    {
+      "presentation_id": "vex",
+      "display_name": "Vex the Unbowed",
+      "source_model_path": "assets/generated/models/units/vex/vex--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/vex/vex--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "066bfd0e7bfa375dfd635d52506c1f839635984f3d88a71d3ffa0f8e6614384c",
+      "output_sha256": "e220523dfceea870823b5128bd53377e396854993239739a4a3445e844d2977f",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "bog-wight",
+      "display_name": "Bog Wight",
+      "source_model_path": "assets/generated/models/units/bog-wight/bog-wight--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/bog-wight/bog-wight--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "8e37e50f4ac4e9dea4d7e11619a91632f683a8b4bfde6b65d7fcba28182d5d68",
+      "output_sha256": "a24e3064ebaa35fa4babf19f66c46b001e2779ccc40a0caa7ca17a138661585b",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    }
+  ]
+}
