@@ -949,6 +949,171 @@
       "state": "idle",
       "direction": "se",
       "frame": 0
+    },
+    {
+      "presentation_id": "thora-bellmark",
+      "display_name": "Thora Bellmark",
+      "source_model_path": "assets/generated/models/units/thora-bellmark/thora-bellmark--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/thora-bellmark/thora-bellmark--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "19a9c69fb65299a755831e44ebdf4942b9e02658582320cf35ebc519637c8e89",
+      "output_sha256": "77f3e4a9779b2b3c7d3220c32866747a3bbf347cb4bbcf5718dc1fd05b42d342",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "toma-reedhand",
+      "display_name": "Toma Reedhand",
+      "source_model_path": "assets/generated/models/units/toma-reedhand/toma-reedhand--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/toma-reedhand/toma-reedhand--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "c3fe4c0f160756da9dffa905b7c13caafef351715b7ca9d66370b69c4863dc22",
+      "output_sha256": "f0179f26369c89dc9aa306bde10ff6e641eb73c725a459b0c11529328bebaafb",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "torv-bellowskin",
+      "display_name": "Torv Bellowskin",
+      "source_model_path": "assets/generated/models/units/torv-bellowskin/torv-bellowskin--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/torv-bellowskin/torv-bellowskin--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "a21aa62238208e38c29e7e5f38f26215ff3196d1d0f93b879c9666c1c120122c",
+      "output_sha256": "7c5cee6d0267dc677fbe40937d884480b9e5bad3a8f3685b79f4630978a1b077",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "umber-dhor",
+      "display_name": "Umber Dhor",
+      "source_model_path": "assets/generated/models/units/umber-dhor/umber-dhor--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/umber-dhor/umber-dhor--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "73bae438aaefd442182a12c2e640bd782c6f89fa59b047ffb75d83838d85cdea",
+      "output_sha256": "f645863e306692217fcc47e20ae6b7f8281b38552c950f0520708522ef3edcd0",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "vaara-cisternhand",
+      "display_name": "Vaara Cisternhand",
+      "source_model_path": "assets/generated/models/units/vaara-cisternhand/vaara-cisternhand--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/vaara-cisternhand/vaara-cisternhand--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "d03290aeb568cd44ae43f4f5d2b37974f406dd94245caa5da1e6cb17b37c3c62",
+      "output_sha256": "0e9929a792680d4866204940d83cb6c31fba8f1b75cfdfd0fcd7ebfdf877f22f",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "varrik-deepchalk",
+      "display_name": "Varrik Deepchalk",
+      "source_model_path": "assets/generated/models/units/varrik-deepchalk/varrik-deepchalk--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/varrik-deepchalk/varrik-deepchalk--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "7a896e3a9e684ad8adf812a2a18b67f1537274866851b7405bfbccbd1b9567a1",
+      "output_sha256": "d30468dacfabb848b1d02ad608eaa34416a473653b035fc1fdf5f430f60589a7",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "venn-ashcord",
+      "display_name": "Venn Ashcord",
+      "source_model_path": "assets/generated/models/units/venn-ashcord/venn-ashcord--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/venn-ashcord/venn-ashcord--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "35dca4868a04427e7531ee4f67cd7b04629646447e313e06ce87ada7ba4478c0",
+      "output_sha256": "13359aa65c26fb145c2de57ea6049eda8ad94efbf20b2842657f69285cbdf051",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "veska-ruun",
+      "display_name": "Veska Ruun",
+      "source_model_path": "assets/generated/models/units/veska-ruun/veska-ruun--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/veska-ruun/veska-ruun--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "585383e27564ea5be00dee37b72f9f5f569e69642f98e102babb2401cd02dd82",
+      "output_sha256": "0a587229884007a4bc060aeff2e9de572d23da7c1ab8f64c69ea823e3ede8d87",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "veyra-sootlace",
+      "display_name": "Veyra Sootlace",
+      "source_model_path": "assets/generated/models/units/veyra-sootlace/veyra-sootlace--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/veyra-sootlace/veyra-sootlace--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "0c43ac3b0d2eff2d01efdb83a4809adeffa5d8211e099dc469ff9f3561d64d60",
+      "output_sha256": "5946fff5790cd9121c6087bcfb6429b36f6d601f6a3a2125b87365a503dc6204",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "yara-chainstep",
+      "display_name": "Yara Chainstep",
+      "source_model_path": "assets/generated/models/units/yara-chainstep/yara-chainstep--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/yara-chainstep/yara-chainstep--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "3acaeb8030e7b9e8038a697825aeefa20006804c1e91f0395f38636c00d752e5",
+      "output_sha256": "3e0880edd867616d2ead9c01fdabd35893764fe147e8f5635d428e370dcbc928",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "yssra-coldnet",
+      "display_name": "Yssra Coldnet",
+      "source_model_path": "assets/generated/models/units/yssra-coldnet/yssra-coldnet--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/yssra-coldnet/yssra-coldnet--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "04bc1696a7fa75232d1e0980ad866e6eb1aaec63dd58163acf1d2805fcf914c9",
+      "output_sha256": "c0fb0a84fc4a6215ed2d1a57927b1d7f9e54aac3a6c38da0d8d02a31db28fc8d",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     }
   ]
 }
