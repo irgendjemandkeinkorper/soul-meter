@@ -4,13 +4,19 @@
   "generator": "built-in imagegen + headless Godot chroma-key/resize pass",
   "camera": {
     "projection": "orthographic",
-    "yaw_degrees": 45.0,
+    "yaw_degrees": 45,
     "pitch_degrees": 26.565051177078,
     "pitch_radians": 0.463647609000806,
     "transparent_background": true,
-    "sprite_size": [256, 256],
-    "tile_size": [64, 32],
-    "world_units_per_tile": 1.0,
+    "sprite_size": [
+      256,
+      256
+    ],
+    "tile_size": [
+      64,
+      32
+    ],
+    "world_units_per_tile": 1,
     "pivot": "bottom-center feet contact"
   },
   "assets": [
@@ -18,7 +24,9 @@
       "presentation_id": "vex",
       "display_name": "Vex the Unbowed",
       "source_model_path": "assets/generated/models/units/vex/vex--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/vex/vex--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/vex/vex--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "066bfd0e7bfa375dfd635d52506c1f839635984f3d88a71d3ffa0f8e6614384c",
       "output_sha256": "e220523dfceea870823b5128bd53377e396854993239739a4a3445e844d2977f",
@@ -31,7 +39,9 @@
       "presentation_id": "bog-wight",
       "display_name": "Bog Wight",
       "source_model_path": "assets/generated/models/units/bog-wight/bog-wight--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/bog-wight/bog-wight--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/bog-wight/bog-wight--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "8e37e50f4ac4e9dea4d7e11619a91632f683a8b4bfde6b65d7fcba28182d5d68",
       "output_sha256": "a24e3064ebaa35fa4babf19f66c46b001e2779ccc40a0caa7ca17a138661585b",
@@ -44,133 +54,361 @@
       "presentation_id": "serai-lun",
       "display_name": "Serai-Lun",
       "source_model_path": "assets/generated/models/units/serai-lun/serai-lun--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/serai-lun/serai-lun--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/serai-lun/serai-lun--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "d95c1d3abc8570269126352d948c22dd505eb49d8e13de25f548bd045a508124",
       "output_sha256": "675b99f1741659709cb81e1439d74807aea21372d1d717c4ca5cb8fae968e2f1",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "old-grumbrand",
       "display_name": "Old Grumbrand",
       "source_model_path": "assets/generated/models/units/old-grumbrand/old-grumbrand--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/old-grumbrand/old-grumbrand--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/old-grumbrand/old-grumbrand--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "7146e5a1be4d11eef6f3c3c405df45b7711bfebaa0d96ee364eb43f617b7cdb2",
       "output_sha256": "eda7c17e51134f365e573a956c36478981edc25c0b658d3aab98847bbdd3abf1",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "wyneth-hallow-tide",
       "display_name": "Wyneth Hallow-Tide",
       "source_model_path": "assets/generated/models/units/wyneth-hallow-tide/wyneth-hallow-tide--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/wyneth-hallow-tide/wyneth-hallow-tide--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/wyneth-hallow-tide/wyneth-hallow-tide--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "c586eece92835ba868b2d439834fd87a502ceeb6d0a71559e3b30cb10c8ce07a",
       "output_sha256": "5366b35b0eba607ededd1e7e71203e29d42082c1a881f92f9c0de4af8abbdaff",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "ressa-quickfingers",
       "display_name": "Ressa Quickfingers",
       "source_model_path": "assets/generated/models/units/ressa-quickfingers/ressa-quickfingers--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/ressa-quickfingers/ressa-quickfingers--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/ressa-quickfingers/ressa-quickfingers--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "632537fdf5332e12bb7ad8a5b636b1fa9637121fe667030e630fd87ee2afeeba",
       "output_sha256": "22c9446e956de6a4579f60c47b734da4459789f814bed2ce9ecff751d892bfb0",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "korrath-ninefold",
       "display_name": "Korrath Ninefold",
       "source_model_path": "assets/generated/models/units/korrath-ninefold/korrath-ninefold--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/korrath-ninefold/korrath-ninefold--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/korrath-ninefold/korrath-ninefold--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "23d7646a662eaca9782a930661b0dc25312ddec7413e2f8e3b9e08402e03f6b6",
       "output_sha256": "59096fed4823505073560f1f1278c4a0a4a8d30301c1d161239f811219b32920",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "maura-greyfen",
       "display_name": "Maura Greyfen",
       "source_model_path": "assets/generated/models/units/maura-greyfen/maura-greyfen--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/maura-greyfen/maura-greyfen--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/maura-greyfen/maura-greyfen--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "3a3f59960fdc1787b2f9e8d87de2e4fb8f0915f8d18b301a60bbae6c597781a3",
       "output_sha256": "dbfd851648f38ac95700cd98a0e9a04a37c4c459dc66af379b927fe05e0e02da",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "cleaned-jawbrace-guard",
       "display_name": "Cleaned Jawbrace Guard",
       "source_model_path": "assets/generated/models/units/cleaned-jawbrace-guard/cleaned-jawbrace-guard--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/cleaned-jawbrace-guard/cleaned-jawbrace-guard--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/cleaned-jawbrace-guard/cleaned-jawbrace-guard--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "279a3d697716a9c32872fea70e890a20dddd5d7151455c78e3a977b6bfdd0e67",
       "output_sha256": "3a5850967e64654f782adc51bae85ae53aa32698c46a5d41b1311ae92839e4cd",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "gnaal-breach-hound",
       "display_name": "Gnaal Breach Hound",
       "source_model_path": "assets/generated/models/units/gnaal-breach-hound/gnaal-breach-hound--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/gnaal-breach-hound/gnaal-breach-hound--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/gnaal-breach-hound/gnaal-breach-hound--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "18c1a4b7f214280840ed3bf49a5b4db6f12ea41a0833d485c7e379cac94811bb",
       "output_sha256": "734aa4d61efdb3f9cfffa9262f09310939b9b78688e6013fed71018e26f55781",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "gnaal-rift-scavenger",
       "display_name": "Gnaal Rift Scavenger",
       "source_model_path": "assets/generated/models/units/gnaal-rift-scavenger/gnaal-rift-scavenger--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/gnaal-rift-scavenger/gnaal-rift-scavenger--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/gnaal-rift-scavenger/gnaal-rift-scavenger--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "1579edcd5a4861e2866f1e5f3c9ef5465c07afb9cf55db43cca0dad4e8cfb59b",
       "output_sha256": "c3bf20ac9838ad692622d205f79947c18e326baef3bfe25afd1cb0b81f3b0354",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "loam-maddened-boar",
       "display_name": "Loam Maddened Boar",
       "source_model_path": "assets/generated/models/units/loam-maddened-boar/loam-maddened-boar--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/loam-maddened-boar/loam-maddened-boar--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/loam-maddened-boar/loam-maddened-boar--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "344164d3e6f2751c691c0ab968756317607e0012f8d462770e7f9ff4c679bee6",
       "output_sha256": "f29663e911fa275457a9fa18640a2561934e91a4545a8ad5d798f67a6aadbb0d",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "mustered-bloodbellow",
       "display_name": "Mustered Bloodbellow",
       "source_model_path": "assets/generated/models/units/mustered-bloodbellow/mustered-bloodbellow--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/mustered-bloodbellow/mustered-bloodbellow--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/mustered-bloodbellow/mustered-bloodbellow--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "3348f2d8d9e0fcc7ada22da148d66e68939a587253b526560a39cdfe31bd1830",
       "output_sha256": "1804a48b31a4e5e7001b4771ba3d236685e219fbd8c17bd702dd3f94fd0fe586",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     },
     {
       "presentation_id": "aela-quietforge",
       "display_name": "Aela Quietforge",
       "source_model_path": "assets/generated/models/units/aela-quietforge/aela-quietforge--imagegen-source.png",
-      "output_paths": ["assets/generated/sprites/units/aela-quietforge/aela-quietforge--idle--se--f00.png"],
+      "output_paths": [
+        "assets/generated/sprites/units/aela-quietforge/aela-quietforge--idle--se--f00.png"
+      ],
       "generator_version": 2,
       "source_sha256": "75322ae57cbf9f73514004bedd3a29725c3728404767ce5fd386617587953132",
       "output_sha256": "0bbf1dc43d853df9f8d8281eeccbed823ddd4c55dbb5991312ccba40d17d8ce4",
       "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
-      "state": "idle", "direction": "se", "frame": 0
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "arvek-stormcup",
+      "display_name": "Arvek Stormcup",
+      "source_model_path": "assets/generated/models/units/arvek-stormcup/arvek-stormcup--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/arvek-stormcup/arvek-stormcup--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "4f59dec30e9a054c77643292eb3db0a62e889a3abffa8f1d9c6fc21f30499017",
+      "output_sha256": "5538292417be14b8655b845ba9f69c55e66c8e66cc54d30238b34cabb45334c4",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "branek-coiljaw",
+      "display_name": "Branek Coiljaw",
+      "source_model_path": "assets/generated/models/units/branek-coiljaw/branek-coiljaw--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/branek-coiljaw/branek-coiljaw--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "276e8c488f31e30c438e0bac96f8c9b55345ad2ece4824c28d5607add6e67759",
+      "output_sha256": "02c9f1d5915e0b39d1e09b622890822dbefe31ac681ca82861b76acd37ec80ec",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "brannic-lowdrum",
+      "display_name": "Brannic Lowdrum",
+      "source_model_path": "assets/generated/models/units/brannic-lowdrum/brannic-lowdrum--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/brannic-lowdrum/brannic-lowdrum--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "5f57109a28f1150c6fb7920c1ef21829dd52d18e1f0e41d1883ea5cb9e8163cf",
+      "output_sha256": "94e4695769299c5fa7eb701da9b6a46bbc54fbd140de67df0c8cd3b8f999f597",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "brek-saltjaw",
+      "display_name": "Brek Saltjaw",
+      "source_model_path": "assets/generated/models/units/brek-saltjaw/brek-saltjaw--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/brek-saltjaw/brek-saltjaw--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "55fb33d9e3b5f1c69e8caf4e333faf51aa67d73eca3c0ddf8a3fa010a0ca3d64",
+      "output_sha256": "3712f68bff8b3deddfcace5ceb9afd434f891a5a4b7d46f0efa2921845668ef5",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "brinna-fourbells",
+      "display_name": "Brinna Fourbells",
+      "source_model_path": "assets/generated/models/units/brinna-fourbells/brinna-fourbells--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/brinna-fourbells/brinna-fourbells--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "215c54bfdfb7368753c6c7305d0fbd9367ff046a362870ec7f40d2f8999185b6",
+      "output_sha256": "2cdaf1117dbb98089451dede2c7d98be455abc5ce59fbe75867d1edd26017e7d",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "daska-threeknots",
+      "display_name": "Daska Threeknots",
+      "source_model_path": "assets/generated/models/units/daska-threeknots/daska-threeknots--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/daska-threeknots/daska-threeknots--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "dbc3444fe30e9187c504ea0aa70c4b3c0a3cf0d5321470182c229ca8bd9a5e3a",
+      "output_sha256": "70ec5d0b016f663b64df539846d749436a48a4baab089758d5bfd7ea6cce0614",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "dorran-rask",
+      "display_name": "Dorran Rask",
+      "source_model_path": "assets/generated/models/units/dorran-rask/dorran-rask--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/dorran-rask/dorran-rask--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "7a1362590be2b75f4be1772396bdd6d3a79a0fb016e30c3cca8f9124072b6c75",
+      "output_sha256": "4fb10fbb87ab53c6ead21ab912a64338246944fc68b2bf17057eb2c9af8ba22b",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "drann-wetiron",
+      "display_name": "Drann Wetiron",
+      "source_model_path": "assets/generated/models/units/drann-wetiron/drann-wetiron--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/drann-wetiron/drann-wetiron--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "a3e39a3c8e1f13355d69be55c4919aea345fc097dae76590819e76476d69cfc1",
+      "output_sha256": "a701c622ff6b7913a6acdffc7e6f3744891eb2123a4bb320b8cf297e1dcbbb74",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "drel-gaunt",
+      "display_name": "Drel Gaunt",
+      "source_model_path": "assets/generated/models/units/drel-gaunt/drel-gaunt--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/drel-gaunt/drel-gaunt--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "af7e0ab146fdc2fc6706bdd825a21b74f3abcbebb06f2207af74da4d90bd6c02",
+      "output_sha256": "372fee14d36ba3e9e6ef170e6d813bd01438eed0eceaad0b723e421bdc742c67",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "droma-flintjaw",
+      "display_name": "Droma Flintjaw",
+      "source_model_path": "assets/generated/models/units/droma-flintjaw/droma-flintjaw--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/droma-flintjaw/droma-flintjaw--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "67b09836595fa0ae13b6c8122be5ecc271a2fe57da8374447a84a7129a4c1fb3",
+      "output_sha256": "4ba3869c0e1fa7fdefb0b763e3cb9544d4d0572b0b31b03d110b29c9d307067b",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "edda-broadmark",
+      "display_name": "Edda Broadmark",
+      "source_model_path": "assets/generated/models/units/edda-broadmark/edda-broadmark--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/edda-broadmark/edda-broadmark--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "f8756beb49a4a8fc547c6ac3fe7fcabf3f6ce4f08a9fbcf5732da605485f0753",
+      "output_sha256": "c141f27532991b67befea6667a3d8086a3f0638158b644ef1c6d13cfe75a97b3",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "enna-grayscar",
+      "display_name": "Enna Grayscar",
+      "source_model_path": "assets/generated/models/units/enna-grayscar/enna-grayscar--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/enna-grayscar/enna-grayscar--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "ae8748db1f5eb8347e2a8bc0d2a7bb299114a4514a213251966463f3c2c2258a",
+      "output_sha256": "f62de3214c767aa27547048e43764cb665871b8e9fec10f9b9b2a7632416d703",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     }
   ]
 }
