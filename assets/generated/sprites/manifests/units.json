@@ -1114,6 +1114,261 @@
       "state": "idle",
       "direction": "se",
       "frame": 0
+    },
+    {
+      "presentation_id": "crowd-guard-a",
+      "display_name": "Crowd Guard A",
+      "source_model_path": "assets/generated/models/units/crowd-guard-a/crowd-guard-a--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-guard-a/crowd-guard-a--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "ce16ea3a4005fb177a793fca67987b386a8926a15f0f8edd5228eac90267ae0e",
+      "output_sha256": "c66fb60115ec39975b06546b5e2dc9140b0045bc773a1b067eeb93e51d07f182",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-guard-b",
+      "display_name": "Crowd Guard B",
+      "source_model_path": "assets/generated/models/units/crowd-guard-b/crowd-guard-b--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-guard-b/crowd-guard-b--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "11a7376d71a0089340b67afcd12d0e1704081cf949480d9940f2e436a12d88d7",
+      "output_sha256": "a7c000be67109aaf32131b496d99adb183922379671c76bcd0a7033c4321c1eb",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-guard-c",
+      "display_name": "Crowd Guard C",
+      "source_model_path": "assets/generated/models/units/crowd-guard-c/crowd-guard-c--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-guard-c/crowd-guard-c--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "90cbaa61eea11759e6486c957f29ff97d763262e9baa281f657eb55b54aba457",
+      "output_sha256": "e0539c1da0a3039a5980cbf69ae7b663f3f5f3f3426101d880069a553dbf3461",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-dockworker-a",
+      "display_name": "Crowd Dockworker A",
+      "source_model_path": "assets/generated/models/units/crowd-dockworker-a/crowd-dockworker-a--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-dockworker-a/crowd-dockworker-a--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "c44740d9831f5cce78121ab809cc16a16906921011e421b149e95905694b8525",
+      "output_sha256": "b6c2b6c55dca352e73682cd654d6629adbfb749c1167641f27e71f04d842ff0d",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-dockworker-b",
+      "display_name": "Crowd Dockworker B",
+      "source_model_path": "assets/generated/models/units/crowd-dockworker-b/crowd-dockworker-b--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-dockworker-b/crowd-dockworker-b--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "66e28cab4b2cba2e845ae285e930037d583968fc0821397339838f84d72129db",
+      "output_sha256": "1e9683ad5deefa1eb6621416d5f1e70dad933fabad7dfaad74891fe11245d9e7",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-merchant-a",
+      "display_name": "Crowd Merchant A",
+      "source_model_path": "assets/generated/models/units/crowd-merchant-a/crowd-merchant-a--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-merchant-a/crowd-merchant-a--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "65a63aefc5ebce9736493a0d407b5cabdf409f3d255f9756463ba60ebc11479c",
+      "output_sha256": "0fbde1ce03ce321556d23a436ccb0b4356da280375c1a93e6e0b2d36fcf50fcb",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-merchant-b",
+      "display_name": "Crowd Merchant B",
+      "source_model_path": "assets/generated/models/units/crowd-merchant-b/crowd-merchant-b--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-merchant-b/crowd-merchant-b--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "714c686e4bd376da281674e1a932ac37b5b19d72ef0a9d27648a277a0cd48d0c",
+      "output_sha256": "177b7e59e2963bf05b498c3720d7f96222133d7b1349ba22d39a2aae5345c248",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-laborer-a",
+      "display_name": "Crowd Laborer A",
+      "source_model_path": "assets/generated/models/units/crowd-laborer-a/crowd-laborer-a--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-laborer-a/crowd-laborer-a--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "5d6332a487154c5895ca46f1ab3a6d7b5348f489ad3982a3cc13c6402ae75e87",
+      "output_sha256": "db18ba39294c780ddbf2813bd968a7a36cd03c1af7a9551eead04d30cfa86f70",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-laborer-b",
+      "display_name": "Crowd Laborer B",
+      "source_model_path": "assets/generated/models/units/crowd-laborer-b/crowd-laborer-b--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "312d7530f963f13282197f2e91badd3b8fdab86038479ce9eea4bdbbf97d624f",
+      "output_sha256": "25e55f514161167466f0f33c27facfb2c41c349562b00cd212a0c5ac608e0eb5",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-acolyte-a",
+      "display_name": "Crowd Acolyte A",
+      "source_model_path": "assets/generated/models/units/crowd-acolyte-a/crowd-acolyte-a--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-acolyte-a/crowd-acolyte-a--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "d2888bbacd909f7fce5b2952c28612e1c16b001e53ac028f1b7f9211e64807ec",
+      "output_sha256": "b0f7d9cf9cbbb078f3fb6150e56c95e2612f84e543ea8f31534d11ab9579eebb",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-acolyte-b",
+      "display_name": "Crowd Acolyte B",
+      "source_model_path": "assets/generated/models/units/crowd-acolyte-b/crowd-acolyte-b--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-acolyte-b/crowd-acolyte-b--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "82f845bf47846c041b8eb6b1a9f46747bcd72abe71aa2ffb17c932db55df7447",
+      "output_sha256": "41d203bb4c95a9783c8529c76f2d486a9b572a6e12127fcd3f89e2131f134522",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "crowd-beggar-a",
+      "display_name": "Crowd Beggar A",
+      "source_model_path": "assets/generated/models/units/crowd-beggar-a/crowd-beggar-a--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/crowd-beggar-a/crowd-beggar-a--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "f0828df96f9a784748ba71c1bb81a93d7e24e65b8c87b67f7b7fc2337b35dcea",
+      "output_sha256": "3993445ee6cc1a33e98b8d6cb6d4d233882c2bf37dba3a99a4e42dc4b4ce85fb",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "fauna-crow",
+      "display_name": "Fauna Crow",
+      "source_model_path": "assets/generated/models/units/fauna-crow/fauna-crow--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/fauna-crow/fauna-crow--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "92dad63bcc4477e472da9299721c08721048dfa28444486d1a6c065e8e0e1a28",
+      "output_sha256": "0d49f5124c253dc38003dcd2f6c95afee208ccba2addcd89e7673257c284c30a",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "fauna-rat",
+      "display_name": "Fauna Rat",
+      "source_model_path": "assets/generated/models/units/fauna-rat/fauna-rat--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/fauna-rat/fauna-rat--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "22773fdfcbd74b5704ad2852158e6a2654ecbd6c0978e5f8a3215fb9298e1691",
+      "output_sha256": "39405bfe148c371dcc41dca29b68029e307a09358d84f27090adeb21d2e01508",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "fauna-stray-dog",
+      "display_name": "Fauna Stray Dog",
+      "source_model_path": "assets/generated/models/units/fauna-stray-dog/fauna-stray-dog--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/fauna-stray-dog/fauna-stray-dog--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "919aad38fa8ee2a7670abb11f1550ca70a50825ec5d747fad87f9c2388e4cea6",
+      "output_sha256": "de97696ff2da81b2eeb6dce792d8f8a2e1d059cec90394d3f0fc82c73ff0de75",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "tier": "crowd-variety",
+      "bound_identity": null,
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     }
   ]
 }
