@@ -39,6 +39,138 @@
       "state": "idle",
       "direction": "se",
       "frame": 0
+    },
+    {
+      "presentation_id": "serai-lun",
+      "display_name": "Serai-Lun",
+      "source_model_path": "assets/generated/models/units/serai-lun/serai-lun--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/serai-lun/serai-lun--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "d95c1d3abc8570269126352d948c22dd505eb49d8e13de25f548bd045a508124",
+      "output_sha256": "675b99f1741659709cb81e1439d74807aea21372d1d717c4ca5cb8fae968e2f1",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "old-grumbrand",
+      "display_name": "Old Grumbrand",
+      "source_model_path": "assets/generated/models/units/old-grumbrand/old-grumbrand--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/old-grumbrand/old-grumbrand--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "7146e5a1be4d11eef6f3c3c405df45b7711bfebaa0d96ee364eb43f617b7cdb2",
+      "output_sha256": "eda7c17e51134f365e573a956c36478981edc25c0b658d3aab98847bbdd3abf1",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "wyneth-hallow-tide",
+      "display_name": "Wyneth Hallow-Tide",
+      "source_model_path": "assets/generated/models/units/wyneth-hallow-tide/wyneth-hallow-tide--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/wyneth-hallow-tide/wyneth-hallow-tide--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "c586eece92835ba868b2d439834fd87a502ceeb6d0a71559e3b30cb10c8ce07a",
+      "output_sha256": "5366b35b0eba607ededd1e7e71203e29d42082c1a881f92f9c0de4af8abbdaff",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "ressa-quickfingers",
+      "display_name": "Ressa Quickfingers",
+      "source_model_path": "assets/generated/models/units/ressa-quickfingers/ressa-quickfingers--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/ressa-quickfingers/ressa-quickfingers--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "632537fdf5332e12bb7ad8a5b636b1fa9637121fe667030e630fd87ee2afeeba",
+      "output_sha256": "22c9446e956de6a4579f60c47b734da4459789f814bed2ce9ecff751d892bfb0",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "korrath-ninefold",
+      "display_name": "Korrath Ninefold",
+      "source_model_path": "assets/generated/models/units/korrath-ninefold/korrath-ninefold--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/korrath-ninefold/korrath-ninefold--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "23d7646a662eaca9782a930661b0dc25312ddec7413e2f8e3b9e08402e03f6b6",
+      "output_sha256": "59096fed4823505073560f1f1278c4a0a4a8d30301c1d161239f811219b32920",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "maura-greyfen",
+      "display_name": "Maura Greyfen",
+      "source_model_path": "assets/generated/models/units/maura-greyfen/maura-greyfen--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/maura-greyfen/maura-greyfen--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "3a3f59960fdc1787b2f9e8d87de2e4fb8f0915f8d18b301a60bbae6c597781a3",
+      "output_sha256": "dbfd851648f38ac95700cd98a0e9a04a37c4c459dc66af379b927fe05e0e02da",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "cleaned-jawbrace-guard",
+      "display_name": "Cleaned Jawbrace Guard",
+      "source_model_path": "assets/generated/models/units/cleaned-jawbrace-guard/cleaned-jawbrace-guard--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/cleaned-jawbrace-guard/cleaned-jawbrace-guard--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "279a3d697716a9c32872fea70e890a20dddd5d7151455c78e3a977b6bfdd0e67",
+      "output_sha256": "3a5850967e64654f782adc51bae85ae53aa32698c46a5d41b1311ae92839e4cd",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "gnaal-breach-hound",
+      "display_name": "Gnaal Breach Hound",
+      "source_model_path": "assets/generated/models/units/gnaal-breach-hound/gnaal-breach-hound--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/gnaal-breach-hound/gnaal-breach-hound--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "18c1a4b7f214280840ed3bf49a5b4db6f12ea41a0833d485c7e379cac94811bb",
+      "output_sha256": "734aa4d61efdb3f9cfffa9262f09310939b9b78688e6013fed71018e26f55781",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "gnaal-rift-scavenger",
+      "display_name": "Gnaal Rift Scavenger",
+      "source_model_path": "assets/generated/models/units/gnaal-rift-scavenger/gnaal-rift-scavenger--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/gnaal-rift-scavenger/gnaal-rift-scavenger--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "1579edcd5a4861e2866f1e5f3c9ef5465c07afb9cf55db43cca0dad4e8cfb59b",
+      "output_sha256": "c3bf20ac9838ad692622d205f79947c18e326baef3bfe25afd1cb0b81f3b0354",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "loam-maddened-boar",
+      "display_name": "Loam Maddened Boar",
+      "source_model_path": "assets/generated/models/units/loam-maddened-boar/loam-maddened-boar--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/loam-maddened-boar/loam-maddened-boar--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "344164d3e6f2751c691c0ab968756317607e0012f8d462770e7f9ff4c679bee6",
+      "output_sha256": "f29663e911fa275457a9fa18640a2561934e91a4545a8ad5d798f67a6aadbb0d",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "mustered-bloodbellow",
+      "display_name": "Mustered Bloodbellow",
+      "source_model_path": "assets/generated/models/units/mustered-bloodbellow/mustered-bloodbellow--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/mustered-bloodbellow/mustered-bloodbellow--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "3348f2d8d9e0fcc7ada22da148d66e68939a587253b526560a39cdfe31bd1830",
+      "output_sha256": "1804a48b31a4e5e7001b4771ba3d236685e219fbd8c17bd702dd3f94fd0fe586",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
+    },
+    {
+      "presentation_id": "aela-quietforge",
+      "display_name": "Aela Quietforge",
+      "source_model_path": "assets/generated/models/units/aela-quietforge/aela-quietforge--imagegen-source.png",
+      "output_paths": ["assets/generated/sprites/units/aela-quietforge/aela-quietforge--idle--se--f00.png"],
+      "generator_version": 2,
+      "source_sha256": "75322ae57cbf9f73514004bedd3a29725c3728404767ce5fd386617587953132",
+      "output_sha256": "0bbf1dc43d853df9f8d8281eeccbed823ddd4c55dbb5991312ccba40d17d8ce4",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle", "direction": "se", "frame": 0
     }
   ]
 }
