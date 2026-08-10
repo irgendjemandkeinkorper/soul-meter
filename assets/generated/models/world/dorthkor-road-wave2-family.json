@@ -1,0 +1,17 @@
+{
+  "set_id": "dorthkor-road-wave2-family",
+  "provenance": "OpenAI image_gen built-in generation tool, gpt-image-2; agent-generated artwork, not Kenney CC0.",
+  "camera_contract": {"projection": "orthographic", "yaw_degrees": 45.0, "pitch_degrees": 26.565051177078, "sprite_size": [256, 256], "tile_size": [64, 32], "transparent_background": true},
+  "assets": [
+    {"presentation_id": "dorthkor-road-straight", "prompt_role": "Dorthkor straight military road tile"},
+    {"presentation_id": "dorthkor-road-corner", "prompt_role": "Dorthkor road corner tile"},
+    {"presentation_id": "dorthkor-road-edge", "prompt_role": "Dorthkor road edge tile"},
+    {"presentation_id": "dorthkor-road-broken", "prompt_role": "Dorthkor broken road tile"},
+    {"presentation_id": "dorthkor-road-memorial", "prompt_role": "Dorthkor memorial road tile"},
+    {"presentation_id": "dorthkor-road-grass-shoulder", "prompt_role": "Dorthkor wet grass shoulder tile"},
+    {"presentation_id": "dorthkor-memorial-marker", "prompt_role": "Dorthkor memorial marker"},
+    {"presentation_id": "dorthkor-road-drum", "prompt_role": "Dorthkor abandoned road drum"},
+    {"presentation_id": "dorthkor-breach-warning-post", "prompt_role": "Dorthkor breach warning post"},
+    {"presentation_id": "dorthkor-supply-cart", "prompt_role": "Dorthkor abandoned supply cart"}
+  ]
+}

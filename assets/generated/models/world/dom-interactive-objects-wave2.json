@@ -1,0 +1,13 @@
+{
+  "set_id": "dom-interactive-objects-wave2",
+  "provenance": "OpenAI image_gen built-in generation tool, gpt-image-2; agent-generated artwork, not Kenney CC0.",
+  "camera_contract": {"projection": "orthographic", "yaw_degrees": 45.0, "pitch_degrees": 26.565051177078, "sprite_size": [256, 256], "transparent_background": true},
+  "assets": [
+    {"presentation_id": "dom-chest-wood--closed", "prompt_role": "Dom chest closed state"},
+    {"presentation_id": "dom-chest-wood--open", "prompt_role": "Dom chest open state"},
+    {"presentation_id": "dom-lever-iron--off", "prompt_role": "Dom lever off state"},
+    {"presentation_id": "dom-lever-iron--on", "prompt_role": "Dom lever on state"},
+    {"presentation_id": "dom-door-wood--closed", "prompt_role": "Dom door closed state"},
+    {"presentation_id": "dom-door-wood--open", "prompt_role": "Dom door open state"}
+  ]
+}
