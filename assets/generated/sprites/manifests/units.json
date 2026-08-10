@@ -409,6 +409,186 @@
       "state": "idle",
       "direction": "se",
       "frame": 0
+    },
+    {
+      "presentation_id": "gerren-pike",
+      "display_name": "Gerren Pike",
+      "source_model_path": "assets/generated/models/units/gerren-pike/gerren-pike--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/gerren-pike/gerren-pike--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "ac7df049b4c431752a077df204471a02853da59ea028b6b109508885ede66453",
+      "output_sha256": "8ac518127a0582cc946f1a44d85d359a97777f02f716c64631007da451616eee",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "hadrik-vale",
+      "display_name": "Hadrik Vale",
+      "source_model_path": "assets/generated/models/units/hadrik-vale/hadrik-vale--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/hadrik-vale/hadrik-vale--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "4dad42ac38921fe41cce62de970fffc21cc61df7915a8fb3e9e97b225b92d876",
+      "output_sha256": "7a0c3c1fb28496b8a43e677a1ed06d349b89b413ff4efbd35bd45c8ff7437391",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "hennik-coalvein",
+      "display_name": "Hennik Coalvein",
+      "source_model_path": "assets/generated/models/units/hennik-coalvein/hennik-coalvein--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/hennik-coalvein/hennik-coalvein--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "af63f2e8246bc71dc78af86b14575806d7b9775666028505452194e8a33239e2",
+      "output_sha256": "14855ec7acbcf1c05a535fdeed775a930a6f8e258842becc5a3409780cbc0b70",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "holst-brinevein",
+      "display_name": "Holst Brinevein",
+      "source_model_path": "assets/generated/models/units/holst-brinevein/holst-brinevein--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/holst-brinevein/holst-brinevein--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "d47112ceb9f9616c0f9cfe945f00f2536d0f79edb77d5daea038264cc8fc6f3d",
+      "output_sha256": "4f525618eb6eea4f7770597fb51307cf7683cb14fc43831872580551b87970c7",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "irka-stonebreath",
+      "display_name": "Irka Stonebreath",
+      "source_model_path": "assets/generated/models/units/irka-stonebreath/irka-stonebreath--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/irka-stonebreath/irka-stonebreath--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "496a0b54b91edeccef91a04fa8268f79cff7ff26d45afe66f45dbf646b15a21e",
+      "output_sha256": "e770c03828b6347493117561dc40228670ac0699a0e0d6c9d345987caafd6e91",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "istra-hearthscar",
+      "display_name": "Istra Hearthscar",
+      "source_model_path": "assets/generated/models/units/istra-hearthscar/istra-hearthscar--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/istra-hearthscar/istra-hearthscar--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "20b409e97cd20ebbee994e9c039c628e63eb6c81a0e095a8e454f57d612d43c8",
+      "output_sha256": "37835655c6d56d9b357bb4a8599e1f2d5df01509e47bf7e8d5b65e5986ada1dc",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "jessa-longbrace",
+      "display_name": "Jessa Longbrace",
+      "source_model_path": "assets/generated/models/units/jessa-longbrace/jessa-longbrace--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/jessa-longbrace/jessa-longbrace--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "a125872b6eff7e5e5846860a2820f540b4aeac267c941c27239e18d1032d6bc3",
+      "output_sha256": "a2d26fa7f27285cc33e85f844946cedef203988fb98a2ac04462773d278f39cb",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "jorun-ashmantle",
+      "display_name": "Jorun Ashmantle",
+      "source_model_path": "assets/generated/models/units/jorun-ashmantle/jorun-ashmantle--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/jorun-ashmantle/jorun-ashmantle--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "199462be2513de0d057c006c9ee53438a3c674581e8eb7406238139ec6cd7247",
+      "output_sha256": "d7b5ca74b5985644aa357302cd786f47594f16df17063ea4093dae27cdfb3d79",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "kadrin-stoneyield",
+      "display_name": "Kadrin Stoneyield",
+      "source_model_path": "assets/generated/models/units/kadrin-stoneyield/kadrin-stoneyield--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/kadrin-stoneyield/kadrin-stoneyield--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "dfe8f88e487c0d86ef26d9c94a190693e7da1b8ca7d144fd48aa1287ba5f3396",
+      "output_sha256": "4155a8f88e1760e1a87f0f7de7e09a84e9d71d5b4aa584bed832349d928e88fb",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "kaelra-pikehand",
+      "display_name": "Kaelra Pikehand",
+      "source_model_path": "assets/generated/models/units/kaelra-pikehand/kaelra-pikehand--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/kaelra-pikehand/kaelra-pikehand--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "d23abad3cf7ede20692ee6036f02d8fc7d6ceb5b8ee783b2f0b172f8220b7dd3",
+      "output_sha256": "142757b50f4a88d21f5ef702f15e0227ada47bd7e8b63360c4b5cef8da8d1af1",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "kelm-rook",
+      "display_name": "Kelm Rook",
+      "source_model_path": "assets/generated/models/units/kelm-rook/kelm-rook--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/kelm-rook/kelm-rook--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "3b51ed63d0dd79c0b1d52d68e416316596821f83213c2647883e0179addd1de4",
+      "output_sha256": "019a4cacbba3e8a9884122cec2d0e7bc5bde95a5c1976da9a2956b163a9e3b1d",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "kessa-nightrail",
+      "display_name": "Kessa Nightrail",
+      "source_model_path": "assets/generated/models/units/kessa-nightrail/kessa-nightrail--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/kessa-nightrail/kessa-nightrail--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "d2ccd100e3def53479d63f2b3b477d78c8714ec22354f18a96265be87941535e",
+      "output_sha256": "86ed83523c32b10461309b4fb9b94a7cc2d32b3c8740361b2b1b13d298f30953",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     }
   ]
 }
