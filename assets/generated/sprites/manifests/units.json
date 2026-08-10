@@ -769,6 +769,186 @@
       "state": "idle",
       "direction": "se",
       "frame": 0
+    },
+    {
+      "presentation_id": "orrik-cinderjaw",
+      "display_name": "Orrik Cinderjaw",
+      "source_model_path": "assets/generated/models/units/orrik-cinderjaw/orrik-cinderjaw--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/orrik-cinderjaw/orrik-cinderjaw--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "e2413cf4acb8c6133f54d1728269aab8079863d139233e4894d0a3aed0b19a54",
+      "output_sha256": "d7bd952c714f886f91f318b6740d3fe4d5331a804aa20a7ba64865a2ac6728af",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "pell-hammersong",
+      "display_name": "Pell Hammersong",
+      "source_model_path": "assets/generated/models/units/pell-hammersong/pell-hammersong--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/pell-hammersong/pell-hammersong--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "15e7d136bb5c63593956ded7b4684865cf393e5a7f4b87c7bfd96bc749b7ba1a",
+      "output_sha256": "27fc8d1ff315c8d59dcefddd86333fe3d3228e4df9b3bf3f3a6903995f5ae46c",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "raika-toll",
+      "display_name": "Raika Toll",
+      "source_model_path": "assets/generated/models/units/raika-toll/raika-toll--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/raika-toll/raika-toll--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "c6f7707e3e586fd4a6e95fbee2ced94568416fc6acda4be7a5ed898892cb32ef",
+      "output_sha256": "8d5ca6bcffbb0c556613d9dcadff7e14abd9f114dfaca6b0a9433051f4439af3",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "ressa-ironmouth",
+      "display_name": "Ressa Ironmouth",
+      "source_model_path": "assets/generated/models/units/ressa-ironmouth/ressa-ironmouth--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/ressa-ironmouth/ressa-ironmouth--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "bc1286dbb17c5eaf841eb776d2e140e20682043dddf5d640928f882d04314ae7",
+      "output_sha256": "34b79ef1286ba684d55dc966c5724cc32facd944928760f5abbdb81f686c2ea7",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "saela-windscar",
+      "display_name": "Saela Windscar",
+      "source_model_path": "assets/generated/models/units/saela-windscar/saela-windscar--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/saela-windscar/saela-windscar--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "7d2aa60629a473e0f33dd211f81ab135eca69ddcd5e61426fe1a3f7ff6bc0d90",
+      "output_sha256": "d56a913b7b60f5f346ea30a23719ef713878ea1301adabca1ba3d13631ea750f",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "sava-mor",
+      "display_name": "Sava Mor",
+      "source_model_path": "assets/generated/models/units/sava-mor/sava-mor--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/sava-mor/sava-mor--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "ebc8cd5ecfd609bf4557cd385028d7f7d36548a6ac903dd602c3ae1469059808",
+      "output_sha256": "613098fec9033dd347f3e3de3f76a606b586be4468b433826f8939662f74f3d6",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "sella-varn",
+      "display_name": "Sella Varn",
+      "source_model_path": "assets/generated/models/units/sella-varn/sella-varn--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/sella-varn/sella-varn--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "dd90a248fb59e8af1caa3ad3f5ca3ddfebd2d13bac9e8bd225eac18aa248c6dd",
+      "output_sha256": "b0f87a441b155bdfea1d40fb26c5666282a1e3bbbabcf3e02a3f24bd900cbde1",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "senn-brinehook",
+      "display_name": "Senn Brinehook",
+      "source_model_path": "assets/generated/models/units/senn-brinehook/senn-brinehook--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/senn-brinehook/senn-brinehook--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "5ab0df581b2426cd07c8c85edf1cd6accaac0c3bf8bb85e8da93bb65317c3812",
+      "output_sha256": "cabf6c2f9b6ee6073c8e2addff337bd14970f06cc109791369ea289221a337f5",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "sorek-hushward",
+      "display_name": "Sorek Hushward",
+      "source_model_path": "assets/generated/models/units/sorek-hushward/sorek-hushward--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/sorek-hushward/sorek-hushward--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "e7c1779c32d020098145e4dba72234df126ec61a89101e04ea2a351b5618e772",
+      "output_sha256": "852aa3331ebf2ace57c48d3d57cb8b25fab39b6341709ed9c9f4059d463c8b46",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "tern-hollowbeat",
+      "display_name": "Tern Hollowbeat",
+      "source_model_path": "assets/generated/models/units/tern-hollowbeat/tern-hollowbeat--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/tern-hollowbeat/tern-hollowbeat--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "3decefcd201b365ebbf3c2ba1e6dbe401ffd35a4795923054c929b4a6f75f7cd",
+      "output_sha256": "f1c318e3ec3dc18cbd802ae8eb342413a568aa1811e10f833ce47f8dbf6cc44a",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "themka-gaath",
+      "display_name": "Themka Gaath",
+      "source_model_path": "assets/generated/models/units/themka-gaath/themka-gaath--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/themka-gaath/themka-gaath--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "88866487f26a608502c0505d51aea4fb0c15c655893714d08be2936ac4416d44",
+      "output_sha256": "f975793a07563d8caf8b11571603c9b97949ebab86d7a698631aefa4bf5d2a84",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
+    },
+    {
+      "presentation_id": "thessa-drumline",
+      "display_name": "Thessa Drumline",
+      "source_model_path": "assets/generated/models/units/thessa-drumline/thessa-drumline--imagegen-source.png",
+      "output_paths": [
+        "assets/generated/sprites/units/thessa-drumline/thessa-drumline--idle--se--f00.png"
+      ],
+      "generator_version": 2,
+      "source_sha256": "d988d9edeac2dd18ff0747bf2e3aa42f6751a1f346b1315cfd8738b7207c4de5",
+      "output_sha256": "939822478f84b9cd9c674e3e46a3f1c217c18b871325189e2628ab620cca7f38",
+      "license_provenance": "Agent-generated raster via built-in imagegen; no third-party model asset reused.",
+      "state": "idle",
+      "direction": "se",
+      "frame": 0
     }
   ]
 }
