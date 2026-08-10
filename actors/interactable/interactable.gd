@@ -60,8 +60,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _used and not repeatable:
 		_prompt.text = interaction_text
 		return
-	if not interaction_flag.is_empty():
-		GameState.set_flag(interaction_flag, true)
+	_apply_interaction()
 	if not repeatable:
 		_used = true
 	_prompt.text = interaction_text
@@ -71,6 +70,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not shop_type.is_empty():
 		var shop_screen := UIManager.open(UIManager.SHOP, true)
 		shop_screen.call("configure_shop", shop_type)
+
+
+## Override this for an interaction with a different durable effect while
+## retaining this class's range, input, lock, prompt, and autosave behavior.
+func _apply_interaction() -> void:
+	if not interaction_flag.is_empty():
+		GameState.set_flag(interaction_flag, true)
 
 
 func _on_flag_changed(flag: String, _value: Variant) -> void:
