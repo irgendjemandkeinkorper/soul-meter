@@ -237,10 +237,15 @@ func test_starting_town_hides_debug_markers_behind_rendered_props() -> void:
 		var threshold := door.get_node("Threshold") as CanvasItem
 		assert_bool(panel.visible).is_false()
 		assert_bool(threshold.visible).is_false()
-		var sprite_name := String(entry.building_id).to_pascal_case() + "DoorSprite"
-		var sprite := town.find_child(sprite_name, true, false) as Sprite2D
-		assert_object(sprite).is_not_null()
-		assert_object(sprite.texture).is_not_null()
+		# The painterly facade art draws its own door, so there's no separate
+		# placeholder door sprite to hide behind any more (removed alongside
+		# the Dom revamp wave-2 art) — verify the facade itself is present
+		# and textured instead.
+		var building_node := town.find_child(String(entry.source_anchor), true, false)
+		assert_object(building_node).is_not_null()
+		var facade := building_node.find_child("Facade", true, false) as Sprite2D
+		assert_object(facade).is_not_null()
+		assert_object(facade.texture).is_not_null()
 
 
 func test_direct_door_supports_a_minimum_reputation_band_gate() -> void:

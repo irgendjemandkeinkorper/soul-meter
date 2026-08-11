@@ -766,28 +766,28 @@ position = Vector2(3400, 1200)
 position = Vector2(500, 515)
 
 [node name="SpawnFromBellHouse" type="Marker2D" parent="."]
-position = Vector2(3000, 295)
+position = Vector2(3000, 522)
 
 [node name="SpawnFromRiverShrine" type="Marker2D" parent="."]
-position = Vector2(1100, 1550)
+position = Vector2(1100, 1705)
 
 [node name="SpawnFromIronCompanies" type="Marker2D" parent="."]
-position = Vector2(3000, 1655)
+position = Vector2(3000, 1576)
 
 [node name="SpawnFromItemShop" type="Marker2D" parent="."]
-position = Vector2(1700, 605)
+position = Vector2(1700, 489)
 
 [node name="SpawnFromEquipmentShop" type="Marker2D" parent="."]
-position = Vector2(2400, 605)
+position = Vector2(2400, 565)
 
 [node name="SpawnFromTownHall" type="Marker2D" parent="."]
-position = Vector2(2400, 1205)
+position = Vector2(2400, 1186)
 
 [node name="SpawnFromChefsHouse" type="Marker2D" parent="."]
-position = Vector2(500, 1805)
+position = Vector2(500, 1751)
 
 [node name="SpawnFromPlayersHouse" type="Marker2D" parent="."]
-position = Vector2(2400, 2000)
+position = Vector2(2400, 2132)
 
 [node name="SpawnFromTrialHall" type="Marker2D" parent="."]
 position = Vector2(1000, 605)
@@ -822,13 +822,8 @@ visible = false
 [node name="Prompt" parent="RegistryArchiveEntrance"]
 z_index = 21
 
-[node name="RegistryArchiveDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(500, 515)
-texture = ExtResource("32_door_sprite")
-offset = Vector2(0, -50.596)
-
 [node name="BellHouseEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(3000, 295)
+position = Vector2(3000, 522)
 transition_id = &"bell_house_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -842,13 +837,8 @@ visible = false
 [node name="Prompt" parent="BellHouseEntrance"]
 z_index = 21
 
-[node name="BellHouseDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(3000, 295)
-texture = ExtResource("32_door_sprite")
-offset = Vector2(0, -50.596)
-
 [node name="RiverShrineEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(1100, 1530)
+position = Vector2(1100, 1685)
 transition_id = &"river_shrine_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -862,13 +852,8 @@ visible = false
 [node name="Prompt" parent="RiverShrineEntrance"]
 z_index = 21
 
-[node name="RiverShrineDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(1100, 1530)
-texture = ExtResource("32_door_sprite")
-offset = Vector2(0, -50.596)
-
 [node name="IronCompaniesEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(3000, 1565)
+position = Vector2(3000, 1486)
 transition_id = &"iron_companies_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -882,13 +867,8 @@ visible = false
 [node name="Prompt" parent="IronCompaniesEntrance"]
 z_index = 21
 
-[node name="IronCompaniesDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(3000, 1565)
-texture = ExtResource("12_gate")
-offset = Vector2(0, -50.596)
-
 [node name="ItemShopEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(1700, 565)
+position = Vector2(1700, 449)
 transition_id = &"item_shop_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -902,13 +882,8 @@ visible = false
 [node name="Prompt" parent="ItemShopEntrance"]
 z_index = 21
 
-[node name="ItemShopDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(1700, 565)
-texture = ExtResource("32_door_sprite")
-offset = Vector2(0, -50.596)
-
 [node name="EquipmentShopEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(2400, 570)
+position = Vector2(2400, 530)
 transition_id = &"equipment_shop_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -922,13 +897,8 @@ visible = false
 [node name="Prompt" parent="EquipmentShopEntrance"]
 z_index = 21
 
-[node name="EquipmentShopDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(2400, 570)
-texture = ExtResource("32_door_sprite")
-offset = Vector2(0, -50.596)
-
 [node name="TownHallEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(2400, 1130)
+position = Vector2(2400, 1111)
 transition_id = &"town_hall_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -942,13 +912,8 @@ visible = false
 [node name="Prompt" parent="TownHallEntrance"]
 z_index = 21
 
-[node name="TownHallDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(2400, 1130)
-texture = ExtResource("32_door_sprite")
-offset = Vector2(0, -50.596)
-
 [node name="ChefsHouseEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(500, 1765)
+position = Vector2(500, 1711)
 transition_id = &"chefs_house_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -962,13 +927,8 @@ visible = false
 [node name="Prompt" parent="ChefsHouseEntrance"]
 z_index = 21
 
-[node name="ChefsHouseDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(500, 1765)
-texture = ExtResource("32_door_sprite")
-offset = Vector2(0, -50.596)
-
 [node name="PlayersHouseEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(2400, 2210)
+position = Vector2(2400, 2092)
 transition_id = &"players_house_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -981,11 +941,6 @@ visible = false
 
 [node name="Prompt" parent="PlayersHouseEntrance"]
 z_index = 21
-
-[node name="PlayersHouseDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(2400, 2210)
-texture = ExtResource("32_door_sprite")
-offset = Vector2(0, -50.596)
 
 [node name="TrialHallEntrance" parent="." instance=ExtResource("31_building_door")]
 position = Vector2(1000, 520)
