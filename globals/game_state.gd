@@ -26,6 +26,17 @@ const DEFAULT_GP := 250
 const MIN_VAR_HARMONY := -5
 const MAX_VAR_HARMONY := 5
 const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
+## Set once a save has run character creation (main_menu -> CharacterCreation ->
+## Playing). Chargen replaces `party[0]`'s identity in place (see
+## `apply_created_character()`) rather than adding a second protagonist record, so
+## `protagonist()`/`companions()`/the tavern's id-based lookups keep working
+## unchanged. Suites that instance a scene directly (bypassing GameFlow's boot
+## sequence) never call this, so they keep seeing the seeded "Vex the Unbowed".
+const CREATED_CHARACTER_FLAG := "player_created_character"
+## Later-unlocked entry point for player-authored recruits (see #98/#129 "reusable
+## later" scope): set this flag (e.g. from a quest) to surface a "create a recruit"
+## option that reuses the same chargen screen in recruit mode.
+const CUSTOM_RECRUIT_UNLOCK_FLAG := "custom_recruit_chargen_unlocked"
 const AUDIO_BUSES: Array[StringName] = [&"Master", &"Music", &"SFX"]
 
 ## M4.3 — husking-while-alive (cosmology/souls.md, "Reaching zero", ratified
@@ -51,6 +62,11 @@ var soul_meter: float = 50.0:
 var gp: int = DEFAULT_GP:
 	set = set_gp
 var party: Array[PartyMember] = []
+## Player-authored recruits created via the re-triggerable "create a recruit" mode
+## (gated by CUSTOM_RECRUIT_UNLOCK_FLAG) — appended to `recruitable_candidates()`,
+## kept out of the hand-authored roster array so tavern gating logic never has to
+## special-case them.
+var custom_recruits: Array[PartyMember] = []
 var inventory: Inventory
 ## Stable vendor id -> stable item id -> current quantity.
 var vendor_stock: Dictionary = {}
@@ -590,6 +606,47 @@ func _make_vex() -> PartyMember:
 	)
 
 
+## Replaces the protagonist's identity with a chargen build, keeping
+## `id = PROTAGONIST_ID` so `protagonist()`, the tavern's id-based lookups, and
+## `battle_stage.gd`'s art keying keep resolving. Only the boot-time
+## CharacterCreation flow calls this — see `ui/screens/character_creation.gd`.
+func apply_created_character(member: PartyMember) -> void:
+	member.id = PROTAGONIST_ID
+	if party.is_empty():
+		party.append(member)
+	else:
+		party[0] = member
+	set_flag(CREATED_CHARACTER_FLAG, true)
+	party_changed.emit()
+
+
+func has_created_character() -> bool:
+	return bool(get_flag(CREATED_CHARACTER_FLAG, false))
+
+
+## Later-unlocked "create a recruit" entry point (see #98/#129 scope note). A
+## quest/reputation hook should call this the same way other flags are set
+## elsewhere in the project (e.g. `globals/renown.gd`'s gates).
+func unlock_custom_recruit_chargen() -> void:
+	set_flag(CUSTOM_RECRUIT_UNLOCK_FLAG, true)
+
+
+func custom_recruit_chargen_unlocked() -> bool:
+	return bool(get_flag(CUSTOM_RECRUIT_UNLOCK_FLAG, false))
+
+
+## Writes a chargen build into the recruitable roster instead of the player-identity
+## slot (recruit mode). Given a unique id if one collides with an existing recruit.
+func add_custom_recruit(member: PartyMember) -> void:
+	var taken_ids := {}
+	for candidate in recruitable_candidates():
+		taken_ids[candidate.id] = true
+	if member.id.is_empty() or taken_ids.has(member.id):
+		member.id = "%s-%d" % [member.id if not member.id.is_empty() else "recruit", custom_recruits.size()]
+	custom_recruits.append(member)
+	party_changed.emit()
+
+
 func recruitable_candidates() -> Array[PartyMember]:
 	var result: Array[PartyMember] = []
 	result.append(
@@ -655,6 +712,7 @@ func recruitable_candidates() -> Array[PartyMember]:
 			8.0
 		)
 	)
+	result.append_array(custom_recruits)
 	return result
 
 
@@ -726,11 +784,15 @@ func to_dict() -> Dictionary:
 	var party_rows: Array[Dictionary] = []
 	for member in party:
 		party_rows.append(member.to_dict())
+	var custom_recruit_rows: Array[Dictionary] = []
+	for member in custom_recruits:
+		custom_recruit_rows.append(member.to_dict())
 	return {
 		"flags": flags.duplicate(true),
 		"soul_meter": soul_meter,
 		"gp": gp,
 		"party": party_rows,
+		"custom_recruits": custom_recruit_rows,
 		"inventory": inventory.serialize(),
 		"vendor_stock": vendor_stock.duplicate(true),
 		"vendor_restock_cycles": vendor_restock_cycles.duplicate(true),
@@ -762,6 +824,9 @@ func from_dict(data: Dictionary) -> bool:
 	party.clear()
 	for row in data.get("party", []):
 		party.append(PartyMember.from_dict(row))
+	custom_recruits.clear()
+	for row in data.get("custom_recruits", []):
+		custom_recruits.append(PartyMember.from_dict(row))
 	inventory_changed.emit()
 	party_changed.emit()
 	return true
@@ -808,6 +873,11 @@ func _validate_save_data(data: Dictionary) -> bool:
 	if data.has("party") and not data["party"] is Array:
 		return false
 	for row: Variant in data.get("party", []):
+		if not row is Dictionary:
+			return false
+	if data.has("custom_recruits") and not data["custom_recruits"] is Array:
+		return false
+	for row: Variant in data.get("custom_recruits", []):
 		if not row is Dictionary:
 			return false
 	var harmony: Dictionary = data.get("var_harmony", {})

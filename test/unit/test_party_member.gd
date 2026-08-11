@@ -33,6 +33,40 @@ func test_save_round_trip_preserves_gameplay_fields() -> void:
 	assert_str(restored.skill_tiers["lore"]).is_equal("trained")
 
 
+func test_save_round_trip_preserves_chargen_identity_fields() -> void:
+	var original := PartyMember.new()
+	original.display_name = "Sera"
+	original.epithet = "the unbowed"
+	original.race = "Vael"
+	original.discipline = "chordblade"
+	original.patron = "mirrorblade"
+	original.background = "sarkhollow-scavenger"
+	original.flaw = "Cannot resist a locked door."
+	original.starting_mastery = "Root Note of choice"
+	original.major_element = "suul"
+	original.minor_element = "khor"
+
+	var restored := PartyMember.from_dict(original.to_dict())
+
+	assert_str(restored.epithet).is_equal("the unbowed")
+	assert_str(restored.discipline).is_equal("chordblade")
+	assert_str(restored.patron).is_equal("mirrorblade")
+	assert_str(restored.background).is_equal("sarkhollow-scavenger")
+	assert_str(restored.flaw).is_equal("Cannot resist a locked door.")
+	assert_str(restored.starting_mastery).is_equal("Root Note of choice")
+	assert_str(restored.major_element).is_equal("suul")
+	assert_str(restored.minor_element).is_equal("khor")
+
+
+func test_chargen_fields_default_empty_for_hand_authored_members() -> void:
+	var member := PartyMember.new()
+	assert_str(member.epithet).is_equal("")
+	assert_str(member.discipline).is_equal("")
+	assert_str(member.patron).is_equal("")
+	assert_str(member.background).is_equal("")
+	assert_str(member.flaw).is_equal("")
+
+
 func test_from_dict_rejects_unsafe_portrait_paths() -> void:
 	# Test with path outside res://
 	var dict_external := {

@@ -11,15 +11,18 @@ extends Node
 ##   Root
 ##   ├── Boot                      splash/config; auto-advances via "boot_done"
 ##   ├── Menus
-##   │   └── Title                 (Options/Credits states land with Maaack's menus)
+##   │   ├── Title                 (Options/Credits states land with Maaack's menus)
+##   │   └── CharacterCreation     the Register of Persons (#98/#129) — new-game only;
+##   │                             "Continue" skips straight to Playing (save already
+##   │                             has a character)
 ##   └── Playing
 ##       ├── Loading               calls loader for `_target_scene`; leaves on "level_ready"
 ##       ├── Active                re-enters Loading on "travel" (see travel())
 ##       ├── Paused                pause overlay + tree pause live here
 ##       └── Battle                battle overlay + tree pause live here (combat scaffold)
 ##
-## Events: boot_done · new_game · level_ready · pause · resume · to_main_menu ·
-##         enter_battle · battle_end · travel
+## Events: boot_done · start_chargen · new_game · level_ready · pause · resume ·
+##         to_main_menu · enter_battle · battle_end · travel
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
 ## The starting town (Dom) — the first gameplay scene loaded on a new game.
@@ -35,6 +38,7 @@ const LOADING_SCREEN := (
 	"res://addons/maaacks_game_template/base/nodes/loading_screen/" + "loading_screen.tscn"
 )
 const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
+const CHARACTER_CREATION_SCREEN := preload("res://ui/screens/character_creation.tscn")
 const BATTLE_SCREEN := preload("res://ui/screens/battle.tscn")
 const CHAPTER_COMPLETE_SCREEN := preload("res://ui/screens/chapter_complete.tscn")
 
@@ -65,6 +69,8 @@ func _ready() -> void:
 	)
 
 	$StateChart/Root/Menus/Title.state_entered.connect(_on_title_entered)
+	$StateChart/Root/Menus/CharacterCreation.state_entered.connect(_on_character_creation_entered)
+	$StateChart/Root/Menus/CharacterCreation.state_exited.connect(_on_character_creation_exited)
 	$StateChart/Root/Playing/Loading.state_entered.connect(_on_loading_entered)
 	$StateChart/Root/Playing/Paused.state_entered.connect(_on_paused_entered)
 	$StateChart/Root/Playing/Paused.state_exited.connect(_on_paused_exited)
@@ -122,6 +128,14 @@ func _on_title_entered() -> void:
 	var cur := get_tree().current_scene
 	if cur == null or cur.scene_file_path != MAIN_MENU_SCENE:
 		SceneLoader.load_scene(MAIN_MENU_SCENE)
+
+
+func _on_character_creation_entered() -> void:
+	UIManager.open(CHARACTER_CREATION_SCREEN, false, true)
+
+
+func _on_character_creation_exited() -> void:
+	UIManager.close_all()
 
 
 func _on_loading_entered() -> void:

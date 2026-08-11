@@ -56,3 +56,42 @@ func test_gated_companions_cannot_bypass_renown_validation() -> void:
 	assert_bool(GameState.set_companions([candidates[0], korrath])).is_false()
 	Renown.gain_reputation("player", 10.0, "test", "test")
 	assert_bool(GameState.set_companions([candidates[0], korrath])).is_true()
+
+
+func test_apply_created_character_replaces_the_lead_identity_in_place() -> void:
+	var built := PartyMember.new()
+	built.id = "whatever-chargen-typed"
+	built.display_name = "Sera"
+	built.race = "Vael"
+
+	GameState.apply_created_character(built)
+
+	assert_int(GameState.party.size()).is_equal(1)
+	assert_str(GameState.party[0].id).is_equal(GameState.PROTAGONIST_ID)
+	assert_str(GameState.party[0].display_name).is_equal("Sera")
+	assert_bool(GameState.has_created_character()).is_true()
+	# protagonist()/companions() must keep resolving by the stable id afterward.
+	assert_object(GameState.protagonist()).is_equal(GameState.party[0])
+
+
+func test_custom_recruit_chargen_is_off_by_default_and_unlockable() -> void:
+	assert_bool(GameState.custom_recruit_chargen_unlocked()).is_false()
+	GameState.unlock_custom_recruit_chargen()
+	assert_bool(GameState.custom_recruit_chargen_unlocked()).is_true()
+
+
+func test_add_custom_recruit_surfaces_in_recruitable_candidates() -> void:
+	var original_custom_recruits := GameState.custom_recruits.duplicate()
+	GameState.custom_recruits.clear()
+
+	var built := PartyMember.new()
+	built.id = "player-made-recruit"
+	built.display_name = "Vann"
+	GameState.add_custom_recruit(built)
+
+	var names: PackedStringArray = []
+	for candidate in GameState.recruitable_candidates():
+		names.append(candidate.display_name)
+	assert_bool(names.has("Vann")).is_true()
+
+	GameState.custom_recruits = original_custom_recruits

@@ -18,6 +18,13 @@ signal move_refused(refusal: Dictionary)
 
 var facing_direction: Vector2 = Vector2.DOWN
 
+## Reachable identity data for the avatar this scene shows, mirroring how NPCs already
+## expose their PartyMember (see actors/party_followers/). Chargen (#98/#129) writes
+## into GameState.party[0]; this is a thin accessor, not a second source of truth —
+## combat stat *usage* stays out of scope here (the battle system's job).
+func party_member() -> PartyMember:
+	return GameState.protagonist()
+
 @onready var _sprite := $Sprite2D as Sprite2D
 @onready var _click_controller := $ClickMoveController as ClickMoveController
 

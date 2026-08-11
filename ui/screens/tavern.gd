@@ -33,6 +33,12 @@ func _build() -> void:
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(hint)
 
+	# Reuses the chargen screen in recruit mode (#98/#129 "reusable later" scope) —
+	# unlocked later via GameState.unlock_custom_recruit_chargen(); off by default.
+	if GameState.custom_recruit_chargen_unlocked():
+		var create_btn := _menu_button(vbox, "Sign On a New Face", _on_create_recruit)
+		create_btn.theme_type_variation = "BronzeButton"
+
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(scroll)
@@ -156,6 +162,15 @@ func _selected_count() -> int:
 func _update_hint() -> void:
 	_hint_lbl.text = "%d / %d companions chosen" % [_selected_count(), MAX_COMPANIONS]
 	_confirm_btn.disabled = _selected_count() != MAX_COMPANIONS
+
+
+func _on_create_recruit() -> void:
+	# The chargen screen (in RECRUIT mode) closes itself once its own ACCEPT juice
+	# finishes — the tavern stays open underneath so the new recruit shows up in
+	# the same list without the player having to reopen it.
+	var screen := UIManager.open(load("res://ui/screens/character_creation.tscn")) as CharacterCreationScreen
+	if screen != null:
+		screen.mode = CharacterCreationScreen.Mode.RECRUIT
 
 
 func _on_confirm() -> void:

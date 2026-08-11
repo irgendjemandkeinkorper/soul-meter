@@ -65,4 +65,4 @@ func _on_new_game_pressed() -> void:
 		_new_game_button.theme_type_variation = "DangerButton"
 		return
 	SaveGame.new_game()
-	GameFlow.send_event("new_game")
+	GameFlow.send_event("start_chargen")

@@ -36,6 +36,19 @@ script = ExtResource("5_transition")
 to = NodePath("../../../Playing")
 event = &"new_game"
 
+[node name="ToCharacterCreation" type="Node" parent="StateChart/Root/Menus/Title"]
+script = ExtResource("5_transition")
+to = NodePath("../../CharacterCreation")
+event = &"start_chargen"
+
+[node name="CharacterCreation" type="Node" parent="StateChart/Root/Menus"]
+script = ExtResource("4_atomic")
+
+[node name="ToPlaying" type="Node" parent="StateChart/Root/Menus/CharacterCreation"]
+script = ExtResource("5_transition")
+to = NodePath("../../../Playing")
+event = &"new_game"
+
 [node name="Playing" type="Node" parent="StateChart/Root"]
 script = ExtResource("3_compound")
 initial_state = NodePath("Loading")

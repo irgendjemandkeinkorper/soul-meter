@@ -4,8 +4,24 @@ extends Resource
 
 @export var id: String = ""
 @export var display_name: String = "Unnamed"
+@export var epithet: String = ""
 @export var race: String = ""
 @export var char_class: String = ""
+
+## Character-creation identity fields (#98/#129, ratified against
+## dramgid-vault `systems/character-creation.md` + `systems/ten-patron-classes.md`).
+## `race` above doubles as the ancestry id/name (kept for save/back-compat with the
+## existing recruit roster); the rest are new. All default empty for the existing
+## hand-authored recruits and for `PartyMember.new()` in tests — only chargen-built
+## members populate them.
+@export var discipline: String = ""
+@export var patron: String = ""
+@export var background: String = ""
+@export var flaw: String = ""
+@export var starting_mastery: String = ""
+@export var major_element: String = ""
+@export var minor_element: String = ""
+
 @export var level: int = 1
 @export var hp: int = 10
 @export var max_hp: int = 10
@@ -30,8 +46,16 @@ func to_dict() -> Dictionary:
 	return {
 		"id": id,
 		"display_name": display_name,
+		"epithet": epithet,
 		"race": race,
 		"char_class": char_class,
+		"discipline": discipline,
+		"patron": patron,
+		"background": background,
+		"flaw": flaw,
+		"starting_mastery": starting_mastery,
+		"major_element": major_element,
+		"minor_element": minor_element,
 		"level": level,
 		"hp": hp,
 		"max_hp": max_hp,
@@ -51,8 +75,16 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	var member := PartyMember.new()
 	member.id = str(data.get("id", ""))
 	member.display_name = str(data.get("display_name", "Unnamed"))
+	member.epithet = str(data.get("epithet", ""))
 	member.race = str(data.get("race", ""))
 	member.char_class = str(data.get("char_class", ""))
+	member.discipline = str(data.get("discipline", ""))
+	member.patron = str(data.get("patron", ""))
+	member.background = str(data.get("background", ""))
+	member.flaw = str(data.get("flaw", ""))
+	member.starting_mastery = str(data.get("starting_mastery", ""))
+	member.major_element = str(data.get("major_element", ""))
+	member.minor_element = str(data.get("minor_element", ""))
 	member.level = int(data.get("level", 1))
 	member.hp = int(data.get("hp", 10))
 	member.max_hp = int(data.get("max_hp", 10))
