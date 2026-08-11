@@ -74,7 +74,7 @@ func test_every_placeholder_portrait_is_stable_distinct_and_resolvable() -> void
 	assert_int(signatures.size()).is_equal(60)
 
 
-func test_portrait_component_uses_generated_theme_variations_without_node_overrides() -> void:
+func test_portrait_component_uses_generated_unit_art_without_node_overrides() -> void:
 	var row := NpcRosterScript.get_npc("sella-varn")
 	var portrait: SMPortrait = auto_free(PortraitScript.new())
 	portrait.theme = ThemeBuilder.build()
@@ -84,11 +84,23 @@ func test_portrait_component_uses_generated_theme_variations_without_node_overri
 	var frame := portrait.get("_frame") as PanelContainer
 	var monogram := portrait.get("_monogram") as Label
 	var placeholder := portrait.get("_placeholder") as VBoxContainer
+	var image := portrait.get("_image") as TextureRect
 	assert_str(frame.theme_type_variation).starts_with("NpcPortraitFrame")
 	assert_str(monogram.theme_type_variation).starts_with("NpcPortraitMonogram")
 	assert_bool(frame.has_theme_stylebox_override("panel")).is_false()
 	assert_str(monogram.text).is_equal(row["portrait"]["monogram"])
-	assert_bool(placeholder.visible).is_true()
+	assert_bool(image.visible).is_true()
+	assert_object(image.texture).is_not_null()
+	assert_bool(placeholder.visible).is_false()
+
+	var missing: SMPortrait = auto_free(PortraitScript.new())
+	missing.theme = ThemeBuilder.build()
+	missing.character_name = "Missing Art"
+	missing.portrait_id = "no-such-npc"
+	add_child(missing)
+	await get_tree().process_frame
+	assert_bool((missing.get("_image") as TextureRect).visible).is_false()
+	assert_bool((missing.get("_placeholder") as VBoxContainer).visible).is_true()
 
 
 func test_real_portrait_seam_matches_party_member_source_image_allowlist() -> void:

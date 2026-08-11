@@ -39,40 +39,42 @@
 [ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="36_town_npcs"]
 [ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="37_blocking_tiles"]
 [ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="38_blocking_layer"]
+[ext_resource type="Script" path="res://world/starting_town.gd" id="39_town"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
-size = Vector2(1600, 40)
+size = Vector2(3400, 40)
 
 [sub_resource type="RectangleShape2D" id="shape_v"]
-size = Vector2(40, 1000)
+size = Vector2(40, 2200)
 
 [sub_resource type="RectangleShape2D" id="shape_v_gapped"]
-size = Vector2(40, 390)
+size = Vector2(40, 890)
 
 [node name="StartingTown" type="Node2D"]
 y_sort_enabled = true
+script = ExtResource("39_town")
 
 [node name="Shoreline" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(800, -182, 2080, 454, 800, 1090, -480, 454)
+polygon = PackedVector2Array(1800, -100, 3500, 750, 1800, 1600, 100, 750)
 color = Color(0.39, 0.35, 0.26, 1)
 z_index = -15
 
 [node name="Waterline" type="Line2D" parent="."]
-points = PackedVector2Array(800, -182, 2080, 454, 800, 1090, -480, 454)
+points = PackedVector2Array(1800, -100, 3500, 750, 1800, 1600, 100, 750)
 width = 5.0
 default_color = Color(0.12, 0.56, 0.68, 0.72)
 closed = true
 z_index = -14
 
 [node name="WaterBackdrop" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-1280, -720, 2880, -720, 2880, 1720, -1280, 1720)
+polygon = PackedVector2Array(-700, -500, 4300, -500, 4300, 3000, -700, 3000)
 color = Color(0.035, 0.25, 0.34, 1)
 z_index = -20
 
 [node name="IsometricGround" type="TileMapLayer" parent="."]
-position = Vector2(800, -154)
+position = Vector2(100, 100)
 script = ExtResource("6_iso")
-map_size = Vector2i(39, 39)
+map_size = Vector2i(54, 69)
 ground_style = 0
 road_axis = 3
 
@@ -82,7 +84,8 @@ road_axis = 3
 ; and physics collision (the TileSet's own physics layer), so the two can never
 ; drift. Paint here in the editor to add or remove an obstacle - no code edit.
 [node name="Blocking" type="TileMapLayer" parent="."]
-position = Vector2(800, -154)
+position = Vector2(100, 100)
+scale = Vector2(2.2, 2.2)
 visible = false
 tile_map_data = PackedByteArray("AAADABEAAAAAAAAAAAACABIAAAAAAAAAAAADABIAAAAAAAAAAAAEABIAAAAAAAAAAAABABMAAAAAAAAAAAACABMAAAAAAAAAAAADABMAAAAAAAAAAAAEABMAAAAAAAAAAAAFABMAAAAAAAAAAAABABQAAAAAAAAAAAACABQAAAAAAAAAAAADABQAAAAAAAAAAAAEABQAAAAAAAAAAAAFABQAAAAAAAAAAAAGABQAAAAAAAAAAAACABUAAAAAAAAAAAADABUAAAAAAAAAAAAEABUAAAAAAAAAAAAFABUAAAAAAAAAAAAGABUAAAAAAAAAAAAHABUAAAAAAAAAAAADABYAAAAAAAAAAAAEABYAAAAAAAAAAAAFABYAAAAAAAAAAAAGABYAAAAAAAAAAAAEABcAAAAAAAAAAAAFABcAAAAAAAAAAAAcABgAAAAAAAAAAAAdABgAAAAAAAAAAAAbABkAAAAAAAAAAAAcABkAAAAAAAAAAAAdABkAAAAAAAAAAAAeABkAAAAAAAAAAAAaABoAAAAAAAAAAAAbABoAAAAAAAAAAAAcABoAAAAAAAAAAAAdABoAAAAAAAAAAAAeABoAAAAAAAAAAAAfABoAAAAAAAAAAAAbABsAAAAAAAAAAAAcABsAAAAAAAAAAAAdABsAAAAAAAAAAAAeABsAAAAAAAAAAAAfABsAAAAAAAAAAAAgABsAAAAAAAAAAAAcABwAAAAAAAAAAAAdABwAAAAAAAAAAAAeABwAAAAAAAAAAAAfABwAAAAAAAAAAAAgABwAAAAAAAAAAAAdAB0AAAAAAAAAAAAeAB0AAAAAAAAAAAAfAB0AAAAAAAAAAAAeAB4AAAAAAAAAAAAUAB8AAAAAAAAAAAATACAAAAAAAAAAAAAUACAAAAAAAAAAAAAVACAAAAAAAAAAAAASACEAAAAAAAAAAAATACEAAAAAAAAAAAAUACEAAAAAAAAAAAAVACEAAAAAAAAAAAAWACEAAAAAAAAAAAATACIAAAAAAAAAAAAUACIAAAAAAAAAAAAVACIAAAAAAAAAAAAWACIAAAAAAAAAAAAUACMAAAAAAAAAAAAVACMAAAAAAAAAAAAeAA8AAAAAAAAAAAAfAA8AAAAAAAAAAAAdABAAAAAAAAAAAAAeABAAAAAAAAAAAAAfABAAAAAAAAAAAAAgABAAAAAAAAAAAAAcABEAAAAAAAAAAAAdABEAAAAAAAAAAAAeABEAAAAAAAAAAAAfABEAAAAAAAAAAAAgABEAAAAAAAAAAAAhABEAAAAAAAAAAAAcABIAAAAAAAAAAAAdABIAAAAAAAAAAAAeABIAAAAAAAAAAAAfABIAAAAAAAAAAAAgABIAAAAAAAAAAAAhABIAAAAAAAAAAAAiABIAAAAAAAAAAAAdABMAAAAAAAAAAAAeABMAAAAAAAAAAAAfABMAAAAAAAAAAAAgABMAAAAAAAAAAAAhABMAAAAAAAAAAAAiABMAAAAAAAAAAAAeABQAAAAAAAAAAAAfABQAAAAAAAAAAAAgABQAAAAAAAAAAAAhABQAAAAAAAAAAAAfABUAAAAAAAAAAAAgABUAAAAAAAAAAAAPABQAAAAAAAAAAAAOABUAAAAAAAAAAAAPABUAAAAAAAAAAAAQABUAAAAAAAAAAAANABYAAAAAAAAAAAAOABYAAAAAAAAAAAAPABYAAAAAAAAAAAAQABYAAAAAAAAAAAARABYAAAAAAAAAAAAOABcAAAAAAAAAAAAPABcAAAAAAAAAAAAQABcAAAAAAAAAAAARABcAAAAAAAAAAAASABcAAAAAAAAAAAAPABgAAAAAAAAAAAAQABgAAAAAAAAAAAARABgAAAAAAAAAAAAQABkAAAAAAAAAAAATABAAAAAAAAAAAAAUABAAAAAAAAAAAAASABEAAAAAAAAAAAATABEAAAAAAAAAAAAUABEAAAAAAAAAAAAVABEAAAAAAAAAAAASABIAAAAAAAAAAAATABIAAAAAAAAAAAAUABIAAAAAAAAAAAAVABIAAAAAAAAAAAAWABIAAAAAAAAAAAATABMAAAAAAAAAAAAUABMAAAAAAAAAAAAVABMAAAAAAAAAAAAWABMAAAAAAAAAAAAUABQAAAAAAAAAAAAVABQAAAAAAAAAAAAOAAYAAAAAAAAAAAANAAcAAAAAAAAAAAAOAAcAAAAAAAAAAAAPAAcAAAAAAAAAAAAMAAgAAAAAAAAAAAANAAgAAAAAAAAAAAAOAAgAAAAAAAAAAAAPAAgAAAAAAAAAAAAQAAgAAAAAAAAAAAAMAAkAAAAAAAAAAAANAAkAAAAAAAAAAAAOAAkAAAAAAAAAAAAPAAkAAAAAAAAAAAAQAAkAAAAAAAAAAAARAAkAAAAAAAAAAAANAAoAAAAAAAAAAAAOAAoAAAAAAAAAAAAPAAoAAAAAAAAAAAAQAAoAAAAAAAAAAAAOAAsAAAAAAAAAAAAPAAsAAAAAAAAAAAAMAB0AAAAAAAAAAAANAB0AAAAAAAAAAAALAB4AAAAAAAAAAAAMAB4AAAAAAAAAAAANAB4AAAAAAAAAAAAOAB4AAAAAAAAAAAALAB8AAAAAAAAAAAAMAB8AAAAAAAAAAAANAB8AAAAAAAAAAAAOAB8AAAAAAAAAAAAPAB8AAAAAAAAAAAAMACAAAAAAAAAAAAANACAAAAAAAAAAAAAOACAAAAAAAAAAAAAPACAAAAAAAAAAAAANACEAAAAAAAAAAAAOACEAAAAAAAAAAAAdAB8AAAAAAAAAAAAeAB8AAAAAAAAAAAAfAB8AAAAAAAAAAAAcACAAAAAAAAAAAAAdACAAAAAAAAAAAAAeACAAAAAAAAAAAAAfACAAAAAAAAAAAAAgACAAAAAAAAAAAAAcACEAAAAAAAAAAAAdACEAAAAAAAAAAAAeACEAAAAAAAAAAAAfACEAAAAAAAAAAAAgACEAAAAAAAAAAAAhACEAAAAAAAAAAAAdACIAAAAAAAAAAAAeACIAAAAAAAAAAAAfACIAAAAAAAAAAAAgACIAAAAAAAAAAAAeACMAAAAAAAAAAAAfACMAAAAAAAAAAAAVAAQAAAAAAAAAAAAWAAQAAAAAAAAAAAAUAAUAAAAAAAAAAAAVAAUAAAAAAAAAAAAWAAUAAAAAAAAAAAAXAAUAAAAAAAAAAAATAAYAAAAAAAAAAAAUAAYAAAAAAAAAAAAVAAYAAAAAAAAAAAAWAAYAAAAAAAAAAAAXAAYAAAAAAAAAAAAYAAYAAAAAAAAAAAATAAcAAAAAAAAAAAAUAAcAAAAAAAAAAAAVAAcAAAAAAAAAAAAWAAcAAAAAAAAAAAAXAAcAAAAAAAAAAAAYAAcAAAAAAAAAAAAZAAcAAAAAAAAAAAAUAAgAAAAAAAAAAAAVAAgAAAAAAAAAAAAWAAgAAAAAAAAAAAAXAAgAAAAAAAAAAAAYAAgAAAAAAAAAAAAVAAkAAAAAAAAAAAAWAAkAAAAAAAAAAAAXAAkAAAAAAAAAAAAWAAoAAAAAAAAAAAA=")
 tile_set = ExtResource("37_blocking_tiles")
@@ -91,27 +94,33 @@ script = ExtResource("38_blocking_layer")
 [node name="Walls" type="StaticBody2D" parent="."]
 
 [node name="ColTop" type="CollisionShape2D" parent="Walls"]
-position = Vector2(800, 20)
+position = Vector2(1800, 100)
 shape = SubResource("shape_h")
 
 [node name="ColBottom" type="CollisionShape2D" parent="Walls"]
-position = Vector2(800, 980)
+position = Vector2(1800, 2300)
 shape = SubResource("shape_h")
 
 [node name="ColLeft" type="CollisionShape2D" parent="Walls"]
-position = Vector2(20, 500)
+position = Vector2(100, 1200)
 shape = SubResource("shape_v")
 
 [node name="ColRightTop" type="CollisionShape2D" parent="Walls"]
-position = Vector2(1580, 235)
+position = Vector2(3500, 650)
 shape = SubResource("shape_v_gapped")
 
 [node name="ColRightBottom" type="CollisionShape2D" parent="Walls"]
-position = Vector2(1580, 765)
+position = Vector2(3500, 1750)
 shape = SubResource("shape_v_gapped")
 
 [node name="TrialHall" type="Node2D" parent="."]
-position = Vector2(1300, 400)
+position = Vector2(1000, 500)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-trial-hall.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="TrialHall"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="TrialHall"]
 z_index = 20
@@ -154,7 +163,13 @@ texture = ExtResource("19_banner_green")
 offset = Vector2(0, -150.596)
 
 [node name="RegistryArchive" type="Node2D" parent="."]
-position = Vector2(300, 335)
+position = Vector2(500, 500)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-registry-archive.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="RegistryArchive"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="RegistryArchive"]
 z_index = 20
@@ -192,7 +207,13 @@ texture = ExtResource("19_banner_green")
 offset = Vector2(0, -135.596)
 
 [node name="BellHouse" type="Node2D" parent="."]
-position = Vector2(900, 845)
+position = Vector2(3000, 500)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-bell-house.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="BellHouse"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="BellHouse"]
 z_index = 20
@@ -230,7 +251,13 @@ texture = ExtResource("21_lantern")
 offset = Vector2(0, -135.596)
 
 [node name="RiverShrine" type="Node2D" parent="."]
-position = Vector2(420, 780)
+position = Vector2(1100, 1700)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-river-shrine.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="RiverShrine"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="RiverShrine"]
 z_index = 20
@@ -258,7 +285,13 @@ texture = ExtResource("21_lantern")
 offset = Vector2(0, -110.596)
 
 [node name="IronCompaniesBarracks" type="Node2D" parent="."]
-position = Vector2(1260, 735)
+position = Vector2(3000, 1500)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-iron-companies-barracks.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="IronCompaniesBarracks"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="IronCompaniesBarracks"]
 z_index = 20
@@ -301,7 +334,13 @@ texture = ExtResource("12_gate")
 offset = Vector2(0, -135.596)
 
 [node name="LowerMarket" type="Node2D" parent="."]
-position = Vector2(610, 590)
+position = Vector2(1700, 1200)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-lower-market.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="LowerMarket"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="GreenStall" type="Sprite2D" parent="LowerMarket"]
 position = Vector2(-42, -12)
@@ -319,7 +358,13 @@ texture = ExtResource("22_cart")
 offset = Vector2(0, -90.596)
 
 [node name="ItemShop" type="Node2D" parent="."]
-position = Vector2(610, 537.5)
+position = Vector2(1700, 500)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-item-shop.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="ItemShop"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="ItemShop"]
 z_index = 20
@@ -347,7 +392,13 @@ texture = ExtResource("21_lantern")
 offset = Vector2(0, -118.096)
 
 [node name="EquipmentShop" type="Node2D" parent="."]
-position = Vector2(900, 542.5)
+position = Vector2(2400, 500)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-equipment-shop.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="EquipmentShop"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="EquipmentShop"]
 z_index = 20
@@ -375,7 +426,13 @@ texture = ExtResource("20_banner_red")
 offset = Vector2(0, -123.096)
 
 [node name="TownHall" type="Node2D" parent="."]
-position = Vector2(1000, 307.5)
+position = Vector2(2400, 1100)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-town-hall.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="TownHall"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="TownHall"]
 z_index = 20
@@ -418,7 +475,13 @@ texture = ExtResource("20_banner_red")
 offset = Vector2(0, -128.096)
 
 [node name="ChefsHouse" type="Node2D" parent="."]
-position = Vector2(260, 637.5)
+position = Vector2(500, 1700)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-chefs-house.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="ChefsHouse"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="ChefsHouse"]
 z_index = 20
@@ -446,7 +509,13 @@ texture = ExtResource("21_lantern")
 offset = Vector2(0, -118.096)
 
 [node name="PlayersHouse" type="Node2D" parent="."]
-position = Vector2(760, 945)
+position = Vector2(2400, 2100)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-players-house.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="PlayersHouse"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="PlayersHouse"]
 z_index = 20
@@ -644,7 +713,13 @@ texture = ExtResource("29_bush")
 offset = Vector2(0, -50.596)
 
 [node name="FourArmsTavern" type="Node2D" parent="."]
-position = Vector2(700, 432)
+position = Vector2(1700, 1800)
+
+; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-four-arms-tavern.png once art/dom-revamp lands
+[node name="Facade" type="Sprite2D" parent="FourArmsTavern"]
+texture = ExtResource("8_house")
+scale = Vector2(2, 3)
+offset = Vector2(0, -128)
 
 [node name="LocationLabel" type="Label" parent="FourArmsTavern"]
 z_index = 20
@@ -682,57 +757,57 @@ texture = ExtResource("16_stall_green")
 offset = Vector2(0, -82.596)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
-position = Vector2(700, 700)
-camera_bounds = Rect2i(0, 0, 1600, 1000)
+position = Vector2(1700, 1200)
+camera_bounds = Rect2i(0, 0, 3600, 2400)
 
 [node name="PartyFollowers" parent="." instance=ExtResource("8_followers")]
 
 [node name="SpawnDefault" type="Marker2D" parent="."]
-position = Vector2(700, 700)
+position = Vector2(1700, 1200)
 
 [node name="SpawnNewGame" type="Marker2D" parent="."]
-position = Vector2(700, 700)
+position = Vector2(1700, 1200)
 
 [node name="SpawnFromDorthkor" type="Marker2D" parent="."]
-position = Vector2(1200, 150)
+position = Vector2(2600, 180)
 
 [node name="SpawnFromWilds" type="Marker2D" parent="."]
-position = Vector2(1470, 500)
+position = Vector2(3400, 1200)
 
 [node name="SpawnFromRegistryArchive" type="Marker2D" parent="."]
-position = Vector2(300, 430)
+position = Vector2(500, 515)
 
 [node name="SpawnFromBellHouse" type="Marker2D" parent="."]
-position = Vector2(900, 560)
+position = Vector2(3000, 295)
 
 [node name="SpawnFromRiverShrine" type="Marker2D" parent="."]
-position = Vector2(420, 530)
+position = Vector2(1100, 1550)
 
 [node name="SpawnFromIronCompanies" type="Marker2D" parent="."]
-position = Vector2(1260, 835)
+position = Vector2(3000, 1655)
 
 [node name="SpawnFromItemShop" type="Marker2D" parent="."]
-position = Vector2(610, 645)
+position = Vector2(1700, 605)
 
 [node name="SpawnFromEquipmentShop" type="Marker2D" parent="."]
-position = Vector2(900, 650)
+position = Vector2(2400, 605)
 
 [node name="SpawnFromTownHall" type="Marker2D" parent="."]
-position = Vector2(1000, 410)
+position = Vector2(2400, 1205)
 
 [node name="SpawnFromChefsHouse" type="Marker2D" parent="."]
-position = Vector2(260, 745)
+position = Vector2(500, 1805)
 
 [node name="SpawnFromPlayersHouse" type="Marker2D" parent="."]
-position = Vector2(760, 690)
+position = Vector2(2400, 2000)
 
 [node name="SpawnFromTrialHall" type="Marker2D" parent="."]
-position = Vector2(1300, 500)
+position = Vector2(1000, 605)
 
 [node name="FieldHUD" parent="." instance=ExtResource("2_hud")]
 
 [node name="TavernDoor" parent="." instance=ExtResource("3_tavern")]
-position = Vector2(700, 400)
+position = Vector2(1700, 1700)
 editable_children = true
 
 [node name="Facade" parent="TavernDoor"]
@@ -745,7 +820,7 @@ visible = false
 visible = false
 
 [node name="RegistryArchiveEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(300, 350)
+position = Vector2(500, 515)
 transition_id = &"registry_archive_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -760,12 +835,12 @@ visible = false
 z_index = 21
 
 [node name="RegistryArchiveDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(300, 350)
+position = Vector2(500, 515)
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="BellHouseEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(900, 640)
+position = Vector2(3000, 295)
 transition_id = &"bell_house_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -780,12 +855,12 @@ visible = false
 z_index = 21
 
 [node name="BellHouseDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(900, 640)
+position = Vector2(3000, 295)
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="RiverShrineEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(420, 610)
+position = Vector2(1100, 1530)
 transition_id = &"river_shrine_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -800,12 +875,12 @@ visible = false
 z_index = 21
 
 [node name="RiverShrineDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(420, 610)
+position = Vector2(1100, 1530)
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="IronCompaniesEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(1260, 755)
+position = Vector2(3000, 1565)
 transition_id = &"iron_companies_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -820,12 +895,12 @@ visible = false
 z_index = 21
 
 [node name="IronCompaniesDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(1260, 755)
+position = Vector2(3000, 1565)
 texture = ExtResource("12_gate")
 offset = Vector2(0, -50.596)
 
 [node name="ItemShopEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(610, 565)
+position = Vector2(1700, 565)
 transition_id = &"item_shop_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -840,12 +915,12 @@ visible = false
 z_index = 21
 
 [node name="ItemShopDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(610, 565)
+position = Vector2(1700, 565)
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="EquipmentShopEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(900, 570)
+position = Vector2(2400, 570)
 transition_id = &"equipment_shop_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -860,12 +935,12 @@ visible = false
 z_index = 21
 
 [node name="EquipmentShopDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(900, 570)
+position = Vector2(2400, 570)
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="TownHallEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(1000, 330)
+position = Vector2(2400, 1130)
 transition_id = &"town_hall_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -880,12 +955,12 @@ visible = false
 z_index = 21
 
 [node name="TownHallDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(1000, 330)
+position = Vector2(2400, 1130)
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="ChefsHouseEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(260, 665)
+position = Vector2(500, 1765)
 transition_id = &"chefs_house_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -900,12 +975,12 @@ visible = false
 z_index = 21
 
 [node name="ChefsHouseDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(260, 665)
+position = Vector2(500, 1765)
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="PlayersHouseEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(760, 770)
+position = Vector2(2400, 2210)
 transition_id = &"players_house_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -920,12 +995,12 @@ visible = false
 z_index = 21
 
 [node name="PlayersHouseDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(760, 770)
+position = Vector2(2400, 2210)
 texture = ExtResource("32_door_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="TrialHallEntrance" parent="." instance=ExtResource("31_building_door")]
-position = Vector2(1300, 420)
+position = Vector2(1000, 520)
 transition_id = &"trial_hall_enter"
 interaction_radius = 48.0
 editable_children = true
@@ -940,27 +1015,27 @@ visible = false
 z_index = 21
 
 [node name="TrialHallDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(1300, 420)
+position = Vector2(1000, 520)
 texture = ExtResource("12_gate")
 offset = Vector2(0, -50.596)
 
 [node name="MarshalCoiljaw" parent="." instance=ExtResource("5_npc")]
-position = Vector2(1050, 420)
+position = Vector2(2450, 1212)
 npc_name = "Marshal Coiljaw"
 dialogue_path = "res://dialogue/marshal_coiljaw.dialogue"
 
 [node name="HadrikVale" parent="." instance=ExtResource("5_npc")]
-position = Vector2(500, 370)
+position = Vector2(700, 535)
 npc_name = "Hadrik Vale"
 dialogue_path = "res://dialogue/hadrik_vale.dialogue"
 
 [node name="TomaReedhand" parent="." instance=ExtResource("5_npc")]
-position = Vector2(560, 740)
+position = Vector2(1820, 1280)
 npc_name = "Toma Reedhand"
 dialogue_path = "res://dialogue/toma_reedhand.dialogue"
 
 [node name="SellaVarn" parent="." instance=ExtResource("5_npc")]
-position = Vector2(1080, 760)
+position = Vector2(2820, 1525)
 npc_name = "Sella Varn"
 dialogue_path = "res://dialogue/sella_varn.dialogue"
 
@@ -968,7 +1043,7 @@ dialogue_path = "res://dialogue/sella_varn.dialogue"
 script = ExtResource("36_town_npcs")
 
 [node name="NoticeBoard" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(470, 420)
+position = Vector2(1400, 1200)
 display_name = "NOTICE BOARD"
 prompt_text = "READ NOTICE"
 interaction_text = "The latest notice names the silent bell house and the east road."
@@ -991,13 +1066,13 @@ offset_bottom = -60.0
 z_index = 21
 
 [node name="NoticeBoardSprite" type="Sprite2D" parent="."]
-position = Vector2(470, 420)
+position = Vector2(1400, 1200)
 scale = Vector2(1.8, 1.8)
 texture = ExtResource("33_sign_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="BellHouseDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(820, 640)
+position = Vector2(2920, 295)
 display_name = "BELL HOUSE"
 prompt_text = "INSPECT BELL"
 interaction_text = "The striker is warm. Something inside the bell is holding the next sound."
@@ -1020,12 +1095,12 @@ visible = false
 z_index = 21
 
 [node name="BellInspectionLantern" type="Sprite2D" parent="."]
-position = Vector2(820, 640)
+position = Vector2(2920, 295)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -50.596)
 
 [node name="RiverShrineMarker" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(350, 610)
+position = Vector2(1030, 1530)
 display_name = "RIVER SHRINE"
 prompt_text = "LEAVE A WORD"
 interaction_text = "You leave one honest word in the water. The current carries it below Dom."
@@ -1046,12 +1121,12 @@ visible = false
 z_index = 21
 
 [node name="RiverShrineLantern" type="Sprite2D" parent="."]
-position = Vector2(350, 610)
+position = Vector2(1030, 1530)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -50.596)
 
 [node name="ItemShopDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(540, 590)
+position = Vector2(1630, 552.5)
 display_name = "ITEM SHOP"
 prompt_text = "BROWSE STOCK"
 interaction_text = "Loam Bread, Cinder-Ink Vials, and field supplies are stacked behind the counter."
@@ -1074,12 +1149,12 @@ visible = false
 z_index = 21
 
 [node name="ItemShopBench" type="Sprite2D" parent="."]
-position = Vector2(540, 590)
+position = Vector2(1630, 552.5)
 texture = ExtResource("35_bench_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="EquipmentShopDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(830, 590)
+position = Vector2(2330, 547.5)
 display_name = "EQUIPMENT SHOP"
 prompt_text = "CHECK GEAR"
 interaction_text = "Iron & Thread carries weapon repairs, field tools, and fittings for a soul-bound party."
@@ -1102,12 +1177,12 @@ visible = false
 z_index = 21
 
 [node name="EquipmentShopBanner" type="Sprite2D" parent="."]
-position = Vector2(830, 590)
+position = Vector2(2330, 547.5)
 texture = ExtResource("20_banner_red")
 offset = Vector2(0, -50.596)
 
 [node name="GarrisonDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(1180, 755)
+position = Vector2(2920, 1520)
 display_name = "GARRISON"
 prompt_text = "REPORT IN"
 interaction_text = "The Iron Companies keep a roster of every blade allowed to leave Dom."
@@ -1129,12 +1204,12 @@ visible = false
 z_index = 21
 
 [node name="GarrisonBanner" type="Sprite2D" parent="."]
-position = Vector2(1180, 755)
+position = Vector2(2920, 1520)
 texture = ExtResource("20_banner_red")
 offset = Vector2(0, -50.596)
 
 [node name="TownHallDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(920, 330)
+position = Vector2(2320, 1122.5)
 display_name = "TOWN HALL"
 prompt_text = "READ THE LEDGER"
 interaction_text = "The public ledger records road commissions, ward debts, and the names of those who failed to return."
@@ -1156,12 +1231,12 @@ visible = false
 z_index = 21
 
 [node name="TownHallBanner" type="Sprite2D" parent="."]
-position = Vector2(920, 330)
+position = Vector2(2320, 1122.5)
 texture = ExtResource("19_banner_green")
 offset = Vector2(0, -50.596)
 
 [node name="ChefsHouseDoor" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(190, 665)
+position = Vector2(430, 1727.5)
 display_name = "CHEF'S HOUSE"
 prompt_text = "KNOCK"
 interaction_text = "A pot simmers inside. Someone has left a bowl on the sill with a note: EAT BEFORE YOU ARGUE."
@@ -1183,13 +1258,13 @@ visible = false
 z_index = 21
 
 [node name="ChefsHousePot" type="Sprite2D" parent="."]
-position = Vector2(190, 665)
+position = Vector2(430, 1727.5)
 texture = ExtResource("34_pot_sprite")
 offset = Vector2(0, -50.596)
 
 [node name="PlayersHouseDoor" parent="." instance=ExtResource("7_interactable")]
 process_mode = 4
-position = Vector2(690, 770)
+position = Vector2(2330, 1925)
 monitoring = false
 monitorable = false
 display_name = "VEX'S HOUSE"
@@ -1213,12 +1288,12 @@ visible = false
 z_index = 21
 
 [node name="PlayersHouseLantern" type="Sprite2D" parent="."]
-position = Vector2(690, 770)
+position = Vector2(2330, 1925)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -50.596)
 
 [node name="SavePoint" parent="." instance=ExtResource("7_interactable")]
-position = Vector2(900, 770)
+position = Vector2(2540, 1925)
 display_name = "HOME SAVE POINT"
 prompt_text = "SAVE GAME"
 interaction_text = "Your name is entered in the household ledger. The run is safe here."
@@ -1240,13 +1315,13 @@ visible = false
 z_index = 21
 
 [node name="SavePointLantern" type="Sprite2D" parent="."]
-position = Vector2(900, 770)
+position = Vector2(2540, 1925)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -50.596)
 modulate = Color(0.45, 1, 0.72, 1)
 
 [node name="RoadToTheWilds" parent="." instance=ExtResource("4_exit")]
-position = Vector2(1580, 500)
+position = Vector2(3500, 1200)
 target_scene = "res://world/test_room.tscn"
 label_text = "TO THE WILDS"
 required_flags = PackedStringArray("tutorial_road_open", "chapter_one_free_roam")
@@ -1254,7 +1329,7 @@ locked_message = "Marshal Coiljaw must issue a field commission."
 spawn_id = &"from_dom"
 
 [node name="NorthRoad" parent="." instance=ExtResource("4_exit")]
-position = Vector2(1200, 60)
+position = Vector2(2600, 100)
 target_scene = "res://world/dorthkor_road.tscn"
 label_text = "DORTHKOR ROAD"
 required_flag = "chapter_dorthkor_commissioned"
@@ -1262,7 +1337,7 @@ locked_message = "Marshal Coiljaw must issue the road commission."
 spawn_id = &"from_dom"
 
 [node name="WoundLip" parent="." instance=ExtResource("4_exit")]
-position = Vector2(400, 60)
+position = Vector2(1000, 100)
 target_scene = "res://world/wound_lip.tscn"
 label_text = "TO THE JAWBRACE"
 required_flag = "deep_trial_open"

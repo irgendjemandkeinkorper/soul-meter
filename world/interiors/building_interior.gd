@@ -7,6 +7,10 @@ const TownNpcSpawnerScript := preload("res://world/town_npc_spawner.gd")
 const NpcPlacementsData: JSON = preload("res://data/generated/dom_npc_placements.json")
 const VendorData := preload("res://globals/vendor_registry.gd")
 const VendorIdsData := preload("res://data/generated/vendor_ids.gd")
+const FALLBACK_FLOOR_TEXTURE := preload("res://assets/generated/sprites/castle-kit/ground.png")
+const FALLBACK_WALL_TEXTURE := preload("res://assets/generated/sprites/castle-kit/wall.png")
+const DEFAULT_FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-interior-floor--wood-panel.png"
+const DEFAULT_WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-interior-wall--brick.png"
 
 ## Vendor rows carry stable town-site ids but no scene anchor. Keep that world-layer
 ## mapping here while stock, prices, gates, and restock remain generated data.
@@ -49,7 +53,16 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	($Floor as Polygon2D).color = floor_color
+	var floor := $Floor as Polygon2D
+	var floor_texture := _load_optional_texture(DEFAULT_FLOOR_TEXTURE_PATH, FALLBACK_FLOOR_TEXTURE)
+	floor.color = floor_color
+	floor.texture = floor_texture
+	floor.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	var wall_texture := _load_optional_texture(DEFAULT_WALL_TEXTURE_PATH, FALLBACK_WALL_TEXTURE)
+	for wall_name: String in ["WallTop", "WallBottom", "WallLeft", "WallRight"]:
+		var wall := get_node(wall_name) as Polygon2D
+		wall.texture = wall_texture
+		wall.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	($AccentRug as Polygon2D).color = accent_color
 	($Title as Label).text = building_name.to_upper()
 	_populate_townsfolk()
@@ -140,3 +153,12 @@ func _interior_scene_path() -> String:
 	if not transition.ends_with("_exit"):
 		return ""
 	return "res://world/interiors/%s.tscn" % transition.trim_suffix("_exit")
+
+
+func _load_optional_texture(path: String, fallback: Texture2D) -> Texture2D:
+	if FileAccess.file_exists(path):
+		var texture := load(path) as Texture2D
+		if texture != null:
+			return texture
+	# TODO(art): swap once art/dom-revamp lands: %s
+	return fallback

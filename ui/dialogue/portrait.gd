@@ -94,6 +94,8 @@ func _refresh() -> void:
 	var asset_path := portrait_path
 	if asset_path.is_empty():
 		asset_path = str(descriptor.get("asset_path", ""))
+	if asset_path.is_empty():
+		asset_path = NpcRosterScript.unit_portrait_path(portrait_id)
 	var texture := NpcRosterScript.load_portrait_texture(asset_path)
 	_image.texture = texture
 	_image.visible = texture != null

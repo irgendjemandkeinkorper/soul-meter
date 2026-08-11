@@ -14,5 +14,5 @@ source_position = Vector2(480, 600)
 destination_scene = "res://world/starting_town.tscn"
 destination_location_id = &"dom"
 spawn_id = &"from_river_shrine"
-destination_spawn_position = Vector2(420, 530)
+destination_spawn_position = Vector2(1100, 1550)
 prompt_text = "E — EXIT"

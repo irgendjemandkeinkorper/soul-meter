@@ -7,6 +7,7 @@ extends RefCounted
 
 const DATA_PATH := "res://data/generated/dom_npc_roster.json"
 const SAFE_PORTRAIT_EXTENSIONS := ["png", "jpg", "jpeg", "svg", "webp", "tga"]
+const UNIT_PORTRAIT_TEMPLATE := "res://assets/generated/sprites/units/%s/%s--idle--se--f00.png"
 
 static var _loaded := false
 static var _npcs: Dictionary = {}
@@ -60,6 +61,12 @@ static func load_portrait_texture(path: String) -> Texture2D:
 		return null
 	var resource: Resource = load(path)
 	return resource as Texture2D
+
+
+static func unit_portrait_path(portrait_id: String) -> String:
+	if portrait_id.is_empty() or portrait_id.contains("..") or portrait_id.contains("/"):
+		return ""
+	return UNIT_PORTRAIT_TEMPLATE % [portrait_id, portrait_id]
 
 
 static func reload() -> void:
