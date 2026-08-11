@@ -69,10 +69,10 @@ func test_marshal_uses_story_dialogue_and_generated_isometric_model() -> void:
 	var sprite := marshal.get_node("Sprite2D") as Sprite2D
 	assert_bool(sprite.region_enabled).is_false()
 	assert_str(sprite.texture.resource_path).starts_with(
-		"res://assets/generated/sprites/mini-characters/"
+		"res://assets/generated/sprites/units/"
 	)
 	assert_bool(sprite.offset.is_equal_approx(
-		preload("res://assets/generated/sprites/isometric_sprite_catalog.gd").SPRITE_PIVOT_OFFSET
+		preload("res://globals/unit_art.gd").PIVOT_OFFSET
 	)).is_true()
 	_free_interior(interior)
 

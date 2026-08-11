@@ -5,13 +5,11 @@ extends Node
 ## the runtime wiring for deterministic 3D-rendered sprite presentation.
 
 const NPC_SCENE: PackedScene = preload("res://actors/npc/npc.tscn")
-const SpriteCatalog := preload("res://assets/generated/sprites/isometric_sprite_catalog.gd")
+const UnitArtScript := preload("res://globals/unit_art.gd")
 
 const ROSTER_PATH := "res://data/generated/dom_npc_roster.json"
 const PLACEMENTS_PATH := "res://data/generated/dom_npc_placements.json"
-const MANIFEST_PATH := "res://assets/generated/sprites/manifest.json"
 const TOWN_SCENE_PATH := "res://world/starting_town.tscn"
-const CHARACTER_KIT := "mini-characters"
 const GENERATED_GROUP := &"generated_townsfolk"
 const GENERATED_INTERACTION_RADIUS := 48.0
 const IDLE_AMPLITUDE := 1.25
@@ -50,19 +48,10 @@ func spawned_npcs() -> Array[NPC]:
 	return _spawned_npcs.duplicate()
 
 
+## Anonymous-figure pool for legacy NPCs with no individually-named unit art.
+## Named story/roster NPCs resolve to their own art via npc_id instead.
 static func sprite_models() -> PackedStringArray:
-	var manifest := _read_json_dictionary(MANIFEST_PATH)
-	var kits_value: Variant = manifest.get("kits", {})
-	if not kits_value is Dictionary:
-		return PackedStringArray()
-	var records_value: Variant = (kits_value as Dictionary).get(CHARACTER_KIT, {})
-	if not records_value is Dictionary:
-		return PackedStringArray()
-	var result := PackedStringArray()
-	for model_name: String in records_value:
-		result.append(model_name)
-	result.sort()
-	return result
+	return UnitArtScript.FALLBACK_POOL
 
 
 func _populate_town() -> void:
@@ -73,9 +62,6 @@ func _populate_town() -> void:
 		push_error("TownNpcSpawner must be a direct child of a Node2D town scene.")
 		return
 	var models := sprite_models()
-	if models.is_empty():
-		push_error("No generated mini-character sprites are registered in the manifest.")
-		return
 
 	_upgrade_legacy_townsfolk(town, models)
 	_spawn_generated_townsfolk(town, models)
@@ -83,11 +69,16 @@ func _populate_town() -> void:
 
 
 func _upgrade_legacy_townsfolk(town: Node2D, models: PackedStringArray) -> void:
+	# A scene-authored npc_id (the hand-placed story NPCs) already self-wired
+	# to its own generated unit art in NPC._ready() — leave it alone. Only
+	# truly anonymous legacy nodes fall back to the generic crowd pool.
 	var model_index := 0
 	for child: Node in town.get_children():
 		if not child is NPC:
 			continue
 		var npc := child as NPC
+		if not npc.npc_id.is_empty():
+			continue
 		_apply_isometric_visual(npc, models[model_index % models.size()])
 		model_index += 1
 
@@ -139,8 +130,10 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray) -> void
 			continue
 		var dialogue := dialogue_value as Dictionary
 		var portrait := portrait_value as Dictionary
+		# model_index/models is now vestigial pool bookkeeping only — each
+		# named NPC displays its own generated unit art (npc_id), not a
+		# shared generic model.
 		var model_index := int(placement.get("model_index", index))
-		var model_name := models[posmod(model_index, models.size())]
 		var facing := str(placement.get("facing", "east"))
 		var idle_phase := float(placement.get("idle_phase", 0.0))
 		npc.name = _node_name(npc_id)
@@ -155,7 +148,7 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray) -> void
 		npc.set_meta(&"facing", facing)
 		npc.set_meta(&"idle_phase", idle_phase)
 		npc.set_meta(&"model_index", model_index)
-		_apply_isometric_visual(npc, model_name, facing)
+		_apply_isometric_visual(npc, npc_id, facing)
 		town.add_child(npc)
 		_set_generated_interaction_radius(npc)
 		_register_idle(npc, idle_phase)
@@ -163,12 +156,12 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray) -> void
 		_spawned_npcs.append(npc)
 
 
-func _apply_isometric_visual(npc: NPC, model_name: String, facing: String = "east") -> void:
-	if not npc.apply_isometric_visual(model_name, facing):
+func _apply_isometric_visual(npc: NPC, unit_id: String, facing: String = "east") -> void:
+	if not npc.apply_isometric_visual(unit_id, facing):
 		return
-	var texture_path := SpriteCatalog.texture_path(CHARACTER_KIT, model_name)
-	npc.set_meta(&"sprite_model", model_name)
-	npc.set_meta(&"sprite_path", texture_path)
+	var resolved_id := UnitArtScript.resolve(unit_id)
+	npc.set_meta(&"sprite_model", resolved_id)
+	npc.set_meta(&"sprite_path", UnitArtScript.texture_path(resolved_id))
 
 
 func _register_idle(npc: NPC, idle_phase: float) -> void:

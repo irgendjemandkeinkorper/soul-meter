@@ -67,4 +67,3 @@ func _apply_party_member() -> void:
 	if party_member == null or _sprite == null:
 		return
 	_sprite.texture = PartyMemberVisualsScript.ensure_portrait(party_member)
-	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

@@ -1010,21 +1010,25 @@ offset = Vector2(0, -50.596)
 [node name="MarshalCoiljaw" parent="." instance=ExtResource("5_npc")]
 position = Vector2(2450, 1212)
 npc_name = "Marshal Coiljaw"
+npc_id = "branek-coiljaw"
 dialogue_path = "res://dialogue/marshal_coiljaw.dialogue"
 
 [node name="HadrikVale" parent="." instance=ExtResource("5_npc")]
 position = Vector2(700, 535)
 npc_name = "Hadrik Vale"
+npc_id = "hadrik-vale"
 dialogue_path = "res://dialogue/hadrik_vale.dialogue"
 
 [node name="TomaReedhand" parent="." instance=ExtResource("5_npc")]
 position = Vector2(1820, 1280)
 npc_name = "Toma Reedhand"
+npc_id = "toma-reedhand"
 dialogue_path = "res://dialogue/toma_reedhand.dialogue"
 
 [node name="SellaVarn" parent="." instance=ExtResource("5_npc")]
 position = Vector2(2820, 1525)
 npc_name = "Sella Varn"
+npc_id = "sella-varn"
 dialogue_path = "res://dialogue/sella_varn.dialogue"
 
 [node name="OutdoorTownsfolk" type="Node" parent="."]

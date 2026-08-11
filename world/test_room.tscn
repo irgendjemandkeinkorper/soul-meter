@@ -92,6 +92,7 @@ position = Vector2(180, 600)
 [node name="IrisIllepah" parent="." instance=ExtResource("3_npc")]
 position = Vector2(1350, 480)
 npc_name = "Iris Illepah"
+npc_id = "iris-illepah"
 dialogue_path = "res://dialogue/iris_illepah.dialogue"
 
 [node name="LoamrootSprig1" parent="." instance=ExtResource("4_pickup")]
@@ -109,8 +110,6 @@ item_id = "materials/loamroot_sprig"
 [node name="BogWight" parent="." instance=ExtResource("5_enemy")]
 position = Vector2(650, 750)
 encounter_id = &"bog-wight"
-visual_region = Rect2(0, 68, 16, 16)
-visual_modulate = Color(0.4, 0.78, 0.55, 1)
 
 [node name="FieldDebtProof" parent="." instance=ExtResource("4_pickup")]
 position = Vector2(650, 750)
@@ -121,8 +120,6 @@ completion_flag = "field_debt_proof_looted"
 [node name="LoamBoar" parent="." instance=ExtResource("5_enemy")]
 position = Vector2(1600, 750)
 encounter_id = &"loam-boar"
-visual_region = Rect2(34, 68, 16, 16)
-visual_modulate = Color(0.66, 0.45, 0.28, 1)
 
 [node name="ReturnToDom" parent="." instance=ExtResource("6_exit")]
 position = Vector2(70, 600)

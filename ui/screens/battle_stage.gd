@@ -27,6 +27,7 @@ const ENVIRONMENT_CASTLE := &"castle"
 const SPRITE_ROOT := "res://assets/generated/sprites"
 const SPRITE_PIVOT_OFFSET := Vector2(0.0, -50.596443)
 const GROUND_ATLAS := preload("res://assets/generated/sprites/ground/ground_tiles.png")
+const UnitArtScript := preload("res://globals/unit_art.gd")
 
 const ENVIRONMENT_TITLES := {
 	ENVIRONMENT_NATURE: "WILDS  •  BROKEN GROUND",
@@ -67,45 +68,15 @@ const ENVIRONMENT_PROPS := {
 	],
 }
 
-const ALLY_SPRITES_BY_NAME := {
-	"Vex": "mini-characters/character-female-a.png",
-	"Vex the Unbowed": "mini-characters/character-female-a.png",
-	"Serai-Lun": "mini-characters/character-female-b.png",
-	"Old Grumbrand": "mini-characters/character-male-a.png",
-	"Wyneth Hallow-Tide": "mini-characters/character-female-c.png",
-	"Ressa Quickfingers": "mini-characters/character-female-d.png",
-	"Korrath Ninefold": "mini-characters/character-male-b.png",
-	"Maura Greyfen": "mini-characters/character-female-f.png",
-}
-const ALLY_FALLBACK_SPRITES := [
-	"mini-characters/character-female-a.png",
-	"mini-characters/character-female-b.png",
-	"mini-characters/character-female-c.png",
-	"mini-characters/character-female-d.png",
-	"mini-characters/character-female-e.png",
-	"mini-characters/character-female-f.png",
-	"mini-characters/character-male-a.png",
-	"mini-characters/character-male-b.png",
-	"mini-characters/character-male-c.png",
-	"mini-characters/character-male-d.png",
-	"mini-characters/character-male-e.png",
-	"mini-characters/character-male-f.png",
-]
-const ENEMY_SPRITES_BY_ARCHETYPE := {
-	&"bog-wight": "mini-characters/character-male-b.png",
-	&"loam-maddened-boar": "mini-characters/character-male-e.png",
-	&"mustered-bloodbellow": "mini-characters/character-male-f.png",
-	&"gnaal-breach-hound": "mini-characters/character-female-e.png",
-	&"gnaal-rift-scavenger": "mini-characters/character-male-d.png",
-	&"cleaned-jawbrace-guard": "mini-characters/character-male-c.png",
-}
-const ENEMY_TINTS_BY_ARCHETYPE := {
-	&"bog-wight": Color("#B8A5D4"),
-	&"loam-maddened-boar": Color("#C99D72"),
-	&"mustered-bloodbellow": Color("#D88878"),
-	&"gnaal-breach-hound": Color("#8FC7B2"),
-	&"gnaal-rift-scavenger": Color("#9AA0D4"),
-	&"cleaned-jawbrace-guard": Color("#B8C8D6"),
+const ALLY_UNIT_IDS_BY_NAME := {
+	"Vex": "vex",
+	"Vex the Unbowed": "vex",
+	"Serai-Lun": "serai-lun",
+	"Old Grumbrand": "old-grumbrand",
+	"Wyneth Hallow-Tide": "wyneth-hallow-tide",
+	"Ressa Quickfingers": "ressa-quickfingers",
+	"Korrath Ninefold": "korrath-ninefold",
+	"Maura Greyfen": "maura-greyfen",
 }
 
 var _snapshot: Dictionary = {}
@@ -1098,8 +1069,7 @@ func _create_combatant_node(actor_id: StringName) -> Node2D:
 
 	var sprite := Sprite2D.new()
 	sprite.name = "Sprite"
-	sprite.offset = SPRITE_PIVOT_OFFSET
-	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.offset = UnitArtScript.PIVOT_OFFSET
 	node.add_child(sprite)
 
 	var identity := Label.new()
@@ -1190,23 +1160,13 @@ func _update_combatant_node(
 
 func _sprite_path_for(row: Dictionary) -> String:
 	var side := StringName(row.get("side", "ally"))
-	var relative_path := ""
+	var unit_id := ""
 	if side == &"enemy":
-		var archetype_id := StringName(row.get("archetype_id", ""))
-		relative_path = str(ENEMY_SPRITES_BY_ARCHETYPE.get(archetype_id, ""))
-		if relative_path.is_empty():
-			var enemy_seed := str(row.get("display_name", archetype_id)).hash()
-			relative_path = ALLY_FALLBACK_SPRITES[
-				posmod(enemy_seed + 6, ALLY_FALLBACK_SPRITES.size())
-			]
+		unit_id = String(StringName(row.get("archetype_id", "")))
 	else:
 		var display_name := str(row.get("display_name", ""))
-		relative_path = str(ALLY_SPRITES_BY_NAME.get(display_name, ""))
-		if relative_path.is_empty():
-			relative_path = ALLY_FALLBACK_SPRITES[
-				posmod(display_name.hash(), ALLY_FALLBACK_SPRITES.size())
-			]
-	return "%s/%s" % [SPRITE_ROOT, relative_path]
+		unit_id = str(ALLY_UNIT_IDS_BY_NAME.get(display_name, display_name))
+	return UnitArtScript.texture_path(UnitArtScript.resolve(unit_id))
 
 
 func _combatant_scale(row: Dictionary) -> float:
@@ -1215,11 +1175,11 @@ func _combatant_scale(row: Dictionary) -> float:
 	return clampf(2.68 + float(row.get("max_hp", 1)) / 180.0, 2.72, 3.15)
 
 
-func _combatant_tint(row: Dictionary) -> Color:
-	if StringName(row.get("side", "ally")) == &"ally":
-		return Color.WHITE
-	var archetype_id := StringName(row.get("archetype_id", ""))
-	return Color(ENEMY_TINTS_BY_ARCHETYPE.get(archetype_id, Color("#C3B7CA")))
+func _combatant_tint(_row: Dictionary) -> Color:
+	# Painterly unit art is already fully colored/shaded — tinting it (as the
+	# old flat mini-characters kit needed for per-archetype variety) would
+	# just wash out the detail.
+	return Color.WHITE
 
 
 func _sync_balance_overlay() -> void:

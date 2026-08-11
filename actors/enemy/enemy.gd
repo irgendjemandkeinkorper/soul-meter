@@ -8,11 +8,8 @@ extends StaticBody2D
 @export var encounter_id: StringName
 @export var required_flag: String = ""
 @export var locked_message: String = "Resolve the threat before this one."
-@export_group("Placeholder presentation")
-## Scene-owned presentation keeps encounter content from branching on lore IDs.
-@export var visual_region := Rect2(0, 102, 16, 16)
-@export var visual_modulate := Color(1.0, 0.4, 0.4, 1.0)
-@export var visual_scale := Vector2(3.5, 3.5)
+
+const UnitArtScript := preload("res://globals/unit_art.gd")
 
 var _player_in_range := false
 var _prompt: Label
@@ -106,6 +103,23 @@ func _apply_visual_identity() -> void:
 	var sprite := $Sprite2D as Sprite2D
 	if sprite == null:
 		return
-	sprite.region_rect = visual_region
-	sprite.modulate = visual_modulate
-	sprite.scale = visual_scale
+	var creature_id := _primary_creature_id()
+	var resolved_id := UnitArtScript.resolve(creature_id)
+	var texture := load(UnitArtScript.texture_path(resolved_id)) as Texture2D
+	if texture == null:
+		push_error("Could not load generated enemy sprite for '%s'." % creature_id)
+		return
+	sprite.texture = texture
+	sprite.region_enabled = false
+	sprite.offset = UnitArtScript.PIVOT_OFFSET
+	sprite.scale = Vector2.ONE
+	sprite.modulate = Color.WHITE
+
+
+func _primary_creature_id() -> String:
+	var enemies: Variant = EncounterCatalog.definition(encounter_id).get("enemies", [])
+	if enemies is Array and not enemies.is_empty():
+		var first_row: Variant = enemies[0]
+		if first_row is Dictionary:
+			return str(first_row.get("id", ""))
+	return ""

@@ -14,4 +14,4 @@ color = Color(0, 0, 0, 0.35)
 
 [node name="Sprite2D" type="Sprite2D" parent="Visual"]
 position = Vector2(0, -28)
-scale = Vector2(3.5, 3.5)
+offset = Vector2(0, -119)

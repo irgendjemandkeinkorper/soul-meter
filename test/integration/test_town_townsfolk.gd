@@ -1,10 +1,15 @@
 extends GdUnitTestSuite
 ## Runtime acceptance coverage for Dom's data-driven outdoor population.
 
-const SpriteCatalog := preload("res://assets/generated/sprites/isometric_sprite_catalog.gd")
+const UnitArtScript := preload("res://globals/unit_art.gd")
 const ROSTER_PATH := "res://data/generated/dom_npc_roster.json"
 const PLACEMENTS_PATH := "res://data/generated/dom_npc_placements.json"
 const TOWN_SCENE_PATH := "res://world/starting_town.tscn"
+## tools/generate_gloot.gd's TOWNSFOLK_MODEL_COUNT — the pool size
+## dom_npc_placements.json's model_index was generated against. This is
+## generated-data bookkeeping only; it no longer selects sprite art (every
+## outdoor townsfolk shows its own named unit art via npc_id).
+const GENERATED_MODEL_POOL_SIZE := 26
 
 
 func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
@@ -29,7 +34,6 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 	var used_facings := {}
 	var used_idle_phases := {}
 	var model_indices_by_anchor := {}
-	var models := TownNpcSpawner.sprite_models()
 	for npc: NPC in spawned:
 		var npc_id := str(npc.get_meta(&"npc_id", ""))
 		assert_array(Array(expected_ids)).contains(npc_id)
@@ -55,16 +59,20 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 		var facing := str(npc.get_meta(&"facing", ""))
 		var idle_phase := float(npc.get_meta(&"idle_phase", -1.0))
 		assert_int(model_index).is_equal(int(placement["model_index"]))
-		assert_str(model_name).is_equal(models[model_index])
+		assert_int(model_index).is_greater_equal(0)
+		assert_int(model_index).is_less(GENERATED_MODEL_POOL_SIZE)
 		assert_str(facing).is_equal(str(placement["facing"]))
 		assert_bool(sprite.flip_h == (facing == "west")).is_true()
 		assert_float(idle_phase).is_equal_approx(float(placement["idle_phase"]), 0.001)
-		var expected_sprite_path := SpriteCatalog.texture_path("mini-characters", model_name)
+		# Every outdoor townsfolk shows its own named unit art, not a shared
+		# generic model — sprite_model resolves to the npc's own id.
+		assert_str(model_name).is_equal(npc_id)
+		var expected_sprite_path := UnitArtScript.texture_path(model_name)
 		assert_object(sprite.texture).is_not_null()
 		assert_str(sprite.texture.resource_path).is_equal(expected_sprite_path)
 		assert_bool(sprite.region_enabled).is_false()
 		assert_bool(sprite.scale == Vector2.ONE).is_true()
-		assert_bool(sprite.offset.is_equal_approx(SpriteCatalog.SPRITE_PIVOT_OFFSET)).is_true()
+		assert_bool(sprite.offset.is_equal_approx(UnitArtScript.PIVOT_OFFSET)).is_true()
 		var areas := npc.find_children("*", "Area2D", true, false)
 		assert_int(areas.size()).is_equal(1)
 		var range_shapes := areas[0].find_children(
@@ -86,21 +94,19 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 	assert_int(used_offsets.size()).is_equal(30)
 	assert_int(used_facings.size()).is_greater(1)
 	assert_int(used_idle_phases.size()).is_equal(30)
-	assert_int(used_models.size()).is_equal(26)
+	assert_int(used_models.size()).is_equal(30)
 
 
 func test_all_sixty_placements_spread_every_model_without_anchor_repeats() -> void:
 	var placements: Dictionary = _json(PLACEMENTS_PATH)["placements"]
-	var models := TownNpcSpawner.sprite_models()
 	var used_model_indices := {}
 	var models_by_scene_anchor := {}
-	assert_int(models.size()).is_equal(26)
 
 	for npc_id: String in placements:
 		var placement: Dictionary = placements[npc_id]
 		var model_index := int(placement["model_index"])
 		assert_int(model_index).is_greater_equal(0)
-		assert_int(model_index).is_less(models.size())
+		assert_int(model_index).is_less(GENERATED_MODEL_POOL_SIZE)
 		used_model_indices[model_index] = true
 		var group_key := "%s|%s" % [placement["scene"], placement["anchor"]]
 		if not models_by_scene_anchor.has(group_key):
@@ -109,7 +115,7 @@ func test_all_sixty_placements_spread_every_model_without_anchor_repeats() -> vo
 		assert_bool(group_models.has(model_index)).is_false()
 		group_models[model_index] = true
 
-	assert_int(used_model_indices.size()).is_equal(models.size())
+	assert_int(used_model_indices.size()).is_equal(GENERATED_MODEL_POOL_SIZE)
 
 
 func test_idle_sway_is_subtle_and_phase_offset_per_townsfolk() -> void:
@@ -154,7 +160,7 @@ func test_every_pre_authored_and_generated_townsfolk_uses_an_isometric_render() 
 		var sprite := npc.get_node("Sprite2D") as Sprite2D
 		assert_bool(sprite.region_enabled).is_false()
 		assert_str(sprite.texture.resource_path).starts_with(
-			"res://assets/generated/sprites/mini-characters/"
+			"res://assets/generated/sprites/units/"
 		)
 
 

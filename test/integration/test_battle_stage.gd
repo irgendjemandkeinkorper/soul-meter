@@ -138,10 +138,10 @@ func test_event_snapshot_selects_environment_combatant_art_and_occupied_zones() 
 	assert_int(stage.environment_sprite_count()).is_equal(5)
 	assert_int(stage.zone_marker_count()).is_equal(6)
 	assert_str(stage.combatant_texture_path(&"ally-0")).contains(
-		"mini-characters/character-female-a.png"
+		"units/vex/vex--idle--se--f00.png"
 	)
 	assert_str(stage.combatant_texture_path(&"enemy-0")).contains(
-		"mini-characters/character-male-e.png"
+		"units/loam-maddened-boar/loam-maddened-boar--idle--se--f00.png"
 	)
 	assert_bool(stage.zone_is_occupied(&"ally", &"front")).is_true()
 	assert_bool(stage.zone_is_occupied(&"enemy", &"flank")).is_true()
@@ -157,7 +157,7 @@ func test_event_snapshot_selects_environment_combatant_art_and_occupied_zones() 
 	))
 	assert_str(stage.environment_id()).is_equal("castle")
 	assert_str(stage.combatant_texture_path(&"enemy-0")).contains(
-		"mini-characters/character-male-c.png"
+		"units/cleaned-jawbrace-guard/cleaned-jawbrace-guard--idle--se--f00.png"
 	)
 
 	stage.consume_event(_event(

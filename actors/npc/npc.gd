@@ -11,12 +11,13 @@ extends StaticBody2D
 @export_range(32.0, 240.0, 1.0) var interaction_radius: float = 120.0
 @export_group("Placeholder presentation")
 ## Scene-owned presentation keeps NPC content from branching on lore names.
+## Only relevant when npc_id is empty and no generated unit art applies —
+## the default Sprite2D texture is already a painterly crowd figure at 1:1.
 @export var visual_region := Rect2(0, 68, 16, 16)
-@export var visual_modulate := Color(0.55, 0.78, 0.64, 1.0)
-@export var visual_scale := Vector2(3.5, 3.5)
+@export var visual_modulate := Color.WHITE
+@export var visual_scale := Vector2.ONE
 
-const SpriteCatalog := preload("res://assets/generated/sprites/isometric_sprite_catalog.gd")
-const CHARACTER_KIT := "mini-characters"
+const UnitArtScript := preload("res://globals/unit_art.gd")
 
 var _player_in_range := false
 var _prompt: Label
@@ -82,6 +83,11 @@ func _stable_actor_id() -> String:
 
 
 func _apply_visual_identity() -> void:
+	# A scene-authored npc_id (e.g. the hand-placed story NPCs in
+	# starting_town.tscn) self-wires to its own generated unit art here;
+	# TownNpcSpawner-driven NPCs get theirs later via apply_isometric_visual.
+	if not npc_id.is_empty() and apply_isometric_visual(npc_id):
+		return
 	var sprite := $Sprite2D as Sprite2D
 	if sprite == null:
 		return
@@ -91,7 +97,8 @@ func _apply_visual_identity() -> void:
 
 
 func apply_isometric_visual(model_name: String, facing: String = "east") -> bool:
-	var texture := load(SpriteCatalog.texture_path(CHARACTER_KIT, model_name)) as Texture2D
+	var resolved_id := UnitArtScript.resolve(model_name)
+	var texture := load(UnitArtScript.texture_path(resolved_id)) as Texture2D
 	if texture == null:
 		push_error("Could not load generated NPC sprite for '%s'." % model_name)
 		return false
@@ -104,7 +111,7 @@ func apply_isometric_visual(model_name: String, facing: String = "east") -> bool
 	sprite.texture = texture
 	sprite.region_enabled = false
 	sprite.position = Vector2.ZERO
-	sprite.offset = SpriteCatalog.SPRITE_PIVOT_OFFSET
+	sprite.offset = UnitArtScript.PIVOT_OFFSET
 	sprite.scale = Vector2.ONE
 	sprite.modulate = Color.WHITE
 	sprite.flip_h = facing == "west"
