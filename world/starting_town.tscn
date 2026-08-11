@@ -40,6 +40,8 @@
 [ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="37_blocking_tiles"]
 [ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="38_blocking_layer"]
 [ext_resource type="Script" path="res://world/starting_town.gd" id="39_town"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-trial-hall--building-facade.png" id="40_trial_hall_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-item-shop--building-facade.png" id="41_item_shop_facade"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(3400, 40)
@@ -116,11 +118,9 @@ shape = SubResource("shape_v_gapped")
 [node name="TrialHall" type="Node2D" parent="."]
 position = Vector2(1000, 500)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-trial-hall.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="TrialHall"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("40_trial_hall_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="TrialHall"]
 z_index = 20
@@ -360,11 +360,9 @@ offset = Vector2(0, -90.596)
 [node name="ItemShop" type="Node2D" parent="."]
 position = Vector2(1700, 500)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-item-shop.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="ItemShop"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("41_item_shop_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="ItemShop"]
 z_index = 20
