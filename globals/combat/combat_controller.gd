@@ -3,6 +3,27 @@ extends RefCounted
 ## Command/event-driven combat session coordinator. It owns runtime turn state,
 ## AP, fixed effect pipelines, and positioning queries; presentation consumes
 ## CombatEvent snapshots and never needs to know which battlefield backs them.
+##
+## FR-102a (amendment §2.1): turn order and timing are NOT decided here. `scheduler`
+## (a `TurnScheduler`, built by `TurnScheduler.create_default(rules)`) is the single
+## authority for "who acts next, when, may they, and what does this cost" — this file
+## never names `ApRoundScheduler` or `ChargeTimeScheduler` directly, only the interface.
+## `rules.use_charge_time` (the flag `create_default()` reads) is therefore the entire
+## abort path: flipping it swaps the scheduler implementation without touching a line
+## here. AP compatibility is retained by construction, not by a branch in this file —
+## `ApRoundScheduler` is a faithful port of the old round/phase loop expressed behind
+## the same interface CT uses (amendment §8.1: AP is not removed in the change that
+## makes CT authoritative).
+##
+## Event vocabulary is versioned per amendment §2.1's mandate ("events will change
+## shape"): `round_started` / `ap_refreshed` / `round_ended` fire only when the active
+## scheduler's `advance()` reports AP round bookkeeping (i.e. only under the AP
+## scheduler) via `_translate_scheduler_extras()`. `measure_started` is the CT-native
+## replacement beat, firing whenever `advance()` reports a crossed 16-tick measure with
+## no round bookkeeping attached. `turn_started` / `turn_ended` / `enemy_turn_started`
+## keep their names — they gain new meaning (charge/ticks data instead of AP-only data)
+## rather than being replaced, since "whose turn is it" stays meaningful under both
+## models.
 
 signal event_emitted(event: CombatEvent)
 signal battle_finished(state: ResultState, outcome_id: StringName)
@@ -23,9 +44,18 @@ var last_refusal: Dictionary = {}
 var battlefield: BattlefieldModel
 var rules: CombatRules
 var skill_check_service: SkillCheckService
+var scheduler: TurnScheduler
 
 var _actions: Dictionary = {}
 var _sequence := 0
+## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
+## CT: overflow keeps them past READY_AT) does not get a redundant `turn_started`.
+var _last_turn_actor: BattleActor = null
+## Tracks which side last acted so `enemy_turn_started` announces a PHASE change (ally
+## control handing to the enemy side), not every individual enemy activation — this
+## keeps the event's old meaning ("the enemy phase began") intact for both schedulers,
+## including CT where several enemies can act back-to-back if they are fast enough.
+var _last_side: StringName = &"ally"
 
 
 func configure(
@@ -39,6 +69,7 @@ func configure(
 		_actions[action.id] = action
 	battlefield = positioning
 	rules = combat_rules
+	scheduler = TurnScheduler.create_default(rules)
 	skill_check_service = check_service
 	if skill_check_service == null:
 		var main_loop := Engine.get_main_loop()
@@ -64,22 +95,28 @@ func start(
 	balance_lock_until_round = 0
 	threshold_effects_suppressed = false
 	last_refusal.clear()
+	active_ally_index = -1
+	_last_turn_actor = null
+	_last_side = &"ally"
 	_assign_combat_ids(allies, &"ally", encounter_id)
 	_assign_combat_ids(enemies, &"enemy", encounter_id)
 	battlefield.setup(allies, enemies)
+	scheduler.setup(allies + enemies)
 	_apply_balance_band(false)
 	state = State.ROUND_START
 	_emit_event(&"battle_started", null, null, {})
 	if not _has_living(enemies):
 		_finish(ResultState.VICTORY, &"slain")
 		return
-	_begin_round()
+	_drive_scheduler()
 
 
 func active_actor() -> BattleActor:
-	if active_ally_index < 0 or active_ally_index >= allies.size():
+	if scheduler == null:
 		return null
-	return allies[active_ally_index]
+	var actor := scheduler.active_actor()
+	active_ally_index = allies.find(actor) if actor != null else -1
+	return actor
 
 
 func action_by_id(action_id: StringName) -> CombatAction:
@@ -94,19 +131,9 @@ func query_action(
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
 	if action == null:
 		return _blocked(&"action", "Unknown combat action.", {"type": &"known_action"})
-	if actor.action_points < action.ap_cost:
-		return {
-			"allowed": false,
-			"blocked_by": &"action_points",
-			"nearest_unblock": {
-				"type": &"action_points",
-				"minimum": action.ap_cost,
-				"delta": action.ap_cost - actor.action_points,
-			},
-			"current_ap": actor.action_points,
-			"required_ap": action.ap_cost,
-			"message": "Requires %d AP; %d AP remains." % [action.ap_cost, actor.action_points],
-		}
+	var affordability := _can_afford(actor, action)
+	if not bool(affordability.get("allowed", false)):
+		return affordability
 	if action.kind == CombatAction.Kind.MOVE:
 		return battlefield.move_query(actor, action.destination)
 	if action.requires_enemy_target():
@@ -131,20 +158,27 @@ func submit_action(
 		return query
 
 	var actor := active_actor()
-	actor.action_points -= action.ap_cost
+	var commit_result := scheduler.commit(actor, action)
+	if not bool(commit_result.get("allowed", false)):
+		# query_action() already validated affordability via the same gate, so this is a
+		# defensive re-check (e.g. a race between query and submit), not duplicated UX.
+		last_refusal = commit_result.duplicate(true)
+		_emit_event(&"action_refused", actor, target, {"action_id": action_id, "reason": commit_result})
+		return commit_result
 	var outcome := _apply_action(actor, target, action, options)
 	outcome["action_id"] = action.id
 	outcome["verb"] = action.verb
 	outcome["ap_cost"] = action.ap_cost
+	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
 	outcome["ap_remaining"] = actor.action_points
+	outcome["charge_remaining"] = int(commit_result.get("charge", 0))
 	_emit_event(&"action_resolved", actor, target, outcome)
 	last_refusal.clear()
+	scheduler.release(actor)
 	if action.kind == CombatAction.Kind.RESOLUTION:
 		_finish(ResultState.VICTORY, action.outcome_id)
-	elif not _has_living(enemies):
-		_finish(ResultState.VICTORY, &"slain")
-	elif actor.action_points == 0:
-		end_turn()
+		return _allowed(outcome)
+	_drive_scheduler()
 	return _allowed(outcome)
 
 
@@ -182,13 +216,19 @@ func submit_speech(
 		return option_refusal
 
 	var actor := active_actor()
-	actor.action_points -= action.ap_cost
+	var commit_result := scheduler.commit(actor, action)
+	if not bool(commit_result.get("allowed", false)):
+		last_refusal = commit_result.duplicate(true)
+		_emit_event(&"action_refused", actor, null, {"action_id": action_id, "reason": commit_result})
+		return commit_result
 	var succeeded := bool(check_result.get("success", false))
 	var outcome: Dictionary = {
 		"action_id": action.id,
 		"verb": action.verb,
 		"ap_cost": action.ap_cost,
+		"ct_spent": int(commit_result.get("ct_spent", 0)),
 		"ap_remaining": actor.action_points,
+		"charge_remaining": int(commit_result.get("charge", 0)),
 		"speech_option_id": option.id,
 		"speech_outcome": option.outcome_name(),
 		"outcome_id": option.outcome_id,
@@ -201,13 +241,14 @@ func submit_speech(
 		outcome.merge(_apply_speech_composition(actor, option), true)
 	_emit_event(&"action_resolved", actor, null, outcome)
 	last_refusal.clear()
+	scheduler.release(actor)
 
 	if succeeded and (
 		option.outcome == CombatSpeechOption.Outcome.END or not _has_living(enemies)
 	):
 		_finish(ResultState.VICTORY, option.outcome_id)
-	elif actor.action_points == 0:
-		end_turn()
+		return _allowed(outcome)
+	_drive_scheduler()
 	return _allowed(outcome)
 
 
@@ -215,13 +256,18 @@ func end_turn() -> bool:
 	if state != State.ALLY_TURN or active_actor() == null:
 		return false
 	var actor := active_actor()
-	_emit_event(&"turn_ended", actor, null, {"ap_remaining": actor.action_points})
-	var next := _next_living_index(allies, active_ally_index)
-	if next >= 0:
-		active_ally_index = next
-		_emit_event(&"turn_started", active_actor(), null, {})
-		return true
-	_resolve_enemy_turn()
+	_emit_event(
+		&"turn_ended",
+		actor,
+		null,
+		{"ap_remaining": actor.action_points, "charge_remaining": scheduler.charge_of(actor)},
+	)
+	# Forfeits whatever resource remains — a no-op if there is nothing left to give up. This
+	# is the ONLY place a turn is yielded voluntarily; a turn that already spent its action
+	# via submit_action() is advanced by _drive_scheduler() below without yielding, so a
+	# charge-time actor with banked overflow is not made to give it up just because it acted.
+	scheduler.yield_turn(actor)
+	_drive_scheduler()
 	return true
 
 
@@ -299,72 +345,168 @@ static func calculate_damage(
 	)
 
 
-func _begin_round() -> void:
-	round_number += 1
-	state = State.ROUND_START
-	_emit_event(&"round_started", null, null, {"round": round_number})
-	for actor in allies + enemies:
-		if not actor.is_alive():
-			continue
-		actor.max_action_points = rules.action_points_for(actor)
-		actor.action_points = actor.max_action_points
-		_emit_event(
-			&"ap_refreshed",
-			actor,
-			null,
-			{"current_ap": actor.action_points, "maximum_ap": actor.max_action_points},
-		)
-	active_ally_index = _next_living_index(allies, -1)
-	if active_ally_index < 0:
-		_finish(ResultState.DEFEAT, &"defeat")
-		return
-	state = State.ALLY_TURN
-	_emit_event(&"turn_started", active_actor(), null, {})
-
-
-func _resolve_enemy_turn() -> void:
-	state = State.ENEMY_TURN
-	_emit_event(&"enemy_turn_started", null, null, {})
-	var enemy_action := action_by_id(&"enemy-strike")
-	for foe in enemies:
-		if not foe.is_alive():
-			continue
-		var target := _first_living(allies)
-		if target == null:
-			break
-		if foe.action_points < enemy_action.ap_cost:
-			var reason := _blocked(
-				&"action_points",
-				"%s cannot afford %s." % [foe.display_name, enemy_action.display_name],
-				{
-					"type": &"action_points",
-					"minimum": enemy_action.ap_cost,
-					"delta": enemy_action.ap_cost - foe.action_points,
-				},
-			)
-			_emit_event(
-				&"action_refused",
-				foe,
-				target,
-				{"action_id": enemy_action.id, "reason": reason},
-			)
-			continue
-		var query := battlefield.target_query(foe, target, enemy_action.target_profile)
-		if not bool(query.get("allowed", false)):
-			continue
-		foe.action_points = maxi(0, foe.action_points - enemy_action.ap_cost)
-		var outcome := _apply_action(foe, target, enemy_action)
-		outcome["action_id"] = enemy_action.id
-		outcome["ap_cost"] = enemy_action.ap_cost
-		outcome["ap_remaining"] = foe.action_points
-		_emit_event(&"action_resolved", foe, target, outcome)
-		_change_balance(foe.balance_affinity * foe.balance_pressure, foe)
+## The scheduler-driven turn loop. FR-102a / amendment §2.1: this is the ONLY place
+## CombatController decides whose turn it is; everything else asks `active_actor()` or
+## reacts to `turn_started` / `enemy_turn_started` events. Loops (rather than recurses)
+## through however many actors resolve automatically — every living enemy that becomes
+## ready — until it is a living ally's turn or the battle ends, so presentation always
+## gets a clean, ordered event stream with a bounded call stack.
+func _drive_scheduler() -> void:
+	while state != State.FINISHED:
 		if not _has_living(allies):
 			_finish(ResultState.DEFEAT, &"defeat")
 			return
-	_emit_event(&"round_ended", null, null, {"round": round_number})
-	_release_balance_lock_if_due()
-	_begin_round()
+		if not _has_living(enemies):
+			_finish(ResultState.VICTORY, &"slain")
+			return
+		state = State.ROUND_START
+		var result := scheduler.advance()
+		if not bool(result.get("allowed", false)):
+			# The only way advance() refuses here is &"no_participants" — everyone alive was
+			# already excluded above — or an internal scheduler defect. Either way the battle
+			# cannot continue; side with the party rather than hang.
+			_finish(ResultState.DEFEAT, &"defeat")
+			return
+		_translate_scheduler_extras(result)
+		var actor: BattleActor = result.get("actor")
+		if actor == null or not actor.is_alive():
+			_finish(ResultState.DEFEAT, &"defeat")
+			return
+
+		var is_continuation := actor == _last_turn_actor and int(result.get("ticks_elapsed", 0)) == 0
+		var turn_payload := {
+			"charge": result.get("charge", 0),
+			"ticks_elapsed": result.get("ticks_elapsed", 0),
+			"measures_crossed": result.get("measures_crossed", 0),
+		}
+
+		if actor.side == &"ally":
+			state = State.ALLY_TURN
+			if not is_continuation:
+				_emit_event(&"turn_started", actor, null, turn_payload)
+			_last_turn_actor = actor
+			_last_side = &"ally"
+			active_ally_index = allies.find(actor)
+			return
+
+		state = State.ENEMY_TURN
+		if _last_side != &"enemy":
+			_emit_event(&"enemy_turn_started", actor, null, turn_payload)
+		_last_turn_actor = actor
+		_last_side = &"enemy"
+		_resolve_enemy_actor(actor)
+		# Loop continues: the next scheduler.advance() picks whoever is ready next, ally or
+		# enemy, without this function recursing into itself.
+
+
+## Translates the scheduler's optional round bookkeeping (`round_started` / `refreshed` /
+## `round_ended`, set only by the AP scheduler) into the legacy events, and fires the CT-
+## native `measure_started` beat when the scheduler crossed a measure with no round
+## bookkeeping attached (i.e. the CT scheduler is live). This is the one place the two
+## event vocabularies fork, and it forks on DATA the scheduler returned, never on
+## `rules.use_charge_time` — CombatController does not know which scheduler is active.
+func _translate_scheduler_extras(result: Dictionary) -> void:
+	# A single advance() call can carry BOTH keys at once — the AP scheduler closes the old
+	# round and opens the new one in one step when the last actor's turn passes. `round_ended`
+	# must be emitted (and the balance lock checked against the round that JUST ended, not the
+	# one about to open) first, matching the original `_resolve_enemy_turn()` order — end the
+	# round, release the lock if it was due, THEN `_begin_round()` opens the next one — or the
+	# lock would release one round early and presentation would see "round 2 started" before
+	# "round 1 ended".
+	if bool(result.get("round_ended", false)):
+		var ended_round := int(result.get("ended_round", round_number))
+		_emit_event(&"round_ended", null, null, {"round": ended_round})
+		_release_balance_lock_if_due(ended_round)
+	round_number = scheduler.measure_index() + 1
+	if bool(result.get("round_started", false)):
+		_emit_event(&"round_started", null, null, {"round": int(result.get("round", round_number))})
+		for row: Variant in result.get("refreshed", []):
+			if row is Dictionary:
+				_emit_event(
+					&"ap_refreshed",
+					row.get("actor"),
+					null,
+					{"current_ap": row.get("current_ap", 0), "maximum_ap": row.get("maximum_ap", 0)},
+				)
+	if not result.has("round_started") and not result.has("round_ended"):
+		var crossed := int(result.get("measures_crossed", 0))
+		if crossed > 0:
+			_emit_event(&"measure_started", null, null, {"measure": scheduler.measure_index()})
+			_release_balance_lock_if_due(round_number)
+
+
+## Resolves exactly one enemy's turn. Ported from the old `_resolve_enemy_turn()` batch
+## loop body, but per-actor: the scheduler — not a `for foe in enemies` loop — decides
+## which enemy this is and when. Affordability is checked before targeting, matching the
+## original AP-check-then-battlefield-check order.
+func _resolve_enemy_actor(actor: BattleActor) -> void:
+	var enemy_action := action_by_id(&"enemy-strike")
+	var target := _first_living(allies)
+	if target == null:
+		return
+	var commit_result := scheduler.commit(actor, enemy_action)
+	if not bool(commit_result.get("allowed", false)):
+		_emit_event(
+			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": commit_result}
+		)
+		_force_pass(actor)
+		return
+	var query := battlefield.target_query(actor, target, enemy_action.target_profile)
+	if not bool(query.get("allowed", false)):
+		scheduler.cancel_committed(actor, true)
+		_emit_event(&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": query})
+		_force_pass(actor)
+		return
+	var outcome := _apply_action(actor, target, enemy_action)
+	outcome["action_id"] = enemy_action.id
+	outcome["ap_cost"] = enemy_action.ap_cost
+	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
+	outcome["ap_remaining"] = actor.action_points
+	outcome["charge_remaining"] = int(commit_result.get("charge", 0))
+	_emit_event(&"action_resolved", actor, target, outcome)
+	scheduler.release(actor)
+	_change_balance(actor.balance_affinity * actor.balance_pressure, actor)
+
+
+## An enemy that cannot afford its action or cannot reach a target still has to leave
+## readiness — otherwise the scheduler would keep re-selecting it (AP: still "unacted
+## this round"; CT: still at or above READY_AT) and the battle would hang. A zero-cost
+## PASS action is the cleanest way to say "this turn happened and produced nothing"
+## through the same commit()/release() pair every other action uses, so the scheduler's
+## round/acted bookkeeping updates exactly as if a real action had resolved.
+func _force_pass(actor: BattleActor) -> void:
+	var result := scheduler.commit(actor, _pass_action())
+	if bool(result.get("allowed", false)):
+		scheduler.release(actor)
+	else:
+		# Defensive fallback only — should not be reachable if commit() just refused this
+		# same actor above for a resource reason, since a zero-cost action has no resource
+		# gate left to fail. Kept so a future refusal reason cannot stall the queue.
+		scheduler.yield_turn(actor)
+
+
+func _pass_action() -> CombatAction:
+	var action := CombatAction.new()
+	action.id = &"__scheduler_pass__"
+	action.kind = CombatAction.Kind.PASS
+	action.verb = CombatAction.Verb.DEFEND
+	action.ap_cost = 0
+	action.ct_cost = 0
+	return action
+
+
+## Whether `actor` can pay for `action` specifically, as opposed to `scheduler.can_act()`
+## which only answers "is it structurally your turn". The AP scheduler exposes this via
+## `can_afford()` (not part of the base `TurnScheduler` contract, since only a resource-
+## metered model needs it); the CT scheduler has no equivalent because every authored
+## action costs at most `maximum_action_ct_cost` (60) against a 100 threshold, so being
+## ready (`can_act()`) already implies being able to afford any authored action. This is
+## checked via `has_method()` rather than a concrete-type check so this file still never
+## names `ApRoundScheduler` or `ChargeTimeScheduler`.
+func _can_afford(actor: BattleActor, action: CombatAction) -> Dictionary:
+	if scheduler.has_method("can_afford"):
+		return scheduler.call("can_afford", actor, action)
+	return scheduler.can_act(actor)
 
 
 func _apply_action(
@@ -552,12 +694,20 @@ func _apply_speech_composition(
 				continue
 			enemies.erase(target)
 			allies.append(target)
+			# Neither scheduler indexes participants by side internally — ApRoundScheduler
+			# reads `actor.side` live on every call, and ChargeTimeScheduler never looks at
+			# side at all — so flipping the field is enough. Deliberately NOT calling
+			# remove_participant()/setup() here: that would wipe every combatant's banked
+			# charge/seat, which is exactly the "a split must not reorder survivors"
+			# guarantee the scheduler's own tests require (see test_turn_scheduler.gd).
+			target.side = &"ally"
 			turned_ids.append(target.combat_id)
 		else:
 			var removal := battlefield.remove_combatant(target)
 			if not bool(removal.get("allowed", false)):
 				continue
 			enemies.erase(target)
+			scheduler.remove_participant(target)
 			removed_ids.append(target.combat_id)
 	var result := {
 		"removed_ids": removed_ids,
@@ -629,8 +779,8 @@ func _apply_balance_band(emit_change: bool = true) -> void:
 		)
 
 
-func _release_balance_lock_if_due() -> void:
-	if balance_lock_until_round <= 0 or round_number < balance_lock_until_round:
+func _release_balance_lock_if_due(current_round: int) -> void:
+	if balance_lock_until_round <= 0 or current_round < balance_lock_until_round:
 		return
 	balance_lock_until_round = 0
 	threshold_effects_suppressed = false
@@ -670,6 +820,7 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"max_hp": actor.max_hp,
 			"ap": actor.action_points,
 			"max_ap": actor.max_action_points,
+			"charge": scheduler.charge_of(actor) if scheduler != null else 0,
 			"position": battlefield.position_of(actor),
 			"side": battlefield.side_of(actor),
 			"guarding": actor.guarding,

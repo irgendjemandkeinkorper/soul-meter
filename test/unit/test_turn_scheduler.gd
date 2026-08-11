@@ -350,3 +350,74 @@ func test_unauthored_ct_cost_falls_back_to_the_ap_conversion_shim() -> void:
 	assert_int(rules.charge_cost_for(authored)).override_failure_message(
 		"an authored ct_cost must win over the shim"
 	).is_equal(45)
+
+
+# ---- issue #138 acceptance: deterministic ordering, Speed-9 cadence, no starvation ----
+
+
+func test_speed_nine_unit_reaches_ready_at_twelve_ticks() -> void:
+	# FR-102a: CT gained per tick equals Speed, a unit acts at CT 100. At speed 9 that is
+	# ceil(100 / 9) = 12 ticks from a cold start — the issue's own acceptance line.
+	var rules := _rules()
+	rules.base_charge_speed = 9
+	rules.attribute_points_per_speed = 2
+	var scheduler := TurnScheduler.create_default(rules)
+	var lone := _actor("speed-9", 0)
+	var group: Array[BattleActor] = [lone]
+	scheduler.setup(group)
+
+	var ready: Dictionary = scheduler.advance()
+
+	assert_bool(ready.get("allowed", false)).is_true()
+	assert_object(ready.get("actor")).is_same(lone)
+	assert_int(ready.get("ticks_elapsed", -1)).is_equal(12)
+	assert_int(scheduler.charge_of(lone)).is_greater_equal(TurnScheduler.READY_AT)
+
+
+func test_speed_nine_unit_acts_every_twelve_ticks_across_repeated_cycles() -> void:
+	# The same cadence must hold turn after turn, not just on the first activation. Each
+	# cycle spends exactly the actor's banked charge (never a fixed action cost), so no
+	# overflow carries between cycles and the 12-tick interval is exact and repeatable —
+	# proving the cadence is real scheduler arithmetic, not a one-off coincidence.
+	var rules := _rules()
+	rules.base_charge_speed = 9
+	rules.attribute_points_per_speed = 2
+	var scheduler := TurnScheduler.create_default(rules)
+	var lone := _actor("speed-9", 0)
+	var group: Array[BattleActor] = [lone]
+	scheduler.setup(group)
+
+	for cycle in 5:
+		var ready: Dictionary = scheduler.advance()
+		assert_int(ready.get("ticks_elapsed", -1)).override_failure_message(
+			"cycle %d did not arrive at the expected 12-tick cadence" % cycle
+		).is_equal(12)
+		var spend_everything := _action("spend-all", scheduler.charge_of(lone))
+		scheduler.commit(lone, spend_everything)
+		scheduler.release(lone)
+		assert_int(scheduler.charge_of(lone)).is_equal(0)
+
+
+func test_wait_refunds_cannot_produce_starvation() -> void:
+	# FR-102a's "waiting refunds" (implemented here as the neutral zero-refund baseline —
+	# see charge_time_scheduler.gd's yield_turn() docstring) must never leave a unit unable
+	# to act again. A unit that ALWAYS waits still has to accrue back up to READY_AT and
+	# act, every single cycle, for as long as the battle runs.
+	var scheduler := TurnScheduler.create_default(_rules())
+	var perpetual_waiter := _actor("waiter", 4)
+	var group: Array[BattleActor] = [perpetual_waiter]
+	scheduler.setup(group)
+
+	var activations := 0
+	for cycle in 50:
+		var ready: Variant = scheduler.advance()
+		assert_bool(ready.get("allowed", false)).override_failure_message(
+			"cycle %d starved: the waiter never became ready again" % cycle
+		).is_true()
+		assert_int(ready.get("ticks_elapsed", 0)).override_failure_message(
+			"cycle %d made no progress toward readiness" % cycle
+		).is_greater(0)
+		activations += 1
+		var yielded: Dictionary = scheduler.yield_turn(perpetual_waiter)
+		assert_bool(yielded.get("allowed", false)).is_true()
+	assert_int(activations).is_equal(50)
