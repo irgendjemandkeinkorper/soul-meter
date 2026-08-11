@@ -506,5 +506,10 @@ func _pascal_case(value: String) -> String:
 
 
 func _apply_runtime_feature_flags() -> void:
-	if OS.get_cmdline_user_args().has("extended-content"):
-		GameState.set_flag("prototype_extended_content", true)
+	# The Deep Trial follow-up chain (dialogue/marshal_coiljaw.dialogue,
+	# quests/deep_trial.tres, world/wound_lip.tscn) is built and covered by
+	# test/e2e/test_first_chapter_journey.gd; this flag no longer gates WIP
+	# content, so it defaults on. --no-extended-content forces it off for
+	# playtesting the Chapter 1 stopping point on purpose.
+	var enabled := not OS.get_cmdline_user_args().has("no-extended-content")
+	GameState.set_flag("prototype_extended_content", enabled)

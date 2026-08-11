@@ -65,6 +65,11 @@ func after_test() -> void:
 
 func test_boot_recruit_commission_side_thread_encounters_and_ruling_reach_ledger() -> void:
 	SaveGame.new_game()
+	# This journey exercises the base COMPLETE -> FREE_ROAM path, which is
+	# still reachable with extended content off (e.g. --no-extended-content);
+	# the extended-content-on path is covered separately in
+	# test_chapter_one_progress.gd's test_extended_content_flag_continues_into_the_deep_trial.
+	GameState.set_flag("prototype_extended_content", false)
 	assert_str(ProjectSettings.get_setting("application/run/main_scene")).is_equal(
 		"res://ui/screens/main_menu.tscn"
 	)
