@@ -324,6 +324,32 @@ func snapshot() -> Dictionary:
 	}
 
 
+## Placeholder Wheel element substituted when an authored `CombatAction` leaves `element_id`
+## empty (issue #142 follow-up). `Resolution.resolve()` requires the ability side to name a real
+## Wheel element — an empty one blocks with `&"unknown_element"` — but `BattleActor.element_id`
+## (the TARGET side) is left empty by default and resolves to `ElementMatrix`'s neutral
+## `IDENTITY_ROW` (×1.0) for any attack element. So which real element an unauthored ability is
+## "wearing" is inert until a real per-unit attunement is authored on the target: any fixed
+## choice here reproduces the same ×1.0 multiplier as before this wiring existed. This is NOT a
+## balance or lore decision — it exists only so the resolver's schema-validity check has
+## something to validate against.
+const _UNAUTHORED_ELEMENT_ID := &"suul"
+
+
+## Routes live combat damage through the pure `Resolution.resolve()` (globals/combat/resolution.gd,
+## #142) instead of standalone arithmetic, while keeping the RPG stat layer (attack/defense/
+## flank/cover) this file already owns. The split:
+##   - Attacker-side power modifiers (base attack, authored power bonus, flank, Order/Chaos
+##     damage_bonus) feed `ability.power`, so they flow through Resolution's
+##     `power × attack_scale × element_matrix × facing × tile_charge` chain.
+##   - Target-side mitigation (defense, defense_bonus, cover) is subtracted from Resolution's
+##     result afterward, exactly as it was subtracted before this change — Resolution has no
+##     defense-stat concept of its own (it is the Elements & Music resolver, not the RPG stat
+##     system), so this file keeps owning that term rather than inventing one inside Resolution.
+## `battle_id`/`tick`/`seed`/facing/tile-state/weather context are left at Resolution's neutral
+## defaults: this battlefield model has no tile-charge or per-actor facing-multiplier system yet
+## (`BattlefieldModel.flank_bonus()`/`cover_bonus()` are this file's own additive stand-ins for
+## those), so passing empty dicts is honest rather than fabricating data that doesn't exist.
 static func calculate_damage(
 	attacker: BattleActor,
 	target: BattleActor,
@@ -331,14 +357,55 @@ static func calculate_damage(
 	_alignment_shift: int,
 	_current_balance: int,
 	flank_bonus: int = 0,
-	cover_bonus: int = 0
+	cover_bonus: int = 0,
+	ability_element_id: StringName = &"",
+	ability_magnitude: StringName = &"note",
+	seed: int = 0
 ) -> int:
-	return maxi(
-		1,
+	var element_id := ability_element_id
+	if String(element_id).is_empty():
+		element_id = _UNAUTHORED_ELEMENT_ID
+	var power := (
 		attacker.effective_attack()
 		+ power_bonus
 		+ flank_bonus
 		+ int(attacker.balance_effects.get("damage_bonus", 0))
+	)
+	var result := Resolution.resolve_action(
+		{
+			"id": String(attacker.combat_id),
+			"attack_scale": attacker.attack_scale,
+		},
+		{
+			"id": "attack",
+			"element_id": element_id,
+			"magnitude": ability_magnitude,
+			"power": power,
+		},
+		{
+			"target": {
+				"id": String(target.combat_id),
+				"hp": target.hp,
+				"element_id": target.element_id,
+			},
+		},
+		seed,
+	)
+	var raw_damage := 0
+	if bool(result.get("allowed", false)):
+		raw_damage = int(result.get("damage", 0))
+	else:
+		# Should be unreachable: a valid Wheel `element_id` (real or the placeholder above) with
+		# magnitude `&"note"` is always a legal single-element Tone, which `CastingGate` always
+		# allows regardless of harmony. Surfacing this loudly rather than silently degrading to
+		# the 1-damage floor below, in case that invariant is ever violated by a future caller.
+		push_warning(
+			"CombatController.calculate_damage: Resolution refused (%s) — %s"
+			% [result.get("blocked_by", ""), result.get("message", "")]
+		)
+	return maxi(
+		1,
+		raw_damage
 		- target.effective_defense()
 		- int(target.balance_effects.get("defense_bonus", 0))
 		- cover_bonus,
@@ -584,6 +651,9 @@ func _resolve_attack(
 			balance,
 			battlefield.flank_bonus(actor, hit_target),
 			cover_bonus,
+			action.element_id,
+			action.magnitude,
+			_sequence,
 		)
 		hit_target.hp = maxi(0, hit_target.hp - damage)
 		total_damage += damage

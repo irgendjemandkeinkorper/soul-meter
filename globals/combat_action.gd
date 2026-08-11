@@ -17,6 +17,20 @@ enum Verb { MOVE, ATTACK, CAST, ITEM, SPEECH, DEFEND }
 ## removed in the same change that first makes CT authoritative).
 @export_range(-1, 200) var ct_cost: int = -1
 @export var power_bonus: int = 0
+## FK into `ElementWheel.ORDER` — the ability's Wheel element, read as `ability.element_id` by
+## `Resolution.resolve()` (globals/combat/resolution.gd). Empty is NOT a valid ability element
+## for that call (`resolve()` blocks with `&"unknown_element"` if it does not resolve to a real
+## Wheel entry) — `CombatController.calculate_damage()` substitutes a documented neutral
+## placeholder (`_UNAUTHORED_ELEMENT_ID`) when this is left empty, so authoring it is optional
+## here but the resolver itself always needs a real one. Mirrors `AbilityDefinition.element_id`
+## (globals/jobs/ability_definition.gd) for the day content is generated from Pandora instead of
+## hand-authored via `CombatAction.make()`.
+@export var element_id: StringName = &""
+## Elements & Music composition magnitude (`CompositionResolver.VALID_MAGNITUDES`), read as
+## `ability.magnitude` by `Resolution.resolve()`. `&"note"` (single-element Tone) is both the
+## default here and `Resolution.resolve()`'s own fallback when the key is absent, so leaving
+## this unauthored is always safe — it never blocks the casting gate (Tone is always allowed).
+@export var magnitude: StringName = &"note"
 ## Negative pushes Chaos; positive pushes Order.
 @export_range(-100, 100) var balance_shift: int = 0
 @export var soul_cost: float = 0.0

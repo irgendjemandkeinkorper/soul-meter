@@ -14,6 +14,20 @@ extends Resource
 @export var archetype_id: StringName = &""
 @export_range(-1, 1) var balance_affinity: int = 0
 @export var balance_pressure: int = 12
+## This actor's elemental attunement (`ElementWheel.ORDER`), read as the TARGET side of
+## `ElementMatrix.target_relation()`/`Resolution.resolve()` when this actor is struck — see
+## globals/combat/resolution.gd and globals/units/unit_attunement.gd's header for why this is
+## never a per-element table on BattleActor: it is a single leaning, not the ten-value
+## `UnitAttunement` row (that table is authored per patron class, not wired here — issue #142
+## follow-up). Empty is a deliberate, valid "no attunement authored yet" sentinel:
+## `ElementMatrix.target_relation()` returns its neutral `IDENTITY_ROW` (×1.0) for an unknown
+## element id, so an un-authored actor is neither resisted nor exposed, matching pre-#142
+## damage exactly until real per-unit attunement data lands.
+@export var element_id: StringName = &""
+## This actor's multiplier on `Resolution.resolve()`'s `power × attack_scale × ...` chain
+## (globals/combat/resolution.gd). 1.0 is neutral — every actor hits at the same scale until
+## per-unit/per-job tuning is authored.
+@export_range(0.0, 5.0) var attack_scale: float = 1.0
 ## GameState flag to set on a win, so a defeated enemy actor doesn't respawn
 ## a fight. Empty for the player's own BattleActor.
 @export var defeated_flag: String = ""
