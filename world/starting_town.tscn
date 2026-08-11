@@ -42,6 +42,16 @@
 [ext_resource type="Script" path="res://world/starting_town.gd" id="39_town"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-trial-hall--building-facade.png" id="40_trial_hall_facade"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-item-shop--building-facade.png" id="41_item_shop_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-registry-archive--building-facade.png" id="42_registry_archive_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-bell-house--building-facade.png" id="43_bell_house_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-river-shrine--building-facade.png" id="44_river_shrine_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-iron-companies-barracks--building-facade.png" id="45_iron_companies_barracks_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-lower-market--building-facade.png" id="46_lower_market_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-equipment-shop--building-facade.png" id="47_equipment_shop_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-town-hall--building-facade.png" id="48_town_hall_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-chefs-house--building-facade.png" id="49_chefs_house_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-players-house--building-facade.png" id="50_players_house_facade"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-four-arms-tavern--building-facade.png" id="51_four_arms_tavern_facade"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(3400, 40)
@@ -165,11 +175,9 @@ offset = Vector2(0, -150.596)
 [node name="RegistryArchive" type="Node2D" parent="."]
 position = Vector2(500, 500)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-registry-archive.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="RegistryArchive"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("42_registry_archive_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="RegistryArchive"]
 z_index = 20
@@ -209,11 +217,9 @@ offset = Vector2(0, -135.596)
 [node name="BellHouse" type="Node2D" parent="."]
 position = Vector2(3000, 500)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-bell-house.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="BellHouse"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("43_bell_house_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="BellHouse"]
 z_index = 20
@@ -253,11 +259,9 @@ offset = Vector2(0, -135.596)
 [node name="RiverShrine" type="Node2D" parent="."]
 position = Vector2(1100, 1700)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-river-shrine.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="RiverShrine"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("44_river_shrine_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="RiverShrine"]
 z_index = 20
@@ -287,11 +291,9 @@ offset = Vector2(0, -110.596)
 [node name="IronCompaniesBarracks" type="Node2D" parent="."]
 position = Vector2(3000, 1500)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-iron-companies-barracks.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="IronCompaniesBarracks"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("45_iron_companies_barracks_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="IronCompaniesBarracks"]
 z_index = 20
@@ -336,11 +338,9 @@ offset = Vector2(0, -135.596)
 [node name="LowerMarket" type="Node2D" parent="."]
 position = Vector2(1700, 1200)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-lower-market.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="LowerMarket"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("46_lower_market_facade")
+offset = Vector2(0, -384)
 
 [node name="GreenStall" type="Sprite2D" parent="LowerMarket"]
 position = Vector2(-42, -12)
@@ -392,11 +392,9 @@ offset = Vector2(0, -118.096)
 [node name="EquipmentShop" type="Node2D" parent="."]
 position = Vector2(2400, 500)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-equipment-shop.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="EquipmentShop"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("47_equipment_shop_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="EquipmentShop"]
 z_index = 20
@@ -426,11 +424,9 @@ offset = Vector2(0, -123.096)
 [node name="TownHall" type="Node2D" parent="."]
 position = Vector2(2400, 1100)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-town-hall.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="TownHall"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("48_town_hall_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="TownHall"]
 z_index = 20
@@ -475,11 +471,9 @@ offset = Vector2(0, -128.096)
 [node name="ChefsHouse" type="Node2D" parent="."]
 position = Vector2(500, 1700)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-chefs-house.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="ChefsHouse"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("49_chefs_house_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="ChefsHouse"]
 z_index = 20
@@ -509,11 +503,9 @@ offset = Vector2(0, -118.096)
 [node name="PlayersHouse" type="Node2D" parent="."]
 position = Vector2(2400, 2100)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-players-house.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="PlayersHouse"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("50_players_house_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="PlayersHouse"]
 z_index = 20
@@ -713,11 +705,9 @@ offset = Vector2(0, -50.596)
 [node name="FourArmsTavern" type="Node2D" parent="."]
 position = Vector2(1700, 1800)
 
-; TODO(art): swap texture for assets/generated/sprites/world/dom/dom-four-arms-tavern.png once art/dom-revamp lands
 [node name="Facade" type="Sprite2D" parent="FourArmsTavern"]
-texture = ExtResource("8_house")
-scale = Vector2(2, 3)
-offset = Vector2(0, -128)
+texture = ExtResource("51_four_arms_tavern_facade")
+offset = Vector2(0, -384)
 
 [node name="LocationLabel" type="Label" parent="FourArmsTavern"]
 z_index = 20
