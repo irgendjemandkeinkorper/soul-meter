@@ -14,6 +14,7 @@ extends Area2D
 
 var _label: Label
 var _location: LocationDefinition
+@onready var _sign: Sprite2D = $SignSprite
 
 
 func _ready() -> void:
@@ -39,6 +40,18 @@ func _ready() -> void:
 	if not required_flag.is_empty() or not required_flags.is_empty():
 		GameState.flag_changed.connect(_on_flag_changed)
 	_refresh_lock()
+	_start_sign_pulse()
+
+
+## Passive, always-on beacon so the exit reads from a distance, not just on approach.
+## Ambient (not springy) per the DS motion language — DS.DUR_AMBIENT is the token for
+## exactly this kind of slow, settled loop.
+func _start_sign_pulse() -> void:
+	var tween := create_tween()
+	tween.set_loops()
+	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(_sign, "self_modulate:a", 0.72, DS.DUR_AMBIENT)
+	tween.tween_property(_sign, "self_modulate:a", 1.0, DS.DUR_AMBIENT)
 
 
 func _on_body_entered(body: Node2D) -> void:

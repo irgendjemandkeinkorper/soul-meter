@@ -6,6 +6,11 @@ extends Quest
 @export var objectives: PackedStringArray = []
 @export var quest_giver: String = ""
 @export var quest_location: String = ""
+## Optional structured pointer alongside quest_location's free text, for future
+## HUD/compass work (e.g. pointing at the TravelExit that leads there). Empty
+## scene path means "not populated yet" — callers must treat that as no data.
+@export var destination_scene: String = ""
+@export var destination_position: Vector2 = Vector2.ZERO
 var current_stage := 0
 
 

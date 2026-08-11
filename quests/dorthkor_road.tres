@@ -10,5 +10,7 @@ quest_description = "A demon breach has silenced Dorthkor Road. The Trial Counci
 quest_objective = "Reach Dorthkor Road."
 quest_giver = "Marshal Coiljaw"
 quest_location = "Dorthkor Road"
+destination_scene = "res://world/starting_town.tscn"
+destination_position = Vector2(2600, 100)
 required_flags = PackedStringArray("chapter_dorthkor_reached", "defeated_breach_hound", "defeated_mustered_dead")
 objectives = PackedStringArray("Reach Dorthkor Road.", "Break the demon vanguard.", "Confront the soldier answering the dead muster.", "Return to Marshal Coiljaw in Dom.")
