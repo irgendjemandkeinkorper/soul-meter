@@ -2742,7 +2742,7 @@
 				"_property_overrides": {
 					"Bio": {
 						"type": "string",
-						"value": "East Arm bench-holder and road marshal of Dom's East Arm."
+						"value": "A Trial Council road marshal charged with the broken muster at Dorthkor."
 					},
 					"Dialogue Context": {
 						"type": "string",
@@ -2766,7 +2766,7 @@
 					},
 					"Epithet": {
 						"type": "string",
-						"value": ""
+						"value": "the Road-Bench"
 					},
 					"Facing": {
 						"type": "string",
@@ -2865,6 +2865,10 @@
 						"type": "string",
 						"value": "Bog Wight"
 					},
+					"Element Id": {
+						"type": "string",
+						"value": "molm"
+					},
 					"Max HP": {
 						"type": "int",
 						"value": 20
@@ -2901,6 +2905,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Loam-Maddened Boar"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "terra"
 					},
 					"Max HP": {
 						"type": "int",
@@ -2939,6 +2947,10 @@
 						"type": "string",
 						"value": "Gnaal Breach-Hound"
 					},
+					"Element Id": {
+						"type": "string",
+						"value": ""
+					},
 					"Max HP": {
 						"type": "int",
 						"value": 28
@@ -2975,6 +2987,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Gnaal Rift-Scavenger"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": ""
 					},
 					"Max HP": {
 						"type": "int",
@@ -3013,6 +3029,10 @@
 						"type": "string",
 						"value": "Mustered Bloodbellow"
 					},
+					"Element Id": {
+						"type": "string",
+						"value": ""
+					},
 					"Max HP": {
 						"type": "int",
 						"value": 32
@@ -3049,6 +3069,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Cleaned Jawbrace Guard"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": ""
 					},
 					"Max HP": {
 						"type": "int",
@@ -15406,12 +15430,19 @@
 				"_id": "503.0",
 				"_name": "Equip",
 				"_type": "string"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": "",
+				"_id": "504.0",
+				"_name": "Element Id",
+				"_type": "string"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 503.0
+			"default": 504.0
 		}
 	},
 	"_version": 1

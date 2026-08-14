@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://df2f0nh6rt0vk"
+path="res://.godot/imported/old_grumbrand.dialogue-b51adafac91f6ef5e9533ae3007bf68c.tres"
+
+[deps]
+
+source_file="res://dialogue/companions/old_grumbrand.dialogue"
+dest_files=["res://.godot/imported/old_grumbrand.dialogue-b51adafac91f6ef5e9533ae3007bf68c.tres"]
+
+[params]
+
+defaults=true

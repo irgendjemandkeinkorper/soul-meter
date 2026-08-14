@@ -1,0 +1,29 @@
+~ start
+=> hub
+
+~ hub
+Old Grumbrand: Speak plainly. I've no patience left for the long way round.
+- "You've gone quiet at the hearth these last few nights." [if not QuestRegistry.is_active(QuestRegistry.GRUMBRAND_QUEST) and not QuestRegistry.is_done(QuestRegistry.GRUMBRAND_QUEST) /]
+	do QuestRegistry.offer(QuestRegistry.GRUMBRAND_QUEST)
+	Old Grumbrand: Quiet. Aye. There's a stiffness starting in my left hand that wasn't there at Tweede. I know what it means. My kind always knows what it means.
+	Old Grumbrand: Ask me again once you've earned the rest of it. I'm not telling that to just anyone who notices.
+	=> hub
+- "What does it mean?" [if QuestRegistry.is_active(QuestRegistry.GRUMBRAND_QUEST) and not GameState.get_flag("party_grumbrand_resolved") /]
+	Old Grumbrand: The settling. Stone taking the mind before it takes the body, an inch at a time. I've watched three elders go mid-sentence. It isn't painful. It's just quiet, where a person used to be.
+	Old Grumbrand: Stuid says a thing properly read can't fully unmake itself — the light demands a name before it lets you go dark. My College would sit me down and take a true reading: every year I lived, put to the record, whether I like the wording or not.
+	Old Grumbrand: Or I keep it mine. Not every stone needs an inscription. Tell me which sounds more like mercy to you.
+	- "Let them read you. A life unrecorded is a life that never gets to argue back." [#consequence=Grumbrand asks his College for a true reading.]
+		do GameState.set_flag("party_grumbrand_resolved", true)
+		do QuestRegistry.resolve_companion_quest("old-grumbrand", QuestRegistry.GRUMBRAND_QUEST, 6.0, "Told Grumbrand to let the Lensbearer College read him true")
+		Old Grumbrand: Then I'll write to Pozor tonight. Let them get the wording right while I can still argue about it.
+		=> END
+	- "Keep it yours. A reading is Stuid's mercy — it isn't the only kind there is." [#consequence=Grumbrand keeps his own council.]
+		do GameState.set_flag("party_grumbrand_resolved", true)
+		do QuestRegistry.resolve_companion_quest("old-grumbrand", QuestRegistry.GRUMBRAND_QUEST, 6.0, "Told Grumbrand his silence was mercy enough")
+		Old Grumbrand: Good. Let the stone have what it's owed and not a word more. That's mine to give, not the Circle's to take.
+		=> END
+- "Never mind." [if not GameState.get_flag("party_grumbrand_resolved") /]
+	=> END
+- "Thank you for telling me that." [if GameState.get_flag("party_grumbrand_resolved") /]
+	Old Grumbrand: You already know. I just said it out loud.
+	=> END

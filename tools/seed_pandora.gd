@@ -484,14 +484,18 @@ func _seed_combatants() -> void:
 	Pandora.create_property(root, "Defense", "int")
 	Pandora.create_property(root, "Balance Affinity", "int")
 	Pandora.create_property(root, "Balance Pressure", "int")
+	Pandora.create_property(root, "Element Id", "string")
 
+	# Element Id is a Wheel id (globals/elements/element_wheel.gd's ORDER) read as this
+	# combatant's TARGET-side attunement — see tools/seed_chapter_one.gd's _seed_combatants()
+	# for the thematic reasoning; keep the two seeders in lockstep.
 	var rows := [
-		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18],
-		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18],
-		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22],
-		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16],
-		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22],
-		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24],
+		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "molm"],
+		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "terra"],
+		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, ""],
+		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, ""],
+		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, ""],
+		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24, ""],
 	]
 	for row in rows:
 		var entity := Pandora.create_entity(row[0], root)
@@ -525,6 +529,7 @@ func _assign_combatant(entity: PandoraEntity, row: Array) -> void:
 	_assign(entity, "Defense", row[4])
 	_assign(entity, "Balance Affinity", row[5])
 	_assign(entity, "Balance Pressure", row[6])
+	_assign(entity, "Element Id", row[7])
 
 
 func _assign_encounter(entity: PandoraEntity, row: Array) -> void:

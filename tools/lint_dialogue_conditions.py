@@ -52,7 +52,7 @@ import sys
 
 IF_TAG = re.compile(r"\[if\b")
 
-DEFAULT_GLOB = "dialogue/*.dialogue"
+DEFAULT_GLOB = "dialogue/**/*.dialogue"
 
 
 class Finding:
@@ -190,7 +190,7 @@ def main(argv: list[str]) -> int:
     if args.self_test:
         return run_self_test()
 
-    paths = args.paths or sorted(glob.glob(DEFAULT_GLOB))
+    paths = args.paths or sorted(glob.glob(DEFAULT_GLOB, recursive=True))
     if not paths:
         print(
             f"DIALOGUE LINT: no files matched {DEFAULT_GLOB}; run from the project root",

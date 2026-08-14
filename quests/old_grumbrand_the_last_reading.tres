@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 18
+quest_name = "The Last Reading"
+quest_description = "Old Grumbrand has gone quiet at the hearth, and a Kaan going quiet is never nothing. Earn enough of his trust in the field and he'll finally say why."
+quest_objective = "Learn what's starting in Old Grumbrand."
+quest_giver = "Old Grumbrand"
+quest_location = "Wherever the party makes camp."
+required_flags = PackedStringArray("party_grumbrand_resolved")
+objectives = PackedStringArray("Talk to Old Grumbrand.", "Hear him out.")

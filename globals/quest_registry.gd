@@ -21,8 +21,26 @@ const FIFTH_ECHO: DomSideQuest = preload("res://quests/dom_fifth_echo.tres")
 const MARCHING_KNOTS: DomSideQuest = preload("res://quests/dom_marching_knots.tres")
 const ASH_IN_THE_RAIN: DomSideQuest = preload("res://quests/dom_ash_in_the_rain.tres")
 const SMOOTHED_WEIGHTS: DomSideQuest = preload("res://quests/dom_smoothed_weights.tres")
+const SERAI_LUN_QUEST: FlagQuest = preload("res://quests/serai_lun_mirror_line.tres")
+const WYNETH_QUEST: FlagQuest = preload("res://quests/wyneth_hallow_tide_kept_name.tres")
+const GRUMBRAND_QUEST: FlagQuest = preload("res://quests/old_grumbrand_the_last_reading.tres")
 const DOM_SIDE_QUEST_DIALOGUE_PATH := "res://dialogue/dom_side_quests.dialogue"
 const MARSHAL_DIALOGUE_PATH := "res://dialogue/marshal_coiljaw.dialogue"
+
+## FR-505 companion personal quests. Keyed by the recruit's `PartyMember.id`
+## (see globals/game_state.gd's recruitable_candidates()). A companion with no
+## entry here simply has no personal-quest content authored yet — that's an
+## explicit content gap, not a hidden one; see CLAUDE.md's status notes.
+const COMPANION_QUESTS := {
+	"serai-lun": SERAI_LUN_QUEST,
+	"wyneth-hallow-tide": WYNETH_QUEST,
+	"old-grumbrand": GRUMBRAND_QUEST,
+}
+const COMPANION_QUEST_DIALOGUE := {
+	"serai-lun": "res://dialogue/companions/serai_lun.dialogue",
+	"wyneth-hallow-tide": "res://dialogue/companions/wyneth_hallow_tide.dialogue",
+	"old-grumbrand": "res://dialogue/companions/old_grumbrand.dialogue",
+}
 const DOM_SIDE_QUESTS: Array[DomSideQuest] = [
 	DISHONEST_CASKS,
 	LIVING_TAG,
@@ -51,6 +69,9 @@ const ALL_QUESTS: Array[Quest] = [
 	MARCHING_KNOTS,
 	ASH_IN_THE_RAIN,
 	SMOOTHED_WEIGHTS,
+	SERAI_LUN_QUEST,
+	WYNETH_QUEST,
+	GRUMBRAND_QUEST,
 ]
 const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD]
 
@@ -137,6 +158,7 @@ const FIELD_DEBT_REWARDS := {
 func _ready() -> void:
 	GameState.inventory_changed.connect(_on_inventory_changed)
 	GameState.flag_changed.connect(_on_flag_changed)
+	GameState.party_changed.connect(_offer_companion_quests_for_party)
 
 
 func offer(quest: Quest) -> void:
@@ -345,6 +367,43 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 	)
 	GameState.set_flag(quest.resolution_flag, str(outcome["id"]))
 	SaveGame.request_autosave("dom-side-quest-resolved")
+	return true
+
+
+## FR-505: a companion's personal quest, if one is authored for them.
+func companion_quest_for(companion_id: String) -> FlagQuest:
+	return COMPANION_QUESTS.get(companion_id)
+
+
+## The dialogue resource path used to talk through a companion's personal
+## quest — empty if none is authored. See ui/screens/party.gd.
+func companion_quest_dialogue_for(companion_id: String) -> String:
+	return str(COMPANION_QUEST_DIALOGUE.get(companion_id, ""))
+
+
+## Offers every active companion's personal quest exactly once. offer() is
+## itself idempotent (QuestSystem no-ops an already-active/completed quest),
+## so calling this on every party_changed is safe.
+func _offer_companion_quests_for_party() -> void:
+	for member in GameState.companions():
+		var quest: FlagQuest = companion_quest_for(member.id)
+		if quest != null and not is_active(quest) and not is_done(quest):
+			offer(quest)
+
+
+## Completes a companion's personal quest and records the one Renown write it
+## grants. Dialogue supplies the id/quest pair so a stale or mismatched
+## reference cannot silently resolve the wrong companion's quest.
+func resolve_companion_quest(
+	companion_id: String, quest: FlagQuest, renown_delta: float, cause: String
+) -> bool:
+	if companion_quest_for(companion_id) != quest or not is_active(quest) or not flags_met(quest):
+		return false
+	turn_in(quest, "resolved", false)
+	if not is_done(quest):
+		return false
+	Renown.gain_reputation("player", renown_delta, cause, "party")
+	SaveGame.request_autosave("companion-quest-resolved")
 	return true
 
 

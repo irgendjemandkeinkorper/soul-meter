@@ -10,6 +10,8 @@ var _sub_lbl: Label
 var _hp_bar: ProgressBar
 var _hp_lbl: Label
 var _bio_lbl: Label
+var _quest_button: Button
+var _selected_member: PartyMember
 
 
 func _build() -> void:
@@ -21,6 +23,7 @@ func _build() -> void:
 	vbox.add_child(row)
 
 	var list := ItemList.new()
+	list.name = "MemberList"
 	list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	list.custom_minimum_size = Vector2(260, 0)
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -53,6 +56,13 @@ func _build() -> void:
 	_bio_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	sheet.add_child(_bio_lbl)
 
+	_quest_button = Button.new()
+	_quest_button.name = "PersonalQuestButton"
+	_quest_button.visible = false
+	_quest_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_quest_button.pressed.connect(_on_quest_button_pressed)
+	sheet.add_child(_quest_button)
+
 	for member in GameState.party:
 		list.add_item(
 			"%s  (Lv %d)" % [member.display_name, member.level],
@@ -71,9 +81,28 @@ func _build() -> void:
 
 func _on_selected(idx: int) -> void:
 	var m: PartyMember = GameState.party[idx]
+	_selected_member = m
 	_name_lbl.text = m.display_name
 	_sub_lbl.text = "%s  •  %s  •  Level %d" % [m.race, m.char_class, m.level]
 	_hp_lbl.text = "HP  %d / %d" % [m.hp, m.max_hp]
 	_hp_bar.max_value = m.max_hp
 	_hp_bar.value = m.hp
 	_bio_lbl.text = m.bio
+	var dialogue_path := QuestRegistry.companion_quest_dialogue_for(m.id)
+	_quest_button.visible = not dialogue_path.is_empty()
+	_quest_button.text = "Talk to %s" % m.display_name
+
+
+## FR-505: opens the companion's personal-quest dialogue, mirroring how
+## actors/npc/npc.gd opens the balloon for a field NPC.
+func _on_quest_button_pressed() -> void:
+	if _selected_member == null:
+		return
+	var dialogue_path := QuestRegistry.companion_quest_dialogue_for(_selected_member.id)
+	if dialogue_path.is_empty():
+		return
+	var dialogue := load(dialogue_path) as DialogueResource
+	if dialogue == null:
+		push_error("Companion '%s' could not load dialogue '%s'." % [_selected_member.id, dialogue_path])
+		return
+	DialogueManager.show_dialogue_balloon(dialogue, "start")

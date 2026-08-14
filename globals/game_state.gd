@@ -26,6 +26,7 @@ const DEFAULT_GP := 250
 const MIN_VAR_HARMONY := -5
 const MAX_VAR_HARMONY := 5
 const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
+const FAST_TRAVEL_DISCOVERY_PREFIX := "fast_travel_hub_discovered:"
 ## Set once a save has run character creation (main_menu -> CharacterCreation ->
 ## Playing). Chargen replaces `party[0]`'s identity in place (see
 ## `apply_created_character()`) rather than adding a second protagonist record, so
@@ -187,6 +188,33 @@ func set_flag(flag: String, value: Variant = true) -> void:
 
 func get_flag(flag: String, default: Variant = false) -> Variant:
 	return flags.get(flag, default)
+
+
+## Records a visited, ratified hub in the existing serialized flag store.
+## Returns true only when this call discovers the hub for the first time.
+func discover_fast_travel_hub(hub_id: StringName) -> bool:
+	if FastTravelRegistry.by_id(hub_id).is_empty():
+		return false
+	var flag := FAST_TRAVEL_DISCOVERY_PREFIX + String(hub_id)
+	if bool(get_flag(flag, false)):
+		return false
+	set_flag(flag, true)
+	return true
+
+
+func is_fast_travel_hub_discovered(hub_id: StringName) -> bool:
+	if FastTravelRegistry.by_id(hub_id).is_empty():
+		return false
+	return bool(get_flag(FAST_TRAVEL_DISCOVERY_PREFIX + String(hub_id), false))
+
+
+func discovered_fast_travel_hubs() -> Array[StringName]:
+	var result: Array[StringName] = []
+	for hub: Dictionary in FastTravelRegistry.all():
+		var hub_id := StringName(hub["id"])
+		if is_fast_travel_hub_discovered(hub_id):
+			result.append(hub_id)
+	return result
 
 
 # --- Defining Strike knowledge ----------------------------------------------
@@ -577,7 +605,8 @@ func _make_member(
 	stats: Vector4i,
 	bio: String,
 	min_reputation: float = 0.0,
-	min_infamy: float = 0.0
+	min_infamy: float = 0.0,
+	patron: String = ""
 ) -> PartyMember:
 	var member := PartyMember.new()
 	member.id = member_id
@@ -592,6 +621,7 @@ func _make_member(
 	member.bio = bio
 	member.min_reputation = min_reputation
 	member.min_infamy = min_infamy
+	member.patron = patron
 	return member
 
 
@@ -602,7 +632,10 @@ func _make_vex() -> PartyMember:
 		"Ash-Bound Kes'reth",
 		"Ironbrand (Kero)",
 		Vector4i(4, 44, 9, 5),
-		"A horned reaver of Karrn-Vash; her soul is a held line, sealed in cinder-ink."
+		"A horned reaver of Karrn-Vash; her soul is a held line, sealed in cinder-ink.",
+		0.0,
+		0.0,
+		"Kero"
 	)
 
 
@@ -656,7 +689,10 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"Mirror-Veil Kes'reth",
 			"Mirrorblade (Maiiam)",
 			Vector4i(3, 30, 8, 2),
-			"A precise duelist who turns Balance into a weapon."
+			"A precise duelist who turns Balance into a weapon.",
+			0.0,
+			0.0,
+			"Maiiam"
 		)
 	)
 	result.append(
@@ -666,7 +702,10 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"Kaan Deepkin",
 			"Lensbearer (Stuid)",
 			Vector4i(3, 38, 5, 6),
-			"A soot-stained salvager built to hold a dangerous line."
+			"A soot-stained salvager built to hold a dangerous line.",
+			0.0,
+			0.0,
+			"Stuid"
 		)
 	)
 	result.append(
@@ -676,7 +715,10 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"Ghorr",
 			"River-Mother (Haeren)",
 			Vector4i(3, 34, 4, 5),
-			"A field-medic whose steady presence makes mistakes survivable."
+			"A field-medic whose steady presence makes mistakes survivable.",
+			0.0,
+			0.0,
+			"Haeren"
 		)
 	)
 	result.append(
@@ -686,7 +728,10 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"Vael",
 			"Locksmirk (Fickah)",
 			Vector4i(3, 28, 9, 1),
-			"A fast, fragile opportunist with an eye for a weak flank."
+			"A fast, fragile opportunist with an eye for a weak flank.",
+			0.0,
+			0.0,
+			"Fickah"
 		)
 	)
 	result.append(
@@ -697,7 +742,9 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"Ironbrand (Kero)",
 			Vector4i(4, 42, 7, 6),
 			"A renowned Steel Day bruiser who demands a proven leader.",
-			10.0
+			10.0,
+			0.0,
+			"Kero"
 		)
 	)
 	result.append(
@@ -709,7 +756,8 @@ func recruitable_candidates() -> Array[PartyMember]:
 			Vector4i(3, 34, 6, 5),
 			"A Deep Salvage veteran who only trusts a notorious name.",
 			0.0,
-			8.0
+			8.0,
+			"Vhorr"
 		)
 	)
 	result.append_array(custom_recruits)
@@ -773,6 +821,18 @@ func set_party(members: Array[PartyMember]) -> void:
 func has_party_member(display_name: String) -> bool:
 	for member in party:
 		if member.display_name == display_name:
+			return true
+	return false
+
+
+## Dialogue Manager condition seam (vault: systems/ten-patron-classes.md) — lets authored
+## content react to which of the Ten a recruited companion answers to, e.g.
+## `[if GameState.has_party_patron("Haeren") /]`. `PartyMember.patron` is otherwise
+## flavor-only data (see globals/party_member.gd); this reads it without adding a new
+## mechanic.
+func has_party_patron(patron: String) -> bool:
+	for member in party:
+		if member.patron == patron:
 			return true
 	return false
 

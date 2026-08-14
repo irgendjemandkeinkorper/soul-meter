@@ -38,6 +38,7 @@ static func make_actors(encounter_id: StringName) -> Array[BattleActor]:
 		actor.defense = int(row.get("defense", 2))
 		actor.balance_affinity = int(row.get("balance_affinity", 0))
 		actor.balance_pressure = int(row.get("balance_pressure", 12))
+		actor.element_id = StringName(row.get("element_id", ""))
 		actors.append(actor)
 
 	if not actors.is_empty():

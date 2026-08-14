@@ -43,6 +43,13 @@ const BATTLE_SCREEN := preload("res://ui/screens/battle.tscn")
 const CHAPTER_COMPLETE_SCREEN := preload("res://ui/screens/chapter_complete.tscn")
 
 var _waiting_for_level := false
+var _pending_fast_travel_cost := 0
+var _fast_travel_in_progress := false
+var _loading_fallback_scene := ""
+var _recovering_from_failure := false
+## Set by a failed scene load, read (and cleared) by the next screen that can
+## report it to the player — currently the region map, the only fast-travel UI.
+var last_travel_error := ""
 ## Which scene Loading loads next — TOWN_SCENE on the initial new_game, or
 ## whatever travel() set it to on a re-entry.
 var _target_scene := TOWN_SCENE
@@ -91,27 +98,59 @@ func send_event(event: StringName) -> void:
 ## The single entry point for moving between gameplay scenes (e.g. a
 ## TravelExit) — never call SceneLoader or change_scene_to_file() directly
 ## from game code (see the header note above).
-func travel(scene_path: String, spawn_id: StringName = &"default") -> void:
+func travel(scene_path: String, spawn_id: StringName = &"default") -> bool:
 	var location := LocationRegistry.by_scene(scene_path)
 	if location == null or not location.allowed_gameplay:
 		push_error("Refusing travel to non-gameplay scene: %s" % scene_path)
-		return
+		return false
 	var destination := LoadDestination.new(location.id, location.resolve_spawn(spawn_id))
 	SaveGame.pending_spawn_id = destination.spawn_id
 	SaveGame.has_pending_player_position = false
-	load_destination(destination)
+	return load_destination(destination)
+
+
+## Validates and purchases a discovered-hub trip as one operation. The optional
+## scene path is a deterministic test seam; production callers omit it.
+func fast_travel(hub_id: StringName, current_scene_path: String = "") -> Dictionary:
+	if _fast_travel_in_progress:
+		return {"ok": false, "error": "travel_in_progress"}
+	var hub := FastTravelRegistry.by_id(hub_id)
+	if hub.is_empty():
+		return {"ok": false, "error": "unknown_destination"}
+	if not GameState.is_fast_travel_hub_discovered(hub_id):
+		return {"ok": false, "error": "undiscovered"}
+	var current_path := current_scene_path
+	if current_path.is_empty():
+		var current := get_tree().current_scene
+		current_path = current.scene_file_path if current != null else ""
+	if current_path == hub["scene_path"]:
+		return {"ok": false, "error": "current_destination"}
+	var cost := int(hub["base_cost_gp"])
+	if not GameState.can_afford(cost):
+		return {"ok": false, "error": "insufficient_gp"}
+	if not GameState.spend_gp(cost):
+		return {"ok": false, "error": "purchase_failed"}
+	_pending_fast_travel_cost = cost
+	_fast_travel_in_progress = true
+	if get_tree().paused:
+		send_event("resume")
+	if not travel(str(hub["scene_path"])):
+		_refund_pending_fast_travel()
+		return {"ok": false, "error": "route_rejected"}
+	return {"ok": true, "cost_gp": cost, "destination": hub_id}
 
 
 ## Resolves a stable destination into GameFlow-owned scene state and asks the
 ## chart to enter its existing loading transition.
-func load_destination(destination: LoadDestination) -> void:
+func load_destination(destination: LoadDestination) -> bool:
 	var location := LocationRegistry.by_id(destination.location_id)
 	if location == null or not location.allowed_gameplay:
 		push_error("Refusing load of unknown gameplay location: %s" % destination.location_id)
-		return
+		return false
 	_target_scene = location.scene_path
 	_target_spawn_id = location.resolve_spawn(destination.spawn_id)
 	send_event("travel")
+	return true
 
 
 func notify_dialogue_closed() -> void:
@@ -139,19 +178,85 @@ func _on_character_creation_exited() -> void:
 
 
 func _on_loading_entered() -> void:
+	var current := get_tree().current_scene
+	if current != null and current.scene_file_path != LOADING_SCREEN:
+		_loading_fallback_scene = current.scene_file_path
 	_waiting_for_level = true
 	SceneLoader.load_scene(_target_scene)
 
 
 func _on_scene_loaded() -> void:
-	if _waiting_for_level:
-		SaveGame.apply_pending_location(get_tree().current_scene)
-		_waiting_for_level = false
+	pass  # completion is polled in _process(); Maaack replaces current_scene on a
+	# deferred turn after this signal, so a one-shot call here can run too early
+	# and never get retried — poll instead of racing it.
+
+
+func _process(_delta: float) -> void:
+	if not _waiting_for_level:
+		return
+	var status := SceneLoader.get_status()
+	if status in [
+		ResourceLoader.THREAD_LOAD_INVALID_RESOURCE,
+		ResourceLoader.THREAD_LOAD_FAILED,
+	]:
+		_handle_scene_load_failure()
+		return
+	var current := get_tree().current_scene
+	if current != null and current.scene_file_path == _target_scene:
+		_complete_scene_load()
+
+
+func _complete_scene_load() -> void:
+	if not _waiting_for_level:
+		return
+	_waiting_for_level = false
+	_loading_fallback_scene = ""
+	var current := get_tree().current_scene
+	if _recovering_from_failure:
+		# We're only back at the fallback scene after a failed load, not a
+		# genuine arrival — skip apply_pending_location/hub discovery and just
+		# surface the failure for the next screen that can report it.
+		_recovering_from_failure = false
 		send_event("level_ready")
 		MusicDirector.play_context("field")
-		SaveGame.flush_pending_autosave.call_deferred()
-		if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
-			notify_dialogue_closed()
+		if not last_travel_error.is_empty():
+			UIManager.open(UIManager.REGION_MAP)
+		return
+	SaveGame.apply_pending_location(current)
+	var hub := FastTravelRegistry.by_scene(_target_scene)
+	if not hub.is_empty():
+		GameState.discover_fast_travel_hub(StringName(hub["id"]))
+	_pending_fast_travel_cost = 0
+	_fast_travel_in_progress = false
+	last_travel_error = ""
+	send_event("level_ready")
+	MusicDirector.play_context("field")
+	SaveGame.flush_pending_autosave.call_deferred()
+	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
+		notify_dialogue_closed()
+
+
+func _handle_scene_load_failure() -> void:
+	push_error("Failed to load gameplay scene: %s" % _target_scene)
+	_refund_pending_fast_travel()
+	last_travel_error = "scene_load_failed"
+	if not _loading_fallback_scene.is_empty() and _loading_fallback_scene != _target_scene:
+		_target_scene = _loading_fallback_scene
+		_recovering_from_failure = true
+		SceneLoader.load_scene(_target_scene)
+		return
+	# No known-good scene to fall back to (e.g. the very first boot load) —
+	# nothing plausible to recover into; leave in Loading rather than fake a
+	# successful transition to nothing.
+	_waiting_for_level = false
+
+
+func _refund_pending_fast_travel() -> void:
+	_fast_travel_in_progress = false
+	if _pending_fast_travel_cost <= 0:
+		return
+	GameState.earn_gp(_pending_fast_travel_cost)
+	_pending_fast_travel_cost = 0
 
 
 func _on_paused_entered() -> void:

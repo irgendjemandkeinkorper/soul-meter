@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://b6bdmy1ivsrox"
+path="res://.godot/imported/wyneth_hallow_tide.dialogue-581848d158ecfed93a348a1d56bff147.tres"
+
+[deps]
+
+source_file="res://dialogue/companions/wyneth_hallow_tide.dialogue"
+dest_files=["res://.godot/imported/wyneth_hallow_tide.dialogue-581848d158ecfed93a348a1d56bff147.tres"]
+
+[params]
+
+defaults=true

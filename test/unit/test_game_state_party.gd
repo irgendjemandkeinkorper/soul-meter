@@ -37,6 +37,32 @@ func test_roster_is_the_curated_six_and_excludes_fixed_lead() -> void:
 	assert_bool(names.has("Ressa Quickfingers")).is_true()
 
 
+func test_roster_carries_the_patron_each_recruit_answers_to() -> void:
+	## `char_class` display strings ("River-Mother (Haeren)") already named these; this
+	## checks the actual `PartyMember.patron` field dialogue conditions read, e.g.
+	## `has_party_patron()` below and dialogue/iris_illepah.dialogue's Haeren-flavor line.
+	var by_id := {}
+	for candidate in GameState.recruitable_candidates():
+		by_id[candidate.id] = candidate.patron
+
+	assert_str(by_id.get("serai-lun")).is_equal("Maiiam")
+	assert_str(by_id.get("old-grumbrand")).is_equal("Stuid")
+	assert_str(by_id.get("wyneth-hallow-tide")).is_equal("Haeren")
+	assert_str(by_id.get("ressa-quickfingers")).is_equal("Fickah")
+	assert_str(by_id.get("korrath-ninefold")).is_equal("Kero")
+	assert_str(by_id.get("maura-greyfen")).is_equal("Vhorr")
+
+
+func test_has_party_patron_reflects_the_active_party_only() -> void:
+	var wyneth := GameState.recruitable_candidates()[2]
+	assert_str(wyneth.id).is_equal("wyneth-hallow-tide")
+
+	assert_bool(GameState.has_party_patron("Haeren")).is_false()
+	GameState.party.append(wyneth)
+	assert_bool(GameState.has_party_patron("Haeren")).is_true()
+	assert_bool(GameState.has_party_patron("Vhorr")).is_false()
+
+
 func test_exactly_two_open_companions_are_ordered_after_vex() -> void:
 	var candidates := GameState.recruitable_candidates()
 	assert_bool(GameState.set_companions([candidates[0]])).is_false()

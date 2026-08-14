@@ -9,6 +9,9 @@ const BattleScript := preload("res://globals/battle.gd")
 const MARSHAL_DIALOGUE_PATH := "res://dialogue/marshal_coiljaw.dialogue"
 const IRIS_DIALOGUE_PATH := "res://dialogue/iris_illepah.dialogue"
 const SELLA_DIALOGUE_PATH := "res://dialogue/sella_varn.dialogue"
+const SERAI_LUN_DIALOGUE_PATH := "res://dialogue/companions/serai_lun.dialogue"
+const WYNETH_DIALOGUE_PATH := "res://dialogue/companions/wyneth_hallow_tide.dialogue"
+const GRUMBRAND_DIALOGUE_PATH := "res://dialogue/companions/old_grumbrand.dialogue"
 const PLACEMENTS_PATH := "res://data/generated/dom_npc_placements.json"
 
 var original_game_state: Dictionary
@@ -197,6 +200,32 @@ func test_every_registered_quest_has_a_playable_dialogue_starter() -> void:
 		QuestRegistry.FIELD_DEBT, MARSHAL_DIALOGUE_PATH, "start", "Accept the field debt"
 	)
 	reached[QuestRegistry.FIELD_DEBT.id] = true
+
+	_reset_fixture()
+	_select_companions()  # candidates[0] is Serai-Lun — recruiting her auto-offers her
+	# personal quest (see QuestRegistry._offer_companion_quests_for_party()), so by the
+	# time her dialogue opens the "offer" branch has already given way to "in progress".
+	await _start_quest_from_dialogue(
+		QuestRegistry.SERAI_LUN_QUEST, SERAI_LUN_DIALOGUE_PATH, "start", "What line are you watching"
+	)
+	reached[QuestRegistry.SERAI_LUN_QUEST.id] = true
+
+	# Wyneth is not one of _select_companions()'s fixed candidates[0]/[1], so her
+	# personal quest is not auto-offered here — start it straight from her own
+	# dialogue, same as the marshal-given quests above.
+	await _start_quest_from_dialogue(
+		QuestRegistry.WYNETH_QUEST, WYNETH_DIALOGUE_PATH, "start", "You never finish the muster forms"
+	)
+	reached[QuestRegistry.WYNETH_QUEST.id] = true
+
+	# Old Grumbrand IS one of _select_companions()'s fixed candidates[0]/[1] (candidate
+	# index 1), so recruiting him above already auto-offered this one — the "offer" hub
+	# line is already gone, same as Serai-Lun above, so this jumps straight to the
+	# "reveal" response.
+	await _start_quest_from_dialogue(
+		QuestRegistry.GRUMBRAND_QUEST, GRUMBRAND_DIALOGUE_PATH, "start", "What does it mean"
+	)
+	reached[QuestRegistry.GRUMBRAND_QUEST.id] = true
 
 	assert_int(reached.size()).is_equal(QuestRegistry.ALL_QUESTS.size())
 	for quest: Quest in QuestRegistry.ALL_QUESTS:

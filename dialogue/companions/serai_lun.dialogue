@@ -1,0 +1,28 @@
+~ start
+=> hub
+
+~ hub
+Serai-Lun: What is it.
+- "You've barely said a word to me since I picked you." [if not QuestRegistry.is_active(QuestRegistry.SERAI_LUN_QUEST) and not QuestRegistry.is_done(QuestRegistry.SERAI_LUN_QUEST) /]
+	do QuestRegistry.offer(QuestRegistry.SERAI_LUN_QUEST)
+	Serai-Lun: There isn't much to say. I watch the line. You keep it, or you don't.
+	Serai-Lun: Ask again when you've held it a while. I'll know if you have.
+	=> hub
+- "What line are you watching?" [if QuestRegistry.is_active(QuestRegistry.SERAI_LUN_QUEST) and not GameState.get_flag("party_serai_lun_resolved") /]
+	Serai-Lun: The one between a killing stroke and a mercy. My old company let it blur. I don't.
+	Serai-Lun: You haven't blurred it either. Not once I was watching.
+	- "I hold it because it's right, not because you're watching." [#consequence=Serai-Lun measures you as someone who doesn't perform for an audience.]
+		do GameState.set_flag("party_serai_lun_resolved", true)
+		do QuestRegistry.resolve_companion_quest("serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0, "Told Serai-Lun the line matters with or without a witness")
+		Serai-Lun: Good. That's the only answer that survives losing.
+		=> END
+	- "I hold it because someone has to keep score." [#consequence=Serai-Lun measures you as someone who still needs a witness.]
+		do GameState.set_flag("party_serai_lun_resolved", true)
+		do QuestRegistry.resolve_companion_quest("serai-lun", QuestRegistry.SERAI_LUN_QUEST, 3.0, "Told Serai-Lun she keeps you honest")
+		Serai-Lun: Then I'll keep watching. Someone should.
+		=> END
+- "Never mind." [if not GameState.get_flag("party_serai_lun_resolved") /]
+	=> END
+- "Thank you for telling me that." [if GameState.get_flag("party_serai_lun_resolved") /]
+	Serai-Lun: You already know. I just said it out loud.
+	=> END

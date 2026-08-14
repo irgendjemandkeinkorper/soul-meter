@@ -79,6 +79,51 @@ limitations before trusting a green result**); FR-904 harness `tools/performance
 no `personal_quest` anywhere); region map / fast travel (FR-503 — ratified as "discovered hubs
 only, at a cost", so implement, don't redesign); Mirror Shop (FR-801); 9-patch pass (FR-605).
 
+## Status addendum (2026-08-12) — supersedes the two sections above where they conflict
+
+**Two corrections to the gap list directly above:** `ui/screens/shop.tscn`/`shop.gd` + a
+`UIManager.SHOP` entry already exist — **the Mirror Shop is not a gap**, contrary to both the
+2026-08-04 gap list and line 48–49's "deliberately NOT in it" note (that note is about `ng_plus.gd`
+specifically and remains accurate for NG+; the shop screen itself is real). FR-503 (region map /
+fast travel) is now implemented — see below — so it's off the gap list too.
+
+**FR-503 landed:** `globals/fast_travel_registry.gd` (a read-only GDScript registry, not a Pandora
+entity — Pandora has no ratified hub/travel-cost schema yet; migrate later, see the file's header),
+`ui/screens/region_map.tscn`/`region_map.gd` (opened from the pause menu), `GameFlow.fast_travel()`
+(purchase + route as one operation, refunds on any failure). `GameFlow._process()` now polls for
+scene-load completion/failure every frame instead of relying on a one-shot `call_deferred` off
+`SceneLoader.scene_loaded` — that signal fired before Maaack's loader actually swapped
+`current_scene`, so completion could be missed permanently; polling fixed it. A failed load
+recovers to the last-known-good scene and reopens the region map so the player sees "Travel
+failed, no GP was spent" instead of silence. Tests: `test/unit/test_fast_travel.gd`,
+`test/integration/test_region_map.gd`.
+
+**FR-505 (companion personal quests) — the promotion-mechanic decision, made by explicit user
+directive since `docs/chapter-one-open-questions.md` Q8 leaves it unratified:** there is no
+separate "promotion" step. A recruit becomes eligible for their personal quest the moment they
+join the active party (`GameState.set_companions()` → `party_changed` →
+`QuestRegistry._offer_companion_quests_for_party()`, idempotent). Content is authored per-recruit
+via `QuestRegistry.COMPANION_QUESTS`/`COMPANION_QUEST_DIALOGUE` (keyed by `PartyMember.id`) — a
+recruit with no entry simply has no personal quest yet, which is visible via
+`QuestRegistry.companion_quest_for()`/`companion_quest_dialogue_for()` returning null/empty, not a
+silent gap. **One worked example is authored end-to-end:** Serai-Lun
+(`quests/serai_lun_mirror_line.tres`, `dialogue/companions/serai_lun.dialogue`). Companions have no
+field presence, so her quest is talked through from `ui/screens/party.gd`'s new "Talk to <name>"
+button (visible only when `companion_quest_dialogue_for()` is non-empty), not a walk-up NPC —
+mirrors `actors/npc/npc.gd`'s `DialogueManager.show_dialogue_balloon()` call. Resolution goes
+through `QuestRegistry.resolve_companion_quest()`, which writes exactly one `Renown.gain_reputation()`
+event. **The other 5 recruits still have no personal quest authored** — that's the real remaining
+content gap, now that the system itself exists. `tools/quest_audit.gd`'s `FLAG_DOMAINS` gained a
+`party` domain for this (e.g. `party_serai_lun_resolved`); don't grandfather new flags into
+`LEGACY_FLAGS` instead — the script's header explains why. Tests:
+`test/unit/test_companion_quest.gd`, `test/integration/test_party_screen.gd`, plus a walkthrough
+step in `test/e2e/test_first_chapter_journey.gd`.
+
+Suite: **651 cases / 0 new failures** (4 pre-existing, unrelated failures reproduce on a clean
+`main` checkout too — `test_actor_presentation.gd`, `test_y_sort.gd`,
+`test_click_to_move.gd`, `test_click_to_move_input.gd` — all headless-rendering/navmesh flakiness,
+not regressions).
+
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
 

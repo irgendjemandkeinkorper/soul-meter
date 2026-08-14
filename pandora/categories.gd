@@ -24,6 +24,12 @@ const BALANCE_BANDS = "263.0"
 const DEFINING_WEAKNESSES = "276.0"
 const VENDORS = "316.0"
 const ELEMENT_RELATIONS = "429.0"
+const JOBS = "451.0"
+const ABILITIES = "461.0"
+const UNITS = "474.0"
+const UNIT_JOBS = "485.0"
+const UNIT_ATTUNEMENT = "491.0"
+const UNIT_LOADOUT = "496.0"
 
 
 class ItemsCategories:

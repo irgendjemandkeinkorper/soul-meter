@@ -1,0 +1,29 @@
+~ start
+=> hub
+
+~ hub
+Wyneth Hallow-Tide: Say what you need. I'm listening either way.
+- "You never finish the muster forms. I've watched you skip a line." [if not QuestRegistry.is_active(QuestRegistry.WYNETH_QUEST) and not QuestRegistry.is_done(QuestRegistry.WYNETH_QUEST) /]
+	do QuestRegistry.offer(QuestRegistry.WYNETH_QUEST)
+	Wyneth Hallow-Tide: One line. One name. I know exactly which one you mean.
+	Wyneth Hallow-Tide: Ask me again once you've earned the rest of it.
+	=> hub
+- "Whose name is it?" [if QuestRegistry.is_active(QuestRegistry.WYNETH_QUEST) and not GameState.get_flag("party_wyneth_resolved") /]
+	Wyneth Hallow-Tide: My first patient at the Hospice Chain. He held a line at Dom so the rest of his company could clear it. The paperwork moved faster than the grief did, and nobody wrote him down after.
+	Wyneth Hallow-Tide: I've kept his name in my own ledger since. Not the public roll. Mine.
+	Wyneth Hallow-Tide: Haeren says a kept name steadies a soul, full stop, ledger or no ledger. My people say a name on the wall is a debt somebody has to answer for. I don't know which one is true anymore. Tell me what you'd do.
+	- "Put him on the wall. Your people are right — a debt only you're holding isn't paid, it's postponed." [#consequence=Wyneth carries the name to the muster clerks.]
+		do GameState.set_flag("party_wyneth_resolved", true)
+		do QuestRegistry.resolve_companion_quest("wyneth-hallow-tide", QuestRegistry.WYNETH_QUEST, 6.0, "Told Wyneth to give the muster-roll her kept name")
+		Wyneth Hallow-Tide: Then I will. Let Dom answer for him the way it answers for everyone else on that wall.
+		=> END
+	- "Keep him in your ledger. Haeren's right — the keeping is the point, not who else gets to see it." [#consequence=Wyneth keeps the name to herself.]
+		do GameState.set_flag("party_wyneth_resolved", true)
+		do QuestRegistry.resolve_companion_quest("wyneth-hallow-tide", QuestRegistry.WYNETH_QUEST, 6.0, "Told Wyneth her private ledger was enough")
+		Wyneth Hallow-Tide: Good. He was never the Iron Companies' to file. He was mine to keep.
+		=> END
+- "Never mind." [if not GameState.get_flag("party_wyneth_resolved") /]
+	=> END
+- "Thank you for telling me that." [if GameState.get_flag("party_wyneth_resolved") /]
+	Wyneth Hallow-Tide: You already know. I just said it out loud.
+	=> END

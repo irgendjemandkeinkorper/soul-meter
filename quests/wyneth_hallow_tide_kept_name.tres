@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 17
+quest_name = "The Kept Name"
+quest_description = "Wyneth Hallow-Tide leaves one line blank on every muster form she fills out. Earn enough of her trust in the field and she'll finally say whose name it is."
+quest_objective = "Learn whose name Wyneth keeps off the muster-roll."
+quest_giver = "Wyneth Hallow-Tide"
+quest_location = "Wherever the party makes camp."
+required_flags = PackedStringArray("party_wyneth_resolved")
+objectives = PackedStringArray("Talk to Wyneth Hallow-Tide.", "Hear her out.")

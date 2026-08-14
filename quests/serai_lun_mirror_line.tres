@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 16
+quest_name = "The Mirror Held Steady"
+quest_description = "Serai-Lun keeps her guard up even with the party. Earn enough of her trust in the field and she'll finally say why."
+quest_objective = "Learn what Serai-Lun is guarding against."
+quest_giver = "Serai-Lun"
+quest_location = "Wherever the party makes camp."
+required_flags = PackedStringArray("party_serai_lun_resolved")
+objectives = PackedStringArray("Talk to Serai-Lun.", "Hear her out.")

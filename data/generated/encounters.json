@@ -30,7 +30,8 @@
         "attack": 4,
         "defense": 1,
         "balance_affinity": 1,
-        "balance_pressure": 18
+        "balance_pressure": 18,
+        "element_id": "molm"
       }
     ]
   },
@@ -110,7 +111,8 @@
         "attack": 6,
         "defense": 3,
         "balance_affinity": 1,
-        "balance_pressure": 22
+        "balance_pressure": 22,
+        "element_id": ""
       }
     ]
   },
@@ -145,7 +147,8 @@
         "attack": 7,
         "defense": 1,
         "balance_affinity": -1,
-        "balance_pressure": 22
+        "balance_pressure": 22,
+        "element_id": ""
       },
       {
         "id": "gnaal-rift-scavenger",
@@ -154,7 +157,8 @@
         "attack": 5,
         "defense": 0,
         "balance_affinity": -1,
-        "balance_pressure": 16
+        "balance_pressure": 16,
+        "element_id": ""
       }
     ]
   },
@@ -189,7 +193,8 @@
         "attack": 7,
         "defense": 4,
         "balance_affinity": 1,
-        "balance_pressure": 24
+        "balance_pressure": 24,
+        "element_id": ""
       }
     ]
   },
@@ -224,7 +229,8 @@
         "attack": 6,
         "defense": 0,
         "balance_affinity": -1,
-        "balance_pressure": 18
+        "balance_pressure": 18,
+        "element_id": "terra"
       }
     ]
   },
@@ -288,7 +294,8 @@
         "attack": 7,
         "defense": 1,
         "balance_affinity": -1,
-        "balance_pressure": 22
+        "balance_pressure": 22,
+        "element_id": ""
       },
       {
         "id": "gnaal-rift-scavenger",
@@ -297,7 +304,8 @@
         "attack": 5,
         "defense": 0,
         "balance_affinity": -1,
-        "balance_pressure": 16
+        "balance_pressure": 16,
+        "element_id": ""
       }
     ]
   },
@@ -362,7 +370,8 @@
         "attack": 6,
         "defense": 3,
         "balance_affinity": 1,
-        "balance_pressure": 22
+        "balance_pressure": 22,
+        "element_id": ""
       },
       {
         "id": "gnaal-breach-hound",
@@ -371,7 +380,8 @@
         "attack": 7,
         "defense": 1,
         "balance_affinity": -1,
-        "balance_pressure": 22
+        "balance_pressure": 22,
+        "element_id": ""
       }
     ]
   },
@@ -449,7 +459,8 @@
         "attack": 6,
         "defense": 3,
         "balance_affinity": 1,
-        "balance_pressure": 22
+        "balance_pressure": 22,
+        "element_id": ""
       }
     ]
   },
@@ -514,7 +525,8 @@
         "attack": 7,
         "defense": 4,
         "balance_affinity": 1,
-        "balance_pressure": 24
+        "balance_pressure": 24,
+        "element_id": ""
       },
       {
         "id": "gnaal-rift-scavenger",
@@ -523,7 +535,8 @@
         "attack": 5,
         "defense": 0,
         "balance_affinity": -1,
-        "balance_pressure": 16
+        "balance_pressure": 16,
+        "element_id": ""
       }
     ]
   },
@@ -587,7 +600,8 @@
         "attack": 7,
         "defense": 4,
         "balance_affinity": 1,
-        "balance_pressure": 24
+        "balance_pressure": 24,
+        "element_id": ""
       },
       {
         "id": "mustered-bloodbellow",
@@ -596,7 +610,8 @@
         "attack": 6,
         "defense": 3,
         "balance_affinity": 1,
-        "balance_pressure": 22
+        "balance_pressure": 22,
+        "element_id": ""
       }
     ]
   }

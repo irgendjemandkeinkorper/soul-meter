@@ -716,6 +716,7 @@ static func _encounter_artifacts() -> Dictionary:
 			"defense": entity.get_integer("Defense"),
 			"balance_affinity": affinity,
 			"balance_pressure": entity.get_integer("Balance Pressure"),
+			"element_id": entity.get_string("Element Id"),
 		}
 
 	var encounters := {}

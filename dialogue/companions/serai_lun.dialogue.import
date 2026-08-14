@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://bqqanljpbru4c"
+path="res://.godot/imported/serai_lun.dialogue-23f023674386173510efbbaf6bee0882.tres"
+
+[deps]
+
+source_file="res://dialogue/companions/serai_lun.dialogue"
+dest_files=["res://.godot/imported/serai_lun.dialogue-23f023674386173510efbbaf6bee0882.tres"]
+
+[params]
+
+defaults=true

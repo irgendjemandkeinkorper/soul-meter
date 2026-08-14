@@ -24,6 +24,7 @@ const COMBATANT_PROPERTIES := [
 	["Defense", "int"],
 	["Balance Affinity", "int"],
 	["Balance Pressure", "int"],
+	["Element Id", "string"],
 ]
 const ENCOUNTER_PROPERTIES := [
 	["Encounter Id", "string"],
@@ -132,13 +133,20 @@ func _seed_npcs(root: PandoraCategory) -> void:
 
 
 func _seed_combatants(root: PandoraCategory) -> void:
+	# Element Id is a Wheel id (see globals/elements/element_wheel.gd's ORDER) read as this
+	# combatant's TARGET-side attunement — the "target relation" gamble curve (vault:
+	# systems/magic-system.md, ratified 2026-08-05) prices any elemental attack against it by
+	# Wheel distance. Bog Wight (a grave-rotted bog creature) is Molm (decay/the grave);
+	# Loam-Maddened Boar (a beast maddened by corrupted soil) is Terra (stone/the earthwork).
+	# Left blank for combatants with no authored attunement yet — they keep resolving at the
+	# ElementMatrix neutral IDENTITY_ROW, unchanged from before this column existed.
 	var rows := [
-		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18],
-		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18],
-		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22],
-		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16],
-		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22],
-		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24],
+		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "molm"],
+		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "terra"],
+		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, ""],
+		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, ""],
+		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, ""],
+		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24, ""],
 	]
 	for row in rows:
 		_upsert(
@@ -152,6 +160,7 @@ func _seed_combatants(root: PandoraCategory) -> void:
 				"Defense": row[4],
 				"Balance Affinity": row[5],
 				"Balance Pressure": row[6],
+				"Element Id": row[7],
 			}
 		)
 

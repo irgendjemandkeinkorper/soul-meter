@@ -187,6 +187,27 @@ to be a safe dependency for something this small and this frequently tuned.
 
 ---
 
+## Region map and fast travel (FR-503)
+
+Fast-travel destinations use the read-only `globals/fast_travel_registry.gd` runtime index.
+Only already-ratified hubs may be listed. Each entry has a stable location ID, scene path,
+display name, and base GP cost, and registry validation checks its location and scene against
+`LocationRegistry`. This deliberately avoids inventing lore or editing `data.pandora` before
+the corresponding vault-backed entities exist.
+
+The registry temporarily duplicates a small amount of location metadata. Treat that as an
+explicit compatibility seam, not a second source of truth: migrate it to a generated
+Pandora-to-runtime artifact once the hub entities and authoring schema are ratified. Nothing in
+the fast-travel runtime writes back to Pandora or generated data.
+
+Visited hubs are stored as namespaced flags in `GameState`, so discovery uses the existing save
+serialization. `GameFlow` marks a hub discovered only after its scene loads successfully. A
+purchase validates the destination and discovery state, verifies affordability through the
+existing GP API, and routes through `GameFlow.travel()` / `send_event("travel")`. A rejected
+route refunds the exact cost; UI code never changes scenes directly.
+
+---
+
 ## Conventions and guardrails
 
 **Data** — Pandora is the source of truth; generated artifacts never hand-edited; no literal

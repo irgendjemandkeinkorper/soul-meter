@@ -67,6 +67,40 @@ func test_cannot_select_more_than_max_party_size() -> void:
 	await runner.simulate_frames(5)
 
 
+func test_tavern_detail_sheet_focuses_first_candidate_and_follows_selection() -> void:
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(5)
+
+	var screen = UIManager.open(UIManager.TAVERN, true)
+	await runner.simulate_frames(5)
+
+	# recruitable_candidates() constructs fresh PartyMember instances per call, so this
+	# must compare against the screen's own _candidates array, not a re-fetched one.
+	var candidates: Array[PartyMember] = screen._candidates
+	assert_object(screen._focused_member).is_equal(candidates[0])
+	assert_str(screen._detail_name_lbl.text).contains(candidates[0].display_name)
+	assert_str(screen._detail_status_lbl.text).is_equal("Available")
+
+	screen._on_row_gui_input(
+		InputEventMouseButton.new(), candidates[1]
+	)  # not a left-click press: no-op, proves focus only moves on a real click
+	assert_object(screen._focused_member).is_equal(candidates[0])
+
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	screen._on_row_gui_input(click, candidates[1])
+	assert_object(screen._focused_member).is_equal(candidates[1])
+	assert_str(screen._detail_name_lbl.text).contains(candidates[1].display_name)
+
+	screen._checks[1].button_pressed = true
+	screen._on_toggled(true, screen._checks[1])
+	assert_str(screen._detail_status_lbl.text).is_equal("Chosen for the company")
+
+	UIManager.close_all()
+	await runner.simulate_frames(5)
+
+
 func test_choosing_candidates_and_confirming_replaces_party() -> void:
 	GameState._seed_demo_data()
 	var runner := scene_runner("res://world/starting_town.tscn")

@@ -31,6 +31,11 @@ Two worked examples to copy from:
 - [`test/integration/test_field_room.gd`](../test/integration/test_field_room.gd) — drives
   `world/test_room.tscn` with simulated input: player movement, wall collision, and the NPC
   talk-prompt appearing only in range.
+- [`test/unit/test_fast_travel.gd`](../test/unit/test_fast_travel.gd) — validates the FR-503
+  registry, discovery/save round-trip, affordability, exact GP deduction, and failure invariants.
+- [`test/integration/test_region_map.gd`](../test/integration/test_region_map.gd) — verifies
+  discovered-only destination filtering, current/unaffordable button states, pause-menu wiring,
+  purchase feedback, and post-load discovery.
 
 ### Running them
 
@@ -45,6 +50,13 @@ Narrow to one directory or one file the same way:
 
 ```bash
 GODOT_BIN=~/.local/bin/godot bash scripts/test.sh -a test/unit/test_reputation.gd
+```
+
+Run the focused FR-503 suites before the full suite:
+
+```bash
+GODOT_BIN=~/.local/bin/godot bash scripts/test.sh -a test/unit/test_fast_travel.gd
+GODOT_BIN=~/.local/bin/godot bash scripts/test.sh -a test/integration/test_region_map.gd
 ```
 
 Exit code `0` means every test passed — that's the signal to check in CI or a pre-push hook.
