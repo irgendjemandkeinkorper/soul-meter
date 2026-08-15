@@ -188,13 +188,7 @@ func _build_ui() -> void:
 
 	# --- middle row: the spoken line, bronze-trimmed panel ---
 	var line_panel := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = DS.STONE_1
-	sb.border_color = DS.BRONZE_1  # the one bronze-trimmed panel on this screen
-	sb.set_border_width_all(DS.BORDER_TRIM_W)
-	sb.set_corner_radius_all(DS.RADIUS)
-	sb.set_content_margin_all(DS.PANEL_PAD)
-	line_panel.add_theme_stylebox_override("panel", sb)
+	line_panel.theme_type_variation = "DialogueLinePanel"
 	line_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_content.add_child(line_panel)
 	_line_label = RichTextLabel.new()

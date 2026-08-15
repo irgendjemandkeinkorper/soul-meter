@@ -24,6 +24,9 @@ const SMOOTHED_WEIGHTS: DomSideQuest = preload("res://quests/dom_smoothed_weight
 const SERAI_LUN_QUEST: FlagQuest = preload("res://quests/serai_lun_mirror_line.tres")
 const WYNETH_QUEST: FlagQuest = preload("res://quests/wyneth_hallow_tide_kept_name.tres")
 const GRUMBRAND_QUEST: FlagQuest = preload("res://quests/old_grumbrand_the_last_reading.tres")
+const RESSA_QUEST: FlagQuest = preload("res://quests/ressa_quickfingers_open_hand.tres")
+const KORRATH_QUEST: FlagQuest = preload("res://quests/korrath_ninefold_proof_asked.tres")
+const MAURA_QUEST: FlagQuest = preload("res://quests/maura_greyfen_name_and_deed.tres")
 const DOM_SIDE_QUEST_DIALOGUE_PATH := "res://dialogue/dom_side_quests.dialogue"
 const MARSHAL_DIALOGUE_PATH := "res://dialogue/marshal_coiljaw.dialogue"
 
@@ -35,11 +38,17 @@ const COMPANION_QUESTS := {
 	"serai-lun": SERAI_LUN_QUEST,
 	"wyneth-hallow-tide": WYNETH_QUEST,
 	"old-grumbrand": GRUMBRAND_QUEST,
+	"ressa-quickfingers": RESSA_QUEST,
+	"korrath-ninefold": KORRATH_QUEST,
+	"maura-greyfen": MAURA_QUEST,
 }
 const COMPANION_QUEST_DIALOGUE := {
 	"serai-lun": "res://dialogue/companions/serai_lun.dialogue",
 	"wyneth-hallow-tide": "res://dialogue/companions/wyneth_hallow_tide.dialogue",
 	"old-grumbrand": "res://dialogue/companions/old_grumbrand.dialogue",
+	"ressa-quickfingers": "res://dialogue/companions/ressa_quickfingers.dialogue",
+	"korrath-ninefold": "res://dialogue/companions/korrath_ninefold.dialogue",
+	"maura-greyfen": "res://dialogue/companions/maura_greyfen.dialogue",
 }
 const DOM_SIDE_QUESTS: Array[DomSideQuest] = [
 	DISHONEST_CASKS,
@@ -72,6 +81,9 @@ const ALL_QUESTS: Array[Quest] = [
 	SERAI_LUN_QUEST,
 	WYNETH_QUEST,
 	GRUMBRAND_QUEST,
+	RESSA_QUEST,
+	KORRATH_QUEST,
+	MAURA_QUEST,
 ]
 const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD]
 

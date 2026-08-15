@@ -36,13 +36,10 @@ func _wyneth() -> PartyMember:
 	return null
 
 
-## Deliberately excludes every recruit with authored content, not just this file's own
-## companion, so this stays the "no authored content" fixture as more personal quests land.
 func _other_recruit() -> PartyMember:
 	for candidate in GameState.recruitable_candidates():
 		if (
 			candidate.id != "wyneth-hallow-tide"
-			and not QuestRegistry.COMPANION_QUESTS.has(candidate.id)
 			and candidate.min_reputation <= 0.0
 			and candidate.min_infamy <= 0.0
 		):

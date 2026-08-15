@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://bo5rpyyrmmd41"
+path="res://.godot/imported/ressa_quickfingers.dialogue-993a101c21abfa040c854529ff357528.tres"
+
+[deps]
+
+source_file="res://dialogue/companions/ressa_quickfingers.dialogue"
+dest_files=["res://.godot/imported/ressa_quickfingers.dialogue-993a101c21abfa040c854529ff357528.tres"]
+
+[params]
+
+defaults=true

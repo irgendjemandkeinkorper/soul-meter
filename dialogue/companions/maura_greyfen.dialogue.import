@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://dy7v1cxo1hfoj"
+path="res://.godot/imported/maura_greyfen.dialogue-93c02c65bfd1ebf0e7d1a75756c3599d.tres"
+
+[deps]
+
+source_file="res://dialogue/companions/maura_greyfen.dialogue"
+dest_files=["res://.godot/imported/maura_greyfen.dialogue-93c02c65bfd1ebf0e7d1a75756c3599d.tres"]
+
+[params]
+
+defaults=true

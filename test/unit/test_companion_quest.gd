@@ -7,6 +7,7 @@ extends GdUnitTestSuite
 ## QuestRegistry.COMPANION_QUESTS have one authored yet.
 
 const DIALOGUE_PATH := "res://dialogue/companions/serai_lun.dialogue"
+const PROVISIONAL_MARKER := "# PROVISIONAL — CANON REVIEW REQUIRED"
 
 var _original_party: Array[PartyMember]
 var _original_flags: Dictionary
@@ -20,6 +21,7 @@ func before_test() -> void:
 	_original_renown = Renown.to_dict().duplicate(true)
 	_original_quests = QuestRegistry.to_dict().duplicate(true)
 	GameState.flags.clear()
+	Renown.from_dict({})
 	QuestRegistry.reset()
 
 
@@ -39,13 +41,10 @@ func _serai_lun() -> PartyMember:
 	return null
 
 
-## Deliberately excludes every recruit with authored content, not just this file's own
-## companion, so this stays the "no authored content" fixture as more personal quests land.
 func _other_recruit() -> PartyMember:
 	for candidate in GameState.recruitable_candidates():
 		if (
 			candidate.id != "serai-lun"
-			and not QuestRegistry.COMPANION_QUESTS.has(candidate.id)
 			and candidate.min_reputation <= 0.0
 			and candidate.min_infamy <= 0.0
 		):
@@ -61,9 +60,8 @@ func test_joining_the_party_offers_her_personal_quest_exactly_once() -> void:
 
 
 func test_recruit_without_authored_content_has_no_dialogue_or_quest() -> void:
-	var undecided := _other_recruit()
-	assert_object(QuestRegistry.companion_quest_for(undecided.id)).is_null()
-	assert_str(QuestRegistry.companion_quest_dialogue_for(undecided.id)).is_empty()
+	assert_object(QuestRegistry.companion_quest_for("no-quest-companion")).is_null()
+	assert_str(QuestRegistry.companion_quest_dialogue_for("no-quest-companion")).is_empty()
 
 
 func test_resolving_grants_renown_exactly_once_and_sets_the_flag() -> void:
@@ -105,3 +103,81 @@ func test_dialogue_offers_and_resolves_through_both_authored_outcomes() -> void:
 	var source := FileAccess.get_file_as_string(DIALOGUE_PATH)
 	assert_str(source).contains('QuestRegistry.resolve_companion_quest("serai-lun"')
 	assert_str(source).contains('GameState.set_flag("party_serai_lun_resolved", true)')
+
+
+func test_remaining_recruits_have_registered_personal_quests_and_dialogue() -> void:
+	assert_object(QuestRegistry.companion_quest_for("ressa-quickfingers")).is_same(
+		QuestRegistry.RESSA_QUEST
+	)
+	assert_object(QuestRegistry.companion_quest_for("korrath-ninefold")).is_same(
+		QuestRegistry.KORRATH_QUEST
+	)
+	assert_object(QuestRegistry.companion_quest_for("maura-greyfen")).is_same(
+		QuestRegistry.MAURA_QUEST
+	)
+	assert_str(QuestRegistry.companion_quest_dialogue_for("ressa-quickfingers")).is_equal(
+		"res://dialogue/companions/ressa_quickfingers.dialogue"
+	)
+	assert_str(QuestRegistry.companion_quest_dialogue_for("korrath-ninefold")).is_equal(
+		"res://dialogue/companions/korrath_ninefold.dialogue"
+	)
+	assert_str(QuestRegistry.companion_quest_dialogue_for("maura-greyfen")).is_equal(
+		"res://dialogue/companions/maura_greyfen.dialogue"
+	)
+
+
+func test_new_companion_dialogue_is_provisional_and_uses_self_closing_conditions() -> void:
+	var paths := PackedStringArray(
+		[
+			"res://dialogue/companions/ressa_quickfingers.dialogue",
+			"res://dialogue/companions/korrath_ninefold.dialogue",
+			"res://dialogue/companions/maura_greyfen.dialogue",
+		]
+	)
+	for path: String in paths:
+		var source := FileAccess.get_file_as_string(path)
+		assert_str(source).starts_with(PROVISIONAL_MARKER)
+		for line: String in source.split("\n"):
+			if "[if " in line:
+				assert_str(line).contains(" /]")
+		var resource: DialogueResource = load(path)
+		assert_object(resource).is_not_null()
+		var first_line: DialogueLine = await DialogueManager.get_next_dialogue_line(resource, "start")
+		assert_object(first_line).is_not_null()
+
+
+func test_new_companion_resolutions_write_exactly_one_reputation_event() -> void:
+	var cases: Array[Dictionary] = [
+		{
+			"id": "ressa-quickfingers",
+			"quest": QuestRegistry.RESSA_QUEST,
+			"flag": "party_ressa_quickfingers_resolved",
+		},
+		{
+			"id": "korrath-ninefold",
+			"quest": QuestRegistry.KORRATH_QUEST,
+			"flag": "party_korrath_ninefold_resolved",
+		},
+		{
+			"id": "maura-greyfen",
+			"quest": QuestRegistry.MAURA_QUEST,
+			"flag": "party_maura_greyfen_resolved",
+		},
+	]
+	for companion_case: Dictionary in cases:
+		Renown.from_dict({})
+		QuestRegistry.reset()
+		GameState.set_flag(str(companion_case["flag"]), true)
+		var quest := companion_case["quest"] as FlagQuest
+		QuestRegistry.offer(quest)
+		var resolved := QuestRegistry.resolve_companion_quest(
+			str(companion_case["id"]), quest, 6.0, "Resolved provisional companion quest"
+		)
+		assert_bool(resolved).is_true()
+		assert_int(Renown.why(&"reputation", 10).size()).is_equal(1)
+		assert_bool(
+			QuestRegistry.resolve_companion_quest(
+				str(companion_case["id"]), quest, 6.0, "Duplicate resolution"
+			)
+		).is_false()
+		assert_int(Renown.why(&"reputation", 10).size()).is_equal(1)

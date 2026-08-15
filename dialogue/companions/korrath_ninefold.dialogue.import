@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://b6aoi16d7fax3"
+path="res://.godot/imported/korrath_ninefold.dialogue-5e3f958810b83bb3d5a58726b24617f2.tres"
+
+[deps]
+
+source_file="res://dialogue/companions/korrath_ninefold.dialogue"
+dest_files=["res://.godot/imported/korrath_ninefold.dialogue-5e3f958810b83bb3d5a58726b24617f2.tres"]
+
+[params]
+
+defaults=true

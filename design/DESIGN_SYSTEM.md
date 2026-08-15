@@ -177,9 +177,9 @@ carried into implementation: the CT disc-vs-pips question above.
 
 ## Not yet ported (tracked gaps)
 
-- **45° corner notches + gradient bevels** — need `StyleBoxTexture` nine-patches generated
-  from the DS (StyleBoxFlat can't notch); until then corners are sharp, fills are bevel
-  mid-stops.
+- **Gradient bevel depth** — 45° corner notches are complete across the runtime theme and
+  dialogue UI through 16px-margined `StyleBoxTexture` nine-patches and semantic theme type
+  variations. A later texture pass may add full gradient bevel depth without changing nodes.
 - **Engraved patterns** (etch/lattice/measure/resonance/brocade/weave) and the grain/vignette
   atmosphere — shader or texture pass later.
 - **Remaining components:** ElementWheel, TempoTrack, AgreementReadout, MeterBar, ItemSlot/

@@ -12,6 +12,9 @@ const SELLA_DIALOGUE_PATH := "res://dialogue/sella_varn.dialogue"
 const SERAI_LUN_DIALOGUE_PATH := "res://dialogue/companions/serai_lun.dialogue"
 const WYNETH_DIALOGUE_PATH := "res://dialogue/companions/wyneth_hallow_tide.dialogue"
 const GRUMBRAND_DIALOGUE_PATH := "res://dialogue/companions/old_grumbrand.dialogue"
+const RESSA_DIALOGUE_PATH := "res://dialogue/companions/ressa_quickfingers.dialogue"
+const KORRATH_DIALOGUE_PATH := "res://dialogue/companions/korrath_ninefold.dialogue"
+const MAURA_DIALOGUE_PATH := "res://dialogue/companions/maura_greyfen.dialogue"
 const PLACEMENTS_PATH := "res://data/generated/dom_npc_placements.json"
 
 var original_game_state: Dictionary
@@ -226,6 +229,21 @@ func test_every_registered_quest_has_a_playable_dialogue_starter() -> void:
 		QuestRegistry.GRUMBRAND_QUEST, GRUMBRAND_DIALOGUE_PATH, "start", "What does it mean"
 	)
 	reached[QuestRegistry.GRUMBRAND_QUEST.id] = true
+
+	await _start_quest_from_dialogue(
+		QuestRegistry.RESSA_QUEST, RESSA_DIALOGUE_PATH, "start", "weak flank first"
+	)
+	reached[QuestRegistry.RESSA_QUEST.id] = true
+
+	await _start_quest_from_dialogue(
+		QuestRegistry.KORRATH_QUEST, KORRATH_DIALOGUE_PATH, "start", "prove every command"
+	)
+	reached[QuestRegistry.KORRATH_QUEST.id] = true
+
+	await _start_quest_from_dialogue(
+		QuestRegistry.MAURA_QUEST, MAURA_DIALOGUE_PATH, "start", "trusted the name"
+	)
+	reached[QuestRegistry.MAURA_QUEST.id] = true
 
 	assert_int(reached.size()).is_equal(QuestRegistry.ALL_QUESTS.size())
 	for quest: Quest in QuestRegistry.ALL_QUESTS:

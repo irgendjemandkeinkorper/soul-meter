@@ -6,6 +6,10 @@ so both numbers were assertions rather than evidence.
 
 This harness measures. It does not optimize, and it does not fail a build on a slow number.
 
+Use the [`FR-904 reference-hardware runbook`](fr-904-runbook.md) for the rendered, three-run
+acceptance procedure. The related comprehension gate is executed with the
+[`Phase 1.5 playtest packet`](playtest-packet.md).
+
 ## Running it
 
 ```bash

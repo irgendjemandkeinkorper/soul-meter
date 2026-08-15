@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 21
+quest_name = "The Name and the Deed"
+quest_description = "Maura Greyfen trusts a notorious name. She wants to know whether a name should keep deciding trust after the person behind it has been observed."
+quest_objective = "Tell Maura whether reputation or observed conduct should carry more weight."
+quest_giver = "Maura Greyfen"
+quest_location = "Wherever the party makes camp."
+required_flags = PackedStringArray("party_maura_greyfen_resolved")
+objectives = PackedStringArray("Talk to Maura Greyfen.", "Answer how trust should be judged.")

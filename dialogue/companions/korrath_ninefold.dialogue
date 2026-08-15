@@ -1,0 +1,29 @@
+# PROVISIONAL — CANON REVIEW REQUIRED
+~ start
+=> hub
+
+~ hub
+Korrath Ninefold: If you have a command, give it.
+- "You keep asking me to prove every command." [if not QuestRegistry.is_active(QuestRegistry.KORRATH_QUEST) and not QuestRegistry.is_done(QuestRegistry.KORRATH_QUEST) /]
+	do QuestRegistry.offer(QuestRegistry.KORRATH_QUEST)
+	Korrath Ninefold: I ask for a proven leader. A command is where proof matters.
+	Korrath Ninefold: Decide what you expect when I think yours is wrong. Then come back.
+	=> hub
+- "What should happen when you dispute an order?" [if QuestRegistry.is_active(QuestRegistry.KORRATH_QUEST) and not GameState.get_flag("party_korrath_ninefold_resolved") /]
+	Korrath Ninefold: Do I challenge you before anyone moves, or carry the command and question it after?
+	Korrath Ninefold: Both can prove a leader. Only one can be our rule.
+	- "Challenge me before we move. A leader who cannot answer should not hide behind urgency." [#consequence=Korrath will demand an answer before carrying a disputed command.]
+		do GameState.set_flag("party_korrath_ninefold_resolved", true)
+		do QuestRegistry.resolve_companion_quest("korrath-ninefold", QuestRegistry.KORRATH_QUEST, 6.0, "Told Korrath to challenge a disputed command before acting")
+		Korrath Ninefold: Then answer plainly when I ask. I will do the same.
+		=> END
+	- "Carry it first and challenge me after. A leader is also proven by taking responsibility for the result." [#consequence=Korrath will carry the command, then demand an accounting.]
+		do GameState.set_flag("party_korrath_ninefold_resolved", true)
+		do QuestRegistry.resolve_companion_quest("korrath-ninefold", QuestRegistry.KORRATH_QUEST, 6.0, "Told Korrath to carry the command and demand an accounting after")
+		Korrath Ninefold: Good. I will follow. I will also remember to ask.
+		=> END
+- "Later." [if not GameState.get_flag("party_korrath_ninefold_resolved") /]
+	=> END
+- "The terms are set." [if GameState.get_flag("party_korrath_ninefold_resolved") /]
+	Korrath Ninefold: Then prove them when the moment comes.
+	=> END

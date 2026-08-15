@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1984" height="64" viewBox="0 0 1984 64">
+  <defs>
+    <polygon id="notch" points="9,1 55,1 63,9 63,55 55,63 9,63 1,55 1,9"/>
+  </defs>
+  <!-- NPC portrait frames: VOID_1 with the ten Wheel accent colours. -->
+  <use href="#notch" fill="#0C0E12" stroke="#E8C46A" stroke-width="2"/>
+  <use href="#notch" transform="translate(64)" fill="#0C0E12" stroke="#4FA96A" stroke-width="2"/>
+  <use href="#notch" transform="translate(128)" fill="#0C0E12" stroke="#2E8FB8" stroke-width="2"/>
+  <use href="#notch" transform="translate(192)" fill="#0C0E12" stroke="#A855F7" stroke-width="2"/>
+  <use href="#notch" transform="translate(256)" fill="#0C0E12" stroke="#8C7A5B" stroke-width="2"/>
+  <use href="#notch" transform="translate(320)" fill="#0C0E12" stroke="#4B3F72" stroke-width="2"/>
+  <use href="#notch" transform="translate(384)" fill="#0C0E12" stroke="#7A8B3C" stroke-width="2"/>
+  <use href="#notch" transform="translate(448)" fill="#0C0E12" stroke="#E0522F" stroke-width="2"/>
+  <use href="#notch" transform="translate(512)" fill="#0C0E12" stroke="#B8C0CC" stroke-width="2"/>
+  <use href="#notch" transform="translate(576)" fill="#0C0E12" stroke="#22D3EE" stroke-width="2"/>
+  <!-- Base, danger, bronze, and disabled button states. -->
+  <use href="#notch" transform="translate(640)" fill="#252B35" stroke="#3A414D"/>
+  <use href="#notch" transform="translate(704)" fill="#252B35" stroke="#A855F7"/>
+  <use href="#notch" transform="translate(768)" fill="#161A21" stroke="#2A303A"/>
+  <use href="#notch" transform="translate(832)" fill="#252B35" stroke="#A855F7" stroke-width="2"/>
+  <use href="#notch" transform="translate(896)" fill="#252B35" fill-opacity="0.42" stroke="#3A414D"/>
+  <use href="#notch" transform="translate(960)" fill="#252B35" stroke="#991B1B"/>
+  <use href="#notch" transform="translate(1024)" fill="#252B35" stroke="#EF4444"/>
+  <use href="#notch" transform="translate(1088)" fill="#946B2D" stroke="#D9AB45"/>
+  <use href="#notch" transform="translate(1152)" fill="#946B2D" stroke="#F0D089"/>
+  <!-- Wells, selection, inventory slots, meters, tooltip, and dialogue. -->
+  <use href="#notch" transform="translate(1216)" fill="#0C0E12" stroke="#07080B"/>
+  <use href="#notch" transform="translate(1280)" fill="#8A2BE2" fill-opacity="0.25" stroke="#A855F7"/>
+  <use href="#notch" transform="translate(1344)" fill="#0C0E12" stroke="#3A414D"/>
+  <use href="#notch" transform="translate(1408)" fill="#0C0E12" stroke="#A855F7"/>
+  <use href="#notch" transform="translate(1472)" fill="#8A2BE2" fill-opacity="0.25" stroke="#A855F7"/>
+  <use href="#notch" transform="translate(1536)" fill="#D9AB45"/>
+  <use href="#notch" transform="translate(1600)" fill="#EF4444"/>
+  <use href="#notch" transform="translate(1664)" fill="#0C0E12" stroke="#946B2D"/>
+  <use href="#notch" transform="translate(1728)" fill="#1B1F27" stroke="#946B2D" stroke-width="2"/>
+  <use href="#notch" transform="translate(1792)" fill="#1B1F27" stroke="#3A414D"/>
+  <use href="#notch" transform="translate(1856)" fill="#232833" stroke="#A855F7"/>
+  <use href="#notch" transform="translate(1920)" fill="#1B1F27" stroke="#3A414D"/>
+</svg>

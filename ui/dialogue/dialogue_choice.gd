@@ -29,6 +29,7 @@ func setup(p_text: String, p_tag: String, p_cost: String, p_consequence: String,
 
 
 func _ready() -> void:
+	theme_type_variation = "DialogueChoice"
 	focus_mode = FOCUS_ALL
 	disabled = locked
 	custom_minimum_size = Vector2(0, DS.CONTROL_H_LG)
@@ -40,11 +41,11 @@ func _ready() -> void:
 	_edge.offset_right = 3.0
 	_edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_edge)
-	_style(false)
-	mouse_entered.connect(func() -> void: _style(true))
-	mouse_exited.connect(func() -> void: _style(false))
-	focus_entered.connect(func() -> void: _style(true))
-	focus_exited.connect(func() -> void: _style(false))
+	_set_edge(false)
+	mouse_entered.connect(func() -> void: _set_edge(true))
+	mouse_exited.connect(func() -> void: _set_edge(false))
+	focus_entered.connect(func() -> void: _set_edge(true))
+	focus_exited.connect(func() -> void: _set_edge(false))
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -112,15 +113,7 @@ func _ready() -> void:
 		modulate = Color(1, 1, 1, 0.42)
 
 
-func _style(hot: bool) -> void:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = DS.STONE_2 if (hot and not locked) else DS.STONE_1
-	sb.border_color = DS.VIOLET_3 if (hot and not locked) else DS.IRON_1
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(DS.RADIUS)
-	sb.set_content_margin_all(0)
-	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-		add_theme_stylebox_override(state, sb)
+func _set_edge(hot: bool) -> void:
 	if _edge != null:
 		_edge.color = DS.VIOLET_3 if (hot and not locked) else DS.BRONZE_2
 

@@ -1,0 +1,29 @@
+# PROVISIONAL — CANON REVIEW REQUIRED
+~ start
+=> hub
+
+~ hub
+Maura Greyfen: I know the name. I am still deciding what it is worth.
+- "You trusted the name before you trusted me." [if not QuestRegistry.is_active(QuestRegistry.MAURA_QUEST) and not QuestRegistry.is_done(QuestRegistry.MAURA_QUEST) /]
+	do QuestRegistry.offer(QuestRegistry.MAURA_QUEST)
+	Maura Greyfen: A notorious name warns you before the person speaks. That is useful.
+	Maura Greyfen: It is not the same as knowing what they will do next. Ask again when you have an answer for that.
+	=> hub
+- "What should decide your trust now?" [if QuestRegistry.is_active(QuestRegistry.MAURA_QUEST) and not GameState.get_flag("party_maura_greyfen_resolved") /]
+	Maura Greyfen: The name tells me what you were willing to risk. Your conduct tells me what you choose with us watching.
+	Maura Greyfen: Which one should carry more weight?
+	- "Judge what I do now. A name can open the door, but it cannot keep earning trust." [#consequence=Maura judges trust by conduct she can observe.]
+		do GameState.set_flag("party_maura_greyfen_resolved", true)
+		do QuestRegistry.resolve_companion_quest("maura-greyfen", QuestRegistry.MAURA_QUEST, 6.0, "Told Maura to judge trust by present conduct")
+		Maura Greyfen: Then the name got my attention. What you do next keeps it.
+		=> END
+	- "Keep the name as a warning. What I do now matters, but it should not erase what the name tells you." [#consequence=Maura keeps reputation as part of every judgment.]
+		do GameState.set_flag("party_maura_greyfen_resolved", true)
+		do QuestRegistry.resolve_companion_quest("maura-greyfen", QuestRegistry.MAURA_QUEST, 6.0, "Told Maura to keep reputation in her judgment")
+		Maura Greyfen: Fair. I will watch the deed without forgetting what brought me here.
+		=> END
+- "Another time." [if not GameState.get_flag("party_maura_greyfen_resolved") /]
+	=> END
+- "You have your answer." [if GameState.get_flag("party_maura_greyfen_resolved") /]
+	Maura Greyfen: I have a measure. Trust still takes watching.
+	=> END

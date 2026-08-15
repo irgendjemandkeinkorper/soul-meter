@@ -3,9 +3,12 @@ extends RefCounted
 ## Builds the runtime Theme from the DS tokens (ui/theme/ds.gd).
 ## Per the architecture guardrails: type variations, never per-node overrides.
 ## Variations provided: TitleLabel, HeadingLabel, EyebrowLabel, QuoteLabel, StatLabel,
-## MutedLabel, NPC portrait variations, DangerButton, BronzeButton, and BattleHud layouts.
-## Panels use a project-owned notched nine-patch. Controls that do not need the silhouette
-## use token-driven StyleBoxFlat treatments so the prototype remains easy to reskin.
+## MutedLabel, NPC portrait variations, DangerButton, BronzeButton, DialogueChoice,
+## DialogueLinePanel, and BattleHud layouts. Every framed control uses a project-owned,
+## 16px-margined notched nine-patch; nodes never carry stylebox overrides.
+
+const NOTCHED_ATLAS := preload("res://assets/ui/notched_nine_patch_atlas.svg")
+const NOTCHED_TILE_SIZE := 64.0
 
 
 static func build() -> Theme:
@@ -41,12 +44,7 @@ static func build() -> Theme:
 		var frame_type := "NpcPortraitFrame%d" % index
 		t.add_type(frame_type)
 		t.set_type_variation(frame_type, "PanelContainer")
-		var portrait_frame := StyleBoxFlat.new()
-		portrait_frame.bg_color = DS.VOID_1
-		portrait_frame.border_color = accent
-		portrait_frame.set_border_width_all(DS.BORDER_TRIM_W)
-		portrait_frame.set_corner_radius_all(DS.RADIUS)
-		portrait_frame.set_content_margin_all(DS.SPACE_2)
+		var portrait_frame := _notched_style(index, DS.SPACE_2)
 		t.set_stylebox("panel", frame_type, portrait_frame)
 
 		var monogram_type := "NpcPortraitMonogram%d" % index
@@ -168,55 +166,40 @@ static func build() -> Theme:
 	t.set_color("font_focus_color", "Button", DS.PARCHMENT)
 	t.set_color("font_disabled_color", "Button", DS.ASH_FAINT)
 
-	var btn := StyleBoxFlat.new()
-	btn.bg_color = Color("#252B35")  # --bevel-iron mid stop
-	btn.border_color = DS.IRON_1
-	btn.set_border_width_all(1)
-	btn.set_corner_radius_all(DS.RADIUS)
+	var btn := _notched_style(10)
 	btn.content_margin_left = DS.SPACE_6
 	btn.content_margin_right = DS.SPACE_6
 	btn.content_margin_top = DS.SPACE_4
 	btn.content_margin_bottom = DS.SPACE_4
 	t.set_stylebox("normal", "Button", btn)
 
-	var btn_hover := btn.duplicate()
-	btn_hover.border_color = DS.VIOLET_3  # hover: the metal edge lights up; no fill lift
+	var btn_hover := _notched_style(11, DS.SPACE_4, DS.SPACE_6)
 	t.set_stylebox("hover", "Button", btn_hover)
 
-	var btn_pressed := btn.duplicate()
-	btn_pressed.bg_color = Color("#161A21")  # --bevel-iron-pressed top stop
-	btn_pressed.border_color = DS.IRON_0
+	var btn_pressed := _notched_style(12, DS.SPACE_4, DS.SPACE_6)
 	t.set_stylebox("pressed", "Button", btn_pressed)
 
-	var btn_focus := btn.duplicate()
-	btn_focus.border_color = DS.VIOLET_3  # --glow-focus ring
-	btn_focus.set_border_width_all(2)
+	var btn_focus := _notched_style(13, DS.SPACE_4, DS.SPACE_6)
 	t.set_stylebox("focus", "Button", btn_focus)
 
-	var btn_disabled := btn.duplicate()
-	btn_disabled.bg_color = Color(btn.bg_color, 0.42)
+	var btn_disabled := _notched_style(14, DS.SPACE_4, DS.SPACE_6)
 	t.set_stylebox("disabled", "Button", btn_disabled)
 
 	# DangerButton — cinder accent (consequence); never mixed with violet on one control.
 	t.add_type("DangerButton")
 	t.set_type_variation("DangerButton", "Button")
-	var dbtn := btn.duplicate()
-	dbtn.border_color = DS.CINDER_2
+	var dbtn := _notched_style(15, DS.SPACE_4, DS.SPACE_6)
 	t.set_stylebox("normal", "DangerButton", dbtn)
-	var dbtn_h := dbtn.duplicate()
-	dbtn_h.border_color = DS.CINDER_3
+	var dbtn_h := _notched_style(16, DS.SPACE_4, DS.SPACE_6)
 	t.set_stylebox("hover", "DangerButton", dbtn_h)
 	t.set_color("font_color", "DangerButton", DS.CINDER_3)
 
 	# BronzeButton — the one ceremonial control per screen (importance = bronze).
 	t.add_type("BronzeButton")
 	t.set_type_variation("BronzeButton", "Button")
-	var bbtn := btn.duplicate()
-	bbtn.bg_color = DS.BRONZE_1
-	bbtn.border_color = DS.BRONZE_3
+	var bbtn := _notched_style(17, DS.SPACE_4, DS.SPACE_6)
 	t.set_stylebox("normal", "BronzeButton", bbtn)
-	var bbtn_h := bbtn.duplicate()
-	bbtn_h.border_color = DS.BRONZE_4
+	var bbtn_h := _notched_style(18, DS.SPACE_4, DS.SPACE_6)
 	t.set_stylebox("hover", "BronzeButton", bbtn_h)
 	t.set_color("font_color", "BronzeButton", DS.TEXT_ON_METAL)
 	t.set_color("font_hover_color", "BronzeButton", DS.TEXT_ON_METAL)
@@ -289,40 +272,23 @@ static func build() -> Theme:
 	t.set_color("font_color", "StandingAlliedLabel", DS.GILD_2)
 
 	# ---- Inset wells: ItemList, ProgressBar track, LineEdit ----
-	var inset := StyleBoxFlat.new()
-	inset.bg_color = DS.VOID_1
-	inset.border_color = DS.VOID_0
-	inset.set_border_width_all(1)
-	inset.set_corner_radius_all(DS.RADIUS)
-	inset.set_content_margin_all(DS.SPACE_4)
+	var inset := _notched_style(19, DS.SPACE_4)
 	for cls in ["ItemList", "LineEdit"]:
 		t.set_stylebox("panel" if cls == "ItemList" else "normal", cls, inset.duplicate())
 	t.set_color("font_color", "ItemList", DS.ASH)
 	t.set_color("font_selected_color", "ItemList", DS.PARCHMENT)
-	var sel := StyleBoxFlat.new()
-	sel.bg_color = Color(DS.VIOLET_2, 0.25)  # selected: violet, over any rarity colour
-	sel.border_color = DS.VIOLET_3
-	sel.set_border_width_all(1)
+	var sel := _notched_style(20)
 	t.set_stylebox("selected", "ItemList", sel)
 	t.set_stylebox("selected_focus", "ItemList", sel.duplicate())
 
 	# ItemSlot — 64px inventory cells: inset stone, violet selection edge.
 	t.add_type("ItemSlot")
 	t.set_type_variation("ItemSlot", "Button")
-	var item_slot := btn.duplicate()
-	item_slot.bg_color = DS.VOID_1
-	item_slot.border_color = DS.IRON_1
-	item_slot.content_margin_left = 2
-	item_slot.content_margin_right = 2
-	item_slot.content_margin_top = 2
-	item_slot.content_margin_bottom = 2
+	var item_slot := _notched_style(21, 2)
 	t.set_stylebox("normal", "ItemSlot", item_slot)
-	var item_slot_hover := item_slot.duplicate()
-	item_slot_hover.border_color = DS.VIOLET_3
+	var item_slot_hover := _notched_style(22, 2)
 	t.set_stylebox("hover", "ItemSlot", item_slot_hover)
-	var item_slot_pressed := item_slot.duplicate()
-	item_slot_pressed.bg_color = Color(DS.VIOLET_2, 0.25)
-	item_slot_pressed.border_color = DS.VIOLET_3
+	var item_slot_pressed := _notched_style(23, 2)
 	t.set_stylebox("pressed", "ItemSlot", item_slot_pressed)
 	t.set_stylebox("focus", "ItemSlot", item_slot_pressed.duplicate())
 	t.set_color("font_color", "ItemSlot", DS.ASH)
@@ -332,14 +298,11 @@ static func build() -> Theme:
 	var track := inset.duplicate()
 	track.set_content_margin_all(0)
 	t.set_stylebox("background", "ProgressBar", track)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = DS.BRONZE_3
-	fill.set_corner_radius_all(DS.RADIUS)
+	var fill := _notched_style(24)
 	t.set_stylebox("fill", "ProgressBar", fill)
 	t.add_type("HealthProgressBar")
 	t.set_type_variation("HealthProgressBar", "ProgressBar")
-	var health_fill := fill.duplicate()
-	health_fill.bg_color = DS.METER_HEALTH_B
+	var health_fill := _notched_style(25)
 	t.set_stylebox("fill", "HealthProgressBar", health_fill)
 
 	# ---- HSlider: carved track + iron grabber ----
@@ -348,12 +311,44 @@ static func build() -> Theme:
 	t.set_stylebox("slider", "HSlider", slider_track)
 
 	# Tooltips are carved annotations, not browser-default bubbles.
-	var tooltip := inset.duplicate()
-	tooltip.border_color = DS.BRONZE_1
-	tooltip.set_border_width_all(1)
+	var tooltip := _notched_style(26, DS.SPACE_4)
 	t.set_stylebox("panel", "TooltipPanel", tooltip)
 	t.set_font("font", "TooltipLabel", body)
 	t.set_font_size("font_size", "TooltipLabel", DS.FS_200)
 	t.set_color("font_color", "TooltipLabel", DS.PARCHMENT)
 
+	# Dialogue surfaces are named variations so dynamically-created controls only
+	# select a semantic role; every state remains centralized in this theme.
+	t.add_type("DialogueLinePanel")
+	t.set_type_variation("DialogueLinePanel", "PanelContainer")
+	t.set_stylebox("panel", "DialogueLinePanel", _notched_style(27, DS.PANEL_PAD))
+
+	t.add_type("DialogueChoice")
+	t.set_type_variation("DialogueChoice", "Button")
+	t.set_stylebox("normal", "DialogueChoice", _notched_style(28))
+	t.set_stylebox("hover", "DialogueChoice", _notched_style(29))
+	t.set_stylebox("pressed", "DialogueChoice", _notched_style(29))
+	t.set_stylebox("focus", "DialogueChoice", _notched_style(29))
+	t.set_stylebox("disabled", "DialogueChoice", _notched_style(30))
+
 	return t
+
+
+static func _notched_style(
+	atlas_index: int, vertical_margin: float = 0.0, horizontal_margin: float = -1.0
+) -> StyleBoxTexture:
+	var region := AtlasTexture.new()
+	region.atlas = NOTCHED_ATLAS
+	region.region = Rect2(atlas_index * NOTCHED_TILE_SIZE, 0.0, NOTCHED_TILE_SIZE, NOTCHED_TILE_SIZE)
+	var style := StyleBoxTexture.new()
+	style.texture = region
+	style.texture_margin_left = 16.0
+	style.texture_margin_top = 16.0
+	style.texture_margin_right = 16.0
+	style.texture_margin_bottom = 16.0
+	var resolved_horizontal := vertical_margin if horizontal_margin < 0.0 else horizontal_margin
+	style.content_margin_left = resolved_horizontal
+	style.content_margin_right = resolved_horizontal
+	style.content_margin_top = vertical_margin
+	style.content_margin_bottom = vertical_margin
+	return style

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 19
+quest_name = "The Open Hand"
+quest_description = "Ressa Quickfingers sees every weak flank as an opportunity. She wants to know when the party expects her to take one and when it expects restraint."
+quest_objective = "Answer how Ressa should judge an opening."
+quest_giver = "Ressa Quickfingers"
+quest_location = "Wherever the party makes camp."
+required_flags = PackedStringArray("party_ressa_quickfingers_resolved")
+objectives = PackedStringArray("Talk to Ressa Quickfingers.", "Answer her question.")

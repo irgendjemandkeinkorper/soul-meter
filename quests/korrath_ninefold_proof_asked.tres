@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 20
+quest_name = "The Proof Asked For"
+quest_description = "Korrath Ninefold demands a proven leader. He wants a clear answer about what he should do when a command itself becomes the proof."
+quest_objective = "Set the terms on which Korrath will follow a disputed command."
+quest_giver = "Korrath Ninefold"
+quest_location = "Wherever the party makes camp."
+required_flags = PackedStringArray("party_korrath_ninefold_resolved")
+objectives = PackedStringArray("Talk to Korrath Ninefold.", "Set the terms of his challenge.")

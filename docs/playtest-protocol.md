@@ -6,6 +6,10 @@ is the go/no-go for region content production. It is not advisory and not waivab
 **Who runs it:** a human. The 3–5 testers must be *outside* the project. No agent, simulation,
 or internal review substitutes for this — that substitution is explicitly disallowed.
 
+Use the fillable [`playtest-packet.md`](playtest-packet.md) to execute and sign off the gate.
+Performance is recorded separately with the
+[`FR-904 reference-hardware runbook`](fr-904-runbook.md).
+
 ---
 
 ## 1. What the gate actually requires
