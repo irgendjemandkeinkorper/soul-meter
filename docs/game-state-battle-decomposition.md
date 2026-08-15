@@ -1,40 +1,68 @@
-# GameState and Battle decomposition scope
+# GameState and Battle decomposition plan (issue #84)
 
-This is a scoping note, not an immediate refactor. It records seams to evaluate before the
-next feature batch adds more responsibility to either autoload.
+Revised 2026-08-15 at HEAD 5b7a674. This supersedes the earlier scoping note: the measured
+facts below are current, and the plan is now ordered by measured coupling, not intuition.
+It remains a plan, not an immediate refactor — land feature work through the current public
+seams, then migrate one seam at a time with characterization tests.
 
-## GameState candidate seams
+## Measured state (2026-08-15)
 
-`globals/game_state.gd` currently combines core flags and party state with inventory, persisted
-settings, and audio-bus setup. A future split could keep a small `GameState` facade for flags,
-party, and serialization while extracting:
+- `globals/game_state.gd`: **1015 lines** (the issue's 366 is stale).
+- `globals/battle.gd`: **741 lines** — but it is now explicitly a *facade*: all turn
+  authority and live pricing sit behind `globals/combat/` (controller 996, grid model 615,
+  schedulers 502/428/217, tile_state/weather/resolution 249/232/229, plus catalogs and
+  value objects). The AP compatibility shim it carried was removed with #176.
+- Battle state is **not serialized**; battle outcomes reach persistence only as GameState
+  flags via `_apply_authored_flags` / `_record_last_outcome` (battle.gd:536–596).
+- GameState's settings/locale/audio persist to `user://settings.cfg`, **not** the save
+  payload — which is exactly why that seam is the cheapest cut.
 
-- an inventory adapter that owns GLoot setup, item creation, and inventory round-trips;
-- a settings service that owns persisted display/audio/input values; and
-- an audio service that owns bus creation and volume/mute updates.
+## GameState seams, ordered by measured coupling (call sites / files)
 
-The facade must remain the single compatibility seam for existing callers until each consumer
-has migrated. The main blocker is autoload coupling: `SaveGame`, UI screens, dialogue mutations,
-and tests currently reach directly into `GameState`, so an eager extraction would create a broad
-signal/API migration rather than a local refactor.
+| seam | coupling | verdict |
+|---|---|---|
+| settings + locale + audio buses | 9 / 2 | **Cut first.** Zero save-payload entanglement, two consumers. Extract `SettingsService` (owns `user://settings.cfg`, fullscreen, locale, bus volumes). |
+| Vär harmony | 5 / 1 | Cut second, or fold into the combat-knowledge move below. |
+| vendors / trade | 17 / 4 | **Cut third — the cluster the old note missed entirely (~157 lines, game_state.gd:366–522).** Extract `VendorService` around the existing `VendorData` preload; it already has its own signal (`vendor_stock_changed`) and payload keys (`vendor_stock`, `vendor_restock_cycles`). |
+| combat knowledge / weaknesses | 13 / 3 | Move toward `globals/combat/` alongside the identity catalog; serialization stays in the facade payload. |
+| fast-travel discovery | 17 / 4 | Leave: it is flag-prefix sugar, not real state. Goes wherever flags go. |
+| inventory (GLoot) | 38 / 12 | Extract only the *setup/adapter* half; the `inventory` handle stays on the facade. |
+| gp / economy, soul meter / husking | 43/9, 76/14 | Facade-core. Do not extract. |
+| flags, party | 274/41, 163/29 | **Facade-core, load-bearing.** Never extract; these plus serialization ARE GameState. |
 
-## Battle candidate seams
+Target end-state: `GameState` = flags + party + soul/husk + gp + serialization facade
+(~450 lines), with `SettingsService`, `VendorService`, and an inventory adapter as
+autoload-free helpers owned by it. Every extraction keeps the facade methods as
+delegating shims until the last consumer migrates (SaveGame's private-method reach —
+`GameState._seed_demo_data()` at save_game.gd:374 — must become a public reset seam in
+the same pass).
 
-`globals/battle.gd` combines turn sequencing, actor/result calculation, encounter setup, and
-signals consumed by the battle screen. `BattleActor` and `BattleResult` already provide a useful
-calculation seam; the next split could extract:
+## Battle seams
 
-- a resolver for attack/defense math, damage, death, and victory results; and
-- a battle-session coordinator for turns, encounter state, reputation writes, and emitted
-  presentation events.
+The old note's "extract a resolver" already happened (`globals/combat/resolution.gd`,
+pure, gate-proven forecast==resolution). What remains in `battle.gd`:
 
-The UI should continue consuming result/reporting data rather than owning resolution. The hard
-blocker is signal and autoload compatibility: `ui/screens/battle.gd`, `GameState`, and the
-existing tests depend on the current `Battle` instance and event ordering. Issue #48 should not
-silently introduce collision identity or a new combat framework while this boundary is unsettled.
+1. **Consequence writer (~190 lines, battle.gd:403–596)** — `_finish`, `_apply_victory`,
+   `_apply_flee_consequence`, `_record_renown`, authored-flag writes. This is persistence
+   policy, not combat. Extract `BattleOutcomeWriter` (plain RefCounted, injected with the
+   ledgers) — it is the only part of Battle that touches GameState/Reputation/Renown, and
+   extracting it makes the append-only ledger rule mechanically auditable.
+2. **Session state + controller bridge** — stays. It is the facade the UI consumes.
+3. **Legacy convenience wrappers** (battle.gd:298–319) — delete after the battle screen
+   migrates to `use_action` paths; they predate the controller.
+
+The one genuinely broad Battle surface is the `combat_event` signal (stage, battle_hud,
+battle_interface, combat_audio, combat_style_tracker all consume it, with replay). That
+contract is now load-bearing for the six-region interface — treat it as frozen; any
+decomposition must keep `combat_event` + `replay_combat_events` byte-compatible.
 
 ## Sequencing
 
-Treat this document as input to a separate refactor issue. Land feature work through the current
-public seams first, then migrate one seam at a time with characterization tests before deleting
-the old facade methods.
+1. `SettingsService` (9 call sites, 2 files) — one afternoon, zero save risk.
+2. `VendorService` — before any shop/economy feature work adds more vendor code.
+3. `BattleOutcomeWriter` — before Chapter 2 content multiplies consequence writes.
+4. Combat-knowledge move + Vär fold-in — opportunistic, next time that code is touched.
+5. Inventory adapter — only when a real inventory feature forces it.
+
+Each step: characterization tests first, delegating shims until consumers migrate, one
+seam per PR, suite green throughout.

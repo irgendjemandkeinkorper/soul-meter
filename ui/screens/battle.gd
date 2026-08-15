@@ -56,6 +56,8 @@ func _build() -> void:
 	stage_space.add_child(_battle_interface)
 	Battle.combat_event.connect(_battle_interface.consume_event)
 	Battle.replay_combat_events(_battle_interface.consume_event)
+	if Battle.controller != null and Battle.controller.scheduler != null:
+		_battle_interface.bind_scheduler(Battle.controller.scheduler)
 
 	_battle_hud = BATTLE_HUD_SCENE.instantiate() as BattleHUD
 	_battle_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
