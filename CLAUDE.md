@@ -156,6 +156,40 @@ Suite: **674 cases / 0 new failures** (same 4 known headless flakes; `test_click
 passes intermittently, confirming flakiness). Quest audit: 0 errors; the new quests emit the
 same `outcome_count` warning class as the accepted Serai/Wyneth/Grumbrand quests.
 
+## Status addendum (2026-08-15, backlog session) — supersedes the sections above where they conflict
+
+**The GitHub backlog was cleared to its human-gated floor: 41 issues closed in six waves**
+(evidence per wave in `docs/issue-evidence-wave*.md`; every closure cites tests + commits).
+Highlights, each a real system now on `main`:
+- **Tactical combat vertical is COMPLETE through Gate T-10:** CT scheduler with ratified
+  wait semantics (#193: 50% READY_AT refund, overflow dropped, 2-wait cap), grid battlefield
+  + deterministic pathing, pure `Resolution.resolve()` (forecast==resolution), six-region
+  battle interface (`ui/hud/battle_interface.*` + `ui/hud/regions/*`, event-driven with
+  replay, contract frozen), deployment chart states. ⚠ Deployment PLACE writes no spawn
+  positions yet — `configure_placement()` has no caller (#202).
+- **Save schema is 6** (expert rerolls + tactical envelope, #189); `equipped_slots` rides
+  as an additive key (no bump; loader defaults `{}`).
+- **Tavern is a real interior scene** (`world/interiors/dom_tavern.tscn`, #199) reached via
+  `GameFlow.travel()`; GAMEPLAY_SCENES comes solely from `LocationRegistry.gameplay_scenes()`
+  (25 locations), no special cases in `travel()`.
+- **Inventory (#126) and World Map (#128) screens are to spec** on GLoot / FastTravelRegistry
+  with DS components `ui/components/{badge,item_slot,meter_bar}` (#114). Equipment persists
+  via `GameState.equipped_slots` snapshot-on-close; Pandora `equip_slot` values ("main_hand")
+  map to rail slots via `InventoryScreen.EQUIP_SLOT_ALIASES`.
+- **NG+ reactivity lines exist** (#105): 3 echo lines gated on read-only `NGPlus.is_active()`,
+  all `PROVISIONAL — CANON REVIEW REQUIRED` (joins the six recruit names in the pending
+  human canon-review pile).
+
+**Open issues (15) are all human-gated or blocked:** #93 playtest gate, #168/#169/#175
+remaining Gate T criteria, #98/#100 Phase-0 ratifications, #102/#104/#106 content waves
+behind #93, #112/#115 off-machine sources, #201/#202 wiring residuals, #177 index, #199-era
+notes closed. `docs/maaack-wizard-checklist.md` is the #56 deliverable (drafted, NOT run).
+
+Suite: **737 cases / 0 new failures** (same 3–4 headless-flaky baseline suites). Watch-out
+class this session: gdUnit treats Variant-inference (`:=` from a Variant-returning call,
+e.g. `auto_free()`) as a parse ERROR that aborts the entire run with exit 105 — type such
+vars explicitly.
+
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
 
