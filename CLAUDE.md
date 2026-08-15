@@ -124,6 +124,38 @@ Suite: **651 cases / 0 new failures** (4 pre-existing, unrelated failures reprod
 `test_click_to_move.gd`, `test_click_to_move_input.gd` — all headless-rendering/navmesh flakiness,
 not regressions).
 
+## Status addendum (2026-08-15) — supersedes the sections above where they conflict
+
+**Companion quests: ALL SIX recruits are now authored** (user ratified all six get quests,
+overriding PRD FR-505's 3–5 minimum). Wave 2 (Wyneth Hallow-Tide, Old Grumbrand) landed earlier;
+wave 3 (merge `153c1eb`) added Ressa Quickfingers (`quests/ressa_quickfingers_open_hand.tres`),
+Korrath Ninefold (`quests/korrath_ninefold_proof_asked.tres`), Maura Greyfen
+(`quests/maura_greyfen_name_and_deed.tres`), each with dialogue in `dialogue/companions/`.
+⚠ The three wave-3 dialogue files are marked `PROVISIONAL — CANON REVIEW REQUIRED`: none of the
+six recruit names exist in the lore vault yet — vault entries + `Vault Id` bridges are a pending
+HUMAN canon task; do not treat the prose as canon or copy it into the vault unreviewed.
+
+**FR-605 (9-patch pass) is DONE** — off the gap list. All former `StyleBoxFlat` sites (6 in
+`ui/theme/theme_builder.gd`, 2 in dialogue UI) now use notched `StyleBoxTexture` nine-patches from
+project-owned `assets/ui/notched_nine_patch_atlas.svg` (31 tiles × 64px), applied via theme type
+variations only (`_notched_style()` helper; dialogue uses `DialogueLinePanel`/`DialogueChoice`).
+Known cosmetic follow-up: eyeball the 64px inventory `ItemSlot` — 16px texture margin vs 2px
+content margin may crowd at small sizes.
+
+**Human-gate packets exist:** `docs/playtest-packet.md` (Phase 1.5 execution packet; its sign-off
+line is what authorizes region-content merging) and `docs/fr-904-runbook.md` (reference-hardware
+benchmark procedure; acceptance = p95 frame time ≤ 16.67 ms with full HUD).
+
+**Chapter 1's remaining work is now entirely human-gated — no autonomous code gaps:**
+run Phase 1.5 with 3–5 outside testers; run the FR-904 runbook on real hardware; canon-review the
+six recruit names; then (and only then) the region wave — 4 more macro locations incl. 2 hubs.
+Counting note: `LocationRegistry.ALL.size()` (24) is NOT the FR-501 metric — it includes 20
+interiors; macro locations are Dom, Wilds, Dorthkor Road, Wound Lip (4 of 8).
+
+Suite: **674 cases / 0 new failures** (same 4 known headless flakes; `test_click_to_move`
+passes intermittently, confirming flakiness). Quest audit: 0 errors; the new quests emit the
+same `outcome_count` warning class as the accepted Serai/Wyneth/Grumbrand quests.
+
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
 
