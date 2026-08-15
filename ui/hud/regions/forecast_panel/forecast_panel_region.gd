@@ -1,0 +1,68 @@
+class_name ForecastPanelRegion
+extends PanelContainer
+
+signal element_selected(element_id: StringName)
+var _context: Dictionary = {}
+var _selected: StringName = ElementWheel.ORDER[0]
+@onready var wheel: HBoxContainer = %ActWheel
+@onready var target_header: Label = %TargetHeader
+@onready var affinity: Label = %AffinityStrip
+@onready var forecast: Label = %Forecast
+
+
+func _ready() -> void:
+	for element_id: StringName in ElementWheel.ORDER:
+		var button := Button.new()
+		button.text = String(element_id).to_upper()
+		button.theme_type_variation = "BronzeButton" if element_id == _selected else "Button"
+		button.pressed.connect(select_element.bind(element_id))
+		wheel.add_child(button)
+
+
+func consume_event(event: CombatEvent) -> void:
+	var snapshot: Dictionary = event.data.get("snapshot", event.data)
+	var forecast_context: Variant = event.data.get("forecast_context", snapshot.get("forecast_context", {}))
+	if forecast_context is Dictionary and not (forecast_context as Dictionary).is_empty():
+		set_forecast_context(forecast_context)
+
+
+func set_forecast_context(context: Dictionary) -> void:
+	_context = context.duplicate(true)
+	_recompute()
+
+
+func select_element(element_id: StringName) -> void:
+	if not ElementWheel.ORDER.has(element_id):
+		return
+	_selected = element_id
+	var ability: Dictionary = _context.get("ability", {}).duplicate(true)
+	ability["element_id"] = String(_selected)
+	ability["elements"] = [_selected]
+	_context["ability"] = ability
+	for child: Node in wheel.get_children():
+		if child is Button:
+			(child as Button).theme_type_variation = "BronzeButton" if (child as Button).text == String(_selected).to_upper() else "Button"
+	_recompute()
+	element_selected.emit(_selected)
+
+
+func forecast_result() -> Dictionary:
+	return Resolution.resolve(_context)
+
+
+func _recompute() -> void:
+	var target: Dictionary = _context.get("target", {})
+	target_header.text = "ATTUNED — %s · H%d" % [str(target.get("element_id", "—")).to_upper(), int(target.get("height", 0))]
+	var values: Dictionary = target.get("attunements", {})
+	var parts: PackedStringArray = []
+	for element_id: StringName in ElementWheel.ORDER:
+		parts.append("%s %+d" % [String(element_id).to_upper(), int(values.get(element_id, values.get(String(element_id), 0)))])
+	affinity.text = "  ".join(parts)
+	var result := forecast_result()
+	if not bool(result.get("allowed", false)):
+		forecast.text = str(result.get("message", "FORECAST UNAVAILABLE"))
+		return
+	var chain: PackedStringArray = []
+	for step: Dictionary in result.get("breakdown", []):
+		chain.append("%s %s" % [str(step.get("label", "")), str(step.get("value", 0))])
+	forecast.text = "%s\nFORECAST %d · HIT 90%%" % [" × ".join(chain), int(result.get("damage", 0))]

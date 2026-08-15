@@ -4,6 +4,7 @@ extends Screen
 
 const BATTLE_STAGE_SCENE := preload("res://ui/screens/battle_stage.tscn")
 const BATTLE_HUD_SCENE := preload("res://ui/hud/battle_hud.tscn")
+const BATTLE_INTERFACE_SCENE := preload("res://ui/hud/battle_interface.tscn")
 const COMBAT_AUDIO := preload("res://audio/combat_audio.gd")
 
 var _stage: Control
@@ -20,6 +21,7 @@ var _tactical_data_button: Button
 var _outcome_box: VBoxContainer
 var _action_buttons: Array[Button] = []
 var _battle_hud: BattleHUD
+var _battle_interface: BattleInterface
 var _combat_audio: Node
 
 
@@ -47,6 +49,13 @@ func _build() -> void:
 	stage_space.add_child(_stage)
 	Battle.combat_event.connect(Callable(_stage, "consume_event"))
 	Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
+
+	_battle_interface = BATTLE_INTERFACE_SCENE.instantiate() as BattleInterface
+	_battle_interface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_battle_interface.z_index = 4
+	stage_space.add_child(_battle_interface)
+	Battle.combat_event.connect(_battle_interface.consume_event)
+	Battle.replay_combat_events(_battle_interface.consume_event)
 
 	_battle_hud = BATTLE_HUD_SCENE.instantiate() as BattleHUD
 	_battle_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

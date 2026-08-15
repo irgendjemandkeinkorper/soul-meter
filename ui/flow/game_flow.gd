@@ -40,6 +40,7 @@ const LOADING_SCREEN := (
 )
 const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
 const CHARACTER_CREATION_SCREEN := preload("res://ui/screens/character_creation.tscn")
+const DEPLOYMENT_SCREEN := preload("res://ui/screens/deployment/deployment.tscn")
 const BATTLE_SCREEN := preload("res://ui/screens/battle.tscn")
 const CHAPTER_COMPLETE_SCREEN := preload("res://ui/screens/chapter_complete.tscn")
 
@@ -88,6 +89,15 @@ func _ready() -> void:
 	$StateChart/Root/Playing/Loading.state_entered.connect(_on_loading_entered)
 	$StateChart/Root/Playing/Paused.state_entered.connect(_on_paused_entered)
 	$StateChart/Root/Playing/Paused.state_exited.connect(_on_paused_exited)
+	var deployment_states := [
+		$StateChart/Root/Playing/DeploymentSlate,
+		$StateChart/Root/Playing/DeploymentAttune,
+		$StateChart/Root/Playing/DeploymentLoadout,
+		$StateChart/Root/Playing/DeploymentPlace,
+	]
+	for index: int in deployment_states.size():
+		deployment_states[index].state_entered.connect(_on_deployment_entered.bind(index))
+		deployment_states[index].state_exited.connect(_on_deployment_exited)
 	$StateChart/Root/Playing/Battle.state_entered.connect(_on_battle_entered)
 	$StateChart/Root/Playing/Battle.state_exited.connect(_on_battle_exited)
 	$StateChart/Root/Playing/ChapterComplete.state_entered.connect(_on_chapter_complete_entered)
@@ -296,6 +306,17 @@ func _on_paused_entered() -> void:
 func _on_paused_exited() -> void:
 	UIManager.close_all()
 	get_tree().paused = false
+
+
+func _on_deployment_entered(step: int) -> void:
+	get_tree().paused = true
+	var screen := UIManager.open(DEPLOYMENT_SCREEN, false, true) as DeploymentScreen
+	if screen != null:
+		screen.configure_step(step)
+
+
+func _on_deployment_exited() -> void:
+	UIManager.close_all()
 
 
 func _on_battle_entered() -> void:

@@ -69,9 +69,9 @@ script = ExtResource("5_transition")
 to = NodePath("../../Paused")
 event = &"pause"
 
-[node name="ToBattle" type="Node" parent="StateChart/Root/Playing/Active"]
+[node name="ToDeploymentSlate" type="Node" parent="StateChart/Root/Playing/Active"]
 script = ExtResource("5_transition")
-to = NodePath("../../Battle")
+to = NodePath("../../DeploymentSlate")
 event = &"enter_battle"
 
 [node name="ToLoading" type="Node" parent="StateChart/Root/Playing/Active"]
@@ -96,6 +96,38 @@ event = &"resume"
 script = ExtResource("5_transition")
 to = NodePath("../../../Menus")
 event = &"to_main_menu"
+
+[node name="DeploymentSlate" type="Node" parent="StateChart/Root/Playing"]
+script = ExtResource("4_atomic")
+
+[node name="ToAttune" type="Node" parent="StateChart/Root/Playing/DeploymentSlate"]
+script = ExtResource("5_transition")
+to = NodePath("../../DeploymentAttune")
+event = &"deployment_next"
+
+[node name="DeploymentAttune" type="Node" parent="StateChart/Root/Playing"]
+script = ExtResource("4_atomic")
+
+[node name="ToLoadout" type="Node" parent="StateChart/Root/Playing/DeploymentAttune"]
+script = ExtResource("5_transition")
+to = NodePath("../../DeploymentLoadout")
+event = &"deployment_next"
+
+[node name="DeploymentLoadout" type="Node" parent="StateChart/Root/Playing"]
+script = ExtResource("4_atomic")
+
+[node name="ToPlace" type="Node" parent="StateChart/Root/Playing/DeploymentLoadout"]
+script = ExtResource("5_transition")
+to = NodePath("../../DeploymentPlace")
+event = &"deployment_next"
+
+[node name="DeploymentPlace" type="Node" parent="StateChart/Root/Playing"]
+script = ExtResource("4_atomic")
+
+[node name="ToBattle" type="Node" parent="StateChart/Root/Playing/DeploymentPlace"]
+script = ExtResource("5_transition")
+to = NodePath("../../Battle")
+event = &"accept_slate"
 
 [node name="Battle" type="Node" parent="StateChart/Root/Playing"]
 script = ExtResource("4_atomic")
