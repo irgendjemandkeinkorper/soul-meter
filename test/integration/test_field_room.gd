@@ -86,30 +86,29 @@ func test_open_inventory_screen() -> void:
 
 	assert_object(inventory_screen).is_not_null()
 
-	# Find the slot grid inside the screen to verify items are visible
-	var item_grid: GridContainer = _find_child_by_type(inventory_screen, "GridContainer")
-	assert_object(item_grid).is_not_null()
+	# The bag is now a GLoot CtrlInventoryGrid bound directly to GameState.inventory.
+	var bag_grid := inventory_screen.find_child("BagGrid", true, false) as CtrlInventoryGrid
+	assert_object(bag_grid).is_not_null()
+	assert_object(bag_grid.inventory).is_same(GameState.inventory)
 
-	# Assert that all 6 starting items are visible as 64px inventory slots.
-	assert_int(item_grid.get_child_count()).is_equal(6)
-	assert_bool((item_grid.get_child(0) as Button).has_focus()).is_true()
-
-	# Verify specific item names through each slot's full tooltip.
-	var expected_titles := [
+	# All 6 starting items are present, with the seeded stack sizes intact.
+	var items := GameState.inventory.get_items()
+	assert_int(items.size()).is_equal(6)
+	var titles: Array[String] = []
+	var stacks := {}
+	for item in items:
+		titles.append(item.get_title())
+		stacks[item.get_title()] = item.get_stack_size()
+	assert_array(titles).contains_exactly_in_any_order([
 		"Taubstummer Axe",
 		"Captured Reflection",
 		"Soul Gauge",
-		"Loam Bread  ×5",
-		"Cinder-Ink Vial  ×2",
-		"QUINE Shard"
-	]
-
-	for i in range(6):
-		var slot: Button = item_grid.get_child(i)
-		assert_str(slot.tooltip_text).is_equal(expected_titles[i])
-
-	assert_str((item_grid.get_child(3) as Button).text).contains("×5")
-	assert_str((item_grid.get_child(4) as Button).text).contains("×2")
+		"Loam Bread",
+		"Cinder-Ink Vial",
+		"QUINE Shard",
+	])
+	assert_int(int(stacks["Loam Bread"])).is_equal(5)
+	assert_int(int(stacks["Cinder-Ink Vial"])).is_equal(2)
 
 	# Programmatically close the screen
 	UIManager.back()

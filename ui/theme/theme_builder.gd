@@ -242,6 +242,24 @@ static func build() -> Theme:
 	t.add_type("MutedLabel")
 	t.set_type_variation("MutedLabel", "Label")
 	t.set_color("font_color", "MutedLabel", DS.ASH_DIM)
+	t.add_type("DangerLabel")
+	t.set_type_variation("DangerLabel", "Label")
+	t.set_color("font_color", "DangerLabel", DS.CINDER_3)
+
+	# Compact composed-component typography.
+	t.add_type("BadgeLabel")
+	t.set_type_variation("BadgeLabel", "Label")
+	t.set_font("font", "BadgeLabel", display)
+	t.set_font_size("font_size", "BadgeLabel", DS.FS_100)
+	t.set_color("font_color", "BadgeLabel", DS.PARCHMENT)
+	t.add_type("ItemSlotCaption")
+	t.set_type_variation("ItemSlotCaption", "Label")
+	t.set_font("font", "ItemSlotCaption", numeric)
+	t.set_font_size("font_size", "ItemSlotCaption", DS.FS_100)
+	t.set_color("font_color", "ItemSlotCaption", DS.PARCHMENT)
+	t.add_type("InventoryColumns")
+	t.set_type_variation("InventoryColumns", "HBoxContainer")
+	t.set_constant("separation", "InventoryColumns", DS.CONTROL_GAP)
 
 	# Journal and Standing use semantic label variations so state remains
 	# color-independent in text while accents still follow the shared palette.
@@ -294,6 +312,22 @@ static func build() -> Theme:
 	t.set_color("font_color", "ItemSlot", DS.ASH)
 	t.set_color("font_hover_color", "ItemSlot", DS.PARCHMENT)
 	t.set_color("font_pressed_color", "ItemSlot", DS.PARCHMENT)
+
+	# Reusable Badge and GLoot ItemSlot scenes choose only these semantic type
+	# variations; their nodes never carry local StyleBox overrides.
+	for badge_type: String in ["Badge", "BadgeZone", "BadgeWeak", "BadgeResist"]:
+		t.add_type(badge_type)
+		t.set_type_variation(badge_type, "PanelContainer")
+	t.set_stylebox("panel", "Badge", _notched_style(19, DS.SPACE_2, DS.SPACE_4))
+	t.set_stylebox("panel", "BadgeZone", _notched_style(20, DS.SPACE_2, DS.SPACE_4))
+	t.set_stylebox("panel", "BadgeWeak", _notched_style(25, DS.SPACE_2, DS.SPACE_4))
+	t.set_stylebox("panel", "BadgeResist", _notched_style(24, DS.SPACE_2, DS.SPACE_4))
+	for rarity_type: String in ["ItemSlotCommon", "ItemSlotRare", "ItemSlotMythic"]:
+		t.add_type(rarity_type)
+		t.set_type_variation(rarity_type, "PanelContainer")
+	t.set_stylebox("panel", "ItemSlotCommon", _notched_style(21, DS.SPACE_1))
+	t.set_stylebox("panel", "ItemSlotRare", _notched_style(22, DS.SPACE_1))
+	t.set_stylebox("panel", "ItemSlotMythic", _notched_style(24, DS.SPACE_1))
 
 	var track := inset.duplicate()
 	track.set_content_margin_all(0)

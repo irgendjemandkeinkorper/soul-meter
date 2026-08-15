@@ -1,9 +1,13 @@
+# PROVISIONAL — CANON REVIEW REQUIRED (NG+ echo line only)
 ~ start
 Iris Illepah: You walk like the Registry counts your steps. Stand easy. The grove does not bill for shade.
 => hub
 
 ~ hub
 Iris Illepah: Ask, then. The light is long and the sweeping is done.
+- "The moss knew my hand before I touched it." [if NGPlus.is_active(SaveGame.ng_plus) /]
+	Iris Illepah: Roots remember circles better than roads. Perhaps you have grown through this place once already.
+	=> hub
 - "One of mine keeps a ledger of names. Haeren's, if the word means anything to you." [if GameState.has_party_patron("Haeren") /]
 	Iris Illepah: It means the grove is in good company. Haeren writes a name down and the writing holds it — that is not so far from what the Loam does with roots. Tell your River-Mother the moss remembers the same way water does: slowly, and all at once when it floods.
 	=> hub

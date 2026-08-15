@@ -1,8 +1,12 @@
+# PROVISIONAL — CANON REVIEW REQUIRED (NG+ echo line only)
 ~ start
 Hadrik Vale: The Registry Archive has three doors, two locks, and one clerk on duty. The third door is for things that have not happened yet.
 => hub
 
 ~ hub
+- "Have you filed a reflection that remembers me?" [if NGPlus.is_active(SaveGame.ng_plus) /]
+	Hadrik Vale: The third door recorded your arrival before you returned. I have not decided which entry is the copy.
+	=> hub
 - "What is the Registry watching in this district?" [if not GameState.get_flag("dom_registry_notice_seen") /]
 	do GameState.set_flag("dom_registry_notice_seen", true)
 	do Reputation.record("player", "the-registry", 1.0, "Asked what the Registry was watching in Dom", "dom")

@@ -13,6 +13,13 @@ static func default_block() -> Dictionary:
 	return DEFAULT_BLOCK.duplicate(true)
 
 
+static func is_active(block: Variant) -> bool:
+	## NG+ begins only after a completed-run marker exists. Style points can accrue
+	## during the first run, so their presence alone must not unlock echo lines.
+	var normalized := normalize(block)
+	return not normalized["completion_metadata"].is_empty()
+
+
 static func normalize(block: Variant) -> Dictionary:
 	if not block is Dictionary:
 		return default_block()
