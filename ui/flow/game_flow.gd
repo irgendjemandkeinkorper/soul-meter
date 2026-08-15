@@ -106,10 +106,6 @@ func send_event(event: StringName) -> void:
 ## TravelExit) — never call SceneLoader or change_scene_to_file() directly
 ## from game code (see the header note above).
 func travel(scene_path: String, spawn_id: StringName = &"default") -> bool:
-	if scene_path == TAVERN_SCENE or (
-		scene_path == TOWN_SCENE and spawn_id == &"from_tavern"
-	):
-		return _travel_to_gameplay_scene(scene_path, spawn_id)
 	var location := LocationRegistry.by_scene(scene_path)
 	if location == null:
 		if not GAMEPLAY_SCENES.has(scene_path):

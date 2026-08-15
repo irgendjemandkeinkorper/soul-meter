@@ -17,6 +17,7 @@ spawns = {
 "from_players_house": "from_players_house",
 "from_registry_archive": "from_registry_archive",
 "from_river_shrine": "from_river_shrine",
+"from_tavern": "from_tavern",
 "from_town_hall": "from_town_hall",
 "from_trial_hall": "from_trial_hall",
 "from_wilds": "from_wilds",
