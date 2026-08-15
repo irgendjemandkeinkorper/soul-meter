@@ -45,8 +45,11 @@ jobs:
       - name: Import project
         run: |
           set -o pipefail
-          "$GODOT_BIN" --headless --path . --import --quit 2>&1 | tee /tmp/godot-import.log
-          if grep -En 'SCRIPT ERROR: (Parse|Compile) Error|ERROR: Failed to load script' /tmp/godot-import.log; then
+          # Commit 47b2dfd added UID-backed imports that need one scan to populate
+          # the fresh .godot UID cache before their preloads resolve on a clean checkout.
+          "$GODOT_BIN" --headless --path . --import --quit 2>&1 | tee /tmp/godot-import-first.log || true
+          "$GODOT_BIN" --headless --path . --import --quit 2>&1 | tee /tmp/godot-import-second.log
+          if grep -En 'SCRIPT ERROR: (Parse|Compile) Error|ERROR: Failed to load script' /tmp/godot-import-second.log; then
             echo "Godot reported a script parse/compile failure during import."
             exit 1
           fi

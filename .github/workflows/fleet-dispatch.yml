@@ -55,10 +55,12 @@ jobs:
         id: guard
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MILESTONE: ${{ matrix.milestone }}
         run: |
-          open_prs=$(gh api --paginate --slurp \
-            "repos/${{ github.repository }}/pulls?state=open&per_page=100" \
-            --jq 'add | map(select(.milestone != null and .milestone.number == '${{ matrix.milestone }}')) | length')
+          open_prs=$(gh api --paginate \
+            "repos/${{ github.repository }}/pulls?state=open&per_page=100" | \
+            jq --slurp --argjson milestone "$MILESTONE" \
+              'add | map(select(.milestone != null and .milestone.number == $milestone)) | length')
           if [ "$open_prs" -gt 0 ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "Milestone ${{ matrix.milestone }} already has $open_prs open PR(s); skipping duplicate dispatch."
