@@ -12,7 +12,7 @@ extends Resource
 
 func get_current_stage() -> Resource:
 	# Evaluate follow-up/extended stages first if conditions are met
-	if not follow_up_condition_flag.is_empty() and bool(GameState.get_flag(follow_up_condition_flag, false)):
+	if not follow_up_condition_flag.is_empty() and GameState.flag_is_true(follow_up_condition_flag):
 		for i in range(follow_up_stages.size() - 1, -1, -1):
 			var stage := follow_up_stages[i]
 			if _are_requirements_met(stage):

@@ -92,7 +92,7 @@ func _refresh_lock() -> void:
 
 
 func _is_unlocked() -> bool:
-	return required_flag.is_empty() or bool(GameState.get_flag(required_flag))
+	return required_flag.is_empty() or GameState.flag_is_true(required_flag)
 
 
 func _locked_prompt() -> String:

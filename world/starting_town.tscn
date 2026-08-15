@@ -789,6 +789,9 @@ position = Vector2(500, 1751)
 [node name="SpawnFromPlayersHouse" type="Marker2D" parent="."]
 position = Vector2(2400, 2132)
 
+[node name="SpawnFromTavern" type="Marker2D" parent="."]
+position = Vector2(1700, 1580)
+
 [node name="SpawnFromTrialHall" type="Marker2D" parent="."]
 position = Vector2(1000, 605)
 

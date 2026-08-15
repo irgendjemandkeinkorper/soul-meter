@@ -248,10 +248,17 @@ func _destination_from_payload(payload: Dictionary) -> LoadDestination:
 	var scene_path := str(payload.get("scene", ""))
 	var location_id := StringName(payload.get("location_id", ""))
 	var location := LocationRegistry.resolve(scene_path, location_id)
-	if location == null or not location.allowed_gameplay:
-		return null
-	var spawn_id := location.resolve_spawn(StringName(payload.get("spawn_id", "default")))
+	var spawn_id := StringName(payload.get("spawn_id", "default"))
 	var position: Vector2 = payload.get("player_position", Vector2.ZERO)
+	if location == null:
+		if not GameFlow.GAMEPLAY_SCENES.has(scene_path):
+			return null
+		return LoadDestination.new(
+			&"", spawn_id, position, payload.has("player_position"), scene_path
+		)
+	if not location.allowed_gameplay:
+		return null
+	spawn_id = location.resolve_spawn(spawn_id)
 	return LoadDestination.new(location.id, spawn_id, position, payload.has("player_position"))
 
 
@@ -446,11 +453,13 @@ func _build_payload() -> Dictionary:
 		var current_location := LocationRegistry.by_scene(scene.scene_file_path)
 		if current_location != null and current_location.allowed_gameplay:
 			location = current_location
-			var player := scene.find_child("Player", true, false) as Node2D
-			if player:
-				payload["player_position"] = player.global_position
-	payload["location_id"] = String(location.id)
-	payload["scene"] = location.scene_path
+		elif GameFlow.GAMEPLAY_SCENES.has(scene.scene_file_path):
+			location = null
+		var player := scene.find_child("Player", true, false) as Node2D
+		if player:
+			payload["player_position"] = player.global_position
+	payload["location_id"] = String(location.id) if location != null else ""
+	payload["scene"] = location.scene_path if location != null else scene.scene_file_path
 	return payload
 
 
@@ -502,7 +511,7 @@ func _in_gameplay_scene() -> bool:
 	if not is_inside_tree():
 		return false
 	var scene := get_tree().current_scene
-	return scene != null and LocationRegistry.is_gameplay_scene(scene.scene_file_path)
+	return scene != null and GameFlow.GAMEPLAY_SCENES.has(scene.scene_file_path)
 
 
 func _pascal_case(value: String) -> String:

@@ -1,8 +1,8 @@
 class_name TavernDoor
 extends StaticBody2D
-## Walk into range, press the interact key (E) — opens the Tavern screen
-## (ui/screens/tavern.gd) as a paused overlay, same as Inventory/Party. Not
-## flow-owned: it's a view over GameState, not a chart state (see game_flow.gd).
+## Walk into range, press the interact key (E) — travels to the Four Arms
+## interior. The party picker remains a normal UIManager overlay, opened by the
+## taverner inside rather than over the live town map.
 
 var _player_in_range := false
 var _prompt: Label
@@ -36,4 +36,8 @@ func _on_body(body: Node2D, entered: bool) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _player_in_range and event.is_action_pressed("interact") and not get_tree().paused:
 		get_viewport().set_input_as_handled()
-		UIManager.open(UIManager.TAVERN, true)
+		_try_travel()
+
+
+func _try_travel() -> bool:
+	return GameFlow.travel(GameFlow.TAVERN_SCENE, &"entry")

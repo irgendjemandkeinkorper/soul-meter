@@ -26,12 +26,12 @@ func _ready() -> void:
 func _apply_interaction() -> void:
 	if interaction_flag.is_empty():
 		return
-	GameState.set_flag(interaction_flag, not bool(GameState.get_flag(interaction_flag, false)))
+	GameState.set_flag(interaction_flag, not GameState.flag_is_true(interaction_flag))
 	_refresh_visual()
 
 
 func _refresh_visual() -> void:
-	var is_on := not interaction_flag.is_empty() and bool(GameState.get_flag(interaction_flag, false))
+	var is_on := not interaction_flag.is_empty() and GameState.flag_is_true(interaction_flag)
 	_off_sprite.visible = not is_on
 	_on_sprite.visible = is_on
 

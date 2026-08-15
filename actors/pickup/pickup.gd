@@ -13,7 +13,7 @@ var _available := true
 
 
 func _ready() -> void:
-	_available = required_flag.is_empty() or bool(GameState.get_flag(required_flag, false))
+	_available = required_flag.is_empty() or GameState.flag_is_true(required_flag)
 	if not required_flag.is_empty():
 		GameState.flag_changed.connect(_on_flag_changed)
 	var shape := CollisionShape2D.new()

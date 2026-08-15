@@ -67,16 +67,34 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not enabled or _player == null:
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		# Use the EVENT's own position, not get_global_mouse_position(). The
-		# pointer can move between the event being generated and this handler
-		# running, so the live cursor is not necessarily where the player
-		# clicked. It also makes the click path testable: simulated input does
-		# not reliably update the live cursor in a headless run.
-		var button := event as InputEventMouseButton
-		var world: Vector2 = _player.get_canvas_transform().affine_inverse() * button.position
-		request_move_to(world)
-		get_viewport().set_input_as_handled()
+	var translated: Dictionary = translate_pointer_event(event, _player.get_canvas_transform())
+	if not translated["accepted"]:
+		return
+	var world_position: Vector2 = translated["world_position"]
+	request_move_to(world_position)
+	get_viewport().set_input_as_handled()
+
+
+## Converts a pressed primary-button event from screen space to world space.
+## Rejected events return `{accepted: false}`; accepted events additionally
+## include `world_position: Vector2`. Keeping this translation independent of a
+## Viewport makes the headless input contract directly testable.
+static func translate_pointer_event(
+	event: InputEvent,
+	canvas_transform: Transform2D
+) -> Dictionary:
+	if not event is InputEventMouseButton:
+		return {"accepted": false}
+	var button := event as InputEventMouseButton
+	if not button.pressed or button.button_index != MOUSE_BUTTON_LEFT:
+		return {"accepted": false}
+	# Use the event's own position rather than the live mouse position. The
+	# pointer can move before this handler runs, and simulated input does not
+	# reliably update the live cursor in a headless run.
+	return {
+		"accepted": true,
+		"world_position": canvas_transform.affine_inverse() * button.position,
+	}
 
 
 ## Locates the shared IsoGrid substrate for whatever scene the player is in.

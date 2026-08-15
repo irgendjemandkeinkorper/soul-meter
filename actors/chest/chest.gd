@@ -40,7 +40,7 @@ func _apply_interaction() -> void:
 
 
 func _refresh_visual() -> void:
-	var is_open := _used or (not interaction_flag.is_empty() and bool(GameState.get_flag(interaction_flag, false)))
+	var is_open := _used or (not interaction_flag.is_empty() and GameState.flag_is_true(interaction_flag))
 	_closed_sprite.visible = not is_open
 	_open_sprite.visible = is_open
 

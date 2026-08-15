@@ -32,8 +32,9 @@ const TOWN_SCENE := "res://world/starting_town.tscn"
 const WILDS_SCENE := "res://world/test_room.tscn"
 const DORTHKOR_SCENE := "res://world/dorthkor_road.tscn"
 const WOUND_LIP_SCENE := "res://world/wound_lip.tscn"
+const TAVERN_SCENE := "res://world/interiors/dom_tavern.tscn"
 ## Every scene UIManager should treat as "in gameplay" (see _in_gameplay()).
-var GAMEPLAY_SCENES: Array[String] = LocationRegistry.gameplay_scenes()
+var GAMEPLAY_SCENES: Array[String] = _gameplay_scenes()
 const LOADING_SCREEN := (
 	"res://addons/maaacks_game_template/base/nodes/loading_screen/" + "loading_screen.tscn"
 )
@@ -56,6 +57,12 @@ var _target_scene := TOWN_SCENE
 var _target_spawn_id: StringName = &"default"
 
 @onready var chart: StateChart = $StateChart
+
+
+static func _gameplay_scenes() -> Array[String]:
+	# The tavern interior is registered in LocationRegistry like every other
+	# interior, so the registry is the single source of gameplay scenes.
+	return LocationRegistry.gameplay_scenes()
 
 
 func _ready() -> void:
@@ -99,14 +106,32 @@ func send_event(event: StringName) -> void:
 ## TravelExit) — never call SceneLoader or change_scene_to_file() directly
 ## from game code (see the header note above).
 func travel(scene_path: String, spawn_id: StringName = &"default") -> bool:
+	if scene_path == TAVERN_SCENE or (
+		scene_path == TOWN_SCENE and spawn_id == &"from_tavern"
+	):
+		return _travel_to_gameplay_scene(scene_path, spawn_id)
 	var location := LocationRegistry.by_scene(scene_path)
-	if location == null or not location.allowed_gameplay:
+	if location == null:
+		if not GAMEPLAY_SCENES.has(scene_path):
+			push_error("Refusing travel to non-gameplay scene: %s" % scene_path)
+			return false
+		return _travel_to_gameplay_scene(scene_path, spawn_id)
+	if not location.allowed_gameplay:
 		push_error("Refusing travel to non-gameplay scene: %s" % scene_path)
 		return false
 	var destination := LoadDestination.new(location.id, location.resolve_spawn(spawn_id))
 	SaveGame.pending_spawn_id = destination.spawn_id
 	SaveGame.has_pending_player_position = false
 	return load_destination(destination)
+
+
+func _travel_to_gameplay_scene(scene_path: String, spawn_id: StringName) -> bool:
+	SaveGame.pending_spawn_id = spawn_id
+	SaveGame.has_pending_player_position = false
+	_target_scene = scene_path
+	_target_spawn_id = spawn_id
+	send_event("travel")
+	return true
 
 
 ## Validates and purchases a discovered-hub trip as one operation. The optional
@@ -143,6 +168,14 @@ func fast_travel(hub_id: StringName, current_scene_path: String = "") -> Diction
 ## Resolves a stable destination into GameFlow-owned scene state and asks the
 ## chart to enter its existing loading transition.
 func load_destination(destination: LoadDestination) -> bool:
+	if not destination.scene_path.is_empty():
+		if not GAMEPLAY_SCENES.has(destination.scene_path):
+			push_error("Refusing load of unknown gameplay scene: %s" % destination.scene_path)
+			return false
+		_target_scene = destination.scene_path
+		_target_spawn_id = destination.spawn_id
+		send_event("travel")
+		return true
 	var location := LocationRegistry.by_id(destination.location_id)
 	if location == null or not location.allowed_gameplay:
 		push_error("Refusing load of unknown gameplay location: %s" % destination.location_id)

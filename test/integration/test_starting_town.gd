@@ -18,23 +18,26 @@ func test_tavern_door_prompt_only_shows_when_player_is_in_range() -> void:
 	assert_bool(prompt.visible).is_true()
 
 
-func test_interacting_with_tavern_door_opens_tavern_screen() -> void:
+func test_interacting_with_tavern_door_requests_tavern_interior_travel() -> void:
 	var runner := scene_runner("res://world/starting_town.tscn")
 	var door: Node2D = runner.find_child("TavernDoor", true, false)
 	var player: Node2D = runner.find_child("Player", true, false)
+	var original_target: String = GameFlow._target_scene
+	var original_spawn: StringName = GameFlow._target_spawn_id
 
 	player.global_position = door.global_position
 	await runner.simulate_frames(20)
 	assert_bool(UIManager.is_open()).is_false()
 
 	runner.simulate_action_press("interact")
-	await runner.simulate_frames(5)
+	await runner.simulate_frames(1)
 	runner.simulate_action_release("interact")
 
-	assert_bool(UIManager.is_open()).is_true()
-
-	UIManager.close_all()
-	await runner.simulate_frames(5)
+	assert_bool(UIManager.is_open()).is_false()
+	assert_str(GameFlow._target_scene).is_equal(GameFlow.TAVERN_SCENE)
+	assert_str(GameFlow._target_spawn_id).is_equal("entry")
+	GameFlow._target_scene = original_target
+	GameFlow._target_spawn_id = original_spawn
 
 
 func test_tavern_screen_lists_all_recruitable_candidates() -> void:

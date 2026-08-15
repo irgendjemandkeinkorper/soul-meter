@@ -143,7 +143,7 @@ static func dorthkor_unlocked() -> bool:
 
 
 static func loamroot_unlocked() -> bool:
-	return bool(GameState.get_flag("chapter_one_free_roam"))
+	return GameState.flag_is_true("chapter_one_free_roam")
 
 
 static func _create_stage(

@@ -1,0 +1,148 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://world/interiors/dom_tavern.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="3_hud"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/ground.png" id="4_floor"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="5_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/mini-characters/character-male-d.png" id="6_taverner"]
+
+[sub_resource type="RectangleShape2D" id="wall_horizontal"]
+size = Vector2(960, 40)
+
+[sub_resource type="RectangleShape2D" id="wall_vertical"]
+size = Vector2(40, 640)
+
+[sub_resource type="RectangleShape2D" id="counter_range"]
+size = Vector2(420, 150)
+
+[sub_resource type="RectangleShape2D" id="counter_shape"]
+size = Vector2(420, 66)
+
+[sub_resource type="RectangleShape2D" id="exit_range"]
+size = Vector2(160, 56)
+
+[node name="DomTavern" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_script")
+
+[node name="Floor" type="Polygon2D" parent="."]
+z_index = -10
+polygon = PackedVector2Array(0, 0, 960, 0, 960, 640, 0, 640)
+texture = ExtResource("4_floor")
+texture_repeat = 2
+color = Color(0.42, 0.31, 0.22, 1)
+
+[node name="BackWall" type="Polygon2D" parent="."]
+z_index = -5
+polygon = PackedVector2Array(0, 0, 960, 0, 960, 84, 0, 84)
+color = Color(0.24, 0.14, 0.1, 1)
+
+[node name="Title" type="Label" parent="."]
+offset_left = 260.0
+offset_top = 28.0
+offset_right = 700.0
+offset_bottom = 70.0
+theme_type_variation = &"HeadingLabel"
+text = "THE FOUR ARMS"
+horizontal_alignment = 1
+
+[node name="Counter" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(270, 218, 690, 218, 690, 284, 270, 284)
+color = Color(0.31, 0.17, 0.09, 1)
+
+[node name="CounterBody" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CounterBody"]
+position = Vector2(480, 251)
+shape = SubResource("counter_shape")
+
+[node name="BenchLeft" type="Sprite2D" parent="."]
+position = Vector2(205, 410)
+texture = ExtResource("5_bench")
+
+[node name="BenchRight" type="Sprite2D" parent="."]
+position = Vector2(755, 410)
+texture = ExtResource("5_bench")
+
+[node name="Taverner" type="Sprite2D" parent="."]
+position = Vector2(480, 178)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("6_taverner")
+
+[node name="TavernerLabel" type="Label" parent="."]
+offset_left = 395.0
+offset_top = 128.0
+offset_right = 565.0
+offset_bottom = 158.0
+theme_type_variation = &"EyebrowLabel"
+text = "TAVERNER"
+horizontal_alignment = 1
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="Top" type="CollisionShape2D" parent="Walls"]
+position = Vector2(480, 20)
+shape = SubResource("wall_horizontal")
+
+[node name="BottomLeft" type="CollisionShape2D" parent="Walls"]
+position = Vector2(190, 620)
+shape = SubResource("wall_horizontal")
+scale = Vector2(0.4, 1)
+
+[node name="BottomRight" type="CollisionShape2D" parent="Walls"]
+position = Vector2(770, 620)
+shape = SubResource("wall_horizontal")
+scale = Vector2(0.4, 1)
+
+[node name="Left" type="CollisionShape2D" parent="Walls"]
+position = Vector2(20, 320)
+shape = SubResource("wall_vertical")
+
+[node name="Right" type="CollisionShape2D" parent="Walls"]
+position = Vector2(940, 320)
+shape = SubResource("wall_vertical")
+
+[node name="CounterInteraction" type="Area2D" parent="."]
+position = Vector2(480, 310)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CounterInteraction"]
+shape = SubResource("counter_range")
+
+[node name="Prompt" type="Label" parent="CounterInteraction"]
+z_index = 20
+offset_left = -100.0
+offset_top = -118.0
+offset_right = 100.0
+offset_bottom = -86.0
+theme_type_variation = &"EyebrowLabel"
+text = "E — CHOOSE COMPANY"
+horizontal_alignment = 1
+visible = false
+
+[node name="Exit" type="Area2D" parent="."]
+position = Vector2(480, 612)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
+shape = SubResource("exit_range")
+
+[node name="Label" type="Label" parent="Exit"]
+offset_left = -70.0
+offset_top = -54.0
+offset_right = 70.0
+offset_bottom = -24.0
+theme_type_variation = &"EyebrowLabel"
+text = "WALK OUT"
+horizontal_alignment = 1
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(480, 510)
+camera_bounds = Rect2i(0, 0, 960, 640)
+
+[node name="SpawnDefault" type="Marker2D" parent="."]
+position = Vector2(480, 510)
+
+[node name="SpawnEntry" type="Marker2D" parent="."]
+position = Vector2(480, 510)
+
+[node name="FieldHUD" parent="." instance=ExtResource("3_hud")]

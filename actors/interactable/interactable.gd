@@ -22,7 +22,7 @@ var _sign: Label
 
 
 func _ready() -> void:
-	_used = not interaction_flag.is_empty() and bool(GameState.get_flag(interaction_flag, false))
+	_used = not interaction_flag.is_empty() and GameState.flag_is_true(interaction_flag)
 	_prompt = $Prompt
 	_sign = $Sign
 	_sign.text = display_name
@@ -91,4 +91,4 @@ func _refresh_prompt() -> void:
 
 
 func _is_unlocked() -> bool:
-	return required_flag.is_empty() or bool(GameState.get_flag(required_flag, false))
+	return required_flag.is_empty() or GameState.flag_is_true(required_flag)

@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 
 
 func test_current_locations_are_registered_as_gameplay_only() -> void:
-	assert_int(LocationRegistry.ALL.size()).is_equal(24)
+	assert_int(LocationRegistry.ALL.size()).is_equal(25)
 	for location in LocationRegistry.ALL:
 		assert_bool(location.allowed_gameplay).is_true()
 		assert_bool(LocationRegistry.is_gameplay_scene(location.scene_path)).is_true()

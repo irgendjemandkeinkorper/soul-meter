@@ -437,8 +437,8 @@ func _apply_victory(result: BattleResult) -> void:
 		defeated_flag = enemies[0].defeated_flag
 	var consequence_flag := _consequence_flag(result.outcome_id)
 	var already_resolved := (
-		(not defeated_flag.is_empty() and bool(GameState.get_flag(defeated_flag)))
-		or (not consequence_flag.is_empty() and bool(GameState.get_flag(consequence_flag)))
+		(not defeated_flag.is_empty() and GameState.flag_is_true(defeated_flag))
+		or (not consequence_flag.is_empty() and GameState.flag_is_true(consequence_flag))
 	)
 	if not defeated_flag.is_empty():
 		GameState.set_flag(defeated_flag, true)
@@ -463,7 +463,7 @@ func _apply_flee_consequence(result: BattleResult, outcome: Dictionary) -> void:
 	_apply_authored_flags(outcome.get("flags", {}), result)
 	var consequence_flag := _consequence_flag(result.outcome_id)
 	var already_recorded := (
-		not consequence_flag.is_empty() and bool(GameState.get_flag(consequence_flag))
+		not consequence_flag.is_empty() and GameState.flag_is_true(consequence_flag)
 	)
 	if not consequence_flag.is_empty():
 		GameState.set_flag(consequence_flag, true)
@@ -510,7 +510,7 @@ func _apply_loss_consequence(result: BattleResult) -> void:
 	var authored_loss := EncounterCatalog.loss(encounter_id)
 	_apply_authored_flags(authored_loss.get("flags", {}), result)
 	var consequence_flag := _consequence_flag(result.outcome_id)
-	if not consequence_flag.is_empty() and bool(GameState.get_flag(consequence_flag)):
+	if not consequence_flag.is_empty() and GameState.flag_is_true(consequence_flag):
 		return
 	if not consequence_flag.is_empty():
 		GameState.set_flag(consequence_flag, true)

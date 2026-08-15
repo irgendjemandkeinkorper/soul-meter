@@ -253,7 +253,7 @@ func resolve_broken_muster(ruling_id: StringName) -> bool:
 		or (ruling_value as Dictionary).is_empty()
 		or not is_active(DORTHKOR_ROAD)
 		or not flags_met(DORTHKOR_ROAD)
-		or not bool(GameState.get_flag("reported_bloodbellow", false))
+		or not GameState.flag_is_true("reported_bloodbellow")
 		or not str(GameState.get_flag("chapter_one_resolution", "")).is_empty()
 	):
 		return false
@@ -487,7 +487,7 @@ func objective_for(quest: Quest) -> String:
 
 func flags_met(quest: FlagQuest) -> bool:
 	for flag in quest.required_flags:
-		if not bool(GameState.get_flag(flag, false)):
+		if not GameState.flag_is_true(flag):
 			return false
 	return true
 

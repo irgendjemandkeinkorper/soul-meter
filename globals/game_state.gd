@@ -120,7 +120,7 @@ func set_soul_meter(value: float) -> void:
 ## This clears once the Gauge is raised back above zero by partial recovery;
 ## the permanent ceiling on that recovery does not (see has_been_husked()).
 func is_husked() -> bool:
-	return bool(get_flag(HUSKED_FLAG, false))
+	return flag_is_true(HUSKED_FLAG)
 
 
 ## True once a soul has ever been husked, even after recovery clears
@@ -190,13 +190,30 @@ func get_flag(flag: String, default: Variant = false) -> Variant:
 	return flags.get(flag, default)
 
 
+## Reads a stored flag as a boolean without mutating its serialized value.
+## Booleans retain their value and non-zero numbers are true. Strings are
+## trimmed and compared case-insensitively: empty, "false", "0", "no", and
+## "off" are false; every other non-empty string is true. Missing values and
+## non-scalar Variant types are false.
+func flag_is_true(flag: String) -> bool:
+	var value: Variant = get_flag(flag, false)
+	if value is bool:
+		return bool(value)
+	if value is int or value is float:
+		return value != 0
+	if value is String or value is StringName:
+		var normalized := String(value).strip_edges().to_lower()
+		return not normalized.is_empty() and normalized not in ["false", "0", "no", "off"]
+	return false
+
+
 ## Records a visited, ratified hub in the existing serialized flag store.
 ## Returns true only when this call discovers the hub for the first time.
 func discover_fast_travel_hub(hub_id: StringName) -> bool:
 	if FastTravelRegistry.by_id(hub_id).is_empty():
 		return false
 	var flag := FAST_TRAVEL_DISCOVERY_PREFIX + String(hub_id)
-	if bool(get_flag(flag, false)):
+	if flag_is_true(flag):
 		return false
 	set_flag(flag, true)
 	return true
@@ -205,7 +222,7 @@ func discover_fast_travel_hub(hub_id: StringName) -> bool:
 func is_fast_travel_hub_discovered(hub_id: StringName) -> bool:
 	if FastTravelRegistry.by_id(hub_id).is_empty():
 		return false
-	return bool(get_flag(FAST_TRAVEL_DISCOVERY_PREFIX + String(hub_id), false))
+	return flag_is_true(FAST_TRAVEL_DISCOVERY_PREFIX + String(hub_id))
 
 
 func discovered_fast_travel_hubs() -> Array[StringName]:
@@ -654,7 +671,7 @@ func apply_created_character(member: PartyMember) -> void:
 
 
 func has_created_character() -> bool:
-	return bool(get_flag(CREATED_CHARACTER_FLAG, false))
+	return flag_is_true(CREATED_CHARACTER_FLAG)
 
 
 ## Later-unlocked "create a recruit" entry point (see #98/#129 scope note). A
@@ -665,7 +682,7 @@ func unlock_custom_recruit_chargen() -> void:
 
 
 func custom_recruit_chargen_unlocked() -> bool:
-	return bool(get_flag(CUSTOM_RECRUIT_UNLOCK_FLAG, false))
+	return flag_is_true(CUSTOM_RECRUIT_UNLOCK_FLAG)
 
 
 ## Writes a chargen build into the recruitable roster instead of the player-identity

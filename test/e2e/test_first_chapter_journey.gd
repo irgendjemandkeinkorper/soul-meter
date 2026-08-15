@@ -454,8 +454,12 @@ func _recruit_at_tavern(runner: GdUnitSceneRunner) -> void:
 	runner.simulate_action_press("interact")
 	await runner.simulate_frames(5)
 	runner.simulate_action_release("interact")
-	assert_bool(UIManager.is_open()).is_true()
-	var tavern = UIManager._stack.back()
+	# The door no longer opens the picker over the town map — it travels to the
+	# Four Arms interior; the picker is opened at the taverner's counter there.
+	assert_str(GameFlow._target_scene).is_equal(GameFlow.TAVERN_SCENE)
+	assert_str(GameFlow._target_spawn_id).is_equal("entry")
+	var tavern: Control = UIManager.open(UIManager.TAVERN, true)
+	assert_object(tavern).is_not_null()
 	assert_str(tavern.scene_file_path).is_equal("res://ui/screens/tavern.tscn")
 	var chosen := 0
 	for check: CheckBox in tavern._checks:

@@ -115,7 +115,7 @@ func _try_travel() -> bool:
 func _is_unlocked() -> bool:
 	if not _gate_configuration_valid or _location == null:
 		return false
-	if not required_flag.is_empty() and not bool(GameState.get_flag(required_flag)):
+	if not required_flag.is_empty() and not GameState.flag_is_true(required_flag):
 		return false
 	if not reputation_faction.is_empty():
 		var current_band: StringName = Reputation.band(reputation_faction)

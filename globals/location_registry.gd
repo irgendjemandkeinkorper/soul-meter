@@ -56,6 +56,9 @@ const PLAYERS_LOFT: LocationDefinition = preload(
 const LOWER_TRIAL_HALL: LocationDefinition = preload(
 	"res://world/locations/interiors/lower_trial_hall.tres"
 )
+const DOM_TAVERN: LocationDefinition = preload(
+	"res://world/locations/interiors/dom_tavern.tres"
+)
 const ALL: Array[LocationDefinition] = [
 	DOM,
 	WILDS,
@@ -81,6 +84,7 @@ const ALL: Array[LocationDefinition] = [
 	CHEFS_PANTRY,
 	PLAYERS_LOFT,
 	LOWER_TRIAL_HALL,
+	DOM_TAVERN,
 ]
 
 static func by_id(location_id: StringName) -> LocationDefinition:

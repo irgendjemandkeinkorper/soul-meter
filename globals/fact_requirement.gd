@@ -29,7 +29,7 @@ func is_met() -> bool:
 		Type.QUEST_FLAGS_MET:
 			return QuestRegistry.flags_met(target_quest)
 		Type.FLAG_TRUE:
-			return bool(GameState.get_flag(target_flag))
+			return GameState.flag_is_true(target_flag)
 		Type.FLAG_NON_EMPTY:
 			return not str(GameState.get_flag(target_flag, "")).is_empty()
 	return false
