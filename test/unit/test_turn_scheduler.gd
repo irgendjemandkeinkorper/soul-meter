@@ -399,10 +399,9 @@ func test_speed_nine_unit_acts_every_twelve_ticks_across_repeated_cycles() -> vo
 
 
 func test_wait_refunds_cannot_produce_starvation() -> void:
-	# FR-102a's "waiting refunds" (implemented here as the neutral zero-refund baseline —
-	# see charge_time_scheduler.gd's yield_turn() docstring) must never leave a unit unable
-	# to act again. A unit that ALWAYS waits still has to accrue back up to READY_AT and
-	# act, every single cycle, for as long as the battle runs.
+	# FR-102a's flat refund must never leave a unit unable to act again. After two waits the
+	# scheduler refuses a third, so this simulation commits the required non-wait action and
+	# verifies the cycle continues without starvation.
 	var scheduler := TurnScheduler.create_default(_rules())
 	var perpetual_waiter := _actor("waiter", 4)
 	var group: Array[BattleActor] = [perpetual_waiter]
@@ -419,5 +418,12 @@ func test_wait_refunds_cannot_produce_starvation() -> void:
 		).is_greater(0)
 		activations += 1
 		var yielded: Dictionary = scheduler.yield_turn(perpetual_waiter)
-		assert_bool(yielded.get("allowed", false)).is_true()
+		if cycle % 3 == 2:
+			assert_bool(yielded.get("allowed", false)).is_false()
+			assert_str(String(yielded.get("blocked_by", &""))).is_equal("consecutive_wait_cap")
+			var required_action := _action("required-action", 30)
+			assert_bool(scheduler.commit(perpetual_waiter, required_action)["allowed"]).is_true()
+			scheduler.release(perpetual_waiter)
+		else:
+			assert_bool(yielded.get("allowed", false)).is_true()
 	assert_int(activations).is_equal(50)

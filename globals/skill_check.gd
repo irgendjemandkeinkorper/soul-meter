@@ -10,6 +10,7 @@ extends Node
 const MAX_EFFECTIVE_PERCENT := 95.0
 const MIN_ROLL := 1
 const MAX_ROLL := 100
+const EXPERT_REROLL_CAP := 1
 const DEFAULT_FIZZLE_TABLE: FizzleTable = preload("res://globals/default_fizzle_table.tres")
 
 const SKILL_DEFINITIONS: Dictionary = {
@@ -93,8 +94,9 @@ func resolve(
 	var used_reroll := false
 	if not succeeded and subject != null and _is_expert(subject, normalized_skill):
 		var reroll_key := _reroll_key(subject, normalized_skill, scene_id)
-		if not _expert_rerolls_used.has(reroll_key):
-			_expert_rerolls_used[reroll_key] = true
+		var rerolls_used := clampi(int(_expert_rerolls_used.get(reroll_key, 0)), 0, EXPERT_REROLL_CAP)
+		if rerolls_used < EXPERT_REROLL_CAP:
+			_expert_rerolls_used[reroll_key] = rerolls_used + 1
 			used_reroll = true
 			var reroll := _next_roll(rolls)
 			succeeded = _roll_succeeds(reroll, effective)
@@ -120,6 +122,35 @@ func reset_scene_rerolls(scene_id: String = "") -> void:
 	for key: String in _expert_rerolls_used.keys():
 		if key.begins_with(prefix):
 			_expert_rerolls_used.erase(key)
+
+
+func to_dict() -> Dictionary:
+	return normalize_save_data({"expert_rerolls_used": _expert_rerolls_used})
+
+
+func from_dict(data: Variant) -> void:
+	var normalized := normalize_save_data(data)
+	_expert_rerolls_used = normalized["expert_rerolls_used"].duplicate(true)
+
+
+static func normalize_save_data(data: Variant) -> Dictionary:
+	var normalized_used: Dictionary = {}
+	if not data is Dictionary:
+		return {"expert_rerolls_used": normalized_used}
+	var raw_used: Variant = data.get("expert_rerolls_used", {})
+	if not raw_used is Dictionary:
+		return {"expert_rerolls_used": normalized_used}
+	for key: Variant in raw_used:
+		if not key is String:
+			continue
+		var raw_count: Variant = raw_used[key]
+		var count := 0
+		if raw_count is bool:
+			count = 1 if raw_count else 0
+		elif raw_count is int or raw_count is float:
+			count = int(raw_count)
+		normalized_used[String(key)] = clampi(count, 0, EXPERT_REROLL_CAP)
+	return {"expert_rerolls_used": normalized_used}
 
 
 ## Calculate the casting-side fizzle chance from the tunable Resource table.

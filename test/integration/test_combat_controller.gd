@@ -73,6 +73,28 @@ func test_insufficient_ap_refusal_matches_structured_gate_shape() -> void:
 	assert_str(events[-1].type).is_equal("action_refused")
 
 
+func test_third_charge_time_wait_is_refused_before_turn_ends_or_scheduler_advances() -> void:
+	var scheduler_script := load("res://globals/combat/charge_time_scheduler.gd") as GDScript
+	controller.scheduler = scheduler_script.new() as TurnScheduler
+	controller.start([ally], [enemy])
+	var scheduler_state := controller.scheduler.to_dict()
+	scheduler_state["consecutive_waits"][ally.combat_id] = 2
+	controller.scheduler.from_dict(scheduler_state)
+	var event_count_before_refusal := events.size()
+	var active_before_refusal := controller.active_actor()
+
+	assert_bool(controller.end_turn()).is_false()
+
+	assert_object(controller.active_actor()).is_same(active_before_refusal)
+	assert_str(String(controller.last_refusal.get("blocked_by", &""))).is_equal(
+		"consecutive_wait_cap"
+	)
+	assert_int(events.size()).is_equal(event_count_before_refusal + 1)
+	assert_str(String(events[-1].type)).is_equal("action_refused")
+	var emitted_reason: Dictionary = events[-1].data.get("reason", {})
+	assert_str(String(emitted_reason.get("blocked_by", &""))).is_equal("consecutive_wait_cap")
+
+
 func test_data_only_focus_action_uses_existing_pipeline() -> void:
 	controller.start([ally], [enemy])
 	controller.shift_balance(10)

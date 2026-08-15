@@ -11,9 +11,9 @@ extends TurnScheduler
 ## always produce the same order — which is what lets replay, the forecast preview, and AI
 ## evaluation share one code path (amendment §5 criterion 9).
 ##
-## OVERFLOW IS PRESERVED. A participant that reaches 112 CT keeps the extra 12 after spending.
-## Truncating to 100 would quietly punish being fast, and would make the timeline lie about the
-## next turn.
+## OVERFLOW IS PRESERVED for actions. A participant that reaches 112 CT keeps the extra 12 after
+## spending. Waiting is the deliberate exception: its overflow is discarded before the flat
+## half-readiness refund is applied.
 ##
 ## INTERRUPT CONTRACT (amendment §4 requires an explicit answer to each):
 ##   1. Does CT freeze while a dialogue balloon is open?
@@ -33,6 +33,7 @@ var _seats: Array[BattleActor] = []
 var _charge: Dictionary = {}          # combat_id -> int
 var _speed: Dictionary = {}           # combat_id -> int
 var _seat_of: Dictionary = {}         # combat_id -> int
+var _consecutive_waits: Dictionary = {} # combat_id -> int
 var _committed_actor: BattleActor = null
 var _committed_cost: int = 0
 var _phase: Phase = Phase.IDLE
@@ -50,6 +51,7 @@ func setup(participants: Array[BattleActor]) -> void:
 	_charge.clear()
 	_speed.clear()
 	_seat_of.clear()
+	_consecutive_waits.clear()
 	_committed_actor = null
 	_committed_cost = 0
 	_phase = Phase.IDLE
@@ -67,6 +69,7 @@ func setup(participants: Array[BattleActor]) -> void:
 		_seats.append(actor)
 		_charge[key] = 0
 		_speed[key] = _rules.charge_speed_for(actor) if _rules != null else 1
+		_consecutive_waits[key] = 0
 
 
 # ---- reads ----
@@ -246,6 +249,9 @@ func commit(actor: BattleActor, action: CombatAction) -> Dictionary:
 	var key := _key(actor)
 	# Overflow above READY_AT is preserved — being fast should stay an advantage.
 	_charge[key] = int(_charge[key]) - cost
+	# Any real action breaks a wait streak. This happens in the shared scheduler path, so player
+	# and AI-controlled actors use identical enforcement.
+	_consecutive_waits[key] = 0
 	_committed_actor = actor
 	_committed_cost = cost
 	_phase = Phase.COMMITTED
@@ -261,23 +267,40 @@ func release(actor: BattleActor) -> void:
 	_phase = Phase.RESOLVED
 
 
-## Spends readiness and takes no action. Overflow above READY_AT is preserved, exactly as it is
-## in commit() — a fast unit that waits stays fast.
-##
-## ⚠ FR-102a also ratifies that **waiting refunds**, and that discount is deliberately NOT
-## implemented here. The size of the refund is a balance value and it has not been authored:
-## `CombatRules` prices actions, movement and cancellation, but has no wait cost. Shipping a
-## plausible number would be a balance decision made by accident, which the tactical amendment
-## forbids in §10.1. This is therefore the neutral baseline — waiting costs one readiness and
-## returns nothing — and the discount is an owner decision tracked on #138.
+## FR-102a ratified wait semantics: discard overflow, then set CT to a flat floor(READY_AT / 2)
+## refund. A unit may wait twice consecutively; the third attempt is refused until it commits a
+## non-wait action. The counter is keyed by combat identity and serialized with scheduler state.
 func yield_turn(actor: BattleActor) -> Dictionary:
 	var gate := can_act(actor)
 	if not bool(gate.get("allowed", false)):
 		return gate
 	var key := _key(actor)
-	_charge[key] = int(_charge[key]) - READY_AT
+	var consecutive_waits := int(_consecutive_waits.get(key, 0))
+	if consecutive_waits >= 2:
+		return _blocked(
+			&"consecutive_wait_cap",
+			"%s must act after waiting twice." % actor.display_name,
+			{"must_act": true, "consecutive_waits": consecutive_waits},
+		)
+	var charge_before := int(_charge[key])
+	var refund := wait_refund_ct()
+	var overflow_discarded := maxi(0, charge_before - READY_AT)
+	consecutive_waits += 1
+	_charge[key] = refund
+	_consecutive_waits[key] = consecutive_waits
 	_phase = Phase.IDLE
-	return _allowed({"actor": actor, "ct_spent": READY_AT, "charge": int(_charge[key])})
+	return _allowed({
+		"actor": actor,
+		"ct_spent": READY_AT - refund,
+		"ct_refunded": refund,
+		"overflow_discarded": overflow_discarded,
+		"consecutive_waits": consecutive_waits,
+		"charge": refund,
+	})
+
+
+static func wait_refund_ct(ready_at: int = READY_AT) -> int:
+	return int(floor(float(ready_at) * 0.5))
 
 
 func cancel_committed(actor: BattleActor, refund: bool) -> Dictionary:
@@ -331,6 +354,7 @@ func remove_participant(actor: BattleActor) -> void:
 		_seats.remove_at(index)
 	_charge.erase(key)
 	_speed.erase(key)
+	_consecutive_waits.erase(key)
 	# Seats are NOT reassigned. Renumbering would silently reorder every tie-break behind this
 	# one, which is exactly the kind of drift a split must not cause.
 
@@ -345,6 +369,9 @@ func to_dict() -> Dictionary:
 	var seats: Dictionary = {}
 	for key in _seat_of:
 		seats[String(key)] = int(_seat_of[key])
+	var consecutive_waits: Dictionary = {}
+	for key in _consecutive_waits:
+		consecutive_waits[String(key)] = clampi(int(_consecutive_waits[key]), 0, 2)
 	return {
 		"ticks": _ticks,
 		"phase": int(_phase),
@@ -354,6 +381,7 @@ func to_dict() -> Dictionary:
 		"committed_cost": _committed_cost,
 		"charge": charges,
 		"seats": seats,
+		"consecutive_waits": consecutive_waits,
 	}
 
 
@@ -369,6 +397,9 @@ func from_dict(data: Dictionary) -> void:
 	var seats: Dictionary = data.get("seats", {})
 	for key in seats:
 		_seat_of[StringName(key)] = int(seats[key])
+	var consecutive_waits: Dictionary = data.get("consecutive_waits", {})
+	for key in consecutive_waits:
+		_consecutive_waits[StringName(key)] = clampi(int(consecutive_waits[key]), 0, 2)
 	var committed_id := str(data.get("committed_id", ""))
 	_committed_actor = null
 	if committed_id != "":

@@ -1,6 +1,6 @@
 {
-  "version": 2,
   "schema_version": 5,
+  "version": 2,
   "scene": "res://world/test_room.tscn",
   "spawn_id": "from_dom",
   "elapsed_seconds": 127,

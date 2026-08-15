@@ -14,6 +14,11 @@
     "purchased_carry_overs": [],
     "completion_metadata": {}
   },
+  "skill_check": {
+    "expert_rerolls_used": {
+      "fixture-scene:fixture-unit:lore": 1
+    }
+  },
   "tactical": {
     "units": {
       "fixture-unit": {

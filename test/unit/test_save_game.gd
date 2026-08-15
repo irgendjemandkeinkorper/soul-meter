@@ -11,6 +11,7 @@ var game_state_before_test: Dictionary = {}
 var reputation_before_test: Dictionary = {}
 var renown_before_test: Dictionary = {}
 var quests_before_test: Dictionary = {}
+var skill_check_before_test: Dictionary = {}
 var target_scene_before_test := ""
 var target_spawn_id_before_test: StringName = &"default"
 
@@ -20,6 +21,8 @@ func before_test() -> void:
 	reputation_before_test = Reputation.to_dict()
 	renown_before_test = Renown.to_dict()
 	quests_before_test = QuestRegistry.to_dict()
+	skill_check_before_test = SkillCheck.to_dict()
+	SkillCheck.from_dict({})
 	target_scene_before_test = GameFlow._target_scene
 	target_spawn_id_before_test = GameFlow._target_spawn_id
 	saves = auto_free(SaveGameScript.new())
@@ -43,6 +46,7 @@ func after_test() -> void:
 	Reputation.from_dict(reputation_before_test)
 	Renown.from_dict(renown_before_test)
 	QuestRegistry.from_dict(quests_before_test)
+	SkillCheck.from_dict(skill_check_before_test)
 	GameFlow._target_scene = target_scene_before_test
 	GameFlow._target_spawn_id = target_spawn_id_before_test
 
@@ -113,6 +117,24 @@ func test_schema_five_scene_path_fixture_round_trips_with_stable_location_id() -
 	assert_str(round_trip["payload"]["location_id"]).is_equal("wilds")
 	assert_str(round_trip["payload"]["scene"]).is_equal("res://world/test_room.tscn")
 	assert_str(round_trip["payload"]["spawn_id"]).is_equal("from_dom")
+
+
+func test_spent_expert_rerolls_survive_a_disk_save_load_round_trip() -> void:
+	var member := PartyMember.new()
+	member.id = "reroll-fixture"
+	member.attributes["spark"] = 5
+	member.skill_tiers["lore"] = "expert"
+	var first := SkillCheck.resolve("lore", member, 0.0, "save-scene", [100, 1])
+	assert_bool(first.rerolled).is_true()
+	assert_bool(saves.save()).is_true()
+
+	SkillCheck.from_dict({})
+	assert_bool(saves.load_save()).is_true()
+	var restored_state: Dictionary = SkillCheck.to_dict()["expert_rerolls_used"]
+	assert_int(restored_state.size()).is_equal(1)
+	var second := SkillCheck.resolve("lore", member, 0.0, "save-scene", [100, 1])
+	assert_bool(second.rerolled).is_false()
+	assert_bool(second.success).is_false()
 
 
 func test_legacy_schema_migrates_without_losing_existing_values() -> void:

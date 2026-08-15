@@ -150,9 +150,10 @@ func load_save() -> bool:
 	var quests_backup := QuestRegistry.to_dict()
 	var ng_plus_backup := ng_plus.duplicate(true)
 	var zhavar_backup := zhavar.duplicate(true)
+	var skill_check_backup := SkillCheck.to_dict()
 	var unit_roster_backup := unit_roster.to_dict()
 	if not GameState.from_dict(payload.get("game_state", {})):
-		_restore_runtime_state(game_state_backup, reputation_backup, renown_backup, quests_backup, ng_plus_backup, zhavar_backup, unit_roster_backup)
+		_restore_runtime_state(game_state_backup, reputation_backup, renown_backup, quests_backup, ng_plus_backup, zhavar_backup, skill_check_backup, unit_roster_backup)
 		return _fail("The game_state section in this save file is invalid.")
 	_apply_runtime_feature_flags()
 	Reputation.from_dict(payload.get("reputation", {}))
@@ -160,6 +161,7 @@ func load_save() -> bool:
 	QuestRegistry.from_dict(payload.get("quests", {}))
 	ng_plus = NGPlus.normalize(payload.get("ng_plus", {}))
 	zhavar = payload.get("zhavar", {}).duplicate(true)
+	SkillCheck.from_dict(payload.get("skill_check", {}))
 	# _prepare_for_load already proved this parses; the migration guarantees the key.
 	var loaded_roster := UnitRoster.from_dict(payload.get("tactical", {}))
 	unit_roster = loaded_roster if loaded_roster != null else UnitRoster.new()
@@ -172,6 +174,7 @@ func load_save() -> bool:
 			quests_backup,
 			ng_plus_backup,
 			zhavar_backup,
+			skill_check_backup,
 			unit_roster_backup
 		)
 		return _fail("The save destination is invalid.")
@@ -343,6 +346,7 @@ func _restore_runtime_state(
 	quests_data: Dictionary,
 	ng_plus_data: Dictionary,
 	zhavar_data: Dictionary,
+	skill_check_data: Dictionary,
 	unit_roster_data: Dictionary
 ) -> void:
 	GameState.from_dict(game_state_data)
@@ -351,6 +355,7 @@ func _restore_runtime_state(
 	QuestRegistry.from_dict(quests_data)
 	ng_plus = ng_plus_data.duplicate(true)
 	zhavar = zhavar_data.duplicate(true)
+	SkillCheck.from_dict(skill_check_data)
 	var restored := UnitRoster.from_dict(unit_roster_data)
 	unit_roster = restored if restored != null else UnitRoster.new()
 
@@ -365,6 +370,7 @@ func new_game() -> void:
 	QuestRegistry.reset()
 	ng_plus = NGPlus.default_block()
 	zhavar = {}
+	SkillCheck.from_dict({})
 	unit_roster = UnitMigration.roster_from_party(GameState.party)
 	var destination := LoadDestination.new(
 		LocationRegistry.DOM.id,
@@ -433,6 +439,7 @@ func _build_payload() -> Dictionary:
 		"ng_plus": NGPlus.normalize(ng_plus),
 		"elapsed_seconds": elapsed_seconds(),
 		"spawn_id": String(pending_spawn_id),
+		"skill_check": SkillCheck.to_dict(),
 		"tactical": _snapshot_unit_roster(),
 	}
 	if scene:

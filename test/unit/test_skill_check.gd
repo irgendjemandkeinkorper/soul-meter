@@ -58,6 +58,26 @@ func test_expert_reroll_is_consumed_once_per_scene() -> void:
 	assert_bool(next_scene.rerolled).is_true()
 
 
+func test_expert_reroll_state_round_trips_and_clamps_usage_to_the_cap() -> void:
+	var member := _member()
+	member.attributes["spark"] = 5
+	member.skill_tiers["lore"] = "expert"
+	var reroll_key := service._reroll_key(member, "lore", "scene-a")
+
+	service.from_dict({"expert_rerolls_used": {reroll_key: 99, "unused": -4}})
+	var persisted: Dictionary = service.to_dict()
+	assert_int(persisted["expert_rerolls_used"][reroll_key]).is_equal(
+		SkillCheckService.EXPERT_REROLL_CAP
+	)
+	assert_int(persisted["expert_rerolls_used"]["unused"]).is_equal(0)
+
+	var restored: SkillCheckService = auto_free(SkillCheckScript.new())
+	restored.from_dict(persisted)
+	var result: Dictionary = restored.resolve("lore", member, 0.0, "scene-a", [100, 1])
+	assert_bool(result.success).is_false()
+	assert_bool(result.rerolled).is_false()
+
+
 func test_fizzle_sanity_table_matches_ratified_readings() -> void:
 	assert_float(service.fizzle_percent(92.0, "tone", 0, "note", 2)).is_equal(4.0)
 	assert_float(service.fizzle_percent(92.0, "chord", 0, "phrase", 2)).is_equal(13.0)

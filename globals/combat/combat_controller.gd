@@ -256,6 +256,14 @@ func end_turn() -> bool:
 	if state != State.ALLY_TURN or active_actor() == null:
 		return false
 	var actor := active_actor()
+	# Yield before publishing the end-of-turn transition. Charge time can refuse a third
+	# consecutive wait, in which case the ready actor must remain in control and act.
+	var yield_result := scheduler.yield_turn(actor)
+	if not bool(yield_result.get("allowed", false)):
+		last_refusal = yield_result.duplicate(true)
+		_emit_event(&"action_refused", actor, null, {"action_id": &"", "reason": yield_result})
+		return false
+	last_refusal.clear()
 	_emit_event(
 		&"turn_ended",
 		actor,
@@ -266,7 +274,6 @@ func end_turn() -> bool:
 	# is the ONLY place a turn is yielded voluntarily; a turn that already spent its action
 	# via submit_action() is advanced by _drive_scheduler() below without yielding, so a
 	# charge-time actor with banked overflow is not made to give it up just because it acted.
-	scheduler.yield_turn(actor)
 	_drive_scheduler()
 	return true
 

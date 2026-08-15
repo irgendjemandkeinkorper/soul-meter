@@ -30,6 +30,9 @@ static func prepare(payload: Variant) -> Dictionary:
 		migrated = _migrate_v4_to_v5(migrated)
 	if source_version <= 5:
 		migrated = _migrate_v5_to_v6(migrated)
+	migrated["skill_check"] = SkillCheckService.normalize_save_data(
+		migrated.get("skill_check", {})
+	)
 	migrated["schema_version"] = CURRENT_SCHEMA_VERSION
 	return {"ok": true, "payload": migrated, "error": ""}
 
@@ -82,8 +85,8 @@ static func _migrate_v4_to_v5(source: Dictionary) -> Dictionary:
 	return migrated
 
 
-## Schema 6 adds the tactical layer's per-unit state (issue #141): the `tactical`
-## envelope section carrying `units`, `unit_jobs`, `unit_attunement` and `unit_loadout`.
+## Schema 6 adds the tactical layer's per-unit state (issue #141) and persisted
+## Expert-reroll usage (issue #189).
 ##
 ## It lives at the TOP LEVEL of the envelope, not inside `game_state`, because the
 ## authored side of these tables belongs to Pandora and only the per-unit state is
@@ -97,12 +100,15 @@ static func _migrate_v4_to_v5(source: Dictionary) -> Dictionary:
 ## content exists yet (canon is owned by GitHub #132).
 static func _migrate_v5_to_v6(source: Dictionary) -> Dictionary:
 	var migrated := source.duplicate(true)
-	if migrated.get("tactical") is Dictionary:
-		return migrated
-	var game_state: Dictionary = {}
-	if migrated.get("game_state", {}) is Dictionary:
-		game_state = migrated.get("game_state", {})
-	migrated["tactical"] = UnitMigration.roster_from_party_rows(game_state.get("party", [])).to_dict()
+	if not migrated.get("tactical") is Dictionary:
+		var game_state: Dictionary = {}
+		if migrated.get("game_state", {}) is Dictionary:
+			game_state = migrated.get("game_state", {})
+		migrated["tactical"] = UnitMigration.roster_from_party_rows(
+			game_state.get("party", [])
+		).to_dict()
+	if not migrated.has("skill_check"):
+		migrated["skill_check"] = {"expert_rerolls_used": {}}
 	return migrated
 
 
