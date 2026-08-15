@@ -24,6 +24,12 @@ extends RefCounted
 ## keep their names — they gain new meaning (charge/ticks data instead of AP-only data)
 ## rather than being replaced, since "whose turn is it" stays meaningful under both
 ## models.
+##
+## AP COMPATIBILITY SHIM (Gate T-10, removal ticket #176). The remaining AP-named outcome keys,
+## snapshot fields, translated AP-round events, and zero-cost pass field are wire compatibility
+## for the rollback scheduler and event-driven HUD. They do not decide readiness, order, or CT
+## price; every such decision routes through `scheduler`. Delete these fields together with
+## `ApRoundScheduler` after the Gate T rollback window.
 
 signal event_emitted(event: CombatEvent)
 signal battle_finished(state: ResultState, outcome_id: StringName)
@@ -553,10 +559,12 @@ func _force_pass(actor: BattleActor) -> void:
 	if bool(result.get("allowed", false)):
 		scheduler.release(actor)
 	else:
-		# Defensive fallback only — should not be reachable if commit() just refused this
-		# same actor above for a resource reason, since a zero-cost action has no resource
-		# gate left to fail. Kept so a future refusal reason cannot stall the queue.
-		scheduler.yield_turn(actor)
+		# Two bounded attempts: a normal yield preserves scheduler-specific wait semantics. If
+		# that is refused by the same non-resource gate (for example an interrupt), consume the
+		# readiness with zero refund. Never return with this actor still selectable forever.
+		var yielded := scheduler.yield_turn(actor)
+		if not bool(yielded.get("allowed", false)):
+			scheduler.force_advance(actor)
 
 
 func _pass_action() -> CombatAction:

@@ -300,6 +300,20 @@ func yield_turn(actor: BattleActor) -> Dictionary:
 	return _allowed({"actor": actor, "ct_spent": forfeited, "charge": 0})
 
 
+func force_advance(actor: BattleActor) -> Dictionary:
+	if actor == null or _seat_index_of(actor) < 0:
+		return _blocked(&"not_participating", "That combatant is not in this battle.", {})
+	var forfeited := maxi(0, actor.action_points)
+	actor.action_points = 0
+	if actor.side == ENEMY_SIDE:
+		_acted_this_round[actor.combat_id] = true
+	if _committed_actor == actor:
+		_committed_actor = null
+		_committed_cost = 0
+	_phase = Phase.IDLE
+	return _allowed({"actor": actor, "ct_spent": forfeited, "ct_refunded": 0, "charge": 0})
+
+
 func interrupt(reason: StringName) -> Dictionary:
 	if _paused:
 		return _blocked(&"already_interrupted", "The battle is already held.", {})

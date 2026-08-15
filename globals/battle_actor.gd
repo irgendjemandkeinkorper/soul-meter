@@ -2,6 +2,11 @@ class_name BattleActor
 extends Resource
 ## Runtime combatant. Party actors retain their party_index so damage can be
 ## committed back to GameState when combat ends.
+##
+## AP COMPATIBILITY SHIM (Gate T-10, removal ticket #176). `action_points`,
+## `max_action_points`, and `effective_max_action_points()` exist solely for the flag-selected
+## `ApRoundScheduler` rollback path. Charge-time gameplay must read `TurnScheduler.charge_of()`;
+## tests characterize this shim so it can be deleted as one unit after the rollback window.
 
 @export var display_name: String = ""
 @export var hp: int = 10

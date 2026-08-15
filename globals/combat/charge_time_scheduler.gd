@@ -299,6 +299,19 @@ func yield_turn(actor: BattleActor) -> Dictionary:
 	})
 
 
+func force_advance(actor: BattleActor) -> Dictionary:
+	var key := _key(actor)
+	if actor == null or not _seat_of.has(key):
+		return _blocked(&"not_participating", "That combatant is not in this battle.", {})
+	var forfeited := maxi(0, int(_charge.get(key, 0)))
+	_charge[key] = 0
+	if _committed_actor == actor:
+		_committed_actor = null
+		_committed_cost = 0
+	_phase = Phase.IDLE
+	return _allowed({"actor": actor, "ct_spent": forfeited, "ct_refunded": 0, "charge": 0})
+
+
 static func wait_refund_ct(ready_at: int = READY_AT) -> int:
 	return int(floor(float(ready_at) * 0.5))
 

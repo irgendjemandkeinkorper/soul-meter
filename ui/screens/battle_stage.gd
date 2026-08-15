@@ -1,6 +1,10 @@
 extends Control
 ## Event-driven battle tableau. CombatEvent snapshots are the only combat input;
 ## transient feedback never queries Battle or CombatController state.
+##
+## AP COMPATIBILITY SHIM (Gate T-10, removal ticket #176). AP-labelled feedback is rendered only
+## when an old-scheduler event carries `ap_cost`; CT events omit it. This presentation branch has
+## no timing authority and is removed with the AP event vocabulary after the rollback window.
 
 signal feedback_presented(
 	kind: StringName, event_sequence: int, motion_used: bool

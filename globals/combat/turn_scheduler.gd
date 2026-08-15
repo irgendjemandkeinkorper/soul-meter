@@ -155,6 +155,14 @@ func yield_turn(_actor: BattleActor) -> Dictionary:
 	return _blocked(&"unimplemented", "TurnScheduler.yield_turn() must be implemented.", {})
 
 
+## Last-resort queue escape used only after both a zero-cost pass commit and a normal yield were
+## refused. It must consume the actor's readiness with no refund even when ordinary action gates
+## (for example an interrupt/pause) are closed, so a controller loop cannot select the same actor
+## forever. Implementations preserve every other participant's resource and seat.
+func force_advance(_actor: BattleActor) -> Dictionary:
+	return _blocked(&"unimplemented", "TurnScheduler.force_advance() must be implemented.", {})
+
+
 ## Halts the queue — a speech check ending or splitting a battle mid-resolution.
 ##
 ## Amendment §4 requires an explicit answer to four questions, and an implementation must

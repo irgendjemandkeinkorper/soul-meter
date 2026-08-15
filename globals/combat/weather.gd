@@ -120,7 +120,7 @@ func measures_applied() -> int:
 ## other call is a no-op tick that reports `applied == false`. A partial measure — fewer than 16
 ## ticks since the last application, including at save/load boundaries — never applies anything
 ## (issue acceptance line 1).
-func tick(tiles: Array[TileState] = []) -> Dictionary:
+func tick(tiles: Array[TileState] = [], balance: int = 0) -> Dictionary:
 	_total_ticks += 1
 	_ticks_since_application += 1
 	if _ticks_since_application < TurnScheduler.TICKS_PER_MEASURE:
@@ -132,7 +132,7 @@ func tick(tiles: Array[TileState] = []) -> Dictionary:
 
 	_ticks_since_application = 0
 	_measures_applied += 1
-	var result := _apply_measure(tiles)
+	var result := _apply_measure(tiles, balance)
 	result["applied"] = true
 	result["measures_applied"] = _measures_applied
 	result["total_ticks"] = _total_ticks
@@ -166,7 +166,7 @@ static func from_dict(data: Dictionary) -> Weather:
 ## `&"hush"`) when weather itself is Hush; otherwise walks every tile, letting each tile's own
 ## `TileState.hush` (Hushwarden field) block that tile individually — weather Hush and tile Hush
 ## are independent and both honored (see file-header NAMING note).
-func _apply_measure(tiles: Array[TileState]) -> Dictionary:
+func _apply_measure(tiles: Array[TileState], balance: int = 0) -> Dictionary:
 	if weather_hush:
 		return _blocked(
 			&"weather_hush",
@@ -176,6 +176,11 @@ func _apply_measure(tiles: Array[TileState]) -> Dictionary:
 	if element_id == UNCHARGED:
 		return _allowed({"charged_tiles": 0, "drained_tiles": 0, "locally_hushed_tiles": 0})
 
+	# FR-104's re-homed Balance bias shares the weather measure. Order makes matching weather
+	# more predictable (one extra same-element residue); Chaos makes clashes more volatile (one
+	# extra drain). Neutral preserves the pre-bias behavior exactly.
+	var ordered_steps := 2 if balance > 0 else 1
+	var chaotic_steps := 2 if balance < 0 else 1
 	var charged := 0
 	var drained := 0
 	var locally_hushed := 0
@@ -189,17 +194,19 @@ func _apply_measure(tiles: Array[TileState]) -> Dictionary:
 			# Reuses TileState's own cap/refusal-aware growth rather than re-deriving it — see
 			# file header. Same element charging itself is never the PLACEHOLDER cross-element
 			# overwrite path.
-			tile.apply_residue(element_id)
+			for _step in ordered_steps:
+				tile.apply_residue(element_id)
 			charged += 1
 		elif ElementWheel.distance(tile.charge_element_id, element_id) == CLASH_WHEEL_DISTANCE:
 			# TileState owns the cap, the Hush guard and the clear-at-zero rule.
-			tile.drain_charge(1)
+			tile.drain_charge(chaotic_steps)
 			drained += 1
 
 	return _allowed({
 		"charged_tiles": charged,
 		"drained_tiles": drained,
 		"locally_hushed_tiles": locally_hushed,
+		"balance_bias": clampi(balance, -100, 100),
 	})
 
 

@@ -1,6 +1,10 @@
 extends Node
 ## Party turn combat around the Balance Gauge. Encounter composition,
 ## contextual resolutions, and their consequences come from generated data.
+##
+## AP COMPATIBILITY SHIM (Gate T-10, removal ticket #176). This facade still normalizes legacy
+## contextual actions that only authored `ap_cost`; all turn authority and live pricing remain
+## behind `TurnScheduler`. Remove the normalization with the AP scheduler, never independently.
 
 signal battle_started
 signal turn_resolved

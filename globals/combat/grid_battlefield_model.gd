@@ -360,7 +360,7 @@ func path_query(actor: BattleActor, destination: StringName) -> Dictionary:
 		return _blocked(&"position", "Combatant is already there.", {"type": &"different_position"})
 	var was_solid := _grid.is_point_solid(origin_cell)
 	_grid.set_point_solid(origin_cell, false)
-	var path := _grid.path_cells(origin_cell, dest_cell)
+	var path := _deterministic_path(origin_cell, dest_cell)
 	_grid.set_point_solid(origin_cell, was_solid)
 	if path.is_empty():
 		return _blocked(&"position", "No path to that cell.", {"type": &"reachable"})
@@ -506,6 +506,68 @@ func _path_ct_cost(path: PackedVector2Array) -> int:
 		var cell := Vector2i(path[i])
 		total += int(ceil(move_cost * _grid.get_point_weight_scale(cell)))
 	return total
+
+
+## AStarGrid2D is deterministic on one engine build, but its equal-f-score choice is not the
+## Gate T contract: equal-cost paths must prefer the lowest row-major cell index. This compact
+## Dijkstra walk makes that tie-break explicit while preserving octile diagonal cost and the
+## no-corner-cutting rule used by IsoGrid.
+func _deterministic_path(from_cell: Vector2i, to_cell: Vector2i) -> PackedVector2Array:
+	var rect := _grid.get_used_rect()
+	var frontier: Array[Dictionary] = [{"cell": from_cell, "cost": 0.0}]
+	var costs: Dictionary = {from_cell: 0.0}
+	var previous: Dictionary = {}
+	while not frontier.is_empty():
+		frontier.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			if not is_equal_approx(float(a["cost"]), float(b["cost"])):
+				return float(a["cost"]) < float(b["cost"])
+			return _cell_index(a["cell"], rect) < _cell_index(b["cell"], rect)
+		)
+		var current: Dictionary = frontier.pop_front()
+		var cell: Vector2i = current["cell"]
+		if float(current["cost"]) > float(costs.get(cell, INF)):
+			continue
+		if cell == to_cell:
+			break
+		var neighbors: Array[Vector2i] = []
+		for y_offset in range(-1, 2):
+			for x_offset in range(-1, 2):
+				if x_offset == 0 and y_offset == 0:
+					continue
+				var next := cell + Vector2i(x_offset, y_offset)
+				if not _grid.is_in_bounds(next) or _grid.is_point_solid(next):
+					continue
+				if x_offset != 0 and y_offset != 0:
+					if (
+						_grid.is_point_solid(cell + Vector2i(x_offset, 0))
+						or _grid.is_point_solid(cell + Vector2i(0, y_offset))
+					):
+						continue
+				neighbors.append(next)
+		neighbors.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+			return _cell_index(a, rect) < _cell_index(b, rect)
+		)
+		for next in neighbors:
+			var diagonal := next.x != cell.x and next.y != cell.y
+			var step_cost := (sqrt(2.0) if diagonal else 1.0) * _grid.get_point_weight_scale(next)
+			var next_cost := float(costs[cell]) + step_cost
+			if next_cost + 0.000001 < float(costs.get(next, INF)):
+				costs[next] = next_cost
+				previous[next] = cell
+				frontier.append({"cell": next, "cost": next_cost})
+	if not costs.has(to_cell):
+		return PackedVector2Array()
+	var reversed: Array[Vector2i] = [to_cell]
+	var cursor := to_cell
+	while cursor != from_cell:
+		cursor = previous[cursor]
+		reversed.append(cursor)
+	reversed.reverse()
+	return PackedVector2Array(reversed)
+
+
+static func _cell_index(cell: Vector2i, rect: Rect2i) -> int:
+	return (cell.y - rect.position.y) * rect.size.x + (cell.x - rect.position.x)
 
 
 func _chebyshev(a: Vector2i, b: Vector2i) -> int:
