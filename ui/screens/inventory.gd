@@ -4,6 +4,15 @@ extends Screen
 
 const ITEM_SLOT_SCENE := preload("res://ui/components/item_slot.tscn")
 const EQUIPMENT_SLOTS: Array[StringName] = [&"main", &"off", &"head", &"body", &"trinket"]
+## Pandora items carry `equip_slot` values like "main_hand"; the rail's slot names are
+## the short forms above. Both spellings are accepted wherever a slot is matched.
+const EQUIP_SLOT_ALIASES := {
+	"main_hand": &"main",
+	"off_hand": &"off",
+	"head": &"head",
+	"body": &"body",
+	"trinket": &"trinket",
+}
 const WEIGHT_CAPACITY := 60.0
 
 var _bag_grid: CtrlInventoryGrid
@@ -23,14 +32,33 @@ func _build() -> void:
 	_build_shell()
 	_ensure_bag_constraints()
 	_build_columns()
+	_restore_equipment()
 	_refresh_weight()
 	GameState.inventory_changed.connect(_refresh_weight)
 
 
 func _exit_tree() -> void:
-	for inventory: Inventory in _equipment.values():
+	# The per-slot inventories are children of this screen and die with it, so the
+	# equipped state is snapshotted into GameState.equipped_slots here (the single
+	# write point — every in-screen drag/equip path is captured by this final pass)
+	# and the items themselves return to the persistent bag.
+	GameState.equipped_slots.clear()
+	for slot_name: StringName in _equipment:
+		var inventory: Inventory = _equipment[slot_name]
 		for item: InventoryItem in inventory.get_items().duplicate():
-			transfer_from_equipment(item, GameState.inventory)
+			GameState.equipped_slots[String(slot_name)] = item.get_prototype().get_prototype_id()
+			if not transfer_from_equipment(item, GameState.inventory):
+				push_error("InventoryScreen: could not return %s to the bag on close." % item.get_title())
+
+
+func _restore_equipment() -> void:
+	for slot_name: StringName in EQUIPMENT_SLOTS:
+		var proto_id := str(GameState.equipped_slots.get(String(slot_name), ""))
+		if proto_id.is_empty():
+			continue
+		for item: InventoryItem in GameState.inventory.get_items_with_prototype_id(proto_id):
+			if transfer_to_equipment(item, _equipment[slot_name], slot_name):
+				break
 
 
 func _build_shell() -> void:
@@ -245,7 +273,7 @@ func _refresh_detail() -> void:
 
 func _on_equipment_drop(item: InventoryItem, _offset: Vector2, slot_name: StringName) -> void:
 	var target: Inventory = _equipment[slot_name]
-	if str(item.get_property("slot", "")) != str(slot_name):
+	if slot_of(item) != slot_name:
 		transfer_from_equipment(item, GameState.inventory)
 		return
 	_flash(find_child("Equipment_%s" % slot_name, true, false) as Control)
@@ -254,7 +282,7 @@ func _on_equipment_drop(item: InventoryItem, _offset: Vector2, slot_name: String
 func _equip_selected() -> void:
 	if not is_instance_valid(_selected_item):
 		return
-	var slot_name := StringName(str(_selected_item.get_property("slot", "")))
+	var slot_name := slot_of(_selected_item)
 	if not _equipment.has(slot_name):
 		_requirement_label.text = "THIS ITEM HAS NO COMPATIBLE SLOT"
 		return
@@ -295,10 +323,15 @@ static func make_equipment_inventory(protoset: JSON) -> Inventory:
 	return inventory
 
 
+static func slot_of(item: InventoryItem) -> StringName:
+	var raw := str(item.get_property("slot", item.get_property("equip_slot", "")))
+	return EQUIP_SLOT_ALIASES.get(raw, StringName(raw))
+
+
 static func transfer_to_equipment(
 	item: InventoryItem, equipment: Inventory, slot_name: StringName
 ) -> bool:
-	if not is_instance_valid(item) or str(item.get_property("slot", "")) != str(slot_name):
+	if not is_instance_valid(item) or slot_of(item) != slot_name:
 		return false
 	var grid := equipment.get_constraint(GridConstraint) as GridConstraint
 	if grid != null:

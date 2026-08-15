@@ -305,7 +305,9 @@ func force_advance(actor: BattleActor) -> Dictionary:
 		return _blocked(&"not_participating", "That combatant is not in this battle.", {})
 	var forfeited := maxi(0, actor.action_points)
 	actor.action_points = 0
-	if actor.side == ENEMY_SIDE:
+	# Gate on the active round side like commit()/cancel_committed(), not actor.side —
+	# a forced pass outside the enemy round must not consume the enemy's one act.
+	if _side == ENEMY_SIDE:
 		_acted_this_round[actor.combat_id] = true
 	if _committed_actor == actor:
 		_committed_actor = null

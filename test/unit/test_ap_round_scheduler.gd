@@ -371,3 +371,25 @@ func _walk_ten_turns() -> Array[String]:
 		seen.append(String(actor.combat_id))
 		scheduler.yield_turn(actor)
 	return seen
+
+
+func test_force_advance_gates_enemy_act_bookkeeping_on_the_active_round_side() -> void:
+	var ally := _actor("ally-0", ApRoundScheduler.ALLY_SIDE)
+	var foe := _actor("enemy-0", ApRoundScheduler.ENEMY_SIDE)
+	var group: Array[BattleActor] = [ally, foe]
+	var scheduler := _scheduler(group)
+	assert_bool(scheduler.advance()["allowed"]).is_true()
+
+	# The ally round is active. Force-passing the enemy now must NOT consume its one
+	# act for the coming enemy round (same _side gate as commit()/cancel_committed()).
+	var forced: Dictionary = scheduler.force_advance(foe)
+	assert_bool(forced["allowed"]).is_true()
+	assert_int(int(forced["ct_refunded"])).is_equal(0)
+	assert_bool(scheduler.to_dict()["acted_this_round"].has(String(foe.combat_id))).is_false()
+
+	# Hand the round to the enemy side; a forced pass there DOES consume the act.
+	scheduler.yield_turn(ally)
+	var step: Dictionary = scheduler.advance()
+	assert_object(step.get("actor")).is_same(foe)
+	assert_bool(scheduler.force_advance(foe)["allowed"]).is_true()
+	assert_bool(scheduler.to_dict()["acted_this_round"].has(String(foe.combat_id))).is_true()

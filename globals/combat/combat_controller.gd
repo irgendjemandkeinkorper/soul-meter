@@ -564,7 +564,12 @@ func _force_pass(actor: BattleActor) -> void:
 		# readiness with zero refund. Never return with this actor still selectable forever.
 		var yielded := scheduler.yield_turn(actor)
 		if not bool(yielded.get("allowed", false)):
-			scheduler.force_advance(actor)
+			var forced := scheduler.force_advance(actor)
+			if not bool(forced.get("allowed", false)):
+				# Contract violation: force_advance may only refuse not_participating,
+				# and a stuck-selectable actor is exactly the hang this path prevents.
+				push_error("CombatController._force_pass(): force_advance refused for %s (%s)." % [
+					actor.combat_id, str(forced.get("blocked_by", ""))])
 
 
 func _pass_action() -> CombatAction:

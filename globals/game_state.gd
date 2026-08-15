@@ -81,6 +81,10 @@ var var_harmony: Dictionary = {}
 ## Stable Pandora Combatant Id -> {encounters, weaknesses}. Weakness IDs are
 ## stable world-fact IDs from the generated Defining Strike table.
 var combat_knowledge: Dictionary = {}
+## Equipment slot name (String) -> equipped item prototype id (String). The items
+## themselves always live in `inventory`; the inventory screen re-seats them into its
+## ephemeral per-slot GLoot inventories from this record on open.
+var equipped_slots: Dictionary = {}
 var settings_path: String = SETTINGS_PATH
 
 var _settings := ConfigFile.new()
@@ -876,6 +880,7 @@ func to_dict() -> Dictionary:
 		"skills": skills.duplicate(true),
 		"var_harmony": var_harmony.duplicate(true),
 		"combat_knowledge": combat_knowledge.duplicate(true),
+		"equipped_slots": equipped_slots.duplicate(true),
 	}
 
 
@@ -898,6 +903,8 @@ func from_dict(data: Dictionary) -> bool:
 	skills = data.get("skills", {}).duplicate(true)
 	var_harmony = data.get("var_harmony", {}).duplicate(true)
 	combat_knowledge = data.get("combat_knowledge", {}).duplicate(true)
+	# Additive key: absent in saves written before the equipment rail persisted (defaults empty).
+	equipped_slots = data.get("equipped_slots", {}).duplicate(true)
 	party.clear()
 	for row in data.get("party", []):
 		party.append(PartyMember.from_dict(row))
