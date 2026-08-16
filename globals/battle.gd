@@ -108,7 +108,8 @@ func start(encounter: Variant) -> void:
 	if ended:
 		push_error("Cannot start an empty encounter: %s" % encounter_id)
 		return
-	var rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	var rules := (load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
+	rules.use_charge_time = bool(_definition.get("use_charge_time", rules.use_charge_time))
 	controller = CombatController.new()
 	controller.event_emitted.connect(_on_combat_event)
 	controller.battle_finished.connect(_on_controller_finished)

@@ -27,6 +27,25 @@ func test_production_field_encounters_build_grid_battlefields() -> void:
 			.override_failure_message("%s did not build a grid battlefield" % encounter_id).is_true()
 		assert_bool(bool(Battle.controller.battlefield.capabilities().get("cells", false))).is_true()
 		assert_str(String(Battle.controller.battlefield.position_of(Battle.current_ally()))).is_not_empty()
+		assert_bool(Battle.controller.rules.use_charge_time)\
+			.override_failure_message("%s unexpectedly changed from the AP fallback" % encounter_id)\
+			.is_false()
+
+
+func test_gate_t1_encounters_use_grid_and_charge_time_in_production() -> void:
+	var encounter_ids: Array[StringName] = [
+		EncounterIds.PHASE2_DEMON,
+		EncounterIds.PHASE2_UNDEAD,
+		EncounterIds.PHASE2_MIXED_WHIPSAW,
+		EncounterIds.PHASE2_SPEECH_WINNABLE,
+		EncounterIds.PHASE2_STABILIZER_SHOWCASE,
+	]
+	for encounter_id: StringName in encounter_ids:
+		Battle.start(encounter_id)
+		assert_bool(Battle.controller.battlefield is GridBattlefieldModel)\
+			.override_failure_message("%s did not build a grid battlefield" % encounter_id).is_true()
+		assert_bool(Battle.controller.rules.use_charge_time)\
+			.override_failure_message("%s did not activate charge time" % encounter_id).is_true()
 
 
 func test_production_encounter_place_writes_a_spawn_position() -> void:
