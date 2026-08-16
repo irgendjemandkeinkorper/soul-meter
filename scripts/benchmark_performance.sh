@@ -10,10 +10,16 @@ set -euo pipefail
 #
 # Usage:
 #   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh
-#   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh -o report.json
+#   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
+#     --scenario populated-grid --display-mode rendered -o report.json
 
 godot_bin="${GODOT_BIN:-godot}"
 output_path=""
+scenario="field"
+display_mode="headless"
+benchmark_data_dir="${SOUL_METER_BENCHMARK_DATA_DIR:-/tmp/soul-meter-godot-benchmark-data}"
+mkdir -p "$benchmark_data_dir"
+export XDG_DATA_HOME="$benchmark_data_dir"
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
@@ -25,8 +31,16 @@ while [[ $# -gt 0 ]]; do
 			fi
 			shift 2
 			;;
+		--scenario)
+			scenario="${2:-}"
+			shift 2
+			;;
+		--display-mode)
+			display_mode="${2:-}"
+			shift 2
+			;;
 		-h|--help)
-			sed -n '3,13p' "$0"
+			sed -n '3,14p' "$0"
 			exit 0
 			;;
 		*)
@@ -41,6 +55,32 @@ if ! command -v "$godot_bin" >/dev/null 2>&1 && [[ ! -x "$godot_bin" ]]; then
 	exit 1
 fi
 
+case "$scenario" in
+	field)
+		tool_script="res://tools/performance_benchmark.gd"
+		;;
+	populated-grid)
+		tool_script="res://tools/populated_grid_benchmark.gd"
+		;;
+	*)
+		echo "Unknown benchmark scenario: $scenario" >&2
+		exit 2
+		;;
+esac
+
+godot_args=()
+case "$display_mode" in
+	headless)
+		godot_args+=("--headless")
+		;;
+	rendered)
+		;;
+	*)
+		echo "Unknown display mode: $display_mode" >&2
+		exit 2
+		;;
+esac
+
 raw="$(mktemp)"
 cleanup() { rm -f "$raw"; }
 trap cleanup EXIT
@@ -50,7 +90,7 @@ trap cleanup EXIT
 # noise ("N resources still in use at exit"), so the presence of a well-formed
 # report — not the exit status — decides success here.
 set +e
-"$godot_bin" --headless --path . --script res://tools/performance_benchmark.gd >"$raw" 2>&1
+"$godot_bin" "${godot_args[@]}" --path . --script "$tool_script" >"$raw" 2>&1
 godot_status=$?
 set -e
 

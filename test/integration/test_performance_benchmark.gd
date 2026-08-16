@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 
 const PerformanceBenchmark := preload("res://tools/performance_benchmark.gd")
+const PopulatedGridBenchmark := preload("res://tools/populated_grid_benchmark.gd")
 
 
 func test_report_schema_honors_warmup_and_sample_counts() -> void:
@@ -56,6 +57,7 @@ func test_report_schema_honors_warmup_and_sample_counts() -> void:
 	).is_true()
 	assert_int(report["scene_baseline"]["authored_nodes"]).is_equal(269)
 	assert_int(report["scene_baseline"]["authored_sprite_2d_nodes"]).is_equal(105)
+	_assert_populated_grid_report_keeps_fr904_metrics_and_describes_rendered_load()
 
 
 func test_report_rejects_sample_count_mismatch() -> void:
@@ -73,3 +75,37 @@ func test_report_rejects_sample_count_mismatch() -> void:
 
 	assert_str(report["status"]).is_equal("error")
 	assert_array(report["errors"]).is_not_empty()
+
+
+func _assert_populated_grid_report_keeps_fr904_metrics_and_describes_rendered_load() -> void:
+	var report: Dictionary = PopulatedGridBenchmark.create_scenario_report(
+		{
+			"frame_time_ms": [1.0, 2.0, 3.0],
+			"draw_calls": [10.0, 11.0, 12.0],
+			"node_count": [300.0, 301.0, 302.0],
+		},
+		{"headless": false, "renderer": "gl_compatibility"},
+		{
+			"ally_count": 3,
+			"enemy_count": 2,
+			"tile_count": 32,
+			"charged_tile_count": 32,
+			"battle_hud_visible": true,
+			"ct_timeline_visible": true,
+		},
+		3,
+	)
+
+	assert_str(report["schema_version"]).is_equal("1.0")
+	assert_str(report["benchmark_id"]).is_equal("FR-904")
+	assert_str(report["target_scene"]).is_equal("res://ui/screens/battle.tscn")
+	assert_bool(report.has_all(["frame_time_ms", "monitors", "spans"])).is_true()
+	assert_int(report["frame_time_ms"]["sample_count"]).is_equal(3)
+	assert_str(report["scenario"]["id"]).is_equal("populated-grid-battle")
+	assert_str(report["scenario"]["encounter_id"]).is_equal("dorthkor-vanguard")
+	assert_int(report["scenario"]["ally_count"]).is_equal(3)
+	assert_int(report["scenario"]["enemy_count"]).is_equal(2)
+	assert_int(report["scenario"]["charged_tile_count"]).is_equal(32)
+	assert_bool(report["scenario"]["battle_hud_visible"]).is_true()
+	assert_bool(report["scenario"]["ct_timeline_visible"]).is_true()
+	assert_bool(report["scenario"]["acceptance_evidence"]).is_false()
