@@ -4,9 +4,9 @@ extends RefCounted
 ## speaks these opaque position/profile/shape APIs, so a grid can replace zones.
 
 
-## FR-105a seam (architecture doc §1.5). `use_grid_battlefield` is the only
-## activation path for a grid model — this stays a one-line switch on data,
-## never a code change, so reverting to zones is a flag flip.
+## FR-105a seam (architecture doc §1.5). `use_grid_battlefield` selects the global
+## default; `Battle` may instead supply a grid model for an encounter that authors
+## grid data. Encounters without that data still use this factory unchanged.
 static func create_default(rules: CombatRules) -> BattlefieldModel:
 	const ZONE_PATH := "res://globals/combat/zone_battlefield_model.gd"
 	const GRID_PATH := "res://globals/combat/grid_battlefield_model.gd"

@@ -14,9 +14,8 @@ extends BattlefieldModel
 ## the two into one derived rule would make "blocked by elevation" and "expensive because of
 ## elevation" the same refusal, which FR-606 forbids.
 ##
-## No map is authored here (amendment §8.1 forbids grid content before Gate T). `build_grid()`
-## takes bare `TileMapLayer` nodes and elevation/cliff data from whichever caller eventually
-## owns a real encounter; this file supplies the mechanism only.
+## No map is authored here. `build_grid()` takes bare `TileMapLayer` nodes and elevation/cliff
+## data from the caller that owns the encounter; this file supplies the mechanism only.
 ##
 ## Determinism: no RNG anywhere below. `IsoGrid`/`AStarGrid2D` tie-breaks are stable (lowest
 ## cell index wins), and `reachable_positions()` sorts its own result by handle string, so the
