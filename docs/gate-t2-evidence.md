@@ -42,3 +42,44 @@ SOUL_METER_HEADLESS=1 ~/.local/bin/godot --headless --path . \
 ```
 
 The harness exits `2` when the frozen threshold fails and prints the complete JSON result.
+
+## Rerun after FR-105a live wiring — 2026-08-16
+
+Status: **FAIL — escalate; do not activate grid content production.**
+
+Commit `c8c9fb3` wires the ratified FR-105a rules into live grid combat without changing this
+harness, its seed, its encounter, or its victory/defeat threshold. `Resolution` now applies the
+provisional +10% damage per favorable elevation step and FRONT/SIDE/BACK damage table, exposes
+the +0/+8/+15 hit bonus, and receives real battlefield context from `CombatController`.
+`GridBattlefieldModel` also refuses melee when `|Δh| > jump` and routes ranged arcs through its
+existing line-of-sight clearance query.
+
+The unchanged comparison produced:
+
+| Arm | Outcome | Party HP | Survivors | Moves | Highest elevation | Rear attacks |
+|---|---:|---:|---:|---:|---:|---:|
+| Positional | Victory | 46 | 2 | 15 | 2 | 1 |
+| Naive | Victory | 40 | 2 | 4 | 0 | 0 |
+
+The positional arm now reaches a rear attack and preserves six more HP, but the naive arm still
+wins with both party members alive. The frozen threshold requires positional victory **and** naive
+defeat, so `passed=false` and both direct harness processes exited `2`. Their JSON outputs were
+byte-identical. The focused gdUnit gate suite independently passed its determinism test and kept
+the natural differential assertion red (`2 test cases | 0 errors | 2 failures | 0 orphans`, exit
+100): naive was `victory`, not `defeat`.
+
+Focused FR-105a verification passed:
+
+- `test/combat_resolution/test_resolution.gd`: `8 test cases | 0 errors | 0 failures`.
+- `test/unit/test_grid_battlefield_model.gd`: `9 test cases | 0 errors | 0 failures`.
+- `test/integration/test_combat_controller.gd`: `13 test cases | 0 errors | 0 failures`.
+
+The required headless-safe full run,
+`SOUL_METER_HEADLESS=1 GODOT_BIN=~/.local/bin/godot bash scripts/test.sh`, reported
+`745 test cases | 1 errors | 6 failures | 0 orphans` (exit 100). The first run reported
+`740 | 1 | 6`; the five new FR-105a tests increased only the case count. The two Gate T-2
+differential assertions and the four pre-existing presentation/input failures in
+`test_actor_presentation`, `test_y_sort`, and `test_click_to_move_input` account for the same
+unchanged failure/error baseline.
+
+Per the stop rule, no further tuning or iteration was attempted after this second failure.
