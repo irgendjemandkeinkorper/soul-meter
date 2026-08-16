@@ -49,7 +49,7 @@ func _build() -> void:
 	vbox.add_child(_save_status)
 	SaveGame.save_failed.connect(_on_save_failed)
 	_menu_button(
-		vbox, "Settings", func() -> void: UIManager.open(load("res://ui/screens/settings.tscn"))
+		vbox, "Settings", func() -> void: UIManager.open(UIManager.SETTINGS)
 	)
 	_menu_button(vbox, "Main Menu", func() -> void: GameFlow.send_event("to_main_menu"))
 	_menu_button(vbox, "Quit", func() -> void: get_tree().quit())

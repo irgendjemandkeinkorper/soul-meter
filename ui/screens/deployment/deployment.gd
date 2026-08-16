@@ -4,7 +4,9 @@ extends Screen
 enum Step { SLATE, ATTUNE, LOADOUT, PLACE }
 
 var current_step := Step.SLATE
-var battlefield_model: GridBattlefieldModel
+## Typed to the FR-105 seam, not the grid implementation: placement goes through the
+## same move()/set_facing() surface on whichever model the battle is running.
+var battlefield_model: BattlefieldModel
 var placement_actor: BattleActor
 @onready var title: Label = %Title
 @onready var body: Label = %Body
@@ -22,7 +24,7 @@ func configure_step(step: Step) -> void:
 		_render()
 
 
-func configure_placement(model: GridBattlefieldModel, actor: BattleActor) -> void:
+func configure_placement(model: BattlefieldModel, actor: BattleActor) -> void:
 	battlefield_model = model
 	placement_actor = actor
 

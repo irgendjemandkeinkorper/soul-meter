@@ -313,6 +313,12 @@ func _on_deployment_entered(step: int) -> void:
 	var screen := UIManager.open(DEPLOYMENT_SCREEN, false, true) as DeploymentScreen
 	if screen != null:
 		screen.configure_step(step)
+		# Battle.start() has already run by the time the chart enters deployment (the
+		# Enemy trigger starts the battle, then sends "enter_battle"), so the PLACE
+		# step hands the screen the LIVE battlefield model — place_unit() writes real
+		# spawn positions instead of refusing on deployment_context (#202).
+		if step == DeploymentScreen.Step.PLACE and Battle.controller != null:
+			screen.configure_placement(Battle.controller.battlefield, Battle.current_ally())
 
 
 func _on_deployment_exited() -> void:

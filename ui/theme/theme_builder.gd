@@ -33,6 +33,11 @@ static func build() -> Theme:
 	panel.set_content_margin_all(DS.PANEL_PAD)
 	t.set_stylebox("panel", "PanelContainer", panel)
 
+	# Main-menu button column (#201): rhythm via type variation, not a per-node override.
+	t.add_type("MainMenuColumn")
+	t.set_type_variation("MainMenuColumn", "VBoxContainer")
+	t.set_constant("separation", "MainMenuColumn", DS.CONTROL_GAP)
+
 	# NPC placeholder portraits. The generated roster picks one of the ten
 	# Wheel-backed variants from the stable portrait id; controls only select a
 	# type variation and never carry task-local theme overrides.

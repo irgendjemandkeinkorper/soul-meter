@@ -16,7 +16,7 @@ func _build() -> void:
 	add_child(center)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 14)
+	vbox.theme_type_variation = "MainMenuColumn"
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(vbox)
 
@@ -34,7 +34,7 @@ func _build() -> void:
 	vbox.add_child(sub)
 
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 24)
+	spacer.custom_minimum_size = Vector2(0, DS.SPACE_8)
 	vbox.add_child(spacer)
 
 	# Buttons send flow events — they never name a destination scene (see GameFlow).
@@ -53,7 +53,7 @@ func _build() -> void:
 	)
 	continue_button.disabled = not SaveGame.has_save()
 	_menu_button(
-		vbox, "Settings", func() -> void: UIManager.open(load("res://ui/screens/settings.tscn"))
+		vbox, "Settings", func() -> void: UIManager.open(UIManager.SETTINGS)
 	)
 	_menu_button(vbox, "Quit", func() -> void: get_tree().quit())
 
