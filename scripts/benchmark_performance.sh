@@ -11,7 +11,7 @@ set -euo pipefail
 # Usage:
 #   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh
 #   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
-#     --scenario populated-grid --display-mode rendered -o report.json
+#     --scenario populated-grid --display-mode rendered --settle-ms 2000 -o report.json
 #   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
 #     --scenario populated-grid --display-mode headless --profile -o profile.json
 
@@ -20,6 +20,8 @@ output_path=""
 scenario="field"
 display_mode="headless"
 profile_mode=0
+settle_ms=2000
+settle_ms_explicit=0
 benchmark_data_dir="${SOUL_METER_BENCHMARK_DATA_DIR:-/tmp/soul-meter-godot-benchmark-data}"
 mkdir -p "$benchmark_data_dir"
 export XDG_DATA_HOME="$benchmark_data_dir"
@@ -46,8 +48,13 @@ while [[ $# -gt 0 ]]; do
 			profile_mode=1
 			shift
 			;;
+		--settle-ms)
+			settle_ms="${2:-}"
+			settle_ms_explicit=1
+			shift 2
+			;;
 		-h|--help)
-			sed -n '3,16p' "$0"
+			sed -n '3,18p' "$0"
 			exit 0
 			;;
 		*)
@@ -80,6 +87,16 @@ if [[ "$profile_mode" -eq 1 && "$scenario" != "populated-grid" ]]; then
 	exit 2
 fi
 
+if [[ "$settle_ms_explicit" -eq 1 && "$scenario" != "populated-grid" ]]; then
+	echo "--settle-ms is only available for --scenario populated-grid" >&2
+	exit 2
+fi
+
+if [[ ! "$settle_ms" =~ ^[0-9]+$ || "$settle_ms" -le 0 ]]; then
+	echo "--settle-ms requires a positive integer duration" >&2
+	exit 2
+fi
+
 godot_args=()
 case "$display_mode" in
 	headless)
@@ -102,12 +119,15 @@ trap cleanup EXIT
 # noise ("N resources still in use at exit"), so the presence of a well-formed
 # report — not the exit status — decides success here.
 set +e
-profile_args=()
+user_args=()
+if [[ "$scenario" == "populated-grid" ]]; then
+	user_args+=("--" "--settle-ms" "$settle_ms")
+fi
 if [[ "$profile_mode" -eq 1 ]]; then
-	profile_args+=("--" "--profile")
+	user_args+=("--profile")
 fi
 "$godot_bin" "${godot_args[@]}" --path . --script "$tool_script" \
-	"${profile_args[@]}" >"$raw" 2>&1
+	"${user_args[@]}" >"$raw" 2>&1
 godot_status=$?
 set -e
 
@@ -126,6 +146,7 @@ if [[ -z "$report" ]]; then
 fi
 
 if [[ -n "$output_path" ]]; then
+	mkdir -p "$(dirname -- "$output_path")"
 	printf '%s\n' "$report" >"$output_path"
 	echo "Wrote FR-904 report to $output_path" >&2
 else

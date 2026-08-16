@@ -18,6 +18,7 @@ const GRID_HEIGHT := 4
 const FULL_DEPLOYMENT_SIZE := 3
 const WARMUP_FRAMES := 120
 const SAMPLE_COUNT := 600
+const DEFAULT_SETTLE_DURATION_MS := 2000
 const PROFILE_WARMUP_FRAMES := 120
 const PROFILE_SAMPLE_COUNT := 600
 const STAGE_TIMEOUT_FRAMES := 1800
@@ -34,6 +35,8 @@ var _stage_region: Control
 var _ct_timeline: Control
 var _battle_event_usec := -1
 var _battle_hud_interactive_usec := -1
+var _setup_frame_times_ms: Array[float] = []
+var _settle_gate: Dictionary = {}
 
 
 func _initialize() -> void:
@@ -56,6 +59,7 @@ func _run() -> void:
 		_finish_with_error()
 		return
 
+	_start_setup_phase_sampling()
 	_battle_event_usec = Time.get_ticks_usec()
 	_battle.call("start", ENCOUNTER_ID)
 	if bool(_battle.get("ended")):
@@ -85,6 +89,8 @@ func _run() -> void:
 		return
 	await process_frame
 	_battle_hud_interactive_usec = Time.get_ticks_usec()
+	_settle_gate = await _discard_post_setup_warmup()
+	_stop_setup_phase_sampling()
 	if _profiling_requested():
 		await _run_attribution_profile()
 		return
@@ -116,6 +122,8 @@ func _run() -> void:
 		SAMPLE_COUNT,
 		WARMUP_FRAMES,
 		_elapsed_ms(_battle_event_usec, _battle_hud_interactive_usec),
+		_setup_frame_times_ms,
+		_settle_gate,
 	)
 	if not _errors.is_empty():
 		report["status"] = "error"
@@ -164,6 +172,8 @@ func _run_attribution_profile() -> void:
 		PROFILE_SAMPLE_COUNT * 2,
 		PROFILE_WARMUP_FRAMES,
 		_elapsed_ms(_battle_event_usec, _battle_hud_interactive_usec),
+		_setup_frame_times_ms,
+		_settle_gate,
 	)
 	report["attribution"] = create_attribution_report(
 		windows, PROFILE_SAMPLE_COUNT, PROFILE_WARMUP_FRAMES
@@ -230,6 +240,54 @@ func _count_sprite_nodes(node: Node) -> int:
 
 func _profiling_requested() -> bool:
 	return OS.get_cmdline_user_args().has("--profile")
+
+
+func _start_setup_phase_sampling() -> void:
+	_setup_frame_times_ms.clear()
+	if not process_frame.is_connected(_record_setup_frame_time):
+		process_frame.connect(_record_setup_frame_time)
+
+
+func _stop_setup_phase_sampling() -> void:
+	if process_frame.is_connected(_record_setup_frame_time):
+		process_frame.disconnect(_record_setup_frame_time)
+
+
+func _record_setup_frame_time() -> void:
+	_setup_frame_times_ms.append(
+		float(Performance.get_monitor(Performance.TIME_PROCESS)) * 1000.0
+	)
+
+
+func _discard_post_setup_warmup() -> Dictionary:
+	var target_duration_ms := _requested_settle_duration_ms()
+	var started_usec := Time.get_ticks_usec()
+	var discarded_frames := 0
+	while _elapsed_ms(started_usec, Time.get_ticks_usec()) < float(target_duration_ms):
+		await process_frame
+		discarded_frames += 1
+	return {
+		"method": "fixed_post_setup_warmup",
+		"starts_after": "battle_hud_interactive",
+		"target_duration_ms": target_duration_ms,
+		"actual_duration_ms": _elapsed_ms(started_usec, Time.get_ticks_usec()),
+		"discarded_frames": discarded_frames,
+	}
+
+
+func _requested_settle_duration_ms() -> int:
+	var arguments := OS.get_cmdline_user_args()
+	var argument_index := arguments.find("--settle-ms")
+	if argument_index < 0:
+		return DEFAULT_SETTLE_DURATION_MS
+	if argument_index + 1 >= arguments.size():
+		_add_error("--settle-ms requires a positive integer duration.")
+		return DEFAULT_SETTLE_DURATION_MS
+	var raw_duration := String(arguments[argument_index + 1])
+	if not raw_duration.is_valid_int() or int(raw_duration) <= 0:
+		_add_error("--settle-ms requires a positive integer duration.")
+		return DEFAULT_SETTLE_DURATION_MS
+	return int(raw_duration)
 
 
 static func _join_profile_windows(first: Dictionary, second: Dictionary) -> Dictionary:
@@ -587,6 +645,7 @@ func _wait_until(predicate: Callable, maximum_frames: int) -> bool:
 
 
 func _finish_with_error() -> void:
+	_stop_setup_phase_sampling()
 	var report := create_scenario_report(
 		{"frame_time_ms": [], "draw_calls": [], "node_count": []},
 		_environment_report(),
@@ -619,6 +678,8 @@ static func create_scenario_report(
 	sample_count: int = SAMPLE_COUNT,
 	warmup_frames: int = WARMUP_FRAMES,
 	battle_entry_ms: float = -1.0,
+	setup_frame_times_ms: Array[float] = [],
+	settle_gate: Dictionary = {},
 ) -> Dictionary:
 	var report := PerformanceBenchmark.create_report(
 		{"warmup_frames": warmup_frames, "sample_count": sample_count},
@@ -648,6 +709,17 @@ static func create_scenario_report(
 		},
 		environment,
 	)
+	var setup_frame_time := PerformanceBenchmark._summarize(setup_frame_times_ms)
+	setup_frame_time["monitor"] = "Performance.TIME_PROCESS"
+	setup_frame_time["unit"] = "ms"
+	report["setup_phase"] = {
+		"duration_ms": battle_entry_ms,
+		"window": "battle_event_to_settle_gate",
+		"frame_time_ms": setup_frame_time,
+	}
+	var measurement := report.get("measurement", {}) as Dictionary
+	measurement["settle_gate"] = settle_gate.duplicate(true)
+	report["measurement"] = measurement
 	report["target_scene"] = TARGET_SCENE
 	report["scene_baseline"] = {
 		"authored_nodes": 1,

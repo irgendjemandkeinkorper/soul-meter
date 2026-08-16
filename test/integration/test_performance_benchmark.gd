@@ -138,6 +138,16 @@ func _assert_populated_grid_report_keeps_fr904_metrics_and_describes_rendered_lo
 			"ct_timeline_visible": true,
 		},
 		3,
+		30,
+		105.0,
+		[80.0, 40.0, 2.0],
+		{
+			"method": "fixed_post_setup_warmup",
+			"starts_after": "battle_hud_interactive",
+			"target_duration_ms": 2000,
+			"actual_duration_ms": 2001.0,
+			"discarded_frames": 290,
+		},
 	)
 
 	assert_str(report["schema_version"]).is_equal("1.0")
@@ -145,6 +155,13 @@ func _assert_populated_grid_report_keeps_fr904_metrics_and_describes_rendered_lo
 	assert_str(report["target_scene"]).is_equal("res://ui/screens/battle.tscn")
 	assert_bool(report.has_all(["frame_time_ms", "monitors", "spans"])).is_true()
 	assert_int(report["frame_time_ms"]["sample_count"]).is_equal(3)
+	assert_float(report["setup_phase"]["duration_ms"]).is_equal(105.0)
+	assert_str(report["setup_phase"]["window"]).is_equal("battle_event_to_settle_gate")
+	assert_float(report["setup_phase"]["frame_time_ms"]["p95"]).is_equal(80.0)
+	assert_str(report["measurement"]["settle_gate"]["method"]).is_equal(
+		"fixed_post_setup_warmup"
+	)
+	assert_int(report["measurement"]["settle_gate"]["target_duration_ms"]).is_equal(2000)
 	assert_str(report["scenario"]["id"]).is_equal("populated-grid-battle")
 	assert_str(report["scenario"]["encounter_id"]).is_equal("dorthkor-vanguard")
 	assert_int(report["scenario"]["ally_count"]).is_equal(3)
