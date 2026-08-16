@@ -8,6 +8,18 @@ const DATA_PATH := "res://data/generated/encounters.json"
 const _FIELD_GRID_DATA := {
 	"bog-wight": {"dimensions": Vector2i(2, 4)},
 	"loam-boar": {"dimensions": Vector2i(2, 4)},
+	"phase2-demon": {"dimensions": Vector2i(2, 4)},
+	"phase2-undead": {"dimensions": Vector2i(2, 4)},
+	"phase2-mixed-whipsaw": {"dimensions": Vector2i(2, 4)},
+	"phase2-speech-winnable": {"dimensions": Vector2i(2, 4)},
+	"phase2-stabilizer-showcase": {"dimensions": Vector2i(2, 4)},
+}
+const _CHARGE_TIME_ENCOUNTERS := {
+	"phase2-demon": true,
+	"phase2-undead": true,
+	"phase2-mixed-whipsaw": true,
+	"phase2-speech-winnable": true,
+	"phase2-stabilizer-showcase": true,
 }
 
 static var _definitions: Dictionary = {}
@@ -20,6 +32,8 @@ static func definition(encounter_id: StringName) -> Dictionary:
 	var grid: Variant = _FIELD_GRID_DATA.get(String(encounter_id), {})
 	if grid is Dictionary and not grid.is_empty():
 		result["grid"] = grid.duplicate(true)
+	if bool(_CHARGE_TIME_ENCOUNTERS.get(String(encounter_id), false)):
+		result["use_charge_time"] = true
 	return result
 
 
