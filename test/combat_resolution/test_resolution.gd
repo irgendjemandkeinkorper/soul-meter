@@ -9,7 +9,7 @@ func test_worked_strom_strike_resolves_to_106_and_describes_writes() -> void:
 	assert_bool(result["allowed"]).is_true()
 	assert_int(result["damage"]).is_equal(106)
 	assert_array(result["breakdown"].map(func(step: Dictionary) -> String: return step["id"])).contains_exactly([
-		"power", "attack_scale", "element_matrix", "facing", "tile_charge"
+		"power", "attack_scale", "element_matrix", "height", "facing", "tile_charge"
 	])
 	assert_int(result["writes"][0]["before"]).is_equal(131)
 	assert_int(result["writes"][0]["after"]).is_equal(25)
@@ -75,6 +75,41 @@ func test_resolution_does_not_mutate_any_input_dictionary() -> void:
 	var before := context.duplicate(true)
 	ResolutionScript.resolve(context)
 	assert_bool(context == before).is_true()
+
+
+func test_height_advantage_adds_exactly_ten_percent_damage_per_step() -> void:
+	var context := _walkthrough_context()
+	context["ability"]["power"] = 100
+	context["ability"]["matrix_multiplier"] = 1.0
+	context["unit"]["attack_scale"] = 1.0
+	context["source_tile"] = {}
+	context["target_tile"] = {}
+	context["facing"] = {"id": &"front"}
+	context["height_advantage_steps"] = 3
+
+	var result: Dictionary = ResolutionScript.resolve(context)
+
+	assert_int(result["damage"]).is_equal(130)
+	assert_float(result["positioning"]["height_multiplier"]).is_equal_approx(1.30, 0.0001)
+
+
+func test_side_and_back_facing_use_ratified_damage_and_hit_bonuses() -> void:
+	var context := _walkthrough_context()
+	context["ability"]["power"] = 100
+	context["ability"]["matrix_multiplier"] = 1.0
+	context["unit"]["attack_scale"] = 1.0
+	context["source_tile"] = {}
+	context["target_tile"] = {}
+
+	context["facing"] = {"id": &"side"}
+	var side: Dictionary = ResolutionScript.resolve(context)
+	assert_int(side["damage"]).is_equal(110)
+	assert_int(side["hit_bonus"]).is_equal(8)
+
+	context["facing"] = {"id": &"back"}
+	var back: Dictionary = ResolutionScript.resolve(context)
+	assert_int(back["damage"]).is_equal(125)
+	assert_int(back["hit_bonus"]).is_equal(15)
 
 
 func _walkthrough_context() -> Dictionary:

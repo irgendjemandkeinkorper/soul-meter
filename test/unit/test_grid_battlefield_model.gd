@@ -161,6 +161,22 @@ func test_target_query_melee_requires_adjacency() -> void:
 	assert_bool(model.target_query(ally, enemy, &"melee").get("allowed", false)).is_true()
 
 
+func test_target_query_melee_refuses_height_beyond_jump() -> void:
+	var model := _model(2, 1)
+	model.set_elevation(Vector2i(1, 0), 2)
+	var ally := _actor("ally")
+	ally.attributes[&"jump"] = 1
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+
+	var result := model.target_query(ally, enemy, &"melee")
+
+	assert_bool(result.get("allowed", true)).is_false()
+	assert_str(String(result.get("blocked_by", &""))).is_equal("blocked_by_elevation")
+
+
 func test_target_query_ranged_ignores_distance() -> void:
 	var model := _model(6, 1)
 	var ally := _actor("ally")
@@ -170,6 +186,21 @@ func test_target_query_ranged_ignores_distance() -> void:
 	model.setup(allies, enemies)
 
 	assert_bool(model.target_query(ally, enemy, &"ranged").get("allowed", false)).is_true()
+
+
+func test_target_query_ranged_requires_line_of_sight_clearance() -> void:
+	var model := _model(5, 1)
+	model.set_elevation(Vector2i(2, 0), 10)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+
+	var result := model.target_query(ally, enemy, &"ranged")
+
+	assert_bool(result.get("allowed", true)).is_false()
+	assert_str(String(result.get("blocked_by", &""))).is_equal("blocked_by_elevation")
 
 
 # ---- movement range: flood fill bounded by CT budget ----

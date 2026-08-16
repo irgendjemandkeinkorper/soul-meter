@@ -359,10 +359,8 @@ const _UNAUTHORED_ELEMENT_ID := &"suul"
 ##     result afterward, exactly as it was subtracted before this change — Resolution has no
 ##     defense-stat concept of its own (it is the Elements & Music resolver, not the RPG stat
 ##     system), so this file keeps owning that term rather than inventing one inside Resolution.
-## `battle_id`/`tick`/`seed`/facing/tile-state/weather context are left at Resolution's neutral
-## defaults: this battlefield model has no tile-charge or per-actor facing-multiplier system yet
-## (`BattlefieldModel.flank_bonus()`/`cover_bonus()` are this file's own additive stand-ins for
-## those), so passing empty dicts is honest rather than fabricating data that doesn't exist.
+## `battle_id`/`tick`/tile-state/weather context stay neutral. Grid-capable callers provide the
+## FR-105a height/facing context; zone combat keeps its existing additive flank behavior.
 static func calculate_damage(
 	attacker: BattleActor,
 	target: BattleActor,
@@ -373,7 +371,8 @@ static func calculate_damage(
 	cover_bonus: int = 0,
 	ability_element_id: StringName = &"",
 	ability_magnitude: StringName = &"note",
-	seed: int = 0
+	seed: int = 0,
+	positional_context: Dictionary = {}
 ) -> int:
 	var element_id := ability_element_id
 	if String(element_id).is_empty():
@@ -401,6 +400,10 @@ static func calculate_damage(
 				"hp": target.hp,
 				"element_id": target.element_id,
 			},
+			"facing": positional_context.get("facing", {}),
+			"height_advantage_steps": int(
+				positional_context.get("height_advantage_steps", 0)
+			),
 		},
 		seed,
 	)
@@ -759,29 +762,74 @@ func _resolve_attack(
 	actor: BattleActor, target: BattleActor, action: CombatAction
 ) -> Dictionary:
 	var total_damage := 0
+	var positional_results: Array[Dictionary] = []
 	var hit_targets := battlefield.targets_for(actor, target, action.aoe_shape)
 	for hit_target: BattleActor in hit_targets:
 		var cover_bonus := battlefield.cover_bonus(actor, hit_target)
 		if bool(hit_target.defining_effects.get("revealed", false)):
 			cover_bonus = 0
+		var positional_context := _positional_resolution_context(actor, hit_target)
+		var legacy_flank_bonus := battlefield.flank_bonus(actor, hit_target)
+		if not positional_context.is_empty():
+			legacy_flank_bonus = 0
 		var damage := calculate_damage(
 			actor,
 			hit_target,
 			action.power_bonus,
 			action.balance_shift,
 			balance,
-			battlefield.flank_bonus(actor, hit_target),
+			legacy_flank_bonus,
 			cover_bonus,
 			action.element_id,
 			action.magnitude,
 			_sequence,
+			positional_context,
 		)
 		hit_target.hp = maxi(0, hit_target.hp - damage)
 		total_damage += damage
+		if not positional_context.is_empty():
+			var modifiers := Resolution.positional_modifiers(
+				int(positional_context["height_advantage_steps"]),
+				StringName(positional_context["facing"]["id"]),
+			)
+			positional_results.append({
+				"target_id": String(hit_target.combat_id),
+				"facing": modifiers["facing"],
+				"height_advantage_steps": modifiers["height_advantage_steps"],
+				"hit_bonus": modifiers["hit_bonus"],
+			})
 	return {
 		"damage": total_damage,
+		"positioning": positional_results,
 		"message": "%s uses %s for %d damage."
 		% [actor.display_name, action.display_name, total_damage],
+	}
+
+
+func _positional_resolution_context(actor: BattleActor, target: BattleActor) -> Dictionary:
+	var capabilities: Dictionary = battlefield.capabilities()
+	if (
+		not bool(capabilities.get("cells", false))
+		or not bool(capabilities.get("elevation", false))
+		or not bool(capabilities.get("facing", false))
+	):
+		return {}
+	var actor_position: Dictionary = battlefield.describe_position(battlefield.position_of(actor))
+	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
+	if not actor_position.has("cell") or not target_position.has("cell"):
+		return {}
+	var attack_direction := _facing_for_delta(
+		(actor_position["cell"] as Vector2i) - (target_position["cell"] as Vector2i)
+	)
+	var target_facing := battlefield.facing_of(target)
+	var facing_id := &"side"
+	if attack_direction == target_facing:
+		facing_id = &"front"
+	elif attack_direction == _opposite_facing(target_facing):
+		facing_id = &"back"
+	return {
+		"height_advantage_steps": maxi(-battlefield.elevation_delta(actor, target), 0),
+		"facing": {"id": facing_id},
 	}
 
 
