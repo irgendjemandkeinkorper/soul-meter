@@ -8,7 +8,6 @@ extends GdUnitTestSuite
 
 const TOWN_SCENE_PATH := "res://world/starting_town.tscn"
 const VIEWPORT_SIZE := Vector2i(1152, 648)
-const BLOCKED_CELL := Vector2i(29, 33)
 
 
 func test_viewport_left_click_reaches_click_move_controller() -> void:
@@ -24,14 +23,31 @@ func test_viewport_left_click_reaches_click_move_controller() -> void:
 
 	var player := town.find_child("Player", true, false) as Player
 	var blocking := town.find_child("Blocking", true, false) as TileMapLayer
+	var ground := town.find_child("IsometricGround", true, false) as TileMapLayer
 	var controller := player.find_child("ClickMoveController", true, false) as ClickMoveController
 	assert_object(player).is_not_null()
 	assert_object(blocking).is_not_null()
+	assert_object(ground).is_not_null()
 	assert_object(controller).is_not_null()
-	assert_int(blocking.get_cell_source_id(BLOCKED_CELL)).is_not_equal(-1)
 
-	var blocked_world: Vector2 = blocking.to_global(blocking.map_to_local(BLOCKED_CELL))
-	var screen_position: Vector2 = player.get_canvas_transform() * blocked_world
+	var grid := IsoGrid.new()
+	grid.build(ground, blocking, 0, true)
+	# The old Blocking cell (29,33) predated Dom's 3400x2200 layout and is now off-camera.
+	var blocked_world := Vector2.INF
+	var screen_position := Vector2.INF
+	var viewport_rect := Rect2(Vector2.ZERO, Vector2(VIEWPORT_SIZE)).grow(-32.0)
+	for cell in ground.get_used_cells():
+		if not grid.is_point_solid(cell):
+			continue
+		var candidate_world := grid.cell_to_world(cell)
+		var candidate_screen := player.get_canvas_transform() * candidate_world
+		if viewport_rect.has_point(candidate_screen):
+			blocked_world = candidate_world
+			screen_position = candidate_screen
+			break
+	assert_bool(blocked_world != Vector2.INF) \
+		.override_failure_message("no painted obstacle is visible in the acceptance viewport") \
+		.is_true()
 	assert_bool(Rect2(Vector2.ZERO, Vector2(VIEWPORT_SIZE)).has_point(screen_position)) \
 		.override_failure_message(
 			"blocked acceptance target %s is outside viewport %s" % [screen_position, VIEWPORT_SIZE]

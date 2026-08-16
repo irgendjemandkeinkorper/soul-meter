@@ -39,6 +39,10 @@ const STUCK_SPEED_EPSILON: float = 12.0
 ## How long the player must sit below STUCK_SPEED_EPSILON before we treat it
 ## as wedged and skip ahead to the next waypoint.
 const STUCK_TIME_THRESHOLD: float = 0.4
+## The player has a non-zero collision body. Keep its centre one grid cell
+## away from static collision diamonds so a legal AStar path is walkable by
+## the CharacterBody2D rather than merely by a dimensionless point.
+const STATIC_CLEARANCE_CELLS: int = 1
 
 @export var enabled: bool = true
 
@@ -115,7 +119,7 @@ func _rebuild_grid() -> void:
 		_iso_grid = null
 		return
 	_iso_grid = IsoGrid.new()
-	_iso_grid.build(_ground, _blocking)
+	_iso_grid.build(_ground, _blocking, STATIC_CLEARANCE_CELLS, true)
 	_sync_occupancy()
 
 
@@ -160,7 +164,13 @@ func request_move_to(target_world: Vector2) -> Dictionary:
 	_waypoints.clear()
 	for point in path:
 		_waypoints.append(point)
-	if _waypoints.size() > 1 and _waypoints[0].distance_to(_player.global_position) <= ARRIVAL_EPSILON:
+	# AStarGrid2D includes the start cell. Repaths can begin anywhere inside
+	# that cell, so its centre may already be behind the moving body.
+	if (
+		_waypoints.size() > 1
+		and _iso_grid.world_to_cell(_waypoints[0])
+			== _iso_grid.world_to_cell(_player.global_position)
+	):
 		_waypoints.remove_at(0)
 
 	_final_destination = target_world
@@ -239,12 +249,25 @@ func _track_stuck(from_position: Vector2, delta: float) -> void:
 
 
 func _pop_reached_waypoints(from_position: Vector2) -> void:
-	while not _waypoints.is_empty() and from_position.distance_to(_waypoints[0]) <= ARRIVAL_EPSILON:
+	while not _waypoints.is_empty() and _waypoint_was_reached(from_position, _waypoints[0]):
 		_waypoints.remove_at(0)
 	if _waypoints.is_empty() and _has_destination:
 		_has_destination = false
 		_repath_timer.stop()
 		path_finished.emit()
+
+
+func _waypoint_was_reached(from_position: Vector2, waypoint: Vector2) -> bool:
+	if from_position.distance_to(waypoint) <= ARRIVAL_EPSILON:
+		return true
+	if _last_seen_position == Vector2.INF:
+		return false
+	var closest := Geometry2D.get_closest_point_to_segment(
+		waypoint,
+		_last_seen_position,
+		from_position
+	)
+	return closest.distance_to(waypoint) <= ARRIVAL_EPSILON
 
 
 ## Re-bakes the obstacle mask and re-routes the remaining path. Wired to a
@@ -254,7 +277,7 @@ func refresh_path() -> void:
 	if not _has_destination or _player == null:
 		return
 	if _ground != null:
-		_iso_grid.build(_ground, _blocking)
+		_iso_grid.build(_ground, _blocking, STATIC_CLEARANCE_CELLS, true)
 	var destination := _final_destination
 	var result := request_move_to(destination)
 	if not bool(result.get("allowed", false)):
