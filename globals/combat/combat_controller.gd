@@ -515,15 +515,20 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 			_release_balance_lock_if_due(round_number)
 
 
-## Resolves exactly one enemy's turn. Ported from the old `_resolve_enemy_turn()` batch
-## loop body, but per-actor: the scheduler — not a `for foe in enemies` loop — decides
-## which enemy this is and when. Affordability is checked before targeting, matching the
-## original AP-check-then-battlefield-check order.
+## Resolves exactly one enemy's turn. The scheduler — not a `for foe in enemies` loop — decides
+## which enemy this is and when. Grid-capable battlefields plan a legal move before committing;
+## attack affordability is checked only after a target is in range.
 func _resolve_enemy_actor(actor: BattleActor) -> void:
 	var enemy_action := action_by_id(&"enemy-strike")
 	var target := _first_living(allies)
 	if target == null:
 		return
+	var targeting := battlefield.target_query(actor, target, enemy_action.target_profile)
+	if not bool(targeting.get("allowed", false)):
+		var destination := _best_enemy_position(actor, target)
+		if destination != &"":
+			_resolve_enemy_move(actor, target, destination)
+			return
 	var commit_result := scheduler.commit(actor, enemy_action)
 	if not bool(commit_result.get("allowed", false)):
 		_emit_event(
@@ -531,12 +536,7 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		)
 		_force_pass(actor)
 		return
-	var query := battlefield.target_query(actor, target, enemy_action.target_profile)
-	if not bool(query.get("allowed", false)):
-		scheduler.cancel_committed(actor, true)
-		_emit_event(&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": query})
-		_force_pass(actor)
-		return
+	_face_toward(actor, target)
 	var outcome := _apply_action(actor, target, enemy_action)
 	outcome["action_id"] = enemy_action.id
 	outcome["ap_cost"] = enemy_action.ap_cost
@@ -546,6 +546,107 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 	_emit_event(&"action_resolved", actor, target, outcome)
 	scheduler.release(actor)
 	_change_balance(actor.balance_affinity * actor.balance_pressure, actor)
+
+
+## Grid-capable enemies spend movement on height and rear access before closing directly. The
+## capability check keeps zone combat on its legacy attack-or-pass behavior and avoids a concrete
+## GridBattlefieldModel dependency at this consumer seam.
+func _best_enemy_position(actor: BattleActor, target: BattleActor) -> StringName:
+	var capabilities: Dictionary = battlefield.capabilities()
+	if not bool(capabilities.get("cells", false)):
+		return &""
+	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
+	if not target_position.has("cell"):
+		return &""
+	var budget := rules.maximum_action_ct_cost if rules != null else 0
+	var candidates: Array[StringName] = battlefield.reachable_positions(actor, budget)
+	var best := &""
+	var best_score := -2147483648
+	for candidate in candidates:
+		var described: Dictionary = battlefield.describe_position(candidate)
+		if not described.has("cell"):
+			continue
+		var score := _enemy_position_score(described, target_position, target)
+		if score > best_score or (score == best_score and (best == &"" or candidate < best)):
+			best = candidate
+			best_score = score
+	return best
+
+
+func _enemy_position_score(
+	candidate: Dictionary, target_position: Dictionary, target: BattleActor
+) -> int:
+	var candidate_cell: Vector2i = candidate.get("cell", Vector2i.ZERO)
+	var target_cell: Vector2i = target_position.get("cell", Vector2i.ZERO)
+	var delta := candidate_cell - target_cell
+	var distance := maxi(absi(delta.x), absi(delta.y))
+	var score := int(candidate.get("elevation", 0)) * 1000 - distance
+	if distance <= 1:
+		score += 500
+	var attack_direction := _facing_for_delta(delta)
+	if attack_direction != &"" and attack_direction == _opposite_facing(battlefield.facing_of(target)):
+		score += 1000
+	return score
+
+
+func _resolve_enemy_move(actor: BattleActor, target: BattleActor, destination: StringName) -> void:
+	var path: Dictionary = battlefield.path_query(actor, destination)
+	if not bool(path.get("allowed", false)):
+		_force_pass(actor)
+		return
+	var move_action := CombatAction.new()
+	move_action.id = &"__enemy_grid_move__"
+	move_action.display_name = "Move"
+	move_action.kind = CombatAction.Kind.MOVE
+	move_action.verb = CombatAction.Verb.MOVE
+	move_action.target_profile = &"self"
+	move_action.destination = destination
+	move_action.ap_cost = 1
+	move_action.ct_cost = int(path.get("ct_cost", rules.move_ct_cost if rules != null else 0))
+	var commit_result := scheduler.commit(actor, move_action)
+	if not bool(commit_result.get("allowed", false)):
+		_force_pass(actor)
+		return
+	var outcome := _apply_action(actor, target, move_action)
+	outcome["action_id"] = move_action.id
+	outcome["ap_cost"] = move_action.ap_cost
+	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
+	outcome["ap_remaining"] = actor.action_points
+	outcome["charge_remaining"] = int(commit_result.get("charge", 0))
+	_emit_event(&"action_resolved", actor, target, outcome)
+	_face_toward(actor, target)
+	scheduler.release(actor)
+
+
+func _face_toward(actor: BattleActor, target: BattleActor) -> void:
+	var capabilities: Dictionary = battlefield.capabilities()
+	if not bool(capabilities.get("facing", false)) or not bool(capabilities.get("cells", false)):
+		return
+	var actor_position: Dictionary = battlefield.describe_position(battlefield.position_of(actor))
+	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
+	if not actor_position.has("cell") or not target_position.has("cell"):
+		return
+	var actor_cell: Vector2i = actor_position.get("cell", Vector2i.ZERO)
+	var target_cell: Vector2i = target_position.get("cell", Vector2i.ZERO)
+	var facing := _facing_for_delta(target_cell - actor_cell)
+	if facing != &"":
+		battlefield.set_facing(actor, facing)
+
+
+func _facing_for_delta(delta: Vector2i) -> StringName:
+	if delta == Vector2i.ZERO:
+		return &""
+	var order: Array[StringName] = [&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"]
+	var angle := atan2(delta.y, delta.x)
+	var index := int(round(angle / (PI / 4.0)))
+	index = ((index % order.size()) + order.size()) % order.size()
+	return order[index]
+
+
+func _opposite_facing(facing: StringName) -> StringName:
+	var order: Array[StringName] = [&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"]
+	var index := order.find(facing)
+	return &"" if index == -1 else order[(index + 4) % order.size()]
 
 
 ## An enemy that cannot afford its action or cannot reach a target still has to leave
