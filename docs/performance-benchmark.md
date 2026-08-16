@@ -219,6 +219,19 @@ cost is hidden:
 | Headless settled setup-window p95 (ms) | 58.602 | 47.914 | 50.825 | **50.825** | reported separately; not the steady-state floor |
 | Headless settled draw calls p95 | 0 | 0 | 0 | 0 | expected in headless mode |
 | Headless settled node count p95 | 374 | 374 | 374 | 374 | record only |
+| WSLg rendered **settled steady-state** frame p50 (ms) | 7.405 | 23.790 | 6.673 | 7.405 | record only |
+| **WSLg rendered settled steady-state frame p95 (ms)** | **7.906** | **40.961** | **8.215** | **8.215** | **≤16.67 ms — provisional PASS on WSLg** |
+| WSLg rendered settled steady-state frame p99 (ms) | 7.906 | 40.961 | 8.215 | 8.215 | record only |
+| WSLg settled setup duration (ms) | 340.161 | 342.693 | 323.232 | 340.161 | <2000 ms transition target |
+| WSLg settled setup-window p95 (ms) | 159.204 | 169.509 | 160.836 | 160.836 | reported separately; not the steady-state floor |
+
+The WSLg settled runs (planner-run, `wslg-settled/run-1.json` through `run-3.json`) put the
+**median settled rendered p95 at 8.215 ms — under the 16.67 ms floor even on WSLg's virtual-GPU
+path**. Run 2 is a visible outlier (p95 40.96 ms; ambient WSL2 contention) that the median-of-three
+rule absorbs; it is retained unedited. This remains provisional: the FR-904 acceptance verdict
+still requires the reference-hardware run per `fr-904-runbook.md`, but the provisional direction
+reversed once setup carryover was excluded — the earlier 161 ms figure was the measurement window,
+not the renderer.
 
 All six pre-settle-gate benchmark JSON reports and all three new settled headless reports are well
 formed with `status: "ok"`. The new reports are
