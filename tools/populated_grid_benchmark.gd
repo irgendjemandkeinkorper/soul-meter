@@ -18,6 +18,8 @@ const GRID_HEIGHT := 4
 const FULL_DEPLOYMENT_SIZE := 3
 const WARMUP_FRAMES := 120
 const SAMPLE_COUNT := 600
+const PROFILE_WARMUP_FRAMES := 120
+const PROFILE_SAMPLE_COUNT := 600
 const STAGE_TIMEOUT_FRAMES := 1800
 const CHARGE_ELEMENT_ID := "strom"
 const CHARGE_ELEMENT_COLOR := "#7BDFF2"
@@ -83,6 +85,9 @@ func _run() -> void:
 		return
 	await process_frame
 	_battle_hud_interactive_usec = Time.get_ticks_usec()
+	if _profiling_requested():
+		await _run_attribution_profile()
+		return
 
 	for _frame: int in WARMUP_FRAMES:
 		await process_frame
@@ -117,6 +122,246 @@ func _run() -> void:
 		report["errors"] = _errors.duplicate()
 	print(JSON.stringify(report))
 	quit(0 if _errors.is_empty() else 1)
+
+
+func _run_attribution_profile() -> void:
+	var windows := {
+		"full_before": await _sample_profile_window(),
+	}
+
+	_stage_region.visible = false
+	windows["without_tile_stage"] = await _sample_profile_window()
+	_stage_region.visible = true
+
+	_ct_timeline.visible = false
+	windows["without_ct_timeline"] = await _sample_profile_window()
+	_ct_timeline.visible = true
+
+	_set_other_hud_visible(false)
+	windows["without_other_hud"] = await _sample_profile_window()
+	_set_other_hud_visible(true)
+
+	_battle_interface.visible = false
+	windows["without_battle_interface"] = await _sample_profile_window()
+	_battle_interface.visible = true
+
+	windows["full_after"] = await _sample_profile_window()
+
+	var baseline_samples := _join_profile_windows(
+		windows["full_before"], windows["full_after"]
+	)
+	var scenario_details := _scenario_details()
+	scenario_details["profile_mode"] = true
+	scenario_details["battle_actor_sprite_nodes"] = _count_sprite_nodes(_battle_interface)
+	var report := create_scenario_report(
+		{
+			"frame_time_ms": baseline_samples["frame_time_ms"],
+			"draw_calls": baseline_samples["draw_calls"],
+			"node_count": baseline_samples["node_count"],
+		},
+		_environment_report(),
+		scenario_details,
+		PROFILE_SAMPLE_COUNT * 2,
+		PROFILE_WARMUP_FRAMES,
+		_elapsed_ms(_battle_event_usec, _battle_hud_interactive_usec),
+	)
+	report["attribution"] = create_attribution_report(
+		windows, PROFILE_SAMPLE_COUNT, PROFILE_WARMUP_FRAMES
+	)
+	print(JSON.stringify(report))
+	quit(0)
+
+
+func _sample_profile_window() -> Dictionary:
+	for _frame: int in PROFILE_WARMUP_FRAMES:
+		await process_frame
+
+	var frame_times_ms: Array[float] = []
+	var frame_intervals_ms: Array[float] = []
+	var physics_times_ms: Array[float] = []
+	var navigation_times_ms: Array[float] = []
+	var draw_calls: Array[float] = []
+	var node_counts: Array[float] = []
+	for _sample: int in PROFILE_SAMPLE_COUNT:
+		var frame_start_usec := Time.get_ticks_usec()
+		await process_frame
+		frame_intervals_ms.append(_elapsed_ms(frame_start_usec, Time.get_ticks_usec()))
+		frame_times_ms.append(
+			float(Performance.get_monitor(Performance.TIME_PROCESS)) * 1000.0
+		)
+		physics_times_ms.append(
+			float(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0
+		)
+		navigation_times_ms.append(
+			float(Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS)) * 1000.0
+		)
+		draw_calls.append(
+			float(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+		)
+		node_counts.append(float(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)))
+	return {
+		"frame_time_ms": frame_times_ms,
+		"frame_interval_ms": frame_intervals_ms,
+		"physics_time_ms": physics_times_ms,
+		"navigation_time_ms": navigation_times_ms,
+		"draw_calls": draw_calls,
+		"node_count": node_counts,
+	}
+
+
+func _set_other_hud_visible(value: bool) -> void:
+	for property_name: StringName in [
+		&"active_unit_plate", &"weather_chip", &"act_target_panel", &"cursor_readout"
+	]:
+		var item := _battle_interface.get(property_name) as CanvasItem
+		if is_instance_valid(item):
+			item.visible = value
+	var hotbar := _battle_interface.find_child("HotbarSoulGauge", true, false) as CanvasItem
+	if is_instance_valid(hotbar):
+		hotbar.visible = value
+
+
+func _count_sprite_nodes(node: Node) -> int:
+	var count := 1 if node is Sprite2D or node is AnimatedSprite2D else 0
+	for child: Node in node.get_children():
+		count += _count_sprite_nodes(child)
+	return count
+
+
+func _profiling_requested() -> bool:
+	return OS.get_cmdline_user_args().has("--profile")
+
+
+static func _join_profile_windows(first: Dictionary, second: Dictionary) -> Dictionary:
+	var joined := {}
+	for metric: String in [
+		"frame_time_ms",
+		"frame_interval_ms",
+		"physics_time_ms",
+		"navigation_time_ms",
+		"draw_calls",
+		"node_count",
+	]:
+		var values: Array = (first.get(metric, []) as Array).duplicate()
+		values.append_array(second.get(metric, []) as Array)
+		joined[metric] = values
+	return joined
+
+
+static func create_attribution_report(
+	windows: Dictionary,
+	sample_count_per_window: int = PROFILE_SAMPLE_COUNT,
+	warmup_frames_per_window: int = PROFILE_WARMUP_FRAMES,
+) -> Dictionary:
+	var summarized_windows := {}
+	for window_name: String in windows:
+		var samples := windows[window_name] as Dictionary
+		var summary := {}
+		for metric: String in [
+			"frame_time_ms",
+			"frame_interval_ms",
+			"physics_time_ms",
+			"navigation_time_ms",
+			"draw_calls",
+			"node_count",
+		]:
+			summary[metric] = PerformanceBenchmark._summarize(samples.get(metric, []))
+		summarized_windows[window_name] = summary
+
+	var baseline := (
+		(summarized_windows.get("full_after", {}) as Dictionary).duplicate(true)
+	)
+	var baseline_p95 := float(baseline["frame_time_ms"]["p95"])
+	var initial_full_p95 := float(
+		summarized_windows.get("full_before", {}).get("frame_time_ms", {}).get("p95", 0.0)
+	)
+
+	var buckets := {
+		"setup_carryover": {
+			"id": "setup_carryover",
+			"method": (
+				"Initial full window minus repeated full window; captures setup work retained "
+				+ "by the coarse Performance.TIME_PROCESS monitor"
+			),
+			"attributed_p95_ms": maxf(0.0, initial_full_p95 - baseline_p95),
+			"window": "full_before",
+			"settled_window": "full_after",
+		},
+		"charged_tile_stage": _ablation_bucket(
+			"charged_tile_stage",
+			"BattleStageRegion hidden; charged tile payload retained",
+			baseline_p95,
+			summarized_windows,
+			"without_tile_stage",
+		),
+		"ct_timeline": _ablation_bucket(
+			"ct_timeline",
+			"TurnTimeline hidden; charge-time scheduler retained",
+			baseline_p95,
+			summarized_windows,
+			"without_ct_timeline",
+		),
+		"other_battle_hud": _ablation_bucket(
+			"other_battle_hud",
+			"Unit plate, weather, forecast, cursor, action hotbar, and soul gauge hidden",
+			baseline_p95,
+			summarized_windows,
+			"without_other_hud",
+		),
+		"engine_background_floor": {
+			"id": "engine_background_floor",
+			"method": "Entire BattleInterface hidden; engine, autoloads, and physics retained",
+			"attributed_p95_ms": float(
+				summarized_windows
+				.get("without_battle_interface", {})
+				.get("frame_time_ms", {})
+				.get("p95", 0.0)
+			),
+			"window": "without_battle_interface",
+		},
+	}
+	var top_cost: Dictionary = {}
+	for bucket_value: Variant in buckets.values():
+		var bucket := bucket_value as Dictionary
+		if (
+			top_cost.is_empty()
+			or float(bucket["attributed_p95_ms"])
+			> float(top_cost["attributed_p95_ms"])
+		):
+			top_cost = bucket.duplicate(true)
+
+	return {
+		"schema_version": "1.0",
+		"method": (
+			"Controlled visibility ablation over one populated-grid process. The repeated "
+			+ "full window is the settled baseline; p95 deltas are directional and non-additive."
+		),
+		"sample_count_per_window": sample_count_per_window,
+		"warmup_frames_per_window": warmup_frames_per_window,
+		"baseline": baseline,
+		"windows": summarized_windows,
+		"buckets": buckets,
+		"top_cost": top_cost,
+	}
+
+
+static func _ablation_bucket(
+	id: String,
+	method: String,
+	baseline_p95: float,
+	summarized_windows: Dictionary,
+	window_name: String,
+) -> Dictionary:
+	var ablated_p95 := float(
+		summarized_windows.get(window_name, {}).get("frame_time_ms", {}).get("p95", 0.0)
+	)
+	return {
+		"id": id,
+		"method": method,
+		"window": window_name,
+		"ablated_p95_ms": ablated_p95,
+		"attributed_p95_ms": maxf(0.0, baseline_p95 - ablated_p95),
+	}
 
 
 func _prime_game_flow() -> bool:

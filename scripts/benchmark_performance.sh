@@ -12,11 +12,14 @@ set -euo pipefail
 #   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh
 #   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
 #     --scenario populated-grid --display-mode rendered -o report.json
+#   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
+#     --scenario populated-grid --display-mode headless --profile -o profile.json
 
 godot_bin="${GODOT_BIN:-godot}"
 output_path=""
 scenario="field"
 display_mode="headless"
+profile_mode=0
 benchmark_data_dir="${SOUL_METER_BENCHMARK_DATA_DIR:-/tmp/soul-meter-godot-benchmark-data}"
 mkdir -p "$benchmark_data_dir"
 export XDG_DATA_HOME="$benchmark_data_dir"
@@ -39,8 +42,12 @@ while [[ $# -gt 0 ]]; do
 			display_mode="${2:-}"
 			shift 2
 			;;
+		--profile)
+			profile_mode=1
+			shift
+			;;
 		-h|--help)
-			sed -n '3,14p' "$0"
+			sed -n '3,16p' "$0"
 			exit 0
 			;;
 		*)
@@ -68,6 +75,11 @@ case "$scenario" in
 		;;
 esac
 
+if [[ "$profile_mode" -eq 1 && "$scenario" != "populated-grid" ]]; then
+	echo "--profile is only available for --scenario populated-grid" >&2
+	exit 2
+fi
+
 godot_args=()
 case "$display_mode" in
 	headless)
@@ -90,7 +102,12 @@ trap cleanup EXIT
 # noise ("N resources still in use at exit"), so the presence of a well-formed
 # report — not the exit status — decides success here.
 set +e
-"$godot_bin" "${godot_args[@]}" --path . --script "$tool_script" >"$raw" 2>&1
+profile_args=()
+if [[ "$profile_mode" -eq 1 ]]; then
+	profile_args+=("--" "--profile")
+fi
+"$godot_bin" "${godot_args[@]}" --path . --script "$tool_script" \
+	"${profile_args[@]}" >"$raw" 2>&1
 godot_status=$?
 set -e
 

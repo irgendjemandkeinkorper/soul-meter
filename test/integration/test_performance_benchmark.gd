@@ -58,6 +58,7 @@ func test_report_schema_honors_warmup_and_sample_counts() -> void:
 	assert_int(report["scene_baseline"]["authored_nodes"]).is_equal(269)
 	assert_int(report["scene_baseline"]["authored_sprite_2d_nodes"]).is_equal(105)
 	_assert_populated_grid_report_keeps_fr904_metrics_and_describes_rendered_load()
+	_assert_attribution_report_names_largest_measured_bucket()
 
 
 func test_report_rejects_sample_count_mismatch() -> void:
@@ -75,6 +76,49 @@ func test_report_rejects_sample_count_mismatch() -> void:
 
 	assert_str(report["status"]).is_equal("error")
 	assert_array(report["errors"]).is_not_empty()
+
+
+func _assert_attribution_report_names_largest_measured_bucket() -> void:
+	var attribution: Dictionary = PopulatedGridBenchmark.create_attribution_report(
+		{
+			"full_before": _profile_window([12.0, 14.0, 16.0]),
+			"without_tile_stage": _profile_window([10.0, 11.0, 12.0]),
+			"without_ct_timeline": _profile_window([11.0, 12.0, 13.0]),
+			"without_other_hud": _profile_window([9.0, 10.0, 11.0]),
+			"without_battle_interface": _profile_window([6.0, 7.0, 8.0]),
+			"full_after": _profile_window([13.0, 15.0, 17.0]),
+		},
+		3,
+		30,
+	)
+
+	assert_str(attribution["method"]).contains("visibility ablation")
+	assert_int(attribution["sample_count_per_window"]).is_equal(3)
+	assert_int(attribution["warmup_frames_per_window"]).is_equal(30)
+	assert_str(attribution["top_cost"]["id"]).is_equal("engine_background_floor")
+	assert_float(attribution["top_cost"]["attributed_p95_ms"]).is_equal(8.0)
+	assert_bool(
+		attribution["buckets"].has_all(
+			[
+				"setup_carryover",
+				"charged_tile_stage",
+				"ct_timeline",
+				"other_battle_hud",
+				"engine_background_floor",
+			]
+		)
+	).is_true()
+	assert_bool(
+		attribution["windows"]["full_before"].has_all(
+			[
+				"frame_time_ms",
+				"frame_interval_ms",
+				"physics_time_ms",
+				"navigation_time_ms",
+				"draw_calls",
+			]
+		)
+	).is_true()
 
 
 func _assert_populated_grid_report_keeps_fr904_metrics_and_describes_rendered_load() -> void:
@@ -109,3 +153,13 @@ func _assert_populated_grid_report_keeps_fr904_metrics_and_describes_rendered_lo
 	assert_bool(report["scenario"]["battle_hud_visible"]).is_true()
 	assert_bool(report["scenario"]["ct_timeline_visible"]).is_true()
 	assert_bool(report["scenario"]["acceptance_evidence"]).is_false()
+
+
+func _profile_window(frame_times: Array[float]) -> Dictionary:
+	return {
+		"frame_time_ms": frame_times,
+		"frame_interval_ms": frame_times,
+		"physics_time_ms": [1.0, 1.0, 1.0],
+		"navigation_time_ms": [0.0, 0.0, 0.0],
+		"draw_calls": [10.0, 10.0, 10.0],
+	}
