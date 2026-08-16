@@ -57,7 +57,7 @@ func _isolated_town_fixture() -> Dictionary:
 	await runner.simulate_frames(5)
 
 	var grid := IsoGrid.new()
-	grid.build(ground, blocking)
+	grid.build(ground, blocking, 0, true)
 
 	var controller: ClickMoveController = player.find_child("ClickMoveController", true, false)
 	return {
@@ -75,13 +75,12 @@ func test_click_paths_the_player_around_a_building() -> void:
 	var controller: ClickMoveController = fixture["controller"]
 	var grid: IsoGrid = fixture["grid"]
 
-	# Clear of every building; RiverShrine and IronCompanies sit between here
-	# and the destination.
-	var start_cell := Vector2i(20, 25)
-	var destination_cell := Vector2i(24, 38)
+	# The old (20,25)->(24,38) coordinates predated Dom's 3400x2200 layout rework
+	# and now cross open ground; this pair straddles a current painted building footprint.
+	var start_cell := Vector2i(20, 10)
+	var destination_cell := Vector2i(35, 12)
 	player.global_position = grid.cell_to_world(start_cell)
 	await runner.simulate_frames(2)
-
 	# A straight line between the two cells crosses at least one solid cell —
 	# proves this is a genuine detour, not a walk across open ground.
 	var crosses_solid := false
@@ -104,7 +103,11 @@ func test_click_paths_the_player_around_a_building() -> void:
 	assert_bool(result.get("allowed")).is_true()
 	assert_bool(controller.has_path()).is_true()
 
-	await runner.simulate_frames(400)
+	# The old 400-frame budget was stale for the longer current-layout detour.
+	for _batch in range(40):
+		await runner.simulate_frames(25)
+		if not controller.has_path():
+			break
 
 	assert_float(player.global_position.distance_to(destination_world)).is_less(20.0)
 	# The path is finished, not just "close enough while still queued".
@@ -135,13 +138,16 @@ func test_unreachable_click_refusal_reaches_the_player_seam() -> void:
 	var controller: ClickMoveController = player.find_child("ClickMoveController", true, false)
 
 	var grid := IsoGrid.new()
-	grid.build(ground, blocking)
+	grid.build(ground, blocking, 0, true)
 
-	# A cell inside TrialHall's painted footprint (see the Blocking layer's
-	# tile_map_data in starting_town.tscn).
-	var inside_trial_hall := Vector2i(21, 6)
-	assert_bool(grid.is_point_solid(inside_trial_hall)).is_true()
-	var target_world := grid.cell_to_world(inside_trial_hall)
+	# The old (21,6) target predated Dom's scaled 3400x2200 Blocking transform.
+	var blocked_cell := Vector2i(-1, -1)
+	for cell in ground.get_used_cells():
+		if grid.is_point_solid(cell):
+			blocked_cell = cell
+			break
+	assert_bool(blocked_cell != Vector2i(-1, -1)).is_true()
+	var target_world := grid.cell_to_world(blocked_cell)
 
 	# Dictionaries are reference types, so mutating one from inside a lambda
 	# is visible here afterward — reassigning a captured local var would not
@@ -242,12 +248,13 @@ func test_facing_direction_updates_while_following_a_click_path() -> void:
 	var controller: ClickMoveController = fixture["controller"]
 	var grid: IsoGrid = fixture["grid"]
 
-	var start_cell := Vector2i(20, 25)
+	# The old (20,25) eastward target became obstructed by Dom's scaled Blocking layout.
+	var start_cell := Vector2i(0, 0)
 	player.global_position = grid.cell_to_world(start_cell)
 	await runner.simulate_frames(2)
 
-	# Due east along an open row — a simple, unambiguous direction.
-	var destination_world: Vector2 = player.global_position + Vector2(300, 0)
+	# Along an open isometric row — a simple direction with a positive screen-space X.
+	var destination_world := grid.cell_to_world(Vector2i(5, 0))
 	var result := controller.request_move_to(destination_world)
 	assert_bool(result.get("allowed")).is_true()
 

@@ -16,6 +16,7 @@ const WORLD_SCENES := [
 	"res://world/starting_town.tscn",
 	"res://world/test_room.tscn",
 ]
+const UnitArtScript := preload("res://globals/unit_art.gd")
 
 ## Background/ground elements are deliberately kept OUTSIDE y-sorting via a
 ## fixed z_index (rule 2). Everything else at the top level of a world scene
@@ -90,9 +91,10 @@ func test_npc_and_enemy_sprite_origins_are_at_the_feet() -> void:
 		assert_object(sprite) \
 			.override_failure_message("%s has no Sprite2D child" % name) \
 			.is_not_null()
-		assert_float(sprite.position.y) \
-			.override_failure_message("%s's sprite origin must be at its feet" % name) \
-			.is_less(0.0)
+		# The old negative-node-position expectation was stale after UnitArt moved grounding to offset.
+		assert_vector(sprite.offset) \
+			.override_failure_message("%s's painterly art must be offset to its feet" % name) \
+			.is_equal(UnitArtScript.PIVOT_OFFSET)
 
 
 func test_actors_own_local_y_sort_does_not_leak_a_fixed_z_index() -> void:
@@ -121,7 +123,8 @@ func test_building_group_and_its_door_prop_can_occlude_the_player() -> void:
 	var runner := scene_runner("res://world/starting_town.tscn")
 	var player: Node2D = runner.find_child("Player", true, false)
 	var building: Node2D = runner.find_child("RegistryArchive", true, false)
-	var door_prop: Node2D = runner.find_child("RegistryArchiveDoorSprite", true, false)
+	# RegistryArchiveDoorSprite was stale after the Dom rework nested the prop as ArchiveDoor.
+	var door_prop: Node2D = building.find_child("ArchiveDoor", true, false)
 
 	assert_object(player).is_not_null()
 	assert_object(building).is_not_null()
@@ -134,4 +137,4 @@ func test_building_group_and_its_door_prop_can_occlude_the_player() -> void:
 	# The door prop sits a little "south" (larger y / closer to camera) of
 	# the building's own origin, so with equal z_index it correctly draws
 	# in front of the building block via y-sort.
-	assert_float(door_prop.position.y).is_greater(building.position.y)
+	assert_float(door_prop.global_position.y).is_greater(building.global_position.y)

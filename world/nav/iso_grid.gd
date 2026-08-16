@@ -29,6 +29,8 @@ extends RefCounted
 var _astar := AStarGrid2D.new()
 var _ground: TileMapLayer
 var _blocking: TileMapLayer  ## obstacle layer; may be null
+var _static_clearance_cells: int = 0
+var _project_blocking_to_ground: bool = false
 
 ## Cells the STATIC obstacle layer painted. Kept separately from AStarGrid2D's own solid flags
 ## so clearing an occupant restores the cell to whatever the painted map said, instead of
@@ -47,11 +49,19 @@ var _occupant_cells: Dictionary = {}  ## Object -> Vector2i
 
 
 ## Builds the grid from a ground TileMapLayer (defines the region and cell size) and an
-## optional blocking TileMapLayer (used cells become solid points). Call once after both
-## layers exist; call again if the map itself changes shape.
-func build(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
+## optional blocking TileMapLayer (used cells become solid points). A transformed field
+## layer can opt into projecting its collision footprint into Ground cell space. Call once
+## after both layers exist; call again if the map itself changes shape.
+func build(
+	ground: TileMapLayer,
+	blocking: TileMapLayer = null,
+	static_clearance_cells: int = 0,
+	project_blocking_to_ground: bool = false
+) -> void:
 	_ground = ground
 	_blocking = blocking
+	_static_clearance_cells = maxi(static_clearance_cells, 0)
+	_project_blocking_to_ground = project_blocking_to_ground
 	var used := ground.get_used_rect()
 	_astar.region = used
 	_astar.cell_size = Vector2(ground.tile_set.tile_size)  # 64 x 32
@@ -69,10 +79,44 @@ func _bake_obstacles() -> void:
 	_static_solid.clear()
 	if _blocking == null:
 		return
-	for cell in _blocking.get_used_cells():
-		if _astar.is_in_boundsv(cell):
-			_astar.set_point_solid(cell, true)
-			_static_solid[cell] = true
+	# Blocking can have a different transform from Ground (Dom's expanded
+	# layout scales its authored collision layer). Bake in Ground cell space
+	# so AStar and the physics polygons describe the same world positions.
+	var occupied_ground_cells: Array[Vector2i] = []
+	if (
+		not _project_blocking_to_ground
+		or (
+			_ground.global_transform.is_equal_approx(_blocking.global_transform)
+			and _ground.tile_set.tile_size == _blocking.tile_set.tile_size
+		)
+	):
+		occupied_ground_cells.assign(_blocking.get_used_cells())
+	else:
+		var half_tile := Vector2(_ground.tile_set.tile_size) * 0.5
+		var sample_offsets: Array[Vector2] = [
+			Vector2.ZERO,
+			Vector2(-half_tile.x, 0.0),
+			Vector2(half_tile.x, 0.0),
+			Vector2(0.0, -half_tile.y),
+			Vector2(0.0, half_tile.y),
+		]
+		for ground_cell in _ground.get_used_cells():
+			var ground_center := _ground.map_to_local(ground_cell)
+			for sample_offset in sample_offsets:
+				var world_position := _ground.to_global(ground_center + sample_offset)
+				var blocking_cell := _blocking.local_to_map(_blocking.to_local(world_position))
+				if _blocking.get_cell_source_id(blocking_cell) == -1:
+					continue
+				occupied_ground_cells.append(ground_cell)
+				break
+	for occupied_cell in occupied_ground_cells:
+		for dx in range(-_static_clearance_cells, _static_clearance_cells + 1):
+			for dy in range(-_static_clearance_cells, _static_clearance_cells + 1):
+				var cell := occupied_cell + Vector2i(dx, dy)
+				if not _astar.is_in_boundsv(cell):
+					continue
+				_astar.set_point_solid(cell, true)
+				_static_solid[cell] = true
 
 
 # --- coordinate conversion: the ONLY place that holds world/cell math ---
