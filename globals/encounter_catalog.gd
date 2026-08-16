@@ -5,6 +5,10 @@ extends RefCounted
 ## Pandora itself and exported builds only need the committed JSON artifact.
 
 const DATA_PATH := "res://data/generated/encounters.json"
+const _FIELD_GRID_DATA := {
+	"bog-wight": {"dimensions": Vector2i(2, 4)},
+	"loam-boar": {"dimensions": Vector2i(2, 4)},
+}
 
 static var _definitions: Dictionary = {}
 
@@ -12,7 +16,11 @@ static var _definitions: Dictionary = {}
 static func definition(encounter_id: StringName) -> Dictionary:
 	_ensure_loaded()
 	var row: Variant = _definitions.get(String(encounter_id), {})
-	return row.duplicate(true) if row is Dictionary else {}
+	var result: Dictionary = row.duplicate(true) if row is Dictionary else {}
+	var grid: Variant = _FIELD_GRID_DATA.get(String(encounter_id), {})
+	if grid is Dictionary and not grid.is_empty():
+		result["grid"] = grid.duplicate(true)
+	return result
 
 
 static func make_actors(encounter_id: StringName) -> Array[BattleActor]:

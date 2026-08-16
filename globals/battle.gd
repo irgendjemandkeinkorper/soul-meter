@@ -60,9 +60,11 @@ var enemy: BattleActor:
 		return enemies[0] if not enemies.is_empty() else null
 
 var _definition: Dictionary = {}
+var _battlefield_ground: TileMapLayer
 
 
 func start(encounter: Variant) -> void:
+	_release_battlefield_ground()
 	_combat_history.clear()
 	allies.clear()
 	enemies.clear()
@@ -110,10 +112,66 @@ func start(encounter: Variant) -> void:
 	controller = CombatController.new()
 	controller.event_emitted.connect(_on_combat_event)
 	controller.battle_finished.connect(_on_controller_finished)
-	controller.configure(available_actions(true), BattlefieldModel.create_default(rules), rules)
+	controller.configure(available_actions(true), _battlefield_for_definition(rules), rules)
 	controller.start(allies, enemies)
 	battle_started.emit()
 	balance_changed.emit(balance)
+
+
+func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
+	var grid: Variant = _definition.get("grid", {})
+	if not grid is Dictionary or grid.is_empty():
+		return BattlefieldModel.create_default(rules)
+
+	var authored_dimensions: Variant = grid.get("dimensions", Vector2i.ZERO)
+	if not authored_dimensions is Vector2i:
+		push_warning("Encounter '%s' has invalid grid dimensions; using zones." % encounter_id)
+		return BattlefieldModel.create_default(rules)
+	var dimensions: Vector2i = authored_dimensions
+	var required_rows := maxi(allies.size(), enemies.size())
+	if dimensions.x < 2 or dimensions.y < required_rows:
+		push_warning("Encounter '%s' grid cannot fit its combatants; using zones." % encounter_id)
+		return BattlefieldModel.create_default(rules)
+
+	_battlefield_ground = TileMapLayer.new()
+	_battlefield_ground.name = "EncounterBattlefieldGround"
+	_battlefield_ground.tile_set = _encounter_grid_tile_set()
+	for y in dimensions.y:
+		for x in dimensions.x:
+			_battlefield_ground.set_cell(Vector2i(x, y), 0, Vector2i.ZERO)
+	var ground_parent: Node = self
+	var main_loop := Engine.get_main_loop()
+	if not is_inside_tree() and main_loop is SceneTree:
+		ground_parent = (main_loop as SceneTree).root
+	ground_parent.add_child(_battlefield_ground)
+
+	var model := GridBattlefieldModel.new()
+	model.configure(rules)
+	model.build_grid(_battlefield_ground)
+	return model
+
+
+func _encounter_grid_tile_set() -> TileSet:
+	var tile_set := TileSet.new()
+	tile_set.tile_size = Vector2i(64, 32)
+	var image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
+	var source := TileSetAtlasSource.new()
+	source.texture = ImageTexture.create_from_image(image)
+	source.texture_region_size = tile_set.tile_size
+	source.create_tile(Vector2i.ZERO)
+	tile_set.add_source(source, 0)
+	return tile_set
+
+
+func _release_battlefield_ground() -> void:
+	if is_instance_valid(_battlefield_ground):
+		_battlefield_ground.free()
+	_battlefield_ground = null
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		_release_battlefield_ground()
 
 
 func replay_combat_events(receiver: Callable) -> void:
