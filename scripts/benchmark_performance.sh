@@ -10,10 +10,21 @@ set -euo pipefail
 #
 # Usage:
 #   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh
-#   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh -o report.json
+#   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
+#     --scenario populated-grid --display-mode rendered --settle-ms 2000 -o report.json
+#   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
+#     --scenario populated-grid --display-mode headless --profile -o profile.json
 
 godot_bin="${GODOT_BIN:-godot}"
 output_path=""
+scenario="field"
+display_mode="headless"
+profile_mode=0
+settle_ms=2000
+settle_ms_explicit=0
+benchmark_data_dir="${SOUL_METER_BENCHMARK_DATA_DIR:-/tmp/soul-meter-godot-benchmark-data}"
+mkdir -p "$benchmark_data_dir"
+export XDG_DATA_HOME="$benchmark_data_dir"
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
@@ -25,8 +36,25 @@ while [[ $# -gt 0 ]]; do
 			fi
 			shift 2
 			;;
+		--scenario)
+			scenario="${2:-}"
+			shift 2
+			;;
+		--display-mode)
+			display_mode="${2:-}"
+			shift 2
+			;;
+		--profile)
+			profile_mode=1
+			shift
+			;;
+		--settle-ms)
+			settle_ms="${2:-}"
+			settle_ms_explicit=1
+			shift 2
+			;;
 		-h|--help)
-			sed -n '3,13p' "$0"
+			sed -n '3,18p' "$0"
 			exit 0
 			;;
 		*)
@@ -41,6 +69,47 @@ if ! command -v "$godot_bin" >/dev/null 2>&1 && [[ ! -x "$godot_bin" ]]; then
 	exit 1
 fi
 
+case "$scenario" in
+	field)
+		tool_script="res://tools/performance_benchmark.gd"
+		;;
+	populated-grid)
+		tool_script="res://tools/populated_grid_benchmark.gd"
+		;;
+	*)
+		echo "Unknown benchmark scenario: $scenario" >&2
+		exit 2
+		;;
+esac
+
+if [[ "$profile_mode" -eq 1 && "$scenario" != "populated-grid" ]]; then
+	echo "--profile is only available for --scenario populated-grid" >&2
+	exit 2
+fi
+
+if [[ "$settle_ms_explicit" -eq 1 && "$scenario" != "populated-grid" ]]; then
+	echo "--settle-ms is only available for --scenario populated-grid" >&2
+	exit 2
+fi
+
+if [[ ! "$settle_ms" =~ ^[0-9]+$ || "$settle_ms" -le 0 ]]; then
+	echo "--settle-ms requires a positive integer duration" >&2
+	exit 2
+fi
+
+godot_args=()
+case "$display_mode" in
+	headless)
+		godot_args+=("--headless")
+		;;
+	rendered)
+		;;
+	*)
+		echo "Unknown display mode: $display_mode" >&2
+		exit 2
+		;;
+esac
+
 raw="$(mktemp)"
 cleanup() { rm -f "$raw"; }
 trap cleanup EXIT
@@ -50,7 +119,15 @@ trap cleanup EXIT
 # noise ("N resources still in use at exit"), so the presence of a well-formed
 # report — not the exit status — decides success here.
 set +e
-"$godot_bin" --headless --path . --script res://tools/performance_benchmark.gd >"$raw" 2>&1
+user_args=()
+if [[ "$scenario" == "populated-grid" ]]; then
+	user_args+=("--" "--settle-ms" "$settle_ms")
+fi
+if [[ "$profile_mode" -eq 1 ]]; then
+	user_args+=("--profile")
+fi
+"$godot_bin" "${godot_args[@]}" --path . --script "$tool_script" \
+	"${user_args[@]}" >"$raw" 2>&1
 godot_status=$?
 set -e
 
@@ -69,6 +146,7 @@ if [[ -z "$report" ]]; then
 fi
 
 if [[ -n "$output_path" ]]; then
+	mkdir -p "$(dirname -- "$output_path")"
 	printf '%s\n' "$report" >"$output_path"
 	echo "Wrote FR-904 report to $output_path" >&2
 else
