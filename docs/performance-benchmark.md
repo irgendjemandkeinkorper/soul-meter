@@ -179,11 +179,49 @@ Reports and failed rendered-attempt logs are under
 | Headless battle event → HUD interactive (ms) | 99.577 | 104.219 | 102.297 | 102.297 | <2000 ms transition target |
 | Headless draw calls p50 | 0 | 0 | 0 | 0 | expected in headless mode |
 | Headless node count p50 | 374 | 374 | 374 | 374 | record only |
-| WSLg rendered frame p95 (ms) | unavailable | unavailable | unavailable | unavailable | ≤16.67 ms |
+| WSLg rendered frame p50 (ms) | 77.506 | 55.702 | 50.943 | 55.702 | record only |
+| **WSLg rendered frame p95 (ms)** | **161.169** | **159.993** | **169.197** | **161.169 (~161.2)** | **≤16.67 ms** |
+| WSLg rendered frame p99 (ms) | 161.169 | 159.993 | 169.197 | 161.169 | record only |
+| WSLg battle event → HUD interactive (ms) | 328.392 | 330.299 | 352.031 | 330.299 | <2000 ms transition target |
+| WSLg draw calls p50 / p95 / p99 | 323 / 323 / 323 | 323 / 323 / 323 | 323 / 323 / 323 | 323 / 323 / 323 | >0 for rendered evidence |
+| WSLg node count p50 / p95 / p99 | 374 / 376 / 376 | 374 / 376 / 376 | 374 / 376 / 376 | 374 / 376 / 376 | record only |
 
-All three headless JSON reports are well formed with `status: "ok"` and identical environment
-metadata. The exact rendered command was attempted three times with `DISPLAY=:0`, but this worker
-environment could not connect to WSLg and Godot stopped before loading the project with
-`ERROR: X11 Display is not available`. No rendered JSON was produced, so no rendered median or
-hot path can be named. The three failure logs were retained; they are not measurements and must
-not be promoted to acceptance evidence.
+All six benchmark JSON reports are well formed with `status: "ok"`. Each rendered report records
+600 samples after 120 warm-up frames and confirms 3 allies, 2 enemies, 32/32 charged tiles, the
+grid battlefield, charge-time scheduler, battle HUD, and CT timeline. The original three
+`*.failure.log` files remain beside the rendered JSON reports because they document this worker's
+inability to open WSLg; they are not measurements and were not substituted for the planner's
+successful runs.
+
+The rendered reports do contain the metrics that appeared as null to the planner. Their nested
+schema paths are `monitors.draw_calls.{p50,p95,p99}` and
+`spans.battle_entry.battle_event_to_hud_interactive`, so no report-writer schema change was
+needed.
+
+### Headless attribution profile
+
+The committed headless profile is
+`reports/fr904-provisional/2026-08-16-wslg-wsl2/headless/profile.json`. It uses 600 samples and
+120 warm-up frames in each of six windows: full UI before and after the experiment, then the tile
+stage, CT timeline, remaining HUD, and whole `BattleInterface` hidden one at a time. This is a
+controlled visibility ablation, not an optimization. Its p95 deltas are directional and are not
+additive.
+
+| Attribution bucket | `TIME_PROCESS` p95 window (ms) | Attributed p95 (ms) | Frame-interval p95 (ms) | Finding |
+|---|---:|---:|---:|---|
+| **Pre-sample setup carryover** | initial full 47.579 → settled full 0.651 | **46.928** | 7.010 initial; 6.993 settled | **Top measured cost** |
+| Charged-tile stage | stage hidden: 0.132 | 0.519 | 7.002 | Small settled-state delta |
+| CT timeline | timeline hidden: 0.314 | 0.337 | 7.011 | Small settled-state delta |
+| Other battle HUD | unit/weather/forecast/cursor/action hotbar/soul gauge hidden: 0.761 | 0.000 | 6.989 | No positive p95 delta in this run |
+| Engine/background floor | whole interface hidden: 0.187 | 0.187 residual | 7.004 | Sub-millisecond `TIME_PROCESS` floor |
+
+The top cost in the headless profile is therefore the initial battle/HUD setup sample retained in
+the coarse `Performance.TIME_PROCESS` signal: the same fully visible populated grid falls from
+47.579 ms p95 in the initial window to 0.651 ms in the repeated settled window. The independent
+wall-clock frame-interval p95 stays near 7 ms across every window, while settled baseline physics
+and navigation p95 are 0.039 ms and 0.016 ms respectively. No battle actor `Sprite2D` or
+`AnimatedSprite2D` nodes exist in this scenario, so there is no actor-sprite bucket to time.
+
+This attribution names the shared headless cost but does not explain the rendered WSLg tail.
+Run the same profile rendered before selecting any fix; do not infer a budget change or Gate T-9
+decision from this provisional WSLg/WSL2 evidence.
