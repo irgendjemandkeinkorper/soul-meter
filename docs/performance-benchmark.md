@@ -15,6 +15,14 @@ acceptance procedure. The related comprehension gate is executed with the
 ```bash
 GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh
 GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh -o reports/fr904.json
+
+# Gate T-9 populated-grid battle (headless regression signal)
+GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
+  --scenario populated-grid --display-mode headless -o reports/fr904-grid-headless.json
+
+# Gate T-9 populated-grid battle (rendered; requires an available display)
+DISPLAY=:0 GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
+  --scenario populated-grid --display-mode rendered -o reports/fr904-grid-rendered.json
 ```
 
 Or invoke the harness directly:
@@ -43,6 +51,9 @@ tail is the number that matters.
 - **120 warmup frames**, discarded, so shader/pipeline compilation doesn't pollute the sample.
 - **600 measured samples**, one `TIME_PROCESS` reading per `process_frame`.
 - Target scene fixed at `world/starting_town.tscn`.
+- `--scenario populated-grid` instead targets the production battle screen with three existing
+  party members, the existing two-enemy `dorthkor-vanguard` composition, an 8×4 grid, the
+  charge-time scheduler, and a deterministic charged-tile rendering fixture on all 32 tiles.
 - Report carries `schema_version` so downstream diffing can detect format changes.
 
 Two runs are comparable only when `environment` matches. Comparing a laptop on battery to CI
@@ -141,3 +152,38 @@ will fail spuriously about a quarter of the time.
   Decide with a real-hardware number, not this headless one.
 - Resource-ready is the largest travel span (53.7 ms of 88.9 ms), so if transition time ever
   becomes a problem, that is where to look.
+
+## 2026-08-16 — populated-grid battle — provisional — WSLg/WSL2, NOT reference-hardware acceptance evidence
+
+This section records scenario-engineering measurements only. It does **not** establish Gate T-9
+or FR-904 acceptance. The runbook still requires three valid rendered runs on declared reference
+hardware with a real display, and the acceptance floor remains a three-run median of run-level
+`frame_time_ms.p95` values at or below **16.67 ms**.
+
+The scenario opens the production battle screen after all four deployment states, deploys Vex
+plus two existing recruit candidates, loads the existing `dorthkor-vanguard` encounter (two
+enemies), installs the production `GridBattlefieldModel` and charge-time scheduler, and renders a
+deterministic benchmark fixture of 32 charged tiles through the production `BattleInterface`.
+Every valid headless report confirms the grid model, CT scheduler, battle HUD, CT timeline, and
+32/32 charged tiles were active. The fixture measures rendering load; it does not add encounter
+balance data or claim that production encounter-authored tile-charge state exists.
+
+Reports and failed rendered-attempt logs are under
+`reports/fr904-provisional/2026-08-16-wslg-wsl2/`.
+
+| Mode / metric | Run 1 | Run 2 | Run 3 | Median | FR-904 floor |
+|---|---:|---:|---:|---:|---:|
+| Headless frame p50 (ms) | 0.117 | 0.145 | 0.135 | 0.135 | record only |
+| **Headless frame p95 (ms)** | 44.468 | 47.766 | 44.992 | **44.992** | ≤16.67 ms, but headless is non-authoritative |
+| Headless frame p99 (ms) | 44.468 | 47.766 | 44.992 | 44.992 | record only |
+| Headless battle event → HUD interactive (ms) | 99.577 | 104.219 | 102.297 | 102.297 | <2000 ms transition target |
+| Headless draw calls p50 | 0 | 0 | 0 | 0 | expected in headless mode |
+| Headless node count p50 | 374 | 374 | 374 | 374 | record only |
+| WSLg rendered frame p95 (ms) | unavailable | unavailable | unavailable | unavailable | ≤16.67 ms |
+
+All three headless JSON reports are well formed with `status: "ok"` and identical environment
+metadata. The exact rendered command was attempted three times with `DISPLAY=:0`, but this worker
+environment could not connect to WSLg and Godot stopped before loading the project with
+`ERROR: X11 Display is not available`. No rendered JSON was produced, so no rendered median or
+hot path can be named. The three failure logs were retained; they are not measurements and must
+not be promoted to acceptance evidence.
