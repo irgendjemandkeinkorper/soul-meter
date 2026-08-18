@@ -66,19 +66,19 @@ func test_recruit_without_authored_content_has_no_dialogue_or_quest() -> void:
 
 func test_resolving_grants_renown_exactly_once_and_sets_the_flag() -> void:
 	GameState.set_companions([_serai_lun(), _other_recruit()])
-	GameState.set_flag("party_serai_lun_resolved", true)
 
-	var ok := QuestRegistry.resolve_companion_quest(
+	var ok: bool = QuestRegistry.resolve_companion_quest(
 		"serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0, "Told Serai-Lun the line matters"
 	)
 
 	assert_bool(ok).is_true()
+	assert_bool(GameState.flag_is_true("party_serai_lun_resolved")).is_true()
 	assert_bool(QuestRegistry.is_done(QuestRegistry.SERAI_LUN_QUEST)).is_true()
 	var events: Array[RenownEvent] = Renown.why(&"reputation", 10)
 	assert_int(events.size()).is_equal(1)
 	assert_float(events[0].delta).is_equal_approx(6.0, 0.001)
 
-	var again := QuestRegistry.resolve_companion_quest(
+	var again: bool = QuestRegistry.resolve_companion_quest(
 		"serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0, "Told Serai-Lun the line matters"
 	)
 	assert_bool(again).is_false()
@@ -87,11 +87,11 @@ func test_resolving_grants_renown_exactly_once_and_sets_the_flag() -> void:
 
 func test_resolve_rejects_a_mismatched_companion_id() -> void:
 	GameState.set_companions([_serai_lun(), _other_recruit()])
-	GameState.set_flag("party_serai_lun_resolved", true)
-	var ok := QuestRegistry.resolve_companion_quest(
+	var ok: bool = QuestRegistry.resolve_companion_quest(
 		"old-grumbrand", QuestRegistry.SERAI_LUN_QUEST, 6.0, "wrong companion"
 	)
 	assert_bool(ok).is_false()
+	assert_bool(GameState.flag_is_true("party_serai_lun_resolved")).is_false()
 	assert_bool(QuestRegistry.is_done(QuestRegistry.SERAI_LUN_QUEST)).is_false()
 
 
@@ -100,9 +100,9 @@ func test_dialogue_offers_and_resolves_through_both_authored_outcomes() -> void:
 	assert_object(resource).is_not_null()
 	var first_line: DialogueLine = await DialogueManager.get_next_dialogue_line(resource, "start")
 	assert_object(first_line).is_not_null()
-	var source := FileAccess.get_file_as_string(DIALOGUE_PATH)
+	var source: String = FileAccess.get_file_as_string(DIALOGUE_PATH)
 	assert_str(source).contains('QuestRegistry.resolve_companion_quest("serai-lun"')
-	assert_str(source).contains('GameState.set_flag("party_serai_lun_resolved", true)')
+	assert_str(source).not_contains('GameState.set_flag("party_serai_lun_resolved", true)')
 
 
 func test_remaining_recruits_have_registered_personal_quests_and_dialogue() -> void:
@@ -127,7 +127,7 @@ func test_remaining_recruits_have_registered_personal_quests_and_dialogue() -> v
 
 
 func test_new_companion_dialogue_is_provisional_and_uses_self_closing_conditions() -> void:
-	var paths := PackedStringArray(
+	var paths: PackedStringArray = PackedStringArray(
 		[
 			"res://dialogue/companions/ressa_quickfingers.dialogue",
 			"res://dialogue/companions/korrath_ninefold.dialogue",
@@ -135,7 +135,7 @@ func test_new_companion_dialogue_is_provisional_and_uses_self_closing_conditions
 		]
 	)
 	for path: String in paths:
-		var source := FileAccess.get_file_as_string(path)
+		var source: String = FileAccess.get_file_as_string(path)
 		assert_str(source).starts_with(PROVISIONAL_MARKER)
 		for line: String in source.split("\n"):
 			if "[if " in line:
@@ -167,13 +167,13 @@ func test_new_companion_resolutions_write_exactly_one_reputation_event() -> void
 	for companion_case: Dictionary in cases:
 		Renown.from_dict({})
 		QuestRegistry.reset()
-		GameState.set_flag(str(companion_case["flag"]), true)
-		var quest := companion_case["quest"] as FlagQuest
+		var quest: FlagQuest = companion_case["quest"] as FlagQuest
 		QuestRegistry.offer(quest)
-		var resolved := QuestRegistry.resolve_companion_quest(
+		var resolved: bool = QuestRegistry.resolve_companion_quest(
 			str(companion_case["id"]), quest, 6.0, "Resolved provisional companion quest"
 		)
 		assert_bool(resolved).is_true()
+		assert_bool(GameState.flag_is_true(str(companion_case["flag"]))).is_true()
 		assert_int(Renown.why(&"reputation", 10).size()).is_equal(1)
 		assert_bool(
 			QuestRegistry.resolve_companion_quest(

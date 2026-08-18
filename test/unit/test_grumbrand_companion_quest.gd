@@ -17,6 +17,7 @@ func before_test() -> void:
 	_original_renown = Renown.to_dict().duplicate(true)
 	_original_quests = QuestRegistry.to_dict().duplicate(true)
 	GameState.flags.clear()
+	Renown.from_dict({})
 	QuestRegistry.reset()
 
 
@@ -56,19 +57,19 @@ func test_joining_the_party_offers_his_personal_quest_exactly_once() -> void:
 
 func test_resolving_grants_renown_exactly_once_and_sets_the_flag() -> void:
 	GameState.set_companions([_grumbrand(), _other_recruit()])
-	GameState.set_flag("party_grumbrand_resolved", true)
 
-	var ok := QuestRegistry.resolve_companion_quest(
+	var ok: bool = QuestRegistry.resolve_companion_quest(
 		"old-grumbrand", QuestRegistry.GRUMBRAND_QUEST, 6.0, "Told Grumbrand his silence was mercy enough"
 	)
 
 	assert_bool(ok).is_true()
+	assert_bool(GameState.flag_is_true("party_grumbrand_resolved")).is_true()
 	assert_bool(QuestRegistry.is_done(QuestRegistry.GRUMBRAND_QUEST)).is_true()
 	var events: Array[RenownEvent] = Renown.why(&"reputation", 10)
 	assert_int(events.size()).is_equal(1)
 	assert_float(events[0].delta).is_equal_approx(6.0, 0.001)
 
-	var again := QuestRegistry.resolve_companion_quest(
+	var again: bool = QuestRegistry.resolve_companion_quest(
 		"old-grumbrand", QuestRegistry.GRUMBRAND_QUEST, 6.0, "Told Grumbrand his silence was mercy enough"
 	)
 	assert_bool(again).is_false()
@@ -77,11 +78,11 @@ func test_resolving_grants_renown_exactly_once_and_sets_the_flag() -> void:
 
 func test_resolve_rejects_a_mismatched_companion_id() -> void:
 	GameState.set_companions([_grumbrand(), _other_recruit()])
-	GameState.set_flag("party_grumbrand_resolved", true)
-	var ok := QuestRegistry.resolve_companion_quest(
+	var ok: bool = QuestRegistry.resolve_companion_quest(
 		"serai-lun", QuestRegistry.GRUMBRAND_QUEST, 6.0, "wrong companion"
 	)
 	assert_bool(ok).is_false()
+	assert_bool(GameState.flag_is_true("party_grumbrand_resolved")).is_false()
 	assert_bool(QuestRegistry.is_done(QuestRegistry.GRUMBRAND_QUEST)).is_false()
 
 
@@ -90,6 +91,6 @@ func test_dialogue_offers_and_resolves_through_both_authored_outcomes() -> void:
 	assert_object(resource).is_not_null()
 	var first_line: DialogueLine = await DialogueManager.get_next_dialogue_line(resource, "start")
 	assert_object(first_line).is_not_null()
-	var source := FileAccess.get_file_as_string(DIALOGUE_PATH)
+	var source: String = FileAccess.get_file_as_string(DIALOGUE_PATH)
 	assert_str(source).contains('QuestRegistry.resolve_companion_quest("old-grumbrand"')
-	assert_str(source).contains('GameState.set_flag("party_grumbrand_resolved", true)')
+	assert_str(source).not_contains('GameState.set_flag("party_grumbrand_resolved", true)')
