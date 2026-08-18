@@ -1,121 +1,73 @@
-# Session Plan — Soul Meter Roadmap Reset
+# Session Plan
 
-**Created:** 2026-08-07
-**Intent Contract:** `.claude/session-intent.md`
-**Mandate:** Reset the roadmap, not the mechanics (D1 + D2)
-
----
+**Created:** 2026-08-18
+**Intent Contract:** See .claude/session-intent.md
 
 ## What You'll End Up With
+A per-recruit canon-review packet for all six companion quests (contradiction
+findings vs the Dramgid vault, proposed vault-entry stubs for human sign-off,
+prose flagged for revision), plus agreed prose improvements applied to
+`dialogue/companions/` — with `tools/quest_audit.gd` clean and the
+companion-quest test suites green.
 
-Four committed artifacts that replace the stale planning brief with a roadmap derived from
-the actual repo:
+## How We'll Get There
 
-1. **`docs/roadmap-chapter-one.md`** — phased milestone map to ship one complete 15–25h
-   region, with epics, dependency ordering, and a definition of done per milestone.
-2. **`docs/architecture-tactical-and-navigation.md`** — concrete Godot scene/script
-   architecture for the four named systems.
-3. **`docs/prd-amendment-living-world.md`** — the FR-504 amendment D6 requires.
-4. **`docs/eval-orchestrator.md`** — the addon evaluation, with a recommendation.
-5. **GitHub milestones + issues** on `irgendjemandkeinkorper/soul-meter`, labelled per the
-   codex / gemini / jules routing policy.
+### Phase Weights
+- Discover: 20% — Cross-check each of the six quests against the Dramgid vault
+  (`canon/` + `cosmology/` are do-not-contradict; follow `related` ids from
+  `index.json`). Output: per-quest findings list.
+- Define: 15% — Lock per-quest "canon-ready" criteria; enumerate anything that
+  touches `canon/open-questions.md` so nothing gets resolved silently.
+- Develop: 30% — Author the six canon-review packets (vault entry stub +
+  contradiction findings + prose flags per recruit); revise flagged dialogue
+  prose where it doesn't require a canon decision.
+- Deliver: 35% — High-stakes validation: debate gate, quest audit
+  (`SOUL_METER_QUEST_AUDIT_STRICT=1`), gdUnit4 suites
+  (test_companion_quest.gd, test_party_screen.gd, e2e walkthrough step).
 
----
+### 🔸 Debate Checkpoints (high-stakes constraint → enabled)
+- After Define: "Are the canon-ready criteria right, and do any quests conflict
+  with do-not-contradict lore?" (1 round, adversarial)
+- After Develop: "Is this content ready for human canon sign-off?" (1 round,
+  adversarial)
 
-## The Four Named Systems — architecture scope
-
-| System | Current state | What the doc must specify |
-|---|---|---|
-| **Global state / flag manager at scale** | `GameState` (flags, Soul Meter, party, inventory) + `Reputation` (append-only ledger) + `Renown`. Save schema 5 with migrations. | How this holds *hundreds* of quest variables: flag namespacing, stable ID schema, the `quest_audit.gd` orphan/read-back check, and the save-envelope contract (FR-802) that makes it survivable. |
-| **Isometric world + navigation** | `IsometricBlockout : TileMapLayer`, 64×32, generated tileset. **No pathfinding at all.** | `AStarGrid2D` construction from the tile layer, obstacle baking from a collision layer, Y-sorting order for iso depth, click-to-move controller, and how the *same* `AStarGrid2D` serves tactical movement range. This is the largest genuinely-unbuilt overworld gap. |
-| **Tactical combat (charge-time, not AP)** | `BattlefieldModel` interface + **only** `ZoneBattlefieldModel`. `charge_time_scheduler.gd` exists. | `GridBattlefieldModel` as a sibling behind `create_default()`. The interface must *widen* to express cells, elevation, facing, occupancy, LOS, and path cost — today it speaks only `StringName` zone ids. Consumers must never learn the concrete type. |
-| **Soul Meter hooks** | `GameState.soul_meter`, `SoulGauge` HUD, dialogue `[#cost=-6 soul]` tags. | Downward-only economy (D5): cast cost, the zero-catastrophe path, slow/social recovery, dialogue gating via Dialogue Manager `[if /]`, and combat casting-gate integration. |
-
----
-
-## Phase Weights
-
-```
-DISCOVER    ██████ 15%
-Audit ratified FRs against verified code state; evaluate Orchestrator
-against Godot 4.7 + Pandora-as-canonical.
-
-DEFINE      ████████████ 30%
-Author the roadmap doc and the FR-504 amendment. Every ratified FR gets an
-explicit disposition: carried, amended, or retired. Nothing changes by silence.
-
-DEVELOP     ████████████████ 40%
-Author the architecture doc for the four systems. Create GitHub milestones
-and self-contained, labelled issues.
-
-DELIVER     ██████ 15%
-Validate: no ratified FR silently dropped; gates present as blocking; issues
-self-contained; boundaries in the intent contract respected.
-```
-
----
-
-## Blocking Gates (must appear as milestones, not checkpoints)
-
-- **Phase 1.5 comprehension gate** — never run. Needs 3–5 outside human playtesters; an
-  agent fleet cannot execute it. Region content must not merge into `world/locations/` or
-  `LocationRegistry.ALL` until it passes. (`docs/playtest-protocol.md`)
-- **Gate T** — the replacement gate installed by the tactical amendment §5. Grid + elevation
-  + facing must demonstrably produce encounters that are meaningfully harder or unwinnable
-  without exploiting height or facing. Grid map / encounter *production* must not start
-  before Gate T passes (amendment §8.1 stop-loss).
-- **FR-904 performance floor** — instrumented, not satisfied.
-
-## Open Canon Questions — surface, never resolve
-
-- **#132** three combat disciplines vs the Ten Patron Classes (advisory recommendation
-  exists; not ratified)
-- **FR-701** which 4–5 vault peoples are playable
-- **FR-907** respec policy — full, partial, or none
-- Gamepad-at-ship (`docs/godot-architecture.md`)
-
----
-
-## Provider Availability
-
-```
-🔴 Codex CLI:        Available ✓
-🟡 Gemini CLI:       Available ✓
-🧭 Antigravity CLI:  Not installed ✗
-🟤 OpenCode:         Not installed ✗
-🟢 Copilot CLI:      Available ✓
-🟠 Qwen CLI:         Not installed ✗
-⚫ Ollama:           Not installed ✗
-🔵 Claude:           Available ✓
-🟣 Perplexity:       Not configured ✗
-🐙 gh CLI:           Authed as irgendjemandkeinkorper ✓
-```
-
-Per the global role policy: Claude owns architecture, roadmap, scope, and GitHub triage.
-Gemini is the candidate for the bounded Orchestrator research. Codex is the candidate for
-`GridBattlefieldModel` and the navigation implementation once the architecture is ratified —
-not before.
-
----
-
-## Debate Checkpoints
-
-- **After Define:** "Does the roadmap's sequencing survive the asymmetry the tactical
-  amendment §2 identified — scheduler seam before grid production?"
-- **After Develop:** "Does the widened `BattlefieldModel` interface express cells, elevation,
-  facing, occupancy, LOS and path cost without any consumer learning the concrete type?"
-  This is the amendment's own stop-loss criterion.
-
----
-
-## Execution
-
+### Execution Commands
+To execute this plan, run:
 ```bash
-/octo:embrace "Re-derive the Soul Meter Chapter One roadmap and architecture from verified repo state"
+/octo:embrace "Review and improve the six companion quests to canon-review readiness"
 ```
 
-Or phase by phase: `/octo:define` → `/octo:develop` → `/octo:deliver`.
+Or execute phases individually:
+- `/octo:discover` (Discover ≥ 20%)
+- `/octo:develop` (Develop ≥ 20%)
+- `/octo:deliver` (Deliver ≥ 20%)
+
+## Provider Requirements
+🔴 Codex CLI: Available ✓
+🟡 Gemini CLI: Available ✓
+🧭 Antigravity CLI: Not installed ✗
+🟤 OpenCode: Not installed ✗
+🟢 Copilot CLI: Available ✓
+🟠 Qwen CLI: Not installed ✗
+⚫ Ollama: Not installed ✗
+🔵 Claude: Available ✓
+🟣 Perplexity: Not configured ✗
 
 ## Success Criteria
+1. Every companion quest reviewed against the lore vault with findings
+   documented per quest.
+2. A concrete canon-review packet the human can act on per recruit.
+3. Provisional markers resolved or explicitly retained with reasons.
+4. Quest audit clean; companion-quest tests green.
+5. No architecture violations (Pandora canonical, ledger write paths,
+   Dialogue Manager conventions).
 
-See `.claude/session-intent.md` § Success Criteria.
+## Hard Boundaries
+- No writes to the Dramgid vault — packets only; canon is a human decision.
+- No silent resolution of `canon/open-questions.md`.
+- No new mechanics; no `addons/` or `data/generated/*` edits.
+
+## Next Steps
+1. Review this plan
+2. Adjust if needed (re-run /octo:plan)
+3. Execute with /octo:embrace when ready
