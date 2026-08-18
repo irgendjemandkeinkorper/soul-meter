@@ -1,5 +1,9 @@
 extends GdUnitTestSuite
 ## FR-505 companion personal quest coverage for Maura Greyfen.
+## Covers party-join offer wiring only: both resolution branches, exact renown
+## delta/cause, and rejection behavior live in test_companion_quest_contract.gd
+## — deleting or skipping that suite silently drops this companion's
+## resolution-path coverage.
 
 const COMPANION_ID := "maura-greyfen"
 const DIALOGUE_PATH := "res://dialogue/companions/maura_greyfen.dialogue"
