@@ -12,7 +12,7 @@ Status: **Pending human canon decision**
   location use the companion name.
 - `globals/game_state.gd:704-717` — recruit construction uses stable `PartyMember.id`
   `"serai-lun"` and display name `"Serai-Lun"` as separate arguments.
-- `globals/quest_registry.gd:33-49` — companion quest/dialogue maps are keyed by `PartyMember.id`.
+- `globals/quest_registry.gd:37-61` — companion quest/dialogue maps are keyed by `PartyMember.id`.
 
 ### Vault citations
 
@@ -53,7 +53,7 @@ and do not create a relationship by implication.
   the dialogue contains no stated faction connection.
 - `globals/game_state.gd:745-756` — recruit construction uses stable `PartyMember.id`
   `"ressa-quickfingers"` and display name `"Ressa Quickfingers"` separately.
-- `globals/quest_registry.gd:33-49` — the Ressa quest/dialogue lookup is keyed by that stable ID.
+- `globals/quest_registry.gd:37-61` — the Ressa quest/dialogue lookup is keyed by that stable ID.
 
 ### Vault citations
 

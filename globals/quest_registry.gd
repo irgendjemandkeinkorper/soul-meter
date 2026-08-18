@@ -441,8 +441,14 @@ func resolve_companion_quest(
 	if active_quest == null:
 		return false
 
+	# Set the flag first so turn_in() can satisfy the quest's required_flags,
+	# then verify completion before the append-only Renown write — a silent
+	# turn_in() no-op must roll the flag back, never leak a ledger entry.
 	GameState.set_flag(completion_flag, true)
 	turn_in(active_quest, "resolved", false)
+	if not is_done(quest):
+		GameState.set_flag(completion_flag, false)
+		return false
 	Renown.gain_reputation("player", renown_delta, cause, "party")
 	SaveGame.request_autosave("companion-quest-resolved")
 	return true

@@ -406,12 +406,24 @@ static func scan_flag_sources(paths: PackedStringArray) -> Dictionary:
 	var read := {}
 	var set_regex := _regex('(?:GameState\\.)?set_flag\\(\\s*["\\\']([^"\\\']+)["\\\']')
 	var get_regex := _regex('(?:GameState\\.)?get_flag\\(\\s*["\\\']([^"\\\']+)["\\\']')
+	# resolve_companion_quest() writes its completion flag through a variable
+	# looked up in COMPANION_QUEST_COMPLETION_FLAGS, which the literal-only
+	# set_flag regex cannot see (limitation 2 above). Count that dict's values
+	# as write-sites so the six party flags don't surface as orphans.
+	var completion_dict_regex := _regex(
+		'COMPANION_QUEST_COMPLETION_FLAGS\\s*:?=\\s*\\{([^}]*)\\}'
+	)
+	var dict_value_regex := _regex('["\\\'][^"\\\']+["\\\']\\s*:\\s*["\\\']([^"\\\']+)["\\\']')
 	for path: String in paths:
 		var source := FileAccess.get_file_as_string(path)
 		for result: RegExMatch in set_regex.search_all(source):
 			written[result.get_string(1)] = true
 		for result: RegExMatch in get_regex.search_all(source):
 			read[result.get_string(1)] = true
+		var dict_match := completion_dict_regex.search(source)
+		if dict_match != null:
+			for result: RegExMatch in dict_value_regex.search_all(dict_match.get_string(1)):
+				written[result.get_string(1)] = true
 	return _flag_access_result(written, read)
 
 
