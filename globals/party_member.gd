@@ -16,6 +16,8 @@ extends Resource
 ## members populate them.
 @export var discipline: String = ""
 @export var patron: String = ""
+## Lore-vault entity id (dramgid-vault characters/<id>.md). Empty = no canon entry yet.
+@export var vault_id: String = ""
 @export var background: String = ""
 @export var flaw: String = ""
 @export var starting_mastery: String = ""

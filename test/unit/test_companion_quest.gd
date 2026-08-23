@@ -126,7 +126,7 @@ func test_remaining_recruits_have_registered_personal_quests_and_dialogue() -> v
 	)
 
 
-func test_new_companion_dialogue_is_provisional_and_uses_self_closing_conditions() -> void:
+func test_new_companion_dialogue_is_canon_reviewed_and_uses_self_closing_conditions() -> void:
 	var paths: PackedStringArray = PackedStringArray(
 		[
 			"res://dialogue/companions/ressa_quickfingers.dialogue",
@@ -136,7 +136,7 @@ func test_new_companion_dialogue_is_provisional_and_uses_self_closing_conditions
 	)
 	for path: String in paths:
 		var source: String = FileAccess.get_file_as_string(path)
-		assert_str(source).starts_with(PROVISIONAL_MARKER)
+		assert_str(source).not_contains(PROVISIONAL_MARKER)
 		for line: String in source.split("\n"):
 			if "[if " in line:
 				assert_str(line).contains(" /]")
@@ -181,3 +181,10 @@ func test_new_companion_resolutions_write_exactly_one_reputation_event() -> void
 			)
 		).is_false()
 		assert_int(Renown.why(&"reputation", 10).size()).is_equal(1)
+
+
+func test_all_recruits_carry_a_vault_id_bridge() -> void:
+	for member: PartyMember in GameState.recruitable_candidates():
+		assert_str(member.vault_id).override_failure_message(
+			"%s has no vault_id — add a dramgid-vault characters/ entry" % member.id
+		).is_not_empty()
