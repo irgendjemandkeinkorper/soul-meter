@@ -122,3 +122,25 @@ wins with both members alive. The binding constraint is now the encounter's kill
 enemies die before their pressure can accumulate into a loss, so **no per-cast modifier of any
 size can flip this encounter's outcome**. That is an encounter-slack finding, not further
 evidence about the positional rules themselves.
+
+## Run 4 — pre-registered encounter-selection rule — 2026-08-24
+
+Owner ratified (before any per-encounter comparison was examined): select the charge-time
+catalog encounter with the lowest NAIVE-arm party-HP fraction (defeat selects immediately;
+lexicographic tiebreak); selection sees no positional results. Seed, party, and the
+victory/defeat threshold unchanged.
+
+Selection sweep (naive arm only): demon 40/54 · mixed-whipsaw 36/54 · speech-winnable 50/54 ·
+stabilizer-showcase 38/54 · **undead 15/54 ← selected**.
+
+Comparison on `phase2-undead`:
+
+| Arm | Outcome | Party HP | Survivors | Rear attacks |
+|---|---:|---:|---:|---:|
+| Positional | Victory | 48 | 2 | 11 |
+| Naive | Victory | 15 | 1 | 0 |
+
+Status: **threshold still unmet** (naive won at 15 HP with one member dead). The positional
+differential is no longer marginal — 33 HP and a party death — but the frozen binary
+threshold requires a naive defeat. Escalated to the owner for the final verdict; no further
+runs without a ruling.

@@ -3,7 +3,14 @@ extends SceneTree
 ## Gate T-2 deterministic positional-depth comparison.
 ##
 ## Pre-registered before execution:
-## - Encounter: existing `phase2-demon` catalog entry, seed 1_692_002, identical two-member party.
+## - Encounter: originally the fixed `phase2-demon` entry. After rerun 3 (see
+##   docs/gate-t2-evidence.md) the owner ratified a PRE-REGISTERED SELECTION RULE (2026-08-24,
+##   #169), fixed before any per-encounter comparison was looked at: run the NAIVE arm across
+##   every charge-time catalog encounter and select the one with the LOWEST naive party-HP
+##   fraction (a naive defeat selects immediately; ties break lexicographically by id). The
+##   selection metric never sees positional-arm results, so the rule cannot optimize for the
+##   differential — it finds the encounter where survival pressure is real, which is what the
+##   original fixed choice lacked. Seed 1_692_002 and the identical two-member party stay.
 ## - Arm A: the shared ally policy includes elevation, facing, and rear-access scoring.
 ## - Arm B: the same policy with those positional score terms set to zero.
 ## - Enemy policy: production CombatController AI in both arms; it seeks reachable height and
@@ -14,7 +21,14 @@ extends SceneTree
 ##   SOUL_METER_HEADLESS=1 godot --headless --path . \
 ##     --script res://tools/gate_t2_positional_depth.gd
 
-const ENCOUNTER_ID := &"phase2-demon"
+const ENCOUNTER_ID := &"phase2-demon"  # rerun 1-3 fixed encounter; kept for the evidence trail
+const CANDIDATE_ENCOUNTERS: Array[StringName] = [
+	&"phase2-demon",
+	&"phase2-mixed-whipsaw",
+	&"phase2-speech-winnable",
+	&"phase2-stabilizer-showcase",
+	&"phase2-undead",
+]
 const SEED := 1_692_002
 const GRID_WIDTH := 8
 const GRID_HEIGHT := 5
@@ -33,11 +47,14 @@ func _initialize() -> void:
 
 
 static func run_comparison() -> Dictionary:
-	var positional: Dictionary = _run_arm(true)
-	var naive: Dictionary = _run_arm(false)
+	var selection: Dictionary = _select_encounter()
+	var encounter_id: StringName = selection["selected"]
+	var positional: Dictionary = _run_arm(true, encounter_id)
+	var naive: Dictionary = _run_arm(false, encounter_id)
 	return {
 		"gate": "T-2 positional depth",
-		"encounter_id": String(ENCOUNTER_ID),
+		"encounter_id": String(encounter_id),
+		"selection": selection,
 		"seed": SEED,
 		"threshold": "positional victory AND naive defeat",
 		"positional": positional,
@@ -49,7 +66,31 @@ static func run_comparison() -> Dictionary:
 	}
 
 
-static func _run_arm(use_positioning: bool) -> Dictionary:
+## The pre-registered selection rule (#169, 2026-08-24). Runs ONLY the naive arm per candidate;
+## positional results play no part in selection.
+static func _select_encounter() -> Dictionary:
+	var rows: Array[Dictionary] = []
+	var best_id: StringName = CANDIDATE_ENCOUNTERS[0]
+	var best_fraction := 999.0
+	for candidate: StringName in CANDIDATE_ENCOUNTERS:
+		var naive: Dictionary = _run_arm(false, candidate)
+		var max_hp := 54.0  # 30 + 24, the fixed probe party
+		var fraction := float(naive.get("party_hp", 0)) / max_hp
+		if naive.get("outcome", "") == "defeat":
+			fraction = 0.0
+		rows.append({
+			"encounter_id": String(candidate),
+			"naive_outcome": naive.get("outcome", ""),
+			"naive_party_hp": naive.get("party_hp", 0),
+			"fraction": fraction,
+		})
+		if fraction < best_fraction:
+			best_fraction = fraction
+			best_id = candidate
+	return {"rule": "lowest naive party-HP fraction; defeat wins; lexicographic tie", "rows": rows, "selected": best_id}
+
+
+static func _run_arm(use_positioning: bool, encounter_id: StringName = ENCOUNTER_ID) -> Dictionary:
 	var loaded_rules := load("res://data/combat/combat_rules.tres") as CombatRules
 	var rules: CombatRules = loaded_rules.duplicate(true) as CombatRules
 	rules.use_grid_battlefield = true
@@ -62,7 +103,7 @@ static func _run_arm(use_positioning: bool) -> Dictionary:
 		battlefield.set_elevation(Vector2i(x, 2), RIDGE_ELEVATION)
 
 	var allies: Array[BattleActor] = _party()
-	var enemies: Array[BattleActor] = EncounterCatalog.make_actors(ENCOUNTER_ID)
+	var enemies: Array[BattleActor] = EncounterCatalog.make_actors(encounter_id)
 	var move_action := CombatAction.new()
 	move_action.id = MOVE_ACTION_ID
 	move_action.display_name = "Probe Move"
