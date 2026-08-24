@@ -7,6 +7,16 @@ extends RefCounted
 ## them later; both consumers receive the result of this one function. All inputs and outputs are
 ## plain dictionaries so they can be copied into saves and action logs without scene-tree state.
 
+## PROVISIONAL FR-105a BALANCE VALUES (amendment §1.1).
+## Keep the complete positional damage/hit table here so the required sweep review can retune it
+## without searching through the resolver or battlefield consumers.
+const PROVISIONAL_HEIGHT_DAMAGE_PER_STEP := 0.10
+const PROVISIONAL_FACING_RULES := {
+	&"front": {"damage_multiplier": 1.00, "hit_bonus": 0},
+	&"side": {"damage_multiplier": 1.10, "hit_bonus": 8},
+	&"back": {"damage_multiplier": 1.25, "hit_bonus": 15},
+}
+
 
 static func resolve(context: Dictionary) -> Dictionary:
 	var unit: Dictionary = _dictionary(context.get("unit", {}))
@@ -64,7 +74,13 @@ static func resolve(context: Dictionary) -> Dictionary:
 		ability.get("matrix_multiplier", ElementMatrix.damage_multiplier(element_id, target_element))
 	)
 	var facing: Dictionary = _dictionary(context.get("facing", {}))
-	var facing_multiplier := float(facing.get("multiplier", 1.0))
+	var positioning := positional_modifiers(
+		int(context.get("height_advantage_steps", 0)),
+		StringName(facing.get("id", &"front")),
+	)
+	var height_multiplier := float(positioning["height_multiplier"])
+	var facing_multiplier := float(positioning["facing_multiplier"])
+	var hit_bonus := int(positioning["hit_bonus"])
 	var tile_multiplier := source_tile.action_multiplier(element_id)
 	var power := maxi(int(ability.get("power", 0)), 0)
 	var attack_scale := maxf(float(unit.get("attack_scale", 1.0)), 0.0)
@@ -73,10 +89,12 @@ static func resolve(context: Dictionary) -> Dictionary:
 		_step("power", "Power", float(power)),
 		_step("attack_scale", "Attack scale", attack_scale),
 		_step("element_matrix", "Element matrix: %s" % String(relation), matrix_multiplier),
-		_step("facing", "Facing: %s" % str(facing.get("id", "neutral")), facing_multiplier),
+		_step("height", "Height advantage", height_multiplier),
+		_step("facing", "Facing: %s" % str(positioning["facing"]), facing_multiplier),
 		_step("tile_charge", "Source tile charge", tile_multiplier),
 	]
 	var scaled_damage := float(power) * attack_scale * matrix_multiplier
+	scaled_damage *= height_multiplier
 	scaled_damage *= facing_multiplier
 	scaled_damage *= tile_multiplier
 
@@ -147,6 +165,8 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"seed": int(context.get("seed", 0)),
 		"ability_id": ability_id,
 		"damage": damage,
+		"hit_bonus": hit_bonus,
+		"positioning": positioning.duplicate(true),
 		"breakdown": breakdown,
 		"element_relationship": {
 			"attack_element": String(element_id),
@@ -183,8 +203,24 @@ static func resolve_action(
 		"target_tile": _dictionary(target_tile.get("tile_state", target_tile)),
 		"weather": _dictionary(battle_unit.get("weather", {})),
 		"facing": _dictionary(target_tile.get("facing", {})),
+		"height_advantage_steps": int(target_tile.get("height_advantage_steps", 0)),
 		"caster_context": _dictionary(battle_unit.get("caster_context", {})),
 	})
+
+
+static func positional_modifiers(
+	height_advantage_steps: int, facing_id: StringName
+) -> Dictionary:
+	var normalized_facing := facing_id if PROVISIONAL_FACING_RULES.has(facing_id) else &"front"
+	var facing_rule: Dictionary = PROVISIONAL_FACING_RULES[normalized_facing]
+	var favorable_steps := maxi(height_advantage_steps, 0)
+	return {
+		"height_advantage_steps": favorable_steps,
+		"height_multiplier": 1.0 + float(favorable_steps) * PROVISIONAL_HEIGHT_DAMAGE_PER_STEP,
+		"facing": normalized_facing,
+		"facing_multiplier": float(facing_rule["damage_multiplier"]),
+		"hit_bonus": int(facing_rule["hit_bonus"]),
+	}
 
 
 static func _ability_elements(ability: Dictionary, fallback: StringName) -> Array[StringName]:

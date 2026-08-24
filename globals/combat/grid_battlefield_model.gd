@@ -221,12 +221,22 @@ func target_query(actor: BattleActor, target: BattleActor, profile: StringName) 
 		)
 	if side_of(actor) == side_of(target):
 		return _blocked(&"target", "This action requires an opposing target.", {"type": &"enemy"})
-	if profile == &"encounter" or profile == &"ranged" or profile == &"any_enemy":
+	if profile == &"encounter" or profile == &"any_enemy":
 		return _allowed()
+	if profile == &"ranged":
+		return line_of_sight(actor, target)
 	if profile == &"melee":
 		if _chebyshev(_cells[actor.combat_id], _cells[target.combat_id]) > 1:
 			return _blocked(
 				&"position", "Move adjacent to make a melee attack.", {"type": &"adjacency"}
+			)
+		var height_difference := absi(elevation_delta(actor, target))
+		var jump := maxi(actor.attribute_value(&"jump"), 0)
+		if height_difference > jump:
+			return _blocked(
+				&"blocked_by_elevation",
+				"The elevation difference exceeds this combatant's jump.",
+				{"type": &"jump", "required": height_difference, "available": jump},
 			)
 		return _allowed()
 	return _blocked(

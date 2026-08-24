@@ -237,6 +237,13 @@ func test_zone_model_owns_legality_cover_flank_and_aoe_shapes() -> void:
 	assert_int(battlefield.targets_for(ally, enemy, &"side").size()).is_equal(2)
 
 
+func test_grid_attacks_route_ratified_height_and_facing_through_resolution() -> void:
+	assert_int(_grid_attack_damage(0, &"w")).is_equal(100)  # FRONT x1.00
+	assert_int(_grid_attack_damage(0, &"n")).is_equal(110)  # SIDE x1.10
+	assert_int(_grid_attack_damage(0, &"e")).is_equal(125)  # BACK x1.25
+	assert_int(_grid_attack_damage(2, &"w")).is_equal(120)  # +10% per favorable step
+
+
 func _actor(name: String, hp: int, attack: int, defense: int) -> BattleActor:
 	var actor := BattleActor.new()
 	actor.display_name = name
@@ -245,6 +252,42 @@ func _actor(name: String, hp: int, attack: int, defense: int) -> BattleActor:
 	actor.attack = attack
 	actor.defense = defense
 	return actor
+
+
+func _grid_attack_damage(attacker_height: int, target_facing: StringName) -> int:
+	var local_rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_grid_ground())
+	grid.set_elevation(Vector2i(0, 0), attacker_height)
+	var attacker := _actor("Grid Ally", 200, 100, 0)
+	attacker.attributes[&"jump"] = attacker_height
+	var target := _actor("Grid Enemy", 200, 1, 0)
+	var local_controller := CombatController.new()
+	local_controller.configure(CombatActionCatalog.all(), grid, local_rules)
+	local_controller.start([attacker], [target])
+	grid.set_facing(target, target_facing)
+
+	var before := target.hp
+	var outcome := local_controller.submit_action(&"strike", target)
+	assert_bool(outcome.get("allowed", false)).is_true()
+	return before - target.hp
+
+
+func _grid_ground() -> TileMapLayer:
+	var tile_set := TileSet.new()
+	tile_set.tile_size = Vector2i(64, 32)
+	var image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
+	var source := TileSetAtlasSource.new()
+	source.texture = ImageTexture.create_from_image(image)
+	source.texture_region_size = Vector2i(64, 32)
+	source.create_tile(Vector2i.ZERO)
+	tile_set.add_source(source, 0)
+	var layer := auto_free(TileMapLayer.new()) as TileMapLayer
+	layer.tile_set = tile_set
+	layer.set_cell(Vector2i(0, 0), 0, Vector2i.ZERO)
+	layer.set_cell(Vector2i(1, 0), 0, Vector2i.ZERO)
+	return layer
 
 
 func _extreme_band() -> Dictionary:
