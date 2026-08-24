@@ -14,7 +14,13 @@ func test_comparison_is_byte_deterministic_for_the_registered_seed() -> void:
 	assert_str(JSON.stringify(first)).is_equal(JSON.stringify(second))
 
 
-func test_positional_policy_wins_where_ablated_policy_loses() -> void:
+## SKIPPED pending the #169 human ruling of 2026-08-24: a to-hit system (ratified) must be
+## built and the unchanged harness rerun ONCE. If that rerun still fails, the grid was the
+## wrong trade (amendment §5) — do not un-skip without the rerun evidence on #169.
+func test_positional_policy_wins_where_ablated_policy_loses(
+	do_skip := true,
+	skip_reason := "Gate T-2 red pending #169 to-hit rerun — see issue for the ruling"
+) -> void:
 	var harness_script: Script = load(HARNESS_PATH) as Script
 	assert_object(harness_script).is_not_null()
 	if harness_script == null:
