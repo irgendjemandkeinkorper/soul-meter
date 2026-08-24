@@ -190,6 +190,24 @@ class this session: gdUnit treats Variant-inference (`:=` from a Variant-returni
 e.g. `auto_free()`) as a parse ERROR that aborts the entire run with exit 105 — type such
 vars explicitly.
 
+## Status addendum (2026-08-23) — supersedes the sections above where they conflict
+
+**Canon review is DONE — off the human-gated list.** All six recruits have vault entries
+(`dramgid-vault/characters/{serai-lun,old-grumbrand,wyneth-hallow-tide,ressa-quickfingers,
+korrath-ninefold,maura-greyfen}.md`, `source: soul-meter`) and `PartyMember.vault_id` bridges
+each one (`_make_member(..., vault_id)`; `test_companion_quest.gd` enforces it for every recruit).
+Two new canon facts ratified by the user: **Serai-Lun is a namesake, not the founder** (Mirror-Veil
+Mirrorblades take Serai of Lun's name as a devotional name); **NG+ is deliberately in-world
+ambiguous** — the three echo lines (Iris/Hadrik/Coiljaw) stay, no vault cosmology for it; the
+Registry's "third door" is recorded as "doctrine or a clerk's joke, not recorded". No
+`PROVISIONAL — CANON REVIEW REQUIRED` markers remain (the element-matrix `PROVISIONAL` is a
+balance flag, not canon).
+
+**#98/#100 are NOT human-gated** — every ⚑ they cite was ratified in `docs/phase-0-ratification.md`;
+they're Codex implementation work (status comments posted). Real remaining human gates: #93
+playtest (recruit 6–8), FR-904 runbook on real hardware, and the Windows-machine chores
+(Maaack wizard, PixelPen, GodotGAS, #112/#115 assets).
+
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
 

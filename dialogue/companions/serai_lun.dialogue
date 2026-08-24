@@ -12,12 +12,10 @@ Serai-Lun: What is it.
 	Serai-Lun: The one between a killing stroke and a mercy. My old company let it blur. I don't.
 	Serai-Lun: You haven't blurred it either. Not once I was watching.
 	- "I hold it because it's right, not because you're watching." [#consequence=Serai-Lun measures you as someone who doesn't perform for an audience.]
-		do GameState.set_flag("party_serai_lun_resolved", true)
 		do QuestRegistry.resolve_companion_quest("serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0, "Told Serai-Lun the line matters with or without a witness")
 		Serai-Lun: Good. That's the only answer that survives losing.
 		=> END
 	- "I hold it because someone has to keep score." [#consequence=Serai-Lun measures you as someone who still needs a witness.]
-		do GameState.set_flag("party_serai_lun_resolved", true)
 		do QuestRegistry.resolve_companion_quest("serai-lun", QuestRegistry.SERAI_LUN_QUEST, 3.0, "Told Serai-Lun she keeps you honest")
 		Serai-Lun: Then I'll keep watching. Someone should.
 		=> END

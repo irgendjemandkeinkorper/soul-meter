@@ -627,7 +627,8 @@ func _make_member(
 	bio: String,
 	min_reputation: float = 0.0,
 	min_infamy: float = 0.0,
-	patron: String = ""
+	patron: String = "",
+	vault_id: String = ""
 ) -> PartyMember:
 	var member := PartyMember.new()
 	member.id = member_id
@@ -643,6 +644,7 @@ func _make_member(
 	member.min_reputation = min_reputation
 	member.min_infamy = min_infamy
 	member.patron = patron
+	member.vault_id = vault_id
 	return member
 
 
@@ -713,7 +715,8 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"A precise duelist who turns Balance into a weapon.",
 			0.0,
 			0.0,
-			"Maiiam"
+			"Maiiam",
+			"serai-lun"
 		)
 	)
 	result.append(
@@ -726,7 +729,8 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"A soot-stained salvager built to hold a dangerous line.",
 			0.0,
 			0.0,
-			"Stuid"
+			"Stuid",
+			"old-grumbrand"
 		)
 	)
 	result.append(
@@ -739,7 +743,8 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"A field-medic whose steady presence makes mistakes survivable.",
 			0.0,
 			0.0,
-			"Haeren"
+			"Haeren",
+			"wyneth-hallow-tide"
 		)
 	)
 	result.append(
@@ -752,7 +757,8 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"A fast, fragile opportunist with an eye for a weak flank.",
 			0.0,
 			0.0,
-			"Fickah"
+			"Fickah",
+			"ressa-quickfingers"
 		)
 	)
 	result.append(
@@ -765,7 +771,8 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"A renowned Steel Day bruiser who demands a proven leader.",
 			10.0,
 			0.0,
-			"Kero"
+			"Kero",
+			"korrath-ninefold"
 		)
 	)
 	result.append(
@@ -778,7 +785,8 @@ func recruitable_candidates() -> Array[PartyMember]:
 			"A Deep Salvage veteran who only trusts a notorious name.",
 			0.0,
 			8.0,
-			"Vhorr"
+			"Vhorr",
+			"maura-greyfen"
 		)
 	)
 	result.append_array(custom_recruits)

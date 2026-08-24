@@ -42,6 +42,14 @@ const COMPANION_QUESTS := {
 	"korrath-ninefold": KORRATH_QUEST,
 	"maura-greyfen": MAURA_QUEST,
 }
+const COMPANION_QUEST_COMPLETION_FLAGS := {
+	"serai-lun": "party_serai_lun_resolved",
+	"wyneth-hallow-tide": "party_wyneth_resolved",
+	"old-grumbrand": "party_grumbrand_resolved",
+	"ressa-quickfingers": "party_ressa_quickfingers_resolved",
+	"korrath-ninefold": "party_korrath_ninefold_resolved",
+	"maura-greyfen": "party_maura_greyfen_resolved",
+}
 const COMPANION_QUEST_DIALOGUE := {
 	"serai-lun": "res://dialogue/companions/serai_lun.dialogue",
 	"wyneth-hallow-tide": "res://dialogue/companions/wyneth_hallow_tide.dialogue",
@@ -403,16 +411,43 @@ func _offer_companion_quests_for_party() -> void:
 			offer(quest)
 
 
-## Completes a companion's personal quest and records the one Renown write it
-## grants. Dialogue supplies the id/quest pair so a stale or mismatched
-## reference cannot silently resolve the wrong companion's quest.
+## Completes a companion's personal quest and records its one Renown write.
+## Dialogue supplies the branch reward as data, while this method owns the
+## completion flag and validates the full contract before changing any state.
 func resolve_companion_quest(
 	companion_id: String, quest: FlagQuest, renown_delta: float, cause: String
 ) -> bool:
-	if companion_quest_for(companion_id) != quest or not is_active(quest) or not flags_met(quest):
+	var configured_quest: FlagQuest = companion_quest_for(companion_id)
+	var completion_flag: String = str(COMPANION_QUEST_COMPLETION_FLAGS.get(companion_id, ""))
+	if (
+		configured_quest == null
+		or configured_quest != quest
+		or completion_flag.is_empty()
+		or not is_active(quest)
+		or is_done(quest)
+		or quest.required_flags.size() != 1
+		or quest.required_flags[0] != completion_flag
+		or not is_finite(renown_delta)
+		or renown_delta <= 0.0
+		or cause.strip_edges().is_empty()
+	):
 		return false
-	turn_in(quest, "resolved", false)
+
+	var active_quest: FlagQuest = null
+	for candidate: Quest in QuestSystem.get_active_quests():
+		if candidate == quest and candidate is FlagQuest:
+			active_quest = candidate
+			break
+	if active_quest == null:
+		return false
+
+	# Set the flag first so turn_in() can satisfy the quest's required_flags,
+	# then verify completion before the append-only Renown write — a silent
+	# turn_in() no-op must roll the flag back, never leak a ledger entry.
+	GameState.set_flag(completion_flag, true)
+	turn_in(active_quest, "resolved", false)
 	if not is_done(quest):
+		GameState.set_flag(completion_flag, false)
 		return false
 	Renown.gain_reputation("player", renown_delta, cause, "party")
 	SaveGame.request_autosave("companion-quest-resolved")

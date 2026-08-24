@@ -1,4 +1,3 @@
-# PROVISIONAL — CANON REVIEW REQUIRED
 ~ start
 => hub
 
@@ -13,12 +12,10 @@ Ressa Quickfingers: See something open, or are you just looking?
 	Ressa Quickfingers: That is my question for you. I can take the gap before it closes, or I can close it before someone else pays for it.
 	Ressa Quickfingers: Which do you expect from me?
 	- "Take the opening while it exists. Hesitation wastes the advantage." [#consequence=Ressa treats a weak flank as an opportunity unless ordered otherwise.]
-		do GameState.set_flag("party_ressa_quickfingers_resolved", true)
 		do QuestRegistry.resolve_companion_quest("ressa-quickfingers", QuestRegistry.RESSA_QUEST, 6.0, "Told Ressa to take the opening before it closes")
 		Ressa Quickfingers: Clear enough. If you want it left alone, say so before I reach it.
 		=> END
 	- "Close it when the party would pay. An advantage is not worth exposing everyone else." [#consequence=Ressa weighs the party's exposure before taking a weak flank.]
-		do GameState.set_flag("party_ressa_quickfingers_resolved", true)
 		do QuestRegistry.resolve_companion_quest("ressa-quickfingers", QuestRegistry.RESSA_QUEST, 6.0, "Told Ressa to protect the party before taking an opening")
 		Ressa Quickfingers: Slower, then. Not slow. I can work with that.
 		=> END
