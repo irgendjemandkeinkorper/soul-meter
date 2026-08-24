@@ -83,3 +83,19 @@ differential assertions and the four pre-existing presentation/input failures in
 unchanged failure/error baseline.
 
 Per the stop rule, no further tuning or iteration was attempted after this second failure.
+
+## To-hit candidate sweep — 2026-08-24 (#169 ruling follow-through)
+
+Owner ratified reading 2: build a to-hit system, rerun the unchanged harness once.
+`tools/to_hit_sweep.gd` swept base ∈ {70,75,80,85,90} × height-mod/step ∈ {0,4,6,8} under
+clamp 5–95 with the ratified facing +0/+8/+15. Key findings (full table in the tool's output):
+
+- Any base ≥ 80 pushes back-attack (+15) into the 95 cap even on flat ground — the ratified
+  facing bonus goes partially inert. Base ≤ 75 keeps side/back expression intact.
+- Height mod 4–6/step doubles the positional-vs-naive expected-value ratio (≈2.1–2.3×) versus
+  damage-only (the 6-HP run-2 gap), chiefly by ALSO penalizing attacks made uphill (-dh).
+- The stylized duel P(win) saturates >96% for all candidates — ranking evidence only; the gate
+  evidence remains the unchanged harness rerun after implementation.
+
+Candidate shortlist presented for ratification: A) base 75 / +6 per step, B) base 70 / +4,
+C) base 80 / +6 (accepts capped back-attacks as diminishing-returns design). Clamp 5–95 in all.
