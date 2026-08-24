@@ -49,7 +49,9 @@ func test_accept_defeat_loot_return_and_choose_companies_reward() -> void:
 	auto_free(battle)
 	battle.start(&"bog-wight")
 	battle.enemies[0].hp = 1
-	assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
+	# Grid battles roll to-hit (#169/#98) — strike until the battle ends.
+	while not battle.ended:
+		assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
 	assert_bool(GameState.get_flag("defeated_bog_wight")).is_true()
 	assert_bool(proof._available).is_true()
 

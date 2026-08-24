@@ -152,3 +152,26 @@ with its post-hoc caveat) to: positional victory AND (naive defeat OR naive lose
 member while positional loses none with an HP differential ≥ 50% of max party HP). Run 4
 meets it. The harness and the gdUnit gate suite now assert the amended threshold; the suite
 runs green with no skips. Grid + CT stand as the ratified chassis.
+
+## Run 5 — final ruleset (Edge in to-hit, enemy Edge authored) — 2026-08-24
+
+The owner's "Both" ruling (Edge in the curve + competent T-1 fixtures) invalidated run 4's
+evidence, and the +16% ally-vs-Edge-less-enemy asymmetry was closed by authoring PROVISIONAL
+enemy Edge through the Pandora seed → generator path (wight 2, boar 3, hound 4, scavenger 4,
+bloodbellow 2, guard 3). One full protocol rerun under the final rules: selection picked
+`phase2-mixed-whipsaw` (naive 24/54); comparison there: positional victory 41/54 with both
+members alive vs naive victory 24/54 with ONE MEMBER DEAD. The owner's final ruling: the
+member-loss differential is the decisive proof; the first amendment's ≥50%-HP rider is
+dropped. **Gate T-2: PASSED under the final ruleset.** Harness, gate suite, and amendment §5
+all encode the final threshold.
+
+### Note — in-suite determinism containment (2026-08-24)
+
+The harness is byte-deterministic across fresh processes (verified repeatedly). Running it
+twice IN-PROCESS inside gdUnit after certain suite combinations (`combat_resolution` + `e2e`
++ `integration`) drifts by single hit-rolls (e.g. demon naive 50→49 HP) even with
+GameState (flags, combat knowledge, Vär harmony, skills, soul) snapshot-restored between
+runs — some ambient engine state interaction, root cause unidentified. Contained by making
+the gdUnit gate test spawn the canonical CLI harness as subprocesses and byte-compare
+stdout, which is the gate's actual evidence standard. If in-process determinism ever
+matters elsewhere, this note is the starting point.

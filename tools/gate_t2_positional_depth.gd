@@ -17,10 +17,10 @@ extends SceneTree
 ##   faces the party through the BattlefieldModel capability seam.
 ## - PASS threshold (OWNER-AMENDED 2026-08-24 after run 4, #169 — the original "Arm A victory
 ##   AND Arm B defeat" stands as the first clause): Arm A victory AND EITHER Arm B defeat OR
-##   (Arm B loses at least one party member while Arm A loses none, AND Arm A preserves at
-##   least 50% of max party HP more than Arm B). The amendment is post-hoc to run 4 and is
-##   recorded as such in docs/gate-t2-evidence.md; the differential it codifies (a party death
-##   plus a 33/54 HP swing) was produced under a selection rule and seed fixed in advance.
+##   (Arm B loses at least one party member while Arm A loses none). The HP-differential
+##   rider from the first amendment was dropped by the owner's final ruling (2026-08-24,
+##   final-ruleset rerun): a party death against a full-strength squad is the decisive
+##   differential. History and caveats: docs/gate-t2-evidence.md.
 ##
 ## Canonical invocation:
 ##   SOUL_METER_HEADLESS=1 godot --headless --path . \
@@ -61,7 +61,7 @@ static func run_comparison() -> Dictionary:
 		"encounter_id": String(encounter_id),
 		"selection": selection,
 		"seed": SEED,
-		"threshold": "positional victory AND (naive defeat OR (naive member lost, positional none, HP differential >= 50% of max))",
+		"threshold": "positional victory AND (naive defeat OR (naive member lost, positional none))",
 		"positional": positional,
 		"naive": naive,
 		"passed": _meets_threshold(positional, naive),
@@ -70,7 +70,6 @@ static func run_comparison() -> Dictionary:
 
 const PARTY_SIZE := 2
 const MAX_PARTY_HP := 54
-const AMENDED_HP_DIFFERENTIAL := 27  # 50% of MAX_PARTY_HP, owner-amended threshold 2026-08-24
 
 
 static func _meets_threshold(positional: Dictionary, naive: Dictionary) -> bool:
@@ -80,8 +79,7 @@ static func _meets_threshold(positional: Dictionary, naive: Dictionary) -> bool:
 		return true
 	var positional_full := int(positional.get("party_survivors", 0)) == PARTY_SIZE
 	var naive_lost_member := int(naive.get("party_survivors", 0)) < PARTY_SIZE
-	var differential := int(positional.get("party_hp", 0)) - int(naive.get("party_hp", 0))
-	return positional_full and naive_lost_member and differential >= AMENDED_HP_DIFFERENTIAL
+	return positional_full and naive_lost_member
 
 
 ## The pre-registered selection rule (#169, 2026-08-24). Runs ONLY the naive arm per candidate;

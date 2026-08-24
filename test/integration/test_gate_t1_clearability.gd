@@ -85,6 +85,7 @@ func _self_play(
 				var stillpoint := ElementsData.triad(&"stillpoint")
 				controller.apply_balance_effect(stillpoint.unique_effect_parameters, ally)
 			var target := _first_living(enemies)
+			_face_toward(controller, ally, target)
 			var action_id := &"strike"
 			if build_id == &"caster":
 				action_id = &"gate-t1-cast"
@@ -101,6 +102,28 @@ func _self_play(
 	result["remaining_hp"] = ally.hp
 	result["turns"] = guard
 	return result
+
+
+const _FACING_ORDER: Array[StringName] = [&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"]
+
+
+## Positional competence (owner 2026-08-24, with #169's to-hit): a representative
+## player faces their target. Without this the fixtures donate free flank arcs to
+## the live enemy positional AI and stop representing play.
+func _face_toward(controller: CombatController, ally: BattleActor, target: BattleActor) -> void:
+	if target == null:
+		return
+	var battlefield := controller.battlefield
+	var ally_position: Dictionary = battlefield.describe_position(battlefield.position_of(ally))
+	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
+	if not ally_position.has("cell") or not target_position.has("cell"):
+		return
+	var delta: Vector2i = (target_position["cell"] as Vector2i) - (ally_position["cell"] as Vector2i)
+	if delta == Vector2i.ZERO:
+		return
+	var index := int(round(atan2(delta.y, delta.x) / (PI / 4.0)))
+	index = ((index % _FACING_ORDER.size()) + _FACING_ORDER.size()) % _FACING_ORDER.size()
+	battlefield.set_facing(ally, _FACING_ORDER[index])
 
 
 func _build_actor(build_id: StringName) -> BattleActor:

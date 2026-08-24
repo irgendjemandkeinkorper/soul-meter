@@ -23,6 +23,7 @@ const PROVISIONAL_FACING_RULES := {
 const PROVISIONAL_TO_HIT := {
 	"base": 70,
 	"height_mod_per_step": 4,
+	"edge_mod_per_point": 2,  # owner 2026-08-24: + (attacker Edge - defender Edge) x 2%
 	"clamp_lo": 5,
 	"clamp_hi": 95,
 }
@@ -98,9 +99,11 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var hit_roll := 0
 	var hit := true
 	if to_hit_enabled:
+		var edge_delta := int(unit.get("edge", 0)) - int(target.get("edge", 0))
 		hit_chance = clampi(
 			int(PROVISIONAL_TO_HIT["base"]) + hit_bonus
-				+ int(PROVISIONAL_TO_HIT["height_mod_per_step"]) * signed_height_steps,
+				+ int(PROVISIONAL_TO_HIT["height_mod_per_step"]) * signed_height_steps
+				+ int(PROVISIONAL_TO_HIT["edge_mod_per_point"]) * edge_delta,
 			int(PROVISIONAL_TO_HIT["clamp_lo"]),
 			int(PROVISIONAL_TO_HIT["clamp_hi"]),
 		)

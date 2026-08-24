@@ -142,7 +142,9 @@ func test_defeat_records_authored_loss_consequence_once() -> void:
 func test_non_story_encounter_uses_the_same_authored_outcome_path() -> void:
 	battle.start(EncounterIds.BOG_WIGHT)
 	battle.enemies[0].hp = 1
-	battle.use_action(BattleScript.ACTION_STRIKE)
+	# Grid battles roll to-hit (#169/#98) — strike until the battle ends.
+	while not battle.ended:
+		assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
 
 	assert_str(battle.last_result.outcome_id).is_equal("slain")
 	assert_str(battle.last_result.cause).contains("grove margins")

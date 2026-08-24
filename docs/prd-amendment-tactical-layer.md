@@ -378,12 +378,13 @@ chassis introduces.
    demonstrate that, the grid was the wrong trade, and that escalates to the human
    immediately.* A gate that cannot fail is not a gate.
 
-   > **OWNER AMENDMENT (2026-08-24, #169):** after four runs (evidence:
-   > `docs/gate-t2-evidence.md`), the binary victory/defeat clause is amended to: positional
-   > victory AND (naive defeat OR naive loses a party member while positional loses none with
-   > an HP differential ≥ 50% of max party HP). Criterion 2 is **PASSED** under run 4
-   > (`phase2-undead`, selected by a pre-registered blind rule: 48/54 HP & 2 alive vs 15/54 &
-   > 1 alive). The amendment is post-hoc and recorded as such.
+   > **OWNER AMENDMENT (2026-08-24, #169; finalized same day after the Edge rerun):** the
+   > binary victory/defeat clause is amended to: positional victory AND (naive defeat OR
+   > naive loses a party member while positional loses none). Criterion 2 is **PASSED**
+   > under the final ruleset (to-hit with Edge, enemy Edge authored): on blind-rule-selected
+   > `phase2-mixed-whipsaw`, naive play loses a party member at 24/54 HP while positional
+   > play keeps both members at 41/54. Full four-run history and post-hoc caveats:
+   > `docs/gate-t2-evidence.md`.
 
 3. **All three orphaned P0s demonstrably work:** a Defining Strike resolves at its CT price;
    the Balance axis visibly changes the board through weather bias; a speech check ends a

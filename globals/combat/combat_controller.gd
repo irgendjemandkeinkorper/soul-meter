@@ -391,6 +391,7 @@ static func calculate_damage(
 			# combat keeps its legacy auto-hit behavior.
 			"to_hit_enabled": not positional_context.is_empty(),
 			"tick": int(seed),
+			"edge": int(attacker.attributes.get(&"edge", 0)),
 		},
 		{
 			"id": "attack",
@@ -403,6 +404,7 @@ static func calculate_damage(
 				"id": String(target.combat_id),
 				"hp": target.hp,
 				"element_id": target.element_id,
+				"edge": int(target.attributes.get(&"edge", 0)),
 			},
 			"facing": positional_context.get("facing", {}),
 			"height_advantage_steps": int(

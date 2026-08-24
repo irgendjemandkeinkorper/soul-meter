@@ -362,7 +362,10 @@ func test_defeat_retry_preserves_recovery_and_applies_loss_once() -> void:
 	auto_free(retry_win)
 	retry_win.start(EncounterIds.BOG_WIGHT)
 	retry_win.enemies[0].hp = 1
-	retry_win.use_action(BattleScript.ACTION_STRIKE)
+	# Grid battles roll to-hit (#169/#98 rulings) — a single strike may whiff, so
+	# strike until the battle ends, as the retry-routes test above already does.
+	while not retry_win.ended:
+		assert_bool(retry_win.use_action(BattleScript.ACTION_STRIKE)).is_true()
 	assert_bool(GameState.get_flag("defeated_bog_wight")).is_true()
 	assert_str(retry_win.last_result.outcome_id).is_equal("slain")
 

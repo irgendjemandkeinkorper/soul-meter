@@ -482,6 +482,7 @@ func _seed_combatants() -> void:
 	Pandora.create_property(root, "Max HP", "int")
 	Pandora.create_property(root, "Attack", "int")
 	Pandora.create_property(root, "Defense", "int")
+	Pandora.create_property(root, "Edge", "int")
 	Pandora.create_property(root, "Balance Affinity", "int")
 	Pandora.create_property(root, "Balance Pressure", "int")
 	Pandora.create_property(root, "Element Id", "string")
@@ -489,13 +490,16 @@ func _seed_combatants() -> void:
 	# Element Id is a Wheel id (globals/elements/element_wheel.gd's ORDER) read as this
 	# combatant's TARGET-side attunement — see tools/seed_chapter_one.gd's _seed_combatants()
 	# for the thematic reasoning; keep the two seeders in lockstep.
+	# Edge (9th column) is PROVISIONAL enemy accuracy/evasion (#169/#98 owner ruling
+	# 2026-08-24: to-hit adds (attacker Edge - defender Edge) x 2%). Values follow the
+	# creature fiction: nimble skirmishers high, armored or shambling low.
 	var rows := [
-		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "molm"],
-		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "terra"],
-		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, ""],
-		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, ""],
-		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, ""],
-		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24, ""],
+		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "molm", 2],
+		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "terra", 3],
+		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, "", 4],
+		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, "", 4],
+		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, "", 2],
+		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24, "", 3],
 	]
 	for row in rows:
 		var entity := Pandora.create_entity(row[0], root)
@@ -530,6 +534,7 @@ func _assign_combatant(entity: PandoraEntity, row: Array) -> void:
 	_assign(entity, "Balance Affinity", row[5])
 	_assign(entity, "Balance Pressure", row[6])
 	_assign(entity, "Element Id", row[7])
+	_assign(entity, "Edge", row[8] if row.size() > 8 else 0)
 
 
 func _assign_encounter(entity: PandoraEntity, row: Array) -> void:

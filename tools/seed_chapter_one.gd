@@ -25,6 +25,7 @@ const COMBATANT_PROPERTIES := [
 	["Balance Affinity", "int"],
 	["Balance Pressure", "int"],
 	["Element Id", "string"],
+	["Edge", "int"],
 ]
 const ENCOUNTER_PROPERTIES := [
 	["Encounter Id", "string"],
@@ -140,13 +141,15 @@ func _seed_combatants(root: PandoraCategory) -> void:
 	# Loam-Maddened Boar (a beast maddened by corrupted soil) is Terra (stone/the earthwork).
 	# Left blank for combatants with no authored attunement yet — they keep resolving at the
 	# ElementMatrix neutral IDENTITY_ROW, unchanged from before this column existed.
+	# Edge (9th column): PROVISIONAL accuracy/evasion — keep in lockstep with
+	# tools/seed_pandora.gd (see that file's rationale comment).
 	var rows := [
-		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "molm"],
-		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "terra"],
-		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, ""],
-		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, ""],
-		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, ""],
-		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24, ""],
+		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "molm", 2],
+		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "terra", 3],
+		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, "", 4],
+		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, "", 4],
+		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, "", 2],
+		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24, "", 3],
 	]
 	for row in rows:
 		_upsert(
@@ -161,6 +164,7 @@ func _seed_combatants(root: PandoraCategory) -> void:
 				"Balance Affinity": row[5],
 				"Balance Pressure": row[6],
 				"Element Id": row[7],
+				"Edge": row[8] if row.size() > 8 else 0,
 			}
 		)
 

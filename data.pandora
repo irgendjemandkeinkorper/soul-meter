@@ -2865,6 +2865,10 @@
 						"type": "string",
 						"value": "Bog Wight"
 					},
+					"Edge": {
+						"type": "int",
+						"value": 2
+					},
 					"Element Id": {
 						"type": "string",
 						"value": "molm"
@@ -2905,6 +2909,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Loam-Maddened Boar"
+					},
+					"Edge": {
+						"type": "int",
+						"value": 3
 					},
 					"Element Id": {
 						"type": "string",
@@ -2947,6 +2955,10 @@
 						"type": "string",
 						"value": "Gnaal Breach-Hound"
 					},
+					"Edge": {
+						"type": "int",
+						"value": 4
+					},
 					"Element Id": {
 						"type": "string",
 						"value": ""
@@ -2987,6 +2999,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Gnaal Rift-Scavenger"
+					},
+					"Edge": {
+						"type": "int",
+						"value": 4
 					},
 					"Element Id": {
 						"type": "string",
@@ -3029,6 +3045,10 @@
 						"type": "string",
 						"value": "Mustered Bloodbellow"
 					},
+					"Edge": {
+						"type": "int",
+						"value": 2
+					},
 					"Element Id": {
 						"type": "string",
 						"value": ""
@@ -3069,6 +3089,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Cleaned Jawbrace Guard"
+					},
+					"Edge": {
+						"type": "int",
+						"value": 3
 					},
 					"Element Id": {
 						"type": "string",
@@ -15437,12 +15461,19 @@
 				"_id": "504.0",
 				"_name": "Element Id",
 				"_type": "string"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "505.0",
+				"_name": "Edge",
+				"_type": "int"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 504.0
+			"default": 505.0
 		}
 	},
 	"_version": 1
