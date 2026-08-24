@@ -410,6 +410,39 @@ func _assert_journey_prerequisites() -> void:
 	assert_int(ChapterOneProgress.current_stage()).is_equal(ChapterOneProgress.Stage.SECURE_ROAD)
 
 
+## #98 acceptance walk: a fresh game's protagonist fights the Broken Muster,
+## the ruling grants the milestone level (+3 advancement points, owner-ratified),
+## and the points are spendable from the character sheet screen.
+func test_milestone_level_from_the_muster_ruling_is_spendable_on_the_sheet() -> void:
+	_reset_fixture()
+	_assert_journey_prerequisites()
+	var vex := GameState.protagonist()
+	assert_object(vex).is_not_null()
+	vex.attributes["spark"] = 5
+	var level_before := vex.level
+	assert_int(vex.advancement_points).is_equal(0)
+
+	_resolve_vanguard()
+	_resolve_muster(&"slain")
+	GameState.set_flag("reported_bloodbellow", true)
+	assert_bool(QuestRegistry.resolve_broken_muster(&"hold-both")).is_true()
+
+	assert_int(vex.level).is_equal(level_before + 1)
+	assert_int(vex.advancement_points).is_equal(Advancement.POINTS_PER_LEVEL)
+
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
+	await runner.simulate_frames(2)
+	var buy := runner.find_child("Buy_lore", true, false) as Button
+	assert_object(buy).is_not_null()
+	assert_bool(buy.disabled).is_false()
+	buy.pressed.emit()
+	await runner.simulate_frames(1)
+
+	assert_float(float(vex.skill_percentages.get("lore", 0.0))).is_equal(5.0)
+	assert_int(vex.advancement_points).is_less(Advancement.POINTS_PER_LEVEL)
+	UIManager.close_all()
+
+
 func _resolve_vanguard() -> void:
 	var battle = BattleScript.new()
 	auto_free(battle)

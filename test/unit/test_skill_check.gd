@@ -146,3 +146,33 @@ func test_expert_reroll_key_separates_two_members_sharing_a_display_name() -> vo
 	assert_str(
 		SkillCheck._reroll_key(a, "lore", "scene")
 	).is_not_equal(SkillCheck._reroll_key(b, "lore", "scene"))
+
+
+func test_resolve_appends_to_the_check_log() -> void:
+	var member := _member()
+	member.attributes["spark"] = 5
+	var forced: Array[int] = [10]
+	service.resolve("lore", member, 0.0, "log-scene", forced)
+
+	var checks := service.recent_checks()
+	assert_int(checks.size()).is_equal(1)
+	var entry: Dictionary = checks[0]
+	assert_bool(bool(entry.success)).is_true()
+	assert_int(int(entry.roll)).is_equal(10)
+	assert_int(int(entry.effective_percent)).is_equal(40)
+	assert_str(str(entry.skill)).is_equal("lore")
+	assert_str(str(entry.scene_id)).is_equal("log-scene")
+
+
+func test_check_log_is_capped_at_twenty_newest_entries() -> void:
+	var member := _member()
+	member.attributes["spark"] = 5
+	for i in 25:
+		var forced: Array[int] = [1 + i]
+		service.resolve("lore", member, 0.0, "cap-scene", forced)
+
+	var checks := service.recent_checks()
+	assert_int(checks.size()).is_equal(SkillCheckService.CHECK_LOG_CAP)
+	# Oldest five were dropped; the newest entry is the last resolve's roll.
+	assert_int(int(checks[0].roll)).is_equal(6)
+	assert_int(int(checks[checks.size() - 1].roll)).is_equal(25)

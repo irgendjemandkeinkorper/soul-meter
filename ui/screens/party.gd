@@ -56,6 +56,13 @@ func _build() -> void:
 	_bio_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	sheet.add_child(_bio_lbl)
 
+	var sheet_button := Button.new()
+	sheet_button.name = "CharacterSheetButton"
+	sheet_button.text = "Character Sheet"
+	sheet_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	sheet_button.pressed.connect(_on_sheet_button_pressed)
+	sheet.add_child(sheet_button)
+
 	_quest_button = Button.new()
 	_quest_button.name = "PersonalQuestButton"
 	_quest_button.visible = false
@@ -91,6 +98,13 @@ func _on_selected(idx: int) -> void:
 	var dialogue_path := QuestRegistry.companion_quest_dialogue_for(m.id)
 	_quest_button.visible = not dialogue_path.is_empty()
 	_quest_button.text = "Talk to %s" % m.display_name
+
+
+## FR-604 (#100): the full sheet lives on its own screen.
+func _on_sheet_button_pressed() -> void:
+	var sheet_screen := UIManager.open(UIManager.CHARACTER_SHEET, true)
+	if _selected_member != null and sheet_screen != null:
+		sheet_screen.call_deferred("select_member", _selected_member.id)
 
 
 ## FR-505: opens the companion's personal-quest dialogue, mirroring how

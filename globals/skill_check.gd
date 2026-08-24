@@ -36,6 +36,11 @@ const TIER_BONUS: Dictionary = {
 var fizzle_table: FizzleTable = DEFAULT_FIZZLE_TABLE
 var random_number_generator := RandomNumberGenerator.new()
 var _expert_rerolls_used: Dictionary = {}
+## FR-205 (#100): ring buffer of the most recent committed checks so the character
+## sheet can surface the numbers (skill%, roll, result). UI-facing convenience —
+## deliberately NOT serialized into saves.
+const CHECK_LOG_CAP := 20
+var _check_log: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -101,12 +106,26 @@ func resolve(
 			var reroll := _next_roll(rolls)
 			succeeded = _roll_succeeds(reroll, effective)
 			first_roll = reroll
-	return {
+	var result := {
 		"success": succeeded,
 		"roll": first_roll,
 		"effective_percent": effective,
 		"rerolled": used_reroll,
 	}
+	var entry := result.duplicate(true)
+	entry["skill"] = String(normalized_skill)
+	entry["subject"] = subject.display_name if subject != null else ""
+	entry["modifiers"] = situational_modifiers
+	entry["scene_id"] = scene_id
+	_check_log.append(entry)
+	while _check_log.size() > CHECK_LOG_CAP:
+		_check_log.pop_front()
+	return result
+
+
+## FR-205: most-recent-last list of committed checks (see _check_log above).
+func recent_checks() -> Array[Dictionary]:
+	return _check_log.duplicate(true)
 
 
 ## Dialogue conditions are previews: evaluating a response must not roll before

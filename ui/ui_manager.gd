@@ -11,6 +11,7 @@ extends CanvasLayer
 const INVENTORY := preload("res://ui/screens/inventory.tscn")
 const PARTY := preload("res://ui/screens/party.tscn")
 const STANDING := preload("res://ui/screens/standing.tscn")
+const CHARACTER_SHEET := preload("res://ui/screens/character_sheet.tscn")
 const TAVERN := preload("res://ui/screens/tavern.tscn")
 const JOURNAL := preload("res://ui/screens/journal.tscn")
 const SHOP := preload("res://ui/screens/shop.tscn")
