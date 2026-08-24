@@ -144,3 +144,11 @@ Status: **threshold still unmet** (naive won at 15 HP with one member dead). The
 differential is no longer marginal — 33 HP and a party death — but the frozen binary
 threshold requires a naive defeat. Escalated to the owner for the final verdict; no further
 runs without a ruling.
+
+## Verdict — Gate T-2 CLOSED as PASSED (owner, 2026-08-24)
+
+The owner amended the §5 threshold (recorded in `docs/prd-amendment-tactical-layer.md` §5.2
+with its post-hoc caveat) to: positional victory AND (naive defeat OR naive loses a party
+member while positional loses none with an HP differential ≥ 50% of max party HP). Run 4
+meets it. The harness and the gdUnit gate suite now assert the amended threshold; the suite
+runs green with no skips. Grid + CT stand as the ratified chassis.

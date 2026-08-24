@@ -14,13 +14,11 @@ func test_comparison_is_byte_deterministic_for_the_registered_seed() -> void:
 	assert_str(JSON.stringify(first)).is_equal(JSON.stringify(second))
 
 
-## SKIPPED pending the #169 human ruling of 2026-08-24: a to-hit system (ratified) must be
-## built and the unchanged harness rerun ONCE. If that rerun still fails, the grid was the
-## wrong trade (amendment §5) — do not un-skip without the rerun evidence on #169.
-func test_positional_policy_wins_where_ablated_policy_loses(
-	do_skip := true,
-	skip_reason := "Gate T-2 red pending #169 to-hit rerun — see issue for the ruling"
-) -> void:
+## Gate T-2 CLOSED as PASSED (#169, owner verdict 2026-08-24) under the owner-amended
+## threshold — see the harness header and docs/gate-t2-evidence.md for the amendment and its
+## post-hoc caveat. This asserts the amended threshold against the pre-registered selection
+## rule's encounter.
+func test_positional_policy_wins_where_ablated_policy_loses() -> void:
 	var harness_script: Script = load(HARNESS_PATH) as Script
 	assert_object(harness_script).is_not_null()
 	if harness_script == null:
@@ -31,5 +29,9 @@ func test_positional_policy_wins_where_ablated_policy_loses(
 	var naive: Dictionary = comparison.get("naive", {})
 
 	assert_str(str(positional.get("outcome", ""))).is_equal("victory")
-	assert_str(str(naive.get("outcome", ""))).is_equal("defeat")
+	assert_int(int(positional.get("party_survivors", 0))).is_equal(2)
+	assert_int(int(naive.get("party_survivors", 0))).is_less(2)
+	assert_int(
+		int(positional.get("party_hp", 0)) - int(naive.get("party_hp", 0))
+	).is_greater_equal(27)
 	assert_bool(bool(comparison.get("passed", false))).is_true()
