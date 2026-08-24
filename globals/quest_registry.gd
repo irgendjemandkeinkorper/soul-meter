@@ -306,6 +306,10 @@ func resolve_broken_muster(ruling_id: StringName) -> bool:
 		str(ruling.get("renown_cause", "")),
 		"dom"
 	)
+	# Milestone leveling (#98, owner 2026-08-24): the Broken Muster ruling is Chapter
+	# 1's first authored level milestone. PROVISIONAL content pick — the milestone
+	# LIST is authoring; the mechanism is ratified.
+	GameState.grant_milestone_level(&"broken-muster")
 	SaveGame.request_checkpoint(SaveGame.Checkpoint.RULING, ruling_key)
 	return true
 

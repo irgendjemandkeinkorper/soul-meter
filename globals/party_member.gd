@@ -25,6 +25,9 @@ extends Resource
 @export var minor_element: String = ""
 
 @export var level: int = 1
+## Unspent point-buy advancement points (#98, D3; granted by story milestones —
+## see GameState.grant_milestone_level and globals/advancement.gd).
+@export var advancement_points: int = 0
 @export var hp: int = 10
 @export var max_hp: int = 10
 @export var attack: int = 5
@@ -59,6 +62,7 @@ func to_dict() -> Dictionary:
 		"major_element": major_element,
 		"minor_element": minor_element,
 		"level": level,
+		"advancement_points": advancement_points,
 		"hp": hp,
 		"max_hp": max_hp,
 		"attack": attack,
@@ -88,6 +92,7 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.major_element = str(data.get("major_element", ""))
 	member.minor_element = str(data.get("minor_element", ""))
 	member.level = int(data.get("level", 1))
+	member.advancement_points = maxi(int(data.get("advancement_points", 0)), 0)
 	member.hp = int(data.get("hp", 10))
 	member.max_hp = int(data.get("max_hp", 10))
 	member.attack = int(data.get("attack", 5))

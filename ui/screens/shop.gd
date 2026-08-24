@@ -70,12 +70,66 @@ func catalog_entries() -> Array[Dictionary]:
 	return GameState.available_vendor_stock(_vendor_id)
 
 
+## D5 Mirror Rewriting (#98, owner-homed here 2026-08-24): one respec per chapter,
+## refunds a chosen member's advancement points. Rendered only for shop_type
+## "mirror"; vendor catalogs are untouched.
+var _mirror_shop := false
+var _rewrite_member_pick: OptionButton
+
+
+func configure_mirror_shop() -> void:
+	_mirror_shop = true
+	if _catalog != null:
+		_render_catalog()
+
+
+func _render_mirror_rewriting() -> void:
+	var row := HBoxContainer.new()
+	row.name = "MirrorRewritingRow"
+	var label := Label.new()
+	label.text = "Mirror Rewriting — unspend every advancement point (once this chapter)"
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	_rewrite_member_pick = OptionButton.new()
+	for index in GameState.party.size():
+		var member: PartyMember = GameState.party[index]
+		_rewrite_member_pick.add_item(member.display_name, index)
+	row.add_child(_rewrite_member_pick)
+	var button := Button.new()
+	button.name = "MirrorRewritingButton"
+	button.text = "Rewrite"
+	button.disabled = not GameState.mirror_rewriting_available() or GameState.party.is_empty()
+	button.pressed.connect(_on_mirror_rewriting)
+	row.add_child(button)
+	_catalog.add_child(row)
+
+
+func _on_mirror_rewriting() -> void:
+	if _rewrite_member_pick == null or GameState.party.is_empty():
+		return
+	var index := clampi(_rewrite_member_pick.selected, 0, GameState.party.size() - 1)
+	var member: PartyMember = GameState.party[index]
+	var result := GameState.use_mirror_rewriting(member)
+	if _status_label != null:
+		_status_label.text = (
+			"The mirror gives back %d point%s." % [
+				int(result.get("refunded_points", 0)),
+				"" if int(result.get("refunded_points", 0)) == 1 else "s",
+			]
+			if bool(result.get("allowed", false))
+			else str(result.get("message", "The mirror stays still."))
+		)
+	_render_catalog()
+
+
 func _render_catalog() -> void:
 	if _catalog == null:
 		return
 	for child in _catalog.get_children():
 		_catalog.remove_child(child)
 		child.queue_free()
+	if _mirror_shop:
+		_render_mirror_rewriting()
 
 	var vendor := VendorData.vendor(_vendor_id)
 	if vendor.is_empty():

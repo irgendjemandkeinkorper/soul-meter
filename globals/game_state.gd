@@ -11,6 +11,7 @@ signal flag_changed(flag: String, value: Variant)
 signal inventory_changed
 signal vendor_stock_changed(vendor_id: String, item_id: String, quantity: int)
 signal party_changed
+signal milestone_level_granted(milestone_id: StringName, new_levels: Dictionary)
 signal locale_changed(locale: String)
 signal var_harmony_changed(actor_id: String, value: int, delta: int, source: StringName)
 signal combat_knowledge_changed(archetype_id: String)
@@ -693,6 +694,48 @@ func custom_recruit_chargen_unlocked() -> bool:
 
 ## Writes a chargen build into the recruitable roster instead of the player-identity
 ## slot (recruit mode). Given a unique id if one collides with an existing recruit.
+## Milestone leveling (#98, owner ruling 2026-08-24): levels are granted ONLY at
+## authored story milestones — never kill/use XP. Idempotent per milestone id via a
+## flag, so replays and re-entrant dialogue cannot double-grant. Levels the active
+## party AND player-authored custom recruits; the hand-authored tavern bench is
+## regenerated per visit by recruitable_candidates() and so has no persistent level
+## to advance (documented existing behavior).
+func grant_milestone_level(milestone_id: StringName) -> bool:
+	var flag := "milestone_level_%s" % String(milestone_id)
+	if flag_is_true(flag):
+		return false
+	set_flag(flag, true)
+	var new_levels := {}
+	for member: PartyMember in party:
+		Advancement.grant_level(member)
+		new_levels[member.id] = member.level
+	for member: PartyMember in custom_recruits:
+		Advancement.grant_level(member)
+		new_levels[member.id] = member.level
+	milestone_level_granted.emit(milestone_id, new_levels)
+	party_changed.emit()
+	return true
+
+
+const MIRROR_REWRITING_FLAG := "mirror_rewriting_used_ch1"
+
+
+## D5: one Mirror Rewriting per chapter (owner-homed in the Mirror Shop screen,
+## 2026-08-24). The single chapter use refunds ONE chosen member.
+func mirror_rewriting_available() -> bool:
+	return not flag_is_true(MIRROR_REWRITING_FLAG)
+
+
+func use_mirror_rewriting(member: PartyMember) -> Dictionary:
+	if not mirror_rewriting_available():
+		return {"allowed": false, "blocked_by": "chapter_limit",
+			"message": "The mirror has already rewritten someone this chapter."}
+	var result := Advancement.mirror_rewriting(member)
+	set_flag(MIRROR_REWRITING_FLAG, true)
+	party_changed.emit()
+	return result
+
+
 func add_custom_recruit(member: PartyMember) -> void:
 	var taken_ids := {}
 	for candidate in recruitable_candidates():
