@@ -99,3 +99,26 @@ clamp 5–95 with the ratified facing +0/+8/+15. Key findings (full table in the
 
 Candidate shortlist presented for ratification: A) base 75 / +6 per step, B) base 70 / +4,
 C) base 80 / +6 (accepts capped back-attacks as diminishing-returns design). Clamp 5–95 in all.
+
+## Rerun 3 — to-hit live (ratified candidate B) — 2026-08-24
+
+Status: **FAIL — hard §5 escalation; no further attempts without an owner decision.**
+
+The ratified to-hit curve (base 70, +4/step signed height, clamp 5–95, facing +0/+8/+15) is
+implemented in `Resolution.resolve()` behind `to_hit_enabled` (grid combat opts in via
+positional context; zone combat keeps legacy auto-hit). Deterministic roll hashed from
+(seed, tick, battle_id, ability, attacker, target); a miss deals 0 (bypassing the 1-damage
+floor), pays CT, keeps source residue, skips target detonation. 26 focused cases green.
+
+Unchanged harness (`phase2-demon`, seed 1692002, same threshold):
+
+| Arm | Outcome | Party HP | Moves | Rear attacks | Decisions |
+|---|---:|---:|---:|---:|---:|
+| Positional | Victory | 46 | 14 | 2 | 24 |
+| Naive | Victory | 40 | 4 | 0 | 14 |
+
+To-hit demonstrably engaged (whiffs changed both arms' action counts), yet the naive arm still
+wins with both members alive. The binding constraint is now the encounter's kill-rate margin:
+enemies die before their pressure can accumulate into a loss, so **no per-cast modifier of any
+size can flip this encounter's outcome**. That is an encounter-slack finding, not further
+evidence about the positional rules themselves.

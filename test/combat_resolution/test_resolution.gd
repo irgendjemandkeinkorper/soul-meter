@@ -112,6 +112,61 @@ func test_side_and_back_facing_use_ratified_damage_and_hit_bonuses() -> void:
 	assert_int(back["hit_bonus"]).is_equal(15)
 
 
+func test_to_hit_disabled_by_default_and_always_hits() -> void:
+	var result: Dictionary = ResolutionScript.resolve(_walkthrough_context())
+	assert_bool(result["hit"]).is_true()
+	assert_int(result["hit_chance"]).is_equal(100)
+	assert_int(result["hit_roll"]).is_equal(0)
+
+
+func test_to_hit_chance_uses_ratified_curve_and_clamps() -> void:
+	# base 70 + back 15 + 4*2 = 93
+	var context := _walkthrough_context()
+	context["to_hit_enabled"] = true
+	context["facing"] = {"id": &"back"}
+	context["height_advantage_steps"] = 2
+	var result: Dictionary = ResolutionScript.resolve(context)
+	assert_int(result["hit_chance"]).is_equal(93)
+
+	# base 70 + front 0 - 4*20 clamps to the 5 floor
+	context["facing"] = {"id": &"front"}
+	context["height_advantage_steps"] = -20
+	result = ResolutionScript.resolve(context)
+	assert_int(result["hit_chance"]).is_equal(5)
+
+	# base 70 + back 15 + 4*10 clamps to the 95 cap
+	context["facing"] = {"id": &"back"}
+	context["height_advantage_steps"] = 10
+	result = ResolutionScript.resolve(context)
+	assert_int(result["hit_chance"]).is_equal(95)
+
+
+func test_to_hit_roll_is_deterministic_and_a_miss_deals_zero_without_detonation() -> void:
+	var context := _walkthrough_context()
+	context["to_hit_enabled"] = true
+	context["facing"] = {"id": &"front"}
+	context["height_advantage_steps"] = -20  # 5% chance: find a missing seed fast
+	var missing_seed := -1
+	for candidate in range(1, 400):
+		context["seed"] = candidate
+		var probe: Dictionary = ResolutionScript.resolve(context)
+		if not bool(probe["hit"]):
+			missing_seed = candidate
+			break
+	assert_int(missing_seed).is_greater(0)
+
+	context["seed"] = missing_seed
+	var miss: Dictionary = ResolutionScript.resolve(context)
+	var repeat: Dictionary = ResolutionScript.resolve(context)
+	assert_bool(miss == repeat).is_true()
+	assert_bool(miss["hit"]).is_false()
+	assert_int(miss["damage"]).is_equal(0)
+	assert_int(miss["writes"][0]["delta"]).is_equal(0)
+	for write: Dictionary in miss["writes"]:
+		if write.get("kind", "") == "tile_state":
+			assert_str(str(write.get("operation", ""))).is_not_equal("detonation")
+
+
 func _walkthrough_context() -> Dictionary:
 	return {
 		"battle_id": "walkthrough",

@@ -387,6 +387,10 @@ static func calculate_damage(
 		{
 			"id": String(attacker.combat_id),
 			"attack_scale": attacker.attack_scale,
+			# To-hit (#169 ruling): grid callers supply positional context and opt in; zone
+			# combat keeps its legacy auto-hit behavior.
+			"to_hit_enabled": not positional_context.is_empty(),
+			"tick": int(seed),
 		},
 		{
 			"id": "attack",
@@ -409,6 +413,10 @@ static func calculate_damage(
 	)
 	var raw_damage := 0
 	if bool(result.get("allowed", false)):
+		if not bool(result.get("hit", true)):
+			# A rolled miss deals nothing: bypass the 1-damage floor below, which exists for
+			# glancing hits, not for whiffs.
+			return 0
 		raw_damage = int(result.get("damage", 0))
 	else:
 		# Should be unreachable: a valid Wheel `element_id` (real or the placeholder above) with

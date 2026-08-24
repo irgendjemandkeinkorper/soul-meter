@@ -16,6 +16,16 @@ const PROVISIONAL_FACING_RULES := {
 	&"side": {"damage_multiplier": 1.10, "hit_bonus": 8},
 	&"back": {"damage_multiplier": 1.25, "hit_bonus": 15},
 }
+## PROVISIONAL to-hit curve (#169 owner ruling 2026-08-24, sweep candidate B — see
+## tools/to_hit_sweep.gd and docs/gate-t2-evidence.md). Applies ONLY when the caller opts in
+## via `to_hit_enabled` (grid combat provides positional context; legacy zone combat stays
+## auto-hit). hit% = clamp(base + facing hit_bonus + height_mod_per_step * signed steps, lo, hi).
+const PROVISIONAL_TO_HIT := {
+	"base": 70,
+	"height_mod_per_step": 4,
+	"clamp_lo": 5,
+	"clamp_hi": 95,
+}
 
 
 static func resolve(context: Dictionary) -> Dictionary:
@@ -82,6 +92,20 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var facing_multiplier := float(positioning["facing_multiplier"])
 	var hit_bonus := int(positioning["hit_bonus"])
 	var tile_multiplier := source_tile.action_multiplier(element_id)
+	var to_hit_enabled := bool(context.get("to_hit_enabled", false))
+	var signed_height_steps := int(context.get("height_advantage_steps", 0))
+	var hit_chance := 100
+	var hit_roll := 0
+	var hit := true
+	if to_hit_enabled:
+		hit_chance = clampi(
+			int(PROVISIONAL_TO_HIT["base"]) + hit_bonus
+				+ int(PROVISIONAL_TO_HIT["height_mod_per_step"]) * signed_height_steps,
+			int(PROVISIONAL_TO_HIT["clamp_lo"]),
+			int(PROVISIONAL_TO_HIT["clamp_hi"]),
+		)
+		hit_roll = _deterministic_hit_roll(context, ability_id, unit, target)
+		hit = hit_roll <= hit_chance
 	var power := maxi(int(ability.get("power", 0)), 0)
 	var attack_scale := maxf(float(unit.get("attack_scale", 1.0)), 0.0)
 
@@ -108,7 +132,16 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var detonation_bonus := int(target_strike.get("bonus_damage", 0))
 	if detonation_bonus != 0:
 		breakdown.append(_step("detonation", "Target tile detonation", float(detonation_bonus), "add"))
+	if to_hit_enabled:
+		breakdown.append(_step(
+			"to_hit", "To-hit: %d%% (rolled %d)" % [hit_chance, hit_roll],
+			1.0 if hit else 0.0,
+		))
 	var damage := maxi(roundi(scaled_damage) + detonation_bonus, 0)
+	if not hit:
+		# A miss still pays CT and still leaves source residue (the cast happened), but deals
+		# no damage and does not detonate the target tile.
+		damage = 0
 
 	var writes: Array[Dictionary] = []
 	var hp_before := maxi(int(target.get("hp", 0)), 0)
@@ -134,7 +167,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		if source_before != source_after:
 			writes.append(_tile_write("residue", source_before, source_after))
 
-	if not target_tile_data.is_empty():
+	if hit and not target_tile_data.is_empty():
 		var target_after := target_tile.to_dict()
 		if target_tile_data != target_after:
 			writes.append(_tile_write("detonation", target_tile_data, target_after))
@@ -165,6 +198,9 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"seed": int(context.get("seed", 0)),
 		"ability_id": ability_id,
 		"damage": damage,
+		"hit": hit,
+		"hit_chance": hit_chance,
+		"hit_roll": hit_roll,
 		"hit_bonus": hit_bonus,
 		"positioning": positioning.duplicate(true),
 		"breakdown": breakdown,
@@ -204,6 +240,7 @@ static func resolve_action(
 		"weather": _dictionary(battle_unit.get("weather", {})),
 		"facing": _dictionary(target_tile.get("facing", {})),
 		"height_advantage_steps": int(target_tile.get("height_advantage_steps", 0)),
+		"to_hit_enabled": bool(battle_unit.get("to_hit_enabled", false)),
 		"caster_context": _dictionary(battle_unit.get("caster_context", {})),
 	})
 
@@ -221,6 +258,25 @@ static func positional_modifiers(
 		"facing_multiplier": float(facing_rule["damage_multiplier"]),
 		"hit_bonus": int(facing_rule["hit_bonus"]),
 	}
+
+
+## Deterministic 1..100 roll. Pure function of the identifying context so that repeated
+## resolution of the same action (forecast, replay, the 64x determinism test) always returns
+## the same result, while distinct ticks/actors/seeds decorrelate.
+static func _deterministic_hit_roll(
+	context: Dictionary, ability_id: String, unit: Dictionary, target: Dictionary
+) -> int:
+	var key := "%d|%d|%s|%s|%s|%s" % [
+		int(context.get("seed", 0)),
+		int(context.get("tick", 0)),
+		str(context.get("battle_id", "")),
+		ability_id,
+		str(unit.get("id", "")),
+		str(target.get("id", "")),
+	]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(key)
+	return rng.randi_range(1, 100)
 
 
 static func _ability_elements(ability: Dictionary, fallback: StringName) -> Array[StringName]:
