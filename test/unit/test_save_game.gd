@@ -70,9 +70,18 @@ func test_validation_rejects_unknown_versions_and_partial_payloads() -> void:
 	assert_bool(saves.validate_payload({"schema_version": 999})).is_false()
 
 
+func test_validation_rejects_a_corrupt_world_clock_phase() -> void:
+	var payload: Dictionary = saves._build_payload()
+	payload["world_clock"] = {"phase": "high-noon"}
+	assert_bool(saves.validate_payload(payload)).is_false()
+	payload["world_clock"] = {"phase": "evening"}
+	assert_bool(saves.validate_payload(payload)).is_true()
+
+
 func test_current_envelope_has_schema_manifest_and_ng_plus_defaults() -> void:
 	var payload: Dictionary = saves._build_payload()
 	assert_int(payload["schema_version"]).is_equal(SaveGameScript.SCHEMA_VERSION)
+	assert_str(str(payload["world_clock"]["phase"])).is_equal(String(WorldClock.phase()))
 	assert_str(payload["location_id"]).is_equal("dom")
 	assert_bool(payload.has("id_schemas")).is_true()
 	assert_int(payload["ng_plus"]["style_points"]).is_equal(0)

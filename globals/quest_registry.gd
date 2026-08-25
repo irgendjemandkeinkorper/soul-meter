@@ -247,6 +247,10 @@ func turn_in(
 	elif is_done(quest) and quest == FIELD_DEBT:
 		GameState.remove_items("materials/loamroot_sprig", 1)
 	if is_done(quest):
+		# FR-504a §3.1: a completed quest advances the clock only when its
+		# resource declares it. Before the autosave, so the save keeps the
+		# post-advance phase.
+		WorldClock.advance_for_quest(quest)
 		SaveGame.request_autosave("quest-completed")
 
 

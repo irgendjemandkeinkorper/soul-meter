@@ -21,6 +21,7 @@ const UnitArtScript := preload("res://globals/unit_art.gd")
 
 var _player_in_range := false
 var _prompt: Label
+var _collision_layer_default := 0
 
 
 func _ready() -> void:
@@ -46,6 +47,48 @@ func _ready() -> void:
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.visible = false
 	add_child(_prompt)
+
+	# FR-504a routines: a named NPC with a NpcRoutines row is placed (or made
+	# absent) per clock phase, on scene load and again on each phase change.
+	# An NPC without a row keeps FR-504 flag/rep reactivity — that path does
+	# nothing here by design.
+	_collision_layer_default = collision_layer
+	_apply_routine()
+	WorldClock.phase_changed.connect(_on_world_phase_changed)
+
+
+func _on_world_phase_changed(
+	_previous: StringName, _current: StringName, _cause: String
+) -> void:
+	_apply_routine()
+
+
+func _apply_routine() -> void:
+	if npc_id.is_empty():
+		return
+	var row := NpcRoutines.placement(npc_id, WorldClock.phase())
+	if row.is_empty():
+		return
+	# Routine positions are HUB_SCENE coordinates; never apply them elsewhere.
+	# (A null current_scene — headless test harness — passes through.)
+	var scene := get_tree().current_scene if is_inside_tree() else null
+	if scene != null and scene.scene_file_path != NpcRoutines.HUB_SCENE:
+		return
+	var present := bool(row.get("present", false))
+	visible = present
+	if present:
+		global_position = row["position"]
+		collision_layer = _collision_layer_default
+		process_mode = Node.PROCESS_MODE_INHERIT
+		NavOccupancy.register(self)
+	else:
+		# §2.1 "absent": not findable, not interactable, and — because a solid
+		# invisible body would still block clicks and paths — not solid either.
+		collision_layer = 0
+		process_mode = Node.PROCESS_MODE_DISABLED
+		remove_from_group(NavOccupancy.GROUP)
+		_player_in_range = false
+		_prompt.visible = false
 
 
 func _on_body(body: Node2D, entered: bool) -> void:

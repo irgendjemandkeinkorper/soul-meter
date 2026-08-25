@@ -152,8 +152,9 @@ func load_save() -> bool:
 	var zhavar_backup := zhavar.duplicate(true)
 	var skill_check_backup := SkillCheck.to_dict()
 	var unit_roster_backup := unit_roster.to_dict()
+	var world_clock_backup := WorldClock.to_dict()
 	if not GameState.from_dict(payload.get("game_state", {})):
-		_restore_runtime_state(game_state_backup, reputation_backup, renown_backup, quests_backup, ng_plus_backup, zhavar_backup, skill_check_backup, unit_roster_backup)
+		_restore_runtime_state(game_state_backup, reputation_backup, renown_backup, quests_backup, ng_plus_backup, zhavar_backup, skill_check_backup, unit_roster_backup, world_clock_backup)
 		return _fail("The game_state section in this save file is invalid.")
 	_apply_runtime_feature_flags()
 	Reputation.from_dict(payload.get("reputation", {}))
@@ -165,6 +166,7 @@ func load_save() -> bool:
 	# _prepare_for_load already proved this parses; the migration guarantees the key.
 	var loaded_roster := UnitRoster.from_dict(payload.get("tactical", {}))
 	unit_roster = loaded_roster if loaded_roster != null else UnitRoster.new()
+	WorldClock.from_dict(payload.get("world_clock", {}))
 	var destination := _destination_from_payload(payload)
 	if destination == null:
 		_restore_runtime_state(
@@ -175,7 +177,8 @@ func load_save() -> bool:
 			ng_plus_backup,
 			zhavar_backup,
 			skill_check_backup,
-			unit_roster_backup
+			unit_roster_backup,
+			world_clock_backup
 		)
 		return _fail("The save destination is invalid.")
 	_set_pending_destination(destination)
@@ -230,6 +233,8 @@ func _prepare_for_load(payload: Variant) -> Dictionary:
 		# -3 .. +3, an element outside the Wheel of Ten, or a per-unit row with no unit
 		# fails the whole payload instead of being quietly repaired.
 		return _load_failure("Save tactical data is corrupt.")
+	if migrated.has("world_clock") and not WorldClock.validate_save_data(migrated["world_clock"]):
+		return _load_failure("Save world_clock data is corrupt.")
 	if migrated.has("location_id"):
 		var location_id: Variant = migrated.get("location_id")
 		if not location_id is String or (location_id as String).length() > 64:
@@ -354,7 +359,8 @@ func _restore_runtime_state(
 	ng_plus_data: Dictionary,
 	zhavar_data: Dictionary,
 	skill_check_data: Dictionary,
-	unit_roster_data: Dictionary
+	unit_roster_data: Dictionary,
+	world_clock_data: Dictionary
 ) -> void:
 	GameState.from_dict(game_state_data)
 	Reputation.from_dict(reputation_data)
@@ -365,6 +371,7 @@ func _restore_runtime_state(
 	SkillCheck.from_dict(skill_check_data)
 	var restored := UnitRoster.from_dict(unit_roster_data)
 	unit_roster = restored if restored != null else UnitRoster.new()
+	WorldClock.from_dict(world_clock_data)
 
 
 func new_game() -> void:
@@ -379,6 +386,7 @@ func new_game() -> void:
 	zhavar = {}
 	SkillCheck.from_dict({})
 	unit_roster = UnitMigration.roster_from_party(GameState.party)
+	WorldClock.reset()
 	var destination := LoadDestination.new(
 		LocationRegistry.DOM.id,
 		LocationRegistry.DOM.resolve_spawn(&"new_game")
@@ -448,6 +456,7 @@ func _build_payload() -> Dictionary:
 		"spawn_id": String(pending_spawn_id),
 		"skill_check": SkillCheck.to_dict(),
 		"tactical": _snapshot_unit_roster(),
+		"world_clock": WorldClock.to_dict(),
 	}
 	if scene:
 		var current_location := LocationRegistry.by_scene(scene.scene_file_path)

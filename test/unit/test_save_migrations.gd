@@ -8,7 +8,7 @@ func test_schema_five_defaults_expert_rerolls_to_zero_used() -> void:
 	var prepared: Dictionary = SaveMigrations.prepare(payload)
 
 	assert_bool(prepared["ok"]).is_true()
-	assert_int(prepared["payload"]["schema_version"]).is_equal(6)
+	assert_int(prepared["payload"]["schema_version"]).is_equal(7)
 	assert_bool(
 		(prepared["payload"]["skill_check"]["expert_rerolls_used"] as Dictionary).is_empty()
 	).is_true()
@@ -47,6 +47,38 @@ func test_schema_six_fixture_preserves_spent_expert_rerolls() -> void:
 	var used: Dictionary = prepared["payload"]["skill_check"]["expert_rerolls_used"]
 	assert_int(used["fixture-scene:fixture-unit:lore"]).is_equal(1)
 	assert_bool(prepared["payload"].has("tactical")).is_true()
+
+
+func test_schema_six_fixture_gains_the_default_world_clock() -> void:
+	# FR-504a §5 criterion 1: a save written before the clock existed loads
+	# and receives the default phase.
+	var file := FileAccess.open(SCHEMA_SIX_FIXTURE_PATH, FileAccess.READ)
+	assert_object(file).is_not_null()
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	var payload: Dictionary = parsed
+	payload["schema_version"] = int(payload["schema_version"])
+	payload["version"] = int(payload["version"])
+
+	var prepared: Dictionary = SaveMigrations.prepare(payload)
+	assert_bool(prepared["ok"]).is_true()
+	assert_int(prepared["payload"]["schema_version"]).is_equal(7)
+	assert_str(str(prepared["payload"]["world_clock"]["phase"])).is_equal("morning")
+
+
+func test_schema_five_payload_also_gains_the_default_world_clock() -> void:
+	var prepared: Dictionary = SaveMigrations.prepare(_schema_five_payload())
+	assert_bool(prepared["ok"]).is_true()
+	assert_str(str(prepared["payload"]["world_clock"]["phase"])).is_equal("morning")
+
+
+func test_migration_preserves_an_existing_world_clock_phase() -> void:
+	var payload := _schema_five_payload()
+	payload["schema_version"] = 7
+	payload["world_clock"] = {"phase": "night"}
+	var prepared: Dictionary = SaveMigrations.prepare(payload)
+	assert_bool(prepared["ok"]).is_true()
+	assert_str(str(prepared["payload"]["world_clock"]["phase"])).is_equal("night")
 
 
 func _schema_five_payload() -> Dictionary:

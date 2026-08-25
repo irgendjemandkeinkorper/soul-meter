@@ -11,6 +11,9 @@ extends Quest
 ## scene path means "not populated yet" — callers must treat that as no data.
 @export var destination_scene: String = ""
 @export var destination_position: Vector2 = Vector2.ZERO
+## FR-504a §3.1: completing this quest advances the world clock one phase.
+## The RESOURCE declares the advance; no call site decides it ad hoc.
+@export var advances_clock := false
 var current_stage := 0
 
 

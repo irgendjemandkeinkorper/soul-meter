@@ -16,6 +16,12 @@ Sella Varn: The district bell used to tell the harbor when the roads were safe. 
 - "The bell is still waiting on an answer." [if QuestRegistry.is_done(QuestRegistry.BELLHOUSE_REPAIR) /]
 	Sella Varn: So are we all. If it rings, the whole ward will hear what it thinks of us.
 	=> END
+- "Early for bell work, isn't it?" [if WorldClock.is_phase("morning") /]
+	Sella Varn: Early is the only hour the harbor still listens for it. By noon they have all decided the silence is permanent.
+	=> hub
+- "Shouldn't you be at the bell house?" [if WorldClock.is_phase("evening") /]
+	Sella Varn: The bell keeps its silence without my help. Evenings, the Four Arms holds me up instead — and hears more honest talk than the Registry ever will.
+	=> hub
 - "I am only passing through."
 	Sella Varn: Then pass slowly. Dom has a way of charging interest on anything you fail to notice.
 	=> END

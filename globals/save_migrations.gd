@@ -3,7 +3,7 @@ extends RefCounted
 ## Version transitions for the serialized save envelope.
 
 const LEGACY_SCHEMA_VERSION := 2
-const CURRENT_SCHEMA_VERSION := 6
+const CURRENT_SCHEMA_VERSION := 7
 
 
 static func prepare(payload: Variant) -> Dictionary:
@@ -30,6 +30,8 @@ static func prepare(payload: Variant) -> Dictionary:
 		migrated = _migrate_v4_to_v5(migrated)
 	if source_version <= 5:
 		migrated = _migrate_v5_to_v6(migrated)
+	if source_version <= 6:
+		migrated = _migrate_v6_to_v7(migrated)
 	migrated["skill_check"] = SkillCheckService.normalize_save_data(
 		migrated.get("skill_check", {})
 	)
@@ -109,6 +111,16 @@ static func _migrate_v5_to_v6(source: Dictionary) -> Dictionary:
 		).to_dict()
 	if not migrated.has("skill_check"):
 		migrated["skill_check"] = {"expert_rerolls_used": {}}
+	return migrated
+
+
+## Schema 7 adds the FR-504a world clock (`docs/prd-amendment-living-world.md`
+## §3.2). A pre-clock save gets the default phase — the amendment's own
+## acceptance criterion 1: "a save written before this amendment must load".
+static func _migrate_v6_to_v7(source: Dictionary) -> Dictionary:
+	var migrated := source.duplicate(true)
+	if not migrated.get("world_clock") is Dictionary:
+		migrated["world_clock"] = {"phase": String(WorldClock.DEFAULT_PHASE)}
 	return migrated
 
 

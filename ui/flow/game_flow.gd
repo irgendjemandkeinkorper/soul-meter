@@ -121,14 +121,23 @@ func travel(scene_path: String, spawn_id: StringName = &"default") -> bool:
 		if not GAMEPLAY_SCENES.has(scene_path):
 			push_error("Refusing travel to non-gameplay scene: %s" % scene_path)
 			return false
-		return _travel_to_gameplay_scene(scene_path, spawn_id)
+		if not _travel_to_gameplay_scene(scene_path, spawn_id):
+			return false
+		WorldClock.advance("travel:%s" % scene_path)
+		return true
 	if not location.allowed_gameplay:
 		push_error("Refusing travel to non-gameplay scene: %s" % scene_path)
 		return false
 	var destination := LoadDestination.new(location.id, location.resolve_spawn(spawn_id))
 	SaveGame.pending_spawn_id = destination.spawn_id
 	SaveGame.has_pending_player_position = false
-	return load_destination(destination)
+	# FR-504a §3.1: travel is a declared clock trigger. The advance lives HERE,
+	# not in load_destination(), because SaveGame's load path also routes
+	# through load_destination() and loading a save must not spend the day.
+	if not load_destination(destination):
+		return false
+	WorldClock.advance("travel:%s" % scene_path)
+	return true
 
 
 func _travel_to_gameplay_scene(scene_path: String, spawn_id: StringName) -> bool:
