@@ -6,6 +6,7 @@
 script = ExtResource("1_definition")
 id = &"wound_lip"
 scene_path = "res://world/wound_lip.tscn"
+thinning_tier = 3
 default_spawn_id = &"default"
 arrival_flag = "chapter_wound_lip_reached"
 arrival_checkpoint = "location-arrival"

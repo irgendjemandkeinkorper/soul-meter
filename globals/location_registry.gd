@@ -114,6 +114,13 @@ static func is_gameplay_scene(scene_path: String) -> bool:
 	return location != null and location.allowed_gameplay
 
 
+## FR-506: the thinning tier of the location that owns `scene_path`
+## (0 for unknown scenes and untiered interiors — town-stable by default).
+static func thinning_tier_by_scene(scene_path: String) -> int:
+	var location := by_scene(scene_path)
+	return location.thinning_tier if location != null else 0
+
+
 static func gameplay_scenes() -> Array[String]:
 	var scenes: Array[String] = []
 	for location in ALL:

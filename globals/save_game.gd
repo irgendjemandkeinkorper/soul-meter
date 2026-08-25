@@ -52,6 +52,9 @@ var _run_started_unix := 0
 var _elapsed_before_load := 0
 var ng_plus: Dictionary = NGPlus.default_block()
 var zhavar: Dictionary = {}
+
+## FR-308: a zone's Zhavar rung changed (raised via raise_zhavar()).
+signal zhavar_rung_changed(zone_id: String, rung: String)
 var last_error := ""
 
 ## Tactical-layer per-unit state (issue #141), persisted as the `tactical` envelope
@@ -123,6 +126,36 @@ func flush_pending_autosave() -> bool:
 	var succeeded := save()
 	autosave_finished.emit(reason, succeeded)
 	return succeeded
+
+
+# --- FR-308 Zhavar (zone-scale escalation ladder) ---------------------------
+# Chapter 1 TRACKS and TELEGRAPHS the Zhavar (PRD FR-308): rung transitions
+# are AUTHORED — quest beats and dialogue `do` lines call raise_zhavar() —
+# the same declarative pattern as FlagQuest.advances_clock. Full
+# dragon-response systemization (banked-harmony thresholds) is Chapter 2+;
+# do not invent an escalation formula here.
+
+
+func zhavar_rung(zone_id: String) -> String:
+	return str(zhavar.get(zone_id, ZHAVAR_RUNGS[0]))
+
+
+## Raises a zone one rung (capped at the ladder's top). Reaching "tolling"
+## for the first time sets the durable flag the scripted tolling event
+## (dialogue) keys on.
+func raise_zhavar(zone_id: String) -> String:
+	if not StableIds.is_valid(StableIds.ZONE, zone_id):
+		push_error("raise_zhavar: invalid zone id '%s'" % zone_id)
+		return ""
+	var index := ZHAVAR_RUNGS.find(zhavar_rung(zone_id))
+	if index < 0 or index >= ZHAVAR_RUNGS.size() - 1:
+		return zhavar_rung(zone_id)
+	var next: String = ZHAVAR_RUNGS[index + 1]
+	zhavar[zone_id] = next
+	if next == "tolling":
+		GameState.set_flag("zhavar_tolling_%s" % zone_id, true)
+	zhavar_rung_changed.emit(zone_id, next)
+	return next
 
 
 func elapsed_seconds() -> int:

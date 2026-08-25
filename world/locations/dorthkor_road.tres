@@ -6,6 +6,7 @@
 script = ExtResource("1_definition")
 id = &"dorthkor_road"
 scene_path = "res://world/dorthkor_road.tscn"
+thinning_tier = 2
 default_spawn_id = &"default"
 arrival_flag = "chapter_dorthkor_reached"
 arrival_checkpoint = "location-arrival"

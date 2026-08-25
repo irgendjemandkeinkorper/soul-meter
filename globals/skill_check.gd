@@ -214,6 +214,18 @@ func fizzle_percent(
 	return rounded
 
 
+## FR-506 thinning gradient: adapts a zone's agreement integrity for the
+## fizzle formula's INPUT — the ratified formula itself is untouched. Each
+## thinning tier toward the front costs integrity, so casting fizzles more
+## the closer the map gets to the Wound. PROVISIONAL balance value.
+const THINNING_INTEGRITY_PENALTY_PER_TIER := 5.0
+
+
+func location_fizzle_integrity(base_integrity: float, scene_path: String) -> float:
+	var tier := LocationRegistry.thinning_tier_by_scene(scene_path)
+	return clampf(base_integrity - tier * THINNING_INTEGRITY_PENALTY_PER_TIER, 0.0, 100.0)
+
+
 func calculate_fizzle(
 	agreement_integrity: float,
 	breadth: String,

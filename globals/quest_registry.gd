@@ -314,6 +314,11 @@ func resolve_broken_muster(ruling_id: StringName) -> bool:
 	# 1's first authored level milestone. PROVISIONAL content pick — the milestone
 	# LIST is authoring; the mechanism is ratified.
 	GameState.grant_milestone_level(&"broken-muster")
+	# FR-308: the ruling is the chapter's loudest banked harmony — the wilds
+	# zone rises one rung (reaching "tolling" if the bellhouse beat already
+	# raised it; the scripted tolling event keys on that flag). Authored
+	# transition per the FR-308 Chapter-1 boundary, not a formula.
+	SaveGame.raise_zhavar("wilds")
 	SaveGame.request_checkpoint(SaveGame.Checkpoint.RULING, ruling_key)
 	return true
 

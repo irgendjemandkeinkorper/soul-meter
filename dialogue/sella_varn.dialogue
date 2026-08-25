@@ -9,6 +9,7 @@ Sella Varn: The district bell used to tell the harbor when the roads were safe. 
 	=> hub
 - "I inspected the bell house. The silence is not a simple break." [if QuestRegistry.is_active(QuestRegistry.BELLHOUSE_REPAIR) and QuestRegistry.flags_met(QuestRegistry.BELLHOUSE_REPAIR) /]
 	do QuestRegistry.turn_in(QuestRegistry.BELLHOUSE_REPAIR, "heard-the-silence", false)
+	do SaveGame.raise_zhavar("wilds")
 	do Reputation.record("player", "dom", 3.0, "Returned a true account of the silent district bell", "dom")
 	do Renown.gain_reputation("player", 2.0, "Investigated the bell house before the Registry closed it", "dom")
 	Sella Varn: Then it chose not to ring. That is worse than a snapped pin, but it is useful truth. I will keep the door open one more night and tell the clerks the district still has a witness.
@@ -21,6 +22,12 @@ Sella Varn: The district bell used to tell the harbor when the roads were safe. 
 	=> hub
 - "Shouldn't you be at the bell house?" [if WorldClock.is_phase("evening") /]
 	Sella Varn: The bell keeps its silence without my help. Evenings, the Four Arms holds me up instead — and hears more honest talk than the Registry ever will.
+	=> hub
+- "What are people saying about me in the ward?" [if Reputation.band("dom") == "warm" or Reputation.band("dom") == "allied" /]
+	Sella Varn: That you show up, and that things ring true after you leave. In Dom that is nearly a title. Wear it carefully.
+	=> hub
+- "What are people saying about me in the ward?" [if Reputation.band("dom") == "cold" or Reputation.band("dom") == "hostile" /]
+	Sella Varn: Less than you'd like and worse than you'd hope. Doors in this ward are heavy; right now yours are heavier.
 	=> hub
 - "I am only passing through."
 	Sella Varn: Then pass slowly. Dom has a way of charging interest on anything you fail to notice.

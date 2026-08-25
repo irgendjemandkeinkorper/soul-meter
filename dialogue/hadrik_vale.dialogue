@@ -16,6 +16,12 @@ Hadrik Vale: The Registry Archive has three doors, two locks, and one clerk on d
 	do Reputation.record("player", "the-registry", -2.0, "Challenged the Registry's failure mark on the Dom bell house", "dom")
 	Hadrik Vale: Then submit a better word before someone else submits a final one. We do not punish accuracy. We punish unfiled accuracy.
 	=> END
+- "Could the Registry open the stacks to me?" [if Reputation.band("the-registry") == "warm" or Reputation.band("the-registry") == "allied" /]
+	Hadrik Vale: For you, the second door. Your filings have been accurate, which around here passes for devotion. Touch nothing with a red seal.
+	=> hub
+- "You keep looking at me like a misfiled entry." [if Reputation.band("the-registry") == "cold" or Reputation.band("the-registry") == "hostile" /]
+	Hadrik Vale: The Registry does not glare. It annotates. Your margin is getting crowded — consider filing something we can approve of.
+	=> hub
 - "I need a quiet place to read."
 	Hadrik Vale: Quiet is available by appointment. Reading is available if you do not touch the numbered drawers.
 	=> END

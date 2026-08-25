@@ -6,6 +6,14 @@ Marshal Coiljaw: Dorthkor's road-drum stopped halfway through the breach warning
 - "You gave me this commission once before." [if NGPlus.is_active(SaveGame.ng_plus) /]
 	Marshal Coiljaw: Then prove the echo useful. Bring back the road with fewer names crossed out.
 	=> hub
+- "Something answered over the east road. The whole ward went still." [if GameState.get_flag("zhavar_tolling_wilds") and not GameState.get_flag("zhavar_tolling_witnessed") /]
+	do GameState.set_flag("zhavar_tolling_witnessed", true)
+	Marshal Coiljaw: One toll. A Nul shape crossed the cloud line east of the road and every sentinel on the wall held their breath together. The old manuals say a zone that can be heard gets visitors. The manuals stop there.
+	Marshal Coiljaw: Nothing landed. This time. If the ward keeps ringing louder, I want you standing where I can find you.
+	=> hub
+- "People are talking about the east road like it's humming." [if SaveGame.zhavar_rung("wilds") == "rising" /]
+	Marshal Coiljaw: Rising, the wardens call it. The zone is being heard further than it used to be. That is either a reputation or a beacon, and I have stopped pretending I know which.
+	=> hub
 - "I need a company before I take the road." [if not GameState.has_selected_companions() /]
 	Marshal Coiljaw: The Four Arms keeps six names on its slate. Choose two. I need a company, not a funeral procession with one set of boots.
 	=> END

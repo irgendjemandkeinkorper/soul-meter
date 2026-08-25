@@ -9,6 +9,10 @@ extends Resource
 @export var spawns: Dictionary = {}
 @export var arrival_flag: String = ""
 @export var arrival_checkpoint: String = ""
+## FR-506 thinning gradient: 0 = Dom (stable), rising toward the front
+## (Wound Lip = 3). Consumed as a fizzle-integrity INPUT via
+## SkillCheck.location_fizzle_integrity() — never as a formula change.
+@export_range(0, 3) var thinning_tier := 0
 
 
 func resolve_spawn(requested: StringName) -> StringName:

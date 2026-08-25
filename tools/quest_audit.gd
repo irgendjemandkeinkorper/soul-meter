@@ -58,6 +58,7 @@ const FLAG_DOMAINS := [
 	"soul",
 	"tutorial",
 	"undertakers",
+	"zhavar",
 ]
 
 ## Flags that predate the grammar. Each one ships in saves already, so it is
@@ -414,16 +415,33 @@ static func scan_flag_sources(paths: PackedStringArray) -> Dictionary:
 		'COMPANION_QUEST_COMPLETION_FLAGS\\s*:?=\\s*\\{([^}]*)\\}'
 	)
 	var dict_value_regex := _regex('["\\\'][^"\\\']+["\\\']\\s*:\\s*["\\\']([^"\\\']+)["\\\']')
+	# SaveGame.raise_zhavar() writes its tolling flag through a format string
+	# ("zhavar_tolling_%s" % zone_id), invisible to the literal-only set_flag
+	# regex (same limitation class as the companion dict above). Count a
+	# format-string write-site as writing every READ flag that matches its
+	# prefix, so per-zone flags don't surface as orphans while an unread typo
+	# still would.
+	var format_set_regex := _regex('(?:GameState\\.)?set_flag\\(\\s*["\\\']([^"\\\']+)%s["\\\']')
+	var written_prefixes := {}
 	for path: String in paths:
 		var source := FileAccess.get_file_as_string(path)
 		for result: RegExMatch in set_regex.search_all(source):
+			# A "%s" literal is a format-string site; the prefix rule below owns it.
+			if "%s" in result.get_string(1):
+				continue
 			written[result.get_string(1)] = true
 		for result: RegExMatch in get_regex.search_all(source):
 			read[result.get_string(1)] = true
+		for result: RegExMatch in format_set_regex.search_all(source):
+			written_prefixes[result.get_string(1)] = true
 		var dict_match := completion_dict_regex.search(source)
 		if dict_match != null:
 			for result: RegExMatch in dict_value_regex.search_all(dict_match.get_string(1)):
 				written[result.get_string(1)] = true
+	for flag: String in read:
+		for prefix: String in written_prefixes:
+			if flag.begins_with(prefix):
+				written[flag] = true
 	return _flag_access_result(written, read)
 
 
@@ -639,7 +657,11 @@ static func _has_later_completion_readback(
 static func _project_flag_access(
 	quest_results: Array[Dictionary], dialogue_sources: Dictionary, readback_sources: Dictionary
 ) -> Dictionary:
-	var quest_flag_paths := PackedStringArray([REGISTRY_PATH, "res://quests/fetch_quest.gd"])
+	# save_game.gd carries the FR-308 raise_zhavar() write-site (a format-string
+	# set_flag the prefix rule in scan_flag_sources resolves against reads).
+	var quest_flag_paths := PackedStringArray(
+		[REGISTRY_PATH, "res://quests/fetch_quest.gd", "res://globals/save_game.gd"]
+	)
 	quest_flag_paths.append_array(PackedStringArray(dialogue_sources.keys()))
 	var access := scan_flag_sources(quest_flag_paths)
 	var written := {}
