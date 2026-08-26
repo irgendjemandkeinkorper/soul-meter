@@ -1,6 +1,8 @@
 extends Node
-## Owns the chapter save slot. The payload is versioned and written through a
-## temporary file so an interrupted save cannot destroy the previous one.
+## Owns the chapter save slots: one autosave/continue slot plus
+## MANUAL_SLOT_COUNT player-facing manual slots (FR-905). Every payload is
+## versioned and written through a temporary file so an interrupted save cannot
+## destroy the previous one, and every slot keeps a last-known-good backup.
 
 signal saved
 signal loaded
@@ -13,6 +15,8 @@ signal save_diagnostic(severity: String, message: String)
 const SAVE_PATH := "user://chapter_one.save"
 const TEMP_PATH := "user://chapter_one.save.tmp"
 const BACKUP_PATH := "user://chapter_one.save.bak"
+## FR-905 ratified floor is "≥ 3 manual slots"; raising this number is the whole change.
+const MANUAL_SLOT_COUNT := 3
 const FORMAT_VERSION := 2
 const SCHEMA_VERSION := SaveMigrations.CURRENT_SCHEMA_VERSION
 const ZHAVAR_RUNGS := ["low", "rising", "tolling", "ringing", "unprecedented"]
@@ -73,20 +77,73 @@ func has_save() -> bool:
 
 
 func save() -> bool:
-	var file := FileAccess.open(temp_path, FileAccess.WRITE)
+	return _write_current_payload(save_path, temp_path, backup_path)
+
+
+## Manual-slot paths derive from the instance `save_path`, so tests that point the
+## autosave slot at a scratch prefix isolate the manual slots with no extra setup.
+func manual_slot_path(slot: int) -> String:
+	return "%s.slot%d.save" % [save_path.get_basename(), slot]
+
+
+func has_manual_save(slot: int) -> bool:
+	if not _is_valid_slot(slot):
+		return false
+	var slot_path := manual_slot_path(slot)
+	return FileAccess.file_exists(slot_path) or FileAccess.file_exists(slot_path + ".bak")
+
+
+func save_to_slot(slot: int) -> bool:
+	if not _is_valid_slot(slot):
+		return _fail("Unknown manual save slot: %d" % slot)
+	var slot_path := manual_slot_path(slot)
+	return _write_current_payload(slot_path, slot_path + ".tmp", slot_path + ".bak")
+
+
+func load_slot(slot: int) -> bool:
+	if not _is_valid_slot(slot):
+		return _fail("Unknown manual save slot: %d" % slot)
+	var slot_path := manual_slot_path(slot)
+	return _load_from(slot_path, slot_path + ".bak")
+
+
+## Cheap header read for slot-picker UI. Never applies state; a corrupt primary
+## falls through to the slot's backup so the picker mirrors what load_slot() would do.
+func manual_slot_summary(slot: int) -> Dictionary:
+	var summary := {"exists": false, "saved_at": 0, "location_id": "", "elapsed_seconds": 0}
+	if not _is_valid_slot(slot):
+		return summary
+	var slot_path := manual_slot_path(slot)
+	for path in [slot_path, slot_path + ".bak"]:
+		var payload: Variant = _read_payload(path)
+		if payload is Dictionary:
+			summary["exists"] = true
+			summary["saved_at"] = int(payload.get("saved_at", 0))
+			summary["location_id"] = str(payload.get("location_id", ""))
+			summary["elapsed_seconds"] = int(payload.get("elapsed_seconds", 0))
+			return summary
+	return summary
+
+
+func _is_valid_slot(slot: int) -> bool:
+	return slot >= 1 and slot <= MANUAL_SLOT_COUNT
+
+
+func _write_current_payload(target_path: String, target_temp_path: String, target_backup_path: String) -> bool:
+	var file := FileAccess.open(target_temp_path, FileAccess.WRITE)
 	if file == null:
 		return _fail("Could not open the save file for writing.")
 	file.store_var(_build_payload())
 	file.close()
 
-	var absolute_temp_path := ProjectSettings.globalize_path(temp_path)
-	var absolute_save_path := ProjectSettings.globalize_path(save_path)
-	var absolute_backup_path := ProjectSettings.globalize_path(backup_path)
+	var absolute_temp_path := ProjectSettings.globalize_path(target_temp_path)
+	var absolute_save_path := ProjectSettings.globalize_path(target_path)
+	var absolute_backup_path := ProjectSettings.globalize_path(target_backup_path)
 	var moved_previous_save := false
-	if FileAccess.file_exists(save_path):
+	if FileAccess.file_exists(target_path):
 		# Keep the last known-good payload around after a successful save. The
 		# next save replaces this backup only after the current save is moved.
-		if FileAccess.file_exists(backup_path):
+		if FileAccess.file_exists(target_backup_path):
 			DirAccess.remove_absolute(absolute_backup_path)
 		var backup_err := DirAccess.rename_absolute(absolute_save_path, absolute_backup_path)
 		if backup_err != OK:
@@ -96,7 +153,7 @@ func save() -> bool:
 	var err := DirAccess.rename_absolute(absolute_temp_path, absolute_save_path)
 	if err != OK:
 		DirAccess.remove_absolute(absolute_temp_path)
-		if moved_previous_save and FileAccess.file_exists(backup_path):
+		if moved_previous_save and FileAccess.file_exists(target_backup_path):
 			DirAccess.rename_absolute(absolute_backup_path, absolute_save_path)
 		return _fail("Could not finish writing the save file.")
 	saved.emit()
@@ -165,16 +222,20 @@ func elapsed_seconds() -> int:
 
 
 func load_save() -> bool:
-	var source_path := save_path
+	return _load_from(save_path, backup_path)
+
+
+func _load_from(primary_path: String, fallback_path: String) -> bool:
+	var source_path := primary_path
 	var prepared := _prepare_for_load(_read_payload(source_path))
 	if not bool(prepared.get("ok", false)):
 		# A save is intentionally recoverable: a failed write or interrupted
 		# replacement should fall back to the persistent last-known-good copy.
-		source_path = backup_path
+		source_path = fallback_path
 		prepared = _prepare_for_load(_read_payload(source_path))
 	if not bool(prepared.get("ok", false)):
 		return _fail("Could not load save: %s" % prepared.get("error", "corrupt payload"))
-	if source_path == backup_path:
+	if source_path == fallback_path:
 		_warn("Primary save was invalid; loading the backup save instead.")
 	var payload: Dictionary = prepared["payload"]
 	var game_state_backup := GameState.to_dict()

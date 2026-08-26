@@ -243,6 +243,22 @@ task. Mid-battle save is not a Ch1 behavior (waveC T-8 ruling); model-level seri
 Full-screen unification of battle.gd into the six regions remains open/optional.
 Suite: **821 cases / 0 failures**.
 
+## Status addendum (2026-08-26) — FR-905 manual save slots
+
+**FR-905's "≥ 3 manual slots" is DONE** (the last purely-code item on #106's save-policy row).
+`SaveGame` gained `MANUAL_SLOT_COUNT` (3), `save_to_slot()`/`load_slot()`/`has_manual_save()`/
+`manual_slot_summary()` — slot paths derive from the instance `save_path`
+(`<base>.slot<N>.save` + `.tmp`/`.bak`), so tests that point the autosave slot at a scratch
+prefix isolate the manual slots for free, and every slot keeps the same atomic-write +
+last-known-good-backup semantics as the autosave (shared `_write_current_payload()`/
+`_load_from()`). The autosave/continue slot is untouched; `new_game()` deliberately does NOT
+wipe manual slots. UI: pause menu now shows three labeled slot buttons (location + minutes,
+per-slot overwrite-confirm; `ManualSaveSlot1..3`, the old `ManualSaveButton` is gone);
+`ui/screens/load_game.{gd,tscn}` (`UIManager.LOAD_GAME`) lists autosave + slots from the
+main menu's new "Load Game" button. No schema change. Tests: `test/unit/test_manual_slots.gd`
+(6 disk-level cases) + the field-room pause-menu case reworked to the slot UI.
+Suite: **827 cases / 128 suites / 0 failures**.
+
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
 

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/screens/load_game.gd" id="1_load"]
+
+[node name="LoadGame" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+script = ExtResource("1_load")

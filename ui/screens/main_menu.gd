@@ -52,6 +52,14 @@ func _build() -> void:
 				GameFlow.send_event("new_game")
 	)
 	continue_button.disabled = not SaveGame.has_save()
+	var any_manual_save := false
+	for slot in range(1, SaveGame.MANUAL_SLOT_COUNT + 1):
+		any_manual_save = any_manual_save or SaveGame.has_manual_save(slot)
+	var load_button := _menu_button(
+		vbox, "Load Game", func() -> void: UIManager.open(UIManager.LOAD_GAME)
+	)
+	load_button.name = "LoadGameButton"
+	load_button.disabled = not (SaveGame.has_save() or any_manual_save)
 	_menu_button(
 		vbox, "Settings", func() -> void: UIManager.open(UIManager.SETTINGS)
 	)

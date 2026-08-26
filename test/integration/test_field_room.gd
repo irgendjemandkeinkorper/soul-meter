@@ -171,31 +171,46 @@ func test_pause_menu_confirms_manual_save_success() -> void:
 	SaveGame.save_path = "user://gdunit_save_visibility.save"
 	SaveGame.temp_path = "user://gdunit_save_visibility.save.tmp"
 	SaveGame.backup_path = "user://gdunit_save_visibility.save.bak"
-	for path in [SaveGame.save_path, SaveGame.temp_path, SaveGame.backup_path]:
-		if FileAccess.file_exists(path):
-			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	_remove_manual_save_test_files()
 
 	var runner := scene_runner("res://world/test_room.tscn")
 	await runner.simulate_frames(10)
 	var screen := UIManager.open(GameFlow.PAUSE_MENU, false, true)
 	await runner.simulate_frames(5)
 	var status := screen.find_child("SaveStatus", true, false) as Label
-	var save_button := screen.find_child("ManualSaveButton", true, false) as Button
+	var slot_button := screen.find_child("ManualSaveSlot1", true, false) as Button
 	assert_object(status).is_not_null()
-	assert_object(save_button).is_not_null()
+	assert_object(slot_button).is_not_null()
 
-	save_button.pressed.emit()
-	assert_str(status.text).is_equal("Chapter saved.")
-	assert_bool(FileAccess.file_exists(SaveGame.save_path)).is_true()
+	slot_button.pressed.emit()
+	assert_str(status.text).is_equal("Saved to slot 1.")
+	var slot_path: String = SaveGame.manual_slot_path(1)
+	assert_bool(FileAccess.file_exists(slot_path)).is_true()
+
+	# FR-905: a second save into an occupied slot arms an overwrite confirm first.
+	slot_button.pressed.emit()
+	assert_str(status.text).is_equal("Slot 1 will be replaced.")
+	slot_button.pressed.emit()
+	assert_str(status.text).is_equal("Saved to slot 1.")
 
 	UIManager.close_all()
 	await runner.simulate_frames(5)
-	for path in [SaveGame.save_path, SaveGame.temp_path, SaveGame.backup_path]:
-		if FileAccess.file_exists(path):
-			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	_remove_manual_save_test_files()
 	SaveGame.save_path = original_save_path
 	SaveGame.temp_path = original_temp_path
 	SaveGame.backup_path = original_backup_path
+
+
+func _remove_manual_save_test_files() -> void:
+	var paths: Array[String] = [SaveGame.save_path, SaveGame.temp_path, SaveGame.backup_path]
+	for slot in range(1, SaveGame.MANUAL_SLOT_COUNT + 1):
+		var slot_path: String = SaveGame.manual_slot_path(slot)
+		paths.append(slot_path)
+		paths.append(slot_path + ".tmp")
+		paths.append(slot_path + ".bak")
+	for path in paths:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
 func _find_child_by_type(parent: Node, type_name: String) -> Node:
