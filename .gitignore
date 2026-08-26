@@ -10,3 +10,4 @@
 
 # Claude Code worktree sessions (local tool scratch, not repo content)
 .claude/worktrees/
+build/
