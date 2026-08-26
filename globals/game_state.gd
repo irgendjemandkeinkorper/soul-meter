@@ -418,7 +418,7 @@ func buy_from_vendor(vendor_id: String, item_id: String) -> Dictionary:
 		return _trade_failure("inventory_full", "THE INVENTORY CANNOT HOLD THIS ITEM", price)
 	if not spend_gp(price):
 		inventory.remove_item(added_item)
-		return _trade_failure("insufficient_gp", "GP LEDGER UNCHANGED", price)
+		return _trade_failure("insufficient_gp", "SILVER LEDGER UNCHANGED", price)
 	_set_vendor_item_quantity(vendor_id, item_id, vendor_item_quantity(vendor_id, item_id) - 1)
 	return _trade_success(price)
 

@@ -189,13 +189,13 @@ func _add_stock_entry(entry: Dictionary, trade_mode: String) -> void:
 	var quantity := int(entry["quantity"])
 	var buy_price := int(entry["buy_price"])
 	var buy_verb := "OFFER" if trade_mode == "offering" else "BUY"
-	var buy := _menu_button(top, "%s  ·  %d GP" % [buy_verb, buy_price], _buy.bind(entry))
+	var buy := _menu_button(top, "%s  ·  %d SILVER" % [buy_verb, buy_price], _buy.bind(entry))
 	buy.custom_minimum_size = Vector2(155, DS.CONTROL_H)
 	buy.disabled = quantity <= 0 or not GameState.can_afford(buy_price)
 
 	var sell_price := int(entry["sell_price"])
 	if trade_mode == "commerce" and VendorData.accepts_sales(_vendor_id, item_id):
-		var sell := _menu_button(top, "SELL  ·  %d GP" % sell_price, _sell.bind(entry))
+		var sell := _menu_button(top, "SELL  ·  %d SILVER" % sell_price, _sell.bind(entry))
 		sell.custom_minimum_size = Vector2(155, DS.CONTROL_H)
 		sell.disabled = GameState.item_count(item_id) <= 0
 
@@ -221,7 +221,7 @@ func _buy(entry: Dictionary) -> void:
 		_status_label.text = _failure_text(result)
 		_render_catalog()
 		return
-	_status_label.text = "PURCHASED  ·  %s  ·  -%d GP" % [
+	_status_label.text = "PURCHASED  ·  %s  ·  -%d SILVER" % [
 		str(entry["name"]).to_upper(), int(result["price"])
 	]
 	_render_catalog()
@@ -233,7 +233,7 @@ func _sell(entry: Dictionary) -> void:
 		_status_label.text = _failure_text(result)
 		_render_catalog()
 		return
-	_status_label.text = "SOLD  ·  %s  ·  +%d GP" % [
+	_status_label.text = "SOLD  ·  %s  ·  +%d SILVER" % [
 		str(entry["name"]).to_upper(), int(result["price"])
 	]
 	_render_catalog()
@@ -248,4 +248,4 @@ func _failure_text(result: Dictionary) -> String:
 
 func _update_gp_label(value: int) -> void:
 	if _gp_label != null:
-		_gp_label.text = "GP  %03d" % value
+		_gp_label.text = "SILVER  %03d" % value

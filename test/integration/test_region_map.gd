@@ -54,7 +54,7 @@ func test_region_map_marks_current_and_disables_current_or_unaffordable_destinat
 	var button := runner.find_child("Hub_dom", true, false) as Button
 	assert_object(button).is_not_null()
 	assert_bool(button.disabled).is_true()
-	assert_str(button.text).contains("GP")
+	assert_str(button.text).contains("SILVER")
 
 	var rows := RegionMapScript.destinations_for(GameFlow.TOWN_SCENE)
 	assert_bool(rows[0]["is_current"]).is_true()
@@ -79,7 +79,7 @@ func test_failed_purchase_reports_error_without_spending_gp() -> void:
 	var screen := runner.scene() as RegionMapScreen
 	screen._on_destination_pressed(&"dom")
 	var status := runner.find_child("TravelStatus", true, false) as Label
-	assert_str(status.text).contains("enough GP")
+	assert_str(status.text).contains("enough silver")
 	assert_int(GameState.gp).is_equal(0)
 
 
