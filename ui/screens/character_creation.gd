@@ -72,6 +72,8 @@ var _flash_rect: ColorRect
 
 func _build() -> void:
 	allow_back = false  # ACCEPT is the only way out — Esc must not skip creation.
+	# Opaque: the main menu is still the live scene underneath and must not read through.
+	_add_opaque_backdrop(DS.STONE_0)
 	var vbox := _make_shell_window("THE REGISTER OF PERSONS")
 
 	_eyebrow_lbl = Label.new()

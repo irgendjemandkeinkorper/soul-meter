@@ -31,6 +31,8 @@ var _detail_bio_lbl: Label
 
 
 func _build() -> void:
+	# Opaque: the tavern interior + field HUD otherwise bleed through the roster text.
+	_add_opaque_backdrop()
 	var vbox := _make_shell_window("The Four Arms — Choose Two Companions")
 
 	var lead_lbl := Label.new()
@@ -64,6 +66,8 @@ func _build() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(360, 0)
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Rows wrap inside the column; a horizontal scrollbar just hides recruit text.
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	split.add_child(scroll)
 
 	var list_box := VBoxContainer.new()
@@ -149,6 +153,7 @@ func _build_row(member: PartyMember) -> Control:
 	sub_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	sub_lbl.modulate = Color(1, 1, 1, 0.6)
 	sub_lbl.text = format_recruit_subtext(member.race, member.char_class, member.hp, member.max_hp)
+	sub_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_child(sub_lbl)
 
 	var bio_lbl := Label.new()

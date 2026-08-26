@@ -16,18 +16,29 @@ func _ready() -> void:
 			)
 	)
 	bar.queue_redraw()
+	# The objective is two lines when a destination is set — lay the bar out as a
+	# column (right edge reserved for the SoulGauge) instead of absolute positions,
+	# so the second objective line can never sit on top of the party readout.
+	var column := VBoxContainer.new()
+	column.name = "BarColumn"
+	column.set_anchors_preset(Control.PRESET_FULL_RECT)
+	column.offset_left = 24.0
+	column.offset_top = float(DS.BORDER_TRIM_W) + 6.0
+	column.offset_right = -270.0
+	column.offset_bottom = -4.0
+	column.add_theme_constant_override("separation", 2)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_child(column)
 	var objective := Label.new()
 	objective.name = "Objective"
-	objective.position = Vector2(24, 12)
-	objective.size = Vector2(1050, 30)
 	objective.theme_type_variation = "HUDLabel"
-	bar.add_child(objective)
+	objective.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	column.add_child(objective)
 	var party_status := Label.new()
 	party_status.name = "PartyStatus"
-	party_status.position = Vector2(24, 43)
-	party_status.size = Vector2(1300, 28)
 	party_status.theme_type_variation = "StatLabel"
-	bar.add_child(party_status)
+	party_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	column.add_child(party_status)
 
 	var tutorial := Label.new()
 	tutorial.name = "Tutorial"
@@ -35,7 +46,7 @@ func _ready() -> void:
 	tutorial.size = Vector2(760, 72)
 	tutorial.theme_type_variation = "EyebrowLabel"
 	tutorial.text = (
-		"WASD  MOVE    E  INTERACT    I  INVENTORY    P  PARTY    "
+		"WASD  MOVE    SHIFT  SPRINT    E  INTERACT    I  INVENTORY    P  PARTY    "
 		+ "Q  JOURNAL    R  STANDINGS    ESC  PAUSE"
 	)
 	add_child(tutorial)

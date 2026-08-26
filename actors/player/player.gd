@@ -10,6 +10,8 @@ extends CharacterBody2D
 
 ## Movement speed in pixels/second.
 @export var speed: float = 260.0
+## Held-Shift sprint (the "sprint" input action) multiplies field speed by this.
+@export var sprint_multiplier: float = 2.0
 @export var camera_bounds := Rect2i(0, 0, 1600, 1000)
 
 ## Re-emits `ClickMoveController.move_refused` so a HUD/UI layer can surface an
@@ -67,7 +69,10 @@ func _physics_process(delta: float) -> void:
 		facing_direction = direction.normalized()
 		if absf(facing_direction.x) > 0.01:
 			_sprite.flip_h = facing_direction.x < 0.0
-	velocity = direction * speed
+	var current_speed := speed
+	if InputMap.has_action("sprint") and Input.is_action_pressed("sprint"):
+		current_speed *= sprint_multiplier
+	velocity = direction * current_speed
 	move_and_slide()
 	_update_footsteps(direction)
 

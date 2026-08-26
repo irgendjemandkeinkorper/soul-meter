@@ -17,6 +17,28 @@ func test_player_moves_right_when_holding_move_right() -> void:
 	assert_float(player.global_position.x).is_greater(start_x)
 
 
+func test_holding_sprint_moves_the_player_materially_faster() -> void:
+	var runner := scene_runner("res://world/test_room.tscn")
+	var player: Node2D = runner.find_child("Player", true, false)
+
+	var walk_start_x: float = player.global_position.x
+	runner.simulate_action_press("move_right")
+	await runner.simulate_frames(30)
+	runner.simulate_action_release("move_right")
+	var walk_distance: float = player.global_position.x - walk_start_x
+
+	var sprint_start_x: float = player.global_position.x
+	runner.simulate_action_press("sprint")
+	runner.simulate_action_press("move_right")
+	await runner.simulate_frames(30)
+	runner.simulate_action_release("move_right")
+	runner.simulate_action_release("sprint")
+	var sprint_distance: float = player.global_position.x - sprint_start_x
+
+	# 2.0x nominal; >=1.5x tolerates headless frame jitter without false greens.
+	assert_float(sprint_distance).is_greater(walk_distance * 1.5)
+
+
 func test_player_stops_at_the_left_wall() -> void:
 	var runner := scene_runner("res://world/test_room.tscn")
 	var player: Node2D = runner.find_child("Player", true, false)

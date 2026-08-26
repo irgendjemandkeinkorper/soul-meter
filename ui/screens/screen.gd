@@ -115,6 +115,19 @@ func _make_shell() -> Array[Control]:
 ##
 ## No per-node overrides here on purpose — all spacing comes from the type variations
 ## registered in `ui/theme/theme_builder.gd`.
+## Screens are transparent overlays by default. Call this first in _build() for
+## screens that must fully cover whatever is beneath them (the live scene, the
+## main menu, the HUD layer) — same pattern as battle.gd's backdrop.
+func _add_opaque_backdrop(color: Color = DS.VOID_1) -> void:
+	var backdrop := ColorRect.new()
+	backdrop.name = "Backdrop"
+	backdrop.color = color
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(backdrop)
+	move_child(backdrop, 0)
+
+
 func _make_shell_window(title_text: String) -> VBoxContainer:
 	var shell := _make_shell()
 	shell_header = shell[0] as HBoxContainer
