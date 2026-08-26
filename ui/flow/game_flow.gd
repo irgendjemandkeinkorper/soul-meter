@@ -35,9 +35,9 @@ const WOUND_LIP_SCENE := "res://world/wound_lip.tscn"
 const TAVERN_SCENE := "res://world/interiors/dom_tavern.tscn"
 ## Every scene UIManager should treat as "in gameplay" (see _in_gameplay()).
 var GAMEPLAY_SCENES: Array[String] = _gameplay_scenes()
-const LOADING_SCREEN := (
-	"res://addons/maaacks_game_template/base/nodes/loading_screen/" + "loading_screen.tscn"
-)
+## Project-owned, DS-styled scene running the Maaack LoadingScreen script —
+## replaces the addon's stock grey screen (never edit the addon itself).
+const LOADING_SCREEN := "res://ui/flow/loading_screen.tscn"
 const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
 const CHARACTER_CREATION_SCREEN := preload("res://ui/screens/character_creation.tscn")
 const DEPLOYMENT_SCREEN := preload("res://ui/screens/deployment/deployment.tscn")

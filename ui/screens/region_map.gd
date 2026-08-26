@@ -17,6 +17,8 @@ var _status_label: Label
 
 
 func _build() -> void:
+	# Opaque: the paused field scene otherwise reads through the etched map.
+	_add_opaque_backdrop()
 	var shell := _make_shell()
 	shell_header = shell[0] as HBoxContainer
 	shell_body = shell[1] as MarginContainer
@@ -27,7 +29,7 @@ func _build() -> void:
 	_refresh()
 	if not GameFlow.last_travel_error.is_empty():
 		GameFlow.last_travel_error = ""
-		_status_label.text = "Travel failed. No GP was spent."
+		_status_label.text = "Travel failed. No silver was spent."
 
 
 func _build_header() -> void:
@@ -40,7 +42,7 @@ func _build_header() -> void:
 	shell_header.add_child(spacer)
 	var ledger := Label.new()
 	ledger.name = "CommissionReadout"
-	ledger.text = "DAY —  ·  RATIONS —  ·  %d SILVER" % GameState.gp
+	ledger.text = "%s  ·  %d SILVER" % [String(WorldClock.phase()).to_upper(), GameState.gp]
 	ledger.theme_type_variation = "StatLabel"
 	shell_header.add_child(ledger)
 
@@ -160,7 +162,7 @@ func _refresh() -> void:
 func _add_mark(destination: Dictionary, index: int) -> void:
 	var button := Button.new()
 	button.name = "Hub_%s" % destination["id"]
-	button.text = "%s  ·  %d GP" % [destination["display_name"], destination["base_cost_gp"]]
+	button.text = "%s  ·  %d SILVER" % [destination["display_name"], destination["base_cost_gp"]]
 	if bool(destination["is_current"]):
 		button.text += "  ·  CURRENT"
 		button.theme_type_variation = "BronzeButton"
@@ -174,16 +176,37 @@ func _add_mark(destination: Dictionary, index: int) -> void:
 	_map_layer.add_child(button)
 
 
+## FR-506: the map itself is evidence — the gazetteer reads the destination's
+## thinning tier instead of printing "UNRECORDED" placeholders.
+const THINNING_WORDS: Array[String] = ["HELD", "FRAYING", "THINNING", "NEAR THE WOUND"]
+const RISK_WORDS: Array[String] = ["LOW", "MODERATE", "HIGH", "SEVERE"]
+
+
 func _select_destination(destination: Dictionary) -> void:
 	_selected = destination
+	var location: LocationDefinition = destination["location"]
+	var tier: int = clampi(location.thinning_tier, 0, THINNING_WORDS.size() - 1)
+	var cost := int(destination["base_cost_gp"])
 	_name_label.text = str(destination["display_name"]).to_upper()
-	_description_label.text = "A discovered hub held in the fast-travel ledger."
-	_distance_label.text = "DISTANCE  REGISTERED ROAD"
-	_time_label.text = "TRAVEL TIME  ROUTE-DEPENDENT"
-	_risk_label.text = "ENCOUNTER RISK  UNRECORDED"
-	_integrity_label.text = "LOCAL INTEGRITY  UNRECORDED"
+	if bool(destination["is_current"]):
+		_description_label.text = "You are here. The ledger holds this mark open."
+	else:
+		_description_label.text = "A discovered hub held in the fast-travel ledger."
+	_distance_label.text = "PASSAGE  ·  %d SILVER  ·  REGISTERED ROAD" % cost
+	var arrival := WorldClock.PHASES[
+		(WorldClock.PHASES.find(WorldClock.phase()) + 1) % WorldClock.PHASES.size()
+	]
+	_time_label.text = "TRAVEL TIME  ·  ONE PHASE — ARRIVE BY %s" % String(arrival).to_upper()
+	_risk_label.text = "ENCOUNTER RISK  ·  %s" % RISK_WORDS[tier]
+	_integrity_label.text = "LOCAL INTEGRITY  ·  %s (THINNING %d)" % [THINNING_WORDS[tier], tier]
 	_writ_notice.visible = false
 	_travel_button.disabled = bool(destination["is_current"]) or not bool(destination["affordable"])
+	if bool(destination["is_current"]):
+		_travel_button.text = "YOU ARE HERE"
+	elif not bool(destination["affordable"]):
+		_travel_button.text = "TRAVEL  ·  %d SILVER (SHORT)" % cost
+	else:
+		_travel_button.text = "TRAVEL  ·  %d SILVER" % cost
 	var tween := create_tween()
 	_name_label.modulate.a = 0.0
 	tween.tween_property(_name_label, "modulate:a", 1.0, DS.DUR_FAST)
@@ -202,11 +225,11 @@ func _on_destination_pressed(hub_id: StringName) -> void:
 		"unknown_destination": "That destination is no longer available.",
 		"undiscovered": "You have not discovered that hub.",
 		"current_destination": "You are already at that hub.",
-		"insufficient_gp": "You do not have enough GP for that journey.",
+		"insufficient_gp": "You do not have enough silver for that journey.",
 		"purchase_failed": "The travel purchase could not be completed.",
-		"route_rejected": "The route could not be opened. No GP was spent.",
+		"route_rejected": "The route could not be opened. No silver was spent.",
 	}
-	_status_label.text = messages.get(str(result.get("error", "")), "Travel failed. No GP was spent.")
+	_status_label.text = messages.get(str(result.get("error", "")), "Travel failed. No silver was spent.")
 	_refresh()
 
 
