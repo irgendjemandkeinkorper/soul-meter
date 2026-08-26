@@ -89,6 +89,13 @@ func targets_for(
 	return []
 
 
+## Presentation snapshot of the static terrain, one Dictionary per cell
+## ({x, y, height_delta, cliff}), consumed by CombatEvent snapshots for the
+## battle-interface stage region. Models without cells report none.
+func tiles_snapshot() -> Array[Dictionary]:
+	return []
+
+
 ## What this model can express. A consumer branches on capabilities, never on
 ## type — no `is_grid()`. The zone model reports each spatial capability as
 ## false and stays fully functional (architecture doc §1.3-1.4).

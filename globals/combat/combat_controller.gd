@@ -51,6 +51,17 @@ var battlefield: BattlefieldModel
 var rules: CombatRules
 var skill_check_service: SkillCheckService
 var scheduler: TurnScheduler
+## Issue #209: the live Weather instance. Ticks on the scheduler's real CT cadence
+## (`_advance_weather()`), applies its per-measure feed/starve to `tile_states`, and
+## feeds `Resolution` context. Stays at the UNCHARGED sentinel unless the encounter
+## authors an element via `configure_weather()` — which encounters do is an owner
+## (balance) decision, not decided here.
+var weather: Weather = Weather.new()
+## Issue #209: per-cell TileState for grid battles ([] for zone battles). Built from
+## the battlefield's static terrain in start(); charge moves only through Weather's
+## measure application (residue-on-cast wiring is a separate authored-ability task).
+var tile_states: Array[TileState] = []
+var _tile_by_cell: Dictionary = {}  ## Vector2i -> TileState
 
 var _actions: Dictionary = {}
 var _sequence := 0
@@ -87,6 +98,65 @@ func configure(
 		skill_check_service = SkillCheckService.new()
 
 
+## Issue #209: authors this battle's weather element (from encounter data — the caller
+## owns where that is authored). Returns Weather's own validation result, so an
+## unrecognized element is a loud refusal, never silently "weather".
+func configure_weather(element_id: StringName, hush: bool = false) -> Dictionary:
+	weather.set_hush(hush)
+	if element_id == Weather.UNCHARGED:
+		return {"allowed": true, "element_id": String(Weather.UNCHARGED)}
+	return weather.set_element(element_id)
+
+
+## Builds one TileState per battlefield cell (grid battles only; a cell-less model
+## reports no tiles and the battle keeps zone semantics). Heights come from the same
+## terrain snapshot the presentation layer uses, so the two can never disagree.
+func _build_tile_states(encounter_id: StringName) -> void:
+	tile_states.clear()
+	_tile_by_cell.clear()
+	if battlefield == null:
+		return
+	for terrain: Dictionary in battlefield.tiles_snapshot():
+		var tile := TileState.create(
+			encounter_id,
+			int(terrain.get("x", 0)),
+			int(terrain.get("y", 0)),
+			int(terrain.get("height_delta", 0)),
+		)
+		tile_states.append(tile)
+		_tile_by_cell[Vector2i(tile.x, tile.y)] = tile
+
+
+## Advances weather by the CT ticks the scheduler just reported. Every 16th tick
+## Weather applies its measure over the live tiles; an application that moved charge
+## is presentation-worthy, so it is emitted as its own event.
+func _advance_weather(ticks_elapsed: int) -> void:
+	for i in ticks_elapsed:
+		var result := weather.tick(tile_states, balance)
+		if not bool(result.get("applied", false)):
+			continue
+		if weather.element_id == Weather.UNCHARGED:
+			continue
+		_emit_event(&"weather_applied", null, null, {
+			"element_id": String(weather.element_id),
+			"charged_tiles": int(result.get("charged_tiles", 0)),
+			"drained_tiles": int(result.get("drained_tiles", 0)),
+			"measures_applied": weather.measures_applied(),
+		})
+
+
+func tile_state_at(cell: Vector2i) -> TileState:
+	return _tile_by_cell.get(cell)
+
+
+## The diametric Clash element (wheel distance 5) — what this weather starves.
+static func _clash_of(element_id: StringName) -> StringName:
+	for candidate: StringName in ElementWheel.ORDER:
+		if ElementWheel.distance(element_id, candidate) == Weather.CLASH_WHEEL_DISTANCE:
+			return candidate
+	return &""
+
+
 func start(
 	ally_group: Array[BattleActor],
 	enemy_group: Array[BattleActor],
@@ -108,6 +178,7 @@ func start(
 	_assign_combat_ids(enemies, &"enemy", encounter_id)
 	battlefield.setup(allies, enemies)
 	scheduler.setup(allies + enemies)
+	_build_tile_states(encounter_id)
 	_apply_balance_band(false)
 	state = State.ROUND_START
 	_emit_event(&"battle_started", null, null, {})
@@ -334,7 +405,31 @@ func snapshot() -> Dictionary:
 		"active_actor_id": active_actor().combat_id if active_actor() else &"",
 		"allies": _actor_snapshots(allies),
 		"enemies": _actor_snapshots(enemies),
+		"tiles": _tile_snapshots(),
+		"weather": _weather_snapshot(),
 	}
+
+
+## Live tiles (terrain + charge) when a grid battle built TileStates; the static
+## terrain snapshot otherwise (zone battles report none either way).
+func _tile_snapshots() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if tile_states.is_empty():
+		if battlefield != null:
+			result = battlefield.tiles_snapshot()
+		return result
+	for tile: TileState in tile_states:
+		result.append(tile.to_dict())
+	return result
+
+
+func _weather_snapshot() -> Dictionary:
+	var data := weather.to_dict()
+	data["tick"] = scheduler.tick_count() if scheduler != null else 0
+	if weather.element_id != Weather.UNCHARGED:
+		data["gains"] = String(weather.element_id)
+		data["drains"] = String(_clash_of(weather.element_id))
+	return data
 
 
 ## Placeholder Wheel element substituted when an authored `CombatAction` leaves `element_id`
@@ -392,6 +487,10 @@ static func calculate_damage(
 			"to_hit_enabled": not positional_context.is_empty(),
 			"tick": int(seed),
 			"edge": int(attacker.attributes.get(&"edge", 0)),
+			# #209: tile/weather terms ride the same positional channel. Absent keys
+			# resolve to Resolution's neutral terms (uncharged tiles, no weather).
+			"tile_state": positional_context.get("source_tile", {}),
+			"weather": positional_context.get("weather", {}),
 		},
 		{
 			"id": "attack",
@@ -406,6 +505,7 @@ static func calculate_damage(
 				"element_id": target.element_id,
 				"edge": int(target.attributes.get(&"edge", 0)),
 			},
+			"tile_state": positional_context.get("target_tile", {}),
 			"facing": positional_context.get("facing", {}),
 			"height_advantage_steps": int(
 				positional_context.get("height_advantage_steps", 0)
@@ -506,6 +606,9 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 	# round, release the lock if it was due, THEN `_begin_round()` opens the next one — or the
 	# lock would release one round early and presentation would see "round 2 started" before
 	# "round 1 ended".
+	# #209: weather shares the scheduler's clock — one Weather.tick() per CT tick the
+	# scheduler just advanced, so the 16-tick measure cadences can never drift apart.
+	_advance_weather(int(result.get("ticks_elapsed", 0)))
 	if bool(result.get("round_ended", false)):
 		var ended_round := int(result.get("ended_round", round_number))
 		_emit_event(&"round_ended", null, null, {"round": ended_round})
@@ -816,6 +919,59 @@ func _resolve_attack(
 	}
 
 
+## #209 forecast parity: the same Resolution context an actual strike will use — same
+## power arithmetic, same tile/weather/facing terms — minus the to-hit roll (a forecast
+## shows the on-hit number). Region D's only calculator is Resolution.resolve(); feeding
+## it this context keeps forecast == resolution by construction.
+func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
+	if actor == null or target == null or action == null:
+		return {}
+	var positional_context := _positional_resolution_context(actor, target)
+	var legacy_flank_bonus := 0
+	if positional_context.is_empty():
+		legacy_flank_bonus = battlefield.flank_bonus(actor, target)
+	var element_id := action.element_id
+	if String(element_id).is_empty():
+		element_id = _UNAUTHORED_ELEMENT_ID
+	var power := (
+		actor.effective_attack()
+		+ action.power_bonus
+		+ legacy_flank_bonus
+		+ int(actor.balance_effects.get("damage_bonus", 0))
+	)
+	var target_height := 0
+	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
+	if target_position.has("elevation"):
+		target_height = int(target_position["elevation"])
+	return {
+		"unit": {
+			"id": String(actor.combat_id),
+			"attack_scale": actor.attack_scale,
+			"edge": int(actor.attributes.get(&"edge", 0)),
+		},
+		"ability": {
+			"id": String(action.id),
+			"element_id": element_id,
+			"elements": [element_id],
+			"magnitude": action.magnitude,
+			"power": power,
+		},
+		"target": {
+			"id": String(target.combat_id),
+			"hp": target.hp,
+			"element_id": target.element_id,
+			"edge": int(target.attributes.get(&"edge", 0)),
+			"height": target_height,
+			"attunements": {},
+		},
+		"source_tile": positional_context.get("source_tile", {}),
+		"target_tile": positional_context.get("target_tile", {}),
+		"weather": positional_context.get("weather", weather.to_dict()),
+		"facing": positional_context.get("facing", {}),
+		"height_advantage_steps": int(positional_context.get("height_advantage_steps", 0)),
+	}
+
+
 func _positional_resolution_context(actor: BattleActor, target: BattleActor) -> Dictionary:
 	var capabilities: Dictionary = battlefield.capabilities()
 	if (
@@ -840,7 +996,17 @@ func _positional_resolution_context(actor: BattleActor, target: BattleActor) -> 
 	return {
 		"height_advantage_steps": maxi(-battlefield.elevation_delta(actor, target), 0),
 		"facing": {"id": facing_id},
+		# #209: live tactical terrain context. Empty dicts resolve to Resolution's
+		# neutral terms, so a grid battle without charges behaves exactly as before.
+		"source_tile": _tile_context(actor_position["cell"] as Vector2i),
+		"target_tile": _tile_context(target_position["cell"] as Vector2i),
+		"weather": weather.to_dict(),
 	}
+
+
+func _tile_context(cell: Vector2i) -> Dictionary:
+	var tile := tile_state_at(cell)
+	return tile.to_dict() if tile != null else {}
 
 
 func _resolve_defining_strike(
@@ -1065,6 +1231,8 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 		result.append({
 			"id": actor.combat_id,
 			"display_name": actor.display_name,
+			"element_id": actor.element_id,
+			"facing": battlefield.facing_of(actor) if battlefield != null else &"",
 			"hp": actor.hp,
 			"max_hp": actor.max_hp,
 			"ap": actor.action_points,

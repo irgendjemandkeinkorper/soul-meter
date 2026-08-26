@@ -24,8 +24,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
-grow_vertical = 2
-theme_type_variation = &"BattleSafeFrame"
+grow_vertical = 1
 
 [node name="Rows" type="VBoxContainer" parent="SafeFrame"]
 layout_mode = 2
@@ -52,6 +51,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 [node name="ActTargetPanel" parent="SafeFrame/Rows/Middle" instance=ExtResource("5")]
 unique_name_in_owner = true
+size_flags_vertical = 0
 
 [node name="CursorReadout" type="Label" parent="SafeFrame/Rows"]
 unique_name_in_owner = true
@@ -64,20 +64,8 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 theme_type_variation = &"BattleHudRow"
-[node name="Action1" type="Button" parent="SafeFrame/Rows/HotbarSoulGauge"]
+[node name="Spacer" type="Control" parent="SafeFrame/Rows/HotbarSoulGauge"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "ACTION I"
-[node name="Action2" type="Button" parent="SafeFrame/Rows/HotbarSoulGauge"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "ACTION II"
-[node name="Action3" type="Button" parent="SafeFrame/Rows/HotbarSoulGauge"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "ACTION III"
-[node name="Action4" type="Button" parent="SafeFrame/Rows/HotbarSoulGauge"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "ACTION IV"
+mouse_filter = 2
 [node name="SoulGauge" parent="SafeFrame/Rows/HotbarSoulGauge" instance=ExtResource("7")]

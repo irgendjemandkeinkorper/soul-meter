@@ -114,6 +114,14 @@ func start(encounter: Variant) -> void:
 	controller.event_emitted.connect(_on_combat_event)
 	controller.battle_finished.connect(_on_controller_finished)
 	controller.configure(available_actions(true), _battlefield_for_definition(rules), rules)
+	var weather_default := StringName(str(_definition.get("weather_default", "")))
+	if weather_default != &"":
+		var weather_result := controller.configure_weather(weather_default)
+		if not bool(weather_result.get("allowed", false)):
+			push_warning(
+				"Encounter '%s' authors unknown weather '%s'; battle starts calm."
+				% [encounter_id, weather_default]
+			)
 	controller.start(allies, enemies)
 	battle_started.emit()
 	balance_changed.emit(balance)
@@ -392,6 +400,17 @@ func living_enemies() -> Array[BattleActor]:
 
 func current_target() -> BattleActor:
 	return _living_enemy(target_enemy_index)
+
+
+## #209: the ACT/TARGET panel's forecast context — the active ally striking the
+## current target, built by the controller with the exact terms live resolution
+## will use. Empty when no battle (or no valid pair) is live.
+func forecast_context() -> Dictionary:
+	if controller == null:
+		return {}
+	return controller.forecast_context(
+		current_ally(), current_target(), controller.action_by_id(&"strike")
+	)
 
 
 func select_next_enemy() -> void:

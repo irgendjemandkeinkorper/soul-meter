@@ -22,6 +22,12 @@ const _CHARGE_TIME_ENCOUNTERS := {
 	"phase2-stabilizer-showcase": true,
 }
 
+## #209: per-encounter authored weather element (Wheel id → the battle's Weather).
+## Deliberately EMPTY: which encounters get which weather is an owner balance
+## decision (`tools/combat_number_sweep.gd` delta must accompany any entry — see the
+## issue's acceptance checks). The mechanism is live; the authoring is not decided here.
+const _WEATHER_DEFAULTS: Dictionary = {}
+
 static var _definitions: Dictionary = {}
 
 
@@ -34,6 +40,9 @@ static func definition(encounter_id: StringName) -> Dictionary:
 		result["grid"] = grid.duplicate(true)
 	if bool(_CHARGE_TIME_ENCOUNTERS.get(String(encounter_id), false)):
 		result["use_charge_time"] = true
+	var authored_weather := str(_WEATHER_DEFAULTS.get(String(encounter_id), ""))
+	if not authored_weather.is_empty():
+		result["weather_default"] = authored_weather
 	return result
 
 

@@ -149,14 +149,17 @@ static func audit_project(strict: bool = false) -> Dictionary:
 	var readback_sources := _readback_sources(dialogue_sources)
 	_classify_readbacks(quest_results, readback_sources)
 	var flag_access := _project_flag_access(quest_results, dialogue_sources, readback_sources)
-	return build_report(quest_results, flag_access, strict, scan_grammar_flags())
+	return build_report(
+		quest_results, flag_access, strict, scan_grammar_flags(), quest_critical_npc_ids()
+	)
 
 
 static func build_report(
 	quest_results: Array[Dictionary],
 	flag_access: Dictionary,
 	strict: bool,
-	grammar_flags: PackedStringArray = PackedStringArray()
+	grammar_flags: PackedStringArray = PackedStringArray(),
+	quest_critical_ids: PackedStringArray = PackedStringArray()
 ) -> Dictionary:
 	var categories := {
 		"outcome_count": _category(),
@@ -164,6 +167,7 @@ static func build_report(
 		"readbacks": _category(),
 		"orphaned_flags": _category(),
 		"flag_grammar": _category(),
+		"phase_reachability": _category(),
 	}
 	var main_read := 0
 	var main_total := 0
@@ -258,6 +262,19 @@ static func build_report(
 			violation
 		)
 
+	var reachability_violations := phase_reachability_violations(quest_critical_ids)
+	for violation: Dictionary in reachability_violations:
+		_add_finding(
+			categories["phase_reachability"],
+			"error",
+			"quest_critical_npc_reachable_in_fewer_than_two_phases",
+			violation
+		)
+	var routined_critical_count := 0
+	for npc_id: String in quest_critical_ids:
+		if NpcRoutines.has_routine(npc_id):
+			routined_critical_count += 1
+
 	var severity := {"error": 0, "warning": 0, "info": 0}
 	var findings_total := 0
 	for category_value: Variant in categories.values():
@@ -304,6 +321,13 @@ static func build_report(
 				"grandfathered": LEGACY_FLAGS.size(),
 				"registered_domains": PackedStringArray(FLAG_DOMAINS),
 				"passes": grammar_violations.is_empty(),
+			},
+			"phase_reachability": {
+				"quest_critical_npcs": quest_critical_ids.size(),
+				"routined": routined_critical_count,
+				"required_phases": 2,
+				"violations": reachability_violations.size(),
+				"passes": reachability_violations.is_empty(),
 			},
 		},
 		"categories": categories,
@@ -400,6 +424,51 @@ static func scan_grammar_flags() -> PackedStringArray:
 	var result := PackedStringArray(flags.keys())
 	result.sort()
 	return result
+
+
+## FR-905 §3.4 (docs/prd-amendment-living-world.md): the quest-critical NPC surface —
+## every authored side-quest giver (`giver_actor_id` in quests/*.tres) plus every NPC
+## whose own dialogue file calls `QuestRegistry.offer(` (dialogue stems are the npc id
+## in snake case, e.g. sella_varn.dialogue → sella-varn).
+##
+## The stem→id mapping is a heuristic with the same fail-safe shape as limitation 1:
+## a wrong or unmapped id has no routine, so it counts as phase-agnostic and passes.
+## Only NPCs that DO carry an NpcRoutines row can violate, and those come from a
+## hand-authored table — a routined giver missed here means the offer lives in a
+## dialogue file not named after the giver, which is itself worth noticing.
+static func quest_critical_npc_ids() -> PackedStringArray:
+	var ids := {}
+	var giver_regex := _regex('giver_actor_id\\s*=\\s*"([^"]+)"')
+	for source: Variant in _source_files(QUEST_DIRECTORY, PackedStringArray(["tres"])).values():
+		for giver_match: RegExMatch in giver_regex.search_all(str(source)):
+			ids[giver_match.get_string(1)] = true
+	var dialogue_sources := _source_files(DIALOGUE_DIRECTORY, PackedStringArray(["dialogue"]))
+	for path: String in dialogue_sources:
+		if str(dialogue_sources[path]).contains("QuestRegistry.offer("):
+			ids[path.get_file().get_basename().replace("_", "-")] = true
+	var result := PackedStringArray(ids.keys())
+	result.sort()
+	return result
+
+
+## The FR-905 soft-lock check: a quest-critical NPC with a world-clock routine must be
+## present (interactable) in at least two phases. NPCs without a routine are
+## phase-agnostic by design (FR-504a item 4) and always reachable.
+static func phase_reachability_violations(npc_ids: PackedStringArray) -> Array[Dictionary]:
+	var violations: Array[Dictionary] = []
+	for npc_id: String in npc_ids:
+		if not NpcRoutines.has_routine(npc_id):
+			continue
+		var present := NpcRoutines.present_phase_count(npc_id)
+		if present < 2:
+			violations.append(
+				{
+					"npc_id": npc_id,
+					"present_phases": present,
+					"required_phases": 2,
+				}
+			)
+	return violations
 
 
 static func scan_flag_sources(paths: PackedStringArray) -> Dictionary:

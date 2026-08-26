@@ -26,6 +26,15 @@ var _combat_audio: Node
 
 
 func _build() -> void:
+	# Battle is an overlay screen: the paused gameplay scene (and its FieldHUD) keeps
+	# rendering underneath, so the screen needs its own opaque ground.
+	var backdrop := ColorRect.new()
+	backdrop.name = "Backdrop"
+	backdrop.color = DS.VOID_1
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(backdrop)
+
 	var safe_frame := MarginContainer.new()
 	safe_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
 	safe_frame.theme_type_variation = "BattleSafeFrame"
@@ -272,6 +281,11 @@ func _refresh() -> void:
 	var target := Battle.current_target()
 	_target_button.text = "TARGET  •  %s  〉" % (target.display_name if target else "NONE")
 	_target_button.disabled = Battle.living_enemies().size() <= 1
+
+	if is_instance_valid(_battle_interface):
+		var forecast_ctx := Battle.forecast_context()
+		if not forecast_ctx.is_empty():
+			_battle_interface.set_forecast_context(forecast_ctx)
 
 
 func _update_enemy_status() -> void:

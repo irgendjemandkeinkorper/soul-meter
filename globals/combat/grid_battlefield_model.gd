@@ -55,6 +55,11 @@ var _cliffs: Dictionary = {}  ## Vector2i -> bool
 ## `CombatController._assign_combat_ids()` at encounter setup (issue #186). Deliberately NOT
 ## `actor.get_instance_id()`: that is process-local, does not survive a save round trip, and is
 ## allocation-order dependent rather than deterministic across two runs with identical inputs.
+## Cached tiles_snapshot() result. Terrain is static per build, so the per-cell dicts
+## are built once and shared by reference across every CombatEvent snapshot — consumers
+## treat them as read-only (the stage region deep-duplicates what it keeps).
+var _tiles_snapshot_cache: Array[Dictionary] = []
+
 var _cells: Dictionary = {}  ## StringName (combat_id) -> Vector2i
 var _sides: Dictionary = {}  ## StringName (combat_id) -> StringName
 var _facings: Dictionary = {}  ## StringName (combat_id) -> StringName
@@ -71,6 +76,7 @@ func configure(rules: CombatRules) -> void:
 ## Elevation/cliff data is supplied separately via `set_elevation()` / `set_cliff()` so the two
 ## concerns stay independently settable, per the header note.
 func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
+	_tiles_snapshot_cache = []
 	_grid = IsoGrid.new()
 	_grid.build(ground, blocking)
 	for cell: Vector2i in _elevation.keys():
@@ -82,6 +88,7 @@ func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
 
 ## Terrain height at `cell`. Scales the CT cost of entering it — never makes it impassable.
 func set_elevation(cell: Vector2i, elevation: int) -> void:
+	_tiles_snapshot_cache = []
 	_elevation[cell] = elevation
 	_apply_elevation_weight(cell)
 
@@ -92,6 +99,7 @@ func elevation_at(cell: Vector2i) -> int:
 
 ## Marks (or clears) `cell` as a cliff: impassable outright, regardless of elevation weight.
 func set_cliff(cell: Vector2i, is_cliff: bool = true) -> void:
+	_tiles_snapshot_cache = []
 	_cliffs[cell] = is_cliff
 	if _grid != null and _grid.is_in_bounds(cell):
 		_grid.set_point_solid(cell, is_cliff)
@@ -287,6 +295,25 @@ func targets_for(
 	if bool(query.get("allowed", false)):
 		result.append(primary)
 	return result
+
+
+func tiles_snapshot() -> Array[Dictionary]:
+	if _grid == null:
+		return []
+	if _tiles_snapshot_cache.is_empty():
+		var rect := _grid.get_used_rect()
+		for y in range(rect.position.y, rect.end.y):
+			for x in range(rect.position.x, rect.end.x):
+				var cell := Vector2i(x, y)
+				if not _grid.is_in_bounds(cell):
+					continue
+				_tiles_snapshot_cache.append({
+					"x": x,
+					"y": y,
+					"height_delta": elevation_at(cell),
+					"cliff": bool(_cliffs.get(cell, false)),
+				})
+	return _tiles_snapshot_cache
 
 
 func capabilities() -> Dictionary:

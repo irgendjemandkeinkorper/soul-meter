@@ -244,6 +244,107 @@ func test_grid_attacks_route_ratified_height_and_facing_through_resolution() -> 
 	assert_int(_grid_attack_damage(2, &"w")).is_equal(120)  # +10% per favorable step
 
 
+func test_weather_shares_the_scheduler_clock_and_feeds_matching_tiles() -> void:
+	var local_controller := _grid_controller(true)
+	assert_bool(bool(local_controller.configure_weather(&"strom").get("allowed", false))).is_true()
+	# Weather ticks ride the scheduler's advance() results — the two clocks agree
+	# after start() has driven the scheduler to the first ready ally.
+	assert_int(local_controller.weather.total_ticks())\
+		.is_equal(local_controller.scheduler.tick_count())
+
+	# Measure application (issue #140 rules): a tile already charged in the weather's
+	# element gains charge; a clash-charged tile drains. Pre-charge both shapes.
+	var fed: TileState = local_controller.tile_state_at(Vector2i(0, 0))
+	fed.apply_residue(&"strom")
+	var starved: TileState = local_controller.tile_state_at(Vector2i(1, 0))
+	starved.apply_residue(CombatController._clash_of(&"strom"))
+	var events: Array[CombatEvent] = []
+	local_controller.event_emitted.connect(func(event: CombatEvent) -> void: events.append(event))
+	local_controller._advance_weather(TurnScheduler.TICKS_PER_MEASURE)
+	assert_int(fed.charge_level).is_greater(1)
+	assert_int(starved.charge_level).is_equal(0)
+	var applied := events.filter(func(e: CombatEvent) -> bool: return e.type == &"weather_applied")
+	assert_int(applied.size()).is_equal(1)
+
+
+func test_snapshot_reports_live_weather_and_charged_tiles() -> void:
+	var local_controller := _grid_controller(true)
+	local_controller.configure_weather(&"strom")
+	(local_controller.tile_state_at(Vector2i(0, 0)) as TileState).apply_residue(&"strom")
+	var snapshot := local_controller.snapshot()
+	var weather: Dictionary = snapshot["weather"]
+	assert_str(str(weather["element_id"])).is_equal("strom")
+	assert_str(str(weather["gains"])).is_equal("strom")
+	assert_str(str(weather["drains"])).is_equal(String(CombatController._clash_of(&"strom")))
+	var charged: Array = (snapshot["tiles"] as Array).filter(
+		func(t: Variant) -> bool: return int((t as Dictionary).get("charge_level", 0)) > 0
+	)
+	assert_int(charged.size()).is_equal(1)
+	assert_str(str((charged[0] as Dictionary)["charge_element_id"])).is_equal("strom")
+
+
+func test_charged_source_tile_raises_the_forecast_and_matches_resolution_terms() -> void:
+	var local_controller := _grid_controller(true)
+	var actor := local_controller.allies[0]
+	var target := local_controller.enemies[0]
+	var strike := local_controller.action_by_id(&"strike")
+	var baseline := Resolution.resolve(local_controller.forecast_context(actor, target, strike))
+	assert_bool(bool(baseline.get("allowed", false))).is_true()
+
+	# Charge the attacker's own tile with the strike's (fallback) element: the
+	# forecast must rise by the tile-charge multiplier, through the same context
+	# terms live resolution uses (source_tile from the actor's cell).
+	var actor_cell: Vector2i = (
+		local_controller.battlefield.describe_position(
+			local_controller.battlefield.position_of(actor)
+		)["cell"]
+	)
+	var source_tile: TileState = local_controller.tile_state_at(actor_cell)
+	source_tile.apply_residue(&"suul")
+	source_tile.apply_residue(&"suul")
+	var context := local_controller.forecast_context(actor, target, strike)
+	assert_dict(context["source_tile"] as Dictionary).is_equal(source_tile.to_dict())
+	assert_dict(context["weather"] as Dictionary).is_equal(local_controller.weather.to_dict())
+	var charged := Resolution.resolve(context)
+	assert_int(int(charged["damage"])).is_greater(int(baseline["damage"]))
+
+
+func _grid_controller(use_charge_time: bool) -> CombatController:
+	var local_rules := (
+		load("res://data/combat/combat_rules.tres") as CombatRules
+	).duplicate(true) as CombatRules
+	local_rules.use_charge_time = use_charge_time
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_grid_ground())
+	var local_controller := CombatController.new()
+	local_controller.configure(CombatActionCatalog.all(), grid, local_rules)
+	local_controller.start(
+		[_actor("Grid Ally", 200, 20, 0)], [_actor("Grid Enemy", 200, 1, 0)], &"weather-test"
+	)
+	return local_controller
+
+
+func test_snapshot_carries_terrain_tiles_and_weather_cadence() -> void:
+	var local_rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_grid_ground())
+	grid.set_elevation(Vector2i(0, 0), 2)
+	var local_controller := CombatController.new()
+	local_controller.configure(CombatActionCatalog.all(), grid, local_rules)
+	local_controller.start([_actor("Grid Ally", 20, 5, 0)], [_actor("Grid Enemy", 20, 5, 0)])
+
+	var snapshot := local_controller.snapshot()
+	var tiles: Array = snapshot.get("tiles", [])
+	assert_int(tiles.size()).is_equal(2)  # _grid_ground() authors two cells
+	assert_int(int((tiles[0] as Dictionary).get("height_delta", -1))).is_equal(2)
+	assert_int(int((tiles[1] as Dictionary).get("height_delta", -1))).is_equal(0)
+	var weather: Dictionary = snapshot.get("weather", {})
+	assert_str(str(weather.get("element_id", "missing"))).is_equal("")
+	assert_int(int(weather.get("tick", -1))).is_equal(local_controller.scheduler.tick_count())
+
+
 func _actor(name: String, hp: int, attack: int, defense: int) -> BattleActor:
 	var actor := BattleActor.new()
 	actor.display_name = name

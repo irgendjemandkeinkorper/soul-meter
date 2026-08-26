@@ -208,6 +208,41 @@ they're Codex implementation work (status comments posted). Real remaining human
 playtest (recruit 6–8), FR-904 runbook on real hardware, and the Windows-machine chores
 (Maaack wizard, PixelPen, GodotGAS, #112/#115 assets).
 
+## Status addendum (2026-08-25) — battle screen QA pass
+
+The combat screen's playtest-QA breakage is fixed. What was wrong and where things stand:
+`ui/screens/battle.gd` (legacy header + COMMAND/LOG/PARTY rail, still the functional command
+surface) hosts the six-region `BattleInterface` INSIDE its battlefield strip — that nesting is
+deliberate and now lays out correctly: the interface lost its double `BattleSafeFrame` margins,
+its dead ACTION I–IV placeholder hotbar (SoulGauge kept — `HotbarSoulGauge` node name is
+test-pinned), and its full-screen-era stage min-size `(560,300)` → `(320,120)`; `SafeFrame`
+uses `grow_vertical = 1` so overflow can never behead the top plates again. Battle gets an
+opaque `DS.VOID_1` backdrop (it's an overlay — the paused field scene bleeds through otherwise).
+**Snapshot schema:** `CombatController.snapshot()` now carries `tiles` (terrain-only, from
+cached `BattlefieldModel.tiles_snapshot()`; zone models report `[]`) and `weather`
+(`element_id` stays the `&""`/CALM sentinel, `tick` is the scheduler's real cadence); actor
+snapshots gained `element_id`/`facing`. `UnitPlateRegion` resolves the active unit from
+`active_actor_id` + rosters (the `active_unit` key exists only in tests) and only renders
+CT-line segments the payload carries — never fabricate SPD/H0.
+**#209 (live Weather + TileState) is IMPLEMENTED** (same session, later wave): CombatController
+owns a `Weather` + per-cell `TileState`s (grid battles; built in `start()` from the terrain
+snapshot), weather ticks ride `_translate_scheduler_extras`' `ticks_elapsed` so the two 16-tick
+clocks can't drift, tile/weather terms feed `Resolution` through the positional-context channel
+(`calculate_damage`), and `Battle.forecast_context()` → `battle.gd _refresh()` →
+`BattleInterface.set_forecast_context()` gives region D the SAME context live resolution uses —
+forecast==resolution by construction. Snapshots carry live tiles (charge included) and weather
+(gains/drains when an element is authored). **Deliberately NOT decided:** which encounters get
+weather — `EncounterCatalog._WEATHER_DEFAULTS` is an EMPTY authoring surface (owner balance
+decision; `combat_number_sweep` verified byte-identical with it empty). Charge's only live
+source is weather feed of pre-charged tiles — residue-on-cast is a separate authored-ability
+task. Mid-battle save is not a Ch1 behavior (waveC T-8 ruling); model-level serialization covers it.
+**FR-905 two-phase audit check is BUILT** (#104's tooling gap): `tools/quest_audit.gd`
+`phase_reachability` category — quest-critical NPCs (tres `giver_actor_id` + dialogue
+`QuestRegistry.offer(` stems) with an `NpcRoutines` row must be present ≥2 phases; live run:
+19 critical / 2 routined / 0 violations.
+Full-screen unification of battle.gd into the six regions remains open/optional.
+Suite: **821 cases / 0 failures**.
+
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
 

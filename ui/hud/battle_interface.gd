@@ -30,5 +30,9 @@ func bind_scheduler(scheduler: TurnScheduler) -> void:
 	turn_timeline.bind_scheduler(scheduler)
 
 
+func set_forecast_context(context: Dictionary) -> void:
+	act_target_panel.set_forecast_context(context)
+
+
 func _on_tile_selected(tile: Dictionary) -> void:
 	cursor_readout.text = "(%d,%d) · HEIGHT %d · %s %d · %s" % [int(tile.get("x", 0)), int(tile.get("y", 0)), int(tile.get("height_delta", tile.get("height", 0))), str(tile.get("charge_element_id", "UNCHARGED")).to_upper(), int(tile.get("charge_level", 0)), str(tile.get("note", ""))]

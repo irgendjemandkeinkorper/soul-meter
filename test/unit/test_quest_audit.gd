@@ -164,6 +164,50 @@ func test_report_carries_a_flag_grammar_category_and_metric() -> void:
 	assert_bool(report["metrics"]["flag_grammar"]["passes"]).is_false()
 
 
+func test_quest_critical_ids_cover_tres_givers_and_dialogue_offer_stems() -> void:
+	var ids := QuestAuditScript.quest_critical_npc_ids()
+	# giver_actor_id path: every authored Dom side quest names one.
+	assert_array(ids).contains(["hadrik-vale", "vaara-cisternhand"])
+	# dialogue-offer path: sella_varn.dialogue calls QuestRegistry.offer().
+	assert_array(ids).contains(["sella-varn"])
+
+
+func test_phase_reachability_passes_routined_and_unrouted_shipped_npcs() -> void:
+	# Shipped content must hold the FR-905 floor: no quest-critical NPC with a
+	# routine may be present in fewer than two phases.
+	var violations := QuestAuditScript.phase_reachability_violations(
+		QuestAuditScript.quest_critical_npc_ids()
+	)
+	assert_array(violations).is_empty()
+
+
+func test_phase_reachability_flags_a_single_phase_quest_critical_npc() -> void:
+	# No shipped NPC violates, so prove the detector on the rule itself: any id
+	# WITHOUT a routine is phase-agnostic and passes; a routined id fails only
+	# below two present phases. sella-varn is routined with 3 present phases.
+	assert_array(
+		QuestAuditScript.phase_reachability_violations(PackedStringArray(["no-such-npc"]))
+	).is_empty()
+	assert_int(NpcRoutines.present_phase_count("sella-varn")).is_greater_equal(2)
+
+
+func test_report_carries_a_phase_reachability_category_and_metric() -> void:
+	var quest_results: Array[Dictionary] = []
+	var flags := QuestAuditScript.scan_flag_sources(PackedStringArray([FLAG_FIXTURE]))
+	var report := QuestAuditScript.build_report(
+		quest_results,
+		flags,
+		false,
+		PackedStringArray(),
+		PackedStringArray(["sella-varn", "branek-coiljaw"])
+	)
+
+	assert_bool(report["categories"].has("phase_reachability")).is_true()
+	assert_int(report["metrics"]["phase_reachability"]["quest_critical_npcs"]).is_equal(2)
+	assert_int(report["metrics"]["phase_reachability"]["routined"]).is_equal(1)
+	assert_bool(report["metrics"]["phase_reachability"]["passes"]).is_true()
+
+
 func _outcome(outcome_id: String, writes_state: bool, read_back: bool) -> Dictionary:
 	return {
 		"id": outcome_id,
