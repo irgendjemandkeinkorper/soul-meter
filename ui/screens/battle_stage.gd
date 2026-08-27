@@ -72,17 +72,6 @@ const ENVIRONMENT_PROPS := {
 	],
 }
 
-const ALLY_UNIT_IDS_BY_NAME := {
-	"Vex": "vex",
-	"Vex the Unbowed": "vex",
-	"Serai-Lun": "serai-lun",
-	"Old Grumbrand": "old-grumbrand",
-	"Wyneth Hallow-Tide": "wyneth-hallow-tide",
-	"Ressa Quickfingers": "ressa-quickfingers",
-	"Korrath Ninefold": "korrath-ninefold",
-	"Maura Greyfen": "maura-greyfen",
-}
-
 var _snapshot: Dictionary = {}
 var _target_id: StringName = &""
 var _active_actor_id: StringName = &""
@@ -1163,13 +1152,11 @@ func _update_combatant_node(
 
 
 func _sprite_path_for(row: Dictionary) -> String:
-	var side := StringName(row.get("side", "ally"))
-	var unit_id := ""
-	if side == &"enemy":
-		unit_id = String(StringName(row.get("archetype_id", "")))
-	else:
-		var display_name := str(row.get("display_name", ""))
-		unit_id = str(ALLY_UNIT_IDS_BY_NAME.get(display_name, display_name))
+	var unit_id := UnitArtScript.combat_unit_id(
+		StringName(row.get("side", "ally")),
+		String(StringName(row.get("archetype_id", ""))),
+		str(row.get("display_name", ""))
+	)
 	return UnitArtScript.texture_path(UnitArtScript.resolve(unit_id))
 
 

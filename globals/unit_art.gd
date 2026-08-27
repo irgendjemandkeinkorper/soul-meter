@@ -22,6 +22,27 @@ const FALLBACK_POOL: PackedStringArray = [
 ]
 
 
+## Combat rows name allies by display_name and enemies by archetype_id; this maps
+## either to a unit-art id (shared by ui/screens/battle_stage.gd and the
+## six-region BattleStageRegion — keep them on this one mapping).
+const ALLY_UNIT_IDS_BY_NAME := {
+	"Vex": "vex",
+	"Vex the Unbowed": "vex",
+	"Serai-Lun": "serai-lun",
+	"Old Grumbrand": "old-grumbrand",
+	"Wyneth Hallow-Tide": "wyneth-hallow-tide",
+	"Ressa Quickfingers": "ressa-quickfingers",
+	"Korrath Ninefold": "korrath-ninefold",
+	"Maura Greyfen": "maura-greyfen",
+}
+
+
+static func combat_unit_id(side: StringName, archetype_id: String, display_name: String) -> String:
+	if side == &"enemy":
+		return archetype_id
+	return str(ALLY_UNIT_IDS_BY_NAME.get(display_name, display_name))
+
+
 static func texture_path(unit_id: String) -> String:
 	return "%s/%s/%s--idle--se--f00.png" % [ROOT, unit_id, unit_id]
 
