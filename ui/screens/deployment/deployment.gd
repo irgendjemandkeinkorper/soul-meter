@@ -11,10 +11,12 @@ var placement_actor: BattleActor
 @onready var title: Label = %Title
 @onready var body: Label = %Body
 @onready var advance_button: Button = %Advance
+@onready var skip_button: Button = %Skip
 
 
 func _ready() -> void:
 	advance_button.pressed.connect(_advance)
+	skip_button.pressed.connect(_skip)
 	_render()
 
 
@@ -45,16 +47,44 @@ func _advance() -> void:
 	GameFlow.send_event(&"accept_slate" if current_step == Step.PLACE else &"deployment_next")
 
 
+## Walk the remaining chart states instead of jumping, so every deployment
+## state's enter/exit side effects (screen swaps, PLACE's model handoff) still
+## run. Count first — the first event frees this screen instance.
+func _skip() -> void:
+	var steps_remaining := int(Step.PLACE) - int(current_step)
+	for _i in steps_remaining:
+		GameFlow.send_event(&"deployment_next")
+	GameFlow.send_event(&"accept_slate")
+
+
 func _render() -> void:
 	var names := ["SLATE", "ATTUNE", "LOADOUT", "PLACE"]
 	title.text = "%d  %s" % [current_step + 1, names[current_step]]
 	match current_step:
 		Step.SLATE:
-			body.text = "ROSTER · SIGIL · NAME · JOB · LEVEL"
+			body.text = (
+				"YOUR PARTY TAKES THE FIELD.\n\n"
+				+ "This step will become the roster sheet — sigil, name, job, level.\n"
+				+ "Nothing to choose yet; your active party deploys as-is."
+			)
 		Step.ATTUNE:
-			body.text = "THE TEN, SIGNED · −3 TO +3 · ONE AFFINITY STRIP"
+			body.text = (
+				"ELEMENTAL AFFINITIES ACROSS THE TEN.\n\n"
+				+ "This step will let you tune each fighter's signed affinities (−3 to +3),\n"
+				+ "which scale elemental damage dealt and taken.\n"
+				+ "Editing isn't built yet; current values apply."
+			)
 		Step.LOADOUT:
-			body.text = "PRIMARY · SECONDARY · REACTION · PASSIVE · EQUIPMENT"
+			body.text = (
+				"ACTIONS AND EQUIPMENT.\n\n"
+				+ "This step will become the loadout picker — primary, secondary,\n"
+				+ "reaction, passive, equipment. Defaults apply for now."
+			)
 		Step.PLACE:
-			body.text = "STARTING POSITION · FACING"
+			body.text = (
+				"STARTING POSITIONS AND FACING.\n\n"
+				+ "This step will let you place each fighter on the field.\n"
+				+ "Default positions apply for now."
+			)
 	advance_button.text = "ACCEPT THE SLATE" if current_step == Step.PLACE else "CONTINUE"
+	skip_button.visible = current_step != Step.PLACE
