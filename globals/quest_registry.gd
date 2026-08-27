@@ -467,6 +467,63 @@ func resolve_companion_quest(
 	return true
 
 
+## Playtest god mode (ui/screens/debug_menu.gd): grant whatever the quest still
+## needs — required flags, fetch items — then route through the SAME resolver
+## real play uses (resolve_broken_muster / resolve_field_debt /
+## resolve_side_quest / resolve_companion_quest / turn_in), so a skipped quest
+## leaves a save indistinguishable from an earned one: every ledger write,
+## checkpoint, clock advance, and milestone still happens exactly once.
+func debug_force_complete(quest: Quest) -> bool:
+	if quest == null or is_done(quest):
+		return false
+	if not is_active(quest):
+		offer(quest)
+		if not is_active(quest):
+			return false
+	for companion_id: String in COMPANION_QUESTS:
+		if COMPANION_QUESTS[companion_id] == quest:
+			return resolve_companion_quest(
+				companion_id,
+				quest,
+				6.0,
+				"Stood with %s through their asking (playtest skip)" % companion_id
+			)
+	if quest is FetchQuest:
+		var fetch := quest as FetchQuest
+		while GameState.item_count(fetch.item_id) < fetch.required_amount:
+			GameState.inventory.create_and_add_item(fetch.item_id)
+		QuestSystem.update_quest(quest)
+		turn_in(quest)
+		return is_done(quest)
+	if quest is DomSideQuest:
+		var side := quest as DomSideQuest
+		for flag in side.required_flags:
+			GameState.set_flag(flag, true)
+		if side.outcome_ids.is_empty():
+			return false
+		return resolve_side_quest(side, StringName(side.outcome_ids[0]))
+	if quest == DORTHKOR_ROAD:
+		for flag in DORTHKOR_ROAD.required_flags:
+			GameState.set_flag(flag, true)
+		GameState.set_flag("reported_bloodbellow", true)
+		# "demons-first" carries no soul-meter requirement, so the skip cannot
+		# stall on an off-center gauge the way "hold-both" would.
+		return resolve_broken_muster(&"demons-first")
+	if quest == FIELD_DEBT:
+		for flag in FIELD_DEBT.required_flags:
+			GameState.set_flag(flag, true)
+		if GameState.item_count("materials/loamroot_sprig") < 1:
+			GameState.inventory.create_and_add_item("materials/loamroot_sprig")
+		return resolve_field_debt(&"balance")
+	if quest is FlagQuest:
+		for flag in (quest as FlagQuest).required_flags:
+			GameState.set_flag(flag, true)
+		turn_in(quest)
+		return is_done(quest)
+	turn_in(quest)
+	return is_done(quest)
+
+
 func side_quest_for_giver(actor_id: String) -> DomSideQuest:
 	for quest in DOM_SIDE_QUESTS:
 		if quest.giver_actor_id == actor_id:

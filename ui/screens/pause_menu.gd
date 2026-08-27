@@ -41,6 +41,15 @@ func _build() -> void:
 	_menu_button(
 		vbox, "Settings", func() -> void: UIManager.open(UIManager.SETTINGS)
 	)
+	# Playtest god mode — debug builds only, and load() (not preload) so release
+	# exports don't ship the screen in the pause menu's dependency graph.
+	if OS.is_debug_build():
+		var debug_button := _menu_button(
+			vbox,
+			"Debug (Playtest)",
+			func() -> void: UIManager.open(load("res://ui/screens/debug_menu.tscn"))
+		)
+		debug_button.name = "DebugMenuButton"
 	_menu_button(vbox, "Main Menu", func() -> void: GameFlow.send_event("to_main_menu"))
 	_menu_button(vbox, "Quit", func() -> void: get_tree().quit())
 
