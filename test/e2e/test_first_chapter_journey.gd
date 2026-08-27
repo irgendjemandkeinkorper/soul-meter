@@ -466,7 +466,10 @@ func _resolve_muster(outcome_id: StringName) -> void:
 		assert_bool(battle.use_action(&"release-bound-soldier")).is_true()
 	else:
 		battle.enemies[0].hp = 1
-		assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
+		# Grid battles roll to-hit (#169/#98 rulings) — a single strike may
+		# whiff, so strike until the battle ends, as _resolve_vanguard() does.
+		while not battle.ended:
+			assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
 	assert_str(battle.last_result.outcome_id).is_equal(String(outcome_id))
 
 

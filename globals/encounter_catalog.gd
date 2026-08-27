@@ -8,6 +8,9 @@ const DATA_PATH := "res://data/generated/encounters.json"
 const _FIELD_GRID_DATA := {
 	"bog-wight": {"dimensions": Vector2i(2, 4)},
 	"loam-boar": {"dimensions": Vector2i(2, 4)},
+	"dorthkor-vanguard": {"dimensions": Vector2i(2, 4)},
+	"dorthkor-muster": {"dimensions": Vector2i(2, 4)},
+	"jawbrace-empty-post": {"dimensions": Vector2i(2, 4)},
 	"phase2-demon": {"dimensions": Vector2i(2, 4)},
 	"phase2-undead": {"dimensions": Vector2i(2, 4)},
 	"phase2-mixed-whipsaw": {"dimensions": Vector2i(2, 4)},

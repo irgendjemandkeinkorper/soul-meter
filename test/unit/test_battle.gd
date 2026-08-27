@@ -206,7 +206,10 @@ func test_bloodbellow_zero_hp_records_conventional_slain_outcome() -> void:
 	battle.start(EncounterIds.DORTHKOR_MUSTER)
 	battle.enemies[0].hp = 1
 
-	battle.use_action(BattleScript.ACTION_STRIKE)
+	# Grid battles roll to-hit (#169/#98 rulings) — a single strike may whiff,
+	# so strike until the battle ends.
+	while not battle.ended:
+		battle.use_action(BattleScript.ACTION_STRIKE)
 
 	assert_str(battle.last_result.outcome_id).is_equal("slain")
 	assert_str(GameState.get_flag("dorthkor_muster_cause")).contains("by force")
