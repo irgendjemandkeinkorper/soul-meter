@@ -1,4 +1,4 @@
-[gd_scene load_steps=43 format=3]
+[gd_scene load_steps=47 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -40,6 +40,10 @@
 [ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="37_blocking_tiles"]
 [ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="38_blocking_layer"]
 [ext_resource type="Script" path="res://world/starting_town.gd" id="39_town"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-market-stall--decorative.png" id="52_dom_stall"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="55_dom_hanging_lantern"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-laundry-line--decorative.png" id="56_dom_laundry"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-moss-statue-fragment--decorative.png" id="57_dom_statue"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-trial-hall--building-facade.png" id="40_trial_hall_facade"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-item-shop--building-facade.png" id="41_item_shop_facade"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-registry-archive--building-facade.png" id="42_registry_archive_facade"]
@@ -816,6 +820,9 @@ transition_id = &"registry_archive_enter"
 interaction_radius = 48.0
 editable_children = true
 
+[node name="DoorSprite" parent="RegistryArchiveEntrance"]
+visible = true
+
 [node name="DoorPanel" parent="RegistryArchiveEntrance"]
 visible = false
 
@@ -830,6 +837,9 @@ position = Vector2(3000, 522)
 transition_id = &"bell_house_enter"
 interaction_radius = 48.0
 editable_children = true
+
+[node name="DoorSprite" parent="BellHouseEntrance"]
+visible = true
 
 [node name="DoorPanel" parent="BellHouseEntrance"]
 visible = false
@@ -846,6 +856,9 @@ transition_id = &"river_shrine_enter"
 interaction_radius = 48.0
 editable_children = true
 
+[node name="DoorSprite" parent="RiverShrineEntrance"]
+visible = true
+
 [node name="DoorPanel" parent="RiverShrineEntrance"]
 visible = false
 
@@ -860,6 +873,9 @@ position = Vector2(3000, 1486)
 transition_id = &"iron_companies_enter"
 interaction_radius = 48.0
 editable_children = true
+
+[node name="DoorSprite" parent="IronCompaniesEntrance"]
+visible = true
 
 [node name="DoorPanel" parent="IronCompaniesEntrance"]
 visible = false
@@ -876,6 +892,9 @@ transition_id = &"item_shop_enter"
 interaction_radius = 48.0
 editable_children = true
 
+[node name="DoorSprite" parent="ItemShopEntrance"]
+visible = true
+
 [node name="DoorPanel" parent="ItemShopEntrance"]
 visible = false
 
@@ -890,6 +909,9 @@ position = Vector2(2400, 530)
 transition_id = &"equipment_shop_enter"
 interaction_radius = 48.0
 editable_children = true
+
+[node name="DoorSprite" parent="EquipmentShopEntrance"]
+visible = true
 
 [node name="DoorPanel" parent="EquipmentShopEntrance"]
 visible = false
@@ -906,6 +928,9 @@ transition_id = &"town_hall_enter"
 interaction_radius = 48.0
 editable_children = true
 
+[node name="DoorSprite" parent="TownHallEntrance"]
+visible = true
+
 [node name="DoorPanel" parent="TownHallEntrance"]
 visible = false
 
@@ -920,6 +945,9 @@ position = Vector2(500, 1711)
 transition_id = &"chefs_house_enter"
 interaction_radius = 48.0
 editable_children = true
+
+[node name="DoorSprite" parent="ChefsHouseEntrance"]
+visible = true
 
 [node name="DoorPanel" parent="ChefsHouseEntrance"]
 visible = false
@@ -936,6 +964,9 @@ transition_id = &"players_house_enter"
 interaction_radius = 48.0
 editable_children = true
 
+[node name="DoorSprite" parent="PlayersHouseEntrance"]
+visible = true
+
 [node name="DoorPanel" parent="PlayersHouseEntrance"]
 visible = false
 
@@ -950,6 +981,9 @@ position = Vector2(1000, 520)
 transition_id = &"trial_hall_enter"
 interaction_radius = 48.0
 editable_children = true
+
+[node name="DoorSprite" parent="TrialHallEntrance"]
+visible = true
 
 [node name="DoorPanel" parent="TrialHallEntrance"]
 visible = false
@@ -1293,3 +1327,684 @@ label_text = "TO THE JAWBRACE"
 required_flag = "deep_trial_open"
 locked_message = "The Jawbrace is outside this prototype path."
 spawn_id = &"from_dom"
+
+[node name="BorderDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="WallTop01" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(170, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop02" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(310, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop03" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(450, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop04" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(590, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop05" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(730, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop06" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1150, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop07" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1290, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop08" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1430, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop09" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1570, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop10" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1710, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop11" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1850, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop12" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1990, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop13" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2130, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop14" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2270, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop15" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2410, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop16" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2830, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop17" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2970, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop18" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3110, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop19" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3250, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallTop20" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3390, 100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom01" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(170, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom02" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(310, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom03" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(450, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom04" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(590, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom05" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(730, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom06" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(870, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom07" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1010, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom08" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1150, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom09" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1290, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom10" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1430, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom11" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1570, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom12" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1710, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom13" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1850, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom14" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(1990, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom15" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2130, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom16" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2270, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom17" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2410, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom18" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2550, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom19" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2690, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom20" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2830, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom21" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(2970, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom22" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3110, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom23" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3250, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallBottom24" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3390, 2300)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft01" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 230)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft02" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 360)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft03" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 490)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft04" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 620)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft05" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 750)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft06" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 880)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft07" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 1010)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft08" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 1140)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft09" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 1270)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft10" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 1400)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft11" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 1530)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft12" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 1660)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft13" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 1790)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft14" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 1920)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft15" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 2050)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallLeft16" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(100, 2180)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightTop01" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 230)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightTop02" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 360)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightTop03" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 490)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightTop04" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 620)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightTop05" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 750)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightTop06" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 880)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightTop07" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 1010)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightBottom01" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 1320)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightBottom02" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 1450)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightBottom03" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 1580)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightBottom04" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 1710)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightBottom05" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 1840)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightBottom06" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 1970)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="WallRightBottom07" type="Sprite2D" parent="BorderDressing"]
+position = Vector2(3500, 2100)
+texture = ExtResource("14_wall")
+offset = Vector2(0, -135.596)
+
+[node name="SetDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="RockBlobWestA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(560, 900)
+texture = ExtResource("26_rock_large")
+offset = Vector2(0, -50.596)
+
+[node name="RockBlobWestB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(450, 985)
+texture = ExtResource("27_rock_small")
+offset = Vector2(0, -50.596)
+
+[node name="BushBlobWest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(665, 1000)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="GrassBlobWest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(500, 1045)
+texture = ExtResource("28_grass")
+offset = Vector2(0, -50.596)
+
+[node name="PineBlobSouthwest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(300, 1420)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="RockBlobSouthwest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(235, 1520)
+texture = ExtResource("26_rock_large")
+offset = Vector2(0, -50.596)
+
+[node name="BushBlobSouthwest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(405, 1545)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="StallBlobMarket" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1150, 1090)
+texture = ExtResource("52_dom_stall")
+offset = Vector2(0, -90.596)
+
+[node name="CartBlobMarket" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1310, 1195)
+texture = ExtResource("22_cart")
+offset = Vector2(0, -90.596)
+
+[node name="PotBlobMarket" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1075, 1220)
+texture = ExtResource("34_pot_sprite")
+offset = Vector2(0, -90.596)
+
+[node name="RockBlobMarket" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1390, 1120)
+texture = ExtResource("27_rock_small")
+offset = Vector2(0, -50.596)
+
+[node name="StatueShrineA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(980, 1800)
+texture = ExtResource("57_dom_statue")
+offset = Vector2(0, -90.596)
+
+[node name="StatueShrineB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1190, 1905)
+texture = ExtResource("57_dom_statue")
+offset = Vector2(0, -90.596)
+
+[node name="RockShrine" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1080, 1960)
+texture = ExtResource("26_rock_large")
+offset = Vector2(0, -50.596)
+
+[node name="BushShrine" type="Sprite2D" parent="SetDressing"]
+position = Vector2(920, 1925)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="OakCornerSouthwest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(300, 2050)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="TreeCornerSouthwest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(455, 2160)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="RockCornerSouthwest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(200, 2210)
+texture = ExtResource("26_rock_large")
+offset = Vector2(0, -50.596)
+
+[node name="BushCornerSouthwest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(380, 2255)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="LaundryChefsHouse" type="Sprite2D" parent="SetDressing"]
+position = Vector2(650, 1695)
+texture = ExtResource("56_dom_laundry")
+offset = Vector2(0, -90.596)
+
+[node name="PotChefsHouse" type="Sprite2D" parent="SetDressing"]
+position = Vector2(385, 1765)
+texture = ExtResource("34_pot_sprite")
+offset = Vector2(0, -90.596)
+
+[node name="LaundryPlayersHouse" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2545, 2075)
+texture = ExtResource("56_dom_laundry")
+offset = Vector2(0, -90.596)
+
+[node name="BushPlayersHouse" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2255, 2145)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="FlowerPlayersHouse" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2470, 2185)
+texture = ExtResource("30_flower")
+offset = Vector2(0, -50.596)
+
+[node name="PotItemShop" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1575, 555)
+texture = ExtResource("34_pot_sprite")
+offset = Vector2(0, -90.596)
+
+[node name="StallItemShop" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1830, 560)
+texture = ExtResource("52_dom_stall")
+offset = Vector2(0, -90.596)
+
+[node name="PotEquipmentShop" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2285, 610)
+texture = ExtResource("34_pot_sprite")
+offset = Vector2(0, -90.596)
+
+[node name="StreetLanternEquipmentShop" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2515, 615)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -90.596)
+
+[node name="StreetLanternTownHallWest" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2280, 1185)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -90.596)
+
+[node name="StreetLanternTownHallEast" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2520, 1185)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -90.596)
+
+[node name="BushBellHouse" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2875, 600)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="RockBellHouse" type="Sprite2D" parent="SetDressing"]
+position = Vector2(3120, 595)
+texture = ExtResource("27_rock_small")
+offset = Vector2(0, -50.596)
+
+[node name="CartIronCompanies" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2860, 1560)
+texture = ExtResource("22_cart")
+offset = Vector2(0, -90.596)
+
+[node name="StreetLanternIronCompanies" type="Sprite2D" parent="SetDressing"]
+position = Vector2(3140, 1555)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -90.596)
+
+[node name="LanternTavernDoor" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1590, 1705)
+texture = ExtResource("55_dom_hanging_lantern")
+offset = Vector2(0, -140.596)
+
+[node name="PotTavern" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1830, 1860)
+texture = ExtResource("34_pot_sprite")
+offset = Vector2(0, -90.596)
+
+[node name="LanternRegistry" type="Sprite2D" parent="SetDressing"]
+position = Vector2(610, 520)
+texture = ExtResource("55_dom_hanging_lantern")
+offset = Vector2(0, -140.596)
+
+[node name="StreetLanternTrialHall" type="Sprite2D" parent="SetDressing"]
+position = Vector2(890, 560)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -90.596)
+
+[node name="StreetLanternMarketSouth" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1560, 1330)
+texture = ExtResource("21_lantern")
+offset = Vector2(0, -90.596)
+
+[node name="LanternMarketEast" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1990, 1260)
+texture = ExtResource("55_dom_hanging_lantern")
+offset = Vector2(0, -140.596)
+
+[node name="OakEastFieldA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2750, 1750)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="PineEastField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2950, 1900)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="TreeEastFieldB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2600, 2050)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="OakSoutheastCorner" type="Sprite2D" parent="SetDressing"]
+position = Vector2(3300, 2150)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="RockSoutheast" type="Sprite2D" parent="SetDressing"]
+position = Vector2(3150, 2230)
+texture = ExtResource("26_rock_large")
+offset = Vector2(0, -50.596)
+
+[node name="BushEastField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2820, 1990)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="GrassEastField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2680, 1880)
+texture = ExtResource("28_grass")
+offset = Vector2(0, -50.596)
+
+[node name="OakNortheastField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(3280, 860)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="RockNortheastField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(3330, 950)
+texture = ExtResource("27_rock_small")
+offset = Vector2(0, -50.596)
+
+[node name="TreeMidEast" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2050, 850)
+texture = ExtResource("24_tree_default")
+offset = Vector2(0, -50.596)
+
+[node name="BushMidEast" type="Sprite2D" parent="SetDressing"]
+position = Vector2(2150, 930)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="GrassMidEast" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1980, 760)
+texture = ExtResource("28_grass")
+offset = Vector2(0, -50.596)
+
+[node name="OakSouthField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1450, 2100)
+texture = ExtResource("23_tree_oak")
+offset = Vector2(0, -50.596)
+
+[node name="PineSouthField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1250, 2200)
+texture = ExtResource("25_tree_pine")
+offset = Vector2(0, -50.596)
+
+[node name="GrassSouthField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1350, 2020)
+texture = ExtResource("28_grass")
+offset = Vector2(0, -50.596)
+
+[node name="FlowerSouthField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1550, 2150)
+texture = ExtResource("30_flower")
+offset = Vector2(0, -50.596)
+
+[node name="GrassWestField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(250, 1150)
+texture = ExtResource("28_grass")
+offset = Vector2(0, -50.596)
+
+[node name="FlowerWestField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(320, 1050)
+texture = ExtResource("30_flower")
+offset = Vector2(0, -50.596)
+
+[node name="RockWestField" type="Sprite2D" parent="SetDressing"]
+position = Vector2(210, 1330)
+texture = ExtResource("27_rock_small")
+offset = Vector2(0, -50.596)
+
+[node name="BushRiverside" type="Sprite2D" parent="SetDressing"]
+position = Vector2(780, 1740)
+texture = ExtResource("29_bush")
+offset = Vector2(0, -50.596)
+
+[node name="GrassRiverside" type="Sprite2D" parent="SetDressing"]
+position = Vector2(700, 1850)
+texture = ExtResource("28_grass")
+offset = Vector2(0, -50.596)
