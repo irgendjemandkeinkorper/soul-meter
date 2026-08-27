@@ -317,6 +317,13 @@ func _actor_cell(actor: Dictionary) -> Vector2i:
 		return position
 	if position is Vector2:
 		return Vector2i(position)
+	# Live snapshots carry GridBattlefieldModel.cell_id() tokens ("c:x,y,h") —
+	# without this decode every unit stacked on cell (0,0).
+	var token := str(position)
+	if token.begins_with("c:"):
+		var parts := token.trim_prefix("c:").split(",")
+		if parts.size() >= 2 and parts[0].is_valid_int() and parts[1].is_valid_int():
+			return Vector2i(parts[0].to_int(), parts[1].to_int())
 	return Vector2i.ZERO
 
 
