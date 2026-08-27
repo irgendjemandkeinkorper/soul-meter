@@ -10,8 +10,6 @@ const COMBAT_AUDIO := preload("res://audio/combat_audio.gd")
 var _stage: Control
 var _party_box: VBoxContainer
 var _enemy_lbl: Label
-var _enemy_hp_bar: ProgressBar
-var _enemy_hp_lbl: Label
 var _balance_lbl: Label
 var _balance_bar: ProgressBar
 var _log_lbl: Label
@@ -44,7 +42,6 @@ func _build() -> void:
 	layout.theme_type_variation = "BattleLayout"
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	safe_frame.add_child(layout)
-	layout.add_child(_make_header())
 
 	var stage_space := Control.new()
 	stage_space.name = "BattlefieldViewport"
@@ -80,7 +77,7 @@ func _build() -> void:
 	add_child(_combat_audio)
 	Battle.combat_event.connect(Callable(_combat_audio, "consume_event"))
 
-	layout.add_child(_make_command_rail())
+	layout.add_child(_make_command_dock())
 
 	Battle.turn_resolved.connect(_refresh)
 	Battle.balance_changed.connect(func(_value: int) -> void: _refresh())
@@ -88,120 +85,76 @@ func _build() -> void:
 	_refresh()
 
 
-func _make_header() -> Control:
-	var header := HBoxContainer.new()
-	header.custom_minimum_size = Vector2(0, 60)
-	header.theme_type_variation = "BattleHeader"
-
-	var title_stack := VBoxContainer.new()
-	title_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var title := Label.new()
-	title.text = "SOUL METER  //  ENGAGEMENT"
-	title.theme_type_variation = "TitleLabel"
-	title_stack.add_child(title)
-	var subtitle := Label.new()
-	subtitle.text = "THE FIELD HAS CHOSEN ITS SIDES"
-	subtitle.theme_type_variation = "EyebrowLabel"
-	title_stack.add_child(subtitle)
-	header.add_child(title_stack)
-
-	_tactical_data_button = _menu_button(
-		header, "TACTICAL DATA", _toggle_tactical_data
-	)
-	_tactical_data_button.custom_minimum_size = Vector2(118, 36)
-	_tactical_data_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_tactical_data_button.theme_type_variation = "BronzeButton"
-
-	var balance_stack := VBoxContainer.new()
-	balance_stack.custom_minimum_size = Vector2(240, 0)
-	_balance_lbl = Label.new()
-	_balance_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_balance_lbl.theme_type_variation = "EyebrowLabel"
-	balance_stack.add_child(_balance_lbl)
-	_balance_bar = ProgressBar.new()
-	_balance_bar.min_value = Battle.BALANCE_MIN
-	_balance_bar.max_value = Battle.BALANCE_MAX
-	_balance_bar.show_percentage = false
-	_balance_bar.custom_minimum_size = Vector2(0, 12)
-	balance_stack.add_child(_balance_bar)
-	header.add_child(balance_stack)
-
-	var target_panel := PanelContainer.new()
-	target_panel.custom_minimum_size = Vector2(265, 0)
-	var target_margin := MarginContainer.new()
-	target_margin.theme_type_variation = "BattleHeaderMargin"
-	target_panel.add_child(target_margin)
-	var target_stack := VBoxContainer.new()
-	target_margin.add_child(target_stack)
-	var eyebrow := Label.new()
-	eyebrow.text = "CURRENT FOE"
-	eyebrow.theme_type_variation = "EyebrowLabel"
-	target_stack.add_child(eyebrow)
-	_enemy_lbl = Label.new()
-	_enemy_lbl.theme_type_variation = "HeadingLabel"
-	target_stack.add_child(_enemy_lbl)
-	_enemy_hp_lbl = Label.new()
-	_enemy_hp_lbl.theme_type_variation = "StatLabel"
-	target_stack.add_child(_enemy_hp_lbl)
-	_enemy_hp_bar = _make_meter(DS.METER_HEALTH_B)
-	_enemy_hp_bar.custom_minimum_size = Vector2(0, 10)
-	target_stack.add_child(_enemy_hp_bar)
-	header.add_child(target_panel)
-
-	return header
-
-
-func _make_command_rail() -> Control:
-	var rail := HBoxContainer.new()
-	rail.custom_minimum_size = Vector2(0, 276)
-	rail.theme_type_variation = "BattleRail"
-	rail.size_flags_vertical = Control.SIZE_SHRINK_END
+## #211 item 4: the old 60px header + 276px three-panel rail are unified into one
+## compact dock so the six-region stage gets the rest of the screen. Everything
+## the header carried lives on: balance strip and foe readout in the center
+## column, TACTICAL DATA next to WITHDRAW.
+func _make_command_dock() -> Control:
+	var dock := HBoxContainer.new()
+	dock.name = "CommandDock"
+	dock.custom_minimum_size = Vector2(0, 172)
+	dock.theme_type_variation = "BattleRail"
+	dock.size_flags_vertical = Control.SIZE_SHRINK_END
 
 	var command_panel := PanelContainer.new()
-	command_panel.custom_minimum_size = Vector2(350, 0)
-	rail.add_child(command_panel)
+	command_panel.custom_minimum_size = Vector2(620, 0)
+	dock.add_child(command_panel)
 	var command_margin := _panel_margin(command_panel)
 	var command_column := VBoxContainer.new()
 	command_column.theme_type_variation = "BattleColumn"
 	command_margin.add_child(command_column)
 	var command_title := Label.new()
 	command_title.text = "COMMAND"
-	command_title.theme_type_variation = "HeadingLabel"
+	command_title.theme_type_variation = "EyebrowLabel"
 	command_column.add_child(command_title)
-	var acting := Label.new()
-	acting.text = "CHOOSE AN ACTION FOR THE ACTIVE PARTY MEMBER"
-	acting.theme_type_variation = "EyebrowLabel"
-	command_column.add_child(acting)
+	# Four columns keep the dock short — with two, the two-line action buttons
+	# stacked the grid taller than the rail this dock replaced.
 	_actions_box = GridContainer.new()
-	_actions_box.columns = 2
+	_actions_box.columns = 4
 	_actions_box.theme_type_variation = "BattleActionGrid"
 	_actions_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	command_column.add_child(_actions_box)
-	_target_button = _menu_button(command_column, "", Battle.select_next_enemy)
-	_target_button.custom_minimum_size = Vector2(0, 30)
-	_target_button.theme_type_variation = "BronzeButton"
 	for action in Battle.available_actions():
 		var button := _menu_button(_actions_box, _short_action_text(action), _use_action.bind(action.id))
-		button.custom_minimum_size = Vector2(155, 34)
+		# No autowrap: single-line labels keep the grid two rows tall — wrapped
+		# labels grew the dock past the rail it replaced.
+		button.custom_minimum_size = Vector2(0, 26)
 		button.tooltip_text = _action_tooltip(action)
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_action_buttons.append(button)
-	var flee := _menu_button(command_column, "WITHDRAW", Battle.flee)
-	flee.custom_minimum_size = Vector2(0, 30)
+	var command_footer := HBoxContainer.new()
+	command_column.add_child(command_footer)
+	_target_button = _menu_button(command_footer, "", Battle.select_next_enemy)
+	_target_button.custom_minimum_size = Vector2(0, 26)
+	_target_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_target_button.theme_type_variation = "BronzeButton"
+	var flee := _menu_button(command_footer, "WITHDRAW", Battle.flee)
+	flee.custom_minimum_size = Vector2(96, 26)
 	flee.theme_type_variation = "DangerButton"
 
 	var log_panel := PanelContainer.new()
 	log_panel.custom_minimum_size = Vector2(310, 0)
 	log_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rail.add_child(log_panel)
+	dock.add_child(log_panel)
 	var log_margin := _panel_margin(log_panel)
 	var log_column := VBoxContainer.new()
 	log_column.theme_type_variation = "BattleColumn"
 	log_margin.add_child(log_column)
-	var log_title := Label.new()
-	log_title.text = "BATTLE LOG"
-	log_title.theme_type_variation = "HeadingLabel"
-	log_column.add_child(log_title)
+	var status_row := HBoxContainer.new()
+	log_column.add_child(status_row)
+	_enemy_lbl = Label.new()
+	_enemy_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_enemy_lbl.theme_type_variation = "EyebrowLabel"
+	status_row.add_child(_enemy_lbl)
+	_balance_lbl = Label.new()
+	_balance_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_balance_lbl.theme_type_variation = "EyebrowLabel"
+	status_row.add_child(_balance_lbl)
+	_balance_bar = ProgressBar.new()
+	_balance_bar.min_value = Battle.BALANCE_MIN
+	_balance_bar.max_value = Battle.BALANCE_MAX
+	_balance_bar.show_percentage = false
+	_balance_bar.custom_minimum_size = Vector2(0, 8)
+	log_column.add_child(_balance_bar)
 	_log_lbl = Label.new()
 	_log_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_log_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -212,23 +165,30 @@ func _make_command_rail() -> Control:
 	log_column.add_child(_outcome_box)
 
 	var party_panel := PanelContainer.new()
-	party_panel.custom_minimum_size = Vector2(410, 0)
-	party_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rail.add_child(party_panel)
+	party_panel.custom_minimum_size = Vector2(330, 0)
+	dock.add_child(party_panel)
 	var party_margin := _panel_margin(party_panel)
 	var party_column := VBoxContainer.new()
 	party_column.theme_type_variation = "BattleColumn"
 	party_margin.add_child(party_column)
+	var party_header := HBoxContainer.new()
+	party_column.add_child(party_header)
 	var party_title := Label.new()
-	party_title.text = "PARTY STATUS"
-	party_title.theme_type_variation = "HeadingLabel"
-	party_column.add_child(party_title)
+	party_title.text = "PARTY"
+	party_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	party_title.theme_type_variation = "EyebrowLabel"
+	party_header.add_child(party_title)
+	_tactical_data_button = _menu_button(
+		party_header, "TACTICAL DATA", _toggle_tactical_data
+	)
+	_tactical_data_button.custom_minimum_size = Vector2(110, 24)
+	_tactical_data_button.theme_type_variation = "BronzeButton"
 	_party_box = VBoxContainer.new()
 	_party_box.theme_type_variation = "BattleTightColumn"
 	_party_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	party_column.add_child(_party_box)
 
-	return rail
+	return dock
 
 
 func _panel_margin(panel: PanelContainer) -> MarginContainer:
@@ -291,69 +251,51 @@ func _refresh() -> void:
 func _update_enemy_status() -> void:
 	var target := Battle.current_target()
 	if target == null:
-		_enemy_lbl.text = "NO TARGET"
-		_enemy_hp_lbl.text = "—"
-		_enemy_hp_bar.value = 0
+		_enemy_lbl.text = "FOE  —"
 		return
-	_enemy_lbl.text = target.display_name.to_upper()
-	_enemy_hp_lbl.text = "HP  %d / %d" % [target.hp, target.max_hp]
-	_enemy_hp_bar.max_value = target.max_hp
-	_enemy_hp_bar.value = target.hp
+	_enemy_lbl.text = "FOE  %s  ·  HP %d / %d" % [target.display_name.to_upper(), target.hp, target.max_hp]
 
 
+## One slim row per ally — the dock is 172px, so party status is a readout,
+## not a card stack; the unit plate region carries the active unit's detail.
 func _update_party_status() -> void:
 	for child in _party_box.get_children():
 		child.free()
 	for actor in Battle.allies:
-		var card := PanelContainer.new()
-		card.custom_minimum_size = Vector2(0, 52)
-		_party_box.add_child(card)
-		var margin := MarginContainer.new()
-		margin.theme_type_variation = "BattlePartyMargin"
-		card.add_child(margin)
 		var row := HBoxContainer.new()
 		row.theme_type_variation = "BattlePartyRow"
-		margin.add_child(row)
+		_party_box.add_child(row)
 		var marker := Label.new()
 		marker.text = "▶" if actor == Battle.current_ally() and actor.is_alive() else "·"
 		marker.custom_minimum_size = Vector2(12, 0)
 		marker.theme_type_variation = "EyebrowLabel"
 		row.add_child(marker)
-		var name_stack := VBoxContainer.new()
-		name_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(name_stack)
 		var name_label := Label.new()
 		name_label.text = actor.display_name.to_upper()
-		name_stack.add_child(name_label)
-		var member_index := actor.party_index
-		var class_name_text := "ACTIVE TURN" if actor == Battle.current_ally() else "READY"
-		if member_index >= 0 and member_index < GameState.party.size():
-			class_name_text = GameState.party[member_index].char_class.to_upper()
-		var role := Label.new()
-		role.text = "FALLEN" if not actor.is_alive() else class_name_text
-		role.theme_type_variation = "EyebrowLabel"
-		name_stack.add_child(role)
-		var stat_stack := VBoxContainer.new()
-		stat_stack.custom_minimum_size = Vector2(112, 0)
-		row.add_child(stat_stack)
+		if not actor.is_alive():
+			name_label.text += "  ·  FALLEN"
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_label.theme_type_variation = "StatLabel"
+		row.add_child(name_label)
 		var hp := Label.new()
 		hp.text = "HP %d / %d" % [actor.hp, actor.max_hp]
 		hp.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		hp.theme_type_variation = "StatLabel"
-		stat_stack.add_child(hp)
+		row.add_child(hp)
 		var bar := _make_meter(DS.METER_HEALTH_B)
 		bar.max_value = actor.max_hp
 		bar.value = actor.hp
-		bar.custom_minimum_size = Vector2(112, 8)
-		stat_stack.add_child(bar)
+		bar.custom_minimum_size = Vector2(96, 8)
+		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(bar)
 
 
 func _short_action_text(action: CombatAction, reason: String = "") -> String:
 	var text := action.display_name.to_upper()
 	if action.soul_cost > 0.0:
-		text += "\nSOUL %d" % int(action.soul_cost)
+		text += " · SOUL %d" % int(action.soul_cost)
 	if not reason.is_empty() and action.kind == CombatAction.Kind.RESOLUTION:
-		text += "\nLOCKED"
+		text += " · LOCKED"
 	return text
 
 
