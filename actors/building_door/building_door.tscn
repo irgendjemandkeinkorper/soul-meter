@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://actors/building_door/building_door.gd" id="1_door"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/objects/dom-door-wood--closed.png" id="2_door_art"]
 
 [sub_resource type="RectangleShape2D" id="door_shape"]
 size = Vector2(72, 34)
@@ -11,6 +12,12 @@ radius = 100.0
 
 [node name="BuildingDoor" type="StaticBody2D"]
 script = ExtResource("1_door")
+
+[node name="DoorSprite" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, -157.4)
+scale = Vector2(1.28, 1.28)
+texture = ExtResource("2_door_art")
 
 [node name="DoorPanel" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(-36, -34, 36, -34, 36, 0, -36, 0)

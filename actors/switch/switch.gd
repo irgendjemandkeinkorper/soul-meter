@@ -47,5 +47,6 @@ func _texture_or_placeholder(path: String) -> Texture2D:
 		var image := Image.load_from_file(ProjectSettings.globalize_path(path))
 		if image != null and not image.is_empty():
 			return ImageTexture.create_from_image(image)
-	# TODO(art): swap once assets/generated/sprites/world/objects/ lands.
+	# The interactive-object art landed (dom-lever-iron--*); null now only means
+	# a missing/corrupt file, and the caller keeps its drawn placeholder.
 	return null

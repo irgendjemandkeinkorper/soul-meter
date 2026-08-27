@@ -3,9 +3,10 @@
 [ext_resource type="Script" path="res://world/interiors/dom_tavern.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="3_hud"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/ground.png" id="4_floor"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/objects/dom-interior-floor--wood-panel.png" id="4_floor"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="5_bench"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/mini-characters/character-male-d.png" id="6_taverner"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-merchant-a/crowd-merchant-a--idle--se--f00.png" id="6_taverner"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/objects/dom-door-wood--closed.png" id="7_door_art"]
 
 [sub_resource type="RectangleShape2D" id="wall_horizontal"]
 size = Vector2(960, 40)
@@ -66,8 +67,7 @@ position = Vector2(755, 410)
 texture = ExtResource("5_bench")
 
 [node name="Taverner" type="Sprite2D" parent="."]
-position = Vector2(480, 178)
-scale = Vector2(1.5, 1.5)
+position = Vector2(480, 105)
 texture = ExtResource("6_taverner")
 
 [node name="TavernerLabel" type="Label" parent="."]
@@ -119,6 +119,11 @@ theme_type_variation = &"EyebrowLabel"
 text = "E — CHOOSE COMPANY"
 horizontal_alignment = 1
 visible = false
+
+[node name="ExitDoorSprite" type="Sprite2D" parent="."]
+position = Vector2(480, 482.6)
+scale = Vector2(1.28, 1.28)
+texture = ExtResource("7_door_art")
 
 [node name="Exit" type="Area2D" parent="."]
 position = Vector2(480, 612)

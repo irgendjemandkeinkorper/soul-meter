@@ -156,5 +156,6 @@ func _load_optional_texture(path: String, fallback: Texture2D) -> Texture2D:
 		var texture := load(path) as Texture2D
 		if texture != null:
 			return texture
-	# TODO(art): swap once art/dom-revamp lands: %s
+	# The dom-revamp interior textures landed; this fallback now only covers a
+	# missing/corrupt import, not a planned art gap.
 	return fallback

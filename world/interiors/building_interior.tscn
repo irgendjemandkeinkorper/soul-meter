@@ -88,6 +88,16 @@ shape = SubResource("wall_vertical")
 [node name="ExitDoor" parent="." instance=ExtResource("3_door")]
 position = Vector2(480, 600)
 prompt_text = "E — EXIT"
+editable_children = true
+
+[node name="DoorSprite" parent="ExitDoor"]
+visible = true
+
+[node name="DoorPanel" parent="ExitDoor"]
+visible = false
+
+[node name="Threshold" parent="ExitDoor"]
+visible = false
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(480, 500)
