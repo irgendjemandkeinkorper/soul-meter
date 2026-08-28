@@ -17,6 +17,19 @@ const UnitArtScript := preload("res://globals/unit_art.gd")
 const DORTHKOR_BACKGROUND := preload(
 	"res://assets/generated/backgrounds/combat/dorthkor-road-battlefield-v1.png"
 )
+const GROUND_ATLAS := preload("res://assets/generated/sprites/ground/ground_tiles.png")
+
+## Ground diamonds from the generated Kenney tileset (64x32, same 2:1 ratio the
+## stage projects at): road battles pave with the road tile, everything else is
+## broken field. Variants are picked deterministically per cell. GROUND_STONE is
+## a boulder prop render, not flat paving — never use it as ground.
+const GROUND_ROAD_VARIANTS: Array[Vector2i] = [IsometricSpriteCatalog.GROUND_ROAD]
+const GROUND_FIELD_VARIANTS: Array[Vector2i] = [
+	IsometricSpriteCatalog.GROUND_GRASS, IsometricSpriteCatalog.GROUND_DIRT,
+]
+## Dims the bright source tiles toward the battle screen's moody palette; the
+## translucency lets the dark diamond under-fill mute the Kenney saturation.
+const GROUND_MODULATE := Color(0.62, 0.63, 0.68, 0.60)
 
 const FIT_MARGIN := 20.0
 const MIN_SCALE := 0.6
@@ -176,6 +189,16 @@ func _draw() -> void:
 			center + Vector2(0, half_h), center + Vector2(-half_w, 0),
 		])
 		draw_colored_polygon(diamond, Color("#20242D"))
+		var atlas_cell := _ground_variant(x, y)
+		draw_texture_rect_region(
+			GROUND_ATLAS,
+			Rect2(center - Vector2(half_w, half_h), Vector2(half_w * 2.0, half_h * 2.0)),
+			Rect2(
+				Vector2(atlas_cell * IsometricSpriteCatalog.TILE_SIZE),
+				Vector2(IsometricSpriteCatalog.TILE_SIZE)
+			),
+			GROUND_MODULATE
+		)
 		var charge := clampi(int(tile.get("charge_level", 0)), 0, DS.CHARGE_MAX)
 		if charge > 0:
 			var color := Color(str(tile.get("element_color", "#7BDFF2")))
@@ -434,6 +457,12 @@ func _layout() -> Dictionary:
 func _project(x: int, y: int, height: int, layout: Dictionary) -> Vector2:
 	return DS.iso_project(x, y, height, Vector2.ZERO) * float(layout["scale"]) \
 		+ (layout["origin"] as Vector2)
+
+
+func _ground_variant(x: int, y: int) -> Vector2i:
+	var variants := GROUND_ROAD_VARIANTS \
+		if String(_encounter_id).begins_with("dorthkor") else GROUND_FIELD_VARIANTS
+	return variants[absi(x * 31 + y * 17) % variants.size()]
 
 
 func _tile_height(tile: Dictionary) -> int:
