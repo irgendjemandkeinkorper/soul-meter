@@ -139,7 +139,12 @@ func _render_catalog() -> void:
 	var status := GameState.vendor_trade_status(_vendor_id)
 	_catalog.add_child(_section(str(vendor["display_name"]).to_upper()))
 	var intro := Label.new()
-	intro.text = "%s  ·  %s STANDING" % [str(vendor["site_name"]), String(band).to_upper()]
+	# Site names seeded from scene identifiers ("ItemShop building") are not
+	# player prose — capitalize() renders them as words; authored prose names
+	# pass through unchanged.
+	intro.text = "%s  ·  %s STANDING" % [
+		str(vendor["site_name"]).capitalize(), String(band).to_upper()
+	]
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_catalog.add_child(intro)
 	var restock: Dictionary = vendor.get("restock", {})
