@@ -155,11 +155,14 @@ func _build_ui() -> void:
 	_root.theme = UIManager.ui_theme
 	add_child(_root)
 
-	# bottom scrim so parchment text holds over the field
+	# bottom scrim so parchment text holds over the field. Its top edge matches
+	# the content column's anchor below — a long dialogue fills the column to the
+	# top, and a scrim that starts lower leaves the portrait/gauge row floating
+	# unbacked over the world (2026-08-28 screenshot sweep).
 	var scrim := ColorRect.new()
 	scrim.color = Color(DS.VOID_0, 0.78)
 	scrim.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	scrim.anchor_top = 0.42
+	scrim.anchor_top = 0.34
 	_root.add_child(scrim)
 
 	var column := VBoxContainer.new()
@@ -190,6 +193,9 @@ func _build_ui() -> void:
 	top.add_child(spacer)
 	var gauge := SOUL_GAUGE.instantiate()
 	gauge.custom_minimum_size = Vector2(220, 42)
+	# The portrait makes this row tall; without a shrink flag the gauge stretches
+	# to match and its label drifts far above its bar.
+	gauge.size_flags_vertical = Control.SIZE_SHRINK_END
 	top.add_child(gauge)
 
 	# --- middle row: the spoken line, bronze-trimmed panel ---

@@ -25,6 +25,10 @@ func before() -> void:
 	GameState.inventory.create_and_add_item(ItemIds.WEAPONS_FORGE_HAMMER)
 	GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_HEARTHLOAF)
 	QuestRegistry.offer(QuestRegistry.FIELD_DEBT)
+	# In real play GameFlow._complete_scene_load() discovers the arrival hub on
+	# the new-game boot; the sweep never travels, so seed it or the region map
+	# photographs empty.
+	GameState.discover_fast_travel_hub(&"dom")
 
 
 func _shoot(scene_path: String, shot_name: String, frames: int = 25) -> void:
