@@ -59,3 +59,107 @@ func test_stage_renders_units_from_snapshot_and_plays_action_beat() -> void:
 	var fx := stage.get_node("FxLayer")
 	assert_int(fx.get_child_count()).is_greater_equal(1)
 	assert_str((fx.get_child(0) as Label).text).is_equal("6")
+
+
+func test_stage_emits_tile_hovered_on_mouse_motion() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var event := CombatEvent.new()
+	event.data = {"tiles": [{"x": 0, "y": 0, "height_delta": 0, "note": "mossy"}]}
+	stage.consume_event(event)
+	await runner.simulate_frames(1)
+	var hovered: Array[Dictionary] = []
+	stage.tile_hovered.connect(func(tile: Dictionary) -> void: hovered.append(tile))
+	# A single tile lays out at the region's center, so a motion event there hits it.
+	var motion := InputEventMouseMotion.new()
+	motion.position = stage.size * 0.5
+	stage._gui_input(motion)
+	assert_int(hovered.size()).is_equal(1)
+	assert_str(str(hovered[0]["note"])).is_equal("mossy")
+	# Re-hovering the same cell is not a new emission.
+	stage._gui_input(motion)
+	assert_int(hovered.size()).is_equal(1)
+
+
+func test_move_with_payload_path_slides_without_damage_pop() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var tiles := [
+		{"x": 0, "y": 0, "height_delta": 0},
+		{"x": 1, "y": 0, "height_delta": 0},
+		{"x": 2, "y": 0, "height_delta": 0},
+	]
+	var before := {
+		"active_actor_id": "ally-vex-0",
+		"allies": [{
+			"id": "ally-vex-0", "display_name": "Vex", "side": "ally", "archetype_id": "",
+			"hp": 20, "max_hp": 20, "position": "c:0,0,0", "facing": "e",
+		}],
+		"enemies": [],
+		"tiles": tiles,
+	}
+	var turn := CombatEvent.new()
+	turn.type = &"turn_started"
+	turn.actor_id = &"ally-vex-0"
+	turn.data = {"snapshot": before}
+	stage.consume_event(turn)
+	await runner.simulate_frames(2)
+
+	var after: Dictionary = before.duplicate(true)
+	(after["allies"][0] as Dictionary)["position"] = "c:2,0,0"
+	var move := CombatEvent.new()
+	move.type = &"action_resolved"
+	move.actor_id = &"ally-vex-0"
+	move.data = {"snapshot": after, "damage": 0, "path": [&"c:0,0,0", &"c:1,0,0", &"c:2,0,0"]}
+	stage.consume_event(move)
+	await runner.simulate_frames(2)
+	# A move is a slide, not a hit: no damage pop spawns.
+	assert_int(stage.get_node("FxLayer").get_child_count()).is_equal(0)
+	# The slide is animated — the sprite has not teleported to the destination...
+	var vex := stage.get_node("UnitsLayer/Unit_ally-vex-0") as TextureRect
+	var start_position := vex.position
+	await await_millis(700)
+	# ...but it settles away from where it started once the tween finishes.
+	assert_bool(vex.position.distance_to(start_position) > 1.0).is_true()
+
+
+func test_unit_plays_ko_fall_when_hp_reaches_zero() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var snapshot := {
+		"active_actor_id": "ally-vex-0",
+		"allies": [{
+			"id": "ally-vex-0", "display_name": "Vex", "side": "ally", "archetype_id": "",
+			"hp": 20, "max_hp": 20, "position": Vector2i(0, 0), "facing": "e",
+		}],
+		"enemies": [{
+			"id": "enemy-bog_wight-0", "display_name": "Bog Wight", "side": "enemy",
+			"archetype_id": "bog_wight", "hp": 8, "max_hp": 20,
+			"position": Vector2i(2, 1), "facing": "",
+		}],
+		"tiles": [
+			{"x": 0, "y": 0, "height_delta": 0},
+			{"x": 2, "y": 1, "height_delta": 0},
+		],
+	}
+	var turn := CombatEvent.new()
+	turn.type = &"turn_started"
+	turn.actor_id = &"ally-vex-0"
+	turn.data = {"snapshot": snapshot}
+	stage.consume_event(turn)
+	await runner.simulate_frames(2)
+	var wight := stage.get_node("UnitsLayer/Unit_enemy-bog_wight-0") as TextureRect
+	assert_float(wight.rotation).is_equal(0.0)
+
+	var killed: Dictionary = snapshot.duplicate(true)
+	(killed["enemies"][0] as Dictionary)["hp"] = 0
+	var strike := CombatEvent.new()
+	strike.type = &"action_resolved"
+	strike.actor_id = &"ally-vex-0"
+	strike.target_id = &"enemy-bog_wight-0"
+	strike.data = {"snapshot": killed, "hit": true, "damage": 8}
+	stage.consume_event(strike)
+	await await_millis(500)
+	# The felled unit tips over at its feet and fades, but stays on the board.
+	assert_bool(absf(wight.rotation) > 0.5).is_true()
+	assert_float(wight.modulate.a).is_less(1.0)

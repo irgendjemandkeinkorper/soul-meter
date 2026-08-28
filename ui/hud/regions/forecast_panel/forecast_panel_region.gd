@@ -4,7 +4,7 @@ extends PanelContainer
 signal element_selected(element_id: StringName)
 var _context: Dictionary = {}
 var _selected: StringName = ElementWheel.ORDER[0]
-@onready var wheel: HBoxContainer = %ActWheel
+@onready var wheel: Container = %ActWheel
 @onready var target_header: Label = %TargetHeader
 @onready var affinity: Label = %AffinityStrip
 @onready var forecast: Label = %Forecast

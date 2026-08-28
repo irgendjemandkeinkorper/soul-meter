@@ -6,10 +6,12 @@ extends Control
 ## Rebuilds its whole view from each CombatEvent's snapshot: the tile grid
 ## (scaled to fill the region instead of a fixed corner), one painterly unit
 ## sprite per living actor at its grid cell, active/target cell rims, and
-## action feedback beats (attacker lunge, damage pop, KO fade). Purely
-## presentational — the frozen region contract (consume_event / tile_selected /
-## rendered_tile_count / select_tile) is unchanged.
+## action feedback beats (attacker lunge, damage pop, KO fall, path-following
+## move slides). Purely presentational — the frozen region contract
+## (consume_event / tile_selected / rendered_tile_count / select_tile) is
+## unchanged; tile_hovered is an additive signal.
 signal tile_selected(tile: Dictionary)
+signal tile_hovered(tile: Dictionary)
 
 const UnitArtScript := preload("res://globals/unit_art.gd")
 const DORTHKOR_BACKGROUND := preload(
@@ -24,6 +26,10 @@ const MAX_SCALE := 2.4
 const SPRITE_TILE_HEIGHTS := 2.6
 const ACTIVE_RIM := Color("#C9A227")  # bronze — matches the DS "current" accent
 const TARGET_RIM := Color("#E06C5A")
+const HOVER_RIM := Color("#9AA3B2")
+const KO_MODULATE := Color(0.5, 0.5, 0.56, 0.45)
+const KO_FALL_RADIANS := deg_to_rad(78.0)
+const NO_CELL := Vector2i(-999, -999)
 
 var _tiles: Array[Dictionary] = []
 var _actors: Array[Dictionary] = []
@@ -31,6 +37,10 @@ var _encounter_id: StringName = &""
 var _active_id: StringName = &""
 var _target_id: StringName = &""
 var _selected := Vector2i(-1, -1)
+var _hovered := Vector2i(-1, -1)
+var _fallen: Dictionary = {}
+var _pending_path_id: StringName = &""
+var _pending_path: Array[Vector2i] = []
 var _backdrop: TextureRect
 var _units_layer: Control
 var _fx_layer: Control
@@ -64,6 +74,12 @@ func _ready() -> void:
 			_sync_units(false)
 			queue_redraw()
 	)
+	mouse_exited.connect(
+		func() -> void:
+			if _hovered != Vector2i(-1, -1):
+				_hovered = Vector2i(-1, -1)
+				queue_redraw()
+	)
 
 
 func consume_event(event: CombatEvent) -> void:
@@ -87,9 +103,14 @@ func consume_event(event: CombatEvent) -> void:
 		&"battle_finished":
 			_active_id = &""
 			_target_id = &""
+	var move_path := _decode_path(event.data.get("path", []))
+	if event.type == &"action_resolved" and move_path.size() >= 2 \
+			and _unit_nodes.has(event.actor_id):
+		_pending_path_id = event.actor_id
+		_pending_path = move_path
 	var animate_move := event.type == &"battlefield_changed"
 	_sync_units(animate_move)
-	if event.type == &"action_resolved":
+	if event.type == &"action_resolved" and move_path.is_empty():
 		_play_action_beat(event)
 	queue_redraw()
 
@@ -109,19 +130,35 @@ func select_tile(cell: Vector2i) -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
-		var layout := _layout()
-		var closest := Vector2i(-1, -1)
-		var distance := INF
+		var cell := _cell_at(event.position)
+		if cell != NO_CELL:
+			select_tile(cell)
+	elif event is InputEventMouseMotion:
+		var cell := _cell_at(event.position)
+		var hovered := cell if cell != NO_CELL else Vector2i(-1, -1)
+		if hovered == _hovered:
+			return
+		_hovered = hovered
 		for tile: Dictionary in _tiles:
-			var cell := Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))
-			var point := _project(cell.x, cell.y, _tile_height(tile), layout)
-			var candidate := point.distance_squared_to(event.position)
-			if candidate < distance:
-				distance = candidate
-				closest = cell
-		var reach: float = float(DS.TILE_W) * float(layout["scale"])
-		if distance <= reach * reach:
-			select_tile(closest)
+			if Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0))) == _hovered:
+				tile_hovered.emit(tile.duplicate(true))
+				break
+		queue_redraw()
+
+
+func _cell_at(point: Vector2) -> Vector2i:
+	var layout := _layout()
+	var closest := NO_CELL
+	var distance := INF
+	for tile: Dictionary in _tiles:
+		var cell := Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))
+		var center := _project(cell.x, cell.y, _tile_height(tile), layout)
+		var candidate := center.distance_squared_to(point)
+		if candidate < distance:
+			distance = candidate
+			closest = cell
+	var reach: float = float(DS.TILE_W) * float(layout["scale"])
+	return closest if distance <= reach * reach else NO_CELL
 
 
 func _draw() -> void:
@@ -152,6 +189,9 @@ func _draw() -> void:
 		var rim := Color("#58606F")
 		var rim_width := 1.0
 		var cell := Vector2i(x, y)
+		if cell == _hovered:
+			rim = HOVER_RIM
+			rim_width = 1.5
 		if cell == _cell_of(_target_id):
 			rim = TARGET_RIM
 			rim_width = 2.0
@@ -233,14 +273,26 @@ func _sync_units(animate_move: bool) -> void:
 			_units_layer.add_child(sprite)
 			_unit_nodes[id] = sprite
 		var cell: Vector2i = _actor_cell(actor)
-		var foot := _project(cell.x, cell.y, _height_at(cell), layout)
 		var sprite_h := float(DS.TILE_H) * SPRITE_TILE_HEIGHTS * scale_factor
 		var aspect := 1.0
 		if sprite.texture != null and sprite.texture.get_height() > 0:
 			aspect = float(sprite.texture.get_width()) / float(sprite.texture.get_height())
 		sprite.size = Vector2(sprite_h * aspect, sprite_h)
-		var destination := foot - Vector2(sprite.size.x * 0.5, sprite.size.y - float(DS.TILE_H) * 0.25 * scale_factor)
-		if animate_move and sprite.position.distance_to(destination) > 1.0:
+		sprite.pivot_offset = Vector2(sprite.size.x * 0.5, sprite.size.y)
+		var destination := _sprite_pos_for_cell(sprite, cell, layout)
+		if id == _pending_path_id and _pending_path.size() >= 2:
+			# The sprite already stands on the path's first cell; slide it through
+			# the remaining waypoints the payload carried.
+			var slide := create_tween()
+			for index: int in range(1, _pending_path.size() - 1):
+				slide.tween_property(
+					sprite, "position",
+					_sprite_pos_for_cell(sprite, _pending_path[index], layout), DS.DUR_FAST
+				)
+			slide.tween_property(sprite, "position", destination, DS.DUR_FAST)
+			_pending_path_id = &""
+			_pending_path = []
+		elif animate_move and sprite.position.distance_to(destination) > 1.0:
 			var tween := create_tween()
 			tween.tween_property(sprite, "position", destination, DS.DUR_BASE)
 		else:
@@ -248,11 +300,24 @@ func _sync_units(animate_move: bool) -> void:
 		sprite.flip_h = String(actor.get("facing", "")).contains("w") \
 			or (str(actor.get("side", "")) == "enemy" and String(actor.get("facing", "")).is_empty())
 		var alive := int(actor.get("hp", 1)) > 0
-		sprite.modulate = Color.WHITE if alive else Color(0.5, 0.5, 0.56, 0.45)
+		var was_fallen := bool(_fallen.get(id, false))
+		if alive:
+			sprite.modulate = Color.WHITE
+			sprite.rotation = 0.0
+			_fallen[id] = false
+		elif was_fallen or not _fallen.has(id):
+			# Already down, or first seen dead: settle in the fallen pose instantly.
+			sprite.modulate = KO_MODULATE
+			sprite.rotation = _fall_rotation(sprite)
+			_fallen[id] = true
+		else:
+			_play_ko_fall(sprite)
+			_fallen[id] = true
 	for id: StringName in _unit_nodes.keys():
 		if not seen.has(id):
 			(_unit_nodes[id] as Node).queue_free()
 			_unit_nodes.erase(id)
+			_fallen.erase(id)
 	# Painter's order: lower on screen draws in front.
 	var order: Array = _unit_nodes.values()
 	order.sort_custom(
@@ -272,7 +337,9 @@ func _play_action_beat(event: CombatEvent) -> void:
 		var lunge := create_tween()
 		lunge.tween_property(attacker, "position", toward, DS.DUR_FAST)
 		lunge.tween_property(attacker, "position", home, DS.DUR_FAST)
-	if defender != null:
+	# A felled defender is mid KO-fall — its fade tween owns modulate; flashing
+	# it back to white here would fight that tween frame-by-frame.
+	if defender != null and not bool(_fallen.get(event.target_id, false)):
 		var flash := create_tween()
 		defender.modulate = Color(1.6, 1.4, 1.4, 1.0)
 		flash.tween_property(defender, "modulate", Color.WHITE, DS.DUR_BASE)
@@ -296,6 +363,45 @@ func _spawn_damage_pop(event: CombatEvent, anchor: TextureRect) -> void:
 	tween.tween_property(pop, "position:y", pop.position.y - 28.0, 0.7)
 	tween.tween_property(pop, "modulate:a", 0.0, 0.7)
 	tween.chain().tween_callback(pop.queue_free)
+
+
+func _sprite_pos_for_cell(sprite: TextureRect, cell: Vector2i, layout: Dictionary) -> Vector2:
+	var foot := _project(cell.x, cell.y, _height_at(cell), layout)
+	var scale_factor: float = layout["scale"]
+	return foot - Vector2(
+		sprite.size.x * 0.5, sprite.size.y - float(DS.TILE_H) * 0.25 * scale_factor
+	)
+
+
+## A felled unit tips away from the way it faces, pivoting at its feet.
+func _fall_rotation(sprite: TextureRect) -> float:
+	return -KO_FALL_RADIANS if sprite.flip_h else KO_FALL_RADIANS
+
+
+func _play_ko_fall(sprite: TextureRect) -> void:
+	var fall := create_tween()
+	fall.set_parallel(true)
+	fall.tween_property(sprite, "rotation", _fall_rotation(sprite), DS.DUR_BASE) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	fall.tween_property(sprite, "modulate", KO_MODULATE, DS.DUR_BASE)
+
+
+## Decodes an Array of GridBattlefieldModel.cell_id() handles ("c:x,y,h") into
+## cells. Any token that fails to decode empties the result — the stage renders
+## only paths the payload actually carries (zone battles pass zone names here).
+func _decode_path(value: Variant) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	if value is not Array:
+		return cells
+	for token: Variant in value as Array:
+		var text := str(token)
+		if not text.begins_with("c:"):
+			return []
+		var parts := text.trim_prefix("c:").split(",")
+		if parts.size() < 2 or not parts[0].is_valid_int() or not parts[1].is_valid_int():
+			return []
+		cells.append(Vector2i(parts[0].to_int(), parts[1].to_int()))
+	return cells
 
 
 # --- projection ----------------------------------------------------------------

@@ -16,6 +16,7 @@ extends Control
 
 func _ready() -> void:
 	stage.tile_selected.connect(_on_tile_selected)
+	stage.tile_hovered.connect(_on_tile_selected)
 
 
 func consume_event(event: CombatEvent) -> void:

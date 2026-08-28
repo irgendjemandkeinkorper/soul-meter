@@ -204,7 +204,7 @@ func move(actor: BattleActor, destination: StringName) -> Dictionary:
 	_grid.set_point_solid(dest_cell, true)
 	var previous := position_of(actor)
 	_cells[actor.combat_id] = dest_cell
-	return _allowed({"from": previous, "to": position_of(actor)})
+	return _allowed({"from": previous, "to": position_of(actor), "path": query.get("path", [])})
 
 
 func move_query(actor: BattleActor, destination: StringName) -> Dictionary:
@@ -212,7 +212,8 @@ func move_query(actor: BattleActor, destination: StringName) -> Dictionary:
 	if not bool(query.get("allowed", false)):
 		return query
 	return _allowed({
-		"from": position_of(actor), "to": destination, "ct_cost": query.get("ct_cost", 0)
+		"from": position_of(actor), "to": destination, "ct_cost": query.get("ct_cost", 0),
+		"path": query.get("path", []),
 	})
 
 
