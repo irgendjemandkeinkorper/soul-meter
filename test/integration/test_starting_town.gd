@@ -4,6 +4,14 @@ extends GdUnitTestSuite
 ## vs. a plain unit suite.
 
 
+## The tavern assertions assume no one has been recruited yet ("Available",
+## check-toggle counting). In whole-tree runs the e2e journey suite executes
+## first and leaves its recruited party in GameState, so establish the
+## precondition instead of assuming a clean autoload.
+func before_test() -> void:
+	GameState.set_companions([])
+
+
 func test_tavern_door_prompt_only_shows_when_player_is_in_range() -> void:
 	var runner := scene_runner("res://world/starting_town.tscn")
 	var door: Node2D = runner.find_child("TavernDoor", true, false)
