@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-28  
 **Scope:** current local worktree, including Claude's inherited presentation changes and
-the subsequent combat, portrait, dialogue, and interior QA slices.
+the subsequent combat, portrait, dialogue, interior, quest-reward, and release-readiness QA slices.
 
 This is an evidence ledger, not a claim that Chapter One has passed its human ship gate.
 The automated checks below are reproducible. The outside-player obligations in
@@ -12,14 +12,17 @@ The automated checks below are reproducible. The outside-player obligations in
 
 | Requirement surface | Evidence | Current result |
 |---|---|---|
-| Full deterministic suite | `bash scripts/acceptance_gate.sh` | 852 tests, 0 errors, 0 failures (`reports/report_602/results.xml`) |
+| Full deterministic suite | `SOUL_METER_LOCALE_STRICT=1 bash scripts/acceptance_gate.sh` | 862 tests, 0 errors, 0 failures (`reports/report_631/results.xml`) |
 | Canonical/generated data | `bash scripts/check_generated_data.sh` | Pandora and 598 isometric sprites report no drift |
+| Localization catalogs | strict acceptance artifact check | 53 msgids aligned across `locale/project.pot`, `data/generated/items.pot`, and `locale/es.po` |
 | Critical-path state journey | `bash scripts/test.sh -a test/e2e/test_first_chapter_journey.gd` | 10 tests pass |
 | Gate T machine-verifiable criteria | Gate-focused suites and save-envelope tests | Criteria 1–5, 7–8, and 10 pass; see `docs/qa/gate-t-current-evidence.md` |
 | Combat presentation/runtime | `test/integration/test_battle_interface.gd`, `test/integration/test_combat_controller.gd` | Encounter-aware Dorthkor battlefield and combat state tests pass |
 | Named conversation portraits | `test/integration/test_dialogue_balloon_portraits.gd`, `test/unit/test_dom_npc_roster.gd` | Marshal, Iris, Sella, Hadrik, and Toma resolve authored art |
 | Interior presentation | `test/integration/test_building_interiors.gd` | Full-HD backdrop coverage and all registered round trips pass |
 | Wilds presentation/depth | `test/integration/test_wilds_presentation.gd`, `test/integration/test_y_sort.gd` | Authored terrain coverage passes; fixed backdrop layers preserve actor y-sort |
+| Quest reward presentation | `test/unit/test_quest_registry.gd`, `test/integration/test_reward_reveal.gd` | Atomic reward summaries, queued modal delivery, standard/reduced motion, focus, and dismissal pass |
+| Exported playtest runtime | `scripts/build_playtest.sh --allow-dirty --output-dir /tmp/soul-meter-playtest-build` plus a TCP-only Xvfb launch | Linux release export, eight-second headless boot, and rendered 1280×720 main-menu launch pass; hashes verify; manifest correctly marks the dirty worktree build as local-only |
 | Visual capture sweep | `bash scripts/test.sh -a test/manual/screenshot_sweep.gd` | 9 capture tests pass at 1920×1080 |
 
 The critical-path journey covers boot, recruitment, commission, a side thread,
@@ -44,6 +47,10 @@ Godot writes the current captures below
 
 The separate battle capture is
 `/tmp/soul-meter-godot-data/godot/app_userdata/SoulMeter/battle_screen_qa.png`.
+The quest-reward capture is
+`/tmp/soul-meter-godot-data/godot/app_userdata/SoulMeter/reward_reveal_qa.png`.
+The rendered exported-build capture is
+`/tmp/soul-meter-exported-main-menu-window.png`.
 
 ## External Gate T evidence still required
 

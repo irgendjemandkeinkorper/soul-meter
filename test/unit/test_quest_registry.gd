@@ -107,6 +107,52 @@ func test_resolve_field_debt_grants_the_selected_reward_exactly_once() -> void:
 	assert_int(Reputation.events_for("iron-companies").size()).is_equal(1)
 
 
+func test_field_debt_publishes_one_complete_reward_summary_after_all_ledger_writes() -> void:
+	QuestRegistry.offer(QuestRegistry.FIELD_DEBT)
+	for flag in QuestRegistry.FIELD_DEBT.required_flags:
+		GameState.set_flag(flag, true)
+	var summaries: Array[Dictionary] = []
+	QuestRegistry.quest_rewards_granted.connect(
+		func(summary: Dictionary) -> void: summaries.append(summary), CONNECT_ONE_SHOT
+	)
+
+	assert_bool(QuestRegistry.resolve_field_debt(&"balance")).is_true()
+
+	assert_int(summaries.size()).is_equal(1)
+	var summary := summaries[0]
+	assert_str(summary.get("quest_name", "")).is_equal(QuestRegistry.FIELD_DEBT.quest_name)
+	assert_str(summary.get("resolution_id", "")).is_equal("balance")
+	assert_str(summary.get("resolution_label", "")).is_equal("Split the credit honestly")
+	var entries: Array = summary.get("entries", [])
+	assert_int(entries.size()).is_equal(4)
+	assert_array(entries).contains([
+		{
+			"kind": "faction",
+			"id": "iron-companies",
+			"delta": 5.0,
+			"detail": "Chose the Split the credit honestly reward for the field debt",
+		},
+		{
+			"kind": "faction",
+			"id": "ssae-seeders",
+			"delta": 5.0,
+			"detail": "Chose the Split the credit honestly reward for the field debt",
+		},
+		{
+			"kind": "faction",
+			"id": "the-registry",
+			"delta": 5.0,
+			"detail": "Chose the Split the credit honestly reward for the field debt",
+		},
+		{
+			"kind": "renown",
+			"id": "renown",
+			"delta": 6.0,
+			"detail": "Returned proof from the first field commission",
+		},
+	])
+
+
 ## NOTE (found while writing this suite, not fixed here per task scope):
 ## resolve_field_debt()'s unknown-reward guard is `if not reward is Dictionary: return false`,
 ## but `FIELD_DEBT_REWARDS.get(reward_id, {})` always returns a Dictionary (the {} default on a

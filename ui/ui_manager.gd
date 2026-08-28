@@ -18,6 +18,7 @@ const SHOP := preload("res://ui/screens/shop.tscn")
 const REGION_MAP := preload("res://ui/screens/region_map.tscn")
 const SETTINGS := preload("res://ui/screens/settings.tscn")
 const LOAD_GAME := preload("res://ui/screens/load_game.tscn")
+const REWARD_REVEAL := preload("res://ui/components/reward_reveal.tscn")
 const BUTTON_PRESS_SOUND := preload("res://assets/audio/sfx/metalClick.ogg")
 const SCREEN_OPEN_SOUND := preload("res://assets/audio/sfx/bookOpen.ogg")
 const SCREEN_CLOSE_SOUND := preload("res://assets/audio/sfx/bookClose.ogg")
@@ -26,6 +27,8 @@ const INVENTORY_MOVE_SOUND := preload("res://assets/audio/sfx/handleSmallLeather
 var ui_theme: Theme
 var _stack: Array[Control] = []
 var _paused_by_ui := false
+var _reward_reveal
+var _reward_queue: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -33,6 +36,9 @@ func _ready() -> void:
 	layer = 10
 	_build_theme()
 	get_tree().node_added.connect(_on_node_added)
+	_create_reward_reveal()
+	if not QuestRegistry.quest_rewards_granted.is_connected(_on_quest_rewards_granted):
+		QuestRegistry.quest_rewards_granted.connect(_on_quest_rewards_granted)
 	if GameState.inventory != null:
 		GameState.inventory.item_moved.connect(_on_inventory_moved)
 
@@ -41,6 +47,41 @@ func _build_theme() -> void:
 	# The Soul Meter Design System theme (see design/DESIGN_SYSTEM.md, ui/theme/).
 	ui_theme = ThemeBuilder.build()
 	get_tree().root.theme = ui_theme
+
+
+func _create_reward_reveal() -> void:
+	_reward_reveal = REWARD_REVEAL.instantiate()
+	_reward_reveal.name = "RewardReveal"
+	_reward_reveal.theme = ui_theme
+	_reward_reveal.z_index = 100
+	_reward_reveal.dismissed.connect(_on_reward_reveal_dismissed)
+	add_child(_reward_reveal)
+
+
+func _on_quest_rewards_granted(summary: Dictionary) -> void:
+	_reward_queue.append(summary.duplicate(true))
+	_show_next_reward()
+
+
+func _show_next_reward() -> void:
+	if _reward_reveal.visible or _reward_queue.is_empty():
+		return
+	move_child(_reward_reveal, get_child_count() - 1)
+	var summary: Dictionary = _reward_queue.pop_front()
+	var reduced_motion := bool(
+		GameState.get_setting("accessibility", "reduced_motion", false)
+	)
+	_reward_reveal.present(summary, reduced_motion)
+
+
+func _on_reward_reveal_dismissed() -> void:
+	_show_next_reward.call_deferred()
+
+
+func reset_reward_reveals() -> void:
+	_reward_queue.clear()
+	if _reward_reveal != null:
+		_reward_reveal.reset()
 
 
 ## Open a screen. `pause` halts the tree for overlay views (inventory while playing);
@@ -104,6 +145,8 @@ func is_open() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _reward_reveal != null and _reward_reveal.visible:
+		return
 	if event.is_action_pressed("ui_cancel"):
 		if is_open():
 			back()

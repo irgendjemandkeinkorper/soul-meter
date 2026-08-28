@@ -18,9 +18,25 @@ Do not write real names, contact details, or recording links in this repository.
 | Test dates | |
 | Evidence directory | `test/manual/gate-t/` |
 
+Build the official Linux artifact from a clean worktree:
+
+```bash
+scripts/build_playtest.sh
+cd build/playtest/linux
+sha256sum -c SHA256SUMS
+```
+
+The builder runs strict acceptance, exports the release executable and pack, boots
+the exported binary headlessly, and writes `BUILD-MANIFEST.txt` plus `SHA256SUMS`.
+It refuses a dirty worktree by default. `--allow-dirty` is for local verification
+only; never use an artifact whose manifest says `valid_for_gate_t=no` in a tester
+session.
+
 Preflight:
 
 - [ ] Artifact, commit SHA, and export target match for every session.
+- [ ] `BUILD-MANIFEST.txt` says `worktree=clean` and `valid_for_gate_t=yes`.
+- [ ] `sha256sum -c SHA256SUMS` passes before the first session and after transfer.
 - [ ] The acceptance gate is green for this exact commit.
 - [ ] Each tester is outside the project and has not previously inspected the slice.
 - [ ] Each tester uses a fresh save and default settings.

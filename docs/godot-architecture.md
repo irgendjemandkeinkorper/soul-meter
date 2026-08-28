@@ -129,8 +129,10 @@ holds runtime effect definitions. Generate the linkage.
   scanner owns dialogue/quest/script strings. Do not merge the two templates.
 - `locale/es.po` is a checked-in non-English scaffold loaded through
   `internationalization/locale/translations`. It is updated by the Pandora generator and
-  keeps existing `msgstr` values. When an English source comment changes, the row is retained
-  and marked `#, fuzzy` for translator review.
+  keeps existing `msgstr` values. The generator rewrites its item-owned rows but preserves
+  dialogue/quest PO blocks verbatim; the acceptance gate validates the scaffold against the
+  union of both templates without merging the template files. When an English item source
+  comment changes, the row is retained and marked `#, fuzzy` for translator review.
 
 **Where strings live — decided:** English source strings live in Pandora (`Display Name`,
 `Description` as authoring fields). Localized strings do NOT — they live downstream in the

@@ -32,6 +32,9 @@ func test_item_po_merge_preserves_translations_and_marks_changed_sources_fuzzy()
 			+ "#. English source: Old Name\n"
 			+ "msgid \"ITEM_MATERIALS_EXAMPLE_NAME\"\n"
 			+ "msgstr \"Nombre antiguo\"\n\n"
+			+ "#: dialogue/example.dialogue\n"
+			+ "msgid \"Existing dialogue source\"\n"
+			+ "msgstr \"Diálogo existente\"\n\n"
 		)
 	)
 	file.close()
@@ -46,4 +49,6 @@ func test_item_po_merge_preserves_translations_and_marks_changed_sources_fuzzy()
 	var merged := Generator._merge_locale_po(path, entries)
 	assert_str(merged).contains('msgstr "Nombre antiguo"')
 	assert_str(merged).contains("#, fuzzy")
+	assert_str(merged).contains('msgid "Existing dialogue source"')
+	assert_str(merged).contains('msgstr "Diálogo existente"')
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

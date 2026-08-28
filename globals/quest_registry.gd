@@ -6,6 +6,8 @@ extends Node
 ## keeps dialogue lines readable and keeps fetch-quest progress live as the
 ## inventory changes.
 
+signal quest_rewards_granted(summary: Dictionary)
+
 const LOAMROOT_SPRIGS: FetchQuest = preload("res://quests/loamroot_sprigs.tres")
 const DORTHKOR_ROAD: FlagQuest = preload("res://quests/dorthkor_road.tres")
 const DEEP_TRIAL: FlagQuest = preload("res://quests/deep_trial.tres")
@@ -214,7 +216,10 @@ func is_done(quest: Quest) -> bool:
 
 
 func turn_in(
-	quest: Quest, resolution: String = "returned", grant_default_reward: bool = true
+	quest: Quest,
+	resolution: String = "returned",
+	grant_default_reward: bool = true,
+	publish_reward_summary: bool = true
 ) -> void:
 	# The chapter ruling is one atomic operation. Refuse a bare quest completion
 	# so a caller cannot leave a save with The Broken Muster completed but no
@@ -227,6 +232,7 @@ func turn_in(
 		)
 	):
 		return
+	var was_done := is_done(quest)
 	QuestSystem.update_quest(quest)
 	if quest is FlagQuest:
 		quest.objective_completed = flags_met(quest)
@@ -252,6 +258,13 @@ func turn_in(
 		# post-advance phase.
 		WorldClock.advance_for_quest(quest)
 		SaveGame.request_autosave("quest-completed")
+		if publish_reward_summary and not was_done:
+			_publish_reward_summary(
+				quest,
+				resolution,
+				_humanize_reward_id(resolution),
+				_default_reward_entries(quest)
+			)
 
 
 func resolve_broken_muster(ruling_id: StringName) -> bool:
@@ -288,11 +301,12 @@ func resolve_broken_muster(ruling_id: StringName) -> bool:
 	# synchronous; the checkpoint remains deferred until the full outcome lands.
 	GameState.set_flag("chapter_one_resolution", ruling_key)
 	active_quest.objective_completed = true
-	turn_in(active_quest, ruling_key, false)
+	turn_in(active_quest, ruling_key, false, false)
 	if not is_done(DORTHKOR_ROAD):
 		GameState.set_flag("chapter_one_resolution", "")
 		return false
 
+	var reward_entries: Array[Dictionary] = []
 	for row_value: Variant in ruling.get("reputation", []):
 		if not row_value is Dictionary:
 			continue
@@ -304,22 +318,28 @@ func resolve_broken_muster(ruling_id: StringName) -> bool:
 			str(row.get("cause", "")),
 			"dom"
 		)
+		reward_entries.append(_reward_entry("faction", str(row.get("faction", "")), float(row.get("delta", 0.0)), str(row.get("cause", ""))))
 	Renown.gain_reputation(
 		"player",
 		float(ruling.get("renown", 0.0)),
 		str(ruling.get("renown_cause", "")),
 		"dom"
 	)
+	reward_entries.append(_reward_entry("renown", "renown", float(ruling.get("renown", 0.0)), str(ruling.get("renown_cause", ""))))
 	# Milestone leveling (#98, owner 2026-08-24): the Broken Muster ruling is Chapter
 	# 1's first authored level milestone. PROVISIONAL content pick — the milestone
 	# LIST is authoring; the mechanism is ratified.
 	GameState.grant_milestone_level(&"broken-muster")
+	reward_entries.append(_reward_entry("level", "milestone-level", 1.0, "Milestone level gained"))
 	# FR-308: the ruling is the chapter's loudest banked harmony — the wilds
 	# zone rises one rung (reaching "tolling" if the bellhouse beat already
 	# raised it; the scripted tolling event keys on that flag). Authored
 	# transition per the FR-308 Chapter-1 boundary, not a formula.
 	SaveGame.raise_zhavar("wilds")
 	SaveGame.request_checkpoint(SaveGame.Checkpoint.RULING, ruling_key)
+	_publish_reward_summary(
+		active_quest, ruling_key, _humanize_reward_id(ruling_key), reward_entries
+	)
 	return true
 
 
@@ -347,20 +367,27 @@ func resolve_field_debt(reward_id: StringName) -> bool:
 	# `resolve_broken_muster()` below already guards both conditions.
 	if not reward is Dictionary or (reward as Dictionary).is_empty():
 		return false
-	turn_in(active_quest, String(reward_id), false)
+	turn_in(active_quest, String(reward_id), false, false)
 	if not is_done(FIELD_DEBT):
 		return false
+	var reward_entries: Array[Dictionary] = []
 	for row: Variant in reward.get("reputation", []):
 		if row is Dictionary:
 			var faction := str(row.get("faction", ""))
 			if not faction.is_empty():
+				var cause := "Chose the %s reward for the field debt" % reward.get("title", "field debt")
 				Reputation.record(
 					"player", faction, float(row.get("delta", 0.0)),
-					"Chose the %s reward for the field debt" % reward.get("title", "field debt"), "field"
+					cause, "field"
 				)
+				reward_entries.append(_reward_entry("faction", faction, float(row.get("delta", 0.0)), cause))
 	GameState.set_flag("field_debt_reward", String(reward_id))
 	Renown.gain_reputation("player", 6.0, "Returned proof from the first field commission", "field")
+	reward_entries.append(_reward_entry("renown", "renown", 6.0, "Returned proof from the first field commission"))
 	SaveGame.request_autosave("field-debt-rewarded")
+	_publish_reward_summary(
+		active_quest, String(reward_id), str(reward.get("title", "")), reward_entries
+	)
 	return true
 
 
@@ -388,7 +415,7 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 	if active_quest == null:
 		return false
 	active_quest.objective_completed = true
-	turn_in(active_quest, str(outcome["id"]), false)
+	turn_in(active_quest, str(outcome["id"]), false, false)
 	if not is_done(quest):
 		return false
 	Reputation.record(
@@ -400,6 +427,19 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 	)
 	GameState.set_flag(quest.resolution_flag, str(outcome["id"]))
 	SaveGame.request_autosave("dom-side-quest-resolved")
+	_publish_reward_summary(
+		active_quest,
+		str(outcome["id"]),
+		_humanize_reward_id(str(outcome["id"])),
+		[
+			_reward_entry(
+				"faction",
+				str(outcome["faction_id"]),
+				float(outcome["reputation_delta"]),
+				str(outcome["cause"])
+			)
+		]
+	)
 	return true
 
 
@@ -458,13 +498,57 @@ func resolve_companion_quest(
 	# then verify completion before the append-only Renown write — a silent
 	# turn_in() no-op must roll the flag back, never leak a ledger entry.
 	GameState.set_flag(completion_flag, true)
-	turn_in(active_quest, "resolved", false)
+	turn_in(active_quest, "resolved", false, false)
 	if not is_done(quest):
 		GameState.set_flag(completion_flag, false)
 		return false
 	Renown.gain_reputation("player", renown_delta, cause, "party")
 	SaveGame.request_autosave("companion-quest-resolved")
+	_publish_reward_summary(
+		active_quest,
+		"resolved",
+		"Companion bond",
+		[_reward_entry("renown", "renown", renown_delta, cause)]
+	)
 	return true
+
+
+func _publish_reward_summary(
+	quest: Quest,
+	resolution_id: String,
+	resolution_label: String,
+	entries: Array[Dictionary]
+) -> void:
+	quest_rewards_granted.emit(
+		{
+			"quest_id": quest.id,
+			"quest_name": quest.quest_name,
+			"resolution_id": resolution_id,
+			"resolution_label": resolution_label,
+			"entries": entries.duplicate(true),
+		}
+	)
+
+
+func _default_reward_entries(quest: Quest) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	if quest is FetchQuest:
+		var fetch := quest as FetchQuest
+		if not fetch.reward_faction.is_empty() and not is_zero_approx(fetch.reward_amount):
+			entries.append(
+				_reward_entry(
+					"faction", fetch.reward_faction, fetch.reward_amount, fetch.reward_cause
+				)
+			)
+	return entries
+
+
+static func _reward_entry(kind: String, id: String, delta: float, detail: String) -> Dictionary:
+	return {"kind": kind, "id": id, "delta": delta, "detail": detail}
+
+
+static func _humanize_reward_id(value: String) -> String:
+	return value.replace("-", " ").replace("_", " ").capitalize()
 
 
 ## Playtest god mode (ui/screens/debug_menu.gd): grant whatever the quest still
