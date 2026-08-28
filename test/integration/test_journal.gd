@@ -10,6 +10,7 @@ var _renown_before: Dictionary
 
 func before_test() -> void:
 	UIManager.close_all()
+	UIManager.reset_reward_reveals()
 	get_tree().paused = false
 	_quest_pools_before = QuestRegistry.to_dict().duplicate(true)
 	_quest_resources_before = {}
@@ -24,6 +25,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	UIManager.close_all()
+	UIManager.reset_reward_reveals()
 	get_tree().paused = false
 	for quest: Quest in QuestRegistry.ALL_QUESTS:
 		if _quest_resources_before.has(quest.id):

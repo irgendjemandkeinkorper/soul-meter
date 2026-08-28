@@ -604,8 +604,10 @@ static func _build_pot(entries: Array[Dictionary]) -> String:
 static func _merge_locale_po(path: String, entries: Array[Dictionary]) -> String:
 	var existing := _read_po_entries(path)
 	var po := _po_header(LOCALE_CODE)
+	var generated_keys := {}
 	for entry: Dictionary in entries:
 		var key: String = entry["key"]
+		generated_keys[key] = true
 		var previous: Dictionary = existing.get(key, {})
 		var translation := str(previous.get("translation", ""))
 		var source_changed := (
@@ -613,6 +615,15 @@ static func _merge_locale_po(path: String, entries: Array[Dictionary]) -> String
 		)
 		var fuzzy := bool(previous.get("fuzzy", false)) or source_changed
 		po += _po_entry(entry, translation, fuzzy)
+	# Godot owns dialogue/quest msgids in locale/project.pot, while this generator
+	# owns item msgids. Both catalogs share the loaded locale/es.po translation file,
+	# so a Pandora regeneration must retain every non-item PO block verbatim.
+	for key: String in existing:
+		if generated_keys.has(key):
+			continue
+		var preserved_block := str(existing[key].get("block", "")).strip_edges()
+		if not preserved_block.is_empty():
+			po += preserved_block + "\n\n"
 	return po.trim_suffix("\n").trim_suffix("\n") + "\n"
 
 
@@ -670,6 +681,7 @@ static func _read_po_entries(path: String) -> Dictionary:
 			"source": source,
 			"translation": _po_field(block, "msgstr"),
 			"fuzzy": block.contains("#, fuzzy"),
+			"block": block,
 		}
 	return result
 

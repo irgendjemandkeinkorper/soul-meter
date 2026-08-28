@@ -10,6 +10,7 @@ required_paths=(
 	"data.pandora"
 	"data/generated/encounters.json"
 	"data/generated/gloot_prototree.json"
+	"data/generated/items.pot"
 	"locale/project.pot"
 	"locale/es.po"
 	"test/manual/prototype_acceptance.md"
@@ -58,7 +59,7 @@ def msgids(path: str) -> set[str]:
     return entries
 
 
-source_ids = msgids("locale/project.pot")
+source_ids = msgids("locale/project.pot") | msgids("data/generated/items.pot")
 translation_ids = msgids("locale/es.po")
 missing = sorted(source_ids - translation_ids)
 extra = sorted(translation_ids - source_ids)

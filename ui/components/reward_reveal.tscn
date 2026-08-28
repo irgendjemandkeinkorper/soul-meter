@@ -1,0 +1,89 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/components/reward_reveal.gd" id="1_reward"]
+
+[node name="RewardReveal" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_reward")
+
+[node name="Scrim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ScreenShellMargin"
+mouse_filter = 2
+
+[node name="Center" type="CenterContainer" parent="SafeArea"]
+layout_mode = 2
+
+[node name="RewardPanel" type="PanelContainer" parent="SafeArea/Center"]
+custom_minimum_size = Vector2(720, 0)
+layout_mode = 2
+theme_type_variation = &"DialogueLinePanel"
+
+[node name="Content" type="MarginContainer" parent="SafeArea/Center/RewardPanel"]
+layout_mode = 2
+
+[node name="Column" type="VBoxContainer" parent="SafeArea/Center/RewardPanel/Content"]
+layout_mode = 2
+theme_type_variation = &"ScreenContentColumn"
+
+[node name="Eyebrow" type="Label" parent="SafeArea/Center/RewardPanel/Content/Column"]
+layout_mode = 2
+theme_type_variation = &"EyebrowLabel"
+text = "QUEST REWARD  ·  LEDGER UPDATED"
+horizontal_alignment = 1
+
+[node name="Trim" type="ColorRect" parent="SafeArea/Center/RewardPanel/Content/Column"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="QuestTitle" type="Label" parent="SafeArea/Center/RewardPanel/Content/Column"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "Quest completed"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Resolution" type="Label" parent="SafeArea/Center/RewardPanel/Content/Column"]
+layout_mode = 2
+theme_type_variation = &"QuoteLabel"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Entries" type="VBoxContainer" parent="SafeArea/Center/RewardPanel/Content/Column"]
+layout_mode = 2
+theme_type_variation = &"LedgerHistory"
+
+[node name="Hint" type="Label" parent="SafeArea/Center/RewardPanel/Content/Column"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Every change above has already been entered in the company ledger."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Continue" type="Button" parent="SafeArea/Center/RewardPanel/Content/Column"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_type_variation = &"BronzeButton"
+text = "CONTINUE  [ENTER]"

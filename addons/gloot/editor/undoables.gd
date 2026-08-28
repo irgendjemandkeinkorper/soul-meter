@@ -3,7 +3,7 @@ extends Object
 const _Undoables = preload("res://addons/gloot/editor/undoables.gd")
 
 
-static func _get_undo_redo_manager() -> EditorUndoRedoManager:
+static func _get_undo_redo_manager():
     if Engine.is_editor_hint():
         var Gloot = load("res://addons/gloot/gloot.gd")
         if Gloot.instance() == null:
