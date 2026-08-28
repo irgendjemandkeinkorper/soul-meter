@@ -13,6 +13,22 @@ const OUTDOOR_JITTER_BY_PLACEMENT := {
 	"town_north_road": Vector2i(22, 32),
 	"town_wound_lip": Vector2i(34, 16),
 }
+const PORTRAIT_PATHS := {
+	"branek-coiljaw": (
+		"res://assets/generated/portraits/marshal_coiljaw_portrait_neutral.png"
+	),
+	"hadrik-vale": "res://assets/generated/portraits/hadrik_vale_portrait_neutral.png",
+	"sella-varn": "res://assets/generated/portraits/sella_varn_portrait_neutral.png",
+	"toma-reedhand": "res://assets/generated/portraits/toma_reedhand_portrait_neutral.png",
+}
+const NPC_BIOS := {
+	"branek-coiljaw": (
+		"A Trial Council road marshal charged with the broken muster at Dorthkor."
+	),
+}
+const NPC_EPITHETS := {
+	"branek-coiljaw": "the Road-Bench",
+}
 const NPC_PROPERTIES := [
 	["Display Name", "string"],
 	["Epithet", "string"],
@@ -236,8 +252,8 @@ func _npc(
 		hooks.append(hook)
 	return {
 		"Display Name": display_name,
-		"Epithet": "",
-		"Bio": "%s of Dom's %s." % [role, district],
+		"Epithet": str(NPC_EPITHETS.get(npc_id, "")),
+		"Bio": str(NPC_BIOS.get(npc_id, "%s of Dom's %s." % [role, district])),
 		"Vault Id": vault_id,
 		"NPC Id": npc_id,
 		"Town Id": "dom",
@@ -247,7 +263,7 @@ func _npc(
 		"Faction Id": faction_id,
 		"Quest Hooks": JSON.stringify(hooks),
 		"Portrait Id": npc_id,
-		"Portrait Path": "",
+		"Portrait Path": str(PORTRAIT_PATHS.get(npc_id, "")),
 		"Dialogue Greeting": _greeting(district),
 		"Dialogue Context": context_line,
 		"Dialogue Farewell": _farewell(district),

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
@@ -6,6 +6,20 @@
 [ext_resource type="PackedScene" path="res://actors/enemy/enemy.tscn" id="4_enemy"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="5_exit"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_iso"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-memorial-marker--decorative.png" id="20_marker"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-breach-warning-post--decorative.png" id="21_post"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road-drum--decorative.png" id="22_drum"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-supply-cart--decorative.png" id="23_cart"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/jawbrace/jawbrace-warning-plate--decorative.png" id="24_plate"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/jawbrace/jawbrace-chain-post--decorative.png" id="25_chain"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_thin_dark.png" id="26_thin_tree"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_blocks_dark.png" id="27_blocks_tree"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/stone_tallB.png" id="28_stone_tall"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/stone_largeC.png" id="29_stone_large"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/rock_smallF.png" id="30_rock_small"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/log_stack.png" id="31_log_stack"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tent_detailedClosed.png" id="32_tent"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/campfire_logs.png" id="33_campfire"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1800, 40)
@@ -19,17 +33,20 @@ arrival_flag = "chapter_dorthkor_reached"
 y_sort_enabled = true
 
 [node name="Ground" type="ColorRect" parent="."]
-offset_right = 1800.0
-offset_bottom = 900.0
+offset_left = -600.0
+offset_top = -400.0
+offset_right = 2400.0
+offset_bottom = 1300.0
 color = Color(0.12, 0.1, 0.1, 1)
 z_index = -20
 
 [node name="IsometricGround" type="TileMapLayer" parent="."]
-position = Vector2(900, 50)
+position = Vector2(900, -752)
 script = ExtResource("6_iso")
-map_size = Vector2i(28, 22)
+map_size = Vector2i(78, 78)
 ground_style = 1
 road_axis = 1
+road_half_width = 2
 
 [node name="Road" type="ColorRect" parent="."]
 visible = false
@@ -92,3 +109,198 @@ position = Vector2(70, 450)
 target_scene = "res://world/starting_town.tscn"
 label_text = "RETURN TO DOM"
 spawn_id = &"from_dorthkor"
+
+[node name="SetDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="MemorialRankA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(380, 170)
+texture = ExtResource("20_marker")
+offset = Vector2(0, -90)
+
+[node name="MemorialRankB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(520, 240)
+texture = ExtResource("20_marker")
+offset = Vector2(0, -90)
+
+[node name="MemorialRankC" type="Sprite2D" parent="SetDressing"]
+position = Vector2(660, 310)
+texture = ExtResource("20_marker")
+offset = Vector2(0, -90)
+
+[node name="MemorialRankD" type="Sprite2D" parent="SetDressing"]
+position = Vector2(800, 380)
+texture = ExtResource("20_marker")
+offset = Vector2(0, -90)
+
+[node name="MemorialPlate" type="Sprite2D" parent="SetDressing"]
+position = Vector2(470, 320)
+texture = ExtResource("24_plate")
+offset = Vector2(0, -90)
+
+[node name="MemorialStone" type="Sprite2D" parent="SetDressing"]
+position = Vector2(320, 230)
+texture = ExtResource("28_stone_tall")
+offset = Vector2(0, -50.596)
+scale = Vector2(1.5, 1.5)
+
+[node name="WarnPostA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(540, 600)
+texture = ExtResource("21_post")
+offset = Vector2(0, -90)
+
+[node name="WarnPostB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(640, 660)
+texture = ExtResource("21_post")
+offset = Vector2(0, -90)
+
+[node name="WarnChain" type="Sprite2D" parent="SetDressing"]
+position = Vector2(590, 700)
+texture = ExtResource("25_chain")
+offset = Vector2(0, -90)
+
+[node name="WarnRock" type="Sprite2D" parent="SetDressing"]
+position = Vector2(480, 660)
+texture = ExtResource("29_stone_large")
+offset = Vector2(0, -50.596)
+scale = Vector2(1.5, 1.5)
+
+[node name="CampTentA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1480, 660)
+texture = ExtResource("32_tent")
+offset = Vector2(0, -50.596)
+scale = Vector2(2, 2)
+
+[node name="CampTentB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1630, 720)
+texture = ExtResource("32_tent")
+offset = Vector2(0, -50.596)
+scale = Vector2(2, 2)
+
+[node name="CampFire" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1550, 740)
+texture = ExtResource("33_campfire")
+offset = Vector2(0, -50.596)
+scale = Vector2(1.5, 1.5)
+
+[node name="CampCart" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1400, 780)
+texture = ExtResource("23_cart")
+offset = Vector2(0, -90)
+
+[node name="CampDrumA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1500, 800)
+texture = ExtResource("22_drum")
+offset = Vector2(0, -90)
+
+[node name="CampDrumB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1680, 640)
+texture = ExtResource("22_drum")
+offset = Vector2(0, -90)
+
+[node name="CampLogs" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1580, 620)
+texture = ExtResource("31_log_stack")
+offset = Vector2(0, -50.596)
+scale = Vector2(1.5, 1.5)
+
+[node name="ShoulderMarkerA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1000, 620)
+texture = ExtResource("20_marker")
+offset = Vector2(0, -90)
+
+[node name="ShoulderMarkerB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1200, 700)
+texture = ExtResource("20_marker")
+offset = Vector2(0, -90)
+
+[node name="ShoulderDrum" type="Sprite2D" parent="SetDressing"]
+position = Vector2(850, 560)
+texture = ExtResource("22_drum")
+offset = Vector2(0, -90)
+
+[node name="ShoulderCart" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1120, 300)
+texture = ExtResource("23_cart")
+offset = Vector2(0, -90)
+
+[node name="DeadTreeA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(250, 100)
+texture = ExtResource("26_thin_tree")
+offset = Vector2(0, -50.596)
+scale = Vector2(2, 2)
+
+[node name="DeadTreeB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(450, 120)
+texture = ExtResource("27_blocks_tree")
+offset = Vector2(0, -50.596)
+scale = Vector2(2, 2)
+
+[node name="DeadTreeC" type="Sprite2D" parent="SetDressing"]
+position = Vector2(600, 90)
+texture = ExtResource("26_thin_tree")
+offset = Vector2(0, -50.596)
+scale = Vector2(2, 2)
+
+[node name="DeadTreeD" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1250, 110)
+texture = ExtResource("27_blocks_tree")
+offset = Vector2(0, -50.596)
+scale = Vector2(2, 2)
+
+[node name="DeadTreeE" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1450, 140)
+texture = ExtResource("26_thin_tree")
+offset = Vector2(0, -50.596)
+scale = Vector2(2, 2)
+
+[node name="DeadTreeF" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1650, 100)
+texture = ExtResource("27_blocks_tree")
+offset = Vector2(0, -50.596)
+scale = Vector2(2, 2)
+
+[node name="SouthStoneA" type="Sprite2D" parent="SetDressing"]
+position = Vector2(300, 800)
+texture = ExtResource("28_stone_tall")
+offset = Vector2(0, -50.596)
+scale = Vector2(1.5, 1.5)
+
+[node name="SouthStoneB" type="Sprite2D" parent="SetDressing"]
+position = Vector2(700, 830)
+texture = ExtResource("29_stone_large")
+offset = Vector2(0, -50.596)
+scale = Vector2(1.5, 1.5)
+
+[node name="SouthRock" type="Sprite2D" parent="SetDressing"]
+position = Vector2(900, 790)
+texture = ExtResource("30_rock_small")
+offset = Vector2(0, -50.596)
+
+[node name="SouthStoneC" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1100, 840)
+texture = ExtResource("28_stone_tall")
+offset = Vector2(0, -50.596)
+scale = Vector2(1.5, 1.5)
+
+[node name="SouthTree" type="Sprite2D" parent="SetDressing"]
+position = Vector2(200, 700)
+texture = ExtResource("26_thin_tree")
+offset = Vector2(0, -50.596)
+scale = Vector2(2, 2)
+
+[node name="EastStone" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1730, 400)
+texture = ExtResource("29_stone_large")
+offset = Vector2(0, -50.596)
+scale = Vector2(1.5, 1.5)
+
+[node name="EastPost" type="Sprite2D" parent="SetDressing"]
+position = Vector2(1720, 250)
+texture = ExtResource("21_post")
+offset = Vector2(0, -90)
+
+[node name="NorthRock" type="Sprite2D" parent="SetDressing"]
+position = Vector2(950, 200)
+texture = ExtResource("30_rock_small")
+offset = Vector2(0, -50.596)

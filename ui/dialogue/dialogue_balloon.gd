@@ -20,7 +20,13 @@ const SOUL_GAUGE := preload("res://ui/hud/soul_gauge.tscn")
 ## The element is the character's ATTUNEMENT (rings the portrait). Grows with the cast;
 ## later this generates from Pandora NPCs.
 const SPEAKERS := {
-	"Iris Illepah": {"subtitle": "Ssae-Seeder of the Groves", "element": "molm"},
+	"Iris Illepah": {
+		"subtitle": "Ssae-Seeder of the Groves",
+		"element": "molm",
+		"portrait_id": "iris-illepah",
+		"portrait_path":
+		"res://assets/generated/portraits/iris_illepah_portrait_neutral.png",
+	},
 	"Marshal Coiljaw": {"subtitle": "the Road-Bench", "element": ""},
 	"Sella Varn": {"subtitle": "Bell Warden of the Lower Ward", "element": "strom"},
 	"Hadrik Vale": {"subtitle": "Registry Archive Clerk", "element": "nul"},

@@ -156,6 +156,5 @@ func _load_optional_texture(path: String, fallback: Texture2D) -> Texture2D:
 		var texture := load(path) as Texture2D
 		if texture != null:
 			return texture
-	# The dom-revamp interior textures landed; this fallback now only covers a
-	# missing/corrupt import, not a planned art gap.
+	# Keep interiors usable when optional generated art is missing or has a corrupt import.
 	return fallback

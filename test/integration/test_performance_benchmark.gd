@@ -4,6 +4,18 @@ const PerformanceBenchmark := preload("res://tools/performance_benchmark.gd")
 const PopulatedGridBenchmark := preload("res://tools/populated_grid_benchmark.gd")
 
 
+func test_field_benchmark_traverses_the_ratified_deployment_flow() -> void:
+	assert_array(PerformanceBenchmark.DEPLOYMENT_EVENTS).contains_exactly(
+		[
+			&"enter_battle",
+			&"deployment_next",
+			&"deployment_next",
+			&"deployment_next",
+			&"accept_slate",
+		]
+	)
+
+
 func test_report_schema_honors_warmup_and_sample_counts() -> void:
 	var report: Dictionary = PerformanceBenchmark.create_report(
 		{"warmup_frames": 3, "sample_count": 4},

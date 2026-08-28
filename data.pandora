@@ -2814,7 +2814,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/marshal_coiljaw_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -7603,7 +7603,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/sella_varn_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -7704,7 +7704,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/hadrik_vale_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -7805,7 +7805,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/toma_reedhand_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",

@@ -283,6 +283,14 @@ func test_snapshot_reports_live_weather_and_charged_tiles() -> void:
 	assert_str(str((charged[0] as Dictionary)["charge_element_id"])).is_equal("strom")
 
 
+func test_snapshot_preserves_encounter_identity_for_environment_presentation() -> void:
+	controller.start([ally], [enemy], &"dorthkor-vanguard")
+
+	assert_str(str(controller.snapshot().get("encounter_id", ""))).is_equal(
+		"dorthkor-vanguard"
+	)
+
+
 func test_charged_source_tile_raises_the_forecast_and_matches_resolution_terms() -> void:
 	var local_controller := _grid_controller(true)
 	var actor := local_controller.allies[0]

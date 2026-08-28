@@ -28,6 +28,8 @@ const EXPECTED_BACKGROUND_Z_INDEX := {
 	"WaterBackdrop": -20,
 	"IsometricGround": -10,
 	"Floor": -20,
+	"WorldUnderlay": -30,
+	"TerrainBackdrop": -15,
 }
 
 

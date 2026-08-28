@@ -100,9 +100,24 @@ func _rebuild_sheet() -> void:
 		calling.modulate = Color(1, 1, 1, 0.6)
 		_sheet_column.add_child(calling)
 
+	# Two columns: the wheel sits beside the skills instead of below the fold —
+	# on a 1080p sheet the single-column layout cut the wheel at the scroll edge
+	# while the right half of the sheet stayed empty.
+	var body := HBoxContainer.new()
+	body.name = "SheetBody"
+	body.add_theme_constant_override("separation", 24)
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sheet_column.add_child(body)
+	var main_column := VBoxContainer.new()
+	main_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(main_column)
+	var side_column := VBoxContainer.new()
+	side_column.custom_minimum_size = Vector2(320, 0)
+	body.add_child(side_column)
+
 	# --- Attributes (fixed after creation, owner 2026-08-24) ---
 	if not member.attributes.is_empty():
-		_sheet_column.add_child(_section("Attributes"))
+		main_column.add_child(_section("Attributes"))
 		var attribute_grid := GridContainer.new()
 		attribute_grid.columns = 6
 		for attribute_id: String in ChargenData.ATTRIBUTE_IDS:
@@ -114,21 +129,21 @@ func _rebuild_sheet() -> void:
 			cell.tooltip_text = str(ChargenData.ATTRIBUTE_HINTS.get(attribute_id, ""))
 			cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			attribute_grid.add_child(cell)
-		_sheet_column.add_child(attribute_grid)
+		main_column.add_child(attribute_grid)
 
 	# --- Skills + advancement spend (#98) ---
-	_sheet_column.add_child(_section("Skills"))
+	main_column.add_child(_section("Skills"))
 	var points_label := Label.new()
 	points_label.name = "AdvancementPoints"
 	points_label.text = (
 		"Advancement points: %d   (granted at story milestones)" % member.advancement_points
 	)
-	_sheet_column.add_child(points_label)
+	main_column.add_child(points_label)
 
 	var skill_grid := GridContainer.new()
 	skill_grid.name = "SkillGrid"
 	skill_grid.columns = 3
-	_sheet_column.add_child(skill_grid)
+	main_column.add_child(skill_grid)
 	for skill_id: String in ChargenData.SKILL_IDS:
 		var label := Label.new()
 		label.text = str(ChargenData.SKILL_LABELS.get(skill_id, skill_id))
@@ -157,11 +172,11 @@ func _rebuild_sheet() -> void:
 		skill_grid.add_child(buy)
 
 	# --- The Wheel (FR-604) ---
-	_sheet_column.add_child(_section("The Wheel"))
+	side_column.add_child(_section("The Wheel"))
 	var wheel := WheelWidgetScript.new()
 	wheel.name = "WheelWidget"
 	wheel.set_elements(member.major_element, member.minor_element)
-	_sheet_column.add_child(wheel)
+	side_column.add_child(wheel)
 	if not member.major_element.is_empty() or not member.minor_element.is_empty():
 		var wheel_caption := Label.new()
 		wheel_caption.text = "Major: %s   Minor: %s" % [
@@ -169,27 +184,27 @@ func _rebuild_sheet() -> void:
 			member.minor_element.capitalize() if not member.minor_element.is_empty() else "—",
 		]
 		wheel_caption.modulate = Color(1, 1, 1, 0.6)
-		_sheet_column.add_child(wheel_caption)
+		side_column.add_child(wheel_caption)
 
 	# --- Recent checks (FR-205, toggleable for Archivists) ---
-	_sheet_column.add_child(_section("Recent Checks"))
+	main_column.add_child(_section("Recent Checks"))
 	var toggle := CheckButton.new()
 	toggle.name = "CheckMathToggle"
 	toggle.text = "Show check math"
 	toggle.button_pressed = bool(GameState.get_setting("interface", "show_check_math", true))
 	toggle.toggled.connect(_on_check_math_toggled)
-	_sheet_column.add_child(toggle)
+	main_column.add_child(toggle)
 	if toggle.button_pressed:
 		var checks := SkillCheck.recent_checks()
 		if checks.is_empty():
 			var none := Label.new()
 			none.text = "(no checks made yet)"
 			none.modulate = Color(1, 1, 1, 0.5)
-			_sheet_column.add_child(none)
+			main_column.add_child(none)
 		else:
 			var log_column := VBoxContainer.new()
 			log_column.name = "CheckLog"
-			_sheet_column.add_child(log_column)
+			main_column.add_child(log_column)
 			for index in range(checks.size() - 1, -1, -1):
 				var entry: Dictionary = checks[index]
 				var line := Label.new()

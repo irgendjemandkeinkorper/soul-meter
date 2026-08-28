@@ -122,7 +122,7 @@ func start(encounter: Variant) -> void:
 				"Encounter '%s' authors unknown weather '%s'; battle starts calm."
 				% [encounter_id, weather_default]
 			)
-	controller.start(allies, enemies)
+	controller.start(allies, enemies, encounter_id)
 	battle_started.emit()
 	balance_changed.emit(balance)
 

@@ -14,6 +14,13 @@ const LOADING_SCREEN := (
 const BATTLE_SCREEN := "res://ui/screens/battle.tscn"
 const TOWN_SPAWNER_SCRIPT := "res://world/town_npc_spawner.gd"
 const BATTLE_ACTOR_SCRIPT := "res://globals/battle_actor.gd"
+const DEPLOYMENT_EVENTS := [
+	&"enter_battle",
+	&"deployment_next",
+	&"deployment_next",
+	&"deployment_next",
+	&"accept_slate",
+]
 const WARMUP_FRAMES := 120
 const SAMPLE_COUNT := 600
 const STAGE_TIMEOUT_FRAMES := 1800
@@ -159,8 +166,9 @@ func _measure_battle_entry() -> bool:
 	if bool(_battle.get("ended")):
 		_add_error("Benchmark battle ended before the overlay could be opened.")
 		return false
-	# Mirrors actors/enemy/enemy.gd: battle data first, then the flow event.
-	_game_flow.call("send_event", &"enter_battle")
+	# Mirrors actors/enemy/enemy.gd, then traverses the mandatory deployment
+	# substates before waiting for the battle overlay.
+	await _advance_deployment_to_battle()
 	var completed := await _wait_until(
 		func() -> bool:
 			return _battle_hud_interactive_usec >= 0,
@@ -170,6 +178,12 @@ func _measure_battle_entry() -> bool:
 	if not completed:
 		_add_error("Timed out waiting for the battle overlay to accept input.")
 	return completed
+
+
+func _advance_deployment_to_battle() -> void:
+	for event: StringName in DEPLOYMENT_EVENTS:
+		_game_flow.call("send_event", event)
+		await process_frame
 
 
 func _on_node_added(node: Node) -> void:

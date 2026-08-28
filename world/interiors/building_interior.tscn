@@ -18,6 +18,11 @@ size = Vector2(360, 54)
 y_sort_enabled = true
 script = ExtResource("1_interior")
 
+[node name="Backdrop" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-960, -640, 1920, -640, 1920, 1280, -960, 1280)
+color = Color(0.025, 0.027, 0.035, 1)
+z_index = -30
+
 [node name="Floor" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(0, 0, 960, 0, 960, 640, 0, 640)
 color = Color(0.12, 0.12, 0.14, 1)
@@ -100,14 +105,14 @@ visible = false
 visible = false
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(480, 500)
+position = Vector2(480, 400)
 camera_bounds = Rect2i(0, 0, 960, 640)
 
 [node name="SpawnDefault" type="Marker2D" parent="."]
-position = Vector2(480, 500)
+position = Vector2(480, 400)
 
 [node name="SpawnEntry" type="Marker2D" parent="."]
-position = Vector2(480, 500)
+position = Vector2(480, 400)
 
 [node name="VendorSpot" type="Marker2D" parent="."]
 position = Vector2(720, 185)

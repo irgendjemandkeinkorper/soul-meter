@@ -1,177 +1,110 @@
-# Phase 1.5 Playtest Protocol — the comprehension go/no-go gate
+# Gate T criterion 6 playtest protocol — tactical comprehension
 
-**Status:** gate materials ready; **the gate has never been run.**
-**Gate authority:** `docs/prd-chapter-one.md` line 185 (RATIFIED 2026-08-03). Passing this gate
-is the go/no-go for region content production. It is not advisory and not waivable by an agent.
-**Who runs it:** a human. The 3–5 testers must be *outside* the project. No agent, simulation,
-or internal review substitutes for this — that substitution is explicitly disallowed.
+**Status:** ready to run; no qualifying outside-player result is recorded yet.
 
-Use the fillable [`playtest-packet.md`](playtest-packet.md) to execute and sign off the gate.
-Performance is recorded separately with the
-[`FR-904 reference-hardware runbook`](fr-904-runbook.md).
+**Authority:** `docs/prd-amendment-tactical-layer.md` §5, criterion 6, ratified and
+trimmed 2026-08-05. `docs/roadmap-chapter-one.md` §1.3 and M5 apply the same ruling.
 
----
+Phase 1.5 is superseded by Gate T, not cancelled. There is **one gate**, and this is
+**not a second session**. The earlier breadth-first slice remains the play scenario;
+Gate T supplies the current tactical chassis and scoring rule.
 
-## 1. What the gate actually requires
+Use `docs/playtest-packet.md` during each session and
+`docs/playtest-run-of-show.md` for facilitator logistics. Performance is separate:
+use `docs/fr-904-runbook.md` for Gate T criterion 9.
 
-Verbatim obligations from PRD line 185, each restated as a checkable condition:
+## 1. Eligibility and session validity
 
-| # | Requirement | Pass condition |
-|---|---|---|
-| G1 | 3–5 outside playtesters (**not one**) | ≥3 distinct testers, none a project contributor |
-| G2 | Complete the slice **unaided** | No hints from the facilitator during play (see §5) |
-| G3 | 45–90 minute slice | Session fits the window without skipping subsystems |
-| G4 | "Why did that cast fail?" answered correctly | Per tester, for the systems the slice exposes |
-| G5 | "What does this gauge do?" answered correctly | Per tester, for the Balance Gauge |
-| G6 | Every subsystem state survives save/load | Verified mid-slice, by the tester, not scripted |
-| G7 | NG+ mock applies carry-overs correctly | Mock rollover observed at slice end |
+- Run the same immutable build with **3–5 eligible outside testers**. Recruit 6–8
+  people to absorb dropouts.
+- A tester is outside the project only if they did not author, review, or previously
+  inspect this slice.
+- Each tester starts from a fresh save and default settings.
+- Each session lasts 45–90 minutes and covers the required slice without facilitator
+  hints. A session outside that window, or one missing a required subsystem, is invalid.
+- The facilitator may explain controls only when the build itself does not display
+  them. They may not explain mechanics, point at relevant UI, or confirm a theory
+  before the four answers are recorded.
+- Recording is opt-in. Store pseudonymous IDs, never names or contact details.
 
-**The gate fails if any single tester misses G4 or G5** for a system the slice put in front of
-them. The complexity budget is the thing under test — not the tester.
+## 2. Slice coverage
 
----
+The inherited Phase 1.5 breadth is retained on the ratified tactical chassis:
 
-## 2. Slice contents (PRD line 185, breadth-first)
+1. Explore Dom and form the company.
+2. Complete one visible dialogue skill check.
+3. Resolve one consequence-bearing side thread and observe a later read-back.
+4. Complete one full tactical encounter using charge time (CT), the grid,
+   elevation/facing, a Defining Strike, Balance/weather movement, combat speech,
+   and tile charge/residue/detonation.
+5. Encounter at least one blocked cast whose FR-606 refusal names the blocking
+   system and nearest unblock condition.
+6. Save and load during the slice; compare the visible state before and after.
+7. Inspect the existing mock NG+ rollover and visible carry-over.
 
-The slice must exercise every subsystem end-to-end:
+Retired AP and zone-positioning instructions must not be used. The build under test
+uses charge time plus grid/elevation/facing.
 
-1. **Exploration** — Dom, plus one travel transition via `GameFlow.travel()`.
-2. **One dialogue skill check** — a visible percentile check through `SkillCheck`.
-3. **One consequence-bearing side quest** — resolution writes a ledger event, read back later.
-4. **One full tactical encounter** — must include *all four*: AP spend, at least one Defining
-   Strike, zone facing, and Balance Gauge movement.
-5. **Save/load mid-slice** — tester-initiated, mid-encounter or mid-quest.
-6. **Mock NG+ rollover** — carry-overs applied and visible.
+## 3. The four gate questions
 
-**Onboarding is breadth-first (§8 risk plan): the slice opens Tone-only.** Chords and Triads
-must not be exposed in the opening beat. The progression to build toward:
+Ask each question once, immediately after the relevant event. Record the answer
+verbatim before asking follow-ups.
 
-`Tone-only cast → AP + zone move → a Balance-moving action → weakness / Defining Strike →
-combat speech → an explicit failure with its unblock condition stated`
+1. **“Why did that cast fail?”**
+   A correct answer identifies the actual FR-606 `blocked_by` system and the nearest
+   unblock condition shown by the build. Generic answers such as “not enough points”
+   are insufficient when the game named Soul, Vär, Breath, CT, span, elevation,
+   facing, occupancy, range, or husked state.
+2. **“What does this gauge do?”**
+   A correct answer explains that actions move the Balance axis and that its state
+   changes the whole board through order/chaos weather bias or extreme effects. It is
+   not merely alignment, mana, morality, or a cosmetic meter.
+3. **“Who acts next, and why?”**
+   A correct answer identifies the next actor from the CT timeline and connects the
+   order to charge/speed and the CT cost of committed actions. “It alternates turns”
+   is incorrect.
+4. **“Explain what just happened on that tile.”**
+   A correct answer connects the observed result to the tile’s element and charge,
+   residue accumulation, weather interaction, hush, or detonation as applicable to
+   the exact event. A generic “magic effect” answer is insufficient.
 
----
+## 4. Scoring
 
-## 3. The known comprehension hazards (what we expect to fail)
+Gate T criterion 6 passes only when:
 
-These are recorded *before* the test so the results can't be rationalized afterward.
+- at least three valid outside-player sessions are complete;
+- every valid tester completed the slice unaided; and
+- a **majority of eligible testers** answers each question correctly **per question**.
 
-- **H1 — Command rail overload.** The rail can expose Strike, Guard, Stabilize, Defining
-  Strike, Paradox, Speech-seam, three movement actions, and Focus simultaneously.
-  Hypothesis: testers cannot form a model of *when* each applies.
-- **H2 — Refusal reasons are one hover away.** `Battle.action_lock_reason()` returns a
-  structured reason, but `ui/screens/battle.gd:331` renders only `LOCKED` on the button and
-  puts the reason in `tooltip_text` (line 338). Hypothesis: testers see *that* something is
-  blocked, never *why* — this directly threatens G4.
-- **H3 — `ASH_DIM` / `ASH_FAINT` contrast on dark stone** is unaudited. If a tester says they
-  cannot *read* a disabled-state explanation, that is a contrast failure, not a comprehension
-  failure — record it separately (see §6) so the two don't get conflated.
+Do not average all answers into one score. One well-understood mechanic cannot carry
+another. With three testers, each question needs at least 2 correct answers; with four,
+at least 3; with five, at least 3.
 
----
+Save/load and mock NG+ observations remain required breadth evidence, but they do not
+replace or dilute the four comprehension tallies. Automated Gate T criteria 1–5 and
+7–10 remain separate evidence.
 
-## 4. Facilitator setup
+## 5. Evidence layout
 
-1. Build the slice (Windows artifact from CI, or a local export).
-2. Fresh save; no prior progress; default settings.
-3. Recording: screen + audio if the tester consents. **Consent is required and must be
-   explicit.** If telemetry or uploaded saves are ever added, consent, data minimization,
-   retention, pseudonymous tester IDs, and deletion must be settled first — none of that is
-   in place today, so **collect nothing beyond notes and consented recordings.**
-4. Assign a pseudonymous tester ID (`T1`…`T5`). Do not record real names in the repo.
+Create one file per valid tester under `test/manual/gate-t/`:
 
----
-
-## 5. Session script
-
-Read verbatim; do not improvise help.
-
-> "Play until you reach a natural stopping point, or about an hour. Think aloud when you can.
-> I can't answer questions about how the game works during play — if you're stuck, say so and
-> keep going however you like. Being stuck is useful data, not a failure on your part."
-
-**During play, the facilitator may not:** explain a mechanic, point at UI, or confirm/deny a
-tester's theory. Log every question asked instead — an unanswered question is a finding.
-
-**Prompt only at these two moments** (after the relevant subsystem has been encountered):
-
-- After a *failed* cast: **"Why did that cast fail?"** — record the answer verbatim.
-- After the Balance Gauge has visibly moved: **"What does this gauge do?"** — verbatim.
-
-Ask each exactly once. Do not rephrase into a leading question.
-
----
-
-## 6. Evidence template
-
-One file per tester, committed to `test/manual/phase-1-5/<tester-id>.md`.
-
-```markdown
-# Phase 1.5 comprehension gate — tester <ID>
-
-Date:
-Facilitator:
-Build (commit SHA):
-Session length:
-Outside tester (not a contributor): yes / no
-Consent to record: yes / no
-
-## Subsystem coverage
-- [ ] Exploration + travel transition
-- [ ] Dialogue skill check
-- [ ] Consequence-bearing side quest (ledger write observed)
-- [ ] Tactical encounter: AP spent / Defining Strike / zone facing / Balance moved
-- [ ] Save + load mid-slice
-- [ ] Mock NG+ rollover
-
-## G4 — "Why did that cast fail?"
-Verbatim answer:
-Correct for the systems exposed: PASS / FAIL
-What the actual reason was:
-
-## G5 — "What does this gauge do?"
-Verbatim answer:
-Correct: PASS / FAIL
-
-## G6 — state survived save/load
-Observed discrepancies (list, or "none"):
-
-## G7 — NG+ mock carry-overs
-Applied correctly: yes / no. Details:
-
-## Questions the tester asked (each one is a finding)
-
-## Legibility problems (contrast/readability — NOT comprehension)
-
-## Facilitator notes
+```text
+test/manual/gate-t/T1.md
+test/manual/gate-t/T2.md
+test/manual/gate-t/T3.md
+test/manual/gate-t/summary.md
 ```
 
-Plus one `test/manual/phase-1-5/summary.md` recording the overall **PASS / FAIL**, tester
-count, and — if FAIL — which of G1–G7 failed and for whom.
+Copy the per-tester and summary templates from `docs/playtest-packet.md`. Include the
+build filename, commit SHA, export target, session duration, subsystem coverage,
+verbatim answers, correctness rationale, and facilitator-intervention log. Do not
+commit recordings, names, email addresses, Discord handles, or other personal data.
 
----
+## 6. Failure handling
 
-## 7. If the gate fails
-
-**Do not let an agent redesign the combat rail in response.** Cutting or hiding any of the
-actions from the permanent roster is a product decision reserved for the human
-(`CLAUDE.md`: don't add or remove mechanics without the design-doc section first).
-
-The permitted agent response to a failure is:
-
-1. Record the failure and the specific misconception, verbatim.
-2. Propose options with trade-offs to the human — do not pick one.
-3. Ship only changes that surface *existing* information better (e.g. rendering the already-
-   structured `action_lock_reason` persistently instead of tooltip-only). Presenting existing
-   domain state more legibly is not a mechanics change; removing an action is.
-
-Re-run the full gate with fresh testers after any remediation. A tester who has already seen
-the slice can no longer answer G4/G5 cold.
-
----
-
-## 8. What this gate does *not* certify
-
-- **Not performance.** FR-904 has its own instrumentation and its own baseline; a comprehension
-  pass says nothing about frame budget.
-- **Not narrative coherence.** That is FR-906's per-wave playtest pass against the world-state
-  matrix.
-- **Not accessibility.** §3's H3 contrast check is a spot-check, not a WCAG sweep.
+If criterion 6 fails, stop region-content production as required by the roadmap.
+Record the misconception verbatim and identify whether the failure is missing
+information, unreadable presentation, or an incorrect player model. Do not remove or
+redesign mechanics in this evidence pass. Claude owns the design response and the
+ratified stop-loss decision; Codex may implement an approved presentation repair and
+then the same immutable-build protocol must be rerun.

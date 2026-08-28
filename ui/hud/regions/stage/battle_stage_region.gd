@@ -12,6 +12,9 @@ extends Control
 signal tile_selected(tile: Dictionary)
 
 const UnitArtScript := preload("res://globals/unit_art.gd")
+const DORTHKOR_BACKGROUND := preload(
+	"res://assets/generated/backgrounds/combat/dorthkor-road-battlefield-v1.png"
+)
 
 const FIT_MARGIN := 20.0
 const MIN_SCALE := 0.6
@@ -24,15 +27,28 @@ const TARGET_RIM := Color("#E06C5A")
 
 var _tiles: Array[Dictionary] = []
 var _actors: Array[Dictionary] = []
+var _encounter_id: StringName = &""
 var _active_id: StringName = &""
 var _target_id: StringName = &""
 var _selected := Vector2i(-1, -1)
+var _backdrop: TextureRect
 var _units_layer: Control
 var _fx_layer: Control
 var _unit_nodes: Dictionary = {}
 
 
 func _ready() -> void:
+	_backdrop = TextureRect.new()
+	_backdrop.name = "EnvironmentBackdrop"
+	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_backdrop.modulate = Color(0.72, 0.75, 0.80, 0.72)
+	_backdrop.show_behind_parent = true
+	_backdrop.hide()
+	add_child(_backdrop)
 	_units_layer = Control.new()
 	_units_layer.name = "UnitsLayer"
 	_units_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -52,6 +68,7 @@ func _ready() -> void:
 
 func consume_event(event: CombatEvent) -> void:
 	var snapshot: Dictionary = event.data.get("snapshot", {})
+	_encounter_id = StringName(str(snapshot.get("encounter_id", "")))
 	var tile_values: Variant = event.data.get("tiles", snapshot.get("tiles", []))
 	if tile_values is Array:
 		_tiles.clear()
@@ -168,6 +185,19 @@ func _read_actors(snapshot: Dictionary) -> void:
 			for row: Variant in rows:
 				if row is Dictionary:
 					_actors.append((row as Dictionary).duplicate(true))
+	_sync_background()
+
+
+func background_texture_path() -> String:
+	if _backdrop == null or _backdrop.texture == null:
+		return ""
+	return _backdrop.texture.resource_path
+
+
+func _sync_background() -> void:
+	var is_dorthkor := String(_encounter_id).begins_with("dorthkor")
+	_backdrop.texture = DORTHKOR_BACKGROUND if is_dorthkor else null
+	_backdrop.visible = is_dorthkor
 
 
 ## Creates/updates one sprite per living actor. Units render only on grid

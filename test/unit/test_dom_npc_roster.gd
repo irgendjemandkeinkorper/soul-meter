@@ -57,12 +57,16 @@ func test_at_least_fifty_of_sixty_townsfolk_carry_a_real_quest_hook() -> void:
 	assert_int(npcs.size() - involved_count).is_less_equal(10)
 
 
-func test_every_placeholder_portrait_is_stable_distinct_and_resolvable() -> void:
+func test_every_portrait_descriptor_is_stable_distinct_and_resolvable() -> void:
 	var signatures := {}
 	for row: Dictionary in NpcRosterScript.all():
 		var portrait: Dictionary = NpcRosterScript.portrait_descriptor(row["id"])
 		assert_str(portrait["id"]).is_equal(row["id"])
-		assert_str(portrait["kind"]).is_equal("monogram")
+		assert_array(["asset", "monogram"]).contains(str(portrait["kind"]))
+		if portrait["kind"] == "asset":
+			var asset_path := str(portrait["asset_path"])
+			assert_bool(NpcRosterScript.is_safe_portrait_path(asset_path)).is_true()
+			assert_bool(FileAccess.file_exists(asset_path)).is_true()
 		assert_bool(not str(portrait["monogram"]).is_empty()).is_true()
 		assert_int(str(portrait["mark"]).length()).is_equal(4)
 		assert_int(int(portrait["palette_index"])).is_between(0, 9)
@@ -101,6 +105,58 @@ func test_portrait_component_uses_generated_unit_art_without_node_overrides() ->
 	await get_tree().process_frame
 	assert_bool((missing.get("_image") as TextureRect).visible).is_false()
 	assert_bool((missing.get("_placeholder") as VBoxContainer).visible).is_true()
+
+
+func test_marshal_dialogue_portrait_uses_authored_source_art() -> void:
+	var expected_path := (
+		"res://assets/generated/portraits/marshal_coiljaw_portrait_neutral.png"
+	)
+	var descriptor := NpcRosterScript.portrait_descriptor("branek-coiljaw")
+	assert_str(str(descriptor.get("asset_path", ""))).is_equal(expected_path)
+	assert_bool(FileAccess.file_exists(expected_path)).is_true()
+
+	var texture := NpcRosterScript.load_portrait_texture(expected_path)
+	assert_object(texture).is_not_null()
+	assert_vector(texture.get_size()).is_equal(Vector2(512, 512))
+
+
+func test_sella_dialogue_portrait_uses_authored_source_art() -> void:
+	var expected_path := (
+		"res://assets/generated/portraits/sella_varn_portrait_neutral.png"
+	)
+	var descriptor := NpcRosterScript.portrait_descriptor("sella-varn")
+	assert_str(str(descriptor.get("asset_path", ""))).is_equal(expected_path)
+	assert_bool(FileAccess.file_exists(expected_path)).is_true()
+
+	var texture := NpcRosterScript.load_portrait_texture(expected_path)
+	assert_object(texture).is_not_null()
+	assert_vector(texture.get_size()).is_equal(Vector2(512, 512))
+
+
+func test_hadrik_dialogue_portrait_uses_authored_source_art() -> void:
+	var expected_path := (
+		"res://assets/generated/portraits/hadrik_vale_portrait_neutral.png"
+	)
+	var descriptor := NpcRosterScript.portrait_descriptor("hadrik-vale")
+	assert_str(str(descriptor.get("asset_path", ""))).is_equal(expected_path)
+	assert_bool(FileAccess.file_exists(expected_path)).is_true()
+
+	var texture := NpcRosterScript.load_portrait_texture(expected_path)
+	assert_object(texture).is_not_null()
+	assert_vector(texture.get_size()).is_equal(Vector2(512, 512))
+
+
+func test_toma_dialogue_portrait_uses_authored_source_art() -> void:
+	var expected_path := (
+		"res://assets/generated/portraits/toma_reedhand_portrait_neutral.png"
+	)
+	var descriptor := NpcRosterScript.portrait_descriptor("toma-reedhand")
+	assert_str(str(descriptor.get("asset_path", ""))).is_equal(expected_path)
+	assert_bool(FileAccess.file_exists(expected_path)).is_true()
+
+	var texture := NpcRosterScript.load_portrait_texture(expected_path)
+	assert_object(texture).is_not_null()
+	assert_vector(texture.get_size()).is_equal(Vector2(512, 512))
 
 
 func test_real_portrait_seam_matches_party_member_source_image_allowlist() -> void:

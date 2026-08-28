@@ -124,8 +124,8 @@
       ],
       "portrait": {
         "id": "branek-coiljaw",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/marshal_coiljaw_portrait_neutral.png",
         "monogram": "MC",
         "mark": "61AE",
         "palette_index": 2
@@ -748,8 +748,8 @@
       ],
       "portrait": {
         "id": "hadrik-vale",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/hadrik_vale_portrait_neutral.png",
         "monogram": "HV",
         "mark": "2546",
         "palette_index": 1
@@ -2293,8 +2293,8 @@
       ],
       "portrait": {
         "id": "sella-varn",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/sella_varn_portrait_neutral.png",
         "monogram": "SV",
         "mark": "E977",
         "palette_index": 4
@@ -2665,8 +2665,8 @@
       ],
       "portrait": {
         "id": "toma-reedhand",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/toma_reedhand_portrait_neutral.png",
         "monogram": "TR",
         "mark": "983E",
         "palette_index": 2

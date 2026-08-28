@@ -18,22 +18,27 @@ func test_player_moves_right_when_holding_move_right() -> void:
 
 
 func test_holding_sprint_moves_the_player_materially_faster() -> void:
-	var runner := scene_runner("res://world/test_room.tscn")
-	var player: Node2D = runner.find_child("Player", true, false)
+	var sample_frames := 8
 
-	var walk_start_x: float = player.global_position.x
-	runner.simulate_action_press("move_right")
-	await runner.simulate_frames(30)
-	runner.simulate_action_release("move_right")
-	var walk_distance: float = player.global_position.x - walk_start_x
+	var walk_runner := scene_runner("res://world/test_room.tscn")
+	var walk_player: CharacterBody2D = walk_runner.find_child("Player", true, false)
+	var walk_start_x: float = walk_player.global_position.x
+	walk_runner.simulate_action_press("move_right")
+	await walk_runner.simulate_frames(sample_frames)
+	walk_runner.simulate_action_release("move_right")
+	var walk_distance: float = walk_player.global_position.x - walk_start_x
+	walk_runner.scene().queue_free()
+	await get_tree().process_frame
 
-	var sprint_start_x: float = player.global_position.x
-	runner.simulate_action_press("sprint")
-	runner.simulate_action_press("move_right")
-	await runner.simulate_frames(30)
-	runner.simulate_action_release("move_right")
-	runner.simulate_action_release("sprint")
-	var sprint_distance: float = player.global_position.x - sprint_start_x
+	var sprint_runner := scene_runner("res://world/test_room.tscn")
+	var sprint_player: CharacterBody2D = sprint_runner.find_child("Player", true, false)
+	var sprint_start_x: float = sprint_player.global_position.x
+	sprint_runner.simulate_action_press("sprint")
+	sprint_runner.simulate_action_press("move_right")
+	await sprint_runner.simulate_frames(sample_frames)
+	sprint_runner.simulate_action_release("move_right")
+	sprint_runner.simulate_action_release("sprint")
+	var sprint_distance: float = sprint_player.global_position.x - sprint_start_x
 
 	# 2.0x nominal; >=1.5x tolerates headless frame jitter without false greens.
 	assert_float(sprint_distance).is_greater(walk_distance * 1.5)

@@ -65,6 +65,7 @@ var _tile_by_cell: Dictionary = {}  ## Vector2i -> TileState
 
 var _actions: Dictionary = {}
 var _sequence := 0
+var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
 ## CT: overflow keeps them past READY_AT) does not get a redundant `turn_started`.
 var _last_turn_actor: BattleActor = null
@@ -164,6 +165,7 @@ func start(
 ) -> void:
 	allies = ally_group
 	enemies = enemy_group
+	_encounter_id = encounter_id
 	_sequence = 0
 	round_number = 0
 	balance = 0
@@ -397,6 +399,7 @@ func apply_balance_effect(parameters: Dictionary, actor: BattleActor = null) -> 
 func snapshot() -> Dictionary:
 	return {
 		"state": state,
+		"encounter_id": _encounter_id,
 		"round": round_number,
 		"balance": balance,
 		"balance_band_id": balance_band_id,

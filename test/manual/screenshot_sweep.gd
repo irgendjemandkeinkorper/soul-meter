@@ -1,12 +1,16 @@
 extends GdUnitTestSuite
 ## Screenshot sweep harness, not an assertion suite — photographs every screen
-## and scene for visual QA. Kept in test/manual/ so CI's -a test runs skip it.
+## and scene for visual QA. scripts/test.sh excludes test/manual from whole-tree
+## runs; invoke this file explicitly under Xvfb.
 ##   xvfb-run -a -s "-screen 0 1920x1080x24" bash addons/gdUnit4/runtest.sh \
 ##     -a test/manual/screenshot_sweep.gd
 ## Writes user://qa/<name>.png per capture.
 
+const CAPTURE_SIZE := Vector2i(1920, 1080)
+
 
 func before() -> void:
+	get_tree().root.size = CAPTURE_SIZE
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://qa"))
 	# Give state-dependent screens something real to show.
 	var candidates := GameState.recruitable_candidates()
@@ -36,6 +40,7 @@ func _shoot(scene_path: String, shot_name: String, frames: int = 25) -> void:
 	RenderingServer.force_draw()
 	await RenderingServer.frame_post_draw
 	var image := scene.get_viewport().get_texture().get_image()
+	assert_object(image.get_size()).is_equal(CAPTURE_SIZE)
 	image.save_png("user://qa/%s.png" % shot_name)
 	print("SHOT %s %s" % [shot_name, image.get_size()])
 	if boot_scene != null and boot_scene != scene:
@@ -76,10 +81,171 @@ func test_shop_screen() -> void:
 	await runner.simulate_frames(3)
 	RenderingServer.force_draw()
 	await RenderingServer.frame_post_draw
-	screen.get_viewport().get_texture().get_image().save_png("user://qa/15_shop.png")
+	var image := screen.get_viewport().get_texture().get_image()
+	assert_object(image.get_size()).is_equal(CAPTURE_SIZE)
+	image.save_png("user://qa/15_shop.png")
 	print("SHOT 15_shop")
 	if boot_scene != null and boot_scene != screen:
 		boot_scene.show()
+
+
+func test_marshal_conversation() -> void:
+	var runner := scene_runner("res://world/starting_town.tscn")
+	var town := runner.scene()
+	await runner.simulate_frames(40)
+	var boot_scene := town.get_tree().current_scene
+	if boot_scene != null and boot_scene != town:
+		boot_scene.hide()
+
+	var balloon: Node = load("res://ui/dialogue/dialogue_balloon.tscn").instantiate()
+	town.add_child(balloon)
+	balloon.call("start", load("res://dialogue/marshal_coiljaw.dialogue"), "start")
+	await runner.simulate_frames(10)
+	var portrait := balloon.get("_portrait") as SMPortrait
+	var portrait_image := portrait.get("_image") as TextureRect
+	assert_str(portrait_image.texture.resource_path).ends_with(
+		"marshal_coiljaw_portrait_neutral.png"
+	)
+
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	var image := town.get_viewport().get_texture().get_image()
+	assert_object(image.get_size()).is_equal(CAPTURE_SIZE)
+	image.save_png("user://qa/16_marshal_conversation.png")
+	print("SHOT 16_marshal_conversation %s" % image.get_size())
+	balloon.free()
+	if boot_scene != null and boot_scene != town:
+		boot_scene.show()
+	if town is CanvasItem:
+		(town as CanvasItem).hide()
+
+
+func test_iris_conversation() -> void:
+	var runner := scene_runner("res://world/test_room.tscn")
+	var field := runner.scene()
+	await runner.simulate_frames(40)
+	var boot_scene := field.get_tree().current_scene
+	if boot_scene != null and boot_scene != field:
+		boot_scene.hide()
+
+	var balloon: Node = load("res://ui/dialogue/dialogue_balloon.tscn").instantiate()
+	field.add_child(balloon)
+	balloon.call("start", load("res://dialogue/iris_illepah.dialogue"), "start")
+	await runner.simulate_frames(10)
+	var portrait := balloon.get("_portrait") as SMPortrait
+	var portrait_image := portrait.get("_image") as TextureRect
+	assert_str(portrait_image.texture.resource_path).ends_with(
+		"iris_illepah_portrait_neutral.png"
+	)
+
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	var image := field.get_viewport().get_texture().get_image()
+	assert_object(image.get_size()).is_equal(CAPTURE_SIZE)
+	image.save_png("user://qa/17_iris_conversation.png")
+	print("SHOT 17_iris_conversation %s" % image.get_size())
+	balloon.free()
+	if boot_scene != null and boot_scene != field:
+		boot_scene.show()
+	if field is CanvasItem:
+		(field as CanvasItem).hide()
+
+
+func test_sella_conversation() -> void:
+	var runner := scene_runner("res://world/interiors/trial_hall.tscn")
+	var hall := runner.scene()
+	await runner.simulate_frames(40)
+	var boot_scene := hall.get_tree().current_scene
+	if boot_scene != null and boot_scene != hall:
+		boot_scene.hide()
+
+	var balloon: Node = load("res://ui/dialogue/dialogue_balloon.tscn").instantiate()
+	hall.add_child(balloon)
+	balloon.call("start", load("res://dialogue/sella_varn.dialogue"), "start")
+	await runner.simulate_frames(10)
+	var portrait := balloon.get("_portrait") as SMPortrait
+	var portrait_image := portrait.get("_image") as TextureRect
+	assert_str(portrait_image.texture.resource_path).ends_with(
+		"sella_varn_portrait_neutral.png"
+	)
+
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	var image := hall.get_viewport().get_texture().get_image()
+	assert_object(image.get_size()).is_equal(CAPTURE_SIZE)
+	image.save_png("user://qa/18_sella_conversation.png")
+	print("SHOT 18_sella_conversation %s" % image.get_size())
+	balloon.free()
+	if boot_scene != null and boot_scene != hall:
+		boot_scene.show()
+	if hall is CanvasItem:
+		(hall as CanvasItem).hide()
+
+
+func test_hadrik_conversation() -> void:
+	var runner := scene_runner("res://world/interiors/registry_archive.tscn")
+	var archive := runner.scene()
+	await runner.simulate_frames(40)
+	var boot_scene := archive.get_tree().current_scene
+	if boot_scene != null and boot_scene != archive:
+		boot_scene.hide()
+
+	var balloon: Node = load("res://ui/dialogue/dialogue_balloon.tscn").instantiate()
+	archive.add_child(balloon)
+	balloon.call(
+		"start",
+		load("res://dialogue/dom_side_quests.dialogue"),
+		"dom_side_rainbound_register",
+	)
+	await runner.simulate_frames(10)
+	var portrait := balloon.get("_portrait") as SMPortrait
+	var portrait_image := portrait.get("_image") as TextureRect
+	assert_str(portrait_image.texture.resource_path).ends_with(
+		"hadrik_vale_portrait_neutral.png"
+	)
+
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	var image := archive.get_viewport().get_texture().get_image()
+	assert_object(image.get_size()).is_equal(CAPTURE_SIZE)
+	image.save_png("user://qa/19_hadrik_conversation.png")
+	print("SHOT 19_hadrik_conversation %s" % image.get_size())
+	balloon.free()
+	if boot_scene != null and boot_scene != archive:
+		boot_scene.show()
+	if archive is CanvasItem:
+		(archive as CanvasItem).hide()
+
+
+func test_toma_conversation() -> void:
+	var runner := scene_runner("res://world/interiors/river_shrine.tscn")
+	var shrine := runner.scene()
+	await runner.simulate_frames(40)
+	var boot_scene := shrine.get_tree().current_scene
+	if boot_scene != null and boot_scene != shrine:
+		boot_scene.hide()
+
+	var balloon: Node = load("res://ui/dialogue/dialogue_balloon.tscn").instantiate()
+	shrine.add_child(balloon)
+	balloon.call("start", load("res://dialogue/toma_reedhand.dialogue"), "start")
+	await runner.simulate_frames(10)
+	var portrait := balloon.get("_portrait") as SMPortrait
+	var portrait_image := portrait.get("_image") as TextureRect
+	assert_str(portrait_image.texture.resource_path).ends_with(
+		"toma_reedhand_portrait_neutral.png"
+	)
+
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	var image := shrine.get_viewport().get_texture().get_image()
+	assert_object(image.get_size()).is_equal(CAPTURE_SIZE)
+	image.save_png("user://qa/19_toma_conversation.png")
+	print("SHOT 19_toma_conversation %s" % image.get_size())
+	balloon.free()
+	if boot_scene != null and boot_scene != shrine:
+		boot_scene.show()
+	if shrine is CanvasItem:
+		(shrine as CanvasItem).hide()
 
 
 func test_field_scenes() -> void:

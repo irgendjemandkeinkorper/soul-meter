@@ -4,12 +4,9 @@ One page per session. Print or split-screen this next to
 [`playtest-packet.md`](playtest-packet.md) (the fillable evidence record) and
 [`playtest-protocol.md`](playtest-protocol.md) (the gate authority).
 
-> **Alignment note (2026-08-24).** The packet's tactical bullets still say "AP spent" and
-> "zone facing" — Phase 1.5 language. Gate T (`docs/prd-amendment-tactical-layer.md` §5,
-> RATIFIED 2026-08-05) retired AP and zones. Where the packet and this run-of-show differ,
-> **this run-of-show and issue #93 win**: observe CT/charge-time turns, grid movement,
-> facing/elevation use, Balance Gauge movement, one Defining Strike, one failed cast.
-> The four gate questions below are #93's, not the packet's two.
+> **Alignment note (2026-08-28).** The packet, protocol, and this run-of-show now use the
+> same ratified Gate T chassis and four-question scoring rule. Do not substitute an older
+> Phase 1.5 packet from a prior build or session.
 
 ## 0. Before any tester (once per build)
 

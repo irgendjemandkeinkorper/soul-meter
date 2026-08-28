@@ -88,6 +88,47 @@ func test_successful_end_removes_every_enemy_without_damage() -> void:
 		assert_bool(model.has_combatant(foes[i])).is_false()
 
 
+func test_gate_t5_mid_queue_speech_result_survives_the_save_envelope() -> void:
+	EncounterCatalog._definitions[String(TEST_ENCOUNTER)]["use_charge_time"] = true
+	battle = _new_battle()
+	var scheduler_state: Dictionary = battle.controller.scheduler.to_dict()
+	scheduler_state["charge"][battle.allies[0].combat_id] = 200
+	for index in battle.enemies.size():
+		scheduler_state["charge"][battle.enemies[index].combat_id] = 140 - index * 10
+	battle.controller.scheduler.from_dict(scheduler_state)
+
+	var result: Dictionary = battle.commit_speech(&"remembered-name", [1])
+
+	assert_bool(result["allowed"]).is_true()
+	assert_bool(battle.ended).is_true()
+	assert_str(battle.last_result.outcome_id).is_equal("spared")
+	assert_str(
+		str(battle.controller.scheduler.to_dict()["committed_id"])
+	).is_empty()
+	var payload: Dictionary = SaveGame._build_payload()
+	var prepared: Dictionary = SaveGame._prepare_for_load(payload)
+	assert_bool(prepared["ok"]).is_true()
+	var restored: Dictionary = prepared["payload"]
+
+	_reset_consequences()
+	assert_bool(GameState.from_dict(restored["game_state"])).is_true()
+	Reputation.from_dict(restored["reputation"])
+	Renown.from_dict(restored["renown"])
+	assert_str(
+		str(GameState.get_flag("encounter_undertakers_parley_test_outcome"))
+	).is_equal("spared")
+	assert_bool(GameState.get_flag("undertakers_parley_spared")).is_true()
+	assert_array(var_to_bytes(GameState.to_dict())).contains_exactly(
+		var_to_bytes(restored["game_state"])
+	)
+	assert_array(var_to_bytes(Reputation.to_dict())).contains_exactly(
+		var_to_bytes(restored["reputation"])
+	)
+	assert_array(var_to_bytes(Renown.to_dict())).contains_exactly(
+		var_to_bytes(restored["renown"])
+	)
+
+
 func test_successful_split_changes_composition_through_battlefield_model() -> void:
 	var departing: BattleActor = battle.enemies[0]
 	var model: BattlefieldModel = battle.controller.battlefield

@@ -64,6 +64,7 @@ func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement
 		var spawn_default := interior.find_child("SpawnDefault", true, false) as Marker2D
 		var spawn_entry := interior.find_child("SpawnEntry", true, false) as Marker2D
 		var exit_door := interior.find_child("ExitDoor", true, false) as BuildingDoor
+		var door_sprite := exit_door.get_node("DoorSprite") as Sprite2D
 		var walls := interior.find_child("Walls", true, false)
 		assert_object(player).is_not_null()
 		assert_object(spawn_default).is_not_null()
@@ -77,12 +78,41 @@ func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement
 			String(BuildingTransitionRegistry.exit_for(entry.building_id).id)
 		)
 		assert_vector(spawn_entry.global_position).is_equal(entry.destination_spawn_position)
+		assert_float(spawn_entry.global_position.y).is_less(door_sprite.global_position.y - 24.0)
 		diagnostics.clear()
 		saves.has_pending_player_position = false
 		saves.pending_spawn_id = entry.spawn_id
 		saves.apply_pending_location(interior)
 		assert_array(diagnostics).is_empty()
 		assert_vector(player.global_position).is_equal(spawn_entry.global_position)
+
+
+func test_interior_backdrop_covers_full_hd_without_changing_gameplay_scale() -> void:
+	var runner := scene_runner("res://world/interiors/registry_archive.tscn")
+	var player := runner.find_child("Player", true, false) as Player
+	var camera := player.get_node("Camera2D") as Camera2D
+	var backdrop := runner.find_child("Backdrop", true, false) as Polygon2D
+	var viewport_size := Vector2(
+		float(ProjectSettings.get_setting("display/window/size/viewport_width")),
+		float(ProjectSettings.get_setting("display/window/size/viewport_height")),
+	)
+	var visible_world_size := viewport_size / camera.zoom
+	var room_center := Vector2(player.camera_bounds.get_center())
+	var backdrop_bounds := _polygon_bounds(backdrop.polygon)
+
+	assert_vector(camera.zoom).is_equal(Vector2.ONE)
+	assert_float(backdrop_bounds.position.x).is_less_equal(
+		room_center.x - visible_world_size.x * 0.5
+	)
+	assert_float(backdrop_bounds.position.y).is_less_equal(
+		room_center.y - visible_world_size.y * 0.5
+	)
+	assert_float(backdrop_bounds.end.x).is_greater_equal(
+		room_center.x + visible_world_size.x * 0.5
+	)
+	assert_float(backdrop_bounds.end.y).is_greater_equal(
+		room_center.y + visible_world_size.y * 0.5
+	)
 
 
 func test_interior_collision_prevents_the_player_from_leaving_through_a_wall() -> void:
@@ -358,6 +388,19 @@ func _make_door(transition_id: StringName) -> BuildingDoor:
 	door.transition_id = transition_id
 	add_child(door)
 	return door
+
+
+func _polygon_bounds(points: PackedVector2Array) -> Rect2:
+	if points.is_empty():
+		return Rect2()
+	var minimum := points[0]
+	var maximum := points[0]
+	for point: Vector2 in points:
+		minimum.x = minf(minimum.x, point.x)
+		minimum.y = minf(minimum.y, point.y)
+		maximum.x = maxf(maximum.x, point.x)
+		maximum.y = maxf(maximum.y, point.y)
+	return Rect2(minimum, maximum - minimum)
 
 
 func _valid_collision_shape_count(walls: Node) -> int:

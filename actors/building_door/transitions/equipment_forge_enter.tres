@@ -14,5 +14,5 @@ source_position = Vector2(800, 40)
 destination_scene = "res://world/interiors/equipment_forge.tscn"
 destination_location_id = &"equipment_forge_interior"
 spawn_id = &"entry"
-destination_spawn_position = Vector2(480, 500)
+destination_spawn_position = Vector2(480, 400)
 prompt_text = "E — ENTER"
