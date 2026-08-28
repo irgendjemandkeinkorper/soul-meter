@@ -5,11 +5,17 @@ extends GdUnitTestSuite
 
 
 ## The tavern assertions assume no one has been recruited yet ("Available",
-## check-toggle counting). In whole-tree runs the e2e journey suite executes
-## first and leaves its recruited party in GameState, so establish the
-## precondition instead of assuming a clean autoload.
+## check-toggle counting), but earlier suites in a whole-tree run leave their
+## recruited party in the GameState autoload. Establish the precondition
+## instead of assuming a clean autoload. set_companions() can't do this — it
+## validates for exactly REQUIRED_COMPANIONS and refuses an empty list — so
+## reset via the wholesale set_party() path, keeping only the lead.
 func before_test() -> void:
-	GameState.set_companions([])
+	var lead_only: Array[PartyMember] = []
+	for member: PartyMember in GameState.party:
+		if member.id == GameState.PROTAGONIST_ID:
+			lead_only.append(member)
+	GameState.set_party(lead_only)
 
 
 func test_tavern_door_prompt_only_shows_when_player_is_in_range() -> void:
