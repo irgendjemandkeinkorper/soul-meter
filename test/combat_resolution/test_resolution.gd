@@ -196,6 +196,7 @@ func _walkthrough_context() -> Dictionary:
 			"charge_element_id": "strom",
 			"charge_level": 2,
 			"height_delta": 0,
+			"cover": false,
 			"hush": false,
 		},
 		"target_tile": {
@@ -205,6 +206,7 @@ func _walkthrough_context() -> Dictionary:
 			"charge_element_id": "",
 			"charge_level": 0,
 			"height_delta": 0,
+			"cover": false,
 			"hush": false,
 		},
 		"weather": {

@@ -387,6 +387,54 @@ func test_line_of_sight_allowed_on_open_flat_ground() -> void:
 	assert_bool(model.line_of_sight(ally, enemy).get("allowed", false)).is_true()
 
 
+# ---- authored terrain cover ----
+
+
+func test_cover_bonus_applies_when_target_hugs_cover_toward_the_shooter() -> void:
+	# ally deploys at (0,0), enemy at (4,0); cover at (3,0) stands between them,
+	# adjacent to the enemy — the enemy is hugging cover against the shot.
+	var model := _model(5, 2)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+	model.set_cover(Vector2i(3, 0), true)
+
+	assert_int(model.cover_bonus(ally, enemy)).is_equal(_rules().cover_defense_bonus)
+	var covered_tile: Dictionary = model.tiles_snapshot()[3]
+	assert_bool(bool(covered_tile.get("cover", false))).is_true()
+
+
+func test_cover_beside_the_attacker_grants_the_defender_nothing() -> void:
+	# Directional rule: a crate next to the SHOOTER is not the target's cover,
+	# and neither is cover behind the target (farther from the attacker).
+	var model := _model(5, 2)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+	model.set_cover(Vector2i(1, 0), true)
+	assert_int(model.cover_bonus(ally, enemy)).is_equal(0)
+	# Behind the target relative to the shot — also nothing (5x2 grid has no
+	# x=5, so use the diagonal behind-cell at (4,1)? no: equal distance. Use
+	# the attacker-side check from the ENEMY's perspective instead: the same
+	# crate at (1,0) IS the ally's cover against the enemy's shot.
+	assert_int(model.cover_bonus(enemy, ally)).is_equal(_rules().cover_defense_bonus)
+
+
+func test_cover_bonus_is_zero_when_shot_line_has_no_cover() -> void:
+	var model := _model(5, 2)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+
+	assert_int(model.cover_bonus(ally, enemy)).is_equal(0)
+
+
 # ---- elevation_delta, facing ----
 
 
@@ -428,6 +476,22 @@ func test_set_facing_accepts_a_valid_direction() -> void:
 
 	assert_bool(result.get("allowed", false)).is_true()
 	assert_str(String(model.facing_of(ally))).is_equal("n")
+
+
+func test_flank_bonus_applies_from_back_and_side_but_not_front() -> void:
+	var model := _model(5, 1)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)  # ally is west of enemy
+
+	model.set_facing(enemy, &"e")
+	assert_int(model.flank_bonus(ally, enemy)).is_equal(_rules().flank_power_bonus)
+	model.set_facing(enemy, &"n")
+	assert_int(model.flank_bonus(ally, enemy)).is_equal(_rules().flank_power_bonus)
+	model.set_facing(enemy, &"w")
+	assert_int(model.flank_bonus(ally, enemy)).is_equal(0)
 
 
 # ---- determinism: no RNG, equal-cost paths resolve the same way every time ----

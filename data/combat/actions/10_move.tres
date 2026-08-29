@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"move"
+display_name = "Move"
+kind = 4
+verb = 0
+# PROVISIONAL Wave P value: one AP per weighted path-cost unit.
+ap_cost = 1
+target_profile = &"self"
+destination = &""
