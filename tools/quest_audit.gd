@@ -25,6 +25,9 @@ extends SceneTree
 ##    combined, not per quest. A five-branch quest therefore weighs more than a
 ##    two-branch one. This is a deliberate choice, recorded here because it is
 ##    not self-evident from the output.
+## 4. Skill-check route detection is indentation- and token-based. It rejects
+##    obvious checked, completed, final-resolution, and prerequisite-gated
+##    alternatives, but cannot prove that every runtime state can reach a route.
 ##
 ## Because of 1 and 2 this tool is a debt-finder, not a proof of compliance.
 ## FR-906's human playtest pass remains the check on whether consequences are
@@ -150,7 +153,12 @@ static func audit_project(strict: bool = false) -> Dictionary:
 	_classify_readbacks(quest_results, readback_sources)
 	var flag_access := _project_flag_access(quest_results, dialogue_sources, readback_sources)
 	return build_report(
-		quest_results, flag_access, strict, scan_grammar_flags(), quest_critical_npc_ids()
+		quest_results,
+		flag_access,
+		strict,
+		scan_grammar_flags(),
+		quest_critical_npc_ids(),
+		dialogue_sources
 	)
 
 
@@ -159,7 +167,8 @@ static func build_report(
 	flag_access: Dictionary,
 	strict: bool,
 	grammar_flags: PackedStringArray = PackedStringArray(),
-	quest_critical_ids: PackedStringArray = PackedStringArray()
+	quest_critical_ids: PackedStringArray = PackedStringArray(),
+	dialogue_sources: Dictionary = {}
 ) -> Dictionary:
 	var categories := {
 		"outcome_count": _category(),
@@ -168,6 +177,7 @@ static func build_report(
 		"orphaned_flags": _category(),
 		"flag_grammar": _category(),
 		"phase_reachability": _category(),
+		"check_softlocks": _category(),
 	}
 	var main_read := 0
 	var main_total := 0
@@ -270,6 +280,15 @@ static func build_report(
 			"quest_critical_npc_reachable_in_fewer_than_two_phases",
 			violation
 		)
+
+	var check_findings := check_softlock_violations(dialogue_sources)
+	for finding: Dictionary in check_findings:
+		var details := finding.duplicate()
+		var finding_severity := str(details.get("severity", "error"))
+		var finding_code := str(details.get("code", "invalid_checked_response"))
+		details.erase("severity")
+		details.erase("code")
+		_add_finding(categories["check_softlocks"], finding_severity, finding_code, details)
 	var routined_critical_count := 0
 	for npc_id: String in quest_critical_ids:
 		if NpcRoutines.has_routine(npc_id):
@@ -881,6 +900,149 @@ static func _flag_access_result(written: Dictionary, read: Dictionary) -> Dictio
 		"written_never_read": written_never_read,
 		"read_never_written": read_never_written,
 	}
+
+
+## Heuristic dialogue audit for build-gated checks. Conditions are identified on
+## response lines, then the response's indented branch is inspected. The quest
+## constant cross-reference rejects checked, completed, final-resolution, and
+## prerequisite-gated responses, but remains a heuristic and only emits a warning.
+static func check_softlock_violations(dialogue_sources: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for path: String in dialogue_sources:
+		var source := str(dialogue_sources[path])
+		var lines := source.split("\n")
+		var line_index := 0
+		while line_index < lines.size():
+			var response_line := str(lines[line_index])
+			var stripped := response_line.strip_edges()
+			if not stripped.begins_with("- ") or "[if " not in response_line or "check(" not in response_line:
+				line_index += 1
+				continue
+
+			var response_indent := _leading_indent(response_line)
+			var branch_end := _response_branch_end(lines, line_index, response_indent)
+			var branch_lines := PackedStringArray()
+			for branch_index in range(line_index + 1, branch_end):
+				branch_lines.append(str(lines[branch_index]))
+			var branch := "\n".join(branch_lines)
+			var identity := {
+				"source": path,
+				"line": line_index + 1,
+				"response": stripped,
+			}
+
+			if "SkillCheck.resolve(" not in branch:
+				var missing_resolve := identity.duplicate()
+				missing_resolve["code"] = "checked_response_missing_resolve"
+				missing_resolve["severity"] = "error"
+				findings.append(missing_resolve)
+
+			var success_line := -1
+			var success_indent := -1
+			var else_line := -1
+			for branch_index in branch_lines.size():
+				var branch_stripped := branch_lines[branch_index].strip_edges()
+				if "last_check_succeeded()" in branch_stripped:
+					success_line = branch_index
+					success_indent = _leading_indent(branch_lines[branch_index])
+				elif (
+					success_line >= 0
+					and branch_stripped == "else"
+					and _leading_indent(branch_lines[branch_index]) == success_indent
+				):
+					# Indentation must match the check's if-line: a nested else
+					# inside the success branch is not the failure branch.
+					else_line = branch_index
+					break
+			var has_success_continuation := success_line >= 0 and else_line > success_line
+			if has_success_continuation:
+				has_success_continuation = _has_check_continuation(
+					branch_lines, success_line + 1, else_line
+				)
+			var has_failure_continuation := else_line >= 0
+			if has_failure_continuation:
+				has_failure_continuation = _has_check_continuation(
+					branch_lines, else_line + 1, branch_lines.size()
+				)
+			if not has_success_continuation or not has_failure_continuation:
+				var missing_outcomes := identity.duplicate()
+				missing_outcomes["code"] = "checked_response_missing_outcomes"
+				missing_outcomes["severity"] = "error"
+				missing_outcomes["has_success_continuation"] = has_success_continuation
+				missing_outcomes["has_failure_continuation"] = has_failure_continuation
+				findings.append(missing_outcomes)
+
+			var quest_match := _regex("QuestRegistry\\.([A-Z][A-Z0-9_]*)").search(response_line)
+			var quest_constant := quest_match.get_string(1) if quest_match != null else ""
+			if quest_constant.is_empty() or not _has_alternate_quest_response(
+				lines, line_index, branch_end, quest_constant
+			):
+				var possible_softlock := identity.duplicate()
+				possible_softlock["code"] = "checked_response_may_be_only_acquisition_route"
+				possible_softlock["severity"] = "warning"
+				possible_softlock["quest_constant"] = quest_constant
+				findings.append(possible_softlock)
+
+			line_index = branch_end
+	return findings
+
+
+static func _has_check_continuation(lines: PackedStringArray, start: int, end: int) -> bool:
+	for line_index in range(start, end):
+		var stripped := lines[line_index].strip_edges()
+		if stripped.begins_with("=>") and stripped != "=> END":
+			return true
+		if stripped.begins_with("do GameState.set_flag("):
+			return true
+		if stripped.begins_with("do QuestRegistry."):
+			return true
+	return false
+
+
+static func _has_alternate_quest_response(
+	lines: PackedStringArray, checked_start: int, checked_end: int, quest_constant: String
+) -> bool:
+	var needle := "QuestRegistry.%s" % quest_constant
+	for line_index in lines.size():
+		if line_index >= checked_start and line_index < checked_end:
+			continue
+		var line := lines[line_index]
+		if not line.strip_edges().begins_with("- ") or needle not in line:
+			continue
+		if "check(" in line:
+			continue
+		if "not QuestRegistry.is_active(%s)" % needle in line:
+			continue
+		if "QuestRegistry.is_done(%s)" % needle in line:
+			continue
+		if "QuestRegistry.flags_met(%s)" % needle in line:
+			continue
+		var response_end := _response_branch_end(lines, line_index, _leading_indent(line))
+		var branch := "\n".join(lines.slice(line_index + 1, response_end))
+		if "QuestRegistry.resolve_side_quest(" in branch:
+			continue
+		if _has_check_continuation(lines, line_index + 1, response_end):
+			return true
+	return false
+
+
+static func _response_branch_end(
+	lines: PackedStringArray, response_index: int, response_indent: int
+) -> int:
+	var line_index := response_index + 1
+	while line_index < lines.size():
+		var line := lines[line_index]
+		var stripped := line.strip_edges()
+		if stripped.begins_with("~ "):
+			break
+		if stripped.begins_with("- ") and _leading_indent(line) <= response_indent:
+			break
+		line_index += 1
+	return line_index
+
+
+static func _leading_indent(line: String) -> int:
+	return line.length() - line.lstrip(" \t").length()
 
 
 static func _category() -> Dictionary:

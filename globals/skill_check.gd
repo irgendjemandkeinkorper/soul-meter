@@ -128,6 +128,13 @@ func recent_checks() -> Array[Dictionary]:
 	return _check_log.duplicate(true)
 
 
+## Result of the newest committed check. An empty log has no successful check.
+func last_check_succeeded() -> bool:
+	if _check_log.is_empty():
+		return false
+	return bool(_check_log.back().get("success", false))
+
+
 ## Dialogue conditions are previews: evaluating a response must not roll before
 ## the player commits to it. `difficulty` is the minimum effective percentage
 ## required by the authored gate, while the eventual committed resolution still
