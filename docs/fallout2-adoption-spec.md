@@ -169,6 +169,23 @@ speech-skip proven; the driving quest live in QuestRegistry with ≥2 routes per
 the Wave 3 convention; canon-review flags on all new prose; suite green; quest
 audit clean.
 
+**Wave P — Positional combat (RATIFIED BY OWNER 2026-08-29, added after REV 2).**
+Battles must stop being stationary slugfests: positioning and line of sight are
+the Fallout 2 core. Owner rulings: (1) tactics activate on the CURRENT square
+grid now — a hex conversion is a separate later wave through the FR-105
+battlefield-model seam; (2) ALL four rules ship: AP-costed click-to-move on the
+battle stage, LOS gating ranged actions (existing refusal taxonomy surfaced in
+the forecast), real terrain cover (grid model currently hard-returns 0), and
+the already-stubbed flank/facing bonus consumed; (3) runs in PARALLEL with
+Wave O (disjoint surfaces: combat core vs flow/scenes).
+Constraints: frozen six-region battle contract — additive only; Resolution
+purity and forecast==resolution preserved (cover/LOS/flank feed the existing
+positional-context channel); enemy full-AP flag stays OFF.
+Accept: player move action exists and costs AP; a blocked shot is refused with
+its reason in the forecast BEFORE commit; cover/flank visibly change forecast
+numbers; enemy turns use position (seek cover / flank when cheap); combat
+number sweep re-run with a balance evidence file; suite green; gate PROCEED.
+
 ## Boundaries (binding)
 
 - Five-layer architecture and Resolution purity preserved; forecast==resolution.
