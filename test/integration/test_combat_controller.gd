@@ -443,6 +443,103 @@ func test_snapshot_carries_terrain_tiles_and_weather_cadence() -> void:
 	assert_int(int(weather.get("tick", -1))).is_equal(local_controller.scheduler.tick_count())
 
 
+func test_grid_cover_changes_forecast_and_resolution_by_the_same_amount() -> void:
+	var uncovered := _positional_controller(5, 2)
+	var uncovered_actor := uncovered.allies[0]
+	var uncovered_target := uncovered.enemies[0]
+	var shot := uncovered.action_by_id(&"test-shot")
+	var uncovered_forecast := uncovered.forecast_action(shot, uncovered_target)
+
+	var covered := _positional_controller(5, 2)
+	var covered_actor := covered.allies[0]
+	var covered_target := covered.enemies[0]
+	# Defender-anchored directional rule: the cover cell hugs the target on the
+	# shooter's side (enemy deploys at (4,0); attacker at (0,0)).
+	(covered.battlefield as GridBattlefieldModel).set_cover(Vector2i(3, 0), true)
+	var covered_forecast := covered.forecast_action(covered.action_by_id(&"test-shot"), covered_target)
+	var hp_before := covered_target.hp
+	var resolved := covered.submit_action(&"test-shot", covered_target)
+
+	assert_bool(bool(uncovered_forecast.get("allowed", false))).is_true()
+	assert_bool(bool(covered_forecast.get("allowed", false))).is_true()
+	assert_int(int(covered_forecast["damage"])).is_less(int(uncovered_forecast["damage"]))
+	assert_int(int(covered_forecast["damage"])).is_equal(hp_before - covered_target.hp)
+	assert_int(int(resolved["damage"])).is_equal(int(covered_forecast["damage"]))
+	assert_int(int((covered_forecast["positioning"] as Dictionary)["cover_bonus"])).is_equal(
+		covered.rules.cover_defense_bonus
+	)
+	assert_object(uncovered_actor).is_not_null()
+	assert_object(covered_actor).is_not_null()
+
+
+func test_ranged_los_refusal_matches_at_forecast_and_commit() -> void:
+	var local_controller := _positional_controller(5, 1)
+	var actor := local_controller.allies[0]
+	var target := local_controller.enemies[0]
+	var shot := local_controller.action_by_id(&"test-shot")
+	(local_controller.battlefield as GridBattlefieldModel).set_elevation(Vector2i(2, 0), 10)
+	var ap_before := actor.action_points
+
+	var forecast := local_controller.forecast_action(shot, target)
+	var committed := local_controller.submit_action(shot.id, target)
+
+	assert_bool(bool(forecast.get("allowed", true))).is_false()
+	assert_bool(bool(committed.get("allowed", true))).is_false()
+	assert_str(String(forecast.get("blocked_by", &""))).is_equal("blocked_by_elevation")
+	assert_str(String(committed.get("blocked_by", &""))).is_equal("blocked_by_elevation")
+	assert_dict(forecast).is_equal(committed)
+	assert_int(actor.action_points).is_equal(ap_before)
+
+
+func test_player_move_spends_path_ap_and_updates_snapshot_position() -> void:
+	var local_controller := _positional_controller(5, 1)
+	var actor := local_controller.allies[0]
+	var ap_before := actor.action_points
+	var destination := &"c:2,0,0"
+	var query := local_controller.move_query(destination)
+
+	var result := local_controller.submit_action(&"move", null, {"destination": destination})
+
+	assert_bool(bool(query.get("allowed", false))).is_true()
+	assert_int(int(query.get("ap_cost", 0))).is_equal(2)
+	assert_bool(bool(result.get("allowed", false))).is_true()
+	assert_int(int(result.get("ap_cost", 0))).is_equal(2)
+	assert_int(actor.action_points).is_equal(ap_before - 2)
+	var ally_snapshot: Dictionary = (local_controller.snapshot()["allies"] as Array)[0]
+	# snapshot position is the opaque battlefield handle, not a raw cell
+	assert_str(String(ally_snapshot.get("position", &""))).is_equal("c:2,0,0")
+
+
+func test_player_move_refuses_occupied_destination_without_spending_ap() -> void:
+	var local_controller := _positional_controller(5, 1)
+	var actor := local_controller.allies[0]
+	var target := local_controller.enemies[0]
+	var destination := local_controller.battlefield.position_of(target)
+	var ap_before := actor.action_points
+
+	var result := local_controller.submit_action(&"move", null, {"destination": destination})
+
+	assert_bool(bool(result.get("allowed", true))).is_false()
+	assert_str(String(result.get("blocked_by", &""))).is_equal("position")
+	assert_str(String((result.get("nearest_unblock", {}) as Dictionary).get("type", &""))).is_equal(
+		"cell_free"
+	)
+	assert_int(actor.action_points).is_equal(ap_before)
+
+
+func test_snapshot_exposes_move_range_and_path_costs_additively() -> void:
+	var local_controller := _positional_controller(5, 1)
+	var movement: Dictionary = local_controller.snapshot().get("movement", {})
+
+	assert_str(String(movement.get("action_id", &""))).is_equal("move")
+	assert_int(int(movement.get("per_cell_ap_cost", 0))).is_equal(1)
+	assert_bool((movement.get("reachable", []) as Array).is_empty()).is_false()
+	var first: Dictionary = (movement.get("reachable", []) as Array)[0]
+	assert_bool(first.has("destination")).is_true()
+	assert_bool(first.has("ap_cost")).is_true()
+	assert_bool(first.has("path")).is_true()
+
+
 func _actor(name: String, hp: int, attack: int, defense: int) -> BattleActor:
 	var actor := BattleActor.new()
 	actor.display_name = name
@@ -486,6 +583,43 @@ func _grid_ground() -> TileMapLayer:
 	layer.tile_set = tile_set
 	layer.set_cell(Vector2i(0, 0), 0, Vector2i.ZERO)
 	layer.set_cell(Vector2i(1, 0), 0, Vector2i.ZERO)
+	return layer
+
+
+func _positional_controller(width: int, height: int) -> CombatController:
+	var local_rules := (
+		load("res://data/combat/combat_rules.tres") as CombatRules
+	).duplicate(true) as CombatRules
+	local_rules.use_charge_time = false
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_sized_grid_ground(width, height))
+	var shot := CombatAction.make(&"test-shot", "Test Shot", CombatAction.Kind.ATTACK, 0, 0, 0.0, 2)
+	shot.target_profile = &"ranged"
+	var actions := CombatActionCatalog.all()
+	actions.append(shot)
+	var local_controller := CombatController.new()
+	local_controller.configure(actions, grid, local_rules)
+	local_controller.start(
+		[_actor("Grid Ally", 200, 20, 0)], [_actor("Grid Enemy", 200, 1, 0)], &"position-test"
+	)
+	return local_controller
+
+
+func _sized_grid_ground(width: int, height: int) -> TileMapLayer:
+	var tile_set := TileSet.new()
+	tile_set.tile_size = Vector2i(64, 32)
+	var image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
+	var source := TileSetAtlasSource.new()
+	source.texture = ImageTexture.create_from_image(image)
+	source.texture_region_size = Vector2i(64, 32)
+	source.create_tile(Vector2i.ZERO)
+	tile_set.add_source(source, 0)
+	var layer := auto_free(TileMapLayer.new()) as TileMapLayer
+	layer.tile_set = tile_set
+	for y in height:
+		for x in width:
+			layer.set_cell(Vector2i(x, y), 0, Vector2i.ZERO)
 	return layer
 
 

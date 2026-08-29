@@ -37,6 +37,8 @@ signal battle_finished(state: ResultState, outcome_id: StringName)
 enum State { IDLE, ROUND_START, ALLY_TURN, ENEMY_TURN, FINISHED }
 enum ResultState { VICTORY, DEFEAT, FLED }
 
+const ACTION_MOVE: StringName = &"move"
+
 var state: State = State.IDLE
 var allies: Array[BattleActor] = []
 var enemies: Array[BattleActor] = []
@@ -123,6 +125,7 @@ func _build_tile_states(encounter_id: StringName) -> void:
 			int(terrain.get("x", 0)),
 			int(terrain.get("y", 0)),
 			int(terrain.get("height_delta", 0)),
+			bool(terrain.get("cover", false)),
 		)
 		tile_states.append(tile)
 		_tile_by_cell[Vector2i(tile.x, tile.y)] = tile
@@ -210,11 +213,20 @@ func query_action(
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
 	if action == null:
 		return _blocked(&"action", "Unknown combat action.", {"type": &"known_action"})
+	if action.kind == CombatAction.Kind.MOVE:
+		var movement := battlefield.move_query(actor, _move_destination(action, options))
+		if not bool(movement.get("allowed", false)):
+			return movement
+		var priced_action := _priced_move_action(action, movement, options)
+		var move_affordability := _can_afford(actor, priced_action)
+		if not bool(move_affordability.get("allowed", false)):
+			return move_affordability
+		movement["ap_cost"] = priced_action.ap_cost
+		movement["ct_cost"] = priced_action.ct_cost
+		return movement
 	var affordability := _can_afford(actor, action)
 	if not bool(affordability.get("allowed", false)):
 		return affordability
-	if action.kind == CombatAction.Kind.MOVE:
-		return battlefield.move_query(actor, action.destination)
 	if action.requires_enemy_target():
 		var targeting := battlefield.target_query(actor, target, action.target_profile)
 		if not bool(targeting.get("allowed", false)):
@@ -237,17 +249,18 @@ func submit_action(
 		return query
 
 	var actor := active_actor()
-	var commit_result := scheduler.commit(actor, action)
+	var committed_action := _priced_move_action(action, query, options)
+	var commit_result := scheduler.commit(actor, committed_action)
 	if not bool(commit_result.get("allowed", false)):
 		# query_action() already validated affordability via the same gate, so this is a
 		# defensive re-check (e.g. a race between query and submit), not duplicated UX.
 		last_refusal = commit_result.duplicate(true)
 		_emit_event(&"action_refused", actor, target, {"action_id": action_id, "reason": commit_result})
 		return commit_result
-	var outcome := _apply_action(actor, target, action, options)
+	var outcome := _apply_action(actor, target, committed_action, options)
 	outcome["action_id"] = action.id
 	outcome["verb"] = action.verb
-	outcome["ap_cost"] = action.ap_cost
+	outcome["ap_cost"] = committed_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
 	outcome["ap_remaining"] = actor.action_points
 	outcome["charge_remaining"] = int(commit_result.get("charge", 0))
@@ -429,6 +442,43 @@ func snapshot() -> Dictionary:
 		"weather": _weather_snapshot(),
 		"scheduler_mode": str(scheduler.to_dict().get("scheduler", "")) if scheduler != null else "",
 		"turn_order": _turn_order_snapshot(),
+		"movement": _movement_snapshot(),
+	}
+
+
+## Additive UI query surface for a selected destination. The result uses the battlefield's
+## refusal taxonomy and includes the exact AP/CT quote submit_action() will commit.
+func move_query(destination: StringName) -> Dictionary:
+	return query_action(action_by_id(ACTION_MOVE), null, {"destination": destination})
+
+
+func _movement_snapshot() -> Dictionary:
+	var actor := active_actor()
+	var action := action_by_id(ACTION_MOVE)
+	if actor == null or action == null or battlefield == null:
+		return {}
+	var capabilities: Dictionary = battlefield.capabilities()
+	if not bool(capabilities.get("cells", false)) or state != State.ALLY_TURN:
+		return {}
+	var base_move_cost := maxi(1, rules.move_ct_cost if rules != null else 1)
+	var per_cell_ap := maxi(1, action.ap_cost)
+	var ct_budget := int(actor.action_points / per_cell_ap) * base_move_cost
+	var reachable: Array[Dictionary] = []
+	for destination: StringName in battlefield.reachable_positions(actor, ct_budget):
+		var query := move_query(destination)
+		if not bool(query.get("allowed", false)):
+			continue
+		reachable.append({
+			"destination": destination,
+			"ap_cost": int(query.get("ap_cost", 0)),
+			"ct_cost": int(query.get("ct_cost", 0)),
+			"path": (query.get("path", []) as Array).duplicate(),
+		})
+	return {
+		"action_id": ACTION_MOVE,
+		"per_cell_ap_cost": per_cell_ap,
+		"remaining_ap": actor.action_points,
+		"reachable": reachable,
 	}
 
 
@@ -871,6 +921,30 @@ func _can_afford(actor: BattleActor, action: CombatAction) -> Dictionary:
 	return scheduler.can_act(actor)
 
 
+func _move_destination(action: CombatAction, options: Dictionary) -> StringName:
+	var authored: Variant = options.get("destination", action.destination)
+	return StringName(str(authored))
+
+
+## AP prices the same weighted path the enemy/CT move path quotes. The authored move
+## action's AP cost is the per-cell rate; elevation can raise the number of cost units.
+func _priced_move_action(
+	action: CombatAction, movement: Dictionary, options: Dictionary
+) -> CombatAction:
+	if action == null or action.kind != CombatAction.Kind.MOVE:
+		return action
+	var priced := action.duplicate(true) as CombatAction
+	priced.destination = _move_destination(action, options)
+	if movement.has("ct_cost"):
+		var base_move_cost := maxi(1, rules.move_ct_cost if rules != null else 1)
+		var cost_units := maxi(
+			1, ceili(float(movement.get("ct_cost", 0)) / float(base_move_cost))
+		)
+		priced.ap_cost = maxi(1, action.ap_cost) * cost_units
+		priced.ct_cost = int(movement.get("ct_cost", base_move_cost))
+	return priced
+
+
 func _apply_action(
 	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary = {}
 ) -> Dictionary:
@@ -943,16 +1017,19 @@ func _resolve_attack(
 		if bool(hit_target.defining_effects.get("revealed", false)):
 			cover_bonus = 0
 		var positional_context := _positional_resolution_context(actor, hit_target)
-		var legacy_flank_bonus := battlefield.flank_bonus(actor, hit_target)
+		# Grid battles pay flanking through the ratified facing MULTIPLIERS inside the
+		# positional context (x1.10 side / x1.25 back); the flat flank_bonus is the zone
+		# model's mechanism and must stay zero here or flanking double-dips.
+		var flank_bonus := battlefield.flank_bonus(actor, hit_target)
 		if not positional_context.is_empty():
-			legacy_flank_bonus = 0
+			flank_bonus = 0
 		var damage := calculate_damage(
 			actor,
 			hit_target,
 			action.power_bonus,
 			action.balance_shift,
 			balance,
-			legacy_flank_bonus,
+			flank_bonus,
 			cover_bonus,
 			action.element_id,
 			action.magnitude,
@@ -972,6 +1049,12 @@ func _resolve_attack(
 				"facing": modifiers["facing"],
 				"height_advantage_steps": modifiers["height_advantage_steps"],
 				"hit_bonus": modifiers["hit_bonus"],
+				"line_of_sight": (
+					battlefield.line_of_sight(actor, hit_target)
+					if action.target_profile == &"ranged" else _allowed()
+				),
+				"cover_bonus": cover_bonus,
+				"flank_bonus": flank_bonus,
 			})
 	return {
 		"damage": total_damage,
@@ -989,16 +1072,24 @@ func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAct
 	if actor == null or target == null or action == null:
 		return {}
 	var positional_context := _positional_resolution_context(actor, target)
-	var legacy_flank_bonus := 0
-	if positional_context.is_empty():
-		legacy_flank_bonus = battlefield.flank_bonus(actor, target)
+	# Same double-dip guard as _resolve_attack: facing multipliers own grid flanking.
+	var flank_bonus := battlefield.flank_bonus(actor, target)
+	if not positional_context.is_empty():
+		flank_bonus = 0
+	var cover_bonus := battlefield.cover_bonus(actor, target)
+	if bool(target.defining_effects.get("revealed", false)):
+		cover_bonus = 0
+	var line_of_sight := (
+		battlefield.line_of_sight(actor, target)
+		if action.target_profile == &"ranged" else _allowed()
+	)
 	var element_id := action.element_id
 	if String(element_id).is_empty():
 		element_id = _UNAUTHORED_ELEMENT_ID
 	var power := (
 		actor.effective_attack()
 		+ action.power_bonus
-		+ legacy_flank_bonus
+		+ flank_bonus
 		+ int(actor.balance_effects.get("damage_bonus", 0))
 	)
 	var target_height := 0
@@ -1035,7 +1126,69 @@ func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAct
 		"facing": positional_context.get("facing", {}),
 		"height_advantage_steps": int(positional_context.get("height_advantage_steps", 0)),
 		"to_hit_enabled": not positional_context.is_empty(),
+		"positioning": {
+			"line_of_sight": line_of_sight,
+			"cover_bonus": cover_bonus,
+			"flank_bonus": flank_bonus,
+			"facing": positional_context.get("facing", {}),
+			"height_advantage_steps": int(
+				positional_context.get("height_advantage_steps", 0)
+			),
+		},
 	}
+
+
+## User-facing forecast: gate first (including ranged LOS), then run the same pure context and
+## post-mitigation damage pipeline submit_action() uses. Refusals are returned unchanged so the
+## blocked_by taxonomy is identical at forecast and commit.
+func forecast_action(
+	action: CombatAction, target: BattleActor = null, options: Dictionary = {}
+) -> Dictionary:
+	var gate := query_action(action, target, options)
+	if not bool(gate.get("allowed", false)):
+		return gate
+	var actor := active_actor()
+	if action.kind == CombatAction.Kind.MOVE:
+		return _allowed({
+			"action_id": action.id,
+			"ap_cost": int(gate.get("ap_cost", action.ap_cost)),
+			"ct_cost": int(gate.get("ct_cost", action.ct_cost)),
+			"path": (gate.get("path", []) as Array).duplicate(),
+			"destination": _move_destination(action, options),
+		})
+	var context := forecast_context(actor, target, action)
+	var resolution := Resolution.resolve(context)
+	var positional_context := _positional_resolution_context(actor, target)
+	var cover_bonus := battlefield.cover_bonus(actor, target)
+	if bool(target.defining_effects.get("revealed", false)):
+		cover_bonus = 0
+	var flank_bonus := battlefield.flank_bonus(actor, target)
+	var damage := calculate_damage(
+		actor,
+		target,
+		action.power_bonus,
+		action.balance_shift,
+		balance,
+		flank_bonus,
+		cover_bonus,
+		action.element_id,
+		action.magnitude,
+		_sequence,
+		positional_context,
+		{
+			"seed": _sequence,
+			"ability_id": String(action.id),
+			"battle_id": String(_encounter_id),
+		},
+	)
+	return _allowed({
+		"action_id": action.id,
+		"ap_cost": action.ap_cost,
+		"damage": damage,
+		"resolution": resolution,
+		"context": context,
+		"positioning": (context.get("positioning", {}) as Dictionary).duplicate(true),
+	})
 
 
 func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> Dictionary:
@@ -1059,16 +1212,14 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 	var cover_bonus := battlefield.cover_bonus(actor, target)
 	if bool(target.defining_effects.get("revealed", false)):
 		cover_bonus = 0
-	var legacy_flank_bonus := battlefield.flank_bonus(actor, target)
-	if not positional_context.is_empty():
-		legacy_flank_bonus = 0
+	var flank_bonus := battlefield.flank_bonus(actor, target)
 	var final_damage := calculate_damage(
 		actor,
 		target,
 		action.power_bonus,
 		action.balance_shift,
 		balance,
-		legacy_flank_bonus,
+		flank_bonus,
 		cover_bonus,
 		action.element_id,
 		action.magnitude,

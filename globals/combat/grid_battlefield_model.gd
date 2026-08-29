@@ -50,6 +50,8 @@ var _grid: IsoGrid
 var _elevation: Dictionary = {}  ## Vector2i -> int
 ## Cells explicitly authored impassable, independent of elevation weight.
 var _cliffs: Dictionary = {}  ## Vector2i -> bool
+## Cells that grant partial cover without blocking movement or line of sight.
+var _cover: Dictionary = {}  ## Vector2i -> bool
 
 ## Keyed on `BattleActor.combat_id` (StringName) — the FR-802 stable id assigned by
 ## `CombatController._assign_combat_ids()` at encounter setup (issue #186). Deliberately NOT
@@ -103,6 +105,12 @@ func set_cliff(cell: Vector2i, is_cliff: bool = true) -> void:
 	_cliffs[cell] = is_cliff
 	if _grid != null and _grid.is_in_bounds(cell):
 		_grid.set_point_solid(cell, is_cliff)
+
+
+## Authors partial cover independently from elevation and impassability.
+func set_cover(cell: Vector2i, grants_cover: bool = true) -> void:
+	_tiles_snapshot_cache = []
+	_cover[cell] = grants_cover
 
 
 func setup(allies: Array[BattleActor], enemies: Array[BattleActor]) -> void:
@@ -204,7 +212,12 @@ func move(actor: BattleActor, destination: StringName) -> Dictionary:
 	_grid.set_point_solid(dest_cell, true)
 	var previous := position_of(actor)
 	_cells[actor.combat_id] = dest_cell
-	return _allowed({"from": previous, "to": position_of(actor), "path": query.get("path", [])})
+	return _allowed({
+		"from": previous,
+		"to": position_of(actor),
+		"ct_cost": int(query.get("ct_cost", 0)),
+		"path": query.get("path", []),
+	})
 
 
 func move_query(actor: BattleActor, destination: StringName) -> Dictionary:
@@ -255,11 +268,25 @@ func target_query(actor: BattleActor, target: BattleActor, profile: StringName) 
 	)
 
 
-## Grid LOS already distinguishes full blocks (elevation/occupancy/range) via
-## `line_of_sight()`; there is no partial-cover bonus layered on top of that, unlike the zone
-## model's back-position cover. Kept as its own method (not deleted) so a consumer branching on
-## `capabilities()` still gets a well-defined answer.
-func cover_bonus(_actor: BattleActor, _target: BattleActor) -> int:
+## PROVISIONAL magnitude comes from CombatRules.cover_defense_bonus (currently +2 defense).
+## Cover is DEFENDER-ANCHORED and DIRECTIONAL: the bonus applies only when a cover tile is
+## Chebyshev-adjacent to the target AND strictly nearer the attacker than the target is —
+## i.e. the target is hugging cover that stands between it and the shot. A crate beside the
+## ATTACKER grants nothing (the round-1 rule was directionless; Wave P gate finding class).
+func cover_bonus(actor: BattleActor, target: BattleActor) -> int:
+	if _rules == null or not has_combatant(actor) or not has_combatant(target):
+		return 0
+	var attacker_cell: Vector2i = _cells[actor.combat_id]
+	var target_cell: Vector2i = _cells[target.combat_id]
+	for y_offset in range(-1, 2):
+		for x_offset in range(-1, 2):
+			if x_offset == 0 and y_offset == 0:
+				continue
+			var cover_cell := target_cell + Vector2i(x_offset, y_offset)
+			if not bool(_cover.get(cover_cell, false)):
+				continue
+			if _chebyshev(cover_cell, attacker_cell) < _chebyshev(target_cell, attacker_cell):
+				return _rules.cover_defense_bonus
 	return 0
 
 
@@ -272,7 +299,8 @@ func flank_bonus(actor: BattleActor, target: BattleActor) -> int:
 	var attack_dir := _direction_of(
 		_cells[actor.combat_id] - _cells[target.combat_id]
 	)
-	if attack_dir != &"" and attack_dir == _opposite(target_facing):
+	# Front is the only safe direction; side and back both consume the flank term.
+	if attack_dir != &"" and attack_dir != target_facing:
 		return _rules.flank_power_bonus
 	return 0
 
@@ -313,6 +341,7 @@ func tiles_snapshot() -> Array[Dictionary]:
 					"y": y,
 					"height_delta": elevation_at(cell),
 					"cliff": bool(_cliffs.get(cell, false)),
+					"cover": bool(_cover.get(cell, false)),
 				})
 	return _tiles_snapshot_cache
 
@@ -325,6 +354,7 @@ func capabilities() -> Dictionary:
 		"occupancy": true,
 		"line_of_sight": true,
 		"path_cost": true,
+		"cover": true,
 	}
 
 

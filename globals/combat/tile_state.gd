@@ -61,6 +61,8 @@ var charge_level: int = 0
 ## Authored `map_tiles.height` plus any battle-time change (e.g. Terrashaper). Carried here,
 ## not on `map_tiles`, for the same immutable-content-vs-battle-layer reason as charge.
 var height_delta: int = 0
+## Static terrain cover carried into the live tile snapshot.
+var cover: bool = false
 ## Hushwarden fields: "no charge moves at all — residue is suspended, detonations impossible"
 ## (issue "Constraints"). Reads (`is_charged()`, `action_multiplier()`) still answer honestly
 ## while hushed; only the mutating operations refuse.
@@ -68,13 +70,14 @@ var hush: bool = false
 
 
 static func create(
-	battle_id: StringName, x: int, y: int, height_delta: int = 0
+	battle_id: StringName, x: int, y: int, height_delta: int = 0, cover: bool = false
 ) -> TileState:
 	var tile := TileState.new()
 	tile.battle_id = battle_id
 	tile.x = x
 	tile.y = y
 	tile.height_delta = height_delta
+	tile.cover = cover
 	return tile
 
 
@@ -198,6 +201,7 @@ func to_dict() -> Dictionary:
 		"charge_element_id": String(charge_element_id),
 		"charge_level": charge_level,
 		"height_delta": height_delta,
+		"cover": cover,
 		"hush": hush,
 	}
 
@@ -210,6 +214,7 @@ static func from_dict(data: Dictionary) -> TileState:
 	tile.charge_element_id = StringName(str(data.get("charge_element_id", "")))
 	tile.charge_level = int(data.get("charge_level", 0))
 	tile.height_delta = int(data.get("height_delta", 0))
+	tile.cover = bool(data.get("cover", false))
 	tile.hush = bool(data.get("hush", false))
 	return tile
 
