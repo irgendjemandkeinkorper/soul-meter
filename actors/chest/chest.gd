@@ -2,6 +2,9 @@ class_name Chest
 extends SMInteractable
 ## A reusable loot container. Interaction policy stays in SMInteractable; this
 ## class only applies the chest-specific loot and visual state.
+## Ownership consequence rule: the first successful take in each opened panel
+## session writes one theft event. Further takes and Take All in that same session
+## do not. Opening the container again begins a new session and may write again.
 
 const CLOSED_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-chest-wood--closed.png"
 const OPEN_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-chest-wood--open.png"
@@ -9,6 +12,7 @@ const PLACEHOLDER_TEXTURE_PATH := "res://assets/kenney/ui/fantasy-ui-borders/PNG
 
 @export var loot: Array[Dictionary] = []
 @export var container_id: String = ""
+@export var owned_by_faction: String = ""
 
 @onready var _closed_sprite: Sprite2D = $ClosedSprite
 @onready var _open_sprite: Sprite2D = $OpenSprite
@@ -33,8 +37,9 @@ func _apply_interaction() -> void:
 		interaction_text = "EMPTY"
 		_refresh_prompt()
 		return
+	GameState.begin_loot_container_session(container_id)
 	var panel := UIManager.open(UIManager.LOOT_PANEL, true) as LootPanel
-	panel.configure(display_name, remaining, container_id)
+	panel.configure(display_name, remaining, container_id, owned_by_faction)
 	panel.dismissed.connect(_on_loot_panel_dismissed, CONNECT_ONE_SHOT)
 
 

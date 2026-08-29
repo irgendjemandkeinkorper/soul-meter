@@ -2,11 +2,16 @@ class_name LootPanel
 extends Screen
 ## Shared inspectable transfer screen for persistent containers and transient spoils.
 
+## PROVISIONAL — aligned with the project's small quest-scale reputation deltas.
+const THEFT_REPUTATION_DELTA: float = -5.0
+
 signal dismissed(remaining: Array[Dictionary])
 
 var _source_name := "LOOT"
 var _items: Array[Dictionary] = []
 var _container_id := ""
+var _owned_by_faction := ""
+var _theft_recorded := false
 var _rows: VBoxContainer
 var _status: Label
 var _dismissed_emitted := false
@@ -34,15 +39,32 @@ func _build() -> void:
 	_render()
 
 
-func configure(source_name: String, items: Array[Dictionary], container_id: String = "") -> void:
+func configure(
+	source_name: String,
+	items: Array[Dictionary],
+	container_id: String = "",
+	owned_by_faction: String = "",
+) -> void:
 	_source_name = source_name
 	_items = items.duplicate(true)
 	_container_id = container_id
+	_owned_by_faction = owned_by_faction.strip_edges()
+	_theft_recorded = (
+		GameState.loot_container_theft_recorded(_container_id)
+		if not _container_id.is_empty()
+		else false
+	)
 	if not _container_id.is_empty():
 		GameState.set_loot_container_contents(_container_id, _items)
 	var title := find_child("ScreenTitle", true, false) as Label
 	if title != null:
-		title.text = _source_name
+		title.text = "OWNED — %s" % _source_name if _is_owned() else _source_name
+		title.theme_type_variation = "DangerLabel" if _is_owned() else "TitleLabel"
+	var take_all_button := find_child("TakeAllButton", true, false) as Button
+	if take_all_button != null:
+		take_all_button.theme_type_variation = "DangerButton" if _is_owned() else "BronzeButton"
+	_status.theme_type_variation = "DangerLabel" if _is_owned() else "MutedLabel"
+	_status.text = "OWNED PROPERTY — TAKING IS THEFT." if _is_owned() else ""
 	_render()
 
 
@@ -55,6 +77,7 @@ func take_item(index: int) -> bool:
 		_status.text = "NO ROOM — THE ITEM REMAINS HERE."
 		return false
 	_persist_remaining()
+	_record_theft_if_needed()
 	_status.text = "ITEM TAKEN."
 	_render()
 	return true
@@ -66,6 +89,8 @@ func take_all() -> int:
 		if take_from(_items, index, GameState.inventory):
 			taken += 1
 	_persist_remaining()
+	if taken > 0:
+		_record_theft_if_needed()
 	_status.text = (
 		"EVERYTHING TAKEN." if _items.is_empty()
 		else "NO ROOM FOR %d ITEM ROW(S); THEY REMAIN HERE." % _items.size()
@@ -96,6 +121,34 @@ func _persist_remaining() -> void:
 		GameState.set_loot_container_contents(_container_id, _items)
 
 
+func _record_theft_if_needed() -> void:
+	if not _is_owned() or _theft_recorded:
+		return
+	if (
+		not _container_id.is_empty()
+		and not GameState.mark_loot_container_theft_recorded(_container_id)
+	):
+		_theft_recorded = true
+		return
+	_theft_recorded = true
+	Reputation.record(
+		"player",
+		_owned_by_faction,
+		THEFT_REPUTATION_DELTA,
+		"Took goods from %s" % _source_name,
+		_current_scene_path(),
+	)
+
+
+func _is_owned() -> bool:
+	return not _owned_by_faction.is_empty()
+
+
+func _current_scene_path() -> String:
+	var current_scene: Node = get_tree().current_scene
+	return current_scene.scene_file_path if current_scene != null else ""
+
+
 func _render() -> void:
 	if _rows == null or _status == null:
 		return
@@ -116,13 +169,13 @@ func _render() -> void:
 		var label := Label.new()
 		label.name = "ItemLabel_%d" % index
 		label.text = _item_label(row_data)
-		label.theme_type_variation = "HeadingLabel"
+		label.theme_type_variation = "DangerLabel" if _is_owned() else "HeadingLabel"
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(label)
 		var take := Button.new()
 		take.name = "TakeButton_%d" % index
 		take.text = "TAKE"
-		take.theme_type_variation = "BronzeButton"
+		take.theme_type_variation = "DangerButton" if _is_owned() else "BronzeButton"
 		take.pressed.connect(take_item.bind(index))
 		row.add_child(take)
 		_rows.add_child(row)
