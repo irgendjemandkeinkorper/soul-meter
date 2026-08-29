@@ -181,6 +181,17 @@ out-of-order completion for the retrofitted quests; no softlocks (audit rule fro
   re-offers the encounter prompt (deterministic, not a reroll); branch unpushed
   (owner decision).
 
+- **Wave 3 — SHIPPED 2026-08-29** (`2dd9632` → `3d6c19d`). Suite 938/0; quest audit
+  0 errors incl. the new `check_softlocks` rule; develop→deliver gate REVISE →
+  **PROCEED** (manual codex dispatch, `embrace-gate-wave3-manual-*.md` r1–r2);
+  evidence `docs/qa/wave3-acceptance-evidence.md`. Went beyond the enumerated
+  minimum: all ten Dom quests retrofitted, eight distinct skills; vault-review
+  items: none (all names/facts pre-exist). DISCOVERY: faction-band vendor
+  pricing and the band-gated trade/access gate already exist in production —
+  Wave 4's vendor and access consumers are satisfied by test coverage, not new
+  code. Accepted residuals: check difficulties PROVISIONAL; `check_softlocks`
+  heuristic limits documented; branch unpushed (owner decision).
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
