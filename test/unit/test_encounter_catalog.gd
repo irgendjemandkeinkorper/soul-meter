@@ -51,3 +51,18 @@ func test_bloodbellow_exposes_three_authored_outcomes() -> void:
 	assert_str(EncounterCatalog.outcome(EncounterIds.DORTHKOR_MUSTER, &"slain")["cause"]).contains(
 		"by force"
 	)
+
+
+func test_every_encounter_definition_has_an_authored_spoils_table() -> void:
+	# Wave 5 invariant: battle victory yields inspectable spoils EVERYWHERE.
+	# Enumerates the generated encounter data so a future encounter cannot
+	# ship without a spoils entry (gate-recorded drift risk).
+	var encounters: Dictionary = (
+		load("res://data/generated/encounters.json") as JSON
+	).data
+	assert_int(encounters.size()).is_greater_equal(10)
+	for encounter_id: String in encounters:
+		assert_array(EncounterCatalog.roll_spoils(StringName(encounter_id))) \
+			.override_failure_message(
+				"Encounter '%s' has no authored spoils table" % encounter_id
+			).is_not_empty()

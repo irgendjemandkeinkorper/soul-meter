@@ -208,6 +208,24 @@ out-of-order completion for the retrofitted quests; no softlocks (audit rule fro
   reactions re-evaluate at dialogue/schedule start, not mid-conversation; branch
   unpushed (owner decision).
 
+- **Wave 5 — SHIPPED 2026-08-29** (`594a08c` → `b73348c` + follow-ups `d0eebc2`,
+  spoils-invariant test). Suite 963/0 (153 suites); quest audit 0 errors;
+  develop→deliver gate **PROCEED_WITH_RISKS** (manual codex dispatch,
+  `embrace-gate-wave5-manual*-*.md`); evidence `docs/qa/wave5-acceptance-evidence.md`.
+  Shipped: shared inspectable `LootPanel` (take/take-all, capacity refusal leaves
+  rows in the source); persistent containers via additive `GameState.loot_containers`
+  (no schema bump); pickups became E-to-take interactions; `BattleResult.spoils` +
+  `EncounterCatalog.roll_spoils` make victory spoils inspectable in ALL battles
+  (travel keeps per-slot determinism + exactly-once); `owned_by_faction` theft =
+  one `Reputation.record` per opened-panel session; 11 placements across 10 of the
+  26 scenes (15 recorded no-place), zero grant-all containers (scan in evidence),
+  economy note 225 GP placed vs 250 starting GP. Both gate-recorded drift risks
+  were closed same-day: the container-id scan now enumerates `world/` from disk,
+  and an invariant test forces every generated encounter to carry an authored
+  spoils table. Accepted residuals: contents/values/theft delta PROVISIONAL;
+  `roll_spoils` is fixed per encounter id (variety needs an owner entropy ruling);
+  no lingering field corpses (battle is an overlay — deliberate).
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
