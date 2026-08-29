@@ -79,6 +79,12 @@ func cover_bonus(_actor: BattleActor, _target: BattleActor) -> int:
 	return 0
 
 
+## Cover granted to a combatant hypothetically standing at an opaque position. Positional AI
+## uses this query without learning a concrete model's geometry or handle representation.
+func cover_bonus_at(_attacker: BattleActor, _target_position: StringName) -> int:
+	return 0
+
+
 func flank_bonus(_actor: BattleActor, _target: BattleActor) -> int:
 	return 0
 
