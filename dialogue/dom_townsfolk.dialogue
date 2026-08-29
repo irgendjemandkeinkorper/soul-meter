@@ -59,13 +59,23 @@ Drel Gaunt: Stand straight when the drum sounds.
 => END
 
 ~ dom_droma_flintjaw
-Droma Flintjaw: Hold at the brace and state your business.
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Droma Flintjaw: The Companies have you marked cold. State your business from there.
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Droma Flintjaw: The Companies speak warmly of you. Cross at the near brace.
+else
+	Droma Flintjaw: Hold at the brace and state your business.
 Droma Flintjaw: Droma's armor tags include one clean plate whose owner still answers morning roll.
 Droma Flintjaw: Cross unarmed or do not cross.
 => END
 
 ~ dom_edda_broadmark
-Edda Broadmark: Yield is an honest word here.
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Edda Broadmark: The Companies give your name no weight. Edda does the same.
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Edda Broadmark: The Companies give your name weight. Edda will hear you first.
+else
+	Edda Broadmark: Yield is an honest word here.
 Edda Broadmark: Edda reads the Company's standing before she reads a volunteer's scars.
 Edda Broadmark: Stand straight when the drum sounds.
 => END
@@ -239,7 +249,12 @@ Raika Toll: Leave me a true count when you return.
 => END
 
 ~ dom_ressa_ironmouth
-Ressa Ironmouth: Mind the sparks, traveler.
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Ressa Ironmouth: The Companies distrust your name. Ressa keeps the hot tongs between you and the rack.
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Ressa Ironmouth: The Companies trust your name. Ressa clears the sparks when you step to the rack.
+else
+	Ressa Ironmouth: Mind the sparks, traveler.
 Ressa Ironmouth: Ressa can spot a false Ironbrand by the way its scar fails to pull when the bearer speaks.
 Ressa Ironmouth: Go before the next hammer fall.
 => END

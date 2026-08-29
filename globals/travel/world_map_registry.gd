@@ -99,6 +99,16 @@ static func _route_rows() -> Array[Dictionary]:
 				{"encounter_id": &"loam-boar", "weight": 2},
 				{"encounter_id": &"dorthkor-vanguard", "weight": 1},
 			],
+			# PROVISIONAL: tune after encounter-frequency playtests. Neutral keeps base weights.
+			"band_encounter_weights": {
+				"faction_id": &"iron-companies",
+				"bands": {
+					&"hostile": {&"dorthkor-vanguard": 3},
+					&"cold": {&"dorthkor-vanguard": 2},
+					&"warm": {&"dorthkor-vanguard": 1},
+					&"allied": {&"dorthkor-vanguard": 0},
+				},
+			},
 			"min_encounters": 1,
 			"max_encounters": 2,
 		},
