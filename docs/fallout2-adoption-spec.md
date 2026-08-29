@@ -171,6 +171,16 @@ out-of-order completion for the retrofitted quests; no softlocks (audit rule fro
   Accepted residuals: cosmetic "CT n" plate label under AP; enemy full-AP flag
   remains OFF pending its own balance pass; branch unpushed (owner decision).
 
+- **Wave 2 — SHIPPED 2026-08-29** (`71b77c0` → `ef98794`). Suite 920/0 (CI-style
+  908/908 independently reproduced by the gate); quest audit 0 errors;
+  develop→deliver gate REVISE → REVISE (docs-only) → **PROCEED**
+  (manual codex dispatch, `embrace-gate-wave2-manual-*.md` r1–r3); evidence
+  `docs/qa/wave2-acceptance-evidence.md` + `docs/qa/wave2-world-map.png`.
+  Accepted residuals: encounter/spoils tables are PROVISIONAL balance surfaces;
+  DOM current-location marker renders faint (cosmetic); an IN_BATTLE reload
+  re-offers the encounter prompt (deterministic, not a reroll); branch unpushed
+  (owner decision).
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
