@@ -38,6 +38,9 @@ enum State { IDLE, ROUND_START, ALLY_TURN, ENEMY_TURN, FINISHED }
 enum ResultState { VICTORY, DEFEAT, FLED }
 
 const ACTION_MOVE: StringName = &"move"
+## PROVISIONAL Wave P positional-AI weight: cover beats adjacency (+500), while a rear
+## opportunity (+1000) remains the stronger tactical instinct.
+const _ENEMY_COVER_POSITION_SCORE := 750
 
 var state: State = State.IDLE
 var allies: Array[BattleActor] = []
@@ -749,11 +752,17 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 	if target == null:
 		return
 	var targeting := battlefield.target_query(actor, target, enemy_action.target_profile)
-	if not bool(targeting.get("allowed", false)):
+	var has_cells := bool(battlefield.capabilities().get("cells", false))
+	if not bool(targeting.get("allowed", false)) and has_cells:
 		var destination := _best_enemy_position(actor, target)
 		if destination != &"":
 			_resolve_enemy_move(actor, target, destination)
 			return
+		_emit_event(
+			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": targeting}
+		)
+		_force_pass(actor)
+		return
 	var commit_result := scheduler.commit(actor, enemy_action)
 	if not bool(commit_result.get("allowed", false)):
 		_emit_event(
@@ -791,15 +800,22 @@ func _best_enemy_position(actor: BattleActor, target: BattleActor) -> StringName
 		var described: Dictionary = battlefield.describe_position(candidate)
 		if not described.has("cell"):
 			continue
-		var score := _enemy_position_score(described, target_position, target)
-		if score > best_score or (score == best_score and (best == &"" or candidate < best)):
+		var score := _enemy_position_score(candidate, described, target_position, target)
+		# Tie-break through String: StringName's `<` orders by interning pointer,
+		# which varies with process history — the same tie resolved differently
+		# in two tests of one run before this was made genuinely lexical.
+		if score > best_score \
+				or (score == best_score and (best == &"" or String(candidate) < String(best))):
 			best = candidate
 			best_score = score
 	return best
 
 
 func _enemy_position_score(
-	candidate: Dictionary, target_position: Dictionary, target: BattleActor
+	candidate_position: StringName,
+	candidate: Dictionary,
+	target_position: Dictionary,
+	target: BattleActor,
 ) -> int:
 	var candidate_cell: Vector2i = candidate.get("cell", Vector2i.ZERO)
 	var target_cell: Vector2i = target_position.get("cell", Vector2i.ZERO)
@@ -808,6 +824,8 @@ func _enemy_position_score(
 	var score := int(candidate.get("elevation", 0)) * 1000 - distance
 	if distance <= 1:
 		score += 500
+	if battlefield.cover_bonus_at(target, candidate_position) > 0:
+		score += _ENEMY_COVER_POSITION_SCORE
 	var attack_direction := _facing_for_delta(delta)
 	if attack_direction != &"" and attack_direction == _opposite_facing(battlefield.facing_of(target)):
 		score += 1000

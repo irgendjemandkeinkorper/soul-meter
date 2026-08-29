@@ -1,5 +1,23 @@
 extends GdUnitTestSuite
 
+
+class CelllessBattlefieldSpy:
+	extends BattlefieldModel
+
+	var describe_calls := 0
+	var reachable_calls := 0
+
+	func capabilities() -> Dictionary:
+		return {"cells": false}
+
+	func describe_position(_position: StringName) -> Dictionary:
+		describe_calls += 1
+		return {}
+
+	func reachable_positions(_actor: BattleActor, _ct_budget: int) -> Array[StringName]:
+		reachable_calls += 1
+		return []
+
 var events: Array[CombatEvent] = []
 var controller: CombatController
 var rules: CombatRules
@@ -540,6 +558,124 @@ func test_snapshot_exposes_move_range_and_path_costs_additively() -> void:
 	assert_bool(first.has("path")).is_true()
 
 
+func test_enemy_prefers_cover_over_an_equal_distance_open_cell() -> void:
+	var local_controller := _enemy_position_controller(&"e")
+	var grid := local_controller.battlefield as GridBattlefieldModel
+	grid.set_cover(Vector2i(3, 2), true)
+
+	var destination := local_controller._best_enemy_position(
+		local_controller.enemies[0], local_controller.allies[0]
+	)
+
+	# c:2,4,0 is an equally distant open cell and wins the lexical tie without cover.
+	assert_str(String(destination)).is_equal("c:4,2,0")
+
+
+func test_enemy_prefers_rear_flank_over_cover_when_both_are_reachable() -> void:
+	var local_controller := _enemy_position_controller(&"n")
+	var grid := local_controller.battlefield as GridBattlefieldModel
+	grid.set_cover(Vector2i(3, 2), true)
+
+	var destination := local_controller._best_enemy_position(
+		local_controller.enemies[0], local_controller.allies[0]
+	)
+
+	assert_str(String(destination)).is_equal("c:2,3,0")
+
+
+func test_enemy_position_scoring_bypasses_cellless_zone_battlefields() -> void:
+	var spy := CelllessBattlefieldSpy.new()
+	var local_controller := CombatController.new()
+	local_controller.battlefield = spy
+	local_controller.rules = rules
+
+	assert_str(String(local_controller._best_enemy_position(enemy, ally))).is_empty()
+	assert_int(spy.describe_calls).is_equal(0)
+	assert_int(spy.reachable_calls).is_equal(0)
+
+
+func test_enemy_position_choice_is_deterministic_across_identical_runs() -> void:
+	var first := _enemy_position_controller(&"e")
+	var second := _enemy_position_controller(&"e")
+	(first.battlefield as GridBattlefieldModel).set_cover(Vector2i(3, 2), true)
+	(second.battlefield as GridBattlefieldModel).set_cover(Vector2i(3, 2), true)
+
+	var first_choice := first._best_enemy_position(first.enemies[0], first.allies[0])
+	var second_choice := second._best_enemy_position(second.enemies[0], second.allies[0])
+
+	assert_str(String(first_choice)).is_equal(String(second_choice))
+	assert_str(String(first_choice)).is_equal("c:4,2,0")
+
+
+func test_melee_enemy_routes_around_an_occupied_elevated_line() -> void:
+	var local_rules := _positional_rules()
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_sized_grid_ground(5, 2))
+	grid.set_elevation(Vector2i(3, 1), 1)
+	var target := _actor("Route Target", 200, 1, 0)
+	var blocker := _actor("Route Blocker", 200, 1, 0)
+	var foe := _actor("Routing Enemy", 200, 1, 0)
+	var local_events: Array[CombatEvent] = []
+	var local_controller := CombatController.new()
+	local_controller.event_emitted.connect(
+		func(event: CombatEvent) -> void: local_events.append(event)
+	)
+	local_controller.configure(CombatActionCatalog.all(), grid, local_rules)
+	local_controller.start([target, blocker], [foe], &"enemy-route-test")
+	assert_bool(grid.move(blocker, &"c:2,0,0").get("allowed", false)).is_true()
+
+	assert_bool(local_controller.end_turn()).is_true()
+	assert_bool(local_controller.end_turn()).is_true()
+
+	assert_str(String(grid.position_of(foe))).is_equal("c:3,1,1")
+	var moves := local_events.filter(
+		func(event: CombatEvent) -> bool:
+			return event.actor_id == foe.combat_id \
+				and StringName(event.data.get("action_id", &"")) == &"__enemy_grid_move__"
+	)
+	assert_int(moves.size()).is_equal(1)
+	assert_array(moves[0].data.get("path_cells", [])).contains(Vector2i(3, 1))
+
+
+func test_unreachable_enemy_emits_the_model_los_refusal_taxonomy() -> void:
+	var local_rules := _positional_rules()
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_sized_grid_ground(5, 1))
+	grid.set_cliff(Vector2i(3, 0), true)
+	grid.set_elevation(Vector2i(2, 0), 10)
+	var target := _actor("LOS Target", 200, 1, 0)
+	var foe := _actor("Blocked Enemy", 200, 1, 0)
+	var ranged_enemy := CombatAction.make(
+		&"enemy-strike", "Enemy Shot", CombatAction.Kind.ATTACK, 0, 0, 0.0, 4
+	)
+	ranged_enemy.target_profile = &"ranged"
+	ranged_enemy.player_available = false
+	var actions: Array[CombatAction] = []
+	for action: CombatAction in CombatActionCatalog.all():
+		if action.id != &"enemy-strike":
+			actions.append(action)
+	actions.append(ranged_enemy)
+	var local_events: Array[CombatEvent] = []
+	var local_controller := CombatController.new()
+	local_controller.event_emitted.connect(
+		func(event: CombatEvent) -> void: local_events.append(event)
+	)
+	local_controller.configure(actions, grid, local_rules)
+	local_controller.start([target], [foe], &"enemy-los-refusal-test")
+
+	assert_bool(local_controller.end_turn()).is_true()
+
+	var refusals := local_events.filter(
+		func(event: CombatEvent) -> bool:
+			return event.type == &"action_refused" and event.actor_id == foe.combat_id
+	)
+	assert_int(refusals.size()).is_equal(1)
+	var reason: Dictionary = refusals[0].data.get("reason", {})
+	assert_str(String(reason.get("blocked_by", &""))).is_equal("blocked_by_elevation")
+
+
 func _actor(name: String, hp: int, attack: int, defense: int) -> BattleActor:
 	var actor := BattleActor.new()
 	actor.display_name = name
@@ -548,6 +684,31 @@ func _actor(name: String, hp: int, attack: int, defense: int) -> BattleActor:
 	actor.attack = attack
 	actor.defense = defense
 	return actor
+
+
+func _positional_rules() -> CombatRules:
+	var local_rules := (
+		load("res://data/combat/combat_rules.tres") as CombatRules
+	).duplicate(true) as CombatRules
+	local_rules.use_charge_time = false
+	return local_rules
+
+
+func _enemy_position_controller(target_facing: StringName) -> CombatController:
+	var local_rules := _positional_rules()
+	local_rules.maximum_action_ct_cost = 40
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_sized_grid_ground(5, 5))
+	var target := _actor("Position Target", 200, 1, 0)
+	var foe := _actor("Position Enemy", 200, 1, 0)
+	var local_controller := CombatController.new()
+	local_controller.configure(CombatActionCatalog.all(), grid, local_rules)
+	local_controller.start([target], [foe], &"enemy-position-test")
+	assert_bool(grid.move(target, &"c:2,2,0").get("allowed", false)).is_true()
+	assert_bool(grid.move(foe, &"c:4,4,0").get("allowed", false)).is_true()
+	assert_bool(grid.set_facing(target, target_facing).get("allowed", false)).is_true()
+	return local_controller
 
 
 func _grid_attack_damage(attacker_height: int, target_facing: StringName) -> int:

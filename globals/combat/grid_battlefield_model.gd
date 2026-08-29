@@ -278,6 +278,23 @@ func cover_bonus(actor: BattleActor, target: BattleActor) -> int:
 		return 0
 	var attacker_cell: Vector2i = _cells[actor.combat_id]
 	var target_cell: Vector2i = _cells[target.combat_id]
+	return _cover_bonus_between(attacker_cell, target_cell)
+
+
+func cover_bonus_at(attacker: BattleActor, target_position: StringName) -> int:
+	if _rules == null or not has_combatant(attacker):
+		return 0
+	var parsed: Dictionary = _parse_handle(target_position)
+	if not bool(parsed.get("ok", false)):
+		return 0
+	var target_cell: Vector2i = parsed.get("cell", Vector2i.ZERO)
+	if _grid == null or not _grid.is_in_bounds(target_cell):
+		return 0
+	var attacker_cell: Vector2i = _cells[attacker.combat_id]
+	return _cover_bonus_between(attacker_cell, target_cell)
+
+
+func _cover_bonus_between(attacker_cell: Vector2i, target_cell: Vector2i) -> int:
 	for y_offset in range(-1, 2):
 		for x_offset in range(-1, 2):
 			if x_offset == 0 and y_offset == 0:
