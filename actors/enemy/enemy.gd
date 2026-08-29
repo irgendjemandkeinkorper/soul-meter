@@ -25,6 +25,7 @@ func _ready() -> void:
 	if not defeated_flag.is_empty() and GameState.get_flag(defeated_flag):
 		queue_free()
 		return
+	GridPlacement.snap_to_walkable_cell(self, global_position)
 	_apply_visual_identity()
 
 	var range_area := Area2D.new()
@@ -123,3 +124,5 @@ func _primary_creature_id() -> String:
 		if first_row is Dictionary:
 			return str(first_row.get("id", ""))
 	return ""
+
+

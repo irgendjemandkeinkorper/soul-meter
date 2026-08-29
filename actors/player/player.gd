@@ -1,16 +1,17 @@
 class_name Player
 extends CharacterBody2D
 ## Field-exploration avatar for the 2D overworld (design doc §6: real-time 2D field).
-## Top-down 8-direction movement, plus Fallout-2-style click-to-move (D4, GH #162,
+## Grid-bound 8-direction movement, plus Fallout-2-style click-to-move (D4, GH #162,
 ## docs/architecture-tactical-and-navigation.md §2.5). `ClickMoveController` (a sibling
 ## component, `$ClickMoveController`) owns the path queue; this script stays the only
 ## thing that touches `velocity` and calls `move_and_slide()` — the controller supplies
 ## a direction, never movement itself. WASD always wins over an in-progress click path
 ## (FR-607: keyboard is a debug AND accessibility path, not just a fallback).
 
-## Movement speed in pixels/second.
+## Movement speed in pixels/second. PROVISIONAL: field traversal balance value.
 @export var speed: float = 260.0
 ## Held-Shift sprint (the "sprint" input action) multiplies field speed by this.
+## PROVISIONAL: field traversal balance multiplier.
 @export var sprint_multiplier: float = 2.0
 @export var camera_bounds := Rect2i(0, 0, 1600, 1000)
 
@@ -44,6 +45,8 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 var _distance_since_footstep := 0.0
 var _last_footstep_index := -1
 var _footstep_rng := RandomNumberGenerator.new()
+var _has_keyboard_step_target: bool = false
+var _keyboard_step_target: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
@@ -59,12 +62,38 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var keyboard_direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var direction := keyboard_direction
-	if not keyboard_direction.is_zero_approx():
-		# WASD always wins: cancel any in-progress click path (FR-607).
-		_click_controller.cancel_path()
+	var direction: Vector2 = Vector2.ZERO
+	var movement_target: Vector2 = Vector2.ZERO
+	var has_movement_target: bool = false
+	var target_is_keyboard_step: bool = false
+	var grid: IsoGrid = _click_controller.get_iso_grid()
+
+	if grid == null:
+		# Launchable scenes without navigation keep the legacy free-movement behavior.
+		_has_keyboard_step_target = false
+		direction = keyboard_direction
+		if not keyboard_direction.is_zero_approx():
+			# WASD always wins: cancel any in-progress click path (FR-607).
+			_click_controller.cancel_path()
+		else:
+			direction = _click_controller.get_steering_direction(global_position, delta)
 	else:
-		direction = _click_controller.get_steering_direction(global_position, delta)
+		if not keyboard_direction.is_zero_approx():
+			# WASD always wins: cancel any in-progress click path (FR-607).
+			_click_controller.cancel_path()
+			if not _has_keyboard_step_target:
+				_begin_keyboard_step(grid, keyboard_direction)
+		if _has_keyboard_step_target:
+			movement_target = _keyboard_step_target
+			has_movement_target = true
+			target_is_keyboard_step = true
+		elif keyboard_direction.is_zero_approx():
+			var click_target: Variant = _click_controller.get_steering_target(global_position, delta)
+			if click_target != null:
+				movement_target = click_target as Vector2
+				has_movement_target = true
+		if has_movement_target:
+			direction = global_position.direction_to(movement_target)
 	if not direction.is_zero_approx():
 		facing_direction = direction.normalized()
 		if absf(facing_direction.x) > 0.01:
@@ -73,8 +102,49 @@ func _physics_process(delta: float) -> void:
 	if InputMap.has_action("sprint") and Input.is_action_pressed("sprint"):
 		current_speed *= sprint_multiplier
 	velocity = direction * current_speed
+	if has_movement_target and delta > 0.0:
+		var distance_to_target: float = global_position.distance_to(movement_target)
+		velocity = direction * minf(current_speed, distance_to_target / delta)
 	move_and_slide()
+	if (
+		has_movement_target
+		and global_position.distance_to(movement_target) <= ClickMoveController.ARRIVAL_EPSILON
+	):
+		_complete_grid_arrival(
+			movement_target,
+			target_is_keyboard_step,
+			grid,
+			keyboard_direction
+		)
 	_update_footsteps(direction)
+
+
+func _begin_keyboard_step(grid: IsoGrid, screen_direction: Vector2) -> void:
+	_click_controller.sync_occupancy()
+	var current_cell: Vector2i = grid.world_to_cell(global_position)
+	var resolved_cell: Variant = grid.resolve_step_cell(current_cell, screen_direction, self)
+	if resolved_cell == null:
+		return
+	_keyboard_step_target = grid.cell_to_world(resolved_cell as Vector2i)
+	_has_keyboard_step_target = true
+
+
+func _complete_grid_arrival(
+	target: Vector2,
+	is_keyboard_step: bool,
+	grid: IsoGrid,
+	keyboard_direction: Vector2
+) -> void:
+	# Player remains the sole authority that moves the body, including exact center snaps.
+	global_position = target
+	velocity = Vector2.ZERO
+	if not is_keyboard_step:
+		_click_controller.complete_current_waypoint(target)
+		return
+	_has_keyboard_step_target = false
+	if not keyboard_direction.is_zero_approx():
+		# Preselect now so a held key continues on the next physics tick without an idle tick.
+		_begin_keyboard_step(grid, keyboard_direction)
 
 
 func _update_footsteps(direction: Vector2) -> void:

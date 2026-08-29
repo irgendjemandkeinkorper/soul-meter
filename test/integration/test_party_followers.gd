@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
-## Party followers are presentation-only actors driven by the player's sampled
-## route. These tests load the real field scenes and step real physics frames.
+## Party followers are presentation-only actors driven by the player's cell
+## history. These tests load the real field scenes and step real physics frames.
 
 var _original_party: Array[PartyMember] = []
 
@@ -14,14 +14,16 @@ func after_test() -> void:
 	get_tree().paused = false
 
 
-func test_field_scene_spawns_followers_and_tracks_the_players_breadcrumbs() -> void:
+func test_field_scene_spawns_followers_and_tracks_successively_older_cells() -> void:
 	_set_companion_count(2)
 	var runner := scene_runner("res://world/test_room.tscn")
 	await runner.simulate_frames(2)
 	var manager := runner.find_child("PartyFollowers", true, false) as PartyFollowers
 	var player := runner.find_child("Player", true, false) as Node2D
+	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
 
 	assert_object(manager).is_not_null()
+	assert_object(ground).is_not_null()
 	assert_int(manager.follower_count()).is_equal(2)
 	assert_str(manager.followers()[0].party_member.id).is_equal("serai-lun")
 	assert_str(manager.followers()[1].party_member.id).is_equal("old-grumbrand")
@@ -29,29 +31,44 @@ func test_field_scene_spawns_followers_and_tracks_the_players_breadcrumbs() -> v
 	assert_bool(follower_node is CollisionObject2D).is_false()
 	assert_object(follower_node.find_child("CollisionShape2D", true, false)).is_null()
 
-	var start := player.global_position
+	var start_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+	var start_center: Vector2 = ground.to_global(ground.map_to_local(start_cell))
+	# A short history is deterministic: every companion waits at the oldest
+	# known cell until enough player cells have been visited.
+	assert_vector(manager.trail_target_for(0)).is_equal(start_center)
+	assert_vector(manager.trail_target_for(1)).is_equal(start_center)
+
+	var visited_cells: Array[Vector2i] = [start_cell]
 	runner.simulate_action_press("move_right")
-	await _wait_physics_frames(40)
+	for _frame in 60:
+		await get_tree().physics_frame
+		var observed_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+		if observed_cell != visited_cells.back():
+			visited_cells.append(observed_cell)
 	runner.simulate_action_release("move_right")
-	runner.simulate_action_press("move_down")
-	await _wait_physics_frames(8)
-	runner.simulate_action_release("move_down")
-	await _wait_physics_frames(1)
+	# Releasing the key finishes the current player step. Keep observing until
+	# that cell is committed before deriving the follower targets.
+	for _frame in 30:
+		await get_tree().physics_frame
+		var observed_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+		if observed_cell != visited_cells.back():
+			visited_cells.append(observed_cell)
+	assert_int(visited_cells.size()).is_greater_equal(3)
 
-	# The second target is old enough to remain on the horizontal leg instead
-	# of cutting diagonally across the right-angle route.
-	var corner_target := manager.trail_target_for(1)
-	assert_float(corner_target.y).is_equal_approx(start.y, 12.0)
-	assert_float(corner_target.x).is_greater(start.x)
-	assert_float(corner_target.x).is_less(player.global_position.x)
+	# Each target is a whole, successively older cell. No target may be an
+	# interpolated point between the two legs of the route.
+	var first_target: Vector2 = ground.to_global(
+		ground.map_to_local(visited_cells[visited_cells.size() - 2])
+	)
+	var second_target: Vector2 = ground.to_global(
+		ground.map_to_local(visited_cells[visited_cells.size() - 3])
+	)
+	assert_vector(manager.trail_target_for(0)).is_equal(first_target)
+	assert_vector(manager.trail_target_for(1)).is_equal(second_target)
 
-	var follower := manager.followers()[1]
-	follower.global_position = corner_target + Vector2(0, 120)
-	var distance_before := follower.global_position.distance_to(corner_target)
-	await _wait_physics_frames(24)
-	var distance_after := follower.global_position.distance_to(manager.trail_target_for(1))
-	assert_float(distance_after).is_less(distance_before)
-	assert_float(distance_after).is_less_equal(2.0)
+	await _wait_physics_frames(30)
+	assert_vector(manager.followers()[0].global_position).is_equal(first_target)
+	assert_vector(manager.followers()[1].global_position).is_equal(second_target)
 
 
 func test_party_changed_adds_and_removes_followers_without_reloading() -> void:

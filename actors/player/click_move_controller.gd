@@ -194,6 +194,17 @@ func has_path() -> bool:
 	return not _waypoints.is_empty()
 
 
+## The keyboard stepper consumes this same grid instance; it must never build a second
+## AStarGrid2D for the player scene.
+func get_iso_grid() -> IsoGrid:
+	return _iso_grid
+
+
+## Refreshes dynamic actor occupancy immediately before a keyboard step is selected.
+func sync_occupancy() -> void:
+	_sync_occupancy()
+
+
 ## Cancels any in-progress path. `player.gd` calls this the moment WASD input
 ## is pressed, so keyboard movement always wins over a stale click (FR-607).
 func cancel_path() -> void:
@@ -220,6 +231,32 @@ func get_steering_direction(from_position: Vector2, delta: float) -> Vector2:
 	if _waypoints.is_empty():
 		return Vector2.ZERO
 	return from_position.direction_to(_waypoints[0])
+
+
+## Returns the exact cell-center waypoint without consuming it inside the arrival epsilon.
+## `Player` uses this target to cap velocity and perform the authoritative exact snap.
+func get_steering_target(from_position: Vector2, delta: float) -> Variant:
+	if _waypoints.is_empty():
+		_last_seen_position = Vector2.INF
+		_stuck_time = 0.0
+		return null
+	_track_stuck(from_position, delta)
+	if _waypoints.is_empty():
+		return null
+	return _waypoints[0]
+
+
+## Consumes the waypoint only after `Player` has snapped its body to that exact center.
+func complete_current_waypoint(waypoint: Vector2) -> void:
+	if _waypoints.is_empty() or not _waypoints[0].is_equal_approx(waypoint):
+		return
+	_waypoints.remove_at(0)
+	_last_seen_position = Vector2.INF
+	_stuck_time = 0.0
+	if _waypoints.is_empty() and _has_destination:
+		_has_destination = false
+		_repath_timer.stop()
+		path_finished.emit()
 
 
 ## A waypoint-to-waypoint straight line has no width; the player's collision
