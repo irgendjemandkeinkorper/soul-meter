@@ -26,6 +26,9 @@ func before_test() -> void:
 	EncounterCatalog._definitions[String(TEST_ENCOUNTER)] = (
 		parsed.duplicate(true) if parsed is Dictionary else {}
 	)
+	# This suite characterizes speech semantics, not positioning; the zones hatch
+	# keeps melee strikes in range regardless of the default-grid deployment.
+	EncounterCatalog._definitions[String(TEST_ENCOUNTER)]["battlefield"] = "zones"
 	battle = _new_battle()
 
 
