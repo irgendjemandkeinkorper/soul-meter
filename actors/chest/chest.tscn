@@ -10,6 +10,7 @@ script = ExtResource("1_chest")
 display_name = "CHEST"
 prompt_text = "OPEN"
 interaction_flag = "chest_opened"
+container_id = "chest-template"
 
 [node name="ClosedSprite" type="Sprite2D" parent="."]
 scale = Vector2(0.35, 0.35)

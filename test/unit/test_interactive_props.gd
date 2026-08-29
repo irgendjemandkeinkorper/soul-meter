@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 
 const CHEST_SCENE := preload("res://actors/chest/chest.tscn")
+const PICKUP_SCENE := preload("res://actors/pickup/pickup.tscn")
 const SWITCH_SCENE := preload("res://actors/switch/switch.tscn")
 const LOOT_ID := "materials/loamroot_sprig"
 
@@ -21,28 +22,32 @@ func after_test() -> void:
 	GameState.from_dict(_game_state_before)
 
 
-func test_chest_grants_loot_once_and_persists_open_flag() -> void:
+func test_chest_opens_persistent_container_without_granting_everything() -> void:
 	var chest: Chest = auto_free(CHEST_SCENE.instantiate())
-	add_child(chest)
+	chest.container_id = "unit-test-chest"
 	chest.loot = [{"item_id": LOOT_ID, "quantity": 2}]
+	add_child(chest)
 
 	chest._apply_interaction()
-	assert_int(GameState.item_count(LOOT_ID)).is_equal(2)
+	assert_int(GameState.item_count(LOOT_ID)).is_equal(0)
 	assert_bool(GameState.get_flag("chest_opened", false)).is_true()
+	assert_array(GameState.loot_container_contents(chest.container_id)).is_equal(chest.loot)
+	UIManager.close_all()
 
-	var saved_state := GameState.to_dict()
-	GameState.flags.clear()
-	GameState.inventory.clear()
-	assert_bool(GameState.from_dict(saved_state)).is_true()
-	assert_bool(GameState.get_flag("chest_opened", false)).is_true()
 
-	chest._used = true
-	chest._player_in_range = true
-	var interact := InputEventAction.new()
-	interact.action = &"interact"
-	interact.pressed = true
-	chest._unhandled_input(interact)
+func test_pickup_is_an_interaction_and_only_completes_after_item_is_added() -> void:
+	var pickup: Pickup = auto_free(PICKUP_SCENE.instantiate())
+	pickup.item_id = LOOT_ID
+	pickup.amount = 2
+	pickup.completion_flag = "unit_pickup_taken"
+	add_child(pickup)
+
+	assert_int(GameState.item_count(LOOT_ID)).is_equal(0)
+	assert_bool(GameState.flag_is_true("unit_pickup_taken")).is_false()
+	pickup._apply_interaction()
 	assert_int(GameState.item_count(LOOT_ID)).is_equal(2)
+	assert_bool(GameState.flag_is_true("unit_pickup_taken")).is_true()
+	assert_bool(pickup.is_queued_for_deletion()).is_true()
 
 
 func test_switch_toggles_flag_and_emits_observable_signal() -> void:

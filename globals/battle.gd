@@ -530,6 +530,7 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 
 
 func _apply_victory(result: BattleResult) -> void:
+	result.spoils = EncounterCatalog.roll_spoils(encounter_id)
 	var outcome := EncounterCatalog.outcome(encounter_id, result.outcome_id)
 	result.message = str(outcome.get("message", "The opposition is defeated."))
 	result.cause = str(outcome.get("cause", _definition.get("win_cause", "Won a field encounter")))

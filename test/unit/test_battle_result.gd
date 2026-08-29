@@ -10,6 +10,7 @@ func test_new_result_defaults_to_an_unsuccessful_defeat() -> void:
 	assert_str(String(result.outcome_id)).is_empty()
 	assert_str(result.message).is_empty()
 	assert_str(result.cause).is_empty()
+	assert_array(result.spoils).is_empty()
 	assert_bool(result.succeeded()).is_false()
 	assert_bool(result.fled()).is_false()
 
@@ -21,12 +22,16 @@ func test_assigned_fields_retain_their_values() -> void:
 	result.outcome_id = &"spared"
 	result.message = "The road is clear."
 	result.cause = "speech"
+	result.spoils = [{"item_id": ItemIds.MATERIALS_LOAMROOT_SPRIG, "quantity": 2}]
 
 	assert_int(result.state).is_equal(BattleResult.State.VICTORY)
 	assert_str(String(result.encounter_id)).is_equal("bog-road")
 	assert_str(String(result.outcome_id)).is_equal("spared")
 	assert_str(result.message).is_equal("The road is clear.")
 	assert_str(result.cause).is_equal("speech")
+	assert_array(result.spoils).is_equal(
+		[{"item_id": ItemIds.MATERIALS_LOAMROOT_SPRIG, "quantity": 2}]
+	)
 	assert_bool(result.succeeded()).is_true()
 	assert_bool(result.fled()).is_false()
 

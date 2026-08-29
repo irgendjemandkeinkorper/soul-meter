@@ -430,8 +430,22 @@ func _on_battle_ended(result: BattleResult) -> void:
 	outcome.text = "ENCOUNTER RESOLVED"
 	outcome.theme_type_variation = "EyebrowLabel"
 	_outcome_box.add_child(outcome)
-	var continue_button := _menu_button(_outcome_box, "CONTINUE", func() -> void: GameFlow.send_event("battle_end"))
+	var continue_button := _menu_button(
+		_outcome_box, "CONTINUE", _continue_after_battle.bind(result)
+	)
 	continue_button.theme_type_variation = "BronzeButton"
+
+
+func _continue_after_battle(result: BattleResult) -> void:
+	if not result.succeeded() or result.spoils.is_empty():
+		GameFlow.send_event("battle_end")
+		return
+	var panel := UIManager.open(UIManager.LOOT_PANEL) as LootPanel
+	panel.configure("BATTLE SPOILS", result.spoils)
+	panel.dismissed.connect(
+		func(_remaining: Array[Dictionary]) -> void: GameFlow.send_event("battle_end"),
+		CONNECT_ONE_SHOT,
+	)
 
 
 static func format_attack(

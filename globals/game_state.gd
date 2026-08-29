@@ -89,6 +89,8 @@ var combat_knowledge: Dictionary = {}
 var equipped_slots: Dictionary = {}
 ## Serialized TravelPlan payload. GameFlow owns the live resource and lifecycle.
 var travel_plan: Dictionary = {}
+## Stable loot-container id -> remaining [{item_id, quantity}] rows.
+var loot_containers: Dictionary = {}
 var settings_path: String = SETTINGS_PATH
 
 var _settings := ConfigFile.new()
@@ -371,6 +373,36 @@ func item_count(item_id: String) -> int:
 	return total
 
 
+func ensure_loot_container(container_id: String, authored_loot: Array[Dictionary]) -> void:
+	if container_id.is_empty():
+		push_error("Loot containers require a stable exported container_id.")
+		return
+	if not loot_containers.has(container_id):
+		set_loot_container_contents(container_id, authored_loot)
+
+
+func loot_container_contents(container_id: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var stored: Variant = loot_containers.get(container_id, [])
+	if stored is Array:
+		for row: Variant in stored:
+			if row is Dictionary:
+				result.append(row.duplicate(true))
+	return result
+
+
+func set_loot_container_contents(container_id: String, contents: Array[Dictionary]) -> void:
+	if container_id.is_empty():
+		return
+	var normalized: Array[Dictionary] = []
+	for row: Dictionary in contents:
+		var item_id := str(row.get("item_id", row.get("id", "")))
+		var quantity := int(row.get("quantity", 0))
+		if not item_id.is_empty() and quantity > 0:
+			normalized.append({"item_id": item_id, "quantity": quantity})
+	loot_containers[container_id] = normalized
+
+
 func remove_items(item_id: String, amount: int) -> bool:
 	if amount <= 0:
 		return true
@@ -625,6 +657,7 @@ func _ensure_audio_buses() -> void:
 func _seed_demo_data() -> void:
 	gp = DEFAULT_GP
 	travel_plan = {}
+	loot_containers.clear()
 	vendor_stock.clear()
 	vendor_restock_cycles.clear()
 	party = [_make_vex()]
@@ -959,6 +992,7 @@ func to_dict() -> Dictionary:
 		"combat_knowledge": combat_knowledge.duplicate(true),
 		"equipped_slots": equipped_slots.duplicate(true),
 		"travel_plan": travel_plan.duplicate(true),
+		"loot_containers": loot_containers.duplicate(true),
 	}
 
 
@@ -985,6 +1019,8 @@ func from_dict(data: Dictionary) -> bool:
 	equipped_slots = data.get("equipped_slots", {}).duplicate(true)
 	# Additive key: absent when no journey is active and in saves from before world-map travel.
 	travel_plan = data.get("travel_plan", {}).duplicate(true)
+	# Additive key: absent in saves from before inspectable world containers.
+	loot_containers = data.get("loot_containers", {}).duplicate(true)
 	party.clear()
 	for row in data.get("party", []):
 		party.append(PartyMember.from_dict(row))
@@ -1005,6 +1041,7 @@ func _validate_save_data(data: Dictionary) -> bool:
 		"inventory",
 		"vendor_stock",
 		"vendor_restock_cycles",
+		"loot_containers",
 	]:
 		if data.has(key) and not data[key] is Dictionary:
 			return false
