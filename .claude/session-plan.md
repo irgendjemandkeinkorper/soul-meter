@@ -1,60 +1,49 @@
-# Session Plan — Fallout 2 Gameplay Flow Rework
+# Session Plan — Blank Combat Stage: Grid by Default
 
-**Created:** 2026-08-28
+**Created:** 2026-08-29
 **Intent Contract:** See .claude/session-intent.md
-**Goal (verbatim):** "we need to make this game play flow and function MUCH more like fallout 2"
+**Goal (verbatim):** "combat screen is still just blank"
 
 ## What You'll End Up With
 
-Soul Meter playing much more like Fallout 2, production-ready on `main`:
-1. **A ratified spec amendment first** — your in-head Fallout 2 spec captured
-   verbatim, mapped system-by-system onto the existing architecture
-   (what changes / what stays / what is explicitly rejected), and ratified as a
-   design-doc/PRD addendum. No silent canon resolution.
-2. **The implemented feel shift** — the changed loops playable end-to-end from
-   a new game, landed in tested waves with the suite green and quest-audit clean.
+Real battles that render and play on the tactical grid: terrain tiles, unit sprites,
+hover AP quotes, click-to-move, LOS/cover/flank — the Wave P layer, reachable in
+actual play instead of only in tests. Verified by a regression test, a screenshot,
+a green suite, and a codex delivery gate.
 
-Likely Fallout 2 axes the spec will rule on (to be confirmed by YOUR list, not
-assumed): open world-map travel with random encounters vs. the current
-discovered-hub graph; skill-check-driven dialogue with speech/barter depth;
-AP-based tactical combat feel vs. the CT scheduler (Gate-T-ratified — evolve,
-don't rewrite); reputation/karma surfacing (Reputation/Renown ledgers already
-exist — presentation gap, not data gap); loot/scavenging density; quest
-structure with multiple resolution paths.
+## Root cause (diagnosed, not speculative)
+
+All 12 authored encounters lack `grid` → `Battle._battlefield_for_definition()`
+returns the ZONE model → the six-region stage draws only grid battles (zone
+snapshots carry no tiles) and the legacy zone presentation is gone from the unified
+screen → blank center. Confirmed against `data/generated/encounters.json` (0 of 12
+with grid) and the screenshot (all six regions render; stage empty).
 
 ## How We'll Get There
 
 ### Phase Weights
-- **Discover: 10%** — Bounded research only where your spec cites Fallout 2
-  behavior that needs precise mechanical definition (delegate to Gemini;
-  Claude synthesizes). No open-ended study — you have the spec.
-- **Define: 20%** — THE CRITICAL PHASE. Elicit your full spec, write the
-  amendment, map each item to keep/evolve/replace per system, flag every
-  [CANON] collision and Gate-T touch, get your ratification. 🔸 DEBATE GATE.
-- **Develop: 40%** — Implement in waves ordered by feel-impact-per-risk;
-  Codex takes bounded implementation handoffs after Claude fixes architecture
-  per wave. Systems/existing-scenes only until #93 clears region content.
-- **Deliver: 30%** — Per-wave: suite + quest audit + screenshot sweep +
-  playthrough evidence; final: acceptance against the ratified amendment.
-  🔸 DEBATE GATE. (High-stakes constraint → validation-heavy.)
-
-### 🐙 Debate Checkpoints
-- **After Define:** "Does this adoption list actually produce the Fallout 2
-  feel without breaking the ratified spine?" — 1-round adversarial
-  (Claude + Codex + Gemini) before you ratify.
-- **After Develop:** "Does this play like Fallout 2 now — and is it ready to
-  ship?" — 1-round collaborative on edge cases before final acceptance.
+- Discover: 5% — DONE (root cause pinned this session; no further research).
+- Define: 10% — default-grid sizing rule (PROVISIONAL): derive dimensions from
+  combatant counts (e.g. max(6, needed) × max(4, rows)), authored `grid.dimensions`
+  always wins; decide where the synthesis lives (extend
+  `_battlefield_for_definition`'s existing else-branch — the TileMapLayer synthesis
+  code is already there for authored grids).
+- Develop: 55% — implement default-grid synthesis in `globals/battle.gd`; keep zone
+  reachable for tests/fallback (a `use_zone` escape hatch in the definition, or the
+  invalid-grid warning paths keep returning zones); regression test (encounter with
+  no authored grid → snapshot tiles non-empty → stage `rendered_tile_count() > 0`);
+  check the enemy-AI/deployment interplay on synthesized grids.
+- Deliver: 30% — full suite; xvfb screenshot of a real battle; strict-audit
+  reporting run; codex delivery gate (REVISE-loop to PROCEED); push + delivery-log
+  note under Wave P ("grid by default" follow-up ruling).
 
 ### Execution Commands
 To execute this plan, run:
 ```bash
-/octo:embrace "make Soul Meter's gameplay flow and function much more like Fallout 2, per .claude/session-intent.md"
+/octo:embrace "make real battles run on the tactical grid by default so the combat stage renders (see .claude/session-intent.md)"
 ```
-
-Or execute phases individually:
-- `/octo:define` (Define ≥ 20%)
-- `/octo:develop` (Develop ≥ 20%)
-- `/octo:deliver` (Deliver ≥ 20%)
+Or (session's established pattern) Claude dispatches a bounded tangle for Develop
+and a manual codex gate for Deliver.
 
 ## Provider Requirements
 🔴 Codex CLI: Available ✓
@@ -68,33 +57,11 @@ Or execute phases individually:
 🟣 Perplexity: Not configured ✗
 
 ## Success Criteria
-1. Spec captured verbatim and ratified as a written amendment before code.
-2. Game plays differently in hand; changed loops playable from a new game.
-3. Every wave on `main` with tests, suite green, quest audit clean.
-4. Gate-T semantics evolved, never silently rewritten.
-
-## Boundaries (from intent contract)
-- No silent canon resolution; no five-layer architecture rewrite.
-- No region-content merges until #93 passes — target systems + existing scenes.
-- #93 playtest and FR-904 benchmark stay human-gated, unaffected.
-
-## Ratified Rulings (owner, 2026-08-28)
-
-Both Define-phase hot spots were ruled on before execution ("yes to both"):
-1. **CT scheduler may change** — AP-based Fallout 2 combat feel authorized.
-   ApRoundScheduler already exists behind the scheduler seam
-   (globals/combat; the seam reads `actor.side` live and was built for this),
-   so the first Develop wave is a scheduler promotion + feel pass, not a rewrite.
-2. **World-map travel supersedes FR-503** — the discovered-hubs-at-a-cost
-   design gives way to Fallout 2-style overworld travel (map marker, travel
-   time, random encounters interrupting travel). FastTravelRegistry +
-   region_map.tscn are the base to evolve.
-
-The Define phase no longer needs to litigate these two; it still needs the
-rest of your spec list.
+(From intent contract) 1. tiles+units render in any authored encounter, pointer
+moves work; 2. regression test for the no-authored-grid path; 3. suite green +
+screenshot + gate PROCEED + pushed.
 
 ## Next Steps
 1. Review this plan
 2. Adjust if needed (re-run /octo:plan)
-3. Execute with /octo:embrace when ready — its Define phase opens by taking
-   down your Fallout 2 spec list item-by-item
+3. Execute when ready
