@@ -1,21 +1,26 @@
 extends GdUnitTestSuite
 
 const DIALOGUE_PATH := "res://dialogue/dom_townsfolk.dialogue"
+# Each speaker reacts to their OWN faction (Pandora `Faction Id`), not a
+# shared one: Droma and Ressa are ironbrand-sentinels, Edda is iron-companies.
 const SPEAKER_CASES: Array[Dictionary] = [
 	{
 		"title": "dom_droma_flintjaw",
-		"hostile": "The Companies have you marked cold. State your business from there.",
-		"warm": "The Companies speak warmly of you. Cross at the near brace.",
+		"faction": "ironbrand-sentinels",
+		"hostile": "The Sentinels have you marked cold. State your business from there.",
+		"warm": "The Sentinels speak warmly of you. Cross at the near brace.",
 	},
 	{
 		"title": "dom_edda_broadmark",
+		"faction": "iron-companies",
 		"hostile": "The Companies give your name no weight. Edda does the same.",
 		"warm": "The Companies give your name weight. Edda will hear you first.",
 	},
 	{
 		"title": "dom_ressa_ironmouth",
-		"hostile": "The Companies distrust your name. Ressa keeps the hot tongs between you and the rack.",
-		"warm": "The Companies trust your name. Ressa clears the sparks when you step to the rack.",
+		"faction": "ironbrand-sentinels",
+		"hostile": "The Sentinels distrust your name. Ressa keeps the hot tongs between you and the rack.",
+		"warm": "The Sentinels trust your name. Ressa clears the sparks when you step to the rack.",
 	},
 ]
 
@@ -34,14 +39,15 @@ func test_each_speaker_switches_between_hostile_and_warm_acknowledgements() -> v
 	var resource: DialogueResource = load(DIALOGUE_PATH)
 	assert_object(resource).is_not_null()
 	for speaker_case: Dictionary in SPEAKER_CASES:
-		_set_iron_companies_standing(Reputation.BAND_HOSTILE)
+		var faction := String(speaker_case["faction"])
+		_set_faction_standing(faction, Reputation.BAND_HOSTILE)
 		var hostile_lines: PackedStringArray = await _lines_for_title(
 			resource, String(speaker_case["title"])
 		)
 		assert_array(hostile_lines).contains(String(speaker_case["hostile"]))
 		assert_array(hostile_lines).not_contains(String(speaker_case["warm"]))
 
-		_set_iron_companies_standing(Reputation.BAND_WARM)
+		_set_faction_standing(faction, Reputation.BAND_WARM)
 		var warm_lines: PackedStringArray = await _lines_for_title(
 			resource, String(speaker_case["title"])
 		)
@@ -60,11 +66,11 @@ func _lines_for_title(resource: DialogueResource, title: String) -> PackedString
 	return texts
 
 
-func _set_iron_companies_standing(delta: float) -> void:
+func _set_faction_standing(faction: String, delta: float) -> void:
 	Reputation.from_dict({
 		"log": [{
 			"actor": "test",
-			"faction": "iron-companies",
+			"faction": faction,
 			"delta": delta,
 			"cause": "Test band setup",
 			"scene": "test",

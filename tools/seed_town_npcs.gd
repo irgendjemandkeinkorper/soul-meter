@@ -21,6 +21,23 @@ const PORTRAIT_PATHS := {
 	"sella-varn": "res://assets/generated/portraits/sella_varn_portrait_neutral.png",
 	"toma-reedhand": "res://assets/generated/portraits/toma_reedhand_portrait_neutral.png",
 }
+## Optional band-gated greeting variants (Wave 4 reputation reactivity).
+## Keyed by npc id; empty/no entry keeps the plain generated greeting.
+## The reaction faction is the NPC's own "Faction Id".
+const REACTIVE_DIALOGUE := {
+	"droma-flintjaw": {
+		"hostile": "The Sentinels have you marked cold. State your business from there.",
+		"warm": "The Sentinels speak warmly of you. Cross at the near brace.",
+	},
+	"edda-broadmark": {
+		"hostile": "The Companies give your name no weight. Edda does the same.",
+		"warm": "The Companies give your name weight. Edda will hear you first.",
+	},
+	"ressa-ironmouth": {
+		"hostile": "The Sentinels distrust your name. Ressa keeps the hot tongs between you and the rack.",
+		"warm": "The Sentinels trust your name. Ressa clears the sparks when you step to the rack.",
+	},
+}
 const NPC_BIOS := {
 	"branek-coiljaw": (
 		"A Trial Council road marshal charged with the broken muster at Dorthkor."
@@ -46,6 +63,8 @@ const NPC_PROPERTIES := [
 	["Dialogue Greeting", "string"],
 	["Dialogue Context", "string"],
 	["Dialogue Farewell", "string"],
+	["Dialogue Hostile", "string"],
+	["Dialogue Warm", "string"],
 	["Placement Scene", "string"],
 	["Placement Anchor", "string"],
 	["Placement X", "float"],
@@ -267,6 +286,8 @@ func _npc(
 		"Dialogue Greeting": _greeting(district),
 		"Dialogue Context": context_line,
 		"Dialogue Farewell": _farewell(district),
+		"Dialogue Hostile": str(REACTIVE_DIALOGUE.get(npc_id, {}).get("hostile", "")),
+		"Dialogue Warm": str(REACTIVE_DIALOGUE.get(npc_id, {}).get("warm", "")),
 		"Placement Scene": placement["scene"],
 		"Placement Anchor": placement["anchor"],
 		"Placement X": placement_offset.x,

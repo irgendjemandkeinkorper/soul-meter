@@ -59,10 +59,10 @@ Drel Gaunt: Stand straight when the drum sounds.
 => END
 
 ~ dom_droma_flintjaw
-if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
-	Droma Flintjaw: The Companies have you marked cold. State your business from there.
-elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
-	Droma Flintjaw: The Companies speak warmly of you. Cross at the near brace.
+if Reputation.band("ironbrand-sentinels") == "hostile" or Reputation.band("ironbrand-sentinels") == "cold"
+	Droma Flintjaw: The Sentinels have you marked cold. State your business from there.
+elif Reputation.band("ironbrand-sentinels") == "warm" or Reputation.band("ironbrand-sentinels") == "allied"
+	Droma Flintjaw: The Sentinels speak warmly of you. Cross at the near brace.
 else
 	Droma Flintjaw: Hold at the brace and state your business.
 Droma Flintjaw: Droma's armor tags include one clean plate whose owner still answers morning roll.
@@ -249,10 +249,10 @@ Raika Toll: Leave me a true count when you return.
 => END
 
 ~ dom_ressa_ironmouth
-if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
-	Ressa Ironmouth: The Companies distrust your name. Ressa keeps the hot tongs between you and the rack.
-elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
-	Ressa Ironmouth: The Companies trust your name. Ressa clears the sparks when you step to the rack.
+if Reputation.band("ironbrand-sentinels") == "hostile" or Reputation.band("ironbrand-sentinels") == "cold"
+	Ressa Ironmouth: The Sentinels distrust your name. Ressa keeps the hot tongs between you and the rack.
+elif Reputation.band("ironbrand-sentinels") == "warm" or Reputation.band("ironbrand-sentinels") == "allied"
+	Ressa Ironmouth: The Sentinels trust your name. Ressa clears the sparks when you step to the rack.
 else
 	Ressa Ironmouth: Mind the sparks, traveler.
 Ressa Ironmouth: Ressa can spot a false Ironbrand by the way its scar fails to pull when the bearer speaks.

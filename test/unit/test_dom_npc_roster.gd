@@ -184,7 +184,9 @@ func test_every_npc_dialogue_title_parses_and_contains_three_real_lines() -> voi
 		assert_object(line).is_not_null()
 		assert_str(line.character).is_equal(row["display_name"])
 		var block := _dialogue_block(source, dialogue["title"])
-		assert_int(block.count("%s: " % row["display_name"])).is_equal(3)
+		# Reactive NPCs carry extra band-gated greeting variants, so the block
+		# holds >= 3 speaker lines (exactly 3 when no reactive lines are authored).
+		assert_int(block.count("%s: " % row["display_name"])).is_greater_equal(3)
 		assert_str(block).not_contains("...")
 		assert_str(block).contains(dialogue["greeting"])
 		assert_str(block).contains(dialogue["context"])

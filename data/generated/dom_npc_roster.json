@@ -31,7 +31,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Aela works only hand tools at home, quiet enough that the East Arm hammers remain the loudest truth.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "shattersteel-concord"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -85,7 +88,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Arvek recognizes the cooper's mark that was burned off Keth Varr's suspect casks.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "grain-factors-table"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -139,7 +145,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "The Road-Bench keeps Dorthkor's broken drumbeat beside every open commission.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/trial_hall.tscn",
@@ -182,7 +191,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "Brannic plays beneath the Hammer Roar by feeling the mugs walk across the table.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -236,7 +248,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Brek did not report after the outer harbor chain tightened itself during the night watch.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/equipment_shop.tscn",
@@ -290,7 +305,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Brinna's midwinter census contains one crossed-out name that still answers at each gate.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -344,7 +362,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Daska prices cleaned armor by the grief of the family asking and calls that brutal honesty.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "kord-rite"
       },
       "placement": {
         "scene": "res://world/interiors/iron_companies.tscn",
@@ -387,7 +408,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Dorran soles road boots differently for the Trial Roads, where every climb leans the same way.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "wayfare-menders"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -443,7 +467,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Drann reserves the honest forge for names the Concord already speaks warmly.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "shattersteel-concord"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -497,7 +524,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "Drel's slate proves the yielded duelist was struck three times after the surrender beat.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/players_house.tscn",
@@ -551,7 +581,10 @@
         },
         "greeting": "Hold at the brace and state your business.",
         "context": "Droma's armor tags include one clean plate whose owner still answers morning roll.",
-        "farewell": "Cross unarmed or do not cross."
+        "farewell": "Cross unarmed or do not cross.",
+        "hostile": "The Sentinels have you marked cold. State your business from there.",
+        "warm": "The Sentinels speak warmly of you. Cross at the near brace.",
+        "faction_id": "ironbrand-sentinels"
       },
       "placement": {
         "scene": "res://world/interiors/town_hall.tscn",
@@ -607,7 +640,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "Edda reads the Company's standing before she reads a volunteer's scars.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "The Companies give your name no weight. Edda does the same.",
+        "warm": "The Companies give your name weight. Edda will hear you first.",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -666,7 +702,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Enna opens sealed road records only for someone carrying proof from the matching watch.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "rennen"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -709,7 +748,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Gerren judges a pike by whether the bearer can see their scar in its edge.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -763,7 +805,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Hadrik can account for every road ledger except the one that returned with rain inside its seals.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "rennen"
       },
       "placement": {
         "scene": "res://world/interiors/town_hall.tscn",
@@ -817,7 +862,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Hennik missed shift after chalking a name that no foreman remembers onto the lift cage.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "shattersteel-concord"
       },
       "placement": {
         "scene": "res://world/interiors/iron_companies.tscn",
@@ -873,7 +921,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Holst saves his storm-proof route for travelers the Mender lodges trust.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "wayfare-menders"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -927,7 +978,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Irka keeps the trial-broken names and has one patient no hall admits sending.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "hospice-chain"
       },
       "placement": {
         "scene": "res://world/interiors/bell_house.tscn",
@@ -981,7 +1035,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Istra remembers which missing veteran stopped eating when the Wound began using Company voices.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "hospice-chain"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1024,7 +1081,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Jessa splices every brace rope with four turns and cuts any sailor who adds a fifth.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1078,7 +1138,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Jorun keeps the charfire table open, but one veteran's bowl has gone cold for six nights.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/interiors/river_shrine.tscn",
@@ -1137,7 +1200,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "Kadrin keeps the damaged ascent roped off and counts every candidate turned away.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1191,7 +1257,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "Kaelra's oldest hound tracks one absent Bloodbellow and refuses every other scent.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/interiors/item_shop.tscn",
@@ -1245,7 +1314,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Kelm found a Restoration clause that hires a Company by the dead names on its old roll.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1304,7 +1376,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Kessa opens the night road only when the Dorthkor warning and the Council seal agree.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1358,7 +1433,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Keth says the newest cooling-water seals are honest bronze wrapped around dishonest water.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "shattersteel-concord"
       },
       "placement": {
         "scene": "res://world/interiors/bell_house.tscn",
@@ -1401,7 +1479,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Kiva keeps storm salt dry in retired drumskins and labels every skin by cadence.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "grain-factors-table"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1455,7 +1536,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Korrin saw the cleaned guard face outward before the first gate opened.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "ironbrand-sentinels"
       },
       "placement": {
         "scene": "res://world/interiors/players_house.tscn",
@@ -1514,7 +1598,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Loa keeps patient names private until a scarred-hall token proves honest concern.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "hospice-chain"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1568,7 +1655,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Maela heard a dead Company's cadence answer between two beats of the spring muster.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/interiors/registry_archive.tscn",
@@ -1622,7 +1712,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Marn carried the sealed vote between the four benches and knows which seal arrived warm.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/chefs_house.tscn",
@@ -1681,7 +1774,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Mera has banked the charfire until medicine reaches the trial-broken ward.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "hospice-chain"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1735,7 +1831,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Nalla stopped the third gate's drum after it answered with a signal no living watch uses.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/item_shop.tscn",
@@ -1778,7 +1877,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Nym sells cups broad enough to catch rain and narrow enough not to lose it to the wind.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "grain-factors-table"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1832,7 +1934,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Orenna holds the only kitchen key to the scarred hall where an unnamed bowl remains set.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "hospice-chain"
       },
       "placement": {
         "scene": "res://world/interiors/chefs_house.tscn",
@@ -1891,7 +1996,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Orm permits a forge shutdown only after a replacement hammer cadence is proven.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "shattersteel-concord"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -1945,7 +2053,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Orren has a storm-stranded crew below the sea-mouth and one safe course left unmarked.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "wayfare-menders"
       },
       "placement": {
         "scene": "res://world/interiors/registry_archive.tscn",
@@ -1988,7 +2099,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Orrik trims hair with forge shears and never lets their hinge lose the hammer rhythm.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "shattersteel-concord"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -2042,7 +2156,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Pell hears a fifth echo under a four-beat Jawbrace signal whenever the western storm turns.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/bell_house.tscn",
@@ -2098,7 +2215,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Raika answers respect for the Sentinels with one more true entry from the Wound ledger.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "ironbrand-sentinels"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -2152,7 +2272,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Ressa can spot a false Ironbrand by the way its scar fails to pull when the bearer speaks.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "The Sentinels distrust your name. Ressa keeps the hot tongs between you and the rack.",
+        "warm": "The Sentinels trust your name. Ressa clears the sparks when you step to the rack.",
+        "faction_id": "ironbrand-sentinels"
       },
       "placement": {
         "scene": "res://world/interiors/iron_companies.tscn",
@@ -2195,7 +2318,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Saela reads tomorrow's western wall by which roof flag tears first.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -2254,7 +2380,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Sava leaves an empty armor stand in her window until the ledge suit is returned or condemned.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -2308,7 +2437,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "The district bell is warm, the rope is sound, and Sella refuses to call its silence a simple break.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/trial_hall.tscn",
@@ -2362,7 +2494,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Senn's newest net came back cut from below, with every knot retied in marching order.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "wayfare-menders"
       },
       "placement": {
         "scene": "res://world/interiors/river_shrine.tscn",
@@ -2416,7 +2551,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Sorek hears the calls before dawn and knows which ones come in a living voice.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "kord-rite"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -2475,7 +2613,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Tern holds a deliberate silence where the lost road roll should have sounded.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -2529,7 +2670,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "The Bridgeholder weighs the Wound-Watch ledger before any voice on the Council floor.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/trial_hall.tscn",
@@ -2583,7 +2727,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "Thessa can point to the exact beat where a living roll enters the cadence of the unremembered.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "iron-companies"
       },
       "placement": {
         "scene": "res://world/interiors/chefs_house.tscn",
@@ -2626,7 +2773,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "Thora inks no promise until the speaker can say its price without lowering their voice.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "ironbrand-sentinels"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -2680,7 +2830,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Toma tends the river shrine between harbor shifts and knows which tide-chain offerings have gone missing.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "wayfare-menders"
       },
       "placement": {
         "scene": "res://world/interiors/town_hall.tscn",
@@ -2734,7 +2887,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Torv locked away a hammer that rings after the forge around it has fallen silent.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "shattersteel-concord"
       },
       "placement": {
         "scene": "res://world/interiors/equipment_shop.tscn",
@@ -2788,7 +2944,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Umber carries a manifest for grain that reached Dom twice on paper and not once by sack.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "grain-factors-table"
       },
       "placement": {
         "scene": "res://world/interiors/item_shop.tscn",
@@ -2842,7 +3001,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "Vaara has sealed a cistern whose rain tastes of forge ash before it reaches the East Arm.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/river_shrine.tscn",
@@ -2901,7 +3063,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Varrik will not mark a descent cage until the lift crew's safety tally is complete.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "shattersteel-concord"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -2957,7 +3122,10 @@
         },
         "greeting": "Keep your footing, traveler.",
         "context": "Venn waives no line, but a warm Registry record earns the useful drawer first.",
-        "farewell": "Leave me a true count when you return."
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "rennen"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -3011,7 +3179,10 @@
         },
         "greeting": "Yield is an honest word here.",
         "context": "Veska found three Pillar weights filed smooth where a candidate's name should be cut.",
-        "farewell": "Stand straight when the drum sounds."
+        "farewell": "Stand straight when the drum sounds.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "trial-council"
       },
       "placement": {
         "scene": "res://world/interiors/registry_archive.tscn",
@@ -3065,7 +3236,10 @@
         },
         "greeting": "Mind the sparks, traveler.",
         "context": "Veyra knows whether ash came from forge coal, charfire, or a suit scoured below the ledges.",
-        "farewell": "Go before the next hammer fall."
+        "farewell": "Go before the next hammer fall.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "shattersteel-concord"
       },
       "placement": {
         "scene": "res://world/interiors/players_house.tscn",
@@ -3124,7 +3298,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Yara will return to the outer chain when the missing watch hand is accounted for.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "ironbrand-sentinels"
       },
       "placement": {
         "scene": "res://world/starting_town.tscn",
@@ -3178,7 +3355,10 @@
         },
         "greeting": "Keep above the harbor spray.",
         "context": "Yssra saw lights climbing the harbor wall against the rain and will speak only beside calm water.",
-        "farewell": "Watch the chain on your way out."
+        "farewell": "Watch the chain on your way out.",
+        "hostile": "",
+        "warm": "",
+        "faction_id": "wayfare-menders"
       },
       "placement": {
         "scene": "res://world/interiors/equipment_shop.tscn",

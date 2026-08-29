@@ -2756,6 +2756,14 @@
 						"type": "string",
 						"value": "Mind the sparks, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Marshal Coiljaw"
@@ -7444,6 +7452,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Themka Gaath"
@@ -7544,6 +7560,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Yield is an honest word here."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -7646,6 +7670,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Hadrik Vale"
@@ -7746,6 +7778,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep above the harbor spray."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -7848,6 +7888,14 @@
 						"type": "string",
 						"value": "Hold at the brace and state your business."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The Sentinels have you marked cold. State your business from there."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "The Sentinels speak warmly of you. Cross at the near brace."
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Droma Flintjaw"
@@ -7948,6 +7996,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Yield is an honest word here."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -8050,6 +8106,14 @@
 						"type": "string",
 						"value": "Keep above the harbor spray."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Orren Chainwake"
@@ -8150,6 +8214,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Mind the sparks, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -8252,6 +8324,14 @@
 						"type": "string",
 						"value": "Mind the sparks, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Keth Varr"
@@ -8352,6 +8432,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep above the harbor spray."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -8454,6 +8542,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Pell Hammersong"
@@ -8554,6 +8650,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Yield is an honest word here."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -8656,6 +8760,14 @@
 						"type": "string",
 						"value": "Mind the sparks, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Jorun Ashmantle"
@@ -8756,6 +8868,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep above the harbor spray."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -8858,6 +8978,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Daska Threeknots"
@@ -8958,6 +9086,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Mind the sparks, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -9060,6 +9196,14 @@
 						"type": "string",
 						"value": "Mind the sparks, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The Sentinels distrust your name. Ressa keeps the hot tongs between you and the rack."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "The Sentinels trust your name. Ressa clears the sparks when you step to the rack."
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Ressa Ironmouth"
@@ -9160,6 +9304,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Yield is an honest word here."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -9262,6 +9414,14 @@
 						"type": "string",
 						"value": "Keep above the harbor spray."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Umber Dhor"
@@ -9362,6 +9522,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -9464,6 +9632,14 @@
 						"type": "string",
 						"value": "Mind the sparks, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Torv Bellowskin"
@@ -9564,6 +9740,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep above the harbor spray."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -9666,6 +9850,14 @@
 						"type": "string",
 						"value": "Keep above the harbor spray."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Brek Saltjaw"
@@ -9766,6 +9958,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Mind the sparks, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -9868,6 +10068,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Marn Veld"
@@ -9968,6 +10176,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Yield is an honest word here."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -10070,6 +10286,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Korrin Blackrail"
@@ -10170,6 +10394,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Mind the sparks, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -10272,6 +10504,14 @@
 						"type": "string",
 						"value": "Yield is an honest word here."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Drel Gaunt"
@@ -10372,6 +10612,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep above the harbor spray."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -10474,6 +10722,14 @@
 						"type": "string",
 						"value": "Mind the sparks, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Istra Hearthscar"
@@ -10574,6 +10830,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Mind the sparks, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -10676,6 +10940,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Brinna Fourbells"
@@ -10776,6 +11048,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -10878,6 +11158,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Enna Grayscar"
@@ -10978,6 +11266,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Mind the sparks, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -11080,6 +11376,14 @@
 						"type": "string",
 						"value": "Keep above the harbor spray."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Loa Flintthread"
@@ -11180,6 +11484,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -11282,6 +11594,14 @@
 						"type": "string",
 						"value": "Mind the sparks, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Orm Redtongs"
@@ -11382,6 +11702,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep above the harbor spray."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -11484,6 +11812,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Tern Hollowbeat"
@@ -11584,6 +11920,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep above the harbor spray."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -11686,6 +12030,14 @@
 						"type": "string",
 						"value": "Yield is an honest word here."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Kadrin Stoneyield"
@@ -11786,6 +12138,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Mind the sparks, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -11888,6 +12248,14 @@
 						"type": "string",
 						"value": "Mind the sparks, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Drann Wetiron"
@@ -11988,6 +12356,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Yield is an honest word here."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The Companies give your name no weight. Edda does the same."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "The Companies give your name weight. Edda will hear you first."
 					},
 					"Display Name": {
 						"type": "string",
@@ -12090,6 +12466,14 @@
 						"type": "string",
 						"value": "Keep above the harbor spray."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Holst Brinevein"
@@ -12190,6 +12574,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -12292,6 +12684,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Venn Ashcord"
@@ -12392,6 +12792,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -12494,6 +12902,14 @@
 						"type": "string",
 						"value": "Yield is an honest word here."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Brannic Lowdrum"
@@ -12594,6 +13010,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -12696,6 +13120,14 @@
 						"type": "string",
 						"value": "Mind the sparks, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Orrik Cinderjaw"
@@ -12796,6 +13228,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Keep above the harbor spray."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -12898,6 +13338,14 @@
 						"type": "string",
 						"value": "Yield is an honest word here."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Thora Bellmark"
@@ -12998,6 +13446,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Mind the sparks, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -13100,6 +13556,14 @@
 						"type": "string",
 						"value": "Keep above the harbor spray."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Kiva Saltbrand"
@@ -13201,6 +13665,14 @@
 						"type": "string",
 						"value": "Keep your footing, traveler."
 					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
+					},
 					"Display Name": {
 						"type": "string",
 						"value": "Dorran Rask"
@@ -13301,6 +13773,14 @@
 					"Dialogue Greeting": {
 						"type": "string",
 						"value": "Mind the sparks, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": ""
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": ""
 					},
 					"Display Name": {
 						"type": "string",
@@ -15468,12 +15948,26 @@
 				"_id": "505.0",
 				"_name": "Edge",
 				"_type": "int"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "506.0",
+				"_name": "Dialogue Hostile",
+				"_type": "string"
+			},
+			{
+				"_category_id": "96",
+				"_default_value": "",
+				"_id": "507.0",
+				"_name": "Dialogue Warm",
+				"_type": "string"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 505.0
+			"default": 507.0
 		}
 	},
 	"_version": 1

@@ -366,6 +366,11 @@ static func _npc_artifacts() -> Dictionary:
 			"greeting": entity.get_string("Dialogue Greeting"),
 			"context": entity.get_string("Dialogue Context"),
 			"farewell": entity.get_string("Dialogue Farewell"),
+			# Optional band-gated greeting variants (empty = no reactivity);
+			# the reaction faction is the NPC's own Faction Id.
+			"hostile": entity.get_string("Dialogue Hostile"),
+			"warm": entity.get_string("Dialogue Warm"),
+			"faction_id": entity.get_string("Faction Id"),
 		}
 		_validate_dialogue_text(npc_id, dialogue)
 		var portrait := {
@@ -422,7 +427,21 @@ static func _dom_dialogue_source(rows: Dictionary) -> String:
 		var dialogue: Dictionary = row["dialogue"]
 		var speaker := str(row["display_name"])
 		source += "~ %s\n" % dialogue["title"]
-		source += "%s: %s\n" % [speaker, dialogue["greeting"]]
+		var hostile := str(dialogue.get("hostile", ""))
+		var warm := str(dialogue.get("warm", ""))
+		var faction := str(dialogue.get("faction_id", ""))
+		if hostile.is_empty() or warm.is_empty() or faction.is_empty():
+			source += "%s: %s\n" % [speaker, dialogue["greeting"]]
+		else:
+			# Band-gated greeting: reputation reactivity against the NPC's
+			# own faction. Non-numeric by construction — band words only.
+			var band_call := "Reputation.band(\"%s\")" % faction
+			source += "if %s == \"hostile\" or %s == \"cold\"\n" % [band_call, band_call]
+			source += "\t%s: %s\n" % [speaker, hostile]
+			source += "elif %s == \"warm\" or %s == \"allied\"\n" % [band_call, band_call]
+			source += "\t%s: %s\n" % [speaker, warm]
+			source += "else\n"
+			source += "\t%s: %s\n" % [speaker, dialogue["greeting"]]
 		source += "%s: %s\n" % [speaker, dialogue["context"]]
 		source += "%s: %s\n" % [speaker, dialogue["farewell"]]
 		source += "=> END\n\n"
@@ -430,8 +449,10 @@ static func _dom_dialogue_source(rows: Dictionary) -> String:
 
 
 static func _validate_dialogue_text(npc_id: String, dialogue: Dictionary) -> void:
-	for field: String in ["greeting", "context", "farewell"]:
+	for field: String in ["greeting", "context", "farewell", "hostile", "warm"]:
 		var line := str(dialogue.get(field, ""))
+		if field in ["hostile", "warm"] and line.is_empty():
+			continue  # variants are optional; empty means no band reactivity
 		assert(not line.is_empty(), "Dom NPC '%s' has empty dialogue %s" % [npc_id, field])
 		assert(line != "...", "Dom NPC '%s' has empty placeholder dialogue" % npc_id)
 		assert(not "\n" in line and not "\r" in line, "Dialogue lines must be single-line")
