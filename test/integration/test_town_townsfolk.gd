@@ -30,6 +30,8 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 	assert_int(expected_ids.size()).is_equal(30)
 
 	var used_models := {}
+	var used_cells := {}
+	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
 	var used_offsets := {}
 	var used_facings := {}
 	var used_idle_phases := {}
@@ -42,8 +44,27 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 		var anchor := runner.find_child(placement["anchor"], true, false) as Node2D
 		assert_object(anchor).is_not_null()
 		var offset: Array = placement["offset"]
-		var expected_position := anchor.position + Vector2(float(offset[0]), float(offset[1]))
-		assert_bool(npc.position.is_equal_approx(expected_position)).is_true()
+		var authored_position := anchor.position + Vector2(float(offset[0]), float(offset[1]))
+		# Wave Q: placements snap to the nearest walkable grid-cell center at apply
+		# time (authored coordinates stay untouched in the generated data). The NPC
+		# must rest exactly ON a cell center, near its authored spot, and no two
+		# townsfolk may share a cell.
+		var npc_cell: Vector2i = ground.local_to_map(ground.to_local(npc.global_position))
+		var npc_center: Vector2 = ground.to_global(ground.map_to_local(npc_cell))
+		var authored_global: Vector2 = npc.get_parent().to_global(authored_position)
+		if not npc.global_position.is_equal_approx(authored_global):
+			# Snapped stand: exactly on a cell center, within the bounded snap
+			# radius of the authored spot, and no two snapped townsfolk share a cell.
+			# (An NPC still at its authored position means the bounded snap found no
+			# open cell within reach — the authored stand wins by design.)
+			assert_bool(npc.global_position.is_equal_approx(npc_center)).is_true()
+			var authored_cell: Vector2i = ground.local_to_map(ground.to_local(authored_global))
+			var cell_delta: Vector2i = (npc_cell - authored_cell).abs()
+			assert_int(maxi(cell_delta.x, cell_delta.y)).is_less_equal(
+				GridPlacement.MAX_SNAP_CELLS
+			)
+			assert_bool(used_cells.has(npc_cell)).is_false()
+			used_cells[npc_cell] = true
 		var offset_key := Vector2(float(offset[0]), float(offset[1]))
 		assert_bool(used_offsets.has(offset_key)).is_false()
 		used_offsets[offset_key] = true

@@ -8,13 +8,25 @@ extends GdUnitTestSuite
 func test_player_moves_right_when_holding_move_right() -> void:
 	var runner := scene_runner("res://world/test_room.tscn")
 	var player: Node2D = runner.find_child("Player", true, false)
+	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
+	var followers := runner.find_child("PartyFollowers", true, false) as PartyFollowers
 	var start_x: float = player.global_position.x
+	var start_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+	var start_center: Vector2 = ground.to_global(ground.map_to_local(start_cell))
+
+	assert_object(followers).is_not_null()
+	assert_vector(followers.trail_target_for(0)).is_equal(start_center)
 
 	runner.simulate_action_press("move_right")
 	await runner.simulate_frames(30)
 	runner.simulate_action_release("move_right")
+	# Releasing input completes the in-flight step before coming to rest.
+	await runner.simulate_frames(30)
 
 	assert_float(player.global_position.x).is_greater(start_x)
+	var resting_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+	var resting_center: Vector2 = ground.to_global(ground.map_to_local(resting_cell))
+	assert_vector(player.global_position).is_equal(resting_center)
 
 
 func test_holding_sprint_moves_the_player_materially_faster() -> void:

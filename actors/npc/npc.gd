@@ -25,6 +25,7 @@ var _collision_layer_default := 0
 
 
 func _ready() -> void:
+	GridPlacement.snap_to_walkable_cell(self, global_position)
 	# A standing NPC is a solid body. Overworld click-paths must route around it rather than
 	# grind into it (GH #190) — see world/nav/nav_occupancy.gd.
 	NavOccupancy.register(self)
@@ -77,7 +78,8 @@ func _apply_routine() -> void:
 	var present := bool(row.get("present", false))
 	visible = present
 	if present:
-		global_position = row["position"]
+		var routine_position: Vector2 = row["position"]
+		GridPlacement.snap_to_walkable_cell(self, routine_position)
 		collision_layer = _collision_layer_default
 		process_mode = Node.PROCESS_MODE_INHERIT
 		NavOccupancy.register(self)

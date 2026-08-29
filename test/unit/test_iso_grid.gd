@@ -85,6 +85,65 @@ func test_world_to_cell_and_cell_to_world_round_trip_across_the_map_rect() -> vo
 	assert_int(checked).is_equal(size.x * size.y)
 
 
+func test_screen_directions_resolve_to_all_eight_isometric_neighbors() -> void:
+	var ground := _make_ground(Vector2i(7, 7))
+	ground.tile_set.tile_shape = TileSet.TILE_SHAPE_ISOMETRIC
+	ground.tile_set.tile_layout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+	var origin := Vector2i(3, 3)
+	var cases: Array[Array] = [
+		[Vector2.UP, Vector2i(-1, -1)],
+		[Vector2(1.0, -1.0), Vector2i(0, -1)],
+		[Vector2.RIGHT, Vector2i(1, -1)],
+		[Vector2(1.0, 1.0), Vector2i(1, 0)],
+		[Vector2.DOWN, Vector2i(1, 1)],
+		[Vector2(-1.0, 1.0), Vector2i(0, 1)],
+		[Vector2.LEFT, Vector2i(-1, 1)],
+		[Vector2(-1.0, -1.0), Vector2i(-1, 0)],
+	]
+
+	for row: Array in cases:
+		var screen_direction: Vector2 = row[0] as Vector2
+		var expected_offset: Vector2i = row[1] as Vector2i
+		assert_vector(grid.screen_direction_to_neighbor(origin, screen_direction)).is_equal(
+			origin + expected_offset
+		)
+
+
+func test_blocked_direct_neighbor_glides_to_the_nearest_angular_alternative() -> void:
+	var ground := _make_ground(Vector2i(7, 7))
+	ground.tile_set.tile_shape = TileSet.TILE_SHAPE_ISOMETRIC
+	ground.tile_set.tile_layout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+	var origin := Vector2i(3, 3)
+	var direct_right := origin + Vector2i(1, -1)
+	grid.set_point_solid(direct_right, true)
+
+	var resolved: Variant = grid.resolve_step_cell(origin, Vector2.RIGHT)
+
+	assert_that(resolved).is_not_null()
+	# The tie is deterministic: NEIGHBOR_OFFSETS ranks the up-right alternative first.
+	assert_vector(resolved as Vector2i).is_equal(origin + Vector2i(0, -1))
+
+
+func test_step_is_refused_when_direct_and_both_glide_neighbors_are_blocked() -> void:
+	var ground := _make_ground(Vector2i(7, 7))
+	ground.tile_set.tile_shape = TileSet.TILE_SHAPE_ISOMETRIC
+	ground.tile_set.tile_layout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
+	var grid := IsoGridScript.new()
+	grid.build(ground)
+	var origin := Vector2i(3, 3)
+	grid.set_point_solid(origin + Vector2i(1, -1), true)
+	grid.set_point_solid(origin + Vector2i(0, -1), true)
+	grid.set_point_solid(origin + Vector2i(1, 0), true)
+
+	var resolved: Variant = grid.resolve_step_cell(origin, Vector2.RIGHT)
+
+	assert_that(resolved).is_null()
+
+
 func test_set_point_solid_is_reachable_through_the_public_api() -> void:
 	var ground := _make_ground(Vector2i(4, 4))
 	var grid := IsoGridScript.new()

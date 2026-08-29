@@ -47,6 +47,17 @@ var _static_solid: Dictionary = {}  ## Vector2i -> true
 var _occupancy: Dictionary = {}  ## Vector2i -> Object
 var _occupant_cells: Dictionary = {}  ## Object -> Vector2i
 
+const NEIGHBOR_OFFSETS: Array[Vector2i] = [
+	Vector2i(-1, -1),
+	Vector2i(0, -1),
+	Vector2i(1, -1),
+	Vector2i(-1, 0),
+	Vector2i(1, 0),
+	Vector2i(-1, 1),
+	Vector2i(0, 1),
+	Vector2i(1, 1),
+]
+
 
 ## Builds the grid from a ground TileMapLayer (defines the region and cell size) and an
 ## optional blocking TileMapLayer (used cells become solid points). A transformed field
@@ -128,6 +139,56 @@ func world_to_cell(world: Vector2) -> Vector2i:
 
 func cell_to_world(cell: Vector2i) -> Vector2:
 	return _ground.to_global(_ground.map_to_local(cell))
+
+
+## Returns the neighboring cell whose world-space direction most closely matches the
+## requested screen direction. TileMapLayer owns the projection, so this remains correct
+## if a field's grid transform differs from the default 64x32 diamond layout.
+func screen_direction_to_neighbor(cell: Vector2i, screen_direction: Vector2) -> Vector2i:
+	var ranked: Array[Vector2i] = neighbors_by_screen_direction(cell, screen_direction)
+	return cell if ranked.is_empty() else ranked[0]
+
+
+## Orders all eight adjacent cells from closest to furthest angular match. This is public
+## so keyboard stepping and its tests share one definition of screen-relative movement.
+func neighbors_by_screen_direction(
+	cell: Vector2i,
+	screen_direction: Vector2
+) -> Array[Vector2i]:
+	var ranked: Array[Vector2i] = []
+	if screen_direction.is_zero_approx():
+		return ranked
+	var remaining: Array[Vector2i] = NEIGHBOR_OFFSETS.duplicate()
+	var requested: Vector2 = screen_direction.normalized()
+	var origin_world: Vector2 = cell_to_world(cell)
+	while not remaining.is_empty():
+		var best_index: int = 0
+		var best_score: float = -INF
+		for index in range(remaining.size()):
+			var offset: Vector2i = remaining[index]
+			var world_direction: Vector2 = cell_to_world(cell + offset) - origin_world
+			var score: float = requested.dot(world_direction.normalized())
+			if score > best_score:
+				best_score = score
+				best_index = index
+		ranked.append(cell + remaining[best_index])
+		remaining.remove_at(best_index)
+	return ranked
+
+
+## Chooses the best matching open neighbor. If the direct match is blocked, the two
+## angularly-nearest alternatives are tried in order so held movement glides along walls.
+func resolve_step_cell(
+	cell: Vector2i,
+	screen_direction: Vector2,
+	mover: Object = null
+) -> Variant:
+	var ranked: Array[Vector2i] = neighbors_by_screen_direction(cell, screen_direction)
+	for index in range(mini(3, ranked.size())):
+		var candidate: Vector2i = ranked[index]
+		if not is_blocked_for(candidate, mover):
+			return candidate
+	return null
 
 
 # --- pathfinding ---

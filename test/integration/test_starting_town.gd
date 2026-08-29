@@ -11,11 +11,42 @@ extends GdUnitTestSuite
 ## validates for exactly REQUIRED_COMPANIONS and refuses an empty list — so
 ## reset via the wholesale set_party() path, keeping only the lead.
 func before_test() -> void:
+	_set_lead_only()
+
+
+func after_test() -> void:
+	_set_lead_only()
+
+
+func _set_lead_only() -> void:
 	var lead_only: Array[PartyMember] = []
 	for member: PartyMember in GameState.party:
 		if member.id == GameState.PROTAGONIST_ID:
 			lead_only.append(member)
 	GameState.set_party(lead_only)
+
+
+func test_party_followers_spawn_on_the_shared_grid_cell_center() -> void:
+	var party: Array[PartyMember] = GameState.party.duplicate()
+	var candidates: Array[PartyMember] = GameState.recruitable_candidates()
+	party.append(candidates[0])
+	GameState.set_party(party)
+
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(2)
+	var manager := runner.find_child("PartyFollowers", true, false) as PartyFollowers
+	var player := runner.find_child("Player", true, false) as Node2D
+	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
+
+	assert_object(manager).is_not_null()
+	assert_object(ground).is_not_null()
+	assert_int(manager.follower_count()).is_equal(1)
+	var player_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+	var player_center: Vector2 = ground.to_global(ground.map_to_local(player_cell))
+	assert_vector(manager.trail_target_for(0)).is_equal(player_center)
+	assert_vector(manager.followers()[0].global_position).is_equal(player_center)
+	var follower_node: Node = manager.followers()[0]
+	assert_bool(follower_node is CollisionObject2D).is_false()
 
 
 func test_tavern_door_prompt_only_shows_when_player_is_in_range() -> void:
