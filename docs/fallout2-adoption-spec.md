@@ -268,6 +268,27 @@ payloads rather than UI combat arithmetic.
   `roll_spoils` is fixed per encounter id (variety needs an owner entropy ruling);
   no lingering field corpses (battle is an overlay — deliberate).
 
+- **Wave O — SHIPPED 2026-08-29** (`0e754db` intro/flow → `910eeca` gauntlet →
+  `44ebea6`/`b0b61a5` elder+quest, gate-r1 revisions `0add5a4`). Suite 988/0 (solo
+  run at `0add5a4`); quest audit run in reporting mode: **0 grammar violations,
+  0 errors, 18 warnings** (all pre-existing `outcome_count`-class findings shared
+  with the accepted Wave 3–5 quests; strict mode by design exits non-zero on any
+  warning, so "strict exit 0" is not a claim this log makes). Gate r1 REVISE →
+  all five findings closed: LocationRegistry id-only resolution (ExitToDom
+  softlock), all flags renamed into the registered `tutorial_` domain (no
+  LEGACY_FLAGS additions; no shipped saves carried the old names), e2e now proves
+  speech-skip + keeper-TALK + keeper-FIGHT arcs against the REAL TravelExit
+  (unlocked AND resolved to Dom), suite health substantiated from solo-run
+  reports, chargen → intro made authoritative in this document. Shipped: intro
+  narration screen (4 diegetic beats), `Menus/IntroNarration` flow state with
+  save-load bypass, Lower Trial Hall gauntlet (aide speech-skip insight-40,
+  switch beat, flag-guarded trial-warden encounter, key-or-check skill door,
+  keeper TALK/FIGHT, exit gated on `tutorial_gauntlet_complete`), Council elder
+  Themka Gaath handing the Dorthkor Road driving quest (insight-40 verb + direct
+  route; Coiljaw field offer intact as route 2), first-arrival council nudge.
+  All new prose `PROVISIONAL — CANON REVIEW REQUIRED`. Trial encounters grant
+  zero reputation (trial, not deed) and carry authored spoils.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
