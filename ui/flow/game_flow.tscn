@@ -44,10 +44,18 @@ event = &"start_chargen"
 [node name="CharacterCreation" type="Node" parent="StateChart/Root/Menus"]
 script = ExtResource("4_atomic")
 
-[node name="ToPlaying" type="Node" parent="StateChart/Root/Menus/CharacterCreation"]
+[node name="ToIntroNarration" type="Node" parent="StateChart/Root/Menus/CharacterCreation"]
+script = ExtResource("5_transition")
+to = NodePath("../../IntroNarration")
+event = &"new_game"
+
+[node name="IntroNarration" type="Node" parent="StateChart/Root/Menus"]
+script = ExtResource("4_atomic")
+
+[node name="ToPlaying" type="Node" parent="StateChart/Root/Menus/IntroNarration"]
 script = ExtResource("5_transition")
 to = NodePath("../../../Playing")
-event = &"new_game"
+event = &"intro_done"
 
 [node name="Playing" type="Node" parent="StateChart/Root"]
 script = ExtResource("3_compound")
