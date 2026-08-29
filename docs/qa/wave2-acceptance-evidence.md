@@ -40,7 +40,7 @@ geographic world-map UI + discovery), `e1bcb56` (screenshot evidence), `a68d475`
 | Avoidance respects skill and caps | `test_encounter_director.gd` (95-cap minus risk modifier, floor 0); avoidance stream seeded per slot (`rng_seed + slot_index`) so reload never rerolls |
 | Risk display derives from the real table | Region-map route panel reads `risk_tier` from the registry row; `test_region_map.gd` asserts the MODERATE tier word renders and **no numeric chance appears** (owner ruling: tagged, no numbers) |
 | Spoils exactly-once under reload | `test_travel_flow.gd::test_battle_victory_grants_spoils_exactly_once_across_duplicate_events_and_reload` (duplicate `battle_ended` emissions + save/clear/reload + re-emission → counts unchanged); `test_spoils_table.gd` asserts prototype-id round-trip for every rolled id |
-| Suite green | Full gdUnit4 run (`runtest.sh -a test`, includes `test/manual` harnesses) post-`a68d475`: **915 / 0**; post-REVISE-response run below. The CI-style `scripts/test.sh` count is 12 lower (manual screenshot harnesses excluded) |
+| Suite green | Full gdUnit4 run (`runtest.sh -a test`, includes `test/manual` harnesses) post-`a68d475`: **915 / 0**; post-REVISE-response (`2d85d3f`): **920 / 0**. The CI-style `scripts/test.sh` count is 12 lower (manual screenshot harnesses excluded); gate round 2 independently reproduced **908/908** CI-style |
 | Quest audit | Production run at `a68d475`: **0 errors**; 12 warnings in the two pre-accepted classes (`outcome_count` 7, `orphaned_flags` 5) + 7 `readbacks` info notes |
 
 ## Gate REVISE response (2026-08-29)
@@ -48,11 +48,13 @@ geographic world-map UI + discovery), `e1bcb56` (screenshot evidence), `a68d475`
 The manual codex gate (`embrace-gate-wave2-manual-*.md`) returned REVISE with two
 blockers; both are addressed in the follow-up commit carrying this section:
 
-1. **Restore invariants:** `TravelPlan.reconcile()` (called by
-   `GameFlow._restore_travel_plan()` on every restore) demotes IN_BATTLE to a
-   resumable AVOID_PROMPT, demotes a prompt with no reached unresolved slot to
-   EN_ROUTE, clamps slot `at_step` into `[0, total_steps]` so arrival can never
-   skip an unresolved slot, and clears ARRIVED/CANCELLED plans to none.
+1. **Restore invariants:** every production restore enters
+   `GameFlow._restore_travel_plan()` (both `_ready()` and `_on_load_requested()`),
+   which clears finished plans (ARRIVED/CANCELLED) and calls
+   `TravelPlan.reconcile()` on unfinished ones — demoting IN_BATTLE to a
+   resumable AVOID_PROMPT, demoting a prompt with no reached unresolved slot to
+   EN_ROUTE, and clamping slot `at_step` into `[0, total_steps]` so arrival can
+   never skip an unresolved slot.
    `GameFlow._next_reached_slot_index()` now delegates to the model's
    `next_unresolved_reached_index()` (single source of truth).
 2. **Test honesty:** per-state envelope regression tests added (see the
