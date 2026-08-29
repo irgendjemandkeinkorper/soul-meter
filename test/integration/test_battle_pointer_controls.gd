@@ -152,6 +152,63 @@ func test_blocked_los_enemy_click_does_not_submit() -> void:
 	)
 
 
+## Gate Wave P finding 2: region D once recomputed its number through a
+## Resolution context that carries no cover term, so cover changed only the
+## "COVER +n" copy — never the forecast NUMBER. The number shown must be the
+## controller's quoted damage, and it must move when cover appears.
+func test_covered_enemy_hover_changes_the_forecast_number_to_the_controller_quote() -> void:
+	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
+	var interface := runner.scene() as BattleInterface
+	var model := _grid_model(5, 1)
+	var shot := CombatAction.new()
+	shot.id = &"pointer-cover-shot"
+	shot.display_name = "Cover Shot"
+	shot.kind = CombatAction.Kind.ATTACK
+	shot.target_profile = &"ranged"
+	shot.ap_cost = 1
+	var actions := CombatActionCatalog.all()
+	actions.append(shot)
+	var fixture := _bind_controller(interface, model, actions)
+	var controller := fixture["controller"] as CombatController
+	var enemy := fixture["enemy"] as BattleActor
+	interface.select_pointer_action(shot.id)
+	await runner.simulate_frames(3)
+	_silence_root_controls(interface)
+	var enemy_point := interface.stage.global_position \
+		+ interface.stage.cell_center(Vector2i(4, 0))
+
+	_push_hover(interface, enemy_point)
+	await runner.simulate_frames(1)
+	var open_number := _forecast_number(interface)
+
+	interface.stage.clear_pointer()
+	model.set_cover(Vector2i(3, 0), true)
+	var covered_payload := controller.forecast_action(shot, enemy)
+	assert_bool(bool(covered_payload.get("allowed", false))).is_true()
+	assert_int(
+		int((covered_payload.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
+	).is_greater(0)
+	_push_hover(interface, enemy_point)
+	await runner.simulate_frames(1)
+	var covered_number := _forecast_number(interface)
+
+	assert_int(covered_number).is_equal(int(covered_payload["damage"]))
+	assert_int(covered_number).is_not_equal(open_number)
+	assert_str(interface.act_target_panel.forecast.text).contains("COVER")
+
+
+func _forecast_number(interface: BattleInterface) -> int:
+	var expression := RegEx.new()
+	expression.compile("FORECAST (\\d+)")
+	var found := expression.search(interface.act_target_panel.forecast.text)
+	assert_object(found) \
+		.override_failure_message(
+			"no FORECAST line in: %s" % interface.act_target_panel.forecast.text
+		) \
+		.is_not_null()
+	return int(found.get_string(1)) if found != null else -1
+
+
 func test_command_rail_button_still_completes_a_battle() -> void:
 	_used_global_battle = true
 	GameState.party.clear()

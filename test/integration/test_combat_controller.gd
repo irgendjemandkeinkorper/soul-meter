@@ -490,6 +490,39 @@ func test_grid_cover_changes_forecast_and_resolution_by_the_same_amount() -> voi
 	assert_object(covered_actor).is_not_null()
 
 
+## Gate Wave P finding 1: forecast_action once fetched its own flat flank_bonus
+## without the positional-context guard, so a side/back forecast exceeded the
+## committed damage. Forecast, commit, and the flat-term zeroing must agree.
+func test_grid_flank_forecast_matches_commit_for_side_and_back_facings() -> void:
+	for facing: StringName in [&"e", &"n"]:
+		var flanked := _positional_controller(5, 2)
+		var flanked_target := flanked.enemies[0]
+		var grid := flanked.battlefield as GridBattlefieldModel
+		assert_bool(grid.set_facing(flanked_target, facing).get("allowed", false)).is_true()
+		var shot := flanked.action_by_id(&"test-shot")
+
+		var forecast := flanked.forecast_action(shot, flanked_target)
+		var hp_before := flanked_target.hp
+		var resolved := flanked.submit_action(&"test-shot", flanked_target)
+
+		assert_bool(bool(forecast.get("allowed", false))).is_true()
+		assert_int(int(forecast["damage"])) \
+			.override_failure_message("facing %s: forecast != commit" % facing) \
+			.is_equal(int(resolved["damage"]))
+		assert_int(int(forecast["damage"])).is_equal(hp_before - flanked_target.hp)
+		# The flat flank term stays zero on grid battles — the ratified facing
+		# multipliers inside the positional context are the only flank payment.
+		assert_int(int((forecast["positioning"] as Dictionary).get("flank_bonus", -1))) \
+			.is_equal(0)
+
+	var front := _positional_controller(5, 2)
+	var front_forecast := front.forecast_action(front.action_by_id(&"test-shot"), front.enemies[0])
+	var back := _positional_controller(5, 2)
+	(back.battlefield as GridBattlefieldModel).set_facing(back.enemies[0], &"e")
+	var back_forecast := back.forecast_action(back.action_by_id(&"test-shot"), back.enemies[0])
+	assert_int(int(back_forecast["damage"])).is_greater(int(front_forecast["damage"]))
+
+
 func test_ranged_los_refusal_matches_at_forecast_and_commit() -> void:
 	var local_controller := _positional_controller(5, 1)
 	var actor := local_controller.allies[0]

@@ -1048,24 +1048,16 @@ func _resolve_attack(
 	var positional_results: Array[Dictionary] = []
 	var hit_targets := battlefield.targets_for(actor, target, action.aoe_shape)
 	for hit_target: BattleActor in hit_targets:
-		var cover_bonus := battlefield.cover_bonus(actor, hit_target)
-		if bool(hit_target.defining_effects.get("revealed", false)):
-			cover_bonus = 0
-		var positional_context := _positional_resolution_context(actor, hit_target)
-		# Grid battles pay flanking through the ratified facing MULTIPLIERS inside the
-		# positional context (x1.10 side / x1.25 back); the flat flank_bonus is the zone
-		# model's mechanism and must stay zero here or flanking double-dips.
-		var flank_bonus := battlefield.flank_bonus(actor, hit_target)
-		if not positional_context.is_empty():
-			flank_bonus = 0
+		var terms := _positional_terms(actor, hit_target)
+		var positional_context: Dictionary = terms["positional_context"]
 		var damage := calculate_damage(
 			actor,
 			hit_target,
 			action.power_bonus,
 			action.balance_shift,
 			balance,
-			flank_bonus,
-			cover_bonus,
+			int(terms["flank_bonus"]),
+			int(terms["cover_bonus"]),
 			action.element_id,
 			action.magnitude,
 			int(resolution_context.get("seed", _sequence)),
@@ -1088,8 +1080,8 @@ func _resolve_attack(
 					battlefield.line_of_sight(actor, hit_target)
 					if action.target_profile == &"ranged" else _allowed()
 				),
-				"cover_bonus": cover_bonus,
-				"flank_bonus": flank_bonus,
+				"cover_bonus": int(terms["cover_bonus"]),
+				"flank_bonus": int(terms["flank_bonus"]),
 			})
 	return {
 		"damage": total_damage,
@@ -1106,14 +1098,10 @@ func _resolve_attack(
 func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
 	if actor == null or target == null or action == null:
 		return {}
-	var positional_context := _positional_resolution_context(actor, target)
-	# Same double-dip guard as _resolve_attack: facing multipliers own grid flanking.
-	var flank_bonus := battlefield.flank_bonus(actor, target)
-	if not positional_context.is_empty():
-		flank_bonus = 0
-	var cover_bonus := battlefield.cover_bonus(actor, target)
-	if bool(target.defining_effects.get("revealed", false)):
-		cover_bonus = 0
+	var terms := _positional_terms(actor, target)
+	var positional_context: Dictionary = terms["positional_context"]
+	var flank_bonus := int(terms["flank_bonus"])
+	var cover_bonus := int(terms["cover_bonus"])
 	var line_of_sight := (
 		battlefield.line_of_sight(actor, target)
 		if action.target_profile == &"ranged" else _allowed()
@@ -1193,19 +1181,16 @@ func forecast_action(
 		})
 	var context := forecast_context(actor, target, action)
 	var resolution := Resolution.resolve(context)
-	var positional_context := _positional_resolution_context(actor, target)
-	var cover_bonus := battlefield.cover_bonus(actor, target)
-	if bool(target.defining_effects.get("revealed", false)):
-		cover_bonus = 0
-	var flank_bonus := battlefield.flank_bonus(actor, target)
+	var terms := _positional_terms(actor, target)
+	var positional_context: Dictionary = terms["positional_context"]
 	var damage := calculate_damage(
 		actor,
 		target,
 		action.power_bonus,
 		action.balance_shift,
 		balance,
-		flank_bonus,
-		cover_bonus,
+		int(terms["flank_bonus"]),
+		int(terms["cover_bonus"]),
 		action.element_id,
 		action.magnitude,
 		_sequence,
@@ -1283,6 +1268,28 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 		"effect_parameters": (weakness.get("effect_parameters", {}) as Dictionary).duplicate(true),
 		"resolution": resolution,
 	})
+
+
+## The ONE source of positional damage terms. _resolve_attack, forecast_context
+## and forecast_action must all draw from here: when forecast_action fetched its
+## own flank_bonus without the positional-context guard, forecast and committed
+## damage diverged for side/back facing on grid battles (Wave P gate finding).
+## Grid battles pay flanking through the ratified facing MULTIPLIERS inside the
+## positional context (x1.10 side / x1.25 back); the flat flank_bonus is the
+## zone model's mechanism and must stay zero here or flanking double-dips.
+func _positional_terms(actor: BattleActor, target: BattleActor) -> Dictionary:
+	var positional_context := _positional_resolution_context(actor, target)
+	var cover_bonus := battlefield.cover_bonus(actor, target)
+	if bool(target.defining_effects.get("revealed", false)):
+		cover_bonus = 0
+	var flank_bonus := battlefield.flank_bonus(actor, target)
+	if not positional_context.is_empty():
+		flank_bonus = 0
+	return {
+		"positional_context": positional_context,
+		"cover_bonus": cover_bonus,
+		"flank_bonus": flank_bonus,
+	}
 
 
 func _positional_resolution_context(actor: BattleActor, target: BattleActor) -> Dictionary:

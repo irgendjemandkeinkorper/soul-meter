@@ -4,6 +4,12 @@ extends PanelContainer
 signal element_selected(element_id: StringName)
 var _context: Dictionary = {}
 var _selected: StringName = ElementWheel.ORDER[0]
+## Damage the controller quoted for the hovered action (-1 = none). The wheel's
+## Resolution breakdown excludes the positional terms (cover/flank) that ride
+## outside the Resolution context, so the NUMBER shown for a live action must be
+## the controller's — the same calculate_damage path a commit will take. This is
+## display of a controller value, not UI arithmetic.
+var _payload_damage := -1
 @onready var wheel: Container = %ActWheel
 @onready var target_header: Label = %TargetHeader
 @onready var affinity: Label = %AffinityStrip
@@ -28,6 +34,7 @@ func consume_event(event: CombatEvent) -> void:
 
 func set_forecast_context(context: Dictionary) -> void:
 	_context = context.duplicate(true)
+	_payload_damage = -1
 	_recompute()
 
 
@@ -37,6 +44,9 @@ func show_action_forecast(payload: Dictionary, context: Dictionary = {}) -> void
 		return
 	if not context.is_empty():
 		set_forecast_context(context)
+	if payload.has("damage"):
+		_payload_damage = int(payload.get("damage", -1))
+		_recompute()
 	var positioning: Dictionary = context.get("positioning", {})
 	var terms: PackedStringArray = []
 	var cover := int(positioning.get("cover_bonus", 0))
@@ -60,6 +70,9 @@ func select_element(element_id: StringName) -> void:
 	if not ElementWheel.ORDER.has(element_id):
 		return
 	_selected = element_id
+	# Wheel exploration is hypothetical (a different element than the quoted
+	# action) — drop the controller quote and let Resolution speak alone.
+	_payload_damage = -1
 	var ability: Dictionary = _context.get("ability", {}).duplicate(true)
 	ability["element_id"] = String(_selected)
 	ability["elements"] = [_selected]
@@ -90,4 +103,5 @@ func _recompute() -> void:
 	var chain: PackedStringArray = []
 	for step: Dictionary in result.get("breakdown", []):
 		chain.append("%s %s" % [str(step.get("label", "")), str(step.get("value", 0))])
-	forecast.text = "%s\nFORECAST %d · HIT 90%%" % [" × ".join(chain), int(result.get("damage", 0))]
+	var shown := _payload_damage if _payload_damage >= 0 else int(result.get("damage", 0))
+	forecast.text = "%s\nFORECAST %d · HIT 90%%" % [" × ".join(chain), shown]

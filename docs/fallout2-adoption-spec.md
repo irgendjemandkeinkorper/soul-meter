@@ -289,6 +289,30 @@ payloads rather than UI combat arithmetic.
   All new prose `PROVISIONAL — CANON REVIEW REQUIRED`. Trial encounters grant
   zero reputation (trial, not deed) and carry authored spoils.
 
+- **Wave P — SHIPPED 2026-08-29** (P1 `3ca7512` positional core → P2 `96fb25d`
+  click-to-move stage → P3 `56d4523` enemy positional AI, gate-r1 revisions
+  following). Evidence `docs/qa/wave-p-acceptance-evidence.md` (rule→proof
+  table; the numbers-unchanged claim is stated precisely — the constants sweep
+  proves only constant identity, encounter-level invariance rests on the
+  zero/OFF-state tests plus the fact no authored encounter carries cover
+  terrain yet). All four ratified rules on the current square grid, hex
+  deferred to the FR-105 seam: player ACTION_MOVE priced by `move_query`
+  (hover quote == commit spend), LOS gating ranged actions at forecast AND
+  commit with the FR-606 taxonomy, defender-anchored directional cover,
+  flanking via the ratified facing multipliers (flat flank term zeroed under
+  positional context — forecast_action's missing guard was gate r1 finding 1,
+  fixed by centralizing all three call sites on `_positional_terms()` with
+  side/back parity tests). Region D shows the controller-quoted damage number
+  (gate r1 finding 2 — it previously recomputed through a Resolution context
+  that carries no cover term, so cover never moved the number). Enemy AI
+  seeks cover (+750 PROVISIONAL, between adjacency +500 and rear-flank
+  +1000), routes around blocked lines, force-passes with the model refusal
+  instead of attacking through a refused target_query (grid only; zone
+  fall-through preserved); position tie-break made genuinely lexical
+  (StringName `<` is interning-pointer order). Command rail unchanged;
+  six-region contract additive; scheduler #193 and the enemy full-AP flag
+  untouched. Suite after r1 revisions: 996/0 (solo run). Gate verdict: r2 pending.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
