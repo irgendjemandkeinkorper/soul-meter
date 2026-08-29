@@ -22,6 +22,21 @@ const _FIELD_GRID_DATA := {
 ## decision (`tools/combat_number_sweep.gd` delta must accompany any entry — see the
 ## issue's acceptance checks). The mechanism is live; the authoring is not decided here.
 const _WEATHER_DEFAULTS: Dictionary = {}
+## PROVISIONAL — first-pass encounter loot, pending a dedicated balance sweep.
+## This authored registry keeps generated Pandora artifacts untouched.
+const _SPOILS: Dictionary = {
+	&"bog-wight": [ItemIds.MATERIALS_GRAVE_SALT, ItemIds.CONSUMABLES_BITTERLEAF_POULTICE],
+	&"loam-boar": [ItemIds.MATERIALS_LOAMROOT_SPRIG, ItemIds.CONSUMABLES_LOAM_BREAD],
+	&"dorthkor-vanguard": [ItemIds.MATERIALS_IRON_RIVETS, ItemIds.MATERIALS_BINDING_THREAD],
+	&"dorthkor-muster": [ItemIds.MATERIALS_IRON_RIVETS, ItemIds.MATERIALS_BINDING_THREAD],
+	&"jawbrace-empty-post": [ItemIds.MATERIALS_IRON_RIVETS, ItemIds.CONSUMABLES_LOAM_BREAD],
+	&"phase2-demon": [ItemIds.MATERIALS_CINDER_INK_VIAL, ItemIds.MATERIALS_GRAVE_SALT],
+	&"phase2-undead": [ItemIds.MATERIALS_GRAVE_SALT, ItemIds.MATERIALS_BINDING_THREAD],
+	&"phase2-mixed-whipsaw": [ItemIds.MATERIALS_GRAVE_SALT, ItemIds.MATERIALS_IRON_RIVETS],
+	&"phase2-speech-winnable": [ItemIds.CONSUMABLES_LOAM_BREAD, ItemIds.MATERIALS_BINDING_THREAD],
+	&"phase2-stabilizer-showcase": [ItemIds.MATERIALS_LOAMROOT_SPRIG, ItemIds.MATERIALS_CINDER_INK_VIAL],
+}
+const _SPOILS_STREAM_OFFSET := 7_000_019
 
 static var _definitions: Dictionary = {}
 
@@ -108,6 +123,24 @@ static func loss(encounter_id: StringName) -> Dictionary:
 
 static func default_outcome(encounter_id: StringName) -> StringName:
 	return StringName(definition(encounter_id).get("default_outcome", "slain"))
+
+
+static func roll_spoils(encounter_id: StringName) -> Array[Dictionary]:
+	var item_ids: Array = _SPOILS.get(encounter_id, [])
+	if item_ids.is_empty():
+		return []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(String(encounter_id).hash()) + _SPOILS_STREAM_OFFSET
+	var result: Array[Dictionary] = [{
+		"item_id": String(item_ids[0]),
+		"quantity": rng.randi_range(1, 2),
+	}]
+	if item_ids.size() > 1 and rng.randf() < 0.5:
+		result.append({
+			"item_id": String(item_ids[1]),
+			"quantity": rng.randi_range(1, 2),
+		})
+	return result
 
 
 static func clear_cache() -> void:

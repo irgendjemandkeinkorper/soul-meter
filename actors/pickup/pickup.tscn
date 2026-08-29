@@ -4,3 +4,22 @@
 
 [node name="Pickup" type="Area2D"]
 script = ExtResource("1_pickup")
+marker_color = Color(0.42, 0.62, 0.28, 1)
+
+[node name="Marker" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-10, 10, -10, -10, 10, -10, 10, 10)
+color = Color(0.42, 0.62, 0.28, 1)
+
+[node name="Sign" type="Label" parent="."]
+offset_left = -80.0
+offset_top = -46.0
+offset_right = 80.0
+offset_bottom = -20.0
+horizontal_alignment = 1
+
+[node name="Prompt" type="Label" parent="."]
+offset_left = -110.0
+offset_top = 18.0
+offset_right = 110.0
+offset_bottom = 54.0
+horizontal_alignment = 1

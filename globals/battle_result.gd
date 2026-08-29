@@ -10,6 +10,7 @@ var encounter_id: StringName = &""
 var outcome_id: StringName = &""
 var message := ""
 var cause := ""
+var spoils: Array[Dictionary] = []
 
 
 func succeeded() -> bool:

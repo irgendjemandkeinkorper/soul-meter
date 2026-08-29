@@ -43,7 +43,7 @@ func test_accept_defeat_loot_return_and_choose_companies_reward() -> void:
 	var runner := scene_runner("res://world/test_room.tscn")
 	await runner.simulate_frames(5)
 	var proof: Pickup = runner.find_child("FieldDebtProof", true, false)
-	assert_bool(proof._available).is_false()
+	assert_bool(proof._is_unlocked()).is_false()
 
 	var battle := BattleScript.new()
 	auto_free(battle)
@@ -53,13 +53,13 @@ func test_accept_defeat_loot_return_and_choose_companies_reward() -> void:
 	while not battle.ended:
 		assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
 	assert_bool(GameState.get_flag("defeated_bog_wight")).is_true()
-	assert_bool(proof._available).is_true()
+	assert_bool(proof._is_unlocked()).is_true()
 
 	var player: Player = runner.find_child("Player", true, false)
 	player.global_position = proof.global_position
-	# A teleported test avatar can begin inside an Area2D without emitting the
-	# enter signal; this call represents the same walking-over interaction.
-	proof._on_body_entered(player)
+	# Pickups are interactions now (E to take); drive the interaction directly,
+	# the same pattern test_interactive_props uses.
+	proof._apply_interaction()
 	await runner.simulate_frames(10)
 	assert_int(GameState.item_count(ItemIds.MATERIALS_LOAMROOT_SPRIG)).is_equal(1)
 	assert_bool(GameState.get_flag("field_debt_proof_looted")).is_true()

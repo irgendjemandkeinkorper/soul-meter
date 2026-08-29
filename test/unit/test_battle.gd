@@ -155,6 +155,19 @@ func test_non_story_encounter_uses_the_same_authored_outcome_path() -> void:
 	assert_float(Reputation.standing("ssae-seeders")).is_equal_approx(6.0, 0.001)
 
 
+func test_victory_result_contains_deterministic_authored_spoils() -> void:
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+	var first: Array[Dictionary] = battle.last_result.spoils.duplicate(true)
+
+	GameState.flags.clear()
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+
+	assert_array(first).is_not_empty()
+	assert_array(battle.last_result.spoils).is_equal(first)
+
+
 func test_player_can_select_between_multiple_living_enemies() -> void:
 	var foes: Array[BattleActor] = [_enemy("Wight", 20, 4, 1), _enemy("Boar", 20, 4, 1)]
 	battle.start(foes)
