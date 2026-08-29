@@ -212,7 +212,34 @@ func test_defining_strike_requires_selection_and_forecast_matches_resolution_con
 	assert_int(forecast["ap_cost"]).is_equal(definition.ap_cost)
 	assert_float(forecast["chance"]).is_equal(SkillCheck.preview("lore", ally.source_member))
 	assert_str(String(pure_forecast["weakness_id"])).is_equal(String(weakness_id))
-	assert_int(pure_forecast["damage"]).is_equal(resolved["damage"])
+	# The landed number is the TOP-LEVEL forecast damage (post-mitigation, computed
+	# through the same calculate_damage pipeline resolution uses). The nested
+	# `resolution` dict stays the pure pre-mitigation Resolution contract.
+	assert_int(forecast["damage"]).is_equal(resolved["damage"])
+	assert_int(int(pure_forecast["damage"])).is_greater_equal(int(forecast["damage"]))
+
+
+func test_snapshot_turn_order_keeps_spent_actors_visible() -> void:
+	# Region E contract (spec Wave 0 item 6): the round order shows EVERY living
+	# participant, acted included. peek_order() filters to who can still act, so the
+	# snapshot must come from round_overview() — a spent ally may not vanish.
+	ally.attributes = {"edge": 0}
+	var second := _actor("Second", 30, 6, 1)
+	controller.start([ally, second], [enemy])
+	controller.submit_action(&"strike", enemy)
+	controller.submit_action(&"strike", enemy)
+	assert_int(ally.action_points).is_equal(0)
+
+	var order: Array = controller.snapshot()["turn_order"]
+	var rows_by_id: Dictionary = {}
+	for row: Variant in order:
+		rows_by_id[String((row as Dictionary)["actor_id"])] = row
+	for expected: BattleActor in [ally, second, enemy]:
+		assert_bool(rows_by_id.has(String(expected.combat_id)))\
+			.override_failure_message("%s missing from turn_order" % expected.display_name).is_true()
+	var spent: Dictionary = rows_by_id[String(ally.combat_id)]
+	assert_bool(spent["acted"]).is_true()
+	assert_bool(spent["pending"]).is_false()
 
 
 func test_ct_scheduler_end_turn_never_grants_unused_ap_defense() -> void:

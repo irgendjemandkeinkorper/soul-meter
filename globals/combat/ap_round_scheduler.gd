@@ -1,14 +1,16 @@
 extends TurnScheduler
-## The retired FR-102 AP round economy, expressed behind the TurnScheduler interface.
+## The FR-102 AP round economy, expressed behind the TurnScheduler interface — the
+## SHIPPED default scheduler since Gate T-10 was amended to CT→AP promotion
+## (2026-08-28, `docs/fallout2-adoption-spec.md` Wave 0 item 5; this header previously
+## called AP "retired", which the ratified promotion superseded).
 ##
-## WHY THIS EXISTS. Amendment §8.1 lists "removing AP compatibility too early" as a stop-loss
-## violation, and §8 requires the abort path to be a flag flip rather than a revert. That is only
-## true if AP is reachable through the same interface CT uses. Branching inside CombatController
-## on a CT flag would instead create two turn-order authorities in one file, which §8.1 names as a
-## release blocker. So there is one authority — this interface — and two implementations.
+## WHY THE SEAM EXISTS. Amendment §8 requires the abort path to be a flag flip rather than
+## a revert, which is only true if both economies are reachable through the same interface.
+## Branching inside CombatController would create two turn-order authorities in one file
+## (§8.1 release blocker). So there is one authority — this interface — and two
+## implementations; CT remains available behind the seam with its compatibility tests.
 ##
-## This is a FAITHFUL port, not an improvement. It reproduces what `combat_controller.gd` did
-## before the extraction, including behaviour that charge time exists to replace:
+## This began as a FAITHFUL port of what `combat_controller.gd` did before the extraction:
 ##
 ##   - A round refreshes AP for every living participant, then allies act, then enemies act.
 ##   - An ally keeps acting while AP remains; the turn passes when AP hits zero or it yields.
@@ -167,6 +169,20 @@ func peek_order(depth: int) -> Array[Dictionary]:
 			break
 		out.append(_order_entry(next, out.size()))
 		seat = int(_seat_of[next.combat_id])
+	return out
+
+
+## Every living participant in current-round seat order (allies then enemies) with
+## acted/pending/active state — the complete Region E payload (spec Wave 0 item 6).
+## peek_order() deliberately filters to whoever can still act, which loses acted
+## actors; presentation reads this instead so the round order never drops anyone.
+func round_overview() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for side: StringName in [ALLY_SIDE, ENEMY_SIDE]:
+		for actor: BattleActor in _seats:
+			if actor == null or not actor.is_alive() or actor.side != side:
+				continue
+			out.append(_order_entry(actor, out.size()))
 	return out
 
 

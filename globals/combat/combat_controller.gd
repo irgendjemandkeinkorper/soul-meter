@@ -436,7 +436,14 @@ func _turn_order_snapshot() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	if scheduler == null:
 		return result
-	for entry: Dictionary in scheduler.peek_order(8):
+	# The AP scheduler exposes the complete living-round order (acted actors included);
+	# CT keeps the forecast-depth view. Region E must never lose an actor mid-round.
+	var order: Array[Dictionary]
+	if scheduler.has_method("round_overview"):
+		order = scheduler.round_overview()
+	else:
+		order = scheduler.peek_order(8)
+	for entry: Dictionary in order:
 		var actor := entry.get("actor") as BattleActor
 		if actor == null:
 			continue
@@ -1046,6 +1053,8 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 	# balance defense and cover in `calculate_damage`. Forecast through the SAME static
 	# pipeline with the SAME arguments `_resolve_attack` will pass, so the shown number
 	# equals the landed number — forecast==resolution by construction, not by echo.
+	# The pure `resolution` dict stays untouched (its writes/log are the pre-mitigation
+	# Resolution contract); the landed figure is the top-level `damage` key.
 	var positional_context := _positional_resolution_context(actor, target)
 	var cover_bonus := battlefield.cover_bonus(actor, target)
 	if bool(target.defining_effects.get("revealed", false)):
@@ -1053,7 +1062,7 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 	var legacy_flank_bonus := battlefield.flank_bonus(actor, target)
 	if not positional_context.is_empty():
 		legacy_flank_bonus = 0
-	resolution["damage"] = calculate_damage(
+	var final_damage := calculate_damage(
 		actor,
 		target,
 		action.power_bonus,
@@ -1077,6 +1086,7 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 		"action_id": action.id,
 		"weakness_id": weakness_id,
 		"weakness_name": str(weakness.get("display_name", weakness_id)),
+		"damage": final_damage,
 		"ap_cost": action.ap_cost,
 		"chance": skill_check_service.preview(
 			str(weakness.get("check_skill", "lore")),

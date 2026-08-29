@@ -233,6 +233,30 @@ func test_each_enemy_acts_exactly_once_per_round() -> void:
 	assert_int(after.get("round", 0)).is_equal(2)
 
 
+func test_a_zero_cost_enemy_action_under_full_ap_still_ends_its_turn() -> void:
+	# Soft-lock guard (Wave 1 review finding): a free action must not renew full-AP
+	# eligibility, or the enemy side could loop the same actor forever.
+	var rules := _rules()
+	rules.enemy_full_ap_turns = true
+	var ally := _actor("ally-0", ApRoundScheduler.ALLY_SIDE)
+	var foe := _actor("enemy-0", ApRoundScheduler.ENEMY_SIDE)
+	var group: Array[BattleActor] = [ally, foe]
+	var scheduler := ApRoundScheduler.new() as TurnScheduler
+	scheduler.configure(rules)
+	scheduler.setup(group)
+	scheduler.advance()
+	scheduler.yield_turn(ally)
+	scheduler.advance()
+
+	var free := _action("taunt", 0)
+	scheduler.commit(foe, free)
+	scheduler.release(foe)
+	var continuation: Dictionary = scheduler.advance()
+
+	assert_int(foe.action_points).is_greater(0)
+	assert_bool(continuation.get("round_ended", false)).is_true()
+
+
 func test_enemy_spends_full_ap_only_when_wave1_flag_is_enabled() -> void:
 	var rules := _rules()
 	rules.enemy_full_ap_turns = true

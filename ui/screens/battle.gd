@@ -291,14 +291,13 @@ func _update_weakness_forecast(index: int) -> void:
 	if not bool(forecast.get("allowed", false)):
 		_weakness_forecast.text = str(forecast.get("message", "Strike unavailable."))
 		return
-	var resolution: Dictionary = forecast.get("resolution", {})
 	var effect_name := str(forecast.get("effect_id", "")).replace("_", " ").capitalize()
 	_weakness_forecast.text = (
 		"COST %d AP  ·  CHANCE %.0f%%\nFORECAST %d DAMAGE  ·  %s"
 		% [
 			int(forecast.get("ap_cost", 0)),
 			float(forecast.get("chance", 0.0)),
-			int(resolution.get("damage", 0)),
+			int(forecast.get("damage", 0)),
 			effect_name if not effect_name.is_empty() else "No additional effect",
 		]
 	)
