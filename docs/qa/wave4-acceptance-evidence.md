@@ -52,8 +52,9 @@ the Pandora-canonical pipeline).
 | Reputation writes produce visible in-world feedback | `ConsequenceNotices` listens to both ledgers' signals; `test/integration/test_consequence_notices.gd` (dedupe, FIFO cap, pause deferral) |
 | ≥3 ambient NPC acknowledgements of standing | `test/integration/test_dom_ambient_reputation.gd` — each of the three speakers switches hostile↔warm lines through the real DialogueManager against their own faction's band |
 | Ambient lines live in the canonical data pipeline | `scripts/check_generated_data.sh` (drift check) green after regeneration; `test/unit/test_dom_npc_roster.gd` validates every generated block (≥3 speaker lines, conditions well-formed) |
-| Encounter composition reacts to standing, deterministically | `test/unit/test_encounter_director.gd` band-weighting cases: weighted vs. absent-key identical-schedule, zero-weight drop, seed determinism per band |
-| Vendors price by faction band; trade access gated | `test/unit/test_vendor_pricing.gd` (see above) — existing production path proven |
+| Encounter composition reacts to standing, deterministically | `test/unit/test_encounter_director.gd` band-weighting cases: per-band table weights, absent-key identical-schedule, seed determinism per band, and SCHEDULE-LEVEL proof — a single-entry route zeroed at allied builds an empty table AND empty schedule (non-empty at hostile), and allied schedules never contain the zeroed encounter across 64 seeds |
+| Vendors price by faction band | `test/unit/test_vendor_pricing.gd` (see above) — existing production path proven |
+| Trade access band-gated | `test/unit/test_vendors.gd::test_band_gated_shrine_refuses_then_accepts_after_standing_changes` (pre-existing refusal→acceptance coverage incl. `nearest_unblock`); `test_vendor_pricing.gd`'s shrine case additionally asserts the neutral-band refusal before earning warm standing, so it cannot pass with the gate removed |
 | Canon / vault review | No new lore facts: the three NPCs, both factions, and all locations pre-exist in the seeded roster; new lines are attitude re-wordings of existing relationships |
 | Suite green | Full gdUnit4 run recorded below |
 

@@ -129,6 +129,32 @@ func test_neutral_band_weights_preserve_the_unconfigured_schedule() -> void:
 	assert_array(configured).is_equal(unconfigured)
 
 
+func test_allied_zero_weight_single_entry_route_empties_table_and_schedule() -> void:
+	# Schedule-level proof that build_schedule() consumes the band-adjusted
+	# table: with the route's ONLY encounter overridden to zero at allied,
+	# the table omits the id entirely (not "weight 0 retained") and the
+	# built schedule is empty. Regresses if build_schedule stops applying
+	# band weights or if zero-weight entries stop being dropped.
+	var route: Dictionary = _route_with_band_weights()
+	route["encounter_table"] = [{"encounter_id": &"dorthkor-vanguard", "weight": 2}]
+	_set_iron_companies_band(&"allied")
+	var table: Array[Dictionary] = EncounterDirector._encounter_table_for_route(route)
+	assert_array(table).is_empty()
+	assert_array(EncounterDirector.build_schedule(route, 84521)).is_empty()
+	_set_iron_companies_band(&"hostile")
+	assert_array(EncounterDirector.build_schedule(route, 84521)).is_not_empty()
+
+
+func test_allied_band_removes_vanguard_from_built_schedules() -> void:
+	_set_iron_companies_band(&"allied")
+	for seed: int in range(64):
+		var schedule: Array[Dictionary] = EncounterDirector.build_schedule(
+			_route_with_band_weights(), seed
+		)
+		for slot: Dictionary in schedule:
+			assert_str(String(slot["encounter_id"])).is_not_equal("dorthkor-vanguard")
+
+
 func test_band_aware_schedule_remains_deterministic() -> void:
 	_set_iron_companies_band(&"hostile")
 	var first: Array[Dictionary] = EncounterDirector.build_schedule(

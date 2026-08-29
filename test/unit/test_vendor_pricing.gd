@@ -106,9 +106,15 @@ func test_unclaimed_bed_resolution_moves_iron_and_thread_price_through_reputatio
 
 
 func test_a_different_factions_vendor_ignores_iron_companies_standing() -> void:
-	# Held Flame Shrine trades only at warm+ ironbrand-sentinels standing, so
-	# earn that first — the test must actually reach a priced item, never
-	# pass by exiting on an empty stock list.
+	# Held Flame Shrine trades only at warm+ ironbrand-sentinels standing:
+	# first prove the gate actually refuses at neutral (non-vacuous — this
+	# fails if the minimum_band gate is removed), then earn warm standing so
+	# the test reaches a genuinely priced item.
+	var refused: Dictionary = GameState.buy_from_vendor(
+		VendorIdsData.HELD_FLAME_SHRINE, ItemIds.RELICS_VOTIVE_CINDER
+	)
+	assert_bool(bool(refused.get("ok", true))).is_false()
+	assert_str(str(refused.get("reason", ""))).is_equal("trade_refused")
 	Reputation.record(
 		"vex", FactionIds.IRONBRAND_SENTINELS, Reputation.BAND_WARM,
 		"Reached warm Sentinel standing", "test"
