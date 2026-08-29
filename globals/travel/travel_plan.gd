@@ -1,0 +1,63 @@
+class_name TravelPlan
+extends Resource
+## Serializable runtime state for one journey.
+
+enum State {
+	EN_ROUTE,
+	AVOID_PROMPT,
+	IN_BATTLE,
+	ARRIVED,
+	CANCELLED,
+}
+
+@export var origin_id: StringName = &""
+@export var destination_id: StringName = &""
+@export var progress_step: int = 0
+@export var total_steps: int = 0
+@export var elapsed_phases: int = 0
+@export var rng_seed: int = 0
+@export var state: State = State.EN_ROUTE
+var encounter_schedule: Array[Dictionary] = []
+
+
+func to_dict() -> Dictionary:
+	return {
+		"origin_id": String(origin_id),
+		"destination_id": String(destination_id),
+		"progress_step": progress_step,
+		"total_steps": total_steps,
+		"elapsed_phases": elapsed_phases,
+		"rng_seed": rng_seed,
+		"encounter_schedule": encounter_schedule.duplicate(true),
+		"state": int(state),
+	}
+
+
+static func from_dict(data: Variant) -> TravelPlan:
+	var plan := TravelPlan.new()
+	if not data is Dictionary:
+		return plan
+
+	plan.origin_id = StringName(data.get("origin_id", ""))
+	plan.destination_id = StringName(data.get("destination_id", ""))
+	plan.progress_step = maxi(int(data.get("progress_step", 0)), 0)
+	plan.total_steps = maxi(int(data.get("total_steps", 0)), 0)
+	plan.progress_step = mini(plan.progress_step, plan.total_steps)
+	plan.elapsed_phases = maxi(int(data.get("elapsed_phases", 0)), 0)
+	plan.rng_seed = int(data.get("rng_seed", 0))
+	plan.state = clampi(
+		int(data.get("state", State.EN_ROUTE)), State.EN_ROUTE, State.CANCELLED
+	) as State
+
+	var raw_schedule: Variant = data.get("encounter_schedule", [])
+	if raw_schedule is Array:
+		for raw_slot: Variant in raw_schedule:
+			if not raw_slot is Dictionary:
+				continue
+			plan.encounter_schedule.append({
+				"at_step": maxi(int(raw_slot.get("at_step", 0)), 0),
+				"encounter_id": StringName(raw_slot.get("encounter_id", "")),
+				"resolved": bool(raw_slot.get("resolved", false)),
+				"spoils_granted": bool(raw_slot.get("spoils_granted", false)),
+			})
+	return plan
