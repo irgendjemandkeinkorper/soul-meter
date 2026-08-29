@@ -370,6 +370,22 @@ static func build() -> Theme:
 	t.set_color("font_color", "StandingWarmLabel", DS.STATE_CONSTANT)
 	t.set_color("font_color", "StandingAlliedLabel", DS.GILD_2)
 
+	# In-play consequence notices use semantic variations so their dynamically
+	# created controls remain inside the shared design-system theme.
+	t.add_type("ConsequenceNoticeStack")
+	t.set_type_variation("ConsequenceNoticeStack", "VBoxContainer")
+	t.set_constant("separation", "ConsequenceNoticeStack", DS.SPACE_2)
+	t.add_type("ConsequenceNoticePanel")
+	t.set_type_variation("ConsequenceNoticePanel", "PanelContainer")
+	t.set_stylebox(
+		"panel", "ConsequenceNoticePanel", _notched_style(27, DS.SPACE_3, DS.SPACE_5)
+	)
+	t.add_type("ConsequenceNoticeLabel")
+	t.set_type_variation("ConsequenceNoticeLabel", "Label")
+	t.set_font("font", "ConsequenceNoticeLabel", display)
+	t.set_font_size("font_size", "ConsequenceNoticeLabel", DS.FS_200)
+	t.set_color("font_color", "ConsequenceNoticeLabel", DS.PARCHMENT)
+
 	# ---- Inset wells: ItemList, ProgressBar track, LineEdit ----
 	var inset := _notched_style(19, DS.SPACE_4)
 	for cls in ["ItemList", "LineEdit"]:
