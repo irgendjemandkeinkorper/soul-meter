@@ -211,12 +211,23 @@ func available_actions(include_enemy_actions: bool = false) -> Array[CombatActio
 
 
 func can_use(action: CombatAction) -> bool:
-	return bool(action_refusal(action).get("allowed", false))
+	return bool(action_refusal(action, null, _availability_options(action)).get("allowed", false))
 
 
 func action_lock_reason(action: CombatAction) -> String:
-	var refusal := action_refusal(action)
+	var refusal := action_refusal(action, null, _availability_options(action))
 	return "" if bool(refusal.get("allowed", false)) else str(refusal.get("message", "Action unavailable."))
+
+
+func _availability_options(action: CombatAction) -> Dictionary:
+	if action == null or action.kind != CombatAction.Kind.DEFINING_STRIKE:
+		return {}
+	var target := current_target()
+	if target == null or target.discovered_weakness_ids.is_empty():
+		return {}
+	# Availability may query one discovered weakness, but execution never receives
+	# this value. The presentation must still ask the player to choose and confirm.
+	return {"weakness_id": target.discovered_weakness_ids[0]}
 
 
 func action_refusal(
@@ -303,6 +314,15 @@ func use_defining_strike(
 		target_index,
 		{"weakness_id": weakness_id, "forced_rolls": forced_rolls.duplicate()},
 	)
+
+
+func defining_strike_forecast(
+	weakness_id: StringName, target_index: int = -1
+) -> Dictionary:
+	if controller == null:
+		return {}
+	var target := _living_enemy(target_enemy_index if target_index < 0 else target_index)
+	return controller.forecast_defining_strike(target, weakness_id)
 
 
 func available_weaknesses(target_index: int = -1) -> Array[Dictionary]:
@@ -695,18 +715,9 @@ func _prepare_enemy_knowledge() -> void:
 
 
 func _resolved_action_options(
-	action: CombatAction, target: BattleActor, options: Dictionary
+	_action: CombatAction, _target: BattleActor, options: Dictionary
 ) -> Dictionary:
-	var resolved := options.duplicate(true)
-	if (
-		action != null
-		and action.kind == CombatAction.Kind.DEFINING_STRIKE
-		and not resolved.has("weakness_id")
-		and target != null
-		and not target.discovered_weakness_ids.is_empty()
-	):
-		resolved["weakness_id"] = target.discovered_weakness_ids[0]
-	return resolved
+	return options.duplicate(true)
 
 
 func _speech_hook() -> Dictionary:

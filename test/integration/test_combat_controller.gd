@@ -59,6 +59,26 @@ func test_ap_refresh_derives_from_attributes_and_costs_are_deducted() -> void:
 	assert_int(ally.action_points).is_equal(4)
 
 
+func test_ending_ap_turn_grants_data_driven_hard_capped_defense_until_refresh() -> void:
+	rules.unused_ap_defense_per_ap = 2
+	rules.unused_ap_defense_cap = 3
+	controller.start([ally], [enemy])
+	var forfeited := ally.action_points
+
+	assert_bool(controller.end_turn()).is_true()
+
+	var ended_event: CombatEvent = null
+	for event: CombatEvent in events:
+		if event.type == &"turn_ended" and event.actor_id == ally.combat_id:
+			ended_event = event
+			break
+	assert_object(ended_event).is_not_null()
+	assert_int(ended_event.data["forfeited_ap"]).is_equal(forfeited)
+	assert_int(ended_event.data["unused_ap_defense_bonus"]).is_equal(3)
+	assert_int(ended_event.data["snapshot"]["allies"][0]["unused_ap_defense_bonus"]).is_equal(3)
+	assert_int(ally.unused_ap_defense_bonus).is_equal(0)
+
+
 func test_insufficient_ap_refusal_matches_structured_gate_shape() -> void:
 	controller.start([ally], [enemy])
 	ally.action_points = 1
@@ -169,6 +189,30 @@ func test_defining_strike_uses_skill_check_and_applies_authored_effect() -> void
 	)
 	assert_str(controller_source).contains("skill_check_service.resolve")
 	assert_bool(controller_source.contains("randi_range(")).is_false()
+
+
+func test_defining_strike_requires_selection_and_forecast_matches_resolution_context() -> void:
+	var weakness_id := &"loam-maddened-boar/knee"
+	ally.source_member = _skilled_member()
+	enemy.archetype_id = &"loam-maddened-boar"
+	enemy.discovered_weakness_ids = [weakness_id]
+	controller.start([ally], [enemy])
+	var definition := CombatActionCatalog.by_id(&"definition")
+
+	var refused: Dictionary = controller.submit_action(definition.id, enemy)
+	assert_bool(refused["allowed"]).is_false()
+	assert_str(String(refused["blocked_by"])).is_equal("weakness")
+
+	var forecast: Dictionary = controller.forecast_defining_strike(enemy, weakness_id)
+	var resolved: Dictionary = controller.submit_action(
+		definition.id, enemy, {"weakness_id": weakness_id, "forced_rolls": [1]}
+	)
+	assert_bool(forecast["allowed"]).is_true()
+	var pure_forecast: Dictionary = forecast["resolution"]
+	assert_int(forecast["ap_cost"]).is_equal(definition.ap_cost)
+	assert_float(forecast["chance"]).is_equal(SkillCheck.preview("lore", ally.source_member))
+	assert_str(String(pure_forecast["weakness_id"])).is_equal(String(weakness_id))
+	assert_int(pure_forecast["damage"]).is_equal(resolved["damage"])
 
 
 func test_failed_defining_check_still_consumes_extra_ap() -> void:

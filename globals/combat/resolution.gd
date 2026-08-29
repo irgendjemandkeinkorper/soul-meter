@@ -217,6 +217,9 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"casting_gate": casting_gate.duplicate(true),
 		"writes": writes,
 	}
+	if context.has("weakness_id"):
+		result["weakness_id"] = StringName(context.get("weakness_id", ""))
+		result["weakness"] = _dictionary(context.get("weakness", {})).duplicate(true)
 	result["action_log"] = {
 		"battle_id": result["battle_id"],
 		"tick": result["tick"],
@@ -231,7 +234,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 static func resolve_action(
 	battle_unit: Dictionary, ability: Dictionary, target_tile: Dictionary, seed: int
 ) -> Dictionary:
-	return resolve({
+	var context := {
 		"battle_id": str(battle_unit.get("battle_id", target_tile.get("battle_id", ""))),
 		"tick": int(battle_unit.get("tick", 0)),
 		"seed": seed,
@@ -245,7 +248,11 @@ static func resolve_action(
 		"height_advantage_steps": int(target_tile.get("height_advantage_steps", 0)),
 		"to_hit_enabled": bool(battle_unit.get("to_hit_enabled", false)),
 		"caster_context": _dictionary(battle_unit.get("caster_context", {})),
-	})
+	}
+	if battle_unit.has("weakness_id"):
+		context["weakness_id"] = battle_unit.get("weakness_id", "")
+		context["weakness"] = _dictionary(battle_unit.get("weakness", {})).duplicate(true)
+	return resolve(context)
 
 
 static func positional_modifiers(

@@ -11,6 +11,12 @@ extends Resource
 @export var context_resolution_ap_cost: int = 2
 @export var cover_defense_bonus: int = 2
 @export var flank_power_bonus: int = 2
+## PROVISIONAL Wave 1 placeholder. This is balance data, not canon; tune only with
+## encounter-sweep evidence. The hard cap prevents banking AP from outvaluing an action.
+@export_range(0, 10) var unused_ap_defense_per_ap: int = 1
+@export_range(0, 10) var unused_ap_defense_cap: int = 1
+## OFF until the documented enemy-AP balance pass authorizes shipping the new rhythm.
+@export var enemy_full_ap_turns: bool = false
 
 ## FR-105a seam (architecture doc §1.5). Selects which BattlefieldModel
 ## `create_default()` builds. False keeps the zone model live; grid support

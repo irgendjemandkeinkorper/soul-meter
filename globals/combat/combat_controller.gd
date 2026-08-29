@@ -335,6 +335,7 @@ func end_turn() -> bool:
 	if state != State.ALLY_TURN or active_actor() == null:
 		return false
 	var actor := active_actor()
+	var forfeited_ap := actor.action_points
 	# Yield before publishing the end-of-turn transition. Charge time can refuse a third
 	# consecutive wait, in which case the ready actor must remain in control and act.
 	var yield_result := scheduler.yield_turn(actor)
@@ -342,12 +343,28 @@ func end_turn() -> bool:
 		last_refusal = yield_result.duplicate(true)
 		_emit_event(&"action_refused", actor, null, {"action_id": &"", "reason": yield_result})
 		return false
+	var unused_ap_defense := 0
+	if (
+		rules != null
+		and str(scheduler.to_dict().get("scheduler", "")) == "ap_round"
+		and forfeited_ap >= 1
+	):
+		unused_ap_defense = mini(
+			forfeited_ap * rules.unused_ap_defense_per_ap,
+			rules.unused_ap_defense_cap,
+		)
+		actor.unused_ap_defense_bonus = unused_ap_defense
 	last_refusal.clear()
 	_emit_event(
 		&"turn_ended",
 		actor,
 		null,
-		{"ap_remaining": actor.action_points, "charge_remaining": scheduler.charge_of(actor)},
+		{
+			"ap_remaining": actor.action_points,
+			"charge_remaining": scheduler.charge_of(actor),
+			"forfeited_ap": forfeited_ap,
+			"unused_ap_defense_bonus": unused_ap_defense,
+		},
 	)
 	# Forfeits whatever resource remains — a no-op if there is nothing left to give up. This
 	# is the ONLY place a turn is yielded voluntarily; a turn that already spent its action
@@ -410,7 +427,25 @@ func snapshot() -> Dictionary:
 		"enemies": _actor_snapshots(enemies),
 		"tiles": _tile_snapshots(),
 		"weather": _weather_snapshot(),
+		"scheduler_mode": str(scheduler.to_dict().get("scheduler", "")) if scheduler != null else "",
+		"turn_order": _turn_order_snapshot(),
 	}
+
+
+func _turn_order_snapshot() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if scheduler == null:
+		return result
+	for entry: Dictionary in scheduler.peek_order(8):
+		var actor := entry.get("actor") as BattleActor
+		if actor == null:
+			continue
+		var row := entry.duplicate(true)
+		row.erase("actor")
+		row["actor_id"] = actor.combat_id
+		row["display_name"] = actor.display_name
+		result.append(row)
+	return result
 
 
 ## Live tiles (terrain + charge) when a grid battle built TileStates; the static
@@ -470,7 +505,8 @@ static func calculate_damage(
 	ability_element_id: StringName = &"",
 	ability_magnitude: StringName = &"note",
 	seed: int = 0,
-	positional_context: Dictionary = {}
+	positional_context: Dictionary = {},
+	resolution_context: Dictionary = {},
 ) -> int:
 	var element_id := ability_element_id
 	if String(element_id).is_empty():
@@ -481,8 +517,7 @@ static func calculate_damage(
 		+ flank_bonus
 		+ int(attacker.balance_effects.get("damage_bonus", 0))
 	)
-	var result := Resolution.resolve_action(
-		{
+	var unit_context := {
 			"id": String(attacker.combat_id),
 			"attack_scale": attacker.attack_scale,
 			# To-hit (#169 ruling): grid callers supply positional context and opt in; zone
@@ -494,7 +529,12 @@ static func calculate_damage(
 			# resolve to Resolution's neutral terms (uncharged tiles, no weather).
 			"tile_state": positional_context.get("source_tile", {}),
 			"weather": positional_context.get("weather", {}),
-		},
+		}
+	if resolution_context.has("weakness_id"):
+		unit_context["weakness_id"] = resolution_context["weakness_id"]
+		unit_context["weakness"] = resolution_context.get("weakness", {}).duplicate(true)
+	var result := Resolution.resolve_action(
+		unit_context,
 		{
 			"id": "attack",
 			"element_id": element_id,
@@ -621,6 +661,9 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 		_emit_event(&"round_started", null, null, {"round": int(result.get("round", round_number))})
 		for row: Variant in result.get("refreshed", []):
 			if row is Dictionary:
+				var refreshed_actor := row.get("actor") as BattleActor
+				if refreshed_actor != null:
+					refreshed_actor.unused_ap_defense_bonus = 0
 				_emit_event(
 					&"ap_refreshed",
 					row.get("actor"),
@@ -875,7 +918,10 @@ func _query_defining_strike(target: BattleActor, weakness_id: StringName) -> Dic
 
 
 func _resolve_attack(
-	actor: BattleActor, target: BattleActor, action: CombatAction
+	actor: BattleActor,
+	target: BattleActor,
+	action: CombatAction,
+	resolution_context: Dictionary = {},
 ) -> Dictionary:
 	var total_damage := 0
 	var positional_results: Array[Dictionary] = []
@@ -900,6 +946,7 @@ func _resolve_attack(
 			action.magnitude,
 			_sequence,
 			positional_context,
+			resolution_context,
 		)
 		hit_target.hp = maxi(0, hit_target.hp - damage)
 		total_damage += damage
@@ -947,6 +994,9 @@ func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAct
 	if target_position.has("elevation"):
 		target_height = int(target_position["elevation"])
 	return {
+		"battle_id": String(_encounter_id),
+		"tick": _sequence,
+		"seed": _sequence,
 		"unit": {
 			"id": String(actor.combat_id),
 			"attack_scale": actor.attack_scale,
@@ -972,7 +1022,35 @@ func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAct
 		"weather": positional_context.get("weather", weather.to_dict()),
 		"facing": positional_context.get("facing", {}),
 		"height_advantage_steps": int(positional_context.get("height_advantage_steps", 0)),
+		"to_hit_enabled": not positional_context.is_empty(),
 	}
+
+
+func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> Dictionary:
+	var actor := active_actor()
+	var action := action_by_id(&"definition")
+	var gate := query_action(action, target, {"weakness_id": weakness_id})
+	if not bool(gate.get("allowed", false)):
+		return gate
+	var weakness: Dictionary = gate.get("weakness", {})
+	var context := forecast_context(actor, target, action)
+	context["weakness_id"] = weakness_id
+	context["weakness"] = weakness.duplicate(true)
+	var resolution := Resolution.resolve(context)
+	return _allowed({
+		"action_id": action.id,
+		"weakness_id": weakness_id,
+		"weakness_name": str(weakness.get("display_name", weakness_id)),
+		"ap_cost": action.ap_cost,
+		"chance": skill_check_service.preview(
+			str(weakness.get("check_skill", "lore")),
+			actor.source_member,
+			float(weakness.get("check_modifier", 0.0)),
+		),
+		"effect_id": StringName(weakness.get("effect_id", "")),
+		"effect_parameters": (weakness.get("effect_parameters", {}) as Dictionary).duplicate(true),
+		"resolution": resolution,
+	})
 
 
 func _positional_resolution_context(actor: BattleActor, target: BattleActor) -> Dictionary:
@@ -1056,7 +1134,10 @@ func _resolve_defining_strike(
 		)
 		return result
 
-	result.merge(_resolve_attack(actor, target, action), true)
+	result.merge(_resolve_attack(actor, target, action, {
+		"weakness_id": weakness_id,
+		"weakness": weakness.duplicate(true),
+	}), true)
 	var resistance: Variant = weakness.get("resistance", {})
 	var resisted := false
 	if resistance is Dictionary:
@@ -1244,6 +1325,7 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"position": battlefield.position_of(actor),
 			"side": battlefield.side_of(actor),
 			"guarding": actor.guarding,
+			"unused_ap_defense_bonus": actor.unused_ap_defense_bonus,
 			"archetype_id": actor.archetype_id,
 			"balance_band_id": actor.balance_band_id,
 			"balance_effects": actor.balance_effects.duplicate(true),

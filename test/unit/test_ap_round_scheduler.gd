@@ -233,6 +233,30 @@ func test_each_enemy_acts_exactly_once_per_round() -> void:
 	assert_int(after.get("round", 0)).is_equal(2)
 
 
+func test_enemy_spends_full_ap_only_when_wave1_flag_is_enabled() -> void:
+	var rules := _rules()
+	rules.enemy_full_ap_turns = true
+	var ally := _actor("ally-0", ApRoundScheduler.ALLY_SIDE)
+	var foe := _actor("enemy-0", ApRoundScheduler.ENEMY_SIDE)
+	var group: Array[BattleActor] = [ally, foe]
+	var scheduler := ApRoundScheduler.new() as TurnScheduler
+	scheduler.configure(rules)
+	scheduler.setup(group)
+	scheduler.advance()
+	scheduler.yield_turn(ally)
+	scheduler.advance()
+
+	var cheap := _action("jab", 1)
+	var ap_before := foe.action_points
+	scheduler.commit(foe, cheap)
+	scheduler.release(foe)
+	var continuation: Dictionary = scheduler.advance()
+
+	assert_int(foe.action_points).is_equal(ap_before - 1)
+	assert_object(continuation.get("actor")).is_same(foe)
+	assert_bool(continuation.get("round_ended", false)).is_false()
+
+
 func test_a_cancelled_enemy_action_does_not_consume_its_one_act() -> void:
 	var ally := _actor("ally-0", ApRoundScheduler.ALLY_SIDE)
 	var foe := _actor("enemy-0", ApRoundScheduler.ENEMY_SIDE)
@@ -354,6 +378,9 @@ func test_peek_order_lists_the_rest_of_the_round_in_acting_order() -> void:
 	assert_object(order[0]["actor"]).is_same(ally)
 	assert_object(order[1]["actor"]).is_same(other)
 	assert_object(order[2]["actor"]).is_same(foe)
+	assert_str(String(order[0]["scheduler_mode"])).is_equal("ap_round")
+	assert_bool(order[0]["pending"]).is_true()
+	assert_int(order[0]["ap_remaining"]).is_equal(ally.action_points)
 
 
 func _walk_ten_turns() -> Array[String]:

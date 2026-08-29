@@ -12,3 +12,7 @@ maximum_action_points = 8
 context_resolution_ap_cost = 2
 cover_defense_bonus = 2
 flank_power_bonus = 2
+# PROVISIONAL Wave 1 placeholder; retune only with balance evidence.
+unused_ap_defense_per_ap = 1
+unused_ap_defense_cap = 1
+enemy_full_ap_turns = false

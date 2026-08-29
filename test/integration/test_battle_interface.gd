@@ -21,6 +21,46 @@ func test_battle_interface_renders_all_six_regions_from_scripted_state() -> void
 	assert_str((runner.find_child("Value", true, false) as Label).text).contains("AQUA")
 
 
+func test_region_e_renders_additive_ap_round_snapshot_payload() -> void:
+	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
+	var interface := runner.scene() as BattleInterface
+	var event := CombatEvent.new()
+	event.type = &"battle_snapshot"
+	event.data = {"snapshot": {
+		"scheduler_mode": "ap_round",
+		"turn_order": [
+			{
+				"actor_id": &"ally-0",
+				"display_name": "Vex",
+				"scheduler_mode": &"ap_round",
+				"ap_remaining": 2,
+				"max_ap": 4,
+				"acted": false,
+				"pending": true,
+				"active": true,
+			},
+			{
+				"actor_id": &"enemy-0",
+				"display_name": "Wight",
+				"scheduler_mode": &"ap_round",
+				"ap_remaining": 0,
+				"max_ap": 3,
+				"acted": true,
+				"pending": false,
+				"active": false,
+			},
+		],
+	}}
+	interface.consume_event(event)
+	await runner.simulate_frames(1)
+
+	var timeline := runner.find_child("TurnTimeline", true, false) as CTTimelineRegion
+	assert_int(timeline.marker_count()).is_equal(2)
+	assert_str((timeline.markers.get_child(0) as Label).text).contains("ACTIVE")
+	assert_str((timeline.markers.get_child(0) as Label).text).contains("●●○○")
+	assert_str((timeline.markers.get_child(1) as Label).text).contains("ACTED")
+
+
 func test_production_battle_instantiates_the_overlay() -> void:
 	var source := FileAccess.get_file_as_string("res://ui/screens/battle.gd")
 	assert_str(source).contains("battle_interface.tscn")

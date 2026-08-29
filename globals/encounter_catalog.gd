@@ -17,14 +17,6 @@ const _FIELD_GRID_DATA := {
 	"phase2-speech-winnable": {"dimensions": Vector2i(2, 4)},
 	"phase2-stabilizer-showcase": {"dimensions": Vector2i(2, 4)},
 }
-const _CHARGE_TIME_ENCOUNTERS := {
-	"phase2-demon": true,
-	"phase2-undead": true,
-	"phase2-mixed-whipsaw": true,
-	"phase2-speech-winnable": true,
-	"phase2-stabilizer-showcase": true,
-}
-
 ## #209: per-encounter authored weather element (Wheel id → the battle's Weather).
 ## Deliberately EMPTY: which encounters get which weather is an owner balance
 ## decision (`tools/combat_number_sweep.gd` delta must accompany any entry — see the
@@ -41,8 +33,6 @@ static func definition(encounter_id: StringName) -> Dictionary:
 	var grid: Variant = _FIELD_GRID_DATA.get(String(encounter_id), {})
 	if grid is Dictionary and not grid.is_empty():
 		result["grid"] = grid.duplicate(true)
-	if bool(_CHARGE_TIME_ENCOUNTERS.get(String(encounter_id), false)):
-		result["use_charge_time"] = true
 	var authored_weather := str(_WEATHER_DEFAULTS.get(String(encounter_id), ""))
 	if not authored_weather.is_empty():
 		result["weather_default"] = authored_weather

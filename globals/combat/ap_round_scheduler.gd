@@ -12,7 +12,8 @@ extends TurnScheduler
 ##
 ##   - A round refreshes AP for every living participant, then allies act, then enemies act.
 ##   - An ally keeps acting while AP remains; the turn passes when AP hits zero or it yields.
-##   - Each enemy acts exactly ONCE per round, however much AP it has left.
+##   - Enemies act once per round by default. CombatRules may opt into spending
+##     their full AP pool; that flag is deliberately OFF in shipped data.
 ##   - Order inside a side is seat order, which is party order.
 ##
 ## The one-action-per-enemy rule is the clearest example of why this is a port and not a design:
@@ -256,7 +257,15 @@ func commit(actor: BattleActor, action: CombatAction) -> Dictionary:
 	_committed_actor = actor
 	_committed_cost = cost
 	_phase = Phase.COMMITTED
-	if _side == ENEMY_SIDE:
+	if (
+		_side == ENEMY_SIDE
+		and (
+			_rules == null
+			or not _rules.enemy_full_ap_turns
+			or actor.action_points <= 0
+			or action.kind == CombatAction.Kind.PASS
+		)
+	):
 		_acted_this_round[actor.combat_id] = true
 	return _allowed({"actor": actor, "ct_spent": cost, "charge": actor.action_points})
 
@@ -489,11 +498,20 @@ func _seat_index_of(actor: BattleActor) -> int:
 
 
 func _order_entry(actor: BattleActor, distance: int) -> Dictionary:
+	var acted := actor.action_points <= 0
+	if actor.side == ENEMY_SIDE:
+		acted = bool(_acted_this_round.get(actor.combat_id, false))
 	return {
 		"actor": actor,
 		"charge": actor.action_points,
 		"ticks_until": distance,
 		"seat": int(_seat_of.get(actor.combat_id, 0)),
+		"scheduler_mode": &"ap_round",
+		"ap_remaining": actor.action_points,
+		"max_ap": actor.max_action_points,
+		"acted": acted,
+		"pending": not acted,
+		"active": actor == active_actor(),
 	}
 
 
