@@ -55,6 +55,19 @@ Droma Flintjaw: A clean plate came off the Jawbrace with a living guard's tag st
 	do GameState.set_flag("dom_living_tag_verified", true)
 	Droma Flintjaw: Then the tag is true and the casualty line is false. Decide which truth touches the plate first.
 	=> END
+- "Read the guard's history in the tag and plate together." [#tag=Lore] [if QuestRegistry.is_active(QuestRegistry.LIVING_TAG) and not GameState.get_flag("dom_living_tag_verified") and not GameState.get_flag("dom_living_tag_check_failed") and check("lore", 45) /]
+	do SkillCheck.resolve("lore")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_living_tag_verified", true)
+		Droma Flintjaw: The tag and plate agree. The living owner stands clear of the false report.
+		=> END
+	else
+		do GameState.set_flag("dom_living_tag_check_failed", true)
+		Droma Flintjaw: The plate alone cannot name its wearer. Bring me both accounts.
+		=> END
+- "Return to Korrin's posture and Ressa's brand reading." [if QuestRegistry.is_active(QuestRegistry.LIVING_TAG) and GameState.get_flag("dom_living_tag_check_failed") and not GameState.get_flag("dom_living_tag_verified") /]
+	Droma Flintjaw: Their two accounts remain the clean path through this inquiry.
+	=> END
 - "Quarantine the plate as Wound-Watch evidence." [#consequence=The Sentinels chain the empty armor away] [if QuestRegistry.is_active(QuestRegistry.LIVING_TAG) and QuestRegistry.flags_met(QuestRegistry.LIVING_TAG) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.LIVING_TAG, "quarantine-the-plate")
 	Droma Flintjaw: Chained screen and double watch. No living body goes inside that iron.
@@ -85,6 +98,19 @@ Irka Stonebreath: One veteran lies in my ward without a hall name. Mercy keeps t
 - "Loa's token and Istra's account identify the veteran." [if QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and not GameState.get_flag("dom_unclaimed_bed_identified") /]
 	do GameState.set_flag("dom_unclaimed_bed_identified", true)
 	Irka Stonebreath: Knowing a name does not grant the right to spend it. Decide where that debt belongs.
+	=> END
+- "Read the veteran's identity in the token and Istra's account." [#tag=Insight] [if QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and not GameState.get_flag("dom_unclaimed_bed_identified") and not GameState.get_flag("dom_unclaimed_bed_check_failed") and check("insight", 45) /]
+	do SkillCheck.resolve("insight")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_unclaimed_bed_identified", true)
+		Irka Stonebreath: You have the identity without turning it into spectacle. Now place the debt.
+		=> END
+	else
+		do GameState.set_flag("dom_unclaimed_bed_check_failed", true)
+		Irka Stonebreath: Do not make certainty from a guarded account. Return with the token beside it.
+		=> END
+- "Return to Loa's token and Istra's account." [if QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and GameState.get_flag("dom_unclaimed_bed_check_failed") and not GameState.get_flag("dom_unclaimed_bed_identified") /]
+	Irka Stonebreath: The original comparison remains open, and the veteran's confidence remains intact.
 	=> END
 - "Return the veteran's name and debt to the Company hall." [#consequence=The Company must answer for the bed it left unnamed] [if QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and QuestRegistry.flags_met(QuestRegistry.UNCLAIMED_BED) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.UNCLAIMED_BED, "return-the-name")
@@ -160,6 +186,19 @@ Hadrik Vale: A road register returned with rain inside three intact seals. One c
 - "The census name matches both watch records." [if QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and not GameState.get_flag("dom_rainbound_register_reconstructed") /]
 	do GameState.set_flag("dom_rainbound_register_reconstructed", true)
 	Hadrik Vale: Then the evidence is complete and the meaning remains disputed. Choose which column bears the name.
+	=> END
+- "Reconstruct the crossed-out entry from all three records." [#tag=Investigation] [if QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and not GameState.get_flag("dom_rainbound_register_reconstructed") and not GameState.get_flag("dom_rainbound_register_check_failed") and check("investigation", 50) /]
+	do SkillCheck.resolve("investigation")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_rainbound_register_reconstructed", true)
+		Hadrik Vale: Every mark has its place again. The disputed name is ready for judgment.
+		=> END
+	else
+		do GameState.set_flag("dom_rainbound_register_check_failed", true)
+		Hadrik Vale: A plausible column is not a proven one. Return with all three records.
+		=> END
+- "Return to Brinna's count, Enna's proof, and Kessa's warning." [if QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and GameState.get_flag("dom_rainbound_register_check_failed") and not GameState.get_flag("dom_rainbound_register_reconstructed") /]
+	Hadrik Vale: The original comparison remains available, one record against the other two.
 	=> END
 - "Restore the crossed-out name as an active witness." [#consequence=The Registry preserves a living witness] [if QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and QuestRegistry.flags_met(QuestRegistry.RAINBOUND_REGISTER) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.RAINBOUND_REGISTER, "restore-the-entry")
@@ -280,6 +319,19 @@ Senn Brinehook: My net came back cut from below and every knot was retied in mar
 	do GameState.set_flag("dom_marching_knots_traced", true)
 	Senn Brinehook: Then the pattern belongs to everyone in danger or only the watch trying to name it. Choose.
 	=> END
+- "Retie the marching sequence from the three accounts." [#tag=Sleight of Hand] [if QuestRegistry.is_active(QuestRegistry.MARCHING_KNOTS) and not GameState.get_flag("dom_marching_knots_traced") and not GameState.get_flag("dom_marching_knots_check_failed") and check("sleight_of_hand", 40) /]
+	do SkillCheck.resolve("sleight_of_hand")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_marching_knots_traced", true)
+		Senn Brinehook: The sequence holds in your hands. Now choose who keeps it.
+		=> END
+	else
+		do GameState.set_flag("dom_marching_knots_check_failed", true)
+		Senn Brinehook: One wrong turn makes another pattern. Bring the three accounts together.
+		=> END
+- "Return to Brek's report, Toma's count, and Yssra's lights." [if QuestRegistry.is_active(QuestRegistry.MARCHING_KNOTS) and GameState.get_flag("dom_marching_knots_check_failed") and not GameState.get_flag("dom_marching_knots_traced") /]
+	Senn Brinehook: The original trace remains open. Let all three accounts hold the line.
+	=> END
 - "Give the marching net to the outer-chain watch." [#consequence=The net becomes numbered Wound-Watch evidence] [if QuestRegistry.is_active(QuestRegistry.MARCHING_KNOTS) and QuestRegistry.flags_met(QuestRegistry.MARCHING_KNOTS) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.MARCHING_KNOTS, "give-it-to-the-watch")
 	Senn Brinehook: Yara gets the whole net. I keep one sketch so sealed evidence cannot become forgotten evidence.
@@ -354,6 +406,19 @@ Veska Ruun: Three Pillar weights were filed smooth where candidate names should 
 - "The scores prove three trials used altered weight." [if QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and not GameState.get_flag("dom_smoothed_weights_audited") /]
 	do GameState.set_flag("dom_smoothed_weights_audited", true)
 	Veska Ruun: Then innocence and legitimacy no longer fit on the same line. Decide which debt the Pillar pays first.
+	=> END
+- "Test the filed weights against an honest Pillar burden." [#tag=Athletics] [if QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and not GameState.get_flag("dom_smoothed_weights_audited") and not GameState.get_flag("dom_smoothed_weights_check_failed") and check("athletics", 50) /]
+	do SkillCheck.resolve("athletics")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_smoothed_weights_audited", true)
+		Veska Ruun: Your measure confirms the altered burden. The affected ranks await judgment.
+		=> END
+	else
+		do GameState.set_flag("dom_smoothed_weights_check_failed", true)
+		Veska Ruun: Feeling the difference is not an audit. Bring the scores and pins together.
+		=> END
+- "Return to Drel's scores and Kadrin's burden pins." [if QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and GameState.get_flag("dom_smoothed_weights_check_failed") and not GameState.get_flag("dom_smoothed_weights_audited") /]
+	Veska Ruun: The original arithmetic remains open. Make those records agree.
 	=> END
 - "Void every trial touched by the altered weights." [#consequence=Compromised ranks fall before the measure] [if QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and QuestRegistry.flags_met(QuestRegistry.SMOOTHED_WEIGHTS) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.SMOOTHED_WEIGHTS, "void-the-trials")
