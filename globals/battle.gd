@@ -127,21 +127,36 @@ func start(encounter: Variant) -> void:
 	balance_changed.emit(balance)
 
 
+## Builds the authored encounter grid, or a provisional default grid when a catalog
+## definition authors none — every catalog encounter is tactical (owner ruling,
+## 2026-08-29: the stage renders only grid battles, so zone defaults left the
+## screen blank in real play). Two zone paths stay live as the FR-105 fallback:
+## authors can select zones explicitly with `"battlefield": "zones"`, and ad-hoc
+## `start(BattleActor)` scaffold battles (no definition — a test/debug surface,
+## never reachable from authored content) keep their legacy zone behavior.
 func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
+	if _definition.is_empty() or str(_definition.get("battlefield", "")) == "zones":
+		return BattlefieldModel.create_default(rules)
+
+	var required_rows: int = maxi(allies.size(), enemies.size())
+	# PROVISIONAL balance dimensions until the later per-encounter content pass.
+	var default_dimensions := Vector2i(7, maxi(5, required_rows))
 	var grid: Variant = _definition.get("grid", {})
 	if not grid is Dictionary or grid.is_empty():
-		return BattlefieldModel.create_default(rules)
+		return _grid_battlefield(default_dimensions, rules)
 
 	var authored_dimensions: Variant = grid.get("dimensions", Vector2i.ZERO)
 	if not authored_dimensions is Vector2i:
-		push_warning("Encounter '%s' has invalid grid dimensions; using zones." % encounter_id)
-		return BattlefieldModel.create_default(rules)
+		push_warning("Encounter '%s' has invalid grid dimensions; using default grid." % encounter_id)
+		return _grid_battlefield(default_dimensions, rules)
 	var dimensions: Vector2i = authored_dimensions
-	var required_rows := maxi(allies.size(), enemies.size())
 	if dimensions.x < 2 or dimensions.y < required_rows:
-		push_warning("Encounter '%s' grid cannot fit its combatants; using zones." % encounter_id)
-		return BattlefieldModel.create_default(rules)
+		push_warning("Encounter '%s' grid cannot fit its combatants; using default grid." % encounter_id)
+		return _grid_battlefield(default_dimensions, rules)
+	return _grid_battlefield(dimensions, rules)
 
+
+func _grid_battlefield(dimensions: Vector2i, rules: CombatRules) -> GridBattlefieldModel:
 	_battlefield_ground = TileMapLayer.new()
 	_battlefield_ground.name = "EncounterBattlefieldGround"
 	_battlefield_ground.tile_set = _encounter_grid_tile_set()
@@ -149,12 +164,12 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 		for x in dimensions.x:
 			_battlefield_ground.set_cell(Vector2i(x, y), 0, Vector2i.ZERO)
 	var ground_parent: Node = self
-	var main_loop := Engine.get_main_loop()
+	var main_loop: MainLoop = Engine.get_main_loop()
 	if not is_inside_tree() and main_loop is SceneTree:
 		ground_parent = (main_loop as SceneTree).root
 	ground_parent.add_child(_battlefield_ground)
 
-	var model := GridBattlefieldModel.new()
+	var model: GridBattlefieldModel = GridBattlefieldModel.new()
 	model.configure(rules)
 	model.build_grid(_battlefield_ground)
 	return model

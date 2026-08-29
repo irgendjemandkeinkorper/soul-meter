@@ -72,6 +72,25 @@ func test_menus_and_screens() -> void:
 	await _shoot("res://ui/screens/debug_menu.tscn", "14_debug_menu")
 
 
+## The blank-stage regression shipped unphotographed because the sweep had no
+## battle capture — battle needs a live encounter, so it gets its own case.
+func test_battle_screen() -> void:
+	var member := PartyMember.new()
+	member.display_name = "Sweep Fighter"
+	member.hp = 40
+	member.max_hp = 40
+	GameState.party.append(member)
+	Battle.start("trial-warden")
+	await _shoot("res://ui/screens/battle.tscn", "23_battle_grid")
+	Battle._release_battlefield_ground()
+	Battle.controller = null
+	Battle.allies.clear()
+	Battle.enemies.clear()
+	Battle._definition.clear()
+	Battle._combat_history.clear()
+	GameState.party.erase(member)
+
+
 func test_shop_screen() -> void:
 	var runner := scene_runner("res://ui/screens/shop.tscn")
 	var screen := runner.scene() as Control
