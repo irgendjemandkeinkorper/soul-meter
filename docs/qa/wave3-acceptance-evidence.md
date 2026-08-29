@@ -37,7 +37,8 @@ quests + band-pricing proof), `8ca5a63` (e2e exemplar).
   on Iron & Thread, display==purchase price, and **Unclaimed Bed's resolution
   crossing neutral→warm visibly lowers the price** through the production
   `resolve_side_quest → Reputation.record` write; a different-faction vendor is
-  unaffected. Wave 4's "all vendors price by faction band" consumer should be
+  unaffected (the shrine test first earns warm Sentinel standing so its stock is
+  genuinely reachable — it can no longer pass vacuously). Wave 4's "all vendors price by faction band" consumer should be
   marked already-satisfied (test coverage, not new code, is its remaining work).
 
 ## Acceptance items
@@ -47,9 +48,9 @@ quests + band-pricing proof), `8ca5a63` (e2e exemplar).
 | Quest audit clean incl. new rule | Production run at `ada1b8f`: **0 errors** across all seven categories; `check_softlocks` count 0 on all ten retrofits |
 | Zero RNG during choice display | `test_dialogue_checks.gd::test_building_checked_choice_consumes_no_rng_or_check_log_entry` (asserts RNG state and check-log length unchanged through DialogueManager condition evaluation) |
 | Exactly one committed resolve | `test_selecting_checked_response_commits_exactly_one_check` |
-| E2E exemplar: both verb routes + one failure route | `test_first_chapter_journey.gd::test_dishonest_casks_exemplar_passes_both_verb_routes_and_a_failure_route` — persuasion route completes the quest; failed check sets its flag, closes only that path, and the original evidence route still resolves. Per-quest contract tests cover the other nine (`_assert_quest_check_route`) |
+| E2E exemplar: both verb routes + one failure route | `test_first_chapter_journey.gd::test_dishonest_casks_exemplar_passes_both_verb_routes_and_a_failure_route` — persuasion route completes the quest; after a failed check the checked option is asserted CLOSED and the ORIGINAL dialogue response is selected through the same DialogueResource (no flags set directly), completing the quest. Per-quest contract tests cover the other nine (`_assert_quest_check_route`) |
 | Canon / vault review | **Vault-review items: none.** Every name and fact in the new lines pre-exists in the quest content (verified by corpus search per name); no new lore facts were introduced |
-| Suite green | Full gdUnit4 run at `8ca5a63`: **938 test cases / 0 errors / 0 failures / 0 flaky** |
+| Suite green | Full gdUnit4 run at `8ca5a63`: **938 / 0**; post-gate-REVISE-response full run **938 / 0** |
 
 ## Residuals
 

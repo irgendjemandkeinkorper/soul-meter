@@ -47,6 +47,12 @@ to a quest continuation. Failure may close this route, but it must set a flag
 that another authored response reads to preserve the original acquisition path.
 Never end the campaign's only route to a required objective.
 
+Known false-negative modes of the audit heuristic (it is string- and
+indentation-based): it does not verify resolve order or count beyond presence,
+does not check the resolved skill matches the gated skill, and does not prove
+the alternate route is reachable at runtime — reviewers must still read the
+branch. It reports:
+
 `tools/quest_audit.gd` reports missing resolves or branches as errors and a
 possibly missing alternate route as a warning. Its route check is heuristic;
 playtest both outcomes and the fallback path before shipping.

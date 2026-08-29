@@ -433,8 +433,17 @@ func test_dishonest_casks_exemplar_passes_both_verb_routes_and_a_failure_route()
 	await DialogueManager.get_next_dialogue_line(resource, check_response.next_id)
 	assert_bool(GameState.flag_is_true("dom_dishonest_casks_check_failed")).is_true()
 	assert_bool(GameState.flag_is_true("dom_dishonest_casks_traced")).is_false()
-	for required_flag: String in quest.required_flags:
-		GameState.set_flag(required_flag, true)
+	# The failed check must CLOSE its own option and leave the original
+	# dialogue route selectable — drive that route through the same resource,
+	# never by setting flags directly.
+	member.skill_percentages["persuasion"] = 95.0
+	assert_object(await _journey_response(resource, HUB_TITLE, CHECK_TEXT)).is_null()
+	var original_response: DialogueResponse = await _journey_response(
+		resource, HUB_TITLE, "Arvek's mark and the forge tally agree."
+	)
+	assert_object(original_response).is_not_null()
+	await DialogueManager.get_next_dialogue_line(resource, original_response.next_id)
+	assert_bool(GameState.flag_is_true("dom_dishonest_casks_traced")).is_true()
 	assert_bool(QuestRegistry.flags_met(quest)).is_true()
 	assert_bool(QuestRegistry.resolve_side_quest(quest, quest.outcome_ids[0])).is_true()
 

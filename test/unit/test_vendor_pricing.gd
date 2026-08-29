@@ -106,12 +106,20 @@ func test_unclaimed_bed_resolution_moves_iron_and_thread_price_through_reputatio
 
 
 func test_a_different_factions_vendor_ignores_iron_companies_standing() -> void:
+	# Held Flame Shrine trades only at warm+ ironbrand-sentinels standing, so
+	# earn that first — the test must actually reach a priced item, never
+	# pass by exiting on an empty stock list.
+	Reputation.record(
+		"vex", FactionIds.IRONBRAND_SENTINELS, Reputation.BAND_WARM,
+		"Reached warm Sentinel standing", "test"
+	)
 	var shrine_id := VendorIdsData.HELD_FLAME_SHRINE
 	var shrine_stock: Array[Dictionary] = GameState.available_vendor_stock(shrine_id)
-	if shrine_stock.is_empty():
-		return
+	assert_array(shrine_stock).is_not_empty()
 	var shrine_item := str(shrine_stock[0].get("id", ""))
+	assert_str(shrine_item).is_not_empty()
 	var price_before: int = VendorData.price_for(shrine_id, shrine_item, true)
+	assert_int(price_before).is_greater(0)
 	Reputation.record(
 		"vex", FactionIds.IRON_COMPANIES, Reputation.BAND_ALLIED,
 		"Reached allied Company standing", "test"
