@@ -110,7 +110,12 @@ func test_move_with_payload_path_slides_without_damage_pop() -> void:
 	var move := CombatEvent.new()
 	move.type = &"action_resolved"
 	move.actor_id = &"ally-vex-0"
-	move.data = {"snapshot": after, "damage": 0, "path": [&"c:0,0,0", &"c:1,0,0", &"c:2,0,0"]}
+	move.data = {
+		"snapshot": after,
+		"damage": 0,
+		"path": [&"c:0,0,0", &"c:1,0,0", &"c:2,0,0"],
+		"path_cells": [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)],
+	}
 	stage.consume_event(move)
 	await runner.simulate_frames(2)
 	# A move is a slide, not a hit: no damage pop spawns.

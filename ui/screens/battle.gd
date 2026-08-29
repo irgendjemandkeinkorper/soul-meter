@@ -68,7 +68,7 @@ func _build() -> void:
 	Battle.combat_event.connect(_battle_interface.consume_event)
 	Battle.replay_combat_events(_battle_interface.consume_event)
 	if Battle.controller != null and Battle.controller.scheduler != null:
-		_battle_interface.bind_scheduler(Battle.controller.scheduler)
+		_battle_interface.bind_controller(Battle.controller)
 
 	_battle_hud = BATTLE_HUD_SCENE.instantiate() as BattleHUD
 	_battle_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -223,6 +223,8 @@ func _use_action(action_id: StringName) -> void:
 	if action != null and action.kind == CombatAction.Kind.DEFINING_STRIKE:
 		_open_weakness_dialog()
 		return
+	if action != null and action.requires_enemy_target() and is_instance_valid(_battle_interface):
+		_battle_interface.select_pointer_action(action_id)
 	Battle.use_action(action_id)
 
 

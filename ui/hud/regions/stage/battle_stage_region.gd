@@ -12,6 +12,8 @@ extends Control
 ## unchanged; tile_hovered is an additive signal.
 signal tile_selected(tile: Dictionary)
 signal tile_hovered(tile: Dictionary)
+signal pointer_pressed(tile: Dictionary, actor_id: StringName)
+signal pointer_cleared
 
 const UnitArtScript := preload("res://globals/unit_art.gd")
 const DORTHKOR_BACKGROUND := preload(
@@ -40,6 +42,10 @@ const SPRITE_TILE_HEIGHTS := 2.6
 const ACTIVE_RIM := Color("#C9A227")  # bronze — matches the DS "current" accent
 const TARGET_RIM := Color("#E06C5A")
 const HOVER_RIM := Color("#9AA3B2")
+const REACHABLE_TINT := Color(0.24, 0.56, 0.42, 0.18)
+const PATH_TINT := Color(0.82, 0.67, 0.24, 0.20)
+const COVER_COLOR := Color("#D6C184")
+const ACTION_FEEDBACK_SECONDS := 0.7
 const KO_MODULATE := Color(0.5, 0.5, 0.56, 0.45)
 const KO_FALL_RADIANS := deg_to_rad(78.0)
 const NO_CELL := Vector2i(-999, -999)
@@ -51,6 +57,10 @@ var _active_id: StringName = &""
 var _target_id: StringName = &""
 var _selected := Vector2i(-1, -1)
 var _hovered := Vector2i(-1, -1)
+var _reachable: Dictionary = {}
+var _hover_path: Array[Vector2i] = []
+var _input_locked_until_msec := 0
+var _pointer_turn_available := true
 var _fallen: Dictionary = {}
 var _pending_path_id: StringName = &""
 var _pending_path: Array[Vector2i] = []
@@ -91,6 +101,7 @@ func _ready() -> void:
 		func() -> void:
 			if _hovered != Vector2i(-1, -1):
 				_hovered = Vector2i(-1, -1)
+				_hover_path.clear()
 				queue_redraw()
 	)
 
@@ -105,6 +116,7 @@ func consume_event(event: CombatEvent) -> void:
 			if value is Dictionary:
 				_tiles.append((value as Dictionary).duplicate(true))
 	_read_actors(snapshot)
+	_set_movement(snapshot.get("movement", {}))
 	match event.type:
 		&"turn_started", &"enemy_turn_started":
 			_active_id = event.actor_id
@@ -116,14 +128,21 @@ func consume_event(event: CombatEvent) -> void:
 		&"battle_finished":
 			_active_id = &""
 			_target_id = &""
-	var move_path := _decode_path(event.data.get("path", []))
+	var move_path := _path_cells(event.data.get("path_cells", []))
 	if event.type == &"action_resolved" and move_path.size() >= 2 \
 			and _unit_nodes.has(event.actor_id):
 		_pending_path_id = event.actor_id
 		_pending_path = move_path
+		_input_locked_until_msec = Time.get_ticks_msec() + roundi(
+			float(move_path.size() - 1) * DS.DUR_FAST * 1000.0
+		)
 	var animate_move := event.type == &"battlefield_changed"
 	_sync_units(animate_move)
 	if event.type == &"action_resolved" and move_path.is_empty():
+		_input_locked_until_msec = maxi(
+			_input_locked_until_msec,
+			Time.get_ticks_msec() + roundi(ACTION_FEEDBACK_SECONDS * 1000.0)
+		)
 		_play_action_beat(event)
 	queue_redraw()
 
@@ -143,20 +162,124 @@ func select_tile(cell: Vector2i) -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			clear_pointer()
+			accept_event()
+			return
+		if event.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if not pointer_input_available():
+			accept_event()
+			return
 		var cell := _cell_at(event.position)
 		if cell != NO_CELL:
 			select_tile(cell)
+			pointer_pressed.emit(_tile_at(cell), _actor_at(cell))
 	elif event is InputEventMouseMotion:
 		var cell := _cell_at(event.position)
 		var hovered := cell if cell != NO_CELL else Vector2i(-1, -1)
 		if hovered == _hovered:
 			return
 		_hovered = hovered
-		for tile: Dictionary in _tiles:
-			if Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0))) == _hovered:
-				tile_hovered.emit(tile.duplicate(true))
-				break
-		queue_redraw()
+		_refresh_hover()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		clear_pointer()
+		accept_event()
+
+
+func clear_pointer() -> void:
+	_hovered = Vector2i(-1, -1)
+	_hover_path.clear()
+	_selected = Vector2i(-1, -1)
+	pointer_cleared.emit()
+	queue_redraw()
+
+
+func pointer_input_available() -> bool:
+	return _pointer_turn_available and Time.get_ticks_msec() >= _input_locked_until_msec
+
+
+func set_pointer_turn_available(available: bool) -> void:
+	_pointer_turn_available = available
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		clear_pointer()
+		get_viewport().set_input_as_handled()
+
+
+## Display-only AP quote from the controller's movement snapshot (AP compatibility:
+## gate T-10 — the stage never computes AP, it renders what move_query priced).
+func hovered_ap_cost() -> int:
+	return int(_reachable.get(_hovered, {}).get("ap_cost", -1))
+
+
+func destination_for_cell(cell: Vector2i) -> StringName:
+	return StringName((_reachable.get(cell, {}) as Dictionary).get("destination", &""))
+
+
+func cover_marker_count() -> int:
+	var count := 0
+	for tile: Dictionary in _tiles:
+		if bool(tile.get("cover", false)):
+			count += 1
+	return count
+
+
+func cell_center(cell: Vector2i) -> Vector2:
+	return _project(cell.x, cell.y, _height_at(cell), _layout())
+
+
+func _set_movement(value: Variant) -> void:
+	_reachable.clear()
+	if value is not Dictionary:
+		_refresh_hover()
+		return
+	var rows: Variant = (value as Dictionary).get("reachable", [])
+	if rows is not Array:
+		_refresh_hover()
+		return
+	for raw: Variant in rows:
+		if raw is not Dictionary:
+			continue
+		var row: Dictionary = (raw as Dictionary).duplicate(true)
+		var cells := _path_cells(row.get("path_cells", []))
+		if cells.is_empty():
+			continue
+		row["path_cells"] = cells
+		_reachable[cells.back()] = row
+	_refresh_hover()
+
+
+func _refresh_hover() -> void:
+	_hover_path.clear()
+	var hover_value: Variant = _reachable.get(_hovered, {})
+	if hover_value is Dictionary:
+		var path_value: Variant = (hover_value as Dictionary).get("path_cells", [])
+		if path_value is Array:
+			for path_cell: Variant in path_value:
+				if path_cell is Vector2i:
+					_hover_path.append(path_cell)
+	for tile: Dictionary in _tiles:
+		if Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0))) == _hovered:
+			tile_hovered.emit(tile.duplicate(true))
+			break
+	queue_redraw()
+
+
+func _tile_at(cell: Vector2i) -> Dictionary:
+	for tile: Dictionary in _tiles:
+		if Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0))) == cell:
+			return tile.duplicate(true)
+	return {}
+
+
+func _actor_at(cell: Vector2i) -> StringName:
+	for actor: Dictionary in _actors:
+		if _actor_cell(actor) == cell and int(actor.get("hp", 1)) > 0:
+			return StringName(str(actor.get("id", "")))
+	return &""
 
 
 func _cell_at(point: Vector2) -> Vector2i:
@@ -199,6 +322,18 @@ func _draw() -> void:
 			),
 			GROUND_MODULATE
 		)
+		var cell := Vector2i(x, y)
+		if _reachable.has(cell):
+			draw_colored_polygon(diamond, REACHABLE_TINT)
+		if _hover_path.has(cell):
+			draw_colored_polygon(diamond, PATH_TINT)
+		if bool(tile.get("cover", false)):
+			var notch := PackedVector2Array([
+				diamond[0] + Vector2(0, 3), diamond[0] + Vector2(8, 7),
+				diamond[0] + Vector2(6, 15), diamond[0] + Vector2(0, 19),
+				diamond[0] + Vector2(-6, 15), diamond[0] + Vector2(-8, 7),
+			])
+			draw_colored_polygon(notch, COVER_COLOR)
 		var charge := clampi(int(tile.get("charge_level", 0)), 0, DS.CHARGE_MAX)
 		if charge > 0:
 			var color := Color(str(tile.get("element_color", "#7BDFF2")))
@@ -211,7 +346,6 @@ func _draw() -> void:
 			)
 		var rim := Color("#58606F")
 		var rim_width := 1.0
-		var cell := Vector2i(x, y)
 		if cell == _hovered:
 			rim = HOVER_RIM
 			rim_width = 1.5
@@ -228,6 +362,12 @@ func _draw() -> void:
 			PackedVector2Array([diamond[0], diamond[1], diamond[2], diamond[3], diamond[0]]),
 			rim, rim_width
 		)
+		if cell == _hovered and _reachable.has(cell):
+			draw_string(
+				ThemeDB.fallback_font, center + Vector2(-13.0, -half_h - 4.0),
+				"%d AP" % int((_reachable[cell] as Dictionary).get("ap_cost", 0)),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#F2E4C9")
+			)
 		if height > 0:
 			draw_string(
 				ThemeDB.fallback_font, center + Vector2(-6.0 * scale_factor, half_h + 11.0),
@@ -409,21 +549,15 @@ func _play_ko_fall(sprite: TextureRect) -> void:
 	fall.tween_property(sprite, "modulate", KO_MODULATE, DS.DUR_BASE)
 
 
-## Decodes an Array of GridBattlefieldModel.cell_id() handles ("c:x,y,h") into
-## cells. Any token that fails to decode empties the result — the stage renders
-## only paths the payload actually carries (zone battles pass zone names here).
-func _decode_path(value: Variant) -> Array[Vector2i]:
+## Accepts controller-projected cells only. Opaque position handles remain model-owned.
+func _path_cells(value: Variant) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	if value is not Array:
 		return cells
-	for token: Variant in value as Array:
-		var text := str(token)
-		if not text.begins_with("c:"):
+	for cell_value: Variant in value as Array:
+		if cell_value is not Vector2i:
 			return []
-		var parts := text.trim_prefix("c:").split(",")
-		if parts.size() < 2 or not parts[0].is_valid_int() or not parts[1].is_valid_int():
-			return []
-		cells.append(Vector2i(parts[0].to_int(), parts[1].to_int()))
+		cells.append(cell_value)
 	return cells
 
 
