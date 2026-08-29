@@ -435,6 +435,10 @@ func _complete_scene_load() -> void:
 	var hub := FastTravelRegistry.by_scene(_target_scene)
 	if not hub.is_empty():
 		GameState.discover_fast_travel_hub(StringName(hub["id"]))
+	for map_location: Dictionary in WorldMapRegistry.all_locations():
+		if str(map_location.get("scene_path", "")) == _target_scene:
+			GameState.discover_world_location(StringName(map_location["id"]))
+			break
 	_pending_fast_travel_cost = 0
 	_fast_travel_in_progress = false
 	last_travel_error = ""

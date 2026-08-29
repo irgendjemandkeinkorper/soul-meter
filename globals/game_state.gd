@@ -28,6 +28,7 @@ const MIN_VAR_HARMONY := -5
 const MAX_VAR_HARMONY := 5
 const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
 const FAST_TRAVEL_DISCOVERY_PREFIX := "fast_travel_hub_discovered:"
+const WORLD_DISCOVERY_PREFIX := "world_location_discovered:"
 ## Set once a save has run character creation (main_menu -> CharacterCreation ->
 ## Playing). Chargen replaces `party[0]`'s identity in place (see
 ## `apply_created_character()`) rather than adding a second protagonist record, so
@@ -230,6 +231,28 @@ func is_fast_travel_hub_discovered(hub_id: StringName) -> bool:
 	if FastTravelRegistry.by_id(hub_id).is_empty():
 		return false
 	return flag_is_true(FAST_TRAVEL_DISCOVERY_PREFIX + String(hub_id))
+
+
+## World-map discovery (supersedes fast-travel hub discovery for macro
+## locations; FastTravelRegistry is the legacy FR-503 surface). Flag-backed so
+## it rides the existing save envelope with no schema change.
+func discover_world_location(location_id: StringName) -> bool:
+	if WorldMapRegistry.location(location_id).is_empty():
+		return false
+	var flag := WORLD_DISCOVERY_PREFIX + String(location_id)
+	if flag_is_true(flag):
+		return false
+	set_flag(flag, true)
+	return true
+
+
+func is_world_location_discovered(location_id: StringName) -> bool:
+	if WorldMapRegistry.location(location_id).is_empty():
+		return false
+	if flag_is_true(WORLD_DISCOVERY_PREFIX + String(location_id)):
+		return true
+	# Legacy bridge: hubs discovered under FR-503 fast travel stay discovered.
+	return is_fast_travel_hub_discovered(location_id)
 
 
 func discovered_fast_travel_hubs() -> Array[StringName]:
