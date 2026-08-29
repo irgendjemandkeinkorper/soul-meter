@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="2_chest"]
 
 [node name="CaskWarehouseInterior" type="Node2D"]
 
@@ -9,3 +10,11 @@ building_name = "Cask Warehouse"
 exit_transition_id = &"cask_warehouse_exit"
 floor_color = Color(0.17, 0.13, 0.09, 1)
 accent_color = Color(0.74, 0.42, 0.18, 1)
+
+[node name="SupplyCrate" parent="." instance=ExtResource("2_chest")]
+position = Vector2(150, 500)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_cask_warehouse_supply_crate"
+loot = Array[Dictionary]([{"item_id": "materials/lamp_oil", "quantity": 2}, {"item_id": "materials/binding_thread", "quantity": 1}])
+container_id = "cask-warehouse-supply-crate"
+owned_by_faction = "iron-companies"

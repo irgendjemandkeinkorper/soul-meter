@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="2_chest"]
 
 [node name="ChefsPantryInterior" type="Node2D"]
 
@@ -9,3 +10,11 @@ building_name = "Chef's Pantry"
 exit_transition_id = &"chefs_pantry_exit"
 floor_color = Color(0.18, 0.12, 0.1, 1)
 accent_color = Color(0.75, 0.39, 0.22, 1)
+
+[node name="SupplyCrate" parent="." instance=ExtResource("2_chest")]
+position = Vector2(150, 500)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_chefs_pantry_supply_crate"
+loot = Array[Dictionary]([{"item_id": "consumables/loam_bread", "quantity": 2}, {"item_id": "consumables/loam_smoked_eel", "quantity": 1}])
+container_id = "chefs-pantry-supply-crate"
+owned_by_faction = "iron-companies"

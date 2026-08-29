@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="2_chest"]
 
 [node name="EquipmentForgeInterior" type="Node2D"]
 
@@ -9,3 +10,11 @@ building_name = "Equipment Forge"
 exit_transition_id = &"equipment_forge_exit"
 floor_color = Color(0.1, 0.12, 0.15, 1)
 accent_color = Color(0.46, 0.59, 0.72, 1)
+
+[node name="RivetCrate" parent="." instance=ExtResource("2_chest")]
+position = Vector2(150, 500)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_equipment_forge_rivet_crate"
+loot = Array[Dictionary]([{"item_id": "materials/iron_rivets", "quantity": 2}])
+container_id = "equipment-forge-rivet-crate"
+owned_by_faction = "iron-companies"

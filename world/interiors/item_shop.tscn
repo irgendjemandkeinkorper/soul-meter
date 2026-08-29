@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="3_chest"]
 
 [node name="ItemShopInterior" type="Node2D"]
 
@@ -17,3 +18,11 @@ transition_id = &"cask_warehouse_enter"
 
 [node name="SpawnFromCaskWarehouse" type="Marker2D" parent="."]
 position = Vector2(800, 150)
+
+[node name="BackroomCrate" parent="." instance=ExtResource("3_chest")]
+position = Vector2(150, 500)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_item_shop_backroom_crate"
+loot = Array[Dictionary]([{"item_id": "tools/surveyors_chalk", "quantity": 1}, {"item_id": "materials/lamp_oil", "quantity": 2}])
+container_id = "item-shop-backroom-crate"
+owned_by_faction = "iron-companies"

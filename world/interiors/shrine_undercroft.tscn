@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="2_chest"]
 
 [node name="ShrineUndercroftInterior" type="Node2D"]
 
@@ -9,3 +10,10 @@ building_name = "Shrine Undercroft"
 exit_transition_id = &"shrine_undercroft_exit"
 floor_color = Color(0.08, 0.15, 0.17, 1)
 accent_color = Color(0.13, 0.55, 0.65, 1)
+
+[node name="OfferingBox" parent="." instance=ExtResource("2_chest")]
+position = Vector2(150, 500)
+display_name = "OFFERING BOX"
+interaction_flag = "loot_opened_shrine_undercroft_offering_box"
+loot = Array[Dictionary]([{"item_id": "relics/votive_cinder", "quantity": 2}])
+container_id = "shrine-undercroft-offering-box"

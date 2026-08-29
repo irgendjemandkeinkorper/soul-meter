@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
@@ -20,6 +20,7 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/log_stack.png" id="31_log_stack"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tent_detailedClosed.png" id="32_tent"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/campfire_logs.png" id="33_campfire"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="34_chest"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1800, 40)
@@ -304,3 +305,10 @@ offset = Vector2(0, -90)
 position = Vector2(950, 200)
 texture = ExtResource("30_rock_small")
 offset = Vector2(0, -50.596)
+
+[node name="CampCache" parent="." instance=ExtResource("34_chest")]
+position = Vector2(1390, 720)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_dorthkor_road_camp_cache"
+loot = Array[Dictionary]([{"item_id": "consumables/hearthloaf", "quantity": 1}, {"item_id": "materials/lamp_oil", "quantity": 1}])
+container_id = "dorthkor-road-camp-cache"

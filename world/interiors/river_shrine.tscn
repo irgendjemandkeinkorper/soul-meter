@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="3_chest"]
 
 [node name="RiverShrineInterior" type="Node2D"]
 
@@ -17,3 +18,11 @@ transition_id = &"shrine_undercroft_enter"
 
 [node name="SpawnFromShrineUndercroft" type="Marker2D" parent="."]
 position = Vector2(800, 150)
+
+[node name="OfferingBox" parent="." instance=ExtResource("3_chest")]
+position = Vector2(150, 500)
+display_name = "OFFERING BOX"
+interaction_flag = "loot_opened_river_shrine_offering_box"
+loot = Array[Dictionary]([{"item_id": "relics/votive_cinder", "quantity": 1}])
+container_id = "river-shrine-offering-box"
+owned_by_faction = "ironbrand-sentinels"
