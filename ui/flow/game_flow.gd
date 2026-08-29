@@ -226,13 +226,7 @@ func _avoidance_succeeds(slot_index: int, chance: float) -> bool:
 
 
 func _next_reached_slot_index() -> int:
-	if travel_plan == null:
-		return -1
-	for index: int in travel_plan.encounter_schedule.size():
-		var slot: Dictionary = travel_plan.encounter_schedule[index]
-		if not bool(slot.get("resolved", false)):
-			return index if int(slot.get("at_step", 0)) <= travel_plan.progress_step else -1
-	return -1
+	return travel_plan.next_unresolved_reached_index() if travel_plan != null else -1
 
 
 func _journey_route() -> Dictionary:
@@ -251,6 +245,14 @@ func _restore_travel_plan() -> void:
 		if not GameState.travel_plan.is_empty()
 		else null
 	)
+	if travel_plan == null:
+		return
+	if travel_plan.state in [TravelPlan.State.ARRIVED, TravelPlan.State.CANCELLED]:
+		# A finished journey has nothing to resume; keep the envelope clean.
+		travel_plan = null
+	else:
+		travel_plan.reconcile()
+	_persist_travel_plan()
 
 
 func _on_load_requested(destination: LoadDestination) -> void:

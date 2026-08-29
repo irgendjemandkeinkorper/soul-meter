@@ -269,6 +269,83 @@ func test_mid_journey_save_reload_preserves_plan_and_avoidance_stream() -> void:
 	)
 
 
+func test_in_battle_save_reloads_to_a_resumable_avoid_prompt() -> void:
+	var plan := _prompt_plan(37)
+	plan.progress_step = 2
+	plan.state = TravelPlan.State.IN_BATTLE
+	_install_plan(plan)
+	assert_bool(SaveGame.save()).is_true()
+
+	GameState.travel_plan = {}
+	GameFlow.travel_plan = null
+	assert_bool(SaveGame.load_save()).is_true()
+
+	var restored: TravelPlan = GameFlow.travel_plan
+	assert_int(int(restored.state)).is_equal(TravelPlan.State.AVOID_PROMPT)
+	var result: Dictionary = GameFlow.resolve_encounter_prompt(false)
+	assert_str(result["event"]).is_equal("battle_started")
+	assert_int(int(restored.state)).is_equal(TravelPlan.State.IN_BATTLE)
+
+
+func test_prompt_state_with_no_reached_slot_reloads_to_en_route() -> void:
+	var plan := _prompt_plan(41)
+	plan.progress_step = 0
+	plan.encounter_schedule[0]["at_step"] = 5
+	plan.state = TravelPlan.State.AVOID_PROMPT
+	_install_plan(plan)
+	assert_bool(SaveGame.save()).is_true()
+
+	GameState.travel_plan = {}
+	GameFlow.travel_plan = null
+	assert_bool(SaveGame.load_save()).is_true()
+
+	assert_int(int(GameFlow.travel_plan.state)).is_equal(TravelPlan.State.EN_ROUTE)
+
+
+func test_out_of_bounds_slot_is_clamped_on_reload_and_blocks_arrival() -> void:
+	var plan := _prompt_plan(47)
+	plan.state = TravelPlan.State.EN_ROUTE
+	plan.total_steps = 4
+	plan.encounter_schedule[0]["at_step"] = 99
+	_install_plan(plan)
+	assert_bool(SaveGame.save()).is_true()
+
+	GameState.travel_plan = {}
+	GameFlow.travel_plan = null
+	assert_bool(SaveGame.load_save()).is_true()
+
+	var restored: TravelPlan = GameFlow.travel_plan
+	assert_int(int(restored.encounter_schedule[0]["at_step"])).is_equal(4)
+	var result: Dictionary = GameFlow.advance_journey(99)
+	assert_str(result["event"]).is_equal("encounter_prompt")
+
+
+func test_finished_journey_states_reload_to_no_plan() -> void:
+	for finished: int in [TravelPlan.State.ARRIVED, TravelPlan.State.CANCELLED]:
+		var plan := _prompt_plan(53)
+		plan.state = finished as TravelPlan.State
+		_install_plan(plan)
+		assert_bool(SaveGame.save()).is_true()
+
+		GameFlow.travel_plan = null
+		assert_bool(SaveGame.load_save()).is_true()
+
+		assert_object(GameFlow.travel_plan).is_null()
+		assert_dict(GameState.travel_plan).is_empty()
+
+
+func test_cancel_journey_from_the_avoid_prompt_clears_the_plan() -> void:
+	var plan := _prompt_plan(59)
+	plan.progress_step = 2
+	_install_plan(plan)
+
+	GameFlow.cancel_journey()
+
+	assert_object(GameFlow.travel_plan).is_null()
+	assert_dict(GameState.travel_plan).is_empty()
+	assert_str(GameFlow._target_scene).is_equal(GameFlow.TOWN_SCENE)
+
+
 func _traveler() -> PartyMember:
 	var member := PartyMember.new()
 	member.id = "travel-flow-test"

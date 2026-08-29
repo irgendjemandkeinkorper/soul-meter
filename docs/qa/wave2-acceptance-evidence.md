@@ -36,12 +36,27 @@ geographic world-map UI + discovery), `e1bcb56` (screenshot evidence), `a68d475`
 | Criterion | Evidence |
 |---|---|
 | Travel round-trip playable | `test_region_map.gd` commits a plan from the screen through `GameFlow.start_journey`; `test_travel_flow.gd` arrival routes through the production `GameFlow.travel()` path and advances WorldClock by exactly the route's `phases_cost`; screenshot `docs/qa/wave2-world-map.png` |
-| Save/reload at journey states resumes correctly | `test_travel_flow.gd::test_mid_journey_save_reload_preserves_plan_and_avoidance_stream` (en-route + prompt; the reloaded avoidance roll reproduces the pre-save result); post-battle reload covered by the spoils reload test. Mid-battle save is not a Ch1 behavior (Wave-C T-8 ruling) — model-level serialization covers it |
+| Save/reload at journey states resumes correctly | Envelope round-trip tests per state in `test_travel_flow.gd`: AVOID_PROMPT (`test_mid_journey_save_reload_preserves_plan_and_avoidance_stream` — the reloaded avoidance roll reproduces the pre-save result), IN_BATTLE (`test_in_battle_save_reloads_to_a_resumable_avoid_prompt` — battle runtime never rides the envelope, so restore demotes to a resumable prompt via `TravelPlan.reconcile()`), stale prompt (`test_prompt_state_with_no_reached_slot_reloads_to_en_route`), out-of-bounds slot (`test_out_of_bounds_slot_is_clamped_on_reload_and_blocks_arrival`), finished states clear to no plan (`test_finished_journey_states_reload_to_no_plan`); post-battle reload covered by the spoils reload test; cancel is tested from both EN_ROUTE and AVOID_PROMPT |
 | Avoidance respects skill and caps | `test_encounter_director.gd` (95-cap minus risk modifier, floor 0); avoidance stream seeded per slot (`rng_seed + slot_index`) so reload never rerolls |
 | Risk display derives from the real table | Region-map route panel reads `risk_tier` from the registry row; `test_region_map.gd` asserts the MODERATE tier word renders and **no numeric chance appears** (owner ruling: tagged, no numbers) |
 | Spoils exactly-once under reload | `test_travel_flow.gd::test_battle_victory_grants_spoils_exactly_once_across_duplicate_events_and_reload` (duplicate `battle_ended` emissions + save/clear/reload + re-emission → counts unchanged); `test_spoils_table.gd` asserts prototype-id round-trip for every rolled id |
-| Suite green | Full gdUnit4 run post-`a68d475`: **915 test cases / 0 errors / 0 failures / 0 flaky** |
+| Suite green | Full gdUnit4 run (`runtest.sh -a test`, includes `test/manual` harnesses) post-`a68d475`: **915 / 0**; post-REVISE-response run below. The CI-style `scripts/test.sh` count is 12 lower (manual screenshot harnesses excluded) |
 | Quest audit | Production run at `a68d475`: **0 errors**; 12 warnings in the two pre-accepted classes (`outcome_count` 7, `orphaned_flags` 5) + 7 `readbacks` info notes |
+
+## Gate REVISE response (2026-08-29)
+
+The manual codex gate (`embrace-gate-wave2-manual-*.md`) returned REVISE with two
+blockers; both are addressed in the follow-up commit carrying this section:
+
+1. **Restore invariants:** `TravelPlan.reconcile()` (called by
+   `GameFlow._restore_travel_plan()` on every restore) demotes IN_BATTLE to a
+   resumable AVOID_PROMPT, demotes a prompt with no reached unresolved slot to
+   EN_ROUTE, clamps slot `at_step` into `[0, total_steps]` so arrival can never
+   skip an unresolved slot, and clears ARRIVED/CANCELLED plans to none.
+   `GameFlow._next_reached_slot_index()` now delegates to the model's
+   `next_unresolved_reached_index()` (single source of truth).
+2. **Test honesty:** per-state envelope regression tests added (see the
+   save/reload row above); this document's claims were corrected to cite them.
 
 ## Deliberately not decided / residuals
 

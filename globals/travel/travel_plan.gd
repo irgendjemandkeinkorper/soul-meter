@@ -61,3 +61,29 @@ static func from_dict(data: Variant) -> TravelPlan:
 				"spoils_granted": bool(raw_slot.get("spoils_granted", false)),
 			})
 	return plan
+
+
+## Repair invariants a permissive from_dict may admit, and runtime states that
+## cannot survive the save envelope. Called by GameFlow on every restore.
+func reconcile() -> void:
+	for slot: Dictionary in encounter_schedule:
+		# An unresolved slot past the destination could otherwise be skipped by
+		# arrival; clamping keeps it reachable at the final step.
+		slot["at_step"] = clampi(int(slot.get("at_step", 0)), 0, maxi(total_steps, 0))
+	if state == State.IN_BATTLE:
+		# Battle runtime never rides the envelope. The reached slot is still
+		# unresolved, so demoting re-offers the prompt; the avoidance roll is
+		# per-slot deterministic, so this is not a reroll exploit.
+		state = State.AVOID_PROMPT
+	if state == State.AVOID_PROMPT and next_unresolved_reached_index() < 0:
+		# Nothing left to prompt about — a prompt state here would deadlock.
+		state = State.EN_ROUTE
+
+
+## Index of the first unresolved slot at or before progress_step, or -1.
+func next_unresolved_reached_index() -> int:
+	for index: int in encounter_schedule.size():
+		var slot: Dictionary = encounter_schedule[index]
+		if not bool(slot.get("resolved", false)):
+			return index if int(slot.get("at_step", 0)) <= progress_step else -1
+	return -1
