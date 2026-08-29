@@ -269,6 +269,44 @@
             "threshold": 6
           }
         }
+      ],
+      "trial-keeper": [
+        {
+          "id": "trial-keeper/disarm",
+          "display_name": "the hand that holds it",
+          "check_skill": "insight",
+          "check_modifier": 0.0,
+          "lore_minimum": 0.0,
+          "prior_encounters": 0,
+          "effect_id": "disarm",
+          "effect_parameters": {
+            "attack_delta": -2.0,
+            "disarmed": true
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        }
+      ],
+      "trial-warden": [
+        {
+          "id": "trial-warden/joint",
+          "display_name": "the joint",
+          "check_skill": "lore",
+          "check_modifier": 0.0,
+          "lore_minimum": 0.0,
+          "prior_encounters": 0,
+          "effect_id": "cripple",
+          "effect_parameters": {
+            "crippled": true,
+            "max_ap_delta": -1.0
+          },
+          "resistance": {
+            "stat": "defense",
+            "threshold": 6
+          }
+        }
       ]
     }
   }

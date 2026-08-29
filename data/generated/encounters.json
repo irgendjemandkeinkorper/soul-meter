@@ -629,5 +629,115 @@
         "edge": 2
       }
     ]
+  },
+  "trial-keeper": {
+    "display_name": "Trial Keeper",
+    "composition": {
+      "archetypes": [
+        "guardian"
+      ],
+      "members": [
+        {
+          "combatant_id": "trial-keeper",
+          "count": 1.0
+        }
+      ]
+    },
+    "zone_layout": [
+      {
+        "combatant_ids": [
+          "trial-keeper"
+        ],
+        "side": "enemy",
+        "zone": "front"
+      }
+    ],
+    "balance_bias": 0.0,
+    "speech_hooks": [],
+    "defeated_flag": "",
+    "win_faction": "",
+    "win_delta": 0.0,
+    "win_cause": "",
+    "loss_faction": "",
+    "loss_delta": 0.0,
+    "loss_cause": "",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {
+      "slain": {
+        "cause": "Passed the Trial Keeper by force",
+        "delta": 0.0,
+        "faction": "",
+        "message": "The Trial Keeper yields the way into Dom."
+      }
+    },
+    "enemies": [
+      {
+        "id": "trial-keeper",
+        "display_name": "Trial Keeper",
+        "max_hp": 22,
+        "attack": 5,
+        "defense": 2,
+        "balance_affinity": 0,
+        "balance_pressure": 18,
+        "element_id": "",
+        "edge": 2
+      }
+    ]
+  },
+  "trial-warden": {
+    "display_name": "Trial Warden",
+    "composition": {
+      "archetypes": [
+        "construct"
+      ],
+      "members": [
+        {
+          "combatant_id": "trial-warden",
+          "count": 1.0
+        }
+      ]
+    },
+    "zone_layout": [
+      {
+        "combatant_ids": [
+          "trial-warden"
+        ],
+        "side": "enemy",
+        "zone": "front"
+      }
+    ],
+    "balance_bias": 0.0,
+    "speech_hooks": [],
+    "defeated_flag": "",
+    "win_faction": "",
+    "win_delta": 0.0,
+    "win_cause": "",
+    "loss_faction": "",
+    "loss_delta": 0.0,
+    "loss_cause": "",
+    "default_outcome": "slain",
+    "context_actions": [],
+    "outcomes": {
+      "slain": {
+        "cause": "Completed the Trial Warden's measure",
+        "delta": 0.0,
+        "faction": "",
+        "message": "The Trial Warden stills and the hall opens onward."
+      }
+    },
+    "enemies": [
+      {
+        "id": "trial-warden",
+        "display_name": "Trial Warden",
+        "max_hp": 18,
+        "attack": 4,
+        "defense": 1,
+        "balance_affinity": 0,
+        "balance_pressure": 16,
+        "element_id": "",
+        "edge": 1
+      }
+    ]
   }
 }

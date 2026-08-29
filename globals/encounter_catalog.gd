@@ -35,6 +35,8 @@ const _SPOILS: Dictionary = {
 	&"phase2-mixed-whipsaw": [ItemIds.MATERIALS_GRAVE_SALT, ItemIds.MATERIALS_IRON_RIVETS],
 	&"phase2-speech-winnable": [ItemIds.CONSUMABLES_LOAM_BREAD, ItemIds.MATERIALS_BINDING_THREAD],
 	&"phase2-stabilizer-showcase": [ItemIds.MATERIALS_LOAMROOT_SPRIG, ItemIds.MATERIALS_CINDER_INK_VIAL],
+	&"trial-warden": [ItemIds.MATERIALS_IRON_RIVETS],
+	&"trial-keeper": [ItemIds.MATERIALS_BINDING_THREAD],
 }
 const _SPOILS_STREAM_OFFSET := 7_000_019
 
