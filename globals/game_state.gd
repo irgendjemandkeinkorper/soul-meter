@@ -40,6 +40,10 @@ const CREATED_CHARACTER_FLAG := "player_created_character"
 ## later" scope): set this flag (e.g. from a quest) to surface a "create a recruit"
 ## option that reuses the same chargen screen in recruit mode.
 const CUSTOM_RECRUIT_UNLOCK_FLAG := "custom_recruit_chargen_unlocked"
+## Set by the Lower Trial Hall gauntlet when the opening trial has been resolved.
+## This remains in the existing serialized flags dictionary; no save schema field
+## or migration is required.
+const OPENING_GAUNTLET_COMPLETE_FLAG := "opening_gauntlet_complete"
 const AUDIO_BUSES: Array[StringName] = [&"Master", &"Music", &"SFX"]
 
 ## M4.3 — husking-while-alive (cosmology/souls.md, "Reaching zero", ratified

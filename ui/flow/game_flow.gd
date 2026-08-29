@@ -12,21 +12,24 @@ extends Node
 ##   ├── Boot                      splash/config; auto-advances via "boot_done"
 ##   ├── Menus
 ##   │   ├── Title                 (Options/Credits states land with Maaack's menus)
-##   │   └── CharacterCreation     the Register of Persons (#98/#129) — new-game only;
-##   │                             "Continue" skips straight to Playing (save already
-##   │                             has a character)
+##   │   ├── CharacterCreation     the Register of Persons (#98/#129) — new-game only
+##   │   └── IntroNarration        provisional opening beats — new-game only;
+##   │                             "Continue" skips both states (save already has a character)
 ##   └── Playing
 ##       ├── Loading               calls loader for `_target_scene`; leaves on "level_ready"
 ##       ├── Active                re-enters Loading on "travel" (see travel())
 ##       ├── Paused                pause overlay + tree pause live here
 ##       └── Battle                battle overlay + tree pause live here (combat scaffold)
 ##
-## Events: boot_done · start_chargen · new_game · level_ready · pause · resume ·
-##         to_main_menu · enter_battle · battle_end · travel
+## Events: boot_done · start_chargen · new_game · intro_done · level_ready · pause ·
+##         resume · to_main_menu · enter_battle · battle_end · travel
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
 ## The starting town (Dom) — the first gameplay scene loaded on a new game.
 const TOWN_SCENE := "res://world/starting_town.tscn"
+## New games enter the opening gauntlet here after the narration. Save loading
+## keeps its resolved destination and bypasses this target entirely.
+const TRIAL_SCENE := "res://world/interiors/lower_trial_hall.tscn"
 ## The original field/wilds vertical slice (Iris, Bog Wight, the Loamroot fetch
 ## quest) — now reached from the town via a TravelExit, not booted directly.
 const WILDS_SCENE := "res://world/test_room.tscn"
@@ -40,6 +43,7 @@ var GAMEPLAY_SCENES: Array[String] = _gameplay_scenes()
 const LOADING_SCREEN := "res://ui/flow/loading_screen.tscn"
 const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
 const CHARACTER_CREATION_SCREEN := preload("res://ui/screens/character_creation.tscn")
+const INTRO_NARRATION_SCREEN := preload("res://ui/screens/intro_narration.tscn")
 const DEPLOYMENT_SCREEN := preload("res://ui/screens/deployment/deployment.tscn")
 const BATTLE_SCREEN := preload("res://ui/screens/battle.tscn")
 const CHAPTER_COMPLETE_SCREEN := preload("res://ui/screens/chapter_complete.tscn")
@@ -90,6 +94,8 @@ func _ready() -> void:
 	$StateChart/Root/Menus/Title.state_entered.connect(_on_title_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_entered.connect(_on_character_creation_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_exited.connect(_on_character_creation_exited)
+	$StateChart/Root/Menus/IntroNarration.state_entered.connect(_on_intro_narration_entered)
+	$StateChart/Root/Menus/IntroNarration.state_exited.connect(_on_intro_narration_exited)
 	$StateChart/Root/Playing/Loading.state_entered.connect(_on_loading_entered)
 	$StateChart/Root/Playing/Paused.state_entered.connect(_on_paused_entered)
 	$StateChart/Root/Playing/Paused.state_exited.connect(_on_paused_exited)
@@ -395,6 +401,16 @@ func _on_character_creation_entered() -> void:
 
 
 func _on_character_creation_exited() -> void:
+	UIManager.close_all()
+
+
+func _on_intro_narration_entered() -> void:
+	_target_scene = TRIAL_SCENE
+	_target_spawn_id = &"entry"
+	UIManager.open(INTRO_NARRATION_SCREEN, false, true)
+
+
+func _on_intro_narration_exited() -> void:
 	UIManager.close_all()
 
 
