@@ -89,7 +89,8 @@ var combat_knowledge: Dictionary = {}
 var equipped_slots: Dictionary = {}
 ## Serialized TravelPlan payload. GameFlow owns the live resource and lifecycle.
 var travel_plan: Dictionary = {}
-## Stable loot-container id -> remaining [{item_id, quantity}] rows.
+## Stable loot-container id -> {items: [{item_id, quantity}], theft_recorded: bool}.
+## Array values from pre-ownership saves remain readable and migrate on next write.
 var loot_containers: Dictionary = {}
 var settings_path: String = SETTINGS_PATH
 
@@ -383,7 +384,9 @@ func ensure_loot_container(container_id: String, authored_loot: Array[Dictionary
 
 func loot_container_contents(container_id: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	var stored: Variant = loot_containers.get(container_id, [])
+	var stored: Variant = loot_containers.get(container_id, {})
+	if stored is Dictionary:
+		stored = stored.get("items", [])
 	if stored is Array:
 		for row: Variant in stored:
 			if row is Dictionary:
@@ -400,7 +403,34 @@ func set_loot_container_contents(container_id: String, contents: Array[Dictionar
 		var quantity := int(row.get("quantity", 0))
 		if not item_id.is_empty() and quantity > 0:
 			normalized.append({"item_id": item_id, "quantity": quantity})
-	loot_containers[container_id] = normalized
+	loot_containers[container_id] = {
+		"items": normalized,
+		"theft_recorded": loot_container_theft_recorded(container_id),
+	}
+
+
+## Starts a newly opened panel session. The marker is persisted inside the existing
+## additive loot_containers save key so saving and loading an open panel cannot
+## re-arm its first-take consequence.
+func begin_loot_container_session(container_id: String) -> void:
+	if container_id.is_empty():
+		return
+	var items: Array[Dictionary] = loot_container_contents(container_id)
+	loot_containers[container_id] = {"items": items, "theft_recorded": false}
+
+
+func loot_container_theft_recorded(container_id: String) -> bool:
+	var stored: Variant = loot_containers.get(container_id, {})
+	return stored is Dictionary and bool(stored.get("theft_recorded", false))
+
+
+## Returns true only for the first successful owned take in the active session.
+func mark_loot_container_theft_recorded(container_id: String) -> bool:
+	if container_id.is_empty() or loot_container_theft_recorded(container_id):
+		return false
+	var items: Array[Dictionary] = loot_container_contents(container_id)
+	loot_containers[container_id] = {"items": items, "theft_recorded": true}
+	return true
 
 
 func remove_items(item_id: String, amount: int) -> bool:
@@ -1069,6 +1099,19 @@ func _validate_save_data(data: Dictionary) -> bool:
 			or not StableIds.is_valid(StableIds.VENDOR, str(vendor_id))
 			or typeof(saved_restock_cycles[vendor_id]) != TYPE_INT
 			or int(saved_restock_cycles[vendor_id]) < 0
+		):
+			return false
+	var saved_loot_containers: Dictionary = data.get("loot_containers", {})
+	for container_id: Variant in saved_loot_containers:
+		if not container_id is String or str(container_id).is_empty() or str(container_id).length() > 128:
+			return false
+		var container_state: Variant = saved_loot_containers[container_id]
+		if container_state is Array:
+			continue
+		if (
+			not container_state is Dictionary
+			or not container_state.get("items", []) is Array
+			or typeof(container_state.get("theft_recorded", false)) != TYPE_BOOL
 		):
 			return false
 	if data.has("party") and not data["party"] is Array:
