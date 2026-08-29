@@ -31,6 +31,31 @@ func set_forecast_context(context: Dictionary) -> void:
 	_recompute()
 
 
+func show_action_forecast(payload: Dictionary, context: Dictionary = {}) -> void:
+	if not bool(payload.get("allowed", false)):
+		forecast.text = str(payload.get("message", "FORECAST UNAVAILABLE"))
+		return
+	if not context.is_empty():
+		set_forecast_context(context)
+	var positioning: Dictionary = context.get("positioning", {})
+	var terms: PackedStringArray = []
+	var cover := int(positioning.get("cover_bonus", 0))
+	var flank := int(positioning.get("flank_bonus", 0))
+	if cover != 0:
+		terms.append("COVER %+d" % cover)
+	if flank != 0:
+		terms.append("FLANK %+d" % flank)
+	if not terms.is_empty():
+		forecast.text += "\n" + " · ".join(terms)
+
+
+func pulse_refusal(message: String) -> void:
+	forecast.text = message
+	var pulse := create_tween()
+	forecast.modulate = Color("#E06C5A")
+	pulse.tween_property(forecast, "modulate", Color.WHITE, 0.22)
+
+
 func select_element(element_id: StringName) -> void:
 	if not ElementWheel.ORDER.has(element_id):
 		return

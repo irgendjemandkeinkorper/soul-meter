@@ -473,6 +473,7 @@ func _movement_snapshot() -> Dictionary:
 			"ap_cost": int(query.get("ap_cost", 0)),
 			"ct_cost": int(query.get("ct_cost", 0)),
 			"path": (query.get("path", []) as Array).duplicate(),
+			"path_cells": _describe_path_cells(query.get("path", [])),
 		})
 	return {
 		"action_id": ACTION_MOVE,
@@ -964,6 +965,7 @@ func _apply_action(
 		CombatAction.Kind.MOVE:
 			var movement := battlefield.move(actor, action.destination)
 			result.merge(movement, true)
+			result["path_cells"] = _describe_path_cells(result.get("path", []))
 			result["message"] = "%s moves to %s." % [actor.display_name, action.destination]
 		CombatAction.Kind.RESOLUTION:
 			result["outcome_id"] = action.outcome_id
@@ -976,6 +978,21 @@ func _apply_action(
 		elif action.kind != CombatAction.Kind.STABILIZE and action.center_pull > 0:
 			_shift_toward_center(action.center_pull, actor)
 	return result
+
+
+## Converts model-owned opaque handles at the controller boundary. Presentation receives
+## renderable cells without learning GridBattlefieldModel's handle serialization.
+func _describe_path_cells(value: Variant) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	if battlefield == null or value is not Array:
+		return cells
+	for handle_value: Variant in value as Array:
+		var described: Dictionary = battlefield.describe_position(StringName(str(handle_value)))
+		var cell_value: Variant = described.get("cell")
+		if cell_value is not Vector2i:
+			return []
+		cells.append(cell_value)
+	return cells
 
 
 func _query_defining_strike(target: BattleActor, weakness_id: StringName) -> Dictionary:

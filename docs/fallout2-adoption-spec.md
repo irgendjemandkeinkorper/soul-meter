@@ -186,6 +186,13 @@ its reason in the forecast BEFORE commit; cover/flank visibly change forecast
 numbers; enemy turns use position (seek cover / flank when cheap); combat
 number sweep re-run with a balance evidence file; suite green; gate PROCEED.
 
+Wave P implementation note (subtask 2): battlefield pointer controls are additive
+to the COMMAND rail. The stage consumes controller snapshot `movement.reachable`
+quotes, preserves destination handles unchanged when committing, previews the
+selected attack through `forecast_action`, and ignores clicks outside `ALLY_TURN`.
+Cover markers are procedural; refusal, cover, and flank copy comes from controller
+payloads rather than UI combat arithmetic.
+
 ## Boundaries (binding)
 
 - Five-layer architecture and Resolution purity preserved; forecast==resolution.
