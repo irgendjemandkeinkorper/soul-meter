@@ -11,6 +11,19 @@ Keth Varr: Honest bronze seals can still close around dishonest water. I need th
 	do GameState.set_flag("dom_dishonest_casks_traced", true)
 	Keth Varr: Then choose the danger Dom carries: a brief silence now or guarded water beneath every hammer.
 	=> END
+- "Three truths are enough to trace the casks." [#tag=Persuasion] [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and not GameState.get_flag("dom_dishonest_casks_traced") and not GameState.get_flag("dom_dishonest_casks_check_failed") and check("persuasion", 45) /]
+	do SkillCheck.resolve("persuasion")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_dishonest_casks_traced", true)
+		Keth Varr: Three truths, one trace. I will accept it.
+		=> END
+	else
+		do GameState.set_flag("dom_dishonest_casks_check_failed", true)
+		Keth Varr: Bring me the mark and the tally together. I will not trace the casks on argument alone.
+		=> END
+- "Return to Arvek's mark and the forge tally." [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and GameState.get_flag("dom_dishonest_casks_check_failed") and not GameState.get_flag("dom_dishonest_casks_traced") /]
+	Keth Varr: Bring me the mark and the tally together. The original inquiry remains open.
+	=> END
 - "Seal the suspect casks until clean water arrives." [#consequence=Council safety before an uninterrupted Hammer Roar] [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and QuestRegistry.flags_met(QuestRegistry.DISHONEST_CASKS) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.DISHONEST_CASKS, "halt-the-water")
 	Keth Varr: The seals stay shut. Let every shortened shift remember why.
