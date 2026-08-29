@@ -56,6 +56,7 @@ var last_travel_error := ""
 ## whatever travel() set it to on a re-entry.
 var _target_scene := TOWN_SCENE
 var _target_spawn_id: StringName = &"default"
+var travel_plan: TravelPlan = null
 
 @onready var chart: StateChart = $StateChart
 
@@ -68,14 +69,17 @@ static func _gameplay_scenes() -> Array[String]:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_restore_travel_plan()
+	if not Battle.battle_ended.is_connected(_on_journey_battle_ended):
+		Battle.battle_ended.connect(_on_journey_battle_ended)
 	# Local visual-regression captures can launch a gameplay scene directly
 	# without the Boot state immediately replacing it with the title screen.
 	if OS.get_cmdline_user_args().has("capture-scene"):
 		return
 	SceneLoader.set_loading_screen(LOADING_SCREEN)
 	SceneLoader.scene_loaded.connect(_on_scene_loaded)
-	if not SaveGame.load_requested.is_connected(load_destination):
-		SaveGame.load_requested.connect(load_destination)
+	if not SaveGame.load_requested.is_connected(_on_load_requested):
+		SaveGame.load_requested.connect(_on_load_requested)
 	# Mirror derived standings into chart expression properties so transition
 	# GUARDS (not if-blocks) can read them: e.g. expression `rep_mirror_choir >= 15`.
 	Reputation.reputation_changed.connect(
@@ -110,6 +114,163 @@ func _ready() -> void:
 ## The single entry point UI code uses to talk to the chart.
 func send_event(event: StringName) -> void:
 	chart.send_event(event)
+
+
+func start_journey(origin_id: StringName, destination_id: StringName) -> bool:
+	var route := WorldMapRegistry.route_between(origin_id, destination_id)
+	if route.is_empty():
+		return false
+	var seed_rng := RandomNumberGenerator.new()
+	seed_rng.randomize()
+	var plan := TravelPlan.new()
+	plan.origin_id = origin_id
+	plan.destination_id = destination_id
+	plan.total_steps = maxi(int(route.get("steps", 0)), 0)
+	plan.rng_seed = seed_rng.randi()
+	plan.encounter_schedule = EncounterDirector.build_schedule(route, plan.rng_seed)
+	travel_plan = plan
+	_persist_travel_plan()
+	return true
+
+
+func advance_journey(steps: int = 1) -> Dictionary:
+	if travel_plan == null or travel_plan.state != TravelPlan.State.EN_ROUTE:
+		return {}
+	# A multi-step advance can never carry the party past an unresolved
+	# encounter boundary (or the destination): clamp to the first unresolved
+	# slot's at_step so every scheduled interruption fires at its own step.
+	var target_step := mini(
+		travel_plan.progress_step + maxi(steps, 0), travel_plan.total_steps
+	)
+	for slot: Dictionary in travel_plan.encounter_schedule:
+		if not bool(slot.get("resolved", false)):
+			target_step = mini(target_step, int(slot.get("at_step", 0)))
+			break
+	travel_plan.progress_step = maxi(target_step, travel_plan.progress_step)
+	var route := _journey_route()
+	var slot_index := _next_reached_slot_index()
+	if slot_index >= 0:
+		travel_plan.state = TravelPlan.State.AVOID_PROMPT
+		_persist_travel_plan()
+		var slot: Dictionary = travel_plan.encounter_schedule[slot_index]
+		return {
+			"event": "encounter_prompt",
+			"encounter_id": StringName(slot["encounter_id"]),
+			"avoidance_chance": EncounterDirector.avoidance_chance(route, GameState.party),
+		}
+	if travel_plan.progress_step >= travel_plan.total_steps:
+		travel_plan.state = TravelPlan.State.ARRIVED
+		var phases_cost := maxi(int(route.get("phases_cost", 0)), 0)
+		travel_plan.elapsed_phases += phases_cost
+		_persist_travel_plan()
+		var destination := WorldMapRegistry.location(travel_plan.destination_id)
+		if not destination.is_empty() and travel(str(destination["scene_path"])):
+			# travel() owns one declared clock advance. The remaining route phases
+			# are added here so a journey costs exactly phases_cost in total.
+			for phase_index: int in range(1, phases_cost):
+				WorldClock.advance(
+					"journey:%s:%d" % [travel_plan.destination_id, phase_index + 1]
+				)
+		return {"event": "arrived"}
+	_persist_travel_plan()
+	return {
+		"event": "en_route",
+		"progress_step": travel_plan.progress_step,
+		"total_steps": travel_plan.total_steps,
+	}
+
+
+func resolve_encounter_prompt(avoid: bool) -> Dictionary:
+	if travel_plan == null or travel_plan.state != TravelPlan.State.AVOID_PROMPT:
+		return {}
+	var slot_index := _next_reached_slot_index()
+	if slot_index < 0:
+		return {}
+	var route := _journey_route()
+	if avoid:
+		var chance := EncounterDirector.avoidance_chance(route, GameState.party)
+		if _avoidance_succeeds(slot_index, chance):
+			travel_plan.encounter_schedule[slot_index]["resolved"] = true
+			travel_plan.state = TravelPlan.State.EN_ROUTE
+			_persist_travel_plan()
+			return {"event": "avoided"}
+	travel_plan.state = TravelPlan.State.IN_BATTLE
+	_persist_travel_plan()
+	var encounter_id := StringName(travel_plan.encounter_schedule[slot_index]["encounter_id"])
+	Battle.start(encounter_id)
+	if not Battle.ended:
+		send_event("enter_battle")
+	return {"event": "battle_started"}
+
+
+func cancel_journey() -> void:
+	if travel_plan == null or travel_plan.state not in [
+		TravelPlan.State.EN_ROUTE, TravelPlan.State.AVOID_PROMPT
+	]:
+		return
+	var origin := WorldMapRegistry.location(travel_plan.origin_id)
+	travel_plan.state = TravelPlan.State.CANCELLED
+	_persist_travel_plan()
+	if not origin.is_empty():
+		travel(str(origin["scene_path"]))
+	travel_plan = null
+	_persist_travel_plan()
+
+
+func _avoidance_succeeds(slot_index: int, chance: float) -> bool:
+	# Avoidance owns one independent RNG stream per schedule slot. Its seed is
+	# plan.rng_seed + zero-based slot index, so saving/reloading never rerolls it.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = travel_plan.rng_seed + slot_index
+	return rng.randf_range(0.0, 100.0) < chance
+
+
+func _next_reached_slot_index() -> int:
+	if travel_plan == null:
+		return -1
+	for index: int in travel_plan.encounter_schedule.size():
+		var slot: Dictionary = travel_plan.encounter_schedule[index]
+		if not bool(slot.get("resolved", false)):
+			return index if int(slot.get("at_step", 0)) <= travel_plan.progress_step else -1
+	return -1
+
+
+func _journey_route() -> Dictionary:
+	if travel_plan == null:
+		return {}
+	return WorldMapRegistry.route_between(travel_plan.origin_id, travel_plan.destination_id)
+
+
+func _persist_travel_plan() -> void:
+	GameState.travel_plan = travel_plan.to_dict() if travel_plan != null else {}
+
+
+func _restore_travel_plan() -> void:
+	travel_plan = (
+		TravelPlan.from_dict(GameState.travel_plan)
+		if not GameState.travel_plan.is_empty()
+		else null
+	)
+
+
+func _on_load_requested(destination: LoadDestination) -> void:
+	_restore_travel_plan()
+	load_destination(destination)
+
+
+func _on_journey_battle_ended(result: BattleResult) -> void:
+	if travel_plan == null or travel_plan.state != TravelPlan.State.IN_BATTLE:
+		return
+	if not result.succeeded():
+		travel_plan.state = TravelPlan.State.AVOID_PROMPT
+		_persist_travel_plan()
+		return
+	var slot_index := _next_reached_slot_index()
+	if slot_index < 0:
+		return
+	travel_plan.encounter_schedule[slot_index]["resolved"] = true
+	travel_plan.state = TravelPlan.State.EN_ROUTE
+	_persist_travel_plan()
 
 
 ## The single entry point for moving between gameplay scenes (e.g. a
