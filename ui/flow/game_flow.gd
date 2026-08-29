@@ -268,7 +268,25 @@ func _on_journey_battle_ended(result: BattleResult) -> void:
 	var slot_index := _next_reached_slot_index()
 	if slot_index < 0:
 		return
-	travel_plan.encounter_schedule[slot_index]["resolved"] = true
+	var slot: Dictionary = travel_plan.encounter_schedule[slot_index]
+	slot["resolved"] = true
+	if not bool(slot.get("spoils_granted", false)):
+		var dropped_items: Array[String] = []
+		var spoils: Array[Dictionary] = SpoilsTable.roll(
+			StringName(slot["encounter_id"]), travel_plan.rng_seed, slot_index
+		)
+		for spoil: Dictionary in spoils:
+			var item_id := String(spoil["item_id"])
+			var quantity := maxi(int(spoil["quantity"]), 1)
+			var item: InventoryItem = GameState.inventory.create_item(item_id)
+			if not item.set_stack_size(quantity) or not GameState.inventory.add_item(item):
+				dropped_items.append("%s x%d" % [item_id, quantity])
+		slot["spoils_granted"] = true
+		if not dropped_items.is_empty():
+			push_warning(
+				"Travel encounter spoils dropped because the inventory was full: %s"
+				% ", ".join(dropped_items)
+			)
 	travel_plan.state = TravelPlan.State.EN_ROUTE
 	_persist_travel_plan()
 
