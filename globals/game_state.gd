@@ -43,7 +43,7 @@ const CUSTOM_RECRUIT_UNLOCK_FLAG := "custom_recruit_chargen_unlocked"
 ## Set by the Lower Trial Hall gauntlet when the opening trial has been resolved.
 ## This remains in the existing serialized flags dictionary; no save schema field
 ## or migration is required.
-const OPENING_GAUNTLET_COMPLETE_FLAG := "opening_gauntlet_complete"
+const OPENING_GAUNTLET_COMPLETE_FLAG := "tutorial_gauntlet_complete"
 const AUDIO_BUSES: Array[StringName] = [&"Master", &"Music", &"SFX"]
 
 ## M4.3 — husking-while-alive (cosmology/souls.md, "Reaching zero", ratified

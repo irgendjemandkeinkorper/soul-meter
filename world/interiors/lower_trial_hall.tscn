@@ -58,7 +58,7 @@ position = Vector2(160, 500)
 display_name = "TRIAL LEVER"
 prompt_text = "PULL"
 interaction_text = "The first gate lifts."
-interaction_flag = "trial_interaction_gate_open"
+interaction_flag = "tutorial_interaction_gate_open"
 repeatable = false
 
 [node name="InteractionGate" type="StaticBody2D" parent="."]
@@ -92,8 +92,8 @@ horizontal_alignment = 1
 position = Vector2(130, 318)
 item_id = "tools/lockpick_roll"
 amount = 1
-completion_flag = "trial_skill_door_open"
-required_flag = "trial_warden_cleared"
+completion_flag = "tutorial_skill_door_open"
+required_flag = "tutorial_warden_cleared"
 locked_message = "The warden still holds this alcove."
 interaction_text = "You take the stamped trial key and its lockpick roll."
 
@@ -137,6 +137,6 @@ color = Color(0.56, 0.39, 0.2, 1)
 position = Vector2(480, 62)
 target_location_id = &"dom"
 label_text = "ENTER DOM"
-required_flag = "opening_gauntlet_complete"
+required_flag = "tutorial_gauntlet_complete"
 locked_message = "The Trial Keeper still bars the way."
 spawn_id = &"new_game"

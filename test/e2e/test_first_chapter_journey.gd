@@ -90,7 +90,8 @@ func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void
 	await get_tree().process_frame
 	assert_str(Battle.encounter_id).is_equal("trial-keeper")
 	Battle._finish(BattleResult.State.VICTORY, &"slain")
-	assert_bool(GameState.flag_is_true("opening_gauntlet_complete")).is_true()
+	assert_bool(GameState.flag_is_true("tutorial_gauntlet_complete")).is_true()
+	_assert_trial_exit_travels_to_dom(trial)
 	remove_child(trial)
 
 	var town: Node = auto_free((load(GameFlow.TOWN_SCENE) as PackedScene).instantiate())
@@ -124,6 +125,46 @@ func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void
 	assert_bool(GameFlow.start_journey(&"dom", &"dorthkor-road")).is_true()
 	assert_str(GameFlow.travel_plan.destination_id).is_equal("dorthkor-road")
 	remove_child(chamber)
+
+
+## The ratified alternative arcs: the entrance speech-skip and the keeper TALK
+## route must each complete the gauntlet AND leave the REAL TravelExit both
+## unlocked and resolved to Dom — `_is_unlocked()` alone passed while a broken
+## id-only resolution left `_location` null and softlocked the arc.
+func test_speech_skip_and_keeper_talk_arcs_open_the_real_exit_to_dom() -> void:
+	var member := GameState.protagonist()
+	assert_object(member).is_not_null()
+	member.skill_tiers["insight"] = "untrained"
+	member.skill_percentages["insight"] = 95.0
+	member.skill_tiers["persuasion"] = "untrained"
+	member.skill_percentages["persuasion"] = 95.0
+	var trial_dialogue := load("res://dialogue/lower_trial_hall.dialogue") as DialogueResource
+
+	SkillCheck.random_number_generator.seed = _winning_percentile_seed()
+	await _choose_response(trial_dialogue, "trial_aide", "Read the trial's intent")
+	assert_bool(GameState.flag_is_true("tutorial_gauntlet_complete")).is_true()
+	var skip_hall: Node = auto_free((load(GameFlow.TRIAL_SCENE) as PackedScene).instantiate())
+	add_child(skip_hall)
+	_assert_trial_exit_travels_to_dom(skip_hall)
+	remove_child(skip_hall)
+
+	GameState.set_flag("tutorial_gauntlet_complete", false)
+	SkillCheck.random_number_generator.seed = _winning_percentile_seed()
+	await _choose_response(trial_dialogue, "trial_keeper", "No blood is needed")
+	assert_bool(GameState.flag_is_true("tutorial_gauntlet_complete")).is_true()
+	var talk_hall: Node = auto_free((load(GameFlow.TRIAL_SCENE) as PackedScene).instantiate())
+	add_child(talk_hall)
+	_assert_trial_exit_travels_to_dom(talk_hall)
+	remove_child(talk_hall)
+
+
+func _assert_trial_exit_travels_to_dom(hall: Node) -> void:
+	var exit := hall.get_node("ExitToDom") as TravelExit
+	assert_object(exit).is_not_null()
+	assert_bool(exit._is_unlocked()).is_true()
+	assert_object(exit._location).is_not_null()
+	assert_str(exit._location.scene_path).is_equal(GameFlow.TOWN_SCENE)
+	assert_str(String(exit._location.resolve_spawn(exit.spawn_id))).is_not_empty()
 
 
 func test_council_elder_checked_route_also_offers_the_driving_quest() -> void:

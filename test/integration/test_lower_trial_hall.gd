@@ -35,7 +35,7 @@ func test_scene_loads_with_every_gauntlet_beat() -> void:
 	var skill_door_shape := hall.get_node("SkillDoor/CollisionShape2D") as CollisionShape2D
 	assert_float((skill_door_shape.shape as RectangleShape2D).size.x).is_equal(880.0)
 	assert_str(hall.get_node("ExitToDom").required_flag).is_equal(
-		"opening_gauntlet_complete"
+		"tutorial_gauntlet_complete"
 	)
 
 
@@ -49,7 +49,7 @@ func test_entrance_speech_skip_success_unlocks_exit() -> void:
 
 	await DialogueManager.get_next_dialogue_line(resource, response.next_id)
 
-	assert_bool(GameState.flag_is_true("opening_gauntlet_complete")).is_true()
+	assert_bool(GameState.flag_is_true("tutorial_gauntlet_complete")).is_true()
 	var hall: Node = auto_free((load(SCENE_PATH) as PackedScene).instantiate())
 	add_child(hall)
 	assert_bool(hall.get_node("ExitToDom")._is_unlocked()).is_true()
@@ -67,7 +67,7 @@ func test_warden_trigger_starts_once_and_victory_opens_the_next_beat() -> void:
 	assert_array(starts).is_equal([&"trial-warden"])
 	assert_str(Battle.encounter_id).is_equal("trial-warden")
 	Battle._finish(BattleResult.State.VICTORY, &"slain")
-	assert_bool(GameState.flag_is_true("trial_warden_cleared")).is_true()
+	assert_bool(GameState.flag_is_true("tutorial_warden_cleared")).is_true()
 
 
 func test_fled_warden_encounter_can_be_retried() -> void:
@@ -79,8 +79,8 @@ func test_fled_warden_encounter_can_be_retried() -> void:
 	hall.request_warden_encounter()
 	Battle._finish(BattleResult.State.FLED, &"fled")
 
-	assert_bool(GameState.flag_is_true("trial_warden_started")).is_false()
-	assert_bool(GameState.flag_is_true("trial_warden_cleared")).is_false()
+	assert_bool(GameState.flag_is_true("tutorial_warden_started")).is_false()
+	assert_bool(GameState.flag_is_true("tutorial_warden_cleared")).is_false()
 	hall.request_warden_encounter()
 	assert_array(starts).is_equal([&"trial-warden", &"trial-warden"])
 	assert_str(Battle.encounter_id).is_equal("trial-warden")
@@ -96,7 +96,7 @@ func test_keeper_talk_success_completes_gauntlet() -> void:
 
 	await DialogueManager.get_next_dialogue_line(resource, response.next_id)
 
-	assert_bool(GameState.flag_is_true("opening_gauntlet_complete")).is_true()
+	assert_bool(GameState.flag_is_true("tutorial_gauntlet_complete")).is_true()
 
 
 func test_keeper_fight_starts_authored_battle_and_victory_completes_gauntlet() -> void:
@@ -112,7 +112,7 @@ func test_keeper_fight_starts_authored_battle_and_victory_completes_gauntlet() -
 
 	assert_str(Battle.encounter_id).is_equal("trial-keeper")
 	Battle._finish(BattleResult.State.VICTORY, &"slain")
-	assert_bool(GameState.flag_is_true("opening_gauntlet_complete")).is_true()
+	assert_bool(GameState.flag_is_true("tutorial_gauntlet_complete")).is_true()
 
 
 func _response_containing(

@@ -4,13 +4,13 @@ extends Node2D
 
 signal trial_encounter_started(encounter_id: StringName)
 
-const OPENING_COMPLETE_FLAG := "opening_gauntlet_complete"
-const INTERACTION_GATE_FLAG := "trial_interaction_gate_open"
-const WARDEN_STARTED_FLAG := "trial_warden_started"
-const WARDEN_CLEARED_FLAG := "trial_warden_cleared"
-const SKILL_DOOR_FLAG := "trial_skill_door_open"
-const KEEPER_FIGHT_REQUESTED_FLAG := "trial_keeper_fight_requested"
-const KEEPER_STARTED_FLAG := "trial_keeper_started"
+const OPENING_COMPLETE_FLAG := "tutorial_gauntlet_complete"
+const INTERACTION_GATE_FLAG := "tutorial_interaction_gate_open"
+const WARDEN_STARTED_FLAG := "tutorial_warden_started"
+const WARDEN_CLEARED_FLAG := "tutorial_warden_cleared"
+const SKILL_DOOR_FLAG := "tutorial_skill_door_open"
+const KEEPER_FIGHT_REQUESTED_FLAG := "tutorial_keeper_fight_requested"
+const KEEPER_STARTED_FLAG := "tutorial_keeper_started"
 const WARDEN_ENCOUNTER_ID := &"trial-warden"
 const KEEPER_ENCOUNTER_ID := &"trial-keeper"
 

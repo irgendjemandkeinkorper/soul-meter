@@ -152,8 +152,8 @@ Accept (for the in-scope part): enumerated lock conversions shipped; quest audit
 out-of-order completion for the retrofitted quests; no softlocks (audit rule from Wave 3).
 
 **Wave O — Opening sequence (RATIFIED BY OWNER 2026-08-29, added after REV 2).**
-The New Game arc must play like Fallout 2's opening: intro narration →
-character creation → a diegetic tutorial gauntlet → an elder hands over the
+The New Game arc must play like Fallout 2's opening: character creation →
+intro narration → a diegetic tutorial gauntlet → an elder hands over the
 driving quest → released into the hub with the world map live. Owner rulings:
 (1) FULL arc; (2) the gauntlet is skippable via a checked speech line at its
 entrance; (3) the quest-giver is a Council of Four Arms elder — quest text

@@ -1,14 +1,14 @@
 # PROVISIONAL — CANON REVIEW REQUIRED: Trial Aide, Trial Keeper, and all lines below.
 ~ trial_aide
 Trial Aide: The lower hall is ready. You may take the trial, or show that you already understand its purpose.
-- "Read the trial's intent and ask to pass." [#tag=INSIGHT] [if not GameState.get_flag("opening_gauntlet_complete") and not GameState.get_flag("trial_aide_skip_failed") and check("insight", 40) /]
+- "Read the trial's intent and ask to pass." [#tag=INSIGHT] [if not GameState.get_flag("tutorial_gauntlet_complete") and not GameState.get_flag("tutorial_aide_skip_failed") and check("insight", 40) /]
 	do SkillCheck.resolve("insight")
 	if SkillCheck.last_check_succeeded()
-		do GameState.set_flag("opening_gauntlet_complete", true)
+		do GameState.set_flag("tutorial_gauntlet_complete", true)
 		Trial Aide: You understand. Go through; the keeper will not bar you.
 		=> END
 	else
-		do GameState.set_flag("trial_aide_skip_failed", true)
+		do GameState.set_flag("tutorial_aide_skip_failed", true)
 		Trial Aide: Not yet. Take the hall and learn what it asks.
 		=> END
 - "I will take the trial."
@@ -17,17 +17,17 @@ Trial Aide: The lower hall is ready. You may take the trial, or show that you al
 
 ~ trial_skill_door
 Trial Aide: The latch accepts the stamped key from the alcove, but a careful hand can read its catch.
-- "Work the catch by touch." [#tag=SLEIGHT OF HAND] [if GameState.get_flag("trial_warden_cleared") and not GameState.get_flag("trial_skill_door_open") and not GameState.get_flag("trial_skill_door_check_failed") and check("sleight_of_hand", 40) /]
+- "Work the catch by touch." [#tag=SLEIGHT OF HAND] [if GameState.get_flag("tutorial_warden_cleared") and not GameState.get_flag("tutorial_skill_door_open") and not GameState.get_flag("tutorial_skill_door_check_failed") and check("sleight_of_hand", 40) /]
 	do SkillCheck.resolve("sleight_of_hand")
 	if SkillCheck.last_check_succeeded()
-		do GameState.set_flag("trial_skill_door_open", true)
+		do GameState.set_flag("tutorial_skill_door_open", true)
 		Trial Aide: The catch lifts. The keeper waits beyond.
 		=> END
 	else
-		do GameState.set_flag("trial_skill_door_check_failed", true)
+		do GameState.set_flag("tutorial_skill_door_check_failed", true)
 		Trial Aide: The catch binds. The key in the alcove remains your way through.
 		=> END
-- "Use the stamped key." [if GameState.get_flag("trial_skill_door_open") /]
+- "Use the stamped key." [if GameState.get_flag("tutorial_skill_door_open") /]
 	Trial Aide: The latch is open.
 	=> END
 - "Leave the latch alone."
@@ -35,18 +35,18 @@ Trial Aide: The latch accepts the stamped key from the alcove, but a careful han
 
 ~ trial_keeper
 Trial Keeper: One choice remains. Convince me to stand aside, or meet me in the trial.
-- "No blood is needed; yielding proves the same lesson." [#tag=PERSUASION] [if not GameState.get_flag("opening_gauntlet_complete") and not GameState.get_flag("trial_keeper_talk_failed") and check("persuasion", 40) /]
+- "No blood is needed; yielding proves the same lesson." [#tag=PERSUASION] [if not GameState.get_flag("tutorial_gauntlet_complete") and not GameState.get_flag("tutorial_keeper_talk_failed") and check("persuasion", 40) /]
 	do SkillCheck.resolve("persuasion")
 	if SkillCheck.last_check_succeeded()
-		do GameState.set_flag("opening_gauntlet_complete", true)
+		do GameState.set_flag("tutorial_gauntlet_complete", true)
 		Trial Keeper: Enough. Pass into Dom.
 		=> END
 	else
-		do GameState.set_flag("trial_keeper_talk_failed", true)
+		do GameState.set_flag("tutorial_keeper_talk_failed", true)
 		Trial Keeper: Words alone have not carried you through.
 		=> END
-- "Fight me, then." [if not GameState.get_flag("opening_gauntlet_complete") /]
-	do GameState.set_flag("trial_keeper_fight_requested", true)
+- "Fight me, then." [if not GameState.get_flag("tutorial_gauntlet_complete") /]
+	do GameState.set_flag("tutorial_keeper_fight_requested", true)
 	Trial Keeper: Then stand ready.
 	=> END
 - "I need a moment."

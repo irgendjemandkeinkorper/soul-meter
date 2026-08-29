@@ -101,10 +101,13 @@ static func by_scene(scene_path: String) -> LocationDefinition:
 	return null
 
 
+## An id with no scene path resolves by id alone; when BOTH are given they must
+## agree — a mismatched pair falls through to the scene lookup so a stale id
+## can never silently reroute an exit.
 static func resolve(scene_path: String, location_id: StringName = &"") -> LocationDefinition:
 	if not location_id.is_empty():
 		var by_name := by_id(location_id)
-		if by_name != null and by_name.scene_path == scene_path:
+		if by_name != null and (scene_path.is_empty() or by_name.scene_path == scene_path):
 			return by_name
 	return by_scene(scene_path)
 
