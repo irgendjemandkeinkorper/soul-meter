@@ -1,33 +1,18 @@
 extends GdUnitTestSuite
 
-const ALL_WORLD_SCENES: Array[String] = [
-	"res://world/dorthkor_road.tscn",
-	"res://world/starting_town.tscn",
-	"res://world/test_room.tscn",
-	"res://world/wound_lip.tscn",
-	"res://world/interiors/bell_house.tscn",
-	"res://world/interiors/bell_loft.tscn",
-	"res://world/interiors/building_interior.tscn",
-	"res://world/interiors/cask_warehouse.tscn",
-	"res://world/interiors/chefs_house.tscn",
-	"res://world/interiors/chefs_pantry.tscn",
-	"res://world/interiors/council_chamber.tscn",
-	"res://world/interiors/dom_tavern.tscn",
-	"res://world/interiors/equipment_forge.tscn",
-	"res://world/interiors/equipment_shop.tscn",
-	"res://world/interiors/garrison_yard.tscn",
-	"res://world/interiors/iron_companies.tscn",
-	"res://world/interiors/item_shop.tscn",
-	"res://world/interiors/lower_trial_hall.tscn",
-	"res://world/interiors/players_house.tscn",
-	"res://world/interiors/players_loft.tscn",
-	"res://world/interiors/registry_archive.tscn",
-	"res://world/interiors/registry_stacks.tscn",
-	"res://world/interiors/river_shrine.tscn",
-	"res://world/interiors/shrine_undercroft.tscn",
-	"res://world/interiors/town_hall.tscn",
-	"res://world/interiors/trial_hall.tscn",
-]
+# Enumerated from disk so a future world scene enters the uniqueness scan
+# automatically; the count only guards against enumeration silently breaking.
+const KNOWN_WORLD_SCENE_MINIMUM := 26
+
+
+static func _all_world_scenes() -> Array[String]:
+	var scenes: Array[String] = []
+	for dir_path: String in ["res://world", "res://world/interiors"]:
+		for file_name: String in DirAccess.get_files_at(dir_path):
+			if file_name.ends_with(".tscn"):
+				scenes.append("%s/%s" % [dir_path, file_name])
+	scenes.sort()
+	return scenes
 
 const EXPECTED_PLACEMENTS := {
 	"res://world/dorthkor_road.tscn": ["dorthkor-road-camp-cache"],
@@ -61,9 +46,11 @@ func after_test() -> void:
 
 
 func test_placed_containers_resolve_with_unique_repository_wide_ids() -> void:
+	var all_scenes: Array[String] = _all_world_scenes()
+	assert_int(all_scenes.size()).is_greater_equal(KNOWN_WORLD_SCENE_MINIMUM)
 	var found_by_scene: Dictionary = {}
 	var scene_for_id: Dictionary = {}
-	for scene_path: String in ALL_WORLD_SCENES:
+	for scene_path: String in all_scenes:
 		var packed: PackedScene = load(scene_path) as PackedScene
 		assert_object(packed).override_failure_message(scene_path).is_not_null()
 		var scene: Node = auto_free(packed.instantiate())
