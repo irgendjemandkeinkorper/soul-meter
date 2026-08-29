@@ -31,6 +31,7 @@ const KORRATH_QUEST: FlagQuest = preload("res://quests/korrath_ninefold_proof_as
 const MAURA_QUEST: FlagQuest = preload("res://quests/maura_greyfen_name_and_deed.tres")
 const DOM_SIDE_QUEST_DIALOGUE_PATH := "res://dialogue/dom_side_quests.dialogue"
 const MARSHAL_DIALOGUE_PATH := "res://dialogue/marshal_coiljaw.dialogue"
+const COUNCIL_ELDER_DIALOGUE_PATH := "res://dialogue/council_elder.dialogue"
 
 ## FR-505 companion personal quests. Keyed by the recruit's `PartyMember.id`
 ## (see globals/game_state.gd's recruitable_candidates()). A companion with no
@@ -620,6 +621,8 @@ func dialogue_route_for_actor(
 ) -> Dictionary:
 	if actor_id == "branek-coiljaw":
 		return {"path": MARSHAL_DIALOGUE_PATH, "title": "start"}
+	if actor_id == "themka-gaath":
+		return {"path": COUNCIL_ELDER_DIALOGUE_PATH, "title": "start"}
 	## Generated roster prose remains the fallback for every townsfolk. The ten
 	## authored givers route through their quest resources at interaction time so
 	## generated data stays untouched and the quests cannot be orphaned by a stale

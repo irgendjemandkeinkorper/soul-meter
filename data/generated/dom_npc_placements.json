@@ -519,7 +519,7 @@
       "model_index": 9
     },
     "themka-gaath": {
-      "scene": "res://world/interiors/trial_hall.tscn",
+      "scene": "res://world/interiors/council_chamber.tscn",
       "anchor": "NpcSpot",
       "offset": [
         0.0,

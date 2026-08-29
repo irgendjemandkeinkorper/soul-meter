@@ -6,6 +6,8 @@ extends GdUnitTestSuite
 ## which is documented by the retry fixture below.
 
 const BattleScript := preload("res://globals/battle.gd")
+const COUNCIL_CHAMBER_PATH := "res://world/interiors/council_chamber.tscn"
+const COUNCIL_ELDER_DIALOGUE_PATH := "res://dialogue/council_elder.dialogue"
 const MARSHAL_DIALOGUE_PATH := "res://dialogue/marshal_coiljaw.dialogue"
 const IRIS_DIALOGUE_PATH := "res://dialogue/iris_illepah.dialogue"
 const SELLA_DIALOGUE_PATH := "res://dialogue/sella_varn.dialogue"
@@ -25,6 +27,7 @@ var original_autosave_reason: String
 var original_save_runtime: Dictionary
 var original_flow_target_scene: String
 var original_flow_target_spawn: StringName
+var original_travel_plan: TravelPlan
 
 
 func before_test() -> void:
@@ -46,6 +49,7 @@ func before_test() -> void:
 	}
 	original_flow_target_scene = GameFlow._target_scene
 	original_flow_target_spawn = GameFlow._target_spawn_id
+	original_travel_plan = GameFlow.travel_plan
 	_reset_fixture()
 
 
@@ -67,6 +71,75 @@ func after_test() -> void:
 	SaveGame.zhavar = original_save_runtime["zhavar"]
 	GameFlow._target_scene = original_flow_target_scene
 	GameFlow._target_spawn_id = original_flow_target_spawn
+	GameFlow.travel_plan = original_travel_plan
+
+
+func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void:
+	SaveGame.new_game()
+	GameFlow._on_intro_narration_entered()
+	var intro := UIManager._stack.back() as IntroNarrationScreen
+	assert_object(intro).is_not_null()
+	intro._complete()
+	GameFlow._on_intro_narration_exited()
+	assert_str(GameFlow._target_scene).is_equal(GameFlow.TRIAL_SCENE)
+
+	var trial: Node = auto_free((load(GameFlow.TRIAL_SCENE) as PackedScene).instantiate())
+	add_child(trial)
+	var trial_dialogue := load("res://dialogue/lower_trial_hall.dialogue") as DialogueResource
+	await _choose_response(trial_dialogue, "trial_keeper", "Fight me")
+	await get_tree().process_frame
+	assert_str(Battle.encounter_id).is_equal("trial-keeper")
+	Battle._finish(BattleResult.State.VICTORY, &"slain")
+	assert_bool(GameState.flag_is_true("opening_gauntlet_complete")).is_true()
+	remove_child(trial)
+
+	var town: Node = auto_free((load(GameFlow.TOWN_SCENE) as PackedScene).instantiate())
+	add_child(town)
+	await get_tree().process_frame
+	assert_bool(GameState.flag_is_true("chapter_council_nudge_shown")).is_true()
+	var notices := town.get_node("FieldHUD/ConsequenceNotices") as ConsequenceNotices
+	assert_array(notices.visible_notice_texts()).contains([
+		"THE COUNCIL AWAITS IN THE COUNCIL CHAMBER."
+	])
+	remove_child(town)
+
+	var chamber: Node = auto_free((load(COUNCIL_CHAMBER_PATH) as PackedScene).instantiate())
+	add_child(chamber)
+	await get_tree().process_frame
+	var elder := chamber.find_child("ThemkaGaath", true, false) as NPC
+	assert_object(elder).is_not_null()
+	assert_str(elder.npc_name).is_equal("Themka Gaath")
+	var elder_row: Dictionary = NpcRoster.get_npc("themka-gaath")
+	var portrait: Dictionary = elder_row.get("portrait", {}) as Dictionary
+	assert_str(str(portrait.get("id", ""))).is_not_empty()
+	assert_str(str(portrait.get("kind", ""))).is_not_empty()
+	var route := QuestRegistry.dialogue_route_for_actor(
+		"themka-gaath", elder.dialogue_path, elder.dialogue_start
+	)
+	assert_str(str(route.get("path", ""))).is_equal(COUNCIL_ELDER_DIALOGUE_PATH)
+	var elder_dialogue := load(COUNCIL_ELDER_DIALOGUE_PATH) as DialogueResource
+	await _choose_response(elder_dialogue, "start", "carry the Council's charge")
+	assert_bool(QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD)).is_true()
+	assert_str(QuestRegistry.DORTHKOR_ROAD.quest_giver).is_equal("Themka Gaath")
+	assert_bool(GameFlow.start_journey(&"dom", &"dorthkor-road")).is_true()
+	assert_str(GameFlow.travel_plan.destination_id).is_equal("dorthkor-road")
+	remove_child(chamber)
+
+
+func test_council_elder_checked_route_also_offers_the_driving_quest() -> void:
+	var member := GameState.protagonist()
+	assert_object(member).is_not_null()
+	for attribute: String in member.attributes:
+		member.attributes[attribute] = 0
+	member.skill_tiers["insight"] = "untrained"
+	member.skill_percentages["insight"] = 95.0
+	SkillCheck.random_number_generator.seed = _winning_percentile_seed()
+	var resource := load(COUNCIL_ELDER_DIALOGUE_PATH) as DialogueResource
+
+	await _choose_response(resource, "start", "Ask what truth matters")
+
+	assert_bool(QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD)).is_true()
+	assert_bool(GameState.flag_is_true("chapter_council_charge_understood")).is_true()
 
 
 func test_boot_recruit_commission_side_thread_encounters_and_ruling_reach_ledger() -> void:

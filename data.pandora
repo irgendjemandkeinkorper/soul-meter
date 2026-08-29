@@ -7438,11 +7438,11 @@
 				"_property_overrides": {
 					"Bio": {
 						"type": "string",
-						"value": "High Warlord and Bridgeholder of Dom's North Arm."
+						"value": "Council of Four Arms elder and Bridgeholder of Dom's North Arm."
 					},
 					"Dialogue Context": {
 						"type": "string",
-						"value": "The Bridgeholder weighs the Wound-Watch ledger before any voice on the Council floor."
+						"value": "PROVISIONAL — CANON REVIEW REQUIRED: The Council elder waits to send a proven traveler beyond Dom."
 					},
 					"Dialogue Farewell": {
 						"type": "string",
@@ -7482,7 +7482,7 @@
 					},
 					"Home": {
 						"type": "string",
-						"value": "Town Hall"
+						"value": "Council Chamber"
 					},
 					"Idle Phase": {
 						"type": "float",
@@ -7502,7 +7502,7 @@
 					},
 					"Placement Scene": {
 						"type": "string",
-						"value": "res://world/interiors/trial_hall.tscn"
+						"value": "res://world/interiors/council_chamber.tscn"
 					},
 					"Placement X": {
 						"type": "float",
@@ -7522,11 +7522,11 @@
 					},
 					"Quest Hooks": {
 						"type": "string",
-						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/themka-gaath/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Requests an independent account before ruling on the living muster.\"}]"
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/themka-gaath/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"PROVISIONAL — CANON REVIEW REQUIRED: Gives the opening charge to travel to Dorthkor Road.\"}]"
 					},
 					"Role": {
 						"type": "string",
-						"value": "High Warlord and Bridgeholder"
+						"value": "Council of Four Arms elder and Bridgeholder"
 					},
 					"Town Id": {
 						"type": "string",

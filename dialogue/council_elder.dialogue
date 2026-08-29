@@ -1,0 +1,29 @@
+# PROVISIONAL — CANON REVIEW REQUIRED: all dialogue prose and option text in this file.
+~ start
+Themka Gaath: Your trial is complete. The Council's first charge lies beyond Dom, on Dorthkor Road.
+=> charge
+
+~ charge
+- "Ask what truth matters before taking the road." [#tag=INSIGHT] [if not QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and not QuestRegistry.is_done(QuestRegistry.DORTHKOR_ROAD) and not GameState.get_flag("chapter_council_charge_check_failed") and check("insight", 40) /]
+	do SkillCheck.resolve("insight")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("chapter_council_charge_understood", true)
+		do QuestRegistry.offer(QuestRegistry.DORTHKOR_ROAD)
+		Themka Gaath: Bring back what the road proves, not what Dom hopes to hear.
+		=> END
+	else
+		do GameState.set_flag("chapter_council_charge_check_failed", true)
+		Themka Gaath: Understanding can follow commitment. The road still waits.
+		=> charge
+- "I will carry the Council's charge to Dorthkor Road." [if not QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and not QuestRegistry.is_done(QuestRegistry.DORTHKOR_ROAD) /]
+	do QuestRegistry.offer(QuestRegistry.DORTHKOR_ROAD)
+	Themka Gaath: Then go. Reach Dorthkor Road and confirm what waits beyond Dom.
+	=> END
+- "The Council's charge is already mine." [if QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) /]
+	Themka Gaath: The world map is open. Begin the journey to Dorthkor Road.
+	=> END
+- "The Dorthkor charge is finished." [if QuestRegistry.is_done(QuestRegistry.DORTHKOR_ROAD) /]
+	Themka Gaath: Then the road has given the Council its answer.
+	=> END
+- "I need a moment."
+	=> END

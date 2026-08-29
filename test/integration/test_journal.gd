@@ -48,7 +48,7 @@ func test_lists_active_and_completed_quests_with_journal_context() -> void:
 	var active_text := _label_text(active)
 	assert_str(active_text).contains("The Broken Muster")
 	assert_str(active_text).contains("Break the demon vanguard.")
-	assert_str(active_text).contains("GIVEN BY  ·  Marshal Coiljaw")
+	assert_str(active_text).contains("GIVEN BY  ·  Themka Gaath")
 	assert_str(active_text).contains("WHERE  ·  Dorthkor Road")
 	assert_str(active_text).contains("STATE  ·  Active")
 

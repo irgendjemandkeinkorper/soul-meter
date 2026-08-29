@@ -81,6 +81,7 @@ const FACTION_PROPERTIES := [
 ]
 const PLACEMENT_ANCHORS := {
 	"trial_hall_i": {"scene": "res://world/interiors/trial_hall.tscn", "anchor": "NpcSpot"},
+	"council_i": {"scene": "res://world/interiors/council_chamber.tscn", "anchor": "NpcSpot"},
 	"town_hall_i": {"scene": "res://world/interiors/town_hall.tscn", "anchor": "NpcSpot"},
 	"registry_i": {"scene": "res://world/interiors/registry_archive.tscn", "anchor": "NpcSpot"},
 	"bell_i": {"scene": "res://world/interiors/bell_house.tscn", "anchor": "NpcSpot"},
@@ -151,7 +152,7 @@ func _townsfolk_rows() -> Array[Dictionary]:
 	# placement key, offset, quest involvement, hook summary, optional vault id.
 	var authored: Array = [
 		["branek-coiljaw", "Marshal Coiljaw", "East Arm bench-holder and road marshal", "Trial Hall", "East Arm", "trial-council", "The Road-Bench keeps Dorthkor's broken drumbeat beside every open commission.", "trial_hall_i", Vector2(-64, 0), "giver", "Commissions a witness to audit the broken Dorthkor muster.", "branek-coiljaw"],
-		["themka-gaath", "Themka Gaath", "High Warlord and Bridgeholder", "Town Hall", "North Arm", "trial-council", "The Bridgeholder weighs the Wound-Watch ledger before any voice on the Council floor.", "trial_hall_i", Vector2(0, 0), "giver", "Requests an independent account before ruling on the living muster.", "themka-gaath"],
+		["themka-gaath", "Themka Gaath", "Council of Four Arms elder and Bridgeholder", "Council Chamber", "North Arm", "trial-council", "PROVISIONAL — CANON REVIEW REQUIRED: The Council elder waits to send a proven traveler beyond Dom.", "council_i", Vector2(0, 0), "giver", "PROVISIONAL — CANON REVIEW REQUIRED: Gives the opening charge to travel to Dorthkor Road.", "themka-gaath"],
 		["sella-varn", "Sella Varn", "Bell warden", "Bell House", "South Arm", "trial-council", "The district bell is warm, the rope is sound, and Sella refuses to call its silence a simple break.", "trial_hall_i", Vector2(64, 0), "giver", "Opens the silent bell-house investigation."],
 		["hadrik-vale", "Hadrik Vale", "Archive clerk", "Registry Archive", "North Arm", "rennen", "Hadrik can account for every road ledger except the one that returned with rain inside its seals.", "town_hall_i", Vector2(-64, 0), "giver", "Requests recovery of a storm-damaged road register."],
 		["toma-reedhand", "Toma Reedhand", "Dockhand and shrine-keeper", "River Shrine", "West Arm", "wayfare-menders", "Toma tends the river shrine between harbor shifts and knows which tide-chain offerings have gone missing.", "town_hall_i", Vector2(0, 0), "giver", "Asks for the missing offerings from the Drownedmouth tide-chain."],

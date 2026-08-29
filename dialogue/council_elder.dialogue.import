@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://jjkxu84jo7w2"
+path="res://.godot/imported/council_elder.dialogue-e80f1ea15881ab730f6dd356de42323f.tres"
+
+[deps]
+
+source_file="res://dialogue/council_elder.dialogue"
+dest_files=["res://.godot/imported/council_elder.dialogue-e80f1ea15881ab730f6dd356de42323f.tres"]
+
+[params]
+
+defaults=true
