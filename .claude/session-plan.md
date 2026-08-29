@@ -1,44 +1,58 @@
-# Session Plan
+# Session Plan — Fallout 2 Gameplay Flow Rework
 
-**Created:** 2026-08-18
+**Created:** 2026-08-28
 **Intent Contract:** See .claude/session-intent.md
+**Goal (verbatim):** "we need to make this game play flow and function MUCH more like fallout 2"
 
 ## What You'll End Up With
-A per-recruit canon-review packet for all six companion quests (contradiction
-findings vs the Dramgid vault, proposed vault-entry stubs for human sign-off,
-prose flagged for revision), plus agreed prose improvements applied to
-`dialogue/companions/` — with `tools/quest_audit.gd` clean and the
-companion-quest test suites green.
+
+Soul Meter playing much more like Fallout 2, production-ready on `main`:
+1. **A ratified spec amendment first** — your in-head Fallout 2 spec captured
+   verbatim, mapped system-by-system onto the existing architecture
+   (what changes / what stays / what is explicitly rejected), and ratified as a
+   design-doc/PRD addendum. No silent canon resolution.
+2. **The implemented feel shift** — the changed loops playable end-to-end from
+   a new game, landed in tested waves with the suite green and quest-audit clean.
+
+Likely Fallout 2 axes the spec will rule on (to be confirmed by YOUR list, not
+assumed): open world-map travel with random encounters vs. the current
+discovered-hub graph; skill-check-driven dialogue with speech/barter depth;
+AP-based tactical combat feel vs. the CT scheduler (Gate-T-ratified — evolve,
+don't rewrite); reputation/karma surfacing (Reputation/Renown ledgers already
+exist — presentation gap, not data gap); loot/scavenging density; quest
+structure with multiple resolution paths.
 
 ## How We'll Get There
 
 ### Phase Weights
-- Discover: 20% — Cross-check each of the six quests against the Dramgid vault
-  (`canon/` + `cosmology/` are do-not-contradict; follow `related` ids from
-  `index.json`). Output: per-quest findings list.
-- Define: 15% — Lock per-quest "canon-ready" criteria; enumerate anything that
-  touches `canon/open-questions.md` so nothing gets resolved silently.
-- Develop: 30% — Author the six canon-review packets (vault entry stub +
-  contradiction findings + prose flags per recruit); revise flagged dialogue
-  prose where it doesn't require a canon decision.
-- Deliver: 35% — High-stakes validation: debate gate, quest audit
-  (`SOUL_METER_QUEST_AUDIT_STRICT=1`), gdUnit4 suites
-  (test_companion_quest.gd, test_party_screen.gd, e2e walkthrough step).
+- **Discover: 10%** — Bounded research only where your spec cites Fallout 2
+  behavior that needs precise mechanical definition (delegate to Gemini;
+  Claude synthesizes). No open-ended study — you have the spec.
+- **Define: 20%** — THE CRITICAL PHASE. Elicit your full spec, write the
+  amendment, map each item to keep/evolve/replace per system, flag every
+  [CANON] collision and Gate-T touch, get your ratification. 🔸 DEBATE GATE.
+- **Develop: 40%** — Implement in waves ordered by feel-impact-per-risk;
+  Codex takes bounded implementation handoffs after Claude fixes architecture
+  per wave. Systems/existing-scenes only until #93 clears region content.
+- **Deliver: 30%** — Per-wave: suite + quest audit + screenshot sweep +
+  playthrough evidence; final: acceptance against the ratified amendment.
+  🔸 DEBATE GATE. (High-stakes constraint → validation-heavy.)
 
-### 🔸 Debate Checkpoints (high-stakes constraint → enabled)
-- After Define: "Are the canon-ready criteria right, and do any quests conflict
-  with do-not-contradict lore?" (1 round, adversarial)
-- After Develop: "Is this content ready for human canon sign-off?" (1 round,
-  adversarial)
+### 🐙 Debate Checkpoints
+- **After Define:** "Does this adoption list actually produce the Fallout 2
+  feel without breaking the ratified spine?" — 1-round adversarial
+  (Claude + Codex + Gemini) before you ratify.
+- **After Develop:** "Does this play like Fallout 2 now — and is it ready to
+  ship?" — 1-round collaborative on edge cases before final acceptance.
 
 ### Execution Commands
 To execute this plan, run:
 ```bash
-/octo:embrace "Review and improve the six companion quests to canon-review readiness"
+/octo:embrace "make Soul Meter's gameplay flow and function much more like Fallout 2, per .claude/session-intent.md"
 ```
 
 Or execute phases individually:
-- `/octo:discover` (Discover ≥ 20%)
+- `/octo:define` (Define ≥ 20%)
 - `/octo:develop` (Develop ≥ 20%)
 - `/octo:deliver` (Deliver ≥ 20%)
 
@@ -54,20 +68,33 @@ Or execute phases individually:
 🟣 Perplexity: Not configured ✗
 
 ## Success Criteria
-1. Every companion quest reviewed against the lore vault with findings
-   documented per quest.
-2. A concrete canon-review packet the human can act on per recruit.
-3. Provisional markers resolved or explicitly retained with reasons.
-4. Quest audit clean; companion-quest tests green.
-5. No architecture violations (Pandora canonical, ledger write paths,
-   Dialogue Manager conventions).
+1. Spec captured verbatim and ratified as a written amendment before code.
+2. Game plays differently in hand; changed loops playable from a new game.
+3. Every wave on `main` with tests, suite green, quest audit clean.
+4. Gate-T semantics evolved, never silently rewritten.
 
-## Hard Boundaries
-- No writes to the Dramgid vault — packets only; canon is a human decision.
-- No silent resolution of `canon/open-questions.md`.
-- No new mechanics; no `addons/` or `data/generated/*` edits.
+## Boundaries (from intent contract)
+- No silent canon resolution; no five-layer architecture rewrite.
+- No region-content merges until #93 passes — target systems + existing scenes.
+- #93 playtest and FR-904 benchmark stay human-gated, unaffected.
+
+## Ratified Rulings (owner, 2026-08-28)
+
+Both Define-phase hot spots were ruled on before execution ("yes to both"):
+1. **CT scheduler may change** — AP-based Fallout 2 combat feel authorized.
+   ApRoundScheduler already exists behind the scheduler seam
+   (globals/combat; the seam reads `actor.side` live and was built for this),
+   so the first Develop wave is a scheduler promotion + feel pass, not a rewrite.
+2. **World-map travel supersedes FR-503** — the discovered-hubs-at-a-cost
+   design gives way to Fallout 2-style overworld travel (map marker, travel
+   time, random encounters interrupting travel). FastTravelRegistry +
+   region_map.tscn are the base to evolve.
+
+The Define phase no longer needs to litigate these two; it still needs the
+rest of your spec list.
 
 ## Next Steps
 1. Review this plan
 2. Adjust if needed (re-run /octo:plan)
-3. Execute with /octo:embrace when ready
+3. Execute with /octo:embrace when ready — its Define phase opens by taking
+   down your Fallout 2 spec list item-by-item

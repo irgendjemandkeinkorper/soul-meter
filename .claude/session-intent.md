@@ -1,52 +1,59 @@
 # Session Intent Contract
 
-**Created:** 2026-08-18
-**Command:** /octo:plan
+**Created:** 2026-08-28
+**Command:** /octo:plan "we need to make this game play flow and function MUCH more like fallout 2"
 
 ## Job Statement
-Review and improve the existing companion quest content in Soul Meter: the six
-recruit personal quests (Serai-Lun, Wyneth Hallow-Tide, Old Grumbrand, Ressa
-Quickfingers, Korrath Ninefold, Maura Greyfen), their dialogue files in
-`dialogue/companions/`, and their quest resources in `quests/` — bringing the
-provisional content to canon-review readiness and production quality.
 
-## Context (from intent capture)
-- **Goal:** Review/improve existing
-- **Knowledge level:** Well-informed (knows options, needs execution)
-- **Scope clarity:** Clear requirements
-- **Success criteria:** Clear understanding + Team alignment + Working solution + Production-ready
-- **Constraints:** Must fit architecture + High stakes
+Rework Soul Meter's gameplay flow and function to feel and play much more like
+Fallout 2 — as a production-ready implementation effort, not a study. The owner
+states the desired changes are **fully specified in their head**; the plan's
+first working step is to elicit that spec verbatim and ratify it against the
+existing canon/PRD before any implementation.
 
-## Known State (from project record)
-- All six recruits have authored quests + dialogue (system complete per FR-505,
-  user ratified all six over the PRD's 3–5 minimum).
-- The three wave-3 dialogue files (ressa_quickfingers, korrath_ninefold,
-  maura_greyfen) are marked `PROVISIONAL — CANON REVIEW REQUIRED` (verified
-  2026-08-18 — the marker is line 1 of each file).
-- None of the six recruit names exist in the lore vault yet — vault entries +
-  `Vault Id` bridges are a pending HUMAN canon task.
-- Quest audit: 0 errors; new quests emit the same `outcome_count` warning class
-  as the accepted quests.
-- Resolution path: `QuestRegistry.resolve_companion_quest()` → exactly one
-  `Renown.gain_reputation()` event.
+## Captured Answers
+
+- **Goal:** Build something (rework gameplay systems/flow toward the Fallout 2 feel)
+- **Knowledge/Clarity:** Fully specified — owner has the detailed changes in mind; just implement
+- **Success:** Production-ready — changes land tested, on main, acceptance-checked
+- **Constraints:** Must fit architecture (keep ratified PRD/Gate-T systems; evolve, don't rewrite) · High stakes (this redirects the design; wrong calls are expensive)
 
 ## Success Criteria
-1. Every companion quest reviewed against the lore vault (do-not-contradict
-   check vs `canon/` + `cosmology/`) with findings documented per quest.
-2. A concrete canon-review packet the human can act on (per-recruit: proposed
-   vault entry stub, contradictions found, prose flagged for revision).
-3. Provisional markers resolved or explicitly retained with reasons.
-4. Mechanical soundness confirmed: quest audit clean, tests green
-   (test_companion_quest.gd, test_party_screen.gd, e2e walkthrough step).
-5. No architecture violations introduced (Pandora canonical, ledger write
-   paths, Dialogue Manager conventions).
 
-## Boundaries (Do NOT)
-- Do not copy provisional prose into the lore vault unreviewed — vault entries
-  are a human canon decision; prepare packets, don't commit canon.
-- Do not resolve open canon questions (`canon/open-questions.md`) silently.
-- Do not add new mechanics; this is content review/improvement within the
-  existing companion-quest system.
-- Do not edit `addons/` or generated `data/generated/*`.
-- High stakes: validation gates (debate/second-perspective review) before any
-  content changes merge.
+1. The owner's Fallout 2 spec is captured as a written, ratified amendment
+   (design-doc / PRD addendum) before implementation begins — no silent canon
+   resolution, per CLAUDE.md.
+2. The game demonstrably plays differently in hand: the changed loops are
+   playable end-to-end from a new game.
+3. Every change lands on `main` with tests, suite green, and quest-audit clean.
+4. Ratified Gate-T combat semantics (CT scheduler, Resolution purity,
+   forecast==resolution, frozen six-region contract) are evolved, not rewritten,
+   unless the owner explicitly ratifies a break.
+
+## Ratified Rulings (owner, 2026-08-28 — "yes to both")
+
+1. **Combat:** the Fallout 2 combat feel MAY touch the Gate-T-ratified CT
+   scheduler — AP-based combat is authorized. (ApRoundScheduler already exists
+   behind the scheduler seam; this is a promotion/swap, not a rewrite.)
+2. **Travel:** Fallout 2-style world-map travel SUPERSEDES FR-503's ratified
+   "discovered hubs only, at a cost" design.
+
+These override the corresponding lines under Boundaries/Success Criteria where
+they conflict; everything else there stands.
+
+## Boundaries
+
+- Do NOT resolve open canon questions or override [CANON] silently.
+- Do NOT rewrite the five-layer architecture (Flow → Presentation → Systems →
+  Narrative → Data); Fallout 2 mechanics map INTO it.
+- Region-content merges stay barred until the #93 playtest gate passes —
+  Fallout 2 flow work must target systems and existing scenes, not new regions,
+  until that clears.
+- The #93 human playtest and FR-904 hardware benchmark remain human-gated and
+  are unaffected by this plan.
+
+## Context
+
+Solo dev + agent fleet (Claude architect/synthesizer, Codex implementation,
+Gemini/Jules bounded research). Chapter 1 vertical is code-complete to its
+human-gated floor; suite 877/0 as of today.
