@@ -1,5 +1,8 @@
 [gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
 
+; PROVISIONAL — CANON REVIEW REQUIRED: Wave O acquisition prose is in council_elder.dialogue.
+; TODO(content wave): continue the existing Chapter 1 arc after arrival confirmation.
+
 [ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
 
 [resource]
@@ -8,7 +11,7 @@ id = 2
 quest_name = "The Broken Muster"
 quest_description = "A demon breach has silenced Dorthkor Road. The Trial Council needs proof of what crossed the stones—and why the dead are mustering with it."
 quest_objective = "Reach Dorthkor Road."
-quest_giver = "Marshal Coiljaw"
+quest_giver = "Themka Gaath"
 quest_location = "Dorthkor Road"
 destination_scene = "res://world/starting_town.tscn"
 destination_position = Vector2(2600, 100)

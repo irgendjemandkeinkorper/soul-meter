@@ -2637,8 +2637,8 @@
         "id": "themka-gaath"
       },
       "display_name": "Themka Gaath",
-      "role": "High Warlord and Bridgeholder",
-      "home": "Town Hall",
+      "role": "Council of Four Arms elder and Bridgeholder",
+      "home": "Council Chamber",
       "district": "North Arm",
       "faction_id": "trial-council",
       "quest_hooks": [
@@ -2646,7 +2646,7 @@
           "involvement": "giver",
           "quest_id": "dom/themka-gaath/giver",
           "state_source": "QuestRegistry",
-          "summary": "Requests an independent account before ruling on the living muster.",
+          "summary": "PROVISIONAL — CANON REVIEW REQUIRED: Gives the opening charge to travel to Dorthkor Road.",
           "stable_id": {
             "kind": "quest",
             "id": "dom/themka-gaath/giver"
@@ -2669,14 +2669,14 @@
           "id": "dom_themka_gaath"
         },
         "greeting": "Keep your footing, traveler.",
-        "context": "The Bridgeholder weighs the Wound-Watch ledger before any voice on the Council floor.",
+        "context": "PROVISIONAL — CANON REVIEW REQUIRED: The Council elder waits to send a proven traveler beyond Dom.",
         "farewell": "Leave me a true count when you return.",
         "hostile": "",
         "warm": "",
         "faction_id": "trial-council"
       },
       "placement": {
-        "scene": "res://world/interiors/trial_hall.tscn",
+        "scene": "res://world/interiors/council_chamber.tscn",
         "anchor": "NpcSpot",
         "offset": [
           0.0,
