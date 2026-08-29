@@ -185,18 +185,40 @@ func test_arrival_advances_exact_route_phase_cost_and_uses_travel_path() -> void
 	assert_str(GameFlow._target_scene).is_equal(GameFlow.DORTHKOR_SCENE)
 
 
-func test_battle_victory_signal_resolves_active_slot_and_resumes_journey() -> void:
+func test_battle_victory_grants_spoils_exactly_once_across_duplicate_events_and_reload() -> void:
 	var plan := _prompt_plan(23)
 	plan.progress_step = 2
 	plan.state = TravelPlan.State.IN_BATTLE
 	_install_plan(plan)
+	var expected_spoils: Array[Dictionary] = SpoilsTable.roll(&"loam-boar", plan.rng_seed, 0)
+	var counts_before: Dictionary = {}
+	for spoil: Dictionary in expected_spoils:
+		var item_id := String(spoil["item_id"])
+		counts_before[item_id] = GameState.item_count(item_id)
 	var victory := BattleResult.new()
 	victory.state = BattleResult.State.VICTORY
 
 	Battle.battle_ended.emit(victory)
 	assert_bool(bool(plan.encounter_schedule[0]["resolved"])).is_true()
+	assert_bool(bool(plan.encounter_schedule[0]["spoils_granted"])).is_true()
 	assert_int(int(plan.state)).is_equal(TravelPlan.State.EN_ROUTE)
 	assert_dict(GameState.travel_plan).is_equal(plan.to_dict())
+	_assert_spoil_counts(expected_spoils, counts_before)
+
+	Battle.battle_ended.emit(victory)
+	_assert_spoil_counts(expected_spoils, counts_before)
+	assert_bool(SaveGame.save()).is_true()
+
+	GameState.inventory.clear()
+	GameState.travel_plan = {}
+	GameFlow.travel_plan = null
+	assert_bool(SaveGame.load_save()).is_true()
+	var restored: TravelPlan = GameFlow.travel_plan
+	assert_bool(bool(restored.encounter_schedule[0]["spoils_granted"])).is_true()
+	_assert_spoil_counts(expected_spoils, counts_before)
+
+	Battle.battle_ended.emit(victory)
+	_assert_spoil_counts(expected_spoils, counts_before)
 
 
 func test_non_victory_battle_signal_returns_to_the_unresolved_prompt() -> void:
@@ -279,6 +301,14 @@ func _prompt_plan(seed: int) -> TravelPlan:
 func _install_plan(plan: TravelPlan) -> void:
 	GameFlow.travel_plan = plan
 	GameState.travel_plan = plan.to_dict()
+
+
+func _assert_spoil_counts(spoils: Array[Dictionary], counts_before: Dictionary) -> void:
+	for spoil: Dictionary in spoils:
+		var item_id := String(spoil["item_id"])
+		assert_int(GameState.item_count(item_id)).is_equal(
+			int(counts_before[item_id]) + int(spoil["quantity"])
+		)
 
 
 func _avoidance_chance() -> float:
