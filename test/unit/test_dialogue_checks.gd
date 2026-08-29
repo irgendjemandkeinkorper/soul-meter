@@ -135,6 +135,81 @@ func test_last_safe_course_check_route_contract() -> void:
 	)
 
 
+func test_living_tag_check_route_contract() -> void:
+	await _assert_quest_check_route(
+		{
+			"quest": QuestRegistry.LIVING_TAG,
+			"title": "dom_side_living_tag_hub",
+			"response": "Read the guard's history in the tag and plate together.",
+			"skill": "lore",
+			"success_flag": "dom_living_tag_verified",
+			"failure_flag": "dom_living_tag_check_failed",
+			"fallback": "Return to Korrin's posture and Ressa's brand reading.",
+			"original": "Korrin's posture and Ressa's brand identify the living owner.",
+		}
+	)
+
+
+func test_marching_knots_check_route_contract() -> void:
+	await _assert_quest_check_route(
+		{
+			"quest": QuestRegistry.MARCHING_KNOTS,
+			"title": "dom_side_marching_knots_hub",
+			"response": "Retie the marching sequence from the three accounts.",
+			"skill": "sleight_of_hand",
+			"success_flag": "dom_marching_knots_traced",
+			"failure_flag": "dom_marching_knots_check_failed",
+			"fallback": "Return to Brek's report, Toma's count, and Yssra's lights.",
+			"original": "The missing report and shrine count match the knots.",
+		}
+	)
+
+
+func test_rainbound_register_check_route_contract() -> void:
+	await _assert_quest_check_route(
+		{
+			"quest": QuestRegistry.RAINBOUND_REGISTER,
+			"title": "dom_side_rainbound_register_hub",
+			"response": "Reconstruct the crossed-out entry from all three records.",
+			"skill": "investigation",
+			"success_flag": "dom_rainbound_register_reconstructed",
+			"failure_flag": "dom_rainbound_register_check_failed",
+			"fallback": "Return to Brinna's count, Enna's proof, and Kessa's warning.",
+			"original": "The census name matches both watch records.",
+		}
+	)
+
+
+func test_smoothed_weights_check_route_contract() -> void:
+	await _assert_quest_check_route(
+		{
+			"quest": QuestRegistry.SMOOTHED_WEIGHTS,
+			"title": "dom_side_smoothed_weights_hub",
+			"response": "Test the filed weights against an honest Pillar burden.",
+			"skill": "athletics",
+			"success_flag": "dom_smoothed_weights_audited",
+			"failure_flag": "dom_smoothed_weights_check_failed",
+			"fallback": "Return to Drel's scores and Kadrin's burden pins.",
+			"original": "The scores prove three trials used altered weight.",
+		}
+	)
+
+
+func test_unclaimed_bed_check_route_contract() -> void:
+	await _assert_quest_check_route(
+		{
+			"quest": QuestRegistry.UNCLAIMED_BED,
+			"title": "dom_side_unclaimed_bed_hub",
+			"response": "Read the veteran's identity in the token and Istra's account.",
+			"skill": "insight",
+			"success_flag": "dom_unclaimed_bed_identified",
+			"failure_flag": "dom_unclaimed_bed_check_failed",
+			"fallback": "Return to Loa's token and Istra's account.",
+			"original": "Loa's token and Istra's account identify the veteran.",
+		}
+	)
+
+
 func test_check_softlock_audit_rejects_violation_and_accepts_worked_example() -> void:
 	var violating_source := """~ test_quest_hub
 - \"Try the shortcut.\" [if check(\"persuasion\", 45) /]
