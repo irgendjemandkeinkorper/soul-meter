@@ -15,12 +15,17 @@ var _balance_bar: ProgressBar
 var _log_lbl: Label
 var _actions_box: GridContainer
 var _target_button: Button
+var _end_turn_button: Button
 var _tactical_data_button: Button
 var _outcome_box: VBoxContainer
 var _action_buttons: Array[Button] = []
 var _battle_hud: BattleHUD
 var _battle_interface: BattleInterface
 var _combat_audio: Node
+var _weakness_dialog: Window
+var _weakness_picker: OptionButton
+var _weakness_forecast: Label
+var _selected_weakness_id: StringName = &""
 
 
 func _build() -> void:
@@ -127,6 +132,10 @@ func _make_command_dock() -> Control:
 	_target_button.custom_minimum_size = Vector2(0, 26)
 	_target_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_target_button.theme_type_variation = "BronzeButton"
+	_end_turn_button = _menu_button(command_footer, "END TURN", Battle.end_turn)
+	_end_turn_button.name = "EndTurnButton"
+	_end_turn_button.custom_minimum_size = Vector2(124, 32)
+	_end_turn_button.theme_type_variation = "BronzeButton"
 	var flee := _menu_button(command_footer, "WITHDRAW", Battle.flee)
 	flee.custom_minimum_size = Vector2(96, 26)
 	flee.theme_type_variation = "DangerButton"
@@ -206,7 +215,103 @@ func _make_meter(fill_color: Color) -> ProgressBar:
 
 
 func _use_action(action_id: StringName) -> void:
+	var action: CombatAction = null
+	for candidate: CombatAction in Battle.available_actions():
+		if candidate.id == action_id:
+			action = candidate
+			break
+	if action != null and action.kind == CombatAction.Kind.DEFINING_STRIKE:
+		_open_weakness_dialog()
+		return
 	Battle.use_action(action_id)
+
+
+func _open_weakness_dialog() -> void:
+	var weaknesses := Battle.available_weaknesses()
+	if weaknesses.is_empty():
+		return
+	_ensure_weakness_dialog()
+	_weakness_picker.clear()
+	for weakness: Dictionary in weaknesses:
+		_weakness_picker.add_item(str(weakness.get("display_name", weakness.get("id", "Weakness"))))
+		_weakness_picker.set_item_metadata(
+			_weakness_picker.item_count - 1, StringName(weakness.get("id", ""))
+		)
+	_selected_weakness_id = StringName(_weakness_picker.get_item_metadata(0))
+	_update_weakness_forecast(0)
+	_weakness_dialog.popup_centered(Vector2i(520, 280))
+
+
+func _ensure_weakness_dialog() -> void:
+	if is_instance_valid(_weakness_dialog):
+		return
+	_weakness_dialog = Window.new()
+	_weakness_dialog.name = "DefiningStrikeDialog"
+	_weakness_dialog.title = "Defining Strike"
+	_weakness_dialog.transient = true
+	_weakness_dialog.exclusive = true
+	_weakness_dialog.unresizable = true
+	_weakness_dialog.close_requested.connect(_weakness_dialog.hide)
+	add_child(_weakness_dialog)
+
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	_weakness_dialog.add_child(margin)
+	var column := VBoxContainer.new()
+	margin.add_child(column)
+	var instruction := Label.new()
+	instruction.text = "Choose a discovered weakness to name."
+	column.add_child(instruction)
+	_weakness_picker = OptionButton.new()
+	_weakness_picker.name = "WeaknessPicker"
+	_weakness_picker.item_selected.connect(_update_weakness_forecast)
+	column.add_child(_weakness_picker)
+	_weakness_forecast = Label.new()
+	_weakness_forecast.name = "WeaknessForecast"
+	_weakness_forecast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_weakness_forecast.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(_weakness_forecast)
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_END
+	column.add_child(buttons)
+	var cancel := _menu_button(buttons, "CANCEL", _weakness_dialog.hide)
+	cancel.custom_minimum_size = Vector2(96, 30)
+	var confirm := _menu_button(buttons, "CONFIRM STRIKE", _confirm_weakness)
+	confirm.name = "ConfirmDefiningStrike"
+	confirm.custom_minimum_size = Vector2(156, 34)
+	confirm.theme_type_variation = "BronzeButton"
+
+
+func _update_weakness_forecast(index: int) -> void:
+	if not is_instance_valid(_weakness_picker) or index < 0 or index >= _weakness_picker.item_count:
+		return
+	_selected_weakness_id = StringName(_weakness_picker.get_item_metadata(index))
+	var forecast := Battle.defining_strike_forecast(_selected_weakness_id)
+	if not bool(forecast.get("allowed", false)):
+		_weakness_forecast.text = str(forecast.get("message", "Strike unavailable."))
+		return
+	var resolution: Dictionary = forecast.get("resolution", {})
+	var effect_name := str(forecast.get("effect_id", "")).replace("_", " ").capitalize()
+	_weakness_forecast.text = (
+		"COST %d AP  ·  CHANCE %.0f%%\nFORECAST %d DAMAGE  ·  %s"
+		% [
+			int(forecast.get("ap_cost", 0)),
+			float(forecast.get("chance", 0.0)),
+			int(resolution.get("damage", 0)),
+			effect_name if not effect_name.is_empty() else "No additional effect",
+		]
+	)
+
+
+func _confirm_weakness() -> void:
+	if _selected_weakness_id.is_empty():
+		return
+	_weakness_dialog.hide()
+	Battle.use_defining_strike(_selected_weakness_id)
 
 
 func _toggle_tactical_data() -> void:
@@ -291,7 +396,7 @@ func _update_party_status() -> void:
 
 
 func _short_action_text(action: CombatAction, reason: String = "") -> String:
-	var text := action.display_name.to_upper()
+	var text := "%s · %d AP" % [action.display_name.to_upper(), action.ap_cost]
 	if action.soul_cost > 0.0:
 		text += " · SOUL %d" % int(action.soul_cost)
 	if not reason.is_empty() and action.kind == CombatAction.Kind.RESOLUTION:

@@ -8,6 +8,21 @@ This ledger separates reproducible machine evidence from the two results that ca
 be manufactured by an agent: outside-player comprehension and reference-hardware
 performance. Green gdUnit results do not override either requirement.
 
+## Amendment — criterion 10 (2026-08-28)
+
+Per Wave 0 of the ratified `docs/fallout2-adoption-spec.md`, Gate T criterion 10 is
+amended from **AP→CT migration completeness** to **CT→AP promotion completeness**.
+The former wording and its Wave-C compatibility characterization remain recorded as
+historical evidence; this amendment does not silently obsolete them or remove CT.
+
+Criterion 10 now passes when AP is the shipped default for every encounter, the five
+encounter-level CT overrides have been removed alongside documented AP balance-pass
+evidence, and the CT scheduler remains available behind the scheduler seam with its
+compatibility tests passing. The enemy full-AP behavior remains behind its new
+`CombatRules` flag, **OFF by default**; enabling it by default is not authorized by this
+amendment. This criterion does not set the PROVISIONAL unused-AP payoff value, add canon
+or lore, or authorize work from Waves 2–6.
+
 ## Criterion ledger
 
 | # | Criterion | Current status | Reproducible evidence |
@@ -21,7 +36,7 @@ performance. Green gdUnit results do not override either requirement.
 | 7 | Fixed-seed determinism and forecast/resolution parity | Automated PASS | Wave-C byte determinism and equal-cost-path tests plus `test/combat_resolution/test_resolution.gd` |
 | 8 | Grid position, facing, elevation, CT, tile charge, weather survive round trip | Automated PASS | `test/integration/test_wavec_tactical_gates.gd::test_gate_t7_resolution_and_tactical_round_trip_are_byte_deterministic` (legacy test name; asserts the criterion-8 state set) |
 | 9 | FR-904 rendered performance floor | **PROVISIONAL — reference run required** | Harness is healthy, but only three declared reference-hardware rendered runs can pass. See `docs/fr-904-runbook.md` and `docs/issue-evidence-175-gate-t9.md` |
-| 10 | AP→CT migration completeness | Automated PASS | Wave-C compatibility characterization; remaining `action_points|ap_cost` paths are under the Gate T-10 compatibility shim and removal ticket #176 |
+| 10 | CT→AP promotion completeness | **AMENDED — Wave 1 evidence pending** | Historical baseline preserved: Wave-C compatibility characterization; remaining `action_points\|ap_cost` paths are under the Gate T-10 compatibility shim and removal ticket #176. Current proof requires AP as the shipped default for every encounter, removal of all five CT overrides with the AP balance-pass evidence, and passing CT scheduler-compatibility tests. |
 
 The focused Gate T integration command currently reports 10 tests and 0 failures:
 

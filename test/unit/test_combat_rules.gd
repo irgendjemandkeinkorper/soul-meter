@@ -41,3 +41,11 @@ func test_charge_cost_handles_null_move_authored_and_ap_fallback() -> void:
 	var fallback := CombatAction.new()
 	fallback.ap_cost = 5
 	assert_int(rules.charge_cost_for(fallback)).is_equal(60)
+
+
+func test_wave1_enemy_and_unused_ap_defaults_are_conservative_and_capped() -> void:
+	var rules := CombatRules.new()
+	assert_bool(rules.enemy_full_ap_turns).is_false()
+	assert_int(rules.unused_ap_defense_per_ap).is_greater_equal(0)
+	assert_int(rules.unused_ap_defense_cap).is_greater_equal(0)
+	assert_int(rules.unused_ap_defense_per_ap).is_less_equal(rules.unused_ap_defense_cap)

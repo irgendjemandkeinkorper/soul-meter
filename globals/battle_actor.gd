@@ -75,6 +75,9 @@ var discovered_weakness_ids: Array[StringName] = []
 var defining_effects: Dictionary = {}
 var balance_band_id: StringName = &""
 var balance_effects: Dictionary = {}
+## Temporary Wave 1 payoff earned by voluntarily ending an AP turn. Cleared at
+## the next AP refresh; authored CombatRules own both its rate and hard cap.
+var unused_ap_defense_bonus: int = 0
 
 
 func is_alive() -> bool:
@@ -90,7 +93,7 @@ func effective_attack() -> int:
 
 
 func effective_defense() -> int:
-	return maxi(0, defense + int(defining_effects.get("defense_delta", 0)))
+	return maxi(0, defense + int(defining_effects.get("defense_delta", 0)) + unused_ap_defense_bonus)
 
 
 func effective_max_action_points(base_value: int) -> int:
