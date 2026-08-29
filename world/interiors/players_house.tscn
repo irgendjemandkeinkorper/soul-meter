@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="3_chest"]
 
 [node name="PlayersHouseInterior" type="Node2D"]
 
@@ -17,3 +18,10 @@ transition_id = &"players_loft_enter"
 
 [node name="SpawnFromPlayersLoft" type="Marker2D" parent="."]
 position = Vector2(800, 150)
+
+[node name="Provisions" parent="." instance=ExtResource("3_chest")]
+position = Vector2(150, 500)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_players_house_provisions"
+loot = Array[Dictionary]([{"item_id": "consumables/hearthloaf", "quantity": 2}, {"item_id": "consumables/loam_bread", "quantity": 1}])
+container_id = "players-house-provisions"

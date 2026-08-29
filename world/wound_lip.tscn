@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="3_hud"]
 [ext_resource type="PackedScene" path="res://actors/enemy/enemy.tscn" id="4_enemy"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="5_exit"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="6_chest"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1800, 40)
@@ -75,3 +76,17 @@ encounter_id = &"jawbrace-empty-post"
 position = Vector2(70, 450)
 target_scene = "res://world/starting_town.tscn"
 label_text = "RETURN TO DOM"
+
+[node name="LedgeCache" parent="." instance=ExtResource("6_chest")]
+position = Vector2(650, 530)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_wound_lip_ledge_cache"
+loot = Array[Dictionary]([{"item_id": "consumables/bitterleaf_poultice", "quantity": 1}, {"item_id": "materials/grave_salt", "quantity": 1}])
+container_id = "wound-lip-ledge-cache"
+
+[node name="GuardKit" parent="." instance=ExtResource("6_chest")]
+position = Vector2(1460, 530)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_wound_lip_guard_kit"
+loot = Array[Dictionary]([{"item_id": "materials/binding_thread", "quantity": 1}, {"item_id": "tools/field_needle", "quantity": 1}])
+container_id = "wound-lip-guard-kit"
