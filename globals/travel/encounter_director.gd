@@ -5,7 +5,7 @@ extends RefCounted
 
 static func build_schedule(route: Dictionary, seed: int) -> Array[Dictionary]:
 	var steps := maxi(int(route.get("steps", 0)), 0)
-	var table := _valid_encounter_table(route.get("encounter_table", []))
+	var table := _encounter_table_for_route(route)
 	if steps <= 0 or table.is_empty():
 		return []
 
@@ -56,6 +56,32 @@ static func _valid_encounter_table(raw_table: Variant) -> Array[Dictionary]:
 			continue
 		table.append({"encounter_id": encounter_id, "weight": weight})
 	return table
+
+
+static func _encounter_table_for_route(route: Dictionary) -> Array[Dictionary]:
+	var table := _valid_encounter_table(route.get("encounter_table", []))
+	var configuration: Variant = route.get("band_encounter_weights", {})
+	if not configuration is Dictionary:
+		return table
+	var faction_id := StringName(configuration.get("faction_id", &""))
+	var raw_bands: Variant = configuration.get("bands", {})
+	if faction_id.is_empty() or not raw_bands is Dictionary:
+		return table
+	var raw_overrides: Variant = raw_bands.get(Reputation.band(String(faction_id)), {})
+	if not raw_overrides is Dictionary:
+		return table
+
+	var result: Array[Dictionary] = []
+	for entry: Dictionary in table:
+		var encounter_id := StringName(entry["encounter_id"])
+		var weight := int(entry["weight"])
+		if raw_overrides.has(encounter_id):
+			weight = int(raw_overrides[encounter_id])
+		elif raw_overrides.has(String(encounter_id)):
+			weight = int(raw_overrides[String(encounter_id)])
+		if weight > 0:
+			result.append({"encounter_id": encounter_id, "weight": weight})
+	return result
 
 
 static func _shuffle_with_rng(values: Array[int], rng: RandomNumberGenerator) -> void:
