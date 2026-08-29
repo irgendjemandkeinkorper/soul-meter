@@ -256,10 +256,7 @@ func _ensure_weakness_dialog() -> void:
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_top", 18)
-	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_bottom", 18)
+	margin.theme_type_variation = "BattlePanelMargin"
 	_weakness_dialog.add_child(margin)
 	var column := VBoxContainer.new()
 	margin.add_child(column)
@@ -395,6 +392,9 @@ func _update_party_status() -> void:
 		row.add_child(bar)
 
 
+## AP round economy: every command label surfaces its AP cost (ratified
+## `docs/fallout2-adoption-spec.md` Wave 1) — this is the shipped scheduler's
+## live cost display, not a Gate T-10 compatibility remnant.
 func _short_action_text(action: CombatAction, reason: String = "") -> String:
 	var text := "%s · %d AP" % [action.display_name.to_upper(), action.ap_cost]
 	if action.soul_cost > 0.0:

@@ -32,7 +32,7 @@ func test_production_field_encounters_build_grid_battlefields() -> void:
 			.is_false()
 
 
-func test_gate_t1_encounters_use_grid_and_charge_time_in_production() -> void:
+func test_gate_t1_encounters_use_grid_and_ap_scheduler_in_production() -> void:
 	var encounter_ids: Array[StringName] = [
 		EncounterIds.PHASE2_DEMON,
 		EncounterIds.PHASE2_UNDEAD,
@@ -44,8 +44,11 @@ func test_gate_t1_encounters_use_grid_and_charge_time_in_production() -> void:
 		Battle.start(encounter_id)
 		assert_bool(Battle.controller.battlefield is GridBattlefieldModel)\
 			.override_failure_message("%s did not build a grid battlefield" % encounter_id).is_true()
+		# Gate-T criterion 10 amendment (docs/fallout2-adoption-spec.md Wave 1): AP is the
+		# shipped default for every encounter; the five CT overrides were removed with
+		# balance evidence (docs/qa/wave1-ap-balance-evidence.md).
 		assert_bool(Battle.controller.rules.use_charge_time)\
-			.override_failure_message("%s did not activate charge time" % encounter_id).is_true()
+			.override_failure_message("%s should run the AP scheduler per the Gate-T c10 amendment" % encounter_id).is_false()
 
 
 func test_production_encounter_place_writes_a_spawn_position() -> void:

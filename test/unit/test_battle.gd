@@ -71,7 +71,11 @@ func test_each_party_member_acts_before_the_enemy_round() -> void:
 
 func test_defining_strike_shifts_balance_without_an_unratified_soul_cost() -> void:
 	battle.start(EncounterIds.BOG_WIGHT)
-	battle.use_action(BattleScript.ACTION_DEFINITION)
+	# Wave 1 (fallout2-adoption-spec): a Defining Strike is a deliberate selection —
+	# the facade no longer auto-picks the first discovered weakness.
+	var weaknesses: Array[Dictionary] = battle.available_weaknesses()
+	assert_array(weaknesses).is_not_empty()
+	battle.use_defining_strike(StringName(weaknesses[0].get("id", "")))
 
 	assert_int(battle.balance).is_equal(25)
 	assert_float(GameState.soul_meter).is_equal_approx(50.0, 0.001)

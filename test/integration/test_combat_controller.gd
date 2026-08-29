@@ -215,6 +215,25 @@ func test_defining_strike_requires_selection_and_forecast_matches_resolution_con
 	assert_int(pure_forecast["damage"]).is_equal(resolved["damage"])
 
 
+func test_ct_scheduler_end_turn_never_grants_unused_ap_defense() -> void:
+	var ct_rules: CombatRules = rules.duplicate(true)
+	ct_rules.use_charge_time = true
+	var ct_controller := CombatController.new()
+	ct_controller.configure(
+		CombatActionCatalog.all(), BattlefieldModel.create_default(ct_rules), ct_rules
+	)
+	ct_controller.start([ally], [enemy])
+	var guard := 0
+	while ct_controller.state != CombatController.State.ALLY_TURN and guard < 200:
+		guard += 1
+		ct_controller.advance()
+	assert_int(ct_controller.state).is_equal(CombatController.State.ALLY_TURN)
+
+	ct_controller.end_turn()
+
+	assert_int(ally.unused_ap_defense_bonus).is_equal(0)
+
+
 func test_failed_defining_check_still_consumes_extra_ap() -> void:
 	var weakness_id := &"loam-maddened-boar/knee"
 	ally.source_member = _skilled_member()

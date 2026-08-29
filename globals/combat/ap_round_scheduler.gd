@@ -263,6 +263,7 @@ func commit(actor: BattleActor, action: CombatAction) -> Dictionary:
 			_rules == null
 			or not _rules.enemy_full_ap_turns
 			or actor.action_points <= 0
+			or cost <= 0  # a free action must not renew eligibility, or the side never advances
 			or action.kind == CombatAction.Kind.PASS
 		)
 	):

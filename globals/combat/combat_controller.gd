@@ -533,10 +533,15 @@ static func calculate_damage(
 	if resolution_context.has("weakness_id"):
 		unit_context["weakness_id"] = resolution_context["weakness_id"]
 		unit_context["weakness"] = resolution_context.get("weakness", {}).duplicate(true)
+	if resolution_context.has("battle_id"):
+		unit_context["battle_id"] = resolution_context["battle_id"]
 	var result := Resolution.resolve_action(
 		unit_context,
 		{
-			"id": "attack",
+			# Defining strikes pass their real ability id so the deterministic roll key
+			# matches `forecast_defining_strike()` — forecast==resolution. Plain attacks
+			# keep the legacy "attack" key (changing it would reshuffle every battle's RNG).
+			"id": str(resolution_context.get("ability_id", "attack")),
 			"element_id": element_id,
 			"magnitude": ability_magnitude,
 			"power": power,
@@ -944,7 +949,7 @@ func _resolve_attack(
 			cover_bonus,
 			action.element_id,
 			action.magnitude,
-			_sequence,
+			int(resolution_context.get("seed", _sequence)),
 			positional_context,
 			resolution_context,
 		)
@@ -1037,6 +1042,37 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 	context["weakness_id"] = weakness_id
 	context["weakness"] = weakness.duplicate(true)
 	var resolution := Resolution.resolve(context)
+	# Resolution's damage figure is pre-mitigation; live resolution subtracts defense,
+	# balance defense and cover in `calculate_damage`. Forecast through the SAME static
+	# pipeline with the SAME arguments `_resolve_attack` will pass, so the shown number
+	# equals the landed number — forecast==resolution by construction, not by echo.
+	var positional_context := _positional_resolution_context(actor, target)
+	var cover_bonus := battlefield.cover_bonus(actor, target)
+	if bool(target.defining_effects.get("revealed", false)):
+		cover_bonus = 0
+	var legacy_flank_bonus := battlefield.flank_bonus(actor, target)
+	if not positional_context.is_empty():
+		legacy_flank_bonus = 0
+	resolution["damage"] = calculate_damage(
+		actor,
+		target,
+		action.power_bonus,
+		action.balance_shift,
+		balance,
+		legacy_flank_bonus,
+		cover_bonus,
+		action.element_id,
+		action.magnitude,
+		_sequence,
+		positional_context,
+		{
+			"weakness_id": weakness_id,
+			"weakness": weakness.duplicate(true),
+			"seed": _sequence,
+			"ability_id": String(action.id),
+			"battle_id": String(_encounter_id),
+		},
+	)
 	return _allowed({
 		"action_id": action.id,
 		"weakness_id": weakness_id,
@@ -1095,6 +1131,9 @@ func _resolve_defining_strike(
 ) -> Dictionary:
 	var weakness_id := StringName(options.get("weakness_id", ""))
 	var weakness := CombatIdentityCatalog.weakness(target.archetype_id, weakness_id)
+	# Captured BEFORE the check emits `check_resolved` (which advances _sequence), so the
+	# damage seed equals the one `forecast_defining_strike()` used — forecast==resolution.
+	var damage_seed := _sequence
 	var forced_rolls: Array[int] = []
 	var authored_rolls: Variant = options.get("forced_rolls", [])
 	if authored_rolls is Array:
@@ -1137,6 +1176,9 @@ func _resolve_defining_strike(
 	result.merge(_resolve_attack(actor, target, action, {
 		"weakness_id": weakness_id,
 		"weakness": weakness.duplicate(true),
+		"seed": damage_seed,
+		"ability_id": String(action.id),
+		"battle_id": String(_encounter_id),
 	}), true)
 	var resistance: Variant = weakness.get("resistance", {})
 	var resisted := false
