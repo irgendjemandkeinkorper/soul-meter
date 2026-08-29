@@ -315,6 +315,29 @@ payloads rather than UI combat arithmetic.
   findings, all real, fixed at `e8cd925`) -> r2 **PROCEED** (no blocking findings;
   parity, region-D number, and evidence scope all verified against the tree).
 
+- **Wave P follow-up (P4) — "grid by default" — SHIPPED 2026-08-29.** Owner ruling
+  after playtest report "combat screen is still just blank": the two trial
+  encounters (and any future catalog encounter authoring no grid) fell back to
+  the zone model, which the six-region stage does not render — blank center
+  stage in real play. Fix: `Battle._battlefield_for_definition()` synthesizes a
+  PROVISIONAL default grid `7 × max(5, rows)` for any catalog definition with a
+  missing/empty/invalid grid block (invalid grids keep their warning); authored
+  `grid.dimensions` still win. Zone stays a live FR-105 fallback two ways: the
+  explicit `"battlefield": "zones"` definition hatch and ad-hoc
+  `start(BattleActor)` scaffold battles (empty definition — test/debug surface,
+  unreachable from authored content). Evidence: 7-case
+  `test/test_battle_default_grid.gd`, suite 1004/0 on merged main, xvfb
+  screenshot `23_battle_grid.png` visually confirmed (grid tiles + deployed
+  units + all six regions). Gate: r1 **PROCEED_WITH_RISKS**, no blocking
+  findings; accepted residuals on record: (1) before per-encounter grid
+  dimensions move into generated JSON (the later content pass), the catalog
+  must normalize a JSON-safe dimensions representation to `Vector2i` — today
+  only the GDScript `_FIELD_GRID_DATA` overlay supplies dimensions, already
+  typed; (2) the zone-fallback tests assert via capabilities rather than the
+  concrete type — deliberate, the zone model's contract forbids consumers
+  naming its type; (3) push_warning emission on invalid grids is not
+  test-pinned (gdUnit has no warning capture).
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
