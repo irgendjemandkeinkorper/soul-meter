@@ -151,6 +151,24 @@ evidence convergence tested by the quest audit's reachability rules).
 Accept (for the in-scope part): enumerated lock conversions shipped; quest audit proves
 out-of-order completion for the retrofitted quests; no softlocks (audit rule from Wave 3).
 
+**Wave O — Opening sequence (RATIFIED BY OWNER 2026-08-29, added after REV 2).**
+The New Game arc must play like Fallout 2's opening: intro narration →
+character creation → a diegetic tutorial gauntlet → an elder hands over the
+driving quest → released into the hub with the world map live. Owner rulings:
+(1) FULL arc; (2) the gauntlet is skippable via a checked speech line at its
+entrance; (3) the quest-giver is a Council of Four Arms elder — quest text
+drafted from the Chapter 1 PRD and flagged for owner canon review before merge.
+Scope: intro-narration screen (text over existing art, skippable, no binary
+deps); gauntlet inside the EXISTING Lower Trial Hall interior (movement beat,
+one forced encounter, a skill-check door, a keeper you can fight OR talk past —
+Wave 3 check convention); council-elder quest handoff in the existing council
+chamber; New Game flow reroutes chargen → intro → gauntlet → Dom. No new
+macro locations (the #93 region gate is untouched).
+Accept: full opening playable end-to-end in an e2e test (both keeper routes);
+speech-skip proven; the driving quest live in QuestRegistry with ≥2 routes per
+the Wave 3 convention; canon-review flags on all new prose; suite green; quest
+audit clean.
+
 ## Boundaries (binding)
 
 - Five-layer architecture and Resolution purity preserved; forecast==resolution.
