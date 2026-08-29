@@ -117,6 +117,19 @@ Jorun Ashmantle: One bowl has gone cold for six nights. The veteran who owns it 
 	do GameState.set_flag("dom_cold_bowl_veteran_found", true)
 	Jorun Ashmantle: Found is not returned. Decide whether the roll needs the veteran more than the veteran needs distance from it.
 	=> END
+- "Let the hound lead me to the veteran." [#tag=Beast Handling] [if QuestRegistry.is_active(QuestRegistry.COLD_BOWL) and not GameState.get_flag("dom_cold_bowl_veteran_found") and not GameState.get_flag("dom_cold_bowl_check_failed") and check("beast_handling", 40) /]
+	do SkillCheck.resolve("beast_handling")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_cold_bowl_veteran_found", true)
+		Jorun Ashmantle: The hound found the veteran. Decide what the roll asks next.
+		=> END
+	else
+		do GameState.set_flag("dom_cold_bowl_check_failed", true)
+		Jorun Ashmantle: The trail is not enough. Use Orenna's key and follow it from the last place the veteran ate alone.
+		=> END
+- "Return with Orenna's key and Kaelra's hound." [if QuestRegistry.is_active(QuestRegistry.COLD_BOWL) and GameState.get_flag("dom_cold_bowl_check_failed") and not GameState.get_flag("dom_cold_bowl_veteran_found") /]
+	Jorun Ashmantle: The original search remains open. Take the key and the hound together.
+	=> END
 - "Bring the veteran home without a desertion charge." [#consequence=The Company makes room without punishment] [if QuestRegistry.is_active(QuestRegistry.COLD_BOWL) and QuestRegistry.flags_met(QuestRegistry.COLD_BOWL) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.COLD_BOWL, "bring-them-home")
 	Jorun Ashmantle: The bowl will be warm. No questions until the veteran chooses to answer one.
@@ -179,6 +192,19 @@ Orren Chainwake: One safe course remains below the sea-mouth and a crew is waiti
 	do GameState.set_flag("dom_last_safe_course_verified", true)
 	Orren Chainwake: Then the course is true today. Decide how many tomorrows get to spend it.
 	=> END
+- "The three reports describe one safe course." [#tag=Survival] [if QuestRegistry.is_active(QuestRegistry.LAST_SAFE_COURSE) and not GameState.get_flag("dom_last_safe_course_verified") and not GameState.get_flag("dom_last_safe_course_check_failed") and check("survival", 50) /]
+	do SkillCheck.resolve("survival")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_last_safe_course_verified", true)
+		Orren Chainwake: The three agree. The course is true today.
+		=> END
+	else
+		do GameState.set_flag("dom_last_safe_course_check_failed", true)
+		Orren Chainwake: The line is not proof. Bring Holst's route, Yssra's lights, and Yara's chain report.
+		=> END
+- "Return to Holst, Yssra, and Yara's reports." [if QuestRegistry.is_active(QuestRegistry.LAST_SAFE_COURSE) and GameState.get_flag("dom_last_safe_course_check_failed") and not GameState.get_flag("dom_last_safe_course_verified") /]
+	Orren Chainwake: The original verification remains open. Bring all three reports.
+	=> END
 - "Publish the course to every Drownedmouth pilot." [#consequence=Every pilot may carry stranded crews home] [if QuestRegistry.is_active(QuestRegistry.LAST_SAFE_COURSE) and QuestRegistry.flags_met(QuestRegistry.LAST_SAFE_COURSE) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.LAST_SAFE_COURSE, "publish-the-course")
 	Orren Chainwake: I will cut the marks before the tide turns. Shared danger is still shared knowledge.
@@ -209,6 +235,19 @@ Pell Hammersong: Four Arms answer in four beats. The western storm keeps sending
 - "The fifth beat survives every test." [if QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and not GameState.get_flag("dom_fifth_echo_tested") /]
 	do GameState.set_flag("dom_fifth_echo_tested", true)
 	Pell Hammersong: Then it is not bad tuning. Decide whether civic speech excludes it or learns to warn with it.
+	=> END
+- "Test the pattern against the four-beat cadence." [#tag=Performance] [if QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and not GameState.get_flag("dom_fifth_echo_tested") and not GameState.get_flag("dom_fifth_echo_check_failed") and check("performance", 45) /]
+	do SkillCheck.resolve("performance")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_fifth_echo_tested", true)
+		Pell Hammersong: You heard it. The fifth beat survives the cadence.
+		=> END
+	else
+		do GameState.set_flag("dom_fifth_echo_check_failed", true)
+		Pell Hammersong: Your ear cannot settle it. Compare Nalla's reply, Tern's silence, and Sorek's calls.
+		=> END
+- "Return to Nalla, Tern, and Sorek's tests." [if QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and GameState.get_flag("dom_fifth_echo_check_failed") and not GameState.get_flag("dom_fifth_echo_tested") /]
+	Pell Hammersong: The original tests remain open. Bring all three answers.
 	=> END
 - "Damp the fifth echo and restore the four-beat signal." [#consequence=The Jawbrace returns to one unambiguous cadence] [if QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and QuestRegistry.flags_met(QuestRegistry.FIFTH_ECHO) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.FIFTH_ECHO, "damp-the-echo")
@@ -271,6 +310,19 @@ Vaara Cisternhand: Forge ash reached my cistern before the rain crossed East Arm
 - "The ash source and both ration counts are verified." [if QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and not GameState.get_flag("dom_ash_in_the_rain_traced") /]
 	do GameState.set_flag("dom_ash_in_the_rain_traced", true)
 	Vaara Cisternhand: Good. There is not enough clean water to make the choice disappear. Put one line first.
+	=> END
+- "The ash and the ration counts point to one demand." [#tag=Investigation] [if QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and not GameState.get_flag("dom_ash_in_the_rain_traced") and not GameState.get_flag("dom_ash_in_the_rain_check_failed") and check("investigation", 45) /]
+	do SkillCheck.resolve("investigation")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_ash_in_the_rain_traced", true)
+		Vaara Cisternhand: The ash and counts agree. Choose who drinks first.
+		=> END
+	else
+		do GameState.set_flag("dom_ash_in_the_rain_check_failed", true)
+		Vaara Cisternhand: An inference is not a trace. Bring Veyra's reading, Umber's manifest, and Mera's count.
+		=> END
+- "Return to Veyra's ash reading and both ration counts." [if QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and GameState.get_flag("dom_ash_in_the_rain_check_failed") and not GameState.get_flag("dom_ash_in_the_rain_traced") /]
+	Vaara Cisternhand: The original trace remains open. Bring the reading and both counts.
 	=> END
 - "Reserve the clean water for the hospice and its charfire table." [#consequence=The trial-broken ward drinks first] [if QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and QuestRegistry.flags_met(QuestRegistry.ASH_IN_THE_RAIN) /]
 	do QuestRegistry.resolve_side_quest(QuestRegistry.ASH_IN_THE_RAIN, "hospice-first")
