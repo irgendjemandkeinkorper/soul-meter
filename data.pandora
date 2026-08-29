@@ -14399,6 +14399,356 @@
 						"value": "magic-system"
 					}
 				}
+			},
+			{
+				"_category_id": "142.0",
+				"_icon_color": "ffffff00",
+				"_id": "508.0",
+				"_index": 0,
+				"_name": "Trial Warden",
+				"_property_overrides": {
+					"Attack": {
+						"type": "int",
+						"value": 4
+					},
+					"Balance Affinity": {
+						"type": "int",
+						"value": 0
+					},
+					"Balance Pressure": {
+						"type": "int",
+						"value": 16
+					},
+					"Combatant Id": {
+						"type": "string",
+						"value": "trial-warden"
+					},
+					"Defense": {
+						"type": "int",
+						"value": 1
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Trial Warden"
+					},
+					"Edge": {
+						"type": "int",
+						"value": 1
+					},
+					"Element Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Max HP": {
+						"type": "int",
+						"value": 18
+					}
+				}
+			},
+			{
+				"_category_id": "142.0",
+				"_icon_color": "ffffff00",
+				"_id": "509.0",
+				"_index": 0,
+				"_name": "Trial Keeper",
+				"_property_overrides": {
+					"Attack": {
+						"type": "int",
+						"value": 5
+					},
+					"Balance Affinity": {
+						"type": "int",
+						"value": 0
+					},
+					"Balance Pressure": {
+						"type": "int",
+						"value": 18
+					},
+					"Combatant Id": {
+						"type": "string",
+						"value": "trial-keeper"
+					},
+					"Defense": {
+						"type": "int",
+						"value": 2
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Trial Keeper"
+					},
+					"Edge": {
+						"type": "int",
+						"value": 2
+					},
+					"Element Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Max HP": {
+						"type": "int",
+						"value": 22
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "510.0",
+				"_index": 0,
+				"_name": "Trial Warden",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "trial-warden"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"construct\"],\"members\":[{\"combatant_id\":\"trial-warden\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Trial Warden"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "trial-warden"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"Completed the Trial Warden's measure\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The Trial Warden stills and the hall opens onward.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"trial-warden\"],\"side\":\"enemy\",\"zone\":\"front\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "150.0",
+				"_icon_color": "ffffff00",
+				"_id": "511.0",
+				"_index": 0,
+				"_name": "Trial Keeper",
+				"_property_overrides": {
+					"Balance Bias": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Combatant Ids": {
+						"type": "string",
+						"value": "trial-keeper"
+					},
+					"Composition": {
+						"type": "string",
+						"value": "{\"archetypes\":[\"guardian\"],\"members\":[{\"combatant_id\":\"trial-keeper\",\"count\":1}]}"
+					},
+					"Context Actions": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Default Outcome": {
+						"type": "string",
+						"value": "slain"
+					},
+					"Defeated Flag": {
+						"type": "string",
+						"value": ""
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Trial Keeper"
+					},
+					"Encounter Id": {
+						"type": "string",
+						"value": "trial-keeper"
+					},
+					"Loss Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Loss Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Loss Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Outcomes": {
+						"type": "string",
+						"value": "{\"slain\":{\"cause\":\"Passed the Trial Keeper by force\",\"delta\":0.0,\"faction\":\"\",\"message\":\"The Trial Keeper yields the way into Dom.\"}}"
+					},
+					"Speech Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Win Cause": {
+						"type": "string",
+						"value": ""
+					},
+					"Win Delta": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Win Faction": {
+						"type": "string",
+						"value": ""
+					},
+					"Zone Layout": {
+						"type": "string",
+						"value": "[{\"combatant_ids\":[\"trial-keeper\"],\"side\":\"enemy\",\"zone\":\"front\"}]"
+					}
+				}
+			},
+			{
+				"_category_id": "276.0",
+				"_icon_color": "ffffff00",
+				"_id": "512.0",
+				"_index": 0,
+				"_name": "Trial Warden — Joint",
+				"_property_overrides": {
+					"Archetype Id": {
+						"type": "string",
+						"value": "trial-warden"
+					},
+					"Check Modifier": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Check Skill": {
+						"type": "string",
+						"value": "lore"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "the joint"
+					},
+					"Effect Id": {
+						"type": "string",
+						"value": "cripple"
+					},
+					"Effect Parameters": {
+						"type": "string",
+						"value": "{\"crippled\":true,\"max_ap_delta\":-1}"
+					},
+					"Lore Minimum": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Prior Encounters": {
+						"type": "int",
+						"value": 0
+					},
+					"Resistance Stat": {
+						"type": "string",
+						"value": "defense"
+					},
+					"Resistance Threshold": {
+						"type": "int",
+						"value": 6
+					},
+					"Weakness Id": {
+						"type": "string",
+						"value": "trial-warden/joint"
+					}
+				}
+			},
+			{
+				"_category_id": "276.0",
+				"_icon_color": "ffffff00",
+				"_id": "513.0",
+				"_index": 0,
+				"_name": "Trial Keeper — Gripping Hand",
+				"_property_overrides": {
+					"Archetype Id": {
+						"type": "string",
+						"value": "trial-keeper"
+					},
+					"Check Modifier": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Check Skill": {
+						"type": "string",
+						"value": "insight"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "the hand that holds it"
+					},
+					"Effect Id": {
+						"type": "string",
+						"value": "disarm"
+					},
+					"Effect Parameters": {
+						"type": "string",
+						"value": "{\"attack_delta\":-2,\"disarmed\":true}"
+					},
+					"Lore Minimum": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Prior Encounters": {
+						"type": "int",
+						"value": 0
+					},
+					"Resistance Stat": {
+						"type": "string",
+						"value": "defense"
+					},
+					"Resistance Threshold": {
+						"type": "int",
+						"value": 6
+					},
+					"Weakness Id": {
+						"type": "string",
+						"value": "trial-keeper/disarm"
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -15967,7 +16317,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 507.0
+			"default": 513.0
 		}
 	},
 	"_version": 1

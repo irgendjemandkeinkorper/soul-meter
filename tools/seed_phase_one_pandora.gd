@@ -97,6 +97,7 @@ func _ready() -> void:
 	_seed_magnitudes()
 	_seed_fizzle()
 	_seed_encounter_schema()
+	_seed_trial_gauntlet()
 	_seed_balance_bands()
 	_seed_defining_weaknesses()
 	Pandora.save_data()
@@ -266,6 +267,88 @@ func _seed_encounter_schema() -> void:
 	_seed_phase_two_encounters(root)
 
 
+func _seed_trial_gauntlet() -> void:
+	var combatants := _root_named("Combatants")
+	var encounters := _root_named("Encounters")
+	if combatants == null or encounters == null:
+		push_error("Trial gauntlet seed requires Combatants and Encounters roots.")
+		return
+
+	# PROVISIONAL — CANON REVIEW REQUIRED: encounter names and outcome prose.
+	_upsert(combatants, "Trial Warden", {
+		"Combatant Id": "trial-warden",
+		"Display Name": "Trial Warden",
+		"Max HP": 18,
+		"Attack": 4,
+		"Defense": 1,
+		"Balance Affinity": 0,
+		"Balance Pressure": 16,
+		"Element Id": "",
+		"Edge": 1,
+	})
+	_upsert(combatants, "Trial Keeper", {
+		"Combatant Id": "trial-keeper",
+		"Display Name": "Trial Keeper",
+		"Max HP": 22,
+		"Attack": 5,
+		"Defense": 2,
+		"Balance Affinity": 0,
+		"Balance Pressure": 18,
+		"Element Id": "",
+		"Edge": 2,
+	})
+
+	var fixtures: Array[Dictionary] = [
+		_encounter_fixture(
+			"Trial Warden",
+			"trial-warden",
+			["construct"],
+			["trial-warden"],
+			[{"side": "enemy", "zone": "front", "combatant_ids": ["trial-warden"]}],
+			0.0,
+			[],
+			[],
+			{
+				"slain": {
+					"message": "The Trial Warden stills and the hall opens onward.",
+					"cause": "Completed the Trial Warden's measure",
+					"faction": "",
+					"delta": 0.0,
+				}
+			},
+		),
+		_encounter_fixture(
+			"Trial Keeper",
+			"trial-keeper",
+			["guardian"],
+			["trial-keeper"],
+			[{"side": "enemy", "zone": "front", "combatant_ids": ["trial-keeper"]}],
+			0.0,
+			[],
+			[],
+			{
+				"slain": {
+					"message": "The Trial Keeper yields the way into Dom.",
+					"cause": "Passed the Trial Keeper by force",
+					"faction": "",
+					"delta": 0.0,
+				}
+			},
+		),
+	]
+	for fixture: Dictionary in fixtures:
+		var entity_name: String = str(fixture.get("entity_name", ""))
+		fixture.erase("entity_name")
+		_upsert(encounters, entity_name, fixture)
+
+
+func _root_named(root_name: String) -> PandoraCategory:
+	for candidate: PandoraCategory in Pandora.get_all_roots():
+		if candidate.get_entity_name() == root_name:
+			return candidate
+	return null
+
+
 func _seed_balance_bands() -> void:
 	var root := _ensure_root("Balance Bands", BALANCE_BAND_PROPERTIES)
 	var rows := [
@@ -302,6 +385,9 @@ func _seed_defining_weaknesses() -> void:
 		_weakness_row("Mustered Bloodbellow — Mustered Weapon", "mustered-bloodbellow", "mustered-bloodbellow/disarm", "the hand that holds it", "insight", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
 		_weakness_row("Cleaned Guard — Binding Oath", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/binding-oath", "the oath that binds it", "lore", 0.0, 0, "bind_break", {"binding_broken": true, "defense_delta": -2}),
 		_weakness_row("Cleaned Guard — Gripping Hand", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/disarm", "the hand that holds it", "insight", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
+		# PROVISIONAL — CANON REVIEW REQUIRED: trial combatant weakness names.
+		_weakness_row("Trial Warden — Joint", "trial-warden", "trial-warden/joint", "the joint", "lore", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
+		_weakness_row("Trial Keeper — Gripping Hand", "trial-keeper", "trial-keeper/disarm", "the hand that holds it", "insight", 0.0, 0, "disarm", {"attack_delta": -2, "disarmed": true}),
 	]
 	for row: Dictionary in rows:
 		var entity_name := str(row.get("Entity Name", ""))

@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://b4pplyfm0ruqr"
+path="res://.godot/imported/lower_trial_hall.dialogue-30302ba8d90b5aed5d2b631b371cad40.tres"
+
+[deps]
+
+source_file="res://dialogue/lower_trial_hall.dialogue"
+dest_files=["res://.godot/imported/lower_trial_hall.dialogue-30302ba8d90b5aed5d2b631b371cad40.tres"]
+
+[params]
+
+defaults=true

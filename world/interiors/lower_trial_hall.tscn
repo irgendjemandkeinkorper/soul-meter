@@ -1,11 +1,142 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="Script" path="res://world/interiors/lower_trial_hall.gd" id="2_controller"]
+[ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="3_npc"]
+[ext_resource type="PackedScene" path="res://actors/switch/switch.tscn" id="4_switch"]
+[ext_resource type="PackedScene" path="res://actors/pickup/pickup.tscn" id="5_pickup"]
+[ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="6_exit"]
+
+[sub_resource type="RectangleShape2D" id="gate_shape"]
+size = Vector2(880, 24)
+
+[sub_resource type="RectangleShape2D" id="warden_trigger_shape"]
+size = Vector2(820, 72)
+
+[sub_resource type="RectangleShape2D" id="skill_gate_shape"]
+size = Vector2(880, 24)
+
+[sub_resource type="RectangleShape2D" id="keeper_gate_shape"]
+size = Vector2(440, 20)
 
 [node name="LowerTrialHallInterior" type="Node2D"]
+script = ExtResource("2_controller")
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Lower Trial Hall"
 exit_transition_id = &"lower_trial_hall_exit"
 floor_color = Color(0.14, 0.15, 0.18, 1)
 accent_color = Color(0.47, 0.35, 0.2, 1)
+
+[node name="ExitDoor" parent="Room"]
+visible = false
+process_mode = 4
+
+[node name="Player" parent="Room"]
+position = Vector2(480, 540)
+
+# PROVISIONAL — CANON REVIEW REQUIRED: scene guidance prose.
+[node name="EntranceInstruction" type="Label" parent="."]
+offset_left = 220.0
+offset_top = 548.0
+offset_right = 740.0
+offset_bottom = 584.0
+theme_type_variation = &"EyebrowLabel"
+text = "SPEAK WITH THE AIDE OR BEGIN AT THE LEVER"
+horizontal_alignment = 1
+
+[node name="EntranceAide" parent="." instance=ExtResource("3_npc")]
+position = Vector2(700, 520)
+npc_name = "Trial Aide"
+dialogue_path = "res://dialogue/lower_trial_hall.dialogue"
+dialogue_start = "trial_aide"
+metadata/faction_id = "trial-council"
+metadata/canon_status = "PROVISIONAL — CANON REVIEW REQUIRED"
+
+[node name="InteractionSwitch" parent="." instance=ExtResource("4_switch")]
+position = Vector2(160, 500)
+display_name = "TRIAL LEVER"
+prompt_text = "PULL"
+interaction_text = "The first gate lifts."
+interaction_flag = "trial_interaction_gate_open"
+repeatable = false
+
+[node name="InteractionGate" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionGate"]
+position = Vector2(480, 430)
+shape = SubResource("gate_shape")
+
+[node name="Visual" type="Polygon2D" parent="InteractionGate"]
+polygon = PackedVector2Array(40, 418, 920, 418, 920, 442, 40, 442)
+color = Color(0.47, 0.35, 0.2, 1)
+
+[node name="WardenTrigger" type="Area2D" parent="."]
+monitoring = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WardenTrigger"]
+position = Vector2(480, 365)
+shape = SubResource("warden_trigger_shape")
+
+# PROVISIONAL — CANON REVIEW REQUIRED: encounter guidance prose.
+[node name="WardenInstruction" type="Label" parent="."]
+offset_left = 280.0
+offset_top = 386.0
+offset_right = 680.0
+offset_bottom = 416.0
+theme_type_variation = &"EyebrowLabel"
+text = "THE TRIAL WARDEN WILL ENGAGE"
+horizontal_alignment = 1
+
+[node name="TrialDoorKey" parent="." instance=ExtResource("5_pickup")]
+position = Vector2(130, 318)
+item_id = "tools/lockpick_roll"
+amount = 1
+completion_flag = "trial_skill_door_open"
+required_flag = "trial_warden_cleared"
+locked_message = "The warden still holds this alcove."
+interaction_text = "You take the stamped trial key and its lockpick roll."
+
+[node name="SkillDoorExaminer" parent="." instance=ExtResource("3_npc")]
+position = Vector2(820, 318)
+npc_name = "Trial Aide"
+dialogue_path = "res://dialogue/lower_trial_hall.dialogue"
+dialogue_start = "trial_skill_door"
+metadata/faction_id = "trial-council"
+metadata/canon_status = "PROVISIONAL — CANON REVIEW REQUIRED"
+
+[node name="SkillDoor" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SkillDoor"]
+position = Vector2(480, 220)
+shape = SubResource("skill_gate_shape")
+
+[node name="Visual" type="Polygon2D" parent="SkillDoor"]
+polygon = PackedVector2Array(40, 208, 920, 208, 920, 232, 40, 232)
+color = Color(0.54, 0.42, 0.25, 1)
+
+[node name="TrialKeeper" parent="." instance=ExtResource("3_npc")]
+position = Vector2(480, 150)
+npc_name = "Trial Keeper"
+dialogue_path = "res://dialogue/lower_trial_hall.dialogue"
+dialogue_start = "trial_keeper"
+metadata/faction_id = "trial-council"
+metadata/canon_status = "PROVISIONAL — CANON REVIEW REQUIRED"
+
+[node name="KeeperGate" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="KeeperGate"]
+position = Vector2(480, 105)
+shape = SubResource("keeper_gate_shape")
+
+[node name="Visual" type="Polygon2D" parent="KeeperGate"]
+polygon = PackedVector2Array(260, 95, 700, 95, 700, 115, 260, 115)
+color = Color(0.56, 0.39, 0.2, 1)
+
+[node name="ExitToDom" parent="." instance=ExtResource("6_exit")]
+position = Vector2(480, 62)
+target_location_id = &"dom"
+label_text = "ENTER DOM"
+required_flag = "opening_gauntlet_complete"
+locked_message = "The Trial Keeper still bars the way."
+spawn_id = &"new_game"
