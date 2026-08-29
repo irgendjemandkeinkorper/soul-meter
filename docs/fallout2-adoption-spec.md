@@ -311,7 +311,9 @@ payloads rather than UI combat arithmetic.
   fall-through preserved); position tie-break made genuinely lexical
   (StringName `<` is interning-pointer order). Command rail unchanged;
   six-region contract additive; scheduler #193 and the enemy full-AP flag
-  untouched. Suite after r1 revisions: 996/0 (solo run). Gate verdict: r2 pending.
+  untouched. Suite after r1 revisions: 996/0 (solo run). Gate: r1 REVISE (three
+  findings, all real, fixed at `e8cd925`) -> r2 **PROCEED** (no blocking findings;
+  parity, region-D number, and evidence scope all verified against the tree).
 
 ## Outstanding for final ratification
 
