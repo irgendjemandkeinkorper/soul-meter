@@ -3,9 +3,10 @@ extends RefCounted
 ## Builds the runtime Theme from the DS tokens (ui/theme/ds.gd).
 ## Per the architecture guardrails: type variations, never per-node overrides.
 ## Variations provided: TitleLabel, HeadingLabel, EyebrowLabel, QuoteLabel, StatLabel,
-## MutedLabel, NPC portrait variations, DangerButton, BronzeButton, DialogueChoice,
-## DialogueLinePanel, and BattleHud layouts. Every framed control uses a project-owned,
-## 16px-margined notched nine-patch; nodes never carry stylebox overrides.
+## MutedLabel, main-menu mirror treatments, NPC portrait variations, DangerButton,
+## BronzeButton, DialogueChoice, DialogueLinePanel, and BattleHud layouts. Every framed
+## control uses a project-owned, 16px-margined notched nine-patch; nodes never carry
+## stylebox overrides.
 
 const NOTCHED_ATLAS := preload("res://assets/ui/notched_nine_patch_atlas.svg")
 const NOTCHED_TILE_SIZE := 64.0
@@ -37,6 +38,39 @@ static func build() -> Theme:
 	t.add_type("MainMenuColumn")
 	t.set_type_variation("MainMenuColumn", "VBoxContainer")
 	t.set_constant("separation", "MainMenuColumn", DS.CONTROL_GAP)
+	t.add_type("MainMenuSafeMargin")
+	t.set_type_variation("MainMenuSafeMargin", "MarginContainer")
+	for margin_name: String in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
+		t.set_constant(margin_name, "MainMenuSafeMargin", DS.SPACE_9)
+	t.add_type("MainMenuMirrorFrame")
+	t.set_type_variation("MainMenuMirrorFrame", "PanelContainer")
+	t.set_stylebox("panel", "MainMenuMirrorFrame", _notched_style(27, DS.SPACE_8, DS.SPACE_9))
+	t.add_type("MainMenuButtonWell")
+	t.set_type_variation("MainMenuButtonWell", "PanelContainer")
+	t.set_stylebox("panel", "MainMenuButtonWell", _notched_style(26, DS.SPACE_5, DS.SPACE_6))
+	t.add_type("MainMenuTitleColumn")
+	t.set_type_variation("MainMenuTitleColumn", "VBoxContainer")
+	t.set_constant("separation", "MainMenuTitleColumn", DS.SPACE_2)
+
+	# Main-menu controls retain the canonical button states, with the larger rail
+	# proportions reserved for the entry screen.
+	t.add_type("MainMenuButton")
+	t.set_type_variation("MainMenuButton", "Button")
+	t.set_font("font", "MainMenuButton", display)
+	t.set_font_size("font_size", "MainMenuButton", DS.FS_300)
+	t.add_type("MainMenuPrimaryButton")
+	t.set_type_variation("MainMenuPrimaryButton", "Button")
+	t.set_font("font", "MainMenuPrimaryButton", display)
+	t.set_font_size("font_size", "MainMenuPrimaryButton", DS.FS_300)
+	t.set_stylebox("normal", "MainMenuPrimaryButton", _notched_style(17, DS.SPACE_4, DS.SPACE_6))
+	t.set_stylebox("hover", "MainMenuPrimaryButton", _notched_style(18, DS.SPACE_4, DS.SPACE_6))
+	t.set_stylebox("pressed", "MainMenuPrimaryButton", _notched_style(12, DS.SPACE_4, DS.SPACE_6))
+	t.set_stylebox("focus", "MainMenuPrimaryButton", _notched_style(13, DS.SPACE_4, DS.SPACE_6))
+	t.set_stylebox("disabled", "MainMenuPrimaryButton", _notched_style(14, DS.SPACE_4, DS.SPACE_6))
+	t.set_color("font_color", "MainMenuPrimaryButton", DS.TEXT_ON_METAL)
+	t.set_color("font_hover_color", "MainMenuPrimaryButton", DS.TEXT_ON_METAL)
+	t.set_color("font_pressed_color", "MainMenuPrimaryButton", DS.PARCHMENT)
+	t.set_color("font_focus_color", "MainMenuPrimaryButton", DS.PARCHMENT)
 
 	# NPC placeholder portraits. The generated roster picks one of the ten
 	# Wheel-backed variants from the stable portrait id; controls only select a

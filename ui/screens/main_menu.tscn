@@ -1,8 +1,31 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://ui/screens/main_menu.gd" id="1_mm"]
+[ext_resource type="Shader" path="res://ui/screens/main_menu_backdrop.gdshader" id="2_backdrop"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_backdrop"]
+shader = ExtResource("2_backdrop")
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 script = ExtResource("1_mm")
+
+[node name="Visuals" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ObsidianMirror" type="ColorRect" parent="Visuals"]
+material = SubResource("ShaderMaterial_backdrop")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
