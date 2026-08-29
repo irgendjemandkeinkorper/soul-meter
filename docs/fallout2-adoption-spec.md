@@ -192,6 +192,22 @@ out-of-order completion for the retrofitted quests; no softlocks (audit rule fro
   code. Accepted residuals: check difficulties PROVISIONAL; `check_softlocks`
   heuristic limits documented; branch unpushed (owner decision).
 
+- **Wave 4 — SHIPPED 2026-08-29** (`65f8866` → `20d87f3`). Suite 948/0 (149 suites);
+  quest audit 0 errors; drift check green; develop→deliver gate REVISE → **PROCEED**
+  (manual codex dispatch, `embrace-gate-wave4-manual*-*.md` r1–r2); evidence
+  `docs/qa/wave4-acceptance-evidence.md`. Shipped: consequence-notice HUD on both
+  ledgers; three ambient townsfolk acknowledgements authored via Pandora
+  (`Dialogue Hostile`/`Dialogue Warm` schema properties → generator emission into the
+  GENERATED `dom_townsfolk.dialogue`; a hand-edit of that file was reverted in favor
+  of the pipeline — `351803b`); band-aware travel-encounter weighting
+  (schedule-build-time only, determinism preserved, schedule-level regression tests).
+  Vendor band pricing and band-gated trade access were pre-existing production paths —
+  accepted as satisfied via non-vacuous test coverage (`test_vendor_pricing.gd`,
+  `test_vendors.gd`). Accepted residuals: `band_encounter_weights` values, notice
+  wording, and reactive-NPC selection are PROVISIONAL balance/content surfaces; band
+  reactions re-evaluate at dialogue/schedule start, not mid-conversation; branch
+  unpushed (owner decision).
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
