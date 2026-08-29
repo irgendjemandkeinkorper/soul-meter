@@ -162,6 +162,15 @@ out-of-order completion for the retrofitted quests; no softlocks (audit rule fro
 - Every wave lands on `main` with tests, suite green, quest audit clean.
 - Gate-T evolves by written amendment (Wave 0 item 5), never silently.
 
+## Delivery log
+
+- **Wave 1 — SHIPPED 2026-08-28** (`2f9762d` → `6a6abcd`). Suite 887/0; quest audit
+  0 errors; develop→deliver gate PROCEED_WITH_RISKS (manual codex dispatch, see
+  `embrace-gate-develop-deliver-manual-1787969714.md`); evidence
+  `docs/qa/wave1-acceptance-evidence.md` + `docs/qa/wave1-ap-balance-evidence.md`.
+  Accepted residuals: cosmetic "CT n" plate label under AP; enemy full-AP flag
+  remains OFF pending its own balance pass; branch unpushed (owner decision).
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
