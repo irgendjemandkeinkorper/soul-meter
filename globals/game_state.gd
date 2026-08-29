@@ -86,6 +86,8 @@ var combat_knowledge: Dictionary = {}
 ## themselves always live in `inventory`; the inventory screen re-seats them into its
 ## ephemeral per-slot GLoot inventories from this record on open.
 var equipped_slots: Dictionary = {}
+## Serialized TravelPlan payload. GameFlow owns the live resource and lifecycle.
+var travel_plan: Dictionary = {}
 var settings_path: String = SETTINGS_PATH
 
 var _settings := ConfigFile.new()
@@ -599,6 +601,7 @@ func _ensure_audio_buses() -> void:
 
 func _seed_demo_data() -> void:
 	gp = DEFAULT_GP
+	travel_plan = {}
 	vendor_stock.clear()
 	vendor_restock_cycles.clear()
 	party = [_make_vex()]
@@ -932,6 +935,7 @@ func to_dict() -> Dictionary:
 		"var_harmony": var_harmony.duplicate(true),
 		"combat_knowledge": combat_knowledge.duplicate(true),
 		"equipped_slots": equipped_slots.duplicate(true),
+		"travel_plan": travel_plan.duplicate(true),
 	}
 
 
@@ -956,6 +960,8 @@ func from_dict(data: Dictionary) -> bool:
 	combat_knowledge = data.get("combat_knowledge", {}).duplicate(true)
 	# Additive key: absent in saves written before the equipment rail persisted (defaults empty).
 	equipped_slots = data.get("equipped_slots", {}).duplicate(true)
+	# Additive key: absent when no journey is active and in saves from before world-map travel.
+	travel_plan = data.get("travel_plan", {}).duplicate(true)
 	party.clear()
 	for row in data.get("party", []):
 		party.append(PartyMember.from_dict(row))
