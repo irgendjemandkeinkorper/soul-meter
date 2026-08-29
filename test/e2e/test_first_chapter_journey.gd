@@ -392,6 +392,74 @@ func test_checkpoint_payload_reconstructs_party_quests_and_flags() -> void:
 	assert_bool(QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD)).is_true()
 
 
+func test_dishonest_casks_exemplar_passes_both_verb_routes_and_a_failure_route() -> void:
+	## Wave 3 feel-gate exemplar: the same quest completes through the
+	## persuasion check verb, and separately through the original evidence
+	## route after a failed check — proving the failure closes only its path.
+	const SIDE_DIALOGUE_PATH := "res://dialogue/dom_side_quests.dialogue"
+	const HUB_TITLE := "dom_side_dishonest_casks_hub"
+	const CHECK_TEXT := "Three truths are enough to trace the casks."
+	var quest := QuestRegistry.DISHONEST_CASKS
+	var member := GameState.protagonist()
+	member.attributes["voice"] = 0
+	member.skill_tiers["persuasion"] = "untrained"
+
+	# Route A — the check verb, forced success (95% effective, winning seed).
+	member.skill_percentages["persuasion"] = 95.0
+	QuestRegistry.offer_side_quest(quest)
+	var resource := load(SIDE_DIALOGUE_PATH) as DialogueResource
+	var check_response: DialogueResponse = await _journey_response(
+		resource, HUB_TITLE, CHECK_TEXT
+	)
+	assert_object(check_response).is_not_null()
+	SkillCheck.random_number_generator.seed = _winning_percentile_seed()
+	await DialogueManager.get_next_dialogue_line(resource, check_response.next_id)
+	assert_bool(GameState.flag_is_true("dom_dishonest_casks_traced")).is_true()
+	assert_bool(QuestRegistry.flags_met(quest)).is_true()
+	assert_bool(QuestRegistry.resolve_side_quest(quest, quest.outcome_ids[0])).is_true()
+	assert_str(QuestRegistry.side_quest_readback(quest)).is_not_empty()
+
+	# Route B — failed check closes only the check path; the original
+	# evidence route still completes the quest.
+	_reset_fixture()
+	member = GameState.protagonist()
+	member.attributes["voice"] = 0
+	member.skill_tiers["persuasion"] = "untrained"
+	member.skill_percentages["persuasion"] = 95.0
+	QuestRegistry.offer_side_quest(quest)
+	resource = load(SIDE_DIALOGUE_PATH) as DialogueResource
+	check_response = await _journey_response(resource, HUB_TITLE, CHECK_TEXT)
+	member.skill_percentages["persuasion"] = 0.0
+	await DialogueManager.get_next_dialogue_line(resource, check_response.next_id)
+	assert_bool(GameState.flag_is_true("dom_dishonest_casks_check_failed")).is_true()
+	assert_bool(GameState.flag_is_true("dom_dishonest_casks_traced")).is_false()
+	for required_flag: String in quest.required_flags:
+		GameState.set_flag(required_flag, true)
+	assert_bool(QuestRegistry.flags_met(quest)).is_true()
+	assert_bool(QuestRegistry.resolve_side_quest(quest, quest.outcome_ids[0])).is_true()
+
+
+func _journey_response(
+	resource: DialogueResource, title: String, response_text: String
+) -> DialogueResponse:
+	var line := await _line_with_responses(resource, title)
+	if line == null:
+		return null
+	for response: DialogueResponse in line.responses:
+		if response.is_allowed and response_text in response.text:
+			return response
+	return null
+
+
+func _winning_percentile_seed() -> int:
+	var probe := RandomNumberGenerator.new()
+	for candidate in range(1, 1000):
+		probe.seed = candidate
+		if probe.randi_range(1, 100) <= 95:
+			return candidate
+	return 1
+
+
 func _reset_fixture() -> void:
 	GameState.flags.clear()
 	GameState.soul_meter = 50.0
