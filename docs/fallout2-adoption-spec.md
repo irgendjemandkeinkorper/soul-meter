@@ -452,6 +452,26 @@ payloads rather than UI combat arithmetic.
   removal of just the intermediate-waypoint callbacks. All prop placement/sizing values
   (`COVER_ART_TILE_WIDTHS` 1.35) are PROVISIONAL balance/feel surfaces.
 
+- **Wave U — lived-in townscape — SHIPPED 2026-08-30** (graphics campaign, the owner's
+  own added priority "Townscape needs to feel more lived in"). Tangle-built, salvaged
+  from `octopus/run/1788070276-1999336`. `world/starting_town.tscn` gains
+  `TownscapeDressing` (GroundDetails flats at z −2 / SoftDetails y-sorted / SolidProps
+  with street-scale collision): ~40 decorative instances wiring all 13 previously
+  unused dom-* sprites with intent (market clutter, braziers along streets, trees on
+  wall lines, puddles+mud at the waterline, grates on roads). `AmbientTownsfolk` adds
+  8 non-interactable wandering crowd figures (`actors/ambient_villager/`, group-tagged,
+  PAUSABLE, waypoint-bounded, no physics body); `world/ambient_prop_motion.gd` sways
+  lanterns and flickers braziers deterministically. Braziers sprite-scaled 0.45 after
+  visual QA (full-frame cauldron art towered over facades at native size). Suite
+  **1039/0** + new lived-in suite 3/0 (instantiation, 360-frame containment, and a
+  wander/motion-actually-happens test closing gate risk 2); sweep 11/0 with the town
+  shot visually verified. Gate r1 **PROCEED_WITH_RISKS** (both risks addressed:
+  additive startup pause documented as deliberate stagger; movement/motion test
+  added). All placements/routes/counts PROVISIONAL owner-balance surfaces. Known
+  pre-existing art debt surfaced by the shot, NOT this wave: several legacy NPC
+  plates render on opaque white backgrounds (notice-board vendor, shrine figures,
+  tavern-front group) — candidate for the next art lane.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the

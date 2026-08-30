@@ -116,3 +116,63 @@ func _property_value(node: Node, property_name: StringName) -> Variant:
 		if StringName(property.get("name", "")) == property_name:
 			return node.get(property_name)
 	return null
+
+
+func test_ambient_villagers_actually_wander_and_props_actually_move() -> void:
+	# Gate r1 risk: containment alone would pass with movement disabled. This
+	# pins that at least one villager displaces and ambient prop motion mutates
+	# rotation or modulate within a bounded simulation.
+	var runner := scene_runner(TOWN_SCENE_PATH)
+	await runner.simulate_frames(2)
+
+	var grouped_nodes: Array[Node] = get_tree().get_nodes_in_group(AMBIENT_VILLAGER_GROUP)
+	assert_int(grouped_nodes.size()).is_greater_equal(1)
+	var start_positions: Dictionary = {}
+	for grouped_node: Node in grouped_nodes:
+		var villager := grouped_node as Node2D
+		if villager != null:
+			start_positions[villager] = villager.position
+
+	var motion_sprites: Array[Node] = []
+	_collect_ambient_motion(runner.scene(), motion_sprites)
+	assert_int(motion_sprites.size()) \
+		.override_failure_message("The town must contain AmbientPropMotion sprites.") \
+		.is_greater_equal(2)
+	var motion_start: Dictionary = {}
+	for sprite_node: Node in motion_sprites:
+		var sprite := sprite_node as Sprite2D
+		motion_start[sprite] = {"rotation": sprite.rotation, "modulate": sprite.modulate}
+
+	# Pauses are staggered up to ~6s; 600 physics frames (~10s at 60fps) is a
+	# budget, not a wait-until — the asserts below are unconditional.
+	var any_villager_moved := false
+	var any_prop_animated := false
+	for _frame_index: int in range(600):
+		await runner.simulate_frames(1)
+		for villager: Node2D in start_positions:
+			if is_instance_valid(villager) \
+					and villager.position.distance_to(start_positions[villager]) > 2.0:
+				any_villager_moved = true
+		for sprite: Sprite2D in motion_start:
+			if not is_instance_valid(sprite):
+				continue
+			var start: Dictionary = motion_start[sprite]
+			if absf(sprite.rotation - float(start["rotation"])) > 0.0005 \
+					or sprite.modulate != start["modulate"]:
+				any_prop_animated = true
+		if any_villager_moved and any_prop_animated:
+			break
+	assert_bool(any_villager_moved) \
+		.override_failure_message("No ambient villager displaced within the frame budget.") \
+		.is_true()
+	assert_bool(any_prop_animated) \
+		.override_failure_message("No AmbientPropMotion sprite changed rotation/modulate.") \
+		.is_true()
+
+
+func _collect_ambient_motion(node: Node, found: Array[Node]) -> void:
+	if node is Sprite2D and node.get_script() is GDScript \
+			and (node.get_script() as GDScript).resource_path.ends_with("ambient_prop_motion.gd"):
+		found.append(node)
+	for child: Node in node.get_children():
+		_collect_ambient_motion(child, found)

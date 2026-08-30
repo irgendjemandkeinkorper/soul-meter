@@ -32,6 +32,9 @@ func _ready() -> void:
 		set_physics_process(false)
 		return
 	_target_index = clampi(starting_waypoint, 0, local_waypoints.size() - 1)
+	# initial_pause is ADDITIVE with the first arrival pause when starting on a
+	# waypoint — deliberate: per-instance values stagger the crowd so the town
+	# doesn't wake in lockstep (gate r1 risk note, documented as intended).
 	_pause_remaining = initial_pause
 
 
