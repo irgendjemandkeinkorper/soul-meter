@@ -30,16 +30,35 @@ func test_wave_aa_dressing_contract() -> void:
 		if layer != null:
 			assert_int(layer.get_child_count()).is_greater_equal(1)
 	assert_int((dressing.get_node("GroundDetails") as Node2D).z_index).is_equal(-2)
+	assert_bool((dressing.get_node("GroundDetails") as Node2D).y_sort_enabled) \
+		.override_failure_message("Flat ground decals must not participate in y-sorting.") \
+		.is_false()
 	assert_bool((dressing.get_node("SoftDetails") as Node2D).y_sort_enabled).is_true()
 	assert_bool((dressing.get_node("SolidProps") as Node2D).y_sort_enabled).is_true()
+	assert_bool(_contains_collision_object(dressing.get_node("GroundDetails"))) \
+		.override_failure_message("GroundDetails must remain collision-free.") \
+		.is_false()
+	assert_bool(_contains_collision_object(dressing.get_node("SoftDetails"))) \
+		.override_failure_message("SoftDetails must remain collision-free.") \
+		.is_false()
 
 	var solid_props := dressing.get_node_or_null("SolidProps")
 	if solid_props != null:
 		var bodies_with_shapes := 0
 		for prop: Node in solid_props.get_children():
-			if prop is StaticBody2D and prop.get_node_or_null("CollisionShape2D") != null:
+			var collision := prop.get_node_or_null("CollisionShape2D") as CollisionShape2D
+			if prop is StaticBody2D and collision != null \
+					and collision.shape != null and not collision.disabled:
 				bodies_with_shapes += 1
-		assert_int(bodies_with_shapes).is_greater_equal(3)
+		assert_int(bodies_with_shapes) \
+			.override_failure_message("At least three solid props need active footprint collisions.") \
+			.is_greater_equal(3)
+
+	var ambient_villagers: Array[Node] = []
+	_collect_group_members(field_room, &"ambient_villager", ambient_villagers)
+	assert_int(ambient_villagers.size()) \
+		.override_failure_message("The dangerous bog may contain at most one ambient villager.") \
+		.is_less_equal(1)
 
 	var breathing: Array[Node] = []
 	_collect_breathing(dressing, breathing)
@@ -344,6 +363,22 @@ func _collect_breathing(node: Node, found: Array[Node]) -> void:
 		found.append(node)
 	for child: Node in node.get_children():
 		_collect_breathing(child, found)
+
+
+func _contains_collision_object(node: Node) -> bool:
+	if node is CollisionObject2D:
+		return true
+	for child: Node in node.get_children():
+		if _contains_collision_object(child):
+			return true
+	return false
+
+
+func _collect_group_members(node: Node, group: StringName, found: Array[Node]) -> void:
+	if node.is_in_group(group):
+		found.append(node)
+	for child: Node in node.get_children():
+		_collect_group_members(child, group, found)
 
 
 func test_wedged_keyboard_step_recovers_to_the_origin_cell_center() -> void:
