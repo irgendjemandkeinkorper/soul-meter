@@ -521,6 +521,19 @@ payloads rather than UI combat arithmetic.
   **PROCEED_WITH_RISKS** → risk closed. All four backdrops PROVISIONAL owner-review
   surfaces (`assets/generated/backgrounds/combat/_contact_sheet.md`).
 
+- **Wave Y — interior texture pass + hero dressing — SHIPPED 2026-08-30** (graphics
+  campaign, lived-in town). Root-cause find: `building_interior.gd`'s floor/wall
+  texture path consts pointed at a nonexistent `world/objects/` directory, so ALL
+  ~20 interiors had silently used castle-kit fallback plates since the interiors
+  landed — fixed to the real dom-interior wood-panel/brick textures (palette-
+  modulated, tiled). Hero interiors dressed: tavern (tables/stools/benches/crates,
+  swaying lanterns, 3 wandering patrons), lower trial hall, item shop, river shrine.
+  Texture-contract + patron-bounds tests added. Suite **1045/0**; sweep 11/0; gate
+  r1 **PROCEED_WITH_RISKS** (non-blocking: tavern test proves containment not
+  displacement — displacement is covered by the town villager test; trial hall stays
+  near-black because its authored `floor_color` modulates the texture down — OWNER
+  PALETTE-TUNING surface). All placements PROVISIONAL.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
