@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3]
+[gd_scene load_steps=39 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
@@ -21,12 +21,34 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tent_detailedClosed.png" id="32_tent"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/campfire_logs.png" id="33_campfire"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="34_chest"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="35_ambient_motion"]
+[ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="36_ambient_villager"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road--broken.png" id="37_road_broken"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road--straight.png" id="38_road_straight"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road--grass-shoulder.png" id="39_grass_shoulder"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-mud-edge--transition.png" id="40_mud_edge"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-puddle--shallow.png" id="41_puddle"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-bush--low.png" id="42_bush"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-a/crowd-laborer-a--idle--se--f00.png" id="43_traveler_a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="44_traveler_b"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1800, 40)
 
 [sub_resource type="RectangleShape2D" id="shape_v"]
 size = Vector2(40, 900)
+
+[sub_resource type="RectangleShape2D" id="shape_memorial_foot"]
+size = Vector2(22, 12)
+
+[sub_resource type="RectangleShape2D" id="shape_warning_foot"]
+size = Vector2(18, 10)
+
+[sub_resource type="RectangleShape2D" id="shape_drum_foot"]
+size = Vector2(30, 14)
+
+[sub_resource type="RectangleShape2D" id="shape_cart_foot"]
+size = Vector2(54, 18)
 
 [node name="DorthkorRoad" type="Node2D"]
 script = ExtResource("1_location")
@@ -312,3 +334,133 @@ display_name = "SUPPLY CRATE"
 interaction_flag = "loot_opened_dorthkor_road_camp_cache"
 loot = Array[Dictionary]([{"item_id": "consumables/hearthloaf", "quantity": 1}, {"item_id": "materials/lamp_oil", "quantity": 1}])
 container_id = "dorthkor-road-camp-cache"
+
+[node name="DorthkorRoadDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="GroundDetails" type="Node2D" parent="DorthkorRoadDressing"]
+z_index = -2
+
+[node name="RoadWearWest" type="Sprite2D" parent="DorthkorRoadDressing/GroundDetails"]
+position = Vector2(390, 475)
+scale = Vector2(0.62, 0.62)
+texture = ExtResource("37_road_broken")
+
+[node name="RoadWearCenter" type="Sprite2D" parent="DorthkorRoadDressing/GroundDetails"]
+position = Vector2(970, 475)
+scale = Vector2(-0.62, 0.62)
+texture = ExtResource("38_road_straight")
+
+[node name="NorthGrassShoulder" type="Sprite2D" parent="DorthkorRoadDressing/GroundDetails"]
+position = Vector2(1420, 295)
+scale = Vector2(0.58, 0.58)
+texture = ExtResource("39_grass_shoulder")
+
+[node name="SouthMudEdge" type="Sprite2D" parent="DorthkorRoadDressing/GroundDetails"]
+position = Vector2(810, 625)
+scale = Vector2(0.54, 0.54)
+texture = ExtResource("40_mud_edge")
+
+[node name="EastPuddle" type="Sprite2D" parent="DorthkorRoadDressing/GroundDetails"]
+position = Vector2(1600, 555)
+scale = Vector2(0.46, 0.46)
+texture = ExtResource("41_puddle")
+
+[node name="SoftDetails" type="Node2D" parent="DorthkorRoadDressing"]
+y_sort_enabled = true
+
+[node name="LowBushWest" type="Sprite2D" parent="DorthkorRoadDressing/SoftDetails"]
+position = Vector2(390, 730)
+offset = Vector2(0, -104)
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("42_bush")
+
+[node name="LowBushEast" type="Sprite2D" parent="DorthkorRoadDressing/SoftDetails"]
+position = Vector2(1550, 255)
+offset = Vector2(0, -104)
+scale = Vector2(-0.25, 0.25)
+texture = ExtResource("42_bush")
+
+[node name="SolidProps" type="Node2D" parent="DorthkorRoadDressing"]
+y_sort_enabled = true
+
+[node name="MemorialNorthWest" type="StaticBody2D" parent="DorthkorRoadDressing/SolidProps"]
+position = Vector2(300, 275)
+
+[node name="Sprite2D" type="Sprite2D" parent="DorthkorRoadDressing/SolidProps/MemorialNorthWest"]
+texture = ExtResource("20_marker")
+offset = Vector2(0, -98)
+scale = Vector2(0.58, 0.58)
+script = ExtResource("35_ambient_motion")
+motion_kind = 2
+phase = 0.7
+period = 11.8
+breath_strength = 0.02
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DorthkorRoadDressing/SolidProps/MemorialNorthWest"]
+position = Vector2(0, -6)
+shape = SubResource("shape_memorial_foot")
+
+[node name="BreachWarningSouthWest" type="StaticBody2D" parent="DorthkorRoadDressing/SolidProps"]
+position = Vector2(620, 735)
+
+[node name="Sprite2D" type="Sprite2D" parent="DorthkorRoadDressing/SolidProps/BreachWarningSouthWest"]
+texture = ExtResource("21_post")
+offset = Vector2(0, -98)
+scale = Vector2(0.56, 0.56)
+script = ExtResource("35_ambient_motion")
+motion_kind = 2
+phase = 2.4
+period = 12.6
+breath_strength = 0.018
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DorthkorRoadDressing/SolidProps/BreachWarningSouthWest"]
+position = Vector2(0, -5)
+shape = SubResource("shape_warning_foot")
+
+[node name="HangingRoadDrumNorth" type="StaticBody2D" parent="DorthkorRoadDressing/SolidProps"]
+position = Vector2(1320, 250)
+
+[node name="Sprite2D" type="Sprite2D" parent="DorthkorRoadDressing/SolidProps/HangingRoadDrumNorth"]
+texture = ExtResource("22_drum")
+offset = Vector2(0, -98)
+scale = Vector2(0.56, 0.56)
+script = ExtResource("35_ambient_motion")
+phase = 4.1
+period = 5.8
+sway_degrees = 0.45
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DorthkorRoadDressing/SolidProps/HangingRoadDrumNorth"]
+position = Vector2(0, -7)
+shape = SubResource("shape_drum_foot")
+
+[node name="MendersCartSouth" type="StaticBody2D" parent="DorthkorRoadDressing/SolidProps"]
+position = Vector2(1040, 735)
+
+[node name="Sprite2D" type="Sprite2D" parent="DorthkorRoadDressing/SolidProps/MendersCartSouth"]
+texture = ExtResource("23_cart")
+offset = Vector2(0, -98)
+scale = Vector2(0.55, 0.55)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DorthkorRoadDressing/SolidProps/MendersCartSouth"]
+position = Vector2(0, -7)
+shape = SubResource("shape_cart_foot")
+
+[node name="AmbientTravelers" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="WayfareMenderWest" parent="AmbientTravelers" instance=ExtResource("36_ambient_villager")]
+position = Vector2(270, 520)
+villager_texture = ExtResource("43_traveler_a")
+local_waypoints = PackedVector2Array(0, 0, 140, -24, 290, 0)
+wander_speed = 24.0
+pause_duration = 1.4
+initial_pause = 0.4
+
+[node name="WayfareMenderEast" parent="AmbientTravelers" instance=ExtResource("36_ambient_villager")]
+position = Vector2(1400, 405)
+villager_texture = ExtResource("44_traveler_b")
+local_waypoints = PackedVector2Array(0, 0, 120, 22, 250, 0)
+wander_speed = 21.0
+pause_duration = 1.8
+initial_pause = 1.1

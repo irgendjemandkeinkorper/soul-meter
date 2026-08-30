@@ -82,6 +82,19 @@ the visual proof of it, not a departure):
 - Prefer a small, consistent light direction across an entire location's asset family
   (do not let each tile pick its own key-light angle) so nothing looks pasted in.
 
+### Field-scene dressing contract
+
+Sparse field scenes use the same restrained three-layer composition established by
+Wound Lip and Dorthkor Road: flat `GroundDetails` below actors, non-colliding
+`SoftDetails`, and small-footprint colliders in `SolidProps`. The scene root, soft
+layer, and solid layer y-sort actors against standing art; ground decals remain
+unsorted at `z_index = -2`. Keep primary routes, spawn points, interactions, and
+travel triggers visually readable rather than filling every empty patch.
+
+Before placing an existing texture, verify that it contains meaningful alpha instead
+of an opaque white plate. Scale large painted sprites independently; collision shapes
+represent only the prop's contact footprint, never its full illustration frame.
+
 ## Known gap — do not silently paper over
 
 The Dom contact sheet (`assets/generated/sprites/world/dom-calibration-contact-sheet.png`)

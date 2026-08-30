@@ -52,6 +52,9 @@ func test_wave_v_dressing_contract() -> void:
 	assert_object(dressing).is_not_null()
 	if dressing == null:
 		return
+	assert_int(dressing.get_child_count()) \
+		.override_failure_message("WoundLipDressing must contain exactly three layers.") \
+		.is_equal(3)
 	for layer_name: String in ["GroundDetails", "SoftDetails", "SolidProps"]:
 		var layer := dressing.get_node_or_null(layer_name)
 		assert_object(layer) \
@@ -59,6 +62,16 @@ func test_wave_v_dressing_contract() -> void:
 			.is_not_null()
 		if layer != null:
 			assert_int(layer.get_child_count()).is_greater_equal(1)
+	var ground_details := dressing.get_node_or_null("GroundDetails") as Node2D
+	var soft_details := dressing.get_node_or_null("SoftDetails") as Node2D
+	var solid_layer := dressing.get_node_or_null("SolidProps") as Node2D
+	if ground_details != null:
+		assert_int(ground_details.z_index).is_equal(-2)
+		assert_bool(ground_details.y_sort_enabled).is_false()
+	if soft_details != null:
+		assert_bool(soft_details.y_sort_enabled).is_true()
+	if solid_layer != null:
+		assert_bool(solid_layer.y_sort_enabled).is_true()
 	# Solid props physically block movement.
 	var solid_props := dressing.get_node_or_null("SolidProps")
 	if solid_props != null:
