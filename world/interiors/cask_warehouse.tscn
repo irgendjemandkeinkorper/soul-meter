@@ -1,7 +1,17 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="2_chest"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="3_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-clay-pot--decorative.png" id="4_pot"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="5_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="6_ambient_motion"]
+
+[sub_resource type="RectangleShape2D" id="crate_footprint"]
+size = Vector2(58, 28)
+
+[sub_resource type="RectangleShape2D" id="pot_footprint"]
+size = Vector2(32, 18)
 
 [node name="CaskWarehouseInterior" type="Node2D"]
 
@@ -10,6 +20,72 @@ building_name = "Cask Warehouse"
 exit_transition_id = &"cask_warehouse_exit"
 floor_color = Color(0.17, 0.13, 0.09, 1)
 accent_color = Color(0.74, 0.42, 0.18, 1)
+
+; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
+[node name="CaskWarehouseDressing" type="Node2D" parent="Room"]
+editor_description = "PROVISIONAL owner-balance surface: preserve the center aisle and exit clearance."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="Room/CaskWarehouseDressing"]
+y_sort_enabled = true
+
+[node name="InventoryPot" type="Sprite2D" parent="Room/CaskWarehouseDressing/SoftDetails"]
+position = Vector2(730, 180)
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("4_pot")
+offset = Vector2(0, -92)
+
+[node name="WarehouseLantern" type="Sprite2D" parent="Room/CaskWarehouseDressing/SoftDetails"]
+position = Vector2(480, 165)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("5_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("6_ambient_motion")
+motion_kind = 0
+phase = 1.1
+period = 4.3
+
+[node name="SolidProps" type="Node2D" parent="Room/CaskWarehouseDressing"]
+y_sort_enabled = true
+
+[node name="CaskCratesNorthwest" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
+position = Vector2(100, 230)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNorthwest"]
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("3_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNorthwest"]
+position = Vector2(0, -10)
+shape = SubResource("crate_footprint")
+disabled = false
+
+[node name="CaskCratesNortheast" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
+position = Vector2(860, 230)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNortheast"]
+scale = Vector2(-0.48, 0.48)
+texture = ExtResource("3_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNortheast"]
+position = Vector2(0, -10)
+shape = SubResource("crate_footprint")
+disabled = false
+
+[node name="SealedPotSoutheast" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
+position = Vector2(840, 500)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/SealedPotSoutheast"]
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("4_pot")
+offset = Vector2(0, -92)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CaskWarehouseDressing/SolidProps/SealedPotSoutheast"]
+position = Vector2(0, -8)
+shape = SubResource("pot_footprint")
+disabled = false
 
 [node name="SupplyCrate" parent="." instance=ExtResource("2_chest")]
 position = Vector2(150, 500)

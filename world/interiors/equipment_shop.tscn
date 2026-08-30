@@ -1,15 +1,89 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall.png" id="3_counter"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="4_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-notice-board--decorative.png" id="5_notice_board"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="6_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="7_ambient_motion"]
+[ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="8_ambient_villager"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-merchant-b/crowd-merchant-b--idle--se--f00.png" id="9_shopkeeper"]
+
+[sub_resource type="RectangleShape2D" id="counter_footprint"]
+size = Vector2(100, 34)
+
+[sub_resource type="RectangleShape2D" id="stock_footprint"]
+size = Vector2(58, 28)
 
 [node name="EquipmentShopInterior" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Equipment Shop"
 exit_transition_id = &"equipment_shop_exit"
 floor_color = Color(0.1, 0.12, 0.15, 1)
 accent_color = Color(0.46, 0.59, 0.72, 1)
+
+; PROVISIONAL owner-balance surface: keep the forge door and customer approach clear.
+[node name="EquipmentShopDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="EquipmentShopDressing"]
+y_sort_enabled = true
+
+[node name="PriceBoard" type="Sprite2D" parent="EquipmentShopDressing/SoftDetails"]
+position = Vector2(112, 220)
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("5_notice_board")
+offset = Vector2(0, -106)
+
+[node name="CounterLantern" type="Sprite2D" parent="EquipmentShopDressing/SoftDetails"]
+position = Vector2(480, 180)
+scale = Vector2(0.56, 0.56)
+texture = ExtResource("6_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("7_ambient_motion")
+motion_kind = 0
+phase = 0.9
+
+[node name="SolidProps" type="Node2D" parent="EquipmentShopDressing"]
+y_sort_enabled = true
+
+[node name="SalesCounter" type="StaticBody2D" parent="EquipmentShopDressing/SolidProps"]
+position = Vector2(300, 300)
+
+[node name="Sprite2D" type="Sprite2D" parent="EquipmentShopDressing/SolidProps/SalesCounter"]
+scale = Vector2(3.0, 1.6)
+texture = ExtResource("3_counter")
+offset = Vector2(0, -61)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EquipmentShopDressing/SolidProps/SalesCounter"]
+position = Vector2(0, -8)
+shape = SubResource("counter_footprint")
+
+[node name="FittingStock" type="StaticBody2D" parent="EquipmentShopDressing/SolidProps"]
+position = Vector2(865, 500)
+
+[node name="Sprite2D" type="Sprite2D" parent="EquipmentShopDressing/SolidProps/FittingStock"]
+scale = Vector2(-0.45, 0.45)
+texture = ExtResource("4_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EquipmentShopDressing/SolidProps/FittingStock"]
+position = Vector2(0, -9)
+shape = SubResource("stock_footprint")
+
+[node name="AmbientOccupants" type="Node2D" parent="EquipmentShopDressing"]
+y_sort_enabled = true
+
+[node name="EquipmentShopkeeper" parent="EquipmentShopDressing/AmbientOccupants" instance=ExtResource("8_ambient_villager")]
+position = Vector2(265, 400)
+villager_texture = ExtResource("9_shopkeeper")
+local_waypoints = PackedVector2Array(0, 0, 64, 8, 52, 56, 4, 46)
+wander_speed = 14.0
+pause_duration = 2.6
+initial_pause = 0.5
 
 [node name="EquipmentForgeDoor" parent="." instance=ExtResource("2_door")]
 position = Vector2(800, 40)

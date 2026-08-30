@@ -1,15 +1,110 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="3_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/jawbrace/jawbrace-warning-plate--decorative.png" id="4_warning_plate"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="5_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="6_ambient_motion"]
+[ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="7_ambient_villager"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-dockworker-a/crowd-dockworker-a--idle--se--f00.png" id="8_attendant"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="9_observer"]
+
+[sub_resource type="RectangleShape2D" id="bench_footprint"]
+size = Vector2(80, 20)
 
 [node name="TrialHallInterior" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Trial Hall"
 exit_transition_id = &"trial_hall_exit"
 floor_color = Color(0.14, 0.15, 0.18, 1)
 accent_color = Color(0.47, 0.35, 0.2, 1)
+
+; PROVISIONAL owner-balance surface: tune formal prop positions, footprints, and patron loops after playtest.
+[node name="TrialHallDressing" type="Node2D" parent="Room"]
+editor_description = "PROVISIONAL owner-balance surface: tune trial-hall dressing and patron loops after playtest."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="Room/TrialHallDressing"]
+y_sort_enabled = true
+
+[node name="TrialWarningPlate" type="Sprite2D" parent="Room/TrialHallDressing/SoftDetails"]
+position = Vector2(116, 225)
+scale = Vector2(0.34, 0.34)
+texture = ExtResource("4_warning_plate")
+offset = Vector2(0, -110)
+
+[node name="LanternWest" type="Sprite2D" parent="Room/TrialHallDressing/SoftDetails"]
+position = Vector2(250, 178)
+scale = Vector2(0.58, 0.58)
+texture = ExtResource("5_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("6_ambient_motion")
+motion_kind = 0
+phase = 0.8
+
+[node name="LanternEast" type="Sprite2D" parent="Room/TrialHallDressing/SoftDetails"]
+position = Vector2(690, 178)
+scale = Vector2(0.58, 0.58)
+texture = ExtResource("5_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("6_ambient_motion")
+motion_kind = 0
+phase = 3.9
+
+[node name="SolidProps" type="Node2D" parent="Room/TrialHallDressing"]
+y_sort_enabled = true
+
+[node name="AudienceBenchWest" type="StaticBody2D" parent="Room/TrialHallDressing/SolidProps"]
+position = Vector2(235, 500)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/TrialHallDressing/SolidProps/AudienceBenchWest"]
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("3_bench")
+offset = Vector2(0, -46)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/TrialHallDressing/SolidProps/AudienceBenchWest"]
+position = Vector2(0, 12)
+shape = SubResource("bench_footprint")
+disabled = false
+
+[node name="AudienceBenchEast" type="StaticBody2D" parent="Room/TrialHallDressing/SolidProps"]
+position = Vector2(725, 500)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/TrialHallDressing/SolidProps/AudienceBenchEast"]
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("3_bench")
+offset = Vector2(0, -46)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/TrialHallDressing/SolidProps/AudienceBenchEast"]
+position = Vector2(0, 12)
+shape = SubResource("bench_footprint")
+disabled = false
+
+[node name="AmbientOccupants" type="Node2D" parent="Room/TrialHallDressing"]
+y_sort_enabled = true
+
+[node name="TrialAttendant" parent="Room/TrialHallDressing/AmbientOccupants" instance=ExtResource("7_ambient_villager")]
+position = Vector2(155, 350)
+villager_texture = ExtResource("8_attendant")
+local_waypoints = PackedVector2Array(0, 0, 62, 8, 54, 64, 6, 54)
+wander_speed = 15.0
+pause_duration = 2.4
+initial_pause = 0.9
+
+[node name="TrialObserver" parent="Room/TrialHallDressing/AmbientOccupants" instance=ExtResource("7_ambient_villager")]
+position = Vector2(705, 350)
+villager_texture = ExtResource("9_observer")
+local_waypoints = PackedVector2Array(0, 0, 60, 10, 48, 64, 2, 54)
+wander_speed = 13.0
+pause_duration = 2.9
+initial_pause = 1.7
 
 [node name="LowerTrialHallDoor" parent="." instance=ExtResource("2_door")]
 position = Vector2(800, 40)

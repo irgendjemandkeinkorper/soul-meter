@@ -6,6 +6,16 @@ const PlayerScene := preload("res://actors/player/player.tscn")
 const SaveGameScript := preload("res://globals/save_game.gd")
 const FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png"
 const WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
+const SHARED_INTERIOR_SCENE_PATH := "res://world/interiors/building_interior.tscn"
+const MAX_SOLID_PROP_FOOTPRINT_SIZE := Vector2(120.0, 48.0)
+const MAX_AMBIENT_VILLAGERS_BY_SCENE: Dictionary = {
+	"res://world/interiors/town_hall.tscn": 2,
+	"res://world/interiors/iron_companies.tscn": 2,
+	"res://world/interiors/equipment_shop.tscn": 1,
+	"res://world/interiors/registry_archive.tscn": 1,
+	"res://world/interiors/trial_hall.tscn": 2,
+	"res://world/interiors/garrison_yard.tscn": 2,
+}
 
 var _game_state_before: Dictionary = {}
 var _reputation_before: Dictionary = {}
@@ -131,6 +141,70 @@ func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement
 		saves.apply_pending_location(interior)
 		assert_array(diagnostics).is_empty()
 		assert_vector(player.global_position).is_equal(spawn_entry.global_position)
+
+
+func test_all_registered_concrete_interiors_meet_dressing_contract() -> void:
+	for scene_path: String in _registered_concrete_interior_paths():
+		var packed := load(scene_path) as PackedScene
+		assert_object(packed) \
+			.override_failure_message("Registered interior does not load: %s" % scene_path) \
+			.is_not_null()
+		if packed == null:
+			continue
+
+		var interior := auto_free(packed.instantiate()) as Node2D
+		add_child(interior)
+		var dressing := _find_dressing_node(interior)
+		assert_object(dressing) \
+			.override_failure_message("Registered interior has no *Dressing Node2D: %s" % scene_path) \
+			.is_not_null()
+		if dressing == null:
+			continue
+
+		var solid_props := dressing.get_node_or_null("SolidProps") as Node2D
+		assert_object(solid_props) \
+			.override_failure_message("Dressing has no SolidProps layer: %s" % scene_path) \
+			.is_not_null()
+		if solid_props != null:
+			var static_props := solid_props.find_children("*", "StaticBody2D", true, false)
+			assert_array(static_props) \
+				.override_failure_message("SolidProps has no StaticBody2D props: %s" % scene_path) \
+				.is_not_empty()
+			for prop: Node in static_props:
+				assert_bool(_has_only_valid_direct_footprint_collisions(prop)) \
+					.override_failure_message(
+						"Solid prop %s needs enabled, direct CollisionShape2D footprints no larger than %s: %s"
+						% [prop.name, MAX_SOLID_PROP_FOOTPRINT_SIZE, scene_path]
+					) \
+					.is_true()
+
+		assert_int(_ambient_prop_motion_count(interior)) \
+			.override_failure_message("Interior has no AmbientPropMotion sprite: %s" % scene_path) \
+			.is_greater_equal(1)
+
+		var villagers := _ambient_villagers_in(interior)
+		var maximum_villagers := int(MAX_AMBIENT_VILLAGERS_BY_SCENE.get(scene_path, 0))
+		assert_int(villagers.size()) \
+			.override_failure_message(
+				"Interior has %d ambient villagers; maximum is %d: %s"
+				% [villagers.size(), maximum_villagers, scene_path]
+			) \
+			.is_less_equal(maximum_villagers)
+		if villagers.is_empty():
+			continue
+
+		var room_bounds := _interior_walkable_bounds(interior)
+		assert_bool(room_bounds.has_area()) \
+			.override_failure_message("Could not derive room-wall bounds: %s" % scene_path) \
+			.is_true()
+		for villager: AmbientVillager in villagers:
+			var authored_bounds := _villager_authored_global_bounds(villager)
+			assert_bool(_rect_encloses(room_bounds, authored_bounds)) \
+				.override_failure_message(
+					"Villager %s authored bounds %s leave room bounds %s: %s"
+					% [villager.name, authored_bounds, room_bounds, scene_path]
+				) \
+				.is_true()
 
 
 func test_interior_backdrop_covers_full_hd_without_changing_gameplay_scale() -> void:
@@ -456,6 +530,133 @@ func _valid_collision_shape_count(walls: Node) -> int:
 		if shape != null and not shape.disabled and shape.shape != null:
 			count += 1
 	return count
+
+
+func _registered_concrete_interior_paths() -> Array[String]:
+	var scene_paths: Array[String] = []
+	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
+		var scene_path := String(entry.destination_scene)
+		if scene_path == SHARED_INTERIOR_SCENE_PATH or scene_paths.has(scene_path):
+			continue
+		scene_paths.append(scene_path)
+	return scene_paths
+
+
+func _find_dressing_node(interior: Node) -> Node2D:
+	var candidates := interior.find_children("*Dressing", "Node2D", true, false)
+	return candidates[0] as Node2D if not candidates.is_empty() else null
+
+
+func _has_only_valid_direct_footprint_collisions(root: Node) -> bool:
+	var has_enabled_shape := false
+	for child: Node in root.get_children():
+		var collision_shape := child as CollisionShape2D
+		if collision_shape == null or collision_shape.disabled:
+			continue
+		has_enabled_shape = true
+		if collision_shape.shape == null:
+			return false
+		var footprint_size := _collision_footprint_size(collision_shape)
+		if footprint_size.x < 0.0 or footprint_size.y < 0.0:
+			return false
+		if footprint_size.x > MAX_SOLID_PROP_FOOTPRINT_SIZE.x:
+			return false
+		if footprint_size.y > MAX_SOLID_PROP_FOOTPRINT_SIZE.y:
+			return false
+	return has_enabled_shape
+
+
+func _collision_footprint_size(collision_shape: CollisionShape2D) -> Vector2:
+	var footprint_size := -Vector2.ONE
+	if collision_shape.shape is RectangleShape2D:
+		footprint_size = (collision_shape.shape as RectangleShape2D).size
+	elif collision_shape.shape is CircleShape2D:
+		var diameter := (collision_shape.shape as CircleShape2D).radius * 2.0
+		footprint_size = Vector2(diameter, diameter)
+	elif collision_shape.shape is CapsuleShape2D:
+		var capsule := collision_shape.shape as CapsuleShape2D
+		footprint_size = Vector2(capsule.radius * 2.0, capsule.height)
+	var footprint_scale := Vector2(
+		absf(collision_shape.global_scale.x),
+		absf(collision_shape.global_scale.y),
+	)
+	return footprint_size * footprint_scale
+
+
+func _ambient_prop_motion_count(root: Node) -> int:
+	var count := 0
+	for descendant: Node in root.find_children("*", "Sprite2D", true, false):
+		if descendant is AmbientPropMotion:
+			count += 1
+	return count
+
+
+func _ambient_villagers_in(root: Node) -> Array[AmbientVillager]:
+	var villagers: Array[AmbientVillager] = []
+	for descendant: Node in root.find_children("*", "Node2D", true, false):
+		if not descendant.is_in_group("ambient_villager"):
+			continue
+		assert_bool(descendant is AmbientVillager) \
+			.override_failure_message(
+				"ambient_villager group member is not an AmbientVillager: %s" % descendant.get_path()
+			) \
+			.is_true()
+		if descendant is AmbientVillager:
+			villagers.append(descendant as AmbientVillager)
+	return villagers
+
+
+func _interior_walkable_bounds(interior: Node) -> Rect2:
+	var walls := interior.find_child("Walls", true, false)
+	if walls == null:
+		return Rect2()
+	var top := walls.get_node_or_null("Top") as CollisionShape2D
+	var bottom := walls.get_node_or_null("Bottom") as CollisionShape2D
+	var left := walls.get_node_or_null("Left") as CollisionShape2D
+	var right := walls.get_node_or_null("Right") as CollisionShape2D
+	if top == null or bottom == null or left == null or right == null:
+		return Rect2()
+	var top_shape := top.shape as RectangleShape2D
+	var bottom_shape := bottom.shape as RectangleShape2D
+	var left_shape := left.shape as RectangleShape2D
+	var right_shape := right.shape as RectangleShape2D
+	if top_shape == null or bottom_shape == null or left_shape == null or right_shape == null:
+		return Rect2()
+	var minimum := Vector2(
+		left.global_position.x + left_shape.size.x * absf(left.global_scale.x) * 0.5,
+		top.global_position.y + top_shape.size.y * absf(top.global_scale.y) * 0.5,
+	)
+	var maximum := Vector2(
+		right.global_position.x - right_shape.size.x * absf(right.global_scale.x) * 0.5,
+		bottom.global_position.y - bottom_shape.size.y * absf(bottom.global_scale.y) * 0.5,
+	)
+	return Rect2(minimum, maximum - minimum)
+
+
+func _villager_authored_global_bounds(villager: AmbientVillager) -> Rect2:
+	var parent := villager.get_parent() as Node2D
+	var authored_bounds := villager.authored_world_bounds()
+	if parent == null:
+		return authored_bounds
+	var corners: Array[Vector2] = [
+		parent.to_global(authored_bounds.position),
+		parent.to_global(Vector2(authored_bounds.end.x, authored_bounds.position.y)),
+		parent.to_global(authored_bounds.end),
+		parent.to_global(Vector2(authored_bounds.position.x, authored_bounds.end.y)),
+	]
+	var bounds := Rect2(corners[0], Vector2.ZERO)
+	for corner: Vector2 in corners:
+		bounds = bounds.expand(corner)
+	return bounds
+
+
+func _rect_encloses(outer: Rect2, inner: Rect2) -> bool:
+	return (
+		inner.position.x >= outer.position.x
+		and inner.position.y >= outer.position.y
+		and inner.end.x <= outer.end.x
+		and inner.end.y <= outer.end.y
+	)
 
 
 func _spawn_marker_name(spawn_id: StringName) -> String:

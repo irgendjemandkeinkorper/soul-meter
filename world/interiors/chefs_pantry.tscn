@@ -1,9 +1,17 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="2_chest"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="3_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-clay-pot--decorative.png" id="4_pot"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="5_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="6_ambient_motion"]
+
+[sub_resource type="RectangleShape2D" id="crate_footprint"]
+size = Vector2(52, 28)
 
 [node name="ChefsPantryInterior" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Chef's Pantry"
@@ -18,3 +26,60 @@ interaction_flag = "loot_opened_chefs_pantry_supply_crate"
 loot = Array[Dictionary]([{"item_id": "consumables/loam_bread", "quantity": 2}, {"item_id": "consumables/loam_smoked_eel", "quantity": 1}])
 container_id = "chefs-pantry-supply-crate"
 owned_by_faction = "iron-companies"
+
+; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
+[node name="ChefsPantryDressing" type="Node2D" parent="."]
+editor_description = "PROVISIONAL owner-balance surface: pantry stores stay clear of the supply chest and exit lane."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="ChefsPantryDressing"]
+y_sort_enabled = true
+
+[node name="DryGoodsPotWest" type="Sprite2D" parent="ChefsPantryDressing/SoftDetails"]
+position = Vector2(105, 300)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("4_pot")
+offset = Vector2(0, -90)
+
+[node name="DryGoodsPotEast" type="Sprite2D" parent="ChefsPantryDressing/SoftDetails"]
+position = Vector2(855, 300)
+scale = Vector2(-0.3, 0.3)
+texture = ExtResource("4_pot")
+offset = Vector2(0, -90)
+
+[node name="HangingLantern" type="Sprite2D" parent="ChefsPantryDressing/SoftDetails"]
+position = Vector2(480, 190)
+scale = Vector2(0.46, 0.46)
+texture = ExtResource("5_lantern")
+offset = Vector2(0, -115)
+script = ExtResource("6_ambient_motion")
+motion_kind = 0
+phase = 3.2
+period = 4.5
+
+[node name="SolidProps" type="Node2D" parent="ChefsPantryDressing"]
+y_sort_enabled = true
+
+[node name="DryGoodsCratesEast" type="StaticBody2D" parent="ChefsPantryDressing/SolidProps"]
+position = Vector2(835, 510)
+
+[node name="Sprite2D" type="Sprite2D" parent="ChefsPantryDressing/SolidProps/DryGoodsCratesEast"]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("3_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ChefsPantryDressing/SolidProps/DryGoodsCratesEast"]
+position = Vector2(0, -9)
+shape = SubResource("crate_footprint")
+
+[node name="ProduceCratesEast" type="StaticBody2D" parent="ChefsPantryDressing/SolidProps"]
+position = Vector2(705, 510)
+
+[node name="Sprite2D" type="Sprite2D" parent="ChefsPantryDressing/SolidProps/ProduceCratesEast"]
+scale = Vector2(-0.42, 0.42)
+texture = ExtResource("3_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ChefsPantryDressing/SolidProps/ProduceCratesEast"]
+position = Vector2(0, -9)
+shape = SubResource("crate_footprint")

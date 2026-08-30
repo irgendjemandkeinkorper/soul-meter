@@ -27,71 +27,77 @@ exit_transition_id = &"river_shrine_exit"
 floor_color = Color(0.08, 0.15, 0.17, 1)
 accent_color = Color(0.13, 0.55, 0.65, 1)
 
-# PROVISIONAL — owner balance surface: shrine dressing positions, scales, and blocking footprints.
-[node name="ProvisionalDressing" type="Node2D" parent="."]
+; PROVISIONAL — owner balance surface: shrine dressing positions, scales, and blocking footprints.
+[node name="RiverShrineDressing" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="MossRockWest" type="StaticBody2D" parent="ProvisionalDressing"]
+[node name="SoftDetails" type="Node2D" parent="RiverShrineDressing"]
+y_sort_enabled = true
+
+[node name="SolidProps" type="Node2D" parent="RiverShrineDressing"]
+y_sort_enabled = true
+
+[node name="MossRockWest" type="StaticBody2D" parent="RiverShrineDressing/SolidProps"]
 position = Vector2(112, 238)
 
-[node name="Sprite2D" type="Sprite2D" parent="ProvisionalDressing/MossRockWest"]
+[node name="Sprite2D" type="Sprite2D" parent="RiverShrineDressing/SolidProps/MossRockWest"]
 texture = ExtResource("4_moss_rock")
 offset = Vector2(0, -239)
 scale = Vector2(0.3, 0.3)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ProvisionalDressing/MossRockWest"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RiverShrineDressing/SolidProps/MossRockWest"]
 position = Vector2(0, -12)
 shape = SubResource("moss_rock_shape")
 
-[node name="MossRockEast" type="StaticBody2D" parent="ProvisionalDressing"]
+[node name="MossRockEast" type="StaticBody2D" parent="RiverShrineDressing/SolidProps"]
 position = Vector2(854, 338)
 
-[node name="Sprite2D" type="Sprite2D" parent="ProvisionalDressing/MossRockEast"]
+[node name="Sprite2D" type="Sprite2D" parent="RiverShrineDressing/SolidProps/MossRockEast"]
 texture = ExtResource("4_moss_rock")
 offset = Vector2(0, -239)
 scale = Vector2(-0.26, 0.26)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ProvisionalDressing/MossRockEast"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RiverShrineDressing/SolidProps/MossRockEast"]
 position = Vector2(0, -10)
 shape = SubResource("small_rock_shape")
 
-[node name="OfferingCrates" type="StaticBody2D" parent="ProvisionalDressing"]
+[node name="OfferingCrates" type="StaticBody2D" parent="RiverShrineDressing/SolidProps"]
 position = Vector2(842, 522)
 
-[node name="Sprite2D" type="Sprite2D" parent="ProvisionalDressing/OfferingCrates"]
+[node name="Sprite2D" type="Sprite2D" parent="RiverShrineDressing/SolidProps/OfferingCrates"]
 texture = ExtResource("6_crates")
 offset = Vector2(0, -115)
 scale = Vector2(0.5, 0.5)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ProvisionalDressing/OfferingCrates"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RiverShrineDressing/SolidProps/OfferingCrates"]
 position = Vector2(0, -11)
 shape = SubResource("crate_shape")
 
-[node name="BloomNorthWest" type="Sprite2D" parent="ProvisionalDressing"]
+[node name="BloomNorthWest" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(112, 128)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
 scale = Vector2(0.42, 0.42)
 
-[node name="BloomNorthEast" type="Sprite2D" parent="ProvisionalDressing"]
+[node name="BloomNorthEast" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(860, 155)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
 scale = Vector2(-0.38, 0.38)
 
-[node name="BloomSouthWest" type="Sprite2D" parent="ProvisionalDressing"]
+[node name="BloomSouthWest" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(245, 554)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
 scale = Vector2(0.34, 0.34)
 
-[node name="BloomSouthEast" type="Sprite2D" parent="ProvisionalDressing"]
+[node name="BloomSouthEast" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(700, 548)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
 scale = Vector2(-0.32, 0.32)
 
-[node name="LanternWest" type="Sprite2D" parent="ProvisionalDressing"]
+[node name="LanternWest" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(252, 252)
 texture = ExtResource("7_lantern")
 offset = Vector2(0, -115)
@@ -100,7 +106,7 @@ script = ExtResource("8_ambient_motion")
 phase = 0.7
 period = 4.2
 
-[node name="LanternEast" type="Sprite2D" parent="ProvisionalDressing"]
+[node name="LanternEast" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(708, 252)
 texture = ExtResource("7_lantern")
 offset = Vector2(0, -115)
@@ -109,60 +115,60 @@ script = ExtResource("8_ambient_motion")
 phase = 3.8
 period = 4.6
 
-[node name="VotiveCandlesWest" type="Node2D" parent="ProvisionalDressing"]
+[node name="VotiveCandlesWest" type="Node2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(360, 230)
 
-[node name="WaxTall" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesWest"]
+[node name="WaxTall" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesWest"]
 polygon = PackedVector2Array(-13, -21, -5, -21, -5, 0, -13, 0)
 color = Color(0.78, 0.7, 0.5, 1)
 
-[node name="FlameTall" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesWest"]
+[node name="FlameTall" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesWest"]
 polygon = PackedVector2Array(-9, -34, -4, -23, -9, -20, -14, -23)
 color = Color(1, 0.64, 0.2, 1)
 
-[node name="WaxShort" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesWest"]
+[node name="WaxShort" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesWest"]
 polygon = PackedVector2Array(3, -14, 11, -14, 11, 0, 3, 0)
 color = Color(0.68, 0.62, 0.46, 1)
 
-[node name="FlameShort" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesWest"]
+[node name="FlameShort" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesWest"]
 polygon = PackedVector2Array(7, -25, 12, -16, 7, -13, 2, -16)
 color = Color(1, 0.77, 0.28, 1)
 
-[node name="VotiveCandlesCenter" type="Node2D" parent="ProvisionalDressing"]
+[node name="VotiveCandlesCenter" type="Node2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(480, 230)
 
-[node name="WaxLeft" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesCenter"]
+[node name="WaxLeft" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesCenter"]
 polygon = PackedVector2Array(-18, -16, -10, -16, -10, 0, -18, 0)
 color = Color(0.7, 0.64, 0.48, 1)
 
-[node name="FlameLeft" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesCenter"]
+[node name="FlameLeft" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesCenter"]
 polygon = PackedVector2Array(-14, -28, -9, -18, -14, -15, -19, -18)
 color = Color(1, 0.7, 0.22, 1)
 
-[node name="WaxRight" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesCenter"]
+[node name="WaxRight" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesCenter"]
 polygon = PackedVector2Array(8, -23, 16, -23, 16, 0, 8, 0)
 color = Color(0.82, 0.74, 0.54, 1)
 
-[node name="FlameRight" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesCenter"]
+[node name="FlameRight" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesCenter"]
 polygon = PackedVector2Array(12, -36, 17, -25, 12, -22, 7, -25)
 color = Color(1, 0.62, 0.17, 1)
 
-[node name="VotiveCandlesEast" type="Node2D" parent="ProvisionalDressing"]
+[node name="VotiveCandlesEast" type="Node2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(600, 230)
 
-[node name="WaxTall" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesEast"]
+[node name="WaxTall" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesEast"]
 polygon = PackedVector2Array(-11, -24, -3, -24, -3, 0, -11, 0)
 color = Color(0.76, 0.68, 0.5, 1)
 
-[node name="FlameTall" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesEast"]
+[node name="FlameTall" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesEast"]
 polygon = PackedVector2Array(-7, -37, -2, -26, -7, -23, -12, -26)
 color = Color(1, 0.68, 0.2, 1)
 
-[node name="WaxShort" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesEast"]
+[node name="WaxShort" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesEast"]
 polygon = PackedVector2Array(5, -13, 13, -13, 13, 0, 5, 0)
 color = Color(0.69, 0.62, 0.46, 1)
 
-[node name="FlameShort" type="Polygon2D" parent="ProvisionalDressing/VotiveCandlesEast"]
+[node name="FlameShort" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesEast"]
 polygon = PackedVector2Array(9, -24, 14, -15, 9, -12, 4, -15)
 color = Color(1, 0.78, 0.3, 1)
 

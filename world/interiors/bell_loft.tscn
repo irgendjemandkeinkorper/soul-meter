@@ -1,11 +1,74 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="2_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="3_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="4_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="5_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="6_ambient_motion"]
+
+[sub_resource type="RectangleShape2D" id="bench_footprint"]
+size = Vector2(82, 20)
+
+[sub_resource type="RectangleShape2D" id="crate_footprint"]
+size = Vector2(52, 28)
 
 [node name="BellLoftInterior" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Bell Loft"
 exit_transition_id = &"bell_loft_exit"
 floor_color = Color(0.16, 0.12, 0.12, 1)
 accent_color = Color(0.72, 0.52, 0.2, 1)
+
+; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
+[node name="BellLoftDressing" type="Node2D" parent="."]
+editor_description = "PROVISIONAL owner-balance surface: sparse loft rest and bell-maintenance storage; preserve the center exit aisle."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="BellLoftDressing"]
+y_sort_enabled = true
+
+[node name="RestStool" type="Sprite2D" parent="BellLoftDressing/SoftDetails"]
+position = Vector2(610, 415)
+scale = Vector2(2, 2)
+texture = ExtResource("3_stool")
+offset = Vector2(0, -39)
+
+[node name="HangingLantern" type="Sprite2D" parent="BellLoftDressing/SoftDetails"]
+position = Vector2(480, 190)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("5_lantern")
+offset = Vector2(0, -115)
+script = ExtResource("6_ambient_motion")
+motion_kind = 0
+phase = 2.4
+period = 4.8
+
+[node name="SolidProps" type="Node2D" parent="BellLoftDressing"]
+y_sort_enabled = true
+
+[node name="KeeperCot" type="StaticBody2D" parent="BellLoftDressing/SolidProps"]
+position = Vector2(265, 415)
+
+[node name="Sprite2D" type="Sprite2D" parent="BellLoftDressing/SolidProps/KeeperCot"]
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("2_bench")
+offset = Vector2(0, -46)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BellLoftDressing/SolidProps/KeeperCot"]
+position = Vector2(0, -7)
+shape = SubResource("bench_footprint")
+
+[node name="BellMaintenanceStores" type="StaticBody2D" parent="BellLoftDressing/SolidProps"]
+position = Vector2(835, 510)
+
+[node name="Sprite2D" type="Sprite2D" parent="BellLoftDressing/SolidProps/BellMaintenanceStores"]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("4_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BellLoftDressing/SolidProps/BellMaintenanceStores"]
+position = Vector2(0, -9)
+shape = SubResource("crate_footprint")

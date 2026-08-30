@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="2_ledger_boxes"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-notice-board--decorative.png" id="3_notice_board"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="4_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="5_ambient_motion"]
+
+[sub_resource type="RectangleShape2D" id="ledger_box_footprint"]
+size = Vector2(58, 28)
 
 [node name="RegistryStacksInterior" type="Node2D"]
 
@@ -9,3 +16,88 @@ building_name = "Registry Stacks"
 exit_transition_id = &"registry_stacks_exit"
 floor_color = Color(0.09, 0.11, 0.15, 1)
 accent_color = Color(0.52, 0.4, 0.22, 1)
+
+; PROVISIONAL owner-balance surface: ledger boxes stay against the room edges.
+[node name="RegistryStacksDressing" type="Node2D" parent="Room"]
+editor_description = "PROVISIONAL owner-balance surface: preserve the center aisle and registry counter access."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="Room/RegistryStacksDressing"]
+y_sort_enabled = true
+
+[node name="IndexBoardWest" type="Sprite2D" parent="Room/RegistryStacksDressing/SoftDetails"]
+position = Vector2(270, 165)
+scale = Vector2(0.34, 0.34)
+texture = ExtResource("3_notice_board")
+offset = Vector2(0, -112)
+
+[node name="IndexBoardEast" type="Sprite2D" parent="Room/RegistryStacksDressing/SoftDetails"]
+position = Vector2(690, 165)
+scale = Vector2(-0.34, 0.34)
+texture = ExtResource("3_notice_board")
+offset = Vector2(0, -112)
+
+[node name="StacksLantern" type="Sprite2D" parent="Room/RegistryStacksDressing/SoftDetails"]
+position = Vector2(480, 155)
+scale = Vector2(0.46, 0.46)
+texture = ExtResource("4_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("5_ambient_motion")
+motion_kind = 0
+phase = 1.8
+period = 4.9
+
+[node name="SolidProps" type="Node2D" parent="Room/RegistryStacksDressing"]
+y_sort_enabled = true
+
+[node name="LedgerBoxesNorthwest" type="StaticBody2D" parent="Room/RegistryStacksDressing/SolidProps"]
+position = Vector2(95, 235)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesNorthwest"]
+scale = Vector2(0.46, 0.46)
+texture = ExtResource("2_ledger_boxes")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesNorthwest"]
+position = Vector2(0, -9)
+shape = SubResource("ledger_box_footprint")
+disabled = false
+
+[node name="LedgerBoxesSouthwest" type="StaticBody2D" parent="Room/RegistryStacksDressing/SolidProps"]
+position = Vector2(95, 500)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesSouthwest"]
+scale = Vector2(0.46, 0.46)
+texture = ExtResource("2_ledger_boxes")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesSouthwest"]
+position = Vector2(0, -9)
+shape = SubResource("ledger_box_footprint")
+disabled = false
+
+[node name="LedgerBoxesNortheast" type="StaticBody2D" parent="Room/RegistryStacksDressing/SolidProps"]
+position = Vector2(865, 235)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesNortheast"]
+scale = Vector2(-0.46, 0.46)
+texture = ExtResource("2_ledger_boxes")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesNortheast"]
+position = Vector2(0, -9)
+shape = SubResource("ledger_box_footprint")
+disabled = false
+
+[node name="LedgerBoxesSoutheast" type="StaticBody2D" parent="Room/RegistryStacksDressing/SolidProps"]
+position = Vector2(865, 500)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesSoutheast"]
+scale = Vector2(-0.46, 0.46)
+texture = ExtResource("2_ledger_boxes")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesSoutheast"]
+position = Vector2(0, -9)
+shape = SubResource("ledger_box_footprint")
+disabled = false

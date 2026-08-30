@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="2_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-notice-board--decorative.png" id="3_notice_board"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="4_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="5_ambient_motion"]
+
+[sub_resource type="RectangleShape2D" id="bench_footprint"]
+size = Vector2(82, 20)
 
 [node name="CouncilChamberInterior" type="Node2D"]
 
@@ -9,3 +16,66 @@ building_name = "Council Chamber"
 exit_transition_id = &"council_chamber_exit"
 floor_color = Color(0.14, 0.14, 0.17, 1)
 accent_color = Color(0.77, 0.57, 0.23, 1)
+
+; PROVISIONAL owner-balance surface: austere formal seating with an open center aisle.
+[node name="CouncilChamberDressing" type="Node2D" parent="Room"]
+editor_description = "PROVISIONAL owner-balance surface: keep council furnishing sparse and formal."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="Room/CouncilChamberDressing"]
+y_sort_enabled = true
+
+[node name="CouncilNoticeBoard" type="Sprite2D" parent="Room/CouncilChamberDressing/SoftDetails"]
+position = Vector2(480, 155)
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("3_notice_board")
+offset = Vector2(0, -112)
+
+[node name="CouncilLanternWest" type="Sprite2D" parent="Room/CouncilChamberDressing/SoftDetails"]
+position = Vector2(250, 165)
+scale = Vector2(0.46, 0.46)
+texture = ExtResource("4_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("5_ambient_motion")
+motion_kind = 0
+phase = 0.6
+period = 4.8
+
+[node name="CouncilLanternEast" type="Sprite2D" parent="Room/CouncilChamberDressing/SoftDetails"]
+position = Vector2(710, 165)
+scale = Vector2(-0.46, 0.46)
+texture = ExtResource("4_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("5_ambient_motion")
+motion_kind = 0
+phase = 3.7
+period = 5.1
+
+[node name="SolidProps" type="Node2D" parent="Room/CouncilChamberDressing"]
+y_sort_enabled = true
+
+[node name="CouncilBenchWest" type="StaticBody2D" parent="Room/CouncilChamberDressing/SolidProps"]
+position = Vector2(160, 445)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchWest"]
+scale = Vector2(2.2, 2.2)
+texture = ExtResource("2_bench")
+offset = Vector2(0, -46)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchWest"]
+position = Vector2(0, -8)
+shape = SubResource("bench_footprint")
+disabled = false
+
+[node name="CouncilBenchEast" type="StaticBody2D" parent="Room/CouncilChamberDressing/SolidProps"]
+position = Vector2(800, 445)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchEast"]
+scale = Vector2(-2.2, 2.2)
+texture = ExtResource("2_bench")
+offset = Vector2(0, -46)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchEast"]
+position = Vector2(0, -8)
+shape = SubResource("bench_footprint")
+disabled = false
