@@ -16,9 +16,7 @@ signal pointer_pressed(tile: Dictionary, actor_id: StringName)
 signal pointer_cleared
 
 const UnitArtScript := preload("res://globals/unit_art.gd")
-const DORTHKOR_BACKGROUND := preload(
-	"res://assets/generated/backgrounds/combat/dorthkor-road-battlefield-v1.png"
-)
+const BACKDROP_PATTERN := "res://assets/generated/backgrounds/combat/%s-battlefield-v1.png"
 const GROUND_ATLAS := preload("res://assets/generated/sprites/ground/ground_tiles.png")
 
 ## Ground diamonds from the generated Kenney tileset (64x32, same 2:1 ratio the
@@ -54,6 +52,7 @@ const NO_CELL := Vector2i(-999, -999)
 
 var _tiles: Array[Dictionary] = []
 var _actors: Array[Dictionary] = []
+var _backdrop_texture_cache: Dictionary = {}
 var _cover_texture_cache: Dictionary = {}
 var _cover_nodes: Dictionary = {}
 var _encounter_id: StringName = &""
@@ -405,10 +404,39 @@ func background_texture_path() -> String:
 	return _backdrop.texture.resource_path
 
 
+## Encounter-prefix -> backdrop theme, mirroring _cover_theme()'s mapping.
+## Unknown/absent art degrades to a hidden backdrop, never a crash.
+func _backdrop_theme() -> String:
+	var id := String(_encounter_id)
+	if id.begins_with("dorthkor"):
+		return "dorthkor-road"
+	if id.begins_with("bog") or id.begins_with("loam"):
+		return "bog-marsh"
+	if id.begins_with("jawbrace"):
+		return "jawbrace-ledge"
+	if id.begins_with("trial"):
+		return "trial-hall"
+	return "wound-touched-field"
+
+
+func _backdrop_texture(theme_name: String) -> Texture2D:
+	if _backdrop_texture_cache.has(theme_name):
+		return _backdrop_texture_cache[theme_name]
+	var path := BACKDROP_PATTERN % theme_name
+	var texture: Texture2D = null
+	# Export-safe gate + load validation (project art-fallback standard).
+	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
+		var resource: Resource = load(path)
+		if resource is Texture2D:
+			texture = resource as Texture2D
+	_backdrop_texture_cache[theme_name] = texture
+	return texture
+
+
 func _sync_background() -> void:
-	var is_dorthkor := String(_encounter_id).begins_with("dorthkor")
-	_backdrop.texture = DORTHKOR_BACKGROUND if is_dorthkor else null
-	_backdrop.visible = is_dorthkor
+	var texture := _backdrop_texture(_backdrop_theme())
+	_backdrop.texture = texture
+	_backdrop.visible = texture != null
 
 
 ## Creates/updates one sprite per living actor. Units render only on grid

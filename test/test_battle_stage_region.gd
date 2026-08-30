@@ -258,3 +258,31 @@ func test_prop_only_snapshot_sorts_cover_by_screen_depth() -> void:
 	assert_object(near).is_not_null()
 	assert_object(far).is_not_null()
 	assert_bool(near.get_index() < far.get_index()).is_true()
+
+
+func test_backdrop_theme_maps_every_catalog_prefix_and_resolution_never_crashes() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var expectations := {
+		&"dorthkor-vanguard": "dorthkor-road",
+		&"bog-wight": "bog-marsh",
+		&"loam-boar": "bog-marsh",
+		&"jawbrace-empty-post": "jawbrace-ledge",
+		&"trial-warden": "trial-hall",
+		&"phase2-demon": "wound-touched-field",
+		&"": "wound-touched-field",
+	}
+	for encounter_id: StringName in expectations:
+		stage._encounter_id = encounter_id
+		assert_str(stage._backdrop_theme()).is_equal(str(expectations[encounter_id]))
+		stage._backdrop_texture_cache.clear()
+		# Resolution returns a Texture2D or null (hidden backdrop) — never a
+		# crash — whether or not the themed backdrop art exists on disk.
+		var texture: Texture2D = stage._backdrop_texture(stage._backdrop_theme())
+		if texture != null:
+			assert_bool(texture.get_width() > 0).is_true()
+	# The dorthkor backdrop is committed art and must keep resolving.
+	stage._encounter_id = &"dorthkor-muster"
+	stage._backdrop_texture_cache.clear()
+	stage._sync_background()
+	assert_str(stage.background_texture_path()).ends_with("dorthkor-road-battlefield-v1.png")
