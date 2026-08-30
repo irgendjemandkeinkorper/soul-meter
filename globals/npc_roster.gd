@@ -57,7 +57,12 @@ static func is_safe_portrait_path(path: String) -> bool:
 
 
 static func load_portrait_texture(path: String) -> Texture2D:
-	if path.is_empty() or not is_safe_portrait_path(path) or not FileAccess.file_exists(path):
+	# ResourceLoader.exists follows export remapping (FileAccess alone misses
+	# imported textures inside a PCK); FileAccess keeps unimported files
+	# resolvable in the editor. Same gate as ChargenArtResolver._art_exists.
+	if path.is_empty() or not is_safe_portrait_path(path):
+		return null
+	if not (ResourceLoader.exists(path) or FileAccess.file_exists(path)):
 		return null
 	var resource: Resource = load(path)
 	return resource as Texture2D
