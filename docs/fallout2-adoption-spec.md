@@ -475,6 +475,25 @@ payloads rather than UI combat arithmetic.
   scene had ever wired them). Regenerated in place with true transparency via an
   art lane; town shot re-verified.
 
+- **Wave V — Wound Lip visual build-out — SHIPPED 2026-08-30** (graphics campaign,
+  world/field polish). Tangle-built, salvaged from `octopus/run/1788073176-2037152`.
+  The ColorRect blockout became a dressed scene: `WoundLipDressing` layers damp-stone/
+  ash ground, the wound-seam + void-cut band with fractured ledges and brace-metal,
+  and the four jawbrace props with collision — all 10 previously-unused jawbrace/*
+  assets wired. `ambient_prop_motion.gd` gained WOUND_BREATH (slow modulate pulse —
+  the wound breathes). Root y-sort added at gate r1 (actors depth-sort with props);
+  `test/integration/test_wound_lip.gd` pins the gameplay contract AND a dressing
+  contract that fails against the old blockout. The QA sweep gained `24_wound_lip`
+  plus a structural fix: the seeded save restores the player's TOWN position into
+  every cold-loaded field scene and earlier runner scenes' cameras stayed current, so
+  Dorthkor photographed an empty corner and Wound Lip photographed void — `_shoot`'s
+  `player_anchor` now repositions the player and reclaims the camera; both field
+  shots re-framed on real content. Wound Lip's player also gained the `camera_bounds`
+  the other field scenes had. Suite **1041/0**; sweep 11/0; gate r1 REVISE (root
+  y-sort, blockout-proof tests) → r2 **PROCEED**. Placements PROVISIONAL. Composition
+  note for the owner: the ledge reads as separated floating plates over the void —
+  deliberate oppression vs. denser walkable stone is an open feel call.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
