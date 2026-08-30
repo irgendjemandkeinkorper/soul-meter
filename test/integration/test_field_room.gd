@@ -69,9 +69,21 @@ func test_player_stops_at_the_left_wall() -> void:
 	await runner.simulate_frames(2000)
 	runner.simulate_action_release("move_left")
 	# Wave Q: at a physics wall the nav grid doesn't know about, held movement
-	# cycles wedge-recovery (advance, stall, snap back to the step origin). After
-	# release, one stuck-threshold window settles the last cycle.
-	await runner.simulate_frames(60)
+	# cycles wedge-recovery (advance, stall, snap back to the step origin). How
+	# many frames the last cycle needs to settle is machine-speed-dependent
+	# (CI flake on 4596ee3: a late snap-back moved an already-captured "settled"
+	# position), so wait for observed stability instead of a fixed window.
+	var stable_frames := 0
+	var last_position: Vector2 = player.global_position
+	for _i in 600:
+		await get_tree().physics_frame
+		if player.global_position.distance_to(last_position) < 0.01:
+			stable_frames += 1
+			if stable_frames >= 30:
+				break
+		else:
+			stable_frames = 0
+			last_position = player.global_position
 
 	# Derive the legal center position from the actual scene colliders instead of
 	# baking in dimensions that change when the blockout or player art changes.
