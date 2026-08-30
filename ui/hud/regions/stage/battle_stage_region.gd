@@ -420,6 +420,9 @@ func _sync_units(animate_move: bool) -> void:
 		for node: Node in _unit_nodes.values():
 			node.queue_free()
 		_unit_nodes.clear()
+		# Prop-only snapshots still need depth order (gate r2) — without this
+		# the cover nodes keep tile insertion order.
+		_apply_painter_order()
 		return
 	var layout := _layout()
 	var scale_factor: float = layout["scale"]
@@ -461,12 +464,15 @@ func _sync_units(animate_move: bool) -> void:
 					sprite, "position",
 					_sprite_pos_for_cell(sprite, _pending_path[index], layout), DS.DUR_FAST
 				)
+				slide.tween_callback(_apply_painter_order)
 			slide.tween_property(sprite, "position", destination, DS.DUR_FAST)
+			slide.tween_callback(_apply_painter_order)
 			_pending_path_id = &""
 			_pending_path = []
 		elif animate_move and sprite.position.distance_to(destination) > 1.0:
 			var tween := create_tween()
 			tween.tween_property(sprite, "position", destination, DS.DUR_BASE)
+			tween.tween_callback(_apply_painter_order)
 		else:
 			sprite.position = destination
 		sprite.flip_h = String(actor.get("facing", "")).contains("w") \
@@ -490,8 +496,17 @@ func _sync_units(animate_move: bool) -> void:
 			(_unit_nodes[id] as Node).queue_free()
 			_unit_nodes.erase(id)
 			_fallen.erase(id)
-	# Painter's order: lower on screen draws in front. Cover props share the
-	# layer so a unit behind a prop is occluded by it and vice versa (gate r1).
+	_apply_painter_order()
+
+
+## Painter's order: lower on screen draws in front. Cover props share the
+## layer so a unit behind a prop is occluded by it and vice versa (gate r1).
+## Also re-invoked from movement-tween callbacks (gate r2): a sliding unit
+## that crosses a prop's base Y must swap draw order as it passes, not wait
+## for the next combat event or resize.
+func _apply_painter_order() -> void:
+	if _units_layer == null:
+		return
 	var order: Array = _unit_nodes.values() + _cover_nodes.values()
 	order.sort_custom(
 		func(a: TextureRect, b: TextureRect) -> bool:

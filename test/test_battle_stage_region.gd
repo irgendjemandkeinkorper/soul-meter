@@ -190,3 +190,71 @@ func test_cover_theme_maps_every_catalog_prefix_and_texture_resolution_never_cra
 		var texture: Texture2D = stage._cover_texture()
 		if texture != null:
 			assert_bool(texture.get_width() > 0).is_true()
+
+
+func test_painter_order_updates_when_a_unit_slides_past_cover() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var tiles := [
+		{"x": 0, "y": 0, "height_delta": 0},
+		{"x": 1, "y": 0, "height_delta": 0, "cover": true},
+		{"x": 2, "y": 0, "height_delta": 0},
+	]
+	var before := {
+		"active_actor_id": "ally-vex-0",
+		"allies": [{
+			"id": "ally-vex-0", "display_name": "Vex", "side": "ally", "archetype_id": "",
+			"hp": 20, "max_hp": 20, "position": "c:0,0,0", "facing": "e",
+		}],
+		"enemies": [],
+		"tiles": tiles,
+	}
+	var turn := CombatEvent.new()
+	turn.type = &"turn_started"
+	turn.actor_id = &"ally-vex-0"
+	turn.data = {"snapshot": before}
+	stage.consume_event(turn)
+	await runner.simulate_frames(2)
+	var vex := stage.get_node("UnitsLayer/Unit_ally-vex-0") as TextureRect
+	var prop := stage.get_node_or_null("UnitsLayer/Cover_1_0") as TextureRect
+	# The generated prop art is committed — a null here means the asset or its
+	# import broke, which is exactly what this suite should catch.
+	assert_object(prop).is_not_null()
+	# On the iso projection the unit at (0,0) stands above/behind the prop at
+	# (1,0): it must draw first (lower child index).
+	assert_bool(vex.get_index() < prop.get_index()).is_true()
+
+	var after: Dictionary = before.duplicate(true)
+	(after["allies"][0] as Dictionary)["position"] = "c:2,0,0"
+	var move := CombatEvent.new()
+	move.type = &"action_resolved"
+	move.actor_id = &"ally-vex-0"
+	move.data = {
+		"snapshot": after,
+		"damage": 0,
+		"path": [&"c:0,0,0", &"c:1,0,0", &"c:2,0,0"],
+		"path_cells": [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)],
+	}
+	stage.consume_event(move)
+	# Let the slide tweens finish; their callbacks re-sort the layer (gate r2).
+	await await_millis(900)
+	assert_bool(vex.get_index() > prop.get_index()).is_true()
+
+
+func test_prop_only_snapshot_sorts_cover_by_screen_depth() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var event := CombatEvent.new()
+	# Deliberately inserted far-cell-first: without the early-return sort the
+	# nodes would keep tile insertion order (gate r2).
+	event.data = {"tiles": [
+		{"x": 2, "y": 2, "height_delta": 0, "cover": true},
+		{"x": 0, "y": 0, "height_delta": 0, "cover": true},
+	]}
+	stage.consume_event(event)
+	await runner.simulate_frames(2)
+	var near := stage.get_node_or_null("UnitsLayer/Cover_0_0") as TextureRect
+	var far := stage.get_node_or_null("UnitsLayer/Cover_2_2") as TextureRect
+	assert_object(near).is_not_null()
+	assert_object(far).is_not_null()
+	assert_bool(near.get_index() < far.get_index()).is_true()
