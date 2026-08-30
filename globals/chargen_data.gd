@@ -147,6 +147,36 @@ const LIKENESS_UNIT_IDS: PackedStringArray = [
 	"crowd-acolyte-a", "crowd-guard-a", "crowd-merchant-a", "crowd-laborer-a",
 ]
 
+## Painterly likeness plates (Wave S art lane, 2 per ratified ancestry) at
+## assets/generated/portraits/player/<id>.png. `unit` names the existing crowd
+## field sprite that stands in wherever a plate is missing or a world-sprite
+## representation is needed — plates never replace field art.
+const LIKENESSES: Array[Dictionary] = [
+	{"id": "likeness_01", "label": "Vael Ledger Courier", "unit": "crowd-acolyte-a"},
+	{"id": "likeness_02", "label": "Vael Hospice Wayfarer", "unit": "crowd-merchant-b"},
+	{"id": "likeness_03", "label": "Kaan Deep-Forge Mason", "unit": "crowd-laborer-a"},
+	{"id": "likeness_04", "label": "Kaan Liftwright", "unit": "crowd-laborer-b"},
+	{"id": "likeness_05", "label": "Vaerin Field Archivist", "unit": "crowd-acolyte-b"},
+	{"id": "likeness_06", "label": "Vaerin Canopy Surveyor", "unit": "crowd-dockworker-a"},
+	{"id": "likeness_07", "label": "Weftkin Loam-Tender", "unit": "crowd-dockworker-b"},
+	{"id": "likeness_08", "label": "Weftkin Road Cultivator", "unit": "crowd-merchant-a"},
+	{"id": "likeness_09", "label": "Mirror-Veil Mirrorwright", "unit": "crowd-guard-a"},
+	{"id": "likeness_10", "label": "Mirror-Veil Canal Craftswoman", "unit": "crowd-guard-b"},
+]
+
+
+static func likeness_by_id(id: String) -> Dictionary:
+	for entry: Dictionary in LIKENESSES:
+		if str(entry.get("id", "")) == id:
+			return entry
+	return {}
+
+
+static func likeness_fallback_unit(id: String) -> String:
+	var entry := likeness_by_id(id)
+	# Pre-gallery likeness ids WERE unit ids; keep them resolving as themselves.
+	return str(entry.get("unit", "")) if not entry.is_empty() else id
+
 
 static func attribute_label(id: String) -> String:
 	return str(ATTRIBUTE_LABELS.get(id, id))
