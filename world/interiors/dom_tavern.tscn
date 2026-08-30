@@ -1,12 +1,22 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://world/interiors/dom_tavern.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="3_hud"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/objects/dom-interior-floor--wood-panel.png" id="4_floor"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png" id="4_floor"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="5_bench"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-merchant-a/crowd-merchant-a--idle--se--f00.png" id="6_taverner"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/objects/dom-door-wood--closed.png" id="7_door_art"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-interior-wall--brick.png" id="8_wall"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall.png" id="9_table"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="10_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="11_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="12_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="13_ambient_motion"]
+[ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="14_ambient_villager"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-merchant-b/crowd-merchant-b--idle--se--f00.png" id="15_patron_merchant"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-dockworker-a/crowd-dockworker-a--idle--se--f00.png" id="16_patron_dockworker"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="17_patron_laborer"]
 
 [sub_resource type="RectangleShape2D" id="wall_horizontal"]
 size = Vector2(960, 40)
@@ -23,6 +33,12 @@ size = Vector2(420, 66)
 [sub_resource type="RectangleShape2D" id="exit_range"]
 size = Vector2(160, 56)
 
+[sub_resource type="RectangleShape2D" id="table_shape"]
+size = Vector2(108, 46)
+
+[sub_resource type="RectangleShape2D" id="crate_shape"]
+size = Vector2(54, 48)
+
 [node name="DomTavern" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_script")
@@ -37,6 +53,8 @@ color = Color(0.42, 0.31, 0.22, 1)
 [node name="BackWall" type="Polygon2D" parent="."]
 z_index = -5
 polygon = PackedVector2Array(0, 0, 960, 0, 960, 84, 0, 84)
+texture = ExtResource("8_wall")
+texture_repeat = 2
 color = Color(0.24, 0.14, 0.1, 1)
 
 [node name="Title" type="Label" parent="."]
@@ -58,14 +76,6 @@ color = Color(0.31, 0.17, 0.09, 1)
 position = Vector2(480, 251)
 shape = SubResource("counter_shape")
 
-[node name="BenchLeft" type="Sprite2D" parent="."]
-position = Vector2(205, 410)
-texture = ExtResource("5_bench")
-
-[node name="BenchRight" type="Sprite2D" parent="."]
-position = Vector2(755, 410)
-texture = ExtResource("5_bench")
-
 [node name="Taverner" type="Sprite2D" parent="."]
 position = Vector2(480, 105)
 texture = ExtResource("6_taverner")
@@ -78,6 +88,142 @@ offset_bottom = 158.0
 theme_type_variation = &"EyebrowLabel"
 text = "TAVERNER"
 horizontal_alignment = 1
+
+; PROVISIONAL owner-balance surface: positions and collision footprints may be tuned after playtest.
+[node name="TavernDressing" type="Node2D" parent="."]
+editor_description = "PROVISIONAL owner-balance surface: tune prop positions and blocking after playtest."
+y_sort_enabled = true
+
+[node name="TableWest" type="StaticBody2D" parent="TavernDressing"]
+position = Vector2(290, 390)
+
+[node name="Sprite2D" type="Sprite2D" parent="TavernDressing/TableWest"]
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("9_table")
+offset = Vector2(0, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TavernDressing/TableWest"]
+position = Vector2(0, -8)
+shape = SubResource("table_shape")
+
+[node name="TableEast" type="StaticBody2D" parent="TavernDressing"]
+position = Vector2(670, 390)
+
+[node name="Sprite2D" type="Sprite2D" parent="TavernDressing/TableEast"]
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("9_table")
+offset = Vector2(0, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TavernDressing/TableEast"]
+position = Vector2(0, -8)
+shape = SubResource("table_shape")
+
+[node name="BenchLeft" type="Sprite2D" parent="TavernDressing"]
+position = Vector2(290, 470)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("5_bench")
+offset = Vector2(0, -18)
+
+[node name="BenchRight" type="Sprite2D" parent="TavernDressing"]
+position = Vector2(670, 470)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("5_bench")
+offset = Vector2(0, -18)
+
+[node name="StoolWestA" type="Sprite2D" parent="TavernDressing"]
+position = Vector2(230, 390)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("10_stool")
+offset = Vector2(0, -14)
+
+[node name="StoolWestB" type="Sprite2D" parent="TavernDressing"]
+position = Vector2(350, 390)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("10_stool")
+offset = Vector2(0, -14)
+
+[node name="StoolEastA" type="Sprite2D" parent="TavernDressing"]
+position = Vector2(610, 390)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("10_stool")
+offset = Vector2(0, -14)
+
+[node name="StoolEastB" type="Sprite2D" parent="TavernDressing"]
+position = Vector2(730, 390)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("10_stool")
+offset = Vector2(0, -14)
+
+[node name="CratesWest" type="StaticBody2D" parent="TavernDressing"]
+position = Vector2(105, 548)
+
+[node name="Sprite2D" type="Sprite2D" parent="TavernDressing/CratesWest"]
+scale = Vector2(0.62, 0.62)
+texture = ExtResource("11_crates")
+offset = Vector2(0, -104)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TavernDressing/CratesWest"]
+position = Vector2(0, -24)
+shape = SubResource("crate_shape")
+
+[node name="CratesEast" type="StaticBody2D" parent="TavernDressing"]
+position = Vector2(855, 548)
+
+[node name="Sprite2D" type="Sprite2D" parent="TavernDressing/CratesEast"]
+scale = Vector2(0.62, 0.62)
+texture = ExtResource("11_crates")
+offset = Vector2(0, -104)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TavernDressing/CratesEast"]
+position = Vector2(0, -24)
+shape = SubResource("crate_shape")
+
+[node name="LanternWest" type="Sprite2D" parent="TavernDressing"]
+position = Vector2(145, 176)
+scale = Vector2(0.58, 0.58)
+texture = ExtResource("12_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("13_ambient_motion")
+motion_kind = 0
+phase = 0.7
+
+[node name="LanternEast" type="Sprite2D" parent="TavernDressing"]
+position = Vector2(815, 176)
+scale = Vector2(0.58, 0.58)
+texture = ExtResource("12_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("13_ambient_motion")
+motion_kind = 0
+phase = 3.8
+
+; PROVISIONAL owner-balance surface: patron loops are bounded to the open tavern aisles.
+[node name="AmbientPatrons" type="Node2D" parent="."]
+editor_description = "PROVISIONAL owner-balance surface: tune patron loops after playtest."
+y_sort_enabled = true
+
+[node name="MerchantPatron" parent="AmbientPatrons" instance=ExtResource("14_ambient_villager")]
+position = Vector2(105, 300)
+villager_texture = ExtResource("15_patron_merchant")
+local_waypoints = PackedVector2Array(0, 0, 54, 8, 38, 42, 4, 34)
+wander_speed = 15.0
+pause_duration = 2.4
+initial_pause = 0.5
+
+[node name="DockworkerPatron" parent="AmbientPatrons" instance=ExtResource("14_ambient_villager")]
+position = Vector2(405, 330)
+villager_texture = ExtResource("16_patron_dockworker")
+local_waypoints = PackedVector2Array(0, 0, 62, -12, 94, 16, 38, 38)
+wander_speed = 17.0
+pause_duration = 2.0
+initial_pause = 1.2
+
+[node name="LaborerPatron" parent="AmbientPatrons" instance=ExtResource("14_ambient_villager")]
+position = Vector2(775, 292)
+villager_texture = ExtResource("17_patron_laborer")
+local_waypoints = PackedVector2Array(0, 0, 56, 16, 32, 48, -4, 30)
+wander_speed = 14.0
+pause_duration = 2.8
+initial_pause = 1.9
 
 [node name="Walls" type="StaticBody2D" parent="."]
 

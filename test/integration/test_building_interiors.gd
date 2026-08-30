@@ -1,8 +1,11 @@
 extends GdUnitTestSuite
 
 const BuildingDoorScene := preload("res://actors/building_door/building_door.tscn")
+const BuildingInteriorScene := preload("res://world/interiors/building_interior.tscn")
 const PlayerScene := preload("res://actors/player/player.tscn")
 const SaveGameScript := preload("res://globals/save_game.gd")
+const FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png"
+const WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
 
 var _game_state_before: Dictionary = {}
 var _reputation_before: Dictionary = {}
@@ -46,6 +49,49 @@ func after_test() -> void:
 	SaveGame.pending_player_position = _pending_position_before
 	SaveGame.has_pending_player_position = _has_pending_position_before
 	SaveGame.pending_spawn_id = _pending_spawn_before
+
+
+func test_shared_interior_keeps_contract_and_loads_palette_modulated_textures() -> void:
+	for texture_path: String in [FLOOR_TEXTURE_PATH, WALL_TEXTURE_PATH]:
+		var exists_for_export := (
+			ResourceLoader.exists(texture_path) or FileAccess.file_exists(texture_path)
+		)
+		assert_bool(exists_for_export) \
+			.override_failure_message("Interior texture is missing: %s" % texture_path) \
+			.is_true()
+		var loaded_texture := load(texture_path) as Texture2D if exists_for_export else null
+		assert_object(loaded_texture) \
+			.override_failure_message("Interior texture does not load as Texture2D: %s" % texture_path) \
+			.is_not_null()
+
+	var interior := auto_free(BuildingInteriorScene.instantiate()) as BuildingInterior
+	interior.exit_transition_id = &"registry_archive_exit"
+	add_child(interior)
+	assert_object(interior.get_node_or_null("Player")).is_not_null()
+	assert_object(interior.get_node_or_null("ExitDoor")).is_not_null()
+	assert_object(interior.get_node_or_null("FieldHUD")).is_not_null()
+
+	var floor := interior.get_node_or_null("Floor") as Polygon2D
+	assert_object(floor).is_not_null()
+	if floor != null:
+		assert_object(floor.texture).is_not_null()
+		if floor.texture != null:
+			assert_str(floor.texture.resource_path).is_equal(FLOOR_TEXTURE_PATH)
+		assert_int(floor.texture_repeat).is_equal(CanvasItem.TEXTURE_REPEAT_ENABLED)
+		assert_object(floor.color).is_equal(interior.floor_color)
+
+	for wall_name: String in ["WallTop", "WallBottom", "WallLeft", "WallRight"]:
+		var wall := interior.get_node_or_null(wall_name) as Polygon2D
+		assert_object(wall) \
+			.override_failure_message("Shared interior is missing textured node %s." % wall_name) \
+			.is_not_null()
+		if wall == null:
+			continue
+		assert_object(wall.texture).is_not_null()
+		if wall.texture != null:
+			assert_str(wall.texture.resource_path).is_equal(WALL_TEXTURE_PATH)
+		assert_int(wall.texture_repeat).is_equal(CanvasItem.TEXTURE_REPEAT_ENABLED)
+		assert_object(wall.color).is_equal(interior.accent_color)
 
 
 func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement_markers() -> void:

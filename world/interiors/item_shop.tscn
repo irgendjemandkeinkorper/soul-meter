@@ -1,8 +1,15 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="3_chest"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="4_shelf"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="5_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall.png" id="6_counter"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="7_crates"]
+
+[sub_resource type="RectangleShape2D" id="crate_blocker"]
+size = Vector2(58, 28)
 
 [node name="ItemShopInterior" type="Node2D"]
 
@@ -11,6 +18,95 @@ building_name = "Item Shop"
 exit_transition_id = &"item_shop_exit"
 floor_color = Color(0.17, 0.13, 0.09, 1)
 accent_color = Color(0.74, 0.42, 0.18, 1)
+
+; PROVISIONAL OWNER-BALANCE SURFACE: prop counts and placements may be tuned without
+; changing the item-shop behavior or interaction contract.
+[node name="ProvisionalDressing" type="Node2D" parent="Room"]
+y_sort_enabled = true
+
+[node name="WallShelfWest" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(115, 130)
+scale = Vector2(2.8, 1.6)
+texture = ExtResource("4_shelf")
+offset = Vector2(0, -50.5)
+
+[node name="WallShelfCenter" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(245, 130)
+scale = Vector2(2.8, 1.6)
+texture = ExtResource("4_shelf")
+offset = Vector2(0, -50.5)
+
+[node name="WallShelfEast" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(860, 285)
+scale = Vector2(2.8, 1.6)
+texture = ExtResource("4_shelf")
+offset = Vector2(0, -50.5)
+
+[node name="CounterFrontWest" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(390, 289)
+scale = Vector2(3.4, 1.6)
+texture = ExtResource("6_counter")
+offset = Vector2(0, -61)
+
+[node name="CounterFrontEast" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(570, 289)
+scale = Vector2(3.4, 1.6)
+texture = ExtResource("6_counter")
+offset = Vector2(0, -61)
+
+[node name="CustomerStoolWest" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(365, 355)
+scale = Vector2(1.75, 1.75)
+texture = ExtResource("5_stool")
+offset = Vector2(0, -50)
+
+[node name="CustomerStoolCenter" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(480, 375)
+scale = Vector2(1.75, 1.75)
+texture = ExtResource("5_stool")
+offset = Vector2(0, -50)
+
+[node name="CustomerStoolEast" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(595, 355)
+scale = Vector2(1.75, 1.75)
+texture = ExtResource("5_stool")
+offset = Vector2(0, -50)
+
+[node name="StockCratesNorthwest" type="StaticBody2D" parent="Room/ProvisionalDressing"]
+position = Vector2(90, 260)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/ProvisionalDressing/StockCratesNorthwest"]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("7_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/ProvisionalDressing/StockCratesNorthwest"]
+position = Vector2(0, -9)
+shape = SubResource("crate_blocker")
+
+[node name="StockCratesSouthwest" type="StaticBody2D" parent="Room/ProvisionalDressing"]
+position = Vector2(90, 470)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/ProvisionalDressing/StockCratesSouthwest"]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("7_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/ProvisionalDressing/StockCratesSouthwest"]
+position = Vector2(0, -9)
+shape = SubResource("crate_blocker")
+
+[node name="StockCratesSoutheast" type="StaticBody2D" parent="Room/ProvisionalDressing"]
+position = Vector2(865, 490)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/ProvisionalDressing/StockCratesSoutheast"]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("7_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/ProvisionalDressing/StockCratesSoutheast"]
+position = Vector2(0, -9)
+shape = SubResource("crate_blocker")
 
 [node name="CaskWarehouseDoor" parent="." instance=ExtResource("2_door")]
 position = Vector2(800, 40)

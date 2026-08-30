@@ -4,6 +4,8 @@ const SaveGameScript := preload("res://globals/save_game.gd")
 const TavernDoorScene := preload("res://actors/tavern_door/tavern_door.tscn")
 const TavernInteriorScene := preload("res://world/interiors/dom_tavern.tscn")
 const PlayerScene := preload("res://actors/player/player.tscn")
+const AMBIENT_VILLAGER_GROUP := &"ambient_villager"
+const PATRON_FRAME_BUDGET := 360
 
 var _game_state_before: Dictionary
 var _target_scene_before: String
@@ -103,6 +105,63 @@ func test_save_load_inside_tavern_restores_scene_and_player_position() -> void:
 	add_child(restored)
 	saves.apply_pending_location(restored)
 	assert_vector((restored.get_node("Player") as Player).position).is_equal(saved_position)
+
+
+func test_ambient_patrons_remain_inside_their_authored_bounds() -> void:
+	var runner := scene_runner("res://world/interiors/dom_tavern.tscn")
+	await runner.simulate_frames(2)
+	var patrons_root := runner.find_child("AmbientPatrons", true, false)
+	assert_object(patrons_root).is_not_null()
+	var patrons: Array[Node] = []
+	if patrons_root != null:
+		for child: Node in patrons_root.get_children():
+			if child.is_in_group(AMBIENT_VILLAGER_GROUP):
+				patrons.append(child)
+	assert_int(patrons.size()) \
+		.override_failure_message("The tavern must contain 2-4 ambient patrons.") \
+		.is_between(2, 4)
+
+	var observations: Array[Dictionary] = []
+	for patron_node: Node in patrons:
+		var patron := patron_node as Node2D
+		var has_bounds_method := patron != null and patron.has_method("authored_world_bounds")
+		assert_bool(has_bounds_method) \
+			.override_failure_message("Tavern patron %s must expose authored bounds." % patron_node.name) \
+			.is_true()
+		var bounds := Rect2()
+		if has_bounds_method:
+			bounds = patron.call("authored_world_bounds") as Rect2
+		observations.append({
+			"patron": patron,
+			"bounds": bounds.grow(1.0),
+			"remained_in_bounds": has_bounds_method and bounds.grow(1.0).has_point(patron.position),
+		})
+
+	for _frame_index: int in range(PATRON_FRAME_BUDGET):
+		await runner.simulate_frames(1)
+		for observation: Dictionary in observations:
+			var patron: Node2D = observation["patron"] as Node2D
+			if not bool(observation["remained_in_bounds"]):
+				continue
+			observation["remained_in_bounds"] = (
+				is_instance_valid(patron)
+				and (observation["bounds"] as Rect2).has_point(patron.position)
+			)
+
+	# gdUnit assertions do not abort, so every patron gets a final assertion.
+	var all_patrons_remained_in_bounds := not observations.is_empty()
+	for observation: Dictionary in observations:
+		var patron: Node2D = observation["patron"] as Node2D
+		var patron_name := String(patron.name) if is_instance_valid(patron) else "freed patron"
+		var remained_in_bounds := bool(observation["remained_in_bounds"])
+		all_patrons_remained_in_bounds = all_patrons_remained_in_bounds and remained_in_bounds
+		assert_bool(remained_in_bounds) \
+			.override_failure_message(
+				"%s left its authored bounds within %d simulated frames."
+				% [patron_name, PATRON_FRAME_BUDGET]
+			) \
+			.is_true()
+	assert_bool(all_patrons_remained_in_bounds).is_true()
 
 
 func _configure_test_paths(saves: Node) -> void:
