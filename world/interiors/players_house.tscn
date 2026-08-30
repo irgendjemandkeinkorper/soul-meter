@@ -1,10 +1,23 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="3_chest"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall.png" id="4_table"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="5_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="6_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-clay-pot--decorative.png" id="7_pot"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="8_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="9_ambient_motion"]
+
+[sub_resource type="RectangleShape2D" id="table_footprint"]
+size = Vector2(100, 34)
+
+[sub_resource type="RectangleShape2D" id="bench_footprint"]
+size = Vector2(82, 20)
 
 [node name="PlayersHouseInterior" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Player's House"
@@ -25,3 +38,60 @@ display_name = "SUPPLY CRATE"
 interaction_flag = "loot_opened_players_house_provisions"
 loot = Array[Dictionary]([{"item_id": "consumables/hearthloaf", "quantity": 2}, {"item_id": "consumables/loam_bread", "quantity": 1}])
 container_id = "players-house-provisions"
+
+; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
+[node name="PlayersHouseDressing" type="Node2D" parent="."]
+editor_description = "PROVISIONAL owner-balance surface: modest player home furnishings; preserve chest and loft access."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="PlayersHouseDressing"]
+y_sort_enabled = true
+
+[node name="TravelStool" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
+position = Vector2(410, 435)
+scale = Vector2(2, 2)
+texture = ExtResource("6_stool")
+offset = Vector2(0, -39)
+
+[node name="WashPot" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
+position = Vector2(855, 510)
+scale = Vector2(0.32, 0.32)
+texture = ExtResource("7_pot")
+offset = Vector2(0, -90)
+
+[node name="HangingLantern" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
+position = Vector2(155, 205)
+scale = Vector2(0.46, 0.46)
+texture = ExtResource("8_lantern")
+offset = Vector2(0, -115)
+script = ExtResource("9_ambient_motion")
+motion_kind = 0
+phase = 4.1
+period = 4.3
+
+[node name="SolidProps" type="Node2D" parent="PlayersHouseDressing"]
+y_sort_enabled = true
+
+[node name="MapTable" type="StaticBody2D" parent="PlayersHouseDressing/SolidProps"]
+position = Vector2(290, 315)
+
+[node name="Sprite2D" type="Sprite2D" parent="PlayersHouseDressing/SolidProps/MapTable"]
+scale = Vector2(3, 1.6)
+texture = ExtResource("4_table")
+offset = Vector2(0, -61)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayersHouseDressing/SolidProps/MapTable"]
+position = Vector2(0, -8)
+shape = SubResource("table_footprint")
+
+[node name="HearthBench" type="StaticBody2D" parent="PlayersHouseDressing/SolidProps"]
+position = Vector2(290, 435)
+
+[node name="Sprite2D" type="Sprite2D" parent="PlayersHouseDressing/SolidProps/HearthBench"]
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("5_bench")
+offset = Vector2(0, -46)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayersHouseDressing/SolidProps/HearthBench"]
+position = Vector2(0, -7)
+shape = SubResource("bench_footprint")

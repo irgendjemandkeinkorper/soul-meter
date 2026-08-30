@@ -1,9 +1,26 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall.png" id="3_table"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="4_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="5_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="6_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-clay-pot--decorative.png" id="7_pot"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="8_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="9_ambient_motion"]
+
+[sub_resource type="RectangleShape2D" id="table_footprint"]
+size = Vector2(100, 34)
+
+[sub_resource type="RectangleShape2D" id="bench_footprint"]
+size = Vector2(82, 20)
+
+[sub_resource type="RectangleShape2D" id="crate_footprint"]
+size = Vector2(52, 28)
 
 [node name="BellHouseInterior" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Bell House"
@@ -17,3 +34,72 @@ transition_id = &"bell_loft_enter"
 
 [node name="SpawnFromBellLoft" type="Marker2D" parent="."]
 position = Vector2(800, 150)
+
+; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
+[node name="BellHouseDressing" type="Node2D" parent="."]
+editor_description = "PROVISIONAL owner-balance surface: restrained bell keeper furnishings; preserve both door lanes."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="BellHouseDressing"]
+y_sort_enabled = true
+
+[node name="HearthStool" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
+position = Vector2(390, 430)
+scale = Vector2(2, 2)
+texture = ExtResource("5_stool")
+offset = Vector2(0, -39)
+
+[node name="ClayWaterPot" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
+position = Vector2(110, 520)
+scale = Vector2(0.32, 0.32)
+texture = ExtResource("7_pot")
+offset = Vector2(0, -90)
+
+[node name="HangingLantern" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
+position = Vector2(155, 205)
+scale = Vector2(0.46, 0.46)
+texture = ExtResource("8_lantern")
+offset = Vector2(0, -115)
+script = ExtResource("9_ambient_motion")
+motion_kind = 0
+phase = 0.8
+period = 4.2
+
+[node name="SolidProps" type="Node2D" parent="BellHouseDressing"]
+y_sort_enabled = true
+
+[node name="WorkTable" type="StaticBody2D" parent="BellHouseDressing/SolidProps"]
+position = Vector2(275, 310)
+
+[node name="Sprite2D" type="Sprite2D" parent="BellHouseDressing/SolidProps/WorkTable"]
+scale = Vector2(3, 1.6)
+texture = ExtResource("3_table")
+offset = Vector2(0, -61)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BellHouseDressing/SolidProps/WorkTable"]
+position = Vector2(0, -8)
+shape = SubResource("table_footprint")
+
+[node name="HearthBench" type="StaticBody2D" parent="BellHouseDressing/SolidProps"]
+position = Vector2(275, 430)
+
+[node name="Sprite2D" type="Sprite2D" parent="BellHouseDressing/SolidProps/HearthBench"]
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("4_bench")
+offset = Vector2(0, -46)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BellHouseDressing/SolidProps/HearthBench"]
+position = Vector2(0, -7)
+shape = SubResource("bench_footprint")
+
+[node name="BellRopeStores" type="StaticBody2D" parent="BellHouseDressing/SolidProps"]
+position = Vector2(855, 520)
+
+[node name="Sprite2D" type="Sprite2D" parent="BellHouseDressing/SolidProps/BellRopeStores"]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("6_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BellHouseDressing/SolidProps/BellRopeStores"]
+position = Vector2(0, -9)
+shape = SubResource("crate_footprint")
