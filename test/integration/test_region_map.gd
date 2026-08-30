@@ -230,3 +230,42 @@ func _clear_test_battle() -> void:
 	Battle.encounter_id = &""
 	Battle.last_result = null
 	Battle.ended = true
+
+
+## Wave AF: the map field carries the painterly Waning Marches atlas plate
+## UNDER the route canvas, stretched (not cover-cropped) so the plate's
+## painted landmarks warp with the same normalized coordinates the markers
+## use. Backdrop must never intercept mouse input.
+func test_atlas_backdrop_sits_under_the_canvas_stretched_to_the_field() -> void:
+	var runner = scene_runner("res://ui/screens/region_map.tscn")
+	await runner.simulate_frames(3)
+	var texture_path := RegionMapScript.ATLAS_TEXTURE_PATH
+	var exists_for_export := (
+		ResourceLoader.exists(texture_path) or FileAccess.file_exists(texture_path)
+	)
+	assert_bool(exists_for_export) \
+		.override_failure_message("Atlas plate is missing: %s" % texture_path) \
+		.is_true()
+	var backdrop: TextureRect = runner.find_child("AtlasBackdrop", true, false) as TextureRect
+	assert_object(backdrop).is_not_null()
+	if backdrop == null:
+		return
+	assert_object(backdrop.texture).is_not_null()
+	if backdrop.texture != null:
+		assert_str(backdrop.texture.resource_path).is_equal(texture_path)
+	assert_int(backdrop.stretch_mode).is_equal(TextureRect.STRETCH_SCALE)
+	assert_int(backdrop.expand_mode).is_equal(TextureRect.EXPAND_IGNORE_SIZE)
+	assert_int(backdrop.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+	var canvas: Control = runner.find_child("MapCanvas", true, false) as Control
+	assert_object(canvas).is_not_null()
+	if canvas != null:
+		assert_bool(backdrop.get_index() < canvas.get_index()) \
+			.override_failure_message("AtlasBackdrop must render beneath MapCanvas.") \
+			.is_true()
+		assert_bool(backdrop.size.is_equal_approx(canvas.size)) \
+			.override_failure_message("AtlasBackdrop must fill the map field.") \
+			.is_true()
+	var route_canvas: Control = runner.find_child("MapCanvas", true, false) as Control
+	assert_bool(bool(route_canvas.get("has_backdrop"))) \
+		.override_failure_message("MapCanvas must scrim (not opaque-fill) over the atlas.") \
+		.is_true()

@@ -2,6 +2,7 @@ class_name RegionMapScreen
 extends Screen
 ## Registry-driven world map and presentation controller for committed journeys.
 
+const ATLAS_TEXTURE_PATH := "res://assets/generated/backgrounds/ui/waning-marches-atlas-v1.png"
 const MARKER_SIZE := Vector2(148.0, 44.0)
 const PARTY_MARKER_SIZE := Vector2(88.0, 30.0)
 const JOURNEY_STEP_SECONDS := 0.5
@@ -79,8 +80,26 @@ func _build_map_field() -> Control:
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
+	# Wave AF: painterly atlas plate under the route canvas. STRETCH_SCALE (not
+	# cover/crop) is load-bearing — marks sit at normalized map coordinates, and
+	# the plate's landmarks are painted at those same normalized coordinates, so
+	# both must warp together under any field aspect.
+	var atlas_texture: Texture2D = null
+	if ResourceLoader.exists(ATLAS_TEXTURE_PATH):
+		atlas_texture = load(ATLAS_TEXTURE_PATH) as Texture2D
+	if atlas_texture != null:
+		var backdrop := TextureRect.new()
+		backdrop.name = "AtlasBackdrop"
+		backdrop.texture = atlas_texture
+		backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		backdrop.stretch_mode = TextureRect.STRETCH_SCALE
+		backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		panel.add_child(backdrop)
+
 	_map_canvas = WorldRouteCanvas.new()
 	_map_canvas.name = "MapCanvas"
+	_map_canvas.has_backdrop = atlas_texture != null
 	_map_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	panel.add_child(_map_canvas)
 
@@ -610,6 +629,7 @@ func _current_scene_path() -> String:
 class WorldRouteCanvas:
 	extends Control
 
+	var has_backdrop := false
 	var _locations: Array[Dictionary] = []
 	var _routes: Array[Dictionary] = []
 	var _active_route: Dictionary = {}
@@ -630,11 +650,17 @@ class WorldRouteCanvas:
 
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), DS.STONE_0)
-		for x: int in range(0, int(size.x), DS.SPACE_9):
-			draw_line(Vector2(x, 0.0), Vector2(x, size.y), DS.STONE_2, DS.BORDER_TRIM_W)
-		for y: int in range(0, int(size.y), DS.SPACE_9):
-			draw_line(Vector2(0.0, y), Vector2(size.x, y), DS.STONE_2, DS.BORDER_TRIM_W)
+		if has_backdrop:
+			# Wave AF: the painterly atlas plate sits beneath this canvas — a
+			# translucent scrim keeps marks/routes readable without hiding it,
+			# and the surveyor grid would fight the hand-inked terrain.
+			draw_rect(Rect2(Vector2.ZERO, size), Color(DS.STONE_0, 0.35))
+		else:
+			draw_rect(Rect2(Vector2.ZERO, size), DS.STONE_0)
+			for x: int in range(0, int(size.x), DS.SPACE_9):
+				draw_line(Vector2(x, 0.0), Vector2(x, size.y), DS.STONE_2, DS.BORDER_TRIM_W)
+			for y: int in range(0, int(size.y), DS.SPACE_9):
+				draw_line(Vector2(0.0, y), Vector2(size.x, y), DS.STONE_2, DS.BORDER_TRIM_W)
 		for route: Dictionary in _routes:
 			var from := _point_for(StringName(route.get("origin_id", &"")))
 			var to := _point_for(StringName(route.get("destination_id", &"")))
