@@ -2,6 +2,16 @@ extends GdUnitTestSuite
 
 const BattleScript := preload("res://globals/battle.gd")
 
+## Wave R: catalog boards are 7x5+ now and deploy melee at range. This suite
+## characterizes authored outcomes/spoils/weaknesses, not grid tactics (those
+## live in the Wave P suites and test_battlefield_authoring.gd), so its catalog
+## encounters are pinned to the FR-105 zones hatch the same way
+## test_combat_speech.gd pins its injected definition.
+const ZONE_PINNED_ENCOUNTERS: Array[StringName] = [
+	EncounterIds.BOG_WIGHT,
+	EncounterIds.DORTHKOR_MUSTER,
+]
+
 var battle
 var original_party: Array[PartyMember] = []
 var original_soul := 0.0
@@ -25,6 +35,9 @@ func before_test() -> void:
 	Reputation.from_dict({})
 	Renown.from_dict({})
 	SaveGame._pending_autosave_reason = ""
+	for encounter_id: StringName in ZONE_PINNED_ENCOUNTERS:
+		EncounterCatalog.definition(encounter_id)
+		EncounterCatalog._definitions[String(encounter_id)]["battlefield"] = "zones"
 	GameState.party.clear()
 	GameState.party.append(_member("Vex", 20, 8, 2))
 	GameState.party.append(_member("Serai", 16, 6, 1))
@@ -42,6 +55,8 @@ func after_test() -> void:
 	Reputation.from_dict(original_reputation)
 	Renown.from_dict(original_renown)
 	SaveGame._pending_autosave_reason = original_autosave_reason
+	for encounter_id: StringName in ZONE_PINNED_ENCOUNTERS:
+		EncounterCatalog._definitions[String(encounter_id)].erase("battlefield")
 
 
 func test_start_builds_the_whole_party() -> void:
@@ -146,9 +161,7 @@ func test_defeat_records_authored_loss_consequence_once() -> void:
 func test_non_story_encounter_uses_the_same_authored_outcome_path() -> void:
 	battle.start(EncounterIds.BOG_WIGHT)
 	battle.enemies[0].hp = 1
-	# Grid battles roll to-hit (#169/#98) — strike until the battle ends.
-	while not battle.ended:
-		assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
+	_strike_until_ended(battle)
 
 	assert_str(battle.last_result.outcome_id).is_equal("slain")
 	assert_str(battle.last_result.cause).contains("grove margins")
@@ -222,11 +235,7 @@ func test_bloodbellow_release_requires_an_enemy_round_and_equilibrium() -> void:
 func test_bloodbellow_zero_hp_records_conventional_slain_outcome() -> void:
 	battle.start(EncounterIds.DORTHKOR_MUSTER)
 	battle.enemies[0].hp = 1
-
-	# Grid battles roll to-hit (#169/#98 rulings) — a single strike may whiff,
-	# so strike until the battle ends.
-	while not battle.ended:
-		battle.use_action(BattleScript.ACTION_STRIKE)
+	_strike_until_ended(battle)
 
 	assert_str(battle.last_result.outcome_id).is_equal("slain")
 	assert_str(GameState.get_flag("dorthkor_muster_cause")).contains("by force")
@@ -241,6 +250,19 @@ func test_defeat_restores_half_health_without_story_resolution() -> void:
 	assert_int(GameState.party[0].hp).is_equal(10)
 	assert_bool(GameState.get_flag("defeated_mustered_dead")).is_false()
 	assert_float(Reputation.standing("ironbrand-sentinels")).is_equal(0.0)
+
+
+## To-hit can whiff (#169/#98), so strike repeatedly — but budgeted, so a
+## refused strike can never hang the whole suite (the Wave R lesson: an
+## unbudgeted `while not battle.ended` assert loop spins forever on refusal).
+func _strike_until_ended(target_battle) -> void:
+	for _swing: int in 40:
+		if target_battle.ended:
+			return
+		assert_bool(target_battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
+	assert_bool(target_battle.ended).override_failure_message(
+		"battle did not end within 40 strikes"
+	).is_true()
 
 
 func _action(source, id: StringName) -> CombatAction:

@@ -153,7 +153,9 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 	if dimensions.x < 2 or dimensions.y < required_rows:
 		push_warning("Encounter '%s' grid cannot fit its combatants; using default grid." % encounter_id)
 		return _grid_battlefield(default_dimensions, rules)
-	return _grid_battlefield(dimensions, rules)
+	var model: GridBattlefieldModel = _grid_battlefield(dimensions, rules)
+	_apply_authored_terrain(model, dimensions, grid)
+	return model
 
 
 func _grid_battlefield(dimensions: Vector2i, rules: CombatRules) -> GridBattlefieldModel:
@@ -173,6 +175,68 @@ func _grid_battlefield(dimensions: Vector2i, rules: CombatRules) -> GridBattlefi
 	model.configure(rules)
 	model.build_grid(_battlefield_ground)
 	return model
+
+
+func _apply_authored_terrain(
+	model: GridBattlefieldModel,
+	dimensions: Vector2i,
+	grid: Dictionary,
+) -> void:
+	var cover_data: Variant = grid.get("cover", [])
+	if not cover_data is Array:
+		push_warning("Encounter '%s' grid cover must be an Array; skipping cover." % encounter_id)
+	else:
+		for authored_cell: Variant in cover_data:
+			if not authored_cell is Vector2i:
+				push_warning(
+					"Encounter '%s' has malformed cover cell '%s'; skipping."
+					% [encounter_id, authored_cell]
+				)
+				continue
+			var cell: Vector2i = authored_cell
+			if not _authored_cell_is_inside(cell, dimensions):
+				push_warning(
+					"Encounter '%s' cover cell %s is outside its %dx%d grid; skipping."
+					% [encounter_id, cell, dimensions.x, dimensions.y]
+				)
+				continue
+			model.set_cover(cell)
+
+	var elevation_data: Variant = grid.get("elevation", {})
+	if not elevation_data is Dictionary:
+		push_warning(
+			"Encounter '%s' grid elevation must be a Dictionary; skipping elevation."
+			% encounter_id
+		)
+		return
+	for authored_cell: Variant in elevation_data:
+		if not authored_cell is Vector2i:
+			push_warning(
+				"Encounter '%s' has malformed elevation cell '%s'; skipping."
+				% [encounter_id, authored_cell]
+			)
+			continue
+		var cell: Vector2i = authored_cell
+		var authored_height: Variant = elevation_data.get(authored_cell)
+		if not authored_height is int:
+			push_warning(
+				"Encounter '%s' elevation at %s must be an int; skipping."
+				% [encounter_id, cell]
+			)
+			continue
+		if not _authored_cell_is_inside(cell, dimensions):
+			push_warning(
+				"Encounter '%s' elevation cell %s is outside its %dx%d grid; skipping."
+				% [encounter_id, cell, dimensions.x, dimensions.y]
+			)
+			continue
+		model.set_elevation(cell, clampi(int(authored_height), 0, DS.ELEVATION_MAX))
+
+	# Authored cliffs await a stage visual; invisible impassable cells are intentionally unsupported.
+
+
+func _authored_cell_is_inside(cell: Vector2i, dimensions: Vector2i) -> bool:
+	return cell.x >= 0 and cell.y >= 0 and cell.x < dimensions.x and cell.y < dimensions.y
 
 
 func _encounter_grid_tile_set() -> TileSet:
