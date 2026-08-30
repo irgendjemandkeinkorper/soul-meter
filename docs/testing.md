@@ -59,6 +59,20 @@ GODOT_BIN=~/.local/bin/godot bash scripts/test.sh -a test/unit/test_fast_travel.
 GODOT_BIN=~/.local/bin/godot bash scripts/test.sh -a test/integration/test_region_map.gd
 ```
 
+Field-dressing changes should run the reference Wound Lip contract together with the
+scene being changed. For Dorthkor Road:
+
+```bash
+GODOT_BIN=~/.local/bin/godot SOUL_METER_HEADLESS=1 bash scripts/test.sh \
+  -a test/integration/test_wound_lip.gd \
+  -a test/integration/test_dorthkor_road.gd
+```
+
+These contracts assert the exact three-layer composition, collision-bearing solid
+props, bounded ambient motion, and (for Dorthkor) traveler containment plus actual
+movement. The paired movement assertion prevents a stationary traveler from producing
+a false-green containment result.
+
 Exit code `0` means every test passed — that's the signal to check in CI or a pre-push hook.
 `scripts/test.sh` intentionally invokes `GdUnitCmdTool.gd` directly: the addon wrapper's
 remote-debug `tcp://127.0.0.1:0` mode is not accepted by Godot 4.7.1. `reports/` (HTML + JUnit

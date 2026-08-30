@@ -34,6 +34,16 @@ func test_wave_aa_dorthkor_road_dressing_contract() -> void:
 			if layer != null:
 				assert_int(layer.get_child_count()).is_greater_equal(1)
 		solid_props = dressing.get_node_or_null("SolidProps")
+		var ground_details := dressing.get_node_or_null("GroundDetails") as Node2D
+		var soft_details := dressing.get_node_or_null("SoftDetails") as Node2D
+		var solid_layer := solid_props as Node2D
+		if ground_details != null:
+			assert_int(ground_details.z_index).is_equal(-2)
+			assert_bool(ground_details.y_sort_enabled).is_false()
+		if soft_details != null:
+			assert_bool(soft_details.y_sort_enabled).is_true()
+		if solid_layer != null:
+			assert_bool(solid_layer.y_sort_enabled).is_true()
 
 	var bodies_with_shapes := 0
 	if solid_props != null:

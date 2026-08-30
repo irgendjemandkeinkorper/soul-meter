@@ -8,6 +8,15 @@ test_data_dir="${SOUL_METER_TEST_DATA_DIR:-/tmp/soul-meter-godot-data}"
 mkdir -p "$test_data_dir"
 export XDG_DATA_HOME="$test_data_dir"
 
+# Some display backends emit errors before gdUnit4 starts when XDG_RUNTIME_DIR is
+# absent. Give test runs a private, permission-correct runtime directory while
+# respecting an explicit caller-provided location.
+if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
+	export XDG_RUNTIME_DIR="$test_data_dir/runtime"
+	mkdir -p "$XDG_RUNTIME_DIR"
+	chmod 700 "$XDG_RUNTIME_DIR"
+fi
+
 # The headless DisplayServer opens a 64x64 window, and Maaack's AppSettings
 # applies whatever resolution player_config.cfg stores — on a fresh data dir
 # (every CI run) that persists 64x64, crushing GUI layout and silently breaking
