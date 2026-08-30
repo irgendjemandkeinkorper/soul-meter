@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://actors/ambient_villager/ambient_villager.gd" id="1_villager"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-a/crowd-laborer-a--idle--se--f00.png" id="2_default"]
+
+[node name="AmbientVillager" type="Node2D" groups=["ambient_villager"]]
+y_sort_enabled = true
+script = ExtResource("1_villager")
+villager_texture = ExtResource("2_default")
+
+[node name="Shadow" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-18, -3, 0, -8, 18, -3, 0, 2)
+color = Color(0, 0, 0, 0.3)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -28)
+texture = ExtResource("2_default")
+offset = Vector2(0, -119)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=3]
+[gd_scene load_steps=90 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -57,6 +57,30 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-players-house--building-facade.png" id="50_players_house_facade"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-four-arms-tavern--building-facade.png" id="51_four_arms_tavern_facade"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-notice-board--decorative.png" id="60_notice_board"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--oak-a.png" id="61_dom_oak_a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--oak-b.png" id="62_dom_oak_b"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--pine-a.png" id="63_dom_pine_a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-bush--low.png" id="64_dom_bush"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-rock--mossy.png" id="65_dom_mossy_rock"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-puddle--shallow.png" id="66_dom_puddle"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-mud-edge--transition.png" id="67_dom_mud_edge"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-drainage-grate--decorative.png" id="68_dom_grate"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="69_dom_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-brazier-iron--street.png" id="70_dom_brazier"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-cobble-edge--outer.png" id="71_dom_cobble_edge"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-cobble-corner--ne.png" id="72_dom_cobble_corner"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-stone-paving--tile.png" id="73_dom_stone_paving"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-wet-road--tile.png" id="74_dom_wet_road"]
+[ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="75_ambient_villager"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="76_ambient_motion"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-merchant-a/crowd-merchant-a--idle--se--f00.png" id="77_crowd_merchant_a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-merchant-b/crowd-merchant-b--idle--se--f00.png" id="78_crowd_merchant_b"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-a/crowd-laborer-a--idle--se--f00.png" id="79_crowd_laborer_a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="80_crowd_laborer_b"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-dockworker-a/crowd-dockworker-a--idle--se--f00.png" id="81_crowd_dockworker_a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-acolyte-a/crowd-acolyte-a--idle--se--f00.png" id="82_crowd_acolyte_a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-acolyte-b/crowd-acolyte-b--idle--se--f00.png" id="83_crowd_acolyte_b"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-beggar-a/crowd-beggar-a--idle--se--f00.png" id="84_crowd_beggar_a"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(3400, 40)
@@ -66,6 +90,21 @@ size = Vector2(40, 2200)
 
 [sub_resource type="RectangleShape2D" id="shape_v_gapped"]
 size = Vector2(40, 890)
+
+[sub_resource type="RectangleShape2D" id="shape_dom_crates"]
+size = Vector2(62, 28)
+
+[sub_resource type="CircleShape2D" id="shape_dom_brazier"]
+radius = 16.0
+
+[sub_resource type="CircleShape2D" id="shape_dom_tree"]
+radius = 30.0
+
+[sub_resource type="RectangleShape2D" id="shape_dom_stall"]
+size = Vector2(112, 34)
+
+[sub_resource type="CircleShape2D" id="shape_dom_rock"]
+radius = 28.0
 
 [node name="StartingTown" type="Node2D"]
 y_sort_enabled = true
@@ -1878,6 +1917,8 @@ offset = Vector2(0, -53.0)
 position = Vector2(1590, 1671.4)
 texture = ExtResource("55_dom_hanging_lantern")
 offset = Vector2(0, -107.0)
+script = ExtResource("76_ambient_motion")
+phase = 0.4
 
 [node name="PotTavern" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1830, 1824.4)
@@ -1888,6 +1929,8 @@ offset = Vector2(0, -55.0)
 position = Vector2(610, 486.4)
 texture = ExtResource("55_dom_hanging_lantern")
 offset = Vector2(0, -107.0)
+script = ExtResource("76_ambient_motion")
+phase = 2.1
 
 [node name="StreetLanternTrialHall" type="Sprite2D" parent="SetDressing"]
 position = Vector2(890, 522.4)
@@ -1903,6 +1946,8 @@ offset = Vector2(0, -53.0)
 position = Vector2(1990, 1226.4)
 texture = ExtResource("55_dom_hanging_lantern")
 offset = Vector2(0, -107.0)
+script = ExtResource("76_ambient_motion")
+phase = 4.2
 
 [node name="OakEastFieldA" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2750, 1754.4)
@@ -2008,3 +2053,400 @@ offset = Vector2(0, -53.0)
 position = Vector2(700, 1854.4)
 texture = ExtResource("28_grass")
 offset = Vector2(0, -55.0)
+
+; PROVISIONAL OWNER-BALANCE SURFACE: every placement, route, and prop count below is
+; intentionally authored for review and may be tuned without changing game logic.
+[node name="TownscapeDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="GroundDetails" type="Node2D" parent="TownscapeDressing"]
+z_index = -2
+
+[node name="PuddleRiverWest" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(720, 1510)
+texture = ExtResource("66_dom_puddle")
+
+[node name="PuddleRiverShrine" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(940, 1580)
+texture = ExtResource("66_dom_puddle")
+
+[node name="PuddleRiverEast" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1280, 1620)
+texture = ExtResource("66_dom_puddle")
+
+[node name="MudEdgeRiverWest" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(650, 1580)
+texture = ExtResource("67_dom_mud_edge")
+
+[node name="MudEdgeRiverShrine" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(850, 1660)
+texture = ExtResource("67_dom_mud_edge")
+
+[node name="MudEdgeRiverEast" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1350, 1680)
+texture = ExtResource("67_dom_mud_edge")
+
+[node name="DrainageGrateNorthStreet" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1700, 850)
+texture = ExtResource("68_dom_grate")
+
+[node name="DrainageGrateMarket" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1700, 1080)
+texture = ExtResource("68_dom_grate")
+
+[node name="DrainageGrateTownHall" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(2100, 1250)
+texture = ExtResource("68_dom_grate")
+
+[node name="CobbleEdgeMarketWest" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1500, 950)
+texture = ExtResource("71_dom_cobble_edge")
+
+[node name="CobbleEdgeMarketEast" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1900, 950)
+texture = ExtResource("71_dom_cobble_edge")
+
+[node name="CobbleCornerMarket" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1450, 1000)
+texture = ExtResource("72_dom_cobble_corner")
+
+[node name="StonePavingMarketWest" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1600, 1000)
+texture = ExtResource("73_dom_stone_paving")
+
+[node name="StonePavingMarketEast" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1760, 1000)
+texture = ExtResource("73_dom_stone_paving")
+
+[node name="WetRoadMarketSouth" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1700, 1400)
+texture = ExtResource("74_dom_wet_road")
+
+[node name="WetRoadTavernApproach" type="Sprite2D" parent="TownscapeDressing/GroundDetails"]
+position = Vector2(1900, 1500)
+texture = ExtResource("74_dom_wet_road")
+
+[node name="SoftDetails" type="Node2D" parent="TownscapeDressing"]
+y_sort_enabled = true
+
+[node name="BushRegistryCorner" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+position = Vector2(260, 590)
+texture = ExtResource("64_dom_bush")
+offset = Vector2(0, -239)
+
+[node name="BushBellWall" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+position = Vector2(3310, 650)
+texture = ExtResource("64_dom_bush")
+offset = Vector2(0, -239)
+
+[node name="BushShrineBank" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+position = Vector2(760, 1930)
+texture = ExtResource("64_dom_bush")
+offset = Vector2(0, -239)
+
+[node name="BushPlayersWall" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+position = Vector2(2730, 2200)
+texture = ExtResource("64_dom_bush")
+offset = Vector2(0, -239)
+
+[node name="LaundryLowerMarket" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+position = Vector2(2080, 1400)
+texture = ExtResource("56_dom_laundry")
+offset = Vector2(0, -113)
+
+[node name="LanternLowerMarketWest" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+position = Vector2(1440, 1200)
+texture = ExtResource("55_dom_hanging_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("76_ambient_motion")
+phase = 1.2
+
+[node name="LanternLowerMarketEast" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+position = Vector2(2020, 1210)
+texture = ExtResource("55_dom_hanging_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("76_ambient_motion")
+phase = 5.1
+
+[node name="SolidProps" type="Node2D" parent="TownscapeDressing"]
+y_sort_enabled = true
+
+[node name="MarketCratesWest" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1230, 1250)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/MarketCratesWest"]
+texture = ExtResource("69_dom_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/MarketCratesWest"]
+position = Vector2(0, -10)
+shape = SubResource("shape_dom_crates")
+
+[node name="MarketCratesSouth" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1320, 1390)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/MarketCratesSouth"]
+texture = ExtResource("69_dom_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/MarketCratesSouth"]
+position = Vector2(0, -10)
+shape = SubResource("shape_dom_crates")
+
+[node name="MarketCratesEast" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1950, 1330)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/MarketCratesEast"]
+texture = ExtResource("69_dom_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/MarketCratesEast"]
+position = Vector2(0, -10)
+shape = SubResource("shape_dom_crates")
+
+[node name="MarketStallSouth" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1510, 1435)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/MarketStallSouth"]
+texture = ExtResource("52_dom_stall")
+offset = Vector2(0, -110)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/MarketStallSouth"]
+position = Vector2(0, -12)
+shape = SubResource("shape_dom_stall")
+
+[node name="BrazierNorthStreet" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1500, 750)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/BrazierNorthStreet"]
+texture = ExtResource("70_dom_brazier")
+offset = Vector2(0, -115)
+script = ExtResource("76_ambient_motion")
+motion_kind = 1
+phase = 0.2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/BrazierNorthStreet"]
+position = Vector2(0, -8)
+shape = SubResource("shape_dom_brazier")
+
+[node name="BrazierNorthStreetEast" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1900, 760)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/BrazierNorthStreetEast"]
+texture = ExtResource("70_dom_brazier")
+offset = Vector2(0, -115)
+script = ExtResource("76_ambient_motion")
+motion_kind = 1
+phase = 1.4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/BrazierNorthStreetEast"]
+position = Vector2(0, -8)
+shape = SubResource("shape_dom_brazier")
+
+[node name="BrazierMarketWest" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1500, 1450)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/BrazierMarketWest"]
+texture = ExtResource("70_dom_brazier")
+offset = Vector2(0, -115)
+script = ExtResource("76_ambient_motion")
+motion_kind = 1
+phase = 2.5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/BrazierMarketWest"]
+position = Vector2(0, -8)
+shape = SubResource("shape_dom_brazier")
+
+[node name="BrazierMarketEast" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1900, 1450)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/BrazierMarketEast"]
+texture = ExtResource("70_dom_brazier")
+offset = Vector2(0, -115)
+script = ExtResource("76_ambient_motion")
+motion_kind = 1
+phase = 3.6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/BrazierMarketEast"]
+position = Vector2(0, -8)
+shape = SubResource("shape_dom_brazier")
+
+[node name="BrazierTownHallApproach" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(2200, 1500)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/BrazierTownHallApproach"]
+texture = ExtResource("70_dom_brazier")
+offset = Vector2(0, -115)
+script = ExtResource("76_ambient_motion")
+motion_kind = 1
+phase = 4.7
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/BrazierTownHallApproach"]
+position = Vector2(0, -8)
+shape = SubResource("shape_dom_brazier")
+
+[node name="BrazierGarrisonStreet" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(2700, 1300)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/BrazierGarrisonStreet"]
+texture = ExtResource("70_dom_brazier")
+offset = Vector2(0, -115)
+script = ExtResource("76_ambient_motion")
+motion_kind = 1
+phase = 5.8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/BrazierGarrisonStreet"]
+position = Vector2(0, -8)
+shape = SubResource("shape_dom_brazier")
+
+[node name="OakRegistryWall" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(330, 720)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/OakRegistryWall"]
+texture = ExtResource("61_dom_oak_a")
+offset = Vector2(0, -245)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/OakRegistryWall"]
+position = Vector2(0, -14)
+shape = SubResource("shape_dom_tree")
+
+[node name="OakBellWall" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(3330, 520)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/OakBellWall"]
+texture = ExtResource("62_dom_oak_b")
+offset = Vector2(0, -245)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/OakBellWall"]
+position = Vector2(0, -14)
+shape = SubResource("shape_dom_tree")
+
+[node name="PineGarrisonCorner" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(3380, 1700)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/PineGarrisonCorner"]
+texture = ExtResource("63_dom_pine_a")
+offset = Vector2(0, -245)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/PineGarrisonCorner"]
+position = Vector2(0, -14)
+shape = SubResource("shape_dom_tree")
+
+[node name="OakSouthwestWall" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(620, 2220)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/OakSouthwestWall"]
+texture = ExtResource("61_dom_oak_a")
+offset = Vector2(0, -245)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/OakSouthwestWall"]
+position = Vector2(0, -14)
+shape = SubResource("shape_dom_tree")
+
+[node name="PineSoutheastWall" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(3120, 2140)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/PineSoutheastWall"]
+texture = ExtResource("63_dom_pine_a")
+offset = Vector2(0, -245)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/PineSoutheastWall"]
+position = Vector2(0, -14)
+shape = SubResource("shape_dom_tree")
+
+[node name="MossRockShrineWest" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(850, 1880)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/MossRockShrineWest"]
+texture = ExtResource("65_dom_mossy_rock")
+offset = Vector2(0, -239)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/MossRockShrineWest"]
+position = Vector2(0, -14)
+shape = SubResource("shape_dom_rock")
+
+[node name="MossRockShrineEast" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1250, 1960)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/MossRockShrineEast"]
+texture = ExtResource("65_dom_mossy_rock")
+offset = Vector2(0, -239)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/MossRockShrineEast"]
+position = Vector2(0, -14)
+shape = SubResource("shape_dom_rock")
+
+[node name="MossRockShrineSouth" type="StaticBody2D" parent="TownscapeDressing/SolidProps"]
+position = Vector2(1040, 2040)
+
+[node name="Sprite2D" type="Sprite2D" parent="TownscapeDressing/SolidProps/MossRockShrineSouth"]
+texture = ExtResource("65_dom_mossy_rock")
+offset = Vector2(0, -239)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TownscapeDressing/SolidProps/MossRockShrineSouth"]
+position = Vector2(0, -14)
+shape = SubResource("shape_dom_rock")
+
+[node name="AmbientTownsfolk" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="MarketMerchantWest" parent="AmbientTownsfolk" instance=ExtResource("75_ambient_villager")]
+position = Vector2(1410, 1215)
+villager_texture = ExtResource("77_crowd_merchant_a")
+local_waypoints = PackedVector2Array(0, 0, 72, 12, 32, 48)
+pause_duration = 2.4
+initial_pause = 0.6
+
+[node name="MarketMerchantEast" parent="AmbientTownsfolk" instance=ExtResource("75_ambient_villager")]
+position = Vector2(1840, 1310)
+villager_texture = ExtResource("78_crowd_merchant_b")
+local_waypoints = PackedVector2Array(0, 0, 68, -18, 108, 18, 42, 44)
+pause_duration = 1.8
+initial_pause = 1.1
+
+[node name="MarketLaborer" parent="AmbientTownsfolk" instance=ExtResource("75_ambient_villager")]
+position = Vector2(1180, 1360)
+villager_texture = ExtResource("79_crowd_laborer_a")
+local_waypoints = PackedVector2Array(0, 0, 58, 20, 18, 54)
+wander_speed = 18.0
+pause_duration = 2.8
+initial_pause = 1.7
+
+[node name="SquareLaborer" parent="AmbientTownsfolk" instance=ExtResource("75_ambient_villager")]
+position = Vector2(2050, 1090)
+villager_texture = ExtResource("80_crowd_laborer_b")
+local_waypoints = PackedVector2Array(0, 0, 84, 0, 48, 46)
+pause_duration = 2.2
+initial_pause = 0.3
+
+[node name="TavernDockworker" parent="AmbientTownsfolk" instance=ExtResource("75_ambient_villager")]
+position = Vector2(1500, 1740)
+villager_texture = ExtResource("81_crowd_dockworker_a")
+local_waypoints = PackedVector2Array(0, 0, 64, 18, 26, 52)
+wander_speed = 20.0
+pause_duration = 2.6
+initial_pause = 1.4
+
+[node name="TavernBeggar" parent="AmbientTownsfolk" instance=ExtResource("75_ambient_villager")]
+position = Vector2(1850, 1730)
+villager_texture = ExtResource("84_crowd_beggar_a")
+local_waypoints = PackedVector2Array(0, 0, 42, 8)
+wander_speed = 12.0
+pause_duration = 4.0
+initial_pause = 2.0
+
+[node name="ShrineAcolyteWest" parent="AmbientTownsfolk" instance=ExtResource("75_ambient_villager")]
+position = Vector2(900, 1770)
+villager_texture = ExtResource("82_crowd_acolyte_a")
+local_waypoints = PackedVector2Array(0, 0, 48, 20, 22, 58)
+wander_speed = 16.0
+pause_duration = 3.2
+initial_pause = 0.8
+
+[node name="ShrineAcolyteEast" parent="AmbientTownsfolk" instance=ExtResource("75_ambient_villager")]
+position = Vector2(1210, 1800)
+villager_texture = ExtResource("83_crowd_acolyte_b")
+local_waypoints = PackedVector2Array(0, 0, 54, -14, 78, 22, 28, 48)
+wander_speed = 16.0
+pause_duration = 3.0
+initial_pause = 1.9
