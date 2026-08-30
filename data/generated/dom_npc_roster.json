@@ -16,8 +16,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "aela-quietforge",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/aela_quietforge_portrait_neutral.png",
         "monogram": "AQ",
         "mark": "061E",
         "palette_index": 6
@@ -73,8 +73,8 @@
       ],
       "portrait": {
         "id": "arvek-stormcup",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/arvek_stormcup_portrait_neutral.png",
         "monogram": "AS",
         "mark": "83F4",
         "palette_index": 8
@@ -176,8 +176,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "brannic-lowdrum",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/brannic_lowdrum_portrait_neutral.png",
         "monogram": "BL",
         "mark": "1CFD",
         "palette_index": 1
@@ -233,8 +233,8 @@
       ],
       "portrait": {
         "id": "brek-saltjaw",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/brek_saltjaw_portrait_neutral.png",
         "monogram": "BS",
         "mark": "256E",
         "palette_index": 8
@@ -290,8 +290,8 @@
       ],
       "portrait": {
         "id": "brinna-fourbells",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/brinna_fourbells_portrait_neutral.png",
         "monogram": "BF",
         "mark": "CD65",
         "palette_index": 2
@@ -347,8 +347,8 @@
       ],
       "portrait": {
         "id": "daska-threeknots",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/daska_threeknots_portrait_neutral.png",
         "monogram": "DT",
         "mark": "4670",
         "palette_index": 1
@@ -393,8 +393,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "dorran-rask",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/dorran_rask_portrait_neutral.png",
         "monogram": "DR",
         "mark": "76E3",
         "palette_index": 7
@@ -452,8 +452,8 @@
       ],
       "portrait": {
         "id": "drann-wetiron",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/drann_wetiron_portrait_neutral.png",
         "monogram": "DW",
         "mark": "B265",
         "palette_index": 5
@@ -509,8 +509,8 @@
       ],
       "portrait": {
         "id": "drel-gaunt",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/drel_gaunt_portrait_neutral.png",
         "monogram": "DG",
         "mark": "8F8E",
         "palette_index": 8
@@ -625,8 +625,8 @@
       ],
       "portrait": {
         "id": "edda-broadmark",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/edda_broadmark_portrait_neutral.png",
         "monogram": "EB",
         "mark": "A701",
         "palette_index": 5
@@ -687,8 +687,8 @@
       ],
       "portrait": {
         "id": "enna-grayscar",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/enna_grayscar_portrait_neutral.png",
         "monogram": "EG",
         "mark": "D045",
         "palette_index": 8
@@ -733,8 +733,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "gerren-pike",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/gerren_pike_portrait_neutral.png",
         "monogram": "GP",
         "mark": "F9EA",
         "palette_index": 4
@@ -847,8 +847,8 @@
       ],
       "portrait": {
         "id": "hennik-coalvein",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/hennik_coalvein_portrait_neutral.png",
         "monogram": "HC",
         "mark": "C300",
         "palette_index": 0
@@ -906,8 +906,8 @@
       ],
       "portrait": {
         "id": "holst-brinevein",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/holst_brinevein_portrait_neutral.png",
         "monogram": "HB",
         "mark": "6257",
         "palette_index": 4
@@ -1020,8 +1020,8 @@
       ],
       "portrait": {
         "id": "istra-hearthscar",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/istra_hearthscar_portrait_neutral.png",
         "monogram": "IH",
         "mark": "AC42",
         "palette_index": 4
@@ -1066,8 +1066,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "jessa-longbrace",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/jessa_longbrace_portrait_neutral.png",
         "monogram": "JL",
         "mark": "68D7",
         "palette_index": 5
@@ -1185,8 +1185,8 @@
       ],
       "portrait": {
         "id": "kadrin-stoneyield",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/kadrin_stoneyield_portrait_neutral.png",
         "monogram": "KS",
         "mark": "B085",
         "palette_index": 3
@@ -1242,8 +1242,8 @@
       ],
       "portrait": {
         "id": "kaelra-pikehand",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/kaelra_pikehand_portrait_neutral.png",
         "monogram": "KP",
         "mark": "C7BC",
         "palette_index": 4
@@ -1299,8 +1299,8 @@
       ],
       "portrait": {
         "id": "kelm-rook",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/kelm_rook_portrait_neutral.png",
         "monogram": "KR",
         "mark": "DAC7",
         "palette_index": 4
@@ -1361,8 +1361,8 @@
       ],
       "portrait": {
         "id": "kessa-nightrail",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/kessa_nightrail_portrait_neutral.png",
         "monogram": "KN",
         "mark": "C0D6",
         "palette_index": 5
@@ -1464,8 +1464,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "kiva-saltbrand",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/kiva_saltbrand_portrait_neutral.png",
         "monogram": "KS",
         "mark": "8A42",
         "palette_index": 2
@@ -1521,8 +1521,8 @@
       ],
       "portrait": {
         "id": "korrin-blackrail",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/korrin_blackrail_portrait_neutral.png",
         "monogram": "KB",
         "mark": "160C",
         "palette_index": 0
@@ -1583,8 +1583,8 @@
       ],
       "portrait": {
         "id": "loa-flintthread",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/loa_flintthread_portrait_neutral.png",
         "monogram": "LF",
         "mark": "2364",
         "palette_index": 5
@@ -1640,8 +1640,8 @@
       ],
       "portrait": {
         "id": "maela-drumscar",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/maela_drumscar_portrait_neutral.png",
         "monogram": "MD",
         "mark": "E803",
         "palette_index": 9
@@ -1697,8 +1697,8 @@
       ],
       "portrait": {
         "id": "marn-veld",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/marn_veld_portrait_neutral.png",
         "monogram": "MV",
         "mark": "982A",
         "palette_index": 5
@@ -1759,8 +1759,8 @@
       ],
       "portrait": {
         "id": "mera-voss",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/mera_voss_portrait_neutral.png",
         "monogram": "MV",
         "mark": "8441",
         "palette_index": 8
@@ -1816,8 +1816,8 @@
       ],
       "portrait": {
         "id": "nalla-gatebeat",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/nalla_gatebeat_portrait_neutral.png",
         "monogram": "NG",
         "mark": "EDC9",
         "palette_index": 9
@@ -1862,8 +1862,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "nym-vara",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/nym_vara_portrait_neutral.png",
         "monogram": "NV",
         "mark": "701B",
         "palette_index": 6
@@ -1919,8 +1919,8 @@
       ],
       "portrait": {
         "id": "orenna-caskbrand",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/orenna_caskbrand_portrait_neutral.png",
         "monogram": "OC",
         "mark": "269E",
         "palette_index": 4
@@ -1981,8 +1981,8 @@
       ],
       "portrait": {
         "id": "orm-redtongs",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/orm_redtongs_portrait_neutral.png",
         "monogram": "OR",
         "mark": "4D88",
         "palette_index": 8
@@ -2084,8 +2084,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "orrik-cinderjaw",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/orrik_cinderjaw_portrait_neutral.png",
         "monogram": "OC",
         "mark": "3A99",
         "palette_index": 2
@@ -2200,8 +2200,8 @@
       ],
       "portrait": {
         "id": "raika-toll",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/raika_toll_portrait_neutral.png",
         "monogram": "RT",
         "mark": "7A81",
         "palette_index": 5
@@ -2257,8 +2257,8 @@
       ],
       "portrait": {
         "id": "ressa-ironmouth",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/ressa_ironmouth_portrait_neutral.png",
         "monogram": "RI",
         "mark": "857E",
         "palette_index": 5
@@ -2303,8 +2303,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "saela-windscar",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/saela_windscar_portrait_neutral.png",
         "monogram": "SW",
         "mark": "E029",
         "palette_index": 5
@@ -2365,8 +2365,8 @@
       ],
       "portrait": {
         "id": "sava-mor",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/sava_mor_portrait_neutral.png",
         "monogram": "SM",
         "mark": "92AB",
         "palette_index": 9
@@ -2536,8 +2536,8 @@
       ],
       "portrait": {
         "id": "sorek-hushward",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/sorek_hushward_portrait_neutral.png",
         "monogram": "SH",
         "mark": "A140",
         "palette_index": 0
@@ -2598,8 +2598,8 @@
       ],
       "portrait": {
         "id": "tern-hollowbeat",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/tern_hollowbeat_portrait_neutral.png",
         "monogram": "TH",
         "mark": "DE3A",
         "palette_index": 0
@@ -2655,8 +2655,8 @@
       ],
       "portrait": {
         "id": "themka-gaath",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/themka_gaath_portrait_neutral.png",
         "monogram": "TG",
         "mark": "FC79",
         "palette_index": 7
@@ -2712,8 +2712,8 @@
       ],
       "portrait": {
         "id": "thessa-drumline",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/thessa_drumline_portrait_neutral.png",
         "monogram": "TD",
         "mark": "7249",
         "palette_index": 6
@@ -2758,8 +2758,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "thora-bellmark",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/thora_bellmark_portrait_neutral.png",
         "monogram": "TB",
         "mark": "A00F",
         "palette_index": 6
@@ -2872,8 +2872,8 @@
       ],
       "portrait": {
         "id": "torv-bellowskin",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/torv_bellowskin_portrait_neutral.png",
         "monogram": "TB",
         "mark": "2486",
         "palette_index": 3
@@ -2929,8 +2929,8 @@
       ],
       "portrait": {
         "id": "umber-dhor",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/umber_dhor_portrait_neutral.png",
         "monogram": "UD",
         "mark": "971D",
         "palette_index": 0
@@ -3048,8 +3048,8 @@
       ],
       "portrait": {
         "id": "varrik-deepchalk",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/varrik_deepchalk_portrait_neutral.png",
         "monogram": "VD",
         "mark": "7B1E",
         "palette_index": 6
@@ -3107,8 +3107,8 @@
       ],
       "portrait": {
         "id": "venn-ashcord",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/venn_ashcord_portrait_neutral.png",
         "monogram": "VA",
         "mark": "2EF6",
         "palette_index": 5
@@ -3221,8 +3221,8 @@
       ],
       "portrait": {
         "id": "veyra-sootlace",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/veyra_sootlace_portrait_neutral.png",
         "monogram": "VS",
         "mark": "4A0C",
         "palette_index": 7
@@ -3283,8 +3283,8 @@
       ],
       "portrait": {
         "id": "yara-chainstep",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/yara_chainstep_portrait_neutral.png",
         "monogram": "YC",
         "mark": "FD69",
         "palette_index": 8
@@ -3340,8 +3340,8 @@
       ],
       "portrait": {
         "id": "yssra-coldnet",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/yssra_coldnet_portrait_neutral.png",
         "monogram": "YC",
         "mark": "4659",
         "palette_index": 7

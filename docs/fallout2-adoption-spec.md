@@ -534,6 +534,17 @@ payloads rather than UI combat arithmetic.
   near-black because its authored `floor_color` modulates the texture down — OWNER
   PALETTE-TUNING surface). All placements PROVISIONAL.
 
+- **Wave Z — Dom portrait completion — SHIPPED 2026-08-30** (graphics campaign,
+  portrait gaps). All **47 remaining Dom townsfolk** got 512×512 painterly neutral
+  busts (three parallel art lanes, disjoint rosters, Wave W shared direction), so
+  every one of the 60 roster NPCs now shows a real portrait in dialogue instead of
+  a monogram card. Wired via `tools/seed_town_npcs.gd` `PORTRAIT_PATHS` →
+  `scripts/seed_town_npcs.sh` regeneration (roster JSON + `data.pandora`; rows
+  flipped `kind: monogram` → `kind: asset`, no other fields changed). All 47
+  designs are canon INTERPOLATIONS (roles/districts/factions canonical, physiques
+  invented) — see `assets/generated/portraits/_contact_sheet_wave_z_{1,2,3}.md`
+  before treating any as canon. Suite **1031/0** (fresh seeded dir, CI mode).
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
