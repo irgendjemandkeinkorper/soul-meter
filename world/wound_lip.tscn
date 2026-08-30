@@ -348,6 +348,7 @@ shape = SubResource("shape_v")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(180, 450)
+camera_bounds = Rect2i(0, 0, 1800, 900)
 
 [node name="FieldHUD" parent="." instance=ExtResource("3_hud")]
 

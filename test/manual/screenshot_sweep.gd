@@ -40,12 +40,33 @@ func _suppress_reward_reveal() -> void:
 		(reveal as CanvasItem).visible = false
 
 
-func _shoot(scene_path: String, shot_name: String, frames: int = 25) -> void:
+func _shoot(
+		scene_path: String,
+		shot_name: String,
+		frames: int = 25,
+		player_anchor := Vector2.INF,
+) -> void:
 	var runner := scene_runner(scene_path)
 	var scene := runner.scene()
 	if scene is Control:
 		(scene as Control).theme = ThemeBuilder.build()
 	await runner.simulate_frames(frames)
+	# The seeded QA save restores the player's SAVED position into every field
+	# scene; for small scenes that lands outside the authored bounds and the
+	# camera photographs empty clear color. An explicit anchor re-frames the
+	# shot on the scene's own content.
+	if player_anchor != Vector2.INF:
+		var player := scene.get_node_or_null("Player")
+		print("ANCHOR %s player=%s" % [shot_name, player])
+		if player is Node2D:
+			(player as Node2D).global_position = player_anchor
+			var anchor_camera := (player as Node2D).get_node_or_null("Camera2D")
+			if anchor_camera is Camera2D:
+				# Earlier runner scenes stay in the tree, so THEIR camera is
+				# still current — reclaim the viewport for this scene's shot.
+				(anchor_camera as Camera2D).make_current()
+				(anchor_camera as Camera2D).reset_smoothing()
+		await runner.simulate_frames(2)
 	var boot_scene := scene.get_tree().current_scene
 	if boot_scene != null and boot_scene != scene:
 		boot_scene.hide()
@@ -319,8 +340,8 @@ func test_toma_conversation() -> void:
 func test_field_scenes() -> void:
 	await _shoot("res://world/starting_town.tscn", "20_town", 40)
 	await _shoot("res://world/test_room.tscn", "21_wilds", 40)
-	await _shoot("res://world/dorthkor_road.tscn", "22_dorthkor_road", 40)
-	await _shoot("res://world/wound_lip.tscn", "24_wound_lip", 40)
+	await _shoot("res://world/dorthkor_road.tscn", "22_dorthkor_road", 40, Vector2(900, 450))
+	await _shoot("res://world/wound_lip.tscn", "24_wound_lip", 40, Vector2(900, 450))
 
 
 func test_interiors() -> void:
