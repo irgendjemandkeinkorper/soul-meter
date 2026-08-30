@@ -253,3 +253,14 @@ the vault wins. Design doc §2 now marks the kidnapping **[CANON]** in several p
 depends on it. Nobody re-checked this against `~/projects/dramgid-vault/` in this pass. If the
 vault still says withdrawing, the conflict sits under Act III and the REPLACE/REDEFINE ending
 logic — worth a 10-minute check before it propagates further.
+
+## Owner ruling 2026-08-30 — "The Seven Measures" header and a future DRAMGID attribute system
+
+The chargen attributes header **"THE SEVEN MEASURES" stays verbatim** even though the ratified
+system (`systems/character-creation.md`, `ChargenData`) has SIX attributes. Owner statement:
+"I think we are gonna use a DRAMGID system which is why its 7 so we can keep that" —
+i.e. a seven-attribute D-R-A-M-G-I-D system is *planned*, and the seven-count header is
+intentional foreshadowing, not a bug. **NOT ratified yet:** what the seven DRAMGID attributes
+are, how the six current attributes map onto them, and what happens to point-buy/skill math.
+Until that ratification lands (vault edit + ChargenData/SkillCheck migration), the six
+attributes remain the only mechanics; no code may add a seventh attribute or remap the six.
