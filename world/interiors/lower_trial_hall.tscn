@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="Script" path="res://world/interiors/lower_trial_hall.gd" id="2_controller"]
@@ -6,6 +6,9 @@
 [ext_resource type="PackedScene" path="res://actors/switch/switch.tscn" id="4_switch"]
 [ext_resource type="PackedScene" path="res://actors/pickup/pickup.tscn" id="5_pickup"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="6_exit"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="7_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="8_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/jawbrace/jawbrace-warning-plate--decorative.png" id="9_warning_plate"]
 
 [sub_resource type="RectangleShape2D" id="gate_shape"]
 size = Vector2(880, 24)
@@ -18,6 +21,9 @@ size = Vector2(880, 24)
 
 [sub_resource type="RectangleShape2D" id="keeper_gate_shape"]
 size = Vector2(440, 20)
+
+[sub_resource type="RectangleShape2D" id="bench_shape"]
+size = Vector2(88, 22)
 
 [node name="LowerTrialHallInterior" type="Node2D"]
 script = ExtResource("2_controller")
@@ -34,6 +40,94 @@ process_mode = 4
 
 [node name="Player" parent="Room"]
 position = Vector2(480, 540)
+
+# PROVISIONAL OWNER-BALANCE SURFACE: adjust or remove formal dressing after owner playtest.
+[node name="ProvisionalDressing" type="Node2D" parent="Room"]
+y_sort_enabled = true
+
+[node name="AudienceBenchFrontLeft" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(315, 480)
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("7_bench")
+offset = Vector2(0, -46)
+
+[node name="AudienceBenchFrontRight" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(645, 480)
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("7_bench")
+offset = Vector2(0, -46)
+
+[node name="AudienceBenchRearLeft" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(315, 545)
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("7_bench")
+offset = Vector2(0, -46)
+
+[node name="AudienceBenchRearRight" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(645, 545)
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("7_bench")
+offset = Vector2(0, -46)
+
+[node name="WardenBenchLeft" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(310, 325)
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("7_bench")
+offset = Vector2(0, -46)
+
+[node name="WardenBenchRight" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(650, 325)
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("7_bench")
+offset = Vector2(0, -46)
+
+[node name="KeeperWitnessStoolLeft" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(360, 155)
+scale = Vector2(3, 3)
+texture = ExtResource("8_stool")
+offset = Vector2(0, -46)
+
+[node name="KeeperWitnessStoolRight" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(600, 155)
+scale = Vector2(3, 3)
+texture = ExtResource("8_stool")
+offset = Vector2(0, -46)
+
+[node name="JawbraceWarningPlateLeft" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(105, 155)
+scale = Vector2(0.34, 0.34)
+texture = ExtResource("9_warning_plate")
+
+[node name="JawbraceWarningPlateRight" type="Sprite2D" parent="Room/ProvisionalDressing"]
+position = Vector2(855, 155)
+scale = Vector2(0.34, 0.34)
+texture = ExtResource("9_warning_plate")
+
+[node name="BlockingBenches" type="StaticBody2D" parent="Room/ProvisionalDressing"]
+
+[node name="AudienceFrontLeftShape" type="CollisionShape2D" parent="Room/ProvisionalDressing/BlockingBenches"]
+position = Vector2(315, 492)
+shape = SubResource("bench_shape")
+
+[node name="AudienceFrontRightShape" type="CollisionShape2D" parent="Room/ProvisionalDressing/BlockingBenches"]
+position = Vector2(645, 492)
+shape = SubResource("bench_shape")
+
+[node name="AudienceRearLeftShape" type="CollisionShape2D" parent="Room/ProvisionalDressing/BlockingBenches"]
+position = Vector2(315, 557)
+shape = SubResource("bench_shape")
+
+[node name="AudienceRearRightShape" type="CollisionShape2D" parent="Room/ProvisionalDressing/BlockingBenches"]
+position = Vector2(645, 557)
+shape = SubResource("bench_shape")
+
+[node name="WardenLeftShape" type="CollisionShape2D" parent="Room/ProvisionalDressing/BlockingBenches"]
+position = Vector2(310, 337)
+shape = SubResource("bench_shape")
+
+[node name="WardenRightShape" type="CollisionShape2D" parent="Room/ProvisionalDressing/BlockingBenches"]
+position = Vector2(650, 337)
+shape = SubResource("bench_shape")
 
 # PROVISIONAL — CANON REVIEW REQUIRED: scene guidance prose.
 [node name="EntranceInstruction" type="Label" parent="."]

@@ -8,8 +8,8 @@ const VendorData := preload("res://globals/vendor_registry.gd")
 const VendorIdsData := preload("res://data/generated/vendor_ids.gd")
 const FALLBACK_FLOOR_TEXTURE := preload("res://assets/generated/sprites/castle-kit/ground.png")
 const FALLBACK_WALL_TEXTURE := preload("res://assets/generated/sprites/castle-kit/wall.png")
-const DEFAULT_FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-interior-floor--wood-panel.png"
-const DEFAULT_WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-interior-wall--brick.png"
+const DEFAULT_FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png"
+const DEFAULT_WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
 
 ## Vendor rows carry stable town-site ids but no scene anchor. Keep that world-layer
 ## mapping here while stock, prices, gates, and restock remain generated data.
@@ -60,6 +60,7 @@ func _ready() -> void:
 	var wall_texture := _load_optional_texture(DEFAULT_WALL_TEXTURE_PATH, FALLBACK_WALL_TEXTURE)
 	for wall_name: String in ["WallTop", "WallBottom", "WallLeft", "WallRight"]:
 		var wall := get_node(wall_name) as Polygon2D
+		wall.color = accent_color
 		wall.texture = wall_texture
 		wall.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	($AccentRug as Polygon2D).color = accent_color
