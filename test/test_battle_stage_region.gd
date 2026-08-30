@@ -168,3 +168,25 @@ func test_unit_plays_ko_fall_when_hp_reaches_zero() -> void:
 	# The felled unit tips over at its feet and fades, but stays on the board.
 	assert_bool(absf(wight.rotation) > 0.5).is_true()
 	assert_float(wight.modulate.a).is_less(1.0)
+
+func test_cover_theme_maps_every_catalog_prefix_and_texture_resolution_never_crashes() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var expectations := {
+		&"dorthkor-vanguard": "road",
+		&"bog-wight": "bog",
+		&"loam-boar": "bog",
+		&"jawbrace-empty-post": "barricade",
+		&"trial-warden": "pillar",
+		&"phase2-demon": "generic",
+		&"": "generic",
+	}
+	for encounter_id: StringName in expectations:
+		stage._encounter_id = encounter_id
+		stage._cover_texture_cache.clear()
+		assert_str(stage._cover_theme()).is_equal(str(expectations[encounter_id]))
+		# Resolution must return a Texture2D or null (badge fallback) — never
+		# crash — whether or not the generated prop art is present on disk.
+		var texture: Texture2D = stage._cover_texture()
+		if texture != null:
+			assert_bool(texture.get_width() > 0).is_true()

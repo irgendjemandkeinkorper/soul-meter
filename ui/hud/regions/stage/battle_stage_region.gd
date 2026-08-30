@@ -45,6 +45,8 @@ const HOVER_RIM := Color("#9AA3B2")
 const REACHABLE_TINT := Color(0.24, 0.56, 0.42, 0.18)
 const PATH_TINT := Color(0.82, 0.67, 0.24, 0.20)
 const COVER_COLOR := Color("#D6C184")
+const COVER_ART_PATTERN := "res://assets/generated/sprites/terrain/cover_%s.png"
+const COVER_ART_TILE_WIDTHS := 1.35  # prop footprint relative to a tile's width
 const ACTION_FEEDBACK_SECONDS := 0.7
 const KO_MODULATE := Color(0.5, 0.5, 0.56, 0.45)
 const KO_FALL_RADIANS := deg_to_rad(78.0)
@@ -52,6 +54,7 @@ const NO_CELL := Vector2i(-999, -999)
 
 var _tiles: Array[Dictionary] = []
 var _actors: Array[Dictionary] = []
+var _cover_texture_cache: Dictionary = {}
 var _encounter_id: StringName = &""
 var _active_id: StringName = &""
 var _target_id: StringName = &""
@@ -328,12 +331,28 @@ func _draw() -> void:
 		if _hover_path.has(cell):
 			draw_colored_polygon(diamond, PATH_TINT)
 		if bool(tile.get("cover", false)):
-			var notch := PackedVector2Array([
-				diamond[0] + Vector2(0, 3), diamond[0] + Vector2(8, 7),
-				diamond[0] + Vector2(6, 15), diamond[0] + Vector2(0, 19),
-				diamond[0] + Vector2(-6, 15), diamond[0] + Vector2(-8, 7),
-			])
-			draw_colored_polygon(notch, COVER_COLOR)
+			var cover_texture := _cover_texture()
+			if cover_texture != null:
+				# Bottom-centered prop whose painted base diamond sits on the tile.
+				var prop_width := half_w * 2.0 * COVER_ART_TILE_WIDTHS
+				var prop_height := prop_width * (
+					float(cover_texture.get_height()) / maxf(1.0, float(cover_texture.get_width()))
+				)
+				draw_texture_rect(
+					cover_texture,
+					Rect2(
+						Vector2(center.x - prop_width / 2.0, center.y + half_h - prop_height),
+						Vector2(prop_width, prop_height)
+					),
+					false
+				)
+			else:
+				var notch := PackedVector2Array([
+					diamond[0] + Vector2(0, 3), diamond[0] + Vector2(8, 7),
+					diamond[0] + Vector2(6, 15), diamond[0] + Vector2(0, 19),
+					diamond[0] + Vector2(-6, 15), diamond[0] + Vector2(-8, 7),
+				])
+				draw_colored_polygon(notch, COVER_COLOR)
 		var charge := clampi(int(tile.get("charge_level", 0)), 0, DS.CHARGE_MAX)
 		if charge > 0:
 			var color := Color(str(tile.get("element_color", "#7BDFF2")))
@@ -591,6 +610,39 @@ func _layout() -> Dictionary:
 func _project(x: int, y: int, height: int, layout: Dictionary) -> Vector2:
 	return DS.iso_project(x, y, height, Vector2.ZERO) * float(layout["scale"]) \
 		+ (layout["origin"] as Vector2)
+
+
+## Encounter-id prefix -> cover prop theme (mirrors _ground_variant's approach).
+func _cover_theme() -> String:
+	var id := String(_encounter_id)
+	if id.begins_with("dorthkor"):
+		return "road"
+	if id.begins_with("bog") or id.begins_with("loam"):
+		return "bog"
+	if id.begins_with("jawbrace"):
+		return "barricade"
+	if id.begins_with("trial"):
+		return "pillar"
+	return "generic"
+
+
+## Texture-level resolution (project standard: existence is not validity) —
+## themed prop, else the generic prop, else null so the drawn badge remains
+## the last-resort marker. Cached per theme for the draw loop.
+func _cover_texture() -> Texture2D:
+	var theme_id := _cover_theme()
+	if _cover_texture_cache.has(theme_id):
+		return _cover_texture_cache[theme_id]
+	var texture: Texture2D = null
+	for candidate: String in [theme_id, "generic"]:
+		var path := COVER_ART_PATTERN % candidate
+		if FileAccess.file_exists(path):
+			var resource: Resource = load(path)
+			if resource is Texture2D:
+				texture = resource as Texture2D
+				break
+	_cover_texture_cache[theme_id] = texture
+	return texture
 
 
 func _ground_variant(x: int, y: int) -> Vector2i:
