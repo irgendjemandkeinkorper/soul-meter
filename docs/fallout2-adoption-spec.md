@@ -545,6 +545,17 @@ payloads rather than UI combat arithmetic.
   invented) — see `assets/generated/portraits/_contact_sheet_wave_z_{1,2,3}.md`
   before treating any as canon. Suite **1031/0** (fresh seeded dir, CI mode).
 
+- **Wave AB — Dorthkor Road painterly retile — SHIPPED 2026-08-30** (graphics
+  campaign; closes the residual Wave AA declared). The road's base ground was still
+  the procedural blockout: a new 2000×1200 terrain plate
+  (`assets/generated/backgrounds/world/dorthkor-road-terrain-v1.png`, matches the
+  loamroot plate's recipe) now sits under the scene with `IsometricGround` hidden —
+  the same recipe test_room uses. All eight remaining nature-kit blockout sprites
+  (trees/stones/rocks/log/tent/campfire) retargeted to painterly art (dom-tree,
+  dom-rock--mossy, loamroot-fallen-log, plus two new lane-generated
+  `dorthkor-camp-{tent,campfire}--decorative.png` with verified alpha), scales
+  compensated per texture-size ratio. No node positions changed. Suite + sweep green.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
