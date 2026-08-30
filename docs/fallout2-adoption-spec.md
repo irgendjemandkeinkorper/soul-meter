@@ -338,6 +338,42 @@ payloads rather than UI combat arithmetic.
   naming its type; (3) push_warning emission on invalid grids is not
   test-pinned (gdUnit has no warning capture).
 
+- **Wave Q — grid-bound overworld movement — SHIPPED 2026-08-29** (owner request:
+  "movement bound to a similar kinda grid in town... WASD/arrow keys but along the
+  grid"; ratified via plan questions: 8-direction screen-relative, EVERYTHING on
+  the grid, smooth continuous steps). WASD/arrows step cell-to-cell on the shared
+  overworld `IsoGrid` (the same lattice click-to-move and the tactical layer use):
+  input resolves to the iso neighbor whose world direction best matches, held keys
+  glide with no pause, the player always rests exactly on a cell center, blocked
+  steps glide along walls via the two angularly-nearest alternatives (corner-cut
+  rule for cell-space diagonals). Click paths complete through the same
+  authoritative snap. NPC/enemy/routine placements snap at APPLY time
+  (`world/nav/grid_placement.gd`: clearance-0 grid — raw painted passability, not
+  the mover-dilated pathing grid — and a bounded ≤2-cell snap; the authored stand
+  wins when nothing nearby is open; authored coordinates untouched). Party
+  followers trail the player's cell history. **Lattice-open semantics**
+  (`IsoGrid.is_step_blocked`): the iso lattice extends beyond the painted region —
+  unpainted ground is open for stepping/placement (parity with the free-movement
+  era; Dom authors 24 of 30 townsfolk on unpainted dirt), while A*/click pathing
+  stays region-bounded. Movement is bounded by camera-bounds ∪ painted-map world
+  extent (+64px), with a re-entry escape valve. Keyboard steps carry bounded
+  wedge recovery (progress-toward-target, 0.35s, snap back to the exact begin
+  position); `Player.rest_on_grid()` normalizes spawn/loaded positions with a
+  `test_move` collision sweep (a stored legal position beats normalizing through
+  a wall). Suite 1019/0; town screenshot verified (townsfolk clustered naturally
+  on centers). Gate: r1 REVISE (wedge, load normalization, test hardening — all
+  fixed, plus the painted-rect discovery above) → r2 REVISE (swept load snap,
+  movement bounds, occupancy root-scoping, progress-based wedge — all fixed;
+  camera-bounds-only clamp corrected after the full suite caught negative-x
+  painted cells refused) → r3 **PROCEED_WITH_RISKS**, no blocking findings.
+  Accepted residuals: static NPC/enemy placement is not physics-swept (2-cell cap,
+  stable authored data); bounds regression covers one side + re-entry (coverage
+  debt, geometry verified); **pre-existing product bug, now issue-tracked: a
+  LOCKED travel exit does not physically close its boundary-collider gap** (free
+  movement could always walk through; movement is now at least bounded). Step
+  speed/PROVISIONAL values: `speed` 260, sprint ×2, stuck threshold 0.35s,
+  bounds margin 64px, MAX_SNAP_CELLS 2.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
