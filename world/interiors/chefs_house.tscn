@@ -40,7 +40,7 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="PrepStool" type="Sprite2D" parent="ChefsHouseDressing/SoftDetails"]
-position = Vector2(420, 435)
+position = Vector2(640, 435)
 scale = Vector2(2, 2)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -39)

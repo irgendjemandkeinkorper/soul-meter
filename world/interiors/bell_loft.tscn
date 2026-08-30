@@ -31,7 +31,7 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="RestStool" type="Sprite2D" parent="BellLoftDressing/SoftDetails"]
-position = Vector2(390, 415)
+position = Vector2(610, 415)
 scale = Vector2(2, 2)
 texture = ExtResource("3_stool")
 offset = Vector2(0, -39)

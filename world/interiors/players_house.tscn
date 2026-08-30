@@ -48,7 +48,7 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="TravelStool" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
-position = Vector2(410, 435)
+position = Vector2(630, 435)
 scale = Vector2(2, 2)
 texture = ExtResource("6_stool")
 offset = Vector2(0, -39)

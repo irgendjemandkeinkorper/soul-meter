@@ -44,7 +44,7 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="HearthStool" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
-position = Vector2(390, 430)
+position = Vector2(610, 430)
 scale = Vector2(2, 2)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -39)

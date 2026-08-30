@@ -60,15 +60,15 @@ period = 4.5
 [node name="SolidProps" type="Node2D" parent="ChefsPantryDressing"]
 y_sort_enabled = true
 
-[node name="LedgerCratesEast" type="StaticBody2D" parent="ChefsPantryDressing/SolidProps"]
+[node name="DryGoodsCratesEast" type="StaticBody2D" parent="ChefsPantryDressing/SolidProps"]
 position = Vector2(835, 510)
 
-[node name="Sprite2D" type="Sprite2D" parent="ChefsPantryDressing/SolidProps/LedgerCratesEast"]
+[node name="Sprite2D" type="Sprite2D" parent="ChefsPantryDressing/SolidProps/DryGoodsCratesEast"]
 scale = Vector2(0.45, 0.45)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ChefsPantryDressing/SolidProps/LedgerCratesEast"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ChefsPantryDressing/SolidProps/DryGoodsCratesEast"]
 position = Vector2(0, -9)
 shape = SubResource("crate_footprint")
 
