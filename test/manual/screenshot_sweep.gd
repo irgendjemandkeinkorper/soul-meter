@@ -31,6 +31,15 @@ func before() -> void:
 	GameState.discover_fast_travel_hub(&"dom")
 
 
+## Quest activity in the seeded sweep state can pop UIManager's modal reward
+## reveal over ANY later capture (it photobombed 02_chargen and 23_battle_grid).
+## Hide it before every shot — the sweep photographs screens, not reward flow.
+func _suppress_reward_reveal() -> void:
+	var reveal := UIManager.get_node_or_null("RewardReveal")
+	if reveal is CanvasItem:
+		(reveal as CanvasItem).visible = false
+
+
 func _shoot(scene_path: String, shot_name: String, frames: int = 25) -> void:
 	var runner := scene_runner(scene_path)
 	var scene := runner.scene()
@@ -40,6 +49,7 @@ func _shoot(scene_path: String, shot_name: String, frames: int = 25) -> void:
 	var boot_scene := scene.get_tree().current_scene
 	if boot_scene != null and boot_scene != scene:
 		boot_scene.hide()
+	_suppress_reward_reveal()
 	await runner.simulate_frames(3)
 	RenderingServer.force_draw()
 	await RenderingServer.frame_post_draw
@@ -79,6 +89,7 @@ func _capture_current(runner: GdUnitSceneRunner, scene: Node, shot_name: String)
 	var boot_scene := scene.get_tree().current_scene
 	if boot_scene != null and boot_scene != scene:
 		boot_scene.hide()
+	_suppress_reward_reveal()
 	await runner.simulate_frames(3)
 	RenderingServer.force_draw()
 	await RenderingServer.frame_post_draw

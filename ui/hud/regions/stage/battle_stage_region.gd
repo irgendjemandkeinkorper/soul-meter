@@ -55,6 +55,7 @@ const NO_CELL := Vector2i(-999, -999)
 var _tiles: Array[Dictionary] = []
 var _actors: Array[Dictionary] = []
 var _cover_texture_cache: Dictionary = {}
+var _cover_nodes: Dictionary = {}
 var _encounter_id: StringName = &""
 var _active_id: StringName = &""
 var _target_id: StringName = &""
@@ -330,29 +331,17 @@ func _draw() -> void:
 			draw_colored_polygon(diamond, REACHABLE_TINT)
 		if _hover_path.has(cell):
 			draw_colored_polygon(diamond, PATH_TINT)
-		if bool(tile.get("cover", false)):
-			var cover_texture := _cover_texture()
-			if cover_texture != null:
-				# Bottom-centered prop whose painted base diamond sits on the tile.
-				var prop_width := half_w * 2.0 * COVER_ART_TILE_WIDTHS
-				var prop_height := prop_width * (
-					float(cover_texture.get_height()) / maxf(1.0, float(cover_texture.get_width()))
-				)
-				draw_texture_rect(
-					cover_texture,
-					Rect2(
-						Vector2(center.x - prop_width / 2.0, center.y + half_h - prop_height),
-						Vector2(prop_width, prop_height)
-					),
-					false
-				)
-			else:
-				var notch := PackedVector2Array([
-					diamond[0] + Vector2(0, 3), diamond[0] + Vector2(8, 7),
-					diamond[0] + Vector2(6, 15), diamond[0] + Vector2(0, 19),
-					diamond[0] + Vector2(-6, 15), diamond[0] + Vector2(-8, 7),
-				])
-				draw_colored_polygon(notch, COVER_COLOR)
+		if bool(tile.get("cover", false)) and _cover_texture() == null:
+			# Badge is the LAST-RESORT marker; with prop art present the cover
+			# prop is a y-sorted node in UnitsLayer (gate r1: props must
+			# interleave with units by base Y, and ground overlays like the
+			# reachable tint must not be painted over by a ground-pass prop).
+			var notch := PackedVector2Array([
+				diamond[0] + Vector2(0, 3), diamond[0] + Vector2(8, 7),
+				diamond[0] + Vector2(6, 15), diamond[0] + Vector2(0, 19),
+				diamond[0] + Vector2(-6, 15), diamond[0] + Vector2(-8, 7),
+			])
+			draw_colored_polygon(notch, COVER_COLOR)
 		var charge := clampi(int(tile.get("charge_level", 0)), 0, DS.CHARGE_MAX)
 		if charge > 0:
 			var color := Color(str(tile.get("element_color", "#7BDFF2")))
@@ -426,6 +415,7 @@ func _sync_background() -> void:
 ## battles (zone models snapshot no tiles, and the legacy battle_stage.gd
 ## composition already presents those).
 func _sync_units(animate_move: bool) -> void:
+	_sync_cover_props()
 	if _tiles.is_empty() or _actors.is_empty():
 		for node: Node in _unit_nodes.values():
 			node.queue_free()
@@ -500,14 +490,57 @@ func _sync_units(animate_move: bool) -> void:
 			(_unit_nodes[id] as Node).queue_free()
 			_unit_nodes.erase(id)
 			_fallen.erase(id)
-	# Painter's order: lower on screen draws in front.
-	var order: Array = _unit_nodes.values()
+	# Painter's order: lower on screen draws in front. Cover props share the
+	# layer so a unit behind a prop is occluded by it and vice versa (gate r1).
+	var order: Array = _unit_nodes.values() + _cover_nodes.values()
 	order.sort_custom(
 		func(a: TextureRect, b: TextureRect) -> bool:
 			return a.position.y + a.size.y < b.position.y + b.size.y
 	)
 	for index: int in order.size():
 		_units_layer.move_child(order[index], index)
+
+
+## Cover props live in UnitsLayer as bottom-anchored nodes so painter's-order
+## sorting depth-interleaves them with units. When no prop art resolves, the
+## ground pass draws the legacy badge instead and this keeps zero nodes.
+func _sync_cover_props() -> void:
+	var texture := _cover_texture()
+	if _tiles.is_empty() or texture == null:
+		for node: Node in _cover_nodes.values():
+			node.queue_free()
+		_cover_nodes.clear()
+		return
+	var layout := _layout()
+	var scale_factor: float = layout["scale"]
+	var half_h := float(DS.TILE_H) * 0.5 * scale_factor
+	var seen: Dictionary = {}
+	for tile: Dictionary in _tiles:
+		if not bool(tile.get("cover", false)):
+			continue
+		var cell := Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))
+		seen[cell] = true
+		var sprite := _cover_nodes.get(cell) as TextureRect
+		if sprite == null:
+			sprite = TextureRect.new()
+			sprite.name = "Cover_%d_%d" % [cell.x, cell.y]
+			sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_units_layer.add_child(sprite)
+			_cover_nodes[cell] = sprite
+		sprite.texture = texture
+		var width := float(DS.TILE_W) * COVER_ART_TILE_WIDTHS * scale_factor
+		var height := width * (
+			float(texture.get_height()) / maxf(1.0, float(texture.get_width()))
+		)
+		sprite.size = Vector2(width, height)
+		var center := _project(cell.x, cell.y, _tile_height(tile), layout)
+		sprite.position = Vector2(center.x - width / 2.0, center.y + half_h - height)
+	for cell: Variant in _cover_nodes.keys():
+		if not seen.has(cell):
+			(_cover_nodes[cell] as Node).queue_free()
+			_cover_nodes.erase(cell)
 
 
 func _play_action_beat(event: CombatEvent) -> void:
@@ -636,7 +669,10 @@ func _cover_texture() -> Texture2D:
 	var texture: Texture2D = null
 	for candidate: String in [theme_id, "generic"]:
 		var path := COVER_ART_PATTERN % candidate
-		if FileAccess.file_exists(path):
+		# ResourceLoader.exists follows export remapping (FileAccess alone
+		# misses imported textures inside a PCK — gate r1); FileAccess keeps
+		# unimported files (tests, fresh drops) resolvable in the editor.
+		if ResourceLoader.exists(path) or FileAccess.file_exists(path):
 			var resource: Resource = load(path)
 			if resource is Texture2D:
 				texture = resource as Texture2D
