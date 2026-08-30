@@ -272,17 +272,23 @@ func test_backdrop_theme_maps_every_catalog_prefix_and_resolution_never_crashes(
 		&"phase2-demon": "wound-touched-field",
 		&"": "wound-touched-field",
 	}
+	# Sequential transitions WITHOUT clearing the cache: all five themed
+	# backdrops are committed art and must resolve non-null through the cache
+	# exactly as a running battle would hit them (gate r1 risk closure).
 	for encounter_id: StringName in expectations:
 		stage._encounter_id = encounter_id
-		assert_str(stage._backdrop_theme()).is_equal(str(expectations[encounter_id]))
-		stage._backdrop_texture_cache.clear()
-		# Resolution returns a Texture2D or null (hidden backdrop) — never a
-		# crash — whether or not the themed backdrop art exists on disk.
-		var texture: Texture2D = stage._backdrop_texture(stage._backdrop_theme())
+		var theme_name: String = str(expectations[encounter_id])
+		assert_str(stage._backdrop_theme()).is_equal(theme_name)
+		stage._sync_background()
+		var texture: Texture2D = stage._backdrop_texture(theme_name)
+		assert_object(texture) \
+			.override_failure_message("Committed backdrop for %s failed to resolve." % theme_name) \
+			.is_not_null()
 		if texture != null:
 			assert_bool(texture.get_width() > 0).is_true()
-	# The dorthkor backdrop is committed art and must keep resolving.
+			assert_str(stage.background_texture_path()) \
+				.ends_with("%s-battlefield-v1.png" % theme_name)
+	# The dorthkor backdrop keeps its pinned path.
 	stage._encounter_id = &"dorthkor-muster"
-	stage._backdrop_texture_cache.clear()
 	stage._sync_background()
 	assert_str(stage.background_texture_path()).ends_with("dorthkor-road-battlefield-v1.png")

@@ -508,6 +508,19 @@ payloads rather than UI combat arithmetic.
   intentional monogram card — extending portraits further is an owner scope call.
   Suite **1042/0**; gate r1 **PROCEED**.
 
+- **Wave X — themed battle backdrops — SHIPPED 2026-08-30** (graphics campaign,
+  battle terrain art). Every encounter family now fights somewhere: four new
+  painterly backdrops (bog-marsh, jawbrace-ledge, trial-hall, wound-touched-field)
+  join dorthkor-road, keyed off the encounter prefix by
+  `BattleStageRegion._backdrop_theme()` exactly like the cover-prop theming, with a
+  per-theme cache and the export-safe existence gate. Missing art degrades to the
+  hidden backdrop (prior non-dorthkor behavior). Stage test transitions through all
+  five themes without clearing the cache and asserts every committed backdrop
+  resolves non-null (gate r1 risk closed same session). Suite **1043/0**; sweep
+  11/0 — the trial-warden board renders inside the trial hall. Gate r1
+  **PROCEED_WITH_RISKS** → risk closed. All four backdrops PROVISIONAL owner-review
+  surfaces (`assets/generated/backgrounds/combat/_contact_sheet.md`).
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
