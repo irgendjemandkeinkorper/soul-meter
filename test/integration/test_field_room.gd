@@ -299,3 +299,60 @@ func test_wedged_keyboard_step_recovers_to_the_origin_cell_center() -> void:
 	assert_bool(bool(player.get("_has_keyboard_step_target"))).is_false()
 	assert_vector(player.global_position).is_equal(origin_center)
 	wall.queue_free()
+
+
+func test_rest_on_grid_never_normalizes_through_a_physics_only_wall() -> void:
+	var runner := scene_runner("res://world/test_room.tscn")
+	var player := runner.find_child("Player", true, false) as Node2D
+	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
+	await runner.simulate_frames(3)
+	var cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+	var center: Vector2 = ground.to_global(ground.map_to_local(cell))
+
+	# A thin physics-only wall between an off-center stored position and its
+	# nearest cell center — the grid believes the center is open.
+	var stored_position: Vector2 = center + Vector2(-24.0, 0.0)
+	var wall := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = Vector2(6.0, 120.0)
+	shape.shape = rectangle
+	wall.add_child(shape)
+	wall.global_position = center + Vector2(-12.0, 0.0)
+	runner.scene().add_child(wall)
+	await runner.simulate_frames(1)
+	player.global_position = stored_position
+
+	player.call("rest_on_grid")
+
+	# The stored legal position wins over normalizing across the wall.
+	assert_vector(player.global_position).is_equal(stored_position)
+	wall.queue_free()
+
+
+func test_keyboard_steps_are_bounded_but_can_always_re_enter_bounds() -> void:
+	var runner := scene_runner("res://world/test_room.tscn")
+	var player := runner.find_child("Player", true, false) as Node2D
+	await runner.simulate_frames(3)
+
+	# Strand the player far outside both the camera bounds and the painted map's
+	# world extent — the void that lattice-open movement could previously walk
+	# into forever through a boundary-collider gap.
+	player.global_position = Vector2(12000.0, 600.0)
+	await runner.simulate_frames(2)
+	var stranded_position: Vector2 = player.global_position
+
+	# Deeper into the void: refused, the player does not move.
+	runner.simulate_action_press("move_right")
+	await runner.simulate_frames(40)
+	runner.simulate_action_release("move_right")
+	await runner.simulate_frames(10)
+	assert_vector(player.global_position).is_equal(stranded_position)
+
+	# Back toward bounds: the escape valve allows strictly-approaching steps, so
+	# an out-of-bounds body is never permanently stranded.
+	runner.simulate_action_press("move_left")
+	await runner.simulate_frames(40)
+	runner.simulate_action_release("move_left")
+	await runner.simulate_frames(30)
+	assert_float(player.global_position.x).is_less(stranded_position.x)

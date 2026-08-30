@@ -317,6 +317,18 @@ func cell_of_occupant(occupant: Object) -> Variant:
 
 ## The one question a caller should ask: "can `mover` path through this cell?" Static geometry
 ## and dynamic occupancy are answered together, in that order, by this single method.
+## World-space bounding box of the painted region (the diamond's corner cells).
+## Camera bounds alone cannot bound movement in an iso scene — the diamond's left
+## and top corners project to negative world coordinates outside any screen rect.
+func world_bounds() -> Rect2:
+	var rect: Rect2i = get_used_rect()
+	var bounds := Rect2(cell_to_world(rect.position), Vector2.ZERO)
+	bounds = bounds.expand(cell_to_world(Vector2i(rect.end.x - 1, rect.position.y)))
+	bounds = bounds.expand(cell_to_world(Vector2i(rect.position.x, rect.end.y - 1)))
+	bounds = bounds.expand(cell_to_world(rect.end - Vector2i.ONE))
+	return bounds
+
+
 ## Passability for grid STEPPING and PLACEMENT (Wave Q). The iso lattice extends
 ## beyond the painted ground: a cell outside the built region carries no paint and
 ## no tracked occupancy, so it is OPEN — parity with the free-movement era, where

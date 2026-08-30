@@ -25,23 +25,30 @@ const PLACEMENT_CLEARANCE_CELLS: int = 0
 ## MAX_SNAP_CELLS), or leaves it at the authored position when no navigation grid
 ## exists in its scene or no nearby cell is open.
 static func snap_to_walkable_cell(actor: Node2D, authored_position: Vector2) -> void:
+	var snapped: Variant = open_cell_center_near(actor, authored_position)
+	actor.global_position = snapped if snapped is Vector2 else authored_position
+
+
+## Returns the open cell center nearest `position` (within MAX_SNAP_CELLS), or null
+## when the actor's scene has no navigation grid or no nearby cell is open. Exposed
+## separately from `snap_to_walkable_cell` so callers that must validate the move
+## themselves (the player's collision-swept `rest_on_grid`) can decide whether to
+## apply it.
+static func open_cell_center_near(actor: Node2D, position: Vector2) -> Variant:
 	var navigation_root: Node = _navigation_root(actor)
 	if navigation_root == null:
-		actor.global_position = authored_position
-		return
+		return null
 	var ground: TileMapLayer = (
 		navigation_root.find_child("IsometricGround", true, false) as TileMapLayer
 	)
 	if ground == null or ground.tile_set == null:
-		actor.global_position = authored_position
-		return
+		return null
 	var grid := IsoGrid.new()
 	var blocking: TileMapLayer = (
 		navigation_root.find_child("Blocking", true, false) as TileMapLayer
 	)
 	grid.build(ground, blocking, PLACEMENT_CLEARANCE_CELLS, true)
-	var snapped: Variant = _nearby_open_cell_center(grid, actor, authored_position)
-	actor.global_position = snapped if snapped is Vector2 else authored_position
+	return _nearby_open_cell_center(grid, navigation_root, actor, position)
 
 
 static func _navigation_root(actor: Node2D) -> Node:
@@ -58,6 +65,7 @@ static func _navigation_root(actor: Node2D) -> Node:
 
 static func _nearby_open_cell_center(
 	grid: IsoGrid,
+	navigation_root: Node,
 	actor: Node2D,
 	authored_position: Vector2
 ) -> Variant:
@@ -66,9 +74,13 @@ static func _nearby_open_cell_center(
 	# Actor occupancy is computed directly from the nav_blocker group — the
 	# grid's own occupancy tracking is region-bounded and this fresh grid has
 	# none — so clustered actors spread to distinct cells even off the paint.
+	# Root scoping is load-bearing (see NavOccupancy.sync): transitional scenes
+	# and parallel test fixtures must not reserve cells in THIS scene's lattice.
 	var occupied_cells: Dictionary = {}
 	for node: Node in actor.get_tree().get_nodes_in_group(NavOccupancy.GROUP):
 		if node == actor or not node is Node2D:
+			continue
+		if node != navigation_root and not navigation_root.is_ancestor_of(node):
 			continue
 		occupied_cells[grid.world_to_cell((node as Node2D).global_position)] = true
 	var authored_cell: Vector2i = grid.world_to_cell(authored_position)

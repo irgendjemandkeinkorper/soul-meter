@@ -49,11 +49,15 @@ var _has_keyboard_step_target: bool = false
 var _keyboard_step_target: Vector2 = Vector2.ZERO
 var _keyboard_step_origin: Vector2 = Vector2.ZERO
 var _keyboard_step_stuck_time: float = 0.0
+var _keyboard_step_prev_distance: float = INF
 
-## A grid step whose body makes less than this much progress per second is wedged
+## A grid step closing less than this much distance-to-target per second is wedged
 ## (physics can hold the body short of an open cell — see ClickMoveController's
 ## STUCK_SPEED_EPSILON note about non-zero-width bodies).
 const STEP_STUCK_SPEED_EPSILON: float = 12.0
+## How far outside the scene's camera bounds a step target may lie. One cell of
+## slack keeps edge cells reachable when bounds hug the playfield exactly.
+const CELL_STEP_BOUNDS_MARGIN: float = 64.0
 ## How long a wedged step may stall before recovery snaps the player back to the
 ## step's origin center and clears the target.
 const STEP_STUCK_TIME_THRESHOLD: float = 0.35
@@ -141,7 +145,12 @@ func _physics_process(delta: float) -> void:
 ## this is the keyboard equivalent. Recovery snaps back to the step's origin center
 ## (at most one cell away, and open a moment ago) so the player always rests on-grid.
 func _track_step_wedge(delta: float) -> void:
-	if get_last_motion().length() > STEP_STUCK_SPEED_EPSILON * delta:
+	# Progress is distance actually closed toward the target this frame — not the
+	# last slide motion, which understates multi-slide physics frames at low FPS.
+	var distance: float = global_position.distance_to(_keyboard_step_target)
+	var progress: float = _keyboard_step_prev_distance - distance
+	_keyboard_step_prev_distance = distance
+	if progress > STEP_STUCK_SPEED_EPSILON * delta:
 		_keyboard_step_stuck_time = 0.0
 		return
 	_keyboard_step_stuck_time += delta
@@ -159,14 +168,36 @@ func _begin_keyboard_step(grid: IsoGrid, screen_direction: Vector2) -> void:
 	var resolved_cell: Variant = grid.resolve_step_cell(current_cell, screen_direction, self)
 	if resolved_cell == null:
 		return
+	var step_target: Vector2 = grid.cell_to_world(resolved_cell as Vector2i)
+	# The virtual lattice is unbounded, so movement needs explicit bounds: without
+	# them, a gap in the boundary colliders (a travel-exit opening) lets held
+	# movement walk into the void forever. Camera bounds alone are a VIEW rect —
+	# an iso diamond's left/top corners project to negative world coordinates —
+	# so the bound is their union with the painted map's world extent.
+	var movement_bounds: Rect2 = (
+		Rect2(camera_bounds).merge(grid.world_bounds()).grow(CELL_STEP_BOUNDS_MARGIN)
+	)
+	if not movement_bounds.has_point(step_target):
+		var target_gap: Vector2 = (
+			step_target.clamp(movement_bounds.position, movement_bounds.end) - step_target
+		)
+		var current_gap: Vector2 = (
+			global_position.clamp(movement_bounds.position, movement_bounds.end)
+			- global_position
+		)
+		# Escape valve: a body already outside bounds may always step back toward
+		# them — refusing everything would strand it permanently.
+		if target_gap.length_squared() >= current_gap.length_squared():
+			return
 	# The exact position the step began from — NOT the computed cell center. At a
 	# wedge the body sits between centers and world_to_cell can identify a cell
 	# whose center lies past the obstacle; returning to where the body actually
 	# stood is the only recovery position guaranteed physically legal.
 	_keyboard_step_origin = global_position
-	_keyboard_step_target = grid.cell_to_world(resolved_cell as Vector2i)
+	_keyboard_step_target = step_target
 	_has_keyboard_step_target = true
 	_keyboard_step_stuck_time = 0.0
+	_keyboard_step_prev_distance = INF
 
 
 ## Normalizes the avatar onto the movement grid (Wave Q: the player rests on cell
@@ -174,9 +205,18 @@ func _begin_keyboard_step(grid: IsoGrid, screen_direction: Vector2) -> void:
 ## position — a save made mid-step stores an off-center position, and without this
 ## the player would rest between cells until the next move. No-grid scenes and
 ## positions with no open cell nearby keep the exact stored placement
-## (GridPlacement's bounded-snap contract).
+## (GridPlacement's bounded-snap contract). The move to the center is collision
+## swept: a grid-open center can still lie across a physics-only obstacle the
+## lattice knows nothing about, and a stored legal position always beats
+## normalizing through a wall.
 func rest_on_grid() -> void:
-	GridPlacement.snap_to_walkable_cell(self, global_position)
+	var target: Variant = GridPlacement.open_cell_center_near(self, global_position)
+	if target == null:
+		return
+	var offset: Vector2 = (target as Vector2) - global_position
+	if not offset.is_zero_approx() and test_move(global_transform, offset):
+		return
+	global_position = target as Vector2
 
 
 func _complete_grid_arrival(
