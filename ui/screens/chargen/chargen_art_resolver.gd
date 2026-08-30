@@ -19,6 +19,26 @@ static func portrait_path(likeness_id: String, pattern: String = PORTRAIT_PATTER
 	return UnitArtScript.texture_path(ChargenData.likeness_fallback_unit(likeness_id))
 
 
+## Loads the portrait as a texture, falling through to the paired field sprite
+## when the generated plate exists but cannot load as a texture (gate r1 ruling:
+## existence is not validity). UI consumers use this, never load() a path
+## themselves, so a corrupt plate can never blank the gallery or the member.
+static func portrait_texture(likeness_id: String, pattern: String = PORTRAIT_PATTERN) -> Texture2D:
+	var generated_path := pattern % likeness_id
+	if FileAccess.file_exists(generated_path):
+		var generated: Resource = load(generated_path)
+		if generated is Texture2D:
+			return generated as Texture2D
+	var fallback_path: String = UnitArtScript.texture_path(
+		ChargenData.likeness_fallback_unit(likeness_id)
+	)
+	if FileAccess.file_exists(fallback_path):
+		var fallback: Resource = load(fallback_path)
+		if fallback is Texture2D:
+			return fallback as Texture2D
+	return null
+
+
 static func ancestry_path(ancestry_id: String, pattern: String = ANCESTRY_PATTERN) -> String:
 	var generated_path := pattern % ancestry_id
 	return generated_path if FileAccess.file_exists(generated_path) else ""

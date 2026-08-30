@@ -131,6 +131,35 @@ func test_recruit_mode_uses_the_same_steps_and_only_writes_the_custom_roster() -
 	screen.queue_free()
 
 
+func test_recruit_mode_cancels_through_the_production_ui_stack() -> void:
+	# Gate r1: cancellation must be exercised the way the tavern opens the
+	# screen — through UIManager — not on a hand-parented instance.
+	var screen := UIManager.open(
+		load("res://ui/screens/character_creation.tscn")
+	) as CharacterCreationScreen
+	assert_object(screen).is_not_null()
+	screen.mode = CharacterCreationScreen.Mode.RECRUIT
+	await get_tree().process_frame
+
+	# Later pages: back steps one leaf, never closes.
+	screen._on_ancestry_pressed("vael")
+	screen._show_step(CharacterCreationScreen.STEP_ELEMENTS)
+	screen._on_back()
+	assert_int(screen._step_index).is_equal(CharacterCreationScreen.STEP_CALLING)
+	assert_bool(is_instance_valid(screen) and screen.is_inside_tree()).is_true()
+
+	# Page one: cancel closes the screen back to the caller. The close is
+	# animated, so wait for it — budgeted (project standard, never unbounded).
+	screen._show_step(CharacterCreationScreen.STEP_ANCESTRY)
+	screen._on_back()
+	for _frame: int in 60:
+		if not is_instance_valid(screen) or not screen.is_inside_tree():
+			break
+		await get_tree().process_frame
+	assert_bool(not is_instance_valid(screen) or not screen.is_inside_tree()).is_true()
+	UIManager.close_all()
+
+
 func _fill_out_valid_build(screen: CharacterCreationScreen, name: String, epithet: String) -> void:
 	screen._on_ancestry_pressed("vael")
 	screen._on_discipline_selected(1)
@@ -143,7 +172,11 @@ func _fill_out_valid_build(screen: CharacterCreationScreen, name: String, epithe
 	screen._epithet_edit.text = epithet
 	screen._epithet_edit.text_changed.emit(epithet)
 	screen._on_flaw_changed("Will not leave a debt uncounted")
-	screen._on_likeness_pressed("crowd-guard-a", screen._likeness_buttons[1])
+	# A REAL gallery selection: the id bound to this button in production
+	# (gate r1: pressing a legacy id through a mismatched button verified only
+	# the fallback path, not that a plate selection persists).
+	var gallery_id := str(ChargenData.LIKENESSES[1]["id"])
+	screen._on_likeness_pressed(gallery_id, screen._likeness_buttons[1])
 	_set_valid_attributes(screen)
 
 
@@ -176,7 +209,10 @@ func _assert_member_matches_picks(member: PartyMember, name: String, epithet: St
 	assert_int(member.attributes["forge"]).is_equal(5)
 	assert_str(member.skill_tiers["athletics"]).is_equal("trained")
 	assert_object(member.portrait).is_not_null()
-	assert_str(member.portrait.resource_path).contains("crowd-guard-a")
+	# The gallery selection persists its PAINTERLY plate (not the fallback).
+	assert_str(member.portrait.resource_path).contains(
+		"portraits/player/%s" % str(ChargenData.LIKENESSES[1]["id"])
+	)
 
 
 func _find_chargen_screen() -> CharacterCreationScreen:

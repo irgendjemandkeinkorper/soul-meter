@@ -49,6 +49,25 @@ func test_existing_ancestry_art_is_preferred() -> void:
 	assert_str(actual).is_equal(expected)
 
 
+func test_corrupt_plate_file_falls_through_to_the_paired_unit_texture() -> void:
+	# Gate r1: existence is not validity — a plate that exists but cannot load
+	# as a texture must still yield the paired field sprite, never null/blank.
+	var corrupt_path := "%s/portrait_likeness_01.png" % TEMP_ROOT
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(TEMP_ROOT))
+	var file := FileAccess.open(corrupt_path, FileAccess.WRITE)
+	file.store_string("this is not a png")
+	file.close()
+
+	var texture: Texture2D = ChargenArtResolverScript.portrait_texture(
+		"likeness_01", "%s/portrait_%%s.png" % TEMP_ROOT
+	)
+	assert_object(texture).is_not_null()
+	assert_str(texture.resource_path).is_equal(
+		UnitArtScript.texture_path(str(ChargenData.likeness_by_id("likeness_01")["unit"]))
+	)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(corrupt_path))
+
+
 func test_gallery_likeness_without_a_plate_falls_back_to_its_paired_unit_sprite() -> void:
 	var actual: String = ChargenArtResolverScript.portrait_path(
 		"likeness_01", "%s/portrait_%%s.png" % TEMP_ROOT

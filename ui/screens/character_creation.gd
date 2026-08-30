@@ -400,10 +400,7 @@ func _build_identity_page() -> Control:
 		btn.toggle_mode = true
 		btn.expand_icon = true
 		btn.button_pressed = likeness_id == _likeness_id
-		var portrait_path: String = ChargenArtResolverScript.portrait_path(likeness_id)
-		var portrait_resource: Resource = load(portrait_path)
-		if portrait_resource is Texture2D:
-			btn.icon = portrait_resource as Texture2D
+		btn.icon = ChargenArtResolverScript.portrait_texture(likeness_id)
 		btn.tooltip_text = str(likeness.get("label", likeness_id))
 		btn.pressed.connect(_on_likeness_pressed.bind(likeness_id, btn))
 		portrait_grid.add_child(btn)
@@ -539,11 +536,7 @@ func _update_ancestry_illustration() -> void:
 func _update_identity_portrait() -> void:
 	if _identity_portrait == null:
 		return
-	var portrait_path: String = ChargenArtResolverScript.portrait_path(_likeness_id)
-	var portrait_resource: Resource = load(portrait_path)
-	_identity_portrait.texture = (
-		portrait_resource as Texture2D if portrait_resource is Texture2D else null
-	)
+	_identity_portrait.texture = ChargenArtResolverScript.portrait_texture(_likeness_id)
 	_identity_portrait.visible = _identity_portrait.texture != null
 	_identity_portrait_fallback.visible = not _identity_portrait.visible
 
@@ -888,10 +881,7 @@ func _build_party_member() -> PartyMember:
 		member.skill_tiers[skill_id] = "trained"
 	member.skill_percentages = {}
 	member.bio = str(ChargenData.ancestry_by_id(_ancestry_id).get("trait", ""))
-	var portrait_path: String = ChargenArtResolverScript.portrait_path(_likeness_id)
-	var portrait_resource: Resource = load(portrait_path)
-	if portrait_resource is Texture2D:
-		member.portrait = portrait_resource as Texture2D
+	member.portrait = ChargenArtResolverScript.portrait_texture(_likeness_id)
 	member.level = 1
 	member.max_hp = int(_attributes.get("anchor", ChargenData.ATTRIBUTE_FLOOR)) * 8
 	member.hp = member.max_hp
