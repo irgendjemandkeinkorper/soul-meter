@@ -467,10 +467,13 @@ payloads rather than UI combat arithmetic.
   wander/motion-actually-happens test closing gate risk 2); sweep 11/0 with the town
   shot visually verified. Gate r1 **PROCEED_WITH_RISKS** (both risks addressed:
   additive startup pause documented as deliberate stagger; movement/motion test
-  added). All placements/routes/counts PROVISIONAL owner-balance surfaces. Known
-  pre-existing art debt surfaced by the shot, NOT this wave: several legacy NPC
-  plates render on opaque white backgrounds (notice-board vendor, shrine figures,
-  tavern-front group) — candidate for the next art lane.
+  added). All placements/routes/counts PROVISIONAL owner-balance surfaces.
+  CORRECTION (same session): the white rectangles in the town shot were first
+  misread as legacy NPC-plate debt; they are actually FOUR OF THIS WAVE'S OWN
+  ground decals — dom-{puddle--shallow,mud-edge--transition,stone-paving--tile,
+  wet-road--tile}.png were authored on opaque white backgrounds (which is why no
+  scene had ever wired them). Regenerated in place with true transparency via an
+  art lane; town shot re-verified.
 
 ## Outstanding for final ratification
 
