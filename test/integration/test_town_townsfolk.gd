@@ -210,8 +210,10 @@ func test_water_backdrop_and_nature_sprites_finish_the_north_and_east_edges() ->
 	assert_int(north_edge.size()).is_equal(10)
 	assert_int(east_edge.size()).is_equal(7)
 	for sprite: Sprite2D in north_edge + east_edge:
+		# Wave AC: edge dressing migrated from the Kenney nature-kit blockout
+		# set to the painterly world sprites (dom-tree/dom-rock/dom-bush et al).
 		assert_str(sprite.texture.resource_path).starts_with(
-			"res://assets/generated/sprites/nature-kit/"
+			"res://assets/generated/sprites/world/"
 		)
 
 

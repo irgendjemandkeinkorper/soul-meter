@@ -1,4 +1,4 @@
-[gd_scene load_steps=90 format=3]
+[gd_scene load_steps=91 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="4_exit"]
 [ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="5_npc"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_iso"]
+[ext_resource type="Texture2D" path="res://assets/generated/backgrounds/world/dom-town-terrain-v1.png" id="99_terrain"]
 [ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="7_interactable"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-slant-roof.png" id="8_house"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-square-roof.png" id="9_tower"]
@@ -22,19 +23,19 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/banner-red.png" id="20_banner_red"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/lantern.png" id="21_lantern"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/cart-high.png" id="22_cart"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_oak.png" id="23_tree_oak"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_default.png" id="24_tree_default"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_pineTallA.png" id="25_tree_pine"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/rock_largeA.png" id="26_rock_large"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/rock_smallB.png" id="27_rock_small"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/grass_large.png" id="28_grass"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/plant_bushDetailed.png" id="29_bush"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/flower_yellowA.png" id="30_flower"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--oak-a.png" id="23_tree_oak"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--oak-b.png" id="24_tree_default"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--pine-a.png" id="25_tree_pine"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-rock--mossy.png" id="26_rock_large"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-rock--mossy.png" id="27_rock_small"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-grass-tuft--decorative.png" id="28_grass"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-bush--low.png" id="29_bush"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-flower-cluster--decorative.png" id="30_flower"]
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="31_building_door"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/door.png" id="32_door_sprite"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/sign.png" id="33_sign_sprite"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/pot_large.png" id="34_pot_sprite"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-wooden-sign--decorative.png" id="33_sign_sprite"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-clay-pot--decorative.png" id="34_pot_sprite"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="35_bench_sprite"]
 [ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="36_town_npcs"]
 [ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="37_blocking_tiles"]
@@ -127,7 +128,14 @@ polygon = PackedVector2Array(-700, -500, 4300, -500, 4300, 3000, -700, 3000)
 color = Color(0.035, 0.25, 0.34, 1)
 z_index = -20
 
+[node name="TerrainBackdrop" type="Sprite2D" parent="."]
+position = Vector2(1700, 1100)
+scale = Vector2(1.8, 1.8)
+z_index = -15
+texture = ExtResource("99_terrain")
+
 [node name="IsometricGround" type="TileMapLayer" parent="."]
+visible = false
 position = Vector2(100, 100)
 script = ExtResource("6_iso")
 map_size = Vector2i(54, 69)
@@ -585,61 +593,73 @@ offset = Vector2(0, -125.596)
 position = Vector2(95, 155)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="TreeWest" type="Sprite2D" parent="."]
 position = Vector2(90, 455)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="OakSouthWest" type="Sprite2D" parent="."]
 position = Vector2(115, 885)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="PineNorth" type="Sprite2D" parent="."]
 position = Vector2(650, 115)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="OakNorthEast" type="Sprite2D" parent="."]
 position = Vector2(1490, 155)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="TreeEast" type="Sprite2D" parent="."]
 position = Vector2(1490, 790)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="PineSouth" type="Sprite2D" parent="."]
 position = Vector2(1130, 905)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="RockWest" type="Sprite2D" parent="."]
 position = Vector2(345, 880)
 texture = ExtResource("26_rock_large")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="RockEast" type="Sprite2D" parent="."]
 position = Vector2(1410, 455)
 texture = ExtResource("26_rock_large")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="RockNorth" type="Sprite2D" parent="."]
 position = Vector2(1120, 105)
 texture = ExtResource("27_rock_small")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.35, 0.35)
 
 [node name="BushRegistry" type="Sprite2D" parent="."]
 position = Vector2(160, 300)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="BushTownHall" type="Sprite2D" parent="."]
 position = Vector2(1115, 330)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="GrassShrine" type="Sprite2D" parent="."]
 position = Vector2(325, 705)
@@ -665,86 +685,103 @@ offset = Vector2(0, -50.596)
 position = Vector2(40, 70)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="NorthEdgePine02" type="Sprite2D" parent="."]
 position = Vector2(200, 55)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="NorthEdgeBush03" type="Sprite2D" parent="."]
 position = Vector2(300, 75)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="NorthEdgeOak04" type="Sprite2D" parent="."]
 position = Vector2(520, 60)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="NorthEdgeTree05" type="Sprite2D" parent="."]
 position = Vector2(800, 55)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="NorthEdgePine06" type="Sprite2D" parent="."]
 position = Vector2(960, 70)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="NorthEdgeBush07" type="Sprite2D" parent="."]
 position = Vector2(1080, 55)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="NorthEdgeOak08" type="Sprite2D" parent="."]
 position = Vector2(1320, 70)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="NorthEdgePine09" type="Sprite2D" parent="."]
 position = Vector2(1460, 60)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="NorthEdgeTree10" type="Sprite2D" parent="."]
 position = Vector2(1580, 75)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="EastEdgeOak01" type="Sprite2D" parent="."]
 position = Vector2(1550, 150)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="EastEdgeTree02" type="Sprite2D" parent="."]
 position = Vector2(1570, 280)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="EastEdgePine03" type="Sprite2D" parent="."]
 position = Vector2(1550, 400)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="EastEdgeTree04" type="Sprite2D" parent="."]
 position = Vector2(1560, 610)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="EastEdgeOak05" type="Sprite2D" parent="."]
 position = Vector2(1550, 740)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="EastEdgePine06" type="Sprite2D" parent="."]
 position = Vector2(1570, 880)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="EastEdgeBush07" type="Sprite2D" parent="."]
 position = Vector2(1550, 980)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="FourArmsTavern" type="Node2D" parent="."]
 position = Vector2(1700, 1800)
@@ -1747,16 +1784,19 @@ y_sort_enabled = true
 position = Vector2(560, 909.4)
 texture = ExtResource("26_rock_large")
 offset = Vector2(0, -60.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="RockBlobWestB" type="Sprite2D" parent="SetDressing"]
 position = Vector2(450, 989.4)
 texture = ExtResource("27_rock_small")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.35, 0.35)
 
 [node name="BushBlobWest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(665, 1002.4)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="GrassBlobWest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(500, 1049.4)
@@ -1767,16 +1807,19 @@ offset = Vector2(0, -55.0)
 position = Vector2(300, 1421.4)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -52.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="RockBlobSouthwest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(235, 1529.4)
 texture = ExtResource("26_rock_large")
 offset = Vector2(0, -60.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="BushBlobSouthwest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(405, 1547.4)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="StallBlobMarket" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1150, 1110.4)
@@ -1797,6 +1840,7 @@ offset = Vector2(0, -55.0)
 position = Vector2(1390, 1124.4)
 texture = ExtResource("27_rock_small")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.35, 0.35)
 
 [node name="StatueShrineA" type="Sprite2D" parent="SetDressing"]
 position = Vector2(980, 1817.4)
@@ -1812,31 +1856,37 @@ offset = Vector2(0, -108.0)
 position = Vector2(1080, 1969.4)
 texture = ExtResource("26_rock_large")
 offset = Vector2(0, -60.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="BushShrine" type="Sprite2D" parent="SetDressing"]
 position = Vector2(920, 1927.4)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="OakCornerSouthwest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(300, 2054.4)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="TreeCornerSouthwest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(455, 2162.4)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="RockCornerSouthwest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(200, 2219.4)
 texture = ExtResource("26_rock_large")
 offset = Vector2(0, -60.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="BushCornerSouthwest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(380, 2257.4)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="LaundryChefsHouse" type="Sprite2D" parent="SetDressing"]
 position = Vector2(650, 1718.4)
@@ -1857,6 +1907,7 @@ offset = Vector2(0, -114.0)
 position = Vector2(2255, 2147.4)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="FlowerPlayersHouse" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2470, 2186.4)
@@ -1897,11 +1948,13 @@ offset = Vector2(0, -53.0)
 position = Vector2(2875, 602.4)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="RockBellHouse" type="Sprite2D" parent="SetDressing"]
 position = Vector2(3120, 599.4)
 texture = ExtResource("27_rock_small")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.35, 0.35)
 
 [node name="CartIronCompanies" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2860, 1528.4)
@@ -1953,31 +2006,37 @@ phase = 4.2
 position = Vector2(2750, 1754.4)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="PineEastField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2950, 1901.4)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -52.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="TreeEastFieldB" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2600, 2052.4)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="OakSoutheastCorner" type="Sprite2D" parent="SetDressing"]
 position = Vector2(3300, 2154.4)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="RockSoutheast" type="Sprite2D" parent="SetDressing"]
 position = Vector2(3150, 2239.4)
 texture = ExtResource("26_rock_large")
 offset = Vector2(0, -60.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="BushEastField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2820, 1992.4)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="GrassEastField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2680, 1884.4)
@@ -1988,21 +2047,25 @@ offset = Vector2(0, -55.0)
 position = Vector2(3280, 864.4)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="RockNortheastField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(3330, 954.4)
 texture = ExtResource("27_rock_small")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.35, 0.35)
 
 [node name="TreeMidEast" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2050, 852.4)
 texture = ExtResource("24_tree_default")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="BushMidEast" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2150, 932.4)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="GrassMidEast" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1980, 764.4)
@@ -2013,11 +2076,13 @@ offset = Vector2(0, -55.0)
 position = Vector2(1450, 2104.4)
 texture = ExtResource("23_tree_oak")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="PineSouthField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1250, 2201.4)
 texture = ExtResource("25_tree_pine")
 offset = Vector2(0, -52.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="GrassSouthField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1350, 2024.4)
@@ -2043,11 +2108,13 @@ offset = Vector2(0, -52.0)
 position = Vector2(210, 1334.4)
 texture = ExtResource("27_rock_small")
 offset = Vector2(0, -55.0)
+scale = Vector2(0.35, 0.35)
 
 [node name="BushRiverside" type="Sprite2D" parent="SetDressing"]
 position = Vector2(780, 1742.4)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -53.0)
+scale = Vector2(0.5, 0.5)
 
 [node name="GrassRiverside" type="Sprite2D" parent="SetDressing"]
 position = Vector2(700, 1854.4)

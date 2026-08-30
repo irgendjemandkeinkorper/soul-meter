@@ -556,6 +556,19 @@ payloads rather than UI combat arithmetic.
   `dorthkor-camp-{tent,campfire}--decorative.png` with verified alpha), scales
   compensated per texture-size ratio. No node positions changed. Suite + sweep green.
 
+- **Wave AC — Dom + wilds painterly ground, Kenney purge complete — SHIPPED 2026-08-30**
+  (graphics campaign). Dom's base ground was still the visible procedural blockout:
+  a new `dom-town-terrain-v1.png` plate (four cobbled arms meeting off-center — the
+  Four Arms made literal) now sits under the town with `IsometricGround` hidden; the
+  last 21 nature-kit blockout sprite refs across `starting_town` + `test_room` were
+  retargeted to painterly art (7 new groundcover props: grass tuft, flower cluster,
+  mushroom cluster, water lily, old stump, wooden sign, clay pot — all alpha-verified),
+  and the two seaming loamroot props (bloom cluster, fallen log) were regenerated with
+  clean transparent bases. **No nature-kit/Kenney environment sprite remains in any
+  world scene.** Contract updates: TerrainBackdrop z_index standardized at −15
+  (test_y_sort convention; dorthkor's aligned too), townsfolk edge-sprite test now
+  pins the painterly path root. Suite **1033/0**; sweep 11/0.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the

@@ -12,17 +12,17 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-root-archway--decorative.png" id="21_ls_arch"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-fallen-log--decorative.png" id="22_ls_log"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-bloom-cluster--decorative.png" id="23_ls_bloom"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_pineTallA.png" id="24_pine"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_default_dark.png" id="25_dark_tree"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/tree_thin_dark.png" id="26_thin_tree"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/rock_largeB.png" id="27_rock_large"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/rock_smallC.png" id="28_rock_small"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/plant_bushDetailed.png" id="29_bush"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/grass_leafsLarge.png" id="30_grass"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/mushroom_redGroup.png" id="31_mushroom_red"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/mushroom_tanGroup.png" id="32_mushroom_tan"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/lily_large.png" id="33_lily"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/stump_old.png" id="34_stump"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--pine-a.png" id="24_pine"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--oak-b.png" id="25_dark_tree"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--oak-a.png" id="26_thin_tree"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-rock--mossy.png" id="27_rock_large"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-rock--mossy.png" id="28_rock_small"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-bush--low.png" id="29_bush"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-grass-tuft--decorative.png" id="30_grass"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-mushroom-cluster--decorative.png" id="31_mushroom_red"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-mushroom-cluster--decorative.png" id="32_mushroom_tan"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-water-lily--decorative.png" id="33_lily"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-old-stump--decorative.png" id="34_stump"]
 [ext_resource type="Texture2D" path="res://assets/generated/backgrounds/world/loamroot-wilds-terrain-v1.png" id="35_terrain"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-grove--bloom-bed.png" id="36_ls_bloom_bed"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-grove--grass.png" id="37_ls_grass"]
@@ -202,7 +202,7 @@ offset = Vector2(0, -90)
 position = Vector2(530, 1070)
 texture = ExtResource("27_rock_large")
 offset = Vector2(0, -50.596)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.75, 0.75)
 
 [node name="StoneCircleBloom" type="Sprite2D" parent="SetDressing"]
 position = Vector2(480, 1010)
@@ -218,19 +218,19 @@ offset = Vector2(0, -90)
 position = Vector2(1600, 200)
 texture = ExtResource("24_pine")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="GrovePineB" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1820, 240)
 texture = ExtResource("24_pine")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="GroveDarkTree" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1750, 380)
 texture = ExtResource("25_dark_tree")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="GroveLog" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1620, 360)
@@ -277,77 +277,80 @@ visible = false
 position = Vector2(300, 130)
 texture = ExtResource("24_pine")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="TreelineDarkA" type="Sprite2D" parent="SetDressing"]
 visible = false
 position = Vector2(480, 170)
 texture = ExtResource("25_dark_tree")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="TreelinePineB" type="Sprite2D" parent="SetDressing"]
 visible = false
 position = Vector2(660, 120)
 texture = ExtResource("24_pine")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="TreelineThin" type="Sprite2D" parent="SetDressing"]
 visible = false
 position = Vector2(840, 180)
 texture = ExtResource("26_thin_tree")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="TreelinePineC" type="Sprite2D" parent="SetDressing"]
 visible = false
 position = Vector2(1020, 130)
 texture = ExtResource("24_pine")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="TreelineDarkB" type="Sprite2D" parent="SetDressing"]
 visible = false
 position = Vector2(1200, 170)
 texture = ExtResource("25_dark_tree")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="TreelinePineD" type="Sprite2D" parent="SetDressing"]
 visible = false
 position = Vector2(1420, 120)
 texture = ExtResource("24_pine")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="EastRock" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1880, 560)
 texture = ExtResource("27_rock_large")
 offset = Vector2(0, -50.596)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.75, 0.75)
 
 [node name="EastBush" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1900, 700)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="EastPine" type="Sprite2D" parent="SetDressing"]
 visible = false
 position = Vector2(1870, 860)
 texture = ExtResource("24_pine")
 offset = Vector2(0, -50.596)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 
 [node name="WestBush" type="Sprite2D" parent="SetDressing"]
 position = Vector2(220, 300)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="WestRock" type="Sprite2D" parent="SetDressing"]
 position = Vector2(300, 420)
 texture = ExtResource("28_rock_small")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.35, 0.35)
 
 [node name="WestStump" type="Sprite2D" parent="SetDressing"]
 position = Vector2(180, 820)
@@ -368,6 +371,7 @@ offset = Vector2(0, -90)
 position = Vector2(1100, 700)
 texture = ExtResource("28_rock_small")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.35, 0.35)
 
 [node name="MidGrass" type="Sprite2D" parent="SetDressing"]
 position = Vector2(740, 680)
@@ -378,6 +382,7 @@ offset = Vector2(0, -50.596)
 position = Vector2(1500, 900)
 texture = ExtResource("29_bush")
 offset = Vector2(0, -50.596)
+scale = Vector2(0.5, 0.5)
 
 [node name="SouthMushroom" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1420, 1080)
