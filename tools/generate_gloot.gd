@@ -38,6 +38,7 @@ extends Node
 
 const OUT_DIR := "res://data/generated"
 const PROTOTREE_PATH := OUT_DIR + "/gloot_prototree.json"
+const ITEM_ICON_DIR := "res://assets/generated/sprites/items"
 const ITEM_IDS_PATH := OUT_DIR + "/item_ids.gd"
 const FACTION_IDS_PATH := OUT_DIR + "/faction_ids.gd"
 const NPC_IDS_PATH := OUT_DIR + "/npc_ids.gd"
@@ -140,6 +141,12 @@ static func generate(check_only: bool = false) -> Dictionary:
 		var slot := ent.get_string("Equip Slot")
 		if not slot.is_empty():
 			props["equip_slot"] = slot
+		# GLoot's InventoryItem.get_texture() reads the "image" property. The
+		# icon path is a pure naming convention (item slug → icon file), so the
+		# generator stays deterministic whether or not the PNG exists yet;
+		# test_inventory_screen's icon contract asserts every referenced icon
+		# actually loads.
+		props["image"] = "%s/%s--icon.png" % [ITEM_ICON_DIR, chain[chain.size() - 1]]
 		protos[path] = props
 
 	var paths := protos.keys()
