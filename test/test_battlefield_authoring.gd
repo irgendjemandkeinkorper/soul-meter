@@ -94,12 +94,25 @@ func test_authored_terrain_keeps_both_deployment_columns_clear() -> void:
 		var dimensions: Vector2i = grid.get("dimensions", Vector2i.ZERO)
 		assert_bool(dimensions.x >= 7 and dimensions.x <= 9).is_true()
 		assert_bool(dimensions.y >= 5 and dimensions.y <= 6).is_true()
+		# Gate r1 risk closure: battle.gd warn-skips malformed/out-of-bounds
+		# authored cells at runtime, so a catalog typo would otherwise ship
+		# silently — enforce the full data invariants here instead.
+		var seen_cover: Dictionary = {}
 		for cell: Variant in grid.get("cover", []):
 			assert_bool(cell is Vector2i).is_true()
 			if cell is Vector2i:
 				assert_bool(cell.x == 0 or cell.x == dimensions.x - 1).override_failure_message(
 					"%s authors cover in deployment column at %s" % [encounter_key, cell]
 				).is_false()
+				assert_bool(
+					cell.x >= 0 and cell.y >= 0 and cell.x < dimensions.x and cell.y < dimensions.y
+				).override_failure_message(
+					"%s authors cover outside its board at %s" % [encounter_key, cell]
+				).is_true()
+				assert_bool(seen_cover.has(cell)).override_failure_message(
+					"%s authors duplicate cover at %s" % [encounter_key, cell]
+				).is_false()
+				seen_cover[cell] = true
 		var elevation: Dictionary = grid.get("elevation", {})
 		for cell: Variant in elevation:
 			assert_bool(cell is Vector2i).is_true()
@@ -107,6 +120,18 @@ func test_authored_terrain_keeps_both_deployment_columns_clear() -> void:
 				assert_bool(cell.x == 0 or cell.x == dimensions.x - 1).override_failure_message(
 					"%s authors elevation in deployment column at %s" % [encounter_key, cell]
 				).is_false()
+				assert_bool(
+					cell.x >= 0 and cell.y >= 0 and cell.x < dimensions.x and cell.y < dimensions.y
+				).override_failure_message(
+					"%s authors elevation outside its board at %s" % [encounter_key, cell]
+				).is_true()
+				var authored_height: int = int(elevation[cell])
+				assert_bool(
+					authored_height >= 1 and authored_height <= DS.ELEVATION_MAX
+				).override_failure_message(
+					"%s authors elevation %d at %s (must be 1..%d)"
+					% [encounter_key, authored_height, cell, DS.ELEVATION_MAX]
+				).is_true()
 
 
 func test_weather_defaults_are_valid_wheel_ids_and_start_without_warnings() -> void:

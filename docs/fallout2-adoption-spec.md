@@ -374,6 +374,38 @@ payloads rather than UI combat arithmetic.
   speed/PROVISIONAL values: `speed` 260, sprint ×2, stuck threshold 0.35s,
   bounds margin 64px, MAX_SNAP_CELLS 2.
 
+- **Wave R — battlefield authoring pass — SHIPPED 2026-08-29** (owner direction: the
+  battle map "definitely needs expanding and fleshing out"). All 12 catalog encounters
+  now carry authored boards in `EncounterCatalog._FIELD_GRID_DATA` (7×5–9×6, replacing
+  the ten Gate-T-era 2×4 overrides; trial-warden + trial-keeper added) with 2–5 themed
+  cover cells and 0–4 elevation cells (bog tussocks, Dorthkor wagon cover/embankments,
+  jawbrace barricades, trial-hall pillars); deployment columns 0 and last stay clear by
+  convention AND by test. `Battle._apply_authored_terrain()` applies cover/elevation
+  with warn-and-skip validation (malformed or out-of-bounds cells never abort a battle)
+  and clamps elevation to `DS.ELEVATION_MAX`; authored cliffs are deliberately
+  unsupported until the stage has a cliff visual (invisible walls are a UX bug).
+  `_WEATHER_DEFAULTS` gained its first three entries (bog-wight: molm, loam-boar:
+  terra, phase2-demon: scor). `test/test_battlefield_authoring.gd` enforces the data
+  invariants directly (bounds, elevation range 1..MAX, no duplicates, clear deployment
+  columns, every encounter deploys a full 5-member party on distinct cells, weather ids
+  valid + warning-free). Consequence-flow suites (test_battle, field-debt and
+  first-chapter journeys) pin their encounters to the FR-105 `"battlefield": "zones"`
+  hatch — their subjects are authored outcomes, not grid tactics — and every
+  strike-until-ended loop is now budgeted (40 swings) after an unbudgeted one hung a
+  30-minute run when the new boards deployed melee at range. Suite 1023/0; trial-warden
+  screenshot verified (pillars, cover badges, clear columns). Gate: r1
+  **PROCEED_WITH_RISKS**, no blocking findings; the sharpest risk (catalog typos
+  warning-skipped without test failure) was closed same-session by the invariant test.
+  Accepted residuals: zone-pin fixtures erase rather than snapshot-restore the
+  `battlefield` key (safe while generated definitions never author one); no test yet
+  walks a real authored board through legal movement into combat (deployment + tactics
+  covered separately); `tools/combat_number_sweep.gd` cannot see weather defaults (it
+  is a static sweep that does not read EncounterCatalog) — before/after was
+  byte-identical, recorded honestly in the table comment. ALL board dimensions, terrain
+  placements, and weather picks are PROVISIONAL balance content awaiting the owner
+  balance pass; `EncounterCatalog._WEATHER_DEFAULTS` remains the authoring surface for
+  the other nine encounters.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
