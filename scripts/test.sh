@@ -8,6 +8,19 @@ test_data_dir="${SOUL_METER_TEST_DATA_DIR:-/tmp/soul-meter-godot-data}"
 mkdir -p "$test_data_dir"
 export XDG_DATA_HOME="$test_data_dir"
 
+# The headless DisplayServer opens a 64x64 window, and Maaack's AppSettings
+# applies whatever resolution player_config.cfg stores — on a fresh data dir
+# (every CI run) that persists 64x64, crushing GUI layout and silently breaking
+# pointer-position tests (red "Godot tests" since Wave R). Seed the design
+# resolution so a fresh run lays out like a real windowed session; never
+# clobber an existing config.
+player_config_dir="$test_data_dir/godot/app_userdata/SoulMeter"
+mkdir -p "$player_config_dir"
+if [ ! -f "$player_config_dir/player_config.cfg" ]; then
+	printf '[VideoSettings]\n\nScreenResolution=Vector2i(1920, 1080)\n' \
+		> "$player_config_dir/player_config.cfg"
+fi
+
 test_args=("$@")
 if [ "${#test_args[@]}" -eq 0 ]; then
 	test_args=("-a" "test")
