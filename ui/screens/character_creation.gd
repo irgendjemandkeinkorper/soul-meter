@@ -52,6 +52,8 @@ var _summary_lbl: Label
 var _eyebrow_lbl: Label
 var _ancestry_art: TextureRect
 var _ancestry_art_fallback: Label
+var _identity_portrait: TextureRect
+var _identity_portrait_fallback: Label
 var _attribute_bars: Dictionary = {}
 var _attribute_value_lbls: Dictionary = {}
 var _skill_pct_lbls: Dictionary = {}
@@ -187,6 +189,7 @@ func _build_ancestry_page() -> Control:
 	_ancestry_art.custom_minimum_size = Vector2(360, 360)
 	_ancestry_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_ancestry_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_ancestry_art.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_ancestry_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ancestry_art.visible = false
 	illustration.add_child(_ancestry_art)
@@ -372,6 +375,17 @@ func _build_identity_page() -> Control:
 		"PORTRAIT OF RECORD",
 		"Painterly plates are preferred. Until a plate arrives, the field likeness remains valid Registry evidence.",
 	)
+	var illustration := parts["illustration"] as VBoxContainer
+	_identity_portrait_fallback = parts["illustration_body"] as Label
+	_identity_portrait = TextureRect.new()
+	_identity_portrait.custom_minimum_size = Vector2(360, 360)
+	_identity_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_identity_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_identity_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_identity_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_identity_portrait.visible = false
+	illustration.add_child(_identity_portrait)
+	illustration.move_child(_identity_portrait, 1)
 	var form := parts["form"] as VBoxContainer
 	var portrait_grid := GridContainer.new()
 	portrait_grid.columns = 4
@@ -406,6 +420,7 @@ func _build_identity_page() -> Control:
 	focusables.append(_epithet_edit)
 	focusables.append(flaw_edit)
 	_page_focusables[STEP_IDENTITY] = focusables
+	_update_identity_portrait()
 	return parts["page"] as Control
 
 
@@ -521,8 +536,21 @@ func _update_ancestry_illustration() -> void:
 	)
 
 
+func _update_identity_portrait() -> void:
+	if _identity_portrait == null:
+		return
+	var portrait_path: String = ChargenArtResolverScript.portrait_path(_likeness_id)
+	var portrait_resource: Resource = load(portrait_path)
+	_identity_portrait.texture = (
+		portrait_resource as Texture2D if portrait_resource is Texture2D else null
+	)
+	_identity_portrait.visible = _identity_portrait.texture != null
+	_identity_portrait_fallback.visible = not _identity_portrait.visible
+
+
 func _on_likeness_pressed(likeness_id: String, pressed_btn: Button) -> void:
 	_likeness_id = likeness_id
+	_update_identity_portrait()
 	for btn: Button in _likeness_buttons:
 		btn.set_pressed_no_signal(btn == pressed_btn)
 	_refresh_summary_and_gate()

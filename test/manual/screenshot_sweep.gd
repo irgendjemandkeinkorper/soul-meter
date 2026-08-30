@@ -55,6 +55,40 @@ func _shoot(scene_path: String, shot_name: String, frames: int = 25) -> void:
 		(scene as CanvasItem).hide()
 
 
+## The chargen wizard is paged — photograph the illustrated pages a single
+## cold-load shot (02_chargen, the Ancestry page) cannot show.
+func test_chargen_wizard_pages() -> void:
+	var runner := scene_runner("res://ui/screens/character_creation.tscn")
+	var screen := runner.scene() as CharacterCreationScreen
+	screen.theme = ThemeBuilder.build()
+	await runner.simulate_frames(25)
+	screen._on_ancestry_pressed(str(ChargenData.ANCESTRIES[4].get("id", "")))
+	await runner.simulate_frames(5)
+	await _capture_current(runner, screen, "02a_chargen_ancestry")
+	screen._show_step(CharacterCreationScreen.STEP_ATTRIBUTES)
+	await runner.simulate_frames(5)
+	await _capture_current(runner, screen, "02b_chargen_attributes")
+	screen._show_step(CharacterCreationScreen.STEP_IDENTITY)
+	await runner.simulate_frames(5)
+	await _capture_current(runner, screen, "02c_chargen_identity")
+	if screen is CanvasItem:
+		(screen as CanvasItem).hide()
+
+
+func _capture_current(runner: GdUnitSceneRunner, scene: Node, shot_name: String) -> void:
+	var boot_scene := scene.get_tree().current_scene
+	if boot_scene != null and boot_scene != scene:
+		boot_scene.hide()
+	await runner.simulate_frames(3)
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	var image := scene.get_viewport().get_texture().get_image()
+	image.save_png("user://qa/%s.png" % shot_name)
+	print("SHOT %s %s" % [shot_name, image.get_size()])
+	if boot_scene != null and boot_scene != scene:
+		boot_scene.show()
+
+
 func test_menus_and_screens() -> void:
 	await _shoot("res://ui/screens/main_menu.tscn", "01_main_menu")
 	await _shoot("res://ui/screens/character_creation.tscn", "02_chargen")
