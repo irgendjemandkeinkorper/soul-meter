@@ -37,6 +37,7 @@ scale = Vector2(0.46, 0.46)
 texture = ExtResource("4_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("5_ambient_motion")
+motion_kind = 0
 phase = 0.6
 period = 4.8
 
@@ -46,6 +47,7 @@ scale = Vector2(-0.46, 0.46)
 texture = ExtResource("4_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("5_ambient_motion")
+motion_kind = 0
 phase = 3.7
 period = 5.1
 
@@ -63,6 +65,7 @@ offset = Vector2(0, -46)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchWest"]
 position = Vector2(0, -8)
 shape = SubResource("bench_footprint")
+disabled = false
 
 [node name="CouncilBenchEast" type="StaticBody2D" parent="Room/CouncilChamberDressing/SolidProps"]
 position = Vector2(800, 445)
@@ -75,3 +78,4 @@ offset = Vector2(0, -46)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchEast"]
 position = Vector2(0, -8)
 shape = SubResource("bench_footprint")
+disabled = false

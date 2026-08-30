@@ -43,6 +43,7 @@ scale = Vector2(0.46, 0.46)
 texture = ExtResource("4_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("5_ambient_motion")
+motion_kind = 0
 phase = 1.8
 period = 4.9
 
@@ -60,6 +61,7 @@ offset = Vector2(0, -115)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesNorthwest"]
 position = Vector2(0, -9)
 shape = SubResource("ledger_box_footprint")
+disabled = false
 
 [node name="LedgerBoxesSouthwest" type="StaticBody2D" parent="Room/RegistryStacksDressing/SolidProps"]
 position = Vector2(95, 500)
@@ -72,6 +74,7 @@ offset = Vector2(0, -115)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesSouthwest"]
 position = Vector2(0, -9)
 shape = SubResource("ledger_box_footprint")
+disabled = false
 
 [node name="LedgerBoxesNortheast" type="StaticBody2D" parent="Room/RegistryStacksDressing/SolidProps"]
 position = Vector2(865, 235)
@@ -84,6 +87,7 @@ offset = Vector2(0, -115)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesNortheast"]
 position = Vector2(0, -9)
 shape = SubResource("ledger_box_footprint")
+disabled = false
 
 [node name="LedgerBoxesSoutheast" type="StaticBody2D" parent="Room/RegistryStacksDressing/SolidProps"]
 position = Vector2(865, 500)
@@ -96,3 +100,4 @@ offset = Vector2(0, -115)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesSoutheast"]
 position = Vector2(0, -9)
 shape = SubResource("ledger_box_footprint")
+disabled = false

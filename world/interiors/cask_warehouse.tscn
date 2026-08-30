@@ -41,23 +41,25 @@ scale = Vector2(0.5, 0.5)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("6_ambient_motion")
+motion_kind = 0
 phase = 1.1
 period = 4.3
 
 [node name="SolidProps" type="Node2D" parent="Room/CaskWarehouseDressing"]
 y_sort_enabled = true
 
-[node name="LedgerCratesNorthwest" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
+[node name="CaskCratesNorthwest" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
 position = Vector2(100, 230)
 
-[node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/LedgerCratesNorthwest"]
+[node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNorthwest"]
 scale = Vector2(0.48, 0.48)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CaskWarehouseDressing/SolidProps/LedgerCratesNorthwest"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNorthwest"]
 position = Vector2(0, -10)
 shape = SubResource("crate_footprint")
+disabled = false
 
 [node name="CaskCratesNortheast" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
 position = Vector2(860, 230)
@@ -70,6 +72,7 @@ offset = Vector2(0, -115)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNortheast"]
 position = Vector2(0, -10)
 shape = SubResource("crate_footprint")
+disabled = false
 
 [node name="SealedPotSoutheast" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
 position = Vector2(840, 500)
@@ -82,6 +85,7 @@ offset = Vector2(0, -92)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/CaskWarehouseDressing/SolidProps/SealedPotSoutheast"]
 position = Vector2(0, -8)
 shape = SubResource("pot_footprint")
+disabled = false
 
 [node name="SupplyCrate" parent="." instance=ExtResource("2_chest")]
 position = Vector2(150, 500)

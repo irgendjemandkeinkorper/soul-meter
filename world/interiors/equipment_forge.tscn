@@ -57,6 +57,7 @@ offset = Vector2(0, -115)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeStockCrates"]
 position = Vector2(0, -10)
 shape = SubResource("crate_footprint")
+disabled = false
 
 [node name="ForgeBrazier" type="StaticBody2D" parent="Room/EquipmentForgeDressing/SolidProps"]
 position = Vector2(825, 325)
@@ -74,6 +75,7 @@ flicker_strength = 0.06
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeBrazier"]
 position = Vector2(0, -10)
 shape = SubResource("brazier_footprint")
+disabled = false
 
 [node name="FinishedGoodsCrates" type="StaticBody2D" parent="Room/EquipmentForgeDressing/SolidProps"]
 position = Vector2(835, 500)
@@ -86,6 +88,7 @@ offset = Vector2(0, -115)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Room/EquipmentForgeDressing/SolidProps/FinishedGoodsCrates"]
 position = Vector2(0, -9)
 shape = SubResource("crate_footprint")
+disabled = false
 
 [node name="RivetCrate" parent="." instance=ExtResource("2_chest")]
 position = Vector2(150, 500)
