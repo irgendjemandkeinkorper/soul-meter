@@ -1,7 +1,17 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="2_chest"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="3_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-brazier-iron--street.png" id="4_brazier"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/objects/dom-lever-iron--off.png" id="5_iron_tool"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="6_ambient_motion"]
+
+[sub_resource type="RectangleShape2D" id="crate_footprint"]
+size = Vector2(58, 28)
+
+[sub_resource type="RectangleShape2D" id="brazier_footprint"]
+size = Vector2(42, 24)
 
 [node name="EquipmentForgeInterior" type="Node2D"]
 
@@ -10,6 +20,72 @@ building_name = "Equipment Forge"
 exit_transition_id = &"equipment_forge_exit"
 floor_color = Color(0.1, 0.12, 0.15, 1)
 accent_color = Color(0.46, 0.59, 0.72, 1)
+
+; PROVISIONAL owner-balance surface: tune forge props without narrowing the center aisle.
+[node name="EquipmentForgeDressing" type="Node2D" parent="Room"]
+editor_description = "PROVISIONAL owner-balance surface: preserve access to the counter, supply crate, and exit."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="Room/EquipmentForgeDressing"]
+y_sort_enabled = true
+
+[node name="WallToolWest" type="Sprite2D" parent="Room/EquipmentForgeDressing/SoftDetails"]
+position = Vector2(250, 170)
+rotation = -0.35
+scale = Vector2(0.32, 0.32)
+texture = ExtResource("5_iron_tool")
+offset = Vector2(0, -104)
+
+[node name="WallToolEast" type="Sprite2D" parent="Room/EquipmentForgeDressing/SoftDetails"]
+position = Vector2(710, 170)
+rotation = 0.35
+scale = Vector2(-0.32, 0.32)
+texture = ExtResource("5_iron_tool")
+offset = Vector2(0, -104)
+
+[node name="SolidProps" type="Node2D" parent="Room/EquipmentForgeDressing"]
+y_sort_enabled = true
+
+[node name="ForgeStockCrates" type="StaticBody2D" parent="Room/EquipmentForgeDressing/SolidProps"]
+position = Vector2(100, 255)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeStockCrates"]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeStockCrates"]
+position = Vector2(0, -10)
+shape = SubResource("crate_footprint")
+
+[node name="ForgeBrazier" type="StaticBody2D" parent="Room/EquipmentForgeDressing/SolidProps"]
+position = Vector2(825, 325)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeBrazier"]
+scale = Vector2(0.52, 0.52)
+texture = ExtResource("4_brazier")
+offset = Vector2(0, -105)
+script = ExtResource("6_ambient_motion")
+motion_kind = 1
+phase = 2.4
+period = 2.7
+flicker_strength = 0.06
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeBrazier"]
+position = Vector2(0, -10)
+shape = SubResource("brazier_footprint")
+
+[node name="FinishedGoodsCrates" type="StaticBody2D" parent="Room/EquipmentForgeDressing/SolidProps"]
+position = Vector2(835, 500)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/EquipmentForgeDressing/SolidProps/FinishedGoodsCrates"]
+scale = Vector2(-0.46, 0.46)
+texture = ExtResource("3_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/EquipmentForgeDressing/SolidProps/FinishedGoodsCrates"]
+position = Vector2(0, -9)
+shape = SubResource("crate_footprint")
 
 [node name="RivetCrate" parent="." instance=ExtResource("2_chest")]
 position = Vector2(150, 500)

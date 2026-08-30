@@ -1,7 +1,21 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="2_chest"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-moss-statue-fragment--decorative.png" id="3_statue_fragment"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="4_offering_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-clay-pot--decorative.png" id="5_votive_pot"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="6_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="7_ambient_motion"]
+
+[sub_resource type="RectangleShape2D" id="statue_footprint"]
+size = Vector2(48, 24)
+
+[sub_resource type="RectangleShape2D" id="crate_footprint"]
+size = Vector2(56, 26)
+
+[sub_resource type="RectangleShape2D" id="pot_footprint"]
+size = Vector2(30, 18)
 
 [node name="ShrineUndercroftInterior" type="Node2D"]
 
@@ -10,6 +24,89 @@ building_name = "Shrine Undercroft"
 exit_transition_id = &"shrine_undercroft_exit"
 floor_color = Color(0.08, 0.15, 0.17, 1)
 accent_color = Color(0.13, 0.55, 0.65, 1)
+
+; PROVISIONAL owner-balance surface: keep offerings at the edges and the ritual aisle open.
+[node name="ShrineUndercroftDressing" type="Node2D" parent="Room"]
+editor_description = "PROVISIONAL owner-balance surface: preserve access to the offering box, counter, and exit."
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="Room/ShrineUndercroftDressing"]
+y_sort_enabled = true
+
+[node name="VotivePot" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SoftDetails"]
+position = Vector2(270, 180)
+scale = Vector2(0.34, 0.34)
+texture = ExtResource("5_votive_pot")
+offset = Vector2(0, -92)
+
+[node name="UndercroftLanternWest" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SoftDetails"]
+position = Vector2(350, 160)
+scale = Vector2(0.44, 0.44)
+texture = ExtResource("6_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("7_ambient_motion")
+phase = 0.9
+period = 4.6
+
+[node name="UndercroftLanternEast" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SoftDetails"]
+position = Vector2(610, 160)
+scale = Vector2(-0.44, 0.44)
+texture = ExtResource("6_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("7_ambient_motion")
+phase = 3.5
+period = 5.0
+
+[node name="SolidProps" type="Node2D" parent="Room/ShrineUndercroftDressing"]
+y_sort_enabled = true
+
+[node name="StatueFragmentWest" type="StaticBody2D" parent="Room/ShrineUndercroftDressing/SolidProps"]
+position = Vector2(105, 285)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/StatueFragmentWest"]
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("3_statue_fragment")
+offset = Vector2(0, -108)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/ShrineUndercroftDressing/SolidProps/StatueFragmentWest"]
+position = Vector2(0, -10)
+shape = SubResource("statue_footprint")
+
+[node name="StatueFragmentEast" type="StaticBody2D" parent="Room/ShrineUndercroftDressing/SolidProps"]
+position = Vector2(855, 285)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/StatueFragmentEast"]
+scale = Vector2(-0.38, 0.38)
+texture = ExtResource("3_statue_fragment")
+offset = Vector2(0, -108)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/ShrineUndercroftDressing/SolidProps/StatueFragmentEast"]
+position = Vector2(0, -10)
+shape = SubResource("statue_footprint")
+
+[node name="StoredOfferings" type="StaticBody2D" parent="Room/ShrineUndercroftDressing/SolidProps"]
+position = Vector2(830, 500)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/StoredOfferings"]
+scale = Vector2(-0.44, 0.44)
+texture = ExtResource("4_offering_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/ShrineUndercroftDressing/SolidProps/StoredOfferings"]
+position = Vector2(0, -9)
+shape = SubResource("crate_footprint")
+
+[node name="SealedVotivePot" type="StaticBody2D" parent="Room/ShrineUndercroftDressing/SolidProps"]
+position = Vector2(735, 500)
+
+[node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/SealedVotivePot"]
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("5_votive_pot")
+offset = Vector2(0, -92)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Room/ShrineUndercroftDressing/SolidProps/SealedVotivePot"]
+position = Vector2(0, -8)
+shape = SubResource("pot_footprint")
 
 [node name="OfferingBox" parent="." instance=ExtResource("2_chest")]
 position = Vector2(150, 500)
