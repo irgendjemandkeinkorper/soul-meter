@@ -13,10 +13,16 @@ func before_test() -> void:
 
 func after_test() -> void:
 	for saved: Dictionary in _silenced_controls:
-		var control := saved.get("control") as Control
-		if is_instance_valid(control):
-			control.visible = bool(saved.get("visible", true))
-			control.mouse_filter = int(saved.get("mouse_filter", Control.MOUSE_FILTER_STOP))
+		# Validity BEFORE the cast: gdUnit's memory observer can free the runner
+		# scene (and these controls) during input-processing awaits, and casting
+		# a freed object raises a runtime error gdUnit records as a failure —
+		# the long-standing CI-headless-only failure of this suite.
+		var control_value: Variant = saved.get("control")
+		if not is_instance_valid(control_value):
+			continue
+		var control := control_value as Control
+		control.visible = bool(saved.get("visible", true))
+		control.mouse_filter = int(saved.get("mouse_filter", Control.MOUSE_FILTER_STOP))
 	if not _used_global_battle:
 		return
 	Battle._release_battlefield_ground()
