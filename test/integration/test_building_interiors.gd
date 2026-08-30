@@ -8,7 +8,10 @@ const FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-f
 const WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
 const SHARED_INTERIOR_SCENE_PATH := "res://world/interiors/building_interior.tscn"
 const MAX_SOLID_PROP_FOOTPRINT_SIZE := Vector2(120.0, 48.0)
-const MAX_AMBIENT_VILLAGERS_BY_SCENE: Dictionary = {
+## Wave AD gate finding: the occupant contract must pin EXACT counts, not just a
+## ceiling — a `<=` alone lets every staffed room silently lose all its
+## occupants. Rooms absent from this map must have zero.
+const AMBIENT_VILLAGERS_BY_SCENE: Dictionary = {
 	"res://world/interiors/town_hall.tscn": 2,
 	"res://world/interiors/iron_companies.tscn": 2,
 	"res://world/interiors/equipment_shop.tscn": 1,
@@ -16,6 +19,14 @@ const MAX_AMBIENT_VILLAGERS_BY_SCENE: Dictionary = {
 	"res://world/interiors/trial_hall.tscn": 2,
 	"res://world/interiors/garrison_yard.tscn": 2,
 }
+## Interiors use a two-layer dressing variant of the field pattern: floor
+## detail is baked into each room's painterly backdrop, so GroundDetails is
+## optional indoors (when present it must keep the field contract — z -2, not
+## y-sorted, no collision). SoftDetails and SolidProps stay mandatory, and no
+## unnamed layers may ride along.
+const ALLOWED_DRESSING_LAYERS: Array[String] = [
+	"GroundDetails", "SoftDetails", "SolidProps", "AmbientOccupants",
+]
 
 var _game_state_before: Dictionary = {}
 var _reputation_before: Dictionary = {}
@@ -161,6 +172,38 @@ func test_all_registered_concrete_interiors_meet_dressing_contract() -> void:
 		if dressing == null:
 			continue
 
+		for layer: Node in dressing.get_children():
+			assert_bool(ALLOWED_DRESSING_LAYERS.has(String(layer.name))) \
+				.override_failure_message(
+					"Dressing layer %s is not one of %s: %s"
+					% [layer.name, ALLOWED_DRESSING_LAYERS, scene_path]
+				) \
+				.is_true()
+
+		var ground_details := dressing.get_node_or_null("GroundDetails") as Node2D
+		if ground_details != null:
+			assert_int(ground_details.z_index) \
+				.override_failure_message("GroundDetails must sit at z -2: %s" % scene_path) \
+				.is_equal(-2)
+			assert_bool(ground_details.y_sort_enabled) \
+				.override_failure_message("GroundDetails must not y-sort: %s" % scene_path) \
+				.is_false()
+			assert_array(ground_details.find_children("*", "CollisionObject2D", true, false)) \
+				.override_failure_message("GroundDetails must not collide: %s" % scene_path) \
+				.is_empty()
+
+		var soft_details := dressing.get_node_or_null("SoftDetails") as Node2D
+		assert_object(soft_details) \
+			.override_failure_message("Dressing has no SoftDetails layer: %s" % scene_path) \
+			.is_not_null()
+		if soft_details != null:
+			assert_bool(soft_details.y_sort_enabled) \
+				.override_failure_message("SoftDetails must y-sort: %s" % scene_path) \
+				.is_true()
+			assert_array(soft_details.find_children("*", "CollisionObject2D", true, false)) \
+				.override_failure_message("SoftDetails props must not collide: %s" % scene_path) \
+				.is_empty()
+
 		var solid_props := dressing.get_node_or_null("SolidProps") as Node2D
 		assert_object(solid_props) \
 			.override_failure_message("Dressing has no SolidProps layer: %s" % scene_path) \
@@ -183,13 +226,13 @@ func test_all_registered_concrete_interiors_meet_dressing_contract() -> void:
 			.is_greater_equal(1)
 
 		var villagers := _ambient_villagers_in(interior)
-		var maximum_villagers := int(MAX_AMBIENT_VILLAGERS_BY_SCENE.get(scene_path, 0))
+		var expected_villagers := int(AMBIENT_VILLAGERS_BY_SCENE.get(scene_path, 0))
 		assert_int(villagers.size()) \
 			.override_failure_message(
-				"Interior has %d ambient villagers; maximum is %d: %s"
-				% [villagers.size(), maximum_villagers, scene_path]
+				"Interior has %d ambient villagers; expected exactly %d: %s"
+				% [villagers.size(), expected_villagers, scene_path]
 			) \
-			.is_less_equal(maximum_villagers)
+			.is_equal(expected_villagers)
 		if villagers.is_empty():
 			continue
 

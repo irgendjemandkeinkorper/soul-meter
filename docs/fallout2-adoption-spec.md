@@ -569,6 +569,33 @@ payloads rather than UI combat arithmetic.
   (test_y_sort convention; dorthkor's aligned too), townsfolk edge-sprite test now
   pins the painterly path root. Suite **1033/0**; sweep 11/0.
 
+- **Wave AA — field-scene lived-in dressing — SHIPPED 2026-08-30** (graphics
+  campaign, "townscape more lived in" extended to the field scenes). The last two
+  undressed field scenes got the three-layer dressing contract
+  (GroundDetails/SoftDetails/SolidProps + root y-sort): Dorthkor Road (memorial
+  props with WOUND_BREATH, two WayfareMender road travelers), Loamroot wilds
+  (bloom breathing, restrained props, at-most-one forager). New
+  `test_dorthkor_road.gd` + a dressing contract in `test_field_room.gd`. Gate r1
+  REVISE (traveler movement flag was global) → per-traveler moved asserts on
+  physics ticks → r2 **PROCEED**. Suite 1033/0; sweep 11/0.
+
+- **Wave AD — all 18 remaining interiors furnished — SHIPPED 2026-08-30**
+  (graphics campaign, lived-in pass moved indoors). Every registered concrete
+  interior except the shared base now carries a `<Room>Dressing` with the
+  **two-layer interior variant** of the field pattern — floor detail is baked
+  into each room's painterly backdrop, so `GroundDetails` is optional indoors
+  (when present it must keep z −2 / no y-sort / no collision); `SoftDetails`
+  (y-sorted, non-colliding) and `SolidProps` (StaticBody2D footprints ≤120×48,
+  enabled, clear of spawns/door corridors) are mandatory; ≥1 AmbientPropMotion
+  sprite per room. Ambient occupants EXACTLY 2/2/1/1/2/2 in
+  town_hall/iron_companies/equipment_shop/registry_archive/trial_hall/
+  garrison_yard, zero everywhere else (homes, storerooms, council chamber,
+  forge stay empty by design). Registry-wide contract test in
+  `test_building_interiors.gd` enforces the layer whitelist, the SoftDetails/
+  GroundDetails contracts, and exact occupant counts (gate r1 REVISE findings:
+  layer contract untested, occupant check vacuous — both fixed). All placements
+  PROVISIONAL. Suite 1034/0; sweep 11/0.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
