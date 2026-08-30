@@ -1,16 +1,95 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="3_chest"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="4_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-notice-board--decorative.png" id="5_notice_board"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="6_lantern"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="7_ambient_motion"]
+[ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="8_ambient_villager"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-a/crowd-laborer-a--idle--se--f00.png" id="9_laborer"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-dockworker-a/crowd-dockworker-a--idle--se--f00.png" id="10_dockworker"]
+
+[sub_resource type="RectangleShape2D" id="supply_footprint"]
+size = Vector2(58, 28)
 
 [node name="IronCompaniesInterior" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Iron Companies"
 exit_transition_id = &"iron_companies_exit"
 floor_color = Color(0.12, 0.13, 0.16, 1)
 accent_color = Color(0.52, 0.55, 0.62, 1)
+
+; PROVISIONAL owner-balance surface: keep the center aisle and garrison door lane clear.
+[node name="IronCompaniesDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="IronCompaniesDressing"]
+y_sort_enabled = true
+
+[node name="CompanyOrders" type="Sprite2D" parent="IronCompaniesDressing/SoftDetails"]
+position = Vector2(115, 220)
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("5_notice_board")
+offset = Vector2(0, -106)
+
+[node name="MusterLantern" type="Sprite2D" parent="IronCompaniesDressing/SoftDetails"]
+position = Vector2(480, 180)
+scale = Vector2(0.56, 0.56)
+texture = ExtResource("6_lantern")
+offset = Vector2(0, -107)
+script = ExtResource("7_ambient_motion")
+motion_kind = 0
+phase = 2.0
+
+[node name="SolidProps" type="Node2D" parent="IronCompaniesDressing"]
+y_sort_enabled = true
+
+[node name="RivetStoresWest" type="StaticBody2D" parent="IronCompaniesDressing/SolidProps"]
+position = Vector2(105, 455)
+
+[node name="Sprite2D" type="Sprite2D" parent="IronCompaniesDressing/SolidProps/RivetStoresWest"]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("4_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="IronCompaniesDressing/SolidProps/RivetStoresWest"]
+position = Vector2(0, -9)
+shape = SubResource("supply_footprint")
+
+[node name="BindingStoresEast" type="StaticBody2D" parent="IronCompaniesDressing/SolidProps"]
+position = Vector2(860, 500)
+
+[node name="Sprite2D" type="Sprite2D" parent="IronCompaniesDressing/SolidProps/BindingStoresEast"]
+scale = Vector2(-0.45, 0.45)
+texture = ExtResource("4_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="IronCompaniesDressing/SolidProps/BindingStoresEast"]
+position = Vector2(0, -9)
+shape = SubResource("supply_footprint")
+
+[node name="AmbientOccupants" type="Node2D" parent="IronCompaniesDressing"]
+y_sort_enabled = true
+
+[node name="CompanyLaborer" parent="IronCompaniesDressing/AmbientOccupants" instance=ExtResource("8_ambient_villager")]
+position = Vector2(245, 350)
+villager_texture = ExtResource("9_laborer")
+local_waypoints = PackedVector2Array(0, 0, 72, 4, 58, 62, 8, 54)
+wander_speed = 16.0
+pause_duration = 2.0
+initial_pause = 0.4
+
+[node name="CompanyDockworker" parent="IronCompaniesDressing/AmbientOccupants" instance=ExtResource("8_ambient_villager")]
+position = Vector2(570, 420)
+villager_texture = ExtResource("10_dockworker")
+local_waypoints = PackedVector2Array(0, 0, 68, -10, 92, 34, 24, 48)
+wander_speed = 15.0
+pause_duration = 2.4
+initial_pause = 1.2
 
 [node name="GarrisonYardDoor" parent="." instance=ExtResource("2_door")]
 position = Vector2(800, 40)

@@ -1,11 +1,88 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="2_crates"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-brazier-iron--street.png" id="3_brazier"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-notice-board--decorative.png" id="4_notice_board"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="5_ambient_motion"]
+[ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="6_ambient_villager"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="7_guard_a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-dockworker-a/crowd-dockworker-a--idle--se--f00.png" id="8_guard_b"]
+
+[sub_resource type="RectangleShape2D" id="supply_footprint"]
+size = Vector2(58, 28)
+
+[sub_resource type="RectangleShape2D" id="brazier_footprint"]
+size = Vector2(42, 24)
 
 [node name="GarrisonYardInterior" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Garrison Yard"
 exit_transition_id = &"garrison_yard_exit"
 floor_color = Color(0.12, 0.13, 0.16, 1)
 accent_color = Color(0.52, 0.55, 0.62, 1)
+
+; PROVISIONAL owner-balance surface: maintain an open drill lane through the room center.
+[node name="GarrisonYardDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="GarrisonYardDressing"]
+y_sort_enabled = true
+
+[node name="DutyRoster" type="Sprite2D" parent="GarrisonYardDressing/SoftDetails"]
+position = Vector2(110, 220)
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("4_notice_board")
+offset = Vector2(0, -106)
+
+[node name="SolidProps" type="Node2D" parent="GarrisonYardDressing"]
+y_sort_enabled = true
+
+[node name="DrillSupplies" type="StaticBody2D" parent="GarrisonYardDressing/SolidProps"]
+position = Vector2(105, 500)
+
+[node name="Sprite2D" type="Sprite2D" parent="GarrisonYardDressing/SolidProps/DrillSupplies"]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_crates")
+offset = Vector2(0, -115)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GarrisonYardDressing/SolidProps/DrillSupplies"]
+position = Vector2(0, -9)
+shape = SubResource("supply_footprint")
+
+[node name="WatchBrazier" type="StaticBody2D" parent="GarrisonYardDressing/SolidProps"]
+position = Vector2(860, 460)
+
+[node name="Sprite2D" type="Sprite2D" parent="GarrisonYardDressing/SolidProps/WatchBrazier"]
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("3_brazier")
+offset = Vector2(0, -112)
+script = ExtResource("5_ambient_motion")
+motion_kind = 1
+phase = 1.7
+period = 2.6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GarrisonYardDressing/SolidProps/WatchBrazier"]
+position = Vector2(0, -8)
+shape = SubResource("brazier_footprint")
+
+[node name="AmbientOccupants" type="Node2D" parent="GarrisonYardDressing"]
+y_sort_enabled = true
+
+[node name="YardGuardWest" parent="GarrisonYardDressing/AmbientOccupants" instance=ExtResource("6_ambient_villager")]
+position = Vector2(245, 350)
+villager_texture = ExtResource("7_guard_a")
+local_waypoints = PackedVector2Array(0, 0, 72, 4, 62, 54, 8, 48)
+wander_speed = 17.0
+pause_duration = 1.8
+initial_pause = 0.3
+
+[node name="YardGuardEast" parent="GarrisonYardDressing/AmbientOccupants" instance=ExtResource("6_ambient_villager")]
+position = Vector2(575, 420)
+villager_texture = ExtResource("8_guard_b")
+local_waypoints = PackedVector2Array(0, 0, 66, -12, 94, 36, 26, 52)
+wander_speed = 16.0
+pause_duration = 2.1
+initial_pause = 1.0
