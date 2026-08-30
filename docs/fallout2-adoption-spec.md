@@ -596,6 +596,20 @@ payloads rather than UI combat arithmetic.
   layer contract untested, occupant check vacuous — both fixed). All placements
   PROVISIONAL. Suite 1034/0; sweep 11/0.
 
+- **Wave AE — painterly inventory icons for all 22 items — SHIPPED 2026-08-30**
+  (graphics campaign; inventory/shop slots rendered blank). Root cause: the
+  Pandora→GLoot generator never emitted GLoot's `image` prototype property, so
+  `InventoryItem.get_texture()` had nothing to load. The generator now emits it
+  by pure naming convention (item slug →
+  `assets/generated/sprites/items/<slug>--icon.png`), deterministic regardless
+  of asset presence; two parallel art lanes produced all 22 256×256 painterly
+  RGBA icons (independently alpha-verified). No UI changes — `item_slot.gd`
+  already renders `item.get_texture()`. Contract in `test_generated_data.gd`:
+  exact slug-to-icon equality (gate r1 finding: prefix/suffix checks let all
+  22 share one icon), existence export-safe, loads, 256×256, real alpha.
+  Gate r2 PROCEED. Suite **1035/0**; sweep 11/0; icons confirmed rendering in
+  the inventory sweep shot.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
