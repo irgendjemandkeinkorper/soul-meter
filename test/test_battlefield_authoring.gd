@@ -149,6 +149,65 @@ func test_weather_defaults_are_valid_wheel_ids_and_start_without_warnings() -> v
 		assert_str(str(weather.get("element_id", ""))).is_equal(expected_element)
 
 
+## Gate r1 residual closure: play a REAL authored board end-to-end — legal
+## movement (the same move_query/submit path the pointer uses) closing the
+## deployment gap into melee, then strikes to victory. bog-wight also carries
+## the authored molm weather, so the live weather path is exercised too.
+func test_bog_wight_board_supports_movement_into_melee_victory() -> void:
+	Battle.start(&"bog-wight")
+	assert_bool(Battle.controller.battlefield is GridBattlefieldModel).is_true()
+	Battle.enemies[0].hp = 1
+
+	var actions_taken := 0
+	while not Battle.ended and actions_taken < 200:
+		actions_taken += 1
+		if Battle.use_action(&"strike"):
+			continue
+		if _step_active_ally_toward(Battle.enemies[0]):
+			continue
+		Battle.end_turn()
+
+	assert_bool(Battle.ended).override_failure_message(
+		"battle did not resolve within 200 actions on the authored bog-wight board"
+	).is_true()
+	assert_str(String(Battle.last_result.outcome_id)).is_equal("slain")
+
+
+## Moves the active ally one legal move toward the target using the controller's
+## movement snapshot (the pointer UI's own data). Returns false when no reachable
+## destination closes the distance, so the caller ends the turn instead.
+func _step_active_ally_toward(target: BattleActor) -> bool:
+	var snapshot: Dictionary = Battle.controller.snapshot()
+	var movement: Dictionary = snapshot.get("movement", {})
+	var reachable: Array = movement.get("reachable", [])
+	if reachable.is_empty():
+		return false
+	var model := Battle.controller.battlefield as GridBattlefieldModel
+	var target_position: Dictionary = model.describe_position(model.position_of(target))
+	var target_cell: Vector2i = target_position.get("cell", Vector2i.ZERO)
+	var ally: BattleActor = Battle.current_ally()
+	if ally == null:
+		return false
+	var current_position: Dictionary = model.describe_position(model.position_of(ally))
+	var current_cell: Vector2i = current_position.get("cell", Vector2i.ZERO)
+	var current_distance: int = (
+		absi(current_cell.x - target_cell.x) + absi(current_cell.y - target_cell.y)
+	)
+	var best_destination: StringName = &""
+	var best_distance: int = current_distance
+	for entry: Variant in reachable:
+		var destination: StringName = (entry as Dictionary).get("destination", &"")
+		var described: Dictionary = model.describe_position(destination)
+		var cell: Vector2i = described.get("cell", Vector2i.ZERO)
+		var distance: int = absi(cell.x - target_cell.x) + absi(cell.y - target_cell.y)
+		if distance < best_distance:
+			best_distance = distance
+			best_destination = destination
+	if best_destination == &"":
+		return false
+	return Battle.use_action(&"move", -1, {"destination": best_destination})
+
+
 func _set_full_party() -> void:
 	GameState.party.clear()
 	for index: int in 5:

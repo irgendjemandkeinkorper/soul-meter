@@ -165,8 +165,8 @@ Highlights, each a real system now on `main`:
   wait semantics (#193: 50% READY_AT refund, overflow dropped, 2-wait cap), grid battlefield
   + deterministic pathing, pure `Resolution.resolve()` (forecast==resolution), six-region
   battle interface (`ui/hud/battle_interface.*` + `ui/hud/regions/*`, event-driven with
-  replay, contract frozen), deployment chart states. ⚠ Deployment PLACE writes no spawn
-  positions yet — `configure_placement()` has no caller (#202).
+  replay, contract frozen), deployment chart states. (The #202 PLACE gap was closed later —
+  `GameFlow._on_deployment_entered()` wires `configure_placement()`; issue CLOSED.)
 - **Save schema is 6** (expert rerolls + tactical envelope, #189); `equipped_slots` rides
   as an additive key (no bump; loader defaults `{}`).
 - **Tavern is a real interior scene** (`world/interiors/dom_tavern.tscn`, #199) reached via

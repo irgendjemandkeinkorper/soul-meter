@@ -397,9 +397,11 @@ payloads rather than UI combat arithmetic.
   **PROCEED_WITH_RISKS**, no blocking findings; the sharpest risk (catalog typos
   warning-skipped without test failure) was closed same-session by the invariant test.
   Accepted residuals: zone-pin fixtures erase rather than snapshot-restore the
-  `battlefield` key (safe while generated definitions never author one); no test yet
-  walks a real authored board through legal movement into combat (deployment + tactics
-  covered separately); `tools/combat_number_sweep.gd` cannot see weather defaults (it
+  `battlefield` key (safe while generated definitions never author one); ~~no test yet
+  walks a real authored board through legal movement into combat~~ — closed same
+  evening: `test_bog_wight_board_supports_movement_into_melee_victory` plays the real
+  bog-wight board (live molm weather) through snapshot-driven legal moves into melee
+  victory via the facade; `tools/combat_number_sweep.gd` cannot see weather defaults (it
   is a static sweep that does not read EncounterCatalog) — before/after was
   byte-identical, recorded honestly in the table comment. ALL board dimensions, terrain
   placements, and weather picks are PROVISIONAL balance content awaiting the owner
