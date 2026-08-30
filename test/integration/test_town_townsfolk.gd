@@ -73,7 +73,6 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 		assert_str(npc.dialogue_start).is_equal(row["dialogue"]["title"])
 		assert_str(str(npc.get_meta(&"portrait_id", ""))).is_equal(row["portrait"]["id"])
 		assert_bool(npc.is_in_group(TownNpcSpawner.GENERATED_GROUP)).is_true()
-
 		var sprite := npc.get_node("Sprite2D") as Sprite2D
 		var model_name := str(npc.get_meta(&"sprite_model", ""))
 		var model_index := int(npc.get_meta(&"model_index", -1))
@@ -112,6 +111,13 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 		var anchor_models: Dictionary = model_indices_by_anchor[anchor_key]
 		assert_bool(anchor_models.has(model_index)).is_false()
 		anchor_models[model_index] = true
+
+	# Guard against a vacuous pass: the per-NPC grid assertions above only run for
+	# snapped townsfolk, so pin that snapping actually happened for a clear
+	# majority (30 spawned; the bounded snap may legitimately keep a few authored
+	# stands in dense market clusters).
+	assert_int(used_cells.size()).is_greater_equal(15)
+
 	assert_int(used_offsets.size()).is_equal(30)
 	assert_int(used_facings.size()).is_greater(1)
 	assert_int(used_idle_phases.size()).is_equal(30)

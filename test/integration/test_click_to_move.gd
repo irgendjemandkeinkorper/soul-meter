@@ -99,6 +99,8 @@ func test_click_paths_the_player_around_a_building() -> void:
 		.is_true()
 
 	var destination_world := grid.cell_to_world(destination_cell)
+	var finished_signals: Array[int] = [0]
+	controller.path_finished.connect(func() -> void: finished_signals[0] += 1)
 	var result := controller.request_move_to(destination_world)
 	assert_bool(result.get("allowed")).is_true()
 	assert_bool(controller.has_path()).is_true()
@@ -109,9 +111,12 @@ func test_click_paths_the_player_around_a_building() -> void:
 		if not controller.has_path():
 			break
 
-	assert_float(player.global_position.distance_to(destination_world)).is_less(20.0)
-	# The path is finished, not just "close enough while still queued".
+	# Wave Q: arrival is an authoritative exact snap onto the destination cell
+	# center — not merely "close enough while still queued" — and the path
+	# finishes exactly once.
+	assert_vector(player.global_position).is_equal(destination_world)
 	assert_bool(controller.has_path()).is_false()
+	assert_int(finished_signals[0]).is_equal(1)
 
 
 func test_unreachable_click_refusal_reaches_the_player_seam() -> void:

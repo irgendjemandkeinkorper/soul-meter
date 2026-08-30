@@ -186,8 +186,18 @@ func resolve_step_cell(
 	var ranked: Array[Vector2i] = neighbors_by_screen_direction(cell, screen_direction)
 	for index in range(mini(3, ranked.size())):
 		var candidate: Vector2i = ranked[index]
-		if not is_blocked_for(candidate, mover):
-			return candidate
+		if is_step_blocked(candidate, mover):
+			continue
+		# Corner-cut rule for cell-space diagonals: the body passes between the two
+		# flanking cardinals, so at least one of them must be open or a non-zero-width
+		# body wedges on the seam even though the destination cell itself is free.
+		var offset: Vector2i = candidate - cell
+		if offset.x != 0 and offset.y != 0:
+			var flank_a := Vector2i(cell.x + offset.x, cell.y)
+			var flank_b := Vector2i(cell.x, cell.y + offset.y)
+			if is_step_blocked(flank_a, mover) and is_step_blocked(flank_b, mover):
+				continue
+		return candidate
 	return null
 
 
@@ -307,6 +317,18 @@ func cell_of_occupant(occupant: Object) -> Variant:
 
 ## The one question a caller should ask: "can `mover` path through this cell?" Static geometry
 ## and dynamic occupancy are answered together, in that order, by this single method.
+## Passability for grid STEPPING and PLACEMENT (Wave Q). The iso lattice extends
+## beyond the painted ground: a cell outside the built region carries no paint and
+## no tracked occupancy, so it is OPEN — parity with the free-movement era, where
+## unpainted ground was walkable. Physics colliders still bound the world out
+## there (backed by the player's wedge recovery). Pathfinding (`find_path` /
+## `is_blocked_for`) stays region-bounded: A* cannot route through virtual cells.
+func is_step_blocked(cell: Vector2i, mover: Object = null) -> bool:
+	if not _astar.is_in_boundsv(cell):
+		return false
+	return is_blocked_for(cell, mover)
+
+
 func is_blocked_for(cell: Vector2i, mover: Object = null) -> bool:
 	if not _astar.is_in_boundsv(cell):
 		return true

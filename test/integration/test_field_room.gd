@@ -67,17 +67,23 @@ func test_player_stops_at_the_left_wall() -> void:
 	runner.simulate_action_press("move_left")
 	# Long enough to reach the wall from the scene's starting position.
 	await runner.simulate_frames(2000)
-	var at_boundary := player.global_position.x
-	await runner.simulate_frames(30)
 	runner.simulate_action_release("move_left")
+	# Wave Q: at a physics wall the nav grid doesn't know about, held movement
+	# cycles wedge-recovery (advance, stall, snap back to the step origin). After
+	# release, one stuck-threshold window settles the last cycle.
+	await runner.simulate_frames(60)
 
 	# Derive the legal center position from the actual scene colliders instead of
 	# baking in dimensions that change when the blockout or player art changes.
 	var wall_face_x := left_wall.global_position.x + wall_shape.size.x / 2.0
 	var player_half_width := player_rect.size.x / 2.0
 	var legal_min_x := wall_face_x + player_half_width
+	# The wall is never clipped through — including by wedge-recovery snaps.
 	assert_float(player.global_position.x).is_greater_equal(legal_min_x - 1.0)
-	assert_float(player.global_position.x).is_equal_approx(at_boundary, 1.0)
+	# And the player comes to a genuine rest instead of jittering forever.
+	var settled_position: Vector2 = player.global_position
+	await runner.simulate_frames(30)
+	assert_vector(player.global_position).is_equal(settled_position)
 
 
 func test_npc_talk_prompt_only_shows_when_player_is_in_range() -> void:
@@ -260,3 +266,36 @@ func _find_child_by_type(parent: Node, type_name: String) -> Node:
 		if res != null:
 			return res
 	return null
+
+
+func test_wedged_keyboard_step_recovers_to_the_origin_cell_center() -> void:
+	var runner := scene_runner("res://world/test_room.tscn")
+	var player := runner.find_child("Player", true, false) as Node2D
+	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
+	# Let the deferred rest_on_grid normalization land before sampling the origin.
+	await runner.simulate_frames(3)
+	var origin_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+	var origin_center: Vector2 = ground.to_global(ground.map_to_local(origin_cell))
+
+	# A physics-only obstacle the nav grid knows nothing about (not painted, not a
+	# nav_blocker): resolve_step_cell will approve the step, then collision holds
+	# the body short of the target center — the wedge the recovery exists for.
+	var wall := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = Vector2(16.0, 220.0)
+	shape.shape = rectangle
+	wall.add_child(shape)
+	wall.global_position = origin_center + Vector2(28.0, 0.0)
+	runner.scene().add_child(wall)
+	await runner.simulate_frames(1)
+
+	runner.simulate_action_press("move_right")
+	await runner.simulate_frames(90)
+	runner.simulate_action_release("move_right")
+	# Any in-flight wedge cycle needs one stuck-threshold window to recover.
+	await runner.simulate_frames(60)
+
+	assert_bool(bool(player.get("_has_keyboard_step_target"))).is_false()
+	assert_vector(player.global_position).is_equal(origin_center)
+	wall.queue_free()

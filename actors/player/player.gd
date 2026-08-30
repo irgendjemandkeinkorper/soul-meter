@@ -47,6 +47,16 @@ var _last_footstep_index := -1
 var _footstep_rng := RandomNumberGenerator.new()
 var _has_keyboard_step_target: bool = false
 var _keyboard_step_target: Vector2 = Vector2.ZERO
+var _keyboard_step_origin: Vector2 = Vector2.ZERO
+var _keyboard_step_stuck_time: float = 0.0
+
+## A grid step whose body makes less than this much progress per second is wedged
+## (physics can hold the body short of an open cell — see ClickMoveController's
+## STUCK_SPEED_EPSILON note about non-zero-width bodies).
+const STEP_STUCK_SPEED_EPSILON: float = 12.0
+## How long a wedged step may stall before recovery snaps the player back to the
+## step's origin center and clears the target.
+const STEP_STUCK_TIME_THRESHOLD: float = 0.35
 
 
 func _ready() -> void:
@@ -58,6 +68,9 @@ func _ready() -> void:
 	camera.position_smoothing_speed = 7.0
 	_footstep_rng.randomize()
 	_click_controller.move_refused.connect(func(refusal: Dictionary) -> void: move_refused.emit(refusal))
+	# Deferred so sibling TileMapLayers are ready; normalizes authored spawn points
+	# onto the grid the same way loaded positions are.
+	rest_on_grid.call_deferred()
 
 
 func _physics_process(delta: float) -> void:
@@ -116,7 +129,28 @@ func _physics_process(delta: float) -> void:
 			grid,
 			keyboard_direction
 		)
+	elif target_is_keyboard_step:
+		_track_step_wedge(delta)
 	_update_footsteps(direction)
+
+
+## Bounded no-progress recovery for keyboard steps: `resolve_step_cell` only proves the
+## destination CELL is open — a physics body (a dynamic actor that arrived after the
+## occupancy sync, or a corner seam) can still hold this body short of the center
+## forever. Click paths already recover via ClickMoveController's stuck tracking;
+## this is the keyboard equivalent. Recovery snaps back to the step's origin center
+## (at most one cell away, and open a moment ago) so the player always rests on-grid.
+func _track_step_wedge(delta: float) -> void:
+	if get_last_motion().length() > STEP_STUCK_SPEED_EPSILON * delta:
+		_keyboard_step_stuck_time = 0.0
+		return
+	_keyboard_step_stuck_time += delta
+	if _keyboard_step_stuck_time < STEP_STUCK_TIME_THRESHOLD:
+		return
+	global_position = _keyboard_step_origin
+	velocity = Vector2.ZERO
+	_has_keyboard_step_target = false
+	_keyboard_step_stuck_time = 0.0
 
 
 func _begin_keyboard_step(grid: IsoGrid, screen_direction: Vector2) -> void:
@@ -125,8 +159,24 @@ func _begin_keyboard_step(grid: IsoGrid, screen_direction: Vector2) -> void:
 	var resolved_cell: Variant = grid.resolve_step_cell(current_cell, screen_direction, self)
 	if resolved_cell == null:
 		return
+	# The exact position the step began from — NOT the computed cell center. At a
+	# wedge the body sits between centers and world_to_cell can identify a cell
+	# whose center lies past the obstacle; returning to where the body actually
+	# stood is the only recovery position guaranteed physically legal.
+	_keyboard_step_origin = global_position
 	_keyboard_step_target = grid.cell_to_world(resolved_cell as Vector2i)
 	_has_keyboard_step_target = true
+	_keyboard_step_stuck_time = 0.0
+
+
+## Normalizes the avatar onto the movement grid (Wave Q: the player rests on cell
+## centers). Called deferred from _ready and after SaveGame applies a loaded
+## position — a save made mid-step stores an off-center position, and without this
+## the player would rest between cells until the next move. No-grid scenes and
+## positions with no open cell nearby keep the exact stored placement
+## (GridPlacement's bounded-snap contract).
+func rest_on_grid() -> void:
+	GridPlacement.snap_to_walkable_cell(self, global_position)
 
 
 func _complete_grid_arrival(

@@ -498,6 +498,10 @@ func apply_pending_location(scene: Node) -> void:
 		return
 	if has_pending_player_position:
 		player.global_position = pending_player_position
+		if player.has_method("rest_on_grid"):
+			# A save made mid-step stores an off-center position; normalize it back
+			# onto the movement grid (no-op in no-grid scenes — Wave Q).
+			player.call("rest_on_grid")
 	else:
 		var marker_name := "Spawn" + _pascal_case(String(pending_spawn_id))
 		var marker := _resolve_spawn_marker(scene, marker_name)

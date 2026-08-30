@@ -159,3 +159,48 @@ func _lead() -> PartyMember:
 func _wait_physics_frames(frame_count: int) -> void:
 	for _frame in frame_count:
 		await get_tree().physics_frame
+
+
+func test_teleporting_the_player_resets_the_cell_trail_to_the_new_position() -> void:
+	_set_companion_count(1)
+	var runner := scene_runner("res://world/test_room.tscn")
+	await runner.simulate_frames(3)
+	var manager := runner.find_child("PartyFollowers", true, false) as PartyFollowers
+	var player := runner.find_child("Player", true, false) as Node2D
+	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
+
+	player.global_position += Vector2(500.0, 0.0)
+	await runner.simulate_frames(2)
+
+	var player_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+	var player_center: Vector2 = ground.to_global(ground.map_to_local(player_cell))
+	# Beyond teleport_reset_distance the trail restarts at the player: the
+	# follower targets the new cell immediately instead of walking the gap.
+	assert_vector(manager.trail_target_for(0)).is_equal(player_center)
+
+
+func test_followers_without_a_navigation_grid_fall_back_to_the_player_position() -> void:
+	_set_companion_count(1)
+	var world: Node2D = auto_free(Node2D.new())
+	var player := Node2D.new()
+	player.name = "Player"
+	player.global_position = Vector2(37.0, 53.0)
+	world.add_child(player)
+	var manager := PartyFollowers.new()
+	manager.name = "PartyFollowers"
+	manager.player_path = NodePath("../Player")
+	world.add_child(manager)
+	get_tree().root.add_child(world)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+	player.global_position = Vector2(90.0, 53.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+	# No IsometricGround exists here: the cell trail is unavailable and the
+	# follower target degrades to tracking the player position directly.
+	assert_int(manager.follower_count()).is_equal(1)
+	assert_vector(manager.trail_target_for(0)).is_equal(player.global_position)
+	world.remove_child(manager)
+	manager.free()

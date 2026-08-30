@@ -40,7 +40,6 @@ static func snap_to_walkable_cell(actor: Node2D, authored_position: Vector2) -> 
 		navigation_root.find_child("Blocking", true, false) as TileMapLayer
 	)
 	grid.build(ground, blocking, PLACEMENT_CLEARANCE_CELLS, true)
-	NavOccupancy.sync(grid, navigation_root, actor)
 	var snapped: Variant = _nearby_open_cell_center(grid, actor, authored_position)
 	actor.global_position = snapped if snapped is Vector2 else authored_position
 
@@ -62,16 +61,23 @@ static func _nearby_open_cell_center(
 	actor: Node2D,
 	authored_position: Vector2
 ) -> Variant:
-	var used_rect: Rect2i = grid.get_used_rect()
+	# The iso lattice extends beyond the painted rect (`is_step_blocked`), so
+	# actors authored on unpainted ground snap to virtual lattice centers too.
+	# Actor occupancy is computed directly from the nav_blocker group — the
+	# grid's own occupancy tracking is region-bounded and this fresh grid has
+	# none — so clustered actors spread to distinct cells even off the paint.
+	var occupied_cells: Dictionary = {}
+	for node: Node in actor.get_tree().get_nodes_in_group(NavOccupancy.GROUP):
+		if node == actor or not node is Node2D:
+			continue
+		occupied_cells[grid.world_to_cell((node as Node2D).global_position)] = true
 	var authored_cell: Vector2i = grid.world_to_cell(authored_position)
 	var nearest_position: Variant = null
 	var nearest_distance_squared: float = INF
 	for y: int in range(authored_cell.y - MAX_SNAP_CELLS, authored_cell.y + MAX_SNAP_CELLS + 1):
 		for x: int in range(authored_cell.x - MAX_SNAP_CELLS, authored_cell.x + MAX_SNAP_CELLS + 1):
 			var cell := Vector2i(x, y)
-			if not used_rect.has_point(cell):
-				continue
-			if grid.is_blocked_for(cell, actor):
+			if occupied_cells.has(cell) or grid.is_step_blocked(cell, actor):
 				continue
 			var candidate: Vector2 = grid.cell_to_world(cell)
 			var distance_squared: float = candidate.distance_squared_to(authored_position)
