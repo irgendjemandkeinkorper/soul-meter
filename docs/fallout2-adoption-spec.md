@@ -408,6 +408,28 @@ payloads rather than UI combat arithmetic.
   balance pass; `EncounterCatalog._WEATHER_DEFAULTS` remains the authoring surface for
   the other nine encounters.
 
+- **Wave S — chargen wizard + painterly likeness gallery — SHIPPED 2026-08-30** (owner
+  mandate: "keep improving the graphics and developing the character creation flow";
+  rulings: illustrated multi-step wizard, painterly portrait gallery, Seven Measures
+  header stays — DRAMGID-7 planned/unratified, see `docs/chapter-one-open-questions.md`).
+  The Register of Persons is now a seven-page wizard (Ancestry → Calling → Elements →
+  Attributes → Skills → Identity → Summary) with per-step gating from `ChargenData`,
+  step rail, keyboard/gamepad focus wiring, and unchanged accept semantics (player
+  boot flow + tavern RECRUIT mode). `ChargenArtResolver` prefers painterly plates and
+  falls through to the paired crowd field sprite at the TEXTURE level (a corrupt plate
+  can never blank the gallery or the member — gate r1 required finding, fixed).
+  `ChargenData.LIKENESSES` pairs ten new plates (2 per ratified ancestry, image_gen per
+  the aesthetics bible; canon notes in `assets/generated/chargen/_contact_sheet.md`)
+  with crowd sprites; legacy unit-id likenesses keep resolving. Five ancestry panel
+  illustrations landed at `assets/generated/chargen/ancestry_<id>.png`. Screenshot
+  sweep photographs three wizard pages (`02a/02b/02c`). Suite **1034/0**; gate r1
+  REVISE (corrupt-plate fallback, production-path cancel test, real gallery-selection
+  parity — all fixed) → r2 **PROCEED**. Residuals: one teardown-time
+  `test_battle_pointer_controls` flake observed once (passed 3/3 solo + clean full
+  rerun; pre-existing suite, untouched); Vaerin/Kaan physical canon gaps are flagged
+  interpolations in the contact sheet — HUMAN canon review before treating the plates
+  as ancestry-defining.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
