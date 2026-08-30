@@ -430,6 +430,28 @@ payloads rather than UI combat arithmetic.
   interpolations in the contact sheet — HUMAN canon review before treating the plates
   as ancestry-defining.
 
+- **Wave T — painterly battle cover props — SHIPPED 2026-08-30** (graphics campaign,
+  "Battle terrain art" priority). Five 512×512 transparent painterly cover props
+  (`assets/generated/sprites/terrain/cover_{bog,road,barricade,pillar,generic}.png`,
+  image_gen per the aesthetics bible, upper-left light) now stand on authored cover
+  cells in the battle stage: `BattleStageRegion._sync_cover_props()` maintains
+  bottom-anchored TextureRects in UnitsLayer, theme-mapped per encounter prefix
+  (dorthkor→road, bog/loam→bog, jawbrace→barricade, trial→pillar, else generic) with a
+  per-theme texture cache and themed→generic fallthrough. Depth is painter's order over
+  units AND props (`_apply_painter_order()`), re-invoked from every movement-tween
+  waypoint/finish and on prop-only snapshots (gate r2 required finding, fixed); ground
+  overlays (reachable/path tints) stay in the ground pass; the legacy gold badge draws
+  only when no prop art resolves. Art existence gates are export-safe —
+  `ResourceLoader.exists(path) or FileAccess.file_exists(path)` plus post-load
+  Texture2D validation — in the stage AND retrofitted into `ChargenArtResolver`
+  (`_art_exists`), which had the identical PCK-remap gap (gate r1 required finding,
+  fixed). The screenshot sweep suppresses the modal `RewardReveal` before every capture
+  (it had photobombed two shots). Suite **1037/0**; gate r1 REVISE → r2 REVISE
+  (painter-order staleness) → r3 **PROCEED_WITH_RISKS**. Residual (non-blocking,
+  r3): the movement test asserts only the final index flip, so it would not catch
+  removal of just the intermediate-waypoint callbacks. All prop placement/sizing values
+  (`COVER_ART_TILE_WIDTHS` 1.35) are PROVISIONAL balance/feel surfaces.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
