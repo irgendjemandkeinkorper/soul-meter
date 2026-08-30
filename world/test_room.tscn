@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3]
+[gd_scene load_steps=42 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -24,12 +24,35 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/lily_large.png" id="33_lily"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/nature-kit/stump_old.png" id="34_stump"]
 [ext_resource type="Texture2D" path="res://assets/generated/backgrounds/world/loamroot-wilds-terrain-v1.png" id="35_terrain"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-grove--bloom-bed.png" id="36_ls_bloom_bed"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-grove--grass.png" id="37_ls_grass"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-grove--mud.png" id="38_ls_mud"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-grove--root-transition.png" id="39_ls_roots"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-grove--shadow.png" id="40_ls_shadow"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-grove--water.png" id="41_ls_water"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-rock--mossy.png" id="42_dom_mossy_rock"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-bush--low.png" id="43_dom_low_bush"]
+[ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="44_ambient_motion"]
+[ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="45_ambient_villager"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="46_crowd_forager"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(2000, 40)
 
 [sub_resource type="RectangleShape2D" id="shape_v"]
 size = Vector2(40, 1200)
+
+[sub_resource type="RectangleShape2D" id="shape_field_stone"]
+size = Vector2(34, 18)
+
+[sub_resource type="RectangleShape2D" id="shape_field_log"]
+size = Vector2(72, 18)
+
+[sub_resource type="RectangleShape2D" id="shape_field_arch"]
+size = Vector2(64, 20)
+
+[sub_resource type="RectangleShape2D" id="shape_field_rock"]
+size = Vector2(46, 22)
 
 [node name="TestRoom" type="Node2D"]
 y_sort_enabled = true
@@ -365,3 +388,140 @@ offset = Vector2(0, -50.596)
 position = Vector2(600, 1140)
 texture = ExtResource("30_grass")
 offset = Vector2(0, -50.596)
+
+[node name="FieldRoomDressing" type="Node2D" parent="."]
+
+[node name="GroundDetails" type="Node2D" parent="FieldRoomDressing"]
+z_index = -2
+
+[node name="NorthShadow" type="Sprite2D" parent="FieldRoomDressing/GroundDetails"]
+position = Vector2(1040, 230)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("40_ls_shadow")
+
+[node name="NorthBloomBed" type="Sprite2D" parent="FieldRoomDressing/GroundDetails"]
+position = Vector2(790, 235)
+scale = Vector2(0.82, 0.82)
+texture = ExtResource("36_ls_bloom_bed")
+
+[node name="WestMudShelf" type="Sprite2D" parent="FieldRoomDressing/GroundDetails"]
+position = Vector2(310, 475)
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("38_ls_mud")
+
+[node name="SouthBogWater" type="Sprite2D" parent="FieldRoomDressing/GroundDetails"]
+position = Vector2(920, 1040)
+scale = Vector2(0.92, 0.92)
+texture = ExtResource("41_ls_water")
+
+[node name="SouthRootVein" type="Sprite2D" parent="FieldRoomDressing/GroundDetails"]
+position = Vector2(1390, 1040)
+scale = Vector2(0.82, 0.82)
+texture = ExtResource("39_ls_roots")
+
+[node name="EastGrassShelf" type="Sprite2D" parent="FieldRoomDressing/GroundDetails"]
+position = Vector2(1790, 590)
+scale = Vector2(0.78, 0.78)
+texture = ExtResource("37_ls_grass")
+
+[node name="SoftDetails" type="Node2D" parent="FieldRoomDressing"]
+y_sort_enabled = true
+
+[node name="BloomWest" type="Sprite2D" parent="FieldRoomDressing/SoftDetails"]
+position = Vector2(570, 250)
+scale = Vector2(0.68, 0.68)
+texture = ExtResource("23_ls_bloom")
+offset = Vector2(0, -90)
+script = ExtResource("44_ambient_motion")
+motion_kind = 2
+phase = 0.7
+period = 10.5
+breath_strength = 0.02
+
+[node name="BloomSouth" type="Sprite2D" parent="FieldRoomDressing/SoftDetails"]
+position = Vector2(1260, 1040)
+scale = Vector2(-0.66, 0.66)
+texture = ExtResource("23_ls_bloom")
+offset = Vector2(0, -90)
+script = ExtResource("44_ambient_motion")
+motion_kind = 2
+phase = 2.8
+period = 12.0
+breath_strength = 0.018
+
+[node name="LowBogBushEast" type="Sprite2D" parent="FieldRoomDressing/SoftDetails"]
+position = Vector2(1840, 860)
+scale = Vector2(0.36, 0.36)
+texture = ExtResource("43_dom_low_bush")
+offset = Vector2(0, -238)
+script = ExtResource("44_ambient_motion")
+phase = 1.6
+period = 9.5
+sway_degrees = 0.3
+
+[node name="SolidProps" type="Node2D" parent="FieldRoomDressing"]
+y_sort_enabled = true
+
+[node name="StandingStoneNorthwest" type="StaticBody2D" parent="FieldRoomDressing/SolidProps"]
+position = Vector2(380, 260)
+
+[node name="Sprite2D" type="Sprite2D" parent="FieldRoomDressing/SolidProps/StandingStoneNorthwest"]
+scale = Vector2(0.72, 0.72)
+texture = ExtResource("20_ls_stone")
+offset = Vector2(0, -90)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FieldRoomDressing/SolidProps/StandingStoneNorthwest"]
+position = Vector2(0, -5)
+shape = SubResource("shape_field_stone")
+
+[node name="FallenLogSouthwest" type="StaticBody2D" parent="FieldRoomDressing/SolidProps"]
+position = Vector2(340, 1070)
+
+[node name="Sprite2D" type="Sprite2D" parent="FieldRoomDressing/SolidProps/FallenLogSouthwest"]
+scale = Vector2(0.72, 0.72)
+texture = ExtResource("22_ls_log")
+offset = Vector2(0, -90)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FieldRoomDressing/SolidProps/FallenLogSouthwest"]
+position = Vector2(0, -5)
+shape = SubResource("shape_field_log")
+
+[node name="RootArchwayNorth" type="StaticBody2D" parent="FieldRoomDressing/SolidProps"]
+position = Vector2(1040, 230)
+
+[node name="Sprite2D" type="Sprite2D" parent="FieldRoomDressing/SolidProps/RootArchwayNorth"]
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("21_ls_arch")
+offset = Vector2(0, -90)
+script = ExtResource("44_ambient_motion")
+motion_kind = 2
+phase = 4.4
+period = 13.0
+breath_strength = 0.015
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FieldRoomDressing/SolidProps/RootArchwayNorth"]
+position = Vector2(0, -5)
+shape = SubResource("shape_field_arch")
+
+[node name="MossRockSoutheast" type="StaticBody2D" parent="FieldRoomDressing/SolidProps"]
+position = Vector2(1810, 1040)
+
+[node name="Sprite2D" type="Sprite2D" parent="FieldRoomDressing/SolidProps/MossRockSoutheast"]
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("42_dom_mossy_rock")
+offset = Vector2(0, -239)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FieldRoomDressing/SolidProps/MossRockSoutheast"]
+position = Vector2(0, -6)
+shape = SubResource("shape_field_rock")
+
+[node name="AmbientWanderers" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="WaryForager" parent="AmbientWanderers" instance=ExtResource("45_ambient_villager")]
+position = Vector2(1190, 250)
+villager_texture = ExtResource("46_crowd_forager")
+local_waypoints = PackedVector2Array(0, 0, 72, 8, 34, 36)
+wander_speed = 14.0
+pause_duration = 3.6
+initial_pause = 1.2

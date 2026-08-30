@@ -5,6 +5,62 @@ extends GdUnitTestSuite
 ## directly. See docs/testing.md ("Automated tests") for when to reach for
 ## this vs. a plain unit test suite like test/unit/test_reputation.gd.
 
+func test_wave_aa_dressing_contract() -> void:
+	var field_room: Node = auto_free(
+		(load("res://world/test_room.tscn") as PackedScene).instantiate()
+	)
+	add_child(field_room)
+	await get_tree().process_frame
+
+	assert_bool((field_room as Node2D).y_sort_enabled) \
+		.override_failure_message("TestRoom root must y-sort actors with props.") \
+		.is_true()
+	var dressing := field_room.get_node_or_null("FieldRoomDressing")
+	assert_object(dressing).is_not_null()
+	if dressing == null:
+		return
+	assert_int(dressing.get_child_count()) \
+		.override_failure_message("FieldRoomDressing must contain exactly the three contract layers.") \
+		.is_equal(3)
+	for layer_name: String in ["GroundDetails", "SoftDetails", "SolidProps"]:
+		var layer := dressing.get_node_or_null(layer_name)
+		assert_object(layer) \
+			.override_failure_message("FieldRoomDressing must keep the %s layer." % layer_name) \
+			.is_not_null()
+		if layer != null:
+			assert_int(layer.get_child_count()).is_greater_equal(1)
+	assert_int((dressing.get_node("GroundDetails") as Node2D).z_index).is_equal(-2)
+	assert_bool((dressing.get_node("SoftDetails") as Node2D).y_sort_enabled).is_true()
+	assert_bool((dressing.get_node("SolidProps") as Node2D).y_sort_enabled).is_true()
+
+	var solid_props := dressing.get_node_or_null("SolidProps")
+	if solid_props != null:
+		var bodies_with_shapes := 0
+		for prop: Node in solid_props.get_children():
+			if prop is StaticBody2D and prop.get_node_or_null("CollisionShape2D") != null:
+				bodies_with_shapes += 1
+		assert_int(bodies_with_shapes).is_greater_equal(3)
+
+	var breathing: Array[Node] = []
+	_collect_breathing(dressing, breathing)
+	assert_int(breathing.size()) \
+		.override_failure_message("At least one Loamroot prop must run WOUND_BREATH.") \
+		.is_greater_equal(1)
+	if breathing.is_empty():
+		return
+	var bloom := breathing[0] as Sprite2D
+	var base_modulate := bloom.modulate
+	var moved := false
+	for _frame: int in range(240):
+		await get_tree().process_frame
+		if bloom.modulate != base_modulate:
+			moved = true
+			break
+	assert_bool(moved) \
+		.override_failure_message("WOUND_BREATH never changed the Loamroot prop modulate.") \
+		.is_true()
+
+
 func test_player_moves_right_when_holding_move_right() -> void:
 	var runner := scene_runner("res://world/test_room.tscn")
 	var player: Node2D = runner.find_child("Player", true, false)
@@ -278,6 +334,16 @@ func _find_child_by_type(parent: Node, type_name: String) -> Node:
 		if res != null:
 			return res
 	return null
+
+
+func _collect_breathing(node: Node, found: Array[Node]) -> void:
+	var script := node.get_script() as GDScript
+	if node is Sprite2D and script != null \
+			and script.resource_path.ends_with("ambient_prop_motion.gd") \
+			and int(node.get("motion_kind")) == AmbientPropMotion.MotionKind.WOUND_BREATH:
+		found.append(node)
+	for child: Node in node.get_children():
+		_collect_breathing(child, found)
 
 
 func test_wedged_keyboard_step_recovers_to_the_origin_cell_center() -> void:
