@@ -20,6 +20,32 @@ const PORTRAIT_PATHS := {
 	"hadrik-vale": "res://assets/generated/portraits/hadrik_vale_portrait_neutral.png",
 	"sella-varn": "res://assets/generated/portraits/sella_varn_portrait_neutral.png",
 	"toma-reedhand": "res://assets/generated/portraits/toma_reedhand_portrait_neutral.png",
+	# Wave W (2026-08-30): the nine Dom quest givers. All nine designs are canon
+	# INTERPOLATIONS (no vault physical descriptions) — see
+	# assets/generated/portraits/_contact_sheet_wave_w.md before treating as canon.
+	"droma-flintjaw": (
+		"res://assets/generated/portraits/droma_flintjaw_portrait_neutral.png"
+	),
+	"irka-stonebreath": (
+		"res://assets/generated/portraits/irka_stonebreath_portrait_neutral.png"
+	),
+	"jorun-ashmantle": (
+		"res://assets/generated/portraits/jorun_ashmantle_portrait_neutral.png"
+	),
+	"keth-varr": "res://assets/generated/portraits/keth_varr_portrait_neutral.png",
+	"orren-chainwake": (
+		"res://assets/generated/portraits/orren_chainwake_portrait_neutral.png"
+	),
+	"pell-hammersong": (
+		"res://assets/generated/portraits/pell_hammersong_portrait_neutral.png"
+	),
+	"senn-brinehook": (
+		"res://assets/generated/portraits/senn_brinehook_portrait_neutral.png"
+	),
+	"vaara-cisternhand": (
+		"res://assets/generated/portraits/vaara_cisternhand_portrait_neutral.png"
+	),
+	"veska-ruun": "res://assets/generated/portraits/veska_ruun_portrait_neutral.png",
 }
 ## Optional band-gated greeting variants (Wave 4 reputation reactivity).
 ## Keyed by npc id; empty/no entry keeps the plain generated greeting.

@@ -7954,7 +7954,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/droma_flintjaw_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -8063,7 +8063,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/veska_ruun_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -8172,7 +8172,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/orren_chainwake_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -8390,7 +8390,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/keth_varr_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -8499,7 +8499,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/irka_stonebreath_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -8608,7 +8608,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/pell_hammersong_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -8717,7 +8717,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/vaara_cisternhand_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -8826,7 +8826,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/jorun_ashmantle_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -8935,7 +8935,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/senn_brinehook_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",

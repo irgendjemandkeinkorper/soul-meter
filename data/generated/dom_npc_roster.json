@@ -566,8 +566,8 @@
       ],
       "portrait": {
         "id": "droma-flintjaw",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/droma_flintjaw_portrait_neutral.png",
         "monogram": "DF",
         "mark": "4811",
         "palette_index": 4
@@ -963,8 +963,8 @@
       ],
       "portrait": {
         "id": "irka-stonebreath",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/irka_stonebreath_portrait_neutral.png",
         "monogram": "IS",
         "mark": "24B1",
         "palette_index": 0
@@ -1123,8 +1123,8 @@
       ],
       "portrait": {
         "id": "jorun-ashmantle",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/jorun_ashmantle_portrait_neutral.png",
         "monogram": "JA",
         "mark": "E44A",
         "palette_index": 3
@@ -1418,8 +1418,8 @@
       ],
       "portrait": {
         "id": "keth-varr",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/keth_varr_portrait_neutral.png",
         "monogram": "KV",
         "mark": "817A",
         "palette_index": 9
@@ -2038,8 +2038,8 @@
       ],
       "portrait": {
         "id": "orren-chainwake",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/orren_chainwake_portrait_neutral.png",
         "monogram": "OC",
         "mark": "CB37",
         "palette_index": 5
@@ -2141,8 +2141,8 @@
       ],
       "portrait": {
         "id": "pell-hammersong",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/pell_hammersong_portrait_neutral.png",
         "monogram": "PH",
         "mark": "C1C2",
         "palette_index": 8
@@ -2479,8 +2479,8 @@
       ],
       "portrait": {
         "id": "senn-brinehook",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/senn_brinehook_portrait_neutral.png",
         "monogram": "SB",
         "mark": "3D8A",
         "palette_index": 9
@@ -2986,8 +2986,8 @@
       ],
       "portrait": {
         "id": "vaara-cisternhand",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/vaara_cisternhand_portrait_neutral.png",
         "monogram": "VC",
         "mark": "CDE8",
         "palette_index": 0
@@ -3164,8 +3164,8 @@
       ],
       "portrait": {
         "id": "veska-ruun",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/veska_ruun_portrait_neutral.png",
         "monogram": "VR",
         "mark": "1EE9",
         "palette_index": 2
