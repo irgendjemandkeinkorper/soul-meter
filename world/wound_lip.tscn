@@ -37,6 +37,7 @@ size = Vector2(82, 32)
 size = Vector2(58, 24)
 
 [node name="WoundLip" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("1_location")
 arrival_flag = "chapter_wound_lip_reached"
 
