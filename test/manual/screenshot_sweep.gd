@@ -320,6 +320,7 @@ func test_field_scenes() -> void:
 	await _shoot("res://world/starting_town.tscn", "20_town", 40)
 	await _shoot("res://world/test_room.tscn", "21_wilds", 40)
 	await _shoot("res://world/dorthkor_road.tscn", "22_dorthkor_road", 40)
+	await _shoot("res://world/wound_lip.tscn", "24_wound_lip", 40)
 
 
 func test_interiors() -> void:
