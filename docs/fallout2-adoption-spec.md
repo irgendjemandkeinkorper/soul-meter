@@ -494,6 +494,20 @@ payloads rather than UI combat arithmetic.
   note for the owner: the ledge reads as separated floating plates over the void —
   deliberate oppression vs. denser walkable stone is an open feel call.
 
+- **Wave W — quest-giver portraits — SHIPPED 2026-08-30** (graphics campaign, portrait
+  gaps). Nine painterly 512×512 neutral portraits for the Dom quest givers (Droma
+  Flintjaw, Irka Stonebreath, Jorun Ashmantle, Keth Varr, Orren Chainwake, Pell
+  Hammersong, Senn Brinehook, Vaara Cisternhand, Veska Ruun), matching the existing
+  five majors' format; wired through the canonical pipeline only (seed_town_npcs
+  PORTRAIT_PATHS → Pandora migration → generate_gloot). Also fixed en route:
+  `NpcRoster.load_portrait_texture` used bare `FileAccess.file_exists` (portraits
+  would vanish in exported builds — same class as the Wave T finding; now the
+  export-safe OR-gate). ⚠ All nine designs are canon INTERPOLATIONS (no vault
+  physical descriptions) — flagged in `_contact_sheet_wave_w.md`, joins the
+  Vaerin/Kaan pile for human canon review. The remaining 47 roster speakers keep the
+  intentional monogram card — extending portraits further is an owner scope call.
+  Suite **1042/0**; gate r1 **PROCEED**.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
