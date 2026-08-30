@@ -610,6 +610,21 @@ payloads rather than UI combat arithmetic.
   Gate r2 PROCEED. Suite **1035/0**; sweep 11/0; icons confirmed rendering in
   the inventory sweep shot.
 
+- **Wave AF — painterly Waning Marches atlas under the region map — SHIPPED
+  2026-08-30** (graphics campaign; the region map was the last wireframe-grade
+  screen). A 1920×1200 painterly atlas plate
+  (`assets/generated/backgrounds/ui/waning-marches-atlas-v1.png`) sits under
+  the route canvas with its four landmarks (Dom's ringed four-arm city,
+  Dorthkor camp, Loamroot bog, the Wound Lip rift) painted at the exact
+  normalized `WorldMapRegistry` map_coordinates the marks use —
+  `STRETCH_SCALE` is load-bearing so plate and marks warp together at any
+  field aspect. With the atlas the canvas draws a 35% scrim instead of its
+  opaque fill + surveyor grid (the fill hid the plate — sweep-eyeball catch);
+  the grid remains the no-asset fallback. Contract test incl. same-parent +
+  z-order, stretch/expand modes, mouse-transparency, scrim flag. Gate
+  PROCEED_WITH_RISKS (sole risk — sibling assertion — closed same session).
+  Suite **1036/0**; sweep 11/0; landmarks verified under all four marks.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the

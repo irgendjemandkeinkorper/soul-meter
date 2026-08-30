@@ -259,6 +259,8 @@ func test_atlas_backdrop_sits_under_the_canvas_stretched_to_the_field() -> void:
 	var canvas: Control = runner.find_child("MapCanvas", true, false) as Control
 	assert_object(canvas).is_not_null()
 	if canvas != null:
+		# get_index() ordering is only meaningful for siblings (gate note).
+		assert_object(backdrop.get_parent()).is_same(canvas.get_parent())
 		assert_bool(backdrop.get_index() < canvas.get_index()) \
 			.override_failure_message("AtlasBackdrop must render beneath MapCanvas.") \
 			.is_true()
