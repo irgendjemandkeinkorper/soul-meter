@@ -11,7 +11,7 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="9_observer"]
 
 [sub_resource type="RectangleShape2D" id="bench_footprint"]
-size = Vector2(88, 22)
+size = Vector2(80, 20)
 
 [node name="TrialHallInterior" type="Node2D"]
 y_sort_enabled = true
@@ -58,7 +58,9 @@ phase = 3.9
 y_sort_enabled = true
 
 [node name="AudienceBenchWest" type="StaticBody2D" parent="Room/TrialHallDressing/SolidProps"]
-position = Vector2(260, 500)
+position = Vector2(235, 500)
+collision_layer = 1
+collision_mask = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/TrialHallDressing/SolidProps/AudienceBenchWest"]
 scale = Vector2(2.25, 2.25)
@@ -71,7 +73,9 @@ shape = SubResource("bench_footprint")
 disabled = false
 
 [node name="AudienceBenchEast" type="StaticBody2D" parent="Room/TrialHallDressing/SolidProps"]
-position = Vector2(700, 500)
+position = Vector2(725, 500)
+collision_layer = 1
+collision_mask = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/TrialHallDressing/SolidProps/AudienceBenchEast"]
 scale = Vector2(2.25, 2.25)

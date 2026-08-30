@@ -24,7 +24,7 @@ accent_color = Color(0.2, 0.68, 0.72, 1)
 
 ; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
 [node name="PlayersLoftDressing" type="Node2D" parent="."]
-editor_description = "PROVISIONAL owner-balance surface: simple sleeping loft and travel storage."
+editor_description = "PROVISIONAL owner-balance surface: simple sleeping loft and travel storage; preserve the center exit aisle."
 y_sort_enabled = true
 
 [node name="SoftDetails" type="Node2D" parent="PlayersLoftDressing"]

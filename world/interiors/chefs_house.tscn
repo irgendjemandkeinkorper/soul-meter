@@ -33,7 +33,7 @@ position = Vector2(800, 150)
 
 ; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
 [node name="ChefsHouseDressing" type="Node2D" parent="."]
-editor_description = "PROVISIONAL owner-balance surface: compact cook's dining and preparation furniture."
+editor_description = "PROVISIONAL owner-balance surface: compact cook's dining and preparation furniture; preserve the center exit aisle."
 y_sort_enabled = true
 
 [node name="SoftDetails" type="Node2D" parent="ChefsHouseDressing"]

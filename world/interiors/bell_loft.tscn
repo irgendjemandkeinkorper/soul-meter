@@ -24,7 +24,7 @@ accent_color = Color(0.72, 0.52, 0.2, 1)
 
 ; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
 [node name="BellLoftDressing" type="Node2D" parent="."]
-editor_description = "PROVISIONAL owner-balance surface: sparse loft rest and bell-maintenance storage."
+editor_description = "PROVISIONAL owner-balance surface: sparse loft rest and bell-maintenance storage; preserve the center exit aisle."
 y_sort_enabled = true
 
 [node name="SoftDetails" type="Node2D" parent="BellLoftDressing"]
