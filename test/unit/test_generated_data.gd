@@ -71,8 +71,11 @@ func test_every_item_prototype_references_a_loadable_transparent_icon() -> void:
 		assert_str(image_path) \
 			.override_failure_message("Item %s has no image property." % item_path) \
 			.is_not_empty()
-		assert_str(image_path).starts_with(Generator.ITEM_ICON_DIR + "/")
-		assert_str(image_path).ends_with("--icon.png")
+		# Gate Wave AE finding: pin the exact slug mapping — prefix/suffix
+		# checks alone would pass if every item pointed at one shared icon.
+		assert_str(image_path).is_equal(
+			"%s/%s--icon.png" % [Generator.ITEM_ICON_DIR, item_path.get_file()]
+		)
 		var exists_for_export := (
 			ResourceLoader.exists(image_path) or FileAccess.file_exists(image_path)
 		)

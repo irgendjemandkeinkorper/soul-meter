@@ -144,7 +144,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		# GLoot's InventoryItem.get_texture() reads the "image" property. The
 		# icon path is a pure naming convention (item slug → icon file), so the
 		# generator stays deterministic whether or not the PNG exists yet;
-		# test_inventory_screen's icon contract asserts every referenced icon
+		# test_generated_data's icon contract asserts every referenced icon
 		# actually loads.
 		props["image"] = "%s/%s--icon.png" % [ITEM_ICON_DIR, chain[chain.size() - 1]]
 		protos[path] = props
