@@ -59,24 +59,48 @@ func test_wave_aa_dressing_contract() -> void:
 	assert_int(ambient_villagers.size()) \
 		.override_failure_message("The dangerous bog may contain at most one ambient villager.") \
 		.is_less_equal(1)
+	var iris_safe_area := Rect2(1120.0, 200.0, 220.0, 160.0)
+	for villager_node: Node in ambient_villagers:
+		var villager := villager_node as AmbientVillager
+		assert_object(villager) \
+			.override_failure_message("Field-room wanderers must use the ambient villager route contract.") \
+			.is_not_null()
+		if villager != null:
+			assert_bool(iris_safe_area.encloses(villager.authored_world_bounds())) \
+				.override_failure_message("The wary forager route must stay in the safe area north of Iris.") \
+				.is_true()
 
 	var breathing: Array[Node] = []
-	_collect_breathing(dressing, breathing)
+	_collect_motion_kind(dressing, AmbientPropMotion.MotionKind.WOUND_BREATH, breathing)
 	assert_int(breathing.size()) \
-		.override_failure_message("At least one Loamroot prop must run WOUND_BREATH.") \
-		.is_greater_equal(1)
-	if breathing.is_empty():
+		.override_failure_message("Loamroot needs two or three restrained WOUND_BREATH props.") \
+		.is_between(2, 3)
+	var swaying: Array[Node] = []
+	_collect_motion_kind(dressing, AmbientPropMotion.MotionKind.LANTERN_SWAY, swaying)
+	assert_int(swaying.size()) \
+		.override_failure_message("Loamroot needs one or two subtly swaying soft props.") \
+		.is_between(1, 2)
+	if breathing.is_empty() or swaying.is_empty():
 		return
 	var bloom := breathing[0] as Sprite2D
 	var base_modulate := bloom.modulate
-	var moved := false
+	var soft_prop := swaying[0] as Sprite2D
+	var base_rotation := soft_prop.rotation
+	var breathed := false
+	var swayed := false
 	for _frame: int in range(240):
 		await get_tree().process_frame
 		if bloom.modulate != base_modulate:
-			moved = true
+			breathed = true
+		if not is_equal_approx(soft_prop.rotation, base_rotation):
+			swayed = true
+		if breathed and swayed:
 			break
-	assert_bool(moved) \
+	assert_bool(breathed) \
 		.override_failure_message("WOUND_BREATH never changed the Loamroot prop modulate.") \
+		.is_true()
+	assert_bool(swayed) \
+		.override_failure_message("LANTERN_SWAY never rotated the Loamroot soft prop.") \
 		.is_true()
 
 
@@ -355,14 +379,14 @@ func _find_child_by_type(parent: Node, type_name: String) -> Node:
 	return null
 
 
-func _collect_breathing(node: Node, found: Array[Node]) -> void:
+func _collect_motion_kind(node: Node, motion_kind: AmbientPropMotion.MotionKind, found: Array[Node]) -> void:
 	var script := node.get_script() as GDScript
 	if node is Sprite2D and script != null \
 			and script.resource_path.ends_with("ambient_prop_motion.gd") \
-			and int(node.get("motion_kind")) == AmbientPropMotion.MotionKind.WOUND_BREATH:
+			and int(node.get("motion_kind")) == motion_kind:
 		found.append(node)
 	for child: Node in node.get_children():
-		_collect_breathing(child, found)
+		_collect_motion_kind(child, motion_kind, found)
 
 
 func _contains_collision_object(node: Node) -> bool:

@@ -3,6 +3,8 @@ extends GdUnitTestSuite
 const SCENE_PATH := "res://world/dorthkor_road.tscn"
 const SIMULATED_FRAME_CAP := 360
 const MOTION_FRAME_CAP := 240
+const WALKABLE_BOUNDS := Rect2(40.0, 40.0, 1720.0, 820.0)
+const ENCOUNTER_CLEARANCE := 80.0
 
 
 func test_wave_aa_dorthkor_road_dressing_contract() -> void:
@@ -48,10 +50,15 @@ func test_wave_aa_dorthkor_road_dressing_contract() -> void:
 	var bodies_with_shapes := 0
 	if solid_props != null:
 		for prop: Node in solid_props.get_children():
-			if prop is StaticBody2D and prop.get_node_or_null("CollisionShape2D") != null:
+			if prop is not StaticBody2D:
+				continue
+			var collision := prop.get_node_or_null("CollisionShape2D") as CollisionShape2D
+			if collision != null and not collision.disabled and collision.shape != null:
 				bodies_with_shapes += 1
 	assert_int(bodies_with_shapes) \
-		.override_failure_message("Dorthkor Road must contain at least four collidable solid props.") \
+		.override_failure_message(
+			"Dorthkor Road must contain at least four enabled solid props with collision shapes."
+		) \
 		.is_greater_equal(4)
 
 	var breathing: Array[Node] = []
@@ -68,6 +75,14 @@ func test_wave_aa_dorthkor_road_dressing_contract() -> void:
 	assert_int(travelers.size()) \
 		.override_failure_message("Dorthkor Road must contain exactly two ambient travelers.") \
 		.is_equal(2)
+	var encounter_actors: Array[Node2D] = []
+	for actor_name: String in ["BreachHound", "MusteredDead"]:
+		var actor := road.get_node_or_null(actor_name) as Node2D
+		assert_object(actor) \
+			.override_failure_message("Dorthkor Road must preserve %s." % actor_name) \
+			.is_not_null()
+		if actor != null:
+			encounter_actors.append(actor)
 	var observations: Array[Dictionary] = []
 	for traveler: Node2D in travelers:
 		var has_bounds_method := traveler.has_method("authored_world_bounds")
@@ -77,6 +92,17 @@ func test_wave_aa_dorthkor_road_dressing_contract() -> void:
 		var bounds := Rect2()
 		if has_bounds_method:
 			bounds = (traveler.call("authored_world_bounds") as Rect2).grow(1.0)
+			assert_bool(WALKABLE_BOUNDS.encloses(bounds)) \
+				.override_failure_message(
+					"%s route must stay inside the road-wall corridor." % traveler.name
+				) \
+				.is_true()
+			for actor: Node2D in encounter_actors:
+				assert_bool(bounds.grow(ENCOUNTER_CLEARANCE).has_point(actor.position)) \
+					.override_failure_message(
+						"%s route must stay clear of %s." % [traveler.name, actor.name]
+					) \
+					.is_false()
 		observations.append({
 			"traveler": traveler,
 			"start": traveler.position,
