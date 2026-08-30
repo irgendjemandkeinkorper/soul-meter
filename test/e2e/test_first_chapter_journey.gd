@@ -19,6 +19,17 @@ const KORRATH_DIALOGUE_PATH := "res://dialogue/companions/korrath_ninefold.dialo
 const MAURA_DIALOGUE_PATH := "res://dialogue/companions/maura_greyfen.dialogue"
 const PLACEMENTS_PATH := "res://data/generated/dom_npc_placements.json"
 
+## Wave R: catalog boards are 7x5+ now and deploy melee at range. This journey
+## exercises durable state seams (quest chains, flags, reputation), not grid
+## tactics (test_battlefield_authoring.gd and the Wave P suites cover those),
+## so its encounters are pinned to the FR-105 zones hatch the same way
+## test_combat_speech.gd pins its injected definition.
+const ZONE_PINNED_ENCOUNTERS: Array[StringName] = [
+	EncounterIds.BOG_WIGHT,
+	EncounterIds.DORTHKOR_VANGUARD,
+	EncounterIds.DORTHKOR_MUSTER,
+]
+
 var original_game_state: Dictionary
 var original_reputation: Dictionary
 var original_renown: Dictionary
@@ -50,10 +61,15 @@ func before_test() -> void:
 	original_flow_target_scene = GameFlow._target_scene
 	original_flow_target_spawn = GameFlow._target_spawn_id
 	original_travel_plan = GameFlow.travel_plan
+	for encounter_id: StringName in ZONE_PINNED_ENCOUNTERS:
+		EncounterCatalog.definition(encounter_id)
+		EncounterCatalog._definitions[String(encounter_id)]["battlefield"] = "zones"
 	_reset_fixture()
 
 
 func after_test() -> void:
+	for encounter_id: StringName in ZONE_PINNED_ENCOUNTERS:
+		EncounterCatalog._definitions[String(encounter_id)].erase("battlefield")
 	UIManager.close_all()
 	get_tree().paused = false
 	GameState.from_dict(original_game_state)
@@ -451,8 +467,7 @@ func test_chapter_encounter_defeat_and_retreat_both_leave_retry_routes() -> void
 			retry.start(encounter_id)
 			for enemy: BattleActor in retry.enemies:
 				enemy.hp = 1
-			while not retry.ended:
-				assert_bool(retry.use_action(BattleScript.ACTION_STRIKE)).is_true()
+			_strike_until_ended(retry)
 			assert_bool(GameState.get_flag(defeated_flag)).is_true()
 
 
@@ -476,10 +491,7 @@ func test_defeat_retry_preserves_recovery_and_applies_loss_once() -> void:
 	auto_free(retry_win)
 	retry_win.start(EncounterIds.BOG_WIGHT)
 	retry_win.enemies[0].hp = 1
-	# Grid battles roll to-hit (#169/#98 rulings) — a single strike may whiff, so
-	# strike until the battle ends, as the retry-routes test above already does.
-	while not retry_win.ended:
-		assert_bool(retry_win.use_action(BattleScript.ACTION_STRIKE)).is_true()
+	_strike_until_ended(retry_win)
 	assert_bool(GameState.get_flag("defeated_bog_wight")).is_true()
 	assert_str(retry_win.last_result.outcome_id).is_equal("slain")
 
@@ -640,8 +652,7 @@ func _resolve_vanguard() -> void:
 	battle.start(EncounterIds.DORTHKOR_VANGUARD)
 	for enemy in battle.enemies:
 		enemy.hp = 1
-	while not battle.ended:
-		assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
+	_strike_until_ended(battle)
 	assert_bool(GameState.get_flag("defeated_breach_hound")).is_true()
 
 
@@ -657,11 +668,21 @@ func _resolve_muster(outcome_id: StringName) -> void:
 		assert_bool(battle.use_action(&"release-bound-soldier")).is_true()
 	else:
 		battle.enemies[0].hp = 1
-		# Grid battles roll to-hit (#169/#98 rulings) — a single strike may
-		# whiff, so strike until the battle ends, as _resolve_vanguard() does.
-		while not battle.ended:
-			assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
+		_strike_until_ended(battle)
 	assert_str(battle.last_result.outcome_id).is_equal(String(outcome_id))
+
+
+## To-hit can whiff (#169/#98), so strike repeatedly — but budgeted, so a
+## refused strike can never hang the whole suite (the Wave R lesson: an
+## unbudgeted `while not battle.ended` assert loop spins forever on refusal).
+func _strike_until_ended(target_battle) -> void:
+	for _swing: int in 40:
+		if target_battle.ended:
+			return
+		assert_bool(target_battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
+	assert_bool(target_battle.ended).override_failure_message(
+		"battle did not end within 40 strikes"
+	).is_true()
 
 
 func _assert_return_stage() -> void:

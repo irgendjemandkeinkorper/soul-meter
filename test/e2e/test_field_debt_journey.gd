@@ -22,9 +22,16 @@ func before_test() -> void:
 	GameState.soul_meter = 50.0
 	Reputation.from_dict({})
 	QuestRegistry.reset()
+	# Wave R: bog-wight's board is 7x5 now and deploys melee at range. This
+	# journey characterizes the quest consequence chain, not grid tactics
+	# (test_battlefield_authoring.gd covers the boards), so pin the encounter
+	# to the FR-105 zones hatch the way test_combat_speech.gd does.
+	EncounterCatalog.definition(&"bog-wight")
+	EncounterCatalog._definitions["bog-wight"]["battlefield"] = "zones"
 
 
 func after_test() -> void:
+	EncounterCatalog._definitions["bog-wight"].erase("battlefield")
 	GameState.flags = original_flags
 	GameState.inventory.clear()
 	GameState.inventory.deserialize(original_inventory)
@@ -49,9 +56,13 @@ func test_accept_defeat_loot_return_and_choose_companies_reward() -> void:
 	auto_free(battle)
 	battle.start(&"bog-wight")
 	battle.enemies[0].hp = 1
-	# Grid battles roll to-hit (#169/#98) — strike until the battle ends.
-	while not battle.ended:
+	# To-hit can whiff (#169/#98) — strike until the battle ends, budgeted so a
+	# refused strike can never hang the suite.
+	var swings := 0
+	while not battle.ended and swings < 40:
+		swings += 1
 		assert_bool(battle.use_action(BattleScript.ACTION_STRIKE)).is_true()
+	assert_bool(battle.ended).is_true()
 	assert_bool(GameState.get_flag("defeated_bog_wight")).is_true()
 	assert_bool(proof._is_unlocked()).is_true()
 
