@@ -112,8 +112,11 @@ func test_wave_aa_dorthkor_road_dressing_contract() -> void:
 
 	var any_traveler_moved := false
 	var prop_animated := false
+	# Travelers advance in _physics_process; awaiting physics ticks (fixed 1/60
+	# game-time each) keeps the 360-tick budget machine-speed-independent, where
+	# process frames can span almost no game time on a fast headless run.
 	for frame_index: int in range(SIMULATED_FRAME_CAP):
-		await runner.simulate_frames(1)
+		await runner.scene().get_tree().physics_frame
 		if frame_index < MOTION_FRAME_CAP and breathing_sprite != null \
 				and breathing_sprite.modulate != base_modulate:
 			prop_animated = true
@@ -129,6 +132,7 @@ func test_wave_aa_dorthkor_road_dressing_contract() -> void:
 			)
 			if traveler.position.distance_to(observation["start"]) > 2.0:
 				any_traveler_moved = true
+				observation["moved"] = true
 
 	assert_bool(prop_animated) \
 		.override_failure_message("WOUND_BREATH did not change modulate within 240 frames.") \
@@ -142,6 +146,14 @@ func test_wave_aa_dorthkor_road_dressing_contract() -> void:
 		assert_bool(bool(observation["remained_in_bounds"])) \
 			.override_failure_message(
 				"%s left its authored waypoint bounds within 360 frames." % traveler_name
+			) \
+			.is_true()
+		# Gate Wave AA finding: movement must be paired PER traveler — a single
+		# global flag lets one stationary traveler ride a moving one's green.
+		assert_bool(bool(observation.get("moved", false))) \
+			.override_failure_message(
+				"%s never moved within 360 frames (containment alone is a false green)."
+				% traveler_name
 			) \
 			.is_true()
 
