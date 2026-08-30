@@ -170,7 +170,10 @@ func test_teleporting_the_player_resets_the_cell_trail_to_the_new_position() -> 
 	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
 
 	player.global_position += Vector2(500.0, 0.0)
-	await runner.simulate_frames(2)
+	# PartyFollowers reacts in _physics_process; simulate_frames advances process
+	# frames whose wall-clock span may contain zero 60Hz physics ticks on a fast
+	# or loaded machine (CI flake on dec4dde). Await real physics frames instead.
+	await _wait_physics_frames(2)
 
 	var player_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
 	var player_center: Vector2 = ground.to_global(ground.map_to_local(player_cell))
