@@ -625,6 +625,22 @@ payloads rather than UI combat arithmetic.
   PROCEED_WITH_RISKS (sole risk — sibling assertion — closed same session).
   Suite **1036/0**; sweep 11/0; landmarks verified under all four marks.
 
+- **Wave AG — painterly obsidian-hall key art under the main-menu shader —
+  SHIPPED 2026-08-31** (graphics campaign; the menu was fully procedural). The
+  ObsidianMirror shader gained an optional `key_art` sampler mixed in as its
+  BASE layer only (`key_art_mix` default 0.0 — the procedural gradient is the
+  intact no-asset fallback); every authored effect (ripple, seam, arch,
+  shimmer, grain, vignette) still animates on top of the plate. One art lane
+  produced the 1920×1080 obsidian-hall plate, composed dark through the
+  center band so panel and title stay readable. `KEY_ART_MIX` (0.85) is a
+  PROVISIONAL owner surface. New `test_main_menu_backdrop.gd`: plate
+  contract, material params, source-level base-layer-ordering and
+  fallback-default asserts (gate r1 REVISE — ordering overclaim + regex
+  false-positives — closed; r2 PROCEED; the RenderingServer reflection call
+  errors under the CI dummy renderer, hence source-level). Suite **1039/0
+  net** (the run's sole error was that reflection call, since replaced);
+  sweep 11/0; shot eyeballed.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
