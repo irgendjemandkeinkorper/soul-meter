@@ -47,13 +47,15 @@ func test_backdrop_material_mixes_the_key_art_under_the_authored_effects() -> vo
 
 
 func test_shader_defaults_keep_the_procedural_backdrop_as_fallback() -> void:
+	# Asserted at source level: RenderingServer parameter reflection is not
+	# available under the CI dummy renderer.
 	var shader := load("res://ui/screens/main_menu_backdrop.gdshader") as Shader
 	assert_object(shader).is_not_null()
-	var material := ShaderMaterial.new()
-	material.shader = shader
-	var default_mix: Variant = RenderingServer.shader_get_parameter_default(
-		shader.get_rid(), "key_art_mix"
+	if shader == null:
+		return
+	var declaration := RegEx.create_from_string(
+		"uniform\\s+float\\s+key_art_mix[^;]*=\\s*0\\.0\\s*;"
 	)
-	assert_float(float(default_mix)) \
+	assert_object(declaration.search(shader.code)) \
 		.override_failure_message("key_art_mix must default to 0.0 (procedural fallback).") \
-		.is_equal_approx(0.0, 0.001)
+		.is_not_null()
