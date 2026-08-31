@@ -2,6 +2,10 @@ extends Screen
 ## The entry scene. New Game loads the field room; Settings stacks over this via UIManager.
 
 const REFLECTION_SHADER := preload("res://ui/screens/main_menu_reflection.gdshader")
+const KEY_ART_PATH := "res://assets/generated/backgrounds/ui/main-menu-obsidian-hall-v1.png"
+## PROVISIONAL owner surface: how strongly the painterly plate replaces the
+## procedural glass base (the shader's effects always layer on top).
+const KEY_ART_MIX := 0.85
 
 var _overwrite_armed := false
 var _new_game_button: Button
@@ -87,6 +91,14 @@ func _configure_backdrop() -> void:
 	backdrop_material.set_shader_parameter("bronze_color", DS.BRONZE_3)
 	backdrop_material.set_shader_parameter("mote_color", DS.MOTE_3)
 	backdrop_material.set_shader_parameter("motion_scale", _motion_scale())
+	# Wave AG: painterly key-art base under the authored shader effects. The
+	# shader's key_art_mix defaults to 0.0, so a missing plate leaves the
+	# original fully procedural backdrop untouched.
+	if ResourceLoader.exists(KEY_ART_PATH):
+		var key_art := load(KEY_ART_PATH) as Texture2D
+		if key_art != null:
+			backdrop_material.set_shader_parameter("key_art", key_art)
+			backdrop_material.set_shader_parameter("key_art_mix", KEY_ART_MIX)
 
 
 func _build_title_treatment(parent: VBoxContainer) -> void:

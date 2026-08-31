@@ -7,6 +7,12 @@ uniform vec4 iron_color : source_color = vec4(0.227, 0.255, 0.302, 1.0);
 uniform vec4 bronze_color : source_color = vec4(0.851, 0.671, 0.271, 1.0);
 uniform vec4 mote_color : source_color = vec4(0.133, 0.827, 0.933, 1.0);
 uniform float motion_scale : hint_range(0.0, 1.0) = 1.0;
+// Wave AG: optional painterly key-art base. At 0.0 the fully procedural
+// glass gradient renders unchanged; when a plate is assigned the authored
+// effects below (ripple, seam, arch, shimmer, grain, vignette) layer on
+// top of it instead of the flat gradient.
+uniform sampler2D key_art : source_color, filter_linear, repeat_disable;
+uniform float key_art_mix : hint_range(0.0, 1.0) = 0.0;
 
 
 float mirrored_noise(vec2 position) {
@@ -23,6 +29,7 @@ void fragment() {
 	float edge_falloff = smoothstep(0.18, 1.0, mirror_x);
 	vec3 glass = mix(stone_color.rgb, void_color.rgb, edge_falloff * 0.82);
 	glass *= 0.72 + 0.28 * (1.0 - smoothstep(0.14, 1.05, distance(uv, vec2(0.5, 0.44))));
+	glass = mix(glass, texture(key_art, uv).rgb, key_art_mix);
 
 	float ripple = sin(uv.y * 34.0 + mirror_x * 11.0 + time);
 	ripple += sin(uv.y * 73.0 - mirror_x * 7.0 - time * 0.63) * 0.45;
