@@ -44,6 +44,20 @@ func test_backdrop_material_mixes_the_key_art_under_the_authored_effects() -> vo
 			.is_equal(MainMenuScript.KEY_ART_PATH)
 	assert_float(float(material.get_shader_parameter("key_art_mix"))) \
 		.is_equal_approx(MainMenuScript.KEY_ART_MIX, 0.001)
+	# Gate Wave AG finding: parameters alone don't prove base-layer placement.
+	# The key-art mix must happen BEFORE the first authored effect (ripple) in
+	# fragment(), so every effect composites on top of the plate.
+	var shader_code := (material.shader as Shader).code
+	var mix_position := shader_code.find("texture(key_art")
+	var first_effect_position := shader_code.find("float ripple")
+	assert_bool(mix_position >= 0 and first_effect_position >= 0) \
+		.override_failure_message("Shader lost the key-art mix or the ripple effect.") \
+		.is_true()
+	assert_bool(mix_position < first_effect_position) \
+		.override_failure_message(
+			"key_art must mix into the BASE before the authored effects."
+		) \
+		.is_true()
 
 
 func test_shader_defaults_keep_the_procedural_backdrop_as_fallback() -> void:
@@ -53,8 +67,10 @@ func test_shader_defaults_keep_the_procedural_backdrop_as_fallback() -> void:
 	assert_object(shader).is_not_null()
 	if shader == null:
 		return
+	# Anchored to an uncommented line start with an identifier boundary (gate
+	# finding: an unanchored pattern also matches comments or *_legacy names).
 	var declaration := RegEx.create_from_string(
-		"uniform\\s+float\\s+key_art_mix[^;]*=\\s*0\\.0\\s*;"
+		"(?m)^\\s*uniform\\s+float\\s+key_art_mix\\b[^;\\n]*=\\s*0\\.0\\s*;"
 	)
 	assert_object(declaration.search(shader.code)) \
 		.override_failure_message("key_art_mix must default to 0.0 (procedural fallback).") \
