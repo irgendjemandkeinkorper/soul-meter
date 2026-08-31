@@ -251,6 +251,45 @@ func test_travel_exit_updates_gameflow_target_scene() -> void:
 	GameFlow._target_scene = original_target
 
 
+## #213 regression (ruling: option a): the boundary walls deliberately leave a
+## collider gap at each exit, so a LOCKED exit must present a solid body there —
+## proven against the physics space itself, not just node structure — and the
+## barrier must vanish when the exit unlocks.
+func test_locked_travel_exit_physically_closes_its_wall_gap() -> void:
+	var original_flags := GameState.flags.duplicate(true)
+	GameState.flags.clear()
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(2)
+	var exit_node: TravelExit = runner.find_child("RoadToTheWilds", true, false)
+	var barrier_shape := exit_node.get_node("LockedBarrier/CollisionShape2D") as CollisionShape2D
+	assert_object(barrier_shape).is_not_null()
+	# set_deferred lands on the next idle pass; give physics a tick to ingest it.
+	for i in range(3):
+		await runner.scene().get_tree().physics_frame
+	assert_bool(barrier_shape.disabled) \
+		.override_failure_message("Locked exit must keep its barrier shape enabled.") \
+		.is_false()
+	var space := (runner.scene() as Node2D).get_world_2d().direct_space_state
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = exit_node.global_position
+	var found_barrier := false
+	for hit: Dictionary in space.intersect_point(query, 8):
+		var collider := hit.get("collider") as Node
+		if collider is StaticBody2D and collider.name == "LockedBarrier":
+			found_barrier = true
+	assert_bool(found_barrier) \
+		.override_failure_message("Physics space has no solid body in the locked exit gap.") \
+		.is_true()
+
+	GameState.set_flag("chapter_one_free_roam", true)
+	for i in range(3):
+		await runner.scene().get_tree().physics_frame
+	assert_bool(barrier_shape.disabled) \
+		.override_failure_message("Unlocked exit must drop its barrier.") \
+		.is_true()
+	GameState.flags = original_flags
+
+
 func test_dom_contains_new_buildings_npcs_and_interactive_events() -> void:
 	var runner := scene_runner("res://world/starting_town.tscn")
 	await runner.simulate_frames(5)

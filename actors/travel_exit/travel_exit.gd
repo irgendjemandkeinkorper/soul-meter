@@ -14,6 +14,7 @@ extends Area2D
 
 var _label: Label
 var _location: LocationDefinition
+var _barrier_shape: CollisionShape2D
 @onready var _sign: Sprite2D = $SignSprite
 
 
@@ -27,6 +28,19 @@ func _ready() -> void:
 	rect.size = Vector2(60, 100)
 	shape.shape = rect
 	add_child(shape)
+
+	# #213 (ruling: option a): the boundary walls deliberately leave a collider
+	# gap where the exit sits, so a LOCKED exit must physically close it — the
+	# barrier's shape is enabled exactly while locked and vanishes on unlock.
+	var barrier := StaticBody2D.new()
+	barrier.name = "LockedBarrier"
+	_barrier_shape = CollisionShape2D.new()
+	_barrier_shape.name = "CollisionShape2D"
+	var barrier_rect := RectangleShape2D.new()
+	barrier_rect.size = rect.size
+	_barrier_shape.shape = barrier_rect
+	barrier.add_child(_barrier_shape)
+	add_child(barrier)
 
 	_label = Label.new()
 	_label.theme_type_variation = "EyebrowLabel"
@@ -73,6 +87,9 @@ func _refresh_lock() -> void:
 	modulate = Color.WHITE if unlocked else Color(0.65, 0.65, 0.65, 1.0)
 	monitoring = true
 	monitorable = true
+	if _barrier_shape != null:
+		# Deferred: _refresh_lock can run from flag_changed during physics.
+		_barrier_shape.set_deferred("disabled", unlocked)
 
 
 func _is_unlocked() -> bool:
