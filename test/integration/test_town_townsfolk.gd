@@ -91,8 +91,10 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 		assert_object(sprite.texture).is_not_null()
 		assert_str(sprite.texture.resource_path).is_equal(expected_sprite_path)
 		assert_bool(sprite.region_enabled).is_false()
-		assert_bool(sprite.scale == Vector2.ONE).is_true()
-		assert_bool(sprite.offset.is_equal_approx(UnitArtScript.PIVOT_OFFSET)).is_true()
+		assert_bool(sprite.scale == Vector2.ONE * UnitArtScript.WORLD_SCALE).is_true()
+		assert_bool(sprite.offset.is_equal_approx(
+			UnitArtScript.PIVOT_OFFSET * UnitArtScript.WORLD_SCALE
+		)).is_true()
 		var areas := npc.find_children("*", "Area2D", true, false)
 		assert_int(areas.size()).is_equal(1)
 		var range_shapes := areas[0].find_children(

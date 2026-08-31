@@ -13,6 +13,29 @@ const ROOT := "res://assets/generated/sprites/units"
 ## lands that ground-contact point at the node's local origin.
 const PIVOT_OFFSET := Vector2(0.0, -119.0)
 
+## Field-scene character scale (owner directive 2026-08-31): world actors draw
+## at roughly half art size so the maps read much larger around them. Applies to
+## every field-facing character sprite (player, NPCs, villagers, followers,
+## field enemies); battle-stage and portrait rendering are untouched.
+const WORLD_SCALE := 0.55
+
+
+## Shrink a field actor's visual toward its ground-contact origin. Multiplies the
+## sprite's position/offset/scale (so the feet stay planted at the node origin)
+## and the shadow's scale. Call exactly once, AFTER the sprite's texture, offset,
+## and scale are in their final unscaled state — calling twice compounds.
+static func apply_world_scale(sprite: Sprite2D, shadow: CanvasItem = null) -> void:
+	if sprite == null or sprite.has_meta(&"unit_art_world_scaled"):
+		return
+	sprite.set_meta(&"unit_art_world_scaled", true)
+	sprite.position *= WORLD_SCALE
+	sprite.offset *= WORLD_SCALE
+	sprite.scale *= WORLD_SCALE
+	if shadow != null:
+		# Absolute, not multiplied: NPC re-dress paths reset the sprite but not
+		# the shadow, and a compounding shadow would shrink on every re-dress.
+		shadow.scale = Vector2.ONE * WORLD_SCALE
+
 ## Ambient/anonymous figures with no individually-named art (legacy
 ## hand-placed NPCs without a matching unit, generic crowd fill).
 const FALLBACK_POOL: PackedStringArray = [

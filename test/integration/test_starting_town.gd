@@ -482,3 +482,41 @@ func test_blocking_cells_are_authored_data_not_painted_by_code() -> void:
 	assert_object(town.find_child("BuildingBoundaries", true, false)) \
 		.override_failure_message("BuildingBoundaries is a second source of truth; it must stay deleted") \
 		.is_null()
+
+
+func test_routined_npc_moves_to_hub_routine_position_in_town() -> void:
+	# Regression guard for the npc.gd routine-scene fix: routines are judged by
+	# the scene the NPC LIVES in (nearest instanced-scene ancestor), not
+	# get_tree().current_scene. In the hub they must still apply — a too-strict
+	# guard would silently freeze every routined NPC at their authored spot.
+	# Gate r1 finding: sella-varn's AUTHORED town position equals her MORNING
+	# routine position, and WorldClock defaults to morning — asserting the
+	# default phase is vacuous. Force afternoon, whose routine spot (1480,1250)
+	# is >1000px from the authored/morning spot, so a broken guard fails loudly.
+	var clock_before := WorldClock.to_dict()
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(3)
+	var npc: NPC = null
+	for candidate: Node in runner.scene().find_children("*", "NPC", true, false):
+		if (candidate as NPC).npc_id == "sella-varn":
+			npc = candidate as NPC
+			break
+	assert_object(npc).is_not_null()
+	if npc == null:
+		WorldClock.from_dict(clock_before)
+		return
+	var authored_position := npc.position
+	WorldClock.set_phase(&"afternoon", "test_routine_regression")
+	await runner.simulate_frames(2)
+	var row := NpcRoutines.placement("sella-varn", &"afternoon")
+	assert_bool(bool(row.get("present", false))).is_true()
+	var routine_position: Vector2 = row["position"]
+	# The target must sit farther from the authored spot than the proximity
+	# tolerance below, or this test proves nothing (measured: ~390px after
+	# grid snapping).
+	assert_float(routine_position.distance_to(authored_position)).is_greater(300.0)
+	assert_bool(npc.visible).is_true()
+	# Position is grid-snapped to the nearest walkable cell, so pin proximity,
+	# not equality.
+	assert_float(npc.position.distance_to(routine_position)).is_less(256.0)
+	WorldClock.from_dict(clock_before)

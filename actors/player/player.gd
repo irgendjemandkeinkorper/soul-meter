@@ -70,6 +70,7 @@ func _ready() -> void:
 	camera.limit_right = camera_bounds.end.x
 	camera.limit_bottom = camera_bounds.end.y
 	camera.position_smoothing_speed = 7.0
+	UnitArt.apply_world_scale(_sprite, get_node_or_null("Shadow"))
 	_footstep_rng.randomize()
 	_click_controller.move_refused.connect(func(refusal: Dictionary) -> void: move_refused.emit(refusal))
 	# Deferred so sibling TileMapLayers are ready; normalizes authored spawn points

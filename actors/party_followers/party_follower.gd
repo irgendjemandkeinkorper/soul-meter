@@ -27,6 +27,7 @@ var _is_moving: bool = false
 
 func _ready() -> void:
 	_apply_party_member()
+	UnitArt.apply_world_scale(_sprite, get_node_or_null("Shadow"))
 
 
 func configure(member: PartyMember, phase: float) -> void:

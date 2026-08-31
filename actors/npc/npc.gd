@@ -58,6 +58,18 @@ func _ready() -> void:
 	WorldClock.phase_changed.connect(_on_world_phase_changed)
 
 
+## The scene file this NPC is hosted in: nearest ancestor (excluding the NPC's
+## own packed scene) that is an instanced scene root. Empty when hosted in a
+## code-built tree (unit-test worlds) — routines then never apply.
+func _containing_scene_path() -> String:
+	var node: Node = get_parent()
+	while node != null:
+		if not node.scene_file_path.is_empty():
+			return node.scene_file_path
+		node = node.get_parent()
+	return ""
+
+
 func _on_world_phase_changed(
 	_previous: StringName, _current: StringName, _cause: String
 ) -> void:
@@ -71,9 +83,11 @@ func _apply_routine() -> void:
 	if row.is_empty():
 		return
 	# Routine positions are HUB_SCENE coordinates; never apply them elsewhere.
-	# (A null current_scene — headless test harness — passes through.)
-	var scene := get_tree().current_scene if is_inside_tree() else null
-	if scene != null and scene.scene_file_path != NpcRoutines.HUB_SCENE:
+	# Judge by the scene THIS NPC lives in, not get_tree().current_scene — under
+	# the test harness current_scene is the runner (or null), which let hub
+	# routines clobber interior placements (the 3 pre-2026-08-31
+	# test_interior_population failures).
+	if _containing_scene_path() != NpcRoutines.HUB_SCENE:
 		return
 	var present := bool(row.get("present", false))
 	visible = present
@@ -138,7 +152,12 @@ func _apply_visual_identity() -> void:
 		return
 	sprite.region_rect = visual_region
 	sprite.modulate = visual_modulate
+	if sprite.has_meta(&"unit_art_world_scaled"):
+		# A spawner already dressed and world-scaled this sprite before it
+		# entered the tree — re-imposing visual_scale would undo the shrink.
+		return
 	sprite.scale = visual_scale
+	UnitArtScript.apply_world_scale(sprite, get_node_or_null("Shadow"))
 
 
 func apply_isometric_visual(model_name: String, facing: String = "east") -> bool:
@@ -160,4 +179,9 @@ func apply_isometric_visual(model_name: String, facing: String = "east") -> bool
 	sprite.scale = Vector2.ONE
 	sprite.modulate = Color.WHITE
 	sprite.flip_h = facing == "west"
+	# Absolutes above reset any prior application — clear the guard so the
+	# world scale re-applies to the fresh unscaled state.
+	if sprite.has_meta(&"unit_art_world_scaled"):
+		sprite.remove_meta(&"unit_art_world_scaled")
+	UnitArtScript.apply_world_scale(sprite, get_node_or_null("Shadow"))
 	return true

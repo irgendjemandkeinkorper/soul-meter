@@ -27,6 +27,7 @@ func _ready() -> void:
 		return
 	GridPlacement.snap_to_walkable_cell(self, global_position)
 	_apply_visual_identity()
+	UnitArtScript.apply_world_scale($Sprite2D as Sprite2D, get_node_or_null("Shadow"))
 
 	var range_area := Area2D.new()
 	var shape := CollisionShape2D.new()

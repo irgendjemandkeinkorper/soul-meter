@@ -73,6 +73,7 @@ func test_marshal_uses_story_dialogue_and_generated_isometric_model() -> void:
 	)
 	assert_bool(sprite.offset.is_equal_approx(
 		preload("res://globals/unit_art.gd").PIVOT_OFFSET
+		* preload("res://globals/unit_art.gd").WORLD_SCALE
 	)).is_true()
 	_free_interior(interior)
 

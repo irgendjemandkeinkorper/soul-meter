@@ -28,6 +28,7 @@ func _ready() -> void:
 	_route_origin = position
 	if villager_texture != null:
 		_sprite.texture = villager_texture
+	UnitArt.apply_world_scale(_sprite, get_node_or_null("Shadow"))
 	if local_waypoints.is_empty():
 		set_physics_process(false)
 		return
