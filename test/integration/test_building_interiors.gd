@@ -8,8 +8,13 @@ const FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-f
 const WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
 const SHARED_INTERIOR_SCENE_PATH := "res://world/interiors/building_interior.tscn"
 const MAX_SOLID_PROP_FOOTPRINT_SIZE := Vector2(120.0, 48.0)
-const MIN_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.2
-const MAX_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.4
+## The 1.2–1.4 door band was ratified (#210) against the pre-shrink player art.
+## UnitArt.WORLD_SCALE later shrank every field actor while environment art
+## stayed at authored size (owner directive 2026-08-31: maps read larger), so
+## the measured door/player ratio is the authored band divided by that scale.
+const UnitArtRef := preload("res://globals/unit_art.gd")
+const MIN_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.2 / UnitArtRef.WORLD_SCALE
+const MAX_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.4 / UnitArtRef.WORLD_SCALE
 const MAX_PROP_TO_DOOR_HEIGHT_RATIO := 1.0
 const MAX_ARCHITECTURE_TO_DOOR_HEIGHT_RATIO := 1.8
 const TALL_ARCHITECTURE_NAME_PARTS: Array[String] = ["Shelf", "Shelving", "Column"]
