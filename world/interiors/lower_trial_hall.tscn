@@ -53,65 +53,65 @@ y_sort_enabled = true
 
 [node name="AudienceBenchFrontLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(315, 480)
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="AudienceBenchFrontRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(645, 480)
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="AudienceBenchRearLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(315, 545)
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="AudienceBenchRearRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(645, 545)
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="WardenBenchLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(310, 325)
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="WardenBenchRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(650, 325)
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="KeeperWitnessStoolLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(360, 155)
-scale = Vector2(3, 3)
+scale = Vector2(1.2, 1.2)
 texture = ExtResource("8_stool")
 offset = Vector2(0, -46)
 
 [node name="KeeperWitnessStoolRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(600, 155)
-scale = Vector2(3, 3)
+scale = Vector2(1.2, 1.2)
 texture = ExtResource("8_stool")
 offset = Vector2(0, -46)
 
 [node name="JawbraceWarningPlateLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(105, 155)
-scale = Vector2(0.34, 0.34)
+scale = Vector2(0.17, 0.17)
 texture = ExtResource("9_warning_plate")
 
 [node name="JawbraceWarningPlateRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(855, 155)
-scale = Vector2(0.34, 0.34)
+scale = Vector2(0.17, 0.17)
 texture = ExtResource("9_warning_plate")
 
 [node name="HallLantern" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(480, 178)
-scale = Vector2(0.55, 0.55)
+scale = Vector2(0.275, 0.275)
 texture = ExtResource("10_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("11_ambient_motion")
@@ -154,7 +154,7 @@ offset_top = 548.0
 offset_right = 740.0
 offset_bottom = 584.0
 theme_type_variation = &"EyebrowLabel"
-text = "SPEAK WITH THE AIDE OR BEGIN AT THE LEVER"
+text = "Speak with the aide or begin at the lever"
 horizontal_alignment = 1
 
 [node name="EntranceAide" parent="." instance=ExtResource("3_npc")]
@@ -167,8 +167,8 @@ metadata/canon_status = "PROVISIONAL — CANON REVIEW REQUIRED"
 
 [node name="InteractionSwitch" parent="." instance=ExtResource("4_switch")]
 position = Vector2(160, 500)
-display_name = "TRIAL LEVER"
-prompt_text = "PULL"
+display_name = "Trial Lever"
+prompt_text = "Pull"
 interaction_text = "The first gate lifts."
 interaction_flag = "tutorial_interaction_gate_open"
 repeatable = false
@@ -197,11 +197,12 @@ offset_top = 386.0
 offset_right = 680.0
 offset_bottom = 416.0
 theme_type_variation = &"EyebrowLabel"
-text = "THE TRIAL WARDEN WILL ENGAGE"
+text = "The trial warden will engage"
 horizontal_alignment = 1
 
 [node name="TrialDoorKey" parent="." instance=ExtResource("5_pickup")]
 position = Vector2(130, 318)
+display_name = "Trial Key"
 item_id = "tools/lockpick_roll"
 amount = 1
 completion_flag = "tutorial_skill_door_open"

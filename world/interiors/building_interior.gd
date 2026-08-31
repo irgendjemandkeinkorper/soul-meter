@@ -37,7 +37,7 @@ const VENDORS_BY_INTERIOR := {
 const INTERIOR_INTERACTION_RADIUS := 56.0
 const VENDOR_SPACING := 128.0
 
-@export var building_name: String = "BUILDING"
+@export var building_name: String = "Building"
 @export var exit_transition_id: StringName = &""
 @export var floor_color := Color(0.12, 0.12, 0.14, 1.0)
 @export var accent_color := Color(0.55, 0.4, 0.22, 1.0)
@@ -64,7 +64,7 @@ func _ready() -> void:
 		wall.texture = wall_texture
 		wall.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	($AccentRug as Polygon2D).color = accent_color
-	($Title as Label).text = building_name.to_upper()
+	($Title as Label).text = building_name
 	_populate_townsfolk()
 	_populate_vendors()
 

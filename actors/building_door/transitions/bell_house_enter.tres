@@ -15,6 +15,6 @@ destination_scene = "res://world/interiors/bell_house.tscn"
 destination_location_id = &"bell_house_interior"
 spawn_id = &"entry"
 destination_spawn_position = Vector2(480, 400)
-prompt_text = "E — ENTER"
+prompt_text = "E — Enter"
 required_flag = "dom_bell_quest_open"
 locked_message = "Sella has not asked you to examine the bell."

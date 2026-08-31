@@ -8,6 +8,11 @@ const FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-f
 const WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
 const SHARED_INTERIOR_SCENE_PATH := "res://world/interiors/building_interior.tscn"
 const MAX_SOLID_PROP_FOOTPRINT_SIZE := Vector2(120.0, 48.0)
+const MIN_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.2
+const MAX_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.4
+const MAX_PROP_TO_DOOR_HEIGHT_RATIO := 1.0
+const MAX_ARCHITECTURE_TO_DOOR_HEIGHT_RATIO := 1.8
+const TALL_ARCHITECTURE_NAME_PARTS: Array[String] = ["Shelf", "Shelving", "Column"]
 ## Wave AD gate finding: the occupant contract must pin EXACT counts, not just a
 ## ceiling — a `<=` alone lets every staffed room silently lose all its
 ## occupants. Rooms absent from this map must have zero.
@@ -246,6 +251,97 @@ func test_all_registered_concrete_interiors_meet_dressing_contract() -> void:
 				.override_failure_message(
 					"Villager %s authored bounds %s leave room bounds %s: %s"
 					% [villager.name, authored_bounds, room_bounds, scene_path]
+				) \
+					.is_true()
+
+
+func test_all_registered_concrete_interiors_meet_scale_and_signage_contract() -> void:
+	for scene_path: String in _registered_concrete_interior_paths():
+		var packed := load(scene_path) as PackedScene
+		assert_object(packed) \
+			.override_failure_message("Registered interior does not load: %s" % scene_path) \
+			.is_not_null()
+		if packed == null:
+			continue
+
+		var interior := auto_free(packed.instantiate()) as Node2D
+		add_child(interior)
+		var player := interior.find_child("Player", true, false) as Player
+		var exit_door := interior.find_child("ExitDoor", true, false) as BuildingDoor
+		var dressing := _find_dressing_node(interior)
+		assert_object(player) \
+			.override_failure_message("Registered interior has no Player: %s" % scene_path) \
+			.is_not_null()
+		assert_object(exit_door) \
+			.override_failure_message("Registered interior has no ExitDoor: %s" % scene_path) \
+			.is_not_null()
+		assert_object(dressing) \
+			.override_failure_message("Registered interior has no *Dressing Node2D: %s" % scene_path) \
+			.is_not_null()
+		if player == null or exit_door == null or dressing == null:
+			continue
+
+		var player_sprite := player.get_node_or_null("Sprite2D") as Sprite2D
+		var door_sprite := exit_door.get_node_or_null("DoorSprite") as Sprite2D
+		assert_object(player_sprite) \
+			.override_failure_message("Player has no Sprite2D in %s" % scene_path) \
+			.is_not_null()
+		assert_object(door_sprite) \
+			.override_failure_message("ExitDoor has no DoorSprite in %s" % scene_path) \
+			.is_not_null()
+		if player_sprite == null or door_sprite == null:
+			continue
+
+		var player_visual_height := _opaque_visual_height(player_sprite)
+		var door_visual_height := _texture_visual_height(door_sprite)
+		assert_float(player_visual_height) \
+			.override_failure_message("Player texture has no rendered pixels: %s" % scene_path) \
+			.is_greater(0.0)
+		assert_float(door_visual_height) \
+			.override_failure_message("Door texture has no visual height: %s" % scene_path) \
+			.is_greater(0.0)
+		if player_visual_height <= 0.0 or door_visual_height <= 0.0:
+			continue
+
+		var door_to_player_ratio := door_visual_height / player_visual_height
+		assert_float(door_to_player_ratio) \
+			.override_failure_message(
+				"Door/player visual-height ratio %.3f must be at least %.1f: %s"
+				% [door_to_player_ratio, MIN_DOOR_TO_PLAYER_HEIGHT_RATIO, scene_path]
+			) \
+			.is_greater_equal(MIN_DOOR_TO_PLAYER_HEIGHT_RATIO)
+		assert_float(door_to_player_ratio) \
+			.override_failure_message(
+				"Door/player visual-height ratio %.3f must be at most %.1f: %s"
+				% [door_to_player_ratio, MAX_DOOR_TO_PLAYER_HEIGHT_RATIO, scene_path]
+			) \
+			.is_less_equal(MAX_DOOR_TO_PLAYER_HEIGHT_RATIO)
+
+		for descendant: Node in dressing.find_children("*", "Sprite2D", true, false):
+			var prop_sprite := descendant as Sprite2D
+			if prop_sprite == null or _has_named_ancestor(prop_sprite, dressing, "AmbientOccupants"):
+				continue
+			var prop_visual_height := _texture_visual_height(prop_sprite)
+			var maximum_ratio := (
+				MAX_ARCHITECTURE_TO_DOOR_HEIGHT_RATIO
+				if _is_tall_architecture_sprite(prop_sprite, dressing)
+				else MAX_PROP_TO_DOOR_HEIGHT_RATIO
+			)
+			assert_float(prop_visual_height / door_visual_height) \
+				.override_failure_message(
+					"Dressing prop %s is taller than its %.1fx door limit: %s"
+					% [prop_sprite.get_path(), maximum_ratio, scene_path]
+				) \
+				.is_less_equal(maximum_ratio)
+
+		for descendant: Node in interior.find_children("*", "Label", true, false):
+			var label := descendant as Label
+			if label == null or not _is_floating_all_caps_floor_label(label, interior, exit_door):
+				continue
+			assert_bool(false) \
+				.override_failure_message(
+					"Floating all-caps floor label %s (%s) remains in %s"
+					% [label.get_path(), label.text, scene_path]
 				) \
 				.is_true()
 
@@ -588,6 +684,57 @@ func _registered_concrete_interior_paths() -> Array[String]:
 func _find_dressing_node(interior: Node) -> Node2D:
 	var candidates := interior.find_children("*Dressing", "Node2D", true, false)
 	return candidates[0] as Node2D if not candidates.is_empty() else null
+
+
+func _opaque_visual_height(sprite: Sprite2D) -> float:
+	if sprite.texture == null:
+		return 0.0
+	var image := sprite.texture.get_image()
+	if image == null or image.is_empty():
+		return 0.0
+	return float(image.get_used_rect().size.y) * absf(sprite.global_scale.y)
+
+
+func _texture_visual_height(sprite: Sprite2D) -> float:
+	if sprite.texture == null:
+		return 0.0
+	return float(sprite.texture.get_height()) * absf(sprite.global_scale.y)
+
+
+func _is_tall_architecture_sprite(sprite: Sprite2D, dressing: Node) -> bool:
+	var candidate: Node = sprite
+	while candidate != null and candidate != dressing:
+		var candidate_name := String(candidate.name)
+		for name_part: String in TALL_ARCHITECTURE_NAME_PARTS:
+			if candidate_name.contains(name_part):
+				return true
+		candidate = candidate.get_parent()
+	return false
+
+
+func _has_named_ancestor(node: Node, boundary: Node, ancestor_name: String) -> bool:
+	var candidate := node.get_parent()
+	while candidate != null and candidate != boundary:
+		if String(candidate.name) == ancestor_name:
+			return true
+		candidate = candidate.get_parent()
+	return false
+
+
+func _is_floating_all_caps_floor_label(
+	label: Label,
+	interior: Node,
+	exit_door: BuildingDoor,
+) -> bool:
+	if exit_door.is_ancestor_of(label):
+		return false
+	var ancestor := label.get_parent()
+	while ancestor != null and ancestor != interior:
+		if ancestor is CanvasLayer:
+			return false
+		ancestor = ancestor.get_parent()
+	var text := label.text.strip_edges()
+	return not text.is_empty() and text == text.to_upper() and text != text.to_lower()
 
 
 func _has_only_valid_direct_footprint_collisions(root: Node) -> bool:

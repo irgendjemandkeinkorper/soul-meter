@@ -45,19 +45,19 @@ y_sort_enabled = true
 
 [node name="HearthStool" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
 position = Vector2(610, 430)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -39)
 
 [node name="ClayWaterPot" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
 position = Vector2(110, 520)
-scale = Vector2(0.32, 0.32)
+scale = Vector2(0.16, 0.16)
 texture = ExtResource("7_pot")
 offset = Vector2(0, -90)
 
 [node name="HangingLantern" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
 position = Vector2(155, 205)
-scale = Vector2(0.46, 0.46)
+scale = Vector2(0.23, 0.23)
 texture = ExtResource("8_lantern")
 offset = Vector2(0, -115)
 script = ExtResource("9_ambient_motion")
@@ -72,7 +72,7 @@ y_sort_enabled = true
 position = Vector2(275, 310)
 
 [node name="Sprite2D" type="Sprite2D" parent="BellHouseDressing/SolidProps/WorkTable"]
-scale = Vector2(3, 1.6)
+scale = Vector2(1.5, 0.8)
 texture = ExtResource("3_table")
 offset = Vector2(0, -61)
 
@@ -84,7 +84,7 @@ shape = SubResource("table_footprint")
 position = Vector2(275, 430)
 
 [node name="Sprite2D" type="Sprite2D" parent="BellHouseDressing/SolidProps/HearthBench"]
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("4_bench")
 offset = Vector2(0, -46)
 
@@ -96,7 +96,7 @@ shape = SubResource("bench_footprint")
 position = Vector2(855, 520)
 
 [node name="Sprite2D" type="Sprite2D" parent="BellHouseDressing/SolidProps/BellRopeStores"]
-scale = Vector2(0.45, 0.45)
+scale = Vector2(0.225, 0.225)
 texture = ExtResource("6_crates")
 offset = Vector2(0, -115)
 

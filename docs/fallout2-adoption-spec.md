@@ -641,6 +641,28 @@ payloads rather than UI combat arithmetic.
   net** (the run's sole error was that reflection call, since replaced);
   sweep 11/0; shot eyeballed.
 
+- **Wave AH — interior scale normalization (#210 scale half) — SHIPPED
+  2026-08-31** (owner playtest: units read ~2× the height of interior props;
+  floating ALL-CAPS placards remained). Ruling: door visual height 1.2–1.4×
+  the unit sprite's opaque-pixel height; props ≤ door; tall architecture
+  (Shelf/Shelving/Column) ≤ 1.8× door; no floating ALL-CAPS labels. The
+  tangle fleet under-delivered (test only, no scenes) — the salvage kept its
+  scale-contract test as the acceptance harness (126 failing assertions on
+  main) and the implementation was re-issued to a single codex worker per
+  the escalation path. Result: the shared door was ALREADY 1.3003× player
+  (327.68 vs 252 px), so the real offenders were props — 114 `Sprite2D.scale`
+  reductions (112 exact halvings, two stools 3→1.2) across the shared base +
+  20 registered interiors; positions/collision/uids untouched. Signage:
+  `building_interior.gd` no longer force-uppercases the Title, prompts and
+  display names de-capsed ("E — Enter", "Offering Box"); mixed-case room
+  titles kept (gate-ratified: the ruling bans ALL-CAPS placards, not room
+  identifiers). One follow-up: `test_world_scavenging.gd`'s expected ledger
+  cause tracks the display name. All prop scales remain PROVISIONAL owner
+  surfaces. Interiors suite 18/18; full suite **1055/1→0** (the 1 was the
+  cause string); `test_interior_population.gd`'s 3 failures reproduce on
+  clean main (pre-existing); sweep 11/0, interior shots eyeballed. Gate r1
+  **PROCEED**.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the

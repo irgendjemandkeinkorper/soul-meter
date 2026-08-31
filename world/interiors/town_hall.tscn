@@ -32,13 +32,13 @@ y_sort_enabled = true
 
 [node name="PublicNoticeBoard" type="Sprite2D" parent="Room/TownHallDressing/SoftDetails"]
 position = Vector2(112, 225)
-scale = Vector2(0.42, 0.42)
+scale = Vector2(0.21, 0.21)
 texture = ExtResource("4_notice_board")
 offset = Vector2(0, -106)
 
 [node name="CouncilLantern" type="Sprite2D" parent="Room/TownHallDressing/SoftDetails"]
 position = Vector2(480, 178)
-scale = Vector2(0.58, 0.58)
+scale = Vector2(0.29, 0.29)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("6_ambient_motion")
@@ -54,7 +54,7 @@ collision_layer = 1
 collision_mask = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/TownHallDressing/SolidProps/PetitionerBenchWest"]
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("3_bench")
 offset = Vector2(0, -46)
 
@@ -69,7 +69,7 @@ collision_layer = 1
 collision_mask = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/TownHallDressing/SolidProps/PetitionerBenchEast"]
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("3_bench")
 offset = Vector2(0, -46)
 

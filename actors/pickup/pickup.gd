@@ -12,8 +12,8 @@ const THEFT_REPUTATION_DELTA: float = -5.0
 
 
 func _ready() -> void:
-	display_name = "PICKUP"
-	prompt_text = "TAKE"
+	display_name = "Pickup"
+	prompt_text = "Take"
 	repeatable = true
 	super._ready()
 

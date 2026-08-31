@@ -35,13 +35,13 @@ y_sort_enabled = true
 
 [node name="VotivePot" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SoftDetails"]
 position = Vector2(270, 180)
-scale = Vector2(0.34, 0.34)
+scale = Vector2(0.17, 0.17)
 texture = ExtResource("5_votive_pot")
 offset = Vector2(0, -92)
 
 [node name="UndercroftLanternWest" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SoftDetails"]
 position = Vector2(350, 160)
-scale = Vector2(0.44, 0.44)
+scale = Vector2(0.22, 0.22)
 texture = ExtResource("6_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("7_ambient_motion")
@@ -51,7 +51,7 @@ period = 4.6
 
 [node name="UndercroftLanternEast" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SoftDetails"]
 position = Vector2(610, 160)
-scale = Vector2(-0.44, 0.44)
+scale = Vector2(-0.22, 0.22)
 texture = ExtResource("6_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("7_ambient_motion")
@@ -66,7 +66,7 @@ y_sort_enabled = true
 position = Vector2(105, 285)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/StatueFragmentWest"]
-scale = Vector2(0.38, 0.38)
+scale = Vector2(0.19, 0.19)
 texture = ExtResource("3_statue_fragment")
 offset = Vector2(0, -108)
 
@@ -79,7 +79,7 @@ disabled = false
 position = Vector2(855, 285)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/StatueFragmentEast"]
-scale = Vector2(-0.38, 0.38)
+scale = Vector2(-0.19, 0.19)
 texture = ExtResource("3_statue_fragment")
 offset = Vector2(0, -108)
 
@@ -92,7 +92,7 @@ disabled = false
 position = Vector2(830, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/StoredOfferings"]
-scale = Vector2(-0.44, 0.44)
+scale = Vector2(-0.22, 0.22)
 texture = ExtResource("4_offering_crates")
 offset = Vector2(0, -115)
 
@@ -105,7 +105,7 @@ disabled = false
 position = Vector2(735, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/SealedVotivePot"]
-scale = Vector2(0.38, 0.38)
+scale = Vector2(0.19, 0.19)
 texture = ExtResource("5_votive_pot")
 offset = Vector2(0, -92)
 
@@ -116,7 +116,8 @@ disabled = false
 
 [node name="OfferingBox" parent="." instance=ExtResource("2_chest")]
 position = Vector2(150, 500)
-display_name = "OFFERING BOX"
+display_name = "Offering Box"
+prompt_text = "Open"
 interaction_flag = "loot_opened_shrine_undercroft_offering_box"
 loot = Array[Dictionary]([{"item_id": "relics/votive_cinder", "quantity": 2}])
 container_id = "shrine-undercroft-offering-box"

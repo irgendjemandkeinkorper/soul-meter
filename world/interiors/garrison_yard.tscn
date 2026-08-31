@@ -33,7 +33,7 @@ y_sort_enabled = true
 
 [node name="DutyRoster" type="Sprite2D" parent="GarrisonYardDressing/SoftDetails"]
 position = Vector2(110, 220)
-scale = Vector2(0.42, 0.42)
+scale = Vector2(0.21, 0.21)
 texture = ExtResource("4_notice_board")
 offset = Vector2(0, -106)
 
@@ -44,7 +44,7 @@ y_sort_enabled = true
 position = Vector2(105, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="GarrisonYardDressing/SolidProps/DrillSupplies"]
-scale = Vector2(0.45, 0.45)
+scale = Vector2(0.225, 0.225)
 texture = ExtResource("2_crates")
 offset = Vector2(0, -115)
 
@@ -56,7 +56,7 @@ shape = SubResource("supply_footprint")
 position = Vector2(860, 460)
 
 [node name="Sprite2D" type="Sprite2D" parent="GarrisonYardDressing/SolidProps/WatchBrazier"]
-scale = Vector2(0.42, 0.42)
+scale = Vector2(0.21, 0.21)
 texture = ExtResource("3_brazier")
 offset = Vector2(0, -112)
 script = ExtResource("5_ambient_motion")

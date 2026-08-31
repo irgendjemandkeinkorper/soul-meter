@@ -32,13 +32,13 @@ y_sort_enabled = true
 
 [node name="TrialWarningPlate" type="Sprite2D" parent="Room/TrialHallDressing/SoftDetails"]
 position = Vector2(116, 225)
-scale = Vector2(0.34, 0.34)
+scale = Vector2(0.17, 0.17)
 texture = ExtResource("4_warning_plate")
 offset = Vector2(0, -110)
 
 [node name="LanternWest" type="Sprite2D" parent="Room/TrialHallDressing/SoftDetails"]
 position = Vector2(250, 178)
-scale = Vector2(0.58, 0.58)
+scale = Vector2(0.29, 0.29)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("6_ambient_motion")
@@ -47,7 +47,7 @@ phase = 0.8
 
 [node name="LanternEast" type="Sprite2D" parent="Room/TrialHallDressing/SoftDetails"]
 position = Vector2(690, 178)
-scale = Vector2(0.58, 0.58)
+scale = Vector2(0.29, 0.29)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("6_ambient_motion")
@@ -63,7 +63,7 @@ collision_layer = 1
 collision_mask = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/TrialHallDressing/SolidProps/AudienceBenchWest"]
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("3_bench")
 offset = Vector2(0, -46)
 
@@ -78,7 +78,7 @@ collision_layer = 1
 collision_mask = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/TrialHallDressing/SolidProps/AudienceBenchEast"]
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("3_bench")
 offset = Vector2(0, -46)
 

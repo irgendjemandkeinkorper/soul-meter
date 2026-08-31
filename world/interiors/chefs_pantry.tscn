@@ -21,7 +21,8 @@ accent_color = Color(0.75, 0.39, 0.22, 1)
 
 [node name="SupplyCrate" parent="." instance=ExtResource("2_chest")]
 position = Vector2(150, 500)
-display_name = "SUPPLY CRATE"
+display_name = "Supply Crate"
+prompt_text = "Open"
 interaction_flag = "loot_opened_chefs_pantry_supply_crate"
 loot = Array[Dictionary]([{"item_id": "consumables/loam_bread", "quantity": 2}, {"item_id": "consumables/loam_smoked_eel", "quantity": 1}])
 container_id = "chefs-pantry-supply-crate"
@@ -37,19 +38,19 @@ y_sort_enabled = true
 
 [node name="DryGoodsPotWest" type="Sprite2D" parent="ChefsPantryDressing/SoftDetails"]
 position = Vector2(105, 300)
-scale = Vector2(0.3, 0.3)
+scale = Vector2(0.15, 0.15)
 texture = ExtResource("4_pot")
 offset = Vector2(0, -90)
 
 [node name="DryGoodsPotEast" type="Sprite2D" parent="ChefsPantryDressing/SoftDetails"]
 position = Vector2(855, 300)
-scale = Vector2(-0.3, 0.3)
+scale = Vector2(-0.15, 0.15)
 texture = ExtResource("4_pot")
 offset = Vector2(0, -90)
 
 [node name="HangingLantern" type="Sprite2D" parent="ChefsPantryDressing/SoftDetails"]
 position = Vector2(480, 190)
-scale = Vector2(0.46, 0.46)
+scale = Vector2(0.23, 0.23)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -115)
 script = ExtResource("6_ambient_motion")
@@ -64,7 +65,7 @@ y_sort_enabled = true
 position = Vector2(835, 510)
 
 [node name="Sprite2D" type="Sprite2D" parent="ChefsPantryDressing/SolidProps/DryGoodsCratesEast"]
-scale = Vector2(0.45, 0.45)
+scale = Vector2(0.225, 0.225)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 
@@ -76,7 +77,7 @@ shape = SubResource("crate_footprint")
 position = Vector2(705, 510)
 
 [node name="Sprite2D" type="Sprite2D" parent="ChefsPantryDressing/SolidProps/ProduceCratesEast"]
-scale = Vector2(-0.42, 0.42)
+scale = Vector2(-0.21, 0.21)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 

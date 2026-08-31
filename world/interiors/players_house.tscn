@@ -34,7 +34,8 @@ position = Vector2(800, 150)
 
 [node name="Provisions" parent="." instance=ExtResource("3_chest")]
 position = Vector2(150, 500)
-display_name = "SUPPLY CRATE"
+display_name = "Supply Crate"
+prompt_text = "Open"
 interaction_flag = "loot_opened_players_house_provisions"
 loot = Array[Dictionary]([{"item_id": "consumables/hearthloaf", "quantity": 2}, {"item_id": "consumables/loam_bread", "quantity": 1}])
 container_id = "players-house-provisions"
@@ -49,19 +50,19 @@ y_sort_enabled = true
 
 [node name="TravelStool" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
 position = Vector2(630, 435)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 texture = ExtResource("6_stool")
 offset = Vector2(0, -39)
 
 [node name="WashPot" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
 position = Vector2(855, 510)
-scale = Vector2(0.32, 0.32)
+scale = Vector2(0.16, 0.16)
 texture = ExtResource("7_pot")
 offset = Vector2(0, -90)
 
 [node name="HangingLantern" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
 position = Vector2(155, 205)
-scale = Vector2(0.46, 0.46)
+scale = Vector2(0.23, 0.23)
 texture = ExtResource("8_lantern")
 offset = Vector2(0, -115)
 script = ExtResource("9_ambient_motion")
@@ -76,7 +77,7 @@ y_sort_enabled = true
 position = Vector2(290, 315)
 
 [node name="Sprite2D" type="Sprite2D" parent="PlayersHouseDressing/SolidProps/MapTable"]
-scale = Vector2(3, 1.6)
+scale = Vector2(1.5, 0.8)
 texture = ExtResource("4_table")
 offset = Vector2(0, -61)
 
@@ -88,7 +89,7 @@ shape = SubResource("table_footprint")
 position = Vector2(290, 435)
 
 [node name="Sprite2D" type="Sprite2D" parent="PlayersHouseDressing/SolidProps/HearthBench"]
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.125, 1.125)
 texture = ExtResource("5_bench")
 offset = Vector2(0, -46)
 

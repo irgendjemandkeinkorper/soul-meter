@@ -27,19 +27,19 @@ y_sort_enabled = true
 
 [node name="IndexBoardWest" type="Sprite2D" parent="Room/RegistryStacksDressing/SoftDetails"]
 position = Vector2(270, 165)
-scale = Vector2(0.34, 0.34)
+scale = Vector2(0.17, 0.17)
 texture = ExtResource("3_notice_board")
 offset = Vector2(0, -112)
 
 [node name="IndexBoardEast" type="Sprite2D" parent="Room/RegistryStacksDressing/SoftDetails"]
 position = Vector2(690, 165)
-scale = Vector2(-0.34, 0.34)
+scale = Vector2(-0.17, 0.17)
 texture = ExtResource("3_notice_board")
 offset = Vector2(0, -112)
 
 [node name="StacksLantern" type="Sprite2D" parent="Room/RegistryStacksDressing/SoftDetails"]
 position = Vector2(480, 155)
-scale = Vector2(0.46, 0.46)
+scale = Vector2(0.23, 0.23)
 texture = ExtResource("4_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("5_ambient_motion")
@@ -54,7 +54,7 @@ y_sort_enabled = true
 position = Vector2(95, 235)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesNorthwest"]
-scale = Vector2(0.46, 0.46)
+scale = Vector2(0.23, 0.23)
 texture = ExtResource("2_ledger_boxes")
 offset = Vector2(0, -115)
 
@@ -67,7 +67,7 @@ disabled = false
 position = Vector2(95, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesSouthwest"]
-scale = Vector2(0.46, 0.46)
+scale = Vector2(0.23, 0.23)
 texture = ExtResource("2_ledger_boxes")
 offset = Vector2(0, -115)
 
@@ -80,7 +80,7 @@ disabled = false
 position = Vector2(865, 235)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesNortheast"]
-scale = Vector2(-0.46, 0.46)
+scale = Vector2(-0.23, 0.23)
 texture = ExtResource("2_ledger_boxes")
 offset = Vector2(0, -115)
 
@@ -93,7 +93,7 @@ disabled = false
 position = Vector2(865, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/RegistryStacksDressing/SolidProps/LedgerBoxesSoutheast"]
-scale = Vector2(-0.46, 0.46)
+scale = Vector2(-0.23, 0.23)
 texture = ExtResource("2_ledger_boxes")
 offset = Vector2(0, -115)
 

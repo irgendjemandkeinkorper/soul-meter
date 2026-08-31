@@ -43,7 +43,7 @@ position = Vector2(112, 238)
 [node name="Sprite2D" type="Sprite2D" parent="RiverShrineDressing/SolidProps/MossRockWest"]
 texture = ExtResource("4_moss_rock")
 offset = Vector2(0, -239)
-scale = Vector2(0.3, 0.3)
+scale = Vector2(0.15, 0.15)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RiverShrineDressing/SolidProps/MossRockWest"]
 position = Vector2(0, -12)
@@ -55,7 +55,7 @@ position = Vector2(854, 338)
 [node name="Sprite2D" type="Sprite2D" parent="RiverShrineDressing/SolidProps/MossRockEast"]
 texture = ExtResource("4_moss_rock")
 offset = Vector2(0, -239)
-scale = Vector2(-0.26, 0.26)
+scale = Vector2(-0.13, 0.13)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RiverShrineDressing/SolidProps/MossRockEast"]
 position = Vector2(0, -10)
@@ -67,7 +67,7 @@ position = Vector2(842, 522)
 [node name="Sprite2D" type="Sprite2D" parent="RiverShrineDressing/SolidProps/OfferingCrates"]
 texture = ExtResource("6_crates")
 offset = Vector2(0, -115)
-scale = Vector2(0.5, 0.5)
+scale = Vector2(0.25, 0.25)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RiverShrineDressing/SolidProps/OfferingCrates"]
 position = Vector2(0, -11)
@@ -77,31 +77,31 @@ shape = SubResource("crate_shape")
 position = Vector2(112, 128)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
-scale = Vector2(0.42, 0.42)
+scale = Vector2(0.21, 0.21)
 
 [node name="BloomNorthEast" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(860, 155)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
-scale = Vector2(-0.38, 0.38)
+scale = Vector2(-0.19, 0.19)
 
 [node name="BloomSouthWest" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(245, 554)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
-scale = Vector2(0.34, 0.34)
+scale = Vector2(0.17, 0.17)
 
 [node name="BloomSouthEast" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(700, 548)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
-scale = Vector2(-0.32, 0.32)
+scale = Vector2(-0.16, 0.16)
 
 [node name="LanternWest" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
 position = Vector2(252, 252)
 texture = ExtResource("7_lantern")
 offset = Vector2(0, -115)
-scale = Vector2(0.52, 0.52)
+scale = Vector2(0.26, 0.26)
 script = ExtResource("8_ambient_motion")
 phase = 0.7
 period = 4.2
@@ -110,7 +110,7 @@ period = 4.2
 position = Vector2(708, 252)
 texture = ExtResource("7_lantern")
 offset = Vector2(0, -115)
-scale = Vector2(-0.52, 0.52)
+scale = Vector2(-0.26, 0.26)
 script = ExtResource("8_ambient_motion")
 phase = 3.8
 period = 4.6
@@ -181,7 +181,8 @@ position = Vector2(800, 150)
 
 [node name="OfferingBox" parent="." instance=ExtResource("3_chest")]
 position = Vector2(150, 500)
-display_name = "OFFERING BOX"
+display_name = "Offering Box"
+prompt_text = "Open"
 interaction_flag = "loot_opened_river_shrine_offering_box"
 loot = Array[Dictionary]([{"item_id": "relics/votive_cinder", "quantity": 1}])
 container_id = "river-shrine-offering-box"

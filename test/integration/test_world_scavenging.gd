@@ -91,7 +91,7 @@ func test_real_scene_owned_container_take_updates_inventory_and_theft_ledger() -
 	assert_int(GameState.item_count(ItemIds.RELICS_VOTIVE_CINDER)).is_equal(1)
 	var events: Array[ReputationEvent] = Reputation.events_for(FactionIds.IRONBRAND_SENTINELS)
 	assert_int(events.size()).is_equal(1)
-	assert_str(events[0].cause).is_equal("Took goods from OFFERING BOX")
+	assert_str(events[0].cause).is_equal("Took goods from Offering Box")
 
 
 func _find_chests(root: Node) -> Array[Chest]:

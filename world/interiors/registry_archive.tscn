@@ -30,13 +30,13 @@ y_sort_enabled = true
 
 [node name="LedgerNoticeBoard" type="Sprite2D" parent="RegistryArchiveDressing/SoftDetails"]
 position = Vector2(112, 220)
-scale = Vector2(0.42, 0.42)
+scale = Vector2(0.21, 0.21)
 texture = ExtResource("4_notice_board")
 offset = Vector2(0, -106)
 
 [node name="ArchiveLantern" type="Sprite2D" parent="RegistryArchiveDressing/SoftDetails"]
 position = Vector2(480, 180)
-scale = Vector2(0.56, 0.56)
+scale = Vector2(0.28, 0.28)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("6_ambient_motion")
@@ -50,7 +50,7 @@ y_sort_enabled = true
 position = Vector2(105, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="RegistryArchiveDressing/SolidProps/LedgerBoxesWest"]
-scale = Vector2(0.45, 0.45)
+scale = Vector2(0.225, 0.225)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 
@@ -62,7 +62,7 @@ shape = SubResource("ledger_box_footprint")
 position = Vector2(860, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="RegistryArchiveDressing/SolidProps/LedgerBoxesEast"]
-scale = Vector2(-0.45, 0.45)
+scale = Vector2(-0.225, 0.225)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 

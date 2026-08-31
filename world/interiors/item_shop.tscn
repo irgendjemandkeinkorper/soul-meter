@@ -32,55 +32,55 @@ y_sort_enabled = true
 
 [node name="WallShelfWest" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(115, 130)
-scale = Vector2(2.8, 1.6)
+scale = Vector2(1.4, 0.8)
 texture = ExtResource("4_shelf")
 offset = Vector2(0, -50.5)
 
 [node name="WallShelfCenter" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(245, 130)
-scale = Vector2(2.8, 1.6)
+scale = Vector2(1.4, 0.8)
 texture = ExtResource("4_shelf")
 offset = Vector2(0, -50.5)
 
 [node name="WallShelfEast" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(860, 285)
-scale = Vector2(2.8, 1.6)
+scale = Vector2(1.4, 0.8)
 texture = ExtResource("4_shelf")
 offset = Vector2(0, -50.5)
 
 [node name="CounterFrontWest" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(390, 289)
-scale = Vector2(3.4, 1.6)
+scale = Vector2(1.7, 0.8)
 texture = ExtResource("6_counter")
 offset = Vector2(0, -61)
 
 [node name="CounterFrontEast" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(570, 289)
-scale = Vector2(3.4, 1.6)
+scale = Vector2(1.7, 0.8)
 texture = ExtResource("6_counter")
 offset = Vector2(0, -61)
 
 [node name="CustomerStoolWest" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(365, 355)
-scale = Vector2(1.75, 1.75)
+scale = Vector2(0.875, 0.875)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -50)
 
 [node name="CustomerStoolCenter" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(480, 375)
-scale = Vector2(1.75, 1.75)
+scale = Vector2(0.875, 0.875)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -50)
 
 [node name="CustomerStoolEast" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(595, 355)
-scale = Vector2(1.75, 1.75)
+scale = Vector2(0.875, 0.875)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -50)
 
 [node name="ShopLantern" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(480, 175)
-scale = Vector2(0.54, 0.54)
+scale = Vector2(0.27, 0.27)
 texture = ExtResource("8_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("9_ambient_motion")
@@ -94,7 +94,7 @@ y_sort_enabled = true
 position = Vector2(90, 260)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ItemShopDressing/SolidProps/StockCratesNorthwest"]
-scale = Vector2(0.45, 0.45)
+scale = Vector2(0.225, 0.225)
 texture = ExtResource("7_crates")
 offset = Vector2(0, -115)
 
@@ -106,7 +106,7 @@ shape = SubResource("crate_blocker")
 position = Vector2(90, 470)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ItemShopDressing/SolidProps/StockCratesSouthwest"]
-scale = Vector2(0.45, 0.45)
+scale = Vector2(0.225, 0.225)
 texture = ExtResource("7_crates")
 offset = Vector2(0, -115)
 
@@ -118,7 +118,7 @@ shape = SubResource("crate_blocker")
 position = Vector2(865, 490)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ItemShopDressing/SolidProps/StockCratesSoutheast"]
-scale = Vector2(0.45, 0.45)
+scale = Vector2(0.225, 0.225)
 texture = ExtResource("7_crates")
 offset = Vector2(0, -115)
 
@@ -135,7 +135,8 @@ position = Vector2(800, 150)
 
 [node name="BackroomCrate" parent="." instance=ExtResource("3_chest")]
 position = Vector2(150, 500)
-display_name = "SUPPLY CRATE"
+display_name = "Supply Crate"
+prompt_text = "Open"
 interaction_flag = "loot_opened_item_shop_backroom_crate"
 loot = Array[Dictionary]([{"item_id": "tools/surveyors_chalk", "quantity": 1}, {"item_id": "materials/lamp_oil", "quantity": 2}])
 container_id = "item-shop-backroom-crate"

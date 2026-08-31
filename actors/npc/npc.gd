@@ -41,7 +41,7 @@ func _ready() -> void:
 	range_area.body_exited.connect(_on_body.bind(false))
 
 	_prompt = Label.new()
-	_prompt.text = "E — TRADE" if not vendor_id.is_empty() else "E — TALK"
+	_prompt.text = "E — Trade" if not vendor_id.is_empty() else "E — Talk"
 	_prompt.theme_type_variation = "EyebrowLabel"
 	_prompt.position = Vector2(-100, -108)
 	_prompt.size = Vector2(200, 32)

@@ -64,7 +64,7 @@ offset_top = 64.0
 offset_right = 680.0
 offset_bottom = 112.0
 theme_type_variation = &"HeadingLabel"
-text = "BUILDING"
+text = "Building"
 horizontal_alignment = 1
 
 [node name="Counter" type="Polygon2D" parent="."]

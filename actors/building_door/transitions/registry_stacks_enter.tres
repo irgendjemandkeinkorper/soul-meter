@@ -15,4 +15,4 @@ destination_scene = "res://world/interiors/registry_stacks.tscn"
 destination_location_id = &"registry_stacks_interior"
 spawn_id = &"entry"
 destination_spawn_position = Vector2(480, 400)
-prompt_text = "E — ENTER"
+prompt_text = "E — Enter"

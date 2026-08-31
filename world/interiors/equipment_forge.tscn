@@ -32,14 +32,14 @@ y_sort_enabled = true
 [node name="WallToolWest" type="Sprite2D" parent="Room/EquipmentForgeDressing/SoftDetails"]
 position = Vector2(250, 170)
 rotation = -0.35
-scale = Vector2(0.32, 0.32)
+scale = Vector2(0.16, 0.16)
 texture = ExtResource("5_iron_tool")
 offset = Vector2(0, -104)
 
 [node name="WallToolEast" type="Sprite2D" parent="Room/EquipmentForgeDressing/SoftDetails"]
 position = Vector2(710, 170)
 rotation = 0.35
-scale = Vector2(-0.32, 0.32)
+scale = Vector2(-0.16, 0.16)
 texture = ExtResource("5_iron_tool")
 offset = Vector2(0, -104)
 
@@ -50,7 +50,7 @@ y_sort_enabled = true
 position = Vector2(100, 255)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeStockCrates"]
-scale = Vector2(0.5, 0.5)
+scale = Vector2(0.25, 0.25)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 
@@ -63,7 +63,7 @@ disabled = false
 position = Vector2(825, 325)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeBrazier"]
-scale = Vector2(0.52, 0.52)
+scale = Vector2(0.26, 0.26)
 texture = ExtResource("4_brazier")
 offset = Vector2(0, -105)
 script = ExtResource("6_ambient_motion")
@@ -81,7 +81,7 @@ disabled = false
 position = Vector2(835, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/EquipmentForgeDressing/SolidProps/FinishedGoodsCrates"]
-scale = Vector2(-0.46, 0.46)
+scale = Vector2(-0.23, 0.23)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 
@@ -92,7 +92,8 @@ disabled = false
 
 [node name="RivetCrate" parent="." instance=ExtResource("2_chest")]
 position = Vector2(150, 500)
-display_name = "SUPPLY CRATE"
+display_name = "Supply Crate"
+prompt_text = "Open"
 interaction_flag = "loot_opened_equipment_forge_rivet_crate"
 loot = Array[Dictionary]([{"item_id": "materials/iron_rivets", "quantity": 2}])
 container_id = "equipment-forge-rivet-crate"

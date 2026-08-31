@@ -31,13 +31,13 @@ y_sort_enabled = true
 
 [node name="InventoryPot" type="Sprite2D" parent="Room/CaskWarehouseDressing/SoftDetails"]
 position = Vector2(730, 180)
-scale = Vector2(0.38, 0.38)
+scale = Vector2(0.19, 0.19)
 texture = ExtResource("4_pot")
 offset = Vector2(0, -92)
 
 [node name="WarehouseLantern" type="Sprite2D" parent="Room/CaskWarehouseDressing/SoftDetails"]
 position = Vector2(480, 165)
-scale = Vector2(0.5, 0.5)
+scale = Vector2(0.25, 0.25)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("6_ambient_motion")
@@ -52,7 +52,7 @@ y_sort_enabled = true
 position = Vector2(100, 230)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNorthwest"]
-scale = Vector2(0.48, 0.48)
+scale = Vector2(0.24, 0.24)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 
@@ -65,7 +65,7 @@ disabled = false
 position = Vector2(860, 230)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNortheast"]
-scale = Vector2(-0.48, 0.48)
+scale = Vector2(-0.24, 0.24)
 texture = ExtResource("3_crates")
 offset = Vector2(0, -115)
 
@@ -78,7 +78,7 @@ disabled = false
 position = Vector2(840, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/SealedPotSoutheast"]
-scale = Vector2(0.42, 0.42)
+scale = Vector2(0.21, 0.21)
 texture = ExtResource("4_pot")
 offset = Vector2(0, -92)
 
@@ -89,7 +89,8 @@ disabled = false
 
 [node name="SupplyCrate" parent="." instance=ExtResource("2_chest")]
 position = Vector2(150, 500)
-display_name = "SUPPLY CRATE"
+display_name = "Supply Crate"
+prompt_text = "Open"
 interaction_flag = "loot_opened_cask_warehouse_supply_crate"
 loot = Array[Dictionary]([{"item_id": "materials/lamp_oil", "quantity": 2}, {"item_id": "materials/binding_thread", "quantity": 1}])
 container_id = "cask-warehouse-supply-crate"

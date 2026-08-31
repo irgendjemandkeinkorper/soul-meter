@@ -32,13 +32,13 @@ y_sort_enabled = true
 
 [node name="CompanyOrders" type="Sprite2D" parent="IronCompaniesDressing/SoftDetails"]
 position = Vector2(115, 220)
-scale = Vector2(0.42, 0.42)
+scale = Vector2(0.21, 0.21)
 texture = ExtResource("5_notice_board")
 offset = Vector2(0, -106)
 
 [node name="MusterLantern" type="Sprite2D" parent="IronCompaniesDressing/SoftDetails"]
 position = Vector2(480, 180)
-scale = Vector2(0.56, 0.56)
+scale = Vector2(0.28, 0.28)
 texture = ExtResource("6_lantern")
 offset = Vector2(0, -107)
 script = ExtResource("7_ambient_motion")
@@ -52,7 +52,7 @@ y_sort_enabled = true
 position = Vector2(105, 455)
 
 [node name="Sprite2D" type="Sprite2D" parent="IronCompaniesDressing/SolidProps/RivetStoresWest"]
-scale = Vector2(0.45, 0.45)
+scale = Vector2(0.225, 0.225)
 texture = ExtResource("4_crates")
 offset = Vector2(0, -115)
 
@@ -64,7 +64,7 @@ shape = SubResource("supply_footprint")
 position = Vector2(860, 500)
 
 [node name="Sprite2D" type="Sprite2D" parent="IronCompaniesDressing/SolidProps/BindingStoresEast"]
-scale = Vector2(-0.45, 0.45)
+scale = Vector2(-0.225, 0.225)
 texture = ExtResource("4_crates")
 offset = Vector2(0, -115)
 
@@ -100,7 +100,8 @@ position = Vector2(800, 150)
 
 [node name="SupplyCrate" parent="." instance=ExtResource("3_chest")]
 position = Vector2(150, 500)
-display_name = "SUPPLY CRATE"
+display_name = "Supply Crate"
+prompt_text = "Open"
 interaction_flag = "loot_opened_iron_companies_supply_crate"
 loot = Array[Dictionary]([{"item_id": "materials/iron_rivets", "quantity": 1}, {"item_id": "materials/binding_thread", "quantity": 1}])
 container_id = "iron-companies-supply-crate"
