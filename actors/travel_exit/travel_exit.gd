@@ -11,6 +11,12 @@ extends Area2D
 @export var required_flags: PackedStringArray = []
 @export var locked_message: String = "This route is not open yet."
 @export var spawn_id: StringName = &"default"
+## #213: the locked barrier must span the WALL OPENING the exit sits in, not
+## just the walk-over trigger (Dom's east-wall gap is 210px tall; a player
+## collider is ~22px, so an undersized barrier leaves walkable slivers).
+## Overshoot into the wall segments is harmless — tune per scene if a gap is
+## oriented or sized differently.
+@export var barrier_size: Vector2 = Vector2(60, 260)
 
 var _label: Label
 var _location: LocationDefinition
@@ -37,8 +43,11 @@ func _ready() -> void:
 	_barrier_shape = CollisionShape2D.new()
 	_barrier_shape.name = "CollisionShape2D"
 	var barrier_rect := RectangleShape2D.new()
-	barrier_rect.size = rect.size
+	barrier_rect.size = barrier_size
 	_barrier_shape.shape = barrier_rect
+	# Set synchronously BEFORE entering the tree: an initially-unlocked exit
+	# must never collide, not even for the frame before a deferred write drains.
+	_barrier_shape.disabled = _is_unlocked()
 	barrier.add_child(_barrier_shape)
 	add_child(barrier)
 

@@ -269,17 +269,23 @@ func test_locked_travel_exit_physically_closes_its_wall_gap() -> void:
 	assert_bool(barrier_shape.disabled) \
 		.override_failure_message("Locked exit must keep its barrier shape enabled.") \
 		.is_false()
+	# Gate #213 finding: Dom's east-wall opening is 210px tall while the
+	# walk-over trigger is only 100px — probe the FULL gap span, not just the
+	# center, or a sliver above/below the trigger stays quietly walkable.
 	var space := (runner.scene() as Node2D).get_world_2d().direct_space_state
-	var query := PhysicsPointQueryParameters2D.new()
-	query.position = exit_node.global_position
-	var found_barrier := false
-	for hit: Dictionary in space.intersect_point(query, 8):
-		var collider := hit.get("collider") as Node
-		if collider is StaticBody2D and collider.name == "LockedBarrier":
-			found_barrier = true
-	assert_bool(found_barrier) \
-		.override_failure_message("Physics space has no solid body in the locked exit gap.") \
-		.is_true()
+	for probe_offset_y: float in [-100.0, -50.0, 0.0, 50.0, 100.0]:
+		var query := PhysicsPointQueryParameters2D.new()
+		query.position = exit_node.global_position + Vector2(0.0, probe_offset_y)
+		var found_barrier := false
+		for hit: Dictionary in space.intersect_point(query, 8):
+			var collider := hit.get("collider") as Node
+			if collider is StaticBody2D and collider.name == "LockedBarrier":
+				found_barrier = true
+		assert_bool(found_barrier) \
+			.override_failure_message(
+				"Locked exit gap is open at offset y=%s." % probe_offset_y
+			) \
+			.is_true()
 
 	GameState.set_flag("chapter_one_free_roam", true)
 	for i in range(3):
