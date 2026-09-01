@@ -232,8 +232,11 @@ clocks can't drift, tile/weather terms feed `Resolution` through the positional-
 `BattleInterface.set_forecast_context()` gives region D the SAME context live resolution uses —
 forecast==resolution by construction. Snapshots carry live tiles (charge included) and weather
 (gains/drains when an element is authored). **Deliberately NOT decided:** which encounters get
-weather — `EncounterCatalog._WEATHER_DEFAULTS` is an EMPTY authoring surface (owner balance
-decision; `combat_number_sweep` verified byte-identical with it empty). Charge's only live
+weather — `EncounterCatalog._WEATHER_DEFAULTS` is a PROVISIONAL owner authoring surface. It is
+no longer empty: three encounters now carry authored weather (`bog-wight: molm`,
+`loam-boar: terra`, `phase2-demon: scor`). The sweep evidence still holds — `combat_number_sweep`
+is a static facing/elevation/wheel-distance sweep that does not read `EncounterCatalog`, so it
+has no per-encounter rows to change either way. Charge's only live
 source is weather feed of pre-charged tiles — residue-on-cast is a separate authored-ability
 task. Mid-battle save is not a Ch1 behavior (waveC T-8 ruling); model-level serialization covers it.
 **FR-905 two-phase audit check is BUILT** (#104's tooling gap): `tools/quest_audit.gd`

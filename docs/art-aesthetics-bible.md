@@ -95,15 +95,15 @@ Before placing an existing texture, verify that it contains meaningful alpha ins
 of an opaque white plate. Scale large painted sprites independently; collision shapes
 represent only the prop's contact footprint, never its full illustration frame.
 
-## Known gap — do not silently paper over
+## Known gap — CLOSED 2026-08-31
 
 The Dom contact sheet (`assets/generated/sprites/world/dom-calibration-contact-sheet.png`)
-shows the new painterly props sitting above the **existing flat Kenney-derived ground
-tileset** (grass/dirt/stone/road) for comparison, and the style break between the two
-rows is visible and real. This aesthetics bible governs new work going forward; it does
-not fix that mismatch. Restyling the existing ground tileset to match this new direction
-is unscoped follow-up work — flag it explicitly rather than blending the two styles by
-accident in a future batch.
+originally showed the new painterly props sitting above the **flat Kenney-derived ground
+tileset** (grass/dirt/stone/road), and the style break between the two rows was visible
+and real. That mismatch is resolved: commit `d4b87e2` replaced the atlas backing
+`assets/generated/sprites/ground/ground_tileset.tres` with painterly ground tiles in this
+direction. New ground work extends that atlas; there is no longer a second style to
+avoid blending with.
 
 ## Brief scaffold for future agents
 
