@@ -44,6 +44,7 @@ SaveGame="*res://globals/save_game.gd"
 SkillCheck="*res://globals/skill_check.gd"
 CombatSpeechPresenter="*res://ui/dialogue/combat_speech_presenter.gd"
 CombatStylePoints="*res://globals/combat_style_tracker.gd"
+LayoutMode="*res://globals/layout_mode.gd"
 
 [dialogue_manager]
 

@@ -489,34 +489,59 @@ func test_routined_npc_moves_to_hub_routine_position_in_town() -> void:
 	# the scene the NPC LIVES in (nearest instanced-scene ancestor), not
 	# get_tree().current_scene. In the hub they must still apply — a too-strict
 	# guard would silently freeze every routined NPC at their authored spot.
-	# Gate r1 finding: sella-varn's AUTHORED town position equals her MORNING
-	# routine position, and WorldClock defaults to morning — asserting the
-	# default phase is vacuous. Force afternoon, whose routine spot (1480,1250)
-	# is >1000px from the authored/morning spot, so a broken guard fails loudly.
+	# Gate r1 finding: asserting the default phase can be vacuous when an
+	# NPC's authored spot coincides with that phase's routine spot. Authored
+	# positions and routine coordinates are both PROVISIONAL owner surfaces
+	# that other waves legitimately move, so hardcoding one NPC/phase pair is
+	# brittle — instead pick ANY routined NPC + phase whose routine target sits
+	# materially farther from the NPC's current spot than the proximity
+	# tolerance, so a frozen NPC always fails loudly.
+	const MOVE_TOLERANCE := 256.0
+	const MATERIAL_DISTANCE := 300.0
 	var clock_before := WorldClock.to_dict()
 	var runner := scene_runner("res://world/starting_town.tscn")
 	await runner.simulate_frames(3)
-	var npc: NPC = null
+	var npcs_by_id := {}
 	for candidate: Node in runner.scene().find_children("*", "NPC", true, false):
-		if (candidate as NPC).npc_id == "sella-varn":
-			npc = candidate as NPC
+		var candidate_id := (candidate as NPC).npc_id
+		if not candidate_id.is_empty():
+			npcs_by_id[candidate_id] = candidate
+	var chosen_npc: NPC = null
+	var chosen_phase := &""
+	var chosen_target := Vector2.ZERO
+	for npc_id: String in NpcRoutines.ROUTINES:
+		if not npcs_by_id.has(npc_id):
+			continue
+		var town_copy := npcs_by_id[npc_id] as NPC
+		for phase: StringName in WorldClock.PHASES:
+			var row := NpcRoutines.placement(npc_id, phase)
+			if not bool(row.get("present", false)):
+				continue
+			var target: Vector2 = row["position"]
+			if target.distance_to(town_copy.position) > MATERIAL_DISTANCE:
+				chosen_npc = town_copy
+				chosen_phase = phase
+				chosen_target = target
+				break
+		if chosen_npc != null:
 			break
-	assert_object(npc).is_not_null()
-	if npc == null:
+	# If NO routined NPC has any phase target materially away from where it
+	# stands, the regression premise itself is gone — fail for a redesign
+	# rather than silently proving nothing.
+	assert_object(chosen_npc) \
+		.override_failure_message(
+			"No routined NPC has a phase target > %spx from its current spot — "
+			% MATERIAL_DISTANCE
+			+ "this regression test can no longer discriminate; redesign it."
+		) \
+		.is_not_null()
+	if chosen_npc == null:
 		WorldClock.from_dict(clock_before)
 		return
-	var authored_position := npc.position
-	WorldClock.set_phase(&"afternoon", "test_routine_regression")
+	WorldClock.set_phase(chosen_phase, "test_routine_regression")
 	await runner.simulate_frames(2)
-	var row := NpcRoutines.placement("sella-varn", &"afternoon")
-	assert_bool(bool(row.get("present", false))).is_true()
-	var routine_position: Vector2 = row["position"]
-	# The target must sit farther from the authored spot than the proximity
-	# tolerance below, or this test proves nothing (measured: ~390px after
-	# grid snapping).
-	assert_float(routine_position.distance_to(authored_position)).is_greater(300.0)
-	assert_bool(npc.visible).is_true()
+	assert_bool(chosen_npc.visible).is_true()
 	# Position is grid-snapped to the nearest walkable cell, so pin proximity,
 	# not equality.
-	assert_float(npc.position.distance_to(routine_position)).is_less(256.0)
+	assert_float(chosen_npc.position.distance_to(chosen_target)).is_less(MOVE_TOLERANCE)
 	WorldClock.from_dict(clock_before)

@@ -663,6 +663,22 @@ payloads rather than UI combat arithmetic.
   clean main (pre-existing); sweep 11/0, interior shots eyeballed. Gate r1
   **PROCEED**.
 
+- **Wave AI — in-game layout mode (owner-directed) — SHIPPED 2026-08-31.**
+  Debug-only map-editing overlay so the owner can adjust layout while
+  playing: `LayoutMode` autoload (inert unless debug build AND
+  `SOUL_METER_LAYOUT=1`; F10 toggles a paused photo-mode editor),
+  `ui/debug/layout_editor` (select/drag/snap/delete/duplicate/nudge across
+  dressing props, NPCs/markers/spots, facades+doors; palette placement
+  auto-conforms to the dressing contracts), overrides persist to
+  `user://layout_overrides/<scene>.json` and re-apply on scene load, and
+  `tools/bake_layout_overrides.gd` bakes an override file into real .tscn
+  edits (review → suite → commit) — committed scenes stay canonical. Gate
+  r1 REVISE (4 findings: bake scene-mismatch guard, scratch meta leaking
+  into bakes, footprint cap 120×48 not enforced, stuck placement mode) —
+  all closed with regression tests; r2 PROCEED. See `docs/layout-mode.md`.
+  Queued next (owner-ratified tool roadmap): playtest evidence recorder
+  (#93 gate), dev/state console, combat lab, dialogue live-iteration.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
