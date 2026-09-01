@@ -2,6 +2,7 @@ extends Node
 ## Debug-only in-game authoring surface for campaign quest packages.
 
 const QUEST_EDITOR_SCENE_PATH: String = "res://ui/debug/quest_editor.tscn"
+const EncounterLoaderScript: Script = preload("res://globals/campaign_encounter_loader.gd")
 const TOGGLE_HOTKEY: Key = KEY_F6
 const ENVIRONMENT_VARIABLE: String = "SOUL_METER_QUEST_EDITOR"
 const CAMPAIGNS_ROOT: String = "user://campaigns"
@@ -173,6 +174,19 @@ func save_campaign(
 		var file_name: String = quest_id + ".json"
 		var quest_path: String = quest_directory.path_join(file_name)
 		serialized_files[quest_path] = JSON.stringify(quest, "  ") + "\n"
+	var encounter_errors: Array[Dictionary] = []
+	for encounter_path: String in EncounterLoaderScript.source_files(
+		package_path, encounter_errors
+	):
+		serialized_files[encounter_path] = FileAccess.get_file_as_string(encounter_path)
+	if not encounter_errors.is_empty():
+		var encounter_error: Dictionary = encounter_errors[0]
+		return _write_failure(
+			validation,
+			package_path,
+			str(encounter_error.get("file", package_path.path_join("encounters"))),
+			str(encounter_error.get("message", "Could not stage campaign encounter files."))
+		)
 
 	var transaction: Dictionary = _replace_package_files(
 		package_path, quest_directory, serialized_files
@@ -301,6 +315,17 @@ func _load_and_register(
 			"expected": "runtime quests with unique reserved ids",
 			"code": "runtime_registration_failed",
 			"message": "QuestRegistry refused the validated runtime quest set.",
+		})
+		loaded["errors"] = errors
+		return loaded
+	var encounters: Dictionary = loaded.get("encounters", {})
+	if not EncounterCatalog.register_runtime_encounters(encounters):
+		errors.append({
+			"file": package_path,
+			"field": "encounters",
+			"expected": "runtime encounters distinct from committed encounters",
+			"code": "runtime_encounter_registration_failed",
+			"message": "EncounterCatalog refused the validated runtime encounter set.",
 		})
 		loaded["errors"] = errors
 		return loaded
@@ -513,8 +538,12 @@ func _package_json_files(package_path: String) -> Array[String]:
 		files.append(campaign_path)
 	var quest_directory: String = package_path.path_join("quests")
 	if not DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(quest_directory)):
-		return files
-	files.append_array(_quest_json_files(quest_directory))
+		pass
+	else:
+		files.append_array(_quest_json_files(quest_directory))
+	var encounter_errors: Array[Dictionary] = []
+	files.append_array(EncounterLoaderScript.source_files(package_path, encounter_errors))
+	files.sort()
 	return files
 
 

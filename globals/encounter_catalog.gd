@@ -107,10 +107,14 @@ const _SPOILS: Dictionary = {
 const _SPOILS_STREAM_OFFSET := 7_000_019
 
 static var _definitions: Dictionary = {}
+static var _runtime_definitions: Dictionary = {}
 
 
 static func definition(encounter_id: StringName) -> Dictionary:
 	_ensure_loaded()
+	var runtime_row: Variant = _runtime_definitions.get(String(encounter_id))
+	if _runtime_definitions.has(String(encounter_id)) and runtime_row is Dictionary:
+		return (runtime_row as Dictionary).duplicate(true)
 	var row: Variant = _definitions.get(String(encounter_id), {})
 	var result: Dictionary = row.duplicate(true) if row is Dictionary else {}
 	var grid: Variant = _FIELD_GRID_DATA.get(String(encounter_id), {})
@@ -119,6 +123,55 @@ static func definition(encounter_id: StringName) -> Dictionary:
 	var authored_weather := str(_WEATHER_DEFAULTS.get(String(encounter_id), ""))
 	if not authored_weather.is_empty():
 		result["weather_default"] = authored_weather
+	return result
+
+
+static func register_runtime_encounters(definitions: Dictionary) -> bool:
+	_ensure_loaded()
+	var replacement: Dictionary = {}
+	for encounter_value: Variant in definitions.keys():
+		var encounter_id: String = str(encounter_value)
+		var definition_value: Variant = definitions[encounter_value]
+		if encounter_id.is_empty() or _definitions.has(encounter_id):
+			return false
+		if not definition_value is Dictionary:
+			return false
+		replacement[encounter_id] = (definition_value as Dictionary).duplicate(true)
+	_runtime_definitions = replacement
+	return true
+
+
+static func clear_runtime_encounters() -> void:
+	_runtime_definitions.clear()
+
+
+static func has_committed(encounter_id: String) -> bool:
+	_ensure_loaded()
+	return _definitions.has(encounter_id)
+
+
+static func committed_archetype(archetype_id: String) -> Dictionary:
+	_ensure_loaded()
+	for definition_value: Variant in _definitions.values():
+		if not definition_value is Dictionary:
+			continue
+		var enemy_values: Variant = (definition_value as Dictionary).get("enemies", [])
+		if not enemy_values is Array:
+			continue
+		for enemy_value: Variant in enemy_values:
+			if enemy_value is Dictionary and str((enemy_value as Dictionary).get("id", "")) == archetype_id:
+				return (enemy_value as Dictionary).duplicate(true)
+	return {}
+
+
+static func all_ids() -> Array[StringName]:
+	_ensure_loaded()
+	var result: Array[StringName] = []
+	for encounter_value: Variant in _definitions.keys():
+		result.append(StringName(str(encounter_value)))
+	for encounter_value: Variant in _runtime_definitions.keys():
+		result.append(StringName(str(encounter_value)))
+	result.sort()
 	return result
 
 
@@ -194,6 +247,8 @@ static func default_outcome(encounter_id: StringName) -> StringName:
 
 
 static func roll_spoils(encounter_id: StringName) -> Array[Dictionary]:
+	if _runtime_definitions.has(String(encounter_id)):
+		return _runtime_spoils(encounter_id)
 	var item_ids: Array = _SPOILS.get(encounter_id, [])
 	if item_ids.is_empty():
 		return []
@@ -208,6 +263,22 @@ static func roll_spoils(encounter_id: StringName) -> Array[Dictionary]:
 			"item_id": String(item_ids[1]),
 			"quantity": rng.randi_range(1, 2),
 		})
+	return result
+
+
+static func _runtime_spoils(encounter_id: StringName) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var spoils_value: Variant = definition(encounter_id).get("spoils", [])
+	if not spoils_value is Array:
+		return result
+	for spoil_value: Variant in spoils_value:
+		if spoil_value is Dictionary:
+			var row: Dictionary = (spoil_value as Dictionary).duplicate(true)
+			if not row.has("quantity"):
+				row["quantity"] = 1
+			result.append(row)
+		elif spoil_value is String:
+			result.append({"item_id": spoil_value, "quantity": 1})
 	return result
 
 

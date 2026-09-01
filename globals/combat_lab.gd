@@ -142,14 +142,7 @@ func close_overlay() -> void:
 
 
 func encounter_ids() -> Array[StringName]:
-	# definition() is the catalog's lazy-load seam. The probe is intentionally unknown and
-	# only ensures `_definitions` represents the current generated catalog.
-	EncounterCatalog.definition(&"__combat_lab_catalog_probe__")
-	var result: Array[StringName] = []
-	for key: Variant in EncounterCatalog._definitions.keys():
-		result.append(StringName(str(key)))
-	result.sort()
-	return result
+	return EncounterCatalog.all_ids()
 
 
 func party_cap() -> int:

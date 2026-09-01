@@ -170,6 +170,36 @@ func test_save_writes_only_the_runtime_package_then_reloads_and_registers() -> v
 	assert_bool(FileAccess.file_exists("user://quest-editor-escape/campaign.json")).is_false()
 
 
+func test_save_round_trips_existing_encounter_files_without_dropping_bytes() -> void:
+	_write_package(PACKAGE_PATH, _campaign(), [_quest("round-trip")])
+	var encounter_path: String = PACKAGE_PATH + "/encounters/nested/editor-fight.json"
+	var encounter_text: String = (
+		"{\n"
+		+ "  \"encounter_id\": \"editor-fight\",\n"
+		+ "  \"display_name\": \"Editor Fight\",\n"
+		+ "  \"enemies\": [{\"archetype_id\": \"bog-wight\"}],\n"
+		+ "  \"grid\": {\"dimensions\": [7, 5], \"cover\": [], \"elevation\": []},\n"
+		+ "  \"weather_default\": \"molm\",\n"
+		+ "  \"spoils\": [{\"item_id\": \"materials/grave_salt\", \"quantity\": 7}],\n"
+		+ "  \"outcomes\": {\"slain\": {\"faction\": \"iron-companies\"}},\n"
+		+ "  \"loss\": {\"faction\": \"iron-companies\"}\n"
+		+ "}\n"
+	)
+	_write_text(encounter_path, encounter_text)
+	var quests: Array[Dictionary] = [_quest("round-trip")]
+
+	var result: Dictionary = _editor.call(
+		"save_campaign", _campaign(), quests
+	)
+
+	assert_bool(bool(result.get("saved", false))).is_true()
+	assert_array(result.get("errors", [])).is_empty()
+	assert_bool(FileAccess.file_exists(encounter_path)).is_true()
+	assert_str(FileAccess.get_file_as_string(encounter_path)).is_equal(encounter_text)
+	assert_array(result.get("written_files", [])).contains([encounter_path])
+	assert_bool(EncounterCatalog.definition(&"editor-fight").is_empty()).is_false()
+
+
 func test_loader_rejects_quest_ids_that_are_unsafe_file_names() -> void:
 	var unsafe_ids: Array[String] = [
 		"a/../../../../gdunit-quest-editor-escape",

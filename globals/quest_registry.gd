@@ -230,6 +230,7 @@ func clear_runtime_quests() -> void:
 		quest.current_stage = 0
 	_runtime_quests.clear()
 	_runtime_dialogue_resources.clear()
+	EncounterCatalog.clear_runtime_encounters()
 
 
 func runtime_quests() -> Array[DomSideQuest]:

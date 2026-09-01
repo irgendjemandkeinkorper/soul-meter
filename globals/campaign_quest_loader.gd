@@ -5,6 +5,8 @@ extends RefCounted
 ## Campaign dialogue is plain text compiled at package load; committed dialogue
 ## remains an imported resource resolved through ResourceLoader.
 
+const PackageFilesScript: Script = preload("res://globals/campaign_package_files.gd")
+const EncounterLoaderScript: Script = preload("res://globals/campaign_encounter_loader.gd")
 const QUEST_SCHEMA := 1
 const RUNTIME_ID_MIN := StableIds.RUNTIME_QUEST_ID_MIN
 const RUNTIME_ID_MAX := StableIds.RUNTIME_QUEST_ID_MAX
@@ -17,21 +19,41 @@ static func runtime_id_for(identity: String) -> int:
 
 
 static func validate_package_data(
-	package_path: String, campaign_data: Dictionary, quest_documents: Array[Dictionary]
+	package_path: String,
+	campaign_data: Dictionary,
+	quest_documents: Array[Dictionary],
+	encounter_documents: Variant = null
 ) -> Dictionary:
 	var errors: Array[Dictionary] = []
 	var quests: Array[DomSideQuest] = []
 	var quest_entries: Array[Dictionary] = []
+	var encounters: Dictionary = {}
 	var campaign: Dictionary = campaign_data.duplicate(true)
 	var campaign_path: String = package_path.path_join("campaign.json")
 	_validate_campaign(campaign, package_path, campaign_path, errors)
 	if not errors.is_empty():
 		return _result(campaign, quests, quest_entries, errors)
+	if encounter_documents == null:
+		encounters = EncounterLoaderScript.load_package(package_path, errors)
+	elif encounter_documents is Array:
+		var typed_documents: Array[Dictionary] = []
+		typed_documents.assign(encounter_documents)
+		encounters = EncounterLoaderScript.validate_documents(typed_documents, errors)
+	else:
+		_add_error(
+			errors,
+			package_path.path_join("encounters"),
+			"encounters",
+			"array of encounter documents",
+			"invalid_encounter_documents",
+			"In-memory encounter documents must be an array."
+		)
 	var dialogue_context: Dictionary = _load_dialogue_context(package_path, errors)
 	if not errors.is_empty():
 		return _result(
 			campaign, quests, quest_entries, errors,
-			dialogue_context.get("campaign_resources", {})
+			dialogue_context.get("campaign_resources", {}),
+			encounters
 		)
 	var validated: Dictionary = _validate_quest_documents(
 		campaign, quest_documents, dialogue_context.get("titles", {}), errors
@@ -40,7 +62,8 @@ static func validate_package_data(
 	quest_entries.assign(validated.get("quest_entries", []))
 	return _result(
 		campaign, quests, quest_entries, errors,
-		dialogue_context.get("campaign_resources", {})
+		dialogue_context.get("campaign_resources", {}),
+		encounters
 	)
 
 
@@ -68,6 +91,7 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 	var errors: Array[Dictionary] = []
 	var quests: Array[DomSideQuest] = []
 	var quest_entries: Array[Dictionary] = []
+	var encounters: Dictionary = {}
 	var campaign_path: String = package_path.path_join("campaign.json")
 	var raw_campaign: Variant = _read_json(campaign_path, errors)
 	var campaign: Dictionary = {}
@@ -80,11 +104,13 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 	var campaign_error_count: int = errors.size()
 	if campaign_error_count > 0:
 		return _result(campaign, quests, quest_entries, errors)
+	encounters = EncounterLoaderScript.load_package(package_path, errors)
 	var dialogue_context: Dictionary = _load_dialogue_context(package_path, errors)
 	if not errors.is_empty():
 		return _result(
 			campaign, quests, quest_entries, errors,
-			dialogue_context.get("campaign_resources", {})
+			dialogue_context.get("campaign_resources", {}),
+			encounters
 		)
 
 	var quest_directory_path: String = package_path.path_join("quests")
@@ -98,7 +124,7 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 			"missing_quest_directory",
 			"Expected a readable quests directory."
 		)
-		return _result(campaign, quests, quest_entries, errors)
+		return _result(campaign, quests, quest_entries, errors, {}, encounters)
 
 	var quest_documents: Array[Dictionary] = []
 	var discovery_state: Dictionary = {"file_count": 0, "stopped": false}
@@ -115,7 +141,7 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 		false
 	)
 	if not errors.is_empty():
-		return _result(campaign, quests, quest_entries, errors)
+		return _result(campaign, quests, quest_entries, errors, {}, encounters)
 	for file_path: String in quest_file_paths:
 		var raw_quest: Variant = _read_json(file_path, errors)
 		if not raw_quest is Dictionary:
@@ -131,20 +157,27 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 	var campaign_dialogue_resources: Dictionary = dialogue_context.get(
 		"campaign_resources", {}
 	)
-	if (
-		register_runtime
-		and not QuestRegistry.register_runtime_quests(quests, campaign_dialogue_resources)
-	):
-		_add_error(
-			errors,
-			package_path,
-			"quests",
-			"runtime quests with unique reserved ids",
-			"runtime_registration_failed",
-			"QuestRegistry refused the validated runtime quest set."
-		)
+	if register_runtime and errors.is_empty():
+		if not QuestRegistry.register_runtime_quests(quests, campaign_dialogue_resources):
+			_add_error(
+				errors,
+				package_path,
+				"quests",
+				"runtime quests with unique reserved ids",
+				"runtime_registration_failed",
+				"QuestRegistry refused the validated runtime quest set."
+			)
+		elif not EncounterCatalog.register_runtime_encounters(encounters):
+			_add_error(
+				errors,
+				package_path,
+				"encounters",
+				"runtime encounters distinct from committed encounters",
+				"runtime_encounter_registration_failed",
+				"EncounterCatalog refused the validated runtime encounter set."
+			)
 	return _result(
-		campaign, quests, quest_entries, errors, campaign_dialogue_resources
+		campaign, quests, quest_entries, errors, campaign_dialogue_resources, encounters
 	)
 
 
@@ -433,50 +466,11 @@ static func _quest_from_data(
 
 
 static func _relative_package_path_is_safe(relative_path: String) -> bool:
-	if (
-		relative_path.begins_with("/")
-		or relative_path.contains("\\")
-		or relative_path.contains(":")
-	):
-		return false
-	var segments: PackedStringArray = relative_path.split("/", true)
-	if segments.is_empty():
-		return false
-	for segment: String in segments:
-		if segment.is_empty() or segment == "." or segment == "..":
-			return false
-		# Windows strips a trailing period or space from a path component, so
-		# "side." and "side" name the SAME directory there while remaining
-		# distinct paths here. That breaks the one-identity/one-file guarantee for
-		# both quest ids and package dialogue sources.
-		if segment.ends_with(".") or segment.ends_with(" "):
-			return false
-		var stem: String = segment.get_slice(".", 0)
-		if _is_windows_reserved_file_stem(stem):
-			return false
-	return true
-
-
-static func _is_windows_reserved_file_stem(stem: String) -> bool:
-	var upper_stem: String = stem.to_upper()
-	if upper_stem in ["CON", "PRN", "AUX", "NUL"]:
-		return true
-	if upper_stem.length() != 4:
-		return false
-	var prefix: String = upper_stem.left(3)
-	var device_number: int = upper_stem.unicode_at(3)
-	return (prefix == "COM" or prefix == "LPT") and device_number >= 49 and device_number <= 57
+	return PackageFilesScript.relative_path_is_safe(relative_path)
 
 
 static func _ascii_case_fold(value: String) -> String:
-	var folded: String = ""
-	for index: int in value.length():
-		var codepoint: int = value.unicode_at(index)
-		if codepoint >= 65 and codepoint <= 90:
-			folded += String.chr(codepoint + 32)
-		else:
-			folded += value.substr(index, 1)
-	return folded
+	return PackageFilesScript.ascii_case_fold(value)
 
 
 static func _package_files(
@@ -491,82 +485,18 @@ static func _package_files(
 	discovery_state: Dictionary,
 	validate_relative_paths: bool
 ) -> Array[String]:
-	var result: Array[String] = []
-	if bool(discovery_state.get("stopped", false)):
-		return result
-	var directory: DirAccess = DirAccess.open(directory_path)
-	if directory == null:
-		return result
-	var file_names: PackedStringArray = directory.get_files()
-	file_names.sort()
-	for file_name: String in file_names:
-		if directory.is_link(file_name):
-			continue
-		var file_path: String = directory_path.path_join(file_name)
-		var file_count: int = int(discovery_state.get("file_count", 0)) + 1
-		discovery_state["file_count"] = file_count
-		if file_count > QUEST_DISCOVERY_MAX_FILES:
-			_add_error(
-				errors,
-				file_path,
-				field,
-				"at most %d regular files" % QUEST_DISCOVERY_MAX_FILES,
-				"%s_discovery_file_limit_exceeded" % code_prefix,
-				"%s discovery exceeded the %d-file package limit at '%s'."
-				% [label, QUEST_DISCOVERY_MAX_FILES, file_path]
-			)
-			discovery_state["stopped"] = true
-			return result
-		if file_name.get_extension().to_lower() != extension:
-			continue
-		var relative_path: String = file_path.trim_prefix(root_path.trim_suffix("/") + "/")
-		if validate_relative_paths and not _relative_package_path_is_safe(relative_path):
-			_add_error(
-				errors,
-				file_path,
-				field,
-				"portable relative package path",
-				"unsafe_%s_file_path" % code_prefix,
-				"%s file '%s' is not a safe portable path inside the campaign package."
-				% [label, relative_path]
-			)
-			continue
-		result.append(file_path)
-	var directory_names: PackedStringArray = directory.get_directories()
-	directory_names.sort()
-	for directory_name: String in directory_names:
-		if directory.is_link(directory_name):
-			continue
-		var child_path: String = directory_path.path_join(directory_name)
-		var child_depth: int = depth + 1
-		if child_depth > QUEST_DISCOVERY_MAX_DEPTH:
-			_add_error(
-				errors,
-				child_path,
-				field,
-				"package tree no deeper than %d directories" % QUEST_DISCOVERY_MAX_DEPTH,
-				"%s_discovery_depth_exceeded" % code_prefix,
-				"%s discovery exceeded the depth limit at '%s'." % [label, child_path]
-			)
-			discovery_state["stopped"] = true
-			return result
-		result.append_array(
-			_package_files(
-				root_path,
-				child_path,
-				extension,
-				field,
-				code_prefix,
-				label,
-				errors,
-				child_depth,
-				discovery_state,
-				validate_relative_paths
-			)
-		)
-		if bool(discovery_state.get("stopped", false)):
-			return result
-	return result
+	return PackageFilesScript.package_files(
+		root_path,
+		directory_path,
+		extension,
+		field,
+		code_prefix,
+		label,
+		errors,
+		depth,
+		discovery_state,
+		validate_relative_paths
+	)
 
 
 static func _read_json(file_path: String, errors: Array[Dictionary]) -> Variant:
@@ -925,16 +855,9 @@ static func _add_error(
 	message: String,
 	line_number: int = -1
 ) -> void:
-	var error: Dictionary = {
-		"file": file_path,
-		"field": field,
-		"expected": expected,
-		"code": code,
-		"message": message,
-	}
-	if line_number > 0:
-		error["line"] = line_number
-	errors.append(error)
+	PackageFilesScript.add_error(
+		errors, file_path, field, expected, code, message, line_number
+	)
 
 
 static func _result(
@@ -942,12 +865,14 @@ static func _result(
 	quests: Array[DomSideQuest],
 	quest_entries: Array[Dictionary],
 	errors: Array[Dictionary],
-	dialogue_resources: Dictionary = {}
+	dialogue_resources: Dictionary = {},
+	encounters: Dictionary = {}
 ) -> Dictionary:
 	return {
 		"campaign": campaign,
 		"quests": quests,
 		"quest_entries": quest_entries,
 		"dialogue_resources": dialogue_resources,
+		"encounters": encounters,
 		"errors": errors,
 	}
