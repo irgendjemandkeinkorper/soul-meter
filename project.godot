@@ -48,6 +48,7 @@ LayoutMode="*res://globals/layout_mode.gd"
 PlaytestRecorder="*res://globals/playtest_recorder.gd"
 DevConsole="*res://globals/dev_console.gd"
 CombatLab="*res://globals/combat_lab.gd"
+ConsequenceTimeline="*res://globals/consequence_timeline.gd"
 
 [dialogue_manager]
 

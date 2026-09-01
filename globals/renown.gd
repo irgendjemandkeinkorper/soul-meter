@@ -47,7 +47,18 @@ func why(kind: StringName, limit: int = 5) -> Array[RenownEvent]:
 	var total := events.size()
 	var count := mini(limit, total)
 	for i in range(count):
-		out.append(events[total - 1 - i])
+		out.append(events[total - 1 - i].copy())
+	return out
+
+
+## The whole append-only log, newest first. This is a read-only derived query;
+## limit <= 0 returns every event. Yields COPIES — see ReputationEvent.copy().
+func history(limit: int = 0) -> Array[RenownEvent]:
+	var out: Array[RenownEvent] = []
+	var total: int = _log.size()
+	var count: int = total if limit <= 0 else mini(limit, total)
+	for index: int in range(count):
+		out.append(_log[total - 1 - index].copy())
 	return out
 
 
@@ -73,8 +84,9 @@ func _record(actor: String, kind: StringName, delta: float, cause: String, scene
 	else:
 		_reputation += delta
 
-	renown_changed.emit(kind, _infamy if kind == &"infamy" else _reputation, e)
-	return e
+	# Copies for the same reason as Reputation.record() — see its comment.
+	renown_changed.emit(kind, _infamy if kind == &"infamy" else _reputation, e.copy())
+	return e.copy()
 
 
 func to_dict() -> Dictionary:

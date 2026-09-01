@@ -63,8 +63,11 @@ func record(actor: String, faction: String, delta: float, cause: String, scene: 
 	faction_events.append(e)
 
 	_standings[faction] = _derive(faction_events)
-	reputation_changed.emit(faction, _standings[faction], e)
-	return e
+	# The signal and the return value are the two other ways a stored event could
+	# escape by reference, and the signal is the one every live observer uses.
+	# Both hand out copies so an observer cannot rewrite the log it is watching.
+	reputation_changed.emit(faction, _standings[faction], e.copy())
+	return e.copy()
 
 
 # --- derived state (read-only) ------------------------------------------------
@@ -111,13 +114,31 @@ func why(faction: String, limit: int = 5) -> Array[ReputationEvent]:
 	var total := events.size()
 	var count := mini(limit, total)
 	for i in range(count):
-		out.append(events[total - 1 - i])
+		out.append(events[total - 1 - i].copy())
+	return out
+
+
+## The whole append-only log, newest first. This is a read-only derived query;
+## limit <= 0 returns every event. Like every read here it yields COPIES: the log
+## is append-only, and an accessor handing out the stored RefCounted would let a
+## caller rewrite history in place while the derived standings kept the old total.
+func history(limit: int = 0) -> Array[ReputationEvent]:
+	var out: Array[ReputationEvent] = []
+	var total: int = _log.size()
+	var count: int = total if limit <= 0 else mini(limit, total)
+	for index: int in range(count):
+		out.append(_log[total - 1 - index].copy())
 	return out
 
 
 func events_for(faction: String) -> Array[ReputationEvent]:
 	var events: Array[ReputationEvent] = _events_by_faction.get(faction, [] as Array[ReputationEvent])
-	return events.duplicate()
+	# duplicate() is a SHALLOW copy — a new array of the same event objects — so
+	# the copies have to be made per element, not by copying the array.
+	var out: Array[ReputationEvent] = []
+	for e: ReputationEvent in events:
+		out.append(e.copy())
+	return out
 
 
 func event_count() -> int:

@@ -74,10 +74,24 @@ func _on_renown_changed(
 	_enqueue("WORD OF YOU SPREADS — %s" % event.cause.strip_edges())
 
 
+## Deduplicates by the event's LEDGER IDENTITY, not by object identity.
+##
+## This used to key on the event object itself, which quietly assumed the ledger
+## would hand out the same instance forever. It no longer does: the ledgers now
+## emit and return copies, so that a signal observer cannot write back into the
+## append-only log through the reference it was handed. Object identity therefore
+## stops meaning "the same consequence", and the same event arriving twice would
+## be announced twice. `order` is monotonic WITHIN one ledger, so the stable key
+## is the ledger paired with the order — never `order` alone, since Reputation
+## and Renown number their events independently.
 func _remember_event(event: RefCounted) -> bool:
-	if event == null or _seen_events.has(event):
+	if event == null:
 		return false
-	_seen_events[event] = true
+	var ledger: StringName = &"renown" if event is RenownEvent else &"reputation"
+	var key: String = "%s:%d" % [ledger, int(event.get("order"))]
+	if _seen_events.has(key):
+		return false
+	_seen_events[key] = true
 	return true
 
 

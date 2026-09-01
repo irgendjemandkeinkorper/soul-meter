@@ -13,6 +13,20 @@ var at: int              ## unix timestamp (wall clock, for save forensics)
 var order: int           ## monotonic sequence number — the authoritative ordering
 
 
+## A detached copy — see ReputationEvent.copy() for why every ledger read returns
+## copies rather than the stored event.
+func copy() -> RenownEvent:
+	var e := RenownEvent.new()
+	e.actor = actor
+	e.kind = kind
+	e.delta = delta
+	e.cause = cause
+	e.scene = scene
+	e.at = at
+	e.order = order
+	return e
+
+
 func to_dict() -> Dictionary:
 	return {
 		"actor": actor, "kind": kind, "delta": delta,

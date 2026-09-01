@@ -69,3 +69,31 @@ func test_to_dict_from_dict_round_trip_preserves_totals() -> void:
 
 	assert_float(reloaded.reputation()).is_equal_approx(10.0, 0.001)
 	assert_float(reloaded.infamy()).is_equal_approx(6.0, 0.001)
+
+
+func test_no_read_path_hands_out_a_writable_reference_to_the_log() -> void:
+	# Same invariant as Reputation: see test_reputation.gd's equivalent for why a
+	# RefCounted event escaping by reference desyncs the log from its derived total.
+	renown.gain_reputation("player", 4.0, "spoke for the drowned", "test_room")
+	var baseline: float = renown.reputation()
+
+	var returned: RenownEvent = renown.gain_infamy("player", 3.0, "broke the seal", "test_room")
+	var from_why: RenownEvent = renown.why(&"reputation", 1)[0]
+	var from_history: RenownEvent = renown.history(1)[0]
+	var signalled: Array[RenownEvent] = []
+	renown.renown_changed.connect(
+		func(_k: StringName, _t: float, e: RenownEvent) -> void: signalled.append(e)
+	)
+	renown.gain_reputation("player", 1.0, "one more", "test_room")
+
+	for escaped: RenownEvent in [returned, from_why, from_history, signalled[0]]:
+		escaped.delta = 9999.0
+		escaped.cause = "REWRITTEN"
+
+	assert_float(renown.reputation()) \
+		.override_failure_message("Mutating an escaped event must not change a derived total") \
+		.is_equal_approx(baseline + 1.0, 0.001)
+	for row: Dictionary in renown.to_dict()["log"]:
+		assert_str(str(row["cause"])) \
+			.override_failure_message("Mutating an escaped event must not rewrite the serialized log") \
+			.is_not_equal("REWRITTEN")

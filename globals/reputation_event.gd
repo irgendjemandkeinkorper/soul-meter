@@ -14,6 +14,23 @@ var at: int              ## unix timestamp (wall clock, for save forensics)
 var order: int           ## monotonic sequence number — the authoritative ordering
 
 
+## A detached copy. The "immutable entry" promise above is a PROMISE, not something
+## GDScript enforces: this is a RefCounted, so any accessor handing out a stored
+## event lets a caller write straight into the ledger and desync the derived
+## standings from the log they are derived from. Every ledger read returns copies
+## made with this, so the log is reachable for writing only through record().
+func copy() -> ReputationEvent:
+	var e := ReputationEvent.new()
+	e.actor = actor
+	e.faction = faction
+	e.delta = delta
+	e.cause = cause
+	e.scene = scene
+	e.at = at
+	e.order = order
+	return e
+
+
 func to_dict() -> Dictionary:
 	return {
 		"actor": actor, "faction": faction, "delta": delta,

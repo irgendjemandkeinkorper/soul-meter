@@ -104,3 +104,40 @@ func test_to_dict_from_dict_round_trip_preserves_standings() -> void:
 	assert_float(reloaded.standing("mirror-choir")).is_equal_approx(10.0, 0.001)
 	assert_str(reloaded.band("the-registry")).is_equal("cold")
 	assert_int(reloaded.event_count()).is_equal(2)
+
+
+func test_no_read_path_hands_out_a_writable_reference_to_the_log() -> void:
+	# The class docstring calls a ReputationEvent "immutable" and the ledger's one
+	# rule is that nothing writes except record(). Neither is enforced by GDScript:
+	# events are RefCounted, so any accessor returning a STORED event lets a caller
+	# rewrite history in place while the derived standing keeps the old total —
+	# the log and the standing derived from it silently disagree, and the next
+	# save serializes the rewritten past.
+	rep.record("player", "mirror-choir", 5.0, "sided with the Backface", "test_room")
+	var baseline_standing: float = rep.standing("mirror-choir")
+	var baseline_serialized: Dictionary = rep.to_dict().duplicate(true)
+
+	# Every way an event can leave the ledger.
+	var returned: ReputationEvent = rep.record("player", "the-registry", 2.0, "paid the clerk", "test_room")
+	var from_why: ReputationEvent = rep.why("mirror-choir", 1)[0]
+	var from_history: ReputationEvent = rep.history(1)[0]
+	var from_events_for: ReputationEvent = rep.events_for("mirror-choir")[0]
+	var signalled: Array[ReputationEvent] = []
+	rep.reputation_changed.connect(
+		func(_f: String, _s: float, e: ReputationEvent) -> void: signalled.append(e)
+	)
+	rep.record("player", "mirror-choir", 1.0, "one more", "test_room")
+
+	for escaped: ReputationEvent in [returned, from_why, from_history, from_events_for, signalled[0]]:
+		escaped.delta = 9999.0
+		escaped.cause = "REWRITTEN"
+
+	# mirror-choir took 5.0 then 1.0; the tampering must not have moved it.
+	assert_float(rep.standing("mirror-choir")) \
+		.override_failure_message("Mutating an escaped event must not change a derived standing") \
+		.is_equal_approx(baseline_standing + 1.0, 0.001)
+	for row: Dictionary in rep.to_dict()["log"]:
+		assert_str(str(row["cause"])) \
+			.override_failure_message("Mutating an escaped event must not rewrite the serialized log") \
+			.is_not_equal("REWRITTEN")
+	assert_int(int(baseline_serialized["next_order"])).is_equal(1)
