@@ -8,10 +8,46 @@ extends RefCounted
 const QUEST_SCHEMA := 1
 const RUNTIME_ID_MIN := StableIds.RUNTIME_QUEST_ID_MIN
 const RUNTIME_ID_MAX := StableIds.RUNTIME_QUEST_ID_MAX
+const QUEST_DISCOVERY_MAX_DEPTH: int = 8
+const QUEST_DISCOVERY_MAX_FILES: int = 512
 
 
 static func runtime_id_for(identity: String) -> int:
 	return StableIds.runtime_quest_id(identity)
+
+
+static func validate_package_data(
+	package_path: String, campaign_data: Dictionary, quest_documents: Array[Dictionary]
+) -> Dictionary:
+	var errors: Array[Dictionary] = []
+	var quests: Array[DomSideQuest] = []
+	var quest_entries: Array[Dictionary] = []
+	var campaign: Dictionary = campaign_data.duplicate(true)
+	var campaign_path: String = package_path.path_join("campaign.json")
+	_validate_campaign(campaign, package_path, campaign_path, errors)
+	if not errors.is_empty():
+		return _result(campaign, quests, quest_entries, errors)
+	var dialogue_titles: Dictionary = _load_routed_dialogue_titles(errors)
+	if not errors.is_empty():
+		return _result(campaign, quests, quest_entries, errors)
+	var validated: Dictionary = _validate_quest_documents(
+		campaign, quest_documents, dialogue_titles, errors
+	)
+	quests.assign(validated.get("quests", []))
+	quest_entries.assign(validated.get("quest_entries", []))
+	return _result(campaign, quests, quest_entries, errors)
+
+
+static func routed_dialogue_titles() -> Array[String]:
+	var errors: Array[Dictionary] = []
+	var title_lookup: Dictionary = _load_routed_dialogue_titles(errors)
+	if not errors.is_empty():
+		return []
+	var titles: Array[String] = []
+	for title_value: Variant in title_lookup.keys():
+		titles.append(str(title_value))
+	titles.sort()
+	return titles
 
 
 static func load_package(package_path: String, register_runtime: bool = true) -> Dictionary:
@@ -47,20 +83,60 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 		)
 		return _result(campaign, quests, quest_entries, errors)
 
-	var file_names: PackedStringArray = quest_directory.get_files()
-	file_names.sort()
-	var id_entries: Dictionary = {}
-	var invalid_runtime_ids: Dictionary = {}
-	var identity_files: Dictionary = {}
-	for file_name: String in file_names:
-		if file_name.get_extension().to_lower() != "json":
-			continue
-		var file_path: String = quest_directory_path.path_join(file_name)
-		var error_count_before: int = errors.size()
+	var quest_documents: Array[Dictionary] = []
+	var discovery_state: Dictionary = {"file_count": 0, "stopped": false}
+	var quest_file_paths: Array[String] = _quest_json_files(
+		quest_directory_path, errors, 0, discovery_state
+	)
+	if not errors.is_empty():
+		return _result(campaign, quests, quest_entries, errors)
+	for file_path: String in quest_file_paths:
 		var raw_quest: Variant = _read_json(file_path, errors)
 		if not raw_quest is Dictionary:
 			continue
-		var quest_data: Dictionary = raw_quest as Dictionary
+		quest_documents.append({"file": file_path, "data": raw_quest as Dictionary})
+
+	var validated: Dictionary = _validate_quest_documents(
+		campaign, quest_documents, dialogue_titles, errors
+	)
+	quests.assign(validated.get("quests", []))
+	quest_entries.assign(validated.get("quest_entries", []))
+
+	if register_runtime and not QuestRegistry.register_runtime_quests(quests):
+		_add_error(
+			errors,
+			package_path,
+			"quests",
+			"runtime quests with unique reserved ids",
+			"runtime_registration_failed",
+			"QuestRegistry refused the validated runtime quest set."
+		)
+	return _result(campaign, quests, quest_entries, errors)
+
+
+static func _validate_quest_documents(
+	campaign: Dictionary,
+	quest_documents: Array[Dictionary],
+	dialogue_titles: Dictionary,
+	errors: Array[Dictionary]
+) -> Dictionary:
+	var quests: Array[DomSideQuest] = []
+	var quest_entries: Array[Dictionary] = []
+	var id_entries: Dictionary = {}
+	var invalid_runtime_ids: Dictionary = {}
+	var identity_files: Dictionary = {}
+	var ascii_case_quest_id_entries: Dictionary = {}
+	for document: Dictionary in quest_documents:
+		var file_path: String = str(document.get("file", ""))
+		var quest_value: Variant = document.get("data")
+		if not quest_value is Dictionary:
+			_add_error(
+				errors, file_path, "$", "quest object", "invalid_document_type",
+				"Expected the quest document to be an object."
+			)
+			continue
+		var error_count_before: int = errors.size()
+		var quest_data: Dictionary = quest_value as Dictionary
 		_validate_quest(quest_data, file_path, dialogue_titles, errors)
 		if errors.size() != error_count_before:
 			continue
@@ -76,6 +152,23 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 				"unique quest identity",
 				"duplicate_quest_identity",
 				"Quest identity '%s' is already authored by %s." % [identity, identity_files[identity]]
+			)
+			continue
+		var ascii_case_quest_id: String = _ascii_case_fold(quest_id)
+		if ascii_case_quest_id_entries.has(ascii_case_quest_id):
+			var previous_case_entry: Dictionary = ascii_case_quest_id_entries[
+				ascii_case_quest_id
+			] as Dictionary
+			_add_error(
+				errors,
+				file_path,
+				"quest_id",
+				"quest id unique under ASCII case folding",
+				"case_insensitive_quest_id_collision",
+				(
+					"Quest id '%s' differs only by ASCII case from '%s', already authored by %s."
+					% [quest_id, previous_case_entry["quest_id"], previous_case_entry["file"]]
+				)
 			)
 			continue
 		if invalid_runtime_ids.has(runtime_id):
@@ -104,23 +197,17 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 		quests.append(quest)
 		quest_entries.append(entry)
 		identity_files[identity] = file_path
+		ascii_case_quest_id_entries[ascii_case_quest_id] = {
+			"file": file_path,
+			"quest_id": quest_id,
+		}
 		id_entries[runtime_id] = entry
 
 	quest_entries = _reject_shared_state_collisions(quest_entries, errors)
 	quests.clear()
 	for entry: Dictionary in quest_entries:
 		quests.append(entry["quest"] as DomSideQuest)
-
-	if register_runtime and not QuestRegistry.register_runtime_quests(quests):
-		_add_error(
-			errors,
-			package_path,
-			"quests",
-			"runtime quests with unique reserved ids",
-			"runtime_registration_failed",
-			"QuestRegistry refused the validated runtime quest set."
-		)
-	return _result(campaign, quests, quest_entries, errors)
+	return {"quests": quests, "quest_entries": quest_entries}
 
 
 static func _validate_campaign(
@@ -205,15 +292,30 @@ static func _validate_quest(
 	var valid_quest_id: bool = _require_nonempty_string(
 		quest_data, "quest_id", file_path, errors
 	)
-	if valid_quest_id and not StableIds.is_valid(StableIds.QUEST, str(quest_data["quest_id"])):
-		_add_error(
-			errors,
-			file_path,
-			"quest_id",
-			StableIds.schema_for(StableIds.QUEST).get("format", "valid stable id"),
-			"invalid_quest_id",
-			"Quest id '%s' does not match the StableIds quest format." % quest_data["quest_id"]
-		)
+	if valid_quest_id:
+		var quest_id: String = str(quest_data["quest_id"])
+		if not StableIds.is_valid(StableIds.QUEST, quest_id):
+			_add_error(
+				errors,
+				file_path,
+				"quest_id",
+				StableIds.schema_for(StableIds.QUEST).get("format", "valid stable id"),
+				"invalid_quest_id",
+				"Quest id '%s' does not match the StableIds quest format." % quest_id
+			)
+		if not _quest_id_resolves_inside_package(quest_id):
+			_add_error(
+				errors,
+				file_path,
+				"quest_id",
+				"portable relative package path",
+				"unsafe_quest_id_file_name",
+				(
+					"Quest id '%s' must produce a relative JSON path inside the campaign package; "
+					+ "segments must be non-empty, may not be '.' or '..' or a Windows reserved "
+					+ "device name, and ':' and backslashes are not allowed."
+				) % quest_id
+			)
 	for field: String in ["name", "giver_actor_id", "decision_prompt", "resolution_flag"]:
 		_require_nonempty_string(quest_data, field, file_path, errors)
 	var valid_dialogue_title: bool = _require_nonempty_string(
@@ -295,6 +397,110 @@ static func _quest_from_data(
 	return quest
 
 
+static func _quest_id_resolves_inside_package(quest_id: String) -> bool:
+	if quest_id.begins_with("/") or quest_id.contains("\\") or quest_id.contains(":"):
+		return false
+	var segments: PackedStringArray = quest_id.split("/", true)
+	if segments.is_empty():
+		return false
+	for segment: String in segments:
+		if segment.is_empty() or segment == "." or segment == "..":
+			return false
+		# Windows strips a trailing period or space from a path component, so
+		# "side." and "side" name the SAME directory there while remaining
+		# distinct ids here. That breaks the one-id/one-file guarantee this
+		# function exists to provide: the id validates, the first save writes it,
+		# and enumeration reads back the stripped spelling as a different quest.
+		if segment.ends_with(".") or segment.ends_with(" "):
+			return false
+		var stem: String = segment.get_slice(".", 0)
+		if _is_windows_reserved_file_stem(stem):
+			return false
+	return true
+
+
+static func _is_windows_reserved_file_stem(stem: String) -> bool:
+	var upper_stem: String = stem.to_upper()
+	if upper_stem in ["CON", "PRN", "AUX", "NUL"]:
+		return true
+	if upper_stem.length() != 4:
+		return false
+	var prefix: String = upper_stem.left(3)
+	var device_number: int = upper_stem.unicode_at(3)
+	return (prefix == "COM" or prefix == "LPT") and device_number >= 49 and device_number <= 57
+
+
+static func _ascii_case_fold(value: String) -> String:
+	var folded: String = ""
+	for index: int in value.length():
+		var codepoint: int = value.unicode_at(index)
+		if codepoint >= 65 and codepoint <= 90:
+			folded += String.chr(codepoint + 32)
+		else:
+			folded += value.substr(index, 1)
+	return folded
+
+
+static func _quest_json_files(
+	directory_path: String,
+	errors: Array[Dictionary],
+	depth: int,
+	discovery_state: Dictionary
+) -> Array[String]:
+	var result: Array[String] = []
+	if bool(discovery_state.get("stopped", false)):
+		return result
+	var directory: DirAccess = DirAccess.open(directory_path)
+	if directory == null:
+		return result
+	var file_names: PackedStringArray = directory.get_files()
+	file_names.sort()
+	for file_name: String in file_names:
+		if directory.is_link(file_name):
+			continue
+		var file_path: String = directory_path.path_join(file_name)
+		var file_count: int = int(discovery_state.get("file_count", 0)) + 1
+		discovery_state["file_count"] = file_count
+		if file_count > QUEST_DISCOVERY_MAX_FILES:
+			_add_error(
+				errors,
+				file_path,
+				"quests",
+				"at most %d regular files" % QUEST_DISCOVERY_MAX_FILES,
+				"quest_discovery_file_limit_exceeded",
+				"Quest discovery exceeded the %d-file package limit at '%s'."
+				% [QUEST_DISCOVERY_MAX_FILES, file_path]
+			)
+			discovery_state["stopped"] = true
+			return result
+		if file_name.get_extension().to_lower() == "json":
+			result.append(file_path)
+	var directory_names: PackedStringArray = directory.get_directories()
+	directory_names.sort()
+	for directory_name: String in directory_names:
+		if directory.is_link(directory_name):
+			continue
+		var child_path: String = directory_path.path_join(directory_name)
+		var child_depth: int = depth + 1
+		if child_depth > QUEST_DISCOVERY_MAX_DEPTH:
+			_add_error(
+				errors,
+				child_path,
+				"quests",
+				"quest tree no deeper than %d directories" % QUEST_DISCOVERY_MAX_DEPTH,
+				"quest_discovery_depth_exceeded",
+				"Quest discovery exceeded the depth limit at '%s'." % child_path
+			)
+			discovery_state["stopped"] = true
+			return result
+		result.append_array(
+			_quest_json_files(child_path, errors, child_depth, discovery_state)
+		)
+		if bool(discovery_state.get("stopped", false)):
+			return result
+	return result
+
+
 static func _read_json(file_path: String, errors: Array[Dictionary]) -> Variant:
 	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
 	if file == null:
@@ -347,8 +553,10 @@ static func _load_routed_dialogue_titles(errors: Array[Dictionary]) -> Dictionar
 	## project tree and silently rejects EVERY campaign quest after export.
 	## `DialogueResource.get_cues()` is the same accessor `DialogueLab` uses.
 	var dialogue_path: String = QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH
-	var resource := ResourceLoader.load(dialogue_path, "", ResourceLoader.CACHE_MODE_REUSE)
-	var dialogue := resource as DialogueResource
+	var resource: Resource = ResourceLoader.load(
+		dialogue_path, "", ResourceLoader.CACHE_MODE_REUSE
+	)
+	var dialogue: DialogueResource = resource as DialogueResource
 	if dialogue == null:
 		_add_error(
 			errors,

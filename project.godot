@@ -50,6 +50,7 @@ DevConsole="*res://globals/dev_console.gd"
 CombatLab="*res://globals/combat_lab.gd"
 ConsequenceTimeline="*res://globals/consequence_timeline.gd"
 DialogueLab="*res://globals/dialogue_lab.gd"
+QuestEditor="*res://globals/quest_editor.gd"
 
 [dialogue_manager]
 
