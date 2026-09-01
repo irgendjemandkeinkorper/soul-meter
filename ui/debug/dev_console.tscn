@@ -1,0 +1,92 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/debug/dev_console.gd" id="1_dev_console"]
+
+[node name="DevConsoleOverlay" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_dev_console")
+
+[node name="ConsolePanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 540.0
+grow_horizontal = 2
+
+[node name="Margin" type="MarginContainer" parent="ConsolePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Column" type="VBoxContainer" parent="ConsolePanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="ConsolePanel/Margin/Column"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="ConsolePanel/Margin/Column/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "DEV / STATE CONSOLE"
+
+[node name="Hint" type="Label" parent="ConsolePanel/Margin/Column/Header"]
+layout_mode = 2
+text = "F1 close  •  ↑/↓ history  •  Enter run"
+
+[node name="QuickActions" type="HBoxContainer" parent="ConsolePanel/Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HelpButton" type="Button" parent="ConsolePanel/Margin/Column/QuickActions"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Show every available console command"
+text = "Help"
+
+[node name="FlagsButton" type="Button" parent="ConsolePanel/Margin/Column/QuickActions"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "List current GameState flags"
+text = "Flags"
+
+[node name="PhaseButton" type="Button" parent="ConsolePanel/Margin/Column/QuickActions"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Advance WorldClock by one phase"
+text = "Phase Next"
+
+[node name="ClearButton" type="Button" parent="ConsolePanel/Margin/Column/QuickActions"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Clear visible console output; command history remains available"
+text = "Clear"
+
+[node name="Log" type="RichTextLabel" parent="ConsolePanel/Margin/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 380)
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+selection_enabled = true
+scroll_active = true
+scroll_following = true
+
+[node name="CommandEntry" type="LineEdit" parent="ConsolePanel/Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Enter a developer console command"
+placeholder_text = "Type a command, or 'help'"
+clear_button_enabled = true

@@ -46,6 +46,7 @@ CombatSpeechPresenter="*res://ui/dialogue/combat_speech_presenter.gd"
 CombatStylePoints="*res://globals/combat_style_tracker.gd"
 LayoutMode="*res://globals/layout_mode.gd"
 PlaytestRecorder="*res://globals/playtest_recorder.gd"
+DevConsole="*res://globals/dev_console.gd"
 
 [dialogue_manager]
 

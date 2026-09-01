@@ -705,6 +705,38 @@ payloads rather than UI combat arithmetic.
   numbers above are from `addons/gdUnit4/runtest.sh`, and its own scoped run
   hid a full-suite isolation failure (see the doc's test note).
 
+- **Wave AK — dev/state console (owner-ratified, #214) — SHIPPED 2026-08-31.**
+  Reach any mid-chapter state in seconds instead of replaying to it. `DevConsole`
+  autoload (F1, paused overlay) with `flag`/`flags`, `soul`, `gp`, `rep`/
+  `standing`/`why`, `renown`/`infamy`, `item`, `quest offer`, `phase`, `goto`,
+  `help`, `clear` — every one through a PUBLIC write path (no private state, no
+  `change_scene_to_file`). Enablement is `is_debug_build()` AND
+  `SOUL_METER_DEV_CONSOLE=1`; the debug-build half is LOAD-BEARING, because a
+  tester holding a console would invalidate the Gate T session the Wave AJ
+  recorder exists to serve. Inert otherwise, test-proven.
+  **Ratified rule — tagged provenance.** Reputation and Renown are append-only
+  consequence ledgers used as EVIDENCE, so a debug tool must never be able to
+  forge an ordinary-looking event: every console ledger write carries
+  `DevConsole.DEBUG_CAUSE_PREFIX` (`"[debug] "`), with `is_debug_caused()` as the
+  reader-side check and no untagged path anywhere. The rule has teeth — **`quest
+  complete` is deliberately UNIMPLEMENTED**: `QuestRegistry.debug_force_complete()`
+  reaches five ledger-writing paths that cannot carry a tagged cause without
+  changing protected globals, so the console refuses rather than writing
+  untagged consequence events (gate-confirmed as the correct call).
+  A write-once `dev_console_used` flag marks any save the console touched.
+  Gate r1 REVISE, three real findings, all closed with regression tests: (1) the
+  console could ERASE its own tamper marker via `flag dev_console_used false` —
+  and since the marker is set once per session, the clear was permanent, so a
+  debug-mutated save could look clean; now refused in both directions; (2)
+  `quest offer` claimed success on a completed quest although `offer()` no-ops
+  there; now refuses and distinguishes already-active; (3) the inert suite
+  snapshotted `GameState` but never restored it, leaking `dev_console_used` into
+  later suites. Suite **1085/0**. See `docs/dev-console.md`.
+  ⚠ Third consecutive worker to claim the repo-standard gdUnit runner is
+  unusable here and fall back to other means (reporting 5 failures that do not
+  reproduce). It is not broken — always re-establish worker test evidence with
+  `addons/gdUnit4/runtest.sh -a test` before gating.
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
