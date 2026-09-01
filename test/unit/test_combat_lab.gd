@@ -285,6 +285,52 @@ func test_the_progression_snapshot_does_not_reach_past_its_own_session() -> void
 		.is_equal(earned_after)
 
 
+func test_a_restarted_session_is_still_contained() -> void:
+	# Gate r3: restore-once disarmed the snapshot, and _start_session restored
+	# WITHOUT re-capturing, so the restarted session ran uncontained — the very
+	# leak restore-once was added to close, reintroduced by the fix for it.
+	# Every session must begin armed, so restore and capture always run as a pair.
+	SaveGame.ng_plus = NGPlus.default_block()
+	var clean_ng_plus := SaveGame.ng_plus.duplicate(true)
+
+	_lab.call("start_test_session", {"encounter_id": EncounterIds.BOG_WIGHT, "seed": 11})
+	assert_bool(bool(_lab.get("_has_saved_state"))).is_true()
+
+	# Restart, then dirty progression the way a finished battle would.
+	_lab.call("restart_same_setup")
+	assert_bool(bool(_lab.get("_has_saved_state"))) \
+		.override_failure_message("A restarted session must be re-armed, not left uncontained") \
+		.is_true()
+	var tracker: CombatStyleTracker = auto_free(CombatStyleTracker.new())
+	SaveGame.ng_plus = tracker.accrue_into(SaveGame.ng_plus)
+
+	_lab.call("stop_test_session")
+
+	assert_dict(SaveGame.ng_plus) \
+		.override_failure_message("Progression from a RESTARTED lab session must not survive") \
+		.is_equal(clean_ng_plus)
+
+
+func test_restart_controls_cannot_replace_a_running_production_battle() -> void:
+	# Gate r3: the restart buttons were the last two unguarded entry points into
+	# Battle.start(). The inspector outlives the lab battle that opened it, so a
+	# restart pressed once a real encounter has begun would destroy it.
+	_lab.call("start_test_session", {"encounter_id": EncounterIds.BOG_WIGHT, "seed": 4})
+	_lab.call("stop_test_session")
+	_lab.set("_setup", {"encounter_id": EncounterIds.BOG_WIGHT, "seed": 4})
+
+	Battle.start(EncounterIds.LOAM_BOAR)
+	var production_controller: CombatController = Battle.controller
+	assert_object(production_controller).is_not_null()
+
+	_lab.call("restart_same_setup")
+	_lab.call("restart_new_seed")
+
+	assert_object(Battle.controller) \
+		.override_failure_message("A restart must not replace a running production battle") \
+		.is_same(production_controller)
+
+
 func _current_party_ids() -> Array[StringName]:
 	var ids: Array[StringName] = []
 	for member: PartyMember in GameState.party:

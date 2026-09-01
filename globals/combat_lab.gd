@@ -40,6 +40,7 @@ var _renown_before: Dictionary = {}
 ## player's next real save would contain progress earned in the sandbox.
 var _ng_plus_before: Dictionary = {}
 var _skill_check_before: Dictionary = {}
+var _rng_seed_before: int = 0
 var _rng_state_before: int = 0
 var _has_saved_state: bool = false
 var last_export_path: String = ""
@@ -232,14 +233,18 @@ func _clear_lab_battle(owned: bool) -> void:
 	Battle.ended = true
 
 
+## The restart controls are the LAST two entry points into Battle.start(). They
+## carry the same ownership guard as the four open/start paths: the inspector
+## outlives the lab battle that opened it, so a restart pressed after a real
+## encounter has begun would otherwise destroy it.
 func restart_same_setup() -> void:
-	if not _enabled or _setup.is_empty():
+	if not _enabled or _setup.is_empty() or production_battle_is_live():
 		return
 	_start_session(_setup, true)
 
 
 func restart_new_seed() -> void:
-	if not _enabled or _setup.is_empty():
+	if not _enabled or _setup.is_empty() or production_battle_is_live():
 		return
 	var next_setup := _setup.duplicate(true)
 	next_setup["seed"] = Time.get_ticks_usec()
@@ -349,10 +354,13 @@ func compare_forecast_resolution(forecast: Dictionary, resolution: Dictionary) -
 func _start_session(requested_setup: Dictionary, enter_game_flow: bool) -> void:
 	if requested_setup.is_empty():
 		return
-	if not _has_saved_state:
-		_capture_saved_state()
-	else:
-		_restore_saved_state()
+	# Rewind any prior session, THEN re-arm. Restoring without re-capturing left
+	# a restarted session with no armed snapshot — the original containment leak,
+	# reintroduced by the restore-once rule that was meant to close it. Every
+	# session must begin armed on genuinely pre-lab state, so these two always
+	# run as a pair. _restore_saved_state() is a no-op when nothing is armed.
+	_restore_saved_state()
+	_capture_saved_state()
 	_setup = _normalize_setup(requested_setup)
 	_turn_rows.clear()
 	_outcome.clear()
@@ -686,6 +694,11 @@ func _capture_saved_state() -> void:
 	# SkillCheck.to_dict() serializes reroll usage, not RNG position, so the
 	# generator's state must be captured separately or every lab session would
 	# permanently shift the randomness later campaign skill checks draw from.
+	# seed and state are captured together and restored in that order, because
+	# assigning seed RESETS state. Restoring state alone left the generator's
+	# observable seed reading as the lab's, which would misreport where the
+	# campaign's randomness came from.
+	_rng_seed_before = SkillCheck.random_number_generator.seed
 	_rng_state_before = SkillCheck.random_number_generator.state
 	_has_saved_state = true
 
@@ -711,6 +724,9 @@ func _restore_saved_state() -> void:
 	# occur then serializes pre-lab progression rather than sandbox progress.
 	SaveGame.ng_plus = _ng_plus_before.duplicate(true)
 	SkillCheck.from_dict(_skill_check_before)
+	# seed first: assigning it resets state, so the reverse order would
+	# discard the restored position.
+	SkillCheck.random_number_generator.seed = _rng_seed_before
 	SkillCheck.random_number_generator.state = _rng_state_before
 
 
@@ -741,11 +757,17 @@ func _refresh_activation() -> void:
 
 
 func _shutdown() -> void:
+	# Tear the owned battle down too. Leaving it live meant a lab battle
+	# abandoned by disabling the lab stayed in Battle, and re-enabling would then
+	# read it as a PRODUCTION encounter (the lab no longer claims it) and refuse
+	# to open over the very battle it had started.
+	var owned_battle := _lab_battle_running
 	close_overlay()
 	_disconnect_battle_signals()
 	_lab_battle_running = false
 	_restore_saved_state()
 	_has_saved_state = false
+	_clear_lab_battle(owned_battle)
 
 
 func _first_living_enemy(controller: CombatController) -> BattleActor:

@@ -8,7 +8,16 @@ extends GdUnitTestSuite
 ## test_region_map: there is no Battle.abandon(), and flee() would run the
 ## production flee path.
 func after_test() -> void:
+	if Battle.encounter_id.is_empty():
+		return
+	Battle._release_battlefield_ground()
+	Battle.allies.clear()
+	Battle.enemies.clear()
+	Battle._definition.clear()
+	Battle._combat_history.clear()
 	Battle.controller = null
+	Battle.encounter_id = &""
+	Battle.last_result = null
 	Battle.ended = true
 
 
