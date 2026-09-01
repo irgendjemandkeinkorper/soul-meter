@@ -1,6 +1,17 @@
 extends GdUnitTestSuite
 
 
+## This suite calls Battle.start() five times and had no teardown, so it left a
+## LIVE global Battle (controller set, ended false) behind for every suite that
+## ran after it. That went unnoticed until Combat Lab added a guard that reads
+## exactly that predicate. Mirrors the teardown idiom in test_travel_flow and
+## test_region_map: there is no Battle.abandon(), and flee() would run the
+## production flee path.
+func after_test() -> void:
+	Battle.controller = null
+	Battle.ended = true
+
+
 func test_chart_routes_enter_battle_through_all_four_deployment_states() -> void:
 	var chart := FileAccess.get_file_as_string("res://ui/flow/game_flow.tscn")
 	for state: String in ["DeploymentSlate", "DeploymentAttune", "DeploymentLoadout", "DeploymentPlace"]:
