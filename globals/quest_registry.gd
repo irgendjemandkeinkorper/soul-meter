@@ -98,6 +98,8 @@ const ALL_QUESTS: Array[Quest] = [
 ]
 const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD]
 
+var _runtime_quests: Array[DomSideQuest] = []
+
 const BROKEN_MUSTER_RULINGS := {
 	"demons-first": {
 		"reputation": [
@@ -182,6 +184,56 @@ func _ready() -> void:
 	GameState.inventory_changed.connect(_on_inventory_changed)
 	GameState.flag_changed.connect(_on_flag_changed)
 	GameState.party_changed.connect(_offer_companion_quests_for_party)
+
+
+func register_runtime_quests(quests: Array[DomSideQuest]) -> bool:
+	var ids: Dictionary = {}
+	for committed_quest: Quest in ALL_QUESTS:
+		ids[committed_quest.id] = true
+	for quest: DomSideQuest in quests:
+		if (
+			quest == null
+			or quest.id < StableIds.RUNTIME_QUEST_ID_MIN
+			or quest.id > StableIds.RUNTIME_QUEST_ID_MAX
+			or not StableIds.is_valid(StableIds.QUEST, quest.stable_id)
+			or quest.id != StableIds.runtime_quest_id(quest.stable_id)
+			or ids.has(quest.id)
+		):
+			push_warning(
+				"QuestRegistry: refused runtime quest with invalid or duplicate identity/id."
+			)
+			return false
+		ids[quest.id] = true
+	clear_runtime_quests()
+	_runtime_quests.assign(quests)
+	return true
+
+
+func clear_runtime_quests() -> void:
+	for quest: DomSideQuest in _runtime_quests:
+		QuestSystem.available.remove_quest(quest)
+		QuestSystem.active.remove_quest(quest)
+		QuestSystem.completed.remove_quest(quest)
+		quest.objective_completed = false
+		quest.current_stage = 0
+	_runtime_quests.clear()
+
+
+func runtime_quests() -> Array[DomSideQuest]:
+	return _runtime_quests.duplicate()
+
+
+func all_quests() -> Array[Quest]:
+	var quests: Array[Quest] = ALL_QUESTS.duplicate()
+	for runtime_quest: DomSideQuest in _runtime_quests:
+		quests.append(runtime_quest)
+	return quests
+
+
+func _registered_side_quests() -> Array[DomSideQuest]:
+	var quests: Array[DomSideQuest] = DOM_SIDE_QUESTS.duplicate()
+	quests.append_array(_runtime_quests)
+	return quests
 
 
 func offer(quest: Quest) -> void:
@@ -393,7 +445,7 @@ func resolve_field_debt(reward_id: StringName) -> bool:
 
 
 func offer_side_quest(quest: DomSideQuest) -> bool:
-	if not DOM_SIDE_QUESTS.has(quest) or is_active(quest) or is_done(quest):
+	if not _registered_side_quests().has(quest) or is_active(quest) or is_done(quest):
 		return false
 	offer(quest)
 	return is_active(quest)
@@ -403,7 +455,7 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 	## Apply one authored choice exactly once. Dialogue supplies the choice, but
 	## this method owns completion, the durable resolution flag, and the only
 	## faction-ledger write used by Dom side quests.
-	if not DOM_SIDE_QUESTS.has(quest) or not is_active(quest) or not flags_met(quest):
+	if not _registered_side_quests().has(quest) or not is_active(quest) or not flags_met(quest):
 		return false
 	var outcome: Dictionary = quest.outcome_for(String(outcome_id))
 	if outcome.is_empty():
@@ -610,7 +662,7 @@ func debug_force_complete(quest: Quest) -> bool:
 
 
 func side_quest_for_giver(actor_id: String) -> DomSideQuest:
-	for quest in DOM_SIDE_QUESTS:
+	for quest: DomSideQuest in _registered_side_quests():
 		if quest.giver_actor_id == actor_id:
 			return quest
 	return null
@@ -644,7 +696,7 @@ func side_quest_readback(quest: DomSideQuest) -> String:
 
 func active_side_quests() -> Array[DomSideQuest]:
 	var result: Array[DomSideQuest] = []
-	for quest: DomSideQuest in DOM_SIDE_QUESTS:
+	for quest: DomSideQuest in _registered_side_quests():
 		if is_active(quest):
 			result.append(quest)
 	return result
@@ -652,7 +704,7 @@ func active_side_quests() -> Array[DomSideQuest]:
 
 func completed_side_quests() -> Array[DomSideQuest]:
 	var result: Array[DomSideQuest] = []
-	for quest: DomSideQuest in DOM_SIDE_QUESTS:
+	for quest: DomSideQuest in _registered_side_quests():
 		if is_done(quest):
 			result.append(quest)
 	return result
@@ -704,16 +756,16 @@ func from_dict(data: Dictionary) -> void:
 	QuestSystem.available.reset()
 	QuestSystem.active.reset()
 	QuestSystem.completed.reset()
-	_restore_pool(QuestSystem.available, data.get("available", []))
-	_restore_pool(QuestSystem.active, data.get("active", []))
-	_restore_pool(QuestSystem.completed, data.get("completed", []))
+	_restore_pool(QuestSystem.available, data.get("available", []), "available")
+	_restore_pool(QuestSystem.active, data.get("active", []), "active")
+	_restore_pool(QuestSystem.completed, data.get("completed", []), "completed")
 
 
 func reset() -> void:
 	QuestSystem.available.reset()
 	QuestSystem.active.reset()
 	QuestSystem.completed.reset()
-	for quest in ALL_QUESTS:
+	for quest: Quest in all_quests():
 		quest.objective_completed = false
 		if quest is FlagQuest:
 			quest.current_stage = 0
@@ -722,22 +774,47 @@ func reset() -> void:
 func _serialize_pool(quests: Array[Quest]) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for quest in quests:
-		rows.append({"id": quest.id, "data": quest.serialize()})
+		var row: Dictionary = {"id": quest.id, "data": quest.serialize()}
+		if quest is DomSideQuest and _runtime_quests.has(quest):
+			row["identity"] = (quest as DomSideQuest).stable_id
+		rows.append(row)
 	return rows
 
 
-func _restore_pool(pool: BaseQuestPool, rows: Array) -> void:
-	for row in rows:
+func _restore_pool(pool: BaseQuestPool, rows: Array, pool_name: String) -> void:
+	for row: Variant in rows:
 		if not row is Dictionary:
 			continue
-		var quest := _quest_by_id(int(row.get("id", -1)))
-		if quest:
-			quest.deserialize(row.get("data", {}))
-			pool.add_quest(quest)
+		var row_data: Dictionary = row as Dictionary
+		var quest_id: int = int(row_data.get("id", -1))
+		var quest: Quest = _quest_by_id(quest_id)
+		if quest == null:
+			push_warning(
+				"QuestRegistry: save row references missing quest id %d in %s pool; skipping."
+				% [quest_id, pool_name]
+			)
+			continue
+		if row_data.has("identity"):
+			var saved_identity: String = str(row_data["identity"])
+			var registered_identity: String = (
+				(quest as DomSideQuest).stable_id if quest is DomSideQuest else ""
+			)
+			if saved_identity != registered_identity:
+				push_warning(
+					(
+						"QuestRegistry: save row identity '%s' does not match registered quest "
+						+ "identity '%s' for id %d in %s pool; skipping."
+					)
+					% [saved_identity, registered_identity, quest_id, pool_name]
+				)
+				continue
+		var serialized_data: Variant = row_data.get("data", {})
+		quest.deserialize(serialized_data if serialized_data is Dictionary else {})
+		pool.add_quest(quest)
 
 
 func _quest_by_id(id: int) -> Quest:
-	for quest in ALL_QUESTS:
+	for quest: Quest in all_quests():
 		if quest.id == id:
 			return quest
 	return null

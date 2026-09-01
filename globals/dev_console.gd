@@ -395,7 +395,7 @@ func _command_goto(args: PackedStringArray) -> bool:
 
 
 func _quest_for_id(quest_id: int) -> Quest:
-	for quest: Quest in QuestRegistry.ALL_QUESTS:
+	for quest: Quest in QuestRegistry.all_quests():
 		if quest.id == quest_id:
 			return quest
 	return null

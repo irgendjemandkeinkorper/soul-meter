@@ -90,12 +90,14 @@ func _verdict_text() -> String:
 
 
 func _side_quest_ledger_text() -> String:
-	var completed := QuestRegistry.completed_side_quests()
+	# This screen is CHAPTER ONE's ledger, not a campaign's, so both sides of the
+	# ratio stay committed-only. A loaded campaign must not move the denominator,
+	# and — the part that is easy to miss — it must not inflate the numerator
+	# either: completed_side_quests() reports the runtime-aware universe, so
+	# filtering only the denominator would render "RESOLVED 11 / 10".
+	var completed := _committed_only(QuestRegistry.completed_side_quests())
 	var lines := PackedStringArray(
-		[
-			"RESOLVED  %d / %d"
-			% [completed.size(), QuestRegistry.DOM_SIDE_QUESTS.size()]
-		]
+		["RESOLVED  %d / %d" % [completed.size(), QuestRegistry.DOM_SIDE_QUESTS.size()]]
 	)
 	if completed.is_empty():
 		lines.append("No Dom side commission was resolved before the road ruling.")
@@ -104,7 +106,7 @@ func _side_quest_ledger_text() -> String:
 			lines.append(
 				"%s  ·  %s" % [quest.quest_name.to_upper(), QuestRegistry.side_quest_readback(quest)]
 			)
-	var active := QuestRegistry.active_side_quests()
+	var active := _committed_only(QuestRegistry.active_side_quests())
 	if not active.is_empty():
 		lines.append("OPEN THREADS")
 		for quest: DomSideQuest in active:
@@ -174,3 +176,12 @@ func _ledger_company() -> String:
 
 func _format_time(seconds: int) -> String:
 	return "%02d:%02d" % [seconds / 60, seconds % 60]
+
+
+## Chapter One's own side quests, excluding any loaded campaign package.
+static func _committed_only(quests: Array[DomSideQuest]) -> Array[DomSideQuest]:
+	var result: Array[DomSideQuest] = []
+	for quest: DomSideQuest in quests:
+		if QuestRegistry.DOM_SIDE_QUESTS.has(quest):
+			result.append(quest)
+	return result

@@ -14,6 +14,12 @@ const VENDOR := &"vendor"
 const ZONE := &"zone"
 const WORLD_FACT := &"world_fact"
 const DIALOGUE_NODE := &"dialogue_node"
+const RUNTIME_QUEST_ID_MIN := 1_000_000
+const RUNTIME_QUEST_ID_MAX := 2_147_483_647
+
+const _FNV_OFFSET_BASIS := 2_166_136_261
+const _FNV_PRIME := 16_777_619
+const _UINT32_MASK := 0xffff_ffff
 
 const KINDS: Array[StringName] = [
 	ACTOR, QUEST, SKILL, ITEM, VENDOR, ZONE, WORLD_FACT, DIALOGUE_NODE
@@ -69,6 +75,14 @@ static func actor(identifier: String) -> Dictionary:
 
 static func quest(identifier: String) -> Dictionary:
 	return make(QUEST, identifier)
+
+
+static func runtime_quest_id(identity: String) -> int:
+	var hash_value: int = _FNV_OFFSET_BASIS
+	for byte: int in identity.to_utf8_buffer():
+		hash_value = ((hash_value ^ byte) * _FNV_PRIME) & _UINT32_MASK
+	var reserved_size: int = RUNTIME_QUEST_ID_MAX - RUNTIME_QUEST_ID_MIN + 1
+	return RUNTIME_QUEST_ID_MIN + (hash_value % reserved_size)
 
 
 static func skill(identifier: String) -> Dictionary:

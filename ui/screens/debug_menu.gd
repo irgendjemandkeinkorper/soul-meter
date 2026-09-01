@@ -54,12 +54,12 @@ func _refresh() -> void:
 	_content.add_child(_section("Quests"))
 	var complete_all := _menu_button(_content, "Complete every remaining quest", func() -> void:
 		var completed := 0
-		for quest: Quest in QuestRegistry.ALL_QUESTS:
+		for quest: Quest in QuestRegistry.all_quests():
 			if QuestRegistry.debug_force_complete(quest):
 				completed += 1
 		_refresh())
 	complete_all.name = "CompleteAllQuests"
-	for quest: Quest in QuestRegistry.ALL_QUESTS:
+	for quest: Quest in QuestRegistry.all_quests():
 		_add_quest_row(quest)
 
 	_add_back_button(_content)

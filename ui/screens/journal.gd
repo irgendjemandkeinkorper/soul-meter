@@ -254,7 +254,7 @@ static func quest_location(quest: Quest) -> String:
 
 func _active_quests() -> Array[Quest]:
 	var quests: Array[Quest] = []
-	for quest: Quest in QuestRegistry.ALL_QUESTS:
+	for quest: Quest in QuestRegistry.all_quests():
 		if QuestRegistry.is_active(quest):
 			quests.append(quest)
 	quests.sort_custom(_quest_name_before)
@@ -263,7 +263,7 @@ func _active_quests() -> Array[Quest]:
 
 func _completed_quests() -> Array[Quest]:
 	var quests: Array[Quest] = []
-	for quest: Quest in QuestRegistry.ALL_QUESTS:
+	for quest: Quest in QuestRegistry.all_quests():
 		if QuestRegistry.is_done(quest):
 			quests.append(quest)
 	quests.sort_custom(_quest_name_before)
