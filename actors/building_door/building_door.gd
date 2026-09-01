@@ -5,14 +5,6 @@ extends StaticBody2D
 
 signal travel_requested(scene_path: String, spawn_id: StringName)
 
-const REPUTATION_BAND_RANK := {
-	&"hostile": 0,
-	&"cold": 1,
-	&"neutral": 2,
-	&"warm": 3,
-	&"allied": 4,
-}
-
 @export var transition_id: StringName = &""
 @export_file("*.tscn") var destination_scene: String = ""
 @export var destination_location_id: StringName = &""
@@ -80,7 +72,7 @@ func _validate_gate_configuration() -> void:
 		push_error(
 			"BuildingDoor '%s' requires both a reputation faction and minimum band." % name
 		)
-	elif has_band and not REPUTATION_BAND_RANK.has(minimum_reputation_band):
+	elif has_band and not Reputation.BAND_RANK.has(minimum_reputation_band):
 		_gate_configuration_valid = false
 		push_error(
 			"BuildingDoor '%s' has unknown reputation band: %s"
@@ -103,25 +95,37 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _try_travel() -> bool:
-	if not _is_unlocked() or _location == null:
+	if not _can_attempt_travel():
 		_refresh_lock()
 		return false
 	var resolved_spawn := _location.resolve_spawn(spawn_id)
+	var accepted := false
+	if reputation_faction.is_empty():
+		accepted = GameFlow.travel(_location.scene_path, resolved_spawn)
+	else:
+		accepted = GameFlow.request_area_access(
+			transition_id, _location.scene_path, resolved_spawn
+		)
+	if not accepted:
+		_refresh_lock()
+		return false
 	travel_requested.emit(_location.scene_path, resolved_spawn)
-	GameFlow.travel(_location.scene_path, resolved_spawn)
 	return true
 
 
-func _is_unlocked() -> bool:
+func _can_attempt_travel() -> bool:
 	if not _gate_configuration_valid or _location == null:
 		return false
-	if not required_flag.is_empty() and not GameState.flag_is_true(required_flag):
+	return required_flag.is_empty() or GameState.flag_is_true(required_flag)
+
+
+func _is_unlocked() -> bool:
+	# Presentation preview only. The actual reputation-gated travel decision is
+	# made by GameFlow's statechart in request_area_access().
+	if not _can_attempt_travel():
 		return false
 	if not reputation_faction.is_empty():
-		var current_band: StringName = Reputation.band(reputation_faction)
-		if int(REPUTATION_BAND_RANK[current_band]) < int(
-			REPUTATION_BAND_RANK[minimum_reputation_band]
-		):
+		if not Reputation.band_at_least(reputation_faction, minimum_reputation_band):
 			return false
 	return true
 

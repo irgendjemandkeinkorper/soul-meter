@@ -21,6 +21,18 @@ const BAND_WARM := 15.0
 const BAND_COLD := -15.0
 const BAND_HOSTILE := -40.0
 
+## Ordering of the bands returned by band(). Lives here, next to the thresholds
+## it ranks, so a rebalance moves both together. Callers that gate on "at least
+## band X" must use band_at_least() rather than comparing raw standings against
+## a copied threshold — a copied threshold silently stops tracking a rebalance.
+const BAND_RANK := {
+	&"hostile": 0,
+	&"cold": 1,
+	&"neutral": 2,
+	&"warm": 3,
+	&"allied": 4,
+}
+
 var _log: Array[ReputationEvent] = []
 var _next_order: int = 0
 ## Derived cache: faction -> standing. Rebuilt from the log; never authoritative.
@@ -73,6 +85,18 @@ func band(faction: String) -> StringName:
 	if s >= BAND_WARM:
 		return &"warm"
 	return &"neutral"
+
+
+## True when `faction`'s current band is at least `minimum_band`. An empty
+## minimum means "no requirement". An unknown band id is a programming error,
+## not a permissive default — it refuses and reports.
+func band_at_least(faction: String, minimum_band: StringName) -> bool:
+	if minimum_band.is_empty():
+		return true
+	if not BAND_RANK.has(minimum_band):
+		push_error("Unknown reputation band: %s" % minimum_band)
+		return false
+	return int(BAND_RANK[band(faction)]) >= int(BAND_RANK[minimum_band])
 
 
 ## All factions that have ever appeared in the log, with their standings.

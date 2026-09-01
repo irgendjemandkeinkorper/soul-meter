@@ -1,4 +1,4 @@
-[gd_scene load_steps=42 format=3]
+[gd_scene load_steps=43 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="6_exit"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="7_iso"]
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
+[ext_resource type="PackedScene" path="res://actors/zhavar_telegraph/zhavar_telegraph.tscn" id="9_zhavar"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-standing-stone--decorative.png" id="20_ls_stone"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-root-archway--decorative.png" id="21_ls_arch"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-fallen-log--decorative.png" id="22_ls_log"]
@@ -56,6 +57,8 @@ size = Vector2(46, 22)
 
 [node name="TestRoom" type="Node2D"]
 y_sort_enabled = true
+
+[node name="ZhavarTelegraph" parent="." instance=ExtResource("9_zhavar")]
 
 [node name="WorldUnderlay" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(-2000, -2000, 4000, -2000, 4000, 3000, -2000, 3000)

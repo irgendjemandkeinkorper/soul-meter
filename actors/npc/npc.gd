@@ -22,10 +22,21 @@ const UnitArtScript := preload("res://globals/unit_art.gd")
 var _player_in_range := false
 var _prompt: Label
 var _collision_layer_default := 0
+var _authored_visible := true
+var _authored_process_mode := Node.PROCESS_MODE_INHERIT
+var _authored_dialogue_path := ""
+var _authored_dialogue_start := "start"
+var _reaction_dialogue_path := ""
+var _reaction_dialogue_start := ""
+## Where the scene author placed this NPC, captured before any routine runs.
+## The deterministic fallback for a reaction that makes an NPC present in a
+## phase whose routine row supplies no position — see _refresh_world_state().
+var _authored_position := Vector2.ZERO
 
 
 func _ready() -> void:
 	GridPlacement.snap_to_walkable_cell(self, global_position)
+	_authored_position = global_position
 	# A standing NPC is a solid body. Overworld click-paths must route around it rather than
 	# grind into it (GH #190) — see world/nav/nav_occupancy.gd.
 	NavOccupancy.register(self)
@@ -54,8 +65,23 @@ func _ready() -> void:
 	# An NPC without a row keeps FR-504 flag/rep reactivity — that path does
 	# nothing here by design.
 	_collision_layer_default = collision_layer
-	_apply_routine()
+	_authored_visible = visible
+	_authored_process_mode = process_mode
+	_authored_dialogue_path = dialogue_path
+	_authored_dialogue_start = dialogue_start
+	_refresh_world_state()
 	WorldClock.phase_changed.connect(_on_world_phase_changed)
+	GameState.flag_changed.connect(_on_reaction_flag_changed)
+	Reputation.reputation_changed.connect(_on_reaction_reputation_changed)
+
+
+func _exit_tree() -> void:
+	if WorldClock.phase_changed.is_connected(_on_world_phase_changed):
+		WorldClock.phase_changed.disconnect(_on_world_phase_changed)
+	if GameState.flag_changed.is_connected(_on_reaction_flag_changed):
+		GameState.flag_changed.disconnect(_on_reaction_flag_changed)
+	if Reputation.reputation_changed.is_connected(_on_reaction_reputation_changed):
+		Reputation.reputation_changed.disconnect(_on_reaction_reputation_changed)
 
 
 ## The scene file this NPC is hosted in: nearest ancestor (excluding the NPC's
@@ -73,38 +99,107 @@ func _containing_scene_path() -> String:
 func _on_world_phase_changed(
 	_previous: StringName, _current: StringName, _cause: String
 ) -> void:
-	_apply_routine()
+	_refresh_world_state()
 
 
-func _apply_routine() -> void:
+func _on_reaction_flag_changed(_flag: String, _value: Variant) -> void:
+	if NpcReactions.has_reaction(npc_id):
+		_refresh_world_state()
+
+
+func _on_reaction_reputation_changed(
+	_faction: String, _standing: float, _event: ReputationEvent
+) -> void:
+	if NpcReactions.has_reaction(npc_id):
+		_refresh_world_state()
+
+
+func _refresh_world_state() -> void:
+	# PRECEDENCE: the routine chooses WHERE; the reaction chooses WHETHER and
+	# WHAT dialogue. Apply the routine first so a matching reaction's presence
+	# verdict wins without discarding a present routine's authored position.
+	var has_routine := NpcRoutines.has_routine(npc_id)
+	var has_reaction := NpcReactions.has_reaction(npc_id)
+	var routine_placed := false
+	if has_routine:
+		routine_placed = _apply_routine()
+	elif has_reaction:
+		_restore_authored_presence()
+	if has_reaction:
+		_apply_reaction()
+		# A reaction may make an NPC present in a phase whose routine row says
+		# absent — and an absent row carries no position. Without an anchor the
+		# NPC would simply keep wherever it last stood, so arrival HISTORY, not
+		# the routine, would decide where it is: a fresh night load and an
+		# evening→night transition would place the same NPC differently. Fall
+		# back to the authored position so the placement is deterministic and
+		# the precedence rule still holds — the routine (or its absence)
+		# decides WHERE, the reaction only decides WHETHER.
+		if visible and not routine_placed:
+			GridPlacement.snap_to_walkable_cell(self, _authored_position)
+
+
+## Returns true when the routine supplied an authored position this refresh.
+func _apply_routine() -> bool:
 	if npc_id.is_empty():
-		return
+		return false
 	var row := NpcRoutines.placement(npc_id, WorldClock.phase())
 	if row.is_empty():
-		return
+		return false
 	# Routine positions are HUB_SCENE coordinates; never apply them elsewhere.
 	# Judge by the scene THIS NPC lives in, not get_tree().current_scene — under
 	# the test harness current_scene is the runner (or null), which let hub
 	# routines clobber interior placements (the 3 pre-2026-08-31
 	# test_interior_population failures).
 	if _containing_scene_path() != NpcRoutines.HUB_SCENE:
-		return
+		return false
 	var present := bool(row.get("present", false))
-	visible = present
 	if present:
 		var routine_position: Vector2 = row["position"]
 		GridPlacement.snap_to_walkable_cell(self, routine_position)
+	_set_present(present)
+	return present
+
+
+func _apply_reaction() -> void:
+	_reaction_dialogue_path = ""
+	_reaction_dialogue_start = ""
+	dialogue_path = _authored_dialogue_path
+	dialogue_start = _authored_dialogue_start
+	var reaction := NpcReactions.resolve(npc_id)
+	if reaction.is_empty():
+		return
+	if reaction.has("present"):
+		_set_present(bool(reaction["present"]))
+	var path := str(reaction.get("dialogue_path", ""))
+	if not path.is_empty():
+		_reaction_dialogue_path = path
+		_reaction_dialogue_start = str(reaction["dialogue_title"])
+		dialogue_path = _reaction_dialogue_path
+		dialogue_start = _reaction_dialogue_start
+
+
+func _restore_authored_presence() -> void:
+	visible = _authored_visible
+	collision_layer = _collision_layer_default
+	process_mode = _authored_process_mode
+	if visible and collision_layer > 0:
+		NavOccupancy.register(self)
+
+
+func _set_present(present: bool) -> void:
+	visible = present
+	if present:
 		collision_layer = _collision_layer_default
 		process_mode = Node.PROCESS_MODE_INHERIT
 		NavOccupancy.register(self)
-	else:
-		# §2.1 "absent": not findable, not interactable, and — because a solid
-		# invisible body would still block clicks and paths — not solid either.
-		collision_layer = 0
-		process_mode = Node.PROCESS_MODE_DISABLED
-		remove_from_group(NavOccupancy.GROUP)
-		_player_in_range = false
-		_prompt.visible = false
+		return
+	# Absent means not findable, interactable, solid, or nav-occupying.
+	collision_layer = 0
+	process_mode = Node.PROCESS_MODE_DISABLED
+	remove_from_group(NavOccupancy.GROUP)
+	_player_in_range = false
+	_prompt.visible = false
 
 
 func _on_body(body: Node2D, entered: bool) -> void:
@@ -120,9 +215,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var shop_screen := UIManager.open(UIManager.SHOP, true)
 			shop_screen.call("configure_vendor", vendor_id)
 			return
-		var route := QuestRegistry.dialogue_route_for_actor(
-			_stable_actor_id(), dialogue_path, dialogue_start
-		)
+		var route := _resolved_dialogue_route()
 		var resolved_path := str(route.get("path", ""))
 		var resolved_title := str(route.get("title", "start"))
 		if resolved_path.is_empty():
@@ -133,6 +226,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			push_error("NPC '%s' could not load dialogue '%s'." % [npc_name, resolved_path])
 			return
 		DialogueManager.show_dialogue_balloon(dialogue, resolved_title)
+
+
+func _resolved_dialogue_route() -> Dictionary:
+	var route := QuestRegistry.dialogue_route_for_actor(
+		_stable_actor_id(), dialogue_path, dialogue_start
+	)
+	if not _reaction_dialogue_path.is_empty():
+		return {
+			"path": _reaction_dialogue_path,
+			"title": _reaction_dialogue_start,
+		}
+	return route
 
 
 func _stable_actor_id() -> String:

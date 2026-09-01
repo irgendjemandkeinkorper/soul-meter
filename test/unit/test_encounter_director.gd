@@ -40,6 +40,21 @@ func _route_with_band_weights() -> Dictionary:
 	return route
 
 
+func _route_at_thinning_tier(tier: int) -> Dictionary:
+	var route: Dictionary = _route()
+	route["origin_id"] = WorldMapRegistry.DOM_ID
+	match tier:
+		0:
+			route["destination_id"] = WorldMapRegistry.DOM_ID
+		1:
+			route["destination_id"] = WorldMapRegistry.WILDS_ID
+		2:
+			route["destination_id"] = WorldMapRegistry.DORTHKOR_ROAD_ID
+		_:
+			route["destination_id"] = WorldMapRegistry.WOUND_LIP_ID
+	return route
+
+
 func _set_iron_companies_band(band: StringName) -> void:
 	var delta := 0.0
 	match band:
@@ -118,6 +133,26 @@ func test_route_without_band_weights_is_identical_across_reputation_bands() -> v
 	_set_iron_companies_band(&"allied")
 	var allied_schedule: Array[Dictionary] = EncounterDirector.build_schedule(_route(), 62140)
 	assert_array(hostile_schedule).is_equal(allied_schedule)
+
+
+func test_thinning_tier_zero_preserves_the_authored_table() -> void:
+	var unchanged: Array[Dictionary] = EncounterDirector._encounter_table_for_route(_route())
+	var tier_zero: Array[Dictionary] = EncounterDirector._encounter_table_for_route(
+		_route_at_thinning_tier(0)
+	)
+	assert_array(tier_zero).is_equal(unchanged)
+
+
+func test_higher_thinning_tiers_monotonically_shift_dangerous_weight() -> void:
+	var previous_vanguard_weight := -1
+	for tier: int in range(4):
+		var table: Array[Dictionary] = EncounterDirector._encounter_table_for_route(
+			_route_at_thinning_tier(tier)
+		)
+		var vanguard_weight := _weight_for(table, &"dorthkor-vanguard")
+		assert_int(vanguard_weight).is_greater(previous_vanguard_weight)
+		assert_int(_weight_for(table, &"loam-boar")).is_equal(1)
+		previous_vanguard_weight = vanguard_weight
 
 
 func test_neutral_band_weights_preserve_the_unconfigured_schedule() -> void:

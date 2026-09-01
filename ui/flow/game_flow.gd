@@ -36,6 +36,22 @@ const WILDS_SCENE := "res://world/test_room.tscn"
 const DORTHKOR_SCENE := "res://world/dorthkor_road.tscn"
 const WOUND_LIP_SCENE := "res://world/wound_lip.tscn"
 const TAVERN_SCENE := "res://world/interiors/dom_tavern.tscn"
+## Authored reputation-gated doorways → the chart expression property whose
+## guard decides them. Keyed by the authored definition itself, so the id,
+## destination and band requirement are all READ from the .tres rather than
+## copied here. Add a row plus a guarded transition pair in the chart; never
+## add a threshold literal to the .tscn.
+const AREA_ACCESS_TRANSITIONS := {
+	BuildingTransitionRegistry.GARRISON_YARD_ENTER: &"garrison_access_granted",
+}
+## Derived from the authored transition, never restated. Renaming the .tres id
+## or repointing its destination moves these with it.
+static var GARRISON_YARD_TRANSITION_ID: StringName = (
+	BuildingTransitionRegistry.GARRISON_YARD_ENTER.id
+)
+static var GARRISON_YARD_SCENE: String = (
+	BuildingTransitionRegistry.GARRISON_YARD_ENTER.destination_scene
+)
 ## Every scene UIManager should treat as "in gameplay" (see _in_gameplay()).
 var GAMEPLAY_SCENES: Array[String] = _gameplay_scenes()
 ## Project-owned, DS-styled scene running the Maaack LoadingScreen script —
@@ -60,6 +76,9 @@ var last_travel_error := ""
 ## whatever travel() set it to on a re-entry.
 var _target_scene := TOWN_SCENE
 var _target_spawn_id: StringName = &"default"
+var _pending_area_scene := ""
+var _pending_area_spawn: StringName = &"default"
+var _area_access_result := -1
 var travel_plan: TravelPlan = null
 
 @onready var chart: StateChart = $StateChart
@@ -89,7 +108,9 @@ func _ready() -> void:
 	Reputation.reputation_changed.connect(
 		func(faction: String, standing: float, _e: ReputationEvent) -> void:
 			chart.set_expression_property("rep_" + faction.replace("-", "_"), standing)
+			_sync_reputation_guards()
 	)
+	_sync_reputation_guards()
 
 	$StateChart/Root/Menus/Title.state_entered.connect(_on_title_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_entered.connect(_on_character_creation_entered)
@@ -97,6 +118,18 @@ func _ready() -> void:
 	$StateChart/Root/Menus/IntroNarration.state_entered.connect(_on_intro_narration_entered)
 	$StateChart/Root/Menus/IntroNarration.state_exited.connect(_on_intro_narration_exited)
 	$StateChart/Root/Playing/Loading.state_entered.connect(_on_loading_entered)
+	$StateChart/Root/Playing/Active/ToGarrisonLoading.taken.connect(
+		_on_area_access_allowed
+	)
+	$StateChart/Root/Playing/Active/RefuseGarrison.taken.connect(
+		_on_area_access_refused
+	)
+	# A queued area-access event that never drains while Active would otherwise
+	# leave its destination staged indefinitely, and a second such request would
+	# overwrite the first's staging before either handler consumed it. Leaving
+	# Active means no guarded area transition can still fire, so the staging is
+	# dead by definition.
+	$StateChart/Root/Playing/Active.state_exited.connect(_clear_pending_area)
 	$StateChart/Root/Playing/Paused.state_entered.connect(_on_paused_entered)
 	$StateChart/Root/Playing/Paused.state_exited.connect(_on_paused_exited)
 	var deployment_states := [
@@ -263,7 +296,26 @@ func _restore_travel_plan() -> void:
 
 func _on_load_requested(destination: LoadDestination) -> void:
 	_restore_travel_plan()
+	# Reputation.from_dict() restores standings without emitting change signals,
+	# so refresh chart-owned access guards after the save payload is applied.
+	_sync_reputation_guards()
 	load_destination(destination)
+
+
+## Mirrors each authored reputation gate into the chart as a DERIVED BOOLEAN.
+##
+## The chart owns the access decision, but it must not own a copy of the data
+## behind it: an expression like `rep_iron_companies >= 15.0` duplicates both the
+## authored `minimum_reputation_band` on the transition .tres AND the band
+## thresholds in Reputation, so either could be rebalanced without moving the
+## gate. Comparing bands here — where the authored requirement is read — keeps
+## exactly one source of truth for the data and one for the decision.
+func _sync_reputation_guards() -> void:
+	for transition: BuildingTransitionDefinition in AREA_ACCESS_TRANSITIONS:
+		var granted := Reputation.band_at_least(
+			transition.reputation_faction, transition.minimum_reputation_band
+		)
+		chart.set_expression_property(AREA_ACCESS_TRANSITIONS[transition], granted)
 
 
 func _on_journey_battle_ended(result: BattleResult) -> void:
@@ -326,6 +378,104 @@ func _travel_to_gameplay_scene(scene_path: String, spawn_id: StringName) -> bool
 	_target_spawn_id = spawn_id
 	send_event("travel")
 	return true
+
+
+## Sends the one authored reputation-gated doorway through the chart. The
+## transition guard owns the decision; this method only stages the destination
+## and observes which guarded transition was taken.
+func request_area_access(
+	transition_id: StringName, scene_path: String, spawn_id: StringName
+) -> bool:
+	var gated := _area_access_transition(transition_id)
+	if gated == null:
+		push_error("Unknown reputation-gated area transition: %s" % transition_id)
+		return false
+	var location := LocationRegistry.by_scene(scene_path)
+	if location == null or not location.allowed_gameplay:
+		push_error("Refusing area access to non-gameplay scene: %s" % scene_path)
+		return false
+	_pending_area_scene = location.scene_path
+	_pending_area_spawn = location.resolve_spawn(spawn_id)
+	_area_access_result = -1
+	send_event(&"garrison_yard_access")
+	if _area_access_result == -1:
+		if bool(($StateChart/Root/Playing/Active as Node).get("active")):
+			# Active IS the guarded pair's source state, so the event matched and
+			# was merely QUEUED (the chart was mid-transition). Emulating the
+			# decision now would race the real transition. Refuse this call —
+			# deliberately without advancing WorldClock — and leave the staged
+			# destination in place so the queued transition still finds it.
+			push_error(
+				"Area access event was queued rather than processed; refusing this "
+				+ "call rather than racing the chart: %s" % transition_id
+			)
+			return false
+		if bool(($StateChart/Root/Playing as Node).get("active")):
+			# A REAL gameplay state that simply is not Active: Loading, Paused,
+			# Battle, Deployment, ChapterComplete. "Not Active" does NOT mean
+			# "detached", and treating it that way would let an allowed request
+			# rewrite _target_scene and SaveGame's pending spawn mid-load, so
+			# the stored destination disagrees with the scene already loading.
+			# Travel is an Active-only behaviour; refuse everywhere else.
+			push_error(
+				"Area access requested from a non-Active gameplay state; refusing: %s"
+				% transition_id
+			)
+			_on_area_access_refused()
+			return false
+		# Not inside Playing at all: a detached gameplay scene (the interior
+		# round-trip fixtures), where no chart transition can fire. travel()
+		# already tolerates this, and area access must match that contract or
+		# the same door behaves differently by caller. The decision still comes
+		# from the AUTHORED guard resource — this asks the chart's own guard
+		# rather than re-deriving the rule in GDScript, so the band logic
+		# continues to live in exactly one place.
+		var access_transition := (
+			$StateChart/Root/Playing/Active/ToGarrisonLoading as Transition
+		)
+		if access_transition.evaluate_guard():
+			_on_area_access_allowed()
+		else:
+			_on_area_access_refused()
+	var accepted := _area_access_result == 1
+	if accepted:
+		WorldClock.advance("travel:%s" % scene_path)
+	return accepted
+
+
+## Looks up an authored reputation-gated transition by its .tres id.
+func _area_access_transition(transition_id: StringName) -> BuildingTransitionDefinition:
+	for transition: BuildingTransitionDefinition in AREA_ACCESS_TRANSITIONS:
+		if transition.id == transition_id:
+			return transition
+	return null
+
+
+func _on_area_access_allowed() -> void:
+	if _pending_area_scene.is_empty():
+		# A transition taken outside an in-flight request_area_access() has no
+		# staged destination; applying it would blank _target_scene.
+		push_error("Area access allowed with no pending destination; ignoring.")
+		return
+	_area_access_result = 1
+	_target_scene = _pending_area_scene
+	_target_spawn_id = _pending_area_spawn
+	SaveGame.pending_spawn_id = _pending_area_spawn
+	SaveGame.has_pending_player_position = false
+	_clear_pending_area()
+
+
+func _on_area_access_refused() -> void:
+	_area_access_result = 0
+	_clear_pending_area()
+
+
+## The staged destination is consumed by whichever guarded transition is taken,
+## so it is cleared there rather than by the requesting call — a queued event
+## that fires after request_area_access() returns must still find it.
+func _clear_pending_area() -> void:
+	_pending_area_scene = ""
+	_pending_area_spawn = &"default"
 
 
 ## Validates and purchases a discovered-hub trip as one operation. The optional

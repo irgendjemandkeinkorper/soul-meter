@@ -2,6 +2,16 @@ class_name EncounterDirector
 extends RefCounted
 ## Pure helpers for deterministic journey encounters and avoidance previews.
 
+# PROVISIONAL: owner-tunable FR-506 coupling. Setting the step to zero restores
+# authored route and band weights exactly. Ranks only classify existing entries;
+# they do not add encounters or replace any authored weight.
+const PROVISIONAL_THINNING_WEIGHT_PER_DANGER_RANK := 1
+const PROVISIONAL_ENCOUNTER_DANGER_RANK := {
+	&"loam-boar": 0,
+	&"bog-wight": 1,
+	&"dorthkor-vanguard": 2,
+}
+
 
 static func build_schedule(route: Dictionary, seed: int) -> Array[Dictionary]:
 	var steps := maxi(int(route.get("steps", 0)), 0)
@@ -61,16 +71,21 @@ static func _valid_encounter_table(raw_table: Variant) -> Array[Dictionary]:
 static func _encounter_table_for_route(route: Dictionary) -> Array[Dictionary]:
 	var table := _valid_encounter_table(route.get("encounter_table", []))
 	var configuration: Variant = route.get("band_encounter_weights", {})
-	if not configuration is Dictionary:
-		return table
-	var faction_id := StringName(configuration.get("faction_id", &""))
-	var raw_bands: Variant = configuration.get("bands", {})
-	if faction_id.is_empty() or not raw_bands is Dictionary:
-		return table
-	var raw_overrides: Variant = raw_bands.get(Reputation.band(String(faction_id)), {})
-	if not raw_overrides is Dictionary:
-		return table
+	if configuration is Dictionary:
+		var faction_id := StringName(configuration.get("faction_id", &""))
+		var raw_bands: Variant = configuration.get("bands", {})
+		if not faction_id.is_empty() and raw_bands is Dictionary:
+			var raw_overrides: Variant = raw_bands.get(
+				Reputation.band(String(faction_id)), {}
+			)
+			if raw_overrides is Dictionary:
+				table = _apply_band_overrides(table, raw_overrides)
+	return _apply_thinning_weights(table, _thinning_tier_for_route(route))
 
+
+static func _apply_band_overrides(
+	table: Array[Dictionary], raw_overrides: Dictionary
+) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for entry: Dictionary in table:
 		var encounter_id := StringName(entry["encounter_id"])
@@ -82,6 +97,39 @@ static func _encounter_table_for_route(route: Dictionary) -> Array[Dictionary]:
 		if weight > 0:
 			result.append({"encounter_id": encounter_id, "weight": weight})
 	return result
+
+
+static func _apply_thinning_weights(
+	table: Array[Dictionary], thinning_tier: int
+) -> Array[Dictionary]:
+	if thinning_tier <= 0 or PROVISIONAL_THINNING_WEIGHT_PER_DANGER_RANK <= 0:
+		return table
+	var result: Array[Dictionary] = []
+	for entry: Dictionary in table:
+		var encounter_id := StringName(entry["encounter_id"])
+		var danger_rank := int(PROVISIONAL_ENCOUNTER_DANGER_RANK.get(encounter_id, 0))
+		var added_weight := (
+			thinning_tier * PROVISIONAL_THINNING_WEIGHT_PER_DANGER_RANK * danger_rank
+		)
+		result.append({
+			"encounter_id": encounter_id,
+			"weight": int(entry["weight"]) + added_weight,
+		})
+	return result
+
+
+static func _thinning_tier_for_route(route: Dictionary) -> int:
+	var tier := 0
+	for key: String in ["origin_id", "destination_id"]:
+		var location_id := StringName(route.get(key, &""))
+		var map_location := WorldMapRegistry.location(location_id)
+		if map_location.is_empty():
+			continue
+		tier = maxi(
+			tier,
+			LocationRegistry.thinning_tier_by_scene(str(map_location.get("scene_path", ""))),
+		)
+	return tier
 
 
 static func _shuffle_with_rng(values: Array[int], rng: RandomNumberGenerator) -> void:
