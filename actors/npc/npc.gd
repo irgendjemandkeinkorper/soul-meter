@@ -215,29 +215,47 @@ func _unhandled_input(event: InputEvent) -> void:
 			var shop_screen := UIManager.open(UIManager.SHOP, true)
 			shop_screen.call("configure_vendor", vendor_id)
 			return
-		var route := _resolved_dialogue_route()
-		var resolved_path := str(route.get("path", ""))
-		var resolved_title := str(route.get("title", "start"))
-		if resolved_path.is_empty():
-			push_error("NPC '%s' has no dialogue resource." % npc_name)
+		var route: Dictionary = _resolved_dialogue_route()
+		var dialogue: DialogueResource = route.get("resource") as DialogueResource
+		var resolved_title: String = str(route.get("title", "start"))
+		if dialogue == null and str(route.get("error", "")) == "unreadable":
+			push_error(_dialogue_load_failure_message(route))
 			return
-		var dialogue := load(resolved_path) as DialogueResource
 		if dialogue == null:
-			push_error("NPC '%s' could not load dialogue '%s'." % [npc_name, resolved_path])
+			push_error("NPC '%s' has no dialogue resource." % npc_name)
 			return
 		DialogueManager.show_dialogue_balloon(dialogue, resolved_title)
 
 
 func _resolved_dialogue_route() -> Dictionary:
-	var route := QuestRegistry.dialogue_route_for_actor(
+	var route: Dictionary = QuestRegistry.dialogue_route_for_actor(
 		_stable_actor_id(), dialogue_path, dialogue_start
 	)
 	if not _reaction_dialogue_path.is_empty():
+		var resource: Resource = ResourceLoader.load(
+			_reaction_dialogue_path, "", ResourceLoader.CACHE_MODE_REUSE
+		)
 		return {
-			"path": _reaction_dialogue_path,
+			"resource": resource as DialogueResource,
 			"title": _reaction_dialogue_start,
+			"error": "" if resource is DialogueResource else "unreadable",
+			"source": _reaction_dialogue_path,
 		}
 	return route
+
+
+func _dialogue_load_failure_message(route: Dictionary) -> String:
+	# `source` is the route's diagnostic-only provenance: a res:// path for
+	# committed dialogue, the package .dialogue file for a compiled campaign one.
+	# Never load from it — the route's `resource` is the only load path.
+	var source: String = str(route.get("source", ""))
+	if not source.is_empty():
+		return "NPC '%s' could not load dialogue '%s'." % [npc_name, source]
+	var resolved_title: String = str(route.get("title", "start"))
+	return (
+		"NPC '%s' could not load dialogue title '%s' from an unidentified resource."
+		% [npc_name, resolved_title]
+	)
 
 
 func _stable_actor_id() -> String:

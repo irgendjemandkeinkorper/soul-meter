@@ -59,8 +59,46 @@ func test_flag_signal_switches_to_existing_alternate_dialogue_route() -> void:
 	assert_str(String(npc._resolved_dialogue_route()["title"])).is_equal("start")
 	GameState.set_flag("zhavar_tolling_wilds", true)
 	var route: Dictionary = npc._resolved_dialogue_route()
-	assert_str(String(route["path"])).is_equal("res://dialogue/marshal_coiljaw.dialogue")
+	var resource: DialogueResource = route.get("resource") as DialogueResource
+	var expected_resource: DialogueResource = ResourceLoader.load(
+		"res://dialogue/marshal_coiljaw.dialogue"
+	) as DialogueResource
+	assert_bool(resource == expected_resource).is_true()
 	assert_str(String(route["title"])).is_equal("hub")
+
+
+func test_committed_dialogue_load_failure_names_attempted_path() -> void:
+	var npc: HubNpc = _make_hub_npc(
+		"unreadable-committed", "res://dialogue/iris_illepah.dialogue", "start"
+	)
+	npc.npc_name = "Gate Tester"
+	var route: Dictionary = npc._resolved_dialogue_route()
+	route["resource"] = null
+	route["error"] = "unreadable"
+	var message: String = str(npc.call("_dialogue_load_failure_message", route))
+
+	assert_str(message).is_equal(
+		"NPC 'Gate Tester' could not load dialogue 'res://dialogue/iris_illepah.dialogue'."
+	)
+
+
+func test_campaign_dialogue_load_failure_names_campaign_source() -> void:
+	var npc: HubNpc = _make_hub_npc("campaign-npc", "", "campaign_greeting")
+	npc.npc_name = "Campaign Tester"
+	# One diagnostic key for both provenances: a committed res:// path and a
+	# campaign package file are both reported through `source`, so the route
+	# never grows a second way to say where a resource came from.
+	var route: Dictionary = {
+		"source": "user://campaigns/gate/dialogue/greeting.dialogue",
+		"title": "campaign_greeting",
+		"error": "unreadable",
+	}
+	var message: String = str(npc.call("_dialogue_load_failure_message", route))
+
+	assert_str(message).is_equal(
+		"NPC 'Campaign Tester' could not load dialogue "
+		+ "'user://campaigns/gate/dialogue/greeting.dialogue'."
+	)
 
 
 func test_npc_without_reaction_row_keeps_authored_behavior_on_live_signals() -> void:

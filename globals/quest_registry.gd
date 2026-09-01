@@ -99,6 +99,7 @@ const ALL_QUESTS: Array[Quest] = [
 const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD]
 
 var _runtime_quests: Array[DomSideQuest] = []
+var _runtime_dialogue_resources: Dictionary = {}
 
 const BROKEN_MUSTER_RULINGS := {
 	"demons-first": {
@@ -186,7 +187,9 @@ func _ready() -> void:
 	GameState.party_changed.connect(_offer_companion_quests_for_party)
 
 
-func register_runtime_quests(quests: Array[DomSideQuest]) -> bool:
+func register_runtime_quests(
+	quests: Array[DomSideQuest], dialogue_resources: Dictionary = {}
+) -> bool:
 	var ids: Dictionary = {}
 	for committed_quest: Quest in ALL_QUESTS:
 		ids[committed_quest.id] = true
@@ -204,8 +207,17 @@ func register_runtime_quests(quests: Array[DomSideQuest]) -> bool:
 			)
 			return false
 		ids[quest.id] = true
+	for title_value: Variant in dialogue_resources.keys():
+		var title: String = str(title_value)
+		var dialogue: DialogueResource = dialogue_resources.get(title_value) as DialogueResource
+		if title.is_empty() or dialogue == null or not dialogue.get_cues().has(title):
+			push_warning(
+				"QuestRegistry: refused runtime dialogue with an invalid title/resource."
+			)
+			return false
 	clear_runtime_quests()
 	_runtime_quests.assign(quests)
+	_runtime_dialogue_resources = dialogue_resources.duplicate()
 	return true
 
 
@@ -217,6 +229,7 @@ func clear_runtime_quests() -> void:
 		quest.objective_completed = false
 		quest.current_stage = 0
 	_runtime_quests.clear()
+	_runtime_dialogue_resources.clear()
 
 
 func runtime_quests() -> Array[DomSideQuest]:
@@ -672,20 +685,52 @@ func dialogue_route_for_actor(
 	actor_id: String, fallback_path: String, fallback_title: String
 ) -> Dictionary:
 	if actor_id == "branek-coiljaw":
-		return {"path": MARSHAL_DIALOGUE_PATH, "title": "start"}
+		return _resolved_dialogue_route(MARSHAL_DIALOGUE_PATH, "start")
 	if actor_id == "themka-gaath":
-		return {"path": COUNCIL_ELDER_DIALOGUE_PATH, "title": "start"}
+		return _resolved_dialogue_route(COUNCIL_ELDER_DIALOGUE_PATH, "start")
 	## Generated roster prose remains the fallback for every townsfolk. The ten
 	## authored givers route through their quest resources at interaction time so
 	## generated data stays untouched and the quests cannot be orphaned by a stale
 	## roster dialogue title.
-	var side_quest := side_quest_for_giver(actor_id)
+	var side_quest: DomSideQuest = side_quest_for_giver(actor_id)
 	if side_quest != null:
-		return {
-			"path": DOM_SIDE_QUEST_DIALOGUE_PATH,
-			"title": side_quest.dialogue_title,
-		}
-	return {"path": fallback_path, "title": fallback_title}
+		var campaign_resource: DialogueResource = _runtime_dialogue_resources.get(
+			side_quest.dialogue_title
+		) as DialogueResource
+		if campaign_resource != null:
+			return {
+				"resource": campaign_resource,
+				"title": side_quest.dialogue_title,
+				"error": "",
+				"source": str(campaign_resource.get_meta(&"campaign_source", "")),
+			}
+		return _resolved_dialogue_route(
+			DOM_SIDE_QUEST_DIALOGUE_PATH, side_quest.dialogue_title
+		)
+	return _resolved_dialogue_route(fallback_path, fallback_title)
+
+
+## A route carries the resolved resource and a DIAGNOSTIC-ONLY `source`.
+##
+## `source` says where the resource came from — a `res://` path for committed
+## dialogue, the package `.dialogue` file for a compiled campaign one — so a
+## failure can name what it tried. It is deliberately NOT a second way to obtain
+## the resource: consumers load nothing, they use `resource`. An earlier revision
+## carried `path` and `campaign_source` beside it, which is the same
+## two-mechanisms-for-one-thing shape this route was created to remove, so keep
+## this to the single key and keep it out of every load path.
+func _resolved_dialogue_route(path: String, title: String) -> Dictionary:
+	var resource: Resource = null
+	var error: String = "missing"
+	if not path.is_empty():
+		resource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE)
+		error = "" if resource is DialogueResource else "unreadable"
+	return {
+		"resource": resource as DialogueResource,
+		"title": title,
+		"error": error,
+		"source": path,
+	}
 
 
 func side_quest_readback(quest: DomSideQuest) -> String:

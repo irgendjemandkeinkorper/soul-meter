@@ -65,7 +65,7 @@ func create_new_quest() -> void:
 		"quest_id": "",
 		"name": "",
 		"giver_actor_id": _first_value(_source_values(&"giver_actor_ids")),
-		"dialogue_title": _first_value(_source_values(&"dialogue_titles")),
+		"dialogue_title": _first_dialogue_title(),
 		"decision_prompt": "",
 		"resolution_flag": "",
 		"outcomes": [_empty_outcome(), _empty_outcome()],
@@ -361,7 +361,7 @@ func _load_quest_form(index: int) -> void:
 	for key: String in ["quest_id", "name", "decision_prompt", "resolution_flag"]:
 		_line_control(key).text = str(quest.get(key, ""))
 	_populate_option(_giver_picker, _source_values(&"giver_actor_ids"), str(quest.get("giver_actor_id", "")))
-	_populate_option(_dialogue_picker, _source_values(&"dialogue_titles"), str(quest.get("dialogue_title", "")))
+	_populate_dialogue_option(str(quest.get("dialogue_title", "")))
 	var outcomes: Array[Dictionary] = []
 	var outcome_values: Variant = quest.get("outcomes", [])
 	if outcome_values is Array:
@@ -377,7 +377,7 @@ func _clear_quest_form() -> void:
 	for key: String in ["quest_id", "name", "decision_prompt", "resolution_flag"]:
 		_line_control(key).text = ""
 	_populate_option(_giver_picker, _source_values(&"giver_actor_ids"), "")
-	_populate_option(_dialogue_picker, _source_values(&"dialogue_titles"), "")
+	_populate_dialogue_option("")
 	_rebuild_outcomes([])
 	_loading = false
 
@@ -771,6 +771,52 @@ func _populate_option(control: OptionButton, values: Array[String], selected_val
 		control.set_item_metadata(control.item_count - 1, value)
 		if value == selected_value:
 			control.select(control.item_count - 1)
+
+
+func _populate_dialogue_option(selected_value: String) -> void:
+	_dialogue_picker.clear()
+	var options: Array[Dictionary] = _dialogue_title_options()
+	var selected_is_available: bool = false
+	for option: Dictionary in options:
+		if str(option.get("title", "")) == selected_value:
+			selected_is_available = true
+			break
+	if not selected_value.is_empty() and not selected_is_available:
+		_dialogue_picker.add_item("[UNAVAILABLE] %s" % selected_value)
+		_dialogue_picker.set_item_metadata(0, selected_value)
+		_dialogue_picker.select(0)
+	for option: Dictionary in options:
+		var title: String = str(option.get("title", ""))
+		if title.is_empty():
+			continue
+		var label: String = str(option.get("label", title))
+		_dialogue_picker.add_item(label)
+		var index: int = _dialogue_picker.item_count - 1
+		_dialogue_picker.set_item_metadata(index, title)
+		if title == selected_value:
+			_dialogue_picker.select(index)
+
+
+func _dialogue_title_options() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if _editor == null:
+		return result
+	var campaign_id: String = ""
+	if _field_controls.has("campaign.id"):
+		campaign_id = _line_control("campaign.id").text.strip_edges()
+	var values: Variant = _editor.call("dialogue_title_options", campaign_id)
+	if values is Array:
+		for value: Variant in values:
+			if value is Dictionary:
+				result.append((value as Dictionary).duplicate(true))
+	return result
+
+
+func _first_dialogue_title() -> String:
+	var options: Array[Dictionary] = _dialogue_title_options()
+	if options.is_empty():
+		return ""
+	return str(options[0].get("title", ""))
 
 
 func _selected_option_value(control: OptionButton) -> String:

@@ -3,6 +3,8 @@ extends GdUnitTestSuite
 const CampaignQuestLoaderScript := preload("res://globals/campaign_quest_loader.gd")
 const CAMPAIGN_ID := "gdunit-campaign-loader"
 const PACKAGE_PATH := "user://campaigns/%s" % CAMPAIGN_ID
+const SECOND_CAMPAIGN_ID := "gdunit-campaign-loader-second"
+const SECOND_PACKAGE_PATH := "user://campaigns/%s" % SECOND_CAMPAIGN_ID
 
 
 func before_test() -> void:
@@ -23,6 +25,7 @@ func before_test() -> void:
 func after_test() -> void:
 	QuestRegistry.clear_runtime_quests()
 	_remove_tree(PACKAGE_PATH)
+	_remove_tree(SECOND_PACKAGE_PATH)
 
 
 func test_runtime_ids_are_deterministic_distinct_and_reserved() -> void:
@@ -71,7 +74,7 @@ func test_valid_package_loads_every_quest_and_registers_them_explicitly() -> voi
 	assert_str(result["campaign"]["entry_location"]).is_equal("harbor")
 
 
-func test_quest_with_unknown_routed_dialogue_title_is_rejected_at_load() -> void:
+func test_quest_title_absent_from_campaign_and_committed_dialogue_is_rejected() -> void:
 	var quest_data: Dictionary = _quest("dead-dialogue", "Dead Dialogue")
 	quest_data["dialogue_title"] = "campaign_title_that_is_not_authored"
 	_write_json(PACKAGE_PATH + "/quests/dead-dialogue.json", quest_data)
@@ -85,6 +88,281 @@ func test_quest_with_unknown_routed_dialogue_title_is_rejected_at_load() -> void
 			"unknown_dialogue_title"
 		)
 	).is_true()
+
+
+func test_campaign_dialogue_title_compiles_registers_routes_and_plays() -> void:
+	var dialogue_title: String = "campaign_authored_greeting"
+	var dialogue_path: String = PACKAGE_PATH + "/dialogue/authored.dialogue"
+	var quest_data: Dictionary = _quest("authored-dialogue", "Authored Dialogue")
+	quest_data["dialogue_title"] = dialogue_title
+	_write_json(PACKAGE_PATH + "/quests/authored-dialogue.json", quest_data)
+	_write_text(
+		dialogue_path,
+		"~ %s\nCampaign Tester: These words came from the campaign.\n=> END\n"
+		% dialogue_title
+	)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	var route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		str(quest_data["giver_actor_id"]),
+		QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
+		"dom_side_dishonest_casks"
+	)
+	var resource: DialogueResource = route.get("resource") as DialogueResource
+	assert_object(resource).is_not_null()
+	if resource == null:
+		return
+	var line: DialogueLine = await DialogueManager.get_next_dialogue_line(
+		resource, str(route.get("title", ""))
+	)
+
+	assert_array(result["errors"]).is_empty()
+	assert_str(str(route.get("title", ""))).is_equal(dialogue_title)
+	assert_str(str(route.get("source", ""))).is_equal(dialogue_path)
+	assert_object(line).is_not_null()
+	if line == null:
+		return
+	assert_str(line.text).is_equal("These words came from the campaign.")
+
+
+func test_campaign_quest_without_own_title_routes_committed_dialogue_resource() -> void:
+	var quest_data: Dictionary = _quest("committed-fallback", "Committed Fallback")
+	_write_json(PACKAGE_PATH + "/quests/committed-fallback.json", quest_data)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	var route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		str(quest_data["giver_actor_id"]),
+		QuestRegistry.COUNCIL_ELDER_DIALOGUE_PATH,
+		"start"
+	)
+	var resource: DialogueResource = route.get("resource") as DialogueResource
+	var committed_resource: DialogueResource = ResourceLoader.load(
+		QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH
+	) as DialogueResource
+
+	assert_array(result["errors"]).is_empty()
+	assert_bool(resource == committed_resource).is_true()
+	assert_str(str(route.get("title", ""))).is_equal(
+		str(quest_data["dialogue_title"])
+	)
+
+
+func test_campaign_dialogue_compile_error_is_attributed_to_source_line_without_registration() -> void:
+	var dialogue_path: String = PACKAGE_PATH + "/dialogue/broken.dialogue"
+	_write_json(PACKAGE_PATH + "/quests/broken.json", _quest("broken", "Broken Dialogue"))
+	_write_text(
+		dialogue_path,
+		"~ valid_title\nif true\n"
+	)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	var compile_errors: Array[Dictionary] = _errors_with_code(
+		result["errors"], "dialogue_compile_error"
+	)
+
+	assert_array(result["quests"]).is_empty()
+	assert_array(QuestRegistry.runtime_quests()).is_empty()
+	assert_int(compile_errors.size()).is_greater_equal(1)
+	if compile_errors.is_empty():
+		return
+	assert_str(str(compile_errors[0].get("file", ""))).is_equal(dialogue_path)
+	assert_str(str(compile_errors[0].get("field", ""))).is_equal("dialogue")
+	assert_int(int(compile_errors[0].get("line", -1))).is_equal(2)
+	assert_str(str(compile_errors[0].get("message", ""))).contains("line 2")
+
+
+func test_import_compile_error_normalizes_zero_based_source_line() -> void:
+	var dialogue_path: String = PACKAGE_PATH + "/dialogue/broken-import.dialogue"
+	_write_text(
+		dialogue_path,
+		"~ valid_title\nCampaign Tester: This line is valid.\n"
+		+ "import \"res://dialogue/not-a-real-campaign-import.dialogue\" as missing\n"
+	)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+	var compile_errors: Array[Dictionary] = _errors_with_code(
+		result["errors"], "dialogue_compile_error"
+	)
+	var import_error: Dictionary = {}
+	var import_error_message: String = DMConstants.get_error_message(
+		DMConstants.ERR_ERRORS_IN_IMPORTED_FILE
+	)
+	for compile_error: Dictionary in compile_errors:
+		if str(compile_error.get("message", "")).contains(import_error_message):
+			import_error = compile_error
+			break
+
+	assert_bool(import_error.is_empty()).is_false()
+	if import_error.is_empty():
+		return
+	assert_str(str(import_error.get("file", ""))).is_equal(dialogue_path)
+	assert_int(int(import_error.get("line", -1))).is_equal(3)
+	assert_str(str(import_error.get("message", ""))).contains("line 3")
+
+
+func test_campaign_dialogue_title_shadowing_committed_title_is_rejected() -> void:
+	var committed_title: String = CampaignQuestLoaderScript.routed_dialogue_titles()[0]
+	var dialogue_path: String = PACKAGE_PATH + "/dialogue/shadow.dialogue"
+	var quest_data: Dictionary = _quest("shadow", "Shadow Dialogue")
+	quest_data["dialogue_title"] = committed_title
+	_write_json(PACKAGE_PATH + "/quests/shadow.json", quest_data)
+	_write_text(
+		dialogue_path,
+		"~ %s\nCampaign Tester: This must not replace canon.\n=> END\n" % committed_title
+	)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+	var shadow_errors: Array[Dictionary] = _errors_with_code(
+		result["errors"], "campaign_dialogue_title_shadows_committed"
+	)
+
+	assert_array(result["quests"]).is_empty()
+	assert_int(shadow_errors.size()).is_equal(1)
+	assert_str(str(shadow_errors[0].get("file", ""))).is_equal(dialogue_path)
+	assert_str(str(shadow_errors[0].get("field", ""))).is_equal("dialogue_title")
+	assert_str(str(shadow_errors[0].get("message", ""))).contains(committed_title)
+
+
+func test_duplicate_campaign_dialogue_title_rejects_every_owning_file() -> void:
+	var duplicate_title: String = "duplicate_campaign_title"
+	_write_text(
+		PACKAGE_PATH + "/dialogue/first.dialogue",
+		"~ %s\nCampaign Tester: First owner.\n=> END\n" % duplicate_title
+	)
+	_write_text(
+		PACKAGE_PATH + "/dialogue/second.dialogue",
+		"~ %s\nCampaign Tester: Second owner.\n=> END\n" % duplicate_title
+	)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+	var duplicate_errors: Array[Dictionary] = _errors_with_code(
+		result["errors"], "duplicate_campaign_dialogue_title"
+	)
+
+	assert_int(duplicate_errors.size()).is_equal(2)
+	assert_bool(
+		_has_error_code(
+			duplicate_errors, "dialogue/first.dialogue", "dialogue_title",
+			"duplicate_campaign_dialogue_title"
+		)
+	).is_true()
+	assert_bool(
+		_has_error_code(
+			duplicate_errors, "dialogue/second.dialogue", "dialogue_title",
+			"duplicate_campaign_dialogue_title"
+		)
+	).is_true()
+
+
+func test_campaign_dialogue_unsafe_relative_path_is_attributed() -> void:
+	var unsafe_path: String = PACKAGE_PATH + "/dialogue/CON.dialogue"
+	_write_text(unsafe_path, "~ safe_title\nCampaign Tester: Unreachable.\n=> END\n")
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+
+	assert_bool(
+		_has_error_code(
+			result["errors"], "dialogue/CON.dialogue", "dialogue",
+			"unsafe_dialogue_file_path"
+		)
+	).is_true()
+
+
+func test_campaign_dialogue_discovery_depth_limit_is_attributed() -> void:
+	var directory_path: String = PACKAGE_PATH + "/dialogue"
+	for index: int in CampaignQuestLoaderScript.QUEST_DISCOVERY_MAX_DEPTH + 1:
+		directory_path = directory_path.path_join("level-%d" % index)
+	_write_text(
+		directory_path.path_join("deep.dialogue"),
+		"~ deep_title\nCampaign Tester: Too deep.\n=> END\n"
+	)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+
+	assert_bool(
+		_has_error_code(
+			result["errors"], "level-8", "dialogue",
+			"dialogue_discovery_depth_exceeded"
+		)
+	).is_true()
+
+
+func test_campaign_dialogue_discovery_file_limit_is_attributed() -> void:
+	for index: int in CampaignQuestLoaderScript.QUEST_DISCOVERY_MAX_FILES + 1:
+		_write_text(PACKAGE_PATH + "/dialogue/filler-%03d.txt" % index, "")
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+
+	assert_bool(
+		_has_error_code(
+			result["errors"], "dialogue/filler-512.txt", "dialogue",
+			"dialogue_discovery_file_limit_exceeded"
+		)
+	).is_true()
+
+
+func test_registering_second_campaign_replaces_first_campaign_dialogue_routes() -> void:
+	var first_title: String = "first_campaign_words"
+	var first_quest: Dictionary = _quest("first-dialogue", "First Dialogue")
+	first_quest["dialogue_title"] = first_title
+	_write_json(PACKAGE_PATH + "/quests/first-dialogue.json", first_quest)
+	_write_text(
+		PACKAGE_PATH + "/dialogue/first.dialogue",
+		"~ %s\nCampaign Tester: First campaign.\n=> END\n" % first_title
+	)
+	var first_result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	var first_route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		str(first_quest["giver_actor_id"]),
+		QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
+		"dom_side_dishonest_casks"
+	)
+	var first_resource: DialogueResource = first_route.get("resource") as DialogueResource
+	assert_array(first_result["errors"]).is_empty()
+	assert_object(first_resource).is_not_null()
+
+	DirAccess.make_dir_recursive_absolute(
+		ProjectSettings.globalize_path(SECOND_PACKAGE_PATH + "/quests")
+	)
+	_write_json(
+		SECOND_PACKAGE_PATH + "/campaign.json",
+		{
+			"id": SECOND_CAMPAIGN_ID,
+			"title": "Second Loader Test Campaign",
+			"entry_location": "harbor",
+			"locations": ["harbor"],
+		}
+	)
+	var second_title: String = "second_campaign_words"
+	var second_quest: Dictionary = _quest("second-dialogue", "Second Dialogue")
+	second_quest["giver_actor_id"] = "test-giver-second-campaign"
+	second_quest["resolution_flag"] = "test_second_campaign_resolution"
+	second_quest["dialogue_title"] = second_title
+	_write_json(SECOND_PACKAGE_PATH + "/quests/second-dialogue.json", second_quest)
+	_write_text(
+		SECOND_PACKAGE_PATH + "/dialogue/second.dialogue",
+		"~ %s\nCampaign Tester: Second campaign.\n=> END\n" % second_title
+	)
+
+	var second_result: Dictionary = CampaignQuestLoaderScript.load_package(SECOND_PACKAGE_PATH)
+	var replaced_route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		str(first_quest["giver_actor_id"]),
+		QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
+		"dom_side_dishonest_casks"
+	)
+	var second_route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		str(second_quest["giver_actor_id"]),
+		QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
+		"dom_side_dishonest_casks"
+	)
+	var replaced_resource: DialogueResource = replaced_route.get("resource") as DialogueResource
+	var second_resource: DialogueResource = second_route.get("resource") as DialogueResource
+
+	assert_array(second_result["errors"]).is_empty()
+	assert_str(str(replaced_route.get("title", ""))).is_equal("dom_side_dishonest_casks")
+	assert_bool(replaced_resource == first_resource).is_false()
+	assert_str(str(second_route.get("title", ""))).is_equal(second_title)
+	assert_object(second_resource).is_not_null()
+	assert_bool(second_resource == first_resource).is_false()
 
 
 func test_duplicate_package_giver_rejects_both_quests_and_names_them() -> void:
@@ -268,9 +546,18 @@ func _errors_with_code(errors: Array, code: String) -> Array[Dictionary]:
 
 
 func _write_json(path: String, value: Dictionary) -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	assert_object(file).is_not_null()
 	file.store_string(JSON.stringify(value, "  "))
+	file.close()
+
+
+func _write_text(path: String, text: String) -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	assert_object(file).is_not_null()
+	file.store_string(text)
 	file.close()
 
 

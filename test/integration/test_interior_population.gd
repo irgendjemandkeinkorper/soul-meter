@@ -61,10 +61,14 @@ func test_marshal_uses_story_dialogue_and_generated_isometric_model() -> void:
 	if marshal == null:
 		_free_interior(interior)
 		return
-	var route := QuestRegistry.dialogue_route_for_actor(
+	var route: Dictionary = QuestRegistry.dialogue_route_for_actor(
 		marshal.npc_id, marshal.dialogue_path, marshal.dialogue_start
 	)
-	assert_str(str(route["path"])).is_equal(QuestRegistry.MARSHAL_DIALOGUE_PATH)
+	var dialogue: DialogueResource = route.get("resource") as DialogueResource
+	var expected_dialogue: DialogueResource = ResourceLoader.load(
+		QuestRegistry.MARSHAL_DIALOGUE_PATH
+	) as DialogueResource
+	assert_bool(dialogue == expected_dialogue).is_true()
 	assert_str(str(route["title"])).is_equal("start")
 	var sprite := marshal.get_node("Sprite2D") as Sprite2D
 	assert_bool(sprite.region_enabled).is_false()

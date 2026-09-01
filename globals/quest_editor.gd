@@ -239,6 +239,15 @@ func dialogue_titles() -> Array[String]:
 	return CampaignQuestLoader.routed_dialogue_titles()
 
 
+func dialogue_title_options(campaign_id: String = "") -> Array[Dictionary]:
+	if not _enabled:
+		return []
+	var package_path: String = ""
+	if _campaign_id_is_safe(campaign_id):
+		package_path = _package_path(campaign_id)
+	return CampaignQuestLoader.dialogue_title_options(package_path)
+
+
 func faction_ids() -> Array[String]:
 	var lookup: Dictionary = {}
 	if not _enabled:
@@ -284,7 +293,8 @@ func _load_and_register(
 		return loaded
 	var quests: Array[DomSideQuest] = []
 	quests.assign(loaded.get("quests", []))
-	if not QuestRegistry.register_runtime_quests(quests):
+	var dialogue_resources: Dictionary = loaded.get("dialogue_resources", {})
+	if not QuestRegistry.register_runtime_quests(quests, dialogue_resources):
 		errors.append({
 			"file": package_path,
 			"field": "quests",

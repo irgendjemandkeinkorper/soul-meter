@@ -34,13 +34,34 @@ user://campaigns/<campaign_id>/campaign.json
 user://campaigns/<campaign_id>/quests/<quest_id>.json
 ```
 
-It never writes `res://`, dialogue sources, committed quest sources, Pandora data, the Dramgid vault, or any other canon surface. Promotion into canon remains the responsibility of `tools/bake_campaign.gd`.
+A complete package may also contain manually authored dialogue text:
+
+```text
+user://campaigns/<campaign_id>/
+├── campaign.json
+├── quests/
+│   └── <quest_id>.json
+└── dialogue/
+    └── *.dialogue
+```
+
+The `.dialogue` files in a runtime package are plain text despite their extension. The editor does not create or modify them; dialogue text is authored in those package files outside the game for now. The editor writes only the JSON files shown above. It never writes `res://`, committed dialogue or quest sources, Pandora data, the Dramgid vault, or any other canon surface. Promotion into canon remains the responsibility of `tools/bake_campaign.gd`.
 
 Campaign quest ids may use `/` to create nested paths such as `quests/side/baked-quest.json`. The path derived from an id must be portable and remain inside the campaign package: the id may not start with `/`; every `/`-separated segment must be non-empty, may not equal `.` or `..`, and may not end in a period or a space (Windows strips those from a path component, so `side.` and `side` would name the same directory there while staying distinct ids here); `:` and backslashes are forbidden; and no segment stem may be a case-insensitive Windows device name (`CON`, `PRN`, `AUX`, `NUL`, `COM1`–`COM9`, or `LPT1`–`LPT9`), with or without an extension. Substrings such as `a..b` remain legal when they satisfy `StableIds.QUEST`. Within one package, quest ids must also be unique under ASCII case folding so two documents cannot name the same path on a case-insensitive filesystem. `CampaignQuestLoader` enforces all of these rules for both disk loading and editor validation.
 
+Dialogue discovery applies the same portable relative-path checks and the same depth and regular-file limits as quest discovery. During quest and dialogue discovery, child files and directories encountered beneath the fixed roots are skipped when they are links. The package's own fixed `quests/` and `dialogue/` roots are opened as given and are not link-checked. That distinction is intentional under [Threat model and limitations](#threat-model-and-limitations), specifically **Symlinked package read/write paths are out of scope**. A package that exceeds a bound or contains an unsafe dialogue path is refused with a normal attributed loader error.
+
+## Campaign dialogue loading
+
+Godot imports committed `.dialogue` assets before runtime, but files beneath `user://` cannot participate in that import pipeline. `CampaignQuestLoader` therefore reads package dialogue as text and compiles it during validation/loading with `DMCompiler`. It inspects compiler errors before constructing a `DialogueResource`; an author typo cannot trigger Dialogue Manager's assert-based runtime helper. Each compiler error reports the package file, the 1-based source `line`, `field`, `expected`, machine-readable `code`, and human-readable Dialogue Manager message.
+
+Compiled resources belong only to the package being registered. Registering or clearing a runtime campaign replaces/releases the previous package's dialogue lookup along with its quests, so a prior campaign title cannot route after a switch.
+
+Title resolution is campaign-first: a runtime quest uses its package's compiled title when present, then the committed routed dialogue resource. A campaign title may not shadow a committed title, and duplicate titles across campaign dialogue files are also refused with attribution. A quest whose title exists in neither source is refused. Committed titles are still discovered through `ResourceLoader` and `DialogueResource.get_cues()` because source-file scraping would fail in exported builds.
+
 ## Validation and runtime state
 
-`CampaignQuestLoader.validate_package_data()` is the single in-memory validation entry point used by the editor. Disk package loading and editor validation share the loader's campaign, quest, identity, collision, and outcome validation implementation; the UI contains no second quest-rule implementation.
+`CampaignQuestLoader.validate_package_data()` is the single in-memory validation entry point used by the editor. Disk package loading and editor validation share the loader's campaign, dialogue compilation, title resolution, quest, identity, collision, and outcome validation implementation; the UI contains no second rule implementation.
 
 The game loader remains tolerant: `load_package()` may return valid quests alongside errors for invalid quest documents. The editor is intentionally strict at the registration boundary. It always loads with `register_runtime = false`, and it calls `QuestRegistry.register_runtime_quests()` only when the loader returned zero errors. A rejected authoring package therefore registers nothing and leaves the previously registered runtime set untouched.
 
@@ -50,7 +71,7 @@ The editor does not offer, resolve, complete, or otherwise advance quests. It do
 
 ## Threat model and limitations
 
-- **Symlinked write paths are out of scope.** Package containment is lexical. A symlink or junction inside a package can direct a write outside it. The editor is debug-only and environment-gated, and someone able to plant such a link in the developer's `user://` already has the ability to write anywhere the game can. The containment check therefore confines the editor's own id-derived paths; it is not a privilege boundary.
+- **Symlinked package read/write paths are out of scope.** Package containment is lexical. As described under [Output boundary](#output-boundary), discovery skips linked child entries but opens the fixed `quests/` and `dialogue/` roots as given; a symlink or junction at one of those roots can therefore redirect reads, and a link in an editor write path can redirect writes. The editor is debug-only and environment-gated, and someone able to plant such a link in the developer's `user://` already has the ability to read or write anywhere the game can. The containment checks confine the tool's own id-derived paths; they are not a privilege boundary.
 - **Save is rollback-capable but not crash-atomic.** Files are promoted individually, so terminating the process during promotion can leave a partially updated package and `.bak` or `.tmp` files. There is no transaction marker or startup recovery. Re-save from the editor, which still holds the draft, to recover. Campaign packages are proposals rather than canon, and `SaveGame` has the same property class.
 
 ## Picker sources
@@ -59,7 +80,7 @@ Known values come from existing runtime sources:
 
 - Entry locations: `WorldMapRegistry.all_locations()`
 - Giver actors: `NpcRoster.all()`
-- Dialogue titles: the routed `DialogueResource` read by `CampaignQuestLoader`
+- Dialogue titles: campaign titles (`[CAMPAIGN]`) plus routed committed titles (`[COMMITTED]`), both supplied by `CampaignQuestLoader`
 - Factions: NPC roster faction ids, current reputation standings, and registered side-quest outcomes
 
 An existing package value that is no longer present in a source remains visible in its picker so it can be corrected without being silently replaced.

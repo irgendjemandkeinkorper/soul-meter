@@ -130,11 +130,11 @@ func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void
 	var portrait: Dictionary = elder_row.get("portrait", {}) as Dictionary
 	assert_str(str(portrait.get("id", ""))).is_not_empty()
 	assert_str(str(portrait.get("kind", ""))).is_not_empty()
-	var route := QuestRegistry.dialogue_route_for_actor(
+	var route: Dictionary = QuestRegistry.dialogue_route_for_actor(
 		"themka-gaath", elder.dialogue_path, elder.dialogue_start
 	)
-	assert_str(str(route.get("path", ""))).is_equal(COUNCIL_ELDER_DIALOGUE_PATH)
-	var elder_dialogue := load(COUNCIL_ELDER_DIALOGUE_PATH) as DialogueResource
+	var elder_dialogue: DialogueResource = route.get("resource") as DialogueResource
+	assert_object(elder_dialogue).is_not_null()
 	await _choose_response(elder_dialogue, "start", "carry the Council's charge")
 	assert_bool(QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD)).is_true()
 	assert_str(QuestRegistry.DORTHKOR_ROAD.quest_giver).is_equal("Themka Gaath")
@@ -231,10 +231,10 @@ func test_boot_recruit_commission_side_thread_encounters_and_ruling_reach_ledger
 	var side_quest := QuestRegistry.DISHONEST_CASKS
 	var giver := NpcRoster.get_npc(side_quest.giver_actor_id)
 	var giver_dialogue: Dictionary = giver["dialogue"]
-	var route := QuestRegistry.dialogue_route_for_actor(
+	var route: Dictionary = QuestRegistry.dialogue_route_for_actor(
 		side_quest.giver_actor_id, str(giver_dialogue["path"]), str(giver_dialogue["title"])
 	)
-	var side_resource := load(str(route["path"])) as DialogueResource
+	var side_resource: DialogueResource = route.get("resource") as DialogueResource
 	await _choose_first_allowed_response(side_resource, str(route["title"]))
 	assert_bool(QuestRegistry.is_active(side_quest)).is_true()
 	await _assert_side_objective_visible(runner, side_quest)
@@ -290,12 +290,12 @@ func test_every_registered_quest_has_a_playable_dialogue_starter() -> void:
 		var placement: Dictionary = placements[side_quest.giver_actor_id]
 		assert_bool(LocationRegistry.is_gameplay_scene(str(placement["scene"]))).is_true()
 		var dialogue: Dictionary = giver["dialogue"]
-		var route := QuestRegistry.dialogue_route_for_actor(
+		var route: Dictionary = QuestRegistry.dialogue_route_for_actor(
 			side_quest.giver_actor_id, str(dialogue["path"]), str(dialogue["title"])
 		)
-		assert_str(str(route["path"])).is_equal(QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH)
 		assert_str(str(route["title"])).is_equal(side_quest.dialogue_title)
-		var resource := load(str(route["path"])) as DialogueResource
+		var resource: DialogueResource = route.get("resource") as DialogueResource
+		assert_object(resource).is_not_null()
 		await _choose_first_allowed_response(resource, str(route["title"]))
 		assert_bool(QuestRegistry.is_active(side_quest)).is_true()
 		reached[side_quest.id] = true

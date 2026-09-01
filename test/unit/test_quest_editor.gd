@@ -59,6 +59,37 @@ func test_in_memory_validation_uses_the_loader_error_contract() -> void:
 	assert_bool(DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(PACKAGE_PATH))).is_false()
 
 
+func test_dialogue_title_picker_distinguishes_campaign_and_committed_titles() -> void:
+	var campaign_title: String = "campaign_picker_title"
+	var quest: Dictionary = _quest("campaign-picker")
+	quest["dialogue_title"] = campaign_title
+	_write_package(PACKAGE_PATH, _campaign(), [quest])
+	_write_text(
+		PACKAGE_PATH + "/dialogue/picker.dialogue",
+		"~ %s\nCampaign Tester: Picker words.\n=> END\n" % campaign_title
+	)
+
+	_editor.call("open_overlay")
+	var layer: CanvasLayer = _editor.get("_overlay_layer") as CanvasLayer
+	assert_object(layer).is_not_null()
+	if layer == null:
+		return
+	var overlay: Control = layer.get_child(0) as Control
+	var picker: OptionButton = overlay.get("_dialogue_picker") as OptionButton
+	var campaign_label_found: bool = false
+	var committed_label_found: bool = false
+	for index: int in picker.item_count:
+		var label: String = picker.get_item_text(index)
+		var title: String = str(picker.get_item_metadata(index))
+		if title == campaign_title and label.contains("CAMPAIGN"):
+			campaign_label_found = true
+		if title == "dom_side_dishonest_casks" and label.contains("COMMITTED"):
+			committed_label_found = true
+
+	assert_bool(campaign_label_found).is_true()
+	assert_bool(committed_label_found).is_true()
+
+
 func test_disabled_editor_is_not_drivable_and_writes_nothing() -> void:
 	var campaign: Dictionary = _campaign()
 	var quests: Array[Dictionary] = [_quest("disabled")]
@@ -615,6 +646,19 @@ func _write_json(file_path: String, value: Dictionary) -> void:
 	if file == null:
 		return
 	file.store_string(JSON.stringify(value, "  ") + "\n")
+	file.close()
+
+
+func _write_text(file_path: String, text: String) -> void:
+	var make_error: Error = DirAccess.make_dir_recursive_absolute(
+		ProjectSettings.globalize_path(file_path.get_base_dir())
+	)
+	assert_bool(make_error == OK or make_error == ERR_ALREADY_EXISTS).is_true()
+	var file: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
+	assert_object(file).is_not_null()
+	if file == null:
+		return
+	file.store_string(text)
 	file.close()
 
 

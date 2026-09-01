@@ -202,24 +202,57 @@ func test_resolve_broken_muster_requires_bloodbellow_reported_first() -> void:
 
 
 func test_dialogue_route_for_actor_routes_marshal_side_quest_and_fallback() -> void:
-	var marshal_route := QuestRegistry.dialogue_route_for_actor(
-		"branek-coiljaw", "res://fallback.dialogue", "fallback_title"
+	var marshal_route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		"branek-coiljaw", QuestRegistry.COUNCIL_ELDER_DIALOGUE_PATH, "start"
 	)
-	assert_str(marshal_route["path"]).is_equal(QuestRegistry.MARSHAL_DIALOGUE_PATH)
+	var marshal_resource: DialogueResource = marshal_route.get("resource") as DialogueResource
+	var expected_marshal: DialogueResource = ResourceLoader.load(
+		QuestRegistry.MARSHAL_DIALOGUE_PATH
+	) as DialogueResource
+	assert_bool(marshal_resource == expected_marshal).is_true()
 	assert_str(marshal_route["title"]).is_equal("start")
 
-	var side_quest := QuestRegistry.DOM_SIDE_QUESTS[0]
-	var side_route := QuestRegistry.dialogue_route_for_actor(
-		side_quest.giver_actor_id, "res://fallback.dialogue", "fallback_title"
+	var side_quest: DomSideQuest = QuestRegistry.DOM_SIDE_QUESTS[0]
+	var side_route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		side_quest.giver_actor_id, QuestRegistry.COUNCIL_ELDER_DIALOGUE_PATH, "start"
 	)
-	assert_str(side_route["path"]).is_equal(QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH)
+	var side_resource: DialogueResource = side_route.get("resource") as DialogueResource
+	var expected_side: DialogueResource = ResourceLoader.load(
+		QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH
+	) as DialogueResource
+	assert_bool(side_resource == expected_side).is_true()
 	assert_str(side_route["title"]).is_equal(side_quest.dialogue_title)
 
-	var fallback_route := QuestRegistry.dialogue_route_for_actor(
-		"nobody-in-particular", "res://fallback.dialogue", "fallback_title"
+	var fallback_route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		"nobody-in-particular", QuestRegistry.COUNCIL_ELDER_DIALOGUE_PATH, "start"
 	)
-	assert_str(fallback_route["path"]).is_equal("res://fallback.dialogue")
-	assert_str(fallback_route["title"]).is_equal("fallback_title")
+	var fallback_resource: DialogueResource = fallback_route.get("resource") as DialogueResource
+	var expected_fallback: DialogueResource = ResourceLoader.load(
+		QuestRegistry.COUNCIL_ELDER_DIALOGUE_PATH
+	) as DialogueResource
+	assert_bool(fallback_resource == expected_fallback).is_true()
+	assert_str(fallback_route["title"]).is_equal("start")
+	# Pin the WHOLE key set, not just the absence of "path". Asserting one banned
+	# key only bans that spelling: a later change added "path" back alongside a
+	# second "campaign_source", and a has("path") check would have caught the
+	# first while waving the second through. The route carries a resource, a
+	# title, an error, and one diagnostic-only source. Nothing else.
+	var fallback_keys: Array = fallback_route.keys()
+	fallback_keys.sort()
+	assert_array(fallback_keys).contains_exactly(["error", "resource", "source", "title"])
+
+
+func test_dialogue_route_for_ordinary_npc_resolves_committed_resource() -> void:
+	var route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		"ordinary-npc-without-a-quest",
+		QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
+		"dom_side_dishonest_casks"
+	)
+	var resource: DialogueResource = route.get("resource") as DialogueResource
+
+	assert_object(resource).is_not_null()
+	assert_bool(resource.get_cues().has("dom_side_dishonest_casks")).is_true()
+	assert_str(str(route.get("title", ""))).is_equal("dom_side_dishonest_casks")
 
 
 func test_to_dict_from_dict_round_trip_restores_active_and_completed_pools() -> void:

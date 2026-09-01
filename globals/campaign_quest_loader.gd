@@ -2,8 +2,8 @@ class_name CampaignQuestLoader
 extends RefCounted
 ## Explicit loader for campaign manifests and authored side-quest JSON.
 ## Nothing scans user:// automatically; callers choose when a package becomes active.
-## This wave routes through Dom's committed side-quest dialogue resource, so every
-## package dialogue_title must already be authored in that resource.
+## Campaign dialogue is plain text compiled at package load; committed dialogue
+## remains an imported resource resolved through ResourceLoader.
 
 const QUEST_SCHEMA := 1
 const RUNTIME_ID_MIN := StableIds.RUNTIME_QUEST_ID_MIN
@@ -27,15 +27,21 @@ static func validate_package_data(
 	_validate_campaign(campaign, package_path, campaign_path, errors)
 	if not errors.is_empty():
 		return _result(campaign, quests, quest_entries, errors)
-	var dialogue_titles: Dictionary = _load_routed_dialogue_titles(errors)
+	var dialogue_context: Dictionary = _load_dialogue_context(package_path, errors)
 	if not errors.is_empty():
-		return _result(campaign, quests, quest_entries, errors)
+		return _result(
+			campaign, quests, quest_entries, errors,
+			dialogue_context.get("campaign_resources", {})
+		)
 	var validated: Dictionary = _validate_quest_documents(
-		campaign, quest_documents, dialogue_titles, errors
+		campaign, quest_documents, dialogue_context.get("titles", {}), errors
 	)
 	quests.assign(validated.get("quests", []))
 	quest_entries.assign(validated.get("quest_entries", []))
-	return _result(campaign, quests, quest_entries, errors)
+	return _result(
+		campaign, quests, quest_entries, errors,
+		dialogue_context.get("campaign_resources", {})
+	)
 
 
 static func routed_dialogue_titles() -> Array[String]:
@@ -48,6 +54,14 @@ static func routed_dialogue_titles() -> Array[String]:
 		titles.append(str(title_value))
 	titles.sort()
 	return titles
+
+
+static func dialogue_title_options(package_path: String) -> Array[Dictionary]:
+	var errors: Array[Dictionary] = []
+	var dialogue_context: Dictionary = _load_dialogue_context(package_path, errors)
+	var options: Array[Dictionary] = []
+	options.assign(dialogue_context.get("options", []))
+	return options
 
 
 static func load_package(package_path: String, register_runtime: bool = true) -> Dictionary:
@@ -66,9 +80,12 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 	var campaign_error_count: int = errors.size()
 	if campaign_error_count > 0:
 		return _result(campaign, quests, quest_entries, errors)
-	var dialogue_titles: Dictionary = _load_routed_dialogue_titles(errors)
+	var dialogue_context: Dictionary = _load_dialogue_context(package_path, errors)
 	if not errors.is_empty():
-		return _result(campaign, quests, quest_entries, errors)
+		return _result(
+			campaign, quests, quest_entries, errors,
+			dialogue_context.get("campaign_resources", {})
+		)
 
 	var quest_directory_path: String = package_path.path_join("quests")
 	var quest_directory: DirAccess = DirAccess.open(quest_directory_path)
@@ -85,8 +102,17 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 
 	var quest_documents: Array[Dictionary] = []
 	var discovery_state: Dictionary = {"file_count": 0, "stopped": false}
-	var quest_file_paths: Array[String] = _quest_json_files(
-		quest_directory_path, errors, 0, discovery_state
+	var quest_file_paths: Array[String] = _package_files(
+		quest_directory_path,
+		quest_directory_path,
+		"json",
+		"quests",
+		"quest",
+		"Quest",
+		errors,
+		0,
+		discovery_state,
+		false
 	)
 	if not errors.is_empty():
 		return _result(campaign, quests, quest_entries, errors)
@@ -97,12 +123,18 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 		quest_documents.append({"file": file_path, "data": raw_quest as Dictionary})
 
 	var validated: Dictionary = _validate_quest_documents(
-		campaign, quest_documents, dialogue_titles, errors
+		campaign, quest_documents, dialogue_context.get("titles", {}), errors
 	)
 	quests.assign(validated.get("quests", []))
 	quest_entries.assign(validated.get("quest_entries", []))
 
-	if register_runtime and not QuestRegistry.register_runtime_quests(quests):
+	var campaign_dialogue_resources: Dictionary = dialogue_context.get(
+		"campaign_resources", {}
+	)
+	if (
+		register_runtime
+		and not QuestRegistry.register_runtime_quests(quests, campaign_dialogue_resources)
+	):
 		_add_error(
 			errors,
 			package_path,
@@ -111,7 +143,9 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 			"runtime_registration_failed",
 			"QuestRegistry refused the validated runtime quest set."
 		)
-	return _result(campaign, quests, quest_entries, errors)
+	return _result(
+		campaign, quests, quest_entries, errors, campaign_dialogue_resources
+	)
 
 
 static func _validate_quest_documents(
@@ -303,7 +337,7 @@ static func _validate_quest(
 				"invalid_quest_id",
 				"Quest id '%s' does not match the StableIds quest format." % quest_id
 			)
-		if not _quest_id_resolves_inside_package(quest_id):
+		if not _relative_package_path_is_safe(quest_id):
 			_add_error(
 				errors,
 				file_path,
@@ -326,9 +360,10 @@ static func _validate_quest(
 			errors,
 			file_path,
 			"dialogue_title",
-			"title authored in %s" % QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
+			"title authored in campaign dialogue or %s"
+			% QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
 			"unknown_dialogue_title",
-			"Dialogue title '%s' is absent from the routed dialogue resource."
+			"Dialogue title '%s' is absent from campaign and committed dialogue."
 			% quest_data["dialogue_title"]
 		)
 
@@ -397,10 +432,14 @@ static func _quest_from_data(
 	return quest
 
 
-static func _quest_id_resolves_inside_package(quest_id: String) -> bool:
-	if quest_id.begins_with("/") or quest_id.contains("\\") or quest_id.contains(":"):
+static func _relative_package_path_is_safe(relative_path: String) -> bool:
+	if (
+		relative_path.begins_with("/")
+		or relative_path.contains("\\")
+		or relative_path.contains(":")
+	):
 		return false
-	var segments: PackedStringArray = quest_id.split("/", true)
+	var segments: PackedStringArray = relative_path.split("/", true)
 	if segments.is_empty():
 		return false
 	for segment: String in segments:
@@ -408,9 +447,8 @@ static func _quest_id_resolves_inside_package(quest_id: String) -> bool:
 			return false
 		# Windows strips a trailing period or space from a path component, so
 		# "side." and "side" name the SAME directory there while remaining
-		# distinct ids here. That breaks the one-id/one-file guarantee this
-		# function exists to provide: the id validates, the first save writes it,
-		# and enumeration reads back the stripped spelling as a different quest.
+		# distinct paths here. That breaks the one-identity/one-file guarantee for
+		# both quest ids and package dialogue sources.
 		if segment.ends_with(".") or segment.ends_with(" "):
 			return false
 		var stem: String = segment.get_slice(".", 0)
@@ -441,11 +479,17 @@ static func _ascii_case_fold(value: String) -> String:
 	return folded
 
 
-static func _quest_json_files(
+static func _package_files(
+	root_path: String,
 	directory_path: String,
+	extension: String,
+	field: String,
+	code_prefix: String,
+	label: String,
 	errors: Array[Dictionary],
 	depth: int,
-	discovery_state: Dictionary
+	discovery_state: Dictionary,
+	validate_relative_paths: bool
 ) -> Array[String]:
 	var result: Array[String] = []
 	if bool(discovery_state.get("stopped", false)):
@@ -465,16 +509,29 @@ static func _quest_json_files(
 			_add_error(
 				errors,
 				file_path,
-				"quests",
+				field,
 				"at most %d regular files" % QUEST_DISCOVERY_MAX_FILES,
-				"quest_discovery_file_limit_exceeded",
-				"Quest discovery exceeded the %d-file package limit at '%s'."
-				% [QUEST_DISCOVERY_MAX_FILES, file_path]
+				"%s_discovery_file_limit_exceeded" % code_prefix,
+				"%s discovery exceeded the %d-file package limit at '%s'."
+				% [label, QUEST_DISCOVERY_MAX_FILES, file_path]
 			)
 			discovery_state["stopped"] = true
 			return result
-		if file_name.get_extension().to_lower() == "json":
-			result.append(file_path)
+		if file_name.get_extension().to_lower() != extension:
+			continue
+		var relative_path: String = file_path.trim_prefix(root_path.trim_suffix("/") + "/")
+		if validate_relative_paths and not _relative_package_path_is_safe(relative_path):
+			_add_error(
+				errors,
+				file_path,
+				field,
+				"portable relative package path",
+				"unsafe_%s_file_path" % code_prefix,
+				"%s file '%s' is not a safe portable path inside the campaign package."
+				% [label, relative_path]
+			)
+			continue
+		result.append(file_path)
 	var directory_names: PackedStringArray = directory.get_directories()
 	directory_names.sort()
 	for directory_name: String in directory_names:
@@ -486,15 +543,26 @@ static func _quest_json_files(
 			_add_error(
 				errors,
 				child_path,
-				"quests",
-				"quest tree no deeper than %d directories" % QUEST_DISCOVERY_MAX_DEPTH,
-				"quest_discovery_depth_exceeded",
-				"Quest discovery exceeded the depth limit at '%s'." % child_path
+				field,
+				"package tree no deeper than %d directories" % QUEST_DISCOVERY_MAX_DEPTH,
+				"%s_discovery_depth_exceeded" % code_prefix,
+				"%s discovery exceeded the depth limit at '%s'." % [label, child_path]
 			)
 			discovery_state["stopped"] = true
 			return result
 		result.append_array(
-			_quest_json_files(child_path, errors, child_depth, discovery_state)
+			_package_files(
+				root_path,
+				child_path,
+				extension,
+				field,
+				code_prefix,
+				label,
+				errors,
+				child_depth,
+				discovery_state,
+				validate_relative_paths
+			)
 		)
 		if bool(discovery_state.get("stopped", false)):
 			return result
@@ -572,6 +640,192 @@ static func _load_routed_dialogue_titles(errors: Array[Dictionary]) -> Dictionar
 		if not cue.is_empty():
 			titles[cue] = true
 	return titles
+
+
+static func _load_dialogue_context(
+	package_path: String, errors: Array[Dictionary]
+) -> Dictionary:
+	var committed_titles: Dictionary = _load_routed_dialogue_titles(errors)
+	var campaign_resources: Dictionary = {}
+	if errors.is_empty() and not package_path.is_empty():
+		campaign_resources = _load_campaign_dialogue_resources(
+			package_path, committed_titles, errors
+		)
+
+	var all_titles: Dictionary = committed_titles.duplicate()
+	for title_value: Variant in campaign_resources.keys():
+		all_titles[str(title_value)] = true
+
+	var options: Array[Dictionary] = []
+	var campaign_titles: Array[String] = []
+	for title_value: Variant in campaign_resources.keys():
+		campaign_titles.append(str(title_value))
+	campaign_titles.sort()
+	for title: String in campaign_titles:
+		options.append({
+			"title": title,
+			"source": "campaign",
+			"label": "[CAMPAIGN] %s" % title,
+		})
+	var committed_title_values: Array[String] = []
+	for title_value: Variant in committed_titles.keys():
+		committed_title_values.append(str(title_value))
+	committed_title_values.sort()
+	for title: String in committed_title_values:
+		options.append({
+			"title": title,
+			"source": "committed",
+			"label": "[COMMITTED] %s" % title,
+		})
+	return {
+		"titles": all_titles,
+		"campaign_resources": campaign_resources,
+		"options": options,
+	}
+
+
+static func _load_campaign_dialogue_resources(
+	package_path: String,
+	committed_titles: Dictionary,
+	errors: Array[Dictionary]
+) -> Dictionary:
+	var dialogue_directory_path: String = package_path.path_join("dialogue")
+	if not DirAccess.dir_exists_absolute(
+		ProjectSettings.globalize_path(dialogue_directory_path)
+	):
+		return {}
+
+	var discovery_state: Dictionary = {"file_count": 0, "stopped": false}
+	var dialogue_file_paths: Array[String] = _package_files(
+		dialogue_directory_path,
+		dialogue_directory_path,
+		"dialogue",
+		"dialogue",
+		"dialogue",
+		"Dialogue",
+		errors,
+		0,
+		discovery_state,
+		true
+	)
+	if bool(discovery_state.get("stopped", false)):
+		return {}
+
+	var resources: Dictionary = {}
+	var title_sources: Dictionary = {}
+	var duplicate_titles: Dictionary = {}
+	for file_path: String in dialogue_file_paths:
+		var text_value: Variant = _read_dialogue_text(file_path, errors)
+		if not text_value is String:
+			continue
+		var source_text: String = text_value as String
+		# Do not replace this with DialogueManager.create_resource_from_text(). That
+		# helper asserts on author errors and halts debug builds. Packages are
+		# untrusted author input, so compile directly, attribute every error, and
+		# construct a resource only after this source compiles cleanly.
+		var compilation: DMCompilerResult = DMCompiler.compile_string(source_text, "")
+		if not compilation.errors.is_empty():
+			for compile_error: DMError in compilation.errors:
+				var line_number: int = _dialogue_compile_error_line(compile_error)
+				_add_error(
+					errors,
+					file_path,
+					"dialogue",
+					"valid Dialogue Manager source at line %d" % line_number,
+					"dialogue_compile_error",
+					"Dialogue compile error on line %d: %s"
+					% [line_number, DMConstants.get_error_message(compile_error.error)],
+					line_number
+				)
+			continue
+
+		var resource: DialogueResource = DialogueResource.new()
+		resource.using_states = compilation.using_states
+		resource.cues = compilation.cues
+		resource.first_cue = compilation.first_cue
+		resource.character_names = compilation.character_names
+		resource.lines = compilation.lines
+		resource.set_meta(&"campaign_source", file_path)
+
+		var cue_titles: Array[String] = []
+		for cue: String in resource.get_cues():
+			if not cue.is_empty():
+				cue_titles.append(cue)
+		cue_titles.sort()
+		for title: String in cue_titles:
+			if committed_titles.has(title):
+				_add_error(
+					errors,
+					file_path,
+					"dialogue_title",
+					"campaign title distinct from every committed title",
+					"campaign_dialogue_title_shadows_committed",
+					"Campaign dialogue title '%s' shadows a committed conversation."
+					% title
+				)
+				continue
+			if duplicate_titles.has(title):
+				_add_duplicate_campaign_dialogue_title_error(errors, file_path, title)
+				continue
+			if title_sources.has(title):
+				_add_duplicate_campaign_dialogue_title_error(
+					errors, str(title_sources[title]), title
+				)
+				_add_duplicate_campaign_dialogue_title_error(errors, file_path, title)
+				resources.erase(title)
+				title_sources.erase(title)
+				duplicate_titles[title] = true
+				continue
+			resources[title] = resource
+			title_sources[title] = file_path
+	return resources
+
+
+static func _dialogue_compile_error_line(compile_error: DMError) -> int:
+	# Dialogue Manager's DMCompilation is internally inconsistent: build_line_tree()
+	# assigns DMTreeLine.line_number = i + 1 and almost every error uses that 1-based
+	# value, but find_imported_cues() passes its raw id and ERR_EMPTY_CUE passes raw i.
+	# Normalize only those four 0-based call sites; adding one to every error shifts
+	# condition, other cue-validation, expression, and indentation failures too far.
+	match compile_error.error:
+		DMConstants.ERR_FILE_ALREADY_IMPORTED, \
+		DMConstants.ERR_DUPLICATE_IMPORT_NAME, \
+		DMConstants.ERR_ERRORS_IN_IMPORTED_FILE, \
+		DMConstants.ERR_EMPTY_CUE:
+			return compile_error.line_number + 1
+		_:
+			return compile_error.line_number
+
+
+static func _read_dialogue_text(
+	file_path: String, errors: Array[Dictionary]
+) -> Variant:
+	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
+	if file == null:
+		_add_error(
+			errors,
+			file_path,
+			"dialogue",
+			"readable campaign dialogue text",
+			"dialogue_file_unreadable",
+			"Could not open dialogue file (FileAccess error %d)."
+			% FileAccess.get_open_error()
+		)
+		return null
+	return file.get_as_text()
+
+
+static func _add_duplicate_campaign_dialogue_title_error(
+	errors: Array[Dictionary], file_path: String, title: String
+) -> void:
+	_add_error(
+		errors,
+		file_path,
+		"dialogue_title",
+		"title unique within campaign dialogue",
+		"duplicate_campaign_dialogue_title",
+		"Campaign dialogue title '%s' is authored by more than one file." % title
+	)
 
 
 static func _reject_shared_state_collisions(
@@ -668,26 +922,32 @@ static func _add_error(
 	field: String,
 	expected: String,
 	code: String,
-	message: String
+	message: String,
+	line_number: int = -1
 ) -> void:
-	errors.append({
+	var error: Dictionary = {
 		"file": file_path,
 		"field": field,
 		"expected": expected,
 		"code": code,
 		"message": message,
-	})
+	}
+	if line_number > 0:
+		error["line"] = line_number
+	errors.append(error)
 
 
 static func _result(
 	campaign: Dictionary,
 	quests: Array[DomSideQuest],
 	quest_entries: Array[Dictionary],
-	errors: Array[Dictionary]
+	errors: Array[Dictionary],
+	dialogue_resources: Dictionary = {}
 ) -> Dictionary:
 	return {
 		"campaign": campaign,
 		"quests": quests,
 		"quest_entries": quest_entries,
+		"dialogue_resources": dialogue_resources,
 		"errors": errors,
 	}
