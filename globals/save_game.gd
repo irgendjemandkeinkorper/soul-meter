@@ -9,6 +9,7 @@ signal loaded
 signal load_requested(destination: LoadDestination)
 signal save_failed(message: String)
 signal autosave_finished(reason: String, succeeded: bool)
+signal ng_plus_applied(block: Dictionary)
 signal spawn_marker_diagnostic(severity: String, marker_name: String, scene_path: String)
 signal save_diagnostic(severity: String, message: String)
 
@@ -601,7 +602,11 @@ func _read_payload(path: String) -> Variant:
 
 
 func apply_ng_plus_to_new_game(initial_state: Dictionary, block: Dictionary) -> Dictionary:
-	return NGPlus.apply_to_new_game(initial_state, block)
+	var applied := NGPlus.apply_to_new_game(initial_state, block)
+	# Emitted AFTER application: the playtest recorder logs this as evidence
+	# that mock NG+ was really applied, so it must not fire on a failed apply.
+	ng_plus_applied.emit(block)
+	return applied
 
 
 func apply_carry_over(initial_state: Dictionary, block: Dictionary) -> Dictionary:

@@ -679,6 +679,32 @@ payloads rather than UI combat arithmetic.
   Queued next (owner-ratified tool roadmap): playtest evidence recorder
   (#93 gate), dev/state console, combat lab, dialogue live-iteration.
 
+- **Wave AJ — playtest evidence recorder (owner-ratified, #214) — SHIPPED
+  2026-08-31.** Tester sessions now document themselves for the #93 / Gate T
+  criterion 6 gate. `PlaytestRecorder` autoload (enabled by
+  `SOUL_METER_PLAYTEST=1` or `--playtest-record`; deliberately NOT gated on
+  `is_debug_build` — it must work inside the exported playtest artifact;
+  inert otherwise, test-proven) appends one flushed JSON line per event to
+  `user://playtest/<session>/events.jsonl` off EXISTING signals only —
+  scenes, dialogue, both consequence ledgers, Soul Meter, quests,
+  battle/CT/weather/tile events, save/load, clock phases. F8 = note +
+  screenshot (a failed screenshot never loses the note), F9 = export, plus
+  auto-export on quit. Export pre-fills `docs/playtest-packet.md`'s
+  per-tester form: build fields from `BUILD-MANIFEST.txt`, duration,
+  Subsystem coverage auto-ticked **from observed events only**, timestamped
+  Observations — and the four gate questions LEFT BLANK, because verbatim
+  answers are human-recorded by ratified protocol. Privacy rule (ratified):
+  gameplay telemetry only — no username, machine name, IP, or personal
+  data. One permitted signal added at the existing NG+ seam
+  (`SaveGame.ng_plus_applied`), emitted AFTER application so a failed apply
+  can't write "mock NG+ applied" into gate evidence. Gate r1 REVISE (file
+  surface under-specified — `.uid` sidecars ratified as standing repo
+  convention); r2 PROCEED. Suite **1073/0**. See `docs/playtest-recorder.md`.
+  ⚠ Worker-claim watch-out: the implementing worker asserted the repo's
+  gdUnit runner is unusable here and substituted a wrapper — false; all
+  numbers above are from `addons/gdUnit4/runtest.sh`, and its own scoped run
+  hid a full-suite isolation failure (see the doc's test note).
+
 ## Outstanding for final ratification
 
 - Owner sign-off on this REV 2 document as the PRD addendum (explicitly including the
