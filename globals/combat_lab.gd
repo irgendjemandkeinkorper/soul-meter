@@ -7,10 +7,13 @@ const AUTHORED_WEATHER := &"__authored_default__"
 const CALM := &""
 ## PROVISIONAL owner surface: F3 may move after balance-facilitator playtesting.
 const TOGGLE_HOTKEY: Key = KEY_F3
-## Emitted by every entry point that declines to open over a live production
-## battle. It lives here, next to the guard, so the tests that assert the
-## refusal is audible match on this constant instead of a copied literal.
-const REFUSAL_WARNING := "Combat Lab refuses to open over a running battle."
+## Emitted by every entry point that declines to open — over a live production
+## battle, or over another debug lab's armed sandbox. It lives here, next to the
+## guard, so the tests that assert the refusal is audible match on this constant
+## instead of a copied literal.
+const REFUSAL_WARNING := (
+	"Combat Lab refuses to open over a running battle or another lab's session."
+)
 
 var force_enabled_for_tests: bool = false:
 	set(value):
@@ -31,15 +34,12 @@ var _outcome: Dictionary = {}
 var _latest_snapshot: Dictionary = {}
 var _pending_forecast: Dictionary = {}
 var _last_comparison: Dictionary = {}
-var _state_before: Dictionary = {}
-var _reputation_before: Dictionary = {}
-var _renown_before: Dictionary = {}
 ## A finished lab battle runs the PRODUCTION end-of-battle path, which accrues
-## style points into SaveGame.ng_plus and can consume persistent SkillCheck
-## expert rerolls. Battle then requests a checkpoint, so without these two the
-## player's next real save would contain progress earned in the sandbox.
-var _ng_plus_before: Dictionary = {}
-var _skill_check_before: Dictionary = {}
+## style points into SaveGame.ng_plus, can consume persistent SkillCheck expert
+## rerolls, turns in quests, and mutates the tactical roster. Battle then
+## requests a checkpoint, so without a full rollback the player's next real save
+## would contain progress earned in the sandbox.
+var _runtime_before: Dictionary = {}
 var _rng_seed_before: int = 0
 var _rng_state_before: int = 0
 var _has_saved_state: bool = false
@@ -70,7 +70,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		# ownership guard open_setup() carries, F3 during a LATER production
 		# battle would reopen the inspector on the stale prior session and
 		# render it over a live encounter it knows nothing about.
-		if production_battle_is_live():
+		if _ownership_conflict_is_live():
 			push_warning(REFUSAL_WARNING)
 			return
 		if _lab_battle_running or not _setup.is_empty():
@@ -98,10 +98,27 @@ func production_battle_is_live() -> bool:
 	)
 
 
+## Every entry point that can open the lab or start a session checks this, not
+## production_battle_is_live() alone.
+func _ownership_conflict_is_live() -> bool:
+	return production_battle_is_live() or another_sandbox_is_armed()
+
+
+## True while a DIFFERENT debug lab holds an armed rollback.
+##
+## Two labs holding snapshots at once is not safe even though each is internally
+## correct: they restore in whatever order they happen to end, and a non-LIFO
+## restore reinstates the first lab's dirty state after that lab already cleaned
+## up. `_has_saved_state` distinguishes our own armed session — which a restart
+## must still be allowed to replace — from the other lab's.
+func another_sandbox_is_armed() -> bool:
+	return SaveGame.runtime_sandbox_is_armed() and not _has_saved_state
+
+
 func open_setup() -> void:
 	if not _enabled or _overlay_layer != null or _lab_battle_running:
 		return
-	if production_battle_is_live():
+	if _ownership_conflict_is_live():
 		push_warning(REFUSAL_WARNING)
 		return
 	_previous_paused = get_tree().paused
@@ -182,13 +199,13 @@ func resolve_weather(
 ## force_enabled_for_tests seam is decorative and a stray call can start a real
 ## Battle and connect signals in a shipped build.
 func start_lab_battle(requested_setup: Dictionary) -> void:
-	if not _enabled or production_battle_is_live():
+	if not _enabled or _ownership_conflict_is_live():
 		return
 	_start_session(requested_setup, true)
 
 
 func start_test_session(requested_setup: Dictionary) -> void:
-	if not _enabled or production_battle_is_live():
+	if not _enabled or _ownership_conflict_is_live():
 		return
 	_start_session(requested_setup, false)
 
@@ -238,13 +255,13 @@ func _clear_lab_battle(owned: bool) -> void:
 ## outlives the lab battle that opened it, so a restart pressed after a real
 ## encounter has begun would otherwise destroy it.
 func restart_same_setup() -> void:
-	if not _enabled or _setup.is_empty() or production_battle_is_live():
+	if not _enabled or _setup.is_empty() or _ownership_conflict_is_live():
 		return
 	_start_session(_setup, true)
 
 
 func restart_new_seed() -> void:
-	if not _enabled or _setup.is_empty() or production_battle_is_live():
+	if not _enabled or _setup.is_empty() or _ownership_conflict_is_live():
 		return
 	var next_setup := _setup.duplicate(true)
 	next_setup["seed"] = Time.get_ticks_usec()
@@ -686,11 +703,11 @@ func _apply_party(selected_ids_value: Variant) -> void:
 
 
 func _capture_saved_state() -> void:
-	_state_before = GameState.to_dict().duplicate(true)
-	_reputation_before = Reputation.to_dict().duplicate(true)
-	_renown_before = Renown.to_dict().duplicate(true)
-	_ng_plus_before = SaveGame.ng_plus.duplicate(true)
-	_skill_check_before = SkillCheck.to_dict().duplicate(true)
+	# SaveGame owns the authoritative list of rollback-able runtime state. This
+	# lab used to enumerate five surfaces here and missed four — including the
+	# quest pools a battle victory turns in and the tactical roster combat
+	# itself mutates. Never re-enumerate the surfaces locally.
+	_runtime_before = SaveGame.capture_runtime_state()
 	# SkillCheck.to_dict() serializes reroll usage, not RNG position, so the
 	# generator's state must be captured separately or every lab session would
 	# permanently shift the randomness later campaign skill checks draw from.
@@ -700,6 +717,10 @@ func _capture_saved_state() -> void:
 	# campaign's randomness came from.
 	_rng_seed_before = SkillCheck.random_number_generator.seed
 	_rng_state_before = SkillCheck.random_number_generator.state
+	# A finished lab battle requests a checkpoint that flushes DEFERRED. The old
+	# code tried to win that race by restoring first; suppression removes the
+	# race instead, so no ordering assumption has to hold.
+	SaveGame.begin_runtime_sandbox()
 	_has_saved_state = true
 
 
@@ -714,20 +735,13 @@ func _restore_saved_state() -> void:
 	if not _has_saved_state:
 		return
 	_has_saved_state = false
-	var restored: bool = GameState.from_dict(_state_before)
-	if not restored:
+	if not SaveGame.restore_runtime_state(_runtime_before):
 		push_warning("Combat Lab could not restore the pre-lab GameState snapshot.")
-	Reputation.from_dict(_reputation_before)
-	Renown.from_dict(_renown_before)
-	# Restored BEFORE any pending checkpoint is flushed: request_checkpoint()
-	# only stages a reason, and the write happens later, so a save that does
-	# occur then serializes pre-lab progression rather than sandbox progress.
-	SaveGame.ng_plus = _ng_plus_before.duplicate(true)
-	SkillCheck.from_dict(_skill_check_before)
 	# seed first: assigning it resets state, so the reverse order would
 	# discard the restored position.
 	SkillCheck.random_number_generator.seed = _rng_seed_before
 	SkillCheck.random_number_generator.state = _rng_state_before
+	SaveGame.end_runtime_sandbox()
 
 
 func _record_playtest_usage() -> void:

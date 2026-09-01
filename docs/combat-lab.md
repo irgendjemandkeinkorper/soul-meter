@@ -55,12 +55,29 @@ re-rolls skill checks and leaves damage identical, and that is correct rather
 than a bug. Controlling combat's damage stream would require an RNG-injection
 seam inside `globals/combat/`, which the lab is not permitted to add.
 
-**Progression containment.** The lab snapshots and restores `GameState`,
-`Reputation`, `Renown`, `SaveGame.ng_plus`, and `SkillCheck`. The last two
-matter because a finished lab battle runs the *production* end-of-battle path:
-it accrues combat style points into `ng_plus` and can consume persistent expert
-rerolls, and `Battle` then requests a save checkpoint. Restoring before that
-checkpoint flushes is what keeps sandbox progress out of the player's save.
+**Progression containment.** The lab snapshots and restores everything
+`SaveGame.capture_runtime_state()` covers — `GameState`, `Reputation`, `Renown`,
+`QuestRegistry`, `ng_plus`, `zhavar`, `SkillCheck`, the tactical `unit_roster`,
+and `WorldClock` — plus the RNG's seed and state, which `SkillCheck.to_dict()`
+does not carry.
+
+This list is deliberately **not** maintained here. It used to be a hand-written
+five, and it was wrong: it omitted the quest pools a battle victory turns in and
+the `unit_roster` that combat itself mutates. `SaveGame` owns the one
+enumeration, alongside the load-failure rollback that proves it.
+
+A finished lab battle runs the *production* end-of-battle path, so it accrues
+style points, can consume persistent expert rerolls, turns in quests, and then
+requests a save checkpoint. That checkpoint is not merely out-raced any more:
+opening a session opens a **runtime sandbox** in which `request_autosave()`
+refuses to stage at all, so nothing can flush after the session ends.
+
+**The debug labs are mutually exclusive.** Every entry point checks
+`_ownership_conflict_is_live()`, which refuses over a production battle *or*
+another lab's armed sandbox. Two labs holding snapshots at once would restore in
+whatever order they happened to end, and a non-LIFO restore reinstates the other
+lab's dirty state after it has already cleaned up. A restart of the lab's own
+session is still allowed.
 
 **EXPORT .MD** writes `user://combat_lab/<timestamp>.md`. The plain-text report contains:
 

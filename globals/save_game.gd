@@ -53,6 +53,7 @@ var has_pending_player_position := false
 var pending_spawn_id: StringName = &"default"
 
 var _pending_autosave_reason := ""
+var _sandbox_sessions := 0
 var _run_started_unix := 0
 var _elapsed_before_load := 0
 var ng_plus: Dictionary = NGPlus.default_block()
@@ -162,6 +163,13 @@ func _write_current_payload(target_path: String, target_temp_path: String, targe
 
 
 func request_autosave(reason: String) -> void:
+	if _sandbox_sessions > 0:
+		# Refused at STAGING, not at flush. Dropping it in flush_pending_autosave()
+		# is not enough: request_autosave() defers the flush, so a request staged
+		# during a sandbox session runs on the next idle frame — after the session
+		# has already restored and ended its sandbox — and would then flush
+		# unsuppressed. A request that is never staged cannot fire late.
+		return
 	_pending_autosave_reason = reason
 	call_deferred("flush_pending_autosave")
 
@@ -177,6 +185,12 @@ func request_checkpoint(checkpoint: Checkpoint, detail: String = "") -> void:
 
 
 func flush_pending_autosave() -> bool:
+	if _sandbox_sessions > 0:
+		# Belt and braces: request_autosave() already refuses to stage while a
+		# sandbox is armed, so nothing should be pending here. A direct caller
+		# must not be able to write sandbox state either.
+		_pending_autosave_reason = ""
+		return false
 	if _pending_autosave_reason.is_empty() or not _in_gameplay_scene():
 		return false
 	var reason := _pending_autosave_reason
@@ -184,6 +198,68 @@ func flush_pending_autosave() -> bool:
 	var succeeded := save()
 	autosave_finished.emit(reason, succeeded)
 	return succeeded
+
+
+## Opens a containment sandbox: a debug lab session holding an armed rollback of
+## capture_runtime_state(), during which nothing may reach the player's save.
+##
+## Counted rather than boolean, purely defensively — the labs are mutually
+## exclusive (each refuses to start while runtime_sandbox_is_armed() and the
+## armed snapshot is not its own), so the depth is only ever 0 or 1. Two labs
+## holding snapshots at once would restore in whatever order they happened to
+## end, and a non-LIFO restore reinstates the earlier lab's dirty state after
+## that lab has already cleaned up.
+func begin_runtime_sandbox() -> void:
+	_sandbox_sessions += 1
+
+
+func end_runtime_sandbox() -> void:
+	_sandbox_sessions = maxi(0, _sandbox_sessions - 1)
+
+
+func runtime_sandbox_is_armed() -> bool:
+	return _sandbox_sessions > 0
+
+
+## The authoritative set of runtime state a rollback must cover.
+##
+## load_game() rolls this back when a load fails part-way, and the debug labs
+## roll it back when a sandbox session ends. Both used to enumerate the surfaces
+## themselves, and they disagreed: the labs each captured five while a real
+## rollback covered nine, so zhavar, the quest pools, the tactical roster and the
+## world clock escaped every sandbox. There is one list now, and it lives here
+## with the load path that proves it — adding a runtime global means adding it
+## once, here, rather than remembering three call sites.
+func capture_runtime_state() -> Dictionary:
+	return {
+		"game_state": GameState.to_dict().duplicate(true),
+		"reputation": Reputation.to_dict().duplicate(true),
+		"renown": Renown.to_dict().duplicate(true),
+		"quests": QuestRegistry.to_dict().duplicate(true),
+		"ng_plus": ng_plus.duplicate(true),
+		"zhavar": zhavar.duplicate(true),
+		"skill_check": SkillCheck.to_dict().duplicate(true),
+		"unit_roster": unit_roster.to_dict().duplicate(true),
+		"world_clock": WorldClock.to_dict().duplicate(true),
+	}
+
+
+## Restores a capture_runtime_state() snapshot. Returns false if GameState
+## refused its section, which is the only surface that can reject a payload.
+func restore_runtime_state(snapshot: Dictionary) -> bool:
+	if snapshot.is_empty():
+		return false
+	var restored: bool = GameState.from_dict(snapshot.get("game_state", {}))
+	Reputation.from_dict(snapshot.get("reputation", {}))
+	Renown.from_dict(snapshot.get("renown", {}))
+	QuestRegistry.from_dict(snapshot.get("quests", {}))
+	ng_plus = (snapshot.get("ng_plus", {}) as Dictionary).duplicate(true)
+	zhavar = (snapshot.get("zhavar", {}) as Dictionary).duplicate(true)
+	SkillCheck.from_dict(snapshot.get("skill_check", {}))
+	var roster := UnitRoster.from_dict(snapshot.get("unit_roster", {}))
+	unit_roster = roster if roster != null else UnitRoster.new()
+	WorldClock.from_dict(snapshot.get("world_clock", {}))
+	return restored
 
 
 # --- FR-308 Zhavar (zone-scale escalation ladder) ---------------------------
@@ -239,17 +315,9 @@ func _load_from(primary_path: String, fallback_path: String) -> bool:
 	if source_path == fallback_path:
 		_warn("Primary save was invalid; loading the backup save instead.")
 	var payload: Dictionary = prepared["payload"]
-	var game_state_backup := GameState.to_dict()
-	var reputation_backup := Reputation.to_dict()
-	var renown_backup := Renown.to_dict()
-	var quests_backup := QuestRegistry.to_dict()
-	var ng_plus_backup := ng_plus.duplicate(true)
-	var zhavar_backup := zhavar.duplicate(true)
-	var skill_check_backup := SkillCheck.to_dict()
-	var unit_roster_backup := unit_roster.to_dict()
-	var world_clock_backup := WorldClock.to_dict()
+	var runtime_backup := capture_runtime_state()
 	if not GameState.from_dict(payload.get("game_state", {})):
-		_restore_runtime_state(game_state_backup, reputation_backup, renown_backup, quests_backup, ng_plus_backup, zhavar_backup, skill_check_backup, unit_roster_backup, world_clock_backup)
+		restore_runtime_state(runtime_backup)
 		return _fail("The game_state section in this save file is invalid.")
 	_apply_runtime_feature_flags()
 	Reputation.from_dict(payload.get("reputation", {}))
@@ -264,17 +332,7 @@ func _load_from(primary_path: String, fallback_path: String) -> bool:
 	WorldClock.from_dict(payload.get("world_clock", {}))
 	var destination := _destination_from_payload(payload)
 	if destination == null:
-		_restore_runtime_state(
-			game_state_backup,
-			reputation_backup,
-			renown_backup,
-			quests_backup,
-			ng_plus_backup,
-			zhavar_backup,
-			skill_check_backup,
-			unit_roster_backup,
-			world_clock_backup
-		)
+		restore_runtime_state(runtime_backup)
 		return _fail("The save destination is invalid.")
 	_set_pending_destination(destination)
 	_elapsed_before_load = int(payload.get("elapsed_seconds", 0))
@@ -446,27 +504,6 @@ func _validate_ng_plus(value: Variant) -> bool:
 	)
 
 
-func _restore_runtime_state(
-	game_state_data: Dictionary,
-	reputation_data: Dictionary,
-	renown_data: Dictionary,
-	quests_data: Dictionary,
-	ng_plus_data: Dictionary,
-	zhavar_data: Dictionary,
-	skill_check_data: Dictionary,
-	unit_roster_data: Dictionary,
-	world_clock_data: Dictionary
-) -> void:
-	GameState.from_dict(game_state_data)
-	Reputation.from_dict(reputation_data)
-	Renown.from_dict(renown_data)
-	QuestRegistry.from_dict(quests_data)
-	ng_plus = ng_plus_data.duplicate(true)
-	zhavar = zhavar_data.duplicate(true)
-	SkillCheck.from_dict(skill_check_data)
-	var restored := UnitRoster.from_dict(unit_roster_data)
-	unit_roster = restored if restored != null else UnitRoster.new()
-	WorldClock.from_dict(world_clock_data)
 
 
 func new_game() -> void:
