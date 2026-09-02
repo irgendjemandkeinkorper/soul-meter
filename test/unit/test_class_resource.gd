@@ -61,6 +61,12 @@ func test_registry_returns_null_resource_for_unknown_or_empty_patron() -> void:
 	assert_bool(ClassResourceRegistry.for_patron("Pazzah").is_null()).is_true()
 
 
+func test_registry_resolves_stuid_to_clarity_from_display_patron() -> void:
+	var resource: ClassResource = ClassResourceRegistry.for_patron("Stuid")
+	assert_bool(resource is StuidClarity).is_true()
+	assert_str(String(resource.patron_id)).is_equal("stuid")
+
+
 # ─── Ironbrand Scars (worked example) ───────────────────────────────────────
 
 
@@ -107,6 +113,136 @@ func test_scars_round_trip_through_registry_from_dict() -> void:
 	assert_bool(restored_scars.guaranteed_hit_armed).is_true()
 	assert_str(String(restored_scars.owner_id)).is_equal("ally-0")
 	assert_dict(restored_scars.snapshot()).contains_key_value("label", "Scars")
+
+
+func test_clarity_spend_reveals_one_forecast_and_consumes_on_resolved_action() -> void:
+	var clarity := StuidClarity.new()
+	assert_bool(clarity.spend_clarity()).is_true()
+	assert_bool(clarity.spend_clarity()).is_false()
+	assert_int(clarity.clarity).is_equal(StuidClarity.MAX_CLARITY - 1)
+	assert_bool(clarity.on_cast_forecast({}).get("reveal", false)).is_true()
+	var move_event := CombatEvent.new()
+	move_event.data = {"action_id": "move"}
+	clarity.on_action(move_event)
+	assert_bool(clarity.reveal_armed).is_true()
+	var cast_event := CombatEvent.new()
+	cast_event.data = {"action_id": "cast", "resolution": {"allowed": true}}
+	clarity.on_action(cast_event)
+	assert_bool(clarity.reveal_armed).is_false()
+	assert_bool(clarity.on_cast_forecast({}).is_empty()).is_true()
+
+
+func test_clarity_round_trip_through_registry_from_dict() -> void:
+	var clarity := StuidClarity.new()
+	clarity.patron_id = &"stuid"
+	clarity.owner_id = &"ally-0"
+	clarity.clarity = 1
+	clarity.reveal_armed = true
+	var restored: ClassResource = ClassResourceRegistry.from_dict(clarity.to_dict())
+	assert_bool(restored is StuidClarity).is_true()
+	var restored_clarity := restored as StuidClarity
+	assert_int(restored_clarity.clarity).is_equal(1)
+	assert_bool(restored_clarity.reveal_armed).is_true()
+	assert_str(String(restored_clarity.owner_id)).is_equal("ally-0")
+	assert_dict(restored_clarity.snapshot()).contains_key_value("label", "Clarity")
+
+
+func test_registry_resolves_all_wave_b_resources() -> void:
+	assert_bool(ClassResourceRegistry.for_patron("Pazzah") is PazzahLedger).is_true()
+	assert_bool(ClassResourceRegistry.for_patron("Fickah") is FickahRuleBreaker).is_true()
+	assert_bool(ClassResourceRegistry.for_patron("Ofshütje") is OfshutjeAttribution).is_true()
+	assert_bool(ClassResourceRegistry.for_patron("Izhakel") is IzhakelThreads).is_true()
+
+
+func test_ledger_queues_and_resolves_entries_on_turn_hook() -> void:
+	var ledger := PazzahLedger.new()
+	assert_bool(ledger.queue_effect(&"verdict", 2, {"amount": 4})).is_true()
+	assert_int(ledger.entries.size()).is_equal(1)
+	ledger.on_turn_start()
+	var resolved := ledger.advance_ledger()
+	assert_int(resolved.size()).is_equal(1)
+	assert_str(str(resolved[0].get("effect_id", ""))).is_equal("verdict")
+
+
+func test_ledger_round_trip_through_registry_from_dict() -> void:
+	var ledger := PazzahLedger.new()
+	ledger.patron_id = &"pazzah"
+	ledger.owner_id = &"ally-0"
+	ledger.queue_effect(&"verdict", 4, {"amount": 4})
+	var restored := ClassResourceRegistry.from_dict(ledger.to_dict()) as PazzahLedger
+	assert_int(restored.entries.size()).is_equal(1)
+	assert_int(restored.entries[0].get("turns_remaining", 0)).is_equal(4)
+	assert_str(String(restored.owner_id)).is_equal("ally-0")
+
+
+func test_fickah_keeps_a_pending_jam_request_until_matching_action() -> void:
+	var breaker := FickahRuleBreaker.new()
+	assert_bool(breaker.jam_the_gears(&"enemy-0")).is_true()
+	assert_bool(breaker.jam_the_gears(&"enemy-1")).is_false()
+	var unrelated := CombatEvent.new()
+	unrelated.target_id = &"enemy-1"
+	breaker.on_action(unrelated)
+	assert_str(String(breaker.jam_target_id)).is_equal("enemy-0")
+	var matching := CombatEvent.new()
+	matching.target_id = &"enemy-0"
+	breaker.on_action(matching)
+	assert_str(String(breaker.jam_target_id)).is_empty()
+	assert_float(FickahRuleBreaker.FIZZLE_FLOOR_PERCENT).is_equal(5.0)
+
+
+func test_fickah_round_trip_through_registry_from_dict() -> void:
+	var breaker := FickahRuleBreaker.new()
+	breaker.patron_id = &"fickah"
+	breaker.jam_the_gears(&"enemy-0")
+	var restored := ClassResourceRegistry.from_dict(breaker.to_dict()) as FickahRuleBreaker
+	assert_str(String(restored.jam_target_id)).is_equal("enemy-0")
+	assert_dict(restored.snapshot()).contains_key_value("label", "Jam")
+
+
+func test_attribution_draw_is_seeded_and_recorded_by_action_hook() -> void:
+	var attribution := OfshutjeAttribution.new()
+	var first := attribution.attribution_for(17)
+	assert_dict(first).contains_key("id")
+	assert_dict(attribution.attribution_for(17)).is_equal(first)
+	var event := CombatEvent.new()
+	event.data = {"resolution": {"allowed": true, "seed": 17}}
+	attribution.on_action(event)
+	assert_str(String(attribution.last_effect_id)).is_equal(str(first["id"]))
+	assert_int(attribution.last_effect_floor).is_equal(int(first["floor"]))
+
+
+func test_attribution_round_trip_through_registry_from_dict() -> void:
+	var attribution := OfshutjeAttribution.new()
+	attribution.patron_id = &"ofshutje"
+	attribution.last_effect_id = &"fork"
+	attribution.last_effect_floor = 2
+	var restored := ClassResourceRegistry.from_dict(attribution.to_dict()) as OfshutjeAttribution
+	assert_str(String(restored.last_effect_id)).is_equal("fork")
+	assert_int(restored.last_effect_floor).is_equal(2)
+
+
+func test_threads_bind_and_trigger_matching_hidden_condition() -> void:
+	var threads := IzhakelThreads.new()
+	assert_bool(threads.bind_thread(&"enemy-0", {"action_id": "strike"}, {"effect_id": "payoff"})).is_true()
+	var other := CombatEvent.new()
+	other.actor_id = &"enemy-0"
+	other.data = {"action_id": "move"}
+	threads.on_action(other)
+	assert_bool(threads.threads[0].get("triggered", false)).is_false()
+	var strike := CombatEvent.new()
+	strike.actor_id = &"enemy-0"
+	strike.data = {"action_id": "strike"}
+	threads.on_action(strike)
+	assert_bool(threads.threads[0].get("triggered", false)).is_true()
+
+
+func test_threads_round_trip_through_registry_from_dict() -> void:
+	var threads := IzhakelThreads.new()
+	threads.patron_id = &"izhakel"
+	threads.bind_thread(&"enemy-0", {"action_id": "strike"}, {"effect_id": "payoff"})
+	var restored := ClassResourceRegistry.from_dict(threads.to_dict()) as IzhakelThreads
+	assert_int(restored.threads.size()).is_equal(1)
+	assert_str(str(restored.threads[0].get("target_id", ""))).is_equal("enemy-0")
 
 
 # ─── Controller dispatch ────────────────────────────────────────────────────

@@ -9,6 +9,7 @@ const UnitArtScript := preload("res://globals/unit_art.gd")
 @onready var breath_label: Label = %Breath
 @onready var element_label: Label = %Element
 @onready var ct_label: Label = %CT
+@onready var resource_label: Label = %Resource
 
 
 func consume_event(event: CombatEvent) -> void:
@@ -24,6 +25,7 @@ func consume_event(event: CombatEvent) -> void:
 	var element := str(unit.get("element_id", ""))
 	element_label.text = "UNATTUNED" if element.is_empty() else element.to_upper()
 	ct_label.text = _ct_line(unit)
+	resource_label.text = _resource_line(unit.get("class_resource", {}))
 	portrait.texture = _portrait_for(unit)
 
 
@@ -70,3 +72,15 @@ func _ct_line(unit: Dictionary) -> String:
 	if not facing.is_empty():
 		parts.append("FACING %s" % facing.to_upper())
 	return " · ".join(parts)
+
+
+func _resource_line(resource: Variant) -> String:
+	if not resource is Dictionary:
+		return ""
+	var data: Dictionary = resource as Dictionary
+	var label := str(data.get("label", ""))
+	if label.is_empty():
+		return ""
+	if data.has("max"):
+		return "%s %d / %d" % [label.to_upper(), int(data.get("value", 0)), int(data.get("max", 0))]
+	return "%s %s" % [label.to_upper(), str(data.get("value", ""))]

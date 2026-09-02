@@ -15,6 +15,11 @@ const PATRON_IDS: Array[StringName] = [
 ## in PATRON_IDS so the roster is visible; B1–B10 fill this table).
 const _FACTORIES: Dictionary = {
 	&"kero": preload("res://globals/combat/class_resources/ironbrand_scars.gd"),
+	&"stuid": preload("res://globals/combat/class_resources/stuid_clarity.gd"),
+	&"pazzah": preload("res://globals/combat/class_resources/pazzah_ledger.gd"),
+	&"fickah": preload("res://globals/combat/class_resources/fickah_rule_breaker.gd"),
+	&"ofshutje": preload("res://globals/combat/class_resources/ofshutje_attribution.gd"),
+	&"izhakel": preload("res://globals/combat/class_resources/izhakel_threads.gd"),
 }
 
 
