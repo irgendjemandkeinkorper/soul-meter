@@ -81,6 +81,10 @@ XML, gitignored) is regenerated each run.
 On a machine without a working X display, set `SOUL_METER_HEADLESS=1`. This is useful for unit
 tests, but integration tests that depend on transported input should run with Xvfb normally.
 
+### Quest consequence audit
+
+The quest consequence audit tool (`tools/quest_audit.gd`) scans quest definitions and dialogue sources to validate outcome counts, resolution flag writes, and read-back coverage. Running `godot --headless --path . --script res://tools/quest_audit.gd` outputs a JSON report containing a `read_back_coverage` section, detailing each quest's outcomes, written flags, and specific read-back locations across dialogue conditions, NPC reaction rows, and encounter or travel gates.
+
 ### Generated-data drift
 
 Pandora is the source of truth for generated runtime artifacts. Run the same guard used by CI
