@@ -264,6 +264,8 @@ func query_action(
 		return defining_gate
 	if action.kind == CombatAction.Kind.CAST:
 		return _query_cast(actor, target, action, options)
+	if action.kind == CombatAction.Kind.ATTACK:
+		return _query_attack_resolution(actor, target, action, options)
 	return _allowed()
 
 
@@ -795,6 +797,13 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		)
 		_force_pass(actor)
 		return
+	var resolution_gate := _query_attack_resolution(actor, target, enemy_action, {})
+	if not bool(resolution_gate.get("allowed", false)):
+		_emit_event(
+			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": resolution_gate}
+		)
+		_force_pass(actor)
+		return
 	var commit_result := scheduler.commit(actor, enemy_action)
 	if not bool(commit_result.get("allowed", false)):
 		_emit_event(
@@ -803,7 +812,10 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		_force_pass(actor)
 		return
 	_face_toward(actor, target)
-	var outcome := _apply_action(actor, target, enemy_action)
+	var outcome := _apply_action(actor, target, enemy_action, {
+		"_resolution": resolution_gate["resolution"],
+		"_resolution_context": resolution_gate["context"],
+	})
 	outcome["action_id"] = enemy_action.id
 	outcome["ap_cost"] = enemy_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))

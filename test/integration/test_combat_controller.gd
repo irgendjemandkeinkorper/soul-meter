@@ -170,6 +170,26 @@ func test_cast_abilities_are_filtered_by_actor_loadout_and_require_selection() -
 	assert_bool(bool(selected.get("allowed", false))).is_true()
 
 
+func test_resolution_refusal_happens_before_scheduler_commit() -> void:
+	var invalid_attack := CombatActionCatalog.by_id(&"strike").duplicate(true) as CombatAction
+	invalid_attack.id = &"invalid-element-strike"
+	invalid_attack.element_id = &"not-on-the-wheel"
+	controller.configure([invalid_attack], battlefield, rules)
+	controller.start([ally], [enemy], &"resolution-refusal")
+	var ap_before := ally.action_points
+	var scheduler_before := controller.scheduler.to_dict()
+	var event_count_before := events.size()
+
+	var result := controller.submit_action(invalid_attack.id, enemy)
+
+	assert_bool(bool(result.get("allowed", true))).is_false()
+	assert_str(String(result.get("blocked_by", &""))).is_equal("unknown_element")
+	assert_int(ally.action_points).is_equal(ap_before)
+	assert_dict(controller.scheduler.to_dict()).is_equal(scheduler_before)
+	assert_int(events.size()).is_equal(event_count_before + 1)
+	assert_str(String(events[-1].type)).is_equal("action_refused")
+
+
 func test_full_round_emits_ordered_presentation_event_stream() -> void:
 	controller.start([ally], [enemy])
 	controller.submit_action(&"strike", enemy)
