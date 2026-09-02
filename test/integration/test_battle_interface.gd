@@ -123,6 +123,16 @@ func test_cast_command_is_visible_and_submits_selected_target_through_interface(
 	var interface := runner.scene() as BattleInterface
 	interface.bind_controller(controller)
 	interface.select_pointer_action(&"cast-seam")
+	var forecast := controller.forecast_action(cast, target)
+	interface.act_target_panel.show_action_forecast(forecast, forecast["context"])
+	interface._append_cast_forecast(cast, forecast)
+	assert_str(interface.act_target_panel.forecast.text).contains(
+		"BREATH %d · SOUL %d · FIZZLE %.0f%%" % [
+			int(forecast["breath_cost"]),
+			int(forecast["soul_cost"]),
+			float(forecast["fizzle_percent"]),
+		]
+	)
 	var hp_before := target.hp
 
 	interface._on_pointer_pressed({"x": 1, "y": 0}, target.combat_id)

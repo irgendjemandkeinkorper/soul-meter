@@ -78,6 +78,7 @@ func _on_tile_hovered(tile: Dictionary) -> void:
 		act_target_panel.show_action_forecast(
 			payload, _controller.forecast_context(_controller.active_actor(), target, action)
 		)
+		_append_cast_forecast(action, payload)
 	# Hovered move quote is display-only (AP compatibility: gate T-10 — the AP
 	# number comes verbatim from the controller's move_query pricing).
 	elif stage.hovered_ap_cost() >= 0:
@@ -117,3 +118,13 @@ func _enemy_by_id(actor_id: StringName) -> BattleActor:
 
 func _on_pointer_cleared() -> void:
 	cursor_readout.text = "CURSOR —"
+
+
+func _append_cast_forecast(action: CombatAction, payload: Dictionary) -> void:
+	if action == null or action.kind != CombatAction.Kind.CAST:
+		return
+	act_target_panel.forecast.text += "\nBREATH %d · SOUL %d · FIZZLE %.0f%%" % [
+		int(payload.get("breath_cost", 0)),
+		int(payload.get("soul_cost", 0.0)),
+		float(payload.get("fizzle_percent", 0.0)),
+	]

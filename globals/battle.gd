@@ -113,7 +113,13 @@ func start(encounter: Variant) -> void:
 	controller = CombatController.new()
 	controller.event_emitted.connect(_on_combat_event)
 	controller.battle_finished.connect(_on_controller_finished)
-	controller.configure(available_actions(true), _battlefield_for_definition(rules), rules)
+	controller.configure(
+		available_actions(true),
+		_battlefield_for_definition(rules),
+		rules,
+		null,
+		TacticalTables.shared().abilities_in_slot(AbilityDefinition.SLOT_ACTION),
+	)
 	var weather_default := StringName(str(_definition.get("weather_default", "")))
 	if weather_default != &"":
 		var weather_result := controller.configure_weather(weather_default)
@@ -379,7 +385,8 @@ func use_action(
 		)
 		turn_resolved.emit()
 		return true
-	if action.soul_cost > 0.0:
+	# CAST resource writes come from Resolution so forecast and commit cannot diverge.
+	if action.verb != CombatAction.Verb.CAST and action.soul_cost > 0.0:
 		GameState.set_soul_meter(GameState.soul_meter - action.soul_cost)
 	var outcome := controller.submit_action(action_id, target, resolved_options)
 	return bool(outcome.get("allowed", false))
@@ -402,6 +409,17 @@ func defining_strike_forecast(
 		return {}
 	var target := _living_enemy(target_enemy_index if target_index < 0 else target_index)
 	return controller.forecast_defining_strike(target, weakness_id)
+
+
+func action_forecast(
+	action: CombatAction, target: BattleActor = null, options: Dictionary = {}
+) -> Dictionary:
+	if controller == null or action == null:
+		return {}
+	var resolved_target := current_target() if target == null and action.requires_enemy_target() else target
+	return controller.forecast_action(
+		action, resolved_target, _resolved_action_options(action, resolved_target, options)
+	)
 
 
 func available_weaknesses(target_index: int = -1) -> Array[Dictionary]:
