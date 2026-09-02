@@ -1148,7 +1148,10 @@ func _finalize_resolution_damage(
 
 
 func _apply_resolution_writes(
-	actor: BattleActor, target: BattleActor, resolution: Dictionary
+	actor: BattleActor,
+	target: BattleActor,
+	resolution: Dictionary,
+	apply_tile_writes: bool = true,
 ) -> void:
 	for write: Dictionary in resolution.get("writes", []):
 		match StringName(write.get("kind", "")):
@@ -1157,8 +1160,10 @@ func _apply_resolution_writes(
 			&"breath":
 				actor.breath = int(write.get("after", actor.breath))
 			&"soul_meter":
-				GameState.set_soul_meter(float(write.get("after", GameState.soul_meter)))
+				_set_soul_meter(float(write.get("after", _soul_meter())))
 			&"tile_state":
+				if not apply_tile_writes:
+					continue
 				var cell := Vector2i(int(write.get("x", 0)), int(write.get("y", 0)))
 				var live_tile := tile_state_at(cell)
 				var after: Dictionary = write.get("after", {})
@@ -1168,6 +1173,24 @@ func _apply_resolution_writes(
 					live_tile.height_delta = int(after.get("height_delta", live_tile.height_delta))
 					live_tile.cover = bool(after.get("cover", live_tile.cover))
 					live_tile.hush = bool(after.get("hush", live_tile.hush))
+
+
+func _game_state() -> Node:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return null
+	return tree.root.get_node_or_null("GameState")
+
+
+func _soul_meter() -> float:
+	var game_state := _game_state()
+	return float(game_state.get("soul_meter")) if game_state != null else 0.0
+
+
+func _set_soul_meter(value: float) -> void:
+	var game_state := _game_state()
+	if game_state != null:
+		game_state.call("set_soul_meter", value)
 
 
 func _resolve_attack(
@@ -1186,7 +1209,11 @@ func _resolve_attack(
 		var resolved := _resolved_attack(actor, hit_target, action, resolution_context, terms)
 		if not bool(resolved.get("allowed", false)):
 			return resolved
-		_apply_resolution_writes(actor, hit_target, resolved)
+		# #215 promotes Resolution tile writes for CAST. Mundane attacks keep their ratified
+		# non-mutating tile behavior; widening elemental residue to every attack is out of scope.
+		_apply_resolution_writes(
+			actor, hit_target, resolved, action.kind == CombatAction.Kind.CAST
+		)
 		committed_resolution = resolved
 		var damage := int(resolved.get("damage", 0))
 		total_damage += damage
@@ -1261,8 +1288,15 @@ func forecast_context(
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if target_position.has("elevation"):
 		target_height = int(target_position["elevation"])
+	var legacy_target_tile: Dictionary = positional_context.get("target_tile", {})
 	return {
-		"battle_id": String(_encounter_id),
+		# Preserve the pre-#215 plain-attack roll key, which inherited battle_id from the target
+		# tile. Authored casts identify the encounter directly for fizzle and hit isolation.
+		"battle_id": (
+			String(_encounter_id)
+			if cast_ability != null
+			else str(legacy_target_tile.get("battle_id", ""))
+		),
 		"tick": _sequence,
 		"seed": _sequence,
 		"unit": {
@@ -1286,7 +1320,7 @@ func forecast_context(
 		"facing": positional_context.get("facing", {}),
 		"height_advantage_steps": int(positional_context.get("height_advantage_steps", 0)),
 		"to_hit_enabled": not positional_context.is_empty(),
-		"soul_meter": GameState.soul_meter,
+		"soul_meter": _soul_meter(),
 		"fizzle": _fizzle_context(actor, options),
 		"caster_context": (options.get("caster_context", {}) as Dictionary).duplicate(true),
 		"positioning": {
