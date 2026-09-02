@@ -114,6 +114,19 @@ func test_loading_to_active_wiring_refills_party_breath_for_travel() -> void:
 	assert_int(GameState.party[0].breath).is_equal(15)
 
 
+func test_loading_a_save_preserves_spent_breath_after_active_transition() -> void:
+	GameState.party[0].breath_max = 15
+	GameState.party[0].breath = 6
+	GameFlow._on_save_loaded()
+
+	GameFlow.get_node("StateChart/Root/Playing/Loading/ToActive").emit_signal("taken")
+
+	assert_int(GameState.party[0].breath).is_equal(6)
+	GameState.party[0].breath = 2
+	GameFlow.get_node("StateChart/Root/Playing/Loading/ToActive").emit_signal("taken")
+	assert_int(GameState.party[0].breath).is_equal(15)
+
+
 func test_advance_journey_stops_at_seeded_encounter_prompt() -> void:
 	var plan := _prompt_plan(7421)
 	plan.state = TravelPlan.State.EN_ROUTE
