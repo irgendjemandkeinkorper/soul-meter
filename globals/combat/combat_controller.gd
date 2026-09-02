@@ -1014,7 +1014,7 @@ func _apply_action(
 	var result: Dictionary = {"message": "%s uses %s." % [actor.display_name, action.display_name]}
 	match action.kind:
 		CombatAction.Kind.ATTACK:
-			result.merge(_resolve_attack(actor, target, action), true)
+			result.merge(_resolve_attack(actor, target, action, options), true)
 		CombatAction.Kind.CAST:
 			result.merge(_resolve_attack(actor, target, action, options), true)
 		CombatAction.Kind.DEFINING_STRIKE:

@@ -190,6 +190,66 @@ func test_resolution_refusal_happens_before_scheduler_commit() -> void:
 	assert_str(String(events[-1].type)).is_equal("action_refused")
 
 
+func test_enemy_resolution_refusal_happens_before_scheduler_commit_spends_no_ct() -> void:
+	var invalid_attack := CombatActionCatalog.by_id(&"enemy-strike").duplicate(true) as CombatAction
+	invalid_attack.element_id = &"not-on-the-wheel"
+	var ct_rules := rules.duplicate(true) as CombatRules
+	ct_rules.use_charge_time = true
+	var target := _actor("CT Refusal Target", 30, 7, 2)
+	var foe := _actor("CT Refusal Enemy", 30, 5, 1)
+	target.side = &"ally"
+	target.combat_id = &"ct-refusal-ally"
+	foe.side = &"enemy"
+	foe.combat_id = &"ct-refusal-enemy"
+	var local_events: Array[CombatEvent] = []
+	var local_controller := CombatController.new()
+	local_controller.event_emitted.connect(
+		func(event: CombatEvent) -> void: local_events.append(event)
+	)
+	local_controller.configure(
+		[invalid_attack], BattlefieldModel.create_default(ct_rules), ct_rules
+	)
+	local_controller.allies = [target]
+	local_controller.enemies = [foe]
+	local_controller.battlefield.setup([target], [foe])
+	local_controller.scheduler.setup([foe, target])
+	var advance := local_controller.scheduler.advance()
+	assert_object(advance.get("actor") as BattleActor).is_same(foe)
+	var charge_before := local_controller.scheduler.charge_of(foe)
+
+	local_controller._resolve_enemy_actor(foe)
+
+	assert_int(local_controller.scheduler.charge_of(foe)).is_equal(charge_before)
+	var refusals := local_events.filter(
+		func(event: CombatEvent) -> bool: return event.type == &"action_refused"
+	)
+	assert_int(refusals.size()).is_equal(1)
+	assert_str(String(refusals[0].data.reason.blocked_by)).is_equal("unknown_element")
+	assert_array(local_events.filter(
+		func(event: CombatEvent) -> bool: return event.type == &"action_resolved"
+	)).is_empty()
+
+
+func test_enemy_attack_commits_the_precommit_resolution_payload() -> void:
+	var enemy_attack := CombatActionCatalog.by_id(&"enemy-strike")
+	ally.side = &"ally"
+	ally.combat_id = &"payload-ally"
+	enemy.side = &"enemy"
+	enemy.combat_id = &"payload-enemy"
+	battlefield.setup([ally], [enemy])
+	var gate := controller._query_attack_resolution(enemy, ally, enemy_attack, {})
+	assert_bool(bool(gate.get("allowed", false))).is_true()
+	var expected_resolution: Dictionary = gate["resolution"].duplicate(true)
+	enemy.attack += 100
+
+	var outcome := controller._apply_action(enemy, ally, enemy_attack, {
+		"_resolution": expected_resolution,
+		"_resolution_context": gate["context"],
+	})
+
+	assert_dict(outcome["resolution"]).is_equal(expected_resolution)
+
+
 func test_full_round_emits_ordered_presentation_event_stream() -> void:
 	controller.start([ally], [enemy])
 	controller.submit_action(&"strike", enemy)
