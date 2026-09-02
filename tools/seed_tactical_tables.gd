@@ -1,12 +1,13 @@
 extends Node
-## seed_tactical_tables.gd — ADDITIVE, idempotent Pandora schema seeder for the six
+## seed_tactical_tables.gd — idempotent Pandora schema seeder for the six
 ## tactical-layer tables of issue #141 (Elemental Architecture Section III):
 ##   Jobs, Abilities, Units, Unit Jobs, Unit Attunement, Unit Loadout
 ##
 ## WHY A SECOND SEEDER. tools/seed_pandora.gd is a one-shot bootstrap: it aborts the
 ## moment res://data.pandora has any root, so it can never add a table to the committed
 ## data. This script adds only the roots it is missing and creates only the property
-## definitions or baseline rows that are missing. It never edits or deletes an existing row.
+## definitions or baseline rows that are missing. The one removal below retires a test fixture
+## that was accidentally seeded as canonical data; all authored rows remain additive-only.
 ##
 ## Run headless: register as a temp autoload and run once (see DEPENDENCIES.md), or
 ##   ~/.local/bin/godot --headless --path . --script tools/seed_tactical_tables.gd
@@ -105,32 +106,21 @@ const CAST_UNIT_ROWS := [
 		"Vault Id": "",
 		"Action Ability Ids": '["note-scor"]',
 	},
-	{
-		"Unit Id": "caster",
-		"Display Name": "Caster",
-		"Epithet": "Gate T fixture",
-		"Base HP": 48,
-		"Base MP": 99,
-		"Base SPD": 6,
-		"Move": 4,
-		"Jump": 1,
-		"Portrait Ref": "",
-		"Vault Id": "",
-		"Action Ability Ids": '["note-strom"]',
-	},
 ]
+
+const RETIRED_FIXTURE_UNIT_ID := "caster"
 
 
 func _ready() -> void:
 	await get_tree().process_frame
 	if not Pandora.is_loaded():
 		Pandora.load_data()
-	var created := seed_tables()
-	if created.is_empty():
+	var changes := seed_tables()
+	if changes.is_empty():
 		print("SEED-TACTICAL: all six tables already present — nothing to do (idempotent).")
 	else:
 		Pandora.save_data()
-		print("SEED-TACTICAL: created roots -> ", ", ".join(created))
+		print("SEED-TACTICAL: applied changes -> ", ", ".join(changes))
 	get_tree().quit()
 
 
@@ -146,9 +136,23 @@ static func seed_tables() -> PackedStringArray:
 			if not root.has_entity_property(definition[0]):
 				Pandora.create_property(root, definition[0], definition[1])
 				created.append("%s.%s" % [table_name, definition[0]])
+	_remove_retired_cast_fixture(created)
 	_seed_note_abilities(created)
 	_seed_cast_units(created)
 	return created
+
+
+static func _remove_retired_cast_fixture(changes: PackedStringArray) -> void:
+	for table_name: String in ["Units", "Unit Loadout"]:
+		var root := _root_by_name(table_name)
+		for candidate: PandoraEntity in Pandora.get_all_entities(root):
+			if candidate is PandoraCategory:
+				continue
+			if candidate.get_string("Unit Id") != RETIRED_FIXTURE_UNIT_ID:
+				continue
+			Pandora.delete_entity(candidate)
+			changes.append("removed %s/%s" % [table_name, RETIRED_FIXTURE_UNIT_ID])
+			break
 
 
 static func _seed_note_abilities(created: PackedStringArray) -> void:

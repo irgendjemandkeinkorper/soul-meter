@@ -33,7 +33,7 @@ func test_generated_tactical_tables_match_pandora_and_ship_ten_note_spells() -> 
 	assert_bool(result.drift).is_false()
 	assert_int(result.job_count).is_equal(0)
 	assert_int(result.ability_count).is_equal(ElementWheel.ORDER.size())
-	assert_int(result.unit_count).is_equal(2)
+	assert_int(result.unit_count).is_equal(1)
 
 
 func test_generated_artifact_exposes_every_table_key() -> void:
@@ -66,9 +66,11 @@ func test_tactical_tables_loader_exposes_note_spells_and_unit_loadouts() -> void
 	assert_int(tables.abilities.size()).is_equal(ElementWheel.ORDER.size())
 	assert_object(tables.job("anything")).is_null()
 	assert_array(tables.abilities_for_job("anything")).is_empty()
-	var caster_abilities := tables.abilities_for_unit("caster", AbilityDefinition.SLOT_ACTION)
-	assert_int(caster_abilities.size()).is_equal(1)
-	assert_str(caster_abilities[0].id).is_equal("note-strom")
+	var vex_abilities := tables.abilities_for_unit("vex", AbilityDefinition.SLOT_ACTION)
+	assert_int(vex_abilities.size()).is_equal(1)
+	assert_str(vex_abilities[0].id).is_equal("note-scor")
+	assert_object(tables.unit("caster")).is_null()
+	assert_object(tables.loadout("caster")).is_null()
 	var combat_rules := load("res://data/combat/combat_rules.tres") as CombatRules
 	var strike_ct_cost := combat_rules.charge_cost_for(CombatActionCatalog.by_id(&"strike"))
 	for element_id: StringName in ElementWheel.ORDER:

@@ -51,6 +51,11 @@ func _self_play(
 		actions.append(_caster_fixture_action())
 	elif build_id == &"balanced-refusal":
 		actions.append(_neutral_attack_fixture_action())
+	var cast_abilities: Array[AbilityDefinition] = []
+	var tactical_tables: TacticalTables = null
+	if build_id == &"caster":
+		cast_abilities = [TacticalTables.shared().ability(TacticalIds.ABILITY_NOTE_STROM)]
+		tactical_tables = _cast_tables_for_actor(ally, cast_abilities, "gate-t1-caster")
 
 	var result := {
 		"result": -1,
@@ -88,7 +93,8 @@ func _self_play(
 		_grid_model(2, 4),
 		_ct_rules(),
 		null,
-		TacticalTables.shared().abilities_in_slot(AbilityDefinition.SLOT_ACTION),
+		cast_abilities,
+		tactical_tables,
 	)
 	controller.start([ally], enemies, encounter_id)
 
@@ -171,6 +177,20 @@ func _caster_fixture_action() -> CombatAction:
 	action.id = &"gate-t1-cast"
 	action.display_name = "Gate T Cast"
 	return action
+
+
+func _cast_tables_for_actor(
+	actor: BattleActor, abilities: Array[AbilityDefinition], unit_id: String
+) -> TacticalTables:
+	actor.source_member = PartyMember.new()
+	actor.source_member.id = unit_id
+	var tables := TacticalTables.new()
+	var loadout := UnitLoadout.create(unit_id)
+	for ability: AbilityDefinition in abilities:
+		tables.abilities[ability.id] = ability
+		loadout.action_ability_ids.append(ability.id)
+	tables.loadouts[unit_id] = loadout
+	return tables
 
 
 ## A control attack for the stabilizer comparison. Strike's automatic 10-point centre pull is

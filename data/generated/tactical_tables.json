@@ -144,18 +144,6 @@
   ],
   "units": [
     {
-      "id": "caster",
-      "display_name": "Caster",
-      "epithet": "Gate T fixture",
-      "base_hp": 48,
-      "base_mp": 99,
-      "base_spd": 6,
-      "move": 4,
-      "jump": 1,
-      "portrait_ref": "",
-      "vault_id": ""
-    },
-    {
       "id": "vex",
       "display_name": "Vex",
       "epithet": "",
@@ -171,18 +159,6 @@
   "unit_jobs": [],
   "unit_attunement": [],
   "unit_loadout": [
-    {
-      "id": "caster",
-      "unit_id": "caster",
-      "primary_job_id": "",
-      "secondary_job_id": "",
-      "action_ability_ids": [
-        "note-strom"
-      ],
-      "reaction_ability_id": "",
-      "passive_ability_id": "",
-      "equip": {}
-    },
     {
       "id": "vex",
       "unit_id": "vex",

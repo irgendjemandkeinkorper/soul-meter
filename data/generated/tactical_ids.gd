@@ -15,5 +15,4 @@ const ABILITY_NOTE_STROM := "note-strom"
 const ABILITY_NOTE_SUUL := "note-suul"
 const ABILITY_NOTE_TERRA := "note-terra"
 
-const UNIT_CASTER := "caster"
 const UNIT_VEX := "vex"
