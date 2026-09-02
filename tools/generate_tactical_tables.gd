@@ -19,10 +19,8 @@ extends Node
 ## NOTE: `godot --headless --script` aborts at teardown ~20-30% of the time in this
 ## environment. Judge the printed output, never the raw exit code.
 ##
-## SHIPPED CONTENT IS EMPTY ON PURPOSE. Issue #141 is schema and generator only; the
-## naming of combat disciplines is canon owned by GitHub #132
-## (docs/prd-amendment-tactical-layer.md §9.1). The generator is written to validate
-## content the moment it is authored, and to emit correct empty tables until then.
+## Combat disciplines remain canon-owned by GitHub #132. Issue #215 adds the directly
+## equipped Tone·Note starter spells without inventing discipline rows.
 
 const GENERATED_HEADER := "GENERATED FILE — do not edit by hand."
 const GENERATED_INSTRUCTION := (
@@ -156,7 +154,10 @@ static func _ability_rows(jobs: Array) -> Array:
 		)
 		seen[ability_id] = true
 		var job_id := entity.get_string("Job Id")
-		assert(job_ids.has(job_id), "Ability '%s' references unknown job '%s'" % [ability_id, job_id])
+		assert(
+			job_id.is_empty() or job_ids.has(job_id),
+			"Ability '%s' references unknown job '%s'" % [ability_id, job_id]
+		)
 		var slot := entity.get_string("Slot")
 		assert(
 			AbilityDefinition.is_valid_slot(slot),
@@ -311,14 +312,26 @@ static func _unit_loadout_rows(units: Array, jobs: Array, abilities: Array) -> A
 		seen[unit_id] = true
 		var primary := entity.get_string("Primary Job Id")
 		var secondary := entity.get_string("Secondary Job Id")
-		assert(job_ids.has(primary), "Loadout '%s' has unknown primary job '%s'" % [unit_id, primary])
+		assert(
+			primary.is_empty() or job_ids.has(primary),
+			"Loadout '%s' has unknown primary job '%s'" % [unit_id, primary]
+		)
 		assert(
 			secondary.is_empty() or job_ids.has(secondary),
 			"Loadout '%s' has unknown secondary job '%s'" % [unit_id, secondary]
 		)
-		assert(secondary != primary, "Loadout '%s' repeats its primary job as secondary" % unit_id)
+		assert(
+			secondary.is_empty() or secondary != primary,
+			"Loadout '%s' repeats its primary job as secondary" % unit_id
+		)
 		var reaction := entity.get_string("Reaction Ability Id")
 		var passive := entity.get_string("Passive Ability Id")
+		var action_abilities := _parse_id_array(
+			entity.get_string("Action Ability Ids"), "%s/action abilities" % unit_id
+		)
+		action_abilities.sort()
+		for ability_id: String in action_abilities:
+			_assert_slot(abilities_by_id, unit_id, ability_id, AbilityDefinition.SLOT_ACTION)
 		_assert_slot(abilities_by_id, unit_id, reaction, AbilityDefinition.SLOT_REACTION)
 		_assert_slot(abilities_by_id, unit_id, passive, AbilityDefinition.SLOT_PASSIVE)
 		rows.append(
@@ -327,6 +340,7 @@ static func _unit_loadout_rows(units: Array, jobs: Array, abilities: Array) -> A
 				"unit_id": unit_id,
 				"primary_job_id": primary,
 				"secondary_job_id": secondary,
+				"action_ability_ids": action_abilities,
 				"reaction_ability_id": reaction,
 				"passive_ability_id": passive,
 				"equip": _parse_json_object(entity.get_string("Equip"), unit_id),

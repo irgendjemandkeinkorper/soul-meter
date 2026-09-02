@@ -14,6 +14,7 @@ extends Control
 @onready var cursor_readout: Label = %CursorReadout
 var _controller: CombatController
 var _selected_action_id: StringName = &"strike"
+var _selected_ability_id := ""
 
 
 func _ready() -> void:
@@ -51,8 +52,9 @@ func bind_controller(controller: CombatController) -> void:
 	)
 
 
-func select_pointer_action(action_id: StringName) -> void:
+func select_pointer_action(action_id: StringName, ability_id: String = "") -> void:
 	_selected_action_id = action_id
+	_selected_ability_id = ability_id
 
 
 func set_forecast_context(context: Dictionary) -> void:
@@ -74,10 +76,15 @@ func _on_tile_hovered(tile: Dictionary) -> void:
 	var target := _enemy_by_id(stage._actor_at(cell))
 	if target != null:
 		var action := _controller.action_by_id(_selected_action_id)
-		var payload := _controller.forecast_action(action, target)
-		act_target_panel.show_action_forecast(
-			payload, _controller.forecast_context(_controller.active_actor(), target, action)
+		var options := (
+			{"ability_id": _selected_ability_id}
+			if action.kind == CombatAction.Kind.CAST else {}
 		)
+		var payload := _controller.forecast_action(action, target, options)
+		act_target_panel.show_action_forecast(
+			payload, _controller.forecast_context(_controller.active_actor(), target, action, options)
+		)
+		_append_cast_forecast(action, payload)
 	# Hovered move quote is display-only (AP compatibility: gate T-10 — the AP
 	# number comes verbatim from the controller's move_query pricing).
 	elif stage.hovered_ap_cost() >= 0:
@@ -94,9 +101,13 @@ func _on_pointer_pressed(tile: Dictionary, actor_id: StringName) -> void:
 	var target := _enemy_by_id(actor_id)
 	if target != null:
 		var action := _controller.action_by_id(_selected_action_id)
-		var payload := _controller.forecast_action(action, target)
+		var options := (
+			{"ability_id": _selected_ability_id}
+			if action.kind == CombatAction.Kind.CAST else {}
+		)
+		var payload := _controller.forecast_action(action, target, options)
 		if bool(payload.get("allowed", false)):
-			_controller.submit_action(_selected_action_id, target)
+			_controller.submit_action(_selected_action_id, target, options)
 		else:
 			act_target_panel.pulse_refusal(str(payload.get("message", "Action blocked.")))
 		return
@@ -117,3 +128,13 @@ func _enemy_by_id(actor_id: StringName) -> BattleActor:
 
 func _on_pointer_cleared() -> void:
 	cursor_readout.text = "CURSOR —"
+
+
+func _append_cast_forecast(action: CombatAction, payload: Dictionary) -> void:
+	if action == null or action.kind != CombatAction.Kind.CAST:
+		return
+	act_target_panel.forecast.text += "\nBREATH %d · SOUL %d · FIZZLE %.0f%%" % [
+		int(payload.get("breath_cost", 0)),
+		int(payload.get("soul_cost", 0.0)),
+		float(payload.get("fizzle_percent", 0.0)),
+	]

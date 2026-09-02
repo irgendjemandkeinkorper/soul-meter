@@ -69,6 +69,8 @@ var tile_states: Array[TileState] = []
 var _tile_by_cell: Dictionary = {}  ## Vector2i -> TileState
 
 var _actions: Dictionary = {}
+var _abilities: Dictionary = {}
+var _tactical_tables: TacticalTables
 var _sequence := 0
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
@@ -85,11 +87,17 @@ func configure(
 	actions: Array[CombatAction],
 	positioning: BattlefieldModel,
 	combat_rules: CombatRules,
-	check_service: SkillCheckService = null
+	check_service: SkillCheckService = null,
+	abilities: Array[AbilityDefinition] = [],
+	tactical_tables: TacticalTables = null,
 ) -> void:
 	_actions.clear()
 	for action in actions:
 		_actions[action.id] = action
+	_abilities.clear()
+	for ability in abilities:
+		_abilities[ability.id] = ability
+	_tactical_tables = tactical_tables if tactical_tables != null else TacticalTables.shared()
 	battlefield = positioning
 	rules = combat_rules
 	scheduler = TurnScheduler.create_default(rules)
@@ -235,7 +243,29 @@ func query_action(
 		if not bool(targeting.get("allowed", false)):
 			return targeting
 	if action.kind == CombatAction.Kind.DEFINING_STRIKE:
-		return _query_defining_strike(target, StringName(options.get("weakness_id", "")))
+		var defining_gate := _query_defining_strike(
+			target, StringName(options.get("weakness_id", ""))
+		)
+		if not bool(defining_gate.get("allowed", false)):
+			return defining_gate
+		var resolution_options := options.duplicate(true)
+		resolution_options.merge({
+			"weakness": defining_gate.get("weakness", {}).duplicate(true),
+			"seed": _sequence,
+			"ability_id": String(action.id),
+			"battle_id": String(_encounter_id),
+		}, true)
+		var resolution_gate := _query_attack_resolution(
+			actor, target, action, resolution_options
+		)
+		if not bool(resolution_gate.get("allowed", false)):
+			return resolution_gate
+		defining_gate.merge(resolution_gate, true)
+		return defining_gate
+	if action.kind == CombatAction.Kind.CAST:
+		return _query_cast(actor, target, action, options)
+	if action.kind == CombatAction.Kind.ATTACK:
+		return _query_attack_resolution(actor, target, action, options)
 	return _allowed()
 
 
@@ -260,7 +290,11 @@ func submit_action(
 		last_refusal = commit_result.duplicate(true)
 		_emit_event(&"action_refused", actor, target, {"action_id": action_id, "reason": commit_result})
 		return commit_result
-	var outcome := _apply_action(actor, target, committed_action, options)
+	var resolved_options := options.duplicate(true)
+	if query.has("resolution"):
+		resolved_options["_resolution"] = query["resolution"]
+		resolved_options["_resolution_context"] = query.get("context", {})
+	var outcome := _apply_action(actor, target, committed_action, resolved_options)
 	outcome["action_id"] = action.id
 	outcome["verb"] = action.verb
 	outcome["ap_cost"] = committed_action.ap_cost
@@ -763,6 +797,13 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		)
 		_force_pass(actor)
 		return
+	var resolution_gate := _query_attack_resolution(actor, target, enemy_action, {})
+	if not bool(resolution_gate.get("allowed", false)):
+		_emit_event(
+			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": resolution_gate}
+		)
+		_force_pass(actor)
+		return
 	var commit_result := scheduler.commit(actor, enemy_action)
 	if not bool(commit_result.get("allowed", false)):
 		_emit_event(
@@ -771,7 +812,10 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		_force_pass(actor)
 		return
 	_face_toward(actor, target)
-	var outcome := _apply_action(actor, target, enemy_action)
+	var outcome := _apply_action(actor, target, enemy_action, {
+		"_resolution": resolution_gate["resolution"],
+		"_resolution_context": resolution_gate["context"],
+	})
 	outcome["action_id"] = enemy_action.id
 	outcome["ap_cost"] = enemy_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
@@ -970,7 +1014,9 @@ func _apply_action(
 	var result: Dictionary = {"message": "%s uses %s." % [actor.display_name, action.display_name]}
 	match action.kind:
 		CombatAction.Kind.ATTACK:
-			result.merge(_resolve_attack(actor, target, action), true)
+			result.merge(_resolve_attack(actor, target, action, options), true)
+		CombatAction.Kind.CAST:
+			result.merge(_resolve_attack(actor, target, action, options), true)
 		CombatAction.Kind.DEFINING_STRIKE:
 			result.merge(_resolve_defining_strike(actor, target, action, options), true)
 		CombatAction.Kind.GUARD:
@@ -1038,6 +1084,185 @@ func _query_defining_strike(target: BattleActor, weakness_id: StringName) -> Dic
 	return _allowed({"weakness": weakness})
 
 
+func _query_cast(
+	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary
+) -> Dictionary:
+	var requested := str(options.get("ability_id", ""))
+	if requested.is_empty():
+		return _blocked(
+			&"ability",
+			"Select an action ability from this unit's loadout to cast.",
+			{"type": &"ability_selection"},
+		)
+	var ability := _cast_ability(actor, options)
+	if ability == null:
+		return _blocked(
+			&"ability",
+			"Equip %s in this unit's action loadout before casting it." % requested,
+			{"type": &"unit_loadout", "ability_id": requested},
+		)
+	var context := forecast_context(actor, target, action, options)
+	var terms := _positional_terms(actor, target)
+	var resolution := _finalize_resolution_damage(
+		Resolution.resolve(context), target, int(terms["cover_bonus"])
+	)
+	if not bool(resolution.get("allowed", false)):
+		return resolution
+	var soul_cost := 0.0
+	for write: Dictionary in resolution.get("writes", []):
+		if write.get("kind", "") == "soul_meter":
+			soul_cost = -float(write.get("delta", 0.0))
+	return _allowed({
+		"ability_id": ability.id,
+		"breath_cost": ability.breath_cost,
+		"soul_cost": soul_cost,
+		"context": context,
+		"resolution": resolution,
+	})
+
+
+func _query_attack_resolution(
+	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary
+) -> Dictionary:
+	var context := forecast_context(actor, target, action, options)
+	var terms := _positional_terms(actor, target)
+	var resolution := _finalize_resolution_damage(
+		Resolution.resolve(context), target, int(terms["cover_bonus"])
+	)
+	if not bool(resolution.get("allowed", false)):
+		return resolution
+	return _allowed({"context": context, "resolution": resolution})
+
+
+func _cast_ability(actor: BattleActor, options: Dictionary) -> AbilityDefinition:
+	var requested := str(options.get("ability_id", ""))
+	if requested.is_empty() or actor == null or _tactical_tables == null:
+		return null
+	for ability: AbilityDefinition in _tactical_tables.abilities_for_unit(
+		_actor_unit_id(actor), AbilityDefinition.SLOT_ACTION
+	):
+		if ability.id == requested:
+			return _abilities.get(requested) as AbilityDefinition
+	return null
+
+
+func _actor_unit_id(actor: BattleActor) -> String:
+	if actor == null:
+		return ""
+	if actor.source_member != null:
+		return actor.source_member.id
+	return String(actor.archetype_id)
+
+
+func _fizzle_context(actor: BattleActor, options: Dictionary) -> Dictionary:
+	var raw: Variant = options.get("fizzle", {})
+	var context: Dictionary = raw.duplicate(true) if raw is Dictionary else {}
+	if not context.has("agreement_integrity"):
+		context["agreement_integrity"] = 100.0
+	if not context.has("pitch"):
+		context["pitch"] = actor.attribute_value(&"pitch")
+	if actor.source_member != null and not context.has("patron"):
+		context["patron"] = actor.source_member.patron
+	return context
+
+
+func _resolved_attack(
+	actor: BattleActor,
+	target: BattleActor,
+	action: CombatAction,
+	options: Dictionary,
+	terms: Dictionary,
+) -> Dictionary:
+	if options.has("_resolution"):
+		var cached := (options["_resolution"] as Dictionary).duplicate(true)
+		for write: Dictionary in cached.get("writes", []):
+			if (
+				write.get("kind", "") == "hp"
+				and String(write.get("target_id", "")) == String(target.combat_id)
+			):
+				return cached
+	var context := forecast_context(actor, target, action, options)
+	return _finalize_resolution_damage(
+		Resolution.resolve(context), target, int(terms["cover_bonus"])
+	)
+
+
+func _finalize_resolution_damage(
+	resolution: Dictionary, target: BattleActor, cover_bonus: int
+) -> Dictionary:
+	if not bool(resolution.get("allowed", false)):
+		return resolution
+	var finalized := resolution.duplicate(true)
+	var damage := 0
+	if bool(finalized.get("hit", true)) and not bool(finalized.get("fizzled", false)):
+		damage = maxi(
+			1,
+			int(finalized.get("damage", 0))
+			- target.effective_defense()
+			- int(target.balance_effects.get("defense_bonus", 0))
+			- cover_bonus,
+		)
+	finalized["damage"] = damage
+	var writes: Array = finalized.get("writes", [])
+	for write: Dictionary in writes:
+		if write.get("kind", "") != "hp":
+			continue
+		write["before"] = target.hp
+		write["after"] = maxi(target.hp - damage, 0)
+		write["delta"] = int(write["after"]) - target.hp
+	var action_log: Dictionary = finalized.get("action_log", {})
+	if not action_log.is_empty():
+		action_log["deltas"] = writes.duplicate(true)
+		finalized["action_log"] = action_log
+	return finalized
+
+
+func _apply_resolution_writes(
+	actor: BattleActor,
+	target: BattleActor,
+	resolution: Dictionary,
+	apply_tile_writes: bool = true,
+) -> void:
+	for write: Dictionary in resolution.get("writes", []):
+		match StringName(write.get("kind", "")):
+			&"hp":
+				target.hp = int(write.get("after", target.hp))
+			&"breath":
+				actor.breath = int(write.get("after", actor.breath))
+			&"soul_meter":
+				_set_soul_meter(float(write.get("after", _soul_meter())))
+			&"tile_state":
+				if not apply_tile_writes:
+					continue
+				var cell := Vector2i(int(write.get("x", 0)), int(write.get("y", 0)))
+				var live_tile := tile_state_at(cell)
+				var after: Dictionary = write.get("after", {})
+				if live_tile != null and not after.is_empty():
+					live_tile.charge_element_id = StringName(after.get("charge_element_id", ""))
+					live_tile.charge_level = int(after.get("charge_level", 0))
+					live_tile.height_delta = int(after.get("height_delta", live_tile.height_delta))
+					live_tile.cover = bool(after.get("cover", live_tile.cover))
+					live_tile.hush = bool(after.get("hush", live_tile.hush))
+
+
+func _game_state() -> Node:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return null
+	return tree.root.get_node_or_null("GameState")
+
+
+func _soul_meter() -> float:
+	var game_state := _game_state()
+	return float(game_state.get("soul_meter")) if game_state != null else 0.0
+
+
+func _set_soul_meter(value: float) -> void:
+	var game_state := _game_state()
+	if game_state != null:
+		game_state.call("set_soul_meter", value)
+
+
 func _resolve_attack(
 	actor: BattleActor,
 	target: BattleActor,
@@ -1046,25 +1271,35 @@ func _resolve_attack(
 ) -> Dictionary:
 	var total_damage := 0
 	var positional_results: Array[Dictionary] = []
+	var committed_resolution: Dictionary = {}
 	var hit_targets := battlefield.targets_for(actor, target, action.aoe_shape)
+	var pending_hits: Array[Dictionary] = []
 	for hit_target: BattleActor in hit_targets:
 		var terms := _positional_terms(actor, hit_target)
 		var positional_context: Dictionary = terms["positional_context"]
-		var damage := calculate_damage(
-			actor,
-			hit_target,
-			action.power_bonus,
-			action.balance_shift,
-			balance,
-			int(terms["flank_bonus"]),
-			int(terms["cover_bonus"]),
-			action.element_id,
-			action.magnitude,
-			int(resolution_context.get("seed", _sequence)),
-			positional_context,
-			resolution_context,
+		var resolved := _resolved_attack(actor, hit_target, action, resolution_context, terms)
+		if not bool(resolved.get("allowed", false)):
+			return resolved
+		pending_hits.append({
+			"target": hit_target,
+			"terms": terms,
+			"positional_context": positional_context,
+			"resolution": resolved,
+		})
+	# Resolve every target against the same pre-action resource/tile state. Applying afterward
+	# keeps one Breath/Soul/tile cost idempotent while each target receives its own HP write.
+	for pending: Dictionary in pending_hits:
+		var hit_target := pending["target"] as BattleActor
+		var terms: Dictionary = pending["terms"]
+		var positional_context: Dictionary = pending["positional_context"]
+		var resolved: Dictionary = pending["resolution"]
+		# #215 promotes Resolution tile writes for CAST. Mundane attacks keep their ratified
+		# non-mutating tile behavior; widening elemental residue to every attack is out of scope.
+		_apply_resolution_writes(
+			actor, hit_target, resolved, action.kind == CombatAction.Kind.CAST
 		)
-		hit_target.hp = maxi(0, hit_target.hp - damage)
+		committed_resolution = resolved
+		var damage := int(resolved.get("damage", 0))
 		total_damage += damage
 		if not positional_context.is_empty():
 			var modifiers := Resolution.positional_modifiers(
@@ -1085,6 +1320,7 @@ func _resolve_attack(
 			})
 	return {
 		"damage": total_damage,
+		"resolution": committed_resolution,
 		"positioning": positional_results,
 		"message": "%s uses %s for %d damage."
 		% [actor.display_name, action.display_name, total_damage],
@@ -1095,7 +1331,9 @@ func _resolve_attack(
 ## power arithmetic, same tile/weather/facing terms — minus the to-hit roll (a forecast
 ## shows the on-hit number). Region D's only calculator is Resolution.resolve(); feeding
 ## it this context keeps forecast == resolution by construction.
-func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
+func forecast_context(
+	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary = {}
+) -> Dictionary:
 	if actor == null or target == null or action == null:
 		return {}
 	var terms := _positional_terms(actor, target)
@@ -1106,35 +1344,59 @@ func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAct
 		battlefield.line_of_sight(actor, target)
 		if action.target_profile == &"ranged" else _allowed()
 	)
-	var element_id := action.element_id
+	var cast_ability: AbilityDefinition = (
+		_cast_ability(actor, options) if action.kind == CombatAction.Kind.CAST else null
+	)
+	var element_id := cast_ability.element_id if cast_ability != null else action.element_id
 	if String(element_id).is_empty():
 		element_id = _UNAUTHORED_ELEMENT_ID
-	var power := (
+	var power := cast_ability.power if cast_ability != null else (
 		actor.effective_attack()
 		+ action.power_bonus
 		+ flank_bonus
 		+ int(actor.balance_effects.get("damage_bonus", 0))
 	)
+	var ability_id := "attack"
+	var battle_id := ""
+	if cast_ability != null:
+		ability_id = cast_ability.id
+		battle_id = String(_encounter_id)
+	elif action.kind == CombatAction.Kind.DEFINING_STRIKE:
+		ability_id = str(options.get("ability_id", action.id))
+		battle_id = str(options.get("battle_id", _encounter_id))
+	var resolution_seed := int(options.get("seed", _sequence))
+	var ability_context := {
+		# Plain attacks retain the pre-#215 deterministic roll key. Casts use the selected
+		# AbilityDefinition id so forecast and commit identify the same authored working.
+		"id": ability_id,
+		"element_id": element_id,
+		"elements": cast_ability.elements.duplicate() if cast_ability != null else [element_id],
+		"magnitude": cast_ability.magnitude if cast_ability != null else action.magnitude,
+		"power": power,
+	}
+	if cast_ability != null:
+		ability_context["is_spell"] = true
+		ability_context["breath_cost"] = cast_ability.breath_cost
 	var target_height := 0
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if target_position.has("elevation"):
 		target_height = int(target_position["elevation"])
-	return {
-		"battle_id": String(_encounter_id),
-		"tick": _sequence,
-		"seed": _sequence,
+	var context := {
+		# Legacy calculate_damage() passed a wrapper with no top-level battle_id to
+		# Resolution.resolve_action(), so plain attacks hashed the empty-string fallback.
+		# That key is deliberately frozen for legacy roll parity: changing it reshuffles
+		# every Gate T-1 self-play roll.
+		# Casts and Defining Strikes retain their authored encounter identity.
+		"battle_id": battle_id,
+		"tick": resolution_seed,
+		"seed": resolution_seed,
 		"unit": {
 			"id": String(actor.combat_id),
 			"attack_scale": actor.attack_scale,
 			"edge": int(actor.attributes.get(&"edge", 0)),
+			"breath": actor.breath,
 		},
-		"ability": {
-			"id": String(action.id),
-			"element_id": element_id,
-			"elements": [element_id],
-			"magnitude": action.magnitude,
-			"power": power,
-		},
+		"ability": ability_context,
 		"target": {
 			"id": String(target.combat_id),
 			"hp": target.hp,
@@ -1149,6 +1411,9 @@ func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAct
 		"facing": positional_context.get("facing", {}),
 		"height_advantage_steps": int(positional_context.get("height_advantage_steps", 0)),
 		"to_hit_enabled": not positional_context.is_empty(),
+		"soul_meter": _soul_meter(),
+		"fizzle": _fizzle_context(actor, options),
+		"caster_context": (options.get("caster_context", {}) as Dictionary).duplicate(true),
 		"positioning": {
 			"line_of_sight": line_of_sight,
 			"cover_bonus": cover_bonus,
@@ -1159,6 +1424,10 @@ func forecast_context(actor: BattleActor, target: BattleActor, action: CombatAct
 			),
 		},
 	}
+	if options.has("weakness_id"):
+		context["weakness_id"] = options["weakness_id"]
+		context["weakness"] = (options.get("weakness", {}) as Dictionary).duplicate(true)
+	return context
 
 
 ## User-facing forecast: gate first (including ranged LOS), then run the same pure context and
@@ -1179,28 +1448,25 @@ func forecast_action(
 			"path": (gate.get("path", []) as Array).duplicate(),
 			"destination": _move_destination(action, options),
 		})
-	var context := forecast_context(actor, target, action)
-	var resolution := Resolution.resolve(context)
-	var terms := _positional_terms(actor, target)
-	var positional_context: Dictionary = terms["positional_context"]
-	var damage := calculate_damage(
-		actor,
-		target,
-		action.power_bonus,
-		action.balance_shift,
-		balance,
-		int(terms["flank_bonus"]),
-		int(terms["cover_bonus"]),
-		action.element_id,
-		action.magnitude,
-		_sequence,
-		positional_context,
-		{
-			"seed": _sequence,
-			"ability_id": String(action.id),
-			"battle_id": String(_encounter_id),
-		},
+	if action.kind == CombatAction.Kind.CAST:
+		var cast_resolution: Dictionary = gate["resolution"]
+		return _allowed({
+			"action_id": action.id,
+			"ability_id": gate["ability_id"],
+			"ap_cost": action.ap_cost,
+			"damage": int(cast_resolution.get("damage", 0)),
+			"fizzle_percent": float(cast_resolution.get("fizzle_percent", 0.0)),
+			"breath_cost": int(gate.get("breath_cost", 0)),
+			"soul_cost": float(gate.get("soul_cost", 0.0)),
+			"resolution": cast_resolution,
+			"context": gate["context"],
+			"positioning": (gate["context"].get("positioning", {}) as Dictionary).duplicate(true),
+		})
+	var context := forecast_context(actor, target, action, options)
+	var resolution := _finalize_resolution_damage(
+		Resolution.resolve(context), target, int(_positional_terms(actor, target)["cover_bonus"])
 	)
+	var damage := int(resolution.get("damage", 0))
 	return _allowed({
 		"action_id": action.id,
 		"ap_cost": action.ap_cost,
@@ -1218,46 +1484,25 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 	if not bool(gate.get("allowed", false)):
 		return gate
 	var weakness: Dictionary = gate.get("weakness", {})
-	var context := forecast_context(actor, target, action)
-	context["weakness_id"] = weakness_id
-	context["weakness"] = weakness.duplicate(true)
-	var resolution := Resolution.resolve(context)
-	# Resolution's damage figure is pre-mitigation; live resolution subtracts defense,
-	# balance defense and cover in `calculate_damage`. Forecast through the SAME static
-	# pipeline with the SAME arguments `_resolve_attack` will pass, so the shown number
-	# equals the landed number — forecast==resolution by construction, not by echo.
-	# The pure `resolution` dict stays untouched (its writes/log are the pre-mitigation
-	# Resolution contract); the landed figure is the top-level `damage` key.
-	var positional_context := _positional_resolution_context(actor, target)
-	var cover_bonus := battlefield.cover_bonus(actor, target)
-	if bool(target.defining_effects.get("revealed", false)):
-		cover_bonus = 0
-	var flank_bonus := battlefield.flank_bonus(actor, target)
-	var final_damage := calculate_damage(
-		actor,
-		target,
-		action.power_bonus,
-		action.balance_shift,
-		balance,
-		flank_bonus,
-		cover_bonus,
-		action.element_id,
-		action.magnitude,
-		_sequence,
-		positional_context,
-		{
-			"weakness_id": weakness_id,
-			"weakness": weakness.duplicate(true),
-			"seed": _sequence,
-			"ability_id": String(action.id),
-			"battle_id": String(_encounter_id),
-		},
+	var resolution_options := {
+		"weakness_id": weakness_id,
+		"weakness": weakness.duplicate(true),
+		"seed": _sequence,
+		"ability_id": String(action.id),
+		"battle_id": String(_encounter_id),
+	}
+	var context := forecast_context(actor, target, action, resolution_options)
+	var terms := _positional_terms(actor, target)
+	var resolution := _finalize_resolution_damage(
+		Resolution.resolve(context), target, int(terms["cover_bonus"])
 	)
+	if not bool(resolution.get("allowed", false)):
+		return resolution
 	return _allowed({
 		"action_id": action.id,
 		"weakness_id": weakness_id,
 		"weakness_name": str(weakness.get("display_name", weakness_id)),
-		"damage": final_damage,
+		"damage": int(resolution.get("damage", 0)),
 		"ap_cost": action.ap_cost,
 		"chance": skill_check_service.preview(
 			str(weakness.get("check_skill", "lore")),
@@ -1376,13 +1621,15 @@ func _resolve_defining_strike(
 		)
 		return result
 
-	result.merge(_resolve_attack(actor, target, action, {
+	var resolution_options := options.duplicate(true)
+	resolution_options.merge({
 		"weakness_id": weakness_id,
 		"weakness": weakness.duplicate(true),
 		"seed": damage_seed,
 		"ability_id": String(action.id),
 		"battle_id": String(_encounter_id),
-	}), true)
+	}, true)
+	result.merge(_resolve_attack(actor, target, action, resolution_options), true)
 	var resistance: Variant = weakness.get("resistance", {})
 	var resisted := false
 	if resistance is Dictionary:
@@ -1576,6 +1823,7 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"balance_effects": actor.balance_effects.duplicate(true),
 			"defining_effects": actor.defining_effects.duplicate(true),
 			"discovered_weakness_ids": actor.discovered_weakness_ids.duplicate(),
+			"breath": actor.breath,
 		})
 	return result
 
