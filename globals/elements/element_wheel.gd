@@ -25,6 +25,13 @@ static func distance(first: Variant, second: Variant) -> int:
 	return mini(clockwise, ORDER.size() - clockwise)
 
 
+static func opposite(element: Variant) -> StringName:
+	var element_index := index_of(element)
+	if element_index < 0:
+		return &""
+	return ORDER[(element_index + ORDER.size() / 2) % ORDER.size()]
+
+
 static func span(elements: Array[StringName]) -> int:
 	var indices: Array[int] = []
 	for element in elements:
