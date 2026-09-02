@@ -121,3 +121,11 @@ func test_add_custom_recruit_surfaces_in_recruitable_candidates() -> void:
 	assert_bool(names.has("Vann")).is_true()
 
 	GameState.custom_recruits = original_custom_recruits
+
+
+func test_refill_party_breath_restores_active_party_to_maximum() -> void:
+	GameState.party[0].breath_max = 15
+	GameState.party[0].breath = 2
+	GameState.refill_party_breath()
+
+	assert_int(GameState.party[0].breath).is_equal(15)

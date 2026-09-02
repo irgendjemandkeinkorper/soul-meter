@@ -9,6 +9,9 @@ extends Resource
 @export var spawns: Dictionary = {}
 @export var arrival_flag: String = ""
 @export var arrival_checkpoint: String = ""
+## Local Agreement Integrity presented to the casting fizzle context. C21 owns
+## authored per-location values; 100 is the neutral fallback for un-authored areas.
+@export_range(0.0, 100.0, 1.0) var integrity: float = 100.0
 ## FR-506 thinning gradient: 0 = Dom (stable), rising toward the front
 ## (Wound Lip = 3). Consumed as a fizzle-integrity INPUT via
 ## SkillCheck.location_fizzle_integrity() — never as a formula change.

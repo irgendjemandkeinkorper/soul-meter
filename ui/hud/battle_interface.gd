@@ -133,8 +133,7 @@ func _on_pointer_cleared() -> void:
 func _append_cast_forecast(action: CombatAction, payload: Dictionary) -> void:
 	if action == null or action.kind != CombatAction.Kind.CAST:
 		return
-	act_target_panel.forecast.text += "\nBREATH %d · SOUL %d · FIZZLE %.0f%%" % [
+	act_target_panel.forecast.text += "\nBREATH %d · SOUL %d" % [
 		int(payload.get("breath_cost", 0)),
 		int(payload.get("soul_cost", 0.0)),
-		float(payload.get("fizzle_percent", 0.0)),
 	]

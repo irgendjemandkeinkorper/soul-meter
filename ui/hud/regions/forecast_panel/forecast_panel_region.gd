@@ -104,4 +104,8 @@ func _recompute() -> void:
 	for step: Dictionary in result.get("breakdown", []):
 		chain.append("%s %s" % [str(step.get("label", "")), str(step.get("value", 0))])
 	var shown := _payload_damage if _payload_damage >= 0 else int(result.get("damage", 0))
-	forecast.text = "%s\nFORECAST %d · HIT 90%%" % [" × ".join(chain), shown]
+	var ability: Dictionary = _context.get("ability", {})
+	var chance := "HIT 90%"
+	if bool(ability.get("is_spell", false)):
+		chance = "FIZZLE %.0f%%" % float(result.get("fizzle_percent", 0.0))
+	forecast.text = "%s\nFORECAST %d · %s" % [" × ".join(chain), shown, chance]

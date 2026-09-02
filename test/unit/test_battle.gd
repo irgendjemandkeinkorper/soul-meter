@@ -35,6 +35,7 @@ func before_test() -> void:
 	Reputation.from_dict({})
 	Renown.from_dict({})
 	SaveGame._pending_autosave_reason = ""
+	EncounterCatalog.clear_runtime_encounters()
 	for encounter_id: StringName in ZONE_PINNED_ENCOUNTERS:
 		EncounterCatalog.definition(encounter_id)
 		EncounterCatalog._definitions[String(encounter_id)]["battlefield"] = "zones"
@@ -55,16 +56,46 @@ func after_test() -> void:
 	Reputation.from_dict(original_reputation)
 	Renown.from_dict(original_renown)
 	SaveGame._pending_autosave_reason = original_autosave_reason
+	EncounterCatalog.clear_runtime_encounters()
 	for encounter_id: StringName in ZONE_PINNED_ENCOUNTERS:
 		EncounterCatalog._definitions[String(encounter_id)].erase("battlefield")
 
 
 func test_start_builds_the_whole_party() -> void:
+	GameState.party[0].breath = 7
 	battle.start(_enemy("Wight", 20, 4, 1))
 
 	assert_int(battle.allies.size()).is_equal(2)
 	assert_str(battle.current_ally().display_name).is_equal("Vex")
+	assert_int(battle.allies[0].breath).is_equal(7)
 	assert_int(battle.enemies.size()).is_equal(1)
+
+
+func test_casting_ability_note_cost_comes_from_authored_data() -> void:
+	var note := TacticalTables.shared().ability(&"note-scor")
+	assert_object(note).is_not_null()
+	assert_int(note.breath_cost).is_equal(3)
+
+
+func test_battle_forecast_context_carries_encounter_integrity_override() -> void:
+	assert_bool(EncounterCatalog.register_runtime_encounters({
+		"forecast-integrity-test": {
+			"agreement_integrity": 42.0,
+			"battlefield": "zones",
+			"enemies": [{
+				"id": "integrity-target",
+				"display_name": "Integrity Target",
+				"max_hp": 20,
+				"attack": 1,
+				"defense": 1,
+			}],
+		},
+	})).is_true()
+	battle.start(&"forecast-integrity-test")
+
+	var context: Dictionary = battle.forecast_context()
+
+	assert_float(float(context["fizzle"]["agreement_integrity"])).is_equal(42.0)
 
 
 func test_each_party_member_acts_before_the_enemy_round() -> void:
@@ -130,6 +161,7 @@ func test_extreme_balance_empowers_every_attacker_regardless_of_alignment() -> v
 
 func test_flee_commits_combat_hp_to_party() -> void:
 	battle.start(_enemy("Wight", 40, 6, 1))
+	battle.allies[0].breath = 4
 	battle.use_action(BattleScript.ACTION_GUARD)
 	battle.use_action(BattleScript.ACTION_STRIKE)
 	battle.end_turn()
@@ -137,6 +169,7 @@ func test_flee_commits_combat_hp_to_party() -> void:
 
 	assert_int(GameState.party[0].hp).is_equal(battle.allies[0].hp)
 	assert_int(GameState.party[0].hp).is_less(20)
+	assert_int(GameState.party[0].breath).is_equal(4)
 	assert_str(battle.last_result.outcome_id).is_equal("fled")
 	assert_str(battle.last_result.cause).contains("withdraw")
 	assert_float(Reputation.standing("ssae-seeders")).is_equal_approx(0.0, 0.001)

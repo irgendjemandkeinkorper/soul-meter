@@ -2,6 +2,10 @@ class_name PartyMember
 extends Resource
 ## One member of the player's party. Instanced in code for now (GameState seeds demo data).
 
+## PROVISIONAL base-tier pool from docs/casting-economy.md; keep this value aligned
+## with that numeric sweep until class-tier Breath values are ratified.
+const DEFAULT_BREATH_MAX := 15
+
 @export var id: String = ""
 @export var display_name: String = "Unnamed"
 @export var epithet: String = ""
@@ -30,6 +34,8 @@ extends Resource
 @export var advancement_points: int = 0
 @export var hp: int = 10
 @export var max_hp: int = 10
+@export var breath: int = DEFAULT_BREATH_MAX
+@export var breath_max: int = DEFAULT_BREATH_MAX
 @export var attack: int = 5
 @export var defense: int = 2
 @export_multiline var bio: String = ""
@@ -65,6 +71,8 @@ func to_dict() -> Dictionary:
 		"advancement_points": advancement_points,
 		"hp": hp,
 		"max_hp": max_hp,
+		"breath": breath,
+		"breath_max": breath_max,
 		"attack": attack,
 		"defense": defense,
 		"bio": bio,
@@ -95,6 +103,8 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.advancement_points = maxi(int(data.get("advancement_points", 0)), 0)
 	member.hp = int(data.get("hp", 10))
 	member.max_hp = int(data.get("max_hp", 10))
+	member.breath_max = maxi(int(data.get("breath_max", DEFAULT_BREATH_MAX)), 0)
+	member.breath = clampi(int(data.get("breath", member.breath_max)), 0, member.breath_max)
 	member.attack = int(data.get("attack", 5))
 	member.defense = int(data.get("defense", 2))
 	member.bio = str(data.get("bio", ""))
