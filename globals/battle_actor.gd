@@ -14,6 +14,8 @@ extends Resource
 @export var max_hp: int = 10
 @export var attack: int = 5
 @export var defense: int = 2
+## Tactical casting resource. Pool sizing remains owner-authored; zero is the neutral default.
+@export var breath: int = 0
 @export var attributes: Dictionary = {}
 ## Stable Combatant Id from Pandora. This is the enemy-archetype key used by
 ## Defining Strike knowledge; ad-hoc test actors may leave it empty.

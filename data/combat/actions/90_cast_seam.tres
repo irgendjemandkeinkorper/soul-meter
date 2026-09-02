@@ -6,9 +6,9 @@
 script = ExtResource("1_action")
 id = &"cast-seam"
 display_name = "Cast"
-kind = 5
+kind = 7
 verb = 2
 ap_cost = 3
 target_profile = &"ranged"
 center_pull = 0
-player_available = false
+player_available = true

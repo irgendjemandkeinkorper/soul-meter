@@ -24,17 +24,230 @@ var rules: CombatRules
 var battlefield: BattlefieldModel
 var ally: BattleActor
 var enemy: BattleActor
+var previous_soul_meter := 50.0
 
 
 func before_test() -> void:
 	events.clear()
-	rules = load("res://data/combat/combat_rules.tres") as CombatRules
+	var authored_rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	rules = authored_rules.duplicate(true) as CombatRules
 	battlefield = BattlefieldModel.create_default(rules)
 	ally = _actor("Ally", 30, 7, 2)
 	enemy = _actor("Enemy", 30, 5, 1)
 	controller = CombatController.new()
 	controller.event_emitted.connect(func(event: CombatEvent) -> void: events.append(event))
 	controller.configure(CombatActionCatalog.all(), battlefield, rules)
+	previous_soul_meter = GameState.soul_meter
+
+
+func after_test() -> void:
+	GameState.set_soul_meter(previous_soul_meter)
+
+
+func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var ability := AbilityDefinition.new()
+	ability.id = "test-strom-cast"
+	ability.display_name = "Test Strom Cast"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.magnitude = &"note"
+	ability.power = 12
+	ability.breath_cost = 3
+	var grid := GridBattlefieldModel.new()
+	grid.configure(rules)
+	grid.build_grid(_grid_ground())
+	controller = CombatController.new()
+	controller.event_emitted.connect(func(event: CombatEvent) -> void: events.append(event))
+	var tables := _cast_tables_for_actor(ally, [ability], "cast-integration-caster")
+	controller.configure([cast], grid, rules, null, [ability], tables)
+	ally.breath = 1
+	GameState.set_soul_meter(10.0)
+	controller.start([ally], [enemy], &"cast-integration")
+
+	var forecast := controller.forecast_action(cast, enemy, {"ability_id": ability.id})
+	var expected_resolution: Dictionary = forecast["resolution"]
+	var expected_hp := int((expected_resolution["writes"] as Array)[0]["after"])
+	var result := controller.submit_action(&"cast-seam", enemy, {"ability_id": ability.id})
+
+	assert_bool(result["allowed"]).is_true()
+	assert_int(enemy.hp).is_equal(expected_hp)
+	assert_int(ally.breath).is_equal(0)
+	assert_float(GameState.soul_meter).is_equal(8.0)
+	var source_cell: Vector2i = grid.describe_position(grid.position_of(ally))["cell"]
+	assert_int(controller.tile_state_at(source_cell).charge_level).is_equal(1)
+	assert_bool(result["resolution"] == expected_resolution).is_true()
+
+
+func test_aoe_cast_resolves_a_distinct_hp_write_for_each_target() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam").duplicate(true) as CombatAction
+	cast.aoe_shape = &"side"
+	var ability := AbilityDefinition.new()
+	ability.id = "test-side-cast"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.power = 12
+	ability.breath_cost = 1
+	var second_enemy := _actor("Second Enemy", 47, 5, 4)
+	var tables := _cast_tables_for_actor(ally, [ability], "aoe-caster")
+	controller.configure([cast], battlefield, rules, null, [ability], tables)
+	ally.breath = 1
+	controller.start([ally], [enemy, second_enemy], &"aoe-resolution")
+	var primary_before := enemy.hp
+	var secondary_before := second_enemy.hp
+
+	var result := controller.submit_action(
+		cast.id, enemy, {"ability_id": ability.id}
+	)
+
+	assert_bool(bool(result.get("allowed", false))).is_true()
+	assert_int(ally.breath).is_equal(0)
+	assert_int(enemy.hp).is_less(primary_before)
+	assert_int(second_enemy.hp).is_less(secondary_before)
+	var final_writes: Array = result["resolution"]["writes"]
+	var hp_write: Dictionary = final_writes.filter(
+		func(write: Dictionary) -> bool: return write.get("kind", "") == "hp"
+	)[0]
+	assert_str(String(hp_write["target_id"])).is_equal(String(second_enemy.combat_id))
+	assert_int(int(hp_write["before"])).is_equal(secondary_before)
+	assert_int(int(hp_write["after"])).is_equal(second_enemy.hp)
+
+
+func test_refused_cast_changes_no_combat_or_resource_state() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var ability := AbilityDefinition.new()
+	ability.id = "too-costly"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.power = 12
+	ability.breath_cost = 4
+	var tables := _cast_tables_for_actor(ally, [ability], "refusal-caster")
+	controller.configure([cast], battlefield, rules, null, [ability], tables)
+	ally.breath = 1
+	GameState.set_soul_meter(2.0)
+	controller.start([ally], [enemy], &"cast-refusal")
+	var before_ap := ally.action_points
+	var before_hp := enemy.hp
+
+	var result := controller.submit_action(&"cast-seam", enemy, {"ability_id": ability.id})
+
+	assert_bool(result["allowed"]).is_false()
+	assert_str(result["blocked_by"]).is_equal("soul")
+	assert_int(ally.action_points).is_equal(before_ap)
+	assert_int(ally.breath).is_equal(1)
+	assert_float(GameState.soul_meter).is_equal(2.0)
+	assert_int(enemy.hp).is_equal(before_hp)
+
+
+func test_cast_abilities_are_filtered_by_actor_loadout_and_require_selection() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var owned := AbilityDefinition.from_dict({
+		"id": "owned-note", "element_id": "strom", "power": 8, "slot": "action"
+	})
+	var other := AbilityDefinition.from_dict({
+		"id": "other-note", "element_id": "aqua", "power": 8, "slot": "action"
+	})
+	var tables := TacticalTables.new()
+	tables.abilities = {owned.id: owned, other.id: other}
+	var loadout := UnitLoadout.create("loadout-caster")
+	loadout.action_ability_ids = PackedStringArray([owned.id])
+	tables.loadouts = {loadout.unit_id: loadout}
+	ally.source_member = PartyMember.new()
+	ally.source_member.id = loadout.unit_id
+	controller.configure([cast], battlefield, rules, null, [owned, other], tables)
+	controller.start([ally], [enemy], &"actor-ability-filter")
+
+	var unselected := controller.query_action(cast, enemy)
+	var unowned := controller.query_action(cast, enemy, {"ability_id": other.id})
+	var selected := controller.query_action(cast, enemy, {"ability_id": owned.id})
+
+	assert_bool(bool(unselected.get("allowed", true))).is_false()
+	assert_str(String(unselected.get("blocked_by", &""))).is_equal("ability")
+	assert_str(String(unselected.get("message", ""))).contains("Select")
+	assert_str(String(unselected.get("message", ""))).contains("loadout")
+	assert_bool(bool(unowned.get("allowed", true))).is_false()
+	assert_str(String(unowned.get("blocked_by", &""))).is_equal("ability")
+	assert_bool(bool(selected.get("allowed", false))).is_true()
+
+
+func test_resolution_refusal_happens_before_scheduler_commit() -> void:
+	var invalid_attack := CombatActionCatalog.by_id(&"strike").duplicate(true) as CombatAction
+	invalid_attack.id = &"invalid-element-strike"
+	invalid_attack.element_id = &"not-on-the-wheel"
+	controller.configure([invalid_attack], battlefield, rules)
+	controller.start([ally], [enemy], &"resolution-refusal")
+	var ap_before := ally.action_points
+	var scheduler_before := controller.scheduler.to_dict()
+	var event_count_before := events.size()
+
+	var result := controller.submit_action(invalid_attack.id, enemy)
+
+	assert_bool(bool(result.get("allowed", true))).is_false()
+	assert_str(String(result.get("blocked_by", &""))).is_equal("unknown_element")
+	assert_int(ally.action_points).is_equal(ap_before)
+	assert_dict(controller.scheduler.to_dict()).is_equal(scheduler_before)
+	assert_int(events.size()).is_equal(event_count_before + 1)
+	assert_str(String(events[-1].type)).is_equal("action_refused")
+
+
+func test_enemy_resolution_refusal_happens_before_scheduler_commit_spends_no_ct() -> void:
+	var invalid_attack := CombatActionCatalog.by_id(&"enemy-strike").duplicate(true) as CombatAction
+	invalid_attack.element_id = &"not-on-the-wheel"
+	var ct_rules := rules.duplicate(true) as CombatRules
+	ct_rules.use_charge_time = true
+	var target := _actor("CT Refusal Target", 30, 7, 2)
+	var foe := _actor("CT Refusal Enemy", 30, 5, 1)
+	target.side = &"ally"
+	target.combat_id = &"ct-refusal-ally"
+	foe.side = &"enemy"
+	foe.combat_id = &"ct-refusal-enemy"
+	var local_events: Array[CombatEvent] = []
+	var local_controller := CombatController.new()
+	local_controller.event_emitted.connect(
+		func(event: CombatEvent) -> void: local_events.append(event)
+	)
+	local_controller.configure(
+		[invalid_attack], BattlefieldModel.create_default(ct_rules), ct_rules
+	)
+	local_controller.allies = [target]
+	local_controller.enemies = [foe]
+	local_controller.battlefield.setup([target], [foe])
+	local_controller.scheduler.setup([foe, target])
+	var advance := local_controller.scheduler.advance()
+	assert_object(advance.get("actor") as BattleActor).is_same(foe)
+	var charge_before := local_controller.scheduler.charge_of(foe)
+
+	local_controller._resolve_enemy_actor(foe)
+
+	assert_int(local_controller.scheduler.charge_of(foe)).is_equal(charge_before)
+	var refusals := local_events.filter(
+		func(event: CombatEvent) -> bool: return event.type == &"action_refused"
+	)
+	assert_int(refusals.size()).is_equal(1)
+	assert_str(String(refusals[0].data.reason.blocked_by)).is_equal("unknown_element")
+	assert_array(local_events.filter(
+		func(event: CombatEvent) -> bool: return event.type == &"action_resolved"
+	)).is_empty()
+
+
+func test_enemy_attack_commits_the_precommit_resolution_payload() -> void:
+	var enemy_attack := CombatActionCatalog.by_id(&"enemy-strike")
+	ally.side = &"ally"
+	ally.combat_id = &"payload-ally"
+	enemy.side = &"enemy"
+	enemy.combat_id = &"payload-enemy"
+	battlefield.setup([ally], [enemy])
+	var gate := controller._query_attack_resolution(enemy, ally, enemy_attack, {})
+	assert_bool(bool(gate.get("allowed", false))).is_true()
+	var expected_resolution: Dictionary = gate["resolution"].duplicate(true)
+	enemy.attack += 100
+
+	var outcome := controller._apply_action(enemy, ally, enemy_attack, {
+		"_resolution": expected_resolution,
+		"_resolution_context": gate["context"],
+	})
+
+	assert_dict(outcome["resolution"]).is_equal(expected_resolution)
 
 
 func test_full_round_emits_ordered_presentation_event_stream() -> void:
@@ -235,6 +448,28 @@ func test_defining_strike_requires_selection_and_forecast_matches_resolution_con
 	# `resolution` dict stays the pure pre-mitigation Resolution contract.
 	assert_int(forecast["damage"]).is_equal(resolved["damage"])
 	assert_int(int(pure_forecast["damage"])).is_greater_equal(int(forecast["damage"]))
+
+
+func test_defining_strike_resolution_forecast_matches_forced_roll_commit() -> void:
+	var weakness_id := &"loam-maddened-boar/knee"
+	ally.source_member = _skilled_member()
+	enemy.archetype_id = &"loam-maddened-boar"
+	enemy.discovered_weakness_ids = [weakness_id]
+	controller.start([ally], [enemy], &"defining-forecast-parity")
+	var definition := CombatActionCatalog.by_id(&"definition")
+	var hp_before := enemy.hp
+
+	var forecast := controller.forecast_defining_strike(enemy, weakness_id)
+	var committed := controller.submit_action(
+		definition.id, enemy, {"weakness_id": weakness_id, "forced_rolls": [1]}
+	)
+
+	assert_bool(bool(forecast.get("allowed", false))).is_true()
+	assert_bool(bool(committed.get("allowed", false))).is_true()
+	assert_int(int(committed["check"]["roll"])).is_equal(1)
+	assert_str(String(forecast["resolution"]["ability_id"])).is_equal(String(definition.id))
+	assert_int(int(forecast["damage"])).is_equal(int(committed["damage"]))
+	assert_int(int(forecast["damage"])).is_equal(hp_before - enemy.hp)
 
 
 func test_snapshot_turn_order_keeps_spent_actors_visible() -> void:
@@ -861,3 +1096,17 @@ func _skilled_member() -> PartyMember:
 	member.attributes = {"spark": 5, "pitch": 5}
 	member.skill_tiers = {"lore": "untrained", "insight": "untrained"}
 	return member
+
+
+func _cast_tables_for_actor(
+	actor: BattleActor, abilities: Array[AbilityDefinition], unit_id: String
+) -> TacticalTables:
+	actor.source_member = PartyMember.new()
+	actor.source_member.id = unit_id
+	var tables := TacticalTables.new()
+	var loadout := UnitLoadout.create(unit_id)
+	for ability: AbilityDefinition in abilities:
+		tables.abilities[ability.id] = ability
+		loadout.action_ability_ids.append(ability.id)
+	tables.loadouts[unit_id] = loadout
+	return tables

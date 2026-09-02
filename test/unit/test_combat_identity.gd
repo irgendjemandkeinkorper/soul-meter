@@ -37,6 +37,10 @@ func test_mundane_action_pulls_order_and_chaos_values_toward_generated_center() 
 		chaos_start + mini(abs(chaos_start), action.center_pull)
 	)
 	for player_action: CombatAction in CombatActionCatalog.player_actions():
+		# CAST identity comes from the selected AbilityDefinition/composition at resolution time;
+		# assigning a command-level shift here would invent a second, conflicting balance effect.
+		if player_action.kind == CombatAction.Kind.CAST:
+			continue
 		assert_bool(player_action.balance_shift != 0 or player_action.center_pull > 0).is_true()
 
 

@@ -337,9 +337,14 @@ func _refresh() -> void:
 			_action_buttons[i].disabled = true
 			continue
 		var reason := Battle.action_lock_reason(actions[i])
+		var forecast := (
+			Battle.action_forecast(actions[i])
+			if actions[i].kind == CombatAction.Kind.CAST and reason.is_empty()
+			else {}
+		)
 		_action_buttons[i].disabled = not reason.is_empty()
-		_action_buttons[i].tooltip_text = _action_tooltip(actions[i], reason)
-		_action_buttons[i].text = _short_action_text(actions[i], reason)
+		_action_buttons[i].tooltip_text = _action_tooltip(actions[i], reason, forecast)
+		_action_buttons[i].text = _short_action_text(actions[i], reason, forecast)
 
 	var target := Battle.current_target()
 	_target_button.text = "TARGET  •  %s  〉" % (target.display_name if target else "NONE")
@@ -396,17 +401,31 @@ func _update_party_status() -> void:
 ## AP round economy: every command label surfaces its AP cost (ratified
 ## `docs/fallout2-adoption-spec.md` Wave 1) — this is the shipped scheduler's
 ## live cost display, not a Gate T-10 compatibility remnant.
-func _short_action_text(action: CombatAction, reason: String = "") -> String:
+func _short_action_text(
+	action: CombatAction, reason: String = "", forecast: Dictionary = {}
+) -> String:
 	var text := "%s · %d AP" % [action.display_name.to_upper(), action.ap_cost]
-	if action.soul_cost > 0.0:
+	if action.kind == CombatAction.Kind.CAST and not forecast.is_empty():
+		text += " · BREATH %d · SOUL %d" % [
+			int(forecast.get("breath_cost", 0)), int(forecast.get("soul_cost", 0.0))
+		]
+	elif action.soul_cost > 0.0:
 		text += " · SOUL %d" % int(action.soul_cost)
 	if not reason.is_empty() and action.kind == CombatAction.Kind.RESOLUTION:
 		text += " · LOCKED"
 	return text
 
 
-func _action_tooltip(action: CombatAction, reason: String = "") -> String:
+func _action_tooltip(
+	action: CombatAction, reason: String = "", forecast: Dictionary = {}
+) -> String:
 	var text := action.summary()
+	if action.kind == CombatAction.Kind.CAST and not forecast.is_empty():
+		text += "\nBreath %d · Soul %d · Fizzle %.0f%%" % [
+			int(forecast.get("breath_cost", 0)),
+			int(forecast.get("soul_cost", 0.0)),
+			float(forecast.get("fizzle_percent", 0.0)),
+		]
 	if not reason.is_empty():
 		text += "\nLocked: " + reason
 	return text

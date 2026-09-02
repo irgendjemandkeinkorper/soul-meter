@@ -20,13 +20,21 @@ const SLOTS: Array[StringName] = [SLOT_ACTION, SLOT_REACTION, SLOT_PASSIVE]
 
 @export var id: String = ""
 @export var display_name: String = ""
-## FK into `jobs`. Every ability belongs to exactly one job.
+## Optional FK into `jobs`; directly equipped unit abilities leave it empty.
 @export var job_id: String = ""
 @export var slot: StringName = SLOT_ACTION
 ## FK into ElementWheel.ORDER; empty means the ability is unaligned.
 @export var element_id: StringName = &""
+@export var elements: Array[StringName] = []
+@export var magnitude: StringName = &"note"
 @export var power: int = 0
-@export var mp_cost: int = 0
+@export var breath_cost: int = 0
+## Legacy serialization/authoring alias. Breath is the canonical runtime name.
+@export var mp_cost: int:
+	get:
+		return breath_cost
+	set(value):
+		breath_cost = value
 @export var ct_cost: int = 0
 @export var range: int = 0
 @export var aoe: int = 0
@@ -46,8 +54,11 @@ func to_dict() -> Dictionary:
 		"job_id": job_id,
 		"slot": String(slot),
 		"element_id": String(element_id),
+		"elements": elements.duplicate(),
+		"magnitude": String(magnitude),
 		"power": power,
-		"mp_cost": mp_cost,
+		"breath_cost": breath_cost,
+		"mp_cost": breath_cost,
 		"ct_cost": ct_cost,
 		"range": range,
 		"aoe": aoe,
@@ -63,8 +74,10 @@ static func from_dict(data: Dictionary) -> AbilityDefinition:
 	ability.job_id = str(data.get("job_id", ""))
 	ability.slot = StringName(str(data.get("slot", String(SLOT_ACTION))))
 	ability.element_id = StringName(str(data.get("element_id", "")))
+	ability.elements.assign(data.get("elements", []))
+	ability.magnitude = StringName(str(data.get("magnitude", "note")))
 	ability.power = int(data.get("power", 0))
-	ability.mp_cost = int(data.get("mp_cost", 0))
+	ability.breath_cost = int(data.get("breath_cost", data.get("mp_cost", 0)))
 	ability.ct_cost = int(data.get("ct_cost", 0))
 	ability.range = int(data.get("range", 0))
 	ability.aoe = int(data.get("aoe", 0))

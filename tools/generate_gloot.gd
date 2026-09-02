@@ -1143,8 +1143,8 @@ static func triad_for_elements(elements: Array[StringName]) -> TriadDefinition:
 
 
 static func _gd_element_row(row: Dictionary) -> String:
-	return '{"id": %s, "display_name": %s, "imposition_id": %s, "imposition_display_name": %s, "rule_bend_id": %s, "rule_bend_description": %s, "deals_damage": %s}' % [
-		_gd_name(row["id"]), _gd_string(row["display_name"]), _gd_name(row["imposition_id"]), _gd_string(row["imposition_display_name"]), _gd_name(row["rule_bend_id"]), _gd_string(row["rule_bend_description"]), str(row["deals_damage"]).to_lower()
+	return '{"id": %s, "display_name": %s, "vault_id": %s, "imposition_id": %s, "imposition_display_name": %s, "rule_bend_id": %s, "rule_bend_description": %s, "deals_damage": %s}' % [
+		_gd_name(row["id"]), _gd_string(row["display_name"]), _gd_string(row["vault_id"]), _gd_name(row["imposition_id"]), _gd_string(row["imposition_display_name"]), _gd_name(row["rule_bend_id"]), _gd_string(row["rule_bend_description"]), str(row["deals_damage"]).to_lower()
 	]
 
 

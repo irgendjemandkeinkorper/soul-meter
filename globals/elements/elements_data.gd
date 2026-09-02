@@ -4,16 +4,16 @@ class_name ElementsData
 extends RefCounted
 
 const ELEMENT_ROWS: Array[Dictionary] = [
-	{"id": &"suul", "display_name": "Suul", "imposition_id": &"exposed", "imposition_display_name": "Exposed", "rule_bend_id": &"reveals_aftertones", "rule_bend_description": "Reveals Aftertones, Discord signatures, and illusions.", "deals_damage": true},
-	{"id": &"bloei", "display_name": "Bloei", "imposition_id": &"overgrown", "imposition_display_name": "Overgrown", "rule_bend_id": &"extends_own_buff_duration", "rule_bend_description": "Extends the duration of your own buffs.", "deals_damage": true},
-	{"id": &"aqua", "display_name": "Aqua", "imposition_id": &"soaked", "imposition_display_name": "Soaked", "rule_bend_id": &"restores_breath", "rule_bend_description": "The only element that restores Breath.", "deals_damage": true},
-	{"id": &"khor", "display_name": "Khor", "imposition_id": &"", "imposition_display_name": "", "rule_bend_id": &"extends_durations_holds_notes", "rule_bend_description": "Extends durations and holds Notes across rounds.", "deals_damage": false},
-	{"id": &"terra", "display_name": "Terra", "imposition_id": &"weighted", "imposition_display_name": "Weighted", "rule_bend_id": &"creates_cover_anchors_aftertones", "rule_bend_description": "Creates cover and anchors Aftertones.", "deals_damage": true},
-	{"id": &"daar", "display_name": "Daar", "imposition_id": &"blinded", "imposition_display_name": "Blinded", "rule_bend_id": &"conceals_discord_signatures", "rule_bend_description": "Conceals Discord signatures.", "deals_damage": true},
-	{"id": &"molm", "display_name": "Molm", "imposition_id": &"decaying", "imposition_display_name": "Decaying", "rule_bend_id": &"converts_to_breath", "rule_bend_description": "Converts corpses and objects into Breath.", "deals_damage": true},
-	{"id": &"scor", "display_name": "Scor", "imposition_id": &"burning", "imposition_display_name": "Burning", "rule_bend_id": &"consumes_aftertone_for_burst", "rule_bend_description": "Consumes an Aftertone for burst power.", "deals_damage": true},
-	{"id": &"nul", "display_name": "Nul", "imposition_id": &"muted", "imposition_display_name": "Muted", "rule_bend_id": &"cancels_and_zeroes_tempo", "rule_bend_description": "Cancels buffs, ends Aftertones, and zeroes Tempo.", "deals_damage": false},
-	{"id": &"strom", "display_name": "Strom", "imposition_id": &"shocked", "imposition_display_name": "Shocked", "rule_bend_id": &"ignores_instability_die", "rule_bend_description": "Ignores the Instability die.", "deals_damage": true},
+	{"id": &"suul", "display_name": "Suul", "vault_id": "elements-and-music", "imposition_id": &"exposed", "imposition_display_name": "Exposed", "rule_bend_id": &"reveals_aftertones", "rule_bend_description": "Reveals Aftertones, Discord signatures, and illusions.", "deals_damage": true},
+	{"id": &"bloei", "display_name": "Bloei", "vault_id": "elements-and-music", "imposition_id": &"overgrown", "imposition_display_name": "Overgrown", "rule_bend_id": &"extends_own_buff_duration", "rule_bend_description": "Extends the duration of your own buffs.", "deals_damage": true},
+	{"id": &"aqua", "display_name": "Aqua", "vault_id": "elements-and-music", "imposition_id": &"soaked", "imposition_display_name": "Soaked", "rule_bend_id": &"restores_breath", "rule_bend_description": "The only element that restores Breath.", "deals_damage": true},
+	{"id": &"khor", "display_name": "Khor", "vault_id": "elements-and-music", "imposition_id": &"", "imposition_display_name": "", "rule_bend_id": &"extends_durations_holds_notes", "rule_bend_description": "Extends durations and holds Notes across rounds.", "deals_damage": false},
+	{"id": &"terra", "display_name": "Terra", "vault_id": "elements-and-music", "imposition_id": &"weighted", "imposition_display_name": "Weighted", "rule_bend_id": &"creates_cover_anchors_aftertones", "rule_bend_description": "Creates cover and anchors Aftertones.", "deals_damage": true},
+	{"id": &"daar", "display_name": "Daar", "vault_id": "elements-and-music", "imposition_id": &"blinded", "imposition_display_name": "Blinded", "rule_bend_id": &"conceals_discord_signatures", "rule_bend_description": "Conceals Discord signatures.", "deals_damage": true},
+	{"id": &"molm", "display_name": "Molm", "vault_id": "elements-and-music", "imposition_id": &"decaying", "imposition_display_name": "Decaying", "rule_bend_id": &"converts_to_breath", "rule_bend_description": "Converts corpses and objects into Breath.", "deals_damage": true},
+	{"id": &"scor", "display_name": "Scor", "vault_id": "elements-and-music", "imposition_id": &"burning", "imposition_display_name": "Burning", "rule_bend_id": &"consumes_aftertone_for_burst", "rule_bend_description": "Consumes an Aftertone for burst power.", "deals_damage": true},
+	{"id": &"nul", "display_name": "Nul", "vault_id": "elements-and-music", "imposition_id": &"muted", "imposition_display_name": "Muted", "rule_bend_id": &"cancels_and_zeroes_tempo", "rule_bend_description": "Cancels buffs, ends Aftertones, and zeroes Tempo.", "deals_damage": false},
+	{"id": &"strom", "display_name": "Strom", "vault_id": "elements-and-music", "imposition_id": &"shocked", "imposition_display_name": "Shocked", "rule_bend_id": &"ignores_instability_die", "rule_bend_description": "Ignores the Instability die.", "deals_damage": true},
 ]
 
 const TRIAD_ROWS: Array[Dictionary] = [

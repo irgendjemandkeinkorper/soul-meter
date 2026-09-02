@@ -3,7 +3,7 @@ extends Resource
 ## Data carried by the combat engine. GodotGAS can implement the effects
 ## behind this seam later without making battle flow depend on that addon.
 
-enum Kind { ATTACK, GUARD, STABILIZE, RESOLUTION, MOVE, PASS, DEFINING_STRIKE }
+enum Kind { ATTACK, GUARD, STABILIZE, RESOLUTION, MOVE, PASS, DEFINING_STRIKE, CAST }
 enum Verb { MOVE, ATTACK, CAST, ITEM, SPEECH, DEFEND }
 
 @export var id: StringName
@@ -74,6 +74,9 @@ static func make(
 		Kind.MOVE:
 			action.verb = Verb.MOVE
 			action.target_profile = &"self"
+		Kind.CAST:
+			action.verb = Verb.CAST
+			action.target_profile = &"ranged"
 	return action
 
 
@@ -129,4 +132,4 @@ func balance_effect_summary() -> String:
 
 
 func requires_enemy_target() -> bool:
-	return kind in [Kind.ATTACK, Kind.DEFINING_STRIKE]
+	return kind in [Kind.ATTACK, Kind.DEFINING_STRIKE, Kind.CAST]

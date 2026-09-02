@@ -6,17 +6,14 @@ extends RefCounted
 ## tools/generate_tactical_tables.gd from Pandora and is never hand-edited and never
 ## written back to. This class only reads it.
 ##
-## The `jobs` and `abilities` tables are EMPTY in shipped data by design: the naming
-## of combat disciplines is canon owned by GitHub #132 (docs/prd-amendment-tactical-layer.md
-## §9.1). Every consumer must therefore tolerate an empty catalog — an empty table is
-## the correct state, not a load failure.
-
 const TABLE_PATH := "res://data/generated/tactical_tables.json"
 
 static var _cache: TacticalTables = null
 
 var jobs: Dictionary = {}  # job_id -> JobDefinition
 var abilities: Dictionary = {}  # ability_id -> AbilityDefinition
+var units: Dictionary = {}  # unit_id -> UnitDefinition
+var loadouts: Dictionary = {}  # unit_id -> UnitLoadout
 
 
 static func load_tables(path: String = TABLE_PATH) -> TacticalTables:
@@ -36,6 +33,14 @@ static func load_tables(path: String = TABLE_PATH) -> TacticalTables:
 		if row is Dictionary:
 			var ability := AbilityDefinition.from_dict(row)
 			tables.abilities[ability.id] = ability
+	for row: Variant in source.get("units", []):
+		if row is Dictionary:
+			var unit := UnitDefinition.from_dict(row)
+			tables.units[unit.id] = unit
+	for row: Variant in source.get("unit_loadout", []):
+		if row is Dictionary:
+			var loadout := UnitLoadout.from_dict(row)
+			tables.loadouts[loadout.unit_id] = loadout
 	return tables
 
 
@@ -58,6 +63,34 @@ func job(job_id: String) -> JobDefinition:
 
 func ability(ability_id: String) -> AbilityDefinition:
 	return abilities.get(ability_id, null)
+
+
+func unit(unit_id: String) -> UnitDefinition:
+	return units.get(unit_id, null)
+
+
+func loadout(unit_id: String) -> UnitLoadout:
+	return loadouts.get(unit_id, null)
+
+
+func abilities_for_unit(unit_id: String, slot: StringName) -> Array[AbilityDefinition]:
+	var row := loadout(unit_id)
+	if row == null:
+		return []
+	var ids := PackedStringArray()
+	match slot:
+		AbilityDefinition.SLOT_ACTION:
+			ids = row.action_ability_ids
+		AbilityDefinition.SLOT_REACTION:
+			ids = PackedStringArray([row.reaction_ability_id])
+		AbilityDefinition.SLOT_PASSIVE:
+			ids = PackedStringArray([row.passive_ability_id])
+	var result: Array[AbilityDefinition] = []
+	for ability_id: String in ids:
+		var definition := ability(ability_id)
+		if definition != null and definition.slot == slot:
+			result.append(definition)
+	return result
 
 
 func abilities_for_job(job_id: String) -> Array[AbilityDefinition]:

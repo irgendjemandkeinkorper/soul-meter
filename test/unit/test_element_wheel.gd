@@ -16,6 +16,13 @@ func test_contains_opposed_pair_only_for_diametric_elements() -> void:
 	assert_bool(ElementWheel.contains_opposed_pair([&"suul", &"daar"])).is_true()
 	assert_bool(ElementWheel.contains_opposed_pair([&"suul", &"bloei"])).is_false()
 
+func test_opposite_returns_the_element_at_wheel_distance_five() -> void:
+	assert_str(String(ElementWheel.opposite(&"suul"))).is_equal("daar")
+	assert_str(String(ElementWheel.opposite(&"daar"))).is_equal("suul")
+	assert_int(ElementWheel.distance(&"strom", ElementWheel.opposite(&"strom"))).is_equal(5)
+	assert_str(String(ElementWheel.opposite(&"unknown"))).is_empty()
+
+
 
 # ─── Wheel algebra, table-driven over the whole wheel ────────────────────────
 #
