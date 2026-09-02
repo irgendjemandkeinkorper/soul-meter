@@ -16,6 +16,15 @@ const SLOT_ACTION := &"action"
 const SLOT_REACTION := &"reaction"
 const SLOT_PASSIVE := &"passive"
 
+## Provisional casting costs from docs/casting-economy.md. Keep this single
+## source of defaults aligned with the Pandora seeder's authored rows.
+const BREATH_COST_BY_MAGNITUDE := {
+	&"note": 3,
+	&"phrase": 6,
+	&"song": 12,
+	&"refrain": 24,
+}
+
 const SLOTS: Array[StringName] = [SLOT_ACTION, SLOT_REACTION, SLOT_PASSIVE]
 
 @export var id: String = ""
@@ -45,6 +54,10 @@ const SLOTS: Array[StringName] = [SLOT_ACTION, SLOT_REACTION, SLOT_PASSIVE]
 
 static func is_valid_slot(value: Variant) -> bool:
 	return StringName(str(value)) in SLOTS
+
+
+static func breath_cost_for_magnitude(magnitude: StringName, fallback: int = 0) -> int:
+	return int(BREATH_COST_BY_MAGNITUDE.get(magnitude, fallback))
 
 
 func to_dict() -> Dictionary:
@@ -77,7 +90,12 @@ static func from_dict(data: Dictionary) -> AbilityDefinition:
 	ability.elements.assign(data.get("elements", []))
 	ability.magnitude = StringName(str(data.get("magnitude", "note")))
 	ability.power = int(data.get("power", 0))
-	ability.breath_cost = int(data.get("breath_cost", data.get("mp_cost", 0)))
+	if data.has("breath_cost"):
+		ability.breath_cost = int(data["breath_cost"])
+	elif data.has("mp_cost"):
+		ability.breath_cost = int(data["mp_cost"])
+	else:
+		ability.breath_cost = breath_cost_for_magnitude(ability.magnitude)
 	ability.ct_cost = int(data.get("ct_cost", 0))
 	ability.range = int(data.get("range", 0))
 	ability.aoe = int(data.get("aoe", 0))

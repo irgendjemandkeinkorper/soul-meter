@@ -21,7 +21,6 @@ const ACTION_PARADOX := &"paradox"
 const ACTION_SPEECH := &"speech-seam"
 const OUTCOME_DEFEAT := &"defeat"
 const OUTCOME_FLED := &"fled"
-
 var allies: Array[BattleActor] = []
 var enemies: Array[BattleActor] = []
 var active_ally_index := 0
@@ -87,9 +86,7 @@ func start(encounter: Variant) -> void:
 		actor.attributes = member.attributes.duplicate(true)
 		actor.party_index = i
 		actor.source_member = member
-		var tactical_unit := TacticalTables.shared().unit(member.id)
-		if tactical_unit != null:
-			actor.breath = tactical_unit.base_mp
+		actor.breath = member.breath
 		allies.append(actor)
 	if allies.is_empty():
 		allies.append(BattleActor.new())
@@ -124,8 +121,9 @@ func start(encounter: Variant) -> void:
 		_battlefield_for_definition(rules),
 		rules,
 		null,
-		TacticalTables.shared().abilities_in_slot(AbilityDefinition.SLOT_ACTION),
+		_casting_abilities(),
 	)
+	controller.configure_agreement_integrity(_agreement_integrity())
 	var weather_default := StringName(str(_definition.get("weather_default", "")))
 	if weather_default != &"":
 		var weather_result := controller.configure_weather(weather_default)
@@ -140,6 +138,32 @@ func start(encounter: Variant) -> void:
 		_pending_class_resources.clear()
 	battle_started.emit()
 	balance_changed.emit(balance)
+
+
+func _casting_abilities() -> Array[AbilityDefinition]:
+	var abilities: Array[AbilityDefinition] = []
+	for ability: AbilityDefinition in TacticalTables.shared().abilities_in_slot(
+		AbilityDefinition.SLOT_ACTION
+	):
+		abilities.append(ability)
+	return abilities
+
+
+func _agreement_integrity(scene_path: String = "") -> float:
+	var resolved_scene_path := scene_path
+	if resolved_scene_path.is_empty():
+		var tree := get_tree()
+		var current_scene: Node = tree.current_scene if tree != null else null
+		if current_scene != null:
+			resolved_scene_path = current_scene.scene_file_path
+	var location := LocationRegistry.by_scene(resolved_scene_path)
+	var location_integrity := location.integrity if location != null else 100.0
+	# FR-506's already-authored thinning tiers remain the location value source
+	# until C21 replaces the neutral integrity defaults with direct authored values.
+	location_integrity = SkillCheck.location_fizzle_integrity(
+		location_integrity, resolved_scene_path
+	)
+	return EncounterCatalog.agreement_integrity(encounter_id, location_integrity)
 
 
 ## Builds the authored encounter grid, or a provisional default grid when a catalog
@@ -796,6 +820,7 @@ func _sync_party_hp() -> void:
 	for actor in allies:
 		if actor.party_index >= 0 and actor.party_index < GameState.party.size():
 			GameState.party[actor.party_index].hp = actor.hp
+			GameState.party[actor.party_index].breath = actor.breath
 	GameState.party_changed.emit()
 
 

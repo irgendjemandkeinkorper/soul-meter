@@ -79,6 +79,7 @@ var _target_spawn_id: StringName = &"default"
 var _pending_area_scene := ""
 var _pending_area_spawn: StringName = &"default"
 var _area_access_result := -1
+var _skip_next_breath_refill := false
 var travel_plan: TravelPlan = null
 
 @onready var chart: StateChart = $StateChart
@@ -103,6 +104,8 @@ func _ready() -> void:
 	SceneLoader.scene_loaded.connect(_on_scene_loaded)
 	if not SaveGame.load_requested.is_connected(_on_load_requested):
 		SaveGame.load_requested.connect(_on_load_requested)
+	if not SaveGame.loaded.is_connected(_on_save_loaded):
+		SaveGame.loaded.connect(_on_save_loaded)
 	# Mirror derived standings into chart expression properties so transition
 	# GUARDS (not if-blocks) can read them: e.g. expression `rep_mirror_choir >= 15`.
 	Reputation.reputation_changed.connect(
@@ -118,6 +121,7 @@ func _ready() -> void:
 	$StateChart/Root/Menus/IntroNarration.state_entered.connect(_on_intro_narration_entered)
 	$StateChart/Root/Menus/IntroNarration.state_exited.connect(_on_intro_narration_exited)
 	$StateChart/Root/Playing/Loading.state_entered.connect(_on_loading_entered)
+	$StateChart/Root/Playing/Loading/ToActive.taken.connect(_on_loading_to_active)
 	$StateChart/Root/Playing/Active/ToGarrisonLoading.taken.connect(
 		_on_area_access_allowed
 	)
@@ -300,6 +304,19 @@ func _on_load_requested(destination: LoadDestination) -> void:
 	# so refresh chart-owned access guards after the save payload is applied.
 	_sync_reputation_guards()
 	load_destination(destination)
+
+
+func _on_save_loaded() -> void:
+	_skip_next_breath_refill = true
+
+
+## Loading/ToActive is the only chart edge that means a gameplay scene was entered;
+## Paused/Battle returning to Active must not refresh this per-scene casting pool.
+func _on_loading_to_active() -> void:
+	if _skip_next_breath_refill:
+		_skip_next_breath_refill = false
+		return
+	GameState.refill_party_breath()
 
 
 ## Mirrors each authored reputation gate into the chart as a DERIVED BOOLEAN.

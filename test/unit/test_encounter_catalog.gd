@@ -3,6 +3,11 @@ extends GdUnitTestSuite
 
 func before_test() -> void:
 	EncounterCatalog.clear_cache()
+	EncounterCatalog.clear_runtime_encounters()
+
+
+func after_test() -> void:
+	EncounterCatalog.clear_runtime_encounters()
 
 
 func test_dorthkor_vanguard_expands_to_multiple_pandora_combatants() -> void:
@@ -23,6 +28,17 @@ func test_catalog_returns_fresh_combatants_for_each_battle() -> void:
 
 	assert_int(second[0].hp).is_equal(second[0].max_hp)
 	assert_int(second[0].hp).is_equal(20)
+
+
+func test_encounter_can_override_location_agreement_integrity() -> void:
+	assert_bool(EncounterCatalog.register_runtime_encounters({
+		"integrity-override-test": {"agreement_integrity": 42.0},
+	})).is_true()
+
+	assert_float(
+		EncounterCatalog.agreement_integrity(&"integrity-override-test", 85.0)
+	).is_equal(42.0)
+	assert_float(EncounterCatalog.agreement_integrity(&"missing-encounter", 85.0)).is_equal(85.0)
 
 
 func test_deep_trial_encounter_has_a_durable_completion_flag() -> void:

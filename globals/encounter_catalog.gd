@@ -126,6 +126,16 @@ static func definition(encounter_id: StringName) -> Dictionary:
 	return result
 
 
+## An encounter may locally override its containing location without changing
+## the LocationDefinition authored for every other encounter in that scene.
+static func agreement_integrity(encounter_id: StringName, fallback: float) -> float:
+	var encounter := definition(encounter_id)
+	var value: Variant = encounter.get("agreement_integrity", fallback)
+	if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
+		return clampf(fallback, 0.0, 100.0)
+	return clampf(float(value), 0.0, 100.0)
+
+
 static func register_runtime_encounters(definitions: Dictionary) -> bool:
 	_ensure_loaded()
 	var replacement: Dictionary = {}

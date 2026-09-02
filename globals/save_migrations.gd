@@ -121,6 +121,20 @@ static func _migrate_v6_to_v7(source: Dictionary) -> Dictionary:
 	var migrated := source.duplicate(true)
 	if not migrated.get("world_clock") is Dictionary:
 		migrated["world_clock"] = {"phase": String(WorldClock.DEFAULT_PHASE)}
+	var game_state: Variant = migrated.get("game_state", {})
+	if game_state is Dictionary:
+		for collection_key: String in ["party", "custom_recruits"]:
+			var rows: Variant = game_state.get(collection_key, [])
+			if not rows is Array:
+				continue
+			for value: Variant in rows:
+				if not value is Dictionary:
+					continue
+				var member: Dictionary = value
+				if not member.has("breath_max"):
+					member["breath_max"] = PartyMember.DEFAULT_BREATH_MAX
+				if not member.has("breath"):
+					member["breath"] = int(member["breath_max"])
 	return migrated
 
 

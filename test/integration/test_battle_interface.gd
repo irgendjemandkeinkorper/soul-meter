@@ -133,13 +133,11 @@ func test_cast_command_is_visible_and_submits_selected_target_through_interface(
 	var forecast := controller.forecast_action(cast, target, {"ability_id": ability.id})
 	interface.act_target_panel.show_action_forecast(forecast, forecast["context"])
 	interface._append_cast_forecast(cast, forecast)
-	assert_str(interface.act_target_panel.forecast.text).contains(
-		"BREATH %d · SOUL %d · FIZZLE %.0f%%" % [
-			int(forecast["breath_cost"]),
-			int(forecast["soul_cost"]),
-			float(forecast["fizzle_percent"]),
-		]
+	var forecast_text := interface.act_target_panel.forecast.text
+	assert_str(forecast_text).contains(
+		"BREATH %d · SOUL %d" % [int(forecast["breath_cost"]), int(forecast["soul_cost"])]
 	)
+	assert_int(forecast_text.count("FIZZLE")).is_equal(1)
 	var hp_before := target.hp
 
 	interface._on_pointer_pressed({"x": 1, "y": 0}, target.combat_id)

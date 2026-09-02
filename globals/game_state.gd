@@ -116,6 +116,16 @@ func _ready() -> void:
 	_seed_demo_data()
 
 
+func refill_party_breath() -> void:
+	var changed := false
+	for member: PartyMember in party:
+		if member.breath != member.breath_max:
+			member.breath = member.breath_max
+			changed = true
+	if changed:
+		party_changed.emit()
+
+
 # --- Soul Meter and facts ----------------------------------------------------
 
 

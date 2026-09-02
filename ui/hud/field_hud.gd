@@ -107,7 +107,10 @@ func _refresh_objective(label: Label) -> void:
 func _refresh_party(label: Label) -> void:
 	var rows: PackedStringArray = []
 	for member in GameState.party:
-		rows.append("%s  %d/%d" % [member.display_name, member.hp, member.max_hp])
+		rows.append(
+			"%s  HP %d/%d  BREATH %d/%d"
+			% [member.display_name, member.hp, member.max_hp, member.breath, member.breath_max]
+		)
 	label.text = "   •   ".join(rows)
 
 

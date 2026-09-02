@@ -1,6 +1,5 @@
 extends GdUnitTestSuite
 
-
 class CelllessBattlefieldSpy:
 	extends BattlefieldModel
 
@@ -77,6 +76,25 @@ func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue(
 	var source_cell: Vector2i = grid.describe_position(grid.position_of(ally))["cell"]
 	assert_int(controller.tile_state_at(source_cell).charge_level).is_equal(1)
 	assert_bool(result["resolution"] == expected_resolution).is_true()
+
+
+func test_dom_and_wound_lip_casts_use_different_matching_fizzle_percentages() -> void:
+	var dom_integrity: float = Battle._agreement_integrity(LocationRegistry.DOM.scene_path)
+	var wound_integrity: float = Battle._agreement_integrity(LocationRegistry.WOUND_LIP.scene_path)
+	var dom: Dictionary = _cast_outcome_for_integrity(dom_integrity)
+	var wound: Dictionary = _cast_outcome_for_integrity(wound_integrity)
+
+	assert_float(wound_integrity).is_less(dom_integrity)
+	assert_float(float(dom["forecast"]["context"]["fizzle"]["agreement_integrity"])) \
+		.is_equal(dom_integrity)
+	assert_float(float(wound["forecast"]["context"]["fizzle"]["agreement_integrity"])) \
+		.is_equal(wound_integrity)
+	assert_float(float(wound["forecast"]["fizzle_percent"])) \
+		.is_greater(float(dom["forecast"]["fizzle_percent"]))
+	for outcome: Dictionary in [dom, wound]:
+		assert_float(float(outcome["forecast"]["fizzle_percent"])).is_equal(
+			float(outcome["committed"]["resolution"]["fizzle_percent"])
+		)
 
 
 func test_aoe_cast_resolves_a_distinct_hp_write_for_each_target() -> void:
@@ -1110,3 +1128,32 @@ func _cast_tables_for_actor(
 		loadout.action_ability_ids.append(ability.id)
 	tables.loadouts[unit_id] = loadout
 	return tables
+
+
+func _cast_outcome_for_integrity(integrity: float) -> Dictionary:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var ability := AbilityDefinition.new()
+	ability.id = "location-integrity-cast"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.magnitude = &"note"
+	ability.power = 6
+	ability.breath_cost = 3
+	var actor := _actor("Location Caster", 30, 7, 2)
+	actor.attributes[&"pitch"] = 2
+	actor.breath = 15
+	var target := _actor("Location Target", 100, 1, 1)
+	var local_rules := (load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(
+		true
+	) as CombatRules
+	var local_controller := CombatController.new()
+	var tables := _cast_tables_for_actor(actor, [ability], "location-integrity-caster")
+	local_controller.configure(
+		[cast], BattlefieldModel.create_default(local_rules), local_rules, null, [ability], tables
+	)
+	local_controller.configure_agreement_integrity(integrity)
+	local_controller.start([actor], [target], &"location-integrity")
+	var options := {"ability_id": ability.id, "seed": 73}
+	var forecast := local_controller.forecast_action(cast, target, options)
+	var committed := local_controller.submit_action(cast.id, target, options)
+	return {"forecast": forecast, "committed": committed}

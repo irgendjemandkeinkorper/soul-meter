@@ -109,6 +109,7 @@ const CAST_UNIT_ROWS := [
 ]
 
 const RETIRED_FIXTURE_UNIT_ID := "caster"
+const AbilityDefinitionScript := preload("res://globals/jobs/ability_definition.gd")
 
 
 func _ready() -> void:
@@ -166,7 +167,7 @@ static func _seed_note_abilities(created: PackedStringArray) -> void:
 			"Slot": "action",
 			"Element Id": String(element.id),
 			"Power": 6,
-			"MP Cost": 1,
+			"MP Cost": AbilityDefinitionScript.breath_cost_for_magnitude(&"note"),
 			"CT Cost": 30,
 			"Range": 3,
 			"AoE": 0,
@@ -174,6 +175,15 @@ static func _seed_note_abilities(created: PackedStringArray) -> void:
 			"Vault Id": element.vault_id,
 		}):
 			created.append("Abilities/%s" % ability_id)
+		else:
+			var entity := _entity_by_id(root, "Ability Id", ability_id)
+			if entity == null:
+				push_error("Missing ability entity for id: %s" % ability_id)
+				continue
+			var mp_cost := entity.get_entity_property("MP Cost")
+			if entity.get_integer("MP Cost") != AbilityDefinitionScript.breath_cost_for_magnitude(&"note"):
+				mp_cost.set_default_value(AbilityDefinitionScript.breath_cost_for_magnitude(&"note"))
+				created.append("Abilities/%s.MP Cost" % ability_id)
 
 
 static func _seed_cast_units(created: PackedStringArray) -> void:
@@ -216,6 +226,13 @@ static func _ensure_entity(
 		assert(property != null, "Missing Pandora property '%s'" % property_name)
 		property.set_default_value(values[property_name])
 	return true
+
+
+static func _entity_by_id(root: PandoraCategory, id_property: String, id_value: String) -> PandoraEntity:
+	for candidate: PandoraEntity in Pandora.get_all_entities(root):
+		if not candidate is PandoraCategory and candidate.get_string(id_property) == id_value:
+			return candidate
+	return null
 
 
 static func _root_by_name(name: String) -> PandoraCategory:

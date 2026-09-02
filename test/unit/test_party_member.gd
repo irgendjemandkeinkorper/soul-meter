@@ -10,6 +10,8 @@ func test_save_round_trip_preserves_gameplay_fields() -> void:
 	original.level = 4
 	original.hp = 31
 	original.max_hp = 44
+	original.breath = 9
+	original.breath_max = 15
 	original.attack = 9
 	original.defense = 5
 	original.bio = "A held line."
@@ -25,12 +27,21 @@ func test_save_round_trip_preserves_gameplay_fields() -> void:
 	assert_str(restored.char_class).is_equal(original.char_class)
 	assert_int(restored.hp).is_equal(31)
 	assert_int(restored.max_hp).is_equal(44)
+	assert_int(restored.breath).is_equal(9)
+	assert_int(restored.breath_max).is_equal(15)
 	assert_int(restored.attack).is_equal(9)
 	assert_int(restored.defense).is_equal(5)
 	assert_float(restored.min_reputation).is_equal(10.0)
 	assert_int(restored.attributes["spark"]).is_equal(4)
 	assert_float(restored.skill_percentages["lore"]).is_equal(5.0)
 	assert_str(restored.skill_tiers["lore"]).is_equal("trained")
+
+
+func test_legacy_member_defaults_breath_to_full() -> void:
+	var restored := PartyMember.from_dict({"display_name": "Legacy Caster"})
+
+	assert_int(restored.breath_max).is_equal(15)
+	assert_int(restored.breath).is_equal(restored.breath_max)
 
 
 func test_save_round_trip_preserves_chargen_identity_fields() -> void:
