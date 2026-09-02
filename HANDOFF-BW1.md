@@ -1,0 +1,55 @@
+# HANDOFF-BW1
+
+Branch: `feat/b-wave-class-resources-1`
+Commits: `6510239f`, `1b75820d`, `bb28a93c`, `e3b6974d`, `051de11c`
+
+## Issue #224 — B1 Mirrorblade Balance
+
+- Files: `globals/combat/class_resources/maiiam_balance.gd`, registry entry, Wave B unit tests.
+- Hooks: `on_action`, `on_cast_forecast`; alternating `strike`/`guard` is Balanced, repeated side reaches Unbalanced, forecast applies damage scale and fizzle-integrity penalty.
+- PROVISIONAL numbers: streak threshold 2, damage multiplier 1.25, integrity penalty 15.0; B11 owns tuning.
+- Tests: `test_mirrorblade_balance_alternation_and_forecast_hooks`, registry lookup, save coverage.
+- Contract gaps: none for the implemented channels.
+
+## Issue #225 — B2 Flamebinder Instructive Failure
+
+- Files: `globals/combat/class_resources/vicoar_instructive_failure.gd`, registry entry, Wave B unit tests.
+- Hooks: `on_fizzle`, `on_cast_forecast`, `on_action`; fizzle tokens bank, `spend_token()` arms a one-shot window, and resolved actions consume it.
+- PROVISIONAL numbers: token cap 3; B11 owns tuning.
+- Tests: `test_flamebinder_fizzle_spend_and_action_hooks`, registry lookup, save coverage.
+- Contract gap: Resolution has no direct `fizzle_percent = 0` override. Existing `mastery=true` only guarantees Note/Phrase, so general casts are not fully guaranteed until the seam exposes that channel.
+
+## Issue #226 — B3 Ironbrand Scars
+
+- Files: existing `ironbrand_scars.gd` exercised by new Wave B tests; generic unit-plate snapshot readout in `ui/hud/regions/unit_plate/`.
+- Hooks: `on_damage_taken`, `on_cast_forecast`, `on_action`; guaranteed-hit window remains the existing B0 worked example.
+- PROVISIONAL numbers: existing Scars cap 5; B11 owns tuning.
+- Tests: `test_ironbrand_scars_damage_forecast_action_and_save_hooks`, existing B0 controller/save tests.
+- Contract gaps: guaranteed-crit remains unavailable because Resolution has no crit channel, as documented by B0.
+
+## Issue #227 — B4 Husk-bearer Hunger
+
+- Files: `globals/combat/class_resources/vhorr_hunger.gd`, registry entry, Wave B unit tests.
+- Hooks: defensive `on_action` handling for a future `dot` write and `on_kill` handling for `cause == dot`; state is exposed in the snapshot and serialized.
+- PROVISIONAL numbers: Hunger cap 5 and pending Soul refund 1.0; B11 owns tuning.
+- Tests: `test_husk_bearer_dot_write_and_kill_hooks`, registry lookup, save coverage.
+- Contract gaps: B0 emits no DoT write kind and no Soul-refund hook. The implementation stores pending refunds but cannot apply them without changing the seam.
+
+## Issue #228 — B5 River-Mother Name-Ledger
+
+- Files: `globals/combat/class_resources/haeren_name_ledger.gd`, registry entry, `data/combat/actions/11_record_name.tres`, Wave B unit tests.
+- Hooks/API: `record_name()` deduplicates names per resource/battle state and banks pending refund state; snapshot and save round-trip are covered.
+- PROVISIONAL numbers: Soul refund 1.0; action AP/CT 2/2 copied from the nearest PASS-compatible action; B11/B13 own final values.
+- Tests: `test_river_mother_records_each_name_once_and_round_trips`, action resource assertions, registry lookup.
+- Contract gaps: the seam has no command-effect hook for applying the action, no battle-event payload hook for fallen/saved ally names, and no Soul-refund hook. The action is authored and the model API is ready, but controller wiring remains outside the frozen seam.
+
+## Verification
+
+- Re-import completed after adding all `class_name` scripts.
+- Focused Wave B + B0 seam suites: `18 test cases | 0 errors | 0 failures`.
+- Full headless fallback: `1267 test cases | 0 errors | 1 failure`; unrelated failure: `test_combat_identity.gd:44` (`test_mundane_action_pulls_order_and_chaos_values_toward_generated_center`).
+- The requested addon wrapper reproduced the documented sandbox abort before statistics (`tcp://127.0.0.1:0`, signal 11/exit 134).
+- Quest audit not run: no quests or dialogue were touched.
+- No push performed; worktree is clean.
+
+Overall Summary: Wave B class resources #224–#228 implemented within the frozen B0 seam; focused tests green, full suite has one unrelated pre-existing failure, and three seam gaps are documented above.
