@@ -29,5 +29,22 @@ func test_forecast_panel_returns_the_exact_resolution_result() -> void:
 	assert_int(panel.wheel.get_child_count()).is_equal(ElementWheel.ORDER.size())
 
 
+func test_forecast_panel_shows_the_resolved_fizzle_percentage_for_a_cast() -> void:
+	var runner := scene_runner("res://ui/hud/regions/forecast_panel/forecast_panel_region.tscn")
+	var panel := runner.scene() as ForecastPanelRegion
+	var context := _context()
+	context["ability"]["is_spell"] = true
+	context["ability"]["breath_cost"] = 3
+	context["unit"]["breath"] = 15
+	context["fizzle"] = {"agreement_integrity": 40.0, "pitch": 2}
+
+	panel.set_forecast_context(context)
+
+	var expected: Dictionary = Resolution.resolve(context)
+	assert_str(panel.forecast.text).contains(
+		"FIZZLE %.0f%%" % float(expected["fizzle_percent"])
+	)
+
+
 func _context() -> Dictionary:
 	return {"unit": {"id": "caster", "attack_scale": 1.0, "harmony": 0}, "ability": {"id": "strike", "power": 10, "element_id": &"strom", "elements": [&"strom"], "magnitude": &"note", "matrix_multiplier": 1.0}, "target": {"id": "target", "hp": 20, "element_id": &"terra", "attunements": {}}, "source_tile": {"charge_element_id": "", "charge_level": 0}, "target_tile": {"charge_element_id": "", "charge_level": 0}, "weather": {"weather_hush": false}, "facing": {"multiplier": 1.0}}

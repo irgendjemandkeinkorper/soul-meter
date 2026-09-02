@@ -129,6 +129,7 @@ func start(encounter: Variant) -> void:
 		null,
 		_casting_abilities(),
 	)
+	controller.configure_agreement_integrity(_agreement_integrity())
 	var weather_default := StringName(str(_definition.get("weather_default", "")))
 	if weather_default != &"":
 		var weather_result := controller.configure_weather(weather_default)
@@ -157,6 +158,23 @@ func _casting_abilities() -> Array[AbilityDefinition]:
 
 func _breath_cost_for_magnitude(magnitude: StringName, fallback: int) -> int:
 	return int(BREATH_COST_BY_MAGNITUDE.get(magnitude, fallback))
+
+
+func _agreement_integrity(scene_path: String = "") -> float:
+	var resolved_scene_path := scene_path
+	if resolved_scene_path.is_empty():
+		var tree := get_tree()
+		var current_scene: Node = tree.current_scene if tree != null else null
+		if current_scene != null:
+			resolved_scene_path = current_scene.scene_file_path
+	var location := LocationRegistry.by_scene(resolved_scene_path)
+	var location_integrity := location.integrity if location != null else 100.0
+	# FR-506's already-authored thinning tiers remain the location value source
+	# until C21 replaces the neutral integrity defaults with direct authored values.
+	location_integrity = SkillCheck.location_fizzle_integrity(
+		location_integrity, resolved_scene_path
+	)
+	return EncounterCatalog.agreement_integrity(encounter_id, location_integrity)
 
 
 ## Builds the authored encounter grid, or a provisional default grid when a catalog

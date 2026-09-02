@@ -56,6 +56,9 @@ var battlefield: BattlefieldModel
 var rules: CombatRules
 var skill_check_service: SkillCheckService
 var scheduler: TurnScheduler
+## Location/encounter input for fizzle. Battle resolves it once at setup so
+## forecast and commit cannot observe different scene state.
+var agreement_integrity: float = 100.0
 ## Issue #209: the live Weather instance. Ticks on the scheduler's real CT cadence
 ## (`_advance_weather()`), applies its per-measure feed/starve to `tile_states`, and
 ## feeds `Resolution` context. Stays at the UNCHARGED sentinel unless the encounter
@@ -110,6 +113,10 @@ func configure(
 			)
 	if skill_check_service == null:
 		skill_check_service = SkillCheckService.new()
+
+
+func configure_agreement_integrity(value: float) -> void:
+	agreement_integrity = clampf(value, 0.0, 100.0)
 
 
 ## Issue #209: authors this battle's weather element (from encounter data — the caller
@@ -1158,7 +1165,7 @@ func _fizzle_context(actor: BattleActor, options: Dictionary) -> Dictionary:
 	var raw: Variant = options.get("fizzle", {})
 	var context: Dictionary = raw.duplicate(true) if raw is Dictionary else {}
 	if not context.has("agreement_integrity"):
-		context["agreement_integrity"] = 100.0
+		context["agreement_integrity"] = agreement_integrity
 	if not context.has("pitch"):
 		context["pitch"] = actor.attribute_value(&"pitch")
 	if actor.source_member != null and not context.has("patron"):

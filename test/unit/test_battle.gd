@@ -35,6 +35,7 @@ func before_test() -> void:
 	Reputation.from_dict({})
 	Renown.from_dict({})
 	SaveGame._pending_autosave_reason = ""
+	EncounterCatalog.clear_runtime_encounters()
 	for encounter_id: StringName in ZONE_PINNED_ENCOUNTERS:
 		EncounterCatalog.definition(encounter_id)
 		EncounterCatalog._definitions[String(encounter_id)]["battlefield"] = "zones"
@@ -55,6 +56,7 @@ func after_test() -> void:
 	Reputation.from_dict(original_reputation)
 	Renown.from_dict(original_renown)
 	SaveGame._pending_autosave_reason = original_autosave_reason
+	EncounterCatalog.clear_runtime_encounters()
 	for encounter_id: StringName in ZONE_PINNED_ENCOUNTERS:
 		EncounterCatalog._definitions[String(encounter_id)].erase("battlefield")
 
@@ -74,6 +76,27 @@ func test_casting_abilities_use_provisional_breath_costs_by_magnitude() -> void:
 	assert_int(battle._breath_cost_for_magnitude(&"phrase", 0)).is_equal(6)
 	assert_int(battle._breath_cost_for_magnitude(&"song", 0)).is_equal(12)
 	assert_int(battle._breath_cost_for_magnitude(&"refrain", 0)).is_equal(24)
+
+
+func test_battle_forecast_context_carries_encounter_integrity_override() -> void:
+	assert_bool(EncounterCatalog.register_runtime_encounters({
+		"forecast-integrity-test": {
+			"agreement_integrity": 42.0,
+			"battlefield": "zones",
+			"enemies": [{
+				"id": "integrity-target",
+				"display_name": "Integrity Target",
+				"max_hp": 20,
+				"attack": 1,
+				"defense": 1,
+			}],
+		},
+	})).is_true()
+	battle.start(&"forecast-integrity-test")
+
+	var context: Dictionary = battle.forecast_context()
+
+	assert_float(float(context["fizzle"]["agreement_integrity"])).is_equal(42.0)
 
 
 func test_each_party_member_acts_before_the_enemy_round() -> void:
