@@ -13,6 +13,7 @@ var _save_paths_before: Array[String] = []
 var _test_save_paths: Array[String] = []
 var _flow_was_active := false
 var _save_runtime_before: Dictionary = {}
+var _skip_breath_refill_before := false
 
 
 func before_test() -> void:
@@ -44,6 +45,7 @@ func before_test() -> void:
 		"zhavar": SaveGame.zhavar.duplicate(true),
 		"unit_roster": SaveGame.unit_roster.to_dict(),
 	}
+	_skip_breath_refill_before = GameFlow._skip_next_breath_refill
 	_flow_was_active = bool(GameFlow.get_node("StateChart/Root/Playing/Active").get("active"))
 	_remove_test_saves()
 	GameFlow.travel_plan = null
@@ -78,6 +80,7 @@ func after_test() -> void:
 	GameFlow.travel_plan = _travel_plan_before
 	GameFlow._target_scene = _target_scene_before
 	GameFlow._target_spawn_id = _target_spawn_before
+	GameFlow._skip_next_breath_refill = _skip_breath_refill_before
 	get_tree().paused = false
 
 
@@ -100,6 +103,15 @@ func test_start_journey_builds_and_persists_plan_without_mutating_on_invalid_rou
 	assert_bool(GameFlow.start_journey(&"dom", &"missing-place")).is_false()
 	assert_dict(GameFlow.travel_plan.to_dict()).is_equal(before_invalid)
 	assert_dict(GameState.travel_plan).is_equal(before_invalid)
+
+
+func test_loading_to_active_wiring_refills_party_breath_for_travel() -> void:
+	GameState.party[0].breath_max = 15
+	GameState.party[0].breath = 2
+
+	GameFlow.get_node("StateChart/Root/Playing/Loading/ToActive").emit_signal("taken")
+
+	assert_int(GameState.party[0].breath).is_equal(15)
 
 
 func test_advance_journey_stops_at_seeded_encounter_prompt() -> void:

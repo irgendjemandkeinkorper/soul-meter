@@ -123,12 +123,9 @@ func test_add_custom_recruit_surfaces_in_recruitable_candidates() -> void:
 	GameState.custom_recruits = original_custom_recruits
 
 
-func test_loading_to_active_transition_refills_active_party_breath() -> void:
+func test_refill_party_breath_restores_active_party_to_maximum() -> void:
 	GameState.party[0].breath_max = 15
 	GameState.party[0].breath = 2
-	GameState._bind_breath_refill_transition()
-	var transition := GameFlow.get_node("StateChart/Root/Playing/Loading/ToActive")
-
-	transition.emit_signal("taken")
+	GameState.refill_party_breath()
 
 	assert_int(GameState.party[0].breath).is_equal(15)
