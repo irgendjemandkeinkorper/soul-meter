@@ -85,7 +85,7 @@ that property yet — adding it is an additive seed change; list it in the hando
 
 ## Pre-handoff checklist
 
-- [ ] Row added to `_encounter_rows()` (and `_combatant_rows()` if a new enemy), seed run,
+- [ ] Row added to `_encounter_rows()` (and a row in `_seed_combatants()` if a new enemy), seed run,
       generator run, `SOUL_METER_DRIFT_CHECK=1` passes, `encounter_ids.gd` has the new const
 - [ ] No hand edits under `data/generated/`
 - [ ] `_FIELD_GRID_DATA` row present; board rules above hold
