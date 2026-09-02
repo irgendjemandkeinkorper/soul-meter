@@ -21,15 +21,6 @@ const ACTION_PARADOX := &"paradox"
 const ACTION_SPEECH := &"speech-seam"
 const OUTCOME_DEFEAT := &"defeat"
 const OUTCOME_FLED := &"fled"
-## PROVISIONAL magnitude costs from docs/casting-economy.md. Clone runtime
-## abilities before applying them so the generated authored tables stay immutable.
-const BREATH_COST_BY_MAGNITUDE := {
-	&"note": 3,
-	&"phrase": 6,
-	&"song": 12,
-	&"refrain": 24,
-}
-
 var allies: Array[BattleActor] = []
 var enemies: Array[BattleActor] = []
 var active_ally_index := 0
@@ -145,19 +136,11 @@ func start(encounter: Variant) -> void:
 
 func _casting_abilities() -> Array[AbilityDefinition]:
 	var abilities: Array[AbilityDefinition] = []
-	for source: AbilityDefinition in TacticalTables.shared().abilities_in_slot(
+	for ability: AbilityDefinition in TacticalTables.shared().abilities_in_slot(
 		AbilityDefinition.SLOT_ACTION
 	):
-		var ability := source.duplicate(true) as AbilityDefinition
-		if ability == null:
-			continue
-		ability.breath_cost = _breath_cost_for_magnitude(ability.magnitude, ability.breath_cost)
 		abilities.append(ability)
 	return abilities
-
-
-func _breath_cost_for_magnitude(magnitude: StringName, fallback: int) -> int:
-	return int(BREATH_COST_BY_MAGNITUDE.get(magnitude, fallback))
 
 
 func _agreement_integrity(scene_path: String = "") -> float:

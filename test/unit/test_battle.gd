@@ -71,11 +71,10 @@ func test_start_builds_the_whole_party() -> void:
 	assert_int(battle.enemies.size()).is_equal(1)
 
 
-func test_casting_abilities_use_provisional_breath_costs_by_magnitude() -> void:
-	assert_int(battle._breath_cost_for_magnitude(&"note", 0)).is_equal(3)
-	assert_int(battle._breath_cost_for_magnitude(&"phrase", 0)).is_equal(6)
-	assert_int(battle._breath_cost_for_magnitude(&"song", 0)).is_equal(12)
-	assert_int(battle._breath_cost_for_magnitude(&"refrain", 0)).is_equal(24)
+func test_casting_ability_note_cost_comes_from_authored_data() -> void:
+	var note := TacticalTables.shared().ability(&"note-scor")
+	assert_object(note).is_not_null()
+	assert_int(note.breath_cost).is_equal(3)
 
 
 func test_battle_forecast_context_carries_encounter_integrity_override() -> void:
