@@ -241,6 +241,7 @@ func capture_runtime_state() -> Dictionary:
 		"skill_check": SkillCheck.to_dict().duplicate(true),
 		"unit_roster": unit_roster.to_dict().duplicate(true),
 		"world_clock": WorldClock.to_dict().duplicate(true),
+		"class_resources": Battle.class_resources_to_dict(),
 	}
 
 
@@ -259,6 +260,7 @@ func restore_runtime_state(snapshot: Dictionary) -> bool:
 	var roster := UnitRoster.from_dict(snapshot.get("unit_roster", {}))
 	unit_roster = roster if roster != null else UnitRoster.new()
 	WorldClock.from_dict(snapshot.get("world_clock", {}))
+	Battle.restore_class_resources(snapshot.get("class_resources", {}))
 	return restored
 
 
@@ -330,6 +332,7 @@ func _load_from(primary_path: String, fallback_path: String) -> bool:
 	var loaded_roster := UnitRoster.from_dict(payload.get("tactical", {}))
 	unit_roster = loaded_roster if loaded_roster != null else UnitRoster.new()
 	WorldClock.from_dict(payload.get("world_clock", {}))
+	Battle.restore_class_resources(payload.get("class_resources", {}))
 	var destination := _destination_from_payload(payload)
 	if destination == null:
 		restore_runtime_state(runtime_backup)
@@ -593,6 +596,9 @@ func _build_payload() -> Dictionary:
 		"skill_check": SkillCheck.to_dict(),
 		"tactical": _snapshot_unit_roster(),
 		"world_clock": WorldClock.to_dict(),
+		# #223 additive key (no schema bump): per-combatant class-resource state. Mid-battle save
+		# is not a Ch1 behaviour, so this is `{}` outside a live battle; loader defaults `{}`.
+		"class_resources": Battle.class_resources_to_dict(),
 	}
 	if scene:
 		var current_location := LocationRegistry.by_scene(scene.scene_file_path)
