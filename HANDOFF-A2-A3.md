@@ -55,3 +55,29 @@ Overall Summary: 1263 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped |
 - Should a follow-up reserve schema 8 for Breath so schema-7 saves written before this slice can be distinguished from schema-7 saves written after it?
 - Should C21 author final `LocationDefinition.integrity` values and retire the existing `thinning_tier` adjustment, or is `integrity` the base value that thinning continues to modify?
 - Should the tactical data generator be updated in its own allowed scope so generated `mp_cost`/`breath_cost` values match the runtime magnitude table?
+
+## Pass 2
+
+### Decisions
+
+- No schema 8: schema-7 saves without Breath default to a full pool, as ratified.
+- `integrity` remains the base value; `thinning_tier` remains a modifier on top. C21 will author integrity values.
+- The generator/data path owns provisional casting costs.
+
+### Commits
+
+- `0336baee` — `fix(casting): author provisional costs in tactical data`
+- `aefd1f00` — `fix(hud): avoid duplicate cast fizzle forecast`
+
+### What changed
+
+- `AbilityDefinition.BREATH_COST_BY_MAGNITUDE` is the single Note/Phrase/Song/Refrain default table from `docs/casting-economy.md`; the seeder reads it, runtime dictionary defaults read it, and `Battle` no longer clones or overrides costs.
+- The seeder updated all ten `note-<element>` Pandora rows to MP/Breath cost 3. The tactical generator regenerated `data/generated/tactical_tables.json`; `tactical_ids.gd` was regenerated and remained byte-identical.
+- The forecast region is the sole owner of the fizzle percentage. The battle interface detail line now contains Breath and Soul only, with a test asserting exactly one `FIZZLE` occurrence.
+
+### Verification
+
+- Seeder output: `SEED-TACTICAL: applied changes ->` all ten Note rows.
+- Generator output: `TACTICAL-GEN: wrote 0 jobs, 10 abilities, and 1 units.`
+- The requested full-suite runner was attempted, but this environment's Godot 4.7 build aborted before discovery because gdUnit4 passes debug port 0 and the sandbox prevents Godot's `user://logs` writes. No new Overall Summary was emitted.
+- Last verified full-suite Overall Summary: `Overall Summary: 1263 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
