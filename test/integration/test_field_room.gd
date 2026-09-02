@@ -120,7 +120,12 @@ func test_player_moves_right_when_holding_move_right() -> void:
 	await runner.simulate_frames(30)
 	runner.simulate_action_release("move_right")
 	# Releasing input completes the in-flight step before coming to rest.
-	await runner.simulate_frames(30)
+	for frame in 120:
+		await runner.simulate_frames(1)
+		var current_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
+		var current_center: Vector2 = ground.to_global(ground.map_to_local(current_cell))
+		if player.global_position.is_equal_approx(current_center):
+			break
 
 	assert_float(player.global_position.x).is_greater(start_x)
 	var resting_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))

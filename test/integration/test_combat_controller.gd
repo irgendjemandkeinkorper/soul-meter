@@ -29,7 +29,8 @@ var previous_soul_meter := 50.0
 
 func before_test() -> void:
 	events.clear()
-	rules = load("res://data/combat/combat_rules.tres") as CombatRules
+	var authored_rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	rules = authored_rules.duplicate(true) as CombatRules
 	battlefield = BattlefieldModel.create_default(rules)
 	ally = _actor("Ally", 30, 7, 2)
 	enemy = _actor("Enemy", 30, 5, 1)
