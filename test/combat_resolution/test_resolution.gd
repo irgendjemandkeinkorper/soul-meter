@@ -198,6 +198,12 @@ func test_cast_fizzle_is_deterministic_and_still_pays_cost_and_leaves_residue() 
 	assert_array(first["writes"].map(func(write: Dictionary) -> String: return str(write["kind"]))).contains([
 		"breath", "soul_meter", "tile_state",
 	])
+	var residue_write: Dictionary = first["writes"].filter(
+		func(write: Dictionary) -> bool: return write.get("operation", "") == "residue"
+	)[0]
+	assert_str(residue_write["after"]["charge_element_id"]).is_equal(
+		String(ElementWheel.opposite(&"strom"))
+	)
 
 
 func test_cast_cost_spends_breath_then_soul_and_refuses_insufficient_soul_without_writes() -> void:

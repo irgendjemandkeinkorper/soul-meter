@@ -67,6 +67,32 @@ static func resolve(context: Dictionary) -> Dictionary:
 			_dictionary(casting_gate.get("nearest_unblock", {}))
 		)
 
+	var target_element := ElementWheel.normalize(target.get("element_id", ""))
+	var is_spell := bool(ability.get("is_spell", false))
+	var fizzle_percent := 0.0
+	var fizzle_roll := 0
+	var fizzled := false
+	if is_spell:
+		fizzle_percent = _fizzle_percent(context, composition, magnitude)
+		fizzle_roll = _deterministic_fizzle_roll(context, ability_id, unit, target)
+		fizzled = fizzle_roll <= fizzle_percent
+
+	var breath_cost := maxi(int(ability.get("breath_cost", ability.get("mp_cost", 0))), 0)
+	var breath_before := maxi(int(unit.get("breath", 0)), 0)
+	var breath_spent := mini(breath_cost, breath_before) if is_spell else 0
+	var soul_overreach := maxi(breath_cost - breath_spent, 0) if is_spell else 0
+	var soul_before := maxf(float(context.get("soul_meter", 0.0)), 0.0)
+	if is_spell and soul_before < float(soul_overreach):
+		return _blocked(
+			&"soul",
+			"Requires %d Soul after Breath." % soul_overreach,
+			{
+				"type": &"soul",
+				"minimum": soul_overreach,
+				"delta": float(soul_overreach) - soul_before,
+			}
+		)
+
 	var weather := Weather.from_dict(_dictionary(context.get("weather", {})))
 	var source_tile_data: Dictionary = _dictionary(context.get("source_tile", {}))
 	var target_tile_data: Dictionary = _dictionary(context.get("target_tile", {}))
@@ -78,7 +104,6 @@ static func resolve(context: Dictionary) -> Dictionary:
 		source_tile.hush = true
 		target_tile.hush = true
 
-	var target_element := ElementWheel.normalize(target.get("element_id", ""))
 	var wheel_distance := ElementWheel.distance(element_id, target_element)
 	var relation := ElementMatrix.relation(element_id, target_element)
 	var matrix_multiplier := float(
@@ -125,13 +150,15 @@ static func resolve(context: Dictionary) -> Dictionary:
 	scaled_damage *= facing_multiplier
 	scaled_damage *= tile_multiplier
 
-	var target_strike := target_tile.strike(element_id)
-	if not bool(target_strike.get("allowed", false)):
-		return _blocked(
-			StringName(target_strike.get("blocked_by", &"tile_state")),
-			str(target_strike.get("message", "The target tile rejects this strike.")),
-			_dictionary(target_strike.get("nearest_unblock", {}))
-		)
+	var target_strike: Dictionary = {"allowed": true, "bonus_damage": 0}
+	if not fizzled:
+		target_strike = target_tile.strike(element_id)
+		if not bool(target_strike.get("allowed", false)):
+			return _blocked(
+				StringName(target_strike.get("blocked_by", &"tile_state")),
+				str(target_strike.get("message", "The target tile rejects this strike.")),
+				_dictionary(target_strike.get("nearest_unblock", {}))
+			)
 	var detonation_bonus := int(target_strike.get("bonus_damage", 0))
 	if detonation_bonus != 0:
 		breakdown.append(_step("detonation", "Target tile detonation", float(detonation_bonus), "add"))
@@ -141,7 +168,10 @@ static func resolve(context: Dictionary) -> Dictionary:
 			1.0 if hit else 0.0,
 		))
 	var damage := maxi(roundi(scaled_damage) + detonation_bonus, 0)
-	if not hit:
+	if fizzled:
+		hit = false
+		damage = 0
+	elif not hit:
 		# A miss still pays CT and still leaves source residue (the cast happened), but deals
 		# no damage and does not detonate the target tile.
 		damage = 0
@@ -159,7 +189,13 @@ static func resolve(context: Dictionary) -> Dictionary:
 
 	if not source_tile_data.is_empty():
 		var source_before := source_tile_data.duplicate(true)
-		var residue := source_tile.apply_residue(element_id)
+		var working_element := (
+			composition.center_element if composition.center_element != &"" else element_id
+		)
+		# PROVISIONAL (#215): fizzle leaves the same +1 charge as a landed cast, but in the
+		# Wheel-opposite element. The owner has not ratified a different residue amount.
+		var residue_element := ElementWheel.opposite(working_element) if fizzled else working_element
+		var residue := source_tile.apply_residue(residue_element)
 		if not bool(residue.get("allowed", false)):
 			return _blocked(
 				StringName(residue.get("blocked_by", &"tile_state")),
@@ -188,6 +224,28 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"delta": -mini(ct_cost, maxi(ct_before, 0)),
 		})
 
+	if is_spell and breath_cost > 0:
+		writes.append({
+			"kind": "breath",
+			"target_id": str(unit.get("id", "")),
+			"before": breath_before,
+			"after": breath_before - breath_spent,
+			"delta": -breath_spent,
+		})
+	var soul_failure_cost := (
+		ElementMatrix.soul_on_failure(element_id, target_element) if fizzled else 0
+	)
+	var total_soul_cost := float(soul_overreach + soul_failure_cost)
+	if is_spell and total_soul_cost > 0.0:
+		var soul_after := maxf(soul_before - total_soul_cost, 0.0)
+		writes.append({
+			"kind": "soul_meter",
+			"target_id": "soul_meter",
+			"before": soul_before,
+			"after": soul_after,
+			"delta": soul_after - soul_before,
+		})
+
 	# TODO(#195): Flag semantics are unanswered; flags are carried by neither calculations nor writes.
 	# TODO(#189): Reroll persistence is unanswered; resolution is deterministic and performs no rerolls.
 	# TODO(#132): Discipline effects are unanswered; they conservatively contribute no modifier.
@@ -201,6 +259,9 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"seed": int(context.get("seed", 0)),
 		"ability_id": ability_id,
 		"damage": damage,
+		"fizzled": fizzled,
+		"fizzle_percent": fizzle_percent,
+		"fizzle_roll": fizzle_roll,
 		"hit": hit,
 		"hit_chance": hit_chance,
 		"hit_roll": hit_roll,
@@ -287,6 +348,58 @@ static func _deterministic_hit_roll(
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(key)
 	return rng.randi_range(1, 100)
+
+
+static func _deterministic_fizzle_roll(
+	context: Dictionary, ability_id: String, unit: Dictionary, target: Dictionary
+) -> int:
+	var key := "fizzle|%d|%d|%s|%s|%s|%s" % [
+		int(context.get("seed", 0)),
+		int(context.get("tick", 0)),
+		str(context.get("battle_id", "")),
+		ability_id,
+		str(unit.get("id", "")),
+		str(target.get("id", "")),
+	]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(key)
+	return rng.randi_range(1, 100)
+
+
+static func _fizzle_percent(
+	context: Dictionary, composition: CompositionResult, magnitude: StringName
+) -> float:
+	var inputs: Dictionary = _dictionary(context.get("fizzle", {}))
+	var breadth := String(inputs.get("breadth", _composition_breadth(composition)))
+	var default_strain := (
+		composition.distance_steps
+		if composition.kind == CompositionResult.Kind.STRAINED_CHORD
+		else 0
+	)
+	var strain := int(inputs.get("strain", inputs.get("strain_steps", default_strain)))
+	var service := SkillCheckService.new()
+	var percent := service.fizzle_percent(
+		float(inputs.get("agreement_integrity", 100.0)),
+		breadth,
+		strain,
+		str(inputs.get("magnitude", magnitude)),
+		int(inputs.get("pitch", 2)),
+		bool(inputs.get("mastery", false)),
+		str(inputs.get("patron", "")),
+	)
+	service.free()
+	return percent
+
+
+static func _composition_breadth(composition: CompositionResult) -> StringName:
+	match composition.kind:
+		CompositionResult.Kind.TONE:
+			return &"tone"
+		CompositionResult.Kind.CHORD, CompositionResult.Kind.STRAINED_CHORD:
+			return &"chord"
+		CompositionResult.Kind.TRIAD:
+			return &"triad"
+	return &""
 
 
 static func _ability_elements(ability: Dictionary, fallback: StringName) -> Array[StringName]:
