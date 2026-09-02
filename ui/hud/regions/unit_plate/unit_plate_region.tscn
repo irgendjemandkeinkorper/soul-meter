@@ -43,3 +43,8 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatLabel"
 text = "CT 0 · SPD 0 · H0 · FACING E"
+[node name="Resource" type="Label" parent="Row/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = ""
