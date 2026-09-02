@@ -177,6 +177,9 @@ static func _seed_note_abilities(created: PackedStringArray) -> void:
 			created.append("Abilities/%s" % ability_id)
 		else:
 			var entity := _entity_by_id(root, "Ability Id", ability_id)
+			if entity == null:
+				push_error("Missing ability entity for id: %s" % ability_id)
+				continue
 			var mp_cost := entity.get_entity_property("MP Cost")
 			if entity.get_integer("MP Cost") != AbilityDefinitionScript.breath_cost_for_magnitude(&"note"):
 				mp_cost.set_default_value(AbilityDefinitionScript.breath_cost_for_magnitude(&"note"))
