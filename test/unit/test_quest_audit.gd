@@ -215,3 +215,137 @@ func _outcome(outcome_id: String, writes_state: bool, read_back: bool) -> Dictio
 		"ledger_events": [],
 		"read_back": read_back,
 	}
+
+
+const QUEST_OK := '''[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[resource]
+quest_name = "Dishonest Water"
+giver_actor_id = "keth-varr"
+objectives = PackedStringArray("Trace the casks.", "Rule on them.")
+'''
+
+const QUEST_BARE := '''[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+[resource]
+quest_name = ""
+quest_giver = ""
+objectives = PackedStringArray()
+'''
+
+const FETCH_QUEST := '''[gd_resource type="Resource" script_class="FetchQuest" load_steps=2 format=3]
+
+[resource]
+quest_name = "Loamroot Sprigs"
+quest_giver = "Iris Illepah"
+'''
+
+const LOCATION_OK := '''[gd_resource type="Resource" script_class="LocationDefinition" load_steps=2 format=3]
+
+[resource]
+id = &"wound_lip"
+scene_path = "res://world/wound_lip.tscn"
+default_spawn_id = &"default"
+arrival_flag = "chapter_wound_lip_reached"
+spawns = {
+"from_dom": "from_dom"
+}
+'''
+
+const LOCATION_BROKEN := '''[gd_resource type="Resource" script_class="LocationDefinition" load_steps=2 format=3]
+
+[resource]
+id = &"nowhere"
+scene_path = "res://world/does_not_exist.tscn"
+default_spawn_id = &"entry"
+arrival_flag = "Nowhere.Reached"
+spawns = {
+"from_dom": "from_dom"
+}
+'''
+
+const LOCATION_ALIASED := '''[gd_resource type="Resource" script_class="LocationDefinition" load_steps=2 format=3]
+
+[resource]
+id = &"bell_house"
+scene_path = "res://world/interiors/bell_house.tscn"
+default_spawn_id = &"entry"
+spawns = {
+"entry": "entry",
+"from_bell_loft": "from_bell_loft"
+}
+'''
+
+
+func test_template_conformance_accepts_shipped_shapes() -> void:
+	var violations := QuestAuditScript.template_conformance_violations(
+		{"res://quests/ok.tres": QUEST_OK, "res://quests/fetch.tres": FETCH_QUEST},
+		{
+			"res://world/locations/ok.tres": LOCATION_OK,
+			"res://world/locations/interiors/aliased.tres": LOCATION_ALIASED,
+		}
+	)
+
+	assert_array(violations).is_empty()
+
+
+func test_template_conformance_warns_on_missing_quest_fields() -> void:
+	var violations := QuestAuditScript.template_conformance_violations(
+		{"res://quests/bare.tres": QUEST_BARE}, {}
+	)
+
+	assert_int(violations.size()).is_equal(3)
+	var codes := PackedStringArray()
+	for violation: Dictionary in violations:
+		codes.append(str(violation["code"]))
+		assert_str(str(violation["severity"])).is_equal("warning")
+		assert_str(str(violation["path"])).is_equal("res://quests/bare.tres")
+	assert_bool(codes.has("quest_missing_name")).is_true()
+	assert_bool(codes.has("quest_missing_giver")).is_true()
+	assert_bool(codes.has("quest_missing_objectives")).is_true()
+
+
+func test_template_conformance_flags_broken_location_fields() -> void:
+	var violations := QuestAuditScript.template_conformance_violations(
+		{}, {"res://world/locations/broken.tres": LOCATION_BROKEN}
+	)
+
+	var by_code := {}
+	for violation: Dictionary in violations:
+		by_code[str(violation["code"])] = violation
+	assert_int(violations.size()).is_equal(3)
+	assert_str(str(by_code["location_scene_missing"]["severity"])).is_equal("error")
+	assert_str(str(by_code["location_scene_missing"]["scene_path"])).is_equal(
+		"res://world/does_not_exist.tscn"
+	)
+	assert_str(str(by_code["location_arrival_flag_grammar"]["severity"])).is_equal("warning")
+	assert_str(str(by_code["location_default_spawn_unaliased"]["severity"])).is_equal("error")
+	assert_str(str(by_code["location_default_spawn_unaliased"]["default_spawn_id"])).is_equal("entry")
+
+
+func test_report_carries_a_template_conformance_category_and_metric() -> void:
+	var quest_results: Array[Dictionary] = []
+	var flags := QuestAuditScript.scan_flag_sources(PackedStringArray([FLAG_FIXTURE]))
+	var violations := QuestAuditScript.template_conformance_violations(
+		{"res://quests/bare.tres": QUEST_BARE},
+		{"res://world/locations/broken.tres": LOCATION_BROKEN}
+	)
+	var report := QuestAuditScript.build_report(
+		quest_results, flags, false, PackedStringArray(), PackedStringArray(), {}, violations
+	)
+
+	var category: Dictionary = report["categories"]["template_conformance"]
+	assert_int(int(category["count"])).is_equal(6)
+	assert_int(int(category["severity"]["error"])).is_equal(2)
+	assert_int(int(category["severity"]["warning"])).is_equal(4)
+	assert_int(int(report["metrics"]["template_conformance"]["violations"])).is_equal(6)
+	assert_int(int(report["metrics"]["template_conformance"]["errors"])).is_equal(2)
+	assert_bool(bool(report["metrics"]["template_conformance"]["passes"])).is_false()
+	assert_int(QuestAuditScript.exit_code_for_report(report, true)).is_equal(1)
+
+
+func test_template_conformance_passes_on_shipped_content() -> void:
+	var report := QuestAuditScript.audit_project(false)
+
+	assert_bool(bool(report["metrics"]["template_conformance"]["passes"])).is_true()
+	assert_int(int(report["metrics"]["template_conformance"]["errors"])).is_equal(0)
