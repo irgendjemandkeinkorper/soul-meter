@@ -1162,7 +1162,13 @@ func _resolved_attack(
 	terms: Dictionary,
 ) -> Dictionary:
 	if options.has("_resolution"):
-		return (options["_resolution"] as Dictionary).duplicate(true)
+		var cached := (options["_resolution"] as Dictionary).duplicate(true)
+		for write: Dictionary in cached.get("writes", []):
+			if (
+				write.get("kind", "") == "hp"
+				and String(write.get("target_id", "")) == String(target.combat_id)
+			):
+				return cached
 	var context := forecast_context(actor, target, action, options)
 	return _finalize_resolution_damage(
 		Resolution.resolve(context), target, int(terms["cover_bonus"])
@@ -1255,12 +1261,26 @@ func _resolve_attack(
 	var positional_results: Array[Dictionary] = []
 	var committed_resolution: Dictionary = {}
 	var hit_targets := battlefield.targets_for(actor, target, action.aoe_shape)
+	var pending_hits: Array[Dictionary] = []
 	for hit_target: BattleActor in hit_targets:
 		var terms := _positional_terms(actor, hit_target)
 		var positional_context: Dictionary = terms["positional_context"]
 		var resolved := _resolved_attack(actor, hit_target, action, resolution_context, terms)
 		if not bool(resolved.get("allowed", false)):
 			return resolved
+		pending_hits.append({
+			"target": hit_target,
+			"terms": terms,
+			"positional_context": positional_context,
+			"resolution": resolved,
+		})
+	# Resolve every target against the same pre-action resource/tile state. Applying afterward
+	# keeps one Breath/Soul/tile cost idempotent while each target receives its own HP write.
+	for pending: Dictionary in pending_hits:
+		var hit_target := pending["target"] as BattleActor
+		var terms: Dictionary = pending["terms"]
+		var positional_context: Dictionary = pending["positional_context"]
+		var resolved: Dictionary = pending["resolution"]
 		# #215 promotes Resolution tile writes for CAST. Mundane attacks keep their ratified
 		# non-mutating tile behavior; widening elemental residue to every attack is out of scope.
 		_apply_resolution_writes(

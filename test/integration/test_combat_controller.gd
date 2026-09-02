@@ -79,6 +79,40 @@ func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue(
 	assert_bool(result["resolution"] == expected_resolution).is_true()
 
 
+func test_aoe_cast_resolves_a_distinct_hp_write_for_each_target() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam").duplicate(true) as CombatAction
+	cast.aoe_shape = &"side"
+	var ability := AbilityDefinition.new()
+	ability.id = "test-side-cast"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.power = 12
+	ability.breath_cost = 1
+	var second_enemy := _actor("Second Enemy", 47, 5, 4)
+	var tables := _cast_tables_for_actor(ally, [ability], "aoe-caster")
+	controller.configure([cast], battlefield, rules, null, [ability], tables)
+	ally.breath = 1
+	controller.start([ally], [enemy, second_enemy], &"aoe-resolution")
+	var primary_before := enemy.hp
+	var secondary_before := second_enemy.hp
+
+	var result := controller.submit_action(
+		cast.id, enemy, {"ability_id": ability.id}
+	)
+
+	assert_bool(bool(result.get("allowed", false))).is_true()
+	assert_int(ally.breath).is_equal(0)
+	assert_int(enemy.hp).is_less(primary_before)
+	assert_int(second_enemy.hp).is_less(secondary_before)
+	var final_writes: Array = result["resolution"]["writes"]
+	var hp_write: Dictionary = final_writes.filter(
+		func(write: Dictionary) -> bool: return write.get("kind", "") == "hp"
+	)[0]
+	assert_str(String(hp_write["target_id"])).is_equal(String(second_enemy.combat_id))
+	assert_int(int(hp_write["before"])).is_equal(secondary_before)
+	assert_int(int(hp_write["after"])).is_equal(second_enemy.hp)
+
+
 func test_refused_cast_changes_no_combat_or_resource_state() -> void:
 	var cast := CombatActionCatalog.by_id(&"cast-seam")
 	var ability := AbilityDefinition.new()
