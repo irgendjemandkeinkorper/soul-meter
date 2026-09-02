@@ -1384,6 +1384,8 @@ func forecast_context(
 	var context := {
 		# Legacy calculate_damage() passed a wrapper with no top-level battle_id to
 		# Resolution.resolve_action(), so plain attacks hashed the empty-string fallback.
+		# That key is deliberately frozen for legacy roll parity: changing it reshuffles
+		# every Gate T-1 self-play roll.
 		# Casts and Defining Strikes retain their authored encounter identity.
 		"battle_id": battle_id,
 		"tick": resolution_seed,
