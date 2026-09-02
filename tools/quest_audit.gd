@@ -38,6 +38,8 @@ const STRICT_ENV := "SOUL_METER_QUEST_AUDIT_STRICT"
 const REGISTRY_PATH := "res://globals/quest_registry.gd"
 const QUEST_DIRECTORY := "res://quests"
 const DIALOGUE_DIRECTORY := "res://dialogue"
+## Template conformance (docs/templates/*.md) scans every LocationDefinition here.
+const LOCATION_DIRECTORY := "res://world/locations"
 const SIDE_READBACK_THRESHOLD := 0.6
 
 ## Flag grammar: <domain>_<subject>_<predicate>, lower snake case.
@@ -158,7 +160,11 @@ static func audit_project(strict: bool = false) -> Dictionary:
 		strict,
 		scan_grammar_flags(),
 		quest_critical_npc_ids(),
-		dialogue_sources
+		dialogue_sources,
+		template_conformance_violations(
+			_source_files(QUEST_DIRECTORY, PackedStringArray(["tres"])),
+			_source_files(LOCATION_DIRECTORY, PackedStringArray(["tres"]))
+		)
 	)
 
 
@@ -168,7 +174,8 @@ static func build_report(
 	strict: bool,
 	grammar_flags: PackedStringArray = PackedStringArray(),
 	quest_critical_ids: PackedStringArray = PackedStringArray(),
-	dialogue_sources: Dictionary = {}
+	dialogue_sources: Dictionary = {},
+	template_violations: Array[Dictionary] = []
 ) -> Dictionary:
 	var categories := {
 		"outcome_count": _category(),
@@ -178,6 +185,7 @@ static func build_report(
 		"flag_grammar": _category(),
 		"phase_reachability": _category(),
 		"check_softlocks": _category(),
+		"template_conformance": _category(),
 	}
 	var main_read := 0
 	var main_total := 0
@@ -289,6 +297,16 @@ static func build_report(
 		details.erase("severity")
 		details.erase("code")
 		_add_finding(categories["check_softlocks"], finding_severity, finding_code, details)
+	var template_error_count := 0
+	for violation: Dictionary in template_violations:
+		var details := violation.duplicate()
+		var violation_severity := str(details.get("severity", "warning"))
+		var violation_code := str(details.get("code", "template_field_missing"))
+		details.erase("severity")
+		details.erase("code")
+		if violation_severity == "error":
+			template_error_count += 1
+		_add_finding(categories["template_conformance"], violation_severity, violation_code, details)
 	var routined_critical_count := 0
 	for npc_id: String in quest_critical_ids:
 		if NpcRoutines.has_routine(npc_id):
@@ -347,6 +365,11 @@ static func build_report(
 				"required_phases": 2,
 				"violations": reachability_violations.size(),
 				"passes": reachability_violations.is_empty(),
+			},
+			"template_conformance": {
+				"violations": template_violations.size(),
+				"errors": template_error_count,
+				"passes": template_error_count == 0,
 			},
 		},
 		"categories": categories,
@@ -817,6 +840,136 @@ static func _has_authored_runtime_value(
 		if occurrences > 1:
 			return true
 	return false
+
+
+## Template conformance (docs/templates/location.md, side-quest.md).
+##
+## Text-level checks over authored `.tres` sources so a worker's handoff can be
+## screened before anyone loads the resource. Both arguments are
+## {path: source text} maps (see _source_files), which keeps the checks
+## testable from a string and free of ResourceLoader side effects.
+##
+## Severity: a structural break (a scene that does not exist, a default spawn
+## that no alias resolves) is an "error"; a missing authoring field is a
+## "warning". Reporting mode never fails on either; STRICT fails on both, like
+## every other category.
+##
+## Limitations: fields are matched at line start (`quest_name = "..."`), which
+## is how Godot serializes them; a hand-edited resource with unusual whitespace
+## is reported as missing, not silently accepted. `objectives` is only required
+## of FlagQuest-derived resources (FetchQuest has none). A quest giver is
+## satisfied by either `quest_giver` (FlagQuest) or `giver_actor_id`
+## (DomSideQuest) — the two shipped conventions.
+static func template_conformance_violations(
+	quest_sources: Dictionary, location_sources: Dictionary
+) -> Array[Dictionary]:
+	var violations: Array[Dictionary] = []
+	var class_regex := _regex('script_class="([A-Za-z0-9_]+)"')
+	var quest_paths: Array = quest_sources.keys()
+	quest_paths.sort()
+	for path_value: Variant in quest_paths:
+		var path := str(path_value)
+		var source := str(quest_sources[path])
+		var class_match := class_regex.search(source)
+		if class_match == null:
+			continue
+		var script_class := class_match.get_string(1)
+		if _tres_string_field(source, "quest_name").is_empty():
+			violations.append(_template_violation(path, "warning", "quest_missing_name", {
+				"field": "quest_name", "script_class": script_class,
+			}))
+		if (
+			_tres_string_field(source, "quest_giver").is_empty()
+			and _tres_string_field(source, "giver_actor_id").is_empty()
+		):
+			violations.append(_template_violation(path, "warning", "quest_missing_giver", {
+				"field": "quest_giver|giver_actor_id", "script_class": script_class,
+			}))
+		var requires_objectives := script_class == "FlagQuest" or script_class == "DomSideQuest"
+		if requires_objectives and _tres_packed_strings(source, "objectives").is_empty():
+			violations.append(_template_violation(path, "warning", "quest_missing_objectives", {
+				"field": "objectives", "script_class": script_class,
+			}))
+
+	var location_paths: Array = location_sources.keys()
+	location_paths.sort()
+	for path_value: Variant in location_paths:
+		var path := str(path_value)
+		var source := str(location_sources[path])
+		if not source.contains('script_class="LocationDefinition"'):
+			continue
+		var scene_path := _tres_string_field(source, "scene_path")
+		if scene_path.is_empty() or not FileAccess.file_exists(scene_path):
+			violations.append(_template_violation(path, "error", "location_scene_missing", {
+				"field": "scene_path", "scene_path": scene_path,
+			}))
+		var arrival_flag := _tres_string_field(source, "arrival_flag")
+		if not arrival_flag.is_empty():
+			var grammar := flag_grammar_violations(PackedStringArray([arrival_flag]))
+			if not grammar.is_empty():
+				violations.append(_template_violation(path, "warning", "location_arrival_flag_grammar", {
+					"field": "arrival_flag",
+					"flag": arrival_flag,
+					"reason": str(grammar[0].get("reason", "")),
+				}))
+		var default_spawn := _tres_string_name_field(source, "default_spawn_id")
+		if default_spawn.is_empty():
+			default_spawn = "default"
+		if default_spawn != "default":
+			var aliases := _tres_dictionary_keys(source, "spawns")
+			if not aliases.has(default_spawn):
+				violations.append(_template_violation(path, "error", "location_default_spawn_unaliased", {
+					"field": "default_spawn_id",
+					"default_spawn_id": default_spawn,
+					"spawns": aliases,
+				}))
+	return violations
+
+
+static func _template_violation(
+	path: String, severity: String, code: String, details: Dictionary
+) -> Dictionary:
+	var violation := details.duplicate()
+	violation["path"] = path
+	violation["severity"] = severity
+	violation["code"] = code
+	return violation
+
+
+## `field = "value"` at line start; empty when absent or empty.
+static func _tres_string_field(source: String, field: String) -> String:
+	var found := _regex('(?m)^%s\\s*=\\s*"([^"]*)"' % field).search(source)
+	return "" if found == null else found.get_string(1).strip_edges()
+
+
+## `field = &"value"` at line start.
+static func _tres_string_name_field(source: String, field: String) -> String:
+	var found := _regex('(?m)^%s\\s*=\\s*&"([^"]*)"' % field).search(source)
+	return "" if found == null else found.get_string(1).strip_edges()
+
+
+## `field = PackedStringArray("a", "b")` at line start → ["a", "b"].
+static func _tres_packed_strings(source: String, field: String) -> PackedStringArray:
+	var result := PackedStringArray()
+	var found := _regex('(?m)^%s\\s*=\\s*PackedStringArray\\(([^)]*)\\)' % field).search(source)
+	if found == null:
+		return result
+	for item: RegExMatch in _regex('"([^"]*)"').search_all(found.get_string(1)):
+		var value := item.get_string(1).strip_edges()
+		if not value.is_empty():
+			result.append(value)
+	return result
+
+
+## Keys of `field = { "k": "v", ... }` (Godot's multi-line Dictionary form).
+static func _tres_dictionary_keys(source: String, field: String) -> PackedStringArray:
+	var keys := PackedStringArray()
+	var found := _regex('(?ms)^%s\\s*=\\s*\\{(.*?)^\\}' % field).search(source)
+	if found == null:
+		return keys
+	for item: RegExMatch in _regex('(?m)^\\s*"([^"]+)"\\s*:').search_all(found.get_string(1)):
+		keys.append(item.get_string(1))
+	return keys
 
 
 static func _quest_metadata(registry_source: String) -> Dictionary:
