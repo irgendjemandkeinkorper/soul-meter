@@ -24,6 +24,7 @@ var rules: CombatRules
 var battlefield: BattlefieldModel
 var ally: BattleActor
 var enemy: BattleActor
+var previous_soul_meter := 50.0
 
 
 func before_test() -> void:
@@ -35,6 +36,70 @@ func before_test() -> void:
 	controller = CombatController.new()
 	controller.event_emitted.connect(func(event: CombatEvent) -> void: events.append(event))
 	controller.configure(CombatActionCatalog.all(), battlefield, rules)
+	previous_soul_meter = GameState.soul_meter
+
+
+func after_test() -> void:
+	GameState.set_soul_meter(previous_soul_meter)
+
+
+func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var ability := AbilityDefinition.new()
+	ability.id = "test-strom-cast"
+	ability.display_name = "Test Strom Cast"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.magnitude = &"note"
+	ability.power = 12
+	ability.breath_cost = 3
+	var grid := GridBattlefieldModel.new()
+	grid.configure(rules)
+	grid.build_grid(_grid_ground())
+	controller = CombatController.new()
+	controller.event_emitted.connect(func(event: CombatEvent) -> void: events.append(event))
+	controller.configure([cast], grid, rules, null, [ability])
+	ally.breath = 1
+	GameState.set_soul_meter(10.0)
+	controller.start([ally], [enemy], &"cast-integration")
+
+	var forecast := controller.forecast_action(cast, enemy, {"ability_id": ability.id})
+	var expected_resolution: Dictionary = forecast["resolution"]
+	var expected_hp := int((expected_resolution["writes"] as Array)[0]["after"])
+	var result := controller.submit_action(&"cast-seam", enemy, {"ability_id": ability.id})
+
+	assert_bool(result["allowed"]).is_true()
+	assert_int(enemy.hp).is_equal(expected_hp)
+	assert_int(ally.breath).is_equal(0)
+	assert_float(GameState.soul_meter).is_equal(8.0)
+	var source_cell: Vector2i = grid.describe_position(grid.position_of(ally))["cell"]
+	assert_int(controller.tile_state_at(source_cell).charge_level).is_equal(1)
+	assert_bool(result["resolution"] == expected_resolution).is_true()
+
+
+func test_refused_cast_changes_no_combat_or_resource_state() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var ability := AbilityDefinition.new()
+	ability.id = "too-costly"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.power = 12
+	ability.breath_cost = 4
+	controller.configure([cast], battlefield, rules, null, [ability])
+	ally.breath = 1
+	GameState.set_soul_meter(2.0)
+	controller.start([ally], [enemy], &"cast-refusal")
+	var before_ap := ally.action_points
+	var before_hp := enemy.hp
+
+	var result := controller.submit_action(&"cast-seam", enemy, {"ability_id": ability.id})
+
+	assert_bool(result["allowed"]).is_false()
+	assert_str(result["blocked_by"]).is_equal("soul")
+	assert_int(ally.action_points).is_equal(before_ap)
+	assert_int(ally.breath).is_equal(1)
+	assert_float(GameState.soul_meter).is_equal(2.0)
+	assert_int(enemy.hp).is_equal(before_hp)
 
 
 func test_full_round_emits_ordered_presentation_event_stream() -> void:

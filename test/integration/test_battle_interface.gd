@@ -95,3 +95,62 @@ func test_dorthkor_grid_battle_uses_its_authored_environment_background() -> voi
 	assert_str(stage.background_texture_path()).ends_with(
 		"dorthkor-road-battlefield-v1.png"
 	)
+
+
+func test_cast_command_is_visible_and_submits_selected_target_through_interface() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	assert_object(cast).is_not_null()
+	assert_bool(cast.player_available).is_true()
+	assert_bool(cast.requires_enemy_target()).is_true()
+
+	var rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	var grid := GridBattlefieldModel.new()
+	grid.configure(rules)
+	grid.build_grid(_two_cell_ground())
+	var actor := _cast_actor("Caster", 30, 8)
+	actor.breath = 2
+	var target := _cast_actor("Target", 30, 1)
+	var ability := AbilityDefinition.new()
+	ability.id = "interface-cast"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.power = 8
+	ability.breath_cost = 1
+	var controller := CombatController.new()
+	controller.configure([cast], grid, rules, null, [ability])
+	controller.start([actor], [target], &"interface-cast")
+	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
+	var interface := runner.scene() as BattleInterface
+	interface.bind_controller(controller)
+	interface.select_pointer_action(&"cast-seam")
+	var hp_before := target.hp
+
+	interface._on_pointer_pressed({"x": 1, "y": 0}, target.combat_id)
+
+	assert_int(target.hp).is_less(hp_before)
+
+
+func _cast_actor(name: String, hp: int, attack: int) -> BattleActor:
+	var actor := BattleActor.new()
+	actor.display_name = name
+	actor.hp = hp
+	actor.max_hp = hp
+	actor.attack = attack
+	actor.attributes = {&"edge": 2, &"pitch": 2}
+	return actor
+
+
+func _two_cell_ground() -> TileMapLayer:
+	var tile_set := TileSet.new()
+	tile_set.tile_size = Vector2i(64, 32)
+	var image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
+	var source := TileSetAtlasSource.new()
+	source.texture = ImageTexture.create_from_image(image)
+	source.texture_region_size = tile_set.tile_size
+	source.create_tile(Vector2i.ZERO)
+	tile_set.add_source(source, 0)
+	var layer := auto_free(TileMapLayer.new()) as TileMapLayer
+	layer.tile_set = tile_set
+	layer.set_cell(Vector2i(0, 0), 0, Vector2i.ZERO)
+	layer.set_cell(Vector2i(1, 0), 0, Vector2i.ZERO)
+	return layer

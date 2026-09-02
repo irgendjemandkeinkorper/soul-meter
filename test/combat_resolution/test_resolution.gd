@@ -167,6 +167,64 @@ func test_to_hit_roll_is_deterministic_and_a_miss_deals_zero_without_detonation(
 			assert_str(str(write.get("operation", ""))).is_not_equal("detonation")
 
 
+func test_cast_fizzle_is_deterministic_and_still_pays_cost_and_leaves_residue() -> void:
+	var context := _walkthrough_context()
+	context["ability"]["is_spell"] = true
+	context["ability"]["breath_cost"] = 3
+	context["unit"]["breath"] = 1
+	context["soul_meter"] = 10.0
+	context["fizzle"] = {
+		"agreement_integrity": 0.0,
+		"pitch": 2,
+		"mastery": false,
+		"patron": "",
+	}
+	var fizzling_seed := -1
+	for candidate in range(1, 400):
+		context["seed"] = candidate
+		if bool(ResolutionScript.resolve(context).get("fizzled", false)):
+			fizzling_seed = candidate
+			break
+	assert_int(fizzling_seed).is_greater(0)
+
+	context["seed"] = fizzling_seed
+	var first: Dictionary = ResolutionScript.resolve(context)
+	var repeated: Dictionary = ResolutionScript.resolve(context)
+
+	assert_bool(first == repeated).is_true()
+	assert_bool(first["fizzled"]).is_true()
+	assert_int(first["damage"]).is_equal(0)
+	assert_int(first["fizzle_roll"]).is_equal(repeated["fizzle_roll"])
+	assert_array(first["writes"].map(func(write: Dictionary) -> String: return str(write["kind"]))).contains([
+		"breath", "soul_meter", "tile_state",
+	])
+
+
+func test_cast_cost_spends_breath_then_soul_and_refuses_insufficient_soul_without_writes() -> void:
+	var context := _walkthrough_context()
+	context["ability"]["is_spell"] = true
+	context["ability"]["breath_cost"] = 4
+	context["unit"]["breath"] = 1
+	context["soul_meter"] = 5.0
+	context["fizzle"] = {"agreement_integrity": 100.0, "pitch": 2}
+
+	var accepted: Dictionary = ResolutionScript.resolve(context)
+	var breath_write: Dictionary = accepted["writes"].filter(
+		func(write: Dictionary) -> bool: return write.get("kind", "") == "breath"
+	)[0]
+	var soul_write: Dictionary = accepted["writes"].filter(
+		func(write: Dictionary) -> bool: return write.get("kind", "") == "soul_meter"
+	)[0]
+	assert_int(breath_write["after"]).is_equal(0)
+	assert_float(soul_write["after"]).is_equal(2.0)
+
+	context["soul_meter"] = 2.0
+	var refused: Dictionary = ResolutionScript.resolve(context)
+	assert_bool(refused["allowed"]).is_false()
+	assert_str(refused["blocked_by"]).is_equal("soul")
+	assert_bool(refused.has("writes")).is_false()
+
+
 func _walkthrough_context() -> Dictionary:
 	return {
 		"battle_id": "walkthrough",
