@@ -20,7 +20,7 @@ const SLOTS: Array[StringName] = [SLOT_ACTION, SLOT_REACTION, SLOT_PASSIVE]
 
 @export var id: String = ""
 @export var display_name: String = ""
-## FK into `jobs`. Every ability belongs to exactly one job.
+## Optional FK into `jobs`; directly equipped unit abilities leave it empty.
 @export var job_id: String = ""
 @export var slot: StringName = SLOT_ACTION
 ## FK into ElementWheel.ORDER; empty means the ability is unaligned.

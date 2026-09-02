@@ -26,15 +26,14 @@ func test_seeder_is_idempotent_against_the_committed_data() -> void:
 	assert_array(Array(TacticalSeeder.seed_tables())).is_empty()
 
 
-func test_generated_tactical_tables_match_pandora_and_ship_no_job_content() -> void:
+func test_generated_tactical_tables_match_pandora_and_ship_ten_note_spells() -> void:
 	if not Pandora.is_loaded():
 		Pandora.load_data()
 	var result: Dictionary = Generator.generate(true)
 	assert_bool(result.drift).is_false()
-	# The acceptance condition of issue #141: zero authored job or ability content.
-	# Discipline naming is canon owned by GitHub #132.
 	assert_int(result.job_count).is_equal(0)
-	assert_int(result.ability_count).is_equal(0)
+	assert_int(result.ability_count).is_equal(ElementWheel.ORDER.size())
+	assert_int(result.unit_count).is_equal(2)
 
 
 func test_generated_artifact_exposes_every_table_key() -> void:
@@ -61,12 +60,28 @@ func test_ct_cost_bound_mirrors_the_charge_time_economy() -> void:
 	assert_int(Generator.CT_READY_AT).is_equal(ready_at)
 
 
-func test_tactical_tables_loader_tolerates_an_empty_catalog() -> void:
+func test_tactical_tables_loader_exposes_note_spells_and_unit_loadouts() -> void:
 	var tables := TacticalTables.load_tables()
 	assert_bool(tables.jobs.is_empty()).is_true()
-	assert_bool(tables.abilities.is_empty()).is_true()
+	assert_int(tables.abilities.size()).is_equal(ElementWheel.ORDER.size())
 	assert_object(tables.job("anything")).is_null()
 	assert_array(tables.abilities_for_job("anything")).is_empty()
+	var caster_abilities := tables.abilities_for_unit("caster", AbilityDefinition.SLOT_ACTION)
+	assert_int(caster_abilities.size()).is_equal(1)
+	assert_str(caster_abilities[0].id).is_equal("note-strom")
+	var combat_rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	var strike_ct_cost := combat_rules.charge_cost_for(CombatActionCatalog.by_id(&"strike"))
+	for element_id: StringName in ElementWheel.ORDER:
+		var ability := tables.ability("note-%s" % element_id)
+		assert_object(ability).is_not_null()
+		assert_str(ability.display_name).is_equal("%s Note" % ElementsData.element(element_id).display_name)
+		assert_int(ability.power).is_equal(6)
+		assert_int(ability.breath_cost).is_equal(1)
+		assert_int(ability.mp_cost).is_equal(1)
+		assert_int(ability.ct_cost).is_equal(strike_ct_cost)
+		assert_int(ability.range).is_equal(3)
+		assert_int(ability.aoe).is_equal(0)
+		assert_str(ability.vault_id).is_equal(ElementsData.element(element_id).vault_id)
 
 
 func test_tactical_tables_loader_returns_an_empty_catalog_for_a_missing_artifact() -> void:
@@ -151,7 +166,14 @@ func test_definitions_round_trip_through_dictionaries() -> void:
 	var unit := UnitDefinition.from_dict({"id": "synthetic-unit", "base_hp": 30, "move": 4})
 	assert_int(UnitDefinition.from_dict(unit.to_dict()).base_hp).is_equal(30)
 
-	var loadout := UnitLoadout.from_dict({"unit_id": "synthetic-unit", "equip": {"hand": "x"}})
+	var loadout := UnitLoadout.from_dict({
+		"unit_id": "synthetic-unit",
+		"action_ability_ids": ["note-suul", "note-strom"],
+		"equip": {"hand": "x"},
+	})
+	assert_array(Array(UnitLoadout.from_dict(loadout.to_dict()).action_ability_ids)).is_equal(
+		["note-suul", "note-strom"]
+	)
 	assert_str(str(UnitLoadout.from_dict(loadout.to_dict()).equip["hand"])).is_equal("x")
 
 

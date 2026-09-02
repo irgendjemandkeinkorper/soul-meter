@@ -14749,6 +14749,756 @@
 						"value": "trial-keeper/disarm"
 					}
 				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "515.0",
+				"_index": 0,
+				"_name": "Suul Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-suul"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Suul Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "suul"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "516.0",
+				"_index": 0,
+				"_name": "Bloei Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-bloei"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Bloei Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "bloei"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "517.0",
+				"_index": 0,
+				"_name": "Aqua Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-aqua"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Aqua Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "aqua"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "518.0",
+				"_index": 0,
+				"_name": "Khor Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-khor"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Khor Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "khor"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "519.0",
+				"_index": 0,
+				"_name": "Terra Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-terra"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Terra Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "terra"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "520.0",
+				"_index": 0,
+				"_name": "Daar Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-daar"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Daar Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "daar"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "521.0",
+				"_index": 0,
+				"_name": "Molm Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-molm"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Molm Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "molm"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "522.0",
+				"_index": 0,
+				"_name": "Scor Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-scor"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Scor Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "scor"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "523.0",
+				"_index": 0,
+				"_name": "Nul Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-nul"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Nul Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "nul"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "461.0",
+				"_icon_color": "ffffff00",
+				"_id": "524.0",
+				"_index": 0,
+				"_name": "Strom Note",
+				"_property_overrides": {
+					"Ability Id": {
+						"type": "string",
+						"value": "note-strom"
+					},
+					"AoE": {
+						"type": "int",
+						"value": 0
+					},
+					"CT Cost": {
+						"type": "int",
+						"value": 30
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Strom Note"
+					},
+					"Element Id": {
+						"type": "string",
+						"value": "strom"
+					},
+					"Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"MP Cost": {
+						"type": "int",
+						"value": 1
+					},
+					"Power": {
+						"type": "int",
+						"value": 6
+					},
+					"Range": {
+						"type": "int",
+						"value": 3
+					},
+					"Slot": {
+						"type": "string",
+						"value": "action"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "elements-and-music"
+					},
+					"Vertical": {
+						"type": "int",
+						"value": 0
+					}
+				}
+			},
+			{
+				"_category_id": "474.0",
+				"_icon_color": "ffffff00",
+				"_id": "525.0",
+				"_index": 0,
+				"_name": "Vex",
+				"_property_overrides": {
+					"Base HP": {
+						"type": "int",
+						"value": 44
+					},
+					"Base MP": {
+						"type": "int",
+						"value": 6
+					},
+					"Base SPD": {
+						"type": "int",
+						"value": 6
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Vex"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": ""
+					},
+					"Jump": {
+						"type": "int",
+						"value": 1
+					},
+					"Move": {
+						"type": "int",
+						"value": 4
+					},
+					"Portrait Ref": {
+						"type": "string",
+						"value": ""
+					},
+					"Unit Id": {
+						"type": "string",
+						"value": "vex"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "496.0",
+				"_icon_color": "ffffff00",
+				"_id": "526.0",
+				"_index": 0,
+				"_name": "Vex Loadout",
+				"_property_overrides": {
+					"Action Ability Ids": {
+						"type": "string",
+						"value": "[\"note-scor\"]"
+					},
+					"Equip": {
+						"type": "string",
+						"value": "{}"
+					},
+					"Passive Ability Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Primary Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Reaction Ability Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Row Id": {
+						"type": "string",
+						"value": "vex"
+					},
+					"Secondary Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Unit Id": {
+						"type": "string",
+						"value": "vex"
+					}
+				}
+			},
+			{
+				"_category_id": "474.0",
+				"_icon_color": "ffffff00",
+				"_id": "527.0",
+				"_index": 0,
+				"_name": "Caster",
+				"_property_overrides": {
+					"Base HP": {
+						"type": "int",
+						"value": 48
+					},
+					"Base MP": {
+						"type": "int",
+						"value": 99
+					},
+					"Base SPD": {
+						"type": "int",
+						"value": 6
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Caster"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Gate T fixture"
+					},
+					"Jump": {
+						"type": "int",
+						"value": 1
+					},
+					"Move": {
+						"type": "int",
+						"value": 4
+					},
+					"Portrait Ref": {
+						"type": "string",
+						"value": ""
+					},
+					"Unit Id": {
+						"type": "string",
+						"value": "caster"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "496.0",
+				"_icon_color": "ffffff00",
+				"_id": "528.0",
+				"_index": 0,
+				"_name": "Caster Loadout",
+				"_property_overrides": {
+					"Action Ability Ids": {
+						"type": "string",
+						"value": "[\"note-strom\"]"
+					},
+					"Equip": {
+						"type": "string",
+						"value": "{}"
+					},
+					"Passive Ability Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Primary Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Reaction Ability Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Row Id": {
+						"type": "string",
+						"value": "caster"
+					},
+					"Secondary Job Id": {
+						"type": "string",
+						"value": ""
+					},
+					"Unit Id": {
+						"type": "string",
+						"value": "caster"
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -16312,12 +17062,19 @@
 				"_id": "507.0",
 				"_name": "Dialogue Warm",
 				"_type": "string"
+			},
+			{
+				"_category_id": "496.0",
+				"_default_value": "",
+				"_id": "514.0",
+				"_name": "Action Ability Ids",
+				"_type": "string"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 513.0
+			"default": 528.0
 		}
 	},
 	"_version": 1

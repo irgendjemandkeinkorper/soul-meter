@@ -84,6 +84,9 @@ func start(encounter: Variant) -> void:
 		actor.attributes = member.attributes.duplicate(true)
 		actor.party_index = i
 		actor.source_member = member
+		var tactical_unit := TacticalTables.shared().unit(member.id)
+		if tactical_unit != null:
+			actor.breath = tactical_unit.base_mp
 		allies.append(actor)
 	if allies.is_empty():
 		allies.append(BattleActor.new())
@@ -813,9 +816,22 @@ func _prepare_enemy_knowledge() -> void:
 
 
 func _resolved_action_options(
-	_action: CombatAction, _target: BattleActor, options: Dictionary
+	action: CombatAction, _target: BattleActor, options: Dictionary
 ) -> Dictionary:
-	return options.duplicate(true)
+	var resolved := options.duplicate(true)
+	if (
+		action != null
+		and action.kind == CombatAction.Kind.CAST
+		and str(resolved.get("ability_id", "")).is_empty()
+	):
+		var actor := current_ally()
+		var unit_id := actor.source_member.id if actor != null and actor.source_member != null else ""
+		var abilities := TacticalTables.shared().abilities_for_unit(
+			unit_id, AbilityDefinition.SLOT_ACTION
+		)
+		if abilities.size() == 1:
+			resolved["ability_id"] = abilities[0].id
+	return resolved
 
 
 func _speech_hook() -> Dictionary:

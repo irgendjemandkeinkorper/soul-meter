@@ -5,6 +5,7 @@ extends RefCounted
 
 var id: StringName = &""
 var display_name: String = ""
+var vault_id: String = ""
 var imposition_id: StringName = &""
 var imposition_display_name: String = ""
 var rule_bend_id: StringName = &""
@@ -25,6 +26,7 @@ static func from_row(row: Dictionary) -> ElementDefinition:
 	var definition := ElementDefinition.new()
 	definition.id = _name(row.get("id", ""))
 	definition.display_name = str(row.get("display_name", definition.id))
+	definition.vault_id = str(row.get("vault_id", ""))
 	definition.imposition_id = _name(row.get("imposition_id", ""))
 	definition.imposition_display_name = str(row.get("imposition_display_name", ""))
 	definition.rule_bend_id = _name(row.get("rule_bend_id", ""))
@@ -37,6 +39,7 @@ func to_dict() -> Dictionary:
 	return {
 		"id": id,
 		"display_name": display_name,
+		"vault_id": vault_id,
 		"imposition_id": imposition_id,
 		"imposition_display_name": imposition_display_name,
 		"rule_bend_id": rule_bend_id,

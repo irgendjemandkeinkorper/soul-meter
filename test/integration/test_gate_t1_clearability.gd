@@ -17,6 +17,10 @@ func test_all_four_build_fixtures_clear_all_five_gate_t1_encounters() -> void:
 			assert_int(int(result.get("result", -1)))\
 				.override_failure_message("%s did not clear %s: %s" % [build_id, encounter_id, result])\
 				.is_equal(CombatController.ResultState.VICTORY)
+			if build_id == &"caster":
+				assert_int(int(result.get("cast_resolutions", 0)))\
+					.override_failure_message("Caster never resolved a spell in %s" % encounter_id)\
+					.is_greater(0)
 
 
 func test_talker_uses_the_authored_speech_resolution() -> void:
@@ -56,6 +60,7 @@ func _self_play(
 		"balance_changes": [],
 		"balance_bands": [],
 		"damage": [],
+		"cast_resolutions": 0,
 	}
 	controller.battle_finished.connect(
 		func(state: CombatController.ResultState, outcome_id: StringName) -> void:
@@ -66,6 +71,9 @@ func _self_play(
 		func(event: CombatEvent) -> void:
 			if event.type == &"action_resolved":
 				result["actions"].append(StringName(event.data.get("action_id", "")))
+				var resolution: Dictionary = event.data.get("resolution", {})
+				if str(resolution.get("ability_id", "")).begins_with("note-"):
+					result["cast_resolutions"] = int(result["cast_resolutions"]) + 1
 				if event.target_id == ally.combat_id:
 					result["damage"].append(int(event.data.get("damage", 0)))
 			elif event.type == &"balance_locked":
@@ -75,7 +83,13 @@ func _self_play(
 			elif event.type == &"balance_band_changed":
 				result["balance_bands"].append(StringName(event.data.get("band_id", "")))
 	)
-	controller.configure(actions, _grid_model(2, 4), _ct_rules())
+	controller.configure(
+		actions,
+		_grid_model(2, 4),
+		_ct_rules(),
+		null,
+		TacticalTables.shared().abilities_in_slot(AbilityDefinition.SLOT_ACTION),
+	)
 	controller.start([ally], enemies, encounter_id)
 
 	var guard := 0
@@ -87,13 +101,16 @@ func _self_play(
 			var target := _first_living(enemies)
 			_face_toward(controller, ally, target)
 			var action_id := &"strike"
-			if build_id == &"caster":
+			if build_id == &"caster" and int(result["cast_resolutions"]) == 0:
 				action_id = &"gate-t1-cast"
 			elif build_id == &"balanced-refusal":
 				action_id = &"gate-t1-neutral-attack"
 			elif build_id == &"talker" and encounter_id == EncounterIds.PHASE2_SPEECH_WINNABLE:
 				action_id = &"phase2-release-binding"
-			var submitted := controller.submit_action(action_id, target)
+			var options := (
+				{"ability_id": "note-strom"} if action_id == &"gate-t1-cast" else {}
+			)
+			var submitted := controller.submit_action(action_id, target, options)
 			if not bool(submitted.get("allowed", false)):
 				result["refusal"] = submitted
 				break
@@ -141,18 +158,18 @@ func _build_actor(build_id: StringName) -> BattleActor:
 	actor.attack = int(row["attack"])
 	actor.defense = int(row["defense"])
 	actor.attributes = {&"edge": int(row["edge"])}
+	actor.source_member = PartyMember.new()
+	actor.source_member.id = String(build_id)
+	if build_id == &"caster":
+		actor.breath = 99
 	return actor
 
 
-## Gate T's parallel-run fixtures are explicitly test-only. This promotes the existing Cast
-## seam with its authored cost/verb/range into a single-element attack so the real elemental
-## resolution path is exercised without shipping a placeholder spell or choosing player canon.
+## Gate T's caster uses the shipped CAST seam and the loadout-authored Strom Note.
 func _caster_fixture_action() -> CombatAction:
 	var action := CombatActionCatalog.by_id(&"cast-seam")
 	action.id = &"gate-t1-cast"
-	action.display_name = "Gate T Elemental Note"
-	action.kind = CombatAction.Kind.ATTACK
-	action.element_id = &"strom"
+	action.display_name = "Gate T Cast"
 	return action
 
 

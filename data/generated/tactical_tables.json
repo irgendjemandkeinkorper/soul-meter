@@ -1,8 +1,199 @@
 {
   "jobs": [],
-  "abilities": [],
-  "units": [],
+  "abilities": [
+    {
+      "id": "note-aqua",
+      "display_name": "Aqua Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "aqua",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "note-bloei",
+      "display_name": "Bloei Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "bloei",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "note-daar",
+      "display_name": "Daar Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "daar",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "note-khor",
+      "display_name": "Khor Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "khor",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "note-molm",
+      "display_name": "Molm Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "molm",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "note-nul",
+      "display_name": "Nul Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "nul",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "note-scor",
+      "display_name": "Scor Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "scor",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "note-strom",
+      "display_name": "Strom Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "strom",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "note-suul",
+      "display_name": "Suul Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "suul",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    },
+    {
+      "id": "note-terra",
+      "display_name": "Terra Note",
+      "job_id": "",
+      "slot": "action",
+      "element_id": "terra",
+      "power": 6,
+      "mp_cost": 1,
+      "ct_cost": 30,
+      "range": 3,
+      "aoe": 0,
+      "vertical": 0,
+      "vault_id": "elements-and-music"
+    }
+  ],
+  "units": [
+    {
+      "id": "caster",
+      "display_name": "Caster",
+      "epithet": "Gate T fixture",
+      "base_hp": 48,
+      "base_mp": 99,
+      "base_spd": 6,
+      "move": 4,
+      "jump": 1,
+      "portrait_ref": "",
+      "vault_id": ""
+    },
+    {
+      "id": "vex",
+      "display_name": "Vex",
+      "epithet": "",
+      "base_hp": 44,
+      "base_mp": 6,
+      "base_spd": 6,
+      "move": 4,
+      "jump": 1,
+      "portrait_ref": "",
+      "vault_id": ""
+    }
+  ],
   "unit_jobs": [],
   "unit_attunement": [],
-  "unit_loadout": []
+  "unit_loadout": [
+    {
+      "id": "caster",
+      "unit_id": "caster",
+      "primary_job_id": "",
+      "secondary_job_id": "",
+      "action_ability_ids": [
+        "note-strom"
+      ],
+      "reaction_ability_id": "",
+      "passive_ability_id": "",
+      "equip": {}
+    },
+    {
+      "id": "vex",
+      "unit_id": "vex",
+      "primary_job_id": "",
+      "secondary_job_id": "",
+      "action_ability_ids": [
+        "note-scor"
+      ],
+      "reaction_ability_id": "",
+      "passive_ability_id": "",
+      "equip": {}
+    }
+  ]
 }
