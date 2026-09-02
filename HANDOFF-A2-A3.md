@@ -81,3 +81,42 @@ Overall Summary: 1263 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped |
 - Generator output: `TACTICAL-GEN: wrote 0 jobs, 10 abilities, and 1 units.`
 - The requested full-suite runner was attempted, but this environment's Godot 4.7 build aborted before discovery because gdUnit4 passes debug port 0 and the sandbox prevents Godot's `user://logs` writes. No new Overall Summary was emitted.
 - Last verified full-suite Overall Summary: `Overall Summary: 1263 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
+
+## Pass 3
+
+### Decisions
+
+- Breath refill ownership follows the dependency direction: `GameFlow` owns the
+  `Loading/ToActive` chart connection and calls the plain `GameState` refill
+  method.
+- Restoring a save marks only the next `Loading/ToActive` arrival as a
+  non-refilling load; ordinary travel and the following arrivals refill Breath.
+- Tactical seeding now reports a missing ability entity and skips that row
+  instead of dereferencing null.
+
+### Commits
+
+- `26b8dc0c` — `docs: A2/A3 pass 2 handoff`
+- `c7adeeae` — `fix: move breath refill wiring into game flow`
+- `78dcdaf0` — `fix: preserve breath when restoring a save`
+- `570e0de5` — `fix: guard missing tactical ability entities`
+
+### What changed
+
+- Removed the `GameState` node-path lookup into `GameFlow`; moved the transition
+  wiring to `ui/flow/game_flow.gd` and moved the chart test to travel-flow
+  integration coverage.
+- Connected save restoration to a one-shot suppression flag. A spent party
+  member remains spent when the restored scene reaches Active, while ordinary
+  travel refills the party.
+- Guarded `_entity_by_id()` results in `tools/seed_tactical_tables.gd` with an
+  ID-bearing `push_error()` and `continue`.
+
+### Verification
+
+- Focused party/travel run: `26 test cases | 0 errors | 0 failures`.
+- Travel-flow run after save-load coverage: `18 test cases | 0 errors | 0 failures`.
+- Tactical schema run: `16 test cases | 0 errors | 0 failures`.
+- Requested full runner: `Overall Summary: 1265 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`.
+- Godot still reports the known sandbox remote-port/audio warnings and resource
+  cleanup diagnostics; they did not affect the passing suite result.
