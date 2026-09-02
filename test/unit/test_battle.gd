@@ -60,11 +60,20 @@ func after_test() -> void:
 
 
 func test_start_builds_the_whole_party() -> void:
+	GameState.party[0].breath = 7
 	battle.start(_enemy("Wight", 20, 4, 1))
 
 	assert_int(battle.allies.size()).is_equal(2)
 	assert_str(battle.current_ally().display_name).is_equal("Vex")
+	assert_int(battle.allies[0].breath).is_equal(7)
 	assert_int(battle.enemies.size()).is_equal(1)
+
+
+func test_casting_abilities_use_provisional_breath_costs_by_magnitude() -> void:
+	assert_int(battle._breath_cost_for_magnitude(&"note", 0)).is_equal(3)
+	assert_int(battle._breath_cost_for_magnitude(&"phrase", 0)).is_equal(6)
+	assert_int(battle._breath_cost_for_magnitude(&"song", 0)).is_equal(12)
+	assert_int(battle._breath_cost_for_magnitude(&"refrain", 0)).is_equal(24)
 
 
 func test_each_party_member_acts_before_the_enemy_round() -> void:
@@ -130,6 +139,7 @@ func test_extreme_balance_empowers_every_attacker_regardless_of_alignment() -> v
 
 func test_flee_commits_combat_hp_to_party() -> void:
 	battle.start(_enemy("Wight", 40, 6, 1))
+	battle.allies[0].breath = 4
 	battle.use_action(BattleScript.ACTION_GUARD)
 	battle.use_action(BattleScript.ACTION_STRIKE)
 	battle.end_turn()
@@ -137,6 +147,7 @@ func test_flee_commits_combat_hp_to_party() -> void:
 
 	assert_int(GameState.party[0].hp).is_equal(battle.allies[0].hp)
 	assert_int(GameState.party[0].hp).is_less(20)
+	assert_int(GameState.party[0].breath).is_equal(4)
 	assert_str(battle.last_result.outcome_id).is_equal("fled")
 	assert_str(battle.last_result.cause).contains("withdraw")
 	assert_float(Reputation.standing("ssae-seeders")).is_equal_approx(0.0, 0.001)

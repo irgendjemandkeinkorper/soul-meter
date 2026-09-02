@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 
 const SCHEMA_SIX_FIXTURE_PATH := "res://test/fixtures/save_game_schema_6.json"
+const SCHEMA_SEVEN_FIXTURE_PATH := "res://test/fixtures/save_game_schema_7.json"
 
 
 func test_schema_five_defaults_expert_rerolls_to_zero_used() -> void:
@@ -66,6 +67,28 @@ func test_schema_six_fixture_gains_the_default_world_clock() -> void:
 	assert_str(str(prepared["payload"]["world_clock"]["phase"])).is_equal("morning")
 
 
+func test_schema_six_fixture_defaults_party_breath_to_full() -> void:
+	var payload := _fixture(SCHEMA_SIX_FIXTURE_PATH)
+
+	var prepared: Dictionary = SaveMigrations.prepare(payload)
+
+	assert_bool(prepared["ok"]).is_true()
+	var member: Dictionary = prepared["payload"]["game_state"]["party"][0]
+	assert_int(member["breath_max"]).is_equal(15)
+	assert_int(member["breath"]).is_equal(member["breath_max"])
+
+
+func test_schema_seven_fixture_preserves_spent_breath() -> void:
+	var payload := _fixture(SCHEMA_SEVEN_FIXTURE_PATH)
+
+	var prepared: Dictionary = SaveMigrations.prepare(payload)
+
+	assert_bool(prepared["ok"]).is_true()
+	var member: Dictionary = prepared["payload"]["game_state"]["party"][0]
+	assert_int(int(member["breath_max"])).is_equal(15)
+	assert_int(int(member["breath"])).is_equal(6)
+
+
 func test_schema_five_payload_also_gains_the_default_world_clock() -> void:
 	var prepared: Dictionary = SaveMigrations.prepare(_schema_five_payload())
 	assert_bool(prepared["ok"]).is_true()
@@ -93,3 +116,15 @@ func _schema_five_payload() -> Dictionary:
 		"zhavar": {},
 		"ng_plus": {},
 	}
+
+
+func _fixture(path: String) -> Dictionary:
+	var file := FileAccess.open(path, FileAccess.READ)
+	assert_object(file).is_not_null()
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	assert_bool(parsed is Dictionary).is_true()
+	var payload: Dictionary = parsed
+	payload["schema_version"] = int(payload["schema_version"])
+	payload["version"] = int(payload["version"])
+	return payload

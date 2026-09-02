@@ -114,6 +114,30 @@ func _ready() -> void:
 	)
 	inventory.item_moved.connect(func() -> void: inventory_changed.emit())
 	_seed_demo_data()
+	_bind_breath_refill_transition.call_deferred()
+
+
+## Loading/ToActive is the only chart edge that means a gameplay scene was entered;
+## Paused/Battle returning to Active must not refresh this per-scene casting pool.
+func _bind_breath_refill_transition() -> void:
+	var transition := get_node_or_null(
+		"/root/GameFlow/StateChart/Root/Playing/Loading/ToActive"
+	)
+	if transition == null:
+		return
+	var callback := Callable(self, "refill_party_breath")
+	if not transition.is_connected("taken", callback):
+		transition.connect("taken", callback)
+
+
+func refill_party_breath() -> void:
+	var changed := false
+	for member: PartyMember in party:
+		if member.breath != member.breath_max:
+			member.breath = member.breath_max
+			changed = true
+	if changed:
+		party_changed.emit()
 
 
 # --- Soul Meter and facts ----------------------------------------------------

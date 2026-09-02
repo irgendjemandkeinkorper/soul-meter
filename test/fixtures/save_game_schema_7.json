@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "schema_version": 6,
+  "schema_version": 7,
   "scene": "res://world/test_room.tscn",
   "spawn_id": "from_dom",
   "elapsed_seconds": 127,
@@ -10,7 +10,9 @@
         "id": "fixture-unit",
         "display_name": "Fixture Unit",
         "hp": 24,
-        "max_hp": 24
+        "max_hp": 24,
+        "breath": 6,
+        "breath_max": 15
       }
     ]
   },
@@ -27,6 +29,9 @@
     "expert_rerolls_used": {
       "fixture-scene:fixture-unit:lore": 1
     }
+  },
+  "world_clock": {
+    "phase": "morning"
   },
   "tactical": {
     "units": {

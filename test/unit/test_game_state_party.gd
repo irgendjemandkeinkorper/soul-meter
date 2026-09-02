@@ -121,3 +121,14 @@ func test_add_custom_recruit_surfaces_in_recruitable_candidates() -> void:
 	assert_bool(names.has("Vann")).is_true()
 
 	GameState.custom_recruits = original_custom_recruits
+
+
+func test_loading_to_active_transition_refills_active_party_breath() -> void:
+	GameState.party[0].breath_max = 15
+	GameState.party[0].breath = 2
+	GameState._bind_breath_refill_transition()
+	var transition := GameFlow.get_node("StateChart/Root/Playing/Loading/ToActive")
+
+	transition.emit_signal("taken")
+
+	assert_int(GameState.party[0].breath).is_equal(15)

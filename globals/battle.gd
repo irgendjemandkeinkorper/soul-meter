@@ -21,6 +21,14 @@ const ACTION_PARADOX := &"paradox"
 const ACTION_SPEECH := &"speech-seam"
 const OUTCOME_DEFEAT := &"defeat"
 const OUTCOME_FLED := &"fled"
+## PROVISIONAL magnitude costs from docs/casting-economy.md. Clone runtime
+## abilities before applying them so the generated authored tables stay immutable.
+const BREATH_COST_BY_MAGNITUDE := {
+	&"note": 3,
+	&"phrase": 6,
+	&"song": 12,
+	&"refrain": 24,
+}
 
 var allies: Array[BattleActor] = []
 var enemies: Array[BattleActor] = []
@@ -84,9 +92,7 @@ func start(encounter: Variant) -> void:
 		actor.attributes = member.attributes.duplicate(true)
 		actor.party_index = i
 		actor.source_member = member
-		var tactical_unit := TacticalTables.shared().unit(member.id)
-		if tactical_unit != null:
-			actor.breath = tactical_unit.base_mp
+		actor.breath = member.breath
 		allies.append(actor)
 	if allies.is_empty():
 		allies.append(BattleActor.new())
@@ -121,7 +127,7 @@ func start(encounter: Variant) -> void:
 		_battlefield_for_definition(rules),
 		rules,
 		null,
-		TacticalTables.shared().abilities_in_slot(AbilityDefinition.SLOT_ACTION),
+		_casting_abilities(),
 	)
 	var weather_default := StringName(str(_definition.get("weather_default", "")))
 	if weather_default != &"":
@@ -134,6 +140,23 @@ func start(encounter: Variant) -> void:
 	controller.start(allies, enemies, encounter_id)
 	battle_started.emit()
 	balance_changed.emit(balance)
+
+
+func _casting_abilities() -> Array[AbilityDefinition]:
+	var abilities: Array[AbilityDefinition] = []
+	for source: AbilityDefinition in TacticalTables.shared().abilities_in_slot(
+		AbilityDefinition.SLOT_ACTION
+	):
+		var ability := source.duplicate(true) as AbilityDefinition
+		if ability == null:
+			continue
+		ability.breath_cost = _breath_cost_for_magnitude(ability.magnitude, ability.breath_cost)
+		abilities.append(ability)
+	return abilities
+
+
+func _breath_cost_for_magnitude(magnitude: StringName, fallback: int) -> int:
+	return int(BREATH_COST_BY_MAGNITUDE.get(magnitude, fallback))
 
 
 ## Builds the authored encounter grid, or a provisional default grid when a catalog
@@ -790,6 +813,7 @@ func _sync_party_hp() -> void:
 	for actor in allies:
 		if actor.party_index >= 0 and actor.party_index < GameState.party.size():
 			GameState.party[actor.party_index].hp = actor.hp
+			GameState.party[actor.party_index].breath = actor.breath
 	GameState.party_changed.emit()
 
 
