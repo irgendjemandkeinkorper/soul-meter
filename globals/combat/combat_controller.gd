@@ -768,6 +768,7 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 		var ended_round := int(result.get("ended_round", round_number))
 		_emit_event(&"round_ended", null, null, {"round": ended_round})
 		_release_balance_lock_if_due(ended_round)
+		_tick_actor_aftertones()
 	round_number = scheduler.measure_index() + 1
 	if bool(result.get("round_started", false)):
 		_emit_event(&"round_started", null, null, {"round": int(result.get("round", round_number))})
@@ -786,6 +787,7 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 		var crossed := int(result.get("measures_crossed", 0))
 		if crossed > 0:
 			_emit_event(&"measure_started", null, null, {"measure": scheduler.measure_index()})
+			_tick_actor_aftertones()
 			_release_balance_lock_if_due(round_number)
 
 
@@ -1249,6 +1251,12 @@ func _apply_resolution_writes(
 					_class_resource_of(actor).on_kill(target.combat_id, cause)
 			&"breath":
 				actor.breath = int(write.get("after", actor.breath))
+			&"aftertones":
+				actor.aftertones = _aftertone_writes(write, actor.aftertones)
+			&"tempo":
+				actor.tempo = int(write.get("after", actor.tempo))
+			&"triad_effect":
+				_apply_triad_effect(actor, target, write)
 			&"soul_meter":
 				_set_soul_meter(float(write.get("after", _soul_meter())))
 			&"tile_state":
@@ -1857,9 +1865,35 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"defining_effects": actor.defining_effects.duplicate(true),
 			"discovered_weakness_ids": actor.discovered_weakness_ids.duplicate(),
 			"breath": actor.breath,
+			"aftertones": actor.aftertones.duplicate(true),
+			"tempo": actor.tempo,
 			"class_resource": _class_resource_of(actor).snapshot(),
 		})
 	return result
+
+
+func _tick_actor_aftertones() -> void:
+	for actor: BattleActor in allies + enemies:
+		if actor != null:
+			actor.tick_aftertones()
+
+
+func _aftertone_writes(write: Dictionary, fallback: Array[Dictionary]) -> Array[Dictionary]:
+	var value: Variant = write.get("after", fallback)
+	var result: Array[Dictionary] = []
+	if value is Array:
+		for entry: Variant in value as Array:
+			if entry is Dictionary:
+				result.append((entry as Dictionary).duplicate(true))
+	return result
+
+
+func _apply_triad_effect(actor: BattleActor, target: BattleActor, write: Dictionary) -> void:
+	# The effect remains declarative in the event stream. Runtime stateful parts are represented
+	# by the explicit writes beside this marker, so no second effect pipeline is introduced.
+	var parameters: Dictionary = write.get("parameters", {})
+	if bool(parameters.get("zero_tempo", false)):
+		actor.tempo = 0
 
 
 ## #223 class-resource seam. Attach from the PartyMember's patron; enemies and ad-hoc actors

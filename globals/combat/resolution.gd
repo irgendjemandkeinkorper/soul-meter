@@ -136,6 +136,37 @@ static func resolve(context: Dictionary) -> Dictionary:
 		hit = hit_roll <= hit_chance
 	var power := maxi(int(ability.get("power", 0)), 0)
 	var attack_scale := maxf(float(unit.get("attack_scale", 1.0)), 0.0)
+	var aftertones := _aftertones(unit.get("aftertones", []))
+	var tempo_before := int(unit.get("tempo", 0))
+	var consumed_aftertone := false
+	var has_terra_bend := composition.rule_bends.has(&"creates_cover_anchors_aftertones")
+	var has_scor_bend := composition.rule_bends.has(&"consumes_aftertone_for_burst")
+	var has_nul_bend := composition.rule_bends.has(&"cancels_and_zeroes_tempo")
+	var has_khor_bend := composition.rule_bends.has(&"extends_durations_holds_notes")
+	if ability.has("aftertone") or ability.has("aftertone_element"):
+		var aftertone_element := ElementWheel.normalize(
+			ability.get("aftertone_element", element_id)
+		)
+		var aftertone_rounds := maxi(int(ability.get("aftertone_rounds", 2)), 1)
+		aftertones.append({
+			"element": aftertone_element,
+			"remaining_rounds": aftertone_rounds,
+			"anchored": false,
+		})
+	if has_scor_bend:
+		for index in aftertones.size():
+			if not bool(aftertones[index].get("anchored", false)):
+				aftertones.remove_at(index)
+				consumed_aftertone = true
+				power += 1 # PROVISIONAL: absent vault burst magnitude, use +1.
+				break
+	if has_nul_bend:
+		aftertones.clear()
+		if tempo_before != 0:
+			tempo_before = 0
+	if has_terra_bend or has_khor_bend:
+		for aftertone: Dictionary in aftertones:
+			aftertone["anchored"] = true
 
 	var breakdown: Array[Dictionary] = [
 		_step("power", "Power", float(power)),
@@ -145,6 +176,8 @@ static func resolve(context: Dictionary) -> Dictionary:
 		_step("facing", "Facing: %s" % str(positioning["facing"]), facing_multiplier),
 		_step("tile_charge", "Source tile charge", tile_multiplier),
 	]
+	if consumed_aftertone:
+		breakdown.append(_step("aftertone_burst", "Scor Aftertone burst", 1.0, "add"))
 	var scaled_damage := float(power) * attack_scale * matrix_multiplier
 	scaled_damage *= height_multiplier
 	scaled_damage *= facing_multiplier
@@ -231,6 +264,37 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"before": breath_before,
 			"after": breath_before - breath_spent,
 			"delta": -breath_spent,
+		})
+	if has_scor_bend or has_terra_bend or has_khor_bend or has_nul_bend or ability.has("aftertone") or ability.has("aftertone_element"):
+		writes.append({
+			"kind": "aftertones",
+			"target_id": str(unit.get("id", "")),
+			"before": _aftertones(unit.get("aftertones", [])),
+			"after": aftertones.duplicate(true),
+		})
+	if has_nul_bend and int(unit.get("tempo", 0)) != 0:
+		writes.append({
+			"kind": "tempo",
+			"target_id": str(unit.get("id", "")),
+			"before": int(unit.get("tempo", 0)),
+			"after": tempo_before,
+			"delta": tempo_before - int(unit.get("tempo", 0)),
+		})
+	var tempo_delta := int(ability.get("tempo_delta", 0))
+	if tempo_delta != 0 and not has_nul_bend:
+		writes.append({
+			"kind": "tempo",
+			"target_id": str(unit.get("id", "")),
+			"before": int(unit.get("tempo", 0)),
+			"after": int(unit.get("tempo", 0)) + tempo_delta,
+			"delta": tempo_delta,
+		})
+	if composition.triad_effect_id != &"":
+		writes.append({
+			"kind": "triad_effect",
+			"target_id": str(unit.get("id", "")),
+			"effect_id": String(composition.triad_effect_id),
+			"parameters": composition.unique_effect_parameters.duplicate(true),
 		})
 	var soul_failure_cost := (
 		ElementMatrix.soul_on_failure(element_id, target_element) if fizzled else 0
@@ -410,6 +474,15 @@ static func _ability_elements(ability: Dictionary, fallback: StringName) -> Arra
 			result.append(ElementWheel.normalize(element))
 	if result.is_empty():
 		result.append(fallback)
+	return result
+
+
+static func _aftertones(value: Variant) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if value is Array:
+		for entry: Variant in value as Array:
+			if entry is Dictionary:
+				result.append((entry as Dictionary).duplicate(true))
 	return result
 
 
