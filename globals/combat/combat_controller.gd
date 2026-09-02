@@ -192,6 +192,8 @@ func start(
 	_last_side = &"ally"
 	_assign_combat_ids(allies, &"ally", encounter_id)
 	_assign_combat_ids(enemies, &"enemy", encounter_id)
+	_attach_class_resources(allies)
+	_attach_class_resources(enemies)
 	battlefield.setup(allies, enemies)
 	scheduler.setup(allies + enemies)
 	_build_tile_states(encounter_id)
@@ -720,6 +722,7 @@ func _drive_scheduler() -> void:
 			state = State.ALLY_TURN
 			if not is_continuation:
 				_emit_event(&"turn_started", actor, null, turn_payload)
+				_class_resource_of(actor).on_turn_start()
 			_last_turn_actor = actor
 			_last_side = &"ally"
 			active_ally_index = allies.find(actor)
@@ -728,6 +731,8 @@ func _drive_scheduler() -> void:
 		state = State.ENEMY_TURN
 		if _last_side != &"enemy":
 			_emit_event(&"enemy_turn_started", actor, null, turn_payload)
+		if actor != _last_turn_actor or int(result.get("ticks_elapsed", 0)) != 0:
+			_class_resource_of(actor).on_turn_start()
 		_last_turn_actor = actor
 		_last_side = &"enemy"
 		_resolve_enemy_actor(actor)
@@ -1222,11 +1227,19 @@ func _apply_resolution_writes(
 	target: BattleActor,
 	resolution: Dictionary,
 	apply_tile_writes: bool = true,
+	cause: StringName = &"attack",
 ) -> void:
 	for write: Dictionary in resolution.get("writes", []):
 		match StringName(write.get("kind", "")):
 			&"hp":
+				var hp_before := target.hp
 				target.hp = int(write.get("after", target.hp))
+				# #223 class-resource hooks fire from the one place HP actually changes.
+				var lost := hp_before - target.hp
+				if lost > 0:
+					_class_resource_of(target).on_damage_taken(lost, actor.combat_id)
+				if hp_before > 0 and target.hp <= 0:
+					_class_resource_of(actor).on_kill(target.combat_id, cause)
 			&"breath":
 				actor.breath = int(write.get("after", actor.breath))
 			&"soul_meter":
@@ -1296,8 +1309,14 @@ func _resolve_attack(
 		# #215 promotes Resolution tile writes for CAST. Mundane attacks keep their ratified
 		# non-mutating tile behavior; widening elemental residue to every attack is out of scope.
 		_apply_resolution_writes(
-			actor, hit_target, resolved, action.kind == CombatAction.Kind.CAST
+			actor,
+			hit_target,
+			resolved,
+			action.kind == CombatAction.Kind.CAST,
+			_kill_cause_for(action),
 		)
+		if bool(resolved.get("fizzled", false)):
+			_class_resource_of(actor).on_fizzle(resolved)
 		committed_resolution = resolved
 		var damage := int(resolved.get("damage", 0))
 		total_damage += damage
@@ -1427,6 +1446,11 @@ func forecast_context(
 	if options.has("weakness_id"):
 		context["weakness_id"] = options["weakness_id"]
 		context["weakness"] = (options.get("weakness", {}) as Dictionary).duplicate(true)
+	# #223: the class resource's ONLY channel into resolution. Same call at forecast and commit,
+	# so whatever it overrides is seen identically by both — no second calculator.
+	var overrides := _class_resource_of(actor).on_cast_forecast(context.duplicate(true))
+	if not overrides.is_empty():
+		context.merge(overrides, true)
 	return context
 
 
@@ -1798,6 +1822,8 @@ func _emit_event(
 	event.target_id = target.combat_id if target else &""
 	event.data = payload.duplicate(true)
 	event.data["snapshot"] = snapshot()
+	if type == &"action_resolved" and actor != null:
+		_class_resource_of(actor).on_action(event)
 	event_emitted.emit(event)
 
 
@@ -1824,8 +1850,58 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"defining_effects": actor.defining_effects.duplicate(true),
 			"discovered_weakness_ids": actor.discovered_weakness_ids.duplicate(),
 			"breath": actor.breath,
+			"class_resource": _class_resource_of(actor).snapshot(),
 		})
 	return result
+
+
+## #223 class-resource seam. Attach from the PartyMember's patron; enemies and ad-hoc actors
+## (no `source_member`) get the Null resource. An actor that already carries a non-null
+## resource (restored from a save, or set by a test) keeps it.
+func _attach_class_resources(group: Array[BattleActor]) -> void:
+	for actor in group:
+		if actor.class_resource == null:
+			var patron: String = actor.source_member.patron if actor.source_member != null else ""
+			actor.class_resource = ClassResourceRegistry.for_patron(patron)
+		actor.class_resource.owner_id = actor.combat_id
+
+
+func _class_resource_of(actor: BattleActor) -> ClassResource:
+	if actor == null:
+		return NullClassResource.new()
+	if actor.class_resource == null:
+		actor.class_resource = NullClassResource.new()
+	return actor.class_resource
+
+
+static func _kill_cause_for(action: CombatAction) -> StringName:
+	match action.kind:
+		CombatAction.Kind.CAST:
+			return &"cast"
+		CombatAction.Kind.DEFINING_STRIKE:
+			return &"defining_strike"
+		_:
+			return &"attack"
+
+
+## Model-level persistence for the additive `class_resources` save key (no schema bump).
+## Keyed by combat id; Null resources are skipped.
+func class_resources_to_dict() -> Dictionary:
+	var result := {}
+	for actor in allies + enemies:
+		var resource := _class_resource_of(actor)
+		if resource.is_null():
+			continue
+		result[String(actor.combat_id)] = resource.to_dict()
+	return result
+
+
+func restore_class_resources(data: Dictionary) -> void:
+	for actor in allies + enemies:
+		var entry: Variant = data.get(String(actor.combat_id), null)
+		if entry is Dictionary:
+			actor.class_resource = ClassResourceRegistry.from_dict(entry)
+			actor.class_resource.owner_id = actor.combat_id
 
 
 ## FR-802 (globals/stable_ids.gd). Builds `BattleActor.combat_id` from stable inputs only —

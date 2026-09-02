@@ -53,6 +53,10 @@ extends Resource
 
 var party_index: int = -1
 var guarding := false
+## Patron-class signature resource (#223 seam, `globals/combat/class_resources/`). Attached by
+## `CombatController.start()` from `source_member.patron`; `NullClassResource` when there is no
+## patron, so it is never null once a battle has started. Not exported: it is runtime state.
+var class_resource: ClassResource = null
 ## FR-802 stable id (globals/stable_ids.gd, StableIds.ACTOR kind). Unique per combatant WITHIN
 ## one encounter — NOT unique per archetype, since two identical enemies (e.g. two Bog Wights)
 ## share `display_name` and `archetype_id` but must not share this. Assigned deterministically
