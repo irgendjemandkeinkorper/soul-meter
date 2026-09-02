@@ -116,14 +116,21 @@ func test_cast_command_is_visible_and_submits_selected_target_through_interface(
 	ability.elements = [&"strom"]
 	ability.power = 8
 	ability.breath_cost = 1
+	actor.source_member = PartyMember.new()
+	actor.source_member.id = "interface-caster"
+	var tables := TacticalTables.new()
+	tables.abilities[ability.id] = ability
+	var loadout := UnitLoadout.create(actor.source_member.id)
+	loadout.action_ability_ids = PackedStringArray([ability.id])
+	tables.loadouts[loadout.unit_id] = loadout
 	var controller := CombatController.new()
-	controller.configure([cast], grid, rules, null, [ability])
+	controller.configure([cast], grid, rules, null, [ability], tables)
 	controller.start([actor], [target], &"interface-cast")
 	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
 	var interface := runner.scene() as BattleInterface
 	interface.bind_controller(controller)
-	interface.select_pointer_action(&"cast-seam")
-	var forecast := controller.forecast_action(cast, target)
+	interface.select_pointer_action(&"cast-seam", ability.id)
+	var forecast := controller.forecast_action(cast, target, {"ability_id": ability.id})
 	interface.act_target_panel.show_action_forecast(forecast, forecast["context"])
 	interface._append_cast_forecast(cast, forecast)
 	assert_str(interface.act_target_panel.forecast.text).contains(

@@ -59,7 +59,8 @@ func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue(
 	grid.build_grid(_grid_ground())
 	controller = CombatController.new()
 	controller.event_emitted.connect(func(event: CombatEvent) -> void: events.append(event))
-	controller.configure([cast], grid, rules, null, [ability])
+	var tables := _cast_tables_for_actor(ally, [ability], "cast-integration-caster")
+	controller.configure([cast], grid, rules, null, [ability], tables)
 	ally.breath = 1
 	GameState.set_soul_meter(10.0)
 	controller.start([ally], [enemy], &"cast-integration")
@@ -86,7 +87,8 @@ func test_refused_cast_changes_no_combat_or_resource_state() -> void:
 	ability.elements = [&"strom"]
 	ability.power = 12
 	ability.breath_cost = 4
-	controller.configure([cast], battlefield, rules, null, [ability])
+	var tables := _cast_tables_for_actor(ally, [ability], "refusal-caster")
+	controller.configure([cast], battlefield, rules, null, [ability], tables)
 	ally.breath = 1
 	GameState.set_soul_meter(2.0)
 	controller.start([ally], [enemy], &"cast-refusal")
@@ -101,6 +103,37 @@ func test_refused_cast_changes_no_combat_or_resource_state() -> void:
 	assert_int(ally.breath).is_equal(1)
 	assert_float(GameState.soul_meter).is_equal(2.0)
 	assert_int(enemy.hp).is_equal(before_hp)
+
+
+func test_cast_abilities_are_filtered_by_actor_loadout_and_require_selection() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var owned := AbilityDefinition.from_dict({
+		"id": "owned-note", "element_id": "strom", "power": 8, "slot": "action"
+	})
+	var other := AbilityDefinition.from_dict({
+		"id": "other-note", "element_id": "aqua", "power": 8, "slot": "action"
+	})
+	var tables := TacticalTables.new()
+	tables.abilities = {owned.id: owned, other.id: other}
+	var loadout := UnitLoadout.create("loadout-caster")
+	loadout.action_ability_ids = PackedStringArray([owned.id])
+	tables.loadouts = {loadout.unit_id: loadout}
+	ally.source_member = PartyMember.new()
+	ally.source_member.id = loadout.unit_id
+	controller.configure([cast], battlefield, rules, null, [owned, other], tables)
+	controller.start([ally], [enemy], &"actor-ability-filter")
+
+	var unselected := controller.query_action(cast, enemy)
+	var unowned := controller.query_action(cast, enemy, {"ability_id": other.id})
+	var selected := controller.query_action(cast, enemy, {"ability_id": owned.id})
+
+	assert_bool(bool(unselected.get("allowed", true))).is_false()
+	assert_str(String(unselected.get("blocked_by", &""))).is_equal("ability")
+	assert_str(String(unselected.get("message", ""))).contains("Select")
+	assert_str(String(unselected.get("message", ""))).contains("loadout")
+	assert_bool(bool(unowned.get("allowed", true))).is_false()
+	assert_str(String(unowned.get("blocked_by", &""))).is_equal("ability")
+	assert_bool(bool(selected.get("allowed", false))).is_true()
 
 
 func test_full_round_emits_ordered_presentation_event_stream() -> void:
@@ -927,3 +960,17 @@ func _skilled_member() -> PartyMember:
 	member.attributes = {"spark": 5, "pitch": 5}
 	member.skill_tiers = {"lore": "untrained", "insight": "untrained"}
 	return member
+
+
+func _cast_tables_for_actor(
+	actor: BattleActor, abilities: Array[AbilityDefinition], unit_id: String
+) -> TacticalTables:
+	actor.source_member = PartyMember.new()
+	actor.source_member.id = unit_id
+	var tables := TacticalTables.new()
+	var loadout := UnitLoadout.create(unit_id)
+	for ability: AbilityDefinition in abilities:
+		tables.abilities[ability.id] = ability
+		loadout.action_ability_ids.append(ability.id)
+	tables.loadouts[unit_id] = loadout
+	return tables

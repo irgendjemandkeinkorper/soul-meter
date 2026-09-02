@@ -70,6 +70,7 @@ var _tile_by_cell: Dictionary = {}  ## Vector2i -> TileState
 
 var _actions: Dictionary = {}
 var _abilities: Dictionary = {}
+var _tactical_tables: TacticalTables
 var _sequence := 0
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
@@ -88,6 +89,7 @@ func configure(
 	combat_rules: CombatRules,
 	check_service: SkillCheckService = null,
 	abilities: Array[AbilityDefinition] = [],
+	tactical_tables: TacticalTables = null,
 ) -> void:
 	_actions.clear()
 	for action in actions:
@@ -95,6 +97,7 @@ func configure(
 	_abilities.clear()
 	for ability in abilities:
 		_abilities[ability.id] = ability
+	_tactical_tables = tactical_tables if tactical_tables != null else TacticalTables.shared()
 	battlefield = positioning
 	rules = combat_rules
 	scheduler = TurnScheduler.create_default(rules)
@@ -1054,10 +1057,19 @@ func _query_defining_strike(target: BattleActor, weakness_id: StringName) -> Dic
 func _query_cast(
 	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary
 ) -> Dictionary:
-	var ability := _cast_ability(options)
+	var requested := str(options.get("ability_id", ""))
+	if requested.is_empty():
+		return _blocked(
+			&"ability",
+			"Select an action ability from this unit's loadout to cast.",
+			{"type": &"ability_selection"},
+		)
+	var ability := _cast_ability(actor, options)
 	if ability == null:
 		return _blocked(
-			&"ability", "Choose a known casting ability.", {"type": &"known_ability"}
+			&"ability",
+			"Equip %s in this unit's action loadout before casting it." % requested,
+			{"type": &"unit_loadout", "ability_id": requested},
 		)
 	var context := forecast_context(actor, target, action, options)
 	var terms := _positional_terms(actor, target)
@@ -1079,15 +1091,37 @@ func _query_cast(
 	})
 
 
-func _cast_ability(options: Dictionary) -> AbilityDefinition:
+func _query_attack_resolution(
+	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary
+) -> Dictionary:
+	var context := forecast_context(actor, target, action, options)
+	var terms := _positional_terms(actor, target)
+	var resolution := _finalize_resolution_damage(
+		Resolution.resolve(context), target, int(terms["cover_bonus"])
+	)
+	if not bool(resolution.get("allowed", false)):
+		return resolution
+	return _allowed({"context": context, "resolution": resolution})
+
+
+func _cast_ability(actor: BattleActor, options: Dictionary) -> AbilityDefinition:
 	var requested := str(options.get("ability_id", ""))
-	if not requested.is_empty():
-		return _abilities.get(requested) as AbilityDefinition
-	var ability_ids: Array = _abilities.keys()
-	ability_ids.sort()
-	if ability_ids.is_empty():
+	if requested.is_empty() or actor == null or _tactical_tables == null:
 		return null
-	return _abilities[ability_ids[0]] as AbilityDefinition
+	for ability: AbilityDefinition in _tactical_tables.abilities_for_unit(
+		_actor_unit_id(actor), AbilityDefinition.SLOT_ACTION
+	):
+		if ability.id == requested:
+			return _abilities.get(requested) as AbilityDefinition
+	return null
+
+
+func _actor_unit_id(actor: BattleActor) -> String:
+	if actor == null:
+		return ""
+	if actor.source_member != null:
+		return actor.source_member.id
+	return String(actor.archetype_id)
 
 
 func _fizzle_context(actor: BattleActor, options: Dictionary) -> Dictionary:
@@ -1261,7 +1295,7 @@ func forecast_context(
 		if action.target_profile == &"ranged" else _allowed()
 	)
 	var cast_ability: AbilityDefinition = (
-		_cast_ability(options) if action.kind == CombatAction.Kind.CAST else null
+		_cast_ability(actor, options) if action.kind == CombatAction.Kind.CAST else null
 	)
 	var element_id := cast_ability.element_id if cast_ability != null else action.element_id
 	if String(element_id).is_empty():
