@@ -57,8 +57,7 @@ func test_registry_returns_null_resource_for_unknown_or_empty_patron() -> void:
 	assert_str(String(unknown.patron_id)).is_empty()
 	assert_bool(unknown.snapshot().is_empty()).is_true()
 	assert_bool(ClassResourceRegistry.for_patron("").is_null()).is_true()
-	# A known patron without an implementation yet is still Null, not an error.
-	assert_bool(ClassResourceRegistry.for_patron("Pazzah").is_null()).is_true()
+	assert_bool(ClassResourceRegistry.for_patron("Pazzah") is PazzahLedger).is_true()
 
 
 func test_registry_resolves_stuid_to_clarity_from_display_patron() -> void:
@@ -202,7 +201,7 @@ func test_fickah_round_trip_through_registry_from_dict() -> void:
 func test_attribution_draw_is_seeded_and_recorded_by_action_hook() -> void:
 	var attribution := OfshutjeAttribution.new()
 	var first := attribution.attribution_for(17)
-	assert_dict(first).contains_key("id")
+	assert_bool(first.has("id")).is_true()
 	assert_dict(attribution.attribution_for(17)).is_equal(first)
 	var event := CombatEvent.new()
 	event.data = {"resolution": {"allowed": true, "seed": 17}}
