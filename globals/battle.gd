@@ -33,6 +33,9 @@ var ended := false
 var encounter_id: StringName = &""
 var last_result: BattleResult
 var controller: CombatController
+## #223: class-resource state loaded from a save before a controller exists. Applied (and
+## cleared) by the next `start()`; `{}` means "nothing to restore".
+var _pending_class_resources: Dictionary = {}
 var last_speech_check: Dictionary = {}
 var last_speech_option: StringName = &""
 var last_speech_succeeded := false
@@ -132,6 +135,9 @@ func start(encounter: Variant) -> void:
 				% [encounter_id, weather_default]
 			)
 	controller.start(allies, enemies, encounter_id)
+	if not _pending_class_resources.is_empty():
+		controller.restore_class_resources(_pending_class_resources)
+		_pending_class_resources.clear()
 	battle_started.emit()
 	balance_changed.emit(balance)
 
@@ -942,3 +948,17 @@ static func _blocked_reason(
 		"nearest_unblock": nearest_unblock.duplicate(true),
 		"message": message,
 	}
+
+
+## #223 additive save key. Empty outside a live battle.
+func class_resources_to_dict() -> Dictionary:
+	if controller == null or ended:
+		return {}
+	return controller.class_resources_to_dict()
+
+
+func restore_class_resources(data: Dictionary) -> void:
+	_pending_class_resources = data.duplicate(true)
+	if controller != null and not ended and not _pending_class_resources.is_empty():
+		controller.restore_class_resources(_pending_class_resources)
+		_pending_class_resources.clear()
