@@ -336,6 +336,28 @@ func test_defining_strike_requires_selection_and_forecast_matches_resolution_con
 	assert_int(int(pure_forecast["damage"])).is_greater_equal(int(forecast["damage"]))
 
 
+func test_defining_strike_resolution_forecast_matches_forced_roll_commit() -> void:
+	var weakness_id := &"loam-maddened-boar/knee"
+	ally.source_member = _skilled_member()
+	enemy.archetype_id = &"loam-maddened-boar"
+	enemy.discovered_weakness_ids = [weakness_id]
+	controller.start([ally], [enemy], &"defining-forecast-parity")
+	var definition := CombatActionCatalog.by_id(&"definition")
+	var hp_before := enemy.hp
+
+	var forecast := controller.forecast_defining_strike(enemy, weakness_id)
+	var committed := controller.submit_action(
+		definition.id, enemy, {"weakness_id": weakness_id, "forced_rolls": [1]}
+	)
+
+	assert_bool(bool(forecast.get("allowed", false))).is_true()
+	assert_bool(bool(committed.get("allowed", false))).is_true()
+	assert_int(int(committed["check"]["roll"])).is_equal(1)
+	assert_str(String(forecast["resolution"]["ability_id"])).is_equal(String(definition.id))
+	assert_int(int(forecast["damage"])).is_equal(int(committed["damage"]))
+	assert_int(int(forecast["damage"])).is_equal(hp_before - enemy.hp)
+
+
 func test_snapshot_turn_order_keeps_spent_actors_visible() -> void:
 	# Region E contract (spec Wave 0 item 6): the round order shows EVERY living
 	# participant, acted included. peek_order() filters to who can still act, so the

@@ -243,7 +243,25 @@ func query_action(
 		if not bool(targeting.get("allowed", false)):
 			return targeting
 	if action.kind == CombatAction.Kind.DEFINING_STRIKE:
-		return _query_defining_strike(target, StringName(options.get("weakness_id", "")))
+		var defining_gate := _query_defining_strike(
+			target, StringName(options.get("weakness_id", ""))
+		)
+		if not bool(defining_gate.get("allowed", false)):
+			return defining_gate
+		var resolution_options := options.duplicate(true)
+		resolution_options.merge({
+			"weakness": defining_gate.get("weakness", {}).duplicate(true),
+			"seed": _sequence,
+			"ability_id": String(action.id),
+			"battle_id": String(_encounter_id),
+		}, true)
+		var resolution_gate := _query_attack_resolution(
+			actor, target, action, resolution_options
+		)
+		if not bool(resolution_gate.get("allowed", false)):
+			return resolution_gate
+		defining_gate.merge(resolution_gate, true)
+		return defining_gate
 	if action.kind == CombatAction.Kind.CAST:
 		return _query_cast(actor, target, action, options)
 	return _allowed()
@@ -1432,46 +1450,25 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 	if not bool(gate.get("allowed", false)):
 		return gate
 	var weakness: Dictionary = gate.get("weakness", {})
-	var context := forecast_context(actor, target, action)
-	context["weakness_id"] = weakness_id
-	context["weakness"] = weakness.duplicate(true)
-	var resolution := Resolution.resolve(context)
-	# Resolution's damage figure is pre-mitigation; live resolution subtracts defense,
-	# balance defense and cover in `calculate_damage`. Forecast through the SAME static
-	# pipeline with the SAME arguments `_resolve_attack` will pass, so the shown number
-	# equals the landed number — forecast==resolution by construction, not by echo.
-	# The pure `resolution` dict stays untouched (its writes/log are the pre-mitigation
-	# Resolution contract); the landed figure is the top-level `damage` key.
-	var positional_context := _positional_resolution_context(actor, target)
-	var cover_bonus := battlefield.cover_bonus(actor, target)
-	if bool(target.defining_effects.get("revealed", false)):
-		cover_bonus = 0
-	var flank_bonus := battlefield.flank_bonus(actor, target)
-	var final_damage := calculate_damage(
-		actor,
-		target,
-		action.power_bonus,
-		action.balance_shift,
-		balance,
-		flank_bonus,
-		cover_bonus,
-		action.element_id,
-		action.magnitude,
-		_sequence,
-		positional_context,
-		{
-			"weakness_id": weakness_id,
-			"weakness": weakness.duplicate(true),
-			"seed": _sequence,
-			"ability_id": String(action.id),
-			"battle_id": String(_encounter_id),
-		},
+	var resolution_options := {
+		"weakness_id": weakness_id,
+		"weakness": weakness.duplicate(true),
+		"seed": _sequence,
+		"ability_id": String(action.id),
+		"battle_id": String(_encounter_id),
+	}
+	var context := forecast_context(actor, target, action, resolution_options)
+	var terms := _positional_terms(actor, target)
+	var resolution := _finalize_resolution_damage(
+		Resolution.resolve(context), target, int(terms["cover_bonus"])
 	)
+	if not bool(resolution.get("allowed", false)):
+		return resolution
 	return _allowed({
 		"action_id": action.id,
 		"weakness_id": weakness_id,
 		"weakness_name": str(weakness.get("display_name", weakness_id)),
-		"damage": final_damage,
+		"damage": int(resolution.get("damage", 0)),
 		"ap_cost": action.ap_cost,
 		"chance": skill_check_service.preview(
 			str(weakness.get("check_skill", "lore")),
@@ -1590,13 +1587,15 @@ func _resolve_defining_strike(
 		)
 		return result
 
-	result.merge(_resolve_attack(actor, target, action, {
+	var resolution_options := options.duplicate(true)
+	resolution_options.merge({
 		"weakness_id": weakness_id,
 		"weakness": weakness.duplicate(true),
 		"seed": damage_seed,
 		"ability_id": String(action.id),
 		"battle_id": String(_encounter_id),
-	}), true)
+	}, true)
+	result.merge(_resolve_attack(actor, target, action, resolution_options), true)
 	var resistance: Variant = weakness.get("resistance", {})
 	var resisted := false
 	if resistance is Dictionary:
