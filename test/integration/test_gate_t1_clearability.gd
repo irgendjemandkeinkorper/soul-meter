@@ -29,8 +29,8 @@ func test_stabilizer_showcase_rewards_stillpoint_center_holding() -> void:
 	var held := _self_play(EncounterIds.PHASE2_STABILIZER_SHOWCASE, &"balanced-refusal", true)
 	var ignored := _self_play(EncounterIds.PHASE2_STABILIZER_SHOWCASE, &"balanced-refusal", false)
 	assert_int(int(held.get("remaining_hp", 0)))\
-		.override_failure_message("Stillpoint made the stabilizer outcome worse: %s vs %s" % [held, ignored])\
-		.is_greater_equal(int(ignored.get("remaining_hp", 0)))
+		.override_failure_message("Stillpoint did not improve the stabilizer outcome")\
+		.is_greater(int(ignored.get("remaining_hp", 0)))
 	assert_int(int(held.get("balance_locks", 0))).is_greater(0)
 
 

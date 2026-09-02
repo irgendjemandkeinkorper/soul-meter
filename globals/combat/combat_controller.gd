@@ -1306,10 +1306,19 @@ func forecast_context(
 		+ flank_bonus
 		+ int(actor.balance_effects.get("damage_bonus", 0))
 	)
+	var ability_id := "attack"
+	var battle_id := ""
+	if cast_ability != null:
+		ability_id = cast_ability.id
+		battle_id = String(_encounter_id)
+	elif action.kind == CombatAction.Kind.DEFINING_STRIKE:
+		ability_id = str(options.get("ability_id", action.id))
+		battle_id = str(options.get("battle_id", _encounter_id))
+	var resolution_seed := int(options.get("seed", _sequence))
 	var ability_context := {
 		# Plain attacks retain the pre-#215 deterministic roll key. Casts use the selected
 		# AbilityDefinition id so forecast and commit identify the same authored working.
-		"id": cast_ability.id if cast_ability != null else "attack",
+		"id": ability_id,
 		"element_id": element_id,
 		"elements": cast_ability.elements.duplicate() if cast_ability != null else [element_id],
 		"magnitude": cast_ability.magnitude if cast_ability != null else action.magnitude,
@@ -1322,17 +1331,13 @@ func forecast_context(
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if target_position.has("elevation"):
 		target_height = int(target_position["elevation"])
-	var legacy_target_tile: Dictionary = positional_context.get("target_tile", {})
-	return {
-		# Preserve the pre-#215 plain-attack roll key, which inherited battle_id from the target
-		# tile. Authored casts identify the encounter directly for fizzle and hit isolation.
-		"battle_id": (
-			String(_encounter_id)
-			if cast_ability != null
-			else str(legacy_target_tile.get("battle_id", ""))
-		),
-		"tick": _sequence,
-		"seed": _sequence,
+	var context := {
+		# Legacy calculate_damage() passed a wrapper with no top-level battle_id to
+		# Resolution.resolve_action(), so plain attacks hashed the empty-string fallback.
+		# Casts and Defining Strikes retain their authored encounter identity.
+		"battle_id": battle_id,
+		"tick": resolution_seed,
+		"seed": resolution_seed,
 		"unit": {
 			"id": String(actor.combat_id),
 			"attack_scale": actor.attack_scale,
@@ -1367,6 +1372,10 @@ func forecast_context(
 			),
 		},
 	}
+	if options.has("weakness_id"):
+		context["weakness_id"] = options["weakness_id"]
+		context["weakness"] = (options.get("weakness", {}) as Dictionary).duplicate(true)
+	return context
 
 
 ## User-facing forecast: gate first (including ranged LOS), then run the same pure context and
