@@ -213,6 +213,17 @@ reputation derivation and the (future) magic-system effect matrix — flagged as
 testing was worth doing at all (`docs/godot-architecture.md`) — don't exist yet; write them
 once there's more than `_derive()`'s simple sum to get wrong.
 
+### Headless Suite Stability Triage (Wave D7)
+
+The four test suites flagged as potentially flaky under headless rendering and navmesh execution were triaged via 10x consecutive headless runs against Godot 4.7.1-stable:
+
+- `test/unit/test_actor_presentation.gd`: 10/10 runs passed (2/2 test cases per run).
+- `test/integration/test_y_sort.gd`: 10/10 runs passed (7/7 test cases per run).
+- `test/integration/test_click_to_move.gd`: 10/10 runs passed (8/8 test cases per run).
+- `test/nav_acceptance/test_click_to_move_input.gd`: 10/10 runs passed (1/1 test cases per run).
+
+All 18 test cases across these four suites demonstrated 100% stability (0 failures / 0 skips) under headless execution.
+
 ## Manual tests
 
 Some things a machine shouldn't grade: does the balloon text read at a sane pace, does a
