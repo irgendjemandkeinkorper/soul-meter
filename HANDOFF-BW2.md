@@ -58,4 +58,15 @@ Overall Summary: Wave B class-resource implementations and snapshot/save tests a
 - Verification via `SOUL_METER_HEADLESS=1 bash scripts/test.sh`:
   - `test/unit/test_class_resource.gd`: `23 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
   - `test/test_unit_plate_region.gd`: `3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
-  - `test/integration/test_combat_controller.gd`: `43 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
+- `test/integration/test_combat_controller.gd`: `43 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
+
+## Wiring pass
+
+- Branch: `feat/b-wave-class-resources-2`; no push.
+- B6 Clarity now carries the armed `reveal` override through forecast/commit and consumes it on the owner's cast outcome.
+- B7 Ledger now queues controller-owned deferred writes, books completion/cancellation, and round-trips deferred bookkeeping.
+- B8 Jam now calls `request_cancel(target, &"any")`; refusal leaves the target armed, while the fizzle floor reads `SkillCheckService.FIZZLE_FLOOR_PERCENT`.
+- B9 Attribution now supplies the shared deterministic hidden-draw table; committed plates remain `??` until revealed.
+- B10 Threads now watches `on_any_action`, queues a zero-round deferred payoff, and prunes with `take_triggered()`.
+- Commits: `bc74a825`, `c6c79e82`, `b1767c06`.
+- Required headless wrapper verification passed: `test/unit/test_class_resource.gd` — `23 test cases | 0 errors | 0 failures`; `test/unit/test_class_resource_seam_v2.gd` — `14 test cases | 0 errors | 0 failures`; `test/integration/test_combat_controller.gd` — `43 test cases | 0 errors | 0 failures`; overall — `80 test cases | 0 errors | 0 failures`.
