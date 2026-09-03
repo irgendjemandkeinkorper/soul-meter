@@ -6,7 +6,7 @@ extends ClassResource
 ## the patron id in the forecast context. Jam execution needs a scheduler cancellation hook
 ## that the B0 seam does not expose, so this resource records the pending request only.
 
-const FIZZLE_FLOOR_PERCENT := 5.0  # PROVISIONAL — B11 owns the floor
+const FIZZLE_FLOOR_PERCENT := SkillCheckService.FIZZLE_FLOOR_PERCENT
 
 var jam_target_id: StringName = &""
 
@@ -14,12 +14,20 @@ var jam_target_id: StringName = &""
 func jam_the_gears(target_id: StringName) -> bool:
 	if target_id.is_empty() or not jam_target_id.is_empty():
 		return false
-	jam_target_id = target_id
+	var result: Dictionary = request_cancel(target_id, &"any")
+	if not bool(result.get("allowed", false)):
+		jam_target_id = target_id
+		return false
 	return true
 
 
 func on_action(event: CombatEvent) -> void:
-	if jam_target_id.is_empty() or event.actor_id != owner_id:
+	if jam_target_id.is_empty():
+		return
+	if event.type == &"action_cancelled" and event.target_id == jam_target_id:
+		jam_target_id = &""
+		return
+	if event.actor_id != owner_id:
 		return
 	var cancelled_action: Variant = event.data.get("cancelled_action", null)
 	if cancelled_action != null and StringName(str(cancelled_action)) == jam_target_id:
