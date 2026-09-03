@@ -46,3 +46,16 @@ Branch: `feat/b-wave-class-resources-2`
 - Commit note: the first local commit was created before the remaining class files were staged and includes the shared registry/test additions; subsequent commits could not be created because this worktree's Git metadata is outside the writable worktree (`.git/worktrees/bw2/index.lock: Read-only file system`). Nothing was pushed.
 
 Overall Summary: Wave B class-resource implementations and snapshot/save tests are present; touched suite is green, full runner is sandbox-blocked before Statistics, four seam gaps are documented, and no changes were pushed.
+
+## Fix pass
+
+- Ledger resolutions now remain in `ready` until `drain_ready()`; the turn-hook regression advances once and verifies the ready entry.
+- Fickah clears a jam only for an owner action carrying the matching `cancelled_action` marker.
+- Clarity consumes only owner cast outcomes; Clarity, Fickah, and Ofshütje ignore other actors' action events.
+- Hidden resource snapshots render as `ATTRIBUTION ??` on the unit plate.
+- B6–B10 documentation records the state-only-until-seam-v2 boundary.
+- Commits: `715ac824`, `a7f3fd21`, `7dc20319`, and `335a8d11`; the Fix pass append is present in the working tree but cannot be committed in this sandbox because the parent worktree metadata is read-only. Nothing was pushed.
+- Verification via `SOUL_METER_HEADLESS=1 bash scripts/test.sh`:
+  - `test/unit/test_class_resource.gd`: `23 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
+  - `test/test_unit_plate_region.gd`: `3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
+  - `test/integration/test_combat_controller.gd`: `43 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
