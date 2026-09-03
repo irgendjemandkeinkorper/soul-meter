@@ -86,4 +86,5 @@ Implemented the six Claude review corrections for issues #219/#220. No push atte
 ### Tests and evidence
 
 - Touched suites: **74 test cases | 0 errors | 0 failures** using `SOUL_METER_HEADLESS=1 scripts/test.sh`.
-- Full suite and the required integration/resolution suites were run with the repository wrapper; final Statistics lines are recorded in the completion handoff.
+- Required Statistics lines: `13 test cases | 0 errors | 0 failures` (triads), `46 test cases | 0 errors | 0 failures` (combat controller), `15 test cases | 0 errors | 0 failures` (resolution), overall `74 test cases | 0 errors | 0 failures`.
+- A full `-a test` run was attempted with the wrapper and exceeded the 120-second execution limit without emitting failure output or Statistics; the focused suites above remain green.
