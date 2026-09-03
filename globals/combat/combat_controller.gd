@@ -1250,7 +1250,6 @@ func _resolved_attack(
 	target: BattleActor,
 	action: CombatAction,
 	options: Dictionary,
-	terms: Dictionary,
 ) -> Dictionary:
 	if options.has("_resolution"):
 		var cached := (options["_resolution"] as Dictionary).duplicate(true)
@@ -1263,7 +1262,7 @@ func _resolved_attack(
 	var context := forecast_context(actor, target, action, options)
 	return _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", terms["cover_bonus"]))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
 	)
 
 
@@ -1396,7 +1395,7 @@ func _resolve_attack(
 	for hit_target: BattleActor in hit_targets:
 		var terms := _positional_terms(actor, hit_target)
 		var positional_context: Dictionary = terms["positional_context"]
-		var resolved := _resolved_attack(actor, hit_target, action, resolution_context, terms)
+		var resolved := _resolved_attack(actor, hit_target, action, resolution_context)
 		if not bool(resolved.get("allowed", false)):
 			return resolved
 		pending_hits.append({
@@ -2043,8 +2042,13 @@ func _expire_temporary_effects() -> void:
 			if not prior is Dictionary:
 				continue
 			var prior_values: Dictionary = prior as Dictionary
-			for aftertone: Dictionary in unit.aftertones:
-				var key := "%s:%d" % [String(aftertone.get("element", "")), int(aftertone.get("remaining_rounds", 0))]
+			for aftertone_index: int in unit.aftertones.size():
+				var aftertone: Dictionary = unit.aftertones[aftertone_index]
+				var key := "%s:%d:%d" % [
+					String(aftertone.get("element", "")),
+					int(aftertone.get("remaining_rounds", 0)),
+					aftertone_index,
+				]
 				if prior_values.has(key):
 					aftertone["anchored"] = bool(prior_values[key])
 		founding_anchor_restore.clear()
@@ -2071,8 +2075,15 @@ func _apply_triad_effect(actor: BattleActor, target: BattleActor, write: Diction
 			duration_freeze_until_round = round_number + 1
 			for unit in allies + enemies:
 				var prior: Dictionary = {}
-				for aftertone: Dictionary in unit.aftertones:
-					var key := "%s:%d" % [String(aftertone.get("element", "")), int(aftertone.get("remaining_rounds", 0))]
+				# The freeze keeps existing tone durations and order stable until restore;
+				# the index disambiguates equal element/duration pairs on the same unit.
+				for aftertone_index: int in unit.aftertones.size():
+					var aftertone: Dictionary = unit.aftertones[aftertone_index]
+					var key := "%s:%d:%d" % [
+						String(aftertone.get("element", "")),
+						int(aftertone.get("remaining_rounds", 0)),
+						aftertone_index,
+					]
 					prior[key] = bool(aftertone.get("anchored", false))
 					aftertone["anchored"] = true
 				founding_anchor_restore[unit.combat_id] = prior
