@@ -5,8 +5,8 @@ extends ClassResource
 ## Vault `systems/magic-system.md` §Per-class resources: "A depleting stat burned for
 ## guaranteed information (true fizzle %, hidden resistances, traps)."
 ##
-## The seam can carry the reveal marker, but Resolution currently ignores `reveal`; the
-## controller/UI integration remains a contract gap for the owning follow-up.
+## The armed reveal is returned through the shared forecast context and consumed only after
+## the owner's cast outcome is committed.
 
 const MAX_CLARITY := 3  # PROVISIONAL — B11 owns the cap
 

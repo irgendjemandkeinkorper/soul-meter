@@ -158,9 +158,12 @@ func test_registry_resolves_all_wave_b_resources() -> void:
 
 func test_ledger_queues_and_resolves_entries_on_turn_hook() -> void:
 	var ledger := PazzahLedger.new()
-	assert_bool(ledger.queue_effect(&"verdict", 1, {"amount": 4})).is_true()
+	var battle := _battle(ledger)
+	var controller: CombatController = battle["controller"]
+	var enemy: BattleActor = battle["enemy"]
+	assert_bool(ledger.queue_effect(&"verdict", 1, {"writes": [{"kind": "hp", "target_id": String(enemy.combat_id), "amount": 4}]})).is_true()
 	assert_int(ledger.entries.size()).is_equal(1)
-	ledger.on_turn_start()
+	controller.end_turn()
 	assert_int(ledger.entries.size()).is_equal(0)
 	assert_int(ledger.ready.size()).is_equal(1)
 	var resolved: Array[Dictionary] = ledger.drain_ready()
@@ -173,17 +176,17 @@ func test_ledger_round_trip_through_registry_from_dict() -> void:
 	var ledger := PazzahLedger.new()
 	ledger.patron_id = &"pazzah"
 	ledger.owner_id = &"ally-0"
-	ledger.queue_effect(&"verdict", 4, {"amount": 4})
+	ledger.entries.append({"effect_id": "verdict", "entry_id": 4, "payload": {"writes": []}})
 	var restored := ClassResourceRegistry.from_dict(ledger.to_dict()) as PazzahLedger
 	assert_int(restored.entries.size()).is_equal(1)
-	assert_int(restored.entries[0].get("turns_remaining", 0)).is_equal(4)
+	assert_int(restored.entries[0].get("entry_id", 0)).is_equal(4)
 	assert_str(String(restored.owner_id)).is_equal("ally-0")
 
 
 func test_fickah_keeps_a_pending_jam_request_until_matching_action() -> void:
 	var breaker := FickahRuleBreaker.new()
 	breaker.owner_id = &"ally-0"
-	assert_bool(breaker.jam_the_gears(&"enemy-0")).is_true()
+	assert_bool(breaker.jam_the_gears(&"enemy-0")).is_false()
 	assert_bool(breaker.jam_the_gears(&"enemy-1")).is_false()
 	var unrelated := CombatEvent.new()
 	unrelated.actor_id = &"ally-0"
@@ -218,10 +221,10 @@ func test_attribution_draw_is_seeded_and_recorded_by_action_hook() -> void:
 	assert_dict(attribution.attribution_for(17)).is_equal(first)
 	var event := CombatEvent.new()
 	event.actor_id = &"ally-0"
-	event.data = {"resolution": {"allowed": true, "seed": 17}}
+	event.data = {"resolution": {"allowed": true, "hidden_draw": {"row_id": first["id"], "row": first}, "revealed": {}}}
 	attribution.on_action(event)
 	assert_str(String(attribution.last_effect_id)).is_equal(str(first["id"]))
-	assert_int(attribution.last_effect_floor).is_equal(int(first["floor"]))
+	assert_int(attribution.last_effect_floor).is_equal(int(first["bonus_damage"]))
 
 
 func test_attribution_round_trip_through_registry_from_dict() -> void:
@@ -236,17 +239,19 @@ func test_attribution_round_trip_through_registry_from_dict() -> void:
 
 func test_threads_bind_and_trigger_matching_hidden_condition() -> void:
 	var threads := IzhakelThreads.new()
-	assert_bool(threads.bind_thread(&"enemy-0", {"action_id": "strike"}, {"effect_id": "payoff"})).is_true()
+	var battle := _battle(threads)
+	var enemy: BattleActor = battle["enemy"]
+	assert_bool(threads.bind_thread(enemy.combat_id, {"action_id": "strike"}, {"writes": [{"kind": "hp", "target_id": String(enemy.combat_id), "amount": 1}]})).is_true()
 	var other := CombatEvent.new()
-	other.actor_id = &"enemy-0"
+	other.actor_id = enemy.combat_id
 	other.data = {"action_id": "move"}
-	threads.on_action(other)
-	assert_bool(threads.threads[0].get("triggered", false)).is_false()
+	threads.on_any_action(other.actor_id, &"move", &"", other.data)
+	assert_int(threads.threads.size()).is_equal(1)
 	var strike := CombatEvent.new()
-	strike.actor_id = &"enemy-0"
+	strike.actor_id = enemy.combat_id
 	strike.data = {"action_id": "strike"}
-	threads.on_action(strike)
-	assert_bool(threads.threads[0].get("triggered", false)).is_true()
+	threads.on_any_action(strike.actor_id, &"strike", &"", strike.data)
+	assert_int(threads.threads.size()).is_equal(0)
 
 
 func test_threads_round_trip_through_registry_from_dict() -> void:
