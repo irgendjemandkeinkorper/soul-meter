@@ -38,7 +38,11 @@ func _queue_hunger_dot(target_id: StringName) -> void:
 
 
 func on_deferred_fired(entry: Dictionary) -> void:
-	if StringName(str(entry.get("label", ""))) != &"hunger_dot":
+	var label := StringName(str(entry.get("label", "")))
+	if label == &"hunger_refund":
+		pending_soul_refunds = maxf(pending_soul_refunds - SOUL_REFUND, 0.0)
+		return
+	if label != &"hunger_dot":
 		return
 	var applied: Array = entry.get("applied", []) as Array
 	if applied.is_empty() or not (applied[0] is Dictionary):
