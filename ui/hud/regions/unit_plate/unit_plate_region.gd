@@ -81,6 +81,8 @@ func _resource_line(resource: Variant) -> String:
 	var label := str(data.get("label", ""))
 	if label.is_empty():
 		return ""
+	if bool(data.get("hidden", false)):
+		return "%s ??" % label.to_upper()
 	if data.has("max"):
 		return "%s %d / %d" % [label.to_upper(), int(data.get("value", 0)), int(data.get("max", 0))]
 	return "%s %s" % [label.to_upper(), str(data.get("value", ""))]
