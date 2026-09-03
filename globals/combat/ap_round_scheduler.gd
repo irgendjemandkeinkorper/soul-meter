@@ -342,6 +342,11 @@ func force_advance(actor: BattleActor) -> Dictionary:
 	return _allowed({"actor": actor, "ct_spent": forfeited, "ct_refunded": 0, "charge": 0})
 
 
+func grant_extra_turn(actor: BattleActor) -> void:
+	if actor != null and _seat_index_of(actor) >= 0:
+		actor.action_points = maxi(actor.action_points, actor.max_action_points)
+
+
 func interrupt(reason: StringName) -> Dictionary:
 	if _paused:
 		return _blocked(&"already_interrupted", "The battle is already held.", {})

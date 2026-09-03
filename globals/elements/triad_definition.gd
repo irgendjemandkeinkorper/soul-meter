@@ -5,6 +5,7 @@ extends RefCounted
 
 var id: StringName = &""
 var display_name: String = ""
+var vault_id: String = ""
 var elements: Array[StringName] = []
 var center_element: StringName = &""
 var unique_effect_id: StringName = &""
@@ -20,6 +21,7 @@ static func from_row(row: Dictionary) -> TriadDefinition:
 	var definition := TriadDefinition.new()
 	definition.id = _name(row.get("id", ""))
 	definition.display_name = str(row.get("display_name", definition.id))
+	definition.vault_id = str(row.get("vault_id", ""))
 	var authored_elements: Variant = row.get("elements", [])
 	if authored_elements is Array:
 		for authored_element: Variant in authored_elements:
@@ -43,6 +45,7 @@ func to_dict() -> Dictionary:
 	return {
 		"id": id,
 		"display_name": display_name,
+		"vault_id": vault_id,
 		"elements": elements.duplicate(),
 		"center": center_element,
 		"unique_effect": {
