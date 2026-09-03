@@ -103,7 +103,7 @@ Failure, B2).
 | B2 Flamebinder Instructive Failure | `on_fizzle` banks; `on_cast_forecast` → `fizzle_percent_override: 0` while armed; consume in `on_action` |
 | B3 Ironbrand Scars | unchanged (`to_hit_enabled`); crit still has no channel |
 | B4 Husk-bearer Hunger | enqueue a `dot` write per stack (`delay_rounds: 1`, re-queue from `on_deferred_fired`); `on_kill` with cause `&"dot"` → enqueue/apply `soul_refund` |
-| B5 River-Mother Name-Ledger | `soul_refund` write from the record action; `on_any_action` to watch the named ally |
+| B5 River-Mother Name-Ledger | `class_resource_action: "record_name"` on a PASS action routes through `on_command(action_id, target_id)`; `soul_refund` writes from record/fall/end paths; `on_any_action` watches the named ally |
 | B6 Lensbearer Clarity | `reveal: true` while armed |
 | B7 Oathclock Ledger | `enqueue_deferred()` on file, `on_deferred_fired()` to bookkeep, `snapshot().deferred` for the plate |
 | B8 Locksmirk Jam the Gears | `request_cancel(target, &"any")`; the fizzle floor stays in `SkillCheckService` |

@@ -317,6 +317,11 @@ func submit_action(
 	if query.has("resolution"):
 		resolved_options["_resolution"] = query["resolution"]
 		resolved_options["_resolution_context"] = query.get("context", {})
+	if committed_action.kind == CombatAction.Kind.PASS and not committed_action.class_resource_action.is_empty():
+		_class_resource_of(actor).on_command(
+			committed_action.class_resource_action,
+			target.combat_id if target != null else &"",
+		)
 	var outcome := _apply_action(actor, target, committed_action, resolved_options)
 	outcome["action_id"] = action.id
 	outcome["verb"] = action.verb
@@ -2045,6 +2050,14 @@ func _actor_by_id(combat_id: StringName) -> BattleActor:
 		if actor.combat_id == combat_id:
 			return actor
 	return null
+
+
+func actor_by_id(combat_id: StringName) -> BattleActor:
+	return _actor_by_id(combat_id)
+
+
+func has_living_enemies() -> bool:
+	return _has_living(enemies)
 
 
 func _deferred_is_due(entry: Dictionary) -> bool:

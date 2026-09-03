@@ -77,7 +77,7 @@ func test_river_mother_records_each_name_once_and_round_trips() -> void:
 	assert_int(action.ap_cost).is_equal(2)
 	var restored: HaerenNameLedger = ClassResourceRegistry.from_dict(resource.to_dict()) as HaerenNameLedger
 	assert_array(restored.recorded_names).contains_exactly(["Aster", "Belen"])
-	assert_float(restored.pending_soul_refunds).is_equal(2.0)
+	assert_float(restored.pending_soul_refunds).is_equal(0.0)
 	assert_bool(resource.snapshot().has("max")).is_false()
 
 
