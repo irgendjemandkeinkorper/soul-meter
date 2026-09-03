@@ -16,6 +16,11 @@ extends Resource
 @export var defense: int = 2
 ## Tactical casting resource. Pool sizing remains owner-authored; zero is the neutral default.
 @export var breath: int = 0
+## Active Aftertones are dictionaries of {element, remaining_rounds, held, anchored}.
+@export var aftertones: Array[Dictionary] = []
+@export var tempo: int = 0
+## PROVISIONAL: the last successful cast element used by the interim Tempo producer.
+var last_cast_element: StringName = &""
 @export var attributes: Dictionary = {}
 ## Stable Combatant Id from Pandora. This is the enemy-archetype key used by
 ## Defining Strike knowledge; ad-hoc test actors may leave it empty.
@@ -132,3 +137,17 @@ func apply_defining_effect(parameters: Dictionary) -> void:
 func apply_balance_band(band_id: StringName, effects: Dictionary) -> void:
 	balance_band_id = band_id
 	balance_effects = effects.duplicate(true)
+
+
+func tick_aftertones() -> void:
+	var remaining: Array[Dictionary] = []
+	for aftertone: Dictionary in aftertones:
+		if bool(aftertone.get("anchored", false)) or bool(aftertone.get("held", false)):
+			remaining.append(aftertone.duplicate(true))
+			continue
+		var rounds := int(aftertone.get("remaining_rounds", 0)) - 1
+		if rounds > 0:
+			var next := aftertone.duplicate(true)
+			next["remaining_rounds"] = rounds
+			remaining.append(next)
+	aftertones = remaining

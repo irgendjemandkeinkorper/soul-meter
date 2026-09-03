@@ -17,6 +17,7 @@ var imposition_strength: StringName = &""
 var rule_bends: Array[StringName] = []
 var damage_components: Array[StringName] = []
 var unique_effect_id: StringName = &""
+var triad_effect_id: StringName = &""
 var unique_effect_parameters: Dictionary = {}
 var fizzle_requested: bool = false
 var self_inflicted_discord: bool = false
@@ -61,6 +62,7 @@ func to_dict() -> Dictionary:
 		"rule_bends": rule_bends.duplicate(),
 		"damage_components": damage_components.duplicate(),
 		"unique_effect_id": unique_effect_id,
+		"triad_effect_id": triad_effect_id,
 		"unique_effect_parameters": unique_effect_parameters.duplicate(true),
 		"fizzle_requested": fizzle_requested,
 		"self_inflicted_discord": self_inflicted_discord,

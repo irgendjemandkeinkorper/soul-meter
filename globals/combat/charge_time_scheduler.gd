@@ -312,6 +312,12 @@ func force_advance(actor: BattleActor) -> Dictionary:
 	return _allowed({"actor": actor, "ct_spent": forfeited, "ct_refunded": 0, "charge": 0})
 
 
+func grant_extra_turn(actor: BattleActor) -> void:
+	var key := _key(actor)
+	if actor != null and _seat_of.has(key):
+		_charge[key] = maxi(int(_charge.get(key, 0)), READY_AT)
+
+
 static func wait_refund_ct(ready_at: int = READY_AT) -> int:
 	return int(floor(float(ready_at) * 0.5))
 
