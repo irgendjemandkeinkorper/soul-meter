@@ -348,6 +348,17 @@ func test_full_round_emits_ordered_presentation_event_stream() -> void:
 	assert_int(projected["enemies"][0]["hp"]).is_less(30)
 
 
+func test_ap_round_boundary_expires_temporary_effects_before_next_actor() -> void:
+	controller.start([ally], [enemy])
+	ally.defining_effects["hit"] = true
+	controller.thunderhead_hit_until_round = controller.round_number
+	assert_bool(controller.end_turn()).is_true()
+
+	assert_int(controller.round_number).is_equal(2)
+	assert_object(controller.active_actor()).is_equal(ally)
+	assert_bool(ally.defining_effects.has("hit")).is_false()
+
+
 func test_ap_refresh_derives_from_attributes_and_costs_are_deducted() -> void:
 	ally.attributes = {"edge": 4}
 	controller.start([ally], [enemy])

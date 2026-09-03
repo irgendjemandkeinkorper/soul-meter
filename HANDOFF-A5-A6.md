@@ -88,3 +88,25 @@ Implemented the six Claude review corrections for issues #219/#220. No push atte
 - Touched suites: **74 test cases | 0 errors | 0 failures** using `SOUL_METER_HEADLESS=1 scripts/test.sh`.
 - Required Statistics lines: `13 test cases | 0 errors | 0 failures` (triads), `46 test cases | 0 errors | 0 failures` (combat controller), `15 test cases | 0 errors | 0 failures` (resolution), overall `74 test cases | 0 errors | 0 failures`.
 - A full `-a test` run was attempted with the wrapper and exceeded the 120-second execution limit without emitting failure output or Statistics; the focused suites above remain green.
+
+## Pass 4
+
+### Status
+
+Implemented the final review fixes for issues #219/#220 on `feat/a5-a6-aftertones-triads`. No push attempted.
+
+### Changes
+
+- Moved temporary-effect expiry after AP round refresh and Aftertone ticking; removed the duplicate `_actor_by_id()` merge conflict.
+- Unified reveal on top-level `context["reveal"]`; Resolution and positioning now use that channel, with class-resource reveal zeroing cover like Dayspring.
+- Keyed Founding anchor restoration by Aftertone element and remaining rounds so tones added during the freeze retain their own anchor state.
+- Added AP round-boundary expiry integration coverage, class-resource reveal/cover parity coverage, live grid Vault cover coverage, and renamed the Cinderfall test.
+
+### Tests and evidence
+
+- `test/unit/test_aftertones_triads.gd`: **13 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans**.
+- `test/combat_resolution/test_resolution.gd`: **15 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans**.
+- `test/integration/test_combat_controller.gd`: **47 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans**.
+- `test/unit/test_class_resource_seam_v2.gd`: **14 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans**.
+- Overall: **89 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans**.
+- `godot --headless --path . --check-only --script res://globals/combat/combat_controller.gd`: no parser errors. `git diff --check`: passed.

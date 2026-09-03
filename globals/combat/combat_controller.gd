@@ -806,7 +806,6 @@ func _drive_scheduler() -> void:
 ## event vocabularies fork, and it forks on DATA the scheduler returned, never on
 ## `rules.use_charge_time` — CombatController does not know which scheduler is active.
 func _translate_scheduler_extras(result: Dictionary) -> void:
-	_expire_temporary_effects()
 	# A single advance() call can carry BOTH keys at once — the AP scheduler closes the old
 	# round and opens the new one in one step when the last actor's turn passes. `round_ended`
 	# must be emitted (and the balance lock checked against the round that JUST ended, not the
@@ -823,6 +822,7 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 		_release_balance_lock_if_due(ended_round)
 		_tick_actor_aftertones()
 	round_number = scheduler.measure_index() + 1
+	_expire_temporary_effects()
 	if bool(result.get("round_started", false)):
 		_emit_event(&"round_started", null, null, {"round": int(result.get("round", round_number))})
 		for row: Variant in result.get("refreshed", []):
@@ -1515,7 +1515,6 @@ func forecast_context(
 			"breath": actor.breath,
 			"aftertones": actor.aftertones.duplicate(true),
 			"tempo": actor.tempo,
-			"reveal": revealed_until_round >= round_number and actor.side == revealed_side,
 			"concealed": concealed_until_round >= round_number and actor.side == concealed_side,
 			"last_cast_element": actor.last_cast_element,
 			"hit": bool(actor.defining_effects.get("hit", false)),
@@ -1555,7 +1554,7 @@ func forecast_context(
 		context["weakness"] = (options.get("weakness", {}) as Dictionary).duplicate(true)
 	# #223: the class resource's ONLY channel into resolution. Same call at forecast and commit,
 	# so whatever it overrides is seen identically by both — no second calculator.
-	var overrides := _class_resource_of(actor).on_cast_forecast(context.duplicate(true))
+	var overrides: Dictionary = _class_resource_of(actor).on_cast_forecast(context.duplicate(true))
 	if not overrides.is_empty():
 		# Seam v2: key-level merge, so `{"unit": {"attack_scale": 1.25}}` keeps unit.id/edge/breath
 		# and `{"fizzle": {"mastery": true}}` keeps fizzle.patron/pitch. A shallow merge replaced
@@ -1563,8 +1562,7 @@ func forecast_context(
 		deep_merge(context, overrides)
 	# Seam v2 channel: ONE top-level `reveal` key. Dayspring (unit.reveal, A5) and ClassResource
 	# reveal overrides both land here so Resolution and the panel read one shape.
-	var resolved_unit: Dictionary = context.get("unit", {}) as Dictionary
-	context["reveal"] = bool(context.get("reveal", false)) or bool(resolved_unit.get("reveal", false))
+	context["reveal"] = _is_revealed(actor) or bool(context.get("reveal", false))
 	var resolved_positioning: Dictionary = context.get("positioning", {}) as Dictionary
 	if bool(context["reveal"]):
 		resolved_positioning["cover_bonus"] = 0
@@ -1618,7 +1616,8 @@ func forecast_action(
 		})
 	var context := forecast_context(actor, target, action, options)
 	var resolution := _finalize_resolution_damage(
-		Resolution.resolve(context), target, int(_positional_terms(actor, target)["cover_bonus"])
+		Resolution.resolve(context), target,
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
 	)
 	var damage := int(resolution.get("damage", 0))
 	return _allowed({
@@ -2033,11 +2032,13 @@ func _expire_temporary_effects() -> void:
 	if not founding_anchor_restore.is_empty() and round_number > duration_freeze_until_round:
 		for unit in allies + enemies:
 			var prior: Variant = founding_anchor_restore.get(unit.combat_id, null)
-			if not prior is Array:
+			if not prior is Dictionary:
 				continue
-			var prior_values: Array = prior as Array
-			for index in mini(unit.aftertones.size(), prior_values.size()):
-				unit.aftertones[index]["anchored"] = bool(prior_values[index])
+			var prior_values: Dictionary = prior as Dictionary
+			for aftertone: Dictionary in unit.aftertones:
+				var key := "%s:%d" % [String(aftertone.get("element", "")), int(aftertone.get("remaining_rounds", 0))]
+				if prior_values.has(key):
+					aftertone["anchored"] = bool(prior_values[key])
 		founding_anchor_restore.clear()
 
 
@@ -2061,9 +2062,10 @@ func _apply_triad_effect(actor: BattleActor, target: BattleActor, write: Diction
 		&"cornerstone":
 			duration_freeze_until_round = round_number + 1
 			for unit in allies + enemies:
-				var prior: Array[bool] = []
+				var prior: Dictionary = {}
 				for aftertone: Dictionary in unit.aftertones:
-					prior.append(bool(aftertone.get("anchored", false)))
+					var key := "%s:%d" % [String(aftertone.get("element", "")), int(aftertone.get("remaining_rounds", 0))]
+					prior[key] = bool(aftertone.get("anchored", false))
 					aftertone["anchored"] = true
 				founding_anchor_restore[unit.combat_id] = prior
 		&"sealed_ground":
@@ -2237,15 +2239,6 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 	var payload := {"requester_id": String(requester_id), "kind": String(kind), "cancelled": cancelled.duplicate(true)}
 	_emit_event(&"action_cancelled", _actor_by_id(requester_id), target, payload)
 	return _allowed(payload)
-
-
-func _actor_by_id(combat_id: StringName) -> BattleActor:
-	if combat_id.is_empty():
-		return null
-	for actor: BattleActor in allies + enemies:
-		if actor.combat_id == combat_id:
-			return actor
-	return null
 
 
 func _deferred_is_due(entry: Dictionary) -> bool:

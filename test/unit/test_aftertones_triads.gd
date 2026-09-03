@@ -43,20 +43,47 @@ func test_stillpoint_applies_balance_consumer() -> void:
 
 func test_founding_anchors_everyone_and_freezes_duration() -> void:
 	var controller := _live_controller(ElementsData.triad(&"founding"))
-	controller.allies[0].aftertones = [{"remaining_rounds": 2, "held": true}]
+	controller.allies[0].aftertones = [{"element": "suul", "remaining_rounds": 2, "held": true}]
 	_submit_triad(controller, ElementsData.triad(&"founding"))
 	assert_bool(controller.enemies[0].aftertones[0]["anchored"]).is_true()
 	assert_int(controller.duration_freeze_until_round).is_equal(controller.round_number + 1)
+	controller.allies[0].aftertones.append({"element": "nul", "remaining_rounds": 1, "anchored": true})
 	controller.round_number = controller.duration_freeze_until_round + 1
 	controller._expire_temporary_effects()
 	assert_bool(bool(controller.allies[0].aftertones[0].get("anchored", false))).is_false()
+	assert_bool(bool(controller.allies[0].aftertones[1].get("anchored", false))).is_true()
 
 
 func test_vault_caster_aftertones_are_anchored() -> void:
 	var controller := _live_controller(ElementsData.triad(&"vault"))
 	controller.allies[0].aftertones = [{"remaining_rounds": 2}]
+	var grid := GridBattlefieldModel.new()
+	grid.configure(controller.rules)
+	grid.build_grid(_vault_ground())
+	grid.setup(controller.allies, controller.enemies)
+	controller.battlefield = grid
+	assert_int(grid.cover_bonus(controller.allies[0], controller.enemies[0])).is_equal(0)
 	_submit_triad(controller, ElementsData.triad(&"vault"))
 	assert_bool(controller.allies[0].aftertones[0]["anchored"]).is_true()
+	assert_int(grid.cover_bonus(controller.allies[0], controller.enemies[0])).is_equal(
+		controller.rules.cover_defense_bonus
+	)
+
+
+func _vault_ground() -> TileMapLayer:
+	var layer := auto_free(TileMapLayer.new()) as TileMapLayer
+	var tile_set := TileSet.new()
+	tile_set.tile_size = Vector2i(64, 32)
+	var image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
+	var source := TileSetAtlasSource.new()
+	source.texture = ImageTexture.create_from_image(image)
+	source.texture_region_size = Vector2i(64, 32)
+	source.create_tile(Vector2i.ZERO)
+	tile_set.add_source(source, 0)
+	layer.tile_set = tile_set
+	layer.set_cell(Vector2i(0, 0), 0, Vector2i.ZERO)
+	layer.set_cell(Vector2i(1, 0), 0, Vector2i.ZERO)
+	return layer
 
 
 func test_pyre_converts_dead_enemies_and_spent_aftertones_to_breath() -> void:
@@ -67,7 +94,7 @@ func test_pyre_converts_dead_enemies_and_spent_aftertones_to_breath() -> void:
 	assert_int(controller.allies[0].breath).is_equal(2)
 
 
-func test_cinderfall_clears_both_sides_and_records_burst() -> void:
+func test_cinderfall_clears_both_sides() -> void:
 	var controller := _live_controller(ElementsData.triad(&"cinderfall"))
 	controller.allies[0].aftertones = [{"remaining_rounds": 2}]
 	controller.enemies[0].aftertones = [{"remaining_rounds": 2}, {"remaining_rounds": 2}]
