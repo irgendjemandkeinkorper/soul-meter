@@ -1,36 +1,35 @@
-# Issue #168 — Gate T-1 clearability plan
+# Issue #286 — Hollowing and acts of Agreement core plan
 
-Tracker: https://github.com/irgendjemandkeinkorper/soul-meter/issues/168
+Tracker: https://github.com/irgendjemandkeinkorper/soul-meter/issues/286
 
-Status: implementation and local verification complete; pending PR checks and merge.
+Status: core implementation and local verification complete on
+`feature/f6-hollowing-agreement-core`. Issue #286 remains open for authored dialogue/barks and
+the project audit's seven pre-existing `bellhouse_repair`/`deep_trial` errors.
 
 ## Scope and assumptions
 
-- Preserve the ratified five encounters and four build archetype names.
-- Reuse authored combat actions, encounter stats, charge-time scheduling, grid positioning,
-  speech resolution, and Stillpoint's exact-centre lock. Do not invent abilities or rebalance.
-- Model the four builds as deterministic self-play policies over the mechanics currently
-  available. Where an archetype-specific action is not yet wired into combat, record that as a
-  gate blocker instead of labelling a generic Strike as that build's mechanic.
+- Preserve `soul_husked` and the existing save-compatible husking implementation; expose
+  Hollowing as an additive public vocabulary.
+- Keep Soul income quest-owned. Combat, rest, and items gain no recovery path.
+- Add an optional, backward-compatible outcome reward contract so existing quest resources and
+  campaign packages remain valid without edits.
+- Do not author canon, reward amounts, recovery prices, companion barks, or dialogue branches.
 
 ## Ordered work
 
-1. Add a failing integration characterization for all five encounter definitions requiring an
-   encounter grid and charge-time controller.
-2. Add the minimum authored encounter-grid overlay for the five Gate T-1 encounter IDs and make
-   the characterization pass.
-3. Build a deterministic self-play matrix for the four canonical archetypes, using only actions
-   and effects reachable through current combat APIs; assert 20/20 victories and the authored
-   speech resolution where applicable.
-4. Assert that the stabilizer policy receives a measurable advantage from Stillpoint's
-   centre-lock in the stabilizer showcase.
-5. If steps 3–4 expose a missing playable archetype mechanic, stop and post exact dependency
-   evidence on #168. Otherwise run focused and full suites, review, commit, push, open a PR, wait
-   for checks, and merge.
+1. Add failing GameState tests for Hollowing aliases and state-change compatibility.
+2. Implement the additive Hollowing signal/query aliases without changing persisted flags.
+3. Add failing quest-resource and resolution tests for a tagged act-of-Agreement Soul reward.
+4. Implement optional outcome tags and Soul deltas through DomSideQuest, campaign loading,
+   quest resolution, and reward summaries; reject malformed reward contracts before mutation.
+5. Extend quest audit coverage, run focused and full suites, review the diff, and commit the
+   verified slice without changing authored quest data.
 
 ## Verification checkpoints
 
-- Focused Gate T-1 integration test is red before production/data changes and green afterward.
-- Existing tactical gate and deployment-flow tests remain green.
-- Full GdUnit suite passes with zero failures and no orphan nodes.
-- PR checks pass before merge.
+- Old `soul_husked` saves still report Hollowing and clear both state signals after recovery.
+- Only a completed outcome tagged `act_of_agreement` can raise Soul.
+- Invalid tags/deltas do not complete a quest or change Soul.
+- Existing resources with no reward metadata remain valid.
+- Quest audit exits 0 with no reward-contract regression; its seven pre-existing content errors
+  remain. The full GdUnit suite reports zero failures.

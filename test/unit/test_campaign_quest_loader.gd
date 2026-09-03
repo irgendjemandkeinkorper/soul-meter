@@ -469,6 +469,41 @@ func test_authored_outcome_objects_fan_out_into_all_six_runtime_arrays() -> void
 	assert_array(quest.outcome_readbacks).contains_exactly(["First readback", "Second readback"])
 
 
+func test_agreement_reward_metadata_fans_out_into_optional_runtime_arrays() -> void:
+	var authored := _quest("agreement", "Agreement Quest")
+	var first_outcome: Dictionary = authored["outcomes"][0]
+	first_outcome["tags"] = [DomSideQuest.ACT_OF_AGREEMENT_TAG]
+	first_outcome["soul_delta"] = 7.0
+	_write_json(PACKAGE_PATH + "/quests/agreement.json", authored)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+	var quest: DomSideQuest = result["quests"][0] as DomSideQuest
+
+	assert_array(result["errors"]).is_empty()
+	assert_array(quest.outcome_tags[0]).contains_exactly([DomSideQuest.ACT_OF_AGREEMENT_TAG])
+	assert_array(quest.outcome_tags[1]).is_empty()
+	assert_float(quest.outcome_soul_deltas[0]).is_equal(7.0)
+	assert_float(quest.outcome_soul_deltas[1]).is_equal(0.0)
+
+
+func test_positive_soul_reward_without_agreement_tag_is_rejected() -> void:
+	var authored := _quest("invalid-reward", "Invalid Reward Quest")
+	(authored["outcomes"][0] as Dictionary)["soul_delta"] = 7.0
+	_write_json(PACKAGE_PATH + "/quests/invalid-reward.json", authored)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+
+	assert_array(result["quests"]).is_empty()
+	assert_bool(
+		_has_error_code(
+			result["errors"],
+			"quests/invalid-reward.json",
+			"outcomes[0].soul_delta",
+			"invalid_soul_reward_contract"
+		)
+	).is_true()
+
+
 func test_creating_the_loader_does_not_scan_or_register_packages() -> void:
 	_write_json(PACKAGE_PATH + "/quests/dormant.json", _quest("dormant", "Dormant Quest"))
 	var loader: RefCounted = CampaignQuestLoaderScript.new()

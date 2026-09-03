@@ -6,6 +6,7 @@ const VendorData := preload("res://globals/vendor_registry.gd")
 
 signal soul_meter_changed(value: float)
 signal husked_state_changed(husked: bool)
+signal hollowing_state_changed(active: bool)
 signal gp_changed(value: int)
 signal flag_changed(flag: String, value: Variant)
 signal inventory_changed
@@ -148,6 +149,11 @@ func is_husked() -> bool:
 	return flag_is_true(HUSKED_FLAG)
 
 
+## Dialogue-facing name for the existing save-compatible husked state.
+func is_hollowing() -> bool:
+	return is_husked()
+
+
 ## True once a soul has ever been husked, even after recovery clears
 ## is_husked(). Drives the permanent recovery ceiling.
 func has_been_husked() -> bool:
@@ -176,11 +182,13 @@ func _enter_husked_state(pre_zero_value: float) -> void:
 		var ceiling := clampf(pre_zero_value, 0.0, 100.0) * HUSKED_CEILING_RATIO
 		set_flag(HUSKED_RECOVERY_CEILING_FLAG, ceiling)
 	husked_state_changed.emit(true)
+	hollowing_state_changed.emit(true)
 
 
 func _exit_husked_state() -> void:
 	set_flag(HUSKED_FLAG, false)
 	husked_state_changed.emit(false)
+	hollowing_state_changed.emit(false)
 
 
 func set_gp(value: int) -> void:

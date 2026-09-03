@@ -38,16 +38,21 @@ From `quests/dom_side_quest.gd`:
 | `outcome_reputation_deltas` | `PackedFloat32Array`, per outcome |
 | `outcome_causes` | the `cause` string written to the `Reputation` ledger |
 | `outcome_readbacks` | one sentence per outcome describing the visible world change |
+| `outcome_tags` | optional parallel tag arrays; `act_of_agreement` marks the only Soul-income outcome type |
+| `outcome_soul_deltas` | optional parallel non-negative deltas; positive exactly when the matching outcome has `act_of_agreement` |
 
-`has_complete_outcome_schema()` requires all six `outcome_*` arrays to be the same length.
+`has_complete_outcome_schema()` requires the six base `outcome_*` arrays to be the same length.
+The two reward arrays may both be empty for backward compatibility; when present, both match that
+length and must satisfy the Agreement tag/delta contract.
 
 ## Runtime contract (do not duplicate it in dialogue)
 
 - Offer: `do QuestRegistry.offer_side_quest(QuestRegistry.<NAME>)` — idempotent.
 - Resolve: `do QuestRegistry.resolve_side_quest(QuestRegistry.<NAME>, "<outcome_id>")` —
   this is the ONLY place that completes the quest, writes `Reputation.record("player",
-  faction, delta, cause, "dom")`, sets `resolution_flag`, and autosaves. Dialogue never calls
-  `Reputation` or `Renown` directly.
+  faction, delta, cause, "dom")`, applies an optional tagged Agreement Soul credit, sets
+  `resolution_flag`, and autosaves. Dialogue never calls `Reputation`, `Renown`, or raises Soul
+  directly.
 - Intermediate progress uses `GameState.set_flag("<domain>_<subject>_<predicate>", true)`
   and is listed in `required_flags` so the decision cannot be reached early.
 

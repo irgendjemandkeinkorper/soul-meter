@@ -493,19 +493,30 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 		"dom"
 	)
 	GameState.set_flag(quest.resolution_flag, str(outcome["id"]))
+	var reward_entries: Array[Dictionary] = [
+		_reward_entry(
+			"faction",
+			str(outcome["faction_id"]),
+			float(outcome["reputation_delta"]),
+			str(outcome["cause"])
+		)
+	]
+	var tags: PackedStringArray = outcome["tags"]
+	if tags.has(DomSideQuest.ACT_OF_AGREEMENT_TAG):
+		var soul_before := GameState.soul_meter
+		GameState.set_soul_meter(soul_before + float(outcome["soul_delta"]))
+		var soul_credited := GameState.soul_meter - soul_before
+		reward_entries.append(
+			_reward_entry(
+				"soul", DomSideQuest.ACT_OF_AGREEMENT_TAG, soul_credited, "Act of Agreement"
+			)
+		)
 	SaveGame.request_autosave("dom-side-quest-resolved")
 	_publish_reward_summary(
 		active_quest,
 		str(outcome["id"]),
 		_humanize_reward_id(str(outcome["id"])),
-		[
-			_reward_entry(
-				"faction",
-				str(outcome["faction_id"]),
-				float(outcome["reputation_delta"]),
-				str(outcome["cause"])
-			)
-		]
+		reward_entries
 	)
 	return true
 

@@ -26,6 +26,34 @@ func test_reaching_zero_husks_but_does_not_end_the_run() -> void:
 	assert_bool(GameState.is_husked()).is_true()
 
 
+func test_hollowing_alias_reads_the_existing_husked_save_flag() -> void:
+	GameState.set_flag(GameState.HUSKED_FLAG, true)
+
+	assert_bool(GameState.is_hollowing()).is_true()
+
+	GameState.set_flag(GameState.HUSKED_FLAG, false)
+
+	assert_bool(GameState.is_hollowing()).is_false()
+
+
+func test_hollowing_signal_mirrors_legacy_husked_state_transitions() -> void:
+	GameState.soul_meter = 10.0
+	var husked_events: Array[bool] = []
+	var hollowing_events: Array[bool] = []
+	var record_husked := func(active: bool) -> void: husked_events.append(active)
+	var record_hollowing := func(active: bool) -> void: hollowing_events.append(active)
+	GameState.husked_state_changed.connect(record_husked)
+	GameState.hollowing_state_changed.connect(record_hollowing)
+
+	GameState.soul_meter = 0.0
+	GameState.soul_meter = 1.0
+
+	GameState.husked_state_changed.disconnect(record_husked)
+	GameState.hollowing_state_changed.disconnect(record_hollowing)
+	assert_array(husked_events).is_equal([true, false])
+	assert_array(hollowing_events).is_equal([true, false])
+
+
 func test_spending_past_zero_still_clamps_to_zero_and_husks() -> void:
 	GameState.soul_meter = 6.0
 	GameState.soul_meter = -40.0
