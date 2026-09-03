@@ -155,12 +155,15 @@ func test_registry_resolves_all_wave_b_resources() -> void:
 
 func test_ledger_queues_and_resolves_entries_on_turn_hook() -> void:
 	var ledger := PazzahLedger.new()
-	assert_bool(ledger.queue_effect(&"verdict", 2, {"amount": 4})).is_true()
+	assert_bool(ledger.queue_effect(&"verdict", 1, {"amount": 4})).is_true()
 	assert_int(ledger.entries.size()).is_equal(1)
 	ledger.on_turn_start()
-	var resolved := ledger.advance_ledger()
+	assert_int(ledger.entries.size()).is_equal(0)
+	assert_int(ledger.ready.size()).is_equal(1)
+	var resolved: Array[Dictionary] = ledger.drain_ready()
 	assert_int(resolved.size()).is_equal(1)
 	assert_str(str(resolved[0].get("effect_id", ""))).is_equal("verdict")
+	assert_array(ledger.drain_ready()).is_empty()
 
 
 func test_ledger_round_trip_through_registry_from_dict() -> void:

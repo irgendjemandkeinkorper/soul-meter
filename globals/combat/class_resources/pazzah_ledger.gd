@@ -9,6 +9,7 @@ extends ClassResource
 const MAX_ENTRIES := 3  # PROVISIONAL — B11 owns the cap
 
 var entries: Array[Dictionary] = []
+var ready: Array[Dictionary] = []
 
 
 func queue_effect(effect_id: StringName, turns: int, payload: Dictionary = {}) -> bool:
@@ -38,6 +39,13 @@ func advance_ledger() -> Array[Dictionary]:
 			next["turns_remaining"] = remaining
 			pending.append(next)
 	entries = pending
+	ready.append_array(resolved)
+	return resolved
+
+
+func drain_ready() -> Array[Dictionary]:
+	var resolved: Array[Dictionary] = ready.duplicate(true)
+	ready.clear()
 	return resolved
 
 
@@ -48,18 +56,21 @@ func snapshot() -> Dictionary:
 		"value": entries.size(),
 		"max": MAX_ENTRIES,
 		"pending": entries.duplicate(true),
+		"ready": ready.duplicate(true),
 	}
 
 
 func to_dict() -> Dictionary:
 	var data: Dictionary = super.to_dict()
 	data["entries"] = entries.duplicate(true)
+	data["ready"] = ready.duplicate(true)
 	return data
 
 
 func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
 	entries.clear()
+	ready.clear()
 	var raw_entries: Variant = data.get("entries", [])
 	if raw_entries is Array:
 		for raw_entry: Variant in raw_entries as Array:
@@ -67,3 +78,8 @@ func from_dict(data: Dictionary) -> void:
 				entries.append((raw_entry as Dictionary).duplicate(true))
 				if entries.size() >= MAX_ENTRIES:
 					break
+	var raw_ready: Variant = data.get("ready", [])
+	if raw_ready is Array:
+		for raw_entry: Variant in raw_ready as Array:
+			if raw_entry is Dictionary:
+				ready.append((raw_entry as Dictionary).duplicate(true))
