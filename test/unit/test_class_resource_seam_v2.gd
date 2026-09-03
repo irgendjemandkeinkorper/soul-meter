@@ -13,9 +13,16 @@ class V2Spy:
 	var cancelled: Array[Dictionary] = []
 	var kills: Array[String] = []
 	var forecast_override: Dictionary = {}
+	var enqueue_on_any_action: Dictionary = {}
+	var cancel_on_any_action: StringName = &""
+	var last_cancel: Dictionary = {}
 
 	func on_any_action(actor_id: StringName, action_id: StringName, target_id: StringName, _outcome: Dictionary) -> void:
 		any_actions.append("%s:%s:%s" % [String(actor_id), String(action_id), String(target_id)])
+		if not enqueue_on_any_action.is_empty():
+			enqueue_deferred(enqueue_on_any_action, {"delay_rounds": 2})
+		if not cancel_on_any_action.is_empty():
+			last_cancel = request_cancel(cancel_on_any_action, &"committed")
 
 	func on_deferred_fired(entry: Dictionary) -> void:
 		fired.append(entry)
@@ -240,6 +247,68 @@ func test_reveal_and_hidden_draw_overrides_reach_forecast_and_commit_identically
 	assert_str(str((committed["hidden_draw"] as Dictionary)["row_id"])).is_equal("surge")
 	assert_int(int(committed["damage"])).is_equal(int(forecast_resolution["damage"]))
 	assert_bool(committed.has("revealed")).is_true()
+
+
+func test_child_events_from_hooks_are_delivered_after_their_parent_in_sequence_order() -> void:
+	var ally_spy := V2Spy.new()
+	var battle := _battle(ally_spy)
+	var controller: CombatController = battle["controller"]
+	var enemy: BattleActor = battle["enemy"]
+	ally_spy.enqueue_on_any_action = {"writes": [{"kind": "hp", "target_id": String(enemy.combat_id), "amount": 1}]}
+	var delivered: Array[Dictionary] = []
+	controller.event_emitted.connect(func(event: CombatEvent) -> void:
+		delivered.append({"type": event.type, "sequence": event.sequence}))
+	assert_bool(controller.submit_action(&"strike", enemy).get("allowed", false)).is_true()
+	var types: Array[StringName] = []
+	var last := -1
+	for item: Dictionary in delivered:
+		types.append(item["type"])
+		assert_int(int(item["sequence"])).is_greater(last)
+		last = int(item["sequence"])
+	assert_int(types.find(&"action_resolved")).is_less(types.find(&"deferred_queued"))
+
+
+func test_committed_cancel_of_the_acting_actor_is_refused_while_resolving() -> void:
+	var ally_spy := V2Spy.new()
+	var enemy_spy := V2Spy.new()
+	var battle := _battle(ally_spy, enemy_spy)
+	var controller: CombatController = battle["controller"]
+	var ally: BattleActor = battle["ally"]
+	var enemy: BattleActor = battle["enemy"]
+	enemy_spy.cancel_on_any_action = ally.combat_id
+	var result := controller.submit_action(&"strike", enemy)
+	assert_bool(result.get("allowed", false)).is_true()
+	assert_bool(enemy_spy.last_cancel.get("allowed", true)).is_false()
+	assert_str(str(enemy_spy.last_cancel.get("blocked_by", ""))).is_equal("resolving")
+	# The scheduler released cleanly: the ally can still act on its next turn.
+	controller.end_turn()
+	assert_bool(controller.query_action(controller.action_by_id(&"strike"), enemy).get("allowed", false)).is_true()
+
+
+func test_deferred_queue_round_trips_inside_the_class_resources_save_dict() -> void:
+	var ally_spy := V2Spy.new()
+	var battle := _battle(ally_spy)
+	var controller: CombatController = battle["controller"]
+	var ally: BattleActor = battle["ally"]
+	var enemy: BattleActor = battle["enemy"]
+	assert_bool(controller.class_resources_to_dict().has(CombatController.DEFERRED_SAVE_KEY)).is_false()
+	ally_spy.enqueue_deferred({"writes": [{"kind": "hp", "target_id": String(enemy.combat_id), "amount": 2}]}, {"delay_rounds": 1}, &"oath")
+	var saved: Dictionary = controller.class_resources_to_dict()
+	assert_bool(saved.has(CombatController.DEFERRED_SAVE_KEY)).is_true()
+	controller.request_cancel(&"", ally.combat_id, &"deferred")
+	assert_int(controller.deferred_entries().size()).is_equal(0)
+	controller.restore_class_resources(saved.duplicate(true))
+	var restored := controller.deferred_entries()
+	assert_int(restored.size()).is_equal(1)
+	assert_str(str(restored[0]["label"])).is_equal("oath")
+	# A save without the key (older save) restores an empty queue.
+	controller.restore_class_resources({})
+	assert_int(controller.deferred_entries().size()).is_equal(0)
+	# Restored entries fire like fresh ones.
+	controller.restore_class_resources(saved.duplicate(true))
+	var hp_before := enemy.hp
+	controller.end_turn()
+	assert_int(enemy.hp).is_less(hp_before)
 
 
 # ─── Helpers ────────────────────────────────────────────────────────────────

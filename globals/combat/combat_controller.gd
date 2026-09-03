@@ -80,6 +80,13 @@ var _sequence := 0
 ## applied through `_apply_resolution_writes()`, the same path Resolution writes take.
 var _deferred: Array[Dictionary] = []
 var _deferred_sequence := 0
+## True while an `action_resolved` event is being delivered (hooks + listeners) and the acting
+## actor's scheduler commit is still unreleased. `request_cancel(&"committed")` on that actor
+## is refused during this window; voiding the commit here would leave `scheduler.release()`
+## with nothing to release.
+var _resolving := false
+## Reserved key inside the `class_resources` save dict that carries the deferred queue.
+const DEFERRED_SAVE_KEY := "__deferred__"
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
 ## CT: overflow keeps them past READY_AT) does not get a redundant `turn_started`.
@@ -1871,15 +1878,22 @@ func _emit_event(
 	event.target_id = target.combat_id if target else &""
 	event.data = payload.duplicate(true)
 	event.data["snapshot"] = snapshot()
+	# The parent event goes out BEFORE any hook runs: a hook that enqueues or cancels emits a
+	# child event with a higher sequence, and replay must see parent then child, monotonic.
+	var resolving_window := type == &"action_resolved"
+	if resolving_window:
+		_resolving = true
+	event_emitted.emit(event)
 	if type == &"action_resolved" and actor != null:
 		_class_resource_of(actor).on_action(event)
 		# Seam v2 broadcast: every actor's resource sees every resolved action (Threads).
 		var action_id := StringName(str(event.data.get("action_id", "")))
 		for observer: BattleActor in allies + enemies:
 			_class_resource_of(observer).on_any_action(
-				event.actor_id, action_id, event.target_id, event.data
+				event.actor_id, action_id, event.target_id, event.data.duplicate(true)
 			)
-	event_emitted.emit(event)
+	if resolving_window:
+		_resolving = false
 
 
 func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
@@ -2009,9 +2023,14 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 				kept.append(entry)
 		_deferred = kept
 	if kind == &"committed" or kind == &"any":
-		var voided := scheduler.cancel_committed(target, false)
-		if bool(voided.get("allowed", false)):
-			cancelled.append({"kind": "committed", "target_id": String(target_id), "ct_refunded": int(voided.get("ct_refunded", 0))})
+		if _resolving and target == active_actor():
+			# The target's action is mid-delivery and its commit is still unreleased.
+			if kind == &"committed":
+				return _blocked(&"resolving", "%s is mid-resolution; its commit cannot be voided now." % target.display_name, {"kind": "committed"})
+		else:
+			var voided := scheduler.cancel_committed(target, false)
+			if bool(voided.get("allowed", false)):
+				cancelled.append({"kind": "committed", "target_id": String(target_id), "ct_refunded": int(voided.get("ct_refunded", 0))})
 	if cancelled.is_empty():
 		return _blocked(&"nothing_to_cancel", "%s has nothing in flight." % target.display_name, {"kind": String(kind)})
 	var payload := {"requester_id": String(requester_id), "kind": String(kind), "cancelled": cancelled.duplicate(true)}
@@ -2110,6 +2129,10 @@ func class_resources_to_dict() -> Dictionary:
 		if resource.is_null():
 			continue
 		result[String(actor.combat_id)] = resource.to_dict()
+	# Seam v2: the deferred queue rides in this same dict under a reserved key (only when
+	# non-empty), so the save format gains no top-level key and older saves restore an empty queue.
+	if not _deferred.is_empty():
+		result[DEFERRED_SAVE_KEY] = {"sequence": _deferred_sequence, "entries": deferred_entries()}
 	return result
 
 
@@ -2120,6 +2143,13 @@ func restore_class_resources(data: Dictionary) -> void:
 			actor.class_resource = ClassResourceRegistry.from_dict(entry)
 			actor.class_resource.owner_id = actor.combat_id
 			actor.class_resource.host = self
+	var queue: Variant = data.get(DEFERRED_SAVE_KEY, {})
+	if queue is Dictionary:
+		_deferred.clear()
+		for raw: Variant in (queue as Dictionary).get("entries", []):
+			if raw is Dictionary:
+				_deferred.append((raw as Dictionary).duplicate(true))
+		_deferred_sequence = maxi(int((queue as Dictionary).get("sequence", 0)), _deferred_sequence)
 
 
 ## FR-802 (globals/stable_ids.gd). Builds `BattleActor.combat_id` from stable inputs only —

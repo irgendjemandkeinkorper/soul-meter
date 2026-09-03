@@ -76,6 +76,21 @@ inside a deferred effect):
 | `dot` | `target_id`, `amount` (HP lost) | HP loss whose kill cause is `&"dot"` (on_kill receives `&"dot"`; `on_damage_taken` fires as usual) |
 | `soul_refund` | `target_id`, `amount` | Adds `amount` to the live Soul meter (`GameState.set_soul_meter`). The only Soul income channel a resource has |
 
+Notes for B9/B11 and the refund classes:
+
+- The hidden-draw row pick is an **unweighted modulo** over `rows` (`(roll - 1) % rows.size()`).
+  B11 must not assume per-row weights; to weight a row, repeat it in the table.
+- `soul_refund` is **live `GameState` income** — it lands on the real Soul meter the moment the
+  write applies, unlike Breath, which is copied into the battle and written back by
+  `Battle._finish()`. A refund that fires in a lost battle has still happened.
+- The deferred queue is saved inside the `class_resources` dict under
+  `CombatController.DEFERRED_SAVE_KEY` (only when non-empty); older saves restore an empty queue.
+- Hook ordering: the parent `action_resolved` event is delivered to listeners BEFORE
+  `on_action`/`on_any_action` run, so a child event a hook emits (`deferred_queued`,
+  `action_cancelled`) always carries a higher sequence than its parent.
+- `request_cancel(&"committed")` on the actor whose action is being resolved is refused with
+  `resolving`; retry from `on_turn_start` or a later event.
+
 Forecast term added: `fizzle_percent_override` (0–100) pins the fizzle chance for that cast;
 `result.fizzle_overridden` is true when it was applied. `0` = a guaranteed cast (Instructive
 Failure, B2).
