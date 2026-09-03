@@ -59,3 +59,12 @@ Overall Summary: Wave B class resources #224–#228 implemented within the froze
 - Preserved full `unit`/`fizzle` forecast sub-dictionaries under shallow seam merge; Vicoar now consumes the armed window only on CAST resolution and refunds it on fizzles.
 - Disabled the unimplemented Record Name action, hid inert Hunger from the unit plate, and removed string-valued snapshot maxima for Balance and Name-Ledger.
 - Added controller-level forecast context coverage and updated Wave B regression tests.
+
+## Wiring pass
+
+- Flamebinder now uses seam v2 `fizzle_percent_override = 0.0` for every armed cast.
+- Hunger now queues/requeues `dot` writes by live stack count and queues `soul_refund` on DoT kills; pending state and deferred entries remain serializable.
+- Name-Ledger now routes `Record Name` through the generic `on_command(action_id, target_id)` hook, watches ally deaths/final enemy defeat through `on_any_action`, and emits one refund per recorded actor.
+- `Record Name` is player-available with `center_pull = 10`; Mirrorblade and Ironbrand remain unchanged and their deep-merge/forecast tests pass.
+- Verification: requested suites passed — `7 + 14 + 4 + 44 = 69 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans`.
+- No push performed.
