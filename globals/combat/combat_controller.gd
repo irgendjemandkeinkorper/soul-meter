@@ -75,6 +75,11 @@ var _actions: Dictionary = {}
 var _abilities: Dictionary = {}
 var _tactical_tables: TacticalTables
 var _sequence := 0
+## Seam v2 (#223 follow-up): effects queued by class resources for a later scheduler boundary.
+## Fired by `_fire_due_deferred()` from `_drive_scheduler()` — the one place turns advance — and
+## applied through `_apply_resolution_writes()`, the same path Resolution writes take.
+var _deferred: Array[Dictionary] = []
+var _deferred_sequence := 0
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
 ## CT: overflow keeps them past READY_AT) does not get a redundant `turn_started`.
@@ -197,6 +202,8 @@ func start(
 	active_ally_index = -1
 	_last_turn_actor = null
 	_last_side = &"ally"
+	_deferred.clear()
+	_deferred_sequence = 0
 	_assign_combat_ids(allies, &"ally", encounter_id)
 	_assign_combat_ids(enemies, &"enemy", encounter_id)
 	_attach_class_resources(allies)
@@ -489,6 +496,7 @@ func snapshot() -> Dictionary:
 		"scheduler_mode": str(scheduler.to_dict().get("scheduler", "")) if scheduler != null else "",
 		"turn_order": _turn_order_snapshot(),
 		"movement": _movement_snapshot(),
+		"deferred": deferred_entries(),
 	}
 
 
@@ -713,6 +721,9 @@ func _drive_scheduler() -> void:
 			_finish(ResultState.DEFEAT, &"defeat")
 			return
 		_translate_scheduler_extras(result)
+		_fire_due_deferred()
+		if state == State.FINISHED:
+			return
 		var actor: BattleActor = result.get("actor")
 		if actor == null or not actor.is_alive():
 			_finish(ResultState.DEFEAT, &"defeat")
@@ -1247,10 +1258,24 @@ func _apply_resolution_writes(
 					_class_resource_of(target).on_damage_taken(lost, actor.combat_id)
 				if hp_before > 0 and target.hp <= 0:
 					_class_resource_of(actor).on_kill(target.combat_id, cause)
+			&"dot":
+				# Seam v2: damage-over-time is an HP loss whose kill cause is &"dot" regardless of
+				# the action that queued it (Husk-bearer Hunger keys refunds on that cause).
+				var dot_before := target.hp
+				target.hp = int(write.get("after", target.hp))
+				var dot_lost := dot_before - target.hp
+				if dot_lost > 0:
+					_class_resource_of(target).on_damage_taken(dot_lost, actor.combat_id)
+				if dot_before > 0 and target.hp <= 0:
+					_class_resource_of(actor).on_kill(target.combat_id, &"dot")
 			&"breath":
 				actor.breath = int(write.get("after", actor.breath))
 			&"soul_meter":
 				_set_soul_meter(float(write.get("after", _soul_meter())))
+			&"soul_refund":
+				# Seam v2: the one Soul income channel a resource has (Hunger, Name-Ledger).
+				# Additive on the live meter; `after` is informational.
+				_set_soul_meter(_soul_meter() + maxf(float(write.get("delta", write.get("amount", 0.0))), 0.0))
 			&"tile_state":
 				if not apply_tile_writes:
 					continue
@@ -1457,8 +1482,25 @@ func forecast_context(
 	# so whatever it overrides is seen identically by both — no second calculator.
 	var overrides := _class_resource_of(actor).on_cast_forecast(context.duplicate(true))
 	if not overrides.is_empty():
-		context.merge(overrides, true)
+		# Seam v2: key-level merge, so `{"unit": {"attack_scale": 1.25}}` keeps unit.id/edge/breath
+		# and `{"fizzle": {"mastery": true}}` keeps fizzle.patron/pitch. A shallow merge replaced
+		# the whole sub-dict (found by the B1–B5 review).
+		deep_merge(context, overrides)
+	# Seam v2 channels always present in the context so Resolution and the panel read one shape.
+	context["reveal"] = bool(context.get("reveal", false))
 	return context
+
+
+## Recursive key-wise merge: nested Dictionaries merge, everything else overwrites. Mutates
+## `base`. Used for `on_cast_forecast` overrides at forecast AND commit (same function, same
+## input, same result).
+static func deep_merge(base: Dictionary, overrides: Dictionary) -> void:
+	for key: Variant in overrides:
+		var incoming: Variant = overrides[key]
+		if incoming is Dictionary and base.get(key) is Dictionary:
+			deep_merge(base[key] as Dictionary, incoming as Dictionary)
+		else:
+			base[key] = incoming.duplicate(true) if incoming is Dictionary or incoming is Array else incoming
 
 
 ## User-facing forecast: gate first (including ranged LOS), then run the same pure context and
@@ -1831,6 +1873,12 @@ func _emit_event(
 	event.data["snapshot"] = snapshot()
 	if type == &"action_resolved" and actor != null:
 		_class_resource_of(actor).on_action(event)
+		# Seam v2 broadcast: every actor's resource sees every resolved action (Threads).
+		var action_id := StringName(str(event.data.get("action_id", "")))
+		for observer: BattleActor in allies + enemies:
+			_class_resource_of(observer).on_any_action(
+				event.actor_id, action_id, event.target_id, event.data
+			)
 	event_emitted.emit(event)
 
 
@@ -1871,6 +1919,7 @@ func _attach_class_resources(group: Array[BattleActor]) -> void:
 			var patron: String = actor.source_member.patron if actor.source_member != null else ""
 			actor.class_resource = ClassResourceRegistry.for_patron(patron)
 		actor.class_resource.owner_id = actor.combat_id
+		actor.class_resource.host = self
 
 
 func _class_resource_of(actor: BattleActor) -> ClassResource:
@@ -1878,6 +1927,8 @@ func _class_resource_of(actor: BattleActor) -> ClassResource:
 		return NullClassResource.new()
 	if actor.class_resource == null:
 		actor.class_resource = NullClassResource.new()
+	if actor.class_resource.host == null:
+		actor.class_resource.host = self
 	return actor.class_resource
 
 
@@ -1890,6 +1941,165 @@ static func _kill_cause_for(action: CombatAction) -> StringName:
 		_:
 			return &"attack"
 
+
+
+# ─── Seam v2: deferred execution + cancellation (#223 follow-up) ───────────────────────────
+
+
+## Queues an effect for a later scheduler boundary. `entry` carries `source_id`, `effect`
+## (`{"writes": [...]}`), and ONE due term: `due_tick` / `delay_ticks` (charge-time clock,
+## `scheduler.tick_count()`) or `due_round` / `delay_rounds` (AP rounds, `round_number`). The
+## effect is applied by `_fire_due_deferred()` through `_apply_resolution_writes()` — no second
+## executor. Returns the refusal shape or `{allowed, entry}`; the entry is also visible in
+## `snapshot().deferred` so the unit plate can show what is pending.
+func enqueue_deferred(entry: Dictionary) -> Dictionary:
+	if state == State.FINISHED or state == State.IDLE:
+		return _blocked(&"battle_not_live", "No live battle to defer into.", {})
+	var source_id := StringName(str(entry.get("source_id", "")))
+	if source_id.is_empty() or _actor_by_id(source_id) == null:
+		return _blocked(&"unknown_source", "Deferred effects need a participating source.", {})
+	var effect: Dictionary = entry.get("effect", {}) if entry.get("effect") is Dictionary else {}
+	var writes: Variant = effect.get("writes", [])
+	if not (writes is Array) or (writes as Array).is_empty():
+		return _blocked(&"empty_effect", "A deferred effect needs at least one write.", {})
+	var queued := entry.duplicate(true)
+	var has_due := false
+	if entry.has("delay_ticks"):
+		queued["due_tick"] = scheduler.tick_count() + maxi(int(entry["delay_ticks"]), 0)
+		has_due = true
+	if entry.has("delay_rounds"):
+		queued["due_round"] = round_number + maxi(int(entry["delay_rounds"]), 0)
+		has_due = true
+	if entry.has("due_tick") or entry.has("due_round"):
+		has_due = true
+	if not has_due:
+		return _blocked(&"no_due_term", "A deferred effect needs due_tick/delay_ticks or due_round/delay_rounds.", {})
+	_deferred_sequence += 1
+	queued["id"] = _deferred_sequence
+	queued["queued_tick"] = scheduler.tick_count()
+	queued["queued_round"] = round_number
+	_deferred.append(queued)
+	_emit_event(&"deferred_queued", _actor_by_id(source_id), null, {"entry": queued.duplicate(true)})
+	return _allowed({"entry": queued.duplicate(true)})
+
+
+func deferred_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for entry: Dictionary in _deferred:
+		out.append(entry.duplicate(true))
+	return out
+
+
+## Cancels what `target_id` has in flight on behalf of `requester_id`. `kind`: &"deferred" removes
+## the target's queued deferred entries; &"committed" voids its committed-but-unresolved
+## scheduler action (a charging Song under charge time) with no refund; &"any" does both. Emits
+## `action_cancelled` with what was removed. Refuses with `nothing_to_cancel` when nothing was.
+func request_cancel(requester_id: StringName, target_id: StringName, kind: StringName = &"any") -> Dictionary:
+	var target := _actor_by_id(target_id)
+	if target == null:
+		return _blocked(&"unknown_target", "That combatant is not in this battle.", {})
+	var cancelled: Array[Dictionary] = []
+	if kind == &"deferred" or kind == &"any":
+		var kept: Array[Dictionary] = []
+		for entry: Dictionary in _deferred:
+			if StringName(str(entry.get("source_id", ""))) == target_id:
+				cancelled.append(entry.duplicate(true))
+				_class_resource_of(target).on_deferred_cancelled(entry.duplicate(true), requester_id)
+			else:
+				kept.append(entry)
+		_deferred = kept
+	if kind == &"committed" or kind == &"any":
+		var voided := scheduler.cancel_committed(target, false)
+		if bool(voided.get("allowed", false)):
+			cancelled.append({"kind": "committed", "target_id": String(target_id), "ct_refunded": int(voided.get("ct_refunded", 0))})
+	if cancelled.is_empty():
+		return _blocked(&"nothing_to_cancel", "%s has nothing in flight." % target.display_name, {"kind": String(kind)})
+	var payload := {"requester_id": String(requester_id), "kind": String(kind), "cancelled": cancelled.duplicate(true)}
+	_emit_event(&"action_cancelled", _actor_by_id(requester_id), target, payload)
+	return _allowed(payload)
+
+
+func _actor_by_id(combat_id: StringName) -> BattleActor:
+	if combat_id.is_empty():
+		return null
+	for actor: BattleActor in allies + enemies:
+		if actor.combat_id == combat_id:
+			return actor
+	return null
+
+
+func _deferred_is_due(entry: Dictionary) -> bool:
+	if entry.has("due_tick") and scheduler.tick_count() >= int(entry["due_tick"]):
+		return true
+	if entry.has("due_round") and round_number >= int(entry["due_round"]):
+		return true
+	return false
+
+
+## Fires every due entry, oldest first, each through `_apply_resolution_writes()`. Fires even
+## when the source is down — a Ledger entry outlives its author — and skips writes whose target
+## has left the battle. Ends the battle if a fired write empties a side.
+func _fire_due_deferred() -> void:
+	if _deferred.is_empty():
+		return
+	var pending: Array[Dictionary] = []
+	var due: Array[Dictionary] = []
+	for entry: Dictionary in _deferred:
+		if _deferred_is_due(entry):
+			due.append(entry)
+		else:
+			pending.append(entry)
+	_deferred = pending
+	for entry: Dictionary in due:
+		var source_id := StringName(str(entry.get("source_id", "")))
+		var source := _actor_by_id(source_id)
+		var applied: Array[Dictionary] = []
+		var effect: Dictionary = entry.get("effect", {})
+		for raw: Variant in effect.get("writes", []):
+			if not (raw is Dictionary):
+				continue
+			var write := raw as Dictionary
+			var target := _actor_by_id(StringName(str(write.get("target_id", ""))))
+			if target == null:
+				continue
+			var materialized := _materialize_write(write, target)
+			var actor := source if source != null else target
+			_apply_resolution_writes(actor, target, {"writes": [materialized]}, true, &"deferred")
+			applied.append(materialized)
+		var fired := entry.duplicate(true)
+		fired["applied"] = applied
+		_emit_event(&"deferred_effect_fired", source, null, {"entry": fired.duplicate(true)})
+		if source != null:
+			_class_resource_of(source).on_deferred_fired(fired)
+	if not _has_living(allies):
+		_finish(ResultState.DEFEAT, &"defeat")
+	elif not _has_living(enemies):
+		_finish(ResultState.VICTORY, &"slain")
+
+
+## Turns a queued write (`delta` or `amount`, no before/after) into the same shape Resolution
+## emits, from LIVE state at fire time. `hp`/`dot` amounts are HP lost; `breath` and
+## `soul_refund` are gains; `soul_meter`/`tile_state` must already carry `after`.
+func _materialize_write(write: Dictionary, target: BattleActor) -> Dictionary:
+	var out := write.duplicate(true)
+	out["target_id"] = String(target.combat_id)
+	match StringName(str(write.get("kind", ""))):
+		&"hp", &"dot":
+			var loss := absi(int(write.get("amount", -int(write.get("delta", 0)))))
+			out["before"] = target.hp
+			out["after"] = maxi(target.hp - loss, 0)
+			out["delta"] = int(out["after"]) - target.hp
+		&"breath":
+			var gain := int(write.get("amount", write.get("delta", 0)))
+			out["before"] = target.breath
+			out["after"] = maxi(target.breath + gain, 0)
+			out["delta"] = int(out["after"]) - target.breath
+		&"soul_refund":
+			var refund := maxf(float(write.get("amount", write.get("delta", 0.0))), 0.0)
+			out["before"] = _soul_meter()
+			out["delta"] = refund
+			out["after"] = _soul_meter() + refund
+	return out
 
 ## Model-level persistence for the additive `class_resources` save key (no schema bump).
 ## Keyed by combat id; Null resources are skipped.
@@ -1909,6 +2119,7 @@ func restore_class_resources(data: Dictionary) -> void:
 		if entry is Dictionary:
 			actor.class_resource = ClassResourceRegistry.from_dict(entry)
 			actor.class_resource.owner_id = actor.combat_id
+			actor.class_resource.host = self
 
 
 ## FR-802 (globals/stable_ids.gd). Builds `BattleActor.combat_id` from stable inputs only —
