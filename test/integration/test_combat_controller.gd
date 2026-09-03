@@ -400,12 +400,21 @@ func test_full_round_emits_ordered_presentation_event_stream() -> void:
 func test_ap_round_boundary_expires_temporary_effects_before_next_actor() -> void:
 	controller.start([ally], [enemy])
 	ally.defining_effects["hit"] = true
+	ally.defining_effects["range_bonus"] = 1
+	ally.aftertones = [{"element": "suul", "remaining_rounds": 2, "anchored": true}]
 	controller.thunderhead_hit_until_round = controller.round_number
+	controller.range_bonus_until_round = controller.round_number
+	controller.duration_freeze_until_round = controller.round_number
+	controller.founding_anchor_restore[ally.combat_id] = {"suul:2:0": false}
 	assert_bool(controller.end_turn()).is_true()
 
 	assert_int(controller.round_number).is_equal(2)
 	assert_object(controller.active_actor()).is_equal(ally)
 	assert_bool(ally.defining_effects.has("hit")).is_false()
+	assert_bool(ally.defining_effects.has("range_bonus")).is_false()
+	assert_bool(bool(ally.aftertones[0].get("anchored", true))).is_false()
+	assert_int(controller.range_bonus_until_round).is_equal(0)
+	assert_bool(controller.founding_anchor_restore.is_empty()).is_true()
 
 
 func test_ap_refresh_derives_from_attributes_and_costs_are_deducted() -> void:

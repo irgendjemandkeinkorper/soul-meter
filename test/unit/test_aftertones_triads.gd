@@ -54,6 +54,21 @@ func test_founding_anchors_everyone_and_freezes_duration() -> void:
 	assert_bool(bool(controller.allies[0].aftertones[1].get("anchored", false))).is_true()
 
 
+func test_founding_restores_duplicate_tones_by_stable_index() -> void:
+	var controller := _live_controller(ElementsData.triad(&"founding"))
+	controller.allies[0].aftertones = [
+		{"element": "suul", "remaining_rounds": 2, "anchored": false},
+		{"element": "suul", "remaining_rounds": 2, "anchored": true},
+	]
+	_submit_triad(controller, ElementsData.triad(&"founding"))
+
+	controller.round_number = controller.duration_freeze_until_round + 1
+	controller._expire_temporary_effects()
+
+	assert_bool(bool(controller.allies[0].aftertones[0].get("anchored", true))).is_false()
+	assert_bool(bool(controller.allies[0].aftertones[1].get("anchored", false))).is_true()
+
+
 func test_vault_caster_aftertones_are_anchored() -> void:
 	var controller := _live_controller(ElementsData.triad(&"vault"))
 	controller.allies[0].aftertones = [{"remaining_rounds": 2}]
