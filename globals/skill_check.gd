@@ -8,6 +8,7 @@ extends Node
 ## this same service without a second dialogue-only implementation.
 
 const MAX_EFFECTIVE_PERCENT := 95.0
+const FIZZLE_FLOOR_PERCENT := 5.0  # PROVISIONAL — B11 owns the floor
 const MIN_ROLL := 1
 const MAX_ROLL := 100
 const EXPERT_REROLL_CAP := 1
@@ -217,7 +218,7 @@ func fizzle_percent(
 	)
 	var rounded := _round_fizzle(raw, magnitude_key)
 	if _is_fickah_or_locksmirk(patron):
-		return maxf(5.0, rounded)
+		return maxf(FIZZLE_FLOOR_PERCENT, rounded)
 	return rounded
 
 

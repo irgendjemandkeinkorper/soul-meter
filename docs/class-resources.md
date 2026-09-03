@@ -116,6 +116,18 @@ Failure, B2).
 
 ## Adding a class (B1–B10 recipe)
 
+| Issue | Patron | Resource | Current status |
+|---|---|---|---|
+| B6 | Stuid | Clarity | State-only until seam v2 |
+| B7 | Pazzah | Oathclock Ledger | State-only until seam v2 |
+| B8 | Fickah | Locksmirk Jam | State-only until seam v2 |
+| B9 | Ofshütje | Stormbearer Attribution | State-only until seam v2 |
+| B10 | Izhakel | Threadwalker Threads | State-only until seam v2 |
+
+These five resources intentionally use only the existing seam. Deferred execution, cancellation
+hooks, all-actor `on_any_action` broadcast, reveal delivery, and hidden effect draws remain
+state-only until seam v2.
+
 1. `globals/combat/class_resources/<patron>_<resource>.gd`, `class_name <PascalCase>`,
    `extends ClassResource`. Header comment quotes the vault table row. Override only the hooks
    you use. Keep every number as a `const` marked `PROVISIONAL` (B11 owns tuning).

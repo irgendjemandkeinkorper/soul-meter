@@ -24,3 +24,15 @@ func test_plate_falls_back_to_unit_art_when_snapshot_has_no_portrait() -> void:
 	plate.consume_event(event)
 	var portrait := runner.find_child("Portrait", true, false) as TextureRect
 	assert_object(portrait.texture).is_not_null()
+
+
+func test_unit_plate_hides_hidden_resource_attribution() -> void:
+	var runner := scene_runner("res://ui/hud/regions/unit_plate/unit_plate_region.tscn")
+	var plate := runner.scene() as UnitPlateRegion
+	var event := CombatEvent.new()
+	event.data = {"active_unit": {
+		"name": "Vex", "hp": 12, "max_hp": 20,
+		"class_resource": {"label": "Attribution", "value": "thunder", "hidden": true},
+	}}
+	plate.consume_event(event)
+	assert_str((runner.find_child("Resource", true, false) as Label).text).is_equal("ATTRIBUTION ??")

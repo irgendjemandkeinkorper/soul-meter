@@ -293,6 +293,43 @@ func test_committed_cancel_of_the_acting_actor_is_refused_while_resolving() -> v
 	assert_bool(controller.query_action(controller.action_by_id(&"strike"), enemy).get("allowed", false)).is_true()
 
 
+func test_fickah_retries_and_cancels_a_queued_deferred_entry_on_its_turn() -> void:
+	var breaker := FickahRuleBreaker.new()
+	var battle := _battle(null, breaker)
+	var controller: CombatController = battle["controller"]
+	var ally: BattleActor = battle["ally"]
+	var enemy: BattleActor = battle["enemy"]
+	var events: Array[StringName] = []
+	controller.event_emitted.connect(func(event: CombatEvent) -> void: events.append(event.type))
+	assert_bool(breaker.jam_the_gears(ally.combat_id)).is_false()
+	assert_str(String(breaker.jam_target_id)).is_equal(String(ally.combat_id))
+	assert_bool((ally.class_resource as ClassResource).enqueue_deferred(
+		{"writes": [{"kind": "hp", "target_id": String(enemy.combat_id), "amount": 3}]},
+		{"delay_rounds": 2}
+	).get("allowed", false)).is_true()
+	controller.end_turn()
+	assert_array(events).contains([&"action_cancelled"])
+	assert_int(controller.deferred_entries().size()).is_equal(0)
+	assert_str(String(breaker.jam_target_id)).is_empty()
+
+
+func test_threads_payoff_applies_hp_on_the_next_deferred_fire() -> void:
+	var threads := IzhakelThreads.new()
+	var battle := _battle(threads)
+	var controller: CombatController = battle["controller"]
+	var ally: BattleActor = battle["ally"]
+	var enemy: BattleActor = battle["enemy"]
+	var hp_before: int = enemy.hp
+	assert_bool(threads.bind_thread(
+		enemy.combat_id,
+		{"action_id": "enemy-strike"},
+		{"writes": [{"kind": "hp", "target_id": String(enemy.combat_id), "amount": 4}]}
+	)).is_true()
+	# The enemy's authored strike is advanced by the controller on the next scheduler beat.
+	controller.end_turn()
+	assert_int(enemy.hp).is_less(hp_before)
+
+
 func test_deferred_queue_round_trips_inside_the_class_resources_save_dict() -> void:
 	var ally_spy := V2Spy.new()
 	var battle := _battle(ally_spy)
