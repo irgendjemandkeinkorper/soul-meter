@@ -484,11 +484,12 @@ func line_of_sight(actor: BattleActor, target: BattleActor) -> Dictionary:
 		)
 	var from_cell: Vector2i = _cells[actor.combat_id]
 	var to_cell: Vector2i = _cells[target.combat_id]
-	if _chebyshev(from_cell, to_cell) > _LOS_MAX_RANGE:
+	var range_bonus := int(actor.defining_effects.get("range_bonus", 0))
+	if _chebyshev(from_cell, to_cell) > _LOS_MAX_RANGE + range_bonus:
 		return _blocked(
 			&"blocked_by_range",
 			"Target is beyond line-of-sight range.",
-			{"type": &"range", "max_range": _LOS_MAX_RANGE},
+			{"type": &"range", "max_range": _LOS_MAX_RANGE + range_bonus},
 		)
 	var from_elev := elevation_at(from_cell)
 	var to_elev := elevation_at(to_cell)

@@ -206,6 +206,31 @@ func test_cast_fizzle_is_deterministic_and_still_pays_cost_and_leaves_residue() 
 	)
 
 
+func test_scor_clean_target_does_not_burst_its_fresh_aftertone() -> void:
+	var context := _walkthrough_context()
+	context["ability"]["element_id"] = &"scor"
+	context["ability"]["elements"] = [&"scor"]
+	context["ability"]["is_spell"] = true
+	var result: Dictionary = ResolutionScript.resolve(context)
+	assert_bool(result["fizzled"]).is_false()
+	assert_bool(result["writes"].any(func(write: Dictionary) -> bool: return write.get("kind", "") == "aftertone_spent")).is_false()
+	var aftertone_write: Dictionary = result["writes"].filter(func(write: Dictionary) -> bool: return write.get("kind", "") == "aftertones")[0]
+	assert_int((aftertone_write["after"] as Array).size()).is_equal(1)
+
+
+func test_fizzled_scor_does_not_consume_existing_aftertone() -> void:
+	var context := _walkthrough_context()
+	context["ability"]["element_id"] = &"scor"
+	context["ability"]["elements"] = [&"scor"]
+	context["ability"]["is_spell"] = true
+	context["fizzle"] = {"agreement_integrity": 0.0, "mastery": false}
+	context["target"]["aftertones"] = [{"element": &"suul", "remaining_rounds": 2}]
+	var result: Dictionary = ResolutionScript.resolve(context)
+	assert_bool(result["fizzled"]).is_true()
+	assert_bool(result["writes"].any(func(write: Dictionary) -> bool: return write.get("kind", "") == "aftertone_spent")).is_false()
+	assert_bool(result["writes"].any(func(write: Dictionary) -> bool: return write.get("kind", "") == "aftertones")).is_false()
+
+
 func test_cast_cost_spends_breath_then_soul_and_refuses_insufficient_soul_without_writes() -> void:
 	var context := _walkthrough_context()
 	context["ability"]["is_spell"] = true

@@ -101,6 +101,7 @@ static func _resolve_triad(result: CompositionResult) -> CompositionResult:
 	result.center_element = definition.center_element
 	result.imposition_strength = &"amplified"
 	result.unique_effect_id = definition.unique_effect_id
+	result.triad_effect_id = definition.unique_effect_id
 	result.unique_effect_parameters = definition.unique_effect_parameters.duplicate(true)
 	result.fizzle_requested = true
 	_add_imposition(result, definition.center_element, &"amplified")

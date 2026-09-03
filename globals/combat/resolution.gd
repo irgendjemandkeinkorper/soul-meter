@@ -138,10 +138,62 @@ static func resolve(context: Dictionary) -> Dictionary:
 			int(PROVISIONAL_TO_HIT["clamp_lo"]),
 			int(PROVISIONAL_TO_HIT["clamp_hi"]),
 		)
-		hit_roll = _deterministic_hit_roll(context, ability_id, unit, target)
-		hit = hit_roll <= hit_chance
+		if bool(unit.get("hit", false)):
+			hit = true
+		else:
+			hit_roll = _deterministic_hit_roll(context, ability_id, unit, target)
+			hit = hit_roll <= hit_chance
 	var power := maxi(int(ability.get("power", 0)), 0)
 	var attack_scale := maxf(float(unit.get("attack_scale", 1.0)), 0.0)
+	var target_aftertones := _aftertones(target.get("aftertones", []))
+	var tempo_before := int(unit.get("tempo", 0))
+	var tempo_after := tempo_before
+	var target_tempo_before := int(target.get("tempo", 0))
+	var target_tempo_after := target_tempo_before
+	var consumed_aftertone := false
+	var target_aftertones_before := target_aftertones.duplicate(true)
+	var has_terra_bend := composition.rule_bends.has(&"creates_cover_anchors_aftertones")
+	var has_scor_bend := composition.rule_bends.has(&"consumes_aftertone_for_burst")
+	var has_nul_bend := composition.rule_bends.has(&"cancels_and_zeroes_tempo")
+	var has_khor_bend := composition.rule_bends.has(&"extends_durations_holds_notes") or composition.elements.has(&"khor")
+	# PROVISIONAL R1: every successful elemental cast lays one centre-element Aftertone on the
+	# target. The legacy ability keys remain optional overrides for authored exceptions only.
+	var lays_aftertone := is_spell and not fizzled
+	if ability.has("aftertone") or ability.has("aftertone_element"):
+		lays_aftertone = bool(ability.get("aftertone", true)) and not fizzled
+	# PROVISIONAL R3: the interim producer tracks the previous successful cast element.
+	var previous_element := ElementWheel.normalize(unit.get("last_cast_element", ""))
+	if is_spell:
+		tempo_after = tempo_before + 1 if not fizzled and previous_element == element_id and previous_element != &"" else 0
+	if not fizzled and has_scor_bend:
+		for index: int in target_aftertones.size():
+			if not bool(target_aftertones[index].get("anchored", false)):
+				target_aftertones.remove_at(index)
+				consumed_aftertone = true
+				power += 1 # PROVISIONAL: absent vault burst magnitude, use +1.
+				break
+	if not fizzled and composition.triad_effect_id == &"everything_burns_at_once":
+		var clearable := _aftertones(unit.get("aftertones", [])).size() + target_aftertones.size()
+		power += clearable
+	if not fizzled and has_nul_bend:
+		target_aftertones.clear()
+		target_tempo_after = 0
+	if lays_aftertone:
+		var aftertone_element := ElementWheel.normalize(ability.get("aftertone_element", composition.center_element if composition.center_element != &"" else element_id))
+		var aftertone_rounds := maxi(int(ability.get("aftertone_rounds", 2)), 1)
+		target_aftertones.append({
+			"element": aftertone_element,
+			"remaining_rounds": aftertone_rounds,
+			"held": false,
+			"anchored": false,
+		})
+	if not fizzled and has_terra_bend:
+		for aftertone: Dictionary in target_aftertones:
+			aftertone["anchored"] = true
+	var held_caster_aftertones := _aftertones(unit.get("aftertones", []))
+	if not fizzled and has_khor_bend and not held_caster_aftertones.is_empty():
+		# PROVISIONAL R2: Khor is caster-side and holds only the caster's most recent laying.
+		held_caster_aftertones[held_caster_aftertones.size() - 1]["held"] = true
 
 	var breakdown: Array[Dictionary] = [
 		_step("power", "Power", float(power)),
@@ -151,6 +203,12 @@ static func resolve(context: Dictionary) -> Dictionary:
 		_step("facing", "Facing: %s" % str(positioning["facing"]), facing_multiplier),
 		_step("tile_charge", "Source tile charge", tile_multiplier),
 	]
+	if not fizzled and composition.triad_effect_id == &"everything_burns_at_once":
+		var cinderfall_count := _aftertones(unit.get("aftertones", [])).size() + _aftertones(target.get("aftertones", [])).size()
+		if cinderfall_count > 0:
+			breakdown.append(_step("cinderfall_burst", "Cinderfall cleared Aftertones", float(cinderfall_count), "add"))
+	if consumed_aftertone:
+		breakdown.append(_step("aftertone_burst", "Scor Aftertone burst", 1.0, "add"))
 	var scaled_damage := float(power) * attack_scale * matrix_multiplier
 	scaled_damage *= height_multiplier
 	scaled_damage *= facing_multiplier
@@ -260,6 +318,61 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"before": breath_before,
 			"after": breath_before - breath_spent,
 			"delta": -breath_spent,
+		})
+	if target_aftertones != target_aftertones_before:
+		writes.append({
+			"kind": "aftertones",
+			"target_id": str(target.get("id", "")),
+			"before": _aftertones(target.get("aftertones", [])),
+			"after": target_aftertones.duplicate(true),
+		})
+	if consumed_aftertone:
+		writes.append({"kind": "aftertone_spent", "target_id": str(target.get("id", "")), "count": 1})
+	if has_khor_bend and held_caster_aftertones != _aftertones(unit.get("aftertones", [])):
+		writes.append({
+			"kind": "aftertones",
+			"target_id": str(unit.get("id", "")),
+			"before": _aftertones(unit.get("aftertones", [])),
+			"after": held_caster_aftertones,
+		})
+	if is_spell and (tempo_after != tempo_before or fizzled):
+		writes.append({
+			"kind": "tempo",
+			"target_id": str(unit.get("id", "")),
+			"before": int(unit.get("tempo", 0)),
+			"after": tempo_after,
+			"delta": tempo_after - int(unit.get("tempo", 0)),
+		})
+	if is_spell and not fizzled:
+		writes.append({
+			"kind": "last_cast_element",
+			"target_id": str(unit.get("id", "")),
+			"before": String(unit.get("last_cast_element", "")),
+			"after": String(element_id),
+		})
+	if has_nul_bend and target_tempo_after != target_tempo_before:
+		writes.append({
+			"kind": "tempo",
+			"target_id": str(target.get("id", "")),
+			"before": target_tempo_before,
+			"after": target_tempo_after,
+			"delta": target_tempo_after - target_tempo_before,
+		})
+	if ability.has("tempo_delta") and not has_nul_bend:
+		var tempo_delta := int(ability.get("tempo_delta", 0))
+		writes.append({
+			"kind": "tempo",
+			"target_id": str(unit.get("id", "")),
+			"before": int(unit.get("tempo", 0)),
+			"after": int(unit.get("tempo", 0)) + tempo_delta,
+			"delta": tempo_delta,
+		})
+	if not fizzled and composition.triad_effect_id != &"":
+		writes.append({
+			"kind": "triad_effect",
+			"target_id": str(unit.get("id", "")),
+			"effect_id": String(composition.triad_effect_id),
+			"parameters": composition.unique_effect_parameters.duplicate(true),
 		})
 	var soul_failure_cost := (
 		ElementMatrix.soul_on_failure(element_id, target_element) if fizzled else 0
@@ -472,6 +585,15 @@ static func _ability_elements(ability: Dictionary, fallback: StringName) -> Arra
 			result.append(ElementWheel.normalize(element))
 	if result.is_empty():
 		result.append(fallback)
+	return result
+
+
+static func _aftertones(value: Variant) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if value is Array:
+		for entry: Variant in value as Array:
+			if entry is Dictionary:
+				result.append((entry as Dictionary).duplicate(true))
 	return result
 
 

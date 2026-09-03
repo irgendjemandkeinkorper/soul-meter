@@ -85,6 +85,10 @@ func cover_bonus_at(_attacker: BattleActor, _target_position: StringName) -> int
 	return 0
 
 
+func set_cover(_cell: Vector2i, _grants_cover: bool = true) -> void:
+	pass
+
+
 func flank_bonus(_actor: BattleActor, _target: BattleActor) -> int:
 	return 0
 

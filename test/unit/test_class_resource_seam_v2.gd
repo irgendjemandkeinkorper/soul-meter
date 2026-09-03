@@ -231,6 +231,12 @@ func test_reveal_and_hidden_draw_overrides_reach_forecast_and_commit_identically
 	var controller: CombatController = battle["controller"]
 	var enemy: BattleActor = battle["enemy"]
 	var strike: CombatAction = controller.action_by_id(&"strike")
+	var grid: GridBattlefieldModel = battle["grid"]
+	grid.set_cover(Vector2i(0, 0), true)
+	var covered := controller.forecast_action(strike, enemy)
+	assert_int(int((covered["positioning"] as Dictionary)["cover_bonus"])).is_equal(
+		controller.rules.cover_defense_bonus
+	)
 	ally_spy.forecast_override = {
 		"reveal": true,
 		"to_hit_enabled": false,
@@ -240,6 +246,8 @@ func test_reveal_and_hidden_draw_overrides_reach_forecast_and_commit_identically
 	assert_bool(forecast.get("allowed", false)).is_true()
 	var forecast_resolution: Dictionary = forecast["resolution"]
 	assert_bool(bool(forecast_resolution["reveal"])).is_true()
+	assert_bool(forecast_resolution.has("revealed")).is_true()
+	assert_int(int((forecast["positioning"] as Dictionary)["cover_bonus"])).is_equal(0)
 	assert_str(str((forecast_resolution["hidden_draw"] as Dictionary)["row_id"])).is_equal("surge")
 	var result := controller.submit_action(&"strike", enemy)
 	assert_bool(result.get("allowed", false)).is_true()
