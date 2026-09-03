@@ -25,13 +25,8 @@ func spend_token() -> bool:
 func on_cast_forecast(context: Dictionary) -> Dictionary:
 	if not guaranteed_cast_armed:
 		return {}
-	# Resolution has no direct fizzle-percent override. Mastery guarantees Note/Phrase only;
-	# this is the strongest existing channel and the general-cast gap is in the handoff.
-	var fizzle: Dictionary = (context.get("fizzle", {}) as Dictionary).duplicate(true)
-	fizzle["agreement_integrity"] = 100.0
-	fizzle["mastery"] = true
-	fizzle["pitch"] = maxi(int(fizzle.get("pitch", 2)), 2)
-	return {"fizzle": fizzle}
+	# Seam v2: an armed token guarantees every cast magnitude, not only mastery magnitudes.
+	return {"fizzle_percent_override": 0.0}
 
 
 func on_action(event: CombatEvent) -> void:

@@ -32,7 +32,7 @@ func test_flamebinder_fizzle_spend_and_action_hooks() -> void:
 	assert_bool(resource.spend_token()).is_true()
 	assert_bool(resource.spend_token()).is_false()
 	var overrides: Dictionary = resource.on_cast_forecast({"fizzle": {"pitch": 2}})
-	assert_bool((overrides["fizzle"] as Dictionary)["mastery"]).is_true()
+	assert_float(float(overrides["fizzle_percent_override"])).is_equal(0.0)
 	resource.on_action(_event({"action_id": "move", "verb": CombatAction.Verb.MOVE, "resolution": {}}))
 	assert_bool(resource.guaranteed_cast_armed).is_true()
 	resource.on_action(_event({"action_id": "cast", "verb": CombatAction.Verb.CAST, "resolution": {"fizzled": true}}))
