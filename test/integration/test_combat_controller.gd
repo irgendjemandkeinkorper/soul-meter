@@ -100,6 +100,34 @@ func test_scor_consumes_target_aftertone_in_live_resolution() -> void:
 	assert_int(controller.spent_aftertones).is_equal(1)
 
 
+func test_plain_suul_cast_lays_aftertone_and_fizzle_does_not() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var ability := AbilityDefinition.new()
+	ability.id = "test-suul-cast"
+	ability.element_id = &"suul"
+	ability.elements = [&"suul"]
+	ability.magnitude = &"note"
+	ability.power = 1
+	var tables := _cast_tables_for_actor(ally, [ability], "suul-caster")
+	controller.configure([cast], battlefield, rules, null, [ability], tables)
+	controller.start([ally], [enemy], &"suul-live")
+	var landed := controller.submit_action(cast.id, enemy, {"ability_id": ability.id, "fizzle": {"agreement_integrity": 100.0, "mastery": true}})
+	assert_bool(bool(landed.get("allowed", false))).is_true()
+	assert_int(enemy.aftertones.size()).is_equal(1)
+	assert_int(int(enemy.aftertones[0].get("remaining_rounds", 0))).is_equal(2)
+	assert_str(str(enemy.aftertones[0].get("element", ""))).is_equal("suul")
+
+	var fizzle_controller := CombatController.new()
+	var fizzle_ally := _actor("Fizzle Ally", 30, 7, 2)
+	var fizzle_enemy := _actor("Fizzle Enemy", 30, 5, 1)
+	var fizzle_tables := _cast_tables_for_actor(fizzle_ally, [ability], "fizzle-caster")
+	fizzle_controller.configure([cast], battlefield, rules, null, [ability], fizzle_tables)
+	fizzle_controller.start([fizzle_ally], [fizzle_enemy], &"suul-fizzle")
+	var fizzled := fizzle_controller.submit_action(cast.id, fizzle_enemy, {"ability_id": ability.id, "fizzle": {"agreement_integrity": 0.0, "mastery": false}})
+	assert_bool(bool(fizzled.get("resolution", {}).get("fizzled", false))).is_true()
+	assert_int(fizzle_enemy.aftertones.size()).is_equal(0)
+
+
 func test_dom_and_wound_lip_casts_use_different_matching_fizzle_percentages() -> void:
 	var dom_integrity: float = Battle._agreement_integrity(LocationRegistry.DOM.scene_path)
 	var wound_integrity: float = Battle._agreement_integrity(LocationRegistry.WOUND_LIP.scene_path)
@@ -763,6 +791,30 @@ func test_grid_cover_changes_forecast_and_resolution_by_the_same_amount() -> voi
 	)
 	assert_object(uncovered_actor).is_not_null()
 	assert_object(covered_actor).is_not_null()
+
+
+func test_dayspring_and_barrow_cover_windows_change_and_revert_resolution_terms() -> void:
+	var revealed := _positional_controller(5, 2)
+	var revealed_actor := revealed.allies[0]
+	var revealed_target := revealed.enemies[0]
+	(revealed.battlefield as GridBattlefieldModel).set_cover(Vector2i(3, 0), true)
+	revealed.round_number = 3
+	revealed.revealed_until_round = 3
+	revealed.revealed_side = revealed_actor.side
+	var revealed_forecast := revealed.forecast_action(revealed.action_by_id(&"test-shot"), revealed_target)
+	assert_int(int(revealed_forecast["positioning"]["cover_bonus"])).is_equal(0)
+
+	var concealed := _positional_controller(5, 2)
+	var concealed_actor := concealed.allies[0]
+	var concealed_target := concealed.enemies[0]
+	concealed.round_number = 3
+	concealed.concealed_until_round = 3
+	concealed.concealed_side = concealed_target.side
+	var concealed_forecast := concealed.forecast_action(concealed.action_by_id(&"test-shot"), concealed_target)
+	assert_int(int(concealed_forecast["positioning"]["cover_bonus"])).is_equal(2)
+	concealed.round_number = 4
+	var expired_forecast := concealed.forecast_action(concealed.action_by_id(&"test-shot"), concealed_target)
+	assert_int(int(expired_forecast["positioning"]["cover_bonus"])).is_equal(0)
 
 
 ## Gate Wave P finding 1: forecast_action once fetched its own flat flank_bonus

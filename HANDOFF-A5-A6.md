@@ -69,3 +69,21 @@ Implemented the Claude REQUEST CHANGES fixes. No push attempted. Git commits cou
 - `test/unit/test_turn_scheduler.gd`: **16 test cases | 0 errors | 0 failures**.
 - `godot --headless --path . --import`: no parse/compile errors; known sandbox/editor teardown warnings remain.
 - Required `addons/gdUnit4/runtest.sh` aborts before statistics because the sandbox rejects `tcp://127.0.0.1:0`; repository `scripts/test.sh` headless wrapper supplied the statistics above.
+
+## Pass 3
+
+### Status
+
+Implemented the six Claude review corrections for issues #219/#220. No push attempted.
+
+### Changes
+
+- Resolution emits Aftertone writes for every changed target, lays plain successful Suul casts, suppresses fizzle consumers, and consumes Scor before laying its own tone.
+- Dayspring/Barrow cover windows flow through positional Resolution terms; the ruling remains PROVISIONAL pending owner confirmation. Vault uses `BattlefieldModel.set_cover()` and the grid model's real cover state.
+- Thunderhead, Rivermouth, and Founding state has explicit round gates/expiry restoration. Cinderfall no longer writes the unused `burst_bonus` flag.
+- All ten Triad tests use a cast fixture through `submit_action`; Fruiting's no-op held assignment is removed. Legacy damage contexts carry target Aftertones, Tempo, hit, and last-cast element.
+
+### Tests and evidence
+
+- Touched suites: **74 test cases | 0 errors | 0 failures** using `SOUL_METER_HEADLESS=1 scripts/test.sh`.
+- Full suite and the required integration/resolution suites were run with the repository wrapper; final Statistics lines are recorded in the completion handoff.
