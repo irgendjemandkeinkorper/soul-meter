@@ -23,8 +23,10 @@ func on_command(action_id: StringName, target_id: StringName) -> void:
 	if action_id != &"record_name" or target_id.is_empty():
 		return
 	var target := host.actor_by_id(target_id) if host != null else null
-	var name: String = target.display_name if target != null else String(target_id)
-	if not record_name(name, target != null and target.is_alive()):
+	if target == null or not target.is_alive() or not host.allies.has(target):
+		return
+	var name: String = target.display_name
+	if not record_name(name, true):
 		return
 	recorded_actor_ids.append(String(target_id))
 
@@ -37,8 +39,10 @@ func on_any_action(
 		if not (raw is Dictionary):
 			continue
 		var write: Dictionary = raw as Dictionary
-		if int(write.get("after", 1)) <= 0:
-			_refund_actor(StringName(str(write.get("target_id", ""))))
+		var kind := StringName(str(write.get("kind", "")))
+		var target_id := String(write.get("target_id", ""))
+		if int(write.get("after", 1)) <= 0 and kind in [&"hp", &"dot"] and target_id in recorded_actor_ids:
+			_refund_actor(StringName(target_id))
 	if host != null and not host.has_living_enemies():
 		for actor_id: String in recorded_actor_ids:
 			var actor := host.actor_by_id(StringName(actor_id))

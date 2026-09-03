@@ -56,13 +56,35 @@ func test_ironbrand_scars_damage_forecast_action_and_save_hooks() -> void:
 func test_husk_bearer_dot_write_and_kill_hooks() -> void:
 	var resource := VhorrHunger.new()
 	resource.patron_id = &"vhorr"
-	resource.on_action(_event({"resolution": {"writes": [{"kind": "dot"}]}}))
+	resource.on_action(_event({
+		"action_id": "strike",
+		"target_id": "enemy-0",
+		"resolution": {"hit": true, "writes": [{"kind": "hp"}]},
+	}))
 	assert_int(resource.hunger).is_equal(1)
+	assert_array(resource.pending_dot_targets).contains(["enemy-0"])
+	resource.on_action(_event({
+		"action_id": "strike",
+		"target_id": "enemy-0",
+		"resolution": {"hit": true, "writes": [{"kind": "hp"}]},
+	}))
+	assert_int(resource.hunger).is_equal(2)
 	resource.on_kill(&"enemy-0", &"dot")
 	assert_float(resource.pending_soul_refunds).is_equal(VhorrHunger.SOUL_REFUND)
 	var restored: VhorrHunger = ClassResourceRegistry.from_dict(resource.to_dict()) as VhorrHunger
-	assert_int(restored.hunger).is_equal(1)
+	assert_int(restored.hunger).is_equal(2)
 	assert_float(restored.pending_soul_refunds).is_equal(VhorrHunger.SOUL_REFUND)
+	assert_array(restored.pending_dot_targets).contains(["enemy-0"])
+
+
+func test_husk_bearer_ignores_non_strike_targeted_actions() -> void:
+	var resource := VhorrHunger.new()
+	resource.on_action(_event({
+		"action_id": "enemy-strike",
+		"target_id": "enemy-0",
+		"resolution": {"hit": true, "writes": [{"kind": "hp"}]},
+	}))
+	assert_int(resource.hunger).is_equal(0)
 
 
 func test_river_mother_records_each_name_once_and_round_trips() -> void:
@@ -81,6 +103,20 @@ func test_river_mother_records_each_name_once_and_round_trips() -> void:
 	assert_bool(resource.snapshot().has("max")).is_false()
 
 
+func test_river_mother_only_refunds_recorded_actor_hp_or_dot_writes() -> void:
+	var resource := HaerenNameLedger.new()
+	resource.recorded_actor_ids = ["ally-0"]
+	resource.on_any_action(&"enemy-0", &"strike", &"ally-0", {
+		"resolution": {"writes": [
+			{"kind": "hp", "target_id": "enemy-0", "after": 0},
+			{"kind": "breath", "target_id": "ally-0", "after": 0},
+			{"kind": "hp", "target_id": "ally-0", "after": 0},
+		]},
+	})
+	assert_float(resource.pending_soul_refunds).is_equal(HaerenNameLedger.SOUL_REFUND)
+	assert_array(resource.refunded_actor_ids).contains(["ally-0"])
+
+
 func test_unit_plate_resource_snapshot_is_renderable() -> void:
 	var scene := load("res://ui/hud/regions/unit_plate/unit_plate_region.tscn") as PackedScene
 	assert_object(scene).is_not_null()
@@ -91,4 +127,5 @@ func test_unit_plate_resource_snapshot_is_renderable() -> void:
 func _event(data: Dictionary) -> CombatEvent:
 	var event := CombatEvent.new()
 	event.data = data
+	event.target_id = StringName(str(data.get("target_id", "")))
 	return event

@@ -8,6 +8,7 @@ const SOUL_REFUND := 1.0 # PROVISIONAL — B11 owns tuning.
 
 var hunger: int = 0
 var pending_soul_refunds: float = 0.0
+var pending_dot_targets: Array[String] = []
 
 
 func on_action(event: CombatEvent) -> void:
@@ -18,18 +19,22 @@ func on_action(event: CombatEvent) -> void:
 	if resolution.is_empty() or bool(resolution.get("fizzled", false)):
 		return
 	var action_id := StringName(str(event.data.get("action_id", "")))
-	if action_id.is_empty() or event.target_id.is_empty() or hunger >= MAX_HUNGER:
-		if hunger >= MAX_HUNGER:
-			_queue_hunger_dot(event.target_id)
+	if action_id.is_empty() or event.target_id.is_empty() or action_id not in [&"strike", &"cast"]:
 		return
-	if action_id in [&"strike", &"cast", &"enemy-strike"]:
-		hunger = mini(hunger + 1, MAX_HUNGER)
-		_queue_hunger_dot(event.target_id)
+	if not bool(resolution.get("hit", true)):
+		return
+	var target_id := String(event.target_id)
+	hunger = mini(hunger + 1, MAX_HUNGER)
+	if target_id in pending_dot_targets:
+		return
+	_queue_hunger_dot(event.target_id)
 
 
 func _queue_hunger_dot(target_id: StringName) -> void:
-	if target_id.is_empty() or hunger <= 0:
+	var target_key := String(target_id)
+	if target_id.is_empty() or hunger <= 0 or target_key in pending_dot_targets:
 		return
+	pending_dot_targets.append(target_key)
 	enqueue_deferred(
 		{"writes": [{"kind": "dot", "target_id": String(target_id), "amount": hunger}]},
 		{"delay_rounds": 1},
@@ -48,6 +53,8 @@ func on_deferred_fired(entry: Dictionary) -> void:
 	if applied.is_empty() or not (applied[0] is Dictionary):
 		return
 	var write: Dictionary = applied[0] as Dictionary
+	var target_key := String(write.get("target_id", ""))
+	pending_dot_targets.erase(target_key)
 	if int(write.get("after", 0)) > 0:
 		_queue_hunger_dot(StringName(str(write.get("target_id", ""))))
 
@@ -56,14 +63,14 @@ func on_kill(_target_id: StringName, cause: StringName) -> void:
 	if cause == &"dot":
 		pending_soul_refunds += SOUL_REFUND
 		enqueue_deferred(
-		{"writes": [{
-			"kind": "soul_refund",
-			"target_id": String(owner_id),
-			"amount": SOUL_REFUND,
-		}]},
-		{"delay_rounds": 0},
-		&"hunger_refund",
-	)
+			{"writes": [{
+				"kind": "soul_refund",
+				"target_id": String(owner_id),
+				"amount": SOUL_REFUND,
+			}]},
+			{"delay_rounds": 0},
+			&"hunger_refund",
+		)
 
 
 func snapshot() -> Dictionary:
@@ -81,6 +88,7 @@ func to_dict() -> Dictionary:
 	var data: Dictionary = super.to_dict()
 	data["hunger"] = hunger
 	data["pending_soul_refunds"] = pending_soul_refunds
+	data["pending_dot_targets"] = pending_dot_targets.duplicate()
 	return data
 
 
@@ -88,3 +96,8 @@ func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
 	hunger = clampi(int(data.get("hunger", 0)), 0, MAX_HUNGER)
 	pending_soul_refunds = maxf(float(data.get("pending_soul_refunds", 0.0)), 0.0)
+	pending_dot_targets.clear()
+	for value: Variant in data.get("pending_dot_targets", []):
+		var target_id := str(value)
+		if not target_id.is_empty() and target_id not in pending_dot_targets:
+			pending_dot_targets.append(target_id)
