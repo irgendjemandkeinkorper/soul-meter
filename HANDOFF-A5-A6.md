@@ -45,3 +45,27 @@ The ten Triads and their unique effect parameters were already present in `data.
 ## Overall Summary
 
 A5/A6 runtime state and data-driven Triad effect seams are implemented, committed in two small commits, and ready for review; final gdUnit4 pass/fail counts remain blocked by the sandbox runner abort before judge output.
+
+## Pass 2
+
+### Status
+
+Implemented the Claude REQUEST CHANGES fixes. No push attempted. Git commits could not be created because the linked worktree index is read-only (`.git/worktrees/a5/index.lock`).
+
+### Changes
+
+- Live and forecast Resolution contexts now carry unit and target Aftertones, Tempo, and last cast element.
+- Successful spells lay a two-round centre-element Aftertone on the target; fizzles lay none. Tempo follows the provisional same-element rule. Scor/Nul/Terra act on target state; Khor holds the caster’s latest Aftertone with separate `held` and `anchored` flags.
+- `_apply_resolution_writes()` applies writes by `target_id`, tracks Scor/expiry spend in `spent_aftertones`, and handles last-cast state.
+- All ten Triad effect ids have controller consumers and explicit tests. Unknown ids emit `triad_effect_unhandled`.
+- Added controller flags/consumers for freeze, cover, Pyre breath, Cinderfall burst, Thunderhead hit/extra turn, reveal/conceal, Rivermouth range, and Fruiting duration.
+- Added `TurnScheduler.grant_extra_turn()` to AP and CT schedulers; grid LOS consumes Rivermouth’s range bonus.
+
+### Tests and evidence
+
+- `test/unit/test_aftertones_triads.gd`: **13 test cases | 0 errors | 0 failures**.
+- `test/combat_resolution/test_resolution.gd`: **13 test cases | 0 errors | 0 failures**.
+- `test/integration/test_combat_controller.gd`: **44 test cases | 0 errors | 0 failures**; includes live Scor forecast/resolution coverage.
+- `test/unit/test_turn_scheduler.gd`: **16 test cases | 0 errors | 0 failures**.
+- `godot --headless --path . --import`: no parse/compile errors; known sandbox/editor teardown warnings remain.
+- Required `addons/gdUnit4/runtest.sh` aborts before statistics because the sandbox rejects `tcp://127.0.0.1:0`; repository `scripts/test.sh` headless wrapper supplied the statistics above.

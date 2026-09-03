@@ -51,6 +51,14 @@ var balance := 0
 var balance_band_id: StringName = &""
 var balance_lock_until_round := 0
 var threshold_effects_suppressed := false
+## PROVISIONAL Triad windows with concrete controller consumers.
+var duration_freeze_until_round := 0
+var revealed_until_round := 0
+var concealed_until_round := 0
+var zone_boundaries_open_until_round := 0
+var revealed_side: StringName = &"ally"
+var concealed_side: StringName = &"ally"
+var spent_aftertones := 0
 var last_refusal: Dictionary = {}
 var battlefield: BattlefieldModel
 var rules: CombatRules
@@ -192,6 +200,13 @@ func start(
 	balance = 0
 	balance_band_id = &""
 	balance_lock_until_round = 0
+	duration_freeze_until_round = 0
+	revealed_until_round = 0
+	concealed_until_round = 0
+	zone_boundaries_open_until_round = 0
+	revealed_side = &"ally"
+	concealed_side = &"ally"
+	spent_aftertones = 0
 	threshold_effects_suppressed = false
 	last_refusal.clear()
 	active_ally_index = -1
@@ -478,6 +493,9 @@ func snapshot() -> Dictionary:
 		"encounter_id": _encounter_id,
 		"round": round_number,
 		"balance": balance,
+		"revealed_until_round": revealed_until_round,
+		"concealed_until_round": concealed_until_round,
+		"zone_boundaries_open_until_round": zone_boundaries_open_until_round,
 		"balance_band_id": balance_band_id,
 		"balance_lock_until_round": balance_lock_until_round,
 		"threshold_effects_suppressed": threshold_effects_suppressed,
@@ -633,6 +651,8 @@ static func calculate_damage(
 			# resolve to Resolution's neutral terms (uncharged tiles, no weather).
 			"tile_state": positional_context.get("source_tile", {}),
 			"weather": positional_context.get("weather", {}),
+			"aftertones": attacker.aftertones.duplicate(true),
+			"tempo": attacker.tempo,
 		}
 	if resolution_context.has("weakness_id"):
 		unit_context["weakness_id"] = resolution_context["weakness_id"]
@@ -784,6 +804,8 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 					{"current_ap": row.get("current_ap", 0), "maximum_ap": row.get("maximum_ap", 0)},
 				)
 	if not result.has("round_started") and not result.has("round_ended"):
+		# AP emits round_ended; CT emits measures_crossed. These branches are exclusive because
+		# each scheduler owns one cadence, so Aftertones tick exactly once per cadence boundary.
 		var crossed := int(result.get("measures_crossed", 0))
 		if crossed > 0:
 			_emit_event(&"measure_started", null, null, {"measure": scheduler.measure_index()})
@@ -1252,9 +1274,21 @@ func _apply_resolution_writes(
 			&"breath":
 				actor.breath = int(write.get("after", actor.breath))
 			&"aftertones":
-				actor.aftertones = _aftertone_writes(write, actor.aftertones)
+				var aftertone_actor := _actor_by_id(str(write.get("target_id", actor.combat_id)))
+				if aftertone_actor != null:
+					var removed := maxi(0, aftertone_actor.aftertones.size() - _aftertone_writes(write, aftertone_actor.aftertones).size())
+					aftertone_actor.aftertones = _aftertone_writes(write, aftertone_actor.aftertones)
+					spent_aftertones += removed
 			&"tempo":
-				actor.tempo = int(write.get("after", actor.tempo))
+				var tempo_actor := _actor_by_id(str(write.get("target_id", actor.combat_id)))
+				if tempo_actor != null:
+					tempo_actor.tempo = int(write.get("after", tempo_actor.tempo))
+			&"aftertone_spent":
+				spent_aftertones += int(write.get("count", 1))
+			&"last_cast_element":
+				var cast_actor := _actor_by_id(str(write.get("target_id", actor.combat_id)))
+				if cast_actor != null:
+					cast_actor.last_cast_element = StringName(str(write.get("after", "")))
 			&"triad_effect":
 				_apply_triad_effect(actor, target, write)
 			&"soul_meter":
@@ -1429,6 +1463,12 @@ func forecast_context(
 			"attack_scale": actor.attack_scale,
 			"edge": int(actor.attributes.get(&"edge", 0)),
 			"breath": actor.breath,
+			"aftertones": actor.aftertones.duplicate(true),
+			"tempo": actor.tempo,
+			"reveal": revealed_until_round >= round_number and actor.side == revealed_side,
+			"concealed": concealed_until_round >= round_number and actor.side == concealed_side,
+			"last_cast_element": actor.last_cast_element,
+			"hit": bool(actor.defining_effects.get("hit", false)),
 		},
 		"ability": ability_context,
 		"target": {
@@ -1436,6 +1476,8 @@ func forecast_context(
 			"hp": target.hp,
 			"element_id": target.element_id,
 			"edge": int(target.attributes.get(&"edge", 0)),
+			"aftertones": target.aftertones.duplicate(true),
+			"tempo": target.tempo,
 			"height": target_height,
 			"attunements": {},
 		},
@@ -1855,8 +1897,8 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"ap": actor.action_points,
 			"max_ap": actor.max_action_points,
 			"charge": scheduler.charge_of(actor) if scheduler != null else 0,
-			"position": battlefield.position_of(actor),
-			"side": battlefield.side_of(actor),
+			"position": battlefield.position_of(actor) if battlefield != null else &"",
+			"side": battlefield.side_of(actor) if battlefield != null else actor.side,
 			"guarding": actor.guarding,
 			"unused_ap_defense_bonus": actor.unused_ap_defense_bonus,
 			"archetype_id": actor.archetype_id,
@@ -1867,15 +1909,20 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"breath": actor.breath,
 			"aftertones": actor.aftertones.duplicate(true),
 			"tempo": actor.tempo,
+			"discord_signatures_visible": not (concealed_until_round >= round_number and actor.side == concealed_side),
 			"class_resource": _class_resource_of(actor).snapshot(),
 		})
 	return result
 
 
 func _tick_actor_aftertones() -> void:
+	if duration_freeze_until_round >= round_number:
+		return
 	for actor: BattleActor in allies + enemies:
 		if actor != null:
+			var before := actor.aftertones.size()
 			actor.tick_aftertones()
+			spent_aftertones += maxi(0, before - actor.aftertones.size())
 
 
 func _aftertone_writes(write: Dictionary, fallback: Array[Dictionary]) -> Array[Dictionary]:
@@ -1889,11 +1936,79 @@ func _aftertone_writes(write: Dictionary, fallback: Array[Dictionary]) -> Array[
 
 
 func _apply_triad_effect(actor: BattleActor, target: BattleActor, write: Dictionary) -> void:
-	# The effect remains declarative in the event stream. Runtime stateful parts are represented
-	# by the explicit writes beside this marker, so no second effect pipeline is introduced.
+	# RULINGS are PROVISIONAL; each Pandora effect id has a concrete live consumer here.
 	var parameters: Dictionary = write.get("parameters", {})
-	if bool(parameters.get("zero_tempo", false)):
-		actor.tempo = 0
+	var effect_id := StringName(str(write.get("effect_id", "")))
+	match effect_id:
+		&"the_held_silence":
+			apply_balance_effect(parameters, actor)
+		&"cornerstone":
+			duration_freeze_until_round = round_number + 1
+			for unit in allies + enemies:
+				for aftertone: Dictionary in unit.aftertones:
+					aftertone["anchored"] = true
+		&"sealed_ground":
+			for aftertone: Dictionary in actor.aftertones:
+				aftertone["anchored"] = true
+			var position := battlefield.describe_position(battlefield.position_of(actor)) if battlefield != null else {}
+			if position.has("cell"):
+				var cell: Vector2i = position["cell"]
+				var tile := tile_state_at(cell)
+				if tile != null:
+					tile.cover = true
+		&"the_rendering":
+			var dead_enemies := 0
+			for foe in enemies:
+				if foe.hp <= 0:
+					dead_enemies += 1
+			var living_allies := _living(allies)
+			var breath_each := int((dead_enemies + spent_aftertones) / maxi(1, living_allies.size()))
+			for ally in living_allies:
+				ally.breath += breath_each
+		&"everything_burns_at_once":
+			var cleared := 0
+			for unit in allies + enemies:
+				cleared += unit.aftertones.size()
+				unit.aftertones.clear()
+			actor.defining_effects["burst_bonus"] = int(actor.defining_effects.get("burst_bonus", 0)) + cleared
+		&"nothing_is_uncertain":
+			for ally in allies:
+				ally.defining_effects["hit"] = true
+			if scheduler != null:
+				scheduler.grant_extra_turn(actor)
+		&"first_light":
+			revealed_until_round = round_number
+			revealed_side = actor.side
+		&"unlisted":
+			concealed_until_round = round_number
+			concealed_side = actor.side
+		&"the_mouth_opens":
+			zone_boundaries_open_until_round = round_number
+			for ally in allies:
+				ally.defining_effects["range_bonus"] = 1
+		&"second_season":
+			for ally in allies:
+				for aftertone: Dictionary in ally.aftertones:
+					aftertone["remaining_rounds"] = int(aftertone.get("remaining_rounds", 0)) + 1
+					if bool(aftertone.get("held", false)):
+						aftertone["held"] = true
+		_:
+			_emit_event(&"triad_effect_unhandled", actor, target, {"effect_id": String(effect_id)})
+
+
+func _actor_by_id(id: String) -> BattleActor:
+	for combatant in allies + enemies:
+		if String(combatant.combat_id) == id:
+			return combatant
+	return null
+
+
+func _living(group: Array[BattleActor]) -> Array[BattleActor]:
+	var result: Array[BattleActor] = []
+	for combatant in group:
+		if combatant != null and combatant.is_alive():
+			result.append(combatant)
+	return result
 
 
 ## #223 class-resource seam. Attach from the PartyMember's patron; enemies and ad-hoc actors

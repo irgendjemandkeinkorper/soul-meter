@@ -163,6 +163,11 @@ func force_advance(_actor: BattleActor) -> Dictionary:
 	return _blocked(&"unimplemented", "TurnScheduler.force_advance() must be implemented.", {})
 
 
+## Grants one ready activation without changing turn ordering policy.
+func grant_extra_turn(_actor: BattleActor) -> void:
+	push_error("TurnScheduler.grant_extra_turn() must be implemented.")
+
+
 ## Halts the queue — a speech check ending or splitting a battle mid-resolution.
 ##
 ## Amendment §4 requires an explicit answer to four questions, and an implementation must

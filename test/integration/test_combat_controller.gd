@@ -78,6 +78,28 @@ func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue(
 	assert_bool(result["resolution"] == expected_resolution).is_true()
 
 
+func test_scor_consumes_target_aftertone_in_live_resolution() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var ability := AbilityDefinition.new()
+	ability.id = "test-scor-cast"
+	ability.element_id = &"scor"
+	ability.elements = [&"scor"]
+	ability.magnitude = &"note"
+	ability.power = 1
+	ability.breath_cost = 0
+	var tables := _cast_tables_for_actor(ally, [ability], "scor-caster")
+	controller.configure([cast], battlefield, rules, null, [ability], tables)
+	enemy.aftertones = [{"element": &"suul", "remaining_rounds": 2, "anchored": false}]
+	controller.start([ally], [enemy], &"scor-live")
+	var forecast := controller.forecast_action(cast, enemy, {"ability_id": ability.id, "fizzle": {"agreement_integrity": 100.0, "mastery": true}})
+	assert_bool(forecast["resolution"]["fizzled"]).is_false()
+	assert_bool((forecast["resolution"]["breakdown"] as Array).any(func(step: Dictionary) -> bool: return step.get("id", "") == "aftertone_burst")).is_true()
+	var result := controller.submit_action(cast.id, enemy, {"ability_id": ability.id, "fizzle": {"agreement_integrity": 100.0, "mastery": true}})
+	assert_bool(result["allowed"]).is_true()
+	assert_int(enemy.aftertones.size()).is_equal(1)
+	assert_int(controller.spent_aftertones).is_equal(1)
+
+
 func test_dom_and_wound_lip_casts_use_different_matching_fizzle_percentages() -> void:
 	var dom_integrity: float = Battle._agreement_integrity(LocationRegistry.DOM.scene_path)
 	var wound_integrity: float = Battle._agreement_integrity(LocationRegistry.WOUND_LIP.scene_path)
