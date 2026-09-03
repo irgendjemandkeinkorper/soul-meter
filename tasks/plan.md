@@ -2,9 +2,9 @@
 
 Tracker: https://github.com/irgendjemandkeinkorper/soul-meter/issues/286
 
-Status: core implementation and local verification complete on
-`feature/f6-hollowing-agreement-core`. Issue #286 remains open for authored dialogue/barks and
-the project audit's seven pre-existing `bellhouse_repair`/`deep_trial` errors.
+Status: core implementation merged through PR #289. The standalone audit's seven false errors
+are fixed on `fix/quest-audit-seven-errors`; issue #286 remains open only for authored
+dialogue/barks.
 
 ## Scope and assumptions
 
@@ -31,5 +31,5 @@ the project audit's seven pre-existing `bellhouse_repair`/`deep_trial` errors.
 - Only a completed outcome tagged `act_of_agreement` can raise Soul.
 - Invalid tags/deltas do not complete a quest or change Soul.
 - Existing resources with no reward metadata remain valid.
-- Quest audit exits 0 with no reward-contract regression; its seven pre-existing content errors
-  remain. The full GdUnit suite reports zero failures.
+- Quest audit reports zero errors with no reward-contract regression. The full GdUnit suite
+  reports zero failures.

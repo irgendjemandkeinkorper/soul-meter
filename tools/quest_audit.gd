@@ -38,6 +38,8 @@ const STRICT_ENV := "SOUL_METER_QUEST_AUDIT_STRICT"
 const REGISTRY_PATH := "res://globals/quest_registry.gd"
 const QUEST_DIRECTORY := "res://quests"
 const DIALOGUE_DIRECTORY := "res://dialogue"
+## Keep the standalone SceneTree entrypoint free of autoload-dependent gameplay classes.
+const ACT_OF_AGREEMENT_TAG := "act_of_agreement"
 ## Template conformance (docs/templates/*.md) scans every LocationDefinition here.
 const LOCATION_DIRECTORY := "res://world/locations"
 const SIDE_READBACK_THRESHOLD := 0.6
@@ -615,11 +617,11 @@ static func _dom_side_outcomes(resource: Resource, resolution_flag: String) -> A
 		var ledger_events := ["%s:%s:%s" % [faction, delta, cause]]
 		if (
 			index < tags.size()
-			and tags[index].has(DomSideQuest.ACT_OF_AGREEMENT_TAG)
+			and tags[index].has(ACT_OF_AGREEMENT_TAG)
 			and index < soul_deltas.size()
 		):
 			ledger_events.append(
-				"soul:%s:%s" % [soul_deltas[index], DomSideQuest.ACT_OF_AGREEMENT_TAG]
+				"soul:%s:%s" % [soul_deltas[index], ACT_OF_AGREEMENT_TAG]
 			)
 		outcomes.append(
 			{

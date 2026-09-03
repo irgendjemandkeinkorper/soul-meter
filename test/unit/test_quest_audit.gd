@@ -4,6 +4,31 @@ const QuestAuditScript := preload("res://tools/quest_audit.gd")
 const FLAG_FIXTURE := "res://test/fixtures/quest_audit/flags.dialogue"
 
 
+func test_standalone_cli_audit_has_zero_error_findings() -> void:
+	var output: Array = []
+	var exit_code := OS.execute(
+		OS.get_executable_path(),
+		[
+			"--headless",
+			"--path", ProjectSettings.globalize_path("res://"),
+			"--script", "res://tools/quest_audit.gd",
+		],
+		output,
+		true
+	)
+	var combined := "\n".join(PackedStringArray(output))
+	var report_start := combined.find("{")
+	var report_end := combined.rfind("}")
+	assert_int(exit_code).is_equal(0)
+	assert_int(report_start).is_greater_equal(0)
+	assert_int(report_end).is_greater(report_start)
+	var report_json := combined.substr(report_start, report_end - report_start + 1)
+	var parsed: Variant = JSON.parse_string(report_json)
+	assert_bool(parsed is Dictionary).is_true()
+	var report: Dictionary = parsed
+	assert_int(int(report["summary"]["severity"]["error"])).is_equal(0)
+
+
 func test_dom_side_agreement_reward_is_audited_as_a_soul_ledger_event() -> void:
 	var quest := DomSideQuest.new()
 	quest.outcome_ids = PackedStringArray(["agree", "decline"])
