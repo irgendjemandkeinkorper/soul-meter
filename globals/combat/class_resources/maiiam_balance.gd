@@ -28,14 +28,17 @@ func on_action(event: CombatEvent) -> void:
 func on_cast_forecast(context: Dictionary) -> Dictionary:
 	if not unbalanced:
 		return {}
-	var fizzle: Dictionary = context.get("fizzle", {}) as Dictionary
+	var unit: Dictionary = (context.get("unit", {}) as Dictionary).duplicate(true)
+	var fizzle: Dictionary = (context.get("fizzle", {}) as Dictionary).duplicate(true)
+	unit["attack_scale"] = UNBALANCED_DAMAGE_MULTIPLIER
+	fizzle["agreement_integrity"] = maxf(
+		float(fizzle.get("agreement_integrity", 100.0))
+		- UNBALANCED_FIZZLE_INTEGRITY_PENALTY,
+		0.0,
+	)
 	return {
-		"unit": {"attack_scale": UNBALANCED_DAMAGE_MULTIPLIER},
-		"fizzle": {"agreement_integrity": maxf(
-			float(fizzle.get("agreement_integrity", 100.0))
-			- UNBALANCED_FIZZLE_INTEGRITY_PENALTY,
-			0.0,
-		)},
+		"unit": unit,
+		"fizzle": fizzle,
 	}
 
 
@@ -44,7 +47,6 @@ func snapshot() -> Dictionary:
 		"patron_id": String(patron_id),
 		"label": "Balance",
 		"value": "Unbalanced" if unbalanced else "Balanced",
-		"max": "Unbalanced",
 		"side": String(last_side),
 		"streak": side_streak,
 	}

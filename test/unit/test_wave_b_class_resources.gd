@@ -18,6 +18,7 @@ func test_mirrorblade_balance_alternation_and_forecast_hooks() -> void:
 	assert_bool(resource.unbalanced).is_false()
 	resource.on_action(_event({"action_id": "guard", "resolution": {}}))
 	assert_bool(resource.unbalanced).is_true()
+	assert_bool(resource.snapshot().has("max")).is_false()
 	var overrides: Dictionary = resource.on_cast_forecast({"fizzle": {"agreement_integrity": 90.0}})
 	assert_float(float((overrides["unit"] as Dictionary)["attack_scale"])).is_equal(1.25)
 	assert_float(float((overrides["fizzle"] as Dictionary)["agreement_integrity"])).is_equal(75.0)
@@ -32,8 +33,11 @@ func test_flamebinder_fizzle_spend_and_action_hooks() -> void:
 	assert_bool(resource.spend_token()).is_false()
 	var overrides: Dictionary = resource.on_cast_forecast({"fizzle": {"pitch": 2}})
 	assert_bool((overrides["fizzle"] as Dictionary)["mastery"]).is_true()
-	resource.on_action(_event({"action_id": "cast", "resolution": {"fizzled": false}}))
+	resource.on_action(_event({"action_id": "move", "verb": CombatAction.Verb.MOVE, "resolution": {}}))
+	assert_bool(resource.guaranteed_cast_armed).is_true()
+	resource.on_action(_event({"action_id": "cast", "verb": CombatAction.Verb.CAST, "resolution": {"fizzled": true}}))
 	assert_bool(resource.guaranteed_cast_armed).is_false()
+	assert_int(resource.tokens).is_equal(VicoarInstructiveFailure.MAX_TOKENS)
 
 
 func test_ironbrand_scars_damage_forecast_action_and_save_hooks() -> void:
@@ -74,14 +78,14 @@ func test_river_mother_records_each_name_once_and_round_trips() -> void:
 	var restored: HaerenNameLedger = ClassResourceRegistry.from_dict(resource.to_dict()) as HaerenNameLedger
 	assert_array(restored.recorded_names).contains_exactly(["Aster", "Belen"])
 	assert_float(restored.pending_soul_refunds).is_equal(2.0)
+	assert_bool(resource.snapshot().has("max")).is_false()
 
 
 func test_unit_plate_resource_snapshot_is_renderable() -> void:
 	var scene := load("res://ui/hud/regions/unit_plate/unit_plate_region.tscn") as PackedScene
 	assert_object(scene).is_not_null()
 	var snapshot := (ClassResourceRegistry.for_patron("Vhorr") as VhorrHunger).snapshot()
-	assert_str(str(snapshot["label"])).is_equal("Hunger")
-	assert_int(int(snapshot["value"])).is_equal(0)
+	assert_bool(bool(snapshot["hidden_on_plate"])).is_true()
 
 
 func _event(data: Dictionary) -> CombatEvent:

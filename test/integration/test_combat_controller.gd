@@ -78,6 +78,30 @@ func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue(
 	assert_bool(result["resolution"] == expected_resolution).is_true()
 
 
+func test_maiiam_forecast_override_preserves_controller_context() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	ally.class_resource = MaiiamBalance.new()
+	(ally.class_resource as MaiiamBalance).unbalanced = true
+	var ability := AbilityDefinition.new()
+	ability.id = "context-preserving-cast"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.magnitude = &"note"
+	ability.power = 4
+	var tables := _cast_tables_for_actor(ally, [ability], "context-preserving-caster")
+	controller.configure([cast], battlefield, rules, null, [ability], tables)
+	controller.start([ally], [enemy], &"context-preserving-battle")
+	var context: Dictionary = controller.forecast_context(
+		ally, enemy, cast, {"ability_id": ability.id}
+	)
+	var unit: Dictionary = context["unit"]
+	var fizzle: Dictionary = context["fizzle"]
+	assert_str(String(unit["id"])).is_equal(String(ally.combat_id))
+	assert_int(int(unit["edge"])).is_equal(ally.attribute_value(&"edge"))
+	assert_int(int(unit["breath"])).is_equal(ally.breath)
+	assert_str(String(fizzle["patron"])).is_equal(ally.source_member.patron)
+
+
 func test_dom_and_wound_lip_casts_use_different_matching_fizzle_percentages() -> void:
 	var dom_integrity: float = Battle._agreement_integrity(LocationRegistry.DOM.scene_path)
 	var wound_integrity: float = Battle._agreement_integrity(LocationRegistry.WOUND_LIP.scene_path)
