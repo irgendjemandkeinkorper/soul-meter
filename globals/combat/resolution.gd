@@ -145,6 +145,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var target_tempo_before := int(target.get("tempo", 0))
 	var target_tempo_after := target_tempo_before
 	var consumed_aftertone := false
+	var target_aftertones_before := target_aftertones.duplicate(true)
 	var has_terra_bend := composition.rule_bends.has(&"creates_cover_anchors_aftertones")
 	var has_scor_bend := composition.rule_bends.has(&"consumes_aftertone_for_burst")
 	var has_nul_bend := composition.rule_bends.has(&"cancels_and_zeroes_tempo")
@@ -154,6 +155,23 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var lays_aftertone := is_spell and not fizzled
 	if ability.has("aftertone") or ability.has("aftertone_element"):
 		lays_aftertone = bool(ability.get("aftertone", true)) and not fizzled
+	# PROVISIONAL R3: the interim producer tracks the previous successful cast element.
+	var previous_element := ElementWheel.normalize(unit.get("last_cast_element", ""))
+	if is_spell:
+		tempo_after = tempo_before + 1 if not fizzled and previous_element == element_id and previous_element != &"" else 0
+	if not fizzled and has_scor_bend:
+		for index: int in target_aftertones.size():
+			if not bool(target_aftertones[index].get("anchored", false)):
+				target_aftertones.remove_at(index)
+				consumed_aftertone = true
+				power += 1 # PROVISIONAL: absent vault burst magnitude, use +1.
+				break
+	if not fizzled and composition.triad_effect_id == &"everything_burns_at_once":
+		var clearable := _aftertones(unit.get("aftertones", [])).size() + target_aftertones.size()
+		power += clearable
+	if not fizzled and has_nul_bend:
+		target_aftertones.clear()
+		target_tempo_after = 0
 	if lays_aftertone:
 		var aftertone_element := ElementWheel.normalize(ability.get("aftertone_element", composition.center_element if composition.center_element != &"" else element_id))
 		var aftertone_rounds := maxi(int(ability.get("aftertone_rounds", 2)), 1)
@@ -163,28 +181,11 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"held": false,
 			"anchored": false,
 		})
-	# PROVISIONAL R3: the interim producer tracks the previous successful cast element.
-	var previous_element := ElementWheel.normalize(unit.get("last_cast_element", ""))
-	if is_spell:
-		tempo_after = tempo_before + 1 if not fizzled and previous_element == element_id and previous_element != &"" else 0
-	if has_scor_bend:
-		for index: int in target_aftertones.size():
-			if not bool(target_aftertones[index].get("anchored", false)):
-				target_aftertones.remove_at(index)
-				consumed_aftertone = true
-				power += 1 # PROVISIONAL: absent vault burst magnitude, use +1.
-				break
-	if composition.triad_effect_id == &"everything_burns_at_once":
-		var clearable := _aftertones(unit.get("aftertones", [])).size() + target_aftertones.size()
-		power += clearable
-	if has_nul_bend:
-		target_aftertones.clear()
-		target_tempo_after = 0
-	if has_terra_bend:
+	if not fizzled and has_terra_bend:
 		for aftertone: Dictionary in target_aftertones:
 			aftertone["anchored"] = true
 	var held_caster_aftertones := _aftertones(unit.get("aftertones", []))
-	if has_khor_bend and not held_caster_aftertones.is_empty():
+	if not fizzled and has_khor_bend and not held_caster_aftertones.is_empty():
 		# PROVISIONAL R2: Khor is caster-side and holds only the caster's most recent laying.
 		held_caster_aftertones[held_caster_aftertones.size() - 1]["held"] = true
 
@@ -196,7 +197,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		_step("facing", "Facing: %s" % str(positioning["facing"]), facing_multiplier),
 		_step("tile_charge", "Source tile charge", tile_multiplier),
 	]
-	if composition.triad_effect_id == &"everything_burns_at_once":
+	if not fizzled and composition.triad_effect_id == &"everything_burns_at_once":
 		var cinderfall_count := _aftertones(unit.get("aftertones", [])).size() + _aftertones(target.get("aftertones", [])).size()
 		if cinderfall_count > 0:
 			breakdown.append(_step("cinderfall_burst", "Cinderfall cleared Aftertones", float(cinderfall_count), "add"))
@@ -289,7 +290,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"after": breath_before - breath_spent,
 			"delta": -breath_spent,
 		})
-	if has_scor_bend or has_terra_bend or has_khor_bend or has_nul_bend or ability.has("aftertone") or ability.has("aftertone_element"):
+	if target_aftertones != target_aftertones_before:
 		writes.append({
 			"kind": "aftertones",
 			"target_id": str(target.get("id", "")),
@@ -337,7 +338,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"after": int(unit.get("tempo", 0)) + tempo_delta,
 			"delta": tempo_delta,
 		})
-	if composition.triad_effect_id != &"":
+	if not fizzled and composition.triad_effect_id != &"":
 		writes.append({
 			"kind": "triad_effect",
 			"target_id": str(unit.get("id", "")),

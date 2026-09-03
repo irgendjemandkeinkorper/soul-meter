@@ -51,11 +51,16 @@ var balance := 0
 var balance_band_id: StringName = &""
 var balance_lock_until_round := 0
 var threshold_effects_suppressed := false
-## PROVISIONAL Triad windows with concrete controller consumers.
+## PROVISIONAL Triad windows with concrete controller consumers. Claude ruling for Dayspring/
+## Barrow: these side windows flow through Resolution positioning terms so forecast and commit
+## use the same revealed/covered target state; owner confirmation is still pending.
 var duration_freeze_until_round := 0
 var revealed_until_round := 0
 var concealed_until_round := 0
 var zone_boundaries_open_until_round := 0
+var thunderhead_hit_until_round := 0
+var range_bonus_until_round := 0
+var founding_anchor_restore: Dictionary = {}
 var revealed_side: StringName = &"ally"
 var concealed_side: StringName = &"ally"
 var spent_aftertones := 0
@@ -204,6 +209,9 @@ func start(
 	revealed_until_round = 0
 	concealed_until_round = 0
 	zone_boundaries_open_until_round = 0
+	thunderhead_hit_until_round = 0
+	range_bonus_until_round = 0
+	founding_anchor_restore.clear()
 	revealed_side = &"ally"
 	concealed_side = &"ally"
 	spent_aftertones = 0
@@ -653,6 +661,8 @@ static func calculate_damage(
 			"weather": positional_context.get("weather", {}),
 			"aftertones": attacker.aftertones.duplicate(true),
 			"tempo": attacker.tempo,
+			"last_cast_element": attacker.last_cast_element,
+			"hit": bool(attacker.defining_effects.get("hit", false)),
 		}
 	if resolution_context.has("weakness_id"):
 		unit_context["weakness_id"] = resolution_context["weakness_id"]
@@ -676,6 +686,10 @@ static func calculate_damage(
 				"hp": target.hp,
 				"element_id": target.element_id,
 				"edge": int(target.attributes.get(&"edge", 0)),
+				"aftertones": target.aftertones.duplicate(true),
+				"tempo": target.tempo,
+				"last_cast_element": target.last_cast_element,
+				"hit": bool(target.defining_effects.get("hit", false)),
 			},
 			"tile_state": positional_context.get("target_tile", {}),
 			"facing": positional_context.get("facing", {}),
@@ -774,6 +788,7 @@ func _drive_scheduler() -> void:
 ## event vocabularies fork, and it forks on DATA the scheduler returned, never on
 ## `rules.use_charge_time` — CombatController does not know which scheduler is active.
 func _translate_scheduler_extras(result: Dictionary) -> void:
+	_expire_temporary_effects()
 	# A single advance() call can carry BOTH keys at once — the AP scheduler closes the old
 	# round and opens the new one in one step when the last actor's turn passes. `round_ended`
 	# must be emitted (and the balance lock checked against the round that JUST ended, not the
@@ -1140,7 +1155,8 @@ func _query_cast(
 	var context := forecast_context(actor, target, action, options)
 	var terms := _positional_terms(actor, target)
 	var resolution := _finalize_resolution_damage(
-		Resolution.resolve(context), target, int(terms["cover_bonus"])
+		Resolution.resolve(context), target,
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", terms["cover_bonus"]))
 	)
 	if not bool(resolution.get("allowed", false)):
 		return resolution
@@ -1163,7 +1179,8 @@ func _query_attack_resolution(
 	var context := forecast_context(actor, target, action, options)
 	var terms := _positional_terms(actor, target)
 	var resolution := _finalize_resolution_damage(
-		Resolution.resolve(context), target, int(terms["cover_bonus"])
+		Resolution.resolve(context), target,
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", terms["cover_bonus"]))
 	)
 	if not bool(resolution.get("allowed", false)):
 		return resolution
@@ -1219,7 +1236,8 @@ func _resolved_attack(
 				return cached
 	var context := forecast_context(actor, target, action, options)
 	return _finalize_resolution_damage(
-		Resolution.resolve(context), target, int(terms["cover_bonus"])
+		Resolution.resolve(context), target,
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", terms["cover_bonus"]))
 	)
 
 
@@ -1303,7 +1321,6 @@ func _apply_resolution_writes(
 					live_tile.charge_element_id = StringName(after.get("charge_element_id", ""))
 					live_tile.charge_level = int(after.get("charge_level", 0))
 					live_tile.height_delta = int(after.get("height_delta", live_tile.height_delta))
-					live_tile.cover = bool(after.get("cover", live_tile.cover))
 					live_tile.hush = bool(after.get("hush", live_tile.hush))
 
 
@@ -1460,6 +1477,7 @@ func forecast_context(
 		"seed": resolution_seed,
 		"unit": {
 			"id": String(actor.combat_id),
+			"harmony": actor.attribute_value(&"harmony"),
 			"attack_scale": actor.attack_scale,
 			"edge": int(actor.attributes.get(&"edge", 0)),
 			"breath": actor.breath,
@@ -1508,6 +1526,11 @@ func forecast_context(
 	var overrides := _class_resource_of(actor).on_cast_forecast(context.duplicate(true))
 	if not overrides.is_empty():
 		context.merge(overrides, true)
+	var resolved_unit: Dictionary = context.get("unit", {}) as Dictionary
+	var resolved_positioning: Dictionary = context.get("positioning", {}) as Dictionary
+	if bool(resolved_unit.get("reveal", false)):
+		resolved_positioning["cover_bonus"] = 0
+	context["positioning"] = resolved_positioning
 	return context
 
 
@@ -1606,8 +1629,10 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 func _positional_terms(actor: BattleActor, target: BattleActor) -> Dictionary:
 	var positional_context := _positional_resolution_context(actor, target)
 	var cover_bonus := battlefield.cover_bonus(actor, target)
-	if bool(target.defining_effects.get("revealed", false)):
+	if _is_revealed(actor):
 		cover_bonus = 0
+	if _is_concealed(target):
+		cover_bonus = rules.cover_defense_bonus if rules != null else cover_bonus
 	var flank_bonus := battlefield.flank_bonus(actor, target)
 	if not positional_context.is_empty():
 		flank_bonus = 0
@@ -1925,6 +1950,34 @@ func _tick_actor_aftertones() -> void:
 			spent_aftertones += maxi(0, before - actor.aftertones.size())
 
 
+func _is_revealed(actor: BattleActor) -> bool:
+	return actor != null and revealed_until_round >= round_number and actor.side == revealed_side
+
+
+func _is_concealed(actor: BattleActor) -> bool:
+	return actor != null and concealed_until_round >= round_number and actor.side == concealed_side
+
+
+func _expire_temporary_effects() -> void:
+	if thunderhead_hit_until_round > 0 and round_number > thunderhead_hit_until_round:
+		thunderhead_hit_until_round = 0
+		for unit in allies + enemies:
+			unit.defining_effects.erase("hit")
+	if range_bonus_until_round > 0 and round_number > range_bonus_until_round:
+		range_bonus_until_round = 0
+		for unit in allies:
+			unit.defining_effects.erase("range_bonus")
+	if not founding_anchor_restore.is_empty() and round_number > duration_freeze_until_round:
+		for unit in allies + enemies:
+			var prior: Variant = founding_anchor_restore.get(unit.combat_id, null)
+			if not prior is Array:
+				continue
+			var prior_values: Array = prior as Array
+			for index in mini(unit.aftertones.size(), prior_values.size()):
+				unit.aftertones[index]["anchored"] = bool(prior_values[index])
+		founding_anchor_restore.clear()
+
+
 func _aftertone_writes(write: Dictionary, fallback: Array[Dictionary]) -> Array[Dictionary]:
 	var value: Variant = write.get("after", fallback)
 	var result: Array[Dictionary] = []
@@ -1945,17 +1998,18 @@ func _apply_triad_effect(actor: BattleActor, target: BattleActor, write: Diction
 		&"cornerstone":
 			duration_freeze_until_round = round_number + 1
 			for unit in allies + enemies:
+				var prior: Array[bool] = []
 				for aftertone: Dictionary in unit.aftertones:
+					prior.append(bool(aftertone.get("anchored", false)))
 					aftertone["anchored"] = true
+				founding_anchor_restore[unit.combat_id] = prior
 		&"sealed_ground":
 			for aftertone: Dictionary in actor.aftertones:
 				aftertone["anchored"] = true
 			var position := battlefield.describe_position(battlefield.position_of(actor)) if battlefield != null else {}
 			if position.has("cell"):
 				var cell: Vector2i = position["cell"]
-				var tile := tile_state_at(cell)
-				if tile != null:
-					tile.cover = true
+				battlefield.set_cover(cell, true)
 		&"the_rendering":
 			var dead_enemies := 0
 			for foe in enemies:
@@ -1966,14 +2020,12 @@ func _apply_triad_effect(actor: BattleActor, target: BattleActor, write: Diction
 			for ally in living_allies:
 				ally.breath += breath_each
 		&"everything_burns_at_once":
-			var cleared := 0
 			for unit in allies + enemies:
-				cleared += unit.aftertones.size()
 				unit.aftertones.clear()
-			actor.defining_effects["burst_bonus"] = int(actor.defining_effects.get("burst_bonus", 0)) + cleared
 		&"nothing_is_uncertain":
 			for ally in allies:
 				ally.defining_effects["hit"] = true
+			thunderhead_hit_until_round = round_number
 			if scheduler != null:
 				scheduler.grant_extra_turn(actor)
 		&"first_light":
@@ -1984,14 +2036,13 @@ func _apply_triad_effect(actor: BattleActor, target: BattleActor, write: Diction
 			concealed_side = actor.side
 		&"the_mouth_opens":
 			zone_boundaries_open_until_round = round_number
+			range_bonus_until_round = round_number
 			for ally in allies:
 				ally.defining_effects["range_bonus"] = 1
 		&"second_season":
 			for ally in allies:
 				for aftertone: Dictionary in ally.aftertones:
 					aftertone["remaining_rounds"] = int(aftertone.get("remaining_rounds", 0)) + 1
-					if bool(aftertone.get("held", false)):
-						aftertone["held"] = true
 		_:
 			_emit_event(&"triad_effect_unhandled", actor, target, {"effect_id": String(effect_id)})
 
