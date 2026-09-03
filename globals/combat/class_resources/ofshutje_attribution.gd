@@ -16,11 +16,6 @@ var last_effect_floor: int = 0
 var last_effect_revealed: bool = false
 
 
-func attribution_for(seed: int) -> Dictionary:
-	var index := absi(seed) % EFFECT_TABLE.size()
-	return (EFFECT_TABLE[index] as Dictionary).duplicate(true)
-
-
 func on_cast_forecast(context: Dictionary) -> Dictionary:
 	var ability: Dictionary = context.get("ability", {})
 	if not bool(ability.get("is_spell", false)):

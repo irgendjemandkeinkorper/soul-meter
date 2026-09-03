@@ -32,14 +32,6 @@ func queue_effect(effect_id: StringName, turns: int, payload: Dictionary = {}) -
 	return true
 
 
-func on_turn_start() -> void:
-	pass
-
-
-func advance_ledger() -> Array[Dictionary]:
-	return []
-
-
 func on_deferred_fired(entry: Dictionary) -> void:
 	var fired_id := int(entry.get("id", 0))
 	for pending: Dictionary in entries:
