@@ -116,16 +116,19 @@ func test_scars_round_trip_through_registry_from_dict() -> void:
 
 func test_clarity_spend_reveals_one_forecast_and_consumes_on_resolved_action() -> void:
 	var clarity := StuidClarity.new()
+	clarity.owner_id = &"ally-0"
 	assert_bool(clarity.spend_clarity()).is_true()
 	assert_bool(clarity.spend_clarity()).is_false()
 	assert_int(clarity.clarity).is_equal(StuidClarity.MAX_CLARITY - 1)
 	assert_bool(clarity.on_cast_forecast({}).get("reveal", false)).is_true()
 	var move_event := CombatEvent.new()
+	move_event.actor_id = &"ally-0"
 	move_event.data = {"action_id": "move"}
 	clarity.on_action(move_event)
 	assert_bool(clarity.reveal_armed).is_true()
 	var cast_event := CombatEvent.new()
-	cast_event.data = {"action_id": "cast", "resolution": {"allowed": true}}
+	cast_event.actor_id = &"ally-0"
+	cast_event.data = {"action_id": "cast", "verb": CombatAction.Verb.CAST, "resolution": {"allowed": true}}
 	clarity.on_action(cast_event)
 	assert_bool(clarity.reveal_armed).is_false()
 	assert_bool(clarity.on_cast_forecast({}).is_empty()).is_true()
@@ -179,14 +182,20 @@ func test_ledger_round_trip_through_registry_from_dict() -> void:
 
 func test_fickah_keeps_a_pending_jam_request_until_matching_action() -> void:
 	var breaker := FickahRuleBreaker.new()
+	breaker.owner_id = &"ally-0"
 	assert_bool(breaker.jam_the_gears(&"enemy-0")).is_true()
 	assert_bool(breaker.jam_the_gears(&"enemy-1")).is_false()
 	var unrelated := CombatEvent.new()
+	unrelated.actor_id = &"ally-0"
 	unrelated.target_id = &"enemy-1"
 	breaker.on_action(unrelated)
 	assert_str(String(breaker.jam_target_id)).is_equal("enemy-0")
 	var matching := CombatEvent.new()
+	matching.actor_id = &"ally-0"
 	matching.target_id = &"enemy-0"
+	breaker.on_action(matching)
+	assert_str(String(breaker.jam_target_id)).is_equal("enemy-0")
+	matching.data = {"cancelled_action": "enemy-0"}
 	breaker.on_action(matching)
 	assert_str(String(breaker.jam_target_id)).is_empty()
 	assert_float(FickahRuleBreaker.FIZZLE_FLOOR_PERCENT).is_equal(5.0)
@@ -203,10 +212,12 @@ func test_fickah_round_trip_through_registry_from_dict() -> void:
 
 func test_attribution_draw_is_seeded_and_recorded_by_action_hook() -> void:
 	var attribution := OfshutjeAttribution.new()
+	attribution.owner_id = &"ally-0"
 	var first := attribution.attribution_for(17)
 	assert_bool(first.has("id")).is_true()
 	assert_dict(attribution.attribution_for(17)).is_equal(first)
 	var event := CombatEvent.new()
+	event.actor_id = &"ally-0"
 	event.data = {"resolution": {"allowed": true, "seed": 17}}
 	attribution.on_action(event)
 	assert_str(String(attribution.last_effect_id)).is_equal(str(first["id"]))

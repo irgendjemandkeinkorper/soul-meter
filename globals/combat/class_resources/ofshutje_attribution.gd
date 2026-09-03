@@ -22,6 +22,8 @@ func attribution_for(seed: int) -> Dictionary:
 
 
 func on_action(event: CombatEvent) -> void:
+	if event.actor_id != owner_id:
+		return
 	var resolution: Dictionary = event.data.get("resolution", {})
 	if resolution.is_empty():
 		return

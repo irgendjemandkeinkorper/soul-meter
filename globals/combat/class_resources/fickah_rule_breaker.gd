@@ -19,9 +19,10 @@ func jam_the_gears(target_id: StringName) -> bool:
 
 
 func on_action(event: CombatEvent) -> void:
-	if jam_target_id.is_empty():
+	if jam_target_id.is_empty() or event.actor_id != owner_id:
 		return
-	if event.target_id == jam_target_id:
+	var cancelled_action: Variant = event.data.get("cancelled_action", null)
+	if cancelled_action != null and StringName(str(cancelled_action)) == jam_target_id:
 		jam_target_id = &""
 
 

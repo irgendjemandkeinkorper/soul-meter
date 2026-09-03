@@ -29,9 +29,13 @@ func on_cast_forecast(_context: Dictionary) -> Dictionary:
 
 
 func on_action(event: CombatEvent) -> void:
-	if not reveal_armed:
+	if not reveal_armed or event.actor_id != owner_id:
 		return
 	var data: Dictionary = event.data
+	var action_verb: Variant = data.get("verb", null)
+	var action_kind: Variant = data.get("kind", null)
+	if action_verb != CombatAction.Verb.CAST and action_kind != CombatAction.Kind.CAST:
+		return
 	if data.has("resolution") and not (data.get("resolution", {}) as Dictionary).is_empty():
 		reveal_armed = false
 
