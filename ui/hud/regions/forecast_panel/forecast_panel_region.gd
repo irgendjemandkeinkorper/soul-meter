@@ -108,4 +108,13 @@ func _recompute() -> void:
 	var chance := "HIT 90%"
 	if bool(ability.get("is_spell", false)):
 		chance = "FIZZLE %.0f%%" % float(result.get("fizzle_percent", 0.0))
-	forecast.text = "%s\nFORECAST %d · %s" % [" × ".join(chain), shown, chance]
+	# Seam v2: a hidden draw is "?" on the panel unless the context is revealed; the calculation
+	# underneath is unchanged (forecast == resolution), only what the player is told differs.
+	var revealed := bool(result.get("reveal", false))
+	var hidden: Dictionary = result.get("hidden_draw", {})
+	var shown_text := str(shown)
+	if not hidden.is_empty() and not revealed:
+		shown_text = "?"
+	if revealed:
+		chance += " · TRUE"
+	forecast.text = "%s\nFORECAST %s · %s" % [" × ".join(chain), shown_text, chance]

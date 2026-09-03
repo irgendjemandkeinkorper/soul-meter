@@ -20,11 +20,39 @@ extends RefCounted
 var patron_id: StringName = &""
 ## `BattleActor.combat_id` of the owner; set by the controller when attached.
 var owner_id: StringName = &""
+## Seam v2: the controller this resource is attached to. Set by the controller when attached
+## (never by a subclass). It is the target of the v2 request helpers below — `enqueue_deferred()`
+## and `request_cancel()` — and is null for a resource that lives outside a battle (unit tests,
+## a save being restored before `Battle.start()`), in which case those helpers refuse.
+var host: CombatController = null
 
 
 ## Fires after every `action_resolved` event whose actor is the owner. `event.data` carries the
 ## full outcome dict (action_id, verb, resolution, ...). Use it to consume one-shot flags.
 func on_action(_event: CombatEvent) -> void:
+	pass
+
+
+## Seam v2 broadcast: fires on EVERY actor's resource for EVERY `action_resolved` event, after the
+## owner's `on_action`. `actor_id` is who acted, `action_id` the `CombatAction` id (&"strike",
+## &"move", ...), `target_id` the declared target (may be empty), `outcome` the same outcome dict
+## `on_action` receives (`resolution`, `verb`, `damage`, ...). Threadwalker Threads watches other
+## actors through this; the owner's own actions arrive here too, so guard on `actor_id` if needed.
+func on_any_action(
+	_actor_id: StringName, _action_id: StringName, _target_id: StringName, _outcome: Dictionary
+) -> void:
+	pass
+
+
+## Seam v2: fires on the SOURCE resource when one of its deferred entries fires (after the
+## writes were applied). `entry` is the queued dict plus `"applied": [materialized writes]`.
+func on_deferred_fired(_entry: Dictionary) -> void:
+	pass
+
+
+## Seam v2: fires on the SOURCE resource when one of its deferred entries was cancelled by
+## `CombatController.request_cancel()` (Jam the Gears), before the `action_cancelled` event.
+func on_deferred_cancelled(_entry: Dictionary, _by_id: StringName) -> void:
 	pass
 
 
@@ -59,6 +87,32 @@ func on_turn_start() -> void:
 ## with respect to its own state (do not consume flags here; consume them in `on_action`).
 func on_cast_forecast(_context: Dictionary) -> Dictionary:
 	return {}
+
+
+## Seam v2 request: queue an effect the controller fires later, at a scheduler boundary, through
+## the SAME write-application path Resolution writes take (`_apply_resolution_writes`), so it is
+## deterministic and replayable. `effect` is `{"writes": [{kind, target_id, delta|amount, ...}]}`
+## (kinds: hp, dot, breath, soul_refund, soul_meter, tile_state; before/after are materialized
+## at fire time from live state). `due` is one of `{"delay_ticks": n}` / `{"due_tick": t}`
+## (charge-time clock) or `{"delay_rounds": n}` / `{"due_round": r}` (AP rounds). Returns the
+## controller's refusal shape; `entry.id` on success. Oathclock Ledger's channel.
+func enqueue_deferred(effect: Dictionary, due: Dictionary, label: StringName = &"") -> Dictionary:
+	if host == null:
+		return {"allowed": false, "blocked_by": "no_host", "message": "Resource is not attached to a battle.", "nearest_unblock": {}}
+	var entry := due.duplicate(true)
+	entry["source_id"] = String(owner_id)
+	entry["effect"] = effect.duplicate(true)
+	entry["label"] = String(label)
+	return host.enqueue_deferred(entry)
+
+
+## Seam v2 request: cancel what `target_id` has in flight. `kind` is &"deferred" (that actor's
+## queued deferred entries), &"committed" (its committed-but-unresolved scheduler action — a
+## charging Song under charge time), or &"any" (both). Locksmirk Jam the Gears' channel.
+func request_cancel(target_id: StringName, kind: StringName = &"any") -> Dictionary:
+	if host == null:
+		return {"allowed": false, "blocked_by": "no_host", "message": "Resource is not attached to a battle.", "nearest_unblock": {}}
+	return host.request_cancel(owner_id, target_id, kind)
 
 
 ## HUD-facing view: what the unit plate shows. Keep it small and stable.
