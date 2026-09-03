@@ -12,5 +12,5 @@ ap_cost = 2
 ct_cost = 2
 target_profile = &"self"
 center_pull = 0
-player_available = true
+player_available = false
 ## PROVISIONAL — copied from the nearest PASS-compatible action; B11/B13 own final costs.

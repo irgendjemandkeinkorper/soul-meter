@@ -23,7 +23,6 @@ func snapshot() -> Dictionary:
 		"patron_id": String(patron_id),
 		"label": "Names Remembered",
 		"value": recorded_names.size(),
-		"max": "per battle",
 		"pending_soul_refunds": pending_soul_refunds,
 	}
 

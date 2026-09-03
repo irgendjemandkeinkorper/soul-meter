@@ -2,6 +2,7 @@ class_name VhorrHunger
 extends ClassResource
 ## Vhorr — Husk-bearer: Hunger. Active DoT ticks stack Hunger; a kill from the owner's DoT
 ## refunds Soul Gauge.
+## INERT until seam v2 emits `dot` writes and &"dot" kill cause.
 
 const MAX_HUNGER := 5 # PROVISIONAL — B11 owns tuning.
 const SOUL_REFUND := 1.0 # PROVISIONAL — B11 owns tuning.
@@ -29,6 +30,7 @@ func snapshot() -> Dictionary:
 		"label": "Hunger",
 		"value": hunger,
 		"max": MAX_HUNGER,
+		"hidden_on_plate": true,
 		"pending_soul_refunds": pending_soul_refunds,
 	}
 

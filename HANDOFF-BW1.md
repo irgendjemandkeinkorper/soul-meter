@@ -53,3 +53,9 @@ Commits: `6510239f`, `1b75820d`, `bb28a93c`, `e3b6974d`, `051de11c`
 - No push performed; worktree is clean.
 
 Overall Summary: Wave B class resources #224–#228 implemented within the frozen B0 seam; focused tests green, full suite has one unrelated pre-existing failure, and three seam gaps are documented above.
+
+## Fix pass
+
+- Preserved full `unit`/`fizzle` forecast sub-dictionaries under shallow seam merge; Vicoar now consumes the armed window only on CAST resolution and refunds it on fizzles.
+- Disabled the unimplemented Record Name action, hid inert Hunger from the unit plate, and removed string-valued snapshot maxima for Balance and Name-Ledger.
+- Added controller-level forecast context coverage and updated Wave B regression tests.
