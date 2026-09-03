@@ -1,5 +1,12 @@
 extends GdUnitTestSuite
 
+class CommandSpy:
+	extends ClassResource
+	var commands: Array[String] = []
+
+	func on_command(action_id: StringName, target_id: StringName) -> void:
+		commands.append("%s:%s" % [String(action_id), String(target_id)])
+
 class CelllessBattlefieldSpy:
 	extends BattlefieldModel
 
@@ -76,6 +83,48 @@ func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue(
 	var source_cell: Vector2i = grid.describe_position(grid.position_of(ally))["cell"]
 	assert_int(controller.tile_state_at(source_cell).charge_level).is_equal(1)
 	assert_bool(result["resolution"] == expected_resolution).is_true()
+
+
+func test_pass_class_resource_command_dispatches_to_owner_only() -> void:
+	var owner_spy := CommandSpy.new()
+	var other_spy := CommandSpy.new()
+	ally.class_resource = owner_spy
+	var other := _actor("Other Ally", 30, 7, 2)
+	other.class_resource = other_spy
+	controller.start([ally, other], [enemy], &"class-resource-command")
+	var action := controller.action_by_id(&"record-name")
+
+	var missing_target := controller.query_action(action)
+	assert_bool(missing_target.get("allowed", false)).is_false()
+	assert_str(String(missing_target.get("blocked_by", ""))).is_equal("no_target")
+	var result := controller.submit_action(action.id, other)
+	assert_bool(result.get("allowed", false)).is_true()
+	assert_array(owner_spy.commands).contains(["record_name:%s" % String(other.combat_id)])
+	assert_array(other_spy.commands).is_empty()
+
+
+func test_maiiam_forecast_override_preserves_controller_context() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	ally.class_resource = MaiiamBalance.new()
+	(ally.class_resource as MaiiamBalance).unbalanced = true
+	var ability := AbilityDefinition.new()
+	ability.id = "context-preserving-cast"
+	ability.element_id = &"strom"
+	ability.elements = [&"strom"]
+	ability.magnitude = &"note"
+	ability.power = 4
+	var tables := _cast_tables_for_actor(ally, [ability], "context-preserving-caster")
+	controller.configure([cast], battlefield, rules, null, [ability], tables)
+	controller.start([ally], [enemy], &"context-preserving-battle")
+	var context: Dictionary = controller.forecast_context(
+		ally, enemy, cast, {"ability_id": ability.id}
+	)
+	var unit: Dictionary = context["unit"]
+	var fizzle: Dictionary = context["fizzle"]
+	assert_str(String(unit["id"])).is_equal(String(ally.combat_id))
+	assert_int(int(unit["edge"])).is_equal(ally.attribute_value(&"edge"))
+	assert_int(int(unit["breath"])).is_equal(ally.breath)
+	assert_str(String(fizzle["patron"])).is_equal(ally.source_member.patron)
 
 
 func test_scor_consumes_target_aftertone_in_live_resolution() -> void:

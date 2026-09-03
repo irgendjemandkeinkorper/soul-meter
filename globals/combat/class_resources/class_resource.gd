@@ -33,6 +33,11 @@ func on_action(_event: CombatEvent) -> void:
 	pass
 
 
+## Optional command channel for authored PASS-kind class-resource actions.
+func on_command(_action_id: StringName, _target_id: StringName) -> void:
+	pass
+
+
 ## Seam v2 broadcast: fires on EVERY actor's resource for EVERY `action_resolved` event, after the
 ## owner's `on_action`. `actor_id` is who acted, `action_id` the `CombatAction` id (&"strike",
 ## &"move", ...), `target_id` the declared target (may be empty), `outcome` the same outcome dict

@@ -14,7 +14,11 @@ const PATRON_IDS: Array[StringName] = [
 ## Patron id → script. Classes without an implementation yet resolve to Null (they are listed
 ## in PATRON_IDS so the roster is visible; B1–B10 fill this table).
 const _FACTORIES: Dictionary = {
+	&"maiiam": preload("res://globals/combat/class_resources/maiiam_balance.gd"),
+	&"haeren": preload("res://globals/combat/class_resources/haeren_name_ledger.gd"),
 	&"kero": preload("res://globals/combat/class_resources/ironbrand_scars.gd"),
+	&"vhorr": preload("res://globals/combat/class_resources/vhorr_hunger.gd"),
+	&"vicoar": preload("res://globals/combat/class_resources/vicoar_instructive_failure.gd"),
 }
 
 
