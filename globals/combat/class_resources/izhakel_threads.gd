@@ -2,8 +2,7 @@ class_name IzhakelThreads
 extends ClassResource
 ## Threadwalker — Izhakel: Threads. Hidden contracts trigger when action data violates them.
 ##
-## Conditions are data. The seam dispatches `on_action` only for the resource owner, not every
-## actor, so cross-field evaluation remains a documented contract gap until that dispatch grows.
+## Conditions are data. Seam v2 broadcasts every resolved action so all actors can be watched.
 
 const MAX_THREADS := 3  # PROVISIONAL — B11 owns the cap
 
@@ -22,7 +21,12 @@ func bind_thread(target_id: StringName, condition: Dictionary, payoff: Dictionar
 	return true
 
 
-func on_action(event: CombatEvent) -> void:
+func on_any_action(
+	actor_id: StringName, _action_id: StringName, _target_id: StringName, outcome: Dictionary
+) -> void:
+	var event := CombatEvent.new()
+	event.actor_id = actor_id
+	event.data = outcome
 	for thread: Dictionary in threads:
 		if bool(thread.get("triggered", false)):
 			continue
@@ -30,7 +34,23 @@ func on_action(event: CombatEvent) -> void:
 			continue
 		var condition: Dictionary = thread.get("condition", {})
 		if _matches_condition(event, condition):
-			thread["triggered"] = true
+			var payoff: Dictionary = thread.get("payoff", {})
+			var queued: Dictionary = enqueue_deferred(payoff, {"delay_rounds": 0}, &"thread")
+			if bool(queued.get("allowed", false)):
+				thread["triggered"] = true
+	take_triggered()
+
+
+func take_triggered() -> Array[Dictionary]:
+	var triggered: Array[Dictionary] = []
+	var pending: Array[Dictionary] = []
+	for thread: Dictionary in threads:
+		if bool(thread.get("triggered", false)):
+			triggered.append(thread.duplicate(true))
+		else:
+			pending.append(thread)
+	threads = pending
+	return triggered
 
 
 func _matches_condition(event: CombatEvent, condition: Dictionary) -> bool:
