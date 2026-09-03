@@ -79,9 +79,11 @@ func _ct_line(unit: Dictionary) -> String:
 
 
 func _resource_line(resource: Variant) -> String:
-	if not resource is Dictionary:
+	if not resource is Dictionary or (resource as Dictionary).is_empty():
 		return ""
 	var data: Dictionary = resource as Dictionary
+	if bool(data.get("hidden_on_plate", false)):
+		return ""
 	var label := str(data.get("label", ""))
 	if label.is_empty():
 		return ""

@@ -270,6 +270,9 @@ func query_action(
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
 	if action == null:
 		return _blocked(&"action", "Unknown combat action.", {"type": &"known_action"})
+	if action.class_resource_action == &"record_name":
+		if target == null or not target.is_alive() or not allies.has(target):
+			return _blocked(&"no_target", "Record Name requires an explicit living ally target.", {"type": &"living_ally"})
 	if action.kind == CombatAction.Kind.MOVE:
 		var movement := battlefield.move_query(actor, _move_destination(action, options))
 		if not bool(movement.get("allowed", false)):
@@ -340,6 +343,11 @@ func submit_action(
 	if query.has("resolution"):
 		resolved_options["_resolution"] = query["resolution"]
 		resolved_options["_resolution_context"] = query.get("context", {})
+	if committed_action.kind == CombatAction.Kind.PASS and not committed_action.class_resource_action.is_empty():
+		_class_resource_of(actor).on_command(
+			committed_action.class_resource_action,
+			target.combat_id if target != null else &"",
+		)
 	var outcome := _apply_action(actor, target, committed_action, resolved_options)
 	outcome["action_id"] = action.id
 	outcome["verb"] = action.verb
@@ -1180,7 +1188,7 @@ func _query_cast(
 		return resolution
 	var soul_cost := 0.0
 	for write: Dictionary in resolution.get("writes", []):
-		if write.get("kind", "") == "soul_meter":
+		if StringName(str(write.get("kind", ""))) == &"soul_meter":
 			soul_cost = -float(write.get("delta", 0.0))
 	return _allowed({
 		"ability_id": ability.id,
@@ -1248,7 +1256,7 @@ func _resolved_attack(
 		var cached := (options["_resolution"] as Dictionary).duplicate(true)
 		for write: Dictionary in cached.get("writes", []):
 			if (
-				write.get("kind", "") == "hp"
+			StringName(str(write.get("kind", ""))) == &"hp"
 				and String(write.get("target_id", "")) == String(target.combat_id)
 			):
 				return cached
@@ -1277,7 +1285,7 @@ func _finalize_resolution_damage(
 	finalized["damage"] = damage
 	var writes: Array = finalized.get("writes", [])
 	for write: Dictionary in writes:
-		if write.get("kind", "") != "hp":
+		if StringName(str(write.get("kind", ""))) != &"hp":
 			continue
 		write["before"] = target.hp
 		write["after"] = maxi(target.hp - damage, 0)
@@ -2241,6 +2249,14 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 	return _allowed(payload)
 
 
+func actor_by_id(combat_id: StringName) -> BattleActor:
+	return _actor_by_id(combat_id)
+
+
+func has_living_enemies() -> bool:
+	return _has_living(enemies)
+
+
 func _deferred_is_due(entry: Dictionary) -> bool:
 	if entry.has("due_tick") and scheduler.tick_count() >= int(entry["due_tick"]):
 		return true
@@ -2318,7 +2334,7 @@ func _materialize_write(write: Dictionary, target: BattleActor) -> Dictionary:
 ## Keyed by combat id; Null resources are skipped.
 func class_resources_to_dict() -> Dictionary:
 	var result := {}
-	for actor in allies + enemies:
+	for actor: BattleActor in allies + enemies:
 		var resource := _class_resource_of(actor)
 		if resource.is_null():
 			continue
@@ -2331,7 +2347,7 @@ func class_resources_to_dict() -> Dictionary:
 
 
 func restore_class_resources(data: Dictionary) -> void:
-	for actor in allies + enemies:
+	for actor: BattleActor in allies + enemies:
 		var entry: Variant = data.get(String(actor.combat_id), null)
 		if entry is Dictionary:
 			actor.class_resource = ClassResourceRegistry.from_dict(entry)

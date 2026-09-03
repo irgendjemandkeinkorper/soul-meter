@@ -76,6 +76,10 @@ inside a deferred effect):
 | `dot` | `target_id`, `amount` (HP lost) | HP loss whose kill cause is `&"dot"` (on_kill receives `&"dot"`; `on_damage_taken` fires as usual) |
 | `soul_refund` | `target_id`, `amount` | Adds `amount` to the live Soul meter (`GameState.set_soul_meter`). The only Soul income channel a resource has |
 
+The v2 host methods used by these resources are `CombatController.actor_by_id(combat_id)` and
+`CombatController.has_living_enemies()`. They are read-only lookup/status helpers for resource
+hooks; they do not widen the resource seam.
+
 Notes for B9/B11 and the refund classes:
 
 - The hidden-draw row pick is an **unweighted modulo** over `rows` (`(roll - 1) % rows.size()`).
@@ -102,8 +106,8 @@ Failure, B2).
 | B1 Mirrorblade Balance | `on_action` + `on_cast_forecast` (`unit.attack_scale`, `fizzle.agreement_integrity`) — key-level merge now keeps the rest of `unit`/`fizzle` |
 | B2 Flamebinder Instructive Failure | `on_fizzle` banks; `on_cast_forecast` → `fizzle_percent_override: 0` while armed; consume in `on_action` |
 | B3 Ironbrand Scars | unchanged (`to_hit_enabled`); crit still has no channel |
-| B4 Husk-bearer Hunger | enqueue a `dot` write per stack (`delay_rounds: 1`, re-queue from `on_deferred_fired`); `on_kill` with cause `&"dot"` → enqueue/apply `soul_refund` |
-| B5 River-Mother Name-Ledger | `soul_refund` write from the record action; `on_any_action` to watch the named ally |
+| B4 Husk-bearer Hunger | successful strikes/casts stack Hunger on hits; each target has one pending self-re-queuing DoT chain, and ticks run via deferred execution; `on_kill` with cause `&"dot"` → enqueue/apply `soul_refund` |
+| B5 River-Mother Name-Ledger | `class_resource_action: "record_name"` on a PASS action routes through `on_command(action_id, target_id)`; `soul_refund` is PROVISIONAL and fires on a recorded ally's fall or battle end only; `on_any_action` watches the named ally |
 | B6 Lensbearer Clarity | `reveal: true` while armed |
 | B7 Oathclock Ledger | `enqueue_deferred()` on file, `on_deferred_fired()` to bookkeep, `snapshot().deferred` for the plate |
 | B8 Locksmirk Jam the Gears | `request_cancel(target, &"any")`; the fizzle floor stays in `SkillCheckService` |

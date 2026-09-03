@@ -45,6 +45,8 @@ enum Verb { MOVE, ATTACK, CAST, ITEM, SPEECH, DEFEND }
 @export var destination: StringName = &""
 @export_range(0, 100) var center_pull: int = 10
 @export var player_available: bool = true
+## Optional class-resource command routed by CombatController for PASS-kind actions.
+@export var class_resource_action: StringName = &""
 
 
 static func make(

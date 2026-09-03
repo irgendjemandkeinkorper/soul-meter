@@ -403,6 +403,8 @@ func use_action(
 	var target: BattleActor = null
 	if action != null and action.requires_enemy_target():
 		target = _living_enemy(target_enemy_index if target_index < 0 else target_index)
+	elif action != null and not action.class_resource_action.is_empty():
+		target = _living_ally(target_index)
 	var resolved_options := _resolved_action_options(action, target, options)
 	if (
 		action == null
@@ -898,6 +900,15 @@ func _living_enemy(preferred: int) -> BattleActor:
 		return enemies[preferred]
 	for actor in enemies:
 		if actor.is_alive():
+			return actor
+	return null
+
+
+func _living_ally(preferred: int) -> BattleActor:
+	if preferred >= 0 and preferred < allies.size() and allies[preferred].is_alive():
+		return allies[preferred]
+	for actor in allies:
+		if actor.is_alive() and actor != current_ally():
 			return actor
 	return null
 
