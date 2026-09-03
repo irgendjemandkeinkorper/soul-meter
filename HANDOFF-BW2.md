@@ -70,3 +70,10 @@ Overall Summary: Wave B class-resource implementations and snapshot/save tests a
 - B10 Threads now watches `on_any_action`, queues a zero-round deferred payoff, and prunes with `take_triggered()`.
 - Commits: `bc74a825`, `c6c79e82`, `b1767c06`.
 - Required headless wrapper verification passed: `test/unit/test_class_resource.gd` — `23 test cases | 0 errors | 0 failures`; `test/unit/test_class_resource_seam_v2.gd` — `14 test cases | 0 errors | 0 failures`; `test/integration/test_combat_controller.gd` — `43 test cases | 0 errors | 0 failures`; overall — `80 test cases | 0 errors | 0 failures`.
+
+## Fix pass 2
+
+- Fickah retries `request_cancel(jam_target_id, &"any")` on the owner's turn, arms only on `nothing_to_cancel`/`resolving`, and clears the target after a successful cancellation; dead consume branches and stale comments are removed.
+- Stuid Clarity only carries `reveal: true` for spell abilities; controller-level coverage verifies deferred cancellation and Thread HP payoff execution.
+- Threads prune triggered entries inline; Attribution's unused `attribution_for()` and Ledger's dead turn-hook leftovers are removed.
+- Required headless wrapper verification passed: `test/unit/test_class_resource.gd` — `23 test cases | 0 errors | 0 failures`; `test/unit/test_class_resource_seam_v2.gd` — `16 test cases | 0 errors | 0 failures`; `test/integration/test_combat_controller.gd` — `43 test cases | 0 errors | 0 failures`; overall — `82 test cases | 0 errors | 0 failures`.

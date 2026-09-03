@@ -120,7 +120,8 @@ func test_clarity_spend_reveals_one_forecast_and_consumes_on_resolved_action() -
 	assert_bool(clarity.spend_clarity()).is_true()
 	assert_bool(clarity.spend_clarity()).is_false()
 	assert_int(clarity.clarity).is_equal(StuidClarity.MAX_CLARITY - 1)
-	assert_bool(clarity.on_cast_forecast({}).get("reveal", false)).is_true()
+	assert_bool(clarity.on_cast_forecast({}).get("reveal", false)).is_false()
+	assert_bool(clarity.on_cast_forecast({"ability": {"is_spell": true}}).get("reveal", false)).is_true()
 	var move_event := CombatEvent.new()
 	move_event.actor_id = &"ally-0"
 	move_event.data = {"action_id": "move"}
@@ -183,31 +184,23 @@ func test_ledger_round_trip_through_registry_from_dict() -> void:
 	assert_str(String(restored.owner_id)).is_equal("ally-0")
 
 
-func test_fickah_keeps_a_pending_jam_request_until_matching_action() -> void:
+func test_fickah_arms_only_for_retryable_cancel_refusals() -> void:
 	var breaker := FickahRuleBreaker.new()
 	breaker.owner_id = &"ally-0"
-	assert_bool(breaker.jam_the_gears(&"enemy-0")).is_false()
-	assert_bool(breaker.jam_the_gears(&"enemy-1")).is_false()
-	var unrelated := CombatEvent.new()
-	unrelated.actor_id = &"ally-0"
-	unrelated.target_id = &"enemy-1"
-	breaker.on_action(unrelated)
-	assert_str(String(breaker.jam_target_id)).is_equal("enemy-0")
-	var matching := CombatEvent.new()
-	matching.actor_id = &"ally-0"
-	matching.target_id = &"enemy-0"
-	breaker.on_action(matching)
-	assert_str(String(breaker.jam_target_id)).is_equal("enemy-0")
-	matching.data = {"cancelled_action": "enemy-0"}
-	breaker.on_action(matching)
+	var battle := _battle(breaker)
+	var enemy: BattleActor = battle["enemy"]
+	assert_bool(breaker.jam_the_gears(&"unknown-enemy")).is_false()
 	assert_str(String(breaker.jam_target_id)).is_empty()
+	assert_bool(breaker.jam_the_gears(enemy.combat_id)).is_false()
+	assert_str(String(breaker.jam_target_id)).is_equal(String(enemy.combat_id))
+	assert_bool(breaker.jam_the_gears(&"enemy-1")).is_false()
 	assert_float(FickahRuleBreaker.FIZZLE_FLOOR_PERCENT).is_equal(5.0)
 
 
 func test_fickah_round_trip_through_registry_from_dict() -> void:
 	var breaker := FickahRuleBreaker.new()
 	breaker.patron_id = &"fickah"
-	breaker.jam_the_gears(&"enemy-0")
+	breaker.jam_target_id = &"enemy-0"
 	var restored := ClassResourceRegistry.from_dict(breaker.to_dict()) as FickahRuleBreaker
 	assert_str(String(restored.jam_target_id)).is_equal("enemy-0")
 	assert_dict(restored.snapshot()).contains_key_value("label", "Jam")
@@ -216,9 +209,11 @@ func test_fickah_round_trip_through_registry_from_dict() -> void:
 func test_attribution_draw_is_seeded_and_recorded_by_action_hook() -> void:
 	var attribution := OfshutjeAttribution.new()
 	attribution.owner_id = &"ally-0"
-	var first := attribution.attribution_for(17)
+	var forecast: Dictionary = attribution.on_cast_forecast({"ability": {"is_spell": true}})
+	var hidden_draw: Dictionary = forecast.get("hidden_draw", {})
+	var rows: Array = hidden_draw.get("rows", [])
+	var first: Dictionary = rows[0]
 	assert_bool(first.has("id")).is_true()
-	assert_dict(attribution.attribution_for(17)).is_equal(first)
 	var event := CombatEvent.new()
 	event.actor_id = &"ally-0"
 	event.data = {"resolution": {"allowed": true, "hidden_draw": {"row_id": first["id"], "row": first}, "revealed": {}}}
