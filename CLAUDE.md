@@ -78,7 +78,24 @@ unregistered — re-import after adding a script with a `class_name`. gdUnit4 tr
 Variant-inference (`:=` from a Variant-returning call, e.g. `auto_free()`) as a parse ERROR
 that aborts the whole run with exit 105 — type such vars explicitly.
 
-Fleet roadmap: docs/fleet-roadmap.md (issues #215–#265).
+**Game identity is RATIFIED** (`docs/game-identity.md`, 2026-09-02, ten owner rulings): soul-as-currency
+hook; hollowing not death; Soul income only via acts of Agreement; combat = tactical centerpiece with
+**Fallout 2 lineage** (4–6 party, ~100 mobs, **same-map combat** — re-scopes the battle overlay,
+#211, D4, #175); Fallout-full field verbs; class = identity + **DRAMGID** (dramgid-mono RFC-0001;
+the build still runs the old six-stat system, migration = #283) = what you can do; XP + skill points
++ class perks; elegiac-and-wry tone. Wave F issues #280–#287 carry these consequences.
+
+**Wave A/B magic-combat work merged 2026-09-02:** ClassResource seam v2 (#275: `on_any_action`
+broadcast, deferred entries fired at CT tick/AP round and persisted under
+`class_resources.__deferred__`, `request_cancel` with `resolving` guard, top-level `reveal`
+context key, deterministic `hidden_draw`, `dot`/`soul_refund` write kinds, `deep_merge` for
+overrides); all ten patron class resources (#277 B1–B5, #276 B6–B10, `globals/combat/class_resources/`,
+`docs/class-resources.md`); Aftertone/Tempo state + ten Triad effects (#278; rulings PROVISIONAL in
+code comments; leftovers #279). Suite after these merges: **1335 cases / 0 failures / 0 orphans**.
+Process rule learned the hard way: a worker PR that adds state needs a `submit_action`-path test
+per effect, or the state ships with no live consumer.
+
+Fleet roadmap: docs/fleet-roadmap.md (issues #215–#265, Wave F #280–#287).
 
 ## Architecture map
 <!-- Read THIS instead of grepping to "discover" structure. Load-bearing paths only. -->
