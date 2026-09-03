@@ -72,8 +72,14 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var fizzle_percent := 0.0
 	var fizzle_roll := 0
 	var fizzled := false
+	var fizzle_overridden := false
 	if is_spell:
 		fizzle_percent = _fizzle_percent(context, composition, magnitude)
+		# Seam v2: a class resource may pin the fizzle chance (Flamebinder's banked failure spends
+		# for a guaranteed cast = 0). Same context at forecast and commit, so both see the pin.
+		if context.has("fizzle_percent_override"):
+			fizzle_percent = clampf(float(context.get("fizzle_percent_override", fizzle_percent)), 0.0, 100.0)
+			fizzle_overridden = true
 		fizzle_roll = _deterministic_fizzle_roll(context, ability_id, unit, target)
 		fizzled = fizzle_roll <= fizzle_percent
 
@@ -167,7 +173,30 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"to_hit", "To-hit: %d%% (rolled %d)" % [hit_chance, hit_roll],
 			1.0 if hit else 0.0,
 		))
-	var damage := maxi(roundi(scaled_damage) + detonation_bonus, 0)
+	# Seam v2 hidden draw (Stormbearer Attribution): the resource hands over a table and a seed
+	# key; the row is drawn from the same deterministic source as the fizzle/hit rolls, so the
+	# forecast and the commit draw the same row. The FORECAST PANEL hides it ("?") unless
+	# `reveal` is set; the calculation itself is identical either way.
+	var hidden_draw := _dictionary(context.get("hidden_draw", {}))
+	var draw_result: Dictionary = {}
+	var draw_bonus := 0
+	if not hidden_draw.is_empty() and not fizzled and hit:
+		var rows: Array = hidden_draw.get("rows", []) if hidden_draw.get("rows") is Array else []
+		if not rows.is_empty():
+			var draw_roll := _deterministic_draw_roll(
+				context, ability_id, unit, target, str(hidden_draw.get("seed_key", ""))
+			)
+			var row := _dictionary(rows[(draw_roll - 1) % rows.size()])
+			draw_bonus = int(row.get("bonus_damage", 0))
+			draw_result = {
+				"table_id": str(hidden_draw.get("table_id", "")),
+				"seed_key": str(hidden_draw.get("seed_key", "")),
+				"roll": draw_roll,
+				"row_id": str(row.get("id", "")),
+				"row": row.duplicate(true),
+			}
+			breakdown.append(_step("hidden_draw", "Hidden draw: %s" % str(row.get("id", "?")), float(draw_bonus), "add"))
+	var damage := maxi(roundi(scaled_damage) + detonation_bonus + draw_bonus, 0)
 	if fizzled:
 		hit = false
 		damage = 0
@@ -277,7 +306,21 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"composition": composition.to_dict(),
 		"casting_gate": casting_gate.duplicate(true),
 		"writes": writes,
+		"fizzle_overridden": fizzle_overridden,
+		"hidden_draw": draw_result,
+		"reveal": bool(context.get("reveal", false)),
 	}
+	if bool(context.get("reveal", false)):
+		# Seam v2 reveal channel (Lensbearer Clarity, Triad Dayspring): what the panel may show
+		# beyond the public forecast. Presence of this key is the panel's cue; the numbers are
+		# the same ones the calculation above used.
+		result["revealed"] = {
+			"fizzle_percent": fizzle_percent,
+			"target_element": String(target_element),
+			"relation": String(relation),
+			"attunements": _dictionary(target.get("attunements", {})).duplicate(true),
+			"hidden_draw_row_id": str(draw_result.get("row_id", "")),
+		}
 	if context.has("weakness_id"):
 		result["weakness_id"] = StringName(context.get("weakness_id", ""))
 		result["weakness"] = _dictionary(context.get("weakness", {})).duplicate(true)
@@ -354,6 +397,25 @@ static func _deterministic_fizzle_roll(
 	context: Dictionary, ability_id: String, unit: Dictionary, target: Dictionary
 ) -> int:
 	var key := "fizzle|%d|%d|%s|%s|%s|%s" % [
+		int(context.get("seed", 0)),
+		int(context.get("tick", 0)),
+		str(context.get("battle_id", "")),
+		ability_id,
+		str(unit.get("id", "")),
+		str(target.get("id", "")),
+	]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(key)
+	return rng.randi_range(1, 100)
+
+
+## Seam v2: hidden-draw roll, keyed like the fizzle roll plus the resource's `seed_key` so two
+## resources drawing on the same cast decorrelate while forecast and commit agree.
+static func _deterministic_draw_roll(
+	context: Dictionary, ability_id: String, unit: Dictionary, target: Dictionary, seed_key: String
+) -> int:
+	var key := "draw|%s|%d|%d|%s|%s|%s|%s" % [
+		seed_key,
 		int(context.get("seed", 0)),
 		int(context.get("tick", 0)),
 		str(context.get("battle_id", "")),
