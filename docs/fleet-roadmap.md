@@ -98,6 +98,22 @@ Seam first (Opus), then one issue per class.
 | D7 | Test flake triage: the 3–4 headless-flaky suites | Jules | S |
 | D8 | Doc sync: CLAUDE.md status addenda collapsed into one current section | Kimi | S |
 
+### Wave F — Identity consequences (ratified 2026-09-02, `docs/game-identity.md`)
+
+Owner rulings that re-scope the build. Architecture first (Opus), then Codex. Runs after Wave B
+merges; F1 and F2 gate D3/D4.
+
+| # | Task | Worker | Size |
+|---|---|---|---|
+| F0 | Architecture note: same-map combat — field scene tiles as the battle grid, combat-mode toggle in GameFlow (Active ↔ Battle without scene swap), alert radius admits actors to the CT order, deployment only for set-pieces; re-scope #211/D4 | Opus | M |
+| F1 | Same-map combat implementation per F0 | Codex | XL |
+| F2 | Scale floor: 100 hostile mobs on one map — AI turn batching, off-screen actor skipping, per-tick budget; #175 becomes a hard gate | Codex + DeepSeek profile | L |
+| F3 | DRAMGID migration: seven attributes + 22 skills replace the six-stat build (save schema bump, chargen wizard, Pandora columns, `SkillCheck` service, dialogue conditions); Yothmeru Karma/Fame mapped onto `Renown` with Doctrine/Decorum scaling | Opus design, Codex impl | XL |
+| F4 | Fallout-full field verbs: locked container, pickpocket, barter screen, loot tables; Loom-sensitive skills degrade in Hush/Waning zones | Codex | L |
+| F5 | Progression: XP from combat + quests, skill points per level, perk lists per patron class as Pandora data, Karma/Fame-gated perks | Codex; DeepSeek curve | L |
+| F6 | Hollowing band: Soul-zero state with dialogue conditions and companion barks; "acts of Agreement" as a tagged quest outcome crediting the gauge | Codex; Kimi dialogue drafts | M |
+| F7 | Canon proposals: hollowing in-fiction, what an act of Agreement looks like per faction | Ollama → Kimi rewrite | S |
+
 ### Wave E — Acceptance
 
 4-archetype full playthroughs, §3 metrics gate (#106). Owner-led with Codex fixes.
@@ -120,7 +136,8 @@ Handoff: changed files, test evidence, risks, open questions
 1. Wave A (magic) and Wave B0 seam first. B1–B13 after B0 merges.
 2. Wave C starts as soon as C0 templates exist; runs on `feat/region-*` branches, held.
 3. Wave D runs whenever the owner has time; D3/D4 are Codex-parallel to B.
-4. Wave E last.
+4. Wave F (identity consequences) after B; F0/F3 design notes can start now.
+5. Wave E last.
 
 Rough effort: A ≈ 1 week, B ≈ 2 weeks, C ≈ 3–4 weeks, D ≈ 1–2 weeks, E ≈ 1 week. Wall time
 is bounded by Opus review, not worker throughput.
