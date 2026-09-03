@@ -68,3 +68,17 @@ Overall Summary: Wave B class resources #224–#228 implemented within the froze
 - `Record Name` is player-available with `center_pull = 10`; Mirrorblade and Ironbrand remain unchanged and their deep-merge/forecast tests pass.
 - Verification: requested suites passed — `7 + 14 + 4 + 44 = 69 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans`.
 - No push performed.
+
+## Fix pass 2
+
+- Name-Ledger refunds now require an `hp`/`dot` write targeting a recorded actor; enemy deaths and
+  ally CT/breath writes do not refund. Record Name requires an explicit living ally and dispatches
+  only to the owner's resource.
+- Hunger stacks on every successful player strike/cast, keeps one pending self-re-queuing DoT chain
+  per target, stops the chain on kill, and serializes pending targets. DoT kill refunds land on the
+  live `GameState` Soul meter through the deferred write path.
+- Documented the two host methods, provisional fall/end refund paths, and Hunger hit/deferred-tick
+  behavior. Added controller dispatch and Wave B regression coverage.
+- Verification: `test_wave_b_class_resources.gd` 9 cases, `test_class_resource.gd` 11 cases,
+  `test_combat_identity.gd` 4 cases, `test_combat_controller.gd` 45 cases; all passed with zero
+  errors/failures. No push performed.
