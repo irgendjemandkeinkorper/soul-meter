@@ -27,6 +27,7 @@ func on_any_action(
 	var event := CombatEvent.new()
 	event.actor_id = actor_id
 	event.data = outcome
+	var pending: Array[Dictionary] = []
 	for thread: Dictionary in threads:
 		if bool(thread.get("triggered", false)):
 			continue
@@ -38,7 +39,9 @@ func on_any_action(
 			var queued: Dictionary = enqueue_deferred(payoff, {"delay_rounds": 0}, &"thread")
 			if bool(queued.get("allowed", false)):
 				thread["triggered"] = true
-	take_triggered()
+		if not bool(thread.get("triggered", false)):
+			pending.append(thread)
+	threads = pending
 
 
 func take_triggered() -> Array[Dictionary]:

@@ -23,7 +23,8 @@ func spend_clarity() -> bool:
 
 
 func on_cast_forecast(_context: Dictionary) -> Dictionary:
-	if not reveal_armed:
+	var ability: Dictionary = _context.get("ability", {})
+	if not reveal_armed or not bool(ability.get("is_spell", false)):
 		return {}
 	return {"reveal": true}
 

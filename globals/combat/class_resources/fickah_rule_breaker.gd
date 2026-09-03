@@ -1,10 +1,9 @@
 class_name FickahRuleBreaker
 extends ClassResource
-## Locksmirk — Fickah: the rule-breaker. Jam request plus the patron's fizzle floor.
+## Locksmirk — Fickah: the rule-breaker. Retryable Jam plus the patron's fizzle floor.
 ##
 ## `SkillCheckService.fizzle_percent()` already applies Fickah's PROVISIONAL 5% floor from
-## the patron id in the forecast context. Jam execution needs a scheduler cancellation hook
-## that the B0 seam does not expose, so this resource records the pending request only.
+## the patron id in the forecast context. A refused Jam is retried when this owner next turns.
 
 const FIZZLE_FLOOR_PERCENT := SkillCheckService.FIZZLE_FLOOR_PERCENT
 
@@ -15,22 +14,20 @@ func jam_the_gears(target_id: StringName) -> bool:
 	if target_id.is_empty() or not jam_target_id.is_empty():
 		return false
 	var result: Dictionary = request_cancel(target_id, &"any")
-	if not bool(result.get("allowed", false)):
+	var blocked_by: StringName = StringName(str(result.get("blocked_by", "")))
+	if not bool(result.get("allowed", false)) and (
+		blocked_by == &"nothing_to_cancel" or blocked_by == &"resolving"
+	):
 		jam_target_id = target_id
 		return false
-	return true
+	return bool(result.get("allowed", false))
 
 
-func on_action(event: CombatEvent) -> void:
+func on_turn_start() -> void:
 	if jam_target_id.is_empty():
 		return
-	if event.type == &"action_cancelled" and event.target_id == jam_target_id:
-		jam_target_id = &""
-		return
-	if event.actor_id != owner_id:
-		return
-	var cancelled_action: Variant = event.data.get("cancelled_action", null)
-	if cancelled_action != null and StringName(str(cancelled_action)) == jam_target_id:
+	var result: Dictionary = request_cancel(jam_target_id, &"any")
+	if bool(result.get("allowed", false)):
 		jam_target_id = &""
 
 
