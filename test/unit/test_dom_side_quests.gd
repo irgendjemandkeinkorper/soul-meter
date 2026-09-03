@@ -6,18 +6,22 @@ const REGISTRY_PATH := "res://globals/quest_registry.gd"
 const SIDE_QUEST_SCRIPT_PATH := "res://quests/dom_side_quest.gd"
 
 var original_flags: Dictionary
+var original_soul_meter: float
 var original_reputation: Dictionary
 var original_quests: Dictionary
 
 
 func before_test() -> void:
 	original_flags = GameState.flags.duplicate(true)
+	original_soul_meter = GameState.soul_meter
 	original_reputation = Reputation.to_dict().duplicate(true)
 	original_quests = QuestRegistry.to_dict().duplicate(true)
 	_reset_side_quest_state()
 
 
 func after_test() -> void:
+	GameState.flags.clear()
+	GameState.soul_meter = original_soul_meter
 	GameState.flags = original_flags
 	Reputation.from_dict(original_reputation)
 	QuestRegistry.reset()
@@ -125,6 +129,57 @@ func test_every_outcome_resolves_once_with_a_durable_flag_and_ledger_event() -> 
 			assert_int(Reputation.to_dict()["log"].size()).is_equal(event_count)
 
 
+func test_untagged_soul_reward_is_rejected_before_quest_completion() -> void:
+	var quest: DomSideQuest = QuestRegistry.DOM_SIDE_QUESTS[0]
+	quest.outcome_tags = _blank_outcome_tags(quest)
+	quest.outcome_soul_deltas = _blank_soul_deltas(quest)
+	quest.outcome_soul_deltas[0] = 5.0
+	GameState.soul_meter = 25.0
+	assert_bool(QuestRegistry.offer_side_quest(quest)).is_true()
+	for required_flag: String in quest.required_flags:
+		GameState.set_flag(required_flag, true)
+
+	var resolved := QuestRegistry.resolve_side_quest(quest, quest.outcome_ids[0])
+
+	quest.outcome_tags = []
+	quest.outcome_soul_deltas = PackedFloat32Array()
+	assert_bool(resolved).is_false()
+	assert_bool(QuestRegistry.is_active(quest)).is_true()
+	assert_float(GameState.soul_meter).is_equal(25.0)
+
+
+func test_act_of_agreement_outcome_recovers_soul_and_reports_reward() -> void:
+	var quest: DomSideQuest = QuestRegistry.DOM_SIDE_QUESTS[0]
+	quest.outcome_tags = _blank_outcome_tags(quest)
+	quest.outcome_tags[0].append(DomSideQuest.ACT_OF_AGREEMENT_TAG)
+	quest.outcome_soul_deltas = _blank_soul_deltas(quest)
+	quest.outcome_soul_deltas[0] = 5.0
+	GameState.soul_meter = 40.0
+	GameState.soul_meter = 0.0
+	assert_bool(GameState.is_hollowing()).is_true()
+	assert_bool(QuestRegistry.offer_side_quest(quest)).is_true()
+	for required_flag: String in quest.required_flags:
+		GameState.set_flag(required_flag, true)
+	var summaries: Array[Dictionary] = []
+	var record_summary := func(summary: Dictionary) -> void: summaries.append(summary)
+	QuestRegistry.quest_rewards_granted.connect(record_summary)
+
+	var resolved := QuestRegistry.resolve_side_quest(quest, quest.outcome_ids[0])
+
+	QuestRegistry.quest_rewards_granted.disconnect(record_summary)
+	quest.outcome_tags = []
+	quest.outcome_soul_deltas = PackedFloat32Array()
+	assert_bool(resolved).is_true()
+	assert_float(GameState.soul_meter).is_equal(5.0)
+	assert_bool(GameState.is_hollowing()).is_false()
+	assert_int(summaries.size()).is_equal(1)
+	var entries: Array = summaries[0]["entries"]
+	assert_int(entries.size()).is_equal(2)
+	assert_dict(entries[1]).contains_key_value("kind", "soul")
+	assert_dict(entries[1]).contains_key_value("id", DomSideQuest.ACT_OF_AGREEMENT_TAG)
+	assert_float(float(entries[1]["delta"])).is_equal(5.0)
+
+
 func test_every_outcome_has_a_later_dialogue_readback() -> void:
 	var resource: DialogueResource = load(DIALOGUE_PATH)
 	assert_object(resource).is_not_null()
@@ -163,6 +218,19 @@ func _reset_side_quest_state() -> void:
 	GameState.flags.clear()
 	Reputation.from_dict({})
 	QuestRegistry.reset()
+
+
+func _blank_outcome_tags(quest: DomSideQuest) -> Array[PackedStringArray]:
+	var tags: Array[PackedStringArray] = []
+	for _index in quest.outcome_count():
+		tags.append(PackedStringArray())
+	return tags
+
+
+func _blank_soul_deltas(quest: DomSideQuest) -> PackedFloat32Array:
+	var deltas := PackedFloat32Array()
+	deltas.resize(quest.outcome_count())
+	return deltas
 
 
 func _json(path: String) -> Dictionary:

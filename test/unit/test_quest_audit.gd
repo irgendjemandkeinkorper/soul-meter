@@ -4,6 +4,25 @@ const QuestAuditScript := preload("res://tools/quest_audit.gd")
 const FLAG_FIXTURE := "res://test/fixtures/quest_audit/flags.dialogue"
 
 
+func test_dom_side_agreement_reward_is_audited_as_a_soul_ledger_event() -> void:
+	var quest := DomSideQuest.new()
+	quest.outcome_ids = PackedStringArray(["agree", "decline"])
+	quest.outcome_faction_ids = PackedStringArray(["faction-a", "faction-b"])
+	quest.outcome_reputation_deltas = PackedFloat32Array([2.0, -2.0])
+	quest.outcome_causes = PackedStringArray(["Agreed", "Declined"])
+	quest.outcome_tags = [
+		PackedStringArray([DomSideQuest.ACT_OF_AGREEMENT_TAG]), PackedStringArray()
+	]
+	quest.outcome_soul_deltas = PackedFloat32Array([5.0, 0.0])
+
+	var outcomes := QuestAuditScript._dom_side_outcomes(quest, "test_resolution")
+
+	assert_array(outcomes[0]["ledger_events"]).contains(
+		"soul:5.0:%s" % DomSideQuest.ACT_OF_AGREEMENT_TAG
+	)
+	assert_int(outcomes[1]["ledger_events"].size()).is_equal(1)
+
+
 func test_classification_counts_only_genuinely_distinct_outcomes() -> void:
 	var outcomes: Array[Dictionary] = [
 		{

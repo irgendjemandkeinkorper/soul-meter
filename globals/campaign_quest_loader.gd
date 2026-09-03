@@ -439,6 +439,65 @@ static func _validate_quest(
 					"duplicate_outcome_id", "Outcome id '%s' is duplicated." % outcome_id
 				)
 			outcome_ids[outcome_id] = true
+		_validate_outcome_soul_reward(outcome, file_path, field_prefix, errors)
+
+
+static func _validate_outcome_soul_reward(
+	outcome: Dictionary, file_path: String, field_prefix: String, errors: Array[Dictionary]
+) -> void:
+	var tags_value: Variant = outcome.get("tags", [])
+	if not tags_value is Array:
+		_add_error(
+			errors, file_path, field_prefix + ".tags", "array of non-empty strings",
+			"invalid_field_type", "Expected outcome tags to be an array."
+		)
+		return
+	var tags: Array = tags_value as Array
+	var seen_tags: Dictionary = {}
+	var tags_are_valid := true
+	for index in tags.size():
+		var tag_value: Variant = tags[index]
+		var tag_field := "%s.tags[%d]" % [field_prefix, index]
+		if not tag_value is String or str(tag_value).strip_edges().is_empty():
+			_add_error(
+				errors, file_path, tag_field, "non-empty string", "invalid_reward_tag",
+				"Expected a non-empty outcome tag."
+			)
+			tags_are_valid = false
+			continue
+		var tag := str(tag_value).strip_edges()
+		if seen_tags.has(tag):
+			_add_error(
+				errors, file_path, tag_field, "unique outcome tag", "invalid_reward_tag",
+				"Outcome tag '%s' is duplicated." % tag
+			)
+			tags_are_valid = false
+		seen_tags[tag] = true
+
+	var soul_delta_value: Variant = outcome.get("soul_delta", 0.0)
+	if not soul_delta_value is float and not soul_delta_value is int:
+		_add_error(
+			errors, file_path, field_prefix + ".soul_delta", "non-negative number",
+			"invalid_field_type", "Expected a numeric Soul delta."
+		)
+		return
+	var soul_delta := float(soul_delta_value)
+	if not is_finite(soul_delta) or soul_delta < 0.0:
+		_add_error(
+			errors, file_path, field_prefix + ".soul_delta", "finite non-negative number",
+			"invalid_soul_reward_contract", "Soul delta must be finite and non-negative."
+		)
+		return
+	if not tags_are_valid:
+		return
+	var is_agreement := tags.has(DomSideQuest.ACT_OF_AGREEMENT_TAG)
+	if is_agreement != (soul_delta > 0.0):
+		_add_error(
+			errors, file_path, field_prefix + ".soul_delta",
+			"positive only for an act_of_agreement outcome",
+			"invalid_soul_reward_contract",
+			"A positive Soul delta and the act_of_agreement tag must appear together."
+		)
 
 
 static func _quest_from_data(
@@ -462,6 +521,8 @@ static func _quest_from_data(
 		quest.outcome_reputation_deltas.append(float(outcome["reputation_delta"]))
 		quest.outcome_causes.append(str(outcome["cause"]))
 		quest.outcome_readbacks.append(str(outcome["readback"]))
+		quest.outcome_tags.append(PackedStringArray(outcome.get("tags", [])))
+		quest.outcome_soul_deltas.append(float(outcome.get("soul_delta", 0.0)))
 	return quest
 
 

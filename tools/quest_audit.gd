@@ -606,15 +606,26 @@ static func _dom_side_outcomes(resource: Resource, resolution_flag: String) -> A
 	var factions: PackedStringArray = resource.get("outcome_faction_ids")
 	var deltas: PackedFloat32Array = resource.get("outcome_reputation_deltas")
 	var causes: PackedStringArray = resource.get("outcome_causes")
+	var tags: Array[PackedStringArray] = resource.get("outcome_tags")
+	var soul_deltas: PackedFloat32Array = resource.get("outcome_soul_deltas")
 	for index: int in ids.size():
 		var faction := factions[index] if index < factions.size() else ""
 		var delta := deltas[index] if index < deltas.size() else 0.0
 		var cause := causes[index] if index < causes.size() else ""
+		var ledger_events := ["%s:%s:%s" % [faction, delta, cause]]
+		if (
+			index < tags.size()
+			and tags[index].has(DomSideQuest.ACT_OF_AGREEMENT_TAG)
+			and index < soul_deltas.size()
+		):
+			ledger_events.append(
+				"soul:%s:%s" % [soul_deltas[index], DomSideQuest.ACT_OF_AGREEMENT_TAG]
+			)
 		outcomes.append(
 			{
 				"id": ids[index],
 				"state_writes": ["%s=%s" % [resolution_flag, ids[index]]],
-				"ledger_events": ["%s:%s:%s" % [faction, delta, cause]],
+				"ledger_events": ledger_events,
 				"readback_flag": resolution_flag,
 				"read_back": false,
 				"source": resource.resource_path,
