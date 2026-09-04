@@ -25,6 +25,7 @@ extends Node
 ##         resume · to_main_menu · enter_battle · battle_end · travel
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
+const QUEST_AUDIT_SCRIPT := "res://tools/quest_audit.gd"
 ## The starting town (Dom) — the first gameplay scene loaded on a new game.
 const TOWN_SCENE := "res://world/starting_town.tscn"
 ## New games enter the opening gauntlet here after the narration. Save loading
@@ -93,6 +94,11 @@ static func _gameplay_scenes() -> Array[String]:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Standalone audits run as the SceneTree main loop and quit from _initialize().
+	# Do not start an unrelated asynchronous title-screen load that the audit will
+	# terminate mid-parse.
+	if _is_quest_audit_cli(OS.get_cmdline_args()):
+		return
 	_restore_travel_plan()
 	if not Battle.battle_ended.is_connected(_on_journey_battle_ended):
 		Battle.battle_ended.connect(_on_journey_battle_ended)
@@ -152,6 +158,15 @@ func _ready() -> void:
 
 	# Boot is where splash/config-load will live; nothing to wait on yet.
 	send_event.call_deferred("boot_done")
+
+
+static func _is_quest_audit_cli(arguments: PackedStringArray) -> bool:
+	var script_index := arguments.find("--script")
+	return (
+		script_index >= 0
+		and script_index + 1 < arguments.size()
+		and arguments[script_index + 1] == QUEST_AUDIT_SCRIPT
+	)
 
 
 ## The single entry point UI code uses to talk to the chart.
