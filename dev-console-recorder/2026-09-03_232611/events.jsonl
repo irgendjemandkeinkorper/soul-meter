@@ -1,0 +1,5 @@
+{"captured_categories":["battle_result","dialogue","mock_ng_plus","quests","renown","reputation","save_load","scene_changes","soul_meter_spends","tactical_events","world_clock"],"privacy":"gameplay telemetry only; no personal data","schema":1,"started_at":"2026-09-03 23:26:11","t":0,"type":"session_started","uncaptured_categories":[]}
+{"scene":"res://ui/screens/main_menu.tscn","t":0,"type":"scene_started"}
+{"command":"help","t":0,"type":"dev_console_command"}
+{"duration_ms":0,"scene":"res://ui/screens/main_menu.tscn","t":0,"type":"scene_ended"}
+{"file":"T_.md","t":1,"type":"exported"}
