@@ -99,6 +99,7 @@ Owner: ratify this doc; close or merge the four stale PRs; start the Steamworks 
 | Playtest round 2 (5 testers), P0/P1 fixes only | Owner + Codex | Day 26 |
 | Full suite green, zero orphans, export builds on CI | Claude review | Day 27 |
 | Steam review submission (allow 3–5 business days) | Owner | Day 25 at the latest |
+| Steamworks partner signup + $100 fee (30-day first-release wait) | Owner | **Sep 4, today** |
 | Gold build tag `v1.0.0-ch1`, depot set live, release date set | Owner | Oct 2 |
 
 ## Standing rules for the month
@@ -113,6 +114,9 @@ Owner: ratify this doc; close or merge the four stale PRs; start the Steamworks 
 ## Owner decisions pending
 
 1. ~~Cut line~~ RESOLVED 2026-09-04: episodic Ch1 first, 20 h is a dream goal.
-2. Price point and release date on Steam (affects store-page copy, not code).
-3. Whether stubbed side quests are visible in-world (signposted) or hidden until the update.
+2. Price: owner leaning $9.99 or $19.99 (2026-09-04), undecided. Release date open.
+   **No Steamworks account yet.** Steam requires a new partner account to wait ~30 days after
+   the $100 fee clears before its first release, and the store page must be public ~2 weeks
+   before launch. Signing up on 2026-09-04 is the critical path for an early-October date.
+3. ~~Stub visibility~~ RESOLVED 2026-09-04: visible in-world, signposted.
 4. ~~Image model~~ RESOLVED 2026-09-04: Gemini image API, style board as reference.
