@@ -164,6 +164,46 @@ func _agreement_integrity(scene_path: String = "") -> float:
 	return EncounterCatalog.agreement_integrity(encounter_id, location_integrity)
 
 
+## Reports whether the currently loaded field can host same-map combat.
+## Refusals retain the shared FR-606 query shape.
+func can_fight_here() -> Dictionary:
+	var field: FieldMap = _current_field_map()
+	if field == null:
+		return {
+			"allowed": false,
+			"blocked_by": &"field_map",
+			"nearest_unblock": {"type": &"field_map"},
+			"message": "Combat requires a loaded field map.",
+		}
+	if field.no_combat_zone():
+		return {
+			"allowed": false,
+			"blocked_by": &"no_combat_zone",
+			"nearest_unblock": {"type": &"combat_enabled_location"},
+			"message": "Combat cannot begin in this location.",
+		}
+	if field.ground() == null or field.blocking() == null:
+		return {
+			"allowed": false,
+			"blocked_by": &"field_layers",
+			"nearest_unblock": {"type": &"field_layers"},
+			"message": "Combat requires ground and blocking layers.",
+		}
+	if field.iso_grid() == null:
+		return {
+			"allowed": false,
+			"blocked_by": &"iso_grid",
+			"nearest_unblock": {"type": &"iso_grid"},
+			"message": "Combat requires a ready field grid.",
+		}
+	return {
+		"allowed": true,
+		"blocked_by": &"",
+		"nearest_unblock": {},
+		"message": "",
+	}
+
+
 ## Catalog encounters fight on the field that is already loaded. Two zone paths
 ## stay live as the FR-105 fallback: authors may select `"battlefield": "zones"`
 ## explicitly, and ad-hoc `start(BattleActor)` scaffold battles have no definition.

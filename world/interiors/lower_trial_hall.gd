@@ -68,7 +68,7 @@ func _start_trial_encounter(encounter_id: StringName) -> void:
 		_active_trial_encounter = &""
 		return
 	trial_encounter_started.emit(encounter_id)
-	GameFlow.send_event("enter_battle")
+	GameFlow.send_event("enter_set_piece")
 
 
 func _on_warden_trigger_body_entered(body: Node2D) -> void:

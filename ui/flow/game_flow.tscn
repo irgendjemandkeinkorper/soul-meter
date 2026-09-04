@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://ui/flow/game_flow.gd" id="1_flow"]
 [ext_resource type="Script" path="res://addons/godot_state_charts/state_chart.gd" id="2_chart"]
@@ -16,14 +16,28 @@ expression = "garrison_access_granted"
 script = ExtResource("7_not_guard")
 guard = SubResource("ExpressionGuard_garrison")
 
+[sub_resource type="Resource" id="ExpressionGuard_can_fight"]
+script = ExtResource("6_expression_guard")
+expression = "can_fight_here"
+
+[sub_resource type="Resource" id="ExpressionGuard_resume_battle"]
+script = ExtResource("6_expression_guard")
+expression = "resume_to_battle"
+
+[sub_resource type="Resource" id="NotGuard_resume_battle"]
+script = ExtResource("7_not_guard")
+guard = SubResource("ExpressionGuard_resume_battle")
+
 [node name="GameFlow" type="Node"]
 script = ExtResource("1_flow")
 
 [node name="StateChart" type="Node" parent="."]
 script = ExtResource("2_chart")
 initial_expression_properties = {
+"can_fight_here": false,
 "garrison_access_granted": false,
-"rep_iron_companies": 0.0
+"rep_iron_companies": 0.0,
+"resume_to_battle": false
 }
 
 [node name="Root" type="Node" parent="StateChart"]
@@ -91,10 +105,16 @@ script = ExtResource("5_transition")
 to = NodePath("../../Paused")
 event = &"pause"
 
+[node name="ToBattle" type="Node" parent="StateChart/Root/Playing/Active"]
+script = ExtResource("5_transition")
+to = NodePath("../../Battle")
+event = &"enter_battle"
+guard = SubResource("ExpressionGuard_can_fight")
+
 [node name="ToDeploymentSlate" type="Node" parent="StateChart/Root/Playing/Active"]
 script = ExtResource("5_transition")
 to = NodePath("../../DeploymentSlate")
-event = &"enter_battle"
+event = &"enter_set_piece"
 
 [node name="ToLoading" type="Node" parent="StateChart/Root/Playing/Active"]
 script = ExtResource("5_transition")
@@ -125,6 +145,13 @@ script = ExtResource("4_atomic")
 script = ExtResource("5_transition")
 to = NodePath("../../Active")
 event = &"resume"
+guard = SubResource("NotGuard_resume_battle")
+
+[node name="ToBattle" type="Node" parent="StateChart/Root/Playing/Paused"]
+script = ExtResource("5_transition")
+to = NodePath("../../Battle")
+event = &"resume"
+guard = SubResource("ExpressionGuard_resume_battle")
 
 [node name="ToMenus" type="Node" parent="StateChart/Root/Playing/Paused"]
 script = ExtResource("5_transition")
@@ -165,6 +192,11 @@ event = &"accept_slate"
 
 [node name="Battle" type="Node" parent="StateChart/Root/Playing"]
 script = ExtResource("4_atomic")
+
+[node name="ToPaused" type="Node" parent="StateChart/Root/Playing/Battle"]
+script = ExtResource("5_transition")
+to = NodePath("../../Paused")
+event = &"pause"
 
 [node name="ToActive" type="Node" parent="StateChart/Root/Playing/Battle"]
 script = ExtResource("5_transition")

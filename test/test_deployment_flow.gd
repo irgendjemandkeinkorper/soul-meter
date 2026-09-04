@@ -29,11 +29,11 @@ func after_test() -> void:
 	_field_scene = null
 
 
-func test_chart_routes_enter_battle_through_all_four_deployment_states() -> void:
+func test_chart_routes_enter_set_piece_through_all_four_deployment_states() -> void:
 	var chart := FileAccess.get_file_as_string("res://ui/flow/game_flow.tscn")
 	for state: String in ["DeploymentSlate", "DeploymentAttune", "DeploymentLoadout", "DeploymentPlace"]:
 		assert_str(chart).contains("name=\"%s\"" % state)
-	assert_str(chart).contains("event = &\"enter_battle\"")
+	assert_str(chart).contains("event = &\"enter_set_piece\"")
 	assert_str(chart).contains("event = &\"accept_slate\"")
 	assert_str(chart).not_contains("change_scene_to_file")
 
