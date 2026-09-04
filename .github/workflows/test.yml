@@ -57,6 +57,25 @@ jobs:
       - name: Check art-free acceptance artifacts
         run: SOUL_METER_ACCEPTANCE_ARTIFACTS_ONLY=1 GODOT_BIN="$GODOT_BIN" bash scripts/acceptance_gate.sh
 
+      - name: Check PR overlap
+        run: bash scripts/forge_overlap_check.sh
+
+      - name: Check Forge canon lint
+        run: |
+          if [ -f "addons/dramgid_forge/tools/forge.gd" ]; then
+            "$GODOT_BIN" --headless -s addons/dramgid_forge/tools/forge.gd lint canon/
+          else
+            echo "addons/dramgid_forge/tools/forge.gd not present yet, skipping Forge lint."
+          fi
+
+      - name: Check Forge drift
+        run: |
+          if [ -f "addons/dramgid_forge/tools/forge.gd" ]; then
+            "$GODOT_BIN" --headless -s addons/dramgid_forge/tools/forge.gd drift
+          else
+            echo "addons/dramgid_forge/tools/forge.gd not present yet, skipping Forge drift."
+          fi
+
       - name: Check Pandora/generated-data drift
         run: SOUL_METER_DRIFT_CHECK=1 GODOT_BIN="$GODOT_BIN" bash scripts/check_generated_data.sh
 
