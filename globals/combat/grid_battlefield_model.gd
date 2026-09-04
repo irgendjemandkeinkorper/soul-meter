@@ -14,8 +14,8 @@ extends BattlefieldModel
 ## the two into one derived rule would make "blocked by elevation" and "expensive because of
 ## elevation" the same refusal, which FR-606 forbids.
 ##
-## No map is authored here. `build_grid()` takes bare `TileMapLayer` nodes and elevation/cliff
-## data from the caller that owns the encounter; this file supplies the mechanism only.
+## No map is authored here. `build_grid()` consumes the field's Ground/Blocking layers and
+## reads cover/elevation from its hidden Terrain sibling; this file supplies the mechanism only.
 ##
 ## Determinism: no RNG anywhere below. `IsoGrid`/`AStarGrid2D` tie-breaks are stable (lowest
 ## cell index wins), and `reachable_positions()` sorts its own result by handle string, so the
@@ -73,19 +73,46 @@ func configure(rules: CombatRules) -> void:
 	_rules = rules
 
 
-## Builds the shared `IsoGrid` this model owns. Not scene-required: any caller (a real map
-## loader later, or a test today) may hand this bare `TileMapLayer` nodes it built in code.
-## Elevation/cliff data is supplied separately via `set_elevation()` / `set_cliff()` so the two
-## concerns stay independently settable, per the header note.
+## Builds from the field layers. A live FieldMap supplies the exact IsoGrid already owned by
+## ClickMoveController; bare-layer unit fixtures retain a local fallback grid.
 func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
 	_tiles_snapshot_cache = []
-	_grid = IsoGrid.new()
-	_grid.build(ground, blocking)
+	_elevation.clear()
+	_cover.clear()
+	_cliffs.clear()
+	var parent: Node = ground.get_parent()
+	var field: FieldMap = (
+		parent.find_child("FieldMap", true, false) as FieldMap if parent != null else null
+	)
+	_grid = field.iso_grid() if field != null else null
+	if _grid == null:
+		_grid = IsoGrid.new()
+		_grid.build(ground, blocking)
+	_read_authored_terrain(ground)
 	for cell: Vector2i in _elevation.keys():
 		_apply_elevation_weight(cell)
 	for cell: Vector2i in _cliffs.keys():
 		if bool(_cliffs[cell]):
 			_grid.set_point_solid(cell, true)
+
+
+func _read_authored_terrain(ground: TileMapLayer) -> void:
+	var parent: Node = ground.get_parent()
+	var terrain: TileMapLayer = (
+		parent.find_child("Terrain", true, false) as TileMapLayer if parent != null else null
+	)
+	if terrain == null:
+		return
+	for cell: Vector2i in terrain.get_used_cells():
+		var tile_data: TileData = terrain.get_cell_tile_data(cell)
+		if tile_data == null:
+			continue
+		var cover_value: Variant = tile_data.get_custom_data(&"cover")
+		if cover_value is bool and cover_value:
+			_cover[cell] = true
+		var elevation_value: Variant = tile_data.get_custom_data(&"elevation")
+		if elevation_value is int and elevation_value != 0:
+			_elevation[cell] = elevation_value
 
 
 ## Terrain height at `cell`. Scales the CT cost of entering it — never makes it impassable.

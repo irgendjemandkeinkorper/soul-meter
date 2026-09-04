@@ -59,6 +59,23 @@ func _handle(x: int, y: int, elevation: int = 0) -> StringName:
 	return StringName("c:%d,%d,%d" % [x, y, elevation])
 
 
+func test_build_grid_reuses_the_field_grid_and_reads_authored_terrain() -> void:
+	var scene: Node = load("res://world/test_room.tscn").instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	var field: FieldMap = scene.find_child("FieldMap", true, false) as FieldMap
+	var model: GridBattlefieldModel = GridBattlefieldModel.new()
+	model.configure(_rules())
+	model.build_grid(field.ground(), field.blocking())
+
+	assert_object(model._grid).is_same(field.iso_grid())
+	assert_bool(bool(_tile_at(model.tiles_snapshot(), Vector2i(2, 1)).get("cover", false))).is_true()
+	assert_int(model.elevation_at(Vector2i(3, 1))).is_equal(1)
+
+	scene.queue_free()
+	await get_tree().process_frame
+
+
 # ---- opaque handles, capabilities, describe_position ----
 
 
@@ -522,3 +539,10 @@ func test_reachable_positions_is_deterministic_across_repeated_calls() -> void:
 	var second := model.reachable_positions(ally, 60)
 
 	assert_array(first).is_equal(second)
+
+
+func _tile_at(tiles: Array[Dictionary], cell: Vector2i) -> Dictionary:
+	for tile: Dictionary in tiles:
+		if int(tile.get("x", -1)) == cell.x and int(tile.get("y", -1)) == cell.y:
+			return tile
+	return {}

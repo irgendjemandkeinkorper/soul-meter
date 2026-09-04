@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=29 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
@@ -20,6 +20,7 @@
 [ext_resource type="Script" path="res://world/field_map.gd" id="18_field_map"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="19_iso"]
 [ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="20_blocking_tiles"]
+[ext_resource type="Script" path="res://world/nav/combat_terrain_layer.gd" id="21_terrain"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1800, 40)
@@ -54,6 +55,10 @@ script = ExtResource("19_iso")
 [node name="Blocking" type="TileMapLayer" parent="."]
 visible = false
 tile_set = ExtResource("20_blocking_tiles")
+
+[node name="Terrain" type="TileMapLayer" parent="."]
+visible = false
+script = ExtResource("21_terrain")
 
 [node name="Hush" type="ColorRect" parent="."]
 z_index = -5
