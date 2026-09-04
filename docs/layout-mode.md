@@ -43,14 +43,16 @@ Use the headless bake tool to turn reviewed scratch data into a scene change:
 ~/.local/bin/godot --headless --path . \
   --script tools/bake_layout_overrides.gd \
   --scene res://world/starting_town.tscn \
-  --overrides /absolute/path/to/starting_town.json
+  --overrides /absolute/path/to/starting_town.json \
+  --write --force
 ```
 
-The default output is the input scene. To preserve the source while inspecting a candidate, pass `--out res://path/to/candidate.tscn`.
+By default, the tool runs in report-only mode and prints planned changes without modifying any scene files.
+Pass `--write` to save the baked scene. If the output file already exists (which includes the default output path `--out`, which defaults to `--scene`), `--force` is required to overwrite it. To preserve the source while inspecting a candidate, pass `--out res://path/to/candidate.tscn`.
 
 The required workflow is:
 
-1. Bake the override.
+1. Bake the override with `--write` (and `--force` if overwriting existing scene files).
 2. Review the `.tscn` git diff carefully.
 3. Run the relevant integration tests and the full suite.
 4. Commit the canonical `.tscn` change only after review.
