@@ -148,10 +148,10 @@ resolve without a pan (F2 budget).
 ### D7. Session end and the ledger
 - **Victory:** every admitted hostile is `DOWNED` and no `ALERTED` hostile remains.
 - **Defeat:** every party member is down. Hollowing rules (F6) apply; not death.
-- **Flee (OWNER):** ruling 6's open question. **Proposed:** the session ends as `FLED`
+- **Flee (ruled 2026-09-04):** the session ends as `FLED`
   when no living hostile has any party member inside `alert_radius × 1.5` for two full CT
   rounds; fled hostiles return to `IDLE` at full HP, downed ones stay down. Ledger writes
-  nothing for fled groups. *Not implemented until the owner rules; the code path exists with
+  nothing for fled groups. *Ruled 2026-09-04 (accepted); the code path ships with
   a `PROVISIONAL` constant so the test can flip it.*
 - The ledger (`Reputation.record` / `Renown` / spoils / `defeated_flag`) fires **per
   `group_id`** at the moment that group's last member is downed, not per session. The
@@ -201,12 +201,15 @@ seam-v2 broadcast, `Reputation`/`Renown` APIs, the save schema.
 Steps 1–3 can run as one Codex handoff; 4–5 as a second; 6 as a third (largest); 7–8 as a
 fourth. `#282` starts after step 5.
 
-## 4. Owner rulings needed
-1. **Flee rule** (D7). Proposed text above.
-2. **No-combat zones** (D2): which Chapter 1 scenes are combat-free. Proposed: Dom
-   interiors and the player's house; Dom streets *can* host combat (set-pieces later).
-3. **Corpses persist across travel?** Proposed: no; downed hostiles despawn on scene exit,
-   `group_id` flags keep them from respawning.
+## 4. Owner rulings (ruled 2026-09-04)
+1. **Flee rule** (D7): **accepted as proposed.** Session ends `FLED` when no living hostile
+   has a party member inside `alert_radius × 1.5` for two full CT rounds; fled hostiles return
+   to `IDLE` at full HP, downed ones stay down, ledger writes nothing. Numbers stay
+   PROVISIONAL constants for DeepSeek tuning.
+2. **No-combat zones** (D2): **Dom interiors and the player's house are combat-free.** Dom
+   streets *can* host combat (set-pieces later).
+3. **Corpses across travel:** **no.** Downed hostiles despawn on scene exit; `group_id` flags
+   keep them from respawning.
 
 ## 5. Risks
 - Step 6 touches the frozen `BattleInterface` contract from the inside; the replay test is
