@@ -20,6 +20,8 @@ func test_standalone_cli_audit_has_zero_error_findings() -> void:
 	var report_start := combined.find("{")
 	var report_end := combined.rfind("}")
 	assert_int(exit_code).is_equal(0)
+	assert_str(combined).not_contains("SCRIPT ERROR:")
+	assert_str(combined).not_contains("Failed loading resource:")
 	assert_int(report_start).is_greater_equal(0)
 	assert_int(report_end).is_greater(report_start)
 	var report_json := combined.substr(report_start, report_end - report_start + 1)
