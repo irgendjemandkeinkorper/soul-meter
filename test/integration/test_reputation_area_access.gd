@@ -2,6 +2,8 @@ extends GdUnitTestSuite
 
 const BUILDING_DOOR_SCENE := preload("res://actors/building_door/building_door.tscn")
 const ACTIVE_STATE_PATH := "StateChart/Root/Playing/Active"
+const CHARGEN_STATE_PATH := "StateChart/Root/Menus/CharacterCreation"
+const INTRO_STATE_PATH := "StateChart/Root/Menus/IntroNarration"
 const LOADING_STATE_PATH := "StateChart/Root/Playing/Loading"
 const PAUSED_STATE_PATH := "StateChart/Root/Playing/Paused"
 const TITLE_STATE_PATH := "StateChart/Root/Menus/Title"
@@ -81,6 +83,19 @@ func test_garrison_area_access_is_decided_by_the_reputation_chart_guard() -> voi
 	assert_bool(_state_is_active(LOADING_STATE_PATH)).is_true()
 	assert_str(GameFlow._target_scene).is_equal(GameFlow.GARRISON_YARD_SCENE)
 	assert_str(String(GameFlow._target_spawn_id)).is_equal("entry")
+
+
+func test_active_state_setup_recovers_from_intro_narration() -> void:
+	await _return_to_title()
+	GameFlow.send_event(&"start_chargen")
+	await get_tree().process_frame
+	GameFlow.send_event(&"new_game")
+	await get_tree().process_frame
+	assert_bool(_state_is_active(INTRO_STATE_PATH)).is_true()
+
+	await _enter_active_state()
+
+	assert_bool(_state_is_active(ACTIVE_STATE_PATH)).is_true()
 
 
 func test_area_access_is_refused_from_a_gameplay_state_that_is_not_active() -> void:
@@ -168,6 +183,12 @@ func test_the_chart_guard_carries_no_copy_of_the_authored_gate_data() -> void:
 func _enter_active_state() -> void:
 	if _state_is_active(ACTIVE_STATE_PATH):
 		return
+	if _state_is_active(CHARGEN_STATE_PATH):
+		GameFlow.send_event(&"new_game")
+		await get_tree().process_frame
+	if _state_is_active(INTRO_STATE_PATH):
+		GameFlow.send_event(&"intro_done")
+		await get_tree().process_frame
 	if _state_is_active(PAUSED_STATE_PATH):
 		GameFlow.send_event(&"resume")
 		await get_tree().process_frame
@@ -181,6 +202,12 @@ func _enter_active_state() -> void:
 
 
 func _return_to_title() -> void:
+	if _state_is_active(CHARGEN_STATE_PATH):
+		GameFlow.send_event(&"new_game")
+		await get_tree().process_frame
+	if _state_is_active(INTRO_STATE_PATH):
+		GameFlow.send_event(&"intro_done")
+		await get_tree().process_frame
 	if _state_is_active(LOADING_STATE_PATH):
 		GameFlow.send_event(&"level_ready")
 		await get_tree().process_frame
