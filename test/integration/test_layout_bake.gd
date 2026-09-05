@@ -224,6 +224,36 @@ position = Vector2(4, 8)
 		.is_false()
 
 
+func test_default_output_and_force_alone_leave_source_bytes_unchanged() -> void:
+	var source_path: String = _test_dir.path_join("report_source.tscn")
+	var override_path: String = _test_dir.path_join("report_override.json")
+	var source: String = """[gd_scene format=3]
+
+[node name="BakeFixture" type="Node2D"]
+
+[node name="MoveMe" type="Node2D" parent="."]
+position = Vector2(4, 8)
+"""
+	_write_text(source_path, source)
+	_write_text(override_path, JSON.stringify({
+		"schema": 1, "scene": source_path,
+		"edits": [{"path": "MoveMe", "position": [20, 30]}],
+		"deletions": [], "additions": [],
+	}))
+	for force_only: bool in [false, true]:
+		var args: PackedStringArray = [
+			"--headless", "--path", ProjectSettings.globalize_path("res://"),
+			"--script", ProjectSettings.globalize_path(BAKE_SCRIPT), "--",
+			"--scene", source_path, "--overrides", override_path,
+		]
+		if force_only:
+			args.append("--force")
+		var output: Array = []
+		OS.execute(OS.get_executable_path(), args, output, true)
+		assert_str("\n".join(PackedStringArray(output))).contains("(report-only)")
+		assert_str(FileAccess.get_file_as_string(source_path)).is_equal(source)
+
+
 func test_bake_requires_force_to_overwrite_existing_target() -> void:
 	var source_path: String = _test_dir.path_join("source_force.tscn")
 	var override_path: String = _test_dir.path_join("override_force.json")
@@ -262,6 +292,7 @@ func test_bake_requires_force_to_overwrite_existing_target() -> void:
 	)
 	var combined_refused: String = "\n".join(PackedStringArray(process_output_refused))
 	assert_str(combined_refused).contains("Layout bake refused: target file '%s' exists. Pass --force to overwrite." % output_path)
+	assert_str(FileAccess.get_file_as_string(output_path)).contains('[node name="Existing"')
 
 	var process_output_forced: Array = []
 	OS.execute(
