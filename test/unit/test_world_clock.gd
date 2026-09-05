@@ -10,13 +10,13 @@ var _phase_count_before: int
 func before_test() -> void:
 	_phase_before = WorldClock.phase()
 	_phase_count_before = WorldClock.phase_count
-	WorldClock.set_phase(WorldClock.DEFAULT_PHASE, "test-setup")
 	WorldClock.phase_count = 0
+	WorldClock.set_phase(WorldClock.DEFAULT_PHASE, "test-setup")
 
 
 func after_test() -> void:
-	WorldClock.set_phase(_phase_before, "test-restore")
 	WorldClock.phase_count = _phase_count_before
+	WorldClock.set_phase(_phase_before, "test-restore")
 
 
 func test_four_phases_and_default() -> void:
@@ -82,6 +82,36 @@ func test_round_trip_survives_every_phase() -> void:
 		WorldClock.from_dict(data)
 		assert_str(String(WorldClock.phase())).is_equal(String(phase))
 		assert_int(WorldClock.phase_count).is_equal(7)
+
+
+func test_load_signal_observes_restored_phase_count_and_day() -> void:
+	WorldClock.phase_count = 20
+	var seen: Array = []
+	var handler := func(_previous: StringName, current: StringName, cause: String) -> void:
+		seen.append([current, cause, WorldClock.phase_count, WorldClock.day_index()])
+	WorldClock.phase_changed.connect(handler)
+	WorldClock.from_dict({"phase": "evening", "phase_count": 6})
+	WorldClock.phase_changed.disconnect(handler)
+	assert_int(seen.size()).is_equal(1)
+	assert_str(String(seen[0][0])).is_equal("evening")
+	assert_str(seen[0][1]).is_equal("load")
+	assert_int(seen[0][2]).is_equal(6)
+	assert_int(seen[0][3]).is_equal(1)
+
+
+func test_reset_signal_observes_reset_phase_count_and_day() -> void:
+	WorldClock.from_dict({"phase": "night", "phase_count": 11})
+	var seen: Array = []
+	var handler := func(_previous: StringName, current: StringName, cause: String) -> void:
+		seen.append([current, cause, WorldClock.phase_count, WorldClock.day_index()])
+	WorldClock.phase_changed.connect(handler)
+	WorldClock.reset()
+	WorldClock.phase_changed.disconnect(handler)
+	assert_int(seen.size()).is_equal(1)
+	assert_str(String(seen[0][0])).is_equal("morning")
+	assert_str(seen[0][1]).is_equal("reset")
+	assert_int(seen[0][2]).is_equal(0)
+	assert_int(seen[0][3]).is_equal(0)
 
 
 func test_from_dict_normalizes_garbage_to_default() -> void:

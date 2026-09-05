@@ -79,8 +79,8 @@ func set_phase(name: StringName, cause: String = "restore") -> bool:
 
 
 func reset() -> void:
-	set_phase(DEFAULT_PHASE, "reset")
 	phase_count = 0
+	set_phase(DEFAULT_PHASE, "reset")
 
 
 # --- persistence (schema 7 `world_clock` envelope; FR-802 world fact) --------
@@ -94,8 +94,8 @@ func from_dict(data: Dictionary) -> void:
 	var name := StringName(str(data.get("phase", DEFAULT_PHASE)))
 	if not PHASES.has(name):
 		name = DEFAULT_PHASE
-	set_phase(name, "load")
 	phase_count = maxi(0, int(data.get("phase_count", 0)))
+	set_phase(name, "load")
 
 
 static func validate_save_data(value: Variant) -> bool:
