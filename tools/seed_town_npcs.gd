@@ -5,6 +5,7 @@ extends Node
 ## script runs; tools/generate_gloot.gd is the one-way path to runtime data.
 
 const TOWN_SCENE := "res://world/starting_town.tscn"
+const SeedPandora := preload("res://tools/seed_pandora.gd")
 const TOWNSFOLK_MODEL_COUNT := 26
 const DEFAULT_OUTDOOR_JITTER := Vector2i(26, 20)
 const OUTDOOR_JITTER_BY_PLACEMENT := {
@@ -193,24 +194,9 @@ func _ready() -> void:
 
 
 func _seed_factions() -> void:
-	var root := _ensure_root("Factions", FACTION_PROPERTIES)
-	var rows := [
-		["The Trial Council", "Dom's four Arm benches, earned through the graded trials.", "Dom", "trial-council"],
-		["The Kord Rite", "Dom's tolerated old-believers at the chasm-lip shrines.", "Dom", "kord-rite"],
-		["The Shattersteel Concord", "The East Arm's joint shattersteel charter with Tweede.", "Dom", "shattersteel-concord"],
-		["The Hospice Chain", "Haeren's protected chain of hospices and keepers.", "Dom", "hospice-chain"],
-		["The Wayfare-Menders", "Road and harbor lodges serving travelers under Ofshutje.", "Dom", "wayfare-menders"],
-		["The Grain Factors' Table", "The factors who provision Dom through Deivel's grain trade.", "Deivel Zeit", "grain-factors-table"],
-		["The Restoration", "Deivel's Restoration, recruiting among Dom's Company halls.", "Deivel Zeit", "the-restoration"],
-	]
-	for row: Array in rows:
-		var entity := _find_by_vault_id(root, row[3])
-		if entity == null:
-			entity = Pandora.create_entity(row[0], root)
-		_assign(entity, "Display Name", row[0])
-		_assign(entity, "Summary", row[1])
-		_assign(entity, "Seat", row[2])
-		_assign(entity, "Vault Id", row[3])
+	var seeder: Node = SeedPandora.new()
+	seeder._seed_factions()
+	seeder.free()
 
 
 func _seed_npcs() -> void:

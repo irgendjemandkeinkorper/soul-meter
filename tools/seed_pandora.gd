@@ -1,25 +1,56 @@
 extends Node
 ## seed_pandora.gd — one-shot seeder for the Pandora category trees (install-order step 4).
 ## Run headless: register as a temp autoload, run once, remove (see DEPENDENCIES.md).
-## Idempotent: aborts if roots already exist. Data lands in res://data.pandora.
+## Idempotent: existing roots are updated by stable id. Data lands in res://data.pandora.
 ##
 ## Canon source: ~/projects/dramgid-vault (the lore vault). Entities carry a `Vault Id`
 ## property bridging back to the vault entity so dialogue/code can query canon.
-## PANDORA IS CANONICAL for *game data*; the lore vault stays canonical for *lore prose*.
+## res://canon is canonical for migrated game data; Pandora remains the runtime database.
 ## Placeholder spells/effects are flagged `Placeholder = true` — mechanics, not canon.
 
 var _cats := {}
+
+
+class CanonReader:
+	const CANON_ROOT := "res://canon"
+
+	static func load(kind: String) -> Array[Dictionary]:
+		var documents: Array[Dictionary] = []
+		if kind.is_empty() or kind.contains("/") or kind.contains("\\") or kind.contains(".."):
+			push_error("CANON-SEED: invalid kind '%s'." % kind)
+			return documents
+
+		var hubs: PackedStringArray = DirAccess.get_directories_at(CANON_ROOT)
+		hubs.sort()
+		for hub: String in hubs:
+			var kind_root: String = CANON_ROOT.path_join(hub).path_join(kind)
+			if not DirAccess.dir_exists_absolute(kind_root):
+				continue
+			var filenames: PackedStringArray = DirAccess.get_files_at(kind_root)
+			filenames.sort()
+			for filename: String in filenames:
+				if filename.get_extension().to_lower() != "json":
+					continue
+				var file: FileAccess = FileAccess.open(kind_root.path_join(filename), FileAccess.READ)
+				if file == null:
+					push_error("CANON-SEED: could not read %s." % kind_root.path_join(filename))
+					continue
+				var parsed: Variant = JSON.parse_string(file.get_as_text())
+				if typeof(parsed) != TYPE_DICTIONARY:
+					push_error("CANON-SEED: %s must contain one JSON object." % filename)
+					continue
+				documents.append(parsed)
+		return documents
 
 
 func _ready() -> void:
 	await get_tree().process_frame
 	if not Pandora.is_loaded():
 		Pandora.load_data()
-	if not Pandora.get_all_roots().is_empty():
-		print("SEED: data.pandora already has roots — aborting (idempotent).")
-		get_tree().quit()
-		return
-	_seed()
+	if Pandora.get_all_roots().is_empty():
+		_seed()
+	else:
+		_seed_factions()
 	Pandora.save_data()
 	print("SEED: done — roots=", Pandora.get_all_roots().size())
 	get_tree().quit()
@@ -29,6 +60,14 @@ func _cat(name: String, parent: PandoraCategory = null) -> PandoraCategory:
 	var c := Pandora.create_category(name, parent)
 	_cats[name] = c
 	return c
+
+
+func _ensure_root(name: String) -> PandoraCategory:
+	for candidate: PandoraCategory in Pandora.get_all_roots():
+		if candidate.get_entity_name() == name:
+			_cats[name] = candidate
+			return candidate
+	return _cat(name)
 
 
 ## Authored default values: runtime setters (set_string etc.) only work on instantiate()d
@@ -318,86 +357,42 @@ func _seed_effects() -> void:
 
 
 func _seed_factions() -> void:
-	var root := _cat("Factions")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Summary", "string")
-	Pandora.create_property(root, "Seat", "string")
-	Pandora.create_property(root, "Vault Id", "string")
+	var root: PandoraCategory = _ensure_root("Factions")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Summary", "string"],
+		["Seat", "string"],
+		["Vault Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		[
-			"The Mirror Choir",
-			"Maiiam's supreme order at Vervulling; 300 silent dancers and an Unnamed Seat.",
-			"Vervulling",
-			"vervulling"
-		],
-		[
-			"The Registry",
-			"Pazzah's Warden-mask bureaucracy; audits every act of magic on the continent.",
-			"Rennen",
-			"rennen"
-		],
-		[
-			"The Noon Court",
-			"Solmarch's state church of certainty — unknowingly worshipping a mask.",
-			"Solmarch",
-			"solmarch"
-		],
-		[
-			"The Reckoning",
-			"Karrn-Vash's radical sect, hunting the lost Taubstummers.",
-			"Karrn-Vash",
-			"karrn-vash"
-		],
-		[
-			"The Backface",
-			"The Undermirror's smuggling network; trades in captured reflections.",
-			"Vervulling",
-			"vervulling"
-		],
-		[
-			"The Ssae-Seeders",
-			"Radical Weftkin who treat the Bloom as ongoing and incomplete.",
-			"Zwarten Bos",
-			"zwarten-bos"
-		],
-		[
-			"The Mourning Dawn",
-			"Rag-As-Res's cells; coffins packed for Gnaal's children.",
-			"(roaming)",
-			"mourning-dawn"
-		],
-		[
-			"The Iron Companies",
-			"Dom's contracted companies, guild and regiment together.",
-			"Dom",
-			"iron-companies"
-		],
-		[
-			"The Ironbrand Sentinels",
-			"Branded wardens of Dom's Wound and its dead muster.",
-			"Dom",
-			"ironbrand-sentinels"
-		],
-		[
-			"The Lords of the Breach",
-			"Extraplanar demon lords of consumption.",
-			"The Breach",
-			"lords-of-the-breach"
-		],
-		[
-			"The Cold Consensus",
-			"Undead sovereigns who preserve souls against release.",
-			"Wintervast",
-			"cold-consensus"
-		],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Summary", r[1])
-		_assign(ent, "Seat", r[2])
-		_assign(ent, "Vault Id", r[3])
+	for row: Dictionary in CanonReader.load("factions"):
+		var stable_id: String = row.get("id", "")
+		var entity: PandoraEntity = _find_by_stable_id(root, stable_id)
+		if entity == null:
+			entity = Pandora.create_entity(row.get("display_name", stable_id), root)
+		_assign(entity, "Display Name", row.get("display_name", ""))
+		_assign(entity, "Summary", row.get("summary", ""))
+		_assign(entity, "Seat", row.get("seat", ""))
+		_assign(entity, "Vault Id", row.get("vault_id", ""))
+
+
+func _find_by_stable_id(root: PandoraCategory, stable_id: String) -> PandoraEntity:
+	for candidate: PandoraEntity in Pandora.get_all_entities(root):
+		if candidate is PandoraCategory:
+			continue
+		var candidate_id: String = _slug(candidate.get_entity_name())
+		if candidate_id == stable_id:
+			return candidate
+	return null
+
+
+func _slug(value: String) -> String:
+	var result: String = value.to_lower()
+	for pair: Array in [["'", ""], ["’", ""], [" ", "-"], ["_", "-"]]:
+		result = result.replace(pair[0], pair[1])
+	return result
 
 
 # --- NPCs: the demo party + canon-named persons ------------------------------------------
