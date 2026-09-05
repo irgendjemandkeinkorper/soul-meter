@@ -23,7 +23,6 @@ func after_test() -> void:
 	CombatLab.force_enabled_for_tests = false
 	EncounterCatalog.clear_runtime_encounters()
 	QuestRegistry.clear_runtime_quests()
-	Battle._release_battlefield_ground()
 	Battle.controller = null
 	Battle.ended = true
 	_remove_tree(ROOT)

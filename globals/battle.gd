@@ -236,12 +236,6 @@ func _current_field_map() -> FieldMap:
 	return tree.root.find_child("FieldMap", true, false) as FieldMap
 
 
-## Compatibility cleanup seam for callers that predate field-owned grids.
-## Battle no longer allocates or owns a TileMapLayer, so there is nothing to release.
-func _release_battlefield_ground() -> void:
-	pass
-
-
 func replay_combat_events(receiver: Callable) -> void:
 	## Late-created presentation receives the same immutable event stream without
 	## querying resolver state or causing global observers to process events twice.

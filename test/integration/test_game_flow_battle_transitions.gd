@@ -67,7 +67,7 @@ func test_enter_battle_goes_directly_to_battle_and_pause_returns_there() -> void
 	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
 	assert_bool(_state_is_active(DEPLOYMENT_SLATE_STATE)).is_false()
 	assert_bool(get_tree().paused).is_false()
-	assert_bool(_field._combat_mode_active).is_true()
+	assert_bool(_field.combat_mode_active()).is_true()
 
 	GameFlow.send_event(&"pause")
 	await get_tree().process_frame
@@ -78,12 +78,12 @@ func test_enter_battle_goes_directly_to_battle_and_pause_returns_there() -> void
 	await get_tree().process_frame
 	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
 	assert_bool(get_tree().paused).is_false()
-	assert_bool(_field._combat_mode_active).is_true()
+	assert_bool(_field.combat_mode_active()).is_true()
 
 	GameFlow.send_event(&"battle_end")
 	await get_tree().process_frame
 	assert_bool(_state_is_active(ACTIVE_STATE)).is_true()
-	assert_bool(_field._combat_mode_active).is_false()
+	assert_bool(_field.combat_mode_active()).is_false()
 
 
 func test_enter_set_piece_traverses_the_existing_deployment_chain() -> void:
@@ -107,7 +107,7 @@ func test_enter_set_piece_traverses_the_existing_deployment_chain() -> void:
 	await get_tree().process_frame
 	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
 	assert_bool(get_tree().paused).is_false()
-	assert_bool(_field._combat_mode_active).is_true()
+	assert_bool(_field.combat_mode_active()).is_true()
 
 
 func test_enter_battle_guard_refuses_a_no_combat_field_with_fr606_shape() -> void:
@@ -131,7 +131,7 @@ func test_enter_battle_guard_refuses_a_no_combat_field_with_fr606_shape() -> voi
 
 	assert_bool(_state_is_active(ACTIVE_STATE)).is_true()
 	assert_bool(_state_is_active(BATTLE_STATE)).is_false()
-	assert_bool(_field._combat_mode_active).is_false()
+	assert_bool(_field.combat_mode_active()).is_false()
 
 
 func _enter_active_state() -> void:

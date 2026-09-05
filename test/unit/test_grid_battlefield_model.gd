@@ -71,6 +71,13 @@ func test_build_grid_reuses_the_field_grid_and_reads_authored_terrain() -> void:
 	assert_object(model._grid).is_same(field.iso_grid())
 	assert_bool(bool(_tile_at(model.tiles_snapshot(), Vector2i(2, 1)).get("cover", false))).is_true()
 	assert_int(model.elevation_at(Vector2i(3, 1))).is_equal(1)
+	# Authored Blocking cells (test_room paints its four solid props) reach the combat grid
+	# through the shared IsoGrid; nothing re-derives passability for combat.
+	var painted: Array[Vector2i] = field.blocking().get_used_cells()
+	assert_array(painted).is_not_empty()
+	for cell: Vector2i in painted:
+		assert_bool(model._grid.is_point_solid(cell)).override_failure_message(str(cell)).is_true()
+	assert_bool(model._grid.is_point_solid(Vector2i(30, 30))).is_false()
 
 	scene.queue_free()
 	await get_tree().process_frame

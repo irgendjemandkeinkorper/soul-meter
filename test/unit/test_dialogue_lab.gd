@@ -321,7 +321,6 @@ func _restore_incoming_state() -> void:
 func _clear_test_battle() -> void:
 	if Battle.encounter_id.is_empty():
 		return
-	Battle._release_battlefield_ground()
 	Battle.allies.clear()
 	Battle.enemies.clear()
 	Battle._definition.clear()

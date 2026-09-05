@@ -52,6 +52,10 @@ func set_combat_mode(active: bool) -> void:
 			travel_exit.monitoring = not active
 
 
+func combat_mode_active() -> bool:
+	return _combat_mode_active
+
+
 ## Hostile replaces Enemy in migration step 4; this group seam stays empty until then.
 func hostiles() -> Array[Node2D]:
 	var result: Array[Node2D] = []

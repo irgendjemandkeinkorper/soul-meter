@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=3]
+[gd_scene load_steps=47 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -37,6 +37,7 @@
 [ext_resource type="Script" path="res://world/field_map.gd" id="47_field_map"]
 [ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="48_blocking_tiles"]
 [ext_resource type="Script" path="res://world/nav/combat_terrain_layer.gd" id="49_terrain"]
+[ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="50_blocking_layer"]
 [ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="45_ambient_villager"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="46_crowd_forager"]
 
@@ -96,7 +97,9 @@ road_axis = 2
 [node name="Blocking" type="TileMapLayer" parent="."]
 visible = false
 position = Vector2(1000, -520)
+tile_map_data = PackedByteArray("AAANACIAAAAAAAAAAAAOACIAAAAAAAAAAAAmADwAAAAAAAAAAAAnADsAAAAAAAAAAAAWABcAAAAAAAAAAAAXABcAAAAAAAAAAAAXABYAAAAAAAAAAAA8ACQAAAAAAAAAAAA=")
 tile_set = ExtResource("48_blocking_tiles")
+script = ExtResource("50_blocking_layer")
 
 [node name="Terrain" type="TileMapLayer" parent="."]
 visible = false

@@ -232,7 +232,6 @@ func stop_test_session() -> void:
 func _clear_lab_battle(owned: bool) -> void:
 	if not owned or Battle.encounter_id.is_empty():
 		return
-	Battle._release_battlefield_ground()
 	Battle.allies.clear()
 	Battle.enemies.clear()
 	Battle._definition.clear()
