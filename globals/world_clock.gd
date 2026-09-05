@@ -23,6 +23,7 @@ const PHASES: Array[StringName] = [&"morning", &"afternoon", &"evening", &"night
 const DEFAULT_PHASE: StringName = &"morning"
 
 var _phase: StringName = DEFAULT_PHASE
+var phase_count: int = 0
 
 
 func phase() -> StringName:
@@ -34,12 +35,19 @@ func is_phase(name: String) -> bool:
 	return _phase == StringName(name)
 
 
+## Zero-based world day derived from four declared phase advances per day.
+func day_index() -> int:
+	@warning_ignore("integer_division")
+	return phase_count / PHASES.size()
+
+
 ## Advance one phase (wrapping night → morning). `cause` is diagnostic and
 ## rides the signal so a stray advance can be traced to its trigger.
 func advance(cause: String) -> StringName:
 	var index := PHASES.find(_phase)
 	var previous := _phase
 	_phase = PHASES[(index + 1) % PHASES.size()]
+	phase_count += 1
 	phase_changed.emit(previous, _phase, cause)
 	return _phase
 
@@ -72,13 +80,14 @@ func set_phase(name: StringName, cause: String = "restore") -> bool:
 
 func reset() -> void:
 	set_phase(DEFAULT_PHASE, "reset")
+	phase_count = 0
 
 
 # --- persistence (schema 7 `world_clock` envelope; FR-802 world fact) --------
 
 
 func to_dict() -> Dictionary:
-	return {"phase": String(_phase)}
+	return {"phase": String(_phase), "phase_count": phase_count}
 
 
 func from_dict(data: Dictionary) -> void:
@@ -86,10 +95,18 @@ func from_dict(data: Dictionary) -> void:
 	if not PHASES.has(name):
 		name = DEFAULT_PHASE
 	set_phase(name, "load")
+	phase_count = maxi(0, int(data.get("phase_count", 0)))
 
 
 static func validate_save_data(value: Variant) -> bool:
 	if not value is Dictionary:
 		return false
-	var name: Variant = (value as Dictionary).get("phase", String(DEFAULT_PHASE))
-	return name is String and PHASES.has(StringName(name))
+	var data: Dictionary = value
+	var name: Variant = data.get("phase", String(DEFAULT_PHASE))
+	var saved_phase_count: Variant = data.get("phase_count", 0)
+	return (
+		name is String
+		and PHASES.has(StringName(name))
+		and typeof(saved_phase_count) == TYPE_INT
+		and int(saved_phase_count) >= 0
+	)
