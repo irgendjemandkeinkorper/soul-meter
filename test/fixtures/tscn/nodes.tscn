@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://fixture"]
+
+[node name="Root" type="Node"]
+
+[node name="Keep" type="Node" parent="."]
+metadata/unchanged = "same bytes"
+
+[node name="Remove" type="Node" parent="."]
+
+[node name="Grandchild" type="Node" parent="Remove"]
+
+[node name="RemoveOther" type="Node" parent="."]
+
+[connection signal="ready" from="Remove/Grandchild" to="Keep" method="queue_free"]
+[connection signal="ready" from="Keep" to="Remove" method="queue_free"]
+[connection signal="ready" from="Keep" to="RemoveOther" method="queue_free"]
+
+[editable path="Remove"]
+[editable path="Remove/Grandchild"]
+[editable path="RemoveOther"]
