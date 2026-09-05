@@ -44,8 +44,11 @@ func set_combat_mode(active: bool) -> void:
 		if controller != null:
 			controller.cancel_path()
 			controller.enabled = not active
-	for node: Node in root.find_children("*", "Enemy", true, false):
-		node.set_process_unhandled_input(not active)
+	# Interact prompts (E) used to hide behind the paused tree. The field stays live during
+	# combat now, so every interactable's unhandled input is switched off instead.
+	for node: Node in root.find_children("*", "", true, false):
+		if _is_field_interactable(node):
+			node.set_process_unhandled_input(not active)
 	for node: Node in root.find_children("*", "TravelExit", true, false):
 		var travel_exit := node as TravelExit
 		if travel_exit != null:
@@ -54,6 +57,16 @@ func set_combat_mode(active: bool) -> void:
 
 func combat_mode_active() -> bool:
 	return _combat_mode_active
+
+
+func _is_field_interactable(node: Node) -> bool:
+	return (
+		node is Enemy
+		or node is NPC
+		or node is SMInteractable
+		or node is TavernDoor
+		or node is BuildingDoor
+	)
 
 
 ## Hostile replaces Enemy in migration step 4; this group seam stays empty until then.

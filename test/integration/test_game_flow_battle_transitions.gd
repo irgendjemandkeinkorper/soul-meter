@@ -59,6 +59,7 @@ func after_test() -> void:
 
 
 func test_enter_battle_goes_directly_to_battle_and_pause_returns_there() -> void:
+	var music_depth_before: int = MusicDirector.get_context_stack().size()
 	Battle.start(EncounterIds.BOG_WIGHT)
 
 	GameFlow.send_event(&"enter_battle")
@@ -68,22 +69,29 @@ func test_enter_battle_goes_directly_to_battle_and_pause_returns_there() -> void
 	assert_bool(_state_is_active(DEPLOYMENT_SLATE_STATE)).is_false()
 	assert_bool(get_tree().paused).is_false()
 	assert_bool(_field.combat_mode_active()).is_true()
+	assert_int(MusicDirector.get_context_stack().size()).is_equal(music_depth_before + 1)
 
 	GameFlow.send_event(&"pause")
 	await get_tree().process_frame
 	assert_bool(_state_is_active(PAUSED_STATE)).is_true()
 	assert_bool(get_tree().paused).is_true()
+	# Pausing mid-fight is not ending it: the field stays in combat mode and the battle music
+	# context is neither popped nor re-pushed across the round trip.
+	assert_bool(_field.combat_mode_active()).is_true()
+	assert_int(MusicDirector.get_context_stack().size()).is_equal(music_depth_before + 1)
 
 	GameFlow.send_event(&"resume")
 	await get_tree().process_frame
 	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
 	assert_bool(get_tree().paused).is_false()
 	assert_bool(_field.combat_mode_active()).is_true()
+	assert_int(MusicDirector.get_context_stack().size()).is_equal(music_depth_before + 1)
 
 	GameFlow.send_event(&"battle_end")
 	await get_tree().process_frame
 	assert_bool(_state_is_active(ACTIVE_STATE)).is_true()
 	assert_bool(_field.combat_mode_active()).is_false()
+	assert_int(MusicDirector.get_context_stack().size()).is_equal(music_depth_before)
 
 
 func test_enter_set_piece_traverses_the_existing_deployment_chain() -> void:

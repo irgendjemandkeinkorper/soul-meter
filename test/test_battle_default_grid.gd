@@ -63,6 +63,21 @@ func test_catalog_start_builds_from_the_live_field_and_deploys_opposing_columns(
 	)
 
 
+func test_finishing_a_battle_hands_the_field_grid_back_to_navigation() -> void:
+	var grid: IsoGrid = _field.iso_grid()
+	var corner: Vector2i = _field.ground().get_used_rect().position
+	assert_bool(grid.is_point_solid(corner)).is_false()
+
+	Battle.start(TEST_ENCOUNTER)
+	assert_bool(grid.is_point_solid(corner)).is_true()
+	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_greater(1.0)
+
+	Battle._finish(BattleResult.State.FLED, &"fled")
+
+	assert_bool(grid.is_point_solid(corner)).is_false()
+	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_equal(1.0)
+
+
 func test_stage_renders_tiles_from_replayed_production_start_event() -> void:
 	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
 	var stage := runner.scene() as BattleStageRegion

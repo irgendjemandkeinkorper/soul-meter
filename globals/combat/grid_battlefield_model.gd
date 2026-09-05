@@ -52,6 +52,10 @@ var _elevation: Dictionary = {}  ## Vector2i -> int
 var _cliffs: Dictionary = {}  ## Vector2i -> bool
 ## Cells that grant partial cover without blocking movement or line of sight.
 var _cover: Dictionary = {}  ## Vector2i -> bool
+## Field-grid flags as they were before combat first touched each cell, so
+## `release_field_grid()` hands the shared IsoGrid back to navigation unchanged.
+var _prior_solid: Dictionary = {}  ## Vector2i -> bool
+var _prior_weight: Dictionary = {}  ## Vector2i -> float
 
 ## Keyed on `BattleActor.combat_id` (StringName) — the FR-802 stable id assigned by
 ## `CombatController._assign_combat_ids()` at encounter setup (issue #186). Deliberately NOT
@@ -80,6 +84,8 @@ func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
 	_elevation.clear()
 	_cover.clear()
 	_cliffs.clear()
+	_prior_solid.clear()
+	_prior_weight.clear()
 	var parent: Node = ground.get_parent()
 	var field: FieldMap = (
 		parent.find_child("FieldMap", true, false) as FieldMap if parent != null else null
@@ -93,7 +99,7 @@ func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
 		_apply_elevation_weight(cell)
 	for cell: Vector2i in _cliffs.keys():
 		if bool(_cliffs[cell]):
-			_grid.set_point_solid(cell, true)
+			_set_solid(cell, true)
 
 
 func _read_authored_terrain(ground: TileMapLayer) -> void:
@@ -109,10 +115,10 @@ func _read_authored_terrain(ground: TileMapLayer) -> void:
 			continue
 		var cover_value: Variant = tile_data.get_custom_data(&"cover")
 		if cover_value is bool and cover_value:
-			_cover[cell] = true
+			set_cover(cell)
 		var elevation_value: Variant = tile_data.get_custom_data(&"elevation")
 		if elevation_value is int and elevation_value != 0:
-			_elevation[cell] = elevation_value
+			set_elevation(cell, clampi(elevation_value, 0, DS.ELEVATION_MAX))
 
 
 ## Terrain height at `cell`. Scales the CT cost of entering it — never makes it impassable.
@@ -131,7 +137,7 @@ func set_cliff(cell: Vector2i, is_cliff: bool = true) -> void:
 	_tiles_snapshot_cache = []
 	_cliffs[cell] = is_cliff
 	if _grid != null and _grid.is_in_bounds(cell):
-		_grid.set_point_solid(cell, is_cliff)
+		_set_solid(cell, is_cliff)
 
 
 ## Authors partial cover independently from elevation and impassability.
@@ -236,7 +242,7 @@ func move(actor: BattleActor, destination: StringName) -> Dictionary:
 	_occupancy.erase(origin_cell)
 	_release_solid(origin_cell)
 	_occupancy[dest_cell] = actor
-	_grid.set_point_solid(dest_cell, true)
+	_set_solid(dest_cell, true)
 	var previous := position_of(actor)
 	_cells[actor.combat_id] = dest_cell
 	return _allowed({
@@ -593,13 +599,15 @@ func _place(actor: BattleActor, cell: Vector2i, facing: StringName) -> void:
 	_cells[id] = clamped
 	_facings[id] = facing
 	_occupancy[clamped] = actor
-	_grid.set_point_solid(clamped, true)
+	_set_solid(clamped, true)
 
 
 func _apply_elevation_weight(cell: Vector2i) -> void:
 	if _grid == null or not _grid.is_in_bounds(cell):
 		return
 	var elevation := elevation_at(cell)
+	if not _prior_weight.has(cell):
+		_prior_weight[cell] = _grid.get_point_weight_scale(cell)
 	_grid.set_point_weight_scale(cell, maxf(1.0, 1.0 + float(elevation) * _ELEVATION_WEIGHT_PER_LEVEL))
 
 
@@ -608,7 +616,31 @@ func _apply_elevation_weight(cell: Vector2i) -> void:
 ## so vacating must not accidentally reopen a cliff.
 func _release_solid(cell: Vector2i) -> void:
 	if _grid != null:
-		_grid.set_point_solid(cell, bool(_cliffs.get(cell, false)))
+		_set_solid(cell, bool(_cliffs.get(cell, false)) or bool(_prior_solid.get(cell, false)))
+
+
+## Every solid write goes through here so the field grid's pre-combat flag is remembered once.
+func _set_solid(cell: Vector2i, solid: bool) -> void:
+	if _grid == null:
+		return
+	if not _prior_solid.has(cell):
+		_prior_solid[cell] = _grid.is_point_solid(cell)
+	_grid.set_point_solid(cell, solid)
+
+
+## Hands the shared field IsoGrid back to navigation: every solid flag and weight this model
+## wrote is restored to its pre-combat value. Combat bookkeeping stays readable for the result
+## screen; only the grid is released. Idempotent. Battle calls it when a fight ends or is
+## superseded by a new one.
+func release_field_grid() -> void:
+	if _grid == null:
+		return
+	for cell: Vector2i in _prior_solid.keys():
+		_grid.set_point_solid(cell, bool(_prior_solid[cell]))
+	for cell: Vector2i in _prior_weight.keys():
+		_grid.set_point_weight_scale(cell, float(_prior_weight[cell]))
+	_prior_solid.clear()
+	_prior_weight.clear()
 
 
 func _path_ct_cost(path: PackedVector2Array) -> int:

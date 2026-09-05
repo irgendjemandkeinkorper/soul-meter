@@ -65,6 +65,7 @@ var _definition: Dictionary = {}
 
 
 func start(encounter: Variant) -> void:
+	_release_field_grid()
 	_combat_history.clear()
 	allies.clear()
 	enemies.clear()
@@ -223,7 +224,8 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 
 
 func _current_field_map() -> FieldMap:
-	var tree: SceneTree = get_tree()
+	# Autoloads earlier in project.godot (GameFlow) ask before Battle joins the tree.
+	var tree: SceneTree = get_tree() if is_inside_tree() else Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return null
 	var current_scene: Node = tree.current_scene
@@ -234,6 +236,16 @@ func _current_field_map() -> FieldMap:
 		if current_field != null:
 			return current_field
 	return tree.root.find_child("FieldMap", true, false) as FieldMap
+
+
+## Returns the shared field IsoGrid to navigation once a battle is over or superseded (D1:
+## combat borrows the field's grid, it never keeps it).
+func _release_field_grid() -> void:
+	if controller == null:
+		return
+	var model: GridBattlefieldModel = controller.battlefield as GridBattlefieldModel
+	if model != null:
+		model.release_field_grid()
 
 
 func replay_combat_events(receiver: Callable) -> void:
@@ -592,6 +604,7 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 		)
 		result.cause = _flee_cause()
 		_apply_flee_consequence(result, flee_outcome)
+	_release_field_grid()
 	last_result = result
 	battle_ended.emit(result)
 

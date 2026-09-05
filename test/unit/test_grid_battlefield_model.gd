@@ -83,6 +83,42 @@ func test_build_grid_reuses_the_field_grid_and_reads_authored_terrain() -> void:
 	await get_tree().process_frame
 
 
+func test_release_field_grid_restores_field_passability_and_weights() -> void:
+	var scene: Node = load("res://world/test_room.tscn").instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	var field: FieldMap = scene.find_child("FieldMap", true, false) as FieldMap
+	var grid: IsoGrid = field.iso_grid()
+	var rect: Rect2i = grid.get_used_rect()
+	var solid_before: Dictionary = {}
+	for y in range(rect.position.y, rect.end.y):
+		for x in range(rect.position.x, rect.end.x):
+			var cell := Vector2i(x, y)
+			solid_before[cell] = grid.is_point_solid(cell)
+	var weight_before: float = grid.get_point_weight_scale(Vector2i(3, 1))
+
+	var model: GridBattlefieldModel = GridBattlefieldModel.new()
+	model.configure(_rules())
+	model.build_grid(field.ground(), field.blocking())
+	var allies: Array[BattleActor] = [_actor("release-ally")]
+	var enemies: Array[BattleActor] = [_actor("release-enemy")]
+	model.setup(allies, enemies)
+	assert_bool(grid.is_point_solid(rect.position)).is_true()
+	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_greater(weight_before)
+
+	model.release_field_grid()
+
+	var mismatches: int = 0
+	for cell: Vector2i in solid_before.keys():
+		if grid.is_point_solid(cell) != bool(solid_before[cell]):
+			mismatches += 1
+	assert_int(mismatches).is_equal(0)
+	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_equal(weight_before)
+
+	scene.queue_free()
+	await get_tree().process_frame
+
+
 # ---- opaque handles, capabilities, describe_position ----
 
 

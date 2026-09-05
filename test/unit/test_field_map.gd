@@ -4,6 +4,18 @@ const TEST_ROOM_SCENE := "res://world/test_room.tscn"
 const TEST_ROOM_BLOCKED_CELL := Vector2i(23, 23)
 const TEST_ROOM_OPEN_CELL := Vector2i(30, 30)
 
+var _game_state_before: Dictionary
+
+
+## Instantiating chapter scenes runs their arrival hooks (flags, checkpoint requests);
+## restore GameState so no suite downstream inherits them.
+func before_test() -> void:
+	_game_state_before = GameState.to_dict().duplicate(true)
+
+
+func after_test() -> void:
+	GameState.from_dict(_game_state_before)
+
 func test_every_gameplay_scene_exposes_field_layers_and_shared_iso_grid() -> void:
 	for scene_path: String in GameFlow.GAMEPLAY_SCENES:
 		var packed_scene: PackedScene = load(scene_path) as PackedScene
@@ -19,6 +31,13 @@ func test_every_gameplay_scene_exposes_field_layers_and_shared_iso_grid() -> voi
 		if field != null:
 			assert_object(field.ground()).override_failure_message(scene_path).is_not_null()
 			assert_object(field.blocking()).override_failure_message(scene_path).is_not_null()
+			if not field.no_combat_zone():
+				# A combat-enabled field must be usable, not merely present: painted ground
+				# and a live grid for the combat model to borrow.
+				assert_bool(field.ground().get_used_rect().has_area()).override_failure_message(
+					scene_path
+				).is_true()
+				assert_object(field.iso_grid()).override_failure_message(scene_path).is_not_null()
 			var controller: ClickMoveController = (
 				scene.find_child("ClickMoveController", true, false) as ClickMoveController
 			)
@@ -78,18 +97,25 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 	)
 	var travel_exit: TravelExit = scene.find_child("ReturnToDom", true, false) as TravelExit
 	var enemy: Enemy = scene.find_child("BogWight", true, false) as Enemy
+	var npc: NPC = scene.find_child("IrisIllepah", true, false) as NPC
+	var pickup: Pickup = scene.find_child("LoamrootSprig1", true, false) as Pickup
 	assert_bool(field.combat_mode_active()).is_false()
 	assert_bool(player.is_physics_processing()).is_true()
 	assert_bool(controller.enabled).is_true()
 	assert_bool(travel_exit.monitoring).is_true()
 	assert_bool(enemy.is_processing_unhandled_input()).is_true()
+	assert_bool(npc.is_processing_unhandled_input()).is_true()
+	assert_bool(pickup.is_processing_unhandled_input()).is_true()
 
 	field.set_combat_mode(true)
 	assert_bool(field.combat_mode_active()).is_true()
 	assert_bool(player.is_physics_processing()).is_false()
 	assert_bool(controller.enabled).is_false()
 	assert_bool(travel_exit.monitoring).is_false()
+	# The tree is no longer paused during combat, so E-prompts must be switched off explicitly.
 	assert_bool(enemy.is_processing_unhandled_input()).is_false()
+	assert_bool(npc.is_processing_unhandled_input()).is_false()
+	assert_bool(pickup.is_processing_unhandled_input()).is_false()
 
 	field.set_combat_mode(false)
 	assert_bool(field.combat_mode_active()).is_false()
@@ -97,6 +123,8 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 	assert_bool(controller.enabled).is_true()
 	assert_bool(travel_exit.monitoring).is_true()
 	assert_bool(enemy.is_processing_unhandled_input()).is_true()
+	assert_bool(npc.is_processing_unhandled_input()).is_true()
+	assert_bool(pickup.is_processing_unhandled_input()).is_true()
 
 	scene.queue_free()
 	await get_tree().process_frame

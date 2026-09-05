@@ -70,6 +70,9 @@ const BATTLE_SCREEN := BATTLE_HUD
 const CHAPTER_COMPLETE_SCREEN := preload("res://ui/screens/chapter_complete.tscn")
 
 var _waiting_for_level := false
+## Battle → Paused → Battle keeps the fight live (D3); this flag tells the Battle exit/enter
+## hooks that they are bracketing a pause, not ending or starting a fight.
+var _battle_paused := false
 var _pending_fast_travel_cost := 0
 var _fast_travel_in_progress := false
 var _loading_fallback_scene := ""
@@ -160,6 +163,7 @@ func _ready() -> void:
 	$StateChart/Root/Playing/Battle.state_entered.connect(_on_battle_entered)
 	$StateChart/Root/Playing/Battle.state_exited.connect(_on_battle_exited)
 	$StateChart/Root/Playing/Battle/ToPaused.taken.connect(_on_battle_pause_taken)
+	$StateChart/Root/Playing/Paused/ToMenus.taken.connect(_on_paused_to_menus_taken)
 	$StateChart/Root/Playing/ChapterComplete.state_entered.connect(_on_chapter_complete_entered)
 	$StateChart/Root/Playing/ChapterComplete.state_exited.connect(_on_chapter_complete_exited)
 
@@ -192,7 +196,13 @@ func _on_active_pause_taken() -> void:
 
 
 func _on_battle_pause_taken() -> void:
+	_battle_paused = true
 	chart.set_expression_property(&"resume_to_battle", true)
+
+
+func _on_paused_to_menus_taken() -> void:
+	_battle_paused = false
+	chart.set_expression_property(&"resume_to_battle", false)
 
 
 func start_journey(origin_id: StringName, destination_id: StringName) -> bool:
@@ -273,6 +283,12 @@ func resolve_encounter_prompt(avoid: bool) -> Dictionary:
 			travel_plan.state = TravelPlan.State.EN_ROUTE
 			_persist_travel_plan()
 			return {"event": "avoided"}
+	var access: Dictionary = Battle.can_fight_here()
+	if not bool(access.get("allowed", false)):
+		# The loaded field cannot host combat (FR-606 shape). Keep the prompt live rather than
+		# stranding the plan IN_BATTLE with no Battle state; where a journey ambush is fought
+		# under same-map combat is a later F1 contract.
+		return {"event": "battle_refused", "refusal": access}
 	travel_plan.state = TravelPlan.State.IN_BATTLE
 	_persist_travel_plan()
 	var encounter_id := StringName(travel_plan.encounter_schedule[slot_index]["encounter_id"])
@@ -732,15 +748,22 @@ func _on_deployment_exited() -> void:
 
 
 func _on_battle_entered() -> void:
+	var resuming := _battle_paused
+	_battle_paused = false
 	var field: FieldMap = Battle._current_field_map()
 	if field != null:
 		field.set_combat_mode(true)
-	MusicDirector.push_context("battle")
+	if not resuming:
+		MusicDirector.push_context("battle")
 	UIManager.open(BATTLE_HUD, false, true)
 
 
 func _on_battle_exited() -> void:
 	UIManager.close_all()
+	if _battle_paused:
+		# Leaving for the pause menu, not ending the fight: the field stays in combat mode and
+		# no end-of-battle work (music pop, autosave flush) runs.
+		return
 	var field: FieldMap = Battle._current_field_map()
 	if field != null:
 		field.set_combat_mode(false)
