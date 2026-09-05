@@ -34,21 +34,41 @@ func _parse_sections() -> void:
 	var current_section: Dictionary = {}
 	var line_start: int = 0
 	var first_section_start: int = -1
+	var in_string: bool = false
 	while line_start < _source_text.length():
 		var newline_at: int = _source_text.find("\n", line_start)
 		var line_end: int = newline_at + 1 if newline_at >= 0 else _source_text.length()
 		var line: String = _without_line_ending(_source_text.substr(line_start, line_end - line_start))
-		var kind: String = _section_kind(line)
+		var kind: String = "" if in_string else _section_kind(line)
 		if not kind.is_empty():
 			if not current_section.is_empty():
 				_finish_section(current_section, line_start)
 			if first_section_start < 0:
 				first_section_start = line_start
 			current_section = _new_section(kind, line, line_start, line_end)
+		in_string = _line_ends_in_string(line, in_string)
 		line_start = line_end
 	if not current_section.is_empty():
 		_finish_section(current_section, _source_text.length())
 	preamble = _source_text if first_section_start < 0 else _source_text.substr(0, first_section_start)
+
+
+## Section-looking lines inside multiline strings belong to the current property.
+static func _line_ends_in_string(line: String, in_string: bool) -> bool:
+	var escaped: bool = false
+	for character: String in line:
+		if in_string:
+			if escaped:
+				escaped = false
+			elif character == "\\":
+				escaped = true
+			elif character == '"':
+				in_string = false
+		elif character == ";":
+			break
+		elif character == '"':
+			in_string = true
+	return in_string
 
 
 func _finish_section(section: Dictionary, end_offset: int) -> void:
@@ -134,6 +154,8 @@ static func _parse_attributes(header_line: String) -> Dictionary:
 				cursor += 1
 			continue
 		cursor += 1
+		while cursor < header_line.length() and _is_space(header_line.substr(cursor, 1)):
+			cursor += 1
 		var value_start: int = cursor
 		var nesting_depth: int = 0
 		var in_quotes: bool = false

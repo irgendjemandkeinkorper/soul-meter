@@ -67,6 +67,43 @@ func test_every_project_scene_round_trips_byte_identically() -> void:
 	assert_bool(saw_starting_town).is_true()
 
 
+func test_multiline_text_does_not_create_scene_sections() -> void:
+	var text_lines: Array[String] = [
+		'text = "Before',
+		'[node name=\\"Phantom\\" type=\\"Node\\"]',
+		'[ext_resource type=\\"Texture2D\\" id=\\"fake\\"]',
+		'[sub_resource type=\\"Resource\\" id=\\"fake\\"]',
+		'[connection signal=\\"ready\\" from=\\".\\" to=\\".\\" method=\\"fake\\"]',
+		'[editable path=\\"Phantom\\"]',
+		'[gd_scene format=3]',
+		'After"',
+	]
+	var source: String = (
+		'[gd_scene format=3]\r\n[node name="Root" type="Label"]\r\n'
+		+ "\r\n".join(text_lines)
+		+ '\r\n\r\n[node name="RealChild" type="Node" parent="."]'
+	)
+	var document: RefCounted = TscnDocumentScript.parse(source)
+	assert_int(document.sections.size()).is_equal(3)
+	assert_int(document.nodes.size()).is_equal(2)
+	assert_str(document.nodes[1]["attributes"]["name"]).is_equal("RealChild")
+	assert_array(document.nodes[0]["property_lines"]).contains_exactly(text_lines)
+	assert_str(document.serialise()).is_equal(source)
+
+
+func test_quotes_in_comments_do_not_hide_following_nodes() -> void:
+	var source: String = (
+		'[gd_scene format=3]\n; An unmatched " in a comment\n'
+		+ '[node name="Root" type="Label"]\n'
+		+ 'text = "A semicolon ; and an escaped quote \\" remain text" ; "\n'
+		+ '[node name="Child" type="Node" parent="."]\n'
+	)
+	var document: RefCounted = TscnDocumentScript.parse(source)
+	assert_int(document.nodes.size()).is_equal(2)
+	assert_str(document.nodes[1]["attributes"]["name"]).is_equal("Child")
+	assert_str(document.serialise()).is_equal(source)
+
+
 func _collect_scene_paths(directory_path: String, scene_paths: PackedStringArray) -> void:
 	var directory: DirAccess = DirAccess.open(directory_path)
 	assert_object(directory) \
@@ -89,3 +126,41 @@ func _collect_scene_paths(directory_path: String, scene_paths: PackedStringArray
 			scene_paths.append(child_path)
 		entry = directory.get_next()
 	directory.list_dir_end()
+
+
+func test_header_attributes_allow_spaces_around_equals() -> void:
+	var source: String = (
+		"[gd_scene format = 3]\r\n"
+		+ "\r\n"
+		+ "[node name = \"Root\" type = \"Node\" groups = [\"one\", \"two\"]]\r\n"
+	)
+	var document: RefCounted = TscnDocumentScript.parse(source)
+
+	assert_str(str(document.header["attributes"]["format"])).is_equal("3")
+	assert_int(document.nodes.size()).is_equal(1)
+	assert_str(str(document.nodes[0]["attributes"]["name"])).is_equal("Root")
+	assert_str(str(document.nodes[0]["attributes"]["type"])).is_equal("Node")
+	assert_str(str(document.nodes[0]["attributes"]["groups"])).is_equal(
+		"[\"one\", \"two\"]"
+	)
+	assert_array(document.serialise().to_utf8_buffer()).is_equal(source.to_utf8_buffer())
+
+
+func test_header_attributes_allow_tabs_around_equals() -> void:
+	var source: String = (
+		"[gd_scene format\t=\t3]\n"
+		+ "[node name\t=\t\"Root\"\ttype\t=\t\"Node\"]\n"
+		+ "[node name\t=\t\"Child\"\tparent\t=\t\".\"\tinstance\t=\tExtResource(\"1_child\")]"
+	)
+	var document: RefCounted = TscnDocumentScript.parse(source)
+
+	assert_str(str(document.header["attributes"]["format"])).is_equal("3")
+	assert_int(document.nodes.size()).is_equal(2)
+	assert_str(str(document.nodes[0]["attributes"]["name"])).is_equal("Root")
+	assert_str(str(document.nodes[0]["attributes"]["type"])).is_equal("Node")
+	assert_str(str(document.nodes[1]["attributes"]["name"])).is_equal("Child")
+	assert_str(str(document.nodes[1]["attributes"]["parent"])).is_equal(".")
+	assert_str(str(document.nodes[1]["attributes"]["instance"])).is_equal(
+		"ExtResource(\"1_child\")"
+	)
+	assert_array(document.serialise().to_utf8_buffer()).is_equal(source.to_utf8_buffer())
