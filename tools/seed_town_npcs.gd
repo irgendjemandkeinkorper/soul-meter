@@ -186,17 +186,20 @@ func _ready() -> void:
 	await get_tree().process_frame
 	if not Pandora.is_loaded():
 		Pandora.load_data()
-	_seed_factions()
+	if not _seed_factions():
+		get_tree().quit(1)
+		return
 	_seed_npcs()
 	Pandora.save_data()
 	print("DOM-NPC-SEED: 60 authored townsfolk present.")
 	get_tree().quit()
 
 
-func _seed_factions() -> void:
+func _seed_factions() -> bool:
 	var seeder: Node = SeedPandora.new()
-	seeder._seed_factions()
+	var seeded: bool = seeder._seed_factions()
 	seeder.free()
+	return seeded
 
 
 func _seed_npcs() -> void:

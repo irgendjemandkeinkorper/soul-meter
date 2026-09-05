@@ -14,16 +14,19 @@ var _cats := {}
 class CanonReader:
 	const CANON_ROOT := "res://canon"
 
-	static func load(kind: String) -> Array[Dictionary]:
+	static func load(kind: String, canon_root: String = CANON_ROOT) -> Array[Dictionary]:
 		var documents: Array[Dictionary] = []
+		var stable_ids: Dictionary = {}
 		if kind.is_empty() or kind.contains("/") or kind.contains("\\") or kind.contains(".."):
 			push_error("CANON-SEED: invalid kind '%s'." % kind)
 			return documents
 
-		var hubs: PackedStringArray = DirAccess.get_directories_at(CANON_ROOT)
+		var hubs: PackedStringArray = []
+		if DirAccess.dir_exists_absolute(canon_root):
+			hubs = DirAccess.get_directories_at(canon_root)
 		hubs.sort()
 		for hub: String in hubs:
-			var kind_root: String = CANON_ROOT.path_join(hub).path_join(kind)
+			var kind_root: String = canon_root.path_join(hub).path_join(kind)
 			if not DirAccess.dir_exists_absolute(kind_root):
 				continue
 			var filenames: PackedStringArray = DirAccess.get_files_at(kind_root)
@@ -31,29 +34,66 @@ class CanonReader:
 			for filename: String in filenames:
 				if filename.get_extension().to_lower() != "json":
 					continue
-				var file: FileAccess = FileAccess.open(kind_root.path_join(filename), FileAccess.READ)
+				var document_path: String = kind_root.path_join(filename)
+				var file: FileAccess = FileAccess.open(document_path, FileAccess.READ)
 				if file == null:
-					push_error("CANON-SEED: could not read %s." % kind_root.path_join(filename))
-					continue
-				var parsed: Variant = JSON.parse_string(file.get_as_text())
-				if typeof(parsed) != TYPE_DICTIONARY:
-					push_error("CANON-SEED: %s must contain one JSON object." % filename)
-					continue
-				documents.append(parsed)
+					push_error("CANON-SEED: could not read %s." % document_path)
+					return []
+				var text: String = file.get_as_text()
+				file.close()
+				var parser := JSON.new()
+				if parser.parse(text) != OK or typeof(parser.data) != TYPE_DICTIONARY:
+					push_error("CANON-SEED: %s must contain one JSON object." % document_path)
+					return []
+				var row: Dictionary = parser.data
+				if kind == "factions":
+					if not _valid_faction(row, document_path, stable_ids):
+						return []
+					stable_ids[row["id"]] = true
+				documents.append(row)
+		if kind == "factions" and documents.is_empty():
+			push_error("CANON-SEED: no faction documents found in %s." % canon_root)
 		return documents
+
+	static func _valid_faction(row: Dictionary, document_path: String, stable_ids: Dictionary) -> bool:
+		for field: String in ["schema", "id", "display_name", "summary", "seat", "vault_id"]:
+			if typeof(row.get(field)) != TYPE_STRING:
+				push_error("CANON-SEED: %s requires string '%s'." % [document_path, field])
+				return false
+		if row["schema"] != "weftlumin.faction.v1":
+			push_error("CANON-SEED: unsupported faction schema in %s." % document_path)
+			return false
+		if String(row["id"]).strip_edges().is_empty():
+			push_error("CANON-SEED: empty faction id in %s." % document_path)
+			return false
+		if stable_ids.has(row["id"]):
+			push_error("CANON-SEED: duplicate faction id '%s' in %s." % [row["id"], document_path])
+			return false
+		return true
 
 
 func _ready() -> void:
 	await get_tree().process_frame
 	if not Pandora.is_loaded():
 		Pandora.load_data()
-	if Pandora.get_all_roots().is_empty():
-		_seed()
-	else:
-		_seed_factions()
+	if not _seed_from_canon():
+		get_tree().quit(1)
+		return
 	Pandora.save_data()
 	print("SEED: done — roots=", Pandora.get_all_roots().size())
 	get_tree().quit()
+
+
+func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
+	# Preflight once before even the empty-database bootstrap can create roots.
+	var factions: Array[Dictionary] = CanonReader.load("factions", canon_root)
+	if factions.is_empty() or not _faction_ids_are_unambiguous(factions):
+		return false
+	if Pandora.get_all_roots().is_empty():
+		_seed(factions)
+	else:
+		_apply_factions(factions)
+	return true
 
 
 func _cat(name: String, parent: PandoraCategory = null) -> PandoraCategory:
@@ -82,14 +122,14 @@ func _assign(ent: PandoraEntity, prop_name: String, value: Variant) -> void:
 	prop.set_default_value(value)
 
 
-func _seed() -> void:
+func _seed(factions: Array[Dictionary]) -> void:
 	_seed_elements()
 	_seed_classes()
 	_seed_peoples()
 	_seed_items()
 	_seed_spells()
 	_seed_effects()
-	_seed_factions()
+	_apply_factions(factions)
 	_seed_npcs()
 	_seed_combatants()
 	_seed_encounters()
@@ -356,7 +396,44 @@ func _seed_effects() -> void:
 # --- Factions: from the vault's city dossiers --------------------------------------------
 
 
-func _seed_factions() -> void:
+func _seed_factions(canon_root: String = CanonReader.CANON_ROOT) -> bool:
+	var factions: Array[Dictionary] = CanonReader.load("factions", canon_root)
+	if factions.is_empty() or not _faction_ids_are_unambiguous(factions):
+		return false
+	_apply_factions(factions)
+	return true
+
+
+func _faction_ids_are_unambiguous(factions: Array[Dictionary]) -> bool:
+	var root: PandoraCategory = null
+	for candidate: PandoraCategory in Pandora.get_all_roots():
+		if candidate.get_entity_name() == "Factions":
+			root = candidate
+			break
+	if root == null:
+		return true
+	var claims: Dictionary = {}
+	for row: Dictionary in factions:
+		# Resolve against existing entities before any new entity can change lookup.
+		# An exact name must not steal the entity owned by a legacy slug identity.
+		var existing: PandoraEntity = _find_by_stable_id(root, row["id"])
+		if existing == null:
+			continue
+		var entity_id: String = existing.get_entity_id()
+		if claims.has(entity_id):
+			push_error(
+				"CANON-SEED: faction ids '%s' and '%s' claim the same existing entity."
+				% [claims[entity_id], row["id"]]
+			)
+			return false
+		claims[entity_id] = row["id"]
+	return true
+
+
+func _apply_factions(factions: Array[Dictionary]) -> void:
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in factions:
+		canon_ids[row["id"]] = true
 	var root: PandoraCategory = _ensure_root("Factions")
 	for property_spec: Array in [
 		["Display Name", "string"],
@@ -367,20 +444,30 @@ func _seed_factions() -> void:
 		if not root.has_entity_property(property_spec[0]):
 			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	for row: Dictionary in CanonReader.load("factions"):
-		var stable_id: String = row.get("id", "")
-		var entity: PandoraEntity = _find_by_stable_id(root, stable_id)
+	for row: Dictionary in factions:
+		var stable_id: String = row["id"]
+		var entity: PandoraEntity = _find_by_stable_id(root, stable_id, canon_ids)
 		if entity == null:
-			entity = Pandora.create_entity(row.get("display_name", stable_id), root)
-		_assign(entity, "Display Name", row.get("display_name", ""))
-		_assign(entity, "Summary", row.get("summary", ""))
-		_assign(entity, "Seat", row.get("seat", ""))
-		_assign(entity, "Vault Id", row.get("vault_id", ""))
+			entity = Pandora.create_entity(stable_id, root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Summary", row["summary"])
+		_assign(entity, "Seat", row["seat"])
+		_assign(entity, "Vault Id", row["vault_id"])
 
 
-func _find_by_stable_id(root: PandoraCategory, stable_id: String) -> PandoraEntity:
+func _find_by_stable_id(
+	root: PandoraCategory, stable_id: String, canon_ids: Dictionary = {}
+) -> PandoraEntity:
+	# Canon-created entities use the immutable id as their internal name. Older
+	# entities keep their existing names and generated IDs, with a slug fallback.
+	for candidate: PandoraEntity in Pandora.get_all_entities(root):
+		if not candidate is PandoraCategory and candidate.get_entity_name() == stable_id:
+			return candidate
 	for candidate: PandoraEntity in Pandora.get_all_entities(root):
 		if candidate is PandoraCategory:
+			continue
+		# A different current canon id is never a legacy display-name alias.
+		if canon_ids.has(candidate.get_entity_name()):
 			continue
 		var candidate_id: String = _slug(candidate.get_entity_name())
 		if candidate_id == stable_id:
