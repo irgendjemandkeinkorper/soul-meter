@@ -12,6 +12,7 @@ var reputation_before_test: Dictionary = {}
 var renown_before_test: Dictionary = {}
 var quests_before_test: Dictionary = {}
 var skill_check_before_test: Dictionary = {}
+var world_clock_before_test: Dictionary = {}
 var target_scene_before_test := ""
 var target_spawn_id_before_test: StringName = &"default"
 
@@ -22,6 +23,7 @@ func before_test() -> void:
 	renown_before_test = Renown.to_dict()
 	quests_before_test = QuestRegistry.to_dict()
 	skill_check_before_test = SkillCheck.to_dict()
+	world_clock_before_test = WorldClock.to_dict()
 	SkillCheck.from_dict({})
 	target_scene_before_test = GameFlow._target_scene
 	target_spawn_id_before_test = GameFlow._target_spawn_id
@@ -47,6 +49,7 @@ func after_test() -> void:
 	Renown.from_dict(renown_before_test)
 	QuestRegistry.from_dict(quests_before_test)
 	SkillCheck.from_dict(skill_check_before_test)
+	WorldClock.from_dict(world_clock_before_test)
 	GameFlow._target_scene = target_scene_before_test
 	GameFlow._target_spawn_id = target_spawn_id_before_test
 
@@ -82,11 +85,41 @@ func test_current_envelope_has_schema_manifest_and_ng_plus_defaults() -> void:
 	var payload: Dictionary = saves._build_payload()
 	assert_int(payload["schema_version"]).is_equal(SaveGameScript.SCHEMA_VERSION)
 	assert_str(str(payload["world_clock"]["phase"])).is_equal(String(WorldClock.phase()))
+	assert_int(payload["world_clock"]["phase_count"]).is_equal(WorldClock.phase_count)
+	assert_int(payload["game_state"]["world_seed"]).is_equal(GameState.world_seed)
 	assert_str(payload["location_id"]).is_equal("dom")
 	assert_bool(payload.has("id_schemas")).is_true()
 	assert_int(payload["ng_plus"]["style_points"]).is_equal(0)
 	assert_array(payload["ng_plus"]["purchased_carry_overs"]).is_empty()
 	assert_bool(payload["zhavar"] is Dictionary).is_true()
+
+
+func test_game_state_world_seed_round_trip_and_legacy_default_persists() -> void:
+	GameState.world_seed = 123456
+	var current: Dictionary = GameState.to_dict()
+	GameState.world_seed = 0
+	assert_bool(GameState.from_dict(current)).is_true()
+	assert_int(GameState.world_seed).is_equal(123456)
+
+	var legacy: Dictionary = current.duplicate(true)
+	legacy.erase("world_seed")
+	GameState.world_seed = 0
+	assert_bool(GameState.from_dict(legacy)).is_true()
+	var regenerated_seed: int = GameState.world_seed
+	assert_int(regenerated_seed).is_greater(0)
+
+	var persisted: Dictionary = GameState.to_dict()
+	GameState.world_seed = 0
+	assert_bool(GameState.from_dict(persisted)).is_true()
+	assert_int(GameState.world_seed).is_equal(regenerated_seed)
+
+
+func test_new_game_draws_and_captures_world_seed() -> void:
+	GameState.world_seed = 0
+	saves.new_game()
+	assert_int(GameState.world_seed).is_greater(0)
+	var captured: Dictionary = saves.capture_runtime_state()
+	assert_int(captured["game_state"]["world_seed"]).is_equal(GameState.world_seed)
 
 
 func test_save_game_does_not_access_private_game_flow_members() -> void:
@@ -329,6 +362,10 @@ func test_validation_rejects_malicious_or_invalid_payload_fields() -> void:
 	var payload_invalid_elapsed := base_payload.duplicate()
 	payload_invalid_elapsed["elapsed_seconds"] = "not a number"
 	assert_bool(saves.validate_payload(payload_invalid_elapsed)).is_false()
+
+	var payload_invalid_seed := base_payload.duplicate(true)
+	payload_invalid_seed["game_state"]["world_seed"] = "not an integer"
+	assert_bool(saves.validate_payload(payload_invalid_seed)).is_false()
 
 
 func test_security_validation_rejects_malicious_keys_and_field_lengths() -> void:

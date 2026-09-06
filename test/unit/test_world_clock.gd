@@ -4,14 +4,18 @@ extends GdUnitTestSuite
 ## and save round-trip at every phase.
 
 var _phase_before: StringName
+var _phase_count_before: int
 
 
 func before_test() -> void:
 	_phase_before = WorldClock.phase()
+	_phase_count_before = WorldClock.phase_count
+	WorldClock.phase_count = 0
 	WorldClock.set_phase(WorldClock.DEFAULT_PHASE, "test-setup")
 
 
 func after_test() -> void:
+	WorldClock.phase_count = _phase_count_before
 	WorldClock.set_phase(_phase_before, "test-restore")
 
 
@@ -28,6 +32,18 @@ func test_advance_walks_phases_in_order_and_wraps() -> void:
 	assert_str(String(WorldClock.advance("test"))).is_equal("evening")
 	assert_str(String(WorldClock.advance("test"))).is_equal("night")
 	assert_str(String(WorldClock.advance("test"))).is_equal("morning")
+
+
+func test_advance_counts_phases_and_day_index_uses_four_phase_days() -> void:
+	assert_int(WorldClock.phase_count).is_equal(0)
+	assert_int(WorldClock.day_index()).is_equal(0)
+	for _i in range(3):
+		WorldClock.advance("test")
+	assert_int(WorldClock.phase_count).is_equal(3)
+	assert_int(WorldClock.day_index()).is_equal(0)
+	WorldClock.advance("test")
+	assert_int(WorldClock.phase_count).is_equal(4)
+	assert_int(WorldClock.day_index()).is_equal(1)
 
 
 func test_advance_emits_phase_changed_with_cause() -> void:
@@ -59,10 +75,43 @@ func test_clock_does_not_advance_on_its_own() -> void:
 func test_round_trip_survives_every_phase() -> void:
 	for phase: StringName in WorldClock.PHASES:
 		WorldClock.set_phase(phase, "test")
+		WorldClock.phase_count = 7
 		var data := WorldClock.to_dict()
 		WorldClock.set_phase(WorldClock.DEFAULT_PHASE, "test")
+		WorldClock.phase_count = 0
 		WorldClock.from_dict(data)
 		assert_str(String(WorldClock.phase())).is_equal(String(phase))
+		assert_int(WorldClock.phase_count).is_equal(7)
+
+
+func test_load_signal_observes_restored_phase_count_and_day() -> void:
+	WorldClock.phase_count = 20
+	var seen: Array = []
+	var handler := func(_previous: StringName, current: StringName, cause: String) -> void:
+		seen.append([current, cause, WorldClock.phase_count, WorldClock.day_index()])
+	WorldClock.phase_changed.connect(handler)
+	WorldClock.from_dict({"phase": "evening", "phase_count": 6})
+	WorldClock.phase_changed.disconnect(handler)
+	assert_int(seen.size()).is_equal(1)
+	assert_str(String(seen[0][0])).is_equal("evening")
+	assert_str(seen[0][1]).is_equal("load")
+	assert_int(seen[0][2]).is_equal(6)
+	assert_int(seen[0][3]).is_equal(1)
+
+
+func test_reset_signal_observes_reset_phase_count_and_day() -> void:
+	WorldClock.from_dict({"phase": "night", "phase_count": 11})
+	var seen: Array = []
+	var handler := func(_previous: StringName, current: StringName, cause: String) -> void:
+		seen.append([current, cause, WorldClock.phase_count, WorldClock.day_index()])
+	WorldClock.phase_changed.connect(handler)
+	WorldClock.reset()
+	WorldClock.phase_changed.disconnect(handler)
+	assert_int(seen.size()).is_equal(1)
+	assert_str(String(seen[0][0])).is_equal("morning")
+	assert_str(seen[0][1]).is_equal("reset")
+	assert_int(seen[0][2]).is_equal(0)
+	assert_int(seen[0][3]).is_equal(0)
 
 
 func test_from_dict_normalizes_garbage_to_default() -> void:
@@ -71,13 +120,16 @@ func test_from_dict_normalizes_garbage_to_default() -> void:
 	assert_str(String(WorldClock.phase())).is_equal("morning")
 	WorldClock.from_dict({})
 	assert_str(String(WorldClock.phase())).is_equal("morning")
+	assert_int(WorldClock.phase_count).is_equal(0)
 
 
 func test_validate_save_data() -> void:
-	assert_bool(WorldClock.validate_save_data({"phase": "evening"})).is_true()
+	assert_bool(WorldClock.validate_save_data({"phase": "evening", "phase_count": 4})).is_true()
 	assert_bool(WorldClock.validate_save_data({})).is_true()
 	assert_bool(WorldClock.validate_save_data({"phase": "noon"})).is_false()
 	assert_bool(WorldClock.validate_save_data({"phase": 3})).is_false()
+	assert_bool(WorldClock.validate_save_data({"phase_count": -1})).is_false()
+	assert_bool(WorldClock.validate_save_data({"phase_count": 1.5})).is_false()
 	assert_bool(WorldClock.validate_save_data("morning")).is_false()
 
 

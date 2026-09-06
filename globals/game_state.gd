@@ -65,6 +65,9 @@ const HUSKED_RECOVERY_CEILING_FLAG := "soul_husked_recovery_ceiling"
 const HUSKED_CEILING_RATIO := 0.5
 
 var flags: Dictionary = {}
+## Per-save deterministic world seed. New games draw it explicitly; legacy
+## saves without the additive key draw it once during load and persist it next save.
+var world_seed: int = 0
 var soul_meter: float = 50.0:
 	set = set_soul_meter
 var gp: int = DEFAULT_GP:
@@ -1020,6 +1023,11 @@ func has_party_patron(patron: String) -> bool:
 	return false
 
 
+func regenerate_world_seed() -> int:
+	world_seed = randi_range(1, 0x7fffffff)
+	return world_seed
+
+
 # --- Save data ---------------------------------------------------------------
 
 
@@ -1032,6 +1040,7 @@ func to_dict() -> Dictionary:
 		custom_recruit_rows.append(member.to_dict())
 	return {
 		"flags": flags.duplicate(true),
+		"world_seed": world_seed,
 		"soul_meter": soul_meter,
 		"gp": gp,
 		"party": party_rows,
@@ -1060,6 +1069,10 @@ func from_dict(data: Dictionary) -> bool:
 		for k in raw_flags:
 			if k is String and k.length() <= 128:
 				flags[k] = raw_flags[k]
+	if data.has("world_seed"):
+		world_seed = int(data["world_seed"])
+	else:
+		regenerate_world_seed()
 	soul_meter = float(data.get("soul_meter", 50.0))
 	gp = maxi(0, int(data.get("gp", DEFAULT_GP)))
 	vendor_stock = data.get("vendor_stock", {}).duplicate(true)
@@ -1085,6 +1098,8 @@ func from_dict(data: Dictionary) -> bool:
 
 
 func _validate_save_data(data: Dictionary) -> bool:
+	if data.has("world_seed") and typeof(data["world_seed"]) != TYPE_INT:
+		return false
 	for key in [
 		"flags",
 		"skills",
