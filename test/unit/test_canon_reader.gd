@@ -112,6 +112,25 @@ func test_distinct_canon_ids_cannot_alias_through_legacy_slug_fallback() -> void
 	assert_str(second.get_entity_property("Display Name").get_default_value()).is_equal("Second Order")
 
 
+func test_incremental_ambiguous_ids_after_reload_refuse_without_mutation() -> void:
+	_write_document("a.json", _row("New_Order", "New_Order"))
+	var initial_seeder: Node = auto_free(SeedPandora.new())
+	assert_bool(initial_seeder._seed_factions(_canon_root)).is_true()
+	var saved_data: Dictionary = Pandora._entity_backend.save_data().duplicate(true)
+	Pandora._entity_backend._clear()
+	Pandora._entity_backend.load_data(saved_data)
+	_write_document("b.json", _row("new-order", "Second Order"))
+	var seeder: Node = auto_free(SeedPandora.new())
+	var before: String = JSON.stringify(Pandora._entity_backend.save_data())
+	var ids_before: String = JSON.stringify(Pandora._id_generator.save_data())
+	var result: Array[bool] = [true]
+	var error := "CANON-SEED: faction ids 'New_Order' and 'new-order' claim the same existing entity."
+	await assert_error(func(): result[0] = seeder._seed_factions(_canon_root)).is_push_error(error)
+	assert_bool(result[0]).is_false()
+	assert_str(JSON.stringify(Pandora._entity_backend.save_data())).is_equal(before)
+	assert_str(JSON.stringify(Pandora._id_generator.save_data())).is_equal(ids_before)
+
+
 func test_ambiguous_claim_on_existing_legacy_entity_refuses_all_updates() -> void:
 	_write_document("a-new-claim.json", _row("The Registry", "A Different Organization"))
 	_write_document("b-legacy-id.json", _row("the-registry", "The Existing Registry"))
