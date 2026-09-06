@@ -254,6 +254,77 @@ func test_report_carries_a_phase_reachability_category_and_metric() -> void:
 	assert_bool(report["metrics"]["phase_reachability"]["passes"]).is_true()
 
 
+func test_report_contains_read_back_coverage_section() -> void:
+	var report := QuestAuditScript.audit_project(false)
+	assert_bool(report.has("read_back_coverage")).is_true()
+	var coverage: Array = report["read_back_coverage"]
+	assert_bool(coverage.is_empty()).is_false()
+	var first_quest: Dictionary = coverage[0]
+	assert_bool(first_quest.has("quest_id")).is_true()
+	assert_bool(first_quest.has("quest_name")).is_true()
+	assert_bool(first_quest.has("kind")).is_true()
+	assert_bool(first_quest.has("outcomes")).is_true()
+	assert_bool(first_quest.has("flags_written")).is_true()
+	assert_bool(first_quest.has("read_backs")).is_true()
+
+
+func test_coverage_outcomes_agree_with_classified_readback_metrics() -> void:
+	var report := QuestAuditScript.audit_project(false)
+	var counts := {"main": 0, "side": 0}
+	for quest: Dictionary in report["read_back_coverage"]:
+		for outcome: Dictionary in quest["outcomes"]:
+			if outcome["read_back"]:
+				counts[quest["kind"]] += 1
+	for kind: String in counts:
+		assert_int(counts[kind]).is_equal(report["metrics"]["readbacks"][kind]["read"])
+
+
+func test_read_back_coverage_categorizes_locations() -> void:
+	var quest_results: Array[Dictionary] = [
+		{
+			"quest_id": "bellhouse_repair",
+			"quest_name": "The Bell That Won't Ring",
+			"constant": "BELLHOUSE_REPAIR",
+			"kind": "side",
+			"outcomes": [
+				{
+					"id": "heard-the-silence",
+					"readback_flag": "dom_bellhouse_inspected",
+					"state_writes": ["dom_bellhouse_inspected=true"],
+					"read_back": true,
+				}
+			]
+		}
+	]
+	var dialogue_sources := {
+		"res://dialogue/sella_varn.dialogue": '- "Inspected." [if GameState.get_flag("dom_bellhouse_inspected") /]'
+	}
+	var sources := dialogue_sources.duplicate()
+	sources["res://quests/bellhouse_repair.tres"] = 'required_flags = PackedStringArray("dom_bellhouse_inspected")'
+	sources["res://globals/npc_reactions.gd"] = """const REACTIONS: Dictionary = {
+	"sella-varn": [
+		{
+			"flag": "dom_bellhouse_inspected",
+		},
+	],
+}"""
+
+	var coverage := QuestAuditScript._build_read_back_coverage(quest_results, sources, dialogue_sources)
+	assert_int(coverage.size()).is_equal(1)
+	var quest_cov: Dictionary = coverage[0]
+	assert_str(quest_cov["quest_id"]).is_equal("bellhouse_repair")
+	assert_array(quest_cov["flags_written"]).contains_exactly(["dom_bellhouse_inspected"])
+
+	var read_backs: Array = quest_cov["read_backs"]
+	assert_int(read_backs.size()).is_equal(1)
+	var flag_rb: Dictionary = read_backs[0]
+	assert_str(flag_rb["flag"]).is_equal("dom_bellhouse_inspected")
+	assert_bool(flag_rb["read_back"]).is_true()
+	assert_bool("res://dialogue/sella_varn.dialogue:1" in flag_rb["dialogue_conditions"]).is_true()
+	assert_bool("NpcReactions:sella-varn" in flag_rb["reaction_rows"]).is_true()
+	assert_bool("res://quests/bellhouse_repair.tres:1" in flag_rb["encounter_gates"]).is_true()
+
+
 func _outcome(outcome_id: String, writes_state: bool, read_back: bool) -> Dictionary:
 	return {
 		"id": outcome_id,
