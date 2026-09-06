@@ -60,8 +60,9 @@ func test_founding_restores_duplicate_tones_by_stable_index() -> void:
 		{"element": "suul", "remaining_rounds": 2, "anchored": false},
 		{"element": "suul", "remaining_rounds": 2, "anchored": true},
 	]
-	_submit_triad(controller, ElementsData.triad(&"founding"))
+	var outcome: Dictionary = _submit_triad(controller, ElementsData.triad(&"founding"))
 
+	assert_bool(outcome.get("allowed", false)).is_true()
 	controller.round_number = controller.duration_freeze_until_round + 1
 	controller._expire_temporary_effects()
 

@@ -1203,10 +1203,9 @@ func _query_attack_resolution(
 	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary
 ) -> Dictionary:
 	var context := forecast_context(actor, target, action, options)
-	var terms := _positional_terms(actor, target)
 	var resolution := _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", terms["cover_bonus"]))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
 	)
 	if not bool(resolution.get("allowed", false)):
 		return resolution

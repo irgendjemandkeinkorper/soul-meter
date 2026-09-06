@@ -24,6 +24,47 @@ class CelllessBattlefieldSpy:
 		reachable_calls += 1
 		return []
 
+class CoverBattlefieldSpy:
+	extends BattlefieldModel
+
+	var cover_value := 0
+
+	func configure(configured_rules: CombatRules) -> void:
+		cover_value = configured_rules.cover_defense_bonus
+
+	func setup(_allies: Array[BattleActor], _enemies: Array[BattleActor]) -> void:
+		pass
+
+	func target_query(
+		_actor: BattleActor, _target: BattleActor, _profile: StringName
+	) -> Dictionary:
+		return {"allowed": true}
+
+	func cover_bonus(_actor: BattleActor, _target: BattleActor) -> int:
+		return cover_value
+
+	func targets_for(
+		_actor: BattleActor, primary: BattleActor, _shape: StringName
+	) -> Array[BattleActor]:
+		var targets: Array[BattleActor] = []
+		targets.append(primary)
+		return targets
+
+class MissingCoverContextController:
+	extends CombatController
+
+	func forecast_context(
+		actor: BattleActor,
+		target: BattleActor,
+		action: CombatAction,
+		options: Dictionary = {},
+	) -> Dictionary:
+		var context: Dictionary = super.forecast_context(actor, target, action, options)
+		var positioning: Dictionary = context.get("positioning", {}) as Dictionary
+		positioning.erase("cover_bonus")
+		context["positioning"] = positioning
+		return context
+
 var events: Array[CombatEvent] = []
 var controller: CombatController
 var rules: CombatRules
@@ -83,6 +124,24 @@ func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue(
 	var source_cell: Vector2i = grid.describe_position(grid.position_of(ally))["cell"]
 	assert_int(controller.tile_state_at(source_cell).charge_level).is_equal(1)
 	assert_bool(result["resolution"] == expected_resolution).is_true()
+
+
+func test_missing_cover_context_uses_same_default_in_forecast_and_submit() -> void:
+	var cover_battlefield := CoverBattlefieldSpy.new()
+	controller = MissingCoverContextController.new()
+	controller.configure([CombatActionCatalog.by_id(&"strike")], cover_battlefield, rules)
+	ally.attributes[&"edge"] = 2
+	controller.start([ally], [enemy], &"missing-cover-context")
+	var strike := controller.action_by_id(&"strike")
+
+	var forecast: Dictionary = controller.forecast_action(strike, enemy)
+	var hp_before := enemy.hp
+	var result: Dictionary = controller.submit_action(&"strike", enemy)
+
+	assert_bool(result.get("allowed", false)).is_true()
+	assert_bool((forecast["context"]["positioning"] as Dictionary).has("cover_bonus")).is_false()
+	assert_int(result["damage"]).is_equal(forecast["damage"])
+	assert_int(hp_before - enemy.hp).is_equal(forecast["damage"])
 
 
 func test_pass_class_resource_command_dispatches_to_owner_only() -> void:
