@@ -79,6 +79,50 @@ func test_insufficient_points_is_refused_with_gate_shape() -> void:
 	assert_str(str(result.get("blocked_by", ""))).is_equal("points")
 
 
+func test_only_held_tones_are_purchasable() -> void:
+	var member := PartyMember.new()
+	member.id = "advancement-tones"
+	member.attributes = {"intuition": 3}
+	member.major_element = "scor"
+	member.minor_element = "molm"
+	member.advancement_points = 6
+	assert_bool(Advancement.is_purchasable(member, "tone_scor")).is_true()
+	assert_bool(Advancement.is_purchasable(member, "tone_aqua")).is_false()
+	assert_bool(Advancement.is_purchasable(member, "heft")).is_true()
+	assert_bool(Advancement.held_tones(member).has("tone_molm")).is_true()
+	var refused := Advancement.buy(member, "tone_aqua")
+	assert_bool(refused["allowed"]).is_false()
+	assert_str(str(refused["blocked_by"])).is_equal("unheld_tone")
+	assert_int(member.advancement_points).is_equal(6)
+	assert_bool(Advancement.buy(member, "tone_scor")["allowed"]).is_true()
+	assert_float(float(member.skill_percentages["tone_scor"])).is_equal(5.0)
+
+
+func test_seed_creation_ledger_writes_lowercase_rows_the_validator_accepts() -> void:
+	var member := PartyMember.new()
+	member.id = "advancement-seed"
+	member.skill_tiers = {"heft": "trained"}
+	member.skill_percentages = {"heft": 10.0, "recall": 5.0}
+	Advancement.seed_creation_ledger(member, {
+		"heft": {"percentage": 10.0, "tier": "Trained", "advancement_points_spent": 4},
+		"recall": {"percentage": 5.0, "tier": "untrained", "advancement_points_spent": 1},
+	})
+	var row: Dictionary = GameState.skills["advancement-seed"]["heft"]
+	assert_str(str(row["tier"])).is_equal("trained")
+	assert_int(int(row["advancement_points_spent"])).is_equal(4)
+	assert_int(Advancement.total_points_spent(member)).is_equal(5)
+	assert_bool(GameState._is_known_skill_tier("trained")).is_true()
+	assert_bool(GameState._is_known_skill_tier("Trained")).is_true()
+	assert_bool(GameState._is_known_skill_tier("master")).is_false()
+	var refund := Advancement.mirror_rewriting(member)
+	assert_int(refund["refunded_points"]).is_equal(5)
+	assert_float(float(member.skill_percentages["heft"])).is_equal(0.0)
+
+	var orphan := PartyMember.new()
+	Advancement.seed_creation_ledger(orphan, {"heft": {"percentage": 5.0}})
+	assert_bool(GameState.skills.has("")).is_false()
+
+
 func test_grant_level_awards_ratified_points() -> void:
 	var member := _member(2)
 	Advancement.grant_level(member)

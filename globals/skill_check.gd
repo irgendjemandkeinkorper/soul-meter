@@ -12,6 +12,8 @@ const FIZZLE_FLOOR_PERCENT := 5.0  # PROVISIONAL — B11 owns the floor
 const MIN_ROLL := 1
 const MAX_ROLL := 100
 const EXPERT_REROLL_CAP := 1
+## PROVISIONAL (R11): 4 makes an Untrained tone equal the canon Intuition reduction exactly.
+const TONE_BONUS_DIVISOR := 4.0
 const DEFAULT_FIZZLE_TABLE: FizzleTable = preload("res://globals/default_fizzle_table.tres")
 const DramgidSchemaScript := preload("res://globals/stats/dramgid_schema.gd")
 
@@ -50,7 +52,7 @@ func preview(
 		return 0.0
 	var definition: Dictionary = SKILL_DEFINITIONS[normalized_skill]
 	var attribute_name: String = definition.attribute
-	var attribute_value := float(subject.attributes.get(attribute_name, 0.0))
+	var attribute_value := float(subject.attribute_value(StringName(attribute_name)))
 	var tier_name := _normalize_tier(str(subject.skill_tiers.get(normalized_skill, "untrained")))
 	var tier_bonus := float(TIER_BONUS.get(tier_name, 0.0))
 	var advancement_percent := float(subject.skill_percentages.get(normalized_skill, 0.0))
@@ -199,6 +201,11 @@ static func normalize_save_data(data: Variant) -> Dictionary:
 ## Percentages are rounded to the nearest integer; exact .5 values use the
 ## authored table's display convention (small Note values round upward, while
 ## larger Song/Refrain values truncate) so the ratified readings remain exact.
+## `tone_bonus` (docs/architecture-chargen-dramgid.md §4.2, PROVISIONAL R3/R11) is the
+## learned part of the caster's lowest Tone across the composition — tier bonus plus
+## advancement, never the attribute part, which is already `intuition_reduction`. An
+## Untrained tone contributes 0, so every ratified reading is unchanged; F3c passes the real
+## value from `fizzle.tone_bonus` in the forecast context.
 func fizzle_percent(
 	agreement_integrity: float,
 	breadth: String,
@@ -206,7 +213,8 @@ func fizzle_percent(
 	magnitude: String,
 	intuition: int,
 	mastery: bool = false,
-	patron: String = ""
+	patron: String = "",
+	tone_bonus: float = 0.0
 ) -> float:
 	var breadth_key := breadth.to_lower()
 	var magnitude_key := magnitude.to_lower()
@@ -215,11 +223,13 @@ func fizzle_percent(
 	var strain_add := float(fizzle_table.strain_add.get(str(strain_steps), 0.0))
 	var multiplier := float(fizzle_table.magnitude_multiplier.get(magnitude_key, 1.0))
 	var intuition_reduction := maxi(intuition - 2, 0) * 2.0
+	var tone_reduction := float(floori(maxf(tone_bonus, 0.0) / TONE_BONUS_DIVISOR))
 	var mastery_reduction := 0.0
 	if mastery and magnitude_key in ["note", "phrase"]:
 		mastery_reduction = 100.0
 	var raw := clampf(
-		(base + breadth_add + strain_add) * multiplier - intuition_reduction - mastery_reduction,
+		(base + breadth_add + strain_add) * multiplier
+			- intuition_reduction - tone_reduction - mastery_reduction,
 		0.0,
 		MAX_EFFECTIVE_PERCENT
 	)
@@ -248,9 +258,31 @@ func calculate_fizzle(
 	magnitude: String,
 	intuition: int,
 	mastery: bool = false,
-	patron: String = ""
+	patron: String = "",
+	tone_bonus: float = 0.0
 ) -> float:
-	return fizzle_percent(agreement_integrity, breadth, strain_steps, magnitude, intuition, mastery, patron)
+	return fizzle_percent(
+		agreement_integrity, breadth, strain_steps, magnitude, intuition, mastery, patron, tone_bonus
+	)
+
+
+## The learned Tone bonus (tier + advancement) of the member's LOWEST tone across
+## `elements` — RFC-0002 OQ-0007's "lowest Resonance", PROVISIONAL. Elements without a
+## tone skill, or an empty list, contribute 0.
+func tone_bonus_for(member: PartyMember, elements: Array) -> float:
+	if member == null or elements.is_empty():
+		return 0.0
+	var lowest := INF
+	for element in elements:
+		var skill_id := DramgidSchemaScript.tone_skill_for(element)
+		if skill_id.is_empty():
+			lowest = minf(lowest, 0.0)
+			continue
+		var tier_name := _normalize_tier(str(member.skill_tiers.get(skill_id, "untrained")))
+		var learned := float(TIER_BONUS.get(tier_name, 0.0)) \
+			+ float(member.skill_percentages.get(skill_id, 0.0))
+		lowest = minf(lowest, learned)
+	return 0.0 if lowest == INF else maxf(lowest, 0.0)
 
 
 func _round_fizzle(value: float, magnitude: String) -> float:

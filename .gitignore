@@ -11,3 +11,6 @@
 # Claude Code worktree sessions (local tool scratch, not repo content)
 .claude/worktrees/
 build/
+
+# Claude Code local scratch (handoffs, debug logs, worker notes)
+.ai-work/

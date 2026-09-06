@@ -49,6 +49,37 @@ func test_legacy_member_defaults_breath_to_full() -> void:
 	assert_int(restored.xp).is_equal(0)
 
 
+func test_class_and_kit_fields_round_trip_and_default_empty() -> void:
+	var member := PartyMember.new()
+	member.class_id = "ironbrand"
+	member.kit_weapon_skill = "heft"
+	member.kit_weapon = "weapons/kero_greatsword"
+	member.mastery_element = "scor"
+	var restored := PartyMember.from_dict(member.to_dict())
+	assert_str(restored.class_id).is_equal("ironbrand")
+	assert_str(restored.kit_weapon_skill).is_equal("heft")
+	assert_str(restored.kit_weapon).is_equal("weapons/kero_greatsword")
+	assert_str(restored.mastery_element).is_equal("scor")
+	var legacy := PartyMember.from_dict({"id": "x"})
+	assert_str(legacy.class_id).is_equal("")
+	assert_str(legacy.kit_weapon_skill).is_equal("")
+	assert_str(legacy.mastery_element).is_equal("")
+
+
+func test_attribute_value_answers_through_the_rename_aliases() -> void:
+	var dramgid := PartyMember.new()
+	dramgid.attributes = {"muster": 4, "doctrine": 3}
+	assert_int(dramgid.attribute_value(&"muster")).is_equal(4)
+	assert_int(dramgid.attribute_value(&"forge")).is_equal(4)
+	assert_int(dramgid.attribute_value(&"doctrine")).is_equal(3)
+	assert_int(dramgid.attribute_value(&"nope")).is_equal(0)
+	var legacy := PartyMember.new()
+	legacy.attributes = {"anchor": 5}
+	assert_int(legacy.attribute_value(&"grit")).is_equal(5)
+	assert_int(legacy.attribute_value(&"anchor")).is_equal(5)
+	assert_int(legacy.attribute_value(&"doctrine")).is_equal(0)
+
+
 func test_attribute_value_reads_canonical_string_name_keys() -> void:
 	var member := PartyMember.new()
 	member.attributes = {DramgidSchemaScript.ATTR_REASON: 4}

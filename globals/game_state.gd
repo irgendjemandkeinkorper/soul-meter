@@ -28,6 +28,15 @@ const DEFAULT_GP := 250
 const MIN_VAR_HARMONY := -5
 const MAX_VAR_HARMONY := 5
 const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
+
+
+## Ledger rows are written lowercase (SkillCheck's canonical form); older envelopes may
+## carry the capitalized spelling. Both validate.
+static func _is_known_skill_tier(tier: String) -> bool:
+	for known: String in SKILL_TIERS:
+		if known.to_lower() == tier.to_lower():
+			return true
+	return false
 const FAST_TRAVEL_DISCOVERY_PREFIX := "fast_travel_hub_discovered:"
 const WORLD_DISCOVERY_PREFIX := "world_location_discovered:"
 ## Set once a save has run character creation (main_menu -> CharacterCreation ->
@@ -1192,7 +1201,7 @@ func _validate_save_data(data: Dictionary) -> bool:
 				if typeof(skill_data["percentage"]) not in [TYPE_INT, TYPE_FLOAT] or float(skill_data["percentage"]) < 0.0 or float(skill_data["percentage"]) > 100.0:
 					return false
 			if skill_data.has("tier"):
-				if not skill_data["tier"] is String or skill_data["tier"] not in SKILL_TIERS:
+				if not skill_data["tier"] is String or not _is_known_skill_tier(skill_data["tier"]):
 					return false
 			if skill_data.has("advancement_points_spent"):
 				if typeof(skill_data["advancement_points_spent"]) != TYPE_INT or int(skill_data["advancement_points_spent"]) < 0:

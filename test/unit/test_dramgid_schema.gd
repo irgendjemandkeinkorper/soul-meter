@@ -5,11 +5,71 @@ const DramgidDerivedScript := preload("res://globals/stats/dramgid_derived.gd")
 const SkillCheckScript := preload("res://globals/skill_check.gd")
 
 
-func test_schema_contains_seven_attributes_and_twenty_two_skills() -> void:
+func test_schema_contains_seven_attributes_and_thirty_seven_skills() -> void:
 	assert_int(DramgidSchemaScript.ATTRIBUTE_IDS.size()).is_equal(7)
 	assert_int(DramgidSchemaScript.ATTRIBUTES.size()).is_equal(7)
-	assert_int(DramgidSchemaScript.SKILL_IDS.size()).is_equal(22)
-	assert_int(DramgidSchemaScript.SKILLS.size()).is_equal(22)
+	assert_int(DramgidSchemaScript.FIELD_SKILL_IDS.size()).is_equal(22)
+	assert_int(DramgidSchemaScript.ARMS_SKILL_IDS.size()).is_equal(5)
+	assert_int(DramgidSchemaScript.TONE_SKILL_IDS.size()).is_equal(10)
+	assert_int(DramgidSchemaScript.SKILL_IDS.size()).is_equal(37)
+	assert_int(DramgidSchemaScript.SKILLS.size()).is_equal(37)
+
+
+func test_groups_partition_every_skill_in_schema_order() -> void:
+	var seen: Dictionary = {}
+	var total := 0
+	for group: String in DramgidSchemaScript.SKILL_GROUPS:
+		var members := DramgidSchemaScript.skills_in_group(group)
+		assert_bool(members.size() > 0).is_true()
+		for skill_id: String in members:
+			assert_bool(seen.has(skill_id)).is_false()
+			seen[skill_id] = true
+			assert_str(DramgidSchemaScript.skill_group(skill_id)).is_equal(group)
+		total += members.size()
+	assert_int(total).is_equal(DramgidSchemaScript.SKILL_IDS.size())
+	for skill_id: String in DramgidSchemaScript.SKILL_IDS:
+		assert_bool(DramgidSchemaScript.is_skill(skill_id)).is_true()
+		assert_bool(DramgidSchemaScript.SKILL_GROUPS.has(DramgidSchemaScript.skill_group(skill_id))).is_true()
+	for skill_id: String in DramgidSchemaScript.FIELD_SKILL_IDS:
+		assert_bool(DramgidSchemaScript.FIELD_GROUPS.has(DramgidSchemaScript.skill_group(skill_id))).is_true()
+
+
+func test_arms_skills_are_muster_or_alacrity_and_ignore_the_loom() -> void:
+	var service: SkillCheckService = auto_free(SkillCheckScript.new())
+	for skill_id: String in DramgidSchemaScript.ARMS_SKILL_IDS:
+		assert_bool(DramgidSchemaScript.is_arms_skill(skill_id)).is_true()
+		assert_bool(DramgidSchemaScript.governing_attribute(skill_id) in ["muster", "alacrity"]).is_true()
+		assert_int(int(DramgidSchemaScript.SKILLS[skill_id]["loom"])).is_equal(DramgidSchemaScript.LoomSensitivity.NONE)
+		assert_int(service.loom_penalty(skill_id, null)).is_equal(0)
+		assert_str(str(DramgidSchemaScript.SKILLS[skill_id]["source"])).is_equal("sm-chargen-proposal")
+
+
+func test_one_intuition_tone_per_wheel_element_with_opposites() -> void:
+	for element: StringName in ElementWheel.ORDER:
+		var skill_id := DramgidSchemaScript.tone_skill_for(element)
+		assert_str(skill_id).is_equal("tone_%s" % element)
+		assert_bool(DramgidSchemaScript.is_tone_skill(skill_id)).is_true()
+		assert_str(DramgidSchemaScript.governing_attribute(skill_id)).is_equal("intuition")
+		assert_int(int(DramgidSchemaScript.SKILLS[skill_id]["loom"])).is_equal(DramgidSchemaScript.LoomSensitivity.NONE)
+		assert_str(DramgidSchemaScript.element_for_tone(skill_id)).is_equal(String(element))
+		assert_str(DramgidSchemaScript.opposed_tone(skill_id)).is_equal(
+			DramgidSchemaScript.tone_skill_for(ElementWheel.opposite(element)))
+	assert_str(DramgidSchemaScript.opposed_tone("tone_scor")).is_equal("tone_aqua")
+	assert_str(DramgidSchemaScript.tone_skill_for("")).is_equal("")
+	assert_str(DramgidSchemaScript.tone_skill_for("Scor")).is_equal("tone_scor")
+	assert_str(DramgidSchemaScript.opposed_tone("recall")).is_equal("")
+
+
+func test_creation_pool_and_attribute_aliases() -> void:
+	assert_int(DramgidSchemaScript.creation_skill_pool(DramgidSchemaScript.default_attributes())).is_equal(
+		DramgidSchemaScript.CREATION_POOL_BASE + 4)
+	assert_int(DramgidSchemaScript.creation_skill_pool({"reason": 5, "decorum": 3}, 1)).is_equal(
+		DramgidSchemaScript.CREATION_POOL_BASE + 9)
+	assert_str(DramgidSchemaScript.canonical_attribute_id("forge")).is_equal("muster")
+	assert_str(DramgidSchemaScript.canonical_attribute_id("muster")).is_equal("muster")
+	assert_str(DramgidSchemaScript.canonical_attribute_id("nope")).is_equal("")
+	assert_str(DramgidSchemaScript.legacy_attribute_id("muster")).is_equal("forge")
+	assert_str(DramgidSchemaScript.legacy_attribute_id("doctrine")).is_equal("")
 
 
 func test_every_skill_has_a_governing_attribute_and_valid_loom_sensitivity() -> void:

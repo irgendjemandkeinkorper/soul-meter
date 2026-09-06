@@ -96,6 +96,45 @@ func test_fizzle_sanity_table_matches_ratified_readings() -> void:
 	assert_float(service.fizzle_percent(40.0, "triad", 0, "song", 2)).is_equal(95.0)
 
 
+func test_tone_bonus_reduces_fizzle_outside_the_multiply_and_untrained_is_neutral() -> void:
+	# Trained tone (+20) → −5; the twelve readings above stay exact at tone_bonus 0.
+	assert_float(service.fizzle_percent(85.0, "chord", 0, "phrase", 2, false, "", 20.0)).is_equal(15.0)
+	assert_float(service.fizzle_percent(85.0, "chord", 0, "phrase", 2, false, "", 0.0)).is_equal(20.0)
+	# Expert (+35) → −8; +5% advancement steps add ~1 each.
+	assert_float(service.fizzle_percent(85.0, "chord", 0, "phrase", 2, false, "", 35.0)).is_equal(12.0)
+	assert_float(service.fizzle_percent(85.0, "chord", 0, "phrase", 2, false, "", 40.0)).is_equal(10.0)
+	# Intuition 5 + Trained Major in Dom: a Note can bottom out, but only Mastery is the rule.
+	assert_float(service.fizzle_percent(92.0, "tone", 0, "note", 5, false, "", 20.0)).is_equal(0.0)
+	# The tone never lifts Fickah's floor.
+	assert_float(service.fizzle_percent(100.0, "tone", 0, "note", 10, true, "Fickah", 95.0)).is_equal(5.0)
+	assert_float(service.calculate_fizzle(85.0, "chord", 0, "phrase", 2, false, "", 20.0)).is_equal(15.0)
+
+
+func test_tone_bonus_for_takes_the_lowest_held_tone() -> void:
+	var member := PartyMember.new()
+	member.attributes = {"intuition": 3}
+	member.skill_tiers = {"tone_scor": "trained", "tone_molm": "expert"}
+	member.skill_percentages = {"tone_scor": 10.0}
+	assert_float(service.tone_bonus_for(member, ["scor"])).is_equal(30.0)
+	assert_float(service.tone_bonus_for(member, ["molm"])).is_equal(35.0)
+	assert_float(service.tone_bonus_for(member, ["scor", "molm"])).is_equal(30.0)
+	assert_float(service.tone_bonus_for(member, ["scor", "aqua"])).is_equal(0.0)
+	assert_float(service.tone_bonus_for(member, [])).is_equal(0.0)
+	assert_float(service.tone_bonus_for(null, ["scor"])).is_equal(0.0)
+
+
+func test_preview_reads_legacy_and_dramgid_attribute_keys() -> void:
+	var member := PartyMember.new()
+	member.attributes = {"muster": 4}
+	# heft (muster) and the legacy athletics (forge) both answer from the DRAMGID key.
+	assert_float(service.preview("heft", member)).is_equal(32.0)
+	assert_float(service.preview("athletics", member)).is_equal(32.0)
+	var legacy := PartyMember.new()
+	legacy.attributes = {"forge": 3}
+	assert_float(service.preview("heft", legacy)).is_equal(24.0)
+	assert_float(service.preview("strain", legacy)).is_equal(24.0)
+
+
 func test_mastery_only_zeroes_note_and_phrase() -> void:
 	assert_float(service.fizzle_percent(40.0, "tone", 0, "note", 2, true)).is_equal(0.0)
 	assert_float(service.fizzle_percent(40.0, "tone", 0, "phrase", 2, true)).is_equal(0.0)

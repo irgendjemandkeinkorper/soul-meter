@@ -1,47 +1,22 @@
 class_name ChargenData
 extends RefCounted
-## Ratified character-creation data (#98 / dramgid-vault `systems/character-creation.md`
-## + `systems/ten-patron-classes.md`, read 2026-08-11). Nothing here is invented — every
-## table mirrors the vault verbatim. See the header comment on
-## `ui/screens/character_creation.gd` for the one place this build knowingly deviates
-## from the literal text of GitHub issue #129 (the "Seven Measures" / D-R-A-M-G-I-D
-## naming does not exist anywhere in ratified data; the vault's six attributes are
-## Forge/Edge/Anchor/Spark/Pitch/Voice — see `character-creation.md` and
-## `globals/skill_check.gd`, which already implements them).
+## Character-creation tables (docs/architecture-chargen-dramgid.md §6–§7; canon: mono
+## `04-world/systems/character-creation.md` + `ten-patron-classes.md`, read 2026-09-05).
+##
+## Stat ids come from DramgidSchema and class rows from ClassCatalog — this file holds
+## only what is specific to creation: peoples, Backgrounds, Disciplines, likenesses and
+## the pair rule. Nothing here re-states a formula: percentages come from
+## SkillCheck.preview() on a ChargenBuild scratch member.
 
-## The six ratified attributes, in vault table order (Body / Mind / Soul pairs).
-const ATTRIBUTE_IDS: PackedStringArray = ["forge", "edge", "anchor", "spark", "pitch", "voice"]
-const ATTRIBUTE_LABELS: Dictionary = {
-	"forge": "Forge",
-	"edge": "Edge",
-	"anchor": "Anchor",
-	"spark": "Spark",
-	"pitch": "Pitch",
-	"voice": "Voice",
-}
-const ATTRIBUTE_HINTS: Dictionary = {
-	"forge": "Raw physical power, carry weight.",
-	"edge": "Precision, accuracy, evasion.",
-	"anchor": "HP pool; resistance to Discord/backlash.",
-	"spark": "Initiative, tactics, non-elemental checks.",
-	"pitch": "Soul Gauge/Breath ceiling; base fizzle reduction.",
-	"voice": "Consonance strength; Name-Ledger effectiveness; social leverage.",
-}
-const ATTRIBUTE_DOMAIN: Dictionary = {
-	"forge": "body", "edge": "body",
-	"anchor": "mind", "spark": "mind",
-	"pitch": "soul", "voice": "soul",
-}
+## Attribute constants, mirrored from the schema so existing callers keep one name.
+const ATTRIBUTE_IDS: PackedStringArray = DramgidSchema.ATTRIBUTE_IDS
+const ATTRIBUTE_FLOOR := DramgidSchema.ATTRIBUTE_FLOOR
+const ATTRIBUTE_CAP := DramgidSchema.ATTRIBUTE_CAP
+const ATTRIBUTE_BUDGET := DramgidSchema.ATTRIBUTE_BUDGET
 
-## "6 attributes, base 2 each, 20 points to distribute, cap 5 at creation"
-## (character-creation.md). Read as: the six final values sum to the budget,
-## each individually floored at ATTRIBUTE_FLOOR and capped at ATTRIBUTE_CAP.
-const ATTRIBUTE_FLOOR := 2
-const ATTRIBUTE_CAP := 5
-const ATTRIBUTE_BUDGET := 20
-
-## The twelve ratified skills, mirrored from SkillCheckService.SKILL_DEFINITIONS
-## so this file never disagrees with the resolution service.
+## TRANSITIONAL — the character sheet still iterates the twelve legacy ids until W1
+## (docs/handoff-chargen-workers.md) moves it onto DramgidSchema.SKILL_GROUPS. The wizard
+## never reads these two tables.
 const SKILL_IDS: PackedStringArray = [
 	"athletics", "stealth", "sleight_of_hand", "beast_handling",
 	"lore", "survival", "investigation", "alchemy",
@@ -56,82 +31,88 @@ const SKILL_LABELS: Dictionary = {
 	"performance": "Performance", "insight": "Insight",
 }
 
-## Chapter 1's production-scoped ancestries (character-creation.md, "Soul Meter (CRPG)
-## scope note") — 5 of the vault's ~20 playable peoples. `leans` is informational only:
-## the vault ratifies that ancestry leanings are "nudges, not flat bonuses" but never
-## quantifies the nudge, so this build does not auto-apply attribute deltas (flagged
-## as an open question for #98 rather than invented here).
+## Chapter 1's production-scoped ancestries (character-creation.md "Soul Meter (CRPG) scope
+## note") — 5 of the ~20 playable peoples. `leans` is informational: the canon ratifies that
+## leanings are "nudges, not flat bonuses" and never quantifies the nudge, so no attribute
+## delta is applied. The two traits that ARE mechanical in canon are data:
+## `creation_bonus_points` (Vael: "extra skill point at creation") and `trained_skills`
+## (Weftkin: "innate Weft-Sensing training" → sounding Trained).
 const ANCESTRIES: Array[Dictionary] = [
-	{"id": "vael", "name": "Vael", "leans": "Balanced", "trait": "Extra skill point at creation (generalist)."},
-	{"id": "kaan", "name": "Kaan", "leans": "Forge / Anchor", "trait": "Vulnerable to Molm-adjacent effects; resistant to physical Discord."},
-	{"id": "vaerin", "name": "Vaerin", "leans": "Spark / Pitch", "trait": "Access to the Fading resource regardless of class."},
-	{"id": "weftkin", "name": "Weftkin", "leans": "Pitch / Voice", "trait": "Innate Weft-Sensing training."},
-	{"id": "kes-reth", "name": "Kes'reth (Mirror-Veil)", "leans": "Voice / Anchor", "trait": "Mirrored Scars — once per encounter, spend vitality to negate one Discord-inflicted condition."},
+	{"id": "vael", "name": "Vael", "leans": "Balanced", "lean_ids": [],
+		"trait": "Extra skill point at creation (generalist).",
+		"creation_bonus_points": 1, "trained_skills": []},
+	{"id": "kaan", "name": "Kaan", "leans": "Muster / Grit", "lean_ids": ["muster", "grit"],
+		"trait": "Vulnerable to Molm-adjacent effects; resistant to physical Discord.",
+		"creation_bonus_points": 0, "trained_skills": []},
+	{"id": "vaerin", "name": "Vaerin", "leans": "Reason / Intuition", "lean_ids": ["reason", "intuition"],
+		"trait": "Access to the Fading resource regardless of class.",
+		"creation_bonus_points": 0, "trained_skills": []},
+	{"id": "weftkin", "name": "Weftkin", "leans": "Intuition / Decorum", "lean_ids": ["intuition", "decorum"],
+		"trait": "Innate Weft-Sensing training (Sounding starts Trained).",
+		"creation_bonus_points": 0, "trained_skills": ["sounding"]},
+	{"id": "kes-reth", "name": "Kes'reth (Mirror-Veil)", "leans": "Decorum / Grit", "lean_ids": ["decorum", "grit"],
+		"trait": "Mirrored Scars — once per encounter, spend vitality to negate one Discord-inflicted condition.",
+		"creation_bonus_points": 0, "trained_skills": []},
 ]
 
-## The five worked-example Backgrounds (character-creation.md). Each grants a skill
-## package (set to Trained), a minor mechanical feature (metadata only — the feature
-## is not yet wired into a system, same boundary as the vault's own "expansion point"
-## framing), and a starting Mastery.
+## The five worked-example Backgrounds (character-creation.md). Skill packages are set
+## Trained; `feature` is metadata (not yet wired, same boundary as the canon's "expansion
+## point"); the starting Mastery is a Root Note of the player's choice among the held
+## elements (ChargenBuild.mastery_element).
 const BACKGROUNDS: Array[Dictionary] = [
 	{
 		"id": "sarkhollow-scavenger", "name": "Sarkhollow Scavenger",
-		"skills": ["lore", "investigation"],
+		"skills": ["recall", "unweave"],
 		"feature": "Advantage identifying relic function.",
 		"mastery": "Root Note of choice",
 	},
 	{
 		"id": "verlossen-miner", "name": "Verlossen Miner",
-		"skills": ["athletics", "survival"],
+		"skills": ["strain", "wayfinding"],
 		"feature": "Resistance to Feedback-tier Discord (mining-deep conditioning).",
 		"mastery": "Root Note of choice",
 	},
 	{
 		"id": "vervulling-kes-reth", "name": "Vervulling Kes'reth",
-		"skills": ["weft_sensing", "lore"],
-		"feature": "+1 Pitch-linked fizzle reduction inside city Gauge-net zones.",
+		"skills": ["sounding", "recall"],
+		"feature": "+1 Intuition-linked fizzle reduction inside city Gauge-net zones.",
 		"mastery": "Root Note of choice",
 	},
 	{
 		"id": "wintervast-rimewalker", "name": "Wintervast Rimewalker-adjacent",
-		"skills": ["insight", "lore"],
+		"skills": ["undertone", "recall"],
 		"feature": "Immune to the first Dissonance hit per encounter (\"unbothered stillness\").",
 		"mastery": "Root Note of choice",
 	},
 	{
 		"id": "dom-storm-coast", "name": "Dom Storm-Coast",
-		"skills": ["survival", "sleight_of_hand"],
+		"skills": ["wayfinding", "slip"],
 		"feature": "Bonus vs. Ofshütje-flavored environmental hazards.",
 		"mastery": "Root Note of choice",
 	},
 ]
 
-## Combat Disciplines (ten-patron-classes.md §Combat Disciplines) — chosen before
-## Patron; no numeric baseline is ratified yet ("expansion point"), so this is
-## identity-only metadata.
+## Combat Disciplines (ten-patron-classes.md §Combat Disciplines) — chosen before Patron
+## ("a body moves before a god notices it"); no numeric baseline is ratified, so this is
+## identity metadata plus the element each favours.
 const DISCIPLINES: Array[Dictionary] = [
-	{"id": "chordblade", "name": "Chordblade", "blurb": "Vanguard footwork, favouring Khor's tempo."},
-	{"id": "terrashaper", "name": "Terrashaper", "blurb": "The engineer's stance, favouring Terra's weight."},
-	{"id": "hushwarden", "name": "Hushwarden", "blurb": "Denial and stillness, favouring Nul's quiet."},
+	{"id": "chordblade", "name": "Chordblade", "favours": "khor",
+		"blurb": "Vanguard footwork, favouring Khor's tempo.",
+		"verbs": "Advance, feint, close — reach and rhythm over weight."},
+	{"id": "terrashaper", "name": "Terrashaper", "favours": "terra",
+		"blurb": "The engineer's stance, favouring Terra's weight.",
+		"verbs": "Hold, brace, raise — elevation and footing over speed."},
+	{"id": "hushwarden", "name": "Hushwarden", "favours": "nul",
+		"blurb": "Denial and stillness, favouring Nul's quiet.",
+		"verbs": "Deny, still, wait — the field taxes every Song inside it, the warden's included."},
 ]
 
-## The Ten Patron Classes (ten-patron-classes.md). `char_class` mirrors the existing
-## "ClassName (Patron)" convention already used by GameState's recruit roster.
-const PATRONS: Array[Dictionary] = [
-	{"id": "mirrorblade", "name": "Mirrorblade", "patron": "Maiiam", "role": "Duelist"},
-	{"id": "river-mother", "name": "River-Mother", "patron": "Haeren", "role": "Support"},
-	{"id": "ironbrand", "name": "Ironbrand", "patron": "Kero", "role": "Berserker"},
-	{"id": "lensbearer", "name": "Lensbearer", "patron": "Stuid", "role": "Buffer/Debuffer"},
-	{"id": "husk-bearer", "name": "Husk-bearer", "patron": "Vhorr", "role": "DoT controller"},
-	{"id": "flamebinder", "name": "Flamebinder", "patron": "Vicoar", "role": "Artificer"},
-	{"id": "stormbearer", "name": "Stormbearer", "patron": "Ofshütje", "role": "Skirmisher"},
-	{"id": "oathclock", "name": "Oathclock", "patron": "Pazzah", "role": "Controller"},
-	{"id": "locksmirk", "name": "Locksmirk", "patron": "Fickah", "role": "Trickster"},
-	{"id": "threadwalker", "name": "Threadwalker", "patron": "Izhakel", "role": "Summoner/Debuffer"},
-]
+## The Ten Patron Classes — a view over ClassCatalog (the one definition).
+const PATRONS: Array[Dictionary] = ClassCatalog.ALL
 
-## The Wheel's five opposed (Clash) pairs (ui/theme/ds.gd header comment) — Major and
-## Minor element picks may never be an opposed pair (ten-patron-classes.md).
+## The Wheel's five opposed (Clash) pairs — Major and Minor may never be an opposed pair
+## (ten-patron-classes.md). Kept as a table for the wizard's live clash hint; the rule
+## itself is ElementWheel.opposite().
 const WHEEL_CLASH_PAIRS: Dictionary = {
 	"suul": "daar", "daar": "suul",
 	"bloei": "molm", "molm": "bloei",
@@ -141,16 +122,14 @@ const WHEEL_CLASH_PAIRS: Dictionary = {
 }
 
 ## Portrait choices for the likeness grid. Reuses existing dedicated crowd-figure
-## art (globals/unit_art.gd FALLBACK_POOL) rather than adding new content — no new
-## art asset was in scope for this build.
+## art (globals/unit_art.gd FALLBACK_POOL) rather than adding new content.
 const LIKENESS_UNIT_IDS: PackedStringArray = [
 	"crowd-acolyte-a", "crowd-guard-a", "crowd-merchant-a", "crowd-laborer-a",
 ]
 
 ## Painterly likeness plates (Wave S art lane, 2 per ratified ancestry) at
 ## assets/generated/portraits/player/<id>.png. `unit` names the existing crowd
-## field sprite that stands in wherever a plate is missing or a world-sprite
-## representation is needed — plates never replace field art.
+## field sprite that stands in wherever a plate is missing.
 const LIKENESSES: Array[Dictionary] = [
 	{"id": "likeness_01", "label": "Vael Ledger Courier", "unit": "crowd-acolyte-a"},
 	{"id": "likeness_02", "label": "Vael Hospice Wayfarer", "unit": "crowd-merchant-b"},
@@ -179,10 +158,17 @@ static func likeness_fallback_unit(id: String) -> String:
 
 
 static func attribute_label(id: String) -> String:
-	return str(ATTRIBUTE_LABELS.get(id, id))
+	return DramgidSchema.attribute_label(id)
 
 
+static func attribute_hint(id: String) -> String:
+	return str(DramgidSchema.ATTRIBUTES.get(id, {}).get("governs", ""))
+
+
+## Schema label first; the transitional legacy table answers the sheet's twelve ids.
 static func skill_label(id: String) -> String:
+	if DramgidSchema.is_skill(id):
+		return DramgidSchema.skill_label(id)
 	return str(SKILL_LABELS.get(id, id))
 
 
@@ -200,38 +186,34 @@ static func ancestry_by_id(id: String) -> Dictionary:
 	return {}
 
 
-static func patron_by_id(id: String) -> Dictionary:
-	for entry in PATRONS:
+static func discipline_by_id(id: String) -> Dictionary:
+	for entry in DISCIPLINES:
 		if entry["id"] == id:
 			return entry
 	return {}
 
 
-## The governing attribute for each skill, mirrored from SkillCheckService so a
-## preview panel never has to reach into the resolution service just to label a row.
+static func patron_by_id(id: String) -> Dictionary:
+	return ClassCatalog.by_id(id)
+
+
 static func governing_attribute(skill_id: String) -> String:
-	var definitions: Dictionary = SkillCheckService.SKILL_DEFINITIONS
-	var definition: Dictionary = definitions.get(skill_id, {})
-	return str(definition.get("attribute", ""))
+	if DramgidSchema.is_skill(skill_id):
+		return DramgidSchema.governing_attribute(skill_id)
+	# Transitional legacy ids resolve through the service's merged definitions.
+	return str(SkillCheckService.SKILL_DEFINITIONS.get(skill_id, {}).get("attribute", ""))
 
 
-## True if `attributes` is a complete, in-budget point-buy: all six ids present,
-## each within [ATTRIBUTE_FLOOR, ATTRIBUTE_CAP], summing to exactly ATTRIBUTE_BUDGET.
+## True if `attributes` is a complete, in-budget point-buy: all seven ids present, each
+## within [floor, cap], summing to exactly the budget (DramgidSchema owns the rule).
 static func is_valid_point_buy(attributes: Dictionary) -> bool:
-	if attributes.size() != ATTRIBUTE_IDS.size():
-		return false
-	var total := 0
-	for id in ATTRIBUTE_IDS:
-		if not attributes.has(id):
-			return false
+	var normalized: Dictionary = {}
+	for id in attributes.keys():
 		var value: Variant = attributes[id]
 		if typeof(value) != TYPE_INT and typeof(value) != TYPE_FLOAT:
 			return false
-		var int_value := int(value)
-		if int_value < ATTRIBUTE_FLOOR or int_value > ATTRIBUTE_CAP:
-			return false
-		total += int_value
-	return total == ATTRIBUTE_BUDGET
+		normalized[str(id)] = int(value)
+	return DramgidSchema.is_valid_attribute_allocation(normalized)
 
 
 static func remaining_points(attributes: Dictionary) -> int:
@@ -248,25 +230,9 @@ static func is_valid_element_pair(major_id: String, minor_id: String) -> bool:
 		return true
 	if major_id == minor_id:
 		return false
-	return WHEEL_CLASH_PAIRS.get(major_id, "") != minor_id
+	return String(ElementWheel.opposite(major_id)) != minor_id
 
 
 ## Default (floor-value) attribute map, used to seed a fresh chargen session.
 static func default_attributes() -> Dictionary:
-	var result := {}
-	for id in ATTRIBUTE_IDS:
-		result[id] = ATTRIBUTE_FLOOR
-	return result
-
-
-## Derives the twelve skill percentages a build would carry once ACCEPTed, mirroring
-## SkillCheckService's formula (`attribute x 8 + tier_bonus`) without needing a live
-## PartyMember/scene — used by the screen's live preview panel.
-static func preview_skill_percentages(attributes: Dictionary, trained_skills: Array) -> Dictionary:
-	var result := {}
-	for skill_id in SKILL_IDS:
-		var attribute_id := governing_attribute(skill_id)
-		var attribute_value := int(attributes.get(attribute_id, ATTRIBUTE_FLOOR))
-		var tier_bonus := 20.0 if skill_id in trained_skills else 0.0
-		result[skill_id] = clampf(attribute_value * 8.0 + tier_bonus, 0.0, SkillCheckService.MAX_EFFECTIVE_PERCENT)
-	return result
+	return DramgidSchema.default_attributes()

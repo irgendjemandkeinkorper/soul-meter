@@ -93,13 +93,13 @@ func test_chargen_wizard_pages() -> void:
 	var screen := runner.scene() as CharacterCreationScreen
 	screen.theme = ThemeBuilder.build()
 	await runner.simulate_frames(25)
-	screen._on_ancestry_pressed(str(ChargenData.ANCESTRIES[4].get("id", "")))
+	screen.select_ancestry(str(ChargenData.ANCESTRIES[4].get("id", "")))
 	await runner.simulate_frames(5)
 	await _capture_current(runner, screen, "02a_chargen_ancestry")
-	screen._show_step(CharacterCreationScreen.STEP_ATTRIBUTES)
+	screen.go_to_step(&"attributes")
 	await runner.simulate_frames(5)
 	await _capture_current(runner, screen, "02b_chargen_attributes")
-	screen._show_step(CharacterCreationScreen.STEP_IDENTITY)
+	screen.go_to_step(&"identity")
 	await runner.simulate_frames(5)
 	await _capture_current(runner, screen, "02c_chargen_identity")
 	if screen is CanvasItem:
