@@ -215,14 +215,14 @@ once there's more than `_derive()`'s simple sum to get wrong.
 
 ### Headless Suite Stability Triage (Wave D7)
 
-The four test suites flagged as potentially flaky under headless rendering and navmesh execution were triaged via 10x consecutive headless runs against Godot 4.7.1-stable:
+The four test suites flagged as potentially flaky under headless rendering and navmesh execution were rechecked on 2026-09-06 via 10 consecutive headless runs against Godot 4.7.1-stable, with `SOUL_METER_HEADLESS=1` and `LP_NUM_THREADS=1`:
 
 - `test/unit/test_actor_presentation.gd`: 10/10 runs passed (2/2 test cases per run).
 - `test/integration/test_y_sort.gd`: 10/10 runs passed (7/7 test cases per run).
 - `test/integration/test_click_to_move.gd`: 10/10 runs passed (8/8 test cases per run).
 - `test/nav_acceptance/test_click_to_move_input.gd`: 10/10 runs passed (1/1 test cases per run).
 
-All 18 test cases across these four suites demonstrated 100% stability (0 failures / 0 skips) under headless execution.
+All 18 test cases passed in this sample (0 failures / 0 skips). A passing sample does not rule out intermittent failures; keep using Xvfb for input-dependent integration tests as described above.
 
 ## Manual tests
 
