@@ -20,6 +20,26 @@ func after_test() -> void:
 	QuestRegistry.from_dict(_original_quests)
 
 
+func test_quest_only_replacement_is_atomic_and_legacy_clear_still_clears_both() -> void:
+	var original: DomSideQuest = _runtime_quest("campaign/atomic-original")
+	assert_bool(QuestRegistry.replace_runtime_quests([original])).is_true()
+	assert_bool(EncounterCatalog.register_runtime_encounters({"unrelated": {"display_name": "Keep"}})).is_true()
+	QuestRegistry.offer(original)
+	original.current_stage = 1
+	var invalid: DomSideQuest = _runtime_quest("campaign/atomic-invalid")
+	invalid.id = 1
+	assert_bool(QuestRegistry.replace_runtime_quests([invalid])).is_false()
+	assert_object(QuestRegistry.runtime_quests()[0]).is_same(original)
+	assert_bool(QuestRegistry.is_active(original)).is_true()
+	assert_int(original.current_stage).is_equal(1)
+	assert_str(EncounterCatalog.definition(&"unrelated").display_name).is_equal("Keep")
+	QuestRegistry.clear_runtime_quests_only()
+	assert_array(QuestRegistry.runtime_quests()).is_empty()
+	assert_str(EncounterCatalog.definition(&"unrelated").display_name).is_equal("Keep")
+	QuestRegistry.clear_runtime_quests()
+	assert_dict(EncounterCatalog.definition(&"unrelated")).is_empty()
+
+
 func test_runtime_quest_survives_registry_save_round_trip() -> void:
 	var quest: DomSideQuest = _runtime_quest("campaign/save-round-trip")
 	assert_bool(QuestRegistry.register_runtime_quests([quest])).is_true()
