@@ -1,0 +1,5 @@
+[gd_scene format=3]
+
+[node name="Root" type="Node"]
+metadata/decimal = PackedByteArray(1, 2, 3)
+metadata/base64 = PackedByteArray("AQID")
