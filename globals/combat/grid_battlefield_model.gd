@@ -71,6 +71,27 @@ var _sides: Dictionary = {}  ## StringName (combat_id) -> StringName
 var _facings: Dictionary = {}  ## StringName (combat_id) -> StringName
 var _occupancy: Dictionary = {}  ## Vector2i -> BattleActor
 var _groups: Dictionary = {ALLY: [], ENEMY: []}
+## Actor references are local setup inputs: combat IDs are assigned by Controller.start().
+var _initial_cells: Dictionary = {}
+
+
+func configure_initial_cells(cells: Dictionary) -> Dictionary:
+	if _grid == null:
+		return _blocked(&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"})
+	var occupied: Dictionary = {}
+	for actor: Variant in cells:
+		if not actor is BattleActor or not cells[actor] is Vector2i:
+			return _blocked(&"position", "Initial placement requires actors and cells.", {"type": &"known_position"})
+		var cell: Vector2i = cells[actor]
+		if not _grid.is_in_bounds(cell):
+			return _blocked(&"position", "That cell is outside the battlefield.", {"type": &"cell_in_bounds"})
+		if occupied.has(cell):
+			return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
+		if _grid.is_point_solid(cell):
+			return _blocked(&"position", "That cell is impassable.", {"type": &"cell_passable"})
+		occupied[cell] = true
+	_initial_cells = cells.duplicate()
+	return _allowed({})
 
 
 func configure(rules: CombatRules) -> void:
@@ -80,6 +101,7 @@ func configure(rules: CombatRules) -> void:
 ## Builds from the field layers. A live FieldMap supplies the exact IsoGrid already owned by
 ## ClickMoveController; bare-layer unit fixtures retain a local fallback grid.
 func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
+	_initial_cells.clear()
 	_tiles_snapshot_cache = []
 	_elevation.clear()
 	_cover.clear()
@@ -162,9 +184,10 @@ func setup(allies: Array[BattleActor], enemies: Array[BattleActor]) -> void:
 		return
 	var rect := _grid.get_used_rect()
 	for i in allies.size():
-		_place(allies[i], Vector2i(rect.position.x, rect.position.y + i), &"e")
+		_place(allies[i], _initial_cells.get(allies[i], Vector2i(rect.position.x, rect.position.y + i)), &"e")
 	for i in enemies.size():
-		_place(enemies[i], Vector2i(rect.end.x - 1, rect.position.y + i), &"w")
+		_place(enemies[i], _initial_cells.get(enemies[i], Vector2i(rect.end.x - 1, rect.position.y + i)), &"w")
+	_initial_cells.clear()
 
 
 func position_of(actor: BattleActor) -> StringName:

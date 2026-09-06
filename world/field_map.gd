@@ -83,13 +83,31 @@ func _is_field_interactable(node: Node) -> bool:
 	)
 
 
-## Hostile replaces Enemy in migration step 4; this group seam stays empty until then.
-func hostiles() -> Array[Node2D]:
-	var result: Array[Node2D] = []
+func hostiles() -> Array[Hostile]:
+	var result: Array[Hostile] = []
 	for node: Node in _field_root().find_children("*", "Node2D", true, false):
-		if node.is_in_group(&"hostile"):
+		if node is Hostile:
 			result.append(node)
 	return result
+
+
+## Called once at a combat clock boundary. Snapshot sources before emitting alerts:
+## synchronous admission callbacks must not turn this pass into a recursive cascade.
+func propagate_alerts() -> void:
+	if no_combat_zone():
+		return
+	var actors := hostiles()
+	var sources: Array[Hostile] = []
+	for hostile: Hostile in actors:
+		if hostile.state == Hostile.State.IN_COMBAT:
+			sources.append(hostile)
+	for hostile: Hostile in actors:
+		if hostile.state != Hostile.State.IDLE:
+			continue
+		for source: Hostile in sources:
+			if source.global_position.distance_to(hostile.global_position) <= source.chain_radius:
+				hostile.request_alert()
+				break
 
 
 ## Location weather moves onto field data in migration step 8.

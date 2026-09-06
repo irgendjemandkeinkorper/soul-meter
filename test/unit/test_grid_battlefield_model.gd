@@ -59,6 +59,31 @@ func _handle(x: int, y: int, elevation: int = 0) -> StringName:
 	return StringName("c:%d,%d,%d" % [x, y, elevation])
 
 
+func test_initial_field_cells_survive_combat_id_assignment() -> void:
+	var model := _model(8, 8)
+	var ally := _actor("before")
+	var enemy := _actor("hostile")
+	assert_bool(model.configure_initial_cells({ally: Vector2i(3, 4), enemy: Vector2i(5, 4)}).get("allowed", false)).is_true()
+	ally.combat_id = &"after"
+	model.setup([ally], [enemy])
+	assert_str(String(model.position_of(ally))).is_equal(String(_handle(3, 4)))
+	assert_str(String(model.position_of(enemy))).is_equal(String(_handle(5, 4)))
+
+
+func test_invalid_initial_cells_do_not_replace_valid_placement() -> void:
+	var model := _model(8, 8)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	assert_bool(model.configure_initial_cells({ally: Vector2i(3, 4), enemy: Vector2i(5, 4)}).get("allowed", false)).is_true()
+	assert_bool(model.configure_initial_cells({ally: Vector2i(3, 4), enemy: Vector2i(3, 4)}).get("allowed", false)).is_false()
+	assert_bool(model.configure_initial_cells({ally: Vector2i(-1, 4)}).get("allowed", false)).is_false()
+	model.set_cliff(Vector2i(6, 6))
+	assert_bool(model.configure_initial_cells({ally: Vector2i(6, 6)}).get("allowed", false)).is_false()
+	model.setup([ally], [enemy])
+	assert_str(String(model.position_of(ally))).is_equal(String(_handle(3, 4)))
+	assert_str(String(model.position_of(enemy))).is_equal(String(_handle(5, 4)))
+
+
 func test_build_grid_reuses_the_field_grid_and_reads_authored_terrain() -> void:
 	var scene: Node = load("res://world/test_room.tscn").instantiate()
 	add_child(scene)
