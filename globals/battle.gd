@@ -75,18 +75,7 @@ func start(encounter: Variant) -> void:
 	last_speech_option = &""
 	last_speech_succeeded = false
 	for i in GameState.party.size():
-		var member: PartyMember = GameState.party[i]
-		var actor := BattleActor.new()
-		actor.display_name = member.display_name
-		actor.hp = member.hp
-		actor.max_hp = member.max_hp
-		actor.attack = member.attack
-		actor.defense = member.defense
-		actor.attributes = member.attributes.duplicate(true)
-		actor.party_index = i
-		actor.source_member = member
-		actor.breath = member.breath
-		allies.append(actor)
+		allies.append(BattleActor.from_party_member(GameState.party[i], i))
 	if allies.is_empty():
 		allies.append(BattleActor.new())
 	if encounter is StringName or encounter is String:

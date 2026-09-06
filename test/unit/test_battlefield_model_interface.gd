@@ -132,3 +132,30 @@ func test_the_flag_selects_the_grid_model_and_false_selects_the_zone_model() -> 
 
 	# The abort path §8.1 depends on: setting the flag back must restore zones.
 	assert_bool(zone_model.get_script() != grid_model.get_script()).is_true()
+
+
+func test_the_base_model_refuses_admission_in_the_refusal_shape() -> void:
+	var model := BattlefieldModel.new()
+	var refusal := model.admit_combatant(_actor("mob"), &"front", &"enemy")
+	assert_bool(refusal.get("allowed", true)).is_false()
+	assert_str(String(refusal.get("blocked_by", ""))).is_equal("composition")
+	assert_str(str(refusal.get("message", ""))).is_not_empty()
+
+
+func test_the_zone_model_admits_a_newcomer_to_the_front() -> void:
+	# FR-105 fallback: zones have no cells, so an unrecognised position lands the newcomer in
+	# FRONT rather than refusing — an alerted mob must never be stranded outside the fight.
+	var model := BattlefieldModel.create_default(_rules())
+	var ally := _actor("ally")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = []
+	model.setup(allies, enemies)
+
+	var mob := _actor("mob")
+	var seated := model.admit_combatant(mob, &"c:4,2,0", &"enemy")
+	assert_bool(seated.get("allowed", false)).is_true()
+	assert_bool(model.has_combatant(mob)).is_true()
+	assert_str(String(model.side_of(mob))).is_equal("enemy")
+	assert_str(String(model.position_of(mob))).is_equal("front")
+	assert_array(model.combatants_on_side(&"enemy")).contains([mob])
+	assert_bool(model.admit_combatant(mob, &"front", &"enemy").get("allowed", true)).is_false()

@@ -427,3 +427,93 @@ func test_wait_refunds_cannot_produce_starvation() -> void:
 		else:
 			assert_bool(yielded.get("allowed", false)).is_true()
 	assert_int(activations).is_equal(50)
+
+
+# ---- admission (same-map combat D5): mid-session seating, both implementations ----
+
+
+func test_admit_seats_a_newcomer_without_disturbing_anyone_already_in_the_battle() -> void:
+	for scheduler in _schedulers():
+		var label: String = scheduler.get_script().resource_path
+		var a := _actor("a", 4)
+		var b := _actor("b", 4)
+		var group: Array[BattleActor] = [a, b]
+		scheduler.setup(group)
+		# Bank some progress so "nobody else moves" is an assertion with something to catch.
+		scheduler.advance()
+		var charge_a := scheduler.charge_of(a)
+		var charge_b := scheduler.charge_of(b)
+		var ticks_before := scheduler.tick_count()
+
+		var newcomer := _actor("c", 4)
+		var seated: Dictionary = scheduler.admit(newcomer, 40)
+		assert_bool(seated.get("allowed", false)).override_failure_message(
+			"%s: admit() must seat a newcomer" % label
+		).is_true()
+
+		assert_int(scheduler.charge_of(a)).override_failure_message(
+			"%s: admitting must not move an existing combatant's banked resource" % label
+		).is_equal(charge_a)
+		assert_int(scheduler.charge_of(b)).is_equal(charge_b)
+		assert_int(scheduler.tick_count()).override_failure_message(
+			"%s: admitting must not move the clock" % label
+		).is_equal(ticks_before)
+		assert_bool(scheduler.can_act(newcomer).get("allowed", true)).override_failure_message(
+			"%s: a just-admitted combatant must not be able to act immediately" % label
+		).is_false()
+
+
+func test_admit_refuses_a_combatant_already_in_the_battle() -> void:
+	for scheduler in _schedulers():
+		var label: String = scheduler.get_script().resource_path
+		var a := _actor("a", 4)
+		var group: Array[BattleActor] = [a]
+		scheduler.setup(group)
+
+		var again: Dictionary = scheduler.admit(a, 40)
+		assert_bool(again.get("allowed", true)).override_failure_message(
+			"%s: admitting a seated combatant must refuse, not duplicate the seat" % label
+		).is_false()
+		assert_str(String(again.get("blocked_by", ""))).is_equal("already_seated")
+		assert_bool(scheduler.admit(null, 40).get("allowed", true)).is_false()
+
+
+func test_a_removed_participant_is_no_longer_a_participant() -> void:
+	for scheduler in _schedulers():
+		var label: String = scheduler.get_script().resource_path
+		var a := _actor("a", 4)
+		var b := _actor("b", 4)
+		var group: Array[BattleActor] = [a, b]
+		scheduler.setup(group)
+		scheduler.advance()
+
+		scheduler.remove_participant(b)
+		var refusal: Dictionary = scheduler.can_act(b)
+		assert_bool(refusal.get("allowed", true)).is_false()
+		assert_str(String(refusal.get("blocked_by", ""))).override_failure_message(
+			"%s: a removed combatant is not merely 'not ready', it is not in the battle" % label
+		).is_equal("not_participating")
+
+
+func test_admission_delay_keeps_a_newcomer_behind_a_combatant_that_just_acted() -> void:
+	# The charge-time economy is the one that can express the delay numerically; the AP economy
+	# says the same thing with its round cadence, which test_admit_... above covers via can_act().
+	var scheduler := TurnScheduler.create_default(_rules())
+	var ally := _actor("ally", 4)
+	var group: Array[BattleActor] = [ally]
+	scheduler.setup(group)
+	var opening: Dictionary = scheduler.advance()
+	assert_object(opening.get("actor")).is_equal(ally)
+	scheduler.commit(ally, _action("strike", 30))
+	scheduler.release(ally)
+
+	var newcomer := _actor("mob", 4)
+	scheduler.admit(newcomer, 40)
+	assert_int(scheduler.charge_of(newcomer)).override_failure_message(
+		"admission_delay seats the newcomer that far BEHIND a fresh combatant"
+	).is_equal(-40)
+
+	var next: Dictionary = scheduler.advance()
+	assert_object(next.get("actor")).override_failure_message(
+		"the party's next turn must come before a mob admitted mid-session"
+	).is_equal(ally)

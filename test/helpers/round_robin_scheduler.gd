@@ -177,6 +177,20 @@ func resume() -> void:
 		_phase = Phase.IDLE
 
 
+## Seats a newcomer at the back of the lap. The cursor is left alone, so the newcomer is
+## reached after everyone already ahead of it — this implementation's equivalent of "not before
+## the party's next turn". The delay is otherwise meaningless here: a round robin has no banked
+## resource to hold back, which is exactly why the seam takes CT and lets each economy translate.
+func admit(actor: BattleActor, _delay_ct: int = 0) -> Dictionary:
+	if actor == null:
+		return _blocked(&"not_participating", "There is no combatant to admit.", {})
+	if _seat_of.has(actor.combat_id):
+		return _blocked(&"already_seated", "Already in this battle.", {})
+	_seat_of[actor.combat_id] = _seats.size()
+	_seats.append(actor)
+	return _allowed({"seat": int(_seat_of[actor.combat_id])})
+
+
 func remove_participant(actor: BattleActor) -> void:
 	if _committed_actor == actor:
 		_committed_actor = null

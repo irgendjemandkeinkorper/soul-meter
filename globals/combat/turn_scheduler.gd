@@ -183,6 +183,19 @@ func resume() -> void:
 	push_error("TurnScheduler.resume() must be implemented.")
 
 
+## Seats ONE participant mid-session, `delay_ct` behind ready on the 100-CT scale (see
+## `CombatRules.admission_delay`). This is the counterpart to `remove_participant()` and the
+## seam same-map combat D5 needs: a mob that joins a running fight must not reorder the fight
+## already in progress, so nobody else's banked resource, seat, or clock may move. A scheduler
+## with no charge to seed (the AP round economy) maps a positive delay onto its own cadence —
+## "not this round" is AP's way of saying "not before the party's next turn".
+##
+## Returns the FR-606 refusal shape when the actor is null or already seated. Callers rely on
+## the `already_seated` refusal to make admission idempotent, so it is a refusal, not an error.
+func admit(_actor: BattleActor, _delay_ct: int = 0) -> Dictionary:
+	return _blocked(&"unimplemented", "TurnScheduler.admit() must be implemented.", {})
+
+
 ## Drops a participant (death, flight, a speech-driven split). Everyone else keeps their banked
 ## CT and their seat, so removal never silently reorders the queue.
 func remove_participant(_actor: BattleActor) -> void:

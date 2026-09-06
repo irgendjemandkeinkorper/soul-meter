@@ -82,3 +82,31 @@ func test_balance_effects_are_deep_copied_at_the_assignment_boundary() -> void:
 
 	assert_str(String(actor.balance_band_id)).is_equal("order")
 	assert_int(actor.balance_effects["modifiers"]["attack_delta"]).is_equal(2)
+
+
+func test_from_party_member_carries_current_hp_and_an_independent_attribute_copy() -> void:
+	# Same-map combat D5 names this conversion so every session start uses one code path.
+	var member := PartyMember.new()
+	member.display_name = "Vex the Unbowed"
+	member.max_hp = 44
+	member.hp = 31
+	member.attack = 9
+	member.defense = 3
+	member.breath = 12
+	member.attributes = {&"edge": 6}
+
+	var actor := BattleActor.from_party_member(member, 2)
+	assert_str(actor.display_name).is_equal("Vex the Unbowed")
+	assert_int(actor.hp).override_failure_message(
+		"the member's CURRENT hp: filling from max_hp would heal the party at every session start"
+	).is_equal(31)
+	assert_int(actor.max_hp).is_equal(44)
+	assert_int(actor.attack).is_equal(9)
+	assert_int(actor.defense).is_equal(3)
+	assert_int(actor.breath).is_equal(12)
+	assert_int(actor.party_index).is_equal(2)
+	assert_object(actor.source_member).is_equal(member)
+
+	# Combat mutates the actor's attributes; the roster must not feel it.
+	actor.attributes[&"edge"] = 99
+	assert_int(member.attributes[&"edge"]).is_equal(6)

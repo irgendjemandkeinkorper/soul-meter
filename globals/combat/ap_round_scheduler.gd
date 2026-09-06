@@ -37,6 +37,10 @@ var _rules: CombatRules
 var _seats: Array[BattleActor] = []
 var _seat_of: Dictionary = {}          # combat_id -> seat index
 var _acted_this_round: Dictionary = {} # combat_id -> bool, enemies only
+## combat_id -> true for participants dropped by remove_participant(). Seats are never
+## compacted here (`_seat_of` values ARE indices into `_seats`, unlike the charge-time
+## scheduler's tie-break numbers), so departure is recorded rather than excised.
+var _released: Dictionary = {}
 var _round: int = 0
 var _side: StringName = ALLY_SIDE
 var _active_seat: int = -1
@@ -57,6 +61,7 @@ func setup(participants: Array[BattleActor]) -> void:
 	_seats.clear()
 	_seat_of.clear()
 	_acted_this_round.clear()
+	_released.clear()
 	_round = 0
 	_side = ALLY_SIDE
 	_active_seat = -1
@@ -86,7 +91,7 @@ func quote(_actor: BattleActor, action: CombatAction) -> int:
 
 
 func can_act(actor: BattleActor) -> Dictionary:
-	if actor == null or not _seat_of.has(actor.combat_id):
+	if actor == null or not _seat_of.has(actor.combat_id) or _released.has(actor.combat_id):
 		return _blocked(&"not_participating", "Not a combatant in this battle.", {})
 	if _paused:
 		return _blocked(&"interrupted", "The battle is held — %s." % String(_interrupt_reason), {})
@@ -136,6 +141,8 @@ func active_actor() -> BattleActor:
 	if _active_seat < 0 or _active_seat >= _seats.size():
 		return null
 	var actor := _seats[_active_seat]
+	if _released.has(actor.combat_id):
+		return null
 	return actor if actor.is_alive() else null
 
 
@@ -369,6 +376,30 @@ func resume() -> void:
 ## Drops a participant without disturbing anyone else's seat or AP. Seats are kept and the entry
 ## is left in place rather than compacted, because compacting would silently renumber every seat
 ## after it and reorder the queue — the exact failure the interface promises never happens.
+## Seats a newcomer mid-round. AP has no charge to seed, so the CT-scale `delay_ct` maps onto
+## the round cadence: any positive delay means "not this round", which is this economy's only
+## way to say what `admission_delay` says on the 100-CT scale — a mob that joins a running
+## fight does not act before the party's next turn. Re-admitting a released combatant reuses
+## its original seat, because `_seat_of` values are live indices into `_seats`.
+func admit(actor: BattleActor, delay_ct: int = 0) -> Dictionary:
+	if actor == null:
+		return _blocked(&"not_participating", "There is no combatant to admit.", {})
+	var key: StringName = actor.combat_id
+	if _seat_of.has(key) and not _released.has(key):
+		return _blocked(
+			&"already_seated", "%s is already in this battle." % actor.display_name, {}
+		)
+	_released.erase(key)
+	if not _seat_of.has(key):
+		_seat_of[key] = _seats.size()
+		_seats.append(actor)
+	var deferred := delay_ct > 0
+	if deferred:
+		_acted_this_round[key] = true
+		actor.action_points = 0
+	return _allowed({"seat": int(_seat_of[key]), "deferred_to_next_round": deferred})
+
+
 func remove_participant(actor: BattleActor) -> void:
 	if actor == null:
 		return
@@ -377,6 +408,7 @@ func remove_participant(actor: BattleActor) -> void:
 		_committed_cost = 0
 		_phase = Phase.IDLE
 	_acted_this_round.erase(actor.combat_id)
+	_released[actor.combat_id] = true
 
 
 # ---- persistence ----
@@ -391,6 +423,10 @@ func to_dict() -> Dictionary:
 	var seats: Array[String] = []
 	for actor in _seats:
 		seats.append(String(actor.combat_id))
+	var released: Array[String] = []
+	for key in _released:
+		released.append(String(key))
+	released.sort()
 	return {
 		"scheduler": "ap_round",
 		"round": _round,
@@ -405,6 +441,7 @@ func to_dict() -> Dictionary:
 		"committed_actor": String(_committed_actor.combat_id) if _committed_actor else "",
 		"acted_this_round": acted,
 		"seats": seats,
+		"released": released,
 	}
 
 
@@ -421,6 +458,9 @@ func from_dict(data: Dictionary) -> void:
 	_acted_this_round.clear()
 	for key in data.get("acted_this_round", []):
 		_acted_this_round[StringName(key)] = true
+	_released.clear()
+	for key in data.get("released", []):
+		_released[StringName(key)] = true
 	var committed := String(data.get("committed_actor", ""))
 	_committed_actor = null
 	if not committed.is_empty():
@@ -439,7 +479,7 @@ func _begin_round() -> Dictionary:
 	_acted_this_round.clear()
 	var refreshed: Array[Dictionary] = []
 	for actor in _seats:
-		if not actor.is_alive():
+		if not actor.is_alive() or _released.has(actor.combat_id):
 			continue
 		actor.max_action_points = (
 			_rules.action_points_for(actor) if _rules != null else actor.max_action_points
@@ -489,6 +529,8 @@ func _next_in_side(after_seat: int, side: StringName) -> BattleActor:
 		var actor := _seats[seat]
 		if not actor.is_alive() or actor.side != side:
 			continue
+		if _released.has(actor.combat_id):
+			continue
 		# Allies act until their AP runs out; enemies act once per round. Both conditions are the
 		# old controller's, kept verbatim.
 		if side == ENEMY_SIDE and bool(_acted_this_round.get(actor.combat_id, false)):
@@ -507,6 +549,8 @@ func _next_in_side(after_seat: int, side: StringName) -> BattleActor:
 ## which silently cost an enemy its turn whenever its action was cancelled rather than resolved.
 func _still_eligible(actor: BattleActor) -> bool:
 	if actor == null or not actor.is_alive():
+		return false
+	if _released.has(actor.combat_id):
 		return false
 	if actor.side == ENEMY_SIDE:
 		return not bool(_acted_this_round.get(actor.combat_id, false))
@@ -539,6 +583,6 @@ func _order_entry(actor: BattleActor, distance: int) -> Dictionary:
 
 func _has_living() -> bool:
 	for actor in _seats:
-		if actor.is_alive():
+		if actor.is_alive() and not _released.has(actor.combat_id):
 			return true
 	return false

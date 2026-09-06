@@ -92,6 +92,24 @@ var balance_effects: Dictionary = {}
 var unused_ap_defense_bonus: int = 0
 
 
+## Named conversion from a roster member to a combatant (same-map combat D5). This is the
+## ONLY place a PartyMember becomes a BattleActor; `hp` is the member's CURRENT hp, never
+## `max_hp`, or every session would silently heal the party. `attributes` is deep-duplicated
+## because combat mutates the actor's copy and CombatRules reads it for AP and charge speed.
+static func from_party_member(member: PartyMember, party_index: int) -> BattleActor:
+	var actor := BattleActor.new()
+	actor.display_name = member.display_name
+	actor.hp = member.hp
+	actor.max_hp = member.max_hp
+	actor.attack = member.attack
+	actor.defense = member.defense
+	actor.attributes = member.attributes.duplicate(true)
+	actor.party_index = party_index
+	actor.source_member = member
+	actor.breath = member.breath
+	return actor
+
+
 func is_alive() -> bool:
 	return hp > 0
 

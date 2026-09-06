@@ -53,6 +53,16 @@ func combatants_on_side(_side: StringName) -> Array[BattleActor]:
 	return []
 
 
+## Places ONE combatant mid-battle at `position` on `side`, the inverse of
+## `remove_combatant()`. Same-map combat D5 admits mobs into a running fight, so composition can
+## no longer be fixed at `setup()` time. `position` is an opaque handle in this model's own
+## vocabulary (the grid model reads `c:x,y,elev`; the zone model reads a zone name).
+func admit_combatant(
+	_actor: BattleActor, _position: StringName, _side: StringName
+) -> Dictionary:
+	return _blocked(&"composition", "Positioning model cannot admit combatants.", {})
+
+
 func remove_combatant(_actor: BattleActor) -> Dictionary:
 	return _blocked(&"composition", "Positioning model cannot remove combatants.", {})
 

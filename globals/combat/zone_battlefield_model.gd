@@ -52,6 +52,29 @@ func combatants_on_side(side: StringName) -> Array[BattleActor]:
 	return result
 
 
+## Seats one combatant mid-battle. The zone model has no cells, so `position` is a zone name
+## and an unrecognised one lands the newcomer in FRONT rather than refusing — zones are a
+## coarse fallback (FR-105) and refusing here would strand an alerted mob outside the fight.
+func admit_combatant(actor: BattleActor, position: StringName, side: StringName) -> Dictionary:
+	if actor == null:
+		return _blocked(
+			&"composition", "There is no combatant to admit.", {"type": &"present_combatant"}
+		)
+	if has_combatant(actor):
+		return _blocked(
+			&"composition", "Combatant is already on the battlefield.", {"type": &"absent_combatant"}
+		)
+	if not _groups.has(side):
+		return _blocked(
+			&"composition", "Unknown battlefield side: %s." % side, {"type": &"known_side"}
+		)
+	var zone := position if VALID_POSITIONS.has(position) else FRONT
+	var group: Array = _groups.get(side, [])
+	group.append(actor)
+	_register(actor, side, zone)
+	return _allowed({"to_side": side, "to_position": position_of(actor)})
+
+
 func remove_combatant(actor: BattleActor) -> Dictionary:
 	if not has_combatant(actor):
 		return _blocked(

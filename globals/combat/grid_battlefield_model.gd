@@ -190,6 +190,48 @@ func combatants_on_side(side: StringName) -> Array[BattleActor]:
 	return result
 
 
+## Seats one combatant on an authored cell mid-battle (same-map combat D5). Unlike `_place()`,
+## which clamps silently because `setup()` only ever hands it column positions it computed
+## itself, this refuses out-of-bounds, impassable and occupied cells: an admitted hostile stands
+## where the scene authored it or the admission fails loudly.
+func admit_combatant(actor: BattleActor, position: StringName, side: StringName) -> Dictionary:
+	if actor == null:
+		return _blocked(
+			&"composition", "There is no combatant to admit.", {"type": &"present_combatant"}
+		)
+	if has_combatant(actor):
+		return _blocked(
+			&"composition", "Combatant is already on the battlefield.", {"type": &"absent_combatant"}
+		)
+	if not _groups.has(side):
+		return _blocked(
+			&"composition", "Unknown battlefield side: %s." % side, {"type": &"known_side"}
+		)
+	if _grid == null:
+		return _blocked(
+			&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"}
+		)
+	var parsed := _parse_handle(position)
+	if not bool(parsed.get("ok", false)):
+		return _blocked(
+			&"position", "That is not a battlefield position.", {"type": &"known_position"}
+		)
+	var cell: Vector2i = parsed["cell"]
+	if not _grid.is_in_bounds(cell):
+		return _blocked(
+			&"position", "That cell is outside the battlefield.", {"type": &"cell_in_bounds"}
+		)
+	if _occupancy.has(cell):
+		return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
+	if _grid.is_point_solid(cell):
+		return _blocked(&"position", "That cell is impassable.", {"type": &"cell_passable"})
+	_sides[actor.combat_id] = side
+	var group: Array = _groups.get(side, [])
+	group.append(actor)
+	_place(actor, cell, &"w" if side == ENEMY else &"e")
+	return _allowed({"to_side": side, "to_position": position_of(actor)})
+
+
 func remove_combatant(actor: BattleActor) -> Dictionary:
 	if not has_combatant(actor):
 		return _blocked(

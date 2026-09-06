@@ -589,3 +589,73 @@ func _tile_at(tiles: Array[Dictionary], cell: Vector2i) -> Dictionary:
 		if int(tile.get("x", -1)) == cell.x and int(tile.get("y", -1)) == cell.y:
 			return tile
 	return {}
+
+
+# ---- admission (same-map combat D5) ----
+
+
+func test_admit_combatant_seats_a_newcomer_on_its_authored_cell() -> void:
+	var model := _model(6, 4)
+	var ally := _actor("ally")
+	var mob := _actor("mob")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = []
+	model.setup(allies, enemies)
+
+	var seated: Dictionary = model.admit_combatant(mob, _handle(4, 2), &"enemy")
+	assert_bool(seated.get("allowed", false)).is_true()
+	assert_bool(model.has_combatant(mob)).is_true()
+	assert_str(String(model.side_of(mob))).is_equal("enemy")
+	assert_str(String(model.position_of(mob))).is_equal(String(_handle(4, 2)))
+	assert_object(model.occupant_of(_handle(4, 2))).is_equal(mob)
+	assert_array(model.combatants_on_side(&"enemy")).contains([mob])
+	# The combatant already on the field keeps the cell setup() gave it.
+	assert_str(String(model.position_of(ally))).is_equal(String(_handle(0, 0)))
+
+
+func test_admit_combatant_refuses_an_unusable_cell_instead_of_clamping() -> void:
+	# _place() clamps silently because setup() only ever hands it positions it computed itself.
+	# An admitted hostile stands where the scene authored it or the admission fails loudly.
+	var model := _model(6, 4)
+	var ally := _actor("ally")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = []
+	model.setup(allies, enemies)
+
+	var outside: Dictionary = model.admit_combatant(_actor("far"), _handle(99, 99), &"enemy")
+	assert_bool(outside.get("allowed", true)).is_false()
+	assert_str(String(outside["nearest_unblock"].get("type", ""))).is_equal("cell_in_bounds")
+
+	var onto_ally: Dictionary = model.admit_combatant(_actor("crowd"), _handle(0, 0), &"enemy")
+	assert_bool(onto_ally.get("allowed", true)).is_false()
+	assert_str(String(onto_ally["nearest_unblock"].get("type", ""))).is_equal("cell_free")
+
+	model.set_cliff(Vector2i(3, 3))
+	var onto_cliff: Dictionary = model.admit_combatant(_actor("climber"), _handle(3, 3), &"enemy")
+	assert_bool(onto_cliff.get("allowed", true)).is_false()
+	assert_str(String(onto_cliff["nearest_unblock"].get("type", ""))).is_equal("cell_passable")
+
+	var mob := _actor("mob")
+	model.admit_combatant(mob, _handle(4, 2), &"enemy")
+	var twice: Dictionary = model.admit_combatant(mob, _handle(4, 1), &"enemy")
+	assert_bool(twice.get("allowed", true)).is_false()
+	assert_str(String(twice.get("blocked_by", ""))).is_equal("composition")
+
+
+func test_a_released_combatant_frees_its_cell_for_the_next_admission() -> void:
+	var model := _model(6, 4)
+	var ally := _actor("ally")
+	var mob := _actor("mob")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = []
+	model.setup(allies, enemies)
+	model.admit_combatant(mob, _handle(4, 2), &"enemy")
+
+	assert_bool(model.remove_combatant(mob).get("allowed", false)).is_true()
+	assert_bool(model.has_combatant(mob)).is_false()
+	assert_object(model.occupant_of(_handle(4, 2))).is_null()
+	assert_array(model.combatants_on_side(&"enemy")).is_empty()
+	var successor := _actor("successor")
+	assert_bool(
+		model.admit_combatant(successor, _handle(4, 2), &"enemy").get("allowed", false)
+	).is_true()
