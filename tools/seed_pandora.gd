@@ -76,8 +76,25 @@ func _ready() -> void:
 	await get_tree().process_frame
 	if not Pandora.is_loaded():
 		Pandora.load_data()
+	var drift_check: bool = OS.get_environment("SOUL_METER_DRIFT_CHECK") == "1"
+	var before_data: String = ""
+	var before_ids: String = ""
+	if drift_check:
+		before_data = JSON.stringify(Pandora._entity_backend.save_data())
+		before_ids = JSON.stringify(Pandora._id_generator.save_data())
 	if not _seed_from_canon():
 		get_tree().quit(1)
+		return
+	if drift_check:
+		if (
+			JSON.stringify(Pandora._entity_backend.save_data()) != before_data
+			or JSON.stringify(Pandora._id_generator.save_data()) != before_ids
+		):
+			push_error("CANON-SEED: drift detected. Re-seed Pandora from canon before committing.")
+			get_tree().quit(1)
+			return
+		print("CANON-SEED: no drift.")
+		get_tree().quit()
 		return
 	Pandora.save_data()
 	print("SEED: done — roots=", Pandora.get_all_roots().size())
