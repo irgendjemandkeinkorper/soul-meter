@@ -1379,6 +1379,82 @@ func _cast_outcome_for_integrity(integrity: float) -> Dictionary:
 # ---- admission (same-map combat step 4): a mob joins a fight already running ----
 
 
+## F0 ruling 6 (2026-09-06), invariant A1, on the case the flat constant cannot cover: the
+## newcomer is the FASTEST actor on the field and is admitted DURING an enemy turn. At edge 48
+## it charges five times faster than the ally, so `admission_delay` alone buys roughly five
+## ticks against the ally's seventeen — it would act first, which is the exact unfairness the
+## delay exists to prevent. The controller must therefore escalate the delay until an ally
+## genuinely acts first, rather than seating the newcomer at the authored number and assuming.
+##
+## Admission is issued from inside the `enemy_turn_started` handler so it really is mid-enemy
+## turn, not merely "after one".
+func test_a_fast_hostile_admitted_during_an_enemy_turn_still_acts_after_the_party() -> void:
+	var local_rules := (
+		load("res://data/combat/combat_rules.tres") as CombatRules
+	).duplicate(true) as CombatRules
+	local_rules.use_charge_time = true
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_sized_grid_ground(6, 4))
+	var controller_under_test := CombatController.new()
+	controller_under_test.configure(CombatActionCatalog.all(), grid, local_rules)
+
+	var ally := _actor("Slow Ally", 400, 1, 0)
+	ally.attributes = {&"edge": 0}
+	var standing := _actor("Standing Foe", 400, 1, 0)
+	standing.attributes = {&"edge": 0}
+	var newcomer := _actor("Quick Arrival", 400, 1, 0)
+	newcomer.attributes = {&"edge": 48}
+
+	var acted: Array[String] = []
+	# Mutated in place, never reassigned: a lambda captures the local by value, so an
+	# assignment inside it would be invisible out here.
+	var admission: Dictionary = {}
+	controller_under_test.event_emitted.connect(
+		func(event: CombatEvent) -> void:
+			if event.type == &"action_resolved":
+				acted.append(String(event.actor_id))
+			if event.type == &"enemy_turn_started" and admission.is_empty():
+				admission.merge(
+					controller_under_test.admit(newcomer, Vector2i(4, 2), &"enemy"), true
+				)
+				# Read the seated charge now: by the time the assertions run the newcomer has
+				# taken its turn and spent it.
+				admission["seated_charge"] = controller_under_test.scheduler.charge_of(newcomer)
+	)
+	controller_under_test.start(
+		[ally] as Array[BattleActor], [standing] as Array[BattleActor], &"a1-test"
+	)
+
+	var guard_count := 0
+	while guard_count < 200 and not acted.has(String(newcomer.combat_id)):
+		guard_count += 1
+		if controller_under_test.state == CombatController.State.FINISHED:
+			break
+		if controller_under_test.state == CombatController.State.ALLY_TURN:
+			if not bool(controller_under_test.submit_action(&"guard").get("allowed", false)):
+				controller_under_test.end_turn()
+		else:
+			controller_under_test.end_turn()
+
+	assert_bool(admission.get("allowed", false)).override_failure_message(
+		"the newcomer must be admitted during an enemy turn: %s" % admission.get("message", "")
+	).is_true()
+	assert_int(int(admission.get("seated_charge", 0))).override_failure_message(
+		"a flat admission_delay cannot hold A1 against a max-speed newcomer, so the "
+		+ "controller must have seated it deeper than the authored constant"
+	).is_less(-local_rules.admission_delay)
+
+	var newcomer_index := acted.find(String(newcomer.combat_id))
+	assert_int(newcomer_index).override_failure_message(
+		"the admitted hostile never acted (resolved actions: %s)" % [acted]
+	).is_greater_equal(0)
+	var ally_index := acted.find(String(ally.combat_id))
+	assert_int(ally_index).override_failure_message(
+		"A1: a party turn must resolve before the newcomer's first turn (order: %s)" % [acted]
+	).is_between(0, newcomer_index - 1)
+
+
 ## The migration table's proof for step 4, driven through the real submit_action path rather
 ## than through scheduler internals: a hostile admitted mid-session does not act before the
 ## party's next turn. Run against BOTH economies, because the shipped default is AP and a

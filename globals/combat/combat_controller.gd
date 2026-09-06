@@ -41,6 +41,11 @@ const ACTION_MOVE: StringName = &"move"
 ## PROVISIONAL Wave P positional-AI weight: cover beats adjacency (+500), while a rear
 ## opportunity (+1000) remains the stronger tactical instinct.
 const _ENEMY_COVER_POSITION_SCORE := 750
+## Doublings of `admission_delay` allowed while satisfying invariant A1 (F0 ruling 6). A fast
+## newcomer needs a bigger delay than a slow one to land behind the party, and the flat
+## constant cannot know which it got, so the delay is raised until the invariant actually
+## holds. Sixteen doublings is far past any speed the rules can produce.
+const _ADMISSION_ESCALATION_LIMIT := 16
 
 var state: State = State.IDLE
 var allies: Array[BattleActor] = []
@@ -303,7 +308,7 @@ func admit(actor: BattleActor, cell: Vector2i, side: StringName = &"enemy") -> D
 	if not bool(placed.get("allowed", false)):
 		last_refusal = placed
 		return placed
-	var seated := scheduler.admit(actor, rules.admission_delay if rules != null else 0)
+	var seated := _seat_with_admission_guarantee(actor, side)
 	if not bool(seated.get("allowed", false)):
 		battlefield.remove_combatant(actor)
 		last_refusal = seated
@@ -318,6 +323,55 @@ func admit(actor: BattleActor, cell: Vector2i, side: StringName = &"enemy") -> D
 		"position": String(battlefield.position_of(actor)),
 		"charge": scheduler.charge_of(actor),
 	})
+
+
+## F0 ruling 6, invariant A1: for any actor admitted mid-session at tick T, at least one
+## party-side actor's turn begins strictly between T and that actor's first turn.
+##
+## `rules.admission_delay` is the default mechanism, not the guarantee — it is a flat CT
+## number and a newcomer's speed decides how many ticks that buys. A fast mob admitted during
+## an enemy turn can clear a flat delay before any ally acts, which is exactly the case the
+## constant was supposed to prevent. So the delay is raised until the projected order actually
+## satisfies A1, and the invariant is asserted rather than assumed.
+func _seat_with_admission_guarantee(actor: BattleActor, side: StringName) -> Dictionary:
+	var delay := maxi(rules.admission_delay if rules != null else 0, 0)
+	var seated := scheduler.admit(actor, delay)
+	if not bool(seated.get("allowed", false)):
+		return seated
+	# An ally admitted mid-session is the party; there is nothing to protect it from. With no
+	# living ally at all A1 is unsatisfiable, and the battle is over on the next drive anyway.
+	if side == &"ally" or not _has_living(allies):
+		return seated
+	for _attempt in _ADMISSION_ESCALATION_LIMIT:
+		if _party_acts_before(actor):
+			return seated
+		scheduler.remove_participant(actor)
+		delay = maxi(delay * 2, 1)
+		seated = scheduler.admit(actor, delay)
+		if not bool(seated.get("allowed", false)):
+			return seated
+	var held := _party_acts_before(actor)
+	if not held:
+		push_warning(
+			"Admission invariant A1 unmet for %s after %d escalations; admitted anyway."
+			% [actor.display_name, _ADMISSION_ESCALATION_LIMIT]
+		)
+	assert(held, "Admission invariant A1 violated (F0 ruling 6).")
+	return seated
+
+
+## True when some living ally's turn begins strictly before `actor`'s first projected turn.
+## Read from `scheduler.peek_order()`, which projects from the same arithmetic `advance()`
+## uses — asking the timeline is the only way this check cannot disagree with resolution.
+func _party_acts_before(actor: BattleActor) -> bool:
+	var depth := maxi(16, (allies.size() + enemies.size() + 2) * 4)
+	for entry: Dictionary in scheduler.peek_order(depth):
+		var next := entry.get("actor") as BattleActor
+		if next == actor:
+			return false
+		if next != null and next.is_alive() and allies.has(next):
+			return true
+	return false
 
 
 ## Takes a combatant OUT of a running battle: it fled, or it left the field. Not the same verb

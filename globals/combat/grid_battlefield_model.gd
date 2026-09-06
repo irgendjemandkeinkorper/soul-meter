@@ -42,6 +42,18 @@ const _ELEVATION_LOS_EPSILON := 0.5
 ## never through this multiplier — see the header note.
 const _ELEVATION_WEIGHT_PER_LEVEL := 0.5
 
+## Chebyshev cells an ambient-entry placement search may travel from a party member's own
+## cell before the whole session is refused (F0 ruling 4, 2026-09-06). PROVISIONAL.
+const PLACEMENT_SEARCH_RADIUS := 4
+
+## 8-way steps for the placement search, matching the Chebyshev geometry the rest of this
+## model uses. Listed row-major so an unsorted traversal is still deterministic.
+const _PLACEMENT_STEPS: Array[Vector2i] = [
+	Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1),
+	Vector2i(-1, 0), Vector2i(1, 0),
+	Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1),
+]
+
 var _rules: CombatRules
 var _grid: IsoGrid
 
@@ -92,6 +104,96 @@ func configure_initial_cells(cells: Dictionary) -> Dictionary:
 		occupied[cell] = true
 	_initial_cells = cells.duplicate()
 	return _allowed({})
+
+
+## Ambient-entry placement (F0 ruling 4, 2026-09-06). `desired` is the party's live field
+## cells in `GameState.party` order; `desired[0]` is the player, the anchor, and is never
+## relocated. Members whose own cell is free keep it; overlapping members take the nearest
+## free cell found by breadth-first search over *reachable* cells — never Euclidean, so a
+## companion can never be seated across a wall from the party it is fighting with. Ties
+## inside one search ring break by row then column, so the answer is identical across two
+## runs and across a save round trip.
+##
+## Refusal is atomic by construction: this is a pure query over the grid, so a caller that
+## refuses has moved nothing. Returns `{"cells": Array[Vector2i]}` on success.
+func resolve_placement(desired: Array[Vector2i]) -> Dictionary:
+	if _grid == null:
+		return _blocked(&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"})
+	if desired.is_empty():
+		return _blocked(
+			&"composition", "There is no party to seat.", {"type": &"present_combatant"}
+		)
+	var anchor: Vector2i = desired[0]
+	if not _is_seatable(anchor):
+		return _blocked(
+			&"position",
+			"The party cannot enter combat from this cell.",
+			{"type": &"anchor_placeable"},
+		)
+	var taken: Dictionary = {anchor: true}
+	var resolved: Array[Vector2i] = [anchor]
+	for index in range(1, desired.size()):
+		var wanted: Vector2i = desired[index]
+		if not taken.has(wanted) and _is_seatable(wanted):
+			taken[wanted] = true
+			resolved.append(wanted)
+			continue
+		var search := _nearest_free_cell(wanted, taken)
+		if not bool(search.get("ok", false)):
+			return _blocked(
+				&"position",
+				"No free cell within %d of the party." % PLACEMENT_SEARCH_RADIUS,
+				{"type": &"cell_free"},
+			)
+		var found: Vector2i = search["cell"]
+		taken[found] = true
+		resolved.append(found)
+	return _allowed({"cells": resolved})
+
+
+## In bounds, passable, and nothing already stands there. Occupied cells are also solid (see
+## `_place()`), so the occupancy test is belt-and-braces against a caller that seats actors
+## through a path that skips `_set_solid()`.
+func _is_seatable(cell: Vector2i) -> bool:
+	return (
+		_grid != null
+		and _grid.is_in_bounds(cell)
+		and not _grid.is_point_solid(cell)
+		and not _occupancy.has(cell)
+	)
+
+
+## Breadth-first ring search outward from `from`, bounded by `PLACEMENT_SEARCH_RADIUS`.
+## Impassable cells are not traversed, only skipped: a candidate is therefore always
+## connected to the cell its actor is standing on, which is what "reachable" buys over a
+## radius test. Each ring is sorted by row then column before it is examined, so the first
+## acceptable cell in the nearest ring is a deterministic choice, not an insertion-order one.
+func _nearest_free_cell(from: Vector2i, taken: Dictionary) -> Dictionary:
+	var visited: Dictionary = {from: true}
+	var frontier: Array[Vector2i] = [from]
+	for _depth in PLACEMENT_SEARCH_RADIUS:
+		var ring: Array[Vector2i] = []
+		for cell: Vector2i in frontier:
+			for step: Vector2i in _PLACEMENT_STEPS:
+				var neighbour: Vector2i = cell + step
+				if visited.has(neighbour):
+					continue
+				visited[neighbour] = true
+				if not _grid.is_in_bounds(neighbour) or _grid.is_point_solid(neighbour):
+					continue
+				ring.append(neighbour)
+		ring.sort_custom(_row_then_column)
+		for cell: Vector2i in ring:
+			if not taken.has(cell) and not _occupancy.has(cell):
+				return {"ok": true, "cell": cell}
+		if ring.is_empty():
+			break
+		frontier = ring
+	return {"ok": false}
+
+
+func _row_then_column(a: Vector2i, b: Vector2i) -> bool:
+	return a.y < b.y if a.y != b.y else a.x < b.x
 
 
 func configure(rules: CombatRules) -> void:

@@ -12,6 +12,9 @@ signal balance_changed(value: int)
 signal battle_ended(result: BattleResult)
 signal combat_event(event: CombatEvent)
 signal speech_requested(dialogue_path: String, dialogue_start: String)
+## Same-map combat D5. A session is one continuous fight on the loaded field, opened by an
+## alert rather than by an encounter id, and grown by `admit()` while it runs.
+signal session_ended(result: BattleResult)
 
 const ACTION_STRIKE := &"strike"
 const ACTION_GUARD := &"guard"
@@ -35,6 +38,11 @@ var controller: CombatController
 ## #223: class-resource state loaded from a save before a controller exists. Applied (and
 ## cleared) by the next `start()`; `{}` means "nothing to restore".
 var _pending_class_resources: Dictionary = {}
+## True between `start_session()`/`start_set_piece()` and the fight ending. Anything that used
+## to test `get_tree().paused` to mean "a battle is running" tests this instead (F0 D3).
+var session_active := false
+var _session_field: FieldMap
+var _session_hostiles: Dictionary = {}  ## StringName (combat_id) -> Hostile
 var last_speech_check: Dictionary = {}
 var last_speech_option: StringName = &""
 var last_speech_succeeded := false
@@ -128,6 +136,247 @@ func start(encounter: Variant) -> void:
 	balance_changed.emit(balance)
 
 
+## Opens an ambient same-map session on the loaded field (F0 D5). `first` is the hostile whose
+## alert was accepted — hop 0 of the fight. No deployment screen opens; the party fights from
+## where it is standing, resolved by F0 ruling 4.
+##
+## Refusal is atomic. Every check and the whole placement query run before a single actor,
+## cell or grid flag is touched, so a caller that gets `allowed: false` back is looking at a
+## field in exactly the state it was in before the call.
+func start_session(field: FieldMap, first: Hostile) -> Dictionary:
+	if session_active:
+		return admit(first)
+	if field == null:
+		return _session_refusal(&"field_map", &"field_map", "Combat requires a loaded field map.")
+	var access := can_fight_here(field)
+	if not bool(access.get("allowed", false)):
+		return access
+	if first == null or first.state == Hostile.State.DOWNED:
+		return _session_refusal(
+			&"composition", &"present_combatant", "A session needs a living hostile to open it."
+		)
+	var hostile_actor := first.battle_actor()
+	if hostile_actor == null:
+		return _session_refusal(
+			&"composition", &"present_combatant", "That hostile has no battle actor."
+		)
+
+	var rules := _session_rules()
+	var model := GridBattlefieldModel.new()
+	model.configure(rules)
+	model.build_grid(field.ground(), field.blocking())
+
+	var live_cells := field.party_cells()
+	if live_cells.is_empty():
+		model.release_field_grid()
+		first.refuse_alert()
+		return _session_refusal(
+			&"field_map", &"party_placed", "The field has no placed party to seat."
+		)
+	var party := _session_party()
+	var desired: Array[Vector2i] = []
+	for index in party.size():
+		# A follower that has not synced yet inherits the last known cell; ruling 4's overlap
+		# pass is exactly what turns that stack back into distinct seats.
+		desired.append(live_cells[mini(index, live_cells.size() - 1)])
+	var placement := model.resolve_placement(desired)
+	if not bool(placement.get("allowed", false)):
+		model.release_field_grid()
+		first.refuse_alert()
+		return placement
+	var seats: Array = placement.get("cells", [])
+
+	var initial: Dictionary = {}
+	for index in party.size():
+		initial[party[index]] = seats[index]
+	# The hostile stands where the scene put it. Duplicate and impassable cells are refused
+	# here, which is also what stops the party from being seated on top of it.
+	initial[hostile_actor] = first.sync_cell()
+	var configured := model.configure_initial_cells(initial)
+	if not bool(configured.get("allowed", false)):
+		model.release_field_grid()
+		first.refuse_alert()
+		return configured
+
+	# Past this line the session is committed.
+	_release_field_grid()
+	_combat_history.clear()
+	_definition = {"battlefield": "grid", "use_charge_time": true}
+	encounter_id = &""
+	last_speech_check.clear()
+	last_speech_option = &""
+	last_speech_succeeded = false
+	allies = party
+	enemies = [hostile_actor]
+	_prepare_enemy_knowledge()
+	active_ally_index = _next_living_index(allies, -1)
+	target_enemy_index = 0
+	balance = 0
+	enemy_rounds = 0
+	last_message = "Steel comes out where you stand."
+	ended = false
+	last_result = null
+
+	controller = CombatController.new()
+	controller.event_emitted.connect(_on_combat_event)
+	controller.battle_finished.connect(_on_controller_finished)
+	controller.configure(
+		available_actions(true), model, rules, null, _casting_abilities()
+	)
+	controller.configure_agreement_integrity(_agreement_integrity())
+	var weather := field.weather_default()
+	if weather != &"":
+		var weather_result := controller.configure_weather(weather)
+		if not bool(weather_result.get("allowed", false)):
+			push_warning("Field authors unknown weather '%s'; the session starts calm." % weather)
+	controller.start(allies, enemies, encounter_id)
+	if not _pending_class_resources.is_empty():
+		controller.restore_class_resources(_pending_class_resources)
+		_pending_class_resources.clear()
+
+	session_active = true
+	_session_field = field
+	_session_hostiles.clear()
+	_track_session_hostile(first, hostile_actor)
+	field.seat_party(seats)
+	if not field.hostile_alerted.is_connected(_on_field_hostile_alerted):
+		field.hostile_alerted.connect(_on_field_hostile_alerted)
+	battle_started.emit()
+	balance_changed.emit(balance)
+	# `seats`/`first_cell` report what the session was OPENED on. Positions move the moment the
+	# scheduler drives, so a caller that wants the entry placement has to be told it.
+	return _session_allowed({
+		"combat_id": String(hostile_actor.combat_id),
+		"seats": seats,
+		"first_cell": initial[hostile_actor],
+	})
+
+
+## Seats one more hostile in the session that is already running. Idempotent: the alert that
+## calls this can fire more than once for the same mob, and a chain hop can reach one the
+## party already dragged in. Refusal returns the hostile to IDLE under a cooldown so a pocket
+## with no room cannot re-refuse on every frame (F0 ruling 4).
+func admit(hostile: Hostile) -> Dictionary:
+	if not session_active or controller == null:
+		return _session_refusal(
+			&"battle_not_live", &"live_session", "There is no live session to admit into."
+		)
+	if hostile == null:
+		return _session_refusal(
+			&"composition", &"present_combatant", "There is no hostile to admit."
+		)
+	if hostile.state == Hostile.State.DOWNED:
+		return _session_refusal(&"composition", &"living_combatant", "That hostile is down.")
+	var actor := hostile.battle_actor()
+	if actor == null:
+		return _session_refusal(
+			&"composition", &"present_combatant", "That hostile has no battle actor."
+		)
+	if _session_hostiles.has(actor.combat_id) and _session_hostiles[actor.combat_id] == hostile:
+		return _session_allowed({
+			"already_admitted": true, "combat_id": String(actor.combat_id)
+		})
+	var result := controller.admit(actor, hostile.sync_cell(), &"enemy")
+	if not bool(result.get("allowed", false)):
+		hostile.refuse_alert()
+		return result
+	_track_session_hostile(hostile, actor)
+	return result
+
+
+## The deployment path (F0 D3). Set-pieces keep their authored composition and their slate;
+## the only thing this adds over `start()` is that the fight is a session, so everything that
+## reads `session_active` sees a set-piece the same way it sees an ambient fight.
+func start_set_piece(field: FieldMap, encounter: StringName) -> Dictionary:
+	if field == null:
+		return _session_refusal(&"field_map", &"field_map", "Combat requires a loaded field map.")
+	var access := can_fight_here(field)
+	if not bool(access.get("allowed", false)):
+		return access
+	start(encounter)
+	if ended:
+		return _session_refusal(
+			&"composition", &"present_combatant", "That encounter has no living enemies."
+		)
+	session_active = true
+	_session_field = field
+	_session_hostiles.clear()
+	return _session_allowed({"encounter_id": String(encounter)})
+
+
+## Party actors for a session, built through the one named conversion (D4/D5) so the ambient
+## and set-piece paths cannot drift in how a PartyMember becomes a BattleActor.
+func _session_party() -> Array[BattleActor]:
+	var party: Array[BattleActor] = []
+	for index in GameState.party.size():
+		party.append(BattleActor.from_party_member(GameState.party[index], index))
+	if party.is_empty():
+		party.append(BattleActor.new())
+	return party
+
+
+## Ambient sessions are always CT: measures are the cadence chain alerts and weather ride on
+## (F0 ruling 5), and an AP round has no meaning on a field that never stopped running.
+func _session_rules() -> CombatRules:
+	var rules := (
+		(load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
+	)
+	rules.use_charge_time = true
+	return rules
+
+
+func _track_session_hostile(hostile: Hostile, actor: BattleActor) -> void:
+	hostile.combat_id = actor.combat_id
+	hostile.mark_in_combat()
+	_session_hostiles[actor.combat_id] = hostile
+
+
+## F0 ruling 5: chain alerts spread one hop per `measure_started`, and on nothing else. The
+## AP scheduler never emits it, so a set-piece fought under AP simply never chains — which is
+## correct, an authored encounter has no idle neighbours to pull in.
+func _propagate_session_alerts() -> void:
+	if not session_active or _session_field == null:
+		return
+	_session_field.propagate_alerts()
+
+
+func _on_field_hostile_alerted(hostile: Hostile) -> void:
+	if not session_active:
+		return
+	admit(hostile)
+
+
+## Ends the session bookkeeping. The grid is released by `_finish()`; this drops the field
+## wiring so a second fight on the same field starts from a clean seam.
+func _end_session(result: BattleResult) -> void:
+	if not session_active:
+		return
+	session_active = false
+	if _session_field != null:
+		if _session_field.hostile_alerted.is_connected(_on_field_hostile_alerted):
+			_session_field.hostile_alerted.disconnect(_on_field_hostile_alerted)
+	_session_field = null
+	_session_hostiles.clear()
+	session_ended.emit(result)
+
+
+func _session_allowed(extra: Dictionary = {}) -> Dictionary:
+	var result := {"allowed": true, "blocked_by": &"", "nearest_unblock": {}, "message": ""}
+	result.merge(extra, true)
+	return result
+
+
+func _session_refusal(
+	blocked_by: StringName, unblock: StringName, message: String
+) -> Dictionary:
+	return {
+		"allowed": false,
+		"blocked_by": blocked_by,
+		"nearest_unblock": {"type": unblock},
+		"message": message,
+	}
+
+
 func _casting_abilities() -> Array[AbilityDefinition]:
 	var abilities: Array[AbilityDefinition] = []
 	for ability: AbilityDefinition in TacticalTables.shared().abilities_in_slot(
@@ -154,10 +403,14 @@ func _agreement_integrity(scene_path: String = "") -> float:
 	return EncounterCatalog.agreement_integrity(encounter_id, location_integrity)
 
 
-## Reports whether the currently loaded field can host same-map combat.
-## Refusals retain the shared FR-606 query shape.
-func can_fight_here() -> Dictionary:
-	var field: FieldMap = _current_field_map()
+## Reports whether a field can host same-map combat. Refusals retain the shared FR-606 query
+## shape. `field` defaults to the loaded one for callers that only have a chart guard to fill
+## (GameFlow); a session asks about the exact field it was handed, because more than one
+## FieldMap can be in the tree — a scene mid-swap, or a test fixture — and answering about the
+## wrong one would let a fight open inside a no-combat interior.
+func can_fight_here(field: FieldMap = null) -> Dictionary:
+	if field == null:
+		field = _current_field_map()
 	if field == null:
 		return {
 			"allowed": false,
@@ -596,6 +849,7 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 	_release_field_grid()
 	last_result = result
 	battle_ended.emit(result)
+	_end_session(result)
 
 
 func _apply_victory(result: BattleResult) -> void:
@@ -883,6 +1137,8 @@ func _on_combat_event(event: CombatEvent) -> void:
 		balance_changed.emit(balance)
 	if event.type == &"enemy_turn_started":
 		enemy_rounds += 1
+	if event.type == &"measure_started":
+		_propagate_session_alerts()
 	if event.data.has("message"):
 		last_message = str(event.data["message"])
 	if controller != null:

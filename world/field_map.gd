@@ -2,8 +2,17 @@ class_name FieldMap
 extends Node2D
 ## Stable field-scene seam shared by navigation and same-map combat.
 
+## Re-emitted for every hostile that accepts an alert on this field, whether the alert came
+## from a proximity sensor, from being targeted, or from a chain hop. Battle listens for it and
+## decides whether that means "open a session" or "admit into the running one".
+signal hostile_alerted(hostile: Hostile)
+
 var _combat_mode_active: bool = false
 var _restore_controls: Array[Callable] = []
+
+
+func _ready() -> void:
+	_connect_hostiles.call_deferred()
 
 
 func ground() -> TileMapLayer:
@@ -86,6 +95,58 @@ func _is_field_interactable(node: Node) -> bool:
 	)
 
 
+func player() -> Player:
+	return _field_root().find_child("Player", true, false) as Player
+
+
+func party_followers() -> PartyFollowers:
+	return _field_root().find_child("PartyFollowers", true, false) as PartyFollowers
+
+
+## The party's live field cells in party order, player first. This is the input to
+## `GridBattlefieldModel.resolve_placement()`; the player's cell is the anchor. Empty when the
+## field has no player or no built grid, which the caller must treat as a refusal.
+func party_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	var grid := iso_grid()
+	var lead := player()
+	if grid == null or lead == null:
+		return cells
+	cells.append(grid.world_to_cell(lead.global_position))
+	var followers := party_followers()
+	if followers == null:
+		return cells
+	for follower: PartyFollower in followers.followers():
+		cells.append(grid.world_to_cell(follower.global_position))
+	return cells
+
+
+## Snaps the presentation party onto the cells combat actually seated them on (F0 ruling 4).
+## Followers are presentation-only and CombatOverlay does not exist until migration step 6, so
+## without this the visible party and the battlefield model disagree for a whole session.
+## Entering combat mode first is what stops the trail from dragging them back off their cells.
+func seat_party(cells: Array[Vector2i]) -> void:
+	if cells.is_empty():
+		return
+	set_combat_mode(true)
+	var grid := iso_grid()
+	if grid == null:
+		return
+	var lead := player()
+	if lead != null:
+		# The anchor is never relocated; this only centres it on the cell it already holds.
+		lead.global_position = grid.cell_to_world(cells[0])
+	var followers := party_followers()
+	if followers == null:
+		return
+	var seated := followers.followers()
+	for index in seated.size():
+		var cell_index := index + 1
+		if cell_index >= cells.size():
+			break
+		seated[index].snap_to(grid.cell_to_world(cells[cell_index]))
+
+
 func hostiles() -> Array[Hostile]:
 	var result: Array[Hostile] = []
 	for node: Node in _field_root().find_children("*", "Node2D", true, false):
@@ -100,6 +161,7 @@ func propagate_alerts() -> void:
 	if no_combat_zone():
 		return
 	var actors := hostiles()
+	_connect_hostiles()
 	var sources: Array[Hostile] = []
 	for hostile: Hostile in actors:
 		if hostile.state == Hostile.State.IN_COMBAT:
@@ -111,6 +173,18 @@ func propagate_alerts() -> void:
 			if source.global_position.distance_to(hostile.global_position) <= source.chain_radius:
 				hostile.request_alert()
 				break
+
+
+## Hostiles may be authored in the scene or spawned later, and a field can be entered more than
+## once, so this is idempotent and re-run whenever the set might have changed.
+func _connect_hostiles() -> void:
+	for hostile: Hostile in hostiles():
+		if not hostile.alerted.is_connected(_on_hostile_alerted):
+			hostile.alerted.connect(_on_hostile_alerted)
+
+
+func _on_hostile_alerted(hostile: Hostile) -> void:
+	hostile_alerted.emit(hostile)
 
 
 ## Location weather moves onto field data in migration step 8.
