@@ -161,21 +161,9 @@ func configure_weather(element_id: StringName, hush: bool = false) -> Dictionary
 ## Builds one TileState per battlefield cell (grid battles only; a cell-less model
 ## reports no tiles and the battle keeps zone semantics). Heights come from the same
 ## terrain snapshot the presentation layer uses, so the two can never disagree.
-func _build_tile_states(encounter_id: StringName) -> void:
+func _reset_tile_states() -> void:
 	tile_states.clear()
 	_tile_by_cell.clear()
-	if battlefield == null:
-		return
-	for terrain: Dictionary in battlefield.tiles_snapshot():
-		var tile := TileState.create(
-			encounter_id,
-			int(terrain.get("x", 0)),
-			int(terrain.get("y", 0)),
-			int(terrain.get("height_delta", 0)),
-			bool(terrain.get("cover", false)),
-		)
-		tile_states.append(tile)
-		_tile_by_cell[Vector2i(tile.x, tile.y)] = tile
 
 
 ## Advances weather by the CT ticks the scheduler just reported. Every 16th tick
@@ -197,7 +185,25 @@ func _advance_weather(ticks_elapsed: int) -> void:
 
 
 func tile_state_at(cell: Vector2i) -> TileState:
-	return _tile_by_cell.get(cell)
+	if _tile_by_cell.has(cell):
+		return _tile_by_cell[cell]
+	if battlefield == null:
+		return null
+	for terrain: Dictionary in battlefield.tiles_snapshot():
+		if Vector2i(int(terrain.get("x", 0)), int(terrain.get("y", 0))) != cell:
+			continue
+		var tile := TileState.create(
+			_encounter_id, cell.x, cell.y,
+			int(terrain.get("height_delta", 0)), bool(terrain.get("cover", false))
+		)
+		_tile_by_cell[cell] = tile
+		tile_states.append(tile)
+		# Preserve the original row-major order of weather effects regardless of touch order.
+		tile_states.sort_custom(func(a: TileState, b: TileState) -> bool:
+			return a.y < b.y or (a.y == b.y and a.x < b.x)
+		)
+		return tile
+	return null
 
 
 ## The diametric Clash element (wheel distance 5) — what this weather starves.
@@ -245,7 +251,7 @@ func start(
 	_attach_class_resources(enemies)
 	battlefield.setup(allies, enemies)
 	scheduler.setup(allies + enemies)
-	_build_tile_states(encounter_id)
+	_reset_tile_states()
 	_apply_balance_band(false)
 	state = State.ROUND_START
 	_emit_event(&"battle_started", null, null, {})
@@ -271,8 +277,15 @@ func admit(actor: BattleActor, cell: Vector2i, side: StringName = &"enemy") -> D
 		return _blocked(&"battle_not_live", "No live battle to admit into.", {})
 	if side != &"ally" and side != &"enemy":
 		return _blocked(&"composition", "Unknown side: %s." % side, {"type": &"known_side"})
-	if not actor.combat_id.is_empty() and _actor_by_id(String(actor.combat_id)) != null:
-		return _allowed({"already_admitted": true, "combat_id": String(actor.combat_id)})
+	if not actor.combat_id.is_empty():
+		var existing := _actor_by_id(String(actor.combat_id))
+		if existing == actor:
+			return _allowed({"already_admitted": true, "combat_id": String(actor.combat_id)})
+		if existing != null:
+			return _blocked(
+				&"composition", "Combat id %s is already taken." % actor.combat_id,
+				{"type": &"unique_id"}
+			)
 
 	var ordinal := int(_admission_ordinal.get(side, 0))
 	_assign_combat_id(actor, side, _encounter_id, ordinal)
@@ -679,16 +692,25 @@ func _turn_order_snapshot() -> Array[Dictionary]:
 	return result
 
 
-## Live tiles (terrain + charge) when a grid battle built TileStates; the static
-## terrain snapshot otherwise (zone battles report none either way).
+## Keep the complete replay payload without allocating persistent state for untouched cells.
+## Weather only changes already-charged cells, so untouched cells remain neutral.
 func _tile_snapshots() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	if tile_states.is_empty():
-		if battlefield != null:
-			result = battlefield.tiles_snapshot()
+	if battlefield == null:
 		return result
-	for tile: TileState in tile_states:
-		result.append(tile.to_dict())
+	var neutral: Dictionary = TileState.create(_encounter_id, 0, 0).to_dict()
+	for terrain: Dictionary in battlefield.tiles_snapshot():
+		var cell := Vector2i(int(terrain.get("x", 0)), int(terrain.get("y", 0)))
+		var tile: TileState = _tile_by_cell.get(cell)
+		if tile != null:
+			result.append(tile.to_dict())
+		else:
+			var data: Dictionary = neutral.duplicate()
+			data["x"] = cell.x
+			data["y"] = cell.y
+			data["height_delta"] = int(terrain.get("height_delta", 0))
+			data["cover"] = bool(terrain.get("cover", false))
+			result.append(data)
 	return result
 
 

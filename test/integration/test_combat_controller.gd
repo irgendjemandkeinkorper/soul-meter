@@ -806,6 +806,21 @@ func test_weather_shares_the_scheduler_clock_and_feeds_matching_tiles() -> void:
 	assert_int(applied.size()).is_equal(1)
 
 
+func test_tile_states_are_lazy_without_changing_neutral_snapshots() -> void:
+	var local_controller := _grid_controller(true)
+	assert_int(local_controller.tile_states.size()).is_equal(0)
+	var before: Dictionary = local_controller.snapshot()
+	assert_int(local_controller.tile_states.size()).is_equal(0)
+	assert_array(before["tiles"]).is_not_empty()
+	var tile: TileState = local_controller.tile_state_at(Vector2i(0, 0))
+	assert_object(tile).is_not_null()
+	assert_object(local_controller.tile_state_at(Vector2i(0, 0))).is_same(tile)
+	assert_int(local_controller.tile_states.size()).is_equal(1)
+	assert_dict(local_controller.snapshot()).is_equal(before)
+	assert_object(local_controller.tile_state_at(Vector2i(-999, -999))).is_null()
+	assert_int(local_controller.tile_states.size()).is_equal(1)
+
+
 func test_snapshot_reports_live_weather_and_charged_tiles() -> void:
 	var local_controller := _grid_controller(true)
 	local_controller.configure_weather(&"strom")
@@ -1477,6 +1492,13 @@ func test_admission_is_idempotent_and_refuses_a_battle_that_is_not_running() -> 
 		"a re-alerted hostile must be absorbed, not refused and not seated twice"
 	).is_true()
 	assert_bool(again.get("already_admitted", false)).is_true()
+	assert_int(idle.enemies.size()).is_equal(2)
+	var impostor := _actor("Different Mob", 40, 1, 0)
+	impostor.combat_id = mob.combat_id
+	var collision: Dictionary = idle.admit(impostor, Vector2i(5, 2), &"enemy")
+	assert_bool(collision.get("allowed", true)).is_false()
+	assert_str(String(collision.get("blocked_by", ""))).is_equal("composition")
+	assert_object(idle.actor_by_id(mob.combat_id)).is_same(mob)
 	assert_int(idle.enemies.size()).is_equal(2)
 
 
