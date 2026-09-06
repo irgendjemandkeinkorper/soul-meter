@@ -1,6 +1,10 @@
 # F1 session startup: overlapping party actors
 
-Status: owner decision needed before connecting field alerts to session startup.
+Status: **RULED 2026-09-06** — accepted with three amendments (player is the anchor and is
+never relocated; relocation is BFS over *reachable* cells, not Euclidean; the search is
+capped at `PLACEMENT_SEARCH_RADIUS = 4` and the whole session is refused past it). The
+binding text is ruling 4 in `docs/architecture-same-map-combat.md` §4; this note is the
+superseded proposal, kept for provenance.
 
 F0 requires ambient combat on the actors' existing field cells without deployment.
 Current exploration deliberately puts companions on the player's starting cell until
