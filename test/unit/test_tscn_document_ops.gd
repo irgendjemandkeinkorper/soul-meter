@@ -35,6 +35,31 @@ func test_set_property_inserts_and_refuses_invalid_targets_without_changes() -> 
 	assert_str(document.serialise()).is_equal(before)
 
 
+func test_set_property_refuses_mismatched_delimiters_without_changes() -> void:
+	var original: String = '[gd_scene format=3]\n[node name="Root" type="Node"]\n'
+	var document: RefCounted = Document.parse(original)
+	document.source_path = "res://test/fixtures/tscn/nodes.tscn"
+	for value: String in ['Vector2[1, 2)', '{"nested": [1, 2})', ')(1', ']\n[node name="Injected" type="Node"]\n[']:
+		assert_bool(document.set_property(".", "metadata/value", value)).is_false()
+		assert_str(document.last_error.get("code", "")).is_equal("invalid_value")
+		assert_str(document.last_error.get("field", "")).is_equal(".:metadata/value")
+		assert_str(document.last_error.get("file", "")).is_equal(document.source_path)
+		assert_str(document.serialise()).is_equal(original)
+
+
+func test_mismatched_source_and_node_fragment_are_refused_without_changes() -> void:
+	var original: String = '[gd_scene format=3]\n[node name="Root" type="Node"]\nmetadata/value = [1, 2)\n'
+	var document: RefCounted = Document.parse(original)
+	assert_bool(document.set_property(".", "metadata/other", "true")).is_false()
+	assert_str(document.last_error.get("code", "")).is_equal("invalid_value")
+	assert_str(document.serialise()).is_equal(original)
+	var valid: String = '[gd_scene format=3]\n[node name="Root" type="Node"]\n'
+	document = Document.parse(valid)
+	assert_bool(document.add_node('[node name="Child" type="Node"]\nmetadata/value = [1, 2)\n', ".")).is_false()
+	assert_str(document.last_error.get("code", "")).is_equal("invalid_node_block")
+	assert_str(document.serialise()).is_equal(valid)
+
+
 func test_add_node_inserts_at_sibling_index_and_preserves_existing_blocks() -> void:
 	var original: String = FileAccess.get_file_as_string("res://test/fixtures/tscn/nodes.tscn")
 	var document: RefCounted = Document.parse(original)
@@ -48,6 +73,16 @@ func test_add_node_inserts_at_sibling_index_and_preserves_existing_blocks() -> v
 	assert_bool(document.add_node(block, ".", 1)).is_false()
 	assert_str(document.last_error["code"]).is_equal("duplicate_node")
 	assert_str(document.serialise()).is_equal(once)
+
+
+func test_add_node_refuses_names_godot_would_rename() -> void:
+	var original: String = '[gd_scene format=3]\n[node name="Root" type="Node"]\n'
+	var document: RefCounted = Document.parse(original)
+	for name: String in ['Floor:Stone', 'Chest@2', '20%', 'Crate.001', 'A/B', 'Quoted"Name']:
+		var block: String = '[node name=%s type="Node"]' % var_to_str(name)
+		assert_bool(document.add_node(block, ".")).is_false()
+		assert_str(document.last_error.get("code", "")).is_equal("invalid_node_name")
+		assert_str(document.serialise()).is_equal(original)
 
 
 func test_remove_node_removes_descendants_connections_and_editable_paths() -> void:

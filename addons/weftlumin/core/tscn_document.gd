@@ -44,7 +44,7 @@ func set_property(node_path: String, key: String, value_text: String) -> bool:
 		return _fail(node_path + ":" + key, "invalid_property", "A property key and value are required.")
 	var value: String = value_text.strip_edges()
 	if _value_end(value, 0, value.length()) != value.length():
-		return _fail(node_path + ":" + key, "invalid_value", "Expected one scene value, not additional lines or comments.")
+		return _fail(node_path + ":" + key, "invalid_value", "Expected one scene value with matching delimiters, not additional lines or comments.")
 	var properties: Array[Dictionary] = _properties(node)
 	if not last_error.is_empty():
 		return false
@@ -74,8 +74,8 @@ func add_node(block: String, parent: String, index: int = -1) -> bool:
 	if not header_line.ends_with("]") or _line_ends_in_string(header_line, false):
 		return _fail(parent, "invalid_node_block", "Node header must have closed quotes and a closing bracket.")
 	var name: String = str(node["attributes"].get("name", ""))
-	if name.is_empty() or name in [".", ".."] or name.contains("/") or name.contains("\n"):
-		return _fail(parent, "invalid_node_name", "Expected a nonempty node name, not a path.")
+	if name.is_empty() or name != name.validate_node_name() or name.contains("\n"):
+		return _fail(parent, "invalid_node_name", "Expected a nonempty node name that Godot preserves unchanged.")
 	var path: String = name if parent == "." else parent + "/" + name
 	fragment._properties(node)
 	if not fragment.last_error.is_empty():
@@ -193,7 +193,7 @@ func _properties(node: Dictionary) -> Array[Dictionary]:
 			var start: int = cursor + match_result.get_end()
 			var end: int = _value_end(_source_text, start, limit)
 			if end < start:
-				_fail(_node_path(node) + ":" + match_result.get_string(1), "invalid_value", "Unterminated property value in source scene.")
+				_fail(_node_path(node) + ":" + match_result.get_string(1), "invalid_value", "Malformed property value in source scene.")
 				return []
 			result.append({"key": match_result.get_string(1), "value_start": start, "value_end": end})
 			newline_at = _source_text.find("\n", end)
@@ -205,7 +205,7 @@ func _properties(node: Dictionary) -> Array[Dictionary]:
 static func _value_end(text: String, start: int, limit: int) -> int:
 	var in_string: bool = false
 	var escaped: bool = false
-	var depth: int = 0
+	var delimiters: Array[String] = []
 	var cursor: int = start
 	while cursor < limit:
 		var character: String = text.substr(cursor, 1)
@@ -219,19 +219,21 @@ static func _value_end(text: String, start: int, limit: int) -> int:
 		elif character == '"':
 			in_string = true
 		elif character == ";":
-			if depth == 0:
+			if delimiters.is_empty():
 				break
 			var newline_at: int = text.find("\n", cursor)
 			cursor = limit if newline_at < 0 else newline_at
 			continue
 		elif character in ["(", "[", "{"]:
-			depth += 1
+			delimiters.append(character)
 		elif character in [")", "]", "}"]:
-			depth -= 1
-		elif character in ["\n", "\r"] and depth == 0:
+			if delimiters.is_empty() or "([{".find(delimiters.back()) != ")]}".find(character):
+				return -1
+			delimiters.pop_back()
+		elif character in ["\n", "\r"] and delimiters.is_empty():
 			break
 		cursor += 1
-	if in_string or depth != 0:
+	if in_string or not delimiters.is_empty():
 		return -1
 	while cursor > start and text.substr(cursor - 1, 1) in [" ", "\t"]:
 		cursor -= 1
