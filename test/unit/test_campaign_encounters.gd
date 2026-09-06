@@ -40,6 +40,24 @@ func test_campaign_encounter_registers_and_starts_through_battle_autoload() -> v
 	assert_str(Battle.enemies[0].display_name).is_equal("Bog Wight")
 
 
+func test_encounter_only_package_needs_no_quest_directory_and_preserves_quests() -> void:
+	var quest := DomSideQuest.new()
+	quest.stable_id = "kind-test/keep-quest"
+	quest.id = StableIds.runtime_quest_id(quest.stable_id)
+	assert_bool(QuestRegistry.replace_runtime_quests([quest])).is_true()
+	var campaign: Dictionary = _campaign(FIRST_ID)
+	campaign["schema"] = "weftlumin.package.v1"
+	campaign["kinds"] = ["encounters"]
+	_write_json(FIRST_PATH + "/campaign.json", campaign)
+	_write_json(FIRST_PATH + "/encounters/only.json", _encounter("encounter-only"))
+	assert_bool(DirAccess.dir_exists_absolute(FIRST_PATH + "/quests")).is_false()
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(FIRST_PATH)
+	assert_array(result.errors).is_empty()
+	assert_array(result.applied_kinds).contains_exactly([&"encounters"])
+	assert_object(QuestRegistry.runtime_quests()[0]).is_same(quest)
+	assert_str(EncounterCatalog.definition(&"encounter-only").display_name).is_equal("Runtime Fight")
+
+
 func test_campaign_dialogue_mutation_starts_registered_campaign_encounter() -> void:
 	_write_package(FIRST_PATH, FIRST_ID, _encounter("dialogue-fight"))
 	var title: String = "campaign_encounter_start"

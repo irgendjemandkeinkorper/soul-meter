@@ -350,6 +350,76 @@ func test_loader_attributes_quest_discovery_file_limit() -> void:
 	assert_str(str(error.get("file", ""))).is_equal(offending_path)
 
 
+func test_authorized_reload_resets_active_quest_and_applies_encounter_changes() -> void:
+	var authored: Dictionary = _quest("encounter-progress")
+	authored["required_flags"] = ["editor_kind_first", "editor_kind_second"]
+	authored["objectives"] = ["First objective", "Second objective"]
+	_write_package(PACKAGE_PATH, _campaign(), [authored])
+	var encounter_path: String = PACKAGE_PATH + "/encounters/editor-kind-fight.json"
+	var encounter: Dictionary = {
+		"encounter_id": "editor-kind-fight", "display_name": "Original Fight",
+		"enemies": [{"archetype_id": "bog-wight"}],
+		"grid": {"dimensions": [7, 5], "cover": [], "elevation": []},
+		"weather_default": "",
+	}
+	_write_text(encounter_path, JSON.stringify(encounter))
+	var initial: Dictionary = _editor.call("reload_campaign", CAMPAIGN_ID)
+	assert_array(initial.get("errors", [])).is_empty()
+	assert_bool(bool(initial.get("registered", false))).is_true()
+	var active_quest: DomSideQuest = QuestRegistry.runtime_quests()[0]
+	QuestSystem.mark_quest_as_available(active_quest)
+	QuestSystem.start_quest(active_quest)
+	GameState.set_flag("editor_kind_first", true)
+	GameState.set_flag("editor_kind_second", false)
+	QuestSystem.update_quest(active_quest)
+	assert_bool(QuestRegistry.is_active(active_quest)).is_true()
+	assert_int(active_quest.current_stage).is_equal(1)
+
+	encounter["display_name"] = "Revised Fight"
+	_write_text(encounter_path, JSON.stringify(encounter))
+	var refused: Dictionary = _editor.call("reload_campaign", CAMPAIGN_ID)
+	var identities: Array[String] = _conflict_identities(
+		refused.get("registration_conflicts", [])
+	)
+	assert_array(refused.get("errors", [])).is_empty()
+	assert_bool(bool(refused.get("registered", true))).is_false()
+	assert_array(identities).contains_exactly([CAMPAIGN_ID + "/encounter-progress"])
+	var no_identities: Array[String] = []
+	var unauthorized: Dictionary = _editor.call("reload_campaign", CAMPAIGN_ID, true, no_identities)
+	assert_bool(bool(unauthorized.get("registered", true))).is_false()
+	assert_array(_conflict_identities(
+		unauthorized.get("registration_conflicts", [])
+	)).contains_exactly(identities)
+	assert_object(QuestRegistry.runtime_quests()[0]).is_same(active_quest)
+	assert_bool(QuestRegistry.is_active(active_quest)).is_true()
+	assert_int(active_quest.current_stage).is_equal(1)
+	assert_str(EncounterCatalog.definition(&"editor-kind-fight").display_name).is_equal(
+		"Original Fight"
+	)
+
+	var applied: Dictionary = _editor.call("reload_campaign", CAMPAIGN_ID, true, identities)
+	assert_array(applied.get("errors", [])).is_empty()
+	assert_bool(bool(applied.get("registered", false))).is_true()
+	assert_array(applied.get("applied_kinds", [])).contains_exactly([&"quests", &"encounters"])
+	assert_bool(QuestRegistry.is_active(active_quest)).is_false()
+	assert_int(active_quest.current_stage).is_equal(0)
+	assert_bool(active_quest.objective_completed).is_false()
+	var replacement: DomSideQuest = QuestRegistry.runtime_quests()[0]
+	assert_bool(replacement == active_quest).is_false()
+	assert_str(replacement.stable_id).is_equal(active_quest.stable_id)
+	assert_bool(QuestRegistry.is_active(replacement)).is_false()
+	assert_str(EncounterCatalog.definition(&"editor-kind-fight").display_name).is_equal(
+		"Revised Fight"
+	)
+	var unchanged: Dictionary = _editor.call("reload_campaign", CAMPAIGN_ID)
+	assert_array(unchanged.get("errors", [])).is_empty()
+	assert_bool(bool(unchanged.get("registered", false))).is_true()
+	assert_array(unchanged.get("applied_kinds", [])).is_empty()
+	assert_object(QuestRegistry.runtime_quests()[0]).is_same(replacement)
+	assert_bool(QuestRegistry.is_active(replacement)).is_false()
+	assert_int(replacement.current_stage).is_equal(0)
+
+
 func test_force_proceeds_when_runtime_conflict_set_is_unchanged() -> void:
 	var initial_quests: Array[Dictionary] = [_quest("live-progress")]
 	var initial_result: Dictionary = _editor.call("save_campaign", _campaign(), initial_quests)

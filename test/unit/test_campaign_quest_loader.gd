@@ -74,6 +74,60 @@ func test_valid_package_loads_every_quest_and_registers_them_explicitly() -> voi
 	assert_str(result["campaign"]["entry_location"]).is_equal("harbor")
 
 
+func test_encounter_edit_preserves_unchanged_quest_resource_and_progress() -> void:
+	var canonical_hashes: Dictionary = _canonical_hashes()
+	_write_json(PACKAGE_PATH + "/quests/first.json", _quest("quest-a", "Quest A"))
+	_write_text(PACKAGE_PATH + "/dialogue/local.dialogue", "~ local_test\nTester: Same line.\n=> END\n")
+	var first: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(first.errors).is_empty()
+	var quest: DomSideQuest = first.quests[0]
+	QuestSystem.mark_quest_as_available(quest)
+	QuestSystem.start_quest(quest)
+	quest.current_stage = 1
+	_write_json(PACKAGE_PATH + "/encounters/test.json", {
+		"encounter_id": "loader-test-fight", "display_name": "First fight",
+		"enemies": [{"archetype_id": "bog-wight"}],
+		"grid": {"dimensions": [7, 5], "cover": [], "elevation": []},
+		"weather_default": "",
+	})
+	var second: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(second.errors).is_empty()
+	assert_object(QuestRegistry.runtime_quests()[0]).is_same(quest)
+	assert_bool(QuestRegistry.is_active(quest)).is_true()
+	assert_int(quest.current_stage).is_equal(1)
+	assert_str(EncounterCatalog.definition(&"loader-test-fight").display_name).is_equal("First fight")
+	assert_array(second.get("applied_kinds", [])).contains_exactly([&"encounters"])
+	var unchanged: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(unchanged.get("applied_kinds", [])).is_empty()
+	QuestRegistry.clear_runtime_quests()
+	var reloaded: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(reloaded.errors).is_empty()
+	assert_int(QuestRegistry.runtime_quests().size()).is_equal(1)
+	assert_bool(EncounterCatalog.definition(&"loader-test-fight").is_empty()).is_false()
+	assert_dict(_canonical_hashes()).is_equal(canonical_hashes)
+
+
+func test_quest_only_manifest_preserves_runtime_encounters() -> void:
+	assert_bool(EncounterCatalog.register_runtime_encounters({"unrelated-fight": {"display_name": "Keep me"}})).is_true()
+	_write_json(PACKAGE_PATH + "/campaign.json", {
+		"schema": "weftlumin.package.v1", "id": CAMPAIGN_ID,
+		"title": "Quest only", "entry_location": "harbor", "locations": ["harbor"],
+		"kinds": ["quests"], "base_commit": "abc123", "provenance": {"source": "ui"},
+	})
+	_write_json(PACKAGE_PATH + "/quests/first.json", _quest("quest-a", "Quest A"))
+	var loaded: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(loaded.errors).is_empty()
+	assert_str(EncounterCatalog.definition(&"unrelated-fight").get("display_name", "")).is_equal("Keep me")
+	assert_str(loaded.campaign.base_commit).is_equal("abc123")
+	assert_dict(loaded.campaign.provenance).is_equal({"source": "ui"})
+	CampaignQuestLoaderScript._quest_kind.clear()
+	assert_array(QuestRegistry.runtime_quests()).is_empty()
+	assert_str(EncounterCatalog.definition(&"unrelated-fight").get("display_name", "")).is_equal("Keep me")
+	loaded = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(loaded.errors).is_empty()
+	assert_int(QuestRegistry.runtime_quests().size()).is_equal(1)
+
+
 func test_quest_title_absent_from_campaign_and_committed_dialogue_is_rejected() -> void:
 	var quest_data: Dictionary = _quest("dead-dialogue", "Dead Dialogue")
 	quest_data["dialogue_title"] = "campaign_title_that_is_not_authored"
@@ -123,6 +177,74 @@ func test_campaign_dialogue_title_compiles_registers_routes_and_plays() -> void:
 	if line == null:
 		return
 	assert_str(line.text).is_equal("These words came from the campaign.")
+
+
+func test_dialogue_edits_and_legacy_route_replacement_are_applied() -> void:
+	var dialogue_title: String = "campaign_kind_refresh"
+	var dialogue_path: String = PACKAGE_PATH + "/dialogue/refresh.dialogue"
+	var authored: Dictionary = _quest("dialogue-refresh", "Dialogue Refresh")
+	authored["dialogue_title"] = dialogue_title
+	_write_json(PACKAGE_PATH + "/quests/dialogue-refresh.json", authored)
+	_write_text(dialogue_path, "~ %s\nTester: Original line.\n=> END\n" % dialogue_title)
+	var initial: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(initial.get("errors", [])).is_empty()
+	var original_dialogue: Dictionary = initial["dialogue_resources"].duplicate()
+
+	_write_text(dialogue_path, "~ %s\nTester: Edited line.\n=> END\n" % dialogue_title)
+	var edited: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(edited.get("errors", [])).is_empty()
+	assert_array(edited.get("applied_kinds", [])).contains_exactly([&"quests"])
+	var edited_route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		str(authored["giver_actor_id"]), QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
+		"dom_side_dishonest_casks"
+	)
+	assert_str(str(edited_route.get("source", ""))).is_equal(dialogue_path)
+	var line: DialogueLine = await DialogueManager.get_next_dialogue_line(
+		edited_route.get("resource") as DialogueResource, str(edited_route.get("title", ""))
+	)
+	assert_object(line).is_not_null()
+	if line == null:
+		return
+	assert_str(line.text).is_equal("Edited line.")
+
+	var reused_quests: Array[DomSideQuest] = QuestRegistry.runtime_quests()
+	assert_bool(QuestRegistry.register_runtime_quests(reused_quests, original_dialogue)).is_true()
+	assert_object(QuestRegistry.runtime_quests()[0]).is_same(reused_quests[0])
+	var legacy_route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		str(authored["giver_actor_id"]), QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
+		"dom_side_dishonest_casks"
+	)
+	line = await DialogueManager.get_next_dialogue_line(
+		legacy_route.get("resource") as DialogueResource, str(legacy_route.get("title", ""))
+	)
+	assert_object(line).is_not_null()
+	if line == null:
+		return
+	assert_str(line.text).is_equal("Original line.")
+
+	var repaired: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(repaired.get("errors", [])).is_empty()
+	assert_array(repaired.get("applied_kinds", [])).contains_exactly([&"quests"])
+	var repaired_route: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		str(authored["giver_actor_id"]), QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH,
+		"dom_side_dishonest_casks"
+	)
+	assert_str(str(repaired_route.get("source", ""))).is_equal(dialogue_path)
+	line = await DialogueManager.get_next_dialogue_line(
+		repaired_route.get("resource") as DialogueResource, str(repaired_route.get("title", ""))
+	)
+	assert_object(line).is_not_null()
+	if line == null:
+		return
+	assert_str(line.text).is_equal("Edited line.")
+	var played_quest: DomSideQuest = QuestRegistry.runtime_quests()[0]
+	var replayed: Dictionary = CampaignQuestLoaderScript.apply_loaded(repaired, PACKAGE_PATH)
+	assert_array(replayed.get("errors", [])).is_empty()
+	assert_array(replayed.get("applied_kinds", [])).is_empty()
+	assert_object(QuestRegistry.runtime_quests()[0]).is_same(played_quest)
+	var unchanged: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_array(unchanged.get("errors", [])).is_empty()
+	assert_array(unchanged.get("applied_kinds", [])).is_empty()
 
 
 func test_campaign_quest_without_own_title_routes_committed_dialogue_resource() -> void:
@@ -469,6 +591,85 @@ func test_authored_outcome_objects_fan_out_into_all_six_runtime_arrays() -> void
 	assert_array(quest.outcome_readbacks).contains_exactly(["First readback", "Second readback"])
 
 
+func test_authored_template_fields_survive_json_loading_without_loss() -> void:
+	var authored: Dictionary = _quest("template", "Template Quest")
+	authored["required_flags"] = ["test_witness_found", "test_gate_returned"]
+	authored["objectives"] = ["Find the witness.", "Return to the gate."]
+	authored["participant_actor_ids"] = [authored["giver_actor_id"], "test-witness"]
+	authored["hook_ids"] = ["hook-one", "hook-two"]
+	authored["quest_description"] = "  A witness remembers…\nKeep both lines.  "
+	authored["quest_objective"] = "  Ask about the seal.  "
+	_write_json(PACKAGE_PATH + "/quests/template.json", authored)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+	assert_array(result["errors"]).is_empty()
+	assert_int(result["quests"].size()).is_equal(1)
+	var quest: DomSideQuest = result["quests"][0] as DomSideQuest
+	assert_array(quest.required_flags).contains_exactly(authored["required_flags"])
+	assert_array(quest.objectives).contains_exactly(authored["objectives"])
+	assert_array(quest.participant_actor_ids).contains_exactly(authored["participant_actor_ids"])
+	assert_array(quest.hook_ids).contains_exactly(authored["hook_ids"])
+	assert_str(quest.quest_description).is_equal(authored["quest_description"])
+	assert_str(quest.quest_objective).is_equal(authored["quest_objective"])
+	assert_str(quest.current_objective()).is_equal("Find the witness.")
+	quest.current_stage = 1
+	assert_str(quest.current_objective()).is_equal("Return to the gate.")
+
+
+func test_omitted_and_empty_template_fields_keep_legacy_defaults() -> void:
+	for quest_id: String in ["omitted", "empty"]:
+		var authored: Dictionary = _quest(quest_id, "Template Defaults")
+		if quest_id == "empty":
+			for field: String in ["required_flags", "objectives", "participant_actor_ids", "hook_ids"]:
+				authored[field] = []
+			authored["quest_description"] = ""
+			authored["quest_objective"] = ""
+		_write_json(PACKAGE_PATH + "/quests/%s.json" % quest_id, authored)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+	assert_array(result["errors"]).is_empty()
+	assert_int(result["quests"].size()).is_equal(2)
+	for quest: DomSideQuest in result["quests"]:
+		assert_array(quest.required_flags).is_empty()
+		assert_array(quest.objectives).is_empty()
+		assert_array(quest.participant_actor_ids).is_empty()
+		assert_array(quest.hook_ids).is_empty()
+		assert_str(quest.quest_description).is_empty()
+		assert_str(quest.quest_objective).is_empty()
+
+
+func test_invalid_optional_template_fields_are_attributed_and_refuse_registration() -> void:
+	var invalid_fields: Dictionary = {
+		"required_flags": [null, "not an array", ["valid", 42]],
+		"objectives": [null, "not an array", ["valid", 42]],
+		"participant_actor_ids": [null, "not an array", ["valid", 42]],
+		"hook_ids": [null, "not an array", ["valid", 42]],
+		"quest_description": [null, 42],
+		"quest_objective": [null, 42],
+	}
+	var expected_errors: Array[Dictionary] = []
+	for field: String in invalid_fields:
+		var invalid_values: Array = invalid_fields[field]
+		for index: int in invalid_values.size():
+			var quest_id: String = "invalid-%s-%d" % [field, index]
+			var authored: Dictionary = _quest(quest_id, "Invalid Template Field")
+			authored[field] = invalid_values[index]
+			var file_name: String = "quests/%s.json" % quest_id
+			_write_json(PACKAGE_PATH + "/" + file_name, authored)
+			var error_field: String = field + "[1]" if invalid_values[index] is Array else field
+			expected_errors.append({"file": file_name, "field": error_field})
+	_write_json(PACKAGE_PATH + "/quests/good.json", _quest("good", "Valid Quest"))
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
+	assert_int(result["quests"].size()).is_equal(1)
+	assert_str((result["quests"][0] as DomSideQuest).stable_id).is_equal(CAMPAIGN_ID + "/good")
+	assert_array(QuestRegistry.runtime_quests()).is_empty()
+	for expected: Dictionary in expected_errors:
+		assert_bool(_has_error_code(
+			result["errors"], expected["file"], expected["field"], "invalid_field_type"
+		)).is_true()
+
+
 func test_agreement_reward_metadata_fans_out_into_optional_runtime_arrays() -> void:
 	var authored := _quest("agreement", "Agreement Quest")
 	var first_outcome: Dictionary = authored["outcomes"][0]
@@ -510,6 +711,28 @@ func test_creating_the_loader_does_not_scan_or_register_packages() -> void:
 
 	assert_object(loader).is_not_null()
 	assert_bool(QuestRegistry.runtime_quests().is_empty()).is_true()
+
+
+func _canonical_hashes() -> Dictionary:
+	var hashes: Dictionary = {}
+	hashes["res://canon"] = DirAccess.dir_exists_absolute("res://canon")
+	if hashes["res://canon"]:
+		_hash_directory("res://canon", hashes)
+	hashes["res://data.pandora"] = FileAccess.get_sha256("res://data.pandora")
+	assert_str(hashes["res://data.pandora"]).is_not_empty()
+	return hashes
+
+
+func _hash_directory(path: String, hashes: Dictionary) -> void:
+	var directory: DirAccess = DirAccess.open(path)
+	assert_object(directory).is_not_null()
+	if directory == null:
+		return
+	for file_name: String in directory.get_files():
+		var file_path: String = path.path_join(file_name)
+		hashes[file_path] = FileAccess.get_sha256(file_path)
+	for directory_name: String in directory.get_directories():
+		_hash_directory(path.path_join(directory_name), hashes)
 
 
 func _quest(quest_id: String, quest_name: String) -> Dictionary:
