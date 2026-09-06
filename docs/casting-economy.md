@@ -21,6 +21,12 @@ fizzle%         = clamp((base + breadth_add + strain_add) * magnitude_mult
                         - pitch_reduction - mastery_reduction, 0, 95)
 ```
 
+Naming (#329): the quantity `agreement_integrity` above is now called **Harmonic Accord**.
+The rename is a rename only — no number in this document moves. The fizzle context key is
+`harmonic_accord`, with `agreement_integrity` accepted as an alias for one wave; the ratified
+formula's own parameter names in `globals/skill_check.gd` keep their original spelling
+deliberately, so the readings below stay verifiable against the code that produced them.
+
 The implementation rounds to the nearest integer, with the documented display
 convention: small Note values round upward, while larger Song/Refrain values
 truncate. The sanity readings below use `strain_steps = 0`, `pitch = 2`, and

@@ -1236,8 +1236,9 @@ func _actor_unit_id(actor: BattleActor) -> String:
 func _fizzle_context(actor: BattleActor, options: Dictionary) -> Dictionary:
 	var raw: Variant = options.get("fizzle", {})
 	var context: Dictionary = raw.duplicate(true) if raw is Dictionary else {}
-	if not context.has("agreement_integrity"):
-		context["agreement_integrity"] = agreement_integrity
+	if not context.has("harmonic_accord") and not context.has("agreement_integrity"):
+		context["harmonic_accord"] = agreement_integrity
+		context["agreement_integrity"] = agreement_integrity # alias wave, #329
 	if not context.has("pitch"):
 		context["pitch"] = actor.attribute_value(&"pitch")
 	if actor.source_member != null and not context.has("patron"):

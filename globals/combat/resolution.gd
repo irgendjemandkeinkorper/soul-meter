@@ -554,7 +554,9 @@ static func _fizzle_percent(
 	var strain := int(inputs.get("strain", inputs.get("strain_steps", default_strain)))
 	var service := SkillCheckService.new()
 	var percent := service.fizzle_percent(
-		float(inputs.get("agreement_integrity", 100.0)),
+		# Harmonic Accord is Agreement Integrity renamed (#329). The old key stays readable
+		# for one wave so authored contexts and in-flight forecasts keep resolving.
+		float(inputs.get("harmonic_accord", inputs.get("agreement_integrity", 100.0))),
 		breadth,
 		strain,
 		str(inputs.get("magnitude", magnitude)),

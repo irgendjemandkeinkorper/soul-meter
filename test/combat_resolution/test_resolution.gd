@@ -306,3 +306,34 @@ func _walkthrough_context() -> Dictionary:
 			"measures_applied": 1,
 		},
 	}
+
+
+func test_harmonic_accord_key_drives_the_fizzle_and_the_legacy_alias_still_does() -> void:
+	# #329 renames Agreement Integrity to Harmonic Accord. A rename is only safe if it moves
+	# no numbers, so this pins both halves: the new key has to actually be read (not silently
+	# fall through to the neutral 100), and the old spelling has to keep working for one wave.
+	var discriminating_seed := -1
+	for candidate in range(1, 400):
+		if _fizzles_at(candidate, "harmonic_accord", 0.0) and not _fizzles_at(candidate, "harmonic_accord", 100.0):
+			discriminating_seed = candidate
+			break
+	assert_int(discriminating_seed).override_failure_message(
+		"no seed separates accord 0 from accord 100, so this test could not tell a read key from an ignored one"
+	).is_greater(0)
+
+	assert_bool(_fizzles_at(discriminating_seed, "harmonic_accord", 0.0)).override_failure_message(
+		"the harmonic_accord key must reach the fizzle formula"
+	).is_true()
+	assert_bool(_fizzles_at(discriminating_seed, "agreement_integrity", 0.0)).override_failure_message(
+		"the agreement_integrity alias must stay readable for one wave"
+	).is_true()
+	# And the alias must not be a floor: a high accord under either spelling still holds.
+	assert_bool(_fizzles_at(discriminating_seed, "agreement_integrity", 100.0)).is_false()
+
+
+func _fizzles_at(seed_value: int, accord_key: String, accord: float) -> bool:
+	var context := _walkthrough_context()
+	context["ability"]["is_spell"] = true
+	context["seed"] = seed_value
+	context["fizzle"] = {accord_key: accord, "pitch": 2, "mastery": false, "patron": ""}
+	return bool(ResolutionScript.resolve(context).get("fizzled", false))

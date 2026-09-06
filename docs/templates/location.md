@@ -29,6 +29,7 @@ the registry lines the reviewer must add in the handoff.
 | `spawns` | `Dictionary` | `{"<requested_id>": "<marker id>"}` alias table | `resolve_spawn()` |
 | `arrival_flag` | `String` | Flag set on first arrival; grammar `<domain>_<subject>_<predicate>` | `world/chapter_location.gd` |
 | `arrival_checkpoint` | `String` | Label for the `LOCATION_ARRIVAL` checkpoint autosave | `chapter_location.gd` → `SaveGame` |
+| `harmonic_accord` | `float 0..100` | Local Harmonic Accord (Agreement Integrity renamed, #329); 100 = neutral, C21 owns authored values | fizzle context key `harmonic_accord` |
 | `thinning_tier` | `int 0..3` | FR-506 gradient input: 0 = Dom, 3 = Wound Lip | `SkillCheck.location_fizzle_integrity()` |
 
 Spawn ids resolve to scene markers by name: spawn id `from_dom` → a `Marker2D` named

@@ -31,11 +31,13 @@ func on_cast_forecast(context: Dictionary) -> Dictionary:
 	var unit: Dictionary = (context.get("unit", {}) as Dictionary).duplicate(true)
 	var fizzle: Dictionary = (context.get("fizzle", {}) as Dictionary).duplicate(true)
 	unit["attack_scale"] = UNBALANCED_DAMAGE_MULTIPLIER
-	fizzle["agreement_integrity"] = maxf(
-		float(fizzle.get("agreement_integrity", 100.0))
+	var accord := maxf(
+		float(fizzle.get("harmonic_accord", fizzle.get("agreement_integrity", 100.0)))
 		- UNBALANCED_FIZZLE_INTEGRITY_PENALTY,
 		0.0,
 	)
+	fizzle["harmonic_accord"] = accord
+	fizzle["agreement_integrity"] = accord # alias wave, #329
 	return {
 		"unit": unit,
 		"fizzle": fizzle,

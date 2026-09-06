@@ -157,13 +157,13 @@ func _agreement_integrity(scene_path: String = "") -> float:
 		if current_scene != null:
 			resolved_scene_path = current_scene.scene_file_path
 	var location := LocationRegistry.by_scene(resolved_scene_path)
-	var location_integrity := location.integrity if location != null else 100.0
+	var location_accord := location.harmonic_accord if location != null else 100.0
 	# FR-506's already-authored thinning tiers remain the location value source
-	# until C21 replaces the neutral integrity defaults with direct authored values.
-	location_integrity = SkillCheck.location_fizzle_integrity(
-		location_integrity, resolved_scene_path
+	# until C21 replaces the neutral accord defaults with direct authored values.
+	location_accord = SkillCheck.location_fizzle_integrity(
+		location_accord, resolved_scene_path
 	)
-	return EncounterCatalog.agreement_integrity(encounter_id, location_integrity)
+	return EncounterCatalog.agreement_integrity(encounter_id, location_accord)
 
 
 ## Builds the authored encounter grid, or a provisional default grid when a catalog

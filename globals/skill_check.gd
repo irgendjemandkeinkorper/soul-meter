@@ -239,10 +239,12 @@ func fizzle_percent(
 	return rounded
 
 
-## FR-506 thinning gradient: adapts a zone's agreement integrity for the
-## fizzle formula's INPUT — the ratified formula itself is untouched. Each
-## thinning tier toward the front costs integrity, so casting fizzles more
-## the closer the map gets to the Wound. PROVISIONAL balance value.
+## FR-506 thinning gradient: adapts a zone's Harmonic Accord (Agreement Integrity
+## renamed, #329) for the fizzle formula's INPUT — the ratified formula itself is
+## untouched. Each thinning tier toward the front costs accord, so casting fizzles
+## more the closer the map gets to the Wound. PROVISIONAL balance value.
+## The function and parameter names below keep their old spelling deliberately:
+## #329 renames the quantity and the context key, not the ratified formula's surface.
 const THINNING_INTEGRITY_PENALTY_PER_TIER := 5.0
 
 
