@@ -1,5 +1,7 @@
 extends GdUnitTestSuite
 
+const DramgidSchemaScript := preload("res://globals/stats/dramgid_schema.gd")
+
 
 func test_save_round_trip_preserves_gameplay_fields() -> void:
 	var original := PartyMember.new()
@@ -8,6 +10,7 @@ func test_save_round_trip_preserves_gameplay_fields() -> void:
 	original.race = "Ash-Bound Kes'reth"
 	original.char_class = "Ironbrand (Kero)"
 	original.level = 4
+	original.xp = 125
 	original.hp = 31
 	original.max_hp = 44
 	original.breath = 9
@@ -25,6 +28,7 @@ func test_save_round_trip_preserves_gameplay_fields() -> void:
 	assert_str(restored.id).is_equal("vex")
 	assert_str(restored.display_name).is_equal(original.display_name)
 	assert_str(restored.char_class).is_equal(original.char_class)
+	assert_int(restored.xp).is_equal(125)
 	assert_int(restored.hp).is_equal(31)
 	assert_int(restored.max_hp).is_equal(44)
 	assert_int(restored.breath).is_equal(9)
@@ -42,6 +46,14 @@ func test_legacy_member_defaults_breath_to_full() -> void:
 
 	assert_int(restored.breath_max).is_equal(15)
 	assert_int(restored.breath).is_equal(restored.breath_max)
+	assert_int(restored.xp).is_equal(0)
+
+
+func test_attribute_value_reads_canonical_string_name_keys() -> void:
+	var member := PartyMember.new()
+	member.attributes = {DramgidSchemaScript.ATTR_REASON: 4}
+
+	assert_int(member.attribute_value(DramgidSchemaScript.ATTR_REASON)).is_equal(4)
 
 
 func test_save_round_trip_preserves_chargen_identity_fields() -> void:

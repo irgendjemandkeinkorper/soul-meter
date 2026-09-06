@@ -13,21 +13,9 @@ const MIN_ROLL := 1
 const MAX_ROLL := 100
 const EXPERT_REROLL_CAP := 1
 const DEFAULT_FIZZLE_TABLE: FizzleTable = preload("res://globals/default_fizzle_table.tres")
+const DramgidSchemaScript := preload("res://globals/stats/dramgid_schema.gd")
 
-const SKILL_DEFINITIONS: Dictionary = {
-	"athletics": {"domain": "body", "attribute": "forge"},
-	"stealth": {"domain": "body", "attribute": "edge"},
-	"sleight_of_hand": {"domain": "body", "attribute": "edge"},
-	"beast_handling": {"domain": "body", "attribute": "forge"},
-	"lore": {"domain": "mind", "attribute": "spark"},
-	"survival": {"domain": "mind", "attribute": "anchor"},
-	"investigation": {"domain": "mind", "attribute": "spark"},
-	"alchemy": {"domain": "mind", "attribute": "anchor"},
-	"persuasion": {"domain": "soul", "attribute": "voice"},
-	"weft_sensing": {"domain": "soul", "attribute": "pitch"},
-	"performance": {"domain": "soul", "attribute": "voice"},
-	"insight": {"domain": "soul", "attribute": "pitch"},
-}
+static var SKILL_DEFINITIONS: Dictionary = DramgidSchemaScript.skill_check_definitions()
 const TIER_BONUS: Dictionary = {
 	"untrained": 0.0,
 	"trained": 20.0,
@@ -67,7 +55,8 @@ func preview(
 	var tier_bonus := float(TIER_BONUS.get(tier_name, 0.0))
 	var advancement_percent := float(subject.skill_percentages.get(normalized_skill, 0.0))
 	return clampf(
-		attribute_value * 8.0 + tier_bonus + advancement_percent + situational_modifiers,
+		attribute_value * 8.0 + tier_bonus + advancement_percent + situational_modifiers
+			+ karma_bonus(normalized_skill),
 		0.0,
 		MAX_EFFECTIVE_PERCENT
 	)
@@ -80,6 +69,24 @@ func effective_percent(
 	situational_modifiers: float = 0.0
 ) -> float:
 	return preview(skill_name, member, situational_modifiers)
+
+
+## The tier values land with Renown in F3a-3. Until then, read the seam when it
+## exists and preserve today's neutral resolution value.
+func karma_bonus(skill_name: String) -> float:
+	var normalized_skill := _normalize_skill_name(skill_name)
+	var definition: Dictionary = SKILL_DEFINITIONS.get(normalized_skill, {})
+	if int(definition.get("karma_direction", 0)) == 0:
+		return 0.0
+	if not Renown.has_method("karma_tier"):
+		return 0.0
+	Renown.call("karma_tier")
+	return 0.0
+
+
+## F4 defines Hush/Waning zone penalties. The hook is intentionally neutral now.
+func loom_penalty(_skill_name: String, _zone: Variant) -> int:
+	return 0
 
 
 ## Resolve a committed check. `forced_rolls` exists for deterministic tests and
@@ -197,7 +204,7 @@ func fizzle_percent(
 	breadth: String,
 	strain_steps: int,
 	magnitude: String,
-	pitch: int,
+	intuition: int,
 	mastery: bool = false,
 	patron: String = ""
 ) -> float:
@@ -207,12 +214,12 @@ func fizzle_percent(
 	var breadth_add := float(fizzle_table.breadth_add.get(breadth_key, 0.0))
 	var strain_add := float(fizzle_table.strain_add.get(str(strain_steps), 0.0))
 	var multiplier := float(fizzle_table.magnitude_multiplier.get(magnitude_key, 1.0))
-	var pitch_reduction := maxi(pitch - 2, 0) * 2.0
+	var intuition_reduction := maxi(intuition - 2, 0) * 2.0
 	var mastery_reduction := 0.0
 	if mastery and magnitude_key in ["note", "phrase"]:
 		mastery_reduction = 100.0
 	var raw := clampf(
-		(base + breadth_add + strain_add) * multiplier - pitch_reduction - mastery_reduction,
+		(base + breadth_add + strain_add) * multiplier - intuition_reduction - mastery_reduction,
 		0.0,
 		MAX_EFFECTIVE_PERCENT
 	)
@@ -239,11 +246,11 @@ func calculate_fizzle(
 	breadth: String,
 	strain_steps: int,
 	magnitude: String,
-	pitch: int,
+	intuition: int,
 	mastery: bool = false,
 	patron: String = ""
 ) -> float:
-	return fizzle_percent(agreement_integrity, breadth, strain_steps, magnitude, pitch, mastery, patron)
+	return fizzle_percent(agreement_integrity, breadth, strain_steps, magnitude, intuition, mastery, patron)
 
 
 func _round_fizzle(value: float, magnitude: String) -> float:

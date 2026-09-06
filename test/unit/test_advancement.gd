@@ -43,6 +43,11 @@ func test_step_cost_bands_follow_resulting_effective_percent() -> void:
 	assert_int(Advancement.step_cost(high, "lore")).is_equal(3)
 
 
+func test_removed_skill_refund_uses_the_advancement_cost_curve() -> void:
+	assert_int(Advancement.points_spent_for_percentage(40.0, 20.0)).is_equal(6)
+	assert_int(Advancement.points_spent_for_percentage(75.0, 10.0)).is_equal(6)
+
+
 func test_cap_blocks_purchases_past_95_effective() -> void:
 	var member := _member(5, "expert")  # effective 75
 	member.advancement_points = 99
