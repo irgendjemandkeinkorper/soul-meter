@@ -29,6 +29,23 @@ const COST_BANDS := [            # [resulting effective% ceiling, cost per +5% s
 ]
 
 
+## Pure cost-curve helper used by schema migration when a removed skill's bought
+## percentage must be returned to the member's point pool.
+static func points_spent_for_percentage(
+	base_effective_percent: float,
+	advancement_percent: float
+) -> int:
+	var step_count := floori(maxf(advancement_percent, 0.0) / STEP_PERCENT)
+	var total := 0
+	for step in range(1, step_count + 1):
+		var resulting := base_effective_percent + step * STEP_PERCENT
+		for band: Array in COST_BANDS:
+			if resulting <= float(band[0]):
+				total += int(band[1])
+				break
+	return total
+
+
 ## Cost of the member's next +5% step in `skill_id`, judged by the RESULTING
 ## effective percentage. Returns -1 when the step is not purchasable (cap reached).
 static func step_cost(member: PartyMember, skill_id: String) -> int:

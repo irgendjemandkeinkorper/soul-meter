@@ -1,6 +1,8 @@
 extends GdUnitTestSuite
 ## Dedicated value-object coverage for BattleActor.
 
+const DramgidSchemaScript := preload("res://globals/stats/dramgid_schema.gd")
+
 
 func test_new_actor_has_combat_ready_defaults() -> void:
 	var actor := BattleActor.new()
@@ -26,7 +28,7 @@ func test_assigned_fields_retain_their_types_and_values() -> void:
 	actor.max_hp = 24
 	actor.attack = 8
 	actor.defense = 3
-	actor.attributes = {"might": 6}
+	actor.attributes = {DramgidSchemaScript.ATTR_MUSTER: 6}
 	actor.archetype_id = &"bog-wight"
 	actor.element_id = &"loam"
 	actor.defeated_flag = "bog_wight_defeated"
@@ -39,7 +41,7 @@ func test_assigned_fields_retain_their_types_and_values() -> void:
 	assert_int(actor.max_hp).is_equal(24)
 	assert_int(actor.attack).is_equal(8)
 	assert_int(actor.defense).is_equal(3)
-	assert_int(actor.attribute_value(&"might")).is_equal(6)
+	assert_int(actor.attribute_value(DramgidSchemaScript.ATTR_MUSTER)).is_equal(6)
 	assert_str(String(actor.archetype_id)).is_equal("bog-wight")
 	assert_str(String(actor.element_id)).is_equal("loam")
 	assert_str(actor.defeated_flag).is_equal("bog_wight_defeated")
