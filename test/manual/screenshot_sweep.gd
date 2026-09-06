@@ -146,9 +146,13 @@ func test_battle_screen() -> void:
 	member.hp = 40
 	member.max_hp = 40
 	GameState.party.append(member)
+	# Same-map combat builds its grid from the live field, so the sweep needs one.
+	var field_scene: Node2D = (load("res://world/test_room.tscn") as PackedScene).instantiate() as Node2D
+	add_child(field_scene)
+	await get_tree().process_frame
 	Battle.start("trial-warden")
 	await _shoot("res://ui/screens/battle.tscn", "23_battle_grid")
-	Battle._release_battlefield_ground()
+	field_scene.free()
 	Battle.controller = null
 	Battle.allies.clear()
 	Battle.enemies.clear()

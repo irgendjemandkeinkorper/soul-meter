@@ -62,11 +62,10 @@ var enemy: BattleActor:
 		return enemies[0] if not enemies.is_empty() else null
 
 var _definition: Dictionary = {}
-var _battlefield_ground: TileMapLayer
 
 
 func start(encounter: Variant) -> void:
-	_release_battlefield_ground()
+	_release_field_grid()
 	_combat_history.clear()
 	allies.clear()
 	enemies.clear()
@@ -166,139 +165,87 @@ func _agreement_integrity(scene_path: String = "") -> float:
 	return EncounterCatalog.agreement_integrity(encounter_id, location_integrity)
 
 
-## Builds the authored encounter grid, or a provisional default grid when a catalog
-## definition authors none — every catalog encounter is tactical (owner ruling,
-## 2026-08-29: the stage renders only grid battles, so zone defaults left the
-## screen blank in real play). Two zone paths stay live as the FR-105 fallback:
-## authors can select zones explicitly with `"battlefield": "zones"`, and ad-hoc
-## `start(BattleActor)` scaffold battles (no definition — a test/debug surface,
-## never reachable from authored content) keep their legacy zone behavior.
+## Reports whether the currently loaded field can host same-map combat.
+## Refusals retain the shared FR-606 query shape.
+func can_fight_here() -> Dictionary:
+	var field: FieldMap = _current_field_map()
+	if field == null:
+		return {
+			"allowed": false,
+			"blocked_by": &"field_map",
+			"nearest_unblock": {"type": &"field_map"},
+			"message": "Combat requires a loaded field map.",
+		}
+	if field.no_combat_zone():
+		return {
+			"allowed": false,
+			"blocked_by": &"no_combat_zone",
+			"nearest_unblock": {"type": &"combat_enabled_location"},
+			"message": "Combat cannot begin in this location.",
+		}
+	if field.ground() == null or field.blocking() == null:
+		return {
+			"allowed": false,
+			"blocked_by": &"field_layers",
+			"nearest_unblock": {"type": &"field_layers"},
+			"message": "Combat requires ground and blocking layers.",
+		}
+	if field.iso_grid() == null:
+		return {
+			"allowed": false,
+			"blocked_by": &"iso_grid",
+			"nearest_unblock": {"type": &"iso_grid"},
+			"message": "Combat requires a ready field grid.",
+		}
+	return {
+		"allowed": true,
+		"blocked_by": &"",
+		"nearest_unblock": {},
+		"message": "",
+	}
+
+
+## Catalog encounters fight on the field that is already loaded. Two zone paths
+## stay live as the FR-105 fallback: authors may select `"battlefield": "zones"`
+## explicitly, and ad-hoc `start(BattleActor)` scaffold battles have no definition.
 func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 	if _definition.is_empty() or str(_definition.get("battlefield", "")) == "zones":
 		return BattlefieldModel.create_default(rules)
 
-	var required_rows: int = maxi(allies.size(), enemies.size())
-	# PROVISIONAL balance dimensions until the later per-encounter content pass.
-	var default_dimensions := Vector2i(7, maxi(5, required_rows))
-	var grid: Variant = _definition.get("grid", {})
-	if not grid is Dictionary or grid.is_empty():
-		return _grid_battlefield(default_dimensions, rules)
-
-	var authored_dimensions: Variant = grid.get("dimensions", Vector2i.ZERO)
-	if not authored_dimensions is Vector2i:
-		push_warning("Encounter '%s' has invalid grid dimensions; using default grid." % encounter_id)
-		return _grid_battlefield(default_dimensions, rules)
-	var dimensions: Vector2i = authored_dimensions
-	if dimensions.x < 2 or dimensions.y < required_rows:
-		push_warning("Encounter '%s' grid cannot fit its combatants; using default grid." % encounter_id)
-		return _grid_battlefield(default_dimensions, rules)
-	var model: GridBattlefieldModel = _grid_battlefield(dimensions, rules)
-	_apply_authored_terrain(model, dimensions, grid)
-	return model
-
-
-func _grid_battlefield(dimensions: Vector2i, rules: CombatRules) -> GridBattlefieldModel:
-	_battlefield_ground = TileMapLayer.new()
-	_battlefield_ground.name = "EncounterBattlefieldGround"
-	_battlefield_ground.tile_set = _encounter_grid_tile_set()
-	for y in dimensions.y:
-		for x in dimensions.x:
-			_battlefield_ground.set_cell(Vector2i(x, y), 0, Vector2i.ZERO)
-	var ground_parent: Node = self
-	var main_loop: MainLoop = Engine.get_main_loop()
-	if not is_inside_tree() and main_loop is SceneTree:
-		ground_parent = (main_loop as SceneTree).root
-	ground_parent.add_child(_battlefield_ground)
-
+	var field: FieldMap = _current_field_map()
+	if field == null:
+		# Invalid direct callers can still fail closed without recreating a hidden
+		# encounter grid. GameFlow's can_fight_here guard prevents this in play.
+		return BattlefieldModel.create_default(rules)
 	var model: GridBattlefieldModel = GridBattlefieldModel.new()
 	model.configure(rules)
-	model.build_grid(_battlefield_ground)
+	model.build_grid(field.ground(), field.blocking())
 	return model
 
 
-func _apply_authored_terrain(
-	model: GridBattlefieldModel,
-	dimensions: Vector2i,
-	grid: Dictionary,
-) -> void:
-	var cover_data: Variant = grid.get("cover", [])
-	if not cover_data is Array:
-		push_warning("Encounter '%s' grid cover must be an Array; skipping cover." % encounter_id)
-	else:
-		for authored_cell: Variant in cover_data:
-			if not authored_cell is Vector2i:
-				push_warning(
-					"Encounter '%s' has malformed cover cell '%s'; skipping."
-					% [encounter_id, authored_cell]
-				)
-				continue
-			var cell: Vector2i = authored_cell
-			if not _authored_cell_is_inside(cell, dimensions):
-				push_warning(
-					"Encounter '%s' cover cell %s is outside its %dx%d grid; skipping."
-					% [encounter_id, cell, dimensions.x, dimensions.y]
-				)
-				continue
-			model.set_cover(cell)
+func _current_field_map() -> FieldMap:
+	# Autoloads earlier in project.godot (GameFlow) ask before Battle joins the tree.
+	var tree: SceneTree = get_tree() if is_inside_tree() else Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return null
+	var current_scene: Node = tree.current_scene
+	if current_scene != null:
+		if current_scene is FieldMap:
+			return current_scene as FieldMap
+		var current_field: FieldMap = current_scene.find_child("FieldMap", true, false) as FieldMap
+		if current_field != null:
+			return current_field
+	return tree.root.find_child("FieldMap", true, false) as FieldMap
 
-	var elevation_data: Variant = grid.get("elevation", {})
-	if not elevation_data is Dictionary:
-		push_warning(
-			"Encounter '%s' grid elevation must be a Dictionary; skipping elevation."
-			% encounter_id
-		)
+
+## Returns the shared field IsoGrid to navigation once a battle is over or superseded (D1:
+## combat borrows the field's grid, it never keeps it).
+func _release_field_grid() -> void:
+	if controller == null:
 		return
-	for authored_cell: Variant in elevation_data:
-		if not authored_cell is Vector2i:
-			push_warning(
-				"Encounter '%s' has malformed elevation cell '%s'; skipping."
-				% [encounter_id, authored_cell]
-			)
-			continue
-		var cell: Vector2i = authored_cell
-		var authored_height: Variant = elevation_data.get(authored_cell)
-		if not authored_height is int:
-			push_warning(
-				"Encounter '%s' elevation at %s must be an int; skipping."
-				% [encounter_id, cell]
-			)
-			continue
-		if not _authored_cell_is_inside(cell, dimensions):
-			push_warning(
-				"Encounter '%s' elevation cell %s is outside its %dx%d grid; skipping."
-				% [encounter_id, cell, dimensions.x, dimensions.y]
-			)
-			continue
-		model.set_elevation(cell, clampi(int(authored_height), 0, DS.ELEVATION_MAX))
-
-	# Authored cliffs await a stage visual; invisible impassable cells are intentionally unsupported.
-
-
-func _authored_cell_is_inside(cell: Vector2i, dimensions: Vector2i) -> bool:
-	return cell.x >= 0 and cell.y >= 0 and cell.x < dimensions.x and cell.y < dimensions.y
-
-
-func _encounter_grid_tile_set() -> TileSet:
-	var tile_set := TileSet.new()
-	tile_set.tile_size = Vector2i(64, 32)
-	var image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
-	var source := TileSetAtlasSource.new()
-	source.texture = ImageTexture.create_from_image(image)
-	source.texture_region_size = tile_set.tile_size
-	source.create_tile(Vector2i.ZERO)
-	tile_set.add_source(source, 0)
-	return tile_set
-
-
-func _release_battlefield_ground() -> void:
-	if is_instance_valid(_battlefield_ground):
-		_battlefield_ground.free()
-	_battlefield_ground = null
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_PREDELETE:
-		_release_battlefield_ground()
+	var model: GridBattlefieldModel = controller.battlefield as GridBattlefieldModel
+	if model != null:
+		model.release_field_grid()
 
 
 func replay_combat_events(receiver: Callable) -> void:
@@ -657,6 +604,7 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 		)
 		result.cause = _flee_cause()
 		_apply_flee_consequence(result, flee_outcome)
+	_release_field_grid()
 	last_result = result
 	battle_ended.emit(result)
 

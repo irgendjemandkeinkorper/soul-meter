@@ -1,0 +1,29 @@
+[gd_resource type="TileSet" load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/ground/ground_tiles.png" id="1_ground"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_combat_terrain"]
+texture = ExtResource("1_ground")
+texture_region_size = Vector2i(64, 32)
+0:0/0 = 0
+0:0/0/custom_data_0 = false
+0:0/0/custom_data_1 = 0
+1:0/0 = 0
+1:0/0/custom_data_0 = true
+1:0/0/custom_data_1 = 0
+2:0/0 = 0
+2:0/0/custom_data_0 = false
+2:0/0/custom_data_1 = 1
+3:0/0 = 0
+3:0/0/custom_data_0 = false
+3:0/0/custom_data_1 = 2
+
+[resource]
+tile_shape = 1
+tile_layout = 5
+tile_size = Vector2i(64, 32)
+custom_data_layer_0/name = "cover"
+custom_data_layer_0/type = 1
+custom_data_layer_1/name = "elevation"
+custom_data_layer_1/type = 2
+sources/0 = SubResource("TileSetAtlasSource_combat_terrain")

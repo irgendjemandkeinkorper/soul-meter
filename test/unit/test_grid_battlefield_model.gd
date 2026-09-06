@@ -59,6 +59,66 @@ func _handle(x: int, y: int, elevation: int = 0) -> StringName:
 	return StringName("c:%d,%d,%d" % [x, y, elevation])
 
 
+func test_build_grid_reuses_the_field_grid_and_reads_authored_terrain() -> void:
+	var scene: Node = load("res://world/test_room.tscn").instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	var field: FieldMap = scene.find_child("FieldMap", true, false) as FieldMap
+	var model: GridBattlefieldModel = GridBattlefieldModel.new()
+	model.configure(_rules())
+	model.build_grid(field.ground(), field.blocking())
+
+	assert_object(model._grid).is_same(field.iso_grid())
+	assert_bool(bool(_tile_at(model.tiles_snapshot(), Vector2i(2, 1)).get("cover", false))).is_true()
+	assert_int(model.elevation_at(Vector2i(3, 1))).is_equal(1)
+	# Authored Blocking cells (test_room paints its four solid props) reach the combat grid
+	# through the shared IsoGrid; nothing re-derives passability for combat.
+	var painted: Array[Vector2i] = field.blocking().get_used_cells()
+	assert_array(painted).is_not_empty()
+	for cell: Vector2i in painted:
+		assert_bool(model._grid.is_point_solid(cell)).override_failure_message(str(cell)).is_true()
+	assert_bool(model._grid.is_point_solid(Vector2i(30, 30))).is_false()
+
+	scene.queue_free()
+	await get_tree().process_frame
+
+
+func test_release_field_grid_restores_field_passability_and_weights() -> void:
+	var scene: Node = load("res://world/test_room.tscn").instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	var field: FieldMap = scene.find_child("FieldMap", true, false) as FieldMap
+	var grid: IsoGrid = field.iso_grid()
+	var rect: Rect2i = grid.get_used_rect()
+	var solid_before: Dictionary = {}
+	for y in range(rect.position.y, rect.end.y):
+		for x in range(rect.position.x, rect.end.x):
+			var cell := Vector2i(x, y)
+			solid_before[cell] = grid.is_point_solid(cell)
+	var weight_before: float = grid.get_point_weight_scale(Vector2i(3, 1))
+
+	var model: GridBattlefieldModel = GridBattlefieldModel.new()
+	model.configure(_rules())
+	model.build_grid(field.ground(), field.blocking())
+	var allies: Array[BattleActor] = [_actor("release-ally")]
+	var enemies: Array[BattleActor] = [_actor("release-enemy")]
+	model.setup(allies, enemies)
+	assert_bool(grid.is_point_solid(rect.position)).is_true()
+	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_greater(weight_before)
+
+	model.release_field_grid()
+
+	var mismatches: int = 0
+	for cell: Vector2i in solid_before.keys():
+		if grid.is_point_solid(cell) != bool(solid_before[cell]):
+			mismatches += 1
+	assert_int(mismatches).is_equal(0)
+	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_equal(weight_before)
+
+	scene.queue_free()
+	await get_tree().process_frame
+
+
 # ---- opaque handles, capabilities, describe_position ----
 
 
@@ -522,3 +582,10 @@ func test_reachable_positions_is_deterministic_across_repeated_calls() -> void:
 	var second := model.reachable_positions(ally, 60)
 
 	assert_array(first).is_equal(second)
+
+
+func _tile_at(tiles: Array[Dictionary], cell: Vector2i) -> Dictionary:
+	for tile: Dictionary in tiles:
+		if int(tile.get("x", -1)) == cell.x and int(tile.get("y", -1)) == cell.y:
+			return tile
+	return {}

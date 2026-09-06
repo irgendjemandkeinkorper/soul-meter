@@ -1,12 +1,17 @@
 extends GdUnitTestSuite
 
+const FIELD_SCENE := preload("res://world/test_room.tscn")
+
 var _game_state_before: Dictionary
 var _reputation_before: Dictionary
 var _renown_before: Dictionary
 var _export_root: String
+var _field_scene: Node2D
 
 
 func before_test() -> void:
+	_field_scene = FIELD_SCENE.instantiate() as Node2D
+	add_child(_field_scene)
 	_game_state_before = GameState.to_dict().duplicate(true)
 	_reputation_before = Reputation.to_dict().duplicate(true)
 	_renown_before = Renown.to_dict().duplicate(true)
@@ -45,6 +50,8 @@ func after_test() -> void:
 	Reputation.from_dict(_reputation_before)
 	Renown.from_dict(_renown_before)
 	get_tree().paused = false
+	_field_scene.free()
+	_field_scene = null
 
 
 func test_disabled_autoload_has_no_children_connections_input_or_files() -> void:

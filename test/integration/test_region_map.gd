@@ -7,10 +7,14 @@ var _travel_plan_before: TravelPlan
 var _target_scene_before := ""
 var _target_spawn_before: StringName = &"default"
 var _flow_was_active := false
+## Journey ambushes now fight on the loaded field (F1); give Battle a real one.
+var _field_scene: Node2D
 
 
 func before_test() -> void:
 	_game_state_before = GameState.to_dict()
+	_field_scene = (load("res://world/test_room.tscn") as PackedScene).instantiate() as Node2D
+	add_child(_field_scene)
 	_travel_plan_before = GameFlow.travel_plan
 	_target_scene_before = GameFlow._target_scene
 	_target_spawn_before = GameFlow._target_spawn_id
@@ -25,6 +29,9 @@ func before_test() -> void:
 
 func after_test() -> void:
 	_restore_flow_after_battle_test()
+	if is_instance_valid(_field_scene):
+		_field_scene.free()
+	_field_scene = null
 	_clear_test_battle()
 	UIManager.close_all()
 	get_tree().paused = false
@@ -221,7 +228,6 @@ func _restore_flow_after_battle_test() -> void:
 func _clear_test_battle() -> void:
 	if Battle.encounter_id.is_empty():
 		return
-	Battle._release_battlefield_ground()
 	Battle.allies.clear()
 	Battle.enemies.clear()
 	Battle._definition.clear()

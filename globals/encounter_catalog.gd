@@ -5,79 +5,6 @@ extends RefCounted
 ## Pandora itself and exported builds only need the committed JSON artifact.
 
 const DATA_PATH := "res://data/generated/encounters.json"
-## PROVISIONAL — Wave R first-pass board balance; every dimension and terrain cell
-## remains subject to encounter playtesting. Deployment columns intentionally stay clear.
-const _FIELD_GRID_DATA := {
-	"bog-wight": {
-		"dimensions": Vector2i(7, 5),
-		# Contestable tussocks around low hummocks in the bog's center.
-		"cover": [Vector2i(2, 1), Vector2i(2, 2), Vector2i(3, 2), Vector2i(4, 3)],
-		"elevation": {Vector2i(3, 1): 1, Vector2i(4, 2): 2},
-	},
-	"loam-boar": {
-		"dimensions": Vector2i(7, 6),
-		"cover": [Vector2i(2, 2), Vector2i(3, 2), Vector2i(4, 3)],
-		"elevation": {Vector2i(2, 3): 1, Vector2i(3, 4): 1, Vector2i(5, 2): 2},
-	},
-	"dorthkor-vanguard": {
-		"dimensions": Vector2i(9, 6),
-		# Broken wagon cover below the Dorthkor Road embankment.
-		"cover": [Vector2i(3, 1), Vector2i(3, 2), Vector2i(4, 2), Vector2i(5, 4)],
-		"elevation": {Vector2i(5, 1): 1, Vector2i(6, 1): 2, Vector2i(6, 2): 2},
-	},
-	"dorthkor-muster": {
-		"dimensions": Vector2i(8, 6),
-		"cover": [Vector2i(2, 1), Vector2i(3, 1), Vector2i(4, 3), Vector2i(5, 3), Vector2i(5, 4)],
-		"elevation": {Vector2i(2, 4): 1, Vector2i(3, 4): 2},
-	},
-	"jawbrace-empty-post": {
-		"dimensions": Vector2i(8, 5),
-		# Paired Jawbrace barricades leave a contested center lane.
-		"cover": [Vector2i(2, 1), Vector2i(2, 2), Vector2i(5, 2), Vector2i(5, 3)],
-		"elevation": {Vector2i(3, 3): 1},
-	},
-	"phase2-demon": {
-		"dimensions": Vector2i(9, 5),
-		"cover": [Vector2i(3, 1), Vector2i(4, 1), Vector2i(5, 3)],
-		"elevation": {Vector2i(4, 2): 3, Vector2i(5, 2): 2, Vector2i(6, 3): 1},
-	},
-	"phase2-undead": {
-		"dimensions": Vector2i(8, 5),
-		"cover": [Vector2i(2, 1), Vector2i(3, 2), Vector2i(4, 2), Vector2i(5, 3)],
-		"elevation": {Vector2i(3, 1): 1, Vector2i(4, 3): 2},
-	},
-	"phase2-mixed-whipsaw": {
-		"dimensions": Vector2i(9, 6),
-		"cover": [Vector2i(2, 2), Vector2i(3, 2), Vector2i(5, 3), Vector2i(6, 3), Vector2i(4, 4)],
-		"elevation": {
-			Vector2i(4, 1): 1,
-			Vector2i(4, 2): 2,
-			Vector2i(4, 3): 3,
-			Vector2i(4, 4): 1,
-		},
-	},
-	"phase2-speech-winnable": {
-		"dimensions": Vector2i(7, 5),
-		"cover": [Vector2i(2, 1), Vector2i(3, 2)],
-		"elevation": {},
-	},
-	"phase2-stabilizer-showcase": {
-		"dimensions": Vector2i(8, 6),
-		"cover": [Vector2i(2, 3), Vector2i(3, 3), Vector2i(4, 2), Vector2i(5, 2)],
-		"elevation": {Vector2i(3, 1): 1, Vector2i(4, 1): 1, Vector2i(5, 4): 2},
-	},
-	"trial-warden": {
-		"dimensions": Vector2i(7, 6),
-		# Trial-hall pillars frame the center dais without blocking deployment.
-		"cover": [Vector2i(2, 1), Vector2i(2, 4), Vector2i(4, 1), Vector2i(4, 4)],
-		"elevation": {Vector2i(3, 2): 1, Vector2i(3, 3): 1},
-	},
-	"trial-keeper": {
-		"dimensions": Vector2i(9, 5),
-		"cover": [Vector2i(2, 1), Vector2i(2, 3), Vector2i(4, 2), Vector2i(6, 1), Vector2i(6, 3)],
-		"elevation": {Vector2i(4, 1): 1, Vector2i(4, 3): 2, Vector2i(5, 2): 1},
-	},
-}
 ## #209: PROVISIONAL per-encounter authored weather (Wheel id → battle Weather).
 ## Wave R sweep evidence (2026-08-29): before/after reports were byte-identical
 ## (SHA-256 3f7d412f...e21b9a1; multiplier, TTK, wager deltas all 0). The current
@@ -117,9 +44,6 @@ static func definition(encounter_id: StringName) -> Dictionary:
 		return (runtime_row as Dictionary).duplicate(true)
 	var row: Variant = _definitions.get(String(encounter_id), {})
 	var result: Dictionary = row.duplicate(true) if row is Dictionary else {}
-	var grid: Variant = _FIELD_GRID_DATA.get(String(encounter_id), {})
-	if grid is Dictionary and not grid.is_empty():
-		result["grid"] = grid.duplicate(true)
 	var authored_weather := str(_WEATHER_DEFAULTS.get(String(encounter_id), ""))
 	if not authored_weather.is_empty():
 		result["weather_default"] = authored_weather

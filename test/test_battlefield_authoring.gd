@@ -1,16 +1,22 @@
 extends GdUnitTestSuite
 
-## Wave R characterization for provisional per-encounter boards. These tests keep
-## authoring data honest without changing the frozen battlefield/stage contract.
+## Field-terrain characterization. These tests keep map authoring data honest
+## without changing the frozen battlefield/stage contract.
 
 const TEST_ENCOUNTER := &"wave-r-authored-grid-test"
+const FIELD_SCENE := preload("res://world/test_room.tscn")
 
 var _original_party: Array[PartyMember] = []
+var _field_scene: Node2D
+var _field: FieldMap
 
 
 func before_test() -> void:
 	_original_party.assign(GameState.party)
 	_set_full_party()
+	_field_scene = FIELD_SCENE.instantiate() as Node2D
+	add_child(_field_scene)
+	_field = _field_scene.get_node("FieldMap") as FieldMap
 	# Load the generated catalog before injecting a test-only definition.
 	EncounterCatalog.definition(&"bog-wight")
 
@@ -20,36 +26,25 @@ func after_test() -> void:
 	_cleanup_battle()
 	GameState.party.clear()
 	GameState.party.assign(_original_party)
+	_field_scene.free()
+	_field_scene = null
+	_field = null
 
 
-func test_authored_terrain_is_applied_clamped_and_malformed_cells_are_skipped() -> void:
+func test_authored_field_terrain_is_applied_to_the_battlefield() -> void:
 	EncounterCatalog._definitions[String(TEST_ENCOUNTER)] = {
 		"display_name": "Wave R Authored Grid Probe",
-		"grid": {
-			"dimensions": Vector2i(7, 5),
-			"cover": [Vector2i(2, 2), Vector2i(8, 2), "bad-cover-cell"],
-			"elevation": {
-				Vector2i(3, 1): 2,
-				Vector2i(4, 2): 99,
-				Vector2i(-1, 1): 1,
-				Vector2i(3, 3): "high",
-				"bad-elevation-cell": 1,
-			},
-		},
 		"enemies": [_enemy_row()],
 	}
 
-	await assert_error(Battle.start.bind(TEST_ENCOUNTER)).is_push_warning(
-		"Encounter 'wave-r-authored-grid-test' cover cell (8, 2) is outside its 7x5 grid; skipping."
-	)
+	Battle.start(TEST_ENCOUNTER)
 
-	var model := Battle.controller.battlefield as GridBattlefieldModel
+	var model: GridBattlefieldModel = Battle.controller.battlefield as GridBattlefieldModel
 	assert_object(model).is_not_null()
-	assert_bool(bool(_tile_at(model.tiles_snapshot(), Vector2i(2, 2)).get("cover", false))).is_true()
-	assert_int(int(_tile_at(model.tiles_snapshot(), Vector2i(3, 1)).get("height_delta", -1))).is_equal(2)
-	assert_int(int(_tile_at(model.tiles_snapshot(), Vector2i(4, 2)).get("height_delta", -1))).is_equal(DS.ELEVATION_MAX)
-	assert_int(model.elevation_at(Vector2i(-1, 1))).is_equal(0)
-	assert_dict(_tile_at(model.tiles_snapshot(), Vector2i(8, 2))).is_empty()
+	assert_object(model._grid).is_same(_field.iso_grid())
+	assert_bool(bool(_tile_at(model.tiles_snapshot(), Vector2i(2, 1)).get("cover", false))).is_true()
+	assert_int(int(_tile_at(model.tiles_snapshot(), Vector2i(3, 1)).get("height_delta", -1))).is_equal(1)
+	assert_int(int(_tile_at(model.tiles_snapshot(), Vector2i(4, 2)).get("height_delta", -1))).is_equal(2)
 
 
 func test_every_catalog_encounter_fits_and_deploys_a_full_party() -> void:
@@ -65,7 +60,7 @@ func test_every_catalog_encounter_fits_and_deploys_a_full_party() -> void:
 		assert_bool(Battle.controller.battlefield is GridBattlefieldModel).override_failure_message(
 			"%s did not start on a grid" % authored_id
 		).is_true()
-		var model := Battle.controller.battlefield as GridBattlefieldModel
+		var model: GridBattlefieldModel = Battle.controller.battlefield as GridBattlefieldModel
 		assert_bool(model.tiles_snapshot().is_empty()).override_failure_message(
 			"%s produced no battlefield tiles" % authored_id
 		).is_false()
@@ -87,51 +82,18 @@ func test_every_catalog_encounter_fits_and_deploys_a_full_party() -> void:
 		assert_int(occupied.size()).is_equal(Battle.allies.size() + Battle.enemies.size())
 
 
-func test_authored_terrain_keeps_both_deployment_columns_clear() -> void:
-	assert_int(EncounterCatalog._FIELD_GRID_DATA.size()).is_equal(12)
-	for encounter_key: Variant in EncounterCatalog._FIELD_GRID_DATA:
-		var grid: Dictionary = EncounterCatalog._FIELD_GRID_DATA[encounter_key]
-		var dimensions: Vector2i = grid.get("dimensions", Vector2i.ZERO)
-		assert_bool(dimensions.x >= 7 and dimensions.x <= 9).is_true()
-		assert_bool(dimensions.y >= 5 and dimensions.y <= 6).is_true()
-		# Gate r1 risk closure: battle.gd warn-skips malformed/out-of-bounds
-		# authored cells at runtime, so a catalog typo would otherwise ship
-		# silently — enforce the full data invariants here instead.
-		var seen_cover: Dictionary = {}
-		for cell: Variant in grid.get("cover", []):
-			assert_bool(cell is Vector2i).is_true()
-			if cell is Vector2i:
-				assert_bool(cell.x == 0 or cell.x == dimensions.x - 1).override_failure_message(
-					"%s authors cover in deployment column at %s" % [encounter_key, cell]
-				).is_false()
-				assert_bool(
-					cell.x >= 0 and cell.y >= 0 and cell.x < dimensions.x and cell.y < dimensions.y
-				).override_failure_message(
-					"%s authors cover outside its board at %s" % [encounter_key, cell]
-				).is_true()
-				assert_bool(seen_cover.has(cell)).override_failure_message(
-					"%s authors duplicate cover at %s" % [encounter_key, cell]
-				).is_false()
-				seen_cover[cell] = true
-		var elevation: Dictionary = grid.get("elevation", {})
-		for cell: Variant in elevation:
-			assert_bool(cell is Vector2i).is_true()
-			if cell is Vector2i:
-				assert_bool(cell.x == 0 or cell.x == dimensions.x - 1).override_failure_message(
-					"%s authors elevation in deployment column at %s" % [encounter_key, cell]
-				).is_false()
-				assert_bool(
-					cell.x >= 0 and cell.y >= 0 and cell.x < dimensions.x and cell.y < dimensions.y
-				).override_failure_message(
-					"%s authors elevation outside its board at %s" % [encounter_key, cell]
-				).is_true()
-				var authored_height: int = int(elevation[cell])
-				assert_bool(
-					authored_height >= 1 and authored_height <= DS.ELEVATION_MAX
-				).override_failure_message(
-					"%s authors elevation %d at %s (must be 1..%d)"
-					% [encounter_key, authored_height, cell, DS.ELEVATION_MAX]
-				).is_true()
+func test_terrain_tileset_authors_cover_and_elevation_custom_data() -> void:
+	var terrain: TileMapLayer = _field_scene.get_node("Terrain") as TileMapLayer
+	assert_object(terrain).is_not_null()
+	assert_int(terrain.tile_set.get_custom_data_layers_count()).is_equal(2)
+	assert_str(String(terrain.tile_set.get_custom_data_layer_name(0))).is_equal("cover")
+	assert_int(terrain.tile_set.get_custom_data_layer_type(0)).is_equal(TYPE_BOOL)
+	assert_str(String(terrain.tile_set.get_custom_data_layer_name(1))).is_equal("elevation")
+	assert_int(terrain.tile_set.get_custom_data_layer_type(1)).is_equal(TYPE_INT)
+	var cover_data: TileData = terrain.get_cell_tile_data(Vector2i(2, 1))
+	var elevation_data: TileData = terrain.get_cell_tile_data(Vector2i(3, 1))
+	assert_bool(bool(cover_data.get_custom_data(&"cover"))).is_true()
+	assert_int(int(elevation_data.get_custom_data(&"elevation"))).is_equal(1)
 
 
 func test_weather_defaults_are_valid_wheel_ids_and_start_without_warnings() -> void:
@@ -182,7 +144,7 @@ func _step_active_ally_toward(target: BattleActor) -> bool:
 	var reachable: Array = movement.get("reachable", [])
 	if reachable.is_empty():
 		return false
-	var model := Battle.controller.battlefield as GridBattlefieldModel
+	var model: GridBattlefieldModel = Battle.controller.battlefield as GridBattlefieldModel
 	var target_position: Dictionary = model.describe_position(model.position_of(target))
 	var target_cell: Vector2i = target_position.get("cell", Vector2i.ZERO)
 	var ally: BattleActor = Battle.current_ally()
@@ -221,7 +183,6 @@ func _set_full_party() -> void:
 
 
 func _cleanup_battle() -> void:
-	Battle._release_battlefield_ground()
 	Battle.controller = null
 	Battle.allies.clear()
 	Battle.enemies.clear()

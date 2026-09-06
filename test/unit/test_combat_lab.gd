@@ -8,7 +8,6 @@ var _reputation_before: Dictionary
 var _renown_before: Dictionary
 var _weather_before: Dictionary
 var _spoils_before: Dictionary
-var _grids_before: Dictionary
 var _definitions_before: Dictionary
 var _matrix_before: Dictionary
 var _wheel_before: Array[StringName]
@@ -25,7 +24,6 @@ func before_test() -> void:
 	EncounterCatalog.definition(EncounterIds.BOG_WIGHT)
 	_weather_before = EncounterCatalog._WEATHER_DEFAULTS.duplicate(true)
 	_spoils_before = EncounterCatalog._SPOILS.duplicate(true)
-	_grids_before = EncounterCatalog._FIELD_GRID_DATA.duplicate(true)
 	_definitions_before = EncounterCatalog._definitions.duplicate(true)
 	_matrix_before = ElementMatrix.IDENTITY_ROW.duplicate(true)
 	_wheel_before.assign(ElementWheel.ORDER)
@@ -142,7 +140,6 @@ func test_lab_session_never_mutates_authored_balance_data() -> void:
 
 	assert_dict(EncounterCatalog._WEATHER_DEFAULTS).is_equal(_weather_before)
 	assert_dict(EncounterCatalog._SPOILS).is_equal(_spoils_before)
-	assert_dict(EncounterCatalog._FIELD_GRID_DATA).is_equal(_grids_before)
 	assert_dict(EncounterCatalog._definitions).is_equal(_definitions_before)
 	assert_dict(ElementMatrix.IDENTITY_ROW).is_equal(_matrix_before)
 	assert_array(ElementWheel.ORDER).is_equal(_wheel_before)
