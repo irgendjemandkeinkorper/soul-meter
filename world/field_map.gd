@@ -3,6 +3,7 @@ extends Node2D
 ## Stable field-scene seam shared by navigation and same-map combat.
 
 var _combat_mode_active: bool = false
+var _restore_controls: Array[Callable] = []
 
 
 func ground() -> TileMapLayer:
@@ -37,22 +38,35 @@ func set_combat_mode(active: bool) -> void:
 	var player := root.find_child("Player", true, false) as Player
 	if player != null:
 		player.velocity = Vector2.ZERO
-		player.set_physics_process(not active)
+	if not active:
+		for restore: Callable in _restore_controls:
+			if restore.is_valid():
+				restore.call()
+		_restore_controls.clear()
+		return
+	if player != null:
+		_restore_controls.append(player.set_physics_process.bind(player.is_physics_processing()))
+		player.set_physics_process(false)
 		var controller := (
 			player.find_child("ClickMoveController", true, false) as ClickMoveController
 		)
 		if controller != null:
+			_restore_controls.append(controller.set.bind("enabled", controller.enabled))
 			controller.cancel_path()
-			controller.enabled = not active
+			controller.enabled = false
 	# Interact prompts (E) used to hide behind the paused tree. The field stays live during
 	# combat now, so every interactable's unhandled input is switched off instead.
 	for node: Node in root.find_children("*", "", true, false):
 		if _is_field_interactable(node):
-			node.set_process_unhandled_input(not active)
+			_restore_controls.append(
+				node.set_process_unhandled_input.bind(node.is_processing_unhandled_input())
+			)
+			node.set_process_unhandled_input(false)
 	for node: Node in root.find_children("*", "TravelExit", true, false):
 		var travel_exit := node as TravelExit
 		if travel_exit != null:
-			travel_exit.monitoring = not active
+			_restore_controls.append(travel_exit.set.bind("monitoring", travel_exit.monitoring))
+			travel_exit.monitoring = false
 
 
 func combat_mode_active() -> bool:
