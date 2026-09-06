@@ -211,6 +211,66 @@ fourth. `#282` starts after step 5.
 3. **Corpses across travel:** **no.** Downed hostiles despawn on scene exit; `group_id` flags
    keep them from respawning.
 
+### Ruled 2026-09-06 (F1 step 4-5 blockers)
+
+4. **Ambient-entry overlap** (D5, step 4): **accepted with three amendments.** The proposal in
+   `docs/f1-session-placement-review.md` is the rule — keep each party member on its current
+   cell when that cell is free, relocate *only* overlapping members, preserve authored blocking
+   and hostile occupancy, refuse atomically, open no deployment screen. Amendments:
+   - **The player is the anchor and is never relocated.** Resolution starts from the player's
+     cell. If the player's own cell is unavailable or off-grid, the session is refused outright.
+   - **Relocation is BFS over the battlefield's *reachable* cells, not Euclidean distance**, so
+     a companion can never be seated across a wall from the party it is fighting with. Search
+     order: `GameState.party` order (stable and serialized, so placement is reproducible from a
+     save); within one member, increasing BFS depth, ties broken by cell `y` then `x`.
+   - **The search radius is capped: `PLACEMENT_SEARCH_RADIUS = 4` cells** (PROVISIONAL constant,
+     DeepSeek-tunable with the other combat numbers). If any companion has no free reachable
+     cell inside the cap, the **whole session is refused**: nothing moves, no actor changes
+     state, the alert is dropped, and the source hostile returns to `IDLE` under a re-alert
+     cooldown so it cannot spam the refusal every frame. Rationale: a pocket that cannot seat
+     the party is a pocket where a tactical fight cannot be fought; refusing beats opening an
+     unfightable session.
+
+   `set_combat_mode(true)` additionally **snaps the presentation followers to their assigned
+   combat cells**, so the visible party matches the battlefield model in the window before
+   `CombatOverlay` exists (step 6). Follower trail movement stays frozen for the session.
+
+   **Rejected alternative:** re-staggering exploration followers so they never share a cell. The
+   trail is ratified presentation behaviour with passing acceptance tests
+   (`test/integration/test_party_followers.gd`); combat placement is a combat concern and must
+   not leak backwards into exploration.
+
+5. **"CT round" means one measure: `TICKS_PER_MEASURE` = 16 ticks.** The CT scheduler has ticks
+   and measures; only the AP scheduler has rounds. Everywhere F0/F1 says "CT round", read
+   "measure". Consequences:
+   - **Chain alerts propagate one hop per `measure_started` event** (step 5). `FieldMap.propagate_alerts()`
+     is driven by the CT-native `measure_started` beat the controller already emits, and by
+     nothing else. **Do not wire it to `round_started`/`round_ended`** — those are AP-only and
+     never fire in an ambient session.
+   - **One hop per event, not per measure crossed.** `advance()` may report `measures_crossed > 1`
+     when a slow actor's turn spans measures; the controller already collapses that to a single
+     `measure_started` emission, and propagation follows the emission. This is intentional:
+     chain spread is bounded by turn cadence, not by wall-clock ticks.
+   - **Propagation never fires at session start.** The initiating hostile is hop 0 and is
+     admitted directly by `start_session()`. The first chain hop lands on the first
+     `measure_started` after the session opens, which guarantees the party a window before
+     reinforcements — the same intent as `admission_delay`.
+   - **Propagation runs only while `Battle.session_active` and the scheduler is CT.** Set-piece
+     encounters are authored; they have no IDLE neighbours to chain.
+   - Ruling 1's flee window ("two full CT rounds") therefore resolves to **two full measures,
+     32 ticks**, still PROVISIONAL.
+
+6. **The admission guarantee is an invariant, not a magic number.** `rules.admission_delay`
+   (PROVISIONAL 40) stays as the default mechanism, but the acceptance gate is:
+
+   > **A1.** For any actor admitted mid-session at tick `T`, at least one party-side actor's
+   > turn begins strictly between `T` and that actor's first turn.
+
+   `admit()` clamps the insertion further when `admission_delay` alone would not satisfy A1, and
+   asserts A1 in debug builds. The `submit_action`-path acceptance test must use the hard case:
+   **the newcomer is the fastest actor on the field and is admitted during an enemy turn.** A
+   passing test built on a slow newcomer does not close step 4.
+
 ## 5. Risks
 - Step 6 touches the frozen `BattleInterface` contract from the inside; the replay test is
   the tripwire. If the tile payload changes, stop and escalate.

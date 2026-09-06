@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://actors/hostile/hostile.gd" id="1_hostile"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-guard-a/crowd-guard-a--idle--se--f00.png" id="2_sheet"]
+
+[sub_resource type="RectangleShape2D" id="body_shape"]
+size = Vector2(48, 48)
+
+[sub_resource type="CircleShape2D" id="alert_shape"]
+resource_local_to_scene = true
+radius = 320.0
+
+[node name="Hostile" type="CharacterBody2D"]
+script = ExtResource("1_hostile")
+y_sort_enabled = true
+
+[node name="Shadow" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-22, -4, 0, -11, 22, -4, 0, 3)
+color = Color(0, 0, 0, 0.35)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -28)
+texture = ExtResource("2_sheet")
+offset = Vector2(0, -119)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("body_shape")
+
+[node name="AlertSensor" type="Area2D" parent="."]
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AlertSensor"]
+shape = SubResource("alert_shape")

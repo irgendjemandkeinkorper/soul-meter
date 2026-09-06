@@ -82,3 +82,32 @@ func test_every_encounter_definition_has_an_authored_spoils_table() -> void:
 			.override_failure_message(
 				"Encounter '%s' has no authored spoils table" % encounter_id
 			).is_not_empty()
+
+
+func test_make_actor_builds_one_combatant_from_an_archetype_id() -> void:
+	# Same-map combat D4: a Hostile scene node owns its own unit, so the catalog must be able to
+	# speak in single units and not only in whole encounters.
+	var actor := EncounterCatalog.make_actor(&"bog-wight")
+	assert_object(actor).is_not_null()
+	assert_str(String(actor.archetype_id)).is_equal("bog-wight")
+	assert_int(actor.hp).is_equal(actor.max_hp)
+	assert_int(actor.hp).is_greater(0)
+	# A unit built with no group carries no ledger fields — those belong to an encounter.
+	assert_str(actor.defeated_flag).is_empty()
+
+	var second := EncounterCatalog.make_actor(&"bog-wight")
+	assert_object(second).is_not_same(actor)
+
+
+func test_make_actor_applies_the_groups_outcome_fields() -> void:
+	var actor := EncounterCatalog.make_actor(&"bog-wight", EncounterIds.BOG_WIGHT)
+	assert_str(actor.defeated_flag).is_equal("defeated_bog_wight")
+	assert_str(actor.win_faction).is_not_empty()
+	var plural := EncounterCatalog.make_actors(EncounterIds.BOG_WIGHT)
+	assert_str(actor.defeated_flag).override_failure_message(
+		"a hostile built for a group must carry the same ledger fields make_actors() gives actors[0]"
+	).is_equal(plural[0].defeated_flag)
+
+
+func test_make_actor_refuses_an_unknown_unit() -> void:
+	assert_object(EncounterCatalog.make_actor(&"no-such-unit")).is_null()

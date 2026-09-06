@@ -49,3 +49,13 @@ func test_wave1_enemy_and_unused_ap_defaults_are_conservative_and_capped() -> vo
 	assert_int(rules.unused_ap_defense_per_ap).is_greater_equal(0)
 	assert_int(rules.unused_ap_defense_cap).is_greater_equal(0)
 	assert_int(rules.unused_ap_defense_per_ap).is_less_equal(rules.unused_ap_defense_cap)
+
+
+func test_admission_delay_is_authored_below_the_ready_threshold() -> void:
+	# Same-map combat D5: a mob admitted mid-session must not act before the party's next turn.
+	# At or above READY_AT it would be seated already ready, which the controller reads as a
+	# continuation of the previous turn — so a tuning sweep must never cross that line.
+	var rules := CombatRules.new()
+	assert_int(rules.admission_delay).is_equal(40)
+	assert_int(rules.admission_delay).is_greater(0)
+	assert_int(rules.admission_delay).is_less(TurnScheduler.READY_AT)
