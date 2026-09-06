@@ -26,7 +26,7 @@ const ALL: Array[Dictionary] = [
 		"resource_blurb": "Alternate strike and guard, advance and withdraw, to stay Balanced; spam one side and you go Unbalanced.",
 		"signature": "Reflection",
 		"signature_blurb": "Once per encounter, redirect an incoming spell effect back at its caster at reduced power.",
-		"suggested_major": "daar", "suggested_minor": "terra", "chord": "The Deep",
+		"suggested_major": "vekh", "suggested_minor": "tham", "chord": "The Deep",
 		"retired_disciplines": [], "watch_disciplines": [], "notes": "",
 	},
 	{
@@ -37,7 +37,7 @@ const ALL: Array[Dictionary] = [
 		"resource_blurb": "Recording a fallen or saved ally's name mid-fight refunds Soul Gauge.",
 		"signature": "Last Washing",
 		"signature_blurb": "When an ally hits 0 HP, spend a Ledger entry to stabilize them instead of a normal death save.",
-		"suggested_major": "aqua", "suggested_minor": "bloei", "chord": "The Green Tide",
+		"suggested_major": "luth", "suggested_minor": "vel", "chord": "The Green Tide",
 		"retired_disciplines": [], "watch_disciplines": [], "notes": "",
 	},
 	{
@@ -48,7 +48,7 @@ const ALL: Array[Dictionary] = [
 		"resource_blurb": "Taking damage banks Scars; spend them to buy guaranteed-hit or guaranteed-crit windows.",
 		"signature": "Debt of Arms",
 		"signature_blurb": "Trade a chunk of your own current HP for a massive damage or buff spike on yourself or an ally.",
-		"suggested_major": "scor", "suggested_minor": "molm", "chord": "Ashfire",
+		"suggested_major": "khash", "suggested_minor": "mozh", "chord": "Ashfire",
 		"retired_disciplines": [], "watch_disciplines": [], "notes": "",
 	},
 	{
@@ -59,7 +59,7 @@ const ALL: Array[Dictionary] = [
 		"resource_blurb": "A slowly-depleting personal stat, burned for guaranteed information: true fizzle, hidden resistances, a trap.",
 		"signature": "Sacred Clarity",
 		"signature_blurb": "Force a target's next action to be telegraphed to the whole party, at Fading cost.",
-		"suggested_major": "suul", "suggested_minor": "bloei", "chord": "Verdance",
+		"suggested_major": "sul", "suggested_minor": "vel", "chord": "Verdance",
 		"retired_disciplines": [], "watch_disciplines": [], "notes": "",
 	},
 	{
@@ -70,7 +70,7 @@ const ALL: Array[Dictionary] = [
 		"resource_blurb": "Every damage-over-time tick you have active stacks Hunger; the more that is dying, the harder you hit.",
 		"signature": "Nothing Wasted",
 		"signature_blurb": "Any kill from a DoT you applied refunds Gauge proportional to the ticks dealt.",
-		"suggested_major": "molm", "suggested_minor": "daar", "chord": "The Grave",
+		"suggested_major": "mozh", "suggested_minor": "vekh", "chord": "The Grave",
 		"retired_disciplines": [], "watch_disciplines": [], "notes": "",
 	},
 	{
@@ -81,7 +81,7 @@ const ALL: Array[Dictionary] = [
 		"resource_blurb": "A failed cast banks a token; spend it to guarantee your next cast of that spell.",
 		"signature": "Second Casting",
 		"signature_blurb": "Once per encounter, spend two banked tokens to turn a fizzle into a success after the fact.",
-		"suggested_major": "terra", "suggested_minor": "khor", "chord": "The Ringing Stone",
+		"suggested_major": "tham", "suggested_minor": "khor", "chord": "The Ringing Stone",
 		"retired_disciplines": [], "watch_disciplines": [], "notes": "",
 	},
 	{
@@ -92,7 +92,7 @@ const ALL: Array[Dictionary] = [
 		"resource_blurb": "Your biggest effects fire semi-randomly off a hidden table; the floor is strong, the ceiling unpredictable.",
 		"signature": "Tuned Thunder",
 		"signature_blurb": "Whenever an ability crits it chains into a second, random effect.",
-		"suggested_major": "strom", "suggested_minor": "suul", "chord": "The Levin",
+		"suggested_major": "zhur", "suggested_minor": "sul", "chord": "The Levin",
 		"retired_disciplines": [], "watch_disciplines": [], "notes": "",
 	},
 	{
@@ -103,7 +103,7 @@ const ALL: Array[Dictionary] = [
 		"resource_blurb": "Queue a debuff, a damage-over-time or a trap to trigger N turns from now, no matter what happens between.",
 		"signature": "Sequenced Verdict",
 		"signature_blurb": "Bank a devastating delayed effect that resolves on a fixed future turn regardless of the target's preparation.",
-		"suggested_major": "nul", "suggested_minor": "scor", "chord": "Emberquiet",
+		"suggested_major": "zhem", "suggested_minor": "khash", "chord": "Emberquiet",
 		"retired_disciplines": [], "watch_disciplines": ["hushwarden"],
 		"notes": "Oathclock x Hushwarden stacks a queue against a tax — allowed, under watch.",
 	},
@@ -127,7 +127,7 @@ const ALL: Array[Dictionary] = [
 		"resource_blurb": "Bind a hidden Contract to a target; violating it triggers a payoff later.",
 		"signature": "The Unspoken Term",
 		"signature_blurb": "Bind up to three Threads across the field and cash them in on your own terms.",
-		"suggested_major": "daar", "suggested_minor": "molm", "chord": "The Grave",
+		"suggested_major": "vekh", "suggested_minor": "mozh", "chord": "The Grave",
 		"retired_disciplines": ["chordblade"], "watch_disciplines": [],
 		"notes": "Threadwalker x Chordblade is retired (2026-08-07): reach is identical under every Discipline, so none can grant or withhold it.",
 	},

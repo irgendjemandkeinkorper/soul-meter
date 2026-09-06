@@ -8,7 +8,7 @@ Marshal Coiljaw: Dorthkor's road-drum stopped halfway through the breach warning
 	=> hub
 - "Something answered over the east road. The whole ward went still." [if GameState.get_flag("zhavar_tolling_wilds") and not GameState.get_flag("zhavar_tolling_witnessed") /]
 	do GameState.set_flag("zhavar_tolling_witnessed", true)
-	Marshal Coiljaw: One toll. A Nul shape crossed the cloud line east of the road and every sentinel on the wall held their breath together. The old manuals say a zone that can be heard gets visitors. The manuals stop there.
+	Marshal Coiljaw: One toll. A Zhem shape crossed the cloud line east of the road and every sentinel on the wall held their breath together. The old manuals say a zone that can be heard gets visitors. The manuals stop there.
 	Marshal Coiljaw: Nothing landed. This time. If the ward keeps ringing louder, I want you standing where I can find you.
 	=> hub
 - "People are talking about the east road like it's humming." [if SaveGame.zhavar_rung("wilds") == "rising" /]

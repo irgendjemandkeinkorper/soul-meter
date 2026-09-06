@@ -54,12 +54,12 @@ func test_class_and_kit_fields_round_trip_and_default_empty() -> void:
 	member.class_id = "ironbrand"
 	member.kit_weapon_skill = "heft"
 	member.kit_weapon = "weapons/kero_greatsword"
-	member.mastery_element = "scor"
+	member.mastery_element = "khash"
 	var restored := PartyMember.from_dict(member.to_dict())
 	assert_str(restored.class_id).is_equal("ironbrand")
 	assert_str(restored.kit_weapon_skill).is_equal("heft")
 	assert_str(restored.kit_weapon).is_equal("weapons/kero_greatsword")
-	assert_str(restored.mastery_element).is_equal("scor")
+	assert_str(restored.mastery_element).is_equal("khash")
 	var legacy := PartyMember.from_dict({"id": "x"})
 	assert_str(legacy.class_id).is_equal("")
 	assert_str(legacy.kit_weapon_skill).is_equal("")
@@ -97,7 +97,7 @@ func test_save_round_trip_preserves_chargen_identity_fields() -> void:
 	original.background = "sarkhollow-scavenger"
 	original.flaw = "Cannot resist a locked door."
 	original.starting_mastery = "Root Note of choice"
-	original.major_element = "suul"
+	original.major_element = "sul"
 	original.minor_element = "khor"
 
 	var restored := PartyMember.from_dict(original.to_dict())
@@ -108,7 +108,7 @@ func test_save_round_trip_preserves_chargen_identity_fields() -> void:
 	assert_str(restored.background).is_equal("sarkhollow-scavenger")
 	assert_str(restored.flaw).is_equal("Cannot resist a locked door.")
 	assert_str(restored.starting_mastery).is_equal("Root Note of choice")
-	assert_str(restored.major_element).is_equal("suul")
+	assert_str(restored.major_element).is_equal("sul")
 	assert_str(restored.minor_element).is_equal("khor")
 
 

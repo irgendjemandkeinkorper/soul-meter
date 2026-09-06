@@ -71,7 +71,7 @@ func test_wheel_sigils_carry_text_presentation_where_the_ds_marks_them() -> void
 			marked.append(String(entry["id"]))
 	assert_array(marked).override_failure_message(
 		"the VS15-marked sigils drifted from the DS set"
-	).contains_exactly(["bloei", "khor", "daar", "scor", "nul"])
+	).contains_exactly(["vel", "khor", "vekh", "khash", "zhem"])
 
 
 func test_wheel_is_the_closed_canon_order() -> void:
@@ -80,7 +80,7 @@ func test_wheel_is_the_closed_canon_order() -> void:
 	for entry in DS.WHEEL:
 		ids.append(String(entry["id"]))
 	assert_array(ids).contains_exactly([
-		"suul", "bloei", "aqua", "khor", "terra", "daar", "molm", "scor", "nul", "strom"
+		"sul", "vel", "luth", "khor", "tham", "vekh", "mozh", "khash", "zhem", "zhur"
 	])
 	assert_array(ids).is_equal(ElementWheel.ORDER.map(func(e: StringName) -> String:
 		return String(e)

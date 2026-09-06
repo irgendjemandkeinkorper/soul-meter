@@ -31,7 +31,7 @@ tasks), mono `04-world/systems/character-creation.md` + `ten-patron-classes.md` 
 | **Latent defect:** the advancement ledger writes lowercase tiers, the save validator only accepts `["Untrained","Trained","Expert"]`. First skill purchase → save rejected on load. | `advancement.gd:_ledger_row`, `game_state.gd:30, ~1194` |
 | Canon has **no weapon skill and no per-element casting skill** in any list (12, 18, 22). Weapons exist only as class **Kit** prose. Elemental competence = Mastery (a Note/Phrase at 0% fizzle), Major/Minor pick (never opposed), Intuition fizzle reduction, Vär breadth gating. | mono `character-creation.md`, `magic-system.md`, `ten-patron-classes.md`; RFC-0004/0005 |
 | Canon chargen order: Race → Discipline → Patron → Major/Minor → Attributes → Background → Skills ("remaining points from a Reason/Decorum-scaled pool", formula unstated) → Flaw (table unenumerated; "bonus skill point or starting resource"). | mono `character-creation.md` §Chargen Flow |
-| Combat reads: to-hit `70 + facing + 4×height + 2×(edge delta)`; plain attack has no weapon and casts with a `&"suul"` placeholder element; casting power = `ability.power`; context built in `CombatController.forecast_context()` and consumed by `Resolution.resolve()` (forecast == resolution). Combat files are **frozen until #281 merges**. | `combat_rules.gd`, `resolution.gd`, `combat_controller.gd:1471-1548` |
+| Combat reads: to-hit `70 + facing + 4×height + 2×(edge delta)`; plain attack has no weapon and casts with a `&"sul"` placeholder element; casting power = `ability.power`; context built in `CombatController.forecast_context()` and consumed by `Resolution.resolve()` (forecast == resolution). Combat files are **frozen until #281 merges**. | `combat_rules.gd`, `resolution.gd`, `combat_controller.gd:1471-1548` |
 | `GameState.equipped_slots` is party-wide and unread by combat; `UnitLoadout.equip` unread. Items carry only `Equip Slot`. | `game_state.gd:94`, `inventory.gd:42-56` |
 
 ---
@@ -156,7 +156,7 @@ arms_percent  = SkillCheck.preview(weapon.skill_id, source_member)          # at
 weapon_bonus  = floori((arms_percent - 40) / 2)                               # 40 = today's implicit baseline → 0
 hit%          = clamp(70 + weapon_bonus + facing + 4×height + 2×(alacrity_atk − alacrity_def), 5, 95)
 power         = attack(muster) + weapon.damage + action.power_bonus + flank + balance
-element(strike) = weapon.element if set, else identity row                    # replaces the &"suul" placeholder (ruling R9)
+element(strike) = weapon.element if set, else identity row                    # replaces the &"sul" placeholder (ruling R9)
 ```
 
 Calibration at the baseline: Untrained Alacrity 2 (16%) → −12; Kit-Trained Alacrity 3
@@ -201,7 +201,7 @@ element instead of the never-set bool. `starting_mastery` (string) stays for dis
 
 ### 4.3 Sheet and forecast reads (F3a)
 
-- Character sheet: ARMS group rows; TONES as one row per held tone (`Scor Tone · I · ◆ ·
+- Character sheet: ARMS group rows; TONES as one row per held tone (`Khash Tone · I · ◆ ·
   52%`); derivation tooltip adds the tone line.
 - Casting forecast panel (`CastingGate`): "Resonance 36% → −5" as a breakdown step (F3c).
 
@@ -244,7 +244,7 @@ case-insensitively (SkillCheck already normalizes to lowercase; lowercase is can
  "kit_skills": ["heft", "grip"],                      # >1 entry = the card offers a choice
  "resource": "Scars", "resource_blurb": "Taking damage banks Scars; spend them to buy guaranteed-hit or guaranteed-crit windows.",
  "signature": "Debt of Arms", "signature_blurb": "Trade current HP for a massive damage or buff spike.",
- "suggested_major": "scor", "suggested_minor": "molm", "chord": "Ashfire",
+ "suggested_major": "khash", "suggested_minor": "mozh", "chord": "Ashfire",
  "retired_disciplines": [],                           # threadwalker: ["chordblade"]
  "watch_disciplines": [],                             # oathclock/locksmirk: ["hushwarden"]
  "notes": "",                                         # locksmirk: "Never reaches 0% fizzle, Mastery included."
@@ -410,8 +410,8 @@ must say so, or testers will report "weapon skill broken".
 
 - `test_dramgid_schema`: 37 ids; every row has a valid `group`; groups partition `SKILL_IDS`;
   ARMS attributes ∈ {muster, alacrity} and loom NONE; a `tone_<e>` for every
-  `ElementWheel.ORDER` id, attribute intuition, loom NONE; `opposed_tone("tone_scor") ==
-  "tone_aqua"`; `tone_skill_for("scor") == "tone_scor"`; `loom_penalty()` returns 0 for every
+  `ElementWheel.ORDER` id, attribute intuition, loom NONE; `opposed_tone("tone_khash") ==
+  "tone_luth"`; `tone_skill_for("khash") == "tone_khash"`; `loom_penalty()` returns 0 for every
   ARMS/TONES id.
 - `test_class_catalog`: ten rows; kit skills ∈ ARMS; `patron_id` ∈ registry ids; suggested
   pairs valid; `for_patron()` non-Null; Threadwalker retires Chordblade.
@@ -427,7 +427,7 @@ must say so, or testers will report "weapon skill broken".
   `mirror_rewriting` refunds creation points; unheld-tone gate.
 - `test_character_creation` (integration): nine leaves gate in order; class card disabled after
   Chordblade for Threadwalker; Ironbrand kit toggle; accepted protagonist has `patron "Kero"`,
-  `class_id "ironbrand"`, `heft` Trained, `tone_scor` Trained, ledger rows, `advancement_points
+  `class_id "ironbrand"`, `heft` Trained, `tone_khash` Trained, ledger rows, `advancement_points
   == pool − spent`; RECRUIT mode writes only `custom_recruits`; save → load round-trip keeps the
   same effective %; `ClassResourceRegistry.for_patron(member.patron)` is non-Null.
 - Manual: `test/manual/character_creation_checklist.md` (new).
@@ -446,7 +446,7 @@ must say so, or testers will report "weapon skill broken".
 | R6 | Flaw grants +0 until the flaw table exists. | yes |
 | R7 | (optional) tagged skills cost one band less at creation — a Fallout-tag feel; changes the ratified bands. | **no** |
 | R8 | Creation points are advancement points → Mirror-refundable. | yes |
-| R9 | Plain attacks take their element from the weapon (drops the `&"suul"` placeholder) — F3c. | deferred to F3c |
+| R9 | Plain attacks take their element from the weapon (drops the `&"sul"` placeholder) — F3c. | deferred to F3c |
 | R10 | Discipline, Patron, Background become required leaves; nine-leaf order. | yes |
 | R11 | Tone fizzle term `floori(tone_bonus/4)` and ARMS hit baseline 40 — numbers for DeepSeek. | as §4 |
 | R12 | Which attribute caps the Soul Gauge (Intuition per `character-creation.md` vs Grit per L-RFC-0006) — surfaces on the attributes leaf readouts. | Intuition (schema text) |

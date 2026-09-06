@@ -83,19 +83,19 @@ func test_only_held_tones_are_purchasable() -> void:
 	var member := PartyMember.new()
 	member.id = "advancement-tones"
 	member.attributes = {"intuition": 3}
-	member.major_element = "scor"
-	member.minor_element = "molm"
+	member.major_element = "khash"
+	member.minor_element = "mozh"
 	member.advancement_points = 6
-	assert_bool(Advancement.is_purchasable(member, "tone_scor")).is_true()
-	assert_bool(Advancement.is_purchasable(member, "tone_aqua")).is_false()
+	assert_bool(Advancement.is_purchasable(member, "tone_khash")).is_true()
+	assert_bool(Advancement.is_purchasable(member, "tone_luth")).is_false()
 	assert_bool(Advancement.is_purchasable(member, "heft")).is_true()
-	assert_bool(Advancement.held_tones(member).has("tone_molm")).is_true()
-	var refused := Advancement.buy(member, "tone_aqua")
+	assert_bool(Advancement.held_tones(member).has("tone_mozh")).is_true()
+	var refused := Advancement.buy(member, "tone_luth")
 	assert_bool(refused["allowed"]).is_false()
 	assert_str(str(refused["blocked_by"])).is_equal("unheld_tone")
 	assert_int(member.advancement_points).is_equal(6)
-	assert_bool(Advancement.buy(member, "tone_scor")["allowed"]).is_true()
-	assert_float(float(member.skill_percentages["tone_scor"])).is_equal(5.0)
+	assert_bool(Advancement.buy(member, "tone_khash")["allowed"]).is_true()
+	assert_float(float(member.skill_percentages["tone_khash"])).is_equal(5.0)
 
 
 func test_seed_creation_ledger_writes_lowercase_rows_the_validator_accepts() -> void:

@@ -13,11 +13,11 @@ const WHEEL_SIZE := 10
 ## The five canon diametrics, from the vault's wheel order. Written out here on
 ## purpose: if the generator's topology ever drifts, this literal is the tripwire.
 const CANON_CLASH_PAIRS := [
-	["daar", "suul"],
-	["bloei", "molm"],
-	["aqua", "scor"],
-	["khor", "nul"],
-	["strom", "terra"],
+	["vekh", "sul"],
+	["vel", "mozh"],
+	["luth", "khash"],
+	["khor", "zhem"],
+	["zhur", "tham"],
 ]
 
 
@@ -78,29 +78,29 @@ func test_clash_is_the_only_relation_at_the_far_side_of_the_wheel() -> void:
 	for pair: Array in CANON_CLASH_PAIRS:
 		assert_str(ElementMatrix.relation(pair[0], pair[1])).is_equal("clash")
 		assert_str(ElementMatrix.relation(pair[1], pair[0])).is_equal("clash")
-	assert_str(ElementMatrix.relation("suul", "suul")).is_equal("same")
-	assert_str(ElementMatrix.relation("suul", "bloei")).is_equal("neighbour")
-	assert_str(ElementMatrix.relation("suul", "aqua")).is_equal("neutral")
+	assert_str(ElementMatrix.relation("sul", "sul")).is_equal("same")
+	assert_str(ElementMatrix.relation("sul", "vel")).is_equal("neighbour")
+	assert_str(ElementMatrix.relation("sul", "luth")).is_equal("neutral")
 
 
 # ─── The ratified gamble curve, as data ──────────────────────────────────────
 
 
 func test_the_target_axis_carries_the_ratified_gamble_curve() -> void:
-	# suul walking clockwise round the wheel gives distances 0..5 in order.
-	var walk := ["suul", "bloei", "aqua", "khor", "terra", "daar"]
+	# sul walking clockwise round the wheel gives distances 0..5 in order.
+	var walk := ["sul", "vel", "luth", "khor", "tham", "vekh"]
 	var damage := [0.5, 0.75, 1.0, 1.1, 1.2, 1.35]
 	var fizzle := [0.0, 3.0, 6.0, 9.0, 12.0, 15.0]
 	var soul := [0, 0, 1, 2, 3, 5]
 	for distance in range(walk.size()):
 		var target: String = walk[distance]
-		assert_float(ElementMatrix.damage_multiplier("suul", target)).is_equal_approx(
+		assert_float(ElementMatrix.damage_multiplier("sul", target)).is_equal_approx(
 			damage[distance], 0.001
 		)
-		assert_float(ElementMatrix.fizzle_add("suul", target)).is_equal_approx(
+		assert_float(ElementMatrix.fizzle_add("sul", target)).is_equal_approx(
 			fizzle[distance], 0.001
 		)
-		assert_int(ElementMatrix.soul_on_failure("suul", target)).is_equal(soul[distance])
+		assert_int(ElementMatrix.soul_on_failure("sul", target)).is_equal(soul[distance])
 
 
 func test_the_multipliers_are_marked_provisional() -> void:
@@ -111,10 +111,10 @@ func test_the_multipliers_are_marked_provisional() -> void:
 
 
 func test_an_unattuned_target_is_neutral_on_every_term() -> void:
-	assert_float(ElementMatrix.damage_multiplier("suul", "")).is_equal_approx(1.0, 0.001)
-	assert_float(ElementMatrix.fizzle_add("suul", "")).is_equal_approx(0.0, 0.001)
-	assert_int(ElementMatrix.soul_on_failure("suul", "")).is_equal(0)
-	assert_str(ElementMatrix.relation("suul", "not-an-element")).is_equal("none")
+	assert_float(ElementMatrix.damage_multiplier("sul", "")).is_equal_approx(1.0, 0.001)
+	assert_float(ElementMatrix.fizzle_add("sul", "")).is_equal_approx(0.0, 0.001)
+	assert_int(ElementMatrix.soul_on_failure("sul", "")).is_equal(0)
+	assert_str(ElementMatrix.relation("sul", "not-an-element")).is_equal("none")
 
 
 # ─── CHORD is caster-side; everything else is target-side ────────────────────
@@ -122,13 +122,13 @@ func test_an_unattuned_target_is_neutral_on_every_term() -> void:
 
 func test_chord_keys_off_caster_attunement_not_target_attunement() -> void:
 	# Adjacent to the caster's attunement -> CHORD. The target is irrelevant.
-	assert_float(ElementMatrix.chord_bonus("suul", "bloei")).is_equal_approx(1.15, 0.001)
-	assert_float(ElementMatrix.chord_bonus("suul", "suul")).is_equal_approx(1.0, 0.001)
-	assert_float(ElementMatrix.chord_bonus("suul", "daar")).is_equal_approx(1.0, 0.001)
+	assert_float(ElementMatrix.chord_bonus("sul", "vel")).is_equal_approx(1.15, 0.001)
+	assert_float(ElementMatrix.chord_bonus("sul", "sul")).is_equal_approx(1.0, 0.001)
+	assert_float(ElementMatrix.chord_bonus("sul", "vekh")).is_equal_approx(1.0, 0.001)
 	# And it is not reachable through the target axis: adjacency to a TARGET is
 	# NEIGHBOUR (x0.75), never CHORD.
-	assert_str(ElementMatrix.relation("suul", "bloei")).is_equal("neighbour")
-	assert_float(ElementMatrix.damage_multiplier("suul", "bloei")).is_equal_approx(0.75, 0.001)
+	assert_str(ElementMatrix.relation("sul", "vel")).is_equal("neighbour")
+	assert_float(ElementMatrix.damage_multiplier("sul", "vel")).is_equal_approx(0.75, 0.001)
 
 
 func test_the_caster_axis_never_prices_fizzle_or_soul() -> void:
@@ -138,17 +138,17 @@ func test_the_caster_axis_never_prices_fizzle_or_soul() -> void:
 
 
 func test_the_two_axes_multiply_orthogonally() -> void:
-	# caster attuned to bloei (adjacent -> CHORD x1.15) casting suul into a
-	# daar-attuned target (opposed -> x1.35). 1.15 * 1.35 = 1.5525.
-	assert_float(ElementMatrix.final_damage_multiplier("suul", "bloei", "daar")).is_equal_approx(
+	# caster attuned to vel (adjacent -> CHORD x1.15) casting sul into a
+	# vekh-attuned target (opposed -> x1.35). 1.15 * 1.35 = 1.5525.
+	assert_float(ElementMatrix.final_damage_multiplier("sul", "vel", "vekh")).is_equal_approx(
 		1.5525, 0.0001
 	)
 	# Same caster relation, same-attuned target: 1.15 * 0.50.
-	assert_float(ElementMatrix.final_damage_multiplier("suul", "bloei", "suul")).is_equal_approx(
+	assert_float(ElementMatrix.final_damage_multiplier("sul", "vel", "sul")).is_equal_approx(
 		0.575, 0.0001
 	)
 	# No chord: the target term stands alone.
-	assert_float(ElementMatrix.final_damage_multiplier("suul", "daar", "daar")).is_equal_approx(
+	assert_float(ElementMatrix.final_damage_multiplier("sul", "vekh", "vekh")).is_equal_approx(
 		1.35, 0.0001
 	)
 
@@ -161,13 +161,13 @@ func test_composition_resolver_output_is_unchanged_by_target_relation() -> void:
 	# resolving the same composition while the *matrix* says wildly different
 	# things about every possible target. Nothing about the compose-time result
 	# may move.
-	var elements: Array[StringName] = [&"suul", &"aqua"]
+	var elements: Array[StringName] = [&"sul", &"luth"]
 	var baseline := CompositionResolver.resolve(elements, &"phrase")
 	for target_attunement: StringName in ElementWheel.ORDER:
 		# Touch the target axis for this target, then re-resolve.
-		var _multiplier := ElementMatrix.damage_multiplier(&"suul", target_attunement)
-		var _fizzle := ElementMatrix.fizzle_add(&"suul", target_attunement)
-		var _soul := ElementMatrix.soul_on_failure(&"suul", target_attunement)
+		var _multiplier := ElementMatrix.damage_multiplier(&"sul", target_attunement)
+		var _fizzle := ElementMatrix.fizzle_add(&"sul", target_attunement)
+		var _soul := ElementMatrix.soul_on_failure(&"sul", target_attunement)
 		var again := CompositionResolver.resolve(elements, &"phrase")
 		assert_int(again.kind).is_equal(baseline.kind)
 		assert_int(again.distance_steps).is_equal(baseline.distance_steps)

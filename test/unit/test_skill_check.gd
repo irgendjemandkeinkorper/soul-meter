@@ -113,14 +113,14 @@ func test_tone_bonus_reduces_fizzle_outside_the_multiply_and_untrained_is_neutra
 func test_tone_bonus_for_takes_the_lowest_held_tone() -> void:
 	var member := PartyMember.new()
 	member.attributes = {"intuition": 3}
-	member.skill_tiers = {"tone_scor": "trained", "tone_molm": "expert"}
-	member.skill_percentages = {"tone_scor": 10.0}
-	assert_float(service.tone_bonus_for(member, ["scor"])).is_equal(30.0)
-	assert_float(service.tone_bonus_for(member, ["molm"])).is_equal(35.0)
-	assert_float(service.tone_bonus_for(member, ["scor", "molm"])).is_equal(30.0)
-	assert_float(service.tone_bonus_for(member, ["scor", "aqua"])).is_equal(0.0)
+	member.skill_tiers = {"tone_khash": "trained", "tone_mozh": "expert"}
+	member.skill_percentages = {"tone_khash": 10.0}
+	assert_float(service.tone_bonus_for(member, ["khash"])).is_equal(30.0)
+	assert_float(service.tone_bonus_for(member, ["mozh"])).is_equal(35.0)
+	assert_float(service.tone_bonus_for(member, ["khash", "mozh"])).is_equal(30.0)
+	assert_float(service.tone_bonus_for(member, ["khash", "luth"])).is_equal(0.0)
 	assert_float(service.tone_bonus_for(member, [])).is_equal(0.0)
-	assert_float(service.tone_bonus_for(null, ["scor"])).is_equal(0.0)
+	assert_float(service.tone_bonus_for(null, ["khash"])).is_equal(0.0)
 
 
 func test_preview_reads_legacy_and_dramgid_attribute_keys() -> void:

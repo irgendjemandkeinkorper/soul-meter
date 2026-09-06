@@ -5,7 +5,7 @@ const ResolutionScript := preload("res://globals/combat/resolution.gd")
 
 func test_aftertones_tick_and_anchoring() -> void:
 	var actor := BattleActor.new()
-	actor.aftertones = [{"element": &"suul", "remaining_rounds": 2, "anchored": false}]
+	actor.aftertones = [{"element": &"sul", "remaining_rounds": 2, "anchored": false}]
 	actor.tick_aftertones()
 	assert_int(actor.aftertones[0]["remaining_rounds"]).is_equal(1)
 	actor.aftertones[0]["anchored"] = true
@@ -14,15 +14,15 @@ func test_aftertones_tick_and_anchoring() -> void:
 
 
 func test_rule_bends_anchor_consume_clear_and_hold_notes() -> void:
-	var terra := _resolve(&"terra", [], [{"element": &"suul", "remaining_rounds": 2}])
-	assert_bool(_has_aftertone(terra, true)).is_true()
-	var scor := _resolve(&"scor", [], [{"element": &"suul", "remaining_rounds": 2}])
-	assert_int(scor["damage"]).is_equal(2)
-	assert_bool(_has_aftertone(scor, false)).is_true()
-	var nul := _resolve(&"nul", [], [{"element": &"suul", "remaining_rounds": 2}], 3)
-	assert_bool(_has_write(nul, "tempo")).is_true()
-	assert_int(_aftertone_write_after(nul).size()).is_equal(1)
-	var khor := _resolve(&"khor", [{"element": &"suul", "remaining_rounds": 2}], [])
+	var tham := _resolve(&"tham", [], [{"element": &"sul", "remaining_rounds": 2}])
+	assert_bool(_has_aftertone(tham, true)).is_true()
+	var khash := _resolve(&"khash", [], [{"element": &"sul", "remaining_rounds": 2}])
+	assert_int(khash["damage"]).is_equal(2)
+	assert_bool(_has_aftertone(khash, false)).is_true()
+	var zhem := _resolve(&"zhem", [], [{"element": &"sul", "remaining_rounds": 2}], 3)
+	assert_bool(_has_write(zhem, "tempo")).is_true()
+	assert_int(_aftertone_write_after(zhem).size()).is_equal(1)
+	var khor := _resolve(&"khor", [{"element": &"sul", "remaining_rounds": 2}], [])
 	assert_bool(_has_held_aftertone(khor)).is_true()
 
 
@@ -43,11 +43,11 @@ func test_stillpoint_applies_balance_consumer() -> void:
 
 func test_founding_anchors_everyone_and_freezes_duration() -> void:
 	var controller := _live_controller(ElementsData.triad(&"founding"))
-	controller.allies[0].aftertones = [{"element": "suul", "remaining_rounds": 2, "held": true}]
+	controller.allies[0].aftertones = [{"element": "sul", "remaining_rounds": 2, "held": true}]
 	_submit_triad(controller, ElementsData.triad(&"founding"))
 	assert_bool(controller.enemies[0].aftertones[0]["anchored"]).is_true()
 	assert_int(controller.duration_freeze_until_round).is_equal(controller.round_number + 1)
-	controller.allies[0].aftertones.append({"element": "nul", "remaining_rounds": 1, "anchored": true})
+	controller.allies[0].aftertones.append({"element": "zhem", "remaining_rounds": 1, "anchored": true})
 	controller.round_number = controller.duration_freeze_until_round + 1
 	controller._expire_temporary_effects()
 	assert_bool(bool(controller.allies[0].aftertones[0].get("anchored", false))).is_false()
@@ -57,8 +57,8 @@ func test_founding_anchors_everyone_and_freezes_duration() -> void:
 func test_founding_restores_duplicate_tones_by_stable_index() -> void:
 	var controller := _live_controller(ElementsData.triad(&"founding"))
 	controller.allies[0].aftertones = [
-		{"element": "suul", "remaining_rounds": 2, "anchored": false},
-		{"element": "suul", "remaining_rounds": 2, "anchored": true},
+		{"element": "sul", "remaining_rounds": 2, "anchored": false},
+		{"element": "sul", "remaining_rounds": 2, "anchored": true},
 	]
 	_submit_triad(controller, ElementsData.triad(&"founding"))
 
@@ -197,7 +197,7 @@ func _resolve(element: StringName, aftertones: Array, target_aftertones: Array =
 	return ResolutionScript.resolve({
 		"unit": {"id": "caster", "harmony": 10, "aftertones": aftertones, "tempo": tempo},
 		"ability": {"id": "bend", "element_id": element, "magnitude": "note", "power": 1, "is_spell": true},
-		"target": {"id": "target", "hp": 10, "element_id": "suul", "aftertones": target_aftertones, "tempo": tempo},
+		"target": {"id": "target", "hp": 10, "element_id": "sul", "aftertones": target_aftertones, "tempo": tempo},
 	})
 
 

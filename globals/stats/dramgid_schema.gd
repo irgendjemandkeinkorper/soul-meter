@@ -80,8 +80,8 @@ const SKILL_IDS: PackedStringArray = [
 	"wildlore", "devotion", "undertone", "mending", "ear", "wayfinding", "sounding",
 	"falsetto", "bellow", "varum", "sway", "downbeat", "brace", "vantage",
 	"keen", "heft", "reach", "loose", "grip",
-	"tone_suul", "tone_bloei", "tone_aqua", "tone_khor", "tone_terra",
-	"tone_daar", "tone_molm", "tone_scor", "tone_nul", "tone_strom",
+	"tone_sul", "tone_vel", "tone_luth", "tone_khor", "tone_tham",
+	"tone_vekh", "tone_mozh", "tone_khash", "tone_zhem", "tone_zhur",
 ]
 
 const FIELD_SKILL_IDS: PackedStringArray = [
@@ -91,8 +91,8 @@ const FIELD_SKILL_IDS: PackedStringArray = [
 ]
 const ARMS_SKILL_IDS: PackedStringArray = ["keen", "heft", "reach", "loose", "grip"]
 const TONE_SKILL_IDS: PackedStringArray = [
-	"tone_suul", "tone_bloei", "tone_aqua", "tone_khor", "tone_terra",
-	"tone_daar", "tone_molm", "tone_scor", "tone_nul", "tone_strom",
+	"tone_sul", "tone_vel", "tone_luth", "tone_khor", "tone_tham",
+	"tone_vekh", "tone_mozh", "tone_khash", "tone_zhem", "tone_zhur",
 ]
 const TONE_SKILL_PREFIX := "tone_"
 
@@ -149,16 +149,16 @@ const SKILLS: Dictionary = {
 	# Intuition fizzle reduction exactly; loom NONE because the zone already enters fizzle
 	# through agreement_integrity. Only the held (Major/Minor) tones are purchasable in
 	# Chapter 1 — see Advancement.buy.
-	"tone_suul": {"group": "tones", "label": "Suul Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "suul"},
-	"tone_bloei": {"group": "tones", "label": "Bloei Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "bloei"},
-	"tone_aqua": {"group": "tones", "label": "Aqua Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "aqua"},
+	"tone_sul": {"group": "tones", "label": "Sul Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "sul"},
+	"tone_vel": {"group": "tones", "label": "Vel Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "vel"},
+	"tone_luth": {"group": "tones", "label": "Luth Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "luth"},
 	"tone_khor": {"group": "tones", "label": "Khor Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "khor"},
-	"tone_terra": {"group": "tones", "label": "Terra Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "terra"},
-	"tone_daar": {"group": "tones", "label": "Daar Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "daar"},
-	"tone_molm": {"group": "tones", "label": "Molm Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "molm"},
-	"tone_scor": {"group": "tones", "label": "Scor Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "scor"},
-	"tone_nul": {"group": "tones", "label": "Nul Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "nul"},
-	"tone_strom": {"group": "tones", "label": "Strom Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "strom"},
+	"tone_tham": {"group": "tones", "label": "Tham Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "tham"},
+	"tone_vekh": {"group": "tones", "label": "Vekh Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "vekh"},
+	"tone_mozh": {"group": "tones", "label": "Mozh Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "mozh"},
+	"tone_khash": {"group": "tones", "label": "Khash Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "khash"},
+	"tone_zhem": {"group": "tones", "label": "Zhem Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "zhem"},
+	"tone_zhur": {"group": "tones", "label": "Zhur Tone", "attribute": "intuition", "loom": LoomSensitivity.NONE, "replaces": "", "mono_token": "", "source": "sm-chargen-proposal", "element": "zhur"},
 }
 
 const SKILL_RENAMES: Dictionary = {
@@ -281,18 +281,18 @@ static func is_tone_skill(skill_id: String) -> bool:
 	return skill_group(skill_id) == GROUP_TONES
 
 
-## "scor" → "tone_scor"; empty/unknown → "".
+## "khash" → "tone_khash"; empty/unknown → "".
 static func tone_skill_for(element: Variant) -> String:
 	var skill_id := TONE_SKILL_PREFIX + str(element).strip_edges().to_lower()
 	return skill_id if is_tone_skill(skill_id) else ""
 
 
-## "tone_scor" → "scor"; non-tone → "".
+## "tone_khash" → "khash"; non-tone → "".
 static func element_for_tone(skill_id: String) -> String:
 	return str(SKILLS.get(skill_id, {}).get("element", "")) if is_tone_skill(skill_id) else ""
 
 
-## The tone opposed on the Wheel ("tone_scor" → "tone_aqua"); "" for non-tones.
+## The tone opposed on the Wheel ("tone_khash" → "tone_luth"); "" for non-tones.
 static func opposed_tone(skill_id: String) -> String:
 	var element := element_for_tone(skill_id)
 	if element.is_empty():

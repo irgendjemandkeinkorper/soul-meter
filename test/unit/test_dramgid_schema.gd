@@ -54,9 +54,9 @@ func test_one_intuition_tone_per_wheel_element_with_opposites() -> void:
 		assert_str(DramgidSchemaScript.element_for_tone(skill_id)).is_equal(String(element))
 		assert_str(DramgidSchemaScript.opposed_tone(skill_id)).is_equal(
 			DramgidSchemaScript.tone_skill_for(ElementWheel.opposite(element)))
-	assert_str(DramgidSchemaScript.opposed_tone("tone_scor")).is_equal("tone_aqua")
+	assert_str(DramgidSchemaScript.opposed_tone("tone_khash")).is_equal("tone_luth")
 	assert_str(DramgidSchemaScript.tone_skill_for("")).is_equal("")
-	assert_str(DramgidSchemaScript.tone_skill_for("Scor")).is_equal("tone_scor")
+	assert_str(DramgidSchemaScript.tone_skill_for("Khash")).is_equal("tone_khash")
 	assert_str(DramgidSchemaScript.opposed_tone("recall")).is_equal("")
 
 

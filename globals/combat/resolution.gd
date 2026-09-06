@@ -152,9 +152,9 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var target_tempo_after := target_tempo_before
 	var consumed_aftertone := false
 	var target_aftertones_before := target_aftertones.duplicate(true)
-	var has_terra_bend := composition.rule_bends.has(&"creates_cover_anchors_aftertones")
-	var has_scor_bend := composition.rule_bends.has(&"consumes_aftertone_for_burst")
-	var has_nul_bend := composition.rule_bends.has(&"cancels_and_zeroes_tempo")
+	var has_tham_bend := composition.rule_bends.has(&"creates_cover_anchors_aftertones")
+	var has_khash_bend := composition.rule_bends.has(&"consumes_aftertone_for_burst")
+	var has_zhem_bend := composition.rule_bends.has(&"cancels_and_zeroes_tempo")
 	var has_khor_bend := composition.rule_bends.has(&"extends_durations_holds_notes") or composition.elements.has(&"khor")
 	# PROVISIONAL R1: every successful elemental cast lays one centre-element Aftertone on the
 	# target. The legacy ability keys remain optional overrides for authored exceptions only.
@@ -165,7 +165,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var previous_element := ElementWheel.normalize(unit.get("last_cast_element", ""))
 	if is_spell:
 		tempo_after = tempo_before + 1 if not fizzled and previous_element == element_id and previous_element != &"" else 0
-	if not fizzled and has_scor_bend:
+	if not fizzled and has_khash_bend:
 		for index: int in target_aftertones.size():
 			if not bool(target_aftertones[index].get("anchored", false)):
 				target_aftertones.remove_at(index)
@@ -175,7 +175,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	if not fizzled and composition.triad_effect_id == &"everything_burns_at_once":
 		var clearable := _aftertones(unit.get("aftertones", [])).size() + target_aftertones.size()
 		power += clearable
-	if not fizzled and has_nul_bend:
+	if not fizzled and has_zhem_bend:
 		target_aftertones.clear()
 		target_tempo_after = 0
 	if lays_aftertone:
@@ -187,7 +187,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"held": false,
 			"anchored": false,
 		})
-	if not fizzled and has_terra_bend:
+	if not fizzled and has_tham_bend:
 		for aftertone: Dictionary in target_aftertones:
 			aftertone["anchored"] = true
 	var held_caster_aftertones := _aftertones(unit.get("aftertones", []))
@@ -208,7 +208,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		if cinderfall_count > 0:
 			breakdown.append(_step("cinderfall_burst", "Cinderfall cleared Aftertones", float(cinderfall_count), "add"))
 	if consumed_aftertone:
-		breakdown.append(_step("aftertone_burst", "Scor Aftertone burst", 1.0, "add"))
+		breakdown.append(_step("aftertone_burst", "Khash Aftertone burst", 1.0, "add"))
 	var scaled_damage := float(power) * attack_scale * matrix_multiplier
 	scaled_damage *= height_multiplier
 	scaled_damage *= facing_multiplier
@@ -350,7 +350,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"before": String(unit.get("last_cast_element", "")),
 			"after": String(element_id),
 		})
-	if has_nul_bend and target_tempo_after != target_tempo_before:
+	if has_zhem_bend and target_tempo_after != target_tempo_before:
 		writes.append({
 			"kind": "tempo",
 			"target_id": str(target.get("id", "")),
@@ -358,7 +358,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"after": target_tempo_after,
 			"delta": target_tempo_after - target_tempo_before,
 		})
-	if ability.has("tempo_delta") and not has_nul_bend:
+	if ability.has("tempo_delta") and not has_zhem_bend:
 		var tempo_delta := int(ability.get("tempo_delta", 0))
 		writes.append({
 			"kind": "tempo",

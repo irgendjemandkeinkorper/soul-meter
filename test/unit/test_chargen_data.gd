@@ -50,11 +50,11 @@ func test_remaining_points_counts_down_to_zero() -> void:
 
 
 func test_element_pair_rejects_a_clash_but_allows_everything_else() -> void:
-	assert_bool(ChargenData.is_valid_element_pair("suul", "daar")).is_false()
-	assert_bool(ChargenData.is_valid_element_pair("daar", "suul")).is_false()
-	assert_bool(ChargenData.is_valid_element_pair("khor", "nul")).is_false()
-	assert_bool(ChargenData.is_valid_element_pair("suul", "khor")).is_true()
-	assert_bool(ChargenData.is_valid_element_pair("suul", "suul")).is_false()
+	assert_bool(ChargenData.is_valid_element_pair("sul", "vekh")).is_false()
+	assert_bool(ChargenData.is_valid_element_pair("vekh", "sul")).is_false()
+	assert_bool(ChargenData.is_valid_element_pair("khor", "zhem")).is_false()
+	assert_bool(ChargenData.is_valid_element_pair("sul", "khor")).is_true()
+	assert_bool(ChargenData.is_valid_element_pair("sul", "sul")).is_false()
 	assert_bool(ChargenData.is_valid_element_pair("", "")).is_true()
 
 
@@ -88,7 +88,7 @@ func test_patrons_are_a_view_over_the_class_catalog() -> void:
 	assert_str(ChargenData.skill_label("lore")).is_equal("Lore")
 	assert_str(ChargenData.attribute_label("muster")).is_equal("Muster")
 	assert_int(ChargenData.DISCIPLINES.size()).is_equal(3)
-	assert_str(str(ChargenData.discipline_by_id("hushwarden")["favours"])).is_equal("nul")
+	assert_str(str(ChargenData.discipline_by_id("hushwarden")["favours"])).is_equal("zhem")
 
 
 func test_five_chapter_one_ancestries_and_five_backgrounds_are_ratified() -> void:

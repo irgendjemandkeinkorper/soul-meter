@@ -53,10 +53,10 @@ func after_test() -> void:
 func test_cast_forecast_is_committed_once_with_matching_damage_cost_and_residue() -> void:
 	var cast := CombatActionCatalog.by_id(&"cast-seam")
 	var ability := AbilityDefinition.new()
-	ability.id = "test-strom-cast"
-	ability.display_name = "Test Strom Cast"
-	ability.element_id = &"strom"
-	ability.elements = [&"strom"]
+	ability.id = "test-zhur-cast"
+	ability.display_name = "Test Zhur Cast"
+	ability.element_id = &"zhur"
+	ability.elements = [&"zhur"]
 	ability.magnitude = &"note"
 	ability.power = 12
 	ability.breath_cost = 3
@@ -109,8 +109,8 @@ func test_maiiam_forecast_override_preserves_controller_context() -> void:
 	(ally.class_resource as MaiiamBalance).unbalanced = true
 	var ability := AbilityDefinition.new()
 	ability.id = "context-preserving-cast"
-	ability.element_id = &"strom"
-	ability.elements = [&"strom"]
+	ability.element_id = &"zhur"
+	ability.elements = [&"zhur"]
 	ability.magnitude = &"note"
 	ability.power = 4
 	var tables := _cast_tables_for_actor(ally, [ability], "context-preserving-caster")
@@ -127,19 +127,19 @@ func test_maiiam_forecast_override_preserves_controller_context() -> void:
 	assert_str(String(fizzle["patron"])).is_equal(ally.source_member.patron)
 
 
-func test_scor_consumes_target_aftertone_in_live_resolution() -> void:
+func test_khash_consumes_target_aftertone_in_live_resolution() -> void:
 	var cast := CombatActionCatalog.by_id(&"cast-seam")
 	var ability := AbilityDefinition.new()
-	ability.id = "test-scor-cast"
-	ability.element_id = &"scor"
-	ability.elements = [&"scor"]
+	ability.id = "test-khash-cast"
+	ability.element_id = &"khash"
+	ability.elements = [&"khash"]
 	ability.magnitude = &"note"
 	ability.power = 1
 	ability.breath_cost = 0
-	var tables := _cast_tables_for_actor(ally, [ability], "scor-caster")
+	var tables := _cast_tables_for_actor(ally, [ability], "khash-caster")
 	controller.configure([cast], battlefield, rules, null, [ability], tables)
-	enemy.aftertones = [{"element": &"suul", "remaining_rounds": 2, "anchored": false}]
-	controller.start([ally], [enemy], &"scor-live")
+	enemy.aftertones = [{"element": &"sul", "remaining_rounds": 2, "anchored": false}]
+	controller.start([ally], [enemy], &"khash-live")
 	var forecast := controller.forecast_action(cast, enemy, {"ability_id": ability.id, "fizzle": {"agreement_integrity": 100.0, "mastery": true}})
 	assert_bool(forecast["resolution"]["fizzled"]).is_false()
 	assert_bool((forecast["resolution"]["breakdown"] as Array).any(func(step: Dictionary) -> bool: return step.get("id", "") == "aftertone_burst")).is_true()
@@ -149,29 +149,34 @@ func test_scor_consumes_target_aftertone_in_live_resolution() -> void:
 	assert_int(controller.spent_aftertones).is_equal(1)
 
 
-func test_plain_suul_cast_lays_aftertone_and_fizzle_does_not() -> void:
+func test_plain_sul_cast_lays_aftertone_and_fizzle_does_not() -> void:
 	var cast := CombatActionCatalog.by_id(&"cast-seam")
 	var ability := AbilityDefinition.new()
-	ability.id = "test-suul-cast"
-	ability.element_id = &"suul"
-	ability.elements = [&"suul"]
+	ability.id = "test-sul-cast"
+	ability.element_id = &"sul"
+	ability.elements = [&"sul"]
 	ability.magnitude = &"note"
 	ability.power = 1
-	var tables := _cast_tables_for_actor(ally, [ability], "suul-caster")
+	var tables := _cast_tables_for_actor(ally, [ability], "sul-caster")
 	controller.configure([cast], battlefield, rules, null, [ability], tables)
-	controller.start([ally], [enemy], &"suul-live")
+	controller.start([ally], [enemy], &"sul-live")
 	var landed := controller.submit_action(cast.id, enemy, {"ability_id": ability.id, "fizzle": {"agreement_integrity": 100.0, "mastery": true}})
 	assert_bool(bool(landed.get("allowed", false))).is_true()
 	assert_int(enemy.aftertones.size()).is_equal(1)
 	assert_int(int(enemy.aftertones[0].get("remaining_rounds", 0))).is_equal(2)
-	assert_str(str(enemy.aftertones[0].get("element", ""))).is_equal("suul")
+	assert_str(str(enemy.aftertones[0].get("element", ""))).is_equal("sul")
 
 	var fizzle_controller := CombatController.new()
 	var fizzle_ally := _actor("Fizzle Ally", 30, 7, 2)
 	var fizzle_enemy := _actor("Fizzle Enemy", 30, 5, 1)
 	var fizzle_tables := _cast_tables_for_actor(fizzle_ally, [ability], "fizzle-caster")
 	fizzle_controller.configure([cast], battlefield, rules, null, [ability], fizzle_tables)
-	fizzle_controller.start([fizzle_ally], [fizzle_enemy], &"suul-fizzle")
+	# The fizzle roll is a deterministic hash of battle_id + ability_id, and
+	# `SkillCheckService.MAX_EFFECTIVE_PERCENT` caps the chance at 95, so no
+	# input can guarantee a fizzle. This battle id is picked because its roll
+	# lands under the cap; editing it -- or the element name inside it --
+	# re-rolls the hash and can flip the two assertions below.
+	fizzle_controller.start([fizzle_ally], [fizzle_enemy], &"sul-fizzle-1")
 	var fizzled := fizzle_controller.submit_action(cast.id, fizzle_enemy, {"ability_id": ability.id, "fizzle": {"agreement_integrity": 0.0, "mastery": false}})
 	assert_bool(bool(fizzled.get("resolution", {}).get("fizzled", false))).is_true()
 	assert_int(fizzle_enemy.aftertones.size()).is_equal(0)
@@ -201,8 +206,8 @@ func test_aoe_cast_resolves_a_distinct_hp_write_for_each_target() -> void:
 	cast.aoe_shape = &"side"
 	var ability := AbilityDefinition.new()
 	ability.id = "test-side-cast"
-	ability.element_id = &"strom"
-	ability.elements = [&"strom"]
+	ability.element_id = &"zhur"
+	ability.elements = [&"zhur"]
 	ability.power = 12
 	ability.breath_cost = 1
 	var second_enemy := _actor("Second Enemy", 47, 5, 4)
@@ -234,8 +239,8 @@ func test_refused_cast_changes_no_combat_or_resource_state() -> void:
 	var cast := CombatActionCatalog.by_id(&"cast-seam")
 	var ability := AbilityDefinition.new()
 	ability.id = "too-costly"
-	ability.element_id = &"strom"
-	ability.elements = [&"strom"]
+	ability.element_id = &"zhur"
+	ability.elements = [&"zhur"]
 	ability.power = 12
 	ability.breath_cost = 4
 	var tables := _cast_tables_for_actor(ally, [ability], "refusal-caster")
@@ -259,10 +264,10 @@ func test_refused_cast_changes_no_combat_or_resource_state() -> void:
 func test_cast_abilities_are_filtered_by_actor_loadout_and_require_selection() -> void:
 	var cast := CombatActionCatalog.by_id(&"cast-seam")
 	var owned := AbilityDefinition.from_dict({
-		"id": "owned-note", "element_id": "strom", "power": 8, "slot": "action"
+		"id": "owned-note", "element_id": "zhur", "power": 8, "slot": "action"
 	})
 	var other := AbilityDefinition.from_dict({
-		"id": "other-note", "element_id": "aqua", "power": 8, "slot": "action"
+		"id": "other-note", "element_id": "luth", "power": 8, "slot": "action"
 	})
 	var tables := TacticalTables.new()
 	tables.abilities = {owned.id: owned, other.id: other}
@@ -401,11 +406,11 @@ func test_ap_round_boundary_expires_temporary_effects_before_next_actor() -> voi
 	controller.start([ally], [enemy])
 	ally.defining_effects["hit"] = true
 	ally.defining_effects["range_bonus"] = 1
-	ally.aftertones = [{"element": "suul", "remaining_rounds": 2, "anchored": true}]
+	ally.aftertones = [{"element": "sul", "remaining_rounds": 2, "anchored": true}]
 	controller.thunderhead_hit_until_round = controller.round_number
 	controller.range_bonus_until_round = controller.round_number
 	controller.duration_freeze_until_round = controller.round_number
-	controller.founding_anchor_restore[ally.combat_id] = {"suul:2:0": false}
+	controller.founding_anchor_restore[ally.combat_id] = {"sul:2:0": false}
 	assert_bool(controller.end_turn()).is_true()
 
 	assert_int(controller.round_number).is_equal(2)
@@ -726,7 +731,7 @@ func test_grid_attacks_route_ratified_height_and_facing_through_resolution() -> 
 
 func test_weather_shares_the_scheduler_clock_and_feeds_matching_tiles() -> void:
 	var local_controller := _grid_controller(true)
-	assert_bool(bool(local_controller.configure_weather(&"strom").get("allowed", false))).is_true()
+	assert_bool(bool(local_controller.configure_weather(&"zhur").get("allowed", false))).is_true()
 	# Weather ticks ride the scheduler's advance() results — the two clocks agree
 	# after start() has driven the scheduler to the first ready ally.
 	assert_int(local_controller.weather.total_ticks())\
@@ -735,9 +740,9 @@ func test_weather_shares_the_scheduler_clock_and_feeds_matching_tiles() -> void:
 	# Measure application (issue #140 rules): a tile already charged in the weather's
 	# element gains charge; a clash-charged tile drains. Pre-charge both shapes.
 	var fed: TileState = local_controller.tile_state_at(Vector2i(0, 0))
-	fed.apply_residue(&"strom")
+	fed.apply_residue(&"zhur")
 	var starved: TileState = local_controller.tile_state_at(Vector2i(1, 0))
-	starved.apply_residue(CombatController._clash_of(&"strom"))
+	starved.apply_residue(CombatController._clash_of(&"zhur"))
 	var events: Array[CombatEvent] = []
 	local_controller.event_emitted.connect(func(event: CombatEvent) -> void: events.append(event))
 	local_controller._advance_weather(TurnScheduler.TICKS_PER_MEASURE)
@@ -749,18 +754,18 @@ func test_weather_shares_the_scheduler_clock_and_feeds_matching_tiles() -> void:
 
 func test_snapshot_reports_live_weather_and_charged_tiles() -> void:
 	var local_controller := _grid_controller(true)
-	local_controller.configure_weather(&"strom")
-	(local_controller.tile_state_at(Vector2i(0, 0)) as TileState).apply_residue(&"strom")
+	local_controller.configure_weather(&"zhur")
+	(local_controller.tile_state_at(Vector2i(0, 0)) as TileState).apply_residue(&"zhur")
 	var snapshot := local_controller.snapshot()
 	var weather: Dictionary = snapshot["weather"]
-	assert_str(str(weather["element_id"])).is_equal("strom")
-	assert_str(str(weather["gains"])).is_equal("strom")
-	assert_str(str(weather["drains"])).is_equal(String(CombatController._clash_of(&"strom")))
+	assert_str(str(weather["element_id"])).is_equal("zhur")
+	assert_str(str(weather["gains"])).is_equal("zhur")
+	assert_str(str(weather["drains"])).is_equal(String(CombatController._clash_of(&"zhur")))
 	var charged: Array = (snapshot["tiles"] as Array).filter(
 		func(t: Variant) -> bool: return int((t as Dictionary).get("charge_level", 0)) > 0
 	)
 	assert_int(charged.size()).is_equal(1)
-	assert_str(str((charged[0] as Dictionary)["charge_element_id"])).is_equal("strom")
+	assert_str(str((charged[0] as Dictionary)["charge_element_id"])).is_equal("zhur")
 
 
 func test_snapshot_preserves_encounter_identity_for_environment_presentation() -> void:
@@ -788,8 +793,8 @@ func test_charged_source_tile_raises_the_forecast_and_matches_resolution_terms()
 		)["cell"]
 	)
 	var source_tile: TileState = local_controller.tile_state_at(actor_cell)
-	source_tile.apply_residue(&"suul")
-	source_tile.apply_residue(&"suul")
+	source_tile.apply_residue(&"sul")
+	source_tile.apply_residue(&"sul")
 	var context := local_controller.forecast_context(actor, target, strike)
 	assert_dict(context["source_tile"] as Dictionary).is_equal(source_tile.to_dict())
 	assert_dict(context["weather"] as Dictionary).is_equal(local_controller.weather.to_dict())
@@ -1277,8 +1282,8 @@ func _cast_outcome_for_integrity(integrity: float) -> Dictionary:
 	var cast := CombatActionCatalog.by_id(&"cast-seam")
 	var ability := AbilityDefinition.new()
 	ability.id = "location-integrity-cast"
-	ability.element_id = &"strom"
-	ability.elements = [&"strom"]
+	ability.element_id = &"zhur"
+	ability.elements = [&"zhur"]
 	ability.magnitude = &"note"
 	ability.power = 6
 	ability.breath_cost = 3

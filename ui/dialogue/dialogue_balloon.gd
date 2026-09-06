@@ -22,15 +22,15 @@ const SOUL_GAUGE := preload("res://ui/hud/soul_gauge.tscn")
 const SPEAKERS := {
 	"Iris Illepah": {
 		"subtitle": "Ssae-Seeder of the Groves",
-		"element": "molm",
+		"element": "mozh",
 		"portrait_id": "iris-illepah",
 		"portrait_path":
 		"res://assets/generated/portraits/iris_illepah_portrait_neutral.png",
 	},
 	"Marshal Coiljaw": {"subtitle": "the Road-Bench", "element": ""},
-	"Sella Varn": {"subtitle": "Bell Warden of the Lower Ward", "element": "strom"},
-	"Hadrik Vale": {"subtitle": "Registry Archive Clerk", "element": "nul"},
-	"Toma Reedhand": {"subtitle": "Dockhand and Shrine-Keeper", "element": "aqua"},
+	"Sella Varn": {"subtitle": "Bell Warden of the Lower Ward", "element": "zhur"},
+	"Hadrik Vale": {"subtitle": "Registry Archive Clerk", "element": "zhem"},
+	"Toma Reedhand": {"subtitle": "Dockhand and Shrine-Keeper", "element": "luth"},
 }
 
 var dialogue_resource: DialogueResource

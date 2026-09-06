@@ -38,7 +38,7 @@ Generated shape (what the catalog serves, `EncounterCatalog.definition(id)`):
  "default_outcome": "slain", "context_actions": [], "speech_hooks": [],
  "outcomes": {"slain": {"faction": ..., "delta": ..., "cause": ..., "message": ...}},
  "enemies": [{"id": "bog-wight", "max_hp": 20, "attack": 4, "defense": 1,
-              "balance_affinity": 1, "balance_pressure": 18, "element_id": "molm", "edge": 2}]
+              "balance_affinity": 1, "balance_pressure": 18, "element_id": "mozh", "edge": 2}]
 }
 ```
 
@@ -53,7 +53,7 @@ const _FIELD_GRID_DATA := {
 		"elevation": {Vector2i(3, 1): 1, Vector2i(4, 2): 2},
 	},
 }
-const _WEATHER_DEFAULTS: Dictionary = {"bog-wight": "molm"}   # element id or absent = CALM
+const _WEATHER_DEFAULTS: Dictionary = {"bog-wight": "mozh"}   # element id or absent = CALM
 const _SPOILS: Dictionary = {
 	&"bog-wight": [ItemIds.MATERIALS_GRAVE_SALT, ItemIds.CONSUMABLES_BITTERLEAF_POULTICE],
 }

@@ -84,9 +84,9 @@ const _FIELD_GRID_DATA := {
 ## tools/combat_number_sweep.gd is a static facing/elevation/wheel-distance sweep and
 ## does not read EncounterCatalog, so it has no per-encounter rows to change.
 const _WEATHER_DEFAULTS: Dictionary = {
-	"bog-wight": "molm",
-	"loam-boar": "terra",
-	"phase2-demon": "scor",
+	"bog-wight": "mozh",
+	"loam-boar": "tham",
+	"phase2-demon": "khash",
 }
 ## PROVISIONAL — first-pass encounter loot, pending a dedicated balance sweep.
 ## This authored registry keeps generated Pandora artifacts untouched.

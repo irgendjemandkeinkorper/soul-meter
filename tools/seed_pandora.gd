@@ -79,7 +79,7 @@ func _seed_elements() -> void:
 		made[e["id"]] = ent
 	# Diametric oppositions — canon, symmetric. Never invent an eleventh element.
 	var clashes := {
-		"suul": "daar", "bloei": "molm", "aqua": "scor", "khor": "nul", "terra": "strom"
+		"sul": "vekh", "vel": "mozh", "luth": "khash", "khor": "zhem", "tham": "zhur"
 	}
 	for a in clashes:
 		_assign(made[a], "Clash", made[clashes[a]])
@@ -265,17 +265,17 @@ func _seed_spells() -> void:
 	var rows := [
 		[
 			"Ember Chord",
-			"Scor",
+			"Khash",
 			4,
-			"A struck chord of fire; louder if Suul or Molm sounded this measure."
+			"A struck chord of fire; louder if Sul or Mozh sounded this measure."
 		],
 		[
 			"Still Water",
-			"Aqua",
+			"Luth",
 			3,
-			"Quiets one surface to mirror-calm; suppressed while Scor rings."
+			"Quiets one surface to mirror-calm; suppressed while Khash rings."
 		],
-		["Hushfall", "Nul", 6, "A hole with edges: silences a zone's tone for one measure."],
+		["Hushfall", "Zhem", 6, "A hole with edges: silences a zone's tone for one measure."],
 	]
 	for r in rows:
 		var ent := Pandora.create_entity(r[0], root)
@@ -297,7 +297,7 @@ func _seed_effects() -> void:
 	Pandora.create_property(root, "Placeholder", "bool")
 
 	var rows := [
-		["Burning", "Scor damage over time; ends early if Aqua sounds.", "duration"],
+		["Burning", "Khash damage over time; ends early if Luth sounds.", "duration"],
 		[
 			"Detuned",
 			"The Waning's fizzle-state: next casting rolls against a worse Agreement.",
@@ -494,8 +494,8 @@ func _seed_combatants() -> void:
 	# 2026-08-24: to-hit adds (attacker Edge - defender Edge) x 2%). Values follow the
 	# creature fiction: nimble skirmishers high, armored or shambling low.
 	var rows := [
-		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "molm", 2],
-		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "terra", 3],
+		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "mozh", 2],
+		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "tham", 3],
 		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, "", 4],
 		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, "", 4],
 		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, "", 2],
@@ -635,7 +635,7 @@ func _seed_locations() -> void:
 		["Deivel Zeit", "", "Haeren", "90–92%", "deivel"],
 		["Dom", "", "Kero", "", "dom"],
 		["Karrn-Vash", "", "Blidnisch", "", "karrn-vash"],
-		["Solmarch", "", "Suulmae (the mask)", "", "solmarch"],
+		["Solmarch", "", "Sulmae (the mask)", "", "solmarch"],
 		["Rennen", "", "Pazzah", "", "rennen"],
 		["Tweede", "", "Vicoar", "", "tweede"],
 		["Pozor", "", "Stuid", "", "pozor"],

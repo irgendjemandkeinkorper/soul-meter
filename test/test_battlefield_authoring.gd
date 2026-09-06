@@ -152,7 +152,7 @@ func test_weather_defaults_are_valid_wheel_ids_and_start_without_warnings() -> v
 ## Gate r1 residual closure: play a REAL authored board end-to-end — legal
 ## movement (the same move_query/submit path the pointer uses) closing the
 ## deployment gap into melee, then strikes to victory. bog-wight also carries
-## the authored molm weather, so the live weather path is exercised too.
+## the authored mozh weather, so the live weather path is exercised too.
 func test_bog_wight_board_supports_movement_into_melee_victory() -> void:
 	Battle.start(&"bog-wight")
 	assert_bool(Battle.controller.battlefield is GridBattlefieldModel).is_true()

@@ -96,11 +96,11 @@ func test_forced_session_applies_runtime_overrides_and_builds_the_inspector() ->
 	await get_tree().process_frame
 
 	assert_object(Battle.controller).is_not_null()
-	assert_str(String(Battle.controller.weather.element_id)).is_equal("strom")
+	assert_str(String(Battle.controller.weather.element_id)).is_equal("zhur")
 	var tile := Battle.controller.tile_state_at(Vector2i.ZERO)
 	assert_object(tile).is_not_null()
 	if tile != null:
-		assert_str(String(tile.charge_element_id)).is_equal("molm")
+		assert_str(String(tile.charge_element_id)).is_equal("mozh")
 		assert_int(tile.charge_level).is_equal(2)
 	assert_object(singleton.find_child("InspectorDock", true, false)).is_not_null()
 	assert_bool(Battle.combat_event.is_connected(Callable(singleton, "_on_combat_event"))).is_true()
@@ -142,8 +142,8 @@ func _test_setup() -> Dictionary:
 		"encounter_id": EncounterIds.BOG_WIGHT,
 		"party_ids": party_ids,
 		"weather_override_enabled": true,
-		"weather_override": &"strom",
-		"tile_seed": {"cell": Vector2i.ZERO, "element_id": &"molm", "charge": 2},
+		"weather_override": &"zhur",
+		"tile_seed": {"cell": Vector2i.ZERO, "element_id": &"mozh", "charge": 2},
 		"seed": 1234,
 	}
 

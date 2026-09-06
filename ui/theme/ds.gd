@@ -65,7 +65,7 @@ const STATE_FEEDBACK := CINDER_3
 const STATE_HUSH := Color("#B8C0CC")
 
 # ---- the Wheel of Ten (canon order; adjacency = Chord, diametric = Clash) ----
-# Clashes: Suul/Daar, Bloei/Molm, Aqua/Scor, Khor/Nul, Terra/Strom. Never reorder.
+# Clashes: Sul/Vekh, Vel/Mozh, Luth/Khash, Khor/Zhem, Tham/Zhur. Never reorder.
 #
 # Sigils carry U+FE0E (VARIATION SELECTOR-15) where the DS marks them, forcing TEXT
 # presentation. Without it these codepoints render as colour emoji on some platforms, which
@@ -74,16 +74,16 @@ const STATE_HUSH := Color("#B8C0CC")
 # without changing the DS first.
 const VS_TEXT := "︎"
 const WHEEL: Array[Dictionary] = [
-	{"id": "suul",  "name": "Suul",  "sigil": "✷", "color": Color("#E8C46A"), "glow": Color("#FFE7A8")},
-	{"id": "bloei", "name": "Bloei", "sigil": "⚘︎", "color": Color("#4FA96A"), "glow": Color("#8FE0A4")},
-	{"id": "aqua",  "name": "Aqua",  "sigil": "≈", "color": Color("#2E8FB8"), "glow": Color("#7FCDE8")},
+	{"id": "sul",  "name": "Sul",  "sigil": "✷", "color": Color("#E8C46A"), "glow": Color("#FFE7A8")},
+	{"id": "vel", "name": "Vel", "sigil": "⚘︎", "color": Color("#4FA96A"), "glow": Color("#8FE0A4")},
+	{"id": "luth",  "name": "Luth",  "sigil": "≈", "color": Color("#2E8FB8"), "glow": Color("#7FCDE8")},
 	{"id": "khor",  "name": "Khor",  "sigil": "♫︎", "color": Color("#A855F7"), "glow": Color("#D6B4FF")},
-	{"id": "terra", "name": "Terra", "sigil": "▲", "color": Color("#8C7A5B"), "glow": Color("#C4AE85")},
-	{"id": "daar",  "name": "Daar",  "sigil": "◑︎", "color": Color("#4B3F72"), "glow": Color("#8577C4")},
-	{"id": "molm",  "name": "Molm",  "sigil": "⁂", "color": Color("#7A8B3C"), "glow": Color("#B4C46B")},
-	{"id": "scor",  "name": "Scor",  "sigil": "☲︎", "color": Color("#E0522F"), "glow": Color("#FF9A6E")},
-	{"id": "nul",   "name": "Nul",   "sigil": "○︎", "color": Color("#B8C0CC"), "glow": Color("#EDF2F8")},
-	{"id": "strom", "name": "Strom", "sigil": "☇", "color": Color("#22D3EE"), "glow": Color("#A6F0FA")},
+	{"id": "tham", "name": "Tham", "sigil": "▲", "color": Color("#8C7A5B"), "glow": Color("#C4AE85")},
+	{"id": "vekh",  "name": "Vekh",  "sigil": "◑︎", "color": Color("#4B3F72"), "glow": Color("#8577C4")},
+	{"id": "mozh",  "name": "Mozh",  "sigil": "⁂", "color": Color("#7A8B3C"), "glow": Color("#B4C46B")},
+	{"id": "khash",  "name": "Khash",  "sigil": "☲︎", "color": Color("#E0522F"), "glow": Color("#FF9A6E")},
+	{"id": "zhem",   "name": "Zhem",   "sigil": "○︎", "color": Color("#B8C0CC"), "glow": Color("#EDF2F8")},
+	{"id": "zhur", "name": "Zhur", "sigil": "☇", "color": Color("#22D3EE"), "glow": Color("#A6F0FA")},
 ]
 
 # ---- type scale (px) ----

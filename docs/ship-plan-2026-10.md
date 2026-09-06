@@ -29,8 +29,8 @@ issues and worker roles stay in force.
 3. **Content lock is day 18.** After that only bugs, balance numbers, and asset swaps merge.
 4. **The reference board is a style target, not a layout target.** It shows a separate battle
    map, deployment phase, and gamepad prompts. We ship same-map combat, keyboard+mouse first.
-   What we take from it: dark carved stone, tarnished bronze chrome, ember (Scor) and cold
-   blue (Aqua/Strom) as the two accent temperatures, Cinzel-style tracked caps, thin brass
+   What we take from it: dark carved stone, tarnished bronze chrome, ember (Khash) and cold
+   blue (Luth/Zhur) as the two accent temperatures, Cinzel-style tracked caps, thin brass
    rules, hex-and-diamond tile glyphs. This already matches the DS ("carved, ledgered, and
    slightly wrong"). No new tokens are needed; the DS wins on any conflict.
 5. **The Codex asset agent drives two pipelines.** Direct: 9-patch `StyleBoxTexture`s, SVG

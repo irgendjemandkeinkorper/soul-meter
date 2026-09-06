@@ -42,7 +42,7 @@ const ANCESTRIES: Array[Dictionary] = [
 		"trait": "Extra skill point at creation (generalist).",
 		"creation_bonus_points": 1, "trained_skills": []},
 	{"id": "kaan", "name": "Kaan", "leans": "Muster / Grit", "lean_ids": ["muster", "grit"],
-		"trait": "Vulnerable to Molm-adjacent effects; resistant to physical Discord.",
+		"trait": "Vulnerable to Mozh-adjacent effects; resistant to physical Discord.",
 		"creation_bonus_points": 0, "trained_skills": []},
 	{"id": "vaerin", "name": "Vaerin", "leans": "Reason / Intuition", "lean_ids": ["reason", "intuition"],
 		"trait": "Access to the Fading resource regardless of class.",
@@ -99,11 +99,11 @@ const DISCIPLINES: Array[Dictionary] = [
 	{"id": "chordblade", "name": "Chordblade", "favours": "khor",
 		"blurb": "Vanguard footwork, favouring Khor's tempo.",
 		"verbs": "Advance, feint, close — reach and rhythm over weight."},
-	{"id": "terrashaper", "name": "Terrashaper", "favours": "terra",
-		"blurb": "The engineer's stance, favouring Terra's weight.",
+	{"id": "thamshaper", "name": "Thamshaper", "favours": "tham",
+		"blurb": "The engineer's stance, favouring Tham's weight.",
 		"verbs": "Hold, brace, raise — elevation and footing over speed."},
-	{"id": "hushwarden", "name": "Hushwarden", "favours": "nul",
-		"blurb": "Denial and stillness, favouring Nul's quiet.",
+	{"id": "hushwarden", "name": "Hushwarden", "favours": "zhem",
+		"blurb": "Denial and stillness, favouring Zhem's quiet.",
 		"verbs": "Deny, still, wait — the field taxes every Song inside it, the warden's included."},
 ]
 
@@ -114,11 +114,11 @@ const PATRONS: Array[Dictionary] = ClassCatalog.ALL
 ## (ten-patron-classes.md). Kept as a table for the wizard's live clash hint; the rule
 ## itself is ElementWheel.opposite().
 const WHEEL_CLASH_PAIRS: Dictionary = {
-	"suul": "daar", "daar": "suul",
-	"bloei": "molm", "molm": "bloei",
-	"aqua": "scor", "scor": "aqua",
-	"khor": "nul", "nul": "khor",
-	"terra": "strom", "strom": "terra",
+	"sul": "vekh", "vekh": "sul",
+	"vel": "mozh", "mozh": "vel",
+	"luth": "khash", "khash": "luth",
+	"khor": "zhem", "zhem": "khor",
+	"tham": "zhur", "zhur": "tham",
 }
 
 ## Portrait choices for the likeness grid. Reuses existing dedicated crowd-figure

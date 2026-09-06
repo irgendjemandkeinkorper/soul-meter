@@ -2,16 +2,16 @@
   "vault_id": "magic-system",
   "provisional": true,
   "wheel_order": [
-    "suul",
-    "bloei",
-    "aqua",
+    "sul",
+    "vel",
+    "luth",
     "khor",
-    "terra",
-    "daar",
-    "molm",
-    "scor",
-    "nul",
-    "strom"
+    "tham",
+    "vekh",
+    "mozh",
+    "khash",
+    "zhem",
+    "zhur"
   ],
   "axes": {
     "target": {
@@ -135,8 +135,8 @@
   },
   "pairs": [
     {
-      "attack_element": "suul",
-      "defend_element": "suul",
+      "attack_element": "sul",
+      "defend_element": "sul",
       "distance": 0,
       "relation": "same",
       "damage_multiplier": 0.5,
@@ -144,8 +144,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "suul",
-      "defend_element": "bloei",
+      "attack_element": "sul",
+      "defend_element": "vel",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -153,8 +153,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "suul",
-      "defend_element": "aqua",
+      "attack_element": "sul",
+      "defend_element": "luth",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -162,7 +162,7 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "suul",
+      "attack_element": "sul",
       "defend_element": "khor",
       "distance": 3,
       "relation": "neutral",
@@ -171,8 +171,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "suul",
-      "defend_element": "terra",
+      "attack_element": "sul",
+      "defend_element": "tham",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -180,8 +180,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "suul",
-      "defend_element": "daar",
+      "attack_element": "sul",
+      "defend_element": "vekh",
       "distance": 5,
       "relation": "clash",
       "damage_multiplier": 1.35,
@@ -189,8 +189,8 @@
       "soul_on_failure": 5
     },
     {
-      "attack_element": "suul",
-      "defend_element": "molm",
+      "attack_element": "sul",
+      "defend_element": "mozh",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -198,8 +198,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "suul",
-      "defend_element": "scor",
+      "attack_element": "sul",
+      "defend_element": "khash",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -207,8 +207,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "suul",
-      "defend_element": "nul",
+      "attack_element": "sul",
+      "defend_element": "zhem",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -216,8 +216,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "suul",
-      "defend_element": "strom",
+      "attack_element": "sul",
+      "defend_element": "zhur",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -225,8 +225,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "bloei",
-      "defend_element": "suul",
+      "attack_element": "vel",
+      "defend_element": "sul",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -234,8 +234,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "bloei",
-      "defend_element": "bloei",
+      "attack_element": "vel",
+      "defend_element": "vel",
       "distance": 0,
       "relation": "same",
       "damage_multiplier": 0.5,
@@ -243,8 +243,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "bloei",
-      "defend_element": "aqua",
+      "attack_element": "vel",
+      "defend_element": "luth",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -252,7 +252,7 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "bloei",
+      "attack_element": "vel",
       "defend_element": "khor",
       "distance": 2,
       "relation": "neutral",
@@ -261,8 +261,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "bloei",
-      "defend_element": "terra",
+      "attack_element": "vel",
+      "defend_element": "tham",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -270,8 +270,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "bloei",
-      "defend_element": "daar",
+      "attack_element": "vel",
+      "defend_element": "vekh",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -279,8 +279,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "bloei",
-      "defend_element": "molm",
+      "attack_element": "vel",
+      "defend_element": "mozh",
       "distance": 5,
       "relation": "clash",
       "damage_multiplier": 1.35,
@@ -288,8 +288,8 @@
       "soul_on_failure": 5
     },
     {
-      "attack_element": "bloei",
-      "defend_element": "scor",
+      "attack_element": "vel",
+      "defend_element": "khash",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -297,8 +297,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "bloei",
-      "defend_element": "nul",
+      "attack_element": "vel",
+      "defend_element": "zhem",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -306,8 +306,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "bloei",
-      "defend_element": "strom",
+      "attack_element": "vel",
+      "defend_element": "zhur",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -315,8 +315,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "aqua",
-      "defend_element": "suul",
+      "attack_element": "luth",
+      "defend_element": "sul",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -324,8 +324,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "aqua",
-      "defend_element": "bloei",
+      "attack_element": "luth",
+      "defend_element": "vel",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -333,8 +333,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "aqua",
-      "defend_element": "aqua",
+      "attack_element": "luth",
+      "defend_element": "luth",
       "distance": 0,
       "relation": "same",
       "damage_multiplier": 0.5,
@@ -342,7 +342,7 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "aqua",
+      "attack_element": "luth",
       "defend_element": "khor",
       "distance": 1,
       "relation": "neighbour",
@@ -351,8 +351,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "aqua",
-      "defend_element": "terra",
+      "attack_element": "luth",
+      "defend_element": "tham",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -360,8 +360,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "aqua",
-      "defend_element": "daar",
+      "attack_element": "luth",
+      "defend_element": "vekh",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -369,8 +369,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "aqua",
-      "defend_element": "molm",
+      "attack_element": "luth",
+      "defend_element": "mozh",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -378,8 +378,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "aqua",
-      "defend_element": "scor",
+      "attack_element": "luth",
+      "defend_element": "khash",
       "distance": 5,
       "relation": "clash",
       "damage_multiplier": 1.35,
@@ -387,8 +387,8 @@
       "soul_on_failure": 5
     },
     {
-      "attack_element": "aqua",
-      "defend_element": "nul",
+      "attack_element": "luth",
+      "defend_element": "zhem",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -396,8 +396,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "aqua",
-      "defend_element": "strom",
+      "attack_element": "luth",
+      "defend_element": "zhur",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -406,7 +406,7 @@
     },
     {
       "attack_element": "khor",
-      "defend_element": "suul",
+      "defend_element": "sul",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -415,7 +415,7 @@
     },
     {
       "attack_element": "khor",
-      "defend_element": "bloei",
+      "defend_element": "vel",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -424,7 +424,7 @@
     },
     {
       "attack_element": "khor",
-      "defend_element": "aqua",
+      "defend_element": "luth",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -442,7 +442,7 @@
     },
     {
       "attack_element": "khor",
-      "defend_element": "terra",
+      "defend_element": "tham",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -451,7 +451,7 @@
     },
     {
       "attack_element": "khor",
-      "defend_element": "daar",
+      "defend_element": "vekh",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -460,7 +460,7 @@
     },
     {
       "attack_element": "khor",
-      "defend_element": "molm",
+      "defend_element": "mozh",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -469,7 +469,7 @@
     },
     {
       "attack_element": "khor",
-      "defend_element": "scor",
+      "defend_element": "khash",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -478,7 +478,7 @@
     },
     {
       "attack_element": "khor",
-      "defend_element": "nul",
+      "defend_element": "zhem",
       "distance": 5,
       "relation": "clash",
       "damage_multiplier": 1.35,
@@ -487,7 +487,7 @@
     },
     {
       "attack_element": "khor",
-      "defend_element": "strom",
+      "defend_element": "zhur",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -495,8 +495,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "terra",
-      "defend_element": "suul",
+      "attack_element": "tham",
+      "defend_element": "sul",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -504,8 +504,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "terra",
-      "defend_element": "bloei",
+      "attack_element": "tham",
+      "defend_element": "vel",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -513,8 +513,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "terra",
-      "defend_element": "aqua",
+      "attack_element": "tham",
+      "defend_element": "luth",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -522,7 +522,7 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "terra",
+      "attack_element": "tham",
       "defend_element": "khor",
       "distance": 1,
       "relation": "neighbour",
@@ -531,8 +531,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "terra",
-      "defend_element": "terra",
+      "attack_element": "tham",
+      "defend_element": "tham",
       "distance": 0,
       "relation": "same",
       "damage_multiplier": 0.5,
@@ -540,8 +540,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "terra",
-      "defend_element": "daar",
+      "attack_element": "tham",
+      "defend_element": "vekh",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -549,8 +549,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "terra",
-      "defend_element": "molm",
+      "attack_element": "tham",
+      "defend_element": "mozh",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -558,8 +558,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "terra",
-      "defend_element": "scor",
+      "attack_element": "tham",
+      "defend_element": "khash",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -567,8 +567,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "terra",
-      "defend_element": "nul",
+      "attack_element": "tham",
+      "defend_element": "zhem",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -576,8 +576,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "terra",
-      "defend_element": "strom",
+      "attack_element": "tham",
+      "defend_element": "zhur",
       "distance": 5,
       "relation": "clash",
       "damage_multiplier": 1.35,
@@ -585,8 +585,8 @@
       "soul_on_failure": 5
     },
     {
-      "attack_element": "daar",
-      "defend_element": "suul",
+      "attack_element": "vekh",
+      "defend_element": "sul",
       "distance": 5,
       "relation": "clash",
       "damage_multiplier": 1.35,
@@ -594,8 +594,8 @@
       "soul_on_failure": 5
     },
     {
-      "attack_element": "daar",
-      "defend_element": "bloei",
+      "attack_element": "vekh",
+      "defend_element": "vel",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -603,8 +603,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "daar",
-      "defend_element": "aqua",
+      "attack_element": "vekh",
+      "defend_element": "luth",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -612,7 +612,7 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "daar",
+      "attack_element": "vekh",
       "defend_element": "khor",
       "distance": 2,
       "relation": "neutral",
@@ -621,8 +621,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "daar",
-      "defend_element": "terra",
+      "attack_element": "vekh",
+      "defend_element": "tham",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -630,8 +630,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "daar",
-      "defend_element": "daar",
+      "attack_element": "vekh",
+      "defend_element": "vekh",
       "distance": 0,
       "relation": "same",
       "damage_multiplier": 0.5,
@@ -639,8 +639,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "daar",
-      "defend_element": "molm",
+      "attack_element": "vekh",
+      "defend_element": "mozh",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -648,8 +648,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "daar",
-      "defend_element": "scor",
+      "attack_element": "vekh",
+      "defend_element": "khash",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -657,8 +657,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "daar",
-      "defend_element": "nul",
+      "attack_element": "vekh",
+      "defend_element": "zhem",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -666,8 +666,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "daar",
-      "defend_element": "strom",
+      "attack_element": "vekh",
+      "defend_element": "zhur",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -675,8 +675,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "molm",
-      "defend_element": "suul",
+      "attack_element": "mozh",
+      "defend_element": "sul",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -684,8 +684,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "molm",
-      "defend_element": "bloei",
+      "attack_element": "mozh",
+      "defend_element": "vel",
       "distance": 5,
       "relation": "clash",
       "damage_multiplier": 1.35,
@@ -693,8 +693,8 @@
       "soul_on_failure": 5
     },
     {
-      "attack_element": "molm",
-      "defend_element": "aqua",
+      "attack_element": "mozh",
+      "defend_element": "luth",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -702,7 +702,7 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "molm",
+      "attack_element": "mozh",
       "defend_element": "khor",
       "distance": 3,
       "relation": "neutral",
@@ -711,8 +711,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "molm",
-      "defend_element": "terra",
+      "attack_element": "mozh",
+      "defend_element": "tham",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -720,8 +720,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "molm",
-      "defend_element": "daar",
+      "attack_element": "mozh",
+      "defend_element": "vekh",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -729,8 +729,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "molm",
-      "defend_element": "molm",
+      "attack_element": "mozh",
+      "defend_element": "mozh",
       "distance": 0,
       "relation": "same",
       "damage_multiplier": 0.5,
@@ -738,8 +738,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "molm",
-      "defend_element": "scor",
+      "attack_element": "mozh",
+      "defend_element": "khash",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -747,8 +747,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "molm",
-      "defend_element": "nul",
+      "attack_element": "mozh",
+      "defend_element": "zhem",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -756,8 +756,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "molm",
-      "defend_element": "strom",
+      "attack_element": "mozh",
+      "defend_element": "zhur",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -765,8 +765,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "scor",
-      "defend_element": "suul",
+      "attack_element": "khash",
+      "defend_element": "sul",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -774,8 +774,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "scor",
-      "defend_element": "bloei",
+      "attack_element": "khash",
+      "defend_element": "vel",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -783,8 +783,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "scor",
-      "defend_element": "aqua",
+      "attack_element": "khash",
+      "defend_element": "luth",
       "distance": 5,
       "relation": "clash",
       "damage_multiplier": 1.35,
@@ -792,7 +792,7 @@
       "soul_on_failure": 5
     },
     {
-      "attack_element": "scor",
+      "attack_element": "khash",
       "defend_element": "khor",
       "distance": 4,
       "relation": "neutral",
@@ -801,8 +801,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "scor",
-      "defend_element": "terra",
+      "attack_element": "khash",
+      "defend_element": "tham",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -810,8 +810,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "scor",
-      "defend_element": "daar",
+      "attack_element": "khash",
+      "defend_element": "vekh",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -819,8 +819,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "scor",
-      "defend_element": "molm",
+      "attack_element": "khash",
+      "defend_element": "mozh",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -828,8 +828,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "scor",
-      "defend_element": "scor",
+      "attack_element": "khash",
+      "defend_element": "khash",
       "distance": 0,
       "relation": "same",
       "damage_multiplier": 0.5,
@@ -837,8 +837,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "scor",
-      "defend_element": "nul",
+      "attack_element": "khash",
+      "defend_element": "zhem",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -846,8 +846,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "scor",
-      "defend_element": "strom",
+      "attack_element": "khash",
+      "defend_element": "zhur",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -855,8 +855,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "nul",
-      "defend_element": "suul",
+      "attack_element": "zhem",
+      "defend_element": "sul",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -864,8 +864,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "nul",
-      "defend_element": "bloei",
+      "attack_element": "zhem",
+      "defend_element": "vel",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -873,8 +873,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "nul",
-      "defend_element": "aqua",
+      "attack_element": "zhem",
+      "defend_element": "luth",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -882,7 +882,7 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "nul",
+      "attack_element": "zhem",
       "defend_element": "khor",
       "distance": 5,
       "relation": "clash",
@@ -891,8 +891,8 @@
       "soul_on_failure": 5
     },
     {
-      "attack_element": "nul",
-      "defend_element": "terra",
+      "attack_element": "zhem",
+      "defend_element": "tham",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -900,8 +900,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "nul",
-      "defend_element": "daar",
+      "attack_element": "zhem",
+      "defend_element": "vekh",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -909,8 +909,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "nul",
-      "defend_element": "molm",
+      "attack_element": "zhem",
+      "defend_element": "mozh",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -918,8 +918,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "nul",
-      "defend_element": "scor",
+      "attack_element": "zhem",
+      "defend_element": "khash",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -927,8 +927,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "nul",
-      "defend_element": "nul",
+      "attack_element": "zhem",
+      "defend_element": "zhem",
       "distance": 0,
       "relation": "same",
       "damage_multiplier": 0.5,
@@ -936,8 +936,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "nul",
-      "defend_element": "strom",
+      "attack_element": "zhem",
+      "defend_element": "zhur",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -945,8 +945,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "strom",
-      "defend_element": "suul",
+      "attack_element": "zhur",
+      "defend_element": "sul",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -954,8 +954,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "strom",
-      "defend_element": "bloei",
+      "attack_element": "zhur",
+      "defend_element": "vel",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -963,8 +963,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "strom",
-      "defend_element": "aqua",
+      "attack_element": "zhur",
+      "defend_element": "luth",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -972,7 +972,7 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "strom",
+      "attack_element": "zhur",
       "defend_element": "khor",
       "distance": 4,
       "relation": "neutral",
@@ -981,8 +981,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "strom",
-      "defend_element": "terra",
+      "attack_element": "zhur",
+      "defend_element": "tham",
       "distance": 5,
       "relation": "clash",
       "damage_multiplier": 1.35,
@@ -990,8 +990,8 @@
       "soul_on_failure": 5
     },
     {
-      "attack_element": "strom",
-      "defend_element": "daar",
+      "attack_element": "zhur",
+      "defend_element": "vekh",
       "distance": 4,
       "relation": "neutral",
       "damage_multiplier": 1.2,
@@ -999,8 +999,8 @@
       "soul_on_failure": 3
     },
     {
-      "attack_element": "strom",
-      "defend_element": "molm",
+      "attack_element": "zhur",
+      "defend_element": "mozh",
       "distance": 3,
       "relation": "neutral",
       "damage_multiplier": 1.1,
@@ -1008,8 +1008,8 @@
       "soul_on_failure": 2
     },
     {
-      "attack_element": "strom",
-      "defend_element": "scor",
+      "attack_element": "zhur",
+      "defend_element": "khash",
       "distance": 2,
       "relation": "neutral",
       "damage_multiplier": 1.0,
@@ -1017,8 +1017,8 @@
       "soul_on_failure": 1
     },
     {
-      "attack_element": "strom",
-      "defend_element": "nul",
+      "attack_element": "zhur",
+      "defend_element": "zhem",
       "distance": 1,
       "relation": "neighbour",
       "damage_multiplier": 0.75,
@@ -1026,8 +1026,8 @@
       "soul_on_failure": 0
     },
     {
-      "attack_element": "strom",
-      "defend_element": "strom",
+      "attack_element": "zhur",
+      "defend_element": "zhur",
       "distance": 0,
       "relation": "same",
       "damage_multiplier": 0.5,

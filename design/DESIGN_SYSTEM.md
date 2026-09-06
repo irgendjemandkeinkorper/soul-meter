@@ -35,8 +35,8 @@ alongside these visual tokens when deciding whether a feature belongs in Soul Me
   bronze-trimmed element per screen) · Arcane (violet = magic/selection, cinder =
   damage/consequence, mote = energy/tempo — never two accents on one control) · Ink
   (parchment/ash). Closed sets: rarity (common/rare/mythic) and agreement states.
-- **The Wheel of Ten** is canon-ordered and closed: Suul, Bloei, Aqua, Khor, Terra, Daar,
-  Molm, Scor, Nul, Strom. Adjacent = Chord; diametric = Clash. Never an 11th, never reorder.
+- **The Wheel of Ten** is canon-ordered and closed: Sul, Vel, Luth, Khor, Tham, Vekh,
+  Mozh, Khash, Zhem, Zhur. Adjacent = Chord; diametric = Clash. Never an 11th, never reorder.
 - **Type:** Cinzel for display + ALL tracked-uppercase labels/buttons; Cormorant Garamond for
   body/dialogue (italic = flavour/quotes); Fira Code for numbers ONLY. No sans in menus.
 - **Corners:** radii ~0; the corner language is a 45° **notch** (6/10/16px). Nothing rounded.
@@ -185,5 +185,5 @@ carried into implementation: the CT disc-vs-pips question above.
 - **Remaining components:** ElementWheel, TempoTrack, AgreementReadout, MeterBar, ItemSlot/
   ItemGrid (grid inventory is confirmed), DialogueChoice, Portrait, Modal, Tooltip — port
   from `components/*/*.prompt.md` as each system lands.
-- **Art:** `assets/art/` portraits (rune-knights, Suulmae, spire figures) still live in the
+- **Art:** `assets/art/` portraits (rune-knights, Sulmae, spire figures) still live in the
   DS project — bring binaries over when the dialogue/portrait UI lands.

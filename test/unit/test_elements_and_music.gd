@@ -21,9 +21,9 @@ func test_every_triad_resolves_with_center_amplified_imposition_all_bends_and_ef
 
 func test_strained_chords_at_two_three_and_four_steps_weaken_both_and_cost_distance() -> void:
 	var cases := [
-		{"first": &"suul", "second": &"aqua", "distance": 2},
-		{"first": &"bloei", "second": &"terra", "distance": 3},
-		{"first": &"suul", "second": &"terra", "distance": 4},
+		{"first": &"sul", "second": &"luth", "distance": 2},
+		{"first": &"vel", "second": &"tham", "distance": 3},
+		{"first": &"sul", "second": &"tham", "distance": 4},
 	]
 	for test_case: Dictionary in cases:
 		var span: int = test_case["distance"]
@@ -41,7 +41,7 @@ func test_strained_chords_at_two_three_and_four_steps_weaken_both_and_cost_dista
 
 
 func test_wider_three_element_span_is_clash_self_discord_without_fizzle() -> void:
-	var result: CompositionResult = Resolver.resolve([&"suul", &"aqua", &"terra"], &"note")
+	var result: CompositionResult = Resolver.resolve([&"sul", &"luth", &"tham"], &"note")
 
 	assert_bool(result.is_clash()).is_true()
 	assert_bool(result.self_inflicted_discord).is_true()
@@ -50,7 +50,7 @@ func test_wider_three_element_span_is_clash_self_discord_without_fizzle() -> voi
 
 
 func test_opposed_elements_are_rejected() -> void:
-	var result: CompositionResult = Resolver.resolve([&"suul", &"daar"], &"note")
+	var result: CompositionResult = Resolver.resolve([&"sul", &"vekh"], &"note")
 
 	assert_bool(result.is_opposed()).is_true()
 	assert_bool(result.rejected).is_true()
@@ -59,7 +59,7 @@ func test_opposed_elements_are_rejected() -> void:
 
 
 func test_tone_has_one_imposition_and_one_rule_bend() -> void:
-	var result: CompositionResult = Resolver.resolve([&"suul"], &"note")
+	var result: CompositionResult = Resolver.resolve([&"sul"], &"note")
 
 	assert_int(result.kind).is_equal(Result.Kind.TONE)
 	assert_int(result.impositions.size()).is_equal(1)
@@ -68,7 +68,7 @@ func test_tone_has_one_imposition_and_one_rule_bend() -> void:
 
 func test_chord_has_one_full_imposition_and_two_rule_bends_with_caster_choice() -> void:
 	var result: CompositionResult = Resolver.resolve(
-		[&"suul", &"bloei"], &"phrase", {"imposition_element": &"bloei"}
+		[&"sul", &"vel"], &"phrase", {"imposition_element": &"vel"}
 	)
 
 	assert_int(result.kind).is_equal(Result.Kind.CHORD)
@@ -77,13 +77,13 @@ func test_chord_has_one_full_imposition_and_two_rule_bends_with_caster_choice() 
 	assert_int(result.rule_bends.size()).is_equal(2)
 
 
-func test_khor_and_nul_never_produce_damage_components() -> void:
-	for element_id in [&"khor", &"nul"]:
+func test_khor_and_zhem_never_produce_damage_components() -> void:
+	for element_id in [&"khor", &"zhem"]:
 		var tone: CompositionResult = Resolver.resolve([element_id], &"note")
 		assert_int(tone.damage_components.size()).is_equal(0)
 
 	for triad in Data.all_triads():
-		if triad.center_element == &"khor" or triad.center_element == &"nul":
+		if triad.center_element == &"khor" or triad.center_element == &"zhem":
 			var result: CompositionResult = Resolver.resolve(triad.elements, &"song")
 			assert_int(result.damage_components.size()).is_equal(0)
 

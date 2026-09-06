@@ -35,7 +35,7 @@ paired-expenditure Soul Gauge economy. The boundary model keeps fact 8 literally
 - **Overreach** — casting past empty Breath — spends the Soul Meter, permanently, at the
   rate the tier demands. This is the only path from casting to Gauge loss, and it is a
   player choice made under a visible warning (FR-606).
-- Aqua and Molm's Rule-Bends (FR-302) restore **Breath**, as specced. Nothing in the
+- Luth and Mozh's Rule-Bends (FR-302) restore **Breath**, as specced. Nothing in the
   Elements & Music spec changes.
 - Vervulling's doctrine reads correctly: paired expenditure keeps both casters inside
   Breath, so the *balanced* spend genuinely frays less. The Registry's observed-but-
@@ -157,16 +157,16 @@ subsystem, so no two Triads compete for the same slot in a build.
 
 | Triad | Span → Center | Unique effect | Subsystem it bends |
 |---|---|---|---|
-| **Dayspring** | Strom–Suul–Bloei → Suul | **First Light.** All hidden state in the zone goes public for the round — enemy Aftertones, Discord signatures, queued effects, and every discovered weakness. Defining Strike checks cost no extra AP this round. | Information → tempo |
-| **Fruiting** | Suul–Bloei–Aqua → Bloei | **Second Season.** Every friendly buff currently active is *copied* onto one other ally; buffs cast this round land on two targets. | Buff propagation |
-| **Rivermouth** | Bloei–Aqua–Khor → Aqua | **The Mouth Opens.** Zone walls dissolve for one round: any combatant may change zone for 0 AP, and AoE shapes ignore zone boundaries. | Positioning (`BattlefieldModel`) |
-| **Founding** | Aqua–Khor–Terra → Khor | **Cornerstone.** Every active effect's remaining duration freezes — friend and foe — until the end of your next turn. | Duration / time |
-| **Vault** | Khor–Terra–Daar → Terra | **Sealed Ground.** Fortify one zone for the encounter: entering costs +1 AP, ranged attacks in suffer Weighted, and Aftertones anchored inside cannot be consumed by enemies. | Terrain authoring mid-battle |
-| **Barrow** | Terra–Daar–Molm → Daar | **Unlisted.** Your side's signatures, queued effects, and positions are hidden until they resolve; enemies cannot target your back zone this round and lose all reveal effects. | Information denial (mirror of Dayspring) |
-| **Pyre** | Daar–Molm–Scor → Molm | **The Rendering.** Every corpse, destroyed object, and expired Aftertone on the field converts at once to **Breath**, split across your side; enemies sharing a zone with a converted corpse take Decaying. | Mass resource conversion |
-| **Cinderfall** | Molm–Scor–Nul → Scor | **Everything Burns At Once.** Consume *all* Aftertones on the field, both sides; each yields its burst to your side. | Aftertone economy cash-out |
-| **Stillpoint** | Scor–Nul–Strom → Nul | **The Held Silence.** The Balance Gauge is forced to exact center and locked there until the end of the next round; while locked, no order/chaos threshold effect can fire for anyone. | **Balance Gauge — the stabilizer/refusal payoff (FR-104)** |
-| **Thunderhead** | Nul–Strom–Suul → Strom | **Nothing Is Uncertain.** For one round your side skips the Instability die entirely, and one ally may act out of turn order. | Variance deletion + initiative |
+| **Dayspring** | Zhur–Sul–Vel → Sul | **First Light.** All hidden state in the zone goes public for the round — enemy Aftertones, Discord signatures, queued effects, and every discovered weakness. Defining Strike checks cost no extra AP this round. | Information → tempo |
+| **Fruiting** | Sul–Vel–Luth → Vel | **Second Season.** Every friendly buff currently active is *copied* onto one other ally; buffs cast this round land on two targets. | Buff propagation |
+| **Rivermouth** | Vel–Luth–Khor → Luth | **The Mouth Opens.** Zone walls dissolve for one round: any combatant may change zone for 0 AP, and AoE shapes ignore zone boundaries. | Positioning (`BattlefieldModel`) |
+| **Founding** | Luth–Khor–Tham → Khor | **Cornerstone.** Every active effect's remaining duration freezes — friend and foe — until the end of your next turn. | Duration / time |
+| **Vault** | Khor–Tham–Vekh → Tham | **Sealed Ground.** Fortify one zone for the encounter: entering costs +1 AP, ranged attacks in suffer Weighted, and Aftertones anchored inside cannot be consumed by enemies. | Terrain authoring mid-battle |
+| **Barrow** | Tham–Vekh–Mozh → Vekh | **Unlisted.** Your side's signatures, queued effects, and positions are hidden until they resolve; enemies cannot target your back zone this round and lose all reveal effects. | Information denial (mirror of Dayspring) |
+| **Pyre** | Vekh–Mozh–Khash → Mozh | **The Rendering.** Every corpse, destroyed object, and expired Aftertone on the field converts at once to **Breath**, split across your side; enemies sharing a zone with a converted corpse take Decaying. | Mass resource conversion |
+| **Cinderfall** | Mozh–Khash–Zhem → Khash | **Everything Burns At Once.** Consume *all* Aftertones on the field, both sides; each yields its burst to your side. | Aftertone economy cash-out |
+| **Stillpoint** | Khash–Zhem–Zhur → Zhem | **The Held Silence.** The Balance Gauge is forced to exact center and locked there until the end of the next round; while locked, no order/chaos threshold effect can fire for anyone. | **Balance Gauge — the stabilizer/refusal payoff (FR-104)** |
+| **Thunderhead** | Zhem–Zhur–Sul → Zhur | **Nothing Is Uncertain.** For one round your side skips the Instability die entirely, and one ally may act out of turn order. | Variance deletion + initiative |
 
 Every element rules exactly one Triad and wings two, per FR-304. **Stillpoint** is the mechanical
 answer to the PRD's requirement that the center-holding / refusal build be genuinely rewarded.
@@ -186,7 +186,7 @@ no existing entity contradicts them.
   Refrain-tier Breath cost). Recoverable through *play*, not only story alignment (FR-306
   anti-build-lock rule). Tone is never gated.
 - **Zhavar** — zone scale. Banking harmony raises local Agreement Integrity *and* how far the
-  zone can be heard: low → rising → **tolling** (one Nul dragon) → ringing (regional delegation)
+  zone can be heard: low → rising → **tolling** (one Zhem dragon) → ringing (regional delegation)
   → unprecedented. Chapter 1 tracks and telegraphs it, with one scripted tolling event; dragon
   response is Chapter 2+.
 
@@ -202,7 +202,7 @@ canon addition on the ancestry side:
 | Ancestry | Leans | Minor trait | Source |
 |---|---|---|---|
 | **Vael** | Balanced | Extra skill point at creation (generalist) | vault, unchanged |
-| **Kaan** | Forge / Anchor | Resistant to physical Discord; vulnerable to Molm-adjacent effects | vault, unchanged |
+| **Kaan** | Forge / Anchor | Resistant to physical Discord; vulnerable to Mozh-adjacent effects | vault, unchanged |
 | **Vaerin** | Spark / Pitch | Access to the **Fading** resource regardless of class | vault, unchanged |
 | **Weftkin** | Pitch / Voice | Innate Weft-Sensing training (starts Trained) | vault, unchanged |
 | **Kes'reth** *(Mirror-Veil)* | **Voice / Anchor** | **Mirrored Scars** — the health-for-memory exchange made mechanical: once per encounter, spend HP to negate one Discord-inflicted debuff. | **NEW — ratified here** |

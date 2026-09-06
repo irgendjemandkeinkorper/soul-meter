@@ -16,7 +16,7 @@ func after_test() -> void:
 func _ironbrand_build() -> ChargenBuild:
 	var build := ChargenBuild.new()
 	build.select_ancestry("kaan")
-	build.select_discipline("terrashaper")
+	build.select_discipline("thamshaper")
 	build.select_class("ironbrand")
 	build.select_background("verlossen-miner")
 	build.display_name = "Sera"
@@ -58,13 +58,13 @@ func test_creation_pool_scales_with_reason_and_decorum_and_vael_bonus() -> void:
 func test_class_choice_grants_kit_tag_and_prefills_suggested_elements() -> void:
 	var build := _ironbrand_build()
 	assert_str(build.kit_skill).is_equal("heft")
-	assert_str(build.major_element).is_equal("scor")
-	assert_str(build.minor_element).is_equal("molm")
-	assert_str(build.mastery_element).is_equal("scor")
+	assert_str(build.major_element).is_equal("khash")
+	assert_str(build.minor_element).is_equal("mozh")
+	assert_str(build.mastery_element).is_equal("khash")
 	var tiers := build.granted_tiers()
 	assert_str(str(tiers.get("heft", ""))).is_equal("trained")
-	assert_str(str(tiers.get("tone_scor", ""))).is_equal("trained")
-	assert_str(str(tiers.get("tone_molm", ""))).is_equal("trained")
+	assert_str(str(tiers.get("tone_khash", ""))).is_equal("trained")
+	assert_str(str(tiers.get("tone_mozh", ""))).is_equal("trained")
 	assert_str(str(tiers.get("strain", ""))).is_equal("trained")
 	assert_str(str(tiers.get("wayfinding", ""))).is_equal("trained")
 	assert_bool(tiers.has("grip")).is_false()
@@ -84,13 +84,13 @@ func test_weftkin_innate_training_is_a_tag() -> void:
 func test_only_held_tones_are_purchasable() -> void:
 	var build := _ironbrand_build()
 	var purchasable := build.purchasable_skills()
-	assert_bool(purchasable.has("tone_scor")).is_true()
-	assert_bool(purchasable.has("tone_molm")).is_true()
-	assert_bool(purchasable.has("tone_aqua")).is_false()
+	assert_bool(purchasable.has("tone_khash")).is_true()
+	assert_bool(purchasable.has("tone_mozh")).is_true()
+	assert_bool(purchasable.has("tone_luth")).is_false()
 	assert_bool(purchasable.has("keen")).is_true()
 	assert_bool(purchasable.has("recall")).is_true()
 	assert_int(purchasable.size()).is_equal(22 + 5 + 2)
-	assert_str(str(build.can_buy("tone_aqua")["blocked_by"])).is_equal("unheld_tone")
+	assert_str(str(build.can_buy("tone_luth")["blocked_by"])).is_equal("unheld_tone")
 
 
 func test_buy_and_refund_use_the_ratified_bands_and_stay_exact() -> void:
@@ -146,7 +146,7 @@ func test_preview_matches_skill_check_on_the_built_member() -> void:
 	var build := _ironbrand_build()
 	_place_all_points(build)
 	build.buy("heft")
-	build.buy("tone_scor")
+	build.buy("tone_khash")
 	var member := build.to_party_member()
 	for skill_id: String in build.purchasable_skills():
 		assert_float(build.preview_percent(skill_id)).is_equal(SkillCheck.preview(skill_id, member, 0.0))
@@ -164,9 +164,9 @@ func test_validation_gates_follow_canon_order() -> void:
 	assert_str(str(build.validate(&"patron")["message"])).contains("retired")
 	build.select_discipline("hushwarden")
 	assert_bool(build.validate(&"patron")["valid"]).is_true()
-	build.set_elements("suul", "daar")
+	build.set_elements("sul", "vekh")
 	assert_bool(build.validate(&"elements")["valid"]).is_false()
-	build.set_elements("suul", "bloei")
+	build.set_elements("sul", "vel")
 	assert_bool(build.validate(&"elements")["valid"]).is_true()
 	assert_bool(build.validate(&"attributes")["valid"]).is_false()
 	_place_all_points(build)
@@ -190,10 +190,10 @@ func test_locksmirk_suggests_nothing_and_elements_stay_open() -> void:
 
 func test_mastery_element_must_be_held() -> void:
 	var build := _ironbrand_build()
-	assert_bool(build.select_mastery("aqua")).is_false()
-	assert_bool(build.select_mastery("molm")).is_true()
-	build.set_elements("scor", "terra")
-	assert_str(build.mastery_element).is_equal("scor")
+	assert_bool(build.select_mastery("luth")).is_false()
+	assert_bool(build.select_mastery("mozh")).is_true()
+	build.set_elements("khash", "tham")
+	assert_str(build.mastery_element).is_equal("khash")
 
 
 func test_to_party_member_writes_every_field_in_the_roster_vocabulary() -> void:
@@ -209,11 +209,11 @@ func test_to_party_member_writes_every_field_in_the_roster_vocabulary() -> void:
 	assert_str(member.class_id).is_equal("ironbrand")
 	assert_str(member.char_class).is_equal("Ironbrand (Kero)")
 	assert_str(member.kit_weapon_skill).is_equal("heft")
-	assert_str(member.discipline).is_equal("terrashaper")
+	assert_str(member.discipline).is_equal("thamshaper")
 	assert_str(member.background).is_equal("verlossen-miner")
 	assert_str(member.race).is_equal("Kaan")
-	assert_str(member.major_element).is_equal("scor")
-	assert_str(member.mastery_element).is_equal("scor")
+	assert_str(member.major_element).is_equal("khash")
+	assert_str(member.mastery_element).is_equal("khash")
 	assert_int(member.attribute_value(&"muster")).is_equal(5)
 	assert_int(member.max_hp).is_equal(40)
 	assert_int(member.hp).is_equal(40)
