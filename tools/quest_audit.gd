@@ -150,8 +150,8 @@ static func audit_project(strict: bool = false) -> Dictionary:
 	var dialogue_sources := _source_files(DIALOGUE_DIRECTORY, PackedStringArray(["dialogue"]))
 	var quest_results := _collect_quest_results(quest_metadata, dialogue_sources)
 	var readback_sources := _readback_sources(dialogue_sources)
-	var read_back_coverage := _build_read_back_coverage(quest_results, readback_sources, dialogue_sources)
 	_classify_readbacks(quest_results, readback_sources)
+	var read_back_coverage := _build_read_back_coverage(quest_results, readback_sources, dialogue_sources)
 	var flag_access := _project_flag_access(quest_results, dialogue_sources, readback_sources)
 	return build_report(
 		quest_results,

@@ -222,6 +222,17 @@ func test_report_contains_read_back_coverage_section() -> void:
 	assert_bool(first_quest.has("read_backs")).is_true()
 
 
+func test_coverage_outcomes_agree_with_classified_readback_metrics() -> void:
+	var report := QuestAuditScript.audit_project(false)
+	var counts := {"main": 0, "side": 0}
+	for quest: Dictionary in report["read_back_coverage"]:
+		for outcome: Dictionary in quest["outcomes"]:
+			if outcome["read_back"]:
+				counts[quest["kind"]] += 1
+	for kind: String in counts:
+		assert_int(counts[kind]).is_equal(report["metrics"]["readbacks"][kind]["read"])
+
+
 func test_read_back_coverage_categorizes_locations() -> void:
 	var quest_results: Array[Dictionary] = [
 		{
