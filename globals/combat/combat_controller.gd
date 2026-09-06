@@ -109,6 +109,10 @@ var _last_turn_actor: BattleActor = null
 ## keeps the event's old meaning ("the enemy phase began") intact for both schedulers,
 ## including CT where several enemies can act back-to-back if they are fast enough.
 var _last_side: StringName = &"ally"
+## side -> the next ordinal a minted combat_id may use. Ids end in the actor's position within
+## its side, so deriving that from the live array size would hand a departed combatant's id to
+## the next arrival the moment release() compacts the array.
+var _admission_ordinal: Dictionary = {}
 
 
 func configure(
@@ -236,6 +240,7 @@ func start(
 	_deferred_sequence = 0
 	_assign_combat_ids(allies, &"ally", encounter_id)
 	_assign_combat_ids(enemies, &"enemy", encounter_id)
+	_admission_ordinal = {&"ally": allies.size(), &"enemy": enemies.size()}
 	_attach_class_resources(allies)
 	_attach_class_resources(enemies)
 	battlefield.setup(allies, enemies)
@@ -248,6 +253,79 @@ func start(
 		_finish(ResultState.VICTORY, &"slain")
 		return
 	_drive_scheduler()
+
+
+## Seats one combatant in a battle that is ALREADY RUNNING (same-map combat D5): the hostile a
+## party member just walked past, admitted without restarting anything. Idempotent, because the
+## alert that calls it can fire more than once for the same mob.
+##
+## `admission_delay` is what keeps this fair: the newcomer is seated that far behind ready, so
+## it cannot act before the party's next turn. Every step reuses the code start() uses — one
+## insertion path, or the two would drift.
+func admit(actor: BattleActor, cell: Vector2i, side: StringName = &"enemy") -> Dictionary:
+	if actor == null:
+		return _blocked(
+			&"composition", "There is no combatant to admit.", {"type": &"present_combatant"}
+		)
+	if state == State.IDLE or state == State.FINISHED:
+		return _blocked(&"battle_not_live", "No live battle to admit into.", {})
+	if side != &"ally" and side != &"enemy":
+		return _blocked(&"composition", "Unknown side: %s." % side, {"type": &"known_side"})
+	if not actor.combat_id.is_empty() and _actor_by_id(String(actor.combat_id)) != null:
+		return _allowed({"already_admitted": true, "combat_id": String(actor.combat_id)})
+
+	var ordinal := int(_admission_ordinal.get(side, 0))
+	_assign_combat_id(actor, side, _encounter_id, ordinal)
+	_admission_ordinal[side] = ordinal + 1
+	if _actor_by_id(String(actor.combat_id)) != null:
+		# A duplicate id would alias two combatants in every id-keyed map at once, silently.
+		return _blocked(
+			&"composition", "Combat id %s is already taken." % actor.combat_id, {"type": &"unique_id"}
+		)
+
+	var group: Array[BattleActor] = allies if side == &"ally" else enemies
+	var placed := battlefield.admit_combatant(
+		actor, StringName("c:%d,%d,0" % [cell.x, cell.y]), side
+	)
+	if not bool(placed.get("allowed", false)):
+		last_refusal = placed
+		return placed
+	var seated := scheduler.admit(actor, rules.admission_delay if rules != null else 0)
+	if not bool(seated.get("allowed", false)):
+		battlefield.remove_combatant(actor)
+		last_refusal = seated
+		return seated
+
+	var single: Array[BattleActor] = [actor]
+	_attach_class_resources(single)
+	group.append(actor)
+	return _allowed({
+		"combat_id": String(actor.combat_id),
+		"side": String(side),
+		"position": String(battlefield.position_of(actor)),
+		"charge": scheduler.charge_of(actor),
+	})
+
+
+## Takes a combatant OUT of a running battle: it fled, or it left the field. Not the same verb
+## as `TurnScheduler.release(actor)`, which means "the committed action resolved" — this one is
+## the inverse of `admit()`. Death is NOT a release: a downed actor stays in the arrays and is
+## filtered by `is_alive()`, which is what lets the ledger and the corpse still find it.
+func release(combat_id: StringName) -> Dictionary:
+	if state == State.IDLE or state == State.FINISHED:
+		return _blocked(&"battle_not_live", "No live battle to release from.", {})
+	var actor := _actor_by_id(String(combat_id))
+	if actor == null:
+		return _blocked(&"unknown_target", "No combatant with id %s." % combat_id, {})
+	var side := actor.side
+	battlefield.remove_combatant(actor)
+	scheduler.remove_participant(actor)
+	allies.erase(actor)
+	enemies.erase(actor)
+	if _last_turn_actor == actor:
+		_last_turn_actor = null
+	active_ally_index = allies.find(scheduler.active_actor())
+	return _allowed({"combat_id": String(combat_id), "from_side": String(side)})
 
 
 func active_actor() -> BattleActor:
@@ -1989,7 +2067,10 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"max_hp": actor.max_hp,
 			"ap": actor.action_points,
 			"max_ap": actor.max_action_points,
-			"charge": scheduler.charge_of(actor) if scheduler != null else 0,
+			# Clamped: a combatant admitted mid-session banks NEGATIVE charge (it is
+			# `admission_delay` further from ready than a fresh one), and the roster plate
+			# renders this straight as "CT %d". The delay is real; "CT -40" is not a reading.
+			"charge": maxi(0, scheduler.charge_of(actor)) if scheduler != null else 0,
 			"position": battlefield.position_of(actor) if battlefield != null else &"",
 			"side": battlefield.side_of(actor) if battlefield != null else actor.side,
 			"guarding": actor.guarding,
@@ -2383,23 +2464,28 @@ func _assign_combat_ids(
 	group: Array[BattleActor], prefix: StringName, encounter_id: StringName = &""
 ) -> void:
 	for i in group.size():
-		var actor := group[i]
-		# Set the side BEFORE the already-assigned check below. An actor reused across battles
-		# keeps its combat_id and would otherwise skip the loop body entirely and end up with no
-		# side, which reads to a scheduler as "on neither side" and drops it from the order.
-		actor.side = prefix
-		if not actor.combat_id.is_empty():
-			continue
-		var parts: Array[String] = [String(prefix)]
-		if not String(encounter_id).is_empty():
-			parts.append(String(encounter_id))
-		var archetype := String(actor.archetype_id)
-		if not archetype.is_empty() and StableIds.is_valid(StableIds.ACTOR, archetype):
-			parts.append(archetype)
-		parts.append(str(i))
-		var candidate := "-".join(parts)
-		var record := StableIds.actor(candidate)
-		actor.combat_id = StringName(record.get("id", candidate))
+		_assign_combat_id(group[i], prefix, encounter_id, i)
+
+
+func _assign_combat_id(
+	actor: BattleActor, prefix: StringName, encounter_id: StringName, ordinal: int
+) -> void:
+	# Set the side BEFORE the already-assigned check below. An actor reused across battles
+	# keeps its combat_id and would otherwise skip the body entirely and end up with no
+	# side, which reads to a scheduler as "on neither side" and drops it from the order.
+	actor.side = prefix
+	if not actor.combat_id.is_empty():
+		return
+	var parts: Array[String] = [String(prefix)]
+	if not String(encounter_id).is_empty():
+		parts.append(String(encounter_id))
+	var archetype := String(actor.archetype_id)
+	if not archetype.is_empty() and StableIds.is_valid(StableIds.ACTOR, archetype):
+		parts.append(archetype)
+	parts.append(str(ordinal))
+	var candidate := "-".join(parts)
+	var record := StableIds.actor(candidate)
+	actor.combat_id = StringName(record.get("id", candidate))
 
 
 func _has_living(group: Array[BattleActor]) -> bool:

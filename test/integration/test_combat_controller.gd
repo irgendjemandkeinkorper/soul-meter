@@ -1359,3 +1359,161 @@ func _cast_outcome_for_integrity(integrity: float) -> Dictionary:
 	var forecast := local_controller.forecast_action(cast, target, options)
 	var committed := local_controller.submit_action(cast.id, target, options)
 	return {"forecast": forecast, "committed": committed}
+
+
+# ---- admission (same-map combat step 4): a mob joins a fight already running ----
+
+
+## The migration table's proof for step 4, driven through the real submit_action path rather
+## than through scheduler internals: a hostile admitted mid-session does not act before the
+## party's next turn. Run against BOTH economies, because the shipped default is AP and a
+## CT-only proof would pass while the game it ships in behaves differently.
+##
+## "Acts" is read off the event stream, not off active_actor(): enemy turns resolve INSIDE
+## _drive_scheduler(), so a poll of active_actor() never sees them.
+func test_a_hostile_admitted_mid_session_acts_after_the_partys_next_turn() -> void:
+	for use_charge_time: bool in [false, true]:
+		var label := "charge time" if use_charge_time else "AP rounds"
+		var local_rules := (
+			load("res://data/combat/combat_rules.tres") as CombatRules
+		).duplicate(true) as CombatRules
+		local_rules.use_charge_time = use_charge_time
+		var grid := GridBattlefieldModel.new()
+		grid.configure(local_rules)
+		grid.build_grid(_sized_grid_ground(6, 4))
+		var controller_under_test := CombatController.new()
+		controller_under_test.configure(CombatActionCatalog.all(), grid, local_rules)
+		var ally := _actor("Admission Ally", 400, 1, 0)
+		var standing := _actor("Standing Foe", 400, 1, 0)
+		var acted: Array[String] = []
+		var acted_in_round: Array[int] = []
+		controller_under_test.event_emitted.connect(
+			func(event: CombatEvent) -> void:
+				if event.type == &"action_resolved":
+					acted.append(String(event.actor_id))
+					acted_in_round.append(controller_under_test.round_number)
+		)
+		controller_under_test.start([ally], [standing], &"admission-test")
+
+		# The party takes a turn first, so "the party's NEXT turn" is a real later event.
+		assert_int(controller_under_test.state).override_failure_message(
+			"%s: the ally opens the battle" % label
+		).is_equal(CombatController.State.ALLY_TURN)
+		var opening: Dictionary = controller_under_test.submit_action(&"guard")
+		assert_bool(opening.get("allowed", false)).override_failure_message(
+			"%s: the opening action must resolve: %s" % [label, opening.get("message", "")]
+		).is_true()
+
+		var newcomer := _actor("Late Arrival", 400, 1, 0)
+		var admitted: Dictionary = controller_under_test.admit(newcomer, Vector2i(4, 2), &"enemy")
+		assert_bool(admitted.get("allowed", false)).override_failure_message(
+			"%s: admission must succeed: %s" % [label, admitted.get("message", "")]
+		).is_true()
+		assert_array(controller_under_test.enemies).contains([newcomer])
+		assert_str(String(controller_under_test.battlefield.position_of(newcomer))).is_equal(
+			"c:4,2,0"
+		)
+		assert_str(String(newcomer.side)).is_equal("enemy")
+		assert_str(String(newcomer.combat_id)).is_not_empty()
+		assert_str(String(newcomer.combat_id)).is_not_equal(String(standing.combat_id))
+		var marker := acted.size()
+		var admitted_in_round := controller_under_test.round_number
+		if use_charge_time:
+			assert_int(controller_under_test.scheduler.charge_of(newcomer)).override_failure_message(
+				"%s: the controller must seat the newcomer at the AUTHORED admission_delay" % label
+			).is_equal(-local_rules.admission_delay)
+
+		var guard_count := 0
+		while guard_count < 80 and not acted.has(String(newcomer.combat_id)):
+			guard_count += 1
+			if controller_under_test.state == CombatController.State.FINISHED:
+				break
+			if controller_under_test.state == CombatController.State.ALLY_TURN:
+				var submitted: Dictionary = controller_under_test.submit_action(&"guard")
+				if not bool(submitted.get("allowed", false)):
+					controller_under_test.end_turn()
+			else:
+				controller_under_test.end_turn()
+
+		var after: Array[String] = []
+		for i in range(marker, acted.size()):
+			after.append(acted[i])
+		var newcomer_index := after.find(String(newcomer.combat_id))
+		assert_int(newcomer_index).override_failure_message(
+			"%s: the admitted hostile never acted (after admission: %s)" % [label, after]
+		).is_greater_equal(0)
+		var ally_index := after.find(String(ally.combat_id))
+		assert_int(ally_index).override_failure_message(
+			"%s: the party must act before a mob that joined mid-fight (after admission: %s)"
+			% [label, after]
+		).is_between(0, newcomer_index - 1)
+		# The sharp edge of the claim: the newcomer does not act in the round it joined.
+		# Under charge time that is admission_delay doing the work (the CT arm above pins the
+		# authored number the controller forwards). Under AP rounds it is overdetermined — a
+		# newcomer also arrives with no action points until the next refresh — so the marking
+		# admit() writes is belt and braces there rather than the only guard.
+		assert_int(acted_in_round[marker + newcomer_index]).override_failure_message(
+			"%s: a mob admitted in round %d acted in that same round"
+			% [label, admitted_in_round]
+		).is_greater(admitted_in_round)
+
+
+func test_admission_is_idempotent_and_refuses_a_battle_that_is_not_running() -> void:
+	var idle := CombatController.new()
+	var idle_rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	var idle_grid := GridBattlefieldModel.new()
+	idle_grid.configure(idle_rules)
+	idle_grid.build_grid(_sized_grid_ground(6, 4))
+	idle.configure(CombatActionCatalog.all(), idle_grid, idle_rules)
+	var early: Dictionary = idle.admit(_actor("Too Early", 10, 1, 0), Vector2i(3, 1), &"enemy")
+	assert_bool(early.get("allowed", true)).is_false()
+	assert_str(String(early.get("blocked_by", ""))).is_equal("battle_not_live")
+
+	idle.start([_actor("Ally", 200, 1, 0)], [_actor("Foe", 200, 1, 0)], &"admission-test")
+	var mob := _actor("Mob", 40, 1, 0)
+	assert_bool(idle.admit(mob, Vector2i(4, 2), &"enemy").get("allowed", false)).is_true()
+	var again: Dictionary = idle.admit(mob, Vector2i(4, 3), &"enemy")
+	assert_bool(again.get("allowed", false)).override_failure_message(
+		"a re-alerted hostile must be absorbed, not refused and not seated twice"
+	).is_true()
+	assert_bool(again.get("already_admitted", false)).is_true()
+	assert_int(idle.enemies.size()).is_equal(2)
+
+
+func test_release_takes_a_combatant_out_of_the_order_and_frees_its_cell() -> void:
+	var local_rules := load("res://data/combat/combat_rules.tres") as CombatRules
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_sized_grid_ground(6, 4))
+	var controller_under_test := CombatController.new()
+	controller_under_test.configure(CombatActionCatalog.all(), grid, local_rules)
+	var ally := _actor("Ally", 200, 1, 0)
+	var standing := _actor("Standing Foe", 200, 1, 0)
+	controller_under_test.start([ally], [standing], &"admission-test")
+	var mob := _actor("Mob", 40, 1, 0)
+	controller_under_test.admit(mob, Vector2i(4, 2), &"enemy")
+
+	var released: Dictionary = controller_under_test.release(mob.combat_id)
+	assert_bool(released.get("allowed", false)).is_true()
+	assert_str(String(released.get("from_side", ""))).is_equal("enemy")
+	assert_array(controller_under_test.enemies).not_contains([mob])
+	assert_object(controller_under_test.actor_by_id(mob.combat_id)).is_null()
+	assert_bool(controller_under_test.battlefield.has_combatant(mob)).is_false()
+	assert_bool(controller_under_test.scheduler.can_act(mob).get("allowed", true)).is_false()
+	assert_str(
+		String(controller_under_test.scheduler.can_act(mob).get("blocked_by", ""))
+	).is_equal("not_participating")
+	# The battle it left is still live: releasing one mob is not a victory.
+	assert_int(controller_under_test.state).is_not_equal(CombatController.State.FINISHED)
+
+	# A combatant released and re-admitted must not inherit a stale id or a stale seat.
+	var successor := _actor("Successor", 40, 1, 0)
+	var readmitted: Dictionary = controller_under_test.admit(successor, Vector2i(4, 2), &"enemy")
+	assert_bool(readmitted.get("allowed", false)).is_true()
+	assert_str(String(successor.combat_id)).override_failure_message(
+		"the next admission must not reuse the departed combatant's id"
+	).is_not_equal(String(mob.combat_id))
+
+	var missing: Dictionary = controller_under_test.release(&"no-such-combatant")
+	assert_bool(missing.get("allowed", true)).is_false()
+	assert_str(String(missing.get("blocked_by", ""))).is_equal("unknown_target")
