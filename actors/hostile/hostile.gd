@@ -24,7 +24,9 @@ func _ready() -> void:
 	if combat_id.is_empty():
 		var root := _field_root()
 		combat_id = StringName("%s:%s" % [root.scene_file_path, root.get_path_to(self)])
-	battle_actor()
+	var actor := battle_actor()
+	if actor != null:
+		actor.combat_id = combat_id
 	_sync_cell.call_deferred()
 
 

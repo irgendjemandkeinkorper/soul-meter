@@ -57,6 +57,9 @@ func set_combat_mode(active: bool) -> void:
 	# Interact prompts (E) used to hide behind the paused tree. The field stays live during
 	# combat now, so every interactable's unhandled input is switched off instead.
 	for node: Node in root.find_children("*", "", true, false):
+		if node is PartyFollowers:
+			_restore_controls.append(node.set_physics_process.bind(node.is_physics_processing()))
+			node.set_physics_process(false)
 		if _is_field_interactable(node):
 			_restore_controls.append(
 				node.set_process_unhandled_input.bind(node.is_processing_unhandled_input())

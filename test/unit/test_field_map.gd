@@ -94,6 +94,8 @@ func test_combat_mode_preserves_controls_that_were_already_disabled() -> void:
 	var controller: ClickMoveController = scene.find_child("ClickMoveController", true, false) as ClickMoveController
 	var npc: NPC = scene.find_child("IrisIllepah", true, false) as NPC
 	var travel_exit: TravelExit = scene.find_child("ReturnToDom", true, false) as TravelExit
+	var followers := scene.find_child("PartyFollowers", true, false) as PartyFollowers
+	followers.set_physics_process(false)
 	player.set_physics_process(false)
 	controller.enabled = false
 	npc.set_process_unhandled_input(false)
@@ -102,6 +104,7 @@ func test_combat_mode_preserves_controls_that_were_already_disabled() -> void:
 	field.set_combat_mode(true)
 	field.set_combat_mode(false)
 	assert_bool(player.is_physics_processing()).is_false()
+	assert_bool(followers.is_physics_processing()).is_false()
 	assert_bool(controller.enabled).is_false()
 	assert_bool(npc.is_processing_unhandled_input()).is_false()
 	assert_bool(travel_exit.monitoring).is_false()
@@ -128,6 +131,8 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 	var enemy: Enemy = scene.find_child("BogWight", true, false) as Enemy
 	var npc: NPC = scene.find_child("IrisIllepah", true, false) as NPC
 	var pickup: Pickup = scene.find_child("LoamrootSprig1", true, false) as Pickup
+	var followers := scene.find_child("PartyFollowers", true, false) as PartyFollowers
+	assert_bool(followers.is_physics_processing()).is_true()
 	assert_bool(field.combat_mode_active()).is_false()
 	assert_bool(player.is_physics_processing()).is_true()
 	assert_bool(controller.enabled).is_true()
@@ -138,6 +143,7 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 
 	field.set_combat_mode(true)
 	assert_bool(field.combat_mode_active()).is_true()
+	assert_bool(followers.is_physics_processing()).is_false()
 	assert_bool(player.is_physics_processing()).is_false()
 	assert_bool(controller.enabled).is_false()
 	assert_bool(travel_exit.monitoring).is_false()
@@ -148,6 +154,7 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 
 	field.set_combat_mode(false)
 	assert_bool(field.combat_mode_active()).is_false()
+	assert_bool(followers.is_physics_processing()).is_true()
 	assert_bool(player.is_physics_processing()).is_true()
 	assert_bool(controller.enabled).is_true()
 	assert_bool(travel_exit.monitoring).is_true()

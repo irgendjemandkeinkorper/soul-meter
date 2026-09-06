@@ -62,6 +62,19 @@ func test_idle_hostile_caches_its_actor_and_does_not_tick() -> void:
 	assert_bool(hostile.is_physics_processing()).is_false()
 
 
+func test_actor_built_before_ready_receives_the_authored_combat_id() -> void:
+	var root := _root()
+	var packed := load(HOSTILE_SCENE) as PackedScene
+	var hostile := packed.instantiate() as Node2D
+	hostile.name = "EarlyActor"
+	hostile.set("unit_id", &"bog-wight")
+	var actor: BattleActor = hostile.call("battle_actor")
+	root.add_child(hostile)
+	assert_object(hostile.call("battle_actor")).is_same(actor)
+	assert_str(String(actor.combat_id)).is_not_empty()
+	assert_str(String(actor.combat_id)).is_equal(String(hostile.get("combat_id")))
+
+
 func test_authored_node_paths_produce_distinct_repeatable_ids() -> void:
 	var root := _root()
 	var first := _spawn(root, "First")
