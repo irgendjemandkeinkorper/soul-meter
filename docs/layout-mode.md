@@ -37,7 +37,7 @@ Overrides are a scratch surface only. The committed `.tscn` file remains canonic
 
 ## Bake an override
 
-Use the headless bake tool to turn reviewed scratch data into a scene change:
+Run the headless bake tool in report-only mode first:
 
 ```bash
 ~/.local/bin/godot --headless --path . \
@@ -46,13 +46,16 @@ Use the headless bake tool to turn reviewed scratch data into a scene change:
   --overrides /absolute/path/to/starting_town.json
 ```
 
-The default output is the input scene. To preserve the source while inspecting a candidate, pass `--out res://path/to/candidate.tscn`.
+By default, the tool runs in report-only mode and prints planned changes without modifying any scene files.
+Pass `--write --out res://path/to/candidate.tscn` to inspect a separate candidate. An existing output also requires `--force`; without `--out`, output defaults to the source scene.
+
+**Do not overwrite canonical maps with this legacy tool.** Moving execution after autoload initialization preserves actor exports, but its `PackedScene.pack()` path still loses editable-instance overrides. Dom's `TavernDoor/Facade.visible = false` is one known example. The surgical text patcher is a separate prerequisite before canonical baking is safe. `--force` permits overwriting; it does not make packing lossless.
 
 The required workflow is:
 
-1. Bake the override.
-2. Review the `.tscn` git diff carefully.
-3. Run the relevant integration tests and the full suite.
-4. Commit the canonical `.tscn` change only after review.
+1. Inspect the report-only summary.
+2. Write only a separate candidate with `--write --out` if needed for inspection.
+3. Review actor exports and editable-instance overrides against the source; a successful summary does not prove scene fidelity.
+4. Use the surgical bake workflow and its acceptance tests before committing a canonical scene change.
 
 The tool prints applied edit/deletion/addition counts and skipped paths. Judge that summary when running in automation; a known engine teardown flake can produce exit 134 after successful output.

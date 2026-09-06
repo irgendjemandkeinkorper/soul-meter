@@ -4,19 +4,25 @@ extends SceneTree
 const LayoutOverridesScript := preload("res://globals/layout_overrides.gd")
 
 
-func _init() -> void:
+func _initialize() -> void:
 	var arguments: PackedStringArray = OS.get_cmdline_user_args()
 	if arguments.is_empty():
 		arguments = OS.get_cmdline_args()
-	var scene_path: String = _option(arguments, "--scene")
-	var override_path: String = _option(arguments, "--overrides")
-	var output_path: String = _option(arguments, "--out")
+
+	var options: Dictionary = parse_arguments(arguments)
+	var scene_path: String = str(options.get("scene", ""))
+	var override_path: String = str(options.get("overrides", ""))
+	var output_path: String = str(options.get("out", ""))
+	var write: bool = bool(options.get("write", false))
+	var force: bool = bool(options.get("force", false))
+
 	if output_path.is_empty():
 		output_path = scene_path
+
 	if scene_path.is_empty() or override_path.is_empty():
 		printerr(
 			"Usage: godot --headless --script tools/bake_layout_overrides.gd "
-			+ "--scene <scene> --overrides <json> [--out <scene>]"
+			+ "--scene <scene> --overrides <json> [--out <scene>] [--write] [--force]"
 		)
 		quit(2)
 		return
@@ -33,9 +39,7 @@ func _init() -> void:
 		printerr("Layout bake could not load overrides: %s" % override_path)
 		quit(4)
 		return
-	# Gate r1 finding 1: output defaults to the SOURCE scene, so an override
-	# file authored for a different scene must never bake — mirror the runtime
-	# scene-match rejection before anything is applied or saved.
+
 	var declared_scene: String = str(document.get("scene", ""))
 	if declared_scene != scene_path:
 		printerr(
@@ -44,6 +48,15 @@ func _init() -> void:
 		)
 		quit(7)
 		return
+
+	if FileAccess.file_exists(output_path) and write and not force:
+		printerr(
+			"Layout bake refused: target file '%s' exists. Pass --force to overwrite."
+			% output_path
+		)
+		quit(8)
+		return
+
 	var scene_root: Node = packed.instantiate()
 	var summary: Dictionary = LayoutOverridesScript.apply_to_scene(scene_root, document, true)
 	var baked := PackedScene.new()
@@ -53,27 +66,56 @@ func _init() -> void:
 		scene_root.free()
 		quit(5)
 		return
-	var save_error: Error = ResourceSaver.save(baked, output_path)
-	scene_root.free()
-	if save_error != OK:
-		printerr("Layout bake could not save scene: %s" % error_string(save_error))
-		quit(6)
-		return
+
+	if write:
+		var save_error: Error = ResourceSaver.save(baked, output_path)
+		scene_root.free()
+		if save_error != OK:
+			printerr("Layout bake could not save scene: %s" % error_string(save_error))
+			quit(6)
+			return
+	else:
+		scene_root.free()
+
+	var mode_label: String = " (report-only)" if not write else ""
 	print(
-		"Layout bake summary: edits=%d deletions=%d additions=%d skipped=%d -> %s"
+		"Layout bake summary: edits=%d deletions=%d additions=%d skipped=%d -> %s%s"
 		% [
 			int(summary["edits_applied"]),
 			int(summary["deletions_applied"]),
 			int(summary["additions_applied"]),
 			int(summary["skipped_paths"]),
 			output_path,
+			mode_label,
 		]
 	)
 	quit(0)
 
 
-func _option(arguments: PackedStringArray, name: String) -> String:
-	var index: int = arguments.find(name)
-	if index < 0 or index + 1 >= arguments.size():
-		return ""
-	return arguments[index + 1]
+static func parse_arguments(arguments: PackedStringArray) -> Dictionary:
+	var options: Dictionary = {
+		"scene": "",
+		"overrides": "",
+		"out": "",
+		"write": false,
+		"force": false,
+	}
+	var index: int = 0
+	while index < arguments.size():
+		var argument: String = arguments[index]
+		if argument == "--write":
+			options["write"] = true
+		elif argument == "--force":
+			options["force"] = true
+		elif argument in ["--scene", "--overrides", "--out"]:
+			if index + 1 < arguments.size():
+				index += 1
+				options[argument.trim_prefix("--")] = arguments[index]
+		elif argument.begins_with("--scene="):
+			options["scene"] = argument.trim_prefix("--scene=")
+		elif argument.begins_with("--overrides="):
+			options["overrides"] = argument.trim_prefix("--overrides=")
+		elif argument.begins_with("--out="):
+			options["out"] = argument.trim_prefix("--out=")
+		index += 1
+	return options

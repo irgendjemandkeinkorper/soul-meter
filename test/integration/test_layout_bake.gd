@@ -54,6 +54,7 @@ position = Vector2(4, 8)
 			"--scene", source_path,
 			"--overrides", override_path,
 			"--out", output_path,
+			"--write",
 		],
 		process_output,
 		true,
@@ -111,6 +112,7 @@ y_sort_enabled = true
 			"--scene", source_path,
 			"--overrides", override_path,
 			"--out", output_path,
+			"--write",
 		],
 		process_output,
 		true,
@@ -162,6 +164,7 @@ func test_bake_refuses_an_override_file_declared_for_a_different_scene() -> void
 			"--scene", source_path,
 			"--overrides", override_path,
 			"--out", output_path,
+			"--write",
 		],
 		process_output,
 		true,
@@ -171,6 +174,220 @@ func test_bake_refuses_an_override_file_declared_for_a_different_scene() -> void
 	assert_bool(FileAccess.file_exists(output_path)) \
 		.override_failure_message("A refused bake must write nothing") \
 		.is_false()
+
+
+func test_bake_report_only_mode_does_not_modify_file() -> void:
+	var source_path: String = _test_dir.path_join("source_report.tscn")
+	var override_path: String = _test_dir.path_join("override_report.json")
+	var output_path: String = _test_dir.path_join("baked_report.tscn")
+	_write_text(source_path, """[gd_scene format=3]
+
+[node name="BakeFixture" type="Node2D"]
+
+[node name="SoftDetails" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="MoveMe" type="Sprite2D" parent="SoftDetails"]
+position = Vector2(4, 8)
+""")
+	_write_text(override_path, JSON.stringify({
+		"schema": 1,
+		"scene": source_path,
+		"edits": [{
+			"path": "SoftDetails/MoveMe",
+			"position": [120.0, 56.0],
+			"scale": [1.25, 0.75],
+		}],
+		"deletions": [],
+		"additions": [],
+	}, "  "))
+
+	var process_output: Array = []
+	OS.execute(
+		OS.get_executable_path(),
+		[
+			"--headless",
+			"--path", ProjectSettings.globalize_path("res://"),
+			"--script", ProjectSettings.globalize_path(BAKE_SCRIPT),
+			"--",
+			"--scene", source_path,
+			"--overrides", override_path,
+			"--out", output_path,
+		],
+		process_output,
+		true,
+	)
+	var combined: String = "\n".join(PackedStringArray(process_output))
+	assert_str(combined).contains("Layout bake summary: edits=1 deletions=0 additions=0 skipped=0 -> %s (report-only)" % output_path)
+	assert_bool(FileAccess.file_exists(output_path)) \
+		.override_failure_message("Report-only mode must not write file") \
+		.is_false()
+
+
+func test_default_output_and_force_alone_leave_source_bytes_unchanged() -> void:
+	var source_path: String = _test_dir.path_join("report_source.tscn")
+	var override_path: String = _test_dir.path_join("report_override.json")
+	var source: String = """[gd_scene format=3]
+
+[node name="BakeFixture" type="Node2D"]
+
+[node name="MoveMe" type="Node2D" parent="."]
+position = Vector2(4, 8)
+"""
+	_write_text(source_path, source)
+	_write_text(override_path, JSON.stringify({
+		"schema": 1, "scene": source_path,
+		"edits": [{"path": "MoveMe", "position": [20, 30]}],
+		"deletions": [], "additions": [],
+	}))
+	for force_only: bool in [false, true]:
+		var args: PackedStringArray = [
+			"--headless", "--path", ProjectSettings.globalize_path("res://"),
+			"--script", ProjectSettings.globalize_path(BAKE_SCRIPT), "--",
+			"--scene", source_path, "--overrides", override_path,
+		]
+		if force_only:
+			args.append("--force")
+		var output: Array = []
+		OS.execute(OS.get_executable_path(), args, output, true)
+		assert_str("\n".join(PackedStringArray(output))).contains("(report-only)")
+		assert_str(FileAccess.get_file_as_string(source_path)).is_equal(source)
+
+
+func test_bake_requires_force_to_overwrite_existing_target() -> void:
+	var source_path: String = _test_dir.path_join("source_force.tscn")
+	var override_path: String = _test_dir.path_join("override_force.json")
+	var output_path: String = _test_dir.path_join("baked_force.tscn")
+	_write_text(source_path, """[gd_scene format=3]
+
+[node name="BakeFixture" type="Node2D"]
+""")
+	_write_text(output_path, """[gd_scene format=3]
+
+[node name="Existing" type="Node2D"]
+""")
+	_write_text(override_path, JSON.stringify({
+		"schema": 1,
+		"scene": source_path,
+		"edits": [],
+		"deletions": [],
+		"additions": [],
+	}, "  "))
+
+	var process_output_refused: Array = []
+	OS.execute(
+		OS.get_executable_path(),
+		[
+			"--headless",
+			"--path", ProjectSettings.globalize_path("res://"),
+			"--script", ProjectSettings.globalize_path(BAKE_SCRIPT),
+			"--",
+			"--scene", source_path,
+			"--overrides", override_path,
+			"--out", output_path,
+			"--write",
+		],
+		process_output_refused,
+		true,
+	)
+	var combined_refused: String = "\n".join(PackedStringArray(process_output_refused))
+	assert_str(combined_refused).contains("Layout bake refused: target file '%s' exists. Pass --force to overwrite." % output_path)
+	assert_str(FileAccess.get_file_as_string(output_path)).contains('[node name="Existing"')
+
+	var process_output_forced: Array = []
+	OS.execute(
+		OS.get_executable_path(),
+		[
+			"--headless",
+			"--path", ProjectSettings.globalize_path("res://"),
+			"--script", ProjectSettings.globalize_path(BAKE_SCRIPT),
+			"--",
+			"--scene", source_path,
+			"--overrides", override_path,
+			"--out", output_path,
+			"--write",
+			"--force",
+		],
+		process_output_forced,
+		true,
+	)
+	var combined_forced: String = "\n".join(PackedStringArray(process_output_forced))
+	assert_str(combined_forced).contains("Layout bake summary: edits=0 deletions=0 additions=0 skipped=0 -> %s" % output_path)
+
+
+func test_bake_preserves_actor_exports_that_reference_autoloads() -> void:
+	var fixture_script_path: String = _test_dir.path_join("fixture_actor.gd")
+	var source_path: String = _test_dir.path_join("source_actor.tscn")
+	var override_path: String = _test_dir.path_join("override_actor.json")
+	var output_path: String = _test_dir.path_join("baked_actor.tscn")
+
+	_write_text(fixture_script_path, """extends Node2D
+
+@export var transition_id: String = "tr_001"
+@export var dialogue_path: String = "res://dialogue/dom_townsfolk.dialogue"
+@export var target_scene: String = "res://world/starting_town.tscn"
+
+func _ready() -> void:
+	if GameState.flag_is_true("dom_intro_seen"):
+		pass
+""")
+
+	_write_text(source_path, """[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="%s" id="1_actor"]
+
+[node name="BakeFixture" type="Node2D"]
+
+[node name="Actor" type="Node2D" parent="."]
+script = ExtResource("1_actor")
+transition_id = "tr_custom"
+dialogue_path = "res://dialogue/dom_side_quests.dialogue"
+target_scene = "res://world/interiors/tavern.tscn"
+""" % fixture_script_path)
+
+	_write_text(override_path, JSON.stringify({
+		"schema": 1,
+		"scene": source_path,
+		"edits": [{
+			"path": "Actor",
+			"position": [20.0, 30.0],
+			"scale": [1.0, 1.0],
+		}],
+		"deletions": [],
+		"additions": [],
+	}, "  "))
+
+	var process_output: Array = []
+	OS.execute(
+		OS.get_executable_path(),
+		[
+			"--headless",
+			"--path", ProjectSettings.globalize_path("res://"),
+			"--script", ProjectSettings.globalize_path(BAKE_SCRIPT),
+			"--",
+			"--scene", source_path,
+			"--overrides", override_path,
+			"--out", output_path,
+			"--write",
+		],
+		process_output,
+		true,
+	)
+	var combined: String = "\n".join(PackedStringArray(process_output))
+	assert_str(combined).contains("Layout bake summary: edits=1 deletions=0 additions=0 skipped=0")
+
+	var packed: PackedScene = ResourceLoader.load(output_path, "PackedScene", ResourceLoader.CACHE_MODE_IGNORE) as PackedScene
+	assert_object(packed).is_not_null()
+	if packed == null:
+		return
+	var instance: Node2D = auto_free(packed.instantiate()) as Node2D
+	var actor: Node2D = instance.get_node("Actor") as Node2D
+	assert_object(actor).is_not_null()
+	if actor == null:
+		return
+	assert_str(str(actor.get("transition_id"))).is_equal("tr_custom")
+	assert_str(str(actor.get("dialogue_path"))).is_equal("res://dialogue/dom_side_quests.dialogue")
+	assert_str(str(actor.get("target_scene"))).is_equal("res://world/interiors/tavern.tscn")
 
 
 func _write_text(path: String, content: String) -> void:
