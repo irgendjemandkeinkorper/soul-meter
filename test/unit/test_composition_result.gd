@@ -16,7 +16,7 @@ func test_kind_predicates_distinguish_resolved_clash_and_opposed() -> void:
 func test_to_dict_deep_copies_nested_payloads() -> void:
 	var result := CompositionResult.new()
 	result.kind = CompositionResult.Kind.TRIAD
-	result.elements = [&"suul"]
+	result.elements = [&"sul"]
 	result.imposition_entries = [{"parameters": {"power": 2}}]
 	result.nearest_unblock = {"nested": {"minimum": 2}}
 	var serialized := result.to_dict()

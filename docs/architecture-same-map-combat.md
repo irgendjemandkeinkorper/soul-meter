@@ -166,7 +166,7 @@ resolve without a pan (F2 budget).
 (always CT now; `ApRoundScheduler` stays only as the scheduler seam's alternate
 implementation for tests), and `_WEATHER_DEFAULTS`, which becomes
 `LocationRegistry` data `weather_default` per location (PROVISIONAL mapping preserved:
-Loamroot Grove = molm, Dorthkor Road = terra, the Wound Lip = scor; Dom = none).
+Loamroot Grove = mozh, Dorthkor Road = tham, the Wound Lip = khash; Dom = none).
 Hostile placement is authored in the scene (`Hostile` instances), not in JSON.
 
 ### D9. Scale budget (contract for F2, #282)

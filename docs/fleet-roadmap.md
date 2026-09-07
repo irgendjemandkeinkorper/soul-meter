@@ -43,8 +43,8 @@ Each wave is a set of issues that can run in parallel. A wave merges before the 
 | A1 | Tactical casting slice (CAST verb, composition, gate, residue). First octopus run (`octopus/run/1788368745-19359/integration`) timed out after writing only tests — those tests are the salvaged contract. Rulings: extend `AbilityDefinition` (no new SpellDefinition), add `Kind.CAST`, Breath spent first then Soul overreach, fizzle also spends Soul via `ElementMatrix.soul_on_failure()`, fizzle from `SkillCheck.fizzle_percent` seeded so forecast==resolution, **a fizzled cast deposits residue of the Wheel-opposite element, not the intended one** (owner ruling 2026-09-02, PROVISIONAL until written to the vault) | Codex | L |
 | A2 | **Breath pool**: `GameState.breath` per-scene, refill on scene enter, casting spends Breath first, overreach spends Soul; save schema bump to 7 | Codex | M |
 | A3 | Fizzle wired into `Resolution` via `SkillCheck.fizzle_percent` with location Agreement Integrity as input; forecast shows true fizzle % | Codex | M |
-| A4 | Fizzle/Breath economy sweep: verify ratified sanity readings, propose Breath sizes per magnitude, Aqua/Molm restore amounts | DeepSeek | M |
-| A5 | Aftertone + Tempo runtime state on `BattleActor` (Terra anchors, Scor consumes, Nul zeroes, Khor holds) | Codex | L |
+| A4 | Fizzle/Breath economy sweep: verify ratified sanity readings, propose Breath sizes per magnitude, Luth/Mozh restore amounts | DeepSeek | M |
+| A5 | Aftertone + Tempo runtime state on `BattleActor` (Tham anchors, Khash consumes, Zhem zeroes, Khor holds) | Codex | L |
 | A6 | Ten Triad-unique effects as data-driven effect pipelines (vault `elements-and-music.md` §Triads is the spec) | Codex | L |
 | A7 | Test backfill: every Triad, every Strained span, Clash > 2 span, Vär gating — unit suite headless | Kimi | M |
 | A8 | Canon doc: "Why did that cast fail?" plain-language explainer per block reason, for FR-606 UI copy | Ollama | S |

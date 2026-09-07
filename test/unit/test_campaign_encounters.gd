@@ -281,11 +281,11 @@ func test_combat_lab_lists_and_starts_registered_campaign_encounter() -> void:
 
 func test_non_positive_max_hp_is_refused_while_huge_max_hp_is_allowed() -> void:
 	var unplayable: Dictionary = _encounter("zero-hp")
-	unplayable["enemies"] = [_complete_enemy(0, "molm")]
+	unplayable["enemies"] = [_complete_enemy(0, "mozh")]
 	_assert_error(_validate(FIRST_PATH, FIRST_ID, unplayable), "unplayable_max_hp", "enemies[0].max_hp")
 
 	var huge: Dictionary = _encounter("huge-hp")
-	huge["enemies"] = [_complete_enemy(2_000_000_000, "molm")]
+	huge["enemies"] = [_complete_enemy(2_000_000_000, "mozh")]
 	assert_array(_validate(FIRST_PATH, FIRST_ID, huge).get("errors", [])).is_empty()
 
 
@@ -312,7 +312,7 @@ func _encounter(encounter_id: String) -> Dictionary:
 			"cover": [[2, 1]],
 			"elevation": [{"cell": [3, 1], "height": 2}],
 		},
-		"weather_default": "molm",
+		"weather_default": "mozh",
 		"spoils": [{"item_id": ItemIds.MATERIALS_GRAVE_SALT, "quantity": 3}],
 		"outcomes": {"slain": {"faction": FactionIds.IRON_COMPANIES}},
 		"loss": {"faction": FactionIds.IRON_COMPANIES},

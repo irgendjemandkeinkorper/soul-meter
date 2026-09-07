@@ -71,7 +71,7 @@ Style/medium: semi-realistic painterly digital dark-fantasy game portrait, rich 
 Composition/framing: square 1:1 bust or upper torso, three-quarter view; face, hands, tracery, and one seed pouch readable; all important features inside a safe central 80% crop for a compact dialogue frame
 Scene/backdrop: genuinely transparent background with only a subtle dark painterly edge falloff attached to the silhouette
 Lighting/mood: one cold directional key light from upper left with dark falloff; muted living yellow-green reflected light along the root tracery; damp, intimate, and slightly uncanny
-Color palette: charcoal and wet-loam brown, bruised gray, weathered moss green, plant-fiber beige, muted Molm yellow-green accents; no broad bright color
+Color palette: charcoal and wet-loam brown, bruised gray, weathered moss green, plant-fiber beige, muted Mozh yellow-green accents; no broad bright color
 Materials/textures: damp woven cloth, repaired plant fiber, weathered skin, fine roots, seed husks
 Constraints: one character only; preserve transparent alpha; no text, letters, UI frame, logo, trademark, or watermark; no large magical aura; no steampunk machinery; no generic druid glamour; no crown; no cartoon/chibi proportions; no pure-black outline; do not invent additional Weftkin anatomy or ancestry lore
 Output intent: production-ready neutral Iris Illepah dialogue portrait, later resized to 512×512 as iris_illepah_portrait_neutral.png
@@ -122,7 +122,7 @@ Style/medium: semi-realistic painterly digital dark-fantasy game portrait, rich 
 Composition/framing: square 1:1 bust or upper torso, three-quarter view; face, bronze guard, rope glove, and striker-key readable; all important features inside a safe central 80% crop for a compact dialogue frame
 Scene/backdrop: flat uniform deep charcoal-gray background with no checkerboard, no pattern, no scenery, no halo, and no cast shadow; subject silhouette clearly separated for later background isolation
 Lighting/mood: cold directional harbor light from upper left; restrained warm bronze bounce from the unseen silent bell; sober, institutional, rain-damp
-Color palette: charcoal, blue-black iron, damp brown leather, tarnished bell bronze, muted storm gray, very restrained Strom blue-violet accent
+Color palette: charcoal, blue-black iron, damp brown leather, tarnished bell bronze, muted storm gray, very restrained Zhur blue-violet accent
 Materials/textures: salt-stiff wool, worn leather, warm patinated bronze, dark rope fiber, weathered skin
 Constraints: one character only; no text, letters, UI frame, logo, trademark, or watermark; no large magical aura; no steampunk machinery; no crown; no generic priest glamour; no cartoon/chibi proportions; no pure-black outline; do not invent ancestry traits or additional lore
 Output intent: production-ready neutral Sella Varn dialogue portrait, later isolated and resized to 512×512 as sella_varn_portrait_neutral.png
@@ -150,8 +150,8 @@ Expression and read: precise, humane beneath institutional restraint, suspicious
 Style/medium: semi-realistic painterly digital dark-fantasy game portrait, rich worn materials and restrained brushwork matching premium classic CRPG talking-head art; not pixel art, flat vector, anime, or clean 3D rendering
 Composition/framing: square 1:1 bust or upper torso, three-quarter view; face, inked hand, warped ledger, wax seal, and clasps readable; all important features inside a safe central 80% crop for a compact dialogue frame
 Scene/backdrop: flat uniform deep charcoal-gray background with no checkerboard, pattern, scenery, halo, or cast shadow; subject silhouette clearly separated for later background isolation
-Lighting/mood: cool diffuse archive-window light from upper left; restrained pale Nul silver reflection along the wet ledger edge; dry room, impossible rain, subdued unease
-Color palette: charcoal, rain-dark brown leather, bruised paper beige, tarnished silver, sealing-wax black-red, restrained Nul gray-white accents
+Lighting/mood: cool diffuse archive-window light from upper left; restrained pale Zhem silver reflection along the wet ledger edge; dry room, impossible rain, subdued unease
+Color palette: charcoal, rain-dark brown leather, bruised paper beige, tarnished silver, sealing-wax black-red, restrained Zhem gray-white accents
 Materials/textures: waxed wool, damp warped paper, cracked leather, oxidized silver, ink-stained skin
 Constraints: one character only; no readable text, letters, UI frame, logo, trademark, or watermark; no large magical aura; no steampunk machinery; no crown; no generic wizard robes; no cartoon/chibi proportions; no pure-black outline; do not invent ancestry traits or additional lore
 Output intent: production-ready neutral Hadrik Vale dialogue portrait, later isolated and resized to 512×512 as hadrik_vale_portrait_neutral.png
@@ -189,8 +189,8 @@ Expression and read: dryly compassionate, respectful of the river without theatr
 Style/medium: semi-realistic painterly digital dark-fantasy game portrait, rich worn materials and restrained brushwork matching premium classic CRPG talking-head art; not pixel art, flat vector, anime, or clean 3D rendering
 Composition/framing: square 1:1 bust or upper torso, three-quarter view; face, wrapped hand, tide-chain link, and offering token readable; all important features inside a safe central 80% crop for a compact dialogue frame
 Scene/backdrop: flat uniform deep charcoal-gray background with no checkerboard, pattern, scenery, halo, or cast shadow; subject silhouette clearly separated for later background isolation
-Lighting/mood: cold river light from upper left with damp falloff; restrained Aqua blue-green reflection along the chain and wet canvas; harbor rain, quiet shrine, practical reverence
-Color palette: charcoal, tar black, wet leather brown, river-stone gray, oxidized chain iron, reed beige, restrained Aqua blue-green accents
+Lighting/mood: cold river light from upper left with damp falloff; restrained Luth blue-green reflection along the chain and wet canvas; harbor rain, quiet shrine, practical reverence
+Color palette: charcoal, tar black, wet leather brown, river-stone gray, oxidized chain iron, reed beige, restrained Luth blue-green accents
 Materials/textures: salt-stiff canvas, wet rope, plant-fiber wraps, oxidized iron, smooth offering stone, weathered skin
 Constraints: one character only; no readable text, letters, UI frame, logo, trademark, or watermark; no large magical aura; no steampunk machinery; no crown; no generic cleric vestments; no cartoon/chibi proportions; no pure-black outline; do not invent ancestry traits, transformed hands, or additional lore
 Output intent: production-ready neutral Toma Reedhand dialogue portrait, later isolated and resized to 512×512 as toma_reedhand_portrait_neutral.png

@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 const ResolutionScript := preload("res://globals/combat/resolution.gd")
 
 
-func test_worked_strom_strike_resolves_to_106_and_describes_writes() -> void:
+func test_worked_zhur_strike_resolves_to_106_and_describes_writes() -> void:
 	var result: Dictionary = ResolutionScript.resolve(_walkthrough_context())
 
 	assert_bool(result["allowed"]).is_true()
@@ -202,14 +202,14 @@ func test_cast_fizzle_is_deterministic_and_still_pays_cost_and_leaves_residue() 
 		func(write: Dictionary) -> bool: return write.get("operation", "") == "residue"
 	)[0]
 	assert_str(residue_write["after"]["charge_element_id"]).is_equal(
-		String(ElementWheel.opposite(&"strom"))
+		String(ElementWheel.opposite(&"zhur"))
 	)
 
 
-func test_scor_clean_target_does_not_burst_its_fresh_aftertone() -> void:
+func test_khash_clean_target_does_not_burst_its_fresh_aftertone() -> void:
 	var context := _walkthrough_context()
-	context["ability"]["element_id"] = &"scor"
-	context["ability"]["elements"] = [&"scor"]
+	context["ability"]["element_id"] = &"khash"
+	context["ability"]["elements"] = [&"khash"]
 	context["ability"]["is_spell"] = true
 	var result: Dictionary = ResolutionScript.resolve(context)
 	assert_bool(result["fizzled"]).is_false()
@@ -218,13 +218,13 @@ func test_scor_clean_target_does_not_burst_its_fresh_aftertone() -> void:
 	assert_int((aftertone_write["after"] as Array).size()).is_equal(1)
 
 
-func test_fizzled_scor_does_not_consume_existing_aftertone() -> void:
+func test_fizzled_khash_does_not_consume_existing_aftertone() -> void:
 	var context := _walkthrough_context()
-	context["ability"]["element_id"] = &"scor"
-	context["ability"]["elements"] = [&"scor"]
+	context["ability"]["element_id"] = &"khash"
+	context["ability"]["elements"] = [&"khash"]
 	context["ability"]["is_spell"] = true
 	context["fizzle"] = {"agreement_integrity": 0.0, "mastery": false}
-	context["target"]["aftertones"] = [{"element": &"suul", "remaining_rounds": 2}]
+	context["target"]["aftertones"] = [{"element": &"sul", "remaining_rounds": 2}]
 	var result: Dictionary = ResolutionScript.resolve(context)
 	assert_bool(result["fizzled"]).is_true()
 	assert_bool(result["writes"].any(func(write: Dictionary) -> bool: return write.get("kind", "") == "aftertone_spent")).is_false()
@@ -268,21 +268,21 @@ func _walkthrough_context() -> Dictionary:
 			"harmony": 0,
 		},
 		"ability": {
-			"id": "strom_strike",
+			"id": "zhur_strike",
 			"power": 42,
-			"element_id": &"strom",
-			"elements": [&"strom"],
+			"element_id": &"zhur",
+			"elements": [&"zhur"],
 			"magnitude": &"note",
 			"matrix_multiplier": 1.50,
 			"ct_cost": 30,
 		},
-		"target": {"id": "defender", "hp": 131, "element_id": &"terra"},
+		"target": {"id": "defender", "hp": 131, "element_id": &"tham"},
 		"facing": {"id": &"side", "multiplier": 1.10},
 		"source_tile": {
 			"battle_id": "walkthrough",
 			"x": 6,
 			"y": 4,
-			"charge_element_id": "strom",
+			"charge_element_id": "zhur",
 			"charge_level": 2,
 			"height_delta": 0,
 			"cover": false,
@@ -299,7 +299,7 @@ func _walkthrough_context() -> Dictionary:
 			"hush": false,
 		},
 		"weather": {
-			"element_id": "strom",
+			"element_id": "zhur",
 			"weather_hush": false,
 			"ticks_since_application": 3,
 			"total_ticks": 19,

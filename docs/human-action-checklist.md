@@ -168,7 +168,7 @@ Export these original PNGs from the same design project:
 - `rune-knight-b-portrait.png`
 - `meshy-figure-b-bust.png`
 - `spire-figure-bust.png`
-- `suulmae-the-undimmed.png`
+- `sulmae-the-undimmed.png`
 - `laughing-sisyphus.png`
 
 For every file, provide:

@@ -72,7 +72,7 @@ func test_start_builds_the_whole_party() -> void:
 
 
 func test_casting_ability_note_cost_comes_from_authored_data() -> void:
-	var note := TacticalTables.shared().ability(&"note-scor")
+	var note := TacticalTables.shared().ability(&"note-khash")
 	assert_object(note).is_not_null()
 	assert_int(note.breath_cost).is_equal(3)
 

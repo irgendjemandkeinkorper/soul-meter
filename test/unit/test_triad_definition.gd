@@ -4,14 +4,14 @@ func test_from_row_normalizes_values_and_copies_effect_parameters() -> void:
 	var definition := TriadDefinition.from_row({
 		"id": "Dawn",
 		"display_name": "Dawn Triad",
-		"elements": ["SUUL", "AQUA"],
-		"center": "AQUA",
+		"elements": ["SUL", "LUTH"],
+		"center": "LUTH",
 		"unique_effect": {"id": "heal", "display_name": "Healing", "parameters": {"amount": 3}},
 	})
 	assert_str(String(definition.id)).is_equal("dawn")
-	assert_str(String(definition.center)).is_equal("aqua")
-	assert_bool(definition.contains_element(&"suul")).is_true()
-	assert_bool(definition.contains_element(&"terra")).is_false()
+	assert_str(String(definition.center)).is_equal("luth")
+	assert_bool(definition.contains_element(&"sul")).is_true()
+	assert_bool(definition.contains_element(&"tham")).is_false()
 	var serialized := definition.to_dict()
 	serialized["unique_effect"]["parameters"]["amount"] = 9
 	assert_int(definition.unique_effect_parameters["amount"]).is_equal(3)

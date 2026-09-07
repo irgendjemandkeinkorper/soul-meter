@@ -137,15 +137,15 @@ func _seed_combatants(root: PandoraCategory) -> void:
 	# Element Id is a Wheel id (see globals/elements/element_wheel.gd's ORDER) read as this
 	# combatant's TARGET-side attunement — the "target relation" gamble curve (vault:
 	# systems/magic-system.md, ratified 2026-08-05) prices any elemental attack against it by
-	# Wheel distance. Bog Wight (a grave-rotted bog creature) is Molm (decay/the grave);
-	# Loam-Maddened Boar (a beast maddened by corrupted soil) is Terra (stone/the earthwork).
+	# Wheel distance. Bog Wight (a grave-rotted bog creature) is Mozh (decay/the grave);
+	# Loam-Maddened Boar (a beast maddened by corrupted soil) is Tham (stone/the earthwork).
 	# Left blank for combatants with no authored attunement yet — they keep resolving at the
 	# ElementMatrix neutral IDENTITY_ROW, unchanged from before this column existed.
 	# Edge (9th column): PROVISIONAL accuracy/evasion — keep in lockstep with
 	# tools/seed_pandora.gd (see that file's rationale comment).
 	var rows := [
-		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "molm", 2],
-		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "terra", 3],
+		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "mozh", 2],
+		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "tham", 3],
 		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, "", 4],
 		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, "", 4],
 		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, "", 2],

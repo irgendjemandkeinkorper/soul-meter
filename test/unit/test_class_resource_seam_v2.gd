@@ -104,7 +104,7 @@ func test_resolution_hidden_draw_is_deterministic_and_adds_the_row_bonus() -> vo
 
 func test_resolution_reveal_exposes_the_hidden_terms_without_changing_the_numbers() -> void:
 	var context := _spell_context()
-	context["target"]["attunements"] = {"scor": 2}
+	context["target"]["attunements"] = {"khash": 2}
 	var closed := Resolution.resolve(context)
 	assert_bool(bool(closed["reveal"])).is_false()
 	assert_bool(closed.has("revealed")).is_false()
@@ -113,7 +113,7 @@ func test_resolution_reveal_exposes_the_hidden_terms_without_changing_the_number
 	assert_bool(bool(opened["reveal"])).is_true()
 	var revealed: Dictionary = opened["revealed"]
 	assert_float(float(revealed["fizzle_percent"])).is_equal(float(closed["fizzle_percent"]))
-	assert_dict(revealed["attunements"]).contains_key_value("scor", 2)
+	assert_dict(revealed["attunements"]).contains_key_value("khash", 2)
 	assert_int(int(opened["damage"])).is_equal(int(closed["damage"]))
 
 
@@ -365,8 +365,8 @@ func _spell_context() -> Dictionary:
 		"tick": 3,
 		"seed": 11,
 		"unit": {"id": "ally-0", "attack_scale": 1.0, "edge": 0, "breath": 20, "harmony": 0},
-		"ability": {"id": "note-scor", "element_id": "scor", "elements": ["scor"], "magnitude": "note", "power": 6, "is_spell": true, "breath_cost": 3},
-		"target": {"id": "enemy-0", "hp": 30, "element_id": "aqua", "edge": 0, "height": 0, "attunements": {}},
+		"ability": {"id": "note-khash", "element_id": "khash", "elements": ["khash"], "magnitude": "note", "power": 6, "is_spell": true, "breath_cost": 3},
+		"target": {"id": "enemy-0", "hp": 30, "element_id": "luth", "edge": 0, "height": 0, "attunements": {}},
 		"soul_meter": 50.0,
 		"fizzle": {"agreement_integrity": 80.0, "pitch": 3},
 		"caster_context": {},

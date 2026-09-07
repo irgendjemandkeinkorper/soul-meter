@@ -46,11 +46,11 @@ func test_remaining_points_counts_down_to_zero() -> void:
 
 
 func test_element_pair_rejects_a_clash_but_allows_everything_else() -> void:
-	assert_bool(ChargenData.is_valid_element_pair("suul", "daar")).is_false()
-	assert_bool(ChargenData.is_valid_element_pair("daar", "suul")).is_false()
-	assert_bool(ChargenData.is_valid_element_pair("khor", "nul")).is_false()
-	assert_bool(ChargenData.is_valid_element_pair("suul", "khor")).is_true()
-	assert_bool(ChargenData.is_valid_element_pair("suul", "suul")).is_false()
+	assert_bool(ChargenData.is_valid_element_pair("sul", "vekh")).is_false()
+	assert_bool(ChargenData.is_valid_element_pair("vekh", "sul")).is_false()
+	assert_bool(ChargenData.is_valid_element_pair("khor", "zhem")).is_false()
+	assert_bool(ChargenData.is_valid_element_pair("sul", "khor")).is_true()
+	assert_bool(ChargenData.is_valid_element_pair("sul", "sul")).is_false()
 	assert_bool(ChargenData.is_valid_element_pair("", "")).is_true()
 
 

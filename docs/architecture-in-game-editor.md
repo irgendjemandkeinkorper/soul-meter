@@ -253,7 +253,7 @@ PR body lists the regenerated files separately from the authored ones.
   "scene_path": "res://world/loamroot_grove.tscn", "allowed_gameplay": true,
   "default_spawn_id": "default", "spawns": {"from_dom": "from_dom"},
   "arrival_flag": "chapter_loamroot_reached", "arrival_checkpoint": "location-arrival",
-  "harmonic_accord": 82.0, "thinning_tier": 1, "weather_default": "molm", "no_combat_zone": false,
+  "harmonic_accord": 82.0, "thinning_tier": 1, "weather_default": "mozh", "no_combat_zone": false,
   "respawn_policy": "wilderness",
   "world_map": {"position": [420, 310], "routes": [{"to": "dom", "danger_rank": 1, "encounter_table": "wilds-road"}]},
   "fast_travel_hub": false,
@@ -557,7 +557,7 @@ accord_at(cell) = clamp(SkillCheck.location_fizzle_integrity(base, scene) + zone
 - `base` = the location document's `harmonic_accord` (C21/#258 authored values, DeepSeek).
 - `zone_delta` (v2) = the sum of `AccordZone` volumes containing the cell — the **one new placeable**
   this note proposes (a data volume, not a trigger: exports `accord_delta`, optional `element_default`
-  override for "this swamp corner is Molm"). Alternative without a new type: `accord_delta` as Terrain
+  override for "this swamp corner is Mozh"). Alternative without a new type: `accord_delta` as Terrain
   custom data painted per cell. Ruling needed (§8).
 - `variation` = DeepSeek's bounded background function (±10 PROVISIONAL) of `day_index`, WorldClock
   phase, the zone's Zhavar rung, and weather element vs the location's patron element; deterministic
@@ -571,7 +571,7 @@ accord_at(cell) = clamp(SkillCheck.location_fizzle_integrity(base, scene) + zone
   cell instead of one float per battle (`combat_controller.gd:74,143-144,1239-1240`) — a combat change
   that follows #281.
 
-**Elemental default per area** ("a swamp has default Molm"): `weather_default` per location (F0 D8) in
+**Elemental default per area** ("a swamp has default Mozh"): `weather_default` per location (F0 D8) in
 the location document, overridable per `AccordZone`. **Overlay:** Weftlumin draws a per-cell accord heatmap,
 the effective weather element badge, tile charge (`TileState`), and Blocking/walkability — read-only,
 from `FieldMap` and the live controller. It is how the owner *sees* hidden state while playing.

@@ -239,7 +239,7 @@
 				"_icon_color": "ffffff00",
 				"_id": "7",
 				"_index": 0,
-				"_name": "Suul",
+				"_name": "Sul",
 				"_property_overrides": {
 					"Clash": {
 						"type": "reference",
@@ -258,11 +258,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Suul"
+						"value": "Sul"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "suul"
+						"value": "sul"
 					},
 					"Glow": {
 						"type": "color",
@@ -299,7 +299,7 @@
 				"_icon_color": "ffffff00",
 				"_id": "8",
 				"_index": 0,
-				"_name": "Bloei",
+				"_name": "Vel",
 				"_property_overrides": {
 					"Clash": {
 						"type": "reference",
@@ -318,11 +318,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Bloei"
+						"value": "Vel"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "bloei"
+						"value": "vel"
 					},
 					"Glow": {
 						"type": "color",
@@ -359,7 +359,7 @@
 				"_icon_color": "ffffff00",
 				"_id": "9",
 				"_index": 0,
-				"_name": "Aqua",
+				"_name": "Luth",
 				"_property_overrides": {
 					"Clash": {
 						"type": "reference",
@@ -378,11 +378,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Aqua"
+						"value": "Luth"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "aqua"
+						"value": "luth"
 					},
 					"Glow": {
 						"type": "color",
@@ -479,7 +479,7 @@
 				"_icon_color": "ffffff00",
 				"_id": "11",
 				"_index": 0,
-				"_name": "Terra",
+				"_name": "Tham",
 				"_property_overrides": {
 					"Clash": {
 						"type": "reference",
@@ -498,11 +498,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Terra"
+						"value": "Tham"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "terra"
+						"value": "tham"
 					},
 					"Glow": {
 						"type": "color",
@@ -539,7 +539,7 @@
 				"_icon_color": "ffffff00",
 				"_id": "12",
 				"_index": 0,
-				"_name": "Daar",
+				"_name": "Vekh",
 				"_property_overrides": {
 					"Clash": {
 						"type": "reference",
@@ -558,11 +558,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Daar"
+						"value": "Vekh"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "daar"
+						"value": "vekh"
 					},
 					"Glow": {
 						"type": "color",
@@ -599,7 +599,7 @@
 				"_icon_color": "ffffff00",
 				"_id": "13",
 				"_index": 0,
-				"_name": "Molm",
+				"_name": "Mozh",
 				"_property_overrides": {
 					"Clash": {
 						"type": "reference",
@@ -618,11 +618,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Molm"
+						"value": "Mozh"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "molm"
+						"value": "mozh"
 					},
 					"Glow": {
 						"type": "color",
@@ -659,7 +659,7 @@
 				"_icon_color": "ffffff00",
 				"_id": "14",
 				"_index": 0,
-				"_name": "Scor",
+				"_name": "Khash",
 				"_property_overrides": {
 					"Clash": {
 						"type": "reference",
@@ -678,11 +678,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Scor"
+						"value": "Khash"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "scor"
+						"value": "khash"
 					},
 					"Glow": {
 						"type": "color",
@@ -719,7 +719,7 @@
 				"_icon_color": "ffffff00",
 				"_id": "15",
 				"_index": 0,
-				"_name": "Nul",
+				"_name": "Zhem",
 				"_property_overrides": {
 					"Clash": {
 						"type": "reference",
@@ -738,11 +738,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Nul"
+						"value": "Zhem"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "nul"
+						"value": "zhem"
 					},
 					"Glow": {
 						"type": "color",
@@ -779,7 +779,7 @@
 				"_icon_color": "ffffff00",
 				"_id": "16",
 				"_index": 0,
-				"_name": "Strom",
+				"_name": "Zhur",
 				"_property_overrides": {
 					"Clash": {
 						"type": "reference",
@@ -798,11 +798,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Strom"
+						"value": "Zhur"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "strom"
+						"value": "zhur"
 					},
 					"Glow": {
 						"type": "color",
@@ -1588,7 +1588,7 @@
 				"_property_overrides": {
 					"Description": {
 						"type": "string",
-						"value": "A struck chord of fire; louder if Suul or Molm sounded this measure."
+						"value": "A struck chord of fire; louder if Sul or Mozh sounded this measure."
 					},
 					"Display Name": {
 						"type": "string",
@@ -1620,7 +1620,7 @@
 				"_property_overrides": {
 					"Description": {
 						"type": "string",
-						"value": "Quiets one surface to mirror-calm; suppressed while Scor rings."
+						"value": "Quiets one surface to mirror-calm; suppressed while Khash rings."
 					},
 					"Display Name": {
 						"type": "string",
@@ -1684,7 +1684,7 @@
 				"_property_overrides": {
 					"Description": {
 						"type": "string",
-						"value": "Scor damage over time; ends early if Aqua sounds."
+						"value": "Khash damage over time; ends early if Luth sounds."
 					},
 					"Display Name": {
 						"type": "string",
@@ -2227,7 +2227,7 @@
 					},
 					"Patron": {
 						"type": "string",
-						"value": "Suulmae (the mask)"
+						"value": "Sulmae (the mask)"
 					},
 					"Vault Id": {
 						"type": "string",
@@ -2879,7 +2879,7 @@
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "molm"
+						"value": "mozh"
 					},
 					"Max HP": {
 						"type": "int",
@@ -2924,7 +2924,7 @@
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "terra"
+						"value": "tham"
 					},
 					"Max HP": {
 						"type": "int",
@@ -3506,7 +3506,7 @@
 				"_property_overrides": {
 					"Center": {
 						"type": "string",
-						"value": "suul"
+						"value": "sul"
 					},
 					"Display Name": {
 						"type": "string",
@@ -3514,7 +3514,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "strom,suul,bloei"
+						"value": "zhur,sul,vel"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -3547,7 +3547,7 @@
 				"_property_overrides": {
 					"Center": {
 						"type": "string",
-						"value": "bloei"
+						"value": "vel"
 					},
 					"Display Name": {
 						"type": "string",
@@ -3555,7 +3555,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "suul,bloei,aqua"
+						"value": "sul,vel,luth"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -3588,7 +3588,7 @@
 				"_property_overrides": {
 					"Center": {
 						"type": "string",
-						"value": "aqua"
+						"value": "luth"
 					},
 					"Display Name": {
 						"type": "string",
@@ -3596,7 +3596,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "bloei,aqua,khor"
+						"value": "vel,luth,khor"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -3637,7 +3637,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "aqua,khor,terra"
+						"value": "luth,khor,tham"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -3670,7 +3670,7 @@
 				"_property_overrides": {
 					"Center": {
 						"type": "string",
-						"value": "terra"
+						"value": "tham"
 					},
 					"Display Name": {
 						"type": "string",
@@ -3678,7 +3678,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "khor,terra,daar"
+						"value": "khor,tham,vekh"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -3711,7 +3711,7 @@
 				"_property_overrides": {
 					"Center": {
 						"type": "string",
-						"value": "daar"
+						"value": "vekh"
 					},
 					"Display Name": {
 						"type": "string",
@@ -3719,7 +3719,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "terra,daar,molm"
+						"value": "tham,vekh,mozh"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -3752,7 +3752,7 @@
 				"_property_overrides": {
 					"Center": {
 						"type": "string",
-						"value": "molm"
+						"value": "mozh"
 					},
 					"Display Name": {
 						"type": "string",
@@ -3760,7 +3760,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "daar,molm,scor"
+						"value": "vekh,mozh,khash"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -3793,7 +3793,7 @@
 				"_property_overrides": {
 					"Center": {
 						"type": "string",
-						"value": "scor"
+						"value": "khash"
 					},
 					"Display Name": {
 						"type": "string",
@@ -3801,7 +3801,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "molm,scor,nul"
+						"value": "mozh,khash,zhem"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -3834,7 +3834,7 @@
 				"_property_overrides": {
 					"Center": {
 						"type": "string",
-						"value": "nul"
+						"value": "zhem"
 					},
 					"Display Name": {
 						"type": "string",
@@ -3842,7 +3842,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "scor,nul,strom"
+						"value": "khash,zhem,zhur"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -3875,7 +3875,7 @@
 				"_property_overrides": {
 					"Center": {
 						"type": "string",
-						"value": "strom"
+						"value": "zhur"
 					},
 					"Display Name": {
 						"type": "string",
@@ -3883,7 +3883,7 @@
 					},
 					"Elements": {
 						"type": "string",
-						"value": "nul,strom,suul"
+						"value": "zhem,zhur,sul"
 					},
 					"Triad Id": {
 						"type": "string",
@@ -14755,11 +14755,11 @@
 				"_icon_color": "ffffff00",
 				"_id": "515.0",
 				"_index": 0,
-				"_name": "Suul Note",
+				"_name": "Sul Note",
 				"_property_overrides": {
 					"Ability Id": {
 						"type": "string",
-						"value": "note-suul"
+						"value": "note-sul"
 					},
 					"AoE": {
 						"type": "int",
@@ -14771,11 +14771,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Suul Note"
+						"value": "Sul Note"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "suul"
+						"value": "sul"
 					},
 					"Job Id": {
 						"type": "string",
@@ -14812,11 +14812,11 @@
 				"_icon_color": "ffffff00",
 				"_id": "516.0",
 				"_index": 0,
-				"_name": "Bloei Note",
+				"_name": "Vel Note",
 				"_property_overrides": {
 					"Ability Id": {
 						"type": "string",
-						"value": "note-bloei"
+						"value": "note-vel"
 					},
 					"AoE": {
 						"type": "int",
@@ -14828,11 +14828,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Bloei Note"
+						"value": "Vel Note"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "bloei"
+						"value": "vel"
 					},
 					"Job Id": {
 						"type": "string",
@@ -14869,11 +14869,11 @@
 				"_icon_color": "ffffff00",
 				"_id": "517.0",
 				"_index": 0,
-				"_name": "Aqua Note",
+				"_name": "Luth Note",
 				"_property_overrides": {
 					"Ability Id": {
 						"type": "string",
-						"value": "note-aqua"
+						"value": "note-luth"
 					},
 					"AoE": {
 						"type": "int",
@@ -14885,11 +14885,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Aqua Note"
+						"value": "Luth Note"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "aqua"
+						"value": "luth"
 					},
 					"Job Id": {
 						"type": "string",
@@ -14983,11 +14983,11 @@
 				"_icon_color": "ffffff00",
 				"_id": "519.0",
 				"_index": 0,
-				"_name": "Terra Note",
+				"_name": "Tham Note",
 				"_property_overrides": {
 					"Ability Id": {
 						"type": "string",
-						"value": "note-terra"
+						"value": "note-tham"
 					},
 					"AoE": {
 						"type": "int",
@@ -14999,11 +14999,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Terra Note"
+						"value": "Tham Note"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "terra"
+						"value": "tham"
 					},
 					"Job Id": {
 						"type": "string",
@@ -15040,11 +15040,11 @@
 				"_icon_color": "ffffff00",
 				"_id": "520.0",
 				"_index": 0,
-				"_name": "Daar Note",
+				"_name": "Vekh Note",
 				"_property_overrides": {
 					"Ability Id": {
 						"type": "string",
-						"value": "note-daar"
+						"value": "note-vekh"
 					},
 					"AoE": {
 						"type": "int",
@@ -15056,11 +15056,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Daar Note"
+						"value": "Vekh Note"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "daar"
+						"value": "vekh"
 					},
 					"Job Id": {
 						"type": "string",
@@ -15097,11 +15097,11 @@
 				"_icon_color": "ffffff00",
 				"_id": "521.0",
 				"_index": 0,
-				"_name": "Molm Note",
+				"_name": "Mozh Note",
 				"_property_overrides": {
 					"Ability Id": {
 						"type": "string",
-						"value": "note-molm"
+						"value": "note-mozh"
 					},
 					"AoE": {
 						"type": "int",
@@ -15113,11 +15113,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Molm Note"
+						"value": "Mozh Note"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "molm"
+						"value": "mozh"
 					},
 					"Job Id": {
 						"type": "string",
@@ -15154,11 +15154,11 @@
 				"_icon_color": "ffffff00",
 				"_id": "522.0",
 				"_index": 0,
-				"_name": "Scor Note",
+				"_name": "Khash Note",
 				"_property_overrides": {
 					"Ability Id": {
 						"type": "string",
-						"value": "note-scor"
+						"value": "note-khash"
 					},
 					"AoE": {
 						"type": "int",
@@ -15170,11 +15170,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Scor Note"
+						"value": "Khash Note"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "scor"
+						"value": "khash"
 					},
 					"Job Id": {
 						"type": "string",
@@ -15211,11 +15211,11 @@
 				"_icon_color": "ffffff00",
 				"_id": "523.0",
 				"_index": 0,
-				"_name": "Nul Note",
+				"_name": "Zhem Note",
 				"_property_overrides": {
 					"Ability Id": {
 						"type": "string",
-						"value": "note-nul"
+						"value": "note-zhem"
 					},
 					"AoE": {
 						"type": "int",
@@ -15227,11 +15227,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Nul Note"
+						"value": "Zhem Note"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "nul"
+						"value": "zhem"
 					},
 					"Job Id": {
 						"type": "string",
@@ -15268,11 +15268,11 @@
 				"_icon_color": "ffffff00",
 				"_id": "524.0",
 				"_index": 0,
-				"_name": "Strom Note",
+				"_name": "Zhur Note",
 				"_property_overrides": {
 					"Ability Id": {
 						"type": "string",
-						"value": "note-strom"
+						"value": "note-zhur"
 					},
 					"AoE": {
 						"type": "int",
@@ -15284,11 +15284,11 @@
 					},
 					"Display Name": {
 						"type": "string",
-						"value": "Strom Note"
+						"value": "Zhur Note"
 					},
 					"Element Id": {
 						"type": "string",
-						"value": "strom"
+						"value": "zhur"
 					},
 					"Job Id": {
 						"type": "string",
@@ -15378,7 +15378,7 @@
 				"_property_overrides": {
 					"Action Ability Ids": {
 						"type": "string",
-						"value": "[\"note-scor\"]"
+						"value": "[\"note-khash\"]"
 					},
 					"Equip": {
 						"type": "string",

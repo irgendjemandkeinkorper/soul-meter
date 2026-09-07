@@ -52,10 +52,10 @@ func test_first_field_encounters_carry_authored_wheel_attunement() -> void:
 	## elemental attack by Wheel distance to the target's attunement — these are the first
 	## two enemies a player fights, so their attunement should not be neutral-by-omission.
 	var bog_wight := EncounterCatalog.make_actors(EncounterIds.BOG_WIGHT)
-	assert_str(bog_wight[0].element_id).is_equal("molm")
+	assert_str(bog_wight[0].element_id).is_equal("mozh")
 
 	var boar := EncounterCatalog.make_actors(EncounterIds.LOAM_BOAR)
-	assert_str(boar[0].element_id).is_equal("terra")
+	assert_str(boar[0].element_id).is_equal("tham")
 
 
 func test_bloodbellow_exposes_three_authored_outcomes() -> void:

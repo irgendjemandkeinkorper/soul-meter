@@ -57,7 +57,7 @@ func test_serialized_party_rows_migrate_the_same_way_as_live_members() -> void:
 
 func test_reconcile_adds_newcomers_and_drops_departures_without_losing_progress() -> void:
 	var roster := UnitMigration.roster_from_party([_member("vex", "Vex", 28)])
-	roster.attunement("vex").set_value(&"terra", 2)
+	roster.attunement("vex").set_value(&"tham", 2)
 	roster.loadout("vex").equip["hand"] = "synthetic-item"
 
 	var reconciled := UnitMigration.reconcile(
@@ -65,7 +65,7 @@ func test_reconcile_adds_newcomers_and_drops_departures_without_losing_progress(
 	)
 	assert_array(Array(reconciled.unit_ids())).is_equal(["iris", "vex"])
 	# Surviving units keep everything they had earned.
-	assert_int(reconciled.attunement("vex").value_for(&"terra")).is_equal(2)
+	assert_int(reconciled.attunement("vex").value_for(&"tham")).is_equal(2)
 	assert_str(str(reconciled.loadout("vex").equip["hand"])).is_equal("synthetic-item")
 
 	var shrunk := UnitMigration.reconcile(reconciled, [_member("iris", "Iris", 20)])
@@ -81,13 +81,13 @@ func test_migration_ignores_non_party_member_entries() -> void:
 
 func test_a_roster_round_trips_through_a_dictionary() -> void:
 	var roster := UnitMigration.roster_from_party([_member("vex", "Vex", 28)])
-	roster.attunement("vex").set_value(&"suul", -3)
+	roster.attunement("vex").set_value(&"sul", -3)
 	(roster.job_progress["vex"] as Dictionary)["synthetic-job"] = UnitJobProgress.from_dict(
 		{"unit_id": "vex", "job_id": "synthetic-job", "jp": 120, "mastered": ["b", "a"]}
 	)
 	var restored := UnitRoster.from_dict(roster.to_dict())
 	assert_object(restored).is_not_null()
-	assert_int(restored.attunement("vex").value_for(&"suul")).is_equal(-3)
+	assert_int(restored.attunement("vex").value_for(&"sul")).is_equal(-3)
 	assert_int(restored.progress_for("vex", "synthetic-job").jp).is_equal(120)
 	assert_array(Array(restored.progress_for("vex", "synthetic-job").mastered)).is_equal(["a", "b"])
 	assert_dict(restored.to_dict()).is_equal(roster.to_dict())

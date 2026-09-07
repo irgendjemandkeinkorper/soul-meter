@@ -4,8 +4,8 @@ extends RefCounted
 ## `docs/prd-amendment-tactical-layer.md` Tactical Layer T1 — Rules & data model.
 ##
 ## RULES (issue body): each full measure, tiles charged in the weather's element gain +1
-## charge; tiles charged in that element's Clash lose 1. A Stormfront feeds Strom-charged
-## tiles and starves Terra-charged tiles. Weather is authored per map
+## charge; tiles charged in that element's Clash lose 1. A Stormfront feeds Zhur-charged
+## tiles and starves Tham-charged tiles. Weather is authored per map
 ## (`maps.weather_default`) and can shift mid-battle on scripted beats.
 ##
 ## WHY it drives `TileState` instead of duplicating it: `globals/combat/tile_state.gd` already

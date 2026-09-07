@@ -97,7 +97,7 @@ func test_play_recovery_unblocks_a_chord() -> void:
 
 func test_gate_preserves_strained_chord_var_cost() -> void:
 	var result: CompositionResult = Resolver.resolve(
-		[&"suul", &"aqua"], &"phrase", {"var_harmony": 0}
+		[&"sul", &"luth"], &"phrase", {"var_harmony": 0}
 	)
 
 	assert_int(result.kind).is_equal(Result.Kind.STRAINED_CHORD)
@@ -108,16 +108,16 @@ func test_gate_preserves_strained_chord_var_cost() -> void:
 func _resolve_tone(harmony: int, context: Dictionary = {}) -> CompositionResult:
 	var gate_context := context.duplicate(true)
 	gate_context["var_harmony"] = harmony
-	return Resolver.resolve([&"suul"], &"note", gate_context)
+	return Resolver.resolve([&"sul"], &"note", gate_context)
 
 
 func _resolve_chord(harmony: int, context: Dictionary = {}) -> CompositionResult:
 	var gate_context := context.duplicate(true)
 	gate_context["var_harmony"] = harmony
-	return Resolver.resolve([&"suul", &"bloei"], &"phrase", gate_context)
+	return Resolver.resolve([&"sul", &"vel"], &"phrase", gate_context)
 
 
 func _resolve_triad(harmony: int, context: Dictionary = {}) -> CompositionResult:
 	var gate_context := context.duplicate(true)
 	gate_context["var_harmony"] = harmony
-	return Resolver.resolve([&"strom", &"suul", &"bloei"], &"song", gate_context)
+	return Resolver.resolve([&"zhur", &"sul", &"vel"], &"song", gate_context)

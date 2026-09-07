@@ -40,8 +40,8 @@ CombatController owns a `Weather` + per-cell `TileState`s, weather ticks ride th
 `Battle.forecast_context()` → `BattleInterface.set_forecast_context()` gives region D the SAME
 context live resolution uses — forecast==resolution by construction. Which encounters get
 weather is still a **PROVISIONAL owner-authoring surface** (`EncounterCatalog._WEATHER_DEFAULTS`);
-three encounters currently carry authored weather (`bog-wight: molm`, `loam-boar: terra`,
-`phase2-demon: scor`).
+three encounters currently carry authored weather (`bog-wight: mozh`, `loam-boar: tham`,
+`phase2-demon: khash`).
 
 **FR-503 fast travel is implemented:** `globals/fast_travel_registry.gd` (read-only GDScript
 registry), `ui/screens/region_map.tscn`/`region_map.gd` (from the pause menu),

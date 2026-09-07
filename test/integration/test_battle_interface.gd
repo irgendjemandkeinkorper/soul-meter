@@ -7,9 +7,9 @@ func test_battle_interface_renders_all_six_regions_from_scripted_state() -> void
 	var event := CombatEvent.new()
 	event.type = &"battle_snapshot"
 	event.data = {"snapshot": {
-		"active_unit": {"id": "sera", "name": "Sera", "hp": 31, "max_hp": 40, "element_id": "strom", "ct": 88, "speed": 9, "height": 1, "facing": "ne"},
-		"tiles": [{"x": 0, "y": 0, "height_delta": 2, "charge_element_id": "strom", "charge_level": 2, "element_color": "#7BDFF2"}],
-		"weather": {"element_id": "aqua", "tick": 7, "gains": "aqua", "drains": "scor"},
+		"active_unit": {"id": "sera", "name": "Sera", "hp": 31, "max_hp": 40, "element_id": "zhur", "ct": 88, "speed": 9, "height": 1, "facing": "ne"},
+		"tiles": [{"x": 0, "y": 0, "height_delta": 2, "charge_element_id": "zhur", "charge_level": 2, "element_color": "#7BDFF2"}],
+		"weather": {"element_id": "luth", "tick": 7, "gains": "luth", "drains": "khash"},
 	}}
 	interface.consume_event(event)
 	await runner.simulate_frames(1)
@@ -18,7 +18,7 @@ func test_battle_interface_renders_all_six_regions_from_scripted_state() -> void
 		assert_object(runner.find_child(node_name, true, false)).is_not_null()
 	assert_str((runner.find_child("HP", true, false) as Label).text).contains("31")
 	assert_int((runner.find_child("Stage", true, false) as BattleStageRegion).rendered_tile_count()).is_equal(1)
-	assert_str((runner.find_child("Value", true, false) as Label).text).contains("AQUA")
+	assert_str((runner.find_child("Value", true, false) as Label).text).contains("LUTH")
 
 
 func test_region_e_renders_additive_ap_round_snapshot_payload() -> void:
@@ -112,8 +112,8 @@ func test_cast_command_is_visible_and_submits_selected_target_through_interface(
 	var target := _cast_actor("Target", 30, 1)
 	var ability := AbilityDefinition.new()
 	ability.id = "interface-cast"
-	ability.element_id = &"strom"
-	ability.elements = [&"strom"]
+	ability.element_id = &"zhur"
+	ability.elements = [&"zhur"]
 	ability.power = 8
 	ability.breath_cost = 1
 	actor.source_member = PartyMember.new()

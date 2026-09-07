@@ -71,15 +71,15 @@ func test_encounter_ids_are_derived_from_the_catalog() -> void:
 func test_weather_resolution_reports_authored_override_and_calm_sources() -> void:
 	var authored: Dictionary = _lab.call("resolve_weather", EncounterIds.BOG_WIGHT, false, &"")
 	var overridden: Dictionary = _lab.call(
-		"resolve_weather", EncounterIds.BOG_WIGHT, true, &"strom"
+		"resolve_weather", EncounterIds.BOG_WIGHT, true, &"zhur"
 	)
 	var calm: Dictionary = _lab.call(
 		"resolve_weather", EncounterIds.DORTHKOR_VANGUARD, false, &""
 	)
 
-	assert_str(str(authored["element_id"])).is_equal("molm")
+	assert_str(str(authored["element_id"])).is_equal("mozh")
 	assert_str(str(authored["source"])).is_equal("authored")
-	assert_str(str(overridden["element_id"])).is_equal("strom")
+	assert_str(str(overridden["element_id"])).is_equal("zhur")
 	assert_str(str(overridden["source"])).is_equal("override")
 	assert_str(str(calm["element_id"])).is_empty()
 	assert_str(str(calm["source"])).is_equal("calm")
@@ -103,8 +103,8 @@ func test_export_markdown_contains_setup_turn_rows_and_outcome() -> void:
 	var setup := {
 		"encounter_id": &"bog-wight",
 		"party_ids": [&"vex", &"serai-lun"],
-		"weather": {"element_id": &"strom", "source": &"override"},
-		"tile_seed": {"cell": Vector2i(2, 1), "element_id": &"molm", "charge": 2},
+		"weather": {"element_id": &"zhur", "source": &"override"},
+		"tile_seed": {"cell": Vector2i(2, 1), "element_id": &"mozh", "charge": 2},
 		"seed": 42,
 	}
 	var turns: Array[Dictionary] = [{
@@ -131,8 +131,8 @@ func test_lab_session_never_mutates_authored_balance_data() -> void:
 		"encounter_id": EncounterIds.BOG_WIGHT,
 		"party_ids": _current_party_ids(),
 		"weather_override_enabled": true,
-		"weather_override": &"strom",
-		"tile_seed": {"cell": Vector2i(0, 0), "element_id": &"molm", "charge": 2},
+		"weather_override": &"zhur",
+		"tile_seed": {"cell": Vector2i(0, 0), "element_id": &"mozh", "charge": 2},
 		"seed": 77,
 	}
 

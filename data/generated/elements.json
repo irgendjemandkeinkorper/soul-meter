@@ -1,8 +1,8 @@
 {
   "elements": [
     {
-      "id": "suul",
-      "display_name": "Suul",
+      "id": "sul",
+      "display_name": "Sul",
       "vault_id": "elements-and-music",
       "imposition_id": "exposed",
       "imposition_display_name": "Exposed",
@@ -11,8 +11,8 @@
       "deals_damage": true
     },
     {
-      "id": "bloei",
-      "display_name": "Bloei",
+      "id": "vel",
+      "display_name": "Vel",
       "vault_id": "elements-and-music",
       "imposition_id": "overgrown",
       "imposition_display_name": "Overgrown",
@@ -21,8 +21,8 @@
       "deals_damage": true
     },
     {
-      "id": "aqua",
-      "display_name": "Aqua",
+      "id": "luth",
+      "display_name": "Luth",
       "vault_id": "elements-and-music",
       "imposition_id": "soaked",
       "imposition_display_name": "Soaked",
@@ -41,8 +41,8 @@
       "deals_damage": false
     },
     {
-      "id": "terra",
-      "display_name": "Terra",
+      "id": "tham",
+      "display_name": "Tham",
       "vault_id": "elements-and-music",
       "imposition_id": "weighted",
       "imposition_display_name": "Weighted",
@@ -51,8 +51,8 @@
       "deals_damage": true
     },
     {
-      "id": "daar",
-      "display_name": "Daar",
+      "id": "vekh",
+      "display_name": "Vekh",
       "vault_id": "elements-and-music",
       "imposition_id": "blinded",
       "imposition_display_name": "Blinded",
@@ -61,8 +61,8 @@
       "deals_damage": true
     },
     {
-      "id": "molm",
-      "display_name": "Molm",
+      "id": "mozh",
+      "display_name": "Mozh",
       "vault_id": "elements-and-music",
       "imposition_id": "decaying",
       "imposition_display_name": "Decaying",
@@ -71,8 +71,8 @@
       "deals_damage": true
     },
     {
-      "id": "scor",
-      "display_name": "Scor",
+      "id": "khash",
+      "display_name": "Khash",
       "vault_id": "elements-and-music",
       "imposition_id": "burning",
       "imposition_display_name": "Burning",
@@ -81,8 +81,8 @@
       "deals_damage": true
     },
     {
-      "id": "nul",
-      "display_name": "Nul",
+      "id": "zhem",
+      "display_name": "Zhem",
       "vault_id": "elements-and-music",
       "imposition_id": "muted",
       "imposition_display_name": "Muted",
@@ -91,8 +91,8 @@
       "deals_damage": false
     },
     {
-      "id": "strom",
-      "display_name": "Strom",
+      "id": "zhur",
+      "display_name": "Zhur",
       "vault_id": "elements-and-music",
       "imposition_id": "shocked",
       "imposition_display_name": "Shocked",
@@ -107,11 +107,11 @@
       "display_name": "Dayspring",
       "vault_id": "elements-and-music",
       "elements": [
-        "strom",
-        "suul",
-        "bloei"
+        "zhur",
+        "sul",
+        "vel"
       ],
-      "center": "suul",
+      "center": "sul",
       "unique_effect": {
         "id": "first_light",
         "display_name": "First Light",
@@ -132,11 +132,11 @@
       "display_name": "Fruiting",
       "vault_id": "elements-and-music",
       "elements": [
-        "suul",
-        "bloei",
-        "aqua"
+        "sul",
+        "vel",
+        "luth"
       ],
-      "center": "bloei",
+      "center": "vel",
       "unique_effect": {
         "id": "second_season",
         "display_name": "Second Season",
@@ -151,11 +151,11 @@
       "display_name": "Rivermouth",
       "vault_id": "elements-and-music",
       "elements": [
-        "bloei",
-        "aqua",
+        "vel",
+        "luth",
         "khor"
       ],
-      "center": "aqua",
+      "center": "luth",
       "unique_effect": {
         "id": "the_mouth_opens",
         "display_name": "The Mouth Opens",
@@ -171,9 +171,9 @@
       "display_name": "Founding",
       "vault_id": "elements-and-music",
       "elements": [
-        "aqua",
+        "luth",
         "khor",
-        "terra"
+        "tham"
       ],
       "center": "khor",
       "unique_effect": {
@@ -191,10 +191,10 @@
       "vault_id": "elements-and-music",
       "elements": [
         "khor",
-        "terra",
-        "daar"
+        "tham",
+        "vekh"
       ],
-      "center": "terra",
+      "center": "tham",
       "unique_effect": {
         "id": "sealed_ground",
         "display_name": "Sealed Ground",
@@ -212,11 +212,11 @@
       "display_name": "Barrow",
       "vault_id": "elements-and-music",
       "elements": [
-        "terra",
-        "daar",
-        "molm"
+        "tham",
+        "vekh",
+        "mozh"
       ],
-      "center": "daar",
+      "center": "vekh",
       "unique_effect": {
         "id": "unlisted",
         "display_name": "Unlisted",
@@ -235,11 +235,11 @@
       "display_name": "Pyre",
       "vault_id": "elements-and-music",
       "elements": [
-        "daar",
-        "molm",
-        "scor"
+        "vekh",
+        "mozh",
+        "khash"
       ],
-      "center": "molm",
+      "center": "mozh",
       "unique_effect": {
         "id": "the_rendering",
         "display_name": "The Rendering",
@@ -257,11 +257,11 @@
       "display_name": "Cinderfall",
       "vault_id": "elements-and-music",
       "elements": [
-        "molm",
-        "scor",
-        "nul"
+        "mozh",
+        "khash",
+        "zhem"
       ],
-      "center": "scor",
+      "center": "khash",
       "unique_effect": {
         "id": "everything_burns_at_once",
         "display_name": "Everything Burns At Once",
@@ -277,11 +277,11 @@
       "display_name": "Stillpoint",
       "vault_id": "elements-and-music",
       "elements": [
-        "scor",
-        "nul",
-        "strom"
+        "khash",
+        "zhem",
+        "zhur"
       ],
-      "center": "nul",
+      "center": "zhem",
       "unique_effect": {
         "id": "the_held_silence",
         "display_name": "The Held Silence",
@@ -297,11 +297,11 @@
       "display_name": "Thunderhead",
       "vault_id": "elements-and-music",
       "elements": [
-        "nul",
-        "strom",
-        "suul"
+        "zhem",
+        "zhur",
+        "sul"
       ],
-      "center": "strom",
+      "center": "zhur",
       "unique_effect": {
         "id": "nothing_is_uncertain",
         "display_name": "Nothing Is Uncertain",

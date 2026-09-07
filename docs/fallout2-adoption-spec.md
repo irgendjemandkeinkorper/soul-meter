@@ -384,8 +384,8 @@ payloads rather than UI combat arithmetic.
   with warn-and-skip validation (malformed or out-of-bounds cells never abort a battle)
   and clamps elevation to `DS.ELEVATION_MAX`; authored cliffs are deliberately
   unsupported until the stage has a cliff visual (invisible walls are a UX bug).
-  `_WEATHER_DEFAULTS` gained its first three entries (bog-wight: molm, loam-boar:
-  terra, phase2-demon: scor). `test/test_battlefield_authoring.gd` enforces the data
+  `_WEATHER_DEFAULTS` gained its first three entries (bog-wight: mozh, loam-boar:
+  tham, phase2-demon: khash). `test/test_battlefield_authoring.gd` enforces the data
   invariants directly (bounds, elevation range 1..MAX, no duplicates, clear deployment
   columns, every encounter deploys a full 5-member party on distinct cells, weather ids
   valid + warning-free). Consequence-flow suites (test_battle, field-debt and
@@ -400,7 +400,7 @@ payloads rather than UI combat arithmetic.
   `battlefield` key (safe while generated definitions never author one); ~~no test yet
   walks a real authored board through legal movement into combat~~ — closed same
   evening: `test_bog_wight_board_supports_movement_into_melee_victory` plays the real
-  bog-wight board (live molm weather) through snapshot-driven legal moves into melee
+  bog-wight board (live mozh weather) through snapshot-driven legal moves into melee
   victory via the facade; `tools/combat_number_sweep.gd` cannot see weather defaults (it
   is a static sweep that does not read EncounterCatalog) — before/after was
   byte-identical, recorded honestly in the table comment. ALL board dimensions, terrain

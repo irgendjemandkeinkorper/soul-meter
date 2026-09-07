@@ -104,7 +104,7 @@ const CAST_UNIT_ROWS := [
 		"Jump": 1,
 		"Portrait Ref": "",
 		"Vault Id": "",
-		"Action Ability Ids": '["note-scor"]',
+		"Action Ability Ids": '["note-khash"]',
 	},
 ]
 

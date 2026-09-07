@@ -16,7 +16,7 @@ const NpcRosterScript := preload("res://globals/npc_roster.gd")
 	set(v):
 		subtitle = v
 		_refresh()
-## Wheel-of-Ten element id ("scor", "molm", …) — colours the ring.
+## Wheel-of-Ten element id ("khash", "mozh", …) — colours the ring.
 @export var element: String = "":
 	set(v):
 		element = v
@@ -113,7 +113,7 @@ func _palette_index(descriptor: Dictionary) -> int:
 			return index
 	if not portrait_id.is_empty():
 		return (portrait_id.hash() & 0x7fffffff) % DS.WHEEL.size()
-	return 8  # Nul: the neutral placeholder treatment.
+	return 8  # Zhem: the neutral placeholder treatment.
 
 
 func _initials(value: String) -> String:

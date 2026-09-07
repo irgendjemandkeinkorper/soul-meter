@@ -116,7 +116,7 @@ than exaggerated wrinkles.
   fibers should be braided into her hair.
 - **Expression:** patient, amused, and never entirely reassuring. Speaking variant may
   show a small smile that does not reach the eyes.
-- **Attunement cue:** Molm, using the coded muted yellow-green ring language.
+- **Attunement cue:** Mozh, using the coded muted yellow-green ring language.
 - **Files:** `iris_illepah_portrait_neutral.png`, `iris_illepah_portrait_speaking.png`,
   `iris_illepah_portrait_concerned.png`, `iris_illepah_field_sheet.png`.
 
@@ -179,7 +179,7 @@ Each needs a neutral portrait, one class-defining portrait, and a transparent fi
   bandage roll, bone needle, and a practical healer's satchel. Avoid a generic white
   fantasy cleric robe.
 - **Expression:** calm, observant, quietly stubborn; compassionate without looking soft.
-- **Attunement cue:** Aqua, suggested through river-blue glass and wet highlights.
+- **Attunement cue:** Luth, suggested through river-blue glass and wet highlights.
 - **Read:** the requested “river healer” identity should be instantly visible even in a
   small tavern card.
 

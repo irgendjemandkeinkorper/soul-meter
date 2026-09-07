@@ -299,7 +299,7 @@ character, uneven baseline by design — paired with a completely disciplined, q
 the loudness is contained to specific moments, not everywhere at once.
 
 **The wrongness.** The compatibility sheet already tells you this god is canonically opposed to
-Terrashaper/held-ground play — Stormbearer punishes stillness. A subtle UI tell: any element that
+Thamshaper/held-ground play — Stormbearer punishes stillness. A subtle UI tell: any element that
 sits static too long in his theme could visibly "charge up" as if inviting a strike, training the
 player to feel unsafe standing still even outside combat.
 

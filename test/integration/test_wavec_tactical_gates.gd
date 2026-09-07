@@ -127,9 +127,9 @@ func test_gate_t7_resolution_and_tactical_round_trip_are_byte_deterministic() ->
 	scheduler_state["consecutive_waits"][actor.combat_id] = 2
 	scheduler.from_dict(scheduler_state)
 	var tile := TileState.create(&"wave-c", 4, 7, 3)
-	tile.apply_residue(&"strom")
-	tile.apply_residue(&"strom")
-	var weather := Weather.create(&"strom")
+	tile.apply_residue(&"zhur")
+	tile.apply_residue(&"zhur")
+	var weather := Weather.create(&"zhur")
 	for _tick in 19:
 		weather.tick([tile])
 	var tactical := {
@@ -178,10 +178,10 @@ func test_gate_t3_defining_strike_weather_bias_and_mid_queue_speech_victory() ->
 	assert_int(strike["charge_remaining"]).is_equal(charge_before - defining_price)
 
 	var ordered := TileState.create(&"weather", 0, 0)
-	ordered.apply_residue(&"strom")
+	ordered.apply_residue(&"zhur")
 	var chaotic := TileState.from_dict(ordered.to_dict())
-	var order_weather := Weather.create(&"strom")
-	var chaos_weather := Weather.create(&"strom")
+	var order_weather := Weather.create(&"zhur")
+	var chaos_weather := Weather.create(&"zhur")
 	for tick_index in TurnScheduler.TICKS_PER_MEASURE:
 		order_weather.tick([ordered], 100)
 		chaos_weather.tick([chaotic], -100)
@@ -258,11 +258,11 @@ func _resolution_context() -> Dictionary:
 	return {
 		"battle_id": "wave-c", "tick": 12, "seed": 173,
 		"unit": {"id": "caster", "attack_scale": 1.25, "ct": 137, "harmony": 0},
-		"ability": {"id": "strike", "power": 24, "element_id": &"strom", "elements": [&"strom"], "magnitude": &"note", "ct_cost": 30},
-		"target": {"id": "target", "hp": 100, "element_id": &"terra"},
+		"ability": {"id": "strike", "power": 24, "element_id": &"zhur", "elements": [&"zhur"], "magnitude": &"note", "ct_cost": 30},
+		"target": {"id": "target", "hp": 100, "element_id": &"tham"},
 		"source_tile": TileState.create(&"wave-c", 0, 0).to_dict(),
 		"target_tile": TileState.create(&"wave-c", 1, 0).to_dict(),
-		"weather": Weather.create(&"strom").to_dict(),
+		"weather": Weather.create(&"zhur").to_dict(),
 		"facing": {"id": &"front", "multiplier": 1.0},
 	}
 

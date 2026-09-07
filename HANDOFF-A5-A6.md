@@ -13,7 +13,7 @@ Implemented on `feat/a5-a6-aftertones-triads`. No push attempted.
 
 - `globals/battle_actor.gd`: additive `aftertones` and `tempo` state, plus round ticking with anchored entries preserved.
 - `globals/combat/combat_controller.gd`: CT/AP cadence ticking, snapshot keys, and application of resolver writes.
-- `globals/combat/resolution.gd`: Rule-Bend context terms and writes for Terra, Scor, Nul, Khor; additive declarative `triad_effect` writes.
+- `globals/combat/resolution.gd`: Rule-Bend context terms and writes for Tham, Khash, Zhem, Khor; additive declarative `triad_effect` writes.
 - `globals/elements/composition_result.gd`, `composition_resolver.gd`, `triad_definition.gd`: `triad_effect_id` and Pandora `vault_id` bridge.
 - `ui/hud/regions/unit_plate/unit_plate_region.gd`, `.tscn`: Aftertone pip text and Tempo display.
 - `test/unit/test_aftertones_triads.gd`: state, Rule-Bend, and all-ten-triad coverage.
@@ -32,14 +32,14 @@ The ten Triads and their unique effect parameters were already present in `data.
 ## PROVISIONAL values
 
 - New Aftertones default to 2 remaining rounds when an ability supplies `aftertone`/`aftertone_element` without `aftertone_rounds`.
-- Scor burst power is +1 because the authored vault data has no burst magnitude.
+- Khash burst power is +1 because the authored vault data has no burst magnitude.
 - Tempo uses authored `tempo_delta` when present; no default delta was invented.
 
 ## Ambiguous vault readings chosen literally
 
-- Terra anchors existing and newly created Aftertones by setting `anchored: true`; anchored entries do not decay.
+- Tham anchors existing and newly created Aftertones by setting `anchored: true`; anchored entries do not decay.
 - Khor “holds Notes across rounds” is represented by the same non-decaying anchored state.
-- Nul ends all Aftertones and writes Tempo to zero.
+- Zhem ends all Aftertones and writes Tempo to zero.
 - Triad unique effects are emitted as declarative `triad_effect` writes carrying the Pandora effect id and parameters; no damage is emitted by the Triad effect marker.
 
 ## Overall Summary
@@ -55,8 +55,8 @@ Implemented the Claude REQUEST CHANGES fixes. No push attempted. Git commits cou
 ### Changes
 
 - Live and forecast Resolution contexts now carry unit and target Aftertones, Tempo, and last cast element.
-- Successful spells lay a two-round centre-element Aftertone on the target; fizzles lay none. Tempo follows the provisional same-element rule. Scor/Nul/Terra act on target state; Khor holds the caster’s latest Aftertone with separate `held` and `anchored` flags.
-- `_apply_resolution_writes()` applies writes by `target_id`, tracks Scor/expiry spend in `spent_aftertones`, and handles last-cast state.
+- Successful spells lay a two-round centre-element Aftertone on the target; fizzles lay none. Tempo follows the provisional same-element rule. Khash/Zhem/Tham act on target state; Khor holds the caster’s latest Aftertone with separate `held` and `anchored` flags.
+- `_apply_resolution_writes()` applies writes by `target_id`, tracks Khash/expiry spend in `spent_aftertones`, and handles last-cast state.
 - All ten Triad effect ids have controller consumers and explicit tests. Unknown ids emit `triad_effect_unhandled`.
 - Added controller flags/consumers for freeze, cover, Pyre breath, Cinderfall burst, Thunderhead hit/extra turn, reveal/conceal, Rivermouth range, and Fruiting duration.
 - Added `TurnScheduler.grant_extra_turn()` to AP and CT schedulers; grid LOS consumes Rivermouth’s range bonus.
@@ -65,7 +65,7 @@ Implemented the Claude REQUEST CHANGES fixes. No push attempted. Git commits cou
 
 - `test/unit/test_aftertones_triads.gd`: **13 test cases | 0 errors | 0 failures**.
 - `test/combat_resolution/test_resolution.gd`: **13 test cases | 0 errors | 0 failures**.
-- `test/integration/test_combat_controller.gd`: **44 test cases | 0 errors | 0 failures**; includes live Scor forecast/resolution coverage.
+- `test/integration/test_combat_controller.gd`: **44 test cases | 0 errors | 0 failures**; includes live Khash forecast/resolution coverage.
 - `test/unit/test_turn_scheduler.gd`: **16 test cases | 0 errors | 0 failures**.
 - `godot --headless --path . --import`: no parse/compile errors; known sandbox/editor teardown warnings remain.
 - Required `addons/gdUnit4/runtest.sh` aborts before statistics because the sandbox rejects `tcp://127.0.0.1:0`; repository `scripts/test.sh` headless wrapper supplied the statistics above.
@@ -78,7 +78,7 @@ Implemented the six Claude review corrections for issues #219/#220. No push atte
 
 ### Changes
 
-- Resolution emits Aftertone writes for every changed target, lays plain successful Suul casts, suppresses fizzle consumers, and consumes Scor before laying its own tone.
+- Resolution emits Aftertone writes for every changed target, lays plain successful Sul casts, suppresses fizzle consumers, and consumes Khash before laying its own tone.
 - Dayspring/Barrow cover windows flow through positional Resolution terms; the ruling remains PROVISIONAL pending owner confirmation. Vault uses `BattlefieldModel.set_cover()` and the grid model's real cover state.
 - Thunderhead, Rivermouth, and Founding state has explicit round gates/expiry restoration. Cinderfall no longer writes the unused `burst_bonus` flag.
 - All ten Triad tests use a cast fixture through `submit_action`; Fruiting's no-op held assignment is removed. Legacy damage contexts carry target Aftertones, Tempo, hit, and last-cast element.
