@@ -7,8 +7,10 @@ extends GdUnitTestSuite
 
 const Accord := preload("res://globals/combat/accord_math.gd")
 
-# Mirrors of the lists their owners hold, used only as test inputs.
-const WHEEL := ["suul", "bloei", "aqua", "khor", "terra", "daar", "molm", "scor", "nul", "strom"]
+# Mirrors of the lists their owners hold, used only as test inputs. The wheel is DS.WHEEL's
+# order; `variation_for()` takes it as a parameter precisely so this file never becomes a
+# second place the ring is defined.
+const WHEEL := ["sul", "vel", "luth", "khor", "tham", "vekh", "mozh", "khash", "zhem", "zhur"]
 const PHASES := ["morning", "afternoon", "evening", "night"]
 const RUNGS := ["low", "rising", "tolling", "ringing", "unprecedented"]
 
@@ -108,13 +110,13 @@ func test_wheel_distance_wraps_and_treats_an_unknown_element_as_neutral() -> voi
 
 func test_variation_for_resolves_ids_and_survives_an_unknown_one() -> void:
 	var resolved: float = Accord.variation_for(
-		12, &"evening", &"tolling", &"molm", &"molm", 77, WHEEL, PHASES, RUNGS
+		12, &"evening", &"tolling", &"mozh", &"mozh", 77, WHEEL, PHASES, RUNGS
 	)
 	var direct: float = Accord.variation(77, 12, 2, 2, 0)
 	assert_float(resolved).is_equal(direct)
 
 	var unknown: float = Accord.variation_for(
-		12, &"not_a_phase", &"not_a_rung", &"not_an_element", &"molm", 77, WHEEL, PHASES, RUNGS
+		12, &"not_a_phase", &"not_a_rung", &"not_an_element", &"mozh", 77, WHEEL, PHASES, RUNGS
 	)
 	assert_float(unknown).override_failure_message(
 		"unknown ids must fall back to neutral, not produce NAN or throw"
