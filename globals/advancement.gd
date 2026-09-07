@@ -65,6 +65,11 @@ static func can_buy(member: PartyMember, skill_id: String) -> bool:
 
 ## Buys one +5% step. Returns the codebase's shared gate shape.
 static func buy(member: PartyMember, skill_id: String) -> Dictionary:
+	if not is_purchasable(member, skill_id):
+		return {
+			"allowed": false, "blocked_by": "unheld_tone",
+			"message": "Only the Major and Minor tones can be trained in Chapter 1.",
+		}
 	var cost := step_cost(member, skill_id)
 	if cost < 0:
 		return {
@@ -83,6 +88,42 @@ static func buy(member: PartyMember, skill_id: String) -> Dictionary:
 	ledger["advancement_points_spent"] = int(ledger.get("advancement_points_spent", 0)) + cost
 	return {"allowed": true, "blocked_by": "", "cost": cost,
 		"new_percentage": float(member.skill_percentages[skill_id])}
+
+
+## Chapter-1 rule (docs/architecture-chargen-dramgid.md §3.3, R3): a `tone_*` skill is
+## purchasable only while it is one of the member's held tones (Major or Minor). Every
+## field and ARMS skill is always purchasable; the cost bands decide the rest.
+static func is_purchasable(member: PartyMember, skill_id: String) -> bool:
+	if not DramgidSchema.is_tone_skill(skill_id):
+		return true
+	return skill_id in held_tones(member)
+
+
+static func held_tones(member: PartyMember) -> PackedStringArray:
+	var result := PackedStringArray()
+	for element in [member.major_element, member.minor_element]:
+		var skill_id := DramgidSchema.tone_skill_for(element)
+		if not skill_id.is_empty() and not result.has(skill_id):
+			result.append(skill_id)
+	return result
+
+
+## Writes the creation-time purchases into the ledger once the member has its final id
+## (docs/architecture-chargen-dramgid.md §5, R8). `rows` is skill_id →
+## {percentage, tier, advancement_points_spent}, the exact ledger row shape, so the Mirror
+## Rewriting refunds creation points like any other advancement point. The member's
+## `skill_percentages` are expected to carry the percentages already
+## (ChargenBuild.to_party_member does that); this only records them.
+static func seed_creation_ledger(member: PartyMember, rows: Dictionary) -> void:
+	if member.id.is_empty():
+		push_warning("Advancement.seed_creation_ledger: member has no id; ledger not written")
+		return
+	for skill_id: String in rows.keys():
+		var source: Dictionary = rows[skill_id]
+		var ledger := _ledger_row(member, skill_id)
+		ledger["percentage"] = float(source.get("percentage", 0.0))
+		ledger["tier"] = str(source.get("tier", ledger.get("tier", "untrained"))).to_lower()
+		ledger["advancement_points_spent"] = int(source.get("advancement_points_spent", 0))
 
 
 static func grant_level(member: PartyMember) -> void:
@@ -126,7 +167,7 @@ static func _ledger_row(member: PartyMember, skill_id: String) -> Dictionary:
 	if not actor_ledger.has(skill_id):
 		actor_ledger[skill_id] = {
 			"percentage": 0.0,
-			"tier": str(member.skill_tiers.get(skill_id, "untrained")),
+			"tier": str(member.skill_tiers.get(skill_id, "untrained")).to_lower(),
 			"advancement_points_spent": 0,
 		}
 	return actor_ledger[skill_id]

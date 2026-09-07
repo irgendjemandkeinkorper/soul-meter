@@ -119,14 +119,16 @@ func _rebuild_sheet() -> void:
 	if not member.attributes.is_empty():
 		main_column.add_child(_section("Attributes"))
 		var attribute_grid := GridContainer.new()
-		attribute_grid.columns = 6
-		for attribute_id: String in ChargenData.ATTRIBUTE_IDS:
+		attribute_grid.columns = DramgidSchema.ATTRIBUTE_IDS.size()
+		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
 			var cell := Label.new()
+			# attribute_value() answers legacy-keyed rows through the rename aliases
+			# until save schema 8 rewrites them.
 			cell.text = "%s %d" % [
-				ChargenData.ATTRIBUTE_LABELS.get(attribute_id, attribute_id),
-				int(member.attributes.get(attribute_id, 0)),
+				DramgidSchema.attribute_label(attribute_id),
+				member.attribute_value(StringName(attribute_id)),
 			]
-			cell.tooltip_text = str(ChargenData.ATTRIBUTE_HINTS.get(attribute_id, ""))
+			cell.tooltip_text = ChargenData.attribute_hint(attribute_id)
 			cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			attribute_grid.add_child(cell)
 		main_column.add_child(attribute_grid)

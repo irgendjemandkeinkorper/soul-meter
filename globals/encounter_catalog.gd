@@ -100,12 +100,17 @@ static func committed_archetype(archetype_id: String) -> Dictionary:
 
 static func all_ids() -> Array[StringName]:
 	_ensure_loaded()
-	var result: Array[StringName] = []
+	# Sort as String, never as StringName — StringName's `<` compares by internal pointer, so a
+	# StringName sort is interning order rather than alphabetical.
+	var names: Array[String] = []
 	for encounter_value: Variant in _definitions.keys():
-		result.append(StringName(str(encounter_value)))
+		names.append(str(encounter_value))
 	for encounter_value: Variant in _runtime_definitions.keys():
-		result.append(StringName(str(encounter_value)))
-	result.sort()
+		names.append(str(encounter_value))
+	names.sort()
+	var result: Array[StringName] = []
+	for id_text: String in names:
+		result.append(StringName(id_text))
 	return result
 
 

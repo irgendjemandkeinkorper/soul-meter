@@ -123,6 +123,20 @@ static func build() -> Theme:
 	t.add_type("ChargenNavigation")
 	t.set_type_variation("ChargenNavigation", "HBoxContainer")
 	t.set_constant("separation", "ChargenNavigation", DS.SPACE_6)
+	# Chargen-on-DRAMGID leaves (docs/architecture-chargen-dramgid.md §7.5): the class-card
+	# grid, the skill spend rows and their group headers. Cards are ChargenChoiceButton.
+	t.add_type("ChargenCardGrid")
+	t.set_type_variation("ChargenCardGrid", "GridContainer")
+	t.set_constant("h_separation", "ChargenCardGrid", DS.SPACE_4)
+	t.set_constant("v_separation", "ChargenCardGrid", DS.SPACE_4)
+	t.add_type("ChargenSkillRow")
+	t.set_type_variation("ChargenSkillRow", "HBoxContainer")
+	t.set_constant("separation", "ChargenSkillRow", DS.SPACE_4)
+	t.add_type("ChargenGroupHeader")
+	t.set_type_variation("ChargenGroupHeader", "Label")
+	t.set_font("font", "ChargenGroupHeader", display)
+	t.set_font_size("font_size", "ChargenGroupHeader", DS.FS_300)
+	t.set_color("font_color", "ChargenGroupHeader", DS.BRONZE_3)
 
 	# NPC placeholder portraits. The generated roster picks one of the ten
 	# Wheel-backed variants from the stable portrait id; controls only select a

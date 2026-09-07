@@ -587,6 +587,7 @@ func describe_position(position: StringName) -> Dictionary:
 ## reachable within `ct_budget` — so the range display and an actual move never disagree.
 func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName]:
 	var result: Array[StringName] = []
+	var handles: Array[String] = []
 	if _grid == null or not has_combatant(actor):
 		return result
 	var id := actor.combat_id
@@ -608,8 +609,13 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 			var handle := _handle_for_cell(cell)
 			var query := path_query(actor, handle)
 			if bool(query.get("allowed", false)) and int(query.get("ct_cost", 0)) <= ct_budget:
-				result.append(handle)
-	result.sort()
+				handles.append(String(handle))
+	# Sort as String, never as StringName: StringName's `<` compares by internal pointer, so a
+	# StringName sort would be interning order and the by-handle order documented above would
+	# quietly not hold.
+	handles.sort()
+	for handle_text: String in handles:
+		result.append(StringName(handle_text))
 	return result
 
 

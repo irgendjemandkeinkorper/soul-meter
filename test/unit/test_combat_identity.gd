@@ -62,15 +62,38 @@ func test_each_generated_archetype_has_stable_weaknesses_covering_all_effect_typ
 		assert_bool(effect_ids.has(effect_id)).is_true()
 
 
+func test_archetype_ids_are_in_alphabetical_order() -> void:
+	# `Array[StringName].sort()` compares by interned pointer, not alphabetically, so a
+	# StringName sort silently returns whatever order the names happened to be created in —
+	# which changes with what else ran first. Every caller that indexes into this list, this
+	# suite included, depends on the order actually being the documented one.
+	var ids := CombatIdentityCatalog.archetype_ids()
+	var expected: Array[String] = []
+	for archetype_id: StringName in ids:
+		expected.append(String(archetype_id))
+	expected.sort()
+	for index in ids.size():
+		assert_str(String(ids[index])).override_failure_message(
+			"archetype_ids() is not alphabetical: %s" % str(ids)
+		).is_equal(expected[index])
+
+
 func test_discovery_expands_from_lore_or_prior_archetype_encounters() -> void:
-	var archetype_id := CombatIdentityCatalog.archetype_ids()[0]
-	var rows := CombatIdentityCatalog.weaknesses_for(archetype_id)
+	# Any archetype carrying a gated weakness proves the rule; which one is not the point, so
+	# the first one found is used rather than assuming a particular position in the list.
+	var archetype_id := &""
 	var gated: Dictionary = {}
-	for row: Dictionary in rows:
-		if float(row.get("lore_minimum", 0.0)) > 0.0 and int(row.get("prior_encounters", 0)) > 0:
-			gated = row
+	for candidate: StringName in CombatIdentityCatalog.archetype_ids():
+		for row: Dictionary in CombatIdentityCatalog.weaknesses_for(candidate):
+			if float(row.get("lore_minimum", 0.0)) > 0.0 and int(row.get("prior_encounters", 0)) > 0:
+				archetype_id = candidate
+				gated = row
+				break
+		if not gated.is_empty():
 			break
-	assert_bool(gated.is_empty()).is_false()
+	assert_bool(gated.is_empty()).override_failure_message(
+		"no archetype has a weakness gated on both lore and prior encounters"
+	).is_false()
 	var weakness_id := StringName(gated["id"])
 
 	assert_bool(_has_candidate(archetype_id, weakness_id, 0.0, 0)).is_false()

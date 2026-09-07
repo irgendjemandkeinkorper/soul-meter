@@ -59,10 +59,16 @@ func test_encounter_ids_are_derived_from_the_catalog() -> void:
 	}
 
 	var encounter_ids: Array[StringName] = _lab.call("encounter_ids")
-	var catalog_ids: Array[StringName] = []
+	# Sort as String, never as StringName: StringName's `<` compares by internal pointer, so
+	# sorting the expectation the same broken way the catalog used to would only compare one
+	# interning order against another.
+	var catalog_names: Array[String] = []
 	for key: Variant in EncounterCatalog._definitions.keys():
-		catalog_ids.append(StringName(str(key)))
-	catalog_ids.sort()
+		catalog_names.append(str(key))
+	catalog_names.sort()
+	var catalog_ids: Array[StringName] = []
+	for id_text: String in catalog_names:
+		catalog_ids.append(StringName(id_text))
 
 	assert_array(encounter_ids).is_equal(catalog_ids)
 	assert_array(encounter_ids).contains([TEST_ENCOUNTER])

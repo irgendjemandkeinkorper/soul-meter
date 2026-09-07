@@ -27,6 +27,15 @@ const DEFAULT_BREATH_MAX := 15
 @export var starting_mastery: String = ""
 @export var major_element: String = ""
 @export var minor_element: String = ""
+## Class id ("ironbrand") — `patron` above holds the deity DISPLAY name ("Kero"), the
+## roster/registry vocabulary (docs/architecture-chargen-dramgid.md §6.3, ruling R4).
+@export var class_id: String = ""
+## The ARMS skill the class Kit trains, and the Kit weapon prototype id once Pandora seeds
+## it (F3a-5). Combat resolves equipment → Kit → bare hands in F3c.
+@export var kit_weapon_skill: String = ""
+@export var kit_weapon: String = ""
+## Wheel element of the Background's "Root Note of choice" Mastery (empty = none yet).
+@export var mastery_element: String = ""
 
 @export var level: int = 1
 @export var xp: int = 0
@@ -68,6 +77,10 @@ func to_dict() -> Dictionary:
 		"starting_mastery": starting_mastery,
 		"major_element": major_element,
 		"minor_element": minor_element,
+		"class_id": class_id,
+		"kit_weapon_skill": kit_weapon_skill,
+		"kit_weapon": kit_weapon,
+		"mastery_element": mastery_element,
 		"level": level,
 		"xp": xp,
 		"advancement_points": advancement_points,
@@ -101,6 +114,10 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.starting_mastery = str(data.get("starting_mastery", ""))
 	member.major_element = str(data.get("major_element", ""))
 	member.minor_element = str(data.get("minor_element", ""))
+	member.class_id = str(data.get("class_id", ""))
+	member.kit_weapon_skill = str(data.get("kit_weapon_skill", ""))
+	member.kit_weapon = str(data.get("kit_weapon", ""))
+	member.mastery_element = str(data.get("mastery_element", ""))
 	member.level = int(data.get("level", 1))
 	member.xp = maxi(int(data.get("xp", 0)), 0)
 	member.advancement_points = maxi(int(data.get("advancement_points", 0)), 0)
@@ -135,8 +152,23 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	return member
 
 
+## Reads a DRAMGID attribute. Until save schema 8 rewrites every row, a member may carry
+## legacy keys ("forge") while a caller asks for the DRAMGID id ("muster"), or the reverse
+## (a legacy dialogue check against a chargen-built member) — both answer through
+## DramgidSchema.ATTRIBUTE_RENAMES.
 func attribute_value(attribute_id: StringName) -> int:
-	return int(attributes.get(String(attribute_id), attributes.get(attribute_id, 0)))
+	var key := String(attribute_id)
+	if attributes.has(key):
+		return int(attributes[key])
+	if attributes.has(attribute_id):
+		return int(attributes[attribute_id])
+	var canonical := DramgidSchema.canonical_attribute_id(key)
+	if not canonical.is_empty() and canonical != key and attributes.has(canonical):
+		return int(attributes[canonical])
+	var legacy := DramgidSchema.legacy_attribute_id(key)
+	if not legacy.is_empty() and attributes.has(legacy):
+		return int(attributes[legacy])
+	return 0
 
 
 static func _dictionary_from_save(value: Variant) -> Dictionary:

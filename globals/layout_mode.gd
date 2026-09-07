@@ -2,6 +2,7 @@ extends Node
 ## Debug-only owner overlay coordinator. In release builds or without opt-in it stays inert.
 
 const LayoutOverridesScript := preload("res://globals/layout_overrides.gd")
+const LayoutRecovery := preload("res://globals/layout_recovery.gd")
 const LAYOUT_EDITOR_SCENE := preload("res://ui/debug/layout_editor.tscn")
 const GAMEPLAY_PATH_PREFIX := "res://world/"
 
@@ -13,6 +14,7 @@ var force_enabled_for_tests: bool = false:
 var _enabled: bool = false
 var _overlay_layer: CanvasLayer = null
 var _previous_paused: bool = false
+var _editing_scene: Node = null
 
 
 func _ready() -> void:
@@ -42,6 +44,8 @@ func enter_layout_mode() -> void:
 	var scene_root: Node = _find_gameplay_scene()
 	if scene_root == null:
 		return
+	_editing_scene = scene_root
+	_editing_scene.tree_exiting.connect(exit_layout_mode)
 	_previous_paused = get_tree().paused
 	get_tree().paused = true
 	_overlay_layer = CanvasLayer.new()
@@ -59,6 +63,12 @@ func enter_layout_mode() -> void:
 func exit_layout_mode() -> void:
 	if _overlay_layer == null:
 		return
+	var editor: Node = _overlay_layer.get_child(0) if _overlay_layer.get_child_count() > 0 else null
+	if editor != null:
+		editor.call("commit_pending_input")
+	if is_instance_valid(_editing_scene) and _editing_scene.tree_exiting.is_connected(exit_layout_mode):
+		_editing_scene.tree_exiting.disconnect(exit_layout_mode)
+	_editing_scene = null
 	var layer: CanvasLayer = _overlay_layer
 	_overlay_layer = null
 	remove_child(layer)
@@ -109,8 +119,8 @@ func _apply_override_to_scene(scene_root: Node) -> void:
 		return
 	scene_root.set_meta("layout_overrides_applied", true)
 	var scene_path: String = scene_root.scene_file_path
-	var override_path: String = LayoutOverridesScript.override_path_for_scene(scene_path)
-	var document: Dictionary = LayoutOverridesScript.load_file(override_path)
+	var restored: Dictionary = LayoutRecovery.load_scene(scene_path)
+	var document: Dictionary = restored["working"]
 	if document.is_empty():
 		return
 	if str(document.get("scene", "")) != scene_path:

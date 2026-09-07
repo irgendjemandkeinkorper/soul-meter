@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://ui/debug/layout_editor.gd" id="1_layout_editor"]
+
+[ext_resource type="Script" path="res://ui/debug/layout_inspector.gd" id="2_inspector"]
 
 [node name="LayoutEditor" type="Control"]
 process_mode = 3
@@ -14,15 +16,12 @@ mouse_filter = 2
 script = ExtResource("1_layout_editor")
 
 [node name="PalettePanel" type="PanelContainer" parent="."]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -330.0
+layout_mode = 0
+offset_left = 16.0
 offset_top = 16.0
-offset_right = -16.0
-offset_bottom = 620.0
-grow_horizontal = 0
+offset_right = 376.0
+offset_bottom = 656.0
+script = ExtResource("2_inspector")
 
 [node name="Margin" type="MarginContainer" parent="PalettePanel"]
 layout_mode = 2
@@ -35,26 +34,40 @@ theme_override_constants/margin_bottom = 12
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="PalettePanel/Margin/Column"]
+[node name="DragHandle" type="Button" parent="PalettePanel/Margin/Column"]
 layout_mode = 2
-text = "LAYOUT MODE"
+text = "LAYOUT MODE — drag to move"
+mouse_default_cursor_shape = 6
 
-[node name="LayerLabel" type="Label" parent="PalettePanel/Margin/Column"]
+[node name="Scroll" type="ScrollContainer" parent="PalettePanel/Margin/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="PalettePanel/Margin/Column/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Transform" type="VBoxContainer" parent="PalettePanel/Margin/Column/Scroll/Content"]
+layout_mode = 2
+
+[node name="LayerLabel" type="Label" parent="PalettePanel/Margin/Column/Scroll/Content"]
 layout_mode = 2
 text = "Placement layer"
 
-[node name="LayerPicker" type="OptionButton" parent="PalettePanel/Margin/Column"]
+[node name="LayerPicker" type="OptionButton" parent="PalettePanel/Margin/Column/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="FootprintLabel" type="Label" parent="PalettePanel/Margin/Column"]
+[node name="FootprintLabel" type="Label" parent="PalettePanel/Margin/Column/Scroll/Content"]
 layout_mode = 2
-text = "Solid footprint (W × H)"
+text = "Solid footprint (local W × H)"
 
-[node name="FootprintRow" type="HBoxContainer" parent="PalettePanel/Margin/Column"]
+[node name="FootprintRow" type="HBoxContainer" parent="PalettePanel/Margin/Column/Scroll/Content"]
 layout_mode = 2
 
-[node name="FootprintWidth" type="SpinBox" parent="PalettePanel/Margin/Column/FootprintRow"]
+[node name="FootprintWidth" type="SpinBox" parent="PalettePanel/Margin/Column/Scroll/Content/FootprintRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -62,11 +75,11 @@ min_value = 1.0
 max_value = 120.0
 value = 64.0
 
-[node name="By" type="Label" parent="PalettePanel/Margin/Column/FootprintRow"]
+[node name="By" type="Label" parent="PalettePanel/Margin/Column/Scroll/Content/FootprintRow"]
 layout_mode = 2
 text = "×"
 
-[node name="FootprintHeight" type="SpinBox" parent="PalettePanel/Margin/Column/FootprintRow"]
+[node name="FootprintHeight" type="SpinBox" parent="PalettePanel/Margin/Column/Scroll/Content/FootprintRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -74,31 +87,83 @@ min_value = 1.0
 max_value = 48.0
 value = 24.0
 
-[node name="PaletteLabel" type="Label" parent="PalettePanel/Margin/Column"]
+[node name="FootprintHint" type="Label" parent="PalettePanel/Margin/Column/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cyan outline = collision, not artwork size."
+autowrap_mode = 2
+
+[node name="PatternLabel" type="Label" parent="PalettePanel/Margin/Column/Scroll/Content"]
+layout_mode = 2
+text = "Pattern library"
+
+[node name="PatternRow" type="HBoxContainer" parent="PalettePanel/Margin/Column/Scroll/Content"]
+layout_mode = 2
+
+[node name="PatternName" type="LineEdit" parent="PalettePanel/Margin/Column/Scroll/Content/PatternRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Pattern name"
+
+[node name="PatternSave" type="Button" parent="PalettePanel/Margin/Column/Scroll/Content/PatternRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Group"
+tooltip_text = "Save the selection as a reusable pattern (Ctrl+G)"
+
+[node name="PatternList" type="ItemList" parent="PalettePanel/Margin/Column/Scroll/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+
+[node name="PatternHint" type="Label" parent="PalettePanel/Margin/Column/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Shift+click to multi-select, then Ctrl+G."
+autowrap_mode = 2
+
+[node name="PaletteLabel" type="Label" parent="PalettePanel/Margin/Column/Scroll/Content"]
 layout_mode = 2
 text = "Placeable textures"
 
-[node name="Palette" type="ItemList" parent="PalettePanel/Margin/Column"]
+[node name="PaletteCategory" type="OptionButton" parent="PalettePanel/Margin/Column/Scroll/Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 410)
+layout_mode = 2
+
+[node name="PaletteSearch" type="LineEdit" parent="PalettePanel/Margin/Column/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Search assets"
+clear_button_enabled = true
+
+[node name="Palette" type="ItemList" parent="PalettePanel/Margin/Column/Scroll/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
 size_flags_vertical = 3
 fixed_icon_size = Vector2i(48, 48)
 same_column_width = true
 icon_mode = 0
 
-[node name="Hint" type="Label" parent="PalettePanel/Margin/Column"]
+[node name="Hint" type="Label" parent="PalettePanel/Margin/Column/Scroll/Content"]
 layout_mode = 2
-text = "Click map to place • Shift = free move\nDel delete • Ctrl+D duplicate • Arrows nudge"
+text = "Shift+click: multi-select • Ctrl+G: save as pattern\nShift+click palette: keep placing • Alt: no snap\nShift+drag: free move • Esc/right-click: cancel\nDel delete • Ctrl+D duplicate • Arrows nudge"
 autowrap_mode = 2
+
+[node name="Save" type="Button" parent="PalettePanel/Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save scratch changes (S)"
 
 [node name="StatusPanel" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 12
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = -48.0
+offset_top = -84.0
 offset_right = -16.0
 offset_bottom = -12.0
 grow_horizontal = 2
@@ -111,9 +176,9 @@ theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 6
 
-[node name="Row" type="HBoxContainer" parent="StatusPanel/Margin"]
+[node name="Row" type="VBoxContainer" parent="StatusPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 2
 
 [node name="SceneStatus" type="Label" parent="StatusPanel/Margin/Row"]
 unique_name_in_owner = true
@@ -133,3 +198,4 @@ text_overrun_behavior = 3
 unique_name_in_owner = true
 layout_mode = 2
 text = "0 unsaved  |  S save / F10 exit"
+text_overrun_behavior = 3
