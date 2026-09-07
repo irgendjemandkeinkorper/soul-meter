@@ -157,18 +157,18 @@ func test_deferred_effect_fires_at_the_due_round_through_the_write_path() -> voi
 	assert_int((controller.snapshot()["deferred"] as Array).size()).is_equal(0)
 
 
-func test_deferred_dot_write_kills_with_cause_dot_and_soul_refund_raises_the_meter() -> void:
+func test_deferred_dot_write_kills_with_cause_dot_and_banks_breath() -> void:
 	var ally_spy := V2Spy.new()
 	var battle := _battle(ally_spy)
 	var controller: CombatController = battle["controller"]
 	var ally: BattleActor = battle["ally"]
 	var enemy: BattleActor = battle["enemy"]
 	enemy.hp = 2
-	var before := GameState.soul_meter
+	var breath_before := ally.breath
 	var queued := ally_spy.enqueue_deferred(
 		{"writes": [
 			{"kind": "dot", "target_id": String(enemy.combat_id), "amount": 3},
-			{"kind": "soul_refund", "target_id": String(ally.combat_id), "amount": 1.5},
+			{"kind": "breath", "target_id": String(ally.combat_id), "amount": 2},
 		]},
 		{"delay_rounds": 1},
 	)
@@ -176,7 +176,54 @@ func test_deferred_dot_write_kills_with_cause_dot_and_soul_refund_raises_the_met
 	controller.end_turn()
 	assert_bool(enemy.is_alive()).is_false()
 	assert_array(ally_spy.kills).contains(["%s:dot" % String(enemy.combat_id)])
-	assert_float(GameState.soul_meter).is_equal(before + 1.5)
+	assert_int(ally.breath).is_equal(breath_before + 2)
+
+
+func test_a_deferred_write_cannot_raise_the_soul_gauge() -> void:
+	# Owner ruling 3 (docs/game-identity.md, reaffirmed on #286): the Gauge rises only
+	# through an act of Agreement — a tagged quest outcome. Combat may spend it and never
+	# return it, and the guard lives where the write applies rather than in a convention.
+	var ally_spy := V2Spy.new()
+	var battle := _battle(ally_spy)
+	var controller: CombatController = battle["controller"]
+	GameState.set_soul_meter(40.0)
+	var before := GameState.soul_meter
+	# The write is addressed to an actor rather than to "soul_meter": a deferred write whose
+	# target does not resolve to an actor is skipped entirely, which would make this pass
+	# without ever reaching the clamp.
+	var ally: BattleActor = battle["ally"]
+	var queued := ally_spy.enqueue_deferred(
+		{"writes": [{
+			"kind": "soul_meter", "target_id": String(ally.combat_id),
+			"before": before, "after": before + 10.0, "delta": 10.0,
+		}]},
+		{"delay_rounds": 1},
+	)
+	assert_bool(queued.get("allowed", false)).is_true()
+	controller.end_turn()
+	assert_float(GameState.soul_meter).override_failure_message(
+		"a combat write raised the Soul Gauge"
+	).is_equal(before)
+
+
+func test_a_soul_meter_write_may_still_spend_the_gauge() -> void:
+	# The clamp must not become "combat cannot touch Soul": overreach and fizzle costs are
+	# exactly how the meter is meant to fall.
+	var ally_spy := V2Spy.new()
+	var battle := _battle(ally_spy)
+	var controller: CombatController = battle["controller"]
+	GameState.set_soul_meter(40.0)
+	var ally: BattleActor = battle["ally"]
+	var queued := ally_spy.enqueue_deferred(
+		{"writes": [{
+			"kind": "soul_meter", "target_id": String(ally.combat_id),
+			"before": 40.0, "after": 34.0, "delta": -6.0,
+		}]},
+		{"delay_rounds": 1},
+	)
+	assert_bool(queued.get("allowed", false)).is_true()
+	controller.end_turn()
+	assert_float(GameState.soul_meter).is_equal(34.0)
 
 
 func test_request_cancel_removes_deferred_entries_and_voids_a_committed_action() -> void:

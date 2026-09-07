@@ -1,14 +1,21 @@
 class_name HaerenNameLedger
 extends ClassResource
-## Haeren — River-Mother: Name-Ledger. Recording a fallen or saved ally's name refunds Gauge;
+## Haeren — River-Mother: Name-Ledger. Recording a fallen or saved ally's name returns Breath;
 ## each name is recorded once per battle.
+##
+## It used to return Soul Gauge. Owner ruling (docs/game-identity.md ruling 3, reaffirmed
+## 2026-09-08 on #286): the Gauge rises ONLY through an act of Agreement, and an act of
+## Agreement is a tagged quest outcome — not something a combat resource can mint. Naming the
+## fallen is arguably the closest a class comes to one, so if the owner wants this specific
+## refund to credit Soul, the change is to route it through the quest system's tagged path,
+## not to reopen a second income channel here. Magnitude unchanged; B11 owns the number.
 
-const SOUL_REFUND := 1.0 # PROVISIONAL — B11 owns tuning.
+const BREATH_REFUND := 1 # PROVISIONAL — B11 owns tuning.
 
 var recorded_names: Array[String] = []
 var recorded_actor_ids: Array[String] = []
 var refunded_actor_ids: Array[String] = []
-var pending_soul_refunds: float = 0.0
+var pending_breath_refunds: float = 0.0
 
 
 func record_name(name: String, _saved: bool) -> bool:
@@ -54,13 +61,13 @@ func _refund_actor(actor_id: StringName) -> void:
 	if actor_id.is_empty() or actor_id in refunded_actor_ids:
 		return
 	refunded_actor_ids.append(String(actor_id))
-	pending_soul_refunds += SOUL_REFUND
+	pending_breath_refunds += float(BREATH_REFUND)
 	_queue_refund()
 
 
 func _queue_refund() -> void:
 	enqueue_deferred(
-		{"writes": [{"kind": "soul_refund", "target_id": String(owner_id), "amount": SOUL_REFUND}]},
+		{"writes": [{"kind": "breath", "target_id": String(owner_id), "amount": BREATH_REFUND}]},
 		{"delay_rounds": 0},
 		&"name_ledger_refund",
 	)
@@ -68,7 +75,7 @@ func _queue_refund() -> void:
 
 func on_deferred_fired(entry: Dictionary) -> void:
 	if StringName(str(entry.get("label", ""))) == &"name_ledger_refund":
-		pending_soul_refunds = maxf(pending_soul_refunds - SOUL_REFUND, 0.0)
+		pending_breath_refunds = maxf(pending_breath_refunds - float(BREATH_REFUND), 0.0)
 
 
 func snapshot() -> Dictionary:
@@ -76,7 +83,7 @@ func snapshot() -> Dictionary:
 		"patron_id": String(patron_id),
 		"label": "Names Remembered",
 		"value": recorded_names.size(),
-		"pending_soul_refunds": pending_soul_refunds,
+		"pending_breath_refunds": pending_breath_refunds,
 	}
 
 
@@ -85,7 +92,7 @@ func to_dict() -> Dictionary:
 	data["recorded_names"] = recorded_names.duplicate()
 	data["recorded_actor_ids"] = recorded_actor_ids.duplicate()
 	data["refunded_actor_ids"] = refunded_actor_ids.duplicate()
-	data["pending_soul_refunds"] = pending_soul_refunds
+	data["pending_breath_refunds"] = pending_breath_refunds
 	return data
 
 
@@ -106,4 +113,7 @@ func from_dict(data: Dictionary) -> void:
 		var refunded_id := str(value)
 		if not refunded_id.is_empty() and refunded_id not in refunded_actor_ids:
 			refunded_actor_ids.append(refunded_id)
-	pending_soul_refunds = maxf(float(data.get("pending_soul_refunds", 0.0)), 0.0)
+	# A save written before the Soul->Breath swap carries the old key; read either.
+	pending_breath_refunds = maxf(
+		float(data.get("pending_breath_refunds", data.get("pending_soul_refunds", 0.0))), 0.0
+	)

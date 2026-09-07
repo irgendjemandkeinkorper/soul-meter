@@ -70,10 +70,10 @@ func test_husk_bearer_dot_write_and_kill_hooks() -> void:
 	}))
 	assert_int(resource.hunger).is_equal(2)
 	resource.on_kill(&"enemy-0", &"dot")
-	assert_float(resource.pending_soul_refunds).is_equal(VhorrHunger.SOUL_REFUND)
+	assert_float(resource.pending_breath_refunds).is_equal(float(VhorrHunger.BREATH_REFUND))
 	var restored: VhorrHunger = ClassResourceRegistry.from_dict(resource.to_dict()) as VhorrHunger
 	assert_int(restored.hunger).is_equal(2)
-	assert_float(restored.pending_soul_refunds).is_equal(VhorrHunger.SOUL_REFUND)
+	assert_float(restored.pending_breath_refunds).is_equal(float(VhorrHunger.BREATH_REFUND))
 	assert_array(restored.pending_dot_targets).contains(["enemy-0"])
 
 
@@ -99,7 +99,7 @@ func test_river_mother_records_each_name_once_and_round_trips() -> void:
 	assert_int(action.ap_cost).is_equal(2)
 	var restored: HaerenNameLedger = ClassResourceRegistry.from_dict(resource.to_dict()) as HaerenNameLedger
 	assert_array(restored.recorded_names).contains_exactly(["Aster", "Belen"])
-	assert_float(restored.pending_soul_refunds).is_equal(0.0)
+	assert_float(restored.pending_breath_refunds).is_equal(0.0)
 	assert_bool(resource.snapshot().has("max")).is_false()
 
 
@@ -113,7 +113,7 @@ func test_river_mother_only_refunds_recorded_actor_hp_or_dot_writes() -> void:
 			{"kind": "hp", "target_id": "ally-0", "after": 0},
 		]},
 	})
-	assert_float(resource.pending_soul_refunds).is_equal(HaerenNameLedger.SOUL_REFUND)
+	assert_float(resource.pending_breath_refunds).is_equal(float(HaerenNameLedger.BREATH_REFUND))
 	assert_array(resource.refunded_actor_ids).contains(["ally-0"])
 
 
@@ -129,3 +129,42 @@ func _event(data: Dictionary) -> CombatEvent:
 	event.data = data
 	event.target_id = StringName(str(data.get("target_id", "")))
 	return event
+
+
+func test_a_pre_ruling_save_restores_its_in_flight_refund_under_the_new_key() -> void:
+	# The Soul->Breath swap renamed the persisted key. A battle saved mid-refund must not
+	# lose it just because the save predates the ruling.
+	var hunger := VhorrHunger.new()
+	hunger.patron_id = &"vhorr"
+	var legacy: Dictionary = hunger.to_dict()
+	legacy.erase("pending_breath_refunds")
+	legacy["pending_soul_refunds"] = 1.0
+	var restored: VhorrHunger = ClassResourceRegistry.from_dict(legacy) as VhorrHunger
+	assert_float(restored.pending_breath_refunds).is_equal(1.0)
+
+	var ledger := HaerenNameLedger.new()
+	ledger.patron_id = &"haeren"
+	var legacy_ledger: Dictionary = ledger.to_dict()
+	legacy_ledger.erase("pending_breath_refunds")
+	legacy_ledger["pending_soul_refunds"] = 1.0
+	var restored_ledger: HaerenNameLedger = (
+		ClassResourceRegistry.from_dict(legacy_ledger) as HaerenNameLedger
+	)
+	assert_float(restored_ledger.pending_breath_refunds).is_equal(1.0)
+
+
+func test_neither_refund_class_writes_to_the_soul_gauge() -> void:
+	# Owner ruling 3 (#286): the Soul Gauge rises only through an act of Agreement, which is
+	# a tagged quest outcome. No class resource may mint one.
+	var hunger := VhorrHunger.new()
+	hunger.on_kill(&"enemy-0", &"dot")
+	var name_ledger := HaerenNameLedger.new()
+	name_ledger.recorded_actor_ids = ["ally-0"]
+	name_ledger.on_any_action(&"enemy-0", &"strike", &"ally-0", {
+		"resolution": {"writes": [{"kind": "hp", "target_id": "ally-0", "after": 0}]},
+	})
+	for resource: ClassResource in [hunger, name_ledger]:
+		for entry: Variant in resource.snapshot().get("deferred", []):
+			for write: Variant in (entry as Dictionary).get("writes", []):
+				assert_str(str((write as Dictionary).get("kind", ""))).is_not_equal("soul_refund")
+				assert_str(str((write as Dictionary).get("kind", ""))).is_not_equal("soul_meter")

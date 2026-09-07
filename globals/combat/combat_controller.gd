@@ -1499,11 +1499,12 @@ func _apply_resolution_writes(
 			&"triad_effect":
 				_apply_triad_effect(actor, target, write)
 			&"soul_meter":
-				_set_soul_meter(float(write.get("after", _soul_meter())))
-			&"soul_refund":
-				# Seam v2: the one Soul income channel a resource has (Hunger, Name-Ledger).
-				# Additive on the live meter; `after` is informational.
-				_set_soul_meter(_soul_meter() + maxf(float(write.get("delta", write.get("amount", 0.0))), 0.0))
+				# Owner ruling (docs/game-identity.md ruling 3, reaffirmed 2026-09-08 on
+				# #286): the Soul Gauge rises ONLY through an act of Agreement, which is a
+				# tagged quest outcome. Combat may spend it and may never return it, so this
+				# write is clamped to a decrease rather than trusted. `Resolution` only ever
+				# emits a spend here; the clamp is the guard, not the mechanism.
+				_set_soul_meter(minf(float(write.get("after", _soul_meter())), _soul_meter()))
 			&"tile_state":
 				if not apply_tile_writes:
 					continue
@@ -2475,8 +2476,8 @@ func _fire_due_deferred() -> void:
 
 
 ## Turns a queued write (`delta` or `amount`, no before/after) into the same shape Resolution
-## emits, from LIVE state at fire time. `hp`/`dot` amounts are HP lost; `breath` and
-## `soul_refund` are gains; `soul_meter`/`tile_state` must already carry `after`.
+## emits, from LIVE state at fire time. `hp`/`dot` amounts are HP lost; `breath` is a gain;
+## `soul_meter`/`tile_state` must already carry `after`.
 func _materialize_write(write: Dictionary, target: BattleActor) -> Dictionary:
 	var out := write.duplicate(true)
 	out["target_id"] = String(target.combat_id)
@@ -2491,11 +2492,6 @@ func _materialize_write(write: Dictionary, target: BattleActor) -> Dictionary:
 			out["before"] = target.breath
 			out["after"] = maxi(target.breath + gain, 0)
 			out["delta"] = int(out["after"]) - target.breath
-		&"soul_refund":
-			var refund := maxf(float(write.get("amount", write.get("delta", 0.0))), 0.0)
-			out["before"] = _soul_meter()
-			out["delta"] = refund
-			out["after"] = _soul_meter() + refund
 	return out
 
 ## Model-level persistence for the additive `class_resources` save key (no schema bump).
