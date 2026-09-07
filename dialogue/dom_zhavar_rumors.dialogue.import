@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://dduwmel6qyfij"
+path="res://.godot/imported/dom_zhavar_rumors.dialogue-67b441c79b399eb98caa9e9a96bf4122.tres"
+
+[deps]
+
+source_file="res://dialogue/dom_zhavar_rumors.dialogue"
+dest_files=["res://.godot/imported/dom_zhavar_rumors.dialogue-67b441c79b399eb98caa9e9a96bf4122.tres"]
+
+[params]
+
+defaults=true

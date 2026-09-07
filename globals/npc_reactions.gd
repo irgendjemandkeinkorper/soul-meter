@@ -8,6 +8,9 @@ const REACTION_CAP := 15
 ## `dialogue/dom_townsfolk.dialogue`, which `tools/generate_gloot.gd` owns.
 const BAND_REACTION_DIALOGUE := "res://dialogue/dom_band_reactions.dialogue"
 
+## FR-308 rumor routes: what Dom says about a zone it can hear getting louder.
+const ZHAVAR_RUMOR_DIALOGUE := "res://dialogue/dom_zhavar_rumors.dialogue"
+
 ## npc_id -> ordered reaction rules. A rule may gate on a flag, reputation, the
 ## protagonist's hollowing state, or any combination, and may override presence
 ## and/or an existing dialogue route.
@@ -93,6 +96,54 @@ const REACTIONS: Dictionary = {
 			"dialogue_title": "dom_holst_brinevein_warm",
 		},
 	],
+	# --- FR-308 Zhavar rumor routes -------------------------------------------
+	# The Zhavar is how far a zone "can be heard" (PRD FR-308), so the people who
+	# hear it for a living are the ones who notice first: two signalers, a sentry
+	# who decides when the north road opens, and a fisher who works in silence.
+	# None of them explains the ladder. Chapter 1 TELEGRAPHS the Zhavar; the
+	# dragon-response systemization it points at is Chapter 2+.
+	#
+	# Nalla carries both rungs, and the LOUDER rule is listed first on purpose:
+	# `resolve()` returns the first match and the gate is a floor, so a
+	# rising-first order would pin her to the quieter line forever.
+	"nalla-gatebeat": [
+		{
+			"zhavar_zone": "wilds",
+			"minimum_zhavar_rung": "tolling",
+			"dialogue_path": ZHAVAR_RUMOR_DIALOGUE,
+			"dialogue_title": "dom_nalla_gatebeat_tolling",
+		},
+		{
+			"zhavar_zone": "wilds",
+			"minimum_zhavar_rung": "rising",
+			"dialogue_path": ZHAVAR_RUMOR_DIALOGUE,
+			"dialogue_title": "dom_nalla_gatebeat_rising",
+		},
+	],
+	"kessa-nightrail": [
+		{
+			"zhavar_zone": "wilds",
+			"minimum_zhavar_rung": "rising",
+			"dialogue_path": ZHAVAR_RUMOR_DIALOGUE,
+			"dialogue_title": "dom_kessa_nightrail_rising",
+		},
+	],
+	"tern-hollowbeat": [
+		{
+			"zhavar_zone": "wilds",
+			"minimum_zhavar_rung": "tolling",
+			"dialogue_path": ZHAVAR_RUMOR_DIALOGUE,
+			"dialogue_title": "dom_tern_hollowbeat_tolling",
+		},
+	],
+	"yssra-coldnet": [
+		{
+			"zhavar_zone": "wilds",
+			"minimum_zhavar_rung": "tolling",
+			"dialogue_path": ZHAVAR_RUMOR_DIALOGUE,
+			"dialogue_title": "dom_yssra_coldnet_tolling",
+		},
+	],
 }
 
 
@@ -120,13 +171,27 @@ static func rule_is_valid(rule: Dictionary) -> bool:
 	var flag := str(rule.get("flag", ""))
 	var faction := str(rule.get("reputation_faction", ""))
 	var band := StringName(rule.get("minimum_reputation_band", &""))
+	var zone := str(rule.get("zhavar_zone", ""))
+	var rung := str(rule.get("minimum_zhavar_rung", ""))
 	if rule.has("hollowing") and not rule["hollowing"] is bool:
 		return false
-	if flag.is_empty() and faction.is_empty() and not rule.has("hollowing"):
+	if (
+		flag.is_empty() and faction.is_empty() and zone.is_empty()
+		and not rule.has("hollowing")
+	):
 		return false
 	if faction.is_empty() != band.is_empty():
 		return false
 	if not band.is_empty() and not Reputation.BAND_RANK.has(band):
+		return false
+	# Half a rung gate is the failure mode this catches: a zone with no floor
+	# would fire at "low", which is every save from its first frame, and a floor
+	# with no zone would silently never fire at all.
+	if zone.is_empty() != rung.is_empty():
+		return false
+	if not rung.is_empty() and not SaveGame.ZHAVAR_RUNGS.has(rung):
+		return false
+	if not zone.is_empty() and not StableIds.is_valid(StableIds.ZONE, zone):
 		return false
 	if rule.has("present") and not rule["present"] is bool:
 		return false
@@ -150,6 +215,16 @@ static func _matches(rule: Dictionary) -> bool:
 	var flag := str(rule.get("flag", ""))
 	if not flag.is_empty() and GameState.get_flag(flag, null) != rule.get("flag_value", true):
 		return false
+	# FR-308. The rumor gate is a FLOOR on the ladder, like the reputation band
+	# above it: "rising or worse". A rumor is not retracted when the zone gets
+	# louder — the town keeps talking, it just talks about something nearer.
+	# SaveGame owns the ladder and its order; reading the rung through it is what
+	# stops a second copy of ZHAVAR_RUNGS drifting out of step with the save.
+	var zone := str(rule.get("zhavar_zone", ""))
+	if not zone.is_empty() and not _zhavar_at_least(
+		zone, str(rule.get("minimum_zhavar_rung", ""))
+	):
+		return false
 	var faction := str(rule.get("reputation_faction", ""))
 	if faction.is_empty():
 		return true
@@ -157,3 +232,11 @@ static func _matches(rule: Dictionary) -> bool:
 	# doors and every other reputation consumer after a rebalance.
 	var minimum := StringName(rule.get("minimum_reputation_band", &"neutral"))
 	return Reputation.band_at_least(faction, minimum)
+
+
+static func _zhavar_at_least(zone_id: String, minimum_rung: String) -> bool:
+	var rungs: Array = SaveGame.ZHAVAR_RUNGS
+	var wanted := rungs.find(minimum_rung)
+	if wanted < 0:
+		return false
+	return rungs.find(SaveGame.zhavar_rung(zone_id)) >= wanted

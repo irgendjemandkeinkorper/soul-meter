@@ -1,0 +1,76 @@
+# FR-308 Zhavar rumor routes for Dom.
+#
+# Chapter 1 TRACKS and TELEGRAPHS the Zhavar; it does not systemize the dragon
+# response, which is Chapter 2+. So none of these lines explains the ladder,
+# names a rung, or promises anything arrives. They are what four people who
+# listen for a living notice about the wilds, and what they decide to do about
+# it — which is mostly to change one small procedure and not say why.
+#
+# `globals/npc_reactions.gd` attaches these by `zhavar_zone` + a rung FLOOR.
+# `dialogue/dom_townsfolk.dialogue` stays the generated neutral fallback and is
+# never hand-edited (tools/generate_gloot.gd owns it).
+
+~ dom_nalla_gatebeat_rising
+Nalla Gatebeat: Stand there a moment. Don't talk.
+Nalla Gatebeat: There. Under the third gate, when the wind drops. It comes back a half-beat late and a half-tone under.
+- "An echo off the wall."
+	Nalla Gatebeat: The wall is forty paces. An echo off the wall comes back before I finish the stroke.
+	Nalla Gatebeat: That one comes from out past the Lip somewhere, and it has been getting shorter every week. Shorter means nearer.
+	=> END
+- "What are you doing about it?"
+	Nalla Gatebeat: Signalling the third gate by hand. No drum.
+	Nalla Gatebeat: The watch thinks I've gone superstitious. Let them. A drum is a question, and I have stopped asking that one.
+	=> END
+
+~ dom_nalla_gatebeat_tolling
+Nalla Gatebeat: You don't have to stand still for it now. I expect you heard it on the road.
+Nalla Gatebeat: It answered. Full stroke, out of the wilds, on nobody's signal.
+- "Answered what?"
+	Nalla Gatebeat: The district bell has been silent for a month. Whatever is out there was not replying to Dom.
+	Nalla Gatebeat: It was replying to something else that is also out there. That is the part I would like written down somewhere that is not my head.
+	=> END
+- "Who else heard it?"
+	Nalla Gatebeat: Everyone on the north wall. Nobody on the Council.
+	Nalla Gatebeat: Those two facts are going to be a problem before the month turns, and I would rather they were your problem than mine.
+	=> END
+
+~ dom_kessa_nightrail_rising
+Kessa Nightrail: Road's open. It's open, I said. Take it and stop looking at me like that.
+Kessa Nightrail: I hold the night road for two seals — the Dorthkor warning and the Council's. Both are current. Both say go.
+- "Then why are you standing in it?"
+	Kessa Nightrail: Because the seals agree and my ears don't.
+	Kessa Nightrail: There's a note under the wind out past the second marker. Been three weeks. It does not stop for weather, and weather stops for nothing.
+	Kessa Nightrail: I can't refuse a road over a note. So I stand in it, and I let people past one at a time, and I count them coming back.
+	=> END
+- "Have they all come back?"
+	Kessa Nightrail: So far.
+	Kessa Nightrail: Ask me again after the front moves. I keep the tally in my own hand, not the Council's, so it will still say the truth when theirs doesn't.
+	=> END
+
+~ dom_tern_hollowbeat_tolling
+Tern Hollowbeat: I keep a silence here. Where the road roll should go. You may stand in it if you can hold still.
+Tern Hollowbeat: Two nights ago the silence was filled from outside.
+- "Filled how?"
+	Tern Hollowbeat: One stroke. Long. Out of the wilds, in the gap I leave for the Dorthkor dead.
+	Tern Hollowbeat: I have kept that gap four years so that nothing could answer it. Something answered it.
+	Tern Hollowbeat: I have not decided yet whether that is a desecration or a reply. The difference matters more than anyone in this Arm thinks.
+	=> END
+- "Will you drum it back?"
+	Tern Hollowbeat: No.
+	Tern Hollowbeat: A memorial that answers is a conversation, and I am not authorised to have one on behalf of the dead.
+	Tern Hollowbeat: I will keep the silence. It is doing more work now than it ever did.
+	=> END
+
+~ dom_yssra_coldnet_tolling
+Yssra Coldnet: Beside the water. Not on the stair. The stair carries.
+Yssra Coldnet: I fish the deep cold, where sound goes further than light and a long way further than sense.
+- "You heard it too."
+	Yssra Coldnet: I felt it. In the net line, before the air had it.
+	Yssra Coldnet: Once. Long. Coming from the wilds side and going out under everything, the way a big thing moves when it does not care who notices.
+	Yssra Coldnet: I brought the boat in and I have not gone back out. That is my whole account and I would rather not repeat it uphill.
+	=> END
+- "Have you told the harbor?"
+	Yssra Coldnet: I told the harbor the cold ran early.
+	Yssra Coldnet: They can act on cold. They cannot act on what I actually heard, and a thing people cannot act on only frightens them into acting wrongly.
+	Yssra Coldnet: You look like someone who is going out there anyway. So you get the true version.
+	=> END
