@@ -635,13 +635,14 @@ func test_milestone_level_from_the_muster_ruling_is_spendable_on_the_sheet() -> 
 
 	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
 	await runner.simulate_frames(2)
-	var buy := runner.find_child("Buy_lore", true, false) as Button
+	# The sheet lists DRAMGID skills now, so Lore's row is Recall's.
+	var buy := runner.find_child("Buy_recall", true, false) as Button
 	assert_object(buy).is_not_null()
 	assert_bool(buy.disabled).is_false()
 	buy.pressed.emit()
 	await runner.simulate_frames(1)
 
-	assert_float(float(vex.skill_percentages.get("lore", 0.0))).is_equal(5.0)
+	assert_float(float(vex.skill_percentages.get("recall", 0.0))).is_equal(5.0)
 	assert_int(vex.advancement_points).is_less(Advancement.POINTS_PER_LEVEL)
 	UIManager.close_all()
 

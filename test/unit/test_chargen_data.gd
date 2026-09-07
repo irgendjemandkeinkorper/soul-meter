@@ -62,7 +62,8 @@ func test_governing_attribute_matches_skill_check_service() -> void:
 	for skill_id in DramgidSchema.SKILL_IDS:
 		var expected: Dictionary = SkillCheckService.SKILL_DEFINITIONS[skill_id]
 		assert_str(ChargenData.governing_attribute(skill_id)).is_equal(str(expected.attribute))
-	# The transitional legacy ids (sheet) still answer through the service definitions.
+	# Legacy ids still answer through the service definitions. Nothing in the UI
+	# depends on that any more, but authored data and old saves can still carry them.
 	assert_str(ChargenData.governing_attribute("lore")).is_equal("spark")
 
 
@@ -84,8 +85,9 @@ func test_backgrounds_and_ancestry_traits_use_schema_skill_ids() -> void:
 func test_patrons_are_a_view_over_the_class_catalog() -> void:
 	assert_int(ChargenData.PATRONS.size()).is_equal(10)
 	assert_str(str(ChargenData.patron_by_id("ironbrand")["patron"])).is_equal("Kero")
-	assert_str(ChargenData.skill_label("recall")).is_equal("Recall")
-	assert_str(ChargenData.skill_label("lore")).is_equal("Lore")
+	# ChargenData no longer wraps skill labels: the sheet reads the schema directly, so
+	# the twelve-legacy-id shim and the table behind it are gone.
+	assert_str(DramgidSchema.skill_label("recall")).is_equal("Recall")
 	assert_str(ChargenData.attribute_label("muster")).is_equal("Muster")
 	assert_int(ChargenData.DISCIPLINES.size()).is_equal(3)
 	assert_str(str(ChargenData.discipline_by_id("hushwarden")["favours"])).is_equal("zhem")
