@@ -4,7 +4,7 @@ const SeedPandora := preload("res://tools/seed_pandora.gd")
 
 const KINDS := [
 	"factions", "elements", "classes", "peoples", "characters", "items", "spells", "effects",
-	"locations", "lore",
+	"locations", "lore", "encounters",
 ]
 
 var _original_backend: PandoraEntityBackend
@@ -626,6 +626,47 @@ func _character_row(character_id: String, order: int) -> Dictionary:
 	}
 
 
+func _characters_of_kind(wanted: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for character: Dictionary in SeedPandora.CanonReader.load("characters"):
+		if String(character.get("kind", "")) == wanted:
+			result.append(character)
+	return result
+
+
+func _archetype_row(archetype_id: String, order: int) -> Dictionary:
+	return {
+		"schema": "weftlumin.character.v1",
+		"kind": "archetype",
+		"id": archetype_id,
+		"order": order,
+		"display_name": archetype_id.capitalize(),
+		"element_id": "",
+		"stats": {
+			"schema": "six-stat.v1",
+			"max_hp": 10,
+			"attack": 1,
+			"defense": 0,
+			"balance_affinity": 0,
+			"balance_pressure": 10,
+			"edge": 1,
+		},
+	}
+
+
+func _encounter_row(encounter_id: String, order: int) -> Dictionary:
+	return {
+		"schema": "weftlumin.encounter.v1",
+		"id": encounter_id,
+		"order": order,
+		"display_name": encounter_id.capitalize(),
+		"archetype_ids": ["fixture-archetype"],
+		"defeated_flag": "defeated_%s" % encounter_id.replace("-", "_"),
+		"win": {"faction": "trial-council", "delta": 1.0, "cause": "A fixture win."},
+		"loss": null,
+	}
+
+
 func test_the_dom_roster_loads_as_sixty_npc_characters() -> void:
 	var characters: Array[Dictionary] = SeedPandora.CanonReader.load("characters")
 	var npcs: Array[Dictionary] = []
@@ -656,8 +697,11 @@ func test_character_order_is_authored_rather_than_alphabetical() -> void:
 	).is_not_equal(sorted_ids)
 
 
+## `placement_offset` is npc-scoped by contract (E1.4g): an archetype stands wherever the
+## encounter puts it and carries no anchor at all, so sweeping every character for one would
+## demand a field canon deliberately does not have.
 func test_every_character_offset_is_a_two_number_pair() -> void:
-	for character: Dictionary in SeedPandora.CanonReader.load("characters"):
+	for character: Dictionary in _characters_of_kind("npc"):
 		var offset: Variant = character["placement_offset"]
 		assert_int((offset as Array).size()).override_failure_message(
 			"character '%s' has a malformed placement offset" % character["id"]
@@ -683,7 +727,7 @@ func test_a_character_with_a_scalar_offset_is_refused() -> void:
 func test_every_character_carries_a_routine_map_and_a_phase_agnostic_flag() -> void:
 	# Issue #385: the two FR-504a fields moved out of `globals/npc_routines.gd`
 	# into the document of the NPC they describe, so every document declares them.
-	for character: Dictionary in SeedPandora.CanonReader.load("characters"):
+	for character: Dictionary in _characters_of_kind("npc"):
 		assert_int(typeof(character["routine"])).override_failure_message(
 			"character '%s' has no routine map" % character["id"]
 		).is_equal(TYPE_DICTIONARY)
@@ -899,3 +943,192 @@ func _faction_root() -> PandoraCategory:
 		if root.get_entity_name() == "Factions":
 			return root
 	return null
+
+
+# --- Archetypes and encounters (E1.4g, #325) ---------------------------------------------
+
+
+func test_the_six_authored_archetypes_load_with_an_opaque_stat_block() -> void:
+	# `six-stat.v1`, not `dramgid.v1`: #283 moved the PARTY onto DRAMGID attributes, but
+	# enemies still carry `edge` and `Resolution.resolve()` still reads it. The tag names the
+	# shape that actually ships; retagging is F3b, blocked on #281.
+	var archetypes: Array[Dictionary] = _characters_of_kind("archetype")
+
+	assert_int(archetypes.size()).is_equal(6)
+	for archetype: Dictionary in archetypes:
+		var stats: Dictionary = archetype["stats"]
+		assert_str(String(stats["schema"])).override_failure_message(
+			"archetype '%s' does not name who validates its stats" % archetype["id"]
+		).is_equal("six-stat.v1")
+		for stat_name: String in [
+			"max_hp", "attack", "defense", "balance_affinity", "balance_pressure", "edge"
+		]:
+			assert_bool(stats.has(stat_name)).override_failure_message(
+				"archetype '%s' is missing '%s'" % [archetype["id"], stat_name]
+			).is_true()
+
+
+## The migration's whole claim is that canon and the database say the same thing. This reads
+## the generated table the runtime actually consumes, not the seeder's own memory: if canon
+## and `data.pandora` ever part company, the numbers a player fights are the database's.
+func test_canon_and_the_generated_encounter_table_agree() -> void:
+	var generated: Dictionary = _generated_encounters()
+	var stats_by_id: Dictionary = {}
+	for archetype: Dictionary in _characters_of_kind("archetype"):
+		stats_by_id[String(archetype["id"])] = archetype["stats"]
+
+	for encounter: Dictionary in SeedPandora.CanonReader.load("encounters"):
+		var encounter_id: String = String(encounter["id"])
+		assert_bool(generated.has(encounter_id)).override_failure_message(
+			"encounter '%s' has no generated row" % encounter_id
+		).is_true()
+		var row: Dictionary = generated[encounter_id]
+		assert_str(String(row["defeated_flag"])).is_equal(String(encounter["defeated_flag"]))
+		_assert_outcome_matches(encounter_id, row, "win", encounter["win"])
+		_assert_outcome_matches(encounter_id, row, "loss", encounter["loss"])
+
+		var enemy_ids: Array[String] = []
+		for enemy: Dictionary in Array(row["enemies"]):
+			enemy_ids.append(String(enemy["id"]))
+			var stats: Dictionary = stats_by_id.get(String(enemy["id"]), {})
+			for stat_name: String in [
+				"max_hp", "attack", "defense", "balance_affinity", "balance_pressure", "edge"
+			]:
+				assert_int(int(enemy[stat_name])).override_failure_message(
+					"archetype '%s' drifted from the database on '%s'"
+					% [enemy["id"], stat_name]
+				).is_equal(int(stats[stat_name]))
+		assert_array(enemy_ids).override_failure_message(
+			"encounter '%s' fields a different roster than canon names" % encounter_id
+		).is_equal(Array(encounter["archetype_ids"]))
+
+
+func _assert_outcome_matches(
+	encounter_id: String, row: Dictionary, prefix: String, outcome: Variant
+) -> void:
+	# A null outcome is the flat legacy absence: no faction, no delta, no cause.
+	var faction: String = "" if outcome == null else String((outcome as Dictionary)["faction"])
+	var delta: float = 0.0 if outcome == null else float((outcome as Dictionary)["delta"])
+	var cause: String = "" if outcome == null else String((outcome as Dictionary)["cause"])
+	assert_str(String(row["%s_faction" % prefix])).override_failure_message(
+		"encounter '%s' %s faction drifted" % [encounter_id, prefix]
+	).is_equal(faction)
+	assert_float(float(row["%s_delta" % prefix])).is_equal(delta)
+	assert_str(String(row["%s_cause" % prefix])).is_equal(cause)
+
+
+func _generated_encounters() -> Dictionary:
+	var file: FileAccess = FileAccess.open(
+		"res://data/generated/encounters.json", FileAccess.READ
+	)
+	assert_object(file).is_not_null()
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	return parsed as Dictionary
+
+
+func test_every_encounter_names_archetypes_that_exist() -> void:
+	var known: Dictionary = {}
+	for archetype: Dictionary in _characters_of_kind("archetype"):
+		known[String(archetype["id"])] = true
+
+	var encounters: Array[Dictionary] = SeedPandora.CanonReader.load("encounters")
+	assert_int(encounters.size()).is_equal(5)
+	for encounter: Dictionary in encounters:
+		for archetype_id: String in Array(encounter["archetype_ids"]):
+			assert_bool(known.has(archetype_id)).override_failure_message(
+				"encounter '%s' names archetype '%s', which no document declares"
+				% [encounter["id"], archetype_id]
+			).is_true()
+
+
+func test_no_encounter_carries_a_grid_or_a_weather_default() -> void:
+	# F0 D8 (spec §4.9): the grid derives from the field's own tiles and weather belongs to
+	# the location. This is the shipped-canon half; the refusal is pinned below.
+	for encounter: Dictionary in SeedPandora.CanonReader.load("encounters"):
+		for refused: String in ["grid", "weather_default"]:
+			assert_bool(encounter.has(refused)).override_failure_message(
+				"encounter '%s' still carries '%s'" % [encounter["id"], refused]
+			).is_false()
+
+
+func test_an_encounter_that_carries_a_grid_is_refused() -> void:
+	var row: Dictionary = _encounter_row("gridded", 0)
+	row["grid"] = {"width": 8, "height": 8}
+	_write_kind("encounters", "gridded.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("encounters", _canon_root)).is_empty()
+
+
+func test_an_encounter_that_carries_a_weather_default_is_refused() -> void:
+	var row: Dictionary = _encounter_row("weathered", 0)
+	row["weather_default"] = "khash"
+	_write_kind("encounters", "weathered.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("encounters", _canon_root)).is_empty()
+
+
+func test_an_encounter_with_no_actors_is_refused() -> void:
+	var row: Dictionary = _encounter_row("actorless", 0)
+	row["archetype_ids"] = []
+	_write_kind("encounters", "actorless.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("encounters", _canon_root)).is_empty()
+
+
+func test_an_outcome_that_names_no_faction_is_refused_rather_than_read_as_absence() -> void:
+	# `null` is how canon says "this side writes no ledger row". An empty faction string is
+	# an oversight wearing the same clothes, so the reader will not accept it as either.
+	var row: Dictionary = _encounter_row("factionless", 0)
+	row["win"] = {"faction": "", "delta": 1.0, "cause": "A fixture win."}
+	_write_kind("encounters", "factionless.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("encounters", _canon_root)).is_empty()
+
+
+func test_a_null_outcome_is_accepted_and_survives_the_read() -> void:
+	_write_kind("encounters", "lossless.json", _encounter_row("lossless", 0))
+
+	var encounters: Array[Dictionary] = SeedPandora.CanonReader.load("encounters", _canon_root)
+
+	assert_int(encounters.size()).is_equal(1)
+	assert_object(encounters[0]["loss"]).is_null()
+
+
+func test_a_character_declaring_a_kind_the_schema_does_not_open_is_refused() -> void:
+	# The kind registry is open by design (spec ruling 5) — but it opens here, in the
+	# contract, not by a typo in a document nobody validates.
+	var row: Dictionary = _archetype_row("wanderer", 0)
+	row["kind"] = "monster"
+	_write_kind("characters", "wanderer.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func test_an_archetype_with_no_stat_block_is_refused() -> void:
+	var row: Dictionary = _archetype_row("statless", 0)
+	row.erase("stats")
+	_write_kind("characters", "statless.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func test_a_stat_block_that_names_no_schema_is_refused() -> void:
+	# Opaque is not unowned: the block may carry anything, but it must say who validates it.
+	var row: Dictionary = _archetype_row("unowned-stats", 0)
+	row["stats"] = {"max_hp": 10}
+	_write_kind("characters", "unowned-stats.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func test_an_archetype_is_not_asked_for_the_fields_only_an_npc_has() -> void:
+	# The point of the kind scoping: an archetype has no district and no routine, and a flat
+	# required-field list would force empty strings into canon to satisfy a reader.
+	_write_kind("characters", "spare.json", _archetype_row("spare", 0))
+
+	var characters: Array[Dictionary] = SeedPandora.CanonReader.load("characters", _canon_root)
+
+	assert_int(characters.size()).is_equal(1)
+	assert_bool(characters[0].has("placement_anchor")).is_false()
+	assert_bool(characters[0].has("routine")).is_false()

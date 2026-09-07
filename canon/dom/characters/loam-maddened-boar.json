@@ -1,0 +1,1 @@
+{"schema":"weftlumin.character.v1","kind":"archetype","id":"loam-maddened-boar","order":61,"display_name":"Loam-Maddened Boar","element_id":"tham","stats":{"schema":"six-stat.v1","max_hp":14,"attack":6,"defense":0,"balance_affinity":-1,"balance_pressure":18,"edge":3}}

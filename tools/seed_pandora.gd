@@ -34,6 +34,25 @@ class CanonReader:
 	## seeder writes into Pandora — an int property against a float one. `vector2is` are authored
 	## as a two-number array, `[width, height]`.
 	##
+	## `kinds` scopes the contract by the document's own `kind` discriminator (spec
+	## §4.7, ruling 5): the top-level `fields` are what EVERY document of the kind must
+	## carry, and the per-kind block adds what only that kind means. An archetype has no
+	## district and an npc has no stat block, and demanding either of the other is how a
+	## flat field list quietly forces empty strings into canon. An unknown `kind` is
+	## refused — the registry is open, but it is opened here, not by a typo.
+	##
+	## `stat_blocks` name OPAQUE blocks: the reader checks the block is an object carrying
+	## a non-empty `schema` string and looks no further. Which schemas exist and what they
+	## require belongs to whoever installs them (`six-stat.v1` today, `dramgid.v1` after
+	## #283); this file must not grow a second opinion about combat stats.
+	##
+	## `string_lists` name arrays of non-empty strings. `outcomes` name consequence blocks —
+	## `null` (this side of the encounter writes no ledger row) or
+	## `{"faction": s, "delta": n, "cause": s}`. `refused` names fields a document must NOT
+	## carry: an encounter owns no `grid` and no `weather_default` (F0 D8 — the grid derives
+	## from field tiles and weather is per location), and a refused field is caught here
+	## rather than silently ignored by a seeder that never reads it.
+	##
 	## `booleans` name required `true`/`false` fields. `routines` name FR-504a routine maps
 	## (issue #385): phase name -> `null` (declared absent) or
 	## `{"position": [x, y], "state": "<state>"}`, with `{}` meaning "no routine, FR-504
@@ -71,15 +90,33 @@ class CanonReader:
 		"characters": {
 			"noun": "character",
 			"schema": "weftlumin.character.v1",
-			"fields": [
-				"id", "kind", "display_name", "epithet", "bio", "role", "home", "district",
-				"faction_id", "vault_id", "portrait_path", "context_line", "dialogue_hostile",
-				"dialogue_warm", "placement_anchor", "involvement", "hook_summary",
-			],
+			"fields": ["id", "kind", "display_name"],
 			"ordered": true,
-			"number_pairs": ["placement_offset"],
-			"booleans": ["phase_agnostic"],
-			"routines": ["routine"],
+			"kinds": {
+				"npc": {
+					"fields": [
+						"epithet", "bio", "role", "home", "district", "faction_id", "vault_id",
+						"portrait_path", "context_line", "dialogue_hostile", "dialogue_warm",
+						"placement_anchor", "involvement", "hook_summary",
+					],
+					"number_pairs": ["placement_offset"],
+					"booleans": ["phase_agnostic"],
+					"routines": ["routine"],
+				},
+				"archetype": {
+					"fields": ["element_id"],
+					"stat_blocks": ["stats"],
+				},
+			},
+		},
+		"encounters": {
+			"noun": "encounter",
+			"schema": "weftlumin.encounter.v1",
+			"fields": ["id", "display_name", "defeated_flag"],
+			"ordered": true,
+			"string_lists": ["archetype_ids"],
+			"outcomes": ["win", "loss"],
+			"refused": ["grid", "weather_default"],
 		},
 		"items": {
 			"noun": "item",
@@ -166,7 +203,12 @@ class CanonReader:
 	) -> bool:
 		var contract: Dictionary = SCHEMAS[kind]
 		var noun: String = contract["noun"]
-		var fields: Array = ["schema"] + Array(contract["fields"])
+		var scoped: Dictionary = _kind_contract(contract, row, document_path, noun)
+		if scoped.has("__refused__"):
+			return false
+		var fields: Array = (
+			["schema"] + Array(contract["fields"]) + Array(scoped.get("fields", []))
+		)
 		for field: String in fields:
 			if typeof(row.get(field)) != TYPE_STRING:
 				push_error("CANON-SEED: %s requires string '%s'." % [document_path, field])
@@ -188,11 +230,13 @@ class CanonReader:
 			return false
 		for field: String in Array(contract.get("integers", [])) + Array(
 			contract.get("numbers", [])
-		):
+		) + Array(scoped.get("integers", [])) + Array(scoped.get("numbers", [])):
 			if typeof(row.get(field)) != TYPE_FLOAT:
 				push_error("CANON-SEED: %s requires numeric '%s'." % [document_path, field])
 				return false
-		for field: String in Array(contract.get("number_pairs", [])):
+		for field: String in Array(contract.get("number_pairs", [])) + Array(
+			scoped.get("number_pairs", [])
+		):
 			var pair: Variant = row.get(field)
 			if typeof(pair) != TYPE_ARRAY or (pair as Array).size() != 2:
 				push_error(
@@ -206,13 +250,123 @@ class CanonReader:
 						% [document_path, field]
 					)
 					return false
-		for field: String in Array(contract.get("booleans", [])):
+		for field: String in Array(contract.get("booleans", [])) + Array(
+			scoped.get("booleans", [])
+		):
 			if typeof(row.get(field)) != TYPE_BOOL:
 				push_error("CANON-SEED: %s requires boolean '%s'." % [document_path, field])
 				return false
-		for field: String in Array(contract.get("routines", [])):
+		for field: String in Array(contract.get("routines", [])) + Array(
+			scoped.get("routines", [])
+		):
 			if not _valid_routine(row.get(field), field, document_path):
 				return false
+		for field: String in Array(contract.get("string_lists", [])) + Array(
+			scoped.get("string_lists", [])
+		):
+			if not _valid_string_list(row.get(field), field, document_path):
+				return false
+		for field: String in Array(contract.get("outcomes", [])) + Array(
+			scoped.get("outcomes", [])
+		):
+			if not _valid_outcome(row.get(field), field, document_path):
+				return false
+		for field: String in Array(contract.get("stat_blocks", [])) + Array(
+			scoped.get("stat_blocks", [])
+		):
+			if not _valid_stat_block(row.get(field), field, document_path):
+				return false
+		for field: String in Array(contract.get("refused", [])) + Array(
+			scoped.get("refused", [])
+		):
+			if row.has(field):
+				push_error(
+					"CANON-SEED: %s must not carry '%s' — an encounter owns no grid and no "
+					% [document_path, field]
+					+ "weather (F0 D8: the grid derives from field tiles, weather is per location)."
+				)
+				return false
+		return true
+
+
+	## The kind-scoped half of the contract. Returns the merged sub-contract, or an empty
+	## dictionary when the document declares a kind the schema does not open.
+	static func _kind_contract(
+		contract: Dictionary, row: Dictionary, document_path: String, noun: String
+	) -> Dictionary:
+		var kinds: Dictionary = contract.get("kinds", {})
+		if kinds.is_empty():
+			return {}
+		var declared: String = String(row.get("kind", ""))
+		if not kinds.has(declared):
+			push_error(
+				"CANON-SEED: %s declares %s kind '%s', which this schema does not open."
+				% [document_path, noun, declared]
+			)
+			return {"__refused__": true}
+		return kinds[declared]
+
+
+	## Opaque by contract: an object with a non-empty `schema` string, and nothing more is
+	## asked of it. See the `stat_blocks` note on SCHEMAS for why this reader stops here.
+	static func _valid_stat_block(value: Variant, field: String, document_path: String) -> bool:
+		if typeof(value) != TYPE_DICTIONARY:
+			push_error("CANON-SEED: %s requires '%s' as an object." % [document_path, field])
+			return false
+		var schema: Variant = (value as Dictionary).get("schema")
+		if typeof(schema) != TYPE_STRING or String(schema).strip_edges().is_empty():
+			push_error(
+				"CANON-SEED: %s '%s' needs a non-empty 'schema' naming who validates it."
+				% [document_path, field]
+			)
+			return false
+		return true
+
+
+	static func _valid_string_list(value: Variant, field: String, document_path: String) -> bool:
+		if typeof(value) != TYPE_ARRAY or (value as Array).is_empty():
+			push_error(
+				"CANON-SEED: %s requires '%s' as a non-empty array." % [document_path, field]
+			)
+			return false
+		for entry: Variant in value as Array:
+			if typeof(entry) != TYPE_STRING or String(entry).strip_edges().is_empty():
+				push_error(
+					"CANON-SEED: %s has an empty or non-string '%s' entry."
+					% [document_path, field]
+				)
+				return false
+		return true
+
+
+	## `null` is the authored way to say "this side writes no ledger row" — the same
+	## explicit-absence rule the routine reader keeps, and for the same reason: a missing
+	## key cannot be told apart from an oversight.
+	static func _valid_outcome(value: Variant, field: String, document_path: String) -> bool:
+		if value == null:
+			return true
+		if typeof(value) != TYPE_DICTIONARY:
+			push_error(
+				"CANON-SEED: %s '%s' must be null or an object." % [document_path, field]
+			)
+			return false
+		var row: Dictionary = value
+		for text_field: String in ["faction", "cause"]:
+			if typeof(row.get(text_field)) != TYPE_STRING:
+				push_error(
+					"CANON-SEED: %s '%s' requires string '%s'."
+					% [document_path, field, text_field]
+				)
+				return false
+		if typeof(row.get("delta")) != TYPE_FLOAT:
+			push_error("CANON-SEED: %s '%s' requires numeric 'delta'." % [document_path, field])
+			return false
+		if String(row["faction"]).strip_edges().is_empty():
+			push_error(
+				"CANON-SEED: %s '%s' names no faction — write null, not an empty one."
+				% [document_path, field]
+			)
+			return false
 		return true
 
 
@@ -330,6 +484,13 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 	var effects: Array[Dictionary] = CanonReader.load("effects", canon_root)
 	var locations: Array[Dictionary] = CanonReader.load("locations", canon_root)
 	var lore: Array[Dictionary] = CanonReader.load("lore", canon_root)
+	var characters: Array[Dictionary] = CanonReader.load("characters", canon_root)
+	var archetypes: Array[Dictionary] = _of_kind(characters, "archetype")
+	var encounters: Array[Dictionary] = CanonReader.load("encounters", canon_root)
+	if archetypes.is_empty() or encounters.is_empty():
+		return false
+	if not _encounters_name_real_archetypes(encounters, archetypes):
+		return false
 	if (
 		elements.is_empty() or classes.is_empty() or peoples.is_empty() or items.is_empty()
 		or spells.is_empty() or effects.is_empty() or locations.is_empty() or lore.is_empty()
@@ -340,7 +501,10 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 	if not _item_categories_exist(items):
 		return false
 	if Pandora.get_all_roots().is_empty():
-		_seed(factions, elements, classes, peoples, items, spells, effects, locations, lore)
+		_seed(
+			factions, elements, classes, peoples, items, spells, effects, locations, lore,
+			archetypes, encounters
+		)
 	else:
 		_apply_elements(elements)
 		_apply_classes(classes)
@@ -351,6 +515,37 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 		_apply_factions(factions)
 		_apply_locations(locations)
 		_apply_lore(lore)
+		_apply_combatants(archetypes)
+		_apply_encounters(encounters)
+	return true
+
+
+func _of_kind(documents: Array[Dictionary], wanted: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for document: Dictionary in documents:
+		if String(document.get("kind", "")) == wanted:
+			result.append(document)
+	return result
+
+
+## The archetype_id indirection is the seam encounters and spawn tables are meant to reference
+## through (spec §4.7), so a name that resolves to nothing is a broken encounter, not a
+## harmless typo — and it fails here, at seed time, rather than as an empty enemy list in a
+## fight the player has already walked into.
+func _encounters_name_real_archetypes(
+	encounters: Array[Dictionary], archetypes: Array[Dictionary]
+) -> bool:
+	var known: Dictionary = {}
+	for row: Dictionary in archetypes:
+		known[row["id"]] = true
+	for row: Dictionary in encounters:
+		for archetype_id: String in Array(row["archetype_ids"]):
+			if not known.has(archetype_id):
+				push_error(
+					"CANON-SEED: encounter '%s' names unknown archetype '%s'."
+					% [row["id"], archetype_id]
+				)
+				return false
 	return true
 
 
@@ -451,7 +646,9 @@ func _seed(
 	spells: Array[Dictionary],
 	effects: Array[Dictionary],
 	locations: Array[Dictionary],
-	lore: Array[Dictionary]
+	lore: Array[Dictionary],
+	archetypes: Array[Dictionary],
+	encounters: Array[Dictionary]
 ) -> void:
 	_apply_elements(elements)
 	_apply_classes(classes)
@@ -461,8 +658,8 @@ func _seed(
 	_apply_effects(effects)
 	_apply_factions(factions)
 	_seed_npcs()
-	_seed_combatants()
-	_seed_encounters()
+	_apply_combatants(archetypes)
+	_apply_encounters(encounters)
 	_apply_locations(locations)
 	_apply_lore(lore)
 
@@ -843,151 +1040,124 @@ func _seed_npcs() -> void:
 			_assign(ent, "Vault Id", r[5])
 
 
-# --- Combatants and encounters: authored here, expanded into generated JSON ---------------
+# --- Combatants and encounters: read from canon, expanded into generated JSON ------------
 
 
-func _seed_combatants() -> void:
-	var root := _cat("Combatants")
-	Pandora.create_property(root, "Combatant Id", "string")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Max HP", "int")
-	Pandora.create_property(root, "Attack", "int")
-	Pandora.create_property(root, "Defense", "int")
-	Pandora.create_property(root, "Edge", "int")
-	Pandora.create_property(root, "Balance Affinity", "int")
-	Pandora.create_property(root, "Balance Pressure", "int")
-	Pandora.create_property(root, "Element Id", "string")
+## Archetypes are `canon/<hub>/characters/*.json` with `kind: "archetype"` (spec §4.7): the
+## same document kind as the townsfolk, discriminated rather than duplicated, and the thing
+## encounters and spawn tables reference by id instead of inlining stats.
+##
+## `element_id` is a Wheel id (`globals/elements/element_wheel.gd`'s ORDER) read as this
+## combatant's TARGET-side attunement — the "target relation" gamble curve (vault:
+## systems/magic-system.md, ratified 2026-08-05) prices any elemental attack against it by
+## Wheel distance. Bog Wight (grave-rotted) is Mozh; the Loam-Maddened Boar (maddened by
+## corrupted soil) is Tham. Empty means no authored attunement, which keeps that combatant
+## resolving at the ElementMatrix neutral IDENTITY_ROW.
+##
+## The stat block is tagged `six-stat.v1`, NOT `dramgid.v1`, and that is deliberate. #283
+## moved the PARTY onto DRAMGID attributes; enemies still carry `edge`, which
+## `Resolution.resolve()` reads as `edge_delta` and `CombatRules.charge_speed_attribute`
+## names. Retagging without moving those consumers would be a label claiming a migration
+## that has not happened — F3b, blocked on #281 (`docs/architecture-dramgid.md` §3.9).
+func _apply_combatants(archetypes: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Combatants")
+	for property_spec: Array in [
+		["Combatant Id", "string"],
+		["Display Name", "string"],
+		["Max HP", "int"],
+		["Attack", "int"],
+		["Defense", "int"],
+		["Edge", "int"],
+		["Balance Affinity", "int"],
+		["Balance Pressure", "int"],
+		["Element Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	# Element Id is a Wheel id (globals/elements/element_wheel.gd's ORDER) read as this
-	# combatant's TARGET-side attunement — see tools/seed_chapter_one.gd's _seed_combatants()
-	# for the thematic reasoning; keep the two seeders in lockstep.
-	# Edge (9th column) is PROVISIONAL enemy accuracy/evasion (#169/#98 owner ruling
-	# 2026-08-24: to-hit adds (attacker Edge - defender Edge) x 2%). Values follow the
-	# creature fiction: nimble skirmishers high, armored or shambling low.
-	var rows := [
-		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "mozh", 2],
-		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "tham", 3],
-		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, "", 4],
-		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, "", 4],
-		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, "", 2],
-		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24, "", 3],
-	]
-	for row in rows:
-		var entity := Pandora.create_entity(row[0], root)
-		_assign_combatant(entity, row)
-
-
-func _seed_encounters() -> void:
-	var root := _cat("Encounters")
-	Pandora.create_property(root, "Encounter Id", "string")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Combatant Ids", "string")
-	Pandora.create_property(root, "Defeated Flag", "string")
-	Pandora.create_property(root, "Win Faction", "string")
-	Pandora.create_property(root, "Win Delta", "float")
-	Pandora.create_property(root, "Win Cause", "string")
-	Pandora.create_property(root, "Loss Faction", "string")
-	Pandora.create_property(root, "Loss Delta", "float")
-	Pandora.create_property(root, "Loss Cause", "string")
-
-	var rows := _encounter_rows()
-	for row in rows:
-		var entity := Pandora.create_entity(row[0], root)
-		_assign_encounter(entity, row)
+	for row: Dictionary in archetypes:
+		var stats: Dictionary = row["stats"]
+		var entity: PandoraEntity = _find_by_id_property(root, "Combatant Id", row["id"])
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Combatant Id", row["id"])
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Element Id", row["element_id"])
+		_assign(entity, "Max HP", int(stats["max_hp"]))
+		_assign(entity, "Attack", int(stats["attack"]))
+		_assign(entity, "Defense", int(stats["defense"]))
+		_assign(entity, "Edge", int(stats["edge"]))
+		_assign(entity, "Balance Affinity", int(stats["balance_affinity"]))
+		_assign(entity, "Balance Pressure", int(stats["balance_pressure"]))
 
 
-func _assign_combatant(entity: PandoraEntity, row: Array) -> void:
-	_assign(entity, "Display Name", row[0])
-	_assign(entity, "Combatant Id", row[1])
-	_assign(entity, "Max HP", row[2])
-	_assign(entity, "Attack", row[3])
-	_assign(entity, "Defense", row[4])
-	_assign(entity, "Balance Affinity", row[5])
-	_assign(entity, "Balance Pressure", row[6])
-	_assign(entity, "Element Id", row[7])
-	_assign(entity, "Edge", row[8] if row.size() > 8 else 0)
+## Encounters are `canon/<hub>/encounters/*.json`. Per F0 D8 (spec §4.9) an encounter owns
+## its actors and its consequences and owns NEITHER a grid NOR a weather default: the grid
+## derives from the field's own tiles and weather belongs to the location. The reader refuses
+## either field outright rather than accepting and ignoring it.
+##
+## `win`/`loss` are `null` when that side of the fight writes no ledger row — the two Dorthkor
+## encounters have no authored loss consequence, and `null` says so where an empty faction
+## string only looks like an oversight. Pandora keeps the flat legacy columns; the shape of a
+## post-#281 encounter (spoils, speech hooks, group_id) is E5.2's call, not this migration's.
+func _apply_encounters(encounters: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Encounters")
+	for property_spec: Array in [
+		["Encounter Id", "string"],
+		["Display Name", "string"],
+		["Combatant Ids", "string"],
+		["Defeated Flag", "string"],
+		["Win Faction", "string"],
+		["Win Delta", "float"],
+		["Win Cause", "string"],
+		["Loss Faction", "string"],
+		["Loss Delta", "float"],
+		["Loss Cause", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
+
+	for row: Dictionary in encounters:
+		var entity: PandoraEntity = _find_by_id_property(root, "Encounter Id", row["id"])
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Encounter Id", row["id"])
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Combatant Ids", ",".join(PackedStringArray(row["archetype_ids"])))
+		_assign(entity, "Defeated Flag", row["defeated_flag"])
+		_assign_outcome(entity, "Win", row["win"])
+		_assign_outcome(entity, "Loss", row["loss"])
 
 
-func _assign_encounter(entity: PandoraEntity, row: Array) -> void:
-	var properties := [
-		"Display Name",
-		"Encounter Id",
-		"Combatant Ids",
-		"Defeated Flag",
-		"Win Faction",
-		"Win Delta",
-		"Win Cause",
-		"Loss Faction",
-		"Loss Delta",
-		"Loss Cause",
-	]
-	for index in properties.size():
-		_assign(entity, properties[index], row[index])
+## A `null` outcome writes the flat legacy absence the old authored rows carried: no faction,
+## no delta, no cause. Keeping the columns rather than deleting them is what lets this land
+## with zero `data.pandora` diff.
+func _assign_outcome(entity: PandoraEntity, prefix: String, outcome: Variant) -> void:
+	if outcome == null:
+		_assign(entity, "%s Faction" % prefix, "")
+		_assign(entity, "%s Delta" % prefix, 0.0)
+		_assign(entity, "%s Cause" % prefix, "")
+		return
+	var row: Dictionary = outcome
+	_assign(entity, "%s Faction" % prefix, row["faction"])
+	_assign(entity, "%s Delta" % prefix, float(row["delta"]))
+	_assign(entity, "%s Cause" % prefix, row["cause"])
 
 
-func _encounter_rows() -> Array:
-	return [
-		[
-			"Bog Wight",
-			"bog-wight",
-			"bog-wight",
-			"defeated_bog_wight",
-			"ssae-seeders",
-			6.0,
-			"Cleared the Bog Wight from the grove margins",
-			"ssae-seeders",
-			-3.0,
-			"The Bog Wight still haunts the grove's edge",
-		],
-		[
-			"Loam-Maddened Boar",
-			"loam-boar",
-			"loam-maddened-boar",
-			"defeated_loam_boar",
-			"ssae-seeders",
-			5.0,
-			"Culled a Loam-maddened boar before it reached the grove",
-			"ssae-seeders",
-			-3.0,
-			"A Loam-maddened boar broke loose near the grove",
-		],
-		[
-			"Dorthkor Demon Vanguard",
-			"dorthkor-vanguard",
-			"gnaal-breach-hound,gnaal-rift-scavenger",
-			"defeated_breach_hound",
-			"iron-companies",
-			5.0,
-			"Broke the demon vanguard at Dorthkor",
-			"",
-			0.0,
-			"",
-		],
-		[
-			"Dorthkor Dead Muster",
-			"dorthkor-muster",
-			"mustered-bloodbellow",
-			"defeated_mustered_dead",
-			"ironbrand-sentinels",
-			5.0,
-			"Stopped a dead soldier answering Dom's muster",
-			"",
-			0.0,
-			"",
-		],
-		[
-			"The Empty Post",
-			"jawbrace-empty-post",
-			"cleaned-jawbrace-guard",
-			"defeated_cleaned_jawbrace_guard",
-			"ironbrand-sentinels",
-			6.0,
-			"Stopped the cleaned armor standing watch at the Jawbrace",
-			"ironbrand-sentinels",
-			-3.0,
-			"The empty guard still holds the first gate",
-		],
-	]
+## Combatant and encounter entities keep their DISPLAY names, so the slug fallback in
+## `_find_by_stable_id` cannot resolve them — "The Empty Post" slugs to `the-empty-post`,
+## never to `jawbrace-empty-post`. Their id lives in an explicit property instead, which is
+## exact, so match on that and let creation be the genuine last resort.
+func _find_by_id_property(
+	root: PandoraCategory, property_name: String, stable_id: String
+) -> PandoraEntity:
+	for candidate: PandoraEntity in Pandora.get_all_entities(root):
+		if candidate is PandoraCategory:
+			continue
+		var property: PandoraProperty = candidate.get_entity_property(property_name)
+		if property != null and String(property.get_default_value()) == stable_id:
+			return candidate
+	return _find_by_stable_id(root, stable_id)
 
 
 # --- Locations: the 12 gazetteer cities (vault: cities/) ---------------------------------
