@@ -26,6 +26,10 @@ func record_name(name: String, _saved: bool) -> bool:
 	return true
 
 
+func commands() -> Array[StringName]:
+	return [&"record_name"]
+
+
 func on_command(action_id: StringName, target_id: StringName) -> void:
 	if action_id != &"record_name" or target_id.is_empty():
 		return

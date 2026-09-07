@@ -33,7 +33,23 @@ func on_action(_event: CombatEvent) -> void:
 	pass
 
 
+## The authored PASS-kind commands this resource answers, by
+## `CombatAction.class_resource_action` id. Empty is the honest default: a
+## resource that is purely reactive has no button.
+##
+## `CombatController.query_action()` refuses a class-resource action whose
+## command is not listed here, so an actor of the wrong patron sees a locked
+## button with a reason instead of a working one that silently does nothing.
+func commands() -> Array[StringName]:
+	return []
+
+
+func accepts_command(action_id: StringName) -> bool:
+	return commands().has(action_id)
+
+
 ## Optional command channel for authored PASS-kind class-resource actions.
+## Only reached for a command this resource listed in `commands()`.
 func on_command(_action_id: StringName, _target_id: StringName) -> void:
 	pass
 

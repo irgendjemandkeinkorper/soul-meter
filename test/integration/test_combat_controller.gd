@@ -2,10 +2,15 @@ extends GdUnitTestSuite
 
 class CommandSpy:
 	extends ClassResource
-	var commands: Array[String] = []
+	var received: Array[String] = []
+
+	# Since #236 the controller refuses a class-resource action the resource does
+	# not claim, so a spy has to claim the command it is spying on.
+	func commands() -> Array[StringName]:
+		return [&"record_name"]
 
 	func on_command(action_id: StringName, target_id: StringName) -> void:
-		commands.append("%s:%s" % [String(action_id), String(target_id)])
+		received.append("%s:%s" % [String(action_id), String(target_id)])
 
 class CelllessBattlefieldSpy:
 	extends BattlefieldModel
@@ -158,8 +163,57 @@ func test_pass_class_resource_command_dispatches_to_owner_only() -> void:
 	assert_str(String(missing_target.get("blocked_by", ""))).is_equal("no_target")
 	var result := controller.submit_action(action.id, other)
 	assert_bool(result.get("allowed", false)).is_true()
-	assert_array(owner_spy.commands).contains(["record_name:%s" % String(other.combat_id)])
-	assert_array(other_spy.commands).is_empty()
+	assert_array(owner_spy.received).contains(["record_name:%s" % String(other.combat_id)])
+	assert_array(other_spy.received).is_empty()
+
+
+func test_a_class_resource_action_is_refused_for_a_patron_that_does_not_answer_it() -> void:
+	# #236: before this, a Lensbearer could press Record Name and nothing at all
+	# happened — the command reached a resource with no handler and was dropped.
+	ally.class_resource = StuidClarity.new()
+	controller.start([ally], [enemy], &"wrong-patron-command")
+
+	var refusal := controller.query_action(controller.action_by_id(&"record-name"), ally)
+
+	assert_bool(refusal.get("allowed", false)).is_false()
+	assert_str(String(refusal.get("blocked_by", ""))).is_equal("class_resource")
+
+
+func test_the_authored_spend_actions_reach_their_resource_through_submit_action() -> void:
+	# The process rule this repo learned the hard way: a resource command needs a
+	# submit_action-path test, or it ships with no live consumer.
+	var scars := IronbrandScars.new()
+	scars.patron_id = &"kero"
+	scars.on_damage_taken(3, &"enemy-0")
+	ally.class_resource = scars
+	controller.start([ally], [enemy], &"spend-scars-command")
+
+	var result := controller.submit_action(&"spend-scars")
+
+	assert_bool(result.get("allowed", false)).is_true()
+	assert_int(scars.scars).is_equal(0)
+	assert_bool(scars.guaranteed_hit_armed).is_true()
+
+
+func test_spend_clarity_reaches_the_lensbearer_through_submit_action() -> void:
+	var clarity := StuidClarity.new()
+	clarity.patron_id = &"stuid"
+	ally.class_resource = clarity
+	controller.start([ally], [enemy], &"spend-clarity-command")
+	assert_bool(controller.submit_action(&"spend-clarity").get("allowed", false)).is_true()
+	assert_bool(clarity.reveal_armed).is_true()
+
+
+
+func test_spend_token_reaches_the_flamebinder_through_submit_action() -> void:
+	var vicoar := VicoarInstructiveFailure.new()
+	vicoar.patron_id = &"vicoar"
+	vicoar.on_fizzle({"fizzled": true})
+	ally.class_resource = vicoar
+	controller.start([ally], [enemy], &"spend-token-command")
+
+	assert_bool(controller.submit_action(&"spend-token").get("allowed", false)).is_true()
+	assert_bool(vicoar.guaranteed_cast_armed).is_true()
 
 
 func test_maiiam_forecast_override_preserves_controller_context() -> void:
