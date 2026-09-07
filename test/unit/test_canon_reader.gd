@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 
 const SeedPandora := preload("res://tools/seed_pandora.gd")
 
-const KINDS := ["factions", "elements", "classes", "peoples", "lore"]
+const KINDS := ["factions", "elements", "classes", "peoples", "locations", "lore"]
 
 var _original_backend: PandoraEntityBackend
 var _original_ids: PandoraIDGenerator
@@ -399,6 +399,72 @@ func test_element_names_still_resolve_through_the_legacy_slug_fallback() -> void
 		var entity: PandoraEntity = seeder._find_by_stable_id(_root("Elements"), element["id"])
 		assert_object(entity).override_failure_message(
 			"no existing entity resolves for element id '%s'" % element["id"]
+		).is_not_null()
+
+
+# --- E1.4e: world-map locations and the generated index ----------------------------------
+
+
+func test_location_documents_cover_the_twelve_world_map_rows() -> void:
+	var locations: Array[Dictionary] = SeedPandora.CanonReader.load("locations")
+	assert_int(locations.size()).is_equal(12)
+	for row: Dictionary in locations:
+		for field: String in ["id", "display_name", "vault_id"]:
+			assert_str(String(row.get(field, ""))).is_not_empty()
+		# Epithet and Agreement are authored-optional and must still be present as strings.
+		assert_bool(row.has("epithet") and row.has("agreement")).is_true()
+
+
+func test_the_generated_index_ids_are_the_canon_ids() -> void:
+	# The index exists to be joined against `canon/<hub>/locations/<id>.json`. The generator's
+	# own `_slug()` maps hyphens to underscores — correct for item paths, silently fatal here —
+	# so this is the case that would catch the two drifting apart.
+	var raw: String = FileAccess.get_file_as_string("res://data/generated/location_index.json")
+	assert_str(raw).override_failure_message("location_index.json is missing").is_not_empty()
+	var parsed: Variant = JSON.parse_string(raw)
+	assert_bool(parsed is Dictionary).is_true()
+	var index: Dictionary = parsed
+	assert_str(String(index.get("schema", ""))).is_equal("weftlumin.location_index.v1")
+
+	var index_ids: Array[String] = []
+	for row: Variant in index.get("locations", []):
+		index_ids.append(String((row as Dictionary)["id"]))
+	var canon_ids: Array[String] = []
+	for row: Dictionary in SeedPandora.CanonReader.load("locations"):
+		canon_ids.append(String(row["id"]))
+	index_ids.sort()
+	canon_ids.sort()
+	assert_array(index_ids).is_equal(canon_ids)
+
+
+func test_the_agreement_field_stays_the_authored_string() -> void:
+	# "91–93%" is a range a person wrote, not a number. Turning it into a float would be
+	# inventing an authored value, which is C21's (#258) to author and not this migration's.
+	var ranges: int = 0
+	for row: Dictionary in SeedPandora.CanonReader.load("locations"):
+		assert_bool(typeof(row["agreement"]) == TYPE_STRING).is_true()
+		if String(row["agreement"]).contains("%"):
+			ranges += 1
+	assert_int(ranges).override_failure_message(
+		"no location carries a range string any more, so this guard proves nothing"
+	).is_greater(0)
+
+
+func test_reseeding_locations_creates_no_duplicates() -> void:
+	var seeder: Node = auto_free(SeedPandora.new())
+	var before: int = Pandora.get_all_entities(_root("Locations")).size()
+	for _repeat: int in 2:
+		seeder._apply_locations(SeedPandora.CanonReader.load("locations"))
+	assert_int(Pandora.get_all_entities(_root("Locations")).size()).is_equal(before)
+
+
+func test_location_names_still_resolve_through_the_legacy_slug_fallback() -> void:
+	var seeder: Node = auto_free(SeedPandora.new())
+	for row: Dictionary in SeedPandora.CanonReader.load("locations"):
+		assert_object(
+			seeder._find_by_stable_id(_root("Locations"), row["id"])
+		).override_failure_message(
+			"no existing entity resolves for location id '%s'" % row["id"]
 		).is_not_null()
 
 

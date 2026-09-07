@@ -38,6 +38,11 @@ class CanonReader:
 			"schema": "weftlumin.class.v1",
 			"fields": ["id", "display_name", "patron", "resource_name", "vault_id"],
 		},
+		"locations": {
+			"noun": "location",
+			"schema": "weftlumin.location.v1",
+			"fields": ["id", "display_name", "epithet", "patron", "agreement", "vault_id"],
+		},
 		"lore": {
 			"noun": "lore entry",
 			"schema": "weftlumin.lore.v1",
@@ -192,18 +197,23 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 	var elements: Array[Dictionary] = CanonReader.load("elements", canon_root)
 	var classes: Array[Dictionary] = CanonReader.load("classes", canon_root)
 	var peoples: Array[Dictionary] = CanonReader.load("peoples", canon_root)
+	var locations: Array[Dictionary] = CanonReader.load("locations", canon_root)
 	var lore: Array[Dictionary] = CanonReader.load("lore", canon_root)
-	if elements.is_empty() or classes.is_empty() or peoples.is_empty() or lore.is_empty():
+	if (
+		elements.is_empty() or classes.is_empty() or peoples.is_empty()
+		or locations.is_empty() or lore.is_empty()
+	):
 		return false
 	if not _elements_match_the_design_system(elements):
 		return false
 	if Pandora.get_all_roots().is_empty():
-		_seed(factions, elements, classes, peoples, lore)
+		_seed(factions, elements, classes, peoples, locations, lore)
 	else:
 		_apply_elements(elements)
 		_apply_classes(classes)
 		_apply_peoples(peoples)
 		_apply_factions(factions)
+		_apply_locations(locations)
 		_apply_lore(lore)
 	return true
 
@@ -270,6 +280,7 @@ func _seed(
 	elements: Array[Dictionary],
 	classes: Array[Dictionary],
 	peoples: Array[Dictionary],
+	locations: Array[Dictionary],
 	lore: Array[Dictionary]
 ) -> void:
 	_apply_elements(elements)
@@ -282,7 +293,7 @@ func _seed(
 	_seed_npcs()
 	_seed_combatants()
 	_seed_encounters()
-	_seed_locations()
+	_apply_locations(locations)
 	_apply_lore(lore)
 
 
@@ -861,35 +872,35 @@ func _encounter_rows() -> Array:
 # --- Locations: the 12 gazetteer cities (vault: cities/) ---------------------------------
 
 
-func _seed_locations() -> void:
-	var root := _cat("Locations")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Epithet", "string")
-	Pandora.create_property(root, "Patron", "string")
-	Pandora.create_property(root, "Agreement", "string")
-	Pandora.create_property(root, "Vault Id", "string")
+## The twelve world-map locations of the Dramgid map. NOT the same set as the playable scenes
+## in `world/locations/*.tres` — those are `LocationDefinition`s and include Dom's twenty
+## interiors, which have no entry here. `agreement` stays the authored string it always was
+## ("91-93%"); turning it into a `harmonic_accord` float would be inventing a number, and C21
+## (#258) owns authored per-location values.
+func _apply_locations(locations: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Locations")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Epithet", "string"],
+		["Patron", "string"],
+		["Agreement", "string"],
+		["Vault Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		["Vervulling", "The Twinfire Capital", "Maiiam", "91–93%", "vervulling"],
-		["Deivel Zeit", "", "Haeren", "90–92%", "deivel"],
-		["Dom", "", "Kero", "", "dom"],
-		["Karrn-Vash", "", "Blidnisch", "", "karrn-vash"],
-		["Solmarch", "", "Sulmae (the mask)", "", "solmarch"],
-		["Rennen", "", "Pazzah", "", "rennen"],
-		["Tweede", "", "Vicoar", "", "tweede"],
-		["Pozor", "", "Stuid", "", "pozor"],
-		["Lefren", "", "Fickah", "", "lefren"],
-		["Milinel", "", "Izhakel", "", "milinel"],
-		["Verspch", "", "Ofshütje", "", "verspch"],
-		["Loamgate", "", "Vhorr", "84–87%", "loamgate"],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Epithet", r[1])
-		_assign(ent, "Patron", r[2])
-		_assign(ent, "Agreement", r[3])
-		_assign(ent, "Vault Id", r[4])
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in locations:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in locations:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Epithet", row["epithet"])
+		_assign(entity, "Patron", row["patron"])
+		_assign(entity, "Agreement", row["agreement"])
+		_assign(entity, "Vault Id", row["vault_id"])
 
 
 # --- Lore: bridge entries into the vault (id + path; prose STAYS in the vault) -----------
