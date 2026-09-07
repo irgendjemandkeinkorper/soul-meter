@@ -448,6 +448,19 @@ validated by whichever schema `#283` installs; the inspector renders it from the
 hard-coded fields. Portrait/sprite pickers use the existing texture-level resolver pattern
 (`ChargenArtResolver.portrait_texture`) and `assets/generated/sprites/units/<id>/…`.
 
+> **Landed 2026-09-07 (E1.4g, #325), the canon half.** `canon/dom/characters/*.json` now carries
+> `kind: "archetype"` alongside the 60 `npc` rows, and the reader's contract is kind-scoped: the
+> top-level fields are what every character declares, and the per-kind block adds what only that
+> kind means. An archetype has no district and an npc has no stat block, and a flat required-field
+> list was forcing empty strings into canon to satisfy the reader. An unknown kind is refused —
+> the registry is open, but it opens in the contract, not by a typo in a document.
+>
+> The six shipped archetypes tag their stats **`six-stat.v1`, not `dramgid.v1`**. #283 moved the
+> *party* onto DRAMGID attributes; enemies still carry `edge`, which `Resolution.resolve()` reads
+> as `edge_delta` and `CombatRules.charge_speed_attribute` names. The tag names the shape that
+> actually ships — retagging is F3b, blocked on #281 (`docs/architecture-dramgid.md` §3.9). The
+> `recruit` kind is not opened yet (E5.1).
+
 ### 4.8 Quests and dialogue wiring (rulings 4, 10)
 
 The F6 quest editor's model (validate in memory → transactional write → reload through the same loader →
@@ -476,6 +489,18 @@ carry authored deployment cells (`set_piece: {ally_cells: [...]}`). Hostile plac
 (`Hostile` instances via the palette). Combat Lab's model (`globals/combat_lab.gd:144-361,409-695`:
 weather resolution, forecast==resolution tripwire, session markdown) becomes the **combat panel** and
 starts sessions through `Battle.start_session(field, first_hostile)` / `start_set_piece(...)`.
+
+> **Landed 2026-09-07 (E1.4g, #325), the canon half.** `canon/dom/encounters/*.json` holds the five
+> authored encounters — actors by archetype id, the defeated flag, and a `win`/`loss` consequence
+> that is either `{faction, delta, cause}` or an explicit `null` when that side writes no ledger
+> row. `grid` and `weather_default` are **refused fields**: a document carrying either fails the
+> read rather than being accepted and quietly ignored by a seeder that never looks at it.
+>
+> Not migrated, deliberately: `Default Outcome`, `Context Actions` and `Outcomes` stay authored in
+> `tools/seed_chapter_one.gd`. They are stringified JSON blobs inside Pandora string properties,
+> and JSON has one number type — round-tripping them through canon rewrites `"minimum_balance":50`
+> as `50.0`, which is data drift bought for nothing. The post-#281 shape that would own them
+> properly (spoils, speech hooks, `group_id`) is E5.2's call.
 
 ### 4.10 Random spawn system (ruling 5)
 

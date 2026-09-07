@@ -1,0 +1,1 @@
+{"schema":"weftlumin.encounter.v1","id":"dorthkor-muster","order":3,"display_name":"Dorthkor Dead Muster","archetype_ids":["mustered-bloodbellow"],"defeated_flag":"defeated_mustered_dead","win":{"faction":"ironbrand-sentinels","delta":5.0,"cause":"Stopped a dead soldier answering Dom's muster"},"loss":null}

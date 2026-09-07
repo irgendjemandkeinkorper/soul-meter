@@ -1,0 +1,1 @@
+{"schema":"weftlumin.encounter.v1","id":"bog-wight","order":0,"display_name":"Bog Wight","archetype_ids":["bog-wight"],"defeated_flag":"defeated_bog_wight","win":{"faction":"ssae-seeders","delta":6.0,"cause":"Cleared the Bog Wight from the grove margins"},"loss":{"faction":"ssae-seeders","delta":-3.0,"cause":"The Bog Wight still haunts the grove's edge"}}

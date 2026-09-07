@@ -1,0 +1,1 @@
+{"schema":"weftlumin.character.v1","kind":"archetype","id":"bog-wight","order":60,"display_name":"Bog Wight","element_id":"mozh","stats":{"schema":"six-stat.v1","max_hp":20,"attack":4,"defense":1,"balance_affinity":1,"balance_pressure":18,"edge":2}}

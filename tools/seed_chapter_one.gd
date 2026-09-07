@@ -1,6 +1,21 @@
 extends Node
 ## Idempotent Pandora migration for chapter-one authored content, including
 ## the combatant and encounter definitions consumed by the data generator.
+##
+## Combatant stats and the base encounter fields are READ FROM CANON
+## (`canon/<hub>/characters/*.json` with `kind: "archetype"`, and
+## `canon/<hub>/encounters/*.json`) rather than restated here. They used to be a second
+## copy of `tools/seed_pandora.gd`'s tables, kept honest only by a comment asking two
+## files to stay in lockstep; E1.4g (#325) removed the second copy.
+##
+## What stays authored here is `Default Outcome`, `Context Actions` and `Outcomes` — the
+## chapter-one battle script. Those are stringified JSON blobs inside Pandora string
+## properties, and JSON has one number type, so round-tripping them through canon would
+## rewrite `"minimum_balance":50` as `50.0` and show up as data drift for no gain. The
+## post-#281 encounter shape that would own them properly is E5.2's call, not this
+## migration's.
+
+const SeedPandora := preload("res://tools/seed_pandora.gd")
 
 const FACTION_PROPERTIES := [
 	["Display Name", "string"],
@@ -134,39 +149,31 @@ func _seed_npcs(root: PandoraCategory) -> void:
 
 
 func _seed_combatants(root: PandoraCategory) -> void:
-	# Element Id is a Wheel id (see globals/elements/element_wheel.gd's ORDER) read as this
-	# combatant's TARGET-side attunement — the "target relation" gamble curve (vault:
-	# systems/magic-system.md, ratified 2026-08-05) prices any elemental attack against it by
-	# Wheel distance. Bog Wight (a grave-rotted bog creature) is Mozh (decay/the grave);
-	# Loam-Maddened Boar (a beast maddened by corrupted soil) is Tham (stone/the earthwork).
-	# Left blank for combatants with no authored attunement yet — they keep resolving at the
-	# ElementMatrix neutral IDENTITY_ROW, unchanged from before this column existed.
-	# Edge (9th column): PROVISIONAL accuracy/evasion — keep in lockstep with
-	# tools/seed_pandora.gd (see that file's rationale comment).
-	var rows := [
-		["Bog Wight", "bog-wight", 20, 4, 1, 1, 18, "mozh", 2],
-		["Loam-Maddened Boar", "loam-maddened-boar", 14, 6, 0, -1, 18, "tham", 3],
-		["Gnaal Breach-Hound", "gnaal-breach-hound", 28, 7, 1, -1, 22, "", 4],
-		["Gnaal Rift-Scavenger", "gnaal-rift-scavenger", 16, 5, 0, -1, 16, "", 4],
-		["Mustered Bloodbellow", "mustered-bloodbellow", 32, 6, 3, 1, 22, "", 2],
-		["Cleaned Jawbrace Guard", "cleaned-jawbrace-guard", 36, 7, 4, 1, 24, "", 3],
-	]
-	for row in rows:
+	for row: Dictionary in _archetypes():
+		var stats: Dictionary = row["stats"]
 		_upsert(
 			root,
-			row[0],
+			row["display_name"],
 			{
-				"Combatant Id": row[1],
-				"Display Name": row[0],
-				"Max HP": row[2],
-				"Attack": row[3],
-				"Defense": row[4],
-				"Balance Affinity": row[5],
-				"Balance Pressure": row[6],
-				"Element Id": row[7],
-				"Edge": row[8] if row.size() > 8 else 0,
+				"Combatant Id": row["id"],
+				"Display Name": row["display_name"],
+				"Max HP": int(stats["max_hp"]),
+				"Attack": int(stats["attack"]),
+				"Defense": int(stats["defense"]),
+				"Balance Affinity": int(stats["balance_affinity"]),
+				"Balance Pressure": int(stats["balance_pressure"]),
+				"Element Id": row["element_id"],
+				"Edge": int(stats["edge"]),
 			}
 		)
+
+
+func _archetypes() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for document: Dictionary in SeedPandora.CanonReader.load("characters"):
+		if String(document.get("kind", "")) == "archetype":
+			result.append(document)
+	return result
 
 
 func _seed_encounters(root: PandoraCategory) -> void:
@@ -174,70 +181,29 @@ func _seed_encounters(root: PandoraCategory) -> void:
 		_upsert(root, row[0], row[1])
 
 
+## Canon owns who fights, which flag records it and what each side writes to the ledger.
+## This file layers the chapter-one battle script on top, by encounter id.
 func _encounter_rows() -> Array:
-	return [
-		[
-			"Bog Wight",
-			_encounter(
-				"bog-wight",
-				"Bog Wight",
-				"bog-wight",
-				"defeated_bog_wight",
-				"ssae-seeders",
-				6.0,
-				"Cleared the Bog Wight from the grove margins",
-				"ssae-seeders",
-				-3.0,
-				"The Bog Wight still haunts the grove's edge"
-			),
-		],
-		[
-			"Loam-Maddened Boar",
-			_encounter(
-				"loam-boar",
-				"Loam-Maddened Boar",
-				"loam-maddened-boar",
-				"defeated_loam_boar",
-				"ssae-seeders",
-				5.0,
-				"Culled a Loam-maddened boar before it reached the grove",
-				"ssae-seeders",
-				-3.0,
-				"A Loam-maddened boar broke loose near the grove"
-			),
-		],
-		[
-			"Dorthkor Demon Vanguard",
-			_encounter(
-				"dorthkor-vanguard",
-				"Dorthkor Demon Vanguard",
-				"gnaal-breach-hound,gnaal-rift-scavenger",
-				"defeated_breach_hound",
-				"iron-companies",
-				5.0,
-				"Broke the demon vanguard at Dorthkor"
-			),
-		],
-		[
-			"Dorthkor Dead Muster",
-			_muster_encounter(),
-		],
-		[
-			"The Empty Post",
-			_encounter(
-				"jawbrace-empty-post",
-				"The Empty Post",
-				"cleaned-jawbrace-guard",
-				"defeated_cleaned_jawbrace_guard",
-				"ironbrand-sentinels",
-				6.0,
-				"Stopped the cleaned armor standing watch at the Jawbrace",
-				"ironbrand-sentinels",
-				-3.0,
-				"The empty guard still holds the first gate"
-			),
-		],
-	]
+	var rows: Array = []
+	for document: Dictionary in SeedPandora.CanonReader.load("encounters"):
+		var win: Dictionary = document["win"] if document["win"] != null else {}
+		var loss: Dictionary = document["loss"] if document["loss"] != null else {}
+		var row: Dictionary = _encounter(
+			document["id"],
+			document["display_name"],
+			",".join(PackedStringArray(document["archetype_ids"])),
+			document["defeated_flag"],
+			String(win.get("faction", "")),
+			float(win.get("delta", 0.0)),
+			String(win.get("cause", "")),
+			String(loss.get("faction", "")),
+			float(loss.get("delta", 0.0)),
+			String(loss.get("cause", ""))
+		)
+		if document["id"] == "dorthkor-muster":
+			_apply_muster_script(row)
+		rows.append([document["display_name"], row])
+	return rows
 
 
 func _encounter(
@@ -278,16 +244,9 @@ func _encounter(
 	}
 
 
-func _muster_encounter() -> Dictionary:
-	var row := _encounter(
-		"dorthkor-muster",
-		"Dorthkor Dead Muster",
-		"mustered-bloodbellow",
-		"defeated_mustered_dead",
-		"ironbrand-sentinels",
-		5.0,
-		"Stopped a dead soldier answering Dom's muster"
-	)
+## The one encounter with a script beyond "kill it": two context actions and three
+## outcomes. Canon says who is in the fight; this says what else can be done in it.
+func _apply_muster_script(row: Dictionary) -> void:
 	row["Context Actions"] = (
 		JSON
 		. stringify(
@@ -357,7 +316,6 @@ func _muster_encounter() -> Dictionary:
 			}
 		)
 	)
-	return row
 
 
 func _upsert(root: PandoraCategory, entity_name: String, values: Dictionary) -> void:

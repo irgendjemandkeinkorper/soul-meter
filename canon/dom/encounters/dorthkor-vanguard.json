@@ -1,0 +1,1 @@
+{"schema":"weftlumin.encounter.v1","id":"dorthkor-vanguard","order":2,"display_name":"Dorthkor Demon Vanguard","archetype_ids":["gnaal-breach-hound","gnaal-rift-scavenger"],"defeated_flag":"defeated_breach_hound","win":{"faction":"iron-companies","delta":5.0,"cause":"Broke the demon vanguard at Dorthkor"},"loss":null}
