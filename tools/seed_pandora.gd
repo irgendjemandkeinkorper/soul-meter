@@ -38,6 +38,11 @@ class CanonReader:
 			"schema": "weftlumin.class.v1",
 			"fields": ["id", "display_name", "patron", "resource_name", "vault_id"],
 		},
+		"lore": {
+			"noun": "lore entry",
+			"schema": "weftlumin.lore.v1",
+			"fields": ["id", "display_name", "summary", "vault_id", "vault_path"],
+		},
 		"peoples": {
 			"noun": "people",
 			"schema": "weftlumin.people.v1",
@@ -187,17 +192,19 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 	var elements: Array[Dictionary] = CanonReader.load("elements", canon_root)
 	var classes: Array[Dictionary] = CanonReader.load("classes", canon_root)
 	var peoples: Array[Dictionary] = CanonReader.load("peoples", canon_root)
-	if elements.is_empty() or classes.is_empty() or peoples.is_empty():
+	var lore: Array[Dictionary] = CanonReader.load("lore", canon_root)
+	if elements.is_empty() or classes.is_empty() or peoples.is_empty() or lore.is_empty():
 		return false
 	if not _elements_match_the_design_system(elements):
 		return false
 	if Pandora.get_all_roots().is_empty():
-		_seed(factions, elements, classes, peoples)
+		_seed(factions, elements, classes, peoples, lore)
 	else:
 		_apply_elements(elements)
 		_apply_classes(classes)
 		_apply_peoples(peoples)
 		_apply_factions(factions)
+		_apply_lore(lore)
 	return true
 
 
@@ -262,7 +269,8 @@ func _seed(
 	factions: Array[Dictionary],
 	elements: Array[Dictionary],
 	classes: Array[Dictionary],
-	peoples: Array[Dictionary]
+	peoples: Array[Dictionary],
+	lore: Array[Dictionary]
 ) -> void:
 	_apply_elements(elements)
 	_apply_classes(classes)
@@ -275,7 +283,7 @@ func _seed(
 	_seed_combatants()
 	_seed_encounters()
 	_seed_locations()
-	_seed_lore()
+	_apply_lore(lore)
 
 
 # --- Elements: the Wheel of Ten (closed canon set; canon/<hub>/elements) -----------------
@@ -887,54 +895,28 @@ func _seed_locations() -> void:
 # --- Lore: bridge entries into the vault (id + path; prose STAYS in the vault) -----------
 
 
-func _seed_lore() -> void:
-	var root := _cat("Lore")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Summary", "string")
-	Pandora.create_property(root, "Vault Id", "string")
-	Pandora.create_property(root, "Vault Path", "string")
+## Bridge rows only: the id, the summary and the vault path. The prose stays in the vault, and
+## a `vault_id` here is not the document's own id — "The Soul Gauge" bridges to `souls`, "The
+## Taubstummers" to `last-great-war`. That is why the two fields exist separately.
+func _apply_lore(lore: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Lore")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Summary", "string"],
+		["Vault Id", "string"],
+		["Vault Path", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		[
-			"The Waning",
-			"Maiiam is withdrawing; magic is dying; the Agreement loosens.",
-			"the-waning",
-			"cosmology/the-waning.md"
-		],
-		[
-			"The Bloom",
-			"Year 0: Kronos unmade into the Mycosphere. The world composted — literally.",
-			"the-bloom",
-			"eras/the-bloom.md"
-		],
-		[
-			"The Soul Gauge",
-			"Souls are Weft-anchored patterns; magic spends them, mostly downward.",
-			"souls",
-			"cosmology/souls.md"
-		],
-		[
-			"Verleidenlot",
-			"The Kes'reth mass-emergence — the Waning's true, unrecognized origin.",
-			"verleidenlot",
-			"locations/verleidenlot.md"
-		],
-		[
-			"The Taubstummers",
-			"The sealed soul-weapons that broke the Tidal Dominion.",
-			"last-great-war",
-			"eras/last-great-war.md"
-		],
-		[
-			"The Wheel of Ten",
-			"Ten elements; adjacency is Chord, opposition is Clash.",
-			"magic-system",
-			"systems/magic-system.md"
-		],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Summary", r[1])
-		_assign(ent, "Vault Id", r[2])
-		_assign(ent, "Vault Path", r[3])
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in lore:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in lore:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Summary", row["summary"])
+		_assign(entity, "Vault Id", row["vault_id"])
+		_assign(entity, "Vault Path", row["vault_path"])
