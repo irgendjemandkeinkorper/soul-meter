@@ -1,0 +1,45 @@
+# FR-402 band-gated reactions for Dom.
+#
+# Each title below is the WARM route for one NPC that `canon/dom/characters`
+# already declares `"involvement": "reputation_reaction"`, with a hook_summary
+# naming the faction and the band. `globals/npc_reactions.gd` attaches them;
+# `dialogue/dom_townsfolk.dialogue` stays the generated neutral fallback and is
+# never hand-edited (tools/generate_gloot.gd owns it).
+
+~ dom_raika_toll_warm
+Raika Toll: Keep your footing. The stones are honest. The rest of the Arm is not.
+Raika Toll: The Sentinels have you written down as someone who brings back a true count. That buys one entry out of the Wound-Watch ledger. One.
+- "Read me the entry."
+	Raika Toll: Fourteenth of the tolling month. A wall-hand went out past the Lip on a listed patrol and came back on nobody's list at all.
+	Raika Toll: The line beneath it says CLOSED, NO FAULT. It is written in a different hand than the rest of the page.
+	Raika Toll: I have not asked whose hand. You may. Do it somewhere the bell cannot hear you.
+	=> END
+- "Keep it. I would rather owe you."
+	Raika Toll: Sensible. An entry spends once. A toll keeper who likes you spends for years.
+	=> END
+
+~ dom_edda_broadmark_warm
+Edda Broadmark: The Companies give your name weight. Edda does the same, and Edda is the harder of the two to move.
+Edda Broadmark: I have a veteran off the muster rolls. Two good knees and no war left in her. She will walk a road with you and not ask which road.
+- "Send her."
+	Edda Broadmark: Then she is sent. She answers to Broadmark, and Broadmark answers to whoever brings her back breathing.
+	=> END
+- "Not yet. I would only get her killed."
+	Edda Broadmark: Honest. Rare. The offer keeps — it is in the book, and the book outlives the both of us.
+	=> END
+
+~ dom_drann_wetiron_warm
+Drann Wetiron: Mind the sparks. The Concord speaks your name warmly, which obliges me to be civil in front of the apprentices.
+Drann Wetiron: The honest forge is the second one, behind the slack tub. It is yours between hammer falls. Do not make me regret the civility.
+=> END
+
+~ dom_venn_ashcord_warm
+Venn Ashcord: I waive no line. Everyone queues. But a warm record decides which drawer I open first, and today it is the useful one.
+Venn Ashcord: Fourth cabinet, the drawer the damp got into. Half of what Dom would rather forget is in there, and all of it is filed under WEATHER.
+=> END
+
+~ dom_holst_brinevein_warm
+Holst Brinevein: The Menders vouch for you, and the Menders are stingy with vouching.
+Holst Brinevein: So. The sea-mouth. Keep the broken tower off your right shoulder until the water goes the colour of old tin, then cut hard for the Lip.
+Holst Brinevein: The straight line is faster. The straight line is also where we stopped counting.
+=> END
