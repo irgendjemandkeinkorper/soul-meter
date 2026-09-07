@@ -151,6 +151,30 @@ additive keys and do not participate (`docs/architecture-in-game-editor.md` §4.
 Weftlumin's character kind (`stats.schema = "dramgid.v1"`, `docs/architecture-in-game-editor.md` §4.7)
 validates against `DramgidSchema` — one more reader, no second definition.
 
+### 3.7a How §3.7's two halves were reconciled (implemented, `globals/renown.gd`)
+
+§3.7 asks for two things that cannot both be literal. It says `gain_reputation`/`gain_infamy`
+"apply `× Decorum/10`", and it says "existing totals/API untouched so tavern gates keep working."
+DRAMGID point-buys attributes 2..5 (`DramgidSchema.ATTRIBUTE_FLOOR`/`ATTRIBUTE_CAP`), so that
+multiplier can only land in 0.2×..0.5×. Two shipped recruit gates read the raw totals —
+reputation ≥ 10 for Korrath Ninefold, infamy ≥ 8 for Maura Greyfen (`GameState._make_member`) —
+against authored grants that top out at 12. Scaling the meters flips both gates.
+
+Resolved so every clause of §3.7 stays literally true:
+
+- **Karma** is a new axis, so nothing depended on it before: the `× Doctrine / 10` multiplier is
+  **live** there, and each event records `base` and `applied` as §3.7 requires.
+- **Reputation and Infamy** keep the authored value as their delta. The Decorum-scaled figure is
+  **computed and recorded** on every event as `RenownEvent.fame_shift`, alongside `witness_factor`
+  — so §6 rules on real play data instead of re-deriving it from prose — but it does not move a
+  live total.
+- **Fame** is `reputation() + infamy()` less Legendary decay, exactly as §3.7 defines it.
+
+The divisor is one named constant, `Renown.ATTRIBUTE_SCALE_DIVISOR`, so the §6 freeze is a
+one-line change. Extreme-tier decay is likewise one named `DECAY_FRACTION_PER_WEEK`; the
+mechanism (asymptotic, boundary-respecting, on `WorldClock.day_changed` only, never a timer) is
+what F3a owes, the percentage is §6's.
+
 ---
 
 ## 4. Explicitly out of F3 (owned elsewhere)
@@ -179,7 +203,14 @@ authored later); companion recruits' attribute re-authoring beyond the mechanica
 7. **Yothmeru tiers/thresholds** adopted from RFC-0007 as written (Karma −1000..1000 seven tiers; Fame
    0..1000 five tiers) — confirm, DeepSeek checks the bands against current Renown totals so no existing
    recruit gate flips.
-8. **Fizzle reduction attribute = Intuition** (RFC-0001) and the vault/mono `magic-system.md` copies are
+8. **Does Fame track the Decorum-scaled `fame_shift` instead of raw `reputation + infamy`?**
+   §3.7 defines Fame as the raw sum, which is what shipped and what the recruit gates survive
+   (see §3.7a). RFC-0007 §4 instead scales it by `witness_factor × Decorum / 10`. Both figures are
+   recorded on every event today, so switching is a read change, not a migration — but it needs a
+   baseline: RFC-0007's `/10` annotates itself "Doctrine or Decorum of 10 = 1.0x", and DRAMGID
+   caps attributes at 5, so that baseline is unreachable and every act is dampened. Either confirm
+   the dampening is intended, or name the attribute value that means 1.0× on a 2..5 scale.
+9. **Fizzle reduction attribute = Intuition** (RFC-0001) and the vault/mono `magic-system.md` copies are
    edited to drop "Pitch" — a canon-doc task (Kimi/Ollama), not code.
 
 ---

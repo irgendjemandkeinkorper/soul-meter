@@ -16,6 +16,11 @@ extends Node
 ## `DEFAULT_PHASE` is the defined value for "clock disabled or never advanced".
 
 signal phase_changed(previous: StringName, current: StringName, cause: String)
+## Fires when a declared advance rolls the day over — the once-a-day hook
+## `Renown`'s Yothmeru decay rides (docs/architecture-dramgid.md §3.7, RFC-0007
+## §5). Deliberately emitted ONLY from advance(): restoring a save or resetting
+## the clock must not look like a day passing, or loading would age the world.
+signal day_changed(previous_day: int, current_day: int)
 
 ## §3.1: four phases, not twenty-four — the phase count is the authoring cost
 ## multiplier for every routine row in NpcRoutines.
@@ -46,9 +51,13 @@ func day_index() -> int:
 func advance(cause: String) -> StringName:
 	var index := PHASES.find(_phase)
 	var previous := _phase
+	var previous_day := day_index()
 	_phase = PHASES[(index + 1) % PHASES.size()]
 	phase_count += 1
 	phase_changed.emit(previous, _phase, cause)
+	var current_day := day_index()
+	if current_day != previous_day:
+		day_changed.emit(previous_day, current_day)
 	return _phase
 
 
