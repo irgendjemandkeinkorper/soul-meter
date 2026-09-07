@@ -693,7 +693,7 @@ runs them from a CI-only harness rather than porting them.
 |---|---|---|
 | tile/terrain painting, hostile placeable, `FieldMap.accord_at`, combat panel | **#281** (F1 same-map combat) | `FieldMap`, `Hostile`, `Terrain` custom data, `Battle.start_session` are F1 deliverables; "nothing else touches `GameFlow`/combat until F1 and F3 merge" (ship plan) |
 | spawn director budget, `max_alive` defaults | **#282** (100-mob floor) | IDLE hostiles must be free |
-| character `stats` schema, encounter archetype columns | **#283** (DRAMGID) | schema 8, Pandora columns |
+| character `stats` schema, encounter archetype columns | **#283** (DRAMGID) | schema 9, Pandora columns |
 | new interactable placeables | #284 | palette is registry-driven, so additive |
 | Dom content pass (ruling 10) | **#305** (Dom art batch) | both write `world/starting_town.tscn` |
 | shell chart integration (E2.3) | **F1 + F3 merge** | `GameFlow` freeze covers both |
@@ -831,7 +831,8 @@ Still open:
 - **F1 slip.** Scene/combat panels wait on #281; E1/E2 do not. If F1 slips past gold, E3 slips with it.
 - **Registry migration blast radius.** Making four registries data-driven touches travel; do it with the
   existing `test_starting_town`/`test_field_room`/journey tests green, one registry per PR.
-- **Schema 8 collision** between #283 and spawn persistence; coordinate in E1.10 (additive key fallback).
+- **Schema 9 collision** between #283 and spawn persistence; coordinate in E1.10 (additive key fallback).
+  (Renumbered 2026-09-07: schema 8 is the elemental-wheel rename, #371, so DRAMGID is the 8 → 9 hop.)
 - **Dom `.tscn` contention** with #305; the PR overlap pre-check refuses to open a colliding PR.
 - **Localisation debt** grows as authored strings land in exports; the bake reports POT deltas but POT
   regeneration remains an editor-machine chore.

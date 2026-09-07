@@ -77,16 +77,18 @@ the code is fair game for the matching task below.
 - **Do not decide:** damage values beyond the PROVISIONAL 2–6 band (DeepSeek N1), any
   combat read, per-member equipment (F4).
 
-## W3 — Codex: save schema 8 additions (joins PR 2 `feat/dramgid-save-8`)
+## W3 — Codex: save schema 9 additions (joins PR 2 `feat/dramgid-save-9`)
 
-- **Objective:** in the v7→v8 migration, per party/recruit row: if `patron` matches a
+> **Renumbered 2026-09-07:** 8 is the elemental-wheel rename (#371). DRAMGID is 8 → 9.
+
+- **Objective:** in the v8→v9 migration, per party/recruit row: if `patron` matches a
   `ClassCatalog` id → `class_id = patron; patron = ClassCatalog.patron_for(class_id)`; if
   `patron` is a deity name → derive `class_id`; grant Trained tiers for
   `kit_weapon_skill` and `tone_<major>` / `tone_<minor>` when the row has them and the
   skill is Untrained; synthesize attributes for attribute-less rows
   (`grit = max_hp/8, muster = attack, alacrity = defense, others 2`) before any
   `DramgidDerived.recompute()`; normalize ledger tier strings to lowercase.
-- **Scope:** `globals/save_migrations.gd`, `test/fixtures/save_game_schema_7.json` → 8
+- **Scope:** `globals/save_migrations.gd`, `test/fixtures/save_game_schema_8.json` → 9
   fixture, `test/unit/test_save_migrations.gd`, `docs/architecture-dramgid.md` §2.1 (append
   the steps; do not rewrite the section).
 - **Acceptance:** fixture with `patron: "ironbrand"` loads as `patron "Kero"`,

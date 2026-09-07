@@ -96,7 +96,11 @@ tiers); DeepSeek sets the per-tier values (§6). Everything else in `SkillCheck`
 
 ## 2. Migration rules
 
-### 2.1 Save schema 7 → 8 (`SaveMigrations._migrate_v7_to_v8`)
+### 2.1 Save schema 8 → 9 (`SaveMigrations._migrate_v8_to_v9`)
+
+> **Renumbered 2026-09-07.** This section originally said 7 → 8. That slot is taken: the
+> elemental-wheel rename shipped as `_migrate_v7_to_v8` (#371, `f5d7e24`) and
+> `CURRENT_SCHEMA_VERSION` is 8 on main. DRAMGID is the next hop, 8 → 9.
 
 For every party row and custom-recruit row (B§3 `PartyMember`, B§5):
 
@@ -107,7 +111,10 @@ For every party row and custom-recruit row (B§3 `PartyMember`, B§5):
    spent from its percentage via the advancement cost curve and add them to `advancement_points`
    (name per `globals/advancement.gd`), then drop the key. Skills with no old source start at 0%/tier 0.
 3. Add `xp: 0` and keep `level`; add nothing for perks (F5 decides the perk container).
-4. `renown`: add `karma: []` event list and `karma_total: 0` (§3.7). Existing reputation/infamy events untouched.
+4. `renown`: **nothing to do — §3.7 shipped without needing a migration** (#384). Karma rides the
+   existing append-only `log` under `kind: "karma"` rather than a parallel list, and `karma_total()`
+   is derived by replaying it, so a pre-Yothmeru envelope loads as Karma 0 on its own. The four keys
+   `RenownEvent` gained are additive and default to what an old row actually meant.
 5. `skill_check`: recorded recent checks carry old skill ids — rename in place.
 6. Derived stats (`max_hp`, `attack`, `defense`, `breath_max`) are **recomputed** from the new
    attributes by the DeepSeek-ratified formulas (§6) rather than copied; the migration logs the
@@ -143,7 +150,7 @@ additive keys and do not participate (`docs/architecture-in-game-editor.md` §4.
 | 3.5 | `globals/advancement.gd` | Skill-point pool receives Alchemy refund; API otherwise unchanged (XP curve is F5) | F3a |
 | 3.6 | Pandora seeders + generators + `campaign_encounter_loader.gd` | Columns per §2.2; drift checks green | F3a |
 | 3.7 | `globals/renown.gd` | **Yothmeru on Renown**: add signed `karma` ledger (`gain_karma(actor, base, cause, scene)` applies `× Doctrine/10` of the *player* at write time and records both `base` and `applied`), `karma_total()`, `karma_tier()` (seven tiers, thresholds from RFC-0007 via §6), `fame()` = reputation + infamy, `fame_tier()` (five tiers); `gain_reputation/gain_infamy` gain an optional `witness_factor` (default 1.0) and apply `× Decorum/10`; extreme-tier decay (Damned/Exalted/Legendary toward the boundary) runs on `WorldClock` day change only — never on a timer; `why("karma")` supported. Existing totals/API untouched so tavern gates keep working | F3a |
-| 3.8 | `globals/save_migrations.gd` | `CURRENT_SCHEMA_VERSION = 8`, `_migrate_v7_to_v8` per §2.1, fixture saves for v7→v8 | F3a |
+| 3.8 | `globals/save_migrations.gd` | `CURRENT_SCHEMA_VERSION = 9`, `_migrate_v8_to_v9` per §2.1, fixture saves for v8→v9 (8 is the wheel rename, #371 — see §2.1) | F3a |
 | 3.9 | `globals/combat/combat_rules.gd`, `resolution.gd`, `combat_controller.gd` | CT speed `6 + Reason/2` (was Edge); to-hit difference on Alacrity (was Edge); `calculate_damage` power term on Muster via `attack`; `_fizzle_context` supplies Intuition (was Pitch). Numbers unchanged unless §6 says otherwise | **F3b, after #281** |
 | 3.10 | Dialogue + quest audit + docs | §2.2 renames; `docs/dialogue-checks.md`; CLAUDE.md status line ("save schema 8") | F3a |
 | 3.11 | Tests | `test_chargen_data` rewritten to the schema; 147 legacy-id lines across `test/` (B§3) renamed by map; new: schema invariants (22 skills, each with a governing attribute; sum-22 validation), v7→v8 migration fixtures incl. Alchemy refund, Yothmeru shift/tier/decay, `karma_bonus` only on bellow/sway, `SkillCheck` API parity | F3a/F3b |
