@@ -1,13 +1,19 @@
 class_name VhorrHunger
 extends ClassResource
 ## Vhorr — Husk-bearer: Hunger. Active DoT ticks stack Hunger; a kill from the owner's DoT
-## refunds Soul Gauge.
+## returns Breath.
+##
+## It used to return Soul Gauge. Owner ruling (docs/game-identity.md ruling 3, reaffirmed
+## 2026-09-08 on #286): the Gauge rises ONLY through an act of Agreement — a tagged quest
+## outcome — and a kill is the opposite of one. The refund keeps its magnitude and moves to
+## Breath, the adjacent per-battle casting pool, so the class economy is a currency swap
+## rather than a deletion. B11 still owns the number.
 
 const MAX_HUNGER := 5 # PROVISIONAL — B11 owns tuning.
-const SOUL_REFUND := 1.0 # PROVISIONAL — B11 owns tuning.
+const BREATH_REFUND := 1 # PROVISIONAL — B11 owns tuning.
 
 var hunger: int = 0
-var pending_soul_refunds: float = 0.0
+var pending_breath_refunds: float = 0.0
 var pending_dot_targets: Array[String] = []
 
 
@@ -45,7 +51,7 @@ func _queue_hunger_dot(target_id: StringName) -> void:
 func on_deferred_fired(entry: Dictionary) -> void:
 	var label := StringName(str(entry.get("label", "")))
 	if label == &"hunger_refund":
-		pending_soul_refunds = maxf(pending_soul_refunds - SOUL_REFUND, 0.0)
+		pending_breath_refunds = maxf(pending_breath_refunds - float(BREATH_REFUND), 0.0)
 		return
 	if label != &"hunger_dot":
 		return
@@ -61,12 +67,12 @@ func on_deferred_fired(entry: Dictionary) -> void:
 
 func on_kill(_target_id: StringName, cause: StringName) -> void:
 	if cause == &"dot":
-		pending_soul_refunds += SOUL_REFUND
+		pending_breath_refunds += float(BREATH_REFUND)
 		enqueue_deferred(
 			{"writes": [{
-				"kind": "soul_refund",
+				"kind": "breath",
 				"target_id": String(owner_id),
-				"amount": SOUL_REFUND,
+				"amount": BREATH_REFUND,
 			}]},
 			{"delay_rounds": 0},
 			&"hunger_refund",
@@ -80,14 +86,14 @@ func snapshot() -> Dictionary:
 		"value": hunger,
 		"max": MAX_HUNGER,
 		"hidden_on_plate": true,
-		"pending_soul_refunds": pending_soul_refunds,
+		"pending_breath_refunds": pending_breath_refunds,
 	}
 
 
 func to_dict() -> Dictionary:
 	var data: Dictionary = super.to_dict()
 	data["hunger"] = hunger
-	data["pending_soul_refunds"] = pending_soul_refunds
+	data["pending_breath_refunds"] = pending_breath_refunds
 	data["pending_dot_targets"] = pending_dot_targets.duplicate()
 	return data
 
@@ -95,7 +101,11 @@ func to_dict() -> Dictionary:
 func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
 	hunger = clampi(int(data.get("hunger", 0)), 0, MAX_HUNGER)
-	pending_soul_refunds = maxf(float(data.get("pending_soul_refunds", 0.0)), 0.0)
+	# A save written before the Soul->Breath swap carries the old key; read either, so an
+	# in-flight refund is not silently dropped by loading an older battle.
+	pending_breath_refunds = maxf(
+		float(data.get("pending_breath_refunds", data.get("pending_soul_refunds", 0.0))), 0.0
+	)
 	pending_dot_targets.clear()
 	for value: Variant in data.get("pending_dot_targets", []):
 		var target_id := str(value)

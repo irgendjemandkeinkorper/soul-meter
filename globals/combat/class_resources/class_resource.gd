@@ -97,7 +97,7 @@ func on_cast_forecast(_context: Dictionary) -> Dictionary:
 ## Seam v2 request: queue an effect the controller fires later, at a scheduler boundary, through
 ## the SAME write-application path Resolution writes take (`_apply_resolution_writes`), so it is
 ## deterministic and replayable. `effect` is `{"writes": [{kind, target_id, delta|amount, ...}]}`
-## (kinds: hp, dot, breath, soul_refund, soul_meter, tile_state; before/after are materialized
+## (kinds: hp, dot, breath, soul_meter, tile_state; before/after are materialized
 ## at fire time from live state). `due` is one of `{"delay_ticks": n}` / `{"due_tick": t}`
 ## (charge-time clock) or `{"delay_rounds": n}` / `{"due_round": r}` (AP rounds). Returns the
 ## controller's refusal shape; `entry.id` on success. Oathclock Ledger's channel.

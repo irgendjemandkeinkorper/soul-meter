@@ -74,7 +74,7 @@ inside a deferred effect):
 | Kind | Fields | Effect |
 |---|---|---|
 | `dot` | `target_id`, `amount` (HP lost) | HP loss whose kill cause is `&"dot"` (on_kill receives `&"dot"`; `on_damage_taken` fires as usual) |
-| `soul_refund` | `target_id`, `amount` | Adds `amount` to the live Soul meter (`GameState.set_soul_meter`). The only Soul income channel a resource has |
+| ~~`soul_refund`~~ | — | **Removed 2026-09-08.** It added `amount` to the live Soul meter, which owner ruling 3 (`docs/game-identity.md`, reaffirmed on #286) forbids: the Gauge rises ONLY through an act of Agreement, a tagged quest outcome. The two classes that used it (B4, B5) now emit `breath` at the same magnitude. `CombatController` clamps a `soul_meter` write to a decrease, so no resource can reopen the channel by accident. |
 
 The v2 host methods used by these resources are `CombatController.actor_by_id(combat_id)` and
 `CombatController.has_living_enemies()`. They are read-only lookup/status helpers for resource
@@ -84,9 +84,16 @@ Notes for B9/B11 and the refund classes:
 
 - The hidden-draw row pick is an **unweighted modulo** over `rows` (`(roll - 1) % rows.size()`).
   B11 must not assume per-row weights; to weight a row, repeat it in the table.
-- `soul_refund` is **live `GameState` income** — it lands on the real Soul meter the moment the
-  write applies, unlike Breath, which is copied into the battle and written back by
-  `Battle._finish()`. A refund that fires in a lost battle has still happened.
+- **A class resource cannot give Soul back.** Owner ruling 3: the Soul Gauge rises only through
+  an act of Agreement, which is a tagged quest outcome (`DomSideQuest.ACT_OF_AGREEMENT_TAG`, and
+  `CampaignQuestLoader` refuses a quest whose positive Soul delta lacks the tag). Combat may
+  spend the Gauge and may never return it; `_apply_writes` clamps a `soul_meter` write to a
+  decrease so the rule is enforced where the write happens rather than by convention. If a
+  specific class should credit Soul, the change is to route it through the quest system's
+  tagged path — not to add a second income channel here.
+- Breath refunds are **not** live `GameState` writes: Breath is copied into the battle and
+  written back by `Battle._finish()`, so a refund in a lost battle does not survive it. That is
+  a behaviour change from the old `soul_refund`, which landed immediately and stuck.
 - The deferred queue is saved inside the `class_resources` dict under
   `CombatController.DEFERRED_SAVE_KEY` (only when non-empty); older saves restore an empty queue.
 - Hook ordering: the parent `action_resolved` event is delivered to listeners BEFORE
@@ -106,8 +113,8 @@ Failure, B2).
 | B1 Mirrorblade Balance | `on_action` + `on_cast_forecast` (`unit.attack_scale`, `fizzle.agreement_integrity`) — key-level merge now keeps the rest of `unit`/`fizzle` |
 | B2 Flamebinder Instructive Failure | `on_fizzle` banks; `on_cast_forecast` → `fizzle_percent_override: 0` while armed; consume in `on_action` |
 | B3 Ironbrand Scars | unchanged (`to_hit_enabled`); crit still has no channel |
-| B4 Husk-bearer Hunger | successful strikes/casts stack Hunger on hits; each target has one pending self-re-queuing DoT chain, and ticks run via deferred execution; `on_kill` with cause `&"dot"` → enqueue/apply `soul_refund` |
-| B5 River-Mother Name-Ledger | `class_resource_action: "record_name"` on a PASS action routes through `on_command(action_id, target_id)`; `soul_refund` is PROVISIONAL and fires on a recorded ally's fall or battle end only; `on_any_action` watches the named ally |
+| B4 Husk-bearer Hunger | successful strikes/casts stack Hunger on hits; each target has one pending self-re-queuing DoT chain, and ticks run via deferred execution; `on_kill` with cause `&"dot"` → enqueue/apply `breath` (was `soul_refund` until the 2026-09-08 ruling) |
+| B5 River-Mother Name-Ledger | `class_resource_action: "record_name"` on a PASS action routes through `on_command(action_id, target_id)`; the `breath` refund (was `soul_refund`) is PROVISIONAL and fires on a recorded ally's fall or battle end only; `on_any_action` watches the named ally |
 | B6 Lensbearer Clarity | `reveal: true` while armed |
 | B7 Oathclock Ledger | `enqueue_deferred()` on file, `on_deferred_fired()` to bookkeep, `snapshot().deferred` for the plate |
 | B8 Locksmirk Jam the Gears | `request_cancel(target, &"any")`; the fizzle floor stays in `SkillCheckService` |
