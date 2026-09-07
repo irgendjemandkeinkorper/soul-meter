@@ -92,7 +92,17 @@ func test_instantiated_contracts_are_inert_and_never_report_success() -> void:
 	assert_bool(get_tree().paused).is_equal(paused_before)
 	assert_bool(DirAccess.dir_exists_absolute("user://weftlumin")).is_equal(scratch_before)
 	assert_bool(InputMap.has_action("weftlumin_toggle")).is_false()
-	assert_bool(ProjectSettings.has_setting("autoload/WeftluminBootstrap")).is_false()
+	# E2.1 (#332) registers WeftluminBootstrap as an autoload, so its absence is no longer the
+	# evidence of inertness — its DISABLED state is. The point this line makes is unchanged:
+	# instantiating the contracts activates nothing.
+	assert_bool(ProjectSettings.has_setting("autoload/WeftluminBootstrap")).is_true()
+	var bootstrap: Node = get_tree().root.get_node_or_null("WeftluminBootstrap")
+	assert_object(bootstrap).override_failure_message(
+		"the bootstrap autoload must be resident in every build"
+	).is_not_null()
+	assert_bool(bool(bootstrap.call("is_enabled"))).override_failure_message(
+		"merely instantiating the Weftlumin contracts must not enable the editor"
+	).is_false()
 
 
 func test_support_types_and_plugin_compile_without_activation() -> void:
