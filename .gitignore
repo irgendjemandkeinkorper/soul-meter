@@ -14,3 +14,9 @@ build/
 
 # Claude Code local scratch (handoffs, debug logs, worker notes)
 .ai-work/
+
+# Runtime evidence written by the combat lab and dev console when they run. HANDOFF-A1.md
+# records the convention that these stay untracked; 22 blank session records reached the repo
+# anyway, and a test run adds more every time.
+combat_lab_recorder/
+dev-console-recorder/
