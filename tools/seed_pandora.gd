@@ -33,6 +33,13 @@ class CanonReader:
 	## type, so `integers` and `numbers` are validated identically and differ only in what the
 	## seeder writes into Pandora — an int property against a float one. `vector2is` are authored
 	## as a two-number array, `[width, height]`.
+	##
+	## `booleans` name required `true`/`false` fields. `routines` name FR-504a routine maps
+	## (issue #385): phase name -> `null` (declared absent) or
+	## `{"position": [x, y], "state": "<state>"}`, with `{}` meaning "no routine, FR-504
+	## flag/rep reactivity applies". The reader validates the SHAPE only; which phase names
+	## are legal and how many routines a hub may carry belong to `NpcRoutines`, which owns
+	## the FR-504a rules and is the runtime reader of this field.
 	const SCHEMAS := {
 		"factions": {
 			"noun": "faction",
@@ -71,6 +78,8 @@ class CanonReader:
 			],
 			"ordered": true,
 			"number_pairs": ["placement_offset"],
+			"booleans": ["phase_agnostic"],
+			"routines": ["routine"],
 		},
 		"items": {
 			"noun": "item",
@@ -197,6 +206,60 @@ class CanonReader:
 						% [document_path, field]
 					)
 					return false
+		for field: String in Array(contract.get("booleans", [])):
+			if typeof(row.get(field)) != TYPE_BOOL:
+				push_error("CANON-SEED: %s requires boolean '%s'." % [document_path, field])
+				return false
+		for field: String in Array(contract.get("routines", [])):
+			if not _valid_routine(row.get(field), field, document_path):
+				return false
+		return true
+
+
+	## A routine map is `phase -> null | {"position": [x, y], "state": "<state>"}`. An empty
+	## map is the common case: it means the character has no routine at all. Absence inside a
+	## routine must be the explicit `null` row, never a missing key — FR-504a §5 criterion 4
+	## draws that line, and this reader will not let a document blur it into "nowhere".
+	static func _valid_routine(value: Variant, field: String, document_path: String) -> bool:
+		if typeof(value) != TYPE_DICTIONARY:
+			push_error("CANON-SEED: %s requires '%s' as an object." % [document_path, field])
+			return false
+		for phase: Variant in value as Dictionary:
+			if typeof(phase) != TYPE_STRING:
+				push_error(
+					"CANON-SEED: %s has a non-string '%s' phase name." % [document_path, field]
+				)
+				return false
+			var placement: Variant = (value as Dictionary)[phase]
+			if placement == null:
+				continue
+			if typeof(placement) != TYPE_DICTIONARY:
+				push_error(
+					"CANON-SEED: %s '%s' phase '%s' must be null or an object."
+					% [document_path, field, phase]
+				)
+				return false
+			var row: Dictionary = placement
+			var position: Variant = row.get("position")
+			if typeof(position) != TYPE_ARRAY or (position as Array).size() != 2:
+				push_error(
+					"CANON-SEED: %s '%s' phase '%s' needs a two-number 'position'."
+					% [document_path, field, phase]
+				)
+				return false
+			for component: Variant in position as Array:
+				if typeof(component) != TYPE_FLOAT:
+					push_error(
+						"CANON-SEED: %s '%s' phase '%s' has a non-numeric position component."
+						% [document_path, field, phase]
+					)
+					return false
+			if typeof(row.get("state")) != TYPE_STRING or String(row["state"]).is_empty():
+				push_error(
+					"CANON-SEED: %s '%s' phase '%s' needs a non-empty 'state'."
+					% [document_path, field, phase]
+				)
+				return false
 		return true
 
 	## The wheel's oppositions are canon and symmetric (§ vault systems/magic-system.md). Two

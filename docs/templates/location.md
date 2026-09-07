@@ -83,16 +83,23 @@ NPCs (`actors/npc/npc.gd`): `npc_name`, `npc_id` (kebab, unique), `dialogue_path
 `giver_actor_id`, or a dialogue file containing `QuestRegistry.offer(`) that has an
 `NpcRoutines` row must be present in ≥ 2 phases (`quest_audit` `phase_reachability`).
 
-Hub routine row (`globals/npc_routines.gd`, positions in THAT scene's coordinates):
+Hub routine row — a field on the NPC's own canon document
+(`canon/<hub>/characters/<npc-id>.json`, positions in THAT scene's coordinates). `{}` means
+"no routine": FR-504 flag/rep reactivity applies. `"phase_agnostic": true` says that is
+deliberate rather than an omission.
 
-```
-"sella-varn": {
-    &"morning":   {"position": Vector2(2820, 1525), "state": &"working"},
-    &"afternoon": {"position": Vector2(1480, 1250), "state": &"buying"},
-    &"evening":   {"position": Vector2(1700, 1560), "state": &"drinking"},
-    &"night":     null,   # ABSENT must be declared, never missing
+```json
+"routine": {
+    "morning":   {"position": [2820, 1525], "state": "working"},
+    "afternoon": {"position": [1480, 1250], "state": "buying"},
+    "evening":   {"position": [1700, 1560], "state": "drinking"},
+    "night":     null
 },
+"phase_agnostic": false
 ```
+
+`globals/npc_routines.gd` reads those fields and keeps only the FR-504a rules canon does not
+carry — `ROUTINE_CAP`, `HUB_SCENE`, the `ABSENT` sentinel.
 
 Note: `NpcRoutines.HUB_SCENE` is currently Dom only; hubs 2–3 need that constant widened
 (one-line change, list it in the handoff — do not do it silently).

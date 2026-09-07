@@ -619,6 +619,8 @@ func _character_row(character_id: String, order: int) -> Dictionary:
 		"dialogue_warm": "",
 		"placement_anchor": "town_hall",
 		"placement_offset": [0, 0],
+		"routine": {},
+		"phase_agnostic": false,
 		"involvement": "",
 		"hook_summary": "",
 	}
@@ -674,6 +676,69 @@ func test_a_character_with_a_scalar_offset_is_refused() -> void:
 	var row: Dictionary = _character_row("scalar-offset", 0)
 	row["placement_offset"] = 12
 	_write_kind("characters", "scalar-offset.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func test_every_character_carries_a_routine_map_and_a_phase_agnostic_flag() -> void:
+	# Issue #385: the two FR-504a fields moved out of `globals/npc_routines.gd`
+	# into the document of the NPC they describe, so every document declares them.
+	for character: Dictionary in SeedPandora.CanonReader.load("characters"):
+		assert_int(typeof(character["routine"])).override_failure_message(
+			"character '%s' has no routine map" % character["id"]
+		).is_equal(TYPE_DICTIONARY)
+		assert_int(typeof(character["phase_agnostic"])).override_failure_message(
+			"character '%s' has no phase_agnostic flag" % character["id"]
+		).is_equal(TYPE_BOOL)
+
+
+func test_authored_routine_rows_survive_the_read_intact() -> void:
+	var row: Dictionary = _character_row("routined", 0)
+	row["routine"] = {
+		"morning": {"position": [12, 34], "state": "working"},
+		"night": null,
+	}
+	_write_kind("characters", "routined.json", row)
+
+	var loaded: Array[Dictionary] = SeedPandora.CanonReader.load("characters", _canon_root)
+	assert_int(loaded.size()).is_equal(1)
+	var routine: Dictionary = loaded[0]["routine"]
+	# JSON has one number type, so an authored integer arrives as a float.
+	assert_array(routine["morning"]["position"]).is_equal([12.0, 34.0])
+	assert_str(routine["morning"]["state"]).is_equal("working")
+	assert_bool(routine["night"] == null).override_failure_message(
+		"a declared absence must stay null rather than becoming an empty row"
+	).is_true()
+
+
+func test_a_character_with_a_non_object_routine_is_refused() -> void:
+	var row: Dictionary = _character_row("scalar-routine", 0)
+	row["routine"] = "morning"
+	_write_kind("characters", "scalar-routine.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func test_a_routine_row_without_a_position_is_refused() -> void:
+	var row: Dictionary = _character_row("no-position", 0)
+	row["routine"] = {"morning": {"state": "working"}}
+	_write_kind("characters", "no-position.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func test_a_routine_row_without_a_state_is_refused() -> void:
+	var row: Dictionary = _character_row("no-state", 0)
+	row["routine"] = {"morning": {"position": [1, 2]}}
+	_write_kind("characters", "no-state.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func test_a_character_without_a_phase_agnostic_flag_is_refused() -> void:
+	var row: Dictionary = _character_row("no-flag", 0)
+	row.erase("phase_agnostic")
+	_write_kind("characters", "no-flag.json", row)
 
 	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
 
