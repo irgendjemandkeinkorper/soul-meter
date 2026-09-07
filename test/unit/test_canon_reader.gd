@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 
 const SeedPandora := preload("res://tools/seed_pandora.gd")
 
-const KINDS := ["factions", "elements", "classes", "peoples"]
+const KINDS := ["factions", "elements", "classes", "peoples", "lore"]
 
 var _original_backend: PandoraEntityBackend
 var _original_ids: PandoraIDGenerator
@@ -400,6 +400,63 @@ func test_element_names_still_resolve_through_the_legacy_slug_fallback() -> void
 		assert_object(entity).override_failure_message(
 			"no existing entity resolves for element id '%s'" % element["id"]
 		).is_not_null()
+
+
+# --- E1.4f: lore bridge rows -------------------------------------------------------------
+
+
+func test_lore_documents_bridge_to_the_vault_without_conflating_the_two_ids() -> void:
+	# A lore document's own id and its `vault_id` are different fields on purpose: "The Soul
+	# Gauge" bridges to `souls`, "The Taubstummers" to `last-great-war`. Collapsing them would
+	# look harmless until a bridge stopped resolving.
+	var lore: Array[Dictionary] = SeedPandora.CanonReader.load("lore")
+	assert_int(lore.size()).is_equal(6)
+	var differing: int = 0
+	for row: Dictionary in lore:
+		for field: String in ["id", "display_name", "summary", "vault_id", "vault_path"]:
+			assert_str(String(row.get(field, ""))).is_not_empty()
+		assert_str(String(row["vault_path"])).ends_with(".md")
+		if String(row["vault_id"]) != String(row["id"]):
+			differing += 1
+	assert_int(differing).override_failure_message(
+		"no document distinguishes its own id from its vault_id, so the test proves nothing"
+	).is_greater(0)
+
+
+func test_reseeding_lore_creates_no_duplicates() -> void:
+	var seeder: Node = auto_free(SeedPandora.new())
+	var before: int = Pandora.get_all_entities(_root("Lore")).size()
+	for _repeat: int in 2:
+		seeder._apply_lore(SeedPandora.CanonReader.load("lore"))
+	assert_int(Pandora.get_all_entities(_root("Lore")).size()).is_equal(before)
+
+
+func test_lore_names_still_resolve_through_the_legacy_slug_fallback() -> void:
+	var seeder: Node = auto_free(SeedPandora.new())
+	for row: Dictionary in SeedPandora.CanonReader.load("lore"):
+		assert_object(
+			seeder._find_by_stable_id(_root("Lore"), row["id"])
+		).override_failure_message(
+			"no existing entity resolves for lore id '%s'" % row["id"]
+		).is_not_null()
+
+
+func test_a_malformed_lore_document_refuses_the_whole_seed() -> void:
+	var row: Dictionary = {
+		"schema": "weftlumin.lore.v1",
+		"id": "test-entry",
+		"display_name": "Test Entry",
+		"summary": "A test summary.",
+		"vault_id": "test-entry",
+	}
+	_write_kind("lore", "test-entry.json", row)
+	var loaded: Array[Array] = [[{}]]
+	await assert_error(
+		func(): loaded[0] = SeedPandora.CanonReader.load("lore", _canon_root)
+	).is_push_error(
+		"CANON-SEED: %s requires string 'vault_path'." % _kind_path("lore", "test-entry.json")
+	)
+	assert_array(loaded[0]).is_empty()
 
 
 func _element_row(element_id: String, order: int, clash: String) -> Dictionary:
