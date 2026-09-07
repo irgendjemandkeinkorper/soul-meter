@@ -175,7 +175,7 @@ static func _migrate_v7_to_v8(source: Dictionary) -> Dictionary:
 			for value: Variant in rows:
 				if value is Dictionary:
 					_rename_member_elements(value)
-		state["skills"] = _rename_tone_keys(state.get("skills", {}))
+		state["skills"] = _rename_actor_skill_keys(state.get("skills", {}))
 		migrated["game_state"] = state
 
 	var tactical: Variant = migrated.get("tactical", {})
@@ -218,6 +218,27 @@ static func _rename_element_keys(rows: Dictionary) -> Dictionary:
 	var renamed: Dictionary = {}
 	for key: Variant in rows.keys():
 		renamed[_rename_element(str(key))] = rows[key]
+	return renamed
+
+
+## `GameState.skills` is keyed by ACTOR, and the tone ids live one level down —
+## `{actor_id: {skill_id: {percentage, tier, …}}}`. Renaming its top level would
+## rename actor ids and miss every tone skill, which is how a schema-7 save could
+## reach schema 8 still holding `tone_scor` while the build asks for `tone_khash`
+## and reads the difference as untrained. A `PartyMember` row is a different
+## shape — its `skill_percentages`/`skill_tiers` are flat skill maps — which is
+## why `_rename_member_elements` calls `_rename_tone_keys` directly.
+static func _rename_actor_skill_keys(rows: Variant) -> Dictionary:
+	if not rows is Dictionary:
+		return {}
+	var source_rows: Dictionary = rows
+	var renamed: Dictionary = {}
+	for actor_id: Variant in source_rows.keys():
+		var row: Variant = source_rows[actor_id]
+		# A non-dictionary row is carried through verbatim rather than replaced
+		# with {}: the loader's validator has to still see the corruption instead
+		# of the migration quietly erasing it.
+		renamed[actor_id] = _rename_tone_keys(row) if row is Dictionary else row
 	return renamed
 
 
