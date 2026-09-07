@@ -1,6 +1,7 @@
 # DRAMGID migration — architecture note (F3 design, #283)
 
-**Status:** DRAFT for owner ratification (§5) · 2026-09-04 · author: Claude (architecture) · fact base:
+**Status:** DRAFT for owner ratification (§5) · 2026-09-04, progress recorded 2026-09-08 (§3, §7)
+· author: Claude (architecture) · fact base:
 `docs/briefs/dramgid-brief.md` (Codex reader, every claim cited there; this note cites the brief as `B§n`).
 **Ratified inputs:** `docs/game-identity.md` rulings 8–9 (class = identity, DRAMGID = what you can do;
 XP + skill points + class perks), fleet F3/F5 rows, mono RFC-0001 (Accepted). **Implements:** the
@@ -26,7 +27,8 @@ silently. Three facts shape the design:
 3. **The 22-skill table exists only in a `proposed` RFC** (mono RFC-0005) while the Accepted
    character-creation file names 12 skills; the owner ratified "22 skills" in game-identity. This
    note adopts the RFC-0005 table **PROVISIONALLY** and asks the owner to ratify RFC-0005 in mono
-   (§5.1). Ship plan's "save schema 7" gate wording is stale: DRAMGID is **schema 8** (B§7).
+   (§5.1). Ship plan's "save schema 7" gate wording is stale: DRAMGID shipped as **schema 9**
+   (this note originally said 8; the elemental-wheel rename took that slot — see §2.1).
 
 ---
 
@@ -119,6 +121,13 @@ For every party row and custom-recruit row (B§3 `PartyMember`, B§5):
 6. Derived stats (`max_hp`, `attack`, `defense`, `breath_max`) are **recomputed** from the new
    attributes by the DeepSeek-ratified formulas (§6) rather than copied; the migration logs the
    before/after per member so a playtester can see the change.
+   > **Deferred, 2026-09-08 (#392).** Steps 1, 2, 3 and 5 shipped; this one did not. §6 has not
+   > frozen, and `DramgidDerived` (§3.3) does not exist. A migrated member therefore keeps its
+   > stored derived stats, and there is a test asserting exactly that, so the gap is visible in
+   > the suite rather than assumed. Stubbing the recompute with today's formulas (what §7
+   > originally suggested) would have rewritten every migrated save's combat numbers once now
+   > and again after §6 freezes; carrying them across rewrites them zero times. When §6 lands,
+   > this is an addition to `_migrate_v8_to_v9`, not a rewrite of it.
 
 Everything else in the envelope is untouched. Weftlumin's `world_seed`/`phase_count`/`spawn_state` are
 additive keys and do not participate (`docs/architecture-in-game-editor.md` §4.10).
@@ -140,6 +149,39 @@ additive keys and do not participate (`docs/architecture-in-game-editor.md` §4.
 ---
 
 ## 3. Surface-by-surface changes
+
+**Status as of 2026-09-08.** Seven of the eleven surfaces have shipped. The `Half` column
+says which half of F3 a surface belongs to; the `Status` column says what actually landed.
+Anything still open is open for a named reason, not because nobody has picked it up.
+
+| # | Surface | Status | Landed in |
+|---|---|---|---|
+| 3.1 | `dramgid_schema.gd` | **done** | `03e74195` |
+| 3.2 | `skill_check.gd` | **done** — definitions from the schema, `karma_bonus` live on Yothmeru | #390 |
+| 3.3 | `party_member.gd` / `battle_actor.gd` | **partial** — `xp` field and the legacy↔DRAMGID `attribute_value()` bridge exist; `DramgidDerived.recompute` does NOT, and is blocked on §6 |  |
+| 3.4 | chargen + character sheet | **done** — the sheet reads `DramgidSchema.SKILL_GROUPS`; `ChargenData.SKILL_IDS`/`SKILL_LABELS` deleted | #394 |
+| 3.5 | `advancement.gd` | **done** — the Alchemy refund arrives through the schema-9 migration | #392 |
+| 3.6 | Pandora seeders + generators | **open** — see the note under the table |  |
+| 3.7 | `renown.gd` (Yothmeru) | **done** — see §3.7a for how its two halves were reconciled | #384 |
+| 3.8 | `save_migrations.gd` | **done** — schema 9, §2.1 steps 1/2/3/5; step 6 deferred with §3.3 | #392 |
+| 3.9 | combat rules | **blocked** — F3b, after #281 |  |
+| 3.10 | dialogue + quest audit + docs | **done** — 14 authored checks and 4 code call sites renamed; the quest audit needed no change (it matches the shape of a `check(` call, not a literal id list) | #393, #395 |
+| 3.11 | tests | **rolling** — each surface above carried its own cases |  |
+
+**Why §3.6 is still open.** It asks for the Combatants category's single `Edge` column to be
+*replaced* by seven attribute columns. But `Edge` is read by the to-hit rule, and moving that
+read to Alacrity is §3.9 — F3b, blocked on #281. Landing the data ahead of its consumer would
+strand it. Its other half (Peoples `Leaning Primary`/`Leaning Secondary`) is display-only in F3
+and `ChargenData.ANCESTRIES` already carries `lean_ids`, so it buys nothing on its own. §3.6
+should ship *with* §3.9, as one re-seed.
+
+Relatedly, `tools/seed_phase_one_pandora.gd`'s authored `check_skill` values (and the defaults
+mirroring them in `combat_controller.gd` and `generate_gloot.gd`) are still `lore`/`insight`.
+They are Pandora seed data: renaming them means re-seeding `data.pandora` and regenerating
+`data/generated/encounters.json`, so they belong to that same data change, where code and
+authored data move together.
+
+### 3.0 The original plan (for reference)
 
 | # | Surface | Change | Half |
 |---|---|---|---|
@@ -249,3 +291,17 @@ F3a (Codex, now, no combat files; blocked only by §6's freeze for the derived f
 schema/migration first with `DramgidDerived` as a stub returning today's formulas, then swap in the
 frozen numbers) → F3b (Codex, after #281 merges; one PR) → canon-doc edits (Kimi) → Weftlumin
 #325/#347 unblock. The Codex handoff is `docs/handoff-dramgid-codex.md`.
+
+**Where that leaves F3a (2026-09-08).** F3a is done except for the two things it was always
+going to trip over, and both are the same blocker wearing two hats:
+
+1. `DramgidDerived.recompute` (§3.3) and the migration's step-6 stat recompute (§2.1) wait on
+   §6's frozen formulas. The plan above says to stub it with "today's formulas" — that was not
+   done, deliberately. A stub that recomputes derived stats using the *current* numbers still
+   rewrites every migrated save's `max_hp`/`attack`/`defense`/`breath_max`, and if §6 then
+   freezes different numbers those saves have been through two rewrites instead of none.
+   Carrying the stored values across is the reversible choice; the migration has a test
+   asserting it, so the deferral is visible rather than assumed.
+2. §3.6 and §3.9 have to ship together (see the note under §3's table).
+
+Everything else F3a owns has merged: #384, #390, #392, #393, #394, #395.
