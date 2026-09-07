@@ -2,7 +2,9 @@ extends GdUnitTestSuite
 
 const SeedPandora := preload("res://tools/seed_pandora.gd")
 
-const KINDS := ["factions", "elements", "classes", "peoples", "locations", "lore"]
+const KINDS := [
+	"factions", "elements", "classes", "peoples", "spells", "effects", "locations", "lore"
+]
 
 var _original_backend: PandoraEntityBackend
 var _original_ids: PandoraIDGenerator
@@ -400,6 +402,75 @@ func test_element_names_still_resolve_through_the_legacy_slug_fallback() -> void
 		assert_object(entity).override_failure_message(
 			"no existing entity resolves for element id '%s'" % element["id"]
 		).is_not_null()
+
+
+# --- E1.4c: spells and effects -----------------------------------------------------------
+
+
+func test_every_spell_names_an_element_that_exists_on_the_wheel() -> void:
+	# The element arrives as an id, not an entity name, so a rename of the display text cannot
+	# break the link — but a typo in the id can, and this is where it surfaces.
+	var wheel_ids: Dictionary = {}
+	for element: Dictionary in SeedPandora.CanonReader.load("elements"):
+		wheel_ids[String(element["id"])] = true
+	var spells: Array[Dictionary] = SeedPandora.CanonReader.load("spells")
+	assert_int(spells.size()).is_equal(3)
+	for row: Dictionary in spells:
+		assert_bool(wheel_ids.has(String(row["element"]))).override_failure_message(
+			"spell '%s' names element '%s', which is not on the wheel"
+			% [row["id"], row["element"]]
+		).is_true()
+		assert_bool(typeof(row["soul_cost"]) == TYPE_FLOAT).override_failure_message(
+			"JSON has one number type; soul_cost arrives as a float and is cast at assignment"
+		).is_true()
+
+
+func test_a_spell_with_a_non_numeric_cost_is_refused() -> void:
+	var row: Dictionary = {
+		"schema": "weftlumin.spell.v1",
+		"id": "test-spell",
+		"display_name": "Test Spell",
+		"description": "A test.",
+		"element": "khash",
+		"soul_cost": "four",
+	}
+	_write_kind("spells", "test-spell.json", row)
+	var loaded: Array[Array] = [[{}]]
+	await assert_error(
+		func(): loaded[0] = SeedPandora.CanonReader.load("spells", _canon_root)
+	).is_push_error(
+		"CANON-SEED: %s requires numeric 'soul_cost'." % _kind_path("spells", "test-spell.json")
+	)
+	assert_array(loaded[0]).is_empty()
+
+
+func test_placeholder_is_a_mechanics_flag_and_stays_out_of_canon() -> void:
+	# The header rule: canon records the world, not what the build has not built yet. The
+	# seeder stamps Placeholder; no document carries it.
+	for kind: String in ["spells", "effects"]:
+		for row: Dictionary in SeedPandora.CanonReader.load(kind):
+			assert_bool(row.has("placeholder")).override_failure_message(
+				"%s document '%s' carries a mechanics flag" % [kind, row["id"]]
+			).is_false()
+	var seeder: Node = auto_free(SeedPandora.new())
+	seeder._apply_spells(SeedPandora.CanonReader.load("spells"))
+	var spell: PandoraEntity = seeder._find_by_stable_id(_root("Spells"), "hushfall")
+	assert_object(spell).is_not_null()
+	assert_bool(spell.get_entity_property("Placeholder").get_default_value()).is_true()
+
+
+func test_reseeding_spells_and_effects_creates_no_duplicates() -> void:
+	var seeder: Node = auto_free(SeedPandora.new())
+	var before: Dictionary = {}
+	for root_name: String in ["Spells", "Effects"]:
+		before[root_name] = Pandora.get_all_entities(_root(root_name)).size()
+	for _repeat: int in 2:
+		seeder._apply_spells(SeedPandora.CanonReader.load("spells"))
+		seeder._apply_effects(SeedPandora.CanonReader.load("effects"))
+	for root_name: String in ["Spells", "Effects"]:
+		assert_int(Pandora.get_all_entities(_root(root_name)).size()).override_failure_message(
+			"%s gained entities on a re-seed" % root_name
+		).is_equal(int(before[root_name]))
 
 
 # --- E1.4e: world-map locations and the generated index ----------------------------------
