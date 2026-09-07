@@ -10,6 +10,13 @@ extends Node
 
 var _cats := {}
 
+## Item sub-categories, in creation order. These are Pandora tree structure rather than canon:
+## an item document names one by this exact display name, and `_item_categories_exist()`
+## refuses an unknown one before anything is written. The order is fixed here because on an
+## empty database it decides the generated category ids, and deriving it from whichever item
+## document happened to sort first would make a fresh seed disagree with the committed one.
+const ITEM_CATEGORIES := ["Weapons", "Relics", "Tools", "Consumables", "Materials"]
+
 
 class CanonReader:
 	const CANON_ROOT := "res://canon"
@@ -21,6 +28,11 @@ class CanonReader:
 	## `ordered` kinds carry an integer `order` and are returned in it. The wheel is a ring and
 	## its rotation is canon — ring distance and the clash pairs are read off it — so that order
 	## must not be an accident of how the files happen to sort.
+	##
+	## `integers`, `numbers` and `vector2is` name non-string fields. JSON has a single number
+	## type, so `integers` and `numbers` are validated identically and differ only in what the
+	## seeder writes into Pandora — an int property against a float one. `vector2is` are authored
+	## as a two-number array, `[width, height]`.
 	const SCHEMAS := {
 		"factions": {
 			"noun": "faction",
@@ -48,6 +60,17 @@ class CanonReader:
 			"noun": "effect",
 			"schema": "weftlumin.effect.v1",
 			"fields": ["id", "display_name", "description", "duration_type"],
+		},
+		"items": {
+			"noun": "item",
+			"schema": "weftlumin.item.v1",
+			"fields": [
+				"id", "display_name", "category", "description", "equip_slot", "rarity",
+				"flavour",
+			],
+			"integers": ["max_stack_size"],
+			"numbers": ["weight"],
+			"vector2is": ["grid_size"],
 		},
 		"locations": {
 			"noun": "location",
@@ -143,10 +166,26 @@ class CanonReader:
 			# JSON has one number type, so an authored integer arrives as a float.
 			push_error("CANON-SEED: %s requires numeric 'order'." % document_path)
 			return false
-		for field: String in Array(contract.get("integers", [])):
+		for field: String in Array(contract.get("integers", [])) + Array(
+			contract.get("numbers", [])
+		):
 			if typeof(row.get(field)) != TYPE_FLOAT:
 				push_error("CANON-SEED: %s requires numeric '%s'." % [document_path, field])
 				return false
+		for field: String in Array(contract.get("vector2is", [])):
+			var pair: Variant = row.get(field)
+			if typeof(pair) != TYPE_ARRAY or (pair as Array).size() != 2:
+				push_error(
+					"CANON-SEED: %s requires '%s' as a two-number array." % [document_path, field]
+				)
+				return false
+			for component: Variant in pair as Array:
+				if typeof(component) != TYPE_FLOAT:
+					push_error(
+						"CANON-SEED: %s has a non-numeric '%s' component."
+						% [document_path, field]
+					)
+					return false
 		return true
 
 	## The wheel's oppositions are canon and symmetric (§ vault systems/magic-system.md). Two
@@ -212,23 +251,27 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 	var elements: Array[Dictionary] = CanonReader.load("elements", canon_root)
 	var classes: Array[Dictionary] = CanonReader.load("classes", canon_root)
 	var peoples: Array[Dictionary] = CanonReader.load("peoples", canon_root)
+	var items: Array[Dictionary] = CanonReader.load("items", canon_root)
 	var spells: Array[Dictionary] = CanonReader.load("spells", canon_root)
 	var effects: Array[Dictionary] = CanonReader.load("effects", canon_root)
 	var locations: Array[Dictionary] = CanonReader.load("locations", canon_root)
 	var lore: Array[Dictionary] = CanonReader.load("lore", canon_root)
 	if (
-		elements.is_empty() or classes.is_empty() or peoples.is_empty()
+		elements.is_empty() or classes.is_empty() or peoples.is_empty() or items.is_empty()
 		or spells.is_empty() or effects.is_empty() or locations.is_empty() or lore.is_empty()
 	):
 		return false
 	if not _elements_match_the_design_system(elements):
 		return false
+	if not _item_categories_exist(items):
+		return false
 	if Pandora.get_all_roots().is_empty():
-		_seed(factions, elements, classes, peoples, spells, effects, locations, lore)
+		_seed(factions, elements, classes, peoples, items, spells, effects, locations, lore)
 	else:
 		_apply_elements(elements)
 		_apply_classes(classes)
 		_apply_peoples(peoples)
+		_apply_items(items)
 		_apply_spells(spells)
 		_apply_effects(effects)
 		_apply_factions(factions)
@@ -261,6 +304,19 @@ func _elements_match_the_design_system(elements: Array[Dictionary]) -> bool:
 	return true
 
 
+## An item naming a category this seeder does not create would be a null parent at creation
+## time, so it is caught in preflight where every other canon-shape failure is caught.
+func _item_categories_exist(items: Array[Dictionary]) -> bool:
+	for row: Dictionary in items:
+		if not ITEM_CATEGORIES.has(row["category"]):
+			push_error(
+				"CANON-SEED: item '%s' names unknown category '%s'."
+				% [row["id"], row["category"]]
+			)
+			return false
+	return true
+
+
 func _design_system_token(element_id: String) -> Dictionary:
 	for token: Dictionary in DS.WHEEL:
 		if String(token["id"]) == element_id:
@@ -282,6 +338,24 @@ func _ensure_root(name: String) -> PandoraCategory:
 	return _cat(name)
 
 
+## The sub-category equivalent of `_ensure_root()`. Re-creating a category that already exists
+## would give it a new generated id and move every child under it, which reads as drift.
+func _ensure_child_category(parent: PandoraCategory, name: String) -> PandoraCategory:
+	# `get_all_categories()`, not `get_all_entities()` — the latter filters categories out
+	# entirely, so a lookup through it can never find one and would recreate it every seed.
+	# Both recurse, hence the parent check: a category of the same name nested deeper is a
+	# different category and must not be adopted as this one.
+	for candidate: PandoraEntity in Pandora.get_all_categories(parent):
+		if (
+			candidate is PandoraCategory
+			and candidate.get_entity_name() == name
+			and (candidate as PandoraCategory)._category_id == parent.get_entity_id()
+		):
+			_cats[name] = candidate
+			return candidate as PandoraCategory
+	return _cat(name, parent)
+
+
 ## Authored default values: runtime setters (set_string etc.) only work on instantiate()d
 ## copies. Authoring goes through the OverridingProperty wrapper -> _property_overrides,
 ## which is what save_data() persists (and what the Pandora editor itself does).
@@ -299,6 +373,7 @@ func _seed(
 	elements: Array[Dictionary],
 	classes: Array[Dictionary],
 	peoples: Array[Dictionary],
+	items: Array[Dictionary],
 	spells: Array[Dictionary],
 	effects: Array[Dictionary],
 	locations: Array[Dictionary],
@@ -307,7 +382,7 @@ func _seed(
 	_apply_elements(elements)
 	_apply_classes(classes)
 	_apply_peoples(peoples)
-	_seed_items()
+	_apply_items(items)
 	_apply_spells(spells)
 	_apply_effects(effects)
 	_apply_factions(factions)
@@ -416,103 +491,52 @@ func _apply_peoples(peoples: Array[Dictionary]) -> void:
 # --- Items: reserved sync-spec properties on the ROOT (propagate to all children) --------
 
 
-func _seed_items() -> void:
-	var root := _cat("Items")
+func _apply_items(items: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Items")
 	# Reserved properties per docs/godot-architecture.md sync spec. Grid inventory is
 	# confirmed, so Grid Size is REQUIRED.
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Description", "string")
-	Pandora.create_property(root, "Max Stack Size", "int")
-	Pandora.create_property(root, "Weight", "float")
-	Pandora.create_property(root, "Grid Size", "vector2i")
-	Pandora.create_property(root, "Equip Slot", "string")
-	Pandora.create_property(root, "Rarity", "string")
-	Pandora.create_property(root, "Flavour", "string")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Description", "string"],
+		["Max Stack Size", "int"],
+		["Weight", "float"],
+		["Grid Size", "vector2i"],
+		["Equip Slot", "string"],
+		["Rarity", "string"],
+		["Flavour", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var weapons := _cat("Weapons", root)
-	var relics := _cat("Relics", root)
-	var tools := _cat("Tools", root)
-	var consumables := _cat("Consumables", root)
-	var materials := _cat("Materials", root)
+	var categories: Dictionary = {}
+	for category_name: String in ITEM_CATEGORIES:
+		categories[category_name] = _ensure_child_category(root, category_name)
 
-	var rows := [
-		[
-			weapons,
-			"Taubstummer Axe",
-			"A sealed soul-weapon of the Last Great War; its edge remembers what it unmade.",
-			1,
-			6.0,
-			Vector2i(2, 3),
-			"main_hand",
-			"mythic",
-			"It does not ring when struck. Nothing it touches does."
-		],
-		[
-			relics,
-			"Captured Reflection",
-			"An obsidian shard that shows a room lit by a sky that does not exist.",
-			1,
-			0.3,
-			Vector2i(1, 1),
-			"",
-			"rare",
-			"Do not name what you see in it. Under the Vow, a named Seat must abdicate."
-		],
-		[
-			tools,
-			"Soul Gauge",
-			"A brass-and-glass dial that reads a soul's integrity — and what magic has spent.",
-			1,
-			0.8,
-			Vector2i(1, 2),
-			"",
-			"rare",
-			"The needle is honest. That is the problem."
-		],
-		[
-			consumables,
-			"Loam Bread",
-			"Dense composting-city fare from Loamgate. Restores a little vigor.",
-			10,
-			0.4,
-			Vector2i(1, 1),
-			"",
-			"common",
-			"Everything returns. Some of it returns as bread."
-		],
-		[
-			materials,
-			"Cinder-Ink Vial",
-			"Ash-Bound tattoo ink; names written in it resist the Waning's slow erasure.",
-			5,
-			0.2,
-			Vector2i(1, 1),
-			"",
-			"common",
-			"The soul is a held line. Hold it."
-		],
-		[
-			relics,
-			"QUINE Shard",
-			"A fragment of pre-Bloom machine, one cyan light still faintly alive.",
-			1,
-			1.1,
-			Vector2i(1, 1),
-			"",
-			"mythic",
-			"It is still counting. No one knows what."
-		],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[1], r[0])
-		_assign(ent, "Display Name", r[1])
-		_assign(ent, "Description", r[2])
-		_assign(ent, "Max Stack Size", r[3])
-		_assign(ent, "Weight", r[4])
-		_assign(ent, "Grid Size", r[5])
-		_assign(ent, "Equip Slot", r[6])
-		_assign(ent, "Rarity", r[7])
-		_assign(ent, "Flavour", r[8])
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in items:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in items:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			# The category places a NEW item in the tree and is deliberately not re-applied to
+			# one that already exists: moving an authored entity between categories is a
+			# structural edit, and this seeder's contract is to update values, not to reshape
+			# a database someone may have arranged in the Pandora editor.
+			entity = Pandora.create_entity(row["display_name"], categories[row["category"]])
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Description", row["description"])
+		_assign(entity, "Max Stack Size", int(row["max_stack_size"]))
+		_assign(entity, "Weight", float(row["weight"]))
+		_assign(entity, "Grid Size", _vector2i(row["grid_size"]))
+		_assign(entity, "Equip Slot", row["equip_slot"])
+		_assign(entity, "Rarity", row["rarity"])
+		_assign(entity, "Flavour", row["flavour"])
+
+
+static func _vector2i(pair: Variant) -> Vector2i:
+	var components: Array = pair as Array
+	return Vector2i(int(components[0]), int(components[1]))
+
 
 
 # --- Spells: PLACEHOLDER mechanics referencing canon elements ----------------------------
