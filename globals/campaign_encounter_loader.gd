@@ -16,6 +16,42 @@ const ENEMY_FIELDS: Array[String] = [
 ]
 
 
+class EncountersKind extends WeftluminKind:
+	func _init() -> void:
+		id = &"encounters"
+		subdir = "encounters"
+		ext = "json"
+		stable_id_kind = StableIds.QUEST
+
+	func validate(documents: Array[Dictionary], errors: Array[Dictionary]) -> Array[Dictionary]:
+		var definitions: Dictionary = CampaignEncounterLoader.validate_documents(documents, errors)
+		var ids: Array = definitions.keys()
+		ids.sort()
+		var normalised: Array[Dictionary] = []
+		for encounter_id: String in ids:
+			normalised.append(definitions[encounter_id])
+		return normalised
+
+	func register(normalised: Array[Dictionary]) -> bool:
+		return EncounterCatalog.register_runtime_encounters(_definitions(normalised))
+
+	func clear() -> void:
+		EncounterCatalog.clear_runtime_encounters()
+
+	func diff(previous: Array[Dictionary], next: Array[Dictionary]) -> Dictionary:
+		var current: Dictionary = {}
+		for encounter_id: StringName in EncounterCatalog.all_ids():
+			if not EncounterCatalog.has_committed(String(encounter_id)):
+				current[String(encounter_id)] = EncounterCatalog.definition(encounter_id)
+		return {"changed": previous != next or current != _definitions(next)}
+
+	func _definitions(normalised: Array[Dictionary]) -> Dictionary:
+		var definitions: Dictionary = {}
+		for definition: Dictionary in normalised:
+			definitions[definition.encounter_id] = definition.duplicate(true)
+		return definitions
+
+
 static func load_package(package_path: String, errors: Array[Dictionary]) -> Dictionary:
 	var documents: Array[Dictionary] = read_documents(package_path, errors)
 	return validate_documents(documents, errors)

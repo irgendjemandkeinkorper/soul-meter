@@ -14,8 +14,8 @@ extends BattlefieldModel
 ## the two into one derived rule would make "blocked by elevation" and "expensive because of
 ## elevation" the same refusal, which FR-606 forbids.
 ##
-## No map is authored here. `build_grid()` takes bare `TileMapLayer` nodes and elevation/cliff
-## data from the caller that owns the encounter; this file supplies the mechanism only.
+## No map is authored here. `build_grid()` consumes the field's Ground/Blocking layers and
+## reads cover/elevation from its hidden Terrain sibling; this file supplies the mechanism only.
 ##
 ## Determinism: no RNG anywhere below. `IsoGrid`/`AStarGrid2D` tie-breaks are stable (lowest
 ## cell index wins), and `reachable_positions()` sorts its own result by handle string, so the
@@ -42,6 +42,18 @@ const _ELEVATION_LOS_EPSILON := 0.5
 ## never through this multiplier — see the header note.
 const _ELEVATION_WEIGHT_PER_LEVEL := 0.5
 
+## Chebyshev cells an ambient-entry placement search may travel from a party member's own
+## cell before the whole session is refused (F0 ruling 4, 2026-09-06). PROVISIONAL.
+const PLACEMENT_SEARCH_RADIUS := 4
+
+## 8-way steps for the placement search, matching the Chebyshev geometry the rest of this
+## model uses. Listed row-major so an unsorted traversal is still deterministic.
+const _PLACEMENT_STEPS: Array[Vector2i] = [
+	Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1),
+	Vector2i(-1, 0), Vector2i(1, 0),
+	Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1),
+]
+
 var _rules: CombatRules
 var _grid: IsoGrid
 
@@ -52,6 +64,10 @@ var _elevation: Dictionary = {}  ## Vector2i -> int
 var _cliffs: Dictionary = {}  ## Vector2i -> bool
 ## Cells that grant partial cover without blocking movement or line of sight.
 var _cover: Dictionary = {}  ## Vector2i -> bool
+## Field-grid flags as they were before combat first touched each cell, so
+## `release_field_grid()` hands the shared IsoGrid back to navigation unchanged.
+var _prior_solid: Dictionary = {}  ## Vector2i -> bool
+var _prior_weight: Dictionary = {}  ## Vector2i -> float
 
 ## Keyed on `BattleActor.combat_id` (StringName) — the FR-802 stable id assigned by
 ## `CombatController._assign_combat_ids()` at encounter setup (issue #186). Deliberately NOT
@@ -67,25 +83,166 @@ var _sides: Dictionary = {}  ## StringName (combat_id) -> StringName
 var _facings: Dictionary = {}  ## StringName (combat_id) -> StringName
 var _occupancy: Dictionary = {}  ## Vector2i -> BattleActor
 var _groups: Dictionary = {ALLY: [], ENEMY: []}
+## Actor references are local setup inputs: combat IDs are assigned by Controller.start().
+var _initial_cells: Dictionary = {}
+
+
+func configure_initial_cells(cells: Dictionary) -> Dictionary:
+	if _grid == null:
+		return _blocked(&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"})
+	var occupied: Dictionary = {}
+	for actor: Variant in cells:
+		if not actor is BattleActor or not cells[actor] is Vector2i:
+			return _blocked(&"position", "Initial placement requires actors and cells.", {"type": &"known_position"})
+		var cell: Vector2i = cells[actor]
+		if not _grid.is_in_bounds(cell):
+			return _blocked(&"position", "That cell is outside the battlefield.", {"type": &"cell_in_bounds"})
+		if occupied.has(cell):
+			return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
+		if _grid.is_point_solid(cell):
+			return _blocked(&"position", "That cell is impassable.", {"type": &"cell_passable"})
+		occupied[cell] = true
+	_initial_cells = cells.duplicate()
+	return _allowed({})
+
+
+## Ambient-entry placement (F0 ruling 4, 2026-09-06). `desired` is the party's live field
+## cells in `GameState.party` order; `desired[0]` is the player, the anchor, and is never
+## relocated. Members whose own cell is free keep it; overlapping members take the nearest
+## free cell found by breadth-first search over *reachable* cells — never Euclidean, so a
+## companion can never be seated across a wall from the party it is fighting with. Ties
+## inside one search ring break by row then column, so the answer is identical across two
+## runs and across a save round trip.
+##
+## Refusal is atomic by construction: this is a pure query over the grid, so a caller that
+## refuses has moved nothing. Returns `{"cells": Array[Vector2i]}` on success.
+func resolve_placement(desired: Array[Vector2i]) -> Dictionary:
+	if _grid == null:
+		return _blocked(&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"})
+	if desired.is_empty():
+		return _blocked(
+			&"composition", "There is no party to seat.", {"type": &"present_combatant"}
+		)
+	var anchor: Vector2i = desired[0]
+	if not _is_seatable(anchor):
+		return _blocked(
+			&"position",
+			"The party cannot enter combat from this cell.",
+			{"type": &"anchor_placeable"},
+		)
+	var taken: Dictionary = {anchor: true}
+	var resolved: Array[Vector2i] = [anchor]
+	for index in range(1, desired.size()):
+		var wanted: Vector2i = desired[index]
+		if not taken.has(wanted) and _is_seatable(wanted):
+			taken[wanted] = true
+			resolved.append(wanted)
+			continue
+		var search := _nearest_free_cell(wanted, taken)
+		if not bool(search.get("ok", false)):
+			return _blocked(
+				&"position",
+				"No free cell within %d of the party." % PLACEMENT_SEARCH_RADIUS,
+				{"type": &"cell_free"},
+			)
+		var found: Vector2i = search["cell"]
+		taken[found] = true
+		resolved.append(found)
+	return _allowed({"cells": resolved})
+
+
+## In bounds, passable, and nothing already stands there. Occupied cells are also solid (see
+## `_place()`), so the occupancy test is belt-and-braces against a caller that seats actors
+## through a path that skips `_set_solid()`.
+func _is_seatable(cell: Vector2i) -> bool:
+	return (
+		_grid != null
+		and _grid.is_in_bounds(cell)
+		and not _grid.is_point_solid(cell)
+		and not _occupancy.has(cell)
+	)
+
+
+## Breadth-first ring search outward from `from`, bounded by `PLACEMENT_SEARCH_RADIUS`.
+## Impassable cells are not traversed, only skipped: a candidate is therefore always
+## connected to the cell its actor is standing on, which is what "reachable" buys over a
+## radius test. Each ring is sorted by row then column before it is examined, so the first
+## acceptable cell in the nearest ring is a deterministic choice, not an insertion-order one.
+func _nearest_free_cell(from: Vector2i, taken: Dictionary) -> Dictionary:
+	var visited: Dictionary = {from: true}
+	var frontier: Array[Vector2i] = [from]
+	for _depth in PLACEMENT_SEARCH_RADIUS:
+		var ring: Array[Vector2i] = []
+		for cell: Vector2i in frontier:
+			for step: Vector2i in _PLACEMENT_STEPS:
+				var neighbour: Vector2i = cell + step
+				if visited.has(neighbour):
+					continue
+				visited[neighbour] = true
+				if not _grid.is_in_bounds(neighbour) or _grid.is_point_solid(neighbour):
+					continue
+				ring.append(neighbour)
+		ring.sort_custom(_row_then_column)
+		for cell: Vector2i in ring:
+			if not taken.has(cell) and not _occupancy.has(cell):
+				return {"ok": true, "cell": cell}
+		if ring.is_empty():
+			break
+		frontier = ring
+	return {"ok": false}
+
+
+func _row_then_column(a: Vector2i, b: Vector2i) -> bool:
+	return a.y < b.y if a.y != b.y else a.x < b.x
 
 
 func configure(rules: CombatRules) -> void:
 	_rules = rules
 
 
-## Builds the shared `IsoGrid` this model owns. Not scene-required: any caller (a real map
-## loader later, or a test today) may hand this bare `TileMapLayer` nodes it built in code.
-## Elevation/cliff data is supplied separately via `set_elevation()` / `set_cliff()` so the two
-## concerns stay independently settable, per the header note.
+## Builds from the field layers. A live FieldMap supplies the exact IsoGrid already owned by
+## ClickMoveController; bare-layer unit fixtures retain a local fallback grid.
 func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
+	_initial_cells.clear()
 	_tiles_snapshot_cache = []
-	_grid = IsoGrid.new()
-	_grid.build(ground, blocking)
+	_elevation.clear()
+	_cover.clear()
+	_cliffs.clear()
+	_prior_solid.clear()
+	_prior_weight.clear()
+	var parent: Node = ground.get_parent()
+	var field: FieldMap = (
+		parent.find_child("FieldMap", true, false) as FieldMap if parent != null else null
+	)
+	_grid = field.iso_grid() if field != null else null
+	if _grid == null:
+		_grid = IsoGrid.new()
+		_grid.build(ground, blocking)
+	_read_authored_terrain(ground)
 	for cell: Vector2i in _elevation.keys():
 		_apply_elevation_weight(cell)
 	for cell: Vector2i in _cliffs.keys():
 		if bool(_cliffs[cell]):
-			_grid.set_point_solid(cell, true)
+			_set_solid(cell, true)
+
+
+func _read_authored_terrain(ground: TileMapLayer) -> void:
+	var parent: Node = ground.get_parent()
+	var terrain: TileMapLayer = (
+		parent.find_child("Terrain", true, false) as TileMapLayer if parent != null else null
+	)
+	if terrain == null:
+		return
+	for cell: Vector2i in terrain.get_used_cells():
+		var tile_data: TileData = terrain.get_cell_tile_data(cell)
+		if tile_data == null:
+			continue
+		var cover_value: Variant = tile_data.get_custom_data(&"cover")
+		if cover_value is bool and cover_value:
+			set_cover(cell)
+		var elevation_value: Variant = tile_data.get_custom_data(&"elevation")
+		if elevation_value is int and elevation_value != 0:
+			set_elevation(cell, clampi(elevation_value, 0, DS.ELEVATION_MAX))
 
 
 ## Terrain height at `cell`. Scales the CT cost of entering it — never makes it impassable.
@@ -104,7 +261,7 @@ func set_cliff(cell: Vector2i, is_cliff: bool = true) -> void:
 	_tiles_snapshot_cache = []
 	_cliffs[cell] = is_cliff
 	if _grid != null and _grid.is_in_bounds(cell):
-		_grid.set_point_solid(cell, is_cliff)
+		_set_solid(cell, is_cliff)
 
 
 ## Authors partial cover independently from elevation and impassability.
@@ -129,9 +286,10 @@ func setup(allies: Array[BattleActor], enemies: Array[BattleActor]) -> void:
 		return
 	var rect := _grid.get_used_rect()
 	for i in allies.size():
-		_place(allies[i], Vector2i(rect.position.x, rect.position.y + i), &"e")
+		_place(allies[i], _initial_cells.get(allies[i], Vector2i(rect.position.x, rect.position.y + i)), &"e")
 	for i in enemies.size():
-		_place(enemies[i], Vector2i(rect.end.x - 1, rect.position.y + i), &"w")
+		_place(enemies[i], _initial_cells.get(enemies[i], Vector2i(rect.end.x - 1, rect.position.y + i)), &"w")
+	_initial_cells.clear()
 
 
 func position_of(actor: BattleActor) -> StringName:
@@ -155,6 +313,48 @@ func combatants_on_side(side: StringName) -> Array[BattleActor]:
 	for actor: BattleActor in _groups.get(side, []):
 		result.append(actor)
 	return result
+
+
+## Seats one combatant on an authored cell mid-battle (same-map combat D5). Unlike `_place()`,
+## which clamps silently because `setup()` only ever hands it column positions it computed
+## itself, this refuses out-of-bounds, impassable and occupied cells: an admitted hostile stands
+## where the scene authored it or the admission fails loudly.
+func admit_combatant(actor: BattleActor, position: StringName, side: StringName) -> Dictionary:
+	if actor == null:
+		return _blocked(
+			&"composition", "There is no combatant to admit.", {"type": &"present_combatant"}
+		)
+	if has_combatant(actor):
+		return _blocked(
+			&"composition", "Combatant is already on the battlefield.", {"type": &"absent_combatant"}
+		)
+	if not _groups.has(side):
+		return _blocked(
+			&"composition", "Unknown battlefield side: %s." % side, {"type": &"known_side"}
+		)
+	if _grid == null:
+		return _blocked(
+			&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"}
+		)
+	var parsed := _parse_handle(position)
+	if not bool(parsed.get("ok", false)):
+		return _blocked(
+			&"position", "That is not a battlefield position.", {"type": &"known_position"}
+		)
+	var cell: Vector2i = parsed["cell"]
+	if not _grid.is_in_bounds(cell):
+		return _blocked(
+			&"position", "That cell is outside the battlefield.", {"type": &"cell_in_bounds"}
+		)
+	if _occupancy.has(cell):
+		return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
+	if _grid.is_point_solid(cell):
+		return _blocked(&"position", "That cell is impassable.", {"type": &"cell_passable"})
+	_sides[actor.combat_id] = side
+	var group: Array = _groups.get(side, [])
+	group.append(actor)
+	_place(actor, cell, &"w" if side == ENEMY else &"e")
+	return _allowed({"to_side": side, "to_position": position_of(actor)})
 
 
 func remove_combatant(actor: BattleActor) -> Dictionary:
@@ -209,7 +409,7 @@ func move(actor: BattleActor, destination: StringName) -> Dictionary:
 	_occupancy.erase(origin_cell)
 	_release_solid(origin_cell)
 	_occupancy[dest_cell] = actor
-	_grid.set_point_solid(dest_cell, true)
+	_set_solid(dest_cell, true)
 	var previous := position_of(actor)
 	_cells[actor.combat_id] = dest_cell
 	return _allowed({
@@ -566,13 +766,15 @@ func _place(actor: BattleActor, cell: Vector2i, facing: StringName) -> void:
 	_cells[id] = clamped
 	_facings[id] = facing
 	_occupancy[clamped] = actor
-	_grid.set_point_solid(clamped, true)
+	_set_solid(clamped, true)
 
 
 func _apply_elevation_weight(cell: Vector2i) -> void:
 	if _grid == null or not _grid.is_in_bounds(cell):
 		return
 	var elevation := elevation_at(cell)
+	if not _prior_weight.has(cell):
+		_prior_weight[cell] = _grid.get_point_weight_scale(cell)
 	_grid.set_point_weight_scale(cell, maxf(1.0, 1.0 + float(elevation) * _ELEVATION_WEIGHT_PER_LEVEL))
 
 
@@ -581,7 +783,31 @@ func _apply_elevation_weight(cell: Vector2i) -> void:
 ## so vacating must not accidentally reopen a cliff.
 func _release_solid(cell: Vector2i) -> void:
 	if _grid != null:
-		_grid.set_point_solid(cell, bool(_cliffs.get(cell, false)))
+		_set_solid(cell, bool(_cliffs.get(cell, false)) or bool(_prior_solid.get(cell, false)))
+
+
+## Every solid write goes through here so the field grid's pre-combat flag is remembered once.
+func _set_solid(cell: Vector2i, solid: bool) -> void:
+	if _grid == null:
+		return
+	if not _prior_solid.has(cell):
+		_prior_solid[cell] = _grid.is_point_solid(cell)
+	_grid.set_point_solid(cell, solid)
+
+
+## Hands the shared field IsoGrid back to navigation: every solid flag and weight this model
+## wrote is restored to its pre-combat value. Combat bookkeeping stays readable for the result
+## screen; only the grid is released. Idempotent. Battle calls it when a fight ends or is
+## superseded by a new one.
+func release_field_grid() -> void:
+	if _grid == null:
+		return
+	for cell: Vector2i in _prior_solid.keys():
+		_grid.set_point_solid(cell, bool(_prior_solid[cell]))
+	for cell: Vector2i in _prior_weight.keys():
+		_grid.set_point_weight_scale(cell, float(_prior_weight[cell]))
+	_prior_solid.clear()
+	_prior_weight.clear()
 
 
 func _path_ct_cost(path: PackedVector2Array) -> int:

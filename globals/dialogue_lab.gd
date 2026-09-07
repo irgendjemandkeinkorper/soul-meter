@@ -27,10 +27,6 @@ var _lab_balloon: Node = null
 var _lab_dialogue_running: bool = false
 var _production_dialogue_running: bool = false
 
-var _runtime_before: Dictionary = {}
-var _rng_seed_before: int = 0
-var _rng_state_before: int = 0
-var _has_saved_state: bool = false
 
 
 func _ready() -> void:
@@ -247,36 +243,45 @@ func _apply_setup_state(setup: Dictionary) -> void:
 			)
 
 
+## Owner id this lab holds the shared sandbox under.
+const SANDBOX_OWNER := &"dialogue_lab"
+
+
+## The shared sandbox, with this game's surfaces registered. Registration replaces by id, so
+## every tool calling this converges on one set rather than each contributing its own.
+func _sandbox() -> WeftluminSandbox:
+	var sandbox: WeftluminSandbox = WeftluminSandbox.shared()
+	sandbox.add_default_surfaces(SaveGame, SkillCheck)
+	return sandbox
+
+
+## Arms the shared sandbox under this lab's name.
+##
+## The reasoning that used to live here — SaveGame owning the authoritative surface list, the
+## RNG position being captured separately, seed restored before state, and autosave suppressed
+## at staging rather than at flush — now lives once in `WeftluminSandbox`.
+## True while THIS tool holds the shared sandbox.
+##
+## Distinct from `another_sandbox_is_armed()`: a restart must be allowed to replace our own
+## armed session, but never someone else's.
+func sandbox_is_armed() -> bool:
+	var sandbox: WeftluminSandbox = _sandbox()
+	return sandbox.is_armed() and sandbox.owner() == SANDBOX_OWNER
+
+
 func _capture_saved_state() -> void:
-	# SaveGame owns the authoritative list of rollback-able runtime state. An
-	# earlier version of this lab enumerated five globals here and missed four,
-	# so replayed dialogue could permanently raise the Zhavar and stage a real
-	# autosave of sandbox state. Never re-enumerate the surfaces locally.
-	_runtime_before = SaveGame.capture_runtime_state()
-	# Not part of that snapshot: SkillCheck.to_dict() serializes reroll usage,
-	# not the generator's position, so an uncaptured session would permanently
-	# shift the randomness later campaign skill checks draw from.
-	_rng_seed_before = SkillCheck.random_number_generator.seed
-	_rng_state_before = SkillCheck.random_number_generator.state
-	# Dialogue writes consequences, and several QuestRegistry mutators reachable
-	# from a `do` line stage an autosave that flushes DEFERRED — while the next
-	# dialogue line is still open, long before the session ends. Suppression, not
-	# restore ordering, is what keeps sandbox state off the player's disk.
-	SaveGame.begin_runtime_sandbox()
-	_has_saved_state = true
+	_sandbox().arm(SANDBOX_OWNER)
 
 
 ## Restores exactly once per session, then disarms.
 func _restore_saved_state() -> void:
-	if not _has_saved_state:
+	if not sandbox_is_armed():
 		return
-	_has_saved_state = false
-	if not SaveGame.restore_runtime_state(_runtime_before):
-		push_warning("Dialogue Lab could not restore the pre-lab GameState snapshot.")
-	# Assigning seed resets state, so the order is load-bearing.
-	SkillCheck.random_number_generator.seed = _rng_seed_before
-	SkillCheck.random_number_generator.state = _rng_state_before
-	SaveGame.end_runtime_sandbox()
+	var result: Dictionary = _sandbox().disarm()
+	if not bool(result["allowed"]):
+		push_warning(
+			"Dialogue Lab could not restore the pre-lab snapshot: %s" % str(result["message"])
+		)
 
 
 func _on_dialogue_started(resource: DialogueResource) -> void:
@@ -401,10 +406,10 @@ func _ownership_conflict_is_live() -> bool:
 ## Two labs holding snapshots at once is not safe even though each is internally
 ## correct: they restore in whatever order they happen to end, and a non-LIFO
 ## restore reinstates the first lab's dirty state after that lab already cleaned
-## up. `_has_saved_state` distinguishes our own armed session — which a restart
+## up. The shared sandbox distinguishes our own armed session — which a restart
 ## must still be allowed to replace — from the other lab's.
 func another_sandbox_is_armed() -> bool:
-	return SaveGame.runtime_sandbox_is_armed() and not _has_saved_state
+	return _sandbox().held_by_other(SANDBOX_OWNER)
 
 
 func _contains_other_dialogue_balloon(node: Node) -> bool:

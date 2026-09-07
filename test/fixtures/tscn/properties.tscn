@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://fixture"]
+
+[node name="Root" type="Label"]
+text = "Before
+[node name=\"TextOnly\"]
+After"
+position = Vector2(1, 2) ; keep this comment
+metadata/array = [
+1,
+2
+]
+
+[node name="Child" type="Node" parent="."]

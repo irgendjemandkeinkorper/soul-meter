@@ -34,6 +34,14 @@ because the technique changed):
 
 ## Visual language
 
+**House style, in two words: gothic mythopunk.** Gothic for the forms — verticality,
+carved stone, tarnished ceremonial metal, wear and weight on everything. Mythopunk for
+the attitude — a mythic world that has been lived in, patched, and repurposed; sacred
+objects put to daily use, myth-tech seams showing. When a Kenney or 3D-kit source asset
+is retooled (batches #305, #309), keep its subject and footprint and re-read it through
+this lens rather than cleaning it up. Every prompt should name the style with these two
+words before the Palette and Lighting text below.
+
 **Rendering style:** semi-realistic painterly digital illustration — closer to dark-
 fantasy concept art than to flat vector/pixel art or a clean 3D-kit render. Rich surface
 detail (wear, rust, moss, wet sheen) rendered through paint-like shading rather than flat

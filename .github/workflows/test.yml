@@ -57,7 +57,7 @@ jobs:
       - name: Check art-free acceptance artifacts
         run: SOUL_METER_ACCEPTANCE_ARTIFACTS_ONLY=1 GODOT_BIN="$GODOT_BIN" bash scripts/acceptance_gate.sh
 
-      - name: Check Pandora/generated-data drift
+      - name: Check canon/Pandora/generated-data drift
         run: SOUL_METER_DRIFT_CHECK=1 GODOT_BIN="$GODOT_BIN" bash scripts/check_generated_data.sh
 
       - name: Run gdUnit4 headless suite

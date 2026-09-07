@@ -81,6 +81,10 @@ XML, gitignored) is regenerated each run.
 On a machine without a working X display, set `SOUL_METER_HEADLESS=1`. This is useful for unit
 tests, but integration tests that depend on transported input should run with Xvfb normally.
 
+### Quest consequence audit
+
+The quest consequence audit tool (`tools/quest_audit.gd`) scans quest definitions and dialogue sources to validate outcome counts, resolution flag writes, and read-back coverage. Running `godot --headless --path . --script res://tools/quest_audit.gd` outputs a JSON report containing a `read_back_coverage` section, detailing each quest's outcomes, written flags, and specific read-back locations across dialogue conditions, NPC reaction rows, and encounter or travel gates.
+
 ### Generated-data drift
 
 Pandora is the source of truth for generated runtime artifacts. Run the same guard used by CI
@@ -212,6 +216,17 @@ generator guard, and packages the Windows playtest artifact only after tests pas
 reputation derivation and the (future) magic-system effect matrix — flagged as the reason
 testing was worth doing at all (`docs/godot-architecture.md`) — don't exist yet; write them
 once there's more than `_derive()`'s simple sum to get wrong.
+
+### Headless Suite Stability Triage (Wave D7)
+
+The four test suites flagged as potentially flaky under headless rendering and navmesh execution were rechecked on 2026-09-06 via 10 consecutive headless runs against Godot 4.7.1-stable, with `SOUL_METER_HEADLESS=1` and `LP_NUM_THREADS=1`:
+
+- `test/unit/test_actor_presentation.gd`: 10/10 runs passed (2/2 test cases per run).
+- `test/integration/test_y_sort.gd`: 10/10 runs passed (7/7 test cases per run).
+- `test/integration/test_click_to_move.gd`: 10/10 runs passed (8/8 test cases per run).
+- `test/nav_acceptance/test_click_to_move_input.gd`: 10/10 runs passed (1/1 test cases per run).
+
+All 18 test cases passed in this sample (0 failures / 0 skips). A passing sample does not rule out intermittent failures; keep using Xvfb for input-dependent integration tests as described above.
 
 ## Manual tests
 

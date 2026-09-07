@@ -190,6 +190,16 @@ func _ready() -> void:
 func register_runtime_quests(
 	quests: Array[DomSideQuest], dialogue_resources: Dictionary = {}
 ) -> bool:
+	if not replace_runtime_quests(quests, dialogue_resources):
+		return false
+	EncounterCatalog.clear_runtime_encounters()
+	return true
+
+
+## Replace only the quest kind, after validating the entire replacement.
+func replace_runtime_quests(
+	quests: Array[DomSideQuest], dialogue_resources: Dictionary = {}
+) -> bool:
 	var ids: Dictionary = {}
 	for committed_quest: Quest in ALL_QUESTS:
 		ids[committed_quest.id] = true
@@ -215,13 +225,18 @@ func register_runtime_quests(
 				"QuestRegistry: refused runtime dialogue with an invalid title/resource."
 			)
 			return false
-	clear_runtime_quests()
+	clear_runtime_quests_only()
 	_runtime_quests.assign(quests)
 	_runtime_dialogue_resources = dialogue_resources.duplicate()
 	return true
 
 
 func clear_runtime_quests() -> void:
+	clear_runtime_quests_only()
+	EncounterCatalog.clear_runtime_encounters()
+
+
+func clear_runtime_quests_only() -> void:
 	for quest: DomSideQuest in _runtime_quests:
 		QuestSystem.available.remove_quest(quest)
 		QuestSystem.active.remove_quest(quest)
@@ -230,7 +245,6 @@ func clear_runtime_quests() -> void:
 		quest.current_stage = 0
 	_runtime_quests.clear()
 	_runtime_dialogue_resources.clear()
-	EncounterCatalog.clear_runtime_encounters()
 
 
 func runtime_quests() -> Array[DomSideQuest]:

@@ -66,6 +66,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not _is_unlocked():
 			_prompt.text = _locked_prompt()
 			return
+		var access: Dictionary = Battle.can_fight_here()
+		if not bool(access.get("allowed", false)):
+			# Guarded chart transition would refuse anyway; refuse here so no live Battle is
+			# left behind without a Battle state (FR-606 shape carries the message).
+			_prompt.text = str(access.get("message", "")).to_upper()
+			return
 		Battle.battle_ended.connect(_on_battle_ended, CONNECT_ONE_SHOT)
 		Battle.start(encounter_id)
 		if Battle.ended:

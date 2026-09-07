@@ -12,6 +12,9 @@ signal balance_changed(value: int)
 signal battle_ended(result: BattleResult)
 signal combat_event(event: CombatEvent)
 signal speech_requested(dialogue_path: String, dialogue_start: String)
+## Same-map combat D5. A session is one continuous fight on the loaded field, opened by an
+## alert rather than by an encounter id, and grown by `admit()` while it runs.
+signal session_ended(result: BattleResult)
 
 const ACTION_STRIKE := &"strike"
 const ACTION_GUARD := &"guard"
@@ -35,6 +38,11 @@ var controller: CombatController
 ## #223: class-resource state loaded from a save before a controller exists. Applied (and
 ## cleared) by the next `start()`; `{}` means "nothing to restore".
 var _pending_class_resources: Dictionary = {}
+## True between `start_session()`/`start_set_piece()` and the fight ending. Anything that used
+## to test `get_tree().paused` to mean "a battle is running" tests this instead (F0 D3).
+var session_active := false
+var _session_field: FieldMap
+var _session_hostiles: Dictionary = {}  ## StringName (combat_id) -> Hostile
 var last_speech_check: Dictionary = {}
 var last_speech_option: StringName = &""
 var last_speech_succeeded := false
@@ -62,11 +70,10 @@ var enemy: BattleActor:
 		return enemies[0] if not enemies.is_empty() else null
 
 var _definition: Dictionary = {}
-var _battlefield_ground: TileMapLayer
 
 
 func start(encounter: Variant) -> void:
-	_release_battlefield_ground()
+	_release_field_grid()
 	_combat_history.clear()
 	allies.clear()
 	enemies.clear()
@@ -76,18 +83,7 @@ func start(encounter: Variant) -> void:
 	last_speech_option = &""
 	last_speech_succeeded = false
 	for i in GameState.party.size():
-		var member: PartyMember = GameState.party[i]
-		var actor := BattleActor.new()
-		actor.display_name = member.display_name
-		actor.hp = member.hp
-		actor.max_hp = member.max_hp
-		actor.attack = member.attack
-		actor.defense = member.defense
-		actor.attributes = member.attributes.duplicate(true)
-		actor.party_index = i
-		actor.source_member = member
-		actor.breath = member.breath
-		allies.append(actor)
+		allies.append(BattleActor.from_party_member(GameState.party[i], i))
 	if allies.is_empty():
 		allies.append(BattleActor.new())
 	if encounter is StringName or encounter is String:
@@ -140,6 +136,247 @@ func start(encounter: Variant) -> void:
 	balance_changed.emit(balance)
 
 
+## Opens an ambient same-map session on the loaded field (F0 D5). `first` is the hostile whose
+## alert was accepted — hop 0 of the fight. No deployment screen opens; the party fights from
+## where it is standing, resolved by F0 ruling 4.
+##
+## Refusal is atomic. Every check and the whole placement query run before a single actor,
+## cell or grid flag is touched, so a caller that gets `allowed: false` back is looking at a
+## field in exactly the state it was in before the call.
+func start_session(field: FieldMap, first: Hostile) -> Dictionary:
+	if session_active:
+		return admit(first)
+	if field == null:
+		return _session_refusal(&"field_map", &"field_map", "Combat requires a loaded field map.")
+	var access := can_fight_here(field)
+	if not bool(access.get("allowed", false)):
+		return access
+	if first == null or first.state == Hostile.State.DOWNED:
+		return _session_refusal(
+			&"composition", &"present_combatant", "A session needs a living hostile to open it."
+		)
+	var hostile_actor := first.battle_actor()
+	if hostile_actor == null:
+		return _session_refusal(
+			&"composition", &"present_combatant", "That hostile has no battle actor."
+		)
+
+	var rules := _session_rules()
+	var model := GridBattlefieldModel.new()
+	model.configure(rules)
+	model.build_grid(field.ground(), field.blocking())
+
+	var live_cells := field.party_cells()
+	if live_cells.is_empty():
+		model.release_field_grid()
+		first.refuse_alert()
+		return _session_refusal(
+			&"field_map", &"party_placed", "The field has no placed party to seat."
+		)
+	var party := _session_party()
+	var desired: Array[Vector2i] = []
+	for index in party.size():
+		# A follower that has not synced yet inherits the last known cell; ruling 4's overlap
+		# pass is exactly what turns that stack back into distinct seats.
+		desired.append(live_cells[mini(index, live_cells.size() - 1)])
+	var placement := model.resolve_placement(desired)
+	if not bool(placement.get("allowed", false)):
+		model.release_field_grid()
+		first.refuse_alert()
+		return placement
+	var seats: Array = placement.get("cells", [])
+
+	var initial: Dictionary = {}
+	for index in party.size():
+		initial[party[index]] = seats[index]
+	# The hostile stands where the scene put it. Duplicate and impassable cells are refused
+	# here, which is also what stops the party from being seated on top of it.
+	initial[hostile_actor] = first.sync_cell()
+	var configured := model.configure_initial_cells(initial)
+	if not bool(configured.get("allowed", false)):
+		model.release_field_grid()
+		first.refuse_alert()
+		return configured
+
+	# Past this line the session is committed.
+	_release_field_grid()
+	_combat_history.clear()
+	_definition = {"battlefield": "grid", "use_charge_time": true}
+	encounter_id = &""
+	last_speech_check.clear()
+	last_speech_option = &""
+	last_speech_succeeded = false
+	allies = party
+	enemies = [hostile_actor]
+	_prepare_enemy_knowledge()
+	active_ally_index = _next_living_index(allies, -1)
+	target_enemy_index = 0
+	balance = 0
+	enemy_rounds = 0
+	last_message = "Steel comes out where you stand."
+	ended = false
+	last_result = null
+
+	controller = CombatController.new()
+	controller.event_emitted.connect(_on_combat_event)
+	controller.battle_finished.connect(_on_controller_finished)
+	controller.configure(
+		available_actions(true), model, rules, null, _casting_abilities()
+	)
+	controller.configure_agreement_integrity(_agreement_integrity())
+	var weather := field.weather_default()
+	if weather != &"":
+		var weather_result := controller.configure_weather(weather)
+		if not bool(weather_result.get("allowed", false)):
+			push_warning("Field authors unknown weather '%s'; the session starts calm." % weather)
+	controller.start(allies, enemies, encounter_id)
+	if not _pending_class_resources.is_empty():
+		controller.restore_class_resources(_pending_class_resources)
+		_pending_class_resources.clear()
+
+	session_active = true
+	_session_field = field
+	_session_hostiles.clear()
+	_track_session_hostile(first, hostile_actor)
+	field.seat_party(seats)
+	if not field.hostile_alerted.is_connected(_on_field_hostile_alerted):
+		field.hostile_alerted.connect(_on_field_hostile_alerted)
+	battle_started.emit()
+	balance_changed.emit(balance)
+	# `seats`/`first_cell` report what the session was OPENED on. Positions move the moment the
+	# scheduler drives, so a caller that wants the entry placement has to be told it.
+	return _session_allowed({
+		"combat_id": String(hostile_actor.combat_id),
+		"seats": seats,
+		"first_cell": initial[hostile_actor],
+	})
+
+
+## Seats one more hostile in the session that is already running. Idempotent: the alert that
+## calls this can fire more than once for the same mob, and a chain hop can reach one the
+## party already dragged in. Refusal returns the hostile to IDLE under a cooldown so a pocket
+## with no room cannot re-refuse on every frame (F0 ruling 4).
+func admit(hostile: Hostile) -> Dictionary:
+	if not session_active or controller == null:
+		return _session_refusal(
+			&"battle_not_live", &"live_session", "There is no live session to admit into."
+		)
+	if hostile == null:
+		return _session_refusal(
+			&"composition", &"present_combatant", "There is no hostile to admit."
+		)
+	if hostile.state == Hostile.State.DOWNED:
+		return _session_refusal(&"composition", &"living_combatant", "That hostile is down.")
+	var actor := hostile.battle_actor()
+	if actor == null:
+		return _session_refusal(
+			&"composition", &"present_combatant", "That hostile has no battle actor."
+		)
+	if _session_hostiles.has(actor.combat_id) and _session_hostiles[actor.combat_id] == hostile:
+		return _session_allowed({
+			"already_admitted": true, "combat_id": String(actor.combat_id)
+		})
+	var result := controller.admit(actor, hostile.sync_cell(), &"enemy")
+	if not bool(result.get("allowed", false)):
+		hostile.refuse_alert()
+		return result
+	_track_session_hostile(hostile, actor)
+	return result
+
+
+## The deployment path (F0 D3). Set-pieces keep their authored composition and their slate;
+## the only thing this adds over `start()` is that the fight is a session, so everything that
+## reads `session_active` sees a set-piece the same way it sees an ambient fight.
+func start_set_piece(field: FieldMap, encounter: StringName) -> Dictionary:
+	if field == null:
+		return _session_refusal(&"field_map", &"field_map", "Combat requires a loaded field map.")
+	var access := can_fight_here(field)
+	if not bool(access.get("allowed", false)):
+		return access
+	start(encounter)
+	if ended:
+		return _session_refusal(
+			&"composition", &"present_combatant", "That encounter has no living enemies."
+		)
+	session_active = true
+	_session_field = field
+	_session_hostiles.clear()
+	return _session_allowed({"encounter_id": String(encounter)})
+
+
+## Party actors for a session, built through the one named conversion (D4/D5) so the ambient
+## and set-piece paths cannot drift in how a PartyMember becomes a BattleActor.
+func _session_party() -> Array[BattleActor]:
+	var party: Array[BattleActor] = []
+	for index in GameState.party.size():
+		party.append(BattleActor.from_party_member(GameState.party[index], index))
+	if party.is_empty():
+		party.append(BattleActor.new())
+	return party
+
+
+## Ambient sessions are always CT: measures are the cadence chain alerts and weather ride on
+## (F0 ruling 5), and an AP round has no meaning on a field that never stopped running.
+func _session_rules() -> CombatRules:
+	var rules := (
+		(load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
+	)
+	rules.use_charge_time = true
+	return rules
+
+
+func _track_session_hostile(hostile: Hostile, actor: BattleActor) -> void:
+	hostile.combat_id = actor.combat_id
+	hostile.mark_in_combat()
+	_session_hostiles[actor.combat_id] = hostile
+
+
+## F0 ruling 5: chain alerts spread one hop per `measure_started`, and on nothing else. The
+## AP scheduler never emits it, so a set-piece fought under AP simply never chains — which is
+## correct, an authored encounter has no idle neighbours to pull in.
+func _propagate_session_alerts() -> void:
+	if not session_active or _session_field == null:
+		return
+	_session_field.propagate_alerts()
+
+
+func _on_field_hostile_alerted(hostile: Hostile) -> void:
+	if not session_active:
+		return
+	admit(hostile)
+
+
+## Ends the session bookkeeping. The grid is released by `_finish()`; this drops the field
+## wiring so a second fight on the same field starts from a clean seam.
+func _end_session(result: BattleResult) -> void:
+	if not session_active:
+		return
+	session_active = false
+	if _session_field != null:
+		if _session_field.hostile_alerted.is_connected(_on_field_hostile_alerted):
+			_session_field.hostile_alerted.disconnect(_on_field_hostile_alerted)
+	_session_field = null
+	_session_hostiles.clear()
+	session_ended.emit(result)
+
+
+func _session_allowed(extra: Dictionary = {}) -> Dictionary:
+	var result := {"allowed": true, "blocked_by": &"", "nearest_unblock": {}, "message": ""}
+	result.merge(extra, true)
+	return result
+
+
+func _session_refusal(
+	blocked_by: StringName, unblock: StringName, message: String
+) -> Dictionary:
+	return {
+		"allowed": false,
+		"blocked_by": blocked_by,
+		"nearest_unblock": {"type": unblock},
+		"message": message,
+	}
+
+
 func _casting_abilities() -> Array[AbilityDefinition]:
 	var abilities: Array[AbilityDefinition] = []
 	for ability: AbilityDefinition in TacticalTables.shared().abilities_in_slot(
@@ -166,139 +403,91 @@ func _agreement_integrity(scene_path: String = "") -> float:
 	return EncounterCatalog.agreement_integrity(encounter_id, location_accord)
 
 
-## Builds the authored encounter grid, or a provisional default grid when a catalog
-## definition authors none — every catalog encounter is tactical (owner ruling,
-## 2026-08-29: the stage renders only grid battles, so zone defaults left the
-## screen blank in real play). Two zone paths stay live as the FR-105 fallback:
-## authors can select zones explicitly with `"battlefield": "zones"`, and ad-hoc
-## `start(BattleActor)` scaffold battles (no definition — a test/debug surface,
-## never reachable from authored content) keep their legacy zone behavior.
+## Reports whether a field can host same-map combat. Refusals retain the shared FR-606 query
+## shape. `field` defaults to the loaded one for callers that only have a chart guard to fill
+## (GameFlow); a session asks about the exact field it was handed, because more than one
+## FieldMap can be in the tree — a scene mid-swap, or a test fixture — and answering about the
+## wrong one would let a fight open inside a no-combat interior.
+func can_fight_here(field: FieldMap = null) -> Dictionary:
+	if field == null:
+		field = _current_field_map()
+	if field == null:
+		return {
+			"allowed": false,
+			"blocked_by": &"field_map",
+			"nearest_unblock": {"type": &"field_map"},
+			"message": "Combat requires a loaded field map.",
+		}
+	if field.no_combat_zone():
+		return {
+			"allowed": false,
+			"blocked_by": &"no_combat_zone",
+			"nearest_unblock": {"type": &"combat_enabled_location"},
+			"message": "Combat cannot begin in this location.",
+		}
+	if field.ground() == null or field.blocking() == null:
+		return {
+			"allowed": false,
+			"blocked_by": &"field_layers",
+			"nearest_unblock": {"type": &"field_layers"},
+			"message": "Combat requires ground and blocking layers.",
+		}
+	if field.iso_grid() == null:
+		return {
+			"allowed": false,
+			"blocked_by": &"iso_grid",
+			"nearest_unblock": {"type": &"iso_grid"},
+			"message": "Combat requires a ready field grid.",
+		}
+	return {
+		"allowed": true,
+		"blocked_by": &"",
+		"nearest_unblock": {},
+		"message": "",
+	}
+
+
+## Catalog encounters fight on the field that is already loaded. Two zone paths
+## stay live as the FR-105 fallback: authors may select `"battlefield": "zones"`
+## explicitly, and ad-hoc `start(BattleActor)` scaffold battles have no definition.
 func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 	if _definition.is_empty() or str(_definition.get("battlefield", "")) == "zones":
 		return BattlefieldModel.create_default(rules)
 
-	var required_rows: int = maxi(allies.size(), enemies.size())
-	# PROVISIONAL balance dimensions until the later per-encounter content pass.
-	var default_dimensions := Vector2i(7, maxi(5, required_rows))
-	var grid: Variant = _definition.get("grid", {})
-	if not grid is Dictionary or grid.is_empty():
-		return _grid_battlefield(default_dimensions, rules)
-
-	var authored_dimensions: Variant = grid.get("dimensions", Vector2i.ZERO)
-	if not authored_dimensions is Vector2i:
-		push_warning("Encounter '%s' has invalid grid dimensions; using default grid." % encounter_id)
-		return _grid_battlefield(default_dimensions, rules)
-	var dimensions: Vector2i = authored_dimensions
-	if dimensions.x < 2 or dimensions.y < required_rows:
-		push_warning("Encounter '%s' grid cannot fit its combatants; using default grid." % encounter_id)
-		return _grid_battlefield(default_dimensions, rules)
-	var model: GridBattlefieldModel = _grid_battlefield(dimensions, rules)
-	_apply_authored_terrain(model, dimensions, grid)
-	return model
-
-
-func _grid_battlefield(dimensions: Vector2i, rules: CombatRules) -> GridBattlefieldModel:
-	_battlefield_ground = TileMapLayer.new()
-	_battlefield_ground.name = "EncounterBattlefieldGround"
-	_battlefield_ground.tile_set = _encounter_grid_tile_set()
-	for y in dimensions.y:
-		for x in dimensions.x:
-			_battlefield_ground.set_cell(Vector2i(x, y), 0, Vector2i.ZERO)
-	var ground_parent: Node = self
-	var main_loop: MainLoop = Engine.get_main_loop()
-	if not is_inside_tree() and main_loop is SceneTree:
-		ground_parent = (main_loop as SceneTree).root
-	ground_parent.add_child(_battlefield_ground)
-
+	var field: FieldMap = _current_field_map()
+	if field == null:
+		# Invalid direct callers can still fail closed without recreating a hidden
+		# encounter grid. GameFlow's can_fight_here guard prevents this in play.
+		return BattlefieldModel.create_default(rules)
 	var model: GridBattlefieldModel = GridBattlefieldModel.new()
 	model.configure(rules)
-	model.build_grid(_battlefield_ground)
+	model.build_grid(field.ground(), field.blocking())
 	return model
 
 
-func _apply_authored_terrain(
-	model: GridBattlefieldModel,
-	dimensions: Vector2i,
-	grid: Dictionary,
-) -> void:
-	var cover_data: Variant = grid.get("cover", [])
-	if not cover_data is Array:
-		push_warning("Encounter '%s' grid cover must be an Array; skipping cover." % encounter_id)
-	else:
-		for authored_cell: Variant in cover_data:
-			if not authored_cell is Vector2i:
-				push_warning(
-					"Encounter '%s' has malformed cover cell '%s'; skipping."
-					% [encounter_id, authored_cell]
-				)
-				continue
-			var cell: Vector2i = authored_cell
-			if not _authored_cell_is_inside(cell, dimensions):
-				push_warning(
-					"Encounter '%s' cover cell %s is outside its %dx%d grid; skipping."
-					% [encounter_id, cell, dimensions.x, dimensions.y]
-				)
-				continue
-			model.set_cover(cell)
+func _current_field_map() -> FieldMap:
+	# Autoloads earlier in project.godot (GameFlow) ask before Battle joins the tree.
+	var tree: SceneTree = get_tree() if is_inside_tree() else Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return null
+	var current_scene: Node = tree.current_scene
+	if current_scene != null:
+		if current_scene is FieldMap:
+			return current_scene as FieldMap
+		var current_field: FieldMap = current_scene.find_child("FieldMap", true, false) as FieldMap
+		if current_field != null:
+			return current_field
+	return tree.root.find_child("FieldMap", true, false) as FieldMap
 
-	var elevation_data: Variant = grid.get("elevation", {})
-	if not elevation_data is Dictionary:
-		push_warning(
-			"Encounter '%s' grid elevation must be a Dictionary; skipping elevation."
-			% encounter_id
-		)
+
+## Returns the shared field IsoGrid to navigation once a battle is over or superseded (D1:
+## combat borrows the field's grid, it never keeps it).
+func _release_field_grid() -> void:
+	if controller == null:
 		return
-	for authored_cell: Variant in elevation_data:
-		if not authored_cell is Vector2i:
-			push_warning(
-				"Encounter '%s' has malformed elevation cell '%s'; skipping."
-				% [encounter_id, authored_cell]
-			)
-			continue
-		var cell: Vector2i = authored_cell
-		var authored_height: Variant = elevation_data.get(authored_cell)
-		if not authored_height is int:
-			push_warning(
-				"Encounter '%s' elevation at %s must be an int; skipping."
-				% [encounter_id, cell]
-			)
-			continue
-		if not _authored_cell_is_inside(cell, dimensions):
-			push_warning(
-				"Encounter '%s' elevation cell %s is outside its %dx%d grid; skipping."
-				% [encounter_id, cell, dimensions.x, dimensions.y]
-			)
-			continue
-		model.set_elevation(cell, clampi(int(authored_height), 0, DS.ELEVATION_MAX))
-
-	# Authored cliffs await a stage visual; invisible impassable cells are intentionally unsupported.
-
-
-func _authored_cell_is_inside(cell: Vector2i, dimensions: Vector2i) -> bool:
-	return cell.x >= 0 and cell.y >= 0 and cell.x < dimensions.x and cell.y < dimensions.y
-
-
-func _encounter_grid_tile_set() -> TileSet:
-	var tile_set := TileSet.new()
-	tile_set.tile_size = Vector2i(64, 32)
-	var image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
-	var source := TileSetAtlasSource.new()
-	source.texture = ImageTexture.create_from_image(image)
-	source.texture_region_size = tile_set.tile_size
-	source.create_tile(Vector2i.ZERO)
-	tile_set.add_source(source, 0)
-	return tile_set
-
-
-func _release_battlefield_ground() -> void:
-	if is_instance_valid(_battlefield_ground):
-		_battlefield_ground.free()
-	_battlefield_ground = null
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_PREDELETE:
-		_release_battlefield_ground()
+	var model: GridBattlefieldModel = controller.battlefield as GridBattlefieldModel
+	if model != null:
+		model.release_field_grid()
 
 
 func replay_combat_events(receiver: Callable) -> void:
@@ -657,8 +846,10 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 		)
 		result.cause = _flee_cause()
 		_apply_flee_consequence(result, flee_outcome)
+	_release_field_grid()
 	last_result = result
 	battle_ended.emit(result)
+	_end_session(result)
 
 
 func _apply_victory(result: BattleResult) -> void:
@@ -946,6 +1137,8 @@ func _on_combat_event(event: CombatEvent) -> void:
 		balance_changed.emit(balance)
 	if event.type == &"enemy_turn_started":
 		enemy_rounds += 1
+	if event.type == &"measure_started":
+		_propagate_session_alerts()
 	if event.data.has("message"):
 		last_message = str(event.data["message"])
 	if controller != null:

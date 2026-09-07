@@ -305,30 +305,15 @@ func _load_and_register(
 	):
 		loaded["registration_conflicts"] = conflicts
 		return loaded
+	# Only an explicitly confirmed reset may replace otherwise unchanged quests.
+	var force_kinds: Array[StringName] = []
+	if force and not conflicts.is_empty():
+		force_kinds.append(&"quests")
+	loaded = CampaignQuestLoader.apply_loaded(loaded, package_path, force_kinds)
+	if not loaded.get("errors", []).is_empty():
+		return loaded
 	var quests: Array[DomSideQuest] = []
 	quests.assign(loaded.get("quests", []))
-	var dialogue_resources: Dictionary = loaded.get("dialogue_resources", {})
-	if not QuestRegistry.register_runtime_quests(quests, dialogue_resources):
-		errors.append({
-			"file": package_path,
-			"field": "quests",
-			"expected": "runtime quests with unique reserved ids",
-			"code": "runtime_registration_failed",
-			"message": "QuestRegistry refused the validated runtime quest set.",
-		})
-		loaded["errors"] = errors
-		return loaded
-	var encounters: Dictionary = loaded.get("encounters", {})
-	if not EncounterCatalog.register_runtime_encounters(encounters):
-		errors.append({
-			"file": package_path,
-			"field": "encounters",
-			"expected": "runtime encounters distinct from committed encounters",
-			"code": "runtime_encounter_registration_failed",
-			"message": "EncounterCatalog refused the validated runtime encounter set.",
-		})
-		loaded["errors"] = errors
-		return loaded
 	_registered_rows = _quest_rows(quests)
 	loaded["registered"] = true
 	return loaded

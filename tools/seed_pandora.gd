@@ -1,34 +1,285 @@
 extends Node
 ## seed_pandora.gd — one-shot seeder for the Pandora category trees (install-order step 4).
 ## Run headless: register as a temp autoload, run once, remove (see DEPENDENCIES.md).
-## Idempotent: aborts if roots already exist. Data lands in res://data.pandora.
+## Idempotent: existing roots are updated by stable id. Data lands in res://data.pandora.
 ##
 ## Canon source: ~/projects/dramgid-vault (the lore vault). Entities carry a `Vault Id`
 ## property bridging back to the vault entity so dialogue/code can query canon.
-## PANDORA IS CANONICAL for *game data*; the lore vault stays canonical for *lore prose*.
+## res://canon is canonical for migrated game data; Pandora remains the runtime database.
 ## Placeholder spells/effects are flagged `Placeholder = true` — mechanics, not canon.
 
 var _cats := {}
+
+
+class CanonReader:
+	const CANON_ROOT := "res://canon"
+
+	## Per-kind contract. A kind listed here is validated and must produce at least one
+	## document; a kind that is not is read verbatim, so a later E1.4 migration can land its
+	## documents before its schema is settled without this file blocking it.
+	##
+	## `ordered` kinds carry an integer `order` and are returned in it. The wheel is a ring and
+	## its rotation is canon — ring distance and the clash pairs are read off it — so that order
+	## must not be an accident of how the files happen to sort.
+	const SCHEMAS := {
+		"factions": {
+			"noun": "faction",
+			"schema": "weftlumin.faction.v1",
+			"fields": ["id", "display_name", "summary", "seat", "vault_id"],
+		},
+		"elements": {
+			"noun": "element",
+			"schema": "weftlumin.element.v1",
+			"fields": ["id", "display_name", "clash"],
+			"ordered": true,
+		},
+		"classes": {
+			"noun": "class",
+			"schema": "weftlumin.class.v1",
+			"fields": ["id", "display_name", "patron", "resource_name", "vault_id"],
+		},
+		"spells": {
+			"noun": "spell",
+			"schema": "weftlumin.spell.v1",
+			"fields": ["id", "display_name", "description", "element"],
+			"integers": ["soul_cost"],
+		},
+		"effects": {
+			"noun": "effect",
+			"schema": "weftlumin.effect.v1",
+			"fields": ["id", "display_name", "description", "duration_type"],
+		},
+		"locations": {
+			"noun": "location",
+			"schema": "weftlumin.location.v1",
+			"fields": ["id", "display_name", "epithet", "patron", "agreement", "vault_id"],
+		},
+		"lore": {
+			"noun": "lore entry",
+			"schema": "weftlumin.lore.v1",
+			"fields": ["id", "display_name", "summary", "vault_id", "vault_path"],
+		},
+		"peoples": {
+			"noun": "people",
+			"schema": "weftlumin.people.v1",
+			"fields": ["id", "display_name", "analogue", "homeland", "vault_id"],
+		},
+	}
+
+	static func load(kind: String, canon_root: String = CANON_ROOT) -> Array[Dictionary]:
+		var documents: Array[Dictionary] = []
+		var stable_ids: Dictionary = {}
+		if kind.is_empty() or kind.contains("/") or kind.contains("\\") or kind.contains(".."):
+			push_error("CANON-SEED: invalid kind '%s'." % kind)
+			return documents
+
+		var hubs: PackedStringArray = []
+		if DirAccess.dir_exists_absolute(canon_root):
+			hubs = DirAccess.get_directories_at(canon_root)
+		hubs.sort()
+		for hub: String in hubs:
+			var kind_root: String = canon_root.path_join(hub).path_join(kind)
+			if not DirAccess.dir_exists_absolute(kind_root):
+				continue
+			var filenames: PackedStringArray = DirAccess.get_files_at(kind_root)
+			filenames.sort()
+			for filename: String in filenames:
+				if filename.get_extension().to_lower() != "json":
+					continue
+				var document_path: String = kind_root.path_join(filename)
+				var file: FileAccess = FileAccess.open(document_path, FileAccess.READ)
+				if file == null:
+					push_error("CANON-SEED: could not read %s." % document_path)
+					return []
+				var text: String = file.get_as_text()
+				file.close()
+				var parser := JSON.new()
+				if parser.parse(text) != OK or typeof(parser.data) != TYPE_DICTIONARY:
+					push_error("CANON-SEED: %s must contain one JSON object." % document_path)
+					return []
+				var row: Dictionary = parser.data
+				if SCHEMAS.has(kind):
+					if not _valid(kind, row, document_path, stable_ids):
+						return []
+					stable_ids[row["id"]] = true
+				documents.append(row)
+		if SCHEMAS.has(kind):
+			if documents.is_empty():
+				push_error(
+					"CANON-SEED: no %s documents found in %s."
+					% [SCHEMAS[kind]["noun"], canon_root]
+				)
+				return documents
+			if bool(SCHEMAS[kind].get("ordered", false)):
+				documents.sort_custom(func(first: Dictionary, second: Dictionary) -> bool:
+					return int(first.get("order", 0)) < int(second.get("order", 0))
+				)
+			if kind == "elements" and not _clashes_are_symmetric(documents):
+				return []
+		return documents
+
+	static func _valid(
+		kind: String, row: Dictionary, document_path: String, stable_ids: Dictionary
+	) -> bool:
+		var contract: Dictionary = SCHEMAS[kind]
+		var noun: String = contract["noun"]
+		var fields: Array = ["schema"] + Array(contract["fields"])
+		for field: String in fields:
+			if typeof(row.get(field)) != TYPE_STRING:
+				push_error("CANON-SEED: %s requires string '%s'." % [document_path, field])
+				return false
+		if row["schema"] != contract["schema"]:
+			push_error("CANON-SEED: unsupported %s schema in %s." % [noun, document_path])
+			return false
+		if String(row["id"]).strip_edges().is_empty():
+			push_error("CANON-SEED: empty %s id in %s." % [noun, document_path])
+			return false
+		if stable_ids.has(row["id"]):
+			push_error(
+				"CANON-SEED: duplicate %s id '%s' in %s." % [noun, row["id"], document_path]
+			)
+			return false
+		if bool(contract.get("ordered", false)) and typeof(row.get("order")) != TYPE_FLOAT:
+			# JSON has one number type, so an authored integer arrives as a float.
+			push_error("CANON-SEED: %s requires numeric 'order'." % document_path)
+			return false
+		for field: String in Array(contract.get("integers", [])):
+			if typeof(row.get(field)) != TYPE_FLOAT:
+				push_error("CANON-SEED: %s requires numeric '%s'." % [document_path, field])
+				return false
+		return true
+
+	## The wheel's oppositions are canon and symmetric (§ vault systems/magic-system.md). Two
+	## documents can each name a clash independently, so a rename that touched only one side
+	## would otherwise seed a half-broken wheel and only surface as a wrong matrix in combat.
+	static func _clashes_are_symmetric(documents: Array[Dictionary]) -> bool:
+		var clash_by_id: Dictionary = {}
+		for row: Dictionary in documents:
+			clash_by_id[row["id"]] = row["clash"]
+		for element_id: String in clash_by_id:
+			var opposite: String = clash_by_id[element_id]
+			if not clash_by_id.has(opposite):
+				push_error(
+					"CANON-SEED: element '%s' clashes with unknown '%s'."
+					% [element_id, opposite]
+				)
+				return false
+			if String(clash_by_id[opposite]) != element_id:
+				push_error(
+					(
+						"CANON-SEED: clash is not symmetric — '%s' names '%s', which names '%s'."
+					)
+					% [element_id, opposite, clash_by_id[opposite]]
+				)
+				return false
+		return true
 
 
 func _ready() -> void:
 	await get_tree().process_frame
 	if not Pandora.is_loaded():
 		Pandora.load_data()
-	if not Pandora.get_all_roots().is_empty():
-		print("SEED: data.pandora already has roots — aborting (idempotent).")
+	var drift_check: bool = OS.get_environment("SOUL_METER_DRIFT_CHECK") == "1"
+	var before_data: String = ""
+	var before_ids: String = ""
+	if drift_check:
+		before_data = JSON.stringify(Pandora._entity_backend.save_data())
+		before_ids = JSON.stringify(Pandora._id_generator.save_data())
+	if not _seed_from_canon():
+		get_tree().quit(1)
+		return
+	if drift_check:
+		if (
+			JSON.stringify(Pandora._entity_backend.save_data()) != before_data
+			or JSON.stringify(Pandora._id_generator.save_data()) != before_ids
+		):
+			push_error("CANON-SEED: drift detected. Re-seed Pandora from canon before committing.")
+			get_tree().quit(1)
+			return
+		print("CANON-SEED: no drift.")
 		get_tree().quit()
 		return
-	_seed()
 	Pandora.save_data()
 	print("SEED: done — roots=", Pandora.get_all_roots().size())
 	get_tree().quit()
+
+
+func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
+	# Preflight once before even the empty-database bootstrap can create roots.
+	var factions: Array[Dictionary] = CanonReader.load("factions", canon_root)
+	if factions.is_empty() or not _faction_ids_are_unambiguous(factions):
+		return false
+	var elements: Array[Dictionary] = CanonReader.load("elements", canon_root)
+	var classes: Array[Dictionary] = CanonReader.load("classes", canon_root)
+	var peoples: Array[Dictionary] = CanonReader.load("peoples", canon_root)
+	var spells: Array[Dictionary] = CanonReader.load("spells", canon_root)
+	var effects: Array[Dictionary] = CanonReader.load("effects", canon_root)
+	var locations: Array[Dictionary] = CanonReader.load("locations", canon_root)
+	var lore: Array[Dictionary] = CanonReader.load("lore", canon_root)
+	if (
+		elements.is_empty() or classes.is_empty() or peoples.is_empty()
+		or spells.is_empty() or effects.is_empty() or locations.is_empty() or lore.is_empty()
+	):
+		return false
+	if not _elements_match_the_design_system(elements):
+		return false
+	if Pandora.get_all_roots().is_empty():
+		_seed(factions, elements, classes, peoples, spells, effects, locations, lore)
+	else:
+		_apply_elements(elements)
+		_apply_classes(classes)
+		_apply_peoples(peoples)
+		_apply_spells(spells)
+		_apply_effects(effects)
+		_apply_factions(factions)
+		_apply_locations(locations)
+		_apply_lore(lore)
+	return true
+
+
+## The wheel is a closed canon set and its presentation tokens are the design system's, not
+## canon's: `DS.WHEEL` is synced from the design-system project (`design/DESIGN_SYSTEM.md`) and
+## copying its hex into `canon/` would create a second source to drift. So canon owns identity,
+## order and the clash; DS owns sigil, colour and glow, and the two lists must agree exactly —
+## in both directions, because an eleventh element added on either side is the failure this
+## guard exists to catch.
+func _elements_match_the_design_system(elements: Array[Dictionary]) -> bool:
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in elements:
+		canon_ids[row["id"]] = true
+	var token_ids: Dictionary = {}
+	for token: Dictionary in DS.WHEEL:
+		token_ids[String(token["id"])] = true
+	for element_id: String in canon_ids:
+		if not token_ids.has(element_id):
+			push_error("CANON-SEED: element '%s' has no DS.WHEEL token." % element_id)
+			return false
+	for token_id: String in token_ids:
+		if not canon_ids.has(token_id):
+			push_error("CANON-SEED: DS.WHEEL token '%s' has no canon document." % token_id)
+			return false
+	return true
+
+
+func _design_system_token(element_id: String) -> Dictionary:
+	for token: Dictionary in DS.WHEEL:
+		if String(token["id"]) == element_id:
+			return token
+	return {}
 
 
 func _cat(name: String, parent: PandoraCategory = null) -> PandoraCategory:
 	var c := Pandora.create_category(name, parent)
 	_cats[name] = c
 	return c
+
+
+func _ensure_root(name: String) -> PandoraCategory:
+	for candidate: PandoraCategory in Pandora.get_all_roots():
+		if candidate.get_entity_name() == name:
+			_cats[name] = candidate
+			return candidate
+	return _cat(name)
 
 
 ## Authored default values: runtime setters (set_string etc.) only work on instantiate()d
@@ -43,106 +294,123 @@ func _assign(ent: PandoraEntity, prop_name: String, value: Variant) -> void:
 	prop.set_default_value(value)
 
 
-func _seed() -> void:
-	_seed_elements()
-	_seed_classes()
-	_seed_peoples()
+func _seed(
+	factions: Array[Dictionary],
+	elements: Array[Dictionary],
+	classes: Array[Dictionary],
+	peoples: Array[Dictionary],
+	spells: Array[Dictionary],
+	effects: Array[Dictionary],
+	locations: Array[Dictionary],
+	lore: Array[Dictionary]
+) -> void:
+	_apply_elements(elements)
+	_apply_classes(classes)
+	_apply_peoples(peoples)
 	_seed_items()
-	_seed_spells()
-	_seed_effects()
-	_seed_factions()
+	_apply_spells(spells)
+	_apply_effects(effects)
+	_apply_factions(factions)
 	_seed_npcs()
 	_seed_combatants()
 	_seed_encounters()
-	_seed_locations()
-	_seed_lore()
+	_apply_locations(locations)
+	_apply_lore(lore)
 
 
-# --- Elements: the Wheel of Ten (closed canon set; DS tokens/elements.css) ---------------
+# --- Elements: the Wheel of Ten (closed canon set; canon/<hub>/elements) -----------------
 
 
-func _seed_elements() -> void:
-	var root := _cat("Elements")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Sigil", "string")
-	Pandora.create_property(root, "Color", "color")
-	Pandora.create_property(root, "Glow", "color")
-	Pandora.create_property(root, "Clash", "reference")
+## Identity, wheel order and the clash come from canon; sigil, colour and glow come from the
+## design system. See `_elements_match_the_design_system()` for why the two are kept apart.
+func _apply_elements(elements: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Elements")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Sigil", "string"],
+		["Color", "color"],
+		["Glow", "color"],
+		["Clash", "reference"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var made := {}
-	for e in DS.WHEEL:
-		var ent := Pandora.create_entity(e["name"], root)
-		_assign(ent, "Display Name", e["name"])
-		_assign(ent, "Sigil", e["sigil"])
-		_assign(ent, "Color", e["color"])
-		_assign(ent, "Glow", e["glow"])
-		made[e["id"]] = ent
-	# Diametric oppositions — canon, symmetric. Never invent an eleventh element.
-	var clashes := {
-		"sul": "vekh", "vel": "mozh", "luth": "khash", "khor": "zhem", "tham": "zhur"
-	}
-	for a in clashes:
-		_assign(made[a], "Clash", made[clashes[a]])
-		_assign(made[clashes[a]], "Clash", made[a])
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in elements:
+		canon_ids[row["id"]] = true
+	var made: Dictionary = {}
+	for row: Dictionary in elements:
+		var stable_id: String = row["id"]
+		var entity: PandoraEntity = _find_by_stable_id(root, stable_id, canon_ids)
+		if entity == null:
+			# Presentation is stamped once, when the row is first written. Re-stamping it on
+			# every seed would make this seeder a second writer of design tokens into game
+			# data, and it is not: `DS.WHEEL` is what the UI actually reads (badge, theme
+			# builder, character creation), and canon owns identity, not appearance.
+			entity = Pandora.create_entity(row["display_name"], root)
+			var token: Dictionary = _design_system_token(stable_id)
+			_assign(entity, "Sigil", token["sigil"])
+			_assign(entity, "Color", token["color"])
+			_assign(entity, "Glow", token["glow"])
+		_assign(entity, "Display Name", row["display_name"])
+		made[stable_id] = entity
+	# Assigned in a second pass: an element's opposite may not have existed on the first.
+	for row: Dictionary in elements:
+		_assign(made[row["id"]], "Clash", made[row["clash"]])
 
 
 # --- Classes: the Ten Patron Classes (vault: systems/ten-patron-classes.md) --------------
 
 
-func _seed_classes() -> void:
-	var root := _cat("Classes")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Patron", "string")
-	Pandora.create_property(root, "Resource Name", "string")
-	Pandora.create_property(root, "Vault Id", "string")
+func _apply_classes(classes: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Classes")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Patron", "string"],
+		["Resource Name", "string"],
+		["Vault Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		["Mirrorblade", "Maiiam", "Balance"],
-		["River-Mother", "Haeren", "The Name-Ledger"],
-		["Ironbrand", "Kero", "Scars"],
-		["Lensbearer", "Stuid", "Fading"],
-		["Husk-bearer", "Vhorr", "The Table"],
-		["Flamebinder", "Vicoar", "Instructive Failure"],
-		["Stormbearer", "Ofshütje", "Attribution"],
-		["Oathclock", "Pazzah", "The Ledger"],
-		["Locksmirk", "Fickah", "Jammed Gears"],
-		["Threadwalker", "Izhakel", "Threads"],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Patron", r[1])
-		_assign(ent, "Resource Name", r[2])
-		_assign(ent, "Vault Id", "ten-patron-classes")
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in classes:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in classes:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Patron", row["patron"])
+		_assign(entity, "Resource Name", row["resource_name"])
+		_assign(entity, "Vault Id", row["vault_id"])
 
 
 # --- Peoples: playable races (vault: peoples/) -------------------------------------------
 
 
-func _seed_peoples() -> void:
-	var root := _cat("Peoples")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Analogue", "string")
-	Pandora.create_property(root, "Homeland", "string")
-	Pandora.create_property(root, "Vault Id", "string")
+func _apply_peoples(peoples: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Peoples")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Analogue", "string"],
+		["Homeland", "string"],
+		["Vault Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		["Kes'reth", "Tiefling", "Vervulling / Karrn-Vash", "kes-reth"],
-		["Vael", "Human", "Deivel Zeit / Solmarch", "vael"],
-		["Ghorr", "Orc", "Dom", "ghorr"],
-		["Vaerin", "Elf", "Pozor", "vaerin"],
-		["Kaan", "Dwarf", "Tweede / Grundvault", "kaan"],
-		["Orthos", "Dragonborn", "Rennen", "orthos"],
-		["Shimari", "Genasi", "Milinel", "shimari"],
-		["Weftkin", "Sporeborn", "Loamgate / Ashscar", "weftkin"],
-		["Fiel", "Smallfolk", "Lefren", "fiel"],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Analogue", r[1])
-		_assign(ent, "Homeland", r[2])
-		_assign(ent, "Vault Id", r[3])
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in peoples:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in peoples:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Analogue", row["analogue"])
+		_assign(entity, "Homeland", row["homeland"])
+		_assign(entity, "Vault Id", row["vault_id"])
 
 
 # --- Items: reserved sync-spec properties on the ROOT (propagate to all children) --------
@@ -250,154 +518,159 @@ func _seed_items() -> void:
 # --- Spells: PLACEHOLDER mechanics referencing canon elements ----------------------------
 
 
-func _seed_spells() -> void:
-	var root := _cat("Spells")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Description", "string")
-	Pandora.create_property(root, "Element", "reference")
-	Pandora.create_property(root, "Soul Cost", "int")
-	Pandora.create_property(root, "Placeholder", "bool")
+## `Placeholder` is set here rather than carried in the documents on purpose: it is a mechanics
+## flag saying these spells are stand-ins until the real ability layer exists, and canon is not
+## the place to record what the build has not built yet (see this file's header).
+##
+## The `element` field is an element id, resolved against the Elements root — not an entity name.
+## Names are display text and can be re-cased or re-worded; the id is the thing that is stable.
+func _apply_spells(spells: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Spells")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Description", "string"],
+		["Element", "reference"],
+		["Soul Cost", "int"],
+		["Placeholder", "bool"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var by_name := {}
-	for e in Pandora.get_all_entities(_cats["Elements"]):
-		by_name[e.get_entity_name()] = e
-
-	var rows := [
-		[
-			"Ember Chord",
-			"Khash",
-			4,
-			"A struck chord of fire; louder if Sul or Mozh sounded this measure."
-		],
-		[
-			"Still Water",
-			"Luth",
-			3,
-			"Quiets one surface to mirror-calm; suppressed while Khash rings."
-		],
-		["Hushfall", "Zhem", 6, "A hole with edges: silences a zone's tone for one measure."],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Element", by_name[r[1]])
-		_assign(ent, "Soul Cost", r[2])
-		_assign(ent, "Description", r[3])
-		_assign(ent, "Placeholder", true)
+	var elements_root: PandoraCategory = _ensure_root("Elements")
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in spells:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in spells:
+		var element: PandoraEntity = _find_by_stable_id(elements_root, row["element"])
+		if element == null:
+			push_error(
+				"CANON-SEED: spell '%s' names unknown element '%s'." % [row["id"], row["element"]]
+			)
+			continue
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Element", element)
+		_assign(entity, "Soul Cost", int(row["soul_cost"]))
+		_assign(entity, "Description", row["description"])
+		_assign(entity, "Placeholder", true)
 
 
 # --- Effects: PLACEHOLDER status shapes for GAS later ------------------------------------
 
 
-func _seed_effects() -> void:
-	var root := _cat("Effects")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Description", "string")
-	Pandora.create_property(root, "Duration Type", "string")
-	Pandora.create_property(root, "Placeholder", "bool")
+func _apply_effects(effects: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Effects")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Description", "string"],
+		["Duration Type", "string"],
+		["Placeholder", "bool"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		["Burning", "Khash damage over time; ends early if Luth sounds.", "duration"],
-		[
-			"Detuned",
-			"The Waning's fizzle-state: next casting rolls against a worse Agreement.",
-			"duration"
-		],
-		["Soul Drain", "The Gauge only goes down. This makes it go down faster.", "duration"],
-		["Warded", "A held line against one named element.", "duration"],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Description", r[1])
-		_assign(ent, "Duration Type", r[2])
-		_assign(ent, "Placeholder", true)
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in effects:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in effects:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Description", row["description"])
+		_assign(entity, "Duration Type", row["duration_type"])
+		_assign(entity, "Placeholder", true)
 
 
 # --- Factions: from the vault's city dossiers --------------------------------------------
 
 
-func _seed_factions() -> void:
-	var root := _cat("Factions")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Summary", "string")
-	Pandora.create_property(root, "Seat", "string")
-	Pandora.create_property(root, "Vault Id", "string")
+func _seed_factions(canon_root: String = CanonReader.CANON_ROOT) -> bool:
+	var factions: Array[Dictionary] = CanonReader.load("factions", canon_root)
+	if factions.is_empty() or not _faction_ids_are_unambiguous(factions):
+		return false
+	_apply_factions(factions)
+	return true
 
-	var rows := [
-		[
-			"The Mirror Choir",
-			"Maiiam's supreme order at Vervulling; 300 silent dancers and an Unnamed Seat.",
-			"Vervulling",
-			"vervulling"
-		],
-		[
-			"The Registry",
-			"Pazzah's Warden-mask bureaucracy; audits every act of magic on the continent.",
-			"Rennen",
-			"rennen"
-		],
-		[
-			"The Noon Court",
-			"Solmarch's state church of certainty — unknowingly worshipping a mask.",
-			"Solmarch",
-			"solmarch"
-		],
-		[
-			"The Reckoning",
-			"Karrn-Vash's radical sect, hunting the lost Taubstummers.",
-			"Karrn-Vash",
-			"karrn-vash"
-		],
-		[
-			"The Backface",
-			"The Undermirror's smuggling network; trades in captured reflections.",
-			"Vervulling",
-			"vervulling"
-		],
-		[
-			"The Ssae-Seeders",
-			"Radical Weftkin who treat the Bloom as ongoing and incomplete.",
-			"Zwarten Bos",
-			"zwarten-bos"
-		],
-		[
-			"The Mourning Dawn",
-			"Rag-As-Res's cells; coffins packed for Gnaal's children.",
-			"(roaming)",
-			"mourning-dawn"
-		],
-		[
-			"The Iron Companies",
-			"Dom's contracted companies, guild and regiment together.",
-			"Dom",
-			"iron-companies"
-		],
-		[
-			"The Ironbrand Sentinels",
-			"Branded wardens of Dom's Wound and its dead muster.",
-			"Dom",
-			"ironbrand-sentinels"
-		],
-		[
-			"The Lords of the Breach",
-			"Extraplanar demon lords of consumption.",
-			"The Breach",
-			"lords-of-the-breach"
-		],
-		[
-			"The Cold Consensus",
-			"Undead sovereigns who preserve souls against release.",
-			"Wintervast",
-			"cold-consensus"
-		],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Summary", r[1])
-		_assign(ent, "Seat", r[2])
-		_assign(ent, "Vault Id", r[3])
+
+func _faction_ids_are_unambiguous(factions: Array[Dictionary]) -> bool:
+	var root: PandoraCategory = null
+	for candidate: PandoraCategory in Pandora.get_all_roots():
+		if candidate.get_entity_name() == "Factions":
+			root = candidate
+			break
+	if root == null:
+		return true
+	var claims: Dictionary = {}
+	for row: Dictionary in factions:
+		# Resolve against existing entities before any new entity can change lookup.
+		# An exact name must not steal the entity owned by a legacy slug identity.
+		var existing: PandoraEntity = _find_by_stable_id(root, row["id"])
+		if existing == null:
+			continue
+		var entity_id: String = existing.get_entity_id()
+		if claims.has(entity_id):
+			push_error(
+				"CANON-SEED: faction ids '%s' and '%s' claim the same existing entity."
+				% [claims[entity_id], row["id"]]
+			)
+			return false
+		claims[entity_id] = row["id"]
+	return true
+
+
+func _apply_factions(factions: Array[Dictionary]) -> void:
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in factions:
+		canon_ids[row["id"]] = true
+	var root: PandoraCategory = _ensure_root("Factions")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Summary", "string"],
+		["Seat", "string"],
+		["Vault Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
+
+	for row: Dictionary in factions:
+		var stable_id: String = row["id"]
+		var entity: PandoraEntity = _find_by_stable_id(root, stable_id, canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(stable_id, root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Summary", row["summary"])
+		_assign(entity, "Seat", row["seat"])
+		_assign(entity, "Vault Id", row["vault_id"])
+
+
+func _find_by_stable_id(
+	root: PandoraCategory, stable_id: String, canon_ids: Dictionary = {}
+) -> PandoraEntity:
+	# Canon-created entities use the immutable id as their internal name. Older
+	# entities keep their existing names and generated IDs, with a slug fallback.
+	for candidate: PandoraEntity in Pandora.get_all_entities(root):
+		if not candidate is PandoraCategory and candidate.get_entity_name() == stable_id:
+			return candidate
+	for candidate: PandoraEntity in Pandora.get_all_entities(root):
+		if candidate is PandoraCategory:
+			continue
+		# A different current canon id is never a legacy display-name alias.
+		if canon_ids.has(candidate.get_entity_name()):
+			continue
+		var candidate_id: String = _slug(candidate.get_entity_name())
+		if candidate_id == stable_id:
+			return candidate
+	return null
+
+
+func _slug(value: String) -> String:
+	var result: String = value.to_lower()
+	for pair: Array in [["'", ""], ["’", ""], [" ", "-"], ["_", "-"]]:
+		result = result.replace(pair[0], pair[1])
+	return result
 
 
 # --- NPCs: the demo party + canon-named persons ------------------------------------------
@@ -622,88 +895,62 @@ func _encounter_rows() -> Array:
 # --- Locations: the 12 gazetteer cities (vault: cities/) ---------------------------------
 
 
-func _seed_locations() -> void:
-	var root := _cat("Locations")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Epithet", "string")
-	Pandora.create_property(root, "Patron", "string")
-	Pandora.create_property(root, "Agreement", "string")
-	Pandora.create_property(root, "Vault Id", "string")
+## The twelve world-map locations of the Dramgid map. NOT the same set as the playable scenes
+## in `world/locations/*.tres` — those are `LocationDefinition`s and include Dom's twenty
+## interiors, which have no entry here. `agreement` stays the authored string it always was
+## ("91-93%"); turning it into a `harmonic_accord` float would be inventing a number, and C21
+## (#258) owns authored per-location values.
+func _apply_locations(locations: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Locations")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Epithet", "string"],
+		["Patron", "string"],
+		["Agreement", "string"],
+		["Vault Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		["Vervulling", "The Twinfire Capital", "Maiiam", "91–93%", "vervulling"],
-		["Deivel Zeit", "", "Haeren", "90–92%", "deivel"],
-		["Dom", "", "Kero", "", "dom"],
-		["Karrn-Vash", "", "Blidnisch", "", "karrn-vash"],
-		["Solmarch", "", "Sulmae (the mask)", "", "solmarch"],
-		["Rennen", "", "Pazzah", "", "rennen"],
-		["Tweede", "", "Vicoar", "", "tweede"],
-		["Pozor", "", "Stuid", "", "pozor"],
-		["Lefren", "", "Fickah", "", "lefren"],
-		["Milinel", "", "Izhakel", "", "milinel"],
-		["Verspch", "", "Ofshütje", "", "verspch"],
-		["Loamgate", "", "Vhorr", "84–87%", "loamgate"],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Epithet", r[1])
-		_assign(ent, "Patron", r[2])
-		_assign(ent, "Agreement", r[3])
-		_assign(ent, "Vault Id", r[4])
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in locations:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in locations:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Epithet", row["epithet"])
+		_assign(entity, "Patron", row["patron"])
+		_assign(entity, "Agreement", row["agreement"])
+		_assign(entity, "Vault Id", row["vault_id"])
 
 
 # --- Lore: bridge entries into the vault (id + path; prose STAYS in the vault) -----------
 
 
-func _seed_lore() -> void:
-	var root := _cat("Lore")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Summary", "string")
-	Pandora.create_property(root, "Vault Id", "string")
-	Pandora.create_property(root, "Vault Path", "string")
+## Bridge rows only: the id, the summary and the vault path. The prose stays in the vault, and
+## a `vault_id` here is not the document's own id — "The Soul Gauge" bridges to `souls`, "The
+## Taubstummers" to `last-great-war`. That is why the two fields exist separately.
+func _apply_lore(lore: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Lore")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Summary", "string"],
+		["Vault Id", "string"],
+		["Vault Path", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		[
-			"The Waning",
-			"Maiiam is withdrawing; magic is dying; the Agreement loosens.",
-			"the-waning",
-			"cosmology/the-waning.md"
-		],
-		[
-			"The Bloom",
-			"Year 0: Kronos unmade into the Mycosphere. The world composted — literally.",
-			"the-bloom",
-			"eras/the-bloom.md"
-		],
-		[
-			"The Soul Gauge",
-			"Souls are Weft-anchored patterns; magic spends them, mostly downward.",
-			"souls",
-			"cosmology/souls.md"
-		],
-		[
-			"Verleidenlot",
-			"The Kes'reth mass-emergence — the Waning's true, unrecognized origin.",
-			"verleidenlot",
-			"locations/verleidenlot.md"
-		],
-		[
-			"The Taubstummers",
-			"The sealed soul-weapons that broke the Tidal Dominion.",
-			"last-great-war",
-			"eras/last-great-war.md"
-		],
-		[
-			"The Wheel of Ten",
-			"Ten elements; adjacency is Chord, opposition is Clash.",
-			"magic-system",
-			"systems/magic-system.md"
-		],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Summary", r[1])
-		_assign(ent, "Vault Id", r[2])
-		_assign(ent, "Vault Path", r[3])
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in lore:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in lore:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Summary", row["summary"])
+		_assign(entity, "Vault Id", row["vault_id"])
+		_assign(entity, "Vault Path", row["vault_path"])

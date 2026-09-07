@@ -43,6 +43,10 @@ run_drift_check \
 	"res://tools/generate_gloot.gd" \
 	"GLOOT-GEN: no drift\."
 run_drift_check \
+	"CanonSeedDriftCheck" \
+	"res://tools/seed_pandora.gd" \
+	"^CANON-SEED: no drift\.$"
+run_drift_check \
 	"IsometricSpriteDriftCheck" \
 	"res://tools/render_isometric_sprites.gd" \
 	"ISO-SPRITE-GEN: no drift\."

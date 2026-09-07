@@ -155,6 +155,7 @@ static func audit_project(strict: bool = false) -> Dictionary:
 	var quest_results := _collect_quest_results(quest_metadata, dialogue_sources)
 	var readback_sources := _readback_sources(dialogue_sources)
 	_classify_readbacks(quest_results, readback_sources)
+	var read_back_coverage := _build_read_back_coverage(quest_results, readback_sources, dialogue_sources)
 	var flag_access := _project_flag_access(quest_results, dialogue_sources, readback_sources)
 	return build_report(
 		quest_results,
@@ -166,7 +167,8 @@ static func audit_project(strict: bool = false) -> Dictionary:
 		template_conformance_violations(
 			_source_files(QUEST_DIRECTORY, PackedStringArray(["tres"])),
 			_source_files(LOCATION_DIRECTORY, PackedStringArray(["tres"]))
-		)
+		),
+		read_back_coverage
 	)
 
 
@@ -177,8 +179,12 @@ static func build_report(
 	grammar_flags: PackedStringArray = PackedStringArray(),
 	quest_critical_ids: PackedStringArray = PackedStringArray(),
 	dialogue_sources: Dictionary = {},
-	template_violations: Array[Dictionary] = []
+	template_violations: Array[Dictionary] = [],
+	read_back_coverage: Array[Dictionary] = []
 ) -> Dictionary:
+	if read_back_coverage.is_empty() and not quest_results.is_empty():
+		var readback_sources := _readback_sources(dialogue_sources)
+		read_back_coverage = _build_read_back_coverage(quest_results, readback_sources, dialogue_sources)
 	var categories := {
 		"outcome_count": _category(),
 		"resolution_writes": _category(),
@@ -375,6 +381,7 @@ static func build_report(
 			},
 		},
 		"categories": categories,
+		"read_back_coverage": read_back_coverage,
 	}
 
 
@@ -724,6 +731,178 @@ static func _direct_outcome(
 		"read_back": false,
 		"source": path,
 		"line": line_index + 1,
+	}
+
+
+static func _build_read_back_coverage(
+	quest_results: Array[Dictionary], sources: Dictionary, dialogue_sources: Dictionary
+) -> Array[Dictionary]:
+	var coverage: Array[Dictionary] = []
+	var reaction_flag_map := _npc_reaction_flags(sources)
+	for quest: Dictionary in quest_results:
+		var quest_id := str(quest.get("quest_id", ""))
+		var quest_name := str(quest.get("quest_name", ""))
+		var kind := str(quest.get("kind", "side"))
+		var outcomes: Array[Dictionary] = _typed_dictionaries(quest.get("outcomes", []))
+
+		var written_flags_map := {}
+		var outcomes_summary: Array[Dictionary] = []
+		for outcome: Dictionary in outcomes:
+			outcomes_summary.append({
+				"id": str(outcome.get("id", "")),
+				"read_back": bool(outcome.get("read_back", false)),
+				"readback_flag": str(outcome.get("readback_flag", "")),
+				"state_writes": _sorted_strings(outcome.get("state_writes", [])),
+			})
+			for write_val: Variant in outcome.get("state_writes", []):
+				var write := str(write_val)
+				var sep := write.find("=")
+				var flag_name := write.left(sep) if sep > 0 else write
+				if not flag_name.is_empty():
+					written_flags_map[flag_name] = true
+			var readback_flag := str(outcome.get("readback_flag", ""))
+			if not readback_flag.is_empty():
+				written_flags_map[readback_flag] = true
+
+		var flags_written := PackedStringArray(written_flags_map.keys())
+		flags_written.sort()
+
+		var read_backs: Array[Dictionary] = []
+		for flag: String in flags_written:
+			read_backs.append(
+				_find_flag_locations(flag, quest, outcomes, sources, dialogue_sources, reaction_flag_map)
+			)
+
+		coverage.append({
+			"quest_id": quest_id,
+			"quest_name": quest_name,
+			"kind": kind,
+			"outcomes": outcomes_summary,
+			"flags_written": flags_written,
+			"read_backs": read_backs,
+		})
+	return coverage
+
+
+static func _npc_reaction_flags(sources: Dictionary = {}) -> Dictionary:
+	var map := {}
+	var source := ""
+	if sources.has("res://globals/npc_reactions.gd"):
+		source = str(sources["res://globals/npc_reactions.gd"])
+	else:
+		source = FileAccess.get_file_as_string("res://globals/npc_reactions.gd")
+	if source.is_empty():
+		return map
+	var lines := source.split("\n")
+	var current_npc := ""
+	var npc_header_regex := _regex('"([a-z0-9_-]+)"\\s*:\\s*\\[')
+	var flag_regex := _regex('"flag"\\s*:\\s*"([^"]+)"')
+	for line in lines:
+		var npc_match := npc_header_regex.search(line)
+		if npc_match != null:
+			current_npc = npc_match.get_string(1)
+		if line.strip_edges().begins_with("],"):
+			current_npc = ""
+			continue
+		if not current_npc.is_empty():
+			var flag_match := flag_regex.search(line)
+			if flag_match != null:
+				var flag := flag_match.get_string(1)
+				if not map.has(flag):
+					map[flag] = [] as Array[String]
+				var list: Array[String] = map[flag]
+				var label := "NpcReactions:%s" % current_npc
+				if not list.has(label):
+					list.append(label)
+				map[flag] = list
+	return map
+
+
+static func _find_flag_locations(
+	flag: String,
+	quest: Dictionary,
+	outcomes: Array[Dictionary],
+	sources: Dictionary,
+	dialogue_sources: Dictionary,
+	reaction_flag_map: Dictionary = {}
+) -> Dictionary:
+	var dialogue_conditions := PackedStringArray()
+	var reaction_rows := PackedStringArray()
+	var encounter_gates := PackedStringArray()
+	var other_locations := PackedStringArray()
+
+	if reaction_flag_map.has(flag):
+		for label_value: Variant in reaction_flag_map[flag]:
+			var label := str(label_value)
+			if not (label in reaction_rows):
+				reaction_rows.append(label)
+
+	var escaped_flag := flag.replace(".", "\\.")
+	var flag_read_regex := _regex('get_flag\\("%s"' % escaped_flag)
+
+	for path: String in sources:
+		var source := str(sources[path])
+		if source.is_empty():
+			continue
+
+		var is_dialogue := dialogue_sources.has(path)
+		var is_encounter := (
+			path.contains("encounter")
+			or path.contains("data.pandora")
+			or path.begins_with("res://world/")
+			or path.begins_with("res://actors/")
+			or path.begins_with("res://quests/")
+		)
+
+		var lines := source.split("\n")
+		var needle := "QuestRegistry.is_done(QuestRegistry.%s)" % str(quest.get("constant", ""))
+		var check_is_done := outcomes.size() == 1 and not needle.is_empty() and needle in source
+
+		for line_index in lines.size():
+			var line := lines[line_index]
+			var line_num := line_index + 1
+			var matches_flag := false
+
+			if flag_read_regex.search(line) != null:
+				matches_flag = true
+			elif "FLAG_NON_EMPTY" in line and '"%s"' % flag in line:
+				matches_flag = true
+			elif "required_flags" in line and '"%s"' % flag in line:
+				matches_flag = true
+			elif check_is_done and needle in line:
+				matches_flag = true
+
+			if matches_flag:
+				var location := "%s:%d" % [path, line_num]
+				if is_dialogue:
+					if not (location in dialogue_conditions):
+						dialogue_conditions.append(location)
+				elif is_encounter:
+					if not (location in encounter_gates):
+						encounter_gates.append(location)
+				else:
+					if not (location in other_locations):
+						other_locations.append(location)
+
+	dialogue_conditions.sort()
+	reaction_rows.sort()
+	encounter_gates.sort()
+	other_locations.sort()
+
+	var is_read := (
+		not dialogue_conditions.is_empty()
+		or not reaction_rows.is_empty()
+		or not encounter_gates.is_empty()
+		or not other_locations.is_empty()
+	)
+
+	return {
+		"flag": flag,
+		"read_back": is_read,
+		"dialogue_conditions": dialogue_conditions,
+		"reaction_rows": reaction_rows,
+		"encounter_gates": encounter_gates,
+		"other_locations": other_locations,
 	}
 
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3]
+[gd_scene load_steps=43 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
@@ -32,6 +32,9 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-bush--low.png" id="42_bush"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-a/crowd-laborer-a--idle--se--f00.png" id="43_traveler_a"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="44_traveler_b"]
+[ext_resource type="Script" path="res://world/field_map.gd" id="46_field_map"]
+[ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="47_blocking_tiles"]
+[ext_resource type="Script" path="res://world/nav/combat_terrain_layer.gd" id="48_terrain"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(1800, 40)
@@ -56,6 +59,9 @@ script = ExtResource("1_location")
 arrival_flag = "chapter_dorthkor_reached"
 y_sort_enabled = true
 
+[node name="FieldMap" type="Node2D" parent="."]
+script = ExtResource("46_field_map")
+
 [node name="Ground" type="ColorRect" parent="."]
 offset_left = -600.0
 offset_top = -400.0
@@ -78,6 +84,15 @@ map_size = Vector2i(78, 78)
 ground_style = 1
 road_axis = 1
 road_half_width = 2
+
+[node name="Blocking" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(900, -752)
+tile_set = ExtResource("47_blocking_tiles")
+
+[node name="Terrain" type="TileMapLayer" parent="."]
+visible = false
+script = ExtResource("48_terrain")
 
 [node name="Road" type="ColorRect" parent="."]
 visible = false

@@ -1,4 +1,4 @@
-[gd_scene load_steps=43 format=3]
+[gd_scene load_steps=47 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -34,6 +34,10 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-rock--mossy.png" id="42_dom_mossy_rock"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-bush--low.png" id="43_dom_low_bush"]
 [ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="44_ambient_motion"]
+[ext_resource type="Script" path="res://world/field_map.gd" id="47_field_map"]
+[ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="48_blocking_tiles"]
+[ext_resource type="Script" path="res://world/nav/combat_terrain_layer.gd" id="49_terrain"]
+[ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="50_blocking_layer"]
 [ext_resource type="PackedScene" path="res://actors/ambient_villager/ambient_villager.tscn" id="45_ambient_villager"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="46_crowd_forager"]
 
@@ -57,6 +61,9 @@ size = Vector2(46, 22)
 
 [node name="TestRoom" type="Node2D"]
 y_sort_enabled = true
+
+[node name="FieldMap" type="Node2D" parent="."]
+script = ExtResource("47_field_map")
 
 [node name="ZhavarTelegraph" parent="." instance=ExtResource("9_zhavar")]
 
@@ -86,6 +93,20 @@ script = ExtResource("7_iso")
 map_size = Vector2i(70, 70)
 ground_style = 2
 road_axis = 2
+
+[node name="Blocking" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(1000, -520)
+tile_map_data = PackedByteArray("AAANACIAAAAAAAAAAAAOACIAAAAAAAAAAAAmADwAAAAAAAAAAAAnADsAAAAAAAAAAAAWABcAAAAAAAAAAAAXABcAAAAAAAAAAAAXABYAAAAAAAAAAAA8ACQAAAAAAAAAAAA=")
+tile_set = ExtResource("48_blocking_tiles")
+script = ExtResource("50_blocking_layer")
+
+[node name="Terrain" type="TileMapLayer" parent="."]
+visible = false
+script = ExtResource("49_terrain")
+cover_cells = Array[Vector2i]([Vector2i(2, 1), Vector2i(2, 2), Vector2i(3, 2), Vector2i(4, 3)])
+elevation_one_cells = Array[Vector2i]([Vector2i(3, 1)])
+elevation_two_cells = Array[Vector2i]([Vector2i(4, 2)])
 
 [node name="WallTop" type="ColorRect" parent="."]
 visible = false

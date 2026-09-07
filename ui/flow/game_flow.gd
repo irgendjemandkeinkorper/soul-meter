@@ -19,10 +19,10 @@ extends Node
 ##       ├── Loading               calls loader for `_target_scene`; leaves on "level_ready"
 ##       ├── Active                re-enters Loading on "travel" (see travel())
 ##       ├── Paused                pause overlay + tree pause live here
-##       └── Battle                battle overlay + tree pause live here (combat scaffold)
+##       └── Battle                battle HUD + field combat mode live here
 ##
 ## Events: boot_done · start_chargen · new_game · intro_done · level_ready · pause ·
-##         resume · to_main_menu · enter_battle · battle_end · travel
+##         resume · to_main_menu · enter_battle · enter_set_piece · battle_end · travel
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
 const QUEST_AUDIT_SCRIPT := "res://tools/quest_audit.gd"
@@ -62,10 +62,17 @@ const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
 const CHARACTER_CREATION_SCREEN := preload("res://ui/screens/character_creation.tscn")
 const INTRO_NARRATION_SCREEN := preload("res://ui/screens/intro_narration.tscn")
 const DEPLOYMENT_SCREEN := preload("res://ui/screens/deployment/deployment.tscn")
-const BATTLE_SCREEN := preload("res://ui/screens/battle.tscn")
+## The stage remains the existing battle screen until migration step 6 rewires
+## it as a field overlay; GameFlow already treats it as the battle HUD.
+const BATTLE_HUD := preload("res://ui/screens/battle.tscn")
+## Performance tooling keeps the old resource name until its D6 migration.
+const BATTLE_SCREEN := BATTLE_HUD
 const CHAPTER_COMPLETE_SCREEN := preload("res://ui/screens/chapter_complete.tscn")
 
 var _waiting_for_level := false
+## Battle → Paused → Battle keeps the fight live (D3); this flag tells the Battle exit/enter
+## hooks that they are bracketing a pause, not ending or starting a fight.
+var _battle_paused := false
 var _pending_fast_travel_cost := 0
 var _fast_travel_in_progress := false
 var _loading_fallback_scene := ""
@@ -120,6 +127,7 @@ func _ready() -> void:
 			_sync_reputation_guards()
 	)
 	_sync_reputation_guards()
+	_sync_battle_guard()
 
 	$StateChart/Root/Menus/Title.state_entered.connect(_on_title_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_entered.connect(_on_character_creation_entered)
@@ -140,6 +148,7 @@ func _ready() -> void:
 	# Active means no guarded area transition can still fire, so the staging is
 	# dead by definition.
 	$StateChart/Root/Playing/Active.state_exited.connect(_clear_pending_area)
+	$StateChart/Root/Playing/Active/ToPaused.taken.connect(_on_active_pause_taken)
 	$StateChart/Root/Playing/Paused.state_entered.connect(_on_paused_entered)
 	$StateChart/Root/Playing/Paused.state_exited.connect(_on_paused_exited)
 	var deployment_states := [
@@ -153,6 +162,8 @@ func _ready() -> void:
 		deployment_states[index].state_exited.connect(_on_deployment_exited)
 	$StateChart/Root/Playing/Battle.state_entered.connect(_on_battle_entered)
 	$StateChart/Root/Playing/Battle.state_exited.connect(_on_battle_exited)
+	$StateChart/Root/Playing/Battle/ToPaused.taken.connect(_on_battle_pause_taken)
+	$StateChart/Root/Playing/Paused/ToMenus.taken.connect(_on_paused_to_menus_taken)
 	$StateChart/Root/Playing/ChapterComplete.state_entered.connect(_on_chapter_complete_entered)
 	$StateChart/Root/Playing/ChapterComplete.state_exited.connect(_on_chapter_complete_exited)
 
@@ -171,7 +182,27 @@ static func _is_quest_audit_cli(arguments: PackedStringArray) -> bool:
 
 ## The single entry point UI code uses to talk to the chart.
 func send_event(event: StringName) -> void:
+	_sync_battle_guard()
 	chart.send_event(event)
+
+
+func _sync_battle_guard() -> void:
+	var access: Dictionary = Battle.can_fight_here()
+	chart.set_expression_property(&"can_fight_here", bool(access.get("allowed", false)))
+
+
+func _on_active_pause_taken() -> void:
+	chart.set_expression_property(&"resume_to_battle", false)
+
+
+func _on_battle_pause_taken() -> void:
+	_battle_paused = true
+	chart.set_expression_property(&"resume_to_battle", true)
+
+
+func _on_paused_to_menus_taken() -> void:
+	_battle_paused = false
+	chart.set_expression_property(&"resume_to_battle", false)
 
 
 func start_journey(origin_id: StringName, destination_id: StringName) -> bool:
@@ -252,6 +283,12 @@ func resolve_encounter_prompt(avoid: bool) -> Dictionary:
 			travel_plan.state = TravelPlan.State.EN_ROUTE
 			_persist_travel_plan()
 			return {"event": "avoided"}
+	var access: Dictionary = Battle.can_fight_here()
+	if not bool(access.get("allowed", false)):
+		# The loaded field cannot host combat (FR-606 shape). Keep the prompt live rather than
+		# stranding the plan IN_BATTLE with no Battle state; where a journey ambush is fought
+		# under same-map combat is a later F1 contract.
+		return {"event": "battle_refused", "refusal": access}
 	travel_plan.state = TravelPlan.State.IN_BATTLE
 	_persist_travel_plan()
 	var encounter_id := StringName(travel_plan.encounter_schedule[slot_index]["encounter_id"])
@@ -698,7 +735,7 @@ func _on_deployment_entered(step: int) -> void:
 	if screen != null:
 		screen.configure_step(step)
 		# Battle.start() has already run by the time the chart enters deployment (the
-		# Enemy trigger starts the battle, then sends "enter_battle"), so the PLACE
+		# set-piece starts the battle, then sends "enter_set_piece"), so the PLACE
 		# step hands the screen the LIVE battlefield model — place_unit() writes real
 		# spawn positions instead of refusing on deployment_context (#202).
 		if step == DeploymentScreen.Step.PLACE and Battle.controller != null:
@@ -707,17 +744,29 @@ func _on_deployment_entered(step: int) -> void:
 
 func _on_deployment_exited() -> void:
 	UIManager.close_all()
+	get_tree().paused = false
 
 
 func _on_battle_entered() -> void:
-	get_tree().paused = true
-	MusicDirector.push_context("battle")
-	UIManager.open(BATTLE_SCREEN, false, true)
+	var resuming := _battle_paused
+	_battle_paused = false
+	var field: FieldMap = Battle._current_field_map()
+	if field != null:
+		field.set_combat_mode(true)
+	if not resuming:
+		MusicDirector.push_context("battle")
+	UIManager.open(BATTLE_HUD, false, true)
 
 
 func _on_battle_exited() -> void:
 	UIManager.close_all()
-	get_tree().paused = false
+	if _battle_paused:
+		# Leaving for the pause menu, not ending the fight: the field stays in combat mode and
+		# no end-of-battle work (music pop, autosave flush) runs.
+		return
+	var field: FieldMap = Battle._current_field_map()
+	if field != null:
+		field.set_combat_mode(false)
 	MusicDirector.pop_context()
 	SaveGame.flush_pending_autosave.call_deferred()
 

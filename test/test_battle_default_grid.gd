@@ -1,14 +1,20 @@
 extends GdUnitTestSuite
 
-## Catalog encounters synthesize a default tactical grid when they author none
-## (owner ruling, 2026-08-29). Ad-hoc `start(BattleActor)` scaffold battles stay
-## on the zone model — that plus the `"battlefield": "zones"` hatch keeps the
-## FR-105 zone fallback live end-to-end.
+## Catalog encounters build their tactical grid from the live field. Ad-hoc
+## `start(BattleActor)` scaffold battles stay on the zone model — that plus the
+## `"battlefield": "zones"` hatch keeps the FR-105 fallback live end-to-end.
 
 const TEST_ENCOUNTER := &"default-grid-probe-test"
+const FIELD_SCENE := preload("res://world/test_room.tscn")
+
+var _field_scene: Node2D
+var _field: FieldMap
 
 
 func before_test() -> void:
+	_field_scene = FIELD_SCENE.instantiate() as Node2D
+	add_child(_field_scene)
+	_field = _field_scene.get_node("FieldMap") as FieldMap
 	EncounterCatalog._definitions[String(TEST_ENCOUNTER)] = {
 		"display_name": "Default Grid Probe",
 		"enemies": [
@@ -25,29 +31,51 @@ func before_test() -> void:
 
 func after_test() -> void:
 	EncounterCatalog._definitions.erase(String(TEST_ENCOUNTER))
-	Battle._release_battlefield_ground()
 	Battle.controller = null
 	Battle.allies.clear()
 	Battle.enemies.clear()
 	Battle._definition.clear()
 	Battle._combat_history.clear()
+	_field_scene.free()
+	_field_scene = null
+	_field = null
 
 
-func test_catalog_start_without_authored_grid_builds_default_grid_and_deploys_opposing_columns() -> void:
+func test_catalog_start_builds_from_the_live_field_and_deploys_opposing_columns() -> void:
 	Battle.start(TEST_ENCOUNTER)
 
 	assert_bool(Battle.controller.battlefield is GridBattlefieldModel).is_true()
+	var model: GridBattlefieldModel = Battle.controller.battlefield as GridBattlefieldModel
+	assert_object(model._grid).is_same(_field.iso_grid())
 	var snapshot: Dictionary = Battle.controller.snapshot()
 	var tiles: Array = snapshot.get("tiles", []) as Array
-	assert_int(tiles.size()).is_equal(35)
+	var used_rect: Rect2i = _field.ground().get_used_rect()
+	assert_int(tiles.size()).is_equal(used_rect.size.x * used_rect.size.y)
 	var ally_position: Dictionary = Battle.controller.battlefield.describe_position(
 		Battle.controller.battlefield.position_of(Battle.allies[0])
 	)
 	var enemy_position: Dictionary = Battle.controller.battlefield.describe_position(
 		Battle.controller.battlefield.position_of(Battle.enemies[0])
 	)
-	assert_vector(ally_position.get("cell", Vector2i(-1, -1))).is_equal(Vector2i(0, 0))
-	assert_vector(enemy_position.get("cell", Vector2i(-1, -1))).is_equal(Vector2i(6, 0))
+	assert_vector(ally_position.get("cell", Vector2i(-1, -1))).is_equal(used_rect.position)
+	assert_vector(enemy_position.get("cell", Vector2i(-1, -1))).is_equal(
+		Vector2i(used_rect.end.x - 1, used_rect.position.y)
+	)
+
+
+func test_finishing_a_battle_hands_the_field_grid_back_to_navigation() -> void:
+	var grid: IsoGrid = _field.iso_grid()
+	var corner: Vector2i = _field.ground().get_used_rect().position
+	assert_bool(grid.is_point_solid(corner)).is_false()
+
+	Battle.start(TEST_ENCOUNTER)
+	assert_bool(grid.is_point_solid(corner)).is_true()
+	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_greater(1.0)
+
+	Battle._finish(BattleResult.State.FLED, &"fled")
+
+	assert_bool(grid.is_point_solid(corner)).is_false()
+	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_equal(1.0)
 
 
 func test_stage_renders_tiles_from_replayed_production_start_event() -> void:
@@ -79,49 +107,6 @@ func test_explicit_zone_battlefield_keeps_zone_model_reachable() -> void:
 
 	assert_bool(model is GridBattlefieldModel).is_false()
 	assert_bool(bool(model.capabilities().get("cells", false))).is_false()
-
-
-func test_authored_grid_dimensions_win_over_default() -> void:
-	Battle.allies.append(BattleActor.new())
-	Battle.enemies.append(_enemy())
-	Battle._definition = {"grid": {"dimensions": Vector2i(9, 6)}}
-
-	var model: BattlefieldModel = Battle._battlefield_for_definition(CombatRules.new())
-
-	assert_bool(model is GridBattlefieldModel).is_true()
-	assert_int(model.tiles_snapshot().size()).is_equal(54)
-
-
-func test_empty_and_invalid_grids_fall_back_to_default_dimensions() -> void:
-	Battle.allies.append(BattleActor.new())
-	Battle.enemies.append(_enemy())
-	var definitions: Array[Dictionary] = [
-		{"grid": {}},
-		{"grid": {"dimensions": "7x5"}},
-		{"grid": {"dimensions": Vector2i(1, 1)}},
-	]
-	for definition: Dictionary in definitions:
-		Battle._release_battlefield_ground()
-		Battle._definition = definition
-		var model: BattlefieldModel = Battle._battlefield_for_definition(CombatRules.new())
-		assert_bool(model is GridBattlefieldModel).is_true()
-		assert_int(model.tiles_snapshot().size()).is_equal(35)
-
-
-func test_default_grid_height_grows_to_fit_the_larger_combatant_side() -> void:
-	Battle.allies.append(BattleActor.new())
-	for index: int in 6:
-		Battle.enemies.append(_enemy())
-	Battle._definition = {"display_name": "Default Grid Probe"}
-
-	var model: BattlefieldModel = Battle._battlefield_for_definition(CombatRules.new())
-	model.setup(Battle.allies, Battle.enemies)
-
-	assert_int(model.tiles_snapshot().size()).is_equal(42)
-	var final_enemy_position: Dictionary = model.describe_position(
-		model.position_of(Battle.enemies[5])
-	)
-	assert_vector(final_enemy_position.get("cell", Vector2i(-1, -1))).is_equal(Vector2i(6, 5))
 
 
 func _enemy() -> BattleActor:

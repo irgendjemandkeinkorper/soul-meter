@@ -12,12 +12,16 @@ var _target_spawn_before: StringName = &"default"
 var _save_paths_before: Array[String] = []
 var _test_save_paths: Array[String] = []
 var _flow_was_active := false
+## Journey ambushes now fight on the loaded field (F1); give Battle a real one.
+var _field_scene: Node2D
 var _save_runtime_before: Dictionary = {}
 var _skip_breath_refill_before := false
 
 
 func before_test() -> void:
 	_game_state_before = GameState.to_dict()
+	_field_scene = (load("res://world/test_room.tscn") as PackedScene).instantiate() as Node2D
+	add_child(_field_scene)
 	_world_clock_before = WorldClock.to_dict()
 	_reputation_before = Reputation.to_dict()
 	_renown_before = Renown.to_dict()
@@ -56,6 +60,9 @@ func before_test() -> void:
 
 func after_test() -> void:
 	_restore_flow_after_battle_test()
+	if is_instance_valid(_field_scene):
+		_field_scene.free()
+	_field_scene = null
 	_clear_test_battle()
 	_remove_test_saves()
 	SaveGame.save_path = _save_paths_before[0]
@@ -165,6 +172,26 @@ func test_successful_avoidance_marks_slot_resolved() -> void:
 	assert_str(result["event"]).is_equal("avoided")
 	assert_bool(bool(plan.encounter_schedule[0]["resolved"])).is_true()
 	assert_int(int(plan.state)).is_equal(TravelPlan.State.EN_ROUTE)
+	assert_dict(GameState.travel_plan).is_equal(plan.to_dict())
+
+
+func test_encounter_prompt_fight_is_refused_when_the_field_cannot_host_combat() -> void:
+	_field_scene.free()
+	_field_scene = (
+		(load("res://world/interiors/players_house.tscn") as PackedScene).instantiate() as Node2D
+	)
+	add_child(_field_scene)
+	var plan := _prompt_plan(41)
+	plan.progress_step = 2
+	_install_plan(plan)
+
+	var result: Dictionary = GameFlow.resolve_encounter_prompt(false)
+
+	# FR-606 shape rides the result; the plan is untouched, so nothing is stranded IN_BATTLE.
+	assert_str(result["event"]).is_equal("battle_refused")
+	var refusal: Dictionary = result["refusal"]
+	assert_str(String(refusal.get("blocked_by", &""))).is_equal("no_combat_zone")
+	assert_int(int(plan.state)).is_equal(TravelPlan.State.AVOID_PROMPT)
 	assert_dict(GameState.travel_plan).is_equal(plan.to_dict())
 
 
@@ -439,7 +466,6 @@ func _restore_flow_after_battle_test() -> void:
 func _clear_test_battle() -> void:
 	if Battle.encounter_id.is_empty():
 		return
-	Battle._release_battlefield_ground()
 	Battle.allies.clear()
 	Battle.enemies.clear()
 	Battle._definition.clear()

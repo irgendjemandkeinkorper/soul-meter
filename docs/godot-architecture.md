@@ -23,25 +23,30 @@ open magic system built on combinable spell effects.
 
 ## Layered architecture
 
-Five layers. Dependencies point downward only. If you find yourself wanting an upward
-reference, that's a design smell — raise it rather than adding one.
+Six layers. Tooling is a debug-only sixth layer above Flow; it may depend downward on the
+game, but no production layer depends on it. All dependencies point downward only. If you
+find yourself wanting an upward reference, that's a design smell — raise it rather than
+adding one.
 
 ```
+Tooling       Weftlumin and other debug-only authoring surfaces
 Flow          State charts — what the game is currently doing
 Presentation  Themes, Phantom Camera, Anima, Juicee, shaders
 Systems       GodotGAS (abilities/effects), GLoot (inventory), reputation ledger
 Narrative     Dialogue Manager, QuestSystem
-Data          Pandora — single source of truth
+Data          Canon text → Pandora runtime database → generated runtime artifacts
 ```
 
 ### The one-way data rule
 
-**Pandora is canonical. Everything else consumes from it. Nothing writes back.**
+**The canonical chain is `canon/` → `data.pandora` → `data/generated/`. It is strictly
+one-way; nothing writes back.**
 
-This is the most important constraint in the project. Items, spells, effects, factions, NPCs,
-and lore entries are Pandora entities. GLoot's prototype JSON, GodotGAS effect resources, and
-any lookup tables are *generated artifacts*, committed to the repo but never hand-edited.
-If a generated file needs to change, change the Pandora entity and regenerate.
+This is the most important constraint in the project. Text under
+`canon/<hub>/<kind>/*.json` is the source for each migrated category and seeds Pandora by
+stable id; Pandora remains the runtime database. GLoot's prototype JSON, GodotGAS effect
+resources, and lookup tables are *generated artifacts*, committed to the repo but never
+hand-edited. To change migrated data, edit canon, reseed Pandora, and regenerate.
 
 ---
 

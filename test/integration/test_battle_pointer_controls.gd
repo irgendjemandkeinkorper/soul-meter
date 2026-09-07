@@ -25,7 +25,6 @@ func after_test() -> void:
 		control.mouse_filter = int(saved.get("mouse_filter", Control.MOUSE_FILTER_STOP))
 	if not _used_global_battle:
 		return
-	Battle._release_battlefield_ground()
 	Battle.controller = null
 	Battle.allies.clear()
 	Battle.enemies.clear()

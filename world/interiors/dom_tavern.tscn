@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://world/interiors/dom_tavern.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
@@ -17,6 +17,9 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-merchant-b/crowd-merchant-b--idle--se--f00.png" id="15_patron_merchant"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-dockworker-a/crowd-dockworker-a--idle--se--f00.png" id="16_patron_dockworker"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-laborer-b/crowd-laborer-b--idle--se--f00.png" id="17_patron_laborer"]
+[ext_resource type="Script" path="res://world/field_map.gd" id="18_field_map"]
+[ext_resource type="TileSet" path="res://assets/generated/sprites/ground/ground_tileset.tres" id="19_ground_tiles"]
+[ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="20_blocking_tiles"]
 
 [sub_resource type="RectangleShape2D" id="wall_horizontal"]
 size = Vector2(960, 40)
@@ -42,6 +45,17 @@ size = Vector2(54, 48)
 [node name="DomTavern" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_script")
+
+[node name="FieldMap" type="Node2D" parent="."]
+script = ExtResource("18_field_map")
+
+[node name="FieldGround" type="TileMapLayer" parent="."]
+visible = false
+tile_set = ExtResource("19_ground_tiles")
+
+[node name="FieldBlocking" type="TileMapLayer" parent="."]
+visible = false
+tile_set = ExtResource("20_blocking_tiles")
 
 [node name="Floor" type="Polygon2D" parent="."]
 z_index = -10

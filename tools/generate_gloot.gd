@@ -54,6 +54,7 @@ const FIZZLE_JSON_PATH := OUT_DIR + "/fizzle_table.json"
 const ELEMENT_MATRIX_JSON_PATH := OUT_DIR + "/element_matrix.json"
 const ELEMENT_MATRIX_ROWS_PATH := OUT_DIR + "/element_matrix_rows.gd"
 const COMBAT_IDENTITY_PATH := OUT_DIR + "/combat_identity.json"
+const LOCATION_INDEX_PATH := OUT_DIR + "/location_index.json"
 const ELEMENTS_DATA_PATH := "res://globals/elements/elements_data.gd"
 const FIZZLE_TABLE_PATH := "res://globals/default_fizzle_table.tres"
 const POT_PATH := OUT_DIR + "/items.pot"
@@ -184,6 +185,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 	var element_matrix_text: String = element_matrix_artifacts["json"]
 	var element_matrix_rows_text: String = element_matrix_artifacts["gd"]
 	var combat_identity_text := _combat_identity_artifact()
+	var location_index_text := _location_index_artifact()
 
 	# --- artifact 3: gettext template of generated item keys ---
 	var item_entries := _item_entries(protos, paths)
@@ -209,6 +211,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		or _differs(ELEMENT_MATRIX_JSON_PATH, element_matrix_text)
 		or _differs(ELEMENT_MATRIX_ROWS_PATH, element_matrix_rows_text)
 		or _differs(COMBAT_IDENTITY_PATH, combat_identity_text)
+		or _differs(LOCATION_INDEX_PATH, location_index_text)
 		or _differs(POT_PATH, pot)
 		or _po_needs_merge(LOCALE_PO_PATH, item_entries)
 	)
@@ -236,6 +239,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		_write(ELEMENT_MATRIX_JSON_PATH, element_matrix_text)
 		_write(ELEMENT_MATRIX_ROWS_PATH, element_matrix_rows_text)
 		_write(COMBAT_IDENTITY_PATH, combat_identity_text)
+		_write(LOCATION_INDEX_PATH, location_index_text)
 		_write(POT_PATH, pot)
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://locale"))
 		_write(LOCALE_PO_PATH, locale_po)
@@ -807,6 +811,48 @@ static func _encounter_artifacts() -> Dictionary:
 		"ids": _ids_source("EncounterIds", encounter_ids),
 		"count": encounter_ids.size(),
 	}
+
+
+## The world-map locations, indexed by stable id (E1.4e / #323).
+##
+## **This is not yet the index E3.3b's four registries read.** Those registries hold *scene*
+## locations — `LocationDefinition`s in `world/locations/*.tres`, twenty-four of them including
+## Dom's interiors — and this index holds the twelve world-map cities that live in Pandora. The
+## two sets overlap only at Dom. Merging them is E3.3a's job (#341 generates the `.tres` files
+## from canon); emitting scene paths from *this* generator would contradict its own contract,
+## since it is generated from `data.pandora` and that data is not in Pandora.
+## `_slug()` maps both spaces and hyphens to underscores, which is right for item paths and
+## wrong here: the index's ids are the join key onto `canon/<hub>/locations/<id>.json`, and those
+## documents use hyphens. Slugging the two differently would produce an index that silently
+## matches nothing.
+static func _canon_slug(name: String) -> String:
+	var result := name.to_lower()
+	for pair in [["'", ""], ["\u2019", ""], [" ", "-"], ["_", "-"]]:
+		result = result.replace(pair[0], pair[1])
+	return result
+
+
+static func _location_index_artifact() -> String:
+	var root := _root_by_name("Locations")
+	var rows: Array[Dictionary] = []
+	var seen := {}
+	for entity: PandoraEntity in Pandora.get_all_entities(root):
+		if entity is PandoraCategory:
+			continue
+		var location_id := _canon_slug(entity.get_entity_name())
+		assert(not seen.has(location_id), "Duplicate location id: %s" % location_id)
+		seen[location_id] = true
+		rows.append({
+			"id": location_id,
+			"display_name": entity.get_string("Display Name"),
+			"epithet": entity.get_string("Epithet"),
+			"patron": entity.get_string("Patron"),
+			"agreement": entity.get_string("Agreement"),
+			"vault_id": entity.get_string("Vault Id"),
+		})
+	assert(not rows.is_empty(), "Pandora has no Locations")
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["id"]) < str(b["id"]))
+	return JSON.stringify({"schema": "weftlumin.location_index.v1", "locations": rows}, "  ", false) + "\n"
 
 
 static func _combat_identity_artifact() -> String:

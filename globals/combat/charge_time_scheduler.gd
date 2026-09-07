@@ -40,6 +40,9 @@ var _phase: Phase = Phase.IDLE
 var _paused := false
 var _interrupt_reason: StringName = &""
 var _ticks: int = 0
+## Monotonic seat allocator. Seats are never renumbered or reused, so an actor admitted after a
+## removal cannot inherit a departed combatant's tie-break position.
+var _next_seat: int = 0
 
 
 func configure(rules: CombatRules) -> void:
@@ -70,6 +73,7 @@ func setup(participants: Array[BattleActor]) -> void:
 		_charge[key] = 0
 		_speed[key] = _rules.charge_speed_for(actor) if _rules != null else 1
 		_consecutive_waits[key] = 0
+	_next_seat = _seats.size()
 
 
 # ---- reads ----
@@ -360,6 +364,29 @@ func resume() -> void:
 		_phase = Phase.IDLE
 
 
+## Seats a newcomer at `-delay_ct` charge, i.e. `delay_ct` CT further from ready than a fresh
+## combatant. Nobody else's charge, seat, or the tick clock moves: weather and deferred class
+## resources are due at absolute `tick_count()` values, so nudging `_ticks` here would drift the
+## two 16-tick measures apart.
+func admit(actor: BattleActor, delay_ct: int = 0) -> Dictionary:
+	if actor == null:
+		return _blocked(&"not_participating", "There is no combatant to admit.", {})
+	var key := _key(actor)
+	if _seat_of.has(key):
+		return _blocked(
+			&"already_seated", "%s is already in this battle." % actor.display_name, {}
+		)
+	# Charge is written BEFORE the seat exists: advance() indexes `_charge[key]` raw for every
+	# seat it walks, so a seat with no charge entry would crash on the very next tick.
+	_charge[key] = -maxi(0, delay_ct)
+	_speed[key] = _rules.charge_speed_for(actor) if _rules != null else 1
+	_consecutive_waits[key] = 0
+	_seat_of[key] = _next_seat
+	_next_seat += 1
+	_seats.append(actor)
+	return _allowed({"charge": int(_charge[key]), "seat": int(_seat_of[key])})
+
+
 func remove_participant(actor: BattleActor) -> void:
 	var key := _key(actor)
 	if not _seat_of.has(key):
@@ -374,8 +401,12 @@ func remove_participant(actor: BattleActor) -> void:
 	_charge.erase(key)
 	_speed.erase(key)
 	_consecutive_waits.erase(key)
-	# Seats are NOT reassigned. Renumbering would silently reorder every tie-break behind this
-	# one, which is exactly the kind of drift a split must not cause.
+	# The seat ENTRY goes with the participant — a stale one makes can_act() answer
+	# "ct_not_ready" for a combatant that has left the battle instead of "not_participating",
+	# and lets force_advance() resurrect a charge entry for an unseated actor. Surviving seats
+	# are NOT renumbered: renumbering would silently reorder every tie-break behind this one,
+	# which is exactly the kind of drift a split must not cause.
+	_seat_of.erase(key)
 
 
 # ---- persistence ----
@@ -416,6 +447,7 @@ func from_dict(data: Dictionary) -> void:
 	var seats: Dictionary = data.get("seats", {})
 	for key in seats:
 		_seat_of[StringName(key)] = int(seats[key])
+		_next_seat = maxi(_next_seat, int(seats[key]) + 1)
 	var consecutive_waits: Dictionary = data.get("consecutive_waits", {})
 	for key in consecutive_waits:
 		_consecutive_waits[StringName(key)] = clampi(int(consecutive_waits[key]), 0, 2)

@@ -13,6 +13,82 @@ const RUNTIME_ID_MAX := StableIds.RUNTIME_QUEST_ID_MAX
 const QUEST_DISCOVERY_MAX_DEPTH: int = 8
 const QUEST_DISCOVERY_MAX_FILES: int = 512
 
+static var _kind_registry: WeftluminKindRegistry
+static var _quest_kind: QuestsKind
+
+
+class QuestsKind extends WeftluminKind:
+	var campaign: Dictionary = {}
+	var dialogue_titles: Dictionary = {}
+	var dialogue_resources: Dictionary = {}
+	var dialogue_snapshot: Dictionary = {}
+	var registered_quests: Array[DomSideQuest] = []
+	var registered_dialogue: Dictionary = {}
+	var _registered_dialogue_snapshot: Dictionary = {}
+
+	func _init() -> void:
+		id = &"quests"
+		subdir = "quests"
+		ext = "json"
+		stable_id_kind = StableIds.QUEST
+
+	func validate(documents: Array[Dictionary], errors: Array[Dictionary]) -> Array[Dictionary]:
+		var validated: Dictionary = CampaignQuestLoader._validate_quest_documents(
+			campaign, documents, dialogue_titles, errors
+		)
+		var normalised: Array[Dictionary] = []
+		var valid_ids: Dictionary = {}
+		for entry: Dictionary in validated.quest_entries:
+			valid_ids[entry.quest_id] = entry.identity
+		for document: Dictionary in documents:
+			if document.get("data") is Dictionary:
+				var quest_id: String = str(document.data.get("quest_id", ""))
+				if valid_ids.has(quest_id):
+					normalised.append({"identity": valid_ids[quest_id], "data": document.data.duplicate(true)})
+		normalised.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.identity < b.identity)
+		return normalised
+
+	func register(normalised: Array[Dictionary]) -> bool:
+		var quests: Array[DomSideQuest] = []
+		for document: Dictionary in normalised:
+			var identity: String = document.identity
+			quests.append(CampaignQuestLoader._quest_from_data(
+				document.data, identity, CampaignQuestLoader.runtime_id_for(identity)
+			))
+		if not QuestRegistry.replace_runtime_quests(quests, dialogue_resources):
+			return false
+		registered_quests = quests
+		registered_dialogue = dialogue_resources.duplicate()
+		_registered_dialogue_snapshot = dialogue_snapshot.duplicate(true)
+		return true
+
+	func clear() -> void:
+		QuestRegistry.clear_runtime_quests_only()
+
+	func diff(previous: Array[Dictionary], next: Array[Dictionary]) -> Dictionary:
+		return {"changed": (
+			previous != next
+			or QuestRegistry.runtime_quests() != registered_quests
+			or dialogue_snapshot != _registered_dialogue_snapshot
+			# Playback mutates compiled line data. Compare installed resource references
+			# to detect legacy replacements without treating playback as an author edit.
+			or QuestRegistry._runtime_dialogue_resources != registered_dialogue
+		)}
+
+	static func snapshot_dialogue(resources: Dictionary) -> Dictionary:
+		var snapshot: Dictionary = {}
+		for title: String in resources:
+			var resource: DialogueResource = resources[title] as DialogueResource
+			if resource == null:
+				continue
+			snapshot[title] = {
+				"using_states": resource.using_states.duplicate(),
+				"cues": resource.cues.duplicate(true), "first_cue": resource.first_cue,
+				"character_names": resource.character_names.duplicate(),
+				"lines": resource.lines.duplicate(true),
+			}
+		return snapshot
+
 
 static func runtime_id_for(identity: String) -> int:
 	return StableIds.runtime_quest_id(identity)
@@ -33,12 +109,18 @@ static func validate_package_data(
 	_validate_campaign(campaign, package_path, campaign_path, errors)
 	if not errors.is_empty():
 		return _result(campaign, quests, quest_entries, errors)
+	var typed_documents: Array[Dictionary] = []
+	if not campaign.kinds.has("encounters"):
+		encounter_documents = []
 	if encounter_documents == null:
-		encounters = EncounterLoaderScript.load_package(package_path, errors)
+		typed_documents = EncounterLoaderScript.read_documents(package_path, errors)
 	elif encounter_documents is Array:
-		var typed_documents: Array[Dictionary] = []
-		typed_documents.assign(encounter_documents)
-		encounters = EncounterLoaderScript.validate_documents(typed_documents, errors)
+		for index: int in encounter_documents.size():
+			if encounter_documents[index] is Dictionary:
+				typed_documents.append(encounter_documents[index])
+			else:
+				_add_error(errors, package_path.path_join("encounters"), "encounters[%d]" % index,
+					"document object", "invalid_encounter_documents", "Encounter document must be an object.")
 	else:
 		_add_error(
 			errors,
@@ -48,23 +130,30 @@ static func validate_package_data(
 			"invalid_encounter_documents",
 			"In-memory encounter documents must be an array."
 		)
-	var dialogue_context: Dictionary = _load_dialogue_context(package_path, errors)
+	encounters = EncounterLoaderScript.validate_documents(typed_documents, errors)
+	var dialogue_context: Dictionary = {"titles": {}, "campaign_resources": {}}
+	if campaign.kinds.has("quests"):
+		dialogue_context = _load_dialogue_context(package_path, errors)
 	if not errors.is_empty():
 		return _result(
 			campaign, quests, quest_entries, errors,
 			dialogue_context.get("campaign_resources", {}),
 			encounters
 		)
-	var validated: Dictionary = _validate_quest_documents(
-		campaign, quest_documents, dialogue_context.get("titles", {}), errors
-	)
-	quests.assign(validated.get("quests", []))
-	quest_entries.assign(validated.get("quest_entries", []))
-	return _result(
+	if campaign.kinds.has("quests"):
+		var validated: Dictionary = _validate_quest_documents(
+			campaign, quest_documents, dialogue_context.get("titles", {}), errors
+		)
+		quests.assign(validated.get("quests", []))
+		quest_entries.assign(validated.get("quest_entries", []))
+	var loaded: Dictionary = _result(
 		campaign, quests, quest_entries, errors,
 		dialogue_context.get("campaign_resources", {}),
 		encounters
 	)
+	loaded["kind_documents"] = {"quests": quest_documents.duplicate(true), "encounters": typed_documents.duplicate(true)}
+	loaded["dialogue_titles"] = dialogue_context.get("titles", {})
+	return loaded
 
 
 static func routed_dialogue_titles() -> Array[String]:
@@ -104,14 +193,25 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 	var campaign_error_count: int = errors.size()
 	if campaign_error_count > 0:
 		return _result(campaign, quests, quest_entries, errors)
-	encounters = EncounterLoaderScript.load_package(package_path, errors)
-	var dialogue_context: Dictionary = _load_dialogue_context(package_path, errors)
+	var encounter_documents: Array[Dictionary] = []
+	if campaign.kinds.has("encounters"):
+		encounter_documents = EncounterLoaderScript.read_documents(package_path, errors)
+		encounters = EncounterLoaderScript.validate_documents(encounter_documents, errors)
+	var dialogue_context: Dictionary = {"titles": {}, "campaign_resources": {}}
+	if campaign.kinds.has("quests"):
+		dialogue_context = _load_dialogue_context(package_path, errors)
 	if not errors.is_empty():
 		return _result(
 			campaign, quests, quest_entries, errors,
 			dialogue_context.get("campaign_resources", {}),
 			encounters
 		)
+
+	if not campaign.kinds.has("quests"):
+		var encounter_result: Dictionary = _result(campaign, quests, quest_entries, errors, {}, encounters)
+		encounter_result["kind_documents"] = {"encounters": encounter_documents}
+		encounter_result["dialogue_titles"] = {}
+		return apply_loaded(encounter_result, package_path) if register_runtime else encounter_result
 
 	var quest_directory_path: String = package_path.path_join("quests")
 	var quest_directory: DirAccess = DirAccess.open(quest_directory_path)
@@ -157,28 +257,50 @@ static func load_package(package_path: String, register_runtime: bool = true) ->
 	var campaign_dialogue_resources: Dictionary = dialogue_context.get(
 		"campaign_resources", {}
 	)
-	if register_runtime and errors.is_empty():
-		if not QuestRegistry.register_runtime_quests(quests, campaign_dialogue_resources):
-			_add_error(
-				errors,
-				package_path,
-				"quests",
-				"runtime quests with unique reserved ids",
-				"runtime_registration_failed",
-				"QuestRegistry refused the validated runtime quest set."
-			)
-		elif not EncounterCatalog.register_runtime_encounters(encounters):
-			_add_error(
-				errors,
-				package_path,
-				"encounters",
-				"runtime encounters distinct from committed encounters",
-				"runtime_encounter_registration_failed",
-				"EncounterCatalog refused the validated runtime encounter set."
-			)
-	return _result(
+	var loaded: Dictionary = _result(
 		campaign, quests, quest_entries, errors, campaign_dialogue_resources, encounters
 	)
+	loaded["kind_documents"] = {"quests": quest_documents, "encounters": encounter_documents}
+	loaded["dialogue_titles"] = dialogue_context.get("titles", {})
+	return apply_loaded(loaded, package_path) if register_runtime else loaded
+
+
+## Apply exactly the validated in-memory snapshot; never reread files after authorization.
+static func apply_loaded(
+	loaded: Dictionary, package_path: String, force_kinds: Array[StringName] = []
+) -> Dictionary:
+	if not loaded.get("errors", []).is_empty():
+		return loaded
+	if not loaded.has("kind_documents"):
+		var errors: Array[Dictionary] = []
+		_add_error(errors, package_path, "$", "validated package snapshot", "missing_kind_documents",
+			"Load or validate the package before applying it.")
+		loaded["errors"] = errors
+		return loaded
+	if _kind_registry == null:
+		_kind_registry = WeftluminKindRegistry.new()
+		_quest_kind = QuestsKind.new()
+		_kind_registry.add(_quest_kind)
+		_kind_registry.add(EncounterLoaderScript.EncountersKind.new())
+	_quest_kind.campaign = loaded.get("campaign", {})
+	_quest_kind.dialogue_titles = loaded.get("dialogue_titles", {})
+	_quest_kind.dialogue_resources = loaded.get("dialogue_resources", {})
+	_quest_kind.dialogue_snapshot = loaded.get("dialogue_snapshot", {}).duplicate(true)
+	var package := WeftluminPackage.new()
+	package.source = package_path.path_join("campaign.json")
+	package.manifest = loaded.get("campaign", {}).duplicate(true)
+	package.documents = loaded.get("kind_documents", {}).duplicate(true)
+	var result: Dictionary = _kind_registry.apply(package, force_kinds)
+	loaded["errors"] = result.errors
+	loaded["applied_kinds"] = result.applied
+	if result.ok and package.manifest.kinds.has("quests"):
+		loaded["quests"] = _quest_kind.registered_quests.duplicate()
+		loaded["dialogue_resources"] = _quest_kind.registered_dialogue.duplicate()
+		for entry: Dictionary in loaded.get("quest_entries", []):
+			for quest: DomSideQuest in _quest_kind.registered_quests:
+				if quest.stable_id == entry.identity:
+					entry["quest"] = quest
+	return loaded
 
 
 static func _validate_quest_documents(
@@ -280,6 +402,10 @@ static func _validate_quest_documents(
 static func _validate_campaign(
 	campaign: Dictionary, package_path: String, file_path: String, errors: Array[Dictionary]
 ) -> void:
+	var package := WeftluminPackage.new()
+	package.manifest = campaign
+	package.source = file_path
+	package.validate_manifest([&"quests", &"encounters"], errors)
 	var valid_id: bool = _require_nonempty_string(campaign, "id", file_path, errors)
 	_require_nonempty_string(campaign, "title", file_path, errors)
 	var valid_entry: bool = _require_nonempty_string(
@@ -385,6 +511,29 @@ static func _validate_quest(
 			)
 	for field: String in ["name", "giver_actor_id", "decision_prompt", "resolution_flag"]:
 		_require_nonempty_string(quest_data, field, file_path, errors)
+	for field: String in ["quest_description", "quest_objective"]:
+		if quest_data.has(field) and not quest_data[field] is String:
+			_add_error(
+				errors, file_path, field, "string", "invalid_field_type",
+				"Expected '%s' to be a string." % field
+			)
+	for field: String in ["required_flags", "objectives", "participant_actor_ids", "hook_ids"]:
+		if not quest_data.has(field):
+			continue
+		var raw_values: Variant = quest_data[field]
+		if not raw_values is Array:
+			_add_error(
+				errors, file_path, field, "array of strings", "invalid_field_type",
+				"Expected '%s' to be an array of strings." % field
+			)
+			continue
+		var values: Array = raw_values as Array
+		for index: int in values.size():
+			if not values[index] is String:
+				_add_error(
+					errors, file_path, "%s[%d]" % [field, index], "string",
+					"invalid_field_type", "Expected each '%s' entry to be a string." % field
+				)
 	var valid_dialogue_title: bool = _require_nonempty_string(
 		quest_data, "dialogue_title", file_path, errors
 	)
@@ -512,6 +661,12 @@ static func _quest_from_data(
 	quest.dialogue_title = str(quest_data["dialogue_title"])
 	quest.decision_prompt = str(quest_data["decision_prompt"])
 	quest.resolution_flag = str(quest_data["resolution_flag"])
+	quest.quest_description = str(quest_data.get("quest_description", ""))
+	quest.quest_objective = str(quest_data.get("quest_objective", ""))
+	quest.required_flags = PackedStringArray(quest_data.get("required_flags", []))
+	quest.objectives = PackedStringArray(quest_data.get("objectives", []))
+	quest.participant_actor_ids = PackedStringArray(quest_data.get("participant_actor_ids", []))
+	quest.hook_ids = PackedStringArray(quest_data.get("hook_ids", []))
 	var outcomes: Array = quest_data["outcomes"] as Array
 	for outcome_value: Variant in outcomes:
 		var outcome: Dictionary = outcome_value as Dictionary
@@ -934,6 +1089,8 @@ static func _result(
 		"quests": quests,
 		"quest_entries": quest_entries,
 		"dialogue_resources": dialogue_resources,
+		# Capture compiled content before runtime playback can mutate its line cache.
+		"dialogue_snapshot": QuestsKind.snapshot_dialogue(dialogue_resources),
 		"encounters": encounters,
 		"errors": errors,
 	}
