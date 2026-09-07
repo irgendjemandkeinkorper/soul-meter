@@ -28,8 +28,9 @@ an **overlay**, not a scene swap; wins/losses write to the reputation ledger the
 dialogue does. **Chapter 1 PRD is RATIFIED** (`docs/prd-chapter-one.md`, zero ⚑ — see
 `docs/phase-0-ratification.md`).
 
-**Save schema is 6** (expert rerolls + tactical envelope, #189); `equipped_slots` rides as an
-additive key (no bump; loader defaults `{}`). **Tactical combat is COMPLETE through Gate
+**Save schema is 9** (DRAMGID attribute/skill rename, #392 — 8 was the 2026-09-06 elemental
+wheel rename #371, 7 the FR-504a world clock, 6 expert rerolls + the tactical envelope #189);
+`equipped_slots` rides as an additive key (no bump; loader defaults `{}`). **Tactical combat is COMPLETE through Gate
 T-10:** CT scheduler with ratified wait semantics (#193), grid battlefield + deterministic
 pathing, pure `Resolution.resolve()` (forecast==resolution), six-region battle interface
 (`ui/hud/battle_interface.*` + `ui/hud/regions/*`, event-driven with replay, contract frozen),
@@ -68,21 +69,29 @@ Lip), hubs 1 of 3.
 
 **Testing:** gdUnit4 (see `docs/testing.md`) — `test/unit/` + `test/integration/` automated,
 `test/manual/` human checklists. Run via `GODOT_BIN=~/.local/bin/godot bash
-addons/gdUnit4/runtest.sh -a test`. Suite: **1221 cases / 187 suites / 0 failures** (2026-09-02 run; a small
+addons/gdUnit4/runtest.sh -a test`. Suite: **1729 cases / 0 failures** (2026-09-08 run; a small
 known set of headless-flaky pre-existing suites — `test_actor_presentation`, `test_y_sort`,
-`test_click_to_move`/`test_click_to_move_input` — rendering/navmesh flakiness, not
-regressions). **Environment gotchas:** `godot --headless --script` exits **134 at teardown
+`test_click_to_move`/`test_click_to_move_input`, `test_field_room`'s sprint case,
+`test_consequence_notices` — rendering/navmesh/timing flakiness, not regressions; each passes
+when its suite is run alone). Full run takes **50+ minutes** locally: use `timeout 5400`, and
+`LP_NUM_THREADS=1`. **Environment gotchas:** `godot --headless --script` exits **134 at teardown
 ~20–30% of the time** even for trivial scripts — never gate CI on a tool script's raw exit
 code, judge the output; applying patches without `--import` leaves new `class_name` globals
 unregistered — re-import after adding a script with a `class_name`. gdUnit4 treats
 Variant-inference (`:=` from a Variant-returning call, e.g. `auto_free()`) as a parse ERROR
-that aborts the whole run with exit 105 — type such vars explicitly.
+that aborts the whole run with exit 105 — type such vars explicitly. Editing a `.dialogue`
+file, or switching branches across one, needs a re-import too — `load()` returns the IMPORTED
+resource, so without it the suite reports large clusters of failures that do not exist.
+gdUnit4 also **stops running the rest of a suite after some failures**: a full run reporting
+one failure in a file may be hiding three, so re-run that suite alone before believing the count.
 
 **Game identity is RATIFIED** (`docs/game-identity.md`, 2026-09-02, ten owner rulings): soul-as-currency
 hook; hollowing not death; Soul income only via acts of Agreement; combat = tactical centerpiece with
 **Fallout 2 lineage** (4–6 party, ~100 mobs, **same-map combat** — re-scopes the battle overlay,
 #211, D4, #175); Fallout-full field verbs; class = identity + **DRAMGID** (dramgid-mono RFC-0001;
-the build still runs the old six-stat system, migration = #283) = what you can do; XP + skill points
+**F3a is 7 of 11 surfaces done** — schema, `SkillCheck` + live karma bonus, chargen + character
+sheet, advancement, Yothmeru on `Renown`, save schema 9, and every dialogue/code skill id;
+what remains is blocked, see `docs/architecture-dramgid.md` §3, #283) = what you can do; XP + skill points
 + class perks; elegiac-and-wry tone. Wave F issues #280–#287 carry these consequences.
 
 **Wave A/B magic-combat work merged 2026-09-02:** ClassResource seam v2 (#275: `on_any_action`
