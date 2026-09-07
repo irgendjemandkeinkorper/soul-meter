@@ -3,7 +3,8 @@ extends GdUnitTestSuite
 const SeedPandora := preload("res://tools/seed_pandora.gd")
 
 const KINDS := [
-	"factions", "elements", "classes", "peoples", "spells", "effects", "locations", "lore"
+	"factions", "elements", "classes", "peoples", "characters", "items", "spells", "effects",
+	"locations", "lore",
 ]
 
 var _original_backend: PandoraEntityBackend
@@ -594,6 +595,169 @@ func test_a_malformed_lore_document_refuses_the_whole_seed() -> void:
 		"CANON-SEED: %s requires string 'vault_path'." % _kind_path("lore", "test-entry.json")
 	)
 	assert_array(loaded[0]).is_empty()
+
+
+
+
+func _character_row(character_id: String, order: int) -> Dictionary:
+	return {
+		"schema": "weftlumin.character.v1",
+		"kind": "npc",
+		"id": character_id,
+		"order": order,
+		"display_name": character_id.capitalize(),
+		"epithet": "",
+		"bio": "",
+		"role": "Fixture",
+		"home": "Trial Hall",
+		"district": "East Arm",
+		"faction_id": "trial-council",
+		"vault_id": "",
+		"portrait_path": "",
+		"context_line": "A fixture line.",
+		"dialogue_hostile": "",
+		"dialogue_warm": "",
+		"placement_anchor": "town_hall",
+		"placement_offset": [0, 0],
+		"involvement": "",
+		"hook_summary": "",
+	}
+
+
+func test_the_dom_roster_loads_as_sixty_npc_characters() -> void:
+	var characters: Array[Dictionary] = SeedPandora.CanonReader.load("characters")
+	var npcs: Array[Dictionary] = []
+	for character: Dictionary in characters:
+		assert_str(character.get("schema", "")).is_equal("weftlumin.character.v1")
+		if String(character["kind"]) == "npc":
+			npcs.append(character)
+
+	assert_int(npcs.size()).is_equal(60)
+
+
+func test_character_order_is_authored_rather_than_alphabetical() -> void:
+	# `Model Index` is derived from this position, so the order is data, not presentation: if
+	# it followed the filenames instead, every townsfolk model would silently change.
+	var characters: Array[Dictionary] = SeedPandora.CanonReader.load("characters")
+	var orders: Array[int] = []
+	var ids: Array[String] = []
+	for character: Dictionary in characters:
+		orders.append(int(character["order"]))
+		ids.append(String(character["id"]))
+	var sorted_ids: Array[String] = ids.duplicate()
+	sorted_ids.sort()
+
+	for index in orders.size():
+		assert_int(orders[index]).is_equal(index)
+	assert_array(ids).override_failure_message(
+		"characters came back in filename order, so the authored order was not applied"
+	).is_not_equal(sorted_ids)
+
+
+func test_every_character_offset_is_a_two_number_pair() -> void:
+	for character: Dictionary in SeedPandora.CanonReader.load("characters"):
+		var offset: Variant = character["placement_offset"]
+		assert_int((offset as Array).size()).override_failure_message(
+			"character '%s' has a malformed placement offset" % character["id"]
+		).is_equal(2)
+
+
+func test_a_character_missing_its_order_is_refused() -> void:
+	var row: Dictionary = _character_row("no-order", 0)
+	row.erase("order")
+	_write_kind("characters", "no-order.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func test_a_character_with_a_scalar_offset_is_refused() -> void:
+	var row: Dictionary = _character_row("scalar-offset", 0)
+	row["placement_offset"] = 12
+	_write_kind("characters", "scalar-offset.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func _item_row(item_id: String, category: String) -> Dictionary:
+	return {
+		"schema": "weftlumin.item.v1",
+		"id": item_id,
+		"display_name": item_id.capitalize(),
+		"category": category,
+		"description": "A fixture item.",
+		"max_stack_size": 1,
+		"weight": 0.5,
+		"grid_size": [1, 2],
+		"equip_slot": "",
+		"rarity": "common",
+		"flavour": "Written for a test.",
+	}
+
+
+func test_items_load_with_their_numeric_and_vector_fields_intact() -> void:
+	var items: Array[Dictionary] = SeedPandora.CanonReader.load("items")
+
+	assert_int(items.size()).is_equal(6)
+	var by_id: Dictionary = {}
+	for item: Dictionary in items:
+		assert_str(item.get("schema", "")).is_equal("weftlumin.item.v1")
+		by_id[item["id"]] = item
+	var axe: Dictionary = by_id["taubstummer-axe"]
+	assert_str(axe["display_name"]).is_equal("Taubstummer Axe")
+	assert_str(axe["category"]).is_equal("Weapons")
+	assert_int(int(axe["max_stack_size"])).is_equal(1)
+	assert_float(float(axe["weight"])).is_equal_approx(6.0, 0.0001)
+	# Authored as [width, height]; JSON has one number type, so both arrive as floats.
+	assert_int(int((axe["grid_size"] as Array)[0])).is_equal(2)
+	assert_int(int((axe["grid_size"] as Array)[1])).is_equal(3)
+	assert_str(axe["equip_slot"]).is_equal("main_hand")
+
+
+func test_every_item_names_a_category_the_seeder_creates() -> void:
+	# The category is the item's parent in the Pandora tree, resolved at creation time. An
+	# unknown one would be a null parent, so it has to be impossible to author.
+	for item: Dictionary in SeedPandora.CanonReader.load("items"):
+		assert_array(SeedPandora.ITEM_CATEGORIES).override_failure_message(
+			"item '%s' names category '%s', which the seeder does not create"
+			% [item["id"], item["category"]]
+		).contains([item["category"]])
+
+
+func test_an_item_with_a_non_numeric_weight_is_refused() -> void:
+	var row: Dictionary = _item_row("bad-weight", "Tools")
+	row["weight"] = "heavy"
+	_write_kind("items", "bad-weight.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("items", _canon_root)).is_empty()
+
+
+func test_an_item_whose_grid_size_is_not_a_pair_is_refused() -> void:
+	# A single number or a three-component array would silently become the wrong footprint in
+	# a grid inventory, which is exactly the kind of error a schema is for.
+	var row: Dictionary = _item_row("bad-grid", "Tools")
+	row["grid_size"] = [1, 2, 3]
+	_write_kind("items", "bad-grid.json", row)
+	assert_array(SeedPandora.CanonReader.load("items", _canon_root)).is_empty()
+
+	var scalar: Dictionary = _item_row("scalar-grid", "Tools")
+	scalar["grid_size"] = 2
+	_write_kind("items", "scalar-grid.json", scalar)
+	assert_array(SeedPandora.CanonReader.load("items", _canon_root)).is_empty()
+
+
+func test_an_item_with_a_non_numeric_grid_component_is_refused() -> void:
+	var row: Dictionary = _item_row("worded-grid", "Tools")
+	row["grid_size"] = [1, "two"]
+	_write_kind("items", "worded-grid.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("items", _canon_root)).is_empty()
+
+
+func test_two_items_may_not_claim_the_same_id() -> void:
+	_write_kind("items", "first.json", _item_row("shared-id", "Tools"))
+	_write_kind("items", "second.json", _item_row("shared-id", "Relics"))
+
+	assert_array(SeedPandora.CanonReader.load("items", _canon_root)).is_empty()
 
 
 func _element_row(element_id: String, order: int, clash: String) -> Dictionary:
