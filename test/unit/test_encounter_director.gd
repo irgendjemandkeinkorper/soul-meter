@@ -91,8 +91,8 @@ func _member(anchor: float, bonus: float = 0.0) -> PartyMember:
 	var member := PartyMember.new()
 	member.id = "travel-test-member"
 	member.attributes = {"anchor": anchor}
-	member.skill_percentages = {"survival": bonus}
-	member.skill_tiers = {"survival": "untrained"}
+	member.skill_percentages = {"wayfinding": bonus}
+	member.skill_tiers = {"wayfinding": "untrained"}
 	return member
 
 
