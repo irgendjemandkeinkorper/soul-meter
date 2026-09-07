@@ -39,10 +39,6 @@ var _last_comparison: Dictionary = {}
 ## rerolls, turns in quests, and mutates the tactical roster. Battle then
 ## requests a checkpoint, so without a full rollback the player's next real save
 ## would contain progress earned in the sandbox.
-var _runtime_before: Dictionary = {}
-var _rng_seed_before: int = 0
-var _rng_state_before: int = 0
-var _has_saved_state: bool = false
 var last_export_path: String = ""
 
 
@@ -104,15 +100,15 @@ func _ownership_conflict_is_live() -> bool:
 	return production_battle_is_live() or another_sandbox_is_armed()
 
 
-## True while a DIFFERENT debug lab holds an armed rollback.
+## True while a DIFFERENT debug tool holds an armed rollback.
 ##
-## Two labs holding snapshots at once is not safe even though each is internally
+## Two tools holding snapshots at once is not safe even though each is internally
 ## correct: they restore in whatever order they happen to end, and a non-LIFO
-## restore reinstates the first lab's dirty state after that lab already cleaned
-## up. `_has_saved_state` distinguishes our own armed session — which a restart
-## must still be allowed to replace — from the other lab's.
+## restore reinstates the first tool's dirty state after that tool already cleaned
+## up. The shared sandbox distinguishes our own armed session — which a restart
+## must still be allowed to replace — from another tool's.
 func another_sandbox_is_armed() -> bool:
-	return SaveGame.runtime_sandbox_is_armed() and not _has_saved_state
+	return _sandbox().held_by_other(SANDBOX_OWNER)
 
 
 func open_setup() -> void:
@@ -694,26 +690,35 @@ func _apply_party(selected_ids_value: Variant) -> void:
 	GameState.party.assign(selected)
 
 
+## Owner id this lab holds the shared sandbox under.
+const SANDBOX_OWNER := &"combat_lab"
+
+
+## The shared sandbox, with this game's surfaces registered. Registration replaces by id, so
+## every tool calling this converges on one set rather than each contributing its own.
+func _sandbox() -> WeftluminSandbox:
+	var sandbox: WeftluminSandbox = WeftluminSandbox.shared()
+	sandbox.add_default_surfaces(SaveGame, SkillCheck)
+	return sandbox
+
+
+## Arms the shared sandbox under this lab's name.
+##
+## The reasoning that used to live here — SaveGame owning the authoritative surface list, the
+## RNG position being captured separately, seed restored before state, and autosave suppressed
+## at staging rather than at flush — now lives once in `WeftluminSandbox`, where a third tool
+## inherits it instead of rediscovering it.
+## True while THIS tool holds the shared sandbox.
+##
+## Distinct from `another_sandbox_is_armed()`: a restart must be allowed to replace our own
+## armed session, but never someone else's.
+func sandbox_is_armed() -> bool:
+	var sandbox: WeftluminSandbox = _sandbox()
+	return sandbox.is_armed() and sandbox.owner() == SANDBOX_OWNER
+
+
 func _capture_saved_state() -> void:
-	# SaveGame owns the authoritative list of rollback-able runtime state. This
-	# lab used to enumerate five surfaces here and missed four — including the
-	# quest pools a battle victory turns in and the tactical roster combat
-	# itself mutates. Never re-enumerate the surfaces locally.
-	_runtime_before = SaveGame.capture_runtime_state()
-	# SkillCheck.to_dict() serializes reroll usage, not RNG position, so the
-	# generator's state must be captured separately or every lab session would
-	# permanently shift the randomness later campaign skill checks draw from.
-	# seed and state are captured together and restored in that order, because
-	# assigning seed RESETS state. Restoring state alone left the generator's
-	# observable seed reading as the lab's, which would misreport where the
-	# campaign's randomness came from.
-	_rng_seed_before = SkillCheck.random_number_generator.seed
-	_rng_state_before = SkillCheck.random_number_generator.state
-	# A finished lab battle requests a checkpoint that flushes DEFERRED. The old
-	# code tried to win that race by restoring first; suppression removes the
-	# race instead, so no ordering assumption has to hold.
-	SaveGame.begin_runtime_sandbox()
-	_has_saved_state = true
+	_sandbox().arm(SANDBOX_OWNER)
 
 
 ## Restores exactly ONCE per session, then disarms.
@@ -724,16 +729,11 @@ func _capture_saved_state() -> void:
 ## player legitimately earned after returning to normal play. Containment must
 ## be scoped to the session, not left standing.
 func _restore_saved_state() -> void:
-	if not _has_saved_state:
+	if not sandbox_is_armed():
 		return
-	_has_saved_state = false
-	if not SaveGame.restore_runtime_state(_runtime_before):
-		push_warning("Combat Lab could not restore the pre-lab GameState snapshot.")
-	# seed first: assigning it resets state, so the reverse order would
-	# discard the restored position.
-	SkillCheck.random_number_generator.seed = _rng_seed_before
-	SkillCheck.random_number_generator.state = _rng_state_before
-	SaveGame.end_runtime_sandbox()
+	var result: Dictionary = _sandbox().disarm()
+	if not bool(result["allowed"]):
+		push_warning("Combat Lab could not restore the pre-lab snapshot: %s" % str(result["message"]))
 
 
 func _record_playtest_usage() -> void:
@@ -772,7 +772,6 @@ func _shutdown() -> void:
 	_disconnect_battle_signals()
 	_lab_battle_running = false
 	_restore_saved_state()
-	_has_saved_state = false
 	_clear_lab_battle(owned_battle)
 
 
