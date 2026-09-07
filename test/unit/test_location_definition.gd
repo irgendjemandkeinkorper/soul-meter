@@ -14,7 +14,7 @@ func test_defaults_are_empty_id_and_a_default_spawn() -> void:
 	assert_bool(location.spawns.is_empty()).is_true()
 	assert_str(location.arrival_flag).is_equal("")
 	assert_str(location.arrival_checkpoint).is_equal("")
-	assert_float(location.integrity).is_equal(100.0)
+	assert_float(location.harmonic_accord).is_equal(100.0)
 
 
 func test_requesting_the_default_marker_resolves_to_default_spawn_id_even_if_registered() -> void:
