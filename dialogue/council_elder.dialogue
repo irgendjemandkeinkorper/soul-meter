@@ -4,8 +4,8 @@ Themka Gaath: Your trial is complete. The Council's first charge lies beyond Dom
 => charge
 
 ~ charge
-- "Ask what truth matters before taking the road." [#tag=INSIGHT] [if not QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and not QuestRegistry.is_done(QuestRegistry.DORTHKOR_ROAD) and not GameState.get_flag("chapter_council_charge_check_failed") and check("insight", 40) /]
-	do SkillCheck.resolve("insight")
+- "Ask what truth matters before taking the road." [#tag=UNDERTONE] [if not QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and not QuestRegistry.is_done(QuestRegistry.DORTHKOR_ROAD) and not GameState.get_flag("chapter_council_charge_check_failed") and check("undertone", 40) /]
+	do SkillCheck.resolve("undertone")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("chapter_council_charge_understood", true)
 		do QuestRegistry.offer(QuestRegistry.DORTHKOR_ROAD)

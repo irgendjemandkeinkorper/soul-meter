@@ -8,11 +8,11 @@ Never resolve a check while Dialogue Manager is building a choice list.
 Put the deterministic gate on the response itself, using the self-closing form:
 
 ```dialogue
-- "Make the case." [#tag=Persuasion] [if check("persuasion", 45) /]
+- "Make the case." [#tag=Sway] [if check("sway", 45) /]
 ```
 
 Combine quest conditions inside the same `[if ... /]` tag when needed. The
-balloon renders `[#tag=Persuasion]` as `[PERSUASION]`. Do not author a numeric
+balloon renders `[#tag=Sway]` as `[SWAY]`. Do not author a numeric
 chance in response text, tags, or consequences. If a choice should remain
 visible but locked, use the existing balloon's shows-but-locked condition form
 and keep the same non-numeric tag.
@@ -25,7 +25,7 @@ consume an Expert reroll or append to `recent_checks()`.
 The selected response's first mutation commits exactly one check:
 
 ```dialogue
-	do SkillCheck.resolve("persuasion")
+	do SkillCheck.resolve("sway")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("quest_evidence_acquired", true)
 		=> END
