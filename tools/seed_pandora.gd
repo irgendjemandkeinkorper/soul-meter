@@ -14,6 +14,37 @@ var _cats := {}
 class CanonReader:
 	const CANON_ROOT := "res://canon"
 
+	## Per-kind contract. A kind listed here is validated and must produce at least one
+	## document; a kind that is not is read verbatim, so a later E1.4 migration can land its
+	## documents before its schema is settled without this file blocking it.
+	##
+	## `ordered` kinds carry an integer `order` and are returned in it. The wheel is a ring and
+	## its rotation is canon — ring distance and the clash pairs are read off it — so that order
+	## must not be an accident of how the files happen to sort.
+	const SCHEMAS := {
+		"factions": {
+			"noun": "faction",
+			"schema": "weftlumin.faction.v1",
+			"fields": ["id", "display_name", "summary", "seat", "vault_id"],
+		},
+		"elements": {
+			"noun": "element",
+			"schema": "weftlumin.element.v1",
+			"fields": ["id", "display_name", "clash"],
+			"ordered": true,
+		},
+		"classes": {
+			"noun": "class",
+			"schema": "weftlumin.class.v1",
+			"fields": ["id", "display_name", "patron", "resource_name", "vault_id"],
+		},
+		"peoples": {
+			"noun": "people",
+			"schema": "weftlumin.people.v1",
+			"fields": ["id", "display_name", "analogue", "homeland", "vault_id"],
+		},
+	}
+
 	static func load(kind: String, canon_root: String = CANON_ROOT) -> Array[Dictionary]:
 		var documents: Array[Dictionary] = []
 		var stable_ids: Dictionary = {}
@@ -46,29 +77,76 @@ class CanonReader:
 					push_error("CANON-SEED: %s must contain one JSON object." % document_path)
 					return []
 				var row: Dictionary = parser.data
-				if kind == "factions":
-					if not _valid_faction(row, document_path, stable_ids):
+				if SCHEMAS.has(kind):
+					if not _valid(kind, row, document_path, stable_ids):
 						return []
 					stable_ids[row["id"]] = true
 				documents.append(row)
-		if kind == "factions" and documents.is_empty():
-			push_error("CANON-SEED: no faction documents found in %s." % canon_root)
+		if SCHEMAS.has(kind):
+			if documents.is_empty():
+				push_error(
+					"CANON-SEED: no %s documents found in %s."
+					% [SCHEMAS[kind]["noun"], canon_root]
+				)
+				return documents
+			if bool(SCHEMAS[kind].get("ordered", false)):
+				documents.sort_custom(func(first: Dictionary, second: Dictionary) -> bool:
+					return int(first.get("order", 0)) < int(second.get("order", 0))
+				)
+			if kind == "elements" and not _clashes_are_symmetric(documents):
+				return []
 		return documents
 
-	static func _valid_faction(row: Dictionary, document_path: String, stable_ids: Dictionary) -> bool:
-		for field: String in ["schema", "id", "display_name", "summary", "seat", "vault_id"]:
+	static func _valid(
+		kind: String, row: Dictionary, document_path: String, stable_ids: Dictionary
+	) -> bool:
+		var contract: Dictionary = SCHEMAS[kind]
+		var noun: String = contract["noun"]
+		var fields: Array = ["schema"] + Array(contract["fields"])
+		for field: String in fields:
 			if typeof(row.get(field)) != TYPE_STRING:
 				push_error("CANON-SEED: %s requires string '%s'." % [document_path, field])
 				return false
-		if row["schema"] != "weftlumin.faction.v1":
-			push_error("CANON-SEED: unsupported faction schema in %s." % document_path)
+		if row["schema"] != contract["schema"]:
+			push_error("CANON-SEED: unsupported %s schema in %s." % [noun, document_path])
 			return false
 		if String(row["id"]).strip_edges().is_empty():
-			push_error("CANON-SEED: empty faction id in %s." % document_path)
+			push_error("CANON-SEED: empty %s id in %s." % [noun, document_path])
 			return false
 		if stable_ids.has(row["id"]):
-			push_error("CANON-SEED: duplicate faction id '%s' in %s." % [row["id"], document_path])
+			push_error(
+				"CANON-SEED: duplicate %s id '%s' in %s." % [noun, row["id"], document_path]
+			)
 			return false
+		if bool(contract.get("ordered", false)) and typeof(row.get("order")) != TYPE_FLOAT:
+			# JSON has one number type, so an authored integer arrives as a float.
+			push_error("CANON-SEED: %s requires numeric 'order'." % document_path)
+			return false
+		return true
+
+	## The wheel's oppositions are canon and symmetric (§ vault systems/magic-system.md). Two
+	## documents can each name a clash independently, so a rename that touched only one side
+	## would otherwise seed a half-broken wheel and only surface as a wrong matrix in combat.
+	static func _clashes_are_symmetric(documents: Array[Dictionary]) -> bool:
+		var clash_by_id: Dictionary = {}
+		for row: Dictionary in documents:
+			clash_by_id[row["id"]] = row["clash"]
+		for element_id: String in clash_by_id:
+			var opposite: String = clash_by_id[element_id]
+			if not clash_by_id.has(opposite):
+				push_error(
+					"CANON-SEED: element '%s' clashes with unknown '%s'."
+					% [element_id, opposite]
+				)
+				return false
+			if String(clash_by_id[opposite]) != element_id:
+				push_error(
+					(
+						"CANON-SEED: clash is not symmetric — '%s' names '%s', which names '%s'."
+					)
+					% [element_id, opposite, clash_by_id[opposite]]
+				)
+				return false
 		return true
 
 
@@ -106,11 +184,52 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 	var factions: Array[Dictionary] = CanonReader.load("factions", canon_root)
 	if factions.is_empty() or not _faction_ids_are_unambiguous(factions):
 		return false
+	var elements: Array[Dictionary] = CanonReader.load("elements", canon_root)
+	var classes: Array[Dictionary] = CanonReader.load("classes", canon_root)
+	var peoples: Array[Dictionary] = CanonReader.load("peoples", canon_root)
+	if elements.is_empty() or classes.is_empty() or peoples.is_empty():
+		return false
+	if not _elements_match_the_design_system(elements):
+		return false
 	if Pandora.get_all_roots().is_empty():
-		_seed(factions)
+		_seed(factions, elements, classes, peoples)
 	else:
+		_apply_elements(elements)
+		_apply_classes(classes)
+		_apply_peoples(peoples)
 		_apply_factions(factions)
 	return true
+
+
+## The wheel is a closed canon set and its presentation tokens are the design system's, not
+## canon's: `DS.WHEEL` is synced from the design-system project (`design/DESIGN_SYSTEM.md`) and
+## copying its hex into `canon/` would create a second source to drift. So canon owns identity,
+## order and the clash; DS owns sigil, colour and glow, and the two lists must agree exactly —
+## in both directions, because an eleventh element added on either side is the failure this
+## guard exists to catch.
+func _elements_match_the_design_system(elements: Array[Dictionary]) -> bool:
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in elements:
+		canon_ids[row["id"]] = true
+	var token_ids: Dictionary = {}
+	for token: Dictionary in DS.WHEEL:
+		token_ids[String(token["id"])] = true
+	for element_id: String in canon_ids:
+		if not token_ids.has(element_id):
+			push_error("CANON-SEED: element '%s' has no DS.WHEEL token." % element_id)
+			return false
+	for token_id: String in token_ids:
+		if not canon_ids.has(token_id):
+			push_error("CANON-SEED: DS.WHEEL token '%s' has no canon document." % token_id)
+			return false
+	return true
+
+
+func _design_system_token(element_id: String) -> Dictionary:
+	for token: Dictionary in DS.WHEEL:
+		if String(token["id"]) == element_id:
+			return token
+	return {}
 
 
 func _cat(name: String, parent: PandoraCategory = null) -> PandoraCategory:
@@ -139,10 +258,15 @@ func _assign(ent: PandoraEntity, prop_name: String, value: Variant) -> void:
 	prop.set_default_value(value)
 
 
-func _seed(factions: Array[Dictionary]) -> void:
-	_seed_elements()
-	_seed_classes()
-	_seed_peoples()
+func _seed(
+	factions: Array[Dictionary],
+	elements: Array[Dictionary],
+	classes: Array[Dictionary],
+	peoples: Array[Dictionary]
+) -> void:
+	_apply_elements(elements)
+	_apply_classes(classes)
+	_apply_peoples(peoples)
 	_seed_items()
 	_seed_spells()
 	_seed_effects()
@@ -154,91 +278,99 @@ func _seed(factions: Array[Dictionary]) -> void:
 	_seed_lore()
 
 
-# --- Elements: the Wheel of Ten (closed canon set; DS tokens/elements.css) ---------------
+# --- Elements: the Wheel of Ten (closed canon set; canon/<hub>/elements) -----------------
 
 
-func _seed_elements() -> void:
-	var root := _cat("Elements")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Sigil", "string")
-	Pandora.create_property(root, "Color", "color")
-	Pandora.create_property(root, "Glow", "color")
-	Pandora.create_property(root, "Clash", "reference")
+## Identity, wheel order and the clash come from canon; sigil, colour and glow come from the
+## design system. See `_elements_match_the_design_system()` for why the two are kept apart.
+func _apply_elements(elements: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Elements")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Sigil", "string"],
+		["Color", "color"],
+		["Glow", "color"],
+		["Clash", "reference"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var made := {}
-	for e in DS.WHEEL:
-		var ent := Pandora.create_entity(e["name"], root)
-		_assign(ent, "Display Name", e["name"])
-		_assign(ent, "Sigil", e["sigil"])
-		_assign(ent, "Color", e["color"])
-		_assign(ent, "Glow", e["glow"])
-		made[e["id"]] = ent
-	# Diametric oppositions — canon, symmetric. Never invent an eleventh element.
-	var clashes := {
-		"sul": "vekh", "vel": "mozh", "luth": "khash", "khor": "zhem", "tham": "zhur"
-	}
-	for a in clashes:
-		_assign(made[a], "Clash", made[clashes[a]])
-		_assign(made[clashes[a]], "Clash", made[a])
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in elements:
+		canon_ids[row["id"]] = true
+	var made: Dictionary = {}
+	for row: Dictionary in elements:
+		var stable_id: String = row["id"]
+		var entity: PandoraEntity = _find_by_stable_id(root, stable_id, canon_ids)
+		if entity == null:
+			# Presentation is stamped once, when the row is first written. Re-stamping it on
+			# every seed would make this seeder a second writer of design tokens into game
+			# data, and it is not: `DS.WHEEL` is what the UI actually reads (badge, theme
+			# builder, character creation), and canon owns identity, not appearance.
+			entity = Pandora.create_entity(row["display_name"], root)
+			var token: Dictionary = _design_system_token(stable_id)
+			_assign(entity, "Sigil", token["sigil"])
+			_assign(entity, "Color", token["color"])
+			_assign(entity, "Glow", token["glow"])
+		_assign(entity, "Display Name", row["display_name"])
+		made[stable_id] = entity
+	# Assigned in a second pass: an element's opposite may not have existed on the first.
+	for row: Dictionary in elements:
+		_assign(made[row["id"]], "Clash", made[row["clash"]])
 
 
 # --- Classes: the Ten Patron Classes (vault: systems/ten-patron-classes.md) --------------
 
 
-func _seed_classes() -> void:
-	var root := _cat("Classes")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Patron", "string")
-	Pandora.create_property(root, "Resource Name", "string")
-	Pandora.create_property(root, "Vault Id", "string")
+func _apply_classes(classes: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Classes")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Patron", "string"],
+		["Resource Name", "string"],
+		["Vault Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		["Mirrorblade", "Maiiam", "Balance"],
-		["River-Mother", "Haeren", "The Name-Ledger"],
-		["Ironbrand", "Kero", "Scars"],
-		["Lensbearer", "Stuid", "Fading"],
-		["Husk-bearer", "Vhorr", "The Table"],
-		["Flamebinder", "Vicoar", "Instructive Failure"],
-		["Stormbearer", "Ofshütje", "Attribution"],
-		["Oathclock", "Pazzah", "The Ledger"],
-		["Locksmirk", "Fickah", "Jammed Gears"],
-		["Threadwalker", "Izhakel", "Threads"],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Patron", r[1])
-		_assign(ent, "Resource Name", r[2])
-		_assign(ent, "Vault Id", "ten-patron-classes")
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in classes:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in classes:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Patron", row["patron"])
+		_assign(entity, "Resource Name", row["resource_name"])
+		_assign(entity, "Vault Id", row["vault_id"])
 
 
 # --- Peoples: playable races (vault: peoples/) -------------------------------------------
 
 
-func _seed_peoples() -> void:
-	var root := _cat("Peoples")
-	Pandora.create_property(root, "Display Name", "string")
-	Pandora.create_property(root, "Analogue", "string")
-	Pandora.create_property(root, "Homeland", "string")
-	Pandora.create_property(root, "Vault Id", "string")
+func _apply_peoples(peoples: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Peoples")
+	for property_spec: Array in [
+		["Display Name", "string"],
+		["Analogue", "string"],
+		["Homeland", "string"],
+		["Vault Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
 
-	var rows := [
-		["Kes'reth", "Tiefling", "Vervulling / Karrn-Vash", "kes-reth"],
-		["Vael", "Human", "Deivel Zeit / Solmarch", "vael"],
-		["Ghorr", "Orc", "Dom", "ghorr"],
-		["Vaerin", "Elf", "Pozor", "vaerin"],
-		["Kaan", "Dwarf", "Tweede / Grundvault", "kaan"],
-		["Orthos", "Dragonborn", "Rennen", "orthos"],
-		["Shimari", "Genasi", "Milinel", "shimari"],
-		["Weftkin", "Sporeborn", "Loamgate / Ashscar", "weftkin"],
-		["Fiel", "Smallfolk", "Lefren", "fiel"],
-	]
-	for r in rows:
-		var ent := Pandora.create_entity(r[0], root)
-		_assign(ent, "Display Name", r[0])
-		_assign(ent, "Analogue", r[1])
-		_assign(ent, "Homeland", r[2])
-		_assign(ent, "Vault Id", r[3])
+	var canon_ids: Dictionary = {}
+	for row: Dictionary in peoples:
+		canon_ids[row["id"]] = true
+	for row: Dictionary in peoples:
+		var entity: PandoraEntity = _find_by_stable_id(root, row["id"], canon_ids)
+		if entity == null:
+			entity = Pandora.create_entity(row["display_name"], root)
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Analogue", row["analogue"])
+		_assign(entity, "Homeland", row["homeland"])
+		_assign(entity, "Vault Id", row["vault_id"])
 
 
 # --- Items: reserved sync-spec properties on the ROOT (propagate to all children) --------
