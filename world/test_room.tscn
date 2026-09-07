@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="7_iso"]
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 [ext_resource type="PackedScene" path="res://actors/zhavar_telegraph/zhavar_telegraph.tscn" id="9_zhavar"]
+[ext_resource type="PackedScene" path="res://actors/zhavar_toll/zhavar_toll.tscn" id="9_zhavar_toll"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-standing-stone--decorative.png" id="20_ls_stone"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-root-archway--decorative.png" id="21_ls_arch"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-fallen-log--decorative.png" id="22_ls_log"]
@@ -66,6 +67,8 @@ y_sort_enabled = true
 script = ExtResource("47_field_map")
 
 [node name="ZhavarTelegraph" parent="." instance=ExtResource("9_zhavar")]
+
+[node name="ZhavarToll" parent="." instance=ExtResource("9_zhavar_toll")]
 
 [node name="WorldUnderlay" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(-2000, -2000, 4000, -2000, 4000, 3000, -2000, 3000)
