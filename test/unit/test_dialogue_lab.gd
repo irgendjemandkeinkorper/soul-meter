@@ -89,7 +89,7 @@ func test_restarted_session_is_rearmed_and_restores_every_runtime_surface() -> v
 	_lab.call("start_test_session", setup)
 	_dirty_all_state("first")
 	_lab.call("start_test_session", setup)
-	assert_bool(bool(_lab.get("_has_saved_state"))) \
+	assert_bool(bool(_lab.call("sandbox_is_armed"))) \
 		.override_failure_message("Every restarted session must begin armed") \
 		.is_true()
 	_dirty_all_state("restarted")
@@ -122,7 +122,7 @@ func test_disabled_lab_is_not_drivable() -> void:
 	_lab.call("replay_same_state")
 	_lab.call("reload_and_replay")
 
-	assert_bool(bool(_lab.get("_has_saved_state"))).is_false()
+	assert_bool(bool(_lab.call("sandbox_is_armed"))).is_false()
 	assert_object(_lab.get("_overlay_layer")).is_null()
 	assert_int(_lab.get_child_count()).is_equal(0)
 
@@ -140,7 +140,7 @@ func test_every_replay_entry_point_refuses_over_a_live_battle() -> void:
 	_lab.call("reload_and_replay")
 
 	assert_object(Battle.controller).is_same(production_controller)
-	assert_bool(bool(_lab.get("_has_saved_state"))).is_false()
+	assert_bool(bool(_lab.call("sandbox_is_armed"))).is_false()
 	assert_object(_lab.get("_overlay_layer")).is_null()
 
 
@@ -156,7 +156,7 @@ func test_every_replay_entry_point_refuses_over_a_live_production_dialogue() -> 
 	_lab.call("replay_same_state")
 	_lab.call("reload_and_replay")
 
-	assert_bool(bool(_lab.get("_has_saved_state"))).is_false()
+	assert_bool(bool(_lab.call("sandbox_is_armed"))).is_false()
 	assert_object(_lab.get("_overlay_layer")).is_null()
 	DialogueManager.dialogue_ended.emit(resource)
 
@@ -228,7 +228,7 @@ func test_the_combat_lab_cannot_start_inside_a_live_dialogue_lab_session() -> vo
 	# refusal below is attributable to the guard rather than to a setup the
 	# combat lab would have rejected anyway.
 	CombatLab.start_test_session(encounter)
-	assert_bool(bool(CombatLab.get("_has_saved_state"))) \
+	assert_bool(bool(CombatLab.call("sandbox_is_armed"))) \
 		.override_failure_message("precondition: this setup must normally arm a snapshot") \
 		.is_true()
 	CombatLab.stop_test_session()
@@ -239,7 +239,7 @@ func test_the_combat_lab_cannot_start_inside_a_live_dialogue_lab_session() -> vo
 		.is_true()
 	CombatLab.start_test_session(encounter)
 
-	assert_bool(bool(CombatLab.get("_has_saved_state"))) \
+	assert_bool(bool(CombatLab.call("sandbox_is_armed"))) \
 		.override_failure_message("the combat lab must not capture a dialogue-dirtied snapshot") \
 		.is_false()
 	_lab.call("end_session")
