@@ -117,8 +117,10 @@ func test_unfrozen_karma_and_loom_hooks_are_neutral() -> void:
 
 
 func test_derived_stub_matches_current_formulas_and_recomputes_member() -> void:
-	assert_int(DramgidDerivedScript.max_hp(4)).is_equal(32)
-	assert_int(DramgidDerivedScript.attack(5)).is_equal(5)
+	# The §6 freeze moved three of these four (docs/dramgid-numbers.md); the
+	# grids and the reasoning are pinned in test/unit/test_dramgid_numbers.gd.
+	assert_int(DramgidDerivedScript.max_hp(4)).is_equal(36)
+	assert_int(DramgidDerivedScript.attack(5)).is_equal(10)
 	assert_int(DramgidDerivedScript.defense(3)).is_equal(3)
 	assert_int(DramgidDerivedScript.breath_max(2)).is_equal(15)
 
@@ -133,9 +135,9 @@ func test_derived_stub_matches_current_formulas_and_recomputes_member() -> void:
 	member.breath = 99
 	DramgidDerivedScript.recompute(member)
 
-	assert_int(member.max_hp).is_equal(32)
-	assert_int(member.hp).is_equal(32)
-	assert_int(member.attack).is_equal(5)
+	assert_int(member.max_hp).is_equal(36)
+	assert_int(member.hp).is_equal(36)
+	assert_int(member.attack).is_equal(10)
 	assert_int(member.defense).is_equal(3)
 	assert_int(member.breath_max).is_equal(15)
 	assert_int(member.breath).is_equal(15)

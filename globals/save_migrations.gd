@@ -204,12 +204,17 @@ static func _migrate_v7_to_v8(source: Dictionary) -> Dictionary:
 ## DRAMGID names, and Alchemy — which DRAMGID deletes rather than renames — returns
 ## the points it cost to the member's pool instead of taking them with it.
 ##
-## Step 6 of §2.1 is deliberately NOT done here. It asks for `max_hp`/`attack`/
-## `defense`/`breath_max` to be recomputed from the new attributes, but those formulas
-## are §6's and still unratified, and `DramgidDerived` (§3.3) does not exist yet. A
-## migrated member keeps its stored derived stats, so loading a save never silently
-## changes its combat numbers ahead of the owner's ruling. When §6 freezes, the
-## recompute is an addition to this function, not a rewrite of it.
+## Step 6 of §2.1 is deliberately NOT done here, and the reason got STRONGER when
+## §6 froze (`docs/dramgid-numbers.md`). It asks for `max_hp`/`attack`/`defense`/
+## `breath_max` to be recomputed from the new attributes — but the seven authored
+## `PartyMember`s carry NO attributes at all (`GameState._make_member()` sets
+## `level`, `hp`, `attack` and `defense` from a `Vector4i` and never touches
+## `attributes`). Running `DramgidDerived.recompute()` over them would read every
+## attribute as 0 and hand Vex 12 max HP and 0 attack. A migrated member keeps its
+## stored derived stats instead, so loading a save never silently rewrites its
+## combat numbers. Step 6 unblocks when the shipped roster gains authored
+## attributes — `docs/dramgid-numbers.md` §10 leaves that to the owner, and its §2
+## migration report is the proposed mapping.
 static func _migrate_v8_to_v9(source: Dictionary) -> Dictionary:
 	var migrated := source.duplicate(true)
 
