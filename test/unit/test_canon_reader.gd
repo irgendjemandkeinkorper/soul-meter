@@ -3,8 +3,8 @@ extends GdUnitTestSuite
 const SeedPandora := preload("res://tools/seed_pandora.gd")
 
 const KINDS := [
-	"factions", "elements", "classes", "peoples", "items", "spells", "effects", "locations",
-	"lore",
+	"factions", "elements", "classes", "peoples", "characters", "items", "spells", "effects",
+	"locations", "lore",
 ]
 
 var _original_backend: PandoraEntityBackend
@@ -596,6 +596,86 @@ func test_a_malformed_lore_document_refuses_the_whole_seed() -> void:
 	)
 	assert_array(loaded[0]).is_empty()
 
+
+
+
+func _character_row(character_id: String, order: int) -> Dictionary:
+	return {
+		"schema": "weftlumin.character.v1",
+		"kind": "npc",
+		"id": character_id,
+		"order": order,
+		"display_name": character_id.capitalize(),
+		"epithet": "",
+		"bio": "",
+		"role": "Fixture",
+		"home": "Trial Hall",
+		"district": "East Arm",
+		"faction_id": "trial-council",
+		"vault_id": "",
+		"portrait_path": "",
+		"context_line": "A fixture line.",
+		"dialogue_hostile": "",
+		"dialogue_warm": "",
+		"placement_anchor": "town_hall",
+		"placement_offset": [0, 0],
+		"involvement": "",
+		"hook_summary": "",
+	}
+
+
+func test_the_dom_roster_loads_as_sixty_npc_characters() -> void:
+	var characters: Array[Dictionary] = SeedPandora.CanonReader.load("characters")
+	var npcs: Array[Dictionary] = []
+	for character: Dictionary in characters:
+		assert_str(character.get("schema", "")).is_equal("weftlumin.character.v1")
+		if String(character["kind"]) == "npc":
+			npcs.append(character)
+
+	assert_int(npcs.size()).is_equal(60)
+
+
+func test_character_order_is_authored_rather_than_alphabetical() -> void:
+	# `Model Index` is derived from this position, so the order is data, not presentation: if
+	# it followed the filenames instead, every townsfolk model would silently change.
+	var characters: Array[Dictionary] = SeedPandora.CanonReader.load("characters")
+	var orders: Array[int] = []
+	var ids: Array[String] = []
+	for character: Dictionary in characters:
+		orders.append(int(character["order"]))
+		ids.append(String(character["id"]))
+	var sorted_ids: Array[String] = ids.duplicate()
+	sorted_ids.sort()
+
+	for index in orders.size():
+		assert_int(orders[index]).is_equal(index)
+	assert_array(ids).override_failure_message(
+		"characters came back in filename order, so the authored order was not applied"
+	).is_not_equal(sorted_ids)
+
+
+func test_every_character_offset_is_a_two_number_pair() -> void:
+	for character: Dictionary in SeedPandora.CanonReader.load("characters"):
+		var offset: Variant = character["placement_offset"]
+		assert_int((offset as Array).size()).override_failure_message(
+			"character '%s' has a malformed placement offset" % character["id"]
+		).is_equal(2)
+
+
+func test_a_character_missing_its_order_is_refused() -> void:
+	var row: Dictionary = _character_row("no-order", 0)
+	row.erase("order")
+	_write_kind("characters", "no-order.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
+
+
+func test_a_character_with_a_scalar_offset_is_refused() -> void:
+	var row: Dictionary = _character_row("scalar-offset", 0)
+	row["placement_offset"] = 12
+	_write_kind("characters", "scalar-offset.json", row)
+
+	assert_array(SeedPandora.CanonReader.load("characters", _canon_root)).is_empty()
 
 
 func _item_row(item_id: String, category: String) -> Dictionary:

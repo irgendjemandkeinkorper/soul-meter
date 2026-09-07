@@ -1,8 +1,10 @@
 extends Node
 ## Idempotent Pandora migration for Dom's authored townsfolk roster.
 ##
-## The rows below are migration input only. Pandora remains canonical after this
-## script runs; tools/generate_gloot.gd is the one-way path to runtime data.
+## The roster itself lives in `canon/dom/characters` (`kind: "npc"`); this script reads it,
+## derives the fields canon deliberately does not carry, and writes the Pandora NPC category.
+## Pandora remains canonical after it runs; tools/generate_gloot.gd is the one-way path to
+## runtime data.
 
 const TOWN_SCENE := "res://world/starting_town.tscn"
 const SeedPandora := preload("res://tools/seed_pandora.gd")
@@ -13,115 +15,6 @@ const OUTDOOR_JITTER_BY_PLACEMENT := {
 	"town_shrine": Vector2i(30, 26),
 	"town_north_road": Vector2i(22, 32),
 	"town_wound_lip": Vector2i(34, 16),
-}
-const PORTRAIT_PATHS := {
-	"branek-coiljaw": (
-		"res://assets/generated/portraits/marshal_coiljaw_portrait_neutral.png"
-	),
-	"hadrik-vale": "res://assets/generated/portraits/hadrik_vale_portrait_neutral.png",
-	"sella-varn": "res://assets/generated/portraits/sella_varn_portrait_neutral.png",
-	"toma-reedhand": "res://assets/generated/portraits/toma_reedhand_portrait_neutral.png",
-	# Wave W (2026-08-30): the nine Dom quest givers. All nine designs are canon
-	# INTERPOLATIONS (no vault physical descriptions) — see
-	# assets/generated/portraits/_contact_sheet_wave_w.md before treating as canon.
-	"droma-flintjaw": (
-		"res://assets/generated/portraits/droma_flintjaw_portrait_neutral.png"
-	),
-	"irka-stonebreath": (
-		"res://assets/generated/portraits/irka_stonebreath_portrait_neutral.png"
-	),
-	"jorun-ashmantle": (
-		"res://assets/generated/portraits/jorun_ashmantle_portrait_neutral.png"
-	),
-	"keth-varr": "res://assets/generated/portraits/keth_varr_portrait_neutral.png",
-	"orren-chainwake": (
-		"res://assets/generated/portraits/orren_chainwake_portrait_neutral.png"
-	),
-	"pell-hammersong": (
-		"res://assets/generated/portraits/pell_hammersong_portrait_neutral.png"
-	),
-	"senn-brinehook": (
-		"res://assets/generated/portraits/senn_brinehook_portrait_neutral.png"
-	),
-	"vaara-cisternhand": (
-		"res://assets/generated/portraits/vaara_cisternhand_portrait_neutral.png"
-	),
-	"veska-ruun": "res://assets/generated/portraits/veska_ruun_portrait_neutral.png",
-	# Wave Z (2026-08-30): the remaining 47 Dom townsfolk. All designs are canon
-	# INTERPOLATIONS (no vault physical descriptions) — see the
-	# assets/generated/portraits/_contact_sheet_wave_z_*.md sheets before treating as canon.
-	"aela-quietforge": "res://assets/generated/portraits/aela_quietforge_portrait_neutral.png",
-	"arvek-stormcup": "res://assets/generated/portraits/arvek_stormcup_portrait_neutral.png",
-	"brannic-lowdrum": "res://assets/generated/portraits/brannic_lowdrum_portrait_neutral.png",
-	"brek-saltjaw": "res://assets/generated/portraits/brek_saltjaw_portrait_neutral.png",
-	"brinna-fourbells": "res://assets/generated/portraits/brinna_fourbells_portrait_neutral.png",
-	"daska-threeknots": "res://assets/generated/portraits/daska_threeknots_portrait_neutral.png",
-	"dorran-rask": "res://assets/generated/portraits/dorran_rask_portrait_neutral.png",
-	"drann-wetiron": "res://assets/generated/portraits/drann_wetiron_portrait_neutral.png",
-	"drel-gaunt": "res://assets/generated/portraits/drel_gaunt_portrait_neutral.png",
-	"edda-broadmark": "res://assets/generated/portraits/edda_broadmark_portrait_neutral.png",
-	"enna-grayscar": "res://assets/generated/portraits/enna_grayscar_portrait_neutral.png",
-	"gerren-pike": "res://assets/generated/portraits/gerren_pike_portrait_neutral.png",
-	"hennik-coalvein": "res://assets/generated/portraits/hennik_coalvein_portrait_neutral.png",
-	"holst-brinevein": "res://assets/generated/portraits/holst_brinevein_portrait_neutral.png",
-	"istra-hearthscar": "res://assets/generated/portraits/istra_hearthscar_portrait_neutral.png",
-	"jessa-longbrace": "res://assets/generated/portraits/jessa_longbrace_portrait_neutral.png",
-	"kadrin-stoneyield": "res://assets/generated/portraits/kadrin_stoneyield_portrait_neutral.png",
-	"kaelra-pikehand": "res://assets/generated/portraits/kaelra_pikehand_portrait_neutral.png",
-	"kelm-rook": "res://assets/generated/portraits/kelm_rook_portrait_neutral.png",
-	"kessa-nightrail": "res://assets/generated/portraits/kessa_nightrail_portrait_neutral.png",
-	"kiva-saltbrand": "res://assets/generated/portraits/kiva_saltbrand_portrait_neutral.png",
-	"korrin-blackrail": "res://assets/generated/portraits/korrin_blackrail_portrait_neutral.png",
-	"loa-flintthread": "res://assets/generated/portraits/loa_flintthread_portrait_neutral.png",
-	"maela-drumscar": "res://assets/generated/portraits/maela_drumscar_portrait_neutral.png",
-	"marn-veld": "res://assets/generated/portraits/marn_veld_portrait_neutral.png",
-	"mera-voss": "res://assets/generated/portraits/mera_voss_portrait_neutral.png",
-	"nalla-gatebeat": "res://assets/generated/portraits/nalla_gatebeat_portrait_neutral.png",
-	"nym-vara": "res://assets/generated/portraits/nym_vara_portrait_neutral.png",
-	"orenna-caskbrand": "res://assets/generated/portraits/orenna_caskbrand_portrait_neutral.png",
-	"orm-redtongs": "res://assets/generated/portraits/orm_redtongs_portrait_neutral.png",
-	"orrik-cinderjaw": "res://assets/generated/portraits/orrik_cinderjaw_portrait_neutral.png",
-	"raika-toll": "res://assets/generated/portraits/raika_toll_portrait_neutral.png",
-	"ressa-ironmouth": "res://assets/generated/portraits/ressa_ironmouth_portrait_neutral.png",
-	"saela-windscar": "res://assets/generated/portraits/saela_windscar_portrait_neutral.png",
-	"sava-mor": "res://assets/generated/portraits/sava_mor_portrait_neutral.png",
-	"sorek-hushward": "res://assets/generated/portraits/sorek_hushward_portrait_neutral.png",
-	"tern-hollowbeat": "res://assets/generated/portraits/tern_hollowbeat_portrait_neutral.png",
-	"themka-gaath": "res://assets/generated/portraits/themka_gaath_portrait_neutral.png",
-	"thessa-drumline": "res://assets/generated/portraits/thessa_drumline_portrait_neutral.png",
-	"thora-bellmark": "res://assets/generated/portraits/thora_bellmark_portrait_neutral.png",
-	"torv-bellowskin": "res://assets/generated/portraits/torv_bellowskin_portrait_neutral.png",
-	"umber-dhor": "res://assets/generated/portraits/umber_dhor_portrait_neutral.png",
-	"varrik-deepchalk": "res://assets/generated/portraits/varrik_deepchalk_portrait_neutral.png",
-	"venn-ashcord": "res://assets/generated/portraits/venn_ashcord_portrait_neutral.png",
-	"veyra-sootlace": "res://assets/generated/portraits/veyra_sootlace_portrait_neutral.png",
-	"yara-chainstep": "res://assets/generated/portraits/yara_chainstep_portrait_neutral.png",
-	"yssra-coldnet": "res://assets/generated/portraits/yssra_coldnet_portrait_neutral.png",
-}
-## Optional band-gated greeting variants (Wave 4 reputation reactivity).
-## Keyed by npc id; empty/no entry keeps the plain generated greeting.
-## The reaction faction is the NPC's own "Faction Id".
-const REACTIVE_DIALOGUE := {
-	"droma-flintjaw": {
-		"hostile": "The Sentinels have you marked cold. State your business from there.",
-		"warm": "The Sentinels speak warmly of you. Cross at the near brace.",
-	},
-	"edda-broadmark": {
-		"hostile": "The Companies give your name no weight. Edda does the same.",
-		"warm": "The Companies give your name weight. Edda will hear you first.",
-	},
-	"ressa-ironmouth": {
-		"hostile": "The Sentinels distrust your name. Ressa keeps the hot tongs between you and the rack.",
-		"warm": "The Sentinels trust your name. Ressa clears the sparks when you step to the rack.",
-	},
-}
-const NPC_BIOS := {
-	"branek-coiljaw": (
-		"A Trial Council road marshal charged with the broken muster at Dorthkor."
-	),
-}
-const NPC_EPITHETS := {
-	"branek-coiljaw": "the Road-Bench",
 }
 const NPC_PROPERTIES := [
 	["Display Name", "string"],
@@ -189,6 +82,10 @@ func _ready() -> void:
 	if not _seed_factions():
 		get_tree().quit(1)
 		return
+	var documents: Array[Dictionary] = SeedPandora.CanonReader.load("characters")
+	if documents.is_empty() or not _placement_anchors_exist(documents):
+		get_tree().quit(1)
+		return
 	_seed_npcs()
 	Pandora.save_data()
 	print("DOM-NPC-SEED: 60 authored townsfolk present.")
@@ -212,109 +109,42 @@ func _seed_npcs() -> void:
 			_assign(entity, property_name, row[property_name])
 
 
+## Reads the authored roster from `canon/dom/characters`, `kind: "npc"`. Everything the
+## seeder writes beyond these fields — greetings, facing, idle phase, model index, the
+## organic outdoor scatter — is derived below and deliberately stays out of canon.
 func _townsfolk_rows() -> Array[Dictionary]:
-	# id, name, role, home, district, faction, contextual line,
-	# placement key, offset, quest involvement, hook summary, optional vault id.
-	var authored: Array = [
-		["branek-coiljaw", "Marshal Coiljaw", "East Arm bench-holder and road marshal", "Trial Hall", "East Arm", "trial-council", "The Road-Bench keeps Dorthkor's broken drumbeat beside every open commission.", "trial_hall_i", Vector2(-64, 0), "giver", "Commissions a witness to audit the broken Dorthkor muster.", "branek-coiljaw"],
-		["themka-gaath", "Themka Gaath", "Council of Four Arms elder and Bridgeholder", "Council Chamber", "North Arm", "trial-council", "PROVISIONAL — CANON REVIEW REQUIRED: The Council elder waits to send a proven traveler beyond Dom.", "council_i", Vector2(0, 0), "giver", "PROVISIONAL — CANON REVIEW REQUIRED: Gives the opening charge to travel to Dorthkor Road.", "themka-gaath"],
-		["sella-varn", "Sella Varn", "Bell warden", "Bell House", "South Arm", "trial-council", "The district bell is warm, the rope is sound, and Sella refuses to call its silence a simple break.", "trial_hall_i", Vector2(64, 0), "giver", "Opens the silent bell-house investigation."],
-		["hadrik-vale", "Hadrik Vale", "Archive clerk", "Registry Archive", "North Arm", "rennen", "Hadrik can account for every road ledger except the one that returned with rain inside its seals.", "town_hall_i", Vector2(-64, 0), "giver", "Requests recovery of a storm-damaged road register."],
-		["toma-reedhand", "Toma Reedhand", "Dockhand and shrine-keeper", "River Shrine", "West Arm", "wayfare-menders", "Toma tends the river shrine between harbor shifts and knows which tide-chain offerings have gone missing.", "town_hall_i", Vector2(0, 0), "giver", "Asks for the missing offerings from the Drownedmouth tide-chain."],
-		["droma-flintjaw", "Droma Flintjaw", "Wound-Watch quartermaster", "Town Hall", "Jawbrace", "ironbrand-sentinels", "Droma's armor tags include one clean plate whose owner still answers morning roll.", "town_hall_i", Vector2(64, 0), "giver", "Seeks proof of how a living guard's tag reached cleaned armor."],
-		["veska-ruun", "Veska Ruun", "Trial examiner", "Trial Hall", "South Arm", "trial-council", "Veska found three Pillar weights filed smooth where a candidate's name should be cut.", "registry_i", Vector2(-64, 0), "giver", "Commissions an inquiry into altered Trial Pillar weights."],
-		["orren-chainwake", "Orren Chainwake", "Drownedmouth pilot", "Pilot Lodge", "West Arm", "wayfare-menders", "Orren has a storm-stranded crew below the sea-mouth and one safe course left unmarked.", "registry_i", Vector2(0, 0), "giver", "Needs a route marker carried to a storm-stranded crew."],
-		["maela-drumscar", "Maela Drumscar", "Company muster drummer", "Iron Companies Barracks", "East Arm", "iron-companies", "Maela heard a dead Company's cadence answer between two beats of the spring muster.", "registry_i", Vector2(64, 0), "giver", "Asks the player to compare an impossible cadence against old muster notation."],
-		["keth-varr", "Keth Varr", "Shattersteel assay clerk", "Equipment Shop", "East Arm", "shattersteel-concord", "Keth says the newest cooling-water seals are honest bronze wrapped around dishonest water.", "bell_i", Vector2(-64, 0), "giver", "Requests samples from a suspect storm-water delivery."],
-		["irka-stonebreath", "Irka Stonebreath", "Hospice scar keeper", "River Shrine Hospice", "West Arm", "hospice-chain", "Irka keeps the trial-broken names and has one patient no hall admits sending.", "bell_i", Vector2(0, 0), "giver", "Seeks the hall that abandoned an unidentified trial-broken veteran."],
-		["pell-hammersong", "Pell Hammersong", "Jaw-drum tuner", "Bell House", "North Arm", "trial-council", "Pell hears a fifth echo under a four-beat Jawbrace signal whenever the western storm turns.", "bell_i", Vector2(64, 0), "giver", "Needs the brace drums tested from both sides of the chasm."],
-		["vaara-cisternhand", "Vaara Cisternhand", "Storm-cistern warden", "Cistern Wardens Hall", "South Arm", "trial-council", "Vaara has sealed a cistern whose rain tastes of forge ash before it reaches the East Arm.", "shrine_i", Vector2(-64, 0), "giver", "Requests a source trace for ash entering a storm cistern."],
-		["jorun-ashmantle", "Jorun Ashmantle", "Charfire hall steward", "Chef's House", "East Arm", "iron-companies", "Jorun keeps the charfire table open, but one veteran's bowl has gone cold for six nights.", "shrine_i", Vector2(0, 0), "giver", "Asks someone to find a missing Company veteran without shaming them."],
-		["senn-brinehook", "Senn Brinehook", "Deep-cold net mender", "River Shrine", "West Arm", "wayfare-menders", "Senn's newest net came back cut from below, with every knot retied in marching order.", "shrine_i", Vector2(64, 0), "giver", "Offers the cut net for investigation at the sea-mouth."],
-		["daska-threeknots", "Daska Threeknots", "Deep Salvage broker", "Howlpath Lodging", "North Arm", "kord-rite", "Daska prices cleaned armor by the grief of the family asking and calls that brutal honesty.", "companies_i", Vector2(-64, 0), "target", "Must be confronted about a suit taken from a forbidden ledge."],
-		["hennik-coalvein", "Hennik Coalvein", "Chasm-wall miner", "East Arm Scarred Hall", "East Arm", "shattersteel-concord", "Hennik missed shift after chalking a name that no foreman remembers onto the lift cage.", "companies_i", Vector2(0, 0), "target", "Is the missing miner sought by the lift crew."],
-		["ressa-ironmouth", "Ressa Ironmouth", "Brand artist", "Equipment Shop", "East Arm", "ironbrand-sentinels", "Ressa can spot a false Ironbrand by the way its scar fails to pull when the bearer speaks.", "companies_i", Vector2(64, 0), "target", "Must inspect a suspect veteran's counterfeit brand."],
-		["kaelra-pikehand", "Kaelra Pikehand", "Three-legged war-dog trainer", "Iron Companies Barracks", "South Arm", "iron-companies", "Kaelra's oldest hound tracks one absent Bloodbellow and refuses every other scent.", "item_i", Vector2(-64, 0), "target", "Holds the hound needed to follow an absent Company soldier."],
-		["umber-dhor", "Umber Dhor", "Grain porter", "Lower Market Loft", "West Arm", "grain-factors-table", "Umber carries a manifest for grain that reached Dom twice on paper and not once by sack.", "item_i", Vector2(0, 0), "target", "Carries the disputed manifest needed by the market factors."],
-		["nalla-gatebeat", "Nalla Gatebeat", "Jawbrace signaler", "Jawbrace Watchroom", "North Arm", "trial-council", "Nalla stopped the third gate's drum after it answered with a signal no living watch uses.", "item_i", Vector2(64, 0), "target", "Is the signaler who can reproduce the unknown gate reply."],
-		["torv-bellowskin", "Torv Bellowskin", "Forge bellows master", "Equipment Shop", "East Arm", "shattersteel-concord", "Torv locked away a hammer that rings after the forge around it has fallen silent.", "equipment_i", Vector2(-64, 0), "target", "Keeps the resonant hammer required for a forge-silence inquiry."],
-		["yssra-coldnet", "Yssra Coldnet", "Deep-cold fisher", "Drownedmouth Berthhouse", "West Arm", "wayfare-menders", "Yssra saw lights climbing the harbor wall against the rain and will speak only beside calm water.", "equipment_i", Vector2(0, 0), "target", "Is the harbor witness another quest must locate."],
-		["brek-saltjaw", "Brek Saltjaw", "Sea-mouth chain hand", "Drownedmouth Chainhouse", "West Arm", "trial-council", "Brek did not report after the outer harbor chain tightened itself during the night watch.", "equipment_i", Vector2(64, 0), "target", "Is the missing chain hand named in the harbor watch report."],
-		["orenna-caskbrand", "Orenna Caskbrand", "Charfire brewer", "Chef's House", "East Arm", "hospice-chain", "Orenna holds the only kitchen key to the scarred hall where an unnamed bowl remains set.", "chefs_i", Vector2(-64, 0), "target", "Holds access needed to inspect an abandoned charfire place."],
-		["marn-veld", "Marn Veld", "Council runner", "Town Hall", "North Arm", "trial-council", "Marn carried the sealed vote between the four benches and knows which seal arrived warm.", "chefs_i", Vector2(0, 0), "information", "Provides required information about a compromised Council message."],
-		["thessa-drumline", "Thessa Drumline", "Muster copyist", "Bell House", "South Arm", "iron-companies", "Thessa can point to the exact beat where a living roll enters the cadence of the unremembered.", "chefs_i", Vector2(64, 0), "information", "Decodes the break between dead and living muster rolls."],
-		["korrin-blackrail", "Korrin Blackrail", "Jawbrace rail inspector", "Jawbrace Watchroom", "North Arm", "ironbrand-sentinels", "Korrin saw the cleaned guard face outward before the first gate opened.", "players_i", Vector2(-64, 0), "information", "Provides the guard's original posture and direction."],
-		["veyra-sootlace", "Veyra Sootlace", "Salvage-cloth merchant", "Lower Market Loft", "East Arm", "shattersteel-concord", "Veyra knows whether ash came from forge coal, charfire, or a suit scoured below the ledges.", "players_i", Vector2(0, 0), "information", "Identifies the ash on recovered salvage cloth."],
-		["drel-gaunt", "Drel Gaunt", "Gauntlet scorekeeper", "Trial Hall", "South Arm", "trial-council", "Drel's slate proves the yielded duelist was struck three times after the surrender beat.", "players_i", Vector2(64, 0), "information", "Supplies the official score from the broken-yield duel."],
-		["arvek-stormcup", "Arvek Stormcup", "Storm-water cooper", "Lower Market", "West Arm", "grain-factors-table", "Arvek recognizes the cooper's mark that was burned off Keth Varr's suspect casks.", "town_trial", Vector2(-100, 70), "information", "Identifies the source warehouse for tampered cooling water."],
-		["istra-hearthscar", "Istra Hearthscar", "Scarred Hall matron", "Iron Companies Barracks", "East Arm", "hospice-chain", "Istra remembers which missing veteran stopped eating when the Wound began using Company voices.", "town_trial", Vector2(0, 78), "information", "Names the veteran connected to a cold place at the charfire table."],
-		["kelm-rook", "Kelm Rook", "Company contract reader", "Iron Companies Barracks", "East Arm", "iron-companies", "Kelm found a Restoration clause that hires a Company by the dead names on its old roll.", "town_trial", Vector2(100, 70), "information", "Explains the hidden condition in a Restoration contract."],
-		["brinna-fourbells", "Brinna Fourbells", "Crossing census keeper", "Town Hall", "North Arm", "trial-council", "Brinna's midwinter census contains one crossed-out name that still answers at each gate.", "town_registry", Vector2(-100, 70), "information", "Provides the missing name from the Crossing census."],
-		["sorek-hushward", "Sorek Hushward", "Lip-shrine sweeper", "Howlpath Lodge", "North Arm", "kord-rite", "Sorek hears the calls before dawn and knows which ones come in a living voice.", "town_registry", Vector2(0, 78), "information", "Distinguishes a living caller from the dead muster echoes."],
-		["enna-grayscar", "Enna Grayscar", "Archive seal clerk", "Registry Archive", "North Arm", "rennen", "Enna opens sealed road records only for someone carrying proof from the matching watch.", "town_registry", Vector2(100, 70), "gate", "Gates access to the sealed road archive behind verified watch proof."],
-		["varrik-deepchalk", "Varrik Deepchalk", "Mining-lift chalker", "Equipment Shop", "East Arm", "shattersteel-concord", "Varrik will not mark a descent cage until the lift crew's safety tally is complete.", "town_bell", Vector2(-100, 70), "gate", "Gates use of a chasm-wall lift behind the completed safety tally."],
-		["loa-flintthread", "Loa Flintthread", "Hospice intake keeper", "River Shrine Hospice", "West Arm", "hospice-chain", "Loa keeps patient names private until a scarred-hall token proves honest concern.", "town_bell", Vector2(0, 78), "gate", "Gates access to an unidentified hospice patient behind a hall token."],
-		["kessa-nightrail", "Kessa Nightrail", "North-road sentry", "North Arm Gatehouse", "North Arm", "iron-companies", "Kessa opens the night road only when the Dorthkor warning and the Council seal agree.", "town_bell", Vector2(100, 70), "gate", "Gates the night road behind matching warning and Council clearance."],
-		["orm-redtongs", "Orm Redtongs", "Forge safety master", "Equipment Shop", "East Arm", "shattersteel-concord", "Orm permits a forge shutdown only after a replacement hammer cadence is proven.", "town_shrine", Vector2(-100, 70), "gate", "Gates a controlled forge-silence behind a replacement cadence."],
-		["yara-chainstep", "Yara Chainstep", "Harbor-chain inspector", "Drownedmouth Chainhouse", "West Arm", "ironbrand-sentinels", "Yara will return to the outer chain when the missing watch hand is accounted for.", "town_shrine", Vector2(0, 78), "state_change", "Moves from the shrine to the outer chain after the watch-hand search resolves."],
-		["tern-hollowbeat", "Tern Hollowbeat", "Dorthkor memorial drummer", "Trial Hall", "North Arm", "trial-council", "Tern holds a deliberate silence where the lost road roll should have sounded.", "town_shrine", Vector2(100, 70), "state_change", "Restores the memorial cadence after the missing roll is recovered."],
-		["mera-voss", "Mera Voss", "Hospice cook", "Chef's House", "West Arm", "hospice-chain", "Mera has banked the charfire until medicine reaches the trial-broken ward.", "town_companies", Vector2(-100, 70), "state_change", "Reopens the hospice charfire table after the medicine delivery."],
-		["kadrin-stoneyield", "Kadrin Stoneyield", "Trial Pillar porter", "Trial Hall", "South Arm", "trial-council", "Kadrin keeps the damaged ascent roped off and counts every candidate turned away.", "town_companies", Vector2(0, 78), "state_change", "Removes the Pillar barricade after its burden pins are repaired."],
-		["sava-mor", "Sava Mor", "Salvager's widow", "Lower Market Loft", "East Arm", "iron-companies", "Sava leaves an empty armor stand in her window until the ledge suit is returned or condemned.", "town_companies", Vector2(100, 70), "state_change", "Changes the market display when the recovered suit's fate is decided."],
-		["drann-wetiron", "Drann Wetiron", "Shattersteel smith", "Equipment Shop", "East Arm", "shattersteel-concord", "Drann reserves the honest forge for names the Concord already speaks warmly.", "town_market", Vector2(-100, 70), "reputation_reaction", "Offers forge access at a warm Shattersteel Concord reputation band."],
-		["edda-broadmark", "Edda Broadmark", "Company recruiter", "Iron Companies Barracks", "South Arm", "iron-companies", "Edda reads the Company's standing before she reads a volunteer's scars.", "town_market", Vector2(0, 78), "reputation_reaction", "Offers a veteran escort at a warm Iron Companies reputation band."],
-		["holst-brinevein", "Holst Brinevein", "Harbor pilot", "Pilot Lodge", "West Arm", "wayfare-menders", "Holst saves his storm-proof route for travelers the Mender lodges trust.", "town_market", Vector2(100, 70), "reputation_reaction", "Shares a safe sea-mouth route at a warm Wayfare-Mender reputation band."],
-		["raika-toll", "Raika Toll", "Sentinel toll keeper", "Jawbrace Watchroom", "North Arm", "ironbrand-sentinels", "Raika answers respect for the Sentinels with one more true entry from the Wound ledger.", "town_equipment", Vector2(-100, 70), "reputation_reaction", "Reveals a Wound-Watch ledger entry at a warm Sentinel reputation band."],
-		["venn-ashcord", "Venn Ashcord", "Registry tallyman", "Registry Archive", "North Arm", "rennen", "Venn waives no line, but a warm Registry record earns the useful drawer first.", "town_equipment", Vector2(0, 78), "reputation_reaction", "Prioritizes a needed archive drawer at a warm Registry reputation band."],
-		["jessa-longbrace", "Jessa Longbrace", "Bridge rope-splicer", "Jawbrace Watchroom", "North Arm", "trial-council", "Jessa splices every brace rope with four turns and cuts any sailor who adds a fifth.", "town_equipment", Vector2(100, 70), "", ""],
-		["brannic-lowdrum", "Brannic Lowdrum", "Tavern drummer", "Four Arms Tavern", "South Arm", "iron-companies", "Brannic plays beneath the Hammer Roar by feeling the mugs walk across the table.", "town_hall", Vector2(-100, 70), "", ""],
-		["saela-windscar", "Saela Windscar", "Roof-flag mender", "Town Hall", "North Arm", "trial-council", "Saela reads tomorrow's western wall by which roof flag tears first.", "town_hall", Vector2(0, 78), "", ""],
-		["orrik-cinderjaw", "Orrik Cinderjaw", "Charfire barber", "Lower Market Loft", "East Arm", "shattersteel-concord", "Orrik trims hair with forge shears and never lets their hinge lose the hammer rhythm.", "town_hall", Vector2(100, 70), "", ""],
-		["nym-vara", "Nym Vara", "Storm-cup seller", "Lower Market", "West Arm", "grain-factors-table", "Nym sells cups broad enough to catch rain and narrow enough not to lose it to the wind.", "town_tavern", Vector2(-100, 70), "", ""],
-		["thora-bellmark", "Thora Bellmark", "Scar tattooist", "Bell House", "South Arm", "ironbrand-sentinels", "Thora inks no promise until the speaker can say its price without lowering their voice.", "town_tavern", Vector2(0, 78), "", ""],
-		["gerren-pike", "Gerren Pike", "Company pike polisher", "Iron Companies Barracks", "East Arm", "iron-companies", "Gerren judges a pike by whether the bearer can see their scar in its edge.", "town_tavern", Vector2(100, 70), "", ""],
-		["kiva-saltbrand", "Kiva Saltbrand", "Harbor salt seller", "Drownedmouth Berthhouse", "West Arm", "grain-factors-table", "Kiva keeps storm salt dry in retired drumskins and labels every skin by cadence.", "town_north_road", Vector2(-90, 90), "", ""],
-		["dorran-rask", "Dorran Rask", "Road cobbler", "North Arm Gatehouse", "North Arm", "wayfare-menders", "Dorran soles road boots differently for the Trial Roads, where every climb leans the same way.", "town_wound_lip", Vector2(-100, 90), "", ""],
-		["aela-quietforge", "Aela Quietforge", "Household tool-mender", "Player's House", "East Arm", "shattersteel-concord", "Aela works only hand tools at home, quiet enough that the East Arm hammers remain the loudest truth.", "town_wound_lip", Vector2(100, 90), "", ""],
-	]
 	var result: Array[Dictionary] = []
-	for authored_index: int in authored.size():
-		var row: Array = authored[authored_index]
-		result.append(
-			_npc(
-				str(row[0]),
-				str(row[1]),
-				str(row[2]),
-				str(row[3]),
-				str(row[4]),
-				str(row[5]),
-				str(row[6]),
-				str(row[7]),
-				row[8] as Vector2,
-				str(row[9]),
-				str(row[10]),
-				str(row[11]) if row.size() > 11 else "",
-				authored_index,
-			)
-		)
+	for document: Dictionary in SeedPandora.CanonReader.load("characters"):
+		if String(document.get("kind", "")) != "npc":
+			continue
+		result.append(_npc(document))
 	return result
 
 
-func _npc(
-	npc_id: String,
-	display_name: String,
-	role: String,
-	home: String,
-	district: String,
-	faction_id: String,
-	context_line: String,
-	placement_key: String,
-	offset: Vector2,
-	involvement: String,
-	hook_summary: String,
-	vault_id: String,
-	authored_index: int,
-) -> Dictionary:
+## An anchor this seeder does not know would be a null placement, so it is caught before
+## anything is written rather than as a crash midway through the roster.
+func _placement_anchors_exist(documents: Array[Dictionary]) -> bool:
+	for document: Dictionary in documents:
+		if String(document.get("kind", "")) != "npc":
+			continue
+		if not PLACEMENT_ANCHORS.has(document["placement_anchor"]):
+			push_error(
+				"DOM-NPC-SEED: character '%s' names unknown placement anchor '%s'."
+				% [document["id"], document["placement_anchor"]]
+			)
+			return false
+	return true
+
+
+func _npc(document: Dictionary) -> Dictionary:
+	var npc_id: String = document["id"]
+	var role: String = document["role"]
+	var district: String = document["district"]
+	var faction_id: String = document["faction_id"]
+	var involvement: String = document["involvement"]
+	var offset_pair: Array = document["placement_offset"]
+	var offset := Vector2(float(offset_pair[0]), float(offset_pair[1]))
+	var placement_key: String = document["placement_anchor"]
 	var placement: Dictionary = PLACEMENT_ANCHORS[placement_key]
 	var placement_offset := offset
 	if placement["scene"] == TOWN_SCENE:
@@ -324,7 +154,7 @@ func _npc(
 		var hook := {
 			"quest_id": "dom/%s/%s" % [npc_id, involvement.replace("_", "-")],
 			"involvement": involvement,
-			"summary": hook_summary,
+			"summary": document["hook_summary"],
 			"state_source": "QuestRegistry",
 		}
 		if involvement in ["gate", "state_change"]:
@@ -335,32 +165,37 @@ func _npc(
 			hook["faction_id"] = faction_id
 			hook["band"] = "warm"
 		hooks.append(hook)
+	# An empty authored bio falls back to the generated one; canon records what was written,
+	# not what the seeder can work out for itself.
+	var bio: String = document["bio"]
+	if bio.is_empty():
+		bio = "%s of Dom's %s." % [role, district]
 	return {
-		"Display Name": display_name,
-		"Epithet": str(NPC_EPITHETS.get(npc_id, "")),
-		"Bio": str(NPC_BIOS.get(npc_id, "%s of Dom's %s." % [role, district])),
-		"Vault Id": vault_id,
+		"Display Name": document["display_name"],
+		"Epithet": document["epithet"],
+		"Bio": bio,
+		"Vault Id": document["vault_id"],
 		"NPC Id": npc_id,
 		"Town Id": "dom",
 		"Role": role,
-		"Home": home,
+		"Home": document["home"],
 		"District": district,
 		"Faction Id": faction_id,
 		"Quest Hooks": JSON.stringify(hooks),
 		"Portrait Id": npc_id,
-		"Portrait Path": str(PORTRAIT_PATHS.get(npc_id, "")),
+		"Portrait Path": document["portrait_path"],
 		"Dialogue Greeting": _greeting(district),
-		"Dialogue Context": context_line,
+		"Dialogue Context": document["context_line"],
 		"Dialogue Farewell": _farewell(district),
-		"Dialogue Hostile": str(REACTIVE_DIALOGUE.get(npc_id, {}).get("hostile", "")),
-		"Dialogue Warm": str(REACTIVE_DIALOGUE.get(npc_id, {}).get("warm", "")),
+		"Dialogue Hostile": document["dialogue_hostile"],
+		"Dialogue Warm": document["dialogue_warm"],
 		"Placement Scene": placement["scene"],
 		"Placement Anchor": placement["anchor"],
 		"Placement X": placement_offset.x,
 		"Placement Y": placement_offset.y,
 		"Facing": _plausible_facing(npc_id, placement_key, offset),
 		"Idle Phase": _idle_phase(npc_id),
-		"Model Index": (authored_index * 11) % TOWNSFOLK_MODEL_COUNT,
+		"Model Index": (int(document["order"]) * 11) % TOWNSFOLK_MODEL_COUNT,
 	}
 
 

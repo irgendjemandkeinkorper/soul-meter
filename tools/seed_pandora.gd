@@ -61,6 +61,17 @@ class CanonReader:
 			"schema": "weftlumin.effect.v1",
 			"fields": ["id", "display_name", "description", "duration_type"],
 		},
+		"characters": {
+			"noun": "character",
+			"schema": "weftlumin.character.v1",
+			"fields": [
+				"id", "kind", "display_name", "epithet", "bio", "role", "home", "district",
+				"faction_id", "vault_id", "portrait_path", "context_line", "dialogue_hostile",
+				"dialogue_warm", "placement_anchor", "involvement", "hook_summary",
+			],
+			"ordered": true,
+			"number_pairs": ["placement_offset"],
+		},
 		"items": {
 			"noun": "item",
 			"schema": "weftlumin.item.v1",
@@ -70,7 +81,7 @@ class CanonReader:
 			],
 			"integers": ["max_stack_size"],
 			"numbers": ["weight"],
-			"vector2is": ["grid_size"],
+			"number_pairs": ["grid_size"],
 		},
 		"locations": {
 			"noun": "location",
@@ -172,7 +183,7 @@ class CanonReader:
 			if typeof(row.get(field)) != TYPE_FLOAT:
 				push_error("CANON-SEED: %s requires numeric '%s'." % [document_path, field])
 				return false
-		for field: String in Array(contract.get("vector2is", [])):
+		for field: String in Array(contract.get("number_pairs", [])):
 			var pair: Variant = row.get(field)
 			if typeof(pair) != TYPE_ARRAY or (pair as Array).size() != 2:
 				push_error(
