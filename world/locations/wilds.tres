@@ -6,6 +6,7 @@
 script = ExtResource("1_definition")
 id = &"wilds"
 scene_path = "res://world/test_room.tscn"
+harmonic_accord = 85.0
 thinning_tier = 1
 default_spawn_id = &"default"
 spawns = {

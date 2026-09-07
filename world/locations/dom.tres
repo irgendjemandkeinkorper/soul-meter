@@ -6,6 +6,7 @@
 script = ExtResource("1_definition")
 id = &"dom"
 scene_path = "res://world/starting_town.tscn"
+harmonic_accord = 95.0
 default_spawn_id = &"default"
 spawns = {
 "from_bell_house": "from_bell_house",
