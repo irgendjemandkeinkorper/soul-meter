@@ -51,6 +51,7 @@ CombatLab="*res://globals/combat_lab.gd"
 ConsequenceTimeline="*res://globals/consequence_timeline.gd"
 DialogueLab="*res://globals/dialogue_lab.gd"
 QuestEditor="*res://globals/quest_editor.gd"
+WeftluminBootstrap="*res://addons/weftlumin/bootstrap.gd"
 
 [dialogue_manager]
 
