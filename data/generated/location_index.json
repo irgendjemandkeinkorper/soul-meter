@@ -1,0 +1,101 @@
+{
+  "schema": "weftlumin.location_index.v1",
+  "locations": [
+    {
+      "id": "deivel-zeit",
+      "display_name": "Deivel Zeit",
+      "epithet": "",
+      "patron": "Haeren",
+      "agreement": "90–92%",
+      "vault_id": "deivel"
+    },
+    {
+      "id": "dom",
+      "display_name": "Dom",
+      "epithet": "",
+      "patron": "Kero",
+      "agreement": "",
+      "vault_id": "dom"
+    },
+    {
+      "id": "karrn-vash",
+      "display_name": "Karrn-Vash",
+      "epithet": "",
+      "patron": "Blidnisch",
+      "agreement": "",
+      "vault_id": "karrn-vash"
+    },
+    {
+      "id": "lefren",
+      "display_name": "Lefren",
+      "epithet": "",
+      "patron": "Fickah",
+      "agreement": "",
+      "vault_id": "lefren"
+    },
+    {
+      "id": "loamgate",
+      "display_name": "Loamgate",
+      "epithet": "",
+      "patron": "Vhorr",
+      "agreement": "84–87%",
+      "vault_id": "loamgate"
+    },
+    {
+      "id": "milinel",
+      "display_name": "Milinel",
+      "epithet": "",
+      "patron": "Izhakel",
+      "agreement": "",
+      "vault_id": "milinel"
+    },
+    {
+      "id": "pozor",
+      "display_name": "Pozor",
+      "epithet": "",
+      "patron": "Stuid",
+      "agreement": "",
+      "vault_id": "pozor"
+    },
+    {
+      "id": "rennen",
+      "display_name": "Rennen",
+      "epithet": "",
+      "patron": "Pazzah",
+      "agreement": "",
+      "vault_id": "rennen"
+    },
+    {
+      "id": "solmarch",
+      "display_name": "Solmarch",
+      "epithet": "",
+      "patron": "Sulmae (the mask)",
+      "agreement": "",
+      "vault_id": "solmarch"
+    },
+    {
+      "id": "tweede",
+      "display_name": "Tweede",
+      "epithet": "",
+      "patron": "Vicoar",
+      "agreement": "",
+      "vault_id": "tweede"
+    },
+    {
+      "id": "verspch",
+      "display_name": "Verspch",
+      "epithet": "",
+      "patron": "Ofshütje",
+      "agreement": "",
+      "vault_id": "verspch"
+    },
+    {
+      "id": "vervulling",
+      "display_name": "Vervulling",
+      "epithet": "The Twinfire Capital",
+      "patron": "Maiiam",
+      "agreement": "91–93%",
+      "vault_id": "vervulling"
+    }
+  ]
+}
