@@ -2,6 +2,19 @@
 Hadrik Vale: The Registry Archive has three doors, two locks, and one clerk on duty. The third door is for things that have not happened yet.
 => hub
 
+~ hollowed
+Hadrik Vale: You are on the third door's list now. I did not put you there. It filled itself in overnight.
+Hadrik Vale: The Registry does not have a word for what you are. It has a margin, and it is writing in it.
+- "..." [if GameState.is_hollowing() /]
+	Hadrik Vale: Yes. That is the entry.
+	=> END
+- "Read it back to me." [if GameState.is_hollowing() /]
+	Hadrik Vale: Present. Answering. Not volunteering. Signed by a clerk who would rather have written something else.
+	Hadrik Vale: Come back when there is more to file. I will keep the page open.
+	=> END
+- "I still have business here." [if GameState.is_hollowing() /]
+	=> hub
+
 ~ hub
 - "Have you filed a reflection that remembers me?" [if NGPlus.is_active(SaveGame.ng_plus) /]
 	Hadrik Vale: The third door recorded your arrival before you returned. I have not decided which entry is the copy.

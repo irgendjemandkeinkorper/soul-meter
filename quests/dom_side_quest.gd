@@ -6,6 +6,16 @@ extends FlagQuest
 ## resolution flags, and QuestRegistry is the only place that applies an
 ## outcome to the reputation ledger.
 
+## The tag that makes an outcome an act of Agreement. Ratified ruling 3 in
+## docs/game-identity.md makes this the ONLY channel by which the Soul Gauge
+## rises, and `CombatController` now enforces the other half by clamping its
+## own `soul_meter` write to a decrease (#286, #398).
+##
+## `outcome_soul_deltas` carries the magnitude, and every authored magnitude is
+## PROVISIONAL pending the numeric pass: the first one authored is 8.0 on
+## `dom/side/living-tag`'s `restore-the-name`, chosen so one Agreement is worth
+## a little more than one costly dialogue choice spends. Rebalancing is an edit
+## to the resources, not to this contract.
 const ACT_OF_AGREEMENT_TAG := "act_of_agreement"
 
 @export var stable_id: String = ""

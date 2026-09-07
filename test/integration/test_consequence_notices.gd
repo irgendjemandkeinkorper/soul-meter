@@ -6,11 +6,13 @@ const ConsequenceNoticesScript := preload("res://ui/hud/consequence_notices.gd")
 var _reputation_before: Dictionary = {}
 var _renown_before: Dictionary = {}
 var _paused_before: bool = false
+var _game_state_before: Dictionary = {}
 
 
 func before_test() -> void:
 	_reputation_before = Reputation.to_dict()
 	_renown_before = Renown.to_dict()
+	_game_state_before = GameState.to_dict()
 	_paused_before = get_tree().paused
 	get_tree().paused = false
 	Reputation.from_dict({})
@@ -21,6 +23,7 @@ func after_test() -> void:
 	get_tree().paused = false
 	Reputation.from_dict(_reputation_before)
 	Renown.from_dict(_renown_before)
+	GameState.from_dict(_game_state_before)
 	get_tree().paused = _paused_before
 
 
@@ -77,6 +80,46 @@ func test_paused_tree_defers_events_until_gameplay_resumes() -> void:
 		"WORD OF YOU SPREADS — Defied the tribunal",
 	])
 	assert_int(notices.pending_notice_count()).is_equal(0)
+
+
+func test_a_companion_speaks_the_protagonist_into_and_out_of_the_hollowing() -> void:
+	# #286: the hollowed protagonist has stopped volunteering, so the transition
+	# reaches the player through somebody who travels with them.
+	var notices: ConsequenceNoticesScript = _notices()
+	_seat_party(["wyneth-hallow-tide"])
+
+	GameState.set_soul_meter(0.0)
+	GameState.set_soul_meter(5.0)
+
+	assert_array(notices.visible_notice_texts()).contains_exactly([
+		'WYNETH HALLOW-TIDE — "%s"' % CompanionBarks.line(
+			"wyneth-hallow-tide", CompanionBarks.HOLLOWED
+		),
+		'WYNETH HALLOW-TIDE — "%s"' % CompanionBarks.line(
+			"wyneth-hallow-tide", CompanionBarks.RETURNED
+		),
+	])
+
+
+func test_an_unwitnessed_hollowing_posts_no_notice() -> void:
+	var notices: ConsequenceNoticesScript = _notices()
+	_seat_party([])
+
+	GameState.set_soul_meter(0.0)
+
+	assert_array(notices.visible_notice_texts()).is_empty()
+	assert_int(notices.pending_notice_count()).is_equal(0)
+
+
+func _seat_party(companion_ids: Array) -> void:
+	var lead := PartyMember.new()
+	lead.id = GameState.PROTAGONIST_ID
+	lead.display_name = GameState.PROTAGONIST_NAME
+	var members: Array[PartyMember] = [lead]
+	for companion: PartyMember in GameState.recruitable_candidates():
+		if companion.id in companion_ids:
+			members.append(companion)
+	GameState.party = members
 
 
 func _notices(hold_seconds: float = 10.0) -> ConsequenceNoticesScript:

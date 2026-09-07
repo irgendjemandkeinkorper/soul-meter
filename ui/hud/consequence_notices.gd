@@ -24,6 +24,9 @@ func _ready() -> void:
 	var renown_handler := Callable(self, "_on_renown_changed")
 	if not Renown.renown_changed.is_connected(renown_handler):
 		Renown.renown_changed.connect(renown_handler)
+	var hollowing_handler := Callable(self, "_on_hollowing_state_changed")
+	if not GameState.hollowing_state_changed.is_connected(hollowing_handler):
+		GameState.hollowing_state_changed.connect(hollowing_handler)
 	_flush_pending()
 
 
@@ -34,6 +37,9 @@ func _exit_tree() -> void:
 	var renown_handler := Callable(self, "_on_renown_changed")
 	if Renown.renown_changed.is_connected(renown_handler):
 		Renown.renown_changed.disconnect(renown_handler)
+	var hollowing_handler := Callable(self, "_on_hollowing_state_changed")
+	if GameState.hollowing_state_changed.is_connected(hollowing_handler):
+		GameState.hollowing_state_changed.disconnect(hollowing_handler)
 
 
 func _notification(what: int) -> void:
@@ -72,6 +78,24 @@ func _on_renown_changed(
 	if not _remember_event(event):
 		return
 	_enqueue("WORD OF YOU SPREADS — %s" % event.cause.strip_edges())
+
+
+## #286: the hollowed protagonist has stopped volunteering, so a companion
+## reports the transition instead. Exactly one speaks — see CompanionBarks for
+## why a chorus would be wrong, and why an unwitnessed hollowing says nothing.
+##
+## Unlike the ledger handlers above this needs no dedup key: the signal only
+## fires on an actual transition, and re-entering the state is a new event that
+## SHOULD be spoken again.
+func _on_hollowing_state_changed(active: bool) -> void:
+	var speaker: Dictionary = CompanionBarks.speaker(
+		GameState.companions(), CompanionBarks.occasion_for(active)
+	)
+	if speaker.is_empty():
+		return
+	_enqueue('%s — "%s"' % [
+		str(speaker["display_name"]).to_upper(), str(speaker["line"])
+	])
 
 
 ## Deduplicates by the event's LEDGER IDENTITY, not by object identity.

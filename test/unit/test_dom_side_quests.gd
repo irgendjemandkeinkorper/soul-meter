@@ -131,6 +131,7 @@ func test_every_outcome_resolves_once_with_a_durable_flag_and_ledger_event() -> 
 
 func test_untagged_soul_reward_is_rejected_before_quest_completion() -> void:
 	var quest: DomSideQuest = QuestRegistry.DOM_SIDE_QUESTS[0]
+	_remember_reward_schema(quest)
 	quest.outcome_tags = _blank_outcome_tags(quest)
 	quest.outcome_soul_deltas = _blank_soul_deltas(quest)
 	quest.outcome_soul_deltas[0] = 5.0
@@ -141,8 +142,7 @@ func test_untagged_soul_reward_is_rejected_before_quest_completion() -> void:
 
 	var resolved := QuestRegistry.resolve_side_quest(quest, quest.outcome_ids[0])
 
-	quest.outcome_tags = []
-	quest.outcome_soul_deltas = PackedFloat32Array()
+	_restore_reward_schema(quest)
 	assert_bool(resolved).is_false()
 	assert_bool(QuestRegistry.is_active(quest)).is_true()
 	assert_float(GameState.soul_meter).is_equal(25.0)
@@ -150,6 +150,7 @@ func test_untagged_soul_reward_is_rejected_before_quest_completion() -> void:
 
 func test_act_of_agreement_outcome_recovers_soul_and_reports_reward() -> void:
 	var quest: DomSideQuest = QuestRegistry.DOM_SIDE_QUESTS[0]
+	_remember_reward_schema(quest)
 	quest.outcome_tags = _blank_outcome_tags(quest)
 	quest.outcome_tags[0].append(DomSideQuest.ACT_OF_AGREEMENT_TAG)
 	quest.outcome_soul_deltas = _blank_soul_deltas(quest)
@@ -167,8 +168,7 @@ func test_act_of_agreement_outcome_recovers_soul_and_reports_reward() -> void:
 	var resolved := QuestRegistry.resolve_side_quest(quest, quest.outcome_ids[0])
 
 	QuestRegistry.quest_rewards_granted.disconnect(record_summary)
-	quest.outcome_tags = []
-	quest.outcome_soul_deltas = PackedFloat32Array()
+	_restore_reward_schema(quest)
 	assert_bool(resolved).is_true()
 	assert_float(GameState.soul_meter).is_equal(5.0)
 	assert_bool(GameState.is_hollowing()).is_false()
@@ -218,6 +218,54 @@ func _reset_side_quest_state() -> void:
 	GameState.flags.clear()
 	Reputation.from_dict({})
 	QuestRegistry.reset()
+
+
+func test_the_only_soul_income_channel_has_authored_content() -> void:
+	# Ratified ruling 3 makes an act of Agreement the ONLY way the Gauge rises,
+	# and #398 clamped combat so it cannot. If no authored outcome carries the
+	# tag then the shipped game has no Soul income at all — a mechanism with no
+	# live consumer, which is exactly the failure this asserts against.
+	var agreements: Array[String] = []
+	for quest: DomSideQuest in QuestRegistry.DOM_SIDE_QUESTS:
+		for index in quest.outcome_count():
+			if quest.outcome_tags.is_empty():
+				continue
+			if not quest.outcome_tags[index].has(DomSideQuest.ACT_OF_AGREEMENT_TAG):
+				continue
+			agreements.append("%s:%s" % [quest.stable_id, quest.outcome_ids[index]])
+			assert_float(quest.outcome_soul_deltas[index]).override_failure_message(
+				"'%s' is tagged an Agreement but credits nothing" % quest.stable_id
+			).is_greater(0.0)
+	assert_array(agreements).override_failure_message(
+		"no authored outcome credits the Soul Gauge, so the Gauge has no income"
+	).is_not_empty()
+
+
+func test_every_authored_reward_schema_is_valid() -> void:
+	for quest: DomSideQuest in QuestRegistry.DOM_SIDE_QUESTS:
+		assert_bool(quest.has_valid_reward_schema()).override_failure_message(
+			"'%s' has a malformed authored reward schema" % quest.stable_id
+		).is_true()
+
+
+## The quest resources are preloaded singletons, so a test that overwrites a
+## reward schema is editing the same object the rest of the run reads. These
+## two used to restore the empty arrays literally — which was correct only
+## while NO quest carried authored tags. Since #286 one does, so the restore
+## has to put back what was actually there.
+var _reward_schema_before: Dictionary = {}
+
+
+func _remember_reward_schema(quest: DomSideQuest) -> void:
+	_reward_schema_before = {
+		"tags": quest.outcome_tags.duplicate(true),
+		"soul_deltas": quest.outcome_soul_deltas.duplicate(),
+	}
+
+
+func _restore_reward_schema(quest: DomSideQuest) -> void:
+	quest.outcome_tags = _reward_schema_before["tags"]
+	quest.outcome_soul_deltas = _reward_schema_before["soul_deltas"]
 
 
 func _blank_outcome_tags(quest: DomSideQuest) -> Array[PackedStringArray]:
