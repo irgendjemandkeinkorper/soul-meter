@@ -1020,7 +1020,7 @@ func _sync_party_hp() -> void:
 func _prepare_enemy_knowledge() -> void:
 	var lore_percent := 0.0
 	for member: PartyMember in GameState.party:
-		lore_percent = maxf(lore_percent, SkillCheck.preview("lore", member))
+		lore_percent = maxf(lore_percent, SkillCheck.preview("recall", member))
 	var recorded_archetypes := {}
 	for target: BattleActor in enemies:
 		if target.archetype_id.is_empty():

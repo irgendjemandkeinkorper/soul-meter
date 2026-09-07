@@ -290,3 +290,28 @@ func _gdscript_files(root: String) -> Array[String]:
 		entry = directory.get_next()
 	directory.list_dir_end()
 	return result
+
+
+func test_an_authored_row_naming_a_pre_dramgid_skill_still_loads() -> void:
+	# Encounter data written before the rename says "persuasion"/"insight". The option
+	# canonicalises on read rather than widening ALLOWED_SKILLS, so everything
+	# downstream sees exactly one id per skill.
+	var legacy := CombatSpeechOption.from_dict({"id": "legacy", "skill": "persuasion"})
+	assert_str(String(legacy.skill)).is_equal("sway")
+	assert_bool(bool(legacy.validation_refusal()["allowed"])).is_true()
+
+	var legacy_insight := CombatSpeechOption.from_dict({"id": "legacy-2", "skill": "insight"})
+	assert_str(String(legacy_insight.skill)).is_equal("undertone")
+	assert_bool(bool(legacy_insight.validation_refusal()["allowed"])).is_true()
+
+
+func test_a_dramgid_row_loads_unchanged_and_an_unrelated_skill_is_still_refused() -> void:
+	var authored := CombatSpeechOption.from_dict({"id": "authored", "skill": "sway"})
+	assert_str(String(authored.skill)).is_equal("sway")
+	assert_bool(bool(authored.validation_refusal()["allowed"])).is_true()
+
+	# The normalisation must not become "accept anything": speech is Sway or Undertone.
+	var wrong := CombatSpeechOption.from_dict({"id": "wrong", "skill": "strain"})
+	var refusal: Dictionary = wrong.validation_refusal()
+	assert_bool(bool(refusal["allowed"])).is_false()
+	assert_str(String(refusal["blocked_by"])).is_equal("speech_skill")

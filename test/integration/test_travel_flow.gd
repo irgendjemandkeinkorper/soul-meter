@@ -399,8 +399,8 @@ func _traveler() -> PartyMember:
 	member.hp = 20
 	member.max_hp = 20
 	member.attributes = {"anchor": 8.0}
-	member.skill_percentages = {"survival": 20.0}
-	member.skill_tiers = {"survival": "untrained"}
+	member.skill_percentages = {"wayfinding": 20.0}
+	member.skill_tiers = {"wayfinding": "untrained"}
 	return member
 
 

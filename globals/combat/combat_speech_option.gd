@@ -5,10 +5,13 @@ extends Resource
 
 enum Outcome { END, SPLIT, TURN }
 
-const ALLOWED_SKILLS: Array[StringName] = [&"persuasion", &"insight"]
+## DRAMGID ids. Authored rows written before the rename say "persuasion"/"insight";
+## `from_dict` maps those through `DramgidSchema.SKILL_RENAMES` before validation, so
+## existing encounter data keeps loading while this list stays canonical.
+const ALLOWED_SKILLS: Array[StringName] = [&"sway", &"undertone"]
 
 @export var id: StringName = &""
-@export var skill: StringName = &"persuasion"
+@export var skill: StringName = &"sway"
 @export var situational_modifier: float = 0.0
 @export var outcome: Outcome = Outcome.END
 @export_range(0, 20) var target_count: int = 1
@@ -20,7 +23,7 @@ const ALLOWED_SKILLS: Array[StringName] = [&"persuasion", &"insight"]
 static func from_dict(row: Dictionary) -> CombatSpeechOption:
 	var option := CombatSpeechOption.new()
 	option.id = StringName(row.get("id", ""))
-	option.skill = StringName(str(row.get("skill", "persuasion")).to_snake_case())
+	option.skill = StringName(_canonical_skill(str(row.get("skill", "sway"))))
 	option.situational_modifier = float(row.get("situational_modifier", 0.0))
 	option.outcome = _outcome_from_name(StringName(row.get("outcome", "end")))
 	option.target_count = int(row.get("target_count", 1))
@@ -36,7 +39,7 @@ func validation_refusal() -> Dictionary:
 	if not ALLOWED_SKILLS.has(skill):
 		return _blocked(
 			&"speech_skill",
-			"Combat speech must use Persuasion or Insight.",
+			"Combat speech must use Sway or Undertone.",
 			{"type": &"skill", "one_of": ALLOWED_SKILLS.duplicate()},
 		)
 	if outcome_id.is_empty():
@@ -60,6 +63,18 @@ func outcome_name() -> StringName:
 			return &"turn"
 		_:
 			return &"end"
+
+
+## Authored encounter rows predate the DRAMGID rename, so a row may still name
+## Persuasion or Insight. Normalising here rather than widening ALLOWED_SKILLS keeps
+## one canonical id inside the resource: everything downstream sees Sway/Undertone.
+static func _canonical_skill(raw: String) -> String:
+	var skill_id := raw.to_snake_case()
+	if DramgidSchema.SKILL_RENAMES.has(skill_id):
+		var renamed := str(DramgidSchema.SKILL_RENAMES[skill_id])
+		if not renamed.is_empty():
+			return renamed
+	return skill_id
 
 
 static func _outcome_from_name(value: StringName) -> Outcome:

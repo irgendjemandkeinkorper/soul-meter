@@ -4,7 +4,7 @@ extends Node
 ##
 ## `resolve()` is the commit-time path. `preview()` only derives the chance and
 ## never consumes random numbers or Expert rerolls. Dialogue Manager discovers
-## `check()` as a top-level autoload method, so [if check("lore", 45) /] uses
+## `check()` as a top-level autoload method, so [if check("recall", 45) /] uses
 ## this same service without a second dialogue-only implementation.
 
 const MAX_EFFECTIVE_PERCENT := 95.0

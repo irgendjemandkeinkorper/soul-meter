@@ -48,7 +48,7 @@ static func avoidance_chance(route: Dictionary, party: Array[PartyMember]) -> fl
 	for member: PartyMember in party:
 		if member == null:
 			continue
-		best_chance = maxf(best_chance, SkillCheck.preview("survival", member))
+		best_chance = maxf(best_chance, SkillCheck.preview("wayfinding", member))
 	var risk_modifier := maxf(float(route.get("risk_modifier", 0.0)), 0.0)
 	return maxf(minf(best_chance, SkillCheckService.MAX_EFFECTIVE_PERCENT) - risk_modifier, 0.0)
 
