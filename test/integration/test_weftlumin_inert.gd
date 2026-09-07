@@ -1,5 +1,6 @@
 extends GdUnitTestSuite
-## #330 skeleton: E2.1 must lift the literal suite gate after adding the real bootstrap.
+## Gate lifted by E2.1 (#332): the real WeftluminBootstrap autoload now exists, so this suite
+## runs against the shipping activation path rather than skipping.
 ## Activation only; shell/panel lifecycle follows in E2. No absent shell API is called.
 ## Run with an isolated, initially clean user-data root. Never delete scratch to pass.
 
@@ -12,11 +13,6 @@ var _env_existed: bool = false
 var _env_value: String = ""
 var _force_before: bool = false
 var _restore_activation: bool = false
-
-
-@warning_ignore("unused_parameter")
-func before(do_skip: bool = true, skip_reason: String = "E2.1 pending: real WeftluminBootstrap required; see docs/weftlumin-test-migration.md") -> void:
-	pass
 
 
 func before_test() -> void:
