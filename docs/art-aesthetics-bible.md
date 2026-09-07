@@ -14,6 +14,11 @@ use until a follow-up batch restyles them to match (see "Known gap" below). `art
 remains the authoritative brief for *what* to produce; this document governs *how it
 should look*.
 
+Everything above the Part II rule governs **world art** — units, props, terrain. **Part II**
+(added 2026-09-07, #296) governs **UI chrome** and holds the per-asset-class prompt templates the
+generated-art pipeline calls. A chrome asset takes its rules from Part II and its house style from
+Part I; it does not take Part I's painterly rendering, which is why icons are flat.
+
 ## Technique
 
 These assets were produced with OpenAI's `image_gen` (text-to-image), **not** the
@@ -128,3 +133,204 @@ When tasking a new UNIT or WORLD batch, carry forward:
    generic high fantasy, steampunk-dominant material language, baked text/UI.
 6. Ground-truth reference: point the agent at the two approved commits above as the
    literal visual target, not just this prose description.
+
+---
+
+# Part II — UI chrome and the image-prompt bible
+
+**Added 2026-09-07 (#296, ship milestone).** Part I above governs *world* art — units, props,
+terrain. Part II governs *chrome* — the frames, plates, icons, and marketing art the interface is
+made of — and gives the per-asset-class prompt templates the generated-art pipeline (#298) calls.
+
+The reference is `design/reference/tactical-ui-style-board.png`, approved by the owner 2026-09-04
+as the ship-milestone visual target. **It is a style reference, not a layout spec.** Take its
+material language, palette, and type treatment; do not take its screen layout — layout is owned by
+`design/ui-shell-conventions.md` and the six-region `BattleInterface` contract, which is frozen.
+
+## Read the board correctly
+
+Three things on the board are already out of date or out of scope. A worker who copies it
+literally will introduce all three.
+
+1. **`SCOR` is a dead element id.** The board predates the wheel rename (`f5d7e24`, #371). Its
+   ember-labelled ability and its `SCOR` tags are today's **Khash**. The full map lives in
+   `SaveMigrations.ELEMENT_RENAMES_V8`; the three that matter for colour work are
+   `scor → khash`, `aqua → luth`, `strom → zhur`. **`VICOAR` is current** — Vicoar is a live
+   patron (`design/god-aesthetic-style-guide.md` §6), not a renamed element.
+2. **The board is gamepad-native.** Its `A` / `Y` / `B` / `RB` / `L` / `R` badges are not our
+   input model: the ship plan is keyboard + mouse. Generated chrome must not bake controller
+   glyphs. Where the board shows a badge, we show a key cap or nothing.
+3. **The board bakes text into the image.** Generated assets never do — every string on screen is
+   a real, translatable `Label` going through the PO pipeline. Baked lettering in a generated
+   plate is a defect, not a style choice.
+
+## The chrome palette, in existing DS tokens
+
+**No new tokens.** Every colour the board uses maps onto something `ui/theme/ds.gd` already ships.
+Prompts cite the hex; code cites the token.
+
+| Board element | DS token | Hex |
+|---|---|---|
+| Panel ground, deepest | `VOID_1` | `#0C0E12` |
+| Panel ground, raised plate | `STONE_0` / `STONE_1` | `#12151B` / `#1B1F27` |
+| Carved bevel, inner shadow | `VOID_0` | `#07080B` |
+| Hairline rule, unemphasised | `IRON_2` / `IRON_3` | `#4E5665` / `#6B7484` |
+| Hairline rule, emphasised; selection | `BRONZE_1` → `BRONZE_3` | `#946B2D` → `#D9AB45` |
+| Header caps | `PARCHMENT` | `#E2E8F0` |
+| Subtitle / secondary caps | `ASH` / `ASH_DIM` | `#94A3B8` / `#64748B` |
+| Ember accent (the board's "SCOR") | `DS.WHEEL` **khash** | `#E0522F` |
+| Cold accent, ally / move range | `DS.WHEEL` **luth** | `#2E8FB8` |
+| Cold accent, bright / charge | `DS.WHEEL` **zhur** = `MOTE_3` | `#22D3EE` |
+| Threat / enemy tint | `CINDER_2` | `#991B1B` |
+
+Type is unchanged and not negotiable: `FONT_DISPLAY` (Cinzel) for tracked uppercase headers and
+buttons, `FONT_BODY` (Cormorant) for prose, `FONT_NUMERIC` (Fira) for **numbers only** — the board
+is right that every readout is tabular and right-aligned, and the DS already says numerals are the
+ledger, not the interface.
+
+## The five chrome elements
+
+Everything on the board is one of five things. Generated art produces the *materials* for these;
+`#297` assembles them as 9-patch `StyleBoxTexture`s and theme type variations.
+
+1. **The plate.** A dark slab of carved stone or blued iron, matte, with a shallow bevel and a
+   45° corner notch — the notch is already the runtime theme's corner treatment, so the generated
+   plate must respect it rather than round the corner. Interior is nearly flat so text stays
+   legible; all the interest is at the edge.
+2. **The rule.** A hairline separating a header from its body, or a plate from the ground. One
+   pixel of warm metal, not a gradient bar. It is the single most repeated mark in the interface
+   and the cheapest thing to get wrong: too bright and the screen turns to graph paper.
+3. **The seal.** A circular or diamond relief medallion — the board's top-right emblem and its
+   `FORGED` plinth. This is the only chrome element allowed real dimensional rendering, and it is
+   reserved for *moments* (a mastery award, a chapter stamp), never for routine controls.
+4. **The glyph.** A flat, solid-fill icon in `PARCHMENT` on a dark plate, readable at 24 px. Icons
+   are **not** painterly — they are the one asset class that deliberately does not follow Part I's
+   rendering style, because a painterly 24 px icon is mud. Silhouette first; no internal shading;
+   no outline.
+5. **The tint.** A tile or cell overlay: a flat wash plus a one-pixel rim, at low alpha. `DS`
+   already ships the helper (`element_tint`) and the cursor rim.
+
+## Where the board and the shipped design system disagree
+
+Two collisions. Both are named here rather than resolved, because both are the owner's call and a
+worker guessing either way produces work that has to be redone.
+
+**1. Bronze.** `design/DESIGN_SYSTEM.md` reserves bronze for the Soul Meter — *"it is ledgered,
+not magical … Vär and Balance never take bronze"*, the rule that keeps the title mechanic the most
+valuable pixel on screen. The runtime theme honours this almost absolutely: `BRONZE_3` appears
+exactly once in `ui/theme/theme_builder.gd`, on one header colour. The board instead makes bronze
+the **primary chrome accent** — every rule, every selected card, every button edge.
+
+Both cannot be true. The recommendation is to **split the ramp rather than the rule**: chrome
+takes the dim end (`BRONZE_0`/`BRONZE_1`, `#5E4415`/`#946B2D`, reading as tarnish) and the Soul
+Meter keeps the lit end (`BRONZE_3`/`BRONZE_4`) alone. That preserves the board's warmth and the
+DS's reservation, and it costs no new token. **It is not ratified** — `#297` should not ship a
+full-bronze chrome pass until it is.
+
+**2. Selection colour.** `DS.TILE_SELECT_RIM` is `#D6B4FF`, the khor glow, and its comment says
+the DS reuses it as the cursor rim. The board's selection rim is gold. The narrow reading, and the
+one this document assumes until ruled otherwise, is that they are different jobs: violet is the
+*grid cursor* (a world-space object, elemental), gold is the *UI selection* (a chrome-space state,
+metallic). If they are meant to be one thing, the DS token wins and the board loses.
+
+## Image-prompt bible
+
+For the Gemini image API pipeline (`#298`). Every call passes
+`design/reference/tactical-ui-style-board.png` as a reference image **for chrome classes**, and
+the Part I approved commits as reference for world classes. Never both — mixing a painterly unit
+reference into an icon prompt is what produces muddy icons.
+
+### The shared preamble
+
+Prepend verbatim to every chrome prompt:
+
+> Gothic mythopunk game interface art. Dark carved stone and tarnished bronze; matte, worn,
+> weighty. Desaturated near-black ground (#0C0E12) with warm metal edges. One directional key
+> light from upper left, deep falloff. No text, no lettering, no numbers, no logos, no watermark.
+> No controller button glyphs. Transparent background. Match the material language of the
+> reference image; do not copy its layout.
+
+The avoid-list is as load-bearing as the description. Append verbatim:
+
+> Avoid: bright saturated colour, neon, glossy plastic, chrome sheen, clean modern UI, flat
+> vector, pixel art, steampunk gears, rivets as decoration, cartoon proportions, drop shadows,
+> rounded corners, gradients across a whole panel, baked text.
+
+### Per-asset-class templates
+
+`{…}` are the only fields a worker fills. Everything else is fixed.
+
+**Panel plate** (→ 9-patch, `#297`)
+
+> {preamble} A single rectangular interface plate, {WIDTH}×{HEIGHT}, seen straight on with no
+> perspective. Carved dark stone face, nearly flat and unornamented in the centre so text can sit
+> on it. Shallow bevelled edge catching a thin warm highlight; 45-degree chamfered corners. A
+> one-pixel tarnished bronze hairline inset from the edge. Uniform border thickness on all four
+> sides so the image can be sliced as a nine-patch.
+
+Nine-patch is the constraint that kills most generations: the border must be *uniform* and the
+centre *empty*. Reject anything with a feature in the middle of the plate.
+
+**Icon / glyph** (→ ability, item, status; 24–64 px use)
+
+> {preamble} A single flat interface icon of {SUBJECT}, solid warm off-white (#E2E8F0) on
+> transparent. Bold simplified silhouette readable at 24 pixels. No internal shading, no gradient,
+> no outline, no perspective, no background plate. One clear shape, centred, with generous margin.
+
+Icons are the class most likely to arrive painterly because Part I's house style pulls that way.
+The preamble alone does not stop it; the "flat, solid, no shading" clause must stay.
+
+**Seal / medallion** (→ mastery stamps, chapter marks, achievement art)
+
+> {preamble} A circular relief medallion of {SUBJECT}, cast in tarnished bronze over blued iron,
+> seen straight on. Deep carved relief with real dimensional shadow. A ring of plain raised metal
+> at the rim — no runes, no lettering. Ember light (#E0522F) pooling in the recesses only.
+> Centred, symmetrical, transparent background.
+
+The seal is the one chrome class allowed to be dimensional. Keep it rare or it stops meaning
+anything.
+
+**Element tint plate** (→ tile and cell overlays)
+
+> {preamble} A seamless 64×32 isometric diamond tile overlay, flat translucent wash of {HEX} at
+> low opacity with a one-pixel brighter rim of the same hue. No texture, no noise, no gradient —
+> it sits over painted ground art and must not compete with it.
+
+`{HEX}` comes from `DS.WHEEL` by element id — post-rename ids only (`khash`, not `scor`).
+
+**Portrait** (→ `assets/generated/portraits/`, extends Part I)
+
+Part I already governs these and 88 exist. The only chrome addition: the frame is separate art.
+Generate the bust on transparent, never with its frame attached, so the frame can be re-themed
+without regenerating 88 portraits.
+
+> {Part I unit preamble} Bust portrait of {SUBJECT}, head and shoulders, three-quarter view,
+> looking slightly off-camera. Semi-realistic painterly digital illustration. Transparent
+> background, no frame, no border, no vignette, no text.
+
+**Steam capsule** (→ `#303`, store page)
+
+The one class that breaks every rule above, deliberately: it is marketing art, not chrome, and it
+is the only place baked text is correct — but the wordmark is composited in a layout tool
+afterwards, not generated.
+
+> {Part I unit preamble} Key art for a dark tactical fantasy RPG. {SCENE}. Semi-realistic
+> painterly digital illustration, cinematic composition, dramatic directional light with deep
+> shadow. Desaturated charcoal and blue-black palette with a single warm ember light source.
+> Clear negative space in the {upper third | left third} for a title treatment. No text, no logo,
+> no watermark, no border.
+
+Steam's capsule set needs several aspect ratios from one scene; generate the widest first and let
+the layout crop, rather than re-prompting per size and getting four different paintings.
+
+### Acceptance
+
+A generated chrome asset is accepted when all four hold:
+
+1. It sits against a real screenshot of the shipped theme without a visible style seam.
+2. Its palette resolves to the token table above — no colour that is not already in `ds.gd`.
+3. It carries no baked text, no controller glyph, and no dead element id.
+4. For plates: it slices as a nine-patch with a uniform border and an empty centre.
+
+Failing 2 is the common one, and it is not a matter of taste: a colour that is not a token cannot
+be themed, so it will drift the first time anything else changes.
