@@ -14,23 +14,6 @@ const ATTRIBUTE_FLOOR := DramgidSchema.ATTRIBUTE_FLOOR
 const ATTRIBUTE_CAP := DramgidSchema.ATTRIBUTE_CAP
 const ATTRIBUTE_BUDGET := DramgidSchema.ATTRIBUTE_BUDGET
 
-## TRANSITIONAL — the character sheet still iterates the twelve legacy ids until W1
-## (docs/handoff-chargen-workers.md) moves it onto DramgidSchema.SKILL_GROUPS. The wizard
-## never reads these two tables.
-const SKILL_IDS: PackedStringArray = [
-	"athletics", "stealth", "sleight_of_hand", "beast_handling",
-	"lore", "survival", "investigation", "alchemy",
-	"persuasion", "weft_sensing", "performance", "insight",
-]
-const SKILL_LABELS: Dictionary = {
-	"athletics": "Athletics", "stealth": "Stealth",
-	"sleight_of_hand": "Sleight of Hand", "beast_handling": "Beast Handling",
-	"lore": "Lore", "survival": "Survival",
-	"investigation": "Investigation", "alchemy": "Alchemy",
-	"persuasion": "Persuasion", "weft_sensing": "Weft-Sensing",
-	"performance": "Performance", "insight": "Insight",
-}
-
 ## Chapter 1's production-scoped ancestries (character-creation.md "Soul Meter (CRPG) scope
 ## note") — 5 of the ~20 playable peoples. `leans` is informational: the canon ratifies that
 ## leanings are "nudges, not flat bonuses" and never quantifies the nudge, so no attribute
@@ -163,13 +146,6 @@ static func attribute_label(id: String) -> String:
 
 static func attribute_hint(id: String) -> String:
 	return str(DramgidSchema.ATTRIBUTES.get(id, {}).get("governs", ""))
-
-
-## Schema label first; the transitional legacy table answers the sheet's twelve ids.
-static func skill_label(id: String) -> String:
-	if DramgidSchema.is_skill(id):
-		return DramgidSchema.skill_label(id)
-	return str(SKILL_LABELS.get(id, id))
 
 
 static func background_by_id(id: String) -> Dictionary:

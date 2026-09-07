@@ -146,32 +146,52 @@ func _rebuild_sheet() -> void:
 	skill_grid.name = "SkillGrid"
 	skill_grid.columns = 3
 	main_column.add_child(skill_grid)
-	for skill_id: String in ChargenData.SKILL_IDS:
-		var label := Label.new()
-		label.text = str(ChargenData.SKILL_LABELS.get(skill_id, skill_id))
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		skill_grid.add_child(label)
+	for group: String in DramgidSchema.SKILL_GROUPS:
+		var group_skills := _listed_skills(group, member)
+		if group_skills.is_empty():
+			continue
+		var heading := Label.new()
+		heading.name = "SkillGroup_%s" % group
+		heading.theme_type_variation = "HeadingLabel"
+		heading.text = DramgidSchema.group_label(group)
+		skill_grid.add_child(heading)
+		# The grid is three columns wide and a heading fills one of them, so two
+		# spacers keep the rows under a heading aligned with the rows above it.
+		skill_grid.add_child(Control.new())
+		skill_grid.add_child(Control.new())
 
-		var effective := SkillCheck.preview(skill_id, member, 0.0)
-		var percent_label := Label.new()
-		percent_label.name = "Percent_%s" % skill_id
-		percent_label.text = "%d%%" % int(effective)
-		# FR-205: the derivation is one hover away, in the ratified formula's own terms.
-		percent_label.tooltip_text = _derivation_tooltip(member, skill_id, effective)
-		skill_grid.add_child(percent_label)
+		for skill_id: String in group_skills:
+			var label := Label.new()
+			label.text = DramgidSchema.skill_label(skill_id)
+			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			skill_grid.add_child(label)
 
-		var buy := Button.new()
-		buy.name = "Buy_%s" % skill_id
-		var cost := Advancement.step_cost(member, skill_id)
-		if cost < 0:
-			buy.text = "at cap"
-			buy.disabled = true
-		else:
-			buy.text = "+5%%  (%d pt)" % cost
-			buy.disabled = not Advancement.can_buy(member, skill_id)
-		buy.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		buy.pressed.connect(_on_buy_pressed.bind(skill_id))
-		skill_grid.add_child(buy)
+			var effective := SkillCheck.preview(skill_id, member, 0.0)
+			var percent_label := Label.new()
+			percent_label.name = "Percent_%s" % skill_id
+			percent_label.text = "%d%%" % int(effective)
+			# FR-205: the derivation is one hover away, in the ratified formula's own terms.
+			percent_label.tooltip_text = _derivation_tooltip(member, skill_id, effective)
+			skill_grid.add_child(percent_label)
+
+			var buy := Button.new()
+			buy.name = "Buy_%s" % skill_id
+			var cost := Advancement.step_cost(member, skill_id)
+			if not Advancement.is_purchasable(member, skill_id):
+				# A Tone the member does not hold is not theirs to raise. It only
+				# appears here at all when it already carries progress, and then the
+				# sheet has to show that progress without offering to add to it.
+				buy.text = "not held"
+				buy.disabled = true
+			elif cost < 0:
+				buy.text = "at cap"
+				buy.disabled = true
+			else:
+				buy.text = "+5%%  (%d pt)" % cost
+				buy.disabled = not Advancement.can_buy(member, skill_id)
+			buy.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			buy.pressed.connect(_on_buy_pressed.bind(skill_id))
+			skill_grid.add_child(buy)
 
 	# --- The Wheel (FR-604) ---
 	side_column.add_child(_section("The Wheel"))
@@ -223,6 +243,25 @@ func _rebuild_sheet() -> void:
 					else Color(1, 0.75, 0.75, 0.85)
 				)
 				log_column.add_child(line)
+
+
+## Which skills of one group the sheet lists. Every group shows its whole slate except
+## TONES: a member can only ever raise the tones they hold (`Advancement.is_purchasable`),
+## so listing all ten would be eight dead rows on most builds. Tones the member already
+## has progress in stay listed even when unheld — points already spent must not vanish
+## from the sheet just because an element changed.
+func _listed_skills(group: String, member: PartyMember) -> PackedStringArray:
+	var slate := DramgidSchema.skills_in_group(group)
+	if group != DramgidSchema.GROUP_TONES:
+		return slate
+	var held := Advancement.held_tones(member)
+	var listed := PackedStringArray()
+	for skill_id: String in slate:
+		var trained := str(member.skill_tiers.get(skill_id, "untrained")).to_lower() != "untrained"
+		var bought := float(member.skill_percentages.get(skill_id, 0.0)) > 0.0
+		if skill_id in held or trained or bought:
+			listed.append(skill_id)
+	return listed
 
 
 func _derivation_tooltip(member: PartyMember, skill_id: String, effective: float) -> String:
