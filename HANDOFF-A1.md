@@ -58,7 +58,7 @@ The ATTACK migration changed the deterministic hit key. Legacy `calculate_damage
 
 ## Pass 3
 
-- Removed the Gate T `caster` unit and its loadout from the seeder and `data.pandora` through Pandora's idempotent deletion path; regenerated artifacts now contain only Vex, Vex's `note-scor` loadout, and all ten Note abilities.
+- Removed the Gate T `caster` unit and its loadout from the seeder and `data.pandora` through Pandora's idempotent deletion path; regenerated artifacts now contain only Vex, Vex's `note-khash` loadout, and all ten Note abilities.
 - Gate T caster self-play now supplies an in-memory `TacticalTables` loadout and keeps `actor.breath = 99` test-only. Tactical schema/generator drift is 16/16 green; Gate T-1 is 3/3 green.
 - Documented that the plain-ATTACK empty `battle_id` hash key is frozen for legacy roll parity. ATTACK now passes `options` through `_apply_action`, so enemy commit applies the pre-gated Resolution; combat controller is 42/42 green, including enemy refusal with no CT spent.
 - Final full suite: `Overall Summary: 1227 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |` across 187/187 suites. The preceding run exposed the unrelated wedged-keyboard timing case; `test_field_room.gd` then passed 12/12 focused before the clean full rerun.

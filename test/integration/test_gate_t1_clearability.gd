@@ -54,7 +54,7 @@ func _self_play(
 	var cast_abilities: Array[AbilityDefinition] = []
 	var tactical_tables: TacticalTables = null
 	if build_id == &"caster":
-		cast_abilities = [TacticalTables.shared().ability(TacticalIds.ABILITY_NOTE_STROM)]
+		cast_abilities = [TacticalTables.shared().ability(TacticalIds.ABILITY_NOTE_ZHUR)]
 		tactical_tables = _cast_tables_for_actor(ally, cast_abilities, "gate-t1-caster")
 
 	var result := {
@@ -114,7 +114,7 @@ func _self_play(
 			elif build_id == &"talker" and encounter_id == EncounterIds.PHASE2_SPEECH_WINNABLE:
 				action_id = &"phase2-release-binding"
 			var options := (
-				{"ability_id": "note-strom"} if action_id == &"gate-t1-cast" else {}
+				{"ability_id": "note-zhur"} if action_id == &"gate-t1-cast" else {}
 			)
 			var submitted := controller.submit_action(action_id, target, options)
 			if not bool(submitted.get("allowed", false)):
@@ -171,7 +171,7 @@ func _build_actor(build_id: StringName) -> BattleActor:
 	return actor
 
 
-## Gate T's caster uses the shipped CAST seam and the loadout-authored Strom Note.
+## Gate T's caster uses the shipped CAST seam and the loadout-authored Zhur Note.
 func _caster_fixture_action() -> CombatAction:
 	var action := CombatActionCatalog.by_id(&"cast-seam")
 	action.id = &"gate-t1-cast"

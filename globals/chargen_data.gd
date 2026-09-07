@@ -63,7 +63,7 @@ const SKILL_LABELS: Dictionary = {
 ## as an open question for #98 rather than invented here).
 const ANCESTRIES: Array[Dictionary] = [
 	{"id": "vael", "name": "Vael", "leans": "Balanced", "trait": "Extra skill point at creation (generalist)."},
-	{"id": "kaan", "name": "Kaan", "leans": "Forge / Anchor", "trait": "Vulnerable to Molm-adjacent effects; resistant to physical Discord."},
+	{"id": "kaan", "name": "Kaan", "leans": "Forge / Anchor", "trait": "Vulnerable to Mozh-adjacent effects; resistant to physical Discord."},
 	{"id": "vaerin", "name": "Vaerin", "leans": "Spark / Pitch", "trait": "Access to the Fading resource regardless of class."},
 	{"id": "weftkin", "name": "Weftkin", "leans": "Pitch / Voice", "trait": "Innate Weft-Sensing training."},
 	{"id": "kes-reth", "name": "Kes'reth (Mirror-Veil)", "leans": "Voice / Anchor", "trait": "Mirrored Scars — once per encounter, spend vitality to negate one Discord-inflicted condition."},
@@ -111,8 +111,8 @@ const BACKGROUNDS: Array[Dictionary] = [
 ## identity-only metadata.
 const DISCIPLINES: Array[Dictionary] = [
 	{"id": "chordblade", "name": "Chordblade", "blurb": "Vanguard footwork, favouring Khor's tempo."},
-	{"id": "terrashaper", "name": "Terrashaper", "blurb": "The engineer's stance, favouring Terra's weight."},
-	{"id": "hushwarden", "name": "Hushwarden", "blurb": "Denial and stillness, favouring Nul's quiet."},
+	{"id": "thamshaper", "name": "Thamshaper", "blurb": "The engineer's stance, favouring Tham's weight."},
+	{"id": "hushwarden", "name": "Hushwarden", "blurb": "Denial and stillness, favouring Zhem's quiet."},
 ]
 
 ## The Ten Patron Classes (ten-patron-classes.md). `char_class` mirrors the existing
@@ -133,11 +133,11 @@ const PATRONS: Array[Dictionary] = [
 ## The Wheel's five opposed (Clash) pairs (ui/theme/ds.gd header comment) — Major and
 ## Minor element picks may never be an opposed pair (ten-patron-classes.md).
 const WHEEL_CLASH_PAIRS: Dictionary = {
-	"suul": "daar", "daar": "suul",
-	"bloei": "molm", "molm": "bloei",
-	"aqua": "scor", "scor": "aqua",
-	"khor": "nul", "nul": "khor",
-	"terra": "strom", "strom": "terra",
+	"sul": "vekh", "vekh": "sul",
+	"vel": "mozh", "mozh": "vel",
+	"luth": "khash", "khash": "luth",
+	"khor": "zhem", "zhem": "khor",
+	"tham": "zhur", "zhur": "tham",
 }
 
 ## Portrait choices for the likeness grid. Reuses existing dedicated crowd-figure

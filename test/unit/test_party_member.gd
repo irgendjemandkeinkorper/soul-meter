@@ -66,7 +66,7 @@ func test_save_round_trip_preserves_chargen_identity_fields() -> void:
 	original.background = "sarkhollow-scavenger"
 	original.flaw = "Cannot resist a locked door."
 	original.starting_mastery = "Root Note of choice"
-	original.major_element = "suul"
+	original.major_element = "sul"
 	original.minor_element = "khor"
 
 	var restored := PartyMember.from_dict(original.to_dict())
@@ -77,7 +77,7 @@ func test_save_round_trip_preserves_chargen_identity_fields() -> void:
 	assert_str(restored.background).is_equal("sarkhollow-scavenger")
 	assert_str(restored.flaw).is_equal("Cannot resist a locked door.")
 	assert_str(restored.starting_mastery).is_equal("Root Note of choice")
-	assert_str(restored.major_element).is_equal("suul")
+	assert_str(restored.major_element).is_equal("sul")
 	assert_str(restored.minor_element).is_equal("khor")
 
 

@@ -8,11 +8,11 @@ extends GdUnitTestSuite
 const Weather := preload("res://globals/combat/weather.gd")
 const TileState := preload("res://globals/combat/tile_state.gd")
 
-## Strom/Terra are a Clash pair per the issue body ("A Stormfront feeds Strom and starves
-## Terra") and `ui/theme/ds.gd`'s Wheel-of-Ten comment.
-const WEATHER_ELEMENT := &"strom"
-const CLASH_ELEMENT := &"terra"
-## Chord-adjacent to Strom, not Clash — proves an unrelated element is left alone.
+## Zhur/Tham are a Clash pair per the issue body ("A Stormfront feeds Zhur and starves
+## Tham") and `ui/theme/ds.gd`'s Wheel-of-Ten comment.
+const WEATHER_ELEMENT := &"zhur"
+const CLASH_ELEMENT := &"tham"
+## Chord-adjacent to Zhur, not Clash — proves an unrelated element is left alone.
 const UNRELATED_ELEMENT := &"khor"
 
 

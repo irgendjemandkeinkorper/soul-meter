@@ -3,8 +3,8 @@ extends RefCounted
 
 ## The fixed circular order used by every element distance calculation.
 const ORDER: Array[StringName] = [
-	&"suul", &"bloei", &"aqua", &"khor", &"terra",
-	&"daar", &"molm", &"scor", &"nul", &"strom",
+	&"sul", &"vel", &"luth", &"khor", &"tham",
+	&"vekh", &"mozh", &"khash", &"zhem", &"zhur",
 ]
 
 

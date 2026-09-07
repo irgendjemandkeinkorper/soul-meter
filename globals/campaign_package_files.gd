@@ -151,7 +151,7 @@ static func add_error(
 
 static func _is_windows_reserved_file_stem(stem: String) -> bool:
 	var upper_stem: String = stem.to_upper()
-	if upper_stem in ["CON", "PRN", "AUX", "NUL"]:
+	if upper_stem in ["CON", "PRN", "AUX", "ZHEM"]:
 		return true
 	if upper_stem.length() != 4:
 		return false

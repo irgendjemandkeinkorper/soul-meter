@@ -68,7 +68,7 @@ func test_tactical_tables_loader_exposes_note_spells_and_unit_loadouts() -> void
 	assert_array(tables.abilities_for_job("anything")).is_empty()
 	var vex_abilities := tables.abilities_for_unit("vex", AbilityDefinition.SLOT_ACTION)
 	assert_int(vex_abilities.size()).is_equal(1)
-	assert_str(vex_abilities[0].id).is_equal("note-scor")
+	assert_str(vex_abilities[0].id).is_equal("note-khash")
 	assert_object(tables.unit("caster")).is_null()
 	assert_object(tables.loadout("caster")).is_null()
 	var combat_rules := load("res://data/combat/combat_rules.tres") as CombatRules
@@ -95,11 +95,11 @@ func test_attunement_rejects_values_outside_the_signed_three_range() -> void:
 	var attunement := UnitAttunement.create("synthetic-unit")
 	assert_int(attunement.values.size()).is_equal(ElementWheel.ORDER.size())
 	for value in [-4, 4, -100, 99]:
-		assert_bool(attunement.set_value(&"suul", value)).is_false()
-		assert_int(attunement.value_for(&"suul")).is_equal(0)
+		assert_bool(attunement.set_value(&"sul", value)).is_false()
+		assert_int(attunement.value_for(&"sul")).is_equal(0)
 	for value in [-3, -1, 0, 2, 3]:
-		assert_bool(attunement.set_value(&"suul", value)).is_true()
-		assert_int(attunement.value_for(&"suul")).is_equal(value)
+		assert_bool(attunement.set_value(&"sul", value)).is_true()
+		assert_int(attunement.value_for(&"sul")).is_equal(value)
 
 
 func test_attunement_rejects_elements_outside_the_wheel_of_ten() -> void:
@@ -110,12 +110,12 @@ func test_attunement_rejects_elements_outside_the_wheel_of_ten() -> void:
 
 func test_attunement_from_dict_rejects_an_out_of_range_row_whole() -> void:
 	var valid := UnitAttunement.create("synthetic-unit")
-	valid.set_value(&"terra", -3)
+	valid.set_value(&"tham", -3)
 	var payload := valid.to_dict()
 	assert_object(UnitAttunement.from_dict(payload)).is_not_null()
 
 	var corrupt: Dictionary = payload.duplicate(true)
-	(corrupt["values"] as Dictionary)["terra"] = -4
+	(corrupt["values"] as Dictionary)["tham"] = -4
 	assert_object(UnitAttunement.from_dict(corrupt)).is_null()
 
 	var unknown: Dictionary = payload.duplicate(true)
@@ -126,13 +126,13 @@ func test_attunement_from_dict_rejects_an_out_of_range_row_whole() -> void:
 func test_attunement_round_trips_through_json_floats() -> void:
 	# JSON has no integer type, so a saved 3 comes back as 3.0. It must still be valid.
 	var restored := UnitAttunement.from_dict(
-		{"unit_id": "synthetic-unit", "values": {"suul": 3.0, "daar": -3.0}}
+		{"unit_id": "synthetic-unit", "values": {"sul": 3.0, "vekh": -3.0}}
 	)
 	assert_object(restored).is_not_null()
-	assert_int(restored.value_for(&"suul")).is_equal(3)
-	assert_int(restored.value_for(&"daar")).is_equal(-3)
+	assert_int(restored.value_for(&"sul")).is_equal(3)
+	assert_int(restored.value_for(&"vekh")).is_equal(-3)
 	assert_object(
-		UnitAttunement.from_dict({"unit_id": "synthetic-unit", "values": {"suul": 1.5}})
+		UnitAttunement.from_dict({"unit_id": "synthetic-unit", "values": {"sul": 1.5}})
 	).is_null()
 
 
@@ -153,7 +153,7 @@ func test_ability_slot_enum_is_exactly_action_reaction_passive() -> void:
 
 func test_definitions_round_trip_through_dictionaries() -> void:
 	var job := JobDefinition.from_dict(
-		{"id": "synthetic-job", "tier": 2, "element_id": "aqua", "growth_hp": 1.5}
+		{"id": "synthetic-job", "tier": 2, "element_id": "luth", "growth_hp": 1.5}
 	)
 	assert_str(JobDefinition.from_dict(job.to_dict()).id).is_equal("synthetic-job")
 	assert_int(JobDefinition.from_dict(job.to_dict()).tier).is_equal(2)
@@ -170,11 +170,11 @@ func test_definitions_round_trip_through_dictionaries() -> void:
 
 	var loadout := UnitLoadout.from_dict({
 		"unit_id": "synthetic-unit",
-		"action_ability_ids": ["note-suul", "note-strom"],
+		"action_ability_ids": ["note-sul", "note-zhur"],
 		"equip": {"hand": "x"},
 	})
 	assert_array(Array(UnitLoadout.from_dict(loadout.to_dict()).action_ability_ids)).is_equal(
-		["note-suul", "note-strom"]
+		["note-sul", "note-zhur"]
 	)
 	assert_str(str(UnitLoadout.from_dict(loadout.to_dict()).equip["hand"])).is_equal("x")
 

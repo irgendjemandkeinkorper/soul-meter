@@ -6,8 +6,8 @@ func test_casting_fields_round_trip_without_losing_typed_element_ids() -> void:
 	source.id = "test-cast"
 	source.display_name = "Test Cast"
 	source.job_id = "test-job"
-	source.element_id = &"strom"
-	source.elements = [&"strom", &"suul"]
+	source.element_id = &"zhur"
+	source.elements = [&"zhur", &"sul"]
 	source.magnitude = &"phrase"
 	source.power = 17
 	source.breath_cost = 3
@@ -19,7 +19,7 @@ func test_casting_fields_round_trip_without_losing_typed_element_ids() -> void:
 	var restored := AbilityDefinition.from_dict(source.to_dict())
 
 	assert_str(restored.id).is_equal(source.id)
-	assert_array(restored.elements).contains_exactly([&"strom", &"suul"])
+	assert_array(restored.elements).contains_exactly([&"zhur", &"sul"])
 	assert_str(String(restored.magnitude)).is_equal("phrase")
 	assert_int(restored.breath_cost).is_equal(3)
 	assert_bool(restored.to_dict() == source.to_dict()).is_true()

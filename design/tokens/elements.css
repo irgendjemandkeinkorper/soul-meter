@@ -1,15 +1,15 @@
 /* The Wheel of Ten. Clockwise adjacency = Chords (consonant).
-   Diametric opposition = Clash (dissonant): Suul/Daar, Bloei/Molm,
-   Aqua/Scor, Khor/Nul, Terra/Strom. */
+   Diametric opposition = Clash (dissonant): Sul/Vekh, Vel/Mozh,
+   Luth/Khash, Khor/Zhem, Tham/Zhur. */
 :root{
-  --el-suul:#E8C46A;   --el-suul-glow:#FFE7A8;  /* Light   — struck crystal   */
-  --el-bloei:#4FA96A;  --el-bloei-glow:#8FE0A4; /* Growth  — rising glissando */
-  --el-aqua:#2E8FB8;   --el-aqua-glow:#7FCDE8;  /* Water   — under-wave pulse */
+  --el-sul:#E8C46A;   --el-sul-glow:#FFE7A8;  /* Light   — struck crystal   */
+  --el-vel:#4FA96A;  --el-vel-glow:#8FE0A4; /* Growth  — rising glissando */
+  --el-luth:#2E8FB8;   --el-luth-glow:#7FCDE8;  /* Water   — under-wave pulse */
   --el-khor:#A855F7;   --el-khor-glow:#D6B4FF;  /* Music   — pattern, any tone*/
-  --el-terra:#8C7A5B;  --el-terra-glow:#C4AE85; /* Earth   — deep fundamental */
-  --el-daar:#4B3F72;   --el-daar-glow:#8577C4;  /* Dark    — felt subtraction */
-  --el-molm:#7A8B3C;   --el-molm-glow:#B4C46B;  /* Rot     — granular crumble */
-  --el-scor:#E0522F;   --el-scor-glow:#FF9A6E;  /* Fire    — crackle-roar     */
-  --el-nul:#B8C0CC;    --el-nul-glow:#EDF2F8;   /* Silence — a hole with edges*/
-  --el-strom:#22D3EE;  --el-strom-glow:#A6F0FA; /* Storm   — tuned thunder    */
+  --el-tham:#8C7A5B;  --el-tham-glow:#C4AE85; /* Earth   — deep fundamental */
+  --el-vekh:#4B3F72;   --el-vekh-glow:#8577C4;  /* Dark    — felt subtraction */
+  --el-mozh:#7A8B3C;   --el-mozh-glow:#B4C46B;  /* Rot     — granular crumble */
+  --el-khash:#E0522F;   --el-khash-glow:#FF9A6E;  /* Fire    — crackle-roar     */
+  --el-zhem:#B8C0CC;    --el-zhem-glow:#EDF2F8;   /* Silence — a hole with edges*/
+  --el-zhur:#22D3EE;  --el-zhur-glow:#A6F0FA; /* Storm   — tuned thunder    */
 }
