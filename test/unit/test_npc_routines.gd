@@ -2,6 +2,12 @@ extends GdUnitTestSuite
 ## FR-504a §2/§5 routine-table invariants: the cap is a number (criterion 7),
 ## absence is declared rather than accidental (criterion 4), and quest-critical
 ## NPCs stay reachable in at least two phases (criterion 5 / FR-905 §3.4).
+##
+## Since #385 the rows live in `canon/<hub>/characters/*.json`, so this suite
+## also pins the read itself: the table has to come off disk, and it has to
+## arrive with the coordinates the GDScript table used to hold.
+
+const CANON_CHARACTERS := "res://canon/dom/characters"
 
 
 func test_routine_count_is_within_the_cap() -> void:
@@ -67,3 +73,68 @@ func test_placement_contract() -> void:
 
 func test_unrouted_npc_counts_all_phases_reachable() -> void:
 	assert_int(NpcRoutines.present_phase_count("branek-coiljaw")).is_equal(4)
+
+
+func test_routines_are_read_from_the_character_documents() -> void:
+	# #385: the table is a READ of canon, not a literal that happens to agree
+	# with it. Editing an NPC's document must move the NPC.
+	assert_bool(NpcRoutines.ROUTINES.is_empty()).override_failure_message(
+		"no routines loaded — canon/<hub>/characters is unreadable from the runtime"
+	).is_false()
+	for npc_id: String in NpcRoutines.ROUTINES:
+		var document := _document(npc_id)
+		var authored: Dictionary = document["routine"]
+		assert_int(authored.size()).override_failure_message(
+			"'%s' routine size disagrees with its document" % npc_id
+		).is_equal((NpcRoutines.ROUTINES[npc_id] as Dictionary).size())
+		for phase: String in authored:
+			var row := NpcRoutines.placement(npc_id, StringName(phase))
+			if authored[phase] == null:
+				assert_bool(bool(row["present"])).override_failure_message(
+					"'%s' is authored absent in %s but the table says present" % [npc_id, phase]
+				).is_false()
+				continue
+			var position: Array = authored[phase]["position"]
+			assert_vector(row["position"]).override_failure_message(
+				"'%s' %s position drifted from its document" % [npc_id, phase]
+			).is_equal(Vector2(float(position[0]), float(position[1])))
+			assert_str(String(row["state"])).is_equal(String(authored[phase]["state"]))
+
+
+func test_the_declared_phase_agnostic_list_is_read_from_canon() -> void:
+	for npc_id in NpcRoutines.DECLARED_PHASE_AGNOSTIC:
+		assert_bool(bool(_document(npc_id)["phase_agnostic"])).override_failure_message(
+			"'%s' is listed phase-agnostic but its document does not say so" % npc_id
+		).is_true()
+
+
+func test_the_dom_routine_roster_is_unchanged_by_the_canon_move() -> void:
+	# #385 required a LOSSLESS migration, so these three values are pinned here
+	# rather than read back out of canon: a compare against the source it came
+	# from could not fail. Sella's morning post is her bell-house post.
+	assert_array(NpcRoutines.ROUTINES.keys()).contains(
+		["sella-varn", "toma-reedhand", "hadrik-vale"]
+	)
+	assert_int(NpcRoutines.routine_count()).is_equal(3)
+	assert_vector(NpcRoutines.placement("sella-varn", &"morning")["position"]).is_equal(
+		Vector2(2820, 1525)
+	)
+	assert_str(
+		String(NpcRoutines.placement("toma-reedhand", &"evening")["state"])
+	).is_equal("drinking")
+	# The clerk does not move between the two working phases; only his evening
+	# lamplight seat differs.
+	assert_vector(NpcRoutines.placement("hadrik-vale", &"afternoon")["position"]).is_equal(
+		NpcRoutines.placement("hadrik-vale", &"morning")["position"]
+	)
+	assert_array(NpcRoutines.DECLARED_PHASE_AGNOSTIC).is_equal(["branek-coiljaw"])
+
+
+func _document(npc_id: String) -> Dictionary:
+	var path := CANON_CHARACTERS.path_join("%s.json" % npc_id)
+	var file := FileAccess.open(path, FileAccess.READ)
+	assert_object(file).override_failure_message("no canon document at %s" % path).is_not_null()
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	assert_bool(parsed is Dictionary).is_true()
+	return parsed
