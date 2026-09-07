@@ -24,8 +24,8 @@ const BREATH_MAX := {
 	"veteran": 30,
 	"master": 60,
 }
-const AQUA_RESTORE := 6
-const MOLM_RESTORE := 12
+const LUTH_RESTORE := 6
+const MOZH_RESTORE := 12
 const SOUL_OVERREACH := {
 	"note": 1,
 	"phrase": 2,

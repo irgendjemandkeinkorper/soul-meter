@@ -89,7 +89,7 @@ margin worth measuring.
 **Legend.** ✅ clean pass · ⚠ pass, watch item recorded · ❓ provisional, blocked on §1.1 ·
 ❌ fail
 
-| Patron | Resource rides | Chordblade | Terrashaper | Hushwarden |
+| Patron | Resource rides | Chordblade | Thamshaper | Hushwarden |
 |---|---|---|---|---|
 | **Mirrorblade** (Maiiam) | action alternation | ✅ | ⚠ W1 | ✅ |
 | **River-Mother** (Haeren) | casting, allies | ✅ | ✅ | ❓ G1 |
@@ -140,8 +140,8 @@ a caster-denial build. Measure the compounded fizzle before judging it.
 
 ### 3.2 The watch items the sheet found on its own
 
-**W1 — Mirrorblade × Terrashaper.** Balance requires alternating paired opposites including
-advance and withdraw. Terrashaper is deliberately weighted and slow. The Resource still
+**W1 — Mirrorblade × Thamshaper.** Balance requires alternating paired opposites including
+advance and withdraw. Thamshaper is deliberately weighted and slow. The Resource still
 functions, because alternation is about *action pairing*, not about distance covered. The vault's
 "colours the fiction" clause covers this exactly. Watch whether the withdraw half feels inert.
 
@@ -149,12 +149,12 @@ functions, because alternation is about *action pairing*, not about distance cov
 move. A high-mobility Flamebinder can outrun their own kinetic sculptures. No rule breaks — the
 constructs work where they were placed. This is a build-quality question, not a legality one.
 
-**W3 — Stormbearer × Terrashaper.** Skirmisher role against a stance Discipline. This is the
+**W3 — Stormbearer × Thamshaper.** Skirmisher role against a stance Discipline. This is the
 sharpest **role** tension on the sheet and the weakest pairing in play terms. It is still legal:
 Attribution's semi-random triggers do not depend on movement. Expect players to avoid it.
 
-**W6 — Threadwalker × Terrashaper.** Contact binding needs the Threadwalker to reach targets,
-and Terrashaper is the least mobile Discipline. Legal, and slower. The Contract mechanic itself
+**W6 — Threadwalker × Thamshaper.** Contact binding needs the Threadwalker to reach targets,
+and Thamshaper is the least mobile Discipline. Legal, and slower. The Contract mechanic itself
 is untouched.
 
 **W7 — Threadwalker × Hushwarden.** The same reach pressure as W6, plus stillness as an

@@ -110,13 +110,13 @@ proposal assumes three simple tiers:
 | Veteran | 30 |
 | Master | 60 |
 
-### Proposed Aqua restore amount
+### Proposed Luth restore amount
 
-One Aqua working restores **6 Breath**.
+One Luth working restores **6 Breath**.
 
-### Proposed Molm corpse/object conversion amount
+### Proposed Mozh corpse/object conversion amount
 
-One corpse or object converted by Molm restores **12 Breath**.
+One corpse or object converted by Mozh restores **12 Breath**.
 
 ### Proposed Soul overreach rate
 

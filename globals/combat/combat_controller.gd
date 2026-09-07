@@ -632,7 +632,7 @@ func _weather_snapshot() -> Dictionary:
 ## choice here reproduces the same ×1.0 multiplier as before this wiring existed. This is NOT a
 ## balance or lore decision — it exists only so the resolver's schema-validity check has
 ## something to validate against.
-const _UNAUTHORED_ELEMENT_ID := &"suul"
+const _UNAUTHORED_ELEMENT_ID := &"sul"
 
 
 ## Routes live combat damage through the pure `Resolution.resolve()` (globals/combat/resolution.gd,

@@ -6,13 +6,13 @@ extends GdUnitTestSuite
 
 const TileState := preload("res://globals/combat/tile_state.gd")
 
-## Suul/Daar are a Clash pair per `ui/theme/ds.gd`'s Wheel-of-Ten comment
-## ("Clashes: Suul/Daar, Bloei/Molm, Aqua/Scor, Khor/Nul, Terra/Strom").
-const CHARGE_ELEMENT := &"suul"
-const CLASH_ELEMENT := &"daar"
-## Bloei is Chord-adjacent to Suul, not Clash — used to prove a non-clash strike never
+## Sul/Vekh are a Clash pair per `ui/theme/ds.gd`'s Wheel-of-Ten comment
+## ("Clashes: Sul/Vekh, Vel/Mozh, Luth/Khash, Khor/Zhem, Tham/Zhur").
+const CHARGE_ELEMENT := &"sul"
+const CLASH_ELEMENT := &"vekh"
+## Vel is Chord-adjacent to Sul, not Clash — used to prove a non-clash strike never
 ## detonates.
-const CHORD_ELEMENT := &"bloei"
+const CHORD_ELEMENT := &"vel"
 
 
 func test_residue_accumulates_and_caps_at_three() -> void:
@@ -141,8 +141,8 @@ func test_determinism_repeated_runs_produce_identical_results() -> void:
 
 func test_drain_charge_shaves_one_level_without_detonating() -> void:
 	var tile := TileState.new()
-	tile.apply_residue(&"suul")
-	tile.apply_residue(&"suul")
+	tile.apply_residue(&"sul")
+	tile.apply_residue(&"sul")
 	assert_int(tile.charge_level).is_equal(2)
 
 	var result: Dictionary = tile.drain_charge(1)
@@ -152,12 +152,12 @@ func test_drain_charge_shaves_one_level_without_detonating() -> void:
 	assert_int(int(result.get("drained", 0))).is_equal(1)
 	assert_bool(bool(result.get("cleared", true))).is_false()
 	assert_int(tile.charge_level).is_equal(1)
-	assert_str(String(tile.charge_element_id)).is_equal("suul")
+	assert_str(String(tile.charge_element_id)).is_equal("sul")
 
 
 func test_drain_charge_clears_the_element_at_zero() -> void:
 	var tile := TileState.new()
-	tile.apply_residue(&"suul")
+	tile.apply_residue(&"sul")
 
 	var result: Dictionary = tile.drain_charge(1)
 
@@ -170,7 +170,7 @@ func test_drain_charge_is_refused_under_a_hushwarden_field() -> void:
 	# reaches tiles through this method, so the guard has to live here rather
 	# than in every caller.
 	var tile := TileState.new()
-	tile.apply_residue(&"suul")
+	tile.apply_residue(&"sul")
 	tile.hush = true
 
 	var result: Dictionary = tile.drain_charge(1)

@@ -19,7 +19,7 @@ left unhunted in Act I kills a named townsperson in Act II.
 
 FR-308 already defines a per-zone escalation meter, the Zhavar, with a five-step ladder:
 
-> low → rising → tolling (one Nul dragon) → ringing (regional delegation) → unprecedented
+> low → rising → tolling (one Zhem dragon) → ringing (regional delegation) → unprecedented
 
 FR-507 keeps that ladder and adds three things it does not have: a **score** that drives it, an
 **evaluation moment** when the score is read, and a **record** that a later chapter can read.
@@ -130,7 +130,7 @@ reaches the first three rungs only, which is already what FR-308 says:
 |---|---|---|
 | low | `steady` | One |
 | rising | `strained` | One |
-| tolling — one Nul dragon | `raided` | One. This is FR-308's scripted tolling event |
+| tolling — one Zhem dragon | `raided` | One. This is FR-308's scripted tolling event |
 | ringing — regional delegation | — | Two and later |
 | unprecedented | — | Two and later |
 

@@ -40,11 +40,11 @@ func test_wizard_gates_each_ratified_step_and_supports_back_and_summary_jumps() 
 	# Calling remains optional, preserving the old ACCEPT rules.
 	screen._on_next()
 	assert_int(screen._step_index).is_equal(CharacterCreationScreen.STEP_ELEMENTS)
-	screen._major_element = "suul"
-	screen._minor_element = "daar"
+	screen._major_element = "sul"
+	screen._minor_element = "vekh"
 	screen._refresh_summary_and_gate()
 	assert_bool(screen._next_btn.disabled).is_true()
-	screen._minor_element = "bloei"
+	screen._minor_element = "vel"
 	screen._refresh_summary_and_gate()
 	assert_bool(screen._next_btn.disabled).is_false()
 	screen._on_next()
@@ -165,8 +165,8 @@ func _fill_out_valid_build(screen: CharacterCreationScreen, name: String, epithe
 	screen._on_discipline_selected(1)
 	screen._on_patron_selected(2)
 	screen._on_background_selected(1)
-	screen._major_element = "suul"
-	screen._minor_element = "bloei"
+	screen._major_element = "sul"
+	screen._minor_element = "vel"
 	screen._name_edit.text = name
 	screen._name_edit.text_changed.emit(name)
 	screen._epithet_edit.text = epithet
@@ -199,11 +199,11 @@ func _assert_member_matches_picks(member: PartyMember, name: String, epithet: St
 	assert_str(member.display_name).is_equal(name)
 	assert_str(member.epithet).is_equal(epithet)
 	assert_str(member.race).is_equal("Vael")
-	assert_str(member.discipline).is_equal("terrashaper")
+	assert_str(member.discipline).is_equal("thamshaper")
 	assert_str(member.patron).is_equal("ironbrand")
 	assert_str(member.background).is_equal("verlossen-miner")
-	assert_str(member.major_element).is_equal("suul")
-	assert_str(member.minor_element).is_equal("bloei")
+	assert_str(member.major_element).is_equal("sul")
+	assert_str(member.minor_element).is_equal("vel")
 	assert_str(member.flaw).is_equal("Will not leave a debt uncounted")
 	assert_str(member.starting_mastery).is_equal("Root Note of choice")
 	assert_int(member.attributes["forge"]).is_equal(5)

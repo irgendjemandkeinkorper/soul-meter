@@ -46,7 +46,7 @@ Touch-binding makes **Threadwalker × Chordblade a good pairing**, not a risky o
 high-mobility melee Discipline is exactly what a binder who must close to touch wants. That cell
 goes CONDITIONAL → **PASS (strong)**.
 
-The cost lands one row over. **Threadwalker × Terrashaper** was drafted PASS on the reasoning that
+The cost lands one row over. **Threadwalker × Thamshaper** was drafted PASS on the reasoning that
 *"across the field works better from a held position."* Under touch-binding that reasoning is
 backwards — an engineer's stance that holds ground and shapes elevation is the *worst* platform
 for a class that has to reach every target physically. That cell moves **PASS → SOFT-FAIL**, and
@@ -71,7 +71,7 @@ Threadwalker × Hushwarden is unaffected: denial fields can be laid without stan
 | Locksmirk | PASS | Blowgun is ranged, which sits oddly on melee — but trap poetry and lockpicking-as-combat are close work. Net PASS. |
 | Threadwalker | **PASS (strong)** | *Resolved 2026-08-05: binding requires physical contact.* A short-reach, high-mobility melee Discipline is the best platform there is for a binder who must close to touch. The Signature cashes in Threads bound earlier, one at a time. |
 
-## Terrashaper — elevation-holding, zone control, Terra weight
+## Thamshaper — elevation-holding, zone control, Tham weight
 
 | Patron | Verdict | Reasoning |
 |---|---|---|
@@ -81,12 +81,12 @@ Threadwalker × Hushwarden is unaffected: denial fields can be laid without stan
 | Lensbearer | PASS (strong) | High ground plus revelation. Sightlines are the whole theme. |
 | Husk-bearer | PASS (strong) | Zone control plus a persistent DoT field is precisely what The Table wants. |
 | Flamebinder | PASS (strong) | Best fit on the board — engineer's stance, constructs, terrain shaping. **Data-model note:** both Discipline and Patron reshape terrain; do not let them claim the same tile-modification verb. |
-| **Stormbearer** | **SOFT-FAIL** | **Terra ↔ Strom are a canonically opposed pair.** Discipline association is flavour-only so this is not a mechanical bar — but the Vow of the Unspoken Name shows opposed pairs carry real weight in this ruleset. |
+| **Stormbearer** | **SOFT-FAIL** | **Tham ↔ Zhur are a canonically opposed pair.** Discipline association is flavour-only so this is not a mechanical bar — but the Vow of the Unspoken Name shows opposed pairs carry real weight in this ruleset. |
 | Oathclock | PASS (strong) | Controller, halberd reach, held ground, delayed verdicts. Excellent. |
 | Locksmirk | PASS | Traps are emplacements; terrain shaping complements them. |
 | **Threadwalker** | **SOFT-FAIL** *(new, 2026-08-05)* | Drafted PASS on the reasoning that "across the field reads better from a held position." Touch-binding inverts that: an engineer's stance that holds ground is the worst platform for a class that must physically reach every target. |
 
-## Hushwarden — denial and stillness, strips tile charge, Nul quiet
+## Hushwarden — denial and stillness, strips tile charge, Zhem quiet
 
 | Patron | Verdict | Reasoning |
 |---|---|---|
@@ -97,7 +97,7 @@ Threadwalker × Hushwarden is unaffected: denial fields can be laid without stan
 | Husk-bearer | PASS (note) | Gut-lute is a sound identity, but The Table is DoT arithmetic, not vocal. Weaker version of River-Mother's problem. |
 | Flamebinder | PASS (rules note) | Instructive Failure banks a token on a **failed cast**. Hushwarden silences casting. **Define "failed" vs "prevented"** or this farms tokens off silence fields. |
 | **Stormbearer** | **SOFT-FAIL** | Attribution is doctrinally about the storm being *heard*; Tuned Thunder chains loudly and randomly. Stillness is the tonal opposite. |
-| **Oathclock** | **SOFT-FAIL** | *Lore check resolved the named suspect:* nothing in the vault requires an oath be spoken. The Ledger fires "regardless of what happens between now and then," and the Kit is a halberd and a **metronome** — timing, not voice. **No mechanical contradiction.** But Oathclock's suggested pair is **Nul/Scor, "Emberquiet — silence and the banked coal"** — it is *already* the silence patron. Hushwarden duplicates its territory rather than contradicting it. **Redundant, not broken.** |
+| **Oathclock** | **SOFT-FAIL** | *Lore check resolved the named suspect:* nothing in the vault requires an oath be spoken. The Ledger fires "regardless of what happens between now and then," and the Kit is a halberd and a **metronome** — timing, not voice. **No mechanical contradiction.** But Oathclock's suggested pair is **Zhem/Khash, "Emberquiet — silence and the banked coal"** — it is *already* the silence patron. Hushwarden duplicates its territory rather than contradicting it. **Redundant, not broken.** |
 | **Locksmirk** | **SOFT-FAIL** | *Resolved 2026-08-05: Hush taxes rather than prevents.* An in-progress Song still exists to jam, so Jam the Gears is not displaced and this is not a HARD-FAIL. It remains thematically crowded — both class and Discipline are "shut the caster down," one by breaking the working and one by making it expensive. |
 | Threadwalker | PASS (strong) | Hidden contracts, "you agree first, the veil is doctrine." Secrecy and silence align well. |
 
@@ -110,17 +110,17 @@ Threadwalker × Hushwarden is unaffected: denial fields can be laid without stan
 | Verdict | Count | Cells |
 |---|---|---|
 | PASS | 22 | — |
-| SOFT-FAIL | 8 | Flamebinder × Chordblade · Oathclock × Chordblade · Stormbearer × Terrashaper · **Threadwalker × Terrashaper** · River-Mother × Hushwarden · Stormbearer × Hushwarden · Oathclock × Hushwarden · Locksmirk × Hushwarden |
+| SOFT-FAIL | 8 | Flamebinder × Chordblade · Oathclock × Chordblade · Stormbearer × Thamshaper · **Threadwalker × Thamshaper** · River-Mother × Hushwarden · Stormbearer × Hushwarden · Oathclock × Hushwarden · Locksmirk × Hushwarden |
 | HARD-FAIL | 0 | — |
 
 Eight SOFT-FAILs, not the six originally drafted: Locksmirk × Hushwarden came *down* from
-HARD-FAIL when Hush was defined as a tax, and Threadwalker × Terrashaper came *up* from PASS when
+HARD-FAIL when Hush was defined as a tax, and Threadwalker × Thamshaper came *up* from PASS when
 Thread-binding was defined as physical.
 
 **What SOFT-FAIL means in practice:** the combination is legal and playable, and ships with no
 dedicated art, barks, or ability variants. Nothing needs to be blocked in code.
 
-**Note the shape of the result.** Six of the eight sit on Hushwarden or Terrashaper, and five of
+**Note the shape of the result.** Six of the eight sit on Hushwarden or Thamshaper, and five of
 those are thematic crowding rather than mechanical friction — a denial Discipline keeps landing
 on classes whose identity already involves shutting something down (Locksmirk jams, Oathclock is
 Emberquiet), and a hold-ground Discipline keeps landing on classes that want to move. If a fourth

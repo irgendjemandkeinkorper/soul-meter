@@ -31,7 +31,7 @@
         "defense": 1,
         "balance_affinity": 1,
         "balance_pressure": 18,
-        "element_id": "molm",
+        "element_id": "mozh",
         "edge": 2
       }
     ]
@@ -235,7 +235,7 @@
         "defense": 0,
         "balance_affinity": -1,
         "balance_pressure": 18,
-        "element_id": "terra",
+        "element_id": "tham",
         "edge": 3
       }
     ]

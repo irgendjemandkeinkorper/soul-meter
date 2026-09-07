@@ -4,15 +4,15 @@ class_name TacticalIds
 
 # No job rows are authored yet.
 
-const ABILITY_NOTE_AQUA := "note-aqua"
-const ABILITY_NOTE_BLOEI := "note-bloei"
-const ABILITY_NOTE_DAAR := "note-daar"
+const ABILITY_NOTE_KHASH := "note-khash"
 const ABILITY_NOTE_KHOR := "note-khor"
-const ABILITY_NOTE_MOLM := "note-molm"
-const ABILITY_NOTE_NUL := "note-nul"
-const ABILITY_NOTE_SCOR := "note-scor"
-const ABILITY_NOTE_STROM := "note-strom"
-const ABILITY_NOTE_SUUL := "note-suul"
-const ABILITY_NOTE_TERRA := "note-terra"
+const ABILITY_NOTE_LUTH := "note-luth"
+const ABILITY_NOTE_MOZH := "note-mozh"
+const ABILITY_NOTE_SUL := "note-sul"
+const ABILITY_NOTE_THAM := "note-tham"
+const ABILITY_NOTE_VEKH := "note-vekh"
+const ABILITY_NOTE_VEL := "note-vel"
+const ABILITY_NOTE_ZHEM := "note-zhem"
+const ABILITY_NOTE_ZHUR := "note-zhur"
 
 const UNIT_VEX := "vex"

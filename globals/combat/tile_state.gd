@@ -58,7 +58,7 @@ var x: int = 0
 var y: int = 0
 var charge_element_id: StringName = UNCHARGED
 var charge_level: int = 0
-## Authored `map_tiles.height` plus any battle-time change (e.g. Terrashaper). Carried here,
+## Authored `map_tiles.height` plus any battle-time change (e.g. Thamshaper). Carried here,
 ## not on `map_tiles`, for the same immutable-content-vs-battle-layer reason as charge.
 var height_delta: int = 0
 ## Static terrain cover carried into the live tile snapshot.

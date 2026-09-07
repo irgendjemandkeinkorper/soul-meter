@@ -140,16 +140,16 @@ func _upsert(root: PandoraCategory, entity_name: String, values: Dictionary) -> 
 func _seed_elements() -> void:
 	var root := _ensure_root("Elements", ELEMENT_PROPERTIES)
 	var rows := [
-		["Suul", "suul", "exposed", "Exposed", "reveals_aftertones", "Reveals Aftertones, Discord signatures, and illusions.", true],
-		["Bloei", "bloei", "overgrown", "Overgrown", "extends_own_buff_duration", "Extends the duration of your own buffs.", true],
-		["Aqua", "aqua", "soaked", "Soaked", "restores_breath", "The only element that restores Breath.", true],
+		["Sul", "sul", "exposed", "Exposed", "reveals_aftertones", "Reveals Aftertones, Discord signatures, and illusions.", true],
+		["Vel", "vel", "overgrown", "Overgrown", "extends_own_buff_duration", "Extends the duration of your own buffs.", true],
+		["Luth", "luth", "soaked", "Soaked", "restores_breath", "The only element that restores Breath.", true],
 		["Khor", "khor", "", "", "extends_durations_holds_notes", "Extends durations and holds Notes across rounds.", false],
-		["Terra", "terra", "weighted", "Weighted", "creates_cover_anchors_aftertones", "Creates cover and anchors Aftertones.", true],
-		["Daar", "daar", "blinded", "Blinded", "conceals_discord_signatures", "Conceals Discord signatures.", true],
-		["Molm", "molm", "decaying", "Decaying", "converts_to_breath", "Converts corpses and objects into Breath.", true],
-		["Scor", "scor", "burning", "Burning", "consumes_aftertone_for_burst", "Consumes an Aftertone for burst power.", true],
-		["Nul", "nul", "muted", "Muted", "cancels_and_zeroes_tempo", "Cancels buffs, ends Aftertones, and zeroes Tempo.", false],
-		["Strom", "strom", "shocked", "Shocked", "ignores_instability_die", "Ignores the Instability die.", true],
+		["Tham", "tham", "weighted", "Weighted", "creates_cover_anchors_aftertones", "Creates cover and anchors Aftertones.", true],
+		["Vekh", "vekh", "blinded", "Blinded", "conceals_discord_signatures", "Conceals Discord signatures.", true],
+		["Mozh", "mozh", "decaying", "Decaying", "converts_to_breath", "Converts corpses and objects into Breath.", true],
+		["Khash", "khash", "burning", "Burning", "consumes_aftertone_for_burst", "Consumes an Aftertone for burst power.", true],
+		["Zhem", "zhem", "muted", "Muted", "cancels_and_zeroes_tempo", "Cancels buffs, ends Aftertones, and zeroes Tempo.", false],
+		["Zhur", "zhur", "shocked", "Shocked", "ignores_instability_die", "Ignores the Instability die.", true],
 	]
 	for row: Array in rows:
 		_upsert(
@@ -171,16 +171,16 @@ func _seed_elements() -> void:
 func _seed_triads() -> void:
 	var root := _ensure_root("Triads", TRIAD_PROPERTIES)
 	var rows := [
-		["Dayspring", "dayspring", "strom,suul,bloei", "suul", "first_light", "First Light", {"duration": "round", "reveals": ["aftertones", "discord_signatures", "queued_effects", "discovered_weaknesses"], "defining_strike_cost": 0}],
-		["Fruiting", "fruiting", "suul,bloei,aqua", "bloei", "second_season", "Second Season", {"copy_active_friendly_buffs": true, "targets_per_new_buff": 2}],
-		["Rivermouth", "rivermouth", "bloei,aqua,khor", "aqua", "the_mouth_opens", "The Mouth Opens", {"duration": "round", "zone_change_ap": 0, "aoe_ignores_zone_boundaries": true}],
-		["Founding", "founding", "aqua,khor,terra", "khor", "cornerstone", "Cornerstone", {"freeze_remaining_durations": true, "until": "end_of_next_turn"}],
-		["Vault", "vault", "khor,terra,daar", "terra", "sealed_ground", "Sealed Ground", {"fortify_zone": true, "encounter_scope": true, "entry_ap_add": 1, "ranged_attacks_apply_weighted": true, "anchored_aftertones_enemy_consumption": false}],
-		["Barrow", "barrow", "terra,daar,molm", "daar", "unlisted", "Unlisted", {"hide_friendly_signatures": true, "hide_friendly_queued_effects": true, "hide_friendly_positions": true, "enemy_back_zone_targetable": false, "enemy_reveal_effects": false, "duration": "round"}],
-		["Pyre", "pyre", "daar,molm,scor", "molm", "the_rendering", "The Rendering", {"convert_corpses": true, "convert_destroyed_objects": true, "convert_expired_aftertones": true, "split_breath_across_side": true, "shared_corpse_applies_decaying": true}],
-		["Cinderfall", "cinderfall", "molm,scor,nul", "scor", "everything_burns_at_once", "Everything Burns At Once", {"consume_all_aftertones": true, "include_both_sides": true, "yield_bursts_to_caster_side": true}],
-		["Stillpoint", "stillpoint", "scor,nul,strom", "nul", "the_held_silence", "The Held Silence", {"balance_gauge": "exact_center", "lock_until": "end_of_next_round", "suppress_threshold_effects": true}],
-		["Thunderhead", "thunderhead", "nul,strom,suul", "strom", "nothing_is_uncertain", "Nothing Is Uncertain", {"skip_instability_die": true, "out_of_turn_allies": 1, "duration": "round"}],
+		["Dayspring", "dayspring", "zhur,sul,vel", "sul", "first_light", "First Light", {"duration": "round", "reveals": ["aftertones", "discord_signatures", "queued_effects", "discovered_weaknesses"], "defining_strike_cost": 0}],
+		["Fruiting", "fruiting", "sul,vel,luth", "vel", "second_season", "Second Season", {"copy_active_friendly_buffs": true, "targets_per_new_buff": 2}],
+		["Rivermouth", "rivermouth", "vel,luth,khor", "luth", "the_mouth_opens", "The Mouth Opens", {"duration": "round", "zone_change_ap": 0, "aoe_ignores_zone_boundaries": true}],
+		["Founding", "founding", "luth,khor,tham", "khor", "cornerstone", "Cornerstone", {"freeze_remaining_durations": true, "until": "end_of_next_turn"}],
+		["Vault", "vault", "khor,tham,vekh", "tham", "sealed_ground", "Sealed Ground", {"fortify_zone": true, "encounter_scope": true, "entry_ap_add": 1, "ranged_attacks_apply_weighted": true, "anchored_aftertones_enemy_consumption": false}],
+		["Barrow", "barrow", "tham,vekh,mozh", "vekh", "unlisted", "Unlisted", {"hide_friendly_signatures": true, "hide_friendly_queued_effects": true, "hide_friendly_positions": true, "enemy_back_zone_targetable": false, "enemy_reveal_effects": false, "duration": "round"}],
+		["Pyre", "pyre", "vekh,mozh,khash", "mozh", "the_rendering", "The Rendering", {"convert_corpses": true, "convert_destroyed_objects": true, "convert_expired_aftertones": true, "split_breath_across_side": true, "shared_corpse_applies_decaying": true}],
+		["Cinderfall", "cinderfall", "mozh,khash,zhem", "khash", "everything_burns_at_once", "Everything Burns At Once", {"consume_all_aftertones": true, "include_both_sides": true, "yield_bursts_to_caster_side": true}],
+		["Stillpoint", "stillpoint", "khash,zhem,zhur", "zhem", "the_held_silence", "The Held Silence", {"balance_gauge": "exact_center", "lock_until": "end_of_next_round", "suppress_threshold_effects": true}],
+		["Thunderhead", "thunderhead", "zhem,zhur,sul", "zhur", "nothing_is_uncertain", "Nothing Is Uncertain", {"skip_instability_die": true, "out_of_turn_allies": 1, "duration": "round"}],
 	]
 	for row: Array in rows:
 		_upsert(root, row[0], {

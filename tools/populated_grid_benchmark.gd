@@ -22,7 +22,7 @@ const DEFAULT_SETTLE_DURATION_MS := 2000
 const PROFILE_WARMUP_FRAMES := 120
 const PROFILE_SAMPLE_COUNT := 600
 const STAGE_TIMEOUT_FRAMES := 1800
-const CHARGE_ELEMENT_ID := "strom"
+const CHARGE_ELEMENT_ID := "zhur"
 const CHARGE_ELEMENT_COLOR := "#7BDFF2"
 
 var _errors: Array[String] = []

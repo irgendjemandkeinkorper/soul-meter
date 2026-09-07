@@ -622,7 +622,7 @@ The vault defines ten classes, each bound to a named patron with a patron-specif
 literal; Locksmirk never reaches 0% fizzle). These are load-bearing counterweights to the
 Waning's fizzle pressure, not flavour.
 
-Elemental Architecture invents three unpatroned jobs: Chordblade, Terrashaper, Hushwarden.
+Elemental Architecture invents three unpatroned jobs: Chordblade, Thamshaper, Hushwarden.
 
 **Recommendation (advisory consensus, not ratified):** adopt them as a **base tier that is not
 a class**. Call them **combat disciplines** (or *foundations*) — the discipline governs

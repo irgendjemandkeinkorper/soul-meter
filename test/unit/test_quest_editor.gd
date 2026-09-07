@@ -179,7 +179,7 @@ func test_save_round_trips_existing_encounter_files_without_dropping_bytes() -> 
 		+ "  \"display_name\": \"Editor Fight\",\n"
 		+ "  \"enemies\": [{\"archetype_id\": \"bog-wight\"}],\n"
 		+ "  \"grid\": {\"dimensions\": [7, 5], \"cover\": [], \"elevation\": []},\n"
-		+ "  \"weather_default\": \"molm\",\n"
+		+ "  \"weather_default\": \"mozh\",\n"
 		+ "  \"spoils\": [{\"item_id\": \"materials/grave_salt\", \"quantity\": 7}],\n"
 		+ "  \"outcomes\": {\"slain\": {\"faction\": \"iron-companies\"}},\n"
 		+ "  \"loss\": {\"faction\": \"iron-companies\"}\n"
@@ -215,7 +215,7 @@ func test_loader_rejects_quest_ids_that_are_unsafe_file_names() -> void:
 		"CON",
 		"prn.txt",
 		"side/AUX",
-		"side/nul.json",
+		"side/zhem.json",
 		"COM1",
 		"com9.notes",
 		"LPT1",
