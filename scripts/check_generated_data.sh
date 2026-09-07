@@ -34,8 +34,22 @@ run_drift_check() {
 		--headless --path . --quit-after 30 2>&1 | tee "$log_file"
 	if ! grep -Eq "$success_pattern" "$log_file"; then
 		echo "$autoload_name drift check did not complete successfully." >&2
+		report_working_tree
 		exit 1
 	fi
+}
+
+# The isometric stage has twice reported "ground TileSet changed" on branches
+# that touched no art, and passed on a rerun of the same commit. A drift check
+# only ever compares the committed artifact against freshly generated text, so
+# either the committed file is not what git recorded or the generator is not
+# deterministic — and the one-word failure message cannot tell those apart.
+# project.godot is excluded because this script edits it on purpose (line 32).
+report_working_tree() {
+	echo "--- tracked files that differ from HEAD at failure time ---" >&2
+	git --no-pager status --porcelain -- . ':!project.godot' >&2 || true
+	git --no-pager diff -- assets/generated data/generated >&2 || true
+	echo "--- end working tree report ---" >&2
 }
 
 run_drift_check \
