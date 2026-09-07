@@ -96,7 +96,24 @@ func karma_bonus(skill_name: String) -> float:
 	var direction := int(definition.get("karma_direction", 0))
 	if direction == 0:
 		return 0.0
-	return float(Renown.karma_tier_offset() * direction) * KARMA_BONUS_PER_TIER
+	return float(_karma_tier_offset() * direction) * KARMA_BONUS_PER_TIER
+
+
+## `Renown` is an autoload, and autoload identifiers do not exist in a `--script`
+## tool run: adding a bare `Renown` reference to this file stopped
+## `tools/casting_economy_sweep.gd` compiling at all, because the tool preloads
+## this script and the whole file then failed to compile. Resolving the node
+## through the tree keeps every tool that preloads `globals/` able to run
+## headlessly. In a booted game the node is always there, so this is the same
+## value by a slower path — and `karma_bonus()` is a per-check call, not
+## per-frame.
+func _karma_tier_offset() -> int:
+	var loop := Engine.get_main_loop()
+	if loop is SceneTree:
+		var node := (loop as SceneTree).root.get_node_or_null(^"Renown")
+		if node != null and node.has_method("karma_tier_offset"):
+			return int(node.call("karma_tier_offset"))
+	return 0
 
 
 ## F4 defines Hush/Waning zone penalties. The hook is intentionally neutral now.
