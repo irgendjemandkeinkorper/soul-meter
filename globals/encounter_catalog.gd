@@ -109,6 +109,44 @@ static func all_ids() -> Array[StringName]:
 	return result
 
 
+## Builds ONE combatant from an archetype row id (same-map combat D4: a `Hostile` scene node
+## owns its own unit, so the catalog can no longer only speak in whole encounters).
+##
+## `group_id` is the encounter the hostile belongs to. When it names a real encounter, that
+## encounter's outcome fields (defeated_flag / win_* / loss_*) are applied, mirroring what
+## `make_actors()` does for `actors[0]`: the ledger still reads them off one representative
+## per group. Passing an empty `group_id` yields a combatant with no outcome fields, which is
+## correct for scaffolding and for the second and later units of a group.
+static func make_actor(unit_id: StringName, group_id: StringName = &"") -> BattleActor:
+	var row := committed_archetype(String(unit_id))
+	if row.is_empty():
+		push_error("Unknown unit ID: %s" % unit_id)
+		return null
+	var actor := _actor_from_row(row)
+	if group_id != &"":
+		var encounter := definition(group_id)
+		if encounter.is_empty():
+			push_error("Unknown encounter ID: %s" % group_id)
+		else:
+			_apply_outcome(encounter, actor)
+	return actor
+
+
+static func _actor_from_row(row: Dictionary) -> BattleActor:
+	var actor := BattleActor.new()
+	actor.archetype_id = StringName(row.get("id", ""))
+	actor.display_name = str(row.get("display_name", "Enemy"))
+	actor.max_hp = int(row.get("max_hp", 10))
+	actor.hp = actor.max_hp
+	actor.attack = int(row.get("attack", 5))
+	actor.defense = int(row.get("defense", 2))
+	actor.balance_affinity = int(row.get("balance_affinity", 0))
+	actor.balance_pressure = int(row.get("balance_pressure", 12))
+	actor.element_id = StringName(row.get("element_id", ""))
+	actor.attributes[&"edge"] = int(row.get("edge", 0))
+	return actor
+
+
 static func make_actors(encounter_id: StringName) -> Array[BattleActor]:
 	var encounter := definition(encounter_id)
 	var actors: Array[BattleActor] = []
@@ -123,18 +161,7 @@ static func make_actors(encounter_id: StringName) -> Array[BattleActor]:
 	for row: Variant in enemy_rows:
 		if not row is Dictionary:
 			continue
-		var actor := BattleActor.new()
-		actor.archetype_id = StringName(row.get("id", ""))
-		actor.display_name = str(row.get("display_name", "Enemy"))
-		actor.max_hp = int(row.get("max_hp", 10))
-		actor.hp = actor.max_hp
-		actor.attack = int(row.get("attack", 5))
-		actor.defense = int(row.get("defense", 2))
-		actor.balance_affinity = int(row.get("balance_affinity", 0))
-		actor.balance_pressure = int(row.get("balance_pressure", 12))
-		actor.element_id = StringName(row.get("element_id", ""))
-		actor.attributes[&"edge"] = int(row.get("edge", 0))
-		actors.append(actor)
+		actors.append(_actor_from_row(row as Dictionary))
 
 	if not actors.is_empty():
 		_apply_outcome(encounter, actors[0])

@@ -45,6 +45,13 @@ extends Resource
 ## Fraction of spent CT returned when a committed action is cancelled or a wait is refunded.
 @export_range(0.0, 1.0) var cancel_refund_ratio: float = 1.0
 
+## PROVISIONAL (same-map combat D5) — how far behind ready a combatant admitted mid-session
+## starts, on the 100-CT scale (`TurnScheduler.READY_AT`). It exists so a mob that joins a
+## running fight cannot act before the party's next turn. Keep it below READY_AT: at or above
+## it the newcomer would be seated ALREADY ready, which reads to the controller as a
+## continuation of the previous turn. DeepSeek sweeps the number in F2.
+@export var admission_delay: int = 40
+
 ## Selects which TurnScheduler `create_default()` builds, exactly as `use_grid_battlefield` does
 ## for the battlefield. False keeps the AP round economy authoritative.
 ##
