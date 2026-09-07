@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://ceteshc8jflsc"
+path="res://.godot/imported/dom_band_reactions.dialogue-c2548441eccedcdbbeb5a3543618bd35.tres"
+
+[deps]
+
+source_file="res://dialogue/dom_band_reactions.dialogue"
+dest_files=["res://.godot/imported/dom_band_reactions.dialogue-c2548441eccedcdbbeb5a3543618bd35.tres"]
+
+[params]
+
+defaults=true

@@ -4,6 +4,10 @@ extends RefCounted
 
 const REACTION_CAP := 15
 
+## The hand-authored home for FR-402 band routes. Kept out of
+## `dialogue/dom_townsfolk.dialogue`, which `tools/generate_gloot.gd` owns.
+const BAND_REACTION_DIALOGUE := "res://dialogue/dom_band_reactions.dialogue"
+
 ## npc_id -> ordered reaction rules. A rule may gate on a flag, reputation, the
 ## protagonist's hollowing state, or any combination, and may override presence
 ## and/or an existing dialogue route.
@@ -36,6 +40,57 @@ const REACTIONS: Dictionary = {
 			"hollowing": true,
 			"dialogue_path": "res://dialogue/hadrik_vale.dialogue",
 			"dialogue_title": "hollowed",
+		},
+	],
+	# FR-402 / #257 band-gated reactions. Each of these five NPCs is already
+	# declared `"involvement": "reputation_reaction"` in
+	# `canon/dom/characters/*.json`, with a `hook_summary` naming BOTH the
+	# faction and the band — canon authored the reaction and nothing read it.
+	# The faction below is the NPC's own `faction_id`; the band is the "warm"
+	# every one of those hook summaries says out loud.
+	#
+	# The route replaces the generated townsfolk fallback rather than editing
+	# it: `dialogue/dom_townsfolk.dialogue` is written by
+	# `tools/generate_gloot.gd` and a hand-edit there is lost on the next
+	# regeneration.
+	"raika-toll": [
+		{
+			"reputation_faction": "ironbrand-sentinels",
+			"minimum_reputation_band": &"warm",
+			"dialogue_path": BAND_REACTION_DIALOGUE,
+			"dialogue_title": "dom_raika_toll_warm",
+		},
+	],
+	"edda-broadmark": [
+		{
+			"reputation_faction": "iron-companies",
+			"minimum_reputation_band": &"warm",
+			"dialogue_path": BAND_REACTION_DIALOGUE,
+			"dialogue_title": "dom_edda_broadmark_warm",
+		},
+	],
+	"drann-wetiron": [
+		{
+			"reputation_faction": "shattersteel-concord",
+			"minimum_reputation_band": &"warm",
+			"dialogue_path": BAND_REACTION_DIALOGUE,
+			"dialogue_title": "dom_drann_wetiron_warm",
+		},
+	],
+	"venn-ashcord": [
+		{
+			"reputation_faction": "rennen",
+			"minimum_reputation_band": &"warm",
+			"dialogue_path": BAND_REACTION_DIALOGUE,
+			"dialogue_title": "dom_venn_ashcord_warm",
+		},
+	],
+	"holst-brinevein": [
+		{
+			"reputation_faction": "wayfare-menders",
+			"minimum_reputation_band": &"warm",
+			"dialogue_path": BAND_REACTION_DIALOGUE,
+			"dialogue_title": "dom_holst_brinevein_warm",
 		},
 	],
 }

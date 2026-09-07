@@ -103,14 +103,14 @@ func _on_world_phase_changed(
 
 
 func _on_reaction_flag_changed(_flag: String, _value: Variant) -> void:
-	if NpcReactions.has_reaction(npc_id):
+	if NpcReactions.has_reaction(_stable_actor_id()):
 		_refresh_world_state()
 
 
 func _on_reaction_reputation_changed(
 	_faction: String, _standing: float, _event: ReputationEvent
 ) -> void:
-	if NpcReactions.has_reaction(npc_id):
+	if NpcReactions.has_reaction(_stable_actor_id()):
 		_refresh_world_state()
 
 
@@ -118,8 +118,14 @@ func _refresh_world_state() -> void:
 	# PRECEDENCE: the routine chooses WHERE; the reaction chooses WHETHER and
 	# WHAT dialogue. Apply the routine first so a matching reaction's presence
 	# verdict wins without discarding a present routine's authored position.
-	var has_routine := NpcRoutines.has_routine(npc_id)
-	var has_reaction := NpcReactions.has_reaction(npc_id)
+	# `_stable_actor_id()`, not `npc_id`: TownNpcSpawner hands its 60 generated
+	# townsfolk their identity as node META, never as the exported property, so
+	# reading `npc_id` here saw "" for every one of them — no routine and no
+	# reaction could ever reach a spawned NPC. The quest router already resolved
+	# identity this way; the world-state path now agrees with it.
+	var actor_id := _stable_actor_id()
+	var has_routine := NpcRoutines.has_routine(actor_id)
+	var has_reaction := NpcReactions.has_reaction(actor_id)
 	var routine_placed := false
 	if has_routine:
 		routine_placed = _apply_routine()
@@ -141,9 +147,10 @@ func _refresh_world_state() -> void:
 
 ## Returns true when the routine supplied an authored position this refresh.
 func _apply_routine() -> bool:
-	if npc_id.is_empty():
+	var actor_id := _stable_actor_id()
+	if actor_id.is_empty():
 		return false
-	var row := NpcRoutines.placement(npc_id, WorldClock.phase())
+	var row := NpcRoutines.placement(actor_id, WorldClock.phase())
 	if row.is_empty():
 		return false
 	# Routine positions are HUB_SCENE coordinates; never apply them elsewhere.
@@ -166,7 +173,7 @@ func _apply_reaction() -> void:
 	_reaction_dialogue_start = ""
 	dialogue_path = _authored_dialogue_path
 	dialogue_start = _authored_dialogue_start
-	var reaction := NpcReactions.resolve(npc_id)
+	var reaction := NpcReactions.resolve(_stable_actor_id())
 	if reaction.is_empty():
 		return
 	if reaction.has("present"):
