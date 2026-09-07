@@ -6,6 +6,7 @@
 script = ExtResource("1_definition")
 id = &"registry_stacks_interior"
 scene_path = "res://world/interiors/registry_stacks.tscn"
+harmonic_accord = 95.0
 default_spawn_id = &"entry"
 spawns = {
 "entry": "entry"

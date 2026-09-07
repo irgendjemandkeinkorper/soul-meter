@@ -71,7 +71,15 @@ meets is measured, none is interpolated. `thinning_tier` is left exactly as auth
 
 The remaining eight macro locations do not exist yet (`world/locations/` holds four plus
 interiors), so this table cannot cover twelve. The **rule** covers them:
-`harmonic_accord = 95 − 15 × thinning_tier`, which is the closed form of the column above.
+**derivation**: `harmonic_accord = swept_effective[tier] + 5 × tier`, where `swept_effective`
+is `tools/casting_economy_sweep.gd`'s `INTEGRITIES` — `[95, 80, 60, 40]` — and `5` is
+`SkillCheck.THINNING_INTEGRITY_PENALTY_PER_TIER`.
+
+> **Correction, 2026-09-07.** An earlier revision of this section stated the rule as
+> `harmonic_accord = 95 − 15 × thinning_tier`. That is wrong: it yields 95/80/65/50 and does
+> not reproduce this table's own 95/85/70/55. There is no clean linear rule, and that is the
+> point — the swept rows `[95, 80, 60, 40]` are sample points the tool measured, not a series.
+> The authored value is whatever puts a location's *effective* accord on one of them.
 A new location authors its tier from where it sits on the wilds→front axis and takes its
 accord from the rule; a location that deviates from the rule should say why in its own note.
 
@@ -86,7 +94,18 @@ Interiors inherit their hub's accord — none of them is on the axis.
 # world/locations/wound_lip.tres     harmonic_accord = 55.0
 ```
 
-## 4. The one decision this proposal does not make
+### RATIFIED 2026-09-07 — applied, option (B)
+
+The owner ratified the table above and chose **(B)**: `harmonic_accord` is a base and the
+`thinning_tier` penalty still stacks on top. The values are authored in
+`world/locations/*.tres`, and Dom's twenty-one interiors carry Dom's 95.0 so an interior can
+never cast more reliably than the street outside it. `test/unit/test_location_registry.gd`
+pins all three properties: the literal values, the derivation above, and that every effective
+accord still lands on a row `tools/casting_economy_sweep.gd` measured.
+
+No code changed. §4 below records the decision that was open until this ratification.
+
+## 4. The decision this proposal did not make (RESOLVED: B)
 
 Once accord is authored, **`harmonic_accord` and `thinning_tier` both apply**, and the tier
 penalty was written as a stand-in for the accord that did not exist yet. Two readings:
