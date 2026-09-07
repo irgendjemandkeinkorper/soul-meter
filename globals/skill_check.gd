@@ -14,6 +14,13 @@ const MAX_ROLL := 100
 const EXPERT_REROLL_CAP := 1
 ## PROVISIONAL (R11): 4 makes an Untrained tone equal the canon Intuition reduction exactly.
 const TONE_BONUS_DIVISOR := 4.0
+## PROVISIONAL — `docs/architecture-dramgid.md` §6 owns the magnitude. RFC-0007 §6
+## states the Sway/Bellow modifier as a tier index (±0..±3) without naming a unit,
+## so 1.0 makes `karma_bonus()` return exactly the RFC's number rather than a
+## rescaling nobody ratified. On this service's 0..100 percentile scale that is a
+## deliberately small nudge; if the numeric pass wants it to bite, this is the one
+## line to change.
+const KARMA_BONUS_PER_TIER := 1.0
 const DEFAULT_FIZZLE_TABLE: FizzleTable = preload("res://globals/default_fizzle_table.tres")
 const DramgidSchemaScript := preload("res://globals/stats/dramgid_schema.gd")
 
@@ -73,17 +80,23 @@ func effective_percent(
 	return preview(skill_name, member, situational_modifiers)
 
 
-## The tier values land with Renown in F3a-3. Until then, read the seam when it
-## exists and preserve today's neutral resolution value.
+## RFC-0007 §6 (RULE.TIER_INDEXED_SKILLS), live since #384 put Yothmeru on the
+## Renown ledger. Sway and Bellow are the only two skills that carry a
+## `karma_direction`, and they read the TIER, not the raw score: Uncertain +0,
+## Upright/Troubled ±1, Virtuous/Cruel ±2, Exalted/Damned ±3. Sway gains from
+## good Karma and Bellow from bad, which falls out of multiplying the signed tier
+## offset by the skill's direction (+1 for Sway, −1 for Bellow).
+##
+## Karma is the PLAYER's ledger, not the subject's — `Renown` is global. A
+## preview for a companion still reads the party's standing, which is right: the
+## room is reacting to who it thinks it is dealing with.
 func karma_bonus(skill_name: String) -> float:
 	var normalized_skill := _normalize_skill_name(skill_name)
 	var definition: Dictionary = SKILL_DEFINITIONS.get(normalized_skill, {})
-	if int(definition.get("karma_direction", 0)) == 0:
+	var direction := int(definition.get("karma_direction", 0))
+	if direction == 0:
 		return 0.0
-	if not Renown.has_method("karma_tier"):
-		return 0.0
-	Renown.call("karma_tier")
-	return 0.0
+	return float(Renown.karma_tier_offset() * direction) * KARMA_BONUS_PER_TIER
 
 
 ## F4 defines Hush/Waning zone penalties. The hook is intentionally neutral now.

@@ -5,8 +5,20 @@ const SkillCheckScript := preload("res://globals/skill_check.gd")
 var service: SkillCheckService
 
 
+var _renown_before_test: Dictionary = {}
+var _party_before_test: Array[PartyMember] = []
+
+
 func before_test() -> void:
 	service = auto_free(SkillCheckScript.new())
+	# The karma cases below write to the global Renown ledger and the party.
+	_renown_before_test = Renown.to_dict()
+	_party_before_test = GameState.party.duplicate()
+
+
+func after_test() -> void:
+	Renown.from_dict(_renown_before_test)
+	GameState.party = _party_before_test
 
 
 func test_preview_applies_attribute_tier_advancement_and_cap() -> void:
@@ -146,6 +158,91 @@ func test_fickah_and_locksmirk_keep_a_five_percent_floor() -> void:
 	assert_float(service.fizzle_percent(100.0, "tone", 0, "note", 10, true, "Fickah")).is_equal(5.0)
 	assert_float(service.fizzle_percent(100.0, "tone", 0, "note", 10, true, "Locksmirk")).is_equal(5.0)
 	assert_float(service.fizzle_percent(100.0, "tone", 0, "note", 10, true, "Kero")).is_equal(0.0)
+
+
+## RFC-0007 §6 (RULE.TIER_INDEXED_SKILLS) — live since #384. These read the
+## global Renown ledger, so each one states the Karma it wants rather than
+## inheriting whatever the previous test left behind.
+func _given_karma(total: float) -> void:
+	Renown.from_dict({})
+	# Doctrine 10 makes the write multiplier exactly 1.0, so `total` is the Karma
+	# that lands. Above the 2..5 point-buy range on purpose: this is a test fixing
+	# a multiplier, not a legal character.
+	var member := PartyMember.new()
+	member.id = GameState.PROTAGONIST_ID
+	member.attributes = {"doctrine": 10, "decorum": 10}
+	var party: Array[PartyMember] = [member]
+	GameState.party = party
+	if not is_zero_approx(total):
+		Renown.gain_karma("player", total, "test fixture")
+
+
+func test_karma_moves_sway_and_bellow_in_opposite_directions() -> void:
+	_given_karma(900.0)  # Exalted, tier offset +3
+	assert_float(service.karma_bonus("sway")).is_equal_approx(
+		3.0 * SkillCheckScript.KARMA_BONUS_PER_TIER, 0.001
+	)
+	assert_float(service.karma_bonus("bellow")).is_equal_approx(
+		-3.0 * SkillCheckScript.KARMA_BONUS_PER_TIER, 0.001
+	)
+
+	_given_karma(-900.0)  # Damned, tier offset -3
+	assert_float(service.karma_bonus("sway")).is_equal_approx(
+		-3.0 * SkillCheckScript.KARMA_BONUS_PER_TIER, 0.001
+	)
+	assert_float(service.karma_bonus("bellow")).override_failure_message(
+		"RFC-0007: Bellow gains in the positive direction from BAD Karma"
+	).is_equal_approx(3.0 * SkillCheckScript.KARMA_BONUS_PER_TIER, 0.001)
+
+
+func test_karma_reads_the_tier_not_the_raw_score() -> void:
+	# Every score inside Virtuous has to give the same bonus; a bonus that tracked
+	# the score would drift across the band.
+	for score: float in [250.0, 400.0, 599.0]:
+		_given_karma(score)
+		assert_float(service.karma_bonus("sway")).override_failure_message(
+			"Karma %s is Virtuous and must give the same bonus as the rest of the band" % score
+		).is_equal_approx(2.0 * SkillCheckScript.KARMA_BONUS_PER_TIER, 0.001)
+
+
+func test_uncertain_karma_is_neutral() -> void:
+	_given_karma(0.0)
+	assert_float(service.karma_bonus("sway")).is_equal_approx(0.0, 0.001)
+	assert_float(service.karma_bonus("bellow")).is_equal_approx(0.0, 0.001)
+
+
+func test_only_sway_and_bellow_carry_a_karma_direction() -> void:
+	# The bonus must not leak into every social or voice check — RFC-0007 names
+	# exactly two skills, and DramgidSchema is where that list lives.
+	_given_karma(900.0)
+	var directed: Array[String] = []
+	for skill_id: String in DramgidSchema.SKILL_IDS:
+		if not is_zero_approx(service.karma_bonus(skill_id)):
+			directed.append(skill_id)
+	directed.sort()
+	assert_array(directed).is_equal(["bellow", "sway"] as Array[String])
+
+
+func test_an_unknown_skill_has_no_karma_bonus() -> void:
+	_given_karma(900.0)
+	assert_float(service.karma_bonus("not-a-skill")).is_equal_approx(0.0, 0.001)
+
+
+func test_karma_reaches_the_previewed_percentage() -> void:
+	# The seam is only real if it lands in `preview()`; a bonus nothing reads is
+	# the state-with-no-consumer failure this project has shipped before.
+	var member := _member()
+	member.attributes["decorum"] = 4
+	member.skill_tiers["sway"] = "trained"
+
+	_given_karma(0.0)
+	var neutral := service.preview("sway", member)
+	_given_karma(900.0)
+	var exalted := service.preview("sway", member)
+
+	assert_float(exalted - neutral).is_equal_approx(
+		3.0 * SkillCheckScript.KARMA_BONUS_PER_TIER, 0.001
+	)
 
 
 func _member() -> PartyMember:
