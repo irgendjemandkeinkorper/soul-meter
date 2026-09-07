@@ -51,10 +51,16 @@ static func balance_effects(value: int, suppressed: bool = false) -> Dictionary:
 
 static func archetype_ids() -> Array[StringName]:
 	_ensure_loaded()
-	var result: Array[StringName] = []
+	# Sort as String, never as StringName: StringName's `<` compares by internal pointer, so a
+	# StringName sort is interning order, not alphabetical, and callers that index into this
+	# list get a different archetype depending on what ran first.
+	var names: Array[String] = []
 	for archetype_id: Variant in _archetype_tables():
-		result.append(StringName(str(archetype_id)))
-	result.sort()
+		names.append(str(archetype_id))
+	names.sort()
+	var result: Array[StringName] = []
+	for id_text: String in names:
+		result.append(StringName(id_text))
 	return result
 
 

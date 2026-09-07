@@ -172,10 +172,17 @@ func test_recruit_mode_cancels_through_the_production_ui_stack() -> void:
 	assert_str(screen.current_step_id()).is_equal("patron")
 	assert_bool(is_instance_valid(screen) and screen.is_inside_tree()).is_true()
 
+	# Page one: cancel closes the screen back to the caller. The close is animated
+	# (`DS.DUR_FAST`, and `UIManager.back()` awaits the exit tween before freeing), so a fixed
+	# handful of frames is not a wait — poll on the condition with a frame budget instead.
 	screen.go_to_step(&"ancestry")
 	screen.back_step()
-	await runner.simulate_frames(6)
+	for _frame: int in 60:
+		if not is_instance_valid(screen) or not screen.is_inside_tree():
+			break
+		await get_tree().process_frame
 	assert_bool(not is_instance_valid(screen) or not screen.is_inside_tree()).is_true()
+	UIManager.close_all()
 
 
 func _fill_out_valid_build(screen: CharacterCreationScreen, name: String, epithet: String) -> void:
