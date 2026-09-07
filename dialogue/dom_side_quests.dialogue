@@ -11,8 +11,8 @@ Keth Varr: Honest bronze seals can still close around dishonest water. I need th
 	do GameState.set_flag("dom_dishonest_casks_traced", true)
 	Keth Varr: Then choose the danger Dom carries: a brief silence now or guarded water beneath every hammer.
 	=> END
-- "Three truths are enough to trace the casks." [#tag=Persuasion] [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and not GameState.get_flag("dom_dishonest_casks_traced") and not GameState.get_flag("dom_dishonest_casks_check_failed") and check("persuasion", 45) /]
-	do SkillCheck.resolve("persuasion")
+- "Three truths are enough to trace the casks." [#tag=Sway] [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and not GameState.get_flag("dom_dishonest_casks_traced") and not GameState.get_flag("dom_dishonest_casks_check_failed") and check("sway", 45) /]
+	do SkillCheck.resolve("sway")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_dishonest_casks_traced", true)
 		Keth Varr: Three truths, one trace. I will accept it.
@@ -55,8 +55,8 @@ Droma Flintjaw: A clean plate came off the Jawbrace with a living guard's tag st
 	do GameState.set_flag("dom_living_tag_verified", true)
 	Droma Flintjaw: Then the tag is true and the casualty line is false. Decide which truth touches the plate first.
 	=> END
-- "Read the guard's history in the tag and plate together." [#tag=Lore] [if QuestRegistry.is_active(QuestRegistry.LIVING_TAG) and not GameState.get_flag("dom_living_tag_verified") and not GameState.get_flag("dom_living_tag_check_failed") and check("lore", 45) /]
-	do SkillCheck.resolve("lore")
+- "Read the guard's history in the tag and plate together." [#tag=Recall] [if QuestRegistry.is_active(QuestRegistry.LIVING_TAG) and not GameState.get_flag("dom_living_tag_verified") and not GameState.get_flag("dom_living_tag_check_failed") and check("recall", 45) /]
+	do SkillCheck.resolve("recall")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_living_tag_verified", true)
 		Droma Flintjaw: The tag and plate agree. The living owner stands clear of the false report.
@@ -99,8 +99,8 @@ Irka Stonebreath: One veteran lies in my ward without a hall name. Mercy keeps t
 	do GameState.set_flag("dom_unclaimed_bed_identified", true)
 	Irka Stonebreath: Knowing a name does not grant the right to spend it. Decide where that debt belongs.
 	=> END
-- "Read the veteran's identity in the token and Istra's account." [#tag=Insight] [if QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and not GameState.get_flag("dom_unclaimed_bed_identified") and not GameState.get_flag("dom_unclaimed_bed_check_failed") and check("insight", 45) /]
-	do SkillCheck.resolve("insight")
+- "Read the veteran's identity in the token and Istra's account." [#tag=Undertone] [if QuestRegistry.is_active(QuestRegistry.UNCLAIMED_BED) and not GameState.get_flag("dom_unclaimed_bed_identified") and not GameState.get_flag("dom_unclaimed_bed_check_failed") and check("undertone", 45) /]
+	do SkillCheck.resolve("undertone")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_unclaimed_bed_identified", true)
 		Irka Stonebreath: You have the identity without turning it into spectacle. Now place the debt.
@@ -143,8 +143,8 @@ Jorun Ashmantle: One bowl has gone cold for six nights. The veteran who owns it 
 	do GameState.set_flag("dom_cold_bowl_veteran_found", true)
 	Jorun Ashmantle: Found is not returned. Decide whether the roll needs the veteran more than the veteran needs distance from it.
 	=> END
-- "Let the hound lead me to the veteran." [#tag=Beast Handling] [if QuestRegistry.is_active(QuestRegistry.COLD_BOWL) and not GameState.get_flag("dom_cold_bowl_veteran_found") and not GameState.get_flag("dom_cold_bowl_check_failed") and check("beast_handling", 40) /]
-	do SkillCheck.resolve("beast_handling")
+- "Let the hound lead me to the veteran." [#tag=Beastbond] [if QuestRegistry.is_active(QuestRegistry.COLD_BOWL) and not GameState.get_flag("dom_cold_bowl_veteran_found") and not GameState.get_flag("dom_cold_bowl_check_failed") and check("beastbond", 40) /]
+	do SkillCheck.resolve("beastbond")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_cold_bowl_veteran_found", true)
 		Jorun Ashmantle: The hound found the veteran. Decide what the roll asks next.
@@ -187,8 +187,8 @@ Hadrik Vale: A road register returned with rain inside three intact seals. One c
 	do GameState.set_flag("dom_rainbound_register_reconstructed", true)
 	Hadrik Vale: Then the evidence is complete and the meaning remains disputed. Choose which column bears the name.
 	=> END
-- "Reconstruct the crossed-out entry from all three records." [#tag=Investigation] [if QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and not GameState.get_flag("dom_rainbound_register_reconstructed") and not GameState.get_flag("dom_rainbound_register_check_failed") and check("investigation", 50) /]
-	do SkillCheck.resolve("investigation")
+- "Reconstruct the crossed-out entry from all three records." [#tag=Unweave] [if QuestRegistry.is_active(QuestRegistry.RAINBOUND_REGISTER) and not GameState.get_flag("dom_rainbound_register_reconstructed") and not GameState.get_flag("dom_rainbound_register_check_failed") and check("unweave", 50) /]
+	do SkillCheck.resolve("unweave")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_rainbound_register_reconstructed", true)
 		Hadrik Vale: Every mark has its place again. The disputed name is ready for judgment.
@@ -231,8 +231,8 @@ Orren Chainwake: One safe course remains below the sea-mouth and a crew is waiti
 	do GameState.set_flag("dom_last_safe_course_verified", true)
 	Orren Chainwake: Then the course is true today. Decide how many tomorrows get to spend it.
 	=> END
-- "The three reports describe one safe course." [#tag=Survival] [if QuestRegistry.is_active(QuestRegistry.LAST_SAFE_COURSE) and not GameState.get_flag("dom_last_safe_course_verified") and not GameState.get_flag("dom_last_safe_course_check_failed") and check("survival", 50) /]
-	do SkillCheck.resolve("survival")
+- "The three reports describe one safe course." [#tag=Wayfinding] [if QuestRegistry.is_active(QuestRegistry.LAST_SAFE_COURSE) and not GameState.get_flag("dom_last_safe_course_verified") and not GameState.get_flag("dom_last_safe_course_check_failed") and check("wayfinding", 50) /]
+	do SkillCheck.resolve("wayfinding")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_last_safe_course_verified", true)
 		Orren Chainwake: The three agree. The course is true today.
@@ -275,8 +275,8 @@ Pell Hammersong: Four Arms answer in four beats. The western storm keeps sending
 	do GameState.set_flag("dom_fifth_echo_tested", true)
 	Pell Hammersong: Then it is not bad tuning. Decide whether civic speech excludes it or learns to warn with it.
 	=> END
-- "Test the pattern against the four-beat cadence." [#tag=Performance] [if QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and not GameState.get_flag("dom_fifth_echo_tested") and not GameState.get_flag("dom_fifth_echo_check_failed") and check("performance", 45) /]
-	do SkillCheck.resolve("performance")
+- "Test the pattern against the four-beat cadence." [#tag=Vārum] [if QuestRegistry.is_active(QuestRegistry.FIFTH_ECHO) and not GameState.get_flag("dom_fifth_echo_tested") and not GameState.get_flag("dom_fifth_echo_check_failed") and check("varum", 45) /]
+	do SkillCheck.resolve("varum")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_fifth_echo_tested", true)
 		Pell Hammersong: You heard it. The fifth beat survives the cadence.
@@ -319,8 +319,8 @@ Senn Brinehook: My net came back cut from below and every knot was retied in mar
 	do GameState.set_flag("dom_marching_knots_traced", true)
 	Senn Brinehook: Then the pattern belongs to everyone in danger or only the watch trying to name it. Choose.
 	=> END
-- "Retie the marching sequence from the three accounts." [#tag=Sleight of Hand] [if QuestRegistry.is_active(QuestRegistry.MARCHING_KNOTS) and not GameState.get_flag("dom_marching_knots_traced") and not GameState.get_flag("dom_marching_knots_check_failed") and check("sleight_of_hand", 40) /]
-	do SkillCheck.resolve("sleight_of_hand")
+- "Retie the marching sequence from the three accounts." [#tag=Slip] [if QuestRegistry.is_active(QuestRegistry.MARCHING_KNOTS) and not GameState.get_flag("dom_marching_knots_traced") and not GameState.get_flag("dom_marching_knots_check_failed") and check("slip", 40) /]
+	do SkillCheck.resolve("slip")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_marching_knots_traced", true)
 		Senn Brinehook: The sequence holds in your hands. Now choose who keeps it.
@@ -363,8 +363,8 @@ Vaara Cisternhand: Forge ash reached my cistern before the rain crossed East Arm
 	do GameState.set_flag("dom_ash_in_the_rain_traced", true)
 	Vaara Cisternhand: Good. There is not enough clean water to make the choice disappear. Put one line first.
 	=> END
-- "The ash and the ration counts point to one demand." [#tag=Investigation] [if QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and not GameState.get_flag("dom_ash_in_the_rain_traced") and not GameState.get_flag("dom_ash_in_the_rain_check_failed") and check("investigation", 45) /]
-	do SkillCheck.resolve("investigation")
+- "The ash and the ration counts point to one demand." [#tag=Unweave] [if QuestRegistry.is_active(QuestRegistry.ASH_IN_THE_RAIN) and not GameState.get_flag("dom_ash_in_the_rain_traced") and not GameState.get_flag("dom_ash_in_the_rain_check_failed") and check("unweave", 45) /]
+	do SkillCheck.resolve("unweave")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_ash_in_the_rain_traced", true)
 		Vaara Cisternhand: The ash and counts agree. Choose who drinks first.
@@ -407,8 +407,8 @@ Veska Ruun: Three Pillar weights were filed smooth where candidate names should 
 	do GameState.set_flag("dom_smoothed_weights_audited", true)
 	Veska Ruun: Then innocence and legitimacy no longer fit on the same line. Decide which debt the Pillar pays first.
 	=> END
-- "Test the filed weights against an honest Pillar burden." [#tag=Athletics] [if QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and not GameState.get_flag("dom_smoothed_weights_audited") and not GameState.get_flag("dom_smoothed_weights_check_failed") and check("athletics", 50) /]
-	do SkillCheck.resolve("athletics")
+- "Test the filed weights against an honest Pillar burden." [#tag=Strain] [if QuestRegistry.is_active(QuestRegistry.SMOOTHED_WEIGHTS) and not GameState.get_flag("dom_smoothed_weights_audited") and not GameState.get_flag("dom_smoothed_weights_check_failed") and check("strain", 50) /]
+	do SkillCheck.resolve("strain")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("dom_smoothed_weights_audited", true)
 		Veska Ruun: Your measure confirms the altered burden. The affected ranks await judgment.

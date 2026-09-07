@@ -40,7 +40,7 @@ func test_scene_loads_with_every_gauntlet_beat() -> void:
 
 
 func test_entrance_speech_skip_success_unlocks_exit() -> void:
-	_configure_skill("insight", 95.0)
+	_configure_skill("undertone", 95.0)
 	SkillCheck.random_number_generator.seed = _successful_seed()
 	var resource := load(DIALOGUE_PATH) as DialogueResource
 	var response: DialogueResponse = await _response_containing(
@@ -87,7 +87,7 @@ func test_fled_warden_encounter_can_be_retried() -> void:
 
 
 func test_keeper_talk_success_completes_gauntlet() -> void:
-	_configure_skill("persuasion", 95.0)
+	_configure_skill("sway", 95.0)
 	SkillCheck.random_number_generator.seed = _successful_seed()
 	var resource := load(DIALOGUE_PATH) as DialogueResource
 	var response: DialogueResponse = await _response_containing(

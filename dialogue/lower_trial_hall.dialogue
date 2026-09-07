@@ -1,8 +1,8 @@
 # PROVISIONAL — CANON REVIEW REQUIRED: Trial Aide, Trial Keeper, and all lines below.
 ~ trial_aide
 Trial Aide: The lower hall is ready. You may take the trial, or show that you already understand its purpose.
-- "Read the trial's intent and ask to pass." [#tag=INSIGHT] [if not GameState.get_flag("tutorial_gauntlet_complete") and not GameState.get_flag("tutorial_aide_skip_failed") and check("insight", 40) /]
-	do SkillCheck.resolve("insight")
+- "Read the trial's intent and ask to pass." [#tag=UNDERTONE] [if not GameState.get_flag("tutorial_gauntlet_complete") and not GameState.get_flag("tutorial_aide_skip_failed") and check("undertone", 40) /]
+	do SkillCheck.resolve("undertone")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("tutorial_gauntlet_complete", true)
 		Trial Aide: You understand. Go through; the keeper will not bar you.
@@ -17,8 +17,8 @@ Trial Aide: The lower hall is ready. You may take the trial, or show that you al
 
 ~ trial_skill_door
 Trial Aide: The latch accepts the stamped key from the alcove, but a careful hand can read its catch.
-- "Work the catch by touch." [#tag=SLEIGHT OF HAND] [if GameState.get_flag("tutorial_warden_cleared") and not GameState.get_flag("tutorial_skill_door_open") and not GameState.get_flag("tutorial_skill_door_check_failed") and check("sleight_of_hand", 40) /]
-	do SkillCheck.resolve("sleight_of_hand")
+- "Work the catch by touch." [#tag=SLIP] [if GameState.get_flag("tutorial_warden_cleared") and not GameState.get_flag("tutorial_skill_door_open") and not GameState.get_flag("tutorial_skill_door_check_failed") and check("slip", 40) /]
+	do SkillCheck.resolve("slip")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("tutorial_skill_door_open", true)
 		Trial Aide: The catch lifts. The keeper waits beyond.
@@ -35,8 +35,8 @@ Trial Aide: The latch accepts the stamped key from the alcove, but a careful han
 
 ~ trial_keeper
 Trial Keeper: One choice remains. Convince me to stand aside, or meet me in the trial.
-- "No blood is needed; yielding proves the same lesson." [#tag=PERSUASION] [if not GameState.get_flag("tutorial_gauntlet_complete") and not GameState.get_flag("tutorial_keeper_talk_failed") and check("persuasion", 40) /]
-	do SkillCheck.resolve("persuasion")
+- "No blood is needed; yielding proves the same lesson." [#tag=SWAY] [if not GameState.get_flag("tutorial_gauntlet_complete") and not GameState.get_flag("tutorial_keeper_talk_failed") and check("sway", 40) /]
+	do SkillCheck.resolve("sway")
 	if SkillCheck.last_check_succeeded()
 		do GameState.set_flag("tutorial_gauntlet_complete", true)
 		Trial Keeper: Enough. Pass into Dom.

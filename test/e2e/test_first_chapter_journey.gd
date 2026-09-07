@@ -150,10 +150,10 @@ func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void
 func test_speech_skip_and_keeper_talk_arcs_open_the_real_exit_to_dom() -> void:
 	var member := GameState.protagonist()
 	assert_object(member).is_not_null()
-	member.skill_tiers["insight"] = "untrained"
-	member.skill_percentages["insight"] = 95.0
-	member.skill_tiers["persuasion"] = "untrained"
-	member.skill_percentages["persuasion"] = 95.0
+	member.skill_tiers["undertone"] = "untrained"
+	member.skill_percentages["undertone"] = 95.0
+	member.skill_tiers["sway"] = "untrained"
+	member.skill_percentages["sway"] = 95.0
 	var trial_dialogue := load("res://dialogue/lower_trial_hall.dialogue") as DialogueResource
 
 	SkillCheck.random_number_generator.seed = _winning_percentile_seed()
@@ -188,8 +188,8 @@ func test_council_elder_checked_route_also_offers_the_driving_quest() -> void:
 	assert_object(member).is_not_null()
 	for attribute: String in member.attributes:
 		member.attributes[attribute] = 0
-	member.skill_tiers["insight"] = "untrained"
-	member.skill_percentages["insight"] = 95.0
+	member.skill_tiers["undertone"] = "untrained"
+	member.skill_percentages["undertone"] = 95.0
 	SkillCheck.random_number_generator.seed = _winning_percentile_seed()
 	var resource := load(COUNCIL_ELDER_DIALOGUE_PATH) as DialogueResource
 
@@ -520,7 +520,7 @@ func test_checkpoint_payload_reconstructs_party_quests_and_flags() -> void:
 
 func test_dishonest_casks_exemplar_passes_both_verb_routes_and_a_failure_route() -> void:
 	## Wave 3 feel-gate exemplar: the same quest completes through the
-	## persuasion check verb, and separately through the original evidence
+	## Sway check verb, and separately through the original evidence
 	## route after a failed check — proving the failure closes only its path.
 	const SIDE_DIALOGUE_PATH := "res://dialogue/dom_side_quests.dialogue"
 	const HUB_TITLE := "dom_side_dishonest_casks_hub"
@@ -528,10 +528,10 @@ func test_dishonest_casks_exemplar_passes_both_verb_routes_and_a_failure_route()
 	var quest := QuestRegistry.DISHONEST_CASKS
 	var member := GameState.protagonist()
 	member.attributes["voice"] = 0
-	member.skill_tiers["persuasion"] = "untrained"
+	member.skill_tiers["sway"] = "untrained"
 
 	# Route A — the check verb, forced success (95% effective, winning seed).
-	member.skill_percentages["persuasion"] = 95.0
+	member.skill_percentages["sway"] = 95.0
 	QuestRegistry.offer_side_quest(quest)
 	var resource := load(SIDE_DIALOGUE_PATH) as DialogueResource
 	var check_response: DialogueResponse = await _journey_response(
@@ -550,19 +550,19 @@ func test_dishonest_casks_exemplar_passes_both_verb_routes_and_a_failure_route()
 	_reset_fixture()
 	member = GameState.protagonist()
 	member.attributes["voice"] = 0
-	member.skill_tiers["persuasion"] = "untrained"
-	member.skill_percentages["persuasion"] = 95.0
+	member.skill_tiers["sway"] = "untrained"
+	member.skill_percentages["sway"] = 95.0
 	QuestRegistry.offer_side_quest(quest)
 	resource = load(SIDE_DIALOGUE_PATH) as DialogueResource
 	check_response = await _journey_response(resource, HUB_TITLE, CHECK_TEXT)
-	member.skill_percentages["persuasion"] = 0.0
+	member.skill_percentages["sway"] = 0.0
 	await DialogueManager.get_next_dialogue_line(resource, check_response.next_id)
 	assert_bool(GameState.flag_is_true("dom_dishonest_casks_check_failed")).is_true()
 	assert_bool(GameState.flag_is_true("dom_dishonest_casks_traced")).is_false()
 	# The failed check must CLOSE its own option and leave the original
 	# dialogue route selectable — drive that route through the same resource,
 	# never by setting flags directly.
-	member.skill_percentages["persuasion"] = 95.0
+	member.skill_percentages["sway"] = 95.0
 	assert_object(await _journey_response(resource, HUB_TITLE, CHECK_TEXT)).is_null()
 	var original_response: DialogueResponse = await _journey_response(
 		resource, HUB_TITLE, "Arvek's mark and the forge tally agree."

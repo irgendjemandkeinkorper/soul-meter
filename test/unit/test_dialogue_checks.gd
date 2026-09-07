@@ -13,7 +13,7 @@ func before_test() -> void:
 	QuestRegistry.reset()
 	QuestRegistry.offer_side_quest(QuestRegistry.DISHONEST_CASKS)
 	SkillCheck._check_log.clear()
-	_configure_persuasion(95.0)
+	_configure_sway(95.0)
 
 
 func test_building_checked_choice_consumes_no_rng_or_check_log_entry() -> void:
@@ -41,7 +41,7 @@ func test_selecting_checked_response_commits_exactly_one_check() -> void:
 	var latest_check: Dictionary = SkillCheck.recent_checks().back()
 	# The authored difficulty gates availability only; the committed roll is
 	# against effective skill, so the log records skill + rolls, not difficulty.
-	assert_str(str(latest_check.get("skill"))).is_equal("persuasion")
+	assert_str(str(latest_check.get("skill"))).is_equal("sway")
 
 
 func test_checked_response_success_and_failure_keep_quest_completable() -> void:
@@ -55,7 +55,7 @@ func test_checked_response_success_and_failure_keep_quest_completable() -> void:
 	before_test()
 	resource = load(DIALOGUE_PATH) as DialogueResource
 	var failure_response: DialogueResponse = await _checked_response(resource)
-	_configure_persuasion(0.0)
+	_configure_sway(0.0)
 	await DialogueManager.get_next_dialogue_line(resource, failure_response.next_id)
 	assert_bool(GameState.flag_is_true("dom_dishonest_casks_traced")).is_false()
 	assert_bool(GameState.flag_is_true("dom_dishonest_casks_check_failed")).is_true()
@@ -81,7 +81,7 @@ func test_ash_in_the_rain_check_route_contract() -> void:
 			"quest": QuestRegistry.ASH_IN_THE_RAIN,
 			"title": "dom_side_ash_in_the_rain_hub",
 			"response": "The ash and the ration counts point to one demand.",
-			"skill": "investigation",
+			"skill": "unweave",
 			"success_flag": "dom_ash_in_the_rain_traced",
 			"failure_flag": "dom_ash_in_the_rain_check_failed",
 			"fallback": "Return to Veyra's ash reading and both ration counts.",
@@ -96,7 +96,7 @@ func test_cold_bowl_check_route_contract() -> void:
 			"quest": QuestRegistry.COLD_BOWL,
 			"title": "dom_side_cold_bowl_hub",
 			"response": "Let the hound lead me to the veteran.",
-			"skill": "beast_handling",
+			"skill": "beastbond",
 			"success_flag": "dom_cold_bowl_veteran_found",
 			"failure_flag": "dom_cold_bowl_check_failed",
 			"fallback": "Return with Orenna's key and Kaelra's hound.",
@@ -111,7 +111,7 @@ func test_fifth_echo_check_route_contract() -> void:
 			"quest": QuestRegistry.FIFTH_ECHO,
 			"title": "dom_side_fifth_echo_hub",
 			"response": "Test the pattern against the four-beat cadence.",
-			"skill": "performance",
+			"skill": "varum",
 			"success_flag": "dom_fifth_echo_tested",
 			"failure_flag": "dom_fifth_echo_check_failed",
 			"fallback": "Return to Nalla, Tern, and Sorek's tests.",
@@ -126,7 +126,7 @@ func test_last_safe_course_check_route_contract() -> void:
 			"quest": QuestRegistry.LAST_SAFE_COURSE,
 			"title": "dom_side_last_safe_course_hub",
 			"response": "The three reports describe one safe course.",
-			"skill": "survival",
+			"skill": "wayfinding",
 			"success_flag": "dom_last_safe_course_verified",
 			"failure_flag": "dom_last_safe_course_check_failed",
 			"fallback": "Return to Holst, Yssra, and Yara's reports.",
@@ -141,7 +141,7 @@ func test_living_tag_check_route_contract() -> void:
 			"quest": QuestRegistry.LIVING_TAG,
 			"title": "dom_side_living_tag_hub",
 			"response": "Read the guard's history in the tag and plate together.",
-			"skill": "lore",
+			"skill": "recall",
 			"success_flag": "dom_living_tag_verified",
 			"failure_flag": "dom_living_tag_check_failed",
 			"fallback": "Return to Korrin's posture and Ressa's brand reading.",
@@ -156,7 +156,7 @@ func test_marching_knots_check_route_contract() -> void:
 			"quest": QuestRegistry.MARCHING_KNOTS,
 			"title": "dom_side_marching_knots_hub",
 			"response": "Retie the marching sequence from the three accounts.",
-			"skill": "sleight_of_hand",
+			"skill": "slip",
 			"success_flag": "dom_marching_knots_traced",
 			"failure_flag": "dom_marching_knots_check_failed",
 			"fallback": "Return to Brek's report, Toma's count, and Yssra's lights.",
@@ -171,7 +171,7 @@ func test_rainbound_register_check_route_contract() -> void:
 			"quest": QuestRegistry.RAINBOUND_REGISTER,
 			"title": "dom_side_rainbound_register_hub",
 			"response": "Reconstruct the crossed-out entry from all three records.",
-			"skill": "investigation",
+			"skill": "unweave",
 			"success_flag": "dom_rainbound_register_reconstructed",
 			"failure_flag": "dom_rainbound_register_check_failed",
 			"fallback": "Return to Brinna's count, Enna's proof, and Kessa's warning.",
@@ -186,7 +186,7 @@ func test_smoothed_weights_check_route_contract() -> void:
 			"quest": QuestRegistry.SMOOTHED_WEIGHTS,
 			"title": "dom_side_smoothed_weights_hub",
 			"response": "Test the filed weights against an honest Pillar burden.",
-			"skill": "athletics",
+			"skill": "strain",
 			"success_flag": "dom_smoothed_weights_audited",
 			"failure_flag": "dom_smoothed_weights_check_failed",
 			"fallback": "Return to Drel's scores and Kadrin's burden pins.",
@@ -201,7 +201,7 @@ func test_unclaimed_bed_check_route_contract() -> void:
 			"quest": QuestRegistry.UNCLAIMED_BED,
 			"title": "dom_side_unclaimed_bed_hub",
 			"response": "Read the veteran's identity in the token and Istra's account.",
-			"skill": "insight",
+			"skill": "undertone",
 			"success_flag": "dom_unclaimed_bed_identified",
 			"failure_flag": "dom_unclaimed_bed_check_failed",
 			"fallback": "Return to Loa's token and Istra's account.",
@@ -212,7 +212,7 @@ func test_unclaimed_bed_check_route_contract() -> void:
 
 func test_check_softlock_audit_rejects_violation_and_accepts_worked_example() -> void:
 	var violating_source := """~ test_quest_hub
-- \"Try the shortcut.\" [if check(\"persuasion\", 45) /]
+- \"Try the shortcut.\" [if check(\"sway\", 45) /]
 	=> END
 """
 	var violating_findings: Array[Dictionary] = QuestAudit.check_softlock_violations(
@@ -224,8 +224,8 @@ func test_check_softlock_audit_rejects_violation_and_accepts_worked_example() ->
 	assert_array(codes).contains(["checked_response_missing_resolve", "checked_response_missing_outcomes"])
 
 	var ending_only_source := """~ test_quest_hub
-- \"Try the shortcut.\" [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and check(\"persuasion\", 45) /]
-	do SkillCheck.resolve(\"persuasion\", 45)
+- \"Try the shortcut.\" [if QuestRegistry.is_active(QuestRegistry.DISHONEST_CASKS) and check(\"sway\", 45) /]
+	do SkillCheck.resolve(\"sway\", 45)
 	if SkillCheck.last_check_succeeded()
 		=> END
 	else
@@ -353,12 +353,12 @@ func _configure_skill(skill: String, advancement: float) -> void:
 	member.skill_percentages[skill] = advancement
 
 
-func _configure_persuasion(advancement: float) -> void:
+func _configure_sway(advancement: float) -> void:
 	var member := GameState.protagonist()
 	assert_object(member).is_not_null()
 	member.attributes["voice"] = 0
-	member.skill_tiers["persuasion"] = "untrained"
-	member.skill_percentages["persuasion"] = advancement
+	member.skill_tiers["sway"] = "untrained"
+	member.skill_percentages["sway"] = advancement
 
 
 func _successful_seed() -> int:
