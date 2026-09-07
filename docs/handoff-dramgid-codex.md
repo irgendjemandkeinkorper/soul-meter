@@ -17,19 +17,24 @@ hook returning 0; `fizzle_percent` parameter `pitch` → `intuition`, formula un
 Accept: schema invariant tests (7 attributes, 22 skills each with a governing attribute, sum-22
 validation); `SkillCheck` public API unchanged except the renamed parameter; suite green.
 
-## PR 2 — F3a-2: save schema 8 + dialogue/audit renames (branch `feat/dramgid-save-8`)
-Scope: `globals/save_migrations.gd`, `test/fixtures/saves/v7_*.json` (new), `dialogue/council_elder.dialogue`,
+## PR 2 — F3a-2: save schema 9 + dialogue/audit renames (branch `feat/dramgid-save-9`)
+> **Renumbered 2026-09-07:** 8 is the elemental-wheel rename (#371). DRAMGID is 8 → 9; see spec §2.1.
+Scope: `globals/save_migrations.gd`, `test/fixtures/saves/v8_*.json` (new), `dialogue/council_elder.dialogue`,
 `dialogue/lower_trial_hall.dialogue`, `dialogue/dom_side_quests.dialogue`, `tools/quest_audit.gd`,
 `docs/dialogue-checks.md`, tests.
-Deliver: `_migrate_v7_to_v8` exactly per spec §2.1 (attribute rename + `doctrine: 2`; skill rename; Alchemy
-refund via the advancement cost curve; `xp: 0`; `renown.karma` keys; recorded-check id rename; derived
-stats recomputed through `DramgidDerived` with a before/after log line per member).
-Accept: fixture v7 saves migrate and load; player rows sum to 22; Alchemy points equal the refund;
+Deliver: `_migrate_v8_to_v9` exactly per spec §2.1 (attribute rename + `doctrine: 2`; skill rename; Alchemy
+refund via the advancement cost curve; `xp: 0`; recorded-check id rename; derived stats recomputed
+through `DramgidDerived` with a before/after log line per member). **No `renown` step** — §3.7 shipped
+in #384 with Karma on the existing append-only log, so a pre-Yothmeru envelope needs no migration.
+Accept: fixture v8 saves migrate and load; player rows sum to 22; Alchemy points equal the refund;
 `quest_audit` 0 errors; `test_dialogue_checks` green with new ids.
 
-## PR 3 — F3a-3: Yothmeru on Renown (branch `feat/dramgid-yothmeru`)
-Scope: `globals/renown.gd`, `globals/world_clock.gd` (subscribe to day change only if E1.10's
-`phase_count` has merged; otherwise leave decay unwired and say so), tests.
+## PR 3 — F3a-3: Yothmeru on Renown — **DONE, merged as #384**
+Shipped `globals/renown.gd` (Karma/Fame, tiers, `karma_tier_offset()`, extreme-tier decay) and
+`globals/world_clock.gd`'s `day_changed`. What is left of this PR is one line in
+`globals/skill_check.gd` on `feat/dramgid-chargen`: `karma_bonus` returns
+`Renown.karma_tier_offset() * karma_direction`. Read §3.7a before changing anything here — owner
+ruling 8 is open on whether Fame switches to the Decorum-scaled `fame_shift`.
 Deliver: spec §3.7 — `gain_karma`, `karma_total`, `karma_tier`, `fame`, `fame_tier`, `witness_factor`
 param with Decorum scaling, extreme-tier decay on day change, `why("karma")`. Tier thresholds from RFC-0007
 as constants in `dramgid_schema.gd` (DeepSeek may adjust later — keep them in one place).
