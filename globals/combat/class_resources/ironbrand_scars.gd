@@ -34,6 +34,19 @@ func spend_scar() -> bool:
 	return true
 
 
+## `data/combat/actions/20_spend_scars.tres` is the button; the window it arms
+## is consumed by the owner's next resolved action, exactly as `spend_scar()`
+## describes. The command adds no second path — it only exposes the existing one.
+func commands() -> Array[StringName]:
+	return [&"spend_scars"]
+
+
+func on_command(action_id: StringName, _target_id: StringName) -> void:
+	if action_id != &"spend_scars":
+		return
+	spend_scar()
+
+
 func on_cast_forecast(_context: Dictionary) -> Dictionary:
 	if guaranteed_hit_armed:
 		return {"to_hit_enabled": false}

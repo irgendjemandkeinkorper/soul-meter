@@ -136,8 +136,20 @@ state-only until seam v2.
    (`ui/hud/regions/unit_plate/`); add a readout there if the existing generic one is not
    enough. `to_dict()`/`from_dict()` call `super` and add your fields.
 4. If the resource needs a player command (spend, file, bind…), author a `CombatAction` `.tres`
-   under `data/combat/actions/` (B13 batch) and gate it in `Battle.action_refusal()` on the
-   resource state — do not add a new `CombatAction.Kind`.
+   under `data/combat/actions/` (B13 batch) with `kind = PASS` and `class_resource_action`
+   set — do not add a new `CombatAction.Kind`. **Then declare the command**: override
+   `commands()` to return it and `on_command()` to run it. `CombatController.query_action()`
+   refuses a class-resource action the acting resource does not claim, so a patron who has no
+   business pressing the button gets a locked button with a reason rather than one that
+   quietly does nothing. Two tests in `test_combat_action_catalog.gd` enforce both directions:
+   every authored command is answered by exactly one patron, and every declared command has an
+   authored action.
+
+   Commands that need a PAYLOAD beyond a target — Pazzah's `queue_effect(effect_id, turns, …)`
+   and Izhakel's `bind_thread(target, condition, payoff)` — are NOT authorable this way yet.
+   `on_command()` carries only `(action_id, target_id)`, and `Battle.use_action()` resolves a
+   class-resource action's target to a living **ally**, so an enemy-targeted command such as
+   Fickah's Jam the Gears has no route either. Both are open design questions, not oversights.
 5. Tests in `test/unit/`: registry lookup, each hook you use (drive a 2-cell grid battle like
    `test_class_resource.gd::_battle()`), save round-trip. Static typing; never `:=` from a
    Variant-returning call.

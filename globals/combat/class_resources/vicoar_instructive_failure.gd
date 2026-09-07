@@ -22,6 +22,18 @@ func spend_token() -> bool:
 	return true
 
 
+## `data/combat/actions/22_spend_token.tres` is the button. A token is banked by
+## a fizzle and spent to guarantee a later cast; the command only spends it.
+func commands() -> Array[StringName]:
+	return [&"spend_token"]
+
+
+func on_command(action_id: StringName, _target_id: StringName) -> void:
+	if action_id != &"spend_token":
+		return
+	spend_token()
+
+
 func on_cast_forecast(context: Dictionary) -> Dictionary:
 	if not guaranteed_cast_armed:
 		return {}

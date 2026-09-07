@@ -22,6 +22,18 @@ func spend_clarity() -> bool:
 	return true
 
 
+## `data/combat/actions/21_spend_clarity.tres` is the button. The armed reveal
+## is still consumed by the owner's next committed cast, not by the command.
+func commands() -> Array[StringName]:
+	return [&"spend_clarity"]
+
+
+func on_command(action_id: StringName, _target_id: StringName) -> void:
+	if action_id != &"spend_clarity":
+		return
+	spend_clarity()
+
+
 func on_cast_forecast(_context: Dictionary) -> Dictionary:
 	var ability: Dictionary = _context.get("ability", {})
 	if not reveal_armed or not bool(ability.get("is_spell", false)):

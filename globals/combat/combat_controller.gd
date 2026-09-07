@@ -415,6 +415,18 @@ func query_action(
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
 	if action == null:
 		return _blocked(&"action", "Unknown combat action.", {"type": &"known_action"})
+	if not action.class_resource_action.is_empty():
+		# A class-resource action is authored once and offered to every actor, so
+		# the resource itself decides whether the command means anything for this
+		# patron. Before #236 a Lensbearer could press Record Name and nothing at
+		# all happened; now the button locks with a reason.
+		var resource := _class_resource_of(actor)
+		if not resource.accepts_command(action.class_resource_action):
+			return _blocked(
+				&"class_resource",
+				"%s cannot use that class action." % actor.display_name,
+				{"type": &"patron", "patron": resource.patron_id},
+			)
 	if action.class_resource_action == &"record_name":
 		if target == null or not target.is_alive() or not allies.has(target):
 			return _blocked(&"no_target", "Record Name requires an explicit living ally target.", {"type": &"living_ally"})
