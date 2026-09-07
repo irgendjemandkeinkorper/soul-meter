@@ -291,11 +291,11 @@ func test_a_restarted_session_is_still_contained() -> void:
 	var clean_ng_plus := SaveGame.ng_plus.duplicate(true)
 
 	_lab.call("start_test_session", {"encounter_id": EncounterIds.BOG_WIGHT, "seed": 11})
-	assert_bool(bool(_lab.get("_has_saved_state"))).is_true()
+	assert_bool(bool(_lab.call("sandbox_is_armed"))).is_true()
 
 	# Restart, then dirty progression the way a finished battle would.
 	_lab.call("restart_same_setup")
-	assert_bool(bool(_lab.get("_has_saved_state"))) \
+	assert_bool(bool(_lab.call("sandbox_is_armed"))) \
 		.override_failure_message("A restarted session must be re-armed, not left uncontained") \
 		.is_true()
 	var tracker: CombatStyleTracker = auto_free(CombatStyleTracker.new())
