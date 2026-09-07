@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="StubSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/stub_side_quest.gd" id="1_stub"]
+
+[resource]
+script = ExtResource("1_stub")
+id = 23
+quest_name = "The Hidden Condition"
+quest_description = "Kelm Rook reads Restoration contracts for a living and has found a clause that only activates once. He will explain what it does. He will not explain who wrote it."
+quest_objective = "Let Kelm Rook read you the clause."
+required_flags = PackedStringArray("dom_hidden_condition_heard")
+objectives = PackedStringArray("Let Kelm Rook read you the clause.")
+stable_id = "dom/side/hidden-condition"
+giver_actor_id = "kelm-rook"
+participant_actor_ids = PackedStringArray("kelm-rook")
+hook_ids = PackedStringArray("dom/kelm-rook/giver")
+dialogue_title = "dom_stub_hidden_condition"
+decision_prompt = ""
+resolution_flag = ""
+outcome_ids = PackedStringArray()
+outcome_labels = PackedStringArray()
+outcome_faction_ids = PackedStringArray()
+outcome_reputation_deltas = PackedFloat32Array()
+outcome_causes = PackedStringArray()
+outcome_readbacks = PackedStringArray()
+resume_flag = "dom_hidden_condition_resume"
+continuation_note = "Resumes as a contract-provenance thread; the clause's author is a Chapter 2 reveal and no faction is implicated in Chapter 1."

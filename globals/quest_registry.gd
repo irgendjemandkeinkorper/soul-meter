@@ -23,6 +23,13 @@ const FIFTH_ECHO: DomSideQuest = preload("res://quests/dom_fifth_echo.tres")
 const MARCHING_KNOTS: DomSideQuest = preload("res://quests/dom_marching_knots.tres")
 const ASH_IN_THE_RAIN: DomSideQuest = preload("res://quests/dom_ash_in_the_rain.tres")
 const SMOOTHED_WEIGHTS: DomSideQuest = preload("res://quests/dom_smoothed_weights.tres")
+## S8 (#302): side quests 5-10 ship VISIBLE and unfinished. See StubSideQuest.
+const STUB_CADENCE: StubSideQuest = preload("res://quests/stub_impossible_cadence.tres")
+const STUB_CONDITION: StubSideQuest = preload("res://quests/stub_hidden_condition.tres")
+const STUB_MESSAGE: StubSideQuest = preload("res://quests/stub_compromised_message.tres")
+const STUB_ROLLS: StubSideQuest = preload("res://quests/stub_two_muster_rolls.tres")
+const STUB_LEDGE: StubSideQuest = preload("res://quests/stub_forbidden_ledge.tres")
+const STUB_TALLY: StubSideQuest = preload("res://quests/stub_incomplete_tally.tres")
 const SERAI_LUN_QUEST: FlagQuest = preload("res://quests/serai_lun_mirror_line.tres")
 const WYNETH_QUEST: FlagQuest = preload("res://quests/wyneth_hallow_tide_kept_name.tres")
 const GRUMBRAND_QUEST: FlagQuest = preload("res://quests/old_grumbrand_the_last_reading.tres")
@@ -73,6 +80,21 @@ const DOM_SIDE_QUESTS: Array[DomSideQuest] = [
 	ASH_IN_THE_RAIN,
 	SMOOTHED_WEIGHTS,
 ]
+## The six S8 stubs. Deliberately NOT in DOM_SIDE_QUESTS: that array is the ten
+## RESOLVABLE Dom side quests and `ui/screens/chapter_complete.gd` renders
+## "RESOLVED n / <its size>", so counting six unfinishable threads in that
+## denominator would report the player failed six quests they were never given a
+## way to finish. They join the routed set through `_registered_side_quests()`,
+## which is what makes each giver's dialogue resolve to the stub.
+const STUB_SIDE_QUESTS: Array[StubSideQuest] = [
+	STUB_CADENCE,
+	STUB_CONDITION,
+	STUB_MESSAGE,
+	STUB_ROLLS,
+	STUB_LEDGE,
+	STUB_TALLY,
+]
+const STUB_SIDE_QUEST_DIALOGUE_PATH := "res://dialogue/dom_side_quest_stubs.dialogue"
 const ALL_QUESTS: Array[Quest] = [
 	LOAMROOT_SPRIGS,
 	DORTHKOR_ROAD,
@@ -260,6 +282,8 @@ func all_quests() -> Array[Quest]:
 
 func _registered_side_quests() -> Array[DomSideQuest]:
 	var quests: Array[DomSideQuest] = DOM_SIDE_QUESTS.duplicate()
+	for stub: StubSideQuest in STUB_SIDE_QUESTS:
+		quests.append(stub)
 	quests.append_array(_runtime_quests)
 	return quests
 
@@ -535,6 +559,50 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 	return true
 
 
+## S8 (#302): end a stub on its authored "to be continued" and record that the
+## player opened the thread.
+##
+## The deliberate difference from `resolve_side_quest()` is everything it does
+## NOT do: no `Reputation.record()`, no Renown, no Soul, no resolution flag.
+## That is not restraint on this method's part — a StubSideQuest carries no
+## outcome arrays, so there is nothing here that COULD be applied. The guard
+## below refuses a stub that was authored with outcomes rather than letting it
+## become a half-priced real quest by accident.
+##
+## `resume_flag` is durable GameState, so a Chapter 1 save tells the post-launch
+## update which threads this player actually opened. That is the entire reason
+## the owner ruled these ship visible instead of cut.
+func suspend_stub(quest: StubSideQuest) -> bool:
+	if quest == null or not quest.is_valid_stub():
+		push_error("suspend_stub: '%s' is not a valid stub." % [quest.stable_id if quest else ""])
+		return false
+	if not STUB_SIDE_QUESTS.has(quest) or not is_active(quest) or not flags_met(quest):
+		return false
+	var active_quest: StubSideQuest = null
+	for candidate: Quest in QuestSystem.get_active_quests():
+		if candidate.id == quest.id and candidate is StubSideQuest:
+			active_quest = candidate
+			break
+	if active_quest == null:
+		return false
+	active_quest.objective_completed = true
+	turn_in(active_quest, StubSideQuest.TO_BE_CONTINUED, false, false)
+	if not is_done(quest):
+		return false
+	GameState.set_flag(quest.resume_flag, true)
+	SaveGame.request_autosave("dom-side-quest-suspended")
+	_publish_reward_summary(active_quest, StubSideQuest.TO_BE_CONTINUED, "To be continued", [])
+	return true
+
+
+## The stub whose giver this actor is, if any.
+func stub_for_giver(actor_id: String) -> StubSideQuest:
+	for stub: StubSideQuest in STUB_SIDE_QUESTS:
+		if stub.giver_actor_id == actor_id:
+			return stub
+	return null
+
+
 ## FR-505: a companion's personal quest, if one is authored for them.
 func companion_quest_for(companion_id: String) -> FlagQuest:
 	return COMPANION_QUESTS.get(companion_id)
@@ -731,7 +799,11 @@ func dialogue_route_for_actor(
 				"source": str(campaign_resource.get_meta(&"campaign_source", "")),
 			}
 		return _resolved_dialogue_route(
-			DOM_SIDE_QUEST_DIALOGUE_PATH, side_quest.dialogue_title
+			(
+				STUB_SIDE_QUEST_DIALOGUE_PATH if side_quest is StubSideQuest
+				else DOM_SIDE_QUEST_DIALOGUE_PATH
+			),
+			side_quest.dialogue_title
 		)
 	return _resolved_dialogue_route(fallback_path, fallback_title)
 

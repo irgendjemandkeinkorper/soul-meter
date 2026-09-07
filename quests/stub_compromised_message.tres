@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="StubSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/stub_side_quest.gd" id="1_stub"]
+
+[resource]
+script = ExtResource("1_stub")
+id = 24
+quest_name = "The Compromised Message"
+quest_description = "Marn Veld carried a Council message that arrived correct, sealed, and wrong. He has not handed it in yet and is running out of hours in which that is a decision rather than an offence."
+quest_objective = "Hear what Marn Veld will not put in writing."
+required_flags = PackedStringArray("dom_compromised_message_heard")
+objectives = PackedStringArray("Hear what Marn Veld will not put in writing.")
+stable_id = "dom/side/compromised-message"
+giver_actor_id = "marn-veld"
+participant_actor_ids = PackedStringArray("marn-veld")
+hook_ids = PackedStringArray("dom/marn-veld/giver")
+dialogue_title = "dom_stub_compromised_message"
+decision_prompt = ""
+resolution_flag = ""
+outcome_ids = PackedStringArray()
+outcome_labels = PackedStringArray()
+outcome_faction_ids = PackedStringArray()
+outcome_reputation_deltas = PackedFloat32Array()
+outcome_causes = PackedStringArray()
+outcome_readbacks = PackedStringArray()
+resume_flag = "dom_compromised_message_resume"
+continuation_note = "Resumes as a courier-chain trace; whether the Council or the Registry is the interested party stays open."
