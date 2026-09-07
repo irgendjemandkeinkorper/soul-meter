@@ -4,8 +4,9 @@ extends RefCounted
 
 const REACTION_CAP := 15
 
-## npc_id -> ordered reaction rules. A rule may gate on a flag, reputation,
-## or both, and may override presence and/or an existing dialogue route.
+## npc_id -> ordered reaction rules. A rule may gate on a flag, reputation, the
+## protagonist's hollowing state, or any combination, and may override presence
+## and/or an existing dialogue route.
 const REACTIONS: Dictionary = {
 	"sella-varn": [
 		{
@@ -24,6 +25,17 @@ const REACTIONS: Dictionary = {
 			"flag_value": true,
 			"dialogue_path": "res://dialogue/marshal_coiljaw.dialogue",
 			"dialogue_title": "hub",
+		},
+	],
+	# #286, the NPC-read surface. The registry clerk does not ask how you are;
+	# he annotates. Ordered FIRST so a hollowed witness is read as hollowed
+	# before any flag- or band-gated route gets a look — a hollowing outranks
+	# whatever errand brought you to the desk.
+	"hadrik-vale": [
+		{
+			"hollowing": true,
+			"dialogue_path": "res://dialogue/hadrik_vale.dialogue",
+			"dialogue_title": "hollowed",
 		},
 	],
 }
@@ -53,7 +65,9 @@ static func rule_is_valid(rule: Dictionary) -> bool:
 	var flag := str(rule.get("flag", ""))
 	var faction := str(rule.get("reputation_faction", ""))
 	var band := StringName(rule.get("minimum_reputation_band", &""))
-	if flag.is_empty() and faction.is_empty():
+	if rule.has("hollowing") and not rule["hollowing"] is bool:
+		return false
+	if flag.is_empty() and faction.is_empty() and not rule.has("hollowing"):
 		return false
 	if faction.is_empty() != band.is_empty():
 		return false
@@ -73,6 +87,11 @@ static func reaction_count() -> int:
 
 
 static func _matches(rule: Dictionary) -> bool:
+	# GameState owns the hollowing state; this only reads it. A rule that names
+	# `hollowing` must match it exactly, so `false` is a usable gate too — an
+	# NPC may have something to say only once you are NOT hollowed.
+	if rule.has("hollowing") and GameState.is_hollowing() != bool(rule["hollowing"]):
+		return false
 	var flag := str(rule.get("flag", ""))
 	if not flag.is_empty() and GameState.get_flag(flag, null) != rule.get("flag_value", true):
 		return false

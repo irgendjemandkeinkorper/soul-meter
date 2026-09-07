@@ -29,6 +29,13 @@ Sella Varn: The district bell used to tell the harbor when the roads were safe. 
 - "What are people saying about me in the ward?" [if Reputation.band("dom") == "cold" or Reputation.band("dom") == "hostile" /]
 	Sella Varn: Less than you'd like and worse than you'd hope. Doors in this ward are heavy; right now yours are heavier.
 	=> hub
+- "..." [if GameState.is_hollowing() /]
+	Sella Varn: I keep a bell that stopped answering, so I know the difference between quiet and gone.
+	Sella Varn: You are quiet. I am going to keep saying your name at you until one of us is proved wrong.
+	=> hub
+- "Say it again." [if GameState.is_hollowing() /]
+	Sella Varn: Your name. I will say it as often as you need and once more after that. The rope is sound. The bronze is warm.
+	=> hub
 - "I am only passing through."
 	Sella Varn: Then pass slowly. Dom has a way of charging interest on anything you fail to notice.
 	=> END

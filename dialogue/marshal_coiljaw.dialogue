@@ -112,3 +112,10 @@ Marshal Coiljaw: Four ledgers are open. Pick one reward; each answer strengthens
 	do QuestRegistry.resolve_field_debt("balance")
 	Marshal Coiljaw: No faction gets the whole story. For once, that is the honest reward.
 	=> END
+- "..." [if GameState.is_hollowing() /]
+	Marshal Coiljaw: I have a road full of names that stopped answering, and a bench that keeps every one of them on the roll.
+	Marshal Coiljaw: You are still on mine. That is not sentiment. That is procedure, and I intend to be very procedural about you.
+	=> hub
+- "Strike me off." [if GameState.is_hollowing() /]
+	Marshal Coiljaw: No. Ask me again when you can be bothered to argue about it — that is the answer I am waiting for.
+	=> hub

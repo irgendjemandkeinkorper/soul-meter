@@ -8,12 +8,14 @@ class HubNpc extends NPC:
 var _flags_before: Dictionary
 var _reputation_before: Dictionary
 var _world_clock_before: Dictionary
+var _soul_before: float
 
 
 func before_test() -> void:
 	_flags_before = GameState.flags.duplicate(true)
 	_reputation_before = Reputation.to_dict()
 	_world_clock_before = WorldClock.to_dict()
+	_soul_before = GameState.soul_meter
 	GameState.flags = {}
 	Reputation.from_dict({})
 	# Recording reputation inside a test refreshes GameFlow's derived guard
@@ -24,6 +26,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	GameState.soul_meter = _soul_before
 	GameState.flags = _flags_before
 	Reputation.from_dict(_reputation_before)
 	GameFlow._sync_reputation_guards()
@@ -154,3 +157,63 @@ func _make_hub_npc(id: String, path: String, title: String) -> HubNpc:
 	npc.add_child(sprite)
 	add_child(npc)
 	return npc
+
+
+func test_a_hollowing_rule_matches_only_while_the_protagonist_is_hollowed() -> void:
+	# #286, the NPC-read surface: the world notices without the player choosing
+	# to raise it. GameState owns the state; NpcReactions only reads it.
+	assert_bool(GameState.is_hollowing()).is_false()
+	assert_bool(NpcReactions.resolve("hadrik-vale").is_empty()).is_true()
+
+	GameState.set_flag(GameState.HUSKED_FLAG, true)
+
+	var rule := NpcReactions.resolve("hadrik-vale")
+	assert_bool(rule.is_empty()).is_false()
+	assert_str(str(rule["dialogue_title"])).is_equal("hollowed")
+
+
+func test_a_hollowing_route_names_a_title_the_dialogue_file_actually_has() -> void:
+	# A reaction that routes to a title nobody authored is a dead end at
+	# runtime and silent in every other test.
+	for npc_id: String in NpcReactions.REACTIONS:
+		for rule: Dictionary in NpcReactions.rules_for(npc_id):
+			var path := str(rule.get("dialogue_path", ""))
+			if path.is_empty():
+				continue
+			var file := FileAccess.open(path, FileAccess.READ)
+			assert_object(file).override_failure_message(
+				"'%s' routes to a missing dialogue file %s" % [npc_id, path]
+			).is_not_null()
+			var source := file.get_as_text()
+			file.close()
+			assert_bool(source.contains("~ %s" % str(rule["dialogue_title"]))).override_failure_message(
+				"'%s' routes to title '%s', which %s does not define"
+				% [npc_id, rule["dialogue_title"], path]
+			).is_true()
+
+
+func test_a_rule_gating_only_on_hollowing_is_valid_and_a_non_bool_one_is_not() -> void:
+	var route := {
+		"dialogue_path": "res://dialogue/hadrik_vale.dialogue",
+		"dialogue_title": "hollowed",
+	}
+	var hollowing_only: Dictionary = route.duplicate()
+	hollowing_only["hollowing"] = true
+	assert_bool(NpcReactions.rule_is_valid(hollowing_only)).is_true()
+
+	var not_a_bool: Dictionary = route.duplicate()
+	not_a_bool["hollowing"] = "yes"
+	assert_bool(NpcReactions.rule_is_valid(not_a_bool)).is_false()
+
+	# Unchanged: a rule that gates on nothing at all is still refused.
+	assert_bool(NpcReactions.rule_is_valid(route)).is_false()
+
+
+func test_a_false_hollowing_gate_is_a_usable_condition() -> void:
+	var rule := {"hollowing": false, "present": true}
+	assert_bool(NpcReactions.rule_is_valid(rule)).is_true()
+	assert_bool(NpcReactions._matches(rule)).is_true()
+
+	GameState.set_flag(GameState.HUSKED_FLAG, true)
+
+	assert_bool(NpcReactions._matches(rule)).is_false()
