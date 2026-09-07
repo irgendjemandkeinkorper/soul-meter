@@ -51,17 +51,18 @@ func _fixture(path: String) -> Dictionary:
 	return fixture
 
 
-func test_current_schema_is_eight() -> void:
+func test_current_schema_is_nine() -> void:
 	# Schema 7 = schema 6 + the FR-504a world_clock envelope.
 	# Schema 8 = the 2026-09-06 elemental rename (every Wheel id but `khor`).
-	assert_int(SaveGameScript.SCHEMA_VERSION).is_equal(8)
-	assert_int(SaveMigrations.CURRENT_SCHEMA_VERSION).is_equal(8)
+	# Schema 9 = the DRAMGID migration (docs/architecture-dramgid.md §2.1).
+	assert_int(SaveGameScript.SCHEMA_VERSION).is_equal(9)
+	assert_int(SaveMigrations.CURRENT_SCHEMA_VERSION).is_equal(9)
 
 
 func test_the_schema_five_fixture_still_loads_and_gains_a_tactical_section() -> void:
 	var prepared: Dictionary = saves._prepare_for_load(_fixture(SCHEMA_FIVE_FIXTURE_PATH))
 	assert_bool(prepared["ok"]).is_true()
-	assert_int(prepared["payload"]["schema_version"]).is_equal(8)
+	assert_int(prepared["payload"]["schema_version"]).is_equal(9)
 	var tactical: Dictionary = prepared["payload"]["tactical"]
 	for table_key in ["units", "unit_jobs", "unit_attunement", "unit_loadout"]:
 		assert_bool(tactical.has(table_key)).is_true()
@@ -109,7 +110,7 @@ func test_the_schema_six_fixture_round_trips_through_disk() -> void:
 
 	var round_trip: Dictionary = saves._prepare_for_load(saves._read_payload(saves.save_path))
 	assert_bool(round_trip["ok"]).is_true()
-	assert_int(round_trip["payload"]["schema_version"]).is_equal(8)
+	assert_int(round_trip["payload"]["schema_version"]).is_equal(9)
 	var roster := UnitRoster.from_dict(round_trip["payload"]["tactical"])
 	assert_object(roster).is_not_null()
 	assert_array(Array(roster.unit_ids())).is_equal(["fixture-unit"])
@@ -142,7 +143,7 @@ func test_a_built_payload_carries_a_roster_reconciled_against_the_live_party() -
 	GameState.set_party([member])
 
 	var payload: Dictionary = saves._build_payload()
-	assert_int(payload["schema_version"]).is_equal(8)
+	assert_int(payload["schema_version"]).is_equal(9)
 	var units: Dictionary = payload["tactical"]["units"]
 	assert_bool(units.has("synthetic-lead")).is_true()
 	assert_int(int(units["synthetic-lead"]["base_hp"])).is_equal(33)

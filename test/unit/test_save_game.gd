@@ -203,7 +203,9 @@ func test_legacy_schema_migrates_without_losing_existing_values() -> void:
 	var prepared: Dictionary = saves._prepare_for_load(current)
 	var migrated: Dictionary = prepared["payload"]
 	assert_int(migrated["schema_version"]).is_equal(SaveGameScript.SCHEMA_VERSION)
-	assert_int(migrated["game_state"]["skills"]["vex"]["persuasion"]["advancement_points_spent"]).is_equal(4)
+	# Schema 9 renames Persuasion to Sway, so the ledger row moves with the skill —
+	# the point of this assertion is that its recorded spend rides across untouched.
+	assert_int(migrated["game_state"]["skills"]["vex"]["sway"]["advancement_points_spent"]).is_equal(4)
 	assert_int(migrated["game_state"]["var_harmony"]["vex"]).is_equal(-3)
 	assert_bool(migrated["game_state"]["combat_knowledge"].is_empty()).is_true()
 	assert_bool(migrated["game_state"]["vendor_stock"].is_empty()).is_true()

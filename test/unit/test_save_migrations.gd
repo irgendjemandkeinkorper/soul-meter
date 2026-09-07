@@ -9,7 +9,7 @@ func test_schema_five_defaults_expert_rerolls_to_zero_used() -> void:
 	var prepared: Dictionary = SaveMigrations.prepare(payload)
 
 	assert_bool(prepared["ok"]).is_true()
-	assert_int(prepared["payload"]["schema_version"]).is_equal(8)
+	assert_int(prepared["payload"]["schema_version"]).is_equal(9)
 	assert_bool(
 		(prepared["payload"]["skill_check"]["expert_rerolls_used"] as Dictionary).is_empty()
 	).is_true()
@@ -28,8 +28,11 @@ func test_expert_reroll_usage_is_clamped_without_changing_other_save_fields() ->
 
 	assert_bool(prepared["ok"]).is_true()
 	var used: Dictionary = prepared["payload"]["skill_check"]["expert_rerolls_used"]
-	assert_int(used["scene:member:lore"]).is_equal(SkillCheckService.EXPERT_REROLL_CAP)
-	assert_int(used["scene:member:insight"]).is_equal(0)
+	# Schema 9 renames the skill in the key's last segment: lore -> recall,
+	# insight -> undertone. The clamp is what this case is about; the rename is
+	# asserted properly in test_save_migration_dramgid.gd.
+	assert_int(used["scene:member:recall"]).is_equal(SkillCheckService.EXPERT_REROLL_CAP)
+	assert_int(used["scene:member:undertone"]).is_equal(0)
 	assert_bool(prepared["payload"]["marker"]["must_survive"]).is_true()
 
 
@@ -46,7 +49,7 @@ func test_schema_six_fixture_preserves_spent_expert_rerolls() -> void:
 	var prepared: Dictionary = SaveMigrations.prepare(payload)
 	assert_bool(prepared["ok"]).is_true()
 	var used: Dictionary = prepared["payload"]["skill_check"]["expert_rerolls_used"]
-	assert_int(used["fixture-scene:fixture-unit:lore"]).is_equal(1)
+	assert_int(used["fixture-scene:fixture-unit:recall"]).is_equal(1)
 	assert_bool(prepared["payload"].has("tactical")).is_true()
 
 
@@ -63,7 +66,7 @@ func test_schema_six_fixture_gains_the_default_world_clock() -> void:
 
 	var prepared: Dictionary = SaveMigrations.prepare(payload)
 	assert_bool(prepared["ok"]).is_true()
-	assert_int(prepared["payload"]["schema_version"]).is_equal(8)
+	assert_int(prepared["payload"]["schema_version"]).is_equal(9)
 	assert_str(str(prepared["payload"]["world_clock"]["phase"])).is_equal("morning")
 
 
@@ -139,7 +142,7 @@ func test_schema_seven_fixture_renames_every_element_id_except_khor() -> void:
 	var prepared: Dictionary = SaveMigrations.prepare(payload)
 
 	assert_bool(prepared["ok"]).is_true()
-	assert_int(prepared["payload"]["schema_version"]).is_equal(8)
+	assert_int(prepared["payload"]["schema_version"]).is_equal(9)
 
 	var attunements: Dictionary = prepared["payload"]["tactical"]["unit_attunement"]
 	assert_bool(attunements.is_empty()).is_false()
@@ -191,7 +194,9 @@ func test_party_element_fields_and_tone_skill_ids_are_renamed() -> void:
 	assert_bool((member["skill_percentages"] as Dictionary).has("tone_khash")).is_true()
 	assert_int(int(member["skill_percentages"]["tone_khash"])).is_equal(45)
 	assert_int(int(member["skill_percentages"]["tone_khor"])).is_equal(30)
-	assert_int(int(member["skill_percentages"]["athletics"])).is_equal(20)
+	# Schema 9 renames Athletics to Strain on the way past; what this case cares
+	# about is that a non-tone skill keeps its percentage through the element pass.
+	assert_int(int(member["skill_percentages"]["strain"])).is_equal(20)
 	assert_bool((member["skill_tiers"] as Dictionary).has("tone_zhur")).is_true()
 
 

@@ -17,7 +17,10 @@ const ELEMENT_RENAMES_V8: Dictionary = {
 	"nul": "zhem",
 	"strom": "zhur",
 }
-const CURRENT_SCHEMA_VERSION := 8
+## DRAMGID deletes Alchemy outright rather than renaming it, which is why it is the
+## one skill id the rename table maps to an empty string.
+const ALCHEMY_SKILL_ID := "alchemy"
+const CURRENT_SCHEMA_VERSION := 9
 
 
 static func prepare(payload: Variant) -> Dictionary:
@@ -48,6 +51,8 @@ static func prepare(payload: Variant) -> Dictionary:
 		migrated = _migrate_v6_to_v7(migrated)
 	if source_version <= 7:
 		migrated = _migrate_v7_to_v8(migrated)
+	if source_version <= 8:
+		migrated = _migrate_v8_to_v9(migrated)
 	migrated["skill_check"] = SkillCheckService.normalize_save_data(
 		migrated.get("skill_check", {})
 	)
@@ -192,6 +197,158 @@ static func _migrate_v7_to_v8(source: Dictionary) -> Dictionary:
 				if values is Dictionary:
 					attunement["values"] = _rename_element_keys(values)
 	return migrated
+
+
+## Schema 9 is the DRAMGID migration (`docs/architecture-dramgid.md` §2.1): the six
+## legacy attributes become seven DRAMGID ones, twelve legacy skill ids take their
+## DRAMGID names, and Alchemy — which DRAMGID deletes rather than renames — returns
+## the points it cost to the member's pool instead of taking them with it.
+##
+## Step 6 of §2.1 is deliberately NOT done here. It asks for `max_hp`/`attack`/
+## `defense`/`breath_max` to be recomputed from the new attributes, but those formulas
+## are §6's and still unratified, and `DramgidDerived` (§3.3) does not exist yet. A
+## migrated member keeps its stored derived stats, so loading a save never silently
+## changes its combat numbers ahead of the owner's ruling. When §6 freezes, the
+## recompute is an addition to this function, not a rewrite of it.
+static func _migrate_v8_to_v9(source: Dictionary) -> Dictionary:
+	var migrated := source.duplicate(true)
+
+	var game_state: Variant = migrated.get("game_state", {})
+	if game_state is Dictionary:
+		var state: Dictionary = game_state
+		# The refund is read from the ledger BEFORE the ledger's own keys are
+		# renamed, because the row it needs is filed under the id being deleted.
+		var ledger: Variant = state.get("skills", {})
+		for collection_key: String in ["party", "custom_recruits"]:
+			var rows: Variant = state.get(collection_key, [])
+			if not rows is Array:
+				continue
+			for value: Variant in rows:
+				if value is Dictionary:
+					_migrate_member_to_dramgid(value, ledger)
+		state["skills"] = _rename_actor_dramgid_skills(ledger)
+		migrated["game_state"] = state
+
+	migrated["skill_check"] = _rename_reroll_skill_ids(migrated.get("skill_check", {}))
+	return migrated
+
+
+static func _migrate_member_to_dramgid(member: Dictionary, skill_ledger: Variant) -> void:
+	var refund := _alchemy_refund(member, skill_ledger)
+	member["attributes"] = _rename_attribute_keys(member.get("attributes", {}))
+	for field: String in ["skill_percentages", "skill_tiers"]:
+		member[field] = _rename_dramgid_skill_keys(member.get(field, {}))
+	member["advancement_points"] = int(member.get("advancement_points", 0)) + refund
+	if not member.has("xp"):
+		member["xp"] = 0
+
+
+static func _rename_attribute_keys(rows: Variant) -> Dictionary:
+	if not rows is Dictionary:
+		return {}
+	var source_rows: Dictionary = rows
+	var renamed: Dictionary = {}
+	for key: Variant in source_rows.keys():
+		var attribute_id := str(key)
+		renamed[str(DramgidSchema.ATTRIBUTE_RENAMES.get(attribute_id, attribute_id))] = (
+			source_rows[key]
+		)
+	# Doctrine is the seventh attribute and has no legacy counterpart, so a pre-DRAMGID
+	# member has nothing to rename into it. It starts at the point-buy FLOOR rather than
+	# 0: a 0 would read as worse than any legal build everywhere Doctrine scales
+	# something — `Renown._attribute_scale` divides by it — and the legacy six were
+	# bought against a 20-point budget, so floor-2 Doctrine lands the row on DRAMGID's 22.
+	if not renamed.is_empty() and not renamed.has(String(DramgidSchema.ATTR_DOCTRINE)):
+		renamed[String(DramgidSchema.ATTR_DOCTRINE)] = DramgidSchema.ATTRIBUTE_FLOOR
+	return renamed
+
+
+static func _rename_dramgid_skill_keys(rows: Variant) -> Dictionary:
+	if not rows is Dictionary:
+		return {}
+	var source_rows: Dictionary = rows
+	var renamed: Dictionary = {}
+	for key: Variant in source_rows.keys():
+		var skill_id := _dramgid_skill_id(str(key))
+		if skill_id.is_empty():
+			continue
+		renamed[skill_id] = source_rows[key]
+	return renamed
+
+
+## Maps one skill id through the DRAMGID slate. An empty return means DRAMGID deleted
+## the skill (Alchemy is the only one). An id the table does not mention — a DRAMGID id
+## already, an ARMS id, a `tone_*` id — comes back untouched, which is what makes this
+## safe to run over a save that is already part-migrated.
+static func _dramgid_skill_id(skill_id: String) -> String:
+	if not DramgidSchema.SKILL_RENAMES.has(skill_id):
+		return skill_id
+	return str(DramgidSchema.SKILL_RENAMES[skill_id])
+
+
+static func _rename_actor_dramgid_skills(rows: Variant) -> Dictionary:
+	if not rows is Dictionary:
+		return {}
+	var source_rows: Dictionary = rows
+	var renamed: Dictionary = {}
+	for actor_id: Variant in source_rows.keys():
+		var row: Variant = source_rows[actor_id]
+		renamed[actor_id] = _rename_dramgid_skill_keys(row) if row is Dictionary else row
+	return renamed
+
+
+## §2.1 step 2: DRAMGID deletes Alchemy, so what the member spent on it is returned to
+## the advancement pool rather than disappearing with the skill.
+##
+## `GameState.skills` records the exact points spent per skill, so that figure is
+## authoritative when it exists. The cost curve is the fallback for a member with no
+## ledger row — an authored recruit, or a save from before the ledger was written — and
+## it charges from a base of 0% because nothing in the envelope separates an authored
+## base percentage from a bought one. That over-refunds a member who was authored with
+## free Alchemy, which is the direction to err in: the alternative silently confiscates
+## points a player paid.
+static func _alchemy_refund(member: Dictionary, skill_ledger: Variant) -> int:
+	var actor_id := str(member.get("id", ""))
+	if skill_ledger is Dictionary and not actor_id.is_empty():
+		var actor_rows: Variant = (skill_ledger as Dictionary).get(actor_id, {})
+		if actor_rows is Dictionary:
+			var row: Variant = (actor_rows as Dictionary).get(ALCHEMY_SKILL_ID, {})
+			if row is Dictionary and (row as Dictionary).has("advancement_points_spent"):
+				return maxi(int((row as Dictionary)["advancement_points_spent"]), 0)
+
+	var percentages: Variant = member.get("skill_percentages", {})
+	if not percentages is Dictionary:
+		return 0
+	var bought := float((percentages as Dictionary).get(ALCHEMY_SKILL_ID, 0.0))
+	if bought <= 0.0:
+		return 0
+	return Advancement.points_spent_for_percentage(0.0, bought)
+
+
+## §2.1 step 5. An expert-reroll key is "<scene>:<member>:<skill>" and only its last
+## segment is a skill id. The split has to come from the RIGHT: a scene path carries its
+## own colon ("res://..."), so scanning left to right cuts the wrong field.
+static func _rename_reroll_skill_ids(data: Variant) -> Dictionary:
+	if not data is Dictionary:
+		return {}
+	var source: Dictionary = (data as Dictionary).duplicate(true)
+	var used: Variant = source.get("expert_rerolls_used", {})
+	if not used is Dictionary:
+		return source
+	var source_used: Dictionary = used
+	var renamed: Dictionary = {}
+	for key: Variant in source_used.keys():
+		var reroll_key := str(key)
+		var separator := reroll_key.rfind(":")
+		if separator < 0:
+			renamed[reroll_key] = source_used[key]
+			continue
+		var skill_id := _dramgid_skill_id(reroll_key.substr(separator + 1))
+		if skill_id.is_empty():
+			continue
+		renamed["%s:%s" % [reroll_key.left(separator), skill_id]] = source_used[key]
+	source["expert_rerolls_used"] = renamed
+	return source
 
 
 static func _rename_member_elements(member: Dictionary) -> void:
