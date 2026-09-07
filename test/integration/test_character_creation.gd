@@ -231,7 +231,9 @@ func _assert_member_matches_picks(member: PartyMember, name: String, epithet: St
 	assert_str(member.starting_mastery).is_equal("Root Note of choice")
 	assert_int(member.attribute_value(&"muster")).is_equal(5)
 	assert_int(member.attribute_value(&"doctrine")).is_equal(2)
-	assert_int(member.max_hp).is_equal(40)
+	assert_int(member.max_hp).is_equal(
+		DramgidDerived.max_hp(member.attribute_value(&"grit"))
+	)
 	assert_str(str(member.skill_tiers["strain"])).is_equal("trained")
 	assert_str(str(member.skill_tiers["heft"])).is_equal("trained")
 	assert_str(str(member.skill_tiers["tone_sul"])).is_equal("trained")

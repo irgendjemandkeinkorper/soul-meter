@@ -215,9 +215,13 @@ func test_to_party_member_writes_every_field_in_the_roster_vocabulary() -> void:
 	assert_str(member.major_element).is_equal("khash")
 	assert_str(member.mastery_element).is_equal("khash")
 	assert_int(member.attribute_value(&"muster")).is_equal(5)
-	assert_int(member.max_hp).is_equal(40)
-	assert_int(member.hp).is_equal(40)
-	assert_int(member.attack).is_equal(5)
+	# Through DramgidDerived, not a literal: this case is about chargen APPLYING
+	# the derived formulas, and `docs/dramgid-numbers.md` owns what they are.
+	assert_int(member.max_hp).is_equal(
+		DramgidDerived.max_hp(member.attribute_value(&"grit"))
+	)
+	assert_int(member.hp).is_equal(member.max_hp)
+	assert_int(member.attack).is_equal(DramgidDerived.attack(5))
 	assert_int(member.level).is_equal(1)
 	assert_str(str(member.skill_tiers.get("heft", ""))).is_equal("trained")
 	assert_float(float(member.skill_percentages.get("heft", 0.0))).is_equal(5.0)

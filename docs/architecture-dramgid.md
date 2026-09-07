@@ -158,7 +158,7 @@ Anything still open is open for a named reason, not because nobody has picked it
 |---|---|---|---|
 | 3.1 | `dramgid_schema.gd` | **done** | `03e74195` |
 | 3.2 | `skill_check.gd` | **done** — definitions from the schema, `karma_bonus` live on Yothmeru | #390 |
-| 3.3 | `party_member.gd` / `battle_actor.gd` | **partial** — `xp` field and the legacy↔DRAMGID `attribute_value()` bridge exist; `DramgidDerived.recompute` does NOT, and is blocked on §6 |  |
+| 3.3 | `party_member.gd` / `battle_actor.gd` | **done** — `xp` field, the legacy↔DRAMGID `attribute_value()` bridge, and `DramgidDerived.recompute` (live consumer: `ChargenBuild.to_party_member()`) | chargen wave; §6 freeze |
 | 3.4 | chargen + character sheet | **done** — the sheet reads `DramgidSchema.SKILL_GROUPS`; `ChargenData.SKILL_IDS`/`SKILL_LABELS` deleted | #394 |
 | 3.5 | `advancement.gd` | **done** — the Alchemy refund arrives through the schema-9 migration | #392 |
 | 3.6 | Pandora seeders + generators | **open** — see the note under the table |  |
@@ -265,6 +265,27 @@ authored later); companion recruits' attribute re-authoring beyond the mechanica
 ---
 
 ## 6. DeepSeek numeric brief (design note + pure functions + tests; Claude review = freeze before F3a merges)
+
+**Status 2026-09-07: four of the seven items are FROZEN.** `docs/dramgid-numbers.md` carries
+the design note, the migration report and the reasoning; `globals/stats/dramgid_derived.gd`
+carries the functions; `tools/dramgid_derived_sweep.gd` produces the grids and
+`test/unit/test_dramgid_numbers.gd` pins them.
+
+| item | status |
+|---|---|
+| `max_hp(grit)` | frozen — `12 + grit × 6` |
+| `breath_max(intuition)` | frozen — `9 + intuition × 3` |
+| `attack(muster)` | frozen — `muster × 2` |
+| `defense(alacrity)` | frozen — `alacrity`, unchanged |
+| `ct_speed(reason)` | reported, NOT applied — `CombatRules.charge_speed_attribute` is still `edge` (§3.9) |
+| `fizzle_reduction(intuition)` | verified unchanged — 48 ratified readings, 0 mismatches |
+| Karma/Fame tiers, `karma_bonus`, decay | already shipped in #384/#390; recorded, not re-proposed |
+
+The three unfrozen rows share one blocker: their consumers still read
+`attributes["edge"]`, and moving that read is §3.9 (F3b, after #281).
+
+The original brief follows.
+
 
 Design within these constraints and deliver `docs/dramgid-numbers.md` + `globals/stats/dramgid_derived.gd`
 (pure static) + tests:
