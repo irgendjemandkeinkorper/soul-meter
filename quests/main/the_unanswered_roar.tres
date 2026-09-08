@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
+
+; PROVISIONAL — CANON REVIEW REQUIRED: all prose below and in
+; dialogue/main/unanswered_roar.dialogue.
+;
+; Act I's closing beat (#246, C9). Beats and reasoning: docs/act-one-beat-sheet.md.
+; Built on already-canon vault material rather than new lore: Dom holds its
+; Agreement at 88-90% through the Hammer Roar, the never-ceasing forge polyrhythm
+; the city calls its Harmonic Constant (cities/dom.md). This quest is the design
+; doc's Act I sentence made playable — "rites that should banish don't bite, and
+; the priests are quietly terrified because someone isn't answering" — and it
+; deliberately stops one word short of naming who.
+;
+; advances_clock stays false, matching every other story quest in the tree.
+; Whether the end of Act I should be a world-clock phase boundary is an owner
+; call under FR-504a §3.1; it is left undecided rather than decided quietly.
+
+[ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]
+
+[resource]
+script = ExtResource("1_flag")
+id = 28
+quest_name = "The Unanswered Roar"
+quest_description = "Three benches of the Trial Council have separately reported Dom's Harmonic Constant reading short, and none of them will say so where the others can hear. Themka Gaath wants a fourth number from someone who owes none of them anything."
+quest_objective = "Take the Council's measure of the Hammer Roar."
+quest_giver = "Themka Gaath"
+quest_location = "Dom, the City of the Four Arms"
+required_flags = PackedStringArray("chapter_roar_measured")
+objectives = PackedStringArray("Take the Council's measure of the Hammer Roar.", "Bring Themka Gaath the number.")
