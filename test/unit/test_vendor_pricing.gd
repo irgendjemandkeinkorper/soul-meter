@@ -74,7 +74,12 @@ func test_displayed_stock_and_purchase_use_the_same_band_price() -> void:
 		"vex", FactionIds.IRON_COMPANIES, Reputation.BAND_WARM,
 		"Reached warm Company standing", "test"
 	)
-	var expected_price: int = VendorData.price_for(PRICED_VENDOR_ID, PRICED_ITEM_ID, true)
+	# Through the SAME barter both other paths apply. Display and purchase were
+	# always consistent with each other; this baseline was the odd one out,
+	# because the bare 3-arg form defaults barter to 0.
+	var expected_price: int = VendorData.price_for(
+		PRICED_VENDOR_ID, PRICED_ITEM_ID, true, &"", GameState.barter_ratio()
+	)
 	var displayed_price: int = _displayed_buy_price(PRICED_VENDOR_ID, PRICED_ITEM_ID)
 	assert_int(displayed_price).is_equal(expected_price)
 
@@ -220,6 +225,34 @@ func test_an_empty_party_barters_at_zero() -> void:
 ## `party[0]` is not that person — the tavern picker can reorder the party — and
 ## a barter subject that quietly differs from the check subject would show up as
 ## prices that move when the player rearranges their line-up.
+## The invariant #415 exists to protect — the price shown IS the price charged —
+## had only ever been exercised at a barter ratio of ZERO, where every path
+## trivially agrees. It took a full-suite run leaving a skilled protagonist
+## behind for the gap to surface, and it surfaced as two unrelated-looking
+## failures rather than as this one.
+func test_the_displayed_price_is_the_charged_price_with_barter_live() -> void:
+	var party_before := GameState.party.duplicate()
+	var protagonist := PartyMember.new()
+	protagonist.id = GameState.PROTAGONIST_ID
+	protagonist.attributes["decorum"] = 5
+	GameState.party.assign([protagonist])
+
+	assert_float(GameState.barter_ratio()).override_failure_message(
+		"barter is at zero, so this case degenerates into the one it was written to escape"
+	).is_greater(0.0)
+
+	var displayed: int = _displayed_buy_price(PRICED_VENDOR_ID, PRICED_ITEM_ID)
+	var gp_before: int = GameState.gp
+	var result: Dictionary = GameState.buy_from_vendor(PRICED_VENDOR_ID, PRICED_ITEM_ID)
+	GameState.party.assign(party_before)
+
+	assert_bool(bool(result.get("ok", false))).is_true()
+	assert_int(int(result.get("price", 0))).override_failure_message(
+		"the shop charged a different number than it displayed once barter was live"
+	).is_equal(displayed)
+	assert_int(gp_before - GameState.gp).is_equal(displayed)
+
+
 func test_barter_rolls_the_protagonist_not_merely_the_first_party_slot() -> void:
 	var party_before := GameState.party.duplicate()
 

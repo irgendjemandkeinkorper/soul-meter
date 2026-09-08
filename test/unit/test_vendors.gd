@@ -115,7 +115,13 @@ func test_sell_moves_item_gp_and_vendor_stock_atomically() -> void:
 
 func test_insufficient_gp_never_goes_negative_or_moves_stock() -> void:
 	var item_id := ItemIds.MATERIALS_CINDER_INK_VIAL
-	var price := VendorData.price_for(VendorIdsData.LOAM_AND_LANTERN, item_id, true)
+	# Through the SAME barter the purchase path applies. The bare 3-arg form
+	# defaults barter to 0, so this line used to set gp one short of a price the
+	# shop would never charge — with any Sway at all the purchase SUCCEEDED and
+	# the case failed, but only when another suite had left a protagonist behind.
+	var price := VendorData.price_for(
+		VendorIdsData.LOAM_AND_LANTERN, item_id, true, &"", GameState.barter_ratio()
+	)
 	GameState.gp = price - 1
 	var item_before := GameState.item_count(item_id)
 	var stock_before := GameState.vendor_item_quantity(VendorIdsData.LOAM_AND_LANTERN, item_id)
