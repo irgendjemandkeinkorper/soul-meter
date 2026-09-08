@@ -358,6 +358,13 @@ func turn_in(
 	elif is_done(quest) and quest == FIELD_DEBT:
 		GameState.remove_items("materials/loamroot_sprig", 1)
 	if is_done(quest):
+		# Ruling 9 (2026-09-02): XP comes from combat AND quests. Gated on
+		# `not was_done` so a re-entrant turn-in cannot pay twice — the same guard
+		# the reward summary already uses, for the same reason.
+		if not was_done:
+			GameState.award_party_xp(
+				Advancement.XP_PER_QUEST, "Completed %s" % quest.resource_path.get_file()
+			)
 		# FR-504a §3.1: a completed quest advances the clock only when its
 		# resource declares it. Before the autosave, so the save keeps the
 		# post-advance phase.

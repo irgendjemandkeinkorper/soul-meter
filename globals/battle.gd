@@ -888,6 +888,7 @@ func _apply_victory(result: BattleResult) -> void:
 		GameState.set_flag(consequence_flag, true)
 	if already_resolved:
 		return
+	_award_victory_xp(result)
 	var faction := str(outcome.get("faction", _definition.get("win_faction", "")))
 	var delta := float(outcome.get("delta", _definition.get("win_delta", 0.0)))
 	if faction.is_empty() and not enemies.is_empty():
@@ -899,6 +900,24 @@ func _apply_victory(result: BattleResult) -> void:
 	_record_renown(outcome, &"reputation", 3.0, result.cause, scene)
 	var checkpoint := SaveGame.Checkpoint.RULING if result.outcome_id != &"slain" else SaveGame.Checkpoint.ENCOUNTER_RESOLUTION
 	SaveGame.request_checkpoint(checkpoint, String(encounter_id) + "-" + String(result.outcome_id))
+
+
+## Ruling 9 (2026-09-02), re-affirmed by the owner 2026-09-08: XP comes from
+## combat. Called AFTER the `already_resolved` guard on purpose — re-entering a
+## fight the party has already won pays nothing, so an encounter cannot be farmed
+## by walking out and back in.
+func _award_victory_xp(result: BattleResult) -> void:
+	var earned := 0
+	for foe: BattleActor in enemies:
+		earned += Advancement.xp_for_defeated(
+			foe.attribute_value(&"grit"), foe.attribute_value(&"muster")
+		)
+	if earned <= 0:
+		return
+	result.xp_awarded = earned
+	result.levels_gained = GameState.award_party_xp(
+		earned, "Won %s" % String(encounter_id)
+	)
 
 
 func _apply_flee_consequence(result: BattleResult, outcome: Dictionary) -> void:

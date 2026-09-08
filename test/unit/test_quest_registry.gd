@@ -9,9 +9,11 @@ var original_renown: Dictionary
 var original_quests: Dictionary
 var original_soul_meter: float
 var original_autosave_reason: String
+var original_party: Array[PartyMember] = []
 
 
 func before_test() -> void:
+	original_party = GameState.party.duplicate()
 	original_flags = GameState.flags.duplicate(true)
 	original_reputation = Reputation.to_dict().duplicate(true)
 	original_renown = Renown.to_dict().duplicate(true)
@@ -33,6 +35,51 @@ func after_test() -> void:
 	Reputation.from_dict(original_reputation)
 	Renown.from_dict(original_renown)
 	SaveGame._pending_autosave_reason = original_autosave_reason
+	GameState.party = original_party
+
+
+## #285 / game-identity ruling 9: XP comes from combat AND quests. Before this,
+## `PartyMember.xp` had no writer anywhere in the codebase.
+func test_completing_a_quest_awards_the_party_xp() -> void:
+	var hero := PartyMember.new()
+	hero.id = "test-quest-hero"
+	GameState.party = [hero]
+
+	var quest: FetchQuest = QuestRegistry.LOAMROOT_SPRIGS
+	QuestRegistry.offer(quest)
+	for _sprig in 3:
+		GameState.inventory.create_and_add_item(ItemIds.MATERIALS_LOAMROOT_SPRIG)
+	quest.update()
+	QuestRegistry.turn_in(quest)
+
+	assert_bool(QuestRegistry.is_done(quest)).is_true()
+	assert_int(hero.xp + (hero.level - 1) * Advancement.XP_BASE).override_failure_message(
+		"a completed quest paid no XP"
+	).is_greater(0)
+
+
+## Gated on `not was_done`, the same guard the reward summary uses. A re-entrant
+## turn-in that paid again would make every quest a repeatable XP faucet.
+func test_turning_a_quest_in_twice_pays_xp_once() -> void:
+	var hero := PartyMember.new()
+	hero.id = "test-quest-hero-twice"
+	GameState.party = [hero]
+
+	var quest: FetchQuest = QuestRegistry.LOAMROOT_SPRIGS
+	QuestRegistry.offer(quest)
+	for _sprig in 3:
+		GameState.inventory.create_and_add_item(ItemIds.MATERIALS_LOAMROOT_SPRIG)
+	quest.update()
+	QuestRegistry.turn_in(quest)
+	var banked := hero.xp
+	var level := hero.level
+
+	QuestRegistry.turn_in(quest)
+
+	assert_int(hero.xp).override_failure_message(
+		"a second turn-in paid again; the quest is an XP faucet"
+	).is_equal(banked)
+	assert_int(hero.level).is_equal(level)
 
 
 func test_offer_writes_the_named_bootstrap_side_effects_per_quest() -> void:

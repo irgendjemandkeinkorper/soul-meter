@@ -13,6 +13,7 @@ signal inventory_changed
 signal vendor_stock_changed(vendor_id: String, item_id: String, quantity: int)
 signal party_changed
 signal milestone_level_granted(milestone_id: StringName, new_levels: Dictionary)
+signal xp_awarded(amount: int, cause: String, levels_gained: Dictionary)
 signal locale_changed(locale: String)
 signal var_harmony_changed(actor_id: String, value: int, delta: int, source: StringName)
 signal combat_knowledge_changed(archetype_id: String)
@@ -839,27 +840,59 @@ func custom_recruit_chargen_unlocked() -> bool:
 
 ## Writes a chargen build into the recruitable roster instead of the player-identity
 ## slot (recruit mode). Given a unique id if one collides with an existing recruit.
-## Milestone leveling (#98, owner ruling 2026-08-24): levels are granted ONLY at
-## authored story milestones — never kill/use XP. Idempotent per milestone id via a
-## flag, so replays and re-entrant dialogue cannot double-grant. Levels the active
-## party AND player-authored custom recruits; the hand-authored tavern bench is
-## regenerated per visit by recruitable_candidates() and so has no persistent level
-## to advance (documented existing behavior).
+## Story milestones. The 2026-08-24 rule this once implemented — levels granted
+## ONLY at authored milestones, never kill/use XP (#98 D3) — was SUPERSEDED by
+## `docs/game-identity.md` ruling 9 (2026-09-02, ratified) and re-affirmed by the
+## owner 2026-09-08. XP is now the one currency and a milestone pays in it, so
+## this is a large authored award rather than a second, parallel way to level.
+## Idempotent per milestone id via a flag, so replays and re-entrant dialogue
+## cannot double-grant. Levels the active party AND player-authored custom
+## recruits; the hand-authored tavern bench is regenerated per visit by
+## recruitable_candidates() and so has no persistent level to advance
+## (documented existing behavior).
 func grant_milestone_level(milestone_id: StringName) -> bool:
 	var flag := "milestone_level_%s" % String(milestone_id)
 	if flag_is_true(flag):
 		return false
 	set_flag(flag, true)
 	var new_levels := {}
+	# Ruling 9 (2026-09-02) makes XP the one currency, so a milestone now pays in
+	# XP rather than handing out a free level beside it. The awarded amount is
+	# sized to carry the member over exactly one threshold, so a story beat still
+	# reads as "you levelled" — but a member who was already most of the way
+	# there keeps the surplus instead of having it swallowed, which is what a
+	# straight `grant_level()` used to do.
 	for member: PartyMember in party:
-		Advancement.grant_level(member)
+		Advancement.award_xp(member, Advancement.milestone_xp(member))
 		new_levels[member.id] = member.level
 	for member: PartyMember in custom_recruits:
-		Advancement.grant_level(member)
+		Advancement.award_xp(member, Advancement.milestone_xp(member))
 		new_levels[member.id] = member.level
 	milestone_level_granted.emit(milestone_id, new_levels)
 	party_changed.emit()
 	return true
+
+
+## The one XP write path. Awards to every party member — companions do not fall
+## behind for having been in the back rank, which is a Fallout-lineage choice: a
+## party that diverges in level makes the roster a trap rather than a choice.
+##
+## Custom recruits on the bench are levelled too, for the same reason milestones
+## level them: a recruit the player built and left behind should still be usable
+## when they come back for them.
+func award_party_xp(amount: int, cause: String) -> Dictionary:
+	var levels_gained := {}
+	if amount <= 0:
+		return levels_gained
+	for member: PartyMember in party:
+		var gained := Advancement.award_xp(member, amount)
+		if gained > 0:
+			levels_gained[member.id] = member.level
+	for member: PartyMember in custom_recruits:
+		Advancement.award_xp(member, amount)
+	xp_awarded.emit(amount, cause, levels_gained)
+	party_changed.emit()
+	return levels_gained
 
 
 const MIRROR_REWRITING_FLAG := "mirror_rewriting_used_ch1"
