@@ -1102,6 +1102,10 @@ position = Vector2(1820, 1280)
 npc_name = "Toma Reedhand"
 npc_id = "toma-reedhand"
 dialogue_path = "res://dialogue/toma_reedhand.dialogue"
+pocket_id = "toma-reedhand-purse"
+pocket_skill = "slip"
+pocket_gp = 9
+pocket_caught_message = "Reedhand's hand closes on your wrist before yours closes on anything."
 
 [node name="SellaVarn" parent="." instance=ExtResource("5_npc")]
 position = Vector2(2820, 1525)
