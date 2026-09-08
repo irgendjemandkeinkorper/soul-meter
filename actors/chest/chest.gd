@@ -19,6 +19,10 @@ const PLACEHOLDER_TEXTURE_PATH := "res://assets/kenney/ui/fantasy-ui-borders/PNG
 
 
 func _ready() -> void:
+	# #284: a container's `container_id` is already unique and durable, so it is
+	# the natural lock id. Authoring both would be two ids for one crate.
+	if lock_id.is_empty():
+		lock_id = container_id
 	GameState.ensure_loot_container(container_id, loot)
 	repeatable = true
 	super._ready()
