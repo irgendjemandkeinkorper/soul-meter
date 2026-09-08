@@ -139,3 +139,79 @@ func _displayed_buy_price(vendor_id: String, item_id: String) -> int:
 		if str(row.get("id", "")) == item_id:
 			return int(row.get("buy_price", 0))
 	return 0
+
+
+## #284 / game-identity ruling 7 ("stats matter outside combat"). Barter is a
+## STANDING modifier off Sway, not a per-transaction roll, because a price the
+## player is shown has to be the price they are charged.
+func test_barter_at_zero_leaves_every_shipped_price_exactly_as_it_was() -> void:
+	assert_float(VendorData.barter_multiplier(true, 0.0)).override_failure_message(
+		"adding barter must not move a single shipped price on its own"
+	).is_equal(1.0)
+	assert_float(VendorData.barter_multiplier(false, 0.0)).is_equal(1.0)
+
+
+func test_barter_buys_cheaper_and_sells_dearer() -> void:
+	var buy := VendorData.barter_multiplier(true, 1.0)
+	var sell := VendorData.barter_multiplier(false, 1.0)
+
+	assert_float(buy).is_less(1.0)
+	assert_float(sell).is_greater(1.0)
+	# Symmetric about 1.0, so a negotiator is never punished in one direction for
+	# being rewarded in the other.
+	assert_float(buy + sell).is_equal_approx(2.0, 0.0001)
+
+
+## Monotone: a better negotiator is never charged more, at any ratio.
+func test_a_better_negotiator_is_never_charged_more() -> void:
+	var previous := VendorData.barter_multiplier(true, 0.0)
+	for step: int in range(1, 11):
+		var current := VendorData.barter_multiplier(true, float(step) / 10.0)
+		assert_float(current).override_failure_message(
+			"buy multiplier rose between ratio %.1f and %.1f" % [(step - 1) / 10.0, step / 10.0]
+		).is_less_equal(previous)
+		previous = current
+
+
+func test_the_barter_ratio_clamps_outside_zero_to_one() -> void:
+	assert_float(VendorData.barter_multiplier(true, 4.0)).is_equal(
+		VendorData.barter_multiplier(true, 1.0)
+	)
+	assert_float(VendorData.barter_multiplier(true, -4.0)).is_equal(
+		VendorData.barter_multiplier(true, 0.0)
+	)
+
+
+## The one that matters. A barter modifier applied to the shop display but not to
+## the transaction is invisible until a player notices the silver does not add
+## up — the same class of defect the combat forecast contract exists to prevent.
+func test_the_displayed_price_is_the_price_charged() -> void:
+	GameState.gp = 500
+	var displayed: int = 0
+	for row: Dictionary in GameState.available_vendor_stock(PRICED_VENDOR_ID):
+		if str(row.get("id", "")) == PRICED_ITEM_ID:
+			displayed = int(row["buy_price"])
+			break
+	assert_int(displayed).override_failure_message(
+		"the priced fixture item is not on the vendor's shelf"
+	).is_greater(0)
+
+	var before := GameState.gp
+	var result := GameState.buy_from_vendor(PRICED_VENDOR_ID, PRICED_ITEM_ID)
+
+	assert_bool(bool(result["ok"])).override_failure_message(
+		"the fixture purchase was refused: %s" % str(result.get("reason", ""))
+	).is_true()
+	assert_int(int(result["price"])).override_failure_message(
+		"the shop displayed %d silver and the purchase charged something else" % displayed
+	).is_equal(displayed)
+	assert_int(before - GameState.gp).is_equal(displayed)
+
+
+## Barter reads the party leader, and an empty party cannot barter rather than
+## erroring — shops are reachable from states where the party is not yet built.
+func test_an_empty_party_barters_at_zero() -> void:
+	var party_before := GameState.party.duplicate()
+	GameState.party.clear()
+	assert_float(GameState.barter_ratio()).is_equal(0.0)
+	GameState.party.assign(party_before)

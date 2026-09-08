@@ -134,11 +134,25 @@ static func stock_for(vendor_id: String, band: StringName = &"") -> Array[Dictio
 	return result
 
 
+## `barter_ratio` is the caller's already-resolved Sway standing, 0.0 (no barter)
+## to 1.0 (mastered), and it is a PARAMETER so this function stays pure and
+## static — reading `SkillCheck` from here would make every price depend on an
+## autoload and on who happens to be leading the party.
+##
+## #284 / game-identity ruling 7. Barter is deliberately NOT a roll. A price the
+## player is shown must be the price they are charged, so it is a standing
+## modifier off the skill's effective percentage, not a per-transaction dice
+## throw. (Sway also carries a `karma_direction`, so a Virtuous ledger already
+## bargains better through `SkillCheck.karma_bonus` — RFC-0007 §6.)
+##
+## 0.0 leaves the price exactly as it was before barter existed, which is what
+## every caller that does not pass it still gets.
 static func price_for(
 	vendor_id: String,
 	item_id: String,
 	player_buys: bool,
-	band: StringName = &""
+	band: StringName = &"",
+	barter_ratio: float = 0.0
 ) -> int:
 	var row := vendor(vendor_id)
 	var item_row := item(item_id)
@@ -153,8 +167,22 @@ static func price_for(
 		float(item_row.get("base_price", 0))
 		* float(row.get(vendor_key, 0.0))
 		* float(band_row.get(transaction_key, 1.0))
+		* barter_multiplier(player_buys, barter_ratio)
 	)
 	return maxi(1, roundi(raw_price)) if raw_price > 0.0 else 0
+
+
+## PROVISIONAL — the swing magnitude is DeepSeek's per #284's "do not decide"
+## boundary. Mastered Sway buys this much cheaper and sells this much dearer.
+const BARTER_SWING := 0.20
+
+
+## Monotone in `barter_ratio` and symmetric between the two directions, so a
+## better negotiator is never charged more. At ratio 0 this returns exactly 1.0,
+## which is why adding barter did not move any shipped price on its own.
+static func barter_multiplier(player_buys: bool, barter_ratio: float) -> float:
+	var ratio := clampf(barter_ratio, 0.0, 1.0)
+	return 1.0 - BARTER_SWING * ratio if player_buys else 1.0 + BARTER_SWING * ratio
 
 
 static func accepts_sales(vendor_id: String, item_id: String) -> bool:

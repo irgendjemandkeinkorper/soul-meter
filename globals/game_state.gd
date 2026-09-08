@@ -493,6 +493,25 @@ func vendor_trade_status(vendor_id: String) -> Dictionary:
 	return VendorData.trade_status(vendor_id)
 
 
+## #284: the party's standing Sway, 0.0 to 1.0, as `VendorRegistry.price_for()`
+## wants it. Every price path in this file resolves it the same way and passes it
+## the same way, so the price a shop DISPLAYS is the price a purchase CHARGES —
+## the same guarantee the combat forecast makes, and worth stating because a
+## barter modifier applied at only one of the two sites is invisible until a
+## player notices the total does not match.
+##
+## Barter reads the party leader, not the protagonist: the person doing the
+## talking is the one at the counter.
+func barter_ratio() -> float:
+	if party.is_empty() or party[0] == null:
+		return 0.0
+	return clampf(
+		SkillCheck.effective_percent("sway", party[0]) / SkillCheck.MAX_EFFECTIVE_PERCENT,
+		0.0,
+		1.0
+	)
+
+
 func available_vendor_stock(vendor_id: String) -> Array[Dictionary]:
 	var status := vendor_trade_status(vendor_id)
 	if not bool(status.get("allowed", false)):
@@ -502,8 +521,9 @@ func available_vendor_stock(vendor_id: String) -> Array[Dictionary]:
 	for row: Dictionary in VendorData.stock_for(vendor_id):
 		var item_id := str(row.get("id", ""))
 		row["quantity"] = vendor_item_quantity(vendor_id, item_id)
-		row["buy_price"] = VendorData.price_for(vendor_id, item_id, true)
-		row["sell_price"] = VendorData.price_for(vendor_id, item_id, false)
+		var barter := barter_ratio()
+		row["buy_price"] = VendorData.price_for(vendor_id, item_id, true, &"", barter)
+		row["sell_price"] = VendorData.price_for(vendor_id, item_id, false, &"", barter)
 		result.append(row)
 	return result
 
@@ -527,7 +547,7 @@ func buy_from_vendor(vendor_id: String, item_id: String) -> Dictionary:
 		return _trade_failure("stock_unavailable")
 	if vendor_item_quantity(vendor_id, item_id) <= 0:
 		return _trade_failure("sold_out")
-	var price := VendorData.price_for(vendor_id, item_id, true)
+	var price := VendorData.price_for(vendor_id, item_id, true, &"", barter_ratio())
 	if price <= 0:
 		return _trade_failure("invalid_price")
 	if not can_afford(price):
@@ -559,7 +579,7 @@ func sell_to_vendor(vendor_id: String, item_id: String) -> Dictionary:
 		return _trade_failure("sales_not_accepted")
 	if item_count(item_id) <= 0:
 		return _trade_failure("item_missing")
-	var price := VendorData.price_for(vendor_id, item_id, false)
+	var price := VendorData.price_for(vendor_id, item_id, false, &"", barter_ratio())
 	if price <= 0:
 		return _trade_failure("invalid_price")
 	if not remove_items(item_id, 1):
