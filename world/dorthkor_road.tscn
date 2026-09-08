@@ -357,6 +357,9 @@ scale = Vector2(0.35, 0.35)
 position = Vector2(1390, 720)
 display_name = "SUPPLY CRATE"
 interaction_flag = "loot_opened_dorthkor_road_camp_cache"
+lock_skill = "strain"
+lock_modifier = 0.0
+lock_failed_message = "The lid holds. Whatever the muster nailed down, it meant to stay down."
 loot = Array[Dictionary]([{"item_id": "consumables/hearthloaf", "quantity": 1}, {"item_id": "materials/lamp_oil", "quantity": 1}])
 container_id = "dorthkor-road-camp-cache"
 
