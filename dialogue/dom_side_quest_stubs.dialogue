@@ -1,0 +1,146 @@
+# S8 (#302): side quests 5–10, shipping VISIBLE and unfinished.
+#
+# Owner ruling 2026-09-04 (`docs/ship-plan-2026-10.md`): four of ten side quests
+# are complete for gold and the other six are signposted rather than cut. Each
+# title below is one giver's opening account and an honest end — the player is
+# told the thread does not close in this chapter, in the giver's own voice, and
+# never with a menu-shaped apology.
+#
+# Structural rules these lines are written against:
+#   * `do QuestRegistry.offer(...)` opens the thread and puts it in the log.
+#   * the stub's single required `..._heard` flag is set on the same beat, which
+#     is what lets it be suspended. Written without a literal set_flag call here:
+#     `tools/quest_audit.gd` scans comments too, and a placeholder flag name in
+#     prose becomes a phantom orphaned flag in the report.
+#   * `do QuestRegistry.suspend_stub(...)` ends it. It writes NO ledger row —
+#     a StubSideQuest has no outcomes to apply — and sets the resume flag a
+#     post-launch update keys on.
+#   * A revisit after suspension says so and offers nothing, because a stub that
+#     could be re-entered would read as a bug rather than a pause.
+
+~ dom_stub_impossible_cadence
+Maela Drumscar: You drum for a company long enough, you stop hearing music and start hearing payroll. Every cadence is a count of who is standing.
+- "And this one?" [if not QuestRegistry.is_active(QuestRegistry.STUB_CADENCE) and not QuestRegistry.is_done(QuestRegistry.STUB_CADENCE) /]
+	do QuestRegistry.offer(QuestRegistry.STUB_CADENCE)
+	do GameState.set_flag("dom_impossible_cadence_heard", true)
+	Maela Drumscar: This one counts eleven and the company is nine. It has counted eleven for three weeks and nobody has drummed it but me.
+	Maela Drumscar: I want it read against the old notation before I file it as my error, because if it is my error I would like to know which two I invented.
+	=> suspend_impossible_cadence
+- "Nothing today." [if not QuestRegistry.is_done(QuestRegistry.STUB_CADENCE) /]
+	Maela Drumscar: Then go. The count will still be wrong tomorrow.
+	=> END
+- "About the eleven." [if QuestRegistry.is_done(QuestRegistry.STUB_CADENCE) /]
+	Maela Drumscar: The archive is sealed until the muster clears, and the muster does not clear this season. We are both waiting on the same door.
+	=> END
+
+~ suspend_impossible_cadence
+do QuestRegistry.suspend_stub(QuestRegistry.STUB_CADENCE)
+Maela Drumscar: The old notation is in the company archive, and the company archive is shut until the muster clears.
+Maela Drumscar: So we are stopped. Not finished — stopped. I will keep drumming the nine and writing down the eleven, and when that door opens I will come find you.
+=> END
+
+~ dom_stub_hidden_condition
+Kelm Rook: You want a contract read, you have come to the right bench. You want it read kindly, you have not.
+- "Read me something." [if not QuestRegistry.is_active(QuestRegistry.STUB_CONDITION) and not QuestRegistry.is_done(QuestRegistry.STUB_CONDITION) /]
+	do QuestRegistry.offer(QuestRegistry.STUB_CONDITION)
+	do GameState.set_flag("dom_hidden_condition_heard", true)
+	Kelm Rook: There is a clause in the Restoration papers that does nothing at all until it does everything at once. One condition, one time, and afterward the page reads as though it was always going to.
+	Kelm Rook: I have found it in four contracts. Four different hands. Same clause, word for word.
+	=> suspend_hidden_condition
+- "Not today." [if not QuestRegistry.is_done(QuestRegistry.STUB_CONDITION) /]
+	Kelm Rook: Wise. Most people who ask what a clause does would rather not have been told.
+	=> END
+- "The clause." [if QuestRegistry.is_done(QuestRegistry.STUB_CONDITION) /]
+	Kelm Rook: Still four. Still identical. I am not chasing a fifth until I know what the first one was for.
+	=> END
+
+~ suspend_hidden_condition
+do QuestRegistry.suspend_stub(QuestRegistry.STUB_CONDITION)
+Kelm Rook: Now. You are going to ask who wrote it, and I am going to tell you that I do not know and that I have stopped asking in this ward.
+Kelm Rook: That is where this ends for now. Not because it is finished. Because the next question is one I would like to still be employed after asking.
+=> END
+
+~ dom_stub_compromised_message
+Marn Veld: Don't stand where the arch sees us. I am a runner. Runners who stand still get remembered.
+- "What are you carrying?" [if not QuestRegistry.is_active(QuestRegistry.STUB_MESSAGE) and not QuestRegistry.is_done(QuestRegistry.STUB_MESSAGE) /]
+	do QuestRegistry.offer(QuestRegistry.STUB_MESSAGE)
+	do GameState.set_flag("dom_compromised_message_heard", true)
+	Marn Veld: A Council message. Correct hand. Correct seal. Correct wax. Wrong.
+	Marn Veld: I have carried this route four years and I know what the fourth line should say, and it says something else in exactly the right voice.
+	=> suspend_compromised_message
+- "Keep running." [if not QuestRegistry.is_done(QuestRegistry.STUB_MESSAGE) /]
+	Marn Veld: That is the plan. It has been the plan since the second hour.
+	=> END
+- "Did you hand it in?" [if QuestRegistry.is_done(QuestRegistry.STUB_MESSAGE) /]
+	Marn Veld: I handed it in. On time, sealed, no note. What else was I going to do — accuse a seal?
+	Marn Veld: I copied the fourth line first. That copy is somewhere neither of us should say out loud.
+	=> END
+
+~ suspend_compromised_message
+do QuestRegistry.suspend_stub(QuestRegistry.STUB_MESSAGE)
+Marn Veld: I have hours, not days. Either I hand it in and it becomes the Council's problem, or I hold it and it becomes mine.
+Marn Veld: I am going to hand it in. And I am going to remember your face, in case the day comes when someone needs to have known about this before it was official.
+=> END
+
+~ dom_stub_two_muster_rolls
+Thessa Drumline: Copyist. Not a clerk, not a scribe — a copyist. My whole trade is that two pages should agree.
+- "And they don't?" [if not QuestRegistry.is_active(QuestRegistry.STUB_ROLLS) and not QuestRegistry.is_done(QuestRegistry.STUB_ROLLS) /]
+	do QuestRegistry.offer(QuestRegistry.STUB_ROLLS)
+	do GameState.set_flag("dom_two_muster_rolls_heard", true)
+	Thessa Drumline: The dead roll and the living roll run parallel for nine hundred lines. On line nine hundred and one they stop.
+	Thessa Drumline: Not a contradiction. Worse. After that line they are simply about different musters, and neither page says so.
+	=> suspend_two_muster_rolls
+- "Later." [if not QuestRegistry.is_done(QuestRegistry.STUB_ROLLS) /]
+	Thessa Drumline: Later is fine. Neither roll is going anywhere. That is rather the trouble.
+	=> END
+- "Line nine hundred and one." [if QuestRegistry.is_done(QuestRegistry.STUB_ROLLS) /]
+	Thessa Drumline: Still there. I have copied it eleven times to be sure it was not my hand doing it.
+	=> END
+
+~ suspend_two_muster_rolls
+do QuestRegistry.suspend_stub(QuestRegistry.STUB_ROLLS)
+Thessa Drumline: I have shown you the line. That is all I am able to do, because reading past it means opening the Dorthkor material, and that is above a copyist.
+Thessa Drumline: So I will keep both pages, and I will keep them honest, and I will wait for someone with standing to ask me the next question. Come back when you are that someone.
+=> END
+
+~ dom_stub_forbidden_ledge
+Daska Threeknots: Salvage. Priced by what the family can carry, not by what the metal is worth. People call that brutal. People are welcome to price it themselves.
+- "What's the suit on the bench?" [if not QuestRegistry.is_active(QuestRegistry.STUB_LEDGE) and not QuestRegistry.is_done(QuestRegistry.STUB_LEDGE) /]
+	do QuestRegistry.offer(QuestRegistry.STUB_LEDGE)
+	do GameState.set_flag("dom_forbidden_ledge_heard", true)
+	Daska Threeknots: Deep salvage. Good plate. Priced fair.
+	Daska Threeknots: And it came off a ledge that nobody is permitted to stand on, which means somebody stood on it, which means the price I wrote is the only honest thing on this bench.
+	=> suspend_forbidden_ledge
+- "Just looking." [if not QuestRegistry.is_done(QuestRegistry.STUB_LEDGE) /]
+	Daska Threeknots: Look all you like. Looking is free. It is the asking that costs.
+	=> END
+- "The suit." [if QuestRegistry.is_done(QuestRegistry.STUB_LEDGE) /]
+	Daska Threeknots: Still on the bench. Still priced. I have not sold it and I am not going to explain why to you either.
+	=> END
+
+~ suspend_forbidden_ledge
+do QuestRegistry.suspend_stub(QuestRegistry.STUB_LEDGE)
+Daska Threeknots: You want to know who brought it in. I am not telling you today, and I want you to understand that is not the same as protecting them.
+Daska Threeknots: Ask me again when you have standing enough that my answer costs me less than my silence does. I will know when that is. So will you.
+=> END
+
+~ dom_stub_incomplete_tally
+Varrik Deepchalk: Nobody goes down that wall until the tally is complete. Not the crew, not the Concord, not you.
+- "How incomplete?" [if not QuestRegistry.is_active(QuestRegistry.STUB_TALLY) and not QuestRegistry.is_done(QuestRegistry.STUB_TALLY) /]
+	do QuestRegistry.offer(QuestRegistry.STUB_TALLY)
+	do GameState.set_flag("dom_incomplete_tally_heard", true)
+	Varrik Deepchalk: By one name. Eleven days.
+	Varrik Deepchalk: A tally short one name is not a tally that is nearly right. It is a tally that is wrong, and I chalk cages on tallies.
+	=> suspend_incomplete_tally
+- "Not going down." [if not QuestRegistry.is_done(QuestRegistry.STUB_TALLY) /]
+	Varrik Deepchalk: Good. Then we have no argument.
+	=> END
+- "The missing name." [if QuestRegistry.is_done(QuestRegistry.STUB_TALLY) /]
+	Varrik Deepchalk: Still missing. Cage still unchalked. I am not moving on either.
+	=> END
+
+~ suspend_incomplete_tally
+do QuestRegistry.suspend_stub(QuestRegistry.STUB_TALLY)
+Varrik Deepchalk: You are going to offer to go and look for him. I know. Everybody does, about day four.
+Varrik Deepchalk: I will not chalk you a cage to do it in, and there is no other way down. So we wait — you for a cage, me for a name. When one of those arrives, come back.
+=> END

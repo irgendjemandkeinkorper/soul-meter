@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="StubSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/stub_side_quest.gd" id="1_stub"]
+
+[resource]
+script = ExtResource("1_stub")
+id = 27
+quest_name = "The Incomplete Tally"
+quest_description = "Varrik Deepchalk will not chalk a descent cage until the lift crew's safety tally is complete. It has been incomplete for eleven days, by one name."
+quest_objective = "Find out which name is missing from Varrik's tally."
+required_flags = PackedStringArray("dom_incomplete_tally_heard")
+objectives = PackedStringArray("Find out which name is missing from Varrik's tally.")
+stable_id = "dom/side/incomplete-tally"
+giver_actor_id = "varrik-deepchalk"
+participant_actor_ids = PackedStringArray("varrik-deepchalk")
+hook_ids = PackedStringArray("dom/varrik-deepchalk/giver")
+dialogue_title = "dom_stub_incomplete_tally"
+decision_prompt = ""
+resolution_flag = ""
+outcome_ids = PackedStringArray()
+outcome_labels = PackedStringArray()
+outcome_faction_ids = PackedStringArray()
+outcome_reputation_deltas = PackedFloat32Array()
+outcome_causes = PackedStringArray()
+outcome_readbacks = PackedStringArray()
+resume_flag = "dom_incomplete_tally_resume"
+continuation_note = "Resumes as the chasm-wall descent; the missing miner Hennik Coalvein is the intended subject and is not resolved in Chapter 1."

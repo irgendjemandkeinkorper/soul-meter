@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="StubSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/stub_side_quest.gd" id="1_stub"]
+
+[resource]
+script = ExtResource("1_stub")
+id = 22
+quest_name = "The Impossible Cadence"
+quest_description = "Maela Drumscar has a muster cadence in her hands that no living company drums and no dead one should. She wants it read against the old notation before she reports it as an error."
+quest_objective = "Hear out Maela Drumscar's account of the cadence."
+required_flags = PackedStringArray("dom_impossible_cadence_heard")
+objectives = PackedStringArray("Hear out Maela Drumscar's account of the cadence.")
+stable_id = "dom/side/impossible-cadence"
+giver_actor_id = "maela-drumscar"
+participant_actor_ids = PackedStringArray("maela-drumscar")
+hook_ids = PackedStringArray("dom/maela-drumscar/giver")
+dialogue_title = "dom_stub_impossible_cadence"
+decision_prompt = ""
+resolution_flag = ""
+outcome_ids = PackedStringArray()
+outcome_labels = PackedStringArray()
+outcome_faction_ids = PackedStringArray()
+outcome_reputation_deltas = PackedFloat32Array()
+outcome_causes = PackedStringArray()
+outcome_readbacks = PackedStringArray()
+resume_flag = "dom_impossible_cadence_resume"
+continuation_note = "Resumes as a notation-comparison investigation across the Iron Companies muster archive; the cadence's source is the payoff and is not decided here."

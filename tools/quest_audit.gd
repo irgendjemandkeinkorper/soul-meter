@@ -205,7 +205,13 @@ static func build_report(
 		var outcomes: Array[Dictionary] = _typed_dictionaries(quest.get("outcomes", []))
 		resolution_count += outcomes.size()
 		var distinct_count := distinct_outcome_count(outcomes)
-		if distinct_count < 2:
+		# A StubSideQuest (#302, S8) ships deliberately unfinished under a ratified
+		# owner decision and carries NO outcomes at all. Warning that it has fewer
+		# than two would put six permanent entries reading "working as ratified"
+		# into the list an author actually reads, which is how a warning list stops
+		# being worth reading. Duck-typed on `resume_flag` to match this file's
+		# convention of not depending on class registration.
+		if distinct_count < 2 and not bool(quest.get("is_stub", false)):
 			_add_finding(
 				categories["outcome_count"],
 				"warning",
@@ -591,6 +597,8 @@ static func _collect_quest_results(
 		var quest: Dictionary = results_by_constant[constant_name]
 		var resource: Resource = quest["resource"]
 		var resolution_flag := str(resource.get("resolution_flag"))
+		quest["is_stub"] = not str(resource.get("resume_flag") if
+			resource.get("resume_flag") != null else "").strip_edges().is_empty()
 		var outcome_ids_value: Variant = resource.get("outcome_ids")
 		if not resolution_flag.is_empty() and outcome_ids_value is PackedStringArray:
 			quest["outcomes"] = _dom_side_outcomes(resource, resolution_flag)
@@ -1166,8 +1174,12 @@ static func _tres_dictionary_keys(source: String, field: String) -> PackedString
 
 static func _quest_metadata(registry_source: String) -> Dictionary:
 	var by_constant := {}
+	# `[^=]*` for the type hint, then whitespace that MAY include newlines. The
+	# earlier `[^\n]*` required the whole declaration on one line, so a preload
+	# wrapped to fit the line budget was invisible here — and a quest this scanner
+	# cannot see is a quest the audit silently never checks.
 	var preload_regex := _regex(
-		'const\\s+([A-Z0-9_]+)[^\\n]*preload\\("(res://quests/[^"]+\\.tres)"\\)'
+		'const\\s+([A-Z0-9_]+)[^=]*=\\s*preload\\(\\s*"(res://quests/[^"]+\\.tres)"\\s*\\)'
 	)
 	for result: RegExMatch in preload_regex.search_all(registry_source):
 		by_constant[result.get_string(1)] = result.get_string(2)

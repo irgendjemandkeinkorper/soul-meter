@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="StubSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/stub_side_quest.gd" id="1_stub"]
+
+[resource]
+script = ExtResource("1_stub")
+id = 25
+quest_name = "Two Muster Rolls"
+quest_description = "Thessa Drumline copies muster rolls and has found the exact line where the dead roll and the living one stop agreeing. She would like someone who is not a copyist to look at it."
+quest_objective = "Read the line where the two rolls part."
+required_flags = PackedStringArray("dom_two_muster_rolls_heard")
+objectives = PackedStringArray("Read the line where the two rolls part.")
+stable_id = "dom/side/two-muster-rolls"
+giver_actor_id = "thessa-drumline"
+participant_actor_ids = PackedStringArray("thessa-drumline")
+hook_ids = PackedStringArray("dom/thessa-drumline/giver")
+dialogue_title = "dom_stub_two_muster_rolls"
+decision_prompt = ""
+resolution_flag = ""
+outcome_ids = PackedStringArray()
+outcome_labels = PackedStringArray()
+outcome_faction_ids = PackedStringArray()
+outcome_reputation_deltas = PackedFloat32Array()
+outcome_causes = PackedStringArray()
+outcome_readbacks = PackedStringArray()
+resume_flag = "dom_two_muster_rolls_resume"
+continuation_note = "Resumes alongside the Dorthkor muster material; the break's meaning is deliberately not stated in Chapter 1."

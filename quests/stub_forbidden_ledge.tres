@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="StubSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/stub_side_quest.gd" id="1_stub"]
+
+[resource]
+script = ExtResource("1_stub")
+id = 26
+quest_name = "The Forbidden Ledge"
+quest_description = "Daska Threeknots prices salvage by the grief of the family asking. One suit on her bench came off a ledge nobody is permitted to stand on, and she has priced it anyway."
+quest_objective = "Ask Daska Threeknots where the suit came from."
+required_flags = PackedStringArray("dom_forbidden_ledge_heard")
+objectives = PackedStringArray("Ask Daska Threeknots where the suit came from.")
+stable_id = "dom/side/forbidden-ledge"
+giver_actor_id = "daska-threeknots"
+participant_actor_ids = PackedStringArray("daska-threeknots")
+hook_ids = PackedStringArray("dom/daska-threeknots/giver")
+dialogue_title = "dom_stub_forbidden_ledge"
+decision_prompt = ""
+resolution_flag = ""
+outcome_ids = PackedStringArray()
+outcome_labels = PackedStringArray()
+outcome_faction_ids = PackedStringArray()
+outcome_reputation_deltas = PackedFloat32Array()
+outcome_causes = PackedStringArray()
+outcome_readbacks = PackedStringArray()
+resume_flag = "dom_forbidden_ledge_resume"
+continuation_note = "Resumes as a Kord-rite salvage-legitimacy thread; whether Daska is culpable or the last honest link is undecided."
