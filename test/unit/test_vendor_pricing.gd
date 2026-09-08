@@ -208,10 +208,39 @@ func test_the_displayed_price_is_the_price_charged() -> void:
 	assert_int(before - GameState.gp).is_equal(displayed)
 
 
-## Barter reads the party leader, and an empty party cannot barter rather than
-## erroring — shops are reachable from states where the party is not yet built.
+## An empty party barters at zero rather than erroring — shops are reachable
+## from states where the party is not yet built.
 func test_an_empty_party_barters_at_zero() -> void:
 	var party_before := GameState.party.duplicate()
 	GameState.party.clear()
 	assert_float(GameState.barter_ratio()).is_equal(0.0)
 	GameState.party.assign(party_before)
+
+## Barter must roll the SAME person every other default skill check rolls.
+## `party[0]` is not that person — the tavern picker can reorder the party — and
+## a barter subject that quietly differs from the check subject would show up as
+## prices that move when the player rearranges their line-up.
+func test_barter_rolls_the_protagonist_not_merely_the_first_party_slot() -> void:
+	var party_before := GameState.party.duplicate()
+
+	var protagonist := PartyMember.new()
+	protagonist.id = GameState.PROTAGONIST_ID
+	protagonist.attributes["decorum"] = 5
+	var companion := PartyMember.new()
+	companion.id = "test-companion"
+	companion.attributes["decorum"] = 0
+
+	GameState.party.assign([protagonist])
+	var leading := GameState.barter_ratio()
+	# Same people, protagonist no longer in slot 0.
+	GameState.party.assign([companion, protagonist])
+	var trailing := GameState.barter_ratio()
+	GameState.party.assign(party_before)
+
+	assert_float(leading).override_failure_message(
+		"a skilled protagonist should barter above zero, or this case proves nothing"
+	).is_greater(0.0)
+	assert_float(trailing).override_failure_message(
+		"reordering the party changed the price. Barter is reading party[0] again"
+	).is_equal(leading)
+

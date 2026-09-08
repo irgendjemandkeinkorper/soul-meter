@@ -503,12 +503,14 @@ func vendor_trade_status(vendor_id: String) -> Dictionary:
 ## Barter reads the party leader, not the protagonist: the person doing the
 ## talking is the one at the counter.
 func barter_ratio() -> float:
-	if party.is_empty() or party[0] == null:
-		return 0.0
+	# The subject is left to SkillCheck rather than picked here. #415 originally
+	# read `party[0]`, which is not the same thing as the protagonist — the
+	# tavern picker can reorder the party — so barter was silently rolling a
+	# different person's Sway than every other default check in the game rolls.
+	# Passing null makes SkillCheck resolve the subject its one way, and deletes
+	# the second copy of that rule rather than fixing it twice.
 	return clampf(
-		SkillCheck.effective_percent("sway", party[0]) / SkillCheck.MAX_EFFECTIVE_PERCENT,
-		0.0,
-		1.0
+		SkillCheck.effective_percent("sway") / SkillCheck.MAX_EFFECTIVE_PERCENT, 0.0, 1.0
 	)
 
 

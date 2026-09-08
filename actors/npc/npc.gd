@@ -9,6 +9,22 @@ extends StaticBody2D
 @export var dialogue_start: String = "start"
 @export var vendor_id: String = ""
 @export_range(32.0, 240.0, 1.0) var interaction_radius: float = 120.0
+@export_group("Pickpocket (#284)")
+## Identifies this NPC's pocket in the flag store. Empty disables the verb
+## entirely — an NPC without a pocket id cannot be robbed, and the prompt says
+## nothing about stealing.
+@export var pocket_id: String = ""
+## The skill rolled. `slip` by default (DRAMGID's rename of sleight_of_hand).
+@export var pocket_skill: String = "slip"
+## Situational modifier handed to SkillCheck. Negative is harder.
+@export var pocket_modifier: float = 0.0
+@export var pocket_item_id: String = ""
+@export var pocket_gp: int = 0
+## Faction that takes the reputation hit when the attempt is CAUGHT. Empty
+## records infamy only — a stranger with no affiliation still saw you try.
+@export var pocket_faction: String = ""
+@export var pocket_caught_message: String = "A hand closes on your wrist. They saw."
+
 @export_group("Placeholder presentation")
 ## Scene-owned presentation keeps NPC content from branching on lore names.
 ## Only relevant when npc_id is empty and no generated unit art applies —
@@ -52,7 +68,7 @@ func _ready() -> void:
 	range_area.body_exited.connect(_on_body.bind(false))
 
 	_prompt = Label.new()
-	_prompt.text = "E — Trade" if not vendor_id.is_empty() else "E — Talk"
+	_prompt.text = _prompt_text()
 	_prompt.theme_type_variation = "EyebrowLabel"
 	_prompt.position = Vector2(-100, -108)
 	_prompt.size = Vector2(200, 32)
@@ -216,6 +232,11 @@ func _on_body(body: Node2D, entered: bool) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _player_in_range and event.is_action_pressed("steal") and not get_tree().paused:
+		get_viewport().set_input_as_handled()
+		attempt_pickpocket()
+		_prompt.text = _prompt_text()
+		return
 	if _player_in_range and event.is_action_pressed("interact") and not get_tree().paused:
 		get_viewport().set_input_as_handled()
 		if not vendor_id.is_empty():
@@ -232,6 +253,118 @@ func _unhandled_input(event: InputEvent) -> void:
 			push_error("NPC '%s' has no dialogue resource." % npc_name)
 			return
 		DialogueManager.show_dialogue_balloon(dialogue, resolved_title)
+
+
+## Whether this NPC carries a pocket at all. An NPC with no `pocket_id` is not
+## robbable and never shows the prompt.
+func has_pocket() -> bool:
+	return not pocket_id.is_empty()
+
+
+func pocket_lifted_flag() -> String:
+	return "pocket_lifted_%s" % pocket_id
+
+
+func pocket_failed_flag() -> String:
+	return "pocket_failed_%s" % pocket_id
+
+
+## True while the pocket is still worth trying: it exists and has neither been
+## lifted nor been fumbled.
+func pocket_is_live() -> bool:
+	return (
+		has_pocket()
+		and not GameState.flag_is_true(pocket_lifted_flag())
+		and not GameState.flag_is_true(pocket_failed_flag())
+	)
+
+
+## ONE COMMITTED ATTEMPT, matching the skill-locked containers of #414. Either
+## outcome closes the pocket for good.
+##
+## The alternative — retry until it works — makes the skill decorative: any
+## `slip` above zero eventually lifts every pocket in Dom, so the check stops
+## being a decision and becomes a delay. Committing also removes the incentive
+## to reload, which matters more here than on a chest: a caught thief pays in
+## reputation, and a consequence a player can undo by pressing F5 is not one.
+## `forced_rolls` is passed straight through to `SkillCheck.resolve`, which
+## already exposes it for exactly this reason: the check is capped at
+## MAX_EFFECTIVE_PERCENT, so no modifier can make either outcome certain and
+## neither branch is testable without pinning the die.
+func attempt_pickpocket(forced_rolls: Array[int] = []) -> Dictionary:
+	if not has_pocket():
+		return {"attempted": false, "success": false, "reason": "no_pocket"}
+	if GameState.flag_is_true(pocket_lifted_flag()):
+		return {"attempted": false, "success": true, "reason": "already_lifted"}
+	if GameState.flag_is_true(pocket_failed_flag()):
+		return {"attempted": false, "success": false, "reason": "already_failed"}
+	if not DramgidSchema.is_skill(pocket_skill):
+		# Deliberately the opposite of #414's unknown-lock-skill fallback, which
+		# OPENS the lock. There the player loses content to an authoring typo; here
+		# they would gain loot and take no risk from one. An unrobbable NPC is the
+		# safe direction, and the warning names the author's mistake either way.
+		push_warning(
+			"NPC '%s' authors unknown pocket skill '%s'; the pocket stays shut."
+			% [npc_name, pocket_skill]
+		)
+		return {"attempted": false, "success": false, "reason": "unknown_skill"}
+
+	var check: Dictionary = SkillCheck.resolve(
+		pocket_skill, null, pocket_modifier, "pocket-%s" % pocket_id, forced_rolls
+	)
+	var succeeded := bool(check.get("success", false))
+	GameState.set_flag(pocket_lifted_flag() if succeeded else pocket_failed_flag(), true)
+	var result := {"attempted": true, "success": succeeded, "check": check}
+	if succeeded:
+		result["taken"] = _grant_pocket_contents()
+	else:
+		_record_caught()
+	return result
+
+
+## Grants what the pocket held. Reports what actually landed rather than what was
+## authored: a full GLoot grid must not silently eat the item and still read as a
+## clean lift.
+func _grant_pocket_contents() -> Dictionary:
+	var taken := {"gp": 0, "item_id": ""}
+	if pocket_gp > 0:
+		GameState.earn_gp(pocket_gp)
+		taken["gp"] = pocket_gp
+	if not pocket_item_id.is_empty():
+		var added: InventoryItem = GameState.inventory.create_and_add_item(pocket_item_id)
+		if added != null:
+			taken["item_id"] = pocket_item_id
+		else:
+			push_warning(
+				"NPC '%s' pocket item '%s' did not fit the inventory." % [npc_name, pocket_item_id]
+			)
+	return taken
+
+
+## PROVISIONAL magnitudes — #284 hands numeric values to DeepSeek. The SHAPE is
+## the decision: getting caught is a consequence written to the ledgers, not a
+## message and a shrug. Infamy always, faction reputation only when the NPC has
+## an affiliation to be indignant on behalf of.
+const CAUGHT_INFAMY := 4.0
+const CAUGHT_REPUTATION_DELTA := -3.0
+
+
+func _record_caught() -> void:
+	var scene := _containing_scene_path()
+	Renown.gain_infamy("player", CAUGHT_INFAMY, "Caught with a hand in a pocket.", scene)
+	if not pocket_faction.is_empty():
+		Reputation.record(
+			"player",
+			pocket_faction,
+			CAUGHT_REPUTATION_DELTA,
+			"Caught stealing from %s." % npc_name,
+			scene
+		)
+
+
+func _prompt_text() -> String:
+	var primary := "E — Trade" if not vendor_id.is_empty() else "E — Talk"
+	return "%s    F — Steal" % primary if pocket_is_live() else primary
 
 
 func _resolved_dialogue_route() -> Dictionary:
