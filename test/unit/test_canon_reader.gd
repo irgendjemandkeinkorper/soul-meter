@@ -976,19 +976,24 @@ func test_the_six_authored_archetypes_carry_a_dramgid_stat_block() -> void:
 		).is_false()
 
 
-func test_enemy_health_stays_authored_rather_than_derived_from_grit() -> void:
-	# The deliberate half of the ruling. `DramgidDerived.max_hp` is the PARTY's
-	# point-buy curve (12 + grit x 6 over 2..5, so 24..42); the shipped enemies run
-	# 14..36. Deriving would make a 14 HP boar 24 and rebalance every encounter,
-	# and Gate T-1's ratified evidence would stop describing the game.
+func test_enemy_health_is_still_authored_pending_the_scaling_pass() -> void:
+	# A TRIPWIRE, not a verdict. Enemy max_hp/attack/defense are meant to come off
+	# their attributes and to vary between instances met in the wild (owner ruling
+	# 2026-09-07, tracked as #412) — this only catches that happening by accident,
+	# through the PARTY's curve, which is the one way it must not happen.
+	# `DramgidDerived.max_hp` spans the point-buy range (12 + grit x 6 over 2..5, so
+	# 24..42); the shipped enemies run 14..36 and include a grit-1 boar the party can
+	# never build. Routing them through this curve makes that boar 24 HP, rebalances
+	# every encounter, and retires Gate T-1's ratified evidence.
 	var below_the_party_floor: int = 0
 	for archetype: Dictionary in _characters_of_kind("archetype"):
 		var stats: Dictionary = archetype["stats"]
 		if int(stats["max_hp"]) < DramgidDerived.max_hp(DramgidSchema.ATTRIBUTE_FLOOR):
 			below_the_party_floor += 1
 	assert_int(below_the_party_floor).override_failure_message(
-		"no enemy sits below the party HP floor any more; if enemy health was moved onto "
-		+ "DramgidDerived, Gate T-1's cleared-encounter evidence needs re-running"
+		"no enemy sits below the party HP floor any more. If #412 landed an enemy-side "
+		+ "curve, rewrite this case against that curve and re-run Gate T-1 (#168); if "
+		+ "enemy health silently reached DramgidDerived instead, that is the bug"
 	).is_greater(0)
 
 

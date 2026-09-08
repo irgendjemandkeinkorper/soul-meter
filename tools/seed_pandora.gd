@@ -1058,14 +1058,19 @@ func _seed_npcs() -> void:
 ## enemies as well). Each archetype carries all seven attributes, and `alacrity` is the
 ## ratified rename of the old `edge` (`DramgidSchema.ATTRIBUTE_RENAMES`).
 ##
-## `max_hp`, `attack` and `defense` stay AUTHORED rather than derived through
-## `DramgidDerived`, and that is the deliberate half. The party point-buys 2..5, so
-## `max_hp = 12 + grit * 6` yields 24/30/36/42 — the shipped enemies run 14..36, and a
-## 14 HP boar would become 24, a 71% buff. Every encounter would need rebalancing and
-## Gate T-1's ratified evidence (five archetype encounters cleared by four build
-## archetypes) would no longer describe the game. Enemies are AUTHORED, not built; the
-## attributes give them the DRAMGID surface (to-hit, charge speed, checks) without
-## handing their health to a character-creation formula.
+## `max_hp`, `attack` and `defense` stay AUTHORED here — INTERIM, tracked as #412, not a
+## settled answer. The owner has ruled (2026-09-07) that enemy attributes SHOULD drive the
+## three combat numbers, and that different instances met in the wild should differ: "I
+## don't want it to be a 'solved' kinda question." What this pass will not do is reach that
+## by reusing the party's curve. The party point-buys 2..5, so `max_hp = 12 + grit * 6`
+## yields 24/30/36/42 while the shipped enemies run 14..36 with a grit-1 boar the party can
+## never build; a 14 HP boar would become 24, a 71% buff, every encounter would need
+## rebalancing, and Gate T-1's ratified evidence (five archetype encounters cleared by four
+## build archetypes) would stop describing the game. #412 carries the enemy-side curve plus
+## the per-spawn variation on top of it, and is sequenced behind #345's SpawnDirector
+## because the roll belongs to the wild spawn path, not to these authored set-pieces. Until
+## then the attributes give enemies the DRAMGID surface (to-hit, charge speed, checks) and
+## the three combat numbers stay where Gate T-1 left them.
 ##
 ## The one remaining boundary: Pandora's column and `data/generated/encounters.json`
 ## still say `Edge`, because campaign packages author that key

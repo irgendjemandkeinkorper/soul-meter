@@ -17,10 +17,13 @@ extends RefCounted
 ## Landing a formula ahead of its consumer would strand it, which is the same
 ## mistake §3.6 is being held back to avoid.
 ##
-## Nothing here applies to ENEMIES. They carry DRAMGID attributes now, but their
-## max_hp/attack/defense stay authored: this file's curves are the party's
-## point-buy range (2..5), and running the shipped enemies through them would
-## rebalance every encounter. See `tools/seed_pandora.gd`'s archetype note.
+## Nothing here applies to ENEMIES, and that is a property of these curves rather
+## than a ruling about enemies. Enemy max_hp/attack/defense SHOULD come off their
+## attributes, and should vary between instances met in the wild — owner ruling
+## 2026-09-07, tracked as #412. What #412 will not do is reuse this file: these
+## curves span the party's point-buy range (2..5) and the shipped enemies run
+## wider and lower, so enemies need their own. Until #412 lands their three
+## combat numbers stay authored. See `tools/seed_pandora.gd`'s archetype note.
 ##
 ## Reasoning, grids and the migration report: `docs/dramgid-numbers.md`.
 ## Sweep: `tools/dramgid_derived_sweep.gd`. Pinned: `test/unit/test_dramgid_numbers.gd`.

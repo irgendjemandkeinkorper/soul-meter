@@ -292,10 +292,15 @@ The three unfrozen rows share one blocker: their consumers still read
 > and no `edge` at all, so every player-built character was fighting with to-hit 0 and charge
 > speed 0. What remains blocked on #281 is the FORMULAS, not the names.
 >
-> Enemy `max_hp`/`attack`/`defense` stay AUTHORED, not derived through `DramgidDerived`. The
-> party point-buys 2..5, so `12 + grit x 6` gives 24/30/36/42 while the shipped enemies run
-> 14..36; deriving would make a 14 HP boar 24 and Gate T-1's ratified cleared-encounter
-> evidence would stop describing the game. Enemies are authored, not built.
+> Enemy `max_hp`/`attack`/`defense` stay AUTHORED **for now — interim, tracked as #412**.
+> The owner ruled on 2026-09-07 that enemy attributes should drive those three numbers, and
+> that instances met in the wild should differ from each other: *"I don't want it to be a
+> 'solved' kinda question."* What #412 will not do is reuse `DramgidDerived`: the party
+> point-buys 2..5, so `12 + grit x 6` gives 24/30/36/42 while the shipped enemies run 14..36
+> with a grit-1 boar the party can never build, so deriving through the party's curve would
+> make that boar 24 HP and Gate T-1's ratified cleared-encounter evidence would stop
+> describing the game. #412 carries an enemy-side curve plus deterministic per-spawn
+> variation frozen at spawn (Gate T-7), sequenced behind #345's SpawnDirector.
 
 The original brief follows.
 
