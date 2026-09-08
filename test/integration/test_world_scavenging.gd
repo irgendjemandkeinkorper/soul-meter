@@ -15,7 +15,8 @@ static func _all_world_scenes() -> Array[String]:
 	return scenes
 
 const EXPECTED_PLACEMENTS := {
-	"res://world/dorthkor_road.tscn": ["dorthkor-road-camp-cache"],
+	"res://world/dorthkor_road.tscn":
+	["dorthkor-road-camp-cache", "dorthkor-road-roadside-cache"],
 	"res://world/wound_lip.tscn": ["wound-lip-ledge-cache", "wound-lip-guard-kit"],
 	"res://world/interiors/cask_warehouse.tscn": ["cask-warehouse-supply-crate"],
 	"res://world/interiors/chefs_pantry.tscn": ["chefs-pantry-supply-crate"],
@@ -66,7 +67,10 @@ func test_placed_containers_resolve_with_unique_repository_wide_ids() -> void:
 		scene_ids.sort()
 		found_by_scene[scene_path] = scene_ids
 
-	assert_int(scene_for_id.size()).is_equal(11)
+	# 12 since #284 verb 4 added the table-driven RoadsideCache beside the
+	# hand-authored CampCache. This count is a PIN: a container added without
+	# updating EXPECTED_PLACEMENTS above should fail here, and did.
+	assert_int(scene_for_id.size()).is_equal(12)
 	for scene_path: String in EXPECTED_PLACEMENTS:
 		var expected: Array = (EXPECTED_PLACEMENTS[scene_path] as Array).duplicate()
 		expected.sort()
