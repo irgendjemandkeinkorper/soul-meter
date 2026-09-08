@@ -482,6 +482,10 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 
 
 func _current_field_map() -> FieldMap:
+	# A live session owns its field. A loading scene or another mounted fixture
+	# must not redirect its HUD to a different field found earlier in the tree.
+	if session_active and is_instance_valid(_session_field):
+		return _session_field
 	# Autoloads earlier in project.godot (GameFlow) ask before Battle joins the tree.
 	var tree: SceneTree = get_tree() if is_inside_tree() else Engine.get_main_loop() as SceneTree
 	if tree == null:
