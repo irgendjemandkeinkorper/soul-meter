@@ -36,6 +36,7 @@ func _build() -> void:
 	backdrop.color = DS.VOID_1
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backdrop.visible = not Battle.session_active
 	add_child(backdrop)
 
 	var safe_frame := MarginContainer.new()
@@ -55,18 +56,23 @@ func _build() -> void:
 	stage_space.clip_contents = true
 	layout.add_child(stage_space)
 
-	_stage = BATTLE_STAGE_SCENE.instantiate() as Control
-	_stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	stage_space.add_child(_stage)
-	Battle.combat_event.connect(Callable(_stage, "consume_event"))
-	Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
+	if not Battle.session_active:
+		_stage = BATTLE_STAGE_SCENE.instantiate() as Control
+		_stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		stage_space.add_child(_stage)
+		Battle.combat_event.connect(Callable(_stage, "consume_event"))
+		Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
 
 	_battle_interface = BATTLE_INTERFACE_SCENE.instantiate() as BattleInterface
 	_battle_interface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_battle_interface.z_index = 4
 	stage_space.add_child(_battle_interface)
+	if Battle.session_active and Battle._current_field_map() != null:
+		_battle_interface.stage.bind_field(Battle._current_field_map())
 	Battle.combat_event.connect(_battle_interface.consume_event)
+	_battle_interface.stage.set_replaying(true)
 	Battle.replay_combat_events(_battle_interface.consume_event)
+	_battle_interface.stage.set_replaying(false)
 	if Battle.controller != null and Battle.controller.scheduler != null:
 		_battle_interface.bind_controller(Battle.controller)
 
@@ -323,7 +329,7 @@ func _toggle_tactical_data() -> void:
 
 
 func _refresh() -> void:
-	if not is_instance_valid(_stage):
+	if not is_instance_valid(_battle_interface):
 		return
 	_balance_bar.value = Battle.balance
 	_balance_lbl.text = _balance_text()
