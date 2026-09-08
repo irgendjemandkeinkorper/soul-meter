@@ -34,15 +34,40 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
   `Reputation`, and Fame is `Renown.reputation`/`infamy` scaled by Decorum.
 - **Field skills (ruling 7).** New interactable kinds (locked container, pickpocketable NPC, barter
   screen) checked against the 22 skills; Loom-sensitive skills degrade in Hush/Waning zones.
+  > **Owner ruling, 2026-09-08 — Hush/Waning zones ARE AccordZone.** There is no separate Loom
+  > zone type. `SkillCheck.loom_penalty(skill, zone)` — a live stub returning 0 — reads #349's
+  > zone surface (`AccordZone` placeable or Terrain `accord_delta`, via `FieldMap.accord_at()`).
+  > Two zone systems over one field would have meant the second one always losing. This moves
+  > `loom_penalty` out of F4 (#284) and makes it a consumer of E6.1 (#349); the field verbs
+  > themselves stay in #284 and are unblocked. `DramgidSchema.SKILLS` already carries the
+  > per-skill `loom` field (5 skills FULL, 5 PARTIAL), so only the zone read is missing.
 - **Progression (ruling 9).** XP source is combat + quests; perk lists per patron class are new
   Pandora data.
+  > **Owner ruling, 2026-09-08 — kill-XP is in, and this supersedes #98 D3.** Asked directly
+  > whether XP comes from killing monsters, the owner answered: *"Definitely get XP from killing
+  > monsters."* That retires the 2026-08-24 milestone-levelling ruling recorded in
+  > `GameState.grant_milestone_level()`'s comment — *"levels are granted ONLY at authored story
+  > milestones — never kill/use XP."* Ruling 9 is nine days later and ratified; kill-XP wins.
+  >
+  > **Recommended consequence (not a ruling — reversible):** keep the milestone machinery and
+  > change what it grants. A story milestone awards a lump of **XP** rather than a free level.
+  > That preserves the authored-pacing control the milestone system exists for and its
+  > per-milestone double-grant guard, while leaving one currency driving one thing.
+  >
+  > `PartyMember.xp` is declared, serialized and migrated with **zero writers** today. The write
+  > paths are `Battle._apply_victory()` (which already guards re-entry via `already_resolved`, so
+  > a re-fought encounter cannot double-pay) and `QuestRegistry.resolve_side_quest()`. See #285.
 - **Hollowing (ruling 2)** is a Soul band with its own dialogue conditions and companion barks.
   Soul income (ruling 3) is the quest system's job: `acts of Agreement` become a tagged quest
   outcome that credits the gauge.
 
 ## Open questions (not resolved here; do not resolve silently)
 
-- Perk cadence (every 3 levels?) and Chapter 1 level cap.
+- Perk cadence (every 3 levels?) and Chapter 1 level cap. **Still open as of 2026-09-08** — the
+  kill-XP ruling above settles the XP *source*, not the curve, the cadence or the cap.
+- Enemy stat variation in the wild (#412): band, which stats vary, whether it is visible, and
+  whether named enemies vary. Recommendations with fitted numbers are on #412 and **await a
+  ruling**.
 - Which of the 22 skills the Chapter 1 content actually checks (minimum viable set).
 - Whether ambient same-map fights can be fled by leaving the alert radius (Fallout allows it).
 - Loot density target for a Fallout-full field game in a world with a Mirror Shop.
