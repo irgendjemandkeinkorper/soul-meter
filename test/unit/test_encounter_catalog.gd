@@ -174,3 +174,31 @@ func test_a_campaign_package_row_with_only_edge_still_lands_on_alacrity() -> voi
 	assert_int(actors[0].attribute_value(&"alacrity")).override_failure_message(
 		"a package row's flat `edge` no longer reaches Alacrity"
 	).is_equal(4)
+
+
+## F0 D8 (#281 step 8). `_WEATHER_DEFAULTS` used to be injected here, keyed per
+## encounter, so a bog wight brought mozh with it wherever it was fought. Weather
+## is `LocationDefinition.weather_default` now — the map has the weather. This pins
+## the retirement: a catalog row must carry no weather of its own.
+func test_the_catalog_no_longer_authors_weather() -> void:
+	for encounter_id: StringName in EncounterCatalog.all_ids():
+		var definition := EncounterCatalog.definition(encounter_id)
+		assert_bool(definition.has("weather_default")).override_failure_message(
+			"encounter '%s' carries a weather default; weather belongs to the location (F0 D8)"
+			% encounter_id
+		).is_false()
+
+
+## The boundary left standing: a campaign package authors `weather_default` on its
+## own encounter (`campaign_encounter_loader.gd` validates the key), and that row
+## still round-trips through the catalog untouched.
+func test_a_campaign_package_may_still_author_its_own_weather() -> void:
+	EncounterCatalog.register_runtime_encounters({
+		"package-weather": {
+			"display_name": "Package Weather",
+			"weather_default": "zhur",
+			"enemies": [{"id": "package-brute", "display_name": "Brute", "max_hp": 9, "attack": 2}],
+		},
+	})
+	var definition := EncounterCatalog.definition(&"package-weather")
+	assert_str(str(definition.get("weather_default", ""))).is_equal("zhur")

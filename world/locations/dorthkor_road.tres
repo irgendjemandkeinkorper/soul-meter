@@ -8,6 +8,7 @@ id = &"dorthkor_road"
 scene_path = "res://world/dorthkor_road.tscn"
 harmonic_accord = 70.0
 thinning_tier = 2
+weather_default = &"tham"
 default_spawn_id = &"default"
 arrival_flag = "chapter_dorthkor_reached"
 arrival_checkpoint = "location-arrival"

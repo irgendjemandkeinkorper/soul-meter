@@ -96,19 +96,43 @@ func test_terrain_tileset_authors_cover_and_elevation_custom_data() -> void:
 	assert_int(int(elevation_data.get_custom_data(&"elevation"))).is_equal(1)
 
 
-func test_weather_defaults_are_valid_wheel_ids_and_start_without_warnings() -> void:
-	assert_bool(EncounterCatalog._WEATHER_DEFAULTS.size() >= 2).is_true()
-	assert_bool(EncounterCatalog._WEATHER_DEFAULTS.size() <= 3).is_true()
-	for encounter_key: Variant in EncounterCatalog._WEATHER_DEFAULTS:
-		_cleanup_battle()
-		var authored_id := StringName(str(encounter_key))
-		var expected_element := str(EncounterCatalog._WEATHER_DEFAULTS[encounter_key])
+## F0 D8 (#281 step 8). This used to read `EncounterCatalog._WEATHER_DEFAULTS` and
+## drive a battle per authored ENCOUNTER. Weather is the LOCATION's now, so the
+## authoring surface being kept honest is `world/locations/*.tres`.
+func test_every_authored_location_weather_is_a_real_wheel_id() -> void:
+	var carrying: int = 0
+	for location: LocationDefinition in LocationRegistry.ALL:
+		var authored := location.weather_default
+		if authored == &"":
+			continue
+		carrying += 1
+		assert_int(ElementWheel.index_of(String(authored))).override_failure_message(
+			"location '%s' authors weather '%s', which is not on the wheel"
+			% [location.id, authored]
+		).is_greater_equal(0)
+	# The F0 D8 mapping: Loamroot Grove = mozh, Dorthkor Road = tham, Wound Lip =
+	# khash. Dom and the 21 interiors are calm.
+	assert_int(carrying).override_failure_message(
+		"F0 D8 authors weather on exactly three locations"
+	).is_equal(3)
 
-		await assert_error(Battle.start.bind(authored_id)).is_success()
 
-		var snapshot: Dictionary = Battle.controller.snapshot()
-		var weather: Dictionary = snapshot.get("weather", {})
-		assert_str(str(weather.get("element_id", ""))).is_equal(expected_element)
+func test_dom_is_calm_and_the_wilds_carry_mozh() -> void:
+	assert_str(String(LocationRegistry.DOM.weather_default)).override_failure_message(
+		"Dom is authored calm (F0 D8)"
+	).is_empty()
+	assert_str(String(LocationRegistry.WILDS.weather_default)).is_equal("mozh")
+	assert_str(String(LocationRegistry.DORTHKOR.weather_default)).is_equal("tham")
+	assert_str(String(LocationRegistry.WOUND_LIP.weather_default)).is_equal("khash")
+
+
+## The live read the same-map session path uses. `FieldMap.weather_default()`
+## returned `&""` unconditionally until step 8, so every session started calm no
+## matter which map it was on — this is the case that would have caught that.
+func test_the_field_reports_its_locations_weather() -> void:
+	assert_str(String(_field.weather_default())).override_failure_message(
+		"the wilds field must report the wilds location's authored mozh"
+	).is_equal("mozh")
 
 
 ## Gate r1 residual closure: play a REAL authored board end-to-end — legal

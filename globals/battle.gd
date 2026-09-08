@@ -120,7 +120,7 @@ func start(encounter: Variant) -> void:
 		_casting_abilities(),
 	)
 	controller.configure_agreement_integrity(_agreement_integrity())
-	var weather_default := StringName(str(_definition.get("weather_default", "")))
+	var weather_default := _weather_for_start()
 	if weather_default != &"":
 		var weather_result := controller.configure_weather(weather_default)
 		if not bool(weather_result.get("allowed", false)):
@@ -384,6 +384,22 @@ func _casting_abilities() -> Array[AbilityDefinition]:
 	):
 		abilities.append(ability)
 	return abilities
+
+
+## F0 D8 (#281 step 8): weather is the LOCATION's. A campaign package may still
+## author `weather_default` on its encounter (`campaign_encounter_loader.gd`
+## validates the key), and that override wins — the same boundary `Edge` keeps for
+## authored packages. Otherwise the current scene's location supplies it.
+func _weather_for_start() -> StringName:
+	var authored := StringName(str(_definition.get("weather_default", "")))
+	if authored != &"":
+		return authored
+	var tree := get_tree()
+	var current_scene: Node = tree.current_scene if tree != null else null
+	if current_scene == null:
+		return &""
+	var location := LocationRegistry.by_scene(current_scene.scene_file_path)
+	return location.weather_default if location != null else &""
 
 
 func _agreement_integrity(scene_path: String = "") -> float:

@@ -22,7 +22,11 @@ func before_test() -> void:
 	_reputation_before = Reputation.to_dict().duplicate(true)
 	_renown_before = Renown.to_dict().duplicate(true)
 	EncounterCatalog.definition(EncounterIds.BOG_WIGHT)
-	_weather_before = EncounterCatalog._WEATHER_DEFAULTS.duplicate(true)
+	# F0 D8 (#281 step 8): weather moved off EncounterCatalog onto the locations, so
+	# the surface the lab must not mutate moved with it.
+	_weather_before = {}
+	for location: LocationDefinition in LocationRegistry.ALL:
+		_weather_before[String(location.id)] = String(location.weather_default)
 	_spoils_before = EncounterCatalog._SPOILS.duplicate(true)
 	_definitions_before = EncounterCatalog._definitions.duplicate(true)
 	_matrix_before = ElementMatrix.IDENTITY_ROW.duplicate(true)
@@ -74,21 +78,36 @@ func test_encounter_ids_are_derived_from_the_catalog() -> void:
 	assert_array(encounter_ids).contains([TEST_ENCOUNTER])
 
 
-func test_weather_resolution_reports_authored_override_and_calm_sources() -> void:
-	var authored: Dictionary = _lab.call("resolve_weather", EncounterIds.BOG_WIGHT, false, &"")
-	var overridden: Dictionary = _lab.call(
-		"resolve_weather", EncounterIds.BOG_WIGHT, true, &"zhur"
+## F0 D8 (#281 step 8): the `authored` source used to come from
+## `EncounterCatalog._WEATHER_DEFAULTS`, keyed per encounter. Weather is the
+## LOCATION's now, so the lab reports a `location` source instead, and `authored`
+## survives only for campaign packages that write the key on their own encounter.
+func test_weather_resolution_reports_location_override_and_calm_sources() -> void:
+	var from_location: Dictionary = _lab.call(
+		"resolve_weather", EncounterIds.BOG_WIGHT, false, &"", "res://world/test_room.tscn"
 	)
-	var calm: Dictionary = _lab.call(
-		"resolve_weather", EncounterIds.DORTHKOR_VANGUARD, false, &""
+	var overridden: Dictionary = _lab.call(
+		"resolve_weather", EncounterIds.BOG_WIGHT, true, &"zhur", ""
+	)
+	var calm_location: Dictionary = _lab.call(
+		"resolve_weather", EncounterIds.BOG_WIGHT, false, &"", "res://world/starting_town.tscn"
+	)
+	var no_location: Dictionary = _lab.call(
+		"resolve_weather", EncounterIds.DORTHKOR_VANGUARD, false, &"", "res://world/nowhere.tscn"
 	)
 
-	assert_str(str(authored["element_id"])).is_equal("mozh")
-	assert_str(str(authored["source"])).is_equal("authored")
+	assert_str(str(from_location["element_id"])).override_failure_message(
+		"the wilds authored mozh; the lab must read it off the location"
+	).is_equal("mozh")
+	assert_str(str(from_location["source"])).is_equal("location")
 	assert_str(str(overridden["element_id"])).is_equal("zhur")
 	assert_str(str(overridden["source"])).is_equal("override")
-	assert_str(str(calm["element_id"])).is_empty()
-	assert_str(str(calm["source"])).is_equal("calm")
+	assert_str(str(calm_location["element_id"])).override_failure_message(
+		"Dom is authored calm (F0 D8), so a fight in Dom starts calm"
+	).is_empty()
+	assert_str(str(calm_location["source"])).is_equal("calm")
+	assert_str(str(no_location["element_id"])).is_empty()
+	assert_str(str(no_location["source"])).is_equal("calm")
 
 
 func test_forecast_resolution_comparator_flags_only_a_divergence() -> void:
@@ -144,7 +163,10 @@ func test_lab_session_never_mutates_authored_balance_data() -> void:
 
 	_lab.call("start_test_session", setup)
 
-	assert_dict(EncounterCatalog._WEATHER_DEFAULTS).is_equal(_weather_before)
+	var weather_after: Dictionary = {}
+	for location: LocationDefinition in LocationRegistry.ALL:
+		weather_after[String(location.id)] = String(location.weather_default)
+	assert_dict(weather_after).is_equal(_weather_before)
 	assert_dict(EncounterCatalog._SPOILS).is_equal(_spoils_before)
 	assert_dict(EncounterCatalog._definitions).is_equal(_definitions_before)
 	assert_dict(ElementMatrix.IDENTITY_ROW).is_equal(_matrix_before)
