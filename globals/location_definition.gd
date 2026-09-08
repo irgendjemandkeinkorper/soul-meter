@@ -18,6 +18,15 @@ extends Resource
 ## SkillCheck.location_fizzle_integrity() — never as a formula change.
 @export_range(0, 3) var thinning_tier := 0
 
+## F0 D8 (#281 step 8): weather belongs to the LOCATION, not the encounter. An
+## empty id is calm. `EncounterCatalog._WEATHER_DEFAULTS` used to hold this
+## per-encounter, which meant the same boar brought its own weather wherever it
+## was fought; the map is the thing that has weather. Campaign packages may still
+## author a `weather_default` on an encounter and it overrides this (see
+## `campaign_encounter_loader.gd`), the same boundary `Edge` keeps.
+## PROVISIONAL mapping, per F0 D8, pending a weather-authoring pass.
+@export var weather_default: StringName = &""
+
 
 func resolve_spawn(requested: StringName) -> StringName:
 	if requested == &"default":

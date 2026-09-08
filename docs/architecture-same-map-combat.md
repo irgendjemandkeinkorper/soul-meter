@@ -196,10 +196,31 @@ seam-v2 broadcast, `Reputation`/`Renown` APIs, the save schema.
 | 5 | Chain alert, one hop per round | test with three hostiles at 0/1/2 hops |
 | 6 | `CombatOverlay` + region B rewire; delete `battle.tscn`/`battle_stage.tscn`; fold `battle_hud` | replay test over the frozen event log renders the same tile payloads |
 | 7 | Session end (D7) with flee path behind the PROVISIONAL constant; ledger per group | victory/defeat/flee tests; `already_resolved` dedupe test |
-| 8 | `EncounterCatalog` slimming + `LocationRegistry.weather_default` (D8) | drift check passes; weather forecast==resolution test unchanged |
+| 8 | `EncounterCatalog` slimming + `LocationRegistry.weather_default` (D8) | drift check passes; weather forecast==resolution test unchanged — **weather half LANDED 2026-09-08**, see below |
 
 Steps 1–3 can run as one Codex handoff; 4–5 as a second; 6 as a third (largest); 7–8 as a
 fourth. `#282` starts after step 5.
+
+### Step 8, weather half — landed 2026-09-08
+
+`LocationDefinition.weather_default` is authored per location (wilds = mozh, Dorthkor Road =
+tham, Wound Lip = khash, Dom and the 21 interiors calm — the D8 mapping, re-expressed on the
+location axis), and `EncounterCatalog._WEATHER_DEFAULTS` is retired along with the injection in
+`definition()`.
+
+This closed a live defect, not only a data move. `FieldMap.weather_default()` was a stub
+returning `&""` unconditionally with the comment *"Location weather moves onto field data in
+migration step 8"* — and `Battle.start_session()` already called it. So **every same-map session
+was starting calm regardless of the map**, and nothing said so. Only the legacy set-piece path
+saw weather at all, through the per-encounter constant.
+
+`Battle._weather_for_start()` now prefers an encounter-authored value (campaign packages write
+that key and `campaign_encounter_loader.gd` validates it — the same boundary `Edge` keeps) and
+otherwise reads the current scene's location. `CombatLab.resolve_weather()` gained an optional
+`scene_path` so the location branch is reachable headlessly, and reports a `location` source.
+
+Still open in step 8: `EncounterCatalog` losing `_FIELD_GRID_DATA`, `battlefield` and
+`use_charge_time`.
 
 ## 4. Owner rulings (ruled 2026-09-04)
 1. **Flee rule** (D7): **accepted as proposed.** Session ends `FLED` when no living hostile

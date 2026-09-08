@@ -10,11 +10,11 @@ const DATA_PATH := "res://data/generated/encounters.json"
 ## (SHA-256 3f7d412f...e21b9a1; multiplier, TTK, wager deltas all 0). The current
 ## tools/combat_number_sweep.gd is a static facing/elevation/wheel-distance sweep and
 ## does not read EncounterCatalog, so it has no per-encounter rows to change.
-const _WEATHER_DEFAULTS: Dictionary = {
-	"bog-wight": "mozh",
-	"loam-boar": "tham",
-	"phase2-demon": "khash",
-}
+## F0 D8 (#281 step 8): `_WEATHER_DEFAULTS` lived here and keyed weather to the
+## ENCOUNTER, so the same boar carried its own weather wherever it was fought. It is
+## now `LocationDefinition.weather_default` — the map has the weather. The three
+## authored values moved with it, re-expressed on the axis D8 names: Loamroot Grove
+## (wilds) = mozh, Dorthkor Road = tham, the Wound Lip = khash, Dom = calm.
 ## PROVISIONAL — first-pass encounter loot, pending a dedicated balance sweep.
 ## This authored registry keeps generated Pandora artifacts untouched.
 const _SPOILS: Dictionary = {
@@ -43,11 +43,7 @@ static func definition(encounter_id: StringName) -> Dictionary:
 	if _runtime_definitions.has(String(encounter_id)) and runtime_row is Dictionary:
 		return (runtime_row as Dictionary).duplicate(true)
 	var row: Variant = _definitions.get(String(encounter_id), {})
-	var result: Dictionary = row.duplicate(true) if row is Dictionary else {}
-	var authored_weather := str(_WEATHER_DEFAULTS.get(String(encounter_id), ""))
-	if not authored_weather.is_empty():
-		result["weather_default"] = authored_weather
-	return result
+	return row.duplicate(true) if row is Dictionary else {}
 
 
 ## An encounter may locally override its containing location without changing

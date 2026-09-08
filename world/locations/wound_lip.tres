@@ -8,6 +8,7 @@ id = &"wound_lip"
 scene_path = "res://world/wound_lip.tscn"
 harmonic_accord = 55.0
 thinning_tier = 3
+weather_default = &"khash"
 default_spawn_id = &"default"
 arrival_flag = "chapter_wound_lip_reached"
 arrival_checkpoint = "location-arrival"

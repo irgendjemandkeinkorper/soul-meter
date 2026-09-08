@@ -187,9 +187,13 @@ func _on_hostile_alerted(hostile: Hostile) -> void:
 	hostile_alerted.emit(hostile)
 
 
-## Location weather moves onto field data in migration step 8.
+## F0 D8 (#281 step 8): the weather a session starts under is the LOCATION's, read
+## off `LocationDefinition.weather_default`. This returned `&""` unconditionally
+## until step 8 landed, so every same-map session started calm no matter what the
+## map was — the stub was the only reason weather never appeared on the field.
 func weather_default() -> StringName:
-	return &""
+	var location := LocationRegistry.by_scene(_scene_path())
+	return location.weather_default if location != null else &""
 
 
 func no_combat_zone() -> bool:

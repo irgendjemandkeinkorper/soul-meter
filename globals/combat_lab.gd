@@ -163,8 +163,14 @@ func party_candidates() -> Array[PartyMember]:
 	return result
 
 
+## `scene_path` defaults to the running scene. It is a parameter so the location
+## branch is reachable from a headless test, which has no world scene loaded and
+## would otherwise only ever see the calm fallback.
 func resolve_weather(
-	encounter_id: StringName, override_enabled: bool, override_id: StringName
+	encounter_id: StringName,
+	override_enabled: bool,
+	override_id: StringName,
+	scene_path: String = "",
 ) -> Dictionary:
 	if override_enabled:
 		return {
@@ -172,6 +178,9 @@ func resolve_weather(
 			"source": &"override",
 			"label": "CALM (override)" if override_id == CALM else "%s (override)" % String(override_id).to_upper(),
 		}
+	# F0 D8 (#281 step 8): weather is the LOCATION's. A campaign package may still
+	# author it on the encounter and that override wins; otherwise the lab reports
+	# whichever location it is standing in, which is what a real session would use.
 	var definition: Dictionary = EncounterCatalog.definition(encounter_id)
 	var authored := StringName(str(definition.get("weather_default", "")))
 	if authored != CALM:
@@ -179,6 +188,18 @@ func resolve_weather(
 			"element_id": authored,
 			"source": &"authored",
 			"label": "%s (authored default)" % String(authored).to_upper(),
+		}
+	var resolved_scene_path := scene_path
+	if resolved_scene_path.is_empty():
+		var tree := get_tree()
+		var current_scene: Node = tree.current_scene if tree != null else null
+		resolved_scene_path = current_scene.scene_file_path if current_scene != null else ""
+	var location := LocationRegistry.by_scene(resolved_scene_path)
+	if location != null and location.weather_default != CALM:
+		return {
+			"element_id": location.weather_default,
+			"source": &"location",
+			"label": "%s (location default)" % String(location.weather_default).to_upper(),
 		}
 	return {"element_id": CALM, "source": &"calm", "label": "CALM (no authored default)"}
 
@@ -312,9 +333,11 @@ func build_session_markdown(
 		"",
 	]
 	if str(weather.get("source", "")) == "override":
-		lines.append("Authoring candidate (manual only): `EncounterCatalog._WEATHER_DEFAULTS[\"%s\"] = \"%s\"`" % [
-			str(setup.get("encounter_id", "")), str(weather.get("element_id", "")),
-		])
+		# F0 D8: the authoring surface is the LOCATION, not the encounter.
+		lines.append(
+			"Authoring candidate (manual only): set `weather_default = &\"%s\"` on this scene's `world/locations/*.tres`"
+			% str(weather.get("element_id", ""))
+		)
 		lines.append("")
 	lines.append_array([
 		"## Turns",
