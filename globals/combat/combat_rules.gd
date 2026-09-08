@@ -4,7 +4,7 @@ extends Resource
 ## modifiers in authored data lets playtesting move numbers without resolver edits.
 
 @export var base_action_points: int = 4
-@export var action_point_attribute: StringName = &"edge"
+@export var action_point_attribute: StringName = &"alacrity"
 @export var attribute_points_per_ap: int = 2
 @export var minimum_action_points: int = 2
 @export var maximum_action_points: int = 8
@@ -29,9 +29,9 @@ extends Resource
 # compatibility in the same change that first makes CT authoritative. ----
 
 ## Charge gained per tick before per-actor variation. No `speed` attribute exists on BattleActor
-## today, so speed derives from an authored attribute the same way AP derives from `edge`.
+## today, so speed derives from an authored attribute the same way AP derives from `alacrity`.
 @export var base_charge_speed: int = 6
-@export var charge_speed_attribute: StringName = &"edge"
+@export var charge_speed_attribute: StringName = &"alacrity"
 @export var attribute_points_per_speed: int = 2
 @export var minimum_charge_speed: int = 1
 @export var maximum_charge_speed: int = 30

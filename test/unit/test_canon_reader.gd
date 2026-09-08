@@ -948,10 +948,9 @@ func _faction_root() -> PandoraCategory:
 # --- Archetypes and encounters (E1.4g, #325) ---------------------------------------------
 
 
-func test_the_six_authored_archetypes_load_with_an_opaque_stat_block() -> void:
-	# `six-stat.v1`, not `dramgid.v1`: #283 moved the PARTY onto DRAMGID attributes, but
-	# enemies still carry `edge` and `Resolution.resolve()` still reads it. The tag names the
-	# shape that actually ships; retagging is F3b, blocked on #281.
+func test_the_six_authored_archetypes_carry_a_dramgid_stat_block() -> void:
+	# Owner ruling 2026-09-07: DRAMGID stats on enemies as well. Every archetype
+	# declares all seven attributes plus the authored combat numbers.
 	var archetypes: Array[Dictionary] = _characters_of_kind("archetype")
 
 	assert_int(archetypes.size()).is_equal(6)
@@ -959,13 +958,43 @@ func test_the_six_authored_archetypes_load_with_an_opaque_stat_block() -> void:
 		var stats: Dictionary = archetype["stats"]
 		assert_str(String(stats["schema"])).override_failure_message(
 			"archetype '%s' does not name who validates its stats" % archetype["id"]
-		).is_equal("six-stat.v1")
+		).is_equal("dramgid.v1")
+		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+			assert_bool(stats.has(attribute_id)).override_failure_message(
+				"archetype '%s' is missing DRAMGID attribute '%s'"
+				% [archetype["id"], attribute_id]
+			).is_true()
 		for stat_name: String in [
-			"max_hp", "attack", "defense", "balance_affinity", "balance_pressure", "edge"
+			"max_hp", "attack", "defense", "balance_affinity", "balance_pressure"
 		]:
 			assert_bool(stats.has(stat_name)).override_failure_message(
 				"archetype '%s' is missing '%s'" % [archetype["id"], stat_name]
 			).is_true()
+		assert_bool(stats.has("edge")).override_failure_message(
+			"archetype '%s' still carries the legacy `edge`; DRAMGID calls it `alacrity`"
+			% archetype["id"]
+		).is_false()
+
+
+func test_enemy_health_is_still_authored_pending_the_scaling_pass() -> void:
+	# A TRIPWIRE, not a verdict. Enemy max_hp/attack/defense are meant to come off
+	# their attributes and to vary between instances met in the wild (owner ruling
+	# 2026-09-07, tracked as #412) — this only catches that happening by accident,
+	# through the PARTY's curve, which is the one way it must not happen.
+	# `DramgidDerived.max_hp` spans the point-buy range (12 + grit x 6 over 2..5, so
+	# 24..42); the shipped enemies run 14..36 and include a grit-1 boar the party can
+	# never build. Routing them through this curve makes that boar 24 HP, rebalances
+	# every encounter, and retires Gate T-1's ratified evidence.
+	var below_the_party_floor: int = 0
+	for archetype: Dictionary in _characters_of_kind("archetype"):
+		var stats: Dictionary = archetype["stats"]
+		if int(stats["max_hp"]) < DramgidDerived.max_hp(DramgidSchema.ATTRIBUTE_FLOOR):
+			below_the_party_floor += 1
+	assert_int(below_the_party_floor).override_failure_message(
+		"no enemy sits below the party HP floor any more. If #412 landed an enemy-side "
+		+ "curve, rewrite this case against that curve and re-run Gate T-1 (#168); if "
+		+ "enemy health silently reached DramgidDerived instead, that is the bug"
+	).is_greater(0)
 
 
 ## The migration's whole claim is that canon and the database say the same thing. This reads
@@ -991,13 +1020,32 @@ func test_canon_and_the_generated_encounter_table_agree() -> void:
 		for enemy: Dictionary in Array(row["enemies"]):
 			enemy_ids.append(String(enemy["id"]))
 			var stats: Dictionary = stats_by_id.get(String(enemy["id"]), {})
-			for stat_name: String in [
-				"max_hp", "attack", "defense", "balance_affinity", "balance_pressure", "edge"
+			for pair: Array in [
+				["max_hp", "max_hp"], ["attack", "attack"], ["defense", "defense"],
+				["balance_affinity", "balance_affinity"],
+				["balance_pressure", "balance_pressure"],
+				# Pandora and the generated table still say `edge`; canon and the
+				# runtime say `alacrity`. One mapping, in one direction.
+				["edge", "alacrity"],
 			]:
-				assert_int(int(enemy[stat_name])).override_failure_message(
+				assert_int(int(enemy[pair[0]])).override_failure_message(
 					"archetype '%s' drifted from the database on '%s'"
-					% [enemy["id"], stat_name]
-				).is_equal(int(stats[stat_name]))
+					% [enemy["id"], pair[0]]
+				).is_equal(int(stats[pair[1]]))
+			# Every DRAMGID attribute has to survive canon -> Pandora -> generated table.
+			# Before #283's §3.6 re-seed, six of the seven were authored in canon and
+			# stopped at Pandora, so an enemy read 0 for all but Alacrity and nothing
+			# said so.
+			var attributes: Dictionary = enemy.get("attributes", {}) as Dictionary
+			for attribute_id: String in DramgidSchema.ATTRIBUTES:
+				assert_bool(attributes.has(attribute_id)).override_failure_message(
+					"archetype '%s' reaches the runtime without '%s'"
+					% [enemy["id"], attribute_id]
+				).is_true()
+				assert_int(int(attributes[attribute_id])).override_failure_message(
+					"archetype '%s' drifted from the database on '%s'"
+					% [enemy["id"], attribute_id]
+				).is_equal(int(stats[attribute_id]))
 		assert_array(enemy_ids).override_failure_message(
 			"encounter '%s' fields a different roster than canon names" % encounter_id
 		).is_equal(Array(encounter["archetype_ids"]))

@@ -131,16 +131,26 @@ func test_a_created_character_is_not_worse_than_the_pre_made_protagonist() -> vo
 
 
 func test_the_unfrozen_formulas_are_absent_on_purpose() -> void:
-	# §7 and the class doc: ct_speed / to-hit / the damage power term are NOT
-	# here while their consumers still read `edge`. A helper appearing before
-	# §3.9 lands is a stranded formula, and this is where that gets caught.
+	# §7 and the class doc: ct_speed / to-hit / the damage power term are NOT here.
+	# A helper appearing before its consumer is a stranded formula, and this is
+	# where that gets caught.
+	#
+	# The earlier revision of this tripwire watched for `charge_speed_attribute`
+	# leaving `edge`, and it FIRED on 2026-09-07 when the owner ruled DRAMGID stats
+	# onto enemies — correctly, and with the wrong conclusion available. Moving the
+	# ATTRIBUTE (`edge` -> `alacrity`, a ratified rename) is not the same as moving
+	# the FORMULA (CT keying on Reason rather than Alacrity, §7). So the watch moved
+	# with it: `alacrity` is the settled state, and `reason` is the thing that would
+	# mean §7 has been applied and this suite needs its curve pinned.
 	var probe: RefCounted = Derived.new()
 	assert_bool(probe.has_method("ct_speed")).override_failure_message(
-		"ct_speed() landed before §3.9 moved CombatRules off `edge` — see docs/dramgid-numbers.md §7"
+		"ct_speed() landed before §3.9 applied the curve — see docs/dramgid-numbers.md §7"
 	).is_false()
 	assert_str(String(CombatRules.new().charge_speed_attribute)).override_failure_message(
-		"CombatRules moved off `edge`; §3.9 is unblocked and §7 can now be applied"
-	).is_equal("edge")
+		"charge_speed_attribute is neither `alacrity` (the 2026-09-07 rename) nor the "
+		+ "`edge` it replaced; if it now reads `reason`, §7 has been applied and this "
+		+ "test owes the CT curve a pin"
+	).is_equal("alacrity")
 
 
 func _shipped_party() -> Array[PartyMember]:

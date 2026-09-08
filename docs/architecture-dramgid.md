@@ -161,25 +161,50 @@ Anything still open is open for a named reason, not because nobody has picked it
 | 3.3 | `party_member.gd` / `battle_actor.gd` | **done** — `xp` field, the legacy↔DRAMGID `attribute_value()` bridge, and `DramgidDerived.recompute` (live consumer: `ChargenBuild.to_party_member()`) | chargen wave; §6 freeze |
 | 3.4 | chargen + character sheet | **done** — the sheet reads `DramgidSchema.SKILL_GROUPS`; `ChargenData.SKILL_IDS`/`SKILL_LABELS` deleted | #394 |
 | 3.5 | `advancement.gd` | **done** — the Alchemy refund arrives through the schema-9 migration | #392 |
-| 3.6 | Pandora seeders + generators | **open** — see the note under the table |  |
+| 3.6 | Pandora seeders + generators | **partial** — the Combatants category carries all seven attribute columns and they reach `BattleActor` 2026-09-07; the `check_skill` rename is still open, see the note under the table |  |
 | 3.7 | `renown.gd` (Yothmeru) | **done** — see §3.7a for how its two halves were reconciled | #384 |
 | 3.8 | `save_migrations.gd` | **done** — schema 9, §2.1 steps 1/2/3/5; step 6 deferred with §3.3 | #392 |
-| 3.9 | combat rules | **blocked** — F3b, after #281 |  |
+| 3.9 | combat rules | **partial** — to-hit/AP/CT attribute moved to Alacrity 2026-09-07; the CT *formula* (`6 + Reason/2`) and the damage power term are still F3b, after #281 |  |
 | 3.10 | dialogue + quest audit + docs | **done** — 14 authored checks and 4 code call sites renamed; the quest audit needed no change (it matches the shape of a `check(` call, not a literal id list) | #393, #395 |
 | 3.11 | tests | **rolling** — each surface above carried its own cases |  |
 
-**Why §3.6 is still open.** It asks for the Combatants category's single `Edge` column to be
-*replaced* by seven attribute columns. But `Edge` is read by the to-hit rule, and moving that
-read to Alacrity is §3.9 — F3b, blocked on #281. Landing the data ahead of its consumer would
-strand it. Its other half (Peoples `Leaning Primary`/`Leaning Secondary`) is display-only in F3
-and `ChargenData.ANCESTRIES` already carries `lean_ids`, so it buys nothing on its own. §3.6
-should ship *with* §3.9, as one re-seed.
+**§3.6's attribute columns landed 2026-09-07; what is left is the `check_skill` rename.**
 
-Relatedly, `tools/seed_phase_one_pandora.gd`'s authored `check_skill` values (and the defaults
-mirroring them in `combat_controller.gd` and `generate_gloot.gd`) are still `lore`/`insight`.
-They are Pandora seed data: renaming them means re-seeding `data.pandora` and regenerating
-`data/generated/encounters.json`, so they belong to that same data change, where code and
-authored data move together.
+The original deferral said `Edge` was read by the to-hit rule and that moving that read to
+Alacrity was §3.9, blocked on #281 — so seeding seven columns would strand them. §3.9's
+*attribute* half shipped that day, which voided the deferral, and leaving it in place had a
+cost of its own: canon authored all seven attributes per archetype while Pandora carried one
+column, so `data/generated/encounters.json` carried one number and every enemy read **0** for
+doctrine, reason, muster, grit, intuition and decorum. `attribute_value()` returns 0 for a name
+it does not hold, so nothing said so — the same silent shape as the chargen defect §3.9 closed
+on the party's side.
+
+The Combatants category now carries one `int` column per attribute, named off
+`DramgidSchema.ATTRIBUTES` labels rather than a second literal list; `generate_gloot.gd` emits
+them as an `attributes` block; `EncounterCatalog._actor_from_row()` reads that block by schema
+id, so an eighth attribute would arrive without a code change. **`Edge` is kept beside
+`Alacrity`, not replaced**: `Edge` is the key authored campaign packages write
+(`campaign_encounter_loader.gd`), so both carry the same number, a package row with only `edge`
+still lands on Alacrity, and the runtime prefers the DRAMGID block when it is present. Pinned by
+`test_canon_and_the_generated_encounter_table_agree` (canon → Pandora → generated, all seven)
+and three cases in `test_encounter_catalog.gd`.
+
+Five of the six new attributes still have no *reader* — the CT formula on Reason, the damage
+power term on Muster and `_fizzle_context`'s Intuition are §3.9's remaining half, after #281.
+They are seeded anyway because the alternative is not "no data" but "0", silently, at the first
+consumer that arrives — including #412's enemy stat scaling.
+
+The other half of §3.6 (Peoples `Leaning Primary`/`Leaning Secondary`) is display-only in F3 and
+`ChargenData.ANCESTRIES` already carries `lean_ids`, so it buys nothing on its own.
+
+**Still open in §3.6:** `tools/seed_phase_one_pandora.gd`'s 14 authored `check_skill` values
+are `lore`/`insight` — pre-DRAMGID ids whose renames are `recall`/`undertone`. They still
+*resolve*, through `DramgidSchema.LEGACY_SKILL_DEFINITIONS` and `attribute_value()`'s
+legacy bridge, so this is stale data rather than a live defect. It was left out of the column
+re-seed on purpose: those two ids are also the legacy-compat fixture in roughly thirty test
+files (`test_skill_check`, `test_advancement`, `test_party_member`, `test_save_game`), and the
+defaults mirroring them live in `combat_controller.gd` and an assertion in `generate_gloot.gd`.
+Renaming them is a data change with its own blast radius, not a rider on this one.
 
 ### 3.0 The original plan (for reference)
 
@@ -193,7 +218,7 @@ authored data move together.
 | 3.6 | Pandora seeders + generators + `campaign_encounter_loader.gd` | Columns per §2.2; drift checks green | F3a |
 | 3.7 | `globals/renown.gd` | **Yothmeru on Renown**: add signed `karma` ledger (`gain_karma(actor, base, cause, scene)` applies `× Doctrine/10` of the *player* at write time and records both `base` and `applied`), `karma_total()`, `karma_tier()` (seven tiers, thresholds from RFC-0007 via §6), `fame()` = reputation + infamy, `fame_tier()` (five tiers); `gain_reputation/gain_infamy` gain an optional `witness_factor` (default 1.0) and apply `× Decorum/10`; extreme-tier decay (Damned/Exalted/Legendary toward the boundary) runs on `WorldClock` day change only — never on a timer; `why("karma")` supported. Existing totals/API untouched so tavern gates keep working | F3a |
 | 3.8 | `globals/save_migrations.gd` | `CURRENT_SCHEMA_VERSION = 9`, `_migrate_v8_to_v9` per §2.1, fixture saves for v8→v9 (8 is the wheel rename, #371 — see §2.1) | F3a |
-| 3.9 | `globals/combat/combat_rules.gd`, `resolution.gd`, `combat_controller.gd` | CT speed `6 + Reason/2` (was Edge); to-hit difference on Alacrity (was Edge); `calculate_damage` power term on Muster via `attack`; `_fizzle_context` supplies Intuition (was Pitch). Numbers unchanged unless §6 says otherwise | **F3b, after #281** |
+| 3.9 | `globals/combat/combat_rules.gd`, `resolution.gd`, `combat_controller.gd` | **DONE 2026-09-07**: to-hit difference on Alacrity; `action_point_attribute`/`charge_speed_attribute` on Alacrity; the snapshot key and `PROVISIONAL_TO_HIT` constant renamed with their readers; `BattleActor.attribute_value()` resolves the legacy name both ways. **STILL F3b, after #281**: the CT *formula* `6 + Reason/2` (this moved the attribute, not the curve), `calculate_damage`'s power term on Muster, and `_fizzle_context` supplying Intuition | **partial** |
 | 3.10 | Dialogue + quest audit + docs | §2.2 renames; `docs/dialogue-checks.md`; CLAUDE.md status line ("save schema 8") | F3a |
 | 3.11 | Tests | `test_chargen_data` rewritten to the schema; 147 legacy-id lines across `test/` (B§3) renamed by map; new: schema invariants (22 skills, each with a governing attribute; sum-22 validation), v7→v8 migration fixtures incl. Alchemy refund, Yothmeru shift/tier/decay, `karma_bonus` only on bellow/sway, `SkillCheck` API parity | F3a/F3b |
 
@@ -277,12 +302,30 @@ carries the functions; `tools/dramgid_derived_sweep.gd` produces the grids and
 | `breath_max(intuition)` | frozen — `9 + intuition × 3` |
 | `attack(muster)` | frozen — `muster × 2` |
 | `defense(alacrity)` | frozen — `alacrity`, unchanged |
-| `ct_speed(reason)` | reported, NOT applied — `CombatRules.charge_speed_attribute` is still `edge` (§3.9) |
+| `ct_speed(reason)` | reported, NOT applied. `charge_speed_attribute` moved `edge`→`alacrity` on 2026-09-07, which is the RENAME, not this formula: keying CT on Reason instead of Alacrity is a different claim and still §3.9 |
 | `fizzle_reduction(intuition)` | verified unchanged — 48 ratified readings, 0 mismatches |
 | Karma/Fame tiers, `karma_bonus`, decay | already shipped in #384/#390; recorded, not re-proposed |
 
 The three unfrozen rows share one blocker: their consumers still read
 `attributes["edge"]`, and moving that read is §3.9 (F3b, after #281).
+
+> **Superseded in part, 2026-09-07 (owner ruling: "DRAMGID stats on enemies as well").**
+> The attribute NAME moved: `edge` is `alacrity` everywhere in canon and the runtime, and the
+> six enemy archetypes carry all seven DRAMGID attributes under a `dramgid.v1` stat block.
+> This closed a live defect rather than only tidying names — `BattleActor.from_party_member()`
+> copies the member's attributes verbatim, and a chargen-built character carries `alacrity`
+> and no `edge` at all, so every player-built character was fighting with to-hit 0 and charge
+> speed 0. What remains blocked on #281 is the FORMULAS, not the names.
+>
+> Enemy `max_hp`/`attack`/`defense` stay AUTHORED **for now — interim, tracked as #412**.
+> The owner ruled on 2026-09-07 that enemy attributes should drive those three numbers, and
+> that instances met in the wild should differ from each other: *"I don't want it to be a
+> 'solved' kinda question."* What #412 will not do is reuse `DramgidDerived`: the party
+> point-buys 2..5, so `12 + grit x 6` gives 24/30/36/42 while the shipped enemies run 14..36
+> with a grit-1 boar the party can never build, so deriving through the party's curve would
+> make that boar 24 HP and Gate T-1's ratified cleared-encounter evidence would stop
+> describing the game. #412 carries an enemy-side curve plus deterministic per-spawn
+> variation frozen at spawn (Gate T-7), sequenced behind #345's SpawnDirector.
 
 The original brief follows.
 

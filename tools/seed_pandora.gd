@@ -1054,11 +1054,33 @@ func _seed_npcs() -> void:
 ## corrupted soil) is Tham. Empty means no authored attunement, which keeps that combatant
 ## resolving at the ElementMatrix neutral IDENTITY_ROW.
 ##
-## The stat block is tagged `six-stat.v1`, NOT `dramgid.v1`, and that is deliberate. #283
-## moved the PARTY onto DRAMGID attributes; enemies still carry `edge`, which
-## `Resolution.resolve()` reads as `edge_delta` and `CombatRules.charge_speed_attribute`
-## names. Retagging without moving those consumers would be a label claiming a migration
-## that has not happened — F3b, blocked on #281 (`docs/architecture-dramgid.md` §3.9).
+## The stat block is tagged `dramgid.v1` (owner ruling 2026-09-07: DRAMGID stats on
+## enemies as well). Each archetype carries all seven attributes, and `alacrity` is the
+## ratified rename of the old `edge` (`DramgidSchema.ATTRIBUTE_RENAMES`).
+##
+## `max_hp`, `attack` and `defense` stay AUTHORED here — INTERIM, tracked as #412, not a
+## settled answer. The owner has ruled (2026-09-07) that enemy attributes SHOULD drive the
+## three combat numbers, and that different instances met in the wild should differ: "I
+## don't want it to be a 'solved' kinda question." What this pass will not do is reach that
+## by reusing the party's curve. The party point-buys 2..5, so `max_hp = 12 + grit * 6`
+## yields 24/30/36/42 while the shipped enemies run 14..36 with a grit-1 boar the party can
+## never build; a 14 HP boar would become 24, a 71% buff, every encounter would need
+## rebalancing, and Gate T-1's ratified evidence (five archetype encounters cleared by four
+## build archetypes) would stop describing the game. #412 carries the enemy-side curve plus
+## the per-spawn variation on top of it, and is sequenced behind #345's SpawnDirector
+## because the roll belongs to the wild spawn path, not to these authored set-pieces. Until
+## then the attributes give enemies the DRAMGID surface (to-hit, charge speed, checks) and
+## the three combat numbers stay where Gate T-1 left them.
+##
+## §3.6, 2026-09-07: the category now carries one `int` column per DRAMGID attribute, and
+## `generate_gloot.gd` emits them as an `attributes` block that `EncounterCatalog` reads by
+## schema id. Before this, canon authored seven and Pandora carried one, so every enemy read
+## 0 for the other six and nothing said so.
+##
+## `Edge` is kept BESIDE `Alacrity` rather than replaced by it: `Edge` is the key authored
+## campaign packages write (`campaign_encounter_loader.gd`), and dropping it would break every
+## authored package. Both carry the same number; a package row with only `edge` still lands on
+## Alacrity, and the runtime prefers the DRAMGID block when a row has one.
 func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 	var root: PandoraCategory = _ensure_root("Combatants")
 	for property_spec: Array in [
@@ -1074,6 +1096,12 @@ func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 	]:
 		if not root.has_entity_property(property_spec[0]):
 			Pandora.create_property(root, property_spec[0], property_spec[1])
+	# One column per DRAMGID attribute, named off the schema rather than a second literal
+	# list, so a schema change cannot leave this seeder describing six attributes.
+	for attribute_id: String in DramgidSchema.ATTRIBUTES:
+		var column: String = _attribute_column(attribute_id)
+		if not root.has_entity_property(column):
+			Pandora.create_property(root, column, "int")
 
 	for row: Dictionary in archetypes:
 		var stats: Dictionary = row["stats"]
@@ -1086,9 +1114,19 @@ func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 		_assign(entity, "Max HP", int(stats["max_hp"]))
 		_assign(entity, "Attack", int(stats["attack"]))
 		_assign(entity, "Defense", int(stats["defense"]))
-		_assign(entity, "Edge", int(stats["edge"]))
+		_assign(entity, "Edge", int(stats["alacrity"]))
+		for attribute_id: String in DramgidSchema.ATTRIBUTES:
+			_assign(entity, _attribute_column(attribute_id), int(stats[attribute_id]))
 		_assign(entity, "Balance Affinity", int(stats["balance_affinity"]))
 		_assign(entity, "Balance Pressure", int(stats["balance_pressure"]))
+
+
+## A DRAMGID attribute's Pandora column, named off `DramgidSchema.ATTRIBUTES` labels.
+## `Edge` is kept beside `Alacrity` on purpose: `Edge` is the key authored campaign packages
+## use (`campaign_encounter_loader.gd`), so both carry the same number and the runtime
+## prefers the DRAMGID one.
+static func _attribute_column(attribute_id: String) -> String:
+	return str(DramgidSchema.ATTRIBUTES[attribute_id]["label"])
 
 
 ## Encounters are `canon/<hub>/encounters/*.json`. Per F0 D8 (spec §4.9) an encounter owns

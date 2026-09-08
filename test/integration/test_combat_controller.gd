@@ -235,7 +235,10 @@ func test_maiiam_forecast_override_preserves_controller_context() -> void:
 	var unit: Dictionary = context["unit"]
 	var fizzle: Dictionary = context["fizzle"]
 	assert_str(String(unit["id"])).is_equal(String(ally.combat_id))
-	assert_int(int(unit["edge"])).is_equal(ally.attribute_value(&"edge"))
+	# F3b: the snapshot key follows the stat. DRAMGID calls it `alacrity`, and the
+	# actor answers to both names, so this reads the new key against the old id
+	# on purpose — it fails if either half of the rename is half-applied.
+	assert_int(int(unit["alacrity"])).is_equal(ally.attribute_value(&"edge"))
 	assert_int(int(unit["breath"])).is_equal(ally.breath)
 	assert_str(String(fizzle["patron"])).is_equal(ally.source_member.patron)
 

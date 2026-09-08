@@ -163,7 +163,7 @@ func _seed_combatants(root: PandoraCategory) -> void:
 				"Balance Affinity": int(stats["balance_affinity"]),
 				"Balance Pressure": int(stats["balance_pressure"]),
 				"Element Id": row["element_id"],
-				"Edge": int(stats["edge"]),
+				"Edge": int(stats["alacrity"]),
 			}
 		)
 

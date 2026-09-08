@@ -740,6 +740,17 @@ static func _po_unescape(value: String) -> String:
 	return str(parsed) if parsed is String else stripped.trim_prefix("\"").trim_suffix("\"")
 
 
+## Every DRAMGID attribute a combatant carries, keyed by schema id. Read off
+## `DramgidSchema.ATTRIBUTES` so a schema change cannot leave this generator emitting six.
+static func _combatant_attributes(entity: PandoraEntity) -> Dictionary:
+	var attributes := {}
+	for attribute_id: String in DramgidSchema.ATTRIBUTES:
+		attributes[attribute_id] = entity.get_integer(
+			str(DramgidSchema.ATTRIBUTES[attribute_id]["label"])
+		)
+	return attributes
+
+
 static func _encounter_artifacts() -> Dictionary:
 	var combatants_root := _root_by_name("Combatants")
 	var encounters_root := _root_by_name("Encounters")
@@ -761,7 +772,11 @@ static func _encounter_artifacts() -> Dictionary:
 			"balance_affinity": affinity,
 			"balance_pressure": entity.get_integer("Balance Pressure"),
 			"element_id": entity.get_string("Element Id"),
+			# `edge` stays flat and first-class: authored campaign packages write that key
+			# and `campaign_encounter_loader.gd` reads it. `attributes` is the DRAMGID
+			# surface the runtime prefers, and carries Alacrity under its own name.
 			"edge": entity.get_integer("Edge"),
+			"attributes": _combatant_attributes(entity),
 		}
 
 	var encounters := {}

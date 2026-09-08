@@ -32,7 +32,16 @@
         "balance_affinity": 1,
         "balance_pressure": 18,
         "element_id": "mozh",
-        "edge": 2
+        "edge": 2,
+        "attributes": {
+          "doctrine": 1,
+          "reason": 1,
+          "alacrity": 2,
+          "muster": 2,
+          "grit": 2,
+          "intuition": 3,
+          "decorum": 1
+        }
       }
     ]
   },
@@ -114,7 +123,16 @@
         "balance_affinity": 1,
         "balance_pressure": 22,
         "element_id": "",
-        "edge": 2
+        "edge": 2,
+        "attributes": {
+          "doctrine": 4,
+          "reason": 1,
+          "alacrity": 2,
+          "muster": 3,
+          "grit": 4,
+          "intuition": 2,
+          "decorum": 3
+        }
       }
     ]
   },
@@ -151,7 +169,16 @@
         "balance_affinity": -1,
         "balance_pressure": 22,
         "element_id": "",
-        "edge": 4
+        "edge": 4,
+        "attributes": {
+          "doctrine": 2,
+          "reason": 2,
+          "alacrity": 4,
+          "muster": 4,
+          "grit": 3,
+          "intuition": 2,
+          "decorum": 1
+        }
       },
       {
         "id": "gnaal-rift-scavenger",
@@ -162,7 +189,16 @@
         "balance_affinity": -1,
         "balance_pressure": 16,
         "element_id": "",
-        "edge": 4
+        "edge": 4,
+        "attributes": {
+          "doctrine": 2,
+          "reason": 2,
+          "alacrity": 4,
+          "muster": 2,
+          "grit": 2,
+          "intuition": 3,
+          "decorum": 1
+        }
       }
     ]
   },
@@ -199,7 +235,16 @@
         "balance_affinity": 1,
         "balance_pressure": 24,
         "element_id": "",
-        "edge": 3
+        "edge": 3,
+        "attributes": {
+          "doctrine": 4,
+          "reason": 2,
+          "alacrity": 3,
+          "muster": 3,
+          "grit": 5,
+          "intuition": 2,
+          "decorum": 3
+        }
       }
     ]
   },
@@ -236,7 +281,16 @@
         "balance_affinity": -1,
         "balance_pressure": 18,
         "element_id": "tham",
-        "edge": 3
+        "edge": 3,
+        "attributes": {
+          "doctrine": 1,
+          "reason": 1,
+          "alacrity": 3,
+          "muster": 3,
+          "grit": 1,
+          "intuition": 1,
+          "decorum": 1
+        }
       }
     ]
   },
@@ -302,7 +356,16 @@
         "balance_affinity": -1,
         "balance_pressure": 22,
         "element_id": "",
-        "edge": 4
+        "edge": 4,
+        "attributes": {
+          "doctrine": 2,
+          "reason": 2,
+          "alacrity": 4,
+          "muster": 4,
+          "grit": 3,
+          "intuition": 2,
+          "decorum": 1
+        }
       },
       {
         "id": "gnaal-rift-scavenger",
@@ -313,7 +376,16 @@
         "balance_affinity": -1,
         "balance_pressure": 16,
         "element_id": "",
-        "edge": 4
+        "edge": 4,
+        "attributes": {
+          "doctrine": 2,
+          "reason": 2,
+          "alacrity": 4,
+          "muster": 2,
+          "grit": 2,
+          "intuition": 3,
+          "decorum": 1
+        }
       }
     ]
   },
@@ -380,7 +452,16 @@
         "balance_affinity": 1,
         "balance_pressure": 22,
         "element_id": "",
-        "edge": 2
+        "edge": 2,
+        "attributes": {
+          "doctrine": 4,
+          "reason": 1,
+          "alacrity": 2,
+          "muster": 3,
+          "grit": 4,
+          "intuition": 2,
+          "decorum": 3
+        }
       },
       {
         "id": "gnaal-breach-hound",
@@ -391,7 +472,16 @@
         "balance_affinity": -1,
         "balance_pressure": 22,
         "element_id": "",
-        "edge": 4
+        "edge": 4,
+        "attributes": {
+          "doctrine": 2,
+          "reason": 2,
+          "alacrity": 4,
+          "muster": 4,
+          "grit": 3,
+          "intuition": 2,
+          "decorum": 1
+        }
       }
     ]
   },
@@ -471,7 +561,16 @@
         "balance_affinity": 1,
         "balance_pressure": 22,
         "element_id": "",
-        "edge": 2
+        "edge": 2,
+        "attributes": {
+          "doctrine": 4,
+          "reason": 1,
+          "alacrity": 2,
+          "muster": 3,
+          "grit": 4,
+          "intuition": 2,
+          "decorum": 3
+        }
       }
     ]
   },
@@ -538,7 +637,16 @@
         "balance_affinity": 1,
         "balance_pressure": 24,
         "element_id": "",
-        "edge": 3
+        "edge": 3,
+        "attributes": {
+          "doctrine": 4,
+          "reason": 2,
+          "alacrity": 3,
+          "muster": 3,
+          "grit": 5,
+          "intuition": 2,
+          "decorum": 3
+        }
       },
       {
         "id": "gnaal-rift-scavenger",
@@ -549,7 +657,16 @@
         "balance_affinity": -1,
         "balance_pressure": 16,
         "element_id": "",
-        "edge": 4
+        "edge": 4,
+        "attributes": {
+          "doctrine": 2,
+          "reason": 2,
+          "alacrity": 4,
+          "muster": 2,
+          "grit": 2,
+          "intuition": 3,
+          "decorum": 1
+        }
       }
     ]
   },
@@ -615,7 +732,16 @@
         "balance_affinity": 1,
         "balance_pressure": 24,
         "element_id": "",
-        "edge": 3
+        "edge": 3,
+        "attributes": {
+          "doctrine": 4,
+          "reason": 2,
+          "alacrity": 3,
+          "muster": 3,
+          "grit": 5,
+          "intuition": 2,
+          "decorum": 3
+        }
       },
       {
         "id": "mustered-bloodbellow",
@@ -626,7 +752,16 @@
         "balance_affinity": 1,
         "balance_pressure": 22,
         "element_id": "",
-        "edge": 2
+        "edge": 2,
+        "attributes": {
+          "doctrine": 4,
+          "reason": 1,
+          "alacrity": 2,
+          "muster": 3,
+          "grit": 4,
+          "intuition": 2,
+          "decorum": 3
+        }
       }
     ]
   },
@@ -681,7 +816,16 @@
         "balance_affinity": 0,
         "balance_pressure": 18,
         "element_id": "",
-        "edge": 2
+        "edge": 2,
+        "attributes": {
+          "doctrine": 0,
+          "reason": 0,
+          "alacrity": 0,
+          "muster": 0,
+          "grit": 0,
+          "intuition": 0,
+          "decorum": 0
+        }
       }
     ]
   },
@@ -736,7 +880,16 @@
         "balance_affinity": 0,
         "balance_pressure": 16,
         "element_id": "",
-        "edge": 1
+        "edge": 1,
+        "attributes": {
+          "doctrine": 0,
+          "reason": 0,
+          "alacrity": 0,
+          "muster": 0,
+          "grit": 0,
+          "intuition": 0,
+          "decorum": 0
+        }
       }
     ]
   }

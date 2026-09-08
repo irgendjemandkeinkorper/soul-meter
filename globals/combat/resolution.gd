@@ -23,7 +23,9 @@ const PROVISIONAL_FACING_RULES := {
 const PROVISIONAL_TO_HIT := {
 	"base": 70,
 	"height_mod_per_step": 4,
-	"edge_mod_per_point": 2,  # owner 2026-08-24: + (attacker Edge - defender Edge) x 2%
+	# owner 2026-08-24: + (attacker Edge - defender Edge) x 2%. The stat kept the
+	# ruling's magnitude and lost its name: DRAMGID calls it Alacrity (#283).
+	"alacrity_mod_per_point": 2,
 	"clamp_lo": 5,
 	"clamp_hi": 95,
 }
@@ -130,11 +132,14 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var hit_roll := 0
 	var hit := true
 	if to_hit_enabled:
-		var edge_delta := int(unit.get("edge", 0)) - int(target.get("edge", 0))
+		# `alacrity` is DRAMGID's name for the old `edge` (DramgidSchema:
+		# "Accuracy, evasion, to-hit difference"). The snapshot key was renamed with
+		# its readers in F3b so there is one name for the stat, not two.
+		var alacrity_delta := int(unit.get("alacrity", 0)) - int(target.get("alacrity", 0))
 		hit_chance = clampi(
 			int(PROVISIONAL_TO_HIT["base"]) + hit_bonus
 				+ int(PROVISIONAL_TO_HIT["height_mod_per_step"]) * signed_height_steps
-				+ int(PROVISIONAL_TO_HIT["edge_mod_per_point"]) * edge_delta,
+				+ int(PROVISIONAL_TO_HIT["alacrity_mod_per_point"]) * alacrity_delta,
 			int(PROVISIONAL_TO_HIT["clamp_lo"]),
 			int(PROVISIONAL_TO_HIT["clamp_hi"]),
 		)

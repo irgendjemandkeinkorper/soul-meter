@@ -114,8 +114,28 @@ func is_alive() -> bool:
 	return hp > 0
 
 
+## Reads a DRAMGID attribute, resolving the legacy name in BOTH directions the way
+## `PartyMember.attribute_value()` does.
+##
+## F3b (#283, owner ruling 2026-09-07). This used to be a bare dictionary lookup, and
+## `from_party_member()` copies the member's attributes verbatim — so a chargen-built
+## character, whose attributes carry `alacrity` and no `edge` at all, answered 0 to
+## every `edge` read in combat. That is the accuracy term AND the charge speed, so a
+## player-built character fought with neither. The two classes are read by the same
+## rules; they must not disagree about what an attribute is called.
 func attribute_value(attribute_id: StringName) -> int:
-	return int(attributes.get(String(attribute_id), attributes.get(attribute_id, 0)))
+	var key := String(attribute_id)
+	if attributes.has(key):
+		return int(attributes[key])
+	if attributes.has(attribute_id):
+		return int(attributes[attribute_id])
+	var canonical := DramgidSchema.canonical_attribute_id(key)
+	if not canonical.is_empty() and canonical != key and attributes.has(canonical):
+		return int(attributes[canonical])
+	var legacy := DramgidSchema.legacy_attribute_id(key)
+	if not legacy.is_empty() and attributes.has(legacy):
+		return int(attributes[legacy])
+	return 0
 
 
 func effective_attack() -> int:
