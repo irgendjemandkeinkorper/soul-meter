@@ -2849,6 +2849,10 @@
 				"_index": 0,
 				"_name": "Bog Wight",
 				"_property_overrides": {
+					"Alacrity": {
+						"type": "int",
+						"value": 2
+					},
 					"Attack": {
 						"type": "int",
 						"value": 4
@@ -2865,6 +2869,10 @@
 						"type": "string",
 						"value": "bog-wight"
 					},
+					"Decorum": {
+						"type": "int",
+						"value": 1
+					},
 					"Defense": {
 						"type": "int",
 						"value": 1
@@ -2872,6 +2880,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Bog Wight"
+					},
+					"Doctrine": {
+						"type": "int",
+						"value": 1
 					},
 					"Edge": {
 						"type": "int",
@@ -2881,9 +2893,25 @@
 						"type": "string",
 						"value": "mozh"
 					},
+					"Grit": {
+						"type": "int",
+						"value": 2
+					},
+					"Intuition": {
+						"type": "int",
+						"value": 3
+					},
 					"Max HP": {
 						"type": "int",
 						"value": 20
+					},
+					"Muster": {
+						"type": "int",
+						"value": 2
+					},
+					"Reason": {
+						"type": "int",
+						"value": 1
 					}
 				}
 			},
@@ -2894,6 +2922,10 @@
 				"_index": 0,
 				"_name": "Loam-Maddened Boar",
 				"_property_overrides": {
+					"Alacrity": {
+						"type": "int",
+						"value": 3
+					},
 					"Attack": {
 						"type": "int",
 						"value": 6
@@ -2910,6 +2942,10 @@
 						"type": "string",
 						"value": "loam-maddened-boar"
 					},
+					"Decorum": {
+						"type": "int",
+						"value": 1
+					},
 					"Defense": {
 						"type": "int",
 						"value": 0
@@ -2917,6 +2953,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Loam-Maddened Boar"
+					},
+					"Doctrine": {
+						"type": "int",
+						"value": 1
 					},
 					"Edge": {
 						"type": "int",
@@ -2926,9 +2966,25 @@
 						"type": "string",
 						"value": "tham"
 					},
+					"Grit": {
+						"type": "int",
+						"value": 1
+					},
+					"Intuition": {
+						"type": "int",
+						"value": 1
+					},
 					"Max HP": {
 						"type": "int",
 						"value": 14
+					},
+					"Muster": {
+						"type": "int",
+						"value": 3
+					},
+					"Reason": {
+						"type": "int",
+						"value": 1
 					}
 				}
 			},
@@ -2939,6 +2995,10 @@
 				"_index": 0,
 				"_name": "Gnaal Breach-Hound",
 				"_property_overrides": {
+					"Alacrity": {
+						"type": "int",
+						"value": 4
+					},
 					"Attack": {
 						"type": "int",
 						"value": 7
@@ -2955,6 +3015,10 @@
 						"type": "string",
 						"value": "gnaal-breach-hound"
 					},
+					"Decorum": {
+						"type": "int",
+						"value": 1
+					},
 					"Defense": {
 						"type": "int",
 						"value": 1
@@ -2962,6 +3026,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Gnaal Breach-Hound"
+					},
+					"Doctrine": {
+						"type": "int",
+						"value": 2
 					},
 					"Edge": {
 						"type": "int",
@@ -2971,9 +3039,25 @@
 						"type": "string",
 						"value": ""
 					},
+					"Grit": {
+						"type": "int",
+						"value": 3
+					},
+					"Intuition": {
+						"type": "int",
+						"value": 2
+					},
 					"Max HP": {
 						"type": "int",
 						"value": 28
+					},
+					"Muster": {
+						"type": "int",
+						"value": 4
+					},
+					"Reason": {
+						"type": "int",
+						"value": 2
 					}
 				}
 			},
@@ -2984,6 +3068,10 @@
 				"_index": 0,
 				"_name": "Gnaal Rift-Scavenger",
 				"_property_overrides": {
+					"Alacrity": {
+						"type": "int",
+						"value": 4
+					},
 					"Attack": {
 						"type": "int",
 						"value": 5
@@ -3000,6 +3088,10 @@
 						"type": "string",
 						"value": "gnaal-rift-scavenger"
 					},
+					"Decorum": {
+						"type": "int",
+						"value": 1
+					},
 					"Defense": {
 						"type": "int",
 						"value": 0
@@ -3007,6 +3099,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Gnaal Rift-Scavenger"
+					},
+					"Doctrine": {
+						"type": "int",
+						"value": 2
 					},
 					"Edge": {
 						"type": "int",
@@ -3016,9 +3112,25 @@
 						"type": "string",
 						"value": ""
 					},
+					"Grit": {
+						"type": "int",
+						"value": 2
+					},
+					"Intuition": {
+						"type": "int",
+						"value": 3
+					},
 					"Max HP": {
 						"type": "int",
 						"value": 16
+					},
+					"Muster": {
+						"type": "int",
+						"value": 2
+					},
+					"Reason": {
+						"type": "int",
+						"value": 2
 					}
 				}
 			},
@@ -3029,6 +3141,10 @@
 				"_index": 0,
 				"_name": "Mustered Bloodbellow",
 				"_property_overrides": {
+					"Alacrity": {
+						"type": "int",
+						"value": 2
+					},
 					"Attack": {
 						"type": "int",
 						"value": 6
@@ -3045,6 +3161,10 @@
 						"type": "string",
 						"value": "mustered-bloodbellow"
 					},
+					"Decorum": {
+						"type": "int",
+						"value": 3
+					},
 					"Defense": {
 						"type": "int",
 						"value": 3
@@ -3052,6 +3172,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Mustered Bloodbellow"
+					},
+					"Doctrine": {
+						"type": "int",
+						"value": 4
 					},
 					"Edge": {
 						"type": "int",
@@ -3061,9 +3185,25 @@
 						"type": "string",
 						"value": ""
 					},
+					"Grit": {
+						"type": "int",
+						"value": 4
+					},
+					"Intuition": {
+						"type": "int",
+						"value": 2
+					},
 					"Max HP": {
 						"type": "int",
 						"value": 32
+					},
+					"Muster": {
+						"type": "int",
+						"value": 3
+					},
+					"Reason": {
+						"type": "int",
+						"value": 1
 					}
 				}
 			},
@@ -3074,6 +3214,10 @@
 				"_index": 0,
 				"_name": "Cleaned Jawbrace Guard",
 				"_property_overrides": {
+					"Alacrity": {
+						"type": "int",
+						"value": 3
+					},
 					"Attack": {
 						"type": "int",
 						"value": 7
@@ -3090,6 +3234,10 @@
 						"type": "string",
 						"value": "cleaned-jawbrace-guard"
 					},
+					"Decorum": {
+						"type": "int",
+						"value": 3
+					},
 					"Defense": {
 						"type": "int",
 						"value": 4
@@ -3097,6 +3245,10 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Cleaned Jawbrace Guard"
+					},
+					"Doctrine": {
+						"type": "int",
+						"value": 4
 					},
 					"Edge": {
 						"type": "int",
@@ -3106,9 +3258,25 @@
 						"type": "string",
 						"value": ""
 					},
+					"Grit": {
+						"type": "int",
+						"value": 5
+					},
+					"Intuition": {
+						"type": "int",
+						"value": 2
+					},
 					"Max HP": {
 						"type": "int",
 						"value": 36
+					},
+					"Muster": {
+						"type": "int",
+						"value": 3
+					},
+					"Reason": {
+						"type": "int",
+						"value": 2
 					}
 				}
 			},
@@ -16979,12 +17147,61 @@
 				"_id": "514.0",
 				"_name": "Action Ability Ids",
 				"_type": "string"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "529.0",
+				"_name": "Doctrine",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "530.0",
+				"_name": "Reason",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "531.0",
+				"_name": "Alacrity",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "532.0",
+				"_name": "Muster",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "533.0",
+				"_name": "Grit",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "534.0",
+				"_name": "Intuition",
+				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": 0,
+				"_id": "535.0",
+				"_name": "Decorum",
+				"_type": "int"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 528.0
+			"default": 535.0
 		}
 	},
 	"_version": 1

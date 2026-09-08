@@ -1032,6 +1032,20 @@ func test_canon_and_the_generated_encounter_table_agree() -> void:
 					"archetype '%s' drifted from the database on '%s'"
 					% [enemy["id"], pair[0]]
 				).is_equal(int(stats[pair[1]]))
+			# Every DRAMGID attribute has to survive canon -> Pandora -> generated table.
+			# Before #283's §3.6 re-seed, six of the seven were authored in canon and
+			# stopped at Pandora, so an enemy read 0 for all but Alacrity and nothing
+			# said so.
+			var attributes: Dictionary = enemy.get("attributes", {}) as Dictionary
+			for attribute_id: String in DramgidSchema.ATTRIBUTES:
+				assert_bool(attributes.has(attribute_id)).override_failure_message(
+					"archetype '%s' reaches the runtime without '%s'"
+					% [enemy["id"], attribute_id]
+				).is_true()
+				assert_int(int(attributes[attribute_id])).override_failure_message(
+					"archetype '%s' drifted from the database on '%s'"
+					% [enemy["id"], attribute_id]
+				).is_equal(int(stats[attribute_id]))
 		assert_array(enemy_ids).override_failure_message(
 			"encounter '%s' fields a different roster than canon names" % encounter_id
 		).is_equal(Array(encounter["archetype_ids"]))

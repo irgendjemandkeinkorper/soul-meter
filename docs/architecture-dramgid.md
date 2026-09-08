@@ -161,25 +161,50 @@ Anything still open is open for a named reason, not because nobody has picked it
 | 3.3 | `party_member.gd` / `battle_actor.gd` | **done** — `xp` field, the legacy↔DRAMGID `attribute_value()` bridge, and `DramgidDerived.recompute` (live consumer: `ChargenBuild.to_party_member()`) | chargen wave; §6 freeze |
 | 3.4 | chargen + character sheet | **done** — the sheet reads `DramgidSchema.SKILL_GROUPS`; `ChargenData.SKILL_IDS`/`SKILL_LABELS` deleted | #394 |
 | 3.5 | `advancement.gd` | **done** — the Alchemy refund arrives through the schema-9 migration | #392 |
-| 3.6 | Pandora seeders + generators | **open** — see the note under the table |  |
+| 3.6 | Pandora seeders + generators | **partial** — the Combatants category carries all seven attribute columns and they reach `BattleActor` 2026-09-07; the `check_skill` rename is still open, see the note under the table |  |
 | 3.7 | `renown.gd` (Yothmeru) | **done** — see §3.7a for how its two halves were reconciled | #384 |
 | 3.8 | `save_migrations.gd` | **done** — schema 9, §2.1 steps 1/2/3/5; step 6 deferred with §3.3 | #392 |
 | 3.9 | combat rules | **partial** — to-hit/AP/CT attribute moved to Alacrity 2026-09-07; the CT *formula* (`6 + Reason/2`) and the damage power term are still F3b, after #281 |  |
 | 3.10 | dialogue + quest audit + docs | **done** — 14 authored checks and 4 code call sites renamed; the quest audit needed no change (it matches the shape of a `check(` call, not a literal id list) | #393, #395 |
 | 3.11 | tests | **rolling** — each surface above carried its own cases |  |
 
-**Why §3.6 is still open.** It asks for the Combatants category's single `Edge` column to be
-*replaced* by seven attribute columns. But `Edge` is read by the to-hit rule, and moving that
-read to Alacrity is §3.9 — F3b, blocked on #281. Landing the data ahead of its consumer would
-strand it. Its other half (Peoples `Leaning Primary`/`Leaning Secondary`) is display-only in F3
-and `ChargenData.ANCESTRIES` already carries `lean_ids`, so it buys nothing on its own. §3.6
-should ship *with* §3.9, as one re-seed.
+**§3.6's attribute columns landed 2026-09-07; what is left is the `check_skill` rename.**
 
-Relatedly, `tools/seed_phase_one_pandora.gd`'s authored `check_skill` values (and the defaults
-mirroring them in `combat_controller.gd` and `generate_gloot.gd`) are still `lore`/`insight`.
-They are Pandora seed data: renaming them means re-seeding `data.pandora` and regenerating
-`data/generated/encounters.json`, so they belong to that same data change, where code and
-authored data move together.
+The original deferral said `Edge` was read by the to-hit rule and that moving that read to
+Alacrity was §3.9, blocked on #281 — so seeding seven columns would strand them. §3.9's
+*attribute* half shipped that day, which voided the deferral, and leaving it in place had a
+cost of its own: canon authored all seven attributes per archetype while Pandora carried one
+column, so `data/generated/encounters.json` carried one number and every enemy read **0** for
+doctrine, reason, muster, grit, intuition and decorum. `attribute_value()` returns 0 for a name
+it does not hold, so nothing said so — the same silent shape as the chargen defect §3.9 closed
+on the party's side.
+
+The Combatants category now carries one `int` column per attribute, named off
+`DramgidSchema.ATTRIBUTES` labels rather than a second literal list; `generate_gloot.gd` emits
+them as an `attributes` block; `EncounterCatalog._actor_from_row()` reads that block by schema
+id, so an eighth attribute would arrive without a code change. **`Edge` is kept beside
+`Alacrity`, not replaced**: `Edge` is the key authored campaign packages write
+(`campaign_encounter_loader.gd`), so both carry the same number, a package row with only `edge`
+still lands on Alacrity, and the runtime prefers the DRAMGID block when it is present. Pinned by
+`test_canon_and_the_generated_encounter_table_agree` (canon → Pandora → generated, all seven)
+and three cases in `test_encounter_catalog.gd`.
+
+Five of the six new attributes still have no *reader* — the CT formula on Reason, the damage
+power term on Muster and `_fizzle_context`'s Intuition are §3.9's remaining half, after #281.
+They are seeded anyway because the alternative is not "no data" but "0", silently, at the first
+consumer that arrives — including #412's enemy stat scaling.
+
+The other half of §3.6 (Peoples `Leaning Primary`/`Leaning Secondary`) is display-only in F3 and
+`ChargenData.ANCESTRIES` already carries `lean_ids`, so it buys nothing on its own.
+
+**Still open in §3.6:** `tools/seed_phase_one_pandora.gd`'s 14 authored `check_skill` values
+are `lore`/`insight` — pre-DRAMGID ids whose renames are `recall`/`undertone`. They still
+*resolve*, through `DramgidSchema.LEGACY_SKILL_DEFINITIONS` and `attribute_value()`'s
+legacy bridge, so this is stale data rather than a live defect. It was left out of the column
+re-seed on purpose: those two ids are also the legacy-compat fixture in roughly thirty test
+files (`test_skill_check`, `test_advancement`, `test_party_member`, `test_save_game`), and the
+defaults mirroring them live in `combat_controller.gd` and an assertion in `generate_gloot.gd`.
+Renaming them is a data change with its own blast radius, not a rider on this one.
 
 ### 3.0 The original plan (for reference)
 

@@ -111,3 +111,66 @@ func test_make_actor_applies_the_groups_outcome_fields() -> void:
 
 func test_make_actor_refuses_an_unknown_unit() -> void:
 	assert_object(EncounterCatalog.make_actor(&"no-such-unit")).is_null()
+
+
+## #283 §3.6. Canon authors all seven DRAMGID attributes per archetype, but until the
+## Combatants re-seed only `Edge` had a Pandora column, so the generated table carried one
+## number and every enemy read 0 for the other six. Nothing said so — `attribute_value()`
+## returns 0 for a name it does not hold, which is the same shape as the chargen defect
+## #411 closed on the party's side. This is the live consumer of that re-seed.
+func test_a_built_enemy_carries_every_dramgid_attribute() -> void:
+	var actor := EncounterCatalog.make_actor(&"bog-wight")
+	for attribute_id: String in DramgidSchema.ATTRIBUTES:
+		assert_bool(actor.attributes.has(StringName(attribute_id))).override_failure_message(
+			"a bog wight reaches combat without '%s'" % attribute_id
+		).is_true()
+	# The authored block, in schema order: doctrine/reason/alacrity/muster/grit/intuition/decorum.
+	assert_int(actor.attribute_value(&"doctrine")).is_equal(1)
+	assert_int(actor.attribute_value(&"reason")).is_equal(1)
+	assert_int(actor.attribute_value(&"alacrity")).is_equal(2)
+	assert_int(actor.attribute_value(&"muster")).is_equal(2)
+	assert_int(actor.attribute_value(&"grit")).is_equal(2)
+	assert_int(actor.attribute_value(&"intuition")).is_equal(3)
+	assert_int(actor.attribute_value(&"decorum")).is_equal(1)
+
+
+## The two archetypes have to differ, or the block is being defaulted rather than read.
+func test_two_archetypes_carry_different_attribute_blocks() -> void:
+	var wight := EncounterCatalog.make_actor(&"bog-wight")
+	var guard := EncounterCatalog.make_actor(&"cleaned-jawbrace-guard")
+	assert_int(guard.attribute_value(&"grit")).override_failure_message(
+		"the Jawbrace guard's authored grit of 5 did not survive the seed"
+	).is_equal(5)
+	assert_int(guard.attribute_value(&"doctrine")).is_equal(4)
+	assert_bool(
+		guard.attribute_value(&"grit") != wight.attribute_value(&"grit")
+	).is_true()
+
+
+## The boundary #411 left standing on purpose: an authored campaign package writes the flat
+## `edge` key and no DRAMGID block (`campaign_encounter_loader.gd`). That row must still
+## produce a fighting unit, and `edge` must land on Alacrity — its ratified rename — not be
+## dropped for want of an `attributes` object.
+func test_a_campaign_package_row_with_only_edge_still_lands_on_alacrity() -> void:
+	EncounterCatalog.register_runtime_encounters({
+		"package-fixture": {
+			"display_name": "Package Fixture",
+			"enemies": [{
+				"id": "package-brute",
+				"display_name": "Package Brute",
+				"max_hp": 11,
+				"attack": 3,
+				"defense": 1,
+				"balance_affinity": 0,
+				"balance_pressure": 12,
+				"element_id": "",
+				"edge": 4,
+			}],
+		},
+	})
+	var actors := EncounterCatalog.make_actors(&"package-fixture")
+
+	assert_int(actors.size()).is_equal(1)
+	assert_int(actors[0].attribute_value(&"alacrity")).override_failure_message(
+		"a package row's flat `edge` no longer reaches Alacrity"
+	).is_equal(4)

@@ -1072,11 +1072,15 @@ func _seed_npcs() -> void:
 ## then the attributes give enemies the DRAMGID surface (to-hit, charge speed, checks) and
 ## the three combat numbers stay where Gate T-1 left them.
 ##
-## The one remaining boundary: Pandora's column and `data/generated/encounters.json`
-## still say `Edge`, because campaign packages author that key
-## (`campaign_encounter_loader.gd`) and renaming it would break every authored package.
-## Canon and the runtime both say `alacrity`; the mapping happens here and in
-## `EncounterCatalog._actor_from_row()`, in one direction, once.
+## §3.6, 2026-09-07: the category now carries one `int` column per DRAMGID attribute, and
+## `generate_gloot.gd` emits them as an `attributes` block that `EncounterCatalog` reads by
+## schema id. Before this, canon authored seven and Pandora carried one, so every enemy read
+## 0 for the other six and nothing said so.
+##
+## `Edge` is kept BESIDE `Alacrity` rather than replaced by it: `Edge` is the key authored
+## campaign packages write (`campaign_encounter_loader.gd`), and dropping it would break every
+## authored package. Both carry the same number; a package row with only `edge` still lands on
+## Alacrity, and the runtime prefers the DRAMGID block when a row has one.
 func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 	var root: PandoraCategory = _ensure_root("Combatants")
 	for property_spec: Array in [
@@ -1092,6 +1096,12 @@ func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 	]:
 		if not root.has_entity_property(property_spec[0]):
 			Pandora.create_property(root, property_spec[0], property_spec[1])
+	# One column per DRAMGID attribute, named off the schema rather than a second literal
+	# list, so a schema change cannot leave this seeder describing six attributes.
+	for attribute_id: String in DramgidSchema.ATTRIBUTES:
+		var column: String = _attribute_column(attribute_id)
+		if not root.has_entity_property(column):
+			Pandora.create_property(root, column, "int")
 
 	for row: Dictionary in archetypes:
 		var stats: Dictionary = row["stats"]
@@ -1105,8 +1115,18 @@ func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 		_assign(entity, "Attack", int(stats["attack"]))
 		_assign(entity, "Defense", int(stats["defense"]))
 		_assign(entity, "Edge", int(stats["alacrity"]))
+		for attribute_id: String in DramgidSchema.ATTRIBUTES:
+			_assign(entity, _attribute_column(attribute_id), int(stats[attribute_id]))
 		_assign(entity, "Balance Affinity", int(stats["balance_affinity"]))
 		_assign(entity, "Balance Pressure", int(stats["balance_pressure"]))
+
+
+## A DRAMGID attribute's Pandora column, named off `DramgidSchema.ATTRIBUTES` labels.
+## `Edge` is kept beside `Alacrity` on purpose: `Edge` is the key authored campaign packages
+## use (`campaign_encounter_loader.gd`), so both carry the same number and the runtime
+## prefers the DRAMGID one.
+static func _attribute_column(attribute_id: String) -> String:
+	return str(DramgidSchema.ATTRIBUTES[attribute_id]["label"])
 
 
 ## Encounters are `canon/<hub>/encounters/*.json`. Per F0 D8 (spec §4.9) an encounter owns

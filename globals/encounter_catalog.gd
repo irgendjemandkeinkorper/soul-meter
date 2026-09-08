@@ -148,7 +148,16 @@ static func _actor_from_row(row: Dictionary) -> BattleActor:
 	actor.balance_affinity = int(row.get("balance_affinity", 0))
 	actor.balance_pressure = int(row.get("balance_pressure", 12))
 	actor.element_id = StringName(row.get("element_id", ""))
-	actor.attributes[&"alacrity"] = int(row.get("edge", 0))
+	# A generated row carries the full DRAMGID block; an authored campaign package carries
+	# only the flat `edge` key (`campaign_encounter_loader.gd`), so that is the fallback and
+	# it lands on Alacrity, `edge`'s ratified rename. Reading the block by schema id rather
+	# than by a literal list means a seventh attribute arrives here without a code change.
+	var authored: Dictionary = row.get("attributes", {}) as Dictionary
+	if authored.is_empty():
+		actor.attributes[&"alacrity"] = int(row.get("edge", 0))
+	else:
+		for attribute_id: String in DramgidSchema.ATTRIBUTES:
+			actor.attributes[StringName(attribute_id)] = int(authored.get(attribute_id, 0))
 	return actor
 
 
