@@ -57,13 +57,44 @@ for the save — start a fresh game to re-run it, or the second pass proves noth
       Uncertain. *(Sway carries a `karma_direction`, RFC-0007 §6 — this is the
       Karma ledger reaching the economy.)*
 
+## 4. Loot tables (#284, verb 4)
+
+**Target:** `RoadsideCache` on Dorthkor Road, west of the CampCache, on the road
+between the spawn point and the camp. Rolls the `road-cache` table; its hidden
+compartment is gated behind `sounding`.
+
+- [ ] Walk east from the spawn. **The cache is visible and reachable** — you can
+      get close enough for its prompt to appear without fighting the terrain.
+      *(It is hand-placed at (760, 470) with no walkability snap, so this is the
+      one thing about it a unit test cannot check.)*
+- [ ] Press **E**. The loot panel opens with **two ordinary items** — supplies,
+      not treasure.
+- [ ] If your `sounding` was good enough, a **third** item is there as well:
+      a lockpick roll from the false bottom. If not, only the two.
+- [ ] Take everything, close the panel, press **E** again. The prompt reads
+      `E — EMPTY`. Nothing has regenerated.
+- [ ] Reload the save from before you opened it and open it again. **The same two
+      base items.** *(Contents are seeded off the container id, so a reload cannot
+      shop for better loot. The search result is committed on first open the same
+      way a lock or a pocket is.)*
+- [ ] Compare with the `CampCache` further east: it still holds its two
+      hand-authored items. *(Authored `loot` outranks `loot_table_id`, so a
+      set-piece container is never quietly re-rolled.)*
+
 ---
 
 ## What is deliberately not covered here
 
-**Loot tables** — verb 4 of 4, not yet built.
-
 **Loom-sensitive degradation in Hush/Waning zones** — moved to #349 (AccordZone) by the
-2026-09-08 ruling. `SkillCheck.loom_penalty()` is a live hook returning 0; none of the
-three verbs above roll a Loom-sensitive skill today (`strain`, `slip` and `sway` are all
-`LoomSensitivity.NONE`), so there is nothing to observe until #349 lands.
+2026-09-08 ruling. `SkillCheck.loom_penalty()` is a live hook returning 0, so nothing
+here is observable yet.
+
+Worth knowing for when it lands, though: the three *verbs* roll `strain`, `slip` and
+`sway`, all `LoomSensitivity.NONE`, so #349 will not touch them. But two of the loot
+tables' gated rows roll **`sounding` and `unweave`, both `LoomSensitivity.FULL`** — so
+once #349 is live, a hidden compartment genuinely becomes harder to find inside a Hush or
+Waning zone. That is the first place the Loom hook will have anything to do, and this
+checklist is where to come back and check it.
+
+Already-opened containers are unaffected either way: contents are committed on first
+open, so a later Loom change cannot retroactively empty a crate the player has seen.

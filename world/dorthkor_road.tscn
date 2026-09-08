@@ -363,6 +363,13 @@ lock_failed_message = "The lid holds. Whatever the muster nailed down, it meant 
 loot = Array[Dictionary]([{"item_id": "consumables/hearthloaf", "quantity": 1}, {"item_id": "materials/lamp_oil", "quantity": 1}])
 container_id = "dorthkor-road-camp-cache"
 
+[node name="RoadsideCache" parent="." instance=ExtResource("34_chest")]
+position = Vector2(760, 470)
+display_name = "ROADSIDE CACHE"
+interaction_flag = "loot_opened_dorthkor_road_roadside_cache"
+container_id = "dorthkor-road-roadside-cache"
+loot_table_id = &"road-cache"
+
 [node name="DorthkorRoadDressing" type="Node2D" parent="."]
 y_sort_enabled = true
 
