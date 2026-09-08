@@ -11,6 +11,11 @@ var outcome_id: StringName = &""
 var message := ""
 var cause := ""
 var spoils: Array[Dictionary] = []
+## #285: XP earned by this victory, and {member_id: new_level} for anyone it
+## levelled. Both stay zero/empty on a defeat, a retreat, and on re-entering a
+## fight the party has already resolved.
+var xp_awarded: int = 0
+var levels_gained: Dictionary = {}
 
 
 func succeeded() -> bool:

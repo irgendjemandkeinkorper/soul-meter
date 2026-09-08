@@ -323,3 +323,73 @@ func _enemy(name: String, hp: int, attack: int, defense: int) -> BattleActor:
 	actor.attack = attack
 	actor.defense = defense
 	return actor
+
+## #285 / game-identity ruling 9: XP comes from combat. Supersedes #98 D3
+## (2026-08-24), which said levels come only from authored story milestones and
+## never from kill XP.
+func test_victory_awards_xp_to_the_party_and_reports_it() -> void:
+	var strong := _enemy("Wight", 20, 4, 1)
+	strong.attributes[&"grit"] = 3
+	strong.attributes[&"muster"] = 3
+	battle.start(strong)
+	var before: int = GameState.party[0].xp
+
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+
+	assert_int(battle.last_result.xp_awarded).override_failure_message(
+		"a won fight paid no XP"
+	).is_greater(0)
+	assert_int(GameState.party[0].xp + GameState.party[0].level * Advancement.XP_BASE).override_failure_message(
+		"the awarded XP never reached the party"
+	).is_greater(before)
+
+
+func test_a_tougher_enemy_pays_more_than_a_weaker_one() -> void:
+	var weak := _enemy("Runt", 20, 4, 1)
+	weak.attributes[&"grit"] = 1
+	weak.attributes[&"muster"] = 1
+	battle.start(weak)
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+	var weak_award: int = battle.last_result.xp_awarded
+
+	battle = auto_free(BattleScript.new())
+	var tough := _enemy("Bloodbellow", 20, 4, 1)
+	tough.attributes[&"grit"] = 5
+	tough.attributes[&"muster"] = 4
+	battle.start(tough)
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+
+	assert_int(int(battle.last_result.xp_awarded)).override_failure_message(
+		"a Bloodbellow paid no more than a runt"
+	).is_greater(weak_award)
+
+
+## Anti-farm. The award sits behind the same `already_resolved` guard the
+## reputation write does, so walking out of a cleared encounter and back in pays
+## nothing — otherwise the XP curve is decorative.
+func test_re_entering_a_resolved_encounter_pays_no_xp() -> void:
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+	assert_int(battle.last_result.xp_awarded).is_greater(0)
+
+	battle = auto_free(BattleScript.new())
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+
+	assert_int(battle.last_result.xp_awarded).override_failure_message(
+		"an already-cleared encounter paid out again; the fight is farmable"
+	).is_equal(0)
+
+
+func test_losing_and_fleeing_pay_nothing() -> void:
+	battle.start(_enemy("Wight", 20, 4, 1))
+	battle._finish(BattleResult.State.DEFEAT, &"defeat")
+	assert_int(battle.last_result.xp_awarded).is_equal(0)
+
+	battle = auto_free(BattleScript.new())
+	battle.start(_enemy("Wight", 20, 4, 1))
+	battle._finish(BattleResult.State.FLED, &"fled")
+	assert_int(battle.last_result.xp_awarded).override_failure_message(
+		"running away paid the same as winning"
+	).is_equal(0)
+

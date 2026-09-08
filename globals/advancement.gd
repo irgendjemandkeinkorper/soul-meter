@@ -9,8 +9,13 @@ extends RefCounted
 ##   2 points while ≤ 75, 3 points while ≤ 95. Effective% is SkillCheckService's
 ##   derivation (attr × 8 + tier + advancement); the Chapter-1 cap of 95% is enforced
 ##   here on the resulting effective%, which is what "100% is a commitment" governs.
-## - Owner 2026-08-24 (TUNABLE): POINTS_PER_LEVEL = 3; levels come from authored story
-##   MILESTONES (see GameState.grant_milestone_level), never from kill/use XP.
+## - Owner 2026-08-24 (TUNABLE): POINTS_PER_LEVEL = 3.
+## - SUPERSEDED 2026-09-02 by `docs/game-identity.md` ruling 9, re-affirmed by the
+##   owner 2026-09-08: levels come from XP, and XP comes from COMBAT and QUESTS.
+##   The earlier rule here — "levels come from authored story MILESTONES, never
+##   from kill/use XP" (#98 D3, 2026-08-24) — no longer holds. Milestones survive
+##   as an XP source rather than as a second, parallel way to gain a level; one
+##   currency is the point. See `GameState.grant_milestone_level`.
 ## - D5: the Mirror Rewriting (once per chapter, see GameState) refunds every
 ##   advancement point ever spent and re-opens them; tiers and Masteries untouched.
 ##
@@ -20,6 +25,27 @@ extends RefCounted
 ## SkillCheckService reads; this service is the ONLY writer that moves both together.
 
 const POINTS_PER_LEVEL := 3      # PROVISIONAL / TUNABLE (owner 2026-08-24)
+
+## PROVISIONAL — #285 hands the curve to DeepSeek. Cost to reach level N+1 is
+## XP_BASE * N, so the curve is LINEAR in level and total XP is quadratic: 100 to
+## reach 2, 200 more for 3, 300 more for 4. Linear rather than exponential
+## because Chapter 1 is short; an exponential curve spends its interesting range
+## outside the content that exists.
+const XP_BASE := 100
+
+## PROVISIONAL. A quest is worth roughly two average kills at the shipped
+## archetype spread, which keeps questing clearly the better rate per minute
+## without making combat XP pointless.
+const XP_PER_QUEST := 40
+
+## PROVISIONAL. Floor and per-point value of a kill.
+const XP_PER_KILL_BASE := 2
+const XP_PER_KILL_PER_POINT := 4
+
+## PROVISIONAL. A milestone is worth one level's XP at the level the member is
+## already at, so a story beat still reads as "you levelled" without introducing
+## a second way to gain levels.
+const MILESTONE_XP_LEVELS := 1
 const STEP_PERCENT := 5.0
 const EFFECTIVE_CAP := 95.0
 const COST_BANDS := [            # [resulting effective% ceiling, cost per +5% step]
@@ -129,6 +155,56 @@ static func seed_creation_ledger(member: PartyMember, rows: Dictionary) -> void:
 static func grant_level(member: PartyMember) -> void:
 	member.level += 1
 	member.advancement_points += POINTS_PER_LEVEL
+
+
+## XP needed to go from `level` to `level + 1`. Never zero, so no amount of XP can
+## grant infinite levels in the loop below.
+static func xp_for_next_level(level: int) -> int:
+	return XP_BASE * maxi(level, 1)
+
+
+## Awards XP and takes every level it pays for. Returns the number of levels
+## gained, so callers can report "and Vex reached 3" without recomputing it.
+##
+## The remainder CARRIES: overshooting a threshold banks the excess rather than
+## discarding it, so two half-levels of work are worth one level. Discarding it
+## would silently penalise players who fight one more encounter than they needed.
+static func award_xp(member: PartyMember, amount: int) -> int:
+	if member == null or amount <= 0:
+		return 0
+	member.xp = maxi(member.xp, 0) + amount
+	var gained := 0
+	while member.xp >= xp_for_next_level(member.level):
+		member.xp -= xp_for_next_level(member.level)
+		grant_level(member)
+		gained += 1
+	return gained
+
+
+## PROVISIONAL — #285 hands the curve to DeepSeek. What a defeated combatant is
+## worth, read off its DRAMGID attributes: `grit` is how hard it was to kill and
+## `muster` is how hard it hit, so XP tracks the difficulty the party actually
+## faced. Deriving it beats a hand-authored per-enemy number, which drifts from
+## the stats the moment either is tuned and gives no signal that it has.
+static func xp_for_defeated(grit: int, muster: int) -> int:
+	return maxi(XP_PER_KILL_BASE + XP_PER_KILL_PER_POINT * (maxi(grit, 0) + maxi(muster, 0)), 1)
+
+
+## What a story milestone is worth to this member: a FIXED award of one level's
+## XP at their current level, scaling with level so a milestone reached late is
+## not a rounding error against the XP already earned.
+##
+## Deliberately NOT "however much is still owed to reach the next level". That
+## variant also levels everyone exactly once, which looks equivalent and is not:
+## a member sitting at 99 of 100 would receive 1 XP and level — the same level
+## they were about to earn anyway — so their 99 points of work bought them
+## nothing. A fixed award levels them AND leaves the 99 banked toward the level
+## after. Reaching a story beat should never be worth less for having played more.
+static func milestone_xp(member: PartyMember) -> int:
+	var total := 0
+	for offset in MILESTONE_XP_LEVELS:
+		total += xp_for_next_level(member.level + offset)
+	return maxi(total, 1)
 
 
 ## D5: refund every advancement point ever spent by this member and remove the
