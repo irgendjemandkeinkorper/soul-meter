@@ -17,6 +17,7 @@ const GRUMBRAND_DIALOGUE_PATH := "res://dialogue/companions/old_grumbrand.dialog
 const RESSA_DIALOGUE_PATH := "res://dialogue/companions/ressa_quickfingers.dialogue"
 const KORRATH_DIALOGUE_PATH := "res://dialogue/companions/korrath_ninefold.dialogue"
 const MAURA_DIALOGUE_PATH := "res://dialogue/companions/maura_greyfen.dialogue"
+const UNANSWERED_ROAR_DIALOGUE_PATH := "res://dialogue/main/unanswered_roar.dialogue"
 const PLACEMENTS_PATH := "res://data/generated/dom_npc_placements.json"
 
 ## Wave R: catalog boards are 7x5+ now and deploy melee at range. This journey
@@ -323,6 +324,19 @@ func test_every_registered_quest_has_a_playable_dialogue_starter() -> void:
 	reached[QuestRegistry.DEEP_TRIAL.id] = true
 
 	_reset_fixture()
+	# Act I's closer is gated on Dom having ruled on the Broken Muster — it is the
+	# chapter's last beat, not a side thread, so its starter is only reachable
+	# after `chapter_one_resolution` is set.
+	GameState.set_flag("chapter_one_resolution", "hold-both")
+	await _start_quest_from_dialogue(
+		QuestRegistry.UNANSWERED_ROAR,
+		UNANSWERED_ROAR_DIALOGUE_PATH,
+		"start",
+		"not saying out loud"
+	)
+	reached[QuestRegistry.UNANSWERED_ROAR.id] = true
+
+	_reset_fixture()
 	await _start_quest_from_dialogue(
 		QuestRegistry.BELLHOUSE_REPAIR, SELLA_DIALOGUE_PATH, "start", "What happened"
 	)
@@ -572,6 +586,109 @@ func test_dishonest_casks_exemplar_passes_both_verb_routes_and_a_failure_route()
 	assert_bool(GameState.flag_is_true("dom_dishonest_casks_traced")).is_true()
 	assert_bool(QuestRegistry.flags_met(quest)).is_true()
 	assert_bool(QuestRegistry.resolve_side_quest(quest, quest.outcome_ids[0])).is_true()
+
+
+## Act I's closing beat (#246). The chain itself is covered by the cases above;
+## these pin the three things the beat exists to guarantee.
+func _open_the_act_one_hook() -> void:
+	_reset_fixture()
+	GameState.set_flag("chapter_one_resolution", "hold-both")
+	QuestRegistry.offer(QuestRegistry.UNANSWERED_ROAR)
+	GameState.set_flag("chapter_roar_measured", true)
+	QuestRegistry.UNANSWERED_ROAR.update()
+
+
+## The hook is the deliverable, not the ruling. Whichever way the player decides
+## to tell Dom, the rite is still being answered less — so every route must leave
+## Chapter Two something to open on.
+func test_every_act_one_ruling_opens_the_act_two_hook() -> void:
+	for ruling in ["sound-the-shortfall", "seal-the-measure", "carry-it-yourself"]:
+		_open_the_act_one_hook()
+		assert_bool(QuestRegistry.chapter_two_hook_open()).override_failure_message(
+			"the hook was open before the chapter closed it"
+		).is_false()
+
+		assert_bool(QuestRegistry.resolve_unanswered_roar(ruling)).is_true()
+
+		assert_bool(QuestRegistry.is_done(QuestRegistry.UNANSWERED_ROAR)).is_true()
+		assert_str(str(GameState.get_flag("chapter_roar_resolution"))).is_equal(ruling)
+		assert_bool(QuestRegistry.chapter_two_hook_open()).override_failure_message(
+			"ruling '%s' closed Act I without opening Act II" % ruling
+		).is_true()
+
+
+## Two of the three rulings move the ledgers; `carry-it-yourself` deliberately
+## moves neither. That silence is a design decision (docs/act-one-beat-sheet.md
+## §3), and an unasserted design decision is indistinguishable from a row someone
+## forgot to fill in.
+func test_telling_dom_moves_the_ledgers_and_keeping_it_moves_nothing() -> void:
+	_open_the_act_one_hook()
+	assert_bool(QuestRegistry.resolve_unanswered_roar("sound-the-shortfall")).is_true()
+	assert_float(Reputation.standing("kord-rite")).is_greater(0.0)
+	assert_float(Reputation.standing("trial-council")).is_less(0.0)
+	assert_float(Renown.reputation()).is_greater(0.0)
+
+	_open_the_act_one_hook()
+	assert_bool(QuestRegistry.resolve_unanswered_roar("seal-the-measure")).is_true()
+	assert_float(Reputation.standing("trial-council")).is_greater(0.0)
+	assert_float(Reputation.standing("kord-rite")).is_less(0.0)
+
+	_open_the_act_one_hook()
+	var events_before: int = Reputation.to_dict().get("events", []).size()
+	assert_bool(QuestRegistry.resolve_unanswered_roar("carry-it-yourself")).is_true()
+	assert_int(Reputation.to_dict().get("events", []).size()).override_failure_message(
+		"keeping the measurement wrote a faction event; it is not a crime and no ledger should say it was"
+	).is_equal(events_before)
+	assert_float(Renown.reputation()).is_equal(0.0)
+	assert_float(Renown.infamy()).override_failure_message(
+		"keeping the measurement was punished as infamy"
+	).is_equal(0.0)
+
+
+## The same atomicity guard the Broken Muster ruling carries: no unmeasured
+## ruling, no unknown ruling, and no second one.
+func test_the_act_one_ruling_cannot_be_faked_unmeasured_or_repeated() -> void:
+	_reset_fixture()
+	GameState.set_flag("chapter_one_resolution", "hold-both")
+	QuestRegistry.offer(QuestRegistry.UNANSWERED_ROAR)
+	assert_bool(QuestRegistry.resolve_unanswered_roar("seal-the-measure")).override_failure_message(
+		"Act I closed on a measurement the player never took"
+	).is_false()
+
+	_open_the_act_one_hook()
+	assert_bool(QuestRegistry.resolve_unanswered_roar("shout-it-from-the-wall")).is_false()
+	assert_bool(QuestRegistry.chapter_two_hook_open()).is_false()
+
+	assert_bool(QuestRegistry.resolve_unanswered_roar("seal-the-measure")).is_true()
+	assert_bool(QuestRegistry.resolve_unanswered_roar("sound-the-shortfall")).override_failure_message(
+		"a second ruling overwrote the first — the chapter's last decision is re-decidable"
+	).is_false()
+	assert_str(str(GameState.get_flag("chapter_roar_resolution"))).is_equal("seal-the-measure")
+
+
+## Gaath is BORROWED by the closer, not replaced by it. Before Dom rules and
+## after the hook resolves he keeps his own dialogue, or the Council's charge and
+## its read-back are silently lost for the rest of the game.
+func test_themka_gaath_only_routes_to_the_closer_while_it_is_live() -> void:
+	_reset_fixture()
+	var before: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		"themka-gaath", COUNCIL_ELDER_DIALOGUE_PATH, "start"
+	)
+	assert_str(str(before["source"])).is_equal(COUNCIL_ELDER_DIALOGUE_PATH)
+
+	_open_the_act_one_hook()
+	var during: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		"themka-gaath", COUNCIL_ELDER_DIALOGUE_PATH, "start"
+	)
+	assert_str(str(during["source"])).is_equal(UNANSWERED_ROAR_DIALOGUE_PATH)
+
+	assert_bool(QuestRegistry.resolve_unanswered_roar("seal-the-measure")).is_true()
+	var after: Dictionary = QuestRegistry.dialogue_route_for_actor(
+		"themka-gaath", COUNCIL_ELDER_DIALOGUE_PATH, "start"
+	)
+	assert_str(str(after["source"])).override_failure_message(
+		"Gaath never gave his own dialogue back after the hook resolved"
+	).is_equal(COUNCIL_ELDER_DIALOGUE_PATH)
 
 
 func _journey_response(

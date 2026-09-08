@@ -11,6 +11,11 @@ signal quest_rewards_granted(summary: Dictionary)
 const LOAMROOT_SPRIGS: FetchQuest = preload("res://quests/loamroot_sprigs.tres")
 const DORTHKOR_ROAD: FlagQuest = preload("res://quests/dorthkor_road.tres")
 const DEEP_TRIAL: FlagQuest = preload("res://quests/deep_trial.tres")
+## Act I's closing beat (#246). See docs/act-one-beat-sheet.md: the Act I spine
+## already shipped as FIELD_DEBT -> DORTHKOR_ROAD -> DEEP_TRIAL; what was missing
+## was the design doc's second half ("rites that should banish don't bite") and
+## the Act II hook, which appeared nowhere in the tree.
+const UNANSWERED_ROAR: FlagQuest = preload("res://quests/main/the_unanswered_roar.tres")
 const BELLHOUSE_REPAIR: FlagQuest = preload("res://quests/bellhouse_repair.tres")
 const FIELD_DEBT: FlagQuest = preload("res://quests/field_debt.tres")
 const DISHONEST_CASKS: DomSideQuest = preload("res://quests/dom_dishonest_casks.tres")
@@ -39,6 +44,7 @@ const MAURA_QUEST: FlagQuest = preload("res://quests/maura_greyfen_name_and_deed
 const DOM_SIDE_QUEST_DIALOGUE_PATH := "res://dialogue/dom_side_quests.dialogue"
 const MARSHAL_DIALOGUE_PATH := "res://dialogue/marshal_coiljaw.dialogue"
 const COUNCIL_ELDER_DIALOGUE_PATH := "res://dialogue/council_elder.dialogue"
+const UNANSWERED_ROAR_DIALOGUE_PATH := "res://dialogue/main/unanswered_roar.dialogue"
 
 ## FR-505 companion personal quests. Keyed by the recruit's `PartyMember.id`
 ## (see globals/game_state.gd's recruitable_candidates()). A companion with no
@@ -99,6 +105,7 @@ const ALL_QUESTS: Array[Quest] = [
 	LOAMROOT_SPRIGS,
 	DORTHKOR_ROAD,
 	DEEP_TRIAL,
+	UNANSWERED_ROAR,
 	BELLHOUSE_REPAIR,
 	FIELD_DEBT,
 	DISHONEST_CASKS,
@@ -118,7 +125,7 @@ const ALL_QUESTS: Array[Quest] = [
 	KORRATH_QUEST,
 	MAURA_QUEST,
 ]
-const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD]
+const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD, UNANSWERED_ROAR]
 
 var _runtime_quests: Array[DomSideQuest] = []
 var _runtime_dialogue_resources: Dictionary = {}
@@ -172,6 +179,53 @@ const BROKEN_MUSTER_RULINGS := {
 		],
 		"renown": 14.0,
 		"renown_cause": "Made Dom bear the honest cost of two fronts",
+	},
+}
+
+## Act I's closing rulings (#246). Faction ids are the lore vault's kebab ids.
+##
+## `carry-it-yourself` deliberately carries NO reputation and NO renown. Keeping
+## the measurement is not a crime and no ledger should treat it as one; its cost
+## is that the player is now the only person in Dom holding a true number and
+## nobody knows to ask them for it. The absence is asserted in the e2e suite so a
+## later reader cannot mistake it for a row someone forgot to fill in.
+const ACT_ONE_HOOK_RULINGS := {
+	"sound-the-shortfall": {
+		"reputation": [
+			{
+				"faction": "kord-rite",
+				"delta": 12.0,
+				"cause": "Said the Constant was reading short where the Arms could hear",
+			},
+			{
+				"faction": "trial-council",
+				"delta": -6.0,
+				"cause": "Took the Council's private number into the open",
+			},
+		],
+		"renown": 12.0,
+		"renown_cause": "Told Dom what its own rite was no longer answering",
+	},
+	"seal-the-measure": {
+		"reputation": [
+			{
+				"faction": "trial-council",
+				"delta": 12.0,
+				"cause": "Gave the Council the only honest count of the Roar",
+			},
+			{
+				"faction": "kord-rite",
+				"delta": -4.0,
+				"cause": "Left the Lip Shrines to keep guessing",
+			},
+		],
+		"renown": 4.0,
+		"renown_cause": "Carried a hard measurement to the bench that asked for it",
+	},
+	"carry-it-yourself": {
+		"reputation": [],
+		"renown": 0.0,
+		"renown_cause": "",
 	},
 }
 
@@ -453,6 +507,89 @@ func resolve_broken_muster(ruling_id: StringName) -> bool:
 		active_quest, ruling_key, _humanize_reward_id(ruling_key), reward_entries
 	)
 	return true
+
+
+func resolve_unanswered_roar(ruling_id: StringName) -> bool:
+	## Act I's closing ruling, and the Act II hook, as ONE atomic operation — the
+	## same shape as resolve_broken_muster() and for the same reason: a save holding
+	## a completed quest with no resolution flag has no dialogue route left that can
+	## finish the chapter.
+	##
+	## Every ruling opens the hook. That is deliberate: what the player decides here
+	## is who else in Dom gets to know, not whether the rite is being answered. The
+	## fact does not depend on the telling.
+	var ruling_key := String(ruling_id)
+	var ruling_value: Variant = ACT_ONE_HOOK_RULINGS.get(ruling_key, {})
+	if (
+		not ruling_value is Dictionary
+		# An unknown ruling id falls back to {}, which IS a Dictionary — without this
+		# line any string whatsoever closes Act I and opens the Act II hook. Every
+		# authored ruling is non-empty, including `carry-it-yourself`, whose EMPTY
+		# reputation list is a value inside a populated row rather than a missing row.
+		or (ruling_value as Dictionary).is_empty()
+		or not is_active(UNANSWERED_ROAR)
+		or not flags_met(UNANSWERED_ROAR)
+		or not str(GameState.get_flag("chapter_roar_resolution", "")).is_empty()
+	):
+		return false
+	var ruling := ruling_value as Dictionary
+
+	var active_quest: Quest = null
+	for quest: Quest in QuestSystem.get_active_quests():
+		if quest.id == UNANSWERED_ROAR.id:
+			active_quest = quest
+			break
+	if active_quest == null:
+		return false
+
+	GameState.set_flag("chapter_roar_resolution", ruling_key)
+	active_quest.objective_completed = true
+	turn_in(active_quest, ruling_key, false, false)
+	if not is_done(UNANSWERED_ROAR):
+		GameState.set_flag("chapter_roar_resolution", "")
+		return false
+
+	var reward_entries: Array[Dictionary] = []
+	for row_value: Variant in ruling.get("reputation", []):
+		if not row_value is Dictionary:
+			continue
+		var row := row_value as Dictionary
+		Reputation.record(
+			"player",
+			str(row.get("faction", "")),
+			float(row.get("delta", 0.0)),
+			str(row.get("cause", "")),
+			"dom"
+		)
+		reward_entries.append(
+			_reward_entry(
+				"faction",
+				str(row.get("faction", "")),
+				float(row.get("delta", 0.0)),
+				str(row.get("cause", ""))
+			)
+		)
+	var renown_delta := float(ruling.get("renown", 0.0))
+	if renown_delta > 0.0:
+		Renown.gain_reputation("player", renown_delta, str(ruling.get("renown_cause", "")), "dom")
+		reward_entries.append(
+			_reward_entry("renown", "renown", renown_delta, str(ruling.get("renown_cause", "")))
+		)
+	# The hook itself. Chapter Two's entry condition reads this flag, not the
+	# resolution — see docs/act-one-beat-sheet.md §6.
+	GameState.set_flag("chapter_two_hook_open", true)
+	SaveGame.request_checkpoint(SaveGame.Checkpoint.RULING, ruling_key)
+	_publish_reward_summary(
+		active_quest, ruling_key, _humanize_reward_id(ruling_key), reward_entries
+	)
+	return true
+
+
+## True once Act I has closed and Chapter Two has something to open on. Reading
+## the flag rather than the quest's done-state keeps the condition durable across
+## a save that predates the quest resource.
+func chapter_two_hook_open() -> bool:
+	return GameState.flag_is_true("chapter_two_hook_open")
 
 
 func resolve_field_debt(reward_id: StringName) -> bool:
@@ -788,6 +925,15 @@ func dialogue_route_for_actor(
 	if actor_id == "branek-coiljaw":
 		return _resolved_dialogue_route(MARSHAL_DIALOGUE_PATH, "start")
 	if actor_id == "themka-gaath":
+		## Act I's closer takes over Gaath's conversation only between Dom's ruling
+		## on the Broken Muster and the hook's own resolution. Outside that window he
+		## keeps his ordinary dialogue, so the charge and its read-back are never lost
+		## — the closer borrows the NPC, it does not replace him.
+		if (
+			not str(GameState.get_flag("chapter_one_resolution", "")).is_empty()
+			and not is_done(UNANSWERED_ROAR)
+		):
+			return _resolved_dialogue_route(UNANSWERED_ROAR_DIALOGUE_PATH, "start")
 		return _resolved_dialogue_route(COUNCIL_ELDER_DIALOGUE_PATH, "start")
 	## Generated roster prose remains the fallback for every townsfolk. The ten
 	## authored givers route through their quest resources at interaction time so

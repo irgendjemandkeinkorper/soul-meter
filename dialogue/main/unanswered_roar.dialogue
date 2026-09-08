@@ -1,0 +1,76 @@
+# PROVISIONAL — CANON REVIEW REQUIRED: all dialogue prose and option text in this file.
+#
+# Act I's closing beat, "The Unanswered Roar" (#246, C9). Beats and the canon it
+# is built on: docs/act-one-beat-sheet.md.
+#
+# Themka Gaath is routed here by QuestRegistry.dialogue_route_for_actor() only
+# between Dom's ruling on the Broken Muster and this quest's own resolution, so
+# this file has to be SELF-CONTAINED. No cross-file dialogue jump exists anywhere
+# in this project, and introducing an untested one on the chapter's last beat to
+# save a few lines is a bad trade.
+#
+# The whole point of this beat is the one thing it does NOT say. Act II is "The
+# Missing God"; Act I only establishes that the rite is performed correctly and
+# answered less. Nothing here names Maiiam, Rhea, or the Waning, and nothing here
+# offers a cause. If a later edit puts a name in Gaath's mouth, that edit has
+# moved Act II into Chapter One.
+
+~ start
+Themka Gaath: You brought the road back to us. Sit a moment before you decide that was the hard part.
+=> hub
+
+~ hub
+- "What is the Council not saying out loud?" [if not QuestRegistry.is_active(QuestRegistry.UNANSWERED_ROAR) and not QuestRegistry.is_done(QuestRegistry.UNANSWERED_ROAR) /]
+	# The offer runs BEFORE the first spoken line on purpose. Dialogue Manager
+	# executes mutations only until it reaches a displayable line, so a `do` placed
+	# after one does not fire until the player clicks past it — and a starter that
+	# needs a second click is a starter that can be walked away from.
+	do QuestRegistry.offer(QuestRegistry.UNANSWERED_ROAR)
+	Themka Gaath: Three benches have reported the Constant reading short. Separately. None of them will say it where the other two can hear.
+	Themka Gaath: Every one of them has an enemy to blame, and every one of them is blaming a different enemy. That is three theories and no measurement.
+	Themka Gaath: Walk the four Arms. Count what the Roar answers. Bring me a fourth number from someone who owes none of them anything.
+	=> END
+- "Why me? The Council has surveyors." [if QuestRegistry.is_active(QuestRegistry.UNANSWERED_ROAR) and not GameState.get_flag("chapter_roar_measured") /]
+	Themka Gaath: It has surveyors who hold seats. A number that costs a man his bench is not a number he brings me quickly.
+	=> hub
+- "I'll take the measure by ear." [#tag=SOUNDING] [if QuestRegistry.is_active(QuestRegistry.UNANSWERED_ROAR) and not GameState.get_flag("chapter_roar_measured") and check("sounding", 35) /]
+	do SkillCheck.resolve("sounding", null, 0.0, "act-one-unanswered-roar")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("chapter_roar_certain", true)
+		do GameState.set_flag("chapter_roar_measured", true)
+		Themka Gaath: Well?
+		Themka Gaath: You walked all four and you are certain. Say the number.
+		=> hub
+	else
+		do GameState.set_flag("chapter_roar_measured", true)
+		Themka Gaath: You have a number. You do not have a number you would sign.
+		Themka Gaath: I will take it. I would rather hold an honest doubt than a confident lie, and this city is running short of both kinds of honesty.
+		=> hub
+- "I'll count it the slow way. Hammer by hammer." [if QuestRegistry.is_active(QuestRegistry.UNANSWERED_ROAR) and not GameState.get_flag("chapter_roar_measured") /]
+	do GameState.set_flag("chapter_roar_measured", true)
+	Themka Gaath: Days of it, then. Standing in four squares with your hands over your ears like a man learning to pray.
+	Themka Gaath: You came back with a count. That is more than the benches managed.
+	=> hub
+- "Say it plainly, where the Arms can hear." [#tag=KORD-RITE] [#consequence=Dom hears the shortfall out loud; the Lip Shrines fill.] [if QuestRegistry.is_active(QuestRegistry.UNANSWERED_ROAR) and QuestRegistry.flags_met(QuestRegistry.UNANSWERED_ROAR) /]
+	do QuestRegistry.resolve_unanswered_roar("sound-the-shortfall")
+	Themka Gaath: You will not be thanked for that. The Kord Rite will be, and they will deserve it — they are the only communion in Dom whose theology expected this.
+	=> hook
+- "The number is yours alone." [#tag=TRIAL-COUNCIL] [#consequence=The Council keeps its city calm and keeps its problem.] [if QuestRegistry.is_active(QuestRegistry.UNANSWERED_ROAR) and QuestRegistry.flags_met(QuestRegistry.UNANSWERED_ROAR) /]
+	do QuestRegistry.resolve_unanswered_roar("seal-the-measure")
+	Themka Gaath: Then the Council will know, and the Council will decide, and the Arms will go on hearing a Roar they believe in.
+	Themka Gaath: I am aware of what I have just asked you to help me do.
+	=> hook
+- "I'll keep it." [#consequence=Nobody in Dom knows to ask you for the only honest number in the city.] [if QuestRegistry.is_active(QuestRegistry.UNANSWERED_ROAR) and QuestRegistry.flags_met(QuestRegistry.UNANSWERED_ROAR) /]
+	do QuestRegistry.resolve_unanswered_roar("carry-it-yourself")
+	Themka Gaath: That is your right. You were not sworn to the bench and I will not pretend you were.
+	Themka Gaath: Carry it, then. It is not a light thing to be the only one holding it.
+	=> hook
+- "Later."
+	=> END
+
+~ hook
+Themka Gaath: One more thing, and then I will let you go.
+Themka Gaath: The rite is not being performed badly. I have watched it my whole life and I would know. The forges have not missed a beat since my grandmother's time.
+Themka Gaath: It is being performed correctly. And it is being answered less.
+Themka Gaath: Somebody on the other end of that line has stopped answering, and no one in this city will say that sentence out loud, because the next question after it is one none of us want to ask.
+=> END

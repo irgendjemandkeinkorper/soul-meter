@@ -25,5 +25,18 @@ Themka Gaath: Your trial is complete. The Council's first charge lies beyond Dom
 - "The Dorthkor charge is finished." [if QuestRegistry.is_done(QuestRegistry.DORTHKOR_ROAD) /]
 	Themka Gaath: Then the road has given the Council its answer.
 	=> END
+## Act I's closing read-back (#246). Gaath routes to the closer's own file while
+## the hook is live (QuestRegistry.dialogue_route_for_actor), so this branch only
+## becomes reachable once it has resolved — and it is what reads
+## `chapter_roar_certain` back to the player, so the flag the sounding check
+## writes is never a number nobody ever hears again.
+- "About the count I brought you." [if QuestRegistry.is_done(QuestRegistry.UNANSWERED_ROAR) and GameState.get_flag("chapter_roar_certain") /]
+	Themka Gaath: You were certain of it. That is the part I keep returning to.
+	Themka Gaath: A doubtful number I could have argued with. Yours I can only act on.
+	=> END
+- "About the count I brought you." [if QuestRegistry.is_done(QuestRegistry.UNANSWERED_ROAR) and not GameState.get_flag("chapter_roar_certain") /]
+	Themka Gaath: You told me you would not sign it. I have thought about that every day since.
+	Themka Gaath: Three benches signed numbers they were sure of. You are the only one who brought me a doubt, and you are the only one I believe.
+	=> END
 - "I need a moment."
 	=> END

@@ -652,6 +652,24 @@ static func _dom_side_outcomes(resource: Resource, resolution_flag: String) -> A
 	return outcomes
 
 
+## Atomic-ruling resolvers, and the quest + resolution flag each one closes.
+##
+## These are the seams where a dialogue line does NOT call `turn_in` directly —
+## it calls a registry method that writes the ruling flag, the ledger events and
+## the completion as one operation. The audit cannot follow that call, so each
+## resolver has to name its target here or its outcomes are invisible and the
+## quest reports zero.
+##
+## This was two parallel ternaries keyed on one resolver name apiece. A third
+## resolver had nowhere to go, which is how "The Unanswered Roar" first came back
+## from the audit with three authored rulings and an outcome count of 0.
+const RESOLVER_TARGETS := {
+	"resolve_broken_muster": {"constant": "DORTHKOR_ROAD", "flag": "chapter_one_resolution"},
+	"resolve_field_debt": {"constant": "FIELD_DEBT", "flag": "field_debt_reward"},
+	"resolve_unanswered_roar": {"constant": "UNANSWERED_ROAR", "flag": "chapter_roar_resolution"},
+}
+
+
 static func _parse_dialogue_resolutions(
 	path: String, source: String, results_by_constant: Dictionary
 ) -> void:
@@ -660,7 +678,10 @@ static func _parse_dialogue_resolutions(
 		'QuestRegistry\\.turn_in\\(QuestRegistry\\.([A-Z0-9_]+),\\s*"([^"]+)",\\s*(true|false)'
 	)
 	var resolver_regex := _regex(
-		'QuestRegistry\\.(resolve_broken_muster|resolve_field_debt)\\("([^"]+)"'
+		(
+			'QuestRegistry\\.(%s)\\("([^"]+)"'
+			% "|".join(PackedStringArray(RESOLVER_TARGETS.keys()))
+		)
 	)
 	for line_index: int in lines.size():
 		var line := lines[line_index]
@@ -681,12 +702,13 @@ static func _parse_dialogue_resolutions(
 		if resolver == null:
 			continue
 		var resolver_name := resolver.get_string(1)
-		var target_constant := "DORTHKOR_ROAD" if resolver_name == "resolve_broken_muster" else "FIELD_DEBT"
+		var target_row: Dictionary = RESOLVER_TARGETS[resolver_name]
+		var target_constant := str(target_row["constant"])
 		if not results_by_constant.has(target_constant):
 			continue
 		var target: Dictionary = results_by_constant[target_constant]
 		var target_outcomes: Array[Dictionary] = target["outcomes"]
-		var flag := "chapter_one_resolution" if target_constant == "DORTHKOR_ROAD" else "field_debt_reward"
+		var flag := str(target_row["flag"])
 		target_outcomes.append(
 			{
 				"id": resolver.get_string(2),

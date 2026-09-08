@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://b52htecjhow5c"
+path="res://.godot/imported/unanswered_roar.dialogue-47d383785cd73666c20aa625f3b90d93.tres"
+
+[deps]
+
+source_file="res://dialogue/main/unanswered_roar.dialogue"
+dest_files=["res://.godot/imported/unanswered_roar.dialogue-47d383785cd73666c20aa625f3b90d93.tres"]
+
+[params]
+
+defaults=true
