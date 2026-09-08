@@ -110,3 +110,57 @@ func test_from_party_member_carries_current_hp_and_an_independent_attribute_copy
 	# Combat mutates the actor's attributes; the roster must not feel it.
 	actor.attributes[&"edge"] = 99
 	assert_int(member.attributes[&"edge"]).is_equal(6)
+
+
+# --- F3b: DRAMGID attributes reach combat (#283, owner ruling 2026-09-07) -------
+
+
+func test_a_dramgid_built_member_is_not_read_as_edge_zero_in_combat() -> void:
+	# The live defect this pins. Chargen writes DRAMGID ids, so a created
+	# character's `attributes` carries `alacrity` and no `edge` at all. Combat
+	# asked for `edge`, got the 0 default, and every player-built character
+	# fought with no accuracy term and no charge speed.
+	var member := PartyMember.new()
+	member.display_name = "Built"
+	member.attributes = {"alacrity": 4, "reason": 3, "grit": 3}
+
+	var actor := BattleActor.from_party_member(member, 0)
+
+	assert_int(actor.attribute_value(&"alacrity")).is_equal(4)
+	assert_int(actor.attribute_value(&"edge")).override_failure_message(
+		"a DRAMGID member read as edge 0 in combat; `edge` is the legacy id for `alacrity`"
+	).is_equal(4)
+
+
+func test_a_legacy_member_still_answers_the_dramgid_id() -> void:
+	# The reverse direction, for saves written before the rename landed.
+	var member := PartyMember.new()
+	member.attributes = {"edge": 2}
+
+	var actor := BattleActor.from_party_member(member, 0)
+
+	assert_int(actor.attribute_value(&"edge")).is_equal(2)
+	assert_int(actor.attribute_value(&"alacrity")).is_equal(2)
+
+
+func test_an_unknown_attribute_is_still_zero() -> void:
+	var actor := BattleActor.new()
+	actor.attributes = {"alacrity": 4}
+
+	assert_int(actor.attribute_value(&"doctrine")).is_equal(0)
+	assert_int(actor.attribute_value(&"not_an_attribute")).is_equal(0)
+
+
+func test_battle_actor_and_party_member_agree_on_every_renamed_attribute() -> void:
+	# PartyMember.attribute_value() already resolved both directions; BattleActor
+	# did not, and the two are read by the same rules. Disagreement between them
+	# is the shape of the defect above.
+	for legacy: String in DramgidSchema.ATTRIBUTE_RENAMES:
+		var dramgid: String = DramgidSchema.ATTRIBUTE_RENAMES[legacy]
+		var member := PartyMember.new()
+		member.attributes = {dramgid: 3}
+		var actor := BattleActor.from_party_member(member, 0)
+
+		assert_int(actor.attribute_value(StringName(legacy))).override_failure_message(
+			"BattleActor and PartyMember disagree on '%s' -> '%s'" % [legacy, dramgid]
+		).is_equal(member.attribute_value(StringName(legacy)))

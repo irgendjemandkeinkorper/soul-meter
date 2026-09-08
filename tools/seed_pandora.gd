@@ -1054,11 +1054,24 @@ func _seed_npcs() -> void:
 ## corrupted soil) is Tham. Empty means no authored attunement, which keeps that combatant
 ## resolving at the ElementMatrix neutral IDENTITY_ROW.
 ##
-## The stat block is tagged `six-stat.v1`, NOT `dramgid.v1`, and that is deliberate. #283
-## moved the PARTY onto DRAMGID attributes; enemies still carry `edge`, which
-## `Resolution.resolve()` reads as `edge_delta` and `CombatRules.charge_speed_attribute`
-## names. Retagging without moving those consumers would be a label claiming a migration
-## that has not happened — F3b, blocked on #281 (`docs/architecture-dramgid.md` §3.9).
+## The stat block is tagged `dramgid.v1` (owner ruling 2026-09-07: DRAMGID stats on
+## enemies as well). Each archetype carries all seven attributes, and `alacrity` is the
+## ratified rename of the old `edge` (`DramgidSchema.ATTRIBUTE_RENAMES`).
+##
+## `max_hp`, `attack` and `defense` stay AUTHORED rather than derived through
+## `DramgidDerived`, and that is the deliberate half. The party point-buys 2..5, so
+## `max_hp = 12 + grit * 6` yields 24/30/36/42 — the shipped enemies run 14..36, and a
+## 14 HP boar would become 24, a 71% buff. Every encounter would need rebalancing and
+## Gate T-1's ratified evidence (five archetype encounters cleared by four build
+## archetypes) would no longer describe the game. Enemies are AUTHORED, not built; the
+## attributes give them the DRAMGID surface (to-hit, charge speed, checks) without
+## handing their health to a character-creation formula.
+##
+## The one remaining boundary: Pandora's column and `data/generated/encounters.json`
+## still say `Edge`, because campaign packages author that key
+## (`campaign_encounter_loader.gd`) and renaming it would break every authored package.
+## Canon and the runtime both say `alacrity`; the mapping happens here and in
+## `EncounterCatalog._actor_from_row()`, in one direction, once.
 func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 	var root: PandoraCategory = _ensure_root("Combatants")
 	for property_spec: Array in [
@@ -1086,7 +1099,7 @@ func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 		_assign(entity, "Max HP", int(stats["max_hp"]))
 		_assign(entity, "Attack", int(stats["attack"]))
 		_assign(entity, "Defense", int(stats["defense"]))
-		_assign(entity, "Edge", int(stats["edge"]))
+		_assign(entity, "Edge", int(stats["alacrity"]))
 		_assign(entity, "Balance Affinity", int(stats["balance_affinity"]))
 		_assign(entity, "Balance Pressure", int(stats["balance_pressure"]))
 

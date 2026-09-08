@@ -164,7 +164,7 @@ Anything still open is open for a named reason, not because nobody has picked it
 | 3.6 | Pandora seeders + generators | **open** — see the note under the table |  |
 | 3.7 | `renown.gd` (Yothmeru) | **done** — see §3.7a for how its two halves were reconciled | #384 |
 | 3.8 | `save_migrations.gd` | **done** — schema 9, §2.1 steps 1/2/3/5; step 6 deferred with §3.3 | #392 |
-| 3.9 | combat rules | **blocked** — F3b, after #281 |  |
+| 3.9 | combat rules | **partial** — to-hit/AP/CT attribute moved to Alacrity 2026-09-07; the CT *formula* (`6 + Reason/2`) and the damage power term are still F3b, after #281 |  |
 | 3.10 | dialogue + quest audit + docs | **done** — 14 authored checks and 4 code call sites renamed; the quest audit needed no change (it matches the shape of a `check(` call, not a literal id list) | #393, #395 |
 | 3.11 | tests | **rolling** — each surface above carried its own cases |  |
 
@@ -193,7 +193,7 @@ authored data move together.
 | 3.6 | Pandora seeders + generators + `campaign_encounter_loader.gd` | Columns per §2.2; drift checks green | F3a |
 | 3.7 | `globals/renown.gd` | **Yothmeru on Renown**: add signed `karma` ledger (`gain_karma(actor, base, cause, scene)` applies `× Doctrine/10` of the *player* at write time and records both `base` and `applied`), `karma_total()`, `karma_tier()` (seven tiers, thresholds from RFC-0007 via §6), `fame()` = reputation + infamy, `fame_tier()` (five tiers); `gain_reputation/gain_infamy` gain an optional `witness_factor` (default 1.0) and apply `× Decorum/10`; extreme-tier decay (Damned/Exalted/Legendary toward the boundary) runs on `WorldClock` day change only — never on a timer; `why("karma")` supported. Existing totals/API untouched so tavern gates keep working | F3a |
 | 3.8 | `globals/save_migrations.gd` | `CURRENT_SCHEMA_VERSION = 9`, `_migrate_v8_to_v9` per §2.1, fixture saves for v8→v9 (8 is the wheel rename, #371 — see §2.1) | F3a |
-| 3.9 | `globals/combat/combat_rules.gd`, `resolution.gd`, `combat_controller.gd` | CT speed `6 + Reason/2` (was Edge); to-hit difference on Alacrity (was Edge); `calculate_damage` power term on Muster via `attack`; `_fizzle_context` supplies Intuition (was Pitch). Numbers unchanged unless §6 says otherwise | **F3b, after #281** |
+| 3.9 | `globals/combat/combat_rules.gd`, `resolution.gd`, `combat_controller.gd` | **DONE 2026-09-07**: to-hit difference on Alacrity; `action_point_attribute`/`charge_speed_attribute` on Alacrity; the snapshot key and `PROVISIONAL_TO_HIT` constant renamed with their readers; `BattleActor.attribute_value()` resolves the legacy name both ways. **STILL F3b, after #281**: the CT *formula* `6 + Reason/2` (this moved the attribute, not the curve), `calculate_damage`'s power term on Muster, and `_fizzle_context` supplying Intuition | **partial** |
 | 3.10 | Dialogue + quest audit + docs | §2.2 renames; `docs/dialogue-checks.md`; CLAUDE.md status line ("save schema 8") | F3a |
 | 3.11 | Tests | `test_chargen_data` rewritten to the schema; 147 legacy-id lines across `test/` (B§3) renamed by map; new: schema invariants (22 skills, each with a governing attribute; sum-22 validation), v7→v8 migration fixtures incl. Alchemy refund, Yothmeru shift/tier/decay, `karma_bonus` only on bellow/sway, `SkillCheck` API parity | F3a/F3b |
 
@@ -277,12 +277,25 @@ carries the functions; `tools/dramgid_derived_sweep.gd` produces the grids and
 | `breath_max(intuition)` | frozen — `9 + intuition × 3` |
 | `attack(muster)` | frozen — `muster × 2` |
 | `defense(alacrity)` | frozen — `alacrity`, unchanged |
-| `ct_speed(reason)` | reported, NOT applied — `CombatRules.charge_speed_attribute` is still `edge` (§3.9) |
+| `ct_speed(reason)` | reported, NOT applied. `charge_speed_attribute` moved `edge`→`alacrity` on 2026-09-07, which is the RENAME, not this formula: keying CT on Reason instead of Alacrity is a different claim and still §3.9 |
 | `fizzle_reduction(intuition)` | verified unchanged — 48 ratified readings, 0 mismatches |
 | Karma/Fame tiers, `karma_bonus`, decay | already shipped in #384/#390; recorded, not re-proposed |
 
 The three unfrozen rows share one blocker: their consumers still read
 `attributes["edge"]`, and moving that read is §3.9 (F3b, after #281).
+
+> **Superseded in part, 2026-09-07 (owner ruling: "DRAMGID stats on enemies as well").**
+> The attribute NAME moved: `edge` is `alacrity` everywhere in canon and the runtime, and the
+> six enemy archetypes carry all seven DRAMGID attributes under a `dramgid.v1` stat block.
+> This closed a live defect rather than only tidying names — `BattleActor.from_party_member()`
+> copies the member's attributes verbatim, and a chargen-built character carries `alacrity`
+> and no `edge` at all, so every player-built character was fighting with to-hit 0 and charge
+> speed 0. What remains blocked on #281 is the FORMULAS, not the names.
+>
+> Enemy `max_hp`/`attack`/`defense` stay AUTHORED, not derived through `DramgidDerived`. The
+> party point-buys 2..5, so `12 + grit x 6` gives 24/30/36/42 while the shipped enemies run
+> 14..36; deriving would make a 14 HP boar 24 and Gate T-1's ratified cleared-encounter
+> evidence would stop describing the game. Enemies are authored, not built.
 
 The original brief follows.
 

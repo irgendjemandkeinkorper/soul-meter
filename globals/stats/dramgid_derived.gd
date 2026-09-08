@@ -8,11 +8,19 @@ extends RefCounted
 ## rule reads `attack`/`defense`), so these are not a seam waiting for one.
 ##
 ## The other three items — CT speed on Reason, the to-hit table on Alacrity, and
-## the damage power term on Muster — are NOT here, deliberately. Their consumers
-## still read `attributes["edge"]` (`CombatRules.charge_speed_attribute`,
-## `Resolution`'s `edge_delta`), and moving that read is §3.9: F3b, blocked on
-## #281. Landing the formula ahead of its consumer would strand it, which is the
-## same mistake §3.6 is being held back to avoid.
+## the damage power term on Muster — are NOT here, deliberately.
+##
+## Their ATTRIBUTE moved on 2026-09-07 (owner ruling): `CombatRules` and
+## `Resolution` now read `alacrity`, which is DRAMGID's name for the old `edge`.
+## Their FORMULAS did not. Keying CT speed on Reason rather than Alacrity is a
+## different claim from renaming the stat, and it is still §3.9: F3b, after #281.
+## Landing a formula ahead of its consumer would strand it, which is the same
+## mistake §3.6 is being held back to avoid.
+##
+## Nothing here applies to ENEMIES. They carry DRAMGID attributes now, but their
+## max_hp/attack/defense stay authored: this file's curves are the party's
+## point-buy range (2..5), and running the shipped enemies through them would
+## rebalance every encounter. See `tools/seed_pandora.gd`'s archetype note.
 ##
 ## Reasoning, grids and the migration report: `docs/dramgid-numbers.md`.
 ## Sweep: `tools/dramgid_derived_sweep.gd`. Pinned: `test/unit/test_dramgid_numbers.gd`.

@@ -843,7 +843,7 @@ static func calculate_damage(
 			# combat keeps its legacy auto-hit behavior.
 			"to_hit_enabled": not positional_context.is_empty(),
 			"tick": int(seed),
-			"edge": int(attacker.attributes.get(&"edge", 0)),
+			"alacrity": attacker.attribute_value(&"alacrity"),
 			# #209: tile/weather terms ride the same positional channel. Absent keys
 			# resolve to Resolution's neutral terms (uncharged tiles, no weather).
 			"tile_state": positional_context.get("source_tile", {}),
@@ -874,7 +874,7 @@ static func calculate_damage(
 				"id": String(target.combat_id),
 				"hp": target.hp,
 				"element_id": target.element_id,
-				"edge": int(target.attributes.get(&"edge", 0)),
+				"alacrity": target.attribute_value(&"alacrity"),
 				"aftertones": target.aftertones.duplicate(true),
 				"tempo": target.tempo,
 				"last_cast_element": target.last_cast_element,
@@ -1685,7 +1685,7 @@ func forecast_context(
 			"id": String(actor.combat_id),
 			"harmony": actor.attribute_value(&"harmony"),
 			"attack_scale": actor.attack_scale,
-			"edge": int(actor.attributes.get(&"edge", 0)),
+			"alacrity": actor.attribute_value(&"alacrity"),
 			"breath": actor.breath,
 			"aftertones": actor.aftertones.duplicate(true),
 			"tempo": actor.tempo,
@@ -1698,7 +1698,7 @@ func forecast_context(
 			"id": String(target.combat_id),
 			"hp": target.hp,
 			"element_id": target.element_id,
-			"edge": int(target.attributes.get(&"edge", 0)),
+			"alacrity": target.attribute_value(&"alacrity"),
 			"aftertones": target.aftertones.duplicate(true),
 			"tempo": target.tempo,
 			"height": target_height,
