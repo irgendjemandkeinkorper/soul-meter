@@ -10,6 +10,7 @@ var _selected: StringName = ElementWheel.ORDER[0]
 ## the controller's — the same calculate_damage path a commit will take. This is
 ## display of a controller value, not UI arithmetic.
 var _payload_damage := -1
+var _class_command_text := ""
 @onready var wheel: Container = %ActWheel
 @onready var target_header: Label = %TargetHeader
 @onready var affinity: Label = %AffinityStrip
@@ -35,6 +36,7 @@ func consume_event(event: CombatEvent) -> void:
 func set_forecast_context(context: Dictionary) -> void:
 	_context = context.duplicate(true)
 	_payload_damage = -1
+	_class_command_text = ""
 	_recompute()
 
 
@@ -44,6 +46,11 @@ func show_action_forecast(payload: Dictionary, context: Dictionary = {}) -> void
 		return
 	if not context.is_empty():
 		set_forecast_context(context)
+	if bool(payload.get("class_command", false)):
+		_class_command_text = str(payload.get("description", "Class command"))
+		_recompute()
+		return
+	_class_command_text = ""
 	if payload.has("damage"):
 		_payload_damage = int(payload.get("damage", -1))
 		_recompute()
@@ -96,6 +103,9 @@ func _recompute() -> void:
 	for element_id: StringName in ElementWheel.ORDER:
 		parts.append("%s %+d" % [String(element_id).to_upper(), int(values.get(element_id, values.get(String(element_id), 0)))])
 	affinity.text = "  ".join(parts)
+	if not _class_command_text.is_empty():
+		forecast.text = _class_command_text
+		return
 	var result := forecast_result()
 	if not bool(result.get("allowed", false)):
 		forecast.text = str(result.get("message", "FORECAST UNAVAILABLE"))

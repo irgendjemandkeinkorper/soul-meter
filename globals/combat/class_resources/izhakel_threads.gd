@@ -9,6 +9,34 @@ const MAX_THREADS := 3  # PROVISIONAL — B11 owns the cap
 var threads: Array[Dictionary] = []
 
 
+func commands() -> Array[StringName]:
+	return [&"bind_hostility"]
+
+
+func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
+	var gate := super.query_command(action_id, target_id, payload)
+	if not bool(gate.allowed):
+		return gate
+	if threads.size() >= MAX_THREADS:
+		return command_refusal(&"class_resource_full", "All Threads are bound. Wait for a contract to trigger.")
+	if target_id.is_empty() or host == null:
+		return command_refusal(&"no_target", "Touch a living enemy to bind the contract.")
+	if not payload.get("amount") is int or int(payload.amount) <= 0:
+		return command_refusal(&"class_resource_payload", "The contract needs a positive payoff.")
+	for thread: Dictionary in threads:
+		if str(thread.get("target_id", "")) == String(target_id) and thread.get("condition", {}) == {"verb": CombatAction.Verb.ATTACK}:
+			return command_refusal(&"class_resource_duplicate", "That enemy already carries this contract.")
+	return gate
+
+
+func execute_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> void:
+	if not bool(query_command(action_id, target_id, payload).allowed):
+		return
+	bind_thread(target_id, {"verb": CombatAction.Verb.ATTACK}, {
+		"writes": [{"kind": "hp", "target_id": String(target_id), "amount": int(payload.amount)}],
+	})
+
+
 func bind_thread(target_id: StringName, condition: Dictionary, payoff: Dictionary) -> bool:
 	if target_id.is_empty() or condition.is_empty() or threads.size() >= MAX_THREADS:
 		return false
@@ -32,6 +60,7 @@ func on_any_action(
 		if bool(thread.get("triggered", false)):
 			continue
 		if StringName(str(thread.get("target_id", ""))) != event.actor_id:
+			pending.append(thread)
 			continue
 		var condition: Dictionary = thread.get("condition", {})
 		if _matches_condition(event, condition):
@@ -42,6 +71,12 @@ func on_any_action(
 		if not bool(thread.get("triggered", false)):
 			pending.append(thread)
 	threads = pending
+
+
+func on_combatant_fell(target_id: StringName) -> void:
+	for index in range(threads.size() - 1, -1, -1):
+		if StringName(str(threads[index].get("target_id", ""))) == target_id:
+			threads.remove_at(index)
 
 
 func take_triggered() -> Array[Dictionary]:
