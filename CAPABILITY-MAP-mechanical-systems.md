@@ -13,6 +13,16 @@ saved damage, collision, navigation and safe rebuilding. See
 The audit below records the pre-implementation baseline; campaign assignments,
 spell targets, NPC movement and the broader proposed art remain pending.
 
+The ten patron resource loops are now playable through the existing combat path;
+see [class completion and remaining signatures](docs/class-completion.md). The
+[deity/element class chart](docs/ideas/deity-element-class-chart.md) is a proposal
+catalog, not 100 implemented kits.
+
+Element resolution now preserves utility-only compositions through damage bonuses
+and patron hooks. Local/global Hush suppresses tile reactions without refusing legal
+actions or persisting temporary weather flags. See
+[element resolution coverage and remaining work](docs/element-resolution-integrity.md).
+
 ## The experience to develop
 
 Owner-confirmed direction: the player should learn rules that remain useful across
@@ -43,7 +53,7 @@ Proposed order: reconcile `element-workings` → try `world-reactions` → exten
 Develop `mechanical-art` alongside each interaction so readability is tested early.
 Expand the remaining class kits after the shared interactions work.
 
-## What actually exists
+## Baseline audit before the implementation updates above
 
 | System | Source evidence | Important limit |
 |---|---|---|

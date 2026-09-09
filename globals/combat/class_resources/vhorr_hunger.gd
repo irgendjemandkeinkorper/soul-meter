@@ -24,6 +24,9 @@ func on_action(event: CombatEvent) -> void:
 			hunger = mini(hunger + 1, MAX_HUNGER)
 	if resolution.is_empty() or bool(resolution.get("fizzled", false)):
 		return
+	# Utility compositions cannot seed a damaging Hunger effect, even on contact.
+	if not bool(resolution.get("direct_damage_enabled", true)):
+		return
 	var action_id := StringName(str(event.data.get("action_id", "")))
 	var is_cast := int(event.data.get("verb", -1)) == CombatAction.Verb.CAST
 	if event.target_id.is_empty() or (action_id not in [&"strike", &"cast"] and not is_cast):

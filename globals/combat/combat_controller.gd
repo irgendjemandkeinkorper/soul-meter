@@ -1457,7 +1457,8 @@ func _finalize_resolution_damage(
 		return resolution
 	var finalized := resolution.duplicate(true)
 	var damage := 0
-	if bool(finalized.get("hit", true)) and not bool(finalized.get("fizzled", false)):
+	var has_damage := bool(finalized.get("direct_damage_enabled", true)) or int(finalized.get("damage", 0)) > 0
+	if has_damage and bool(finalized.get("hit", true)) and not bool(finalized.get("fizzled", false)):
 		damage = maxi(
 			1,
 			int(finalized.get("damage", 0))

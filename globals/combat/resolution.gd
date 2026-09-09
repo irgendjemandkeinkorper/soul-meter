@@ -71,6 +71,9 @@ static func resolve(context: Dictionary) -> Dictionary:
 
 	var target_element := ElementWheel.normalize(target.get("element_id", ""))
 	var is_spell := bool(ability.get("is_spell", false))
+	# Composition already identifies the damage-bearing components. Utility spells
+	# retain their effects and costs; a mundane weapon is not made harmless by its label.
+	var direct_damage_enabled := not is_spell or not composition.damage_components.is_empty()
 	var fizzle_percent := 0.0
 	var fizzle_roll := 0
 	var fizzled := false
@@ -149,6 +152,8 @@ static func resolve(context: Dictionary) -> Dictionary:
 			hit_roll = _deterministic_hit_roll(context, ability_id, unit, target)
 			hit = hit_roll <= hit_chance
 	var power := maxi(int(ability.get("power", 0)), 0)
+	if not direct_damage_enabled:
+		power = 0
 	var attack_scale := maxf(float(unit.get("attack_scale", 1.0)), 0.0)
 	var target_aftertones := _aftertones(target.get("aftertones", []))
 	var tempo_before := int(unit.get("tempo", 0))
@@ -170,7 +175,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var previous_element := ElementWheel.normalize(unit.get("last_cast_element", ""))
 	if is_spell:
 		tempo_after = tempo_before + 1 if not fizzled and previous_element == element_id and previous_element != &"" else 0
-	if not fizzled and has_khash_bend:
+	if direct_damage_enabled and not fizzled and has_khash_bend:
 		for index: int in target_aftertones.size():
 			if not bool(target_aftertones[index].get("anchored", false)):
 				target_aftertones.remove_at(index)
@@ -220,7 +225,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	scaled_damage *= tile_multiplier
 
 	var target_strike: Dictionary = {"allowed": true, "bonus_damage": 0}
-	if not fizzled:
+	if not fizzled and hit and not target_tile.hush:
 		target_strike = target_tile.strike(element_id)
 		if not bool(target_strike.get("allowed", false)):
 			return _blocked(
@@ -243,7 +248,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var hidden_draw := _dictionary(context.get("hidden_draw", {}))
 	var draw_result: Dictionary = {}
 	var draw_bonus := 0
-	if not hidden_draw.is_empty() and not fizzled and hit:
+	if direct_damage_enabled and not hidden_draw.is_empty() and not fizzled and hit:
 		var rows: Array = hidden_draw.get("rows", []) if hidden_draw.get("rows") is Array else []
 		if not rows.is_empty():
 			var draw_roll := _deterministic_draw_roll(
@@ -279,7 +284,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"delta": hp_after - hp_before,
 	})
 
-	if not source_tile_data.is_empty():
+	if not source_tile_data.is_empty() and not source_tile.hush:
 		var source_before := source_tile_data.duplicate(true)
 		var working_element := (
 			composition.center_element if composition.center_element != &"" else element_id
@@ -298,7 +303,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		if source_before != source_after:
 			writes.append(_tile_write("residue", source_before, source_after))
 
-	if hit and not target_tile_data.is_empty():
+	if hit and not target_tile_data.is_empty() and not target_tile.hush:
 		var target_after := target_tile.to_dict()
 		if target_tile_data != target_after:
 			writes.append(_tile_write("detonation", target_tile_data, target_after))
@@ -398,6 +403,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	# TODO(#132): Discipline effects are unanswered; they conservatively contribute no modifier.
 	var result := {
 		"allowed": true,
+		"direct_damage_enabled": direct_damage_enabled,
 		"blocked_by": "",
 		"nearest_unblock": {},
 		"message": "",
