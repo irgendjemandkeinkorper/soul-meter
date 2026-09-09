@@ -8,6 +8,7 @@ signal state_restored
 const MAX_COUNTER := 2147483647
 
 var _structures: Dictionary = {}
+var _services: Dictionary = {}
 
 
 func register_structure(id: String, max_integrity: int, rebuild_phases: int = 0) -> bool:
@@ -90,14 +91,40 @@ static func _valid_id(value: Variant) -> bool:
 	return value is String and not value.is_empty() and value.length() <= 128 and value == value.strip_edges()
 
 
+## One existing merchant identity; no inventory, NPC or quest state is copied here.
+func register_service(vendor_id: String, structure_id: String, home: String, temporary: String = "") -> bool:
+	var row := {"structure_id": structure_id, "home": home, "temporary": temporary}
+	if not _valid_id(vendor_id) or not _valid_service(row, _structures):
+		return false
+	if _services.has(vendor_id):
+		return _services[vendor_id] == row
+	_services[vendor_id] = row
+	return true
+
+
+func service_status(vendor_id: String) -> Dictionary:
+	if not _services.has(vendor_id):
+		return {}
+	var service: Dictionary = _services[vendor_id]
+	var row: Dictionary = _structures[service["structure_id"]]
+	var usable: bool = int(row["integrity"]) > 0
+	var relocated: bool = not usable and not str(service["temporary"]).is_empty()
+	return {
+		"structure_id": service["structure_id"], "available": usable or relocated,
+		"relocated": relocated,
+		"location_id": service["home"] if usable else service["temporary"],
+	}
+
+
 func to_dict() -> Dictionary:
-	return {"structures": _structures.duplicate(true)}
+	return {"structures": _structures.duplicate(true), "services": _services.duplicate(true)}
 
 
 func from_dict(value: Variant) -> bool:
 	if not validate_save_data(value):
 		return false
 	_structures = (value.get("structures", {}) as Dictionary).duplicate(true)
+	_services = (value.get("services", {}) as Dictionary).duplicate(true)
 	state_restored.emit()
 	return true
 
@@ -109,7 +136,22 @@ static func validate_save_data(value: Variant) -> bool:
 	for id: Variant in rows:
 		if not _valid_id(id) or not _valid_structure(rows[id]):
 			return false
+	var services: Variant = value.get("services", {})
+	if not services is Dictionary:
+		return false
+	for vendor_id: Variant in services:
+		if not _valid_id(vendor_id) or not _valid_service(services[vendor_id], rows):
+			return false
 	return true
+
+
+static func _valid_service(value: Variant, structures: Dictionary) -> bool:
+	if not value is Dictionary or not _valid_id(value.get("structure_id")):
+		return false
+	if not structures.has(value["structure_id"]) or not _valid_id(value.get("home")):
+		return false
+	var temporary: Variant = value.get("temporary")
+	return temporary is String and (temporary.is_empty() or (_valid_id(temporary) and temporary != value["home"]))
 
 
 static func _valid_structure(value: Variant) -> bool:

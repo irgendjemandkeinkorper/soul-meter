@@ -114,3 +114,37 @@ func test_corrupt_state_is_rejected_atomically_and_empty_legacy_state_is_valid()
 	assert_bool(state.from_dict({"structures": []})).is_false()
 	assert_bool(state.from_dict({})).is_true()
 	assert_dict(state.structure("gate")).is_empty()
+
+
+func test_merchants_relocate_selectively_without_creating_another_identity() -> void:
+	state.register_structure("market", 10, 4)
+	state.register_structure("forge", 10, 4)
+	assert_bool(state.register_service("grocer", "market", "item-shop", "dom")).is_true()
+	assert_bool(state.register_service("smith", "forge", "equipment-shop")).is_true()
+	state.damage("market", 10, 0)
+	state.damage("forge", 10, 0)
+	var grocer: Dictionary = state.service_status("grocer")
+	assert_bool(grocer["available"]).is_true()
+	assert_bool(grocer["relocated"]).is_true()
+	assert_str(grocer["location_id"]).is_equal("dom")
+	assert_bool(state.service_status("smith")["available"]).is_false()
+	var restored = StructureState.new()
+	assert_bool(restored.from_dict(state.to_dict())).is_true()
+	assert_dict(restored.service_status("grocer")).is_equal(grocer)
+	restored.advance(4)
+	assert_str(restored.service_status("grocer")["location_id"]).is_equal("item-shop")
+	assert_bool(restored.service_status("grocer")["relocated"]).is_false()
+	assert_bool(restored.service_status("smith")["available"]).is_true()
+	assert_dict(restored.service_status("unregistered")).is_empty()
+
+
+func test_service_registration_rejects_missing_structures_and_conflicting_identity() -> void:
+	assert_bool(state.register_service("grocer", "missing", "item-shop")).is_false()
+	state.register_structure("market", 10)
+	assert_bool(state.register_service("grocer", "market", "item-shop", "dom")).is_true()
+	assert_bool(state.register_service("grocer", "market", "item-shop", "dom")).is_true()
+	assert_bool(state.register_service("grocer", "market", "other-shop")).is_false()
+	assert_bool(state.register_service("smith", "market", "dom", "dom")).is_false()
+	var corrupt: Dictionary = state.to_dict()
+	corrupt["services"]["grocer"]["structure_id"] = "missing"
+	assert_bool(state.from_dict(corrupt)).is_false()

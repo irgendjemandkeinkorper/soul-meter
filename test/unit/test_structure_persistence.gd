@@ -40,6 +40,7 @@ func test_only_declared_clock_advances_rebuild_structures() -> void:
 func test_disk_save_restores_damage_and_deadlines_without_aging_unloaded_sites() -> void:
 	saves.world_structures.register_structure("town/gate", 10, 4)
 	saves.world_structures.register_structure("wilds/temple", 10)
+	saves.world_structures.register_service("test-grocer", "town/gate", "item-shop", "dom")
 	saves.world_structures.damage("town/gate", 10, 0)
 	saves.world_structures.damage("wilds/temple", 10, 0)
 	WorldClock.advance("travel:test")
@@ -51,10 +52,12 @@ func test_disk_save_restores_damage_and_deadlines_without_aging_unloaded_sites()
 	assert_int(WorldClock.phase_count).is_equal(1)
 	assert_str(saves.world_structures.structure("town/gate")["state"]).is_equal("rebuilding")
 	assert_int(saves.world_structures.structure("town/gate")["rebuild_at"]).is_equal(4)
+	assert_str(saves.world_structures.service_status("test-grocer")["location_id"]).is_equal("dom")
 	for _index in range(3):
 		WorldClock.advance("travel:test")
 	assert_str(saves.world_structures.structure("town/gate")["state"]).is_equal("intact")
 	assert_str(saves.world_structures.structure("wilds/temple")["state"]).is_equal("ruined")
+	assert_str(saves.world_structures.service_status("test-grocer")["location_id"]).is_equal("item-shop")
 
 
 func test_legacy_save_defaults_empty_and_corrupt_structure_section_is_rejected() -> void:
