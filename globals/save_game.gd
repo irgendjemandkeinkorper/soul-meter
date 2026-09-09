@@ -21,6 +21,7 @@ const MANUAL_SLOT_COUNT := 3
 const FORMAT_VERSION := 2
 const SCHEMA_VERSION := SaveMigrations.CURRENT_SCHEMA_VERSION
 const ZHAVAR_RUNGS := ["low", "rising", "tolling", "ringing", "unprecedented"]
+const WorldStructuresScript := preload("res://globals/world_structure_state.gd")
 
 # Instance paths keep the production slot as the default while allowing tests
 # to exercise disk-level rotation without touching a developer's real save.
@@ -72,6 +73,16 @@ var last_error := ""
 ## It is deliberately NOT read by combat yet; moving it to GameState is a follow-up and
 ## needs no schema change, since the payload shape is the same either way.
 var unit_roster := UnitRoster.new()
+## Opt-in physical world state, independent of a loaded field or combat session.
+var world_structures := WorldStructuresScript.new()
+
+
+func _ready() -> void:
+	WorldClock.phase_advanced.connect(_on_world_phase_advanced)
+
+
+func _on_world_phase_advanced(phase_count: int) -> void:
+	world_structures.advance(phase_count)
 
 
 func has_save() -> bool:
@@ -241,14 +252,17 @@ func capture_runtime_state() -> Dictionary:
 		"skill_check": SkillCheck.to_dict().duplicate(true),
 		"unit_roster": unit_roster.to_dict().duplicate(true),
 		"world_clock": WorldClock.to_dict().duplicate(true),
+		"world_structures": world_structures.to_dict(),
 		"class_resources": Battle.class_resources_to_dict(),
 	}
 
 
 ## Restores a capture_runtime_state() snapshot. Returns false if GameState
-## refused its section, which is the only surface that can reject a payload.
+## refused its section, or if the structure section is invalid.
 func restore_runtime_state(snapshot: Dictionary) -> bool:
 	if snapshot.is_empty():
+		return false
+	if not WorldStructuresScript.validate_save_data(snapshot.get("world_structures", {})):
 		return false
 	var restored: bool = GameState.from_dict(snapshot.get("game_state", {}))
 	Reputation.from_dict(snapshot.get("reputation", {}))
@@ -260,6 +274,7 @@ func restore_runtime_state(snapshot: Dictionary) -> bool:
 	var roster := UnitRoster.from_dict(snapshot.get("unit_roster", {}))
 	unit_roster = roster if roster != null else UnitRoster.new()
 	WorldClock.from_dict(snapshot.get("world_clock", {}))
+	world_structures.from_dict(snapshot.get("world_structures", {}))
 	Battle.restore_class_resources(snapshot.get("class_resources", {}))
 	return restored
 
@@ -332,6 +347,7 @@ func _load_from(primary_path: String, fallback_path: String) -> bool:
 	var loaded_roster := UnitRoster.from_dict(payload.get("tactical", {}))
 	unit_roster = loaded_roster if loaded_roster != null else UnitRoster.new()
 	WorldClock.from_dict(payload.get("world_clock", {}))
+	world_structures.from_dict(payload.get("world_structures", {}))
 	Battle.restore_class_resources(payload.get("class_resources", {}))
 	var destination := _destination_from_payload(payload)
 	if destination == null:
@@ -391,6 +407,8 @@ func _prepare_for_load(payload: Variant) -> Dictionary:
 		return _load_failure("Save tactical data is corrupt.")
 	if migrated.has("world_clock") and not WorldClock.validate_save_data(migrated["world_clock"]):
 		return _load_failure("Save world_clock data is corrupt.")
+	if not WorldStructuresScript.validate_save_data(migrated.get("world_structures", {})):
+		return _load_failure("Save world_structures data is corrupt.")
 	if migrated.has("location_id"):
 		var location_id: Variant = migrated.get("location_id")
 		if not location_id is String or (location_id as String).length() > 64:
@@ -523,6 +541,7 @@ func new_game() -> void:
 	SkillCheck.from_dict({})
 	unit_roster = UnitMigration.roster_from_party(GameState.party)
 	WorldClock.reset()
+	world_structures.from_dict({})
 	var destination := LoadDestination.new(
 		LocationRegistry.DOM.id,
 		LocationRegistry.DOM.resolve_spawn(&"new_game")
@@ -597,6 +616,8 @@ func _build_payload() -> Dictionary:
 		"skill_check": SkillCheck.to_dict(),
 		"tactical": _snapshot_unit_roster(),
 		"world_clock": WorldClock.to_dict(),
+		# Additive opt-in envelope; older saves start with no structure overrides.
+		"world_structures": world_structures.to_dict(),
 		# #223 additive key (no schema bump): per-combatant class-resource state. Mid-battle save
 		# is not a Ch1 behaviour, so this is `{}` outside a live battle; loader defaults `{}`.
 		"class_resources": Battle.class_resources_to_dict(),
