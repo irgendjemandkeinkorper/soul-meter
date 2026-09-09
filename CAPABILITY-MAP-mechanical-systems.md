@@ -7,9 +7,11 @@ below. Other new interactions remain proposals, not ratified implementation spec
 This replaces the opening-route focus of the earlier draft.
 
 **Implementation update:** the opt-in state, save/world-clock and merchant-service
-foundation is implemented. See [the API and integration boundaries](docs/persistent-structures.md).
-The audit below records the pre-implementation baseline; physical field objects,
-spell targets, NPC movement and the proposed art are still pending integration.
+foundation is implemented. A standalone barricade yard now connects four-state art,
+saved damage, collision, navigation and safe rebuilding. See
+[the playable fixture and API](docs/persistent-structures.md).
+The audit below records the pre-implementation baseline; campaign assignments,
+spell targets, NPC movement and the broader proposed art remain pending.
 
 ## The experience to develop
 

@@ -82,7 +82,24 @@ func _ready() -> void:
 
 
 func _on_world_phase_advanced(phase_count: int) -> void:
-	world_structures.advance(phase_count)
+	advance_world_structures(phase_count)
+
+
+## Loaded field objects veto unsafe restoration. Offscreen structures need no
+## physical guard. Repeating at the same phase only retries already-due repairs.
+func advance_world_structures(phase_count: int = -1) -> void:
+	if phase_count < 0:
+		phase_count = WorldClock.phase_count
+	var blocked_ids: Array[String] = []
+	if is_inside_tree():
+		for node: Node in get_tree().get_nodes_in_group(&"world_structure"):
+			if node.get("structure_state") != world_structures:
+				continue
+			var id: String = node.get("structure_id")
+			var row := world_structures.structure(id)
+			if int(row.get("rebuild_at", -1)) >= 0 and bool(node.call("rebuild_is_blocked")):
+				blocked_ids.append(id)
+	world_structures.advance(phase_count, blocked_ids)
 
 
 func has_save() -> bool:

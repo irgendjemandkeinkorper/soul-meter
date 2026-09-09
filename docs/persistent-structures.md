@@ -1,9 +1,30 @@
-# Persistent structure and merchant-service foundation
+# Persistent structures and selective merchant service
 
 The structure model implements the owner-approved recovery rules in
 [the mechanical systems packet](../CAPABILITY-MAP-mechanical-systems.md).
-It is opt-in: this increment assigns no campaign buildings or merchants and
-does not add spell targets, NPC movement, damaged art or terrain collision changes.
+It is opt-in: campaign buildings and merchants have no assignments yet. A playable
+structure yard now binds saved damage to four-state art, terrain collision and
+navigation. Spell targeting and NPC movement remain separate integration work.
+
+## Play the field fixture
+
+From the repository root, run `bash scripts/play_structure_yard.sh` (set `GODOT_BIN`
+if Godot is not on PATH). This uses the existing `capture-scene` launch option so
+GameFlow does not replace the fixture with the title screen.
+
+Walk near a barricade and press **E** three times to destroy it. **F6** advances
+one world phase: the maintained barricade rebuilds after two, while the abandoned
+one stays ruined. Stand on the rubble to hold a due repair; stepping clear lets
+it finish without another time advance. **F5/F9** store/restore a local runtime
+snapshot, including the fixture player's position. Campaign autosaves are
+sandboxed; these keys do not write a save slot. Restarting the fixture starts a
+fresh process; durable disk persistence is covered by the save integration suite.
+
+The fixture values (30 integrity, 10 damage per E press, two recovery phases) are
+test controls, not spell formulas or campaign balance. Its generated
+[sprite sheet](../assets/generated/sprites/world/objects/timber-barricade--states.png)
+and [built-in imagegen prompt](../assets/generated/sprites/world/objects/timber-barricade--states.md)
+are checked in together.
 
 ## Runtime ownership
 
@@ -85,22 +106,40 @@ relocated service is denied at its former site and accepted at its temporary sit
 subject to the same standing rules as before. Registration is not NPC relocation:
 field integration must move the existing actor and its interaction point there.
 
-## Boundary for field integration
+## Physical field binding
 
 `structure(id)` and `to_dict()` return detached snapshots. `structure_changed(id)`
 reports a physical state transition; `state_restored` reports a snapshot replacement.
 Presentation can consume these without being allowed to mutate internal rows.
 
-The model's `advance(phase_count, blocked_ids)` supports deferring restoration of
-occupied footprints. Retrying at the same phase restores a newly clear footprint
-without adding time. The current save-owner subscription passes no occupied IDs:
-**connect actual occupancy guards before opting physical campaign objects into
-automatic restoration.** There are no such assignments in this increment.
+`actors/destructible/destructible_structure.tscn` extends the existing
+`SMInteractable` input/range/feedback contract. Authors supply a stable structure
+ID, integrity, rebuild duration, a `blocking_path` pointing to `BlockingLayer`,
+and an exclusive array of painted footprint cells. Positions are authored at
+the actual `map_to_local()` centers; isometric cells include a center offset.
+Use static, unflipped collision tiles and do not move their layer after binding.
+The fixture demonstrates the contract without changing a campaign map.
 
-The next field slice must update art, collision, navigation, cover, entrances and
-NPC interaction positions together. It must also refresh open shop presentation
-when availability changes. Those are explicit remaining integration tasks, not
-behaviors claimed by this state foundation.
+The object captures those cells' tile IDs before applying saved state. Damage
+retains collision until integrity reaches zero, then erases only those cells.
+Rebuilding keeps the footprint open until completion. Restoration puts the
+original tiles back. `BlockingLayer.set_structure_footprint()` emits one change
+notification after the edit; existing `IsoGrid` consumers refresh their static
+obstacles while preserving actor occupancy and terrain weights. A grid rebuilt
+against another field clears old solids and disconnects from the old layer.
+
+`SaveGame.advance_world_structures()` gathers loaded objects' occupancy vetoes
+before calling the model. Body shapes, live actor positions and non-colliding
+party followers can hold a repair. Active field combat also holds repairs and
+disables the inherited E interaction. A due object's 0.25-second poll only
+retries placement at the **same world phase**; it never advances world time.
+Offscreen structures continue to use their saved deadlines.
+
+`apply_structure_damage(amount)` accepts an already-resolved positive amount.
+`interaction_damage` defaults to zero; only the yard enables manual test strikes.
+This is a damage receiver, not yet a spell target. Cover metadata, combat target
+selection, entrances, physical merchant relocation and open-shop refresh still
+need integration before assigning whole campaign buildings.
 
 ## Verification
 
@@ -139,3 +178,22 @@ full-suite/order-or-environment issue; it does not claim a green full suite.
 Local evidence: feature `reports/report_1375/results.xml`; baseline
 `/tmp/soul-meter-structure-baseline/reports/report_2/results.xml`. Reports are
 generated artifacts. No existing test was weakened or disabled to obtain a pass.
+
+### Field object verification — 2026-09-09
+
+The final focused run passed **50/50** cases across the grid, structure model,
+save persistence, merchant service, interactable and field-map suites
+(`reports/report_1385/results.xml`). Six new cases exercise field input,
+damage/art/collision, scene re-entry, occupied repair and automatic retry,
+combat deferral, fixture snapshot rewind, live grid edits and scene teardown.
+
+Native Godot/OpenGL captures verified intact, damaged, ruined and rebuilding
+frames at gameplay scale. The source sheet is a 1254×1254 RGBA PNG consumed
+directly as four frames; no raster postprocessing was applied.
+
+Final full run: **1,936 executed cases**, zero runtime errors, and the same nine
+failed assertions in the three baseline tests listed above
+(`reports/report_1386/results.xml`). Test names and failure locations were compared
+programmatically with the unmodified baseline report and match exactly. The
+scene-teardown regression found during the focused follow-up is fixed and covered
+by a dedicated grid test.
