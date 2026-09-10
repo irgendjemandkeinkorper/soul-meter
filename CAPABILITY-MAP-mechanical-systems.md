@@ -31,6 +31,11 @@ shared Khor upkeep, the nine elemental jobs, proposed spell forms, physical reac
 boundaries and a Khash/Luth barricade prototype. These new mechanics are proposals
 for review; the document distinguishes them from implemented behavior.
 
+[Spell forms and hybrids](docs/ideas/spell-forms-and-hybrids.md) extends that draft
+through Note/Phrase/Song/Refrain progressions, all ten adjacent Chord families and
+selected strained hybrids. New effects and ultimate-use restrictions remain proposals;
+the existing composition gates, elemental identities and persistence rules are retained.
+
 ## The experience to develop
 
 Owner-confirmed direction: the player should learn rules that remain useful across

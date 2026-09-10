@@ -5,6 +5,11 @@ Khor, unavailable starting patron Maiiam, retained ten-element Wheel and persist
 physical destruction are owner-approved. New spell names, restrictions, material
 reactions and progression below are proposals, not shipped behavior or new canon.
 
+The companion [spell forms and hybrids](spell-forms-and-hybrids.md) develops primary,
+secondary, tertiary and ultimate forms for each element and shared Khor, along with
+natural Chord families, selected strained hybrids and the existing Triad identities.
+It also proposes mastery, commitment limits and visual tells for advanced spells.
+
 ## The playable foundation
 
 An element should give the player a recognizable way to solve a problem. Each has
