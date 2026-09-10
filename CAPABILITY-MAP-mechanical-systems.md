@@ -26,6 +26,11 @@ and patron hooks. Local/global Hush suppresses tile reactions without refusing l
 actions or persisting temporary weather flags. See
 [element resolution coverage and remaining work](docs/element-resolution-integrity.md).
 
+The [elemental magic working design](docs/ideas/elemental-magic-systems.md) now develops
+shared Khor upkeep, the nine elemental jobs, proposed spell forms, physical reaction
+boundaries and a Khash/Luth barricade prototype. These new mechanics are proposals
+for review; the document distinguishes them from implemented behavior.
+
 ## The experience to develop
 
 Owner-confirmed direction: the player should learn rules that remain useful across
