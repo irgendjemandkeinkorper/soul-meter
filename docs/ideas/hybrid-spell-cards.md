@@ -1,10 +1,12 @@
-# Hybrid spell cards: complete listed-family draft
+# Hybrid spell cards: natural Chords and the first strained families
 
 **2026-09-09 · Initial playtest data; no runtime changes.** Uses the
 [shared card rules](spell-card-rules.md), [elemental cards](elemental-spell-cards.md)
 and [Khash material rules](khash-prototype-spell-cards.md). All 40 natural-hybrid forms
 and the 12 listed advanced strained forms receive a card here or a precise pointer.
-This completes the existing named catalog, not every possible distant-element pair.
+The [remaining strained cards](strained-spell-cards.md) add the other 26 legal distant
+pairs; together the two documents cover every legal two-element family. This file
+retains the original 52 hybrid forms and their shared weakened-status convention.
 
 | Form | N / Note | P / Phrase | S / Song | R / Refrain |
 |---|---|---|---|---|

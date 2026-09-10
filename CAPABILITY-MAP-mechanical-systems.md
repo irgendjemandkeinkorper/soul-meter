@@ -41,11 +41,14 @@ concrete numeric proposal: ignition/quenching, field upkeep, a delayed Refrain a
 finite material fire across combat and world phases. This remains a design packet;
 the runtime yard has not gained spell targeting or material combustion yet.
 
-The [complete spell-card packet](docs/ideas/spell-card-catalog.md) now covers all 92
-named forms and the ten existing Triad compatibility cards. Shared status, targeting,
-cost, ownership and interruption rules support the same treatment across every
-listed family. This completes the design-card pass; runtime implementation and
-balance playtesting remain separate work.
+The [complete spell-card packet](docs/ideas/spell-card-catalog.md), expanded on
+2026-09-10, now covers 170 named forms and ten separate Triad compatibility cards:
+all elemental progressions, all ten adjacent Chords and all thirty legal strained
+pairs. The [78 additional strained forms](docs/ideas/strained-spell-cards.md) include
+costs, limits, counterplay and visual direction. Shared status, ownership and finite
+resource rules apply throughout; the five opposed pairs remain refused. This
+completes family/form design coverage; runtime implementation and balance playtesting
+remain separate work.
 
 ## The experience to develop
 

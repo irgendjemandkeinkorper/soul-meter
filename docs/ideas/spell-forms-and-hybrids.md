@@ -9,6 +9,9 @@ The [complete spell-card packet](spell-card-catalog.md) now prices every named f
 and defines its target, duration and counter. Explicit card refinements supersede
 this earlier concept pass, including the Khor ultimate prices and Unfading Brand's
 limited field reposition. The concept names, Wheel pairs and elemental identities remain.
+The [strained-family supplement](strained-spell-cards.md) subsequently adds 78 forms
+for the remaining 26 legal distant pairs. The 92-name inventory below records this
+original concept pass; the packet index tracks the expanded 170-form total.
 
 Jump to [elemental families](#elemental-spell-families),
 [natural hybrids](#natural-chord-families),

@@ -1,6 +1,6 @@
 # Complete spell-card design packet
 
-**2026-09-09 · Design-card pass complete.** All 92 named forms now have a priced card
+**2026-09-10 · Full legal-pair design-card pass complete.** All 170 named forms have a priced card
 or an explicit shared-price reference, targeting, concrete effect budgets, duration
 and counter/persistence rules. The ten existing Triads have separate compatibility
 cards. These are initial playtest proposals, not implemented or final-balanced spells.
@@ -11,7 +11,7 @@ cards. These are initial playtest proposals, not implemented or final-balanced s
 |---|---|
 | [Shared card rules](spell-card-rules.md) | Default costs, operational statuses, target intent, ownership, upkeep, resource budgets and interruption settlement. |
 | [Elemental cards](elemental-spell-cards.md) and [Khash cards](khash-prototype-spell-cards.md) | Every primary, secondary, tertiary and ultimate form for the nine chosen elements and shared Khor. |
-| [Hybrid cards](hybrid-spell-cards.md) | All ten adjacent Chord families and all four currently listed strained families, including their exact limits. |
+| [Hybrid cards](hybrid-spell-cards.md) and [remaining strained cards](strained-spell-cards.md) | All ten adjacent Chord families and all thirty legal distant-pair families, including their exact limits, counterplay and new-family visual direction. |
 | [Existing Triad cards](triad-spell-cards.md) | The ten canonical component/center/unique-effect identities and the remaining gaps in current consumers/adapters. |
 
 ## Coverage
@@ -20,13 +20,19 @@ cards. These are initial playtest proposals, not implemented or final-balanced s
 |---|---|---|
 | Chosen elements plus shared Khor | 10 | 40 named forms |
 | Natural adjacent Chords | 10 | 40 named forms |
-| Listed advanced strained Chords | 4 | 12 named forms |
-| Existing cataloged Triads | 10 | 10 compatibility cards, separate from the 92-form inventory |
+| All legal advanced strained Chords | 30 | 90 named forms |
+| Existing cataloged Triads | 10 | 10 compatibility cards, separate from the 170-form inventory |
 
-This covers the existing proposed form catalog. It does not invent a spell for
-every legal distant pair, a 93rd hybrid, a new patron or a new elemental position.
-Khor remains shared; Maiiam remains unavailable as a starting patron; the underlying
-ten-element Wheel and opposed-pair refusals remain intact.
+The original 92-form pass is retained; 26 additional strained families contribute
+78 new secondary/tertiary/ultimate forms. The named inventory is 20 primary,
+50 secondary, 50 tertiary and 50 ultimate forms. Strained techniques start at
+secondary; they do not require new primary spells. Every unordered legal pair on
+the ten-element Wheel is represented exactly once across the two hybrid documents.
+
+Khor remains shared; Maiiam remains unavailable as a starting patron. The five
+opposed pairs — Sul/Vekh, Vel/Mozh, Luth/Khash, Khor/Zhem and Tham/Zhur — remain
+unavailable in a single cast. This completes the agreed family/form coverage, not
+every imaginable technique, three-element permutation or runtime implementation.
 
 ## Cost and use conventions
 
@@ -59,6 +65,9 @@ repeatable trigger. Its own window/use flag cannot be copied or extended.
 These are checks of the proposed contracts, not reports of Godot integration tests.
 The Khash packet separately checks quenching at 21 integrity, finite burn collapse
 and equivalent bulk/stepwise world-phase catch-up.
+The [strained supplement's acceptance examples](strained-spell-cards.md#boundaries-and-acceptance-examples)
+also check separate transfer/source pools, lost delayed allocations, spent trap shots,
+held growth burning down and distinct creature/object damage budgets.
 
 ## Runtime handoff
 
