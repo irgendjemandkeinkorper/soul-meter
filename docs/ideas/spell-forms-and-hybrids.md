@@ -258,6 +258,10 @@ effect should hide an enemy response, a friendly target or a newly blocked route
 
 ## First progression playtest
 
+The [Khash prototype spell cards](khash-prototype-spell-cards.md) now propose concrete
+AP/CT/Breath prices, ranges, field and fire rules, response windows, and save/travel
+examples for this progression. Those values remain playtest candidates.
+
 Develop **Kindle → Cinder Spear → Firebreak → Crown of Embers**, then add the
 Khor/Khash strained family and Luth quenching as the first comparison. This tests
 precision, spending an Aftertone, maintaining a route hazard, an ultimate commitment,

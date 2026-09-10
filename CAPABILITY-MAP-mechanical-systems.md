@@ -36,6 +36,11 @@ through Note/Phrase/Song/Refrain progressions, all ten adjacent Chord families a
 selected strained hybrids. New effects and ultimate-use restrictions remain proposals;
 the existing composition gates, elemental identities and persistence rules are retained.
 
+The [Khash prototype cards](docs/ideas/khash-prototype-spell-cards.md) supply the first
+concrete numeric proposal: ignition/quenching, field upkeep, a delayed Refrain and
+finite material fire across combat and world phases. This remains a design packet;
+the runtime yard has not gained spell targeting or material combustion yet.
+
 ## The experience to develop
 
 Owner-confirmed direction: the player should learn rules that remain useful across
