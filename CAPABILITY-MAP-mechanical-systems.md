@@ -15,8 +15,11 @@ spell targets, NPC movement and the broader proposed art remain pending.
 
 The ten patron resource loops are now playable through the existing combat path;
 see [class completion and remaining signatures](docs/class-completion.md). The
-[deity/element class chart](docs/ideas/deity-element-class-chart.md) is a proposal
-catalog, not 100 implemented kits.
+[deity/element class chart](docs/ideas/deity-element-class-chart.md) now records the
+owner-approved nine-by-nine selection structure: 81 proposed specializations, Khor
+shared by everyone, and Maiiam unavailable as a starting patron during the kidnapping.
+The underlying ten-element Wheel remains intact. Names and techniques remain proposals;
+runtime selection and shared Khor progression have not yet been changed.
 
 Element resolution now preserves utility-only compositions through damage bonuses
 and patron hooks. Local/global Hush suppresses tile reactions without refusing legal
