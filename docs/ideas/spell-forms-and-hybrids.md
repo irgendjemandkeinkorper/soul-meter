@@ -5,6 +5,11 @@
 unlock requirements and ultimate restrictions below are candidates for playtesting.
 This document does not change runtime spells, costs, classes or the generated Wheel.
 
+The [complete spell-card packet](spell-card-catalog.md) now prices every named form
+and defines its target, duration and counter. Explicit card refinements supersede
+this earlier concept pass, including the Khor ultimate prices and Unfading Brand's
+limited field reposition. The concept names, Wheel pairs and elemental identities remain.
+
 Jump to [elemental families](#elemental-spell-families),
 [natural hybrids](#natural-chord-families),
 [strained hybrids](#selected-strained-hybrids), or

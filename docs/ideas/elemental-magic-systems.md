@@ -10,6 +10,9 @@ secondary, tertiary and ultimate forms for each element and shared Khor, along w
 natural Chord families, selected strained hybrids and the existing Triad identities.
 It also proposes mastery, commitment limits and visual tells for advanced spells.
 
+The [complete spell-card packet](spell-card-catalog.md) develops those proposals into
+priced cards, shared status/resource rules and existing-Triad compatibility notes.
+
 ## The playable foundation
 
 An element should give the player a recognizable way to solve a problem. Each has

@@ -33,9 +33,9 @@ The current +1 Khash Aftertone burst is retained as a provisional baseline.
 | **Crown of Embers** | Refrain / Khash Tone | 4 / 60 | 24 | Three distinct marked cells, all within 5 at commitment | Wind up, then resolve creature power 18 at each mark, apply Burning on hits, and deal object integrity damage 9 with eligible ignition. One hit per entity across the pattern. |
 | **Douse** | Note / Luth Tone, utility form | 2 / 30 | 3 | 4; one creature or object | Remove this packet's Burning/physical fire and apply Soaked to a creature or Wet to an object for two round checkpoints. No damage, healing, Breath restoration or integrity repair in this mode. |
 | **Hold Note** | Note / shared Khor Tone | 1 / 30 | 1, then 1 per upkeep | 4; one owned eligible Note/field anchor | Freeze its remaining duration through the next checkpoint. The caster has one initial sustain slot; the hold's own upkeep cannot be held. |
-| **Held Ember** | Phrase / strained Khor + Khash Chord | 3 / 45 | 6, then normal upkeep | 4; one owned eligible fire Note | Establish the hold and apply a focused creature-power-9 pulse to a declared enemy in that Note's footprint. No new object impact or automatic field creation. |
+| **Held Ember** | Phrase / strained Khor + Khash Chord | 3 / 45 | 6, then normal upkeep | 4; one owned eligible fire Note | Establish the hold and apply a focused creature-power-9 pulse with weakened Burning on hit to a declared enemy in that Note's footprint. No new object impact or automatic field creation. |
 | **Furnace Choir** | Song / strained Khor + Khash Chord | 4 / 60 | 12, then normal upkeep | Firebreak placement rules | Create Firebreak and establish its hold in one cast. It uses the same one sustain slot and the same per-entity hazard limits. |
-| **Unfading Brand** | Refrain / strained Khor + Khash Chord | 4 / 60 | 24; next upkeep included | 4; one already held eligible fire Note | Prepay one round of sustain so its holder can take another action during that round. Does not add a field, an impact burst or a second sustain slot. |
+| **Unfading Brand** | Refrain / strained Khor + Khash Chord | 0 / 0 | 12; next upkeep included | 4; one already held eligible fire Note | Prepay one round of sustain; optionally shift an unanchored fire line one legal cardinal cell. Preserve its instance and per-round damage tracking. No additional field, impact burst or sustain slot. |
 
 **Khor + Khash is distance 4, a Strained Chord.** Keep its weakened impositions,
 composition-reported Vär cost and existing fizzle/gate consequences visible. Universal
@@ -133,14 +133,17 @@ application. No source receives kill credit or a Breath refund twice.
    physical damage. Ending the animation has no repair effect.
 
 Cancellation uses the existing action/cancellation policy for action-cost refunds;
-this specification does not override it with an invented all-resource refund.
-The prototype needs a clear declaration of which committed spell costs survive
-interruption before implementation. A kill before the next scheduled turn must
+the completed [shared card rules](spell-card-rules.md) now propose retaining paid
+Breath, already-paid Soul and the spent R use on interruption, without a second
+fizzle or failure charge. This remains a playtest rule. A kill before the next scheduled turn must
 cancel the pending release, not leave a queue entry waiting forever for a dead actor.
 
 The proposed one-Refrain allowance is shared by Crown of Embers and Unfading Brand
 for a character. Khor cannot preserve it or create a second use. Unfading Brand has
-no delayed area release; its price buys an action opportunity on an existing setup.
+no delayed area release. The completion pass reprices it to 0 AP / 0 CT and 12 Breath
+so it actually buys an action opportunity, and permits one legal cardinal-cell shift
+of an unanchored fire line. See [the hybrid card](hybrid-spell-cards.md) for preserved
+hazard tracking and placement limits; no second field or initial impact is created.
 
 ## Physical timber rules
 

@@ -41,6 +41,12 @@ concrete numeric proposal: ignition/quenching, field upkeep, a delayed Refrain a
 finite material fire across combat and world phases. This remains a design packet;
 the runtime yard has not gained spell targeting or material combustion yet.
 
+The [complete spell-card packet](docs/ideas/spell-card-catalog.md) now covers all 92
+named forms and the ten existing Triad compatibility cards. Shared status, targeting,
+cost, ownership and interruption rules support the same treatment across every
+listed family. This completes the design-card pass; runtime implementation and
+balance playtesting remain separate work.
+
 ## The experience to develop
 
 Owner-confirmed direction: the player should learn rules that remain useful across
