@@ -21,6 +21,18 @@ size = Vector2(360, 54)
 y_sort_enabled = true
 script = ExtResource("1_interior")
 
+[node name="Surround" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="ColorRect" type="ColorRect" parent="Surround"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02745098, 0.03137255, 0.04313726, 1)
+
 [node name="FieldMap" type="Node2D" parent="."]
 script = ExtResource("5_field_map")
 
@@ -34,7 +46,7 @@ tile_set = ExtResource("7_blocking_tiles")
 
 [node name="Backdrop" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(-960, -640, 1920, -640, 1920, 1280, -960, 1280)
-color = Color(0.025, 0.027, 0.035, 1)
+color = Color(0.02745098, 0.03137255, 0.04313726, 1)
 z_index = -30
 
 [node name="Floor" type="Polygon2D" parent="."]
@@ -49,28 +61,28 @@ color = Color(0.55, 0.4, 0.22, 1)
 z_index = -10
 
 [node name="WallTop" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(0, 0, 960, 0, 960, 40, 0, 40)
+polygon = PackedVector2Array(-48, -96, 1008, -96, 1008, 0, -48, 0)
 color = Color(0.24, 0.24, 0.27, 1)
 texture_repeat = 2
-z_index = -5
+z_index = -1
 
 [node name="WallBottom" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(0, 600, 960, 600, 960, 640, 0, 640)
+polygon = PackedVector2Array(-48, 640, 1008, 640, 1008, 688, -48, 688)
 color = Color(0.24, 0.24, 0.27, 1)
 texture_repeat = 2
-z_index = -5
+z_index = -1
 
 [node name="WallLeft" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(0, 40, 40, 40, 40, 600, 0, 600)
+polygon = PackedVector2Array(-48, 0, 0, 0, 0, 640, -48, 640)
 color = Color(0.24, 0.24, 0.27, 1)
 texture_repeat = 2
-z_index = -5
+z_index = -1
 
 [node name="WallRight" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(920, 40, 960, 40, 960, 600, 920, 600)
+polygon = PackedVector2Array(960, 0, 1008, 0, 1008, 640, 960, 640)
 color = Color(0.24, 0.24, 0.27, 1)
 texture_repeat = 2
-z_index = -5
+z_index = -1
 
 [node name="Title" type="Label" parent="."]
 offset_left = 280.0

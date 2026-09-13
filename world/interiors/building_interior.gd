@@ -10,6 +10,8 @@ const FALLBACK_FLOOR_TEXTURE := preload("res://assets/generated/sprites/castle-k
 const FALLBACK_WALL_TEXTURE := preload("res://assets/generated/sprites/castle-kit/wall.png")
 const DEFAULT_FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png"
 const DEFAULT_WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
+const WALL_THICKNESS := 48.0
+const BACK_WALL_THICKNESS := 96.0
 
 ## Vendor rows carry stable town-site ids but no scene anchor. Keep that world-layer
 ## mapping here while stock, prices, gates, and restock remain generated data.
@@ -52,6 +54,9 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	($Surround/ColorRect as ColorRect).color = DS.INK_0
+	($Backdrop as Polygon2D).color = DS.INK_0
+	configure_room_camera(self)
 	var floor := $Floor as Polygon2D
 	var floor_texture := _load_optional_texture(DEFAULT_FLOOR_TEXTURE_PATH, FALLBACK_FLOOR_TEXTURE)
 	floor.color = floor_color
@@ -67,6 +72,27 @@ func _ready() -> void:
 	($Title as Label).text = building_name
 	_populate_townsfolk()
 	_populate_vendors()
+
+
+## Also used by the standalone tavern. Parent _ready runs after Player._ready,
+## so update both the exported movement seam and the already-initialized camera.
+static func configure_room_camera(room: Node2D) -> void:
+	var floor := room.get_node("Floor") as Polygon2D
+	var bounds := Rect2(floor.to_global(floor.polygon[0]), Vector2.ZERO)
+	for point: Vector2 in floor.polygon:
+		bounds = bounds.expand(floor.to_global(point))
+	bounds = bounds.grow_individual(
+		WALL_THICKNESS, BACK_WALL_THICKNESS, WALL_THICKNESS, WALL_THICKNESS
+	)
+	var player := room.get_node("Player") as Player
+	player.camera_bounds = Rect2i(bounds)
+	var camera := player.get_node("Camera2D") as Camera2D
+	camera.limit_left = player.camera_bounds.position.x
+	camera.limit_top = player.camera_bounds.position.y
+	camera.limit_right = player.camera_bounds.end.x
+	camera.limit_bottom = player.camera_bounds.end.y
+	camera.reset_smoothing()
+	camera.force_update_scroll()
 
 
 func _populate_townsfolk() -> void:

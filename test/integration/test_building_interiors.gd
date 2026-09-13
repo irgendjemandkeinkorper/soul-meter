@@ -98,6 +98,7 @@ func test_shared_interior_keeps_contract_and_loads_palette_modulated_textures() 
 	var interior := auto_free(BuildingInteriorScene.instantiate()) as BuildingInterior
 	interior.exit_transition_id = &"registry_archive_exit"
 	add_child(interior)
+	_assert_room_presentation(interior)
 	assert_object(interior.get_node_or_null("Player")).is_not_null()
 	assert_object(interior.get_node_or_null("ExitDoor")).is_not_null()
 	assert_object(interior.get_node_or_null("FieldHUD")).is_not_null()
@@ -137,6 +138,7 @@ func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement
 		assert_object(packed).is_not_null()
 		var interior := auto_free(packed.instantiate()) as Node2D
 		add_child(interior)
+		_assert_room_presentation(interior)
 		var player := interior.find_child("Player", true, false) as Player
 		var spawn_default := interior.find_child("SpawnDefault", true, false) as Marker2D
 		var spawn_entry := interior.find_child("SpawnEntry", true, false) as Marker2D
@@ -162,6 +164,28 @@ func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement
 		saves.apply_pending_location(interior)
 		assert_array(diagnostics).is_empty()
 		assert_vector(player.global_position).is_equal(spawn_entry.global_position)
+
+
+func test_tavern_has_room_presentation_and_textured_wood_counter() -> void:
+	var tavern := _make_scene(GameFlow.TAVERN_SCENE)
+	_assert_room_presentation(tavern)
+	var counter := tavern.get_node("Counter") as Polygon2D
+	assert_object(counter.texture).is_not_null()
+	if counter.texture != null:
+		assert_str(counter.texture.resource_path).is_equal(WALL_TEXTURE_PATH)
+	assert_object(counter.color).is_equal(Color(0.31, 0.17, 0.09, 1))
+
+
+func test_camera_limits_follow_floor_bounds_in_a_translated_room() -> void:
+	var interior := auto_free(BuildingInteriorScene.instantiate()) as BuildingInterior
+	interior.exit_transition_id = &"registry_archive_exit"
+	interior.position = Vector2(120, -80)
+	var floor := interior.get_node("Floor") as Polygon2D
+	floor.polygon = PackedVector2Array([
+		Vector2(-160, -120), Vector2(1120, -120), Vector2(1120, 760), Vector2(-160, 760),
+	])
+	add_child(interior)
+	_assert_camera_limits(interior, floor)
 
 
 func test_entry_spawns_clear_exit_door_art() -> void:
@@ -667,6 +691,59 @@ func _make_door(transition_id: StringName) -> BuildingDoor:
 	door.transition_id = transition_id
 	add_child(door)
 	return door
+
+
+func _assert_room_presentation(interior: Node2D) -> void:
+	var surround := interior.find_child("Surround", true, false) as CanvasLayer
+	assert_object(surround).override_failure_message("Missing Surround: %s" % interior.name).is_not_null()
+	if surround != null:
+		assert_int(surround.layer).is_equal(-1)
+		var rect := surround.get_node_or_null("ColorRect") as ColorRect
+		assert_object(rect).is_not_null()
+		if rect != null:
+			assert_object(rect.color).is_equal(DS.VOID_0)
+			assert_int(rect.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+			assert_vector(rect.position).is_equal(Vector2.ZERO)
+			assert_vector(rect.size).is_equal(interior.get_viewport_rect().size)
+	var floor := interior.find_child("Floor", true, false) as Polygon2D
+	assert_object(floor).is_not_null()
+	for wall_name: String in ["WallTop", "WallBottom", "WallLeft", "WallRight"]:
+		var wall := interior.find_child(wall_name, true, false) as Polygon2D
+		# Preserve the standalone tavern's existing back-wall node path.
+		if wall == null and wall_name == "WallTop":
+			wall = interior.find_child("BackWall", true, false) as Polygon2D
+		assert_object(wall) \
+			.override_failure_message("Missing %s: %s" % [wall_name, interior.name]).is_not_null()
+		if wall == null:
+			continue
+		var twice_area := 0.0
+		for index: int in wall.polygon.size():
+			twice_area += wall.polygon[index].cross(wall.polygon[(index + 1) % wall.polygon.size()])
+		assert_float(absf(twice_area)).is_greater(0.0)
+		assert_object(wall.texture).is_not_null()
+		if wall.texture != null:
+			assert_str(wall.texture.resource_path).is_equal(WALL_TEXTURE_PATH)
+		var bounds := _polygon_bounds(wall.polygon)
+		var thickness := bounds.size.y if wall_name in ["WallTop", "WallBottom"] else bounds.size.x
+		assert_float(thickness).is_equal(96.0 if wall_name == "WallTop" else 48.0)
+		assert_int(wall.z_index).is_equal(-1)
+		assert_bool(wall.z_as_relative).is_true()
+		assert_int(wall.z_index).is_greater(floor.z_index)
+	_assert_camera_limits(interior, floor)
+
+
+func _assert_camera_limits(interior: Node2D, floor: Polygon2D) -> void:
+	var player := interior.find_child("Player", true, false) as Player
+	var camera := player.get_node("Camera2D") as Camera2D
+	var points := PackedVector2Array()
+	for point: Vector2 in floor.polygon:
+		points.append(floor.to_global(point))
+	var room_rect := _polygon_bounds(points).grow_individual(48.0, 96.0, 48.0, 48.0)
+	assert_int(camera.limit_left).is_equal(int(room_rect.position.x))
+	assert_int(camera.limit_top).is_equal(int(room_rect.position.y))
+	assert_int(camera.limit_right).is_equal(int(room_rect.end.x))
+	assert_int(camera.limit_bottom).is_equal(int(room_rect.end.y))
+	assert_object(player.camera_bounds).is_equal(Rect2i(room_rect))
 
 
 func _polygon_bounds(points: PackedVector2Array) -> Rect2:

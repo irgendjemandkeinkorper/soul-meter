@@ -46,6 +46,18 @@ size = Vector2(54, 48)
 y_sort_enabled = true
 script = ExtResource("1_script")
 
+[node name="Surround" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="ColorRect" type="ColorRect" parent="Surround"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02745098, 0.03137255, 0.04313726, 1)
+
 [node name="FieldMap" type="Node2D" parent="."]
 script = ExtResource("18_field_map")
 
@@ -65,8 +77,29 @@ texture_repeat = 2
 color = Color(0.42, 0.31, 0.22, 1)
 
 [node name="BackWall" type="Polygon2D" parent="."]
-z_index = -5
-polygon = PackedVector2Array(0, 0, 960, 0, 960, 84, 0, 84)
+z_index = -1
+polygon = PackedVector2Array(-48, -96, 1008, -96, 1008, 0, -48, 0)
+texture = ExtResource("8_wall")
+texture_repeat = 2
+color = Color(0.24, 0.14, 0.1, 1)
+
+[node name="WallBottom" type="Polygon2D" parent="."]
+z_index = -1
+polygon = PackedVector2Array(-48, 640, 1008, 640, 1008, 688, -48, 688)
+texture = ExtResource("8_wall")
+texture_repeat = 2
+color = Color(0.24, 0.14, 0.1, 1)
+
+[node name="WallLeft" type="Polygon2D" parent="."]
+z_index = -1
+polygon = PackedVector2Array(-48, 0, 0, 0, 0, 640, -48, 640)
+texture = ExtResource("8_wall")
+texture_repeat = 2
+color = Color(0.24, 0.14, 0.1, 1)
+
+[node name="WallRight" type="Polygon2D" parent="."]
+z_index = -1
+polygon = PackedVector2Array(960, 0, 1008, 0, 1008, 640, 960, 640)
 texture = ExtResource("8_wall")
 texture_repeat = 2
 color = Color(0.24, 0.14, 0.1, 1)
@@ -82,6 +115,8 @@ horizontal_alignment = 1
 
 [node name="Counter" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(270, 218, 690, 218, 690, 284, 270, 284)
+texture = ExtResource("8_wall")
+texture_repeat = 2
 color = Color(0.31, 0.17, 0.09, 1)
 
 [node name="CounterBody" type="StaticBody2D" parent="."]
