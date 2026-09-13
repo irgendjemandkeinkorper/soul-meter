@@ -6,6 +6,7 @@ const PlayerScene := preload("res://actors/player/player.tscn")
 const SaveGameScript := preload("res://globals/save_game.gd")
 const FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png"
 const WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
+const COUNTER_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-counter--bar.png"
 const SHARED_INTERIOR_SCENE_PATH := "res://world/interiors/building_interior.tscn"
 const MAX_SOLID_PROP_FOOTPRINT_SIZE := Vector2(120.0, 48.0)
 ## The 1.2–1.4 door band was ratified (#210) against the pre-shrink player art.
@@ -172,8 +173,9 @@ func test_tavern_has_room_presentation_and_textured_wood_counter() -> void:
 	var counter := tavern.get_node("Counter") as Polygon2D
 	assert_object(counter.texture).is_not_null()
 	if counter.texture != null:
-		assert_str(counter.texture.resource_path).is_equal(WALL_TEXTURE_PATH)
-	assert_object(counter.color).is_equal(Color(0.31, 0.17, 0.09, 1))
+		assert_str(counter.texture.resource_path).is_equal(COUNTER_TEXTURE_PATH)
+	assert_object(counter.color).is_equal(Color.WHITE)
+	assert_int(counter.uv.size()).is_equal(counter.polygon.size())
 
 
 func test_camera_limits_follow_floor_bounds_in_a_translated_room() -> void:

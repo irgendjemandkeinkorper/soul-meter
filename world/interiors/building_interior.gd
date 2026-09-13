@@ -6,11 +6,14 @@ const NpcScene := preload("res://actors/npc/npc.tscn")
 const NpcPlacementsData: JSON = preload("res://data/generated/dom_npc_placements.json")
 const VendorData := preload("res://globals/vendor_registry.gd")
 const VendorIdsData := preload("res://data/generated/vendor_ids.gd")
-const FALLBACK_FLOOR_TEXTURE := preload("res://assets/generated/sprites/castle-kit/ground.png")
-const FALLBACK_WALL_TEXTURE := preload("res://assets/generated/sprites/castle-kit/wall.png")
+const FALLBACK_FLOOR_TEXTURE := preload("res://assets/generated/sprites/interior/dom-interior-floor--stone-flag.png")
+const FALLBACK_WALL_TEXTURE := preload("res://assets/generated/sprites/interior/dom-interior-wall--brick-dark.png")
 const DEFAULT_FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png"
 const DEFAULT_WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
+const COUNTER_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-counter--bar.png"
 const WALL_THICKNESS := 48.0
+## Accent rugs read as dyed floorboards, not flat paint, over the textured floor.
+const RUG_DARKEN := 0.45
 const BACK_WALL_THICKNESS := 96.0
 
 ## Vendor rows carry stable town-site ids but no scene anchor. Keep that world-layer
@@ -68,7 +71,11 @@ func _ready() -> void:
 		wall.color = accent_color
 		wall.texture = wall_texture
 		wall.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-	($AccentRug as Polygon2D).color = accent_color
+	var rug := $AccentRug as Polygon2D
+	rug.color = accent_color.darkened(RUG_DARKEN)
+	rug.texture = floor_texture
+	rug.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	configure_counter($Counter as Polygon2D)
 	($Title as Label).text = building_name
 	_populate_townsfolk()
 	_populate_vendors()
@@ -185,3 +192,25 @@ func _load_optional_texture(path: String, fallback: Texture2D) -> Texture2D:
 			return texture
 	# Keep interiors usable when optional generated art is missing or has a corrupt import.
 	return fallback
+
+
+## Stretches the painted bar-counter texture across the whole counter polygon so the
+## art is not sampled from world (0, 0); leaves collision and node paths untouched.
+static func configure_counter(counter: Polygon2D) -> void:
+	if counter == null:
+		return
+	if counter.texture == null:
+		counter.texture = load(COUNTER_TEXTURE_PATH) as Texture2D
+	if counter.texture == null:
+		return
+	var bounds := Rect2(counter.polygon[0], Vector2.ZERO)
+	for point: Vector2 in counter.polygon:
+		bounds = bounds.expand(point)
+	var texture_size := counter.texture.get_size()
+	var uv := PackedVector2Array()
+	for point: Vector2 in counter.polygon:
+		var t := (point - bounds.position) / bounds.size
+		uv.append(t * texture_size)
+	counter.uv = uv
+	counter.texture_repeat = CanvasItem.TEXTURE_REPEAT_DISABLED
+	counter.color = Color.WHITE

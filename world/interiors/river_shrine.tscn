@@ -175,6 +175,16 @@ color = Color(1, 0.78, 0.3, 1)
 [node name="ShrineUndercroftDoor" parent="." instance=ExtResource("2_door")]
 position = Vector2(800, 40)
 transition_id = &"shrine_undercroft_enter"
+editable_children = true
+
+[node name="DoorSprite" parent="ShrineUndercroftDoor"]
+visible = true
+position = Vector2(0, -52)
+scale = Vector2(0.55, 0.55)
+
+[node name="DoorPanel" parent="ShrineUndercroftDoor"]
+visible = false
+
 
 [node name="SpawnFromShrineUndercroft" type="Marker2D" parent="."]
 position = Vector2(800, 150)

@@ -94,7 +94,8 @@ text = "Building"
 horizontal_alignment = 1
 
 [node name="Counter" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(300, 235, 660, 235, 660, 289, 300, 289)
+position = Vector2(480, 289)
+polygon = PackedVector2Array(-180, -90, 180, -90, 180, 0, -180, 0)
 color = Color(0.3, 0.22, 0.16, 1)
 
 [node name="FurnitureCollision" type="StaticBody2D" parent="."]

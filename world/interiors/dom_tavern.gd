@@ -10,7 +10,7 @@ var _counter_player_in_range := false
 
 func _ready() -> void:
 	($Surround/ColorRect as ColorRect).color = DS.INK_0
-	($Counter as Polygon2D).color = DS.WOOD_0
+	BuildingInterior.configure_counter($Counter as Polygon2D)
 	BuildingInterior.configure_room_camera(self)
 	$CounterInteraction.body_entered.connect(_on_counter_body.bind(true))
 	$CounterInteraction.body_exited.connect(_on_counter_body.bind(false))

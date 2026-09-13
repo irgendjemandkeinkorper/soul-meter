@@ -84,6 +84,16 @@ initial_pause = 0.7
 [node name="RegistryStacksDoor" parent="." instance=ExtResource("2_door")]
 position = Vector2(800, 40)
 transition_id = &"registry_stacks_enter"
+editable_children = true
+
+[node name="DoorSprite" parent="RegistryStacksDoor"]
+visible = true
+position = Vector2(0, -52)
+scale = Vector2(0.55, 0.55)
+
+[node name="DoorPanel" parent="RegistryStacksDoor"]
+visible = false
+
 
 [node name="SpawnFromRegistryStacks" type="Marker2D" parent="."]
 position = Vector2(800, 150)

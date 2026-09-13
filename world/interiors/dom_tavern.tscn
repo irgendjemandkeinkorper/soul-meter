@@ -1,15 +1,16 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=29 format=3]
 
 [ext_resource type="Script" path="res://world/interiors/dom_tavern.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="3_hud"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png" id="4_floor"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="5_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-bench--plank.png" id="5_bench"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/units/crowd-merchant-a/crowd-merchant-a--idle--se--f00.png" id="6_taverner"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/objects/dom-door-wood--closed.png" id="7_door_art"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-interior-wall--brick.png" id="8_wall"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall.png" id="9_table"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="10_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-table--long.png" id="9_table"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-stool--round.png" id="10_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-counter--bar.png" id="21_counter"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="11_crates"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="12_lantern"]
 [ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="13_ambient_motion"]
@@ -114,8 +115,9 @@ text = "THE FOUR ARMS"
 horizontal_alignment = 1
 
 [node name="Counter" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(270, 218, 690, 218, 690, 284, 270, 284)
-texture = ExtResource("8_wall")
+position = Vector2(480, 284)
+polygon = PackedVector2Array(-210, -105, 210, -105, 210, 0, -210, 0)
+texture = ExtResource("21_counter")
 texture_repeat = 2
 color = Color(0.31, 0.17, 0.09, 1)
 
@@ -126,14 +128,14 @@ position = Vector2(480, 251)
 shape = SubResource("counter_shape")
 
 [node name="Taverner" type="Sprite2D" parent="."]
-position = Vector2(480, 105)
+position = Vector2(640, 50)
 texture = ExtResource("6_taverner")
 
 [node name="TavernerLabel" type="Label" parent="."]
-offset_left = 395.0
-offset_top = 128.0
-offset_right = 565.0
-offset_bottom = 158.0
+offset_left = 555.0
+offset_top = 73.0
+offset_right = 725.0
+offset_bottom = 103.0
 theme_type_variation = &"EyebrowLabel"
 text = "TAVERNER"
 horizontal_alignment = 1
@@ -147,7 +149,7 @@ y_sort_enabled = true
 position = Vector2(290, 390)
 
 [node name="Sprite2D" type="Sprite2D" parent="TavernDressing/TableWest"]
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.6, 0.6)
 texture = ExtResource("9_table")
 offset = Vector2(0, -24)
 
@@ -159,7 +161,7 @@ shape = SubResource("table_shape")
 position = Vector2(670, 390)
 
 [node name="Sprite2D" type="Sprite2D" parent="TavernDressing/TableEast"]
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.6, 0.6)
 texture = ExtResource("9_table")
 offset = Vector2(0, -24)
 
@@ -169,37 +171,37 @@ shape = SubResource("table_shape")
 
 [node name="BenchLeft" type="Sprite2D" parent="TavernDressing"]
 position = Vector2(290, 470)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("5_bench")
 offset = Vector2(0, -18)
 
 [node name="BenchRight" type="Sprite2D" parent="TavernDressing"]
 position = Vector2(670, 470)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("5_bench")
 offset = Vector2(0, -18)
 
 [node name="StoolWestA" type="Sprite2D" parent="TavernDressing"]
 position = Vector2(230, 390)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.4, 0.4)
 texture = ExtResource("10_stool")
 offset = Vector2(0, -14)
 
 [node name="StoolWestB" type="Sprite2D" parent="TavernDressing"]
 position = Vector2(350, 390)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.4, 0.4)
 texture = ExtResource("10_stool")
 offset = Vector2(0, -14)
 
 [node name="StoolEastA" type="Sprite2D" parent="TavernDressing"]
 position = Vector2(610, 390)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.4, 0.4)
 texture = ExtResource("10_stool")
 offset = Vector2(0, -14)
 
 [node name="StoolEastB" type="Sprite2D" parent="TavernDressing"]
 position = Vector2(730, 390)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(0.4, 0.4)
 texture = ExtResource("10_stool")
 offset = Vector2(0, -14)
 

@@ -94,6 +94,16 @@ initial_pause = 1.2
 [node name="GarrisonYardDoor" parent="." instance=ExtResource("2_door")]
 position = Vector2(800, 40)
 transition_id = &"garrison_yard_enter"
+editable_children = true
+
+[node name="DoorSprite" parent="GarrisonYardDoor"]
+visible = true
+position = Vector2(0, -52)
+scale = Vector2(0.55, 0.55)
+
+[node name="DoorPanel" parent="GarrisonYardDoor"]
+visible = false
+
 
 [node name="SpawnFromGarrisonYard" type="Marker2D" parent="."]
 position = Vector2(800, 150)

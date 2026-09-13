@@ -3,8 +3,8 @@ extends SMInteractable
 ## A repeatable flag toggle. The inherited interaction_flag is the single
 ## source of truth so gates can observe GameState.flag_changed directly.
 
-const OFF_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-lever-iron--off.png"
-const ON_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-lever-iron--on.png"
+const OFF_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-switch--off.png"
+const ON_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-switch--on.png"
 const PLACEHOLDER_TEXTURE_PATH := "res://assets/kenney/ui/fantasy-ui-borders/PNG/Default/Panel/panel-013.png"
 
 @onready var _off_sprite: Sprite2D = $OffSprite

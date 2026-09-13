@@ -6,8 +6,8 @@
 [ext_resource type="PackedScene" path="res://actors/switch/switch.tscn" id="4_switch"]
 [ext_resource type="PackedScene" path="res://actors/pickup/pickup.tscn" id="5_pickup"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="6_exit"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="7_bench"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="8_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-bench--plank.png" id="7_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-stool--round.png" id="8_stool"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/jawbrace/jawbrace-warning-plate--decorative.png" id="9_warning_plate"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="10_lantern"]
 [ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="11_ambient_motion"]
@@ -53,49 +53,49 @@ y_sort_enabled = true
 
 [node name="AudienceBenchFrontLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(315, 480)
-scale = Vector2(1.125, 1.125)
+scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="AudienceBenchFrontRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(645, 480)
-scale = Vector2(1.125, 1.125)
+scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="AudienceBenchRearLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(315, 545)
-scale = Vector2(1.125, 1.125)
+scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="AudienceBenchRearRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(645, 545)
-scale = Vector2(1.125, 1.125)
+scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="WardenBenchLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(310, 325)
-scale = Vector2(1.125, 1.125)
+scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="WardenBenchRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(650, 325)
-scale = Vector2(1.125, 1.125)
+scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="KeeperWitnessStoolLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(360, 155)
-scale = Vector2(1.2, 1.2)
+scale = Vector2(0.1116, 0.0774)
 texture = ExtResource("8_stool")
 offset = Vector2(0, -46)
 
 [node name="KeeperWitnessStoolRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
 position = Vector2(600, 155)
-scale = Vector2(1.2, 1.2)
+scale = Vector2(0.1116, 0.0774)
 texture = ExtResource("8_stool")
 offset = Vector2(0, -46)
 

@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="2_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-bench--plank.png" id="2_bench"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-notice-board--decorative.png" id="3_notice_board"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="4_lantern"]
 [ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="5_ambient_motion"]
@@ -58,7 +58,7 @@ y_sort_enabled = true
 position = Vector2(160, 445)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchWest"]
-scale = Vector2(1.1, 1.1)
+scale = Vector2(0.1686, 0.1409)
 texture = ExtResource("2_bench")
 offset = Vector2(0, -46)
 
@@ -71,7 +71,7 @@ disabled = false
 position = Vector2(800, 445)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchEast"]
-scale = Vector2(-1.1, 1.1)
+scale = Vector2(-0.1686, 0.1409)
 texture = ExtResource("2_bench")
 offset = Vector2(0, -46)
 

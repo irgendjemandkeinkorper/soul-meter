@@ -3,9 +3,9 @@
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="3_chest"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="4_shelf"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="5_stool"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall.png" id="6_counter"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-bench--plank.png" id="4_shelf"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-stool--round.png" id="5_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-table--long.png" id="6_counter"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="7_crates"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="8_lantern"]
 [ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="9_ambient_motion"]
@@ -32,49 +32,49 @@ y_sort_enabled = true
 
 [node name="WallShelfWest" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(115, 130)
-scale = Vector2(1.4, 0.8)
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_shelf")
 offset = Vector2(0, -50.5)
 
 [node name="WallShelfCenter" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(245, 130)
-scale = Vector2(1.4, 0.8)
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_shelf")
 offset = Vector2(0, -50.5)
 
 [node name="WallShelfEast" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(860, 285)
-scale = Vector2(1.4, 0.8)
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_shelf")
 offset = Vector2(0, -50.5)
 
 [node name="CounterFrontWest" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(390, 289)
-scale = Vector2(1.7, 0.8)
+scale = Vector2(0.6, 0.6)
 texture = ExtResource("6_counter")
 offset = Vector2(0, -61)
 
 [node name="CounterFrontEast" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(570, 289)
-scale = Vector2(1.7, 0.8)
+scale = Vector2(0.6, 0.6)
 texture = ExtResource("6_counter")
 offset = Vector2(0, -61)
 
 [node name="CustomerStoolWest" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(365, 355)
-scale = Vector2(0.875, 0.875)
+scale = Vector2(0.4, 0.4)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -50)
 
 [node name="CustomerStoolCenter" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(480, 375)
-scale = Vector2(0.875, 0.875)
+scale = Vector2(0.4, 0.4)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -50)
 
 [node name="CustomerStoolEast" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
 position = Vector2(595, 355)
-scale = Vector2(0.875, 0.875)
+scale = Vector2(0.4, 0.4)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -50)
 
@@ -129,6 +129,16 @@ shape = SubResource("crate_blocker")
 [node name="CaskWarehouseDoor" parent="." instance=ExtResource("2_door")]
 position = Vector2(800, 40)
 transition_id = &"cask_warehouse_enter"
+editable_children = true
+
+[node name="DoorSprite" parent="CaskWarehouseDoor"]
+visible = true
+position = Vector2(0, -52)
+scale = Vector2(0.55, 0.55)
+
+[node name="DoorPanel" parent="CaskWarehouseDoor"]
+visible = false
+
 
 [node name="SpawnFromCaskWarehouse" type="Marker2D" parent="."]
 position = Vector2(800, 150)

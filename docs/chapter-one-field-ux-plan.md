@@ -102,6 +102,12 @@ build with Waves 1–3 merged: Trial → Council → Field Debt → Dorthkor →
 ruling → reload. Evidence per row of that table. Owner plays the same route once and
 answers exactly: "Did anything vanish, and where?" and "Does Dom read as a place?"
 
+## Progress log
+- 2026-09-13 Wave 0 done — root causes confirmed on rendered frames (`docs/qa/ch1-field-ux-wave0.md`).
+- 2026-09-13 Wave 1 done — commit `17edf750` on `feat/ch1-facade-occlusion`: facade fade, interior entry in front of door, Waterline removed; 62 rendered cases green (`docs/qa/ch1-field-ux-wave1.md`).
+- 2026-09-13 Wave 2 done — commit `8f55b4ef`: dark surround, thick brick walls, room-bounded camera; 56 rendered cases green (`docs/qa/ch1-field-ux-wave2.md`).
+- 2026-09-13 Wave 3a (#309) done — Luna art batch + Fable scale/counter/door fixes; 52 rendered cases green (`docs/qa/ch1-field-ux-wave3a.md`).
+
 ## Out of scope for this push
 World-map travel rewrite, AP-combat changes, new locations (#238/#239), Weftlumin waves,
 new dialogue or quests, canon edits. These stay on their existing issues.
