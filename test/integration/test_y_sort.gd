@@ -112,7 +112,7 @@ func test_actors_own_local_y_sort_does_not_leak_a_fixed_z_index() -> void:
 			.is_equal(0)
 
 
-func test_building_group_and_its_door_prop_can_occlude_the_player() -> void:
+func test_building_facade_shares_the_player_y_sort_band() -> void:
 	# Regression guard for the bug this issue fixed: several decorative
 	# "door" and accent sprites in starting_town.tscn (e.g.
 	# RegistryArchiveDoorSprite) were pinned to z_index = 2, which always
@@ -120,23 +120,19 @@ func test_building_group_and_its_door_prop_can_occlude_the_player() -> void:
 	# That defeats "a prop hides the player when the player stands above it,
 	# and the player hides the prop when the player stands below it," since
 	# z_index outranks y-sort. Assert they now sit in the shared z_index = 0
-	# bucket alongside the player and building groups, so occlusion is
-	# decided purely by feet position (y-sort).
+	# bucket alongside the player and building groups. The painted Facade
+	# now owns the former door/accent art and inherits its building's feet.
 	var runner := scene_runner("res://world/starting_town.tscn")
 	var player: Node2D = runner.find_child("Player", true, false)
 	var building: Node2D = runner.find_child("RegistryArchive", true, false)
-	# RegistryArchiveDoorSprite was stale after the Dom rework nested the prop as ArchiveDoor.
-	var door_prop: Node2D = building.find_child("ArchiveDoor", true, false)
+	var facade := building.get_node("Facade") as Sprite2D
 
 	assert_object(player).is_not_null()
 	assert_object(building).is_not_null()
-	assert_object(door_prop).is_not_null()
+	assert_object(facade).is_not_null()
 
 	assert_int(player.z_index).is_equal(0)
 	assert_int(building.z_index).is_equal(0)
-	assert_int(door_prop.z_index).is_equal(0)
-
-	# The door prop sits a little "south" (larger y / closer to camera) of
-	# the building's own origin, so with equal z_index it correctly draws
-	# in front of the building block via y-sort.
-	assert_float(door_prop.global_position.y).is_greater(building.global_position.y)
+	assert_int(facade.z_index).is_equal(0)
+	assert_bool(facade.z_as_relative).is_true()
+	assert_vector(facade.global_position).is_equal(building.global_position)

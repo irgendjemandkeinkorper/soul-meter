@@ -3,6 +3,58 @@ extends GdUnitTestSuite
 ## ui/screens/tavern.gd. See docs/testing.md for when to reach for scene_runner
 ## vs. a plain unit suite.
 
+const TownScript := preload("res://world/starting_town.gd")
+
+
+func test_building_roots_and_facades_survive_kit_cleanup() -> void:
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(2)
+	var town := runner.scene()
+	for building_name: String in TownScript.BUILDING_NAMES:
+		var building := town.get_node_or_null(building_name)
+		assert_object(building).is_not_null()
+		if building == null:
+			continue
+		assert_object(building.get_node_or_null("Facade")).is_not_null()
+		for sprite: Sprite2D in building.find_children("*", "Sprite2D", true, false):
+			if sprite.name == &"Facade" or sprite.texture == null:
+				continue
+			for kit_name: String in ["castle-kit", "fantasy-town-kit"]:
+				assert_bool(sprite.texture.resource_path.contains(kit_name)) \
+					.override_failure_message("Kit sprite remains at %s" % sprite.get_path()) \
+					.is_false()
+
+
+func test_dom_transition_and_npc_anchors_survive_kit_cleanup() -> void:
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(2)
+	var town := runner.scene()
+	assert_object(town.get_node_or_null("FieldHUD/ConsequenceNotices")).is_not_null()
+	var transition_count := 0
+	for filename: String in DirAccess.get_files_at("res://actors/building_door/transitions"):
+		if not filename.ends_with("_enter.tres"):
+			continue
+		var transition := load("res://actors/building_door/transitions/" + filename) as BuildingTransitionDefinition
+		if transition.source_scene != "res://world/starting_town.tscn":
+			continue
+		transition_count += 1
+		assert_object(town.get_node_or_null(NodePath(transition.source_anchor))) \
+			.override_failure_message("Missing transition anchor: %s" % transition.source_anchor) \
+			.is_not_null()
+	assert_int(transition_count).is_greater(0)
+	var placements: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://data/generated/dom_npc_placements.json"
+	))
+	var placement_count := 0
+	for placement: Dictionary in placements["placements"].values():
+		if placement["scene"] != "res://world/starting_town.tscn":
+			continue
+		placement_count += 1
+		assert_object(town.get_node_or_null(NodePath(placement["anchor"]))) \
+			.override_failure_message("Missing NPC anchor: %s" % placement["anchor"]) \
+			.is_not_null()
+	assert_int(placement_count).is_greater(0)
+
 
 ## The tavern assertions assume no one has been recruited yet ("Available",
 ## check-toggle counting), but earlier suites in a whole-tree run leave their

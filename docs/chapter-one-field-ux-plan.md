@@ -107,6 +107,8 @@ answers exactly: "Did anything vanish, and where?" and "Does Dom read as a place
 - 2026-09-13 Wave 1 done — commit `17edf750` on `feat/ch1-facade-occlusion`: facade fade, interior entry in front of door, Waterline removed; 62 rendered cases green (`docs/qa/ch1-field-ux-wave1.md`).
 - 2026-09-13 Wave 2 done — commit `8f55b4ef`: dark surround, thick brick walls, room-bounded camera; 56 rendered cases green (`docs/qa/ch1-field-ux-wave2.md`).
 - 2026-09-13 Wave 3a (#309) done — Luna art batch + Fable scale/counter/door fixes; 52 rendered cases green (`docs/qa/ch1-field-ux-wave3a.md`).
+- 2026-09-13 Wave 3b (#305 partial) done — hidden kit assemblies + dead battle scenery deleted; 91 live outdoor kit sprites deferred to an art batch (`docs/qa/ch1-field-ux-wave3b.md`).
+- 2026-09-13 Owner review of 3a: rooms must be ~2× larger for the furniture to be at scale → Wave 3c (room scale) dispatched to Astra.
 
 ## Out of scope for this push
 World-map travel rewrite, AP-combat changes, new locations (#238/#239), Weftlumin waves,
