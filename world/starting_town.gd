@@ -3,6 +3,8 @@ extends Node2D
 ## The old kit assemblies remain named in the scene so art can be inspected and
 ## swapped without losing the existing node wiring, but only Facade renders.
 
+const FacadeOccluderScript := preload("res://world/facade_occluder.gd")
+
 const BUILDING_NAMES := [
 	"TrialHall",
 	"RegistryArchive",
@@ -32,6 +34,8 @@ func _ready() -> void:
 		for child: Node in building.get_children():
 			if child is Sprite2D and child.name != "Facade":
 				child.visible = false
+		var facade := building.get_node("Facade") as Sprite2D
+		building.add_child(FacadeOccluderScript.new(facade))
 	_show_opening_council_nudge()
 
 

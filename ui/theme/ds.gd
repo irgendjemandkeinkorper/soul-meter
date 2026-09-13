@@ -125,6 +125,9 @@ const TILE_H := 28
 const ELEV_PX := 12
 const ELEVATION_MAX := 3
 
+# World facade presentation — ratified Chapter One field-UX Wave 1.
+const FACADE_OCCLUDED_ALPHA := 0.35
+
 # Per-tile element charge (0-3). Tint alpha is 0.20 + 0.14 x level; charge 0 draws nothing.
 const CHARGE_MAX := 3
 const CHARGE_ALPHA_BASE := 0.20

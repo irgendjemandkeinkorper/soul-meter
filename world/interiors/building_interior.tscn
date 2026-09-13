@@ -124,14 +124,14 @@ visible = false
 visible = false
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(480, 400)
+position = Vector2(480, 498.6)
 camera_bounds = Rect2i(0, 0, 960, 640)
 
 [node name="SpawnDefault" type="Marker2D" parent="."]
 position = Vector2(480, 400)
 
 [node name="SpawnEntry" type="Marker2D" parent="."]
-position = Vector2(480, 400)
+position = Vector2(480, 498.6)
 
 [node name="VendorSpot" type="Marker2D" parent="."]
 position = Vector2(720, 185)

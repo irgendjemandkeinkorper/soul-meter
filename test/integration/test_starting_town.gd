@@ -49,6 +49,26 @@ func test_party_followers_spawn_on_the_shared_grid_cell_center() -> void:
 	assert_bool(follower_node is CollisionObject2D).is_false()
 
 
+func test_town_has_no_blockout_waterline() -> void:
+	var town := auto_free(load("res://world/starting_town.tscn").instantiate()) as Node2D
+	assert_object(town.get_node_or_null("Waterline")).is_null()
+
+
+func test_town_player_behind_tavern_fades_facade() -> void:
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(3)
+	var town := runner.scene() as Node2D
+	var player := town.get_node("Player") as Player
+	var tavern := town.get_node("FourArmsTavern") as Node2D
+	var facade := tavern.get_node("Facade") as Sprite2D
+	assert_bool(player.is_in_group(&"player")).is_true()
+	player.global_position = tavern.global_position + Vector2(0, -136)
+	await runner.simulate_frames(30)
+	assert_float(facade.modulate.a).is_equal_approx(DS.FACADE_OCCLUDED_ALPHA, 0.001)
+	assert_bool(player.visible).is_true()
+	assert_float(player.modulate.a).is_equal(1.0)
+
+
 func test_tavern_door_prompt_only_shows_when_player_is_in_range() -> void:
 	var runner := scene_runner("res://world/starting_town.tscn")
 	var door: Node2D = runner.find_child("TavernDoor", true, false)

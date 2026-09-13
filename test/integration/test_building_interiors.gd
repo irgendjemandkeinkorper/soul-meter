@@ -155,13 +155,28 @@ func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement
 			String(BuildingTransitionRegistry.exit_for(entry.building_id).id)
 		)
 		assert_vector(spawn_entry.global_position).is_equal(entry.destination_spawn_position)
-		assert_float(spawn_entry.global_position.y).is_less(door_sprite.global_position.y - 24.0)
+		assert_float(spawn_entry.global_position.y).is_greater_equal(door_sprite.global_position.y + 40.0)
 		diagnostics.clear()
 		saves.has_pending_player_position = false
 		saves.pending_spawn_id = entry.spawn_id
 		saves.apply_pending_location(interior)
 		assert_array(diagnostics).is_empty()
 		assert_vector(player.global_position).is_equal(spawn_entry.global_position)
+
+
+func test_entry_spawns_clear_exit_door_art() -> void:
+	var paths := _registered_concrete_interior_paths()
+	paths.append(SHARED_INTERIOR_SCENE_PATH)
+	paths.append(GameFlow.TAVERN_SCENE)
+	for path: String in paths:
+		var interior := auto_free(load(path).instantiate()) as Node2D
+		var spawn := interior.find_child("SpawnEntry", true, false) as Marker2D
+		var door := interior.find_child("ExitDoorSprite", true, false) as Sprite2D
+		if door == null:
+			door = interior.find_child("ExitDoor", true, false).get_node("DoorSprite") as Sprite2D
+		assert_float(spawn.global_position.y) \
+			.override_failure_message("Entry overlaps exit door art: %s" % path) \
+			.is_greater_equal(door.global_position.y + 40.0)
 
 
 func test_all_registered_concrete_interiors_meet_dressing_contract() -> void:
