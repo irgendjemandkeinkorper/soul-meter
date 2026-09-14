@@ -166,7 +166,7 @@ func _measure_battle_entry() -> bool:
 	if bool(_battle.get("ended")):
 		_add_error("Benchmark battle ended before the overlay could be opened.")
 		return false
-	# Mirrors actors/enemy/enemy.gd, then traverses the mandatory deployment
+	# Mirrors a set-piece start, then traverses the mandatory deployment
 	# substates before waiting for the battle overlay.
 	await _advance_deployment_to_battle()
 	var completed := await _wait_until(

@@ -2,12 +2,10 @@ extends Screen
 ## Full-screen party combat view. Battle owns the rules; this screen is the
 ## presentation layer and submits action IDs to the autoload.
 
-const BATTLE_STAGE_SCENE := preload("res://ui/screens/battle_stage.tscn")
 const BATTLE_HUD_SCENE := preload("res://ui/hud/battle_hud.tscn")
 const BATTLE_INTERFACE_SCENE := preload("res://ui/hud/battle_interface.tscn")
 const COMBAT_AUDIO := preload("res://audio/combat_audio.gd")
 
-var _stage: Control
 var _party_box: VBoxContainer
 var _enemy_lbl: Label
 var _balance_lbl: Label
@@ -29,8 +27,9 @@ var _selected_weakness_id: StringName = &""
 
 
 func _build() -> void:
-	# Battle is an overlay screen: the paused gameplay scene (and its FieldHUD) keeps
-	# rendering underneath, so the screen needs its own opaque ground.
+	# Battle is the field HUD: the gameplay scene keeps rendering underneath and the fight is
+	# drawn on it by CombatOverlay. The backdrop only exists for a fight with no field (tests
+	# and tools that start Battle without a session).
 	var backdrop := ColorRect.new()
 	backdrop.name = "Backdrop"
 	backdrop.color = DS.VOID_1
@@ -55,13 +54,6 @@ func _build() -> void:
 	stage_space.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	stage_space.clip_contents = true
 	layout.add_child(stage_space)
-
-	if not Battle.session_active:
-		_stage = BATTLE_STAGE_SCENE.instantiate() as Control
-		_stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		stage_space.add_child(_stage)
-		Battle.combat_event.connect(Callable(_stage, "consume_event"))
-		Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
 
 	_battle_interface = BATTLE_INTERFACE_SCENE.instantiate() as BattleInterface
 	_battle_interface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

@@ -88,8 +88,7 @@ func combat_mode_active() -> bool:
 
 func _is_field_interactable(node: Node) -> bool:
 	return (
-		node is Enemy
-		or node is NPC
+		node is NPC
 		or node is SMInteractable
 		or node is TavernDoor
 		or node is BuildingDoor

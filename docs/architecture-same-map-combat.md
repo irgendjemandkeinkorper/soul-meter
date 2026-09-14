@@ -210,10 +210,20 @@ the canvas transform and field grid, so camera and field transforms do not intro
 projection. Live events drive movement, action feedback, HP readouts and facing markers.
 Historical replay restores positions without replaying animations on the live field actors.
 
-This is not completion of step 6: the legacy set-piece screen and hidden tactical HUD still
-exist. Retiring those surfaces and the log-hidden Bog Wight acceptance remain required before
-#281 can close. The focused tests are in `test/unit/test_combat_overlay.gd`; the existing
-BattleInterface tests guard the frozen payload.
+**Legacy board retired — 2026-09-14.** `ui/screens/battle_stage.*` and `actors/enemy/*` are
+deleted; `ui/screens/battle.tscn` survives as the field HUD (its backdrop shows only for a fight
+started without a session, which no production path does). Still open from D6: folding
+`ui/hud/battle_hud.tscn` into `BattleInterface`. The focused tests are in
+`test/unit/test_combat_overlay.gd`; the existing BattleInterface tests guard the frozen payload.
+
+**Set-pieces on the field — landed 2026-09-14.** `Battle.start_set_piece(field, encounter)`
+builds the grid from the field it is given (interiors allowed: a set-piece is placed by
+design), seats the party where it stands with the enemies on the nearest free cells
+`SET_PIECE_ENEMY_OFFSET` east of the player (PROVISIONAL until encounters author cells),
+spawns one Hostile per enemy that adopts the actor and stands on its seat, and frees them with
+the session. The trial hall gained a hidden `IsometricGround` blockout because interior
+`FieldGround` layers are empty. Callers: `lower_trial_hall._start_trial_encounter` and the
+journey ambush in `GameFlow`. Acceptance: `test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory`.
 
 **Camera (D6/D9) — landed 2026-09-14.** `CombatOverlay.bind_field` binds the player's
 `Camera2D`; each `turn_started`/`enemy_turn_started` pans to an off-screen active actor over
