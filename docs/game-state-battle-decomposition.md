@@ -51,7 +51,7 @@ pure, gate-proven forecast==resolution). What remains in `battle.gd`:
 3. **Legacy convenience wrappers** (battle.gd:298–319) — delete after the battle screen
    migrates to `use_action` paths; they predate the controller.
 
-The one genuinely broad Battle surface is the `combat_event` signal (stage, battle_hud,
+The one genuinely broad Battle surface is the `combat_event` signal (stage, tactical data region,
 battle_interface, combat_audio, combat_style_tracker all consume it, with replay). That
 contract is now load-bearing for the six-region interface — treat it as frozen; any
 decomposition must keep `combat_event` + `replay_combat_events` byte-compatible.

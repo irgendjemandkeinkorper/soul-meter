@@ -1,10 +1,10 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://ui/hud/battle_hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://ui/hud/regions/tactical_data/tactical_data_region.gd" id="1_hud"]
 [ext_resource type="Script" path="res://ui/hud/balance_arcs.gd" id="2_balance"]
 [ext_resource type="Script" path="res://ui/hud/eclipse_pips.gd" id="3_pips"]
 
-[node name="BattleHUD" type="PanelContainer"]
+[node name="TacticalDataRegion" type="PanelContainer"]
 custom_minimum_size = Vector2(0, 210)
 theme_type_variation = &"BattleHudPanel"
 script = ExtResource("1_hud")

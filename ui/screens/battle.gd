@@ -2,7 +2,6 @@ extends Screen
 ## Full-screen party combat view. Battle owns the rules; this screen is the
 ## presentation layer and submits action IDs to the autoload.
 
-const BATTLE_HUD_SCENE := preload("res://ui/hud/battle_hud.tscn")
 const BATTLE_INTERFACE_SCENE := preload("res://ui/hud/battle_interface.tscn")
 const COMBAT_AUDIO := preload("res://audio/combat_audio.gd")
 
@@ -17,7 +16,6 @@ var _end_turn_button: Button
 var _tactical_data_button: Button
 var _outcome_box: VBoxContainer
 var _action_buttons: Array[Button] = []
-var _battle_hud: BattleHUD
 var _battle_interface: BattleInterface
 var _combat_audio: Node
 var _weakness_dialog: Window
@@ -67,14 +65,6 @@ func _build() -> void:
 	_battle_interface.stage.set_replaying(false)
 	if Battle.controller != null and Battle.controller.scheduler != null:
 		_battle_interface.bind_controller(Battle.controller)
-
-	_battle_hud = BATTLE_HUD_SCENE.instantiate() as BattleHUD
-	_battle_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_battle_hud.z_index = 5
-	_battle_hud.visible = false
-	stage_space.add_child(_battle_hud)
-	Battle.combat_event.connect(_battle_hud.consume_event)
-	Battle.replay_combat_events(_battle_hud.consume_event)
 
 	_combat_audio = COMBAT_AUDIO.new() as Node
 	add_child(_combat_audio)
@@ -311,13 +301,11 @@ func _confirm_weakness() -> void:
 
 
 func _toggle_tactical_data() -> void:
-	if not is_instance_valid(_battle_hud):
+	if not is_instance_valid(_battle_interface):
 		return
-	_battle_hud.visible = not _battle_hud.visible
+	var shown := _battle_interface.toggle_tactical_data()
 	if is_instance_valid(_tactical_data_button):
-		_tactical_data_button.text = (
-			"CLOSE TACTICAL DATA" if _battle_hud.visible else "TACTICAL DATA"
-		)
+		_tactical_data_button.text = "CLOSE TACTICAL DATA" if shown else "TACTICAL DATA"
 
 
 func _refresh() -> void:

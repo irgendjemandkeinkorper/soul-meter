@@ -1,6 +1,6 @@
-class_name BattleHUD
+class_name TacticalDataRegion
 extends PanelContainer
-## FR-603 presentation model. Every rendered value is reconstructed from
+## FR-603 tactical data, a BattleInterface region (D6). Presentation model: Every rendered value is reconstructed from
 ## CombatEvent payloads; this component has no resolver or battle-state reads.
 
 @onready var _initiative_label: Label = $Margin/Columns/PrimaryRow/InitiativeColumn/Initiative

@@ -212,8 +212,10 @@ Historical replay restores positions without replaying animations on the live fi
 
 **Legacy board retired — 2026-09-14.** `ui/screens/battle_stage.*` and `actors/enemy/*` are
 deleted; `ui/screens/battle.tscn` survives as the field HUD (its backdrop shows only for a fight
-started without a session, which no production path does). Still open from D6: folding
-`ui/hud/battle_hud.tscn` into `BattleInterface`. The focused tests are in
+started without a session, which no production path does). D6's last item landed the same
+day: `ui/hud/battle_hud.tscn` is now `ui/hud/regions/tactical_data/tactical_data_region.tscn`, a
+hidden BattleInterface region fed by `consume_event` and toggled by `toggle_tactical_data()`.
+The focused tests are in
 `test/unit/test_combat_overlay.gd`; the existing BattleInterface tests guard the frozen payload.
 
 **Set-pieces on the field — landed 2026-09-14.** `Battle.start_set_piece(field, encounter)`

@@ -169,3 +169,26 @@ func _two_cell_ground() -> TileMapLayer:
 	layer.set_cell(Vector2i(0, 0), 0, Vector2i.ZERO)
 	layer.set_cell(Vector2i(1, 0), 0, Vector2i.ZERO)
 	return layer
+
+
+## D6 (#281): the FR-603 tactical data panel is a BattleInterface region, hidden until the
+## player asks for it, and fed by the same consume_event as every other region.
+func test_tactical_data_is_a_hidden_region_fed_by_the_interface_event_stream() -> void:
+	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
+	var interface := runner.scene() as BattleInterface
+	var tactical := runner.find_child("TacticalData", true, false) as TacticalDataRegion
+	assert_object(tactical).is_not_null()
+	assert_bool(tactical.visible).is_false()
+
+	var event := CombatEvent.new()
+	event.type = &"action_resolved"
+	event.data = {"snapshot": {"balance": -35, "active_actor_id": &"ally-0", "allies": [], "enemies": []}}
+	interface.consume_event(event)
+	await runner.simulate_frames(1)
+	var balance := runner.find_child("BalanceValue", true, false) as Label
+	assert_str(balance.text).contains("-35")
+
+	assert_bool(interface.toggle_tactical_data()).is_true()
+	assert_bool(tactical.visible).is_true()
+	assert_bool(interface.toggle_tactical_data()).is_false()
+	assert_bool(tactical.visible).is_false()

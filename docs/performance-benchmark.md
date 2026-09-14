@@ -40,7 +40,7 @@ godot --headless --path . --script res://tools/performance_benchmark.gd
 | `setup_phase` | Battle setup duration plus p50 / p95 / p99 for the battle-event-to-settle-gate setup window |
 | `measurement.settle_gate` | Settle method, target/actual discard duration, and discarded frame count |
 | `spans.travel_transition` | Six ordered spans from `GameFlow.travel` to first interactive frame |
-| `spans.battle_entry` | Battle event → BattleHUD visible and accepting input |
+| `spans.battle_entry` | Battle event → BattleInterface visible and accepting input |
 | `town_npc_spawner` | Idle sprite count, per-sprite per-frame work, whether viewport culling exists |
 | `scene_baseline` | Authored node/Sprite2D counts for the target scene |
 | `environment` | OS, CPU, renderer, Godot build — runs are only comparable within one environment |
