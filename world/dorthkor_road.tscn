@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="3_hud"]
-[ext_resource type="PackedScene" path="res://actors/enemy/enemy.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" path="res://actors/hostile/hostile.tscn" id="4_hostile"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="5_exit"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_iso"]
 [ext_resource type="Texture2D" path="res://assets/generated/backgrounds/world/dorthkor-road-terrain-v1.png" id="45_terrain"]
@@ -140,15 +140,21 @@ position = Vector2(180, 450)
 
 [node name="FieldHUD" parent="." instance=ExtResource("3_hud")]
 
-[node name="BreachHound" parent="." instance=ExtResource("4_enemy")]
+[node name="BreachHound" parent="." instance=ExtResource("4_hostile")]
 position = Vector2(720, 430)
-encounter_id = &"dorthkor-vanguard"
+unit_id = &"gnaal-breach-hound"
+group_id = &"dorthkor-vanguard"
 
-[node name="MusteredDead" parent="." instance=ExtResource("4_enemy")]
+[node name="RiftScavenger" parent="." instance=ExtResource("4_hostile")]
+position = Vector2(820, 480)
+unit_id = &"gnaal-rift-scavenger"
+group_id = &"dorthkor-vanguard"
+
+[node name="MusteredDead" parent="." instance=ExtResource("4_hostile")]
 position = Vector2(1280, 470)
-encounter_id = &"dorthkor-muster"
+unit_id = &"mustered-bloodbellow"
+group_id = &"dorthkor-muster"
 required_flag = "defeated_breach_hound"
-locked_message = "Break the demon vanguard first."
 
 [node name="ReturnToDom" parent="." instance=ExtResource("5_exit")]
 position = Vector2(70, 450)

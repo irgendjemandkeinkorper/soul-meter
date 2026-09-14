@@ -13,8 +13,14 @@ enum State { IDLE, ALERTED, IN_COMBAT, DOWNED }
 ## Seconds this hostile stays deaf after a session it triggered was refused for want of room
 ## (F0 ruling 4). Without it a party wedged in a pocket re-refuses on every physics frame.
 @export var realert_cooldown: float = 2.0 # PROVISIONAL — F0 ruling 4.
+## Authored gate: while this flag is false the hostile is deaf — it stands on the field but
+## no proximity or chain alert reaches it. Replaces the legacy Enemy `required_flag` lock.
+@export var required_flag: String = ""
+
+const LOCKED_MODULATE := Color(0.6, 0.6, 0.6, 1.0)
 
 const SENSOR_NAME := "AlertSensor"
+const NODE_PATH_SENSOR := NodePath(SENSOR_NAME)
 
 var combat_id: StringName
 var cell: Vector2i
@@ -27,6 +33,10 @@ func _ready() -> void:
 	set_process(false)
 	set_physics_process(false)
 	add_to_group(&"hostile")
+	# D7 ruling 3: a group the party already put down stays down across scene loads.
+	if _group_already_defeated():
+		queue_free()
+		return
 	if combat_id.is_empty():
 		var root := _field_root()
 		combat_id = StringName("%s:%s" % [root.scene_file_path, root.get_path_to(self)])
@@ -39,6 +49,10 @@ func _ready() -> void:
 		sprite.offset = UnitArt.PIVOT_OFFSET
 		UnitArt.apply_world_scale(sprite, get_node_or_null("Shadow"))
 	_configure_sensor()
+	if not required_flag.is_empty():
+		if not GameState.flag_changed.is_connected(_on_flag_changed):
+			GameState.flag_changed.connect(_on_flag_changed)
+		_refresh_lock()
 	sync_cell.call_deferred()
 
 
@@ -52,6 +66,8 @@ func battle_actor() -> BattleActor:
 
 func request_alert() -> bool:
 	if state != State.IDLE or battle_actor() == null:
+		return false
+	if not is_unlocked():
 		return false
 	if alert_cooldown_active():
 		return false
@@ -82,6 +98,30 @@ func refuse_alert() -> void:
 	state = State.IDLE
 	_cooldown_until_msec = Time.get_ticks_msec() + int(maxf(realert_cooldown, 0.0) * 1000.0)
 	_set_sensor_enabled(true)
+
+
+func is_unlocked() -> bool:
+	return required_flag.is_empty() or GameState.flag_is_true(required_flag)
+
+
+func _group_already_defeated() -> bool:
+	if group_id.is_empty():
+		return false
+	var flag := EncounterCatalog.defeated_flag(group_id)
+	return not flag.is_empty() and GameState.flag_is_true(flag)
+
+
+func _on_flag_changed(flag: String, _value: Variant) -> void:
+	if flag != required_flag:
+		return
+	_refresh_lock()
+	if is_unlocked():
+		# The player may already be standing inside the radius when the gate opens.
+		_check_initial_overlap.call_deferred()
+
+
+func _refresh_lock() -> void:
+	modulate = Color.WHITE if is_unlocked() else LOCKED_MODULATE
 
 
 func alert_cooldown_active() -> bool:
@@ -154,10 +194,12 @@ func _check_initial_overlap() -> void:
 			return
 
 
+## `body_entered` -> `request_alert` -> here runs inside the physics in/out callback, where
+## Area2D refuses a direct `monitoring` write; deferring it is the engine-sanctioned path.
 func _set_sensor_enabled(enabled: bool) -> void:
-	var sensor := get_node_or_null(NodePath(SENSOR_NAME)) as Area2D
+	var sensor := get_node_or_null(NODE_PATH_SENSOR) as Area2D
 	if sensor != null:
-		sensor.monitoring = enabled
+		sensor.set_deferred(&"monitoring", enabled)
 
 
 ## Recomputes and returns this hostile's field cell. Admission reads it live rather than

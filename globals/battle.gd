@@ -261,6 +261,8 @@ func start_session(field: FieldMap, first: Hostile) -> Dictionary:
 	field.seat_party(seats)
 	if not field.hostile_alerted.is_connected(_on_field_hostile_alerted):
 		field.hostile_alerted.connect(_on_field_hostile_alerted)
+	if not field.tree_exiting.is_connected(_on_session_field_exiting):
+		field.tree_exiting.connect(_on_session_field_exiting)
 	battle_started.emit()
 	balance_changed.emit(balance)
 	# `seats`/`first_cell` report what the session was OPENED on. Positions move the moment the
@@ -367,20 +369,36 @@ func _on_field_hostile_alerted(hostile: Hostile) -> void:
 	admit(hostile)
 
 
+## The field is being unloaded under a live session (a save load, a fixture teardown). The
+## fight cannot continue without its ground, so it ends as a flight: no ledger, hostiles
+## settle, and nothing in Battle keeps pointing at nodes that are about to be freed.
+func _on_session_field_exiting() -> void:
+	if not session_active:
+		return
+	if not ended:
+		flee()
+	if session_active:
+		_end_session(null)
+
+
 ## Ends the session bookkeeping. The grid is released by `_finish()`; this drops the field
 ## wiring so a second fight on the same field starts from a clean seam.
 func _end_session(result: BattleResult) -> void:
 	if not session_active:
 		return
 	session_active = false
-	if _session_field != null:
+	if is_instance_valid(_session_field):
 		if _session_field.hostile_alerted.is_connected(_on_field_hostile_alerted):
 			_session_field.hostile_alerted.disconnect(_on_field_hostile_alerted)
+		if _session_field.tree_exiting.is_connected(_on_session_field_exiting):
+			_session_field.tree_exiting.disconnect(_on_session_field_exiting)
 	# D7: the field keeps the outcome. Dead hostiles stay down; anything still standing when
 	# the party fled or fell returns to IDLE at full HP so the map can be crossed again.
-	for hostile: Hostile in _session_hostiles.values():
-		if not is_instance_valid(hostile):
+	for tracked: Variant in _session_hostiles.values():
+		# A typed loop variable would throw on a freed node before any validity check ran.
+		if not is_instance_valid(tracked):
 			continue
+		var hostile := tracked as Hostile
 		var actor := hostile.battle_actor()
 		if actor != null and not actor.is_alive():
 			hostile.mark_downed()
@@ -405,9 +423,11 @@ func _resolve_downed_groups() -> void:
 	if not _ambient_session:
 		return
 	var groups: Dictionary = {}
-	for hostile: Hostile in _session_hostiles.values():
-		if not is_instance_valid(hostile):
+	for tracked: Variant in _session_hostiles.values():
+		# A typed loop variable would throw on a freed node before any validity check ran.
+		if not is_instance_valid(tracked):
 			continue
+		var hostile := tracked as Hostile
 		var actor := hostile.battle_actor()
 		if actor == null:
 			continue
@@ -492,9 +512,11 @@ func _check_session_flee() -> void:
 	var party := _session_party_positions()
 	var any_in_reach := false
 	var any_living := false
-	for hostile: Hostile in _session_hostiles.values():
-		if not is_instance_valid(hostile):
+	for tracked: Variant in _session_hostiles.values():
+		# A typed loop variable would throw on a freed node before any validity check ran.
+		if not is_instance_valid(tracked):
 			continue
+		var hostile := tracked as Hostile
 		var actor := hostile.battle_actor()
 		if actor == null or not actor.is_alive():
 			continue

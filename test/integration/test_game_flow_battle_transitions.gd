@@ -94,6 +94,25 @@ func test_enter_battle_goes_directly_to_battle_and_pause_returns_there() -> void
 	assert_int(MusicDirector.get_context_stack().size()).is_equal(music_depth_before)
 
 
+## #281 step 1: the authored Hostile in the field is what opens an ambient session. Walking
+## into its alert radius, with nothing pressed, is the whole trigger.
+func test_walking_into_an_authored_hostile_opens_a_session_and_enters_battle() -> void:
+	var hostile := _field_scene.find_child("BogWight", true, false) as Hostile
+	assert_object(hostile).is_not_null()
+	if hostile == null:
+		return
+	var player := _field_scene.find_child("Player", true, false) as Player
+	player.global_position = hostile.global_position + Vector2(hostile.alert_radius * 0.5, 0.0)
+	for _i in 4:
+		await get_tree().physics_frame
+	await get_tree().process_frame
+
+	assert_bool(Battle.session_active).is_true()
+	assert_int(hostile.state).is_equal(Hostile.State.IN_COMBAT)
+	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
+	assert_bool(_field.combat_mode_active()).is_true()
+
+
 func test_enter_set_piece_traverses_the_existing_deployment_chain() -> void:
 	Battle.start(EncounterIds.BOG_WIGHT)
 
@@ -215,6 +234,8 @@ func _state_is_active(path: String) -> bool:
 
 
 func _reset_battle() -> void:
+	if Battle.session_active:
+		Battle._end_session(null)
 	Battle.controller = null
 	Battle.allies.clear()
 	Battle.enemies.clear()

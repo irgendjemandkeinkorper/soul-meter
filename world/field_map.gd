@@ -2,9 +2,10 @@ class_name FieldMap
 extends Node2D
 ## Stable field-scene seam shared by navigation and same-map combat.
 
-## Re-emitted for every hostile that accepts an alert on this field, whether the alert came
-## from a proximity sensor, from being targeted, or from a chain hop. Battle listens for it and
-## decides whether that means "open a session" or "admit into the running one".
+## Re-emitted for every hostile that accepts an alert on this field while a session is live,
+## whether the alert came from a proximity sensor, from being targeted, or from a chain hop.
+## Battle listens for it and admits the hostile. The FIRST alert on a quiet field is different:
+## the field opens the session itself (`_open_session`) and hands navigation to GameFlow.
 signal hostile_alerted(hostile: Hostile)
 
 var _combat_mode_active: bool = false
@@ -184,7 +185,24 @@ func _connect_hostiles() -> void:
 
 
 func _on_hostile_alerted(hostile: Hostile) -> void:
-	hostile_alerted.emit(hostile)
+	if Battle.session_active:
+		hostile_alerted.emit(hostile)
+		return
+	_open_session(hostile)
+
+
+## #281 step 1: an accepted alert on a quiet field is the ambient trigger. Battle refuses (and
+## returns the hostile to IDLE under cooldown) when the party cannot be seated; only a committed
+## session moves the chart, the same `enter_battle` a travel encounter sends.
+func _open_session(hostile: Hostile) -> void:
+	if player() == null:
+		# A field without a party has nobody to fight; leave the alert as a plain signal.
+		hostile_alerted.emit(hostile)
+		return
+	var result: Dictionary = Battle.start_session(self, hostile)
+	if not bool(result.get("allowed", false)):
+		return
+	GameFlow.send_event(&"enter_battle")
 
 
 ## F0 D8 (#281 step 8): the weather a session starts under is the LOCATION's, read

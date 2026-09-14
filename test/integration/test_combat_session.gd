@@ -363,3 +363,20 @@ func test_session_ends_fled_after_two_measures_with_no_party_in_reach() -> void:
 	assert_int(Reputation.event_count()).is_equal(events_before)
 	assert_bool(Battle.session_active).is_false()
 	Reputation.from_dict(reputation_before)
+
+
+## A field torn down under a live session (save load, fixture teardown) must not leave Battle
+## holding a session that points at freed nodes; the fight ends as a flight instead.
+func test_unloading_the_field_under_a_live_session_ends_it_as_a_flight() -> void:
+	var field := await _field()
+	var hostile := _hostile(field, "Wight", Vector2i(30, 30))
+	var result: Dictionary = Battle.start_session(field, hostile)
+	assert_bool(bool(result.get("allowed", false))).is_true()
+	assert_bool(Battle.session_active).is_true()
+
+	field.get_parent().free()
+	await get_tree().process_frame
+
+	assert_bool(Battle.session_active).is_false()
+	assert_bool(Battle.ended).is_true()
+	assert_int(Battle.last_result.state).is_equal(BattleResult.State.FLED)
