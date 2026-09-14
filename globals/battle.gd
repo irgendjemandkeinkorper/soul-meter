@@ -43,6 +43,20 @@ var _pending_class_resources: Dictionary = {}
 var session_active := false
 var _session_field: FieldMap
 var _session_hostiles: Dictionary = {}  ## StringName (combat_id) -> Hostile
+## True only for an ambient `start_session()` fight. A set-piece is also a session, but it
+## keeps its authored encounter ledger; the per-group ledger and the flee rule below are the
+## ambient path's (F0 D7).
+var _ambient_session := false
+## D7 PROVISIONAL (ruled 2026-09-04, numbers open to tuning): the session ends FLED once no
+## living hostile has had any party member inside `alert_radius × FLEE_RADIUS_FACTOR` for
+## FLEE_MEASURES consecutive measures. The test flips these through the constants.
+const PROVISIONAL_FLEE_RADIUS_FACTOR := 1.5
+const PROVISIONAL_FLEE_MEASURES := 2
+var _measures_out_of_reach := 0
+var _resolved_groups: Dictionary = {}  ## StringName (group_id) -> true once its ledger fired
+var _session_spoils: Array[Dictionary] = []
+var _session_xp := 0
+var _session_levels: Dictionary = {}  ## member id -> levels gained, summed across groups
 var last_speech_check: Dictionary = {}
 var last_speech_option: StringName = &""
 var last_speech_succeeded := false
@@ -235,8 +249,14 @@ func start_session(field: FieldMap, first: Hostile) -> Dictionary:
 		_pending_class_resources.clear()
 
 	session_active = true
+	_ambient_session = true
 	_session_field = field
 	_session_hostiles.clear()
+	_resolved_groups.clear()
+	_session_spoils = []
+	_session_xp = 0
+	_session_levels = {}
+	_measures_out_of_reach = 0
 	_track_session_hostile(first, hostile_actor)
 	field.seat_party(seats)
 	if not field.hostile_alerted.is_connected(_on_field_hostile_alerted):
@@ -299,6 +319,7 @@ func start_set_piece(field: FieldMap, encounter: StringName) -> Dictionary:
 			&"composition", &"present_combatant", "That encounter has no living enemies."
 		)
 	session_active = true
+	_ambient_session = false
 	_session_field = field
 	_session_hostiles.clear()
 	return _session_allowed({"encounter_id": String(encounter)})
@@ -355,9 +376,142 @@ func _end_session(result: BattleResult) -> void:
 	if _session_field != null:
 		if _session_field.hostile_alerted.is_connected(_on_field_hostile_alerted):
 			_session_field.hostile_alerted.disconnect(_on_field_hostile_alerted)
+	# D7: the field keeps the outcome. Dead hostiles stay down; anything still standing when
+	# the party fled or fell returns to IDLE at full HP so the map can be crossed again.
+	for hostile: Hostile in _session_hostiles.values():
+		if not is_instance_valid(hostile):
+			continue
+		var actor := hostile.battle_actor()
+		if actor != null and not actor.is_alive():
+			hostile.mark_downed()
+		else:
+			hostile.return_to_idle()
+	if _ambient_session and result != null:
+		# One checkpoint per session, not one per resolved group (D7).
+		SaveGame.request_checkpoint(
+			SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, "session-" + String(result.outcome_id)
+		)
 	_session_field = null
 	_session_hostiles.clear()
+	_ambient_session = false
 	session_ended.emit(result)
+
+
+## D7: the ledger fires per `group_id` the moment that group's last admitted member is
+## downed, not at session end. Idempotent per group and per session; `defeated_flag` keeps
+## the cross-session `already_resolved` dedupe, so a group the party already cleared once
+## pays nothing when it is fought again.
+func _resolve_downed_groups() -> void:
+	if not _ambient_session:
+		return
+	var groups: Dictionary = {}
+	for hostile: Hostile in _session_hostiles.values():
+		if not is_instance_valid(hostile):
+			continue
+		var actor := hostile.battle_actor()
+		if actor == null:
+			continue
+		if not actor.is_alive() and hostile.state != Hostile.State.DOWNED:
+			hostile.mark_downed()
+		if hostile.group_id == &"":
+			continue
+		if not groups.has(hostile.group_id):
+			groups[hostile.group_id] = []
+		(groups[hostile.group_id] as Array).append(actor)
+	for group_id: StringName in groups:
+		if _resolved_groups.has(group_id):
+			continue
+		var members: Array = groups[group_id]
+		var all_down := true
+		for actor: BattleActor in members:
+			if actor.is_alive():
+				all_down = false
+				break
+		if all_down:
+			_resolve_group(group_id, members)
+
+
+func _resolve_group(group_id: StringName, members: Array) -> void:
+	_resolved_groups[group_id] = true
+	var outcome_id := EncounterCatalog.default_outcome(group_id)
+	var outcome := EncounterCatalog.outcome(group_id, outcome_id)
+	var defeated_flag := EncounterCatalog.defeated_flag(group_id)
+	var already_resolved := not defeated_flag.is_empty() and GameState.flag_is_true(defeated_flag)
+	if not defeated_flag.is_empty():
+		GameState.set_flag(defeated_flag, true)
+	if already_resolved:
+		return
+	var cause := str(outcome.get("cause", members[0].win_cause if not members.is_empty() else ""))
+	if cause.is_empty():
+		cause = "Cleared %s" % String(group_id)
+	var scene := _outcome_scene(outcome)
+	var faction := str(outcome.get("faction", members[0].win_faction if not members.is_empty() else ""))
+	var delta := float(outcome.get("delta", members[0].win_delta if not members.is_empty() else 0.0))
+	if not faction.is_empty():
+		Reputation.record("player", faction, delta, cause, scene)
+	_record_renown(outcome, &"reputation", 3.0, cause, scene)
+	var earned := 0
+	for actor: BattleActor in members:
+		earned += Advancement.xp_for_defeated(
+			actor.attribute_value(&"grit"), actor.attribute_value(&"muster")
+		)
+	if earned > 0:
+		_session_xp += earned
+		var levels := GameState.award_party_xp(earned, "Cleared %s" % String(group_id))
+		for member_id: Variant in levels:
+			_session_levels[member_id] = int(_session_levels.get(member_id, 0)) + int(levels[member_id])
+	_session_spoils.append_array(EncounterCatalog.roll_spoils(group_id))
+	var group_result := BattleResult.new()
+	group_result.state = BattleResult.State.VICTORY
+	group_result.encounter_id = group_id
+	group_result.outcome_id = outcome_id
+	group_result.cause = cause
+	_apply_authored_flags(outcome.get("flags", {}), group_result)
+
+
+## Party positions on the live field, in world space. Presentation nodes are what the flee
+## rule measures against: an off-screen party that walked away is what "out of reach" means.
+func _session_party_positions() -> Array[Vector2]:
+	var positions: Array[Vector2] = []
+	if _session_field == null:
+		return positions
+	var lead := _session_field.player()
+	if lead != null:
+		positions.append(lead.global_position)
+	var followers := _session_field.party_followers()
+	if followers != null:
+		for follower: Node2D in followers.followers():
+			positions.append(follower.global_position)
+	return positions
+
+
+## D7 flee rule, checked once per measure (the ambient clock's round).
+func _check_session_flee() -> void:
+	if not _ambient_session or controller == null or ended:
+		return
+	var party := _session_party_positions()
+	var any_in_reach := false
+	var any_living := false
+	for hostile: Hostile in _session_hostiles.values():
+		if not is_instance_valid(hostile):
+			continue
+		var actor := hostile.battle_actor()
+		if actor == null or not actor.is_alive():
+			continue
+		any_living = true
+		var reach := hostile.alert_radius * PROVISIONAL_FLEE_RADIUS_FACTOR
+		for position: Vector2 in party:
+			if hostile.global_position.distance_to(position) <= reach:
+				any_in_reach = true
+				break
+		if any_in_reach:
+			break
+	if not any_living or any_in_reach:
+		_measures_out_of_reach = 0
+		return
+	_measures_out_of_reach += 1
+	if _measures_out_of_reach >= PROVISIONAL_FLEE_MEASURES:
+		controller.force_finish(CombatController.ResultState.FLED, OUTCOME_FLED)
 
 
 func _session_allowed(extra: Dictionary = {}) -> Dictionary:
@@ -853,7 +1007,9 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 	result.encounter_id = encounter_id
 	result.outcome_id = outcome_id
 	_record_last_outcome(result)
-	if state == BattleResult.State.VICTORY:
+	if _ambient_session:
+		_finish_ambient(result)
+	elif state == BattleResult.State.VICTORY:
 		_apply_victory(result)
 	elif state == BattleResult.State.DEFEAT:
 		result.message = "The company falls back and recovers to half strength."
@@ -870,6 +1026,28 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 	last_result = result
 	battle_ended.emit(result)
 	_end_session(result)
+
+
+## D7 for an ambient session. Groups already paid out when their last member fell; victory
+## only sweeps up whatever is left (a group whose last member fell on the finishing blow) and
+## hands the accumulated spoils and XP to the result. Defeat and flight write no ledger for
+## the groups still standing — PROVISIONAL: D7 rules a fled group writes nothing, and a
+## session has no authored loss stake, so defeat is treated the same until one is ratified.
+func _finish_ambient(result: BattleResult) -> void:
+	match result.state:
+		BattleResult.State.VICTORY:
+			_resolve_downed_groups()
+			result.message = "The field is quiet again."
+			result.cause = "Cleared the field"
+		BattleResult.State.DEFEAT:
+			result.message = "The company falls back and recovers to half strength."
+			result.cause = "Overrun on the field"
+		_:
+			result.message = "The company disengages without reward or resolution."
+			result.cause = "Broke off the fight"
+	result.spoils = _session_spoils.duplicate(true)
+	result.xp_awarded = _session_xp
+	result.levels_gained = _session_levels.duplicate(true)
 
 
 func _apply_victory(result: BattleResult) -> void:
@@ -1178,6 +1356,9 @@ func _on_combat_event(event: CombatEvent) -> void:
 		enemy_rounds += 1
 	if event.type == &"measure_started":
 		_propagate_session_alerts()
+		_check_session_flee()
+	if event.type == &"action_resolved":
+		_resolve_downed_groups()
 	if event.data.has("message"):
 		last_message = str(event.data["message"])
 	if controller != null:

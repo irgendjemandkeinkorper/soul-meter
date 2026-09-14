@@ -97,6 +97,22 @@ func mark_downed() -> void:
 	_set_sensor_enabled(false)
 
 
+## D7: a hostile that survived a session the party fled (or lost) goes back to IDLE at full
+## HP, under the same re-alert cooldown a refusal uses so it cannot re-open the fight on the
+## very frame the party is still standing inside its radius. A DOWNED hostile stays down.
+func return_to_idle() -> void:
+	if state == State.DOWNED:
+		return
+	state = State.IDLE
+	var actor := battle_actor()
+	if actor != null:
+		actor.hp = actor.max_hp
+		actor.guarding = false
+	velocity = Vector2.ZERO
+	_cooldown_until_msec = Time.get_ticks_msec() + int(maxf(realert_cooldown, 0.0) * 1000.0)
+	_set_sensor_enabled(true)
+
+
 ## D9: an IDLE hostile does no per-frame work. Proximity is an Area2D overlap and nothing
 ## else, and the sensor is switched off the moment this hostile stops being able to be
 ## alerted. The radius is per-instance, so the shape is resized here rather than authored.
