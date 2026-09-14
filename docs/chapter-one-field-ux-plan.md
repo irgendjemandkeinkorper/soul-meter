@@ -109,6 +109,7 @@ answers exactly: "Did anything vanish, and where?" and "Does Dom read as a place
 - 2026-09-13 Wave 3a (#309) done — Luna art batch + Fable scale/counter/door fixes; 52 rendered cases green (`docs/qa/ch1-field-ux-wave3a.md`).
 - 2026-09-13 Wave 3b (#305 partial) done — hidden kit assemblies + dead battle scenery deleted; 91 live outdoor kit sprites deferred to an art batch (`docs/qa/ch1-field-ux-wave3b.md`).
 - 2026-09-13 Owner review of 3a: rooms must be ~2× larger for the furniture to be at scale → Wave 3c (room scale) dispatched to Astra.
+- 2026-09-14 Wave 3c done — commit `af0931be` (PR #425): all 22 interiors doubled to 1920×1280, transitions and Pandora offsets migrated; focused suites 54/54, generated-data drift clean. Owner scale check pending in Wave 4.
 
 ## Out of scope for this push
 World-map travel rewrite, AP-combat changes, new locations (#238/#239), Weftlumin waves,
