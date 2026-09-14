@@ -23,25 +23,25 @@
 [ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="20_blocking_tiles"]
 
 [sub_resource type="RectangleShape2D" id="wall_horizontal"]
-size = Vector2(960, 40)
+size = Vector2(1920, 80)
 
 [sub_resource type="RectangleShape2D" id="wall_vertical"]
-size = Vector2(40, 640)
+size = Vector2(80, 1280)
 
 [sub_resource type="RectangleShape2D" id="counter_range"]
-size = Vector2(420, 150)
+size = Vector2(840, 300)
 
 [sub_resource type="RectangleShape2D" id="counter_shape"]
-size = Vector2(420, 66)
+size = Vector2(840, 132)
 
 [sub_resource type="RectangleShape2D" id="exit_range"]
-size = Vector2(160, 56)
+size = Vector2(320, 112)
 
 [sub_resource type="RectangleShape2D" id="table_shape"]
-size = Vector2(108, 46)
+size = Vector2(216, 92)
 
 [sub_resource type="RectangleShape2D" id="crate_shape"]
-size = Vector2(54, 48)
+size = Vector2(108, 96)
 
 [node name="DomTavern" type="Node2D"]
 y_sort_enabled = true
@@ -72,51 +72,51 @@ tile_set = ExtResource("20_blocking_tiles")
 
 [node name="Floor" type="Polygon2D" parent="."]
 z_index = -10
-polygon = PackedVector2Array(0, 0, 960, 0, 960, 640, 0, 640)
+polygon = PackedVector2Array(0, 0, 1920, 0, 1920, 1280, 0, 1280)
 texture = ExtResource("4_floor")
 texture_repeat = 2
 color = Color(0.42, 0.31, 0.22, 1)
 
 [node name="BackWall" type="Polygon2D" parent="."]
 z_index = -1
-polygon = PackedVector2Array(-48, -96, 1008, -96, 1008, 0, -48, 0)
+polygon = PackedVector2Array(-48, -96, 1968, -96, 1968, 0, -48, 0)
 texture = ExtResource("8_wall")
 texture_repeat = 2
 color = Color(0.24, 0.14, 0.1, 1)
 
 [node name="WallBottom" type="Polygon2D" parent="."]
 z_index = -1
-polygon = PackedVector2Array(-48, 640, 1008, 640, 1008, 688, -48, 688)
+polygon = PackedVector2Array(-48, 1280, 1968, 1280, 1968, 1328, -48, 1328)
 texture = ExtResource("8_wall")
 texture_repeat = 2
 color = Color(0.24, 0.14, 0.1, 1)
 
 [node name="WallLeft" type="Polygon2D" parent="."]
 z_index = -1
-polygon = PackedVector2Array(-48, 0, 0, 0, 0, 640, -48, 640)
+polygon = PackedVector2Array(-48, 0, 0, 0, 0, 1280, -48, 1280)
 texture = ExtResource("8_wall")
 texture_repeat = 2
 color = Color(0.24, 0.14, 0.1, 1)
 
 [node name="WallRight" type="Polygon2D" parent="."]
 z_index = -1
-polygon = PackedVector2Array(960, 0, 1008, 0, 1008, 640, 960, 640)
+polygon = PackedVector2Array(1920, 0, 1968, 0, 1968, 1280, 1920, 1280)
 texture = ExtResource("8_wall")
 texture_repeat = 2
 color = Color(0.24, 0.14, 0.1, 1)
 
 [node name="Title" type="Label" parent="."]
-offset_left = 260.0
-offset_top = 28.0
-offset_right = 700.0
-offset_bottom = 70.0
+offset_left = 520
+offset_top = 56
+offset_right = 1400
+offset_bottom = 140
 theme_type_variation = &"HeadingLabel"
 text = "THE FOUR ARMS"
 horizontal_alignment = 1
 
 [node name="Counter" type="Polygon2D" parent="."]
-position = Vector2(480, 284)
-polygon = PackedVector2Array(-210, -105, 210, -105, 210, 0, -210, 0)
+position = Vector2(960, 568)
+polygon = PackedVector2Array(-420, -210, 420, -210, 420, 0, -420, 0)
 texture = ExtResource("21_counter")
 texture_repeat = 2
 color = Color(0.31, 0.17, 0.09, 1)
@@ -124,18 +124,18 @@ color = Color(0.31, 0.17, 0.09, 1)
 [node name="CounterBody" type="StaticBody2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CounterBody"]
-position = Vector2(480, 251)
+position = Vector2(960, 502)
 shape = SubResource("counter_shape")
 
 [node name="Taverner" type="Sprite2D" parent="."]
-position = Vector2(640, 50)
+position = Vector2(1280, 100)
 texture = ExtResource("6_taverner")
 
 [node name="TavernerLabel" type="Label" parent="."]
-offset_left = 555.0
-offset_top = 73.0
-offset_right = 725.0
-offset_bottom = 103.0
+offset_left = 1110
+offset_top = 146
+offset_right = 1450
+offset_bottom = 206
 theme_type_variation = &"EyebrowLabel"
 text = "TAVERNER"
 horizontal_alignment = 1
@@ -146,7 +146,7 @@ editor_description = "PROVISIONAL owner-balance surface: tune prop positions and
 y_sort_enabled = true
 
 [node name="TableWest" type="StaticBody2D" parent="TavernDressing"]
-position = Vector2(290, 390)
+position = Vector2(580, 780)
 
 [node name="Sprite2D" type="Sprite2D" parent="TavernDressing/TableWest"]
 scale = Vector2(0.6, 0.6)
@@ -154,11 +154,11 @@ texture = ExtResource("9_table")
 offset = Vector2(0, -24)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TavernDressing/TableWest"]
-position = Vector2(0, -8)
+position = Vector2(0, -16)
 shape = SubResource("table_shape")
 
 [node name="TableEast" type="StaticBody2D" parent="TavernDressing"]
-position = Vector2(670, 390)
+position = Vector2(1340, 780)
 
 [node name="Sprite2D" type="Sprite2D" parent="TavernDressing/TableEast"]
 scale = Vector2(0.6, 0.6)
@@ -166,47 +166,47 @@ texture = ExtResource("9_table")
 offset = Vector2(0, -24)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TavernDressing/TableEast"]
-position = Vector2(0, -8)
+position = Vector2(0, -16)
 shape = SubResource("table_shape")
 
 [node name="BenchLeft" type="Sprite2D" parent="TavernDressing"]
-position = Vector2(290, 470)
+position = Vector2(580, 940)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("5_bench")
 offset = Vector2(0, -18)
 
 [node name="BenchRight" type="Sprite2D" parent="TavernDressing"]
-position = Vector2(670, 470)
+position = Vector2(1340, 940)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("5_bench")
 offset = Vector2(0, -18)
 
 [node name="StoolWestA" type="Sprite2D" parent="TavernDressing"]
-position = Vector2(230, 390)
+position = Vector2(460, 780)
 scale = Vector2(0.4, 0.4)
 texture = ExtResource("10_stool")
 offset = Vector2(0, -14)
 
 [node name="StoolWestB" type="Sprite2D" parent="TavernDressing"]
-position = Vector2(350, 390)
+position = Vector2(700, 780)
 scale = Vector2(0.4, 0.4)
 texture = ExtResource("10_stool")
 offset = Vector2(0, -14)
 
 [node name="StoolEastA" type="Sprite2D" parent="TavernDressing"]
-position = Vector2(610, 390)
+position = Vector2(1220, 780)
 scale = Vector2(0.4, 0.4)
 texture = ExtResource("10_stool")
 offset = Vector2(0, -14)
 
 [node name="StoolEastB" type="Sprite2D" parent="TavernDressing"]
-position = Vector2(730, 390)
+position = Vector2(1460, 780)
 scale = Vector2(0.4, 0.4)
 texture = ExtResource("10_stool")
 offset = Vector2(0, -14)
 
 [node name="CratesWest" type="StaticBody2D" parent="TavernDressing"]
-position = Vector2(105, 548)
+position = Vector2(210, 1096)
 
 [node name="Sprite2D" type="Sprite2D" parent="TavernDressing/CratesWest"]
 scale = Vector2(0.62, 0.62)
@@ -214,11 +214,11 @@ texture = ExtResource("11_crates")
 offset = Vector2(0, -104)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TavernDressing/CratesWest"]
-position = Vector2(0, -24)
+position = Vector2(0, -48)
 shape = SubResource("crate_shape")
 
 [node name="CratesEast" type="StaticBody2D" parent="TavernDressing"]
-position = Vector2(855, 548)
+position = Vector2(1710, 1096)
 
 [node name="Sprite2D" type="Sprite2D" parent="TavernDressing/CratesEast"]
 scale = Vector2(0.62, 0.62)
@@ -226,11 +226,11 @@ texture = ExtResource("11_crates")
 offset = Vector2(0, -104)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TavernDressing/CratesEast"]
-position = Vector2(0, -24)
+position = Vector2(0, -48)
 shape = SubResource("crate_shape")
 
 [node name="LanternWest" type="Sprite2D" parent="TavernDressing"]
-position = Vector2(145, 176)
+position = Vector2(290, 352)
 scale = Vector2(0.58, 0.58)
 texture = ExtResource("12_lantern")
 offset = Vector2(0, -107)
@@ -239,7 +239,7 @@ motion_kind = 0
 phase = 0.7
 
 [node name="LanternEast" type="Sprite2D" parent="TavernDressing"]
-position = Vector2(815, 176)
+position = Vector2(1630, 352)
 scale = Vector2(0.58, 0.58)
 texture = ExtResource("12_lantern")
 offset = Vector2(0, -107)
@@ -253,25 +253,25 @@ editor_description = "PROVISIONAL owner-balance surface: tune patron loops after
 y_sort_enabled = true
 
 [node name="MerchantPatron" parent="AmbientPatrons" instance=ExtResource("14_ambient_villager")]
-position = Vector2(105, 300)
+position = Vector2(210, 600)
 villager_texture = ExtResource("15_patron_merchant")
-local_waypoints = PackedVector2Array(0, 0, 54, 8, 38, 42, 4, 34)
+local_waypoints = PackedVector2Array(0, 0, 108, 16, 76, 84, 8, 68)
 wander_speed = 15.0
 pause_duration = 2.4
 initial_pause = 0.5
 
 [node name="DockworkerPatron" parent="AmbientPatrons" instance=ExtResource("14_ambient_villager")]
-position = Vector2(405, 330)
+position = Vector2(810, 660)
 villager_texture = ExtResource("16_patron_dockworker")
-local_waypoints = PackedVector2Array(0, 0, 62, -12, 94, 16, 38, 38)
+local_waypoints = PackedVector2Array(0, 0, 124, -24, 188, 32, 76, 76)
 wander_speed = 17.0
 pause_duration = 2.0
 initial_pause = 1.2
 
 [node name="LaborerPatron" parent="AmbientPatrons" instance=ExtResource("14_ambient_villager")]
-position = Vector2(775, 292)
+position = Vector2(1550, 584)
 villager_texture = ExtResource("17_patron_laborer")
-local_waypoints = PackedVector2Array(0, 0, 56, 16, 32, 48, -4, 30)
+local_waypoints = PackedVector2Array(0, 0, 112, 32, 64, 96, -8, 60)
 wander_speed = 14.0
 pause_duration = 2.8
 initial_pause = 1.9
@@ -279,72 +279,72 @@ initial_pause = 1.9
 [node name="Walls" type="StaticBody2D" parent="."]
 
 [node name="Top" type="CollisionShape2D" parent="Walls"]
-position = Vector2(480, 20)
+position = Vector2(960, 40)
 shape = SubResource("wall_horizontal")
 
 [node name="BottomLeft" type="CollisionShape2D" parent="Walls"]
-position = Vector2(190, 620)
+position = Vector2(380, 1240)
 shape = SubResource("wall_horizontal")
 scale = Vector2(0.4, 1)
 
 [node name="BottomRight" type="CollisionShape2D" parent="Walls"]
-position = Vector2(770, 620)
+position = Vector2(1540, 1240)
 shape = SubResource("wall_horizontal")
 scale = Vector2(0.4, 1)
 
 [node name="Left" type="CollisionShape2D" parent="Walls"]
-position = Vector2(20, 320)
+position = Vector2(40, 640)
 shape = SubResource("wall_vertical")
 
 [node name="Right" type="CollisionShape2D" parent="Walls"]
-position = Vector2(940, 320)
+position = Vector2(1880, 640)
 shape = SubResource("wall_vertical")
 
 [node name="CounterInteraction" type="Area2D" parent="."]
-position = Vector2(480, 310)
+position = Vector2(960, 620)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CounterInteraction"]
 shape = SubResource("counter_range")
 
 [node name="Prompt" type="Label" parent="CounterInteraction"]
 z_index = 20
-offset_left = -100.0
-offset_top = -118.0
-offset_right = 100.0
-offset_bottom = -86.0
+offset_left = -200
+offset_top = -236
+offset_right = 200
+offset_bottom = -172
 theme_type_variation = &"EyebrowLabel"
 text = "E — CHOOSE COMPANY"
 horizontal_alignment = 1
 visible = false
 
 [node name="ExitDoorSprite" type="Sprite2D" parent="."]
-position = Vector2(480, 482.6)
+position = Vector2(960, 965.2)
 scale = Vector2(1.28, 1.28)
 texture = ExtResource("7_door_art")
 
 [node name="Exit" type="Area2D" parent="."]
-position = Vector2(480, 612)
+position = Vector2(960, 1224)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
 shape = SubResource("exit_range")
 
 [node name="Label" type="Label" parent="Exit"]
-offset_left = -70.0
-offset_top = -54.0
-offset_right = 70.0
-offset_bottom = -24.0
+offset_left = -140
+offset_top = -108
+offset_right = 140
+offset_bottom = -48
 theme_type_variation = &"EyebrowLabel"
 text = "WALK OUT"
 horizontal_alignment = 1
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(480, 538.6)
-camera_bounds = Rect2i(0, 0, 960, 640)
+position = Vector2(960, 1077.2)
+camera_bounds = Rect2i(0, 0, 1920, 1280)
 
 [node name="SpawnDefault" type="Marker2D" parent="."]
-position = Vector2(480, 510)
+position = Vector2(960, 1020)
 
 [node name="SpawnEntry" type="Marker2D" parent="."]
-position = Vector2(480, 538.6)
+position = Vector2(960, 1077.2)
 
 [node name="FieldHUD" parent="." instance=ExtResource("3_hud")]

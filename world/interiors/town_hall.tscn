@@ -31,13 +31,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="PublicNoticeBoard" type="Sprite2D" parent="Room/TownHallDressing/SoftDetails"]
-position = Vector2(112, 225)
+position = Vector2(224, 450)
 scale = Vector2(0.21, 0.21)
 texture = ExtResource("4_notice_board")
 offset = Vector2(0, -106)
 
 [node name="CouncilLantern" type="Sprite2D" parent="Room/TownHallDressing/SoftDetails"]
-position = Vector2(480, 178)
+position = Vector2(960, 356)
 scale = Vector2(0.29, 0.29)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
@@ -49,7 +49,7 @@ phase = 1.2
 y_sort_enabled = true
 
 [node name="PetitionerBenchWest" type="StaticBody2D" parent="Room/TownHallDressing/SolidProps"]
-position = Vector2(235, 500)
+position = Vector2(470, 1000)
 collision_layer = 1
 collision_mask = 1
 
@@ -64,7 +64,7 @@ shape = SubResource("bench_footprint")
 disabled = false
 
 [node name="PetitionerBenchEast" type="StaticBody2D" parent="Room/TownHallDressing/SolidProps"]
-position = Vector2(725, 500)
+position = Vector2(1450, 1000)
 collision_layer = 1
 collision_mask = 1
 
@@ -82,23 +82,23 @@ disabled = false
 y_sort_enabled = true
 
 [node name="HallClerk" parent="Room/TownHallDressing/AmbientOccupants" instance=ExtResource("7_ambient_villager")]
-position = Vector2(165, 350)
+position = Vector2(330, 700)
 villager_texture = ExtResource("8_clerk")
-local_waypoints = PackedVector2Array(0, 0, 58, 6, 48, 62, 4, 54)
+local_waypoints = PackedVector2Array(0, 0, 116, 12, 96, 124, 8, 108)
 wander_speed = 14.0
 pause_duration = 2.5
 initial_pause = 0.6
 
 [node name="WaitingPetitioner" parent="Room/TownHallDressing/AmbientOccupants" instance=ExtResource("7_ambient_villager")]
-position = Vector2(730, 350)
+position = Vector2(1460, 700)
 villager_texture = ExtResource("9_petitioner")
-local_waypoints = PackedVector2Array(0, 0, 64, 8, 50, 66, 4, 54)
+local_waypoints = PackedVector2Array(0, 0, 128, 16, 100, 132, 8, 108)
 wander_speed = 13.0
 pause_duration = 2.8
 initial_pause = 1.5
 
 [node name="CouncilChamberDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"council_chamber_enter"
 editable_children = true
 
@@ -112,4 +112,4 @@ visible = false
 
 
 [node name="SpawnFromCouncilChamber" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)

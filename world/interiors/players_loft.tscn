@@ -31,13 +31,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="BedsideStool" type="Sprite2D" parent="PlayersLoftDressing/SoftDetails"]
-position = Vector2(610, 415)
+position = Vector2(1220, 830)
 scale = Vector2(0.093, 0.0645)
 texture = ExtResource("3_stool")
 offset = Vector2(0, -39)
 
 [node name="HangingLantern" type="Sprite2D" parent="PlayersLoftDressing/SoftDetails"]
-position = Vector2(480, 190)
+position = Vector2(960, 380)
 scale = Vector2(0.24, 0.24)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -115)
@@ -50,7 +50,7 @@ period = 4.7
 y_sort_enabled = true
 
 [node name="SleepingCot" type="StaticBody2D" parent="PlayersLoftDressing/SolidProps"]
-position = Vector2(265, 415)
+position = Vector2(530, 830)
 
 [node name="Sprite2D" type="Sprite2D" parent="PlayersLoftDressing/SolidProps/SleepingCot"]
 scale = Vector2(0.1724, 0.1441)
@@ -62,7 +62,7 @@ position = Vector2(0, -7)
 shape = SubResource("bench_footprint")
 
 [node name="TravelStores" type="StaticBody2D" parent="PlayersLoftDressing/SolidProps"]
-position = Vector2(835, 510)
+position = Vector2(1670, 1020)
 
 [node name="Sprite2D" type="Sprite2D" parent="PlayersLoftDressing/SolidProps/TravelStores"]
 scale = Vector2(0.225, 0.225)

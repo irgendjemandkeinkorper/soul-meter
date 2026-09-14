@@ -31,13 +31,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="TrialWarningPlate" type="Sprite2D" parent="Room/TrialHallDressing/SoftDetails"]
-position = Vector2(116, 225)
+position = Vector2(232, 450)
 scale = Vector2(0.17, 0.17)
 texture = ExtResource("4_warning_plate")
 offset = Vector2(0, -110)
 
 [node name="LanternWest" type="Sprite2D" parent="Room/TrialHallDressing/SoftDetails"]
-position = Vector2(250, 178)
+position = Vector2(500, 356)
 scale = Vector2(0.29, 0.29)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
@@ -46,7 +46,7 @@ motion_kind = 0
 phase = 0.8
 
 [node name="LanternEast" type="Sprite2D" parent="Room/TrialHallDressing/SoftDetails"]
-position = Vector2(690, 178)
+position = Vector2(1380, 356)
 scale = Vector2(0.29, 0.29)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
@@ -58,7 +58,7 @@ phase = 3.9
 y_sort_enabled = true
 
 [node name="AudienceBenchWest" type="StaticBody2D" parent="Room/TrialHallDressing/SolidProps"]
-position = Vector2(235, 500)
+position = Vector2(470, 1000)
 collision_layer = 1
 collision_mask = 1
 
@@ -73,7 +73,7 @@ shape = SubResource("bench_footprint")
 disabled = false
 
 [node name="AudienceBenchEast" type="StaticBody2D" parent="Room/TrialHallDressing/SolidProps"]
-position = Vector2(725, 500)
+position = Vector2(1450, 1000)
 collision_layer = 1
 collision_mask = 1
 
@@ -91,23 +91,23 @@ disabled = false
 y_sort_enabled = true
 
 [node name="TrialAttendant" parent="Room/TrialHallDressing/AmbientOccupants" instance=ExtResource("7_ambient_villager")]
-position = Vector2(155, 350)
+position = Vector2(310, 700)
 villager_texture = ExtResource("8_attendant")
-local_waypoints = PackedVector2Array(0, 0, 62, 8, 54, 64, 6, 54)
+local_waypoints = PackedVector2Array(0, 0, 124, 16, 108, 128, 12, 108)
 wander_speed = 15.0
 pause_duration = 2.4
 initial_pause = 0.9
 
 [node name="TrialObserver" parent="Room/TrialHallDressing/AmbientOccupants" instance=ExtResource("7_ambient_villager")]
-position = Vector2(705, 350)
+position = Vector2(1410, 700)
 villager_texture = ExtResource("9_observer")
-local_waypoints = PackedVector2Array(0, 0, 60, 10, 48, 64, 2, 54)
+local_waypoints = PackedVector2Array(0, 0, 120, 20, 96, 128, 4, 108)
 wander_speed = 13.0
 pause_duration = 2.9
 initial_pause = 1.7
 
 [node name="LowerTrialHallDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"lower_trial_hall_enter"
 editable_children = true
 
@@ -121,4 +121,4 @@ visible = false
 
 
 [node name="SpawnFromLowerTrialHall" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)

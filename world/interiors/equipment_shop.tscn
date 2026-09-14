@@ -33,13 +33,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="PriceBoard" type="Sprite2D" parent="EquipmentShopDressing/SoftDetails"]
-position = Vector2(112, 220)
+position = Vector2(224, 440)
 scale = Vector2(0.21, 0.21)
 texture = ExtResource("5_notice_board")
 offset = Vector2(0, -106)
 
 [node name="CounterLantern" type="Sprite2D" parent="EquipmentShopDressing/SoftDetails"]
-position = Vector2(480, 180)
+position = Vector2(960, 360)
 scale = Vector2(0.28, 0.28)
 texture = ExtResource("6_lantern")
 offset = Vector2(0, -107)
@@ -51,7 +51,7 @@ phase = 0.9
 y_sort_enabled = true
 
 [node name="SalesCounter" type="StaticBody2D" parent="EquipmentShopDressing/SolidProps"]
-position = Vector2(300, 300)
+position = Vector2(600, 600)
 
 [node name="Sprite2D" type="Sprite2D" parent="EquipmentShopDressing/SolidProps/SalesCounter"]
 scale = Vector2(0.6, 0.6)
@@ -63,7 +63,7 @@ position = Vector2(0, -8)
 shape = SubResource("counter_footprint")
 
 [node name="FittingStock" type="StaticBody2D" parent="EquipmentShopDressing/SolidProps"]
-position = Vector2(865, 500)
+position = Vector2(1730, 1000)
 
 [node name="Sprite2D" type="Sprite2D" parent="EquipmentShopDressing/SolidProps/FittingStock"]
 scale = Vector2(-0.225, 0.225)
@@ -78,15 +78,15 @@ shape = SubResource("stock_footprint")
 y_sort_enabled = true
 
 [node name="EquipmentShopkeeper" parent="EquipmentShopDressing/AmbientOccupants" instance=ExtResource("8_ambient_villager")]
-position = Vector2(265, 400)
+position = Vector2(530, 800)
 villager_texture = ExtResource("9_shopkeeper")
-local_waypoints = PackedVector2Array(0, 0, 64, 8, 52, 56, 4, 46)
+local_waypoints = PackedVector2Array(0, 0, 128, 16, 104, 112, 8, 92)
 wander_speed = 14.0
 pause_duration = 2.6
 initial_pause = 0.5
 
 [node name="EquipmentForgeDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"equipment_forge_enter"
 editable_children = true
 
@@ -100,4 +100,4 @@ visible = false
 
 
 [node name="SpawnFromEquipmentForge" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)

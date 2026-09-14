@@ -26,13 +26,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="CouncilNoticeBoard" type="Sprite2D" parent="Room/CouncilChamberDressing/SoftDetails"]
-position = Vector2(480, 155)
+position = Vector2(960, 310)
 scale = Vector2(0.19, 0.19)
 texture = ExtResource("3_notice_board")
 offset = Vector2(0, -112)
 
 [node name="CouncilLanternWest" type="Sprite2D" parent="Room/CouncilChamberDressing/SoftDetails"]
-position = Vector2(250, 165)
+position = Vector2(500, 330)
 scale = Vector2(0.23, 0.23)
 texture = ExtResource("4_lantern")
 offset = Vector2(0, -107)
@@ -42,7 +42,7 @@ phase = 0.6
 period = 4.8
 
 [node name="CouncilLanternEast" type="Sprite2D" parent="Room/CouncilChamberDressing/SoftDetails"]
-position = Vector2(710, 165)
+position = Vector2(1420, 330)
 scale = Vector2(-0.23, 0.23)
 texture = ExtResource("4_lantern")
 offset = Vector2(0, -107)
@@ -55,7 +55,7 @@ period = 5.1
 y_sort_enabled = true
 
 [node name="CouncilBenchWest" type="StaticBody2D" parent="Room/CouncilChamberDressing/SolidProps"]
-position = Vector2(160, 445)
+position = Vector2(320, 890)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchWest"]
 scale = Vector2(0.1686, 0.1409)
@@ -68,7 +68,7 @@ shape = SubResource("bench_footprint")
 disabled = false
 
 [node name="CouncilBenchEast" type="StaticBody2D" parent="Room/CouncilChamberDressing/SolidProps"]
-position = Vector2(800, 445)
+position = Vector2(1600, 890)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CouncilChamberDressing/SolidProps/CouncilBenchEast"]
 scale = Vector2(-0.1686, 0.1409)

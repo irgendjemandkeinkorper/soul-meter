@@ -31,55 +31,55 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="WallShelfWest" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
-position = Vector2(115, 130)
+position = Vector2(230, 260)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_shelf")
 offset = Vector2(0, -50.5)
 
 [node name="WallShelfCenter" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
-position = Vector2(245, 130)
+position = Vector2(490, 260)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_shelf")
 offset = Vector2(0, -50.5)
 
 [node name="WallShelfEast" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
-position = Vector2(860, 285)
+position = Vector2(1720, 570)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_shelf")
 offset = Vector2(0, -50.5)
 
 [node name="CounterFrontWest" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
-position = Vector2(390, 289)
+position = Vector2(780, 578)
 scale = Vector2(0.6, 0.6)
 texture = ExtResource("6_counter")
 offset = Vector2(0, -61)
 
 [node name="CounterFrontEast" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
-position = Vector2(570, 289)
+position = Vector2(1140, 578)
 scale = Vector2(0.6, 0.6)
 texture = ExtResource("6_counter")
 offset = Vector2(0, -61)
 
 [node name="CustomerStoolWest" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
-position = Vector2(365, 355)
+position = Vector2(730, 710)
 scale = Vector2(0.4, 0.4)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -50)
 
 [node name="CustomerStoolCenter" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
-position = Vector2(480, 375)
+position = Vector2(960, 750)
 scale = Vector2(0.4, 0.4)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -50)
 
 [node name="CustomerStoolEast" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
-position = Vector2(595, 355)
+position = Vector2(1190, 710)
 scale = Vector2(0.4, 0.4)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -50)
 
 [node name="ShopLantern" type="Sprite2D" parent="Room/ItemShopDressing/SoftDetails"]
-position = Vector2(480, 175)
+position = Vector2(960, 350)
 scale = Vector2(0.27, 0.27)
 texture = ExtResource("8_lantern")
 offset = Vector2(0, -107)
@@ -91,7 +91,7 @@ phase = 1.4
 y_sort_enabled = true
 
 [node name="StockCratesNorthwest" type="StaticBody2D" parent="Room/ItemShopDressing/SolidProps"]
-position = Vector2(90, 260)
+position = Vector2(180, 520)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ItemShopDressing/SolidProps/StockCratesNorthwest"]
 scale = Vector2(0.225, 0.225)
@@ -103,7 +103,7 @@ position = Vector2(0, -9)
 shape = SubResource("crate_blocker")
 
 [node name="StockCratesSouthwest" type="StaticBody2D" parent="Room/ItemShopDressing/SolidProps"]
-position = Vector2(90, 470)
+position = Vector2(180, 940)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ItemShopDressing/SolidProps/StockCratesSouthwest"]
 scale = Vector2(0.225, 0.225)
@@ -115,7 +115,7 @@ position = Vector2(0, -9)
 shape = SubResource("crate_blocker")
 
 [node name="StockCratesSoutheast" type="StaticBody2D" parent="Room/ItemShopDressing/SolidProps"]
-position = Vector2(865, 490)
+position = Vector2(1730, 980)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ItemShopDressing/SolidProps/StockCratesSoutheast"]
 scale = Vector2(0.225, 0.225)
@@ -127,7 +127,7 @@ position = Vector2(0, -9)
 shape = SubResource("crate_blocker")
 
 [node name="CaskWarehouseDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"cask_warehouse_enter"
 editable_children = true
 
@@ -141,10 +141,10 @@ visible = false
 
 
 [node name="SpawnFromCaskWarehouse" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)
 
 [node name="BackroomCrate" parent="." instance=ExtResource("3_chest")]
-position = Vector2(150, 500)
+position = Vector2(300, 1000)
 display_name = "Supply Crate"
 prompt_text = "Open"
 interaction_flag = "loot_opened_item_shop_backroom_crate"

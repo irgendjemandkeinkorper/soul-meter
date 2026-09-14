@@ -25,7 +25,7 @@ floor_color = Color(0.18, 0.12, 0.1, 1)
 accent_color = Color(0.75, 0.39, 0.22, 1)
 
 [node name="ChefsPantryDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"chefs_pantry_enter"
 editable_children = true
 
@@ -39,7 +39,7 @@ visible = false
 
 
 [node name="SpawnFromChefsPantry" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)
 
 ; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
 [node name="ChefsHouseDressing" type="Node2D" parent="."]
@@ -50,19 +50,19 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="PrepStool" type="Sprite2D" parent="ChefsHouseDressing/SoftDetails"]
-position = Vector2(640, 435)
+position = Vector2(1280, 870)
 scale = Vector2(0.093, 0.0645)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -39)
 
 [node name="WaterPot" type="Sprite2D" parent="ChefsHouseDressing/SoftDetails"]
-position = Vector2(115, 515)
+position = Vector2(230, 1030)
 scale = Vector2(0.16, 0.16)
 texture = ExtResource("6_pot")
 offset = Vector2(0, -90)
 
 [node name="HangingLantern" type="Sprite2D" parent="ChefsHouseDressing/SoftDetails"]
-position = Vector2(155, 205)
+position = Vector2(310, 410)
 scale = Vector2(0.23, 0.23)
 texture = ExtResource("7_lantern")
 offset = Vector2(0, -115)
@@ -75,7 +75,7 @@ period = 4.0
 y_sort_enabled = true
 
 [node name="PrepTable" type="StaticBody2D" parent="ChefsHouseDressing/SolidProps"]
-position = Vector2(300, 315)
+position = Vector2(600, 630)
 
 [node name="Sprite2D" type="Sprite2D" parent="ChefsHouseDressing/SolidProps/PrepTable"]
 scale = Vector2(0.6, 0.6)
@@ -87,7 +87,7 @@ position = Vector2(0, -8)
 shape = SubResource("table_footprint")
 
 [node name="DiningBench" type="StaticBody2D" parent="ChefsHouseDressing/SolidProps"]
-position = Vector2(300, 435)
+position = Vector2(600, 870)
 
 [node name="Sprite2D" type="Sprite2D" parent="ChefsHouseDressing/SolidProps/DiningBench"]
 scale = Vector2(0.1724, 0.1441)

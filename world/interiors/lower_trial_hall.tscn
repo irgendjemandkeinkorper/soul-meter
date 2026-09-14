@@ -13,16 +13,16 @@
 [ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="11_ambient_motion"]
 
 [sub_resource type="RectangleShape2D" id="gate_shape"]
-size = Vector2(880, 24)
+size = Vector2(1760, 48)
 
 [sub_resource type="RectangleShape2D" id="warden_trigger_shape"]
-size = Vector2(820, 72)
+size = Vector2(1640, 144)
 
 [sub_resource type="RectangleShape2D" id="skill_gate_shape"]
-size = Vector2(880, 24)
+size = Vector2(1760, 48)
 
 [sub_resource type="RectangleShape2D" id="keeper_gate_shape"]
-size = Vector2(440, 20)
+size = Vector2(880, 40)
 
 [sub_resource type="RectangleShape2D" id="bench_shape"]
 size = Vector2(88, 22)
@@ -42,7 +42,7 @@ visible = false
 process_mode = 4
 
 [node name="Player" parent="Room"]
-position = Vector2(480, 540)
+position = Vector2(960, 1098.6)
 
 ; PROVISIONAL OWNER-BALANCE SURFACE: adjust or remove formal dressing after owner playtest.
 [node name="LowerTrialHallDressing" type="Node2D" parent="Room"]
@@ -52,65 +52,65 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="AudienceBenchFrontLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(315, 480)
+position = Vector2(630, 960)
 scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="AudienceBenchFrontRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(645, 480)
+position = Vector2(1290, 960)
 scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="AudienceBenchRearLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(315, 545)
+position = Vector2(630, 1090)
 scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="AudienceBenchRearRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(645, 545)
+position = Vector2(1290, 1090)
 scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="WardenBenchLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(310, 325)
+position = Vector2(620, 650)
 scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="WardenBenchRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(650, 325)
+position = Vector2(1300, 650)
 scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("7_bench")
 offset = Vector2(0, -46)
 
 [node name="KeeperWitnessStoolLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(360, 155)
+position = Vector2(720, 310)
 scale = Vector2(0.1116, 0.0774)
 texture = ExtResource("8_stool")
 offset = Vector2(0, -46)
 
 [node name="KeeperWitnessStoolRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(600, 155)
+position = Vector2(1200, 310)
 scale = Vector2(0.1116, 0.0774)
 texture = ExtResource("8_stool")
 offset = Vector2(0, -46)
 
 [node name="JawbraceWarningPlateLeft" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(105, 155)
+position = Vector2(210, 310)
 scale = Vector2(0.17, 0.17)
 texture = ExtResource("9_warning_plate")
 
 [node name="JawbraceWarningPlateRight" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(855, 155)
+position = Vector2(1710, 310)
 scale = Vector2(0.17, 0.17)
 texture = ExtResource("9_warning_plate")
 
 [node name="HallLantern" type="Sprite2D" parent="Room/LowerTrialHallDressing/SoftDetails"]
-position = Vector2(480, 178)
+position = Vector2(960, 356)
 scale = Vector2(0.275, 0.275)
 texture = ExtResource("10_lantern")
 offset = Vector2(0, -107)
@@ -149,16 +149,16 @@ shape = SubResource("bench_shape")
 
 ; PROVISIONAL — CANON REVIEW REQUIRED: scene guidance prose.
 [node name="EntranceInstruction" type="Label" parent="."]
-offset_left = 220.0
-offset_top = 548.0
-offset_right = 740.0
-offset_bottom = 584.0
+offset_left = 440
+offset_top = 1096
+offset_right = 1480
+offset_bottom = 1168
 theme_type_variation = &"EyebrowLabel"
 text = "Speak with the aide or begin at the lever"
 horizontal_alignment = 1
 
 [node name="EntranceAide" parent="." instance=ExtResource("3_npc")]
-position = Vector2(700, 520)
+position = Vector2(1400, 1040)
 npc_name = "Trial Aide"
 dialogue_path = "res://dialogue/lower_trial_hall.dialogue"
 dialogue_start = "trial_aide"
@@ -166,7 +166,7 @@ metadata/faction_id = "trial-council"
 metadata/canon_status = "PROVISIONAL — CANON REVIEW REQUIRED"
 
 [node name="InteractionSwitch" parent="." instance=ExtResource("4_switch")]
-position = Vector2(160, 500)
+position = Vector2(320, 1000)
 display_name = "Trial Lever"
 prompt_text = "Pull"
 interaction_text = "The first gate lifts."
@@ -176,32 +176,32 @@ repeatable = false
 [node name="InteractionGate" type="StaticBody2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionGate"]
-position = Vector2(480, 430)
+position = Vector2(960, 860)
 shape = SubResource("gate_shape")
 
 [node name="Visual" type="Polygon2D" parent="InteractionGate"]
-polygon = PackedVector2Array(40, 418, 920, 418, 920, 442, 40, 442)
+polygon = PackedVector2Array(80, 836, 1840, 836, 1840, 884, 80, 884)
 color = Color(0.47, 0.35, 0.2, 1)
 
 [node name="WardenTrigger" type="Area2D" parent="."]
 monitoring = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WardenTrigger"]
-position = Vector2(480, 365)
+position = Vector2(960, 730)
 shape = SubResource("warden_trigger_shape")
 
 ; PROVISIONAL — CANON REVIEW REQUIRED: encounter guidance prose.
 [node name="WardenInstruction" type="Label" parent="."]
-offset_left = 280.0
-offset_top = 386.0
-offset_right = 680.0
-offset_bottom = 416.0
+offset_left = 560
+offset_top = 772
+offset_right = 1360
+offset_bottom = 832
 theme_type_variation = &"EyebrowLabel"
 text = "The trial warden will engage"
 horizontal_alignment = 1
 
 [node name="TrialDoorKey" parent="." instance=ExtResource("5_pickup")]
-position = Vector2(130, 318)
+position = Vector2(260, 636)
 display_name = "Trial Key"
 item_id = "tools/lockpick_roll"
 amount = 1
@@ -211,7 +211,7 @@ locked_message = "The warden still holds this alcove."
 interaction_text = "You take the stamped trial key and its lockpick roll."
 
 [node name="SkillDoorExaminer" parent="." instance=ExtResource("3_npc")]
-position = Vector2(820, 318)
+position = Vector2(1640, 636)
 npc_name = "Trial Aide"
 dialogue_path = "res://dialogue/lower_trial_hall.dialogue"
 dialogue_start = "trial_skill_door"
@@ -221,15 +221,15 @@ metadata/canon_status = "PROVISIONAL — CANON REVIEW REQUIRED"
 [node name="SkillDoor" type="StaticBody2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SkillDoor"]
-position = Vector2(480, 220)
+position = Vector2(960, 440)
 shape = SubResource("skill_gate_shape")
 
 [node name="Visual" type="Polygon2D" parent="SkillDoor"]
-polygon = PackedVector2Array(40, 208, 920, 208, 920, 232, 40, 232)
+polygon = PackedVector2Array(80, 416, 1840, 416, 1840, 464, 80, 464)
 color = Color(0.54, 0.42, 0.25, 1)
 
 [node name="TrialKeeper" parent="." instance=ExtResource("3_npc")]
-position = Vector2(480, 150)
+position = Vector2(960, 300)
 npc_name = "Trial Keeper"
 dialogue_path = "res://dialogue/lower_trial_hall.dialogue"
 dialogue_start = "trial_keeper"
@@ -239,15 +239,15 @@ metadata/canon_status = "PROVISIONAL — CANON REVIEW REQUIRED"
 [node name="KeeperGate" type="StaticBody2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KeeperGate"]
-position = Vector2(480, 105)
+position = Vector2(960, 210)
 shape = SubResource("keeper_gate_shape")
 
 [node name="Visual" type="Polygon2D" parent="KeeperGate"]
-polygon = PackedVector2Array(260, 95, 700, 95, 700, 115, 260, 115)
+polygon = PackedVector2Array(520, 190, 1400, 190, 1400, 230, 520, 230)
 color = Color(0.56, 0.39, 0.2, 1)
 
 [node name="ExitToDom" parent="." instance=ExtResource("6_exit")]
-position = Vector2(480, 62)
+position = Vector2(960, 124)
 target_location_id = &"dom"
 label_text = "ENTER DOM"
 required_flag = "tutorial_gauntlet_complete"

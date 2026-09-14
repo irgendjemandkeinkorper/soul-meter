@@ -9,13 +9,13 @@
 [ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="7_blocking_tiles"]
 
 [sub_resource type="RectangleShape2D" id="wall_horizontal"]
-size = Vector2(960, 40)
+size = Vector2(1920, 80)
 
 [sub_resource type="RectangleShape2D" id="wall_vertical"]
-size = Vector2(40, 640)
+size = Vector2(80, 1280)
 
 [sub_resource type="RectangleShape2D" id="counter_shape"]
-size = Vector2(360, 54)
+size = Vector2(720, 108)
 
 [node name="BuildingInterior" type="Node2D"]
 y_sort_enabled = true
@@ -45,85 +45,85 @@ visible = false
 tile_set = ExtResource("7_blocking_tiles")
 
 [node name="Backdrop" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-960, -640, 1920, -640, 1920, 1280, -960, 1280)
+polygon = PackedVector2Array(-1920, -1280, 3840, -1280, 3840, 2560, -1920, 2560)
 color = Color(0.02745098, 0.03137255, 0.04313726, 1)
 z_index = -30
 
 [node name="Floor" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(0, 0, 960, 0, 960, 640, 0, 640)
+polygon = PackedVector2Array(0, 0, 1920, 0, 1920, 1280, 0, 1280)
 color = Color(0.12, 0.12, 0.14, 1)
 texture_repeat = 2
 z_index = -20
 
 [node name="AccentRug" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(300, 350, 660, 350, 720, 500, 240, 500)
+polygon = PackedVector2Array(600, 700, 1320, 700, 1440, 1000, 480, 1000)
 color = Color(0.55, 0.4, 0.22, 1)
 z_index = -10
 
 [node name="WallTop" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-48, -96, 1008, -96, 1008, 0, -48, 0)
+polygon = PackedVector2Array(-48, -96, 1968, -96, 1968, 0, -48, 0)
 color = Color(0.24, 0.24, 0.27, 1)
 texture_repeat = 2
 z_index = -1
 
 [node name="WallBottom" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-48, 640, 1008, 640, 1008, 688, -48, 688)
+polygon = PackedVector2Array(-48, 1280, 1968, 1280, 1968, 1328, -48, 1328)
 color = Color(0.24, 0.24, 0.27, 1)
 texture_repeat = 2
 z_index = -1
 
 [node name="WallLeft" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-48, 0, 0, 0, 0, 640, -48, 640)
+polygon = PackedVector2Array(-48, 0, 0, 0, 0, 1280, -48, 1280)
 color = Color(0.24, 0.24, 0.27, 1)
 texture_repeat = 2
 z_index = -1
 
 [node name="WallRight" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(960, 0, 1008, 0, 1008, 640, 960, 640)
+polygon = PackedVector2Array(1920, 0, 1968, 0, 1968, 1280, 1920, 1280)
 color = Color(0.24, 0.24, 0.27, 1)
 texture_repeat = 2
 z_index = -1
 
 [node name="Title" type="Label" parent="."]
-offset_left = 280.0
-offset_top = 64.0
-offset_right = 680.0
-offset_bottom = 112.0
+offset_left = 560
+offset_top = 128
+offset_right = 1360
+offset_bottom = 224
 theme_type_variation = &"HeadingLabel"
 text = "Building"
 horizontal_alignment = 1
 
 [node name="Counter" type="Polygon2D" parent="."]
-position = Vector2(480, 289)
-polygon = PackedVector2Array(-180, -90, 180, -90, 180, 0, -180, 0)
+position = Vector2(960, 578)
+polygon = PackedVector2Array(-360, -180, 360, -180, 360, 0, -360, 0)
 color = Color(0.3, 0.22, 0.16, 1)
 
 [node name="FurnitureCollision" type="StaticBody2D" parent="."]
 
 [node name="CounterShape" type="CollisionShape2D" parent="FurnitureCollision"]
-position = Vector2(480, 262)
+position = Vector2(960, 524)
 shape = SubResource("counter_shape")
 
 [node name="Walls" type="StaticBody2D" parent="."]
 
 [node name="Top" type="CollisionShape2D" parent="Walls"]
-position = Vector2(480, 20)
+position = Vector2(960, 40)
 shape = SubResource("wall_horizontal")
 
 [node name="Bottom" type="CollisionShape2D" parent="Walls"]
-position = Vector2(480, 620)
+position = Vector2(960, 1240)
 shape = SubResource("wall_horizontal")
 
 [node name="Left" type="CollisionShape2D" parent="Walls"]
-position = Vector2(20, 320)
+position = Vector2(40, 640)
 shape = SubResource("wall_vertical")
 
 [node name="Right" type="CollisionShape2D" parent="Walls"]
-position = Vector2(940, 320)
+position = Vector2(1880, 640)
 shape = SubResource("wall_vertical")
 
 [node name="ExitDoor" parent="." instance=ExtResource("3_door")]
-position = Vector2(480, 600)
+position = Vector2(960, 1200)
 prompt_text = "E — EXIT"
 editable_children = true
 
@@ -137,19 +137,19 @@ visible = false
 visible = false
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(480, 498.6)
-camera_bounds = Rect2i(0, 0, 960, 640)
+position = Vector2(960, 1098.6)
+camera_bounds = Rect2i(0, 0, 1920, 1280)
 
 [node name="SpawnDefault" type="Marker2D" parent="."]
-position = Vector2(480, 400)
+position = Vector2(960, 800)
 
 [node name="SpawnEntry" type="Marker2D" parent="."]
-position = Vector2(480, 498.6)
+position = Vector2(960, 1098.6)
 
 [node name="VendorSpot" type="Marker2D" parent="."]
-position = Vector2(720, 185)
+position = Vector2(1440, 370)
 
 [node name="NpcSpot" type="Marker2D" parent="."]
-position = Vector2(240, 185)
+position = Vector2(480, 370)
 
 [node name="FieldHUD" parent="." instance=ExtResource("4_hud")]

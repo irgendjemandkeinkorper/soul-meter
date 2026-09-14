@@ -29,7 +29,7 @@ floor_color = Color(0.16, 0.12, 0.12, 1)
 accent_color = Color(0.72, 0.52, 0.2, 1)
 
 [node name="BellLoftDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"bell_loft_enter"
 editable_children = true
 
@@ -43,7 +43,7 @@ visible = false
 
 
 [node name="SpawnFromBellLoft" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)
 
 ; PROVISIONAL owner-balance surface: tune prop positions and footprints after playtest.
 [node name="BellHouseDressing" type="Node2D" parent="."]
@@ -54,19 +54,19 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="HearthStool" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
-position = Vector2(610, 430)
+position = Vector2(1220, 860)
 scale = Vector2(0.093, 0.0645)
 texture = ExtResource("5_stool")
 offset = Vector2(0, -39)
 
 [node name="ClayWaterPot" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
-position = Vector2(110, 520)
+position = Vector2(220, 1040)
 scale = Vector2(0.16, 0.16)
 texture = ExtResource("7_pot")
 offset = Vector2(0, -90)
 
 [node name="HangingLantern" type="Sprite2D" parent="BellHouseDressing/SoftDetails"]
-position = Vector2(155, 205)
+position = Vector2(310, 410)
 scale = Vector2(0.23, 0.23)
 texture = ExtResource("8_lantern")
 offset = Vector2(0, -115)
@@ -79,7 +79,7 @@ period = 4.2
 y_sort_enabled = true
 
 [node name="WorkTable" type="StaticBody2D" parent="BellHouseDressing/SolidProps"]
-position = Vector2(275, 310)
+position = Vector2(550, 620)
 
 [node name="Sprite2D" type="Sprite2D" parent="BellHouseDressing/SolidProps/WorkTable"]
 scale = Vector2(0.6, 0.6)
@@ -91,7 +91,7 @@ position = Vector2(0, -8)
 shape = SubResource("table_footprint")
 
 [node name="HearthBench" type="StaticBody2D" parent="BellHouseDressing/SolidProps"]
-position = Vector2(275, 430)
+position = Vector2(550, 860)
 
 [node name="Sprite2D" type="Sprite2D" parent="BellHouseDressing/SolidProps/HearthBench"]
 scale = Vector2(0.1724, 0.1441)
@@ -103,7 +103,7 @@ position = Vector2(0, -7)
 shape = SubResource("bench_footprint")
 
 [node name="BellRopeStores" type="StaticBody2D" parent="BellHouseDressing/SolidProps"]
-position = Vector2(855, 520)
+position = Vector2(1710, 1040)
 
 [node name="Sprite2D" type="Sprite2D" parent="BellHouseDressing/SolidProps/BellRopeStores"]
 scale = Vector2(0.225, 0.225)

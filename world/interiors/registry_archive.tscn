@@ -29,13 +29,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="LedgerNoticeBoard" type="Sprite2D" parent="RegistryArchiveDressing/SoftDetails"]
-position = Vector2(112, 220)
+position = Vector2(224, 440)
 scale = Vector2(0.21, 0.21)
 texture = ExtResource("4_notice_board")
 offset = Vector2(0, -106)
 
 [node name="ArchiveLantern" type="Sprite2D" parent="RegistryArchiveDressing/SoftDetails"]
-position = Vector2(480, 180)
+position = Vector2(960, 360)
 scale = Vector2(0.28, 0.28)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
@@ -47,7 +47,7 @@ phase = 1.5
 y_sort_enabled = true
 
 [node name="LedgerBoxesWest" type="StaticBody2D" parent="RegistryArchiveDressing/SolidProps"]
-position = Vector2(105, 500)
+position = Vector2(210, 1000)
 
 [node name="Sprite2D" type="Sprite2D" parent="RegistryArchiveDressing/SolidProps/LedgerBoxesWest"]
 scale = Vector2(0.225, 0.225)
@@ -59,7 +59,7 @@ position = Vector2(0, -9)
 shape = SubResource("ledger_box_footprint")
 
 [node name="LedgerBoxesEast" type="StaticBody2D" parent="RegistryArchiveDressing/SolidProps"]
-position = Vector2(860, 500)
+position = Vector2(1720, 1000)
 
 [node name="Sprite2D" type="Sprite2D" parent="RegistryArchiveDressing/SolidProps/LedgerBoxesEast"]
 scale = Vector2(-0.225, 0.225)
@@ -74,15 +74,15 @@ shape = SubResource("ledger_box_footprint")
 y_sort_enabled = true
 
 [node name="ArchiveClerk" parent="RegistryArchiveDressing/AmbientOccupants" instance=ExtResource("7_ambient_villager")]
-position = Vector2(310, 350)
+position = Vector2(620, 700)
 villager_texture = ExtResource("8_clerk")
-local_waypoints = PackedVector2Array(0, 0, 62, 8, 54, 58, 6, 50)
+local_waypoints = PackedVector2Array(0, 0, 124, 16, 108, 116, 12, 100)
 wander_speed = 14.0
 pause_duration = 2.5
 initial_pause = 0.7
 
 [node name="RegistryStacksDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"registry_stacks_enter"
 editable_children = true
 
@@ -96,4 +96,4 @@ visible = false
 
 
 [node name="SpawnFromRegistryStacks" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)
