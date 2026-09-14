@@ -211,9 +211,36 @@ projection. Live events drive movement, action feedback, HP readouts and facing 
 Historical replay restores positions without replaying animations on the live field actors.
 
 This is not completion of step 6: the legacy set-piece screen and hidden tactical HUD still
-exist. Retiring those surfaces, camera behavior, authored Hostile migration, and the log-hidden
-Bog Wight acceptance remain required before #281 can close. The focused tests are in
-`test/unit/test_combat_overlay.gd`; the existing BattleInterface tests guard the frozen payload.
+exist. Retiring those surfaces and the log-hidden Bog Wight acceptance remain required before
+#281 can close. The focused tests are in `test/unit/test_combat_overlay.gd`; the existing
+BattleInterface tests guard the frozen payload.
+
+**Camera (D6/D9) — landed 2026-09-14.** `CombatOverlay.bind_field` binds the player's
+`Camera2D`; each `turn_started`/`enemy_turn_started` pans to an off-screen active actor over
+`DS.DUR_BASE`, and `battle_finished` returns the camera to the player. An enemy beyond one
+screen margin gets no pan and no move tween (`pans_suppressed_for`). Test:
+`test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_the_end`.
+
+**Authored Hostiles — landed 2026-09-14.** The three field scenes instance
+`actors/hostile/hostile.tscn` in place of the legacy `Enemy` nodes (`unit_id` + `group_id` per
+`encounters.json`; Dorthkor's vanguard is two hostiles so the group can resolve). `FieldMap`
+opens the session on the first accepted alert of a quiet field and sends `enter_battle`; live
+alerts still go to `Battle.admit`. `Hostile.required_flag` replaces the Enemy lock (deaf and
+dimmed until the flag is set), and a hostile whose group `defeated_flag` is set frees itself at
+ready (D7 ruling 3). `Battle` ends a session as a flight when its field leaves the tree.
+`actors/enemy/*` is now unreferenced by any scene and goes with the step 6 retirement.
+
+### Step 7, session end — landed 2026-09-14
+
+`Battle` keeps `_ambient_session`; `_finish` routes it to `_finish_ambient`. The ledger fires
+per `group_id` the moment that group's last admitted member is downed (`_resolve_downed_groups`
+on every `action_resolved`): defeated flag, reputation, renown, XP and spoils, deduped on an
+already-set flag. Victory sweeps whatever fell on the finishing blow and messages "The field is
+quiet again." Defeat and flight write no ledger. The flee rule is checked on `measure_started`
+behind `PROVISIONAL_FLEE_RADIUS_FACTOR` (1.5) and `PROVISIONAL_FLEE_MEASURES` (2). At session
+end dead hostiles `mark_downed()`, survivors `return_to_idle()` at full HP under the re-alert
+cooldown, and one `ENCOUNTER_RESOLUTION` checkpoint is requested per session. Tests are in
+`test/integration/test_combat_session.gd`.
 
 ### Step 8, weather half — landed 2026-09-08
 
