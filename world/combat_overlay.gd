@@ -19,13 +19,38 @@ var _original_colors: Dictionary = {}
 var _flashes: Dictionary = {}
 var _theme: Theme
 var animate_events := true
+## D6 camera: the field camera belongs to the player and keeps following them. The overlay
+## only drives its `offset`, so limits and smoothing stay the player's, and clearing the
+## offset at the end is all it takes to hand the view back.
+var _camera: Camera2D
+var _camera_anchor: Node2D
+var _camera_tween: Tween
+## Actor ids whose current turn began beyond one screen of margin (D9): no pan, no move
+## tween — the actor snaps between cells until its next turn starts nearer the view.
+var _suppressed: Dictionary = {}
 const NUMERIC_FONT := preload(DS.FONT_NUMERIC)
+## D9: how far past the visible rect an enemy may start its turn and still earn a pan.
+const CAMERA_MARGIN_SCREENS := 1.0
 
 
 func bind_field(field: FieldMap) -> void:
 	_field = field
 	z_index = 1
 	bind_grid(field.iso_grid(), field.ground())
+	var lead := field.player()
+	if lead != null:
+		var camera := lead.get_node_or_null("Camera2D") as Camera2D
+		if camera != null:
+			bind_camera(camera, lead)
+
+
+func bind_camera(camera: Camera2D, anchor: Node2D) -> void:
+	_camera = camera
+	_camera_anchor = anchor
+
+
+func pans_suppressed_for(actor_id: StringName) -> bool:
+	return _suppressed.has(actor_id)
 
 
 func cell_at_viewport(point: Vector2) -> Vector2i:
@@ -54,6 +79,7 @@ func _exit_tree() -> void:
 	for node: Variant in _original_colors:
 		if is_instance_valid(node):
 			node.modulate = _original_colors[node]
+	_release_camera(false)
 
 
 func is_animating() -> bool:
@@ -98,16 +124,71 @@ func consume_event(event: CombatEvent) -> void:
 		&"turn_started", &"enemy_turn_started":
 			_active_id = event.actor_id
 			_target_id = &""
+			_focus_camera(event.actor_id, event.type == &"enemy_turn_started")
 		&"action_resolved":
 			_active_id = event.actor_id
 			_target_id = event.target_id
 		&"battle_finished":
 			_active_id = &""
 			_target_id = &""
+			_release_camera(animate_events)
 	_sync_actors(event)
 	if animate_events and event.type == &"action_resolved" and (event.data.get("path_cells", []) as Array).is_empty():
 		_play_action(event)
 	queue_redraw()
+
+
+## The rect the player currently sees, in world space, from the camera the overlay drives.
+## Uses the intended centre (anchor + offset) rather than the smoothed one so a pan already
+## in flight is not re-decided against a half-way frame.
+func _view_rect() -> Rect2:
+	var size := _camera.get_viewport_rect().size / _camera.zoom
+	var center := _camera_anchor.global_position + _camera.offset
+	return Rect2(center - size * 0.5, size)
+
+
+func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
+	if not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
+		return
+	var node := _nodes.get(actor_id) as Node2D
+	if not is_instance_valid(node):
+		return
+	var view := _view_rect()
+	if view.has_point(node.global_position):
+		_suppressed.erase(actor_id)
+		return
+	if is_enemy and not view.grow_individual(
+		view.size.x * CAMERA_MARGIN_SCREENS, view.size.y * CAMERA_MARGIN_SCREENS,
+		view.size.x * CAMERA_MARGIN_SCREENS, view.size.y * CAMERA_MARGIN_SCREENS
+	).has_point(node.global_position):
+		_suppressed[actor_id] = true
+		return
+	_suppressed.erase(actor_id)
+	_pan_camera_to(node.global_position - _camera_anchor.global_position)
+
+
+func _release_camera(animated: bool) -> void:
+	_suppressed.clear()
+	if not is_instance_valid(_camera):
+		return
+	if animated:
+		_pan_camera_to(Vector2.ZERO)
+		return
+	if _camera_tween != null and _camera_tween.is_valid():
+		_camera_tween.kill()
+	_camera_tween = null
+	_camera.offset = Vector2.ZERO
+
+
+func _pan_camera_to(offset: Vector2) -> void:
+	if _camera_tween != null and _camera_tween.is_valid():
+		_camera_tween.kill()
+	_camera_tween = null
+	if not animate_events or not is_inside_tree():
+		_camera.offset = offset
+		return
+	_camera_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_camera_tween.tween_property(_camera, "offset", offset, DS.DUR_BASE)
 
 
 func _bind_field_actors(snapshot: Dictionary) -> void:
@@ -138,7 +219,10 @@ func _sync_actors(event: CombatEvent) -> void:
 		if cell == null:
 			continue
 		var path: Array = event.data.get("path_cells", [])
-		if animate_events and event.type == &"action_resolved" and id == event.actor_id and path.size() >= 2:
+		if (
+			animate_events and event.type == &"action_resolved" and id == event.actor_id
+			and path.size() >= 2 and not _suppressed.has(id)
+		):
 			_stop_move(id)
 			var tween := create_tween()
 			_moves[id] = tween

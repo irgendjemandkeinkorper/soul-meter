@@ -178,3 +178,71 @@ func _ground() -> TileMapLayer:
 	ground.set_cell(Vector2i(1, 0), 0, Vector2i.ZERO)
 	add_child(ground)
 	return ground
+
+
+## F1 step 6 camera (D6/D9): the field camera stays on the player until a turn starts for an
+## actor that is off-screen; then it pans to that actor for the turn, and returns to the player
+## when the fight ends. An enemy turn that begins entirely beyond one screen of margin gets no
+## pan and no move tween — that actor snaps (F2 budget).
+func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_the_end() -> void:
+	var ground := _ground()
+	var grid := IsoGrid.new()
+	grid.build(ground)
+	var overlay := auto_free(Node2D.new()) as Node2D
+	overlay.set_script(load("res://world/combat_overlay.gd"))
+	add_child(overlay)
+	overlay.set("animate_events", false)
+	overlay.call("bind_grid", grid, ground)
+	var player := auto_free(Node2D.new()) as Node2D
+	add_child(player)
+	var camera := Camera2D.new()
+	player.add_child(camera)
+	var screen := camera.get_viewport_rect().size
+	var near_ally := auto_free(Node2D.new()) as Node2D
+	var far_enemy := auto_free(Node2D.new()) as Node2D
+	add_child(near_ally)
+	add_child(far_enemy)
+	player.global_position = Vector2.ZERO
+	# Just off the right edge of the screen: inside the one-screen margin.
+	near_ally.global_position = Vector2(screen.x * 0.8, 0)
+	# Ten screens away: beyond the margin.
+	far_enemy.global_position = Vector2(screen.x * 10.0, 0)
+	overlay.call("bind_actor", &"lead", player)
+	overlay.call("bind_actor", &"ally", near_ally)
+	overlay.call("bind_actor", &"enemy", far_enemy)
+	overlay.call("bind_camera", camera, player)
+
+	var on_screen := CombatEvent.new()
+	on_screen.type = &"turn_started"
+	on_screen.actor_id = &"lead"
+	overlay.call("consume_event", on_screen)
+	assert_vector(camera.offset).override_failure_message(
+		"an on-screen actor's turn must not move the camera"
+	).is_equal(Vector2.ZERO)
+
+	var ally_turn := CombatEvent.new()
+	ally_turn.type = &"turn_started"
+	ally_turn.actor_id = &"ally"
+	overlay.call("consume_event", ally_turn)
+	assert_vector(camera.offset).override_failure_message(
+		"an off-screen party member's turn pans the camera onto them"
+	).is_equal(near_ally.global_position - player.global_position)
+
+	var enemy_turn := CombatEvent.new()
+	enemy_turn.type = &"enemy_turn_started"
+	enemy_turn.actor_id = &"enemy"
+	overlay.call("consume_event", enemy_turn)
+	assert_vector(camera.offset).override_failure_message(
+		"an enemy turn beyond one screen of margin resolves without a pan"
+	).is_equal(near_ally.global_position - player.global_position)
+	assert_bool(overlay.call("pans_suppressed_for", &"enemy")).override_failure_message(
+		"a far enemy's turn resolves without move tweens"
+	).is_true()
+
+	var finished := CombatEvent.new()
+	finished.type = &"battle_finished"
+	overlay.call("consume_event", finished)
+	assert_vector(camera.offset).override_failure_message(
+		"the camera returns to the player when the fight ends"
+	).is_equal(Vector2.ZERO)
+	assert_bool(overlay.call("pans_suppressed_for", &"enemy")).is_false()
