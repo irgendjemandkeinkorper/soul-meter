@@ -2,9 +2,9 @@ extends GdUnitTestSuite
 
 
 func test_hud_renders_all_fr_603_values_from_one_combat_event() -> void:
-	var runner := scene_runner("res://ui/hud/battle_hud.tscn")
+	var runner := scene_runner("res://ui/hud/regions/tactical_data/tactical_data_region.tscn")
 	var margin := runner.find_child("Margin", true, false) as MarginContainer
-	var hud := margin.get_parent() as BattleHUD
+	var hud := margin.get_parent() as TacticalDataRegion
 	assert_object(hud).is_not_null()
 	hud.consume_event(_complete_event())
 	await runner.simulate_frames(1)
@@ -27,9 +27,9 @@ func test_hud_renders_all_fr_603_values_from_one_combat_event() -> void:
 
 
 func test_check_math_tooltip_shows_required_numbers_and_toggles_off() -> void:
-	var runner := scene_runner("res://ui/hud/battle_hud.tscn")
+	var runner := scene_runner("res://ui/hud/regions/tactical_data/tactical_data_region.tscn")
 	var margin := runner.find_child("Margin", true, false) as MarginContainer
-	var hud := margin.get_parent() as BattleHUD
+	var hud := margin.get_parent() as TacticalDataRegion
 	hud.consume_event(_complete_event())
 	await runner.simulate_frames(1)
 	var check_label := runner.find_child("CheckMath", true, false) as Label
@@ -45,10 +45,10 @@ func test_check_math_tooltip_shows_required_numbers_and_toggles_off() -> void:
 
 func test_hud_sources_have_no_domain_reads_or_per_node_theme_overrides() -> void:
 	var hud_paths := [
-		"res://ui/hud/battle_hud.gd",
+		"res://ui/hud/regions/tactical_data/tactical_data_region.gd",
 		"res://ui/hud/balance_arcs.gd",
 		"res://ui/hud/eclipse_pips.gd",
-		"res://ui/hud/battle_hud.tscn",
+		"res://ui/hud/regions/tactical_data/tactical_data_region.tscn",
 	]
 	for path: String in hud_paths:
 		var hud_source := FileAccess.get_file_as_string(path)

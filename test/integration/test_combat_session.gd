@@ -106,6 +106,24 @@ func test_start_session_seats_a_stacked_party_on_distinct_cells() -> void:
 		seen[handle] = true
 
 
+func test_ambient_hud_updates_without_the_legacy_stage() -> void:
+	var field := await _field()
+	var hostile := _hostile(field, "OverlayWight", Vector2i(30, 30))
+	var opened := Battle.start_session(field, hostile)
+	assert_bool(opened.get("allowed", false)).is_true()
+	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
+	add_child(screen)
+	assert_object(screen.get("_stage")).is_null()
+	assert_str((screen.get("_enemy_lbl") as Label).text).contains("BOG WIGHT")
+	assert_int((screen.get("_party_box") as VBoxContainer).get_child_count()).is_greater(0)
+	assert_bool((screen.get_node("Backdrop") as ColorRect).visible).is_false()
+	assert_object(field.combat_overlay()).is_not_null()
+	screen.free()
+	Battle._end_session(null)
+	field.get_parent().queue_free()
+	await get_tree().process_frame
+
+
 func test_admitting_the_same_hostile_twice_is_idempotent() -> void:
 	var field := await _field()
 	var first := _hostile(field, "First", Vector2i(30, 30))
@@ -238,3 +256,160 @@ func test_admit_without_a_live_session_is_refused() -> void:
 	var refused := Battle.admit(wight)
 	assert_bool(refused.get("allowed", true)).is_false()
 	assert_str(str(refused["nearest_unblock"]["type"])).is_equal("live_session")
+
+
+## Drives the live session until it ends or `guard` steps pass. On the party's turn it strikes
+## `target` when one is given, otherwise it guards; every other state just advances the clock.
+func _drive_until_ended(target: BattleActor = null, guard: int = 400) -> void:
+	var steps := 0
+	while steps < guard and not Battle.ended and Battle.controller != null:
+		steps += 1
+		if Battle.controller.state == CombatController.State.ALLY_TURN:
+			var action := &"strike" if target != null and target.is_alive() else &"guard"
+			if not bool(Battle.controller.submit_action(action, target).get("allowed", false)):
+				Battle.controller.end_turn()
+		else:
+			Battle.controller.end_turn()
+
+
+## F1 step 7 (D7): the ledger fires per `group_id` the moment that group's last member goes
+## down, and the field hostile is left DOWNED so it never alerts again.
+func test_downing_the_last_of_a_group_fires_its_ledger_and_marks_the_hostile_downed() -> void:
+	var reputation_before := Reputation.to_dict().duplicate(true)
+	GameState.set_flag("defeated_bog_wight", false)
+	var field := await _field()
+	var wight := _hostile(field, "Wight", Vector2i(30, 30))
+	wight.group_id = &"bog-wight"
+	assert_bool(Battle.start_session(field, wight).get("allowed", false)).is_true()
+	var foe := wight.battle_actor()
+	foe.hp = 1
+	var events_before := Reputation.event_count()
+
+	_drive_until_ended(foe)
+
+	assert_bool(Battle.ended).override_failure_message("the session never resolved").is_true()
+	assert_int(Battle.last_result.state).is_equal(BattleResult.State.VICTORY)
+	assert_bool(GameState.flag_is_true("defeated_bog_wight")).override_failure_message(
+		"the group's defeated_flag must be written when its last member falls"
+	).is_true()
+	assert_int(wight.state).is_equal(Hostile.State.DOWNED)
+	assert_int(Reputation.event_count()).override_failure_message(
+		"exactly one reputation entry per resolved group"
+	).is_equal(events_before + 1)
+	assert_str(Reputation.history(1)[0].faction).is_equal("ssae-seeders")
+	assert_int(Battle.last_result.xp_awarded).is_greater(0)
+	assert_bool(Battle.session_active).is_false()
+	Reputation.from_dict(reputation_before)
+
+
+func test_a_group_resolves_when_its_last_member_falls_while_the_session_continues() -> void:
+	var reputation_before := Reputation.to_dict().duplicate(true)
+	GameState.set_flag("defeated_bog_wight", false)
+	GameState.set_flag("defeated_loam_boar", false)
+	var field := await _field()
+	var wight := _hostile(field, "Wight", Vector2i(30, 30))
+	wight.group_id = &"bog-wight"
+	var boar := _hostile(field, "Boar", Vector2i(33, 30))
+	boar.unit_id = &"loam-maddened-boar"
+	boar.group_id = &"loam-boar"
+	assert_bool(Battle.start_session(field, wight).get("allowed", false)).is_true()
+	assert_bool(Battle.admit(boar).get("allowed", false)).is_true()
+	var foe := wight.battle_actor()
+	foe.hp = 1
+	boar.battle_actor().hp = 999
+	boar.battle_actor().max_hp = 999
+
+	var seen_live_resolution := [false]
+	Battle.combat_event.connect(
+		func(_event: CombatEvent) -> void:
+			if Battle.session_active and GameState.flag_is_true("defeated_bog_wight"):
+				seen_live_resolution[0] = true
+	)
+	_drive_until_ended(foe, 60)
+
+	assert_bool(seen_live_resolution[0]).override_failure_message(
+		"the bog-wight group must resolve while the boar keeps the session alive"
+	).is_true()
+	assert_int(wight.state).is_equal(Hostile.State.DOWNED)
+	assert_bool(GameState.flag_is_true("defeated_loam_boar")).is_false()
+	assert_int(boar.state).is_equal(Hostile.State.IN_COMBAT)
+	Reputation.from_dict(reputation_before)
+
+
+## D7 flee rule (ruled 2026-09-04, PROVISIONAL numbers): two full measures with no party member
+## inside `alert_radius × 1.5` of any living hostile ends the session FLED. Survivors go back to
+## IDLE at full HP and the ledger writes nothing.
+func test_session_ends_fled_after_two_measures_with_no_party_in_reach() -> void:
+	var reputation_before := Reputation.to_dict().duplicate(true)
+	GameState.set_flag("defeated_bog_wight", false)
+	var field := await _field()
+	var wight := _hostile(field, "Wight", Vector2i(30, 30))
+	wight.group_id = &"bog-wight"
+	assert_bool(Battle.start_session(field, wight).get("allowed", false)).is_true()
+	var foe := wight.battle_actor()
+	foe.hp = foe.max_hp - 1
+	var events_before := Reputation.event_count()
+	field.player().global_position = wight.global_position + Vector2(wight.alert_radius * 4.0, 0)
+	for follower: Node2D in field.party_followers().followers():
+		follower.global_position = field.player().global_position
+
+	_drive_until_ended(null, 200)
+
+	assert_bool(Battle.ended).is_true()
+	assert_int(Battle.last_result.state).is_equal(BattleResult.State.FLED)
+	assert_int(wight.state).is_equal(Hostile.State.IDLE)
+	assert_int(foe.hp).override_failure_message("a fled hostile heals to full").is_equal(foe.max_hp)
+	assert_bool(GameState.flag_is_true("defeated_bog_wight")).is_false()
+	assert_int(Reputation.event_count()).is_equal(events_before)
+	assert_bool(Battle.session_active).is_false()
+	Reputation.from_dict(reputation_before)
+
+
+## A field torn down under a live session (save load, fixture teardown) must not leave Battle
+## holding a session that points at freed nodes; the fight ends as a flight instead.
+func test_unloading_the_field_under_a_live_session_ends_it_as_a_flight() -> void:
+	var field := await _field()
+	var hostile := _hostile(field, "Wight", Vector2i(30, 30))
+	var result: Dictionary = Battle.start_session(field, hostile)
+	assert_bool(bool(result.get("allowed", false))).is_true()
+	assert_bool(Battle.session_active).is_true()
+
+	field.get_parent().free()
+	await get_tree().process_frame
+
+	assert_bool(Battle.session_active).is_false()
+	assert_bool(Battle.ended).is_true()
+	assert_int(Battle.last_result.state).is_equal(BattleResult.State.FLED)
+
+
+## #281 set-piece migration: an authored encounter is fought on the field too. Battle spawns
+## one Hostile per encounter enemy on the cell the battlefield model seated it on, tracks them
+## like admitted hostiles, and frees them when the session ends.
+func test_start_set_piece_spawns_a_field_hostile_per_enemy_and_frees_them_at_the_end() -> void:
+	var field := await _field()
+	var authored := field.hostiles().size()
+	var opened: Dictionary = Battle.start_set_piece(field, &"dorthkor-vanguard")
+	assert_bool(bool(opened.get("allowed", false))).override_failure_message(
+		"%s" % opened.get("message", "")
+	).is_true()
+	assert_bool(Battle.session_active).is_true()
+	var spawned: Array[Hostile] = []
+	for hostile: Hostile in field.hostiles():
+		if hostile.state == Hostile.State.IN_COMBAT:
+			spawned.append(hostile)
+	assert_int(spawned.size()).is_equal(Battle.enemies.size())
+	var model := Battle.controller.battlefield as GridBattlefieldModel
+	for hostile: Hostile in spawned:
+		var actor := hostile.battle_actor()
+		assert_bool(Battle.enemies.has(actor)).is_true()
+		var expected := field.iso_grid().cell_to_world(
+			model._parse_handle(model.position_of(actor))["cell"]
+		)
+		assert_vector(hostile.global_position).is_equal(expected)
+
+	Battle._finish(BattleResult.State.VICTORY, &"slain")
+	await get_tree().process_frame
+	assert_bool(Battle.session_active).is_false()
+	assert_int(field.hostiles().size()).is_equal(authored)
+	field.get_parent().queue_free()
+	await get_tree().process_frame

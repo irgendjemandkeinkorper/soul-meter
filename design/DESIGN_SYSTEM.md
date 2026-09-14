@@ -20,7 +20,7 @@ alongside these visual tokens when deciding whether a feature belongs in Soul Me
 - `ui/hud/soul_gauge.gd` — the DS's flagship component ported: bronze fill (never violet —
   "ledgered, not magical"), canon agreement states (constant/skip/feedback/hush; feedback
   pulses), the Registry audit-floor mark.
-- `ui/hud/battle_hud.tscn` — the event-stream HUD: initiative and zones/weaknesses are
+- `ui/hud/regions/tactical_data/tactical_data_region.tscn` — the event-stream tactical data region of BattleInterface: initiative and zones/weaknesses are
   mirror-paired around the centre Balance arcs, and check math is an explicit toggle. It
   composes existing tokens and type variations only. ⚠ Built against FR-603, which
   `docs/prd-amendment-tactical-layer.md` **supersedes** (region model); its AP pips become CT —

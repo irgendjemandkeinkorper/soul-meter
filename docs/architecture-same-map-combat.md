@@ -201,6 +201,59 @@ seam-v2 broadcast, `Reputation`/`Renown` APIs, the save schema.
 Steps 1–3 can run as one Codex handoff; 4–5 as a second; 6 as a third (largest); 7–8 as a
 fourth. `#282` starts after step 5.
 
+### Step 6, ambient overlay slice — implementation in progress
+
+Ambient sessions bind region B to `world/combat_overlay.gd`. The overlay borrows the field's
+`IsoGrid` and existing party/Hostile nodes; it does not draw replacement ground or create unit
+sprites. Region B keeps its tile dictionaries and pointer signals. Cell picking converts through
+the canvas transform and field grid, so camera and field transforms do not introduce a second
+projection. Live events drive movement, action feedback, HP readouts and facing markers.
+Historical replay restores positions without replaying animations on the live field actors.
+
+**Legacy board retired — 2026-09-14.** `ui/screens/battle_stage.*` and `actors/enemy/*` are
+deleted; `ui/screens/battle.tscn` survives as the field HUD (its backdrop shows only for a fight
+started without a session, which no production path does). D6's last item landed the same
+day: `ui/hud/battle_hud.tscn` is now `ui/hud/regions/tactical_data/tactical_data_region.tscn`, a
+hidden BattleInterface region fed by `consume_event` and toggled by `toggle_tactical_data()`.
+The focused tests are in
+`test/unit/test_combat_overlay.gd`; the existing BattleInterface tests guard the frozen payload.
+
+**Set-pieces on the field — landed 2026-09-14.** `Battle.start_set_piece(field, encounter)`
+builds the grid from the field it is given (interiors allowed: a set-piece is placed by
+design), seats the party where it stands with the enemies on the nearest free cells
+`SET_PIECE_ENEMY_OFFSET` east of the player (PROVISIONAL until encounters author cells),
+spawns one Hostile per enemy that adopts the actor and stands on its seat, and frees them with
+the session. The trial hall gained a hidden `IsometricGround` blockout because interior
+`FieldGround` layers are empty. Callers: `lower_trial_hall._start_trial_encounter` and the
+journey ambush in `GameFlow`. Acceptance: `test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory`.
+
+**Camera (D6/D9) — landed 2026-09-14.** `CombatOverlay.bind_field` binds the player's
+`Camera2D`; each `turn_started`/`enemy_turn_started` pans to an off-screen active actor over
+`DS.DUR_BASE`, and `battle_finished` returns the camera to the player. An enemy beyond one
+screen margin gets no pan and no move tween (`pans_suppressed_for`). Test:
+`test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_the_end`.
+
+**Authored Hostiles — landed 2026-09-14.** The three field scenes instance
+`actors/hostile/hostile.tscn` in place of the legacy `Enemy` nodes (`unit_id` + `group_id` per
+`encounters.json`; Dorthkor's vanguard is two hostiles so the group can resolve). `FieldMap`
+opens the session on the first accepted alert of a quiet field and sends `enter_battle`; live
+alerts still go to `Battle.admit`. `Hostile.required_flag` replaces the Enemy lock (deaf and
+dimmed until the flag is set), and a hostile whose group `defeated_flag` is set frees itself at
+ready (D7 ruling 3). `Battle` ends a session as a flight when its field leaves the tree.
+`actors/enemy/*` is now unreferenced by any scene and goes with the step 6 retirement.
+
+### Step 7, session end — landed 2026-09-14
+
+`Battle` keeps `_ambient_session`; `_finish` routes it to `_finish_ambient`. The ledger fires
+per `group_id` the moment that group's last admitted member is downed (`_resolve_downed_groups`
+on every `action_resolved`): defeated flag, reputation, renown, XP and spoils, deduped on an
+already-set flag. Victory sweeps whatever fell on the finishing blow and messages "The field is
+quiet again." Defeat and flight write no ledger. The flee rule is checked on `measure_started`
+behind `PROVISIONAL_FLEE_RADIUS_FACTOR` (1.5) and `PROVISIONAL_FLEE_MEASURES` (2). At session
+end dead hostiles `mark_downed()`, survivors `return_to_idle()` at full HP under the re-alert
+cooldown, and one `ENCOUNTER_RESOLUTION` checkpoint is requested per session. Tests are in
+`test/integration/test_combat_session.gd`.
+
 ### Step 8, weather half — landed 2026-09-08
 
 `LocationDefinition.weather_default` is authored per location (wilds = mozh, Dorthkor Road =

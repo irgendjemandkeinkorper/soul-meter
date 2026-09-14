@@ -66,6 +66,14 @@ func test_warden_trigger_starts_once_and_victory_opens_the_next_beat() -> void:
 
 	assert_array(starts).is_equal([&"trial-warden"])
 	assert_str(Battle.encounter_id).is_equal("trial-warden")
+	# The warden is a field session in the hall itself: no separate board, a spawned Hostile.
+	assert_bool(Battle.session_active).is_true()
+	var field := hall.find_child("FieldMap", true, false) as FieldMap
+	var wardens: Array[Hostile] = []
+	for hostile: Hostile in field.hostiles():
+		if hostile.unit_id == &"trial-warden":
+			wardens.append(hostile)
+	assert_int(wardens.size()).is_equal(1)
 	Battle._finish(BattleResult.State.VICTORY, &"slain")
 	assert_bool(GameState.flag_is_true("tutorial_warden_cleared")).is_true()
 

@@ -94,8 +94,86 @@ func test_enter_battle_goes_directly_to_battle_and_pause_returns_there() -> void
 	assert_int(MusicDirector.get_context_stack().size()).is_equal(music_depth_before)
 
 
+## #281 step 1: the authored Hostile in the field is what opens an ambient session. Walking
+## into its alert radius, with nothing pressed, is the whole trigger.
+func test_walking_into_an_authored_hostile_opens_a_session_and_enters_battle() -> void:
+	var hostile := _field_scene.find_child("BogWight", true, false) as Hostile
+	assert_object(hostile).is_not_null()
+	if hostile == null:
+		return
+	var player := _field_scene.find_child("Player", true, false) as Player
+	player.global_position = hostile.global_position + Vector2(hostile.alert_radius * 0.5, 0.0)
+	for _i in 4:
+		await get_tree().physics_frame
+	await get_tree().process_frame
+
+	assert_bool(Battle.session_active).is_true()
+	assert_int(hostile.state).is_equal(Hostile.State.IN_COMBAT)
+	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
+	assert_bool(_field.combat_mode_active()).is_true()
+
+
+## #281 acceptance: the Bog Wight is fought where it stands. No deployment, no separate board —
+## the player walks in, the field HUD opens over the same scene, the party strikes it down, the
+## group ledger fires, the wight stays DOWNED, and CONTINUE returns the chart to Active with the
+## field-debt proof now reachable.
+func test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory() -> void:
+	var flag_before: bool = GameState.flag_is_true("defeated_bog_wight")
+	var reputation_before := Reputation.to_dict().duplicate(true)
+	GameState.set_flag("defeated_bog_wight", false)
+	var hostile := _field_scene.find_child("BogWight", true, false) as Hostile
+	var player := _field_scene.find_child("Player", true, false) as Player
+	var proof := _field_scene.find_child("FieldDebtProof", true, false) as Pickup
+	assert_object(proof).is_not_null()
+	player.global_position = hostile.global_position + Vector2(hostile.alert_radius * 0.5, 0.0)
+	for _i in 4:
+		await get_tree().physics_frame
+	await get_tree().process_frame
+	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
+	assert_bool(_state_is_active(DEPLOYMENT_SLATE_STATE)).is_false()
+	var hud: Control = UIManager._stack.back() if not UIManager._stack.is_empty() else null
+	assert_object(hud).is_not_null()
+	assert_object(hud.get("_stage")).override_failure_message(
+		"The ambient HUD must not mount the legacy tactical stage."
+	).is_null()
+
+	var foe := hostile.battle_actor()
+	foe.hp = 1
+	var steps := 0
+	while steps < 200 and not Battle.ended and Battle.controller != null:
+		steps += 1
+		if Battle.controller.state == CombatController.State.ALLY_TURN:
+			if not bool(Battle.controller.submit_action(&"strike", foe).get("allowed", false)):
+				Battle.controller.end_turn()
+		else:
+			Battle.controller.end_turn()
+	await get_tree().process_frame
+
+	assert_bool(Battle.ended).is_true()
+	assert_int(Battle.last_result.state).is_equal(BattleResult.State.VICTORY)
+	assert_bool(GameState.flag_is_true("defeated_bog_wight")).is_true()
+	assert_int(hostile.state).is_equal(Hostile.State.DOWNED)
+	assert_bool(Battle.session_active).is_false()
+
+	hud.call("_continue_after_battle", Battle.last_result)
+	await get_tree().process_frame
+	if _state_is_active(BATTLE_STATE):
+		# Spoils opened the loot panel; dismissing it is what sends battle_end.
+		var panel: Control = UIManager._stack.back()
+		panel.emit_signal("dismissed", [] as Array[Dictionary])
+		await get_tree().process_frame
+	assert_bool(_state_is_active(ACTIVE_STATE)).is_true()
+	assert_bool(_field.combat_mode_active()).is_false()
+	assert_bool(player.is_physics_processing()).is_true()
+	assert_bool(is_instance_valid(proof) and proof.is_inside_tree()).is_true()
+
+	Reputation.from_dict(reputation_before)
+	GameState.set_flag("defeated_bog_wight", flag_before)
+
+
 func test_enter_set_piece_traverses_the_existing_deployment_chain() -> void:
-	Battle.start(EncounterIds.BOG_WIGHT)
+	var opened: Dictionary = Battle.start_set_piece(_field, EncounterIds.BOG_WIGHT)
+	assert_bool(bool(opened.get("allowed", false))).is_true()
 
 	GameFlow.send_event(&"enter_set_piece")
 	await get_tree().process_frame
@@ -116,6 +194,11 @@ func test_enter_set_piece_traverses_the_existing_deployment_chain() -> void:
 	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
 	assert_bool(get_tree().paused).is_false()
 	assert_bool(_field.combat_mode_active()).is_true()
+	var hud: Control = UIManager._stack.back() if not UIManager._stack.is_empty() else null
+	assert_object(hud).is_not_null()
+	assert_object(hud.get("_stage")).override_failure_message(
+		"A set-piece must not mount the legacy tactical stage either."
+	).is_null()
 
 
 func test_enter_battle_guard_refuses_a_no_combat_field_with_fr606_shape() -> void:
@@ -215,6 +298,8 @@ func _state_is_active(path: String) -> bool:
 
 
 func _reset_battle() -> void:
+	if Battle.session_active:
+		Battle._end_session(null)
 	Battle.controller = null
 	Battle.allies.clear()
 	Battle.enemies.clear()

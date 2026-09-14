@@ -811,7 +811,7 @@ func _make_vex() -> PartyMember:
 
 ## Replaces the protagonist's identity with a chargen build, keeping
 ## `id = PROTAGONIST_ID` so `protagonist()`, the tavern's id-based lookups, and
-## `battle_stage.gd`'s art keying keep resolving. Only the boot-time
+## unit-art keying keep resolving. Only the boot-time
 ## CharacterCreation flow calls this — see `ui/screens/character_creation.gd`.
 func apply_created_character(member: PartyMember) -> void:
 	member.id = PROTAGONIST_ID

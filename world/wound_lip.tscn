@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="3_hud"]
-[ext_resource type="PackedScene" path="res://actors/enemy/enemy.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" path="res://actors/hostile/hostile.tscn" id="4_hostile"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="6_chest"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/jawbrace/jawbrace--damp-stone.png" id="7_damp_stone"]
@@ -372,9 +372,10 @@ camera_bounds = Rect2i(0, 0, 1800, 900)
 
 [node name="FieldHUD" parent="." instance=ExtResource("3_hud")]
 
-[node name="CleanedGuard" parent="." instance=ExtResource("4_enemy")]
+[node name="CleanedGuard" parent="." instance=ExtResource("4_hostile")]
 position = Vector2(1050, 450)
-encounter_id = &"jawbrace-empty-post"
+unit_id = &"cleaned-jawbrace-guard"
+group_id = &"jawbrace-empty-post"
 
 [node name="ReturnToDom" parent="." instance=ExtResource("5_exit")]
 position = Vector2(70, 450)

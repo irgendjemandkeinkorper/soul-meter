@@ -12,6 +12,7 @@ extends Control
 @onready var act_target_panel: ForecastPanelRegion = %ActTargetPanel
 @onready var turn_timeline: CTTimelineRegion = %TurnTimeline
 @onready var cursor_readout: Label = %CursorReadout
+@onready var tactical_data: TacticalDataRegion = %TacticalData
 var _controller: CombatController
 var _selected_action_id: StringName = &"strike"
 var _selected_ability_id := ""
@@ -36,6 +37,17 @@ func consume_event(event: CombatEvent) -> void:
 	weather_chip.consume_event(event)
 	act_target_panel.consume_event(event)
 	turn_timeline.consume_event(event)
+	tactical_data.consume_event(event)
+
+
+## The FR-603 panel is opt-in: hidden until asked for. Returns the new visibility.
+func toggle_tactical_data() -> bool:
+	tactical_data.visible = not tactical_data.visible
+	return tactical_data.visible
+
+
+func tactical_data_visible() -> bool:
+	return tactical_data.visible
 
 
 func bind_scheduler(scheduler: TurnScheduler) -> void:

@@ -128,3 +128,37 @@ func _spawn(root: Node, node_name: String) -> Node2D:
 	hostile.set("unit_id", &"bog-wight")
 	root.add_child(hostile)
 	return hostile
+
+
+func test_locked_hostile_stays_deaf_until_its_flag_is_set() -> void:
+	var root := _root()
+	root.add_child(CombatField.new())
+	var hostile := _spawn(root, "Wight")
+	if hostile == null:
+		return
+	var had_flag: bool = GameState.flag_is_true("test_hostile_gate")
+	GameState.set_flag("test_hostile_gate", false)
+	hostile.set("required_flag", "test_hostile_gate")
+	assert_bool(hostile.call("request_alert")).is_false()
+	assert_int(hostile.get("state")).is_equal(0)
+	GameState.set_flag("test_hostile_gate", true)
+	assert_bool(hostile.call("request_alert")).is_true()
+	GameState.set_flag("test_hostile_gate", had_flag)
+
+
+func test_hostile_whose_group_is_already_defeated_frees_itself() -> void:
+	var root := _root()
+	root.add_child(CombatField.new())
+	var had_flag: bool = GameState.flag_is_true("defeated_bog_wight")
+	GameState.set_flag("defeated_bog_wight", true)
+	var packed := load(HOSTILE_SCENE) as PackedScene
+	var hostile := packed.instantiate() as Node2D
+	hostile.name = "Wight"
+	hostile.set("unit_id", &"bog-wight")
+	hostile.set("group_id", &"bog-wight")
+	root.add_child(hostile)
+	await get_tree().process_frame
+	GameState.set_flag("defeated_bog_wight", had_flag)
+	assert_object(root.get_node_or_null("Wight")) \
+		.override_failure_message("A hostile whose group is already defeated must despawn.") \
+		.is_null()

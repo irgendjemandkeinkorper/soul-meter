@@ -46,8 +46,8 @@ const FALLBACK_POOL: PackedStringArray = [
 
 
 ## Combat rows name allies by display_name and enemies by archetype_id; this maps
-## either to a unit-art id (shared by ui/screens/battle_stage.gd and the
-## six-region BattleStageRegion — keep them on this one mapping).
+## either to a unit-art id (shared by CombatOverlay and the six-region
+## BattleStageRegion — keep them on this one mapping).
 const ALLY_UNIT_IDS_BY_NAME := {
 	"Vex": "vex",
 	"Vex the Unbowed": "vex",
