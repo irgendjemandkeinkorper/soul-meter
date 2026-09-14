@@ -63,8 +63,11 @@ func request_keeper_encounter() -> void:
 
 func _start_trial_encounter(encounter_id: StringName) -> void:
 	_active_trial_encounter = encounter_id
-	Battle.start(encounter_id)
-	if Battle.ended:
+	var field := find_child("FieldMap", true, false) as FieldMap
+	var opened: Dictionary = Battle.start_set_piece(field, encounter_id)
+	if not bool(opened.get("allowed", false)):
+		push_warning("Trial encounter '%s' refused: %s" % [encounter_id, opened.get("message", "")])
+	if not bool(opened.get("allowed", false)) or Battle.ended:
 		_active_trial_encounter = &""
 		return
 	trial_encounter_started.emit(encounter_id)

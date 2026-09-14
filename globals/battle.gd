@@ -42,7 +42,17 @@ var _pending_class_resources: Dictionary = {}
 ## to test `get_tree().paused` to mean "a battle is running" tests this instead (F0 D3).
 var session_active := false
 var _session_field: FieldMap
-var _session_hostiles: Dictionary = {}  ## StringName (combat_id) -> Hostile
+var _session_hostiles: Dictionary = {}
+## Hostiles Battle itself spawned for a set-piece (#281). They exist only for the fight and
+## are freed with the session; authored hostiles are never in this list.
+var _spawned_hostiles: Array[Hostile] = []
+## Set between `start_set_piece()` entering `start()` and the battlefield being built, so the
+## field-grid model seats the party where it stands and the enemies across from it.
+var _set_piece_pending: bool = false
+var _set_piece_seats: Array[Vector2i] = []
+## PROVISIONAL: how many cells east of the player a set-piece's first enemy is seated when the
+## encounter authors no cells of its own.
+const SET_PIECE_ENEMY_OFFSET := Vector2i(3, 0)  ## StringName (combat_id) -> Hostile
 ## True only for an ambient `start_session()` fight. A set-piece is also a session, but it
 ## keeps its authored encounter ledger; the per-group ledger and the flee rule below are the
 ## ambient path's (F0 D7).
@@ -312,19 +322,56 @@ func admit(hostile: Hostile) -> Dictionary:
 func start_set_piece(field: FieldMap, encounter: StringName) -> Dictionary:
 	if field == null:
 		return _session_refusal(&"field_map", &"field_map", "Combat requires a loaded field map.")
-	var access := can_fight_here(field)
+	var access := can_fight_here(field, true)
 	if not bool(access.get("allowed", false)):
 		return access
+	_session_field = field
+	_set_piece_pending = true
+	_set_piece_seats = []
 	start(encounter)
+	_set_piece_pending = false
 	if ended:
+		_session_field = null
 		return _session_refusal(
 			&"composition", &"present_combatant", "That encounter has no living enemies."
 		)
 	session_active = true
 	_ambient_session = false
-	_session_field = field
 	_session_hostiles.clear()
+	_resolved_groups.clear()
+	_measures_out_of_reach = 0
+	_spawn_set_piece_hostiles(field)
+	if not _set_piece_seats.is_empty():
+		field.seat_party(_set_piece_seats)
+	if not field.tree_exiting.is_connected(_on_session_field_exiting):
+		field.tree_exiting.connect(_on_session_field_exiting)
 	return _session_allowed({"encounter_id": String(encounter)})
+
+
+## #281: a set-piece has no authored field nodes, so Battle gives every encounter enemy one —
+## a Hostile that adopts the actor `start()` built and stands on the cell the battlefield
+## model seated it on. The overlay then drives it exactly like an ambient hostile.
+func _spawn_set_piece_hostiles(field: FieldMap) -> void:
+	_spawned_hostiles.clear()
+	var model := controller.battlefield as GridBattlefieldModel
+	var grid := field.iso_grid()
+	var packed := load("res://actors/hostile/hostile.tscn") as PackedScene
+	if model == null or grid == null or packed == null:
+		return
+	var parent: Node = field.get_parent()
+	for index in enemies.size():
+		var actor := enemies[index]
+		var hostile := packed.instantiate() as Hostile
+		hostile.name = "SetPiece%d_%s" % [index, String(actor.archetype_id)]
+		hostile.group_id = encounter_id
+		hostile.adopt_actor(actor)
+		var parsed: Dictionary = model._parse_handle(model.position_of(actor))
+		parent.add_child(hostile)
+		if bool(parsed.get("ok", false)):
+			hostile.global_position = grid.cell_to_world(parsed["cell"])
+		hostile.sync_cell()
+		_track_session_hostile(hostile, actor)
+		_spawned_hostiles.append(hostile)
 
 
 ## Party actors for a session, built through the one named conversion (D4/D5) so the ambient
@@ -409,6 +456,10 @@ func _end_session(result: BattleResult) -> void:
 		SaveGame.request_checkpoint(
 			SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, "session-" + String(result.outcome_id)
 		)
+	for spawned: Variant in _spawned_hostiles:
+		if is_instance_valid(spawned):
+			(spawned as Node).queue_free()
+	_spawned_hostiles.clear()
 	_session_field = null
 	_session_hostiles.clear()
 	_ambient_session = false
@@ -600,7 +651,7 @@ func _agreement_integrity(scene_path: String = "") -> float:
 ## (GameFlow); a session asks about the exact field it was handed, because more than one
 ## FieldMap can be in the tree — a scene mid-swap, or a test fixture — and answering about the
 ## wrong one would let a fight open inside a no-combat interior.
-func can_fight_here(field: FieldMap = null) -> Dictionary:
+func can_fight_here(field: FieldMap = null, set_piece: bool = false) -> Dictionary:
 	if field == null:
 		field = _current_field_map()
 	if field == null:
@@ -610,7 +661,9 @@ func can_fight_here(field: FieldMap = null) -> Dictionary:
 			"nearest_unblock": {"type": &"field_map"},
 			"message": "Combat requires a loaded field map.",
 		}
-	if field.no_combat_zone():
+	# An authored set-piece is placed by design (the trial hall is an interior); only ambient
+	# fights honour the no-combat zone.
+	if field.no_combat_zone() and not set_piece:
 		return {
 			"allowed": false,
 			"blocked_by": &"no_combat_zone",
@@ -646,7 +699,9 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 	if _definition.is_empty() or str(_definition.get("battlefield", "")) == "zones":
 		return BattlefieldModel.create_default(rules)
 
-	var field: FieldMap = _current_field_map()
+	var field: FieldMap = (
+		_session_field if is_instance_valid(_session_field) else _current_field_map()
+	)
 	if field == null:
 		# Invalid direct callers can still fail closed without recreating a hidden
 		# encounter grid. GameFlow's can_fight_here guard prevents this in play.
@@ -654,7 +709,40 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 	var model: GridBattlefieldModel = GridBattlefieldModel.new()
 	model.configure(rules)
 	model.build_grid(field.ground(), field.blocking())
+	if _set_piece_pending:
+		_seat_set_piece(model, field)
 	return model
+
+
+## A set-piece is fought where the party stands, like an ambient session (ruling 4), with the
+## enemies seated on the nearest free cells across from the player. An encounter that authors
+## its own cells is a later contract; until then this is the one placement rule.
+func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
+	var live_cells := field.party_cells()
+	if live_cells.is_empty():
+		return
+	var desired: Array[Vector2i] = []
+	for index in allies.size():
+		desired.append(live_cells[mini(index, live_cells.size() - 1)])
+	var placement := model.resolve_placement(desired)
+	if not bool(placement.get("allowed", false)):
+		return
+	var seats: Array = placement.get("cells", [])
+	var initial: Dictionary = {}
+	var taken: Dictionary = {}
+	for index in allies.size():
+		initial[allies[index]] = seats[index]
+		taken[seats[index]] = true
+	var anchor: Vector2i = seats[0]
+	for index in enemies.size():
+		var wanted: Vector2i = anchor + SET_PIECE_ENEMY_OFFSET + Vector2i(0, index)
+		var found := model._nearest_free_cell(wanted, taken)
+		if not bool(found.get("ok", false)):
+			return
+		initial[enemies[index]] = found["cell"]
+		taken[found["cell"]] = true
+	if bool(model.configure_initial_cells(initial).get("allowed", false)):
+		_set_piece_seats.assign(seats)
 
 
 func _current_field_map() -> FieldMap:

@@ -380,3 +380,36 @@ func test_unloading_the_field_under_a_live_session_ends_it_as_a_flight() -> void
 	assert_bool(Battle.session_active).is_false()
 	assert_bool(Battle.ended).is_true()
 	assert_int(Battle.last_result.state).is_equal(BattleResult.State.FLED)
+
+
+## #281 set-piece migration: an authored encounter is fought on the field too. Battle spawns
+## one Hostile per encounter enemy on the cell the battlefield model seated it on, tracks them
+## like admitted hostiles, and frees them when the session ends.
+func test_start_set_piece_spawns_a_field_hostile_per_enemy_and_frees_them_at_the_end() -> void:
+	var field := await _field()
+	var authored := field.hostiles().size()
+	var opened: Dictionary = Battle.start_set_piece(field, &"dorthkor-vanguard")
+	assert_bool(bool(opened.get("allowed", false))).override_failure_message(
+		"%s" % opened.get("message", "")
+	).is_true()
+	assert_bool(Battle.session_active).is_true()
+	var spawned: Array[Hostile] = []
+	for hostile: Hostile in field.hostiles():
+		if hostile.state == Hostile.State.IN_COMBAT:
+			spawned.append(hostile)
+	assert_int(spawned.size()).is_equal(Battle.enemies.size())
+	var model := Battle.controller.battlefield as GridBattlefieldModel
+	for hostile: Hostile in spawned:
+		var actor := hostile.battle_actor()
+		assert_bool(Battle.enemies.has(actor)).is_true()
+		var expected := field.iso_grid().cell_to_world(
+			model._parse_handle(model.position_of(actor))["cell"]
+		)
+		assert_vector(hostile.global_position).is_equal(expected)
+
+	Battle._finish(BattleResult.State.VICTORY, &"slain")
+	await get_tree().process_frame
+	assert_bool(Battle.session_active).is_false()
+	assert_int(field.hostiles().size()).is_equal(authored)
+	field.get_parent().queue_free()
+	await get_tree().process_frame

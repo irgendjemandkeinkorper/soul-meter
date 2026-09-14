@@ -1,7 +1,8 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="Script" path="res://world/interiors/lower_trial_hall.gd" id="2_controller"]
+[ext_resource type="Script" path="res://world/isometric_blockout.gd" id="11_iso"]
 [ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="3_npc"]
 [ext_resource type="PackedScene" path="res://actors/switch/switch.tscn" id="4_switch"]
 [ext_resource type="PackedScene" path="res://actors/pickup/pickup.tscn" id="5_pickup"]
@@ -30,6 +31,13 @@ size = Vector2(88, 22)
 [node name="LowerTrialHallInterior" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("2_controller")
+
+[node name="IsometricGround" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(480, -300)
+script = ExtResource("11_iso")
+map_size = Vector2i(40, 40)
+road_axis = 0
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Lower Trial Hall"

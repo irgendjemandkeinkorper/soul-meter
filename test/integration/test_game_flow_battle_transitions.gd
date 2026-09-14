@@ -172,7 +172,8 @@ func test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory()
 
 
 func test_enter_set_piece_traverses_the_existing_deployment_chain() -> void:
-	Battle.start(EncounterIds.BOG_WIGHT)
+	var opened: Dictionary = Battle.start_set_piece(_field, EncounterIds.BOG_WIGHT)
+	assert_bool(bool(opened.get("allowed", false))).is_true()
 
 	GameFlow.send_event(&"enter_set_piece")
 	await get_tree().process_frame
@@ -193,6 +194,11 @@ func test_enter_set_piece_traverses_the_existing_deployment_chain() -> void:
 	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
 	assert_bool(get_tree().paused).is_false()
 	assert_bool(_field.combat_mode_active()).is_true()
+	var hud: Control = UIManager._stack.back() if not UIManager._stack.is_empty() else null
+	assert_object(hud).is_not_null()
+	assert_object(hud.get("_stage")).override_failure_message(
+		"A set-piece must not mount the legacy tactical stage either."
+	).is_null()
 
 
 func test_enter_battle_guard_refuses_a_no_combat_field_with_fr606_shape() -> void:

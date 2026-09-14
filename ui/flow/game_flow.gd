@@ -292,8 +292,8 @@ func resolve_encounter_prompt(avoid: bool) -> Dictionary:
 	travel_plan.state = TravelPlan.State.IN_BATTLE
 	_persist_travel_plan()
 	var encounter_id := StringName(travel_plan.encounter_schedule[slot_index]["encounter_id"])
-	Battle.start(encounter_id)
-	if not Battle.ended:
+	var opened: Dictionary = Battle.start_set_piece(Battle._current_field_map(), encounter_id)
+	if bool(opened.get("allowed", false)) and not Battle.ended:
 		send_event("enter_battle")
 	return {"event": "battle_started"}
 

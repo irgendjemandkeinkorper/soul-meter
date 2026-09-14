@@ -56,6 +56,14 @@ func _ready() -> void:
 	sync_cell.call_deferred()
 
 
+## Set-piece spawn: this hostile stands in for an actor Battle already built from the
+## encounter, so it must not build a second one. Called before `add_child`.
+func adopt_actor(actor: BattleActor) -> void:
+	_actor = actor
+	unit_id = actor.archetype_id
+	combat_id = actor.combat_id
+
+
 func battle_actor() -> BattleActor:
 	if _actor == null:
 		_actor = EncounterCatalog.make_actor(unit_id, group_id)
