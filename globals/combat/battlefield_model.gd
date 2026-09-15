@@ -174,6 +174,35 @@ func elevation_delta(_actor: BattleActor, _target: BattleActor) -> int:
 	return 0
 
 
+## The cell an actor stands on, or null when this model has no cells or the actor is absent.
+## Consumers still branch on `capabilities().cells`; this is a convenience over
+## `describe_position(position_of(actor))`, never a second handle format.
+func cell_of(_actor: BattleActor) -> Variant:
+	return null
+
+
+## Legality of one cell for area workings, in the refusal shape:
+## `{allowed, in_bounds, passable, occupant_id}`. Models without cells refuse.
+func cell_query(_cell: Vector2i) -> Dictionary:
+	return _blocked(&"position", "Positioning model has no cells.", {"type": &"cells"})
+
+
+## Forced displacement (a pull or a shove): seats `actor` on `cell` with no path or CT cost.
+## The caller has validated the destination; this refuses only what it cannot represent.
+func displace(_actor: BattleActor, _cell: Vector2i) -> Dictionary:
+	return _blocked(&"position", "Positioning model does not support displacement.", {})
+
+
+## Line of sight from an actor to a CELL (an area mark), same taxonomy as `line_of_sight()`.
+func line_of_sight_to_cell(_actor: BattleActor, _cell: Vector2i) -> Dictionary:
+	return _allowed()
+
+
+## Line of sight between two cells, from a remembered cast position rather than a live actor.
+func line_of_sight_between_cells(_from: Vector2i, _to: Vector2i) -> Dictionary:
+	return _allowed()
+
+
 static func _allowed(extra: Dictionary = {}) -> Dictionary:
 	var result := {
 		"allowed": true,

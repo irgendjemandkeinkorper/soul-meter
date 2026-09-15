@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"verdict-by-fire"
+display_name = "Verdict by Fire"
+kind = 0
+verb = 2
+ap_cost = 4
+ct_cost = 60
+element_id = &"khash"
+magnitude = &"refrain"
+target_profile = &"cells"
+player_available = true
+effect_id = &"verdict_by_fire"
+effect_payload = {"range": 5, "cell_count": 3, "power": 18, "delay_rounds": 2, "refrain_use": true, "requires_patron": "pazzah", "requires_tier": 3, "ledger_entry": true}
+spell = true
+breath_cost = 24
+description = "Ash Magistrate, Tier 3 (Triad). File a Crown of Embers on the Ledger: it releases at the Ledger beat two rounds later, untethered to your position. Spends your Refrain and a Ledger entry."

@@ -295,3 +295,24 @@ are stated here so implementation has something to reject.
    they exercise the Ledger beat and the Threads condition seam respectively.
 3. The remaining seven follow once the reaction matrix's steps 1–3 exist in the runtime,
    because Cairn, Nightfeeder and Sparkwright depend on K/T/X/R reactions.
+
+### Ash Magistrate runtime (2026-09-15)
+
+The kit and the cards it leans on are live in `CombatController`; the substrate is
+`globals/combat/fire_field.gd` (`FireField`). Test suite:
+`test/unit/test_ash_magistrate.gd`.
+
+| Piece | Where | Notes |
+|---|---|---|
+| Burning, Soaked | `BattleActor.impositions` | Burning = 3 HP at the next two checkpoints, refresh not stack, refused while Soaked. Soaked lasts two checkpoints. |
+| Firebreak lines, hazard | `CombatController.fire` (`FireField`) | 3 HP + Burning once per creature per round, on entry (move or pull), on creation, and at the checkpoint for anyone standing in it. Lines last two checkpoints. |
+| Checkpoint | `_fire_checkpoint()` from the AP `round_ended` / CT measure beat | Order: snapshot Burning → standing hazards → burn ticks for the snapshot → age Soaked → age lines. A checkpoint that empties a side ends the battle; a killed upcoming actor forfeits its seat instead of counting as a defeat. |
+| Cards | `data/combat/actions/30–33, 40–41` | Kindle, Firebreak, Crown of Embers, Douse; Thrust, Hook and Draw. Cell cards use `target_profile = &"cells"` with `options.cells = [{x, y}, …]`. |
+| Kit | `data/combat/actions/50–52` | Sentence of Ash (Ledger entry, `delay_rounds` 2), Herd (`allow_marked_destination`, Chord gate), Verdict by Fire (Ledger entry, Refrain use, Triad gate, untethered). |
+| Gates | `CombatAction.effect_payload` | `requires_patron`, `requires_tier` (2 chord / 3 triad via `CastingGate.query_breadth`), `refrain_use` (one per battle, spent at commit), `ledger_entry` (needs a free Ledger entry). Refusals name the gate: `class_resource`, `var_harmony`, `refrain_spent`, `ledger_full`, `blocked_by_range`, `line_shape`, `pull_geometry`, `pull_destination`. |
+| Marks | `snapshot().fire.marks` | Filed-but-unfired cell workings, for the HUD and the Herd rule. Jam the Gears (`request_cancel`) removes them with the entry. |
+| Save | `class_resources_to_dict()` keys `__fire__`, `__impositions__` | Additive; older saves restore no fire. |
+
+Not done: the battle HUD (`ui/hud/battle_interface.gd`) still only targets enemies, so
+cell cards and Douse-on-ally have no pointer flow yet. Numbers are the cards' provisional
+values (B11 owns the cap review).

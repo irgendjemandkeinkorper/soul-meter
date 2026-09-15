@@ -73,7 +73,10 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var is_spell := bool(ability.get("is_spell", false))
 	# Composition already identifies the damage-bearing components. Utility spells
 	# retain their effects and costs; a mundane weapon is not made harmless by its label.
-	var direct_damage_enabled := not is_spell or not composition.damage_components.is_empty()
+	var direct_damage_enabled := (
+		(not is_spell or not composition.damage_components.is_empty())
+		and not bool(ability.get("no_damage", false))
+	)
 	var fizzle_percent := 0.0
 	var fizzle_roll := 0
 	var fizzled := false

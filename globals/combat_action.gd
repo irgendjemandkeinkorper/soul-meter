@@ -51,6 +51,25 @@ enum Verb { MOVE, ATTACK, CAST, ITEM, SPEECH, DEFEND }
 @export_enum("self", "ally", "enemy") var class_resource_target: String = "self"
 ## Authored parameters only; transient player options cannot replace this payload.
 @export var class_resource_payload: Dictionary = {}
+## Authored effect pipeline id (`CombatController._EFFECT_*`), the data seam for card content
+## that is not a plain hit: fire lines, Burning, pulls, delayed releases. Empty means the kind's
+## default behavior. Unknown ids are refused at query time, never silently ignored.
+@export var effect_id: StringName = &""
+## Parameters for `effect_id`, plus the shared gates every effect action may declare:
+## `range` (Chebyshev cells), `requires_patron`, `requires_tier` (2 = Chord gate, 3 = Triad gate),
+## `refrain_use` (spends the caster's one Refrain allowance), `ledger_entry` (files through the
+## Pazzah Ledger and needs a free entry). Authored only; player options never replace it.
+@export var effect_payload: Dictionary = {}
+## True for an authored spell card: `Resolution` rolls fizzle, spends `breath_cost`, lays
+## Aftertones and Tempo exactly as a loadout ability would, and `power_bonus` is the card's flat
+## creature power instead of a bonus on the actor's attack.
+@export var spell: bool = false
+@export_range(0, 200) var breath_cost: int = 0
+## A working with no direct HP damage (Douse, Hook and Draw). The to-hit roll still happens.
+@export var no_damage: bool = false
+## Which side an effect action targets: "enemy" (default), "ally", or "any" (a living creature
+## on either side, Douse). Cell-targeted actions use `target_profile = &"cells"` instead.
+@export_enum("enemy", "ally", "any") var target_side: String = "enemy"
 @export_multiline var description: String = ""
 
 
@@ -128,10 +147,27 @@ func summary() -> String:
 		target = class_resource_target.capitalize()
 	if not description.is_empty():
 		effect = description
+	if targets_cells():
+		target = "Cells"
+	elif target_side == "ally":
+		target = "Ally"
+	elif target_side == "any":
+		target = "Creature"
 	var costs: Array[String] = ["%d AP" % ap_cost]
+	if breath_cost > 0:
+		costs.append("%d Breath" % breath_cost)
 	if not is_zero_approx(soul_cost):
 		costs.append("%d Soul" % int(soul_cost))
 	return "%s · %s · %s" % [target, effect, " + ".join(costs)]
+
+
+## Cell-targeted working: the player declares grid cells (`options.cells`), not a creature.
+func targets_cells() -> bool:
+	return target_profile == &"cells"
+
+
+func targets_any_side() -> bool:
+	return target_side == "any" and not targets_cells() and class_resource_action.is_empty()
 
 
 func balance_effect_summary() -> String:
@@ -143,10 +179,16 @@ func balance_effect_summary() -> String:
 
 
 func requires_enemy_target() -> bool:
+	if targets_cells() or targets_any_side():
+		return false
+	if class_resource_action.is_empty() and target_side == "ally":
+		return false
 	return kind in [Kind.ATTACK, Kind.DEFINING_STRIKE, Kind.CAST] or (
 		not class_resource_action.is_empty() and class_resource_target == "enemy"
 	)
 
 
 func requires_ally_target() -> bool:
-	return not class_resource_action.is_empty() and class_resource_target == "ally"
+	if not class_resource_action.is_empty():
+		return class_resource_target == "ally"
+	return target_side == "ally" and not targets_cells()

@@ -90,6 +90,10 @@ var balance_effects: Dictionary = {}
 ## Temporary Wave 1 payoff earned by voluntarily ending an AP turn. Cleared at
 ## the next AP refresh; authored CombatRules own both its rate and hard cap.
 var unused_ap_defense_bonus: int = 0
+## Elemental impositions on this creature, keyed by imposition id (`ElementsData`
+## `imposition_id`, e.g. "burning", "soaked"). Each value is that imposition's own small state
+## dict; `FireField` owns the Khash/Luth entries. Runtime combat state, cleared with the actor.
+var impositions: Dictionary = {}
 
 
 ## Named conversion from a roster member to a combatant (same-map combat D5). This is the

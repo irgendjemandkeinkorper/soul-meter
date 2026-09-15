@@ -193,7 +193,9 @@ Null resources omitted) beside the other runtime sections and reads it back with
 `Battle.restore_class_resources()`. Outside a live battle it is `{}`; the loader defaults `{}`.
 A restore that arrives before a controller exists is held in `Battle._pending_class_resources`
 and applied by the next `Battle.start()`. Mid-battle save is not a Chapter 1 behaviour, so this
-is model-level round-trip only.
+is model-level round-trip only. The same dict carries two more reserved keys beside
+`__deferred__`: `__fire__` (Firebreak lines and per-round hazard marks) and `__impositions__`
+(Burning/Soaked per combat id), both omitted when empty so older saves load unchanged.
 
 ## Do not decide (B-wave workers)
 
