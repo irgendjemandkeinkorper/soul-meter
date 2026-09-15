@@ -346,10 +346,14 @@ static func _npc_artifacts() -> Dictionary:
 		if not hooks.is_empty():
 			quest_involved_count += 1
 
+		# Pandora offsets retain their authored units; Wave 3c doubles interior
+		# layout only. Marker anchors are already migrated in the room scenes.
+		var placement_scene := entity.get_string("Placement Scene")
+		var layout_factor := 2.0 if placement_scene.begins_with("res://world/interiors/") else 1.0
 		var placement := {
-			"scene": entity.get_string("Placement Scene"),
+			"scene": placement_scene,
 			"anchor": entity.get_string("Placement Anchor"),
-			"offset": [entity.get_float("Placement X"), entity.get_float("Placement Y")],
+			"offset": [entity.get_float("Placement X") * layout_factor, entity.get_float("Placement Y") * layout_factor],
 			"facing": entity.get_string("Facing"),
 			"idle_phase": entity.get_float("Idle Phase"),
 			"model_index": entity.get_integer("Model Index"),

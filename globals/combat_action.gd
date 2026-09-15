@@ -47,6 +47,11 @@ enum Verb { MOVE, ATTACK, CAST, ITEM, SPEECH, DEFEND }
 @export var player_available: bool = true
 ## Optional class-resource command routed by CombatController for PASS-kind actions.
 @export var class_resource_action: StringName = &""
+## Class commands retain PASS-kind execution but declare their own target side.
+@export_enum("self", "ally", "enemy") var class_resource_target: String = "self"
+## Authored parameters only; transient player options cannot replace this payload.
+@export var class_resource_payload: Dictionary = {}
+@export_multiline var description: String = ""
 
 
 static func make(
@@ -119,6 +124,10 @@ func summary() -> String:
 			if verb == Verb.SPEECH:
 				target = "Encounter"
 				effect = "Opens combat dialogue"
+	if not class_resource_action.is_empty():
+		target = class_resource_target.capitalize()
+	if not description.is_empty():
+		effect = description
 	var costs: Array[String] = ["%d AP" % ap_cost]
 	if not is_zero_approx(soul_cost):
 		costs.append("%d Soul" % int(soul_cost))
@@ -134,4 +143,10 @@ func balance_effect_summary() -> String:
 
 
 func requires_enemy_target() -> bool:
-	return kind in [Kind.ATTACK, Kind.DEFINING_STRIKE, Kind.CAST]
+	return kind in [Kind.ATTACK, Kind.DEFINING_STRIKE, Kind.CAST] or (
+		not class_resource_action.is_empty() and class_resource_target == "enemy"
+	)
+
+
+func requires_ally_target() -> bool:
+	return not class_resource_action.is_empty() and class_resource_target == "ally"

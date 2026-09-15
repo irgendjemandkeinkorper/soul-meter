@@ -6,6 +6,43 @@ const IsoGridScript := preload("res://world/nav/iso_grid.gd")
 const TILE_SIZE := Vector2i(64, 32)
 
 
+func test_live_obstacle_edits_update_existing_grids_and_preserve_occupants_and_weights() -> void:
+	var ground := _make_ground(Vector2i(5, 5))
+	var cell := Vector2i(2, 2)
+	var blocking: BlockingLayer = auto_free(BlockingLayer.new())
+	blocking.tile_set = ground.tile_set
+	var tiles := {cell: [0, Vector2i.ZERO, 0]}
+	blocking.set_structure_footprint(tiles, true)
+	var grid := IsoGridScript.new()
+	grid.build(ground, blocking)
+	var occupant: Node = auto_free(Node.new())
+	grid.set_occupant(occupant, Vector2i(3, 3))
+	grid.set_point_weight_scale(Vector2i(1, 1), 2.5)
+	blocking.set_structure_footprint(tiles, false)
+	assert_bool(grid.is_point_solid(cell)).is_false()
+	assert_bool(grid.is_point_solid(Vector2i(3, 3))).is_true()
+	assert_float(grid.get_point_weight_scale(Vector2i(1, 1))).is_equal(2.5)
+	blocking.set_structure_footprint(tiles, true)
+	assert_bool(grid.is_point_solid(cell)).is_true()
+	# Rebinding must stop listening to the previous field's obstacle layer.
+	grid.build(ground)
+	blocking.set_structure_footprint(tiles, false)
+	assert_bool(grid.is_point_solid(cell)).is_false()
+
+
+func test_obstacle_notifications_during_scene_teardown_do_not_access_released_tilesets() -> void:
+	var ground := _make_ground(Vector2i(3, 3))
+	var blocking := _make_blocking([Vector2i(1, 1)], ground.tile_set)
+	var grid := IsoGridScript.new()
+	grid.build(ground, blocking, 0, true)
+	# Tile resources can be released before other nodes emit their final changes.
+	ground.tile_set = null
+	blocking.changed.emit()
+	var next_ground := _make_ground(Vector2i(3, 3))
+	grid.build(next_ground, blocking)
+	assert_bool(grid.is_point_solid(Vector2i(1, 1))).is_true()
+
+
 func _make_tile_set() -> TileSet:
 	var tile_set := TileSet.new()
 	tile_set.tile_size = TILE_SIZE

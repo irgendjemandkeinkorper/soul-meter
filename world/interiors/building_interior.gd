@@ -6,10 +6,15 @@ const NpcScene := preload("res://actors/npc/npc.tscn")
 const NpcPlacementsData: JSON = preload("res://data/generated/dom_npc_placements.json")
 const VendorData := preload("res://globals/vendor_registry.gd")
 const VendorIdsData := preload("res://data/generated/vendor_ids.gd")
-const FALLBACK_FLOOR_TEXTURE := preload("res://assets/generated/sprites/castle-kit/ground.png")
-const FALLBACK_WALL_TEXTURE := preload("res://assets/generated/sprites/castle-kit/wall.png")
+const FALLBACK_FLOOR_TEXTURE := preload("res://assets/generated/sprites/interior/dom-interior-floor--stone-flag.png")
+const FALLBACK_WALL_TEXTURE := preload("res://assets/generated/sprites/interior/dom-interior-wall--brick-dark.png")
 const DEFAULT_FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png"
 const DEFAULT_WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
+const COUNTER_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-counter--bar.png"
+const WALL_THICKNESS := 48.0
+## Accent rugs read as dyed floorboards, not flat paint, over the textured floor.
+const RUG_DARKEN := 0.45
+const BACK_WALL_THICKNESS := 96.0
 
 ## Vendor rows carry stable town-site ids but no scene anchor. Keep that world-layer
 ## mapping here while stock, prices, gates, and restock remain generated data.
@@ -52,6 +57,9 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	($Surround/ColorRect as ColorRect).color = DS.INK_0
+	($Backdrop as Polygon2D).color = DS.INK_0
+	configure_room_camera(self)
 	var floor := $Floor as Polygon2D
 	var floor_texture := _load_optional_texture(DEFAULT_FLOOR_TEXTURE_PATH, FALLBACK_FLOOR_TEXTURE)
 	floor.color = floor_color
@@ -63,10 +71,35 @@ func _ready() -> void:
 		wall.color = accent_color
 		wall.texture = wall_texture
 		wall.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-	($AccentRug as Polygon2D).color = accent_color
+	var rug := $AccentRug as Polygon2D
+	rug.color = accent_color.darkened(RUG_DARKEN)
+	rug.texture = floor_texture
+	rug.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	configure_counter($Counter as Polygon2D)
 	($Title as Label).text = building_name
 	_populate_townsfolk()
 	_populate_vendors()
+
+
+## Also used by the standalone tavern. Parent _ready runs after Player._ready,
+## so update both the exported movement seam and the already-initialized camera.
+static func configure_room_camera(room: Node2D) -> void:
+	var floor := room.get_node("Floor") as Polygon2D
+	var bounds := Rect2(floor.to_global(floor.polygon[0]), Vector2.ZERO)
+	for point: Vector2 in floor.polygon:
+		bounds = bounds.expand(floor.to_global(point))
+	bounds = bounds.grow_individual(
+		WALL_THICKNESS, BACK_WALL_THICKNESS, WALL_THICKNESS, WALL_THICKNESS
+	)
+	var player := room.get_node("Player") as Player
+	player.camera_bounds = Rect2i(bounds)
+	var camera := player.get_node("Camera2D") as Camera2D
+	camera.limit_left = player.camera_bounds.position.x
+	camera.limit_top = player.camera_bounds.position.y
+	camera.limit_right = player.camera_bounds.end.x
+	camera.limit_bottom = player.camera_bounds.end.y
+	camera.reset_smoothing()
+	camera.force_update_scroll()
 
 
 func _populate_townsfolk() -> void:
@@ -159,3 +192,25 @@ func _load_optional_texture(path: String, fallback: Texture2D) -> Texture2D:
 			return texture
 	# Keep interiors usable when optional generated art is missing or has a corrupt import.
 	return fallback
+
+
+## Stretches the painted bar-counter texture across the whole counter polygon so the
+## art is not sampled from world (0, 0); leaves collision and node paths untouched.
+static func configure_counter(counter: Polygon2D) -> void:
+	if counter == null:
+		return
+	if counter.texture == null:
+		counter.texture = load(COUNTER_TEXTURE_PATH) as Texture2D
+	if counter.texture == null:
+		return
+	var bounds := Rect2(counter.polygon[0], Vector2.ZERO)
+	for point: Vector2 in counter.polygon:
+		bounds = bounds.expand(point)
+	var texture_size := counter.texture.get_size()
+	var uv := PackedVector2Array()
+	for point: Vector2 in counter.polygon:
+		var t := (point - bounds.position) / bounds.size
+		uv.append(t * texture_size)
+	counter.uv = uv
+	counter.texture_repeat = CanvasItem.TEXTURE_REPEAT_DISABLED
+	counter.color = Color.WHITE

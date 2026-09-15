@@ -6,6 +6,7 @@ const PlayerScene := preload("res://actors/player/player.tscn")
 const SaveGameScript := preload("res://globals/save_game.gd")
 const FLOOR_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-floor--wood-panel.png"
 const WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wall--brick.png"
+const COUNTER_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-counter--bar.png"
 const SHARED_INTERIOR_SCENE_PATH := "res://world/interiors/building_interior.tscn"
 const MAX_SOLID_PROP_FOOTPRINT_SIZE := Vector2(120.0, 48.0)
 ## The 1.2–1.4 door band was ratified (#210) against the pre-shrink player art.
@@ -98,6 +99,7 @@ func test_shared_interior_keeps_contract_and_loads_palette_modulated_textures() 
 	var interior := auto_free(BuildingInteriorScene.instantiate()) as BuildingInterior
 	interior.exit_transition_id = &"registry_archive_exit"
 	add_child(interior)
+	_assert_room_presentation(interior)
 	assert_object(interior.get_node_or_null("Player")).is_not_null()
 	assert_object(interior.get_node_or_null("ExitDoor")).is_not_null()
 	assert_object(interior.get_node_or_null("FieldHUD")).is_not_null()
@@ -137,6 +139,7 @@ func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement
 		assert_object(packed).is_not_null()
 		var interior := auto_free(packed.instantiate()) as Node2D
 		add_child(interior)
+		_assert_room_presentation(interior)
 		var player := interior.find_child("Player", true, false) as Player
 		var spawn_default := interior.find_child("SpawnDefault", true, false) as Marker2D
 		var spawn_entry := interior.find_child("SpawnEntry", true, false) as Marker2D
@@ -155,13 +158,74 @@ func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement
 			String(BuildingTransitionRegistry.exit_for(entry.building_id).id)
 		)
 		assert_vector(spawn_entry.global_position).is_equal(entry.destination_spawn_position)
-		assert_float(spawn_entry.global_position.y).is_less(door_sprite.global_position.y - 24.0)
+		assert_float(spawn_entry.global_position.y).is_greater_equal(door_sprite.global_position.y + 40.0)
 		diagnostics.clear()
 		saves.has_pending_player_position = false
 		saves.pending_spawn_id = entry.spawn_id
 		saves.apply_pending_location(interior)
 		assert_array(diagnostics).is_empty()
 		assert_vector(player.global_position).is_equal(spawn_entry.global_position)
+
+
+func test_tavern_has_room_presentation_and_textured_wood_counter() -> void:
+	var tavern := _make_scene(GameFlow.TAVERN_SCENE)
+	_assert_room_presentation(tavern)
+	var counter := tavern.get_node("Counter") as Polygon2D
+	assert_object(counter.texture).is_not_null()
+	if counter.texture != null:
+		assert_str(counter.texture.resource_path).is_equal(COUNTER_TEXTURE_PATH)
+	assert_object(counter.color).is_equal(Color.WHITE)
+	assert_int(counter.uv.size()).is_equal(counter.polygon.size())
+
+
+func test_all_registered_interior_npc_anchors_resolve_inside_enlarged_floors() -> void:
+	var data := load("res://data/generated/dom_npc_placements.json") as JSON
+	var placements: Dictionary = data.data["placements"]
+	var checked_npcs := 0
+	for scene_path: String in _registered_concrete_interior_paths():
+		var interior := _make_scene(scene_path)
+		var floor := interior.find_child("Floor", true, false) as Polygon2D
+		for npc_id: String in placements:
+			var placement: Dictionary = placements[npc_id]
+			if placement["scene"] != scene_path:
+				continue
+			var anchor := interior.find_child(placement["anchor"], true, false) as Marker2D
+			assert_object(anchor).override_failure_message("Missing NPC anchor: %s" % npc_id).is_not_null()
+			if anchor == null:
+				continue
+			var offset: Array = placement["offset"]
+			var global_position := anchor.global_position + Vector2(float(offset[0]), float(offset[1]))
+			assert_bool(Geometry2D.is_point_in_polygon(floor.to_local(global_position), floor.polygon)) \
+				.override_failure_message("NPC placement outside enlarged floor: %s" % npc_id).is_true()
+			checked_npcs += 1
+	assert_int(checked_npcs).is_equal(30)
+
+
+func test_camera_limits_follow_floor_bounds_in_a_translated_room() -> void:
+	var interior := auto_free(BuildingInteriorScene.instantiate()) as BuildingInterior
+	interior.exit_transition_id = &"registry_archive_exit"
+	interior.position = Vector2(120, -80)
+	var floor := interior.get_node("Floor") as Polygon2D
+	floor.polygon = PackedVector2Array([
+		Vector2(-160, -120), Vector2(1120, -120), Vector2(1120, 760), Vector2(-160, 760),
+	])
+	add_child(interior)
+	_assert_camera_limits(interior, floor)
+
+
+func test_entry_spawns_clear_exit_door_art() -> void:
+	var paths := _registered_concrete_interior_paths()
+	paths.append(SHARED_INTERIOR_SCENE_PATH)
+	paths.append(GameFlow.TAVERN_SCENE)
+	for path: String in paths:
+		var interior := auto_free(load(path).instantiate()) as Node2D
+		var spawn := interior.find_child("SpawnEntry", true, false) as Marker2D
+		var door := interior.find_child("ExitDoorSprite", true, false) as Sprite2D
+		if door == null:
+			door = interior.find_child("ExitDoor", true, false).get_node("DoorSprite") as Sprite2D
+		assert_float(spawn.global_position.y) \
+			.override_failure_message("Entry overlaps exit door art: %s" % path) \
+			.is_greater_equal(door.global_position.y + 40.0)
 
 
 func test_all_registered_concrete_interiors_meet_dressing_contract() -> void:
@@ -382,12 +446,15 @@ func test_interior_backdrop_covers_full_hd_without_changing_gameplay_scale() -> 
 func test_interior_collision_prevents_the_player_from_leaving_through_a_wall() -> void:
 	var runner := scene_runner("res://world/interiors/registry_archive.tscn")
 	var player := runner.find_child("Player", true, false) as Player
+	var bottom := runner.scene().get_node("Room/Walls/Bottom") as CollisionShape2D
+	var shape := bottom.shape as RectangleShape2D
+	var inner_wall_y := bottom.global_position.y - shape.size.y * 0.5
 	var start_y: float = player.global_position.y
 	runner.simulate_action_press("move_down")
 	await runner.simulate_frames(90)
 	runner.simulate_action_release("move_down")
 	assert_float(player.global_position.y).is_greater(start_y)
-	assert_float(player.global_position.y).is_less(600.0)
+	assert_float(player.global_position.y).is_less(inner_wall_y)
 
 
 func test_registry_archive_round_trip_returns_to_its_matching_town_spawn() -> void:
@@ -652,6 +719,68 @@ func _make_door(transition_id: StringName) -> BuildingDoor:
 	door.transition_id = transition_id
 	add_child(door)
 	return door
+
+
+func _assert_room_presentation(interior: Node2D) -> void:
+	var surround := interior.find_child("Surround", true, false) as CanvasLayer
+	assert_object(surround).override_failure_message("Missing Surround: %s" % interior.name).is_not_null()
+	if surround != null:
+		assert_int(surround.layer).is_equal(-1)
+		var rect := surround.get_node_or_null("ColorRect") as ColorRect
+		assert_object(rect).is_not_null()
+		if rect != null:
+			assert_object(rect.color).is_equal(DS.VOID_0)
+			assert_int(rect.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+			assert_vector(rect.position).is_equal(Vector2.ZERO)
+			assert_vector(rect.size).is_equal(interior.get_viewport_rect().size)
+	var floor := interior.find_child("Floor", true, false) as Polygon2D
+	assert_object(floor).is_not_null()
+	var floor_bounds := _polygon_bounds(floor.polygon)
+	assert_float(floor_bounds.size.x).is_greater_equal(1920.0)
+	assert_float(floor_bounds.size.y).is_greater_equal(1280.0)
+	var player := interior.find_child("Player", true, false) as Player
+	var camera := player.get_node("Camera2D") as Camera2D
+	# At the shipping viewport the visible world must fit inside room limits.
+	var visible_world := Vector2(1920, 1080) / camera.zoom
+	assert_float(float(camera.limit_right - camera.limit_left)).is_greater_equal(visible_world.x)
+	assert_float(float(camera.limit_bottom - camera.limit_top)).is_greater_equal(visible_world.y)
+	for wall_name: String in ["WallTop", "WallBottom", "WallLeft", "WallRight"]:
+		var wall := interior.find_child(wall_name, true, false) as Polygon2D
+		# Preserve the standalone tavern's existing back-wall node path.
+		if wall == null and wall_name == "WallTop":
+			wall = interior.find_child("BackWall", true, false) as Polygon2D
+		assert_object(wall) \
+			.override_failure_message("Missing %s: %s" % [wall_name, interior.name]).is_not_null()
+		if wall == null:
+			continue
+		var twice_area := 0.0
+		for index: int in wall.polygon.size():
+			twice_area += wall.polygon[index].cross(wall.polygon[(index + 1) % wall.polygon.size()])
+		assert_float(absf(twice_area)).is_greater(0.0)
+		assert_object(wall.texture).is_not_null()
+		if wall.texture != null:
+			assert_str(wall.texture.resource_path).is_equal(WALL_TEXTURE_PATH)
+		var bounds := _polygon_bounds(wall.polygon)
+		var thickness := bounds.size.y if wall_name in ["WallTop", "WallBottom"] else bounds.size.x
+		assert_float(thickness).is_equal(96.0 if wall_name == "WallTop" else 48.0)
+		assert_int(wall.z_index).is_equal(-1)
+		assert_bool(wall.z_as_relative).is_true()
+		assert_int(wall.z_index).is_greater(floor.z_index)
+	_assert_camera_limits(interior, floor)
+
+
+func _assert_camera_limits(interior: Node2D, floor: Polygon2D) -> void:
+	var player := interior.find_child("Player", true, false) as Player
+	var camera := player.get_node("Camera2D") as Camera2D
+	var points := PackedVector2Array()
+	for point: Vector2 in floor.polygon:
+		points.append(floor.to_global(point))
+	var room_rect := _polygon_bounds(points).grow_individual(48.0, 96.0, 48.0, 48.0)
+	assert_int(camera.limit_left).is_equal(int(room_rect.position.x))
+	assert_int(camera.limit_top).is_equal(int(room_rect.position.y))
+	assert_int(camera.limit_right).is_equal(int(room_rect.end.x))
+	assert_int(camera.limit_bottom).is_equal(int(room_rect.end.y))
+	assert_object(player.camera_bounds).is_equal(Rect2i(room_rect))
 
 
 func _polygon_bounds(points: PackedVector2Array) -> Rect2:

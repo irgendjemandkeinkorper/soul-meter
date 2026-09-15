@@ -28,6 +28,17 @@ func commands() -> Array[StringName]:
 	return [&"spend_clarity"]
 
 
+func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
+	var gate := super.query_command(action_id, target_id, payload)
+	if not bool(gate.allowed):
+		return gate
+	if reveal_armed:
+		return command_refusal(&"class_resource_armed", "Clarity is already armed for your next cast.")
+	if clarity <= 0:
+		return command_refusal(&"class_resource_empty", "No Clarity remains in this battle.")
+	return gate
+
+
 func on_command(action_id: StringName, _target_id: StringName) -> void:
 	if action_id != &"spend_clarity":
 		return

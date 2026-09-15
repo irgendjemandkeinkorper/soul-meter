@@ -106,6 +106,24 @@ func test_start_session_seats_a_stacked_party_on_distinct_cells() -> void:
 		seen[handle] = true
 
 
+func test_ambient_hud_updates_without_the_legacy_stage() -> void:
+	var field := await _field()
+	var hostile := _hostile(field, "OverlayWight", Vector2i(30, 30))
+	var opened := Battle.start_session(field, hostile)
+	assert_bool(opened.get("allowed", false)).is_true()
+	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
+	add_child(screen)
+	assert_object(screen.get("_stage")).is_null()
+	assert_str((screen.get("_enemy_lbl") as Label).text).contains("BOG WIGHT")
+	assert_int((screen.get("_party_box") as VBoxContainer).get_child_count()).is_greater(0)
+	assert_bool((screen.get_node("Backdrop") as ColorRect).visible).is_false()
+	assert_object(field.combat_overlay()).is_not_null()
+	screen.free()
+	Battle._end_session(null)
+	field.get_parent().queue_free()
+	await get_tree().process_frame
+
+
 func test_admitting_the_same_hostile_twice_is_idempotent() -> void:
 	var field := await _field()
 	var first := _hostile(field, "First", Vector2i(30, 30))

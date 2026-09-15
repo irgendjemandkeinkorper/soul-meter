@@ -6,8 +6,8 @@ extends SMInteractable
 ## session writes one theft event. Further takes and Take All in that same session
 ## do not. Opening the container again begins a new session and may write again.
 
-const CLOSED_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-chest-wood--closed.png"
-const OPEN_TEXTURE_PATH := "res://assets/generated/sprites/world/objects/dom-chest-wood--open.png"
+const CLOSED_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-chest--closed.png"
+const OPEN_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-chest--open.png"
 const PLACEHOLDER_TEXTURE_PATH := "res://assets/kenney/ui/fantasy-ui-borders/PNG/Default/Panel/panel-013.png"
 
 @export var loot: Array[Dictionary] = []

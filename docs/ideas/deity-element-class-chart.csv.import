@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://btu02opvi2gs4"
+
+[deps]
+
+files=["res://docs/ideas/deity-element-class-chart.Divine tradition.translation", "res://docs/ideas/deity-element-class-chart.Element.translation", "res://docs/ideas/deity-element-class-chart.Potential class name.translation", "res://docs/ideas/deity-element-class-chart.Proposed playstyle.translation"]
+
+source_file="res://docs/ideas/deity-element-class-chart.csv"
+dest_files=["res://docs/ideas/deity-element-class-chart.Divine tradition.translation", "res://docs/ideas/deity-element-class-chart.Element.translation", "res://docs/ideas/deity-element-class-chart.Potential class name.translation", "res://docs/ideas/deity-element-class-chart.Proposed playstyle.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

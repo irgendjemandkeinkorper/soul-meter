@@ -6,6 +6,12 @@ Wight) and `art/world-lane` commit `4ac3118` (Dom 7-piece calibration micro-set)
 renders are the reference standard — when in doubt, compare a new asset against them
 directly, not against this document's prose.
 
+**Author update, 2026-09-10:** [Part III](#part-iii--seed-race-design-guidelines)
+now governs race identity and appearance, taking precedence over older race descriptions
+and character references where they conflict. This is a text guideline for the author's
+3D modeling and Blender captures. The existing calibration art remains a reference for
+surface treatment, palette, and lighting; its anatomy does not override the new race direction.
+
 This supersedes the flat Kenney-derived look as the **target aesthetic** for new units,
 props, and terrain. It does not retroactively invalidate the existing Kenney-sourced
 tileset (`assets/generated/sprites/ground/ground_tileset.tres`) or the deterministic
@@ -18,16 +24,21 @@ Everything above the Part II rule governs **world art** — units, props, terrai
 (added 2026-09-07, #296) governs **UI chrome** and holds the per-asset-class prompt templates the
 generated-art pipeline calls. A chrome asset takes its rules from Part II and its house style from
 Part I; it does not take Part I's painterly rendering, which is why icons are flat.
+**Part III** collects the seed races' physical, tactile, and acoustic identities for
+designing models. Seed races come first; the larger historical peoples inventory is
+not the design roster for this pass.
 
 ## Technique
 
-These assets were produced with OpenAI's `image_gen` (text-to-image), **not** the
-project's deterministic GLB→PNG isometric renderer. That is a deliberate, approved
-departure for this style tier: the painterly result is what got approved, and
-`render_isometric_sprites.gd`'s flat-lit 3D-kit look was not. Future UNIT and
-WORLD/TERRAIN batches should default to `image_gen` for this style unless a specific
-asset genuinely needs the deterministic renderer's guarantees (e.g. an asset that must
-be procedurally regenerated from a parametrized 3D source).
+The original calibration assets were produced with OpenAI's `image_gen`. Their approval
+established the painterly appearance, material weight, and atmosphere described below.
+
+**Current race workflow, author-confirmed 2026-09-10:** the author designs and makes
+3D models, then captures them in **Blender** for isometric art tokens and related uses.
+This Bible supplies a coherent text reference for that work. It does not commission
+image generation, model creation, renders, or an automated asset pipeline. Read
+"painterly" as the desired finish of the captured art, achievable through modeling,
+materials, textures, and lighting, rather than as a requirement to use text-to-image.
 
 Standing constraints carried over from the render pipeline (do not relax these just
 because the technique changed):
@@ -120,19 +131,19 @@ avoid blending with.
 
 ## Brief scaffold for future agents
 
-When tasking a new UNIT or WORLD batch, carry forward:
+When preparing a model/design brief or an independently requested world-art batch, carry forward:
 1. Subject/tile identity (canonical ID from Pandora/encounter data or the location brief).
-2. Style/medium: "semi-realistic painterly digital illustration, isometric single-subject
-   composition, transparent background" (not "pixel art," not "flat vector," not "3D
-   render kit").
+2. Style/medium: author-made 3D race models captured in Blender, with a semi-realistic,
+   painterly finish, isometric single-subject composition, and transparent background.
+   Follow Part III for race anatomy; use this part for the shared material and lighting language.
 3. Lighting: one consistent directional key light + dark falloff, matching the family's
    established light direction.
 4. Palette: pull the relevant lines from the Palette section above — never leave palette
    unconstrained.
 5. Avoid-list: pure-black outlines, flat/even lighting, cartoon/chibi proportions, bright
    generic high fantasy, steampunk-dominant material language, baked text/UI.
-6. Ground-truth reference: point the agent at the two approved commits above as the
-   literal visual target, not just this prose description.
+6. Reference: use the approved commits above for finish and atmosphere. For race identity,
+   the author's Part III corrections take precedence over older images and briefs.
 
 ---
 
@@ -334,3 +345,266 @@ A generated chrome asset is accepted when all four hold:
 
 Failing 2 is the common one, and it is not a matter of taste: a colour that is not a token cannot
 be themed, so it will drift the first time anything else changes.
+
+---
+
+# Part III — Seed-race design guidelines
+
+**Direction supplied by the author, 2026-09-10.** This section coalesces the author's
+*The Races of Dramgid: Seed and Elder Lineages* text and accompanying appearance
+corrections into a reference for designing 3D characters. The purpose is to keep each
+race's shape, material, movement, and cultural expression coherent while the author
+models it and later captures it in Blender.
+
+The explicit appearance decisions and lineage facts below come from the author.
+**Design reading** identifies an interpretation to guide exploration, not newly fixed
+anatomy. **Open** identifies decisions the source does not yet supply. Fantasy labels
+such as elf, orc, smallfolk, genasi, tiefling, and dragonborn are orientation aids;
+the author intends these peoples to look substantially different from stock fantasy races.
+
+## Scope and precedence
+
+**Seed races first: nine in total, author-confirmed 2026-09-10.** The complete roster
+is **Vael (Solan), Kes'reth, Orthos, Vaerin, Kaan, Shimari, Weftkin, Fiel, and Ghorr**.
+Vael and Solan name the same people and count as one lineage. These nine lineages
+form the nine-part harmonic cycle and the Great Chord.
+
+**Mirror-Veil is dropped.** Do not develop mirror-bodied Kes'reth, a reflective branch,
+paired mirror scars, or a Mirror-Veil variant. Older Serai-Lun art and the former
+two-branch scheme do not establish current race appearance. The supplied Kes'reth
+entry is the starting point; dropping Mirror-Veil does not itself decide a character's
+replacement identity or require a game-data migration.
+
+This author direction overrides conflicting race facts in the
+[earlier source survey](briefs/race-appearance-source-survey.md), the sibling vault,
+and older game art briefs for this design work. In particular, **Orthos are Puer's
+Witnesses/Dragonborn**, **Shimari carry Iris's mycorrhizal inheritance**, **Weftkin
+carry Osse Vaal's biological/signal inheritance**, and **Fiel carry Yungmi's
+envy-to-generosity inheritance**. Do not fall back to the earlier assignments.
+**Solan are Vael**, explicitly confirmed by the author. This shared identity carries
+the Kalyi/Certainty-Bearer foundation below; the older vault's different Vael founding
+assignment does not override it.
+
+## The shared foundation: the Forge Principle
+
+Balance is not peace. In the supplied account, the Bloom at Year 0 was an acoustic
+cataclysm ending the QUINE epistemic framework: 80% of humanity was unmade through
+the de-resolution of biological frequencies, while the surviving 20% were rewritten
+through the Founding Seeds. Baes Kuchnik anchors the Acoustic Understanding and
+holds the memory of that toll; the seeds' virtues and sins become tactile and tonal
+inheritances in the new peoples. Preserve the stated **Spindle-VI** origin of Osse
+Vaal even though the broader account centers the **Spindle-VII** crew.
+
+For design, a race's inheritance should inform a consistent relationship between its
+body, its characteristic rhythm, and what the Waning takes from it. A sound is not
+automatically a visible aura, musical notation, or ornament. It can inform how weight
+settles, hands move, surfaces feel, garments hang, and tools are used. These are
+design readings to explore, not requirements to give every individual the same
+occupation, temperament, costume, or stage of illness.
+
+## The named seed lineages
+
+### Vael (Solan) — The Certainty-Bearers
+
+**Author foundation:** Kalyi's cold leadership, formal logic, and synthesis-bridge
+architecture. Their acoustic signature is a persistent high-frequency **B-flat**,
+the resonance of QUINE's crystal substrate. As the Weft thins, tactile rigidity
+fails; structures soften into tonal instability and star-tech memories become static.
+
+**Design reading:** explore controlled, deliberate construction and the tactile
+difference between something that holds its form and something losing that certainty.
+The material story is rigidity becoming unstable. This does not yet prescribe a
+crystal body, a machine body, or ordinary human anatomy.
+
+**Open:** silhouette, bodily substrate, facial structure, proportions, surface palette,
+and how loss of rigidity reads on a living person. The acoustic B-flat has no assigned
+color. Solmarch's association with Hard Certainty can inform culture without settling biology.
+
+### Kes'reth — The Ashborn
+
+**Author foundation:** Nole's physician-like detachment, the "armor of apathy," and
+the clinical tally of the dead. Their sound is the measured count of **169 names**
+in a low monotone. Their **Clinical Heat** becomes slow, ashen combustion as the
+Waning consumes their forms. The supplied tiefling/Ashborn identity retains the
+horned point of reference; the Mirror-Veil branch is removed.
+
+**Design reading:** let the contrast between bodily heat and controlled bearing guide
+the design. Heat, ash, and endurance can be conveyed through material and posture
+without making every healthy Kes'reth an actively burning body. The count of names
+is an acoustic inheritance, not a requirement to engrave 169 marks onto every model.
+
+**Open:** horn arrangement, face, build, skin and ash palette, tail/feet anatomy, and
+the healthy-to-combusting transition. The older ash-to-red skin range is historical
+reference, not a newly confirmed restriction.
+
+### Orthos — The Witnesses / Dragonborn
+
+**Author foundation:** **Puer**, the pilot; spatial awareness and rhythmic navigation
+of darkness. The **Left-Right double-tap heartbeat** synchronizes with Dramgid's
+orbit. Waning-induced temporal drift traps them in **six-minute** ancestral trauma loops.
+Their supplied bodily reference is **Dragonborn**.
+
+**Design reading:** develop a distinctly Dramgid draconic humanoid whose bearing can
+suggest orientation, balance, and a repeated left/right cadence. A designed pose or
+gesture may carry that rhythm; it need not become visible clockwork. The older
+Kalyi/synthesis-frame account is not the basis for their anatomy in this pass.
+
+**Open:** head and muzzle, scales or other surface, horns, tail, limb proportions,
+and how strongly draconic the body reads. Wings and flight are not established by
+the label. Temporal drift is a condition, not a requirement for a permanently distorted mesh.
+
+### Vaerin — The Archivists
+
+**Author foundation:** **Reth's greed for truth**, archiving at the biological self's
+expense. Their acoustic identity is the tactile rustle of vellum and the Silver
+Scriptorium's absolute archive silence. Losing or destroying an archived record
+audibly removes **one year of life** into silence. The supplied orientation is elven.
+
+**Design reading:** explore the tension between preservation and bodily expenditure:
+careful handling, protected surfaces, and a material language that values records.
+Vellum can inform texture or clothing studies without making their skin literally paper.
+The absence of sound is part of their identity; a glowing archive effect is unnecessary.
+
+**Open:** the distinctive anatomy that takes them beyond conventional elves, including
+ears, facial proportions, build, palette, and any visible consequence of lost lifespan.
+Age loss does not by itself establish transparency, spectral bodies, or a fixed wrinkle pattern.
+
+### Kaan — The Deepkin
+
+**Author foundation:** **Dieters's geological patience**, finding settled truth in
+wreckage. Their signature is tectonic grinding and geothermic resonance. Without
+the Weft's binding, they revert to **inert, non-sentient rock**. The supplied dwarf
+orientation and compatible older stone-fused description provide starting context.
+
+**Design reading:** material weight and settled structure should matter when exploring
+their bodies. Consider how their chosen anatomy bears loads and how a living surface
+differs from the inert rock it can become. Fungal symbiosis from the historical
+Deepkin account should not replace this stone-centered identity.
+
+**Open:** body proportions, mineral coverage and type, exposed flesh, hair/beard
+structure, joint behavior, and the progression from healthy body to inert stone.
+Specific minerals and an almost entirely stone body remain design choices.
+
+### Shimari — The Sporeborn
+
+**Author foundation:** **Iris's mycorrhizal communion** and search for the erased bond.
+Their sound is a warm, haptic growth-cycle drone, the **Melody of the Spore**. As the
+Loom's filter fails, they are prematurely reabsorbed and composted by the fungal mass.
+The supplied labels are Sporeborn/Genasi.
+
+**Design reading:** give communion, living fungal material, and the boundary between
+individual and surrounding growth a coherent expression. This is the roster's explicit
+mycorrhizal inheritance. “Genasi” does not require a standard fire/water/earth/air palette.
+
+**Open:** face and limbs, cap or capless body, fungal structures, texture and color,
+and how reabsorption differs visibly from a healthy person. A mushroom head, exposed
+bone frame, or permanent attachment to terrain has not been selected.
+
+### Weftkin — The Signal-Seekers
+
+**Author foundation:** **Osse Vaal of Spindle-VI**, caught between biological life and
+signal. Their acoustic vocabulary is Morse-code flicker and a leading note that
+never resolves. Severance from the Underweave leaves hollow **shadow puppets** without
+voice or signal.
+
+**Design reading:** explore the coexistence of a biological person and an interrupted
+signal. The incompletion can inform rhythm, gesture, or a restrained surface treatment;
+it does not require holograms or an electronic screen for a face. Keep their design
+distinct from Shimari's mycorrhizal communion rather than reusing the old all-fungal
+Weftkin template automatically.
+
+**Open:** healthy anatomy and material, how signal is sensed or expressed, and the
+literal versus figurative appearance of the severed shadow-puppet state. Healthy
+Weftkin are not defined as already hollow or voiceless.
+
+### Fiel — The Liberated
+
+**Author-fixed appearance:** **monkey–turtle hybrid humanoid folk**. This replaces
+generic smallfolk as the useful visual starting point. The source still supplies
+Smallfolk as a label, but no exact height is fixed.
+
+**Author foundation:** **Yungmi's envy transformed into generosity**. Their sound is
+the **Whistlebox trill** and a mother's Zindari death-lullaby. As reality hardens,
+they become physically shackled by their own skin.
+
+**Design reading:** both monkey and turtle ancestry should be legible in the body
+design, beyond clothing or a carried prop. Explore the relationship between mobile,
+expressive anatomy and a protective or resistant surface. Loss of flexibility gives
+the Waning a direct tactile contrast with healthy movement.
+
+**Open:** distribution of primate and chelonian features, shell presence and shape,
+fur/scales/skin, tail, hands and feet, facial structure, and relative size. Do not
+silently select a full carapace, prehensile tail, or a fixed locomotion pattern.
+
+### Ghorr — The Bloodbellows
+
+**Author-fixed appearance:** **four arms**, an **almost ursine** body, and warthog-like
+facial character, using the author's remembered Star Wars cantina/bounty-hunter image
+as loose visual context. The exact screen species is not identified; the useful
+direction is the bear-like mass and warthog-like character, not a copied costume.
+The “orc” label must not pull the design back to a conventional two-armed orc.
+
+**Author foundation:** **Strauss's martial discipline and wrath survived**. Their
+signature is the **Bloodbellows roar** and rhythmic storm-forged shield beating.
+The Waning makes their bodies **heavy and brittle**, unable to bear the burdens
+they were made to hold.
+
+**Design reading:** resolve a credible four-arm torso, shoulder organization, and
+space for all four arms to move. Preserve readable arm separation in isometric
+views; bear-like mass should not turn the lower pair into unreadable stubs. Clothes,
+harnesses, and tools need to fit this anatomy. Explore breath, chest, and stance
+as part of the Bloodbellows identity without prescribing every Ghorr as a soldier.
+
+**Open:** placement and relative size of the two arm pairs, hand anatomy, fur coverage,
+snout and tusks, leg posture, relative scale, and surface palette. The warthog reference
+does not yet fix a particular tusk pattern. Brittle decline is a separate state from
+the healthy body's capacity to carry weight.
+
+## Acoustic relationships to keep in mind
+
+These relationships are supplied world context. Their translation into pose, material,
+or composition remains a design reading; they are not a new combat-system specification.
+
+| Relationship | Supplied effect | Use in visual thinking |
+|---|---|---|
+| Ghorr → Orthos | Bloodbellows disrupts the double-tap synchronization and causes temporal disorientation. | Contrast Ghorr's forceful rhythm with Orthos's ordered cadence; avoid making their rhythmic identities interchangeable. |
+| Vael (Solan) → Fiel | Rigid B-flat conflicts with the Whistlebox and physically shackles Fiel. | Keep Vael's rigidity and Fiel's threatened mobility distinct in form and movement. |
+| Shimari + Vaerin | Haptic drone harmonizes with archive silence. | Compatible tactile restraint can connect them without erasing fungal versus archival identity. |
+| Kaan + Kes'reth | Geothermic hum stabilizes the measured 169-name count. | Explore complementary weight, heat, and controlled pacing without assigning shared anatomy. |
+| The Great Chord | All nine seed-race signatures align to resolve the “M” of Maiiam and briefly stabilize the Waning. | Treat the nine lineages as a complete harmonic ensemble while preserving each one's distinct identity. |
+
+## Elder peoples and other context — later design work
+
+**Giants and Goliaths** are the Verspch builders: elder peoples outside the seed logic,
+storm-callers and drum-namers following Ofshütje, the Thunder-Bearer. **Dragons** are
+will-fed, distinct from the belief-fed Ten and function-fed örlaganna; the supplied
+account places them in older hierarchies and alongside Vael (Solan) in Solmarch's Hard
+Certainty architecture. Giants, Goliaths, and Dragons are outside the nine seed lineages.
+
+**Baes Kuchnik** is the Forge catalyst and the sole remaining truly biological human
+in the supplied account. Formerly Rhea and the origin point for Maiiam, she maintains
+LOG-OB and Auntie-Synth and holds the memory of the 80% toll. She is an individual,
+not a generic human population template or a seed race.
+
+Other peoples in the historical survey remain outside this initial seed-race design
+pass. Their absence from this pass does not establish their deletion from the world.
+
+## Applying the guideline while modeling
+
+1. **Establish the body first.** Keep fixed anatomy distinct from exploration: four arms
+   for Ghorr and the monkey–turtle hybrid for Fiel are author decisions; unresolved
+   tails, horns, shells, scale bands, and palettes are still design work.
+2. **Separate identity layers.** Race supplies anatomy and inheritance. Culture,
+   occupation, age, personal history, equipment, and Waning condition add variation.
+   A biological horn, shell, or fungal feature is not inherently corruption.
+3. **Check the intended view.** Examine the model's silhouette from the eventual
+   Blender isometric capture angle. Keep identifying forms and limb separation visible
+   as the image shrinks. Existing export dimensions are integration context, not a
+   reason to flatten meaningful differences in body size or proportion.
+4. **Keep a common material world.** Use Part I's wear, weight, restrained accents,
+   and lighting across very different bodies. The palette describes the shared scene;
+   it does not settle every race's skin color or require every person to wear armor.
+5. **Record decisions as they are made.** Add chosen proportions, surfaces, palette,
+   body variation, and garment accommodations to the relevant entry, with the author
+   decision distinguished from an exploratory interpretation. The deliverable remains
+   a coalescing text guideline for the author's modeling work.

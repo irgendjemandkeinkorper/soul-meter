@@ -64,6 +64,7 @@ const STEP_STUCK_TIME_THRESHOLD: float = 0.35
 
 
 func _ready() -> void:
+	add_to_group(&"player")
 	var camera := $Camera2D as Camera2D
 	camera.limit_left = camera_bounds.position.x
 	camera.limit_top = camera_bounds.position.y

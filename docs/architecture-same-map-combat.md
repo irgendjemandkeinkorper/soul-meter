@@ -201,6 +201,20 @@ seam-v2 broadcast, `Reputation`/`Renown` APIs, the save schema.
 Steps 1–3 can run as one Codex handoff; 4–5 as a second; 6 as a third (largest); 7–8 as a
 fourth. `#282` starts after step 5.
 
+### Step 6, ambient overlay slice — implementation in progress
+
+Ambient sessions bind region B to `world/combat_overlay.gd`. The overlay borrows the field's
+`IsoGrid` and existing party/Hostile nodes; it does not draw replacement ground or create unit
+sprites. Region B keeps its tile dictionaries and pointer signals. Cell picking converts through
+the canvas transform and field grid, so camera and field transforms do not introduce a second
+projection. Live events drive movement, action feedback, HP readouts and facing markers.
+Historical replay restores positions without replaying animations on the live field actors.
+
+This is not completion of step 6: the legacy set-piece screen and hidden tactical HUD still
+exist. Retiring those surfaces, camera behavior, authored Hostile migration, and the log-hidden
+Bog Wight acceptance remain required before #281 can close. The focused tests are in
+`test/unit/test_combat_overlay.gd`; the existing BattleInterface tests guard the frozen payload.
+
 ### Step 8, weather half — landed 2026-09-08
 
 `LocationDefinition.weather_default` is authored per location (wilds = mozh, Dorthkor Road =

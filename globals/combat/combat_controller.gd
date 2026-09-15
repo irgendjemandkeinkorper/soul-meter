@@ -427,9 +427,22 @@ func query_action(
 				"%s cannot use that class action." % actor.display_name,
 				{"type": &"patron", "patron": resource.patron_id},
 			)
-	if action.class_resource_action == &"record_name":
+	if action.requires_ally_target():
 		if target == null or not target.is_alive() or not allies.has(target):
-			return _blocked(&"no_target", "Record Name requires an explicit living ally target.", {"type": &"living_ally"})
+			return _blocked(&"no_target", "%s requires an explicit living ally target." % action.display_name, {"type": &"living_ally"})
+	if not action.class_resource_action.is_empty():
+		if action.requires_enemy_target() and (target == null or not target.is_alive() or not enemies.has(target)):
+			return _blocked(&"no_target", "%s requires a living enemy target." % action.display_name, {"type": &"living_enemy"})
+		var command_gate := _class_resource_of(actor).query_command(
+			action.class_resource_action, target.combat_id if target != null else &"",
+			action.class_resource_payload,
+		)
+		if not bool(command_gate.get("allowed", false)):
+			return command_gate
+		if _soul_meter() < action.soul_cost:
+			return _blocked(&"soul", "Requires %d Soul." % int(action.soul_cost), {
+				"type": &"soul", "minimum": action.soul_cost,
+			})
 	if action.kind == CombatAction.Kind.MOVE:
 		var movement := battlefield.move_query(actor, _move_destination(action, options))
 		if not bool(movement.get("allowed", false)):
@@ -501,9 +514,12 @@ func submit_action(
 		resolved_options["_resolution"] = query["resolution"]
 		resolved_options["_resolution_context"] = query.get("context", {})
 	if committed_action.kind == CombatAction.Kind.PASS and not committed_action.class_resource_action.is_empty():
-		_class_resource_of(actor).on_command(
+		if committed_action.soul_cost > 0.0:
+			_set_soul_meter(_soul_meter() - committed_action.soul_cost)
+		_class_resource_of(actor).execute_command(
 			committed_action.class_resource_action,
 			target.combat_id if target != null else &"",
+			committed_action.class_resource_payload.duplicate(true),
 		)
 	var outcome := _apply_action(actor, target, committed_action, resolved_options)
 	outcome["action_id"] = action.id
@@ -1060,6 +1076,7 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		"_resolution_context": resolution_gate["context"],
 	})
 	outcome["action_id"] = enemy_action.id
+	outcome["verb"] = enemy_action.verb
 	outcome["ap_cost"] = enemy_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
 	outcome["ap_remaining"] = actor.action_points
@@ -1139,6 +1156,7 @@ func _resolve_enemy_move(actor: BattleActor, target: BattleActor, destination: S
 		return
 	var outcome := _apply_action(actor, target, move_action)
 	outcome["action_id"] = move_action.id
+	outcome["verb"] = move_action.verb
 	outcome["ap_cost"] = move_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
 	outcome["ap_remaining"] = actor.action_points
@@ -1439,7 +1457,8 @@ func _finalize_resolution_damage(
 		return resolution
 	var finalized := resolution.duplicate(true)
 	var damage := 0
-	if bool(finalized.get("hit", true)) and not bool(finalized.get("fizzled", false)):
+	var has_damage := bool(finalized.get("direct_damage_enabled", true)) or int(finalized.get("damage", 0)) > 0
+	if has_damage and bool(finalized.get("hit", true)) and not bool(finalized.get("fizzled", false)):
 		damage = maxi(
 			1,
 			int(finalized.get("damage", 0))
@@ -1480,6 +1499,7 @@ func _apply_resolution_writes(
 					_class_resource_of(target).on_damage_taken(lost, actor.combat_id)
 				if hp_before > 0 and target.hp <= 0:
 					_class_resource_of(actor).on_kill(target.combat_id, cause)
+					_notify_combatant_fell(target.combat_id)
 			&"dot":
 				# Seam v2: damage-over-time is an HP loss whose kill cause is &"dot" regardless of
 				# the action that queued it (Husk-bearer Hunger keys refunds on that cause).
@@ -1490,6 +1510,7 @@ func _apply_resolution_writes(
 					_class_resource_of(target).on_damage_taken(dot_lost, actor.combat_id)
 				if dot_before > 0 and target.hp <= 0:
 					_class_resource_of(actor).on_kill(target.combat_id, &"dot")
+					_notify_combatant_fell(target.combat_id)
 			&"breath":
 				actor.breath = int(write.get("after", actor.breath))
 			&"aftertones":
@@ -1528,6 +1549,11 @@ func _apply_resolution_writes(
 					live_tile.charge_level = int(after.get("charge_level", 0))
 					live_tile.height_delta = int(after.get("height_delta", live_tile.height_delta))
 					live_tile.hush = bool(after.get("hush", live_tile.hush))
+
+
+func _notify_combatant_fell(target_id: StringName) -> void:
+	for observer: BattleActor in allies + enemies:
+		_class_resource_of(observer).on_combatant_fell(target_id)
 
 
 func _game_state() -> Node:
@@ -1765,6 +1791,12 @@ func forecast_action(
 	var gate := query_action(action, target, options)
 	if not bool(gate.get("allowed", false)):
 		return gate
+	if not action.class_resource_action.is_empty():
+		return _allowed({
+			"action_id": action.id, "class_command": true,
+			"ap_cost": action.ap_cost, "ct_cost": action.ct_cost, "soul_cost": action.soul_cost,
+			"damage": 0, "description": action.description,
+		})
 	var actor := active_actor()
 	if action.kind == CombatAction.Kind.MOVE:
 		return _allowed({
@@ -2111,7 +2143,10 @@ func _release_balance_lock_if_due(current_round: int) -> void:
 func _finish(result_state: ResultState, outcome_id: StringName) -> void:
 	if state == State.FINISHED:
 		return
+	for actor: BattleActor in allies + enemies:
+		_class_resource_of(actor).on_battle_end(result_state == ResultState.VICTORY)
 	state = State.FINISHED
+	_settle_due_breath_refunds()
 	_emit_event(&"battle_finished", null, null, {"result": result_state, "outcome_id": outcome_id})
 	battle_finished.emit(result_state, outcome_id)
 
@@ -2461,30 +2496,53 @@ func _fire_due_deferred() -> void:
 			pending.append(entry)
 	_deferred = pending
 	for entry: Dictionary in due:
-		var source_id := StringName(str(entry.get("source_id", "")))
-		var source := _actor_by_id(source_id)
-		var applied: Array[Dictionary] = []
-		var effect: Dictionary = entry.get("effect", {})
-		for raw: Variant in effect.get("writes", []):
-			if not (raw is Dictionary):
-				continue
-			var write := raw as Dictionary
-			var target := _actor_by_id(StringName(str(write.get("target_id", ""))))
-			if target == null:
-				continue
-			var materialized := _materialize_write(write, target)
-			var actor := source if source != null else target
-			_apply_resolution_writes(actor, target, {"writes": [materialized]}, true, &"deferred")
-			applied.append(materialized)
-		var fired := entry.duplicate(true)
-		fired["applied"] = applied
-		_emit_event(&"deferred_effect_fired", source, null, {"entry": fired.duplicate(true)})
-		if source != null:
-			_class_resource_of(source).on_deferred_fired(fired)
+		_apply_deferred_entry(entry)
 	if not _has_living(allies):
 		_finish(ResultState.DEFEAT, &"defeat")
 	elif not _has_living(enemies):
 		_finish(ResultState.VICTORY, &"slain")
+
+
+func _apply_deferred_entry(entry: Dictionary) -> void:
+	var source := _actor_by_id(StringName(str(entry.get("source_id", ""))))
+	var applied: Array[Dictionary] = []
+	var effect: Dictionary = entry.get("effect", {})
+	for raw: Variant in effect.get("writes", []):
+		if not (raw is Dictionary):
+			continue
+		var write := raw as Dictionary
+		var target := _actor_by_id(StringName(str(write.get("target_id", ""))))
+		if target == null:
+			continue
+		var materialized := _materialize_write(write, target)
+		# Breath writes address the recipient; damage still attributes its source.
+		var actor := target if str(write.get("kind", "")) == "breath" or source == null else source
+		_apply_resolution_writes(actor, target, {"writes": [materialized]}, true, &"deferred")
+		applied.append(materialized)
+	var fired := entry.duplicate(true)
+	fired["applied"] = applied
+	_emit_event(&"deferred_effect_fired", source, null, {"entry": fired.duplicate(true)})
+	if source != null:
+		_class_resource_of(source).on_deferred_fired(fired)
+
+
+func _settle_due_breath_refunds() -> void:
+	var pending: Array[Dictionary] = []
+	var refunds: Array[Dictionary] = []
+	for entry: Dictionary in _deferred:
+		var writes: Array = (entry.get("effect", {}) as Dictionary).get("writes", [])
+		var only_breath := not writes.is_empty()
+		for raw: Variant in writes:
+			if not raw is Dictionary or str(raw.get("kind", "")) != "breath":
+				only_breath = false
+				break
+		if only_breath and _deferred_is_due(entry):
+			refunds.append(entry)
+		else:
+			pending.append(entry)
+	_deferred = pending
+	for entry: Dictionary in refunds:
+		_apply_deferred_entry(entry)
 
 
 ## Turns a queued write (`delta` or `amount`, no before/after) into the same shape Resolution

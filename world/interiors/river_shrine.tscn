@@ -38,7 +38,7 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="MossRockWest" type="StaticBody2D" parent="RiverShrineDressing/SolidProps"]
-position = Vector2(112, 238)
+position = Vector2(224, 476)
 
 [node name="Sprite2D" type="Sprite2D" parent="RiverShrineDressing/SolidProps/MossRockWest"]
 texture = ExtResource("4_moss_rock")
@@ -50,7 +50,7 @@ position = Vector2(0, -12)
 shape = SubResource("moss_rock_shape")
 
 [node name="MossRockEast" type="StaticBody2D" parent="RiverShrineDressing/SolidProps"]
-position = Vector2(854, 338)
+position = Vector2(1708, 676)
 
 [node name="Sprite2D" type="Sprite2D" parent="RiverShrineDressing/SolidProps/MossRockEast"]
 texture = ExtResource("4_moss_rock")
@@ -62,7 +62,7 @@ position = Vector2(0, -10)
 shape = SubResource("small_rock_shape")
 
 [node name="OfferingCrates" type="StaticBody2D" parent="RiverShrineDressing/SolidProps"]
-position = Vector2(842, 522)
+position = Vector2(1684, 1044)
 
 [node name="Sprite2D" type="Sprite2D" parent="RiverShrineDressing/SolidProps/OfferingCrates"]
 texture = ExtResource("6_crates")
@@ -74,31 +74,31 @@ position = Vector2(0, -11)
 shape = SubResource("crate_shape")
 
 [node name="BloomNorthWest" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
-position = Vector2(112, 128)
+position = Vector2(224, 256)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
 scale = Vector2(0.21, 0.21)
 
 [node name="BloomNorthEast" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
-position = Vector2(860, 155)
+position = Vector2(1720, 310)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
 scale = Vector2(-0.19, 0.19)
 
 [node name="BloomSouthWest" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
-position = Vector2(245, 554)
+position = Vector2(490, 1108)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
 scale = Vector2(0.17, 0.17)
 
 [node name="BloomSouthEast" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
-position = Vector2(700, 548)
+position = Vector2(1400, 1096)
 texture = ExtResource("5_bloom")
 offset = Vector2(0, -115)
 scale = Vector2(-0.16, 0.16)
 
 [node name="LanternWest" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
-position = Vector2(252, 252)
+position = Vector2(504, 504)
 texture = ExtResource("7_lantern")
 offset = Vector2(0, -115)
 scale = Vector2(0.26, 0.26)
@@ -107,7 +107,7 @@ phase = 0.7
 period = 4.2
 
 [node name="LanternEast" type="Sprite2D" parent="RiverShrineDressing/SoftDetails"]
-position = Vector2(708, 252)
+position = Vector2(1416, 504)
 texture = ExtResource("7_lantern")
 offset = Vector2(0, -115)
 scale = Vector2(-0.26, 0.26)
@@ -116,71 +116,81 @@ phase = 3.8
 period = 4.6
 
 [node name="VotiveCandlesWest" type="Node2D" parent="RiverShrineDressing/SoftDetails"]
-position = Vector2(360, 230)
+position = Vector2(720, 460)
 
 [node name="WaxTall" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesWest"]
-polygon = PackedVector2Array(-13, -21, -5, -21, -5, 0, -13, 0)
+polygon = PackedVector2Array(-26, -42, -10, -42, -10, 0, -26, 0)
 color = Color(0.78, 0.7, 0.5, 1)
 
 [node name="FlameTall" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesWest"]
-polygon = PackedVector2Array(-9, -34, -4, -23, -9, -20, -14, -23)
+polygon = PackedVector2Array(-18, -68, -8, -46, -18, -40, -28, -46)
 color = Color(1, 0.64, 0.2, 1)
 
 [node name="WaxShort" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesWest"]
-polygon = PackedVector2Array(3, -14, 11, -14, 11, 0, 3, 0)
+polygon = PackedVector2Array(6, -28, 22, -28, 22, 0, 6, 0)
 color = Color(0.68, 0.62, 0.46, 1)
 
 [node name="FlameShort" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesWest"]
-polygon = PackedVector2Array(7, -25, 12, -16, 7, -13, 2, -16)
+polygon = PackedVector2Array(14, -50, 24, -32, 14, -26, 4, -32)
 color = Color(1, 0.77, 0.28, 1)
 
 [node name="VotiveCandlesCenter" type="Node2D" parent="RiverShrineDressing/SoftDetails"]
-position = Vector2(480, 230)
+position = Vector2(960, 460)
 
 [node name="WaxLeft" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesCenter"]
-polygon = PackedVector2Array(-18, -16, -10, -16, -10, 0, -18, 0)
+polygon = PackedVector2Array(-36, -32, -20, -32, -20, 0, -36, 0)
 color = Color(0.7, 0.64, 0.48, 1)
 
 [node name="FlameLeft" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesCenter"]
-polygon = PackedVector2Array(-14, -28, -9, -18, -14, -15, -19, -18)
+polygon = PackedVector2Array(-28, -56, -18, -36, -28, -30, -38, -36)
 color = Color(1, 0.7, 0.22, 1)
 
 [node name="WaxRight" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesCenter"]
-polygon = PackedVector2Array(8, -23, 16, -23, 16, 0, 8, 0)
+polygon = PackedVector2Array(16, -46, 32, -46, 32, 0, 16, 0)
 color = Color(0.82, 0.74, 0.54, 1)
 
 [node name="FlameRight" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesCenter"]
-polygon = PackedVector2Array(12, -36, 17, -25, 12, -22, 7, -25)
+polygon = PackedVector2Array(24, -72, 34, -50, 24, -44, 14, -50)
 color = Color(1, 0.62, 0.17, 1)
 
 [node name="VotiveCandlesEast" type="Node2D" parent="RiverShrineDressing/SoftDetails"]
-position = Vector2(600, 230)
+position = Vector2(1200, 460)
 
 [node name="WaxTall" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesEast"]
-polygon = PackedVector2Array(-11, -24, -3, -24, -3, 0, -11, 0)
+polygon = PackedVector2Array(-22, -48, -6, -48, -6, 0, -22, 0)
 color = Color(0.76, 0.68, 0.5, 1)
 
 [node name="FlameTall" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesEast"]
-polygon = PackedVector2Array(-7, -37, -2, -26, -7, -23, -12, -26)
+polygon = PackedVector2Array(-14, -74, -4, -52, -14, -46, -24, -52)
 color = Color(1, 0.68, 0.2, 1)
 
 [node name="WaxShort" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesEast"]
-polygon = PackedVector2Array(5, -13, 13, -13, 13, 0, 5, 0)
+polygon = PackedVector2Array(10, -26, 26, -26, 26, 0, 10, 0)
 color = Color(0.69, 0.62, 0.46, 1)
 
 [node name="FlameShort" type="Polygon2D" parent="RiverShrineDressing/SoftDetails/VotiveCandlesEast"]
-polygon = PackedVector2Array(9, -24, 14, -15, 9, -12, 4, -15)
+polygon = PackedVector2Array(18, -48, 28, -30, 18, -24, 8, -30)
 color = Color(1, 0.78, 0.3, 1)
 
 [node name="ShrineUndercroftDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"shrine_undercroft_enter"
+editable_children = true
+
+[node name="DoorSprite" parent="ShrineUndercroftDoor"]
+visible = true
+position = Vector2(0, -52)
+scale = Vector2(0.55, 0.55)
+
+[node name="DoorPanel" parent="ShrineUndercroftDoor"]
+visible = false
+
 
 [node name="SpawnFromShrineUndercroft" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)
 
 [node name="OfferingBox" parent="." instance=ExtResource("3_chest")]
-position = Vector2(150, 500)
+position = Vector2(300, 1000)
 display_name = "Offering Box"
 prompt_text = "Open"
 interaction_flag = "loot_opened_river_shrine_offering_box"

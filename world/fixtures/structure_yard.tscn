@@ -1,0 +1,60 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://world/fixtures/structure_yard.gd" id="1_yard"]
+[ext_resource type="Script" path="res://world/isometric_blockout.gd" id="2_ground"]
+[ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="3_tiles"]
+[ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="4_player"]
+[ext_resource type="PackedScene" path="res://actors/destructible/destructible_structure.tscn" id="5_structure"]
+[ext_resource type="Script" path="res://world/field_map.gd" id="6_field"]
+[ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="7_blocking"]
+
+[node name="StructureYard" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_yard")
+
+[node name="IsometricGround" type="TileMapLayer" parent="."]
+position = Vector2(640, 120)
+script = ExtResource("2_ground")
+map_size = Vector2i(20, 20)
+ground_style = 1
+road_axis = 0
+
+[node name="Blocking" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(640, 120)
+tile_map_data = PackedByteArray("AAAGAAUAAAAAAAAAAAAHAAUAAAAAAAAAAAANAAUAAAAAAAAAAAAOAAUAAAAAAAAAAAA=")
+tile_set = ExtResource("3_tiles")
+script = ExtResource("7_blocking")
+
+[node name="FieldMap" type="Node2D" parent="."]
+script = ExtResource("6_field")
+
+[node name="MaintainedBarricade" parent="." instance=ExtResource("5_structure")]
+position = Vector2(720, 320)
+display_name = "MAINTAINED BARRICADE"
+structure_id = "fixture/maintained-barricade"
+rebuild_phases = 2
+blocking_path = NodePath("../Blocking")
+footprint = Array[Vector2i]([Vector2i(6, 5), Vector2i(7, 5)])
+interaction_damage = 10
+
+[node name="AbandonedBarricade" parent="." instance=ExtResource("5_structure")]
+position = Vector2(944, 432)
+display_name = "ABANDONED BARRICADE"
+structure_id = "fixture/abandoned-barricade"
+blocking_path = NodePath("../Blocking")
+footprint = Array[Vector2i]([Vector2i(13, 5), Vector2i(14, 5)])
+interaction_damage = 10
+
+[node name="Player" parent="." instance=ExtResource("4_player")]
+position = Vector2(640, 376)
+
+[node name="Instructions" type="Label" parent="."]
+offset_left = 460.0
+offset_top = 64.0
+offset_right = 1140.0
+offset_bottom = 160.0
+text = "STRUCTURE YARD
+Move: WASD / click | Nearby barricade: E to strike
+F6: advance one world phase | F5 / F9: snapshot / restore
+Left: maintained (2 phases). Right: abandoned (no timer)."

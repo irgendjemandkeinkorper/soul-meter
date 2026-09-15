@@ -24,8 +24,12 @@ func on_action(event: CombatEvent) -> void:
 			hunger = mini(hunger + 1, MAX_HUNGER)
 	if resolution.is_empty() or bool(resolution.get("fizzled", false)):
 		return
+	# Utility compositions cannot seed a damaging Hunger effect, even on contact.
+	if not bool(resolution.get("direct_damage_enabled", true)):
+		return
 	var action_id := StringName(str(event.data.get("action_id", "")))
-	if action_id.is_empty() or event.target_id.is_empty() or action_id not in [&"strike", &"cast"]:
+	var is_cast := int(event.data.get("verb", -1)) == CombatAction.Verb.CAST
+	if event.target_id.is_empty() or (action_id not in [&"strike", &"cast"] and not is_cast):
 		return
 	if not bool(resolution.get("hit", true)):
 		return
@@ -61,8 +65,21 @@ func on_deferred_fired(entry: Dictionary) -> void:
 	var write: Dictionary = applied[0] as Dictionary
 	var target_key := String(write.get("target_id", ""))
 	pending_dot_targets.erase(target_key)
+	if int(write.get("before", 0)) > int(write.get("after", 0)):
+		hunger = mini(hunger + 1, MAX_HUNGER)
 	if int(write.get("after", 0)) > 0:
 		_queue_hunger_dot(StringName(str(write.get("target_id", ""))))
+
+
+func on_deferred_cancelled(entry: Dictionary, _by_id: StringName) -> void:
+	var label := StringName(str(entry.get("label", "")))
+	if label == &"hunger_refund":
+		pending_breath_refunds = maxf(pending_breath_refunds - float(BREATH_REFUND), 0.0)
+	elif label == &"hunger_dot":
+		var effect: Dictionary = entry.get("effect", {})
+		for raw: Variant in effect.get("writes", []):
+			if raw is Dictionary:
+				pending_dot_targets.erase(String(raw.get("target_id", "")))
 
 
 func on_kill(_target_id: StringName, cause: StringName) -> void:

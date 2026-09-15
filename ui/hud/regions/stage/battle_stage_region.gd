@@ -16,6 +16,7 @@ signal pointer_pressed(tile: Dictionary, actor_id: StringName)
 signal pointer_cleared
 
 const UnitArtScript := preload("res://globals/unit_art.gd")
+const FieldOverlayScript := preload("res://world/combat_overlay.gd")
 const BACKDROP_PATTERN := "res://assets/generated/backgrounds/combat/%s-battlefield-v1.png"
 const GROUND_ATLAS := preload("res://assets/generated/sprites/ground/ground_tiles.png")
 
@@ -71,6 +72,33 @@ var _backdrop: TextureRect
 var _units_layer: Control
 var _fx_layer: Control
 var _unit_nodes: Dictionary = {}
+var _field_overlay: FieldOverlayScript
+
+
+## Migration step 6: the region retains its frozen input/payload API while the
+## loaded field owns projection and actor presentation for ambient sessions.
+func bind_field(field: FieldMap) -> void:
+	if is_instance_valid(_field_overlay):
+		_field_overlay.free()
+	_field_overlay = FieldOverlayScript.new()
+	_field_overlay.name = "CombatOverlay"
+	field.add_child(_field_overlay)
+	_field_overlay.bind_field(field)
+	_backdrop.hide()
+	_units_layer.hide()
+	_fx_layer.hide()
+	queue_redraw()
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_field_overlay):
+		_field_overlay.name = "RetiredCombatOverlay"
+		_field_overlay.queue_free()
+
+
+func set_replaying(replaying: bool) -> void:
+	if is_instance_valid(_field_overlay):
+		_field_overlay.animate_events = not replaying
 
 
 func _ready() -> void:
@@ -106,6 +134,8 @@ func _ready() -> void:
 				_hovered = Vector2i(-1, -1)
 				_hover_path.clear()
 				queue_redraw()
+				if is_instance_valid(_field_overlay):
+					_field_overlay.set_pointer(_selected, null)
 	)
 
 
@@ -131,6 +161,10 @@ func consume_event(event: CombatEvent) -> void:
 		&"battle_finished":
 			_active_id = &""
 			_target_id = &""
+	if is_instance_valid(_field_overlay):
+		_field_overlay.consume_event(event)
+		_field_overlay.set_pointer(_selected, _hovered)
+		return
 	var move_path := _path_cells(event.data.get("path_cells", []))
 	if event.type == &"action_resolved" and move_path.size() >= 2 \
 			and _unit_nodes.has(event.actor_id):
@@ -161,6 +195,8 @@ func select_tile(cell: Vector2i) -> void:
 			tile_selected.emit(tile.duplicate(true))
 			break
 	queue_redraw()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_pointer(_selected, _hovered)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -196,9 +232,13 @@ func clear_pointer() -> void:
 	_selected = Vector2i(-1, -1)
 	pointer_cleared.emit()
 	queue_redraw()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_pointer(null, null)
 
 
 func pointer_input_available() -> bool:
+	if is_instance_valid(_field_overlay):
+		return _pointer_turn_available and not _field_overlay.is_animating()
 	return _pointer_turn_available and Time.get_ticks_msec() >= _input_locked_until_msec
 
 
@@ -231,6 +271,11 @@ func cover_marker_count() -> int:
 
 
 func cell_center(cell: Vector2i) -> Vector2:
+	if is_instance_valid(_field_overlay):
+		var point := _field_overlay.cell_center(cell)
+		return get_global_transform_with_canvas().affine_inverse() * (
+			_field_overlay.get_global_transform_with_canvas() * point
+		)
 	return _project(cell.x, cell.y, _height_at(cell), _layout())
 
 
@@ -269,6 +314,8 @@ func _refresh_hover() -> void:
 			tile_hovered.emit(tile.duplicate(true))
 			break
 	queue_redraw()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_pointer(_selected, _hovered)
 
 
 func _tile_at(cell: Vector2i) -> Dictionary:
@@ -286,6 +333,9 @@ func _actor_at(cell: Vector2i) -> StringName:
 
 
 func _cell_at(point: Vector2) -> Vector2i:
+	if is_instance_valid(_field_overlay):
+		var cell := _field_overlay.cell_at_viewport(get_global_transform_with_canvas() * point)
+		return cell if not _tile_at(cell).is_empty() else NO_CELL
 	var layout := _layout()
 	var closest := NO_CELL
 	var distance := INF
@@ -301,6 +351,8 @@ func _cell_at(point: Vector2) -> Vector2i:
 
 
 func _draw() -> void:
+	if is_instance_valid(_field_overlay):
+		return
 	var layout := _layout()
 	var scale_factor: float = layout["scale"]
 	var half_w := float(DS.TILE_W) * 0.5 * scale_factor
@@ -434,6 +486,9 @@ func _backdrop_texture(theme_name: String) -> Texture2D:
 
 
 func _sync_background() -> void:
+	if is_instance_valid(_field_overlay):
+		_backdrop.hide()
+		return
 	var texture := _backdrop_texture(_backdrop_theme())
 	_backdrop.texture = texture
 	_backdrop.visible = texture != null
@@ -443,6 +498,8 @@ func _sync_background() -> void:
 ## battles (zone models snapshot no tiles, and the legacy battle_stage.gd
 ## composition already presents those).
 func _sync_units(animate_move: bool) -> void:
+	if is_instance_valid(_field_overlay):
+		return
 	_sync_cover_props()
 	if _tiles.is_empty() or _actors.is_empty():
 		for node: Node in _unit_nodes.values():
