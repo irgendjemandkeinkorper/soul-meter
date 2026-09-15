@@ -485,6 +485,9 @@ func query_action(
 		var cell_affordability := _can_afford(actor, action)
 		if not bool(cell_affordability.get("allowed", false)):
 			return cell_affordability
+		if bool(options.get("availability_only", false)):
+			# The command rail asks "can this be armed?" before any cell is picked.
+			return _allowed({"cells_pending": int(action.effect_payload.get("cell_count", 3))})
 		return _query_cell_action(actor, action, options, target)
 	if action.targets_any_side():
 		if target == null or not target.is_alive() or (not allies.has(target) and not enemies.has(target)):

@@ -547,6 +547,9 @@ func action_lock_reason(action: CombatAction) -> String:
 
 
 func _availability_options(action: CombatAction) -> Dictionary:
+	if action != null and action.targets_cells():
+		# Cells are picked on the stage after the button arms the pointer.
+		return {"availability_only": true}
 	if action == null or action.kind != CombatAction.Kind.DEFINING_STRIKE:
 		return {}
 	var target := current_target()
@@ -599,7 +602,7 @@ func action_refusal(
 			)
 	if controller == null:
 		return {"allowed": true, "blocked_by": &"", "nearest_unblock": {}, "message": ""}
-	if target == null and action.requires_enemy_target():
+	if target == null and (action.requires_enemy_target() or action.targets_any_side()):
 		target = current_target()
 	elif target == null and action.requires_ally_target():
 		target = _living_ally(-1)

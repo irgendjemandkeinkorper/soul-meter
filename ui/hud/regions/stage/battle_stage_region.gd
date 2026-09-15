@@ -43,6 +43,10 @@ const TARGET_RIM := Color("#E06C5A")
 const HOVER_RIM := Color("#9AA3B2")
 const REACHABLE_TINT := Color(0.24, 0.56, 0.42, 0.18)
 const PATH_TINT := Color(0.82, 0.67, 0.24, 0.20)
+const PENDING_TINT := Color(0.84, 0.71, 1.0, 0.30)  # khor glow: the cells being picked
+const FIRE_TINT := Color(0.94, 0.42, 0.16, 0.34)
+const MARK_TINT := Color(0.94, 0.42, 0.16, 0.14)   # filed, not yet burning
+const LIGHT_TINT := Color(1.0, 0.94, 0.70, 0.22)
 const COVER_COLOR := Color("#D6C184")
 const COVER_ART_PATTERN := "res://assets/generated/sprites/terrain/cover_%s.png"
 const COVER_ART_TILE_WIDTHS := 1.35  # prop footprint relative to a tile's width
@@ -63,6 +67,10 @@ var _selected := Vector2i(-1, -1)
 var _hovered := Vector2i(-1, -1)
 var _reachable: Dictionary = {}
 var _hover_path: Array[Vector2i] = []
+var _pending_cells: Array[Vector2i] = []
+var _fire_cells: Dictionary = {}   # Vector2i -> true (burning now)
+var _mark_cells: Dictionary = {}   # Vector2i -> true (filed for a later beat)
+var _light_cells: Dictionary = {}  # Vector2i -> true (inside a Witness Light)
 var _input_locked_until_msec := 0
 var _pointer_turn_available := true
 var _fallen: Dictionary = {}
@@ -150,6 +158,7 @@ func consume_event(event: CombatEvent) -> void:
 				_tiles.append((value as Dictionary).duplicate(true))
 	_read_actors(snapshot)
 	_set_movement(snapshot.get("movement", {}))
+	_read_fields(snapshot)
 	match event.type:
 		&"turn_started", &"enemy_turn_started":
 			_active_id = event.actor_id
@@ -186,6 +195,49 @@ func consume_event(event: CombatEvent) -> void:
 
 func rendered_tile_count() -> int:
 	return _tiles.size()
+
+
+func set_pending_cells(cells: Array[Vector2i]) -> void:
+	_pending_cells = cells.duplicate()
+	queue_redraw()
+
+
+func fire_cell_count() -> int:
+	return _fire_cells.size()
+
+
+func light_cell_count() -> int:
+	return _light_cells.size()
+
+
+## Board workings from the controller snapshot: burning Firebreak cells, filed marks, and
+## Witness Light fields. Rendered as ground tints so units and cover still read on top.
+func _read_fields(snapshot: Dictionary) -> void:
+	if not snapshot.has("fire") and not snapshot.has("light"):
+		return
+	_fire_cells.clear()
+	_mark_cells.clear()
+	_light_cells.clear()
+	var fire: Dictionary = snapshot.get("fire", {})
+	for line: Variant in fire.get("lines", []):
+		if line is Dictionary:
+			for cell: Vector2i in FireField.cells_from_data((line as Dictionary).get("cells", [])):
+				_fire_cells[cell] = true
+	for mark: Variant in fire.get("marks", []):
+		if mark is Dictionary:
+			for cell: Vector2i in FireField.cells_from_data((mark as Dictionary).get("cells", [])):
+				_mark_cells[cell] = true
+	var light: Dictionary = snapshot.get("light", {})
+	for field: Variant in light.get("fields", []):
+		if not (field is Dictionary):
+			continue
+		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
+		if not (center is Vector2i):
+			continue
+		var radius := int((field as Dictionary).get("radius", 0))
+		for dy: int in range(-radius, radius + 1):
+			for dx: int in range(-radius, radius + 1):
+				_light_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
 
 
 func select_tile(cell: Vector2i) -> void:
@@ -382,6 +434,14 @@ func _draw() -> void:
 			draw_colored_polygon(diamond, REACHABLE_TINT)
 		if _hover_path.has(cell):
 			draw_colored_polygon(diamond, PATH_TINT)
+		if _light_cells.has(cell):
+			draw_colored_polygon(diamond, LIGHT_TINT)
+		if _fire_cells.has(cell):
+			draw_colored_polygon(diamond, FIRE_TINT)
+		elif _mark_cells.has(cell):
+			draw_colored_polygon(diamond, MARK_TINT)
+		if _pending_cells.has(cell):
+			draw_colored_polygon(diamond, PENDING_TINT)
 		if bool(tile.get("cover", false)) and _cover_texture() == null:
 			# Badge is the LAST-RESORT marker; with prop art present the cover
 			# prop is a y-sorted node in UnitsLayer (gate r1: props must

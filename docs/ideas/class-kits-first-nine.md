@@ -313,9 +313,14 @@ The kit and the cards it leans on are live in `CombatController`; the substrate 
 | Marks | `snapshot().fire.marks` | Filed-but-unfired cell workings, for the HUD and the Herd rule. Jam the Gears (`request_cancel`) removes them with the entry. |
 | Save | `class_resources_to_dict()` keys `__fire__`, `__impositions__` | Additive; older saves restore no fire. |
 
-Not done: the battle HUD (`ui/hud/battle_interface.gd`) still only targets enemies, so
-cell cards and Douse-on-ally have no pointer flow yet. Numbers are the cards' provisional
-values (B11 owns the cap review).
+Numbers are the cards' provisional values (B11 owns the cap review).
+
+HUD (2026-09-15): a cell card's rail button only arms the pointer; the stage then takes one
+press per cell (`effect_payload.cell_count`), quotes the working when the closing cell is
+hovered, and submits on the last press. A contract card (`contract_target`) takes the enemy
+press first. Creature-side cards (Douse, Veil) accept ally or any-side presses. The stage
+tints burning cells, filed marks, Witness Light fields and the cells being picked; the
+same-map overlay tints the first three. Test: `test/integration/test_battle_cell_targeting.gd`.
 
 ### Witness Weaver runtime (2026-09-15)
 

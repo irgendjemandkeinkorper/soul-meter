@@ -12,6 +12,9 @@ var _moves: Dictionary = {}
 var _active_id: StringName
 var _target_id: StringName
 var _reachable: Dictionary = {}
+var _fire_cells: Dictionary = {}
+var _mark_cells: Dictionary = {}
+var _light_cells: Dictionary = {}
 var _selected: Variant = null
 var _hovered: Variant = null
 var _field: FieldMap
@@ -89,6 +92,7 @@ func consume_event(event: CombatEvent) -> void:
 				_actors[StringName(str(actor.get("id", "")))] = actor.duplicate(true)
 		_bind_field_actors(snapshot)
 	_reachable.clear()
+	_read_fields(snapshot)
 	var movement: Dictionary = snapshot.get("movement", {})
 	for row: Dictionary in movement.get("reachable", []):
 		var cells: Array = row.get("path_cells", [])
@@ -228,6 +232,34 @@ func _diamond(cell: Vector2i) -> PackedVector2Array:
 	return points
 
 
+func _read_fields(snapshot: Dictionary) -> void:
+	if not snapshot.has("fire") and not snapshot.has("light"):
+		return
+	_fire_cells.clear()
+	_mark_cells.clear()
+	_light_cells.clear()
+	var fire: Dictionary = snapshot.get("fire", {})
+	for line: Variant in fire.get("lines", []):
+		if line is Dictionary:
+			for cell: Vector2i in FireField.cells_from_data((line as Dictionary).get("cells", [])):
+				_fire_cells[cell] = true
+	for mark: Variant in fire.get("marks", []):
+		if mark is Dictionary:
+			for cell: Vector2i in FireField.cells_from_data((mark as Dictionary).get("cells", [])):
+				_mark_cells[cell] = true
+	var light: Dictionary = snapshot.get("light", {})
+	for field: Variant in light.get("fields", []):
+		if not (field is Dictionary):
+			continue
+		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
+		if not (center is Vector2i):
+			continue
+		var radius := int((field as Dictionary).get("radius", 0))
+		for dy: int in range(-radius, radius + 1):
+			for dx: int in range(-radius, radius + 1):
+				_light_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+
+
 func _draw() -> void:
 	if _grid == null or not is_instance_valid(_ground):
 		return
@@ -236,6 +268,12 @@ func _draw() -> void:
 		var diamond := _diamond(cell)
 		if _reachable.has(cell):
 			draw_colored_polygon(diamond, Color(DS.TILE_SELECT_RIM, 0.12))
+		if _light_cells.has(cell):
+			draw_colored_polygon(diamond, Color(1.0, 0.94, 0.70, 0.22))
+		if _fire_cells.has(cell):
+			draw_colored_polygon(diamond, Color(0.94, 0.42, 0.16, 0.34))
+		elif _mark_cells.has(cell):
+			draw_colored_polygon(diamond, Color(0.94, 0.42, 0.16, 0.14))
 		var charge := int(tile.get("charge_level", 0))
 		if charge > 0:
 			var element_color := Color(str(tile.get("element_color", DS.MOTE_3.to_html())))

@@ -229,8 +229,15 @@ func _use_action(action_id: StringName) -> void:
 	if action != null and action.kind == CombatAction.Kind.DEFINING_STRIKE:
 		_open_weakness_dialog()
 		return
-	if action != null and action.requires_enemy_target() and is_instance_valid(_battle_interface):
-		_battle_interface.select_pointer_action(action_id)
+	if action != null and is_instance_valid(_battle_interface):
+		if action.targets_cells() or action.targets_any_side() or (
+			action.class_resource_action.is_empty() and action.target_side == "ally"
+		):
+			# Cell workings and creature-side cards are aimed on the stage; the button only arms.
+			_battle_interface.select_pointer_action(action_id)
+			return
+		if action.requires_enemy_target():
+			_battle_interface.select_pointer_action(action_id)
 	Battle.use_action(action_id)
 
 
