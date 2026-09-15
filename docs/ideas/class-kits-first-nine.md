@@ -354,4 +354,26 @@ Third kit, on Breath restoration and the existing Jam. Test suite:
 Design conflict to resolve: Opened Sluice's cap of 9 is unreachable at Second Breath's P price
 of 6 Breath while "never more than the Runner actually paid" stands. The runtime applies both
 rules literally, so today the tier only widens the cap on paper. Thrown weapons (Cast Iron,
-Double Cast, Blinding Throw) are not built: no tier leans on them.
+Double Cast, Blinding Throw) are not built: no tier leans on them. (Blinding Throw was built
+for the Nightfeeder below.)
+
+### Nightfeeder runtime (2026-09-15)
+
+Fourth kit, on the existing Vhorr Hunger engine and a Vekh concealment layer. Test suite:
+`test/unit/test_nightfeeder.gd`.
+
+| Piece | Where | Notes |
+|---|---|---|
+| Shroud fields | `LightField.create_shroud()`; `kind = "shroud"` beside light fields | Fixed Shroud: center within 4, radius 1, two checkpoints. Eclipse Procession: `moving = true`, radius 2, one checkpoint, always centered on the caster's current cell (`_shroud_center()`). Shrouds never light a cell; the snapshot publishes them under `light.shrouds` and the stage/overlay tint them dark. |
+| Concealment | `_signatures_visible()` | Exposed, Lit or a light cell wins first (X1), then Veiled, then a shroud raised by the creature's own side. A creature in a Witness Light inside a Shroud stays readable until the window expires. Fire is never concealed (X4): the fire substrate is untouched. |
+| Blinded | `LightField.apply_blinded()`, one checkpoint | Blinding Throw (`47`): ranged 3, no damage, a hit Blinds. PROVISIONAL reading of "weakened": a Blinded attacker gets no flank term and its facing reads as front. Hazard ticks are unaffected. The grit packet is not modelled. |
+| Blades | `data/combat/actions/45, 46` | Quick Cut (plain). Open Seam refuses the target's front (`facing`) at query time and ignores one point of defense (`armor_bypass` → `defense_bypass` in the resolution context). Both seed Hunger: `VhorrHunger.on_action` now accepts any ATTACK-verb hit. |
+| Blindside | `49_blindside.tres`, `_blindside` {actor: {until_round, bite}} | Self only (`self_only`). Armed for two checkpoints; a plain Blindside is spent by the caster's next attack or cast (`blindside_spent`). The hidden-preparation half is bookkeeping only: no rule reads a Blindside yet apart from the Bite. Saved under `__vekh__`. |
+| T1 Fed in the Dark | `_fed_in_the_dark()` inside `request_cancel()` | A `hunger_dot` entry whose Vhorr owner is concealed by their OWN Veil or Shroud is kept; if nothing else was cancelled the Jam is refused `source_untraceable`. Any revelation, or a Veil cast by someone else, ends it. The tick itself still fires. |
+| T2 Blindside Bite | `61_blindside_bite.tres` (Chord gate, Vhorr) | Arms `bite = true`. The next Open Seam on a Blinded target is allowed from any angle and resolves with `facing = side` (flanked); the Bite is consumed by that attempt, hit or miss. Without Blinded the angle rule stands and the Bite waits. |
+| T3 Eclipse Feast | `62_eclipse_feast.tres` (Triad gate, Refrain use); `_eclipse_feast()` | Eclipse Procession plus one extra tick at the checkpoint for each owned `hunger_dot` chain whose target stands inside the moving shroud: amount = current Hunger, kill cause `dot` (the refund pays), Hunger climbs as for a queued tick. One checkpoint, then the feast entry is dropped. |
+
+Open design points: Blinding Throw's grit ammunition has no inventory hook; Blindside's
+"hide the preparation" has no reader beyond the Bite (the HUD does not yet hide a Blindsided
+working's identity from the enemy AI, which reads no identities anyway); the Blinded
+weakening is provisional until the martial cards doc states it.

@@ -121,9 +121,18 @@ const EFFECT_GREAT_CONFLUENCE := &"great_confluence"  ## instant refuge: restore
 const EFFECT_OPENED_SLUICE := &"opened_sluice"    ## Second Breath, cap 9 within a checkpoint of a Jam
 const EFFECT_WASH_THE_GEARS := &"wash_the_gears"  ## Turning Tide B; Jam-cancelled enemies inside Soaked
 const EFFECT_FLOODGATE := &"floodgate"            ## Great Confluence; discharges an armed Jam retry
+const EFFECT_BLINDING_THROW := &"blinding_throw"  ## hit → Blinded, one checkpoint, no damage
+const EFFECT_OPEN_SEAM := &"open_seam"            ## side/rear blade attack; a Bite waives the angle
+const EFFECT_BLINDSIDE := &"blindside"            ## self: hide the next working's preparation
+const EFFECT_BLINDSIDE_BITE := &"blindside_bite"  ## Blindside; next Open Seam on a Blinded target is flanked
+const EFFECT_SHROUD := &"shroud"                  ## fixed concealment field, radius 1, two checkpoints
+const EFFECT_ECLIPSE := &"eclipse_procession"     ## moving concealment field around the caster
+const EFFECT_ECLIPSE_FEAST := &"eclipse_feast"    ## Eclipse; Hunger inside ticks once more at the checkpoint
 const _KNOWN_EFFECTS: Array[StringName] = [
 	EFFECT_SECOND_BREATH, EFFECT_TURNING_TIDE, EFFECT_GREAT_CONFLUENCE, EFFECT_OPENED_SLUICE,
 	EFFECT_WASH_THE_GEARS, EFFECT_FLOODGATE,
+	EFFECT_BLINDING_THROW, EFFECT_OPEN_SEAM, EFFECT_BLINDSIDE, EFFECT_BLINDSIDE_BITE,
+	EFFECT_SHROUD, EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST,
 	EFFECT_UNVEIL, EFFECT_VEIL, EFFECT_WITNESS_LIGHT, EFFECT_NOONDAY, EFFECT_PUSH, EFFECT_UNSEAT,
 	EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT,
 	EFFECT_BURNING_STRIKE, EFFECT_DOUSE, EFFECT_THRUST, EFFECT_PULL, EFFECT_FIRE_LINE,
@@ -159,6 +168,11 @@ const JAMS_SAVE_KEY := "__jams__"
 ## reads this for its windows; it is data the controller already emitted as `action_cancelled`.
 var _jam_log: Dictionary = {}
 const IMPOSITIONS_SAVE_KEY := "__impositions__"
+## Vekh preparations: {combat_id: {"until_round", "bite"}} for armed Blindsides and
+## {combat_id: field_id} for an Eclipse Feast waiting on its checkpoint.
+var _blindside: Dictionary = {}
+var _feast: Dictionary = {}
+const VEKH_SAVE_KEY := "__vekh__"
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
 ## CT: overflow keeps them past READY_AT) does not get a redundant `turn_started`.
@@ -307,6 +321,8 @@ func start(
 	light.reset()
 	_jam_log.clear()
 	_refrain_uses.clear()
+	_blindside.clear()
+	_feast.clear()
 	for combatant: BattleActor in allies + enemies:
 		combatant.impositions.clear()
 	_assign_combat_ids(allies, &"ally", encounter_id)
@@ -820,7 +836,7 @@ func snapshot() -> Dictionary:
 		"movement": _movement_snapshot(),
 		"deferred": deferred_entries(),
 		"fire": {"lines": fire.snapshot(), "marks": _marks_snapshot()},
-		"light": {"fields": light.snapshot()},
+		"light": {"fields": _light_snapshot(), "shrouds": _shroud_snapshot()},
 	}
 
 
@@ -1406,6 +1422,7 @@ func _apply_action(
 	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary = {}
 ) -> Dictionary:
 	var result: Dictionary = {"message": "%s uses %s." % [actor.display_name, action.display_name]}
+	_spend_blindside(actor, action)
 	if action.targets_cells():
 		result.merge(_apply_cell_action(actor, action, options), true)
 		if action.balance_shift != 0:
@@ -1513,7 +1530,8 @@ func _query_cast(
 	var terms := _positional_terms(actor, target)
 	var resolution := _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", terms["cover_bonus"]))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", terms["cover_bonus"])),
+		int(context.get("defense_bypass", 0)),
 	)
 	if not bool(resolution.get("allowed", false)):
 		return resolution
@@ -1536,7 +1554,8 @@ func _query_attack_resolution(
 	var context := forecast_context(actor, target, action, options)
 	var resolution := _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0)),
+		int(context.get("defense_bypass", 0)),
 	)
 	if not bool(resolution.get("allowed", false)):
 		return resolution
@@ -1593,12 +1612,13 @@ func _resolved_attack(
 	var context := forecast_context(actor, target, action, options)
 	return _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0)),
+		int(context.get("defense_bypass", 0)),
 	)
 
 
 func _finalize_resolution_damage(
-	resolution: Dictionary, target: BattleActor, cover_bonus: int
+	resolution: Dictionary, target: BattleActor, cover_bonus: int, defense_bypass: int = 0
 ) -> Dictionary:
 	if not bool(resolution.get("allowed", false)):
 		return resolution
@@ -1609,7 +1629,7 @@ func _finalize_resolution_damage(
 		damage = maxi(
 			1,
 			int(finalized.get("damage", 0))
-			- target.effective_defense()
+			- maxi(target.effective_defense() - maxi(defense_bypass, 0), 0)
 			- int(target.balance_effects.get("defense_bonus", 0))
 			- cover_bonus,
 		)
@@ -1830,6 +1850,13 @@ func forecast_context(
 	var positional_context: Dictionary = terms["positional_context"]
 	var flank_bonus := int(terms["flank_bonus"])
 	var cover_bonus := int(terms["cover_bonus"])
+	if action.effect_id == EFFECT_OPEN_SEAM and _bite_applies(actor, target):
+		# Blindside Bite: a Blinded target is treated as flanked whatever its true facing.
+		if positional_context.is_empty():
+			flank_bonus = rules.flank_power_bonus if rules != null else flank_bonus
+		else:
+			positional_context = positional_context.duplicate(true)
+			positional_context["facing"] = {"id": &"side"}
 	var line_of_sight := (
 		battlefield.line_of_sight(actor, target)
 		if action.target_profile == &"ranged" else _allowed()
@@ -1941,6 +1968,8 @@ func forecast_context(
 	if options.has("weakness_id"):
 		context["weakness_id"] = options["weakness_id"]
 		context["weakness"] = (options.get("weakness", {}) as Dictionary).duplicate(true)
+	if action.effect_payload.has("armor_bypass"):
+		context["defense_bypass"] = int(action.effect_payload.get("armor_bypass", 0))
 	# #223: the class resource's ONLY channel into resolution. Same call at forecast and commit,
 	# so whatever it overrides is seen identically by both — no second calculator.
 	var overrides: Dictionary = _class_resource_of(actor).on_cast_forecast(context.duplicate(true))
@@ -2043,7 +2072,8 @@ func forecast_action(
 	var context := forecast_context(actor, target, action, options)
 	var resolution := _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0)),
+		int(context.get("defense_bypass", 0)),
 	)
 	var damage := int(resolution.get("damage", 0))
 	return _allowed({
@@ -2111,6 +2141,12 @@ func _positional_terms(actor: BattleActor, target: BattleActor) -> Dictionary:
 	var flank_bonus := battlefield.flank_bonus(actor, target)
 	if not positional_context.is_empty():
 		flank_bonus = 0
+	if LightField.is_blinded(actor):
+		# PROVISIONAL Blinded: the attacker cannot read a facing, so no flank or facing edge.
+		flank_bonus = 0
+		if not positional_context.is_empty():
+			positional_context = positional_context.duplicate(true)
+			positional_context["facing"] = {"id": &"front"}
 	return {
 		"positional_context": positional_context,
 		"cover_bonus": cover_bonus,
@@ -2604,6 +2640,7 @@ const _GRID_EFFECTS: Array[StringName] = [
 	&"pull", &"fire_line", &"sentence_of_ash", &"crown_of_embers", &"verdict_by_fire",
 	&"push", &"witness_light", &"noonday_revelation", &"term_of_daylight", &"noon_contract",
 	&"turning_tide", &"great_confluence", &"wash_the_gears", &"floodgate",
+	&"shroud", &"eclipse_procession", &"eclipse_feast",
 ]
 const RESTORE_CELL_EFFECTS: Array[StringName] = [
 	&"turning_tide", &"great_confluence", &"wash_the_gears", &"floodgate",
@@ -2698,6 +2735,15 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 		return _allowed()
 	var delta: Vector2i = (to as Vector2i) - (from as Vector2i)
 	var distance := maxi(absi(delta.x), absi(delta.y))
+	if bool(action.effect_payload.get("self_only", false)) and target != actor:
+		return _blocked(
+			&"target", "%s prepares only its user." % action.display_name, {"type": &"self"},
+		)
+	if action.effect_id == EFFECT_OPEN_SEAM and not _open_seam_angle_ok(actor, target):
+		return _blocked(
+			&"facing", "%s needs the target's side or rear, or a Blindside Bite on a Blinded target." % action.display_name,
+			{"type": &"side_or_rear"},
+		)
 	var range_cells := int(action.effect_payload.get("range", 0))
 	if range_cells > 0 and distance > range_cells:
 		return _blocked(
@@ -2797,8 +2843,13 @@ func _query_cell_action(
 					&"line_shape", "%s burns three cells in a straight, touching line." % action.display_name,
 					{"type": &"cardinal_line", "count": count},
 				)
+		EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST:
+			if distinct[0] != (origin as Vector2i):
+				return _blocked(
+					&"target", "%s is centered on its caster." % action.display_name, {"type": &"self_cell"},
+				)
 		EFFECT_CROWN_OF_EMBERS, EFFECT_VERDICT_BY_FIRE, EFFECT_WITNESS_LIGHT, EFFECT_NOONDAY, \
-		EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT:
+		EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT, EFFECT_SHROUD:
 			for cell: Vector2i in distinct:
 				var sight := battlefield.line_of_sight_to_cell(actor, cell)
 				if not bool(sight.get("allowed", false)):
@@ -2939,6 +2990,16 @@ func _apply_cell_action(actor: BattleActor, action: CombatAction, options: Dicti
 		EFFECT_NOONDAY:
 			result["revealed"] = _noonday(actor, cells[0])
 			result["message"] = "%s calls a Noonday Revelation." % actor.display_name
+		EFFECT_SHROUD:
+			result.merge(_create_shroud(actor, cells[0], int(payload.get("radius", LightField.SHROUD_RADIUS)), LightField.SHROUD_CHECKPOINTS, false), true)
+			result["message"] = "%s raises a Shroud." % actor.display_name
+		EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST:
+			var eclipse := _create_shroud(actor, cells[0], int(payload.get("radius", LightField.ECLIPSE_RADIUS)), LightField.ECLIPSE_CHECKPOINTS, true)
+			result.merge(eclipse, true)
+			if action.effect_id == EFFECT_ECLIPSE_FEAST:
+				_feast[String(actor.combat_id)] = int((eclipse.get("field", {}) as Dictionary).get("id", 0))
+				result["feast_armed"] = true
+			result["message"] = "%s leads an Eclipse Procession." % actor.display_name
 		EFFECT_TERM_OF_DAYLIGHT:
 			var field := _create_light_field(actor.combat_id, cells[0])
 			result.merge(field, true)
@@ -2995,6 +3056,23 @@ func _apply_effect_after_attack(
 		EFFECT_VEIL:
 			if hit:
 				out["veiled"] = _apply_veiled(target, actor.combat_id)
+		EFFECT_BLINDING_THROW:
+			if hit:
+				out["blinded"] = _apply_blinded(target, actor.combat_id)
+		EFFECT_BLINDSIDE, EFFECT_BLINDSIDE_BITE:
+			if not fizzled:
+				_blindside[String(actor.combat_id)] = {
+					"until_round": round_number + 1,
+					"bite": action.effect_id == EFFECT_BLINDSIDE_BITE,
+				}
+				out["blindside"] = _blindside[String(actor.combat_id)].duplicate(true)
+				_emit_event(&"blindside_armed", actor, null, out["blindside"])
+		EFFECT_OPEN_SEAM:
+			out["flanked"] = _bite_applies(actor, target)
+			if _blindside.has(String(actor.combat_id)):
+				# Consumed by the attempt, hit or miss.
+				_blindside.erase(String(actor.combat_id))
+				_emit_event(&"blindside_spent", actor, target, {"flanked": out["flanked"]})
 		EFFECT_UNSEAT:
 			if hit and target.guarding:
 				target.guarding = false
@@ -3377,6 +3455,8 @@ func _signatures_visible(actor: BattleActor) -> bool:
 		return true
 	if LightField.is_veiled(actor):
 		return false
+	if not _friendly_shroud_over(actor).is_empty():
+		return false
 	return not (concealed_until_round >= round_number and actor.side == concealed_side)
 
 
@@ -3468,14 +3548,174 @@ func _trigger_witness_contracts(actor: BattleActor, revealed: Array[String]) -> 
 
 
 func _light_checkpoint(completed_round: int) -> void:
+	_eclipse_feast(completed_round)
 	for creature: BattleActor in _living(allies) + _living(enemies):
-		for imposition: String in [LightField.IMPOSITION_EXPOSED, LightField.IMPOSITION_VEILED, LightField.IMPOSITION_LIT]:
+		for imposition: String in [LightField.IMPOSITION_EXPOSED, LightField.IMPOSITION_VEILED, LightField.IMPOSITION_LIT, LightField.IMPOSITION_BLINDED]:
 			if LightField.age(creature, imposition):
 				_emit_event(&"imposition_expired", creature, null, {"imposition": imposition, "round": completed_round})
 	for field: Dictionary in light.advance_checkpoint():
-		_emit_event(&"light_field_expired", _actor_by_id(StringName(str(field.get("owner_id", "")))), null, {
+		var expired_type: StringName = &"shroud_expired" if LightField.is_shroud(field) else &"light_field_expired"
+		_emit_event(expired_type, _actor_by_id(StringName(str(field.get("owner_id", "")))), null, {
 			"field": LightField._serialize_field(field), "round": completed_round,
 		})
+	for combat_id: String in _blindside.keys():
+		if completed_round >= int((_blindside[combat_id] as Dictionary).get("until_round", 0)):
+			_blindside.erase(combat_id)
+			_emit_event(&"blindside_expired", _actor_by_id(StringName(combat_id)), null, {"round": completed_round})
+
+
+## ---------------------------------------------------------------------------
+## Vekh concealment: Shroud / Eclipse Procession fields, Blinded, Blindside, the Nightfeeder.
+## ---------------------------------------------------------------------------
+
+
+func _create_shroud(actor: BattleActor, center: Vector2i, radius: int, checkpoints: int, moving: bool) -> Dictionary:
+	var created: Dictionary = light.create_shroud(actor.combat_id, center, radius, round_number, checkpoints, moving)
+	_emit_event(&"shroud_raised", actor, null, {"field": LightField._serialize_field(created.get("field", {}))})
+	return created
+
+
+## A moving shroud (Eclipse Procession) is wherever its owner stands now.
+func _shroud_center(field: Dictionary) -> Vector2i:
+	if bool(field.get("moving", false)):
+		var owner_cell: Variant = _actor_cell(_actor_by_id(StringName(str(field.get("owner_id", "")))))
+		if owner_cell is Vector2i:
+			return owner_cell as Vector2i
+	return field.get("center", Vector2i.ZERO)
+
+
+func _shroud_covers(field: Dictionary, cell: Vector2i) -> bool:
+	var delta := cell - _shroud_center(field)
+	return maxi(absi(delta.x), absi(delta.y)) <= int(field.get("radius", 0))
+
+
+## The first shroud raised by the creature's own side that covers its cell, or `{}`.
+func _friendly_shroud_over(actor: BattleActor) -> Dictionary:
+	if actor == null or light.is_empty():
+		return {}
+	var at: Variant = _actor_cell(actor)
+	if not (at is Vector2i):
+		return {}
+	for field: Dictionary in light.shrouds():
+		var owner := _actor_by_id(StringName(str(field.get("owner_id", ""))))
+		if owner == null or owner.side != actor.side:
+			continue
+		if _shroud_covers(field, at as Vector2i):
+			return field
+	return {}
+
+
+func _light_snapshot() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for field: Dictionary in light.fields:
+		if not LightField.is_shroud(field):
+			out.append(LightField._serialize_field(field))
+	return out
+
+
+## Shrouds as the HUD should draw them: moving ones already re-centered on their owner.
+func _shroud_snapshot() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for field: Dictionary in light.shrouds():
+		var drawn := field.duplicate(true)
+		drawn["center"] = _shroud_center(field)
+		out.append(LightField._serialize_field(drawn))
+	return out
+
+
+func _apply_blinded(target: BattleActor, source_id: StringName) -> Dictionary:
+	var outcome: Dictionary = LightField.apply_blinded(target, source_id)
+	if bool(outcome.get("applied", false)):
+		_emit_event(&"blinded_applied", _actor_by_id(source_id), target, outcome)
+	return outcome
+
+
+## Open Seam's angle: side or rear at commitment. With no facing on the board the angle is
+## free. A Blindside Bite on a Blinded target waives it (the target is treated as flanked).
+func _open_seam_angle_ok(actor: BattleActor, target: BattleActor) -> bool:
+	if _bite_applies(actor, target):
+		return true
+	var facing: Dictionary = _positional_resolution_context(actor, target).get("facing", {})
+	return StringName(str(facing.get("id", &"side"))) != &"front"
+
+
+## A plain Blindside is consumed by the next authored working's commitment (Vekh P row); a
+## Bite waits for an Open Seam, which spends it in `_apply_effect_after_attack`.
+func _spend_blindside(actor: BattleActor, action: CombatAction) -> void:
+	var armed: Dictionary = _blindside.get(String(actor.combat_id), {})
+	if armed.is_empty() or bool(armed.get("bite", false)):
+		return
+	if action.effect_id in [EFFECT_BLINDSIDE, EFFECT_BLINDSIDE_BITE] or action.kind not in [CombatAction.Kind.ATTACK, CombatAction.Kind.CAST, CombatAction.Kind.DEFINING_STRIKE]:
+		return
+	_blindside.erase(String(actor.combat_id))
+	_emit_event(&"blindside_spent", actor, null, {"action_id": String(action.id), "flanked": false})
+
+
+func _bite_applies(actor: BattleActor, target: BattleActor) -> bool:
+	if actor == null or target == null:
+		return false
+	var armed: Dictionary = _blindside.get(String(actor.combat_id), {})
+	return bool(armed.get("bite", false)) and LightField.is_blinded(target)
+
+
+func blindside_armed(actor: BattleActor) -> Dictionary:
+	return (_blindside.get(String(actor.combat_id), {}) as Dictionary).duplicate(true) if actor != null else {}
+
+
+## Nightfeeder T1 — Fed in the Dark: a Hunger tick cannot be traced to a Vhorr owner whose
+## signatures are concealed by their OWN Veil or Shroud. Revelation (Exposed, Lit, a light
+## field) always beats the concealment; a Veil or Shroud cast by someone else does not count.
+func _fed_in_the_dark(source: BattleActor, entry: Dictionary) -> bool:
+	if source == null or StringName(str(entry.get("label", ""))) != &"hunger_dot":
+		return false
+	if not (_class_resource_of(source) is VhorrHunger):
+		return false
+	if _is_exposed_now(source):
+		return false
+	var own_id := String(source.combat_id)
+	if LightField.is_veiled(source):
+		var veil: Dictionary = source.impositions.get(LightField.IMPOSITION_VEILED, {})
+		if String(veil.get("source_id", "")) == own_id:
+			return true
+	var shroud := _friendly_shroud_over(source)
+	return not shroud.is_empty() and String(shroud.get("owner_id", "")) == own_id
+
+
+## Nightfeeder T3 — Eclipse Feast: before the checkpoint ages the field, every Hunger chain
+## the caster owns on a creature standing inside the moving shroud ticks once more. A tick
+## is a tick: current Hunger, capped by the resource, kill cause &"dot" (the refund pays).
+func _eclipse_feast(completed_round: int) -> void:
+	if _feast.is_empty():
+		return
+	for combat_id: String in _feast.keys():
+		var caster := _actor_by_id(StringName(combat_id))
+		var field: Dictionary = light.field_by_id(int(_feast[combat_id]))
+		_feast.erase(combat_id)
+		if caster == null or not caster.is_alive() or field.is_empty():
+			continue
+		var hunger := _class_resource_of(caster) as VhorrHunger
+		if hunger == null:
+			continue
+		var fed: Array[String] = []
+		for entry: Dictionary in _deferred.duplicate():
+			if String(entry.get("source_id", "")) != combat_id or StringName(str(entry.get("label", ""))) != &"hunger_dot":
+				continue
+			for raw: Variant in (entry.get("effect", {}) as Dictionary).get("writes", []):
+				if not (raw is Dictionary) or str((raw as Dictionary).get("kind", "")) != "dot":
+					continue
+				var target := _actor_by_id(StringName(str((raw as Dictionary).get("target_id", ""))))
+				if target == null or not target.is_alive() or String(target.combat_id) in fed:
+					continue
+				var at: Variant = _actor_cell(target)
+				if not (at is Vector2i) or not _shroud_covers(field, at as Vector2i):
+					continue
+				var write := _materialize_write({"kind": "dot", "target_id": String(target.combat_id), "amount": hunger.hunger}, target)
+				_apply_resolution_writes(caster, target, {"writes": [write]}, true, &"dot")
+				hunger.on_extra_tick(write)
+				fed.append(String(target.combat_id))
+				_emit_event(&"eclipse_feast_tick", caster, target, {"write": write.duplicate(true), "round": completed_round})
+		if not _has_living(enemies):
+			_finish(ResultState.VICTORY, &"slain")
 
 
 ## Filed-but-unfired cell workings, for the HUD's marks layer and the Herd's destination rule.
@@ -3583,10 +3823,16 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 	if target == null:
 		return _blocked(&"unknown_target", "That combatant is not in this battle.", {})
 	var cancelled: Array[Dictionary] = []
+	var untraceable := 0
 	if kind == &"deferred" or kind == &"any":
 		var kept: Array[Dictionary] = []
 		for entry: Dictionary in _deferred:
 			if StringName(str(entry.get("source_id", ""))) == target_id:
+				if _fed_in_the_dark(target, entry):
+					# Nightfeeder T1: a concealed source cannot be named by the Jam.
+					untraceable += 1
+					kept.append(entry)
+					continue
 				cancelled.append(entry.duplicate(true))
 				_class_resource_of(target).on_deferred_cancelled(entry.duplicate(true), requester_id)
 			else:
@@ -3602,6 +3848,11 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 			if bool(voided.get("allowed", false)):
 				cancelled.append({"kind": "committed", "target_id": String(target_id), "ct_refunded": int(voided.get("ct_refunded", 0))})
 	if cancelled.is_empty():
+		if untraceable > 0:
+			return _blocked(
+				&"source_untraceable", "%s's Hunger cannot be traced while its source is concealed." % target.display_name,
+				{"kind": String(kind), "untraceable": untraceable},
+			)
 		return _blocked(&"nothing_to_cancel", "%s has nothing in flight." % target.display_name, {"kind": String(kind)})
 	var payload := {"requester_id": String(requester_id), "kind": String(kind), "cancelled": cancelled.duplicate(true)}
 	var log: Dictionary = _jam_log.get(String(requester_id), {})
@@ -3746,6 +3997,8 @@ func class_resources_to_dict() -> Dictionary:
 		result[LIGHT_SAVE_KEY] = light.to_dict()
 	if not _jam_log.is_empty():
 		result[JAMS_SAVE_KEY] = _jam_log.duplicate(true)
+	if not _blindside.is_empty() or not _feast.is_empty():
+		result[VEKH_SAVE_KEY] = {"blindside": _blindside.duplicate(true), "feast": _feast.duplicate(true)}
 	var impositions: Dictionary = {}
 	for actor: BattleActor in allies + enemies:
 		if not actor.impositions.is_empty():
@@ -3778,6 +4031,10 @@ func restore_class_resources(data: Dictionary) -> void:
 	var jams: Variant = data.get(JAMS_SAVE_KEY, null)
 	if jams is Dictionary:
 		_jam_log = (jams as Dictionary).duplicate(true)
+	var vekh: Variant = data.get(VEKH_SAVE_KEY, {})
+	if vekh is Dictionary:
+		_blindside = ((vekh as Dictionary).get("blindside", {}) as Dictionary).duplicate(true)
+		_feast = ((vekh as Dictionary).get("feast", {}) as Dictionary).duplicate(true)
 	var impositions: Variant = data.get(IMPOSITIONS_SAVE_KEY, {})
 	if impositions is Dictionary:
 		for actor: BattleActor in allies + enemies:

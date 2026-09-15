@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"blindside"
+display_name = "Blindside"
+kind = 0
+verb = 2
+ap_cost = 3
+ct_cost = 45
+element_id = &"vekh"
+magnitude = &"phrase"
+target_profile = &"ranged"
+target_side = "ally"
+player_available = true
+effect_id = &"blindside"
+effect_payload = {"self_only": true}
+spell = true
+breath_cost = 6
+no_damage = true
+description = "Vekh Phrase, self. Hide the preparation of your next working for two checkpoints. Consumed by that working; its footprint stays visible."

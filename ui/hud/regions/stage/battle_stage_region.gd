@@ -47,6 +47,7 @@ const PENDING_TINT := Color(0.84, 0.71, 1.0, 0.30)  # khor glow: the cells being
 const FIRE_TINT := Color(0.94, 0.42, 0.16, 0.34)
 const MARK_TINT := Color(0.94, 0.42, 0.16, 0.14)   # filed, not yet burning
 const LIGHT_TINT := Color(1.0, 0.94, 0.70, 0.22)
+const SHROUD_TINT := Color(0.22, 0.16, 0.36, 0.30)
 const COVER_COLOR := Color("#D6C184")
 const COVER_ART_PATTERN := "res://assets/generated/sprites/terrain/cover_%s.png"
 const COVER_ART_TILE_WIDTHS := 1.35  # prop footprint relative to a tile's width
@@ -70,7 +71,8 @@ var _hover_path: Array[Vector2i] = []
 var _pending_cells: Array[Vector2i] = []
 var _fire_cells: Dictionary = {}   # Vector2i -> true (burning now)
 var _mark_cells: Dictionary = {}   # Vector2i -> true (filed for a later beat)
-var _light_cells: Dictionary = {}  # Vector2i -> true (inside a Witness Light)
+var _light_cells: Dictionary = {}
+var _shroud_cells: Dictionary = {}  # Vector2i -> true (inside a Shroud / Eclipse Procession)  # Vector2i -> true (inside a Witness Light)
 var _input_locked_until_msec := 0
 var _pointer_turn_available := true
 var _fallen: Dictionary = {}
@@ -210,6 +212,10 @@ func light_cell_count() -> int:
 	return _light_cells.size()
 
 
+func shroud_cell_count() -> int:
+	return _shroud_cells.size()
+
+
 ## Board workings from the controller snapshot: burning Firebreak cells, filed marks, and
 ## Witness Light fields. Rendered as ground tints so units and cover still read on top.
 func _read_fields(snapshot: Dictionary) -> void:
@@ -218,6 +224,7 @@ func _read_fields(snapshot: Dictionary) -> void:
 	_fire_cells.clear()
 	_mark_cells.clear()
 	_light_cells.clear()
+	_shroud_cells.clear()
 	var fire: Dictionary = snapshot.get("fire", {})
 	for line: Variant in fire.get("lines", []):
 		if line is Dictionary:
@@ -238,6 +245,16 @@ func _read_fields(snapshot: Dictionary) -> void:
 		for dy: int in range(-radius, radius + 1):
 			for dx: int in range(-radius, radius + 1):
 				_light_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+	for field: Variant in light.get("shrouds", []):
+		if not (field is Dictionary):
+			continue
+		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
+		if not (center is Vector2i):
+			continue
+		var radius := int((field as Dictionary).get("radius", 0))
+		for dy: int in range(-radius, radius + 1):
+			for dx: int in range(-radius, radius + 1):
+				_shroud_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
 
 
 func select_tile(cell: Vector2i) -> void:
@@ -434,6 +451,8 @@ func _draw() -> void:
 			draw_colored_polygon(diamond, REACHABLE_TINT)
 		if _hover_path.has(cell):
 			draw_colored_polygon(diamond, PATH_TINT)
+		if _shroud_cells.has(cell):
+			draw_colored_polygon(diamond, SHROUD_TINT)
 		if _light_cells.has(cell):
 			draw_colored_polygon(diamond, LIGHT_TINT)
 		if _fire_cells.has(cell):

@@ -28,8 +28,12 @@ func on_action(event: CombatEvent) -> void:
 	if not bool(resolution.get("direct_damage_enabled", true)):
 		return
 	var action_id := StringName(str(event.data.get("action_id", "")))
-	var is_cast := int(event.data.get("verb", -1)) == CombatAction.Verb.CAST
-	if event.target_id.is_empty() or (action_id not in [&"strike", &"cast"] and not is_cast):
+	var verb := int(event.data.get("verb", -1))
+	var is_cast := verb == CombatAction.Verb.CAST
+	# Any weapon hit seeds (Strike, Quick Cut, Open Seam: class-kits-first-nine.md, Nightfeeder);
+	# a no-damage card (Blinding Throw) is filtered above by direct_damage_enabled.
+	var is_weapon := verb == CombatAction.Verb.ATTACK
+	if event.target_id.is_empty() or (action_id not in [&"strike", &"cast"] and not is_cast and not is_weapon):
 		return
 	if not bool(resolution.get("hit", true)):
 		return
@@ -69,6 +73,13 @@ func on_deferred_fired(entry: Dictionary) -> void:
 		hunger = mini(hunger + 1, MAX_HUNGER)
 	if int(write.get("after", 0)) > 0:
 		_queue_hunger_dot(StringName(str(write.get("target_id", ""))))
+
+
+## Eclipse Feast: the controller applied one extra Hunger tick outside the deferred queue.
+## The chain itself is untouched; only the Hunger count moves, as it does for a queued tick.
+func on_extra_tick(write: Dictionary) -> void:
+	if int(write.get("before", 0)) > int(write.get("after", 0)):
+		hunger = mini(hunger + 1, MAX_HUNGER)
 
 
 func on_deferred_cancelled(entry: Dictionary, _by_id: StringName) -> void:

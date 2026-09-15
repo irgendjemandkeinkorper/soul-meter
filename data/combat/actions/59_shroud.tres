@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"shroud"
+display_name = "Shroud"
+kind = 0
+verb = 2
+ap_cost = 3
+ct_cost = 45
+element_id = &"vekh"
+magnitude = &"song"
+target_profile = &"cells"
+player_available = true
+effect_id = &"shroud"
+effect_payload = {"range": 4, "cell_count": 1, "radius": 1}
+spell = true
+breath_cost = 12
+description = "Vekh Song. A fixed shroud within 4, radius 1, for two checkpoints: friendly signatures inside are concealed. Revelation windows and fire inside stay visible."

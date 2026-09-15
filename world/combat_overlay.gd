@@ -15,6 +15,7 @@ var _reachable: Dictionary = {}
 var _fire_cells: Dictionary = {}
 var _mark_cells: Dictionary = {}
 var _light_cells: Dictionary = {}
+var _shroud_cells: Dictionary = {}  # Vector2i -> true (inside a Shroud / Eclipse Procession)
 var _selected: Variant = null
 var _hovered: Variant = null
 var _field: FieldMap
@@ -238,6 +239,7 @@ func _read_fields(snapshot: Dictionary) -> void:
 	_fire_cells.clear()
 	_mark_cells.clear()
 	_light_cells.clear()
+	_shroud_cells.clear()
 	var fire: Dictionary = snapshot.get("fire", {})
 	for line: Variant in fire.get("lines", []):
 		if line is Dictionary:
@@ -258,6 +260,16 @@ func _read_fields(snapshot: Dictionary) -> void:
 		for dy: int in range(-radius, radius + 1):
 			for dx: int in range(-radius, radius + 1):
 				_light_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+	for field: Variant in light.get("shrouds", []):
+		if not (field is Dictionary):
+			continue
+		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
+		if not (center is Vector2i):
+			continue
+		var radius := int((field as Dictionary).get("radius", 0))
+		for dy: int in range(-radius, radius + 1):
+			for dx: int in range(-radius, radius + 1):
+				_shroud_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
 
 
 func _draw() -> void:
@@ -268,6 +280,8 @@ func _draw() -> void:
 		var diamond := _diamond(cell)
 		if _reachable.has(cell):
 			draw_colored_polygon(diamond, Color(DS.TILE_SELECT_RIM, 0.12))
+		if _shroud_cells.has(cell):
+			draw_colored_polygon(diamond, Color(0.22, 0.16, 0.36, 0.30))
 		if _light_cells.has(cell):
 			draw_colored_polygon(diamond, Color(1.0, 0.94, 0.70, 0.22))
 		if _fire_cells.has(cell):

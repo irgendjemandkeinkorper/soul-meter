@@ -10,6 +10,11 @@ extends RefCounted
 ## - Veiled: two checkpoints; signatures concealed. Cannot be applied over Exposed (X1).
 ## - Lit (Term of Daylight): a revelation that follows the creature for one checkpoint.
 ## - Witness Light: fixed center, radius 1, two checkpoints; occupants read as Exposed while inside.
+## - Shroud (Vekh S): fixed center, radius 1, two checkpoints; friendly signatures inside are
+##   concealed. Eclipse Procession (Vekh R): a `moving` shroud that follows its owner for one
+##   checkpoint. Shroud fields share this list with `kind = "shroud"`; light fields are `"light"`.
+## - Blinded (Vekh imposition, Blinding Throw): one checkpoint; the creature's own attacks lose
+##   facing and cover reads, and a Blindside Bite treats it as flanked.
 
 const FIELD_DURATION_CHECKPOINTS := 2
 const FIELD_RADIUS := 1
@@ -19,8 +24,16 @@ const LIT_CHECKPOINTS := 1
 const IMPOSITION_EXPOSED := "exposed"
 const IMPOSITION_VEILED := "veiled"
 const IMPOSITION_LIT := "lit"
+const IMPOSITION_BLINDED := "blinded"
+const BLINDED_CHECKPOINTS := 1
+const SHROUD_CHECKPOINTS := 2
+const SHROUD_RADIUS := 1
+const ECLIPSE_RADIUS := 2
+const ECLIPSE_CHECKPOINTS := 1
+const KIND_LIGHT := "light"
+const KIND_SHROUD := "shroud"
 
-## {id, owner_id, center: Vector2i, radius, remaining_checkpoints, created_round}
+## {id, owner_id, center: Vector2i, radius, remaining_checkpoints, created_round, kind, moving}
 var fields: Array[Dictionary] = []
 var _sequence := 0
 
@@ -43,9 +56,52 @@ func create_field(owner_id: StringName, center: Vector2i, radius: int, round_num
 		"radius": maxi(radius, 0),
 		"remaining_checkpoints": FIELD_DURATION_CHECKPOINTS,
 		"created_round": round_number,
+		"kind": KIND_LIGHT,
+		"moving": false,
 	}
 	fields.append(field)
 	return {"allowed": true, "field": field.duplicate(true)}
+
+
+## A concealment field. `moving` shrouds are re-centered on their owner by the controller
+## before every read (Eclipse Procession); fixed shrouds keep their center (Shroud).
+func create_shroud(
+	owner_id: StringName, center: Vector2i, radius: int, round_number: int,
+	checkpoints: int = SHROUD_CHECKPOINTS, moving: bool = false
+) -> Dictionary:
+	_sequence += 1
+	var field := {
+		"id": _sequence,
+		"owner_id": String(owner_id),
+		"center": center,
+		"radius": maxi(radius, 0),
+		"remaining_checkpoints": maxi(checkpoints, 1),
+		"created_round": round_number,
+		"kind": KIND_SHROUD,
+		"moving": moving,
+	}
+	fields.append(field)
+	return {"allowed": true, "field": field.duplicate(true)}
+
+
+static func is_shroud(field: Dictionary) -> bool:
+	return String(field.get("kind", KIND_LIGHT)) == KIND_SHROUD
+
+
+## The oldest shroud covering `cell`, or `{}`.
+func shroud_at(cell: Vector2i) -> Dictionary:
+	for field: Dictionary in fields:
+		if is_shroud(field) and covers(field, cell):
+			return field
+	return {}
+
+
+func shrouds() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for field: Dictionary in fields:
+		if is_shroud(field):
+			out.append(field)
+	return out
 
 
 func field_by_id(field_id: int) -> Dictionary:
@@ -55,9 +111,11 @@ func field_by_id(field_id: int) -> Dictionary:
 	return {}
 
 
-## The oldest field covering `cell`, or `{}`.
+## The oldest LIGHT field covering `cell`, or `{}`. Shrouds never light a cell.
 func field_at(cell: Vector2i) -> Dictionary:
 	for field: Dictionary in fields:
+		if is_shroud(field):
+			continue
 		if covers(field, cell):
 			return field
 	return {}
@@ -145,6 +203,23 @@ static func is_lit(actor: BattleActor) -> bool:
 	return actor != null and actor.impositions.has(IMPOSITION_LIT)
 
 
+static func is_blinded(actor: BattleActor) -> bool:
+	return actor != null and actor.impositions.has(IMPOSITION_BLINDED)
+
+
+## Blinded: one checkpoint by default. Refresh, never stack; physical and magical sources
+## share the one instance (martial-action-cards.md, M24).
+static func apply_blinded(actor: BattleActor, source_id: StringName, checkpoints: int = BLINDED_CHECKPOINTS) -> Dictionary:
+	if actor == null:
+		return {"applied": false, "refreshed": false, "reason": "no_target"}
+	var refreshed := is_blinded(actor)
+	actor.impositions[IMPOSITION_BLINDED] = {
+		"remaining_checkpoints": maxi(checkpoints, 1),
+		"source_id": String(source_id),
+	}
+	return {"applied": true, "refreshed": refreshed, "reason": ""}
+
+
 ## Exposed replaces Veiled (S3: revelation contests the veil). Refresh, never stack.
 static func apply_exposed(actor: BattleActor, source_id: StringName, checkpoints: int = EXPOSED_CHECKPOINTS) -> Dictionary:
 	if actor == null:
@@ -213,4 +288,6 @@ static func _deserialize_field(data: Dictionary) -> Dictionary:
 	field["id"] = int(data.get("id", 0))
 	field["radius"] = int(data.get("radius", 0))
 	field["remaining_checkpoints"] = int(data.get("remaining_checkpoints", 0))
+	field["kind"] = String(data.get("kind", KIND_LIGHT))
+	field["moving"] = bool(data.get("moving", false))
 	return field
