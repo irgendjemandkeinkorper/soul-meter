@@ -196,7 +196,8 @@ and applied by the next `Battle.start()`. Mid-battle save is not a Chapter 1 beh
 is model-level round-trip only. The same dict carries two more reserved keys beside
 `__deferred__`: `__fire__` (Firebreak lines and per-round hazard marks), `__light__` (Witness
 Light and Shroud fields), `__jams__` (successful Jams by requester and round), `__vekh__`
-(armed Blindsides and a pending Eclipse Feast) and `__impositions__`
+(armed Blindsides and a pending Eclipse Feast), `__materials__` (timber and stone objects
+with integrity, fuel, fire and Wet) and `__impositions__`
 (Burning/Soaked/Exposed/Veiled/Lit/Blinded per combat id), all omitted when empty so older
 saves load unchanged.
 

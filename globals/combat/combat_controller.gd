@@ -128,11 +128,15 @@ const EFFECT_BLINDSIDE_BITE := &"blindside_bite"  ## Blindside; next Open Seam o
 const EFFECT_SHROUD := &"shroud"                  ## fixed concealment field, radius 1, two checkpoints
 const EFFECT_ECLIPSE := &"eclipse_procession"     ## moving concealment field around the caster
 const EFFECT_ECLIPSE_FEAST := &"eclipse_feast"    ## Eclipse; Hunger inside ticks once more at the checkpoint
+const EFFECT_RECLAIM := &"reclaim"                ## consume a ruined source once for Breath (M4)
+const EFFECT_ROT_THE_BRACE := &"rot_the_brace"    ## decay integrity damage on susceptible material
+const EFFECT_SEVER := &"sever"                    ## end a working: a Firebreak line (Z6)
 const _KNOWN_EFFECTS: Array[StringName] = [
 	EFFECT_SECOND_BREATH, EFFECT_TURNING_TIDE, EFFECT_GREAT_CONFLUENCE, EFFECT_OPENED_SLUICE,
 	EFFECT_WASH_THE_GEARS, EFFECT_FLOODGATE,
 	EFFECT_BLINDING_THROW, EFFECT_OPEN_SEAM, EFFECT_BLINDSIDE, EFFECT_BLINDSIDE_BITE,
 	EFFECT_SHROUD, EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST,
+	EFFECT_RECLAIM, EFFECT_ROT_THE_BRACE, EFFECT_SEVER,
 	EFFECT_UNVEIL, EFFECT_VEIL, EFFECT_WITNESS_LIGHT, EFFECT_NOONDAY, EFFECT_PUSH, EFFECT_UNSEAT,
 	EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT,
 	EFFECT_BURNING_STRIKE, EFFECT_DOUSE, EFFECT_THRUST, EFFECT_PULL, EFFECT_FIRE_LINE,
@@ -173,6 +177,11 @@ const IMPOSITIONS_SAVE_KEY := "__impositions__"
 var _blindside: Dictionary = {}
 var _feast: Dictionary = {}
 const VEKH_SAVE_KEY := "__vekh__"
+## Physical material on the board (yard timber, stone control): reaction-matrix step 1.
+var material := MaterialField.new()
+const MATERIALS_SAVE_KEY := "__materials__"
+## Effects that only ever address an object or a working, never a creature or a cell.
+const _OBJECT_ONLY_EFFECTS: Array[StringName] = [&"reclaim", &"rot_the_brace", &"sever"]
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
 ## CT: overflow keeps them past READY_AT) does not get a redundant `turn_started`.
@@ -323,6 +332,7 @@ func start(
 	_refrain_uses.clear()
 	_blindside.clear()
 	_feast.clear()
+	material.reset()
 	for combatant: BattleActor in allies + enemies:
 		combatant.impositions.clear()
 	_assign_combat_ids(allies, &"ally", encounter_id)
@@ -510,6 +520,11 @@ func query_action(
 		var effect_gate := _query_effect_gate(actor, action, options)
 		if not bool(effect_gate.get("allowed", false)):
 			return effect_gate
+	if options.has("object_id") or options.has("line_id") or _OBJECT_ONLY_EFFECTS.has(action.effect_id):
+		var object_affordability := _can_afford(actor, action)
+		if not bool(object_affordability.get("allowed", false)):
+			return object_affordability
+		return _query_object_action(actor, action, options)
 	if action.targets_cells():
 		var cell_affordability := _can_afford(actor, action)
 		if not bool(cell_affordability.get("allowed", false)):
@@ -630,6 +645,8 @@ func submit_action(
 	if query.has("resolution"):
 		resolved_options["_resolution"] = query["resolution"]
 		resolved_options["_resolution_context"] = query.get("context", {})
+	if query.has("object"):
+		resolved_options["_object"] = query["object"]
 	if query.has("cells"):
 		resolved_options["_cells"] = query["cells"]
 		if target != null:
@@ -836,6 +853,7 @@ func snapshot() -> Dictionary:
 		"movement": _movement_snapshot(),
 		"deferred": deferred_entries(),
 		"fire": {"lines": fire.snapshot(), "marks": _marks_snapshot()},
+		"materials": material.snapshot(),
 		"light": {"fields": _light_snapshot(), "shrouds": _shroud_snapshot()},
 	}
 
@@ -1155,6 +1173,7 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 		_release_balance_lock_if_due(ended_round)
 		_tick_actor_aftertones()
 		_fire_checkpoint(round_number)
+		_material_checkpoint(round_number)
 		_light_checkpoint(round_number)
 	round_number = scheduler.measure_index() + 1
 	_expire_temporary_effects()
@@ -1182,6 +1201,7 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 			# Hazard events during the measure that just closed were tracked under the previous
 			# round number; the checkpoint settles against that same number.
 			_fire_checkpoint(round_number - 1)
+			_material_checkpoint(round_number - 1)
 			_light_checkpoint(round_number - 1)
 
 
@@ -1423,6 +1443,9 @@ func _apply_action(
 ) -> Dictionary:
 	var result: Dictionary = {"message": "%s uses %s." % [actor.display_name, action.display_name]}
 	_spend_blindside(actor, action)
+	if options.has("_object"):
+		result.merge(_apply_object_action(actor, action, options), true)
+		return result
 	if action.targets_cells():
 		result.merge(_apply_cell_action(actor, action, options), true)
 		if action.balance_shift != 0:
@@ -2831,7 +2854,13 @@ func _query_cell_action(
 				{"type": &"range", "range": range_cells, "cell": {"x": cell.x, "y": cell.y}},
 			)
 		var legality := battlefield.cell_query(cell)
-		if not bool(legality.get("in_bounds", false)) or not bool(legality.get("passable", false)):
+		# A fire line may run across, and a Crown mark may sit on, a combustible object's
+		# footprint; never stone or other impassable ground.
+		var across_timber := (
+			action.effect_id in [EFFECT_FIRE_LINE, EFFECT_SENTENCE_OF_ASH, EFFECT_CROWN_OF_EMBERS, EFFECT_VERDICT_BY_FIRE]
+			and MaterialField.is_combustible(material.object_at(cell))
+		)
+		if not bool(legality.get("in_bounds", false)) or (not bool(legality.get("passable", false)) and not across_timber):
 			return _blocked(
 				&"cell_illegal", "That cell cannot hold a working.",
 				{"type": &"open_cell", "cell": {"x": cell.x, "y": cell.y}},
@@ -3158,7 +3187,11 @@ func _create_fire_line(owner_id: StringName, cells: Array[Vector2i], label: Stri
 	var occupants: Array[BattleActor] = []
 	for cell: Vector2i in cells:
 		var legality := battlefield.cell_query(cell)
-		if not bool(legality.get("in_bounds", false)) or not bool(legality.get("passable", false)):
+		if not bool(legality.get("in_bounds", false)):
+			continue
+		# A line can run across a combustible object's footprint (the Khash packet), not
+		# through other impassable ground.
+		if not bool(legality.get("passable", false)) and material.object_at(cell).is_empty():
 			continue
 		legal.append(cell)
 		var occupant := _actor_by_id(StringName(str(legality.get("occupant_id", ""))))
@@ -3176,7 +3209,13 @@ func _create_fire_line(owner_id: StringName, cells: Array[Vector2i], label: Stri
 		var at: Variant = _actor_cell(occupant)
 		if at is Vector2i and legal.has(at as Vector2i):
 			hazards.append(_apply_hazard(occupant, at as Vector2i))
-	return {"line": line, "hazards": hazards}
+	var ignited: Array[String] = []
+	for cell: Vector2i in legal:
+		var row := material.object_at(cell)
+		if not row.is_empty() and MaterialField.can_ignite(row):
+			_thermal_hit_object(_actor_by_id(owner_id), String(row["id"]), 0)
+			ignited.append(String(row["id"]))
+	return {"line": line, "hazards": hazards, "ignited_objects": ignited}
 
 
 ## Fires a marked Crown: tether (caster alive and on the cast cell) when `tethered`, LOS
@@ -3207,12 +3246,18 @@ func _release_crown(actor: BattleActor, write: Dictionary) -> void:
 	release.target_profile = &"ranged"
 	var power := int(write.get("power", 18))
 	var struck: Array[BattleActor] = []
+	var struck_objects: Array[String] = []
+	var object_hits: Array[Dictionary] = []
 	var hits: Array[Dictionary] = []
 	for cell: Vector2i in cells:
 		var sight := battlefield.line_of_sight_between_cells(anchor, cell)
 		if not bool(sight.get("allowed", false)):
 			continue
 		var legality := battlefield.cell_query(cell)
+		var row := material.object_at(cell)
+		if not row.is_empty() and not struck_objects.has(String(row["id"])):
+			struck_objects.append(String(row["id"]))
+			object_hits.append(_thermal_hit_object(source, String(row["id"]), int(write.get("object_damage", 9))))
 		var occupant := _actor_by_id(StringName(str(legality.get("occupant_id", ""))))
 		if occupant == null or not occupant.is_alive() or struck.has(occupant):
 			continue
@@ -3231,6 +3276,7 @@ func _release_crown(actor: BattleActor, write: Dictionary) -> void:
 		hits.append(entry)
 	var released := base.duplicate(true)
 	released["hits"] = hits
+	released["object_hits"] = object_hits
 	_emit_event(&"crown_released", source, null, released)
 
 
@@ -3562,6 +3608,197 @@ func _light_checkpoint(completed_round: int) -> void:
 		if completed_round >= int((_blindside[combat_id] as Dictionary).get("until_round", 0)):
 			_blindside.erase(combat_id)
 			_emit_event(&"blindside_expired", _actor_by_id(StringName(combat_id)), null, {"round": completed_round})
+
+
+## ---------------------------------------------------------------------------
+## Material: timber and stone on the board (reaction matrix step 1: L2, H2, M4, Z6).
+## ---------------------------------------------------------------------------
+
+
+## Registers a physical object on a cell after `start()`. Its footprint blocks until ruined.
+func place_material(id: String, cell: Vector2i, kind: String = MaterialField.KIND_TIMBER, label: String = "") -> Dictionary:
+	var added: Dictionary = material.add_object(id, cell, kind, label)
+	if bool(added.get("allowed", false)):
+		_block_object_cell(cell, true)
+		_emit_event(&"material_placed", null, null, {"object": added.get("object", {})})
+	return added
+
+
+func _block_object_cell(cell: Vector2i, blocked: bool) -> void:
+	if battlefield != null and battlefield.has_method("set_cliff"):
+		battlefield.call("set_cliff", cell, blocked)
+
+
+func material_object(id: String) -> Dictionary:
+	return material.object(id).duplicate(true)
+
+
+## Object- and working-targeted casts: `options.object_id` (Kindle, Douse, Reclaim, Rot the
+## Brace) or `options.line_id` (Sever on a Firebreak). Rejections spend nothing.
+func _query_object_action(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	if not bool(battlefield.capabilities().get("cells", false)):
+		return _blocked(&"position", "%s needs a gridded battlefield." % action.display_name, {"type": &"cells"})
+	var origin: Variant = _actor_cell(actor)
+	if not (origin is Vector2i):
+		return _blocked(&"position", "%s is not standing on the grid." % actor.display_name, {"type": &"cells"})
+	var range_cells := int(action.effect_payload.get("range", 4))
+	var preview := {}
+	if action.effect_id == EFFECT_SEVER:
+		var line: Dictionary = fire.line_by_id(int(options.get("line_id", 0)))
+		if line.is_empty():
+			return _blocked(&"no_target", "%s needs a working to end." % action.display_name, {"type": &"working"})
+		var reachable := false
+		for cell: Vector2i in FireField.cells_from_data(line.get("cells", [])):
+			var delta: Vector2i = cell - (origin as Vector2i)
+			if maxi(absi(delta.x), absi(delta.y)) <= range_cells:
+				reachable = true
+				break
+		if not reachable:
+			return _blocked(&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells], {"type": &"range", "range": range_cells})
+		preview = {"kind": "line", "line_id": int(line.get("id", 0)), "cells": FireField.cells_to_data(FireField.cells_from_data(line.get("cells", [])))}
+	else:
+		var row := material.object(String(options.get("object_id", "")))
+		if row.is_empty():
+			return _blocked(&"no_target", "%s needs an object to work on." % action.display_name, {"type": &"object"})
+		var cell: Vector2i = row.get("cell", Vector2i.ZERO)
+		var delta: Vector2i = cell - (origin as Vector2i)
+		if maxi(absi(delta.x), absi(delta.y)) > range_cells:
+			return _blocked(&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells], {"type": &"range", "range": range_cells})
+		var sight := battlefield.line_of_sight_to_cell(actor, cell)
+		if not bool(sight.get("allowed", false)):
+			return sight
+		preview = {"kind": "object", "object_id": String(row["id"]), "cell": {"x": cell.x, "y": cell.y}}
+		match action.effect_id:
+			EFFECT_BURNING_STRIKE:
+				if not MaterialField.is_combustible(row):
+					return _blocked(&"no_effect", "%s is noncombustible; fire does nothing to it." % String(row["label"]), {"type": &"combustible"})
+				if bool(row.get("ruined", false)):
+					return _blocked(&"no_effect", "%s is already ruined." % String(row["label"]), {"type": &"intact_object"})
+				preview["object_damage"] = int(action.effect_payload.get("object_damage", 3))
+				preview["ignition_refusal"] = MaterialField.ignition_refusal(row)
+			EFFECT_DOUSE:
+				if not MaterialField.is_combustible(row) or bool(row.get("ruined", false)):
+					return _blocked(&"no_effect", "%s cannot be wetted to any effect." % String(row["label"]), {"type": &"wettable"})
+				preview["quenches"] = bool(row.get("burning", false))
+			EFFECT_RECLAIM:
+				var refusal := MaterialField.reclaim_refusal(row)
+				if not refusal.is_empty():
+					var why := "%s is burning: not yet a source." % String(row["label"]) if refusal == "burning" else "%s is not a source." % String(row["label"])
+					return _blocked(&"not_a_source", why, {"type": &"source", "reason": refusal})
+				preview["yield"] = mini(MaterialField.RECLAIM_YIELD, _breath_room(actor))
+			EFFECT_ROT_THE_BRACE:
+				if not MaterialField.is_combustible(row) or bool(row.get("ruined", false)):
+					return _blocked(&"no_effect", "%s is not susceptible to rot." % String(row["label"]), {"type": &"susceptible"})
+				preview["object_damage"] = int(action.effect_payload.get("object_damage", 9))
+				preview["collapses"] = int(row.get("integrity", 0)) <= int(preview["object_damage"])
+			_:
+				return _blocked(&"no_effect", "%s does not work on objects." % action.display_name, {"type": &"object"})
+	var result := {"object": preview}
+	if action.spell:
+		var cast := _resolve_cell_cast(actor, action, options)
+		if not bool(cast.get("allowed", false)):
+			return cast
+		result["resolution"] = cast["resolution"]
+		result["context"] = cast["context"]
+	return _allowed(result)
+
+
+func _apply_object_action(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	var preview: Dictionary = options.get("_object", {})
+	var result := {"object": preview.duplicate(true), "effect_id": action.effect_id, "fizzled": false}
+	if action.spell:
+		var resolution: Dictionary = options.get("_resolution", {})
+		if resolution.is_empty():
+			var cast := _resolve_cell_cast(actor, action, options)
+			if not bool(cast.get("allowed", false)):
+				result.merge(cast, true)
+				return result
+			resolution = cast["resolution"]
+		_apply_resolution_writes(actor, actor, resolution, true, &"cast")
+		result["resolution"] = resolution
+		if bool(resolution.get("fizzled", false)):
+			_class_resource_of(actor).on_fizzle(resolution)
+			result["fizzled"] = true
+			result["message"] = "%s's %s fizzles." % [actor.display_name, action.display_name]
+			return result
+	var object_id := String(preview.get("object_id", ""))
+	match action.effect_id:
+		EFFECT_BURNING_STRIKE:
+			result["thermal"] = _thermal_hit_object(actor, object_id, int(preview.get("object_damage", 3)))
+			result["message"] = "%s kindles %s." % [actor.display_name, String(material.object(object_id).get("label", object_id))]
+		EFFECT_DOUSE:
+			var doused: Dictionary = material.douse(object_id)
+			_emit_event(&"object_doused", actor, null, {"object_id": object_id, "quenched": bool(doused.get("quenched", false))})
+			result["doused"] = doused
+			result["message"] = "%s douses %s." % [actor.display_name, String(material.object(object_id).get("label", object_id))]
+		EFFECT_RECLAIM:
+			var claimed: Dictionary = material.reclaim(object_id)
+			var restored := _restore_breath(actor, actor, int(claimed.get("yield", 0))) if bool(claimed.get("applied", false)) else 0
+			_emit_event(&"object_reclaimed", actor, null, {"object_id": object_id, "restored": restored})
+			result["restored"] = restored
+			result["message"] = "%s reclaims %s." % [actor.display_name, String(material.object(object_id).get("label", object_id))]
+		EFFECT_ROT_THE_BRACE:
+			var rotted: Dictionary = material.rot(object_id, int(preview.get("object_damage", 9)))
+			_emit_event(&"object_damaged", actor, null, {"object_id": object_id, "damage": int(rotted.get("damage", 0)), "channel": "decay"})
+			if bool(rotted.get("collapsed", false)):
+				_collapse_object(object_id)
+			result["rot"] = rotted
+			result["message"] = "%s rots %s." % [actor.display_name, String(material.object(object_id).get("label", object_id))]
+		EFFECT_SEVER:
+			var line_id := int(preview.get("line_id", 0))
+			var line: Dictionary = fire.line_by_id(line_id)
+			result["severed"] = fire.remove_line(line_id)
+			_emit_event(&"line_severed", actor, null, {"line_id": line_id, "line": line.duplicate(true)})
+			result["message"] = "%s severs the Firebreak." % actor.display_name
+	return result
+
+
+## Authored thermal integrity damage on an object, then eligible ignition (H2: Wet refuses
+## ignition, the direct hit still lands). Emits one event per real change.
+func _thermal_hit_object(source: BattleActor, object_id: String, damage: int) -> Dictionary:
+	var source_id: StringName = source.combat_id if source != null else &""
+	var hit: Dictionary = material.thermal_hit(object_id, damage, source_id)
+	if int(hit.get("damage", 0)) > 0:
+		_emit_event(&"object_damaged", source, null, {"object_id": object_id, "damage": int(hit["damage"]), "channel": "thermal"})
+	if bool(hit.get("ignited", false)):
+		_emit_event(&"object_ignited", source, null, {"object_id": object_id})
+	elif bool(hit.get("applied", false)) and not String(hit.get("ignition_refusal", "")).is_empty():
+		_emit_event(&"ignition_refused", source, null, {"object_id": object_id, "reason": String(hit["ignition_refusal"])})
+	if bool(hit.get("collapsed", false)):
+		_collapse_object(object_id)
+	return hit
+
+
+func _collapse_object(object_id: String) -> void:
+	var row := material.object(object_id)
+	if row.is_empty():
+		return
+	_block_object_cell(row.get("cell", Vector2i.ZERO), false)
+	_emit_event(&"object_collapsed", null, null, {"object_id": object_id})
+
+
+## Matrix checkpoint order for material: burn ticks, collapse, Wet countdown, then new
+## eligibility (a covering fire line reignites timber whose Wet just ran out). Runs after the
+## fire checkpoint, so a line that expired this checkpoint reignites nothing.
+func _material_checkpoint(completed_round: int) -> void:
+	if material.is_empty():
+		return
+	for event: Dictionary in material.advance_checkpoint():
+		var object_id := String(event.get("object_id", ""))
+		var type := StringName(str(event.get("type", "")))
+		var payload := event.duplicate(true)
+		payload["round"] = completed_round
+		if type == &"object_collapsed":
+			_collapse_object(object_id)
+			continue
+		_emit_event(type, _actor_by_id(StringName(str(material.object(object_id).get("burn_source_id", "")))), null, payload)
+	if fire.is_empty():
+		return
+	for row: Dictionary in material.objects.values():
+		var cell: Vector2i = row.get("cell", Vector2i.ZERO)
+		if MaterialField.can_ignite(row) and fire.is_burning_cell(cell):
+			var line: Dictionary = fire.line_at(cell)
+			_thermal_hit_object(_actor_by_id(StringName(str(line.get("owner_id", "")))), String(row["id"]), 0)
 
 
 ## ---------------------------------------------------------------------------
@@ -3999,6 +4236,8 @@ func class_resources_to_dict() -> Dictionary:
 		result[JAMS_SAVE_KEY] = _jam_log.duplicate(true)
 	if not _blindside.is_empty() or not _feast.is_empty():
 		result[VEKH_SAVE_KEY] = {"blindside": _blindside.duplicate(true), "feast": _feast.duplicate(true)}
+	if not material.is_empty():
+		result[MATERIALS_SAVE_KEY] = material.to_dict()
 	var impositions: Dictionary = {}
 	for actor: BattleActor in allies + enemies:
 		if not actor.impositions.is_empty():
@@ -4031,6 +4270,11 @@ func restore_class_resources(data: Dictionary) -> void:
 	var jams: Variant = data.get(JAMS_SAVE_KEY, null)
 	if jams is Dictionary:
 		_jam_log = (jams as Dictionary).duplicate(true)
+	var materials: Variant = data.get(MATERIALS_SAVE_KEY, null)
+	if materials is Dictionary:
+		material.from_dict(materials as Dictionary)
+		for row: Dictionary in material.objects.values():
+			_block_object_cell(row.get("cell", Vector2i.ZERO), not bool(row.get("ruined", false)))
 	var vekh: Variant = data.get(VEKH_SAVE_KEY, {})
 	if vekh is Dictionary:
 		_blindside = ((vekh as Dictionary).get("blindside", {}) as Dictionary).duplicate(true)

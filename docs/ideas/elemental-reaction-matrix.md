@@ -252,3 +252,22 @@ fires that is not in this table. Sources: [elemental design](elemental-magic-sys
 [shared card rules](spell-card-rules.md), [Khash packet](khash-prototype-spell-cards.md),
 [Triad cards](triad-spell-cards.md), the vault's `systems/elements-and-music.md`, and
 `globals/combat/tile_state.gd` for the untouched charge rules.
+
+### Step 1 runtime (2026-09-15)
+
+Material reactions on a new physical substrate, `globals/combat/material_field.gd`
+(`CombatController.material`). Test suite: `test/unit/test_reaction_matrix_step1.gd`.
+
+| Piece | Where | Notes |
+|---|---|---|
+| Objects | `CombatController.place_material(id, cell, kind, label)` after `start()` | Timber: integrity 30, nine fuel ticks, combustible. Stone: noncombustible, immune to thermal damage. An object's cell is impassable (grid cliff) until ruined. Saved under `__materials__`; published in `snapshot().materials`. No scene bridge yet: the yard has to call `place_material` itself. |
+| Object casts | `options.object_id` on Kindle, Douse, Reclaim, Rot the Brace; `options.line_id` on Sever | Routed through `_query_object_action` / `_apply_object_action`: range and line of sight to the object's cell, eligibility before payment, costs and fizzle through the cell-cast path. The `object` preview in the query is the committed result. The HUD pointer does not pick objects yet. |
+| Kindle / Crown / Firebreak | `object_damage` payload (3 / 9); `_thermal_hit_object()` | Direct integrity damage, then eligible ignition. A fire line and a Crown mark may sit on a timber cell (never stone); the line ignites timber at creation and reignites it at a checkpoint once its Wet ran out. Cinder Spear is not built. |
+| L2 | `MaterialField.douse()` | Object: fire ends, Wet two checkpoints, lost integrity stays. Creature half unchanged. Under a Firebreak the line continues. |
+| H2 | `MaterialField.ignition_refusal()` = `wet` | The hit lands, no ignition, `ignition_refused` event. Soaked creature half already refused Burning. |
+| M4 | `64_reclaim.tres`, `MaterialField.reclaim_refusal()` | Burning: `not_a_source` (reason `burning`) before payment. Ruined timber yields 9 Breath once, capacity-clamped (`already_claimed` after). Intact timber and stone are not sources. `65_rot_the_brace.tres` (M2) ignores Wet and rejects stone. |
+| Z6 | `63_sever.tres` (`line_id` within 4) | The line is removed; timber already burning keeps ticking on its own fuel. Sever's other targets (Aftertones, held Notes) are step 2. |
+| Checkpoint | `_material_checkpoint()` after `_fire_checkpoint()` | Burn ticks (3 integrity, 1 fuel) on what burned at entry, collapse (fire ends, footprint opens), fuel exhaustion, Wet countdown, then reignition under a surviving line. |
+
+Open: yard scene bridge and HUD object picking; Cinder Spear; the out-of-combat WorldClock
+burn rule in the Khash packet is not wired (combat-only substrate).

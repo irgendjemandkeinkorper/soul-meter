@@ -4,20 +4,20 @@
 
 [resource]
 script = ExtResource("1_action")
-id = &"douse"
-display_name = "Douse"
+id = &"sever"
+display_name = "Sever"
 kind = 0
 verb = 2
-ap_cost = 2
-ct_cost = 30
-element_id = &"luth"
-magnitude = &"note"
+ap_cost = 3
+ct_cost = 45
+element_id = &"zhem"
+magnitude = &"phrase"
 target_profile = &"ranged"
 target_side = "any"
 player_available = true
-effect_id = &"douse"
+effect_id = &"sever"
 effect_payload = {"range": 4}
 spell = true
-breath_cost = 3
+breath_cost = 6
 no_damage = true
-description = "Luth Note. A creature within 4 cells stops Burning and is Soaked for two checkpoints; or an object within 4 is quenched and Wet for two checkpoints."
+description = "Zhem Phrase. End one working within 4: a Firebreak line ends at once. Physical fire already burning on material keeps burning on its own fuel."

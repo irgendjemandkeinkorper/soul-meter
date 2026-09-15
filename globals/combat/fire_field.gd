@@ -63,6 +63,13 @@ func create_line(owner_id: StringName, cells: Array[Vector2i], round_number: int
 
 ## The line covering `cell`, or `{}`. When lines overlap, the first-created line wins the
 ## credit for a hazard event (stable id as the tie-breaker, per the packet's credit rule).
+func line_by_id(line_id: int) -> Dictionary:
+	for line: Dictionary in lines:
+		if int(line.get("id", 0)) == line_id:
+			return line
+	return {}
+
+
 func line_at(cell: Vector2i) -> Dictionary:
 	for line: Dictionary in lines:
 		if (line["cells"] as Array).has(cell):
