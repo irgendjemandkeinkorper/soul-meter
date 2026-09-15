@@ -337,3 +337,21 @@ suite: `test/unit/test_witness_weaver.gd`.
 | Kit | `data/combat/actions/53–55` | Term of Witness: a `bind_witness` Thread whose payoff is reveal + Exposed instead of 6 damage. Term of Daylight: Witness Light plus a Thread on the MOVE that ends inside that field (`ended_in_light` on the move outcome), payoff Lit; one moving revelation at a time. Noon Contract: Noonday, then every revealed enemy's Witness contract pays now and frees its Thread (Triad gate, Refrain use). |
 | Threads | `IzhakelThreads` | Entries now carry `kind` (`hostility`, `witness`, `daylight`); duplicates are refused per kind and target. |
 | Save | `class_resources_to_dict()` key `__light__` | Additive, omitted when empty. |
+
+### Sluice Runner runtime (2026-09-15)
+
+Third kit, on Breath restoration and the existing Jam. Test suite:
+`test/unit/test_sluice_runner.gd`.
+
+| Piece | Where | Notes |
+|---|---|---|
+| Paid Breath | `_paid_breath()` from the cast's Resolution breath write | Soul overreach is not Breath paid. Every restoration is capped by it and by the recipient's `PartyMember.breath_max`. |
+| Cards | `data/combat/actions/38, 39, 48` | Second Breath (one ally within 4, up to 6, refused on a full ally before payment). Turning Tide (`options.mode` A or B at commit; A splits up to 12 among up to three allies within 1 of the cell by `options.allocations` or an even split; B quenches the refuge). Great Confluence (instant, up to 24 among four, quench, Refrain use). |
+| Mode B Soaked | `_apply_refuge()` | Interpretation: mode B Soaks allies and any creature it quenched; enemies that were not Burning are not Soaked. That is what makes Wash the Gears' extra Soak mean something. |
+| Jam window | `_jam_log` filled by `request_cancel()` successes | Opened Sluice needs a Jam that landed this round or last (`requires_jam_within`). Wash the Gears Soaks enemies in the refuge whose action the caster's Jam cancelled this round. Saved under `__jams__`. |
+| Kit | `data/combat/actions/56–58` | Opened Sluice (cap 9), Wash the Gears (Chord gate), Floodgate (Triad gate, Refrain use; an armed Jam retry discharges on the nearest enemy in the refuge and the retry is consumed). |
+
+Design conflict to resolve: Opened Sluice's cap of 9 is unreachable at Second Breath's P price
+of 6 Breath while "never more than the Runner actually paid" stands. The runtime applies both
+rules literally, so today the tier only widens the cap on paper. Thrown weapons (Cast Iron,
+Double Cast, Blinding Throw) are not built: no tier leans on them.

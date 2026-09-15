@@ -115,7 +115,15 @@ const EFFECT_PUSH := &"push"                      ## hit → shove target one ce
 const EFFECT_UNSEAT := &"unseat"                  ## hit → end the target's Guard
 const EFFECT_TERM_OF_DAYLIGHT := &"term_of_daylight"  ## Witness Light + Daylight contract
 const EFFECT_NOON_CONTRACT := &"noon_contract"    ## Noonday + trigger Witness contracts inside
+const EFFECT_SECOND_BREATH := &"second_breath"    ## restore Breath to one ally, capped by paid
+const EFFECT_TURNING_TIDE := &"turning_tide"      ## mode A: split Breath; mode B: quench a refuge
+const EFFECT_GREAT_CONFLUENCE := &"great_confluence"  ## instant refuge: restore up to four + quench
+const EFFECT_OPENED_SLUICE := &"opened_sluice"    ## Second Breath, cap 9 within a checkpoint of a Jam
+const EFFECT_WASH_THE_GEARS := &"wash_the_gears"  ## Turning Tide B; Jam-cancelled enemies inside Soaked
+const EFFECT_FLOODGATE := &"floodgate"            ## Great Confluence; discharges an armed Jam retry
 const _KNOWN_EFFECTS: Array[StringName] = [
+	EFFECT_SECOND_BREATH, EFFECT_TURNING_TIDE, EFFECT_GREAT_CONFLUENCE, EFFECT_OPENED_SLUICE,
+	EFFECT_WASH_THE_GEARS, EFFECT_FLOODGATE,
 	EFFECT_UNVEIL, EFFECT_VEIL, EFFECT_WITNESS_LIGHT, EFFECT_NOONDAY, EFFECT_PUSH, EFFECT_UNSEAT,
 	EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT,
 	EFFECT_BURNING_STRIKE, EFFECT_DOUSE, EFFECT_THRUST, EFFECT_PULL, EFFECT_FIRE_LINE,
@@ -146,6 +154,10 @@ const DEFERRED_SAVE_KEY := "__deferred__"
 ## Reserved keys inside the same dict for the fire substrate and per-combatant impositions.
 const FIRE_SAVE_KEY := "__fire__"
 const LIGHT_SAVE_KEY := "__light__"
+const JAMS_SAVE_KEY := "__jams__"
+## Successful Jams by requester: {"round": int, "targets": [combat ids]}. The Sluice Runner
+## reads this for its windows; it is data the controller already emitted as `action_cancelled`.
+var _jam_log: Dictionary = {}
 const IMPOSITIONS_SAVE_KEY := "__impositions__"
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
@@ -293,6 +305,7 @@ func start(
 	_deferred_sequence = 0
 	fire.reset()
 	light.reset()
+	_jam_log.clear()
 	_refrain_uses.clear()
 	for combatant: BattleActor in allies + enemies:
 		combatant.impositions.clear()
@@ -2590,6 +2603,10 @@ func _class_resource_of(actor: BattleActor) -> ClassResource:
 const _GRID_EFFECTS: Array[StringName] = [
 	&"pull", &"fire_line", &"sentence_of_ash", &"crown_of_embers", &"verdict_by_fire",
 	&"push", &"witness_light", &"noonday_revelation", &"term_of_daylight", &"noon_contract",
+	&"turning_tide", &"great_confluence", &"wash_the_gears", &"floodgate",
+]
+const RESTORE_CELL_EFFECTS: Array[StringName] = [
+	&"turning_tide", &"great_confluence", &"wash_the_gears", &"floodgate",
 ]
 const NOONDAY_RADIUS := 2
 const NOONDAY_CHECKPOINTS := 1
@@ -2653,6 +2670,14 @@ func _query_effect_gate(actor: BattleActor, action: CombatAction, options: Dicti
 				&"ledger_full", "The Ledger holds %d entries; wait for one to fire." % PazzahLedger.MAX_ENTRIES,
 				{"type": &"ledger_capacity", "max": PazzahLedger.MAX_ENTRIES},
 			)
+	if payload.has("requires_jam_within"):
+		var window := int(payload.get("requires_jam_within", 1))
+		var log: Dictionary = _jam_log.get(String(actor.combat_id), {})
+		if log.is_empty() or int(log.get("round", -999)) < round_number - window:
+			return _blocked(
+				&"jam_window", "%s needs a Jam that landed within the last checkpoint." % action.display_name,
+				{"type": &"recent_jam", "checkpoints": window},
+			)
 	if action.targets_cells() or _GRID_EFFECTS.has(action.effect_id):
 		if not bool(battlefield.capabilities().get("cells", false)):
 			return _blocked(
@@ -2679,6 +2704,13 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 			&"blocked_by_range", "%s reaches %d cells; the target is %d away." % [action.display_name, range_cells, distance],
 			{"type": &"range", "range": range_cells, "distance": distance},
 		)
+	if action.effect_id == EFFECT_SECOND_BREATH or action.effect_id == EFFECT_OPENED_SLUICE:
+		if _breath_room(target) <= 0:
+			return _blocked(
+				&"no_effect", "%s has no Breath to restore." % target.display_name,
+				{"type": &"breath_room"},
+			)
+		return _allowed()
 	if action.effect_id == EFFECT_UNSEAT:
 		if not target.guarding:
 			return _blocked(
@@ -2771,6 +2803,13 @@ func _query_cell_action(
 				var sight := battlefield.line_of_sight_to_cell(actor, cell)
 				if not bool(sight.get("allowed", false)):
 					return sight
+	if RESTORE_CELL_EFFECTS.has(action.effect_id):
+		var mode := _tide_mode(action, options)
+		if mode == "A" and _refuge_recipients(actor, distinct[0], int(action.effect_payload.get("radius", 1)), int(action.effect_payload.get("recipients", 3))).is_empty():
+			return _blocked(
+				&"no_effect", "%s would restore nothing: no ally with Breath to fill is in the refuge." % action.display_name,
+				{"type": &"breath_room"},
+			)
 	if bool(action.effect_payload.get("contract_target", false)):
 		# A cell working that also binds a creature (Term of Daylight): the contract half needs a
 		# living enemy at touch and a free Thread; the field half is the cells above.
@@ -2790,6 +2829,10 @@ func _query_cell_action(
 		var cast := _resolve_cell_cast(actor, action, options)
 		if not bool(cast.get("allowed", false)):
 			return cast
+		if RESTORE_CELL_EFFECTS.has(action.effect_id) and _tide_mode(action, options) == "A":
+			result["allocations"] = _plan_restoration(
+				actor, distinct[0], action, options, _paid_breath(cast["resolution"])
+			)
 		var soul_cost := 0.0
 		for write: Dictionary in (cast["resolution"] as Dictionary).get("writes", []):
 			if StringName(str(write.get("kind", ""))) == &"soul_meter":
@@ -2841,6 +2884,7 @@ func _apply_cell_action(actor: BattleActor, action: CombatAction, options: Dicti
 	var result := {
 		"cells": FireField.cells_to_data(cells), "effect_id": action.effect_id, "fizzled": false,
 	}
+	var paid_breath := 0
 	if action.spell:
 		var resolution: Dictionary = options.get("_resolution", {})
 		if resolution.is_empty():
@@ -2849,6 +2893,7 @@ func _apply_cell_action(actor: BattleActor, action: CombatAction, options: Dicti
 				result.merge(cast, true)
 				return result
 			resolution = cast["resolution"]
+		paid_breath = _paid_breath(resolution)
 		_apply_resolution_writes(actor, actor, resolution, true, &"cast")
 		result["resolution"] = resolution
 		if bool(resolution.get("fizzled", false)):
@@ -2886,6 +2931,8 @@ func _apply_cell_action(actor: BattleActor, action: CombatAction, options: Dicti
 			})
 			result["queued"] = bool(queued.get("allowed", false))
 			result["message"] = "%s raises a Crown of Embers." % actor.display_name
+		EFFECT_TURNING_TIDE, EFFECT_WASH_THE_GEARS, EFFECT_GREAT_CONFLUENCE, EFFECT_FLOODGATE:
+			result.merge(_apply_refuge(actor, action, cells[0], options, paid_breath), true)
 		EFFECT_WITNESS_LIGHT:
 			result.merge(_create_light_field(actor.combat_id, cells[0]), true)
 			result["message"] = "%s raises a Witness Light." % actor.display_name
@@ -2936,6 +2983,10 @@ func _apply_effect_after_attack(
 		EFFECT_DOUSE:
 			if hit:
 				out["douse"] = _apply_douse(actor, target)
+		EFFECT_SECOND_BREATH, EFFECT_OPENED_SLUICE:
+			if not fizzled:
+				var cap := int(action.effect_payload.get("restore_max", 6))
+				out["restored"] = _restore_breath(actor, target, mini(cap, _paid_breath(resolution)))
 		EFFECT_UNVEIL:
 			if hit:
 				# Reveal first so the payload records the veil it tore; Exposed then replaces it.
@@ -3137,6 +3188,167 @@ func _fire_checkpoint(completed_round: int) -> void:
 		_emit_event(&"fire_line_expired", _actor_by_id(StringName(str(line.get("owner_id", "")))), null, {
 			"line": line, "round": completed_round,
 		})
+
+
+# ─── Water: Breath restoration and refuges (Luth cards, Sluice Runner) ──────
+
+
+## Breath the caster actually spent on this cast (Soul overreach is not Breath paid).
+func _paid_breath(resolution: Dictionary) -> int:
+	for write: Dictionary in resolution.get("writes", []):
+		if StringName(str(write.get("kind", ""))) == &"breath":
+			return maxi(int(write.get("before", 0)) - int(write.get("after", 0)), 0)
+	return 0
+
+
+func _breath_capacity(actor: BattleActor) -> int:
+	if actor == null or actor.source_member == null:
+		return 0
+	return maxi(actor.source_member.breath_max, 0)
+
+
+func _breath_room(actor: BattleActor) -> int:
+	return maxi(_breath_capacity(actor) - actor.breath, 0) if actor != null else 0
+
+
+## Restores up to `amount`, clamped by the recipient's capacity. Returns the Breath granted.
+func _restore_breath(actor: BattleActor, target: BattleActor, amount: int) -> int:
+	var granted := mini(maxi(amount, 0), _breath_room(target))
+	if granted <= 0:
+		return 0
+	var write := _materialize_write({"kind": "breath", "amount": granted}, target)
+	_apply_resolution_writes(target, target, {"writes": [write]}, false, &"cast")
+	_emit_event(&"breath_restored", actor, target, {"amount": granted})
+	return granted
+
+
+func _tide_mode(action: CombatAction, options: Dictionary) -> String:
+	return str(options.get("mode", action.effect_payload.get("mode", "B"))).to_upper()
+
+
+## Other living allies inside the refuge with Breath to fill, nearest to the center first.
+func _refuge_recipients(caster: BattleActor, center: Vector2i, radius: int, limit: int) -> Array[BattleActor]:
+	var found: Array[BattleActor] = []
+	for ally: BattleActor in _living(allies):
+		if ally == caster or _breath_room(ally) <= 0:
+			continue
+		var at: Variant = _actor_cell(ally)
+		if not (at is Vector2i):
+			continue
+		var delta: Vector2i = (at as Vector2i) - center
+		if maxi(absi(delta.x), absi(delta.y)) <= radius:
+			found.append(ally)
+	found.sort_custom(func(a: BattleActor, b: BattleActor) -> bool:
+		var da: Vector2i = (_actor_cell(a) as Vector2i) - center
+		var db: Vector2i = (_actor_cell(b) as Vector2i) - center
+		return maxi(absi(da.x), absi(da.y)) < maxi(absi(db.x), absi(db.y)))
+	if found.size() > limit:
+		found.resize(limit)
+	return found
+
+
+## One paid budget split among the refuge's recipients: authored `options.allocations`
+## ({combat_id: amount}) when given, otherwise an even split; every share is clamped by the
+## recipient's room and the total by min(budget, paid). Same function at forecast and commit.
+func _plan_restoration(
+	caster: BattleActor, center: Vector2i, action: CombatAction, options: Dictionary, paid: int
+) -> Dictionary:
+	var payload := action.effect_payload
+	var recipients := _refuge_recipients(caster, center, int(payload.get("radius", 1)), int(payload.get("recipients", 3)))
+	var budget := mini(int(payload.get("budget", 12)), paid)
+	var plan := {}
+	if recipients.is_empty() or budget <= 0:
+		return plan
+	var requested: Dictionary = options.get("allocations", {}) if options.get("allocations") is Dictionary else {}
+	var remaining := budget
+	if requested.is_empty():
+		var share := budget / recipients.size()
+		var spare := budget - share * recipients.size()
+		for ally: BattleActor in recipients:
+			var amount := mini(share + (1 if spare > 0 else 0), _breath_room(ally))
+			if spare > 0:
+				spare -= 1
+			plan[String(ally.combat_id)] = amount
+			remaining -= amount
+		# Leftover from clamped shares flows to whoever still has room.
+		for ally: BattleActor in recipients:
+			if remaining <= 0:
+				break
+			var extra := mini(remaining, _breath_room(ally) - int(plan[String(ally.combat_id)]))
+			plan[String(ally.combat_id)] = int(plan[String(ally.combat_id)]) + extra
+			remaining -= extra
+	else:
+		for ally: BattleActor in recipients:
+			var amount := mini(mini(int(requested.get(String(ally.combat_id), 0)), _breath_room(ally)), remaining)
+			if amount > 0:
+				plan[String(ally.combat_id)] = amount
+				remaining -= amount
+	return plan
+
+
+## Turning Tide / Great Confluence commit. Mode A restores by the plan; mode B quenches the
+## refuge (Burning ends, allies and quenched creatures are Soaked). Wash the Gears also Soaks
+## enemies the caster's Jam cancelled this round; Floodgate discharges an armed Jam retry.
+func _apply_refuge(
+	actor: BattleActor, action: CombatAction, center: Vector2i, options: Dictionary, paid: int
+) -> Dictionary:
+	var payload := action.effect_payload
+	var radius := int(payload.get("radius", 1))
+	var mode := _tide_mode(action, options)
+	var out := {"mode": mode, "center": LightField.cell_to_data(center)}
+	var inside: Array[BattleActor] = []
+	for creature: BattleActor in _living(allies) + _living(enemies):
+		var at: Variant = _actor_cell(creature)
+		if at is Vector2i:
+			var delta: Vector2i = (at as Vector2i) - center
+			if maxi(absi(delta.x), absi(delta.y)) <= radius:
+				inside.append(creature)
+	var restores_and_quenches := action.effect_id == EFFECT_GREAT_CONFLUENCE or action.effect_id == EFFECT_FLOODGATE
+	if mode == "A" or restores_and_quenches:
+		var plan := _plan_restoration(actor, center, action, options, paid)
+		var restored := {}
+		for id: String in plan:
+			var ally := _actor_by_id(StringName(id))
+			if ally != null:
+				restored[id] = _restore_breath(actor, ally, int(plan[id]))
+		out["restored"] = restored
+	if mode == "B" or restores_and_quenches:
+		var cancelled: Array = (_jam_log.get(String(actor.combat_id), {}) as Dictionary).get("targets", []) \
+			if int((_jam_log.get(String(actor.combat_id), {}) as Dictionary).get("round", -1)) == round_number else []
+		var soaked: Array[String] = []
+		for creature: BattleActor in inside:
+			var washed := action.effect_id == EFFECT_WASH_THE_GEARS and cancelled.has(String(creature.combat_id))
+			if allies.has(creature) or FireField.is_burning(creature) or washed:
+				_apply_douse(actor, creature)
+				soaked.append(String(creature.combat_id))
+		out["soaked"] = soaked
+	if action.effect_id == EFFECT_FLOODGATE:
+		out["discharged"] = _discharge_jam(actor, center, radius)
+	return out
+
+
+## Floodgate: an armed Jam retry fires now on the nearest living enemy in the refuge.
+func _discharge_jam(actor: BattleActor, center: Vector2i, radius: int) -> Dictionary:
+	var resource := _class_resource_of(actor)
+	if not (resource is FickahRuleBreaker) or (resource as FickahRuleBreaker).jam_target_id.is_empty():
+		return {}
+	var breaker := resource as FickahRuleBreaker
+	var nearest: BattleActor = null
+	var nearest_distance := radius + 1
+	for enemy: BattleActor in _living(enemies):
+		var at: Variant = _actor_cell(enemy)
+		if not (at is Vector2i):
+			continue
+		var delta: Vector2i = (at as Vector2i) - center
+		var distance := maxi(absi(delta.x), absi(delta.y))
+		if distance <= radius and distance < nearest_distance:
+			nearest = enemy
+			nearest_distance = distance
+	if nearest == null:
+		return {"target_id": "", "allowed": false, "reason": "no_enemy_in_refuge"}
+	var result := request_cancel(actor.combat_id, nearest.combat_id, &"any")
+	breaker.jam_target_id = &""
+	return {"target_id": String(nearest.combat_id), "allowed": bool(result.get("allowed", false)), "reason": String(result.get("blocked_by", &""))}
 
 
 # ─── Light: Exposed / Veiled / Witness Light / Noonday ─────────────────────
@@ -3392,6 +3604,12 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 	if cancelled.is_empty():
 		return _blocked(&"nothing_to_cancel", "%s has nothing in flight." % target.display_name, {"kind": String(kind)})
 	var payload := {"requester_id": String(requester_id), "kind": String(kind), "cancelled": cancelled.duplicate(true)}
+	var log: Dictionary = _jam_log.get(String(requester_id), {})
+	if int(log.get("round", -1)) != round_number:
+		log = {"round": round_number, "targets": []}
+	if not (log["targets"] as Array).has(String(target_id)):
+		(log["targets"] as Array).append(String(target_id))
+	_jam_log[String(requester_id)] = log
 	_emit_event(&"action_cancelled", _actor_by_id(requester_id), target, payload)
 	return _allowed(payload)
 
@@ -3526,6 +3744,8 @@ func class_resources_to_dict() -> Dictionary:
 		result[FIRE_SAVE_KEY] = fire.to_dict()
 	if not light.is_empty():
 		result[LIGHT_SAVE_KEY] = light.to_dict()
+	if not _jam_log.is_empty():
+		result[JAMS_SAVE_KEY] = _jam_log.duplicate(true)
 	var impositions: Dictionary = {}
 	for actor: BattleActor in allies + enemies:
 		if not actor.impositions.is_empty():
@@ -3555,6 +3775,9 @@ func restore_class_resources(data: Dictionary) -> void:
 	var light_data: Variant = data.get(LIGHT_SAVE_KEY, null)
 	if light_data is Dictionary:
 		light.from_dict(light_data as Dictionary)
+	var jams: Variant = data.get(JAMS_SAVE_KEY, null)
+	if jams is Dictionary:
+		_jam_log = (jams as Dictionary).duplicate(true)
 	var impositions: Variant = data.get(IMPOSITIONS_SAVE_KEY, {})
 	if impositions is Dictionary:
 		for actor: BattleActor in allies + enemies:

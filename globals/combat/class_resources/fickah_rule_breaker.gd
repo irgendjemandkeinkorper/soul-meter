@@ -43,6 +43,10 @@ func jam_the_gears(target_id: StringName) -> bool:
 	return bool(result.get("allowed", false))
 
 
+func has_armed_jam() -> bool:
+	return not jam_target_id.is_empty()
+
+
 func on_turn_start() -> void:
 	if jam_target_id.is_empty() or host == null:
 		return
