@@ -127,6 +127,9 @@ spell compositions, and they do not add automatic reactions to every contact.
 | Khor → sustained effect → Zhem | Sever an eligible effect despite its deliberate hold. | Khor can preserve an effect's time; it does not make that effect immune to removal. |
 | Mozh → eligible remains | Consume the source once and restore its authored Breath amount. | Stable identity prevents harvesting again after save/load or travel. Essential quest objects are ineligible unless specifically authored otherwise. |
 
+The full later-cast × earlier-state table, including the opposed-pair counters and
+status pairs, is in [elemental-reaction-matrix.md](elemental-reaction-matrix.md).
+
 For predictable chain reactions, the preview must distinguish the initial cast from
 later burn ticks, propagation and collapse. Any uncertain outcome is shown as uncertain;
 the player does not receive a false exact forecast. Global Hush continues to suppress

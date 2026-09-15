@@ -12,6 +12,7 @@ cards. These are initial playtest proposals, not implemented or final-balanced s
 | [Shared card rules](spell-card-rules.md) | Default costs, operational statuses, target intent, ownership, upkeep, resource budgets and interruption settlement. |
 | [Elemental cards](elemental-spell-cards.md) and [Khash cards](khash-prototype-spell-cards.md) | Every primary, secondary, tertiary and ultimate form for the nine chosen elements and shared Khor. |
 | [Hybrid cards](hybrid-spell-cards.md) and [remaining strained cards](strained-spell-cards.md) | All ten adjacent Chord families and all thirty legal distant-pair families, including their exact limits, counterplay and new-family visual direction. |
+| [Reaction matrix](elemental-reaction-matrix.md) | What every later cast does to every state an earlier element leaves: statuses, holds, fields, materials, conduction; opposed pairs as counters. |
 | [Existing Triad cards](triad-spell-cards.md) | The ten canonical component/center/unique-effect identities and the remaining gaps in current consumers/adapters. |
 
 ## Coverage
