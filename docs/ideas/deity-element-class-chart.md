@@ -246,6 +246,9 @@ and [generated element definitions](../../data/generated/elements.json).
 Deity and element themes also follow the local lore vault's `systems/ten-patron-classes.md`
 and `systems/magic-system.md`; current Soul-income rulings supersede older refund prose.
 
+**Developed kits:** nine cells (one per patron, one per element) are worked into full kits in
+[class-kits-first-nine.md](class-kits-first-nine.md).
+
 **Suggested first comparison:** Ash Magistrate, Boundary Warden and Oathclock. They test
 one divine engine across destruction, construction and non-damaging disruption.
 
