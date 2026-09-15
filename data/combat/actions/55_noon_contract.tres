@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"noon-contract"
+display_name = "Noon Contract"
+kind = 0
+verb = 2
+ap_cost = 4
+ct_cost = 60
+element_id = &"sul"
+magnitude = &"refrain"
+target_profile = &"cells"
+player_available = true
+effect_id = &"noon_contract"
+effect_payload = {"range": 5, "cell_count": 1, "refrain_use": true, "requires_patron": "izhakel", "requires_tier": 3}
+spell = true
+breath_cost = 24
+description = "Witness Weaver, Tier 3 (Triad). Noonday Revelation; every revealed enemy carrying a Term of Witness pays it out now and frees the Thread. Spends your Refrain."

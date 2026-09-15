@@ -91,6 +91,8 @@ var _tile_by_cell: Dictionary = {}  ## Vector2i -> TileState
 ## Khash prototype fire substrate (globals/combat/fire_field.gd): fire lines, Burning, Soaked.
 ## The controller applies every hazard/burn HP change through `_apply_resolution_writes()`.
 var fire: FireField = FireField.new()
+## Sul/Vekh revelation substrate: Witness Light fields; Exposed/Veiled/Lit impositions.
+var light: LightField = LightField.new()
 ## combat_id -> Refrain uses this battle. PROVISIONAL: one Refrain allowance per character per
 ## battle, shared by every `refrain_use` working (Crown of Embers, Verdict by Fire).
 var _refrain_uses: Dictionary = {}
@@ -105,7 +107,17 @@ const EFFECT_FIRE_LINE := &"fire_line"            ## create a Firebreak now
 const EFFECT_SENTENCE_OF_ASH := &"sentence_of_ash"  ## file a Firebreak on the Ledger
 const EFFECT_CROWN_OF_EMBERS := &"crown_of_embers"  ## mark cells, release at next own turn
 const EFFECT_VERDICT_BY_FIRE := &"verdict_by_fire"  ## mark cells, release at the Ledger beat
+const EFFECT_UNVEIL := &"unveil"                  ## Exposed + reveal the target's signature
+const EFFECT_VEIL := &"veil"                      ## Veiled on self/ally (refused over Exposed)
+const EFFECT_WITNESS_LIGHT := &"witness_light"    ## revelation field, radius 1, two checkpoints
+const EFFECT_NOONDAY := &"noonday_revelation"     ## instant sweep, radius 2, one checkpoint
+const EFFECT_PUSH := &"push"                      ## hit → shove target one cell away
+const EFFECT_UNSEAT := &"unseat"                  ## hit → end the target's Guard
+const EFFECT_TERM_OF_DAYLIGHT := &"term_of_daylight"  ## Witness Light + Daylight contract
+const EFFECT_NOON_CONTRACT := &"noon_contract"    ## Noonday + trigger Witness contracts inside
 const _KNOWN_EFFECTS: Array[StringName] = [
+	EFFECT_UNVEIL, EFFECT_VEIL, EFFECT_WITNESS_LIGHT, EFFECT_NOONDAY, EFFECT_PUSH, EFFECT_UNSEAT,
+	EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT,
 	EFFECT_BURNING_STRIKE, EFFECT_DOUSE, EFFECT_THRUST, EFFECT_PULL, EFFECT_FIRE_LINE,
 	EFFECT_SENTENCE_OF_ASH, EFFECT_CROWN_OF_EMBERS, EFFECT_VERDICT_BY_FIRE,
 ]
@@ -133,6 +145,7 @@ var _resolving := false
 const DEFERRED_SAVE_KEY := "__deferred__"
 ## Reserved keys inside the same dict for the fire substrate and per-combatant impositions.
 const FIRE_SAVE_KEY := "__fire__"
+const LIGHT_SAVE_KEY := "__light__"
 const IMPOSITIONS_SAVE_KEY := "__impositions__"
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
@@ -279,6 +292,7 @@ func start(
 	_deferred.clear()
 	_deferred_sequence = 0
 	fire.reset()
+	light.reset()
 	_refrain_uses.clear()
 	for combatant: BattleActor in allies + enemies:
 		combatant.impositions.clear()
@@ -471,7 +485,7 @@ func query_action(
 		var cell_affordability := _can_afford(actor, action)
 		if not bool(cell_affordability.get("allowed", false)):
 			return cell_affordability
-		return _query_cell_action(actor, action, options)
+		return _query_cell_action(actor, action, options, target)
 	if action.targets_any_side():
 		if target == null or not target.is_alive() or (not allies.has(target) and not enemies.has(target)):
 			return _blocked(&"no_target", "%s requires a living creature target." % action.display_name, {"type": &"living_target"})
@@ -586,6 +600,8 @@ func submit_action(
 		resolved_options["_resolution_context"] = query.get("context", {})
 	if query.has("cells"):
 		resolved_options["_cells"] = query["cells"]
+		if target != null:
+			resolved_options["_target_id"] = String(target.combat_id)
 	if bool(committed_action.effect_payload.get("refrain_use", false)):
 		# The proposed spent-use rule: the allowance is consumed at commit, fizzle or not.
 		_refrain_uses[String(actor.combat_id)] = int(_refrain_uses.get(String(actor.combat_id), 0)) + 1
@@ -788,6 +804,7 @@ func snapshot() -> Dictionary:
 		"movement": _movement_snapshot(),
 		"deferred": deferred_entries(),
 		"fire": {"lines": fire.snapshot(), "marks": _marks_snapshot()},
+		"light": {"fields": light.snapshot()},
 	}
 
 
@@ -1106,6 +1123,7 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 		_release_balance_lock_if_due(ended_round)
 		_tick_actor_aftertones()
 		_fire_checkpoint(round_number)
+		_light_checkpoint(round_number)
 	round_number = scheduler.measure_index() + 1
 	_expire_temporary_effects()
 	if bool(result.get("round_started", false)):
@@ -1132,6 +1150,7 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 			# Hazard events during the measure that just closed were tracked under the previous
 			# round number; the checkpoint settles against that same number.
 			_fire_checkpoint(round_number - 1)
+			_light_checkpoint(round_number - 1)
 
 
 ## Resolves exactly one enemy's turn. The scheduler — not a `for foe in enemies` loop — decides
@@ -1399,6 +1418,11 @@ func _apply_action(
 			result["message"] = "%s moves to %s." % [actor.display_name, action.destination]
 			if bool(movement.get("allowed", false)):
 				result["hazard"] = _hazard_on_path(actor, result["path_cells"])
+				# Threads read this: a Daylight contract fires on a MOVE ending inside its field.
+				var landed: Variant = _actor_cell(actor)
+				result["ended_in_light"] = (
+					int(light.field_at(landed as Vector2i).get("id", 0)) if landed is Vector2i else 0
+				)
 		CombatAction.Kind.RESOLUTION:
 			result["outcome_id"] = action.outcome_id
 			result["message"] = "%s chooses %s." % [actor.display_name, action.display_name]
@@ -1668,6 +1692,20 @@ func _apply_resolution_writes(
 				)
 			&"crown_release":
 				_release_crown(actor, write)
+			&"exposed":
+				_apply_exposed(
+					target, StringName(str(write.get("source_id", actor.combat_id))),
+					int(write.get("checkpoints", LightField.EXPOSED_CHECKPOINTS)),
+				)
+			&"veiled":
+				_apply_veiled(target, StringName(str(write.get("source_id", actor.combat_id))))
+			&"reveal_signature":
+				_reveal_signature(actor, target)
+			&"lit":
+				_apply_lit(
+					target, StringName(str(write.get("source_id", actor.combat_id))),
+					int(write.get("field_id", 0)), int(write.get("checkpoints", LightField.LIT_CHECKPOINTS)),
+				)
 
 
 func _notify_combatant_fell(target_id: StringName) -> void:
@@ -1897,7 +1935,7 @@ func forecast_context(
 		deep_merge(context, overrides)
 	# Seam v2 channel: ONE top-level `reveal` key. Dayspring (unit.reveal, A5) and ClassResource
 	# reveal overrides both land here so Resolution and the panel read one shape.
-	context["reveal"] = _is_revealed(actor) or bool(context.get("reveal", false))
+	context["reveal"] = _is_revealed(actor) or _is_exposed_now(target) or bool(context.get("reveal", false))
 	var resolved_positioning: Dictionary = context.get("positioning", {}) as Dictionary
 	if bool(context["reveal"]):
 		resolved_positioning["cover_bonus"] = 0
@@ -2050,7 +2088,7 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 func _positional_terms(actor: BattleActor, target: BattleActor) -> Dictionary:
 	var positional_context := _positional_resolution_context(actor, target)
 	var cover_bonus := battlefield.cover_bonus(actor, target)
-	if _is_revealed(actor):
+	if _is_revealed(actor) or _is_exposed_now(target):
 		cover_bonus = 0
 	if _is_concealed(target):
 		cover_bonus = rules.cover_defense_bonus if rules != null else cover_bonus
@@ -2374,7 +2412,8 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"breath": actor.breath,
 			"aftertones": actor.aftertones.duplicate(true),
 			"tempo": actor.tempo,
-			"discord_signatures_visible": not (concealed_until_round >= round_number and actor.side == concealed_side),
+			"discord_signatures_visible": _signatures_visible(actor),
+			"exposed": _is_exposed_now(actor),
 			"class_resource": _class_resource_of(actor).snapshot(),
 			"impositions": actor.impositions.duplicate(true),
 		})
@@ -2547,7 +2586,10 @@ func _class_resource_of(actor: BattleActor) -> ClassResource:
 
 const _GRID_EFFECTS: Array[StringName] = [
 	&"pull", &"fire_line", &"sentence_of_ash", &"crown_of_embers", &"verdict_by_fire",
+	&"push", &"witness_light", &"noonday_revelation", &"term_of_daylight", &"noon_contract",
 ]
+const NOONDAY_RADIUS := 2
+const NOONDAY_CHECKPOINTS := 1
 ## Writes a cell cast keeps from Resolution: the caster's own costs and residue, never a
 ## creature write — the synthetic target is nobody.
 const _CELL_CAST_WRITE_KINDS: Array[StringName] = [
@@ -2634,6 +2676,22 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 			&"blocked_by_range", "%s reaches %d cells; the target is %d away." % [action.display_name, range_cells, distance],
 			{"type": &"range", "range": range_cells, "distance": distance},
 		)
+	if action.effect_id == EFFECT_UNSEAT:
+		if not target.guarding:
+			return _blocked(
+				&"no_response", "%s has no Guard to unseat." % target.display_name,
+				{"type": &"martial_response"},
+			)
+		return _allowed()
+	if action.effect_id == EFFECT_PUSH:
+		var away: Vector2i = (to as Vector2i) + delta.sign()
+		var push_cell := battlefield.cell_query(away)
+		if not bool(push_cell.get("allowed", false)):
+			return _blocked(
+				&"push_destination", "There is no open cell to shove %s into." % target.display_name,
+				{"type": &"open_cell", "cell": {"x": away.x, "y": away.y}},
+			)
+		return _allowed({"push_destination": away})
 	if action.effect_id != EFFECT_PULL:
 		return _allowed()
 	var cardinal := (delta.x == 0) != (delta.y == 0)
@@ -2660,7 +2718,9 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 
 ## Cell-targeted working: `options.cells` declares the shape; range, shape and LOS are checked
 ## per effect; a spell card then resolves fizzle/Breath/Soul against a synthetic empty target.
-func _query_cell_action(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+func _query_cell_action(
+	actor: BattleActor, action: CombatAction, options: Dictionary, target: BattleActor = null
+) -> Dictionary:
 	var cells: Array[Vector2i] = FireField.cells_from_data(options.get("cells", []))
 	if cells.is_empty():
 		return _blocked(
@@ -2702,11 +2762,26 @@ func _query_cell_action(actor: BattleActor, action: CombatAction, options: Dicti
 					&"line_shape", "%s burns three cells in a straight, touching line." % action.display_name,
 					{"type": &"cardinal_line", "count": count},
 				)
-		EFFECT_CROWN_OF_EMBERS, EFFECT_VERDICT_BY_FIRE:
+		EFFECT_CROWN_OF_EMBERS, EFFECT_VERDICT_BY_FIRE, EFFECT_WITNESS_LIGHT, EFFECT_NOONDAY, \
+		EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT:
 			for cell: Vector2i in distinct:
 				var sight := battlefield.line_of_sight_to_cell(actor, cell)
 				if not bool(sight.get("allowed", false)):
 					return sight
+	if bool(action.effect_payload.get("contract_target", false)):
+		# A cell working that also binds a creature (Term of Daylight): the contract half needs a
+		# living enemy at touch and a free Thread; the field half is the cells above.
+		if target == null or not target.is_alive() or not enemies.has(target):
+			return _blocked(&"no_target", "%s needs a living enemy to bind." % action.display_name, {"type": &"living_enemy"})
+		var touch := battlefield.target_query(actor, target, &"melee")
+		if not bool(touch.get("allowed", false)):
+			return touch
+		var threads := _threads_of(actor)
+		if threads == null:
+			return _blocked(&"class_resource", "%s binds through Izhakel's Threads." % action.display_name, {"type": &"patron", "patron": &"izhakel"})
+		var daylight_gate := threads.query_daylight(target.combat_id)
+		if not bool(daylight_gate.get("allowed", false)):
+			return daylight_gate
 	var result := {"cells": distinct}
 	if action.spell:
 		var cast := _resolve_cell_cast(actor, action, options)
@@ -2808,6 +2883,28 @@ func _apply_cell_action(actor: BattleActor, action: CombatAction, options: Dicti
 			})
 			result["queued"] = bool(queued.get("allowed", false))
 			result["message"] = "%s raises a Crown of Embers." % actor.display_name
+		EFFECT_WITNESS_LIGHT:
+			result.merge(_create_light_field(actor.combat_id, cells[0]), true)
+			result["message"] = "%s raises a Witness Light." % actor.display_name
+		EFFECT_NOONDAY:
+			result["revealed"] = _noonday(actor, cells[0])
+			result["message"] = "%s calls a Noonday Revelation." % actor.display_name
+		EFFECT_TERM_OF_DAYLIGHT:
+			var field := _create_light_field(actor.combat_id, cells[0])
+			result.merge(field, true)
+			var bound_target := _actor_by_id(StringName(str(options.get("_target_id", ""))))
+			var threads := _threads_of(actor)
+			var field_id := int((field.get("field", {}) as Dictionary).get("id", 0))
+			result["bound"] = (
+				threads != null and bound_target != null and field_id > 0
+				and threads.bind_daylight(bound_target.combat_id, field_id)
+			)
+			result["message"] = "%s binds a Term of Daylight." % actor.display_name
+		EFFECT_NOON_CONTRACT:
+			var revealed: Array[String] = _noonday(actor, cells[0])
+			result["revealed"] = revealed
+			result["triggered"] = _trigger_witness_contracts(actor, revealed)
+			result["message"] = "%s calls the Noon Contract." % actor.display_name
 		EFFECT_VERDICT_BY_FIRE:
 			var filed := (_class_resource_of(actor) as PazzahLedger).queue_effect(
 				EFFECT_VERDICT_BY_FIRE, int(payload.get("delay_rounds", 2)),
@@ -2836,6 +2933,30 @@ func _apply_effect_after_attack(
 		EFFECT_DOUSE:
 			if hit:
 				out["douse"] = _apply_douse(actor, target)
+		EFFECT_UNVEIL:
+			if hit:
+				# Reveal first so the payload records the veil it tore; Exposed then replaces it.
+				out["revealed"] = _reveal_signature(actor, target)
+				out["exposed"] = _apply_exposed(target, actor.combat_id, LightField.EXPOSED_CHECKPOINTS)
+		EFFECT_VEIL:
+			if hit:
+				out["veiled"] = _apply_veiled(target, actor.combat_id)
+		EFFECT_UNSEAT:
+			if hit and target.guarding:
+				target.guarding = false
+				out["unseated"] = true
+				_emit_event(&"unseated", actor, target, {})
+		EFFECT_PUSH:
+			if hit:
+				var push := _query_effect_target(actor, target, action)
+				if push.has("push_destination"):
+					var away: Vector2i = push["push_destination"]
+					var shoved := battlefield.displace(target, away)
+					out["pushed"] = bool(shoved.get("allowed", false))
+					if bool(shoved.get("allowed", false)):
+						out["pushed_to"] = {"x": away.x, "y": away.y}
+						_emit_event(&"combatant_pushed", actor, target, {"cell": out["pushed_to"]})
+						out["hazard"] = _apply_hazard(target, away)
 		EFFECT_PULL:
 			if hit:
 				var geometry := _query_effect_target(actor, target, action)
@@ -3012,6 +3133,133 @@ func _fire_checkpoint(completed_round: int) -> void:
 	for line: Dictionary in fire.advance_checkpoint():
 		_emit_event(&"fire_line_expired", _actor_by_id(StringName(str(line.get("owner_id", "")))), null, {
 			"line": line, "round": completed_round,
+		})
+
+
+# ─── Light: Exposed / Veiled / Witness Light / Noonday ─────────────────────
+
+
+func _threads_of(actor: BattleActor) -> IzhakelThreads:
+	var resource := _class_resource_of(actor)
+	return resource as IzhakelThreads if resource is IzhakelThreads else null
+
+
+## Exposed, Lit, or standing inside a Witness Light: cover is worthless and signatures read.
+func _is_exposed_now(actor: BattleActor) -> bool:
+	if actor == null:
+		return false
+	if LightField.is_exposed(actor) or LightField.is_lit(actor):
+		return true
+	if light.is_empty():
+		return false
+	var at: Variant = _actor_cell(actor)
+	return at is Vector2i and light.is_lit_cell(at as Vector2i)
+
+
+## Revelation beats concealment; a Veil hides; otherwise the side-wide rule applies.
+func _signatures_visible(actor: BattleActor) -> bool:
+	if _is_exposed_now(actor):
+		return true
+	if LightField.is_veiled(actor):
+		return false
+	return not (concealed_until_round >= round_number and actor.side == concealed_side)
+
+
+func _apply_exposed(target: BattleActor, source_id: StringName, checkpoints: int) -> Dictionary:
+	var outcome: Dictionary = LightField.apply_exposed(target, source_id, checkpoints)
+	if bool(outcome.get("applied", false)):
+		_emit_event(&"exposed_applied", _actor_by_id(source_id), target, outcome)
+	return outcome
+
+
+func _apply_veiled(target: BattleActor, source_id: StringName) -> Dictionary:
+	var outcome: Dictionary = LightField.apply_veiled(target, source_id)
+	if bool(outcome.get("applied", false)):
+		_emit_event(&"veiled_applied", _actor_by_id(source_id), target, outcome)
+	return outcome
+
+
+func _apply_lit(target: BattleActor, source_id: StringName, field_id: int, checkpoints: int) -> Dictionary:
+	var outcome: Dictionary = LightField.apply_lit(target, source_id, field_id, checkpoints)
+	if bool(outcome.get("applied", false)):
+		_emit_event(&"lit_applied", _actor_by_id(source_id), target, {"field_id": field_id})
+	return outcome
+
+
+## The information payoff: the target's Veil (if any) is torn and its casting signature —
+## last element, Aftertones, discovered weaknesses — is published to the party.
+func _reveal_signature(actor: BattleActor, target: BattleActor) -> Dictionary:
+	if target == null:
+		return {}
+	var payload := {
+		"target_id": String(target.combat_id),
+		"was_veiled": LightField.clear_veiled(target),
+		"last_cast_element": String(target.last_cast_element),
+		"aftertones": target.aftertones.duplicate(true),
+		"discovered_weakness_ids": target.discovered_weakness_ids.duplicate(),
+	}
+	_emit_event(&"signature_revealed", actor, target, payload)
+	return payload
+
+
+func _create_light_field(owner_id: StringName, center: Vector2i) -> Dictionary:
+	var created: Dictionary = light.create_field(owner_id, center, LightField.FIELD_RADIUS, round_number)
+	var field: Dictionary = created.get("field", {})
+	_emit_event(&"light_field_created", _actor_by_id(owner_id), null, {"field": LightField._serialize_field(field)})
+	return {"field": field}
+
+
+## Instant sweep: every living creature within the radius and in sight of the center has its
+## signature revealed and reads as Exposed for one checkpoint. Returns the revealed ids.
+func _noonday(actor: BattleActor, center: Vector2i) -> Array[String]:
+	var revealed: Array[String] = []
+	for creature: BattleActor in _living(allies) + _living(enemies):
+		var at: Variant = _actor_cell(creature)
+		if not (at is Vector2i):
+			continue
+		var delta: Vector2i = (at as Vector2i) - center
+		if maxi(absi(delta.x), absi(delta.y)) > NOONDAY_RADIUS:
+			continue
+		if not bool(battlefield.line_of_sight_between_cells(center, at as Vector2i).get("allowed", false)):
+			continue
+		_reveal_signature(actor, creature)
+		_apply_exposed(creature, actor.combat_id, NOONDAY_CHECKPOINTS)
+		revealed.append(String(creature.combat_id))
+	_emit_event(&"noonday_revelation", actor, null, {
+		"center": LightField.cell_to_data(center), "radius": NOONDAY_RADIUS, "revealed": revealed.duplicate(),
+	})
+	return revealed
+
+
+## Noon Contract: Witness contracts on the revealed enemies pay out now and free their slot.
+func _trigger_witness_contracts(actor: BattleActor, revealed: Array[String]) -> Array[String]:
+	var threads := _threads_of(actor)
+	if threads == null:
+		return []
+	var triggered: Array[String] = []
+	for target_id: String in revealed:
+		var target := _actor_by_id(StringName(target_id))
+		if target == null or not enemies.has(target):
+			continue
+		for payoff: Dictionary in threads.release_witness(StringName(target_id)):
+			for raw: Variant in payoff.get("writes", []):
+				if not (raw is Dictionary):
+					continue
+				var write := _materialize_write(raw as Dictionary, target)
+				_apply_resolution_writes(actor, target, {"writes": [write]}, true, &"thread")
+			triggered.append(target_id)
+			_emit_event(&"contract_triggered", actor, target, {"kind": "witness", "payoff": payoff})
+	return triggered
+
+
+func _light_checkpoint(completed_round: int) -> void:
+	for creature: BattleActor in _living(allies) + _living(enemies):
+		for imposition: String in [LightField.IMPOSITION_EXPOSED, LightField.IMPOSITION_VEILED, LightField.IMPOSITION_LIT]:
+			if LightField.age(creature, imposition):
+				_emit_event(&"imposition_expired", creature, null, {"imposition": imposition, "round": completed_round})
+	for field: Dictionary in light.advance_checkpoint():
+		_emit_event(&"light_field_expired", _actor_by_id(StringName(str(field.get("owner_id", "")))), null, {
+			"field": LightField._serialize_field(field), "round": completed_round,
 		})
 
 
@@ -3273,6 +3521,8 @@ func class_resources_to_dict() -> Dictionary:
 		result[DEFERRED_SAVE_KEY] = {"sequence": _deferred_sequence, "entries": deferred_entries()}
 	if not fire.is_empty() or not fire.hazard_round.is_empty():
 		result[FIRE_SAVE_KEY] = fire.to_dict()
+	if not light.is_empty():
+		result[LIGHT_SAVE_KEY] = light.to_dict()
 	var impositions: Dictionary = {}
 	for actor: BattleActor in allies + enemies:
 		if not actor.impositions.is_empty():
@@ -3299,6 +3549,9 @@ func restore_class_resources(data: Dictionary) -> void:
 	var fire_data: Variant = data.get(FIRE_SAVE_KEY, null)
 	if fire_data is Dictionary:
 		fire.from_dict(fire_data as Dictionary)
+	var light_data: Variant = data.get(LIGHT_SAVE_KEY, null)
+	if light_data is Dictionary:
+		light.from_dict(light_data as Dictionary)
 	var impositions: Variant = data.get(IMPOSITIONS_SAVE_KEY, {})
 	if impositions is Dictionary:
 		for actor: BattleActor in allies + enemies:

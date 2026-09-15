@@ -316,3 +316,19 @@ The kit and the cards it leans on are live in `CombatController`; the substrate 
 Not done: the battle HUD (`ui/hud/battle_interface.gd`) still only targets enemies, so
 cell cards and Douse-on-ally have no pointer flow yet. Numbers are the cards' provisional
 values (B11 owns the cap review).
+
+### Witness Weaver runtime (2026-09-15)
+
+Second kit, on a light substrate: `globals/combat/light_field.gd` (`LightField`). Test
+suite: `test/unit/test_witness_weaver.gd`.
+
+| Piece | Where | Notes |
+|---|---|---|
+| Exposed, Veiled, Lit | `BattleActor.impositions` | Exposed: two checkpoints, cover is worthless against the creature, signatures visible; it tears a Veil (S3). Veiled: two checkpoints, signatures hidden; refused over Exposed (X1). Lit: a revelation that follows the creature for one checkpoint (Term of Daylight). |
+| Witness Light fields | `CombatController.light` | Center within 4, radius 1, two checkpoints. Occupants read as Exposed while inside (`snapshot().enemies[].exposed`), nothing persists when they leave. |
+| Information payoff | `signature_revealed` event | Torn veil, last cast element, Aftertones, discovered weaknesses. Unveil, Noonday and the Witness contract all pay this; none deal damage. |
+| Checkpoint | `_light_checkpoint()` beside the fire checkpoint | Ages impositions, then fields. |
+| Cards | `data/combat/actions/34–37, 42–44` | Unveil, Witness Light, Noonday Revelation (radius 2, one checkpoint, Refrain use), Veil (Vekh, ally/self); Close Strike, Shove (`push`), Unseat (needs a guarding target). Prism Lance is not built: no tier leans on it. |
+| Kit | `data/combat/actions/53–55` | Term of Witness: a `bind_witness` Thread whose payoff is reveal + Exposed instead of 6 damage. Term of Daylight: Witness Light plus a Thread on the MOVE that ends inside that field (`ended_in_light` on the move outcome), payoff Lit; one moving revelation at a time. Noon Contract: Noonday, then every revealed enemy's Witness contract pays now and frees its Thread (Triad gate, Refrain use). |
+| Threads | `IzhakelThreads` | Entries now carry `kind` (`hostility`, `witness`, `daylight`); duplicates are refused per kind and target. |
+| Save | `class_resources_to_dict()` key `__light__` | Additive, omitted when empty. |
