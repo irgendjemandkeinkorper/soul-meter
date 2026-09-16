@@ -164,6 +164,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var target_tempo_before := int(target.get("tempo", 0))
 	var target_tempo_after := target_tempo_before
 	var consumed_aftertone := false
+	var consumed_note: Dictionary = {}
 	var target_aftertones_before := target_aftertones.duplicate(true)
 	var has_tham_bend := composition.rule_bends.has(&"creates_cover_anchors_aftertones")
 	var has_khash_bend := composition.rule_bends.has(&"consumes_aftertone_for_burst")
@@ -181,6 +182,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	if direct_damage_enabled and not fizzled and has_khash_bend:
 		for index: int in target_aftertones.size():
 			if not bool(target_aftertones[index].get("anchored", false)):
+				consumed_note = target_aftertones[index].duplicate(true)
 				target_aftertones.remove_at(index)
 				consumed_aftertone = true
 				power += 1 # PROVISIONAL: absent vault burst magnitude, use +1.
@@ -195,6 +197,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		var aftertone_element := ElementWheel.normalize(ability.get("aftertone_element", composition.center_element if composition.center_element != &"" else element_id))
 		var aftertone_rounds := maxi(int(ability.get("aftertone_rounds", 2)), 1)
 		target_aftertones.append({
+			"owner_id": str(unit.get("id", "")),
 			"element": aftertone_element,
 			"remaining_rounds": aftertone_rounds,
 			"held": false,
@@ -340,7 +343,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"after": target_aftertones.duplicate(true),
 		})
 	if consumed_aftertone:
-		writes.append({"kind": "aftertone_spent", "target_id": str(target.get("id", "")), "count": 1})
+		writes.append({"kind": "aftertone_spent", "target_id": str(target.get("id", "")), "count": 1, "consumed": consumed_note})
 	if has_khor_bend and held_caster_aftertones != _aftertones(unit.get("aftertones", [])):
 		writes.append({
 			"kind": "aftertones",

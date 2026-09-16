@@ -131,12 +131,15 @@ const EFFECT_ECLIPSE_FEAST := &"eclipse_feast"    ## Eclipse; Hunger inside tick
 const EFFECT_RECLAIM := &"reclaim"                ## consume a ruined source once for Breath (M4)
 const EFFECT_ROT_THE_BRACE := &"rot_the_brace"    ## decay integrity damage on susceptible material
 const EFFECT_SEVER := &"sever"                    ## end a working: a Firebreak line (Z6)
+const EFFECT_HOLD_NOTE := &"hold_note"
+const EFFECT_ANCHOR := &"anchor"
 const _KNOWN_EFFECTS: Array[StringName] = [
 	EFFECT_SECOND_BREATH, EFFECT_TURNING_TIDE, EFFECT_GREAT_CONFLUENCE, EFFECT_OPENED_SLUICE,
 	EFFECT_WASH_THE_GEARS, EFFECT_FLOODGATE,
 	EFFECT_BLINDING_THROW, EFFECT_OPEN_SEAM, EFFECT_BLINDSIDE, EFFECT_BLINDSIDE_BITE,
 	EFFECT_SHROUD, EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST,
 	EFFECT_RECLAIM, EFFECT_ROT_THE_BRACE, EFFECT_SEVER,
+	EFFECT_HOLD_NOTE, EFFECT_ANCHOR,
 	EFFECT_UNVEIL, EFFECT_VEIL, EFFECT_WITNESS_LIGHT, EFFECT_NOONDAY, EFFECT_PUSH, EFFECT_UNSEAT,
 	EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT,
 	EFFECT_BURNING_STRIKE, EFFECT_DOUSE, EFFECT_THRUST, EFFECT_PULL, EFFECT_FIRE_LINE,
@@ -180,8 +183,12 @@ const VEKH_SAVE_KEY := "__vekh__"
 ## Physical material on the board (yard timber, stone control): reaction-matrix step 1.
 var material := MaterialField.new()
 const MATERIALS_SAVE_KEY := "__materials__"
+const HOLDS_SAVE_KEY := "__holds__"
+## One owned Note per holder. held_by survives Aftertone array edits; upkeep_paid spans
+## any CT recharge between paying upkeep and taking the first action of that turn.
+var _holds: Dictionary = {}
 ## Effects that only ever address an object or a working, never a creature or a cell.
-const _OBJECT_ONLY_EFFECTS: Array[StringName] = [&"reclaim", &"rot_the_brace", &"sever"]
+const _OBJECT_ONLY_EFFECTS: Array[StringName] = [&"reclaim", &"rot_the_brace", &"sever", &"hold_note", &"anchor"]
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
 ## CT: overflow keeps them past READY_AT) does not get a redundant `turn_started`.
@@ -301,6 +308,8 @@ func start(
 	enemy_group: Array[BattleActor],
 	encounter_id: StringName = &""
 ) -> void:
+	for holder_id: String in _holds.keys():
+		release_hold(holder_id, "battle_restarted")
 	allies = ally_group
 	enemies = enemy_group
 	_encounter_id = encounter_id
@@ -333,6 +342,7 @@ func start(
 	_blindside.clear()
 	_feast.clear()
 	material.reset()
+	_holds.clear()
 	for combatant: BattleActor in allies + enemies:
 		combatant.impositions.clear()
 	_assign_combat_ids(allies, &"ally", encounter_id)
@@ -663,6 +673,8 @@ func submit_action(
 			committed_action.class_resource_payload.duplicate(true),
 		)
 	var outcome := _apply_action(actor, target, committed_action, resolved_options)
+	_finish_hold_turn(actor)
+	_check_holds()
 	outcome["action_id"] = action.id
 	outcome["verb"] = action.verb
 	outcome["ap_cost"] = committed_action.ap_cost
@@ -762,6 +774,7 @@ func end_turn() -> bool:
 		_emit_event(&"action_refused", actor, null, {"action_id": &"", "reason": yield_result})
 		return false
 	var unused_ap_defense := 0
+	_finish_hold_turn(actor)
 	if (
 		rules != null
 		and str(scheduler.to_dict().get("scheduler", "")) == "ap_round"
@@ -854,6 +867,7 @@ func snapshot() -> Dictionary:
 		"deferred": deferred_entries(),
 		"fire": {"lines": fire.snapshot(), "marks": _marks_snapshot()},
 		"materials": material.snapshot(),
+		"holds": _holds.duplicate(true),
 		"light": {"fields": _light_snapshot(), "shrouds": _shroud_snapshot()},
 	}
 
@@ -1081,6 +1095,7 @@ static func calculate_damage(
 ## gets a clean, ordered event stream with a bounded call stack.
 func _drive_scheduler() -> void:
 	while state != State.FINISHED:
+		_check_holds()
 		if not _has_living(allies):
 			_finish(ResultState.DEFEAT, &"defeat")
 			return
@@ -1127,6 +1142,11 @@ func _drive_scheduler() -> void:
 			"ticks_elapsed": result.get("ticks_elapsed", 0),
 			"measures_crossed": result.get("measures_crossed", 0),
 		}
+		if not is_continuation:
+			_pay_hold_upkeep(actor)
+			if not bool(scheduler.can_act(actor).get("allowed", false)):
+				_last_turn_actor = actor
+				continue
 
 		if actor.side == &"ally":
 			state = State.ALLY_TURN
@@ -1157,6 +1177,7 @@ func _drive_scheduler() -> void:
 ## event vocabularies fork, and it forks on DATA the scheduler returned, never on
 ## `rules.use_charge_time` — CombatController does not know which scheduler is active.
 func _translate_scheduler_extras(result: Dictionary) -> void:
+	_check_holds()
 	# A single advance() call can carry BOTH keys at once — the AP scheduler closes the old
 	# round and opens the new one in one step when the last actor's turn passes. `round_ended`
 	# must be emitted (and the balance lock checked against the round that JUST ended, not the
@@ -1244,6 +1265,7 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		"_resolution": resolution_gate["resolution"],
 		"_resolution_context": resolution_gate["context"],
 	})
+	_finish_hold_turn(actor)
 	outcome["action_id"] = enemy_action.id
 	outcome["verb"] = enemy_action.verb
 	outcome["ap_cost"] = enemy_action.ap_cost
@@ -1324,6 +1346,8 @@ func _resolve_enemy_move(actor: BattleActor, target: BattleActor, destination: S
 		_force_pass(actor)
 		return
 	var outcome := _apply_action(actor, target, move_action)
+	_finish_hold_turn(actor)
+	_check_holds()
 	outcome["action_id"] = move_action.id
 	outcome["verb"] = move_action.verb
 	outcome["ap_cost"] = move_action.ap_cost
@@ -1373,6 +1397,7 @@ func _opposite_facing(facing: StringName) -> StringName:
 ## through the same commit()/release() pair every other action uses, so the scheduler's
 ## round/acted bookkeeping updates exactly as if a real action had resolved.
 func _force_pass(actor: BattleActor) -> void:
+	_finish_hold_turn(actor)
 	var result := scheduler.commit(actor, _pass_action())
 	if bool(result.get("allowed", false)):
 		scheduler.release(actor)
@@ -1715,6 +1740,9 @@ func _apply_resolution_writes(
 					tempo_actor.tempo = int(write.get("after", tempo_actor.tempo))
 			&"aftertone_spent":
 				spent_aftertones += int(write.get("count", 1))
+				if write.has("consumed"):
+					_check_holds("consumed")
+					_emit_event(&"aftertone_consumed", actor, target, {"aftertone": (write["consumed"] as Dictionary).duplicate(true)})
 			&"last_cast_element":
 				var cast_actor := _actor_by_id(str(write.get("target_id", actor.combat_id)))
 				if cast_actor != null:
@@ -1765,9 +1793,11 @@ func _apply_resolution_writes(
 					target, StringName(str(write.get("source_id", actor.combat_id))),
 					int(write.get("field_id", 0)), int(write.get("checkpoints", LightField.LIT_CHECKPOINTS)),
 				)
+	_check_holds()
 
 
 func _notify_combatant_fell(target_id: StringName) -> void:
+	_check_holds()
 	for observer: BattleActor in allies + enemies:
 		_class_resource_of(observer).on_combatant_fell(target_id)
 
@@ -2039,6 +2069,14 @@ func forecast_action(
 			"damage": 0, "description": action.description,
 		})
 	var actor := active_actor()
+	if gate.has("object"):
+		return _allowed({
+			"action_id": action.id, "object": (gate["object"] as Dictionary).duplicate(true),
+			"ap_cost": action.ap_cost, "ct_cost": action.ct_cost, "breath_cost": action.breath_cost,
+			"damage": 0, "resolution": gate.get("resolution", {}),
+			"fizzle_percent": float((gate.get("resolution", {}) as Dictionary).get("fizzle_percent", 0.0)),
+			"description": action.description,
+		})
 	if action.kind == CombatAction.Kind.MOVE:
 		return _allowed({
 			"action_id": action.id,
@@ -2422,6 +2460,8 @@ func _release_balance_lock_if_due(current_round: int) -> void:
 func _finish(result_state: ResultState, outcome_id: StringName) -> void:
 	if state == State.FINISHED:
 		return
+	for holder_id: String in _holds.keys():
+		release_hold(holder_id, "battle_ended")
 	for actor: BattleActor in allies + enemies:
 		_class_resource_of(actor).on_battle_end(result_state == ResultState.VICTORY)
 	state = State.FINISHED
@@ -2496,6 +2536,7 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 
 
 func _tick_actor_aftertones() -> void:
+	_check_holds()
 	if duration_freeze_until_round >= round_number:
 		return
 	for actor: BattleActor in allies + enemies:
@@ -2503,6 +2544,7 @@ func _tick_actor_aftertones() -> void:
 			var before := actor.aftertones.size()
 			actor.tick_aftertones()
 			spent_aftertones += maxi(0, before - actor.aftertones.size())
+	_check_holds()
 
 
 func _is_revealed(actor: BattleActor) -> bool:
@@ -2953,6 +2995,10 @@ func _resolve_cell_cast(actor: BattleActor, action: CombatAction, options: Dicti
 	var kept: Array[Dictionary] = []
 	for write: Dictionary in resolution.get("writes", []):
 		if _CELL_CAST_WRITE_KINDS.has(StringName(str(write.get("kind", "")))):
+			# Only the selected Note changes: suppress the legacy implicit Khor hold and
+			# synthetic-target Aftertones for these explicit working-targeted cards.
+			if action.effect_id in [EFFECT_HOLD_NOTE, EFFECT_ANCHOR, EFFECT_SEVER] and String(write.get("kind", "")) in ["aftertones", "aftertone_spent"]:
+				continue
 			kept.append(write)
 	resolution["writes"] = kept
 	resolution["damage"] = 0
@@ -3308,7 +3354,7 @@ func _fire_checkpoint(completed_round: int) -> void:
 	for actor: BattleActor in living:
 		if FireField.age_soaked(actor):
 			_emit_event(&"soaked_expired", actor, null, {"round": completed_round})
-	for line: Dictionary in fire.advance_checkpoint():
+	for line: Dictionary in fire.advance_checkpoint(_held_ids("line")):
 		_emit_event(&"fire_line_expired", _actor_by_id(StringName(str(line.get("owner_id", "")))), null, {
 			"line": line, "round": completed_round,
 		})
@@ -3599,7 +3645,7 @@ func _light_checkpoint(completed_round: int) -> void:
 		for imposition: String in [LightField.IMPOSITION_EXPOSED, LightField.IMPOSITION_VEILED, LightField.IMPOSITION_LIT, LightField.IMPOSITION_BLINDED]:
 			if LightField.age(creature, imposition):
 				_emit_event(&"imposition_expired", creature, null, {"imposition": imposition, "round": completed_round})
-	for field: Dictionary in light.advance_checkpoint():
+	for field: Dictionary in light.advance_checkpoint(_held_ids("field")):
 		var expired_type: StringName = &"shroud_expired" if LightField.is_shroud(field) else &"light_field_expired"
 		_emit_event(expired_type, _actor_by_id(StringName(str(field.get("owner_id", "")))), null, {
 			"field": LightField._serialize_field(field), "round": completed_round,
@@ -3635,7 +3681,216 @@ func material_object(id: String) -> Dictionary:
 
 ## Object- and working-targeted casts: `options.object_id` (Kindle, Douse, Reclaim, Rot the
 ## Brace) or `options.line_id` (Sever on a Firebreak). Rejections spend nothing.
+func _note_row(note: Dictionary) -> Dictionary:
+	match String(note.get("kind", "")):
+		"line":
+			return fire.line_by_id(int(note.get("line_id", 0)))
+		"field":
+			return light.field_by_id(int(note.get("field_id", 0)))
+		"aftertone":
+			var target := _actor_by_id(String(note.get("target_id", "")))
+			var index := int(note.get("index", -1))
+			if target != null and index >= 0 and index < target.aftertones.size():
+				return target.aftertones[index]
+	return {}
+
+
+func _note_in_reach(actor: BattleActor, note: Dictionary, reach: int = 4) -> bool:
+	var origin: Variant = _actor_cell(actor)
+	if not (origin is Vector2i):
+		return false
+	var row: Dictionary = _note_row(note)
+	var cells: Array[Vector2i] = []
+	match String(note.get("kind", "")):
+		"line":
+			cells = FireField.cells_from_data(row.get("cells", []))
+		"field":
+			if row.get("center") is Vector2i:
+				cells.append(row["center"])
+		"aftertone":
+			var target := _actor_by_id(String(note.get("target_id", "")))
+			var at: Variant = _actor_cell(target) if target != null else null
+			if at is Vector2i:
+				cells.append(at as Vector2i)
+	for cell: Vector2i in cells:
+		var delta: Vector2i = cell - (origin as Vector2i)
+		if maxi(absi(delta.x), absi(delta.y)) <= reach:
+			return true
+	return false
+
+
+func _query_note_action(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	var note: Dictionary = {}
+	if options.has("hold_of"):
+		note = (_holds.get(String(options["hold_of"]), {}) as Dictionary).duplicate(true)
+	elif options.get("aftertone") is Dictionary:
+		var selected: Dictionary = options["aftertone"]
+		note = {"kind": "aftertone", "target_id": String(selected.get("target_id", "")), "index": int(selected.get("index", -1))}
+	elif options.has("line_id"):
+		note = {"kind": "line", "line_id": int(options["line_id"])}
+	elif options.has("field_id"):
+		note = {"kind": "field", "field_id": int(options["field_id"])}
+	var row: Dictionary = _note_row(note)
+	if row.is_empty():
+		return _blocked(&"no_target", "%s needs a living Note." % action.display_name, {"type": &"note"})
+	var kind := String(note["kind"])
+	if kind == "aftertone":
+		var carrier := _actor_by_id(String(note["target_id"]))
+		if not carrier.is_alive() or int(row.get("remaining_rounds", 0)) <= 0:
+			return _blocked(&"ineligible_note", "That Aftertone has ended.", {"type": &"living_note"})
+	if action.effect_id == EFFECT_ANCHOR and kind != "aftertone":
+		return _blocked(&"not_aftertone", "Anchor only protects an Aftertone.", {"type": &"aftertone"})
+	if not _note_in_reach(actor, note):
+		return _blocked(&"blocked_by_range", "%s reaches 4 cells." % action.display_name, {"type": &"range", "range": 4})
+	# Older Aftertones have no source id. Their carrier supplies legacy ownership; new
+	# Resolution lays always record the caster, including lays on hostile creatures.
+	var owner_id := String(row.get("owner_id", note.get("target_id", "")))
+	var owner := _actor_by_id(owner_id)
+	if action.effect_id == EFFECT_HOLD_NOTE:
+		if owner != actor:
+			return _blocked(&"not_owned", "Hold Note needs an owned Note.", {"type": &"owned_note"})
+		if _holds.has(String(actor.combat_id)):
+			return _blocked(&"sustain_slot", "Release the held Note first.", {"type": &"free_sustain_slot"})
+		if kind == "field" and bool(row.get("moving", false)):
+			return _blocked(&"ineligible_note", "This moving working is not an eligible Note.", {"type": &"eligible_note"})
+	if action.effect_id == EFFECT_ANCHOR and (owner == null or owner.side != actor.side):
+		return _blocked(&"not_friendly", "Anchor needs a friendly Aftertone.", {"type": &"friendly_aftertone"})
+	note["anchored"] = bool(row.get("anchored", false)) or action.effect_id == EFFECT_ANCHOR
+	note["held"] = bool(row.get("held", false)) or action.effect_id == EFFECT_HOLD_NOTE or _note_is_held(note)
+	note["severable"] = true
+	note["consumable"] = kind == "aftertone" and not bool(note["anchored"])
+	if action.effect_id == EFFECT_HOLD_NOTE:
+		note["upkeep"] = {"ap": 1, "ct": 30, "breath": 1, "timing": "turn_start"}
+	var cast := _resolve_cell_cast(actor, action, options)
+	if not bool(cast.get("allowed", false)):
+		return cast
+	return _allowed({"object": note, "resolution": cast["resolution"], "context": cast["context"]})
+
+
+func _note_is_held(note: Dictionary) -> bool:
+	for hold: Dictionary in _holds.values():
+		if String(hold.get("kind", "")) != String(note.get("kind", "")):
+			continue
+		match String(note.get("kind", "")):
+			"line":
+				if int(hold.get("line_id", 0)) == int(note.get("line_id", 0)):
+					return true
+			"field":
+				if int(hold.get("field_id", 0)) == int(note.get("field_id", 0)):
+					return true
+	return false
+
+
+func _held_ids(kind: String) -> Array[int]:
+	_check_holds()
+	var ids: Array[int] = []
+	for hold: Dictionary in _holds.values():
+		if String(hold.get("kind", "")) == kind:
+			ids.append(int(hold.get("%s_id" % kind, 0)))
+	return ids
+
+
+## Declining future upkeep is an explicit, cost-free release; Jam does not call this.
+func release_hold(holder_id: String, reason: String = "declined") -> bool:
+	if not _holds.has(holder_id):
+		return false
+	var hold: Dictionary = _holds[holder_id]
+	if String(hold.get("kind", "")) == "aftertone":
+		var target := _actor_by_id(String(hold.get("target_id", "")))
+		if target != null:
+			for aftertone: Dictionary in target.aftertones:
+				if String(aftertone.get("held_by", "")) == holder_id:
+					aftertone["held"] = false
+					aftertone.erase("held_by")
+	_holds.erase(holder_id)
+	_emit_event(&"hold_released", _actor_by_id(holder_id), null, {"note": hold.duplicate(true), "reason": reason})
+	return true
+
+
+func _check_holds(ended_reason: String = "ended") -> void:
+	for holder_id: String in _holds.keys():
+		var hold: Dictionary = _holds[holder_id]
+		var holder := _actor_by_id(holder_id)
+		if holder == null or not holder.is_alive():
+			release_hold(holder_id, "holder_lost")
+			continue
+		if String(hold.get("kind", "")) == "aftertone":
+			var target := _actor_by_id(String(hold.get("target_id", "")))
+			var found := false
+			if target != null and target.is_alive():
+				for index: int in target.aftertones.size():
+					if String(target.aftertones[index].get("held_by", "")) == holder_id:
+						hold["index"] = index
+						found = true
+						break
+			if not found:
+				release_hold(holder_id, ended_reason)
+				continue
+		var row: Dictionary = _note_row(hold)
+		if row.is_empty():
+			release_hold(holder_id, ended_reason)
+		elif not _note_in_reach(holder, hold):
+			release_hold(holder_id, "out_of_reach")
+		else:
+			hold["anchored"] = bool(row.get("anchored", false))
+			hold["consumable"] = String(hold.get("kind", "")) == "aftertone" and not bool(hold["anchored"])
+	# Resolution snapshots its writes before applying HP. A lethal HP write can release a
+	# hold before a later Aftertone write restores that old snapshot. Never resurrect its
+	# held flag; legacy implicit holds have no held_by marker and remain unchanged.
+	for carrier: BattleActor in allies + enemies:
+		for aftertone: Dictionary in carrier.aftertones:
+			var holder_id := String(aftertone.get("held_by", ""))
+			if not holder_id.is_empty() and not _holds.has(holder_id):
+				aftertone["held"] = false
+				aftertone.erase("held_by")
+
+
+func _pay_hold_upkeep(actor: BattleActor) -> void:
+	_check_holds()
+	var hold: Dictionary = _holds.get(String(actor.combat_id), {})
+	if hold.is_empty() or bool(hold.get("upkeep_paid", false)):
+		return
+	var upkeep := CombatAction.new()
+	upkeep.ap_cost = 1
+	upkeep.ct_cost = 30
+	if actor.breath < 1 or not bool(_can_afford(actor, upkeep).get("allowed", false)):
+		release_hold(String(actor.combat_id), "upkeep_unpaid")
+		return
+	var payment: Dictionary = scheduler.commit(actor, upkeep)
+	if not bool(payment.get("allowed", false)):
+		release_hold(String(actor.combat_id), "upkeep_unpaid")
+		return
+	actor.breath -= 1
+	hold["upkeep_paid"] = true
+	scheduler.release(actor)
+	_emit_event(&"hold_upkeep_paid", actor, null, {"breath": 1, "ap_cost": 1, "ct_cost": 30})
+
+
+func _finish_hold_turn(actor: BattleActor) -> void:
+	if _holds.has(String(actor.combat_id)):
+		(_holds[String(actor.combat_id)] as Dictionary)["upkeep_paid"] = false
+
+
+func _sever_note(actor: BattleActor, note: Dictionary) -> bool:
+	var removed := false
+	var target := _actor_by_id(String(note.get("target_id", "")))
+	match String(note.get("kind", "")):
+		"field":
+			removed = light.remove_field(int(note.get("field_id", 0)))
+		"aftertone":
+			if target != null and not _note_row(note).is_empty():
+				target.aftertones.remove_at(int(note["index"]))
+				spent_aftertones += 1
+				removed = true
+	if removed:
+		_check_holds("severed")
+		_emit_event(&"note_severed", actor, target, {"note": note.duplicate(true)})
+	return removed
+
+
 func _query_object_action(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	if action.effect_id in [EFFECT_HOLD_NOTE, EFFECT_ANCHOR] or (action.effect_id == EFFECT_SEVER and (options.has("aftertone") or options.has("hold_of"))):
+		return _query_note_action(actor, action, options)
 	if not bool(battlefield.capabilities().get("cells", false)):
 		return _blocked(&"position", "%s needs a gridded battlefield." % action.display_name, {"type": &"cells"})
 	var origin: Variant = _actor_cell(actor)
@@ -3745,11 +4000,29 @@ func _apply_object_action(actor: BattleActor, action: CombatAction, options: Dic
 			result["rot"] = rotted
 			result["message"] = "%s rots %s." % [actor.display_name, String(material.object(object_id).get("label", object_id))]
 		EFFECT_SEVER:
+			if String(preview.get("kind", "")) != "line":
+				result["severed"] = _sever_note(actor, preview)
+				return result
 			var line_id := int(preview.get("line_id", 0))
 			var line: Dictionary = fire.line_by_id(line_id)
 			result["severed"] = fire.remove_line(line_id)
 			_emit_event(&"line_severed", actor, null, {"line_id": line_id, "line": line.duplicate(true)})
+			_check_holds("severed")
 			result["message"] = "%s severs the Firebreak." % actor.display_name
+		EFFECT_HOLD_NOTE:
+			var hold: Dictionary = preview.duplicate(true)
+			hold["since_round"] = round_number
+			hold["upkeep_paid"] = false
+			_holds[String(actor.combat_id)] = hold
+			var note: Dictionary = _note_row(hold)
+			if String(hold["kind"]) == "aftertone":
+				note["held"] = true
+				note["held_by"] = String(actor.combat_id)
+			_emit_event(&"note_held", actor, null, {"note": preview.duplicate(true)})
+		EFFECT_ANCHOR:
+			var note: Dictionary = _note_row(preview)
+			note["anchored"] = true
+			_emit_event(&"aftertone_anchored", actor, _actor_by_id(String(preview["target_id"])), {"note": preview.duplicate(true)})
 	return result
 
 
@@ -4238,6 +4511,8 @@ func class_resources_to_dict() -> Dictionary:
 		result[VEKH_SAVE_KEY] = {"blindside": _blindside.duplicate(true), "feast": _feast.duplicate(true)}
 	if not material.is_empty():
 		result[MATERIALS_SAVE_KEY] = material.to_dict()
+	if not _holds.is_empty():
+		result[HOLDS_SAVE_KEY] = _holds.duplicate(true)
 	var impositions: Dictionary = {}
 	for actor: BattleActor in allies + enemies:
 		if not actor.impositions.is_empty():
@@ -4248,6 +4523,9 @@ func class_resources_to_dict() -> Dictionary:
 
 
 func restore_class_resources(data: Dictionary) -> void:
+	# Legacy saves have no holds; clear the current section before replacing it.
+	for holder_id: String in _holds.keys():
+		release_hold(holder_id, "restore")
 	for actor: BattleActor in allies + enemies:
 		var entry: Variant = data.get(String(actor.combat_id), null)
 		if entry is Dictionary:
@@ -4285,6 +4563,16 @@ func restore_class_resources(data: Dictionary) -> void:
 			var row: Variant = (impositions as Dictionary).get(String(actor.combat_id), null)
 			if row is Dictionary:
 				actor.impositions = (row as Dictionary).duplicate(true)
+	var holds: Variant = data.get(HOLDS_SAVE_KEY, {})
+	if holds is Dictionary:
+		_holds = (holds as Dictionary).duplicate(true)
+		for holder_id: String in _holds:
+			var hold: Dictionary = _holds[holder_id]
+			var note: Dictionary = _note_row(hold)
+			if String(hold.get("kind", "")) == "aftertone" and not note.is_empty():
+				note["held"] = true
+				note["held_by"] = holder_id
+	_check_holds()
 
 
 ## FR-802 (globals/stable_ids.gd). Builds `BattleActor.combat_id` from stable inputs only —

@@ -4,20 +4,20 @@
 
 [resource]
 script = ExtResource("1_action")
-id = &"sever"
-display_name = "Sever"
+id = &"anchor"
+display_name = "Anchor"
 kind = 0
 verb = 2
 ap_cost = 3
 ct_cost = 45
-element_id = &"zhem"
+element_id = &"tham"
 magnitude = &"phrase"
 target_profile = &"ranged"
 target_side = "any"
 player_available = true
-effect_id = &"sever"
+effect_id = &"anchor"
 effect_payload = {"range": 4}
 spell = true
 breath_cost = 6
 no_damage = true
-description = "Zhem Phrase. End one working within 4: a Firebreak, a held Note, or an Aftertone, including anchored Aftertones. Frees its hold without a refund. Physical fire on material keeps burning on its own fuel."
+description = "Tham Phrase. Anchor one friendly Aftertone within 4 without adding duration. Protects against ordinary Khash consumption; Sever still ends it. Stacks with Hold Note."

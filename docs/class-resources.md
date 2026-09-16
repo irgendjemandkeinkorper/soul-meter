@@ -197,9 +197,16 @@ is model-level round-trip only. The same dict carries two more reserved keys bes
 `__deferred__`: `__fire__` (Firebreak lines and per-round hazard marks), `__light__` (Witness
 Light and Shroud fields), `__jams__` (successful Jams by requester and round), `__vekh__`
 (armed Blindsides and a pending Eclipse Feast), `__materials__` (timber and stone objects
-with integrity, fuel, fire and Wet) and `__impositions__`
+with integrity, fuel, fire and Wet), `__holds__` (one sustained Note per holder, its target
+reference and upkeep state) and `__impositions__`
 (Burning/Soaked/Exposed/Veiled/Lit/Blinded per combat id), all omitted when empty so older
 saves load unchanged.
+
+`__holds__` is omitted when empty. Aftertone ownership (`owner_id`) and sustain identity
+(`held_by`, alongside `held` and `anchored`) remain inside the actor's existing Aftertone
+dictionaries. Restore actor Aftertones before restoring holds. New lays record their caster;
+legacy Aftertones without an owner use their carrier for Hold Note/Anchor eligibility.
+Restoring a section without `__holds__` releases current holds. No schema version changes.
 
 ## Do not decide (B-wave workers)
 

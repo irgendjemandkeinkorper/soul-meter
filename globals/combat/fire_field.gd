@@ -99,10 +99,13 @@ func mark_hazard(combat_id: StringName, round_number: int) -> void:
 
 
 ## Ages every line by one checkpoint and returns the lines that expired (already removed).
-func advance_checkpoint() -> Array[Dictionary]:
+func advance_checkpoint(held_ids: Array[int] = []) -> Array[Dictionary]:
 	var expired: Array[Dictionary] = []
 	var kept: Array[Dictionary] = []
 	for line: Dictionary in lines:
+		if held_ids.has(int(line.get("id", 0))):
+			kept.append(line)
+			continue
 		line["remaining_checkpoints"] = int(line.get("remaining_checkpoints", 0)) - 1
 		if int(line["remaining_checkpoints"]) <= 0:
 			expired.append(line.duplicate(true))

@@ -134,10 +134,13 @@ func remove_field(field_id: int) -> bool:
 
 
 ## Ages every field by one checkpoint and returns the ones that expired (already removed).
-func advance_checkpoint() -> Array[Dictionary]:
+func advance_checkpoint(held_ids: Array[int] = []) -> Array[Dictionary]:
 	var expired: Array[Dictionary] = []
 	var kept: Array[Dictionary] = []
 	for field: Dictionary in fields:
+		if held_ids.has(int(field.get("id", 0))):
+			kept.append(field)
+			continue
 		field["remaining_checkpoints"] = int(field.get("remaining_checkpoints", 0)) - 1
 		if int(field["remaining_checkpoints"]) <= 0:
 			expired.append(field.duplicate(true))

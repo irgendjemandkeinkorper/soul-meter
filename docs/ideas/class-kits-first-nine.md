@@ -296,6 +296,10 @@ are stated here so implementation has something to reject.
 3. The remaining seven follow once the reaction matrix's steps 1–3 exist in the runtime,
    because Cairn, Nightfeeder and Sparkwright depend on K/T/X/R reactions.
 
+Shared Hold Note is implemented by reaction-matrix step 2 (2026-09-16), alongside Anchor
+and Sever on held Notes/Aftertones. See the [step-2 runtime table](elemental-reaction-matrix.md#step-2-runtime-2026-09-16)
+for target options, upkeep, save state, tests, and the remaining Anchor expiry conflict.
+
 ### Ash Magistrate runtime (2026-09-15)
 
 The kit and the cards it leans on are live in `CombatController`; the substrate is
