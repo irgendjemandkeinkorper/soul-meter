@@ -184,7 +184,8 @@ func apply_balance_band(band_id: StringName, effects: Dictionary) -> void:
 func tick_aftertones() -> void:
 	var remaining: Array[Dictionary] = []
 	for aftertone: Dictionary in aftertones:
-		if bool(aftertone.get("anchored", false)) or bool(aftertone.get("held", false)):
+		# Anchoring prevents consumption; only a hold freezes ordinary duration.
+		if bool(aftertone.get("held", false)):
 			remaining.append(aftertone.duplicate(true))
 			continue
 		var rounds := int(aftertone.get("remaining_rounds", 0)) - 1

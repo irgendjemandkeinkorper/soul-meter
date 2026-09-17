@@ -207,6 +207,9 @@ saves load unchanged.
 dictionaries. Restore actor Aftertones before restoring holds. New lays record their caster;
 legacy Aftertones without an owner use their carrier for Hold Note/Anchor eligibility.
 Restoring a section without `__holds__` releases current holds. No schema version changes.
+Anchoring protects against consumption without pausing duration. Existing saved anchored
+Aftertones count down from their stored remaining duration unless held or covered by an
+explicit duration-freeze effect (owner decision, 2026-09-16); no migration is needed.
 
 ## Do not decide (B-wave workers)
 

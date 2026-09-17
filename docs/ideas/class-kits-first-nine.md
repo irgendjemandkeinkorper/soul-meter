@@ -298,7 +298,7 @@ are stated here so implementation has something to reject.
 
 Shared Hold Note is implemented by reaction-matrix step 2 (2026-09-16), alongside Anchor
 and Sever on held Notes/Aftertones. See the [step-2 runtime table](elemental-reaction-matrix.md#step-2-runtime-2026-09-16)
-for target options, upkeep, save state, tests, and the remaining Anchor expiry conflict.
+for target options, upkeep, save state, tests, and the ratified Anchor expiry behavior.
 
 ### Ash Magistrate runtime (2026-09-15)
 

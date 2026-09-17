@@ -20,4 +20,4 @@ effect_payload = {"range": 4}
 spell = true
 breath_cost = 6
 no_damage = true
-description = "Tham Phrase. Anchor one friendly Aftertone within 4 without adding duration. Protects against ordinary Khash consumption; Sever still ends it. Stacks with Hold Note."
+description = "Tham Phrase. Anchor one friendly Aftertone within 4 without adding duration. Protects against ordinary Khash consumption; ordinary expiry and Sever still end it. Stacks with Hold Note."

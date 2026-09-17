@@ -151,6 +151,28 @@ func test_k3_anchor_then_hold_stacks_and_does_not_hold_an_unselected_note() -> v
 	assert_bool(bool(b.caster.aftertones[0].held)).is_false()
 	_end_round(b)
 	assert_int(int(b.enemy.aftertones[0].remaining_rounds)).is_equal(3)
+	var c: CombatController = b.controller
+	assert_bool(c.release_hold(String(b.caster.combat_id))).is_true()
+	_end_round(b)
+	assert_bool(bool(b.enemy.aftertones[0].anchored)).is_true()
+	assert_int(int(b.enemy.aftertones[0].remaining_rounds)).is_equal(2)
+	_end_round(b)
+	_end_round(b)
+	assert_array(b.enemy.aftertones).is_empty()
+
+
+func test_t2_anchor_alone_preserves_remaining_duration_and_expires_normally() -> void:
+	var b := _battle()
+	var selected := _aftertone(b, b.ally)
+	_cast(b, &"anchor", selected)
+	assert_int(int(b.ally.aftertones[0].remaining_rounds)).is_equal(3)
+	for remaining: int in [2, 1]:
+		_end_round(b)
+		assert_bool(bool(b.ally.aftertones[0].anchored)).is_true()
+		assert_bool(bool(b.ally.aftertones[0].held)).is_false()
+		assert_int(int(b.ally.aftertones[0].remaining_rounds)).is_equal(remaining)
+	_end_round(b)
+	assert_array(b.ally.aftertones).is_empty()
 
 
 func test_t2_hold_then_anchor_one_friendly_aftertone_and_no_other() -> void:
@@ -274,6 +296,9 @@ func test_hold_tracks_aftertone_array_shifts_and_save_round_trip_and_legacy_clea
 	restored_c.restore_class_resources({})
 	assert_bool(restored_c.class_resources_to_dict().has("__holds__")).is_false()
 	assert_bool(bool(target.aftertones[0].held)).is_false()
+	_end_round(restored)
+	assert_bool(bool(target.aftertones[0].anchored)).is_true()
+	assert_int(int(target.aftertones[0].remaining_rounds)).is_equal(2)
 
 
 func test_ct_upkeep_costs_thirty_once_while_recharging_for_the_next_action() -> void:

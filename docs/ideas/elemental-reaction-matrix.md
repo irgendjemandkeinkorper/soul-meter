@@ -275,7 +275,7 @@ burn rule in the Khash packet is not wired (combat-only substrate).
 ### Step 2 runtime (2026-09-16)
 
 Hold/anchor/consume/sever run through the controller's forecast and submit paths. Suite:
-`test/unit/test_reaction_matrix_step2.gd` (16 cases). Cards: `66_hold_note.tres`,
+`test/unit/test_reaction_matrix_step2.gd` (17 cases). Cards: `66_hold_note.tres`,
 `67_anchor.tres`, and the extended `63_sever.tres`.
 
 | Piece / code | Runtime contract | Evidence in the step-2 suite |
@@ -283,7 +283,7 @@ Hold/anchor/consume/sever run through the controller's forecast and submit paths
 | Hold Note | `options.field_id` selects a fixed Witness Light or Shroud; `options.line_id` selects a Firebreak; `options.aftertone = {target_id, index}` selects an owned Aftertone, including one carried by an enemy. One sustain slot per caster. Cast and each turn-start upkeep cost 1 AP / 30 CT and 1 Breath. Held fields skip only duration ageing; Burning, Wet, hazards and fuel remain independent. | `test_hold_light_freezes_duration_and_pays_once_per_turn`, `test_hold_firebreak_freezes_only_the_line_not_burning_or_wet`, `test_one_sustain_slot_refuses_before_costs_and_release_frees_it` |
 | Lifecycle | Missing Breath/AP, holder death, loss of the Note or reach greater than 4 releases the hold. `release_hold(holder_id)` explicitly declines further upkeep. Duration resumes; nothing is refunded. CT recharge after paying upkeep does not pay again before the actor can act. | `test_missing_breath_or_ap_upkeep_releases_without_partial_payment`, `test_leaving_sustain_reach_releases_and_duration_resumes`, `test_holder_death_releases_immediately_through_the_hp_write_path`, `test_ct_upkeep_costs_thirty_once_while_recharging_for_the_next_action` |
 | K3 | Anchor then Hold Note stacks `anchored` and `held`; forecast publishes both flags plus `consumable`, `severable` and upkeep. The legacy implicit Khor hold is suppressed for these targeted cards so no unselected Aftertone changes. | `test_k3_anchor_then_hold_stacks_and_does_not_hold_an_unselected_note` |
-| T2 | Anchor sets `anchored` on exactly one friendly Aftertone within 4, including one already held. A held field or line is rejected before costs. | `test_t2_hold_then_anchor_one_friendly_aftertone_and_no_other`, `test_t2_anchor_refuses_held_non_aftertones_before_breath_and_ap` |
+| T2 | Anchor sets `anchored` on exactly one friendly Aftertone within 4, including one already held. It does not pause or extend duration: only Hold Note or an explicit duration-freeze effect does that. Releasing a hold resumes the anchored Aftertone's countdown. A held field or line is rejected before costs. | `test_t2_anchor_alone_preserves_remaining_duration_and_expires_normally`, `test_t2_hold_then_anchor_one_friendly_aftertone_and_no_other`, `test_t2_anchor_refuses_held_non_aftertones_before_breath_and_ap` |
 | H3 | The existing Khash attack burst consumes the first unanchored Aftertone. Consuming the held one emits `aftertone_consumed` and `hold_released`, freeing the slot and stopping upkeep. Anchoring prevents this consumption; the ordinary attack still lands. | `test_h3_khash_consumes_unanchored_held_aftertone_and_stops_upkeep`, `test_h3_anchored_held_aftertone_refuses_consumption_but_attack_still_lands` |
 | Z3, Z4 | Sever accepts `options.hold_of = holder_id` or `options.aftertone = {target_id, index}`. It ends the underlying Note and its hold, including an anchored Aftertone, without refund. Physical material fire is unchanged. Direct unheld light/shroud field targeting remains step 4. | `test_z3_z4_sever_ends_each_held_note_and_anchored_aftertones_without_refund` |
 | Ownership and save | New Aftertones record `owner_id`; legacy ownerless Aftertones use their carrier. `held_by` keeps a hold attached when earlier array entries disappear. `__holds__` lives in `class_resources`, omitted when empty; actor Aftertones restore before holds. The existing schema is unchanged. | `test_hold_rejects_unowned_missing_moving_and_out_of_reach_notes_without_payment`, `test_hold_tracks_aftertone_array_shifts_and_save_round_trip_and_legacy_clear` |
@@ -295,20 +295,24 @@ Aftertone writes captured before the kill cannot resurrect a released `held_by` 
 Verification on Godot 4.7.1 under Xvfb: the complete unit tree, HUD cell-targeting suite,
 and `test/combat_resolution/test_resolution.gd` passed together (164 suites, exit 0):
 
-`Overall Summary: 1617 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
+`Overall Summary: 1618 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |`
 
-The focused step-2 suite also passed all 16 cases. `git diff --check` passed. Editor import
-exited 0 and generated the suite UID, but logged vendor editor errors in Dialogue Manager's
+After the owner's expiry decision below, the focused step-2 and Aftertones/Triads suites
+passed all 31 cases (17 step-2 cases). The full run above includes that change and exited 0
+in 2 min 15 sec. `git diff --check` passed. The initial step-2 editor import exited 0 and
+generated the suite UID, but logged vendor editor errors in Dialogue Manager's
 `DMThemeValues._init`, Pandora dock cleanup and Phantom Camera singleton cleanup; it is not
 a clean editor-import result. The test runner also logged resource cleanup diagnostics after
 its successful exit summary. No vendor files were changed. HUD symbols/picking were not added.
 
+**Owner decision, 2026-09-16:** match the Anchor card's ordinary-expiry rule. The owner
+authorized `globals/battle_actor.gd` in this step; `tick_aftertones()` now freezes only held
+Aftertones. Anchoring still prevents ordinary Khash consumption, and Founding's separate
+duration-freeze window still applies. Live Anchor, hold-release, and restored-save checks
+cover the countdown and expiry; the earlier expiry conflict is resolved.
+
 Open / design conflicts carried forward:
 
-- **Anchored duration:** the card says “Ordinary expiry and eligible severing still work,”
-  but the existing `BattleActor.tick_aftertones()` freezes anchored Aftertones as well as
-  held ones. This step currently sets the literal `anchored` flag and preserves that existing
-  behavior pending owner direction on changing `globals/battle_actor.gd`.
 - **Z4:** “Inside a Vault Triad's Sealed Ground the Triad rule wins and Sever is rejected
   there.” The exception remains unimplemented; anchoring alone never refuses Sever.
 - **CT upkeep:** “Upkeep timing for CT battles (measure vs turn). Implement turn start; note
