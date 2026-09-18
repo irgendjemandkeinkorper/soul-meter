@@ -1,0 +1,189 @@
+# Called shots, accuracy, and injuries
+
+**Status:** Proposed architecture, 2026-09-17. Serious-injury persistence and separate design/task files confirmed by the user on 2026-09-17. Planning only; remaining gameplay rules and balance are proposals.
+
+**Requested direction:** Expand Soul Meter's turn-based combat toward Fallout 2's aimed attacks and situational accuracy, replacing the groin target with the **throat**. Include line of sight, environmental conditions, and injuries.
+
+**Implementation checklist:** [Called-shot expansion tasks](../../tasks/called-shots-and-injuries.md).
+
+## Recommended shape
+
+Build one aiming system that serves ordinary attacks, anatomical called shots, and discovered Defining Strike weaknesses. Show the chance and its causes before commitment. A successful called shot can produce a location-specific injury; choosing a location does not guarantee a disabling effect.
+
+The first playable encounter should support **torso, arm, and throat**, with clear versus dim conditions, partial cover, and a vocal opponent. Expand anatomy after this loop is understandable and tactically useful. Preserve same-map combat, party play, the existing schedulers, and the Elements & Music economy.
+
+### Decisions and their status
+
+| Decision | Status |
+|---|---|
+| Called shots, throat replacing groin, situational accuracy, injuries | Requested by the user; in scope for this plan |
+| One resolver shared by forecast, execution, replay, and AI | Recommended architecture using existing boundaries |
+| Visible anatomy needs no Lore roll; hidden weaknesses retain discovery requirements | Proposed rule amendment |
+| Location difficulty, aim surcharge, injury chances/severities, environmental penalties | Proposed tuning; not settled numbers |
+| Serious injuries persist beyond combat until treated | Confirmed by the user, 2026-09-17; persistence and treatment are required scope |
+
+## Existing foundation and design amendments
+
+| Existing source | Implication for the expansion |
+|---|---|
+| [Game identity](../game-identity.md) | Preserve Fallout lineage, same-map encounters, class identity, and acts of Agreement as the source of Soul income. |
+| [Chapter-one PRD](../prd-chapter-one.md), FR103 | Calls Defining Strikes the called-shot system and restricts body-part menus. This proposal explicitly expands that older requirement in response to the new request. Amend FR103 when rules are accepted. |
+| [Martial rules proposal](martial-combat-rules.md) | Retain weapon identities and explicit AP/CT authoring. Its avoidance of a new critical roll needs an explicit amendment if conditional injury rolls are adopted. |
+| [Resolution](../../globals/combat/resolution.gd) | Already deterministic and shared. Current provisional accuracy is 70 + 2 × Alacrity difference + facing + 4 × height difference, clamped to 5–95 when to-hit resolution is enabled. Preserve the baseline while adding explainable inputs. |
+| [Combat controller](../../globals/combat/combat_controller.gd) | Owns legality, costs, forecasts, and effect application. Defining Strikes currently add a knowledge check. Audit their effect path: effects must require a confirmed physical hit. Cover currently reduces damage here. |
+| [Grid battlefield](../../globals/combat/grid_battlefield_model.gd) | Has range, elevation, cover, and binary LOS. Extend this query boundary for exposure; audit hard terrain blockers instead of assuming existing LOS handles every wall. |
+| [Combat rules](../../globals/combat/combat_rules.gd) | Supports AP-round and charge-time schedulers. Charge time is not universally enabled; called shots must support both without inventing an AP-to-CT conversion. |
+| [Spell-card rules](spell-card-rules.md) | Muted resets Tempo; it is not persistent silence. Elemental statuses and physical injuries need separate contracts. |
+
+### What to borrow from Fallout
+
+Borrow the decision structure: spend more effort aiming, trade accuracy for a specific consequence, and use position or conditions to improve the attempt. The [Fallout 2 Community Edition combat implementation](https://github.com/alexbatalov/fallout2-ce/blob/main/src/combat.cc) includes location penalties and location-specific critical effects, with accuracy affected by weapon skill, distance, illumination, intervening creatures, and blindness. It is a reimplementation reference, not an official rules specification. Soul Meter should use its own attributes, skills, timing, and authored anatomy rather than copy those numerical tables.
+
+## Player-facing rules
+
+### Choose an attack, a target, and an aim
+
+An ordinary attack remains the fastest interaction. An Aim control opens the target's available locations; the player sees hit chance, additional AP or CT cost, and a concise possible effect before committing. Canceling or inspecting a target spends nothing.
+
+Use authored anatomy, not a universal human silhouette. A humanoid can expose torso, head/eyes, left/right arms, left/right legs, and throat; another creature can omit or replace these. Missing or fully covered parts cannot be selected. Obvious parts are available without discovery checks. Discovered supernatural or narrative weaknesses appear alongside anatomy with their existing knowledge requirements.
+
+| Location family | Proposed tactical purpose | Constraint |
+|---|---|---|
+| Torso | Reliable damage, smallest aiming penalty | Ordinary attack remains useful; no free disabling effect |
+| Arms/hands | Impair attacks using the injured limb or weapon | Handedness and weapon use must be authored; no universal stat penalty |
+| Legs | Impair movement or positional recovery | Express costs through the active scheduler; avoid unavoidable permanent immobility |
+| Head/eyes | Difficult disruption or impaired sight | Severe outcomes need separate rarity/resistance tuning; no automatic stun lock |
+| Throat | Disrupt explicitly vocal actions | Does not automatically block all magic or reuse the Muted status |
+
+**Throat proposal:** a minor injury penalizes eligible vocal actions; a severe injury can prevent actions explicitly requiring an intact voice until recovery. Severity, duration, and interruption of an already committed action require authored rules. An action's element or spell classification alone does not establish vocal dependence. Provide a viable nonvocal action before allowing a severe throat effect in playable content.
+
+Add action delivery metadata such as `requires_voice` and limb requirements. Validate it against class cards and lore before production authoring. Any interaction with held notes, pending casts, or sustained workings must use their existing lifecycle and reaction contracts. Do not silently remove all Aftertones, undo spent Soul, or cancel unrelated anchored effects.
+
+### Accuracy: legality first, percentage second
+
+1. **Establish legality:** valid actor, observed target, range, action eligibility, required limb/voice, line of fire, and exposed aim location.
+2. **Build one frozen context:** positions, relevant skills, equipment, exposure, environment, and injuries at the action boundary.
+3. **Calculate and explain chance:** combine the baseline and applicable modifiers, then apply the legal-shot clamp.
+4. **Resolve once:** consume the committed action's deterministic roll; apply damage and eligible consequences on a hit.
+
+Proposed formula structure; all added terms are authored and calibrated, not hard-coded here:
+
+```text
+chance = clamp(
+    existing baseline
+  + calibrated relevant-skill contribution
+  + weapon/range modifier
+  + location difficulty
+  + partial-cover/exposure modifier
+  + physical visibility modifier
+  + attacker injury modifier
+  + eligible target-condition modifier,
+  legal minimum, legal maximum
+)
+```
+
+Retain the existing baseline until parity tests pass. Introduce skill contribution only after checking existing derived stats for double counting. Use the relevant existing Arms or Tone skill; do not introduce a Guns or Pitch attribute. Physical melee, projectiles, direct spells, and area effects need explicit applicability profiles; a melee swing should not inherit a bow's range or wind penalty.
+
+Illustrative arithmetic, **not proposed balance values**: baseline 70, skill +10, throat −25, partial cover −15, dim visibility −10 gives 30%; an eligible hand injury at −10 gives 20%. The forecast should expose this arithmetic in percentage points.
+
+### LOS and environment have different jobs
+
+| Condition | Proposed behavior |
+|---|---|
+| Solid wall or fully hidden selected location | Illegal direct shot; no cost or RNG consumed. A minimum hit chance cannot bypass a wall. |
+| Low obstacle or partial body exposure | Exposed locations remain targetable with authored penalties; hidden locations are disabled. |
+| Dim light, smoke, fog | One composed visibility result for an otherwise locatable target, with reason labels. Define combination rules to avoid counting the same loss of sight twice. |
+| Range, elevation, facing | Preserve current positioning semantics, adding weapon-specific range bands where authored. |
+| Rain/wind, footing, elemental conditions | Apply only through explicit delivery or terrain rules. Wind is not a generic melee penalty; Soaked is not automatically an accuracy debuff. |
+
+Start with deterministic tile/edge tracing and authored exposure masks. Do not require per-bone 3D raycasts or a new physical weather simulation. The first environment producer can be authored clear/dim and obscured cells; physical weather feeds the same context later if approved.
+
+Separate **observation** (can this actor locate the target?), **line of fire** (can this attack reach it?), and **location exposure** (which parts can it hit?). A visible actor behind glass or a low wall can have a different firing result. Keep intervening actors' existing blocking behavior initially; projectile interception, penetration, and friendly fire are separate scope choices.
+
+Existing elemental [Weather](../../globals/combat/weather.gd) changes charge. Witness Light and Shroud concern revelation/concealment and must not automatically become physical illumination or body invisibility. Add an explicit adapter for approved interactions.
+
+**Cover migration:** current cover subtracts damage. Recommend using exposure for direct-shot avoidance while keeping armor and explicitly authored material protection as mitigation. Avoid charging the same generic cover bonus in both places. Compare existing encounters before switching their profiles; retain legacy behavior until migrated.
+
+**Status reconciliation:** inventory current Blinded, facing, and other accuracy consumers before adding terms. A written proposed −10 percentage-point status and a runtime facing restriction are not interchangeable; select one accepted behavior and test it rather than accumulating both accidentally.
+
+## Injury resolution and recovery
+
+Resolve injuries after a confirmed hit and damage mitigation. Define which damage thresholds, effect types, armor protections, and target resistances permit each consequence. A miss cannot cripple, interrupt a voice, or apply an old Defining Strike effect. A zero-damage hit only applies an injury if the action explicitly allows that outcome.
+
+Recommend a conditional injury/severity roll, reusing an existing compatible critical mechanism if the implementation audit finds one. Avoid parallel critical systems. The aim location selects an authored outcome table; damage type and anatomy determine eligible outcomes. Do not add separate limb HP in the first release.
+
+Forecasts distinguish **chance to hit** from **chance to injure on hit**. If those are 60% and 25%, the overall injury chance is 15%; label all three correctly. Previewing consumes no RNG and reveals no future roll. Version deterministic roll channels and replay data if extra rolls change existing action sequencing.
+
+Store injuries separately from temporary elemental impositions. An injury record has stable injury and location IDs, severity, provenance needed for rules, and recovery state. Bound repeated applications per location; explicitly define refresh or escalation so repeated minor hits cannot create unlimited stacking penalties.
+
+Apply action-specific modifiers rather than subtracting Alacrity globally: changing that attribute would also change timing and other derived behavior. A hand injury affects eligible attacks; a leg injury affects movement; a throat injury affects voice-tagged actions. NPCs follow the same rules.
+
+### Persistence — confirmed
+
+**User decision, 2026-09-17: serious injuries persist after combat until treated.** Ending combat, retreating, traveling, or saving/reloading does not clear them. Treatment access, recovery rules, durable injury state, and save compatibility are required parts of this expansion. Minor-injury duration remains an authored rule to settle; this decision does not turn temporary elemental statuses into persistent injuries.
+
+Do not ship persistent disabling injuries before an accessible recovery route exists. Mending is an existing skill and a candidate for treatment, not an automatic authorization for a new healing economy. Treatment cost, providers/items, time, and success rules need explicit design. HP healing and injury treatment must have a defined relationship; neither grants Soul. Ordinary HP restoration must not silently erase a serious injury; any action that treats it must explicitly implement the recovery contract.
+
+For persistent party injuries, extend [PartyMember](../../globals/party_member.gd) serialization with stable optional records, mirror them into [BattleActor](../../globals/battle_actor.gd), and synchronize through [Battle](../../globals/battle.gd). Handle retreat, transitions, reload, death, and revival—not only victory. Old saves without injury data load with no injuries. Decide whether a schema migration is required under [SaveMigrations](../../globals/save_migrations.gd).
+
+For hostiles, first identify the authoritative same-map actor state and its existing persistence lifetime. Preserve injuries for that lifetime without creating an unrelated global NPC registry or changing corpse/despawn policy. Temporary class-resource serialization is not the durable home for physical injuries.
+
+## Architecture and ownership
+
+These are proposed contracts, not an instruction to add a class for every row.
+
+| Contract | Owner / integration | Contents |
+|---|---|---|
+| Anatomy and aim rules | Pandora → validated generated catalog adapter | Stable profile/part IDs, supported locations, exposure groups, location difficulty, outcome references |
+| Action intent | Existing CombatAction and controller query/submit boundary | Optional aim location or discovered weakness; old actions default to ordinary aim; explicit active-scheduler cost |
+| Attack context | Battlefield + existing stat/status adapters | Snapshot of geometry, observation, physical environment, relevant equipment and injuries |
+| Accuracy/result | Pure Resolution helpers | Legality reasons, ordered modifier breakdown, hit chance, conditional effects, deterministic outcome; no writes |
+| Injury lifecycle | Controller/BattleActor and durable owner | Apply once, emit events, serialize serious injuries, recover through explicit treatment rules |
+
+```mermaid
+flowchart LR
+    UI[HUD aim selection] --> Q[Controller query]
+    AI[AI candidate scoring] --> Q
+    DATA[Pandora catalogs] --> Q
+    MAP[Battlefield observation and exposure] --> Q
+    Q --> CTX[Immutable attack context]
+    CTX --> R[Pure Resolution]
+    R --> F[Forecast with reason breakdown]
+    UI --> S[Controller submit and revalidation]
+    S --> R
+    R --> APPLY[Controller applies result once]
+    APPLY --> STATE[Actor and durable injury state]
+    APPLY --> EVENTS[Combat events and replay]
+```
+
+Forecast and submission use the same calculation against their respective current snapshots. On submission, revalidate changed geometry, target eligibility, and costs before spending; reactions then follow the existing committed-action contract. UI only renders results and emits intent. AI uses observable expected outcomes, not hidden anatomy, secret weaknesses, or future random rolls.
+
+Pandora remains the source of production data. Extend the authoring/export/validation pipeline and regenerate; never hand-edit `data/generated/*`. Test fixtures may use small local profiles. Generated IDs must survive display-name changes and save round trips.
+
+The HUD can begin with a text-based location list: chance, active-scheduler cost, possible consequence, and disabled reason. Use existing DS tokens/theme variations, localization, keyboard/controller selection, and the forecast region. No new visual art direction is required.
+
+## Delivery sequence
+
+1. **Explain the current shot:** baseline parity, legality reasons, and an accuracy breakdown visible in the combat lab/HUD.
+2. **Make aiming playable:** torso/arm/throat intent, explicit costs, on-hit outcomes, and the real selector/submit path.
+3. **Make position matter:** exposure and one physical visibility producer, including forecast refresh and cover migration checks.
+4. **Make injuries coherent:** vocal integration, persistent serious injuries, treatment access, save compatibility, and broader anatomy.
+5. **Make enemies and content use it:** bounded AI scoring, Pandora authoring, representative encounters, replay/save checks, and performance evidence.
+
+Use the [task checklist](../../tasks/called-shots-and-injuries.md) for the smaller implementation slices and checkpoints. Start with one bow, one blade, a voice-tagged action, and a target without a throat. Further locations, weather types, and injury tables are content expansion after the first complete encounter.
+
+## Risks and acceptance
+
+| Risk | Required evidence or mitigation |
+|---|---|
+| Two accuracy pipelines disagree | Query/forecast/submit tests assert identical modifier arithmetic for an unchanged snapshot. Existing ordinary attacks retain baseline results before opt-in migration. |
+| Called shots become guaranteed disables or a mandatory choice | Compare ordinary damage and aimed utility across range/cover; tune cost, hit penalty, resistance, and bounded severity together. Include viable actions after injury. |
+| Preview, save, or AI leaks hidden information | No preview RNG mutation; observed-only queries; stable serialized IDs and deterministic replay channels. |
+| New geometry breaks reactions or costs | Invalid target spends nothing; actual committed misses pay normal costs; held/countered actions preserve existing once-only lifecycle semantics. |
+| Many actors multiply targeting work | Limit AI to legal nearby candidates; cache geometry by terrain/occupancy/observer revision. Measure a representative ~100-actor map against baseline rather than rescanning every body part every frame. |
+
+Follow [agent-owned verification](../agent-verification.md). Automated evidence must cover blocked/partial/clear shots, absent anatomy, conditional injury probabilities, injury application through submit, costs in both schedulers, and deterministic previews/replays. Run the real HUD under Xvfb/display and inspect the result; headless unit success does not establish usability. Save compatibility and treatment scenarios are mandatory: prove a serious injury survives combat exit and reload, then prove explicit treatment removes or reduces it according to the recovery contract.
+
+The bounded human playtest is: in the supplied encounter, choose between a torso attack, an arm attack, and a throat attack, then judge whether each tradeoff is understandable and useful. Agents own routine execution and regression checks.
+
+**Next design work:** specify the treatment route, costs, and recovery outcomes. Serious-injury persistence is settled; exact numerical tuning and treatment rules remain proposals until reviewed. This document does not authorize implementation or publication.
