@@ -355,9 +355,25 @@ func _end_session(result: BattleResult) -> void:
 	if _session_field != null:
 		if _session_field.hostile_alerted.is_connected(_on_field_hostile_alerted):
 			_session_field.hostile_alerted.disconnect(_on_field_hostile_alerted)
+	_settle_session_hostiles()
 	_session_field = null
 	_session_hostiles.clear()
 	session_ended.emit(result)
+
+
+## D7: a hostile whose actor did not survive stays DOWNED on the field; one that did (the party
+## fled, or fell) goes back to IDLE at full HP under the re-alert cooldown, so the fight can be
+## picked up again without the mob re-opening it on the very next physics frame.
+func _settle_session_hostiles() -> void:
+	for combat_id: StringName in _session_hostiles:
+		var hostile: Hostile = _session_hostiles[combat_id]
+		if not is_instance_valid(hostile):
+			continue
+		var actor := hostile.battle_actor()
+		if actor == null or not actor.is_alive():
+			hostile.mark_downed()
+		else:
+			hostile.release_from_session()
 
 
 func _session_allowed(extra: Dictionary = {}) -> Dictionary:

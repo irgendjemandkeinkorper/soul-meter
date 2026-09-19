@@ -215,6 +215,20 @@ exist. Retiring those surfaces, camera behavior, authored Hostile migration, and
 Bog Wight acceptance remain required before #281 can close. The focused tests are in
 `test/unit/test_combat_overlay.gd`; the existing BattleInterface tests guard the frozen payload.
 
+### Ambient entry wired — 2026-09-19 (`feat/same-map-ambient`)
+
+Until this slice nothing in production called `Battle.start_session()`, and no world scene
+authored a `Hostile`; ambient combat was reachable only from the labs and the suite. Now the
+flow owns the edge: `GameFlow.watch_field_hostiles()` is armed in `_complete_scene_load()`, the
+first accepted alert opens the session and sends `enter_battle`, and Battle admits every later
+alert itself. `FieldMap.register_hostile()` (called from `Hostile._ready()`) keeps late-arriving
+hostiles on that path. `Battle._end_session()` settles the field per D7: dead hostiles stay
+`DOWNED` on the map (dim, walk-over), standing ones return to `IDLE` at full HP under the
+re-alert cooldown. `test_room` (Bog Wight, Loam Boar) and `dorthkor_road` (Breach Hound + Rift
+Scavenger) author `Hostile` nodes; `dorthkor-muster` and the Wound Lip post stay `Enemy`
+set-pieces. Evidence: `docs/qa/same-map-2026-09-19/`. The log-hidden Bog Wight acceptance is
+**not yet met** (stacked seating, no visible action beat) — see that README.
+
 ### Step 8, weather half — landed 2026-09-08
 
 `LocationDefinition.weather_default` is authored per location (wilds = mozh, Dorthkor Road =

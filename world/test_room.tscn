@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="3_npc"]
 [ext_resource type="PackedScene" path="res://actors/pickup/pickup.tscn" id="4_pickup"]
-[ext_resource type="PackedScene" path="res://actors/enemy/enemy.tscn" id="5_enemy"]
+[ext_resource type="PackedScene" path="res://actors/hostile/hostile.tscn" id="12_hostile"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="6_exit"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="7_iso"]
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
@@ -188,9 +188,10 @@ item_id = "materials/loamroot_sprig"
 position = Vector2(1350, 620)
 item_id = "materials/loamroot_sprig"
 
-[node name="BogWight" parent="." instance=ExtResource("5_enemy")]
+[node name="BogWight" parent="." instance=ExtResource("12_hostile")]
 position = Vector2(650, 750)
-encounter_id = &"bog-wight"
+unit_id = &"bog-wight"
+group_id = &"bog-wight"
 
 [node name="FieldDebtProof" parent="." instance=ExtResource("4_pickup")]
 position = Vector2(650, 750)
@@ -198,9 +199,10 @@ item_id = "materials/loamroot_sprig"
 required_flag = "defeated_bog_wight"
 completion_flag = "field_debt_proof_looted"
 
-[node name="LoamBoar" parent="." instance=ExtResource("5_enemy")]
+[node name="LoamBoar" parent="." instance=ExtResource("12_hostile")]
 position = Vector2(1600, 750)
-encounter_id = &"loam-boar"
+unit_id = &"loam-maddened-boar"
+group_id = &"loam-boar"
 
 [node name="ReturnToDom" parent="." instance=ExtResource("6_exit")]
 position = Vector2(70, 600)
