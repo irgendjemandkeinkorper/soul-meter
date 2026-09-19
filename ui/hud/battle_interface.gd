@@ -18,6 +18,10 @@ var _selected_ability_id := ""
 ## Cell working in progress: cells picked so far, and the creature a contract card bound.
 var _pending_cells: Array[Vector2i] = []
 var _pending_target: BattleActor = null
+## Anatomical aim armed for the selected action; empty means ordinary aim. It is a mode,
+## not a per-target choice: the next enemy press submits with it, and the controller
+## refuses (without cost) when that target cannot take the location.
+var _aim_location: StringName = &""
 
 
 func _ready() -> void:
@@ -26,6 +30,7 @@ func _ready() -> void:
 	stage.tile_hovered.connect(_on_tile_hovered)
 	stage.pointer_pressed.connect(_on_pointer_pressed)
 	stage.pointer_cleared.connect(_on_pointer_cleared)
+	act_target_panel.aim_selected.connect(select_aim)
 
 
 func consume_event(event: CombatEvent) -> void:
@@ -58,7 +63,52 @@ func bind_controller(controller: CombatController) -> void:
 func select_pointer_action(action_id: StringName, ability_id: String = "") -> void:
 	_selected_action_id = action_id
 	_selected_ability_id = ability_id
+	_aim_location = &""
+	act_target_panel.clear_aim_options()
 	_clear_pending()
+
+
+## Arms (or with an empty location, cancels) an anatomical aim for the selected action.
+func select_aim(location: StringName) -> void:
+	var action := _controller.action_by_id(_selected_action_id) if _controller != null else null
+	if action == null or (not location.is_empty() and not action.aim_profiles.has(location)):
+		return
+	_aim_location = location
+	# Re-mark the row in place so the selection is visible before the next hover.
+	for child: Node in act_target_panel.aim_row.get_children():
+		if child is Button:
+			(child as Button).theme_type_variation = (
+				"BronzeButton" if str(child.get_meta("aim_location", "")) == str(location) else "Button"
+			)
+
+
+func aim_location() -> StringName:
+	return _aim_location
+
+
+## Options the controller needs for the armed action: the cast ability and any armed aim.
+func _action_options(action: CombatAction) -> Dictionary:
+	var options: Dictionary = {}
+	if action != null and action.kind == CombatAction.Kind.CAST:
+		options["ability_id"] = _selected_ability_id
+	if not _aim_location.is_empty():
+		options["aim_location"] = String(_aim_location)
+	return options
+
+
+## Quotes every authored location on `action` against `target` through the real forecast
+## gate, so the aim row disables exactly what the controller would refuse.
+func _refresh_aim_options(action: CombatAction, target: BattleActor) -> void:
+	if action == null or action.aim_profiles.is_empty():
+		act_target_panel.clear_aim_options()
+		return
+	var quotes: Dictionary = {}
+	for key: Variant in action.aim_profiles.keys():
+		var location := StringName(str(key))
+		var options := _action_options(action)
+		options["aim_location"] = String(location)
+		quotes[location] = _controller.forecast_action(action, target, options)
+	act_target_panel.show_aim_options(action, target, quotes, _aim_location)
 
 
 func pending_cells() -> Array[Vector2i]:
@@ -93,15 +143,14 @@ func _on_tile_hovered(tile: Dictionary) -> void:
 		return
 	var target := _target_for(action, stage._actor_at(cell))
 	if target != null:
-		var options := (
-			{"ability_id": _selected_ability_id}
-			if action.kind == CombatAction.Kind.CAST else {}
-		)
+		_refresh_aim_options(action, target)
+		var options := _action_options(action)
 		var payload := _controller.forecast_action(action, target, options)
 		act_target_panel.show_action_forecast(
 			payload, _controller.forecast_context(_controller.active_actor(), target, action, options)
 		)
 		_append_cast_forecast(action, payload)
+		_append_aim_forecast(payload)
 	# Hovered move quote is display-only (AP compatibility: gate T-10 — the AP
 	# number comes verbatim from the controller's move_query pricing).
 	elif stage.hovered_ap_cost() >= 0:
@@ -122,10 +171,7 @@ func _on_pointer_pressed(tile: Dictionary, actor_id: StringName) -> void:
 		return
 	var target := _target_for(action, actor_id)
 	if target != null:
-		var options := (
-			{"ability_id": _selected_ability_id}
-			if action.kind == CombatAction.Kind.CAST else {}
-		)
+		var options := _action_options(action)
 		var payload := _controller.forecast_action(action, target, options)
 		if bool(payload.get("allowed", false)):
 			_controller.submit_action(_selected_action_id, target, options)
@@ -233,3 +279,17 @@ func _append_cast_forecast(action: CombatAction, payload: Dictionary) -> void:
 	if action.kind != CombatAction.Kind.CAST:
 		# Loadout casts already carry the panel's own fizzle line; authored cards add theirs.
 		act_target_panel.forecast.text += " · FIZZLE %d%%" % int(payload.get("fizzle_percent", 0.0))
+
+
+## The armed aim's own line: location, the active scheduler's priced cost, and the
+## consequence the controller currently promises (none until injuries land).
+func _append_aim_forecast(payload: Dictionary) -> void:
+	if _aim_location.is_empty() or not bool(payload.get("allowed", false)):
+		return
+	var aim: Dictionary = (payload.get("context", {}) as Dictionary).get("aim", {})
+	var use_ct := _controller != null and _controller.rules != null and _controller.rules.use_charge_time
+	act_target_panel.forecast.text += "\n" + tr("AIM %s · COST %d %s · %s") % [
+		str(aim.get("display_name", _aim_location)).to_upper(),
+		int(payload.get("ct_cost" if use_ct else "ap_cost", 0)), "CT" if use_ct else "AP",
+		tr("NO INJURY EFFECT YET"),
+	]

@@ -145,6 +145,81 @@ func test_cast_command_is_visible_and_submits_selected_target_through_interface(
 	assert_int(target.hp).is_less(hp_before)
 
 
+func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void:
+	var rules := (load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
+	rules.use_charge_time = false
+	var grid := GridBattlefieldModel.new()
+	grid.configure(rules)
+	grid.build_grid(_two_cell_ground())
+	var action := CombatAction.make(&"aim-strike", "Aim strike", CombatAction.Kind.ATTACK, 0, 0, 0.0, 1)
+	action.ct_cost = 30
+	action.aim_profiles = preload("res://globals/combat_lab.gd").AIM_PROFILES.duplicate(true)
+	var actor := _cast_actor("Aimer", 30, 8)
+	var target := _cast_actor("Mark", 30, 1)
+	target.anatomy = {
+		"torso": {"display_name": "Torso", "exposed": true},
+		"arm": {"display_name": "Shield arm", "exposed": false},
+		"throat": {"display_name": "Throat", "exposed": true},
+	}
+	var controller := CombatController.new()
+	var actions := CombatActionCatalog.all()
+	actions.append(action)
+	controller.configure(actions, grid, rules)
+	controller.start([actor], [target], &"interface-aim")
+	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
+	var interface := runner.scene() as BattleInterface
+	interface.bind_controller(controller)
+	var snapshot := CombatEvent.new()
+	snapshot.type = &"battle_snapshot"
+	snapshot.data = {"snapshot": controller.snapshot()}
+	interface.consume_event(snapshot)
+	await runner.simulate_frames(1)
+	var panel := interface.act_target_panel
+
+	# An ordinary action shows no aim row.
+	interface.select_pointer_action(&"strike")
+	interface._on_tile_hovered({"x": 1, "y": 0})
+	assert_bool(panel.aim_row.visible).is_false()
+
+	# Hovering the mark with the aimed action offers every authored location; the covered
+	# arm stays visible but disabled with the controller's reason.
+	interface.select_pointer_action(&"aim-strike")
+	interface._on_tile_hovered({"x": 1, "y": 0})
+	assert_bool(panel.aim_row.visible).is_true()
+	assert_int(panel.aim_row.get_child_count()).is_equal(4)
+	assert_str(panel.aim_button(&"arm").text).is_equal("SHIELD ARM")
+	assert_bool(panel.aim_button(&"arm").disabled).is_true()
+	assert_str(panel.aim_button(&"arm").tooltip_text).is_equal("That location is not exposed.")
+	assert_bool(panel.aim_button(&"throat").disabled).is_false()
+	assert_bool(panel.aim_button(&"").disabled).is_false()
+	var ordinary_text := panel.forecast.text
+	assert_str(ordinary_text).not_contains("AIM THROAT")
+
+	# Selecting the throat arms the aim and the next hover quotes it: penalty, priced cost,
+	# and the (absent) consequence all come from the controller payload.
+	panel.aim_button(&"throat").pressed.emit()
+	assert_str(String(interface.aim_location())).is_equal("throat")
+	interface._on_tile_hovered({"x": 1, "y": 0})
+	var aimed := controller.forecast_action(action, target, {"aim_location": "throat"})
+	assert_str(panel.forecast.text).contains("Aim: Throat -25 pp")
+	assert_str(panel.forecast.text).contains("AIM THROAT · COST %d AP · NO INJURY EFFECT YET" % int(aimed["ap_cost"]))
+	assert_str(panel.aim_button(&"throat").theme_type_variation).is_equal("BronzeButton")
+
+	# Pressing the mark submits the armed aim and pays the surcharged AP.
+	var ap_before := actor.action_points
+	interface._on_pointer_pressed({"x": 1, "y": 0}, target.combat_id)
+	assert_int(actor.action_points).is_equal(ap_before - int(aimed["ap_cost"]))
+	assert_int(int(aimed["ap_cost"])).is_equal(action.ap_cost + 1)
+
+	# Cancel through the ordinary button, then re-arming a different action clears the row.
+	panel.aim_button(&"").pressed.emit()
+	assert_str(String(interface.aim_location())).is_equal("")
+	panel.aim_button(&"throat").pressed.emit()
+	interface.select_pointer_action(&"strike")
+	assert_str(String(interface.aim_location())).is_equal("")
+	assert_bool(panel.aim_row.visible).is_false()
+
+
 func _cast_actor(name: String, hp: int, attack: int) -> BattleActor:
 	var actor := BattleActor.new()
 	actor.display_name = name

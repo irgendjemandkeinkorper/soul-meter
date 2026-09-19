@@ -1,6 +1,6 @@
 # Called-shot expansion — implementation checklist
 
-**Status:** Accuracy foundation (task 2) verified 2026-09-18; lab aimed attack (task 3) implemented with automated evidence 2026-09-19. HUD selection and injuries remain planned.
+**Status:** Accuracy foundation (task 2) verified 2026-09-18; lab aimed attack (task 3) and HUD aim selection (task 4) implemented 2026-09-19. Blocked-shot exposure, environment, and injuries remain planned.
 
 **Confirmed decisions, 2026-09-17:** The user chose separate combat design/task files and serious injuries that persist until treated. Persistence and treatment tasks are required.
 
@@ -10,7 +10,7 @@
 
 **2026-09-18 progress:** Treatment/recovery contracts drafted; task 10 split into transaction, healer, and field-treatment slices. Task 2 is complete without adding new balance terms. [Verification evidence](../docs/qa/combat-accuracy-2026-09-18.md). Next implementation: task 3's lab fixture; unresolved injury tuning does not block that slice.
 
-**2026-09-19 progress:** Task 3 landed: `CalledShot` legality/pricing, controller aim query at forecast and commit, lab fixture with synthetic anatomy, and 9 aimed-action tests under both schedulers (`test/integration/test_called_shots.gd`, `test/unit/test_combat_lab.gd`). A JSON-replayed aim context now logs identically to the live one. The lab panel was not inspected rendered; Checkpoint A's third item is covered only by the hidden-result assertions from task 2. Next implementation: task 4 (aim selection in the real HUD).
+**2026-09-19 progress:** Task 3 landed: `CalledShot` legality/pricing, controller aim query at forecast and commit, lab fixture with synthetic anatomy, and 9 aimed-action tests under both schedulers (`test/integration/test_called_shots.gd`, `test/unit/test_combat_lab.gd`). A JSON-replayed aim context now logs identically to the live one. The lab panel was not inspected rendered; Checkpoint A's third item is covered only by the hidden-result assertions from task 2. Task 4 landed the same day: forecast-panel aim row, interface aim mode, controller-quoted disabled reasons, rendered capture. [Evidence](../docs/qa/called-shot-hud-2026-09-19.md). Next implementation: task 5 (blocked shot versus partial exposure).
 
 **Architecture:** [Called shots, accuracy, and injuries](../docs/ideas/called-shots-and-injuries.md). Existing `tasks/plan.md` and `tasks/todo.md` remain owned by their current work.
 
@@ -72,9 +72,9 @@ Each task targets one focused session. Estimates are engineering planning ranges
 **Scope:** Render the controller's available locations and forecast through existing HUD regions.
 
 **Acceptance:**
-- [ ] Player can select, inspect, cancel, and submit a location with mouse and existing keyboard/controller navigation.
-- [ ] The panel shows hit chance, active-scheduler cost, possible consequence, and disabled reason from controller data.
-- [ ] Changing target/action clears stale aim state; localized labels and DS styling follow existing conventions.
+- [x] Player can select, inspect, cancel, and submit a location with mouse and existing keyboard/controller navigation.
+- [x] The panel shows hit chance, active-scheduler cost, possible consequence, and disabled reason from controller data.
+- [x] Changing target/action clears stale aim state; localized labels and DS styling follow existing conventions.
 
 **Verification:** Rendered input integration under Xvfb/display, inspected screenshot, cancellation and target-switch checks.
 

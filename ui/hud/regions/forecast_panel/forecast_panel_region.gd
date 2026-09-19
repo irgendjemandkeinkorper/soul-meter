@@ -2,6 +2,9 @@ class_name ForecastPanelRegion
 extends PanelContainer
 
 signal element_selected(element_id: StringName)
+## Player picked an anatomical aim (empty = ordinary aim) from the aim row.
+signal aim_selected(location: StringName)
+const ORDINARY_AIM := &""
 var _context: Dictionary = {}
 var _selected: StringName = ElementWheel.ORDER[0]
 ## Landed damage quoted by the controller (-1 = none), including mitigation.
@@ -10,6 +13,7 @@ var _selected: StringName = ElementWheel.ORDER[0]
 var _payload_damage := -1
 var _class_command_text := ""
 @onready var wheel: Container = %ActWheel
+@onready var aim_row: Container = %AimRow
 @onready var target_header: Label = %TargetHeader
 @onready var affinity: Label = %AffinityStrip
 @onready var forecast: Label = %Forecast
@@ -62,6 +66,57 @@ func show_action_forecast(payload: Dictionary, context: Dictionary = {}) -> void
 		terms.append("FLANK %+d" % flank)
 	if not terms.is_empty():
 		forecast.text += "\n" + " · ".join(terms)
+
+
+## Rebuilds the aim row from controller quotes: one button per authored location on the
+## armed action plus the ordinary aim. `quotes` maps location -> forecast/refusal payload;
+## a refused location stays visible but disabled, with the controller's reason as tooltip.
+## Buttons are ordinary focusable controls, so keyboard/controller navigation reaches them.
+func show_aim_options(
+	action: CombatAction, target: BattleActor, quotes: Dictionary, selected: StringName
+) -> void:
+	for child: Node in aim_row.get_children():
+		aim_row.remove_child(child)
+		child.queue_free()
+	if action == null or action.aim_profiles.is_empty():
+		aim_row.visible = false
+		return
+	var locations: Array[StringName] = [ORDINARY_AIM]
+	for key: Variant in action.aim_profiles.keys():
+		locations.append(StringName(str(key)))
+	for location: StringName in locations:
+		var button := Button.new()
+		button.name = "Aim%s" % ("Ordinary" if location == ORDINARY_AIM else str(location).capitalize())
+		button.text = tr("ORDINARY") if location == ORDINARY_AIM else _aim_label(target, location)
+		button.theme_type_variation = "BronzeButton" if location == selected else "Button"
+		var quote: Dictionary = quotes.get(location, {})
+		if location != ORDINARY_AIM and not bool(quote.get("allowed", false)):
+			button.disabled = true
+			button.tooltip_text = str(quote.get("message", tr("Aim unavailable.")))
+		button.set_meta("aim_location", str(location))
+		button.pressed.connect(func() -> void: aim_selected.emit(location))
+		aim_row.add_child(button)
+	aim_row.visible = true
+
+
+func clear_aim_options() -> void:
+	for child: Node in aim_row.get_children():
+		aim_row.remove_child(child)
+		child.queue_free()
+	aim_row.visible = false
+
+
+func aim_button(location: StringName) -> Button:
+	for child: Node in aim_row.get_children():
+		if child is Button and child.has_meta("aim_location") and str(child.get_meta("aim_location")) == str(location):
+			return child as Button
+	return null
+
+
+static func _aim_label(target: BattleActor, location: StringName) -> String:
+	if target != null and target.anatomy.get(location) is Dictionary:
+		return str((target.anatomy[location] as Dictionary).get("display_name", location)).to_upper()
+	return str(location).capitalize().to_upper()
 
 
 func pulse_refusal(message: String) -> void:
