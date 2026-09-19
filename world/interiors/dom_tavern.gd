@@ -9,6 +9,7 @@ var _counter_player_in_range := false
 
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	($Surround/ColorRect as ColorRect).color = DS.INK_0
 	BuildingInterior.configure_counter($Counter as Polygon2D)
 	BuildingInterior.configure_room_camera(self)

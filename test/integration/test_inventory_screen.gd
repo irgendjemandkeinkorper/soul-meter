@@ -29,6 +29,40 @@ func test_inventory_uses_three_column_gloot_layout() -> void:
 	assert_object(runner.find_child("Equipment_main", true, false) as CtrlInventoryGrid).is_not_null()
 
 
+func test_opening_a_populated_bag_places_items_without_overlap_or_item_events() -> void:
+	# New games and older saves can populate the inventory before the first UI grid exists.
+	var old_grid := GameState.inventory.get_constraint(GridConstraint)
+	if old_grid != null:
+		old_grid.free()
+	for prototype_id: String in [ItemIds.WEAPONS_FORGE_HAMMER, ItemIds.CONSUMABLES_HEARTHLOAF, ItemIds.MATERIALS_LOAMROOT_SPRIG]:
+		GameState.inventory.create_and_add_item(prototype_id)
+	var items := GameState.inventory.get_items().duplicate()
+	var removed: Array[InventoryItem] = []
+	GameState.inventory.item_removed.connect(func(item: InventoryItem) -> void: removed.append(item))
+	var runner := scene_runner("res://ui/screens/inventory.tscn")
+	await runner.simulate_frames(2)
+	var grid := GameState.inventory.get_constraint(GridConstraint) as GridConstraint
+	var occupied: Array[Rect2i] = []
+	for item: InventoryItem in items:
+		assert_bool(GameState.inventory.has_item(item)).is_true()
+		var rect := grid.get_item_rect(item)
+		assert_bool(Rect2i(Vector2i.ZERO, grid.size).encloses(rect)).is_true()
+		for prior: Rect2i in occupied:
+			assert_bool(prior.intersects(rect)).override_failure_message("Bag items overlap").is_false()
+		occupied.append(rect)
+	assert_array(removed).is_empty()
+	# A player-arranged valid position must survive reopening and the save payload.
+	assert_bool(grid.set_item_position(items[0], Vector2i(5, 4))).is_true()
+	var saved := GameState.inventory.serialize()
+	runner.scene().free()
+	assert_bool(GameState.inventory.deserialize(saved)).is_true()
+	var reopened := scene_runner("res://ui/screens/inventory.tscn")
+	await reopened.simulate_frames(2)
+	grid = GameState.inventory.get_constraint(GridConstraint) as GridConstraint
+	var restored := GameState.inventory.get_items_with_prototype_id(ItemIds.WEAPONS_FORGE_HAMMER)[0]
+	assert_vector(grid.get_item_position(restored)).is_equal(Vector2i(5, 4))
+
+
 func test_equipment_transfer_accepts_matching_slot_and_rejects_mismatch() -> void:
 	var source: Inventory = auto_free(Inventory.new())
 	source.protoset = load("res://data/generated/gloot_prototree.json")
@@ -43,6 +77,20 @@ func test_equipment_transfer_accepts_matching_slot_and_rejects_mismatch() -> voi
 	assert_bool(source.has_item(axe)).is_false()
 	assert_bool(InventoryScreenScript.transfer_from_equipment(axe, source)).is_true()
 	assert_bool(source.has_item(axe)).is_true()
+
+
+func test_overfull_legacy_layout_repair_is_atomic_and_keeps_every_item() -> void:
+	var inventory: Inventory = auto_free(Inventory.new())
+	inventory.protoset = GameState.inventory.protoset
+	inventory.create_and_add_item(ItemIds.CONSUMABLES_HEARTHLOAF)
+	inventory.create_and_add_item(ItemIds.MATERIALS_LOAMROOT_SPRIG)
+	var grid := GridConstraint.new()
+	grid.size = Vector2i.ONE
+	inventory.add_child(grid)
+	var before := inventory.serialize()
+	assert_bool(InventoryScreenScript.repair_bag_layout(grid)).is_false()
+	assert_that(inventory.serialize()).is_equal(before)
+	assert_int(inventory.get_item_count()).is_equal(2)
 
 
 func test_pandora_equip_slot_values_resolve_to_rail_slots() -> void:

@@ -31,7 +31,62 @@ const PROVISIONAL_TO_HIT := {
 }
 
 
+## Data-only explanation of the existing curve. Values are percentage points,
+## not damage multipliers; constructing this record never rolls or mutates state.
+static func accuracy_breakdown(context: Dictionary) -> Dictionary:
+	var enabled := bool(context.get("to_hit_enabled", false))
+	var unit := _dictionary(context.get("unit", {}))
+	var target := _dictionary(context.get("target", {}))
+	var facing := _dictionary(context.get("facing", {}))
+	var positioning := positional_modifiers(
+		int(context.get("height_advantage_steps", 0)), StringName(facing.get("id", &"front"))
+	)
+	var base := int(PROVISIONAL_TO_HIT["base"]) if enabled else 100
+	var modifiers: Array[Dictionary] = []
+	if enabled:
+		modifiers = [
+			{"id": "alacrity", "label": "Alacrity", "percentage_points":
+				(int(unit.get("alacrity", 0)) - int(target.get("alacrity", 0)))
+				* int(PROVISIONAL_TO_HIT["alacrity_mod_per_point"])},
+			{"id": "facing", "label": "Facing", "percentage_points": int(positioning["hit_bonus"])},
+			{"id": "height", "label": "Height", "percentage_points":
+				int(context.get("height_advantage_steps", 0)) * int(PROVISIONAL_TO_HIT["height_mod_per_step"])},
+		]
+		var aim := _dictionary(context.get("aim", {}))
+		if not aim.is_empty() and bool(aim.get("allowed", false)):
+			modifiers.append({"id": "aim", "label": "Aim: %s" % str(aim.get("display_name", "")),
+				"percentage_points": -int(aim.get("accuracy_penalty", 0))})
+	var raw := base
+	for modifier: Dictionary in modifiers:
+		raw += int(modifier["percentage_points"])
+	var chance := clampi(raw, int(PROVISIONAL_TO_HIT["clamp_lo"]), int(PROVISIONAL_TO_HIT["clamp_hi"])) if enabled else 100
+	var guaranteed := not enabled or bool(unit.get("hit", false))
+	return {
+		"enabled": enabled, "base": base, "modifiers": modifiers,
+		"unclamped_chance": raw, "hit_chance": chance,
+		"clamp_adjustment": chance - raw,
+		"minimum": int(PROVISIONAL_TO_HIT["clamp_lo"]) if enabled else 100,
+		"maximum": int(PROVISIONAL_TO_HIT["clamp_hi"]) if enabled else 100,
+		"guaranteed": guaranteed,
+		"effective_hit_chance": 100 if guaranteed else chance,
+	}
+
+
+## Hypothetical landed damage for presentation. The caller's accuracy and cast
+## risks still come from resolve(context); this copy never changes committed rolls.
+static func preview_on_hit(context: Dictionary) -> Dictionary:
+	var preview := context.duplicate(true)
+	var unit := _dictionary(preview.get("unit", {})).duplicate(true)
+	unit["hit"] = true
+	preview["unit"] = unit
+	preview["fizzle_percent_override"] = 0.0
+	return resolve(preview)
+
+
 static func resolve(context: Dictionary) -> Dictionary:
+	var aim := _dictionary(context.get("aim", {}))
+	if not aim.is_empty() and not bool(aim.get("allowed", false)):
+		return aim.duplicate(true)
 	var unit: Dictionary = _dictionary(context.get("unit", {}))
 	var ability: Dictionary = _dictionary(context.get("ability", {}))
 	var target: Dictionary = _dictionary(context.get("target", {}))
@@ -133,22 +188,11 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var hit_bonus := int(positioning["hit_bonus"])
 	var tile_multiplier := source_tile.action_multiplier(element_id)
 	var to_hit_enabled := bool(context.get("to_hit_enabled", false))
-	var signed_height_steps := int(context.get("height_advantage_steps", 0))
-	var hit_chance := 100
+	var accuracy := accuracy_breakdown(context)
+	var hit_chance := int(accuracy["hit_chance"])
 	var hit_roll := 0
 	var hit := true
 	if to_hit_enabled:
-		# `alacrity` is DRAMGID's name for the old `edge` (DramgidSchema:
-		# "Accuracy, evasion, to-hit difference"). The snapshot key was renamed with
-		# its readers in F3b so there is one name for the stat, not two.
-		var alacrity_delta := int(unit.get("alacrity", 0)) - int(target.get("alacrity", 0))
-		hit_chance = clampi(
-			int(PROVISIONAL_TO_HIT["base"]) + hit_bonus
-				+ int(PROVISIONAL_TO_HIT["height_mod_per_step"]) * signed_height_steps
-				+ int(PROVISIONAL_TO_HIT["alacrity_mod_per_point"]) * alacrity_delta,
-			int(PROVISIONAL_TO_HIT["clamp_lo"]),
-			int(PROVISIONAL_TO_HIT["clamp_hi"]),
-		)
 		if bool(unit.get("hit", false)):
 			hit = true
 		else:
@@ -423,6 +467,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"fizzle_roll": fizzle_roll,
 		"hit": hit,
 		"hit_chance": hit_chance,
+		"accuracy_breakdown": accuracy,
 		"hit_roll": hit_roll,
 		"hit_bonus": hit_bonus,
 		"positioning": positioning.duplicate(true),
@@ -460,6 +505,9 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"seed": result["seed"],
 		"deltas": writes.duplicate(true),
 	}
+	if not aim.is_empty():
+		result["aim"] = aim.duplicate(true)
+		result["action_log"]["aim"] = aim.duplicate(true)
 	return result
 
 

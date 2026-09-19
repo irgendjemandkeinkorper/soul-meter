@@ -1,10 +1,12 @@
 # Called shots, accuracy, and injuries
 
-**Status:** Proposed architecture, 2026-09-17. Serious-injury persistence and separate design/task files confirmed by the user on 2026-09-17. Planning only; remaining gameplay rules and balance are proposals.
+**Status:** Architecture proposed 2026-09-17; accuracy-foundation implementation started 2026-09-18. Confirmed rules and implemented behavior are distinguished below; remaining gameplay rules and balance are proposals.
 
 **Requested direction:** Expand Soul Meter's turn-based combat toward Fallout 2's aimed attacks and situational accuracy, replacing the groin target with the **throat**. Include line of sight, environmental conditions, and injuries.
 
 **Implementation checklist:** [Called-shot expansion tasks](../../tasks/called-shots-and-injuries.md).
+
+**2026-09-18 continuation:** Added the treatment/recovery contract and split its implementation into verifiable slices. The user confirmed that qualified Mending can cure serious injuries outside combat. Exact qualification thresholds, supply costs, and treatment success rules remain recommendations.
 
 ## Recommended shape
 
@@ -18,22 +20,32 @@ The first playable encounter should support **torso, arm, and throat**, with cle
 |---|---|
 | Called shots, throat replacing groin, situational accuracy, injuries | Requested by the user; in scope for this plan |
 | One resolver shared by forecast, execution, replay, and AI | Recommended architecture using existing boundaries |
-| Visible anatomy needs no Lore roll; hidden weaknesses retain discovery requirements | Proposed rule amendment |
+| Visible anatomy needs no Lore roll; hidden/supernatural weaknesses retain discovery requirements | Confirmed by the user, 2026-09-18; FR-103 amended. Anatomy selection is not implemented yet. |
+| Aiming adds an action cost as well as an accuracy penalty; AP/CT surcharges are authored separately | Confirmed by the user, 2026-09-18; first values remain provisional lab tuning |
 | Location difficulty, aim surcharge, injury chances/severities, environmental penalties | Proposed tuning; not settled numbers |
 | Serious injuries persist beyond combat until treated | Confirmed by the user, 2026-09-17; persistence and treatment are required scope |
+| Qualified Mending can cure serious injuries outside combat | Confirmed by the user, 2026-09-18; field cures are required scope |
 
 ## Existing foundation and design amendments
 
 | Existing source | Implication for the expansion |
 |---|---|
 | [Game identity](../game-identity.md) | Preserve Fallout lineage, same-map encounters, class identity, and acts of Agreement as the source of Soul income. |
-| [Chapter-one PRD](../prd-chapter-one.md), FR103 | Calls Defining Strikes the called-shot system and restricts body-part menus. This proposal explicitly expands that older requirement in response to the new request. Amend FR103 when rules are accepted. |
+| [Chapter-one PRD](../prd-chapter-one.md), FR103 | Amended 2026-09-18 to permit freely targeted exposed anatomy while preserving discovery for hidden/supernatural weaknesses. The new anatomy selector remains planned. |
 | [Martial rules proposal](martial-combat-rules.md) | Retain weapon identities and explicit AP/CT authoring. Its avoidance of a new critical roll needs an explicit amendment if conditional injury rolls are adopted. |
 | [Resolution](../../globals/combat/resolution.gd) | Already deterministic and shared. Current provisional accuracy is 70 + 2 × Alacrity difference + facing + 4 × height difference, clamped to 5–95 when to-hit resolution is enabled. Preserve the baseline while adding explainable inputs. |
-| [Combat controller](../../globals/combat/combat_controller.gd) | Owns legality, costs, forecasts, and effect application. Defining Strikes currently add a knowledge check. Audit their effect path: effects must require a confirmed physical hit. Cover currently reduces damage here. |
+| [Combat controller](../../globals/combat/combat_controller.gd) | Owns legality, costs, forecasts, and effect application. Defining Strikes add a knowledge check and now require a confirmed physical hit before applying their effect. Cover still reduces damage here. |
 | [Grid battlefield](../../globals/combat/grid_battlefield_model.gd) | Has range, elevation, cover, and binary LOS. Extend this query boundary for exposure; audit hard terrain blockers instead of assuming existing LOS handles every wall. |
 | [Combat rules](../../globals/combat/combat_rules.gd) | Supports AP-round and charge-time schedulers. Charge time is not universally enabled; called shots must support both without inventing an AP-to-CT conversion. |
 | [Spell-card rules](spell-card-rules.md) | Muted resets Tempo; it is not persistent silence. Elemental statuses and physical injuries need separate contracts. |
+
+### Implemented accuracy foundation — 2026-09-18
+
+The resolver now returns an additive data-only `accuracy_breakdown`: base, named percentage-point modifiers, pre-clamp chance, clamp adjustment, and effective chance (including legacy automatic/guaranteed hits). Existing deterministic outcomes, costs, and the provisional curve are unchanged. Controller legality reasons still reach the forecast before chance calculation.
+
+Forecast payloads add `damage_on_hit`, calculated through the same resolver and mitigation path under a hypothetical landed, non-fizzled action. Existing raw `damage`/`resolution` fields remain compatible for replay/parity consumers. The HUD displays conditional damage, actual hit/fizzle risks, and named accuracy terms; it omits future hit-roll labels and unrevealed hidden-draw rows. The Defining Strike dialog distinguishes knowledge success from physical accuracy, and its effect application now requires a physical hit.
+
+[Focused tests and rendered evidence](../qa/combat-accuracy-2026-09-18.md). No anatomy selector, aim surcharge, environmental accuracy term, or new injury state is enabled by this foundation slice.
 
 ### What to borrow from Fallout
 
@@ -122,11 +134,76 @@ Apply action-specific modifiers rather than subtracting Alacrity globally: chang
 
 **User decision, 2026-09-17: serious injuries persist after combat until treated.** Ending combat, retreating, traveling, or saving/reloading does not clear them. Treatment access, recovery rules, durable injury state, and save compatibility are required parts of this expansion. Minor-injury duration remains an authored rule to settle; this decision does not turn temporary elemental statuses into persistent injuries.
 
-Do not ship persistent disabling injuries before an accessible recovery route exists. Mending is an existing skill and a candidate for treatment, not an automatic authorization for a new healing economy. Treatment cost, providers/items, time, and success rules need explicit design. HP healing and injury treatment must have a defined relationship; neither grants Soul. Ordinary HP restoration must not silently erase a serious injury; any action that treats it must explicitly implement the recovery contract.
+Do not ship persistent disabling injuries before an accessible recovery route exists. Qualified Mending is the confirmed out-of-combat field-cure route. Treatment cost, providers/items, time, and success rules remain proposed below; this decision does not ratify a broader healing economy. HP healing and injury treatment must have a defined relationship; neither grants Soul. Ordinary HP restoration must not silently erase a serious injury; any action that treats it must explicitly implement the recovery contract.
 
 For persistent party injuries, extend [PartyMember](../../globals/party_member.gd) serialization with stable optional records, mirror them into [BattleActor](../../globals/battle_actor.gd), and synchronize through [Battle](../../globals/battle.gd). Handle retreat, transitions, reload, death, and revival—not only victory. Old saves without injury data load with no injuries. Decide whether a schema migration is required under [SaveMigrations](../../globals/save_migrations.gd).
 
 For hostiles, first identify the authoritative same-map actor state and its existing persistence lifetime. Preserve injuries for that lifetime without creating an unrelated global NPC registry or changing corpse/despawn policy. Temporary class-resource serialization is not the durable home for physical injuries.
+
+### Treatment foundation — inspected 2026-09-18
+
+| Existing foundation | What it supplies; what remains missing |
+|---|---|
+| [DRAMGID brief](../briefs/dramgid-brief.md), [schema](../../globals/stats/dramgid_schema.gd) | Mending is medicine/physical healing, governed by Intuition and not Loom-sensitive. Its placement in the Soul skill group does not make treatment spend Soul. |
+| [SkillCheck](../../globals/skill_check.gd) | Existing skill tiers and effective-percent preview. `resolve()` uses a service RNG and scene-scoped Expert rerolls; it is not automatically the deterministic combat resolver. |
+| [GameState](../../globals/game_state.gd) | Party inventory quantities, `remove_items()`, GP payments, vendor access and quoted prices. These are reusable primitives, not an existing atomic injury-treatment action. |
+| [Generated items](../../data/generated/gloot_prototree.json) | Bitterleaf Poultice has inventory metadata, including base price 14 and stack size 5. Its record does not declare a serious-injury cure; base price is not a treatment tariff. |
+| [Consumables/recovery assessment](consumables-and-recovery-gaps.md) | Already distinguishes HP healing, assistance, and returning a downed actor to action. General combat-item use and downed/recovery contracts remain dependencies, not assumed completed features. |
+
+### Recommended recovery rules
+
+Keep three effects explicit: **restore HP**, **relieve an injury temporarily**, and **cure an injury**. An action may combine them only when its card says so. A full-HP character can still need injury treatment; a cured character can still have missing HP.
+
+| Route | Proposed eligibility and cost | Outcome |
+|---|---|---|
+| Ordinary HP care | Existing/pending healing action's own eligibility, supply and timing rules | Restores its authored HP amount; leaves injury records unchanged. Bitterleaf is a candidate here, not a universal cure. |
+| Qualified field treatment — route confirmed | Outside combat; proposed prerequisites: conscious, capable practitioner with at least Trained Mending; supported injury; one matching treatment-supply unit per injury | Proposed outcome: guaranteed cure of that one supported injury when all requirements are met. No HP restoration unless separately authored. |
+| Healer service | Accessible authored provider, supported injury, quoted GP fee; provider supplies included in the fee | Guaranteed cure of one selected injury. Party Mending is not required. This provides access for parties without a trained practitioner. |
+| Emergency field relief — later extension | Priced combat action, eligible self/adjacent target, matching supply; requires the general item-use contract | Temporarily reduces an authored penalty without deleting or downgrading the serious injury. Defer until its timing and combat-item rules are accepted. |
+
+**User decision, 2026-09-18:** qualified Mending can cure serious injuries outside combat; field care is not limited to temporary relief. Include this route in the initial persistent-injury system. Healer access remains the recommended alternative for parties without a qualified practitioner. The decision confirms the field-cure capability, not the proposed Trained threshold, supply quantity, or guaranteed-success rule.
+
+**Initial treatment recommendation:** use deterministic eligibility for safe, out-of-combat care rather than a repeatable cure roll. Skill determines which treatment cards the practitioner qualifies for; it does not create repeated failed payments. The proposed first card requires the existing Trained tier. More demanding cards may require Expert later. This is an action prerequisite, not a replacement for the global percentile skill-check system. Do not call `SkillCheck.resolve()` or consume an Expert reroll for a guaranteed treatment.
+
+Treat one injury instance per operation. The first slice offers complete cure, avoiding a new multi-stage wound-healing meter. Keep injury severity intact until successful treatment; temporary relief never turns a serious injury into a minor injury that clears at combat end. Rest, elapsed time, ordinary HP healing, and scene-entry Breath refill do not cure serious injuries. No treatment grants Soul, resets ultimate uses, or erases unrelated elemental impositions.
+
+The practitioner must satisfy explicitly authored limb and action requirements; a throat injury alone does not prevent nonvocal medicine. Self-treatment is allowed only when that treatment's access/limb requirements can be met. Do not infer that every arm injury disables both hands. For the first slice, target conscious living allies; downed assistance, revival, and treatment of a dead actor remain with their separate recovery contracts.
+
+### Costs, availability, and tuning boundary
+
+Field treatment uses an authored supply reference and quantity, initially **one matching supply unit for one injury**. This is a proposed treatment card, not permission to rename Bitterleaf or invent a canonical item in generated data. Select/author the production supply through Pandora. Service treatment uses one quoted GP fee per injury; practitioner skill and supplies are included, so there is no second hidden party-item charge.
+
+For isolated transaction tests, use a **20 GP service fee** and **one test supply unit**. These are fixture constants, not proposed retail balance. Production prices require the encounter/resupply pass and must be displayed before commitment. No background treatment timer or new calendar subsystem is required: safe treatment completes as an explicit out-of-combat interaction. Combat relief, if later enabled, needs authored AP and CT prices and cannot use the safe-treatment shortcut.
+
+Before an encounter that can cause a persistent disabling injury is enabled, its route must provide accessible treatment. Validate a party without Mending, without ready cash, and with an injured practitioner. Access cannot depend solely on a hostile or reputation-locked provider. An authored finite remedy, reachable alternative provider, or explicit assistance route can satisfy this; select it in encounter authoring rather than inventing a global free-healing rule. A playable route must remain available with the encounter's allowed injuries, not merely have a provider somewhere on the map.
+
+### Query, commit, and save contract
+
+Use one treatment service/helper in the Systems layer; do not add an autoload or a second inventory implementation by default. The party screen or provider interaction emits an intent; the helper queries authoritative party injuries and existing resource owners. Combat relief, when implemented, remains a CombatController action.
+
+| Contract | Required fields or behavior |
+|---|---|
+| Intent | Stable patient ID, injury-instance ID, treatment-card ID, practitioner or provider ID. Display names are not identifiers. |
+| Quote | Allowed/disabled reason, exact supply or GP cost, before/after injury state, affected action restrictions, and state revision. No writes, RNG, or payment. |
+| Revalidation | Verify the selected injury still exists, patient/practitioner eligibility, provider access, resources, and that combat has not begun. A changed price or outcome returns a fresh quote for confirmation rather than silently changing the charge. |
+| Commit | Validate and reserve/preflight the whole operation, debit exactly once, apply the cure exactly once, then emit the state-change event. If application fails, restore the debit; never save a paid-but-uncured intermediate state. |
+| Persistence | Save only a coherent completed state. Reject duplicate/stale submissions; reopened UI and reload show the saved outcome, not a repeatable pending payment. The durable injury owner remains authoritative. |
+
+An injury **instance** ID distinguishes a healed arm injury from a new injury later inflicted on that same arm. Pair instance identity with a revision so an old treatment quote cannot cure a newly worsened injury or a replacement injury by mistake. Do not key transactions only by location or display label. Save-and-reload must preserve that identity for an untreated injury.
+
+The ordinary inventory/GP methods do not by themselves guarantee all-or-nothing treatment. Keep mutation within a synchronous coordinator with no signal-driven reentry or save snapshot during partial mutation; adapt existing notification boundaries where needed, and test rollback. Do not hand-code a second stack-removal loop or bypass public GP methods.
+
+The injury UI should show location, effect, serious/persistent status, available treatment, eligible practitioner, and exact cost. If a method is unavailable, show why and the known alternative. Selecting a provider or opening inventory does not itself perform treatment. After a cure, update both the injury display and action eligibility immediately through the normal state notification contract.
+
+### Recovery acceptance encounter
+
+1. Inflict a serious throat injury through an actual aimed hit. Verify the affected vocal action is restricted and a nonvocal alternative remains legal.
+2. End or retreat from combat, travel, and save/reload. The same injury instance and restriction survive; ordinary HP healing does not clear them.
+3. Request a treatment quote with insufficient resources, with an ineligible practitioner, and after combat starts. Each invalid commitment leaves stock, GP, and the injury unchanged.
+4. Use a valid treatment through the real provider/party UI. Pay once, cure the selected injury once, restore eligible vocal actions, and leave Soul and unrelated injuries unchanged.
+5. Repeat the old intent and reload the completed save. Neither repeats payment nor restores the injury. Run equivalent arm/leg cases to verify treatment follows authored anatomy rather than throat-specific code.
+
+Also test re-injury after quoting, full HP with an injury, multiple injuries, last-item stack removal, and treatment failure during application. Automated transaction tests use injected failures; they do not require random treatment failures in the game.
 
 ## Architecture and ownership
 
@@ -186,4 +263,4 @@ Follow [agent-owned verification](../agent-verification.md). Automated evidence 
 
 The bounded human playtest is: in the supplied encounter, choose between a torso attack, an arm attack, and a throat attack, then judge whether each tradeoff is understandable and useful. Agents own routine execution and regression checks.
 
-**Next design work:** specify the treatment route, costs, and recovery outcomes. Serious-injury persistence is settled; exact numerical tuning and treatment rules remain proposals until reviewed. This document does not authorize implementation or publication.
+**Next design work:** consolidate the provisional treatment cards and numerical combat tuning for the first encounter. Persistent serious injuries and qualified out-of-combat Mending cures are settled. Production tariffs, supply authoring, exact qualification/success rules, and minor-injury duration remain proposals. This document does not authorize implementation or publication.

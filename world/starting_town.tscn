@@ -100,6 +100,7 @@ size = Vector2(112, 34)
 radius = 28.0
 
 [node name="StartingTown" type="Node2D"]
+texture_filter = 2
 y_sort_enabled = true
 script = ExtResource("39_town")
 
@@ -419,24 +420,28 @@ offset = Vector2(0, -50.596)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassShrine" type="Sprite2D" parent="."]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(325, 705)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -50.596)
 
 [node name="GrassGarrison" type="Sprite2D" parent="."]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(1385, 705)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -50.596)
 
 [node name="FlowersWest" type="Sprite2D" parent="."]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(180, 760)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -50.596)
 
 [node name="FlowersEast" type="Sprite2D" parent="."]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(1170, 780)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -50.596)
 
 [node name="NorthEdgeTree01" type="Sprite2D" parent="."]
 position = Vector2(40, 70)
@@ -1054,9 +1059,10 @@ visible = false
 z_index = 21
 
 [node name="ChefsHousePot" type="Sprite2D" parent="."]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(430, 1727.5)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -50.596)
 
 [node name="PlayersHouseDoor" parent="." instance=ExtResource("7_interactable")]
 process_mode = 4
@@ -1535,9 +1541,10 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassBlobWest" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(500, 1049.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="PineBlobSouthwest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(300, 1421.4)
@@ -1568,9 +1575,10 @@ texture = ExtResource("22_cart")
 offset = Vector2(0, -59.0)
 
 [node name="PotBlobMarket" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(1075, 1184.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="RockBlobMarket" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1390, 1124.4)
@@ -1630,9 +1638,10 @@ texture = ExtResource("56_dom_laundry")
 offset = Vector2(0, -114.0)
 
 [node name="PotChefsHouse" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(385, 1729.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="LaundryPlayersHouse" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2545, 2098.4)
@@ -1646,14 +1655,16 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="FlowerPlayersHouse" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(2470, 2186.4)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -52.0)
 
 [node name="PotItemShop" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(1575, 519.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="StallItemShop" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1830, 580.4)
@@ -1661,9 +1672,10 @@ texture = ExtResource("52_dom_stall")
 offset = Vector2(0, -111.0)
 
 [node name="PotEquipmentShop" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(2285, 574.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="StreetLanternEquipmentShop" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2515, 577.4)
@@ -1703,21 +1715,24 @@ texture = ExtResource("21_lantern")
 offset = Vector2(0, -53.0)
 
 [node name="LanternTavernDoor" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(1590, 1671.4)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107.0)
 script = ExtResource("76_ambient_motion")
 phase = 0.4
 
 [node name="PotTavern" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(1830, 1824.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="LanternRegistry" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(610, 486.4)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107.0)
 script = ExtResource("76_ambient_motion")
 phase = 2.1
 
@@ -1732,9 +1747,10 @@ texture = ExtResource("21_lantern")
 offset = Vector2(0, -53.0)
 
 [node name="LanternMarketEast" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(1990, 1226.4)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107.0)
 script = ExtResource("76_ambient_motion")
 phase = 4.2
 
@@ -1775,9 +1791,10 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassEastField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(2680, 1884.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="OakNortheastField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(3280, 864.4)
@@ -1804,9 +1821,10 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassMidEast" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(1980, 764.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="OakSouthField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1450, 2104.4)
@@ -1821,24 +1839,28 @@ offset = Vector2(0, -52.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassSouthField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(1350, 2024.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="FlowerSouthField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(1550, 2151.4)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -52.0)
 
 [node name="GrassWestField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(250, 1154.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="FlowerWestField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(320, 1051.4)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -52.0)
 
 [node name="RockWestField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(210, 1334.4)
@@ -1853,9 +1875,10 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassRiverside" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(700, 1854.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 ; PROVISIONAL OWNER-BALANCE SURFACE: every placement, route, and prop count below is
 ; intentionally authored for review and may be tuned without changing game logic.
@@ -1958,16 +1981,18 @@ texture = ExtResource("56_dom_laundry")
 offset = Vector2(0, -113)
 
 [node name="LanternLowerMarketWest" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(1440, 1200)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107)
 script = ExtResource("76_ambient_motion")
 phase = 1.2
 
 [node name="LanternLowerMarketEast" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(2020, 1210)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107)
 script = ExtResource("76_ambient_motion")
 phase = 5.1
 

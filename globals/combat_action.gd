@@ -71,6 +71,10 @@ enum Verb { MOVE, ATTACK, CAST, ITEM, SPEECH, DEFEND }
 ## on either side, Douse). Cell-targeted actions use `target_profile = &"cells"` instead.
 @export_enum("enemy", "ally", "any") var target_side: String = "enemy"
 @export_multiline var description: String = ""
+## Opt-in called-shot profiles keyed by anatomy location. Each authors positive
+## ap_surcharge, ct_surcharge and accuracy_penalty (percentage points).
+## Empty preserves ordinary attacks. The first producer is a debug lab fixture.
+@export var aim_profiles: Dictionary = {}
 
 
 static func make(

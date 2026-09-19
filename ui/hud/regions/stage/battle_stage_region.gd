@@ -33,7 +33,9 @@ const GROUND_FIELD_VARIANTS: Array[Vector2i] = [
 const GROUND_MODULATE := Color(0.62, 0.63, 0.68, 0.60)
 
 const FIT_MARGIN := 20.0
-const MIN_SCALE := 0.6
+## Full field grids can be much larger than the old encounter boards. Permit
+## overview scales so their edge combatants remain inside this region.
+const MIN_SCALE := 0.01
 const MAX_SCALE := 2.4
 ## Sprite height as a multiple of a (scaled) tile height — reads as "a figure
 ## standing on the tile" rather than a giant or a speck.
@@ -603,11 +605,16 @@ func _sync_units(animate_move: bool) -> void:
 			sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 			var unit_id := UnitArtScript.combat_unit_id(
 				StringName(str(actor.get("side", "ally"))),
 				str(actor.get("archetype_id", "")),
 				str(actor.get("display_name", ""))
 			)
+			if not str(actor.get("member_id", "")).is_empty():
+				unit_id = UnitArtScript.field_unit_id(
+					str(actor["member_id"]), str(actor.get("portrait_path", ""))
+				)
 			sprite.texture = load(UnitArtScript.texture_path(UnitArtScript.resolve(unit_id)))
 			_units_layer.add_child(sprite)
 			_unit_nodes[id] = sprite

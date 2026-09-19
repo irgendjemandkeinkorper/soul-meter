@@ -124,6 +124,34 @@ func test_ambient_hud_updates_without_the_legacy_stage() -> void:
 	await get_tree().process_frame
 
 
+func test_full_command_catalog_leaves_the_live_battlefield_visible() -> void:
+	var field := await _field()
+	var hostile := _hostile(field, "LayoutWight", Vector2i(30, 30))
+	assert_bool(Battle.start_session(field, hostile).get("allowed", false)).is_true()
+	var runner := scene_runner("res://ui/screens/battle.tscn")
+	var screen := runner.scene() as Screen
+	screen.theme = ThemeBuilder.build()
+	await runner.simulate_frames(3)
+	var dock := screen.find_child("CommandDock", true, false) as Control
+	var battlefield := screen.find_child("BattlefieldViewport", true, false) as Control
+	assert_float(dock.size.y).override_failure_message("Commands must not push the field off-screen").is_less(screen.size.y * 0.35)
+	assert_float(battlefield.size.y).is_greater(screen.size.y * 0.5)
+	assert_int((screen.get("_action_buttons") as Array).size()).is_equal(Battle.available_actions().size())
+	var scroll := screen.find_child("ActionScroll", true, false) as ScrollContainer
+	assert_object(scroll).is_not_null()
+	var buttons: Array = screen.get("_action_buttons")
+	assert_float((buttons[0] as Button).size.x).is_greater(100.0)
+	var last_button := buttons.back() as Button
+	scroll.ensure_control_visible(last_button)
+	await runner.simulate_frames(2)
+	assert_int(scroll.scroll_vertical).is_greater(0)
+	assert_bool(scroll.get_global_rect().intersects(last_button.get_global_rect())).is_true()
+	screen.free()
+	Battle._end_session(null)
+	field.get_parent().queue_free()
+	await get_tree().process_frame
+
+
 func test_admitting_the_same_hostile_twice_is_idempotent() -> void:
 	var field := await _field()
 	var first := _hostile(field, "First", Vector2i(30, 30))

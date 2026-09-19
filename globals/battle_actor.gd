@@ -25,6 +25,9 @@ var last_cast_element: StringName = &""
 ## Stable Combatant Id from Pandora. This is the enemy-archetype key used by
 ## Defining Strike knowledge; ad-hoc test actors may leave it empty.
 @export var archetype_id: StringName = &""
+## Authored visible anatomy: location id -> {display_name, exposed}. Empty means
+## no anatomy authored, never an assumed humanoid. Discovery remains separate.
+@export var anatomy: Dictionary = {}
 @export_range(-1, 1) var balance_affinity: int = 0
 @export var balance_pressure: int = 12
 ## This actor's elemental attunement (`ElementWheel.ORDER`), read as the TARGET side of

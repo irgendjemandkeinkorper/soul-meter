@@ -511,6 +511,13 @@ func query_action(
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
 	if action == null:
 		return _blocked(&"action", "Unknown combat action.", {"type": &"known_action"})
+	var aim_location := StringName(str(options.get("aim_location", "")))
+	if not aim_location.is_empty():
+		if options.has("object_id") or options.has("line_id"):
+			return _blocked(&"aim_action", "Anatomical aim requires a creature target.", {})
+		var aim := _query_aim(actor, target, action, aim_location)
+		if not bool(aim.get("allowed", false)):
+			return aim
 	if not action.class_resource_action.is_empty():
 		# A class-resource action is authored once and offered to every actor, so
 		# the resource itself decides whether the command means anything for this
@@ -570,7 +577,7 @@ func query_action(
 		movement["ap_cost"] = priced_action.ap_cost
 		movement["ct_cost"] = priced_action.ct_cost
 		return movement
-	var affordability := _can_afford(actor, action)
+	var affordability := _can_afford(actor, CalledShot.priced_action(action, aim_location))
 	if not bool(affordability.get("allowed", false)):
 		return affordability
 	if action.requires_enemy_target():
@@ -644,6 +651,9 @@ func submit_action(
 
 	var actor := active_actor()
 	var committed_action := _priced_move_action(action, query, options)
+	committed_action = CalledShot.priced_action(
+		committed_action, StringName(str(options.get("aim_location", "")))
+	)
 	var commit_result := scheduler.commit(actor, committed_action)
 	if not bool(commit_result.get("allowed", false)):
 		# query_action() already validated affordability via the same gate, so this is a
@@ -676,6 +686,8 @@ func submit_action(
 	_finish_hold_turn(actor)
 	_check_holds()
 	outcome["action_id"] = action.id
+	if options.has("aim_location") and not str(options["aim_location"]).is_empty():
+		outcome["aim_location"] = str(options["aim_location"])
 	outcome["verb"] = action.verb
 	outcome["ap_cost"] = committed_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
@@ -1444,6 +1456,16 @@ func _move_destination(action: CombatAction, options: Dictionary) -> StringName:
 	return StringName(str(authored))
 
 
+func _query_aim(
+	actor: BattleActor, target: BattleActor, action: CombatAction, location: StringName,
+) -> Dictionary:
+	var accuracy_enabled := (
+		actor != null and target != null
+		and not _positional_resolution_context(actor, target).is_empty()
+	)
+	return CalledShot.query(action, target, location, accuracy_enabled, rules.maximum_action_ct_cost)
+
+
 ## AP prices the same weighted path the enemy/CT move path quotes. The authored move
 ## action's AP cost is the per-cell rate; elevation can raise the number of cost units.
 func _priced_move_action(
@@ -2038,6 +2060,9 @@ func forecast_context(
 	if bool(context["reveal"]):
 		resolved_positioning["cover_bonus"] = 0
 	context["positioning"] = resolved_positioning
+	var aim_location := StringName(str(options.get("aim_location", "")))
+	if not aim_location.is_empty():
+		context["aim"] = _query_aim(actor, target, action, aim_location)
 	return context
 
 
@@ -2108,6 +2133,7 @@ func forecast_action(
 			"action_id": action.id,
 			"ap_cost": action.ap_cost,
 			"damage": int(card_resolution.get("damage", 0)),
+			"damage_on_hit": _forecast_damage_on_hit(gate["context"], target),
 			"fizzle_percent": float(card_resolution.get("fizzle_percent", 0.0)),
 			"breath_cost": action.breath_cost,
 			"soul_cost": float(gate.get("soul_cost", 0.0)),
@@ -2123,6 +2149,7 @@ func forecast_action(
 			"ability_id": gate["ability_id"],
 			"ap_cost": action.ap_cost,
 			"damage": int(cast_resolution.get("damage", 0)),
+			"damage_on_hit": _forecast_damage_on_hit(gate["context"], target),
 			"fizzle_percent": float(cast_resolution.get("fizzle_percent", 0.0)),
 			"breath_cost": int(gate.get("breath_cost", 0)),
 			"soul_cost": float(gate.get("soul_cost", 0.0)),
@@ -2137,14 +2164,27 @@ func forecast_action(
 		int(context.get("defense_bypass", 0)),
 	)
 	var damage := int(resolution.get("damage", 0))
+	var priced_action := CalledShot.priced_action(action, StringName(str(options.get("aim_location", ""))))
 	return _allowed({
 		"action_id": action.id,
-		"ap_cost": action.ap_cost,
+		"ap_cost": priced_action.ap_cost,
+		"ct_cost": priced_action.ct_cost,
+		"aim_location": str(options.get("aim_location", "")),
 		"damage": damage,
 		"resolution": resolution,
 		"context": context,
+		"damage_on_hit": _forecast_damage_on_hit(context, target),
 		"positioning": (context.get("positioning", {}) as Dictionary).duplicate(true),
 	})
+
+
+func _forecast_damage_on_hit(context: Dictionary, target: BattleActor) -> int:
+	var preview := _finalize_resolution_damage(
+		Resolution.preview_on_hit(context), target,
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0)),
+		int(context.get("defense_bypass", 0)),
+	)
+	return int(preview.get("damage", 0))
 
 
 func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> Dictionary:
@@ -2173,6 +2213,7 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 		"weakness_id": weakness_id,
 		"weakness_name": str(weakness.get("display_name", weakness_id)),
 		"damage": int(resolution.get("damage", 0)),
+		"damage_on_hit": _forecast_damage_on_hit(context, target),
 		"ap_cost": action.ap_cost,
 		"chance": skill_check_service.preview(
 			str(weakness.get("check_skill", "lore")),
@@ -2308,6 +2349,13 @@ func _resolve_defining_strike(
 		"battle_id": String(_encounter_id),
 	}, true)
 	result.merge(_resolve_attack(actor, target, action, resolution_options), true)
+	var physical_resolution: Dictionary = result.get("resolution", {})
+	if not bool(physical_resolution.get("allowed", false)) or not bool(physical_resolution.get("hit", false)):
+		result["message"] = (
+			"%s names %s, but the physical strike misses."
+			% [actor.display_name, result["weakness_name"]]
+		)
+		return result
 	var resistance: Variant = weakness.get("resistance", {})
 	var resisted := false
 	if resistance is Dictionary:
@@ -2505,6 +2553,13 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 		result.append({
 			"id": actor.combat_id,
 			"display_name": actor.display_name,
+			"anatomy": actor.anatomy.duplicate(true),
+			# Serializable presentation identity; never embed loaded textures in replay data.
+			"member_id": actor.source_member.id if actor.source_member != null else "",
+			"portrait_path": (
+				actor.source_member.portrait.resource_path
+				if actor.source_member != null and actor.source_member.portrait != null else ""
+			),
 			"element_id": actor.element_id,
 			"facing": battlefield.facing_of(actor) if battlefield != null else &"",
 			"hp": actor.hp,

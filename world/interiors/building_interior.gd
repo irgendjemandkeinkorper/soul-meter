@@ -14,6 +14,9 @@ const COUNTER_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-inter
 const WALL_THICKNESS := 48.0
 ## Accent rugs read as dyed floorboards, not flat paint, over the textured floor.
 const RUG_DARKEN := 0.45
+## Authored room colors tint painted materials; multiplying by the old blockout
+## colors directly crushed the wood grain and brickwork into black.
+const MATERIAL_TINT_STRENGTH := 0.35
 const BACK_WALL_THICKNESS := 96.0
 
 ## Vendor rows carry stable town-site ids but no scene anchor. Keep that world-layer
@@ -57,22 +60,23 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	($Surround/ColorRect as ColorRect).color = DS.INK_0
 	($Backdrop as Polygon2D).color = DS.INK_0
 	configure_room_camera(self)
 	var floor := $Floor as Polygon2D
 	var floor_texture := _load_optional_texture(DEFAULT_FLOOR_TEXTURE_PATH, FALLBACK_FLOOR_TEXTURE)
-	floor.color = floor_color
+	floor.color = Color.WHITE.lerp(floor_color, MATERIAL_TINT_STRENGTH)
 	floor.texture = floor_texture
 	floor.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	var wall_texture := _load_optional_texture(DEFAULT_WALL_TEXTURE_PATH, FALLBACK_WALL_TEXTURE)
 	for wall_name: String in ["WallTop", "WallBottom", "WallLeft", "WallRight"]:
 		var wall := get_node(wall_name) as Polygon2D
-		wall.color = accent_color
+		wall.color = Color.WHITE.lerp(accent_color, MATERIAL_TINT_STRENGTH)
 		wall.texture = wall_texture
 		wall.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	var rug := $AccentRug as Polygon2D
-	rug.color = accent_color.darkened(RUG_DARKEN)
+	rug.color = Color.WHITE.lerp(accent_color, MATERIAL_TINT_STRENGTH).darkened(RUG_DARKEN)
 	rug.texture = floor_texture
 	rug.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	configure_counter($Counter as Polygon2D)
@@ -186,7 +190,7 @@ func _interior_scene_path() -> String:
 
 
 func _load_optional_texture(path: String, fallback: Texture2D) -> Texture2D:
-	if FileAccess.file_exists(path):
+	if ResourceLoader.exists(path):
 		var texture := load(path) as Texture2D
 		if texture != null:
 			return texture

@@ -111,7 +111,9 @@ func test_shared_interior_keeps_contract_and_loads_palette_modulated_textures() 
 		if floor.texture != null:
 			assert_str(floor.texture.resource_path).is_equal(FLOOR_TEXTURE_PATH)
 		assert_int(floor.texture_repeat).is_equal(CanvasItem.TEXTURE_REPEAT_ENABLED)
-		assert_object(floor.color).is_equal(interior.floor_color)
+		# Painterly source textures already contain dark shading. The room tint
+		# must retain enough light for their grain to remain visible.
+		assert_float(floor.color.v).is_greater_equal(0.65)
 
 	for wall_name: String in ["WallTop", "WallBottom", "WallLeft", "WallRight"]:
 		var wall := interior.get_node_or_null(wall_name) as Polygon2D
@@ -124,7 +126,7 @@ func test_shared_interior_keeps_contract_and_loads_palette_modulated_textures() 
 		if wall.texture != null:
 			assert_str(wall.texture.resource_path).is_equal(WALL_TEXTURE_PATH)
 		assert_int(wall.texture_repeat).is_equal(CanvasItem.TEXTURE_REPEAT_ENABLED)
-		assert_object(wall.color).is_equal(interior.accent_color)
+		assert_float(wall.color.v).is_greater_equal(0.65)
 
 
 func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement_markers() -> void:

@@ -8,7 +8,6 @@ extends SMInteractable
 
 const CLOSED_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-chest--closed.png"
 const OPEN_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-chest--open.png"
-const PLACEHOLDER_TEXTURE_PATH := "res://assets/kenney/ui/fantasy-ui-borders/PNG/Default/Panel/panel-013.png"
 
 @export var loot: Array[Dictionary] = []
 @export var container_id: String = ""
@@ -142,13 +141,11 @@ func _refresh_visual() -> void:
 	var is_open := _used or (not interaction_flag.is_empty() and GameState.flag_is_true(interaction_flag))
 	_closed_sprite.visible = not is_open
 	_open_sprite.visible = is_open
+	$Marker.visible = _open_sprite.texture == null if is_open else _closed_sprite.texture == null
 
 
 func _texture_or_placeholder(path: String) -> Texture2D:
-	if FileAccess.file_exists(path):
-		var image := Image.load_from_file(ProjectSettings.globalize_path(path))
-		if image != null and not image.is_empty():
-			return ImageTexture.create_from_image(image)
-	# The interactive-object art landed (dom-chest-wood--*); null now only means
-	# a missing/corrupt file, and the caller keeps its drawn placeholder.
+	# Imported resources remain available in exported PCKs; source PNG files do not.
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
 	return null

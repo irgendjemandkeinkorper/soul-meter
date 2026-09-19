@@ -29,6 +29,7 @@ var _selected_item: InventoryItem
 
 
 func _build() -> void:
+	_add_opaque_backdrop()
 	_build_shell()
 	_ensure_bag_constraints()
 	_build_columns()
@@ -105,12 +106,55 @@ func _ensure_bag_constraints() -> void:
 		grid = GridConstraint.new()
 		grid.size = Vector2i(8, 8)
 		GameState.inventory.add_child(grid)
+	if not repair_bag_layout(grid):
+		push_warning("Bag layout exceeds available space; all items and their positions were preserved.")
 	_weight_constraint = GameState.inventory.get_constraint(WeightConstraint) as WeightConstraint
 	if _weight_constraint == null:
 		_weight_constraint = WeightConstraint.new()
 		_weight_constraint.capacity = WEIGHT_CAPACITY
 		GameState.inventory.add_child(_weight_constraint)
 	_weight_constraint.changed.connect(_refresh_weight)
+
+
+## Attaching GLoot's grid to a populated bag leaves existing items at (0, 0).
+## Plan positions first, preserving valid player placements. Never remove/re-add
+## items: that can trigger quest events, merge stacks, or lose an overfull save.
+static func repair_bag_layout(grid: GridConstraint) -> bool:
+	var occupied: Array[Rect2i] = []
+	var pending: Array[InventoryItem] = []
+	var placements: Dictionary = {}
+	var bounds := Rect2i(Vector2i.ZERO, grid.size)
+	for item: InventoryItem in grid.inventory.get_items():
+		var rect := grid.get_item_rect(item)
+		if bounds.encloses(rect) and _bag_rect_is_free(rect, occupied):
+			occupied.append(rect)
+		else:
+			pending.append(item)
+	for item: InventoryItem in pending:
+		var item_size := grid.get_item_size(item)
+		var found := false
+		for x: int in range(grid.size.x - item_size.x + 1):
+			for y: int in range(grid.size.y - item_size.y + 1):
+				var rect := Rect2i(Vector2i(x, y), item_size)
+				if _bag_rect_is_free(rect, occupied):
+					occupied.append(rect)
+					placements[item] = rect.position
+					found = true
+					break
+			if found:
+				break
+		if not found:
+			return false
+	for item: InventoryItem in placements:
+		grid.set_item_position_unsafe(item, placements[item])
+	return true
+
+
+static func _bag_rect_is_free(rect: Rect2i, occupied: Array[Rect2i]) -> bool:
+	for prior: Rect2i in occupied:
+		if prior.intersects(rect):
+			return false
+	return true
 
 
 func _build_columns() -> void:

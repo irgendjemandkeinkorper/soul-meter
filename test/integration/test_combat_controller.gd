@@ -680,6 +680,42 @@ func test_defining_strike_uses_skill_check_and_applies_authored_effect() -> void
 	assert_bool(controller_source.contains("randi_range(")).is_false()
 
 
+func test_defining_strike_physical_miss_pays_cost_but_cannot_cripple() -> void:
+	var weakness_id := &"loam-maddened-boar/knee"
+	ally.source_member = _skilled_member()
+	enemy.archetype_id = &"loam-maddened-boar"
+	enemy.discovered_weakness_ids = [weakness_id]
+	enemy.attributes[&"alacrity"] = 100
+	rules.use_charge_time = false
+	var grid := GridBattlefieldModel.new()
+	grid.configure(rules)
+	grid.build_grid(_grid_ground())
+	controller.configure(CombatActionCatalog.all(), grid, rules)
+	controller.start([ally], [enemy], &"defining-physical-miss")
+	var definition := CombatActionCatalog.by_id(&"definition")
+	var forecast := controller.forecast_defining_strike(enemy, weakness_id)
+	assert_bool(forecast["allowed"]).is_true()
+	assert_bool(forecast["resolution"]["hit"]).is_false()
+	assert_int(forecast["damage_on_hit"]).is_greater(0)
+	var hp_before := enemy.hp
+	var effects_before := enemy.defining_effects.duplicate(true)
+	var ap_before := ally.action_points
+	var sequence_before := controller._sequence
+	for _preview: int in 3:
+		assert_dict(controller.forecast_defining_strike(enemy, weakness_id)).is_equal(forecast)
+	assert_int(controller._sequence).is_equal(sequence_before)
+	var result := controller.submit_action(
+		definition.id, enemy, {"weakness_id": weakness_id, "forced_rolls": [1]}
+	)
+	assert_bool(result["allowed"]).is_true()
+	assert_bool(result["check"]["success"]).is_true()
+	assert_bool(result["resolution"]["hit"]).is_false()
+	assert_int(enemy.hp).is_equal(hp_before)
+	assert_int(ally.action_points).is_equal(ap_before - definition.ap_cost)
+	assert_bool(result["effect_applied"]).is_false()
+	assert_dict(enemy.defining_effects).is_equal(effects_before)
+
+
 func test_defining_strike_requires_selection_and_forecast_matches_resolution_context() -> void:
 	var weakness_id := &"loam-maddened-boar/knee"
 	ally.source_member = _skilled_member()
@@ -907,6 +943,19 @@ func test_snapshot_preserves_encounter_identity_for_environment_presentation() -
 	)
 
 
+func test_snapshot_preserves_custom_portrait_identity_as_paths() -> void:
+	var member := PartyMember.new()
+	member.id = "custom-recruit"
+	member.portrait = load("res://assets/generated/portraits/player/likeness_01.png") as Texture2D
+	ally.source_member = member
+	controller.start([ally], [enemy], &"trial-warden")
+	var row: Dictionary = controller.snapshot()["allies"][0]
+	assert_str(str(row["member_id"])).is_equal(member.id)
+	assert_str(str(row["portrait_path"])).is_equal(member.portrait.resource_path)
+	var decoded: Dictionary = JSON.parse_string(JSON.stringify(row))
+	assert_str(str(decoded["portrait_path"])).is_equal(member.portrait.resource_path)
+
+
 func test_charged_source_tile_raises_the_forecast_and_matches_resolution_terms() -> void:
 	var local_controller := _grid_controller(true)
 	var actor := local_controller.allies[0]
@@ -991,6 +1040,8 @@ func test_grid_cover_changes_forecast_and_resolution_by_the_same_amount() -> voi
 	assert_int(int(covered_forecast["damage"])).is_less(int(uncovered_forecast["damage"]))
 	assert_int(int(covered_forecast["damage"])).is_equal(hp_before - covered_target.hp)
 	assert_int(int(resolved["damage"])).is_equal(int(covered_forecast["damage"]))
+	assert_int(int(covered_forecast["damage_on_hit"])).is_equal(int(resolved["damage"]))
+	assert_int(int(uncovered_forecast["damage_on_hit"])).is_equal(int(uncovered_forecast["damage"]))
 	assert_int(int((covered_forecast["positioning"] as Dictionary)["cover_bonus"])).is_equal(
 		covered.rules.cover_defense_bonus
 	)

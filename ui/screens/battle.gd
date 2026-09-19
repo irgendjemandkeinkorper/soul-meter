@@ -118,18 +118,27 @@ func _make_command_dock() -> Control:
 	command_title.text = "COMMAND"
 	command_title.theme_type_variation = "EyebrowLabel"
 	command_column.add_child(command_title)
-	# Four columns keep the dock short — with two, the two-line action buttons
-	# stacked the grid taller than the rail this dock replaced.
+	# The action catalog grows with the class kits. Scroll its rows inside the
+	# dock so every command remains reachable without shrinking the battlefield.
+	var action_scroll := ScrollContainer.new()
+	action_scroll.name = "ActionScroll"
+	action_scroll.custom_minimum_size = Vector2(0, 84)
+	action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	action_scroll.follow_focus = true
+	command_column.add_child(action_scroll)
 	_actions_box = GridContainer.new()
 	_actions_box.columns = 4
 	_actions_box.theme_type_variation = "BattleActionGrid"
-	_actions_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	command_column.add_child(_actions_box)
+	_actions_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_scroll.add_child(_actions_box)
 	for action in Battle.available_actions():
 		var button := _menu_button(_actions_box, _short_action_text(action), _use_action.bind(action.id))
 		# No autowrap: single-line labels keep the grid two rows tall — wrapped
 		# labels grew the dock past the rail it replaced.
 		button.custom_minimum_size = Vector2(0, 26)
+		button.clip_text = true
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.tooltip_text = _action_tooltip(action)
 		_action_buttons.append(button)
 	var command_footer := HBoxContainer.new()
@@ -307,12 +316,15 @@ func _update_weakness_forecast(index: int) -> void:
 		_weakness_forecast.text = str(forecast.get("message", "Strike unavailable."))
 		return
 	var effect_name := str(forecast.get("effect_id", "")).replace("_", " ").capitalize()
+	var resolution: Dictionary = forecast.get("resolution", {})
+	var accuracy: Dictionary = resolution.get("accuracy_breakdown", {})
 	_weakness_forecast.text = (
-		"COST %d AP  ·  CHANCE %.0f%%\nFORECAST %d DAMAGE  ·  %s"
+		"COST %d AP  ·  KNOWLEDGE %.0f%%  ·  HIT %d%%\nFORECAST %d DAMAGE ON HIT\n%s requires a successful knowledge check and a hit."
 		% [
 			int(forecast.get("ap_cost", 0)),
 			float(forecast.get("chance", 0.0)),
-			int(forecast.get("damage", 0)),
+			int(accuracy.get("effective_hit_chance", resolution.get("hit_chance", 100))),
+			int(forecast.get("damage_on_hit", forecast.get("damage", 0))),
 			effect_name if not effect_name.is_empty() else "No additional effect",
 		]
 	)

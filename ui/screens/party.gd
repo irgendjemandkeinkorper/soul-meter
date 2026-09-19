@@ -12,9 +12,11 @@ var _hp_lbl: Label
 var _bio_lbl: Label
 var _quest_button: Button
 var _selected_member: PartyMember
+var _detail_portrait: TextureRect
 
 
 func _build() -> void:
+	_add_opaque_backdrop()
 	var vbox := _make_shell_window("Party")
 
 	var row := HBoxContainer.new()
@@ -27,9 +29,22 @@ func _build() -> void:
 	list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	list.custom_minimum_size = Vector2(260, 0)
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list.fixed_icon_size = Vector2i(48, 48)
-	list.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	list.fixed_icon_size = Vector2i(64, 64)
+	list.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	row.add_child(list)
+
+	var portrait_frame := PanelContainer.new()
+	portrait_frame.theme_type_variation = "NpcPortraitFrame8"
+	portrait_frame.custom_minimum_size = Vector2(320, 320)
+	portrait_frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(portrait_frame)
+	_detail_portrait = TextureRect.new()
+	_detail_portrait.name = "MemberPortrait"
+	_detail_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_detail_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_detail_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_detail_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait_frame.add_child(_detail_portrait)
 
 	var sheet := VBoxContainer.new()
 	sheet.theme_type_variation = "LedgerColumn"
@@ -89,6 +104,8 @@ func _build() -> void:
 func _on_selected(idx: int) -> void:
 	var m: PartyMember = GameState.party[idx]
 	_selected_member = m
+	_detail_portrait.texture = PartyMemberVisualsScript.ensure_portrait(m)
+	_detail_portrait.tooltip_text = m.display_name
 	_name_lbl.text = m.display_name
 	_sub_lbl.text = "%s  •  %s  •  Level %d" % [m.race, m.char_class, m.level]
 	_hp_lbl.text = "HP  %d / %d" % [m.hp, m.max_hp]

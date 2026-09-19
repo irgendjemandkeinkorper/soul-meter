@@ -1,8 +1,14 @@
 # Called-shot expansion — implementation checklist
 
-**Status:** Proposed, 2026-09-17. No implementation tasks started.
+**Status:** Accuracy foundation (task 2) implemented and verified 2026-09-18. Anatomy selection and injuries remain planned.
 
 **Confirmed decisions, 2026-09-17:** The user chose separate combat design/task files and serious injuries that persist until treated. Persistence and treatment tasks are required.
+
+**Confirmed decision, 2026-09-18:** Qualified Mending can cure serious injuries outside combat. Task 10C is required; exact qualification thresholds, costs, and success rules remain proposals.
+
+**Additional confirmed decisions, 2026-09-18:** Visible anatomy is freely targetable; hidden/supernatural weaknesses retain discovery. Aimed attacks use an extra action cost plus an accuracy penalty, with AP and CT surcharges authored separately. Exact values remain provisional.
+
+**2026-09-18 progress:** Treatment/recovery contracts drafted; task 10 split into transaction, healer, and field-treatment slices. Task 2 is complete without adding new balance terms. [Verification evidence](../docs/qa/combat-accuracy-2026-09-18.md). Next implementation: task 3's lab fixture; unresolved injury tuning does not block that slice.
 
 **Architecture:** [Called shots, accuracy, and injuries](../docs/ideas/called-shots-and-injuries.md). Existing `tasks/plan.md` and `tasks/todo.md` remain owned by their current work.
 
@@ -15,7 +21,7 @@ Each task targets one focused session. Estimates are engineering planning ranges
 **Scope:** Settle the rule changes needed before gameplay implementation; record accepted versus deferred choices in the architecture proposal and relevant existing requirements.
 
 **Acceptance:**
-- [ ] Ordinary anatomy and discovered Defining Strike eligibility are explicit; FR103's menu restriction is reconciled.
+- [x] Ordinary anatomy and discovered Defining Strike eligibility are explicit; FR103's menu restriction is reconciled.
 - [ ] Aim costs, delivery tags, injury eligibility/stacking, and accuracy modifier order have a reviewable contract; provisional values are labeled.
 - [ ] Recovery contract specifies treatment access, costs, outcomes, and minor-injury duration; serious injuries persist until treated as already confirmed.
 
@@ -28,9 +34,11 @@ Each task targets one focused session. Estimates are engineering planning ranges
 **Scope:** Produce a typed/validated accuracy breakdown through the existing resolver and forecast boundary.
 
 **Acceptance:**
-- [ ] Current ordinary attacks retain hit chances, cost, and deterministic outcomes for fixed fixtures, including legacy non-to-hit paths.
-- [ ] Forecast exposes named percentage-point modifiers and illegal-shot reasons without consuming RNG.
-- [ ] Existing Defining Strike consequences cannot apply after a physical miss; add a focused regression for the real submit path.
+- [x] Current ordinary attacks retain hit chances, cost, and deterministic outcomes for fixed fixtures, including legacy non-to-hit paths.
+- [x] Forecast exposes named percentage-point modifiers and existing illegal-shot reasons without advancing RNG or action sequencing.
+- [x] Existing Defining Strike consequences cannot apply after a physical miss; add a focused regression for the real submit path.
+
+**Implemented boundary:** `Resolution.accuracy_breakdown()` exposes the existing curve. Additive `damage_on_hit` quotes use the same resolver and controller mitigation; raw `damage`/`resolution` remain deterministic compatibility payloads. HUD presents conditional damage and risk, masks hidden draw rows, and excludes upcoming hit-roll labels. AP/CT costs and existing damage/accuracy balance are unchanged.
 
 **Verification:** Focused resolution/controller tests: front/side/back, height, clamp boundaries, miss-effect gating, repeated previews.
 
@@ -151,18 +159,50 @@ Each task targets one focused session. Estimates are engineering planning ranges
 
 ## Phase 4 — finish the playable system
 
-### 10. Provide recovery for persistent injuries — 60–120 minutes per recovery route
+### 10A. Cure one injury through an atomic treatment operation — 60–120 minutes
 
-**Scope:** Required. Implement the accepted treatment route through existing interaction and skill systems before persistent disabling injuries enter playable content.
+**Scope:** Required. Add the shared query/commit helper using durable injuries and existing inventory/GP methods. Prove the operation through a lab fixture before attaching production interactions.
 
 **Acceptance:**
-- [ ] Treatment removes or reduces the intended injury and updates usable actions/forecast immediately.
-- [ ] Cost, success, HP-healing relationship, and availability match the accepted recovery contract; ordinary HP restoration does not silently clear serious injuries, and no Soul income is invented.
-- [ ] The first disabling-injury encounter cannot leave the party without an accessible recovery or escape route.
+- [ ] Quote identifies one injury instance/revision and exact cost; stale injury, changed price, invalid access, and combat-active state reject without payment.
+- [ ] Valid treatment pays and cures exactly once; injected application failure rolls back payment, and duplicate intent cannot pay again or cure a later injury at the same location.
+- [ ] Completed state round-trips coherently through saves; ordinary HP healing leaves serious injuries intact and treatment grants no Soul.
 
-**Verification:** Injure → treat → save/reload → use recovered action through actual interaction paths; failed/canceled treatment spends only contracted costs.
+**Verification:** Focused integration tests with 20 GP and one-supply test fixtures, insufficient resources, last-item stack, stale quote, duplicate submission, re-injury, and injected rollback. Use a real injury from the attack submit path for the lifecycle check.
 
-**Dependencies:** 8, 9 and accepted recovery design. **Likely files:** existing treatment/interaction owner, injury lifecycle helper, one authored recovery fixture, relevant UI region, recovery integration test. **Size:** M per route; identify concrete owner before coding.
+**Dependencies:** 9 and accepted shared recovery contract from 1. **Likely files:** proposed `globals/injury_treatment.gd`, `globals/game_state.gd`, injury lifecycle helper, combat-lab fixture, proposed treatment integration suite. **Size:** M.
+
+### 10B. Make a healer treatment accessible in the encounter — 60–120 minutes
+
+**Scope:** Required. Connect one authored provider interaction to the shared operation and its displayed quote. Author the recovery access needed by the first disabling-injury encounter.
+
+**Acceptance:**
+- [ ] Player selects an injury, sees an exact GP quote, commits through the interaction, and immediately regains the corresponding permitted actions.
+- [ ] Provider supplies are included in the fee; lack of party Mending does not block the route, and invalid/changed quotes cannot charge silently.
+- [ ] Encounter has a verified recovery path for no cash, no party Mending, and an injured practitioner; author the access solution without a new global free-healing mechanic.
+
+**Verification:** Rendered provider interaction; attack → injury → retreat → provider → cure → save/reload; inspect the receipt and restrictions. Check reputation/access changes and the authored no-cash route.
+
+**Dependencies:** 8, 10A and accepted provider/access design. **Likely files:** existing interaction adapter, provider/encounter source data, injury detail UI, treatment integration suite. **Size:** M. Provider identity/location must be selected from authorized content before writing narrative.
+
+### Recovery checkpoint
+
+- [ ] A party without Mending can complete the persistent injury/recovery loop.
+- [ ] Transaction, save, and rendered interaction checks pass; neither failure nor duplicate submission loses resources.
+- [ ] A guaranteed treatment consumes no SkillCheck RNG or Expert reroll.
+
+### 10C. Offer qualified field treatment — 60–120 minutes
+
+**Scope:** Required by the confirmed field-cure decision. Expose the shared operation in the party injury UI using authored Mending/limb prerequisites and a matching supply. Temporary combat relief remains a separate later combat-item extension.
+
+**Acceptance:**
+- [ ] A qualified, conscious practitioner can cure one supported injury outside combat using the displayed supply quantity; ineligible self-treatment gives a precise reason.
+- [ ] Field treatment uses the same quote/commit/notification rules as provider treatment and rejects if combat begins before commitment.
+- [ ] Cure removes only the selected injury; HP, other injuries, elemental effects, Soul, and ultimate flags follow their independent contracts.
+
+**Verification:** Rendered party treatment, practitioner switch, injured hands versus nonvocal care, last supply unit, cancel/reopen, and combat-start race.
+
+**Dependencies:** 10A, accepted qualification/success rules and production supply card; field-cure capability is already confirmed. **Likely files:** party injury UI, treatment helper, Pandora treatment supply source, catalog adapter, treatment integration suite. **Size:** M.
 
 ### 11. Author production anatomy and injury content — 60–120 minutes per catalog slice
 
@@ -175,7 +215,7 @@ Each task targets one focused session. Estimates are engineering planning ranges
 
 **Verification:** Generator validation, catalog loading, missing-reference rejection, and one submit-path fixture per newly enabled region.
 
-**Dependencies:** 5–9; 10 before persistent disabling profiles ship. **Likely files:** existing Pandora schema/export owner, `globals/combat/combat_identity_catalog.gd`, authored catalog source, generated output via exporter, catalog test. **Size:** M per slice. Locate the authoring owner first; do not create a competing source of truth.
+**Dependencies:** 5–9; 10A–10C before persistent disabling profiles ship. **Likely files:** existing Pandora schema/export owner, `globals/combat/combat_identity_catalog.gd`, authored catalog source, generated output via exporter, catalog test. **Size:** M per slice. Locate the authoring owner first; do not create a competing source of truth.
 
 ### 12. Make AI choose useful called shots — 60–120 minutes
 
