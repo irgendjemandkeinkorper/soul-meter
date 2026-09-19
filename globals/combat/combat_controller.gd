@@ -1751,6 +1751,22 @@ func _finalize_resolution_damage(
 		write["before"] = target.hp
 		write["after"] = maxi(target.hp - damage, 0)
 		write["delta"] = int(write["after"]) - target.hp
+	if finalized.has("injury"):
+		# Injury eligibility is decided HERE, after hit and mitigation: a miss or a fizzle never
+		# injures, and a hit below the authored damage threshold does not either.
+		var injury: Dictionary = finalized["injury"]
+		var eligible := (
+			bool(finalized.get("hit", true)) and not bool(finalized.get("fizzled", false))
+			and damage >= int(injury.get("min_damage", 1))
+		)
+		injury["eligible"] = eligible
+		injury["applies"] = eligible and bool(injury.get("rolled", false))
+		if bool(injury["applies"]):
+			writes.append({
+				"kind": "injury", "target_id": String(target.combat_id),
+				"injury": injury.duplicate(true),
+			})
+		finalized["writes"] = writes
 	var action_log: Dictionary = finalized.get("action_log", {})
 	if not action_log.is_empty():
 		action_log["deltas"] = writes.duplicate(true)
@@ -1788,6 +1804,17 @@ func _apply_resolution_writes(
 				if dot_before > 0 and target.hp <= 0:
 					_class_resource_of(actor).on_kill(target.combat_id, &"dot")
 					_notify_combatant_fell(target.combat_id)
+			&"injury":
+				var applied := CombatInjury.apply(
+					target, write.get("injury", {}),
+					"%s|%d|%s|%s" % [
+						str(resolution.get("battle_id", "")), int(resolution.get("tick", 0)),
+						String(actor.combat_id), str(resolution.get("ability_id", "")),
+					],
+					int(resolution.get("tick", 0)),
+				)
+				if bool(applied.get("applied", false)):
+					_emit_event(&"injury_applied", actor, target, applied)
 			&"breath":
 				actor.breath = int(write.get("after", actor.breath))
 			&"aftertones":
@@ -2101,9 +2128,15 @@ func forecast_context(
 		resolved_positioning["cover_bonus"] = 0
 	context["positioning"] = resolved_positioning
 	context["visibility"] = visibility_context(actor, target, action)
+	if action.kind == CombatAction.Kind.ATTACK and not action.spell:
+		var injury_modifiers := CombatInjury.attack_accuracy_modifiers(actor)
+		if not injury_modifiers.is_empty():
+			context["attacker_injury_modifiers"] = injury_modifiers
 	var aim_location := StringName(str(options.get("aim_location", "")))
 	if not aim_location.is_empty():
 		context["aim"] = _query_aim(actor, target, action, aim_location)
+		if bool(context["aim"].get("allowed", false)) and context["aim"].has("injury"):
+			context["injury"] = (context["aim"]["injury"] as Dictionary).duplicate(true)
 	return context
 
 
@@ -2216,7 +2249,26 @@ func forecast_action(
 		"context": context,
 		"damage_on_hit": _forecast_damage_on_hit(context, target),
 		"positioning": (context.get("positioning", {}) as Dictionary).duplicate(true),
+		"injury_forecast": _injury_forecast(resolution, _forecast_damage_on_hit(context, target)),
 	})
+
+
+## The three chances a forecast must label separately: to hit, to injure ON hit, overall.
+## Purely presentational; never reads the rolled result.
+func _injury_forecast(resolution: Dictionary, damage_on_hit: int) -> Dictionary:
+	if not resolution.has("injury"):
+		return {}
+	var injury: Dictionary = resolution["injury"]
+	var chances: Dictionary = resolution.get("injury_chance", {})
+	var eligible := damage_on_hit >= int(injury.get("min_damage", 1))
+	return {
+		"id": str(injury.get("id", "")), "location_id": str(injury.get("location_id", "")),
+		"severity": str(injury.get("severity", "minor")),
+		"hit_chance": int(chances.get("hit", 0)),
+		"chance_on_hit": int(chances.get("on_hit", 0)) if eligible else 0,
+		"overall_chance": int(chances.get("overall", 0)) if eligible else 0,
+		"eligible": eligible, "min_damage": int(injury.get("min_damage", 1)),
+	}
 
 
 func _forecast_damage_on_hit(context: Dictionary, target: BattleActor) -> int:
@@ -2595,6 +2647,7 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"id": actor.combat_id,
 			"display_name": actor.display_name,
 			"anatomy": actor.anatomy.duplicate(true),
+			"injuries": actor.injuries.duplicate(true),
 			# Serializable presentation identity; never embed loaded textures in replay data.
 			"member_id": actor.source_member.id if actor.source_member != null else "",
 			"portrait_path": (

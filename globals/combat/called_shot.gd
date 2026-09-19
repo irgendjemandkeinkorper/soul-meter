@@ -38,13 +38,27 @@ static func query(
 			return _blocked(&"aim_profile", "Aim costs and penalty must be authored as positive integers.")
 	if action.ct_cost < 0 or action.ct_cost + int(profile["ct_surcharge"]) > maximum_ct_cost:
 		return _blocked(&"aim_profile", "Aim needs an explicit CT cost within the action cost limit.")
-	return {
+	var injury: Dictionary = {}
+	if profile.has("injury"):
+		if not profile["injury"] is Dictionary or str((profile["injury"] as Dictionary).get("id", "")).is_empty():
+			return _blocked(&"aim_profile", "An aim injury must author an id.")
+		injury = (profile["injury"] as Dictionary).duplicate(true)
+		var chance: Variant = injury.get("chance_on_hit", 0)
+		if not (chance is int or chance is float) or int(chance) < 0 or int(chance) > 100:
+			return _blocked(&"aim_profile", "Aim injury chance must be authored as 0-100.")
+		injury["chance_on_hit"] = int(chance)
+		injury["min_damage"] = maxi(int(injury.get("min_damage", 1)), 0)
+		injury["location_id"] = String(location)
+	var result := {
 		"allowed": true, "location_id": String(location),
 		"display_name": str(anatomy.get("display_name", location)),
 		"ap_surcharge": int(profile["ap_surcharge"]),
 		"ct_surcharge": int(profile["ct_surcharge"]),
 		"accuracy_penalty": int(profile["accuracy_penalty"]),
 	}
+	if not injury.is_empty():
+		result["injury"] = injury
+	return result
 
 
 ## Called only after query succeeds. Never changes the catalog Resource.

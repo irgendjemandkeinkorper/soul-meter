@@ -202,7 +202,10 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	interface._on_tile_hovered({"x": 1, "y": 0})
 	var aimed := controller.forecast_action(action, target, {"aim_location": "throat"})
 	assert_str(panel.forecast.text).contains("Aim: Throat -25 pp")
-	assert_str(panel.forecast.text).contains("AIM THROAT · COST %d AP · NO INJURY EFFECT YET" % int(aimed["ap_cost"]))
+	var injury_forecast: Dictionary = aimed["injury_forecast"]
+	assert_str(panel.forecast.text).contains("AIM THROAT · COST %d AP · INJURY %d%% ON HIT · %d%% OVERALL" % [
+		int(aimed["ap_cost"]), int(injury_forecast["chance_on_hit"]), int(injury_forecast["overall_chance"]),
+	])
 	assert_str(panel.aim_button(&"throat").theme_type_variation).is_equal("BronzeButton")
 
 	# Pressing the mark submits the armed aim and pays the surcharged AP.

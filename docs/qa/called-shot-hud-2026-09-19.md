@@ -29,4 +29,4 @@ At a raw 1280×720 viewport the panel overflows by roughly 47 px; the design sys
 
 ## Not covered
 
-No production action authors `aim_profiles` yet (task 11), so the row never appears in a shipped encounter. No injury consequence is displayed because none exists (task 7). Controller/keyboard navigation was not exercised with real input events.
+No production action authors `aim_profiles` yet (task 11), so the row never appears in a shipped encounter. The injury consequence line was added by task 7 (see `called-shot-injury-2026-09-19.md`); `aim-row-1920.png` was recaptured then. Controller/keyboard navigation was not exercised with real input events.

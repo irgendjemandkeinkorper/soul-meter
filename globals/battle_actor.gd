@@ -28,6 +28,9 @@ var last_cast_element: StringName = &""
 ## Authored visible anatomy: location id -> {display_name, exposed}. Empty means
 ## no anatomy authored, never an assumed humanoid. Discovery remains separate.
 @export var anatomy: Dictionary = {}
+## Location injuries keyed by location id (see CombatInjury). Separate from impositions.
+## Combat-local for the task 7 slice; durable party persistence is task 9.
+@export var injuries: Dictionary = {}
 @export_range(-1, 1) var balance_affinity: int = 0
 @export var balance_pressure: int = 12
 ## This actor's elemental attunement (`ElementWheel.ORDER`), read as the TARGET side of

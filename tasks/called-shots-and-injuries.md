@@ -1,6 +1,6 @@
 # Called-shot expansion — implementation checklist
 
-**Status:** Accuracy foundation (task 2) verified 2026-09-18; lab aimed attack (task 3) and HUD aim selection (task 4) and line-of-fire/exposure (task 5), and physical visibility (task 6) implemented 2026-09-19; Checkpoint B reached. Injuries remain planned.
+**Status:** Accuracy foundation (task 2) verified 2026-09-18; lab aimed attack (task 3) and HUD aim selection (task 4) and line-of-fire/exposure (task 5), physical visibility (task 6), and bounded location injury (task 7) implemented 2026-09-19; Checkpoint B reached. Throat/vocal, persistence, and treatment remain planned.
 
 **Confirmed decisions, 2026-09-17:** The user chose separate combat design/task files and serious injuries that persist until treated. Persistence and treatment tasks are required.
 
@@ -10,7 +10,7 @@
 
 **2026-09-18 progress:** Treatment/recovery contracts drafted; task 10 split into transaction, healer, and field-treatment slices. Task 2 is complete without adding new balance terms. [Verification evidence](../docs/qa/combat-accuracy-2026-09-18.md). Next implementation: task 3's lab fixture; unresolved injury tuning does not block that slice.
 
-**2026-09-19 progress:** Task 3 landed: `CalledShot` legality/pricing, controller aim query at forecast and commit, lab fixture with synthetic anatomy, and 9 aimed-action tests under both schedulers (`test/integration/test_called_shots.gd`, `test/unit/test_combat_lab.gd`). A JSON-replayed aim context now logs identically to the live one. The lab panel was not inspected rendered; Checkpoint A's third item is covered only by the hidden-result assertions from task 2. Task 4 landed the same day: forecast-panel aim row, interface aim mode, controller-quoted disabled reasons, rendered capture. [Evidence](../docs/qa/called-shot-hud-2026-09-19.md). Task 5 landed: authored obstacles refuse `blocked_by_obstacle`, low cover hides cover-hidden anatomy (`aim_cover`) unless seen over from height, legacy cover mitigation retained without a second charge. [Evidence](../docs/qa/called-shot-exposure-2026-09-19.md). Task 6 landed: per-cell clear/dim/obscured composed worst-of, ranged-only applicability, Blinded reconciled to its facing restriction, provisional −10/−25 pp, live forecast refresh. [Evidence](../docs/qa/called-shot-visibility-2026-09-19.md). Next implementation: task 7 (bounded location injury).
+**2026-09-19 progress:** Task 3 landed: `CalledShot` legality/pricing, controller aim query at forecast and commit, lab fixture with synthetic anatomy, and 9 aimed-action tests under both schedulers (`test/integration/test_called_shots.gd`, `test/unit/test_combat_lab.gd`). A JSON-replayed aim context now logs identically to the live one. The lab panel was not inspected rendered; Checkpoint A's third item is covered only by the hidden-result assertions from task 2. Task 4 landed the same day: forecast-panel aim row, interface aim mode, controller-quoted disabled reasons, rendered capture. [Evidence](../docs/qa/called-shot-hud-2026-09-19.md). Task 5 landed: authored obstacles refuse `blocked_by_obstacle`, low cover hides cover-hidden anatomy (`aim_cover`) unless seen over from height, legacy cover mitigation retained without a second charge. [Evidence](../docs/qa/called-shot-exposure-2026-09-19.md). Task 6 landed: per-cell clear/dim/obscured composed worst-of, ranged-only applicability, Blinded reconciled to its facing restriction, provisional −10/−25 pp, live forecast refresh. [Evidence](../docs/qa/called-shot-visibility-2026-09-19.md). Task 7 landed: `CombatInjury` records on `BattleActor.injuries` (one per location, refresh on repeat, replay no-op), injury eligibility decided after mitigation, arm injury as a named −10 pp attack modifier that leaves Alacrity and spells alone, HUD/lab quotes with on-hit and overall chance. [Evidence](../docs/qa/called-shot-injury-2026-09-19.md). Next implementation: task 8 (throat/vocal restriction).
 
 **Architecture:** [Called shots, accuracy, and injuries](../docs/ideas/called-shots-and-injuries.md). Existing `tasks/plan.md` and `tasks/todo.md` remain owned by their current work.
 
@@ -119,9 +119,9 @@ Each task targets one focused session. Estimates are engineering planning ranges
 **Scope:** Add minimal injury records and conditional outcome resolution for an isolated fixture, initially using combat-local state. This is an intermediate test slice; serious injuries cannot ship with combat-only storage.
 
 **Acceptance:**
-- [ ] Injury eligibility is evaluated after hit/mitigation; misses and ineligible zero-damage hits produce no injury.
-- [ ] Arm injury affects eligible attacks without changing base Alacrity; duplicate application obeys the accepted bound/refresh rule.
-- [ ] Preview probabilities distinguish on-hit and overall injury chance; replay remains deterministic and applies the result once.
+- [x] Injury eligibility is evaluated after hit/mitigation; misses and ineligible zero-damage hits produce no injury.
+- [x] Arm injury affects eligible attacks without changing base Alacrity; duplicate application obeys the accepted bound/refresh rule.
+- [x] Preview probabilities distinguish on-hit and overall injury chance; replay remains deterministic and applies the result once.
 
 **Verification:** Submit-path injury application and consumption, severity/stacking boundaries, deterministic replay, and preview purity.
 

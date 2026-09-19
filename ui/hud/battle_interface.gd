@@ -288,8 +288,16 @@ func _append_aim_forecast(payload: Dictionary) -> void:
 		return
 	var aim: Dictionary = (payload.get("context", {}) as Dictionary).get("aim", {})
 	var use_ct := _controller != null and _controller.rules != null and _controller.rules.use_charge_time
+	var injury: Dictionary = payload.get("injury_forecast", {})
+	var consequence := tr("NO INJURY EFFECT")
+	if not injury.is_empty() and bool(injury.get("eligible", false)):
+		consequence = tr("INJURY %d%% ON HIT · %d%% OVERALL") % [
+			int(injury.get("chance_on_hit", 0)), int(injury.get("overall_chance", 0)),
+		]
+	elif not injury.is_empty():
+		consequence = tr("INJURY NEEDS %d DAMAGE") % int(injury.get("min_damage", 1))
 	act_target_panel.forecast.text += "\n" + tr("AIM %s · COST %d %s · %s") % [
 		str(aim.get("display_name", _aim_location)).to_upper(),
 		int(payload.get("ct_cost" if use_ct else "ap_cost", 0)), "CT" if use_ct else "AP",
-		tr("NO INJURY EFFECT YET"),
+		consequence,
 	]

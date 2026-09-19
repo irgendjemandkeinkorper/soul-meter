@@ -66,6 +66,11 @@ static func accuracy_breakdown(context: Dictionary) -> Dictionary:
 		if not aim.is_empty() and bool(aim.get("allowed", false)):
 			modifiers.append({"id": "aim", "label": "Aim: %s" % str(aim.get("display_name", "")),
 				"percentage_points": -int(aim.get("accuracy_penalty", 0))})
+		# Attacker injuries: action-specific terms the controller lists only for eligible attacks.
+		for injury_term: Variant in context.get("attacker_injury_modifiers", []):
+			if injury_term is Dictionary:
+				modifiers.append({"id": "injury", "label": str((injury_term as Dictionary).get("label", "Injury")),
+					"percentage_points": int((injury_term as Dictionary).get("percentage_points", 0))})
 	var raw := base
 	for modifier: Dictionary in modifiers:
 		raw += int(modifier["percentage_points"])
@@ -495,6 +500,29 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"hidden_draw": draw_result,
 		"reveal": bool(context.get("reveal", false)),
 	}
+	var injury_profile := _dictionary(context.get("injury", {}))
+	if not injury_profile.is_empty() and to_hit_enabled:
+		# Conditional injury roll on its OWN deterministic channel, so adding it never shifts the
+		# existing hit/fizzle sequences. Eligibility against mitigated damage is finalized by
+		# the controller; this records the roll and the three chances the forecast must label.
+		var chance_on_hit := clampi(int(injury_profile.get("chance_on_hit", 0)), 0, 100)
+		var injury_roll := _deterministic_injury_roll(context, ability_id, unit, target)
+		result["injury"] = {
+			"id": str(injury_profile.get("id", "")),
+			"location_id": str(injury_profile.get("location_id", "")),
+			"severity": str(injury_profile.get("severity", "minor")),
+			"effects": _dictionary(injury_profile.get("effects", {})).duplicate(true),
+			"chance_on_hit": chance_on_hit,
+			"min_damage": maxi(int(injury_profile.get("min_damage", 1)), 0),
+			"roll": injury_roll,
+			"rolled": injury_roll <= chance_on_hit,
+			"applies": false,
+		}
+		result["injury_chance"] = {
+			"hit": int(accuracy["effective_hit_chance"]),
+			"on_hit": chance_on_hit,
+			"overall": int(floor(float(int(accuracy["effective_hit_chance"]) * chance_on_hit) / 100.0)),
+		}
 	if bool(context.get("reveal", false)):
 		# Seam v2 reveal channel (Lensbearer Clarity, Triad Dayspring): what the panel may show
 		# beyond the public forecast. Presence of this key is the panel's cue; the numbers are
@@ -569,6 +597,22 @@ static func _deterministic_hit_roll(
 	context: Dictionary, ability_id: String, unit: Dictionary, target: Dictionary
 ) -> int:
 	var key := "%d|%d|%s|%s|%s|%s" % [
+		int(context.get("seed", 0)),
+		int(context.get("tick", 0)),
+		str(context.get("battle_id", "")),
+		ability_id,
+		str(unit.get("id", "")),
+		str(target.get("id", "")),
+	]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(key)
+	return rng.randi_range(1, 100)
+
+
+static func _deterministic_injury_roll(
+	context: Dictionary, ability_id: String, unit: Dictionary, target: Dictionary
+) -> int:
+	var key := "injury|%d|%d|%s|%s|%s|%s" % [
 		int(context.get("seed", 0)),
 		int(context.get("tick", 0)),
 		str(context.get("battle_id", "")),
@@ -701,6 +745,16 @@ static func _aim(context: Dictionary) -> Dictionary:
 	for key: String in ["accuracy_penalty", "ap_surcharge", "ct_surcharge"]:
 		if aim.has(key) and (aim[key] is float or aim[key] is int):
 			aim[key] = int(aim[key])
+	if aim.get("injury") is Dictionary:
+		var injury: Dictionary = aim["injury"]
+		for key: String in ["chance_on_hit", "min_damage"]:
+			if injury.has(key) and (injury[key] is float or injury[key] is int):
+				injury[key] = int(injury[key])
+		if injury.get("effects") is Dictionary:
+			for effect_key: Variant in (injury["effects"] as Dictionary).keys():
+				var value: Variant = injury["effects"][effect_key]
+				if value is float:
+					injury["effects"][effect_key] = int(value)
 	return aim
 
 

@@ -9,8 +9,12 @@ const AIM_ACTION := &"lab-aimed-shot"
 ## PROVISIONAL fixture values, not production balance or creature anatomy.
 const AIM_PROFILES := {
 	"torso": {"ap_surcharge": 1, "ct_surcharge": 5, "accuracy_penalty": 5},
-	"arm": {"ap_surcharge": 1, "ct_surcharge": 10, "accuracy_penalty": 15},
-	"throat": {"ap_surcharge": 1, "ct_surcharge": 15, "accuracy_penalty": 25},
+	"arm": {"ap_surcharge": 1, "ct_surcharge": 10, "accuracy_penalty": 15,
+		"injury": {"id": "arm-strained", "chance_on_hit": 50, "min_damage": 1, "severity": "minor",
+			"effects": {"attack_accuracy_pp": -10}}},
+	"throat": {"ap_surcharge": 1, "ct_surcharge": 15, "accuracy_penalty": 25,
+		"injury": {"id": "throat-bruised", "chance_on_hit": 35, "min_damage": 1, "severity": "minor",
+			"effects": {}}},
 }
 ## PROVISIONAL owner surface: F3 may move after balance-facilitator playtesting.
 const TOGGLE_HOTKEY: Key = KEY_F3

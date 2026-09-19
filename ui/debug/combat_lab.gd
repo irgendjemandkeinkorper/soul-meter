@@ -306,10 +306,17 @@ func _update_aim(payload: Dictionary) -> void:
 	if int(accuracy["clamp_adjustment"]) != 0:
 		terms.append(tr("Clamp %+d pp") % int(accuracy["clamp_adjustment"]))
 	var use_ct := str(quote.get("scheduler_mode", "ap")) == "ct"
-	_aim_quote.text = tr("%s · COST %d %s · HIT %d%%\n%d DAMAGE ON HIT\n%s\nSynthetic anatomy; injury effects are not enabled.") % [
+	var injury: Dictionary = quote.get("injury_forecast", {})
+	var injury_line := tr("Synthetic anatomy; no injury authored for this location.")
+	if not injury.is_empty():
+		injury_line = tr("INJURY %s · %d%% ON HIT · %d%% OVERALL (needs %d damage)") % [
+			str(injury.get("id", "")), int(injury.get("chance_on_hit", 0)),
+			int(injury.get("overall_chance", 0)), int(injury.get("min_damage", 1)),
+		]
+	_aim_quote.text = tr("%s · COST %d %s · HIT %d%%\n%d DAMAGE ON HIT\n%s\n%s") % [
 		str(quote.get("target_name", "")), int(quote["ct_cost"] if use_ct else quote["ap_cost"]),
 		"CT" if use_ct else "AP", int(accuracy["effective_hit_chance"]),
-		int(quote["damage_on_hit"]), " · ".join(terms),
+		int(quote["damage_on_hit"]), " · ".join(terms), injury_line,
 	]
 
 
