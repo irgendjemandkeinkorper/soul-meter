@@ -128,7 +128,7 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 		scene.find_child("ClickMoveController", true, false) as ClickMoveController
 	)
 	var travel_exit: TravelExit = scene.find_child("ReturnToDom", true, false) as TravelExit
-	var enemy: Enemy = scene.find_child("BogWight", true, false) as Enemy
+	var hostile: Hostile = scene.find_child("BogWight", true, false) as Hostile
 	var npc: NPC = scene.find_child("IrisIllepah", true, false) as NPC
 	var pickup: Pickup = scene.find_child("LoamrootSprig1", true, false) as Pickup
 	var followers := scene.find_child("PartyFollowers", true, false) as PartyFollowers
@@ -137,7 +137,10 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 	assert_bool(player.is_physics_processing()).is_true()
 	assert_bool(controller.enabled).is_true()
 	assert_bool(travel_exit.monitoring).is_true()
-	assert_bool(enemy.is_processing_unhandled_input()).is_true()
+	# BogWight is a same-map Hostile now (#281): it has no E-prompt to switch off, it only
+	# needs to still be standing on the field when combat mode toggles.
+	assert_object(hostile).is_not_null()
+	assert_int(hostile.state).is_equal(Hostile.State.IDLE)
 	assert_bool(npc.is_processing_unhandled_input()).is_true()
 	assert_bool(pickup.is_processing_unhandled_input()).is_true()
 
@@ -148,7 +151,6 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 	assert_bool(controller.enabled).is_false()
 	assert_bool(travel_exit.monitoring).is_false()
 	# The tree is no longer paused during combat, so E-prompts must be switched off explicitly.
-	assert_bool(enemy.is_processing_unhandled_input()).is_false()
 	assert_bool(npc.is_processing_unhandled_input()).is_false()
 	assert_bool(pickup.is_processing_unhandled_input()).is_false()
 
@@ -158,7 +160,7 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 	assert_bool(player.is_physics_processing()).is_true()
 	assert_bool(controller.enabled).is_true()
 	assert_bool(travel_exit.monitoring).is_true()
-	assert_bool(enemy.is_processing_unhandled_input()).is_true()
+	assert_int(hostile.state).is_equal(Hostile.State.IDLE)
 	assert_bool(npc.is_processing_unhandled_input()).is_true()
 	assert_bool(pickup.is_processing_unhandled_input()).is_true()
 

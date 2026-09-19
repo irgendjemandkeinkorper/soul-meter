@@ -179,8 +179,16 @@ func propagate_alerts() -> void:
 ## once, so this is idempotent and re-run whenever the set might have changed.
 func _connect_hostiles() -> void:
 	for hostile: Hostile in hostiles():
-		if not hostile.alerted.is_connected(_on_hostile_alerted):
-			hostile.alerted.connect(_on_hostile_alerted)
+		register_hostile(hostile)
+
+
+## A hostile that enters the field after `_ready` (spawned, or added by a fixture) wires itself
+## here, so the first alert reaches the flow no matter when the mob arrived.
+func register_hostile(hostile: Hostile) -> void:
+	if hostile == null:
+		return
+	if not hostile.alerted.is_connected(_on_hostile_alerted):
+		hostile.alerted.connect(_on_hostile_alerted)
 
 
 func _on_hostile_alerted(hostile: Hostile) -> void:

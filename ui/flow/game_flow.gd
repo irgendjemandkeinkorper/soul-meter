@@ -691,9 +691,33 @@ func _complete_scene_load() -> void:
 	last_travel_error = ""
 	send_event("level_ready")
 	MusicDirector.play_context("field")
+	watch_field_hostiles()
 	SaveGame.flush_pending_autosave.call_deferred()
 	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
 		notify_dialogue_closed()
+
+
+## F1 (#281): the first accepted alert on a field opens the ambient session. Battle only
+## listens to a field once a session is live (it admits reinforcements itself), so before
+## that point the flow is what turns "a hostile noticed the party" into the chart entering
+## Battle — the same edge `Enemy` takes by hand after `Battle.start()`. Idempotent: a field
+## can be arrived at more than once and the connection must not stack.
+func watch_field_hostiles() -> void:
+	var field: FieldMap = Battle._current_field_map()
+	if field == null:
+		return
+	if not field.hostile_alerted.is_connected(_on_field_hostile_alerted):
+		field.hostile_alerted.connect(_on_field_hostile_alerted)
+
+
+func _on_field_hostile_alerted(hostile: Hostile) -> void:
+	if Battle.session_active:
+		return  # Battle is connected to the same signal and admits into the live session.
+	var field: FieldMap = Battle._current_field_map()
+	var opened: Dictionary = Battle.start_session(field, hostile)
+	if not bool(opened.get("allowed", false)):
+		return
+	send_event("enter_battle")
 
 
 func _handle_scene_load_failure() -> void:
