@@ -118,6 +118,8 @@ func execute_command(raw_command: String) -> bool:
 			return _command_renown(args, verb)
 		"item":
 			return _command_item(args)
+		"treat":
+			return _command_treat(args)
 		"quest":
 			return _command_quest(args)
 		"phase":
@@ -133,6 +135,7 @@ func execute_command(raw_command: String) -> bool:
 			_append_line("renown <delta>  |  infamy <delta>")
 			_append_line("why <faction|renown|infamy>")
 			_append_line("item <item_id> [count]")
+			_append_line("treat <member_id> <location> [service-test|field-test] [practitioner_id]")
 			_append_line("quest offer <quest_id>")
 			_append_line("quest complete <quest_id> (unavailable: provenance guard)")
 			_append_line("phase <morning|afternoon|evening|night|next>")
@@ -315,6 +318,36 @@ func _command_item(args: PackedStringArray) -> bool:
 	_append_line("Added %d × %s; inventory now has %d." % [
 		count, item_id, GameState.item_count(item_id)
 	])
+	return true
+
+
+## Lab fixture for task 10A: drives InjuryTreatment through its real quote/commit path with
+## the test cards. Never bypasses the coordinator.
+func _command_treat(args: PackedStringArray) -> bool:
+	if args.size() < 3 or args.size() > 5:
+		return _usage("treat <member_id> <location> [card] [practitioner_id]")
+	var patient := InjuryTreatment.member_by_id(GameState, args[1])
+	if patient == null:
+		return _refuse("No party member '%s'." % args[1])
+	var record: Dictionary = patient.injuries.get(args[2], {})
+	if record.is_empty():
+		return _refuse("%s has no %s injury." % [patient.display_name, args[2]])
+	var card := args[3] if args.size() > 3 else "service-test"
+	var identity := CombatInjury.record_identity(record)
+	var intent := {
+		"patient_id": args[1], "instance_id": identity["instance_id"], "revision": identity["revision"],
+		"card_id": card, "provider_id": "test-healer",
+		"practitioner_id": args[4] if args.size() > 4 else args[1],
+	}
+	var combat_active: bool = Battle.session_active or (Battle.controller != null and not Battle.ended)
+	var quoted := InjuryTreatment.quote(intent, GameState, combat_active)
+	if not bool(quoted["allowed"]):
+		return _refuse("Treatment refused (%s): %s" % [quoted["blocked_by"], quoted["message"]])
+	intent["expected_cost"] = quoted["cost"]
+	var result := InjuryTreatment.commit(intent, GameState, combat_active)
+	if not bool(result["allowed"]):
+		return _refuse("Treatment refused (%s): %s" % [result["blocked_by"], result["message"]])
+	_append_line("Treated %s's %s with %s; paid %s." % [patient.display_name, args[2], card, str(result["paid"])])
 	return true
 
 

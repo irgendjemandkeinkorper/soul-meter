@@ -22,6 +22,14 @@ const PERSISTENT_SEVERITY := "serious"
 const REQUIRED_RECORD_KEYS: Array[String] = ["injury_id", "location_id"]
 
 
+## Stable identity of a record: instance id plus revision (its application count).
+static func record_identity(record: Dictionary) -> Dictionary:
+	return {
+		"instance_id": str(record.get("instance_id", "")),
+		"revision": int(record.get("applications", 1)),
+	}
+
+
 ## Records that outlive combat, keyed by location. Pure; the input is untouched.
 static func persistent_records(injuries: Dictionary) -> Dictionary:
 	var kept: Dictionary = {}
@@ -76,6 +84,9 @@ static func apply(target: BattleActor, injury: Dictionary, source_key: String, t
 		return {"applied": true, "refreshed": true, "record": existing.duplicate(true)}
 	var record := {
 		"injury_id": str(injury.get("id", "")),
+		# Instance identity (task 10): distinguishes this wound from a later one at the same
+		# location. `applications` is its revision; a refresh bumps it so stale quotes reject.
+		"instance_id": "%s@%s|%s" % [str(injury.get("id", "")), location, source_key],
 		"location_id": location,
 		"severity": str(injury.get("severity", "minor")),
 		"effects": (injury.get("effects", {}) as Dictionary).duplicate(true),
