@@ -155,3 +155,120 @@ func _controller() -> CombatController:
 	controller.configure(actions, grid, rules)
 	controller.start([ally], [enemy], &"injury-test")
 	return controller
+
+
+func test_a_minor_throat_injury_penalizes_only_voice_tagged_actions() -> void:
+	var controller := _controller()
+	var target := controller.enemies[0]
+	var actor := controller.active_actor()
+	var shot := controller.action_by_id(&"aim-test")
+	var call := _vocal_twin(controller, shot)
+	var alacrity_before := actor.attribute_value(&"alacrity")
+	var tempo_before := actor.tempo
+	var healthy_shot := int(controller.forecast_action(shot, target)["resolution"]["accuracy_breakdown"]["hit_chance"])
+	var healthy_call := int(controller.forecast_action(call, target)["resolution"]["accuracy_breakdown"]["hit_chance"])
+	CombatInjury.apply(actor, _minor_throat(), "k", 1)
+	var injured_call: Dictionary = controller.forecast_action(call, target)["resolution"]["accuracy_breakdown"]
+	assert_int(int(injured_call["hit_chance"])).is_equal(healthy_call - 10)
+	assert_array(_labels(injured_call)).contains(["Injury: Throat (voice)"])
+	var injured_shot: Dictionary = controller.forecast_action(shot, target)["resolution"]["accuracy_breakdown"]
+	assert_int(int(injured_shot["hit_chance"])).is_equal(healthy_shot)
+	assert_array(_labels(injured_shot)).not_contains(["Injury: Throat (voice)"])
+	assert_bool(controller.query_action(call, target)["allowed"]).is_true()
+	# Physical injury, not the Zhem imposition: Tempo, Alacrity, and impositions are untouched.
+	assert_int(actor.tempo).is_equal(tempo_before)
+	assert_int(actor.attribute_value(&"alacrity")).is_equal(alacrity_before)
+	assert_bool(actor.impositions.has("muted")).is_false()
+
+
+func test_a_voice_blocking_injury_refuses_vocal_actions_but_leaves_a_permitted_one() -> void:
+	var controller := _controller()
+	var target := controller.enemies[0]
+	var actor := controller.active_actor()
+	var shot := controller.action_by_id(&"aim-test")
+	var call := _vocal_twin(controller, shot)
+	CombatInjury.apply(actor, _severe_throat(), "k", 1)
+	var refused := controller.query_action(call, target)
+	assert_bool(refused["allowed"]).is_false()
+	assert_str(str(refused["blocked_by"])).is_equal("voice_required")
+	assert_str(str(refused["message"])).contains("throat")
+	var pay_before := [actor.action_points, controller.scheduler.charge_of(actor)]
+	assert_bool(controller.submit_action(call.id, target)["allowed"]).is_false()
+	assert_array([actor.action_points, controller.scheduler.charge_of(actor)]).is_equal(pay_before)
+	assert_bool(controller.query_action(shot, target)["allowed"]).is_true()
+	assert_bool(controller.submit_action(shot.id, target)["allowed"]).is_true()
+
+
+func test_a_voice_blocking_hit_releases_the_targets_held_note_once_and_nothing_else() -> void:
+	var controller := _controller()
+	var target := controller.enemies[0]
+	var ally := controller.active_actor()
+	var action := controller.action_by_id(&"aim-test")
+	action.aim_profiles["throat"]["injury"] = _severe_throat()
+	# The enemy holds one of the ally's Aftertones; a second Aftertone is unrelated.
+	ally.aftertones = [
+		{"element": "khash", "remaining_rounds": 3, "held": true, "held_by": String(target.combat_id)},
+		{"element": "shen", "remaining_rounds": 2},
+	]
+	controller._holds[String(target.combat_id)] = {
+		"kind": "aftertone", "target_id": String(ally.combat_id), "index": 0, "upkeep_paid": true,
+	}
+	var releases: Array[Dictionary] = []
+	controller.event_emitted.connect(func(event: CombatEvent) -> void:
+		if event.type == &"hold_released":
+			releases.append(event.data.duplicate(true)))
+	var options := {"aim_location": "throat"}
+	var hit_seed := -1
+	for seed_value: int in 400:
+		controller._sequence = seed_value
+		var resolution: Dictionary = controller.forecast_action(action, target, options)["resolution"]
+		if bool(resolution["hit"]) and bool(resolution["injury"]["rolled"]):
+			hit_seed = seed_value
+			break
+	assert_int(hit_seed).is_greater_equal(0)
+	controller._sequence = hit_seed
+	var result := controller.submit_action(action.id, target, options)
+	assert_bool(result["resolution"]["injury"]["applies"]).is_true()
+	assert_int(releases.size()).is_equal(1)
+	assert_str(str(releases[0]["reason"])).is_equal("voice_lost")
+	assert_bool(controller._holds.has(String(target.combat_id))).is_false()
+	assert_int(ally.aftertones.size()).is_equal(2)
+	assert_bool(bool(ally.aftertones[0].get("held", false))).is_false()
+	assert_int(int(ally.aftertones[1]["remaining_rounds"])).is_equal(2)
+	# Replaying the same commit neither re-applies nor re-releases.
+	controller._apply_resolution_writes(ally, target, result["resolution"])
+	assert_int(releases.size()).is_equal(1)
+	# A minor throat injury never interrupts.
+	var minor := _controller()
+	var minor_target := minor.enemies[0]
+	minor._holds[String(minor_target.combat_id)] = {"kind": "aftertone", "target_id": "x", "index": 0}
+	CombatInjury.apply(minor_target, _minor_throat(), "k", 1)
+	minor._interrupt_voice(minor_target)
+	assert_bool(minor._holds.has(String(minor_target.combat_id))).is_true()
+
+
+func _vocal_twin(controller: CombatController, shot: CombatAction) -> CombatAction:
+	var call := shot.duplicate(true) as CombatAction
+	call.id = &"aim-test-call"
+	call.requires_voice = true
+	call.aim_profiles = {}
+	controller._actions[call.id] = call
+	return call
+
+
+static func _minor_throat() -> Dictionary:
+	var injury: Dictionary = Lab.AIM_PROFILES["throat"]["injury"].duplicate(true)
+	injury["location_id"] = "throat"
+	return injury
+
+
+static func _severe_throat() -> Dictionary:
+	return {"id": "throat-crushed", "location_id": "throat", "chance_on_hit": 100, "min_damage": 1,
+		"severity": "serious", "effects": {"voice_blocked": true}}
+
+
+static func _labels(breakdown: Dictionary) -> Array:
+	var labels: Array = []
+	for modifier: Dictionary in breakdown["modifiers"]:
+		labels.append(str(modifier["label"]))
+	return labels

@@ -9,6 +9,10 @@ extends RefCounted
 ## so the resolver reads records, never a catalog. Persistence beyond combat is task 9.
 
 const EFFECT_ATTACK_ACCURACY := "attack_accuracy_pp"
+## Minor throat rule: percentage points paid by voice-tagged actions that roll to hit.
+const EFFECT_VOCAL_ACCURACY := "vocal_accuracy_pp"
+## Severe throat rule: actions that require an intact voice are refused until recovery.
+const EFFECT_VOICE_BLOCKED := "voice_blocked"
 
 
 ## Applies `injury` (the resolver's finalized injury dict) to `target`. `source_key` is the
@@ -42,6 +46,36 @@ static func apply(target: BattleActor, injury: Dictionary, source_key: String, t
 	}
 	target.injuries[location] = record
 	return {"applied": true, "refreshed": false, "record": record.duplicate(true)}
+
+
+## Accuracy terms a voice-tagged action pays. Nonvocal actions never see these.
+static func vocal_accuracy_modifiers(actor: BattleActor) -> Array[Dictionary]:
+	var modifiers: Array[Dictionary] = []
+	if actor == null:
+		return modifiers
+	for location: String in actor.injuries.keys():
+		var record: Dictionary = actor.injuries[location]
+		var points := int((record.get("effects", {}) as Dictionary).get(EFFECT_VOCAL_ACCURACY, 0))
+		if points == 0:
+			continue
+		modifiers.append({
+			"id": "injury", "label": "Injury: %s (voice)" % location.capitalize(),
+			"percentage_points": points, "location_id": location,
+		})
+	return modifiers
+
+
+## The record that currently blocks the actor's voice, or an empty dictionary. This is a
+## physical injury contract: it never reads or writes the Muted imposition, whose Tempo
+## meaning belongs to the spell-card rules.
+static func voice_block(actor: BattleActor) -> Dictionary:
+	if actor == null:
+		return {}
+	for location: String in actor.injuries.keys():
+		var record: Dictionary = actor.injuries[location]
+		if bool((record.get("effects", {}) as Dictionary).get(EFFECT_VOICE_BLOCKED, false)):
+			return record
+	return {}
 
 
 ## Accuracy terms an injured attacker pays on eligible attacks. Action-specific by design:

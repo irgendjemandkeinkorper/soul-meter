@@ -6,6 +6,8 @@ const EXPORT_ROOT := "user://combat_lab"
 const AUTHORED_WEATHER := &"__authored_default__"
 const CALM := &""
 const AIM_ACTION := &"lab-aimed-shot"
+## Lab-only voice-tagged action used to show the throat rule (task 8).
+const VOCAL_ACTION := &"lab-vocal-call"
 ## PROVISIONAL fixture values, not production balance or creature anatomy.
 const AIM_PROFILES := {
 	"torso": {"ap_surcharge": 1, "ct_surcharge": 5, "accuracy_penalty": 5},
@@ -14,7 +16,7 @@ const AIM_PROFILES := {
 			"effects": {"attack_accuracy_pp": -10}}},
 	"throat": {"ap_surcharge": 1, "ct_surcharge": 15, "accuracy_penalty": 25,
 		"injury": {"id": "throat-bruised", "chance_on_hit": 35, "min_damage": 1, "severity": "minor",
-			"effects": {}}},
+			"effects": {"vocal_accuracy_pp": -10}}},
 }
 ## PROVISIONAL owner surface: F3 may move after balance-facilitator playtesting.
 const TOGGLE_HOTKEY: Key = KEY_F3
@@ -502,6 +504,14 @@ func _install_aim_fixture(controller: CombatController, profile: String) -> void
 	action.player_available = false
 	action.aim_profiles = AIM_PROFILES.duplicate(true)
 	controller._actions[AIM_ACTION] = action
+	# Voice-tagged twin of the shot (task 8): same numbers, so any forecast difference between
+	# the two after a throat hit is the vocal rule and nothing else.
+	var call := CombatAction.make(VOCAL_ACTION, "Lab vocal call", CombatAction.Kind.ATTACK)
+	call.ct_cost = 30
+	call.target_profile = &"ranged"
+	call.player_available = false
+	call.requires_voice = true
+	controller._actions[VOCAL_ACTION] = call
 	for target: BattleActor in controller.enemies:
 		target.anatomy = {
 			"torso": {"display_name": "Torso", "exposed": true, "hidden_by_cover": true},

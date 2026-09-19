@@ -167,6 +167,35 @@ func test_visibility_fixture_dims_every_enemy_cell_and_shows_in_the_aim_quote() 
 	_lab.call("stop_test_session")
 
 
+func test_lab_vocal_call_pays_a_throat_injury_that_the_aimed_shot_does_not() -> void:
+	await _mount_test_room()
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+		"called_shot_fixture": true, "anatomy_fixture": "exposed", "seed": 42,
+	})
+	var controller: CombatController = Battle.controller
+	var grid := controller.battlefield as GridBattlefieldModel
+	var enemy := controller.enemies[0]
+	var ally := controller.active_actor()
+	assert_bool(grid.displace(enemy, grid.cell_of(ally) + Vector2i(1, 0))["allowed"]).is_true()
+	var shot := controller.action_by_id(&"lab-aimed-shot")
+	var call := controller.action_by_id(&"lab-vocal-call")
+	assert_object(call).is_not_null()
+	assert_bool(call.requires_voice).is_true()
+	var injury: Dictionary = (_lab.get("AIM_PROFILES") as Dictionary)["throat"]["injury"].duplicate(true)
+	injury["location_id"] = "throat"
+	CombatInjury.apply(ally, injury, "lab", 1)
+	var call_labels: Array = []
+	for modifier: Dictionary in controller.forecast_action(call, enemy)["resolution"]["accuracy_breakdown"]["modifiers"]:
+		call_labels.append(str(modifier["label"]))
+	assert_array(call_labels).contains(["Injury: Throat (voice)"])
+	var shot_labels: Array = []
+	for modifier: Dictionary in controller.forecast_action(shot, enemy)["resolution"]["accuracy_breakdown"]["modifiers"]:
+		shot_labels.append(str(modifier["label"]))
+	assert_array(shot_labels).not_contains(["Injury: Throat (voice)"])
+	_lab.call("stop_test_session")
+
+
 func test_called_shot_fixture_is_opt_in_and_missing_or_covered_anatomy_is_refused() -> void:
 	for profile: String in ["no_throat", "covered_arm"]:
 		_lab.call("start_test_session", {

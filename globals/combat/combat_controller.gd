@@ -546,6 +546,16 @@ func query_action(
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
 	if action == null:
 		return _blocked(&"action", "Unknown combat action.", {"type": &"known_action"})
+	if action.requires_voice:
+		var voice_block := CombatInjury.voice_block(actor)
+		if not voice_block.is_empty():
+			return _blocked(
+				&"voice_required",
+				"%s needs a voice; %s's %s injury prevents it." % [
+					action.display_name, actor.display_name, str(voice_block.get("location_id", "throat")).capitalize().to_lower(),
+				],
+				{"type": &"intact_voice", "location_id": str(voice_block.get("location_id", "")), "injury_id": str(voice_block.get("injury_id", ""))},
+			)
 	var aim_location := StringName(str(options.get("aim_location", "")))
 	if not aim_location.is_empty():
 		if options.has("object_id") or options.has("line_id"):
@@ -1815,6 +1825,7 @@ func _apply_resolution_writes(
 				)
 				if bool(applied.get("applied", false)):
 					_emit_event(&"injury_applied", actor, target, applied)
+					_interrupt_voice(target)
 			&"breath":
 				actor.breath = int(write.get("after", actor.breath))
 			&"aftertones":
@@ -2128,10 +2139,13 @@ func forecast_context(
 		resolved_positioning["cover_bonus"] = 0
 	context["positioning"] = resolved_positioning
 	context["visibility"] = visibility_context(actor, target, action)
+	var injury_modifiers: Array[Dictionary] = []
 	if action.kind == CombatAction.Kind.ATTACK and not action.spell:
-		var injury_modifiers := CombatInjury.attack_accuracy_modifiers(actor)
-		if not injury_modifiers.is_empty():
-			context["attacker_injury_modifiers"] = injury_modifiers
+		injury_modifiers.append_array(CombatInjury.attack_accuracy_modifiers(actor))
+	if action.requires_voice:
+		injury_modifiers.append_array(CombatInjury.vocal_accuracy_modifiers(actor))
+	if not injury_modifiers.is_empty():
+		context["attacker_injury_modifiers"] = injury_modifiers
 	var aim_location := StringName(str(options.get("aim_location", "")))
 	if not aim_location.is_empty():
 		context["aim"] = _query_aim(actor, target, action, aim_location)
@@ -3937,6 +3951,18 @@ func _held_ids(kind: String) -> Array[int]:
 		if String(hold.get("kind", "")) == kind:
 			ids.append(int(hold.get("%s_id" % kind, 0)))
 	return ids
+
+
+## Interruption rule (task 8, accepted 2026-09-19): a voice-blocking injury ends the injured
+## actor's held Note through the ordinary release path. Upkeep already paid stays paid, the
+## release settles once (`_holds` is the only ledger), and nothing else the actor owns —
+## Aftertones, Soul, anchored fields, deferred entries — is touched. A minor injury never
+## interrupts. Committed-but-unreleased actions keep their commit; the refusal only reaches
+## the next voice-tagged query.
+func _interrupt_voice(target: BattleActor) -> void:
+	if target == null or CombatInjury.voice_block(target).is_empty():
+		return
+	release_hold(String(target.combat_id), "voice_lost")
 
 
 ## Declining future upkeep is an explicit, cost-free release; Jam does not call this.

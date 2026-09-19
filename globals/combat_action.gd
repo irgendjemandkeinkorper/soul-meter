@@ -75,6 +75,9 @@ enum Verb { MOVE, ATTACK, CAST, ITEM, SPEECH, DEFEND }
 ## ap_surcharge, ct_surcharge and accuracy_penalty (percentage points).
 ## Empty preserves ordinary attacks. The first producer is a debug lab fixture.
 @export var aim_profiles: Dictionary = {}
+## Delivery metadata (called-shots task 8): the action needs an intact voice. Element or
+## spell classification alone never implies this; content authors it explicitly.
+@export var requires_voice: bool = false
 
 
 static func make(
