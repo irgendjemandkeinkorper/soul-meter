@@ -52,7 +52,7 @@ static func accuracy_breakdown(context: Dictionary) -> Dictionary:
 			{"id": "height", "label": "Height", "percentage_points":
 				int(context.get("height_advantage_steps", 0)) * int(PROVISIONAL_TO_HIT["height_mod_per_step"])},
 		]
-		var aim := _dictionary(context.get("aim", {}))
+		var aim := _aim(context)
 		if not aim.is_empty() and bool(aim.get("allowed", false)):
 			modifiers.append({"id": "aim", "label": "Aim: %s" % str(aim.get("display_name", "")),
 				"percentage_points": -int(aim.get("accuracy_penalty", 0))})
@@ -84,7 +84,7 @@ static func preview_on_hit(context: Dictionary) -> Dictionary:
 
 
 static func resolve(context: Dictionary) -> Dictionary:
-	var aim := _dictionary(context.get("aim", {}))
+	var aim := _aim(context)
 	if not aim.is_empty() and not bool(aim.get("allowed", false)):
 		return aim.duplicate(true)
 	var unit: Dictionary = _dictionary(context.get("unit", {}))
@@ -682,6 +682,16 @@ static func _tile_write(operation: String, before: Dictionary, after: Dictionary
 
 static func _dictionary(value: Variant) -> Dictionary:
 	return value if value is Dictionary else {}
+
+
+## The aim quote is authored in integers. A context that went through JSON comes back
+## with floats, so a replay normalizes them before logging or the logged aim diverges.
+static func _aim(context: Dictionary) -> Dictionary:
+	var aim := _dictionary(context.get("aim", {})).duplicate(true)
+	for key: String in ["accuracy_penalty", "ap_surcharge", "ct_surcharge"]:
+		if aim.has(key) and (aim[key] is float or aim[key] is int):
+			aim[key] = int(aim[key])
+	return aim
 
 
 static func _blocked(
