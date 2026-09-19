@@ -64,9 +64,13 @@ func test_insufficient_ap_includes_the_aim_surcharge() -> void:
 
 func test_ct_actor_must_be_ready_even_for_a_supported_aim() -> void:
 	var controller := _controller(true)
-	var actor := controller.active_actor()
-	controller.scheduler._charge[actor.combat_id] = 99
-	_assert_refused(controller, "torso", "ct_not_ready")
+	# Nobody is charged, so no combatant is active. The controller gates on the active
+	# actor before any aim query, so a supported aim still refuses with the turn reason
+	# and neither the schedule nor the target changes.
+	for combatant: BattleActor in controller.allies + controller.enemies:
+		controller.scheduler._charge[combatant.combat_id] = 0
+	assert_object(controller.active_actor()).is_null()
+	_assert_refused(controller, "torso", "turn_state")
 
 
 func test_los_blocker_cannot_be_bypassed_by_minimum_hit_chance() -> void:
@@ -168,8 +172,8 @@ func _assert_refused(controller: CombatController, location: String, reason: Str
 	var hp_before := target.hp
 	var forecast := controller.forecast_action(action, target, {"aim_location": location})
 	var result := controller.submit_action(action.id, target, {"aim_location": location})
-	assert_bool(result["allowed"]).is_false()
-	assert_str(str(result["blocked_by"])).is_equal(reason)
+	assert_bool(result["allowed"]).override_failure_message(str(result)).is_false()
+	assert_str(str(result["blocked_by"])).override_failure_message(str(result)).is_equal(reason)
 	assert_dict(forecast).is_equal(result)
 	assert_dict(controller.scheduler.to_dict()).is_equal(before)
 	assert_int(target.hp).is_equal(hp_before)

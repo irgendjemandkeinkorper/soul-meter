@@ -1,6 +1,6 @@
 # Called-shot expansion — implementation checklist
 
-**Status:** Accuracy foundation (task 2) implemented and verified 2026-09-18. Anatomy selection and injuries remain planned.
+**Status:** Accuracy foundation (task 2) verified 2026-09-18; lab aimed attack (task 3) implemented with automated evidence 2026-09-19. HUD selection and injuries remain planned.
 
 **Confirmed decisions, 2026-09-17:** The user chose separate combat design/task files and serious injuries that persist until treated. Persistence and treatment tasks are required.
 
@@ -9,6 +9,8 @@
 **Additional confirmed decisions, 2026-09-18:** Visible anatomy is freely targetable; hidden/supernatural weaknesses retain discovery. Aimed attacks use an extra action cost plus an accuracy penalty, with AP and CT surcharges authored separately. Exact values remain provisional.
 
 **2026-09-18 progress:** Treatment/recovery contracts drafted; task 10 split into transaction, healer, and field-treatment slices. Task 2 is complete without adding new balance terms. [Verification evidence](../docs/qa/combat-accuracy-2026-09-18.md). Next implementation: task 3's lab fixture; unresolved injury tuning does not block that slice.
+
+**2026-09-19 progress:** Task 3 landed: `CalledShot` legality/pricing, controller aim query at forecast and commit, lab fixture with synthetic anatomy, and 9 aimed-action tests under both schedulers (`test/integration/test_called_shots.gd`, `test/unit/test_combat_lab.gd`). A JSON-replayed aim context now logs identically to the live one. The lab panel was not inspected rendered; Checkpoint A's third item is covered only by the hidden-result assertions from task 2. Next implementation: task 4 (aim selection in the real HUD).
 
 **Architecture:** [Called shots, accuracy, and injuries](../docs/ideas/called-shots-and-injuries.md). Existing `tasks/plan.md` and `tasks/todo.md` remain owned by their current work.
 
@@ -49,9 +51,9 @@ Each task targets one focused session. Estimates are engineering planning ranges
 **Scope:** Add optional location intent and a minimal fixture anatomy profile; exercise torso/arm/throat queries without building the full injury catalog.
 
 **Acceptance:**
-- [ ] A lab action can select torso, arm, or throat with a visible location penalty and explicitly authored AP/CT surcharge.
-- [ ] Missing or blocked locations and insufficient resources reject before spending; a committed miss pays its legitimate cost.
-- [ ] Old actions default to ordinary aim and serialize/replay without requiring new fields.
+- [x] A lab action can select torso, arm, or throat with a visible location penalty and explicitly authored AP/CT surcharge.
+- [x] Missing or blocked locations and insufficient resources reject before spending; a committed miss pays its legitimate cost.
+- [x] Old actions default to ordinary aim and serialize/replay without requiring new fields.
 
 **Verification:** Action round trips and submit tests under both scheduler implementations; fixture target without a throat.
 
@@ -59,8 +61,8 @@ Each task targets one focused session. Estimates are engineering planning ranges
 
 ### Checkpoint A
 
-- [ ] Ordinary-attack parity and aim legality/cost tests pass.
-- [ ] A lab action reaches the actual controller submit path with its chosen location.
+- [x] Ordinary-attack parity and aim legality/cost tests pass.
+- [x] A lab action reaches the actual controller submit path with its chosen location.
 - [ ] No hidden knowledge or extra random rolls are revealed by previewing.
 
 ## Phase 2 — expose the tactical choice

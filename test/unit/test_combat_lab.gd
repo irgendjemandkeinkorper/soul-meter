@@ -45,6 +45,9 @@ func after_test() -> void:
 	EncounterCatalog._definitions.erase(String(TEST_ENCOUNTER))
 	if _lab != null:
 		_lab.call("stop_test_session")
+	# Battle is an autoload; a suite that leaves a session live poisons every suite after it.
+	if Battle.session_active:
+		Battle._end_session(null)
 	var restored: bool = GameState.from_dict(_game_state_before)
 	assert_bool(restored).is_true()
 	Reputation.from_dict(_reputation_before)
@@ -81,10 +84,21 @@ func test_encounter_ids_are_derived_from_the_catalog() -> void:
 func test_called_shot_fixture_submits_and_exports_the_chosen_location_without_mutating_catalog() -> void:
 	var ordinary := CombatActionCatalog.by_id(&"strike")
 	var profiles_before := ordinary.aim_profiles.duplicate(true)
+	# Aiming needs accuracy resolution, which only the field grid provides. Without a
+	# mounted FieldMap, Battle.start() falls back to the zone battlefield and every
+	# aim refuses with `aim_accuracy`, exactly as the real lab does off the field.
+	await _mount_test_room()
 	_lab.call("start_test_session", {
 		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
 		"called_shot_fixture": true, "anatomy_fixture": "exposed", "seed": 42,
 	})
+	# The catalog seats the wight at the encounter's authored cell, out of ranged
+	# line-of-sight range from the party; the aim contract is what is under test here.
+	var grid := Battle.controller.battlefield as GridBattlefieldModel
+	assert_object(grid).is_not_null()
+	var ally_cell: Vector2i = grid.cell_of(Battle.controller.active_actor())
+	var seated: Dictionary = grid.displace(Battle.controller.enemies[0], ally_cell + Vector2i(1, 0))
+	assert_bool(seated["allowed"]).override_failure_message(str(seated)).is_true()
 	_lab.call("select_lab_aim", &"throat")
 	var forecast: Dictionary = _lab.call("aim_forecast")
 	assert_bool(forecast["allowed"]).override_failure_message(str(forecast)).is_true()
@@ -409,3 +423,11 @@ func _current_party_ids() -> Array[StringName]:
 	for member: PartyMember in GameState.party:
 		ids.append(StringName(member.id))
 	return ids
+
+
+func _mount_test_room() -> FieldMap:
+	var scene: Node = (load("res://world/test_room.tscn") as PackedScene).instantiate()
+	add_child(scene)
+	auto_free(scene)
+	await get_tree().process_frame
+	return scene.find_child("FieldMap", true, false) as FieldMap
