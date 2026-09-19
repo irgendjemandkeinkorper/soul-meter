@@ -142,6 +142,31 @@ func test_low_cover_fixture_hides_the_torso_but_leaves_the_throat_targetable() -
 	_lab.call("stop_test_session")
 
 
+func test_visibility_fixture_dims_every_enemy_cell_and_shows_in_the_aim_quote() -> void:
+	await _mount_test_room()
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+		"called_shot_fixture": true, "anatomy_fixture": "exposed", "visibility_fixture": "dim", "seed": 42,
+	})
+	var grid := Battle.controller.battlefield as GridBattlefieldModel
+	var enemy := Battle.controller.enemies[0]
+	assert_str(String(grid.visibility_at(grid.cell_of(enemy)))).is_equal("dim")
+	var ally_cell: Vector2i = grid.cell_of(Battle.controller.active_actor())
+	assert_bool(grid.displace(enemy, ally_cell + Vector2i(1, 0))["allowed"]).is_true()
+	# The fixture authored the wight's original cell; author its new seat the same way.
+	assert_bool(Battle.controller.configure_visibility(ally_cell + Vector2i(1, 0), &"dim")["allowed"]).is_true()
+	_lab.call("select_lab_aim", &"throat")
+	var forecast: Dictionary = _lab.call("aim_forecast")
+	assert_bool(forecast["allowed"]).override_failure_message(str(forecast)).is_true()
+	var labels: Array = []
+	for modifier: Dictionary in forecast["resolution"]["accuracy_breakdown"]["modifiers"]:
+		labels.append(str(modifier["label"]))
+	assert_array(labels).contains(["Visibility: dim"])
+	var markdown: String = _lab.call("build_session_markdown", _lab.get("_setup"), _lab.get("_turn_rows"), {})
+	assert_str(markdown).contains("Visibility fixture: `dim`")
+	_lab.call("stop_test_session")
+
+
 func test_called_shot_fixture_is_opt_in_and_missing_or_covered_anatomy_is_refused() -> void:
 	for profile: String in ["no_throat", "covered_arm"]:
 		_lab.call("start_test_session", {

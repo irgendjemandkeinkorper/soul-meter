@@ -129,6 +129,63 @@ func test_low_cover_hides_only_cover_hidden_locations_and_high_ground_sees_over_
 		assert_bool(behind["allowed"]).override_failure_message(str(behind)).is_true()
 
 
+func test_dim_visibility_lowers_a_ranged_shot_at_forecast_and_commit_but_not_a_spell() -> void:
+	for use_ct: bool in [false, true]:
+		var controller := _controller(use_ct)
+		var grid := controller.battlefield as GridBattlefieldModel
+		var target := controller.enemies[0]
+		var action := controller.action_by_id(&"aim-test")
+		var clear := controller.forecast_action(action, target, {"aim_location": "arm"})
+		assert_bool(controller.configure_visibility(grid.cell_of(target), &"dim")["allowed"]).is_true()
+		var dim := controller.forecast_action(action, target, {"aim_location": "arm"})
+		var clear_chance := int(clear["resolution"]["accuracy_breakdown"]["hit_chance"])
+		var dim_chance := int(dim["resolution"]["accuracy_breakdown"]["hit_chance"])
+		assert_int(dim_chance).is_equal(clear_chance + int(Resolution.PROVISIONAL_TO_HIT["visibility_dim_pp"]))
+		assert_str(str(dim["context"]["visibility"]["level"])).is_equal("dim")
+		# Elemental weather is a separate system: changing it leaves the visibility term alone.
+		controller.configure_weather(&"khash")
+		assert_str(str(controller.forecast_action(action, target, {"aim_location": "arm"})["context"]["visibility"]["level"])).is_equal("dim")
+		# A direct spell carries no visibility term until an explicit profile says so.
+		var spell := action.duplicate(true) as CombatAction
+		spell.id = &"aim-spell"
+		spell.spell = true
+		spell.aim_profiles = {}
+		controller._actions[spell.id] = spell
+		var spell_forecast := controller.forecast_action(spell, target)
+		assert_bool(spell_forecast["allowed"]).override_failure_message(str(spell_forecast)).is_true()
+		assert_bool(spell_forecast["context"]["visibility"]["applies"]).is_false()
+		assert_str(str(spell_forecast["context"]["visibility"]["level"])).is_equal("dim")
+
+		# Commit resolves with the same context the forecast quoted (the enemy round that
+		# follows may move the target, so this is the last check on this controller).
+		var result := controller.submit_action(action.id, target, {"aim_location": "arm"})
+		assert_bool(result["allowed"]).override_failure_message(str(result)).is_true()
+		assert_dict(result["resolution"]["accuracy_breakdown"]).is_equal(dim["resolution"]["accuracy_breakdown"])
+
+
+func test_blinded_attacker_keeps_the_facing_restriction_and_no_visibility_penalty() -> void:
+	var controller := _controller(false)
+	var grid := controller.battlefield as GridBattlefieldModel
+	var target := controller.enemies[0]
+	var actor := controller.active_actor()
+	var action := controller.action_by_id(&"aim-test")
+	grid.set_visibility(grid.cell_of(target), &"dim")
+	grid.set_facing(target, &"w")  # the shooter stands to the target's west: rear or side without Blinded
+	var sighted := controller.forecast_action(action, target)
+	LightField.apply_blinded(actor, &"test")
+	var blinded := controller.forecast_action(action, target)
+	var ids: Array = []
+	for modifier: Dictionary in blinded["resolution"]["accuracy_breakdown"]["modifiers"]:
+		ids.append(str(modifier["id"]))
+	assert_array(ids).not_contains(["visibility"])
+	assert_str(str(blinded["context"]["facing"]["id"])).is_equal("front")
+	assert_str(str(blinded["context"]["visibility"]["reason"])).is_equal("blinded_facing_restriction")
+	var sighted_ids: Array = []
+	for modifier: Dictionary in sighted["resolution"]["accuracy_breakdown"]["modifiers"]:
+		sighted_ids.append(str(modifier["id"]))
+	assert_array(sighted_ids).contains(["visibility"])
+
+
 func test_committed_aimed_miss_still_pays_the_extra_cost() -> void:
 	for use_ct: bool in [false, true]:
 		var controller := _controller(use_ct)

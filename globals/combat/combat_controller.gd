@@ -247,6 +247,41 @@ func configure_weather(element_id: StringName, hush: bool = false) -> Dictionary
 	return weather.set_element(element_id)
 
 
+## Physical visibility for this shot, composed by the battlefield (worst cell wins) and marked
+## applicable only for ranged, non-spell attacks: melee swings and direct spells carry no
+## visibility term until an explicit profile says so. A Blinded attacker keeps its accepted
+## behavior (the facing restriction in _positional_terms) and gets no second penalty here.
+func visibility_context(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
+	var composed: Dictionary = battlefield.visibility_between(actor, target)
+	var blinded := LightField.is_blinded(actor)
+	var applicable := (
+		action != null and action.kind == CombatAction.Kind.ATTACK
+		and action.target_profile == &"ranged" and not action.spell
+	)
+	return {
+		"level": String(composed.get("level", &"clear")),
+		"causes": (composed.get("causes", []) as Array).duplicate(true),
+		"applies": applicable and not blinded,
+		"blinded": blinded,
+		"reason": "blinded_facing_restriction" if blinded else ("" if applicable else "action_profile"),
+	}
+
+
+## Authors physical visibility on one cell mid-battle and refreshes every forecast consumer:
+## the event carries a fresh ordinary-strike forecast context so region D re-quotes at once.
+func configure_visibility(cell: Vector2i, level: StringName) -> Dictionary:
+	var result: Dictionary = battlefield.set_visibility(cell, level)
+	if not bool(result.get("allowed", false)):
+		return result
+	var actor := active_actor()
+	var target := _first_living(enemies)
+	_emit_event(&"visibility_changed", actor, target, {
+		"cell": FireField.cells_to_data([cell])[0], "level": String(level),
+		"forecast_context": forecast_context(actor, target, action_by_id(&"strike")),
+	})
+	return result
+
+
 ## Builds one TileState per battlefield cell (grid battles only; a cell-less model
 ## reports no tiles and the battle keeps zone semantics). Heights come from the same
 ## terrain snapshot the presentation layer uses, so the two can never disagree.
@@ -2065,6 +2100,7 @@ func forecast_context(
 	if bool(context["reveal"]):
 		resolved_positioning["cover_bonus"] = 0
 	context["positioning"] = resolved_positioning
+	context["visibility"] = visibility_context(actor, target, action)
 	var aim_location := StringName(str(options.get("aim_location", "")))
 	if not aim_location.is_empty():
 		context["aim"] = _query_aim(actor, target, action, aim_location)

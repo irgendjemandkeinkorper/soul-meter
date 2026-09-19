@@ -211,6 +211,22 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	assert_int(actor.action_points).is_equal(ap_before - int(aimed["ap_cost"]))
 	assert_int(int(aimed["ap_cost"])).is_equal(action.ap_cost + 1)
 
+	# A visibility change mid-battle refreshes the forecast panel through the event stream.
+	var before_text := panel.forecast.text
+	var forecast_clear := panel.forecast_result()
+	var visibility_event := CombatEvent.new()
+	visibility_event.type = &"visibility_changed"
+	visibility_event.data = {
+		"forecast_context": controller.forecast_context(actor, target, action, {"aim_location": "throat"}),
+	}
+	action.target_profile = &"ranged"
+	assert_bool(controller.configure_visibility(grid.cell_of(target), &"dim")["allowed"]).is_true()
+	visibility_event.data["forecast_context"] = controller.forecast_context(actor, target, action, {"aim_location": "throat"})
+	interface.consume_event(visibility_event)
+	assert_str(panel.forecast.text).contains("Visibility: dim -10 pp")
+	assert_int(int(panel.forecast_result()["accuracy_breakdown"]["hit_chance"])).is_equal(int(forecast_clear["accuracy_breakdown"]["hit_chance"]) - 10)
+	assert_str(panel.forecast.text).is_not_equal(before_text)
+
 	# Cancel through the ordinary button, then re-arming a different action clears the row.
 	panel.aim_button(&"").pressed.emit()
 	assert_str(String(interface.aim_location())).is_equal("")

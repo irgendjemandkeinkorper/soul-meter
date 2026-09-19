@@ -379,3 +379,28 @@ func _fizzles_at(seed_value: int, accord_key: String, accord: float) -> bool:
 	context["seed"] = seed_value
 	context["fizzle"] = {accord_key: accord, "pitch": 2, "mastery": false, "patron": ""}
 	return bool(ResolutionScript.resolve(context).get("fizzled", false))
+
+
+func test_visibility_term_applies_only_when_the_controller_marks_the_shot_applicable() -> void:
+	var context := {
+		"to_hit_enabled": true,
+		"unit": {"id": "a", "alacrity": 0, "attack_scale": 1.0},
+		"target": {"id": "t", "hp": 20, "alacrity": 0},
+		"ability": {"id": "shot", "power": 10, "element_id": &"zhur", "elements": [&"zhur"]},
+		"facing": {"id": &"front"}, "height_advantage_steps": 0,
+	}
+	var clear := Resolution.accuracy_breakdown(context)
+	context["visibility"] = {"level": "dim", "applies": true}
+	var dim := Resolution.accuracy_breakdown(context)
+	assert_int(int(dim["hit_chance"])).is_equal(int(clear["hit_chance"]) + int(Resolution.PROVISIONAL_TO_HIT["visibility_dim_pp"]))
+	var labels: Array = []
+	for modifier: Dictionary in dim["modifiers"]:
+		labels.append(str(modifier["label"]))
+	assert_array(labels).contains(["Visibility: dim"])
+	context["visibility"] = {"level": "obscured", "applies": true}
+	assert_int(int(Resolution.accuracy_breakdown(context)["hit_chance"])).is_equal(
+		int(clear["hit_chance"]) + int(Resolution.PROVISIONAL_TO_HIT["visibility_obscured_pp"])
+	)
+	# Not applicable (melee, spell, or Blinded): the level is recorded but no term is charged.
+	context["visibility"] = {"level": "obscured", "applies": false, "reason": "blinded_facing_restriction"}
+	assert_dict(Resolution.accuracy_breakdown(context)).is_equal(clear)

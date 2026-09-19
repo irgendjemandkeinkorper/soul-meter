@@ -21,6 +21,7 @@ var _turns: Label = null
 var _export_path: Label = null
 var _aim_fixture: CheckButton = null
 var _anatomy_fixture: OptionButton = null
+var _visibility_fixture: OptionButton = null
 var _aim_controls: VBoxContainer = null
 var _aim_picker: OptionButton = null
 var _aim_quote: Label = null
@@ -147,6 +148,12 @@ func _build_setup() -> void:
 		_anatomy_fixture.add_item(tr(profile[0]))
 		_anatomy_fixture.set_item_metadata(_anatomy_fixture.item_count - 1, profile[1])
 	aim_row.add_child(_anatomy_fixture)
+	_visibility_fixture = OptionButton.new()
+	_visibility_fixture.name = "VisibilityFixture"
+	for level: Array in [["Clear", "clear"], ["Dim", "dim"], ["Obscured", "obscured"]]:
+		_visibility_fixture.add_item(tr("%s visibility") % tr(level[0]))
+		_visibility_fixture.set_item_metadata(_visibility_fixture.item_count - 1, level[1])
+	aim_row.add_child(_visibility_fixture)
 	column.add_child(aim_row)
 
 	var buttons := HBoxContainer.new()
@@ -243,6 +250,7 @@ func _start_battle() -> void:
 		"seed": Time.get_ticks_usec(),
 		"called_shot_fixture": _aim_fixture.button_pressed,
 		"anatomy_fixture": str(_anatomy_fixture.get_selected_metadata()),
+		"visibility_fixture": str(_visibility_fixture.get_selected_metadata()),
 	})
 
 

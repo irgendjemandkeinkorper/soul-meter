@@ -67,6 +67,9 @@ var _cover: Dictionary = {}  ## Vector2i -> bool
 ## Cells authored as solid obstacles that block line of fire (walls), independent of the
 ## navigation blocking layer so a fence or shallow water never silently stops a shot.
 var _obstacles: Dictionary = {}  ## Vector2i -> bool
+## Authored physical visibility per cell; absent means clear.
+var _visibility: Dictionary = {}  ## Vector2i -> StringName
+const VISIBILITY_LEVELS: Array[StringName] = [&"clear", &"dim", &"obscured"]
 ## Field-grid flags as they were before combat first touched each cell, so
 ## `release_field_grid()` hands the shared IsoGrid back to navigation unchanged.
 var _prior_solid: Dictionary = {}  ## Vector2i -> bool
@@ -211,6 +214,7 @@ func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
 	_elevation.clear()
 	_cover.clear()
 	_obstacles.clear()
+	_visibility.clear()
 	_cliffs.clear()
 	_prior_solid.clear()
 	_prior_weight.clear()
@@ -247,6 +251,9 @@ func _read_authored_terrain(ground: TileMapLayer) -> void:
 		var obstacle_value: Variant = tile_data.get_custom_data(&"blocks_fire")
 		if obstacle_value is bool and obstacle_value:
 			set_obstacle(cell)
+		var visibility_value: Variant = tile_data.get_custom_data(&"visibility")
+		if visibility_value is String and not (visibility_value as String).is_empty():
+			set_visibility(cell, StringName(visibility_value))
 		var elevation_value: Variant = tile_data.get_custom_data(&"elevation")
 		if elevation_value is int and elevation_value != 0:
 			set_elevation(cell, clampi(elevation_value, 0, DS.ELEVATION_MAX))
@@ -480,6 +487,37 @@ func target_query(actor: BattleActor, target: BattleActor, profile: StringName) 
 ## Chebyshev-adjacent to the target AND strictly nearer the attacker than the target is —
 ## i.e. the target is hugging cover that stands between it and the shot. A crate beside the
 ## ATTACKER grants nothing (the round-1 rule was directionless; Wave P gate finding class).
+func set_visibility(cell: Vector2i, level: StringName) -> Dictionary:
+	if not VISIBILITY_LEVELS.has(level):
+		return _blocked(
+			&"visibility", "Unknown visibility level: %s." % level, {"type": &"visibility_level"}
+		)
+	_tiles_snapshot_cache = []
+	if level == &"clear":
+		_visibility.erase(cell)
+	else:
+		_visibility[cell] = level
+	return _allowed({"cell": cell, "level": level})
+
+
+func visibility_at(cell: Vector2i) -> StringName:
+	return _visibility.get(cell, &"clear")
+
+
+func visibility_between(actor: BattleActor, target: BattleActor) -> Dictionary:
+	if not has_combatant(actor) or not has_combatant(target):
+		return {"level": &"clear", "causes": []}
+	var causes: Array[Dictionary] = []
+	var worst := 0
+	for cell: Vector2i in [_cells[actor.combat_id], _cells[target.combat_id]]:
+		var level := visibility_at(cell)
+		if level == &"clear":
+			continue
+		causes.append({"cell": cell, "level": level})
+		worst = maxi(worst, VISIBILITY_LEVELS.find(level))
+	return {"level": VISIBILITY_LEVELS[worst], "causes": causes}
+
+
 func set_obstacle(cell: Vector2i, blocks_fire: bool = true) -> void:
 	_tiles_snapshot_cache = []
 	_obstacles[cell] = blocks_fire
@@ -593,6 +631,7 @@ func tiles_snapshot() -> Array[Dictionary]:
 					"height_delta": elevation_at(cell),
 					"cliff": bool(_cliffs.get(cell, false)),
 					"cover": bool(_cover.get(cell, false)),
+					"visibility": String(visibility_at(cell)),
 				})
 	return _tiles_snapshot_cache
 

@@ -351,6 +351,8 @@ func build_session_markdown(
 		lines.append("")
 	if bool(setup.get("called_shot_fixture", false)):
 		lines.append("- Called-shot fixture: `%s` (provisional costs and synthetic anatomy; no injuries)" % str(setup.get("anatomy_fixture", "exposed")))
+	if str(setup.get("visibility_fixture", "clear")) != "clear":
+		lines.append("- Visibility fixture: `%s` on every enemy cell (provisional physical visibility)" % str(setup.get("visibility_fixture", "clear")))
 		lines.append("")
 	lines.append_array([
 		"## Turns",
@@ -458,6 +460,14 @@ func _normalize_setup(requested_setup: Dictionary) -> Dictionary:
 func _apply_runtime_overrides(controller: CombatController, setup: Dictionary) -> void:
 	if bool(setup.get("called_shot_fixture", false)):
 		_install_aim_fixture(controller, str(setup.get("anatomy_fixture", "exposed")))
+	var visibility := StringName(str(setup.get("visibility_fixture", "clear")))
+	if visibility != &"clear":
+		for enemy: BattleActor in controller.enemies:
+			var cell: Variant = controller.battlefield.cell_of(enemy)
+			if cell is Vector2i:
+				var visibility_result := controller.configure_visibility(cell, visibility)
+				if not bool(visibility_result.get("allowed", false)):
+					push_warning("Combat Lab visibility fixture refused: %s" % visibility_result)
 	var weather: Dictionary = setup.get("weather", {})
 	var weather_result := controller.configure_weather(
 		StringName(weather.get("element_id", CALM))

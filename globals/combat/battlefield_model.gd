@@ -105,6 +105,23 @@ func set_obstacle(_cell: Vector2i, _blocks_fire: bool = true) -> void:
 	pass
 
 
+## Authored physical visibility of a cell: &"clear", &"dim" or &"obscured". Purely physical
+## (light, smoke, fog); elemental Weather, Witness Light and Shroud never write it.
+func set_visibility(_cell: Vector2i, _level: StringName) -> Dictionary:
+	return _blocked(&"position", "This battlefield has no cells to author.", {"type": &"cells"})
+
+
+func visibility_at(_cell: Vector2i) -> StringName:
+	return &"clear"
+
+
+## One composed physical visibility result for a shot from `actor` at `target`:
+## `{level, causes: [{cell, level}]}`. Overlapping causes compose as the WORST level, never a
+## sum, so the same loss of sight is never counted twice. Cell-less models are always clear.
+func visibility_between(_actor: BattleActor, _target: BattleActor) -> Dictionary:
+	return {"level": &"clear", "causes": []}
+
+
 ## Whether low cover between `actor` and `target` hides the target's cover-hidden anatomy:
 ## `{covered: bool, cell: Vector2i (when covered), seen_over: bool}`. Only the grid model has
 ## the geometry; zones report no cover so every authored location stays exposed.

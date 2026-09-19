@@ -116,7 +116,7 @@ Existing elemental [Weather](../../globals/combat/weather.gd) changes charge. Wi
 
 **Cover migration (status 2026-09-19):** authored obstacles block line of fire and low cover hides only cover-hidden anatomy; ordinary and aimed shots keep the legacy damage mitigation, and no cover accuracy term exists yet. Original recommendation: current cover subtracts damage. Recommend using exposure for direct-shot avoidance while keeping armor and explicitly authored material protection as mitigation. Avoid charging the same generic cover bonus in both places. Compare existing encounters before switching their profiles; retain legacy behavior until migrated.
 
-**Status reconciliation:** inventory current Blinded, facing, and other accuracy consumers before adding terms. A written proposed −10 percentage-point status and a runtime facing restriction are not interchangeable; select one accepted behavior and test it rather than accumulating both accidentally.
+**Status reconciliation (status 2026-09-19):** Blinded keeps its runtime facing restriction and receives no visibility percentage term; physical visibility is per-cell clear/dim/obscured, composed worst-of, ranged non-spell attacks only, with provisional −10/−25 pp. Original note: inventory current Blinded, facing, and other accuracy consumers before adding terms. A written proposed −10 percentage-point status and a runtime facing restriction are not interchangeable; select one accepted behavior and test it rather than accumulating both accidentally.
 
 ## Injury resolution and recovery
 

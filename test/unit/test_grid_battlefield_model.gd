@@ -729,3 +729,35 @@ func test_location_cover_follows_the_directional_rule_and_high_ground_sees_over_
 	model.set_cover(Vector2i(3, 0), false)
 	model.set_cover(Vector2i(1, 0), true)  # cover beside the attacker hides nothing
 	assert_bool(model.location_cover(ally, enemy)["covered"]).is_false()
+
+
+func test_visibility_composes_the_worst_cell_and_rejects_unknown_levels() -> void:
+	var model := _model(5, 2)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+	assert_str(String(model.visibility_between(ally, enemy)["level"])).is_equal("clear")
+	assert_bool(model.set_visibility(Vector2i(4, 0), &"foggy")["allowed"]).is_false()
+
+	assert_bool(model.set_visibility(Vector2i(4, 0), &"dim")["allowed"]).is_true()
+	var dim := model.visibility_between(ally, enemy)
+	assert_str(String(dim["level"])).is_equal("dim")
+	assert_int((dim["causes"] as Array).size()).is_equal(1)
+
+	# Two overlapping causes compose as the worst level, never as a sum.
+	assert_bool(model.set_visibility(Vector2i(0, 0), &"obscured")["allowed"]).is_true()
+	var composed := model.visibility_between(ally, enemy)
+	assert_str(String(composed["level"])).is_equal("obscured")
+	assert_int((composed["causes"] as Array).size()).is_equal(2)
+	# Cover, elevation and a cell between the two never enter the visibility result.
+	model.set_cover(Vector2i(3, 0), true)
+	model.set_elevation(Vector2i(2, 0), 2)
+	model.set_visibility(Vector2i(2, 0), &"obscured")
+	assert_int((model.visibility_between(ally, enemy)["causes"] as Array).size()).is_equal(2)
+	assert_str(str(model.tiles_snapshot()[4]["visibility"])).is_equal("dim")
+
+	assert_bool(model.set_visibility(Vector2i(4, 0), &"clear")["allowed"]).is_true()
+	assert_bool(model.set_visibility(Vector2i(0, 0), &"clear")["allowed"]).is_true()
+	assert_str(String(model.visibility_between(ally, enemy)["level"])).is_equal("clear")

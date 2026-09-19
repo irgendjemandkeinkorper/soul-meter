@@ -28,6 +28,11 @@ const PROVISIONAL_TO_HIT := {
 	"alacrity_mod_per_point": 2,
 	"clamp_lo": 5,
 	"clamp_hi": 95,
+	# PROVISIONAL physical visibility terms (called-shots design, 2026-09-19). Applied only when
+	# the controller marks the shot applicable (ranged, non-spell attack); never for Blinded,
+	# whose accepted behavior is the facing restriction, not a second percentage term.
+	"visibility_dim_pp": -10,
+	"visibility_obscured_pp": -25,
 }
 
 
@@ -52,6 +57,11 @@ static func accuracy_breakdown(context: Dictionary) -> Dictionary:
 			{"id": "height", "label": "Height", "percentage_points":
 				int(context.get("height_advantage_steps", 0)) * int(PROVISIONAL_TO_HIT["height_mod_per_step"])},
 		]
+		var visibility := _dictionary(context.get("visibility", {}))
+		var level := StringName(str(visibility.get("level", "clear")))
+		if bool(visibility.get("applies", false)) and level != &"clear":
+			modifiers.append({"id": "visibility", "label": "Visibility: %s" % level,
+				"percentage_points": int(PROVISIONAL_TO_HIT.get("visibility_%s_pp" % level, 0))})
 		var aim := _aim(context)
 		if not aim.is_empty() and bool(aim.get("allowed", false)):
 			modifiers.append({"id": "aim", "label": "Aim: %s" % str(aim.get("display_name", "")),
