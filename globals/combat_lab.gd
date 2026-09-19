@@ -490,13 +490,33 @@ func _install_aim_fixture(controller: CombatController, profile: String) -> void
 	controller._actions[AIM_ACTION] = action
 	for target: BattleActor in controller.enemies:
 		target.anatomy = {
-			"torso": {"display_name": "Torso", "exposed": true},
+			"torso": {"display_name": "Torso", "exposed": true, "hidden_by_cover": true},
 			"arm": {"display_name": "Arm", "exposed": profile != "covered_arm"},
 			"throat": {"display_name": "Throat", "exposed": true},
 		}
 		if profile == "no_throat":
 			target.anatomy.erase("throat")
+	if profile == "low_cover":
+		_seat_low_cover(controller)
 	_aim_controller = controller
+
+
+## Places one cover cell beside the first living enemy on the side facing the active ally, so
+## the fixture target hugs low cover against the party's shot (torso hidden, throat exposed).
+func _seat_low_cover(controller: CombatController) -> void:
+	var grid := controller.battlefield as GridBattlefieldModel
+	var enemy := _first_living_enemy(controller)
+	var ally := controller.active_actor()
+	if grid == null or enemy == null or ally == null:
+		return
+	var enemy_cell: Variant = grid.cell_of(enemy)
+	var ally_cell: Variant = grid.cell_of(ally)
+	if enemy_cell == null or ally_cell == null:
+		return
+	var step := ((ally_cell as Vector2i) - (enemy_cell as Vector2i)).sign()
+	if step == Vector2i.ZERO:
+		return
+	grid.set_cover((enemy_cell as Vector2i) + step, true)
 
 
 func select_lab_aim(location: StringName) -> void:

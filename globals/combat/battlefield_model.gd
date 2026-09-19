@@ -99,6 +99,19 @@ func set_cover(_cell: Vector2i, _grants_cover: bool = true) -> void:
 	pass
 
 
+## Authors a solid obstacle that blocks line of fire without changing elevation or passability
+## semantics elsewhere. Models without cells ignore it.
+func set_obstacle(_cell: Vector2i, _blocks_fire: bool = true) -> void:
+	pass
+
+
+## Whether low cover between `actor` and `target` hides the target's cover-hidden anatomy:
+## `{covered: bool, cell: Vector2i (when covered), seen_over: bool}`. Only the grid model has
+## the geometry; zones report no cover so every authored location stays exposed.
+func location_cover(_actor: BattleActor, _target: BattleActor) -> Dictionary:
+	return {"covered": false, "seen_over": false}
+
+
 func flank_bonus(_actor: BattleActor, _target: BattleActor) -> int:
 	return 0
 

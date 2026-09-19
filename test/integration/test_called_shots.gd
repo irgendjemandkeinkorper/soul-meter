@@ -79,6 +79,56 @@ func test_los_blocker_cannot_be_bypassed_by_minimum_hit_chance() -> void:
 	_assert_refused(controller, "throat", "blocked_by_elevation")
 
 
+func test_solid_obstacle_blocks_aimed_and_ordinary_shots_before_any_chance() -> void:
+	for use_ct: bool in [false, true]:
+		var controller := _controller(use_ct)
+		var grid := controller.battlefield as GridBattlefieldModel
+		var between: Vector2i = (grid.cell_of(controller.enemies[0]) as Vector2i) - Vector2i(1, 0)
+		grid.set_obstacle(between, true)
+		_assert_refused(controller, "throat", "blocked_by_obstacle")
+		var ordinary := controller.forecast_action(controller.action_by_id(&"aim-test"), controller.enemies[0])
+		assert_bool(ordinary["allowed"]).is_false()
+		assert_str(str(ordinary["blocked_by"])).is_equal("blocked_by_obstacle")
+
+
+func test_low_cover_hides_only_cover_hidden_locations_and_high_ground_sees_over_it() -> void:
+	for use_ct: bool in [false, true]:
+		var controller := _controller(use_ct)
+		var grid := controller.battlefield as GridBattlefieldModel
+		var target := controller.enemies[0]
+		var ally := controller.active_actor()
+		target.anatomy["torso"]["hidden_by_cover"] = true
+		var enemy_cell: Vector2i = grid.cell_of(target)
+		var ally_cell: Vector2i = grid.cell_of(ally)
+		var toward_ally: Vector2i = enemy_cell + (ally_cell - enemy_cell).sign()
+		grid.set_cover(toward_ally, true)
+
+		_assert_refused(controller, "torso", "aim_cover")
+		var action := controller.action_by_id(&"aim-test")
+		var throat := controller.forecast_action(action, target, {"aim_location": "throat"})
+		assert_bool(throat["allowed"]).override_failure_message(str(throat)).is_true()
+		# The ordinary attack keeps its legacy cover mitigation; exposure never adds a second
+		# generic cover charge on top of it.
+		var ordinary := controller.forecast_action(action, target)
+		assert_bool(ordinary["allowed"]).is_true()
+		assert_int(int(ordinary["positioning"]["cover_bonus"])).is_equal(controller.rules.cover_defense_bonus)
+		assert_int(int(throat["positioning"]["cover_bonus"])).is_equal(controller.rules.cover_defense_bonus)
+		var aim_terms: Array = []
+		for modifier: Dictionary in throat["resolution"]["accuracy_breakdown"]["modifiers"]:
+			aim_terms.append(str(modifier["id"]))
+		assert_array(aim_terms).not_contains(["cover"])
+
+		grid.set_elevation(ally_cell, 3)
+		var over := controller.forecast_action(action, target, {"aim_location": "torso"})
+		assert_bool(over["allowed"]).override_failure_message(str(over)).is_true()
+		grid.set_elevation(ally_cell, 0)
+
+		grid.set_cover(toward_ally, false)
+		grid.set_cover(enemy_cell - (ally_cell - enemy_cell).sign(), true)  # cover behind the target
+		var behind := controller.forecast_action(action, target, {"aim_location": "torso"})
+		assert_bool(behind["allowed"]).override_failure_message(str(behind)).is_true()
+
+
 func test_committed_aimed_miss_still_pays_the_extra_cost() -> void:
 	for use_ct: bool in [false, true]:
 		var controller := _controller(use_ct)

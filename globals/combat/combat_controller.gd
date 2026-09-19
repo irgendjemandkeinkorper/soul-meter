@@ -1463,7 +1463,12 @@ func _query_aim(
 		actor != null and target != null
 		and not _positional_resolution_context(actor, target).is_empty()
 	)
-	return CalledShot.query(action, target, location, accuracy_enabled, rules.maximum_action_ct_cost)
+	var cover: Dictionary = (
+		battlefield.location_cover(actor, target) if actor != null and target != null else {}
+	)
+	return CalledShot.query(
+		action, target, location, accuracy_enabled, rules.maximum_action_ct_cost, cover
+	)
 
 
 ## AP prices the same weighted path the enemy/CT move path quotes. The authored move

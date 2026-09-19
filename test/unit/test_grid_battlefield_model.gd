@@ -684,3 +684,48 @@ func test_a_released_combatant_frees_its_cell_for_the_next_admission() -> void:
 	assert_bool(
 		model.admit_combatant(successor, _handle(4, 2), &"enemy").get("allowed", false)
 	).is_true()
+
+
+func test_line_of_fire_blocked_by_authored_obstacle_with_its_own_reason() -> void:
+	var model := _model(5, 2)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+	model.set_obstacle(Vector2i(2, 0), true)
+
+	var result := model.line_of_sight(ally, enemy)
+
+	assert_bool(result.get("allowed", true)).is_false()
+	assert_str(String(result.get("blocked_by", ""))).is_equal("blocked_by_obstacle")
+	assert_that(result["nearest_unblock"]["cell"]).is_equal(Vector2i(2, 0))
+	model.set_obstacle(Vector2i(2, 0), false)
+	assert_bool(model.line_of_sight(ally, enemy).get("allowed", false)).is_true()
+
+
+func test_location_cover_follows_the_directional_rule_and_high_ground_sees_over_it() -> void:
+	var model := _model(5, 2)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+	assert_bool(model.location_cover(ally, enemy)["covered"]).is_false()
+
+	model.set_cover(Vector2i(3, 0), true)  # the enemy hugs cover toward the shooter
+	var covered := model.location_cover(ally, enemy)
+	assert_bool(covered["covered"]).is_true()
+	assert_that(covered["cell"]).is_equal(Vector2i(3, 0))
+	# Line of sight itself stays open: cover is partial exposure, never a blocked shot.
+	assert_bool(model.line_of_sight(ally, enemy).get("allowed", false)).is_true()
+
+	model.set_elevation(Vector2i(0, 0), 3)  # the shooter stands above the wall
+	var seen_over := model.location_cover(ally, enemy)
+	assert_bool(seen_over["covered"]).is_false()
+	assert_bool(seen_over["seen_over"]).is_true()
+
+	model.set_elevation(Vector2i(0, 0), 0)
+	model.set_cover(Vector2i(3, 0), false)
+	model.set_cover(Vector2i(1, 0), true)  # cover beside the attacker hides nothing
+	assert_bool(model.location_cover(ally, enemy)["covered"]).is_false()

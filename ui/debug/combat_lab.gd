@@ -143,7 +143,7 @@ func _build_setup() -> void:
 	aim_row.add_child(_aim_fixture)
 	_anatomy_fixture = OptionButton.new()
 	_anatomy_fixture.name = "AnatomyFixture"
-	for profile: Array in [["Exposed anatomy", "exposed"], ["Arm covered", "covered_arm"], ["No throat", "no_throat"]]:
+	for profile: Array in [["Exposed anatomy", "exposed"], ["Arm covered", "covered_arm"], ["No throat", "no_throat"], ["Low cover", "low_cover"]]:
 		_anatomy_fixture.add_item(tr(profile[0]))
 		_anatomy_fixture.set_item_metadata(_anatomy_fixture.item_count - 1, profile[1])
 	aim_row.add_child(_anatomy_fixture)

@@ -6,7 +6,7 @@ extends RefCounted
 
 static func query(
 	action: CombatAction, target: BattleActor, location: StringName,
-	accuracy_enabled: bool, maximum_ct_cost: int,
+	accuracy_enabled: bool, maximum_ct_cost: int, cover: Dictionary = {},
 ) -> Dictionary:
 	if (
 		action.kind != CombatAction.Kind.ATTACK or action.spell or action.no_damage
@@ -21,6 +21,10 @@ static func query(
 	var anatomy: Dictionary = target.anatomy[location]
 	if not bool(anatomy.get("exposed", false)):
 		return _blocked(&"aim_exposure", "That location is not exposed.")
+	# Partial exposure: low cover hides only the locations authored as cover-hidden; the
+	# rest stay targetable. A fully blocked line of fire is refused before this point.
+	if bool(cover.get("covered", false)) and bool(anatomy.get("hidden_by_cover", false)):
+		return _blocked(&"aim_cover", "Low cover hides that location from here.")
 	if not accuracy_enabled:
 		return _blocked(&"aim_accuracy", "Aiming requires a battlefield with accuracy resolution.")
 	if not action.aim_profiles[location] is Dictionary:

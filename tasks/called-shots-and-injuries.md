@@ -1,6 +1,6 @@
 # Called-shot expansion — implementation checklist
 
-**Status:** Accuracy foundation (task 2) verified 2026-09-18; lab aimed attack (task 3) and HUD aim selection (task 4) implemented 2026-09-19. Blocked-shot exposure, environment, and injuries remain planned.
+**Status:** Accuracy foundation (task 2) verified 2026-09-18; lab aimed attack (task 3) and HUD aim selection (task 4) and line-of-fire/exposure (task 5) implemented 2026-09-19. Environment and injuries remain planned.
 
 **Confirmed decisions, 2026-09-17:** The user chose separate combat design/task files and serious injuries that persist until treated. Persistence and treatment tasks are required.
 
@@ -10,7 +10,7 @@
 
 **2026-09-18 progress:** Treatment/recovery contracts drafted; task 10 split into transaction, healer, and field-treatment slices. Task 2 is complete without adding new balance terms. [Verification evidence](../docs/qa/combat-accuracy-2026-09-18.md). Next implementation: task 3's lab fixture; unresolved injury tuning does not block that slice.
 
-**2026-09-19 progress:** Task 3 landed: `CalledShot` legality/pricing, controller aim query at forecast and commit, lab fixture with synthetic anatomy, and 9 aimed-action tests under both schedulers (`test/integration/test_called_shots.gd`, `test/unit/test_combat_lab.gd`). A JSON-replayed aim context now logs identically to the live one. The lab panel was not inspected rendered; Checkpoint A's third item is covered only by the hidden-result assertions from task 2. Task 4 landed the same day: forecast-panel aim row, interface aim mode, controller-quoted disabled reasons, rendered capture. [Evidence](../docs/qa/called-shot-hud-2026-09-19.md). Next implementation: task 5 (blocked shot versus partial exposure).
+**2026-09-19 progress:** Task 3 landed: `CalledShot` legality/pricing, controller aim query at forecast and commit, lab fixture with synthetic anatomy, and 9 aimed-action tests under both schedulers (`test/integration/test_called_shots.gd`, `test/unit/test_combat_lab.gd`). A JSON-replayed aim context now logs identically to the live one. The lab panel was not inspected rendered; Checkpoint A's third item is covered only by the hidden-result assertions from task 2. Task 4 landed the same day: forecast-panel aim row, interface aim mode, controller-quoted disabled reasons, rendered capture. [Evidence](../docs/qa/called-shot-hud-2026-09-19.md). Task 5 landed: authored obstacles refuse `blocked_by_obstacle`, low cover hides cover-hidden anatomy (`aim_cover`) unless seen over from height, legacy cover mitigation retained without a second charge. [Evidence](../docs/qa/called-shot-exposure-2026-09-19.md). Next implementation: task 6 (physical visibility).
 
 **Architecture:** [Called shots, accuracy, and injuries](../docs/ideas/called-shots-and-injuries.md). Existing `tasks/plan.md` and `tasks/todo.md` remain owned by their current work.
 
@@ -85,9 +85,9 @@ Each task targets one focused session. Estimates are engineering planning ranges
 **Scope:** Extend the battlefield query with line-of-fire and location-exposure results, consumed by aiming.
 
 **Acceptance:**
-- [ ] Solid obstacle, elevation occlusion, and existing intervening-actor blockers are explicit fixtures; blocked shots cannot use the minimum chance.
-- [ ] A low-cover fixture exposes the appropriate regions while hiding others; facing/elevation changes produce consistent results.
-- [ ] Migrate the fixture's cover profile without accidentally applying the same generic cover as both hit penalty and damage reduction.
+- [x] Solid obstacle, elevation occlusion, and existing intervening-actor blockers are explicit fixtures; blocked shots cannot use the minimum chance.
+- [x] A low-cover fixture exposes the appropriate regions while hiding others; facing/elevation changes produce consistent results.
+- [x] Migrate the fixture's cover profile without accidentally applying the same generic cover as both hit penalty and damage reduction.
 
 **Verification:** Grid tests plus query/submit cases; inspect the low-cover fixture in the running lab.
 

@@ -64,6 +64,9 @@ var _elevation: Dictionary = {}  ## Vector2i -> int
 var _cliffs: Dictionary = {}  ## Vector2i -> bool
 ## Cells that grant partial cover without blocking movement or line of sight.
 var _cover: Dictionary = {}  ## Vector2i -> bool
+## Cells authored as solid obstacles that block line of fire (walls), independent of the
+## navigation blocking layer so a fence or shallow water never silently stops a shot.
+var _obstacles: Dictionary = {}  ## Vector2i -> bool
 ## Field-grid flags as they were before combat first touched each cell, so
 ## `release_field_grid()` hands the shared IsoGrid back to navigation unchanged.
 var _prior_solid: Dictionary = {}  ## Vector2i -> bool
@@ -207,6 +210,7 @@ func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
 	_tiles_snapshot_cache = []
 	_elevation.clear()
 	_cover.clear()
+	_obstacles.clear()
 	_cliffs.clear()
 	_prior_solid.clear()
 	_prior_weight.clear()
@@ -240,6 +244,9 @@ func _read_authored_terrain(ground: TileMapLayer) -> void:
 		var cover_value: Variant = tile_data.get_custom_data(&"cover")
 		if cover_value is bool and cover_value:
 			set_cover(cell)
+		var obstacle_value: Variant = tile_data.get_custom_data(&"blocks_fire")
+		if obstacle_value is bool and obstacle_value:
+			set_obstacle(cell)
 		var elevation_value: Variant = tile_data.get_custom_data(&"elevation")
 		if elevation_value is int and elevation_value != 0:
 			set_elevation(cell, clampi(elevation_value, 0, DS.ELEVATION_MAX))
@@ -473,6 +480,28 @@ func target_query(actor: BattleActor, target: BattleActor, profile: StringName) 
 ## Chebyshev-adjacent to the target AND strictly nearer the attacker than the target is —
 ## i.e. the target is hugging cover that stands between it and the shot. A crate beside the
 ## ATTACKER grants nothing (the round-1 rule was directionless; Wave P gate finding class).
+func set_obstacle(cell: Vector2i, blocks_fire: bool = true) -> void:
+	_tiles_snapshot_cache = []
+	_obstacles[cell] = blocks_fire
+
+
+## Low cover hides the target's cover-hidden locations only when the target hugs a cover cell
+## that stands toward the attacker (the same directional rule as `cover_bonus`) AND the
+## attacker does not stand above the target: high ground sees over low cover, matching
+## `line_of_sight()`. Facing plays no part — a low wall hides the same parts from any side.
+func location_cover(actor: BattleActor, target: BattleActor) -> Dictionary:
+	if not has_combatant(actor) or not has_combatant(target):
+		return {"covered": false, "seen_over": false}
+	var attacker_cell: Vector2i = _cells[actor.combat_id]
+	var target_cell: Vector2i = _cells[target.combat_id]
+	var cover_cell: Variant = _cover_cell_between(attacker_cell, target_cell)
+	if cover_cell == null:
+		return {"covered": false, "seen_over": false}
+	if elevation_at(attacker_cell) > elevation_at(target_cell):
+		return {"covered": false, "seen_over": true, "cell": cover_cell}
+	return {"covered": true, "seen_over": false, "cell": cover_cell}
+
+
 func cover_bonus(actor: BattleActor, target: BattleActor) -> int:
 	if _rules == null or not has_combatant(actor) or not has_combatant(target):
 		return 0
@@ -495,6 +524,11 @@ func cover_bonus_at(attacker: BattleActor, target_position: StringName) -> int:
 
 
 func _cover_bonus_between(attacker_cell: Vector2i, target_cell: Vector2i) -> int:
+	return _rules.cover_defense_bonus if _cover_cell_between(attacker_cell, target_cell) != null else 0
+
+
+## The cover cell the target hugs against a shot from `attacker_cell`, or null.
+func _cover_cell_between(attacker_cell: Vector2i, target_cell: Vector2i) -> Variant:
 	for y_offset in range(-1, 2):
 		for x_offset in range(-1, 2):
 			if x_offset == 0 and y_offset == 0:
@@ -503,8 +537,8 @@ func _cover_bonus_between(attacker_cell: Vector2i, target_cell: Vector2i) -> int
 			if not bool(_cover.get(cover_cell, false)):
 				continue
 			if _chebyshev(cover_cell, attacker_cell) < _chebyshev(target_cell, attacker_cell):
-				return _rules.cover_defense_bonus
-	return 0
+				return cover_cell
+	return null
 
 
 func flank_bonus(actor: BattleActor, target: BattleActor) -> int:
@@ -793,6 +827,12 @@ func _line_of_sight_cells(
 				&"blocked_by_elevation",
 				"Higher ground blocks the line of sight.",
 				{"type": &"elevation", "cell": cell},
+			)
+		if bool(_obstacles.get(cell, false)):
+			return _blocked(
+				&"blocked_by_obstacle",
+				"A solid obstacle blocks the line of fire.",
+				{"type": &"obstacle", "cell": cell},
 			)
 		var occupant: BattleActor = _occupancy.get(cell)
 		if occupant != null and occupant != viewer and occupant != viewed:

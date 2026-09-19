@@ -121,6 +121,27 @@ func test_called_shot_fixture_submits_and_exports_the_chosen_location_without_mu
 	assert_dict(ordinary.aim_profiles).is_equal(profiles_before)
 
 
+func test_low_cover_fixture_hides_the_torso_but_leaves_the_throat_targetable() -> void:
+	await _mount_test_room()
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+		"called_shot_fixture": true, "anatomy_fixture": "low_cover", "seed": 42,
+	})
+	var grid := Battle.controller.battlefield as GridBattlefieldModel
+	var ally_cell: Vector2i = grid.cell_of(Battle.controller.active_actor())
+	assert_bool(grid.displace(Battle.controller.enemies[0], ally_cell + Vector2i(2, 0))["allowed"]).is_true()
+	# The catalog seats the wight out of range; re-seat the fixture's cover beside its new cell.
+	_lab.call("_seat_low_cover", Battle.controller)
+	_lab.call("select_lab_aim", &"torso")
+	var torso: Dictionary = _lab.call("aim_forecast")
+	assert_bool(torso["allowed"]).override_failure_message(str(torso)).is_false()
+	assert_str(str(torso["blocked_by"])).is_equal("aim_cover")
+	_lab.call("select_lab_aim", &"throat")
+	var throat: Dictionary = _lab.call("aim_forecast")
+	assert_bool(throat["allowed"]).override_failure_message(str(throat)).is_true()
+	_lab.call("stop_test_session")
+
+
 func test_called_shot_fixture_is_opt_in_and_missing_or_covered_anatomy_is_refused() -> void:
 	for profile: String in ["no_throat", "covered_arm"]:
 		_lab.call("start_test_session", {
