@@ -61,6 +61,10 @@ const DEFAULT_BREATH_MAX := 15
 ## 0 means "open to anyone" — most candidates leave these at the default.
 @export var min_reputation: float = 0.0
 @export var min_infamy: float = 0.0
+## Serious location injuries that persist until treated (called-shots task 9). Keyed by
+## location id; each value is a CombatInjury record. Mirrored into BattleActor for combat and
+## written back by Battle at every finish. Ordinary HP care never touches this.
+@export var injuries: Dictionary = {}
 
 
 func to_dict() -> Dictionary:
@@ -97,6 +101,7 @@ func to_dict() -> Dictionary:
 		"skill_tiers": skill_tiers.duplicate(true),
 		"min_reputation": min_reputation,
 		"min_infamy": min_infamy,
+		"injuries": injuries.duplicate(true),
 	}
 
 
@@ -149,6 +154,7 @@ static func from_dict(data: Dictionary) -> PartyMember:
 					member.portrait = res
 	member.min_reputation = float(data.get("min_reputation", 0.0))
 	member.min_infamy = float(data.get("min_infamy", 0.0))
+	member.injuries = CombatInjury.records_from_save(data.get("injuries", {}))
 	return member
 
 

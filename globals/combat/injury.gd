@@ -13,6 +13,47 @@ const EFFECT_ATTACK_ACCURACY := "attack_accuracy_pp"
 const EFFECT_VOCAL_ACCURACY := "vocal_accuracy_pp"
 ## Severe throat rule: actions that require an intact voice are refused until recovery.
 const EFFECT_VOICE_BLOCKED := "voice_blocked"
+## Persistence rule (user decision 2026-09-17): serious injuries outlive combat until treated.
+## Minor injuries are combat-local under the current authored rule (duration unsettled) and are
+## dropped at every combat end: victory, defeat, flee, and same-map session end.
+const PERSISTENT_SEVERITY := "serious"
+## Save keys every stored record must carry. Anything else inside a record is preserved
+## verbatim (unknown-record policy: keep what we do not understand, never invent or drop it).
+const REQUIRED_RECORD_KEYS: Array[String] = ["injury_id", "location_id"]
+
+
+## Records that outlive combat, keyed by location. Pure; the input is untouched.
+static func persistent_records(injuries: Dictionary) -> Dictionary:
+	var kept: Dictionary = {}
+	for location: Variant in injuries.keys():
+		var record: Variant = injuries[location]
+		if record is Dictionary and str((record as Dictionary).get("severity", "minor")) == PERSISTENT_SEVERITY:
+			kept[str(location)] = (record as Dictionary).duplicate(true)
+	return kept
+
+
+## Loads records from a save. Old saves have no key and load with no injuries. A record
+## missing a stable id is malformed and dropped; ids are plain strings, so a data rename
+## must ship its own migration under SaveMigrations rather than silently re-keying here.
+static func records_from_save(raw: Variant) -> Dictionary:
+	var loaded: Dictionary = {}
+	if not raw is Dictionary:
+		return loaded
+	for location: Variant in (raw as Dictionary).keys():
+		var record: Variant = (raw as Dictionary)[location]
+		if not record is Dictionary:
+			continue
+		var complete := true
+		for key: String in REQUIRED_RECORD_KEYS:
+			if str((record as Dictionary).get(key, "")).is_empty():
+				complete = false
+		if not complete:
+			continue
+		var copy: Dictionary = (record as Dictionary).duplicate(true)
+		if not copy.get("effects") is Dictionary:
+			copy["effects"] = {}
+		loaded[str(location)] = copy
+	return loaded
 
 
 ## Applies `injury` (the resolver's finalized injury dict) to `target`. `source_key` is the

@@ -284,3 +284,24 @@ func test_admit_without_a_live_session_is_refused() -> void:
 	var refused := Battle.admit(wight)
 	assert_bool(refused.get("allowed", true)).is_false()
 	assert_str(str(refused["nearest_unblock"]["type"])).is_equal("live_session")
+
+
+## Task 9 hostile slice: the Hostile node owns its BattleActor for the field's lifetime, so a
+## serious injury taken in one session is still there when the same hostile opens the next.
+func test_a_hostiles_serious_injury_survives_to_the_next_session_on_this_map() -> void:
+	var field := await _field()
+	var wight := _hostile(field, "Wight", Vector2i(30, 30))
+	assert_bool(Battle.start_session(field, wight)["allowed"]).is_true()
+	var actor := wight.battle_actor()
+	actor.injuries["throat"] = {"injury_id": "throat-crushed", "location_id": "throat", "severity": "serious", "effects": {"voice_blocked": true}}
+	actor.injuries["arm"] = {"injury_id": "arm-strained", "location_id": "arm", "severity": "minor", "effects": {}}
+	Battle._end_session(null)
+	Battle._release_field_grid()
+	Battle.controller = null
+	Battle.ended = true
+	wight.state = Hostile.State.IDLE
+	assert_array(wight.battle_actor().injuries.keys()).is_equal(["throat"])
+	var reopened := Battle.start_session(field, wight)
+	assert_bool(reopened["allowed"]).override_failure_message(str(reopened)).is_true()
+	assert_bool(bool(Battle.enemies[0].injuries["throat"]["effects"]["voice_blocked"])).is_true()
+	assert_bool(CombatInjury.voice_block(Battle.enemies[0]).is_empty()).is_false()

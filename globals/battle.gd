@@ -356,6 +356,14 @@ func _end_session(result: BattleResult) -> void:
 		if _session_field.hostile_alerted.is_connected(_on_field_hostile_alerted):
 			_session_field.hostile_alerted.disconnect(_on_field_hostile_alerted)
 	_session_field = null
+	# A hostile's BattleActor lives as long as its Hostile node (the field scene instance), so
+	# its serious injuries carry into the next session on this map by themselves. Minor ones
+	# end with the fight, same as the party's. Downed hostiles keep their records; corpse and
+	# despawn policy is untouched here.
+	for hostile: Hostile in _session_hostiles.values():
+		var actor := hostile.battle_actor()
+		if actor != null:
+			actor.injuries = CombatInjury.persistent_records(actor.injuries)
 	_session_hostiles.clear()
 	session_ended.emit(result)
 
@@ -1053,11 +1061,15 @@ func _consequence_flag(outcome_id: StringName) -> String:
 	)
 
 
+## Runs at every finish (victory, defeat, flee). Injury contract (task 9): serious records
+## are written back and persist until treated; minor ones end with the fight. Defeat halves
+## HP but does not clear injuries — revival is not treatment.
 func _sync_party_hp() -> void:
 	for actor in allies:
 		if actor.party_index >= 0 and actor.party_index < GameState.party.size():
 			GameState.party[actor.party_index].hp = actor.hp
 			GameState.party[actor.party_index].breath = actor.breath
+			GameState.party[actor.party_index].injuries = CombatInjury.persistent_records(actor.injuries)
 	GameState.party_changed.emit()
 
 

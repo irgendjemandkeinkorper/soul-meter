@@ -165,3 +165,21 @@ func test_from_dict_accepts_safe_portrait_paths() -> void:
 	}
 	var restored_valid := PartyMember.from_dict(dict_valid)
 	assert_object(restored_valid.portrait).is_not_null()
+
+
+func test_injuries_round_trip_and_legacy_saves_load_with_none() -> void:
+	var member := PartyMember.new()
+	member.injuries = {"throat": {"injury_id": "throat-crushed", "location_id": "throat", "severity": "serious",
+		"effects": {"voice_blocked": true}, "applications": 1, "recovery": "untreated", "future_key": "kept"}}
+	var loaded := PartyMember.from_dict(member.to_dict())
+	assert_dict(loaded.injuries).is_equal(member.injuries)
+	assert_str(str(loaded.injuries["throat"]["future_key"])).is_equal("kept")
+	var legacy := member.to_dict()
+	legacy.erase("injuries")
+	assert_dict(PartyMember.from_dict(legacy).injuries).is_empty()
+	# Malformed records (no stable id, wrong shape) are dropped; the rest survive.
+	var mixed := member.to_dict()
+	mixed["injuries"] = {"arm": {"severity": "serious"}, "leg": "broken", "throat": mixed["injuries"]["throat"]}
+	var partial := PartyMember.from_dict(mixed)
+	assert_array(partial.injuries.keys()).is_equal(["throat"])
+	assert_dict(PartyMember.from_dict({"injuries": 7}).injuries).is_empty()
