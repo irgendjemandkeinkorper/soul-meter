@@ -1303,14 +1303,18 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		)
 		_force_pass(actor)
 		return
-	var resolution_gate := _query_attack_resolution(actor, target, enemy_action, {})
+	var aim_options := choose_enemy_aim(actor, target, enemy_action)
+	var resolution_gate := _query_attack_resolution(actor, target, enemy_action, aim_options)
 	if not bool(resolution_gate.get("allowed", false)):
 		_emit_event(
 			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": resolution_gate}
 		)
 		_force_pass(actor)
 		return
-	var commit_result := scheduler.commit(actor, enemy_action)
+	var committed_action := CalledShot.priced_action(
+		enemy_action, StringName(str(aim_options.get("aim_location", "")))
+	)
+	var commit_result := scheduler.commit(actor, committed_action)
 	if not bool(commit_result.get("allowed", false)):
 		_emit_event(
 			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": commit_result}
@@ -1318,20 +1322,91 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		_force_pass(actor)
 		return
 	_face_toward(actor, target)
-	var outcome := _apply_action(actor, target, enemy_action, {
-		"_resolution": resolution_gate["resolution"],
-		"_resolution_context": resolution_gate["context"],
-	})
+	var apply_options := aim_options.duplicate(true)
+	apply_options["_resolution"] = resolution_gate["resolution"]
+	apply_options["_resolution_context"] = resolution_gate["context"]
+	var outcome := _apply_action(actor, target, committed_action, apply_options)
 	_finish_hold_turn(actor)
 	outcome["action_id"] = enemy_action.id
 	outcome["verb"] = enemy_action.verb
-	outcome["ap_cost"] = enemy_action.ap_cost
+	if aim_options.has("aim_location"):
+		outcome["aim_location"] = str(aim_options["aim_location"])
+	outcome["ap_cost"] = committed_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
 	outcome["ap_remaining"] = actor.action_points
 	outcome["charge_remaining"] = int(commit_result.get("charge", 0))
 	_emit_event(&"action_resolved", actor, target, outcome)
 	scheduler.release(actor)
 	_change_balance(actor.balance_affinity * actor.balance_pressure, actor)
+
+
+## PROVISIONAL (called-shots task 12): how many HP of expected damage one full injury is
+## worth to the AI. A balance-facilitator number, not a ratified rule.
+const PROVISIONAL_AI_INJURY_VALUE := 6
+
+
+## Called-shots task 12: picks the aim the enemy's action should use, or `{}` for an ordinary
+## attack. Bounded to the action's authored profiles, legal through the same `_query_aim` and
+## scheduler gates the player faces, and scored from FORECAST data only (hit chance, damage
+## on hit, injury chance): the committed roll is never consulted. Observable state only:
+## authored anatomy exposure, cover, visibility, and the target's existing injuries.
+func choose_enemy_aim(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
+	if actor == null or target == null or action == null or action.aim_profiles.is_empty():
+		return {}
+	var best := {}
+	var best_value := _enemy_attack_value(actor, target, action, {})
+	if best_value < 0.0:
+		return {}
+	var locations: Array = action.aim_profiles.keys()
+	locations.sort()
+	for location: Variant in locations:
+		var location_id := StringName(str(location))
+		# An already-injured part has nothing more to lose: the aim would pay for nothing.
+		if target.injuries.has(str(location_id)):
+			continue
+		var legality := _query_aim(actor, target, action, location_id)
+		if not bool(legality.get("allowed", false)):
+			continue
+		if not _enemy_can_pay(actor, CalledShot.priced_action(action, location_id)):
+			continue
+		var options := {"aim_location": str(location_id)}
+		# A shot held up to the minimum chance by the clamp is a coin toss the surcharge
+		# cannot improve; the floor is never a reason to pay more.
+		var breakdown := Resolution.accuracy_breakdown(forecast_context(actor, target, action, options))
+		if int(breakdown.get("clamp_adjustment", 0)) > 0:
+			continue
+		var value := _enemy_attack_value(actor, target, action, options)
+		if value > best_value:
+			best_value = value
+			best = options
+	return best
+
+
+## Cost-only affordability for a candidate, independent of whose turn it is: the AP
+## scheduler quotes the priced action against the actor's points; CT legality of the
+## surcharge was already settled by `_query_aim` against the action cost limit.
+func _enemy_can_pay(actor: BattleActor, priced: CombatAction) -> bool:
+	if scheduler != null and scheduler.has_method("quote"):
+		return int(scheduler.call("quote", actor, priced)) <= actor.action_points
+	return true
+
+
+## Expected value of one attack from its forecast: hit% × damage on hit, plus the injury's
+## overall chance weighted by PROVISIONAL_AI_INJURY_VALUE when the quoted damage can reach
+## the authored threshold. Returns -1 when the attack cannot be forecast at all.
+func _enemy_attack_value(actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary) -> float:
+	var context := forecast_context(actor, target, action, options)
+	if context.is_empty():
+		return -1.0
+	var breakdown := Resolution.accuracy_breakdown(context)
+	var hit_chance := float(breakdown.get("effective_hit_chance", breakdown.get("hit_chance", 100))) / 100.0
+	var damage_on_hit := _forecast_damage_on_hit(context, target)
+	var value := hit_chance * float(damage_on_hit)
+	var injury: Dictionary = context.get("injury", {})
+	if not injury.is_empty() and damage_on_hit >= int(injury.get("min_damage", 1)):
+		var overall := hit_chance * float(int(injury.get("chance_on_hit", 0))) / 100.0
+		value += overall * float(PROVISIONAL_AI_INJURY_VALUE)
+	return value
 
 
 ## Grid-capable enemies spend movement on height and rear access before closing directly. The
