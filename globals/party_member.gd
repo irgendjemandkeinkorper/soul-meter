@@ -65,6 +65,18 @@ const DEFAULT_BREATH_MAX := 15
 ## location id; each value is a CombatInjury record. Mirrored into BattleActor for combat and
 ## written back by Battle at every finish. Ordinary HP care never touches this.
 @export var injuries: Dictionary = {}
+## PROVISIONAL (called-shots balance pass, 2026-09-20): every recruitable member is a
+## humanoid, so party members expose the humanoid silhouette until per-character anatomy is
+## authored in canon. Optional in saves: an absent key loads this default, never nothing,
+## because a party with no anatomy can never be aimed at and the enemy AI stays inert.
+const HUMANOID_ANATOMY: Dictionary = {
+	"torso": {"display_name": "Torso", "exposed": true, "hidden_by_cover": true},
+	"arm": {"display_name": "Arm", "exposed": true, "hidden_by_cover": false},
+	"leg": {"display_name": "Leg", "exposed": true, "hidden_by_cover": true},
+	"head": {"display_name": "Head", "exposed": true, "hidden_by_cover": false},
+	"throat": {"display_name": "Throat", "exposed": true, "hidden_by_cover": false},
+}
+@export var anatomy: Dictionary = HUMANOID_ANATOMY.duplicate(true)
 
 
 func to_dict() -> Dictionary:
@@ -102,6 +114,7 @@ func to_dict() -> Dictionary:
 		"min_reputation": min_reputation,
 		"min_infamy": min_infamy,
 		"injuries": injuries.duplicate(true),
+		"anatomy": anatomy.duplicate(true),
 	}
 
 
@@ -155,6 +168,9 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.min_reputation = float(data.get("min_reputation", 0.0))
 	member.min_infamy = float(data.get("min_infamy", 0.0))
 	member.injuries = CombatInjury.records_from_save(data.get("injuries", {}))
+	var saved_anatomy: Variant = data.get("anatomy", null)
+	member.anatomy = (saved_anatomy as Dictionary).duplicate(true) if saved_anatomy is Dictionary \
+		else HUMANOID_ANATOMY.duplicate(true)
 	return member
 
 

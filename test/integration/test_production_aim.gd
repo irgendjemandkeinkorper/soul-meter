@@ -35,7 +35,7 @@ func test_absent_and_covered_parts_are_refused_on_real_archetypes() -> void:
 
 func test_an_aimed_arm_hit_on_the_wight_applies_a_minor_injury_that_ends_with_the_fight() -> void:
 	var controller := _controller(&"bog-wight", false)
-	# Below the serious threshold (12): this is the minor case.
+	# Below the serious threshold (9): this is the minor case.
 	controller.allies[0].attack = 6
 	var strike := controller.action_by_id(&"strike")
 	var wight := controller.enemies[0]
@@ -188,7 +188,7 @@ func test_a_heavy_aimed_arm_hit_escalates_to_a_serious_injury_that_persists_and_
 		var wight := controller.enemies[0]
 		var options := {"aim_location": "arm"}
 		var forecast := controller.forecast_action(strike, wight, options)
-		assert_int(int(forecast["damage_on_hit"])).is_greater_equal(12)
+		assert_int(int(forecast["damage_on_hit"])).is_greater_equal(9)
 		assert_bool(forecast["injury_forecast"]["serious_eligible"]).is_true()
 		assert_str(str(forecast["injury_forecast"]["id"])).is_equal("arm-broken")
 		assert_str(str(forecast["injury_forecast"]["severity"])).is_equal("serious")
@@ -215,9 +215,9 @@ func test_a_light_aimed_arm_hit_stays_minor_and_the_forecast_names_the_serious_t
 	var wight := controller.enemies[0]
 	var options := {"aim_location": "arm"}
 	var forecast := controller.forecast_action(strike, wight, options)
-	assert_int(int(forecast["damage_on_hit"])).is_less(12)
+	assert_int(int(forecast["damage_on_hit"])).is_less(9)
 	assert_bool(forecast["injury_forecast"]["serious_eligible"]).is_false()
-	assert_int(int(forecast["injury_forecast"]["serious_min_damage"])).is_equal(12)
+	assert_int(int(forecast["injury_forecast"]["serious_min_damage"])).is_equal(9)
 	assert_str(str(forecast["injury_forecast"]["id"])).is_equal("arm-strained")
 	controller._sequence = _hit_seed(controller, strike, wight, options)
 	var result := controller.submit_action(strike.id, wight, options)

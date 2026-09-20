@@ -29,7 +29,7 @@ aim_profiles = {
 "attack_accuracy_pp": -20
 },
 "id": "arm-broken",
-"min_damage": 12
+"min_damage": 9
 },
 "severity": "minor"
 }
@@ -50,7 +50,7 @@ aim_profiles = {
 "sight_accuracy_pp": -30
 },
 "id": "eye-swollen",
-"min_damage": 14
+"min_damage": 10
 },
 "severity": "minor"
 }
@@ -71,7 +71,7 @@ aim_profiles = {
 "move_cost_percent": 100
 },
 "id": "leg-lamed",
-"min_damage": 12
+"min_damage": 9
 },
 "severity": "minor"
 }
@@ -93,7 +93,7 @@ aim_profiles = {
 "voice_blocked": true
 },
 "id": "throat-crushed",
-"min_damage": 14
+"min_damage": 10
 },
 "severity": "minor"
 }

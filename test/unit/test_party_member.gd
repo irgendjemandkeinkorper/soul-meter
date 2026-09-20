@@ -183,3 +183,15 @@ func test_injuries_round_trip_and_legacy_saves_load_with_none() -> void:
 	var partial := PartyMember.from_dict(mixed)
 	assert_array(partial.injuries.keys()).is_equal(["throat"])
 	assert_dict(PartyMember.from_dict({"injuries": 7}).injuries).is_empty()
+
+
+func test_anatomy_defaults_to_the_humanoid_silhouette_round_trips_and_legacy_saves_get_it_too() -> void:
+	var member := PartyMember.new()
+	assert_dict(member.anatomy).is_equal(PartyMember.HUMANOID_ANATOMY)
+	member.anatomy["horns"] = {"display_name": "Horns", "exposed": true, "hidden_by_cover": false}
+	var loaded := PartyMember.from_dict(member.to_dict())
+	assert_dict(loaded.anatomy).is_equal(member.anatomy)
+	var legacy := member.to_dict()
+	legacy.erase("anatomy")
+	assert_dict(PartyMember.from_dict(legacy).anatomy).is_equal(PartyMember.HUMANOID_ANATOMY)
+	assert_dict(BattleActor.from_party_member(loaded, 0).anatomy).is_equal(member.anatomy)

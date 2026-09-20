@@ -118,6 +118,7 @@ static func from_party_member(member: PartyMember, party_index: int) -> BattleAc
 	actor.source_member = member
 	actor.breath = member.breath
 	actor.injuries = member.injuries.duplicate(true)
+	actor.anatomy = member.anatomy.duplicate(true)
 	return actor
 
 
