@@ -31,14 +31,18 @@ func consume_event(event: CombatEvent) -> void:
 	ct_label.text = _ct_line(unit)
 	resource_label.text = _resource_line(unit.get("class_resource", {}))
 	portrait.texture = _portrait_for(unit)
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
-## Snapshots carry no portrait textures — fall back to the same painterly unit
+## Snapshots carry portrait resource paths; missing portraits use painterly unit
 ## art the stage renders, resolved from the roster keys the payload does carry.
 func _portrait_for(unit: Dictionary) -> Texture2D:
 	var provided := unit.get("portrait", null) as Texture2D
 	if provided != null:
 		return provided
+	var authored := NpcRoster.load_portrait_texture(str(unit.get("portrait_path", "")))
+	if authored != null:
+		return authored
 	var unit_id := UnitArtScript.combat_unit_id(
 		StringName(str(unit.get("side", "ally"))),
 		str(unit.get("archetype_id", "")),

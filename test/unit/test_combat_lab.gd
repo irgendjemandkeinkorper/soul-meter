@@ -78,6 +78,54 @@ func test_encounter_ids_are_derived_from_the_catalog() -> void:
 	assert_array(encounter_ids).contains([TEST_ENCOUNTER])
 
 
+func test_called_shot_fixture_submits_and_exports_the_chosen_location_without_mutating_catalog() -> void:
+	var ordinary := CombatActionCatalog.by_id(&"strike")
+	var profiles_before := ordinary.aim_profiles.duplicate(true)
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+		"called_shot_fixture": true, "anatomy_fixture": "exposed", "seed": 42,
+	})
+	_lab.call("select_lab_aim", &"throat")
+	var forecast: Dictionary = _lab.call("aim_forecast")
+	assert_bool(forecast["allowed"]).override_failure_message(str(forecast)).is_true()
+	var result: Dictionary = _lab.call("submit_lab_aim")
+	assert_bool(result["allowed"]).override_failure_message(str(result)).is_true()
+	assert_str(result["aim_location"]).is_equal("throat")
+	assert_dict(result["resolution"]).is_equal(forecast["resolution"])
+	assert_dict(ordinary.aim_profiles).is_equal(profiles_before)
+	var rows: Array[Dictionary] = _lab.get("_turn_rows")
+	var aimed_row: Dictionary = {}
+	for row: Dictionary in rows:
+		if str(row.get("aim_location", "")) == "throat":
+			aimed_row = row
+	assert_bool(aimed_row.get("compared", false)).is_true()
+	assert_bool(aimed_row.get("diverged", true)).is_false()
+	var markdown: String = _lab.call("build_session_markdown", _lab.get("_setup"), rows, {})
+	assert_str(markdown).contains("lab-aimed-shot @ throat")
+	_lab.call("stop_test_session")
+	assert_bool((_lab.call("submit_lab_aim") as Dictionary)["allowed"]).is_false()
+	assert_dict(ordinary.aim_profiles).is_equal(profiles_before)
+
+
+func test_called_shot_fixture_is_opt_in_and_missing_or_covered_anatomy_is_refused() -> void:
+	for profile: String in ["no_throat", "covered_arm"]:
+		_lab.call("start_test_session", {
+			"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+			"called_shot_fixture": true, "anatomy_fixture": profile, "seed": 42,
+		})
+		_lab.call("select_lab_aim", &"throat" if profile == "no_throat" else &"arm")
+		var forecast: Dictionary = _lab.call("aim_forecast")
+		assert_bool(forecast["allowed"]).is_false()
+		assert_str(str(forecast["blocked_by"])).is_equal("aim_location" if profile == "no_throat" else "aim_exposure")
+		_lab.call("stop_test_session")
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(), "seed": 42,
+	})
+	assert_object(Battle.controller.action_by_id(&"lab-aimed-shot")).is_null()
+	assert_dict(Battle.controller.enemies[0].anatomy).is_empty()
+	assert_bool((_lab.call("submit_lab_aim") as Dictionary)["allowed"]).is_false()
+
+
 ## F0 D8 (#281 step 8): the `authored` source used to come from
 ## `EncounterCatalog._WEATHER_DEFAULTS`, keyed per encounter. Weather is the
 ## LOCATION's now, so the lab reports a `location` source instead, and `authored`

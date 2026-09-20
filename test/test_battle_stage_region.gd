@@ -1,6 +1,42 @@
 extends GdUnitTestSuite
 
 
+func test_large_field_grid_keeps_corner_combatants_inside_the_stage() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	stage.size = Vector2(960, 480)
+	var event := CombatEvent.new()
+	event.data = {"snapshot": {
+		"tiles": [{"x": 0, "y": 0}, {"x": 63, "y": 0}, {"x": 0, "y": 63}, {"x": 63, "y": 63}],
+		"allies": [{"id": "ally-vex", "display_name": "Vex", "side": "ally", "position": Vector2i.ZERO}],
+		"enemies": [{"id": "enemy-wight", "archetype_id": "bog-wight", "side": "enemy", "position": Vector2i(63, 63)}],
+	}}
+	stage.consume_event(event)
+	await runner.simulate_frames(2)
+	for unit: Control in stage.get_node("UnitsLayer").get_children():
+		assert_bool(Rect2(Vector2.ZERO, stage.size).encloses(unit.get_rect())).override_failure_message(
+			"Large field projection placed %s outside the tactical stage" % unit.name
+		).is_true()
+
+
+func test_custom_portrait_selects_field_art_on_the_tactical_stage() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var event := CombatEvent.new()
+	event.data = {"snapshot": {
+		"allies": [{
+			"id": "ally-custom", "member_id": "custom-recruit", "display_name": "Custom Recruit",
+			"portrait_path": "res://assets/generated/portraits/player/likeness_01.png",
+			"hp": 20, "max_hp": 20, "position": Vector2i.ZERO, "side": "ally",
+		}],
+		"tiles": [{"x": 0, "y": 0, "height_delta": 0}],
+	}}
+	stage.consume_event(event)
+	await runner.simulate_frames(2)
+	var sprite := stage.get_node("UnitsLayer/Unit_ally-custom") as TextureRect
+	assert_str(sprite.texture.resource_path).is_equal(UnitArt.texture_path("crowd-acolyte-a"))
+
+
 func test_stage_projects_event_tiles_and_emits_cursor_state() -> void:
 	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
 	var stage := runner.scene() as BattleStageRegion

@@ -4,12 +4,11 @@ extends PanelContainer
 signal element_selected(element_id: StringName)
 var _context: Dictionary = {}
 var _selected: StringName = ElementWheel.ORDER[0]
-## Damage the controller quoted for the hovered action (-1 = none). The wheel's
-## Resolution breakdown excludes the positional terms (cover/flank) that ride
-## outside the Resolution context, so the NUMBER shown for a live action must be
-## the controller's — the same calculate_damage path a commit will take. This is
-## display of a controller value, not UI arithmetic.
+## Landed damage quoted by the controller (-1 = none), including mitigation.
+## The raw deterministic outcome remains available for replay/parity checks;
+## presentation uses its conditional quote so it cannot announce a future miss.
 var _payload_damage := -1
+var _class_command_text := ""
 @onready var wheel: Container = %ActWheel
 @onready var target_header: Label = %TargetHeader
 @onready var affinity: Label = %AffinityStrip
@@ -35,6 +34,7 @@ func consume_event(event: CombatEvent) -> void:
 func set_forecast_context(context: Dictionary) -> void:
 	_context = context.duplicate(true)
 	_payload_damage = -1
+	_class_command_text = ""
 	_recompute()
 
 
@@ -44,8 +44,13 @@ func show_action_forecast(payload: Dictionary, context: Dictionary = {}) -> void
 		return
 	if not context.is_empty():
 		set_forecast_context(context)
+	if bool(payload.get("class_command", false)):
+		_class_command_text = str(payload.get("description", "Class command"))
+		_recompute()
+		return
+	_class_command_text = ""
 	if payload.has("damage"):
-		_payload_damage = int(payload.get("damage", -1))
+		_payload_damage = int(payload.get("damage_on_hit", payload.get("damage", -1)))
 		_recompute()
 	var positioning: Dictionary = context.get("positioning", {})
 	var terms: PackedStringArray = []
@@ -96,25 +101,43 @@ func _recompute() -> void:
 	for element_id: StringName in ElementWheel.ORDER:
 		parts.append("%s %+d" % [String(element_id).to_upper(), int(values.get(element_id, values.get(String(element_id), 0)))])
 	affinity.text = "  ".join(parts)
+	if not _class_command_text.is_empty():
+		forecast.text = _class_command_text
+		return
 	var result := forecast_result()
 	if not bool(result.get("allowed", false)):
 		forecast.text = str(result.get("message", "FORECAST UNAVAILABLE"))
 		return
 	var chain: PackedStringArray = []
-	for step: Dictionary in result.get("breakdown", []):
-		chain.append("%s %s" % [str(step.get("label", "")), str(step.get("value", 0))])
-	var shown := _payload_damage if _payload_damage >= 0 else int(result.get("damage", 0))
-	var ability: Dictionary = _context.get("ability", {})
-	var chance := "HIT 90%"
-	if bool(ability.get("is_spell", false)):
-		chance = "FIZZLE %.0f%%" % float(result.get("fizzle_percent", 0.0))
-	# Seam v2: a hidden draw is "?" on the panel unless the context is revealed; the calculation
-	# underneath is unchanged (forecast == resolution), only what the player is told differs.
+	var landed := Resolution.preview_on_hit(_context)
 	var revealed := bool(result.get("reveal", false))
-	var hidden: Dictionary = result.get("hidden_draw", {})
+	for step: Dictionary in landed.get("breakdown", []):
+		# Committed rolls belong in the combat log, never in the aiming preview.
+		if str(step.get("id", "")) == "to_hit":
+			continue
+		if str(step.get("id", "")) == "hidden_draw" and not revealed:
+			continue
+		chain.append("%s %s" % [str(step.get("label", "")), str(step.get("value", 0))])
+	var shown := _payload_damage if _payload_damage >= 0 else int(landed.get("damage", 0))
+	var ability: Dictionary = _context.get("ability", {})
+	var accuracy: Dictionary = result.get("accuracy_breakdown", {})
+	var chance := "HIT %d%%" % int(accuracy.get("effective_hit_chance", result.get("hit_chance", 100)))
+	if bool(ability.get("is_spell", false)):
+		chance += " · FIZZLE %.0f%%" % float(result.get("fizzle_percent", 0.0))
+	# Hidden draws remain masked even when the upcoming committed action will miss.
+	var hidden: Dictionary = landed.get("hidden_draw", {})
 	var shown_text := str(shown)
 	if not hidden.is_empty() and not revealed:
 		shown_text = "?"
 	if revealed:
 		chance += " · TRUE"
-	forecast.text = "%s\nFORECAST %s · %s" % [" × ".join(chain), shown_text, chance]
+	forecast.text = "%s\nFORECAST %s ON HIT · %s" % [" × ".join(chain), shown_text, chance]
+	if bool(accuracy.get("enabled", false)):
+		var terms: PackedStringArray = ["Base %d%%" % int(accuracy["base"])]
+		for modifier: Dictionary in accuracy.get("modifiers", []):
+			terms.append("%s %+d pp" % [str(modifier["label"]), int(modifier["percentage_points"])])
+		if int(accuracy.get("clamp_adjustment", 0)) != 0:
+			terms.append("Clamp %+d pp" % int(accuracy["clamp_adjustment"]))
+		if bool(accuracy.get("guaranteed", false)):
+			terms.append("Guaranteed hit")
+		forecast.text += "\n" + " · ".join(terms)

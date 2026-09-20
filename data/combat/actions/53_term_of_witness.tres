@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"term-of-witness"
+display_name = "Term of Witness"
+kind = 5
+verb = 3
+ap_cost = 2
+ct_cost = 30
+target_profile = &"melee"
+player_available = true
+class_resource_action = &"bind_witness"
+class_resource_target = "enemy"
+class_resource_payload = {"checkpoints": 2}
+description = "Witness Weaver, Tier 1. Bind an enemy at touch: its next attack Exposes it and reveals its signature instead of paying damage. Uses a Thread."

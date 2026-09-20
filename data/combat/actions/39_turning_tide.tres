@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"turning-tide"
+display_name = "Turning Tide"
+kind = 0
+verb = 2
+ap_cost = 4
+ct_cost = 60
+element_id = &"luth"
+magnitude = &"song"
+target_profile = &"cells"
+player_available = true
+effect_id = &"turning_tide"
+effect_payload = {"range": 4, "cell_count": 1, "radius": 1, "budget": 12, "recipients": 3, "mode": "A"}
+spell = true
+breath_cost = 12
+description = "Luth Sequence. Mode A: split up to 12 paid Breath among up to three allies within 1 of a cell within 4. Mode B: quench that refuge and Soak allies and quenched creatures. Choose at commit."

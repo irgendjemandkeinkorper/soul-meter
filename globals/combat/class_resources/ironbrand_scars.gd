@@ -41,6 +41,17 @@ func commands() -> Array[StringName]:
 	return [&"spend_scars"]
 
 
+func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
+	var gate := super.query_command(action_id, target_id, payload)
+	if not bool(gate.allowed):
+		return gate
+	if guaranteed_hit_armed:
+		return command_refusal(&"class_resource_armed", "Your guaranteed hit is already armed. Resolve an attack first.")
+	if scars <= 0:
+		return command_refusal(&"class_resource_empty", "No Scars banked. Taking damage banks a Scar.")
+	return gate
+
+
 func on_command(action_id: StringName, _target_id: StringName) -> void:
 	if action_id != &"spend_scars":
 		return

@@ -4,6 +4,7 @@ extends Screen
 ## advancement point-spend surface. Member list on the left mirrors ui/screens/party.gd.
 
 const WheelWidgetScript := preload("res://ui/components/wheel_widget.gd")
+const PartyMemberVisualsScript := preload("res://actors/party_followers/party_member_visuals.gd")
 
 var _member_list: ItemList
 var _sheet_column: VBoxContainer
@@ -11,6 +12,7 @@ var _selected_member: PartyMember
 
 
 func _build() -> void:
+	_add_opaque_backdrop()
 	var vbox := _make_shell_window("Register of Persons")
 
 	var row := HBoxContainer.new()
@@ -21,8 +23,10 @@ func _build() -> void:
 	_member_list = ItemList.new()
 	_member_list.name = "MemberList"
 	_member_list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_member_list.custom_minimum_size = Vector2(240, 0)
+	_member_list.custom_minimum_size = Vector2(320, 0)
 	_member_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_member_list.fixed_icon_size = Vector2i(64, 64)
+	_member_list.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	row.add_child(_member_list)
 
 	var scroll := ScrollContainer.new()
@@ -38,7 +42,10 @@ func _build() -> void:
 	scroll.add_child(_sheet_column)
 
 	for member in GameState.party:
-		_member_list.add_item("%s  (Lv %d)" % [member.display_name, member.level])
+		_member_list.add_item(
+			"%s  (Lv %d)" % [member.display_name, member.level],
+			PartyMemberVisualsScript.ensure_portrait(member)
+		)
 	_member_list.item_selected.connect(_on_selected)
 	if GameState.party.size() > 0:
 		_member_list.select(0)
@@ -114,6 +121,18 @@ func _rebuild_sheet() -> void:
 	var side_column := VBoxContainer.new()
 	side_column.custom_minimum_size = Vector2(320, 0)
 	body.add_child(side_column)
+	var portrait_frame := PanelContainer.new()
+	portrait_frame.theme_type_variation = "NpcPortraitFrame8"
+	portrait_frame.custom_minimum_size = Vector2(256, 256)
+	side_column.add_child(portrait_frame)
+	var portrait := TextureRect.new()
+	portrait.name = "MemberPortrait"
+	portrait.texture = PartyMemberVisualsScript.ensure_portrait(member)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait_frame.add_child(portrait)
 
 	# --- Attributes (fixed after creation, owner 2026-08-24) ---
 	if not member.attributes.is_empty():

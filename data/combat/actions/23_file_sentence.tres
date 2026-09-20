@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"file-sentence"
+display_name = "File Sentence"
+kind = 5
+verb = 3
+ap_cost = 2
+ct_cost = 2
+target_profile = &"ranged"
+player_available = true
+class_resource_action = &"file_sentence"
+class_resource_target = "enemy"
+class_resource_payload = {"amount": 6, "delay_rounds": 2}
+description = "File 6 damage against an enemy, due two rounds later. Up to three pending sentences."
+## PROVISIONAL first playable action: costs follow Record Name; payoff/delay await balance review.

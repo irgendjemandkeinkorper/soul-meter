@@ -36,6 +36,7 @@ func _build() -> void:
 	backdrop.color = DS.VOID_1
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backdrop.visible = not Battle.session_active
 	add_child(backdrop)
 
 	var safe_frame := MarginContainer.new()
@@ -55,18 +56,23 @@ func _build() -> void:
 	stage_space.clip_contents = true
 	layout.add_child(stage_space)
 
-	_stage = BATTLE_STAGE_SCENE.instantiate() as Control
-	_stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	stage_space.add_child(_stage)
-	Battle.combat_event.connect(Callable(_stage, "consume_event"))
-	Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
+	if not Battle.session_active:
+		_stage = BATTLE_STAGE_SCENE.instantiate() as Control
+		_stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		stage_space.add_child(_stage)
+		Battle.combat_event.connect(Callable(_stage, "consume_event"))
+		Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
 
 	_battle_interface = BATTLE_INTERFACE_SCENE.instantiate() as BattleInterface
 	_battle_interface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_battle_interface.z_index = 4
 	stage_space.add_child(_battle_interface)
+	if Battle.session_active and Battle._current_field_map() != null:
+		_battle_interface.stage.bind_field(Battle._current_field_map())
 	Battle.combat_event.connect(_battle_interface.consume_event)
+	_battle_interface.stage.set_replaying(true)
 	Battle.replay_combat_events(_battle_interface.consume_event)
+	_battle_interface.stage.set_replaying(false)
 	if Battle.controller != null and Battle.controller.scheduler != null:
 		_battle_interface.bind_controller(Battle.controller)
 
@@ -112,18 +118,27 @@ func _make_command_dock() -> Control:
 	command_title.text = "COMMAND"
 	command_title.theme_type_variation = "EyebrowLabel"
 	command_column.add_child(command_title)
-	# Four columns keep the dock short — with two, the two-line action buttons
-	# stacked the grid taller than the rail this dock replaced.
+	# The action catalog grows with the class kits. Scroll its rows inside the
+	# dock so every command remains reachable without shrinking the battlefield.
+	var action_scroll := ScrollContainer.new()
+	action_scroll.name = "ActionScroll"
+	action_scroll.custom_minimum_size = Vector2(0, 84)
+	action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	action_scroll.follow_focus = true
+	command_column.add_child(action_scroll)
 	_actions_box = GridContainer.new()
 	_actions_box.columns = 4
 	_actions_box.theme_type_variation = "BattleActionGrid"
-	_actions_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	command_column.add_child(_actions_box)
+	_actions_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_scroll.add_child(_actions_box)
 	for action in Battle.available_actions():
 		var button := _menu_button(_actions_box, _short_action_text(action), _use_action.bind(action.id))
 		# No autowrap: single-line labels keep the grid two rows tall — wrapped
 		# labels grew the dock past the rail it replaced.
 		button.custom_minimum_size = Vector2(0, 26)
+		button.clip_text = true
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.tooltip_text = _action_tooltip(action)
 		_action_buttons.append(button)
 	var command_footer := HBoxContainer.new()
@@ -223,8 +238,15 @@ func _use_action(action_id: StringName) -> void:
 	if action != null and action.kind == CombatAction.Kind.DEFINING_STRIKE:
 		_open_weakness_dialog()
 		return
-	if action != null and action.requires_enemy_target() and is_instance_valid(_battle_interface):
-		_battle_interface.select_pointer_action(action_id)
+	if action != null and is_instance_valid(_battle_interface):
+		if action.targets_cells() or action.targets_any_side() or (
+			action.class_resource_action.is_empty() and action.target_side == "ally"
+		):
+			# Cell workings and creature-side cards are aimed on the stage; the button only arms.
+			_battle_interface.select_pointer_action(action_id)
+			return
+		if action.requires_enemy_target():
+			_battle_interface.select_pointer_action(action_id)
 	Battle.use_action(action_id)
 
 
@@ -294,12 +316,15 @@ func _update_weakness_forecast(index: int) -> void:
 		_weakness_forecast.text = str(forecast.get("message", "Strike unavailable."))
 		return
 	var effect_name := str(forecast.get("effect_id", "")).replace("_", " ").capitalize()
+	var resolution: Dictionary = forecast.get("resolution", {})
+	var accuracy: Dictionary = resolution.get("accuracy_breakdown", {})
 	_weakness_forecast.text = (
-		"COST %d AP  ·  CHANCE %.0f%%\nFORECAST %d DAMAGE  ·  %s"
+		"COST %d AP  ·  KNOWLEDGE %.0f%%  ·  HIT %d%%\nFORECAST %d DAMAGE ON HIT\n%s requires a successful knowledge check and a hit."
 		% [
 			int(forecast.get("ap_cost", 0)),
 			float(forecast.get("chance", 0.0)),
-			int(forecast.get("damage", 0)),
+			int(accuracy.get("effective_hit_chance", resolution.get("hit_chance", 100))),
+			int(forecast.get("damage_on_hit", forecast.get("damage", 0))),
 			effect_name if not effect_name.is_empty() else "No additional effect",
 		]
 	)
@@ -323,7 +348,7 @@ func _toggle_tactical_data() -> void:
 
 
 func _refresh() -> void:
-	if not is_instance_valid(_stage):
+	if not is_instance_valid(_battle_interface):
 		return
 	_balance_bar.value = Battle.balance
 	_balance_lbl.text = _balance_text()

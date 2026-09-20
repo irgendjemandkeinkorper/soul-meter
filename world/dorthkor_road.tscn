@@ -1,9 +1,10 @@
-[gd_scene load_steps=43 format=3]
+[gd_scene load_steps=44 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="3_hud"]
 [ext_resource type="PackedScene" path="res://actors/enemy/enemy.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" path="res://actors/hostile/hostile.tscn" id="12_hostile"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="5_exit"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_iso"]
 [ext_resource type="Texture2D" path="res://assets/generated/backgrounds/world/dorthkor-road-terrain-v1.png" id="45_terrain"]
@@ -55,6 +56,7 @@ size = Vector2(30, 14)
 size = Vector2(54, 18)
 
 [node name="DorthkorRoad" type="Node2D"]
+texture_filter = 2
 script = ExtResource("1_location")
 arrival_flag = "chapter_dorthkor_reached"
 y_sort_enabled = true
@@ -140,9 +142,15 @@ position = Vector2(180, 450)
 
 [node name="FieldHUD" parent="." instance=ExtResource("3_hud")]
 
-[node name="BreachHound" parent="." instance=ExtResource("4_enemy")]
+[node name="BreachHound" parent="." instance=ExtResource("12_hostile")]
 position = Vector2(720, 430)
-encounter_id = &"dorthkor-vanguard"
+unit_id = &"gnaal-breach-hound"
+group_id = &"dorthkor-vanguard"
+
+[node name="RiftScavenger" parent="." instance=ExtResource("12_hostile")]
+position = Vector2(820, 500)
+unit_id = &"gnaal-rift-scavenger"
+group_id = &"dorthkor-vanguard"
 
 [node name="MusteredDead" parent="." instance=ExtResource("4_enemy")]
 position = Vector2(1280, 470)
@@ -235,14 +243,16 @@ texture = ExtResource("23_cart")
 offset = Vector2(0, -90)
 
 [node name="CampDrumA" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4319, 0.4319)
+offset = Vector2(0, -111)
 position = Vector2(1500, 800)
 texture = ExtResource("22_drum")
-offset = Vector2(0, -90)
 
 [node name="CampDrumB" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4319, 0.4319)
+offset = Vector2(0, -111)
 position = Vector2(1680, 640)
 texture = ExtResource("22_drum")
-offset = Vector2(0, -90)
 
 [node name="CampLogs" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1580, 620)
@@ -261,9 +271,10 @@ texture = ExtResource("20_marker")
 offset = Vector2(0, -90)
 
 [node name="ShoulderDrum" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4319, 0.4319)
+offset = Vector2(0, -111)
 position = Vector2(850, 560)
 texture = ExtResource("22_drum")
-offset = Vector2(0, -90)
 
 [node name="ShoulderCart" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1120, 300)

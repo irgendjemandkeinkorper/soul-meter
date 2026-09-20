@@ -19,6 +19,12 @@ var _field_state: Label = null
 var _style: Label = null
 var _turns: Label = null
 var _export_path: Label = null
+var _aim_fixture: CheckButton = null
+var _anatomy_fixture: OptionButton = null
+var _aim_controls: VBoxContainer = null
+var _aim_picker: OptionButton = null
+var _aim_quote: Label = null
+var _aim_submit: Button = null
 
 
 func configure(lab: Node, inspector: bool) -> void:
@@ -37,6 +43,7 @@ func update_inspector(payload: Dictionary) -> void:
 		return
 	_update_timeline(payload.get("timeline", []))
 	_update_forecast(payload)
+	_update_aim(payload)
 	_update_field_state(payload)
 	_style.text = _style_text(payload.get("style", {}))
 	_turns.text = _turn_text(payload.get("turns", []), payload.get("outcome", {}))
@@ -129,6 +136,18 @@ func _build_setup() -> void:
 	_tile_charge = _spin(0, TileState.MAX_CHARGE_LEVEL, 0)
 	tile_row.add_child(_tile_charge)
 	column.add_child(tile_row)
+	var aim_row := HBoxContainer.new()
+	_aim_fixture = CheckButton.new()
+	_aim_fixture.name = "CalledShotFixture"
+	_aim_fixture.text = tr("Called-shot fixture (provisional)")
+	aim_row.add_child(_aim_fixture)
+	_anatomy_fixture = OptionButton.new()
+	_anatomy_fixture.name = "AnatomyFixture"
+	for profile: Array in [["Exposed anatomy", "exposed"], ["Arm covered", "covered_arm"], ["No throat", "no_throat"]]:
+		_anatomy_fixture.add_item(tr(profile[0]))
+		_anatomy_fixture.set_item_metadata(_anatomy_fixture.item_count - 1, profile[1])
+	aim_row.add_child(_anatomy_fixture)
+	column.add_child(aim_row)
 
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
@@ -159,9 +178,13 @@ func _build_inspector() -> void:
 	margin.add_theme_constant_override("margin_right", 18)
 	margin.add_theme_constant_override("margin_bottom", 14)
 	panel.add_child(margin)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	margin.add_child(scroll)
 	var column := VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 8)
-	margin.add_child(column)
+	scroll.add_child(column)
 
 	column.add_child(_heading("COMBAT LAB — LIVE RESOLUTION", 20))
 	var buttons := HBoxContainer.new()
@@ -183,6 +206,7 @@ func _build_inspector() -> void:
 	buttons.add_child(hide)
 	column.add_child(buttons)
 
+	_build_aim_controls(column)
 	_timeline = _section(column, "CT TIMELINE")
 	_forecast = _section(column, "FORECAST → RESOLUTION")
 	_divergence = Label.new()
@@ -217,7 +241,68 @@ func _start_battle() -> void:
 			"charge": int(_tile_charge.value),
 		},
 		"seed": Time.get_ticks_usec(),
+		"called_shot_fixture": _aim_fixture.button_pressed,
+		"anatomy_fixture": str(_anatomy_fixture.get_selected_metadata()),
 	})
+
+
+func _build_aim_controls(parent: VBoxContainer) -> void:
+	_aim_controls = VBoxContainer.new()
+	_aim_controls.name = "AimControls"
+	parent.add_child(_aim_controls)
+	var title := Label.new()
+	title.text = tr("CALLED SHOTS — PROVISIONAL FIXTURE")
+	title.theme_type_variation = &"StatLabel"
+	_aim_controls.add_child(title)
+	_aim_picker = OptionButton.new()
+	_aim_picker.name = "AimLocation"
+	for row: Array in [["Ordinary attack", ""], ["Torso", "torso"], ["Arm", "arm"], ["Throat", "throat"]]:
+		_aim_picker.add_item(tr(row[0]))
+		_aim_picker.set_item_metadata(_aim_picker.item_count - 1, row[1])
+	_aim_picker.item_selected.connect(func(index: int) -> void:
+		_lab.call("select_lab_aim", StringName(_aim_picker.get_item_metadata(index)))
+	)
+	_aim_controls.add_child(_aim_picker)
+	_aim_quote = Label.new()
+	_aim_quote.name = "AimQuote"
+	_aim_quote.theme_type_variation = &"StatLabel"
+	_aim_quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_aim_controls.add_child(_aim_quote)
+	_aim_submit = Button.new()
+	_aim_submit.name = "SubmitAim"
+	_aim_submit.text = tr("FIRE LAB SHOT")
+	_aim_submit.theme_type_variation = &"BronzeButton"
+	_aim_submit.pressed.connect(func() -> void: _lab.call("submit_lab_aim"))
+	_aim_controls.add_child(_aim_submit)
+
+
+func _update_aim(payload: Dictionary) -> void:
+	if _aim_controls == null:
+		return
+	_aim_controls.visible = bool(payload.get("aim_enabled", false))
+	if not _aim_controls.visible:
+		return
+	for index: int in _aim_picker.item_count:
+		if str(_aim_picker.get_item_metadata(index)) == str(payload.get("aim_location", "torso")):
+			_aim_picker.select(index)
+	var quote: Dictionary = payload.get("aim_forecast", {})
+	_aim_submit.disabled = not bool(quote.get("allowed", false))
+	if _aim_submit.disabled:
+		_aim_quote.text = str(quote.get("message", tr("Aim unavailable.")))
+		return
+	var resolution: Dictionary = quote["resolution"]
+	var accuracy: Dictionary = resolution["accuracy_breakdown"]
+	var terms: PackedStringArray = [tr("Base %d%%") % int(accuracy["base"])]
+	for modifier: Dictionary in accuracy["modifiers"]:
+		terms.append("%s %+d pp" % [tr(str(modifier["label"])), int(modifier["percentage_points"])])
+	if int(accuracy["clamp_adjustment"]) != 0:
+		terms.append(tr("Clamp %+d pp") % int(accuracy["clamp_adjustment"]))
+	var use_ct := str(quote.get("scheduler_mode", "ap")) == "ct"
+	_aim_quote.text = tr("%s · COST %d %s · HIT %d%%\n%d DAMAGE ON HIT\n%s\nSynthetic anatomy; injury effects are not enabled.") % [
+		str(quote.get("target_name", "")), int(quote["ct_cost"] if use_ct else quote["ap_cost"]),
+		"CT" if use_ct else "AP", int(accuracy["effective_hit_chance"]),
+		int(quote["damage_on_hit"]), " · ".join(terms),
+	]
 
 
 func _on_party_selection_changed(index: int, selected: bool) -> void:

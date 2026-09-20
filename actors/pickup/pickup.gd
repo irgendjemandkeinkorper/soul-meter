@@ -12,10 +12,21 @@ const THEFT_REPUTATION_DELTA: float = -5.0
 
 
 func _ready() -> void:
-	display_name = "Pickup"
+	var prototypes := GameState.inventory.get_prototree()
+	var item_name := str(prototypes.get_prototype_property(item_id, "name", "Pickup"))
+	display_name = ItemLocalization.text(item_id, "name", item_name)
 	prompt_text = "Take"
 	repeatable = true
 	super._ready()
+	var texture_path := str(prototypes.get_prototype_property(item_id, "image", ""))
+	if not texture_path.is_empty() and ResourceLoader.exists(texture_path):
+		var texture := load(texture_path) as Texture2D
+		if texture != null:
+			var sprite := $ItemSprite as Sprite2D
+			sprite.texture = texture
+			sprite.scale = Vector2.ONE * (40.0 / maxf(texture.get_width(), texture.get_height()))
+			sprite.offset.y = -texture.get_height() * 0.5
+			$Marker.hide()
 
 
 func _apply_interaction() -> void:

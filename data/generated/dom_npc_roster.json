@@ -154,7 +154,7 @@
         "scene": "res://world/interiors/trial_hall.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",
@@ -257,7 +257,7 @@
         "scene": "res://world/interiors/equipment_shop.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -371,7 +371,7 @@
         "scene": "res://world/interiors/iron_companies.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",
@@ -533,7 +533,7 @@
         "scene": "res://world/interiors/players_house.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -590,7 +590,7 @@
         "scene": "res://world/interiors/town_hall.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -814,7 +814,7 @@
         "scene": "res://world/interiors/town_hall.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",
@@ -1266,7 +1266,7 @@
         "scene": "res://world/interiors/item_shop.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",
@@ -1442,7 +1442,7 @@
         "scene": "res://world/interiors/bell_house.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",
@@ -1545,7 +1545,7 @@
         "scene": "res://world/interiors/players_house.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",
@@ -1664,7 +1664,7 @@
         "scene": "res://world/interiors/registry_archive.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -1840,7 +1840,7 @@
         "scene": "res://world/interiors/item_shop.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -1943,7 +1943,7 @@
         "scene": "res://world/interiors/chefs_house.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",
@@ -2165,7 +2165,7 @@
         "scene": "res://world/interiors/bell_house.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -2281,7 +2281,7 @@
         "scene": "res://world/interiors/iron_companies.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -2446,7 +2446,7 @@
         "scene": "res://world/interiors/trial_hall.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -2503,7 +2503,7 @@
         "scene": "res://world/interiors/river_shrine.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -2736,7 +2736,7 @@
         "scene": "res://world/interiors/chefs_house.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          64.0,
+          128.0,
           0.0
         ],
         "facing": "west",
@@ -2896,7 +2896,7 @@
         "scene": "res://world/interiors/equipment_shop.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",
@@ -3010,7 +3010,7 @@
         "scene": "res://world/interiors/river_shrine.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",
@@ -3188,7 +3188,7 @@
         "scene": "res://world/interiors/registry_archive.tscn",
         "anchor": "NpcSpot",
         "offset": [
-          -64.0,
+          -128.0,
           0.0
         ],
         "facing": "east",

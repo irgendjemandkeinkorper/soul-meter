@@ -31,7 +31,62 @@ const PROVISIONAL_TO_HIT := {
 }
 
 
+## Data-only explanation of the existing curve. Values are percentage points,
+## not damage multipliers; constructing this record never rolls or mutates state.
+static func accuracy_breakdown(context: Dictionary) -> Dictionary:
+	var enabled := bool(context.get("to_hit_enabled", false))
+	var unit := _dictionary(context.get("unit", {}))
+	var target := _dictionary(context.get("target", {}))
+	var facing := _dictionary(context.get("facing", {}))
+	var positioning := positional_modifiers(
+		int(context.get("height_advantage_steps", 0)), StringName(facing.get("id", &"front"))
+	)
+	var base := int(PROVISIONAL_TO_HIT["base"]) if enabled else 100
+	var modifiers: Array[Dictionary] = []
+	if enabled:
+		modifiers = [
+			{"id": "alacrity", "label": "Alacrity", "percentage_points":
+				(int(unit.get("alacrity", 0)) - int(target.get("alacrity", 0)))
+				* int(PROVISIONAL_TO_HIT["alacrity_mod_per_point"])},
+			{"id": "facing", "label": "Facing", "percentage_points": int(positioning["hit_bonus"])},
+			{"id": "height", "label": "Height", "percentage_points":
+				int(context.get("height_advantage_steps", 0)) * int(PROVISIONAL_TO_HIT["height_mod_per_step"])},
+		]
+		var aim := _dictionary(context.get("aim", {}))
+		if not aim.is_empty() and bool(aim.get("allowed", false)):
+			modifiers.append({"id": "aim", "label": "Aim: %s" % str(aim.get("display_name", "")),
+				"percentage_points": -int(aim.get("accuracy_penalty", 0))})
+	var raw := base
+	for modifier: Dictionary in modifiers:
+		raw += int(modifier["percentage_points"])
+	var chance := clampi(raw, int(PROVISIONAL_TO_HIT["clamp_lo"]), int(PROVISIONAL_TO_HIT["clamp_hi"])) if enabled else 100
+	var guaranteed := not enabled or bool(unit.get("hit", false))
+	return {
+		"enabled": enabled, "base": base, "modifiers": modifiers,
+		"unclamped_chance": raw, "hit_chance": chance,
+		"clamp_adjustment": chance - raw,
+		"minimum": int(PROVISIONAL_TO_HIT["clamp_lo"]) if enabled else 100,
+		"maximum": int(PROVISIONAL_TO_HIT["clamp_hi"]) if enabled else 100,
+		"guaranteed": guaranteed,
+		"effective_hit_chance": 100 if guaranteed else chance,
+	}
+
+
+## Hypothetical landed damage for presentation. The caller's accuracy and cast
+## risks still come from resolve(context); this copy never changes committed rolls.
+static func preview_on_hit(context: Dictionary) -> Dictionary:
+	var preview := context.duplicate(true)
+	var unit := _dictionary(preview.get("unit", {})).duplicate(true)
+	unit["hit"] = true
+	preview["unit"] = unit
+	preview["fizzle_percent_override"] = 0.0
+	return resolve(preview)
+
+
 static func resolve(context: Dictionary) -> Dictionary:
+	var aim := _dictionary(context.get("aim", {}))
+	if not aim.is_empty() and not bool(aim.get("allowed", false)):
+		return aim.duplicate(true)
 	var unit: Dictionary = _dictionary(context.get("unit", {}))
 	var ability: Dictionary = _dictionary(context.get("ability", {}))
 	var target: Dictionary = _dictionary(context.get("target", {}))
@@ -71,6 +126,12 @@ static func resolve(context: Dictionary) -> Dictionary:
 
 	var target_element := ElementWheel.normalize(target.get("element_id", ""))
 	var is_spell := bool(ability.get("is_spell", false))
+	# Composition already identifies the damage-bearing components. Utility spells
+	# retain their effects and costs; a mundane weapon is not made harmless by its label.
+	var direct_damage_enabled := (
+		(not is_spell or not composition.damage_components.is_empty())
+		and not bool(ability.get("no_damage", false))
+	)
 	var fizzle_percent := 0.0
 	var fizzle_roll := 0
 	var fizzled := false
@@ -127,28 +188,19 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var hit_bonus := int(positioning["hit_bonus"])
 	var tile_multiplier := source_tile.action_multiplier(element_id)
 	var to_hit_enabled := bool(context.get("to_hit_enabled", false))
-	var signed_height_steps := int(context.get("height_advantage_steps", 0))
-	var hit_chance := 100
+	var accuracy := accuracy_breakdown(context)
+	var hit_chance := int(accuracy["hit_chance"])
 	var hit_roll := 0
 	var hit := true
 	if to_hit_enabled:
-		# `alacrity` is DRAMGID's name for the old `edge` (DramgidSchema:
-		# "Accuracy, evasion, to-hit difference"). The snapshot key was renamed with
-		# its readers in F3b so there is one name for the stat, not two.
-		var alacrity_delta := int(unit.get("alacrity", 0)) - int(target.get("alacrity", 0))
-		hit_chance = clampi(
-			int(PROVISIONAL_TO_HIT["base"]) + hit_bonus
-				+ int(PROVISIONAL_TO_HIT["height_mod_per_step"]) * signed_height_steps
-				+ int(PROVISIONAL_TO_HIT["alacrity_mod_per_point"]) * alacrity_delta,
-			int(PROVISIONAL_TO_HIT["clamp_lo"]),
-			int(PROVISIONAL_TO_HIT["clamp_hi"]),
-		)
 		if bool(unit.get("hit", false)):
 			hit = true
 		else:
 			hit_roll = _deterministic_hit_roll(context, ability_id, unit, target)
 			hit = hit_roll <= hit_chance
 	var power := maxi(int(ability.get("power", 0)), 0)
+	if not direct_damage_enabled:
+		power = 0
 	var attack_scale := maxf(float(unit.get("attack_scale", 1.0)), 0.0)
 	var target_aftertones := _aftertones(target.get("aftertones", []))
 	var tempo_before := int(unit.get("tempo", 0))
@@ -156,6 +208,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var target_tempo_before := int(target.get("tempo", 0))
 	var target_tempo_after := target_tempo_before
 	var consumed_aftertone := false
+	var consumed_note: Dictionary = {}
 	var target_aftertones_before := target_aftertones.duplicate(true)
 	var has_tham_bend := composition.rule_bends.has(&"creates_cover_anchors_aftertones")
 	var has_khash_bend := composition.rule_bends.has(&"consumes_aftertone_for_burst")
@@ -170,9 +223,10 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var previous_element := ElementWheel.normalize(unit.get("last_cast_element", ""))
 	if is_spell:
 		tempo_after = tempo_before + 1 if not fizzled and previous_element == element_id and previous_element != &"" else 0
-	if not fizzled and has_khash_bend:
+	if direct_damage_enabled and not fizzled and has_khash_bend:
 		for index: int in target_aftertones.size():
 			if not bool(target_aftertones[index].get("anchored", false)):
+				consumed_note = target_aftertones[index].duplicate(true)
 				target_aftertones.remove_at(index)
 				consumed_aftertone = true
 				power += 1 # PROVISIONAL: absent vault burst magnitude, use +1.
@@ -187,6 +241,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		var aftertone_element := ElementWheel.normalize(ability.get("aftertone_element", composition.center_element if composition.center_element != &"" else element_id))
 		var aftertone_rounds := maxi(int(ability.get("aftertone_rounds", 2)), 1)
 		target_aftertones.append({
+			"owner_id": str(unit.get("id", "")),
 			"element": aftertone_element,
 			"remaining_rounds": aftertone_rounds,
 			"held": false,
@@ -220,7 +275,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	scaled_damage *= tile_multiplier
 
 	var target_strike: Dictionary = {"allowed": true, "bonus_damage": 0}
-	if not fizzled:
+	if not fizzled and hit and not target_tile.hush:
 		target_strike = target_tile.strike(element_id)
 		if not bool(target_strike.get("allowed", false)):
 			return _blocked(
@@ -243,7 +298,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var hidden_draw := _dictionary(context.get("hidden_draw", {}))
 	var draw_result: Dictionary = {}
 	var draw_bonus := 0
-	if not hidden_draw.is_empty() and not fizzled and hit:
+	if direct_damage_enabled and not hidden_draw.is_empty() and not fizzled and hit:
 		var rows: Array = hidden_draw.get("rows", []) if hidden_draw.get("rows") is Array else []
 		if not rows.is_empty():
 			var draw_roll := _deterministic_draw_roll(
@@ -279,7 +334,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"delta": hp_after - hp_before,
 	})
 
-	if not source_tile_data.is_empty():
+	if not source_tile_data.is_empty() and not source_tile.hush:
 		var source_before := source_tile_data.duplicate(true)
 		var working_element := (
 			composition.center_element if composition.center_element != &"" else element_id
@@ -298,7 +353,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		if source_before != source_after:
 			writes.append(_tile_write("residue", source_before, source_after))
 
-	if hit and not target_tile_data.is_empty():
+	if hit and not target_tile_data.is_empty() and not target_tile.hush:
 		var target_after := target_tile.to_dict()
 		if target_tile_data != target_after:
 			writes.append(_tile_write("detonation", target_tile_data, target_after))
@@ -332,7 +387,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"after": target_aftertones.duplicate(true),
 		})
 	if consumed_aftertone:
-		writes.append({"kind": "aftertone_spent", "target_id": str(target.get("id", "")), "count": 1})
+		writes.append({"kind": "aftertone_spent", "target_id": str(target.get("id", "")), "count": 1, "consumed": consumed_note})
 	if has_khor_bend and held_caster_aftertones != _aftertones(unit.get("aftertones", [])):
 		writes.append({
 			"kind": "aftertones",
@@ -398,6 +453,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	# TODO(#132): Discipline effects are unanswered; they conservatively contribute no modifier.
 	var result := {
 		"allowed": true,
+		"direct_damage_enabled": direct_damage_enabled,
 		"blocked_by": "",
 		"nearest_unblock": {},
 		"message": "",
@@ -411,6 +467,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"fizzle_roll": fizzle_roll,
 		"hit": hit,
 		"hit_chance": hit_chance,
+		"accuracy_breakdown": accuracy,
 		"hit_roll": hit_roll,
 		"hit_bonus": hit_bonus,
 		"positioning": positioning.duplicate(true),
@@ -448,6 +505,9 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"seed": result["seed"],
 		"deltas": writes.duplicate(true),
 	}
+	if not aim.is_empty():
+		result["aim"] = aim.duplicate(true)
+		result["action_log"]["aim"] = aim.duplicate(true)
 	return result
 
 

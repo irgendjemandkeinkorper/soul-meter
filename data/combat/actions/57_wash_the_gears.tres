@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"wash-the-gears"
+display_name = "Wash the Gears"
+kind = 0
+verb = 2
+ap_cost = 4
+ct_cost = 60
+element_id = &"luth"
+magnitude = &"song"
+target_profile = &"cells"
+player_available = true
+effect_id = &"wash_the_gears"
+effect_payload = {"range": 4, "cell_count": 1, "radius": 1, "mode": "B", "requires_patron": "fickah", "requires_tier": 2}
+spell = true
+breath_cost = 12
+description = "Sluice Runner, Tier 2 (Chord). Turning Tide mode B; enemies in the refuge whose action your Jam cancelled this round are Soaked too."

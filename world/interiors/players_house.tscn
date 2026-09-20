@@ -3,9 +3,9 @@
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_door"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="3_chest"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall.png" id="4_table"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="5_bench"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="6_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-table--long.png" id="4_table"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-bench--plank.png" id="5_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-stool--round.png" id="6_stool"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-clay-pot--decorative.png" id="7_pot"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="8_lantern"]
 [ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="9_ambient_motion"]
@@ -26,14 +26,24 @@ floor_color = Color(0.11, 0.15, 0.16, 1)
 accent_color = Color(0.2, 0.68, 0.72, 1)
 
 [node name="PlayersLoftDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"players_loft_enter"
+editable_children = true
+
+[node name="DoorSprite" parent="PlayersLoftDoor"]
+visible = true
+position = Vector2(0, -52)
+scale = Vector2(0.55, 0.55)
+
+[node name="DoorPanel" parent="PlayersLoftDoor"]
+visible = false
+
 
 [node name="SpawnFromPlayersLoft" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)
 
 [node name="Provisions" parent="." instance=ExtResource("3_chest")]
-position = Vector2(150, 500)
+position = Vector2(300, 1000)
 display_name = "Supply Crate"
 prompt_text = "Open"
 interaction_flag = "loot_opened_players_house_provisions"
@@ -49,19 +59,19 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="TravelStool" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
-position = Vector2(630, 435)
-scale = Vector2(1, 1)
+position = Vector2(1260, 870)
+scale = Vector2(0.093, 0.0645)
 texture = ExtResource("6_stool")
 offset = Vector2(0, -39)
 
 [node name="WashPot" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
-position = Vector2(855, 510)
+position = Vector2(1710, 1020)
 scale = Vector2(0.16, 0.16)
 texture = ExtResource("7_pot")
 offset = Vector2(0, -90)
 
 [node name="HangingLantern" type="Sprite2D" parent="PlayersHouseDressing/SoftDetails"]
-position = Vector2(155, 205)
+position = Vector2(310, 410)
 scale = Vector2(0.23, 0.23)
 texture = ExtResource("8_lantern")
 offset = Vector2(0, -115)
@@ -74,10 +84,10 @@ period = 4.3
 y_sort_enabled = true
 
 [node name="MapTable" type="StaticBody2D" parent="PlayersHouseDressing/SolidProps"]
-position = Vector2(290, 315)
+position = Vector2(580, 630)
 
 [node name="Sprite2D" type="Sprite2D" parent="PlayersHouseDressing/SolidProps/MapTable"]
-scale = Vector2(1.5, 0.8)
+scale = Vector2(0.6, 0.6)
 texture = ExtResource("4_table")
 offset = Vector2(0, -61)
 
@@ -86,10 +96,10 @@ position = Vector2(0, -8)
 shape = SubResource("table_footprint")
 
 [node name="HearthBench" type="StaticBody2D" parent="PlayersHouseDressing/SolidProps"]
-position = Vector2(290, 435)
+position = Vector2(580, 870)
 
 [node name="Sprite2D" type="Sprite2D" parent="PlayersHouseDressing/SolidProps/HearthBench"]
-scale = Vector2(1.125, 1.125)
+scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("5_bench")
 offset = Vector2(0, -46)
 

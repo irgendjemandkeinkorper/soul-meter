@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"rot-the-brace"
+display_name = "Rot the Brace"
+kind = 0
+verb = 2
+ap_cost = 4
+ct_cost = 60
+element_id = &"mozh"
+magnitude = &"song"
+target_profile = &"ranged"
+target_side = "any"
+player_available = true
+effect_id = &"rot_the_brace"
+effect_payload = {"range": 4, "object_damage": 9}
+spell = true
+breath_cost = 12
+no_damage = true
+description = "Mozh Song. Deal 9 integrity damage once to one susceptible timber component within 4. Wet does not protect it; stone rejects."

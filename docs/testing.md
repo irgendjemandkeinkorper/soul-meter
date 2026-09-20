@@ -228,6 +228,16 @@ The four test suites flagged as potentially flaky under headless rendering and n
 
 All 18 test cases passed in this sample (0 failures / 0 skips). A passing sample does not rule out intermittent failures; keep using Xvfb for input-dependent integration tests as described above.
 
+### Whole-tree order dependence (open, 2026-09-15)
+
+A full `scripts/test.sh -a test` run fails four integration suites that pass when run on their
+own, both on the same commit and on the commit before it: `test/integration/test_town_townsfolk.gd`
+(townsfolk dialogue path), `test/integration/test_interior_population.gd` (indoor NPC dialogue
+titles), `test/integration/test_consequence_notices.gd` (FIFO cap at three) and
+`test/integration/test_field_room.gd` (sprint speed). The failures depend on what ran before
+them, so the likely cause is state leaking between suites through an autoload. Untriaged; run
+those four in isolation until it is fixed, and do not use their whole-tree result as a signal.
+
 ## Manual tests
 
 Some things a machine shouldn't grade: does the balloon text read at a sane pace, does a

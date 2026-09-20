@@ -48,10 +48,31 @@ func accepts_command(action_id: StringName) -> bool:
 	return commands().has(action_id)
 
 
+## Pure readiness check before AP/CT/Soul are committed. Subclasses add resource
+## and payload requirements here; on_command remains the committed mutation hook.
+func query_command(action_id: StringName, _target_id: StringName, _payload: Dictionary = {}) -> Dictionary:
+	if not accepts_command(action_id):
+		return command_refusal(&"class_resource", "This patron cannot use that class action.")
+	return {"allowed": true, "blocked_by": &"", "message": "", "nearest_unblock": {}}
+
+
+func command_refusal(reason: StringName, message: String) -> Dictionary:
+	return {
+		"allowed": false, "blocked_by": reason, "message": message,
+		"nearest_unblock": {"type": &"class_resource", "patron": patron_id},
+	}
+
+
 ## Optional command channel for authored PASS-kind class-resource actions.
 ## Only reached for a command this resource listed in `commands()`.
 func on_command(_action_id: StringName, _target_id: StringName) -> void:
 	pass
+
+
+## Additive payload channel. Existing two-argument command implementations and
+## hook consumers keep working; payload-driven resources override this wrapper.
+func execute_command(action_id: StringName, target_id: StringName, _payload: Dictionary = {}) -> void:
+	on_command(action_id, target_id)
 
 
 ## Seam v2 broadcast: fires on EVERY actor's resource for EVERY `action_resolved` event, after the
@@ -92,6 +113,17 @@ func on_fizzle(_resolution: Dictionary) -> void:
 ## Fires when an HP write by the owner takes a target from alive to 0 HP.
 ## `cause` is the action kind that did it: &"attack", &"cast", or &"defining_strike".
 func on_kill(_target_id: StringName, _cause: StringName) -> void:
+	pass
+
+
+## Broadcast after any combatant falls, including deferred damage.
+func on_combatant_fell(_target_id: StringName) -> void:
+	pass
+
+
+## Final bookkeeping before the finish signal and persistence copy. Only earned,
+## already-due Breath refunds are settled here; time and offensive effects stop.
+func on_battle_end(_victory: bool) -> void:
 	pass
 
 

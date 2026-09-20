@@ -27,14 +27,45 @@ func _ready() -> void:
 	set_process(false)
 	set_physics_process(false)
 	add_to_group(&"hostile")
+	# An authored group that the ledger already recorded as beaten does not come back: the
+	# same check `Enemy` makes, so `defeated_*` flags keep gating pickups and follow-up fights.
+	if group_id != &"":
+		var defeated_flag := EncounterCatalog.defeated_flag(group_id)
+		if not defeated_flag.is_empty() and GameState.flag_is_true(defeated_flag):
+			_retire()
+			return
 	if combat_id.is_empty():
 		var root := _field_root()
 		combat_id = StringName("%s:%s" % [root.scene_file_path, root.get_path_to(self)])
 	var actor := battle_actor()
 	if actor != null:
 		actor.combat_id = combat_id
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+	if sprite != null:
+		sprite.texture = load(UnitArt.texture_path(UnitArt.resolve(String(unit_id)))) as Texture2D
+		sprite.offset = UnitArt.PIVOT_OFFSET
+		UnitArt.apply_world_scale(sprite, get_node_or_null("Shadow"))
+	if is_inside_tree():
+		GridPlacement.snap_to_walkable_cell(self, global_position)
+		var field := _field_map()
+		if field != null:
+			field.register_hostile(self)
 	_configure_sensor()
 	sync_cell.call_deferred()
+
+
+## A beaten mob leaves the field: hide it, switch the sensor off, drop it out of physics, and
+## free it on a later idle frame so nothing that found it this frame touches a dead object.
+func _retire() -> void:
+	visible = false
+	remove_from_group(&"hostile")
+	var sensor := get_node_or_null(NodePath(SENSOR_NAME)) as Area2D
+	if sensor != null:
+		sensor.set_deferred("monitoring", false)
+	set_deferred("process_mode", Node.PROCESS_MODE_DISABLED)
+	set_deferred("collision_layer", 0)
+	set_deferred("collision_mask", 0)
+	queue_free.call_deferred()
 
 
 func battle_actor() -> BattleActor:
@@ -90,6 +121,26 @@ func mark_downed() -> void:
 		actor.hp = 0
 	velocity = Vector2.ZERO
 	_set_sensor_enabled(false)
+	# A downed mob stays on the field as a body the party can walk over (owner ruling 3:
+	# corpses despawn on scene exit, not on the spot). The dim is the field-side echo of the
+	# overlay's KO fade, not a new art call.
+	set_collision_layer_value(1, false)
+	collision_mask = 0
+	modulate = Color(0.55, 0.55, 0.55, 0.7)
+
+
+## D7: the session closed with this hostile still standing — the party fled or fell. It goes
+## back to IDLE at full HP so the next approach re-opens the fight, under the same cooldown
+## a refused alert uses, so it cannot re-alert on the physics frame the field unfreezes.
+func release_from_session() -> void:
+	if state == State.DOWNED or state == State.IDLE:
+		return
+	var actor := battle_actor()
+	if actor != null:
+		actor.hp = actor.max_hp
+	state = State.IDLE
+	_cooldown_until_msec = Time.get_ticks_msec() + int(maxf(realert_cooldown, 0.0) * 1000.0)
+	_set_sensor_enabled(true)
 
 
 ## D9: an IDLE hostile does no per-frame work. Proximity is an Area2D overlap and nothing
@@ -136,7 +187,7 @@ func _check_initial_overlap() -> void:
 func _set_sensor_enabled(enabled: bool) -> void:
 	var sensor := get_node_or_null(NodePath(SENSOR_NAME)) as Area2D
 	if sensor != null:
-		sensor.monitoring = enabled
+		sensor.set_deferred("monitoring", enabled)
 
 
 ## Recomputes and returns this hostile's field cell. Admission reads it live rather than

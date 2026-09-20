@@ -19,6 +19,7 @@ func _ready() -> void:
 	_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_frame)
 	_icon = TextureRect.new()
+	_icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE

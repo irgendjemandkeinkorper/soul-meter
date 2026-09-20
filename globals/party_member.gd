@@ -143,7 +143,7 @@ static func from_dict(data: Dictionary) -> PartyMember:
 		# .import metadata and .ctex cache files are generated implementation details,
 		# not portrait paths emitted by PartyMember.to_dict(), so they stay rejected.
 		if ext in ["png", "jpg", "jpeg", "svg", "webp", "tga"]:
-			if FileAccess.file_exists(portrait_path):
+			if ResourceLoader.exists(portrait_path):
 				var res = load(portrait_path)
 				if res is Texture2D:
 					member.portrait = res
