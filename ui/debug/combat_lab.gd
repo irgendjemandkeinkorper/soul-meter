@@ -313,6 +313,7 @@ func _update_aim(payload: Dictionary) -> void:
 			str(injury.get("id", "")), int(injury.get("chance_on_hit", 0)),
 			int(injury.get("overall_chance", 0)), int(injury.get("min_damage", 1)),
 		]
+	# AP compatibility: the lab shows the AP quote when the CT battlefield flag is off.
 	_aim_quote.text = tr("%s · COST %d %s · HIT %d%%\n%d DAMAGE ON HIT\n%s\n%s") % [
 		str(quote.get("target_name", "")), int(quote["ct_cost"] if use_ct else quote["ap_cost"]),
 		"CT" if use_ct else "AP", int(accuracy["effective_hit_chance"]),

@@ -67,6 +67,7 @@ static func priced_action(action: CombatAction, location: StringName) -> CombatA
 		return action
 	var priced := action.duplicate(true) as CombatAction
 	var profile: Dictionary = action.aim_profiles[location]
+	# AP compatibility: the AP surcharge mirrors the CT surcharge for the AP round economy.
 	priced.ap_cost += int(profile["ap_surcharge"])
 	priced.ct_cost += int(profile["ct_surcharge"])
 	return priced
