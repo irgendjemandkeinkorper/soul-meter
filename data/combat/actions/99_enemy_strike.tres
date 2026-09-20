@@ -9,6 +9,42 @@ display_name = "Strike"
 kind = 0
 verb = 1
 ap_cost = 4
+ct_cost = 45
 target_profile = &"melee"
 center_pull = 0
 player_available = false
+aim_profiles = {
+"arm": {
+"accuracy_penalty": 15,
+"ap_surcharge": 1,
+"ct_surcharge": 10,
+"injury": {
+"chance_on_hit": 50,
+"effects": {
+"attack_accuracy_pp": -10
+},
+"id": "arm-strained",
+"min_damage": 1,
+"severity": "minor"
+}
+},
+"throat": {
+"accuracy_penalty": 25,
+"ap_surcharge": 1,
+"ct_surcharge": 15,
+"injury": {
+"chance_on_hit": 35,
+"effects": {
+"vocal_accuracy_pp": -10
+},
+"id": "throat-bruised",
+"min_damage": 1,
+"severity": "minor"
+}
+},
+"torso": {
+"accuracy_penalty": 5,
+"ap_surcharge": 1,
+"ct_surcharge": 5
+}
+}

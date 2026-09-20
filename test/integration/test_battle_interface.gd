@@ -176,8 +176,9 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	await runner.simulate_frames(1)
 	var panel := interface.act_target_panel
 
-	# An ordinary action shows no aim row.
-	interface.select_pointer_action(&"strike")
+	# An action without authored aim profiles shows no aim row (strike now authors them,
+	# task 11B, so guard is the unaimable control here).
+	interface.select_pointer_action(&"guard")
 	interface._on_tile_hovered({"x": 1, "y": 0})
 	assert_bool(panel.aim_row.visible).is_false()
 

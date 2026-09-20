@@ -211,7 +211,9 @@ func test_called_shot_fixture_is_opt_in_and_missing_or_covered_anatomy_is_refuse
 		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(), "seed": 42,
 	})
 	assert_object(Battle.controller.action_by_id(&"lab-aimed-shot")).is_null()
-	assert_dict(Battle.controller.enemies[0].anatomy).is_empty()
+	# Without the fixture the wight keeps its AUTHORED anatomy (task 11A), not the synthetic one.
+	assert_bool(bool(Battle.controller.enemies[0].anatomy["throat"]["exposed"])).is_true()
+	assert_bool(Battle.controller.enemies[0].anatomy["torso"].has("hidden_by_cover")).is_true()
 	assert_bool((_lab.call("submit_lab_aim") as Dictionary)["allowed"]).is_false()
 
 
