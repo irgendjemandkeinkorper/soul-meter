@@ -27,6 +27,20 @@ aim_profiles = {
 "severity": "minor"
 }
 },
+"head": {
+"accuracy_penalty": 30,
+"ap_surcharge": 1,
+"ct_surcharge": 15,
+"injury": {
+"chance_on_hit": 30,
+"effects": {
+"sight_accuracy_pp": -15
+},
+"id": "sight-blurred",
+"min_damage": 1,
+"severity": "minor"
+}
+},
 "leg": {
 "accuracy_penalty": 15,
 "ap_surcharge": 1,

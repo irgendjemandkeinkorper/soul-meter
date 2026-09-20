@@ -208,7 +208,7 @@ func test_a_campaign_package_may_still_author_its_own_weather() -> void:
 ## row onto the built actor. Absent parts are absent, covered parts are not exposed.
 func test_built_enemies_carry_authored_anatomy_with_absent_and_covered_parts() -> void:
 	var wight := EncounterCatalog.make_actor(&"bog-wight")
-	assert_array(wight.anatomy.keys()).contains_exactly_in_any_order(["torso", "arm", "throat", "leg"])
+	assert_array(wight.anatomy.keys()).contains_exactly_in_any_order(["torso", "arm", "throat", "leg", "head"])
 	assert_bool(bool(wight.anatomy["torso"]["hidden_by_cover"])).is_true()
 	assert_bool(bool(wight.anatomy["throat"]["exposed"])).is_true()
 	var boar := EncounterCatalog.make_actor(&"loam-maddened-boar")

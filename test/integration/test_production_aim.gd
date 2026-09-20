@@ -125,6 +125,63 @@ func test_a_hobbled_ally_pays_more_ap_and_ct_for_the_same_step_and_the_forecast_
 		assert_str(str(after["move_modifiers"][0]["label"])).is_equal("Injury: Leg (movement)")
 
 
+func test_head_is_quoted_on_the_wight_and_hound_and_refused_behind_the_guard_helm() -> void:
+	for charge_time: bool in [false, true]:
+		var controller := _controller(&"bog-wight", charge_time)
+		var forecast := controller.forecast_action(controller.action_by_id(&"strike"), controller.enemies[0], {"aim_location": "head"})
+		assert_bool(forecast["allowed"]).override_failure_message(str(forecast)).is_true()
+		assert_int(int(forecast["injury_forecast"]["chance_on_hit"])).is_equal(30)
+	var hound := _controller(&"gnaal-breach-hound", false)
+	assert_str(str(hound._query_aim(hound.allies[0], hound.enemies[0], hound.action_by_id(&"strike"), "head")["display_name"])).is_equal("Muzzle")
+	var guard := _controller(&"cleaned-jawbrace-guard", false)
+	assert_str(str(guard.query_action(guard.action_by_id(&"strike"), guard.enemies[0], {"aim_location": "head"})["blocked_by"])).is_equal("aim_exposure")
+	var boar := _controller(&"loam-maddened-boar", false)
+	assert_str(str(boar.query_action(boar.action_by_id(&"strike"), boar.enemies[0], {"aim_location": "head"})["blocked_by"])).is_equal("aim_location")
+
+
+func test_an_aimed_head_hit_blurs_sight_for_ranged_and_aimed_shots_but_not_body_swings() -> void:
+	for charge_time: bool in [false, true]:
+		var controller := _controller(&"bog-wight", charge_time)
+		var strike := controller.action_by_id(&"strike")
+		var wight := controller.enemies[0]
+		var vex := controller.allies[0]
+		var options := {"aim_location": "head"}
+		var hit_seed := -1
+		for seed_value: int in 400:
+			controller._sequence = seed_value
+			var resolution: Dictionary = controller.forecast_action(strike, wight, options)["resolution"]
+			if bool(resolution["hit"]) and bool(resolution["injury"]["rolled"]):
+				hit_seed = seed_value
+				break
+		assert_int(hit_seed).is_greater_equal(0)
+		controller._sequence = hit_seed
+		var result := controller.submit_action(strike.id, wight, options)
+		assert_bool(result["allowed"]).override_failure_message(str(result)).is_true()
+		assert_str(str(wight.injuries["head"]["injury_id"])).is_equal("sight-blurred")
+		assert_dict(CombatInjury.persistent_records(wight.injuries)).is_empty()
+		# Mirror the record onto Vex so the attacker-side rule is observable from the player seat.
+		vex.injuries["head"] = (wight.injuries["head"] as Dictionary).duplicate(true)
+		var shot := CombatAction.make(&"test-shot", "Test shot", CombatAction.Kind.ATTACK)
+		shot.ct_cost = 30
+		shot.target_profile = &"ranged"
+		controller._actions[shot.id] = shot
+		assert_array(_labels(controller.forecast_context(vex, wight, shot, {}))).contains(["Injury: Head (sight)"])
+		assert_array(_labels(controller.forecast_context(vex, wight, strike, {"aim_location": "torso"}))).contains(["Injury: Head (sight)"])
+		assert_array(_labels(controller.forecast_context(vex, wight, strike, {}))).not_contains(["Injury: Head (sight)"])
+		var forecast := controller.forecast_action(strike, wight, {"aim_location": "torso"})
+		var labels: Array = []
+		for modifier: Dictionary in forecast["resolution"]["accuracy_breakdown"]["modifiers"]:
+			labels.append(str(modifier["label"]))
+		assert_array(labels).contains(["Injury: Head (sight)"])
+
+
+func _labels(context: Dictionary) -> Array:
+	var labels: Array = []
+	for modifier: Dictionary in context.get("attacker_injury_modifiers", []):
+		labels.append(str(modifier["label"]))
+	return labels
+
+
 func _controller(archetype: StringName, charge_time: bool, rows: int = 1) -> CombatController:
 	var rules := (load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
 	rules.use_charge_time = charge_time

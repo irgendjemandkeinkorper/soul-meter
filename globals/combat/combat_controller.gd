@@ -2230,14 +2230,21 @@ func forecast_context(
 		resolved_positioning["cover_bonus"] = 0
 	context["positioning"] = resolved_positioning
 	context["visibility"] = visibility_context(actor, target, action)
+	var aim_location := StringName(str(options.get("aim_location", "")))
 	var injury_modifiers: Array[Dictionary] = []
 	if action.kind == CombatAction.Kind.ATTACK and not action.spell:
 		injury_modifiers.append_array(CombatInjury.attack_accuracy_modifiers(actor))
 	if action.requires_voice:
 		injury_modifiers.append_array(CombatInjury.vocal_accuracy_modifiers(actor))
+	# Sight-dependent shots: the physical-visibility applicability, or any called shot.
+	var sight_dependent := (
+		action.kind == CombatAction.Kind.ATTACK and not action.spell
+		and (action.target_profile == &"ranged" or not aim_location.is_empty())
+	)
+	if sight_dependent:
+		injury_modifiers.append_array(CombatInjury.sight_accuracy_modifiers(actor))
 	if not injury_modifiers.is_empty():
 		context["attacker_injury_modifiers"] = injury_modifiers
-	var aim_location := StringName(str(options.get("aim_location", "")))
 	if not aim_location.is_empty():
 		context["aim"] = _query_aim(actor, target, action, aim_location)
 		if bool(context["aim"].get("allowed", false)) and context["aim"].has("injury"):

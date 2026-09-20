@@ -16,6 +16,9 @@ const EFFECT_VOICE_BLOCKED := "voice_blocked"
 ## Leg rule (task 11 legs slice): percent added to the priced cost of every move, expressed
 ## through whichever scheduler is active (AP units or CT). Never immobility.
 const EFFECT_MOVE_COST_PERCENT := "move_cost_percent"
+## Head/eyes rule (task 11 head slice): percentage points paid by shots that depend on sight —
+## ranged non-spell attacks and every aimed attack. Melee swings at the body pay nothing.
+const EFFECT_SIGHT_ACCURACY := "sight_accuracy_pp"
 ## Persistence rule (user decision 2026-09-17): serious injuries outlive combat until treated.
 ## Minor injuries are combat-local under the current authored rule (duration unsettled) and are
 ## dropped at every combat end: victory, defeat, flee, and same-map session end.
@@ -176,3 +179,22 @@ static func move_cost_multiplier(actor: BattleActor) -> float:
 	for modifier: Dictionary in move_cost_modifiers(actor):
 		percent += int(modifier["percent"])
 	return maxf(0.0, 1.0 + float(percent) / 100.0)
+
+
+## Accuracy terms an attacker with impaired sight pays on sight-dependent shots. Separate from
+## Blinded and from physical visibility: a different physical cause, never a second charge of
+## either of those.
+static func sight_accuracy_modifiers(actor: BattleActor) -> Array[Dictionary]:
+	var modifiers: Array[Dictionary] = []
+	if actor == null:
+		return modifiers
+	for location: String in actor.injuries.keys():
+		var record: Dictionary = actor.injuries[location]
+		var points := int((record.get("effects", {}) as Dictionary).get(EFFECT_SIGHT_ACCURACY, 0))
+		if points == 0:
+			continue
+		modifiers.append({
+			"id": "injury", "label": "Injury: %s (sight)" % location.capitalize(),
+			"percentage_points": points, "location_id": location,
+		})
+	return modifiers

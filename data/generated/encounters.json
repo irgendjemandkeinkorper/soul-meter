@@ -48,6 +48,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "head": {
+            "display_name": "Head",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
           "leg": {
             "display_name": "Leg",
             "exposed": true,
@@ -161,6 +166,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "head": {
+            "display_name": "Head",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
           "leg": {
             "display_name": "Leg",
             "exposed": true,
@@ -224,6 +234,11 @@
           "decorum": 1
         },
         "anatomy": {
+          "head": {
+            "display_name": "Muzzle",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
           "leg": {
             "display_name": "Foreleg",
             "exposed": true,
@@ -263,6 +278,11 @@
         "anatomy": {
           "arm": {
             "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "head": {
+            "display_name": "Head",
             "exposed": true,
             "hidden_by_cover": false
           },
@@ -332,6 +352,11 @@
           "arm": {
             "display_name": "Arm",
             "exposed": true,
+            "hidden_by_cover": false
+          },
+          "head": {
+            "display_name": "Helm",
+            "exposed": false,
             "hidden_by_cover": false
           },
           "leg": {
@@ -479,6 +504,11 @@
           "decorum": 1
         },
         "anatomy": {
+          "head": {
+            "display_name": "Muzzle",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
           "leg": {
             "display_name": "Foreleg",
             "exposed": true,
@@ -518,6 +548,11 @@
         "anatomy": {
           "arm": {
             "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "head": {
+            "display_name": "Head",
             "exposed": true,
             "hidden_by_cover": false
           },
@@ -619,6 +654,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "head": {
+            "display_name": "Head",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
           "leg": {
             "display_name": "Leg",
             "exposed": true,
@@ -656,6 +696,11 @@
           "decorum": 1
         },
         "anatomy": {
+          "head": {
+            "display_name": "Muzzle",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
           "leg": {
             "display_name": "Foreleg",
             "exposed": true,
@@ -767,6 +812,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "head": {
+            "display_name": "Head",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
           "leg": {
             "display_name": "Leg",
             "exposed": true,
@@ -865,6 +915,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "head": {
+            "display_name": "Helm",
+            "exposed": false,
+            "hidden_by_cover": false
+          },
           "leg": {
             "display_name": "Leg",
             "exposed": true,
@@ -904,6 +959,11 @@
         "anatomy": {
           "arm": {
             "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "head": {
+            "display_name": "Head",
             "exposed": true,
             "hidden_by_cover": false
           },
@@ -1004,6 +1064,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "head": {
+            "display_name": "Helm",
+            "exposed": false,
+            "hidden_by_cover": false
+          },
           "leg": {
             "display_name": "Leg",
             "exposed": true,
@@ -1043,6 +1108,11 @@
         "anatomy": {
           "arm": {
             "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "head": {
+            "display_name": "Head",
             "exposed": true,
             "hidden_by_cover": false
           },
