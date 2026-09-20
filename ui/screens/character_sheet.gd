@@ -227,6 +227,9 @@ func _rebuild_sheet() -> void:
 		wheel_caption.modulate = Color(1, 1, 1, 0.6)
 		side_column.add_child(wheel_caption)
 
+	# --- Injuries (called-shots 10C): serious records and qualified field treatment ---
+	_render_injuries(main_column, member)
+
 	# --- Recent checks (FR-205, toggleable for Archivists) ---
 	main_column.add_child(_section("Recent Checks"))
 	var toggle := CheckButton.new()
@@ -262,6 +265,142 @@ func _rebuild_sheet() -> void:
 					else Color(1, 0.75, 0.75, 0.85)
 				)
 				log_column.add_child(line)
+
+
+const PRACTITIONER_REASONS: Array[String] = [
+	"unknown_practitioner", "practitioner_down", "unqualified", "practitioner_injured",
+]
+var _practitioner_picks: Dictionary = {}
+## Explicit practitioner choice per location; survives the rebuild a choice triggers.
+var _practitioner_choice: Dictionary = {}
+var _choice_owner: PartyMember
+var _treatment_status: Label
+
+
+## One row per serious injury on the sheet's member (the patient), with a practitioner pick
+## and a field-treatment button carrying the exact supply cost from `InjuryTreatment.quote`.
+## The pick defaults to the first qualified party member so the common case is one press.
+func _render_injuries(column: VBoxContainer, patient: PartyMember) -> void:
+	column.add_child(_section("Injuries"))
+	_treatment_status = Label.new()
+	_treatment_status.name = "TreatmentStatus"
+	_treatment_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_treatment_status.modulate = Color(1, 1, 1, 0.7)
+	column.add_child(_treatment_status)
+	_practitioner_picks.clear()
+	if _selected_member != _choice_owner:
+		_practitioner_choice.clear()
+		_choice_owner = _selected_member
+	var rows := InjuryTreatment.treatable_rows(GameState).filter(
+		func(row: Dictionary) -> bool: return row["member"] == patient
+	)
+	if rows.is_empty():
+		var none := Label.new()
+		none.name = "NoInjuries"
+		none.text = "(no serious injuries)"
+		none.modulate = Color(1, 1, 1, 0.5)
+		column.add_child(none)
+		return
+	for row: Dictionary in rows:
+		for card_id: String in InjuryTreatment.field_cards():
+			_add_injury_row(column, patient, str(row["location"]), row["record"], card_id)
+
+
+func _add_injury_row(column: VBoxContainer, patient: PartyMember, location: String, record: Dictionary, card_id: String) -> void:
+	var card: Dictionary = InjuryTreatment.CARDS[card_id]
+	var box := VBoxContainer.new()
+	box.name = "Injury_%s" % location
+	column.add_child(box)
+	var title := Label.new()
+	title.name = "InjuryTitle_%s" % location
+	var lifts: Array = InjuryTreatment._restrictions(record)
+	title.text = "%s  •  serious  •  %s  •  %s" % [
+		location.capitalize(),
+		" / ".join(PackedStringArray(lifts)).replace("_", " ") if not lifts.is_empty() else "no listed restriction",
+		str(record.get("recovery", "untreated")),
+	]
+	box.add_child(title)
+	var controls := HBoxContainer.new()
+	controls.add_theme_constant_override("separation", 12)
+	box.add_child(controls)
+	var pick := OptionButton.new()
+	pick.name = "Practitioner_%s" % location
+	var default_index := -1
+	for index in GameState.party.size():
+		var candidate: PartyMember = GameState.party[index]
+		pick.add_item(candidate.display_name, index)
+		# Default to the first candidate who is not refused for a practitioner reason, so a
+		# missing supply is reported as a missing supply and not as the patient's own skill.
+		var candidate_quote := _field_quote(patient, record, card_id, candidate)
+		if default_index < 0 and not PRACTITIONER_REASONS.has(str(candidate_quote.get("blocked_by", ""))):
+			default_index = index
+	var chosen := int(_practitioner_choice.get(location, -1))
+	if chosen < 0 or chosen >= GameState.party.size():
+		chosen = maxi(default_index, 0)
+	pick.select(chosen)
+	pick.item_selected.connect(func(index: int) -> void:
+		_practitioner_choice[location] = index
+		_rebuild_sheet())
+	_practitioner_picks[location] = pick
+	controls.add_child(pick)
+	var practitioner: PartyMember = GameState.party[pick.selected] if not GameState.party.is_empty() else null
+	var quoted := _field_quote(patient, record, card_id, practitioner)
+	var supply := str(card["supply_item"])
+	var button := Button.new()
+	button.name = "FieldTreat_%s" % location
+	button.text = "%s  •  %d × %s  (carry %d)" % [
+		str(card.get("display_name", card_id)), int(card["supply_quantity"]),
+		ItemLocalization.text(supply, "name", supply.get_file().capitalize()), GameState.item_count(supply),
+	]
+	button.disabled = not bool(quoted["allowed"])
+	button.pressed.connect(_on_field_treat.bind(patient, location, card_id))
+	controls.add_child(button)
+	if not bool(quoted["allowed"]):
+		var why := Label.new()
+		why.name = "InjuryWhy_%s" % location
+		why.text = "%s  %s" % [str(quoted.get("message", "")), str(quoted.get("alternative", card.get("alternative", "")))]
+		why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		why.modulate = Color(1, 0.85, 0.75, 0.85)
+		box.add_child(why)
+
+
+func _field_intent(patient: PartyMember, record: Dictionary, card_id: String, practitioner: PartyMember) -> Dictionary:
+	var identity := CombatInjury.record_identity(record)
+	return {
+		"patient_id": str(patient.id), "instance_id": identity["instance_id"], "revision": identity["revision"],
+		"card_id": card_id, "practitioner_id": str(practitioner.id) if practitioner != null else "",
+	}
+
+
+func _field_quote(patient: PartyMember, record: Dictionary, card_id: String, practitioner: PartyMember) -> Dictionary:
+	return InjuryTreatment.quote(_field_intent(patient, record, card_id, practitioner), GameState, _combat_active())
+
+
+func _on_field_treat(patient: PartyMember, location: String, card_id: String) -> void:
+	var record: Dictionary = patient.injuries.get(location, {})
+	var pick: OptionButton = _practitioner_picks.get(location)
+	var practitioner: PartyMember = GameState.party[pick.selected] if pick != null and pick.selected >= 0 else null
+	var intent := _field_intent(patient, record, card_id, practitioner)
+	var quoted := InjuryTreatment.quote(intent, GameState, _combat_active())
+	if bool(quoted["allowed"]):
+		intent["expected_cost"] = quoted["cost"]
+	var result := InjuryTreatment.commit(intent, GameState, _combat_active())
+	var text := ""
+	if bool(result.get("allowed", false)):
+		var supply := str(result["paid"]["supply_item"])
+		text = "%s treated %s's %s; used %d × %s." % [
+			practitioner.display_name if practitioner != null else "Someone", patient.display_name, location,
+			int(result["paid"]["supply_quantity"]), ItemLocalization.text(supply, "name", supply.get_file().capitalize()),
+		]
+	else:
+		text = "Treatment refused (%s): %s" % [str(result.get("blocked_by", "")).replace("_", " "), str(result.get("message", ""))]
+	_rebuild_sheet()
+	if _treatment_status != null:
+		_treatment_status.text = text
+
+
+static func _combat_active() -> bool:
+	return Battle.session_active or (Battle.controller != null and not Battle.ended)
 
 
 ## Which skills of one group the sheet lists. Every group shows its whole slate except

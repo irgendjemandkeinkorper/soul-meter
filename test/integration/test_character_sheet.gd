@@ -180,3 +180,119 @@ func test_a_tone_with_progress_stays_listed_but_cannot_be_raised() -> void:
 	assert_object(buy).is_not_null()
 	assert_bool(buy.disabled).is_true()
 	assert_str(buy.text).is_equal("not held")
+
+
+# --- Called-shots 10C: field treatment on the sheet -----------------------------------------
+
+var _treatment_gs: Dictionary
+
+
+func _injured_party() -> Array[PartyMember]:
+	var vex := _vex()
+	vex.hp = 9
+	vex.max_hp = 20
+	_wound(vex, "throat", "k1")
+	_wound(vex, "arm", "k2")
+	var serai := PartyMember.new()
+	serai.id = "serai"
+	serai.display_name = "Serai"
+	serai.hp = 12
+	serai.max_hp = 12
+	serai.skill_tiers = {"mending": "trained"}
+	var party: Array[PartyMember] = [vex, serai]
+	return party
+
+
+static func _wound(member: PartyMember, location: String, key: String) -> void:
+	var injury_id := "throat-crushed" if location == "throat" else "arm-severed"
+	member.injuries[location] = {
+		"injury_id": injury_id, "instance_id": "%s@%s|%s" % [injury_id, location, key],
+		"location_id": location, "severity": "serious", "applications": 1,
+		"effects": {"voice_blocked": true} if location == "throat" else {"attack_accuracy_pp": -10},
+		"recovery": "untreated",
+	}
+
+
+func test_field_treatment_picks_the_qualified_practitioner_and_cures_only_the_selected_injury() -> void:
+	var gp_before := GameState.gp
+	var soul_before := GameState.soul_meter
+	GameState.party = _injured_party()
+	GameState.remove_items(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE, GameState.item_count(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE))
+	Battle.controller = null
+	Battle.ended = true
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
+	await runner.simulate_frames(2)
+	assert_str((runner.find_child("InjuryTitle_throat", true, false) as Label).text).contains("Throat  •  serious  •  voice")
+	var button := runner.find_child("FieldTreat_throat", true, false) as Button
+	assert_str(button.text).contains("1 × Bitterleaf Poultice  (carry 0)")
+	assert_bool(button.disabled).is_true()
+	assert_str((runner.find_child("InjuryWhy_throat", true, false) as Label).text).contains("No bitterleaf_poultice to hand")
+	# Last supply unit arrives; the qualified practitioner is picked by default.
+	GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE)
+	(runner.scene() as Node).call("_rebuild_sheet")
+	await runner.simulate_frames(1)
+	var pick := runner.find_child("Practitioner_throat", true, false) as OptionButton
+	assert_str(pick.get_item_text(pick.selected)).is_equal("Serai")
+	button = runner.find_child("FieldTreat_throat", true, false) as Button
+	assert_bool(button.disabled).is_false()
+	# Switching to the untrained patient herself gives a precise reason.
+	pick.select(0)
+	pick.item_selected.emit(0)
+	await runner.simulate_frames(1)
+	button = runner.find_child("FieldTreat_throat", true, false) as Button
+	assert_bool(button.disabled).is_true()
+	assert_str((runner.find_child("InjuryWhy_throat", true, false) as Label).text).contains("Vex lacks Trained Mending")
+	pick = runner.find_child("Practitioner_throat", true, false) as OptionButton
+	pick.select(1)
+	pick.item_selected.emit(1)
+	await runner.simulate_frames(1)
+	button = runner.find_child("FieldTreat_throat", true, false) as Button
+	button.pressed.emit()
+	await runner.simulate_frames(1)
+	var vex: PartyMember = GameState.party[0]
+	assert_array(vex.injuries.keys()).is_equal(["arm"])
+	assert_int(vex.hp).is_equal(9)
+	assert_int(GameState.item_count(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE)).is_equal(0)
+	assert_int(GameState.gp).is_equal(gp_before)
+	assert_float(GameState.soul_meter).is_equal_approx(soul_before, 0.001)
+	assert_str((runner.find_child("TreatmentStatus", true, false) as Label).text).contains("Serai treated Vex's throat; used 1 × Bitterleaf Poultice.")
+	assert_object(runner.find_child("Injury_throat", true, false)).is_null()
+	assert_object(runner.find_child("Injury_arm", true, false)).is_not_null()
+
+
+func test_injured_hands_block_field_care_but_a_hurt_throat_does_not_and_combat_start_refuses() -> void:
+	GameState.party = _injured_party()
+	var serai: PartyMember = GameState.party[1]
+	GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE)
+	_wound(serai, "arm", "m1")
+	Battle.controller = null
+	Battle.ended = true
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
+	await runner.simulate_frames(2)
+	var pick := runner.find_child("Practitioner_throat", true, false) as OptionButton
+	pick.select(1)
+	pick.item_selected.emit(1)
+	await runner.simulate_frames(1)
+	assert_bool((runner.find_child("FieldTreat_throat", true, false) as Button).disabled).is_true()
+	assert_str((runner.find_child("InjuryWhy_throat", true, false) as Label).text).contains("Serai's arm injury prevents this treatment")
+	serai.injuries.erase("arm")
+	_wound(serai, "throat", "m2")
+	(runner.scene() as Node).call("_rebuild_sheet")
+	await runner.simulate_frames(1)
+	pick = runner.find_child("Practitioner_throat", true, false) as OptionButton
+	pick.select(1)
+	pick.item_selected.emit(1)
+	await runner.simulate_frames(1)
+	var button := runner.find_child("FieldTreat_throat", true, false) as Button
+	assert_bool(button.disabled).is_false()
+	# Combat begins between the quote and the press: nothing is spent.
+	Battle.controller = CombatController.new()
+	Battle.ended = false
+	button.pressed.emit()
+	await runner.simulate_frames(1)
+	Battle.controller = null
+	Battle.ended = true
+	assert_str((runner.find_child("TreatmentStatus", true, false) as Label).text).contains("combat active")
+	assert_bool((GameState.party[0] as PartyMember).injuries.has("throat")).is_true()
+	assert_int(GameState.item_count(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE)).is_equal(1)
+	GameState.remove_items(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE, 1)

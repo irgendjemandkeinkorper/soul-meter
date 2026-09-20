@@ -30,6 +30,16 @@ const CARDS: Dictionary = {
 		"cures": ["arm", "throat"], "display_name": "Succor of the Held Flame",
 		"alternative": "Root & Reed sets wounds for a fee.",
 	},
+	## PRODUCTION field card (10C). Supply is PROVISIONAL: Bitterleaf Poultice is the existing
+	## field-wound consumable and is used as-is, not renamed; the Pandora resupply pass may
+	## swap it. Trained Mending and an unhurt arm are the proposed prerequisites.
+	"field-mending": {
+		"kind": "field", "skill": "mending", "min_tier": "trained",
+		"supply_item": "consumables/bitterleaf_poultice", "supply_quantity": 1,
+		"cures": ["arm", "throat"], "practitioner_requires": ["arm"],
+		"display_name": "Field mending",
+		"alternative": "Root & Reed sets wounds for a fee; the Shrine of the Held Flame offers succor once.",
+	},
 	"service-test": {
 		"kind": "service", "provider_id": "test-healer", "gp": 20,
 		"cures": ["arm", "throat"],
@@ -155,6 +165,16 @@ static func commit(intent: Dictionary, state: Node, combat_active: bool, inject_
 	result["paid"] = cost
 	result["after"] = {}
 	return result
+
+
+## Field cards (no provider): what a party practitioner can perform outside combat.
+static func field_cards() -> Array[String]:
+	var ids: Array[String] = []
+	for card_id: String in CARDS.keys():
+		var card: Dictionary = CARDS[card_id]
+		if str(card.get("kind", "")) == "field" and not card_id.ends_with("-test"):
+			ids.append(card_id)
+	return ids
 
 
 ## Cards a provider (vendor id) offers, in authored order.
