@@ -14,6 +14,22 @@ extends RefCounted
 const TIER_ORDER: Array[String] = ["untrained", "trained", "expert"]
 
 const CARDS: Dictionary = {
+	## PRODUCTION (10B, provider chosen by the owner 2026-09-19). The fee is PROVISIONAL
+	## pending the encounter/resupply pass; supplies are included, no party Mending needed.
+	"herbalist-service": {
+		"kind": "service", "provider_id": "root-and-reed", "gp": 20, "access": "vendor_band",
+		"cures": ["arm", "throat"], "display_name": "Herbalist's setting",
+		"alternative": "Shrine of the Held Flame offers succor once.",
+	},
+	## Authored finite remedy: the shrine keeper treats one wound per game for anyone, whatever
+	## the party's standing or purse. This is the no-cash / locked-out route, not a global
+	## free-healing rule.
+	"shrine-succor": {
+		"kind": "service", "provider_id": "held-flame-shrine", "gp": 0, "access": "any",
+		"once_flag": "dom_shrine_succor_spent",
+		"cures": ["arm", "throat"], "display_name": "Succor of the Held Flame",
+		"alternative": "Root & Reed sets wounds for a fee.",
+	},
 	"service-test": {
 		"kind": "service", "provider_id": "test-healer", "gp": 20,
 		"cures": ["arm", "throat"],
@@ -61,6 +77,15 @@ static func quote(intent: Dictionary, state: Node, combat_active: bool) -> Dicti
 		"service":
 			if str(intent.get("provider_id", "")) != str(card["provider_id"]):
 				return _blocked("invalid_access", "That provider does not offer this treatment.")
+			if str(card.get("access", "any")) == "vendor_band":
+				var status: Dictionary = state.vendor_trade_status(str(card["provider_id"]))
+				if not bool(status.get("allowed", false)):
+					return _blocked("invalid_access", str(status.get("reason", "PROVIDER UNAVAILABLE")),
+						{"alternative": str(card.get("alternative", ""))})
+			var once_flag := str(card.get("once_flag", ""))
+			if not once_flag.is_empty() and state.flag_is_true(once_flag):
+				return _blocked("remedy_spent", "That succor has already been given.",
+					{"alternative": str(card.get("alternative", ""))})
 			cost["gp"] = int(card["gp"])
 			if not state.can_afford(cost["gp"]):
 				return _blocked("insufficient_gp", "NEED %d GP · HAVE %d" % [cost["gp"], state.gp], {"cost": cost})
@@ -87,7 +112,8 @@ static func quote(intent: Dictionary, state: Node, combat_active: bool) -> Dicti
 		return _blocked("price_changed", "The price has changed; confirm the new quote.", {"cost": cost})
 	return {
 		"allowed": true, "blocked_by": "", "message": "",
-		"card_id": card_id, "patient_id": patient.id, "location": location,
+		"card_id": card_id, "display_name": str(card.get("display_name", card_id)),
+		"patient_id": patient.id, "location": location,
 		"identity": identity, "cost": cost,
 		"before": record.duplicate(true), "after": {},
 		"lifts": _restrictions(record),
@@ -121,11 +147,34 @@ static func commit(intent: Dictionary, state: Node, combat_active: bool, inject_
 		assert(state.gp == gp_before, "treatment rollback must restore GP")
 		return _blocked("apply_failed", "Treatment failed; nothing was spent.", {"cost": cost})
 	assert(is_equal_approx(state.soul_meter, soul_before), "treatment never touches Soul")
+	var once_flag := str(CARDS[str(quoted["card_id"])].get("once_flag", ""))
+	if not once_flag.is_empty():
+		state.set_flag(once_flag, true)
 	state.party_changed.emit()
 	var result := quoted.duplicate(true)
 	result["paid"] = cost
 	result["after"] = {}
 	return result
+
+
+## Cards a provider (vendor id) offers, in authored order.
+static func cards_for_provider(provider_id: String) -> Array[String]:
+	var ids: Array[String] = []
+	for card_id: String in CARDS.keys():
+		if str((CARDS[card_id] as Dictionary).get("provider_id", "")) == provider_id:
+			ids.append(card_id)
+	return ids
+
+
+## Every serious injury in the party as (member, location, record) rows for a UI to list.
+static func treatable_rows(state: Node) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for member: PartyMember in state.party:
+		for location: Variant in member.injuries.keys():
+			var record: Dictionary = member.injuries[location]
+			if str(record.get("severity", "minor")) == CombatInjury.PERSISTENT_SEVERITY:
+				rows.append({"member": member, "location": str(location), "record": record})
+	return rows
 
 
 static func member_by_id(state: Node, member_id: String) -> PartyMember:
