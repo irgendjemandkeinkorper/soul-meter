@@ -41,6 +41,23 @@
           "grit": 2,
           "intuition": 3,
           "decorum": 1
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -132,6 +149,23 @@
           "grit": 4,
           "intuition": 2,
           "decorum": 3
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -178,6 +212,18 @@
           "grit": 3,
           "intuition": 2,
           "decorum": 1
+        },
+        "anatomy": {
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Flank",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       },
       {
@@ -198,6 +244,23 @@
           "grit": 2,
           "intuition": 3,
           "decorum": 1
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -244,6 +307,23 @@
           "grit": 5,
           "intuition": 2,
           "decorum": 3
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Gorget",
+            "exposed": false,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -290,6 +370,13 @@
           "grit": 1,
           "intuition": 1,
           "decorum": 1
+        },
+        "anatomy": {
+          "torso": {
+            "display_name": "Flank",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -365,6 +452,18 @@
           "grit": 3,
           "intuition": 2,
           "decorum": 1
+        },
+        "anatomy": {
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Flank",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       },
       {
@@ -385,6 +484,23 @@
           "grit": 2,
           "intuition": 3,
           "decorum": 1
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -461,6 +577,23 @@
           "grit": 4,
           "intuition": 2,
           "decorum": 3
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       },
       {
@@ -481,6 +614,18 @@
           "grit": 3,
           "intuition": 2,
           "decorum": 1
+        },
+        "anatomy": {
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Flank",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -570,6 +715,23 @@
           "grit": 4,
           "intuition": 2,
           "decorum": 3
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -646,6 +808,23 @@
           "grit": 5,
           "intuition": 2,
           "decorum": 3
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Gorget",
+            "exposed": false,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       },
       {
@@ -666,6 +845,23 @@
           "grit": 2,
           "intuition": 3,
           "decorum": 1
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -741,6 +937,23 @@
           "grit": 5,
           "intuition": 2,
           "decorum": 3
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Gorget",
+            "exposed": false,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       },
       {
@@ -761,6 +974,23 @@
           "grit": 4,
           "intuition": 2,
           "decorum": 3
+        },
+        "anatomy": {
+          "arm": {
+            "display_name": "Arm",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "throat": {
+            "display_name": "Throat",
+            "exposed": true,
+            "hidden_by_cover": false
+          },
+          "torso": {
+            "display_name": "Torso",
+            "exposed": true,
+            "hidden_by_cover": true
+          }
         }
       }
     ]
@@ -825,7 +1055,8 @@
           "grit": 0,
           "intuition": 0,
           "decorum": 0
-        }
+        },
+        "anatomy": {}
       }
     ]
   },
@@ -889,7 +1120,8 @@
           "grit": 0,
           "intuition": 0,
           "decorum": 0
-        }
+        },
+        "anatomy": {}
       }
     ]
   }

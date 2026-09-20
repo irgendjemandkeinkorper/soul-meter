@@ -781,6 +781,7 @@ static func _encounter_artifacts() -> Dictionary:
 			# surface the runtime prefers, and carries Alacrity under its own name.
 			"edge": entity.get_integer("Edge"),
 			"attributes": _combatant_attributes(entity),
+			"anatomy": _parse_json_object(entity.get_string("Anatomy"), "Anatomy", combatant_id),
 		}
 
 	var encounters := {}

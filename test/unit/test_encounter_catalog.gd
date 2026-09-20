@@ -202,3 +202,23 @@ func test_a_campaign_package_may_still_author_its_own_weather() -> void:
 	})
 	var definition := EncounterCatalog.definition(&"package-weather")
 	assert_str(str(definition.get("weather_default", ""))).is_equal("zhur")
+
+
+## Called-shots task 11: anatomy is authored per archetype in canon and rides the generated
+## row onto the built actor. Absent parts are absent, covered parts are not exposed.
+func test_built_enemies_carry_authored_anatomy_with_absent_and_covered_parts() -> void:
+	var wight := EncounterCatalog.make_actor(&"bog-wight")
+	assert_array(wight.anatomy.keys()).contains_exactly_in_any_order(["torso", "arm", "throat"])
+	assert_bool(bool(wight.anatomy["torso"]["hidden_by_cover"])).is_true()
+	assert_bool(bool(wight.anatomy["throat"]["exposed"])).is_true()
+	var boar := EncounterCatalog.make_actor(&"loam-maddened-boar")
+	assert_array(boar.anatomy.keys()).is_equal(["torso"])
+	assert_str(str(boar.anatomy["torso"]["display_name"])).is_equal("Flank")
+	var hound := EncounterCatalog.make_actor(&"gnaal-breach-hound")
+	assert_bool(hound.anatomy.has("arm")).is_false()
+	assert_bool(hound.anatomy.has("throat")).is_true()
+	var guard := EncounterCatalog.make_actor(&"cleaned-jawbrace-guard")
+	assert_bool(bool(guard.anatomy["throat"]["exposed"])).is_false()
+	# Fresh copies: mutating one actor's anatomy never leaks into the next build.
+	wight.anatomy.erase("throat")
+	assert_bool(EncounterCatalog.make_actor(&"bog-wight").anatomy.has("throat")).is_true()
