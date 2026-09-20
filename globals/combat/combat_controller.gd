@@ -1862,6 +1862,16 @@ func _finalize_resolution_damage(
 		)
 		injury["eligible"] = eligible
 		injury["applies"] = eligible and bool(injury.get("rolled", false))
+		# Serious escalation: same roll, higher authored threshold on the same mitigated damage.
+		var serious: Dictionary = injury.get("serious", {})
+		injury["escalated"] = (
+			bool(injury["applies"]) and not serious.is_empty()
+			and damage >= int(serious.get("min_damage", 2147483647))
+		)
+		if bool(injury["escalated"]):
+			injury["id"] = str(serious.get("id", injury.get("id", "")))
+			injury["severity"] = CombatInjury.PERSISTENT_SEVERITY
+			injury["effects"] = (serious.get("effects", {}) as Dictionary).duplicate(true)
 		if bool(injury["applies"]):
 			writes.append({
 				"kind": "injury", "target_id": String(target.combat_id),
@@ -2373,13 +2383,21 @@ func _injury_forecast(resolution: Dictionary, damage_on_hit: int) -> Dictionary:
 	var injury: Dictionary = resolution["injury"]
 	var chances: Dictionary = resolution.get("injury_chance", {})
 	var eligible := damage_on_hit >= int(injury.get("min_damage", 1))
+	var serious: Dictionary = injury.get("serious", {})
+	var serious_eligible := (
+		eligible and not serious.is_empty()
+		and damage_on_hit >= int(serious.get("min_damage", 2147483647))
+	)
 	return {
-		"id": str(injury.get("id", "")), "location_id": str(injury.get("location_id", "")),
-		"severity": str(injury.get("severity", "minor")),
+		"id": str(serious.get("id", "")) if serious_eligible else str(injury.get("id", "")),
+		"location_id": str(injury.get("location_id", "")),
+		"severity": CombatInjury.PERSISTENT_SEVERITY if serious_eligible else str(injury.get("severity", "minor")),
 		"hit_chance": int(chances.get("hit", 0)),
 		"chance_on_hit": int(chances.get("on_hit", 0)) if eligible else 0,
 		"overall_chance": int(chances.get("overall", 0)) if eligible else 0,
 		"eligible": eligible, "min_damage": int(injury.get("min_damage", 1)),
+		"serious_eligible": serious_eligible,
+		"serious_min_damage": int(serious.get("min_damage", 0)) if not serious.is_empty() else 0,
 	}
 
 

@@ -24,6 +24,13 @@ aim_profiles = {
 },
 "id": "arm-strained",
 "min_damage": 1,
+"serious": {
+"effects": {
+"attack_accuracy_pp": -20
+},
+"id": "arm-broken",
+"min_damage": 12
+},
 "severity": "minor"
 }
 },
@@ -38,6 +45,13 @@ aim_profiles = {
 },
 "id": "sight-blurred",
 "min_damage": 1,
+"serious": {
+"effects": {
+"sight_accuracy_pp": -30
+},
+"id": "eye-swollen",
+"min_damage": 14
+},
 "severity": "minor"
 }
 },
@@ -52,6 +66,13 @@ aim_profiles = {
 },
 "id": "leg-hobbled",
 "min_damage": 1,
+"serious": {
+"effects": {
+"move_cost_percent": 100
+},
+"id": "leg-lamed",
+"min_damage": 12
+},
 "severity": "minor"
 }
 },
@@ -66,6 +87,14 @@ aim_profiles = {
 },
 "id": "throat-bruised",
 "min_damage": 1,
+"serious": {
+"effects": {
+"vocal_accuracy_pp": -25,
+"voice_blocked": true
+},
+"id": "throat-crushed",
+"min_damage": 14
+},
 "severity": "minor"
 }
 },

@@ -18,7 +18,7 @@ const CARDS: Dictionary = {
 	## pending the encounter/resupply pass; supplies are included, no party Mending needed.
 	"herbalist-service": {
 		"kind": "service", "provider_id": "root-and-reed", "gp": 20, "access": "vendor_band",
-		"cures": ["arm", "throat"], "display_name": "Herbalist's setting",
+		"cures": ["arm", "throat", "leg", "head"], "display_name": "Herbalist's setting",
 		"alternative": "Shrine of the Held Flame offers succor once.",
 	},
 	## Authored finite remedy: the shrine keeper treats one wound per game for anyone, whatever
@@ -27,7 +27,7 @@ const CARDS: Dictionary = {
 	"shrine-succor": {
 		"kind": "service", "provider_id": "held-flame-shrine", "gp": 0, "access": "any",
 		"once_flag": "dom_shrine_succor_spent",
-		"cures": ["arm", "throat"], "display_name": "Succor of the Held Flame",
+		"cures": ["arm", "throat", "leg", "head"], "display_name": "Succor of the Held Flame",
 		"alternative": "Root & Reed sets wounds for a fee.",
 	},
 	## PRODUCTION field card (10C). Supply is PROVISIONAL: Bitterleaf Poultice is the existing
@@ -36,18 +36,18 @@ const CARDS: Dictionary = {
 	"field-mending": {
 		"kind": "field", "skill": "mending", "min_tier": "trained",
 		"supply_item": "consumables/bitterleaf_poultice", "supply_quantity": 1,
-		"cures": ["arm", "throat"], "practitioner_requires": ["arm"],
+		"cures": ["arm", "throat", "leg", "head"], "practitioner_requires": ["arm"],
 		"display_name": "Field mending",
 		"alternative": "Root & Reed sets wounds for a fee; the Shrine of the Held Flame offers succor once.",
 	},
 	"service-test": {
 		"kind": "service", "provider_id": "test-healer", "gp": 20,
-		"cures": ["arm", "throat"],
+		"cures": ["arm", "throat", "leg", "head"],
 	},
 	"field-test": {
 		"kind": "field", "skill": "mending", "min_tier": "trained",
 		"supply_item": "materials/loamroot_sprig", "supply_quantity": 1,
-		"cures": ["arm", "throat"],
+		"cures": ["arm", "throat", "leg", "head"],
 		## Locations the practitioner needs unhurt to perform this card (authored per card;
 		## a throat injury never blocks nonvocal medicine).
 		"practitioner_requires": ["arm"],

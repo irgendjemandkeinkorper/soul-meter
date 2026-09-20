@@ -49,6 +49,22 @@ static func query(
 		injury["chance_on_hit"] = int(chance)
 		injury["min_damage"] = maxi(int(injury.get("min_damage", 1)), 0)
 		injury["location_id"] = String(location)
+		# Serious escalation (task 11 serious slice): an optional variant that replaces the minor
+		# record when mitigated damage reaches its own, higher threshold. Authored, never rolled
+		# separately, so the forecast's three chances stay exact.
+		if injury.has("serious"):
+			var serious: Variant = injury["serious"]
+			if not serious is Dictionary or str((serious as Dictionary).get("id", "")).is_empty():
+				return _blocked(&"aim_profile", "A serious aim injury must author an id.")
+			var serious_threshold: Variant = (serious as Dictionary).get("min_damage", 0)
+			if not (serious_threshold is int or serious_threshold is float) \
+					or int(serious_threshold) <= int(injury["min_damage"]):
+				return _blocked(&"aim_profile", "A serious aim injury needs a damage threshold above the minor one.")
+			injury["serious"] = {
+				"id": str((serious as Dictionary).get("id", "")),
+				"min_damage": int(serious_threshold),
+				"effects": ((serious as Dictionary).get("effects", {}) as Dictionary).duplicate(true),
+			}
 	var result := {
 		"allowed": true, "location_id": String(location),
 		"display_name": str(anatomy.get("display_name", location)),

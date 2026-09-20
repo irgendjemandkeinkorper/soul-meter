@@ -294,6 +294,10 @@ func _append_aim_forecast(payload: Dictionary) -> void:
 		consequence = tr("INJURY %d%% ON HIT · %d%% OVERALL") % [
 			int(injury.get("chance_on_hit", 0)), int(injury.get("overall_chance", 0)),
 		]
+		if bool(injury.get("serious_eligible", false)):
+			consequence += tr(" · SERIOUS")
+		elif int(injury.get("serious_min_damage", 0)) > 0:
+			consequence += tr(" · SERIOUS AT %d") % int(injury.get("serious_min_damage", 0))
 	elif not injury.is_empty():
 		consequence = tr("INJURY NEEDS %d DAMAGE") % int(injury.get("min_damage", 1))
 	act_target_panel.forecast.text += "\n" + tr("AIM %s · COST %d %s · %s") % [

@@ -35,6 +35,8 @@ func test_absent_and_covered_parts_are_refused_on_real_archetypes() -> void:
 
 func test_an_aimed_arm_hit_on_the_wight_applies_a_minor_injury_that_ends_with_the_fight() -> void:
 	var controller := _controller(&"bog-wight", false)
+	# Below the serious threshold (12): this is the minor case.
+	controller.allies[0].attack = 6
 	var strike := controller.action_by_id(&"strike")
 	var wight := controller.enemies[0]
 	var options := {"aim_location": "arm"}
@@ -75,6 +77,8 @@ func test_leg_is_quoted_on_humanoids_and_the_hound_but_not_the_boar() -> void:
 func test_an_aimed_leg_hit_hobbles_movement_under_both_schedulers_and_ends_with_the_fight() -> void:
 	for charge_time: bool in [false, true]:
 		var controller := _controller(&"bog-wight", charge_time)
+		# Below the serious threshold: the minor case.
+		controller.allies[0].attack = 6
 		var strike := controller.action_by_id(&"strike")
 		var wight := controller.enemies[0]
 		var options := {"aim_location": "leg"}
@@ -142,6 +146,8 @@ func test_head_is_quoted_on_the_wight_and_hound_and_refused_behind_the_guard_hel
 func test_an_aimed_head_hit_blurs_sight_for_ranged_and_aimed_shots_but_not_body_swings() -> void:
 	for charge_time: bool in [false, true]:
 		var controller := _controller(&"bog-wight", charge_time)
+		# Below the serious threshold: the minor case.
+		controller.allies[0].attack = 6
 		var strike := controller.action_by_id(&"strike")
 		var wight := controller.enemies[0]
 		var vex := controller.allies[0]
@@ -173,6 +179,71 @@ func test_an_aimed_head_hit_blurs_sight_for_ranged_and_aimed_shots_but_not_body_
 		for modifier: Dictionary in forecast["resolution"]["accuracy_breakdown"]["modifiers"]:
 			labels.append(str(modifier["label"]))
 		assert_array(labels).contains(["Injury: Head (sight)"])
+
+
+func test_a_heavy_aimed_arm_hit_escalates_to_a_serious_injury_that_persists_and_treatment_covers_every_region() -> void:
+	for charge_time: bool in [false, true]:
+		var controller := _controller(&"bog-wight", charge_time)
+		var strike := controller.action_by_id(&"strike")
+		var wight := controller.enemies[0]
+		var options := {"aim_location": "arm"}
+		var forecast := controller.forecast_action(strike, wight, options)
+		assert_int(int(forecast["damage_on_hit"])).is_greater_equal(12)
+		assert_bool(forecast["injury_forecast"]["serious_eligible"]).is_true()
+		assert_str(str(forecast["injury_forecast"]["id"])).is_equal("arm-broken")
+		assert_str(str(forecast["injury_forecast"]["severity"])).is_equal("serious")
+		assert_int(int(forecast["injury_forecast"]["chance_on_hit"])).is_equal(50)
+		var hit_seed := _hit_seed(controller, strike, wight, options)
+		controller._sequence = hit_seed
+		var result := controller.submit_action(strike.id, wight, options)
+		assert_bool(result["allowed"]).override_failure_message(str(result)).is_true()
+		assert_bool(result["resolution"]["injury"]["escalated"]).is_true()
+		assert_str(str(wight.injuries["arm"]["injury_id"])).is_equal("arm-broken")
+		assert_str(str(wight.injuries["arm"]["severity"])).is_equal("serious")
+		assert_int(int(wight.injuries["arm"]["effects"]["attack_accuracy_pp"])).is_equal(-20)
+		assert_dict(CombatInjury.persistent_records(wight.injuries)).contains_keys(["arm"])
+	for location: String in ["arm", "throat", "leg", "head"]:
+		for card_id: String in ["herbalist-service", "shrine-succor", "field-mending"]:
+			assert_array(InjuryTreatment.CARDS[card_id]["cures"]).contains([location])
+
+
+func test_a_light_aimed_arm_hit_stays_minor_and_the_forecast_names_the_serious_threshold() -> void:
+	var controller := _controller(&"bog-wight", false)
+	var vex := controller.allies[0]
+	vex.attack = 6
+	var strike := controller.action_by_id(&"strike")
+	var wight := controller.enemies[0]
+	var options := {"aim_location": "arm"}
+	var forecast := controller.forecast_action(strike, wight, options)
+	assert_int(int(forecast["damage_on_hit"])).is_less(12)
+	assert_bool(forecast["injury_forecast"]["serious_eligible"]).is_false()
+	assert_int(int(forecast["injury_forecast"]["serious_min_damage"])).is_equal(12)
+	assert_str(str(forecast["injury_forecast"]["id"])).is_equal("arm-strained")
+	controller._sequence = _hit_seed(controller, strike, wight, options)
+	var result := controller.submit_action(strike.id, wight, options)
+	assert_bool(result["allowed"]).override_failure_message(str(result)).is_true()
+	assert_bool(result["resolution"]["injury"]["escalated"]).is_false()
+	assert_str(str(wight.injuries["arm"]["injury_id"])).is_equal("arm-strained")
+	assert_dict(CombatInjury.persistent_records(wight.injuries)).is_empty()
+
+
+func test_enemy_strike_authors_the_same_serious_variants_as_strike() -> void:
+	var strike := CombatActionCatalog.by_id(&"strike")
+	var enemy_strike := CombatActionCatalog.by_id(&"enemy-strike")
+	for location: String in ["arm", "leg", "head", "throat"]:
+		var mine: Dictionary = strike.aim_profiles[location]["injury"]["serious"]
+		var theirs: Dictionary = enemy_strike.aim_profiles[location]["injury"]["serious"]
+		assert_dict(theirs).override_failure_message(location).is_equal(mine)
+		assert_int(int(mine["min_damage"])).is_greater(int(strike.aim_profiles[location]["injury"]["min_damage"]))
+
+
+func _hit_seed(controller: CombatController, action: CombatAction, target: BattleActor, options: Dictionary) -> int:
+	for seed_value: int in 400:
+		controller._sequence = seed_value
+		var resolution: Dictionary = controller.forecast_action(action, target, options)["resolution"]
+		if bool(resolution["hit"]) and bool(resolution["injury"]["rolled"]):
+			return seed_value
+	return -1
 
 
 func _labels(context: Dictionary) -> Array:

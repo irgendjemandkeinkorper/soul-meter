@@ -518,6 +518,8 @@ static func resolve(context: Dictionary) -> Dictionary:
 			"rolled": injury_roll <= chance_on_hit,
 			"applies": false,
 		}
+		if injury_profile.has("serious"):
+			result["injury"]["serious"] = _dictionary(injury_profile.get("serious", {})).duplicate(true)
 		result["injury_chance"] = {
 			"hit": int(accuracy["effective_hit_chance"]),
 			"on_hit": chance_on_hit,
