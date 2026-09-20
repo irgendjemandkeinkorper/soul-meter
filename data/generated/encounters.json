@@ -48,6 +48,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
+          },
           "throat": {
             "display_name": "Throat",
             "exposed": true,
@@ -156,6 +161,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
+          },
           "throat": {
             "display_name": "Throat",
             "exposed": true,
@@ -214,6 +224,11 @@
           "decorum": 1
         },
         "anatomy": {
+          "leg": {
+            "display_name": "Foreleg",
+            "exposed": true,
+            "hidden_by_cover": true
+          },
           "throat": {
             "display_name": "Throat",
             "exposed": true,
@@ -250,6 +265,11 @@
             "display_name": "Arm",
             "exposed": true,
             "hidden_by_cover": false
+          },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
           },
           "throat": {
             "display_name": "Throat",
@@ -313,6 +333,11 @@
             "display_name": "Arm",
             "exposed": true,
             "hidden_by_cover": false
+          },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
           },
           "throat": {
             "display_name": "Gorget",
@@ -454,6 +479,11 @@
           "decorum": 1
         },
         "anatomy": {
+          "leg": {
+            "display_name": "Foreleg",
+            "exposed": true,
+            "hidden_by_cover": true
+          },
           "throat": {
             "display_name": "Throat",
             "exposed": true,
@@ -490,6 +520,11 @@
             "display_name": "Arm",
             "exposed": true,
             "hidden_by_cover": false
+          },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
           },
           "throat": {
             "display_name": "Throat",
@@ -584,6 +619,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
+          },
           "throat": {
             "display_name": "Throat",
             "exposed": true,
@@ -616,6 +656,11 @@
           "decorum": 1
         },
         "anatomy": {
+          "leg": {
+            "display_name": "Foreleg",
+            "exposed": true,
+            "hidden_by_cover": true
+          },
           "throat": {
             "display_name": "Throat",
             "exposed": true,
@@ -722,6 +767,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
+          },
           "throat": {
             "display_name": "Throat",
             "exposed": true,
@@ -815,6 +865,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
+          },
           "throat": {
             "display_name": "Gorget",
             "exposed": false,
@@ -851,6 +906,11 @@
             "display_name": "Arm",
             "exposed": true,
             "hidden_by_cover": false
+          },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
           },
           "throat": {
             "display_name": "Throat",
@@ -944,6 +1004,11 @@
             "exposed": true,
             "hidden_by_cover": false
           },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
+          },
           "throat": {
             "display_name": "Gorget",
             "exposed": false,
@@ -980,6 +1045,11 @@
             "display_name": "Arm",
             "exposed": true,
             "hidden_by_cover": false
+          },
+          "leg": {
+            "display_name": "Leg",
+            "exposed": true,
+            "hidden_by_cover": true
           },
           "throat": {
             "display_name": "Throat",

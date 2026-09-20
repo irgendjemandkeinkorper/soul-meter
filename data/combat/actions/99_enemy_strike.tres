@@ -28,6 +28,20 @@ aim_profiles = {
 "severity": "minor"
 }
 },
+"leg": {
+"accuracy_penalty": 15,
+"ap_surcharge": 1,
+"ct_surcharge": 10,
+"injury": {
+"chance_on_hit": 40,
+"effects": {
+"move_cost_percent": 50
+},
+"id": "leg-hobbled",
+"min_damage": 1,
+"severity": "minor"
+}
+},
 "throat": {
 "accuracy_penalty": 25,
 "ap_surcharge": 1,

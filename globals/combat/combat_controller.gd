@@ -615,12 +615,13 @@ func query_action(
 		var movement := battlefield.move_query(actor, _move_destination(action, options))
 		if not bool(movement.get("allowed", false)):
 			return movement
-		var priced_action := _priced_move_action(action, movement, options)
+		var priced_action := _priced_move_action(action, movement, options, actor)
 		var move_affordability := _can_afford(actor, priced_action)
 		if not bool(move_affordability.get("allowed", false)):
 			return move_affordability
 		movement["ap_cost"] = priced_action.ap_cost
 		movement["ct_cost"] = priced_action.ct_cost
+		movement["move_modifiers"] = CombatInjury.move_cost_modifiers(actor)
 		return movement
 	var affordability := _can_afford(actor, CalledShot.priced_action(action, aim_location))
 	if not bool(affordability.get("allowed", false)):
@@ -695,7 +696,7 @@ func submit_action(
 		return query
 
 	var actor := active_actor()
-	var committed_action := _priced_move_action(action, query, options)
+	var committed_action := _priced_move_action(action, query, options, actor)
 	committed_action = CalledShot.priced_action(
 		committed_action, StringName(str(options.get("aim_location", "")))
 	)
@@ -945,7 +946,10 @@ func _movement_snapshot() -> Dictionary:
 		return {}
 	var base_move_cost := maxi(1, rules.move_ct_cost if rules != null else 1)
 	var per_cell_ap := maxi(1, action.ap_cost)
-	var ct_budget := int(actor.action_points / per_cell_ap) * base_move_cost
+	var ct_budget := int(
+		float(int(actor.action_points / per_cell_ap) * base_move_cost)
+		/ CombatInjury.move_cost_multiplier(actor)
+	)
 	var reachable: Array[Dictionary] = []
 	for destination: StringName in battlefield.reachable_positions(actor, ct_budget):
 		var query := move_query(destination)
@@ -1419,7 +1423,10 @@ func _best_enemy_position(actor: BattleActor, target: BattleActor) -> StringName
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if not target_position.has("cell"):
 		return &""
-	var budget := rules.maximum_action_ct_cost if rules != null else 0
+	var budget := int(
+		float(rules.maximum_action_ct_cost if rules != null else 0)
+		/ CombatInjury.move_cost_multiplier(actor)
+	)
 	var candidates: Array[StringName] = battlefield.reachable_positions(actor, budget)
 	var best := &""
 	var best_score := -2147483648
@@ -1472,7 +1479,9 @@ func _resolve_enemy_move(actor: BattleActor, target: BattleActor, destination: S
 	move_action.target_profile = &"self"
 	move_action.destination = destination
 	move_action.ap_cost = 1
-	move_action.ct_cost = int(path.get("ct_cost", rules.move_ct_cost if rules != null else 0))
+	move_action.ct_cost = _injured_move_ct(
+		actor, int(path.get("ct_cost", rules.move_ct_cost if rules != null else 0))
+	)
 	var commit_result := scheduler.commit(actor, move_action)
 	if not bool(commit_result.get("allowed", false)):
 		_force_pass(actor)
@@ -1593,8 +1602,10 @@ func _query_aim(
 
 ## AP prices the same weighted path the enemy/CT move path quotes. The authored move
 ## action's AP cost is the per-cell rate; elevation can raise the number of cost units.
+## A leg injury raises the path price before either scheduler reads it, so AP units and CT
+## both grow and NPCs pay the same rule (`_resolve_enemy_move`).
 func _priced_move_action(
-	action: CombatAction, movement: Dictionary, options: Dictionary
+	action: CombatAction, movement: Dictionary, options: Dictionary, actor: BattleActor = null
 ) -> CombatAction:
 	if action == null or action.kind != CombatAction.Kind.MOVE:
 		return action
@@ -1602,12 +1613,17 @@ func _priced_move_action(
 	priced.destination = _move_destination(action, options)
 	if movement.has("ct_cost"):
 		var base_move_cost := maxi(1, rules.move_ct_cost if rules != null else 1)
-		var cost_units := maxi(
-			1, ceili(float(movement.get("ct_cost", 0)) / float(base_move_cost))
-		)
+		var path_ct := _injured_move_ct(actor, int(movement.get("ct_cost", base_move_cost)))
+		var cost_units := maxi(1, ceili(float(path_ct) / float(base_move_cost)))
 		priced.ap_cost = maxi(1, action.ap_cost) * cost_units
-		priced.ct_cost = int(movement.get("ct_cost", base_move_cost))
+		priced.ct_cost = path_ct
 	return priced
+
+
+func _injured_move_ct(actor: BattleActor, path_ct: int) -> int:
+	if actor == null:
+		return path_ct
+	return maxi(1, ceili(float(path_ct) * CombatInjury.move_cost_multiplier(actor)))
 
 
 func _apply_action(

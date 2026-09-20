@@ -13,6 +13,9 @@ const EFFECT_ATTACK_ACCURACY := "attack_accuracy_pp"
 const EFFECT_VOCAL_ACCURACY := "vocal_accuracy_pp"
 ## Severe throat rule: actions that require an intact voice are refused until recovery.
 const EFFECT_VOICE_BLOCKED := "voice_blocked"
+## Leg rule (task 11 legs slice): percent added to the priced cost of every move, expressed
+## through whichever scheduler is active (AP units or CT). Never immobility.
+const EFFECT_MOVE_COST_PERCENT := "move_cost_percent"
 ## Persistence rule (user decision 2026-09-17): serious injuries outlive combat until treated.
 ## Minor injuries are combat-local under the current authored rule (duration unsettled) and are
 ## dropped at every combat end: victory, defeat, flee, and same-map session end.
@@ -147,3 +150,29 @@ static func attack_accuracy_modifiers(actor: BattleActor) -> Array[Dictionary]:
 			"percentage_points": points, "location_id": location,
 		})
 	return modifiers
+
+
+## Movement cost terms an injured mover pays, in percent of the path price. Bounded by the
+## one-record-per-location rule, so a refreshed leg never compounds.
+static func move_cost_modifiers(actor: BattleActor) -> Array[Dictionary]:
+	var modifiers: Array[Dictionary] = []
+	if actor == null:
+		return modifiers
+	for location: String in actor.injuries.keys():
+		var record: Dictionary = actor.injuries[location]
+		var percent := int((record.get("effects", {}) as Dictionary).get(EFFECT_MOVE_COST_PERCENT, 0))
+		if percent == 0:
+			continue
+		modifiers.append({
+			"id": "injury", "label": "Injury: %s (movement)" % location.capitalize(),
+			"percent": percent, "location_id": location,
+		})
+	return modifiers
+
+
+## Multiplier applied to a path's CT price before scheduler pricing; 1.0 when unhurt.
+static func move_cost_multiplier(actor: BattleActor) -> float:
+	var percent := 0
+	for modifier: Dictionary in move_cost_modifiers(actor):
+		percent += int(modifier["percent"])
+	return maxf(0.0, 1.0 + float(percent) / 100.0)

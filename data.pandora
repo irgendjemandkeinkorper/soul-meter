@@ -2855,7 +2855,7 @@
 					},
 					"Anatomy": {
 						"type": "string",
-						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
+						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"leg\":{\"display_name\":\"Leg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
 					},
 					"Attack": {
 						"type": "int",
@@ -3009,7 +3009,7 @@
 					},
 					"Anatomy": {
 						"type": "string",
-						"value": "{\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Flank\",\"exposed\":true,\"hidden_by_cover\":true}}"
+						"value": "{\"leg\":{\"display_name\":\"Foreleg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Flank\",\"exposed\":true,\"hidden_by_cover\":true}}"
 					},
 					"Attack": {
 						"type": "int",
@@ -3086,7 +3086,7 @@
 					},
 					"Anatomy": {
 						"type": "string",
-						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
+						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"leg\":{\"display_name\":\"Leg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
 					},
 					"Attack": {
 						"type": "int",
@@ -3163,7 +3163,7 @@
 					},
 					"Anatomy": {
 						"type": "string",
-						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
+						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"leg\":{\"display_name\":\"Leg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
 					},
 					"Attack": {
 						"type": "int",
@@ -3240,7 +3240,7 @@
 					},
 					"Anatomy": {
 						"type": "string",
-						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"throat\":{\"display_name\":\"Gorget\",\"exposed\":false,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
+						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"leg\":{\"display_name\":\"Leg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Gorget\",\"exposed\":false,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
 					},
 					"Attack": {
 						"type": "int",
