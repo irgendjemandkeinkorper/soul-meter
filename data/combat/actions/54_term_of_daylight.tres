@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"term-of-daylight"
+display_name = "Term of Daylight"
+kind = 0
+verb = 2
+ap_cost = 6
+ct_cost = 90
+element_id = &"sul"
+magnitude = &"song"
+target_profile = &"cells"
+player_available = true
+effect_id = &"term_of_daylight"
+effect_payload = {"range": 4, "cell_count": 1, "contract_target": true, "requires_patron": "izhakel", "requires_tier": 2}
+spell = true
+breath_cost = 12
+description = "Witness Weaver, Tier 2 (Chord). Raise a Witness Light and bind an adjacent enemy: its next move ending inside the field carries the revelation with it for one checkpoint. Uses a Thread."

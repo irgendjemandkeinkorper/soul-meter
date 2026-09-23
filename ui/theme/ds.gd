@@ -125,6 +125,13 @@ const TILE_H := 28
 const ELEV_PX := 12
 const ELEVATION_MAX := 3
 
+# World facade presentation — ratified Chapter One field-UX Wave 1.
+const FACADE_OCCLUDED_ALPHA := 0.35
+# Interior presentation — Wave 2. Reuse the darkest surface for unlit building space.
+const INK_0 := VOID_0
+# Existing tavern wood tint, named for the interim textured counter until #309.
+const WOOD_0 := Color(0.31, 0.17, 0.09, 1)
+
 # Per-tile element charge (0-3). Tint alpha is 0.20 + 0.14 x level; charge 0 draws nothing.
 const CHARGE_MAX := 3
 const CHARGE_ALPHA_BASE := 0.20

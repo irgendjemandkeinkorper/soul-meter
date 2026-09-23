@@ -9,8 +9,12 @@ func test_aftertones_tick_and_anchoring() -> void:
 	actor.tick_aftertones()
 	assert_int(actor.aftertones[0]["remaining_rounds"]).is_equal(1)
 	actor.aftertones[0]["anchored"] = true
+	actor.aftertones[0]["held"] = true
 	actor.tick_aftertones()
 	assert_int(actor.aftertones[0]["remaining_rounds"]).is_equal(1)
+	actor.aftertones[0]["held"] = false
+	actor.tick_aftertones()
+	assert_array(actor.aftertones).is_empty()
 
 
 func test_rule_bends_anchor_consume_clear_and_hold_notes() -> void:
@@ -47,6 +51,9 @@ func test_founding_anchors_everyone_and_freezes_duration() -> void:
 	_submit_triad(controller, ElementsData.triad(&"founding"))
 	assert_bool(controller.enemies[0].aftertones[0]["anchored"]).is_true()
 	assert_int(controller.duration_freeze_until_round).is_equal(controller.round_number + 1)
+	var remaining_before := int(controller.enemies[0].aftertones[0]["remaining_rounds"])
+	controller._tick_actor_aftertones()
+	assert_int(int(controller.enemies[0].aftertones[0]["remaining_rounds"])).is_equal(remaining_before)
 	controller.allies[0].aftertones.append({"element": "zhem", "remaining_rounds": 1, "anchored": true})
 	controller.round_number = controller.duration_freeze_until_round + 1
 	controller._expire_temporary_effects()

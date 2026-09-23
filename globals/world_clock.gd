@@ -16,6 +16,8 @@ extends Node
 ## `DEFAULT_PHASE` is the defined value for "clock disabled or never advanced".
 
 signal phase_changed(previous: StringName, current: StringName, cause: String)
+## Actual elapsed world time only; set_phase(), load and reset never emit this.
+signal phase_advanced(phase_count: int)
 ## Fires when a declared advance rolls the day over — the once-a-day hook
 ## `Renown`'s Yothmeru decay rides (docs/architecture-dramgid.md §3.7, RFC-0007
 ## §5). Deliberately emitted ONLY from advance(): restoring a save or resetting
@@ -58,6 +60,7 @@ func advance(cause: String) -> StringName:
 	var current_day := day_index()
 	if current_day != previous_day:
 		day_changed.emit(previous_day, current_day)
+	phase_advanced.emit(phase_count)
 	return _phase
 
 

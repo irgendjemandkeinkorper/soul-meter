@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"floodgate"
+display_name = "Floodgate"
+kind = 0
+verb = 2
+ap_cost = 4
+ct_cost = 60
+element_id = &"luth"
+magnitude = &"refrain"
+target_profile = &"cells"
+player_available = true
+effect_id = &"floodgate"
+effect_payload = {"range": 5, "cell_count": 1, "radius": 1, "budget": 24, "recipients": 4, "mode": "A", "refrain_use": true, "requires_patron": "fickah", "requires_tier": 3}
+spell = true
+breath_cost = 24
+description = "Sluice Runner, Tier 3 (Triad). Great Confluence, instant. An armed Jam retry discharges on the nearest enemy in the refuge as part of the release."

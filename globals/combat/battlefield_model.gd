@@ -99,6 +99,36 @@ func set_cover(_cell: Vector2i, _grants_cover: bool = true) -> void:
 	pass
 
 
+## Authors a solid obstacle that blocks line of fire without changing elevation or passability
+## semantics elsewhere. Models without cells ignore it.
+func set_obstacle(_cell: Vector2i, _blocks_fire: bool = true) -> void:
+	pass
+
+
+## Authored physical visibility of a cell: &"clear", &"dim" or &"obscured". Purely physical
+## (light, smoke, fog); elemental Weather, Witness Light and Shroud never write it.
+func set_visibility(_cell: Vector2i, _level: StringName) -> Dictionary:
+	return _blocked(&"position", "This battlefield has no cells to author.", {"type": &"cells"})
+
+
+func visibility_at(_cell: Vector2i) -> StringName:
+	return &"clear"
+
+
+## One composed physical visibility result for a shot from `actor` at `target`:
+## `{level, causes: [{cell, level}]}`. Overlapping causes compose as the WORST level, never a
+## sum, so the same loss of sight is never counted twice. Cell-less models are always clear.
+func visibility_between(_actor: BattleActor, _target: BattleActor) -> Dictionary:
+	return {"level": &"clear", "causes": []}
+
+
+## Whether low cover between `actor` and `target` hides the target's cover-hidden anatomy:
+## `{covered: bool, cell: Vector2i (when covered), seen_over: bool}`. Only the grid model has
+## the geometry; zones report no cover so every authored location stays exposed.
+func location_cover(_actor: BattleActor, _target: BattleActor) -> Dictionary:
+	return {"covered": false, "seen_over": false}
+
+
 func flank_bonus(_actor: BattleActor, _target: BattleActor) -> int:
 	return 0
 
@@ -172,6 +202,35 @@ func occupant_of(_position: StringName) -> BattleActor:
 ## Elevation delta, target minus actor. The zone model always returns 0.
 func elevation_delta(_actor: BattleActor, _target: BattleActor) -> int:
 	return 0
+
+
+## The cell an actor stands on, or null when this model has no cells or the actor is absent.
+## Consumers still branch on `capabilities().cells`; this is a convenience over
+## `describe_position(position_of(actor))`, never a second handle format.
+func cell_of(_actor: BattleActor) -> Variant:
+	return null
+
+
+## Legality of one cell for area workings, in the refusal shape:
+## `{allowed, in_bounds, passable, occupant_id}`. Models without cells refuse.
+func cell_query(_cell: Vector2i) -> Dictionary:
+	return _blocked(&"position", "Positioning model has no cells.", {"type": &"cells"})
+
+
+## Forced displacement (a pull or a shove): seats `actor` on `cell` with no path or CT cost.
+## The caller has validated the destination; this refuses only what it cannot represent.
+func displace(_actor: BattleActor, _cell: Vector2i) -> Dictionary:
+	return _blocked(&"position", "Positioning model does not support displacement.", {})
+
+
+## Line of sight from an actor to a CELL (an area mark), same taxonomy as `line_of_sight()`.
+func line_of_sight_to_cell(_actor: BattleActor, _cell: Vector2i) -> Dictionary:
+	return _allowed()
+
+
+## Line of sight between two cells, from a remembered cast position rather than a live actor.
+func line_of_sight_between_cells(_from: Vector2i, _to: Vector2i) -> Dictionary:
+	return _allowed()
 
 
 static func _allowed(extra: Dictionary = {}) -> Dictionary:

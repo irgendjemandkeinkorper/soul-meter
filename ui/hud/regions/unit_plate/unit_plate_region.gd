@@ -1,6 +1,8 @@
 class_name UnitPlateRegion
 extends PanelContainer
 
+signal injury_selected(location: String)
+
 const UnitArtScript := preload("res://globals/unit_art.gd")
 
 @onready var portrait: TextureRect = %Portrait
@@ -12,6 +14,13 @@ const UnitArtScript := preload("res://globals/unit_art.gd")
 @onready var element_label: Label = %Element
 @onready var ct_label: Label = %CT
 @onready var resource_label: Label = %Resource
+@onready var injury_badges: HFlowContainer = %InjuryBadges
+
+var _unit: Dictionary = {}
+
+
+func unit_snapshot() -> Dictionary:
+	return _unit.duplicate(true)
 
 
 func consume_event(event: CombatEvent) -> void:
@@ -20,7 +29,12 @@ func consume_event(event: CombatEvent) -> void:
 	if unit.is_empty():
 		unit = _active_from_rosters(snapshot)
 	if unit.is_empty():
+		if snapshot.has("active_actor_id") or snapshot.has("active_unit") or event.type == &"battle_started":
+			_unit = {}
+			_update_injury_badges()
 		return
+	_unit = unit.duplicate(true)
+	_update_injury_badges()
 	name_label.text = str(unit.get("name", unit.get("display_name", unit.get("id", "ACTIVE UNIT"))))
 	hp_label.text = "HP %d / %d" % [int(unit.get("hp", 0)), int(unit.get("max_hp", unit.get("hp", 0)))]
 	breath_label.text = "BREATH %d" % int(unit.get("breath", 0))
@@ -31,14 +45,50 @@ func consume_event(event: CombatEvent) -> void:
 	ct_label.text = _ct_line(unit)
 	resource_label.text = _resource_line(unit.get("class_resource", {}))
 	portrait.texture = _portrait_for(unit)
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
-## Snapshots carry no portrait textures — fall back to the same painterly unit
+func _update_injury_badges() -> void:
+	var injuries: Dictionary = _unit.get("injuries", {})
+	# Keep surviving buttons in place so ordinary HP/CT snapshots do not steal focus.
+	for child: Node in injury_badges.get_children():
+		if not injuries.has(str(child.get_meta("location", ""))):
+			injury_badges.remove_child(child)
+			child.queue_free()
+	var anatomy: Dictionary = _unit.get("anatomy", {})
+	for location: String in injuries:
+		var record: Dictionary = injuries[location]
+		var button := injury_button(location)
+		if button == null:
+			button = Button.new()
+			button.set_meta("location", location)
+			button.pressed.connect(func() -> void: injury_selected.emit(location))
+			injury_badges.add_child(button)
+		var part: Dictionary = anatomy.get(location, {})
+		var label := str(part.get("display_name", location.capitalize())).to_upper()
+		var serious := str(record.get("severity", "minor")) == CombatInjury.PERSISTENT_SEVERITY
+		button.text = tr("%s · %s") % [label, tr("SERIOUS") if serious else tr("MINOR")]
+		button.theme_type_variation = "DangerButton" if serious else "Button"
+		button.tooltip_text = tr("Click to inspect injury penalties and recovery.")
+	injury_badges.visible = not injuries.is_empty()
+
+
+func injury_button(location: String) -> Button:
+	for child: Node in injury_badges.get_children():
+		if str(child.get_meta("location", "")) == location:
+			return child as Button
+	return null
+
+
+## Snapshots carry portrait resource paths; missing portraits use painterly unit
 ## art the stage renders, resolved from the roster keys the payload does carry.
 func _portrait_for(unit: Dictionary) -> Texture2D:
 	var provided := unit.get("portrait", null) as Texture2D
 	if provided != null:
 		return provided
+	var authored := NpcRoster.load_portrait_texture(str(unit.get("portrait_path", "")))
+	if authored != null:
+		return authored
 	var unit_id := UnitArtScript.combat_unit_id(
 		StringName(str(unit.get("side", "ally"))),
 		str(unit.get("archetype_id", "")),

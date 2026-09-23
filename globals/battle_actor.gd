@@ -25,6 +25,12 @@ var last_cast_element: StringName = &""
 ## Stable Combatant Id from Pandora. This is the enemy-archetype key used by
 ## Defining Strike knowledge; ad-hoc test actors may leave it empty.
 @export var archetype_id: StringName = &""
+## Authored visible anatomy: location id -> {display_name, exposed}. Empty means
+## no anatomy authored, never an assumed humanoid. Discovery remains separate.
+@export var anatomy: Dictionary = {}
+## Location injuries keyed by location id (see CombatInjury). Separate from impositions.
+## Combat-local for the task 7 slice; durable party persistence is task 9.
+@export var injuries: Dictionary = {}
 @export_range(-1, 1) var balance_affinity: int = 0
 @export var balance_pressure: int = 12
 ## This actor's elemental attunement (`ElementWheel.ORDER`), read as the TARGET side of
@@ -90,6 +96,10 @@ var balance_effects: Dictionary = {}
 ## Temporary Wave 1 payoff earned by voluntarily ending an AP turn. Cleared at
 ## the next AP refresh; authored CombatRules own both its rate and hard cap.
 var unused_ap_defense_bonus: int = 0
+## Elemental impositions on this creature, keyed by imposition id (`ElementsData`
+## `imposition_id`, e.g. "burning", "soaked"). Each value is that imposition's own small state
+## dict; `FireField` owns the Khash/Luth entries. Runtime combat state, cleared with the actor.
+var impositions: Dictionary = {}
 
 
 ## Named conversion from a roster member to a combatant (same-map combat D5). This is the
@@ -107,6 +117,8 @@ static func from_party_member(member: PartyMember, party_index: int) -> BattleAc
 	actor.party_index = party_index
 	actor.source_member = member
 	actor.breath = member.breath
+	actor.injuries = member.injuries.duplicate(true)
+	actor.anatomy = member.anatomy.duplicate(true)
 	return actor
 
 
@@ -180,7 +192,8 @@ func apply_balance_band(band_id: StringName, effects: Dictionary) -> void:
 func tick_aftertones() -> void:
 	var remaining: Array[Dictionary] = []
 	for aftertone: Dictionary in aftertones:
-		if bool(aftertone.get("anchored", false)) or bool(aftertone.get("held", false)):
+		# Anchoring prevents consumption; only a hold freezes ordinary duration.
+		if bool(aftertone.get("held", false)):
 			remaining.append(aftertone.duplicate(true))
 			continue
 		var rounds := int(aftertone.get("remaining_rounds", 0)) - 1

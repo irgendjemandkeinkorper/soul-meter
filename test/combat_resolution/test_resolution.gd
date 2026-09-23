@@ -119,6 +119,48 @@ func test_to_hit_disabled_by_default_and_always_hits() -> void:
 	assert_int(result["hit_roll"]).is_equal(0)
 
 
+func test_accuracy_explanation_preserves_the_existing_curve_and_clamps() -> void:
+	var cases: Array[Dictionary] = [
+		{"facing": "front", "height": 0, "alacrity": 0, "expected": 70, "clamp": 0},
+		{"facing": "side", "height": -1, "alacrity": 2, "expected": 78, "clamp": 0},
+		{"facing": "back", "height": 2, "alacrity": 0, "expected": 93, "clamp": 0},
+		{"facing": "front", "height": -20, "alacrity": 0, "expected": 5, "clamp": 15},
+		{"facing": "back", "height": 10, "alacrity": 0, "expected": 95, "clamp": -30},
+	]
+	for fixture: Dictionary in cases:
+		var context := _walkthrough_context()
+		context["to_hit_enabled"] = true
+		context["facing"] = {"id": fixture["facing"]}
+		context["height_advantage_steps"] = fixture["height"]
+		context["unit"]["alacrity"] = fixture["alacrity"]
+		context["target"]["alacrity"] = 0
+		var before := context.duplicate(true)
+		var result := ResolutionScript.resolve(context)
+		var accuracy: Dictionary = result["accuracy_breakdown"]
+		assert_int(result["hit_chance"]).is_equal(fixture["expected"])
+		assert_int(accuracy["effective_hit_chance"]).is_equal(fixture["expected"])
+		assert_int(accuracy["clamp_adjustment"]).is_equal(fixture["clamp"])
+		assert_array(accuracy["modifiers"].map(func(term: Dictionary) -> String: return term["id"])).contains_exactly(["alacrity", "facing", "height"])
+		assert_bool(accuracy.has("hit_roll")).is_false()
+		assert_dict(context).is_equal(before)
+		assert_dict(ResolutionScript.accuracy_breakdown(context)).is_equal(accuracy)
+
+
+func test_accuracy_explains_auto_hit_and_guaranteed_hit_without_changing_legacy_chance() -> void:
+	var context := _walkthrough_context()
+	var automatic := ResolutionScript.accuracy_breakdown(context)
+	assert_int(automatic["effective_hit_chance"]).is_equal(100)
+	assert_array(automatic["modifiers"]).is_empty()
+	context["to_hit_enabled"] = true
+	context["unit"]["hit"] = true
+	context["height_advantage_steps"] = -20
+	var result := ResolutionScript.resolve(context)
+	assert_int(result["hit_chance"]).is_equal(5)
+	assert_int(result["accuracy_breakdown"]["effective_hit_chance"]).is_equal(100)
+	assert_bool(result["hit"]).is_true()
+	assert_int(result["hit_roll"]).is_equal(0)
+
+
 func test_to_hit_chance_uses_ratified_curve_and_clamps() -> void:
 	# base 70 + back 15 + 4*2 = 93
 	var context := _walkthrough_context()
@@ -337,3 +379,28 @@ func _fizzles_at(seed_value: int, accord_key: String, accord: float) -> bool:
 	context["seed"] = seed_value
 	context["fizzle"] = {accord_key: accord, "pitch": 2, "mastery": false, "patron": ""}
 	return bool(ResolutionScript.resolve(context).get("fizzled", false))
+
+
+func test_visibility_term_applies_only_when_the_controller_marks_the_shot_applicable() -> void:
+	var context := {
+		"to_hit_enabled": true,
+		"unit": {"id": "a", "alacrity": 0, "attack_scale": 1.0},
+		"target": {"id": "t", "hp": 20, "alacrity": 0},
+		"ability": {"id": "shot", "power": 10, "element_id": &"zhur", "elements": [&"zhur"]},
+		"facing": {"id": &"front"}, "height_advantage_steps": 0,
+	}
+	var clear := Resolution.accuracy_breakdown(context)
+	context["visibility"] = {"level": "dim", "applies": true}
+	var dim := Resolution.accuracy_breakdown(context)
+	assert_int(int(dim["hit_chance"])).is_equal(int(clear["hit_chance"]) + int(Resolution.PROVISIONAL_TO_HIT["visibility_dim_pp"]))
+	var labels: Array = []
+	for modifier: Dictionary in dim["modifiers"]:
+		labels.append(str(modifier["label"]))
+	assert_array(labels).contains(["Visibility: dim"])
+	context["visibility"] = {"level": "obscured", "applies": true}
+	assert_int(int(Resolution.accuracy_breakdown(context)["hit_chance"])).is_equal(
+		int(clear["hit_chance"]) + int(Resolution.PROVISIONAL_TO_HIT["visibility_obscured_pp"])
+	)
+	# Not applicable (melee, spell, or Blinded): the level is recorded but no term is charged.
+	context["visibility"] = {"level": "obscured", "applies": false, "reason": "blinded_facing_restriction"}
+	assert_dict(Resolution.accuracy_breakdown(context)).is_equal(clear)

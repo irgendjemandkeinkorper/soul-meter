@@ -55,6 +55,7 @@ size = Vector2(30, 14)
 size = Vector2(54, 18)
 
 [node name="DorthkorRoad" type="Node2D"]
+texture_filter = 2
 script = ExtResource("1_location")
 arrival_flag = "chapter_dorthkor_reached"
 y_sort_enabled = true
@@ -235,14 +236,16 @@ texture = ExtResource("23_cart")
 offset = Vector2(0, -90)
 
 [node name="CampDrumA" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4319, 0.4319)
+offset = Vector2(0, -111)
 position = Vector2(1500, 800)
 texture = ExtResource("22_drum")
-offset = Vector2(0, -90)
 
 [node name="CampDrumB" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4319, 0.4319)
+offset = Vector2(0, -111)
 position = Vector2(1680, 640)
 texture = ExtResource("22_drum")
-offset = Vector2(0, -90)
 
 [node name="CampLogs" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1580, 620)
@@ -261,9 +264,10 @@ texture = ExtResource("20_marker")
 offset = Vector2(0, -90)
 
 [node name="ShoulderDrum" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4319, 0.4319)
+offset = Vector2(0, -111)
 position = Vector2(850, 560)
 texture = ExtResource("22_drum")
-offset = Vector2(0, -90)
 
 [node name="ShoulderCart" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1120, 300)

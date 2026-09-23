@@ -53,6 +53,7 @@ func _ready() -> void:
 	_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_frame.add_child(_image)
 
 	_placeholder = VBoxContainer.new()

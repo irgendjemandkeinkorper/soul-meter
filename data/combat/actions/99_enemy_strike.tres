@@ -9,6 +9,99 @@ display_name = "Strike"
 kind = 0
 verb = 1
 ap_cost = 4
+ct_cost = 45
 target_profile = &"melee"
 center_pull = 0
 player_available = false
+aim_profiles = {
+"arm": {
+"accuracy_penalty": 15,
+"ap_surcharge": 1,
+"ct_surcharge": 10,
+"injury": {
+"chance_on_hit": 50,
+"effects": {
+"attack_accuracy_pp": -10
+},
+"id": "arm-strained",
+"min_damage": 1,
+"serious": {
+"effects": {
+"attack_accuracy_pp": -20
+},
+"id": "arm-broken",
+"min_damage": 9
+},
+"severity": "minor"
+}
+},
+"head": {
+"accuracy_penalty": 30,
+"ap_surcharge": 1,
+"ct_surcharge": 15,
+"injury": {
+"chance_on_hit": 30,
+"effects": {
+"sight_accuracy_pp": -15
+},
+"id": "sight-blurred",
+"min_damage": 1,
+"serious": {
+"effects": {
+"sight_accuracy_pp": -30
+},
+"id": "eye-swollen",
+"min_damage": 10
+},
+"severity": "minor"
+}
+},
+"leg": {
+"accuracy_penalty": 15,
+"ap_surcharge": 1,
+"ct_surcharge": 10,
+"injury": {
+"chance_on_hit": 40,
+"effects": {
+"move_cost_percent": 50
+},
+"id": "leg-hobbled",
+"min_damage": 1,
+"serious": {
+"effects": {
+"move_cost_percent": 100
+},
+"id": "leg-lamed",
+"min_damage": 9
+},
+"severity": "minor"
+}
+},
+"throat": {
+"accuracy_penalty": 25,
+"ap_surcharge": 1,
+"ct_surcharge": 15,
+"injury": {
+"chance_on_hit": 35,
+"effects": {
+"vocal_accuracy_pp": -10
+},
+"id": "throat-bruised",
+"min_damage": 1,
+"serious": {
+"effects": {
+"vocal_accuracy_pp": -25,
+"voice_blocked": true
+},
+"id": "throat-crushed",
+"min_damage": 10
+},
+"severity": "minor"
+}
+},
+"torso": {
+"accuracy_penalty": 5,
+"ap_surcharge": 1,
+"ct_surcharge": 5
+}
+}

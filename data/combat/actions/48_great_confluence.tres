@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"great-confluence"
+display_name = "Great Confluence"
+kind = 0
+verb = 2
+ap_cost = 4
+ct_cost = 60
+element_id = &"luth"
+magnitude = &"refrain"
+target_profile = &"cells"
+player_available = true
+effect_id = &"great_confluence"
+effect_payload = {"range": 5, "cell_count": 1, "radius": 1, "budget": 24, "recipients": 4, "mode": "A", "refrain_use": true}
+spell = true
+breath_cost = 24
+description = "Luth Refrain, instant. Up to four allies within 1 of a cell within 5 share up to 24 paid Breath, and the refuge is quenched."

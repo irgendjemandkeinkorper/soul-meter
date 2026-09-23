@@ -4,14 +4,25 @@ extends Screen
 ## advancement point-spend surface. Member list on the left mirrors ui/screens/party.gd.
 
 const WheelWidgetScript := preload("res://ui/components/wheel_widget.gd")
+const PartyMemberVisualsScript := preload("res://actors/party_followers/party_member_visuals.gd")
+const TreatmentNoticeScene := preload("res://ui/components/treatment_notice.tscn")
+const TreatmentNoticeScript := preload("res://ui/components/treatment_notice.gd")
 
 var _member_list: ItemList
 var _sheet_column: VBoxContainer
 var _selected_member: PartyMember
+var _treatment_notice: TreatmentNoticeScript
+
+
+func _uses_ledger_style() -> bool:
+	return true
 
 
 func _build() -> void:
+	_add_opaque_backdrop()
 	var vbox := _make_shell_window("Register of Persons")
+	_treatment_notice = TreatmentNoticeScene.instantiate() as TreatmentNoticeScript
+	vbox.add_child(_treatment_notice)
 
 	var row := HBoxContainer.new()
 	row.theme_type_variation = "MirrorPairRow"
@@ -21,15 +32,18 @@ func _build() -> void:
 	_member_list = ItemList.new()
 	_member_list.name = "MemberList"
 	_member_list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_member_list.custom_minimum_size = Vector2(240, 0)
+	_member_list.custom_minimum_size = Vector2(320, 0)
 	_member_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_child(_member_list)
+	_member_list.fixed_icon_size = Vector2i(64, 64)
+	_member_list.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	row.add_child(_ledger_panel(_member_list, "PartyLedger", true))
+	_treatment_notice.dismissed.connect(_member_list.grab_focus)
 
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_child(scroll)
+	row.add_child(_ledger_panel(scroll, "PersonLedger"))
 
 	_sheet_column = VBoxContainer.new()
 	_sheet_column.name = "SheetColumn"
@@ -38,7 +52,10 @@ func _build() -> void:
 	scroll.add_child(_sheet_column)
 
 	for member in GameState.party:
-		_member_list.add_item("%s  (Lv %d)" % [member.display_name, member.level])
+		_member_list.add_item(
+			"%s  (Lv %d)" % [member.display_name, member.level],
+			PartyMemberVisualsScript.ensure_portrait(member)
+		)
 	_member_list.item_selected.connect(_on_selected)
 	if GameState.party.size() > 0:
 		_member_list.select(0)
@@ -60,8 +77,11 @@ func select_member(member_id: String) -> void:
 
 
 func _on_selected(idx: int) -> void:
+	if _selected_member != GameState.party[idx]:
+		_treatment_notice.clear_notice()
 	_selected_member = GameState.party[idx]
 	_rebuild_sheet()
+	_settle_content(_sheet_column)
 
 
 func _rebuild_sheet() -> void:
@@ -83,7 +103,7 @@ func _rebuild_sheet() -> void:
 
 	var identity := Label.new()
 	identity.text = "%s  •  %s  •  Level %d" % [member.race, member.char_class, member.level]
-	identity.modulate = Color(1, 1, 1, 0.6)
+	identity.theme_type_variation = "MutedLabel"
 	_sheet_column.add_child(identity)
 
 	var calling_bits: Array[String] = []
@@ -97,7 +117,7 @@ func _rebuild_sheet() -> void:
 		var calling := Label.new()
 		calling.text = "  •  ".join(calling_bits)
 		calling.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		calling.modulate = Color(1, 1, 1, 0.6)
+		calling.theme_type_variation = "MutedLabel"
 		_sheet_column.add_child(calling)
 
 	# Two columns: the wheel sits beside the skills instead of below the fold —
@@ -105,21 +125,36 @@ func _rebuild_sheet() -> void:
 	# while the right half of the sheet stayed empty.
 	var body := HBoxContainer.new()
 	body.name = "SheetBody"
-	body.add_theme_constant_override("separation", 24)
+	body.theme_type_variation = "MirrorPairRow"
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_sheet_column.add_child(body)
 	var main_column := VBoxContainer.new()
+	main_column.theme_type_variation = "LedgerColumn"
 	main_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(main_column)
 	var side_column := VBoxContainer.new()
+	side_column.theme_type_variation = "LedgerColumn"
 	side_column.custom_minimum_size = Vector2(320, 0)
 	body.add_child(side_column)
+	var portrait_frame := PanelContainer.new()
+	portrait_frame.theme_type_variation = "NpcPortraitFrame8"
+	portrait_frame.custom_minimum_size = Vector2(256, 256)
+	side_column.add_child(portrait_frame)
+	var portrait := TextureRect.new()
+	portrait.name = "MemberPortrait"
+	portrait.texture = PartyMemberVisualsScript.ensure_portrait(member)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait_frame.add_child(portrait)
 
 	# --- Attributes (fixed after creation, owner 2026-08-24) ---
 	if not member.attributes.is_empty():
 		main_column.add_child(_section("Attributes"))
 		var attribute_grid := GridContainer.new()
-		attribute_grid.columns = DramgidSchema.ATTRIBUTE_IDS.size()
+		attribute_grid.columns = 3
+		attribute_grid.theme_type_variation = "LedgerGrid"
 		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
 			var cell := Label.new()
 			# attribute_value() answers legacy-keyed rows through the rename aliases
@@ -137,6 +172,7 @@ func _rebuild_sheet() -> void:
 	main_column.add_child(_section("Skills"))
 	var points_label := Label.new()
 	points_label.name = "AdvancementPoints"
+	points_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	points_label.text = (
 		"Advancement points: %d   (granted at story milestones)" % member.advancement_points
 	)
@@ -145,6 +181,7 @@ func _rebuild_sheet() -> void:
 	var skill_grid := GridContainer.new()
 	skill_grid.name = "SkillGrid"
 	skill_grid.columns = 3
+	skill_grid.theme_type_variation = "LedgerGrid"
 	main_column.add_child(skill_grid)
 	for group: String in DramgidSchema.SKILL_GROUPS:
 		var group_skills := _listed_skills(group, member)
@@ -169,6 +206,7 @@ func _rebuild_sheet() -> void:
 			var effective := SkillCheck.preview(skill_id, member, 0.0)
 			var percent_label := Label.new()
 			percent_label.name = "Percent_%s" % skill_id
+			percent_label.theme_type_variation = "StatLabel"
 			percent_label.text = "%d%%" % int(effective)
 			# FR-205: the derivation is one hover away, in the ratified formula's own terms.
 			percent_label.tooltip_text = _derivation_tooltip(member, skill_id, effective)
@@ -208,6 +246,9 @@ func _rebuild_sheet() -> void:
 		wheel_caption.modulate = Color(1, 1, 1, 0.6)
 		side_column.add_child(wheel_caption)
 
+	# --- Injuries (called-shots 10C): serious records and qualified field treatment ---
+	_render_injuries(main_column, member)
+
 	# --- Recent checks (FR-205, toggleable for Archivists) ---
 	main_column.add_child(_section("Recent Checks"))
 	var toggle := CheckButton.new()
@@ -243,6 +284,144 @@ func _rebuild_sheet() -> void:
 					else Color(1, 0.75, 0.75, 0.85)
 				)
 				log_column.add_child(line)
+
+
+const PRACTITIONER_REASONS: Array[String] = [
+	"unknown_practitioner", "practitioner_down", "unqualified", "practitioner_injured",
+]
+var _practitioner_picks: Dictionary = {}
+## Explicit practitioner choice per location; survives the rebuild a choice triggers.
+var _practitioner_choice: Dictionary = {}
+var _choice_owner: PartyMember
+var _treatment_status: Label
+
+
+## One row per serious injury on the sheet's member (the patient), with a practitioner pick
+## and a field-treatment button carrying the exact supply cost from `InjuryTreatment.quote`.
+## The pick defaults to the first qualified party member so the common case is one press.
+func _render_injuries(column: VBoxContainer, patient: PartyMember) -> void:
+	column.add_child(_section("Injuries"))
+	_treatment_status = Label.new()
+	_treatment_status.name = "TreatmentStatus"
+	_treatment_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_treatment_status.modulate = Color(1, 1, 1, 0.7)
+	column.add_child(_treatment_status)
+	_practitioner_picks.clear()
+	if _selected_member != _choice_owner:
+		_practitioner_choice.clear()
+		_choice_owner = _selected_member
+	var rows := InjuryTreatment.treatable_rows(GameState).filter(
+		func(row: Dictionary) -> bool: return row["member"] == patient
+	)
+	if rows.is_empty():
+		var none := Label.new()
+		none.name = "NoInjuries"
+		none.text = "(no serious injuries)"
+		none.modulate = Color(1, 1, 1, 0.5)
+		column.add_child(none)
+		return
+	for row: Dictionary in rows:
+		for card_id: String in InjuryTreatment.field_cards():
+			_add_injury_row(column, patient, str(row["location"]), row["record"], card_id)
+
+
+func _add_injury_row(column: VBoxContainer, patient: PartyMember, location: String, record: Dictionary, card_id: String) -> void:
+	var card: Dictionary = InjuryTreatment.CARDS[card_id]
+	var box := VBoxContainer.new()
+	box.name = "Injury_%s" % location
+	column.add_child(box)
+	var title := Label.new()
+	title.name = "InjuryTitle_%s" % location
+	var lifts: Array = InjuryTreatment._restrictions(record)
+	title.text = "%s  •  serious  •  %s  •  %s" % [
+		location.capitalize(),
+		" / ".join(PackedStringArray(lifts)).replace("_", " ") if not lifts.is_empty() else "no listed restriction",
+		str(record.get("recovery", "untreated")),
+	]
+	box.add_child(title)
+	var controls := HBoxContainer.new()
+	controls.add_theme_constant_override("separation", 12)
+	box.add_child(controls)
+	var pick := OptionButton.new()
+	pick.name = "Practitioner_%s" % location
+	var default_index := -1
+	for index in GameState.party.size():
+		var candidate: PartyMember = GameState.party[index]
+		pick.add_item(candidate.display_name, index)
+		# Default to the first candidate who is not refused for a practitioner reason, so a
+		# missing supply is reported as a missing supply and not as the patient's own skill.
+		var candidate_quote := _field_quote(patient, record, card_id, candidate)
+		if default_index < 0 and not PRACTITIONER_REASONS.has(str(candidate_quote.get("blocked_by", ""))):
+			default_index = index
+	var chosen := int(_practitioner_choice.get(location, -1))
+	if chosen < 0 or chosen >= GameState.party.size():
+		chosen = maxi(default_index, 0)
+	pick.select(chosen)
+	pick.item_selected.connect(func(index: int) -> void:
+		_practitioner_choice[location] = index
+		_rebuild_sheet())
+	_practitioner_picks[location] = pick
+	controls.add_child(pick)
+	var practitioner: PartyMember = GameState.party[pick.selected] if not GameState.party.is_empty() else null
+	var quoted := _field_quote(patient, record, card_id, practitioner)
+	var supply := str(card["supply_item"])
+	var button := Button.new()
+	button.name = "FieldTreat_%s" % location
+	button.text = "%s  •  %d × %s  (carry %d)" % [
+		str(card.get("display_name", card_id)), int(card["supply_quantity"]),
+		ItemLocalization.text(supply, "name", supply.get_file().capitalize()), GameState.item_count(supply),
+	]
+	button.disabled = not bool(quoted["allowed"])
+	button.pressed.connect(_on_field_treat.bind(patient, location, card_id))
+	controls.add_child(button)
+	if not bool(quoted["allowed"]):
+		var why := Label.new()
+		why.name = "InjuryWhy_%s" % location
+		why.text = "%s  %s" % [str(quoted.get("message", "")), str(quoted.get("alternative", card.get("alternative", "")))]
+		why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		why.modulate = Color(1, 0.85, 0.75, 0.85)
+		box.add_child(why)
+
+
+func _field_intent(patient: PartyMember, record: Dictionary, card_id: String, practitioner: PartyMember) -> Dictionary:
+	var identity := CombatInjury.record_identity(record)
+	return {
+		"patient_id": str(patient.id), "instance_id": identity["instance_id"], "revision": identity["revision"],
+		"card_id": card_id, "practitioner_id": str(practitioner.id) if practitioner != null else "",
+	}
+
+
+func _field_quote(patient: PartyMember, record: Dictionary, card_id: String, practitioner: PartyMember) -> Dictionary:
+	return InjuryTreatment.quote(_field_intent(patient, record, card_id, practitioner), GameState, _combat_active())
+
+
+func _on_field_treat(patient: PartyMember, location: String, card_id: String) -> void:
+	_treatment_notice.clear_notice()
+	var record: Dictionary = patient.injuries.get(location, {})
+	var pick: OptionButton = _practitioner_picks.get(location)
+	var practitioner: PartyMember = GameState.party[pick.selected] if pick != null and pick.selected >= 0 else null
+	var intent := _field_intent(patient, record, card_id, practitioner)
+	var quoted := InjuryTreatment.quote(intent, GameState, _combat_active())
+	if bool(quoted["allowed"]):
+		intent["expected_cost"] = quoted["cost"]
+	var result := InjuryTreatment.commit(intent, GameState, _combat_active())
+	var text := ""
+	if bool(result.get("allowed", false)):
+		var supply := str(result["paid"]["supply_item"])
+		text = "%s treated %s's %s; used %d × %s." % [
+			practitioner.display_name if practitioner != null else "Someone", patient.display_name, location,
+			int(result["paid"]["supply_quantity"]), ItemLocalization.text(supply, "name", supply.get_file().capitalize()),
+		]
+	else:
+		text = "Treatment refused (%s): %s" % [str(result.get("blocked_by", "")).replace("_", " "), str(result.get("message", ""))]
+	_rebuild_sheet()
+	if _treatment_status != null:
+		_treatment_status.text = text
+	_treatment_notice.show_result(result, patient.display_name)
+
+
+static func _combat_active() -> bool:
+	return Battle.session_active or (Battle.controller != null and not Battle.ended)
 
 
 ## Which skills of one group the sheet lists. Every group shows its whole slate except

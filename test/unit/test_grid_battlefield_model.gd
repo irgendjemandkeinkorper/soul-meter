@@ -684,3 +684,80 @@ func test_a_released_combatant_frees_its_cell_for_the_next_admission() -> void:
 	assert_bool(
 		model.admit_combatant(successor, _handle(4, 2), &"enemy").get("allowed", false)
 	).is_true()
+
+
+func test_line_of_fire_blocked_by_authored_obstacle_with_its_own_reason() -> void:
+	var model := _model(5, 2)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+	model.set_obstacle(Vector2i(2, 0), true)
+
+	var result := model.line_of_sight(ally, enemy)
+
+	assert_bool(result.get("allowed", true)).is_false()
+	assert_str(String(result.get("blocked_by", ""))).is_equal("blocked_by_obstacle")
+	assert_that(result["nearest_unblock"]["cell"]).is_equal(Vector2i(2, 0))
+	model.set_obstacle(Vector2i(2, 0), false)
+	assert_bool(model.line_of_sight(ally, enemy).get("allowed", false)).is_true()
+
+
+func test_location_cover_follows_the_directional_rule_and_high_ground_sees_over_it() -> void:
+	var model := _model(5, 2)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+	assert_bool(model.location_cover(ally, enemy)["covered"]).is_false()
+
+	model.set_cover(Vector2i(3, 0), true)  # the enemy hugs cover toward the shooter
+	var covered := model.location_cover(ally, enemy)
+	assert_bool(covered["covered"]).is_true()
+	assert_that(covered["cell"]).is_equal(Vector2i(3, 0))
+	# Line of sight itself stays open: cover is partial exposure, never a blocked shot.
+	assert_bool(model.line_of_sight(ally, enemy).get("allowed", false)).is_true()
+
+	model.set_elevation(Vector2i(0, 0), 3)  # the shooter stands above the wall
+	var seen_over := model.location_cover(ally, enemy)
+	assert_bool(seen_over["covered"]).is_false()
+	assert_bool(seen_over["seen_over"]).is_true()
+
+	model.set_elevation(Vector2i(0, 0), 0)
+	model.set_cover(Vector2i(3, 0), false)
+	model.set_cover(Vector2i(1, 0), true)  # cover beside the attacker hides nothing
+	assert_bool(model.location_cover(ally, enemy)["covered"]).is_false()
+
+
+func test_visibility_composes_the_worst_cell_and_rejects_unknown_levels() -> void:
+	var model := _model(5, 2)
+	var ally := _actor("ally")
+	var enemy := _actor("enemy")
+	var allies: Array[BattleActor] = [ally]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+	assert_str(String(model.visibility_between(ally, enemy)["level"])).is_equal("clear")
+	assert_bool(model.set_visibility(Vector2i(4, 0), &"foggy")["allowed"]).is_false()
+
+	assert_bool(model.set_visibility(Vector2i(4, 0), &"dim")["allowed"]).is_true()
+	var dim := model.visibility_between(ally, enemy)
+	assert_str(String(dim["level"])).is_equal("dim")
+	assert_int((dim["causes"] as Array).size()).is_equal(1)
+
+	# Two overlapping causes compose as the worst level, never as a sum.
+	assert_bool(model.set_visibility(Vector2i(0, 0), &"obscured")["allowed"]).is_true()
+	var composed := model.visibility_between(ally, enemy)
+	assert_str(String(composed["level"])).is_equal("obscured")
+	assert_int((composed["causes"] as Array).size()).is_equal(2)
+	# Cover, elevation and a cell between the two never enter the visibility result.
+	model.set_cover(Vector2i(3, 0), true)
+	model.set_elevation(Vector2i(2, 0), 2)
+	model.set_visibility(Vector2i(2, 0), &"obscured")
+	assert_int((model.visibility_between(ally, enemy)["causes"] as Array).size()).is_equal(2)
+	assert_str(str(model.tiles_snapshot()[4]["visibility"])).is_equal("dim")
+
+	assert_bool(model.set_visibility(Vector2i(4, 0), &"clear")["allowed"]).is_true()
+	assert_bool(model.set_visibility(Vector2i(0, 0), &"clear")["allowed"]).is_true()
+	assert_str(String(model.visibility_between(ally, enemy)["level"])).is_equal("clear")

@@ -1,6 +1,42 @@
 extends GdUnitTestSuite
 
 
+func test_large_field_grid_keeps_corner_combatants_inside_the_stage() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	stage.size = Vector2(960, 480)
+	var event := CombatEvent.new()
+	event.data = {"snapshot": {
+		"tiles": [{"x": 0, "y": 0}, {"x": 63, "y": 0}, {"x": 0, "y": 63}, {"x": 63, "y": 63}],
+		"allies": [{"id": "ally-vex", "display_name": "Vex", "side": "ally", "position": Vector2i.ZERO}],
+		"enemies": [{"id": "enemy-wight", "archetype_id": "bog-wight", "side": "enemy", "position": Vector2i(63, 63)}],
+	}}
+	stage.consume_event(event)
+	await runner.simulate_frames(2)
+	for unit: Control in stage.get_node("UnitsLayer").get_children():
+		assert_bool(Rect2(Vector2.ZERO, stage.size).encloses(unit.get_rect())).override_failure_message(
+			"Large field projection placed %s outside the tactical stage" % unit.name
+		).is_true()
+
+
+func test_custom_portrait_selects_field_art_on_the_tactical_stage() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var event := CombatEvent.new()
+	event.data = {"snapshot": {
+		"allies": [{
+			"id": "ally-custom", "member_id": "custom-recruit", "display_name": "Custom Recruit",
+			"portrait_path": "res://assets/generated/portraits/player/likeness_01.png",
+			"hp": 20, "max_hp": 20, "position": Vector2i.ZERO, "side": "ally",
+		}],
+		"tiles": [{"x": 0, "y": 0, "height_delta": 0}],
+	}}
+	stage.consume_event(event)
+	await runner.simulate_frames(2)
+	var sprite := stage.get_node("UnitsLayer/Unit_ally-custom") as TextureRect
+	assert_str(sprite.texture.resource_path).is_equal(UnitArt.texture_path("crowd-acolyte-a"))
+
+
 func test_stage_projects_event_tiles_and_emits_cursor_state() -> void:
 	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
 	var stage := runner.scene() as BattleStageRegion
@@ -58,7 +94,48 @@ func test_stage_renders_units_from_snapshot_and_plays_action_beat() -> void:
 	await runner.simulate_frames(2)
 	var fx := stage.get_node("FxLayer")
 	assert_int(fx.get_child_count()).is_greater_equal(1)
-	assert_str((fx.get_child(0) as Label).text).is_equal("6")
+	assert_str((fx.get_node("DamagePop/Column/Outcome") as Label).text).is_equal("6 DAMAGE")
+
+
+func test_hit_pulse_requires_damage_and_small_lunge_returns_home() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var snapshot := {
+		"tiles": [{"x": 0, "y": 0}, {"x": 3, "y": 0}],
+		"allies": [{"id": "ally", "display_name": "Vex", "side": "ally", "hp": 30, "position": Vector2i.ZERO}],
+		"enemies": [{"id": "enemy", "display_name": "Bog Wight", "side": "enemy", "hp": 30, "position": Vector2i(3, 0)}],
+	}
+	var event := CombatEvent.new()
+	event.data = {"snapshot": snapshot}
+	stage.consume_event(event)
+	await runner.simulate_frames(2)
+	var attacker := stage.get_node("UnitsLayer/Unit_ally") as TextureRect
+	var defender := stage.get_node("UnitsLayer/Unit_enemy") as TextureRect
+	var home := attacker.position
+	var defender_home := defender.position
+	var fx := stage.get_node("FxLayer")
+	event.type = &"action_resolved"
+	event.actor_id = &"ally"
+	event.target_id = &"enemy"
+	for outcome: Dictionary in [{"hit": false, "damage": 0}, {"hit": true, "damage": 0}, {"hit": true, "damage": 7}]:
+		event.data = {"snapshot": snapshot, "hit": outcome["hit"], "damage": outcome["damage"]}
+		var before := event.to_dict()
+		stage.consume_event(event)
+		assert_bool(fx.has_node("HitPulse")).is_equal(int(outcome["damage"]) > 0)
+		if int(outcome["damage"]) == 0:
+			assert_bool(defender.modulate.is_equal_approx(Color.WHITE)).is_true()
+		await await_millis(80)
+		assert_float(attacker.position.distance_to(home)).is_less_equal(float(DS.SPACE_4) + 0.01)
+		assert_float(defender.position.distance_to(defender_home)).is_less(0.001)
+		await await_millis(2100)
+		assert_float(attacker.position.distance_to(home)).is_less(0.001)
+		assert_bool(defender.modulate.is_equal_approx(Color.WHITE)).is_true()
+		assert_int(fx.get_child_count()).is_equal(0)
+		assert_dict(event.to_dict()).is_equal(before)
+	stage.set_replaying(true)
+	stage.consume_event(event)
+	assert_int(fx.get_child_count()).is_equal(0)
+	assert_bool(stage.pointer_input_available()).is_true()
 
 
 func test_stage_emits_tile_hovered_on_mouse_motion() -> void:

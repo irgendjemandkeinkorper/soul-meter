@@ -26,9 +26,15 @@ var _flavour_label: Label
 var _requirement_label: Label
 var _value_label: Label
 var _selected_item: InventoryItem
+var _detail_column: Control
+
+
+func _uses_ledger_style() -> bool:
+	return true
 
 
 func _build() -> void:
+	_add_opaque_backdrop()
 	_build_shell()
 	_ensure_bag_constraints()
 	_build_columns()
@@ -97,6 +103,7 @@ func _build_shell() -> void:
 	var gauge := SOUL_GAUGE_SCENE.instantiate()
 	gauge.custom_minimum_size.x = 300.0
 	shell_hud_bar.add_child(gauge)
+	_add_back_button(shell_hud_bar)
 
 
 func _ensure_bag_constraints() -> void:
@@ -105,12 +112,55 @@ func _ensure_bag_constraints() -> void:
 		grid = GridConstraint.new()
 		grid.size = Vector2i(8, 8)
 		GameState.inventory.add_child(grid)
+	if not repair_bag_layout(grid):
+		push_warning("Bag layout exceeds available space; all items and their positions were preserved.")
 	_weight_constraint = GameState.inventory.get_constraint(WeightConstraint) as WeightConstraint
 	if _weight_constraint == null:
 		_weight_constraint = WeightConstraint.new()
 		_weight_constraint.capacity = WEIGHT_CAPACITY
 		GameState.inventory.add_child(_weight_constraint)
 	_weight_constraint.changed.connect(_refresh_weight)
+
+
+## Attaching GLoot's grid to a populated bag leaves existing items at (0, 0).
+## Plan positions first, preserving valid player placements. Never remove/re-add
+## items: that can trigger quest events, merge stacks, or lose an overfull save.
+static func repair_bag_layout(grid: GridConstraint) -> bool:
+	var occupied: Array[Rect2i] = []
+	var pending: Array[InventoryItem] = []
+	var placements: Dictionary = {}
+	var bounds := Rect2i(Vector2i.ZERO, grid.size)
+	for item: InventoryItem in grid.inventory.get_items():
+		var rect := grid.get_item_rect(item)
+		if bounds.encloses(rect) and _bag_rect_is_free(rect, occupied):
+			occupied.append(rect)
+		else:
+			pending.append(item)
+	for item: InventoryItem in pending:
+		var item_size := grid.get_item_size(item)
+		var found := false
+		for x: int in range(grid.size.x - item_size.x + 1):
+			for y: int in range(grid.size.y - item_size.y + 1):
+				var rect := Rect2i(Vector2i(x, y), item_size)
+				if _bag_rect_is_free(rect, occupied):
+					occupied.append(rect)
+					placements[item] = rect.position
+					found = true
+					break
+			if found:
+				break
+		if not found:
+			return false
+	for item: InventoryItem in placements:
+		grid.set_item_position_unsafe(item, placements[item])
+	return true
+
+
+static func _bag_rect_is_free(rect: Rect2i, occupied: Array[Rect2i]) -> bool:
+	for prior: Rect2i in occupied:
+		if prior.intersects(rect):
+			return false
+	return true
 
 
 func _build_columns() -> void:
@@ -120,9 +170,10 @@ func _build_columns() -> void:
 	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	shell_body.add_child(columns)
-	columns.add_child(_build_equipment_column())
+	columns.add_child(_ledger_panel(_build_equipment_column(), "EquipmentLedger"))
 	columns.add_child(_build_bag_column())
-	columns.add_child(_build_detail_column())
+	_detail_column = _build_detail_column()
+	columns.add_child(_ledger_panel(_detail_column, "ItemLedger"))
 
 
 func _build_equipment_column() -> Control:
@@ -130,31 +181,16 @@ func _build_equipment_column() -> Control:
 	column.name = "EquipmentColumn"
 	column.custom_minimum_size.x = 360.0
 	column.theme_type_variation = "ScreenContentColumn"
-	var party_tabs := HBoxContainer.new()
-	party_tabs.name = "PartyTabs"
-	for index: int in 3:
-		var tab := Button.new()
-		tab.text = str(index + 1)
-		tab.theme_type_variation = "ItemSlot"
-		tab.custom_minimum_size = Vector2.ONE * DS.SLOT_SIZE_SM
-		party_tabs.add_child(tab)
-	column.add_child(party_tabs)
 	column.add_child(_section("EQUIPMENT"))
 	for slot_name: StringName in EQUIPMENT_SLOTS:
 		column.add_child(_build_equipment_row(slot_name))
-	column.add_child(_section("STATS"))
-	for stat_text: String in ["VITALITY", "DEFENCE", "CARRY"]:
-		var stat := Label.new()
-		stat.name = "StatRow_%s" % stat_text.capitalize()
-		stat.text = "%s  —" % stat_text
-		stat.theme_type_variation = "StatLabel"
-		column.add_child(stat)
 	return column
 
 
 func _build_equipment_row(slot_name: StringName) -> Control:
 	var row := HBoxContainer.new()
 	row.name = "EquipRow_%s" % slot_name
+	row.theme_type_variation = "LedgerRow"
 	var inventory := make_equipment_inventory(GameState.inventory.protoset)
 	inventory.name = "EquipmentInventory_%s" % slot_name
 	add_child(inventory)
@@ -186,10 +222,16 @@ func _build_equipment_row(slot_name: StringName) -> Control:
 func _build_bag_column() -> Control:
 	var panel := PanelContainer.new()
 	panel.name = "BagColumn"
+	panel.theme_type_variation = "LedgerInset"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var content := VBoxContainer.new()
+	content.theme_type_variation = "LedgerColumn"
+	panel.add_child(content)
+	content.add_child(_section(tr("CARRIED ITEMS")))
 	var scroll := ScrollContainer.new()
 	scroll.name = "BagScroll"
-	panel.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(scroll)
 	_bag_grid = CtrlInventoryGrid.new()
 	_bag_grid.name = "BagGrid"
 	_bag_grid.inventory = GameState.inventory
@@ -220,7 +262,6 @@ func _build_detail_column() -> Control:
 	var equip := Button.new()
 	equip.name = "EquipButton"
 	equip.text = "EQUIP"
-	equip.theme_type_variation = "BronzeButton"
 	equip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	equip.pressed.connect(_equip_selected)
 	actions.add_child(equip)
@@ -238,6 +279,7 @@ func _detail_label(node_name: String, text: String, variation: String) -> Label:
 	label.name = node_name
 	label.text = text
 	label.theme_type_variation = variation
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return label
 
 
@@ -253,6 +295,7 @@ func _refresh_detail() -> void:
 	_name_label.text = _selected_item.get_title()
 	_type_label.text = proto_id.split("/")[0].capitalize()
 	for child: Node in _stats.get_children():
+		_stats.remove_child(child)
 		child.queue_free()
 	# "ap_cost" is display-only item metadata (AP compatibility: gate T-10, not the AP round economy).
 	for property: String in ["damage", "dr", "ap_cost", "soul_cost", "weight", "element"]:
@@ -264,11 +307,7 @@ func _refresh_detail() -> void:
 	_flavour_label.text = str(_selected_item.get_property("flavour", ""))
 	_requirement_label.text = str(_selected_item.get_property("requirement", ""))
 	_value_label.text = "%s SILVER" % _selected_item.get_property("value", _selected_item.get_property("base_price", 0))
-	modulate.a = 0.0
-	position.x += DS.SPACE_3
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "modulate:a", 1.0, DS.DUR_FAST)
-	tween.tween_property(self, "position:x", position.x - DS.SPACE_3, DS.DUR_FAST)
+	_settle_content(_detail_column)
 
 
 func _on_equipment_drop(item: InventoryItem, _offset: Vector2, slot_name: StringName) -> void:

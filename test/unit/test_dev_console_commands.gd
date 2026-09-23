@@ -215,3 +215,22 @@ func _last_entry() -> Dictionary:
 
 func _last_text() -> String:
 	return str(_last_entry().get("text", ""))
+
+
+func test_treat_command_drives_the_treatment_coordinator_and_refuses_cleanly() -> void:
+	assert_bool(GameState.party.size() > 0).is_true()
+	var member: PartyMember = GameState.party[0]
+	var member_id := str(member.id)
+	assert_str(member_id).is_not_empty()
+	assert_bool(_execute("treat %s throat" % member_id)).is_false()
+	assert_str(str(_last_entry()["text"])).contains("no throat injury")
+	member.injuries["throat"] = {"injury_id": "throat-crushed", "instance_id": "throat-crushed@throat|dev",
+		"location_id": "throat", "severity": "serious", "applications": 1, "effects": {"voice_blocked": true}}
+	GameState.set_gp(5)
+	assert_bool(_execute("treat %s throat" % member_id)).is_false()
+	assert_str(str(_last_entry()["text"])).contains("insufficient_gp")
+	assert_bool(member.injuries.has("throat")).is_true()
+	GameState.set_gp(20)
+	assert_bool(_execute("treat %s throat" % member_id)).is_true()
+	assert_int(GameState.gp).is_equal(0)
+	assert_bool(member.injuries.has("throat")).is_false()

@@ -16,6 +16,10 @@ signal pointer_pressed(tile: Dictionary, actor_id: StringName)
 signal pointer_cleared
 
 const UnitArtScript := preload("res://globals/unit_art.gd")
+const FieldOverlayScript := preload("res://world/combat_overlay.gd")
+const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
+const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
+const TargetPreviewScene := preload("res://ui/hud/target_preview.tscn")
 const BACKDROP_PATTERN := "res://assets/generated/backgrounds/combat/%s-battlefield-v1.png"
 const GROUND_ATLAS := preload("res://assets/generated/sprites/ground/ground_tiles.png")
 
@@ -32,7 +36,9 @@ const GROUND_FIELD_VARIANTS: Array[Vector2i] = [
 const GROUND_MODULATE := Color(0.62, 0.63, 0.68, 0.60)
 
 const FIT_MARGIN := 20.0
-const MIN_SCALE := 0.6
+## Full field grids can be much larger than the old encounter boards. Permit
+## overview scales so their edge combatants remain inside this region.
+const MIN_SCALE := 0.01
 const MAX_SCALE := 2.4
 ## Sprite height as a multiple of a (scaled) tile height — reads as "a figure
 ## standing on the tile" rather than a giant or a speck.
@@ -42,6 +48,11 @@ const TARGET_RIM := Color("#E06C5A")
 const HOVER_RIM := Color("#9AA3B2")
 const REACHABLE_TINT := Color(0.24, 0.56, 0.42, 0.18)
 const PATH_TINT := Color(0.82, 0.67, 0.24, 0.20)
+const PENDING_TINT := Color(0.84, 0.71, 1.0, 0.30)  # khor glow: the cells being picked
+const FIRE_TINT := Color(0.94, 0.42, 0.16, 0.34)
+const MARK_TINT := Color(0.94, 0.42, 0.16, 0.14)   # filed, not yet burning
+const LIGHT_TINT := Color(1.0, 0.94, 0.70, 0.22)
+const SHROUD_TINT := Color(0.22, 0.16, 0.36, 0.30)
 const COVER_COLOR := Color("#D6C184")
 const COVER_ART_PATTERN := "res://assets/generated/sprites/terrain/cover_%s.png"
 const COVER_ART_TILE_WIDTHS := 1.35  # prop footprint relative to a tile's width
@@ -62,6 +73,11 @@ var _selected := Vector2i(-1, -1)
 var _hovered := Vector2i(-1, -1)
 var _reachable: Dictionary = {}
 var _hover_path: Array[Vector2i] = []
+var _pending_cells: Array[Vector2i] = []
+var _fire_cells: Dictionary = {}   # Vector2i -> true (burning now)
+var _mark_cells: Dictionary = {}   # Vector2i -> true (filed for a later beat)
+var _light_cells: Dictionary = {}
+var _shroud_cells: Dictionary = {}  # Vector2i -> true (inside a Shroud / Eclipse Procession)  # Vector2i -> true (inside a Witness Light)
 var _input_locked_until_msec := 0
 var _pointer_turn_available := true
 var _fallen: Dictionary = {}
@@ -71,6 +87,77 @@ var _backdrop: TextureRect
 var _units_layer: Control
 var _fx_layer: Control
 var _unit_nodes: Dictionary = {}
+var _field_overlay: FieldOverlayScript
+var _animate_events := true
+var _hit_flashes: Dictionary = {}
+var _preview_id: StringName = &""
+var target_preview: PanelContainer
+
+
+## Receives a public quote from the interface; no combat arithmetic or rolls here.
+func show_target_preview(actor_id: StringName, actor_name: String, quote: String) -> void:
+	_preview_id = actor_id
+	(target_preview.get_node("Column/TargetName") as Label).text = actor_name
+	(target_preview.get_node("Column/Quote") as Label).text = quote
+	target_preview.reset_size()
+	target_preview.show()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_preview_target(actor_id)
+	_process(0.0)
+	queue_redraw()
+
+
+func clear_target_preview() -> void:
+	_preview_id = &""
+	if is_instance_valid(target_preview):
+		target_preview.hide()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_preview_target(&"")
+	queue_redraw()
+
+
+func _process(_delta: float) -> void:
+	if _preview_id.is_empty() or not is_instance_valid(target_preview):
+		return
+	var cell := _cell_of(_preview_id)
+	if cell == NO_CELL:
+		clear_target_preview()
+		return
+	# Project through the field's canvas transform too, so camera motion keeps the
+	# quote beside its target while text remains at HUD scale.
+	var anchor := cell_center(cell)
+	var desired := anchor + Vector2(DS.SPACE_8, -target_preview.size.y - DS.SPACE_8)
+	if desired.x + target_preview.size.x > size.x - DS.SPACE_4:
+		desired.x = anchor.x - target_preview.size.x - DS.SPACE_8
+	target_preview.position = desired.clamp(Vector2.ONE * DS.SPACE_4,
+		(size - target_preview.size - Vector2.ONE * DS.SPACE_4).max(Vector2.ONE * DS.SPACE_4))
+
+
+## Migration step 6: the region retains its frozen input/payload API while the
+## loaded field owns projection and actor presentation for ambient sessions.
+func bind_field(field: FieldMap) -> void:
+	if is_instance_valid(_field_overlay):
+		_field_overlay.free()
+	_field_overlay = FieldOverlayScript.new()
+	_field_overlay.name = "CombatOverlay"
+	field.add_child(_field_overlay)
+	_field_overlay.bind_field(field)
+	_backdrop.hide()
+	_units_layer.hide()
+	_fx_layer.hide()
+	queue_redraw()
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_field_overlay):
+		_field_overlay.name = "RetiredCombatOverlay"
+		_field_overlay.queue_free()
+
+
+func set_replaying(replaying: bool) -> void:
+	_animate_events = not replaying
+	if is_instance_valid(_field_overlay):
+		_field_overlay.animate_events = not replaying
 
 
 func _ready() -> void:
@@ -95,6 +182,9 @@ func _ready() -> void:
 	_fx_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_fx_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_fx_layer)
+	target_preview = TargetPreviewScene.instantiate() as PanelContainer
+	target_preview.z_index = 2
+	add_child(target_preview)
 	resized.connect(
 		func() -> void:
 			_sync_units(false)
@@ -106,6 +196,8 @@ func _ready() -> void:
 				_hovered = Vector2i(-1, -1)
 				_hover_path.clear()
 				queue_redraw()
+				if is_instance_valid(_field_overlay):
+					_field_overlay.set_pointer(_selected, null)
 	)
 
 
@@ -120,6 +212,7 @@ func consume_event(event: CombatEvent) -> void:
 				_tiles.append((value as Dictionary).duplicate(true))
 	_read_actors(snapshot)
 	_set_movement(snapshot.get("movement", {}))
+	_read_fields(snapshot)
 	match event.type:
 		&"turn_started", &"enemy_turn_started":
 			_active_id = event.actor_id
@@ -131,6 +224,10 @@ func consume_event(event: CombatEvent) -> void:
 		&"battle_finished":
 			_active_id = &""
 			_target_id = &""
+	if is_instance_valid(_field_overlay):
+		_field_overlay.consume_event(event)
+		_field_overlay.set_pointer(_selected, _hovered)
+		return
 	var move_path := _path_cells(event.data.get("path_cells", []))
 	if event.type == &"action_resolved" and move_path.size() >= 2 \
 			and _unit_nodes.has(event.actor_id):
@@ -141,7 +238,7 @@ func consume_event(event: CombatEvent) -> void:
 		)
 	var animate_move := event.type == &"battlefield_changed"
 	_sync_units(animate_move)
-	if event.type == &"action_resolved" and move_path.is_empty():
+	if _animate_events and event.type == &"action_resolved" and move_path.is_empty():
 		_input_locked_until_msec = maxi(
 			_input_locked_until_msec,
 			Time.get_ticks_msec() + roundi(ACTION_FEEDBACK_SECONDS * 1000.0)
@@ -154,6 +251,64 @@ func rendered_tile_count() -> int:
 	return _tiles.size()
 
 
+func set_pending_cells(cells: Array[Vector2i]) -> void:
+	_pending_cells = cells.duplicate()
+	queue_redraw()
+
+
+func fire_cell_count() -> int:
+	return _fire_cells.size()
+
+
+func light_cell_count() -> int:
+	return _light_cells.size()
+
+
+func shroud_cell_count() -> int:
+	return _shroud_cells.size()
+
+
+## Board workings from the controller snapshot: burning Firebreak cells, filed marks, and
+## Witness Light fields. Rendered as ground tints so units and cover still read on top.
+func _read_fields(snapshot: Dictionary) -> void:
+	if not snapshot.has("fire") and not snapshot.has("light"):
+		return
+	_fire_cells.clear()
+	_mark_cells.clear()
+	_light_cells.clear()
+	_shroud_cells.clear()
+	var fire: Dictionary = snapshot.get("fire", {})
+	for line: Variant in fire.get("lines", []):
+		if line is Dictionary:
+			for cell: Vector2i in FireField.cells_from_data((line as Dictionary).get("cells", [])):
+				_fire_cells[cell] = true
+	for mark: Variant in fire.get("marks", []):
+		if mark is Dictionary:
+			for cell: Vector2i in FireField.cells_from_data((mark as Dictionary).get("cells", [])):
+				_mark_cells[cell] = true
+	var light: Dictionary = snapshot.get("light", {})
+	for field: Variant in light.get("fields", []):
+		if not (field is Dictionary):
+			continue
+		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
+		if not (center is Vector2i):
+			continue
+		var radius := int((field as Dictionary).get("radius", 0))
+		for dy: int in range(-radius, radius + 1):
+			for dx: int in range(-radius, radius + 1):
+				_light_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+	for field: Variant in light.get("shrouds", []):
+		if not (field is Dictionary):
+			continue
+		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
+		if not (center is Vector2i):
+			continue
+		var radius := int((field as Dictionary).get("radius", 0))
+		for dy: int in range(-radius, radius + 1):
+			for dx: int in range(-radius, radius + 1):
+				_shroud_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+
+
 func select_tile(cell: Vector2i) -> void:
 	_selected = cell
 	for tile: Dictionary in _tiles:
@@ -161,6 +316,8 @@ func select_tile(cell: Vector2i) -> void:
 			tile_selected.emit(tile.duplicate(true))
 			break
 	queue_redraw()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_pointer(_selected, _hovered)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -196,9 +353,13 @@ func clear_pointer() -> void:
 	_selected = Vector2i(-1, -1)
 	pointer_cleared.emit()
 	queue_redraw()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_pointer(null, null)
 
 
 func pointer_input_available() -> bool:
+	if is_instance_valid(_field_overlay):
+		return _pointer_turn_available and not _field_overlay.is_animating()
 	return _pointer_turn_available and Time.get_ticks_msec() >= _input_locked_until_msec
 
 
@@ -231,6 +392,11 @@ func cover_marker_count() -> int:
 
 
 func cell_center(cell: Vector2i) -> Vector2:
+	if is_instance_valid(_field_overlay):
+		var point := _field_overlay.cell_center(cell)
+		return get_global_transform_with_canvas().affine_inverse() * (
+			_field_overlay.get_global_transform_with_canvas() * point
+		)
 	return _project(cell.x, cell.y, _height_at(cell), _layout())
 
 
@@ -269,6 +435,8 @@ func _refresh_hover() -> void:
 			tile_hovered.emit(tile.duplicate(true))
 			break
 	queue_redraw()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_pointer(_selected, _hovered)
 
 
 func _tile_at(cell: Vector2i) -> Dictionary:
@@ -286,6 +454,9 @@ func _actor_at(cell: Vector2i) -> StringName:
 
 
 func _cell_at(point: Vector2) -> Vector2i:
+	if is_instance_valid(_field_overlay):
+		var cell := _field_overlay.cell_at_viewport(get_global_transform_with_canvas() * point)
+		return cell if not _tile_at(cell).is_empty() else NO_CELL
 	var layout := _layout()
 	var closest := NO_CELL
 	var distance := INF
@@ -301,6 +472,8 @@ func _cell_at(point: Vector2) -> Vector2i:
 
 
 func _draw() -> void:
+	if is_instance_valid(_field_overlay):
+		return
 	var layout := _layout()
 	var scale_factor: float = layout["scale"]
 	var half_w := float(DS.TILE_W) * 0.5 * scale_factor
@@ -330,6 +503,16 @@ func _draw() -> void:
 			draw_colored_polygon(diamond, REACHABLE_TINT)
 		if _hover_path.has(cell):
 			draw_colored_polygon(diamond, PATH_TINT)
+		if _shroud_cells.has(cell):
+			draw_colored_polygon(diamond, SHROUD_TINT)
+		if _light_cells.has(cell):
+			draw_colored_polygon(diamond, LIGHT_TINT)
+		if _fire_cells.has(cell):
+			draw_colored_polygon(diamond, FIRE_TINT)
+		elif _mark_cells.has(cell):
+			draw_colored_polygon(diamond, MARK_TINT)
+		if _pending_cells.has(cell):
+			draw_colored_polygon(diamond, PENDING_TINT)
 		if bool(tile.get("cover", false)) and _cover_texture() == null:
 			# Badge is the LAST-RESORT marker; with prop art present the cover
 			# prop is a y-sorted node in UnitsLayer (gate r1: props must
@@ -356,7 +539,7 @@ func _draw() -> void:
 		if cell == _hovered:
 			rim = HOVER_RIM
 			rim_width = 1.5
-		if cell == _cell_of(_target_id):
+		if cell == _cell_of(_preview_id if not _preview_id.is_empty() else _target_id):
 			rim = TARGET_RIM
 			rim_width = 2.0
 		elif cell == _cell_of(_active_id):
@@ -434,6 +617,9 @@ func _backdrop_texture(theme_name: String) -> Texture2D:
 
 
 func _sync_background() -> void:
+	if is_instance_valid(_field_overlay):
+		_backdrop.hide()
+		return
 	var texture := _backdrop_texture(_backdrop_theme())
 	_backdrop.texture = texture
 	_backdrop.visible = texture != null
@@ -443,8 +629,12 @@ func _sync_background() -> void:
 ## battles (zone models snapshot no tiles, and the legacy battle_stage.gd
 ## composition already presents those).
 func _sync_units(animate_move: bool) -> void:
+	if is_instance_valid(_field_overlay):
+		return
 	_sync_cover_props()
 	if _tiles.is_empty() or _actors.is_empty():
+		for id: StringName in _hit_flashes.keys():
+			_stop_hit_flash(id)
 		for node: Node in _unit_nodes.values():
 			node.queue_free()
 		_unit_nodes.clear()
@@ -467,11 +657,16 @@ func _sync_units(animate_move: bool) -> void:
 			sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 			var unit_id := UnitArtScript.combat_unit_id(
 				StringName(str(actor.get("side", "ally"))),
 				str(actor.get("archetype_id", "")),
 				str(actor.get("display_name", ""))
 			)
+			if not str(actor.get("member_id", "")).is_empty():
+				unit_id = UnitArtScript.field_unit_id(
+					str(actor["member_id"]), str(actor.get("portrait_path", ""))
+				)
 			sprite.texture = load(UnitArtScript.texture_path(UnitArtScript.resolve(unit_id)))
 			_units_layer.add_child(sprite)
 			_unit_nodes[id] = sprite
@@ -508,7 +703,8 @@ func _sync_units(animate_move: bool) -> void:
 		var alive := int(actor.get("hp", 1)) > 0
 		var was_fallen := bool(_fallen.get(id, false))
 		if alive:
-			sprite.modulate = Color.WHITE
+			if not _hit_flashes.has(id):
+				sprite.modulate = Color.WHITE
 			sprite.rotation = 0.0
 			_fallen[id] = false
 		elif was_fallen or not _fallen.has(id):
@@ -517,10 +713,12 @@ func _sync_units(animate_move: bool) -> void:
 			sprite.rotation = _fall_rotation(sprite)
 			_fallen[id] = true
 		else:
+			_stop_hit_flash(id)
 			_play_ko_fall(sprite)
 			_fallen[id] = true
 	for id: StringName in _unit_nodes.keys():
 		if not seen.has(id):
+			_stop_hit_flash(id)
 			(_unit_nodes[id] as Node).queue_free()
 			_unit_nodes.erase(id)
 			_fallen.erase(id)
@@ -591,36 +789,50 @@ func _play_action_beat(event: CombatEvent) -> void:
 	var defender := _unit_nodes.get(event.target_id) as TextureRect
 	if attacker != null and defender != null and attacker != defender:
 		var home := attacker.position
-		var toward := home + (defender.position - home) * 0.25
+		var toward := home + (defender.position - home).limit_length(DS.SPACE_4)
 		var lunge := create_tween()
 		lunge.tween_property(attacker, "position", toward, DS.DUR_FAST)
 		lunge.tween_property(attacker, "position", home, DS.DUR_FAST)
 	# A felled defender is mid KO-fall — its fade tween owns modulate; flashing
 	# it back to white here would fight that tween frame-by-frame.
-	if defender != null and not bool(_fallen.get(event.target_id, false)):
+	if defender != null and HitPulseScript.is_damaging_hit(event):
+		var pulse := HitPulseScript.new()
+		pulse.name = "HitPulse"
+		pulse.position = defender.position + defender.size * Vector2(0.5, 0.45)
+		_fx_layer.add_child(pulse)
+	if defender != null and HitPulseScript.is_damaging_hit(event) and not bool(_fallen.get(event.target_id, false)):
+		_stop_hit_flash(event.target_id)
 		var flash := create_tween()
-		defender.modulate = Color(1.6, 1.4, 1.4, 1.0)
+		_hit_flashes[event.target_id] = flash
+		defender.modulate = DS.PARCHMENT
 		flash.tween_property(defender, "modulate", Color.WHITE, DS.DUR_BASE)
-	var anchor := defender if defender != null else attacker
-	if anchor != null:
-		_spawn_damage_pop(event, anchor)
+		flash.tween_callback(func() -> void: _hit_flashes.erase(event.target_id))
+	if defender != null and HitPulseScript.has_result(event):
+		_spawn_damage_pop(event)
 
 
-func _spawn_damage_pop(event: CombatEvent, anchor: TextureRect) -> void:
-	var hit := bool(event.data.get("hit", true))
-	var damage := int(event.data.get("damage", 0))
-	var pop := Label.new()
-	pop.theme_type_variation = "HeadingLabel"
-	pop.text = str(damage) if hit and damage > 0 else ("MISS" if not hit else "0")
-	pop.modulate = Color("#F2E4C9") if hit else Color("#9AA3B2")
-	pop.position = anchor.position + Vector2(anchor.size.x * 0.5 - 10.0, -6.0)
-	pop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+func _stop_hit_flash(id: StringName) -> void:
+	var previous := _hit_flashes.get(id) as Tween
+	if previous != null and previous.is_valid():
+		previous.kill()
+	_hit_flashes.erase(id)
+
+
+func _spawn_damage_pop(event: CombatEvent) -> void:
+	for previous: Node in _fx_layer.get_children():
+		if previous.get_meta("result_target", &"") == event.target_id:
+			_fx_layer.remove_child(previous)
+			previous.queue_free()
+	var pop := CombatResultScene.instantiate()
 	_fx_layer.add_child(pop)
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(pop, "position:y", pop.position.y - 28.0, 0.7)
-	tween.tween_property(pop, "modulate:a", 0.0, 0.7)
-	tween.chain().tween_callback(pop.queue_free)
+	pop.setup(event, _result_anchor.bind(event.target_id), func() -> Rect2:
+		return get_global_transform_with_canvas() * Rect2(Vector2.ZERO, size)
+	)
+
+
+func _result_anchor(id: StringName) -> Variant:
+	var unit := _unit_nodes.get(id) as TextureRect
+	return unit.position + unit.size * Vector2(0.5, 0.55) if is_instance_valid(unit) else null
 
 
 func _sprite_pos_for_cell(sprite: TextureRect, cell: Vector2i, layout: Dictionary) -> Vector2:

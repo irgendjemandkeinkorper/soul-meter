@@ -132,7 +132,7 @@ func _build_row(member: PartyMember) -> Control:
 	portrait.custom_minimum_size = Vector2(56, 56)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(portrait)
 	_row_portraits.append(portrait)
@@ -176,10 +176,10 @@ func _build_detail_sheet(split: HBoxContainer) -> void:
 	split.add_child(sheet)
 
 	_detail_portrait = TextureRect.new()
-	_detail_portrait.custom_minimum_size = Vector2(128, 128)
+	_detail_portrait.custom_minimum_size = Vector2(256, 256)
 	_detail_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_detail_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_detail_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_detail_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_detail_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	sheet.add_child(_detail_portrait)
 

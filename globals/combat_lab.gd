@@ -5,6 +5,19 @@ const COMBAT_LAB_SCENE := preload("res://ui/debug/combat_lab.tscn")
 const EXPORT_ROOT := "user://combat_lab"
 const AUTHORED_WEATHER := &"__authored_default__"
 const CALM := &""
+const AIM_ACTION := &"lab-aimed-shot"
+## Lab-only voice-tagged action used to show the throat rule (task 8).
+const VOCAL_ACTION := &"lab-vocal-call"
+## PROVISIONAL fixture values, not production balance or creature anatomy.
+const AIM_PROFILES := {
+	"torso": {"ap_surcharge": 1, "ct_surcharge": 5, "accuracy_penalty": 5},
+	"arm": {"ap_surcharge": 1, "ct_surcharge": 10, "accuracy_penalty": 15,
+		"injury": {"id": "arm-strained", "chance_on_hit": 50, "min_damage": 1, "severity": "minor",
+			"effects": {"attack_accuracy_pp": -10}}},
+	"throat": {"ap_surcharge": 1, "ct_surcharge": 15, "accuracy_penalty": 25,
+		"injury": {"id": "throat-bruised", "chance_on_hit": 35, "min_damage": 1, "severity": "minor",
+			"effects": {"vocal_accuracy_pp": -10}}},
+}
 ## PROVISIONAL owner surface: F3 may move after balance-facilitator playtesting.
 const TOGGLE_HOTKEY: Key = KEY_F3
 ## Emitted by every entry point that declines to open — over a live production
@@ -34,6 +47,8 @@ var _outcome: Dictionary = {}
 var _latest_snapshot: Dictionary = {}
 var _pending_forecast: Dictionary = {}
 var _last_comparison: Dictionary = {}
+var _aim_location: StringName = &"torso"
+var _aim_controller: CombatController = null
 ## A finished lab battle runs the PRODUCTION end-of-battle path, which accrues
 ## style points into SaveGame.ng_plus, can consume persistent SkillCheck expert
 ## rerolls, turns in quests, and mutates the tactical roster. Battle then
@@ -247,6 +262,7 @@ func stop_test_session() -> void:
 ## including the encounter id, rosters and last_result, which a partial reset
 ## would leave visible to whatever runs next.
 func _clear_lab_battle(owned: bool) -> void:
+	_aim_controller = null
 	if not owned or Battle.encounter_id.is_empty():
 		return
 	Battle.allies.clear()
@@ -339,6 +355,11 @@ func build_session_markdown(
 			% str(weather.get("element_id", ""))
 		)
 		lines.append("")
+	if bool(setup.get("called_shot_fixture", false)):
+		lines.append("- Called-shot fixture: `%s` (provisional costs and synthetic anatomy; no injuries)" % str(setup.get("anatomy_fixture", "exposed")))
+	if str(setup.get("visibility_fixture", "clear")) != "clear":
+		lines.append("- Visibility fixture: `%s` on every enemy cell (provisional physical visibility)" % str(setup.get("visibility_fixture", "clear")))
+		lines.append("")
 	lines.append_array([
 		"## Turns",
 		"",
@@ -349,7 +370,7 @@ func build_session_markdown(
 		lines.append("| %d | %s | %s | %s | %s | %s |" % [
 			int(row.get("turn", 0)),
 			str(row.get("actor", "")),
-			str(row.get("action", "")),
+			str(row.get("action", "")) + (" @ " + str(row["aim_location"]) if not str(row.get("aim_location", "")).is_empty() else ""),
 			_value_or_dash(row.get("forecast", null)),
 			_value_or_dash(row.get("resolution", null)),
 			(
@@ -390,6 +411,8 @@ func _start_session(requested_setup: Dictionary, enter_game_flow: bool) -> void:
 	_restore_saved_state()
 	_capture_saved_state()
 	_setup = _normalize_setup(requested_setup)
+	_aim_location = &"torso"
+	_aim_controller = null
 	_turn_rows.clear()
 	_outcome.clear()
 	_latest_snapshot.clear()
@@ -441,6 +464,16 @@ func _normalize_setup(requested_setup: Dictionary) -> Dictionary:
 
 
 func _apply_runtime_overrides(controller: CombatController, setup: Dictionary) -> void:
+	if bool(setup.get("called_shot_fixture", false)):
+		_install_aim_fixture(controller, str(setup.get("anatomy_fixture", "exposed")))
+	var visibility := StringName(str(setup.get("visibility_fixture", "clear")))
+	if visibility != &"clear":
+		for enemy: BattleActor in controller.enemies:
+			var cell: Variant = controller.battlefield.cell_of(enemy)
+			if cell is Vector2i:
+				var visibility_result := controller.configure_visibility(cell, visibility)
+				if not bool(visibility_result.get("allowed", false)):
+					push_warning("Combat Lab visibility fixture refused: %s" % visibility_result)
 	var weather: Dictionary = setup.get("weather", {})
 	var weather_result := controller.configure_weather(
 		StringName(weather.get("element_id", CALM))
@@ -462,6 +495,88 @@ func _apply_runtime_overrides(controller: CombatController, setup: Dictionary) -
 		if not bool(residue_result.get("allowed", false)):
 			push_warning("Combat Lab tile seed refused: %s" % residue_result)
 			break
+
+
+func _install_aim_fixture(controller: CombatController, profile: String) -> void:
+	var action := CombatAction.make(AIM_ACTION, "Lab aimed shot", CombatAction.Kind.ATTACK)
+	action.ct_cost = 30
+	action.target_profile = &"ranged"
+	action.player_available = false
+	action.aim_profiles = AIM_PROFILES.duplicate(true)
+	controller._actions[AIM_ACTION] = action
+	# Voice-tagged twin of the shot (task 8): same numbers, so any forecast difference between
+	# the two after a throat hit is the vocal rule and nothing else.
+	var call := CombatAction.make(VOCAL_ACTION, "Lab vocal call", CombatAction.Kind.ATTACK)
+	call.ct_cost = 30
+	call.target_profile = &"ranged"
+	call.player_available = false
+	call.requires_voice = true
+	controller._actions[VOCAL_ACTION] = call
+	for target: BattleActor in controller.enemies:
+		target.anatomy = {
+			"torso": {"display_name": "Torso", "exposed": true, "hidden_by_cover": true},
+			"arm": {"display_name": "Arm", "exposed": profile != "covered_arm"},
+			"throat": {"display_name": "Throat", "exposed": true},
+		}
+		if profile == "no_throat":
+			target.anatomy.erase("throat")
+	if profile == "low_cover":
+		_seat_low_cover(controller)
+	_aim_controller = controller
+
+
+## Places one cover cell beside the first living enemy on the side facing the active ally, so
+## the fixture target hugs low cover against the party's shot (torso hidden, throat exposed).
+func _seat_low_cover(controller: CombatController) -> void:
+	var grid := controller.battlefield as GridBattlefieldModel
+	var enemy := _first_living_enemy(controller)
+	var ally := controller.active_actor()
+	if grid == null or enemy == null or ally == null:
+		return
+	var enemy_cell: Variant = grid.cell_of(enemy)
+	var ally_cell: Variant = grid.cell_of(ally)
+	if enemy_cell == null or ally_cell == null:
+		return
+	var step := ((ally_cell as Vector2i) - (enemy_cell as Vector2i)).sign()
+	if step == Vector2i.ZERO:
+		return
+	grid.set_cover((enemy_cell as Vector2i) + step, true)
+
+
+func select_lab_aim(location: StringName) -> void:
+	if not location.is_empty() and not AIM_PROFILES.has(location):
+		return
+	_aim_location = location
+	_update_panel()
+
+
+func aim_forecast() -> Dictionary:
+	if not _enabled or not _lab_battle_running or _aim_controller == null or Battle.controller != _aim_controller:
+		return {"allowed": false, "message": "Enable the called-shot fixture in a lab session."}
+	var target := _first_living_enemy(_aim_controller)
+	var forecast := _aim_controller.forecast_action(
+		_aim_controller.action_by_id(AIM_ACTION), target, {"aim_location": _aim_location}
+	)
+	forecast["target_name"] = target.display_name if target != null else ""
+	forecast["scheduler_mode"] = "ct" if _aim_controller.rules.use_charge_time else "ap"
+	return forecast
+
+
+func submit_lab_aim() -> Dictionary:
+	var forecast := aim_forecast()
+	if not bool(forecast.get("allowed", false)):
+		return forecast
+	var actor := _aim_controller.active_actor()
+	var target := _first_living_enemy(_aim_controller)
+	_pending_forecast = {
+		"actor_id": actor.combat_id, "actor": actor.display_name,
+		"target_id": target.combat_id, "action_id": AIM_ACTION,
+		"aim_location": String(_aim_location), "damage": int(forecast["damage"]),
+		"context": forecast["context"].duplicate(true),
+	}
+	var result := _aim_controller.submit_action(AIM_ACTION, target, {"aim_location": _aim_location})
+	_update_panel()
+	return result
 
 
 func _capture_pending_forecast() -> void:
@@ -532,6 +647,7 @@ func _record_resolution(event: CombatEvent) -> void:
 		action_id == StringName(_pending_forecast.get("action_id", &""))
 		and event.actor_id == StringName(_pending_forecast.get("actor_id", &""))
 		and _resolution_target(event) == StringName(_pending_forecast.get("target_id", &""))
+		and str(event.data.get("aim_location", "")) == str(_pending_forecast.get("aim_location", ""))
 		and resolved_damage != null
 	):
 		forecast_damage = int(_pending_forecast.get("damage", 0))
@@ -546,6 +662,7 @@ func _record_resolution(event: CombatEvent) -> void:
 		"turn": _turn_rows.size() + 1,
 		"actor": _actor_name(event.actor_id),
 		"action": String(action_id),
+		"aim_location": str(event.data.get("aim_location", "")),
 		"forecast": forecast_damage,
 		"resolution": resolved_damage,
 		"compared": forecast_damage != null and resolved_damage != null,
@@ -634,6 +751,9 @@ func _inspector_payload() -> Dictionary:
 		"style": CombatStylePoints.score_breakdown(),
 		"combatant_tiles": _combatant_tiles(),
 		"last_export_path": last_export_path,
+		"aim_enabled": bool(_setup.get("called_shot_fixture", false)),
+		"aim_location": String(_aim_location),
+		"aim_forecast": aim_forecast() if bool(_setup.get("called_shot_fixture", false)) else {},
 	}
 
 

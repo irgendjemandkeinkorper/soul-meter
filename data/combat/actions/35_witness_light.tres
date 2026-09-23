@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"witness-light"
+display_name = "Witness Light"
+kind = 0
+verb = 2
+ap_cost = 4
+ct_cost = 60
+element_id = &"sul"
+magnitude = &"song"
+target_profile = &"cells"
+player_available = true
+effect_id = &"witness_light"
+effect_payload = {"range": 4, "cell_count": 1}
+spell = true
+breath_cost = 12
+description = "Sul Sequence. A revelation field of radius 1 around a cell within 4, for two checkpoints. Creatures inside read as Exposed while they stay."

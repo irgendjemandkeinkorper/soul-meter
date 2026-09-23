@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"eclipse-procession"
+display_name = "Eclipse Procession"
+kind = 0
+verb = 2
+ap_cost = 4
+ct_cost = 60
+element_id = &"vekh"
+magnitude = &"refrain"
+target_profile = &"cells"
+player_available = true
+effect_id = &"eclipse_procession"
+effect_payload = {"range": 0, "cell_count": 1, "radius": 2, "refrain_use": true}
+spell = true
+breath_cost = 24
+description = "Vekh Refrain, caster-centered radius 2. A moving shroud that follows you for one checkpoint; allies are concealed only while inside."

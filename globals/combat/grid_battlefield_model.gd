@@ -64,6 +64,12 @@ var _elevation: Dictionary = {}  ## Vector2i -> int
 var _cliffs: Dictionary = {}  ## Vector2i -> bool
 ## Cells that grant partial cover without blocking movement or line of sight.
 var _cover: Dictionary = {}  ## Vector2i -> bool
+## Cells authored as solid obstacles that block line of fire (walls), independent of the
+## navigation blocking layer so a fence or shallow water never silently stops a shot.
+var _obstacles: Dictionary = {}  ## Vector2i -> bool
+## Authored physical visibility per cell; absent means clear.
+var _visibility: Dictionary = {}  ## Vector2i -> StringName
+const VISIBILITY_LEVELS: Array[StringName] = [&"clear", &"dim", &"obscured"]
 ## Field-grid flags as they were before combat first touched each cell, so
 ## `release_field_grid()` hands the shared IsoGrid back to navigation unchanged.
 var _prior_solid: Dictionary = {}  ## Vector2i -> bool
@@ -207,6 +213,8 @@ func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
 	_tiles_snapshot_cache = []
 	_elevation.clear()
 	_cover.clear()
+	_obstacles.clear()
+	_visibility.clear()
 	_cliffs.clear()
 	_prior_solid.clear()
 	_prior_weight.clear()
@@ -240,6 +248,12 @@ func _read_authored_terrain(ground: TileMapLayer) -> void:
 		var cover_value: Variant = tile_data.get_custom_data(&"cover")
 		if cover_value is bool and cover_value:
 			set_cover(cell)
+		var obstacle_value: Variant = tile_data.get_custom_data(&"blocks_fire")
+		if obstacle_value is bool and obstacle_value:
+			set_obstacle(cell)
+		var visibility_value: Variant = tile_data.get_custom_data(&"visibility")
+		if visibility_value is String and not (visibility_value as String).is_empty():
+			set_visibility(cell, StringName(visibility_value))
 		var elevation_value: Variant = tile_data.get_custom_data(&"elevation")
 		if elevation_value is int and elevation_value != 0:
 			set_elevation(cell, clampi(elevation_value, 0, DS.ELEVATION_MAX))
@@ -473,6 +487,59 @@ func target_query(actor: BattleActor, target: BattleActor, profile: StringName) 
 ## Chebyshev-adjacent to the target AND strictly nearer the attacker than the target is —
 ## i.e. the target is hugging cover that stands between it and the shot. A crate beside the
 ## ATTACKER grants nothing (the round-1 rule was directionless; Wave P gate finding class).
+func set_visibility(cell: Vector2i, level: StringName) -> Dictionary:
+	if not VISIBILITY_LEVELS.has(level):
+		return _blocked(
+			&"visibility", "Unknown visibility level: %s." % level, {"type": &"visibility_level"}
+		)
+	_tiles_snapshot_cache = []
+	if level == &"clear":
+		_visibility.erase(cell)
+	else:
+		_visibility[cell] = level
+	return _allowed({"cell": cell, "level": level})
+
+
+func visibility_at(cell: Vector2i) -> StringName:
+	return _visibility.get(cell, &"clear")
+
+
+func visibility_between(actor: BattleActor, target: BattleActor) -> Dictionary:
+	if not has_combatant(actor) or not has_combatant(target):
+		return {"level": &"clear", "causes": []}
+	var causes: Array[Dictionary] = []
+	var worst := 0
+	for cell: Vector2i in [_cells[actor.combat_id], _cells[target.combat_id]]:
+		var level := visibility_at(cell)
+		if level == &"clear":
+			continue
+		causes.append({"cell": cell, "level": level})
+		worst = maxi(worst, VISIBILITY_LEVELS.find(level))
+	return {"level": VISIBILITY_LEVELS[worst], "causes": causes}
+
+
+func set_obstacle(cell: Vector2i, blocks_fire: bool = true) -> void:
+	_tiles_snapshot_cache = []
+	_obstacles[cell] = blocks_fire
+
+
+## Low cover hides the target's cover-hidden locations only when the target hugs a cover cell
+## that stands toward the attacker (the same directional rule as `cover_bonus`) AND the
+## attacker does not stand above the target: high ground sees over low cover, matching
+## `line_of_sight()`. Facing plays no part — a low wall hides the same parts from any side.
+func location_cover(actor: BattleActor, target: BattleActor) -> Dictionary:
+	if not has_combatant(actor) or not has_combatant(target):
+		return {"covered": false, "seen_over": false}
+	var attacker_cell: Vector2i = _cells[actor.combat_id]
+	var target_cell: Vector2i = _cells[target.combat_id]
+	var cover_cell: Variant = _cover_cell_between(attacker_cell, target_cell)
+	if cover_cell == null:
+		return {"covered": false, "seen_over": false}
+	if elevation_at(attacker_cell) > elevation_at(target_cell):
+		return {"covered": false, "seen_over": true, "cell": cover_cell}
+	return {"covered": true, "seen_over": false, "cell": cover_cell}
+
+
 func cover_bonus(actor: BattleActor, target: BattleActor) -> int:
 	if _rules == null or not has_combatant(actor) or not has_combatant(target):
 		return 0
@@ -495,6 +562,11 @@ func cover_bonus_at(attacker: BattleActor, target_position: StringName) -> int:
 
 
 func _cover_bonus_between(attacker_cell: Vector2i, target_cell: Vector2i) -> int:
+	return _rules.cover_defense_bonus if _cover_cell_between(attacker_cell, target_cell) != null else 0
+
+
+## The cover cell the target hugs against a shot from `attacker_cell`, or null.
+func _cover_cell_between(attacker_cell: Vector2i, target_cell: Vector2i) -> Variant:
 	for y_offset in range(-1, 2):
 		for x_offset in range(-1, 2):
 			if x_offset == 0 and y_offset == 0:
@@ -503,8 +575,8 @@ func _cover_bonus_between(attacker_cell: Vector2i, target_cell: Vector2i) -> int
 			if not bool(_cover.get(cover_cell, false)):
 				continue
 			if _chebyshev(cover_cell, attacker_cell) < _chebyshev(target_cell, attacker_cell):
-				return _rules.cover_defense_bonus
-	return 0
+				return cover_cell
+	return null
 
 
 func flank_bonus(actor: BattleActor, target: BattleActor) -> int:
@@ -559,6 +631,7 @@ func tiles_snapshot() -> Array[Dictionary]:
 					"height_delta": elevation_at(cell),
 					"cliff": bool(_cliffs.get(cell, false)),
 					"cover": bool(_cover.get(cell, false)),
+					"visibility": String(visibility_at(cell)),
 				})
 	return _tiles_snapshot_cache
 
@@ -688,9 +761,92 @@ func line_of_sight(actor: BattleActor, target: BattleActor) -> Dictionary:
 		return _blocked(
 			&"blocked_by_range", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
 		)
-	var from_cell: Vector2i = _cells[actor.combat_id]
-	var to_cell: Vector2i = _cells[target.combat_id]
-	var range_bonus := int(actor.defining_effects.get("range_bonus", 0))
+	return _line_of_sight_cells(_cells[actor.combat_id], _cells[target.combat_id], actor, target)
+
+
+func occupant_of(position: StringName) -> BattleActor:
+	var parsed := _parse_handle(position)
+	if not bool(parsed.get("ok", false)):
+		return null
+	return _occupancy.get(parsed["cell"])
+
+
+func cell_of(actor: BattleActor) -> Variant:
+	if actor == null or not _cells.has(actor.combat_id):
+		return null
+	return _cells[actor.combat_id]
+
+
+func cell_query(cell: Vector2i) -> Dictionary:
+	if _grid == null:
+		return _blocked(&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"})
+	if not _grid.is_in_bounds(cell):
+		return _blocked(
+			&"position", "That cell is outside the battlefield.", {"type": &"in_bounds", "cell": cell}
+		)
+	var occupant: BattleActor = _occupancy.get(cell)
+	var passable := not _grid.is_point_solid(cell) or occupant != null
+	if bool(_cliffs.get(cell, false)):
+		passable = false
+	return _allowed({
+		"in_bounds": true,
+		"passable": passable,
+		"occupant_id": occupant.combat_id if occupant != null else &"",
+	})
+
+
+## Forced displacement: no path, no cost, no facing change. Refuses an out-of-bounds,
+## impassable or occupied destination so a pull can never stack two combatants on one cell.
+func displace(actor: BattleActor, cell: Vector2i) -> Dictionary:
+	if _grid == null:
+		return _blocked(&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"})
+	if not has_combatant(actor) or not _cells.has(actor.combat_id):
+		return _blocked(
+			&"position", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
+		)
+	if not _grid.is_in_bounds(cell):
+		return _blocked(&"position", "That cell is outside the battlefield.", {"type": &"in_bounds"})
+	var occupant: BattleActor = _occupancy.get(cell)
+	if occupant != null and occupant != actor:
+		return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
+	if occupant == null and _grid.is_point_solid(cell):
+		return _blocked(&"position", "That cell is impassable.", {"type": &"cell_passable"})
+	var origin_cell: Vector2i = _cells[actor.combat_id]
+	if origin_cell == cell:
+		return _allowed({"from": position_of(actor), "to": position_of(actor)})
+	var previous := position_of(actor)
+	_occupancy.erase(origin_cell)
+	_release_solid(origin_cell)
+	_occupancy[cell] = actor
+	_set_solid(cell, true)
+	_cells[actor.combat_id] = cell
+	return _allowed({"from": previous, "to": position_of(actor)})
+
+
+func line_of_sight_to_cell(actor: BattleActor, cell: Vector2i) -> Dictionary:
+	if _grid == null or not has_combatant(actor):
+		return _blocked(
+			&"blocked_by_range", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
+		)
+	return _line_of_sight_cells(_cells[actor.combat_id], cell, actor, null)
+
+
+func line_of_sight_between_cells(from: Vector2i, to: Vector2i) -> Dictionary:
+	if _grid == null:
+		return _blocked(&"blocked_by_range", "Grid battlefield has not been built.", {"type": &"grid_ready"})
+	return _line_of_sight_cells(from, to, _occupancy.get(from), _occupancy.get(to))
+
+
+## Shared sightline walk for `line_of_sight()` and the cell variants. `viewer`/`viewed` are the
+## combatants standing at either end (or null) so they never block their own sightline.
+func _line_of_sight_cells(
+	from_cell: Vector2i, to_cell: Vector2i, viewer: BattleActor, viewed: BattleActor
+) -> Dictionary:
+	if not _grid.is_in_bounds(to_cell):
+		return _blocked(
+			&"blocked_by_range", "That cell is outside the battlefield.", {"type": &"in_bounds"}
+		)
+	var range_bonus := int(viewer.defining_effects.get("range_bonus", 0)) if viewer != null else 0
 	if _chebyshev(from_cell, to_cell) > _LOS_MAX_RANGE + range_bonus:
 		return _blocked(
 			&"blocked_by_range",
@@ -711,8 +867,14 @@ func line_of_sight(actor: BattleActor, target: BattleActor) -> Dictionary:
 				"Higher ground blocks the line of sight.",
 				{"type": &"elevation", "cell": cell},
 			)
+		if bool(_obstacles.get(cell, false)):
+			return _blocked(
+				&"blocked_by_obstacle",
+				"A solid obstacle blocks the line of fire.",
+				{"type": &"obstacle", "cell": cell},
+			)
 		var occupant: BattleActor = _occupancy.get(cell)
-		if occupant != null and occupant != actor and occupant != target:
+		if occupant != null and occupant != viewer and occupant != viewed:
 			if from_elev <= elevation_at(cell):
 				return _blocked(
 					&"blocked_by_occupancy",
@@ -720,13 +882,6 @@ func line_of_sight(actor: BattleActor, target: BattleActor) -> Dictionary:
 					{"type": &"occupancy", "cell": cell},
 				)
 	return _allowed()
-
-
-func occupant_of(position: StringName) -> BattleActor:
-	var parsed := _parse_handle(position)
-	if not bool(parsed.get("ok", false)):
-		return null
-	return _occupancy.get(parsed["cell"])
 
 
 func elevation_delta(actor: BattleActor, target: BattleActor) -> int:

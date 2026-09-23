@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"herd"
+display_name = "Herd"
+kind = 0
+verb = 1
+ap_cost = 3
+ct_cost = 45
+target_profile = &"ranged"
+player_available = true
+effect_id = &"pull"
+effect_payload = {"range": 2, "requires_patron": "pazzah", "requires_tier": 2, "allow_marked_destination": true}
+no_damage = true
+description = "Ash Magistrate, Tier 2 (Chord). Hook and Draw that may drag the enemy onto a filed cell."

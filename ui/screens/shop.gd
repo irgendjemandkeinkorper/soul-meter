@@ -4,6 +4,8 @@ extends Screen
 
 const VendorData := preload("res://globals/vendor_registry.gd")
 const VendorIdsData := preload("res://data/generated/vendor_ids.gd")
+const TreatmentNoticeScene := preload("res://ui/components/treatment_notice.tscn")
+const TreatmentNoticeScript := preload("res://ui/components/treatment_notice.gd")
 const LEGACY_SHOPS := {
 	"items": VendorIdsData.LOAM_AND_LANTERN,
 	"equipment": VendorIdsData.IRON_AND_THREAD,
@@ -13,9 +15,15 @@ var _vendor_id := VendorIdsData.LOAM_AND_LANTERN
 var _catalog: VBoxContainer
 var _gp_label: Label
 var _status_label: Label
+var _treatment_notice: TreatmentNoticeScript
+
+
+func _uses_ledger_style() -> bool:
+	return true
 
 
 func _build() -> void:
+	_add_opaque_backdrop()
 	var vbox := _make_shell_window("Shop")
 	# The vendor eyebrow and the purse were already a header row; they belong in the
 	# shell's Header rather than a hand-spaced row at the top of the body.
@@ -37,17 +45,27 @@ func _build() -> void:
 	_status_label.theme_type_variation = "MutedLabel"
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_status_label)
+	_treatment_notice = TreatmentNoticeScene.instantiate() as TreatmentNoticeScript
+	vbox.add_child(_treatment_notice)
 
 	_catalog = VBoxContainer.new()
 	_catalog.theme_type_variation = "ScreenContentColumn"
 	_catalog.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_child(_catalog)
+	var scroll := ScrollContainer.new()
+	scroll.name = "CatalogScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(scroll)
+	scroll.add_child(_catalog)
 	_add_back_button(vbox)
+	_treatment_notice.dismissed.connect(shell_back_button.grab_focus)
 	_render_catalog()
 
 
 ## Keeps the two existing starting-town doors compatible without hardcoded stock.
 func configure_shop(shop_type: String) -> void:
+	if is_instance_valid(_treatment_notice):
+		_treatment_notice.clear_notice()
 	if LEGACY_SHOPS.has(shop_type):
 		_vendor_id = LEGACY_SHOPS[shop_type]
 	elif not VendorData.vendor(shop_type).is_empty():
@@ -157,6 +175,7 @@ func _render_catalog() -> void:
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_catalog.add_child(note)
 	_catalog.add_child(HSeparator.new())
+	_render_treatment()
 
 	if not bool(status.get("allowed", false)):
 		var refusal := Label.new()
@@ -177,12 +196,105 @@ func _render_catalog() -> void:
 		_add_stock_entry(entry, str(vendor.get("trade_mode", "commerce")))
 
 
-func _add_stock_entry(entry: Dictionary, trade_mode: String) -> void:
-	var row := VBoxContainer.new()
-	row.add_theme_constant_override("separation", 3)
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+## 10B: the provider's treatment cards, one row per serious injury in the party. The quote
+## shown is the quote charged: the button carries the exact cost from `InjuryTreatment.quote`
+## and commit refuses a changed price instead of charging it.
+func _render_treatment() -> void:
+	var cards := InjuryTreatment.cards_for_provider(_vendor_id)
+	if cards.is_empty():
+		return
+	_catalog.add_child(_section("TREATMENT"))
+	var rows := InjuryTreatment.treatable_rows(GameState)
+	if rows.is_empty():
+		var none := Label.new()
+		none.text = "NO SERIOUS INJURIES IN THE PARTY."
+		none.theme_type_variation = "MutedLabel"
+		_catalog.add_child(none)
+		_catalog.add_child(HSeparator.new())
+		return
+	for row: Dictionary in rows:
+		for card_id: String in cards:
+			_add_treatment_row(row, card_id)
+	_catalog.add_child(HSeparator.new())
+
+
+func _add_treatment_row(row: Dictionary, card_id: String) -> void:
+	var member: PartyMember = row["member"]
+	var location: String = row["location"]
+	var record: Dictionary = row["record"]
+	var identity := CombatInjury.record_identity(record)
+	var intent := {
+		"patient_id": str(member.id), "instance_id": identity["instance_id"], "revision": identity["revision"],
+		"card_id": card_id, "provider_id": _vendor_id,
+	}
+	var quoted := InjuryTreatment.quote(intent, GameState, _combat_active())
+	var box := VBoxContainer.new()
+	box.name = "Treatment_%s_%s_%s" % [str(member.id), location, card_id]
+	box.add_theme_constant_override("separation", 3)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", DS.SPACE_4)
+	box.add_child(top)
+	var title := Label.new()
+	title.text = "%s  ·  %s  ·  SERIOUS" % [member.display_name.to_upper(), location.to_upper()]
+	title.theme_type_variation = "HeadingLabel"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(title)
+	var cost: Dictionary = quoted.get("cost", {"gp": int(InjuryTreatment.CARDS[card_id].get("gp", 0))})
+	var button := _menu_button(top, "TREAT  ·  %d SILVER" % int(cost.get("gp", 0)), _treat.bind(intent, cost))
+	button.name = "Treat_%s_%s_%s" % [str(member.id), location, card_id]
+	button.custom_minimum_size = Vector2(155, DS.CONTROL_H)
+	button.disabled = not bool(quoted.get("allowed", false))
+	var meta := Label.new()
+	var lifts: Array = quoted.get("lifts", InjuryTreatment._restrictions(record))
+	meta.text = "%s  ·  LIFTS %s" % [
+		str(InjuryTreatment.CARDS[card_id].get("display_name", card_id)).to_upper(),
+		" / ".join(PackedStringArray(lifts)).replace("_", " ").to_upper() if not lifts.is_empty() else "NOTHING LISTED",
+	]
+	meta.theme_type_variation = "MutedLabel"
+	meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(meta)
+	if not bool(quoted.get("allowed", false)):
+		var why := Label.new()
+		var alternative := str(quoted.get("alternative", ""))
+		why.text = str(quoted.get("message", "UNAVAILABLE")).to_upper()
+		if not alternative.is_empty():
+			why.text += "  ·  " + alternative.to_upper()
+		why.theme_type_variation = "MutedLabel"
+		why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(why)
+	_catalog.add_child(box)
+
+
+func _treat(intent: Dictionary, expected_cost: Dictionary) -> void:
+	_treatment_notice.clear_notice()
+	var confirmed := intent.duplicate(true)
+	confirmed["expected_cost"] = expected_cost
+	var result := InjuryTreatment.commit(confirmed, GameState, _combat_active())
+	if not bool(result.get("allowed", false)):
+		_status_label.text = "%s  ·  %s" % [
+			str(result.get("blocked_by", "refused")).replace("_", " ").to_upper(), str(result.get("message", "")),
+		]
+		_render_catalog()
+		return
+	_status_label.text = "TREATED  ·  %s %s  ·  -%d SILVER" % [
+		str(InjuryTreatment.member_by_id(GameState, str(result["patient_id"])).display_name).to_upper(),
+		str(result["location"]).to_upper(), int(result["paid"]["gp"]),
+	]
+	_render_catalog()
+	_treatment_notice.show_result(result, InjuryTreatment.member_by_id(GameState, str(result["patient_id"])).display_name)
+
+
+static func _combat_active() -> bool:
+	return Battle.session_active or (Battle.controller != null and not Battle.ended)
+
+
+func _add_stock_entry(entry: Dictionary, trade_mode: String) -> void:
+	var row := VBoxContainer.new()
+	row.theme_type_variation = "LedgerColumn"
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var top := HBoxContainer.new()
+	top.theme_type_variation = "LedgerRow"
 	row.add_child(top)
 	var title := Label.new()
 	title.text = str(entry["name"])
@@ -217,7 +329,7 @@ func _add_stock_entry(entry: Dictionary, trade_mode: String) -> void:
 	description.text = str(entry["description"])
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(description)
-	_catalog.add_child(row)
+	_catalog.add_child(_ledger_panel(row, "Stock_" + item_id.replace("/", "_"), true))
 
 
 func _buy(entry: Dictionary) -> void:

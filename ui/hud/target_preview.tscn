@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[node name="TargetPreview" type="PanelContainer"]
+visible = false
+mouse_filter = 2
+theme_type_variation = &"ConsequenceNoticePanel"
+
+[node name="Column" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"BattleHudColumn"
+
+[node name="TargetName" type="Label" parent="Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"StatLabel"
+
+[node name="Quote" type="Label" parent="Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"AimWarningLabel"

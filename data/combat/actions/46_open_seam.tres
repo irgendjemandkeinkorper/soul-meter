@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"open-seam"
+display_name = "Open Seam"
+kind = 0
+verb = 1
+ap_cost = 3
+ct_cost = 45
+target_profile = &"melee"
+player_available = true
+effect_id = &"open_seam"
+effect_payload = {"armor_bypass": 1}
+description = "Short blades. One attack on an adjacent enemy from its side or rear, ignoring 1 point of its defense. A Blindside Bite lets it land on a Blinded target from any angle, as if flanked."

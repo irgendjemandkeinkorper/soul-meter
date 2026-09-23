@@ -148,6 +148,9 @@ static func _actor_from_row(row: Dictionary) -> BattleActor:
 	# only the flat `edge` key (`campaign_encounter_loader.gd`), so that is the fallback and
 	# it lands on Alacrity, `edge`'s ratified rename. Reading the block by schema id rather
 	# than by a literal list means a seventh attribute arrives here without a code change.
+	# Called-shots task 11: authored anatomy (location -> exposure) rides the row verbatim.
+	# A row without one (an authored campaign package) simply has no aimable locations.
+	actor.anatomy = (row.get("anatomy", {}) as Dictionary).duplicate(true)
 	var authored: Dictionary = row.get("attributes", {}) as Dictionary
 	if authored.is_empty():
 		actor.attributes[&"alacrity"] = int(row.get("edge", 0))

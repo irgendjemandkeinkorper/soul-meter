@@ -12,6 +12,31 @@ var entries: Array[Dictionary] = []
 var ready: Array[Dictionary] = []
 
 
+func commands() -> Array[StringName]:
+	return [&"file_sentence"]
+
+
+func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
+	var gate := super.query_command(action_id, target_id, payload)
+	if not bool(gate.allowed):
+		return gate
+	if entries.size() >= MAX_ENTRIES:
+		return command_refusal(&"class_resource_full", "The Ledger is full. Wait for a sentence to resolve.")
+	if target_id.is_empty() or host == null:
+		return command_refusal(&"no_target", "Choose a living enemy for the sentence.")
+	if not payload.get("amount") is int or int(payload.amount) <= 0 or not payload.get("delay_rounds") is int or int(payload.delay_rounds) <= 0:
+		return command_refusal(&"class_resource_payload", "The sentence needs positive damage and a future round.")
+	return gate
+
+
+func execute_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> void:
+	if not bool(query_command(action_id, target_id, payload).allowed):
+		return
+	queue_effect(action_id, int(payload.delay_rounds), {
+		"writes": [{"kind": "hp", "target_id": String(target_id), "amount": int(payload.amount)}],
+	})
+
+
 func queue_effect(effect_id: StringName, turns: int, payload: Dictionary = {}) -> bool:
 	if effect_id.is_empty() or turns <= 0 or entries.size() >= MAX_ENTRIES:
 		return false
