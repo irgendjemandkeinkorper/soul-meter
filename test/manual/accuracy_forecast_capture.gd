@@ -16,6 +16,8 @@ func test_accuracy_forecast_layout() -> void:
 		"target": {"id": "target", "hp": 20, "element_id": &"tham"},
 		"ability": {"id": "strike", "power": 10, "element_id": &"zhur", "elements": [&"zhur"], "magnitude": &"note"},
 		"facing": {"id": &"side"}, "height_advantage_steps": -1,
+		"visibility": {"applies": true, "level": "obscured"},
+		"attacker_injury_modifiers": [{"label": "Injury: Arm", "percentage_points": -15}],
 	})
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://qa"))
 	for viewport_size: Vector2i in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
@@ -24,11 +26,24 @@ func test_accuracy_forecast_layout() -> void:
 		var panel := interface.act_target_panel
 		assert_bool(interface.get_global_rect().encloses(panel.get_global_rect())).is_true()
 		assert_bool(panel.get_global_rect().encloses(panel.forecast.get_global_rect())).is_true()
-		assert_str(panel.forecast.text).contains("HIT 82%")
-		RenderingServer.force_draw()
-		await RenderingServer.frame_post_draw
-		var capture := get_viewport().get_texture().get_image()
-		assert_int(capture.save_png("user://qa/accuracy-%d.png" % viewport_size.x)).is_equal(OK)
+		assert_str(panel.forecast.text).contains("HIT 42%")
+		assert_str(panel.accuracy_summary.text).contains("Visibility: obscured -25 pp · Injury: Arm -15 pp")
+		for expanded: bool in [false, true]:
+			panel.aim_details.button_pressed = expanded
+			await runner.simulate_frames(5)
+			assert_bool(interface.get_global_rect().encloses(panel.get_global_rect())).is_true()
+			assert_bool(panel.get_global_rect().encloses(panel.accuracy_summary.get_global_rect())).is_true()
+			assert_bool(panel.accuracy_details.visible).is_equal(expanded)
+			assert_bool(panel.accuracy_summary.visible).is_equal(not expanded)
+			assert_bool(interface.get_global_rect().encloses(interface.get_node("SafeFrame/Rows").get_global_rect())).is_true()
+			if expanded:
+				assert_bool(panel.get_global_rect().encloses(panel.accuracy_details.get_global_rect())).is_true()
+				assert_str(panel.accuracy_details.text).contains("Final hit chance 42%")
+			RenderingServer.force_draw()
+			await RenderingServer.frame_post_draw
+			var capture := get_viewport().get_texture().get_image()
+			var mode := "details" if expanded else "compact"
+			assert_int(capture.save_png("user://qa/accuracy-reasons-%s-%d.png" % [mode, viewport_size.x])).is_equal(OK)
 	get_tree().root.size = Vector2i(1920, 1080)
 	if boot != null:
 		boot.visible = was_visible

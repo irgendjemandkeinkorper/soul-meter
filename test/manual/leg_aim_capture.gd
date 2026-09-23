@@ -62,8 +62,8 @@ func test_leg_aim_and_hobbled_move_readout() -> void:
 		await get_tree().process_frame
 	var panel := interface.act_target_panel
 	assert_bool(panel.get_global_rect().encloses(panel.aim_row.get_global_rect())).is_true()
-	assert_str(panel.forecast.text).contains("AIM LEG")
-	assert_str(panel.forecast.text).contains("40%")
+	assert_str(panel.aim_title.text).contains("AIM LEG")
+	assert_str(panel.aim_consequence.text).contains("40%")
 	RenderingServer.force_draw()
 	await RenderingServer.frame_post_draw
 	assert_int(viewport.get_texture().get_image().save_png("user://qa/leg-aim-1920.png")).is_equal(OK)

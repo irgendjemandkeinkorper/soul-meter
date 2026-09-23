@@ -71,8 +71,8 @@ func test_aim_row_layout_fits_the_forecast_panel() -> void:
 		var panel := interface.act_target_panel
 		assert_bool(interface.get_global_rect().encloses(panel.get_global_rect())).is_true()
 		assert_bool(panel.get_global_rect().encloses(panel.aim_row.get_global_rect())).is_true()
-		assert_bool(panel.get_global_rect().encloses(panel.forecast.get_global_rect())).is_true()
-		assert_str(panel.forecast.text).contains("AIM THROAT")
+		assert_str(panel.aim_title.text).contains("AIM THROAT")
+		assert_bool(panel.get_global_rect().encloses(panel.aim_summary.get_global_rect())).is_true()
 		RenderingServer.force_draw()
 		await RenderingServer.frame_post_draw
 		var capture := viewport.get_texture().get_image()

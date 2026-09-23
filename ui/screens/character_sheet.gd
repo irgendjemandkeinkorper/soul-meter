@@ -5,15 +5,24 @@ extends Screen
 
 const WheelWidgetScript := preload("res://ui/components/wheel_widget.gd")
 const PartyMemberVisualsScript := preload("res://actors/party_followers/party_member_visuals.gd")
+const TreatmentNoticeScene := preload("res://ui/components/treatment_notice.tscn")
+const TreatmentNoticeScript := preload("res://ui/components/treatment_notice.gd")
 
 var _member_list: ItemList
 var _sheet_column: VBoxContainer
 var _selected_member: PartyMember
+var _treatment_notice: TreatmentNoticeScript
+
+
+func _uses_ledger_style() -> bool:
+	return true
 
 
 func _build() -> void:
 	_add_opaque_backdrop()
 	var vbox := _make_shell_window("Register of Persons")
+	_treatment_notice = TreatmentNoticeScene.instantiate() as TreatmentNoticeScript
+	vbox.add_child(_treatment_notice)
 
 	var row := HBoxContainer.new()
 	row.theme_type_variation = "MirrorPairRow"
@@ -27,13 +36,14 @@ func _build() -> void:
 	_member_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_member_list.fixed_icon_size = Vector2i(64, 64)
 	_member_list.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	row.add_child(_member_list)
+	row.add_child(_ledger_panel(_member_list, "PartyLedger", true))
+	_treatment_notice.dismissed.connect(_member_list.grab_focus)
 
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_child(scroll)
+	row.add_child(_ledger_panel(scroll, "PersonLedger"))
 
 	_sheet_column = VBoxContainer.new()
 	_sheet_column.name = "SheetColumn"
@@ -67,8 +77,11 @@ func select_member(member_id: String) -> void:
 
 
 func _on_selected(idx: int) -> void:
+	if _selected_member != GameState.party[idx]:
+		_treatment_notice.clear_notice()
 	_selected_member = GameState.party[idx]
 	_rebuild_sheet()
+	_settle_content(_sheet_column)
 
 
 func _rebuild_sheet() -> void:
@@ -90,7 +103,7 @@ func _rebuild_sheet() -> void:
 
 	var identity := Label.new()
 	identity.text = "%s  •  %s  •  Level %d" % [member.race, member.char_class, member.level]
-	identity.modulate = Color(1, 1, 1, 0.6)
+	identity.theme_type_variation = "MutedLabel"
 	_sheet_column.add_child(identity)
 
 	var calling_bits: Array[String] = []
@@ -104,7 +117,7 @@ func _rebuild_sheet() -> void:
 		var calling := Label.new()
 		calling.text = "  •  ".join(calling_bits)
 		calling.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		calling.modulate = Color(1, 1, 1, 0.6)
+		calling.theme_type_variation = "MutedLabel"
 		_sheet_column.add_child(calling)
 
 	# Two columns: the wheel sits beside the skills instead of below the fold —
@@ -112,13 +125,15 @@ func _rebuild_sheet() -> void:
 	# while the right half of the sheet stayed empty.
 	var body := HBoxContainer.new()
 	body.name = "SheetBody"
-	body.add_theme_constant_override("separation", 24)
+	body.theme_type_variation = "MirrorPairRow"
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_sheet_column.add_child(body)
 	var main_column := VBoxContainer.new()
+	main_column.theme_type_variation = "LedgerColumn"
 	main_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(main_column)
 	var side_column := VBoxContainer.new()
+	side_column.theme_type_variation = "LedgerColumn"
 	side_column.custom_minimum_size = Vector2(320, 0)
 	body.add_child(side_column)
 	var portrait_frame := PanelContainer.new()
@@ -138,7 +153,8 @@ func _rebuild_sheet() -> void:
 	if not member.attributes.is_empty():
 		main_column.add_child(_section("Attributes"))
 		var attribute_grid := GridContainer.new()
-		attribute_grid.columns = DramgidSchema.ATTRIBUTE_IDS.size()
+		attribute_grid.columns = 3
+		attribute_grid.theme_type_variation = "LedgerGrid"
 		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
 			var cell := Label.new()
 			# attribute_value() answers legacy-keyed rows through the rename aliases
@@ -156,6 +172,7 @@ func _rebuild_sheet() -> void:
 	main_column.add_child(_section("Skills"))
 	var points_label := Label.new()
 	points_label.name = "AdvancementPoints"
+	points_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	points_label.text = (
 		"Advancement points: %d   (granted at story milestones)" % member.advancement_points
 	)
@@ -164,6 +181,7 @@ func _rebuild_sheet() -> void:
 	var skill_grid := GridContainer.new()
 	skill_grid.name = "SkillGrid"
 	skill_grid.columns = 3
+	skill_grid.theme_type_variation = "LedgerGrid"
 	main_column.add_child(skill_grid)
 	for group: String in DramgidSchema.SKILL_GROUPS:
 		var group_skills := _listed_skills(group, member)
@@ -188,6 +206,7 @@ func _rebuild_sheet() -> void:
 			var effective := SkillCheck.preview(skill_id, member, 0.0)
 			var percent_label := Label.new()
 			percent_label.name = "Percent_%s" % skill_id
+			percent_label.theme_type_variation = "StatLabel"
 			percent_label.text = "%d%%" % int(effective)
 			# FR-205: the derivation is one hover away, in the ratified formula's own terms.
 			percent_label.tooltip_text = _derivation_tooltip(member, skill_id, effective)
@@ -377,6 +396,7 @@ func _field_quote(patient: PartyMember, record: Dictionary, card_id: String, pra
 
 
 func _on_field_treat(patient: PartyMember, location: String, card_id: String) -> void:
+	_treatment_notice.clear_notice()
 	var record: Dictionary = patient.injuries.get(location, {})
 	var pick: OptionButton = _practitioner_picks.get(location)
 	var practitioner: PartyMember = GameState.party[pick.selected] if pick != null and pick.selected >= 0 else null
@@ -397,6 +417,7 @@ func _on_field_treat(patient: PartyMember, location: String, card_id: String) ->
 	_rebuild_sheet()
 	if _treatment_status != null:
 		_treatment_status.text = text
+	_treatment_notice.show_result(result, patient.display_name)
 
 
 static func _combat_active() -> bool:

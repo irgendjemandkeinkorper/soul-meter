@@ -17,6 +17,9 @@ signal pointer_cleared
 
 const UnitArtScript := preload("res://globals/unit_art.gd")
 const FieldOverlayScript := preload("res://world/combat_overlay.gd")
+const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
+const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
+const TargetPreviewScene := preload("res://ui/hud/target_preview.tscn")
 const BACKDROP_PATTERN := "res://assets/generated/backgrounds/combat/%s-battlefield-v1.png"
 const GROUND_ATLAS := preload("res://assets/generated/sprites/ground/ground_tiles.png")
 
@@ -85,6 +88,49 @@ var _units_layer: Control
 var _fx_layer: Control
 var _unit_nodes: Dictionary = {}
 var _field_overlay: FieldOverlayScript
+var _animate_events := true
+var _hit_flashes: Dictionary = {}
+var _preview_id: StringName = &""
+var target_preview: PanelContainer
+
+
+## Receives a public quote from the interface; no combat arithmetic or rolls here.
+func show_target_preview(actor_id: StringName, actor_name: String, quote: String) -> void:
+	_preview_id = actor_id
+	(target_preview.get_node("Column/TargetName") as Label).text = actor_name
+	(target_preview.get_node("Column/Quote") as Label).text = quote
+	target_preview.reset_size()
+	target_preview.show()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_preview_target(actor_id)
+	_process(0.0)
+	queue_redraw()
+
+
+func clear_target_preview() -> void:
+	_preview_id = &""
+	if is_instance_valid(target_preview):
+		target_preview.hide()
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_preview_target(&"")
+	queue_redraw()
+
+
+func _process(_delta: float) -> void:
+	if _preview_id.is_empty() or not is_instance_valid(target_preview):
+		return
+	var cell := _cell_of(_preview_id)
+	if cell == NO_CELL:
+		clear_target_preview()
+		return
+	# Project through the field's canvas transform too, so camera motion keeps the
+	# quote beside its target while text remains at HUD scale.
+	var anchor := cell_center(cell)
+	var desired := anchor + Vector2(DS.SPACE_8, -target_preview.size.y - DS.SPACE_8)
+	if desired.x + target_preview.size.x > size.x - DS.SPACE_4:
+		desired.x = anchor.x - target_preview.size.x - DS.SPACE_8
+	target_preview.position = desired.clamp(Vector2.ONE * DS.SPACE_4,
+		(size - target_preview.size - Vector2.ONE * DS.SPACE_4).max(Vector2.ONE * DS.SPACE_4))
 
 
 ## Migration step 6: the region retains its frozen input/payload API while the
@@ -109,6 +155,7 @@ func _exit_tree() -> void:
 
 
 func set_replaying(replaying: bool) -> void:
+	_animate_events = not replaying
 	if is_instance_valid(_field_overlay):
 		_field_overlay.animate_events = not replaying
 
@@ -135,6 +182,9 @@ func _ready() -> void:
 	_fx_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_fx_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_fx_layer)
+	target_preview = TargetPreviewScene.instantiate() as PanelContainer
+	target_preview.z_index = 2
+	add_child(target_preview)
 	resized.connect(
 		func() -> void:
 			_sync_units(false)
@@ -188,7 +238,7 @@ func consume_event(event: CombatEvent) -> void:
 		)
 	var animate_move := event.type == &"battlefield_changed"
 	_sync_units(animate_move)
-	if event.type == &"action_resolved" and move_path.is_empty():
+	if _animate_events and event.type == &"action_resolved" and move_path.is_empty():
 		_input_locked_until_msec = maxi(
 			_input_locked_until_msec,
 			Time.get_ticks_msec() + roundi(ACTION_FEEDBACK_SECONDS * 1000.0)
@@ -489,7 +539,7 @@ func _draw() -> void:
 		if cell == _hovered:
 			rim = HOVER_RIM
 			rim_width = 1.5
-		if cell == _cell_of(_target_id):
+		if cell == _cell_of(_preview_id if not _preview_id.is_empty() else _target_id):
 			rim = TARGET_RIM
 			rim_width = 2.0
 		elif cell == _cell_of(_active_id):
@@ -583,6 +633,8 @@ func _sync_units(animate_move: bool) -> void:
 		return
 	_sync_cover_props()
 	if _tiles.is_empty() or _actors.is_empty():
+		for id: StringName in _hit_flashes.keys():
+			_stop_hit_flash(id)
 		for node: Node in _unit_nodes.values():
 			node.queue_free()
 		_unit_nodes.clear()
@@ -651,7 +703,8 @@ func _sync_units(animate_move: bool) -> void:
 		var alive := int(actor.get("hp", 1)) > 0
 		var was_fallen := bool(_fallen.get(id, false))
 		if alive:
-			sprite.modulate = Color.WHITE
+			if not _hit_flashes.has(id):
+				sprite.modulate = Color.WHITE
 			sprite.rotation = 0.0
 			_fallen[id] = false
 		elif was_fallen or not _fallen.has(id):
@@ -660,10 +713,12 @@ func _sync_units(animate_move: bool) -> void:
 			sprite.rotation = _fall_rotation(sprite)
 			_fallen[id] = true
 		else:
+			_stop_hit_flash(id)
 			_play_ko_fall(sprite)
 			_fallen[id] = true
 	for id: StringName in _unit_nodes.keys():
 		if not seen.has(id):
+			_stop_hit_flash(id)
 			(_unit_nodes[id] as Node).queue_free()
 			_unit_nodes.erase(id)
 			_fallen.erase(id)
@@ -734,36 +789,50 @@ func _play_action_beat(event: CombatEvent) -> void:
 	var defender := _unit_nodes.get(event.target_id) as TextureRect
 	if attacker != null and defender != null and attacker != defender:
 		var home := attacker.position
-		var toward := home + (defender.position - home) * 0.25
+		var toward := home + (defender.position - home).limit_length(DS.SPACE_4)
 		var lunge := create_tween()
 		lunge.tween_property(attacker, "position", toward, DS.DUR_FAST)
 		lunge.tween_property(attacker, "position", home, DS.DUR_FAST)
 	# A felled defender is mid KO-fall — its fade tween owns modulate; flashing
 	# it back to white here would fight that tween frame-by-frame.
-	if defender != null and not bool(_fallen.get(event.target_id, false)):
+	if defender != null and HitPulseScript.is_damaging_hit(event):
+		var pulse := HitPulseScript.new()
+		pulse.name = "HitPulse"
+		pulse.position = defender.position + defender.size * Vector2(0.5, 0.45)
+		_fx_layer.add_child(pulse)
+	if defender != null and HitPulseScript.is_damaging_hit(event) and not bool(_fallen.get(event.target_id, false)):
+		_stop_hit_flash(event.target_id)
 		var flash := create_tween()
-		defender.modulate = Color(1.6, 1.4, 1.4, 1.0)
+		_hit_flashes[event.target_id] = flash
+		defender.modulate = DS.PARCHMENT
 		flash.tween_property(defender, "modulate", Color.WHITE, DS.DUR_BASE)
-	var anchor := defender if defender != null else attacker
-	if anchor != null:
-		_spawn_damage_pop(event, anchor)
+		flash.tween_callback(func() -> void: _hit_flashes.erase(event.target_id))
+	if defender != null and HitPulseScript.has_result(event):
+		_spawn_damage_pop(event)
 
 
-func _spawn_damage_pop(event: CombatEvent, anchor: TextureRect) -> void:
-	var hit := bool(event.data.get("hit", true))
-	var damage := int(event.data.get("damage", 0))
-	var pop := Label.new()
-	pop.theme_type_variation = "HeadingLabel"
-	pop.text = str(damage) if hit and damage > 0 else ("MISS" if not hit else "0")
-	pop.modulate = Color("#F2E4C9") if hit else Color("#9AA3B2")
-	pop.position = anchor.position + Vector2(anchor.size.x * 0.5 - 10.0, -6.0)
-	pop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+func _stop_hit_flash(id: StringName) -> void:
+	var previous := _hit_flashes.get(id) as Tween
+	if previous != null and previous.is_valid():
+		previous.kill()
+	_hit_flashes.erase(id)
+
+
+func _spawn_damage_pop(event: CombatEvent) -> void:
+	for previous: Node in _fx_layer.get_children():
+		if previous.get_meta("result_target", &"") == event.target_id:
+			_fx_layer.remove_child(previous)
+			previous.queue_free()
+	var pop := CombatResultScene.instantiate()
 	_fx_layer.add_child(pop)
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(pop, "position:y", pop.position.y - 28.0, 0.7)
-	tween.tween_property(pop, "modulate:a", 0.0, 0.7)
-	tween.chain().tween_callback(pop.queue_free)
+	pop.setup(event, _result_anchor.bind(event.target_id), func() -> Rect2:
+		return get_global_transform_with_canvas() * Rect2(Vector2.ZERO, size)
+	)
+
+
+func _result_anchor(id: StringName) -> Variant:
+	var unit := _unit_nodes.get(id) as TextureRect
+	return unit.position + unit.size * Vector2(0.5, 0.55) if is_instance_valid(unit) else null
 
 
 func _sprite_pos_for_cell(sprite: TextureRect, cell: Vector2i, layout: Dictionary) -> Vector2:

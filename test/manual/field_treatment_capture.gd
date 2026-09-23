@@ -2,12 +2,12 @@ extends GdUnitTestSuite
 ## Rendered evidence for task 10C: the character sheet's Injuries section with a qualified
 ## practitioner and one supply unit, at the 1920×1080 design frame.
 
-var _original_party: Array[PartyMember]
+var _state_before: Dictionary
 
 
 func before_test() -> void:
 	UIManager.close_all()
-	_original_party = GameState.party.duplicate()
+	_state_before = GameState.to_dict().duplicate(true)
 	var vex := PartyMember.new()
 	vex.id = GameState.PROTAGONIST_ID
 	vex.display_name = "Vex"
@@ -28,8 +28,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	UIManager.close_all()
-	GameState.remove_items(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE, 1)
-	GameState.party = _original_party
+	GameState.from_dict(_state_before)
 
 
 func test_capture_injuries_section() -> void:
@@ -58,3 +57,13 @@ func test_capture_injuries_section() -> void:
 	RenderingServer.force_draw()
 	await RenderingServer.frame_post_draw
 	assert_int(viewport.get_texture().get_image().save_png("user://qa/field-treatment-1920.png")).is_equal(OK)
+	button.pressed.emit()
+	for _frame: int in 5:
+		await get_tree().process_frame
+	var notice := sheet.find_child("TreatmentNotice", true, false) as PanelContainer
+	assert_bool(notice.visible).is_true()
+	assert_bool(sheet.get_global_rect().encloses(notice.get_global_rect())).is_true()
+	assert_object(sheet.find_child("Injury_throat", true, false)).is_null()
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	assert_int(viewport.get_texture().get_image().save_png("user://qa/recovery-field-1920.png")).is_equal(OK)

@@ -11,6 +11,7 @@ var _nodes: Dictionary = {}
 var _moves: Dictionary = {}
 var _active_id: StringName
 var _target_id: StringName
+var _preview_id: StringName
 var _reachable: Dictionary = {}
 var _fire_cells: Dictionary = {}
 var _mark_cells: Dictionary = {}
@@ -24,6 +25,13 @@ var _flashes: Dictionary = {}
 var _theme: Theme
 var animate_events := true
 const NUMERIC_FONT := preload(DS.FONT_NUMERIC)
+const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
+const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
+
+
+func set_preview_target(actor_id: StringName) -> void:
+	_preview_id = actor_id
+	queue_redraw()
 
 
 func bind_field(field: FieldMap) -> void:
@@ -158,6 +166,7 @@ func _sync_actors(event: CombatEvent) -> void:
 		if sprite != null and actor.has("facing"):
 			sprite.flip_h = str(actor["facing"]).contains("w")
 		if int(actor.get("hp", 1)) <= 0:
+			_stop_flash(id)
 			node.modulate.a = 0.35
 		elif not _flashes.has(id):
 			node.modulate = _original_colors.get(node, Color.WHITE)
@@ -169,38 +178,45 @@ func _play_action(event: CombatEvent) -> void:
 	if is_instance_valid(attacker) and is_instance_valid(target) and attacker != target:
 		_stop_move(event.actor_id)
 		var home := attacker.global_position
+		var cell: Variant = _actor_cell(_actors.get(event.actor_id, {}))
+		if _grid != null and cell != null:
+			home = _grid.cell_to_world(cell)
 		var lunge := create_tween()
 		_moves[event.actor_id] = lunge
-		lunge.tween_property(attacker, "global_position", home.lerp(target.global_position, 0.25), DS.DUR_FAST)
+		lunge.tween_property(attacker, "global_position", home + (target.global_position - home).limit_length(DS.SPACE_4), DS.DUR_FAST)
 		lunge.tween_property(attacker, "global_position", home, DS.DUR_FAST)
 		lunge.tween_callback(func() -> void: _moves.erase(event.actor_id))
 	if not is_instance_valid(target):
 		return
-	var previous := _flashes.get(event.target_id) as Tween
-	if previous != null and previous.is_valid():
-		previous.kill()
-	var color: Color = _original_colors.get(target, Color.WHITE)
-	if int((_actors.get(event.target_id, {}) as Dictionary).get("hp", 1)) <= 0:
-		color.a = 0.35
-	var flash := create_tween()
-	_flashes[event.target_id] = flash
-	target.modulate = DS.PARCHMENT
-	flash.tween_property(target, "modulate", color, DS.DUR_BASE)
-	flash.tween_callback(func() -> void: _flashes.erase(event.target_id))
-	var pop := Label.new()
+	if HitPulseScript.is_damaging_hit(event):
+		var pulse := HitPulseScript.new()
+		pulse.name = "HitPulse"
+		pulse.position = to_local(target.global_position) + Vector2(0, -DS.SPACE_8)
+		add_child(pulse)
+		_stop_flash(event.target_id)
+		# A defeated target keeps its fallen opacity; feedback must not revive its tint.
+		if int((_actors.get(event.target_id, {}) as Dictionary).get("hp", 1)) > 0:
+			var color: Color = _original_colors.get(target, Color.WHITE)
+			var flash := create_tween()
+			_flashes[event.target_id] = flash
+			target.modulate = color * DS.PARCHMENT
+			flash.tween_property(target, "modulate", color, DS.DUR_BASE)
+			flash.tween_callback(func() -> void: _flashes.erase(event.target_id))
+	if not HitPulseScript.has_result(event):
+		return
+	for previous: Node in get_children():
+		if previous.get_meta("result_target", &"") == event.target_id:
+			remove_child(previous)
+			previous.queue_free()
+	var pop := CombatResultScene.instantiate()
 	if _theme == null:
 		_theme = ThemeBuilder.build()
 	pop.theme = _theme
-	pop.theme_type_variation = &"StatLabel" if bool(event.data.get("hit", true)) else &"HeadingLabel"
-	pop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pop.text = str(int(event.data.get("damage", 0))) if bool(event.data.get("hit", true)) else "MISS"
-	pop.modulate = DS.PARCHMENT
 	add_child(pop)
-	pop.position = to_local(target.global_position) + Vector2(0, -48)
-	var rise := create_tween().set_parallel(true)
-	rise.tween_property(pop, "position:y", pop.position.y - 28.0, DS.DUR_SLOW)
-	rise.tween_property(pop, "modulate:a", 0.0, DS.DUR_SLOW)
-	rise.chain().tween_callback(pop.queue_free)
+	pop.setup(event, func() -> Variant:
+		return to_local(target.global_position) + Vector2(0, -DS.SPACE_8) if is_instance_valid(target) else null,
+		func() -> Rect2: return get_viewport_rect()
+	)
 
 
 func _stop_move(id: StringName) -> void:
@@ -208,6 +224,13 @@ func _stop_move(id: StringName) -> void:
 	if tween != null and tween.is_valid():
 		tween.kill()
 	_moves.erase(id)
+
+
+func _stop_flash(id: StringName) -> void:
+	var tween := _flashes.get(id) as Tween
+	if tween != null and tween.is_valid():
+		tween.kill()
+	_flashes.erase(id)
 
 
 func _actor_cell(actor: Dictionary) -> Variant:
@@ -321,7 +344,7 @@ func _draw() -> void:
 				PackedVector2Array([tip - direction * 6 + side, tip, tip - direction * 6 - side]),
 				DS.BRONZE_3, 2.0
 			)
-	for id: StringName in [_active_id, _target_id]:
+	for id: StringName in [_active_id, _preview_id if not _preview_id.is_empty() else _target_id]:
 		if not _actors.has(id):
 			continue
 		var cell: Variant = _actor_cell(_actors[id])

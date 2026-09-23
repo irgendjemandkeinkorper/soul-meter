@@ -195,18 +195,43 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	assert_bool(panel.aim_button(&"").disabled).is_false()
 	var ordinary_text := panel.forecast.text
 	assert_str(ordinary_text).not_contains("AIM THROAT")
+	var target_preview := interface.stage.target_preview
+	var preview_quote := target_preview.get_node("Column/Quote") as Label
+	assert_bool(target_preview.visible).is_true()
+	assert_str((target_preview.get_node("Column/TargetName") as Label).text).is_equal("Mark")
+	assert_str(preview_quote.text).contains("ORDINARY · HIT")
 
-	# Selecting the throat arms the aim and the next hover quotes it: penalty, priced cost,
-	# and the (absent) consequence all come from the controller payload.
-	panel.aim_button(&"throat").pressed.emit()
+	# Selection immediately quotes the inspected target and preserves keyboard focus.
+	panel.aim_button(&"throat").grab_focus()
+	var ap_before_preview := actor.action_points
+	runner.simulate_action_pressed("ui_accept")
+	await runner.simulate_frames(1)
 	assert_str(String(interface.aim_location())).is_equal("throat")
-	interface._on_tile_hovered({"x": 1, "y": 0})
+	assert_bool(panel.aim_button(&"throat").has_focus()).is_true()
+	assert_str(panel.aim_button(&"throat").text).is_equal("[THROAT]")
+	assert_int(actor.action_points).is_equal(ap_before_preview)
 	var aimed := controller.forecast_action(action, target, {"aim_location": "throat"})
-	assert_str(panel.forecast.text).contains("Aim: Throat -25 pp")
+	assert_str(preview_quote.text).is_equal("THROAT · HIT %d%%" % int(aimed["resolution"]["accuracy_breakdown"]["effective_hit_chance"]))
+	# The map quote remains while keyboard focus is on the aim controls.
+	assert_bool(target_preview.visible).is_true()
+	assert_str(panel.accuracy_summary.text).contains("Aim: Throat -25 pp")
+	assert_str(panel.accuracy_details.text).contains("Aim: Throat -25 pp")
+	assert_str(panel.accuracy_details.text).contains("Final hit chance %d%%" % int(aimed["resolution"]["accuracy_breakdown"]["effective_hit_chance"]))
+	assert_bool(panel.accuracy_details.visible).is_false()
 	var injury_forecast: Dictionary = aimed["injury_forecast"]
-	assert_str(panel.forecast.text).contains("AIM THROAT · COST %d AP · INJURY %d%% ON HIT · %d%% OVERALL" % [
-		int(aimed["ap_cost"]), int(injury_forecast["chance_on_hit"]), int(injury_forecast["overall_chance"]),
+	assert_str(panel.aim_title.text).is_equal("AIM THROAT")
+	assert_str(panel.aim_stats.text).contains("COST %d AP" % int(aimed["ap_cost"]))
+	assert_str(panel.aim_consequence.text).contains("INJURY %d%% ON HIT · %d%% OVERALL" % [
+		int(injury_forecast["chance_on_hit"]), int(injury_forecast["overall_chance"]),
 	])
+	assert_bool(panel.forecast.visible).is_false()
+	panel.aim_details.grab_focus()
+	runner.simulate_action_pressed("ui_accept")
+	await runner.simulate_frames(1)
+	assert_bool(panel.forecast.visible).is_true()
+	assert_bool(panel.accuracy_details.visible).is_true()
+	assert_bool(panel.aim_details.has_focus()).is_true()
+	assert_int(actor.action_points).is_equal(ap_before_preview)
 	assert_str(panel.aim_button(&"throat").theme_type_variation).is_equal("BronzeButton")
 
 	# Pressing the mark submits the armed aim and pays the surcharged AP.
@@ -227,17 +252,37 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	assert_bool(controller.configure_visibility(grid.cell_of(target), &"dim")["allowed"]).is_true()
 	visibility_event.data["forecast_context"] = controller.forecast_context(actor, target, action, {"aim_location": "throat"})
 	interface.consume_event(visibility_event)
-	assert_str(panel.forecast.text).contains("Visibility: dim -10 pp")
+	assert_str(panel.accuracy_summary.text).contains("Visibility: dim -10 pp")
+	assert_str(panel.accuracy_details.text).contains("Visibility: dim -10 pp")
 	assert_int(int(panel.forecast_result()["accuracy_breakdown"]["hit_chance"])).is_equal(int(forecast_clear["accuracy_breakdown"]["hit_chance"]) - 10)
 	assert_str(panel.forecast.text).is_not_equal(before_text)
 
 	# Cancel through the ordinary button, then re-arming a different action clears the row.
 	panel.aim_button(&"").pressed.emit()
 	assert_str(String(interface.aim_location())).is_equal("")
+	assert_str(panel.aim_title.text).is_equal("ORDINARY ATTACK")
+	assert_str(panel.aim_consequence.text).is_equal("NO INJURY EFFECT")
 	panel.aim_button(&"throat").pressed.emit()
 	interface.select_pointer_action(&"strike")
 	assert_str(String(interface.aim_location())).is_equal("")
 	assert_bool(panel.aim_row.visible).is_false()
+	assert_bool(panel.aim_summary.visible).is_false()
+	assert_bool(panel.accuracy_summary.visible).is_false()
+	assert_bool(target_preview.visible).is_false()
+	interface._on_tile_hovered({"x": 1, "y": 0})
+	interface.select_aim(&"arm")
+	assert_str(preview_quote.text).is_equal("SHIELD ARM · UNAVAILABLE")
+	assert_bool(panel.accuracy_summary.visible).is_false()
+	interface._on_pointer_cleared()
+	assert_bool(target_preview.visible).is_false()
+	interface.select_aim(&"throat")
+	assert_bool(target_preview.visible).is_false()
+	interface._on_tile_hovered({"x": 1, "y": 0})
+	var resolved := CombatEvent.new()
+	resolved.type = &"action_resolved"
+	resolved.data = {"snapshot": controller.snapshot()}
+	interface.consume_event(resolved)
+	assert_bool(target_preview.visible).is_false()
 
 
 func _cast_actor(name: String, hp: int, attack: int) -> BattleActor:

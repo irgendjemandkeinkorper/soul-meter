@@ -6,6 +6,10 @@ const Lab := preload("res://globals/combat_lab.gd")
 
 func test_injury_needs_a_hit_and_the_authored_damage_and_applies_once_per_commit() -> void:
 	var controller := _controller()
+	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
+	var interface := runner.scene() as BattleInterface
+	interface.bind_controller(controller)
+	controller.event_emitted.connect(interface.consume_event)
 	var target := controller.enemies[0]
 	var action := controller.action_by_id(&"aim-test")
 	var options := {"aim_location": "arm"}
@@ -24,6 +28,7 @@ func test_injury_needs_a_hit_and_the_authored_damage_and_applies_once_per_commit
 			break
 	assert_int(hit_seed).is_greater_equal(0)
 	assert_int(miss_seed).is_greater_equal(0)
+	assert_bool(interface.injury_notice.visible).is_false() # Forecasting emits no injury feedback.
 
 	# A miss never injures, whatever the injury roll said.
 	controller._sequence = miss_seed
@@ -31,9 +36,12 @@ func test_injury_needs_a_hit_and_the_authored_damage_and_applies_once_per_commit
 	assert_bool(miss["resolution"]["hit"]).is_false()
 	assert_bool(miss["resolution"]["injury"]["applies"]).is_false()
 	assert_dict(target.injuries).is_empty()
+	assert_bool(interface.injury_notice.visible).is_false()
 
 	# A rolled hit applies exactly one record, and the cached commit replays without refreshing.
 	var replay_controller := _controller()
+	interface.bind_controller(replay_controller)
+	replay_controller.event_emitted.connect(interface.consume_event)
 	var replay_target := replay_controller.enemies[0]
 	replay_controller._sequence = hit_seed
 	var forecast := replay_controller.forecast_action(action, replay_target, options)
@@ -46,9 +54,13 @@ func test_injury_needs_a_hit_and_the_authored_damage_and_applies_once_per_commit
 	var record: Dictionary = replay_target.injuries["arm"]
 	assert_str(str(record["injury_id"])).is_equal("arm-strained")
 	assert_int(int(record["applications"])).is_equal(1)
+	assert_bool(interface.injury_notice.visible).is_true()
+	assert_str(interface.injury_notice.heading.text).contains("AIM TARGET — ARM")
+	assert_str(interface.injury_notice.details.text).contains("Attack accuracy: -10 percentage points")
 	assert_str(str(record["recovery"])).is_equal("untreated")
 	replay_controller._apply_resolution_writes(replay_controller.active_actor(), replay_target, result["resolution"])
 	assert_int(int((replay_target.injuries["arm"] as Dictionary)["applications"])).is_equal(1)
+	assert_int(interface.injury_notice.pending_count()).is_equal(0)
 
 
 func test_second_qualifying_hit_refreshes_the_record_without_escalating() -> void:

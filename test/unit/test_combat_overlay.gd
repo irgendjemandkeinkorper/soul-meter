@@ -149,10 +149,17 @@ func test_action_feedback_uses_event_damage_without_changing_actor_state() -> vo
 	}}
 	var before := event.data.duplicate(true)
 	overlay.call("consume_event", event)
-	assert_str((overlay.get_child(0) as Label).text).is_equal("7")
+	assert_str((overlay.get_node("DamagePop/Column/Outcome") as Label).text).is_equal("7 DAMAGE")
+	assert_object(overlay.get_node_or_null("HitPulse")).is_not_null()
+	await get_tree().create_timer(DS.DUR_INSTANT).timeout
+	assert_float(attacker.global_position.distance_to(grid.cell_to_world(Vector2i.ZERO))).is_less_equal(float(DS.SPACE_4) + 0.01)
 	await get_tree().create_timer(DS.DUR_SLOW + 0.1).timeout
 	assert_vector(attacker.global_position).is_equal(grid.cell_to_world(Vector2i.ZERO))
 	assert_vector(target.global_position).is_equal(grid.cell_to_world(Vector2i(1, 0)))
+	# The readable result outlives motion without extending the animation/input gate.
+	assert_bool(overlay.call("is_animating")).is_false()
+	assert_object(overlay.get_node_or_null("DamagePop")).is_not_null()
+	await get_tree().create_timer(2.1).timeout
 	assert_int(overlay.get_child_count()).is_equal(0)
 	assert_dict(event.data).is_equal(before)
 	# Reopening the HUD replays history to restore state; it must not make live
@@ -161,6 +168,37 @@ func test_action_feedback_uses_event_damage_without_changing_actor_state() -> vo
 	overlay.call("consume_event", event)
 	assert_int(overlay.get_child_count()).is_equal(0)
 	assert_bool(overlay.call("is_animating")).is_false()
+	# Neither a miss nor a zero-damage hit creates the impact mark or target flash.
+	overlay.set("animate_events", true)
+	for hit: bool in [false, true]:
+		event.data["hit"] = hit
+		event.data["damage"] = 0
+		overlay.call("consume_event", event)
+		assert_object(overlay.get_node_or_null("HitPulse")).is_null()
+		assert_dict(overlay.get("_flashes")).is_empty()
+		assert_bool(target.modulate.is_equal_approx(Color.WHITE)).is_true()
+		await get_tree().create_timer(DS.DUR_SLOW + 0.1).timeout
+	# Production strikes carry hit/fizzle in the nested resolution rather than a flat flag.
+	event.data.erase("hit")
+	for resolution: Dictionary in [{"hit": false}, {"hit": true, "fizzled": true}]:
+		event.data["resolution"] = resolution
+		overlay.call("consume_event", event)
+		var expected := "FIZZLE" if bool(resolution.get("fizzled", false)) else "MISS"
+		assert_str((overlay.get_node("DamagePop/Column/Outcome") as Label).text).is_equal(expected)
+		assert_object(overlay.get_node_or_null("HitPulse")).is_null()
+		await get_tree().create_timer(DS.DUR_SLOW + 0.1).timeout
+	event.data.erase("resolution")
+	# A late snapshot reporting a KO cancels an in-flight flash instead of restoring opacity.
+	event.data["hit"] = true
+	event.data["damage"] = 7
+	overlay.call("consume_event", event)
+	var defeated := CombatEvent.new()
+	defeated.type = &"battle_snapshot"
+	defeated.data = {"snapshot": event.data["snapshot"].duplicate(true)}
+	defeated.data["snapshot"]["enemies"][0]["hp"] = 0
+	overlay.call("consume_event", defeated)
+	await get_tree().create_timer(DS.DUR_SLOW + 0.1).timeout
+	assert_float(target.modulate.a).is_equal_approx(0.35, 0.001)
 
 
 func _ground() -> TileMapLayer:

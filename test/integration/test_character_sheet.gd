@@ -258,6 +258,39 @@ func test_field_treatment_picks_the_qualified_practitioner_and_cures_only_the_se
 	assert_str((runner.find_child("TreatmentStatus", true, false) as Label).text).contains("Serai treated Vex's throat; used 1 × Bitterleaf Poultice.")
 	assert_object(runner.find_child("Injury_throat", true, false)).is_null()
 	assert_object(runner.find_child("Injury_arm", true, false)).is_not_null()
+	var notice := runner.find_child("TreatmentNotice", true, false) as PanelContainer
+	assert_bool(notice.visible).is_true()
+	assert_str((notice.get_node("Column/Top/Heading") as Label).text).is_equal("VEX — THROAT INJURY CLEARED")
+	assert_str((notice.get_node("Column/Penalties") as Label).text).contains("voice block")
+	assert_str((notice.get_node("Column/Payment") as Label).text).is_equal("Used 1 × Bitterleaf Poultice")
+	assert_bool((notice.get_node("Column/Top/Dismiss") as Button).has_focus()).is_true()
+	# Refreshing the sheet must not erase the success receipt or its focus.
+	runner.scene().call("_rebuild_sheet")
+	await runner.simulate_frames(1)
+	assert_bool(notice.visible).is_true()
+	runner.simulate_action_pressed("ui_accept")
+	await runner.simulate_frames(1)
+	assert_bool(notice.visible).is_false()
+	assert_bool((runner.find_child("MemberList", true, false) as ItemList).has_focus()).is_true()
+
+
+func test_recovery_receipt_closes_when_switching_patients() -> void:
+	GameState.party = _injured_party()
+	GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE)
+	Battle.controller = null
+	Battle.ended = true
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
+	await runner.simulate_frames(2)
+	(runner.find_child("FieldTreat_arm", true, false) as Button).pressed.emit()
+	await runner.simulate_frames(1)
+	var notice := runner.find_child("TreatmentNotice", true, false) as PanelContainer
+	assert_bool(notice.visible).is_true()
+	assert_object(runner.find_child("Injury_arm", true, false)).is_null()
+	assert_object(runner.find_child("Injury_throat", true, false)).is_not_null()
+	runner.scene().call("select_member", "serai")
+	assert_bool(notice.visible).is_false()
+	runner.scene().call("select_member", GameState.PROTAGONIST_ID)
+	assert_bool(notice.visible).is_false()
 
 
 func test_injured_hands_block_field_care_but_a_hurt_throat_does_not_and_combat_start_refuses() -> void:
@@ -293,6 +326,7 @@ func test_injured_hands_block_field_care_but_a_hurt_throat_does_not_and_combat_s
 	Battle.controller = null
 	Battle.ended = true
 	assert_str((runner.find_child("TreatmentStatus", true, false) as Label).text).contains("combat active")
+	assert_bool((runner.find_child("TreatmentNotice", true, false) as PanelContainer).visible).is_false()
 	assert_bool((GameState.party[0] as PartyMember).injuries.has("throat")).is_true()
 	assert_int(GameState.item_count(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE)).is_equal(1)
 	GameState.remove_items(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE, 1)

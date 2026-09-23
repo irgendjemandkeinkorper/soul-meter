@@ -47,3 +47,13 @@ func test_capture_treatment_section() -> void:
 	RenderingServer.force_draw()
 	await RenderingServer.frame_post_draw
 	assert_int(viewport.get_texture().get_image().save_png("user://qa/treatment-shop-1920.png")).is_equal(OK)
+	button.pressed.emit()
+	for _frame: int in 5:
+		await get_tree().process_frame
+	var notice := shop.find_child("TreatmentNotice", true, false) as PanelContainer
+	assert_bool(notice.visible).is_true()
+	assert_bool(shop.get_global_rect().encloses(notice.get_global_rect())).is_true()
+	assert_object(shop.find_child("Treat_vex_throat_herbalist-service", true, false)).is_null()
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	assert_int(viewport.get_texture().get_image().save_png("user://qa/recovery-shop-1920.png")).is_equal(OK)
