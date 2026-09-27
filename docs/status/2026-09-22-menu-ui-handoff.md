@@ -1,5 +1,11 @@
 # Menu UI pass — paused 2026-09-22
 
+**Resumed and completed on 2026-09-25 at the user's request.** The saved implementation
+was already in the clean repository at resumption. Layout fixes, interaction checks,
+screenshots, and remaining limitations are recorded in
+[the completed menu QA note](../qa/ledger-menus-2026-09-25.md).
+The pause and unverified-state descriptions below are historical.
+
 User requested a pause for the day. Resume implementation only when asked.
 
 ## Agreed scope

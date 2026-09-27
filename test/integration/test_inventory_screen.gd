@@ -127,3 +127,38 @@ func test_equipped_item_survives_screen_close_and_reopen() -> void:
 	var second: InventoryScreen = reopened.scene()
 	var slot_inventory: Inventory = second._equipment[&"main"]
 	assert_int(slot_inventory.get_item_count()).is_equal(1)
+	var restored: InventoryItem = slot_inventory.get_items()[0]
+	assert_str((second.find_child("EquipmentLabel_main", true, false) as Label).text).is_equal(restored.get_title())
+	assert_bool(InventoryScreenScript.transfer_from_equipment(restored, GameState.inventory)).is_true()
+	assert_str((second.find_child("EquipmentLabel_main", true, false) as Label).text).is_equal("EMPTY")
+
+
+func test_rapid_selection_only_fades_details_and_keeps_last_item() -> void:
+	var first := GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_HEARTHLOAF)
+	var last := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_FORGE_HAMMER)
+	var runner := scene_runner("res://ui/screens/inventory.tscn")
+	await runner.simulate_frames(2)
+	var screen := runner.scene() as InventoryScreen
+	var position_before := screen.position
+	for index: int in 8:
+		screen._on_item_selected(first)
+		screen._on_item_selected(last)
+	assert_vector(screen.position).is_equal(position_before)
+	assert_float(screen.modulate.a).is_equal(1.0)
+	await get_tree().create_timer(DS.DUR_FAST * 2.0).timeout
+	assert_float(screen._detail_column.modulate.a).is_equal_approx(1.0, 0.001)
+	assert_str((screen.find_child("ItemName", true, false) as Label).text).is_equal(last.get_title())
+
+
+func test_dropping_selected_item_clears_details_and_actions() -> void:
+	var item := GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_HEARTHLOAF)
+	var runner := scene_runner("res://ui/screens/inventory.tscn")
+	await runner.simulate_frames(2)
+	var screen := runner.scene() as InventoryScreen
+	screen._on_item_selected(item)
+	screen._drop_selected()
+	assert_str((screen.find_child("ItemName", true, false) as Label).text).is_equal("SELECT AN ITEM")
+	assert_str((screen.find_child("ItemValue", true, false) as Label).text).is_empty()
+	assert_int(screen.find_child("ItemStats", true, false).get_child_count()).is_equal(0)
+	assert_bool((screen.find_child("EquipButton", true, false) as Button).disabled).is_true()
+	assert_bool((screen.find_child("DropButton", true, false) as Button).disabled).is_true()

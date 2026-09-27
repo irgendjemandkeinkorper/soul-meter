@@ -3,6 +3,7 @@ extends Screen
 ## Three-column GLoot inventory presentation over GameState.inventory.
 
 const ITEM_SLOT_SCENE := preload("res://ui/components/item_slot.tscn")
+const BAG_SLOT_SCENE := preload("res://ui/components/item_slot_small.tscn")
 const EQUIPMENT_SLOTS: Array[StringName] = [&"main", &"off", &"head", &"body", &"trinket"]
 ## Pandora items carry `equip_slot` values like "main_hand"; the rail's slot names are
 ## the short forms above. Both spellings are accepted wherever a slot is matched.
@@ -27,6 +28,9 @@ var _requirement_label: Label
 var _value_label: Label
 var _selected_item: InventoryItem
 var _detail_column: Control
+var _equip_button: Button
+var _drop_button: Button
+var _closing := false
 
 
 func _uses_ledger_style() -> bool:
@@ -39,11 +43,13 @@ func _build() -> void:
 	_ensure_bag_constraints()
 	_build_columns()
 	_restore_equipment()
+	_refresh_detail()
 	_refresh_weight()
 	GameState.inventory_changed.connect(_refresh_weight)
 
 
 func _exit_tree() -> void:
+	_closing = true
 	# The per-slot inventories are children of this screen and die with it, so the
 	# equipped state is snapshotted into GameState.equipped_slots here (the single
 	# write point — every in-screen drag/equip path is captured by this final pass)
@@ -179,7 +185,7 @@ func _build_columns() -> void:
 func _build_equipment_column() -> Control:
 	var column := VBoxContainer.new()
 	column.name = "EquipmentColumn"
-	column.custom_minimum_size.x = 360.0
+	column.custom_minimum_size.x = 260.0
 	column.theme_type_variation = "ScreenContentColumn"
 	column.add_child(_section("EQUIPMENT"))
 	for slot_name: StringName in EQUIPMENT_SLOTS:
@@ -206,6 +212,7 @@ func _build_equipment_row(slot_name: StringName) -> Control:
 	grid.inventory_item_selected.connect(_on_item_selected)
 	row.add_child(grid)
 	var labels := VBoxContainer.new()
+	labels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var eyebrow := Label.new()
 	eyebrow.text = str(slot_name).to_upper()
 	eyebrow.theme_type_variation = "EyebrowLabel"
@@ -214,9 +221,20 @@ func _build_equipment_row(slot_name: StringName) -> Control:
 	item_name.name = "EquipmentLabel_%s" % slot_name
 	item_name.text = "EMPTY"
 	item_name.theme_type_variation = "MutedLabel"
+	item_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	labels.add_child(item_name)
 	row.add_child(labels)
+	inventory.item_added.connect(_refresh_equipment_label.bind(inventory, item_name))
+	inventory.item_removed.connect(_refresh_equipment_label.bind(inventory, item_name))
 	return row
+
+
+func _refresh_equipment_label(_item: InventoryItem, inventory: Inventory, label: Label) -> void:
+	if _closing:
+		return
+	var items := inventory.get_items()
+	label.text = items[0].get_title() if not items.is_empty() else tr("EMPTY")
+	_refresh_detail()
 
 
 func _build_bag_column() -> Control:
@@ -237,16 +255,19 @@ func _build_bag_column() -> Control:
 	_bag_grid.inventory = GameState.inventory
 	_bag_grid.field_dimensions = Vector2.ONE * DS.SLOT_SIZE
 	_bag_grid.item_spacing = DS.ITEM_GRID_GAP
-	_bag_grid.custom_item_control_scene = ITEM_SLOT_SCENE
+	_bag_grid.custom_item_control_scene = BAG_SLOT_SCENE
 	_bag_grid.inventory_item_selected.connect(_on_item_selected)
 	scroll.add_child(_bag_grid)
+	scroll.resized.connect(func() -> void:
+		var cell := clampf(floorf((scroll.size.x - DS.SPACE_6) / 8.0) - DS.ITEM_GRID_GAP, DS.SLOT_SIZE_SM, DS.SLOT_SIZE)
+		_bag_grid.field_dimensions = Vector2.ONE * cell)
 	return panel
 
 
 func _build_detail_column() -> Control:
 	var column := VBoxContainer.new()
 	column.name = "DetailColumn"
-	column.custom_minimum_size.x = 430.0
+	column.custom_minimum_size.x = 320.0
 	column.theme_type_variation = "ScreenContentColumn"
 	_name_label = _detail_label("ItemName", "SELECT AN ITEM", "TitleLabel")
 	_type_label = _detail_label("ItemType", "", "MutedLabel")
@@ -260,12 +281,15 @@ func _build_detail_column() -> Control:
 		column.add_child(child)
 	var actions := HBoxContainer.new()
 	var equip := Button.new()
+	_equip_button = equip
 	equip.name = "EquipButton"
+	equip.theme_type_variation = "BronzeButton"
 	equip.text = "EQUIP"
 	equip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	equip.pressed.connect(_equip_selected)
 	actions.add_child(equip)
 	var drop := Button.new()
+	_drop_button = drop
 	drop.name = "DropButton"
 	drop.text = "DROP"
 	drop.pressed.connect(_drop_selected)
@@ -289,14 +313,20 @@ func _on_item_selected(item: InventoryItem) -> void:
 
 
 func _refresh_detail() -> void:
-	if not is_instance_valid(_selected_item):
+	for child: Node in _stats.get_children():
+		_stats.remove_child(child)
+		child.queue_free()
+	var selected := is_instance_valid(_selected_item)
+	_equip_button.disabled = not selected or not _equipment.has(slot_of(_selected_item)) or _selected_item.get_inventory() != GameState.inventory
+	_drop_button.disabled = not selected or _selected_item.get_inventory() != GameState.inventory
+	if not selected:
+		_name_label.text = tr("SELECT AN ITEM")
+		for label: Label in [_type_label, _flavour_label, _requirement_label, _value_label]:
+			label.text = ""
 		return
 	var proto_id := _selected_item.get_prototype().get_prototype_id()
 	_name_label.text = _selected_item.get_title()
 	_type_label.text = proto_id.split("/")[0].capitalize()
-	for child: Node in _stats.get_children():
-		_stats.remove_child(child)
-		child.queue_free()
 	# "ap_cost" is display-only item metadata (AP compatibility: gate T-10, not the AP round economy).
 	for property: String in ["damage", "dr", "ap_cost", "soul_cost", "weight", "element"]:
 		if _selected_item.has_property(property):
@@ -333,6 +363,7 @@ func _drop_selected() -> void:
 	if is_instance_valid(_selected_item) and _selected_item.get_inventory() == GameState.inventory:
 		GameState.inventory.remove_item(_selected_item)
 		_selected_item = null
+		_refresh_detail()
 
 
 func _flash(control: Control) -> void:

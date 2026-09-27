@@ -32,7 +32,7 @@ func _build() -> void:
 	_member_list = ItemList.new()
 	_member_list.name = "MemberList"
 	_member_list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_member_list.custom_minimum_size = Vector2(320, 0)
+	_member_list.custom_minimum_size = Vector2(240, 0)
 	_member_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_member_list.fixed_icon_size = Vector2i(64, 64)
 	_member_list.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -40,6 +40,7 @@ func _build() -> void:
 	_treatment_notice.dismissed.connect(_member_list.grab_focus)
 
 	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -94,6 +95,7 @@ func _rebuild_sheet() -> void:
 
 	var name_label := Label.new()
 	name_label.name = "SheetName"
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name_label.theme_type_variation = "HeadingLabel"
 	name_label.text = (
 		"%s, %s" % [member.display_name, member.epithet]
@@ -104,6 +106,7 @@ func _rebuild_sheet() -> void:
 	var identity := Label.new()
 	identity.text = "%s  •  %s  •  Level %d" % [member.race, member.char_class, member.level]
 	identity.theme_type_variation = "MutedLabel"
+	identity.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sheet_column.add_child(identity)
 
 	var calling_bits: Array[String] = []
@@ -134,7 +137,7 @@ func _rebuild_sheet() -> void:
 	body.add_child(main_column)
 	var side_column := VBoxContainer.new()
 	side_column.theme_type_variation = "LedgerColumn"
-	side_column.custom_minimum_size = Vector2(320, 0)
+	side_column.custom_minimum_size = Vector2(260, 0)
 	body.add_child(side_column)
 	var portrait_frame := PanelContainer.new()
 	portrait_frame.theme_type_variation = "NpcPortraitFrame8"
@@ -244,6 +247,7 @@ func _rebuild_sheet() -> void:
 			member.minor_element.capitalize() if not member.minor_element.is_empty() else "—",
 		]
 		wheel_caption.modulate = Color(1, 1, 1, 0.6)
+		wheel_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		side_column.add_child(wheel_caption)
 
 	# --- Injuries (called-shots 10C): serious records and qualified field treatment ---
@@ -283,6 +287,7 @@ func _rebuild_sheet() -> void:
 					Color(1, 1, 1, 0.85) if bool(entry.get("success", false))
 					else Color(1, 0.75, 0.75, 0.85)
 				)
+				line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				log_column.add_child(line)
 
 
@@ -303,6 +308,7 @@ func _render_injuries(column: VBoxContainer, patient: PartyMember) -> void:
 	column.add_child(_section("Injuries"))
 	_treatment_status = Label.new()
 	_treatment_status.name = "TreatmentStatus"
+	_treatment_status.visible = false
 	_treatment_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_treatment_status.modulate = Color(1, 1, 1, 0.7)
 	column.add_child(_treatment_status)
@@ -329,9 +335,11 @@ func _add_injury_row(column: VBoxContainer, patient: PartyMember, location: Stri
 	var card: Dictionary = InjuryTreatment.CARDS[card_id]
 	var box := VBoxContainer.new()
 	box.name = "Injury_%s" % location
+	box.theme_type_variation = "LedgerColumn"
 	column.add_child(box)
 	var title := Label.new()
 	title.name = "InjuryTitle_%s" % location
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var lifts: Array = InjuryTreatment._restrictions(record)
 	title.text = "%s  •  serious  •  %s  •  %s" % [
 		location.capitalize(),
@@ -339,8 +347,8 @@ func _add_injury_row(column: VBoxContainer, patient: PartyMember, location: Stri
 		str(record.get("recovery", "untreated")),
 	]
 	box.add_child(title)
-	var controls := HBoxContainer.new()
-	controls.add_theme_constant_override("separation", 12)
+	var controls := VBoxContainer.new()
+	controls.theme_type_variation = "LedgerColumn"
 	box.add_child(controls)
 	var pick := OptionButton.new()
 	pick.name = "Practitioner_%s" % location
@@ -367,7 +375,7 @@ func _add_injury_row(column: VBoxContainer, patient: PartyMember, location: Stri
 	var supply := str(card["supply_item"])
 	var button := Button.new()
 	button.name = "FieldTreat_%s" % location
-	button.text = "%s  •  %d × %s  (carry %d)" % [
+	button.text = "%s\n%d × %s  (carry %d)" % [
 		str(card.get("display_name", card_id)), int(card["supply_quantity"]),
 		ItemLocalization.text(supply, "name", supply.get_file().capitalize()), GameState.item_count(supply),
 	]
@@ -417,6 +425,7 @@ func _on_field_treat(patient: PartyMember, location: String, card_id: String) ->
 	_rebuild_sheet()
 	if _treatment_status != null:
 		_treatment_status.text = text
+		_treatment_status.visible = true
 	_treatment_notice.show_result(result, patient.display_name)
 
 

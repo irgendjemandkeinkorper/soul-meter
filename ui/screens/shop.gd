@@ -22,6 +22,13 @@ func _uses_ledger_style() -> bool:
 	return true
 
 
+func _focus_first_control() -> void:
+	# Let the nested catalog finish layout before focus-follow computes its scroll.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	super._focus_first_control()
+
+
 func _build() -> void:
 	_add_opaque_backdrop()
 	var vbox := _make_shell_window("Shop")
@@ -53,6 +60,7 @@ func _build() -> void:
 	_catalog.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var scroll := ScrollContainer.new()
 	scroll.name = "CatalogScroll"
+	scroll.follow_focus = true
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(scroll)
@@ -66,6 +74,8 @@ func _build() -> void:
 func configure_shop(shop_type: String) -> void:
 	if is_instance_valid(_treatment_notice):
 		_treatment_notice.clear_notice()
+	if is_instance_valid(_status_label):
+		_status_label.text = ""
 	if LEGACY_SHOPS.has(shop_type):
 		_vendor_id = LEGACY_SHOPS[shop_type]
 	elif not VendorData.vendor(shop_type).is_empty():
@@ -106,6 +116,7 @@ func _render_mirror_rewriting() -> void:
 	row.name = "MirrorRewritingRow"
 	var label := Label.new()
 	label.text = "Mirror Rewriting — unspend every advancement point (once this chapter)"
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(label)
 	_rewrite_member_pick = OptionButton.new()
@@ -143,6 +154,11 @@ func _on_mirror_rewriting() -> void:
 func _render_catalog() -> void:
 	if _catalog == null:
 		return
+	var focused := get_viewport().gui_get_focus_owner()
+	var focus_name := ""
+	if focused != null and _catalog.is_ancestor_of(focused):
+		focus_name = str(focused.name)
+		_restore_catalog_focus.call_deferred(focus_name)
 	for child in _catalog.get_children():
 		_catalog.remove_child(child)
 		child.queue_free()
@@ -196,6 +212,17 @@ func _render_catalog() -> void:
 		_add_stock_entry(entry, str(vendor.get("trade_mode", "commerce")))
 
 
+func _restore_catalog_focus(node_name: String) -> void:
+	# Treatment receipts deliberately take focus until dismissed.
+	if _treatment_notice.visible:
+		return
+	var previous := _catalog.find_child(node_name, true, false) as Button
+	if previous != null and not previous.disabled:
+		previous.grab_focus()
+	else:
+		shell_back_button.grab_focus()
+
+
 ## 10B: the provider's treatment cards, one row per serious injury in the party. The quote
 ## shown is the quote charged: the button carries the exact cost from `InjuryTreatment.quote`
 ## and commit refuses a changed price instead of charging it.
@@ -230,13 +257,14 @@ func _add_treatment_row(row: Dictionary, card_id: String) -> void:
 	var quoted := InjuryTreatment.quote(intent, GameState, _combat_active())
 	var box := VBoxContainer.new()
 	box.name = "Treatment_%s_%s_%s" % [str(member.id), location, card_id]
-	box.add_theme_constant_override("separation", 3)
+	box.theme_type_variation = "LedgerColumn"
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", DS.SPACE_4)
+	top.theme_type_variation = "LedgerRow"
 	box.add_child(top)
 	var title := Label.new()
 	title.text = "%s  ·  %s  ·  SERIOUS" % [member.display_name.to_upper(), location.to_upper()]
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.theme_type_variation = "HeadingLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(title)
@@ -298,6 +326,7 @@ func _add_stock_entry(entry: Dictionary, trade_mode: String) -> void:
 	row.add_child(top)
 	var title := Label.new()
 	title.text = str(entry["name"])
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.theme_type_variation = "HeadingLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(title)
@@ -307,12 +336,14 @@ func _add_stock_entry(entry: Dictionary, trade_mode: String) -> void:
 	var buy_price := int(entry["buy_price"])
 	var buy_verb := "OFFER" if trade_mode == "offering" else "BUY"
 	var buy := _menu_button(top, "%s  ·  %d SILVER" % [buy_verb, buy_price], _buy.bind(entry))
+	buy.name = "Buy_" + item_id.replace("/", "_")
 	buy.custom_minimum_size = Vector2(155, DS.CONTROL_H)
 	buy.disabled = quantity <= 0 or not GameState.can_afford(buy_price)
 
 	var sell_price := int(entry["sell_price"])
 	if trade_mode == "commerce" and VendorData.accepts_sales(_vendor_id, item_id):
 		var sell := _menu_button(top, "SELL  ·  %d SILVER" % sell_price, _sell.bind(entry))
+		sell.name = "Sell_" + item_id.replace("/", "_")
 		sell.custom_minimum_size = Vector2(155, DS.CONTROL_H)
 		sell.disabled = GameState.item_count(item_id) <= 0
 
@@ -324,6 +355,7 @@ func _add_stock_entry(entry: Dictionary, trade_mode: String) -> void:
 		GameState.item_count(item_id),
 	]
 	meta.theme_type_variation = "MutedLabel"
+	meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(meta)
 	var description := Label.new()
 	description.text = str(entry["description"])

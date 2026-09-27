@@ -34,6 +34,28 @@ func after_test() -> void:
 	GameState.from_dict(_state_before)
 
 
+func test_transaction_refresh_keeps_keyboard_focus_and_updates_stock() -> void:
+	GameState.set_gp(200)
+	var shop := await _shop(HERBALIST)
+	var id := ItemIds.CONSUMABLES_BITTERLEAF_POULTICE
+	var buy_name := "Buy_" + id.replace("/", "_")
+	var buy := shop.find_child(buy_name, true, false) as Button
+	buy.grab_focus()
+	var before := GameState.item_count(id)
+	buy.pressed.emit()
+	await get_tree().process_frame
+	buy = shop.find_child(buy_name, true, false) as Button
+	assert_bool(buy.has_focus()).is_true()
+	assert_int(GameState.item_count(id)).is_equal(before + 1)
+	var sell := shop.find_child("Sell_" + id.replace("/", "_"), true, false) as Button
+	assert_bool(sell.disabled).is_false()
+	# A spent purse disables the old action and leaves a usable focus target.
+	GameState.set_gp(0)
+	shop.call("_render_catalog")
+	await get_tree().process_frame
+	assert_bool(shop.shell_back_button.has_focus()).is_true()
+
+
 func test_player_sees_the_exact_quote_treats_and_regains_the_voice() -> void:
 	_wound(GameState.party[0], "throat", "k1")
 	var shop := await _shop(HERBALIST)
@@ -62,6 +84,7 @@ func test_player_sees_the_exact_quote_treats_and_regains_the_voice() -> void:
 	assert_bool(notice.visible).is_true()
 	shop.configure_vendor(SHRINE)
 	assert_bool(notice.visible).is_false()
+	assert_str((shop.get("_status_label") as Label).text).is_empty()
 
 
 func test_no_cash_and_hostile_standing_show_why_and_the_shrine_takes_one_wound() -> void:
