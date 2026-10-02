@@ -148,6 +148,8 @@ func show_aim_forecast(payload: Dictionary, selected: StringName, use_ct: bool) 
 	var landed := Resolution.preview_on_hit(_context)
 	if not (landed.get("hidden_draw", {}) as Dictionary).is_empty() and not bool(resolution.get("reveal", false)):
 		damage = "?"
+	# Display-only cost quote (AP compatibility: gate T-10 — the panel never prices an
+	# action; it renders the controller's "ap_cost" only when the CT battlefield flag is off).
 	aim_stats.text = tr("HIT %d%% · COST %d %s\nDAMAGE %s ON HIT") % [
 		hit, int(payload.get("ct_cost" if use_ct else "ap_cost", 0)), "CT" if use_ct else "AP", damage,
 	]

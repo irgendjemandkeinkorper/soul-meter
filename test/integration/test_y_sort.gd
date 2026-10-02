@@ -32,6 +32,24 @@ const EXPECTED_BACKGROUND_Z_INDEX := {
 	"TerrainBackdrop": -15,
 }
 
+var _original_flags: Dictionary = {}
+
+
+## World scenes read GameState while they build: an Enemy whose encounter is
+## already flagged defeated queue_free()s itself in _ready() BEFORE it dresses
+## its sprite, so the node is still findable this frame but carries the
+## undressed enemy.tscn defaults. gdUnit runs suites in directory-enumeration
+## order, which is not stable across CI runner images, so pin the fresh-field
+## state these preconditions describe instead of inheriting whatever flags an
+## earlier suite left in the autoload.
+func before_test() -> void:
+	_original_flags = GameState.flags.duplicate(true)
+	GameState.flags.clear()
+
+
+func after_test() -> void:
+	GameState.flags = _original_flags
+
 
 func test_world_scene_roots_enable_y_sort_on_the_common_parent() -> void:
 	for scene_path in WORLD_SCENES:

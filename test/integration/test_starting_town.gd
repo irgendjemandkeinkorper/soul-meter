@@ -62,12 +62,24 @@ func test_dom_transition_and_npc_anchors_survive_kit_cleanup() -> void:
 ## instead of assuming a clean autoload. set_companions() can't do this — it
 ## validates for exactly REQUIRED_COMPANIONS and refuses an empty list — so
 ## reset via the wholesale set_party() path, keeping only the lead.
+##
+## The same goes for the WorldClock autoload: these tests assert Dom as
+## authored, which is the default phase. A leaked later phase moves routined
+## NPCs (FR-504a) — in the evening Sella Varn and Toma Reedhand stand at the
+## Four Arms, inside interact range of the tavern door, and take the press the
+## door tests send. Pin the default phase and hand the clock back afterwards.
+var _world_clock_before: Dictionary
+
+
 func before_test() -> void:
 	_set_lead_only()
+	_world_clock_before = WorldClock.to_dict()
+	WorldClock.reset()
 
 
 func after_test() -> void:
 	_set_lead_only()
+	WorldClock.from_dict(_world_clock_before)
 
 
 func _set_lead_only() -> void:
