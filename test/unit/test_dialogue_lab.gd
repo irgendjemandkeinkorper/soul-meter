@@ -167,6 +167,11 @@ func test_a_session_contains_zhavar_and_the_other_save_game_runtime_surfaces() -
 	# `do SaveGame.raise_zhavar("wilds")` is authored in dialogue/sella_varn.dialogue,
 	# and raising a rung is permanent, so a leak here silently advances the
 	# campaign's escalation ladder every time an author replays that beat.
+	# raise_zhavar() is capped at the ladder's top, so a whole-tree run in which
+	# an earlier suite already rang "wilds" out would make the precondition
+	# below fail for reasons unrelated to the lab. Start from the bottom rung;
+	# after_test() restores whatever the suite inherited.
+	SaveGame.zhavar["wilds"] = SaveGame.ZHAVAR_RUNGS[0]
 	var zhavar_before := SaveGame.zhavar_rung("wilds")
 	var clean: Dictionary = _snapshot_all_state()
 
