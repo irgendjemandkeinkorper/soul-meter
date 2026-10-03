@@ -131,13 +131,17 @@ func mark_downed() -> void:
 
 ## D7: the session closed with this hostile still standing — the party fled or fell. It goes
 ## back to IDLE at full HP so the next approach re-opens the fight, under the same cooldown
-## a refused alert uses, so it cannot re-alert on the physics frame the field unfreezes.
+## a refused alert uses, so it cannot re-alert on the physics frame the field unfreezes. A
+## guard raised mid-fight and any residual velocity are dropped too: the mob stands where the
+## session left it, exactly as if it had never been alerted. A DOWNED hostile stays down.
 func release_from_session() -> void:
 	if state == State.DOWNED or state == State.IDLE:
 		return
 	var actor := battle_actor()
 	if actor != null:
 		actor.hp = actor.max_hp
+		actor.guarding = false
+	velocity = Vector2.ZERO
 	state = State.IDLE
 	_cooldown_until_msec = Time.get_ticks_msec() + int(maxf(realert_cooldown, 0.0) * 1000.0)
 	_set_sensor_enabled(true)
