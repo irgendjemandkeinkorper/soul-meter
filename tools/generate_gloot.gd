@@ -930,7 +930,12 @@ static func _combat_identity_artifact() -> String:
 		var effect_id := entity.get_string("Effect Id")
 		assert(combatant_ids.has(archetype_id), "Unknown weakness archetype: %s" % archetype_id)
 		assert(not weakness_id.is_empty() and not " " in weakness_id, "Invalid weakness ID")
-		assert(check_skill in ["lore", "insight"], "Invalid Defining Strike skill: %s" % check_skill)
+		# DRAMGID ids only (#283 §3.6): the pre-schema `lore`/`insight` rows were re-seeded
+		# to `recall`/`undertone`, so a legacy id here is stale Pandora data, not a valid row.
+		assert(
+			check_skill in ["recall", "undertone"],
+			"Invalid Defining Strike skill: %s" % check_skill
+		)
 		assert(
 			effect_id in ["cripple", "disarm", "bind_break", "reveal"],
 			"Invalid Defining Strike effect: %s" % effect_id

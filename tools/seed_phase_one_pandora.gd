@@ -373,21 +373,21 @@ func _seed_balance_bands() -> void:
 func _seed_defining_weaknesses() -> void:
 	var root := _ensure_root("Defining Weaknesses", DEFINING_WEAKNESS_PROPERTIES)
 	var rows: Array[Dictionary] = [
-		_weakness_row("Bog Wight — Hidden Shape", "bog-wight", "bog-wight/reveal", "what it conceals", "insight", 0.0, 0, "reveal", {"revealed": true}),
-		_weakness_row("Bog Wight — Knee", "bog-wight", "bog-wight/knee", "the knee", "lore", 40.0, 1, "cripple", {"crippled": true, "max_ap_delta": -1}),
-		_weakness_row("Loam Boar — Knee", "loam-maddened-boar", "loam-maddened-boar/knee", "the knee", "lore", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
-		_weakness_row("Loam Boar — Buried Rage", "loam-maddened-boar", "loam-maddened-boar/reveal", "what it conceals", "insight", 40.0, 1, "reveal", {"revealed": true}),
-		_weakness_row("Gnaal Breach-Hound — Knee", "gnaal-breach-hound", "gnaal-breach-hound/knee", "the knee", "lore", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
-		_weakness_row("Gnaal Breach-Hound — Breach Name", "gnaal-breach-hound", "gnaal-breach-hound/reveal", "what it conceals", "insight", 40.0, 1, "reveal", {"revealed": true}),
-		_weakness_row("Gnaal Rift-Scavenger — Grasp", "gnaal-rift-scavenger", "gnaal-rift-scavenger/disarm", "the hand that holds it", "lore", 0.0, 0, "disarm", {"attack_delta": -2, "disarmed": true}),
-		_weakness_row("Gnaal Rift-Scavenger — Rift Path", "gnaal-rift-scavenger", "gnaal-rift-scavenger/reveal", "what it conceals", "insight", 40.0, 1, "reveal", {"revealed": true}),
-		_weakness_row("Mustered Bloodbellow — Binding Oath", "mustered-bloodbellow", "mustered-bloodbellow/binding-oath", "the oath that binds it", "lore", 0.0, 0, "bind_break", {"binding_broken": true, "defense_delta": -2}),
-		_weakness_row("Mustered Bloodbellow — Mustered Weapon", "mustered-bloodbellow", "mustered-bloodbellow/disarm", "the hand that holds it", "insight", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
-		_weakness_row("Cleaned Guard — Binding Oath", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/binding-oath", "the oath that binds it", "lore", 0.0, 0, "bind_break", {"binding_broken": true, "defense_delta": -2}),
-		_weakness_row("Cleaned Guard — Gripping Hand", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/disarm", "the hand that holds it", "insight", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
+		_weakness_row("Bog Wight — Hidden Shape", "bog-wight", "bog-wight/reveal", "what it conceals", "undertone", 0.0, 0, "reveal", {"revealed": true}),
+		_weakness_row("Bog Wight — Knee", "bog-wight", "bog-wight/knee", "the knee", "recall", 40.0, 1, "cripple", {"crippled": true, "max_ap_delta": -1}),
+		_weakness_row("Loam Boar — Knee", "loam-maddened-boar", "loam-maddened-boar/knee", "the knee", "recall", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
+		_weakness_row("Loam Boar — Buried Rage", "loam-maddened-boar", "loam-maddened-boar/reveal", "what it conceals", "undertone", 40.0, 1, "reveal", {"revealed": true}),
+		_weakness_row("Gnaal Breach-Hound — Knee", "gnaal-breach-hound", "gnaal-breach-hound/knee", "the knee", "recall", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
+		_weakness_row("Gnaal Breach-Hound — Breach Name", "gnaal-breach-hound", "gnaal-breach-hound/reveal", "what it conceals", "undertone", 40.0, 1, "reveal", {"revealed": true}),
+		_weakness_row("Gnaal Rift-Scavenger — Grasp", "gnaal-rift-scavenger", "gnaal-rift-scavenger/disarm", "the hand that holds it", "recall", 0.0, 0, "disarm", {"attack_delta": -2, "disarmed": true}),
+		_weakness_row("Gnaal Rift-Scavenger — Rift Path", "gnaal-rift-scavenger", "gnaal-rift-scavenger/reveal", "what it conceals", "undertone", 40.0, 1, "reveal", {"revealed": true}),
+		_weakness_row("Mustered Bloodbellow — Binding Oath", "mustered-bloodbellow", "mustered-bloodbellow/binding-oath", "the oath that binds it", "recall", 0.0, 0, "bind_break", {"binding_broken": true, "defense_delta": -2}),
+		_weakness_row("Mustered Bloodbellow — Mustered Weapon", "mustered-bloodbellow", "mustered-bloodbellow/disarm", "the hand that holds it", "undertone", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
+		_weakness_row("Cleaned Guard — Binding Oath", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/binding-oath", "the oath that binds it", "recall", 0.0, 0, "bind_break", {"binding_broken": true, "defense_delta": -2}),
+		_weakness_row("Cleaned Guard — Gripping Hand", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/disarm", "the hand that holds it", "undertone", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
 		# PROVISIONAL — CANON REVIEW REQUIRED: trial combatant weakness names.
-		_weakness_row("Trial Warden — Joint", "trial-warden", "trial-warden/joint", "the joint", "lore", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
-		_weakness_row("Trial Keeper — Gripping Hand", "trial-keeper", "trial-keeper/disarm", "the hand that holds it", "insight", 0.0, 0, "disarm", {"attack_delta": -2, "disarmed": true}),
+		_weakness_row("Trial Warden — Joint", "trial-warden", "trial-warden/joint", "the joint", "recall", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
+		_weakness_row("Trial Keeper — Gripping Hand", "trial-keeper", "trial-keeper/disarm", "the hand that holds it", "undertone", 0.0, 0, "disarm", {"attack_delta": -2, "disarmed": true}),
 	]
 	for row: Dictionary in rows:
 		var entity_name := str(row.get("Entity Name", ""))

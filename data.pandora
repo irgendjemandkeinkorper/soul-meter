@@ -5324,7 +5324,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "insight"
+						"value": "undertone"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5377,7 +5377,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "lore"
+						"value": "recall"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5430,7 +5430,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "lore"
+						"value": "recall"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5483,7 +5483,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "insight"
+						"value": "undertone"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5536,7 +5536,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "lore"
+						"value": "recall"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5589,7 +5589,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "insight"
+						"value": "undertone"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5642,7 +5642,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "lore"
+						"value": "recall"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5695,7 +5695,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "insight"
+						"value": "undertone"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5748,7 +5748,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "lore"
+						"value": "recall"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5801,7 +5801,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "insight"
+						"value": "undertone"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5854,7 +5854,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "lore"
+						"value": "recall"
 					},
 					"Display Name": {
 						"type": "string",
@@ -5907,7 +5907,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "insight"
+						"value": "undertone"
 					},
 					"Display Name": {
 						"type": "string",
@@ -14853,7 +14853,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "lore"
+						"value": "recall"
 					},
 					"Display Name": {
 						"type": "string",
@@ -14906,7 +14906,7 @@
 					},
 					"Check Skill": {
 						"type": "string",
-						"value": "insight"
+						"value": "undertone"
 					},
 					"Display Name": {
 						"type": "string",
