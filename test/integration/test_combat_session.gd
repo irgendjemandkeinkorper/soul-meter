@@ -430,3 +430,97 @@ func test_unloading_the_field_under_a_live_session_ends_it_as_a_flight() -> void
 	assert_bool(Battle.session_active).is_false()
 	assert_bool(Battle.ended).is_true()
 	assert_int(Battle.last_result.state).is_equal(BattleResult.State.FLED)
+
+
+## #281 D5: a set-piece has no authored field nodes, so Battle spawns one Hostile per encounter
+## enemy. Each body must stand in for the actor `start()` already built (not a second one) and
+## stand on the cell the battlefield model seated that actor on.
+func test_a_set_piece_spawns_one_body_per_enemy_on_its_seated_cell() -> void:
+	var field := await _field()
+	var opened := Battle.start_set_piece(field, &"dorthkor-vanguard")
+	assert_bool(opened.get("allowed", false)).override_failure_message(
+		"the set-piece must open: %s" % opened.get("message", "")
+	).is_true()
+	assert_bool(Battle.session_active).is_true()
+	assert_int(Battle.enemies.size()).is_equal(2)
+	assert_int(Battle._spawned_hostiles.size()).is_equal(Battle.enemies.size())
+
+	var model := Battle.controller.battlefield as GridBattlefieldModel
+	assert_object(model).is_not_null()
+	var seen: Dictionary = {}
+	for ally: BattleActor in Battle.allies:
+		seen[model.cell_of(ally)] = true
+	for index in Battle.enemies.size():
+		var actor := Battle.enemies[index]
+		var body := Battle._spawned_hostiles[index]
+		assert_object(body.battle_actor()).override_failure_message(
+			"a set-piece body adopts the encounter's actor; it must not build its own"
+		).is_same(actor)
+		assert_int(body.state).is_equal(Hostile.State.IN_COMBAT)
+		assert_str(String(body.combat_id)).is_equal(String(actor.combat_id))
+		var seated: Variant = model.cell_of(actor)
+		assert_bool(seated is Vector2i).is_true()
+		assert_that(body.sync_cell()).override_failure_message(
+			"the body must stand on the cell combat seated its actor on"
+		).is_equal(seated)
+		assert_bool(seen.has(seated)).override_failure_message(
+			"no two combatants may share cell %s" % [seated]
+		).is_false()
+		seen[seated] = true
+
+
+## The bodies exist only for the fight: ending the session frees them and leaves nothing in
+## Battle pointing at them. Authored hostiles are not in this list and are not freed.
+func test_ending_a_set_piece_frees_the_bodies_it_spawned_and_no_others() -> void:
+	var field := await _field()
+	var authored := _hostile(field, "Authored", Vector2i(30, 30))
+	var opened := Battle.start_set_piece(field, &"dorthkor-vanguard")
+	assert_bool(opened.get("allowed", false)).is_true()
+	var bodies: Array[Hostile] = Battle._spawned_hostiles.duplicate()
+	assert_int(bodies.size()).is_equal(2)
+
+	Battle._end_session(null)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_bool(Battle.session_active).is_false()
+	assert_int(Battle._spawned_hostiles.size()).is_equal(0)
+	for body: Variant in bodies:
+		assert_bool(is_instance_valid(body)).override_failure_message(
+			"a set-piece body must not outlive its session"
+		).is_false()
+	assert_bool(is_instance_valid(authored)).override_failure_message(
+		"an authored hostile is the scene's, not the set-piece's, and must survive"
+	).is_true()
+
+
+## A set-piece body is exempt from the `defeated_*` retirement an authored hostile makes in
+## `_ready`: its actor is already in the controller, so a retired body would leave the fight
+## with an enemy nobody can see.
+func test_a_set_piece_body_is_not_retired_by_its_encounters_defeated_flag() -> void:
+	var field := await _field()
+	var flag := EncounterCatalog.defeated_flag(&"dorthkor-vanguard")
+	if not flag.is_empty():
+		GameState.set_flag(flag, true)
+	var opened := Battle.start_set_piece(field, &"dorthkor-vanguard")
+	if not bool(opened.get("allowed", false)):
+		# The composition builder may refuse a beaten encounter outright; then there is no
+		# fight and so nothing to keep visible.
+		assert_int(Battle._spawned_hostiles.size()).is_equal(0)
+		return
+	await get_tree().process_frame
+	assert_int(Battle._spawned_hostiles.size()).is_equal(Battle.enemies.size())
+	for body: Hostile in Battle._spawned_hostiles:
+		assert_bool(is_instance_valid(body) and not body.is_queued_for_deletion()).is_true()
+
+
+## An authored encounter is placed by design, so it opens inside a no-combat interior where an
+## ambient alert is refused (F0 ruling 2 binds ambient sessions only).
+func test_a_set_piece_opens_inside_a_no_combat_zone() -> void:
+	var scene: Node = (load(INTERIOR_SCENE) as PackedScene).instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	var field := scene.find_child("FieldMap", true, false) as FieldMap
+	assert_bool(field.no_combat_zone()).is_true()
+	assert_bool(Battle.can_fight_here(field).get("allowed", true)).is_false()
+	assert_bool(Battle.can_fight_here(field, true).get("allowed", false)).is_true()

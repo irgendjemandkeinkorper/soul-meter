@@ -146,3 +146,31 @@ func _successful_seed() -> int:
 		if probe.randi_range(1, 100) <= 95:
 			return candidate
 	return 1
+
+
+## #281 D5: the trial fights are set-pieces fought in the hall itself. The warden must be a
+## session on the hall's own field with a body standing in the room, and the body must leave
+## with the fight.
+func test_warden_fight_is_a_session_in_the_hall_with_a_spawned_body() -> void:
+	var hall: Node = auto_free((load(SCENE_PATH) as PackedScene).instantiate())
+	add_child(hall)
+
+	hall.request_warden_encounter()
+
+	assert_bool(Battle.session_active).override_failure_message(
+		"the trial fight must open as a same-map session, interior or not"
+	).is_true()
+	assert_int(Battle.enemies.size()).is_greater(0)
+	assert_int(Battle._spawned_hostiles.size()).is_equal(Battle.enemies.size())
+	var bodies: Array[Hostile] = Battle._spawned_hostiles.duplicate()
+	for body: Hostile in bodies:
+		assert_bool(hall.is_ancestor_of(body)).override_failure_message(
+			"the warden's body must stand in the hall, not in another scene"
+		).is_true()
+		assert_object(body.battle_actor()).is_same(Battle.enemies[bodies.find(body)])
+
+	Battle._finish(BattleResult.State.VICTORY, &"slain")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	for body: Variant in bodies:
+		assert_bool(is_instance_valid(body)).is_false()

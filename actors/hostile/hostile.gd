@@ -27,6 +27,9 @@ var cell: Vector2i
 var state: State = State.IDLE
 var _actor: BattleActor
 var _cooldown_until_msec: int = 0
+## True once `adopt_actor()` handed this node an actor Battle already built: a set-piece body
+## spawned for a fight that is running now, not a scene-authored mob that persists between visits.
+var _adopted: bool = false
 
 
 func _ready() -> void:
@@ -35,7 +38,10 @@ func _ready() -> void:
 	add_to_group(&"hostile")
 	# An authored group that the ledger already recorded as beaten does not come back: the
 	# same check `Enemy` makes, so `defeated_*` flags keep gating pickups and follow-up fights.
-	if group_id != &"":
+	# A set-piece body is exempt: whether its encounter runs again is its caller's gate, and the
+	# actor it stands in for is already in the controller — retiring the body would leave the
+	# fight with an enemy nobody can see.
+	if group_id != &"" and not _adopted:
 		var defeated_flag := EncounterCatalog.defeated_flag(group_id)
 		if not defeated_flag.is_empty() and GameState.flag_is_true(defeated_flag):
 			_retire()
@@ -76,6 +82,16 @@ func _retire() -> void:
 	set_deferred("collision_layer", 0)
 	set_deferred("collision_mask", 0)
 	queue_free.call_deferred()
+
+
+## Set-piece spawn (#281 D5): this hostile stands in for an actor Battle already built from the
+## encounter, so it must not build a second one. Called before `add_child`, so `_ready` finds
+## the actor, its combat id and its unit art already decided.
+func adopt_actor(actor: BattleActor) -> void:
+	_actor = actor
+	_adopted = true
+	unit_id = actor.archetype_id
+	combat_id = actor.combat_id
 
 
 func battle_actor() -> BattleActor:

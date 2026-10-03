@@ -98,3 +98,42 @@ func test_ambient_bog_wight_fight_reads_with_the_log_hidden() -> void:
 
 	screen.free()
 	Battle._end_session(null)
+
+
+## Rendered evidence for #281 D5: the trial warden fought as a set-piece in the Lower Trial
+## Hall. Battle spawns the warden's body where the party stands; the capture shows whether it
+## lands on the hall floor, inside the walls, apart from the party.
+func test_trial_warden_set_piece_stands_in_the_hall() -> void:
+	GameState.flags.clear()
+	if GameState.party.is_empty():
+		GameState._seed_demo_data()
+	var runner := scene_runner("res://world/interiors/lower_trial_hall.tscn")
+	var root := runner.scene() as Node2D
+	await runner.simulate_frames(3)
+	var field := root.find_child("FieldMap", true, false) as FieldMap
+	assert_object(field).is_not_null()
+
+	root.call("request_warden_encounter")
+	await runner.simulate_frames(4)
+
+	assert_bool(Battle.session_active) \
+		.override_failure_message("the trial warden must open as a same-map set-piece") \
+		.is_true()
+	assert_int(Battle._spawned_hostiles.size()).is_equal(Battle.enemies.size())
+	UIManager.close_all()
+	var boot_scene := get_tree().current_scene as CanvasItem
+	if boot_scene != null:
+		boot_scene.hide()
+	var player := field.player()
+	var camera := player.get_node_or_null("Camera2D") as Camera2D if player != null else null
+	if camera != null:
+		camera.enabled = true
+		camera.make_current()
+		camera.reset_smoothing()
+	await runner.simulate_frames(5)
+	await _capture("trial-warden-set-piece")
+	print("PARTY CELLS ", field.party_cells())
+	for body: Hostile in Battle._spawned_hostiles:
+		print("BODY ", body.name, " cell ", body.sync_cell(), " at ", body.global_position)
+
+	Battle._end_session(null)
