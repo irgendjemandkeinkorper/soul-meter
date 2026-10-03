@@ -14,6 +14,8 @@ set -euo pipefail
 #     --scenario populated-grid --display-mode rendered --settle-ms 2000 -o report.json
 #   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
 #     --scenario populated-grid --display-mode headless --profile -o profile.json
+#   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
+#     --scenario populated_field --display-mode headless --raw-samples -o field100.json
 
 godot_bin="${GODOT_BIN:-godot}"
 output_path=""
@@ -22,6 +24,9 @@ display_mode="headless"
 profile_mode=0
 settle_ms=2000
 settle_ms_explicit=0
+raw_samples=0
+attribute_listeners=0
+decision_target=""
 benchmark_data_dir="${SOUL_METER_BENCHMARK_DATA_DIR:-/tmp/soul-meter-godot-benchmark-data}"
 mkdir -p "$benchmark_data_dir"
 export XDG_DATA_HOME="$benchmark_data_dir"
@@ -53,8 +58,20 @@ while [[ $# -gt 0 ]]; do
 			settle_ms_explicit=1
 			shift 2
 			;;
+		--raw-samples)
+			raw_samples=1
+			shift
+			;;
+		--attribute-listeners)
+			attribute_listeners=1
+			shift
+			;;
+		--decision-target)
+			decision_target="${2:-}"
+			shift 2
+			;;
 		-h|--help)
-			sed -n '3,18p' "$0"
+			sed -n '3,20p' "$0"
 			exit 0
 			;;
 		*)
@@ -76,6 +93,10 @@ case "$scenario" in
 	populated-grid)
 		tool_script="res://tools/populated_grid_benchmark.gd"
 		;;
+	populated_field|populated-field)
+		scenario="populated_field"
+		tool_script="res://tools/populated_field_benchmark.gd"
+		;;
 	*)
 		echo "Unknown benchmark scenario: $scenario" >&2
 		exit 2
@@ -87,8 +108,18 @@ if [[ "$profile_mode" -eq 1 && "$scenario" != "populated-grid" ]]; then
 	exit 2
 fi
 
-if [[ "$settle_ms_explicit" -eq 1 && "$scenario" != "populated-grid" ]]; then
-	echo "--settle-ms is only available for --scenario populated-grid" >&2
+if [[ ( "$raw_samples" -eq 1 || "$attribute_listeners" -eq 1 || -n "$decision_target" ) && "$scenario" != "populated_field" ]]; then
+	echo "--raw-samples, --attribute-listeners and --decision-target are only available for --scenario populated_field" >&2
+	exit 2
+fi
+
+if [[ -n "$decision_target" && ( ! "$decision_target" =~ ^[0-9]+$ || "$decision_target" -le 0 ) ]]; then
+	echo "--decision-target requires a positive integer count" >&2
+	exit 2
+fi
+
+if [[ "$settle_ms_explicit" -eq 1 && "$scenario" != "populated-grid" && "$scenario" != "populated_field" ]]; then
+	echo "--settle-ms is only available for --scenario populated-grid or populated_field" >&2
 	exit 2
 fi
 
@@ -120,11 +151,20 @@ trap cleanup EXIT
 # report — not the exit status — decides success here.
 set +e
 user_args=()
-if [[ "$scenario" == "populated-grid" ]]; then
+if [[ "$scenario" == "populated-grid" || "$scenario" == "populated_field" ]]; then
 	user_args+=("--" "--settle-ms" "$settle_ms")
 fi
 if [[ "$profile_mode" -eq 1 ]]; then
 	user_args+=("--profile")
+fi
+if [[ "$raw_samples" -eq 1 ]]; then
+	user_args+=("--raw-samples")
+fi
+if [[ "$attribute_listeners" -eq 1 ]]; then
+	user_args+=("--attribute-listeners")
+fi
+if [[ -n "$decision_target" ]]; then
+	user_args+=("--decision-target" "$decision_target")
 fi
 "$godot_bin" "${godot_args[@]}" --path . --script "$tool_script" \
 	"${user_args[@]}" >"$raw" 2>&1

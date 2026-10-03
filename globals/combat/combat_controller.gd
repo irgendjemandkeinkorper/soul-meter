@@ -2763,7 +2763,13 @@ func _emit_event(
 		# Seam v2 broadcast: every actor's resource sees every resolved action (Threads).
 		var action_id := StringName(str(event.data.get("action_id", "")))
 		for observer: BattleActor in allies + enemies:
-			_class_resource_of(observer).on_any_action(
+			var observer_resource := _class_resource_of(observer)
+			# A null resource ignores the broadcast, so it gets no private copy of the payload.
+			# The copy carries the whole snapshot; one per bystander was 838 ms of every
+			# resolved action with 100 hostiles on the field (#282).
+			if observer_resource.is_null():
+				continue
+			observer_resource.on_any_action(
 				event.actor_id, action_id, event.target_id, event.data.duplicate(true)
 			)
 	if resolving_window:
