@@ -20,3 +20,6 @@ build/
 # anyway, and a test run adds more every time.
 combat_lab_recorder/
 dev-console-recorder/
+
+# Steam development app id (owner-local, never committed; see docs/steam-integration.md)
+steam_appid.txt
