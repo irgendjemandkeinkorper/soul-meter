@@ -31,6 +31,8 @@ GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
   -o reports/fr904-field100-headless.json
 # `--decision-target 5` shortens the decision window for a smoke run; the default is one
 # decision per admitted hostile (100).
+# `--attribute-listeners` adds `session.listeners`: self time per synchronous combat-event
+# listener during the decision window. Its proxies cost time, so compare only attributed runs.
 ```
 
 Or invoke the harness directly:
@@ -301,21 +303,22 @@ First measurement for #282 (F2, the D9 scale budget). `tools/populated_field_ben
 hostiles, Intel i5-13400F / 16 threads, Godot 4.7.1, headless `gl_compatibility`. Draw calls
 read 0, so nothing here says anything about rendering cost.
 
-Three runs before and three after the one change this slice makes (below). All six reports
-have `status: ok` and no errors.
+Three runs at each of three points: before any change, after fix 1, and after fix 2 (both
+below). All nine reports have `status: ok` and no errors.
 
-| Measurement (ms) | Before: run 1 / 2 / 3 | After: run 1 / 2 / 3 | D9 line |
-|---|---|---|---|
-| Idle field frame, p50 | 0.342 / 0.341 / 0.282 | 0.344 / 0.403 / 0.449 | — |
-| In-session frame, p50 (ally turn pending) | 0.381 / 0.332 / 0.350 | 0.321 / 0.432 / 0.306 | — |
-| First alert to visible battle HUD | 450 / 489 / 451 | 418 / 451 / 419 | — |
-| Admission, mean per hostile | 68.7 / 68.9 / 67.4 | 64.1 / 70.2 / 67.0 | — |
-| Admission, all 100 | 6801 / 6823 / 6676 | 6346 / 6951 / 6636 | — |
-| Enemy decision, mean | 3486 / 3556 / 3422 | 2596 / 2651 / 2602 | **2** |
-| Enemy decision, p50 | 2344 / 2434 / 2292 | 1409 / 1559 / 1449 | — |
-| Enemy decision, p95 | 13195 / 13181 / 13050 | 12452 / 12416 / 12793 | — |
-| Enemy decision, max | 18345 / 18339 / 17950 | 17358 / 17480 / 16799 | — |
-| Ally turn with no enemy decision, mean | 577 (run 1) | 203 / 220 / 201 | — |
+| Measurement (ms) | Before: run 1 / 2 / 3 | After fix 1 | After fix 2 | D9 line |
+|---|---|---|---|---|
+| Idle field frame, p50 | 0.342 / 0.341 / 0.282 | 0.344 / 0.403 / 0.449 | 0.436 / 0.364 / 0.482 | — |
+| In-session frame, p50 (ally turn pending) | 0.381 / 0.332 / 0.350 | 0.321 / 0.432 / 0.306 | 0.425 / 0.404 / 0.412 | — |
+| First alert to visible battle HUD | 450 / 489 / 451 | 418 / 451 / 419 | 479 / 468 / 483 | — |
+| Admission, mean per hostile | 68.7 / 68.9 / 67.4 | 64.1 / 70.2 / 67.0 | 70.7 / 70.1 / 69.0 | — |
+| Admission, all 100 | 6801 / 6823 / 6676 | 6346 / 6951 / 6636 | 6997 / 6937 / 6836 | — |
+| Enemy decision, mean | 3486 / 3556 / 3422 | 2596 / 2651 / 2602 | **137 / 138 / 140** | **2** |
+| Enemy decision, p50 | 2344 / 2434 / 2292 | 1409 / 1559 / 1449 | 126 / 127 / 131 | — |
+| Enemy decision, p95 | 13195 / 13181 / 13050 | 12452 / 12416 / 12793 | 178 / 172 / 168 | — |
+| Enemy decision, max | 18345 / 18339 / 17950 | 17358 / 17480 / 16799 | 409 / 364 / 385 | — |
+| Decision window, 104 decisions | 360,635 (run 1) | — | 15,913 / 16,105 / 16,291 | — |
+| Ally turn with no enemy decision, mean | 577 (run 1) | 203 / 220 / 201 | 223 / 224 / 231 | — |
 
 Node count was 866 on the idle field and 1087 in session (before runs).
 
@@ -323,13 +326,13 @@ Node count was 866 on the idle field and 1087 in session (before runs).
 
 1. **Presence is cheap.** 100 idle hostiles cost under half a millisecond of process time per
    frame. The D9 "presence budget" holds on this machine, headless.
-2. **A round is not playable.** The D9 line is a 2 ms mean per enemy decision. The measured
-   mean is about 2,600 ms after this slice: one round of 100 decisions takes over four
-   minutes of wall clock. This is three orders of magnitude over, so run-to-run noise does not
-   matter to the conclusion.
+2. **A round is still not playable.** The D9 line is a 2 ms mean per enemy decision. Before
+   this slice the mean was about 3,500 ms and a round of 100 decisions took six minutes. After
+   both fixes it is about 138 ms and a round takes 16 s: 25 times faster, and still about 70
+   times over the line.
 3. **Admission is slow too.** About 67 ms per hostile, 6.3 to 7.0 s to admit 100.
 
-### The one fix in this slice
+### Fix 1: no snapshot copy for class resources that ignore it
 
 `CombatController._emit_event()` broadcasts every resolved action to every combatant's class
 resource (Seam v2), handing each a deep copy of the event payload. The payload carries the full
@@ -351,23 +354,55 @@ A scratch probe (not committed; same field, 100 admitted, no HUD attached) timed
 | `_best_enemy_position()` | 30 ms | 28 ms |
 | `Battle.admit()` x 99 | 7910 ms | 7102 to 7244 ms |
 
-### What is still unexplained
+### Fix 2: path searches stop at the move budget
 
-With no HUD attached, a whole `_resolve_enemy_actor()` call measured 9 to 80 ms in the probe.
-The benchmark, which runs with the battle HUD mounted, measures about 2,600 ms per decision.
-The difference was **not attributed in this slice**. The likely candidates, in the order they
-should be measured:
+`--attribute-listeners` (added in this slice; see "Running it") showed the listeners were
+not the problem: they took 7 s of a 266 s decision window. Temporary timers in the
+controller's enemy loop (not committed) put 96% of each decision in `_best_enemy_position()`:
+2,573 ms mean of 2,677 ms.
 
-1. The synchronous `event_emitted` listeners (battle HUD and `CombatOverlay`) handling each
-   event with 100 enemies in the snapshot. Suspected dominant; unmeasured.
-2. `snapshot()` rebuilding 4,900 tile dictionaries on every event (14 to 15 ms per event).
-3. `GridBattlefieldModel.reachable_positions()` running one A* per cell in the move box
-   (about 30 ms per moving enemy).
-4. Admission: 64 to 70 ms per hostile.
+`GridBattlefieldModel.reachable_positions()` runs one `_deterministic_path()` search per cell
+in the move box (up to 80 cells). That search is a Dijkstra in GDScript that re-sorts its
+whole frontier on every pop and had no stopping rule other than reaching the destination. For
+a cell nothing can reach (walled in by the enemy's own side, which is what a crowd around the
+party looks like) it flooded the entire connected grid, 4,900 cells. Decisions got slower as
+enemies converged: 284 ms for the first, 3,597 ms mean once the party was surrounded.
 
-The benchmark's decision timer also folds silent forced passes into the next decision, so the
+`reachable_positions()` now passes a cap to the search. A step costs `ceil(move_ct_cost * w)`
+CT and at most `sqrt(2) * w` search cost for the same weight, so any path whose search cost
+exceeds `budget * sqrt(2) / move_ct_cost` also exceeds the CT budget, and the cell would have
+been rejected anyway. Below the cap the search order, path and tie-breaks are unchanged.
+`path_query()`, `move()` and `move_query()` are uncapped, as before.
+`test_capped_reachable_positions_match_the_uncapped_brute_force` checks the capped answer
+against the uncapped one for five budgets on a field with elevation, a cliff-walled pocket
+and a ring of enemies with one gap.
+
+### Where the remaining 138 ms goes
+
+One attributed run after fix 2 (proxy overhead included, so its 135 ms mean is not directly
+comparable): 15.7 s decision window, 130 events, 125 `turn_resolved`.
+
+| Listener (self time) | Calls | Total ms | Mean ms per call |
+|---|---|---|---|
+| `combat_event` -> `battle_interface.gd.consume_event` | 130 | 4,690 | 36.1 |
+| `turn_resolved` -> `battle.gd._refresh` | 125 | 2,043 | 16.3 |
+| `combat_event` -> `battle_hud.gd.consume_event` | 130 | 1,867 | 14.4 |
+| `event_emitted` -> `battle.gd._on_combat_event` | 130 | 52 | 0.4 |
+| style tracker + combat audio | 260 | 4 | under 0.1 |
+| **Listeners total** | | **8,657** | |
+| Controller and scheduler (the rest of the window) | | about 7,000 | about 68 per decision |
+
+The listeners are now about 55% of the window. Measured earlier, inside the controller:
+`snapshot()` is about 14 ms per event (most of it 4,900 tile dictionaries), and one
+`reachable_positions()` call for an enemy with open ground around it about 30 ms.
+
+Next targets, largest first:
+
+1. `BattleInterface.consume_event` (36 ms per event) and the battle screen's `_refresh`
+   (16 ms per turn): presentation work redone per event for 100 enemies.
+2. `snapshot()` rebuilding every tile on every event.
+3. Admission, about 70 ms per hostile. Not looked at.
+4. The batching, off-screen skipping and per-tick budget that #282 names. None is built.
+
+The benchmark's decision timer folds silent forced passes into the next decision, so the
 p95 and max rows can include more than one enemy's work.
-
-None of AI batching, off-screen skipping or a per-tick budget (the mechanisms #282 names) has
-been built. This section is the profile those slices start from.
-

@@ -681,6 +681,7 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 	var origin: Vector2i = _cells[id]
 	var move_cost := maxi(1, _rules.move_ct_cost if _rules != null else 1)
 	var max_radius := int(ct_budget / move_cost) + 1
+	var search_cap := _search_cost_cap(ct_budget)
 	var rect := _grid.get_used_rect()
 	var min_y := maxi(rect.position.y, origin.y - max_radius)
 	var max_y := mini(rect.end.y - 1, origin.y + max_radius)
@@ -692,7 +693,7 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 			if cell == origin:
 				continue
 			var handle := _handle_for_cell(cell)
-			var query := path_query(actor, handle)
+			var query := _path_query(actor, handle, search_cap)
 			if bool(query.get("allowed", false)) and int(query.get("ct_cost", 0)) <= ct_budget:
 				handles.append(String(handle))
 	# Sort as String, never as StringName: StringName's `<` compares by internal pointer, so a
@@ -709,6 +710,14 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 ## `reachable_positions()` all route through it so the quoted cost and the paid cost can never
 ## drift apart (doc §1.7).
 func path_query(actor: BattleActor, destination: StringName) -> Dictionary:
+	return _path_query(actor, destination, INF)
+
+
+## `path_query()` with the search stopped once every unsettled cell costs more than
+## `max_search_cost` (in `_deterministic_path` cost units). Below the cap the search order, and
+## so the path and its tie-breaks, are exactly `path_query()`'s; past it the answer is "No path"
+## instead of a path the caller would have rejected anyway (see `_search_cost_cap`).
+func _path_query(actor: BattleActor, destination: StringName, max_search_cost: float) -> Dictionary:
 	if _grid == null:
 		return _blocked(&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"})
 	if not has_combatant(actor):
@@ -735,7 +744,7 @@ func path_query(actor: BattleActor, destination: StringName) -> Dictionary:
 		return _blocked(&"position", "Combatant is already there.", {"type": &"different_position"})
 	var was_solid := _grid.is_point_solid(origin_cell)
 	_grid.set_point_solid(origin_cell, false)
-	var path := _deterministic_path(origin_cell, dest_cell)
+	var path := _deterministic_path(origin_cell, dest_cell, max_search_cost)
 	_grid.set_point_solid(origin_cell, was_solid)
 	if path.is_empty():
 		return _blocked(&"position", "No path to that cell.", {"type": &"reachable"})
@@ -992,11 +1001,26 @@ func _path_ct_cost(path: PackedVector2Array) -> int:
 	return total
 
 
+## The largest `_deterministic_path` cost a path can have and still cost `ct_budget` or less in
+## CT. A step costs `ceil(move_ct_cost * w)` CT and at most `sqrt(2) * w` search cost for the
+## same weight `w`, so CT >= search cost * move_ct_cost / sqrt(2) on every path. A search that
+## has passed this cap can only reach `to_cell` by a path whose CT exceeds the budget. Without
+## the cap, every unreachable cell in the move box (an enemy hemmed in by its own side) flooded
+## the whole grid: 2.6 s per enemy decision with 100 hostiles admitted (#282).
+func _search_cost_cap(ct_budget: int) -> float:
+	var move_cost := _rules.move_ct_cost if _rules != null else 1
+	if move_cost <= 0:
+		return INF
+	return float(ct_budget) * sqrt(2.0) / float(move_cost)
+
+
 ## AStarGrid2D is deterministic on one engine build, but its equal-f-score choice is not the
 ## Gate T contract: equal-cost paths must prefer the lowest row-major cell index. This compact
 ## Dijkstra walk makes that tie-break explicit while preserving octile diagonal cost and the
 ## no-corner-cutting rule used by IsoGrid.
-func _deterministic_path(from_cell: Vector2i, to_cell: Vector2i) -> PackedVector2Array:
+func _deterministic_path(
+	from_cell: Vector2i, to_cell: Vector2i, max_search_cost: float = INF
+) -> PackedVector2Array:
 	var rect := _grid.get_used_rect()
 	var frontier: Array[Dictionary] = [{"cell": from_cell, "cost": 0.0}]
 	var costs: Dictionary = {from_cell: 0.0}
@@ -1011,6 +1035,9 @@ func _deterministic_path(from_cell: Vector2i, to_cell: Vector2i) -> PackedVector
 		var cell: Vector2i = current["cell"]
 		if float(current["cost"]) > float(costs.get(cell, INF)):
 			continue
+		if float(current["cost"]) > max_search_cost + 0.000001:
+			# Everything still unsettled costs at least this much, `to_cell` included.
+			return PackedVector2Array()
 		if cell == to_cell:
 			break
 		var neighbors: Array[Vector2i] = []

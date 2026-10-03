@@ -609,6 +609,57 @@ func test_reachable_positions_is_deterministic_across_repeated_calls() -> void:
 	assert_array(first).is_equal(second)
 
 
+## #282: `reachable_positions()` stops each path search at the CT budget. The cap is only an
+## optimisation, so the answer must equal the brute-force one built from the uncapped public
+## `path_query()`: every cell whose deterministic path costs the budget or less. The field mixes
+## the cases the cap has to get right: elevation (step weight above 1), a cliff-walled pocket
+## no path enters, and a ring of enemies with one gap, which is what a crowded session looks
+## like from inside the crowd.
+func test_capped_reachable_positions_match_the_uncapped_brute_force() -> void:
+	var model := _model(14, 14)
+	model.set_elevation(Vector2i(7, 4), 2)
+	model.set_elevation(Vector2i(8, 4), 3)
+	model.set_elevation(Vector2i(4, 8), 1)
+	for cell: Vector2i in [
+		Vector2i(1, 10), Vector2i(2, 10), Vector2i(3, 10), Vector2i(3, 11),
+		Vector2i(3, 12), Vector2i(2, 12), Vector2i(1, 12), Vector2i(1, 11),
+	]:
+		model.set_cliff(cell, true)
+	var ally := _actor("ally")
+	var enemies: Array[BattleActor] = []
+	var cells: Dictionary = {ally: Vector2i(6, 6)}
+	for offset: Vector2i in [
+		Vector2i(-2, -2), Vector2i(-1, -2), Vector2i(0, -2), Vector2i(1, -2), Vector2i(2, -2),
+		Vector2i(2, -1), Vector2i(2, 0), Vector2i(2, 1), Vector2i(2, 2), Vector2i(1, 2),
+		Vector2i(-1, 2), Vector2i(-2, 2), Vector2i(-2, 1), Vector2i(-2, 0), Vector2i(-2, -1),
+	]:
+		var enemy := _actor("ring-%d-%d" % [offset.x, offset.y])
+		enemies.append(enemy)
+		cells[enemy] = Vector2i(6, 6) + offset
+	assert_bool(model.configure_initial_cells(cells).get("allowed", false)).is_true()
+	var allies: Array[BattleActor] = [ally]
+	model.setup(allies, enemies)
+
+	for budget: int in [20, 40, 60, 100, 200]:
+		var expected: Array[String] = []
+		for y in 14:
+			for x in 14:
+				var handle := model._handle_for_cell(Vector2i(x, y))
+				var query := model.path_query(ally, handle)
+				if bool(query.get("allowed", false)) and int(query.get("ct_cost", 0)) <= budget:
+					expected.append(String(handle))
+		expected.sort()
+		var actual: Array[String] = []
+		for handle: StringName in model.reachable_positions(ally, budget):
+			actual.append(String(handle))
+		assert_array(actual).override_failure_message(
+			"budget %d: the capped search must agree with the uncapped one" % budget
+		).is_equal(expected)
+	# The enclosed pocket is never reachable, whatever the budget.
+	assert_bool(model.reachable_positions(ally, 1000).has(model._handle_for_cell(Vector2i(2, 11)))) \
+		.is_false()
+
+
 func _tile_at(tiles: Array[Dictionary], cell: Vector2i) -> Dictionary:
 	for tile: Dictionary in tiles:
 		if int(tile.get("x", -1)) == cell.x and int(tile.get("y", -1)) == cell.y:
