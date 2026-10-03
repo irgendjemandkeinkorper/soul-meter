@@ -6,6 +6,21 @@ const MOTION_FRAME_CAP := 240
 const WALKABLE_BOUNDS := Rect2(40.0, 40.0, 1720.0, 820.0)
 const ENCOUNTER_CLEARANCE := 80.0
 
+var _game_state_before: Dictionary
+
+
+## The road's mobs are same-map Hostiles (#281): one whose group is already flagged beaten
+## retires itself in `_ready`, so a suite that cleared the vanguard or the muster earlier in
+## the run must not take them away from this contract.
+func before_test() -> void:
+	_game_state_before = GameState.to_dict().duplicate(true)
+	GameState.set_flag("defeated_breach_hound", false)
+	GameState.set_flag("defeated_mustered_dead", false)
+
+
+func after_test() -> void:
+	GameState.from_dict(_game_state_before)
+
 
 func test_wave_aa_dorthkor_road_dressing_contract() -> void:
 	var runner := scene_runner(SCENE_PATH)

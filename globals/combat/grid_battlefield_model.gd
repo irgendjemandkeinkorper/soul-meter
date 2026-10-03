@@ -157,6 +157,18 @@ func resolve_placement(desired: Array[Vector2i]) -> Dictionary:
 	return _allowed({"cells": resolved})
 
 
+## Set-piece seating (#281 D5): `wanted` itself when it is free, otherwise the nearest free
+## reachable cell under the same bounded search `resolve_placement()` uses for an overlapping
+## companion. `taken` holds the cells this placement pass already handed out. Same return
+## shape as that search: `{"ok": true, "cell": Vector2i}` or `{"ok": false}`.
+func seat_near(wanted: Vector2i, taken: Dictionary) -> Dictionary:
+	if _grid == null:
+		return {"ok": false}
+	if not taken.has(wanted) and _is_seatable(wanted):
+		return {"ok": true, "cell": wanted}
+	return _nearest_free_cell(wanted, taken)
+
+
 ## In bounds, passable, and nothing already stands there. Occupied cells are also solid (see
 ## `_place()`), so the occupancy test is belt-and-braces against a caller that seats actors
 ## through a path that skips `_set_solid()`.

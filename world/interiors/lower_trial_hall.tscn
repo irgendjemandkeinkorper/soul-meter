@@ -1,7 +1,8 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="Script" path="res://world/interiors/lower_trial_hall.gd" id="2_controller"]
+[ext_resource type="Script" path="res://world/isometric_blockout.gd" id="12_iso"]
 [ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="3_npc"]
 [ext_resource type="PackedScene" path="res://actors/switch/switch.tscn" id="4_switch"]
 [ext_resource type="PackedScene" path="res://actors/pickup/pickup.tscn" id="5_pickup"]
@@ -30,6 +31,17 @@ size = Vector2(88, 22)
 [node name="LowerTrialHallInterior" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("2_controller")
+
+; #281 D5: the trial fights are set-pieces fought in this room, so its FieldMap needs a walk
+; grid (the interior FieldGround layer is empty). Hidden: the floor polygons stay the art. The
+; 80x80 diamond is centred on the 1920x1280 room (centre 960,640; apex 80 rows above it) so
+; every floor cell inside the walls is a seat. Ambient alerts still refuse here (interior).
+[node name="IsometricGround" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(960, -640)
+script = ExtResource("12_iso")
+map_size = Vector2i(80, 80)
+road_axis = 0
 
 [node name="Room" parent="." instance=ExtResource("1_interior")]
 building_name = "Lower Trial Hall"

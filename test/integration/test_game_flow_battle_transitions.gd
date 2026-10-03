@@ -215,6 +215,8 @@ func _state_is_active(path: String) -> bool:
 
 
 func _reset_battle() -> void:
+	if Battle.session_active:
+		Battle._end_session(null)
 	Battle.controller = null
 	Battle.allies.clear()
 	Battle.enemies.clear()
@@ -223,3 +225,72 @@ func _reset_battle() -> void:
 	Battle.encounter_id = &""
 	Battle.last_result = null
 	Battle.ended = true
+
+
+## F1 (#281): the flow, not the field, owns the edge from "a hostile noticed the party" to
+## the chart entering Battle. The fixture bypasses `_complete_scene_load`, so the watch is
+## armed by hand exactly as arrival on a real field arms it.
+func _ambient_hostile(offset: Vector2) -> Hostile:
+	# A hostile whose group is already flagged beaten retires itself in `_ready`; a prior test
+	# in this suite wins that fight, so clear the flag before the fixture mob is born.
+	GameState.set_flag("defeated_bog_wight", false)
+	GameFlow.watch_field_hostiles()
+	var player := _field_scene.find_child("Player", true, false) as Player
+	var hostile := (
+		load("res://actors/hostile/hostile.tscn") as PackedScene
+	).instantiate() as Hostile
+	hostile.name = "AmbientWight"
+	hostile.unit_id = &"bog-wight"
+	hostile.group_id = &"bog-wight"
+	hostile.realert_cooldown = 0.0
+	hostile.position = player.global_position + offset
+	_field_scene.add_child(hostile)
+	# The sensor's initial-overlap pass is deferred and then waits one physics frame.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await get_tree().process_frame
+	return hostile
+
+
+func test_first_hostile_alert_opens_an_ambient_session_and_enters_battle() -> void:
+	var hostile := await _ambient_hostile(Vector2(96.0, 0.0))
+
+	assert_bool(Battle.session_active) \
+		.override_failure_message("walking into a hostile's alert radius must open a session") \
+		.is_true()
+	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
+	assert_bool(_state_is_active(DEPLOYMENT_SLATE_STATE)).is_false()
+	assert_bool(_field.combat_mode_active()).is_true()
+	assert_int(hostile.state).is_equal(Hostile.State.IN_COMBAT)
+
+
+func test_victory_downs_the_hostile_and_writes_its_group_flag() -> void:
+	var hostile := await _ambient_hostile(Vector2(96.0, 0.0))
+	assert_bool(Battle.session_active).is_true()
+
+	hostile.battle_actor().hp = 0
+	Battle.controller.force_finish(CombatController.ResultState.VICTORY, &"slain")
+	await get_tree().process_frame
+
+	assert_bool(Battle.session_active).is_false()
+	assert_int(hostile.state).is_equal(Hostile.State.DOWNED)
+	assert_bool(hostile.get_collision_layer_value(1)).is_false()
+	assert_bool(GameState.flag_is_true("defeated_bog_wight")).is_true()
+
+
+func test_fleeing_returns_a_standing_hostile_to_idle_at_full_hp() -> void:
+	var hostile := await _ambient_hostile(Vector2(96.0, 0.0))
+	assert_bool(Battle.session_active).is_true()
+	var actor := hostile.battle_actor()
+	actor.hp = 3
+	# The party is still inside the radius after fleeing; the cooldown is what keeps the mob from
+	# re-opening the fight on the very next physics frame, so give it a real one here.
+	hostile.realert_cooldown = 60.0
+
+	Battle.flee()
+	await get_tree().process_frame
+
+	assert_bool(Battle.session_active).is_false()
+	assert_int(hostile.state).is_equal(Hostile.State.IDLE)
+	assert_int(actor.hp).is_equal(actor.max_hp)
+	assert_bool(hostile.get_collision_layer_value(1)).is_true()

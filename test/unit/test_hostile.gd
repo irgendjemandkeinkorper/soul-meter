@@ -110,6 +110,82 @@ func test_downed_hostile_retains_its_actor_and_cannot_alert() -> void:
 	assert_bool(hostile.call("request_alert")).is_false()
 
 
+## D4 lock: a hostile with a `required_flag` stands dimmed and deaf until the flag is set, then
+## opens with no prompt and no press — the next alert is simply accepted.
+func test_locked_hostile_stays_deaf_and_dimmed_until_its_flag_is_set() -> void:
+	var root := _root()
+	root.add_child(CombatField.new())
+	var had_flag: bool = GameState.flag_is_true("test_hostile_gate")
+	GameState.set_flag("test_hostile_gate", false)
+	var packed := load(HOSTILE_SCENE) as PackedScene
+	var hostile := packed.instantiate() as Node2D
+	hostile.name = "Wight"
+	hostile.set("unit_id", &"bog-wight")
+	hostile.set("required_flag", "test_hostile_gate")
+	root.add_child(hostile)
+
+	assert_bool(hostile.call("is_unlocked")).is_false()
+	assert_that(hostile.modulate).is_equal(Hostile.LOCKED_MODULATE)
+	assert_bool(hostile.call("request_alert")).is_false()
+	assert_int(hostile.get("state")).is_equal(0)
+
+	GameState.set_flag("test_hostile_gate", true)
+	assert_bool(hostile.call("is_unlocked")).is_true()
+	assert_that(hostile.modulate).override_failure_message(
+		"an opened gate hands the tint back"
+	).is_equal(Color.WHITE)
+	assert_bool(hostile.call("request_alert")).is_true()
+	GameState.set_flag("test_hostile_gate", had_flag)
+
+
+## Two writers of `modulate`: the lock tints a standing hostile, `mark_downed()` tints a corpse.
+## A gate that flips after the kill must never un-dim the body.
+func test_a_flag_change_never_undims_a_downed_hostile() -> void:
+	var root := _root()
+	root.add_child(CombatField.new())
+	var had_flag: bool = GameState.flag_is_true("test_hostile_gate")
+	GameState.set_flag("test_hostile_gate", true)
+	var packed := load(HOSTILE_SCENE) as PackedScene
+	var hostile := packed.instantiate() as Node2D
+	hostile.name = "Wight"
+	hostile.set("unit_id", &"bog-wight")
+	hostile.set("required_flag", "test_hostile_gate")
+	root.add_child(hostile)
+	hostile.call("mark_downed")
+	var corpse_tint: Color = hostile.modulate
+	assert_that(corpse_tint).is_not_equal(Color.WHITE)
+
+	GameState.set_flag("test_hostile_gate", false)
+	assert_that(hostile.modulate).is_equal(corpse_tint)
+	GameState.set_flag("test_hostile_gate", true)
+	assert_that(hostile.modulate).is_equal(corpse_tint)
+	assert_bool(hostile.call("request_alert")).is_false()
+	GameState.set_flag("test_hostile_gate", had_flag)
+
+
+## D7 ruling 3: a group the party already put down stays down across scene loads.
+func test_hostile_whose_group_is_already_defeated_frees_itself() -> void:
+	var root := _root()
+	root.add_child(CombatField.new())
+	var had_flag: bool = GameState.flag_is_true("defeated_bog_wight")
+	GameState.set_flag("defeated_bog_wight", true)
+	var packed := load(HOSTILE_SCENE) as PackedScene
+	var hostile := packed.instantiate() as Node2D
+	hostile.name = "Wight"
+	hostile.set("unit_id", &"bog-wight")
+	hostile.set("group_id", &"bog-wight")
+	root.add_child(hostile)
+	# Retirement hides and disarms the mob on the spot and frees it on a later idle frame.
+	assert_bool(hostile.visible).is_false()
+	assert_bool(hostile.is_in_group(&"hostile")).is_false()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	GameState.set_flag("defeated_bog_wight", had_flag)
+	assert_object(root.get_node_or_null("Wight")) \
+		.override_failure_message("A hostile whose group is already defeated must despawn.") \
+		.is_null()
+
+
 func _root() -> Node2D:
 	var root: Node2D = auto_free(Node2D.new())
 	root.name = "HostileFixture"
