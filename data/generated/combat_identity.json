@@ -62,7 +62,7 @@
         {
           "id": "bog-wight/knee",
           "display_name": "the knee",
-          "check_skill": "lore",
+          "check_skill": "recall",
           "check_modifier": 0.0,
           "lore_minimum": 40.0,
           "prior_encounters": 1,
@@ -79,7 +79,7 @@
         {
           "id": "bog-wight/reveal",
           "display_name": "what it conceals",
-          "check_skill": "insight",
+          "check_skill": "undertone",
           "check_modifier": 0.0,
           "lore_minimum": 0.0,
           "prior_encounters": 0,
@@ -97,7 +97,7 @@
         {
           "id": "cleaned-jawbrace-guard/binding-oath",
           "display_name": "the oath that binds it",
-          "check_skill": "lore",
+          "check_skill": "recall",
           "check_modifier": 0.0,
           "lore_minimum": 0.0,
           "prior_encounters": 0,
@@ -114,7 +114,7 @@
         {
           "id": "cleaned-jawbrace-guard/disarm",
           "display_name": "the hand that holds it",
-          "check_skill": "insight",
+          "check_skill": "undertone",
           "check_modifier": 0.0,
           "lore_minimum": 40.0,
           "prior_encounters": 1,
@@ -133,7 +133,7 @@
         {
           "id": "gnaal-breach-hound/knee",
           "display_name": "the knee",
-          "check_skill": "lore",
+          "check_skill": "recall",
           "check_modifier": 0.0,
           "lore_minimum": 0.0,
           "prior_encounters": 0,
@@ -150,7 +150,7 @@
         {
           "id": "gnaal-breach-hound/reveal",
           "display_name": "what it conceals",
-          "check_skill": "insight",
+          "check_skill": "undertone",
           "check_modifier": 0.0,
           "lore_minimum": 40.0,
           "prior_encounters": 1,
@@ -168,7 +168,7 @@
         {
           "id": "gnaal-rift-scavenger/disarm",
           "display_name": "the hand that holds it",
-          "check_skill": "lore",
+          "check_skill": "recall",
           "check_modifier": 0.0,
           "lore_minimum": 0.0,
           "prior_encounters": 0,
@@ -185,7 +185,7 @@
         {
           "id": "gnaal-rift-scavenger/reveal",
           "display_name": "what it conceals",
-          "check_skill": "insight",
+          "check_skill": "undertone",
           "check_modifier": 0.0,
           "lore_minimum": 40.0,
           "prior_encounters": 1,
@@ -203,7 +203,7 @@
         {
           "id": "loam-maddened-boar/knee",
           "display_name": "the knee",
-          "check_skill": "lore",
+          "check_skill": "recall",
           "check_modifier": 0.0,
           "lore_minimum": 0.0,
           "prior_encounters": 0,
@@ -220,7 +220,7 @@
         {
           "id": "loam-maddened-boar/reveal",
           "display_name": "what it conceals",
-          "check_skill": "insight",
+          "check_skill": "undertone",
           "check_modifier": 0.0,
           "lore_minimum": 40.0,
           "prior_encounters": 1,
@@ -238,7 +238,7 @@
         {
           "id": "mustered-bloodbellow/binding-oath",
           "display_name": "the oath that binds it",
-          "check_skill": "lore",
+          "check_skill": "recall",
           "check_modifier": 0.0,
           "lore_minimum": 0.0,
           "prior_encounters": 0,
@@ -255,7 +255,7 @@
         {
           "id": "mustered-bloodbellow/disarm",
           "display_name": "the hand that holds it",
-          "check_skill": "insight",
+          "check_skill": "undertone",
           "check_modifier": 0.0,
           "lore_minimum": 40.0,
           "prior_encounters": 1,
@@ -274,7 +274,7 @@
         {
           "id": "trial-keeper/disarm",
           "display_name": "the hand that holds it",
-          "check_skill": "insight",
+          "check_skill": "undertone",
           "check_modifier": 0.0,
           "lore_minimum": 0.0,
           "prior_encounters": 0,
@@ -293,7 +293,7 @@
         {
           "id": "trial-warden/joint",
           "display_name": "the joint",
-          "check_skill": "lore",
+          "check_skill": "recall",
           "check_modifier": 0.0,
           "lore_minimum": 0.0,
           "prior_encounters": 0,

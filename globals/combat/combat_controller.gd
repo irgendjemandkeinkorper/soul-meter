@@ -2439,7 +2439,7 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 		"damage_on_hit": _forecast_damage_on_hit(context, target),
 		"ap_cost": action.ap_cost,
 		"chance": skill_check_service.preview(
-			str(weakness.get("check_skill", "lore")),
+			str(weakness.get("check_skill", "recall")),
 			actor.source_member,
 			float(weakness.get("check_modifier", 0.0)),
 		),
@@ -2530,7 +2530,7 @@ func _resolve_defining_strike(
 		for roll: Variant in authored_rolls:
 			if typeof(roll) == TYPE_INT:
 				forced_rolls.append(int(roll))
-	var check_skill := str(weakness.get("check_skill", "lore"))
+	var check_skill := str(weakness.get("check_skill", "recall"))
 	# Was `"combat-%d" % get_instance_id()` — CombatController's own instance id is
 	# process-local and allocation-order dependent (issue #186). `actor.combat_id` is the
 	# FR-802 stable id assigned deterministically at encounter setup, so the same encounter

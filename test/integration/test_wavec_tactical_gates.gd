@@ -270,8 +270,8 @@ func _resolution_context() -> Dictionary:
 func _skilled_member() -> PartyMember:
 	var member := PartyMember.new()
 	member.id = "wave-c-definer"
-	member.attributes = {"spark": 5, "pitch": 5}
-	member.skill_tiers = {"lore": "untrained", "insight": "untrained"}
+	member.attributes = {"reason": 5, "intuition": 5}
+	member.skill_tiers = {"recall": "untrained", "undertone": "untrained"}
 	return member
 
 
