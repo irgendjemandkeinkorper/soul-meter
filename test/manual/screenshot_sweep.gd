@@ -2,8 +2,7 @@ extends GdUnitTestSuite
 ## Screenshot sweep harness, not an assertion suite — photographs every screen
 ## and scene for visual QA. scripts/test.sh excludes test/manual from whole-tree
 ## runs; invoke this file explicitly under Xvfb.
-##   xvfb-run -a -s "-screen 0 1920x1080x24" bash addons/gdUnit4/runtest.sh \
-##     -a test/manual/screenshot_sweep.gd
+##   GODOT_BIN=~/.local/bin/godot bash scripts/test.sh -a test/manual/screenshot_sweep.gd
 ## Writes user://qa/<name>.png per capture.
 
 const CAPTURE_SIZE := Vector2i(1920, 1080)
@@ -46,6 +45,11 @@ func _shoot(
 		frames: int = 25,
 		player_anchor := Vector2.INF,
 ) -> void:
+	# Hidden prior scenes can retain current cameras and CanvasLayers. Disable
+	# those before the next capture, including players nested inside Room.
+	for node: Node in get_tree().root.find_children("*", "Camera2D", true, false):
+		(node as Camera2D).enabled = false
+	get_viewport().canvas_transform = Transform2D.IDENTITY
 	var runner := scene_runner(scene_path)
 	var scene := runner.scene()
 	if scene is Control:
@@ -55,17 +59,16 @@ func _shoot(
 	# scene; for small scenes that lands outside the authored bounds and the
 	# camera photographs empty clear color. An explicit anchor re-frames the
 	# shot on the scene's own content.
-	if player_anchor != Vector2.INF:
-		var player := scene.get_node_or_null("Player")
-		print("ANCHOR %s player=%s" % [shot_name, player])
-		if player is Node2D:
+	var player := scene.find_child("Player", true, false) as Node2D
+	if player != null:
+		if player_anchor != Vector2.INF:
 			(player as Node2D).global_position = player_anchor
-			var anchor_camera := (player as Node2D).get_node_or_null("Camera2D")
-			if anchor_camera is Camera2D:
-				# Earlier runner scenes stay in the tree, so THEIR camera is
-				# still current — reclaim the viewport for this scene's shot.
-				(anchor_camera as Camera2D).make_current()
-				(anchor_camera as Camera2D).reset_smoothing()
+		var anchor_camera := player.get_node_or_null("Camera2D") as Camera2D
+		if anchor_camera != null:
+			anchor_camera.enabled = true
+			anchor_camera.make_current()
+			anchor_camera.reset_smoothing()
+			anchor_camera.force_update_scroll()
 		await runner.simulate_frames(2)
 	var boot_scene := scene.get_tree().current_scene
 	if boot_scene != null and boot_scene != scene:
@@ -84,6 +87,8 @@ func _shoot(
 	# it cannot photobomb the next capture.
 	if scene is CanvasItem:
 		(scene as CanvasItem).hide()
+	for layer: Node in scene.find_children("*", "CanvasLayer", true, false):
+		(layer as CanvasLayer).hide()
 
 
 ## The chargen wizard is paged — photograph the illustrated pages a single
@@ -353,3 +358,15 @@ func test_interiors() -> void:
 	await _shoot("res://world/interiors/item_shop.tscn", "31_item_shop_interior", 40)
 	await _shoot("res://world/interiors/trial_hall.tscn", "32_trial_hall_interior", 40)
 	await _shoot("res://world/interiors/river_shrine.tscn", "33_river_shrine_interior", 40)
+	var photographed: Array[String] = [
+		"dom_tavern", "item_shop", "trial_hall", "river_shrine", "building_interior",
+	]
+	var directory := DirAccess.open("res://world/interiors")
+	var files := directory.get_files()
+	files.sort()
+	for file: String in files:
+		if file.ends_with(".tscn") and not file.get_basename() in photographed:
+			await _shoot(
+				"res://world/interiors/" + file,
+				"interior_" + file.get_basename(), 40
+			)

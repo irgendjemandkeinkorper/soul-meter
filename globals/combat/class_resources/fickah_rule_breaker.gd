@@ -10,6 +10,26 @@ const FIZZLE_FLOOR_PERCENT := SkillCheckService.FIZZLE_FLOOR_PERCENT
 var jam_target_id: StringName = &""
 
 
+func commands() -> Array[StringName]:
+	return [&"jam_the_gears"]
+
+
+func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
+	var gate := super.query_command(action_id, target_id, payload)
+	if not bool(gate.allowed):
+		return gate
+	if not jam_target_id.is_empty():
+		return command_refusal(&"class_resource_armed", "A Jam is already waiting on its target.")
+	if target_id.is_empty() or host == null:
+		return command_refusal(&"no_target", "Choose a living enemy to Jam.")
+	return gate
+
+
+func on_command(action_id: StringName, target_id: StringName) -> void:
+	if action_id == &"jam_the_gears":
+		jam_the_gears(target_id)
+
+
 func jam_the_gears(target_id: StringName) -> bool:
 	if target_id.is_empty() or not jam_target_id.is_empty():
 		return false
@@ -23,8 +43,16 @@ func jam_the_gears(target_id: StringName) -> bool:
 	return bool(result.get("allowed", false))
 
 
+func has_armed_jam() -> bool:
+	return not jam_target_id.is_empty()
+
+
 func on_turn_start() -> void:
-	if jam_target_id.is_empty():
+	if jam_target_id.is_empty() or host == null:
+		return
+	var target := host.actor_by_id(jam_target_id) if host != null else null
+	if target == null or not target.is_alive():
+		jam_target_id = &""
 		return
 	var result: Dictionary = request_cancel(jam_target_id, &"any")
 	if bool(result.get("allowed", false)):

@@ -106,6 +106,7 @@ class CanonReader:
 				"archetype": {
 					"fields": ["element_id"],
 					"stat_blocks": ["stats"],
+					"anatomy_maps": ["anatomy"],
 				},
 			},
 		},
@@ -276,6 +277,12 @@ class CanonReader:
 		):
 			if not _valid_stat_block(row.get(field), field, document_path):
 				return false
+		for field: String in Array(contract.get("anatomy_maps", [])) + Array(
+			scoped.get("anatomy_maps", [])
+		):
+			# Optional: an archetype without anatomy simply has no aimable locations.
+			if row.has(field) and not _valid_anatomy(row.get(field), field, document_path):
+				return false
 		for field: String in Array(contract.get("refused", [])) + Array(
 			scoped.get("refused", [])
 		):
@@ -305,6 +312,33 @@ class CanonReader:
 			)
 			return {"__refused__": true}
 		return kinds[declared]
+
+
+	## Called-shots task 11: authored anatomy, location id -> {display_name, exposed,
+	## hidden_by_cover}. Ids are stable snake_case keys the resolver and aim profiles use; a
+	## part the creature lacks is simply absent, never authored as a placeholder.
+	static func _valid_anatomy(value: Variant, field: String, document_path: String) -> bool:
+		if typeof(value) != TYPE_DICTIONARY:
+			push_error("CANON-SEED: %s requires '%s' as an object." % [document_path, field])
+			return false
+		var anatomy: Dictionary = value
+		for location: Variant in anatomy.keys():
+			var location_id := String(location)
+			if location_id.is_empty() or location_id != location_id.to_snake_case() or location_id.contains(" "):
+				push_error("CANON-SEED: %s '%s' has a non-stable location id '%s'." % [document_path, field, location_id])
+				return false
+			var part: Variant = anatomy[location]
+			if typeof(part) != TYPE_DICTIONARY:
+				push_error("CANON-SEED: %s '%s.%s' must be an object." % [document_path, field, location_id])
+				return false
+			if typeof((part as Dictionary).get("display_name")) != TYPE_STRING or String((part as Dictionary)["display_name"]).strip_edges().is_empty():
+				push_error("CANON-SEED: %s '%s.%s' needs a string 'display_name'." % [document_path, field, location_id])
+				return false
+			for flag: String in ["exposed", "hidden_by_cover"]:
+				if (part as Dictionary).has(flag) and typeof((part as Dictionary)[flag]) != TYPE_BOOL:
+					push_error("CANON-SEED: %s '%s.%s.%s' must be a boolean." % [document_path, field, location_id, flag])
+					return false
+		return true
 
 
 	## Opaque by contract: an object with a non-empty `schema` string, and nothing more is
@@ -1093,6 +1127,9 @@ func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 		["Balance Affinity", "int"],
 		["Balance Pressure", "int"],
 		["Element Id", "string"],
+		# Called-shots task 11: authored anatomy as a JSON object, keys in sorted order so
+		# the same canon always seeds the same string.
+		["Anatomy", "string"],
 	]:
 		if not root.has_entity_property(property_spec[0]):
 			Pandora.create_property(root, property_spec[0], property_spec[1])
@@ -1119,6 +1156,21 @@ func _apply_combatants(archetypes: Array[Dictionary]) -> void:
 			_assign(entity, _attribute_column(attribute_id), int(stats[attribute_id]))
 		_assign(entity, "Balance Affinity", int(stats["balance_affinity"]))
 		_assign(entity, "Balance Pressure", int(stats["balance_pressure"]))
+		_assign(entity, "Anatomy", _anatomy_json(row.get("anatomy", {})))
+
+
+static func _anatomy_json(anatomy: Dictionary) -> String:
+	var ordered := {}
+	var locations: Array = anatomy.keys()
+	locations.sort()
+	for location: Variant in locations:
+		var part: Dictionary = anatomy[location]
+		ordered[String(location)] = {
+			"display_name": str(part.get("display_name", String(location).capitalize())),
+			"exposed": bool(part.get("exposed", true)),
+			"hidden_by_cover": bool(part.get("hidden_by_cover", false)),
+		}
+	return JSON.stringify(ordered)
 
 
 ## A DRAMGID attribute's Pandora column, named off `DramgidSchema.ATTRIBUTES` labels.

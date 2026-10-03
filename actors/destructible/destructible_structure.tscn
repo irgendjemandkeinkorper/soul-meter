@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="1_base"]
+[ext_resource type="Script" path="res://actors/destructible/destructible_structure.gd" id="2_script"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/objects/timber-barricade--states.png" id="3_art"]
+
+[node name="DestructibleStructure" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+display_name = "BARRICADE"
+prompt_text = "INSPECT"
+repeatable = true
+collision_layer = 0
+collision_mask = 0
+
+[node name="Marker" parent="." index="0"]
+visible = false
+
+[node name="Accent" parent="." index="1"]
+visible = false
+
+[node name="Sign" parent="." index="2"]
+offset_top = -110.0
+offset_bottom = -80.0
+
+[node name="Sprite2D" type="Sprite2D" parent="." index="5"]
+position = Vector2(0, -34)
+scale = Vector2(0.24, 0.24)
+texture = ExtResource("3_art")
+hframes = 2
+vframes = 2

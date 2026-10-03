@@ -356,6 +356,14 @@ func _end_session(result: BattleResult) -> void:
 		if _session_field.hostile_alerted.is_connected(_on_field_hostile_alerted):
 			_session_field.hostile_alerted.disconnect(_on_field_hostile_alerted)
 	_session_field = null
+	# A hostile's BattleActor lives as long as its Hostile node (the field scene instance), so
+	# its serious injuries carry into the next session on this map by themselves. Minor ones
+	# end with the fight, same as the party's. Downed hostiles keep their records; corpse and
+	# despawn policy is untouched here.
+	for hostile: Hostile in _session_hostiles.values():
+		var actor := hostile.battle_actor()
+		if actor != null:
+			actor.injuries = CombatInjury.persistent_records(actor.injuries)
 	_session_hostiles.clear()
 	session_ended.emit(result)
 
@@ -482,6 +490,10 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 
 
 func _current_field_map() -> FieldMap:
+	# A live session owns its field. A loading scene or another mounted fixture
+	# must not redirect its HUD to a different field found earlier in the tree.
+	if session_active and is_instance_valid(_session_field):
+		return _session_field
 	# Autoloads earlier in project.godot (GameFlow) ask before Battle joins the tree.
 	var tree: SceneTree = get_tree() if is_inside_tree() else Engine.get_main_loop() as SceneTree
 	if tree == null:
@@ -543,6 +555,9 @@ func action_lock_reason(action: CombatAction) -> String:
 
 
 func _availability_options(action: CombatAction) -> Dictionary:
+	if action != null and action.targets_cells():
+		# Cells are picked on the stage after the button arms the pointer.
+		return {"availability_only": true}
 	if action == null or action.kind != CombatAction.Kind.DEFINING_STRIKE:
 		return {}
 	var target := current_target()
@@ -595,8 +610,10 @@ func action_refusal(
 			)
 	if controller == null:
 		return {"allowed": true, "blocked_by": &"", "nearest_unblock": {}, "message": ""}
-	if target == null and action.requires_enemy_target():
+	if target == null and (action.requires_enemy_target() or action.targets_any_side()):
 		target = current_target()
+	elif target == null and action.requires_ally_target():
+		target = _living_ally(-1)
 	return controller.query_action(action, target, _resolved_action_options(action, target, options))
 
 
@@ -608,7 +625,7 @@ func use_action(
 	var target: BattleActor = null
 	if action != null and action.requires_enemy_target():
 		target = _living_enemy(target_enemy_index if target_index < 0 else target_index)
-	elif action != null and not action.class_resource_action.is_empty():
+	elif action != null and action.requires_ally_target():
 		target = _living_ally(target_index)
 	var resolved_options := _resolved_action_options(action, target, options)
 	if (
@@ -626,7 +643,7 @@ func use_action(
 		turn_resolved.emit()
 		return true
 	# CAST resource writes come from Resolution so forecast and commit cannot diverge.
-	if action.verb != CombatAction.Verb.CAST and action.soul_cost > 0.0:
+	if action.verb != CombatAction.Verb.CAST and action.class_resource_action.is_empty() and action.soul_cost > 0.0:
 		GameState.set_soul_meter(GameState.soul_meter - action.soul_cost)
 	var outcome := controller.submit_action(action_id, target, resolved_options)
 	return bool(outcome.get("allowed", false))
@@ -1044,11 +1061,15 @@ func _consequence_flag(outcome_id: StringName) -> String:
 	)
 
 
+## Runs at every finish (victory, defeat, flee). Injury contract (task 9): serious records
+## are written back and persist until treated; minor ones end with the fight. Defeat halves
+## HP but does not clear injuries — revival is not treatment.
 func _sync_party_hp() -> void:
 	for actor in allies:
 		if actor.party_index >= 0 and actor.party_index < GameState.party.size():
 			GameState.party[actor.party_index].hp = actor.hp
 			GameState.party[actor.party_index].breath = actor.breath
+			GameState.party[actor.party_index].injuries = CombatInjury.persistent_records(actor.injuries)
 	GameState.party_changed.emit()
 
 
@@ -1136,7 +1157,8 @@ func _living_ally(preferred: int) -> BattleActor:
 	for actor in allies:
 		if actor.is_alive() and actor != current_ally():
 			return actor
-	return null
+	var actor := current_ally()
+	return actor if actor != null and actor.is_alive() else null
 
 
 func _shift_toward_center(amount: int) -> void:

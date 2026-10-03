@@ -1,6 +1,18 @@
 extends GdUnitTestSuite
 
 
+func test_unit_plate_uses_selected_likeness_from_serializable_snapshot() -> void:
+	var runner := scene_runner("res://ui/hud/regions/unit_plate/unit_plate_region.tscn")
+	var plate := runner.scene() as UnitPlateRegion
+	var event := CombatEvent.new()
+	var portrait_path := "res://assets/generated/portraits/player/likeness_01.png"
+	event.data = {"active_unit": {
+		"name": "Custom Recruit", "member_id": "custom-recruit", "portrait_path": portrait_path,
+	}}
+	plate.consume_event(event)
+	assert_str((runner.find_child("Portrait", true, false) as TextureRect).texture.resource_path).is_equal(portrait_path)
+
+
 func test_unit_plate_renders_vitals_element_and_ct_line() -> void:
 	var runner := scene_runner("res://ui/hud/regions/unit_plate/unit_plate_region.tscn")
 	var plate := runner.scene() as UnitPlateRegion

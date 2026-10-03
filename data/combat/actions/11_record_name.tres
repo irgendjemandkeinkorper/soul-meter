@@ -14,4 +14,6 @@ target_profile = &"encounter"
 center_pull = 10
 player_available = true
 class_resource_action = &"record_name"
+class_resource_target = "ally"
+description = "Record a living ally once. Their fall or survival of victory returns Breath."
 ## PROVISIONAL — copied from the nearest PASS-compatible action; B11/B13 own final costs.

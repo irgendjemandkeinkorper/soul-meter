@@ -11,6 +11,7 @@ var _game_state_before: Dictionary
 var _target_scene_before: String
 var _target_spawn_before: StringName
 var _current_scene_before: Node
+var _world_clock_before: Dictionary
 var _test_save_paths: Array[String] = []
 
 
@@ -19,6 +20,10 @@ func before_test() -> void:
 	_target_scene_before = GameFlow._target_scene
 	_target_spawn_before = GameFlow._target_spawn_id
 	_current_scene_before = get_tree().current_scene
+	# GameFlow.travel() is a declared WorldClock trigger (FR-504a §3.1): the
+	# door/exit round trip below spends two phases. Hand the clock back, or
+	# every later suite loads Dom in the evening with routined NPCs relocated.
+	_world_clock_before = WorldClock.to_dict()
 	UIManager.close_all()
 	get_tree().paused = false
 
@@ -34,6 +39,7 @@ func after_test() -> void:
 	GameState.from_dict(_game_state_before)
 	GameFlow._target_scene = _target_scene_before
 	GameFlow._target_spawn_id = _target_spawn_before
+	WorldClock.from_dict(_world_clock_before)
 
 
 func test_tavern_door_counter_party_picker_and_exit_complete_the_round_trip() -> void:

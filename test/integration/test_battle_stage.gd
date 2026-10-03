@@ -135,7 +135,7 @@ func test_event_snapshot_selects_environment_combatant_art_and_occupied_zones() 
 	))
 
 	assert_str(stage.environment_id()).is_equal("nature")
-	assert_int(stage.environment_sprite_count()).is_equal(5)
+	assert_object(stage.get_node_or_null("BattleArt/EnvironmentSprites")).is_null()
 	assert_int(stage.zone_marker_count()).is_equal(6)
 	assert_str(stage.combatant_texture_path(&"ally-0")).contains(
 		"units/vex/vex--idle--se--f00.png"

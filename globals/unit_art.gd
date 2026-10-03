@@ -28,6 +28,7 @@ static func apply_world_scale(sprite: Sprite2D, shadow: CanvasItem = null) -> vo
 	if sprite == null or sprite.has_meta(&"unit_art_world_scaled"):
 		return
 	sprite.set_meta(&"unit_art_world_scaled", true)
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	sprite.position *= WORLD_SCALE
 	sprite.offset *= WORLD_SCALE
 	sprite.scale *= WORLD_SCALE
@@ -70,8 +71,23 @@ static func texture_path(unit_id: String) -> String:
 	return "%s/%s/%s--idle--se--f00.png" % [ROOT, unit_id, unit_id]
 
 
+## A portrait bust is never a walking sprite. Chargen already authors a field
+## counterpart for each likeness; preserve that identity across menus and combat.
+static func field_unit_id(member_id: String, portrait_path: String = "") -> String:
+	if portrait_path.begins_with("res://assets/generated/portraits/player/"):
+		var likeness := portrait_path.get_file().get_basename()
+		var unit_id := ChargenData.likeness_fallback_unit(likeness)
+		if has_unit(unit_id):
+			return unit_id
+	elif portrait_path.begins_with(ROOT + "/"):
+		var unit_id := portrait_path.get_base_dir().get_file()
+		if has_unit(unit_id):
+			return unit_id
+	return resolve(member_id)
+
+
 static func has_unit(unit_id: String) -> bool:
-	return not unit_id.is_empty() and FileAccess.file_exists(texture_path(unit_id))
+	return not unit_id.is_empty() and ResourceLoader.exists(texture_path(unit_id))
 
 
 ## Deterministic fallback for a unit id with no dedicated art (e.g. a legacy

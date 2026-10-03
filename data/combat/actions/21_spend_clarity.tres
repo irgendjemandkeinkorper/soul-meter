@@ -14,4 +14,5 @@ target_profile = &"self"
 center_pull = 10
 player_available = true
 class_resource_action = &"spend_clarity"
+description = "Spend one Clarity to reveal hidden forecast terms until your next cast resolves."
 ## PROVISIONAL — costs copied from the nearest PASS-compatible action; B11 owns final numbers.

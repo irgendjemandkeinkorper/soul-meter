@@ -28,8 +28,6 @@ const CHAOS_COLOR := Color("#B39AF5")
 const ENVIRONMENT_NATURE := &"nature"
 const ENVIRONMENT_TOWN := &"fantasy-town"
 const ENVIRONMENT_CASTLE := &"castle"
-const SPRITE_ROOT := "res://assets/generated/sprites"
-const SPRITE_PIVOT_OFFSET := Vector2(0.0, -50.596443)
 const GROUND_ATLAS := preload("res://assets/generated/sprites/ground/ground_tiles.png")
 const UnitArtScript := preload("res://globals/unit_art.gd")
 
@@ -47,29 +45,6 @@ const ENVIRONMENT_TILE_REGIONS := {
 	ENVIRONMENT_NATURE: Rect2(0, 0, 64, 32),
 	ENVIRONMENT_TOWN: Rect2(192, 0, 64, 32),
 	ENVIRONMENT_CASTLE: Rect2(128, 0, 64, 32),
-}
-const ENVIRONMENT_PROPS := {
-	ENVIRONMENT_NATURE: [
-		{"texture": "nature-kit/tree_pineTallA_detailed.png", "position": Vector2(0.06, 0.36), "scale": 1.55},
-		{"texture": "nature-kit/tree_oak_dark.png", "position": Vector2(0.94, 0.35), "scale": 1.35, "flip_h": true},
-		{"texture": "nature-kit/tent_detailedOpen.png", "position": Vector2(0.10, 0.57), "scale": 1.15},
-		{"texture": "nature-kit/rock_largeE.png", "position": Vector2(0.90, 0.57), "scale": 1.25},
-		{"texture": "nature-kit/plant_bushLarge.png", "position": Vector2(0.80, 0.50), "scale": 1.0},
-	],
-	ENVIRONMENT_TOWN: [
-		{"texture": "fantasy-town-kit/wall-wood-door.png", "position": Vector2(0.06, 0.39), "scale": 1.35},
-		{"texture": "fantasy-town-kit/wall-broken.png", "position": Vector2(0.94, 0.39), "scale": 1.30, "flip_h": true},
-		{"texture": "fantasy-town-kit/stall-green.png", "position": Vector2(0.10, 0.57), "scale": 1.15},
-		{"texture": "fantasy-town-kit/fountain-round-detail.png", "position": Vector2(0.89, 0.57), "scale": 1.10},
-		{"texture": "fantasy-town-kit/tree-high-round.png", "position": Vector2(0.84, 0.34), "scale": 1.10},
-	],
-	ENVIRONMENT_CASTLE: [
-		{"texture": "castle-kit/tower-square.png", "position": Vector2(0.06, 0.38), "scale": 1.45},
-		{"texture": "castle-kit/wall-half.png", "position": Vector2(0.18, 0.48), "scale": 1.30},
-		{"texture": "castle-kit/gate.png", "position": Vector2(0.94, 0.40), "scale": 1.45, "flip_h": true},
-		{"texture": "castle-kit/flag-banner-long.png", "position": Vector2(0.84, 0.28), "scale": 1.15},
-		{"texture": "castle-kit/rocks-large.png", "position": Vector2(0.89, 0.57), "scale": 1.20},
-	],
 }
 
 var _snapshot: Dictionary = {}
@@ -101,13 +76,11 @@ var _global_cue_balance := 0
 
 var _art_root: Control
 var _backdrop: ColorRect
-var _environment_layer: Control
 var _zone_layer: Control
 var _combatant_layer: Control
 var _balance_overlay: ColorRect
 var _environment_label: Label
 var _environment_id: StringName = &""
-var _environment_prop_nodes: Array[Sprite2D] = []
 var _zone_nodes: Dictionary = {}
 var _zone_tiles: Dictionary = {}
 var _zone_labels: Dictionary = {}
@@ -220,10 +193,6 @@ func combatant_texture_path(actor_id: StringName) -> String:
 	return str(_actor_texture_paths.get(actor_id, ""))
 
 
-func environment_sprite_count() -> int:
-	return _environment_prop_nodes.size()
-
-
 func zone_marker_count() -> int:
 	return _zone_nodes.size()
 
@@ -252,7 +221,6 @@ func _build_art_layers() -> void:
 	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_art_root.add_child(_backdrop)
 
-	_environment_layer = _new_art_layer("EnvironmentSprites", 0)
 	_zone_layer = _new_art_layer("BattleZones", 1)
 	_combatant_layer = _new_art_layer("CombatantSprites", 2)
 
@@ -358,38 +326,11 @@ func _environment_for_snapshot(source: Dictionary) -> StringName:
 
 
 func _rebuild_environment() -> void:
-	for child: Node in _environment_layer.get_children():
-		child.free()
-	_environment_prop_nodes.clear()
 	_backdrop.color = Color(ENVIRONMENT_COLORS.get(_environment_id, Color("#101B1B")))
 	_environment_label.text = str(
 		ENVIRONMENT_TITLES.get(_environment_id, ENVIRONMENT_TITLES[ENVIRONMENT_NATURE])
 	)
 	_set_zone_textures()
-
-	var definitions: Variant = ENVIRONMENT_PROPS.get(
-		_environment_id, ENVIRONMENT_PROPS[ENVIRONMENT_NATURE]
-	)
-	if not definitions is Array:
-		return
-	for raw_definition: Variant in definitions:
-		if not raw_definition is Dictionary:
-			continue
-		var relative_path := str(raw_definition.get("texture", ""))
-		var texture := load("%s/%s" % [SPRITE_ROOT, relative_path]) as Texture2D
-		if texture == null:
-			push_warning("Battle environment sprite is missing: %s" % relative_path)
-			continue
-		var prop := Sprite2D.new()
-		prop.name = relative_path.get_file().get_basename().to_pascal_case()
-		prop.texture = texture
-		prop.offset = SPRITE_PIVOT_OFFSET
-		prop.flip_h = bool(raw_definition.get("flip_h", false))
-		prop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		prop.set_meta("normalized_position", raw_definition.get("position", Vector2.ZERO))
-		prop.set_meta("base_scale", float(raw_definition.get("scale", 1.0)))
-		_environment_layer.add_child(prop)
-		_environment_prop_nodes.append(prop)
 
 
 func _set_zone_textures() -> void:
@@ -458,10 +399,6 @@ func _layout_stage_art() -> void:
 	_environment_label.position = Vector2(28, clampf(size.y * 0.11, 18.0, 80.0))
 	_environment_label.size = Vector2(minf(420.0, size.x * 0.42), 34)
 	var scale_factor := _art_scale()
-	for prop: Sprite2D in _environment_prop_nodes:
-		var normalized := Vector2(prop.get_meta("normalized_position", Vector2.ZERO))
-		prop.position = Vector2(size.x * normalized.x, size.y * normalized.y)
-		prop.scale = Vector2.ONE * float(prop.get_meta("base_scale", 1.0)) * scale_factor
 	for key: Variant in _zone_nodes:
 		var node := _zone_nodes.get(key) as Node2D
 		if node == null:

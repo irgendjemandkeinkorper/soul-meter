@@ -12,14 +12,37 @@ extends TileMapLayer
 ##
 ## The layer is `visible = false`: it exists to be occupied, not seen.
 ##
-## This script deliberately carries NO cell data and NO painting behaviour. Its only job is to
-## fail loudly if the authoring contract is broken, because both consumers degrade silently
-## otherwise — a missing `TileSet` means no physics AND no bake, and a player walks through a
+## Cell data is authored in the scene. This script validates that contract and applies
+## opt-in destruction/restoration to an object's captured footprint. It fails loudly when
+## the contract breaks — a missing `TileSet` means no physics AND no bake, and a player walks through a
 ## wall with nothing in the log. It is the guard #187 asked for in place of the 221-element
 ## constant it replaced.
 ##
 ## Actors (NPCs, townsfolk) are NOT painted here. They are dynamic and are layered on top of
 ## this static set as occupancy — see `world/nav/nav_occupancy.gd` and `IsoGrid.set_occupant()`.
+
+
+## Each row is the authored [source_id, atlas_coords, alternative_tile]. Notify
+## consumers once after the whole edit: TileMapLayer cell writes do not emit changed.
+func set_structure_footprint(tiles: Dictionary, enabled: bool) -> void:
+	var edited := false
+	for cell: Vector2i in tiles:
+		var tile: Array = tiles[cell]
+		if enabled:
+			if (
+				get_cell_source_id(cell) == tile[0]
+				and get_cell_atlas_coords(cell) == tile[1]
+				and get_cell_alternative_tile(cell) == tile[2]
+			):
+				continue
+			set_cell(cell, tile[0], tile[1], tile[2])
+		else:
+			if get_cell_source_id(cell) == -1:
+				continue
+			erase_cell(cell)
+		edited = true
+	if edited:
+		changed.emit()
 
 
 func _ready() -> void:

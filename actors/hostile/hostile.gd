@@ -33,6 +33,11 @@ func _ready() -> void:
 	var actor := battle_actor()
 	if actor != null:
 		actor.combat_id = combat_id
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+	if sprite != null:
+		sprite.texture = load(UnitArt.texture_path(UnitArt.resolve(String(unit_id)))) as Texture2D
+		sprite.offset = UnitArt.PIVOT_OFFSET
+		UnitArt.apply_world_scale(sprite, get_node_or_null("Shadow"))
 	_configure_sensor()
 	sync_cell.call_deferred()
 

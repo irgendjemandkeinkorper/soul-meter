@@ -34,13 +34,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="VotivePot" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SoftDetails"]
-position = Vector2(270, 180)
+position = Vector2(540, 360)
 scale = Vector2(0.17, 0.17)
 texture = ExtResource("5_votive_pot")
 offset = Vector2(0, -92)
 
 [node name="UndercroftLanternWest" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SoftDetails"]
-position = Vector2(350, 160)
+position = Vector2(700, 320)
 scale = Vector2(0.22, 0.22)
 texture = ExtResource("6_lantern")
 offset = Vector2(0, -107)
@@ -50,7 +50,7 @@ phase = 0.9
 period = 4.6
 
 [node name="UndercroftLanternEast" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SoftDetails"]
-position = Vector2(610, 160)
+position = Vector2(1220, 320)
 scale = Vector2(-0.22, 0.22)
 texture = ExtResource("6_lantern")
 offset = Vector2(0, -107)
@@ -63,7 +63,7 @@ period = 5.0
 y_sort_enabled = true
 
 [node name="StatueFragmentWest" type="StaticBody2D" parent="Room/ShrineUndercroftDressing/SolidProps"]
-position = Vector2(105, 285)
+position = Vector2(210, 570)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/StatueFragmentWest"]
 scale = Vector2(0.19, 0.19)
@@ -76,7 +76,7 @@ shape = SubResource("statue_footprint")
 disabled = false
 
 [node name="StatueFragmentEast" type="StaticBody2D" parent="Room/ShrineUndercroftDressing/SolidProps"]
-position = Vector2(855, 285)
+position = Vector2(1710, 570)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/StatueFragmentEast"]
 scale = Vector2(-0.19, 0.19)
@@ -89,7 +89,7 @@ shape = SubResource("statue_footprint")
 disabled = false
 
 [node name="StoredOfferings" type="StaticBody2D" parent="Room/ShrineUndercroftDressing/SolidProps"]
-position = Vector2(830, 500)
+position = Vector2(1660, 1000)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/StoredOfferings"]
 scale = Vector2(-0.22, 0.22)
@@ -102,7 +102,7 @@ shape = SubResource("crate_footprint")
 disabled = false
 
 [node name="SealedVotivePot" type="StaticBody2D" parent="Room/ShrineUndercroftDressing/SolidProps"]
-position = Vector2(735, 500)
+position = Vector2(1470, 1000)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/ShrineUndercroftDressing/SolidProps/SealedVotivePot"]
 scale = Vector2(0.19, 0.19)
@@ -115,7 +115,7 @@ shape = SubResource("pot_footprint")
 disabled = false
 
 [node name="OfferingBox" parent="." instance=ExtResource("2_chest")]
-position = Vector2(150, 500)
+position = Vector2(300, 1000)
 display_name = "Offering Box"
 prompt_text = "Open"
 interaction_flag = "loot_opened_shrine_undercroft_offering_box"

@@ -35,10 +35,12 @@ subscribe to events themselves and presentation never calls them.
 | `on_action(event)` | `_emit_event()` for every `action_resolved` whose actor is the owner | the `CombatEvent` (`data` = outcome dict: `action_id`, `verb`, `resolution`, `damage`, …) |
 | `on_damage_taken(amount, source_id)` | `_apply_resolution_writes()` when an `hp` write lowers the owner's HP | HP lost (> 0), attacker's combat id |
 | `on_kill(target_id, cause)` | same place, when the owner's `hp` write takes a target from alive to 0 | victim combat id; `&"attack"`, `&"cast"` or `&"defining_strike"` |
+| `on_combatant_fell(target_id)` | broadcast after an HP/DoT write takes any combatant from alive to 0 | victim combat id; Name-Ledger observes direct and deferred falls |
+| `on_battle_end(victory)` | before the controller finishes and emits its persistence-facing signal | true for lethal or nonviolent victory; surviving recorded allies earn Breath |
 | `on_fizzle(resolution)` | `_resolve_attack()` after a CAST resolution with `fizzled == true` is applied | the committed Resolution dict |
 | `on_cast_forecast(context) -> Dictionary` | `forecast_context()` — the ONE function both `forecast_action()` and the commit path use | a copy of the context about to go to `Resolution.resolve()`; returns overrides merged on top |
 
-`on_cast_forecast` is the only way a resource changes an outcome, and it is called with identical
+`on_cast_forecast` is the only way a resource changes a Resolution outcome, and it is called with identical
 input at forecast and at commit. That is what keeps forecast == resolution: a resource cannot
 compute damage, it can only adjust the context that Resolution computes from. Because it runs
 twice per action, it must be pure with respect to its own state — consume one-shot flags in
@@ -94,6 +96,10 @@ Notes for B9/B11 and the refund classes:
 - Breath refunds are **not** live `GameState` writes: Breath is copied into the battle and
   written back by `Battle._finish()`, so a refund in a lost battle does not survive it. That is
   a behaviour change from the old `soul_refund`, which landed immediately and stuck.
+- Before `battle_finished`, the controller settles already-due effects containing only Breath
+  writes through the normal write/event path. This includes refunds earned by the final kill.
+  It never advances the clock, runs pending offensive effects, or pays future refunds early.
+  Deferred Breath writes credit their declared recipient; damage retains source attribution.
 - The deferred queue is saved inside the `class_resources` dict under
   `CombatController.DEFERRED_SAVE_KEY` (only when non-empty); older saves restore an empty queue.
 - Hook ordering: the parent `action_resolved` event is delivered to listeners BEFORE
@@ -114,26 +120,46 @@ Failure, B2).
 | B2 Flamebinder Instructive Failure | `on_fizzle` banks; `on_cast_forecast` → `fizzle_percent_override: 0` while armed; consume in `on_action` |
 | B3 Ironbrand Scars | unchanged (`to_hit_enabled`); crit still has no channel |
 | B4 Husk-bearer Hunger | successful strikes/casts stack Hunger on hits; each target has one pending self-re-queuing DoT chain, and ticks run via deferred execution; `on_kill` with cause `&"dot"` → enqueue/apply `breath` (was `soul_refund` until the 2026-09-08 ruling) |
-| B5 River-Mother Name-Ledger | `class_resource_action: "record_name"` on a PASS action routes through `on_command(action_id, target_id)`; the `breath` refund (was `soul_refund`) is PROVISIONAL and fires on a recorded ally's fall or battle end only; `on_any_action` watches the named ally |
+| B5 River-Mother Name-Ledger | `record_name` routes through the class command gate; `on_combatant_fell` observes direct/deferred falls and `on_battle_end` handles surviving names at victory; the 1 Breath refund is idempotent per recorded actor |
 | B6 Lensbearer Clarity | `reveal: true` while armed |
 | B7 Oathclock Ledger | `enqueue_deferred()` on file, `on_deferred_fired()` to bookkeep, `snapshot().deferred` for the plate |
 | B8 Locksmirk Jam the Gears | `request_cancel(target, &"any")`; the fizzle floor stays in `SkillCheckService` |
 | B9 Stormbearer Attribution | `hidden_draw` with B11's table; `on_action` reads `resolution.hidden_draw.row_id` |
 | B10 Threadwalker Threads | `on_any_action` to evaluate the contract; payoff via `enqueue_deferred()` or a direct write from `on_any_action` through `enqueue_deferred({"delay_rounds": 0})` |
 
+## Playable commands (2026-09-09 completion pass)
+
+All ten resource loops are live. Seven have authored commands; Mirrorblade, Husk-bearer and
+Stormbearer react to ordinary combat actions. The per-class matrix and signature boundaries
+are in [class-completion.md](class-completion.md).
+
+`CombatAction.class_resource_target` declares `self`, `ally` or `enemy` independently of
+PASS-kind execution. Enemy commands use the existing target/range/LOS path. Ally commands
+select a living ally; Record Name can target its caster. `class_resource_payload` holds authored
+parameters and cannot be replaced by player options. `description` supplies the action tooltip.
+
+`query_command(action_id, target_id, payload)` is a pure readiness gate before AP/CT/Soul
+commit. It refuses empty, already-armed, full, duplicate or malformed commands. After scheduler
+commit, `execute_command(action_id, target_id, payload)` receives a deep copy. The default
+wrapper calls the existing two-argument `on_command`, preserving subclass compatibility.
+The controller owns class-command Soul costs; the Battle facade does not charge them again.
+
+The new File Sentence, Jam the Gears and Bind Hostility actions cost 2 AP / 2 CT each. Sentence
+deals 6 damage after two rounds; Hostility triggers 6 damage on the target's next ATTACK verb;
+Jam costs 1 Soul. These are **provisional first-playable content values**, not approval or
+application of the separate B11 balance proposals. Deferred `delay_rounds` uses the existing
+scheduler cadence conversion in CT mode. Jam can cancel enemy-owned deferred entries, even
+entries aimed at someone else; it is not a cleanse of effects attached to that enemy.
+
+Enemy attack and movement events now include their verb just like player actions. Unrelated
+actions preserve Threads; a target's death releases its contract slot. Hunger gains from real damaging ticks, accepts actual authored CAST
+actions, and clears cancelled target bookkeeping so the effect can be reapplied.
+
+Class command forecasts return `class_command`, authored `description`, costs and zero immediate
+damage without calling Resolution. The existing forecast panel presents the command's delayed
+or conditional effect instead of an ordinary attack prediction, including during wheel browsing.
+
 ## Adding a class (B1–B10 recipe)
-
-| Issue | Patron | Resource | Current status |
-|---|---|---|---|
-| B6 | Stuid | Clarity | State-only until seam v2 |
-| B7 | Pazzah | Oathclock Ledger | State-only until seam v2 |
-| B8 | Fickah | Locksmirk Jam | State-only until seam v2 |
-| B9 | Ofshütje | Stormbearer Attribution | State-only until seam v2 |
-| B10 | Izhakel | Threadwalker Threads | State-only until seam v2 |
-
-These five resources intentionally use only the existing seam. Deferred execution, cancellation
-hooks, all-actor `on_any_action` broadcast, reveal delivery, and hidden effect draws remain
-state-only until seam v2.
 
 1. `globals/combat/class_resources/<patron>_<resource>.gd`, `class_name <PascalCase>`,
    `extends ClassResource`. Header comment quotes the vault table row. Override only the hooks
@@ -145,18 +171,16 @@ state-only until seam v2.
 4. If the resource needs a player command (spend, file, bind…), author a `CombatAction` `.tres`
    under `data/combat/actions/` (B13 batch) with `kind = PASS` and `class_resource_action`
    set — do not add a new `CombatAction.Kind`. **Then declare the command**: override
-   `commands()` to return it and `on_command()` to run it. `CombatController.query_action()`
+   `commands()` to return it, `query_command()` to validate readiness, and `on_command()` or
+   `execute_command()` to run it. `CombatController.query_action()`
    refuses a class-resource action the acting resource does not claim, so a patron who has no
    business pressing the button gets a locked button with a reason rather than one that
    quietly does nothing. Two tests in `test_combat_action_catalog.gd` enforce both directions:
    every authored command is answered by exactly one patron, and every declared command has an
    authored action.
 
-   Commands that need a PAYLOAD beyond a target — Pazzah's `queue_effect(effect_id, turns, …)`
-   and Izhakel's `bind_thread(target, condition, payoff)` — are NOT authorable this way yet.
-   `on_command()` carries only `(action_id, target_id)`, and `Battle.use_action()` resolves a
-   class-resource action's target to a living **ally**, so an enemy-targeted command such as
-   Fickah's Jam the Gears has no route either. Both are open design questions, not oversights.
+   Set `class_resource_target` and `class_resource_payload` when needed. Pazzah and Izhakel
+   demonstrate payload validation and deferred effects; Fickah demonstrates cancellation.
 5. Tests in `test/unit/`: registry lookup, each hook you use (drive a 2-cell grid battle like
    `test_class_resource.gd::_battle()`), save round-trip. Static typing; never `:=` from a
    Variant-returning call.
@@ -169,7 +193,23 @@ Null resources omitted) beside the other runtime sections and reads it back with
 `Battle.restore_class_resources()`. Outside a live battle it is `{}`; the loader defaults `{}`.
 A restore that arrives before a controller exists is held in `Battle._pending_class_resources`
 and applied by the next `Battle.start()`. Mid-battle save is not a Chapter 1 behaviour, so this
-is model-level round-trip only.
+is model-level round-trip only. The same dict carries two more reserved keys beside
+`__deferred__`: `__fire__` (Firebreak lines and per-round hazard marks), `__light__` (Witness
+Light and Shroud fields), `__jams__` (successful Jams by requester and round), `__vekh__`
+(armed Blindsides and a pending Eclipse Feast), `__materials__` (timber and stone objects
+with integrity, fuel, fire and Wet), `__holds__` (one sustained Note per holder, its target
+reference and upkeep state) and `__impositions__`
+(Burning/Soaked/Exposed/Veiled/Lit/Blinded per combat id), all omitted when empty so older
+saves load unchanged.
+
+`__holds__` is omitted when empty. Aftertone ownership (`owner_id`) and sustain identity
+(`held_by`, alongside `held` and `anchored`) remain inside the actor's existing Aftertone
+dictionaries. Restore actor Aftertones before restoring holds. New lays record their caster;
+legacy Aftertones without an owner use their carrier for Hold Note/Anchor eligibility.
+Restoring a section without `__holds__` releases current holds. No schema version changes.
+Anchoring protects against consumption without pausing duration. Existing saved anchored
+Aftertones count down from their stored remaining duration unless held or covered by an
+explicit duration-freeze effect (owner decision, 2026-09-16); no migration is needed.
 
 ## Do not decide (B-wave workers)
 

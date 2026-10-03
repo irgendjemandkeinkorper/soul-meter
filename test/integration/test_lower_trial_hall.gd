@@ -33,7 +33,7 @@ func test_scene_loads_with_every_gauntlet_beat() -> void:
 	assert_object(hall.get_node("TrialKeeper")).is_not_null()
 	assert_object(hall.get_node("ExitToDom")).is_not_null()
 	var skill_door_shape := hall.get_node("SkillDoor/CollisionShape2D") as CollisionShape2D
-	assert_float((skill_door_shape.shape as RectangleShape2D).size.x).is_equal(880.0)
+	assert_float((skill_door_shape.shape as RectangleShape2D).size.x).is_equal(1760.0)
 	assert_str(hall.get_node("ExitToDom").required_flag).is_equal(
 		"tutorial_gauntlet_complete"
 	)

@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/hud/combat_result.gd" id="1"]
+
+[node name="DamagePop" type="PanelContainer"]
+custom_minimum_size = Vector2(260, 0)
+mouse_filter = 2
+theme_type_variation = &"ConsequenceNoticePanel"
+script = ExtResource("1")
+
+[node name="Column" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"BattleHudColumn"
+
+[node name="TargetName" type="Label" parent="Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"StatLabel"
+autowrap_mode = 2
+
+[node name="Outcome" type="Label" parent="Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HeadingLabel"
+autowrap_mode = 2
+
+[node name="Injury" type="Label" parent="Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"AimWarningLabel"
+autowrap_mode = 2

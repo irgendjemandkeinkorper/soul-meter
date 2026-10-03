@@ -393,3 +393,32 @@ func test_losing_and_fleeing_pay_nothing() -> void:
 		"running away paid the same as winning"
 	).is_equal(0)
 
+
+
+func test_serious_injuries_persist_past_every_finish_and_minor_ones_do_not() -> void:
+	GameState.party[0].injuries = {"arm": _serious("arm-severed", "arm")}
+	battle.start(_enemy("Wight", 40, 6, 1))
+	assert_dict(battle.allies[0].injuries).is_equal({"arm": _serious("arm-severed", "arm")})
+	battle.allies[0].injuries["throat"] = {"injury_id": "throat-bruised", "location_id": "throat", "severity": "minor", "effects": {}}
+	battle.allies[1].injuries["throat"] = _serious("throat-crushed", "throat")
+	battle.flee()
+	assert_array(GameState.party[0].injuries.keys()).is_equal(["arm"])
+	assert_dict(GameState.party[1].injuries).is_equal({"throat": _serious("throat-crushed", "throat")})
+
+	battle = auto_free(BattleScript.new())
+	battle.start(_enemy("Wight", 40, 6, 1))
+	assert_dict(battle.allies[1].injuries).is_equal({"throat": _serious("throat-crushed", "throat")})
+	battle._finish(BattleResult.State.DEFEAT, BattleScript.OUTCOME_DEFEAT)
+	# Defeat revives at half HP; revival is not treatment.
+	assert_int(GameState.party[1].hp).is_equal(8)
+	assert_dict(GameState.party[1].injuries).is_equal({"throat": _serious("throat-crushed", "throat")})
+
+	battle = auto_free(BattleScript.new())
+	battle.start(_enemy("Wight", 1, 6, 1))
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+	assert_dict(GameState.party[1].injuries).is_equal({"throat": _serious("throat-crushed", "throat")})
+	assert_array(GameState.party[0].injuries.keys()).is_equal(["arm"])
+
+
+static func _serious(injury_id: String, location: String) -> Dictionary:
+	return {"injury_id": injury_id, "location_id": location, "severity": "serious", "effects": {}, "recovery": "untreated"}

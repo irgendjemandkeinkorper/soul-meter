@@ -13,14 +13,50 @@ extends GdUnitTestSuite
 ## future regression is caught.
 
 
+var _reduced_motion_before: bool
+
+
 func before_test() -> void:
+	_reduced_motion_before = bool(GameState.get_setting("accessibility", "reduced_motion", false))
+	GameState.set_setting("accessibility", "reduced_motion", false)
 	UIManager.close_all()
 	get_tree().paused = false
 
 
 func after_test() -> void:
+	GameState.set_setting("accessibility", "reduced_motion", _reduced_motion_before)
 	UIManager.close_all()
 	get_tree().paused = false
+
+
+func test_reduced_motion_keeps_shell_and_content_stationary() -> void:
+	GameState.set_setting("accessibility", "reduced_motion", true)
+	var screen := auto_free(Screen.new()) as Screen
+	add_child(screen)
+	var content := Control.new()
+	screen.add_child(content)
+	screen.play_enter()
+	assert_float(screen.position.y).is_zero()
+	await screen.transition_finished
+	screen._settle_content(content)
+	assert_float(content.modulate.a).is_equal(1.0)
+	screen.play_exit()
+	assert_float(screen.position.y).is_zero()
+	await screen.transition_finished
+	assert_float(screen.position.y).is_zero()
+
+
+func test_closing_during_enter_preserves_opacity_and_position() -> void:
+	var screen := UIManager.open(UIManager.INVENTORY, false) as Screen
+	await get_tree().process_frame
+	var alpha := screen.modulate.a
+	var y := screen.position.y
+	UIManager.back()
+	assert_float(screen.modulate.a).is_equal_approx(alpha, 0.001)
+	assert_float(screen.position.y).is_equal_approx(y, 0.001)
+	await get_tree().create_timer(DS.DUR_BASE * 2.0).timeout
+	assert_bool(is_instance_valid(screen)).is_false()
+	assert_bool(UIManager.is_open()).is_false()
 
 
 func test_opening_a_screen_plays_the_enter_transition() -> void:

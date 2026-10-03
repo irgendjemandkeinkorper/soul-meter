@@ -246,6 +246,7 @@ func _build_ancestry_page(step: Dictionary) -> Control:
 	var illustration := parts["illustration"] as VBoxContainer
 	_ancestry_art_fallback = parts["illustration_body"] as Label
 	_ancestry_art = TextureRect.new()
+	_ancestry_art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_ancestry_art.custom_minimum_size = Vector2(360, 360)
 	_ancestry_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_ancestry_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -767,6 +768,7 @@ func _build_identity_page(step: Dictionary) -> Control:
 	var illustration := parts["illustration"] as VBoxContainer
 	_identity_portrait_fallback = parts["illustration_body"] as Label
 	_identity_portrait = TextureRect.new()
+	_identity_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_identity_portrait.custom_minimum_size = Vector2(360, 360)
 	_identity_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_identity_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

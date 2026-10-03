@@ -64,6 +64,7 @@ const STEP_STUCK_TIME_THRESHOLD: float = 0.35
 
 
 func _ready() -> void:
+	add_to_group(&"player")
 	var camera := $Camera2D as Camera2D
 	camera.limit_left = camera_bounds.position.x
 	camera.limit_top = camera_bounds.position.y
@@ -71,11 +72,19 @@ func _ready() -> void:
 	camera.limit_bottom = camera_bounds.end.y
 	camera.position_smoothing_speed = 7.0
 	UnitArt.apply_world_scale(_sprite, get_node_or_null("Shadow"))
+	_refresh_member_art()
+	GameState.party_changed.connect(_refresh_member_art)
 	_footstep_rng.randomize()
 	_click_controller.move_refused.connect(func(refusal: Dictionary) -> void: move_refused.emit(refusal))
 	# Deferred so sibling TileMapLayers are ready; normalizes authored spawn points
 	# onto the grid the same way loaded positions are.
 	rest_on_grid.call_deferred()
+
+
+func _refresh_member_art() -> void:
+	var texture := PartyMemberVisuals.field_texture(party_member())
+	if texture != null:
+		_sprite.texture = texture
 
 
 func _physics_process(delta: float) -> void:

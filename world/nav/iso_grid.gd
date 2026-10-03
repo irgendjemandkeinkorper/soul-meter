@@ -69,8 +69,12 @@ func build(
 	static_clearance_cells: int = 0,
 	project_blocking_to_ground: bool = false
 ) -> void:
+	if is_instance_valid(_blocking) and _blocking.changed.is_connected(_refresh_obstacles):
+		_blocking.changed.disconnect(_refresh_obstacles)
 	_ground = ground
 	_blocking = blocking
+	if _blocking != null:
+		_blocking.changed.connect(_refresh_obstacles)
 	_static_clearance_cells = maxi(static_clearance_cells, 0)
 	_project_blocking_to_ground = project_blocking_to_ground
 	var used := ground.get_used_rect()
@@ -82,6 +86,21 @@ func build(
 	# Never cut a corner through a building.
 	_astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	_astar.update()
+	_astar.fill_solid_region(used, false)
+	_bake_obstacles()
+	_reapply_occupancy()
+
+
+## Destructible scenery edits the authored collision layer. Refresh every consumer
+## immediately without rebuilding AStar (which would erase terrain weights).
+func _refresh_obstacles() -> void:
+	# Layer teardown can emit changed after another layer released its TileSet.
+	if not is_instance_valid(_ground) or not is_instance_valid(_blocking):
+		return
+	if _ground.tile_set == null or _blocking.tile_set == null:
+		return
+	for cell: Vector2i in _static_solid:
+		_astar.set_point_solid(cell, false)
 	_bake_obstacles()
 	_reapply_occupancy()
 

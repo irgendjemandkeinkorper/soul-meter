@@ -31,13 +31,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="CompanyOrders" type="Sprite2D" parent="IronCompaniesDressing/SoftDetails"]
-position = Vector2(115, 220)
+position = Vector2(230, 440)
 scale = Vector2(0.21, 0.21)
 texture = ExtResource("5_notice_board")
 offset = Vector2(0, -106)
 
 [node name="MusterLantern" type="Sprite2D" parent="IronCompaniesDressing/SoftDetails"]
-position = Vector2(480, 180)
+position = Vector2(960, 360)
 scale = Vector2(0.28, 0.28)
 texture = ExtResource("6_lantern")
 offset = Vector2(0, -107)
@@ -49,7 +49,7 @@ phase = 2.0
 y_sort_enabled = true
 
 [node name="RivetStoresWest" type="StaticBody2D" parent="IronCompaniesDressing/SolidProps"]
-position = Vector2(105, 455)
+position = Vector2(210, 910)
 
 [node name="Sprite2D" type="Sprite2D" parent="IronCompaniesDressing/SolidProps/RivetStoresWest"]
 scale = Vector2(0.225, 0.225)
@@ -61,7 +61,7 @@ position = Vector2(0, -9)
 shape = SubResource("supply_footprint")
 
 [node name="BindingStoresEast" type="StaticBody2D" parent="IronCompaniesDressing/SolidProps"]
-position = Vector2(860, 500)
+position = Vector2(1720, 1000)
 
 [node name="Sprite2D" type="Sprite2D" parent="IronCompaniesDressing/SolidProps/BindingStoresEast"]
 scale = Vector2(-0.225, 0.225)
@@ -76,30 +76,40 @@ shape = SubResource("supply_footprint")
 y_sort_enabled = true
 
 [node name="CompanyLaborer" parent="IronCompaniesDressing/AmbientOccupants" instance=ExtResource("8_ambient_villager")]
-position = Vector2(245, 350)
+position = Vector2(490, 700)
 villager_texture = ExtResource("9_laborer")
-local_waypoints = PackedVector2Array(0, 0, 72, 4, 58, 62, 8, 54)
+local_waypoints = PackedVector2Array(0, 0, 144, 8, 116, 124, 16, 108)
 wander_speed = 16.0
 pause_duration = 2.0
 initial_pause = 0.4
 
 [node name="CompanyDockworker" parent="IronCompaniesDressing/AmbientOccupants" instance=ExtResource("8_ambient_villager")]
-position = Vector2(570, 420)
+position = Vector2(1140, 840)
 villager_texture = ExtResource("10_dockworker")
-local_waypoints = PackedVector2Array(0, 0, 68, -10, 92, 34, 24, 48)
+local_waypoints = PackedVector2Array(0, 0, 136, -20, 184, 68, 48, 96)
 wander_speed = 15.0
 pause_duration = 2.4
 initial_pause = 1.2
 
 [node name="GarrisonYardDoor" parent="." instance=ExtResource("2_door")]
-position = Vector2(800, 40)
+position = Vector2(1600, 80)
 transition_id = &"garrison_yard_enter"
+editable_children = true
+
+[node name="DoorSprite" parent="GarrisonYardDoor"]
+visible = true
+position = Vector2(0, -52)
+scale = Vector2(0.55, 0.55)
+
+[node name="DoorPanel" parent="GarrisonYardDoor"]
+visible = false
+
 
 [node name="SpawnFromGarrisonYard" type="Marker2D" parent="."]
-position = Vector2(800, 150)
+position = Vector2(1600, 300)
 
 [node name="SupplyCrate" parent="." instance=ExtResource("3_chest")]
-position = Vector2(150, 500)
+position = Vector2(300, 1000)
 display_name = "Supply Crate"
 prompt_text = "Open"
 interaction_flag = "loot_opened_iron_companies_supply_crate"
