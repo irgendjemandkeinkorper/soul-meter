@@ -13,7 +13,13 @@ enum State { IDLE, ALERTED, IN_COMBAT, DOWNED }
 ## Seconds this hostile stays deaf after a session it triggered was refused for want of room
 ## (F0 ruling 4). Without it a party wedged in a pocket re-refuses on every physics frame.
 @export var realert_cooldown: float = 2.0 # PROVISIONAL — F0 ruling 4.
+## Authored gate: while this flag is false the hostile is deaf — it stands on the field, dimmed,
+## but no proximity or chain alert reaches it. Replaces the legacy Enemy `required_flag` lock
+## (D4): there is no press-E trigger and no locked prompt, the mob simply ignores the party
+## until the flag is set, and re-checks its radius the moment it opens.
+@export var required_flag: String = ""
 
+const LOCKED_MODULATE := Color(0.6, 0.6, 0.6, 1.0)
 const SENSOR_NAME := "AlertSensor"
 
 var combat_id: StringName
@@ -51,6 +57,10 @@ func _ready() -> void:
 		if field != null:
 			field.register_hostile(self)
 	_configure_sensor()
+	if not required_flag.is_empty():
+		if not GameState.flag_changed.is_connected(_on_flag_changed):
+			GameState.flag_changed.connect(_on_flag_changed)
+		_refresh_lock()
 	sync_cell.call_deferred()
 
 
@@ -78,6 +88,8 @@ func battle_actor() -> BattleActor:
 
 func request_alert() -> bool:
 	if state != State.IDLE or battle_actor() == null:
+		return false
+	if not is_unlocked():
 		return false
 	if alert_cooldown_active():
 		return false
@@ -108,6 +120,28 @@ func refuse_alert() -> void:
 	state = State.IDLE
 	_cooldown_until_msec = Time.get_ticks_msec() + int(maxf(realert_cooldown, 0.0) * 1000.0)
 	_set_sensor_enabled(true)
+
+
+func is_unlocked() -> bool:
+	return required_flag.is_empty() or GameState.flag_is_true(required_flag)
+
+
+func _on_flag_changed(flag: String, _value: Variant) -> void:
+	if flag != required_flag:
+		return
+	_refresh_lock()
+	if is_unlocked():
+		# The player may already be standing inside the radius when the gate opens.
+		_check_initial_overlap.call_deferred()
+
+
+## The lock owns the tint of a standing hostile only. `mark_downed()` owns a corpse's, so a
+## flag that flips after the kill (a chain of gated groups falling in one session) must never
+## un-dim the body on the field.
+func _refresh_lock() -> void:
+	if state == State.DOWNED:
+		return
+	modulate = Color.WHITE if is_unlocked() else LOCKED_MODULATE
 
 
 func alert_cooldown_active() -> bool:

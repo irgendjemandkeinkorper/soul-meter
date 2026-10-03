@@ -200,7 +200,7 @@ required_flag = "defeated_bog_wight"
 completion_flag = "field_debt_proof_looted"
 
 [node name="LoamBoar" parent="." instance=ExtResource("12_hostile")]
-position = Vector2(1600, 750)
+position = Vector2(1750, 950)
 unit_id = &"loam-maddened-boar"
 group_id = &"loam-boar"
 

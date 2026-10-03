@@ -118,6 +118,9 @@ func test_combat_mode_preserves_controls_that_were_already_disabled() -> void:
 
 
 func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() -> void:
+	# BogWight retires itself in `_ready` when its group is already flagged beaten; a suite that
+	# won that fight earlier in the run must not take the fixture mob away from this one.
+	GameState.set_flag("defeated_bog_wight", false)
 	var scene: Node = (load(TEST_ROOM_SCENE) as PackedScene).instantiate()
 	add_child(scene)
 	await get_tree().process_frame

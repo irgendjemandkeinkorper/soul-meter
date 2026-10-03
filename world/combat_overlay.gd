@@ -79,6 +79,10 @@ func bind_grid(grid: IsoGrid, ground: TileMapLayer) -> void:
 func bind_actor(actor_id: StringName, node: Node2D) -> void:
 	_nodes[actor_id] = node
 	if is_instance_valid(node) and not _original_colors.has(node):
+		# A locked hostile's dim is its gate, not its colour. It is bound with the rest of the
+		# field at session start; its colour is recorded once it opens and can actually join.
+		if node is Hostile and not (node as Hostile).is_unlocked():
+			return
 		_original_colors[node] = node.modulate
 
 
