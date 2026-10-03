@@ -15,6 +15,10 @@ extends SceneTree
 ##   godot --headless --path . --script res://tools/populated_field_benchmark.gd -- --settle-ms 2000
 ## `--raw-samples` after the `--` adds every raw sample array under `measurement.raw_samples`;
 ## `--decision-target N` shortens (or lengthens) the decision window from its one-round default.
+## `--attribute-listeners` adds `session.listeners`: self time per synchronous listener on the
+## controller's `event_emitted` and Battle's `combat_event` / `turn_resolved` during the decision
+## window. The proxies cost time of their own, so do not compare an attributed run's timings
+## with an unattributed one.
 
 const PerformanceBenchmark := preload("res://tools/performance_benchmark.gd")
 ## Loaded at runtime, never preloaded: it names `Hostile`, `FieldMap` and `Battle`, whose
@@ -72,6 +76,9 @@ var _nodes_before_synthesis := -1
 var _nodes_after_synthesis := -1
 var _off_plan_count := -1
 var _off_plan_examples: Array[Dictionary] = []
+var _wrapped: Array[Dictionary] = []
+var _listener_totals: Dictionary = {}  ## String label -> {calls, self_usec, max_usec}
+var _listener_child_usec: Array = []
 
 
 func _initialize() -> void:
@@ -164,7 +171,12 @@ func _run() -> void:
 	var session_samples := await _sample_window(SAMPLE_COUNT)
 
 	# Window 3: enemy AI decisions.
+	var attribute := OS.get_cmdline_user_args().has("--attribute-listeners")
+	if attribute:
+		_wrap_listeners()
 	var ally_turns := await _run_decision_window()
+	if attribute:
+		_unwrap_listeners()
 
 	var report := create_scenario_report(
 		idle_samples,
@@ -195,6 +207,10 @@ func _run() -> void:
 			"decision_ms": decision_ms,
 		}
 		report["measurement"] = measurement
+	if attribute:
+		var session := report.get("session", {}) as Dictionary
+		session["listeners"] = _listener_report()
+		report["session"] = session
 	if not _errors.is_empty():
 		report["status"] = "error"
 		report["errors"] = _errors.duplicate()
@@ -369,6 +385,98 @@ func _drive_ally_turn() -> StringName:
 func _on_controller_event(event: CombatEvent) -> void:
 	if DECISION_EVENT_TYPES.has(event.type) and _enemy_ids.has(event.actor_id):
 		_pass_marks.append(Time.get_ticks_usec())
+
+
+# --- listener attribution (--attribute-listeners) ---
+
+
+## Replaces every connection on the controller's `event_emitted` and on Battle's
+## `combat_event` / `turn_resolved` with a timing proxy, in the same order and with the same
+## flags, for the decision window only. Off by default: the proxies add their own overhead,
+## so an attributed run is not comparable with an unattributed one.
+func _wrap_listeners() -> void:
+	var controller := _battle.get("controller") as CombatController
+	if controller == null:
+		return
+	_wrap_signal(controller.event_emitted, "event_emitted", 1)
+	_wrap_signal(_battle.get("combat_event") as Signal, "combat_event", 1)
+	_wrap_signal(_battle.get("turn_resolved") as Signal, "turn_resolved", 0)
+
+
+func _wrap_signal(source: Signal, signal_label: String, arity: int) -> void:
+	for connection: Dictionary in source.get_connections():
+		var original := connection["callable"] as Callable
+		if original.get_object() == self:
+			continue
+		var flags := int(connection.get("flags", 0))
+		var label := "%s -> %s" % [signal_label, _callable_label(original)]
+		var proxy: Callable
+		if arity == 1:
+			proxy = func(argument: Variant) -> void: _timed(label, original, [argument])
+		else:
+			proxy = func() -> void: _timed(label, original, [])
+		source.disconnect(original)
+		source.connect(proxy, flags)
+		_wrapped.append({"signal": source, "original": original, "proxy": proxy, "flags": flags})
+
+
+func _unwrap_listeners() -> void:
+	for entry: Dictionary in _wrapped:
+		var source := entry["signal"] as Signal
+		if source.is_connected(entry["proxy"]):
+			source.disconnect(entry["proxy"])
+		if not source.is_connected(entry["original"]):
+			source.connect(entry["original"], int(entry["flags"]))
+	_wrapped.clear()
+
+
+## Inclusive time per call, with the time spent in nested wrapped listeners subtracted to give
+## self time: Battle's relay on `event_emitted` emits `combat_event`, so without the split its
+## time would count every HUD listener a second time.
+func _timed(label: String, original: Callable, arguments: Array) -> void:
+	_listener_child_usec.append(0)
+	var started := Time.get_ticks_usec()
+	original.callv(arguments)
+	var inclusive := Time.get_ticks_usec() - started
+	var children := int(_listener_child_usec.pop_back())
+	if not _listener_child_usec.is_empty():
+		_listener_child_usec[-1] = int(_listener_child_usec[-1]) + inclusive
+	var row: Dictionary = _listener_totals.get(label, {"calls": 0, "self_usec": 0, "max_usec": 0})
+	var self_usec := inclusive - children
+	row["calls"] = int(row["calls"]) + 1
+	row["self_usec"] = int(row["self_usec"]) + self_usec
+	row["max_usec"] = maxi(int(row["max_usec"]), self_usec)
+	_listener_totals[label] = row
+
+
+func _callable_label(callable: Callable) -> String:
+	var target := callable.get_object()
+	var owner_name := "?"
+	if target != null:
+		var script := target.get_script() as Script
+		owner_name = script.resource_path.get_file() if script != null else target.get_class()
+	return "%s.%s" % [owner_name, callable.get_method()]
+
+
+func _listener_report() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for label: String in _listener_totals:
+		var row: Dictionary = _listener_totals[label]
+		var calls := int(row["calls"])
+		rows.append(
+			{
+				"listener": label,
+				"calls": calls,
+				"self_total_ms": float(row["self_usec"]) / 1000.0,
+				"self_mean_ms": float(row["self_usec"]) / 1000.0 / maxf(1.0, float(calls)),
+				"self_max_ms": float(row["max_usec"]) / 1000.0,
+			}
+		)
+	rows.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			return float(a["self_total_ms"]) > float(b["self_total_ms"])
+	)
+	return rows
 
 
 func _tick_count(controller: CombatController) -> int:

@@ -25,6 +25,7 @@ profile_mode=0
 settle_ms=2000
 settle_ms_explicit=0
 raw_samples=0
+attribute_listeners=0
 decision_target=""
 benchmark_data_dir="${SOUL_METER_BENCHMARK_DATA_DIR:-/tmp/soul-meter-godot-benchmark-data}"
 mkdir -p "$benchmark_data_dir"
@@ -59,6 +60,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--raw-samples)
 			raw_samples=1
+			shift
+			;;
+		--attribute-listeners)
+			attribute_listeners=1
 			shift
 			;;
 		--decision-target)
@@ -103,8 +108,8 @@ if [[ "$profile_mode" -eq 1 && "$scenario" != "populated-grid" ]]; then
 	exit 2
 fi
 
-if [[ ( "$raw_samples" -eq 1 || -n "$decision_target" ) && "$scenario" != "populated_field" ]]; then
-	echo "--raw-samples and --decision-target are only available for --scenario populated_field" >&2
+if [[ ( "$raw_samples" -eq 1 || "$attribute_listeners" -eq 1 || -n "$decision_target" ) && "$scenario" != "populated_field" ]]; then
+	echo "--raw-samples, --attribute-listeners and --decision-target are only available for --scenario populated_field" >&2
 	exit 2
 fi
 
@@ -154,6 +159,9 @@ if [[ "$profile_mode" -eq 1 ]]; then
 fi
 if [[ "$raw_samples" -eq 1 ]]; then
 	user_args+=("--raw-samples")
+fi
+if [[ "$attribute_listeners" -eq 1 ]]; then
+	user_args+=("--attribute-listeners")
 fi
 if [[ -n "$decision_target" ]]; then
 	user_args+=("--decision-target" "$decision_target")
