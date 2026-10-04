@@ -428,7 +428,10 @@ func test_resolution_refusal_happens_before_scheduler_commit() -> void:
 	assert_str(String(events[-1].type)).is_equal("action_refused")
 
 
-func test_enemy_resolution_refusal_happens_before_scheduler_commit_spends_no_ct() -> void:
+## The refused attack is never committed, so its cost is never charged. The turn still has to
+## end: the forced pass falls back to the ratified wait, because a free pass left the foe ready
+## and the scheduler would seat it again forever.
+func test_enemy_resolution_refusal_happens_before_scheduler_commit_and_the_turn_ends_in_a_wait() -> void:
 	var invalid_attack := CombatActionCatalog.by_id(&"enemy-strike").duplicate(true) as CombatAction
 	invalid_attack.element_id = &"not-on-the-wheel"
 	var ct_rules := rules.duplicate(true) as CombatRules
@@ -457,7 +460,12 @@ func test_enemy_resolution_refusal_happens_before_scheduler_commit_spends_no_ct(
 
 	local_controller._resolve_enemy_actor(foe)
 
-	assert_int(local_controller.scheduler.charge_of(foe)).is_equal(charge_before)
+	var refund: int = load("res://globals/combat/charge_time_scheduler.gd").wait_refund_ct()
+	assert_int(charge_before).is_greater_equal(TurnScheduler.READY_AT)
+	assert_int(local_controller.scheduler.charge_of(foe)).is_equal(refund)
+	assert_int(
+		int(local_controller.scheduler.to_dict()["consecutive_waits"][String(foe.combat_id)])
+	).is_equal(1)
 	var refusals := local_events.filter(
 		func(event: CombatEvent) -> bool: return event.type == &"action_refused"
 	)
@@ -1487,6 +1495,42 @@ func _cast_outcome_for_integrity(integrity: float) -> Dictionary:
 	var forecast := local_controller.forecast_action(cast, target, options)
 	var committed := local_controller.submit_action(cast.id, target, options)
 	return {"forecast": forecast, "committed": committed}
+
+
+## A crowd of fast foes boxes one in: it cannot reach the party and has no cell to move to,
+## so it is force-passed. Under charge time that pass was free and the foe stayed ready, so
+## start() never returned. Ambient field sessions always run charge time.
+func test_a_boxed_in_enemy_under_charge_time_does_not_stall_the_battle() -> void:
+	var local_rules := (
+		load("res://data/combat/combat_rules.tres") as CombatRules
+	).duplicate(true) as CombatRules
+	local_rules.use_charge_time = true
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_sized_grid_ground(12, 6))
+	var controller_under_test := CombatController.new()
+	controller_under_test.configure(CombatActionCatalog.all(), grid, local_rules)
+	var party: Array[BattleActor] = []
+	for index: int in 3:
+		var ally := _actor("Slow Ally %d" % index, 400, 1, 0)
+		ally.attributes = {&"edge": 0}
+		party.append(ally)
+	var foes: Array[BattleActor] = []
+	for index: int in 12:
+		var foe := _actor("Fast Foe %d" % index, 400, 1, 0)
+		foe.attributes = {&"edge": 48 - (index % 3)}
+		foes.append(foe)
+	var refused: Array[String] = []
+	controller_under_test.event_emitted.connect(
+		func(event: CombatEvent) -> void:
+			if event.type == &"action_refused":
+				refused.append(String(event.actor_id))
+	)
+	controller_under_test.start(party, foes, &"boxed-in")
+	assert_int(controller_under_test.state).is_equal(CombatController.State.ALLY_TURN)
+	assert_array(refused).override_failure_message(
+		"the fixture no longer boxes a foe in, so it does not exercise the forced pass"
+	).is_not_empty()
 
 
 # ---- admission (same-map combat step 4): a mob joins a fight already running ----
