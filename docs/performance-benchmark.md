@@ -507,3 +507,24 @@ Where a 26 ms decision goes now (timers, approximate): listeners about 15 ms per
 Still about 13 times over the D9 line. Most of what is left is presentation redone for every
 enemy event. That is the batching #282 names, and it changes what the player sees during an
 enemy phase, so it needs a design call first.
+
+### Later on 2026-10-04 — the dock and HUD render once per frame
+
+| Measurement (ms) | One walk | Once per frame |
+|---|---|---|
+| Enemy decision, mean | 25.5–26.7 | **20.2–20.9** |
+| Ally turn with no enemy decision, mean | 70.5–81.7 | 32.2–34.2 |
+| Decision window, 104 decisions | 3,174–3,370 | 2,339–2,417 |
+
+The controller resolves a whole enemy phase inside one frame, so nothing is drawn between
+its events. The battle screen's dock (`_refresh`, 5.9 ms) and `BattleHUD` (snapshot copy and
+render, 2.6 ms) ran for every event anyway. Both now queue one deferred refresh, which runs
+before the frame draws. The decision window no longer contains that work. It runs **once in
+the frame after the phase**, roughly 8 ms by the per-call timings above, instead of once per
+event. `BattleHUD` still folds weaknesses and check math per event, reading the newest
+snapshot by reference. The rendered `screenshot_battle_screen` capture is pixel-identical to
+the one before this change.
+
+What is left per decision is mostly `BattleInterface.consume_event` (about 6 ms): the stage
+and field overlay, whose per-event work starts move and hit animations from that event's
+positions. Coalescing that needs a decision on how a 100-enemy phase should look.

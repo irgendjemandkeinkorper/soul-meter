@@ -14,6 +14,9 @@ extends PanelContainer
 @onready var _weaknesses_label: Label = $Margin/Columns/SecondaryRow/WeaknessesColumn/Weaknesses
 
 var _snapshot: Dictionary = {}
+## The newest event's snapshot, by reference, until the once-per-frame render copies it.
+var _pending_snapshot: Dictionary = {}
+var _render_queued := false
 var _initiative: Array = []
 var _weaknesses: Array[Dictionary] = []
 var _last_check_math: Dictionary = {}
@@ -35,14 +38,31 @@ func consume_event(event: CombatEvent) -> void:
 		_last_check_math.clear()
 	var snapshot_value: Variant = event.data.get("snapshot", {})
 	if snapshot_value is Dictionary:
-		# The HUD never reads the board; leaving the tiles out skips copying every cell.
-		var shallow: Dictionary = (snapshot_value as Dictionary).duplicate()
-		shallow.erase("tiles")
-		_snapshot = shallow.duplicate(true)
+		_pending_snapshot = snapshot_value
 	if event.data.get("initiative") is Array:
 		_initiative = event.data.get("initiative", []).duplicate(true)
 	_consume_weaknesses(event)
 	_consume_check_math(event)
+	_queue_render()
+
+
+## An enemy phase resolves inside one frame and nothing is drawn between its events, so the
+## snapshot copy and the render happen once per frame, before it draws (#282).
+func _queue_render() -> void:
+	if _render_queued:
+		return
+	_render_queued = true
+	_flush_render.call_deferred()
+
+
+func _flush_render() -> void:
+	_render_queued = false
+	if not _pending_snapshot.is_empty():
+		# The HUD never reads the board; leaving the tiles out skips copying every cell.
+		var shallow: Dictionary = _pending_snapshot.duplicate()
+		shallow.erase("tiles")
+		_snapshot = shallow.duplicate(true)
+		_pending_snapshot = {}
 	_render()
 
 
@@ -163,7 +183,8 @@ func _consume_weaknesses(event: CombatEvent) -> void:
 			_append_weakness(row, event.target_id)
 	elif event.type == &"weakness_discovered":
 		_append_weakness(event.data.get("weakness", event.data), event.target_id)
-	for enemy: Variant in _snapshot.get("enemies", []):
+	var current := _pending_snapshot if not _pending_snapshot.is_empty() else _snapshot
+	for enemy: Variant in current.get("enemies", []):
 		if enemy is Dictionary and enemy.get("weaknesses") is Array:
 			for weakness: Variant in enemy.get("weaknesses", []):
 				_append_weakness(weakness, StringName(enemy.get("id", "")))

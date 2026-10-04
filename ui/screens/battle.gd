@@ -26,6 +26,7 @@ var _weakness_dialog: Window
 var _weakness_picker: OptionButton
 var _weakness_forecast: Label
 var _selected_weakness_id: StringName = &""
+var _refresh_queued := false
 
 
 func _build() -> void:
@@ -90,8 +91,8 @@ func _build() -> void:
 
 	layout.add_child(_make_command_dock())
 
-	Battle.turn_resolved.connect(_refresh)
-	Battle.balance_changed.connect(func(_value: int) -> void: _refresh())
+	Battle.turn_resolved.connect(_queue_refresh)
+	Battle.balance_changed.connect(func(_value: int) -> void: _queue_refresh())
 	Battle.battle_ended.connect(_on_battle_ended)
 	_refresh()
 
@@ -345,6 +346,22 @@ func _toggle_tactical_data() -> void:
 		_tactical_data_button.text = (
 			"CLOSE TACTICAL DATA" if _battle_hud.visible else "TACTICAL DATA"
 		)
+
+
+## The controller resolves a whole enemy phase inside one frame, and nothing is drawn between
+## its events, so the dock refreshes once per frame instead of once per event (#282: with 100
+## hostiles that was 6 ms a turn, every turn). The deferred call still lands before the frame
+## draws. Battle end and setup refresh directly.
+func _queue_refresh() -> void:
+	if _refresh_queued:
+		return
+	_refresh_queued = true
+	_flush_refresh.call_deferred()
+
+
+func _flush_refresh() -> void:
+	_refresh_queued = false
+	_refresh()
 
 
 func _refresh() -> void:
