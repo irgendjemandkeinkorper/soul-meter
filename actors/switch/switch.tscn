@@ -6,6 +6,7 @@
 size = Vector2(40, 40)
 
 [node name="InteractiveSwitch" type="Area2D"]
+texture_filter = 2
 script = ExtResource("1_switch")
 display_name = "LEVER"
 prompt_text = "TOGGLE"
@@ -13,13 +14,14 @@ interaction_flag = "lever_on"
 repeatable = true
 
 [node name="OffSprite" type="Sprite2D" parent="."]
-scale = Vector2(0.35, 0.35)
+scale = Vector2(0.298, 0.328)
 
 [node name="OnSprite" type="Sprite2D" parent="."]
-scale = Vector2(0.35, 0.35)
+scale = Vector2(0.342, 0.335)
 visible = false
 
 [node name="Marker" type="Polygon2D" parent="."]
+visible = false
 polygon = PackedVector2Array(-18, 18, -18, -20, 18, -20, 18, 18)
 color = Color(0.58, 0.42, 0.1, 1)
 

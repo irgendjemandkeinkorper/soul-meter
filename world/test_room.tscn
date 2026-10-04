@@ -61,6 +61,7 @@ size = Vector2(64, 20)
 size = Vector2(46, 22)
 
 [node name="TestRoom" type="Node2D"]
+texture_filter = 2
 y_sort_enabled = true
 
 [node name="FieldMap" type="Node2D" parent="."]
@@ -232,9 +233,10 @@ offset = Vector2(0, -50.596)
 scale = Vector2(0.75, 0.75)
 
 [node name="StoneCircleBloom" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3668, 0.3668)
+offset = Vector2(0, -114)
 position = Vector2(480, 1010)
 texture = ExtResource("23_ls_bloom")
-offset = Vector2(0, -90)
 
 [node name="RootArch" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1700, 300)
@@ -265,9 +267,10 @@ texture = ExtResource("22_ls_log")
 offset = Vector2(0, -90)
 
 [node name="GroveMushrooms" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2935, 0.2935)
+offset = Vector2(0, -92)
 position = Vector2(1680, 340)
 texture = ExtResource("32_mushroom_tan")
-offset = Vector2(0, -50.596)
 
 [node name="BogLog" type="Sprite2D" parent="SetDressing"]
 position = Vector2(950, 980)
@@ -275,19 +278,22 @@ texture = ExtResource("22_ls_log")
 offset = Vector2(0, -90)
 
 [node name="BogLilyA" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2609, 0.2609)
+offset = Vector2(0, -70)
 position = Vector2(1050, 1030)
 texture = ExtResource("33_lily")
-offset = Vector2(0, -50.596)
 
 [node name="BogLilyB" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2609, 0.2609)
+offset = Vector2(0, -70)
 position = Vector2(1130, 970)
 texture = ExtResource("33_lily")
-offset = Vector2(0, -50.596)
 
 [node name="BogMushroom" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2935, 0.2935)
+offset = Vector2(0, -92)
 position = Vector2(900, 1060)
 texture = ExtResource("31_mushroom_red")
-offset = Vector2(0, -50.596)
 
 [node name="BogStump" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1220, 1050)
@@ -295,9 +301,10 @@ texture = ExtResource("34_stump")
 offset = Vector2(0, -50.596)
 
 [node name="BogGrass" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(1010, 940)
 texture = ExtResource("30_grass")
-offset = Vector2(0, -50.596)
 
 [node name="TreelinePineA" type="Sprite2D" parent="SetDressing"]
 visible = false
@@ -385,14 +392,16 @@ texture = ExtResource("34_stump")
 offset = Vector2(0, -50.596)
 
 [node name="WestGrass" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(260, 900)
 texture = ExtResource("30_grass")
-offset = Vector2(0, -50.596)
 
 [node name="MidBloom" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3668, 0.3668)
+offset = Vector2(0, -114)
 position = Vector2(860, 330)
 texture = ExtResource("23_ls_bloom")
-offset = Vector2(0, -90)
 
 [node name="MidRock" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1100, 700)
@@ -401,9 +410,10 @@ offset = Vector2(0, -50.596)
 scale = Vector2(0.35, 0.35)
 
 [node name="MidGrass" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(740, 680)
 texture = ExtResource("30_grass")
-offset = Vector2(0, -50.596)
 
 [node name="MidBush" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1500, 900)
@@ -412,14 +422,16 @@ offset = Vector2(0, -50.596)
 scale = Vector2(0.5, 0.5)
 
 [node name="SouthMushroom" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2935, 0.2935)
+offset = Vector2(0, -92)
 position = Vector2(1420, 1080)
 texture = ExtResource("32_mushroom_tan")
-offset = Vector2(0, -50.596)
 
 [node name="SouthGrass" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(600, 1140)
 texture = ExtResource("30_grass")
-offset = Vector2(0, -50.596)
 
 [node name="FieldRoomDressing" type="Node2D" parent="."]
 
@@ -460,10 +472,10 @@ texture = ExtResource("37_ls_grass")
 y_sort_enabled = true
 
 [node name="BloomWest" type="Sprite2D" parent="FieldRoomDressing/SoftDetails"]
+scale = Vector2(0.3668, 0.3668)
+offset = Vector2(0, -114)
 position = Vector2(570, 250)
-scale = Vector2(0.68, 0.68)
 texture = ExtResource("23_ls_bloom")
-offset = Vector2(0, -90)
 script = ExtResource("44_ambient_motion")
 motion_kind = 2
 phase = 0.7
@@ -471,10 +483,10 @@ period = 10.5
 breath_strength = 0.02
 
 [node name="BloomSouth" type="Sprite2D" parent="FieldRoomDressing/SoftDetails"]
+scale = Vector2(0.3668, 0.3668)
+offset = Vector2(0, -114)
 position = Vector2(1260, 1040)
-scale = Vector2(-0.66, 0.66)
 texture = ExtResource("23_ls_bloom")
-offset = Vector2(0, -90)
 script = ExtResource("44_ambient_motion")
 motion_kind = 2
 phase = 2.8

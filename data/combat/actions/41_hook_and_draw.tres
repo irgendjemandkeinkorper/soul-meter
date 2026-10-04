@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"hook-and-draw"
+display_name = "Hook and Draw"
+kind = 0
+verb = 1
+ap_cost = 3
+ct_cost = 45
+target_profile = &"ranged"
+player_available = true
+effect_id = &"pull"
+effect_payload = {"range": 2}
+no_damage = true
+description = "Polearm. Hook an enemy exactly two cells away on a straight line; on a hit, drag them one cell toward you into an open cell."

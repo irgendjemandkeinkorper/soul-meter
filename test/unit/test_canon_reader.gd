@@ -1180,3 +1180,28 @@ func test_an_archetype_is_not_asked_for_the_fields_only_an_npc_has() -> void:
 	assert_int(characters.size()).is_equal(1)
 	assert_bool(characters[0].has("placement_anchor")).is_false()
 	assert_bool(characters[0].has("routine")).is_false()
+
+
+## Called-shots task 11: anatomy is validated at the canon boundary, so a malformed part
+## never reaches Pandora. Absence is legal (no aimable locations); presence must be well-formed.
+func test_archetype_anatomy_is_optional_but_validated() -> void:
+	var plain := _archetype_row("plain-beast", 0)
+	_write_kind("characters", "plain-beast.json", plain)
+	var authored := _archetype_row("authored-wight", 1)
+	authored["anatomy"] = {"torso": {"display_name": "Torso", "exposed": true, "hidden_by_cover": true}, "throat": {"display_name": "Throat"}}
+	_write_kind("characters", "authored-wight.json", authored)
+	var loaded: Array[Dictionary] = SeedPandora.CanonReader.load("characters", _canon_root)
+	assert_int(loaded.size()).is_equal(2)
+	assert_bool(loaded[1].has("anatomy")).is_true()
+	for broken: Variant in [
+		"torso", {"Left Arm": {"display_name": "Arm"}}, {"arm": "exposed"},
+		{"arm": {"display_name": ""}}, {"arm": {"display_name": "Arm", "exposed": "yes"}},
+	]:
+		var bad := _archetype_row("bad-%d" % _fixture_files.size(), 2)
+		bad["anatomy"] = broken
+		_write_kind("characters", "bad.json", bad)
+		assert_int(SeedPandora.CanonReader.load("characters", _canon_root).size()).override_failure_message(
+			"anatomy %s must be refused" % str(broken)
+		).is_equal(0)
+		DirAccess.remove_absolute(_kind_path("characters", "bad.json"))
+		_fixture_files.erase(_kind_path("characters", "bad.json"))

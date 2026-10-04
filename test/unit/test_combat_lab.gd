@@ -45,6 +45,9 @@ func after_test() -> void:
 	EncounterCatalog._definitions.erase(String(TEST_ENCOUNTER))
 	if _lab != null:
 		_lab.call("stop_test_session")
+	# Battle is an autoload; a suite that leaves a session live poisons every suite after it.
+	if Battle.session_active:
+		Battle._end_session(null)
 	var restored: bool = GameState.from_dict(_game_state_before)
 	assert_bool(restored).is_true()
 	Reputation.from_dict(_reputation_before)
@@ -76,6 +79,142 @@ func test_encounter_ids_are_derived_from_the_catalog() -> void:
 
 	assert_array(encounter_ids).is_equal(catalog_ids)
 	assert_array(encounter_ids).contains([TEST_ENCOUNTER])
+
+
+func test_called_shot_fixture_submits_and_exports_the_chosen_location_without_mutating_catalog() -> void:
+	var ordinary := CombatActionCatalog.by_id(&"strike")
+	var profiles_before := ordinary.aim_profiles.duplicate(true)
+	# Aiming needs accuracy resolution, which only the field grid provides. Without a
+	# mounted FieldMap, Battle.start() falls back to the zone battlefield and every
+	# aim refuses with `aim_accuracy`, exactly as the real lab does off the field.
+	await _mount_test_room()
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+		"called_shot_fixture": true, "anatomy_fixture": "exposed", "seed": 42,
+	})
+	# The catalog seats the wight at the encounter's authored cell, out of ranged
+	# line-of-sight range from the party; the aim contract is what is under test here.
+	var grid := Battle.controller.battlefield as GridBattlefieldModel
+	assert_object(grid).is_not_null()
+	var ally_cell: Vector2i = grid.cell_of(Battle.controller.active_actor())
+	var seated: Dictionary = grid.displace(Battle.controller.enemies[0], ally_cell + Vector2i(1, 0))
+	assert_bool(seated["allowed"]).override_failure_message(str(seated)).is_true()
+	_lab.call("select_lab_aim", &"throat")
+	var forecast: Dictionary = _lab.call("aim_forecast")
+	assert_bool(forecast["allowed"]).override_failure_message(str(forecast)).is_true()
+	var result: Dictionary = _lab.call("submit_lab_aim")
+	assert_bool(result["allowed"]).override_failure_message(str(result)).is_true()
+	assert_str(result["aim_location"]).is_equal("throat")
+	assert_dict(result["resolution"]).is_equal(forecast["resolution"])
+	assert_dict(ordinary.aim_profiles).is_equal(profiles_before)
+	var rows: Array[Dictionary] = _lab.get("_turn_rows")
+	var aimed_row: Dictionary = {}
+	for row: Dictionary in rows:
+		if str(row.get("aim_location", "")) == "throat":
+			aimed_row = row
+	assert_bool(aimed_row.get("compared", false)).is_true()
+	assert_bool(aimed_row.get("diverged", true)).is_false()
+	var markdown: String = _lab.call("build_session_markdown", _lab.get("_setup"), rows, {})
+	assert_str(markdown).contains("lab-aimed-shot @ throat")
+	_lab.call("stop_test_session")
+	assert_bool((_lab.call("submit_lab_aim") as Dictionary)["allowed"]).is_false()
+	assert_dict(ordinary.aim_profiles).is_equal(profiles_before)
+
+
+func test_low_cover_fixture_hides_the_torso_but_leaves_the_throat_targetable() -> void:
+	await _mount_test_room()
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+		"called_shot_fixture": true, "anatomy_fixture": "low_cover", "seed": 42,
+	})
+	var grid := Battle.controller.battlefield as GridBattlefieldModel
+	var ally_cell: Vector2i = grid.cell_of(Battle.controller.active_actor())
+	assert_bool(grid.displace(Battle.controller.enemies[0], ally_cell + Vector2i(2, 0))["allowed"]).is_true()
+	# The catalog seats the wight out of range; re-seat the fixture's cover beside its new cell.
+	_lab.call("_seat_low_cover", Battle.controller)
+	_lab.call("select_lab_aim", &"torso")
+	var torso: Dictionary = _lab.call("aim_forecast")
+	assert_bool(torso["allowed"]).override_failure_message(str(torso)).is_false()
+	assert_str(str(torso["blocked_by"])).is_equal("aim_cover")
+	_lab.call("select_lab_aim", &"throat")
+	var throat: Dictionary = _lab.call("aim_forecast")
+	assert_bool(throat["allowed"]).override_failure_message(str(throat)).is_true()
+	_lab.call("stop_test_session")
+
+
+func test_visibility_fixture_dims_every_enemy_cell_and_shows_in_the_aim_quote() -> void:
+	await _mount_test_room()
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+		"called_shot_fixture": true, "anatomy_fixture": "exposed", "visibility_fixture": "dim", "seed": 42,
+	})
+	var grid := Battle.controller.battlefield as GridBattlefieldModel
+	var enemy := Battle.controller.enemies[0]
+	assert_str(String(grid.visibility_at(grid.cell_of(enemy)))).is_equal("dim")
+	var ally_cell: Vector2i = grid.cell_of(Battle.controller.active_actor())
+	assert_bool(grid.displace(enemy, ally_cell + Vector2i(1, 0))["allowed"]).is_true()
+	# The fixture authored the wight's original cell; author its new seat the same way.
+	assert_bool(Battle.controller.configure_visibility(ally_cell + Vector2i(1, 0), &"dim")["allowed"]).is_true()
+	_lab.call("select_lab_aim", &"throat")
+	var forecast: Dictionary = _lab.call("aim_forecast")
+	assert_bool(forecast["allowed"]).override_failure_message(str(forecast)).is_true()
+	var labels: Array = []
+	for modifier: Dictionary in forecast["resolution"]["accuracy_breakdown"]["modifiers"]:
+		labels.append(str(modifier["label"]))
+	assert_array(labels).contains(["Visibility: dim"])
+	var markdown: String = _lab.call("build_session_markdown", _lab.get("_setup"), _lab.get("_turn_rows"), {})
+	assert_str(markdown).contains("Visibility fixture: `dim`")
+	_lab.call("stop_test_session")
+
+
+func test_lab_vocal_call_pays_a_throat_injury_that_the_aimed_shot_does_not() -> void:
+	await _mount_test_room()
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+		"called_shot_fixture": true, "anatomy_fixture": "exposed", "seed": 42,
+	})
+	var controller: CombatController = Battle.controller
+	var grid := controller.battlefield as GridBattlefieldModel
+	var enemy := controller.enemies[0]
+	var ally := controller.active_actor()
+	assert_bool(grid.displace(enemy, grid.cell_of(ally) + Vector2i(1, 0))["allowed"]).is_true()
+	var shot := controller.action_by_id(&"lab-aimed-shot")
+	var call := controller.action_by_id(&"lab-vocal-call")
+	assert_object(call).is_not_null()
+	assert_bool(call.requires_voice).is_true()
+	var injury: Dictionary = (_lab.get("AIM_PROFILES") as Dictionary)["throat"]["injury"].duplicate(true)
+	injury["location_id"] = "throat"
+	CombatInjury.apply(ally, injury, "lab", 1)
+	var call_labels: Array = []
+	for modifier: Dictionary in controller.forecast_action(call, enemy)["resolution"]["accuracy_breakdown"]["modifiers"]:
+		call_labels.append(str(modifier["label"]))
+	assert_array(call_labels).contains(["Injury: Throat (voice)"])
+	var shot_labels: Array = []
+	for modifier: Dictionary in controller.forecast_action(shot, enemy)["resolution"]["accuracy_breakdown"]["modifiers"]:
+		shot_labels.append(str(modifier["label"]))
+	assert_array(shot_labels).not_contains(["Injury: Throat (voice)"])
+	_lab.call("stop_test_session")
+
+
+func test_called_shot_fixture_is_opt_in_and_missing_or_covered_anatomy_is_refused() -> void:
+	for profile: String in ["no_throat", "covered_arm"]:
+		_lab.call("start_test_session", {
+			"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(),
+			"called_shot_fixture": true, "anatomy_fixture": profile, "seed": 42,
+		})
+		_lab.call("select_lab_aim", &"throat" if profile == "no_throat" else &"arm")
+		var forecast: Dictionary = _lab.call("aim_forecast")
+		assert_bool(forecast["allowed"]).is_false()
+		assert_str(str(forecast["blocked_by"])).is_equal("aim_location" if profile == "no_throat" else "aim_exposure")
+		_lab.call("stop_test_session")
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(), "seed": 42,
+	})
+	assert_object(Battle.controller.action_by_id(&"lab-aimed-shot")).is_null()
+	# Without the fixture the wight keeps its AUTHORED anatomy (task 11A), not the synthetic one.
+	assert_bool(bool(Battle.controller.enemies[0].anatomy["throat"]["exposed"])).is_true()
+	assert_bool(Battle.controller.enemies[0].anatomy["torso"].has("hidden_by_cover")).is_true()
+	assert_bool((_lab.call("submit_lab_aim") as Dictionary)["allowed"]).is_false()
 
 
 ## F0 D8 (#281 step 8): the `authored` source used to come from
@@ -361,3 +500,11 @@ func _current_party_ids() -> Array[StringName]:
 	for member: PartyMember in GameState.party:
 		ids.append(StringName(member.id))
 	return ids
+
+
+func _mount_test_room() -> FieldMap:
+	var scene: Node = (load("res://world/test_room.tscn") as PackedScene).instantiate()
+	add_child(scene)
+	auto_free(scene)
+	await get_tree().process_frame
+	return scene.find_child("FieldMap", true, false) as FieldMap

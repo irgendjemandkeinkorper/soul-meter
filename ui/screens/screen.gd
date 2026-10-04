@@ -9,6 +9,7 @@ var flow_owned := false
 var allow_back := true
 signal transition_finished
 var _transition_tween: Tween
+var _content_tweens: Dictionary = {}
 
 const SOUL_GAUGE_SCENE := preload("res://ui/hud/soul_gauge.tscn")
 
@@ -17,10 +18,13 @@ const SOUL_GAUGE_SCENE := preload("res://ui/hud/soul_gauge.tscn")
 var shell_header: HBoxContainer
 var shell_body: MarginContainer
 var shell_hud_bar: HBoxContainer
+var shell_back_button: Button
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	if _uses_ledger_style():
+		theme = ThemeBuilder.build_ledger()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build()
 	call_deferred("_focus_first_control")
@@ -29,6 +33,35 @@ func _ready() -> void:
 ## Override: build this screen's UI here.
 func _build() -> void:
 	pass
+
+
+func _uses_ledger_style() -> bool:
+	return false
+
+
+func _ledger_panel(content: Control, node_name: String, inset: bool = false) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.name = node_name
+	panel.theme_type_variation = "LedgerInset" if inset else "LedgerPanel"
+	panel.size_flags_horizontal = content.size_flags_horizontal
+	panel.size_flags_vertical = content.size_flags_vertical
+	panel.add_child(content)
+	return panel
+
+
+## Refresh only the changed content; never move the screen or restart its enter tween.
+func _settle_content(content: Control) -> void:
+	var previous := _content_tweens.get(content) as Tween
+	if previous != null and previous.is_valid():
+		previous.kill()
+	content.modulate.a = 1.0
+	if bool(GameState.get_setting("accessibility", "reduced_motion", false)):
+		return
+	content.modulate.a = 0.6
+	var tween := content.create_tween()
+	_content_tweens[content] = tween
+	tween.tween_property(content, "modulate:a", 1.0, DS.DUR_FAST).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.finished.connect(func() -> void: _content_tweens.erase(content), CONNECT_ONE_SHOT)
 
 
 func _focus_first_control() -> void:
@@ -119,6 +152,13 @@ func _make_shell() -> Array[Control]:
 ## screens that must fully cover whatever is beneath them (the live scene, the
 ## main menu, the HUD layer) — same pattern as battle.gd's backdrop.
 func _add_opaque_backdrop(color: Color = DS.VOID_1) -> void:
+	if _uses_ledger_style():
+		var stone := Control.new()
+		stone.set_script(preload("res://ui/components/ledger_backdrop.gd"))
+		stone.name = "Backdrop"
+		add_child(stone)
+		move_child(stone, 0)
+		return
 	var backdrop := ColorRect.new()
 	backdrop.name = "Backdrop"
 	backdrop.color = color
@@ -140,17 +180,19 @@ func _make_shell_window(title_text: String) -> VBoxContainer:
 	title.theme_type_variation = "TitleLabel"
 	shell_header.add_child(title)
 
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	shell_body.add_child(scroll)
-
 	var column := VBoxContainer.new()
 	column.name = "ScreenContent"
 	column.theme_type_variation = "ScreenContentColumn"
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.add_child(column)
+	if _uses_ledger_style():
+		shell_body.add_child(column)
+	else:
+		var scroll := ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		shell_body.add_child(scroll)
+		scroll.add_child(column)
 
 	# An expanding spacer is what makes the gauge rightmost in an HBox; the gauge is
 	# added last so anything a screen inserts later still lands to its left.
@@ -177,11 +219,15 @@ func play_exit() -> void:
 
 func _play_shell_transition(entering: bool) -> void:
 	var duration := DS.DUR_BASE if entering else DS.DUR_FAST
-	var settle := 8.0
+	var reduced_motion := bool(GameState.get_setting("accessibility", "reduced_motion", false))
+	var settle := 0.0 if reduced_motion else float(DS.SPACE_4)
 	if is_instance_valid(_transition_tween):
 		_transition_tween.kill()
-	modulate.a = 0.0 if entering else 1.0
-	position.y = -settle if entering else 0.0
+	if entering:
+		modulate.a = 0.0
+		position.y = -settle
+	elif reduced_motion:
+		position.y = 0.0
 
 	_transition_tween = create_tween()
 	_transition_tween.set_parallel(true)
@@ -264,5 +310,11 @@ func _section(text: String) -> Label:
 
 
 func _add_back_button(box: Container, text: String = "Back") -> void:
+	if _uses_ledger_style() and shell_hud_bar != null:
+		shell_back_button = _menu_button(shell_hud_bar, text, close)
+		shell_back_button.name = "LedgerBack"
+		shell_back_button.custom_minimum_size.y = DS.CONTROL_H_LG
+		shell_hud_bar.move_child(shell_back_button, 0)
+		return
 	box.add_child(HSeparator.new())
 	_menu_button(box, text, close)

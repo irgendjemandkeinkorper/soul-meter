@@ -88,6 +88,68 @@ var weather: Weather = Weather.new()
 ## measure application (residue-on-cast wiring is a separate authored-ability task).
 var tile_states: Array[TileState] = []
 var _tile_by_cell: Dictionary = {}  ## Vector2i -> TileState
+## Khash prototype fire substrate (globals/combat/fire_field.gd): fire lines, Burning, Soaked.
+## The controller applies every hazard/burn HP change through `_apply_resolution_writes()`.
+var fire: FireField = FireField.new()
+## Sul/Vekh revelation substrate: Witness Light fields; Exposed/Veiled/Lit impositions.
+var light: LightField = LightField.new()
+## combat_id -> Refrain uses this battle. PROVISIONAL: one Refrain allowance per character per
+## battle, shared by every `refrain_use` working (Crown of Embers, Verdict by Fire).
+var _refrain_uses: Dictionary = {}
+
+## Authored effect pipelines (`CombatAction.effect_id`). Every id here has a concrete consumer
+## below; an authored action naming any other id is refused at query time.
+const EFFECT_BURNING_STRIKE := &"burning_strike"  ## hit → Burning (Kindle, Cinder Spear)
+const EFFECT_DOUSE := &"douse"                    ## clear Burning, apply Soaked
+const EFFECT_THRUST := &"thrust"                  ## plain reach attack; gates only
+const EFFECT_PULL := &"pull"                      ## hit → pull target one cell toward wielder
+const EFFECT_FIRE_LINE := &"fire_line"            ## create a Firebreak now
+const EFFECT_SENTENCE_OF_ASH := &"sentence_of_ash"  ## file a Firebreak on the Ledger
+const EFFECT_CROWN_OF_EMBERS := &"crown_of_embers"  ## mark cells, release at next own turn
+const EFFECT_VERDICT_BY_FIRE := &"verdict_by_fire"  ## mark cells, release at the Ledger beat
+const EFFECT_UNVEIL := &"unveil"                  ## Exposed + reveal the target's signature
+const EFFECT_VEIL := &"veil"                      ## Veiled on self/ally (refused over Exposed)
+const EFFECT_WITNESS_LIGHT := &"witness_light"    ## revelation field, radius 1, two checkpoints
+const EFFECT_NOONDAY := &"noonday_revelation"     ## instant sweep, radius 2, one checkpoint
+const EFFECT_PUSH := &"push"                      ## hit → shove target one cell away
+const EFFECT_UNSEAT := &"unseat"                  ## hit → end the target's Guard
+const EFFECT_TERM_OF_DAYLIGHT := &"term_of_daylight"  ## Witness Light + Daylight contract
+const EFFECT_NOON_CONTRACT := &"noon_contract"    ## Noonday + trigger Witness contracts inside
+const EFFECT_SECOND_BREATH := &"second_breath"    ## restore Breath to one ally, capped by paid
+const EFFECT_TURNING_TIDE := &"turning_tide"      ## mode A: split Breath; mode B: quench a refuge
+const EFFECT_GREAT_CONFLUENCE := &"great_confluence"  ## instant refuge: restore up to four + quench
+const EFFECT_OPENED_SLUICE := &"opened_sluice"    ## Second Breath, cap 9 within a checkpoint of a Jam
+const EFFECT_WASH_THE_GEARS := &"wash_the_gears"  ## Turning Tide B; Jam-cancelled enemies inside Soaked
+const EFFECT_FLOODGATE := &"floodgate"            ## Great Confluence; discharges an armed Jam retry
+const EFFECT_BLINDING_THROW := &"blinding_throw"  ## hit → Blinded, one checkpoint, no damage
+const EFFECT_OPEN_SEAM := &"open_seam"            ## side/rear blade attack; a Bite waives the angle
+const EFFECT_BLINDSIDE := &"blindside"            ## self: hide the next working's preparation
+const EFFECT_BLINDSIDE_BITE := &"blindside_bite"  ## Blindside; next Open Seam on a Blinded target is flanked
+const EFFECT_SHROUD := &"shroud"                  ## fixed concealment field, radius 1, two checkpoints
+const EFFECT_ECLIPSE := &"eclipse_procession"     ## moving concealment field around the caster
+const EFFECT_ECLIPSE_FEAST := &"eclipse_feast"    ## Eclipse; Hunger inside ticks once more at the checkpoint
+const EFFECT_RECLAIM := &"reclaim"                ## consume a ruined source once for Breath (M4)
+const EFFECT_ROT_THE_BRACE := &"rot_the_brace"    ## decay integrity damage on susceptible material
+const EFFECT_SEVER := &"sever"                    ## end a working: a Firebreak line (Z6)
+const EFFECT_HOLD_NOTE := &"hold_note"
+const EFFECT_ANCHOR := &"anchor"
+const _KNOWN_EFFECTS: Array[StringName] = [
+	EFFECT_SECOND_BREATH, EFFECT_TURNING_TIDE, EFFECT_GREAT_CONFLUENCE, EFFECT_OPENED_SLUICE,
+	EFFECT_WASH_THE_GEARS, EFFECT_FLOODGATE,
+	EFFECT_BLINDING_THROW, EFFECT_OPEN_SEAM, EFFECT_BLINDSIDE, EFFECT_BLINDSIDE_BITE,
+	EFFECT_SHROUD, EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST,
+	EFFECT_RECLAIM, EFFECT_ROT_THE_BRACE, EFFECT_SEVER,
+	EFFECT_HOLD_NOTE, EFFECT_ANCHOR,
+	EFFECT_UNVEIL, EFFECT_VEIL, EFFECT_WITNESS_LIGHT, EFFECT_NOONDAY, EFFECT_PUSH, EFFECT_UNSEAT,
+	EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT,
+	EFFECT_BURNING_STRIKE, EFFECT_DOUSE, EFFECT_THRUST, EFFECT_PULL, EFFECT_FIRE_LINE,
+	EFFECT_SENTENCE_OF_ASH, EFFECT_CROWN_OF_EMBERS, EFFECT_VERDICT_BY_FIRE,
+]
+## Write kinds that address cells rather than a combatant; deferred entries carrying them fire
+## without a live target.
+const _CELL_WRITE_KINDS: Array[StringName] = [&"fire_line", &"crown_release"]
+## PROVISIONAL Refrain allowance per character per battle.
+const REFRAIN_USES_PER_BATTLE := 1
 
 var _actions: Dictionary = {}
 var _abilities: Dictionary = {}
@@ -105,6 +167,28 @@ var _deferred_sequence := 0
 var _resolving := false
 ## Reserved key inside the `class_resources` save dict that carries the deferred queue.
 const DEFERRED_SAVE_KEY := "__deferred__"
+## Reserved keys inside the same dict for the fire substrate and per-combatant impositions.
+const FIRE_SAVE_KEY := "__fire__"
+const LIGHT_SAVE_KEY := "__light__"
+const JAMS_SAVE_KEY := "__jams__"
+## Successful Jams by requester: {"round": int, "targets": [combat ids]}. The Sluice Runner
+## reads this for its windows; it is data the controller already emitted as `action_cancelled`.
+var _jam_log: Dictionary = {}
+const IMPOSITIONS_SAVE_KEY := "__impositions__"
+## Vekh preparations: {combat_id: {"until_round", "bite"}} for armed Blindsides and
+## {combat_id: field_id} for an Eclipse Feast waiting on its checkpoint.
+var _blindside: Dictionary = {}
+var _feast: Dictionary = {}
+const VEKH_SAVE_KEY := "__vekh__"
+## Physical material on the board (yard timber, stone control): reaction-matrix step 1.
+var material := MaterialField.new()
+const MATERIALS_SAVE_KEY := "__materials__"
+const HOLDS_SAVE_KEY := "__holds__"
+## One owned Note per holder. held_by survives Aftertone array edits; upkeep_paid spans
+## any CT recharge between paying upkeep and taking the first action of that turn.
+var _holds: Dictionary = {}
+## Effects that only ever address an object or a working, never a creature or a cell.
+const _OBJECT_ONLY_EFFECTS: Array[StringName] = [&"reclaim", &"rot_the_brace", &"sever", &"hold_note", &"anchor"]
 var _encounter_id: StringName = &""
 ## Tracks whose turn was last announced so a continuing actor (AP: still has AP left;
 ## CT: overflow keeps them past READY_AT) does not get a redundant `turn_started`.
@@ -161,6 +245,41 @@ func configure_weather(element_id: StringName, hush: bool = false) -> Dictionary
 	if element_id == Weather.UNCHARGED:
 		return {"allowed": true, "element_id": String(Weather.UNCHARGED)}
 	return weather.set_element(element_id)
+
+
+## Physical visibility for this shot, composed by the battlefield (worst cell wins) and marked
+## applicable only for ranged, non-spell attacks: melee swings and direct spells carry no
+## visibility term until an explicit profile says so. A Blinded attacker keeps its accepted
+## behavior (the facing restriction in _positional_terms) and gets no second penalty here.
+func visibility_context(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
+	var composed: Dictionary = battlefield.visibility_between(actor, target)
+	var blinded := LightField.is_blinded(actor)
+	var applicable := (
+		action != null and action.kind == CombatAction.Kind.ATTACK
+		and action.target_profile == &"ranged" and not action.spell
+	)
+	return {
+		"level": String(composed.get("level", &"clear")),
+		"causes": (composed.get("causes", []) as Array).duplicate(true),
+		"applies": applicable and not blinded,
+		"blinded": blinded,
+		"reason": "blinded_facing_restriction" if blinded else ("" if applicable else "action_profile"),
+	}
+
+
+## Authors physical visibility on one cell mid-battle and refreshes every forecast consumer:
+## the event carries a fresh ordinary-strike forecast context so region D re-quotes at once.
+func configure_visibility(cell: Vector2i, level: StringName) -> Dictionary:
+	var result: Dictionary = battlefield.set_visibility(cell, level)
+	if not bool(result.get("allowed", false)):
+		return result
+	var actor := active_actor()
+	var target := _first_living(enemies)
+	_emit_event(&"visibility_changed", actor, target, {
+		"cell": FireField.cells_to_data([cell])[0], "level": String(level),
+		"forecast_context": forecast_context(actor, target, action_by_id(&"strike")),
+	})
+	return result
 
 
 ## Builds one TileState per battlefield cell (grid battles only; a cell-less model
@@ -224,6 +343,8 @@ func start(
 	enemy_group: Array[BattleActor],
 	encounter_id: StringName = &""
 ) -> void:
+	for holder_id: String in _holds.keys():
+		release_hold(holder_id, "battle_restarted")
 	allies = ally_group
 	enemies = enemy_group
 	_encounter_id = encounter_id
@@ -249,6 +370,16 @@ func start(
 	_last_side = &"ally"
 	_deferred.clear()
 	_deferred_sequence = 0
+	fire.reset()
+	light.reset()
+	_jam_log.clear()
+	_refrain_uses.clear()
+	_blindside.clear()
+	_feast.clear()
+	material.reset()
+	_holds.clear()
+	for combatant: BattleActor in allies + enemies:
+		combatant.impositions.clear()
 	_assign_combat_ids(allies, &"ally", encounter_id)
 	_assign_combat_ids(enemies, &"enemy", encounter_id)
 	_admission_ordinal = {&"ally": allies.size(), &"enemy": enemies.size()}
@@ -415,6 +546,23 @@ func query_action(
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
 	if action == null:
 		return _blocked(&"action", "Unknown combat action.", {"type": &"known_action"})
+	if action.requires_voice:
+		var voice_block := CombatInjury.voice_block(actor)
+		if not voice_block.is_empty():
+			return _blocked(
+				&"voice_required",
+				"%s needs a voice; %s's %s injury prevents it." % [
+					action.display_name, actor.display_name, str(voice_block.get("location_id", "throat")).capitalize().to_lower(),
+				],
+				{"type": &"intact_voice", "location_id": str(voice_block.get("location_id", "")), "injury_id": str(voice_block.get("injury_id", ""))},
+			)
+	var aim_location := StringName(str(options.get("aim_location", "")))
+	if not aim_location.is_empty():
+		if options.has("object_id") or options.has("line_id"):
+			return _blocked(&"aim_action", "Anatomical aim requires a creature target.", {})
+		var aim := _query_aim(actor, target, action, aim_location)
+		if not bool(aim.get("allowed", false)):
+			return aim
 	if not action.class_resource_action.is_empty():
 		# A class-resource action is authored once and offered to every actor, so
 		# the resource itself decides whether the command means anything for this
@@ -427,27 +575,73 @@ func query_action(
 				"%s cannot use that class action." % actor.display_name,
 				{"type": &"patron", "patron": resource.patron_id},
 			)
-	if action.class_resource_action == &"record_name":
+	if action.requires_ally_target():
 		if target == null or not target.is_alive() or not allies.has(target):
-			return _blocked(&"no_target", "Record Name requires an explicit living ally target.", {"type": &"living_ally"})
+			return _blocked(&"no_target", "%s requires an explicit living ally target." % action.display_name, {"type": &"living_ally"})
+	if not action.effect_id.is_empty() or not action.effect_payload.is_empty() or action.targets_cells():
+		var effect_gate := _query_effect_gate(actor, action, options)
+		if not bool(effect_gate.get("allowed", false)):
+			return effect_gate
+	if options.has("object_id") or options.has("line_id") or _OBJECT_ONLY_EFFECTS.has(action.effect_id):
+		var object_affordability := _can_afford(actor, action)
+		if not bool(object_affordability.get("allowed", false)):
+			return object_affordability
+		return _query_object_action(actor, action, options)
+	if action.targets_cells():
+		var cell_affordability := _can_afford(actor, action)
+		if not bool(cell_affordability.get("allowed", false)):
+			return cell_affordability
+		if bool(options.get("availability_only", false)):
+			# The command rail asks "can this be armed?" before any cell is picked.
+			return _allowed({"cells_pending": int(action.effect_payload.get("cell_count", 3))})
+		return _query_cell_action(actor, action, options, target)
+	if action.targets_any_side():
+		if target == null or not target.is_alive() or (not allies.has(target) and not enemies.has(target)):
+			return _blocked(&"no_target", "%s requires a living creature target." % action.display_name, {"type": &"living_target"})
+	if not action.class_resource_action.is_empty():
+		if action.requires_enemy_target() and (target == null or not target.is_alive() or not enemies.has(target)):
+			return _blocked(&"no_target", "%s requires a living enemy target." % action.display_name, {"type": &"living_enemy"})
+		var command_gate := _class_resource_of(actor).query_command(
+			action.class_resource_action, target.combat_id if target != null else &"",
+			action.class_resource_payload,
+		)
+		if not bool(command_gate.get("allowed", false)):
+			return command_gate
+		if _soul_meter() < action.soul_cost:
+			return _blocked(&"soul", "Requires %d Soul." % int(action.soul_cost), {
+				"type": &"soul", "minimum": action.soul_cost,
+			})
 	if action.kind == CombatAction.Kind.MOVE:
 		var movement := battlefield.move_query(actor, _move_destination(action, options))
 		if not bool(movement.get("allowed", false)):
 			return movement
-		var priced_action := _priced_move_action(action, movement, options)
+		var priced_action := _priced_move_action(action, movement, options, actor)
 		var move_affordability := _can_afford(actor, priced_action)
 		if not bool(move_affordability.get("allowed", false)):
 			return move_affordability
 		movement["ap_cost"] = priced_action.ap_cost
 		movement["ct_cost"] = priced_action.ct_cost
+		movement["move_modifiers"] = CombatInjury.move_cost_modifiers(actor)
 		return movement
-	var affordability := _can_afford(actor, action)
+	var affordability := _can_afford(actor, CalledShot.priced_action(action, aim_location))
 	if not bool(affordability.get("allowed", false)):
 		return affordability
 	if action.requires_enemy_target():
 		var targeting := battlefield.target_query(actor, target, action.target_profile)
 		if not bool(targeting.get("allowed", false)):
 			return targeting
+	if action.requires_ally_target() and action.class_resource_action.is_empty() and target != actor:
+		var ally_sight := battlefield.line_of_sight(actor, target)
+		if not bool(ally_sight.get("allowed", false)):
+			return ally_sight
+	if action.targets_any_side() and target != actor:
+		var any_sight := battlefield.line_of_sight(actor, target)
+		if not bool(any_sight.get("allowed", false)):
+			return any_sight
+	if target != null and (not action.effect_id.is_empty() or action.effect_payload.has("range")):
+		var effect_targeting := _query_effect_target(actor, target, action)
+		if not bool(effect_targeting.get("allowed", false)):
+			return effect_targeting
 	if action.kind == CombatAction.Kind.DEFINING_STRIKE:
 		var defining_gate := _query_defining_strike(
 			target, StringName(options.get("weakness_id", ""))
@@ -471,6 +665,20 @@ func query_action(
 	if action.kind == CombatAction.Kind.CAST:
 		return _query_cast(actor, target, action, options)
 	if action.kind == CombatAction.Kind.ATTACK:
+		if action.spell and target != null:
+			# An authored spell card resolves like a loadout cast: fizzle and Breath come from the
+			# same Resolution call, so the Soul-after-Breath refusal surfaces here, before commit.
+			var spell_gate := _query_attack_resolution(actor, target, action, options)
+			if not bool(spell_gate.get("allowed", false)):
+				return spell_gate
+			var spell_resolution: Dictionary = spell_gate["resolution"]
+			var spell_soul := 0.0
+			for write: Dictionary in spell_resolution.get("writes", []):
+				if StringName(str(write.get("kind", ""))) == &"soul_meter":
+					spell_soul = -float(write.get("delta", 0.0))
+			spell_gate["breath_cost"] = action.breath_cost
+			spell_gate["soul_cost"] = spell_soul
+			return spell_gate
 		return _query_attack_resolution(actor, target, action, options)
 	return _allowed()
 
@@ -488,7 +696,10 @@ func submit_action(
 		return query
 
 	var actor := active_actor()
-	var committed_action := _priced_move_action(action, query, options)
+	var committed_action := _priced_move_action(action, query, options, actor)
+	committed_action = CalledShot.priced_action(
+		committed_action, StringName(str(options.get("aim_location", "")))
+	)
 	var commit_result := scheduler.commit(actor, committed_action)
 	if not bool(commit_result.get("allowed", false)):
 		# query_action() already validated affordability via the same gate, so this is a
@@ -500,13 +711,29 @@ func submit_action(
 	if query.has("resolution"):
 		resolved_options["_resolution"] = query["resolution"]
 		resolved_options["_resolution_context"] = query.get("context", {})
+	if query.has("object"):
+		resolved_options["_object"] = query["object"]
+	if query.has("cells"):
+		resolved_options["_cells"] = query["cells"]
+		if target != null:
+			resolved_options["_target_id"] = String(target.combat_id)
+	if bool(committed_action.effect_payload.get("refrain_use", false)):
+		# The proposed spent-use rule: the allowance is consumed at commit, fizzle or not.
+		_refrain_uses[String(actor.combat_id)] = int(_refrain_uses.get(String(actor.combat_id), 0)) + 1
 	if committed_action.kind == CombatAction.Kind.PASS and not committed_action.class_resource_action.is_empty():
-		_class_resource_of(actor).on_command(
+		if committed_action.soul_cost > 0.0:
+			_set_soul_meter(_soul_meter() - committed_action.soul_cost)
+		_class_resource_of(actor).execute_command(
 			committed_action.class_resource_action,
 			target.combat_id if target != null else &"",
+			committed_action.class_resource_payload.duplicate(true),
 		)
 	var outcome := _apply_action(actor, target, committed_action, resolved_options)
+	_finish_hold_turn(actor)
+	_check_holds()
 	outcome["action_id"] = action.id
+	if options.has("aim_location") and not str(options["aim_location"]).is_empty():
+		outcome["aim_location"] = str(options["aim_location"])
 	outcome["verb"] = action.verb
 	outcome["ap_cost"] = committed_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
@@ -605,6 +832,7 @@ func end_turn() -> bool:
 		_emit_event(&"action_refused", actor, null, {"action_id": &"", "reason": yield_result})
 		return false
 	var unused_ap_defense := 0
+	_finish_hold_turn(actor)
 	if (
 		rules != null
 		and str(scheduler.to_dict().get("scheduler", "")) == "ap_round"
@@ -695,6 +923,10 @@ func snapshot() -> Dictionary:
 		"turn_order": _turn_order_snapshot(),
 		"movement": _movement_snapshot(),
 		"deferred": deferred_entries(),
+		"fire": {"lines": fire.snapshot(), "marks": _marks_snapshot()},
+		"materials": material.snapshot(),
+		"holds": _holds.duplicate(true),
+		"light": {"fields": _light_snapshot(), "shrouds": _shroud_snapshot()},
 	}
 
 
@@ -714,7 +946,10 @@ func _movement_snapshot() -> Dictionary:
 		return {}
 	var base_move_cost := maxi(1, rules.move_ct_cost if rules != null else 1)
 	var per_cell_ap := maxi(1, action.ap_cost)
-	var ct_budget := int(actor.action_points / per_cell_ap) * base_move_cost
+	var ct_budget := int(
+		float(int(actor.action_points / per_cell_ap) * base_move_cost)
+		/ CombatInjury.move_cost_multiplier(actor)
+	)
 	var reachable: Array[Dictionary] = []
 	for destination: StringName in battlefield.reachable_positions(actor, ct_budget):
 		var query := move_query(destination)
@@ -921,6 +1156,7 @@ static func calculate_damage(
 ## gets a clean, ordered event stream with a bounded call stack.
 func _drive_scheduler() -> void:
 	while state != State.FINISHED:
+		_check_holds()
 		if not _has_living(allies):
 			_finish(ResultState.DEFEAT, &"defeat")
 			return
@@ -936,20 +1172,42 @@ func _drive_scheduler() -> void:
 			_finish(ResultState.DEFEAT, &"defeat")
 			return
 		_translate_scheduler_extras(result)
-		_fire_due_deferred()
+		# A round-end fire checkpoint can empty a side before anyone's turn begins.
+		if not _has_living(allies):
+			_finish(ResultState.DEFEAT, &"defeat")
+			return
+		if not _has_living(enemies):
+			_finish(ResultState.VICTORY, &"slain")
+			return
+		var upcoming: BattleActor = result.get("actor")
+		var is_continuation := upcoming == _last_turn_actor and int(result.get("ticks_elapsed", 0)) == 0
+		# Entries due at "the start of X's next scheduled turn" fire only when X's turn truly
+		# begins — an AP continuation of the turn that queued them is not a new turn.
+		_fire_due_deferred(null if is_continuation else upcoming)
 		if state == State.FINISHED:
 			return
 		var actor: BattleActor = result.get("actor")
-		if actor == null or not actor.is_alive():
+		if actor == null:
 			_finish(ResultState.DEFEAT, &"defeat")
 			return
+		if not actor.is_alive():
+			# A checkpoint effect (burn tick, filed Firebreak) killed the combatant the scheduler
+			# just seated. Forfeit that seat and let the next advance() pick a living one; the
+			# side checks at the top of the loop decide whether the battle is over.
+			scheduler.force_advance(actor)
+			_last_turn_actor = null
+			continue
 
-		var is_continuation := actor == _last_turn_actor and int(result.get("ticks_elapsed", 0)) == 0
 		var turn_payload := {
 			"charge": result.get("charge", 0),
 			"ticks_elapsed": result.get("ticks_elapsed", 0),
 			"measures_crossed": result.get("measures_crossed", 0),
 		}
+		if not is_continuation:
+			_pay_hold_upkeep(actor)
+			if not bool(scheduler.can_act(actor).get("allowed", false)):
+				_last_turn_actor = actor
+				continue
 
 		if actor.side == &"ally":
 			state = State.ALLY_TURN
@@ -980,6 +1238,7 @@ func _drive_scheduler() -> void:
 ## event vocabularies fork, and it forks on DATA the scheduler returned, never on
 ## `rules.use_charge_time` — CombatController does not know which scheduler is active.
 func _translate_scheduler_extras(result: Dictionary) -> void:
+	_check_holds()
 	# A single advance() call can carry BOTH keys at once — the AP scheduler closes the old
 	# round and opens the new one in one step when the last actor's turn passes. `round_ended`
 	# must be emitted (and the balance lock checked against the round that JUST ended, not the
@@ -995,6 +1254,9 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 		_emit_event(&"round_ended", null, null, {"round": ended_round})
 		_release_balance_lock_if_due(ended_round)
 		_tick_actor_aftertones()
+		_fire_checkpoint(round_number)
+		_material_checkpoint(round_number)
+		_light_checkpoint(round_number)
 	round_number = scheduler.measure_index() + 1
 	_expire_temporary_effects()
 	if bool(result.get("round_started", false)):
@@ -1018,6 +1280,11 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 			_emit_event(&"measure_started", null, null, {"measure": scheduler.measure_index()})
 			_tick_actor_aftertones()
 			_release_balance_lock_if_due(round_number)
+			# Hazard events during the measure that just closed were tracked under the previous
+			# round number; the checkpoint settles against that same number.
+			_fire_checkpoint(round_number - 1)
+			_material_checkpoint(round_number - 1)
+			_light_checkpoint(round_number - 1)
 
 
 ## Resolves exactly one enemy's turn. The scheduler — not a `for foe in enemies` loop — decides
@@ -1040,14 +1307,18 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		)
 		_force_pass(actor)
 		return
-	var resolution_gate := _query_attack_resolution(actor, target, enemy_action, {})
+	var aim_options := choose_enemy_aim(actor, target, enemy_action)
+	var resolution_gate := _query_attack_resolution(actor, target, enemy_action, aim_options)
 	if not bool(resolution_gate.get("allowed", false)):
 		_emit_event(
 			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": resolution_gate}
 		)
 		_force_pass(actor)
 		return
-	var commit_result := scheduler.commit(actor, enemy_action)
+	var committed_action := CalledShot.priced_action(
+		enemy_action, StringName(str(aim_options.get("aim_location", "")))
+	)
+	var commit_result := scheduler.commit(actor, committed_action)
 	if not bool(commit_result.get("allowed", false)):
 		_emit_event(
 			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": commit_result}
@@ -1055,18 +1326,91 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		_force_pass(actor)
 		return
 	_face_toward(actor, target)
-	var outcome := _apply_action(actor, target, enemy_action, {
-		"_resolution": resolution_gate["resolution"],
-		"_resolution_context": resolution_gate["context"],
-	})
+	var apply_options := aim_options.duplicate(true)
+	apply_options["_resolution"] = resolution_gate["resolution"]
+	apply_options["_resolution_context"] = resolution_gate["context"]
+	var outcome := _apply_action(actor, target, committed_action, apply_options)
+	_finish_hold_turn(actor)
 	outcome["action_id"] = enemy_action.id
-	outcome["ap_cost"] = enemy_action.ap_cost
+	outcome["verb"] = enemy_action.verb
+	if aim_options.has("aim_location"):
+		outcome["aim_location"] = str(aim_options["aim_location"])
+	outcome["ap_cost"] = committed_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
 	outcome["ap_remaining"] = actor.action_points
 	outcome["charge_remaining"] = int(commit_result.get("charge", 0))
 	_emit_event(&"action_resolved", actor, target, outcome)
 	scheduler.release(actor)
 	_change_balance(actor.balance_affinity * actor.balance_pressure, actor)
+
+
+## PROVISIONAL (called-shots task 12): how many HP of expected damage one full injury is
+## worth to the AI. A balance-facilitator number, not a ratified rule.
+const PROVISIONAL_AI_INJURY_VALUE := 6
+
+
+## Called-shots task 12: picks the aim the enemy's action should use, or `{}` for an ordinary
+## attack. Bounded to the action's authored profiles, legal through the same `_query_aim` and
+## scheduler gates the player faces, and scored from FORECAST data only (hit chance, damage
+## on hit, injury chance): the committed roll is never consulted. Observable state only:
+## authored anatomy exposure, cover, visibility, and the target's existing injuries.
+func choose_enemy_aim(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
+	if actor == null or target == null or action == null or action.aim_profiles.is_empty():
+		return {}
+	var best := {}
+	var best_value := _enemy_attack_value(actor, target, action, {})
+	if best_value < 0.0:
+		return {}
+	var locations: Array = action.aim_profiles.keys()
+	locations.sort()
+	for location: Variant in locations:
+		var location_id := StringName(str(location))
+		# An already-injured part has nothing more to lose: the aim would pay for nothing.
+		if target.injuries.has(str(location_id)):
+			continue
+		var legality := _query_aim(actor, target, action, location_id)
+		if not bool(legality.get("allowed", false)):
+			continue
+		if not _enemy_can_pay(actor, CalledShot.priced_action(action, location_id)):
+			continue
+		var options := {"aim_location": str(location_id)}
+		# A shot held up to the minimum chance by the clamp is a coin toss the surcharge
+		# cannot improve; the floor is never a reason to pay more.
+		var breakdown := Resolution.accuracy_breakdown(forecast_context(actor, target, action, options))
+		if int(breakdown.get("clamp_adjustment", 0)) > 0:
+			continue
+		var value := _enemy_attack_value(actor, target, action, options)
+		if value > best_value:
+			best_value = value
+			best = options
+	return best
+
+
+## Cost-only affordability for a candidate, independent of whose turn it is: the AP
+## scheduler quotes the priced action against the actor's points; CT legality of the
+## surcharge was already settled by `_query_aim` against the action cost limit.
+func _enemy_can_pay(actor: BattleActor, priced: CombatAction) -> bool:
+	if scheduler != null and scheduler.has_method("quote"):
+		return int(scheduler.call("quote", actor, priced)) <= actor.action_points
+	return true
+
+
+## Expected value of one attack from its forecast: hit% × damage on hit, plus the injury's
+## overall chance weighted by PROVISIONAL_AI_INJURY_VALUE when the quoted damage can reach
+## the authored threshold. Returns -1 when the attack cannot be forecast at all.
+func _enemy_attack_value(actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary) -> float:
+	var context := forecast_context(actor, target, action, options)
+	if context.is_empty():
+		return -1.0
+	var breakdown := Resolution.accuracy_breakdown(context)
+	var hit_chance := float(breakdown.get("effective_hit_chance", breakdown.get("hit_chance", 100))) / 100.0
+	var damage_on_hit := _forecast_damage_on_hit(context, target)
+	var value := hit_chance * float(damage_on_hit)
+	var injury: Dictionary = context.get("injury", {})
+	if not injury.is_empty() and damage_on_hit >= int(injury.get("min_damage", 1)):
+		var overall := hit_chance * float(int(injury.get("chance_on_hit", 0))) / 100.0
+		value += overall * float(PROVISIONAL_AI_INJURY_VALUE)
+	return value
 
 
 ## Grid-capable enemies spend movement on height and rear access before closing directly. The
@@ -1079,7 +1423,10 @@ func _best_enemy_position(actor: BattleActor, target: BattleActor) -> StringName
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if not target_position.has("cell"):
 		return &""
-	var budget := rules.maximum_action_ct_cost if rules != null else 0
+	var budget := int(
+		float(rules.maximum_action_ct_cost if rules != null else 0)
+		/ CombatInjury.move_cost_multiplier(actor)
+	)
 	var candidates: Array[StringName] = battlefield.reachable_positions(actor, budget)
 	var best := &""
 	var best_score := -2147483648
@@ -1132,13 +1479,18 @@ func _resolve_enemy_move(actor: BattleActor, target: BattleActor, destination: S
 	move_action.target_profile = &"self"
 	move_action.destination = destination
 	move_action.ap_cost = 1
-	move_action.ct_cost = int(path.get("ct_cost", rules.move_ct_cost if rules != null else 0))
+	move_action.ct_cost = _injured_move_ct(
+		actor, int(path.get("ct_cost", rules.move_ct_cost if rules != null else 0))
+	)
 	var commit_result := scheduler.commit(actor, move_action)
 	if not bool(commit_result.get("allowed", false)):
 		_force_pass(actor)
 		return
 	var outcome := _apply_action(actor, target, move_action)
+	_finish_hold_turn(actor)
+	_check_holds()
 	outcome["action_id"] = move_action.id
+	outcome["verb"] = move_action.verb
 	outcome["ap_cost"] = move_action.ap_cost
 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
 	outcome["ap_remaining"] = actor.action_points
@@ -1186,6 +1538,7 @@ func _opposite_facing(facing: StringName) -> StringName:
 ## through the same commit()/release() pair every other action uses, so the scheduler's
 ## round/acted bookkeeping updates exactly as if a real action had resolved.
 func _force_pass(actor: BattleActor) -> void:
+	_finish_hold_turn(actor)
 	var result := scheduler.commit(actor, _pass_action())
 	if bool(result.get("allowed", false)):
 		scheduler.release(actor)
@@ -1232,10 +1585,27 @@ func _move_destination(action: CombatAction, options: Dictionary) -> StringName:
 	return StringName(str(authored))
 
 
+func _query_aim(
+	actor: BattleActor, target: BattleActor, action: CombatAction, location: StringName,
+) -> Dictionary:
+	var accuracy_enabled := (
+		actor != null and target != null
+		and not _positional_resolution_context(actor, target).is_empty()
+	)
+	var cover: Dictionary = (
+		battlefield.location_cover(actor, target) if actor != null and target != null else {}
+	)
+	return CalledShot.query(
+		action, target, location, accuracy_enabled, rules.maximum_action_ct_cost, cover
+	)
+
+
 ## AP prices the same weighted path the enemy/CT move path quotes. The authored move
 ## action's AP cost is the per-cell rate; elevation can raise the number of cost units.
+## A leg injury raises the path price before either scheduler reads it, so AP units and CT
+## both grow and NPCs pay the same rule (`_resolve_enemy_move`).
 func _priced_move_action(
-	action: CombatAction, movement: Dictionary, options: Dictionary
+	action: CombatAction, movement: Dictionary, options: Dictionary, actor: BattleActor = null
 ) -> CombatAction:
 	if action == null or action.kind != CombatAction.Kind.MOVE:
 		return action
@@ -1243,21 +1613,37 @@ func _priced_move_action(
 	priced.destination = _move_destination(action, options)
 	if movement.has("ct_cost"):
 		var base_move_cost := maxi(1, rules.move_ct_cost if rules != null else 1)
-		var cost_units := maxi(
-			1, ceili(float(movement.get("ct_cost", 0)) / float(base_move_cost))
-		)
+		var path_ct := _injured_move_ct(actor, int(movement.get("ct_cost", base_move_cost)))
+		var cost_units := maxi(1, ceili(float(path_ct) / float(base_move_cost)))
 		priced.ap_cost = maxi(1, action.ap_cost) * cost_units
-		priced.ct_cost = int(movement.get("ct_cost", base_move_cost))
+		priced.ct_cost = path_ct
 	return priced
+
+
+func _injured_move_ct(actor: BattleActor, path_ct: int) -> int:
+	if actor == null:
+		return path_ct
+	return maxi(1, ceili(float(path_ct) * CombatInjury.move_cost_multiplier(actor)))
 
 
 func _apply_action(
 	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary = {}
 ) -> Dictionary:
 	var result: Dictionary = {"message": "%s uses %s." % [actor.display_name, action.display_name]}
+	_spend_blindside(actor, action)
+	if options.has("_object"):
+		result.merge(_apply_object_action(actor, action, options), true)
+		return result
+	if action.targets_cells():
+		result.merge(_apply_cell_action(actor, action, options), true)
+		if action.balance_shift != 0:
+			_change_balance(action.balance_shift, actor)
+		return result
 	match action.kind:
 		CombatAction.Kind.ATTACK:
 			result.merge(_resolve_attack(actor, target, action, options), true)
+			if not action.effect_id.is_empty():
+				result.merge(_apply_effect_after_attack(actor, target, action, result), true)
 		CombatAction.Kind.CAST:
 			result.merge(_resolve_attack(actor, target, action, options), true)
 		CombatAction.Kind.DEFINING_STRIKE:
@@ -1274,6 +1660,13 @@ func _apply_action(
 			result.merge(movement, true)
 			result["path_cells"] = _describe_path_cells(result.get("path", []))
 			result["message"] = "%s moves to %s." % [actor.display_name, action.destination]
+			if bool(movement.get("allowed", false)):
+				result["hazard"] = _hazard_on_path(actor, result["path_cells"])
+				# Threads read this: a Daylight contract fires on a MOVE ending inside its field.
+				var landed: Variant = _actor_cell(actor)
+				result["ended_in_light"] = (
+					int(light.field_at(landed as Vector2i).get("id", 0)) if landed is Vector2i else 0
+				)
 		CombatAction.Kind.RESOLUTION:
 			result["outcome_id"] = action.outcome_id
 			result["message"] = "%s chooses %s." % [actor.display_name, action.display_name]
@@ -1348,7 +1741,8 @@ func _query_cast(
 	var terms := _positional_terms(actor, target)
 	var resolution := _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", terms["cover_bonus"]))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", terms["cover_bonus"])),
+		int(context.get("defense_bypass", 0)),
 	)
 	if not bool(resolution.get("allowed", false)):
 		return resolution
@@ -1371,7 +1765,8 @@ func _query_attack_resolution(
 	var context := forecast_context(actor, target, action, options)
 	var resolution := _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0)),
+		int(context.get("defense_bypass", 0)),
 	)
 	if not bool(resolution.get("allowed", false)):
 		return resolution
@@ -1428,22 +1823,24 @@ func _resolved_attack(
 	var context := forecast_context(actor, target, action, options)
 	return _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0)),
+		int(context.get("defense_bypass", 0)),
 	)
 
 
 func _finalize_resolution_damage(
-	resolution: Dictionary, target: BattleActor, cover_bonus: int
+	resolution: Dictionary, target: BattleActor, cover_bonus: int, defense_bypass: int = 0
 ) -> Dictionary:
 	if not bool(resolution.get("allowed", false)):
 		return resolution
 	var finalized := resolution.duplicate(true)
 	var damage := 0
-	if bool(finalized.get("hit", true)) and not bool(finalized.get("fizzled", false)):
+	var has_damage := bool(finalized.get("direct_damage_enabled", true)) or int(finalized.get("damage", 0)) > 0
+	if has_damage and bool(finalized.get("hit", true)) and not bool(finalized.get("fizzled", false)):
 		damage = maxi(
 			1,
 			int(finalized.get("damage", 0))
-			- target.effective_defense()
+			- maxi(target.effective_defense() - maxi(defense_bypass, 0), 0)
 			- int(target.balance_effects.get("defense_bonus", 0))
 			- cover_bonus,
 		)
@@ -1455,6 +1852,32 @@ func _finalize_resolution_damage(
 		write["before"] = target.hp
 		write["after"] = maxi(target.hp - damage, 0)
 		write["delta"] = int(write["after"]) - target.hp
+	if finalized.has("injury"):
+		# Injury eligibility is decided HERE, after hit and mitigation: a miss or a fizzle never
+		# injures, and a hit below the authored damage threshold does not either.
+		var injury: Dictionary = finalized["injury"]
+		var eligible := (
+			bool(finalized.get("hit", true)) and not bool(finalized.get("fizzled", false))
+			and damage >= int(injury.get("min_damage", 1))
+		)
+		injury["eligible"] = eligible
+		injury["applies"] = eligible and bool(injury.get("rolled", false))
+		# Serious escalation: same roll, higher authored threshold on the same mitigated damage.
+		var serious: Dictionary = injury.get("serious", {})
+		injury["escalated"] = (
+			bool(injury["applies"]) and not serious.is_empty()
+			and damage >= int(serious.get("min_damage", 2147483647))
+		)
+		if bool(injury["escalated"]):
+			injury["id"] = str(serious.get("id", injury.get("id", "")))
+			injury["severity"] = CombatInjury.PERSISTENT_SEVERITY
+			injury["effects"] = (serious.get("effects", {}) as Dictionary).duplicate(true)
+		if bool(injury["applies"]):
+			writes.append({
+				"kind": "injury", "target_id": String(target.combat_id),
+				"injury": injury.duplicate(true),
+			})
+		finalized["writes"] = writes
 	var action_log: Dictionary = finalized.get("action_log", {})
 	if not action_log.is_empty():
 		action_log["deltas"] = writes.duplicate(true)
@@ -1480,6 +1903,7 @@ func _apply_resolution_writes(
 					_class_resource_of(target).on_damage_taken(lost, actor.combat_id)
 				if hp_before > 0 and target.hp <= 0:
 					_class_resource_of(actor).on_kill(target.combat_id, cause)
+					_notify_combatant_fell(target.combat_id)
 			&"dot":
 				# Seam v2: damage-over-time is an HP loss whose kill cause is &"dot" regardless of
 				# the action that queued it (Husk-bearer Hunger keys refunds on that cause).
@@ -1490,6 +1914,19 @@ func _apply_resolution_writes(
 					_class_resource_of(target).on_damage_taken(dot_lost, actor.combat_id)
 				if dot_before > 0 and target.hp <= 0:
 					_class_resource_of(actor).on_kill(target.combat_id, &"dot")
+					_notify_combatant_fell(target.combat_id)
+			&"injury":
+				var applied := CombatInjury.apply(
+					target, write.get("injury", {}),
+					"%s|%d|%s|%s" % [
+						str(resolution.get("battle_id", "")), int(resolution.get("tick", 0)),
+						String(actor.combat_id), str(resolution.get("ability_id", "")),
+					],
+					int(resolution.get("tick", 0)),
+				)
+				if bool(applied.get("applied", false)):
+					_emit_event(&"injury_applied", actor, target, applied)
+					_interrupt_voice(target)
 			&"breath":
 				actor.breath = int(write.get("after", actor.breath))
 			&"aftertones":
@@ -1504,6 +1941,9 @@ func _apply_resolution_writes(
 					tempo_actor.tempo = int(write.get("after", tempo_actor.tempo))
 			&"aftertone_spent":
 				spent_aftertones += int(write.get("count", 1))
+				if write.has("consumed"):
+					_check_holds("consumed")
+					_emit_event(&"aftertone_consumed", actor, target, {"aftertone": (write["consumed"] as Dictionary).duplicate(true)})
 			&"last_cast_element":
 				var cast_actor := _actor_by_id(str(write.get("target_id", actor.combat_id)))
 				if cast_actor != null:
@@ -1528,6 +1968,39 @@ func _apply_resolution_writes(
 					live_tile.charge_level = int(after.get("charge_level", 0))
 					live_tile.height_delta = int(after.get("height_delta", live_tile.height_delta))
 					live_tile.hush = bool(after.get("hush", live_tile.hush))
+			&"burning":
+				_apply_burning(target, StringName(str(write.get("source_id", actor.combat_id))))
+			&"douse":
+				_apply_douse(actor, target)
+			&"fire_line":
+				_create_fire_line(
+					StringName(str(write.get("owner_id", actor.combat_id))),
+					FireField.cells_from_data(write.get("cells", [])),
+					String(write.get("label", "firebreak")),
+				)
+			&"crown_release":
+				_release_crown(actor, write)
+			&"exposed":
+				_apply_exposed(
+					target, StringName(str(write.get("source_id", actor.combat_id))),
+					int(write.get("checkpoints", LightField.EXPOSED_CHECKPOINTS)),
+				)
+			&"veiled":
+				_apply_veiled(target, StringName(str(write.get("source_id", actor.combat_id))))
+			&"reveal_signature":
+				_reveal_signature(actor, target)
+			&"lit":
+				_apply_lit(
+					target, StringName(str(write.get("source_id", actor.combat_id))),
+					int(write.get("field_id", 0)), int(write.get("checkpoints", LightField.LIT_CHECKPOINTS)),
+				)
+	_check_holds()
+
+
+func _notify_combatant_fell(target_id: StringName) -> void:
+	_check_holds()
+	for observer: BattleActor in allies + enemies:
+		_class_resource_of(observer).on_combatant_fell(target_id)
 
 
 func _game_state() -> Node:
@@ -1631,6 +2104,13 @@ func forecast_context(
 	var positional_context: Dictionary = terms["positional_context"]
 	var flank_bonus := int(terms["flank_bonus"])
 	var cover_bonus := int(terms["cover_bonus"])
+	if action.effect_id == EFFECT_OPEN_SEAM and _bite_applies(actor, target):
+		# Blindside Bite: a Blinded target is treated as flanked whatever its true facing.
+		if positional_context.is_empty():
+			flank_bonus = rules.flank_power_bonus if rules != null else flank_bonus
+		else:
+			positional_context = positional_context.duplicate(true)
+			positional_context["facing"] = {"id": &"side"}
 	var line_of_sight := (
 		battlefield.line_of_sight(actor, target)
 		if action.target_profile == &"ranged" else _allowed()
@@ -1647,6 +2127,12 @@ func forecast_context(
 		+ flank_bonus
 		+ int(actor.balance_effects.get("damage_bonus", 0))
 	)
+	if cast_ability == null and action.spell:
+		# An authored spell card carries the card's flat creature power, like a loadout ability.
+		power = action.power_bonus
+	if options.has("power_override"):
+		# A delayed release (Crown of Embers) resolves the card's authored power at fire time.
+		power = int(options["power_override"])
 	var ability_id := "attack"
 	var battle_id := ""
 	if cast_ability != null:
@@ -1655,6 +2141,11 @@ func forecast_context(
 	elif action.kind == CombatAction.Kind.DEFINING_STRIKE:
 		ability_id = str(options.get("ability_id", action.id))
 		battle_id = str(options.get("battle_id", _encounter_id))
+	elif action.spell or not action.effect_id.is_empty():
+		# Authored cards key their deterministic rolls on their own id; plain attacks keep the
+		# frozen legacy key so existing self-play rolls do not reshuffle.
+		ability_id = String(action.id)
+		battle_id = String(_encounter_id)
 	var resolution_seed := int(options.get("seed", _sequence))
 	var ability_context := {
 		# Plain attacks retain the pre-#215 deterministic roll key. Casts use the selected
@@ -1668,6 +2159,11 @@ func forecast_context(
 	if cast_ability != null:
 		ability_context["is_spell"] = true
 		ability_context["breath_cost"] = cast_ability.breath_cost
+	elif action.spell:
+		ability_context["is_spell"] = true
+		ability_context["breath_cost"] = action.breath_cost
+	if action.no_damage:
+		ability_context["no_damage"] = true
 	var target_height := 0
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if target_position.has("elevation"):
@@ -1726,6 +2222,8 @@ func forecast_context(
 	if options.has("weakness_id"):
 		context["weakness_id"] = options["weakness_id"]
 		context["weakness"] = (options.get("weakness", {}) as Dictionary).duplicate(true)
+	if action.effect_payload.has("armor_bypass"):
+		context["defense_bypass"] = int(action.effect_payload.get("armor_bypass", 0))
 	# #223: the class resource's ONLY channel into resolution. Same call at forecast and commit,
 	# so whatever it overrides is seen identically by both — no second calculator.
 	var overrides: Dictionary = _class_resource_of(actor).on_cast_forecast(context.duplicate(true))
@@ -1736,11 +2234,31 @@ func forecast_context(
 		deep_merge(context, overrides)
 	# Seam v2 channel: ONE top-level `reveal` key. Dayspring (unit.reveal, A5) and ClassResource
 	# reveal overrides both land here so Resolution and the panel read one shape.
-	context["reveal"] = _is_revealed(actor) or bool(context.get("reveal", false))
+	context["reveal"] = _is_revealed(actor) or _is_exposed_now(target) or bool(context.get("reveal", false))
 	var resolved_positioning: Dictionary = context.get("positioning", {}) as Dictionary
 	if bool(context["reveal"]):
 		resolved_positioning["cover_bonus"] = 0
 	context["positioning"] = resolved_positioning
+	context["visibility"] = visibility_context(actor, target, action)
+	var aim_location := StringName(str(options.get("aim_location", "")))
+	var injury_modifiers: Array[Dictionary] = []
+	if action.kind == CombatAction.Kind.ATTACK and not action.spell:
+		injury_modifiers.append_array(CombatInjury.attack_accuracy_modifiers(actor))
+	if action.requires_voice:
+		injury_modifiers.append_array(CombatInjury.vocal_accuracy_modifiers(actor))
+	# Sight-dependent shots: the physical-visibility applicability, or any called shot.
+	var sight_dependent := (
+		action.kind == CombatAction.Kind.ATTACK and not action.spell
+		and (action.target_profile == &"ranged" or not aim_location.is_empty())
+	)
+	if sight_dependent:
+		injury_modifiers.append_array(CombatInjury.sight_accuracy_modifiers(actor))
+	if not injury_modifiers.is_empty():
+		context["attacker_injury_modifiers"] = injury_modifiers
+	if not aim_location.is_empty():
+		context["aim"] = _query_aim(actor, target, action, aim_location)
+		if bool(context["aim"].get("allowed", false)) and context["aim"].has("injury"):
+			context["injury"] = (context["aim"]["injury"] as Dictionary).duplicate(true)
 	return context
 
 
@@ -1765,7 +2283,21 @@ func forecast_action(
 	var gate := query_action(action, target, options)
 	if not bool(gate.get("allowed", false)):
 		return gate
+	if not action.class_resource_action.is_empty():
+		return _allowed({
+			"action_id": action.id, "class_command": true,
+			"ap_cost": action.ap_cost, "ct_cost": action.ct_cost, "soul_cost": action.soul_cost,
+			"damage": 0, "description": action.description,
+		})
 	var actor := active_actor()
+	if gate.has("object"):
+		return _allowed({
+			"action_id": action.id, "object": (gate["object"] as Dictionary).duplicate(true),
+			"ap_cost": action.ap_cost, "ct_cost": action.ct_cost, "breath_cost": action.breath_cost,
+			"damage": 0, "resolution": gate.get("resolution", {}),
+			"fizzle_percent": float((gate.get("resolution", {}) as Dictionary).get("fizzle_percent", 0.0)),
+			"description": action.description,
+		})
 	if action.kind == CombatAction.Kind.MOVE:
 		return _allowed({
 			"action_id": action.id,
@@ -1774,6 +2306,38 @@ func forecast_action(
 			"path": (gate.get("path", []) as Array).duplicate(),
 			"destination": _move_destination(action, options),
 		})
+	if action.targets_cells():
+		var cell_resolution: Dictionary = gate.get("resolution", {})
+		return _allowed({
+			"action_id": action.id,
+			"cell_working": true,
+			"effect_id": action.effect_id,
+			"ap_cost": action.ap_cost,
+			"ct_cost": action.ct_cost,
+			"damage": 0,
+			"cells": FireField.cells_to_data(gate.get("cells", [] as Array[Vector2i])),
+			"fizzle_percent": float(cell_resolution.get("fizzle_percent", 0.0)),
+			"breath_cost": action.breath_cost,
+			"soul_cost": float(gate.get("soul_cost", 0.0)),
+			"description": action.description,
+			"resolution": cell_resolution,
+			"context": gate.get("context", {}),
+		})
+	if action.spell and action.kind == CombatAction.Kind.ATTACK:
+		var card_resolution: Dictionary = gate["resolution"]
+		return _allowed({
+			"action_id": action.id,
+			"ap_cost": action.ap_cost,
+			"damage": int(card_resolution.get("damage", 0)),
+			"damage_on_hit": _forecast_damage_on_hit(gate["context"], target),
+			"fizzle_percent": float(card_resolution.get("fizzle_percent", 0.0)),
+			"breath_cost": action.breath_cost,
+			"soul_cost": float(gate.get("soul_cost", 0.0)),
+			"resolution": card_resolution,
+			"context": gate["context"],
+			"positioning": (gate["context"].get("positioning", {}) as Dictionary).duplicate(true),
+			"description": action.description,
+		})
 	if action.kind == CombatAction.Kind.CAST:
 		var cast_resolution: Dictionary = gate["resolution"]
 		return _allowed({
@@ -1781,6 +2345,7 @@ func forecast_action(
 			"ability_id": gate["ability_id"],
 			"ap_cost": action.ap_cost,
 			"damage": int(cast_resolution.get("damage", 0)),
+			"damage_on_hit": _forecast_damage_on_hit(gate["context"], target),
 			"fizzle_percent": float(cast_resolution.get("fizzle_percent", 0.0)),
 			"breath_cost": int(gate.get("breath_cost", 0)),
 			"soul_cost": float(gate.get("soul_cost", 0.0)),
@@ -1791,17 +2356,58 @@ func forecast_action(
 	var context := forecast_context(actor, target, action, options)
 	var resolution := _finalize_resolution_damage(
 		Resolution.resolve(context), target,
-		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0))
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0)),
+		int(context.get("defense_bypass", 0)),
 	)
 	var damage := int(resolution.get("damage", 0))
+	var priced_action := CalledShot.priced_action(action, StringName(str(options.get("aim_location", ""))))
 	return _allowed({
 		"action_id": action.id,
-		"ap_cost": action.ap_cost,
+		"ap_cost": priced_action.ap_cost,
+		"ct_cost": priced_action.ct_cost,
+		"aim_location": str(options.get("aim_location", "")),
 		"damage": damage,
 		"resolution": resolution,
 		"context": context,
+		"damage_on_hit": _forecast_damage_on_hit(context, target),
 		"positioning": (context.get("positioning", {}) as Dictionary).duplicate(true),
+		"injury_forecast": _injury_forecast(resolution, _forecast_damage_on_hit(context, target)),
 	})
+
+
+## The three chances a forecast must label separately: to hit, to injure ON hit, overall.
+## Purely presentational; never reads the rolled result.
+func _injury_forecast(resolution: Dictionary, damage_on_hit: int) -> Dictionary:
+	if not resolution.has("injury"):
+		return {}
+	var injury: Dictionary = resolution["injury"]
+	var chances: Dictionary = resolution.get("injury_chance", {})
+	var eligible := damage_on_hit >= int(injury.get("min_damage", 1))
+	var serious: Dictionary = injury.get("serious", {})
+	var serious_eligible := (
+		eligible and not serious.is_empty()
+		and damage_on_hit >= int(serious.get("min_damage", 2147483647))
+	)
+	return {
+		"id": str(serious.get("id", "")) if serious_eligible else str(injury.get("id", "")),
+		"location_id": str(injury.get("location_id", "")),
+		"severity": CombatInjury.PERSISTENT_SEVERITY if serious_eligible else str(injury.get("severity", "minor")),
+		"hit_chance": int(chances.get("hit", 0)),
+		"chance_on_hit": int(chances.get("on_hit", 0)) if eligible else 0,
+		"overall_chance": int(chances.get("overall", 0)) if eligible else 0,
+		"eligible": eligible, "min_damage": int(injury.get("min_damage", 1)),
+		"serious_eligible": serious_eligible,
+		"serious_min_damage": int(serious.get("min_damage", 0)) if not serious.is_empty() else 0,
+	}
+
+
+func _forecast_damage_on_hit(context: Dictionary, target: BattleActor) -> int:
+	var preview := _finalize_resolution_damage(
+		Resolution.preview_on_hit(context), target,
+		int((context.get("positioning", {}) as Dictionary).get("cover_bonus", 0)),
+		int(context.get("defense_bypass", 0)),
+	)
+	return int(preview.get("damage", 0))
 
 
 func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> Dictionary:
@@ -1830,6 +2436,7 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 		"weakness_id": weakness_id,
 		"weakness_name": str(weakness.get("display_name", weakness_id)),
 		"damage": int(resolution.get("damage", 0)),
+		"damage_on_hit": _forecast_damage_on_hit(context, target),
 		"ap_cost": action.ap_cost,
 		"chance": skill_check_service.preview(
 			str(weakness.get("check_skill", "lore")),
@@ -1852,13 +2459,19 @@ func forecast_defining_strike(target: BattleActor, weakness_id: StringName) -> D
 func _positional_terms(actor: BattleActor, target: BattleActor) -> Dictionary:
 	var positional_context := _positional_resolution_context(actor, target)
 	var cover_bonus := battlefield.cover_bonus(actor, target)
-	if _is_revealed(actor):
+	if _is_revealed(actor) or _is_exposed_now(target):
 		cover_bonus = 0
 	if _is_concealed(target):
 		cover_bonus = rules.cover_defense_bonus if rules != null else cover_bonus
 	var flank_bonus := battlefield.flank_bonus(actor, target)
 	if not positional_context.is_empty():
 		flank_bonus = 0
+	if LightField.is_blinded(actor):
+		# PROVISIONAL Blinded: the attacker cannot read a facing, so no flank or facing edge.
+		flank_bonus = 0
+		if not positional_context.is_empty():
+			positional_context = positional_context.duplicate(true)
+			positional_context["facing"] = {"id": &"front"}
 	return {
 		"positional_context": positional_context,
 		"cover_bonus": cover_bonus,
@@ -1959,6 +2572,13 @@ func _resolve_defining_strike(
 		"battle_id": String(_encounter_id),
 	}, true)
 	result.merge(_resolve_attack(actor, target, action, resolution_options), true)
+	var physical_resolution: Dictionary = result.get("resolution", {})
+	if not bool(physical_resolution.get("allowed", false)) or not bool(physical_resolution.get("hit", false)):
+		result["message"] = (
+			"%s names %s, but the physical strike misses."
+			% [actor.display_name, result["weakness_name"]]
+		)
+		return result
 	var resistance: Variant = weakness.get("resistance", {})
 	var resisted := false
 	if resistance is Dictionary:
@@ -2111,7 +2731,12 @@ func _release_balance_lock_if_due(current_round: int) -> void:
 func _finish(result_state: ResultState, outcome_id: StringName) -> void:
 	if state == State.FINISHED:
 		return
+	for holder_id: String in _holds.keys():
+		release_hold(holder_id, "battle_ended")
+	for actor: BattleActor in allies + enemies:
+		_class_resource_of(actor).on_battle_end(result_state == ResultState.VICTORY)
 	state = State.FINISHED
+	_settle_due_breath_refunds()
 	_emit_event(&"battle_finished", null, null, {"result": result_state, "outcome_id": outcome_id})
 	battle_finished.emit(result_state, outcome_id)
 
@@ -2151,6 +2776,14 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 		result.append({
 			"id": actor.combat_id,
 			"display_name": actor.display_name,
+			"anatomy": actor.anatomy.duplicate(true),
+			"injuries": actor.injuries.duplicate(true),
+			# Serializable presentation identity; never embed loaded textures in replay data.
+			"member_id": actor.source_member.id if actor.source_member != null else "",
+			"portrait_path": (
+				actor.source_member.portrait.resource_path
+				if actor.source_member != null and actor.source_member.portrait != null else ""
+			),
 			"element_id": actor.element_id,
 			"facing": battlefield.facing_of(actor) if battlefield != null else &"",
 			"hp": actor.hp,
@@ -2173,13 +2806,16 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"breath": actor.breath,
 			"aftertones": actor.aftertones.duplicate(true),
 			"tempo": actor.tempo,
-			"discord_signatures_visible": not (concealed_until_round >= round_number and actor.side == concealed_side),
+			"discord_signatures_visible": _signatures_visible(actor),
+			"exposed": _is_exposed_now(actor),
 			"class_resource": _class_resource_of(actor).snapshot(),
+			"impositions": actor.impositions.duplicate(true),
 		})
 	return result
 
 
 func _tick_actor_aftertones() -> void:
+	_check_holds()
 	if duration_freeze_until_round >= round_number:
 		return
 	for actor: BattleActor in allies + enemies:
@@ -2187,6 +2823,7 @@ func _tick_actor_aftertones() -> void:
 			var before := actor.aftertones.size()
 			actor.tick_aftertones()
 			spent_aftertones += maxi(0, before - actor.aftertones.size())
+	_check_holds()
 
 
 func _is_revealed(actor: BattleActor) -> bool:
@@ -2338,6 +2975,1588 @@ func _class_resource_of(actor: BattleActor) -> ClassResource:
 	return actor.class_resource
 
 
+## ---------------------------------------------------------------------------
+## Fire substrate + authored effect cards (Ash Magistrate kit).
+## Cell workings, Burning/Soaked impositions, Firebreak lines, delayed releases.
+## ---------------------------------------------------------------------------
+
+const _GRID_EFFECTS: Array[StringName] = [
+	&"pull", &"fire_line", &"sentence_of_ash", &"crown_of_embers", &"verdict_by_fire",
+	&"push", &"witness_light", &"noonday_revelation", &"term_of_daylight", &"noon_contract",
+	&"turning_tide", &"great_confluence", &"wash_the_gears", &"floodgate",
+	&"shroud", &"eclipse_procession", &"eclipse_feast",
+]
+const RESTORE_CELL_EFFECTS: Array[StringName] = [
+	&"turning_tide", &"great_confluence", &"wash_the_gears", &"floodgate",
+]
+const NOONDAY_RADIUS := 2
+const NOONDAY_CHECKPOINTS := 1
+## Writes a cell cast keeps from Resolution: the caster's own costs and residue, never a
+## creature write — the synthetic target is nobody.
+const _CELL_CAST_WRITE_KINDS: Array[StringName] = [
+	&"breath", &"aftertones", &"aftertone_spent", &"tempo", &"last_cast_element",
+	&"soul_meter", &"tile_state",
+]
+
+
+## Shared gates every effect card may declare: known effect id, patron, Chord/Triad tier,
+## Refrain allowance, Ledger capacity, grid capability.
+func _query_effect_gate(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	var payload := action.effect_payload
+	if not action.effect_id.is_empty() and not _KNOWN_EFFECTS.has(action.effect_id):
+		return _blocked(
+			&"effect", "%s has an effect this battle cannot resolve." % action.display_name,
+			{"type": &"known_effect", "effect_id": String(action.effect_id)},
+		)
+	var resource := _class_resource_of(actor)
+	var required_patron := StringName(str(payload.get("requires_patron", "")))
+	if not required_patron.is_empty() and resource.patron_id != required_patron:
+		return _blocked(
+			&"class_resource", "%s belongs to the %s kit." % [action.display_name, String(required_patron).capitalize()],
+			{"type": &"patron", "patron": required_patron},
+		)
+	var required_tier := int(payload.get("requires_tier", 0))
+	if required_tier >= 2:
+		var breadth: StringName = &"triad" if required_tier >= 3 else &"chord"
+		var caster_context: Dictionary = (options.get("caster_context", {}) as Dictionary).duplicate(true)
+		if bool(payload.get("refrain_use", false)) and not caster_context.has("breath_tier"):
+			caster_context["breath_tier"] = "refrain"
+		var tier_gate := CastingGate.query_breadth(
+			breadth, actor.attribute_value(&"harmony"), action.magnitude, caster_context
+		)
+		if not bool(tier_gate.get("allowed", false)):
+			var unblock: Dictionary = (tier_gate.get("nearest_unblock", {}) as Dictionary).duplicate(true)
+			unblock["tier"] = required_tier
+			unblock["current_harmony"] = int(tier_gate.get("current_harmony", 0))
+			unblock["required_harmony"] = int(tier_gate.get("required_harmony", 0))
+			return _blocked(
+				StringName(str(tier_gate.get("blocked_by", &"casting_gate"))),
+				str(tier_gate.get("message", "%s needs a %s working." % [action.display_name, String(breadth)])),
+				unblock,
+			)
+	if bool(payload.get("refrain_use", false)):
+		if int(_refrain_uses.get(String(actor.combat_id), 0)) >= REFRAIN_USES_PER_BATTLE:
+			return _blocked(
+				&"refrain_spent", "%s has already spent this battle's Refrain." % actor.display_name,
+				{"type": &"refrain", "uses": REFRAIN_USES_PER_BATTLE},
+			)
+	if bool(payload.get("ledger_entry", false)):
+		if not (resource is PazzahLedger):
+			return _blocked(
+				&"class_resource", "%s files through the Pazzah Ledger." % action.display_name,
+				{"type": &"patron", "patron": &"pazzah"},
+			)
+		if (resource as PazzahLedger).entries.size() >= PazzahLedger.MAX_ENTRIES:
+			return _blocked(
+				&"ledger_full", "The Ledger holds %d entries; wait for one to fire." % PazzahLedger.MAX_ENTRIES,
+				{"type": &"ledger_capacity", "max": PazzahLedger.MAX_ENTRIES},
+			)
+	if payload.has("requires_jam_within"):
+		var window := int(payload.get("requires_jam_within", 1))
+		var log: Dictionary = _jam_log.get(String(actor.combat_id), {})
+		if log.is_empty() or int(log.get("round", -999)) < round_number - window:
+			return _blocked(
+				&"jam_window", "%s needs a Jam that landed within the last checkpoint." % action.display_name,
+				{"type": &"recent_jam", "checkpoints": window},
+			)
+	if action.targets_cells() or _GRID_EFFECTS.has(action.effect_id):
+		if not bool(battlefield.capabilities().get("cells", false)):
+			return _blocked(
+				&"position", "%s needs a gridded battlefield." % action.display_name,
+				{"type": &"cells"},
+			)
+	return _allowed()
+
+
+## Creature-targeted effect geometry: payload range in Chebyshev cells, plus the pull rule
+## (target exactly two cells away on a cardinal, middle cell free).
+func _query_effect_target(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
+	if not bool(battlefield.capabilities().get("cells", false)):
+		return _allowed()
+	var from: Variant = _actor_cell(actor)
+	var to: Variant = _actor_cell(target)
+	if not (from is Vector2i) or not (to is Vector2i):
+		return _allowed()
+	var delta: Vector2i = (to as Vector2i) - (from as Vector2i)
+	var distance := maxi(absi(delta.x), absi(delta.y))
+	if bool(action.effect_payload.get("self_only", false)) and target != actor:
+		return _blocked(
+			&"target", "%s prepares only its user." % action.display_name, {"type": &"self"},
+		)
+	if action.effect_id == EFFECT_OPEN_SEAM and not _open_seam_angle_ok(actor, target):
+		return _blocked(
+			&"facing", "%s needs the target's side or rear, or a Blindside Bite on a Blinded target." % action.display_name,
+			{"type": &"side_or_rear"},
+		)
+	var range_cells := int(action.effect_payload.get("range", 0))
+	if range_cells > 0 and distance > range_cells:
+		return _blocked(
+			&"blocked_by_range", "%s reaches %d cells; the target is %d away." % [action.display_name, range_cells, distance],
+			{"type": &"range", "range": range_cells, "distance": distance},
+		)
+	if action.effect_id == EFFECT_SECOND_BREATH or action.effect_id == EFFECT_OPENED_SLUICE:
+		if _breath_room(target) <= 0:
+			return _blocked(
+				&"no_effect", "%s has no Breath to restore." % target.display_name,
+				{"type": &"breath_room"},
+			)
+		return _allowed()
+	if action.effect_id == EFFECT_UNSEAT:
+		if not target.guarding:
+			return _blocked(
+				&"no_response", "%s has no Guard to unseat." % target.display_name,
+				{"type": &"martial_response"},
+			)
+		return _allowed()
+	if action.effect_id == EFFECT_PUSH:
+		var away: Vector2i = (to as Vector2i) + delta.sign()
+		var push_cell := battlefield.cell_query(away)
+		if not bool(push_cell.get("allowed", false)):
+			return _blocked(
+				&"push_destination", "There is no open cell to shove %s into." % target.display_name,
+				{"type": &"open_cell", "cell": {"x": away.x, "y": away.y}},
+			)
+		return _allowed({"push_destination": away})
+	if action.effect_id != EFFECT_PULL:
+		return _allowed()
+	var cardinal := (delta.x == 0) != (delta.y == 0)
+	if not cardinal or distance != 2:
+		return _blocked(
+			&"pull_geometry", "%s needs an enemy exactly two cells away on a straight line." % action.display_name,
+			{"type": &"cardinal_distance", "distance": 2},
+		)
+	var destination: Vector2i = (to as Vector2i) - delta.sign()
+	var cell := battlefield.cell_query(destination)
+	if not bool(cell.get("allowed", false)):
+		return _blocked(
+			&"pull_destination", "The cell between you is not open.",
+			{"type": &"open_cell", "cell": {"x": destination.x, "y": destination.y}},
+		)
+	if not bool(action.effect_payload.get("allow_marked_destination", false)):
+		if fire.is_burning_cell(destination) or _mark_cells().has(destination):
+			return _blocked(
+				&"pull_destination", "Only the Herd can drag someone onto a filed cell.",
+				{"type": &"unmarked_cell", "cell": {"x": destination.x, "y": destination.y}},
+			)
+	return _allowed({"pull_destination": destination})
+
+
+## Cell-targeted working: `options.cells` declares the shape; range, shape and LOS are checked
+## per effect; a spell card then resolves fizzle/Breath/Soul against a synthetic empty target.
+func _query_cell_action(
+	actor: BattleActor, action: CombatAction, options: Dictionary, target: BattleActor = null
+) -> Dictionary:
+	var cells: Array[Vector2i] = FireField.cells_from_data(options.get("cells", []))
+	if cells.is_empty():
+		return _blocked(
+			&"no_target", "%s needs target cells." % action.display_name,
+			{"type": &"cells", "count": int(action.effect_payload.get("cell_count", 3))},
+		)
+	var origin: Variant = _actor_cell(actor)
+	if not (origin is Vector2i):
+		return _blocked(&"position", "%s is not standing on the grid." % actor.display_name, {"type": &"cells"})
+	var range_cells := int(action.effect_payload.get("range", 0))
+	var count := int(action.effect_payload.get("cell_count", 3))
+	var distinct: Array[Vector2i] = []
+	for cell: Vector2i in cells:
+		if not distinct.has(cell):
+			distinct.append(cell)
+	if distinct.size() != count:
+		return _blocked(
+			&"cell_count", "%s marks exactly %d distinct cells." % [action.display_name, count],
+			{"type": &"cells", "count": count},
+		)
+	for cell: Vector2i in distinct:
+		var delta: Vector2i = cell - (origin as Vector2i)
+		var distance := maxi(absi(delta.x), absi(delta.y))
+		if range_cells > 0 and distance > range_cells:
+			return _blocked(
+				&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells],
+				{"type": &"range", "range": range_cells, "cell": {"x": cell.x, "y": cell.y}},
+			)
+		var legality := battlefield.cell_query(cell)
+		# A fire line may run across, and a Crown mark may sit on, a combustible object's
+		# footprint; never stone or other impassable ground.
+		var across_timber := (
+			action.effect_id in [EFFECT_FIRE_LINE, EFFECT_SENTENCE_OF_ASH, EFFECT_CROWN_OF_EMBERS, EFFECT_VERDICT_BY_FIRE]
+			and MaterialField.is_combustible(material.object_at(cell))
+		)
+		if not bool(legality.get("in_bounds", false)) or (not bool(legality.get("passable", false)) and not across_timber):
+			return _blocked(
+				&"cell_illegal", "That cell cannot hold a working.",
+				{"type": &"open_cell", "cell": {"x": cell.x, "y": cell.y}},
+			)
+	match action.effect_id:
+		EFFECT_FIRE_LINE, EFFECT_SENTENCE_OF_ASH:
+			if not FireField.is_cardinal_line(distinct):
+				return _blocked(
+					&"line_shape", "%s burns three cells in a straight, touching line." % action.display_name,
+					{"type": &"cardinal_line", "count": count},
+				)
+		EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST:
+			if distinct[0] != (origin as Vector2i):
+				return _blocked(
+					&"target", "%s is centered on its caster." % action.display_name, {"type": &"self_cell"},
+				)
+		EFFECT_CROWN_OF_EMBERS, EFFECT_VERDICT_BY_FIRE, EFFECT_WITNESS_LIGHT, EFFECT_NOONDAY, \
+		EFFECT_TERM_OF_DAYLIGHT, EFFECT_NOON_CONTRACT, EFFECT_SHROUD:
+			for cell: Vector2i in distinct:
+				var sight := battlefield.line_of_sight_to_cell(actor, cell)
+				if not bool(sight.get("allowed", false)):
+					return sight
+	if RESTORE_CELL_EFFECTS.has(action.effect_id):
+		var mode := _tide_mode(action, options)
+		if mode == "A" and _refuge_recipients(actor, distinct[0], int(action.effect_payload.get("radius", 1)), int(action.effect_payload.get("recipients", 3))).is_empty():
+			return _blocked(
+				&"no_effect", "%s would restore nothing: no ally with Breath to fill is in the refuge." % action.display_name,
+				{"type": &"breath_room"},
+			)
+	if bool(action.effect_payload.get("contract_target", false)):
+		# A cell working that also binds a creature (Term of Daylight): the contract half needs a
+		# living enemy at touch and a free Thread; the field half is the cells above.
+		if target == null or not target.is_alive() or not enemies.has(target):
+			return _blocked(&"no_target", "%s needs a living enemy to bind." % action.display_name, {"type": &"living_enemy"})
+		var touch := battlefield.target_query(actor, target, &"melee")
+		if not bool(touch.get("allowed", false)):
+			return touch
+		var threads := _threads_of(actor)
+		if threads == null:
+			return _blocked(&"class_resource", "%s binds through Izhakel's Threads." % action.display_name, {"type": &"patron", "patron": &"izhakel"})
+		var daylight_gate := threads.query_daylight(target.combat_id)
+		if not bool(daylight_gate.get("allowed", false)):
+			return daylight_gate
+	var result := {"cells": distinct}
+	if action.spell:
+		var cast := _resolve_cell_cast(actor, action, options)
+		if not bool(cast.get("allowed", false)):
+			return cast
+		if RESTORE_CELL_EFFECTS.has(action.effect_id) and _tide_mode(action, options) == "A":
+			result["allocations"] = _plan_restoration(
+				actor, distinct[0], action, options, _paid_breath(cast["resolution"])
+			)
+		var soul_cost := 0.0
+		for write: Dictionary in (cast["resolution"] as Dictionary).get("writes", []):
+			if StringName(str(write.get("kind", ""))) == &"soul_meter":
+				soul_cost = -float(write.get("delta", 0.0))
+		result["resolution"] = cast["resolution"]
+		result["context"] = cast["context"]
+		result["soul_cost"] = soul_cost
+		result["breath_cost"] = action.breath_cost
+	return _allowed(result)
+
+
+## Resolution context for a working with no creature target: the caster's own terms, an empty
+## target, no to-hit. Same calculator as a strike, so fizzle/Breath/Soul rules stay in one place.
+func _cell_cast_context(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	var context := forecast_context(actor, actor, action, options)
+	if context.is_empty():
+		return context
+	context["target"] = {
+		"id": "", "hp": 0, "element_id": "", "alacrity": 0, "aftertones": [], "tempo": 0,
+		"height": 0, "attunements": {},
+	}
+	context["target_tile"] = {}
+	context["facing"] = {}
+	context["height_advantage_steps"] = 0
+	context["to_hit_enabled"] = false
+	context["positioning"] = {
+		"line_of_sight": _allowed(), "cover_bonus": 0, "flank_bonus": 0, "facing": {},
+		"height_advantage_steps": 0,
+	}
+	return context
+
+
+func _resolve_cell_cast(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	var context := _cell_cast_context(actor, action, options)
+	var resolution := Resolution.resolve(context)
+	if not bool(resolution.get("allowed", false)):
+		return resolution
+	var kept: Array[Dictionary] = []
+	for write: Dictionary in resolution.get("writes", []):
+		if _CELL_CAST_WRITE_KINDS.has(StringName(str(write.get("kind", "")))):
+			# Only the selected Note changes: suppress the legacy implicit Khor hold and
+			# synthetic-target Aftertones for these explicit working-targeted cards.
+			if action.effect_id in [EFFECT_HOLD_NOTE, EFFECT_ANCHOR, EFFECT_SEVER] and String(write.get("kind", "")) in ["aftertones", "aftertone_spent"]:
+				continue
+			kept.append(write)
+	resolution["writes"] = kept
+	resolution["damage"] = 0
+	return _allowed({"context": context, "resolution": resolution})
+
+
+func _apply_cell_action(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	var cells: Array[Vector2i] = FireField.cells_from_data(options.get("_cells", options.get("cells", [])))
+	var result := {
+		"cells": FireField.cells_to_data(cells), "effect_id": action.effect_id, "fizzled": false,
+	}
+	var paid_breath := 0
+	if action.spell:
+		var resolution: Dictionary = options.get("_resolution", {})
+		if resolution.is_empty():
+			var cast := _resolve_cell_cast(actor, action, options)
+			if not bool(cast.get("allowed", false)):
+				result.merge(cast, true)
+				return result
+			resolution = cast["resolution"]
+		paid_breath = _paid_breath(resolution)
+		_apply_resolution_writes(actor, actor, resolution, true, &"cast")
+		result["resolution"] = resolution
+		if bool(resolution.get("fizzled", false)):
+			_class_resource_of(actor).on_fizzle(resolution)
+			result["fizzled"] = true
+			result["message"] = "%s's %s fizzles." % [actor.display_name, action.display_name]
+			return result
+	var payload := action.effect_payload
+	var owner := String(actor.combat_id)
+	var anchor: Variant = _actor_cell(actor)
+	var anchor_data := {"x": (anchor as Vector2i).x, "y": (anchor as Vector2i).y} if anchor is Vector2i else {}
+	match action.effect_id:
+		EFFECT_FIRE_LINE:
+			result.merge(_create_fire_line(actor.combat_id, cells, String(action.id)), true)
+			result["message"] = "%s lays a Firebreak." % actor.display_name
+		EFFECT_SENTENCE_OF_ASH:
+			var filed := (_class_resource_of(actor) as PazzahLedger).queue_effect(
+				EFFECT_SENTENCE_OF_ASH, int(payload.get("delay_rounds", 2)),
+				{"writes": [{
+					"kind": "fire_line", "cells": FireField.cells_to_data(cells), "owner_id": owner,
+					"label": String(action.id),
+				}]},
+			)
+			result["filed"] = filed
+			result["message"] = "%s files a Sentence of Ash." % actor.display_name
+		EFFECT_CROWN_OF_EMBERS:
+			var queued := enqueue_deferred({
+				"source_id": owner,
+				"label": String(action.id),
+				"due_turn_of": owner,
+				"effect": {"writes": [{
+					"kind": "crown_release", "cells": FireField.cells_to_data(cells), "anchor": anchor_data,
+					"power": int(payload.get("power", 18)), "tethered": true, "label": String(action.id),
+				}]},
+			})
+			result["queued"] = bool(queued.get("allowed", false))
+			result["message"] = "%s raises a Crown of Embers." % actor.display_name
+		EFFECT_TURNING_TIDE, EFFECT_WASH_THE_GEARS, EFFECT_GREAT_CONFLUENCE, EFFECT_FLOODGATE:
+			result.merge(_apply_refuge(actor, action, cells[0], options, paid_breath), true)
+		EFFECT_WITNESS_LIGHT:
+			result.merge(_create_light_field(actor.combat_id, cells[0]), true)
+			result["message"] = "%s raises a Witness Light." % actor.display_name
+		EFFECT_NOONDAY:
+			result["revealed"] = _noonday(actor, cells[0])
+			result["message"] = "%s calls a Noonday Revelation." % actor.display_name
+		EFFECT_SHROUD:
+			result.merge(_create_shroud(actor, cells[0], int(payload.get("radius", LightField.SHROUD_RADIUS)), LightField.SHROUD_CHECKPOINTS, false), true)
+			result["message"] = "%s raises a Shroud." % actor.display_name
+		EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST:
+			var eclipse := _create_shroud(actor, cells[0], int(payload.get("radius", LightField.ECLIPSE_RADIUS)), LightField.ECLIPSE_CHECKPOINTS, true)
+			result.merge(eclipse, true)
+			if action.effect_id == EFFECT_ECLIPSE_FEAST:
+				_feast[String(actor.combat_id)] = int((eclipse.get("field", {}) as Dictionary).get("id", 0))
+				result["feast_armed"] = true
+			result["message"] = "%s leads an Eclipse Procession." % actor.display_name
+		EFFECT_TERM_OF_DAYLIGHT:
+			var field := _create_light_field(actor.combat_id, cells[0])
+			result.merge(field, true)
+			var bound_target := _actor_by_id(StringName(str(options.get("_target_id", ""))))
+			var threads := _threads_of(actor)
+			var field_id := int((field.get("field", {}) as Dictionary).get("id", 0))
+			result["bound"] = (
+				threads != null and bound_target != null and field_id > 0
+				and threads.bind_daylight(bound_target.combat_id, field_id)
+			)
+			result["message"] = "%s binds a Term of Daylight." % actor.display_name
+		EFFECT_NOON_CONTRACT:
+			var revealed: Array[String] = _noonday(actor, cells[0])
+			result["revealed"] = revealed
+			result["triggered"] = _trigger_witness_contracts(actor, revealed)
+			result["message"] = "%s calls the Noon Contract." % actor.display_name
+		EFFECT_VERDICT_BY_FIRE:
+			var filed := (_class_resource_of(actor) as PazzahLedger).queue_effect(
+				EFFECT_VERDICT_BY_FIRE, int(payload.get("delay_rounds", 2)),
+				{"writes": [{
+					"kind": "crown_release", "cells": FireField.cells_to_data(cells), "anchor": anchor_data,
+					"power": int(payload.get("power", 18)), "tethered": false, "label": String(action.id),
+				}]},
+			)
+			result["filed"] = filed
+			result["message"] = "%s files a Verdict by Fire." % actor.display_name
+	return result
+
+
+## Riders on a creature-targeted card, applied after the strike landed or missed.
+func _apply_effect_after_attack(
+	actor: BattleActor, target: BattleActor, action: CombatAction, result: Dictionary
+) -> Dictionary:
+	var resolution: Dictionary = result.get("resolution", {})
+	var fizzled := bool(resolution.get("fizzled", false))
+	var hit := bool(resolution.get("hit", true)) and not fizzled
+	var out := {"hit": hit}
+	match action.effect_id:
+		EFFECT_BURNING_STRIKE:
+			if hit:
+				out["burning"] = _apply_burning(target, actor.combat_id)
+		EFFECT_DOUSE:
+			if hit:
+				out["douse"] = _apply_douse(actor, target)
+		EFFECT_SECOND_BREATH, EFFECT_OPENED_SLUICE:
+			if not fizzled:
+				var cap := int(action.effect_payload.get("restore_max", 6))
+				out["restored"] = _restore_breath(actor, target, mini(cap, _paid_breath(resolution)))
+		EFFECT_UNVEIL:
+			if hit:
+				# Reveal first so the payload records the veil it tore; Exposed then replaces it.
+				out["revealed"] = _reveal_signature(actor, target)
+				out["exposed"] = _apply_exposed(target, actor.combat_id, LightField.EXPOSED_CHECKPOINTS)
+		EFFECT_VEIL:
+			if hit:
+				out["veiled"] = _apply_veiled(target, actor.combat_id)
+		EFFECT_BLINDING_THROW:
+			if hit:
+				out["blinded"] = _apply_blinded(target, actor.combat_id)
+		EFFECT_BLINDSIDE, EFFECT_BLINDSIDE_BITE:
+			if not fizzled:
+				_blindside[String(actor.combat_id)] = {
+					"until_round": round_number + 1,
+					"bite": action.effect_id == EFFECT_BLINDSIDE_BITE,
+				}
+				out["blindside"] = _blindside[String(actor.combat_id)].duplicate(true)
+				_emit_event(&"blindside_armed", actor, null, out["blindside"])
+		EFFECT_OPEN_SEAM:
+			out["flanked"] = _bite_applies(actor, target)
+			if _blindside.has(String(actor.combat_id)):
+				# Consumed by the attempt, hit or miss.
+				_blindside.erase(String(actor.combat_id))
+				_emit_event(&"blindside_spent", actor, target, {"flanked": out["flanked"]})
+		EFFECT_UNSEAT:
+			if hit and target.guarding:
+				target.guarding = false
+				out["unseated"] = true
+				_emit_event(&"unseated", actor, target, {})
+		EFFECT_PUSH:
+			if hit:
+				var push := _query_effect_target(actor, target, action)
+				if push.has("push_destination"):
+					var away: Vector2i = push["push_destination"]
+					var shoved := battlefield.displace(target, away)
+					out["pushed"] = bool(shoved.get("allowed", false))
+					if bool(shoved.get("allowed", false)):
+						out["pushed_to"] = {"x": away.x, "y": away.y}
+						_emit_event(&"combatant_pushed", actor, target, {"cell": out["pushed_to"]})
+						out["hazard"] = _apply_hazard(target, away)
+		EFFECT_PULL:
+			if hit:
+				var geometry := _query_effect_target(actor, target, action)
+				if geometry.has("pull_destination"):
+					var destination: Vector2i = geometry["pull_destination"]
+					var moved := battlefield.displace(target, destination)
+					out["pulled"] = bool(moved.get("allowed", false))
+					if bool(moved.get("allowed", false)):
+						out["pulled_to"] = {"x": destination.x, "y": destination.y}
+						_emit_event(&"combatant_pulled", actor, target, {"cell": out["pulled_to"]})
+						out["hazard"] = _apply_hazard(target, destination)
+	return out
+
+
+func _hazard_on_path(actor: BattleActor, path_cells: Array[Vector2i]) -> Dictionary:
+	for cell: Vector2i in path_cells:
+		if fire.is_burning_cell(cell):
+			var hazard := _apply_hazard(actor, cell)
+			if bool(hazard.get("applied", false)):
+				return hazard
+	return {}
+
+
+## One hazard event per creature per round: 3 HP credited to the line's owner, then Burning.
+func _apply_hazard(actor: BattleActor, cell: Vector2i) -> Dictionary:
+	var line: Dictionary = fire.line_at(cell)
+	if line.is_empty() or actor == null or not actor.is_alive():
+		return {}
+	if not fire.hazard_due(actor.combat_id, round_number):
+		return {"applied": false, "reason": "already_this_round"}
+	fire.mark_hazard(actor.combat_id, round_number)
+	var owner_id := StringName(str(line.get("owner_id", "")))
+	var source := _actor_by_id(owner_id)
+	if source == null:
+		source = actor
+	var write := _materialize_write({"kind": "dot", "amount": FireField.HAZARD_DAMAGE}, actor)
+	_apply_resolution_writes(source, actor, {"writes": [write]}, false, &"dot")
+	var burning := _apply_burning(actor, owner_id)
+	var payload := {
+		"cell": {"x": cell.x, "y": cell.y}, "line_id": int(line.get("id", 0)),
+		"damage": -int(write.get("delta", 0)), "burning": burning,
+	}
+	_emit_event(&"fire_hazard", source, actor, payload)
+	payload["applied"] = true
+	return payload
+
+
+func _apply_burning(target: BattleActor, source_id: StringName) -> Dictionary:
+	var outcome: Dictionary = FireField.apply_burning(target, source_id)
+	if bool(outcome.get("applied", false)):
+		_emit_event(&"burning_applied", _actor_by_id(source_id), target, outcome)
+	return outcome
+
+
+func _apply_douse(actor: BattleActor, target: BattleActor) -> Dictionary:
+	var cleared: bool = FireField.clear_burning(target)
+	FireField.apply_soaked(target)
+	var outcome := {"cleared": cleared, "soaked": true}
+	_emit_event(&"doused", actor, target, outcome)
+	return outcome
+
+
+## Creates a Firebreak over the still-legal cells; creatures already standing in it take the
+## hazard at once.
+func _create_fire_line(owner_id: StringName, cells: Array[Vector2i], label: String) -> Dictionary:
+	var legal: Array[Vector2i] = []
+	var occupants: Array[BattleActor] = []
+	for cell: Vector2i in cells:
+		var legality := battlefield.cell_query(cell)
+		if not bool(legality.get("in_bounds", false)):
+			continue
+		# A line can run across a combustible object's footprint (the Khash packet), not
+		# through other impassable ground.
+		if not bool(legality.get("passable", false)) and material.object_at(cell).is_empty():
+			continue
+		legal.append(cell)
+		var occupant := _actor_by_id(StringName(str(legality.get("occupant_id", ""))))
+		if occupant != null and not occupants.has(occupant):
+			occupants.append(occupant)
+	var created: Dictionary = fire.create_line(owner_id, legal, round_number)
+	if not bool(created.get("allowed", false)):
+		return {"line": {}, "hazards": [], "skipped": FireField.cells_to_data(cells)}
+	var line: Dictionary = created["line"]
+	_emit_event(&"fire_line_created", _actor_by_id(owner_id), null, {
+		"line": line, "cells": FireField.cells_to_data(legal), "label": label,
+	})
+	var hazards: Array[Dictionary] = []
+	for occupant: BattleActor in occupants:
+		var at: Variant = _actor_cell(occupant)
+		if at is Vector2i and legal.has(at as Vector2i):
+			hazards.append(_apply_hazard(occupant, at as Vector2i))
+	var ignited: Array[String] = []
+	for cell: Vector2i in legal:
+		var row := material.object_at(cell)
+		if not row.is_empty() and MaterialField.can_ignite(row):
+			_thermal_hit_object(_actor_by_id(owner_id), String(row["id"]), 0)
+			ignited.append(String(row["id"]))
+	return {"line": line, "hazards": hazards, "ignited_objects": ignited}
+
+
+## Fires a marked Crown: tether (caster alive and on the cast cell) when `tethered`, LOS
+## revalidated from the anchor per cell, one hit per creature, Burning on hit.
+func _release_crown(actor: BattleActor, write: Dictionary) -> void:
+	var source := _actor_by_id(StringName(str(write.get("source_id", ""))))
+	if source == null:
+		source = actor
+	var anchor_data: Dictionary = write.get("anchor", {})
+	var anchor := Vector2i(int(anchor_data.get("x", 0)), int(anchor_data.get("y", 0)))
+	var cells: Array[Vector2i] = FireField.cells_from_data(write.get("cells", []))
+	var label := String(write.get("label", "crown_of_embers"))
+	var base := {"cells": FireField.cells_to_data(cells), "anchor": anchor_data, "label": label}
+	if bool(write.get("tethered", false)):
+		var caster := _actor_by_id(StringName(str(write.get("source_id", ""))))
+		var reason := &""
+		if caster == null or not caster.is_alive():
+			reason = &"caster_down"
+		elif _actor_cell(caster) != anchor:
+			reason = &"caster_moved"
+		if not reason.is_empty():
+			var interrupted := base.duplicate(true)
+			interrupted["reason"] = reason
+			_emit_event(&"crown_interrupted", source, null, interrupted)
+			return
+	var release := CombatAction.make(&"crown_release", label.capitalize(), CombatAction.Kind.ATTACK)
+	release.element_id = &"khash"
+	release.target_profile = &"ranged"
+	var power := int(write.get("power", 18))
+	var struck: Array[BattleActor] = []
+	var struck_objects: Array[String] = []
+	var object_hits: Array[Dictionary] = []
+	var hits: Array[Dictionary] = []
+	for cell: Vector2i in cells:
+		var sight := battlefield.line_of_sight_between_cells(anchor, cell)
+		if not bool(sight.get("allowed", false)):
+			continue
+		var legality := battlefield.cell_query(cell)
+		var row := material.object_at(cell)
+		if not row.is_empty() and not struck_objects.has(String(row["id"])):
+			struck_objects.append(String(row["id"]))
+			object_hits.append(_thermal_hit_object(source, String(row["id"]), int(write.get("object_damage", 9))))
+		var occupant := _actor_by_id(StringName(str(legality.get("occupant_id", ""))))
+		if occupant == null or not occupant.is_alive() or struck.has(occupant):
+			continue
+		struck.append(occupant)
+		var resolved := _resolved_attack(source, occupant, release, {"power_override": power})
+		if not bool(resolved.get("allowed", false)):
+			continue
+		_apply_resolution_writes(source, occupant, resolved, false, &"cast")
+		var hit := bool(resolved.get("hit", true))
+		var entry := {
+			"target_id": String(occupant.combat_id), "cell": {"x": cell.x, "y": cell.y},
+			"hit": hit, "damage": int(resolved.get("damage", 0)),
+		}
+		if hit:
+			entry["burning"] = _apply_burning(occupant, source.combat_id)
+		hits.append(entry)
+	var released := base.duplicate(true)
+	released["hits"] = hits
+	released["object_hits"] = object_hits
+	_emit_event(&"crown_released", source, null, released)
+
+
+## Checkpoint ordering (the fire packet): snapshot who is Burning, resolve standing hazards,
+## tick the snapshot's Burning, age Soaked, age lines.
+func _fire_checkpoint(completed_round: int) -> void:
+	var living := _living(allies) + _living(enemies)
+	var burning_at_entry: Array[BattleActor] = []
+	for actor: BattleActor in living:
+		if FireField.is_burning(actor):
+			burning_at_entry.append(actor)
+	if not fire.is_empty():
+		for actor: BattleActor in living:
+			var at: Variant = _actor_cell(actor)
+			if at is Vector2i and fire.is_burning_cell(at as Vector2i):
+				_apply_hazard(actor, at as Vector2i)
+	for actor: BattleActor in burning_at_entry:
+		if not actor.is_alive() or not FireField.is_burning(actor):
+			continue
+		var source := _actor_by_id(FireField.burn_source_id(actor))
+		if source == null:
+			source = actor
+		var write := _materialize_write({"kind": "dot", "amount": FireField.BURN_TICK_DAMAGE}, actor)
+		_apply_resolution_writes(source, actor, {"writes": [write]}, false, &"dot")
+		var remaining: int = FireField.consume_burn_tick(actor)
+		_emit_event(&"burn_tick", source, actor, {
+			"damage": -int(write.get("delta", 0)), "remaining_ticks": remaining, "round": completed_round,
+		})
+	for actor: BattleActor in living:
+		if FireField.age_soaked(actor):
+			_emit_event(&"soaked_expired", actor, null, {"round": completed_round})
+	for line: Dictionary in fire.advance_checkpoint(_held_ids("line")):
+		_emit_event(&"fire_line_expired", _actor_by_id(StringName(str(line.get("owner_id", "")))), null, {
+			"line": line, "round": completed_round,
+		})
+
+
+# ─── Water: Breath restoration and refuges (Luth cards, Sluice Runner) ──────
+
+
+## Breath the caster actually spent on this cast (Soul overreach is not Breath paid).
+func _paid_breath(resolution: Dictionary) -> int:
+	for write: Dictionary in resolution.get("writes", []):
+		if StringName(str(write.get("kind", ""))) == &"breath":
+			return maxi(int(write.get("before", 0)) - int(write.get("after", 0)), 0)
+	return 0
+
+
+func _breath_capacity(actor: BattleActor) -> int:
+	if actor == null or actor.source_member == null:
+		return 0
+	return maxi(actor.source_member.breath_max, 0)
+
+
+func _breath_room(actor: BattleActor) -> int:
+	return maxi(_breath_capacity(actor) - actor.breath, 0) if actor != null else 0
+
+
+## Restores up to `amount`, clamped by the recipient's capacity. Returns the Breath granted.
+func _restore_breath(actor: BattleActor, target: BattleActor, amount: int) -> int:
+	var granted := mini(maxi(amount, 0), _breath_room(target))
+	if granted <= 0:
+		return 0
+	var write := _materialize_write({"kind": "breath", "amount": granted}, target)
+	_apply_resolution_writes(target, target, {"writes": [write]}, false, &"cast")
+	_emit_event(&"breath_restored", actor, target, {"amount": granted})
+	return granted
+
+
+func _tide_mode(action: CombatAction, options: Dictionary) -> String:
+	return str(options.get("mode", action.effect_payload.get("mode", "B"))).to_upper()
+
+
+## Other living allies inside the refuge with Breath to fill, nearest to the center first.
+func _refuge_recipients(caster: BattleActor, center: Vector2i, radius: int, limit: int) -> Array[BattleActor]:
+	var found: Array[BattleActor] = []
+	for ally: BattleActor in _living(allies):
+		if ally == caster or _breath_room(ally) <= 0:
+			continue
+		var at: Variant = _actor_cell(ally)
+		if not (at is Vector2i):
+			continue
+		var delta: Vector2i = (at as Vector2i) - center
+		if maxi(absi(delta.x), absi(delta.y)) <= radius:
+			found.append(ally)
+	found.sort_custom(func(a: BattleActor, b: BattleActor) -> bool:
+		var da: Vector2i = (_actor_cell(a) as Vector2i) - center
+		var db: Vector2i = (_actor_cell(b) as Vector2i) - center
+		return maxi(absi(da.x), absi(da.y)) < maxi(absi(db.x), absi(db.y)))
+	if found.size() > limit:
+		found.resize(limit)
+	return found
+
+
+## One paid budget split among the refuge's recipients: authored `options.allocations`
+## ({combat_id: amount}) when given, otherwise an even split; every share is clamped by the
+## recipient's room and the total by min(budget, paid). Same function at forecast and commit.
+func _plan_restoration(
+	caster: BattleActor, center: Vector2i, action: CombatAction, options: Dictionary, paid: int
+) -> Dictionary:
+	var payload := action.effect_payload
+	var recipients := _refuge_recipients(caster, center, int(payload.get("radius", 1)), int(payload.get("recipients", 3)))
+	var budget := mini(int(payload.get("budget", 12)), paid)
+	var plan := {}
+	if recipients.is_empty() or budget <= 0:
+		return plan
+	var requested: Dictionary = options.get("allocations", {}) if options.get("allocations") is Dictionary else {}
+	var remaining := budget
+	if requested.is_empty():
+		var share := budget / recipients.size()
+		var spare := budget - share * recipients.size()
+		for ally: BattleActor in recipients:
+			var amount := mini(share + (1 if spare > 0 else 0), _breath_room(ally))
+			if spare > 0:
+				spare -= 1
+			plan[String(ally.combat_id)] = amount
+			remaining -= amount
+		# Leftover from clamped shares flows to whoever still has room.
+		for ally: BattleActor in recipients:
+			if remaining <= 0:
+				break
+			var extra := mini(remaining, _breath_room(ally) - int(plan[String(ally.combat_id)]))
+			plan[String(ally.combat_id)] = int(plan[String(ally.combat_id)]) + extra
+			remaining -= extra
+	else:
+		for ally: BattleActor in recipients:
+			var amount := mini(mini(int(requested.get(String(ally.combat_id), 0)), _breath_room(ally)), remaining)
+			if amount > 0:
+				plan[String(ally.combat_id)] = amount
+				remaining -= amount
+	return plan
+
+
+## Turning Tide / Great Confluence commit. Mode A restores by the plan; mode B quenches the
+## refuge (Burning ends, allies and quenched creatures are Soaked). Wash the Gears also Soaks
+## enemies the caster's Jam cancelled this round; Floodgate discharges an armed Jam retry.
+func _apply_refuge(
+	actor: BattleActor, action: CombatAction, center: Vector2i, options: Dictionary, paid: int
+) -> Dictionary:
+	var payload := action.effect_payload
+	var radius := int(payload.get("radius", 1))
+	var mode := _tide_mode(action, options)
+	var out := {"mode": mode, "center": LightField.cell_to_data(center)}
+	var inside: Array[BattleActor] = []
+	for creature: BattleActor in _living(allies) + _living(enemies):
+		var at: Variant = _actor_cell(creature)
+		if at is Vector2i:
+			var delta: Vector2i = (at as Vector2i) - center
+			if maxi(absi(delta.x), absi(delta.y)) <= radius:
+				inside.append(creature)
+	var restores_and_quenches := action.effect_id == EFFECT_GREAT_CONFLUENCE or action.effect_id == EFFECT_FLOODGATE
+	if mode == "A" or restores_and_quenches:
+		var plan := _plan_restoration(actor, center, action, options, paid)
+		var restored := {}
+		for id: String in plan:
+			var ally := _actor_by_id(StringName(id))
+			if ally != null:
+				restored[id] = _restore_breath(actor, ally, int(plan[id]))
+		out["restored"] = restored
+	if mode == "B" or restores_and_quenches:
+		var cancelled: Array = (_jam_log.get(String(actor.combat_id), {}) as Dictionary).get("targets", []) \
+			if int((_jam_log.get(String(actor.combat_id), {}) as Dictionary).get("round", -1)) == round_number else []
+		var soaked: Array[String] = []
+		for creature: BattleActor in inside:
+			var washed := action.effect_id == EFFECT_WASH_THE_GEARS and cancelled.has(String(creature.combat_id))
+			if allies.has(creature) or FireField.is_burning(creature) or washed:
+				_apply_douse(actor, creature)
+				soaked.append(String(creature.combat_id))
+		out["soaked"] = soaked
+	if action.effect_id == EFFECT_FLOODGATE:
+		out["discharged"] = _discharge_jam(actor, center, radius)
+	return out
+
+
+## Floodgate: an armed Jam retry fires now on the nearest living enemy in the refuge.
+func _discharge_jam(actor: BattleActor, center: Vector2i, radius: int) -> Dictionary:
+	var resource := _class_resource_of(actor)
+	if not (resource is FickahRuleBreaker) or (resource as FickahRuleBreaker).jam_target_id.is_empty():
+		return {}
+	var breaker := resource as FickahRuleBreaker
+	var nearest: BattleActor = null
+	var nearest_distance := radius + 1
+	for enemy: BattleActor in _living(enemies):
+		var at: Variant = _actor_cell(enemy)
+		if not (at is Vector2i):
+			continue
+		var delta: Vector2i = (at as Vector2i) - center
+		var distance := maxi(absi(delta.x), absi(delta.y))
+		if distance <= radius and distance < nearest_distance:
+			nearest = enemy
+			nearest_distance = distance
+	if nearest == null:
+		return {"target_id": "", "allowed": false, "reason": "no_enemy_in_refuge"}
+	var result := request_cancel(actor.combat_id, nearest.combat_id, &"any")
+	breaker.jam_target_id = &""
+	return {"target_id": String(nearest.combat_id), "allowed": bool(result.get("allowed", false)), "reason": String(result.get("blocked_by", &""))}
+
+
+# ─── Light: Exposed / Veiled / Witness Light / Noonday ─────────────────────
+
+
+func _threads_of(actor: BattleActor) -> IzhakelThreads:
+	var resource := _class_resource_of(actor)
+	return resource as IzhakelThreads if resource is IzhakelThreads else null
+
+
+## Exposed, Lit, or standing inside a Witness Light: cover is worthless and signatures read.
+func _is_exposed_now(actor: BattleActor) -> bool:
+	if actor == null:
+		return false
+	if LightField.is_exposed(actor) or LightField.is_lit(actor):
+		return true
+	if light.is_empty():
+		return false
+	var at: Variant = _actor_cell(actor)
+	return at is Vector2i and light.is_lit_cell(at as Vector2i)
+
+
+## Revelation beats concealment; a Veil hides; otherwise the side-wide rule applies.
+func _signatures_visible(actor: BattleActor) -> bool:
+	if _is_exposed_now(actor):
+		return true
+	if LightField.is_veiled(actor):
+		return false
+	if not _friendly_shroud_over(actor).is_empty():
+		return false
+	return not (concealed_until_round >= round_number and actor.side == concealed_side)
+
+
+func _apply_exposed(target: BattleActor, source_id: StringName, checkpoints: int) -> Dictionary:
+	var outcome: Dictionary = LightField.apply_exposed(target, source_id, checkpoints)
+	if bool(outcome.get("applied", false)):
+		_emit_event(&"exposed_applied", _actor_by_id(source_id), target, outcome)
+	return outcome
+
+
+func _apply_veiled(target: BattleActor, source_id: StringName) -> Dictionary:
+	var outcome: Dictionary = LightField.apply_veiled(target, source_id)
+	if bool(outcome.get("applied", false)):
+		_emit_event(&"veiled_applied", _actor_by_id(source_id), target, outcome)
+	return outcome
+
+
+func _apply_lit(target: BattleActor, source_id: StringName, field_id: int, checkpoints: int) -> Dictionary:
+	var outcome: Dictionary = LightField.apply_lit(target, source_id, field_id, checkpoints)
+	if bool(outcome.get("applied", false)):
+		_emit_event(&"lit_applied", _actor_by_id(source_id), target, {"field_id": field_id})
+	return outcome
+
+
+## The information payoff: the target's Veil (if any) is torn and its casting signature —
+## last element, Aftertones, discovered weaknesses — is published to the party.
+func _reveal_signature(actor: BattleActor, target: BattleActor) -> Dictionary:
+	if target == null:
+		return {}
+	var payload := {
+		"target_id": String(target.combat_id),
+		"was_veiled": LightField.clear_veiled(target),
+		"last_cast_element": String(target.last_cast_element),
+		"aftertones": target.aftertones.duplicate(true),
+		"discovered_weakness_ids": target.discovered_weakness_ids.duplicate(),
+	}
+	_emit_event(&"signature_revealed", actor, target, payload)
+	return payload
+
+
+func _create_light_field(owner_id: StringName, center: Vector2i) -> Dictionary:
+	var created: Dictionary = light.create_field(owner_id, center, LightField.FIELD_RADIUS, round_number)
+	var field: Dictionary = created.get("field", {})
+	_emit_event(&"light_field_created", _actor_by_id(owner_id), null, {"field": LightField._serialize_field(field)})
+	return {"field": field}
+
+
+## Instant sweep: every living creature within the radius and in sight of the center has its
+## signature revealed and reads as Exposed for one checkpoint. Returns the revealed ids.
+func _noonday(actor: BattleActor, center: Vector2i) -> Array[String]:
+	var revealed: Array[String] = []
+	for creature: BattleActor in _living(allies) + _living(enemies):
+		var at: Variant = _actor_cell(creature)
+		if not (at is Vector2i):
+			continue
+		var delta: Vector2i = (at as Vector2i) - center
+		if maxi(absi(delta.x), absi(delta.y)) > NOONDAY_RADIUS:
+			continue
+		if not bool(battlefield.line_of_sight_between_cells(center, at as Vector2i).get("allowed", false)):
+			continue
+		_reveal_signature(actor, creature)
+		_apply_exposed(creature, actor.combat_id, NOONDAY_CHECKPOINTS)
+		revealed.append(String(creature.combat_id))
+	_emit_event(&"noonday_revelation", actor, null, {
+		"center": LightField.cell_to_data(center), "radius": NOONDAY_RADIUS, "revealed": revealed.duplicate(),
+	})
+	return revealed
+
+
+## Noon Contract: Witness contracts on the revealed enemies pay out now and free their slot.
+func _trigger_witness_contracts(actor: BattleActor, revealed: Array[String]) -> Array[String]:
+	var threads := _threads_of(actor)
+	if threads == null:
+		return []
+	var triggered: Array[String] = []
+	for target_id: String in revealed:
+		var target := _actor_by_id(StringName(target_id))
+		if target == null or not enemies.has(target):
+			continue
+		for payoff: Dictionary in threads.release_witness(StringName(target_id)):
+			for raw: Variant in payoff.get("writes", []):
+				if not (raw is Dictionary):
+					continue
+				var write := _materialize_write(raw as Dictionary, target)
+				_apply_resolution_writes(actor, target, {"writes": [write]}, true, &"thread")
+			triggered.append(target_id)
+			_emit_event(&"contract_triggered", actor, target, {"kind": "witness", "payoff": payoff})
+	return triggered
+
+
+func _light_checkpoint(completed_round: int) -> void:
+	_eclipse_feast(completed_round)
+	for creature: BattleActor in _living(allies) + _living(enemies):
+		for imposition: String in [LightField.IMPOSITION_EXPOSED, LightField.IMPOSITION_VEILED, LightField.IMPOSITION_LIT, LightField.IMPOSITION_BLINDED]:
+			if LightField.age(creature, imposition):
+				_emit_event(&"imposition_expired", creature, null, {"imposition": imposition, "round": completed_round})
+	for field: Dictionary in light.advance_checkpoint(_held_ids("field")):
+		var expired_type: StringName = &"shroud_expired" if LightField.is_shroud(field) else &"light_field_expired"
+		_emit_event(expired_type, _actor_by_id(StringName(str(field.get("owner_id", "")))), null, {
+			"field": LightField._serialize_field(field), "round": completed_round,
+		})
+	for combat_id: String in _blindside.keys():
+		if completed_round >= int((_blindside[combat_id] as Dictionary).get("until_round", 0)):
+			_blindside.erase(combat_id)
+			_emit_event(&"blindside_expired", _actor_by_id(StringName(combat_id)), null, {"round": completed_round})
+
+
+## ---------------------------------------------------------------------------
+## Material: timber and stone on the board (reaction matrix step 1: L2, H2, M4, Z6).
+## ---------------------------------------------------------------------------
+
+
+## Registers a physical object on a cell after `start()`. Its footprint blocks until ruined.
+func place_material(id: String, cell: Vector2i, kind: String = MaterialField.KIND_TIMBER, label: String = "") -> Dictionary:
+	var added: Dictionary = material.add_object(id, cell, kind, label)
+	if bool(added.get("allowed", false)):
+		_block_object_cell(cell, true)
+		_emit_event(&"material_placed", null, null, {"object": added.get("object", {})})
+	return added
+
+
+func _block_object_cell(cell: Vector2i, blocked: bool) -> void:
+	if battlefield != null and battlefield.has_method("set_cliff"):
+		battlefield.call("set_cliff", cell, blocked)
+
+
+func material_object(id: String) -> Dictionary:
+	return material.object(id).duplicate(true)
+
+
+## Object- and working-targeted casts: `options.object_id` (Kindle, Douse, Reclaim, Rot the
+## Brace) or `options.line_id` (Sever on a Firebreak). Rejections spend nothing.
+func _note_row(note: Dictionary) -> Dictionary:
+	match String(note.get("kind", "")):
+		"line":
+			return fire.line_by_id(int(note.get("line_id", 0)))
+		"field":
+			return light.field_by_id(int(note.get("field_id", 0)))
+		"aftertone":
+			var target := _actor_by_id(String(note.get("target_id", "")))
+			var index := int(note.get("index", -1))
+			if target != null and index >= 0 and index < target.aftertones.size():
+				return target.aftertones[index]
+	return {}
+
+
+func _note_in_reach(actor: BattleActor, note: Dictionary, reach: int = 4) -> bool:
+	var origin: Variant = _actor_cell(actor)
+	if not (origin is Vector2i):
+		return false
+	var row: Dictionary = _note_row(note)
+	var cells: Array[Vector2i] = []
+	match String(note.get("kind", "")):
+		"line":
+			cells = FireField.cells_from_data(row.get("cells", []))
+		"field":
+			if row.get("center") is Vector2i:
+				cells.append(row["center"])
+		"aftertone":
+			var target := _actor_by_id(String(note.get("target_id", "")))
+			var at: Variant = _actor_cell(target) if target != null else null
+			if at is Vector2i:
+				cells.append(at as Vector2i)
+	for cell: Vector2i in cells:
+		var delta: Vector2i = cell - (origin as Vector2i)
+		if maxi(absi(delta.x), absi(delta.y)) <= reach:
+			return true
+	return false
+
+
+func _query_note_action(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	var note: Dictionary = {}
+	if options.has("hold_of"):
+		note = (_holds.get(String(options["hold_of"]), {}) as Dictionary).duplicate(true)
+	elif options.get("aftertone") is Dictionary:
+		var selected: Dictionary = options["aftertone"]
+		note = {"kind": "aftertone", "target_id": String(selected.get("target_id", "")), "index": int(selected.get("index", -1))}
+	elif options.has("line_id"):
+		note = {"kind": "line", "line_id": int(options["line_id"])}
+	elif options.has("field_id"):
+		note = {"kind": "field", "field_id": int(options["field_id"])}
+	var row: Dictionary = _note_row(note)
+	if row.is_empty():
+		return _blocked(&"no_target", "%s needs a living Note." % action.display_name, {"type": &"note"})
+	var kind := String(note["kind"])
+	if kind == "aftertone":
+		var carrier := _actor_by_id(String(note["target_id"]))
+		if not carrier.is_alive() or int(row.get("remaining_rounds", 0)) <= 0:
+			return _blocked(&"ineligible_note", "That Aftertone has ended.", {"type": &"living_note"})
+	if action.effect_id == EFFECT_ANCHOR and kind != "aftertone":
+		return _blocked(&"not_aftertone", "Anchor only protects an Aftertone.", {"type": &"aftertone"})
+	if not _note_in_reach(actor, note):
+		return _blocked(&"blocked_by_range", "%s reaches 4 cells." % action.display_name, {"type": &"range", "range": 4})
+	# Older Aftertones have no source id. Their carrier supplies legacy ownership; new
+	# Resolution lays always record the caster, including lays on hostile creatures.
+	var owner_id := String(row.get("owner_id", note.get("target_id", "")))
+	var owner := _actor_by_id(owner_id)
+	if action.effect_id == EFFECT_HOLD_NOTE:
+		if owner != actor:
+			return _blocked(&"not_owned", "Hold Note needs an owned Note.", {"type": &"owned_note"})
+		if _holds.has(String(actor.combat_id)):
+			return _blocked(&"sustain_slot", "Release the held Note first.", {"type": &"free_sustain_slot"})
+		if kind == "field" and bool(row.get("moving", false)):
+			return _blocked(&"ineligible_note", "This moving working is not an eligible Note.", {"type": &"eligible_note"})
+	if action.effect_id == EFFECT_ANCHOR and (owner == null or owner.side != actor.side):
+		return _blocked(&"not_friendly", "Anchor needs a friendly Aftertone.", {"type": &"friendly_aftertone"})
+	note["anchored"] = bool(row.get("anchored", false)) or action.effect_id == EFFECT_ANCHOR
+	note["held"] = bool(row.get("held", false)) or action.effect_id == EFFECT_HOLD_NOTE or _note_is_held(note)
+	note["severable"] = true
+	note["consumable"] = kind == "aftertone" and not bool(note["anchored"])
+	if action.effect_id == EFFECT_HOLD_NOTE:
+		note["upkeep"] = {"ap": 1, "ct": 30, "breath": 1, "timing": "turn_start"}
+	var cast := _resolve_cell_cast(actor, action, options)
+	if not bool(cast.get("allowed", false)):
+		return cast
+	return _allowed({"object": note, "resolution": cast["resolution"], "context": cast["context"]})
+
+
+func _note_is_held(note: Dictionary) -> bool:
+	for hold: Dictionary in _holds.values():
+		if String(hold.get("kind", "")) != String(note.get("kind", "")):
+			continue
+		match String(note.get("kind", "")):
+			"line":
+				if int(hold.get("line_id", 0)) == int(note.get("line_id", 0)):
+					return true
+			"field":
+				if int(hold.get("field_id", 0)) == int(note.get("field_id", 0)):
+					return true
+	return false
+
+
+func _held_ids(kind: String) -> Array[int]:
+	_check_holds()
+	var ids: Array[int] = []
+	for hold: Dictionary in _holds.values():
+		if String(hold.get("kind", "")) == kind:
+			ids.append(int(hold.get("%s_id" % kind, 0)))
+	return ids
+
+
+## Interruption rule (task 8, accepted 2026-09-19): a voice-blocking injury ends the injured
+## actor's held Note through the ordinary release path. Upkeep already paid stays paid, the
+## release settles once (`_holds` is the only ledger), and nothing else the actor owns —
+## Aftertones, Soul, anchored fields, deferred entries — is touched. A minor injury never
+## interrupts. Committed-but-unreleased actions keep their commit; the refusal only reaches
+## the next voice-tagged query.
+func _interrupt_voice(target: BattleActor) -> void:
+	if target == null or CombatInjury.voice_block(target).is_empty():
+		return
+	release_hold(String(target.combat_id), "voice_lost")
+
+
+## Declining future upkeep is an explicit, cost-free release; Jam does not call this.
+func release_hold(holder_id: String, reason: String = "declined") -> bool:
+	if not _holds.has(holder_id):
+		return false
+	var hold: Dictionary = _holds[holder_id]
+	if String(hold.get("kind", "")) == "aftertone":
+		var target := _actor_by_id(String(hold.get("target_id", "")))
+		if target != null:
+			for aftertone: Dictionary in target.aftertones:
+				if String(aftertone.get("held_by", "")) == holder_id:
+					aftertone["held"] = false
+					aftertone.erase("held_by")
+	_holds.erase(holder_id)
+	_emit_event(&"hold_released", _actor_by_id(holder_id), null, {"note": hold.duplicate(true), "reason": reason})
+	return true
+
+
+func _check_holds(ended_reason: String = "ended") -> void:
+	for holder_id: String in _holds.keys():
+		var hold: Dictionary = _holds[holder_id]
+		var holder := _actor_by_id(holder_id)
+		if holder == null or not holder.is_alive():
+			release_hold(holder_id, "holder_lost")
+			continue
+		if String(hold.get("kind", "")) == "aftertone":
+			var target := _actor_by_id(String(hold.get("target_id", "")))
+			var found := false
+			if target != null and target.is_alive():
+				for index: int in target.aftertones.size():
+					if String(target.aftertones[index].get("held_by", "")) == holder_id:
+						hold["index"] = index
+						found = true
+						break
+			if not found:
+				release_hold(holder_id, ended_reason)
+				continue
+		var row: Dictionary = _note_row(hold)
+		if row.is_empty():
+			release_hold(holder_id, ended_reason)
+		elif not _note_in_reach(holder, hold):
+			release_hold(holder_id, "out_of_reach")
+		else:
+			hold["anchored"] = bool(row.get("anchored", false))
+			hold["consumable"] = String(hold.get("kind", "")) == "aftertone" and not bool(hold["anchored"])
+	# Resolution snapshots its writes before applying HP. A lethal HP write can release a
+	# hold before a later Aftertone write restores that old snapshot. Never resurrect its
+	# held flag; legacy implicit holds have no held_by marker and remain unchanged.
+	for carrier: BattleActor in allies + enemies:
+		for aftertone: Dictionary in carrier.aftertones:
+			var holder_id := String(aftertone.get("held_by", ""))
+			if not holder_id.is_empty() and not _holds.has(holder_id):
+				aftertone["held"] = false
+				aftertone.erase("held_by")
+
+
+func _pay_hold_upkeep(actor: BattleActor) -> void:
+	_check_holds()
+	var hold: Dictionary = _holds.get(String(actor.combat_id), {})
+	if hold.is_empty() or bool(hold.get("upkeep_paid", false)):
+		return
+	var upkeep := CombatAction.new()
+	upkeep.ap_cost = 1
+	upkeep.ct_cost = 30
+	if actor.breath < 1 or not bool(_can_afford(actor, upkeep).get("allowed", false)):
+		release_hold(String(actor.combat_id), "upkeep_unpaid")
+		return
+	var payment: Dictionary = scheduler.commit(actor, upkeep)
+	if not bool(payment.get("allowed", false)):
+		release_hold(String(actor.combat_id), "upkeep_unpaid")
+		return
+	actor.breath -= 1
+	hold["upkeep_paid"] = true
+	scheduler.release(actor)
+	_emit_event(&"hold_upkeep_paid", actor, null, {"breath": 1, "ap_cost": 1, "ct_cost": 30})
+
+
+func _finish_hold_turn(actor: BattleActor) -> void:
+	if _holds.has(String(actor.combat_id)):
+		(_holds[String(actor.combat_id)] as Dictionary)["upkeep_paid"] = false
+
+
+func _sever_note(actor: BattleActor, note: Dictionary) -> bool:
+	var removed := false
+	var target := _actor_by_id(String(note.get("target_id", "")))
+	match String(note.get("kind", "")):
+		"field":
+			removed = light.remove_field(int(note.get("field_id", 0)))
+		"aftertone":
+			if target != null and not _note_row(note).is_empty():
+				target.aftertones.remove_at(int(note["index"]))
+				spent_aftertones += 1
+				removed = true
+	if removed:
+		_check_holds("severed")
+		_emit_event(&"note_severed", actor, target, {"note": note.duplicate(true)})
+	return removed
+
+
+func _query_object_action(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	if action.effect_id in [EFFECT_HOLD_NOTE, EFFECT_ANCHOR] or (action.effect_id == EFFECT_SEVER and (options.has("aftertone") or options.has("hold_of"))):
+		return _query_note_action(actor, action, options)
+	if not bool(battlefield.capabilities().get("cells", false)):
+		return _blocked(&"position", "%s needs a gridded battlefield." % action.display_name, {"type": &"cells"})
+	var origin: Variant = _actor_cell(actor)
+	if not (origin is Vector2i):
+		return _blocked(&"position", "%s is not standing on the grid." % actor.display_name, {"type": &"cells"})
+	var range_cells := int(action.effect_payload.get("range", 4))
+	var preview := {}
+	if action.effect_id == EFFECT_SEVER:
+		var line: Dictionary = fire.line_by_id(int(options.get("line_id", 0)))
+		if line.is_empty():
+			return _blocked(&"no_target", "%s needs a working to end." % action.display_name, {"type": &"working"})
+		var reachable := false
+		for cell: Vector2i in FireField.cells_from_data(line.get("cells", [])):
+			var delta: Vector2i = cell - (origin as Vector2i)
+			if maxi(absi(delta.x), absi(delta.y)) <= range_cells:
+				reachable = true
+				break
+		if not reachable:
+			return _blocked(&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells], {"type": &"range", "range": range_cells})
+		preview = {"kind": "line", "line_id": int(line.get("id", 0)), "cells": FireField.cells_to_data(FireField.cells_from_data(line.get("cells", [])))}
+	else:
+		var row := material.object(String(options.get("object_id", "")))
+		if row.is_empty():
+			return _blocked(&"no_target", "%s needs an object to work on." % action.display_name, {"type": &"object"})
+		var cell: Vector2i = row.get("cell", Vector2i.ZERO)
+		var delta: Vector2i = cell - (origin as Vector2i)
+		if maxi(absi(delta.x), absi(delta.y)) > range_cells:
+			return _blocked(&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells], {"type": &"range", "range": range_cells})
+		var sight := battlefield.line_of_sight_to_cell(actor, cell)
+		if not bool(sight.get("allowed", false)):
+			return sight
+		preview = {"kind": "object", "object_id": String(row["id"]), "cell": {"x": cell.x, "y": cell.y}}
+		match action.effect_id:
+			EFFECT_BURNING_STRIKE:
+				if not MaterialField.is_combustible(row):
+					return _blocked(&"no_effect", "%s is noncombustible; fire does nothing to it." % String(row["label"]), {"type": &"combustible"})
+				if bool(row.get("ruined", false)):
+					return _blocked(&"no_effect", "%s is already ruined." % String(row["label"]), {"type": &"intact_object"})
+				preview["object_damage"] = int(action.effect_payload.get("object_damage", 3))
+				preview["ignition_refusal"] = MaterialField.ignition_refusal(row)
+			EFFECT_DOUSE:
+				if not MaterialField.is_combustible(row) or bool(row.get("ruined", false)):
+					return _blocked(&"no_effect", "%s cannot be wetted to any effect." % String(row["label"]), {"type": &"wettable"})
+				preview["quenches"] = bool(row.get("burning", false))
+			EFFECT_RECLAIM:
+				var refusal := MaterialField.reclaim_refusal(row)
+				if not refusal.is_empty():
+					var why := "%s is burning: not yet a source." % String(row["label"]) if refusal == "burning" else "%s is not a source." % String(row["label"])
+					return _blocked(&"not_a_source", why, {"type": &"source", "reason": refusal})
+				preview["yield"] = mini(MaterialField.RECLAIM_YIELD, _breath_room(actor))
+			EFFECT_ROT_THE_BRACE:
+				if not MaterialField.is_combustible(row) or bool(row.get("ruined", false)):
+					return _blocked(&"no_effect", "%s is not susceptible to rot." % String(row["label"]), {"type": &"susceptible"})
+				preview["object_damage"] = int(action.effect_payload.get("object_damage", 9))
+				preview["collapses"] = int(row.get("integrity", 0)) <= int(preview["object_damage"])
+			_:
+				return _blocked(&"no_effect", "%s does not work on objects." % action.display_name, {"type": &"object"})
+	var result := {"object": preview}
+	if action.spell:
+		var cast := _resolve_cell_cast(actor, action, options)
+		if not bool(cast.get("allowed", false)):
+			return cast
+		result["resolution"] = cast["resolution"]
+		result["context"] = cast["context"]
+	return _allowed(result)
+
+
+func _apply_object_action(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	var preview: Dictionary = options.get("_object", {})
+	var result := {"object": preview.duplicate(true), "effect_id": action.effect_id, "fizzled": false}
+	if action.spell:
+		var resolution: Dictionary = options.get("_resolution", {})
+		if resolution.is_empty():
+			var cast := _resolve_cell_cast(actor, action, options)
+			if not bool(cast.get("allowed", false)):
+				result.merge(cast, true)
+				return result
+			resolution = cast["resolution"]
+		_apply_resolution_writes(actor, actor, resolution, true, &"cast")
+		result["resolution"] = resolution
+		if bool(resolution.get("fizzled", false)):
+			_class_resource_of(actor).on_fizzle(resolution)
+			result["fizzled"] = true
+			result["message"] = "%s's %s fizzles." % [actor.display_name, action.display_name]
+			return result
+	var object_id := String(preview.get("object_id", ""))
+	match action.effect_id:
+		EFFECT_BURNING_STRIKE:
+			result["thermal"] = _thermal_hit_object(actor, object_id, int(preview.get("object_damage", 3)))
+			result["message"] = "%s kindles %s." % [actor.display_name, String(material.object(object_id).get("label", object_id))]
+		EFFECT_DOUSE:
+			var doused: Dictionary = material.douse(object_id)
+			_emit_event(&"object_doused", actor, null, {"object_id": object_id, "quenched": bool(doused.get("quenched", false))})
+			result["doused"] = doused
+			result["message"] = "%s douses %s." % [actor.display_name, String(material.object(object_id).get("label", object_id))]
+		EFFECT_RECLAIM:
+			var claimed: Dictionary = material.reclaim(object_id)
+			var restored := _restore_breath(actor, actor, int(claimed.get("yield", 0))) if bool(claimed.get("applied", false)) else 0
+			_emit_event(&"object_reclaimed", actor, null, {"object_id": object_id, "restored": restored})
+			result["restored"] = restored
+			result["message"] = "%s reclaims %s." % [actor.display_name, String(material.object(object_id).get("label", object_id))]
+		EFFECT_ROT_THE_BRACE:
+			var rotted: Dictionary = material.rot(object_id, int(preview.get("object_damage", 9)))
+			_emit_event(&"object_damaged", actor, null, {"object_id": object_id, "damage": int(rotted.get("damage", 0)), "channel": "decay"})
+			if bool(rotted.get("collapsed", false)):
+				_collapse_object(object_id)
+			result["rot"] = rotted
+			result["message"] = "%s rots %s." % [actor.display_name, String(material.object(object_id).get("label", object_id))]
+		EFFECT_SEVER:
+			if String(preview.get("kind", "")) != "line":
+				result["severed"] = _sever_note(actor, preview)
+				return result
+			var line_id := int(preview.get("line_id", 0))
+			var line: Dictionary = fire.line_by_id(line_id)
+			result["severed"] = fire.remove_line(line_id)
+			_emit_event(&"line_severed", actor, null, {"line_id": line_id, "line": line.duplicate(true)})
+			_check_holds("severed")
+			result["message"] = "%s severs the Firebreak." % actor.display_name
+		EFFECT_HOLD_NOTE:
+			var hold: Dictionary = preview.duplicate(true)
+			hold["since_round"] = round_number
+			hold["upkeep_paid"] = false
+			_holds[String(actor.combat_id)] = hold
+			var note: Dictionary = _note_row(hold)
+			if String(hold["kind"]) == "aftertone":
+				note["held"] = true
+				note["held_by"] = String(actor.combat_id)
+			_emit_event(&"note_held", actor, null, {"note": preview.duplicate(true)})
+		EFFECT_ANCHOR:
+			var note: Dictionary = _note_row(preview)
+			note["anchored"] = true
+			_emit_event(&"aftertone_anchored", actor, _actor_by_id(String(preview["target_id"])), {"note": preview.duplicate(true)})
+	return result
+
+
+## Authored thermal integrity damage on an object, then eligible ignition (H2: Wet refuses
+## ignition, the direct hit still lands). Emits one event per real change.
+func _thermal_hit_object(source: BattleActor, object_id: String, damage: int) -> Dictionary:
+	var source_id: StringName = source.combat_id if source != null else &""
+	var hit: Dictionary = material.thermal_hit(object_id, damage, source_id)
+	if int(hit.get("damage", 0)) > 0:
+		_emit_event(&"object_damaged", source, null, {"object_id": object_id, "damage": int(hit["damage"]), "channel": "thermal"})
+	if bool(hit.get("ignited", false)):
+		_emit_event(&"object_ignited", source, null, {"object_id": object_id})
+	elif bool(hit.get("applied", false)) and not String(hit.get("ignition_refusal", "")).is_empty():
+		_emit_event(&"ignition_refused", source, null, {"object_id": object_id, "reason": String(hit["ignition_refusal"])})
+	if bool(hit.get("collapsed", false)):
+		_collapse_object(object_id)
+	return hit
+
+
+func _collapse_object(object_id: String) -> void:
+	var row := material.object(object_id)
+	if row.is_empty():
+		return
+	_block_object_cell(row.get("cell", Vector2i.ZERO), false)
+	_emit_event(&"object_collapsed", null, null, {"object_id": object_id})
+
+
+## Matrix checkpoint order for material: burn ticks, collapse, Wet countdown, then new
+## eligibility (a covering fire line reignites timber whose Wet just ran out). Runs after the
+## fire checkpoint, so a line that expired this checkpoint reignites nothing.
+func _material_checkpoint(completed_round: int) -> void:
+	if material.is_empty():
+		return
+	for event: Dictionary in material.advance_checkpoint():
+		var object_id := String(event.get("object_id", ""))
+		var type := StringName(str(event.get("type", "")))
+		var payload := event.duplicate(true)
+		payload["round"] = completed_round
+		if type == &"object_collapsed":
+			_collapse_object(object_id)
+			continue
+		_emit_event(type, _actor_by_id(StringName(str(material.object(object_id).get("burn_source_id", "")))), null, payload)
+	if fire.is_empty():
+		return
+	for row: Dictionary in material.objects.values():
+		var cell: Vector2i = row.get("cell", Vector2i.ZERO)
+		if MaterialField.can_ignite(row) and fire.is_burning_cell(cell):
+			var line: Dictionary = fire.line_at(cell)
+			_thermal_hit_object(_actor_by_id(StringName(str(line.get("owner_id", "")))), String(row["id"]), 0)
+
+
+## ---------------------------------------------------------------------------
+## Vekh concealment: Shroud / Eclipse Procession fields, Blinded, Blindside, the Nightfeeder.
+## ---------------------------------------------------------------------------
+
+
+func _create_shroud(actor: BattleActor, center: Vector2i, radius: int, checkpoints: int, moving: bool) -> Dictionary:
+	var created: Dictionary = light.create_shroud(actor.combat_id, center, radius, round_number, checkpoints, moving)
+	_emit_event(&"shroud_raised", actor, null, {"field": LightField._serialize_field(created.get("field", {}))})
+	return created
+
+
+## A moving shroud (Eclipse Procession) is wherever its owner stands now.
+func _shroud_center(field: Dictionary) -> Vector2i:
+	if bool(field.get("moving", false)):
+		var owner_cell: Variant = _actor_cell(_actor_by_id(StringName(str(field.get("owner_id", "")))))
+		if owner_cell is Vector2i:
+			return owner_cell as Vector2i
+	return field.get("center", Vector2i.ZERO)
+
+
+func _shroud_covers(field: Dictionary, cell: Vector2i) -> bool:
+	var delta := cell - _shroud_center(field)
+	return maxi(absi(delta.x), absi(delta.y)) <= int(field.get("radius", 0))
+
+
+## The first shroud raised by the creature's own side that covers its cell, or `{}`.
+func _friendly_shroud_over(actor: BattleActor) -> Dictionary:
+	if actor == null or light.is_empty():
+		return {}
+	var at: Variant = _actor_cell(actor)
+	if not (at is Vector2i):
+		return {}
+	for field: Dictionary in light.shrouds():
+		var owner := _actor_by_id(StringName(str(field.get("owner_id", ""))))
+		if owner == null or owner.side != actor.side:
+			continue
+		if _shroud_covers(field, at as Vector2i):
+			return field
+	return {}
+
+
+func _light_snapshot() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for field: Dictionary in light.fields:
+		if not LightField.is_shroud(field):
+			out.append(LightField._serialize_field(field))
+	return out
+
+
+## Shrouds as the HUD should draw them: moving ones already re-centered on their owner.
+func _shroud_snapshot() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for field: Dictionary in light.shrouds():
+		var drawn := field.duplicate(true)
+		drawn["center"] = _shroud_center(field)
+		out.append(LightField._serialize_field(drawn))
+	return out
+
+
+func _apply_blinded(target: BattleActor, source_id: StringName) -> Dictionary:
+	var outcome: Dictionary = LightField.apply_blinded(target, source_id)
+	if bool(outcome.get("applied", false)):
+		_emit_event(&"blinded_applied", _actor_by_id(source_id), target, outcome)
+	return outcome
+
+
+## Open Seam's angle: side or rear at commitment. With no facing on the board the angle is
+## free. A Blindside Bite on a Blinded target waives it (the target is treated as flanked).
+func _open_seam_angle_ok(actor: BattleActor, target: BattleActor) -> bool:
+	if _bite_applies(actor, target):
+		return true
+	var facing: Dictionary = _positional_resolution_context(actor, target).get("facing", {})
+	return StringName(str(facing.get("id", &"side"))) != &"front"
+
+
+## A plain Blindside is consumed by the next authored working's commitment (Vekh P row); a
+## Bite waits for an Open Seam, which spends it in `_apply_effect_after_attack`.
+func _spend_blindside(actor: BattleActor, action: CombatAction) -> void:
+	var armed: Dictionary = _blindside.get(String(actor.combat_id), {})
+	if armed.is_empty() or bool(armed.get("bite", false)):
+		return
+	if action.effect_id in [EFFECT_BLINDSIDE, EFFECT_BLINDSIDE_BITE] or action.kind not in [CombatAction.Kind.ATTACK, CombatAction.Kind.CAST, CombatAction.Kind.DEFINING_STRIKE]:
+		return
+	_blindside.erase(String(actor.combat_id))
+	_emit_event(&"blindside_spent", actor, null, {"action_id": String(action.id), "flanked": false})
+
+
+func _bite_applies(actor: BattleActor, target: BattleActor) -> bool:
+	if actor == null or target == null:
+		return false
+	var armed: Dictionary = _blindside.get(String(actor.combat_id), {})
+	return bool(armed.get("bite", false)) and LightField.is_blinded(target)
+
+
+func blindside_armed(actor: BattleActor) -> Dictionary:
+	return (_blindside.get(String(actor.combat_id), {}) as Dictionary).duplicate(true) if actor != null else {}
+
+
+## Nightfeeder T1 — Fed in the Dark: a Hunger tick cannot be traced to a Vhorr owner whose
+## signatures are concealed by their OWN Veil or Shroud. Revelation (Exposed, Lit, a light
+## field) always beats the concealment; a Veil or Shroud cast by someone else does not count.
+func _fed_in_the_dark(source: BattleActor, entry: Dictionary) -> bool:
+	if source == null or StringName(str(entry.get("label", ""))) != &"hunger_dot":
+		return false
+	if not (_class_resource_of(source) is VhorrHunger):
+		return false
+	if _is_exposed_now(source):
+		return false
+	var own_id := String(source.combat_id)
+	if LightField.is_veiled(source):
+		var veil: Dictionary = source.impositions.get(LightField.IMPOSITION_VEILED, {})
+		if String(veil.get("source_id", "")) == own_id:
+			return true
+	var shroud := _friendly_shroud_over(source)
+	return not shroud.is_empty() and String(shroud.get("owner_id", "")) == own_id
+
+
+## Nightfeeder T3 — Eclipse Feast: before the checkpoint ages the field, every Hunger chain
+## the caster owns on a creature standing inside the moving shroud ticks once more. A tick
+## is a tick: current Hunger, capped by the resource, kill cause &"dot" (the refund pays).
+func _eclipse_feast(completed_round: int) -> void:
+	if _feast.is_empty():
+		return
+	for combat_id: String in _feast.keys():
+		var caster := _actor_by_id(StringName(combat_id))
+		var field: Dictionary = light.field_by_id(int(_feast[combat_id]))
+		_feast.erase(combat_id)
+		if caster == null or not caster.is_alive() or field.is_empty():
+			continue
+		var hunger := _class_resource_of(caster) as VhorrHunger
+		if hunger == null:
+			continue
+		var fed: Array[String] = []
+		for entry: Dictionary in _deferred.duplicate():
+			if String(entry.get("source_id", "")) != combat_id or StringName(str(entry.get("label", ""))) != &"hunger_dot":
+				continue
+			for raw: Variant in (entry.get("effect", {}) as Dictionary).get("writes", []):
+				if not (raw is Dictionary) or str((raw as Dictionary).get("kind", "")) != "dot":
+					continue
+				var target := _actor_by_id(StringName(str((raw as Dictionary).get("target_id", ""))))
+				if target == null or not target.is_alive() or String(target.combat_id) in fed:
+					continue
+				var at: Variant = _actor_cell(target)
+				if not (at is Vector2i) or not _shroud_covers(field, at as Vector2i):
+					continue
+				var write := _materialize_write({"kind": "dot", "target_id": String(target.combat_id), "amount": hunger.hunger}, target)
+				_apply_resolution_writes(caster, target, {"writes": [write]}, true, &"dot")
+				hunger.on_extra_tick(write)
+				fed.append(String(target.combat_id))
+				_emit_event(&"eclipse_feast_tick", caster, target, {"write": write.duplicate(true), "round": completed_round})
+		if not _has_living(enemies):
+			_finish(ResultState.VICTORY, &"slain")
+
+
+## Filed-but-unfired cell workings, for the HUD's marks layer and the Herd's destination rule.
+func _marks_snapshot() -> Array[Dictionary]:
+	var marks: Array[Dictionary] = []
+	for entry: Dictionary in _deferred:
+		for raw: Variant in (entry.get("effect", {}) as Dictionary).get("writes", []):
+			if not (raw is Dictionary):
+				continue
+			var write := raw as Dictionary
+			var kind := StringName(str(write.get("kind", "")))
+			if not _CELL_WRITE_KINDS.has(kind):
+				continue
+			marks.append({
+				"entry_id": int(entry.get("id", 0)),
+				"kind": String(kind),
+				"label": String(write.get("label", entry.get("label", ""))),
+				"source_id": String(entry.get("source_id", "")),
+				"cells": FireField.cells_to_data(FireField.cells_from_data(write.get("cells", []))),
+				"due_round": int(entry.get("due_round", -1)),
+				"due_turn_of": String(entry.get("due_turn_of", "")),
+			})
+	return marks
+
+
+func _mark_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for mark: Dictionary in _marks_snapshot():
+		for cell: Vector2i in FireField.cells_from_data(mark.get("cells", [])):
+			if not cells.has(cell):
+				cells.append(cell)
+	return cells
+
+
+func _actor_cell(actor: BattleActor) -> Variant:
+	if actor == null:
+		return null
+	return battlefield.cell_of(actor)
+
+
 static func _kill_cause_for(action: CombatAction) -> StringName:
 	match action.kind:
 		CombatAction.Kind.CAST:
@@ -2376,7 +4595,7 @@ func enqueue_deferred(entry: Dictionary) -> Dictionary:
 	if entry.has("delay_rounds"):
 		queued["due_round"] = round_number + maxi(int(entry["delay_rounds"]), 0)
 		has_due = true
-	if entry.has("due_tick") or entry.has("due_round"):
+	if entry.has("due_tick") or entry.has("due_round") or entry.has("due_turn_of"):
 		has_due = true
 	if not has_due:
 		return _blocked(&"no_due_term", "A deferred effect needs due_tick/delay_ticks or due_round/delay_rounds.", {})
@@ -2405,10 +4624,16 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 	if target == null:
 		return _blocked(&"unknown_target", "That combatant is not in this battle.", {})
 	var cancelled: Array[Dictionary] = []
+	var untraceable := 0
 	if kind == &"deferred" or kind == &"any":
 		var kept: Array[Dictionary] = []
 		for entry: Dictionary in _deferred:
 			if StringName(str(entry.get("source_id", ""))) == target_id:
+				if _fed_in_the_dark(target, entry):
+					# Nightfeeder T1: a concealed source cannot be named by the Jam.
+					untraceable += 1
+					kept.append(entry)
+					continue
 				cancelled.append(entry.duplicate(true))
 				_class_resource_of(target).on_deferred_cancelled(entry.duplicate(true), requester_id)
 			else:
@@ -2424,8 +4649,19 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 			if bool(voided.get("allowed", false)):
 				cancelled.append({"kind": "committed", "target_id": String(target_id), "ct_refunded": int(voided.get("ct_refunded", 0))})
 	if cancelled.is_empty():
+		if untraceable > 0:
+			return _blocked(
+				&"source_untraceable", "%s's Hunger cannot be traced while its source is concealed." % target.display_name,
+				{"kind": String(kind), "untraceable": untraceable},
+			)
 		return _blocked(&"nothing_to_cancel", "%s has nothing in flight." % target.display_name, {"kind": String(kind)})
 	var payload := {"requester_id": String(requester_id), "kind": String(kind), "cancelled": cancelled.duplicate(true)}
+	var log: Dictionary = _jam_log.get(String(requester_id), {})
+	if int(log.get("round", -1)) != round_number:
+		log = {"round": round_number, "targets": []}
+	if not (log["targets"] as Array).has(String(target_id)):
+		(log["targets"] as Array).append(String(target_id))
+	_jam_log[String(requester_id)] = log
 	_emit_event(&"action_cancelled", _actor_by_id(requester_id), target, payload)
 	return _allowed(payload)
 
@@ -2438,10 +4674,14 @@ func has_living_enemies() -> bool:
 	return _has_living(enemies)
 
 
-func _deferred_is_due(entry: Dictionary) -> bool:
+## `upcoming` is the actor whose turn is about to begin (null on an AP continuation), the
+## third due term: `due_turn_of` fires at the start of that combatant's next scheduled turn.
+func _deferred_is_due(entry: Dictionary, upcoming: BattleActor = null) -> bool:
 	if entry.has("due_tick") and scheduler.tick_count() >= int(entry["due_tick"]):
 		return true
 	if entry.has("due_round") and round_number >= int(entry["due_round"]):
+		return true
+	if entry.has("due_turn_of") and upcoming != null and String(upcoming.combat_id) == str(entry["due_turn_of"]):
 		return true
 	return false
 
@@ -2449,42 +4689,75 @@ func _deferred_is_due(entry: Dictionary) -> bool:
 ## Fires every due entry, oldest first, each through `_apply_resolution_writes()`. Fires even
 ## when the source is down — a Ledger entry outlives its author — and skips writes whose target
 ## has left the battle. Ends the battle if a fired write empties a side.
-func _fire_due_deferred() -> void:
+func _fire_due_deferred(upcoming: BattleActor = null) -> void:
 	if _deferred.is_empty():
 		return
 	var pending: Array[Dictionary] = []
 	var due: Array[Dictionary] = []
 	for entry: Dictionary in _deferred:
-		if _deferred_is_due(entry):
+		if _deferred_is_due(entry, upcoming):
 			due.append(entry)
 		else:
 			pending.append(entry)
 	_deferred = pending
 	for entry: Dictionary in due:
-		var source_id := StringName(str(entry.get("source_id", "")))
-		var source := _actor_by_id(source_id)
-		var applied: Array[Dictionary] = []
-		var effect: Dictionary = entry.get("effect", {})
-		for raw: Variant in effect.get("writes", []):
-			if not (raw is Dictionary):
-				continue
-			var write := raw as Dictionary
-			var target := _actor_by_id(StringName(str(write.get("target_id", ""))))
-			if target == null:
-				continue
-			var materialized := _materialize_write(write, target)
-			var actor := source if source != null else target
-			_apply_resolution_writes(actor, target, {"writes": [materialized]}, true, &"deferred")
-			applied.append(materialized)
-		var fired := entry.duplicate(true)
-		fired["applied"] = applied
-		_emit_event(&"deferred_effect_fired", source, null, {"entry": fired.duplicate(true)})
-		if source != null:
-			_class_resource_of(source).on_deferred_fired(fired)
+		_apply_deferred_entry(entry)
 	if not _has_living(allies):
 		_finish(ResultState.DEFEAT, &"defeat")
 	elif not _has_living(enemies):
 		_finish(ResultState.VICTORY, &"slain")
+
+
+func _apply_deferred_entry(entry: Dictionary) -> void:
+	var source := _actor_by_id(StringName(str(entry.get("source_id", ""))))
+	var applied: Array[Dictionary] = []
+	var effect: Dictionary = entry.get("effect", {})
+	for raw: Variant in effect.get("writes", []):
+		if not (raw is Dictionary):
+			continue
+		var write := raw as Dictionary
+		if _CELL_WRITE_KINDS.has(StringName(str(write.get("kind", "")))):
+			# Cell workings address the board, not a combatant. They fire even if their source
+			# is down (a filed Firebreak still ignites); the write itself decides tethers.
+			var board_write := write.duplicate(true)
+			board_write["source_id"] = String(entry.get("source_id", ""))
+			var board_actor := source if source != null else _first_living(allies + enemies)
+			if board_actor != null:
+				_apply_resolution_writes(board_actor, board_actor, {"writes": [board_write]}, true, &"deferred")
+				applied.append(board_write)
+			continue
+		var target := _actor_by_id(StringName(str(write.get("target_id", ""))))
+		if target == null:
+			continue
+		var materialized := _materialize_write(write, target)
+		# Breath writes address the recipient; damage still attributes its source.
+		var actor := target if str(write.get("kind", "")) == "breath" or source == null else source
+		_apply_resolution_writes(actor, target, {"writes": [materialized]}, true, &"deferred")
+		applied.append(materialized)
+	var fired := entry.duplicate(true)
+	fired["applied"] = applied
+	_emit_event(&"deferred_effect_fired", source, null, {"entry": fired.duplicate(true)})
+	if source != null:
+		_class_resource_of(source).on_deferred_fired(fired)
+
+
+func _settle_due_breath_refunds() -> void:
+	var pending: Array[Dictionary] = []
+	var refunds: Array[Dictionary] = []
+	for entry: Dictionary in _deferred:
+		var writes: Array = (entry.get("effect", {}) as Dictionary).get("writes", [])
+		var only_breath := not writes.is_empty()
+		for raw: Variant in writes:
+			if not raw is Dictionary or str(raw.get("kind", "")) != "breath":
+				only_breath = false
+				break
+		if only_breath and _deferred_is_due(entry):
+			refunds.append(entry)
+		else:
+			pending.append(entry)
+	_deferred = pending
+	for entry: Dictionary in refunds:
+		_apply_deferred_entry(entry)
 
 
 ## Turns a queued write (`delta` or `amount`, no before/after) into the same shape Resolution
@@ -2519,10 +4792,31 @@ func class_resources_to_dict() -> Dictionary:
 	# non-empty), so the save format gains no top-level key and older saves restore an empty queue.
 	if not _deferred.is_empty():
 		result[DEFERRED_SAVE_KEY] = {"sequence": _deferred_sequence, "entries": deferred_entries()}
+	if not fire.is_empty() or not fire.hazard_round.is_empty():
+		result[FIRE_SAVE_KEY] = fire.to_dict()
+	if not light.is_empty():
+		result[LIGHT_SAVE_KEY] = light.to_dict()
+	if not _jam_log.is_empty():
+		result[JAMS_SAVE_KEY] = _jam_log.duplicate(true)
+	if not _blindside.is_empty() or not _feast.is_empty():
+		result[VEKH_SAVE_KEY] = {"blindside": _blindside.duplicate(true), "feast": _feast.duplicate(true)}
+	if not material.is_empty():
+		result[MATERIALS_SAVE_KEY] = material.to_dict()
+	if not _holds.is_empty():
+		result[HOLDS_SAVE_KEY] = _holds.duplicate(true)
+	var impositions: Dictionary = {}
+	for actor: BattleActor in allies + enemies:
+		if not actor.impositions.is_empty():
+			impositions[String(actor.combat_id)] = actor.impositions.duplicate(true)
+	if not impositions.is_empty():
+		result[IMPOSITIONS_SAVE_KEY] = impositions
 	return result
 
 
 func restore_class_resources(data: Dictionary) -> void:
+	# Legacy saves have no holds; clear the current section before replacing it.
+	for holder_id: String in _holds.keys():
+		release_hold(holder_id, "restore")
 	for actor: BattleActor in allies + enemies:
 		var entry: Variant = data.get(String(actor.combat_id), null)
 		if entry is Dictionary:
@@ -2536,6 +4830,40 @@ func restore_class_resources(data: Dictionary) -> void:
 			if raw is Dictionary:
 				_deferred.append((raw as Dictionary).duplicate(true))
 		_deferred_sequence = maxi(int((queue as Dictionary).get("sequence", 0)), _deferred_sequence)
+	var fire_data: Variant = data.get(FIRE_SAVE_KEY, null)
+	if fire_data is Dictionary:
+		fire.from_dict(fire_data as Dictionary)
+	var light_data: Variant = data.get(LIGHT_SAVE_KEY, null)
+	if light_data is Dictionary:
+		light.from_dict(light_data as Dictionary)
+	var jams: Variant = data.get(JAMS_SAVE_KEY, null)
+	if jams is Dictionary:
+		_jam_log = (jams as Dictionary).duplicate(true)
+	var materials: Variant = data.get(MATERIALS_SAVE_KEY, null)
+	if materials is Dictionary:
+		material.from_dict(materials as Dictionary)
+		for row: Dictionary in material.objects.values():
+			_block_object_cell(row.get("cell", Vector2i.ZERO), not bool(row.get("ruined", false)))
+	var vekh: Variant = data.get(VEKH_SAVE_KEY, {})
+	if vekh is Dictionary:
+		_blindside = ((vekh as Dictionary).get("blindside", {}) as Dictionary).duplicate(true)
+		_feast = ((vekh as Dictionary).get("feast", {}) as Dictionary).duplicate(true)
+	var impositions: Variant = data.get(IMPOSITIONS_SAVE_KEY, {})
+	if impositions is Dictionary:
+		for actor: BattleActor in allies + enemies:
+			var row: Variant = (impositions as Dictionary).get(String(actor.combat_id), null)
+			if row is Dictionary:
+				actor.impositions = (row as Dictionary).duplicate(true)
+	var holds: Variant = data.get(HOLDS_SAVE_KEY, {})
+	if holds is Dictionary:
+		_holds = (holds as Dictionary).duplicate(true)
+		for holder_id: String in _holds:
+			var hold: Dictionary = _holds[holder_id]
+			var note: Dictionary = _note_row(hold)
+			if String(hold.get("kind", "")) == "aftertone" and not note.is_empty():
+				note["held"] = true
+				note["held_by"] = holder_id
+	_check_holds()
 
 
 ## FR-802 (globals/stable_ids.gd). Builds `BattleActor.combat_id` from stable inputs only —

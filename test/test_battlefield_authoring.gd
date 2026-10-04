@@ -7,12 +7,25 @@ const TEST_ENCOUNTER := &"wave-r-authored-grid-test"
 const FIELD_SCENE := preload("res://world/test_room.tscn")
 
 var _original_party: Array[PartyMember] = []
+var _original_flags: Dictionary = {}
+var _original_combat_knowledge: Dictionary = {}
+var _original_reputation: Dictionary = {}
+var _original_renown: Dictionary = {}
 var _field_scene: Node2D
 var _field: FieldMap
 
 
 func before_test() -> void:
 	_original_party.assign(GameState.party)
+	# These tests drive the real Battle autoload, and the bog-wight case wins.
+	# A win writes its consequences into the autoloads (defeated/outcome flags,
+	# a faction-standing event, a renown event) and every start records combat
+	# knowledge. Snapshot them: a leaked `defeated_bog_wight` makes the wilds
+	# Enemy free itself on _ready in whichever suite loads test_room next.
+	_original_flags = GameState.flags.duplicate(true)
+	_original_combat_knowledge = GameState.combat_knowledge.duplicate(true)
+	_original_reputation = Reputation.to_dict().duplicate(true)
+	_original_renown = Renown.to_dict().duplicate(true)
 	_set_full_party()
 	_field_scene = FIELD_SCENE.instantiate() as Node2D
 	add_child(_field_scene)
@@ -24,6 +37,10 @@ func before_test() -> void:
 func after_test() -> void:
 	EncounterCatalog._definitions.erase(String(TEST_ENCOUNTER))
 	_cleanup_battle()
+	GameState.flags = _original_flags
+	GameState.combat_knowledge = _original_combat_knowledge
+	Reputation.from_dict(_original_reputation)
+	Renown.from_dict(_original_renown)
 	GameState.party.clear()
 	GameState.party.assign(_original_party)
 	_field_scene.free()

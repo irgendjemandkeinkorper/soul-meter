@@ -30,14 +30,14 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="WallToolWest" type="Sprite2D" parent="Room/EquipmentForgeDressing/SoftDetails"]
-position = Vector2(250, 170)
+position = Vector2(500, 340)
 rotation = -0.35
 scale = Vector2(0.16, 0.16)
 texture = ExtResource("5_iron_tool")
 offset = Vector2(0, -104)
 
 [node name="WallToolEast" type="Sprite2D" parent="Room/EquipmentForgeDressing/SoftDetails"]
-position = Vector2(710, 170)
+position = Vector2(1420, 340)
 rotation = 0.35
 scale = Vector2(-0.16, 0.16)
 texture = ExtResource("5_iron_tool")
@@ -47,7 +47,7 @@ offset = Vector2(0, -104)
 y_sort_enabled = true
 
 [node name="ForgeStockCrates" type="StaticBody2D" parent="Room/EquipmentForgeDressing/SolidProps"]
-position = Vector2(100, 255)
+position = Vector2(200, 510)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeStockCrates"]
 scale = Vector2(0.25, 0.25)
@@ -60,7 +60,7 @@ shape = SubResource("crate_footprint")
 disabled = false
 
 [node name="ForgeBrazier" type="StaticBody2D" parent="Room/EquipmentForgeDressing/SolidProps"]
-position = Vector2(825, 325)
+position = Vector2(1650, 650)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/EquipmentForgeDressing/SolidProps/ForgeBrazier"]
 scale = Vector2(0.26, 0.26)
@@ -78,7 +78,7 @@ shape = SubResource("brazier_footprint")
 disabled = false
 
 [node name="FinishedGoodsCrates" type="StaticBody2D" parent="Room/EquipmentForgeDressing/SolidProps"]
-position = Vector2(835, 500)
+position = Vector2(1670, 1000)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/EquipmentForgeDressing/SolidProps/FinishedGoodsCrates"]
 scale = Vector2(-0.23, 0.23)
@@ -91,7 +91,7 @@ shape = SubResource("crate_footprint")
 disabled = false
 
 [node name="RivetCrate" parent="." instance=ExtResource("2_chest")]
-position = Vector2(150, 500)
+position = Vector2(300, 1000)
 display_name = "Supply Crate"
 prompt_text = "Open"
 interaction_flag = "loot_opened_equipment_forge_rivet_crate"

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"bind-hostility"
+display_name = "Bind Hostility"
+kind = 5
+verb = 3
+ap_cost = 2
+ct_cost = 2
+target_profile = &"melee"
+player_available = true
+class_resource_action = &"bind_hostility"
+class_resource_target = "enemy"
+class_resource_payload = {"amount": 6}
+description = "Bind an enemy at contact range. Their next attack triggers a single 6-damage payoff. Up to three contracts."
+## PROVISIONAL first playable contract: costs follow Record Name; payoff awaits balance review.

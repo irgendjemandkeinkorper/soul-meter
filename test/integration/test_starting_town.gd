@@ -3,6 +3,58 @@ extends GdUnitTestSuite
 ## ui/screens/tavern.gd. See docs/testing.md for when to reach for scene_runner
 ## vs. a plain unit suite.
 
+const TownScript := preload("res://world/starting_town.gd")
+
+
+func test_building_roots_and_facades_survive_kit_cleanup() -> void:
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(2)
+	var town := runner.scene()
+	for building_name: String in TownScript.BUILDING_NAMES:
+		var building := town.get_node_or_null(building_name)
+		assert_object(building).is_not_null()
+		if building == null:
+			continue
+		assert_object(building.get_node_or_null("Facade")).is_not_null()
+		for sprite: Sprite2D in building.find_children("*", "Sprite2D", true, false):
+			if sprite.name == &"Facade" or sprite.texture == null:
+				continue
+			for kit_name: String in ["castle-kit", "fantasy-town-kit"]:
+				assert_bool(sprite.texture.resource_path.contains(kit_name)) \
+					.override_failure_message("Kit sprite remains at %s" % sprite.get_path()) \
+					.is_false()
+
+
+func test_dom_transition_and_npc_anchors_survive_kit_cleanup() -> void:
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(2)
+	var town := runner.scene()
+	assert_object(town.get_node_or_null("FieldHUD/ConsequenceNotices")).is_not_null()
+	var transition_count := 0
+	for filename: String in DirAccess.get_files_at("res://actors/building_door/transitions"):
+		if not filename.ends_with("_enter.tres"):
+			continue
+		var transition := load("res://actors/building_door/transitions/" + filename) as BuildingTransitionDefinition
+		if transition.source_scene != "res://world/starting_town.tscn":
+			continue
+		transition_count += 1
+		assert_object(town.get_node_or_null(NodePath(transition.source_anchor))) \
+			.override_failure_message("Missing transition anchor: %s" % transition.source_anchor) \
+			.is_not_null()
+	assert_int(transition_count).is_greater(0)
+	var placements: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://data/generated/dom_npc_placements.json"
+	))
+	var placement_count := 0
+	for placement: Dictionary in placements["placements"].values():
+		if placement["scene"] != "res://world/starting_town.tscn":
+			continue
+		placement_count += 1
+		assert_object(town.get_node_or_null(NodePath(placement["anchor"]))) \
+			.override_failure_message("Missing NPC anchor: %s" % placement["anchor"]) \
+			.is_not_null()
+	assert_int(placement_count).is_greater(0)
+
 
 ## The tavern assertions assume no one has been recruited yet ("Available",
 ## check-toggle counting), but earlier suites in a whole-tree run leave their
@@ -10,12 +62,24 @@ extends GdUnitTestSuite
 ## instead of assuming a clean autoload. set_companions() can't do this — it
 ## validates for exactly REQUIRED_COMPANIONS and refuses an empty list — so
 ## reset via the wholesale set_party() path, keeping only the lead.
+##
+## The same goes for the WorldClock autoload: these tests assert Dom as
+## authored, which is the default phase. A leaked later phase moves routined
+## NPCs (FR-504a) — in the evening Sella Varn and Toma Reedhand stand at the
+## Four Arms, inside interact range of the tavern door, and take the press the
+## door tests send. Pin the default phase and hand the clock back afterwards.
+var _world_clock_before: Dictionary
+
+
 func before_test() -> void:
 	_set_lead_only()
+	_world_clock_before = WorldClock.to_dict()
+	WorldClock.reset()
 
 
 func after_test() -> void:
 	_set_lead_only()
+	WorldClock.from_dict(_world_clock_before)
 
 
 func _set_lead_only() -> void:
@@ -47,6 +111,26 @@ func test_party_followers_spawn_on_the_shared_grid_cell_center() -> void:
 	assert_vector(manager.followers()[0].global_position).is_equal(player_center)
 	var follower_node: Node = manager.followers()[0]
 	assert_bool(follower_node is CollisionObject2D).is_false()
+
+
+func test_town_has_no_blockout_waterline() -> void:
+	var town := auto_free(load("res://world/starting_town.tscn").instantiate()) as Node2D
+	assert_object(town.get_node_or_null("Waterline")).is_null()
+
+
+func test_town_player_behind_tavern_fades_facade() -> void:
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(3)
+	var town := runner.scene() as Node2D
+	var player := town.get_node("Player") as Player
+	var tavern := town.get_node("FourArmsTavern") as Node2D
+	var facade := tavern.get_node("Facade") as Sprite2D
+	assert_bool(player.is_in_group(&"player")).is_true()
+	player.global_position = tavern.global_position + Vector2(0, -136)
+	await runner.simulate_frames(30)
+	assert_float(facade.modulate.a).is_equal_approx(DS.FACADE_OCCLUDED_ALPHA, 0.001)
+	assert_bool(player.visible).is_true()
+	assert_float(player.modulate.a).is_equal(1.0)
 
 
 func test_tavern_door_prompt_only_shows_when_player_is_in_range() -> void:

@@ -1,7 +1,8 @@
 extends Node2D
-## Runtime presentation seam for Dom's placeholder facades.
-## The old kit assemblies remain named in the scene so art can be inspected and
-## swapped without losing the existing node wiring, but only Facade renders.
+## Runtime occlusion for Dom's painted facades. Building roots retain the
+## existing door, collision, and placement wiring.
+
+const FacadeOccluderScript := preload("res://world/facade_occluder.gd")
 
 const BUILDING_NAMES := [
 	"TrialHall",
@@ -29,9 +30,8 @@ func _ready() -> void:
 		if building == null:
 			push_error("Starting town is missing building '%s'." % building_name)
 			continue
-		for child: Node in building.get_children():
-			if child is Sprite2D and child.name != "Facade":
-				child.visible = false
+		var facade := building.get_node("Facade") as Sprite2D
+		building.add_child(FacadeOccluderScript.new(facade))
 	_show_opening_council_nudge()
 
 

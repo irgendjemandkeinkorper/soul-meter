@@ -1,4 +1,4 @@
-[gd_scene load_steps=93 format=3]
+[gd_scene load_steps=83 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
@@ -8,17 +8,8 @@
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_iso"]
 [ext_resource type="Texture2D" path="res://assets/generated/backgrounds/world/dom-town-terrain-v1.png" id="99_terrain"]
 [ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="7_interactable"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-slant-roof.png" id="8_house"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-square-roof.png" id="9_tower"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-square.png" id="10_tower_base"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-square-mid-door.png" id="11_tower_door"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/gate.png" id="12_gate"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/tower-square-top-roof-high.png" id="13_high_roof"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/wall.png" id="14_wall"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/siege-tower.png" id="15_siege_tower"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-green.png" id="16_stall_green"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-red.png" id="17_stall_red"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/fountain-round-detail.png" id="18_fountain"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/banner-green.png" id="19_banner_green"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/banner-red.png" id="20_banner_red"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/lantern.png" id="21_lantern"]
@@ -33,7 +24,6 @@
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-flower-cluster--decorative.png" id="30_flower"]
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="31_building_door"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/door.png" id="32_door_sprite"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-wooden-sign--decorative.png" id="33_sign_sprite"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-clay-pot--decorative.png" id="34_pot_sprite"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="35_bench_sprite"]
@@ -110,6 +100,7 @@ size = Vector2(112, 34)
 radius = 28.0
 
 [node name="StartingTown" type="Node2D"]
+texture_filter = 2
 y_sort_enabled = true
 script = ExtResource("39_town")
 
@@ -120,13 +111,6 @@ script = ExtResource("90_field_map")
 polygon = PackedVector2Array(1800, -100, 3500, 750, 1800, 1600, 100, 750)
 color = Color(0.39, 0.35, 0.26, 1)
 z_index = -15
-
-[node name="Waterline" type="Line2D" parent="."]
-points = PackedVector2Array(1800, -100, 3500, 750, 1800, 1600, 100, 750)
-width = 5.0
-default_color = Color(0.12, 0.56, 0.68, 0.72)
-closed = true
-z_index = -14
 
 [node name="WaterBackdrop" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(-700, -500, 4300, -500, 4300, 3000, -700, 3000)
@@ -203,36 +187,6 @@ theme_type_variation = &"EyebrowLabel"
 text = "TRIAL HALL"
 horizontal_alignment = 1
 
-[node name="BackLeft" type="Sprite2D" parent="TrialHall"]
-position = Vector2(-48, -24)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -150.596)
-
-[node name="BackRight" type="Sprite2D" parent="TrialHall"]
-position = Vector2(48, -24)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -150.596)
-
-[node name="CouncilTower" type="Sprite2D" parent="TrialHall"]
-position = Vector2(0, 8)
-texture = ExtResource("8_house")
-offset = Vector2(0, -150.596)
-
-[node name="CouncilGate" type="Sprite2D" parent="TrialHall"]
-position = Vector2(0, 38)
-texture = ExtResource("12_gate")
-offset = Vector2(0, -150.596)
-
-[node name="CouncilBannerLeft" type="Sprite2D" parent="TrialHall"]
-position = Vector2(-36, 18)
-texture = ExtResource("20_banner_red")
-offset = Vector2(0, -150.596)
-
-[node name="CouncilBannerRight" type="Sprite2D" parent="TrialHall"]
-position = Vector2(36, 18)
-texture = ExtResource("19_banner_green")
-offset = Vector2(0, -150.596)
-
 [node name="RegistryArchive" type="Node2D" parent="."]
 position = Vector2(500, 500)
 
@@ -249,31 +203,6 @@ offset_bottom = -175.0
 theme_type_variation = &"EyebrowLabel"
 text = "REGISTRY ARCHIVE"
 horizontal_alignment = 1
-
-[node name="BackLeft" type="Sprite2D" parent="RegistryArchive"]
-position = Vector2(-48, -24)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -135.596)
-
-[node name="BackRight" type="Sprite2D" parent="RegistryArchive"]
-position = Vector2(48, -24)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -135.596)
-
-[node name="LedgerTower" type="Sprite2D" parent="RegistryArchive"]
-position = Vector2(0, 8)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -135.596)
-
-[node name="ArchiveDoor" type="Sprite2D" parent="RegistryArchive"]
-position = Vector2(0, 35)
-texture = ExtResource("11_tower_door")
-offset = Vector2(0, -135.596)
-
-[node name="ArchiveBanner" type="Sprite2D" parent="RegistryArchive"]
-position = Vector2(-28, 24)
-texture = ExtResource("19_banner_green")
-offset = Vector2(0, -135.596)
 
 [node name="BellHouse" type="Node2D" parent="."]
 position = Vector2(3000, 500)
@@ -292,31 +221,6 @@ theme_type_variation = &"EyebrowLabel"
 text = "BELL HOUSE"
 horizontal_alignment = 1
 
-[node name="BellWingLeft" type="Sprite2D" parent="BellHouse"]
-position = Vector2(-42, -20)
-texture = ExtResource("10_tower_base")
-offset = Vector2(0, -135.596)
-
-[node name="BellWingRight" type="Sprite2D" parent="BellHouse"]
-position = Vector2(42, -20)
-texture = ExtResource("10_tower_base")
-offset = Vector2(0, -135.596)
-
-[node name="BellTower" type="Sprite2D" parent="BellHouse"]
-position = Vector2(0, 10)
-texture = ExtResource("8_house")
-offset = Vector2(0, -135.596)
-
-[node name="BellRoof" type="Sprite2D" parent="BellHouse"]
-position = Vector2(0, -38)
-texture = ExtResource("13_high_roof")
-offset = Vector2(0, -135.596)
-
-[node name="BellLantern" type="Sprite2D" parent="BellHouse"]
-position = Vector2(0, 38)
-texture = ExtResource("21_lantern")
-offset = Vector2(0, -135.596)
-
 [node name="RiverShrine" type="Node2D" parent="."]
 position = Vector2(1100, 1700)
 
@@ -333,21 +237,6 @@ offset_bottom = -175.0
 theme_type_variation = &"EyebrowLabel"
 text = "RIVER SHRINE"
 horizontal_alignment = 1
-
-[node name="ShrineBasin" type="Sprite2D" parent="RiverShrine"]
-scale = Vector2(0.65, 0.65)
-texture = ExtResource("18_fountain")
-offset = Vector2(0, -110.596)
-
-[node name="ShrineLanternLeft" type="Sprite2D" parent="RiverShrine"]
-position = Vector2(-45, 12)
-texture = ExtResource("21_lantern")
-offset = Vector2(0, -110.596)
-
-[node name="ShrineLanternRight" type="Sprite2D" parent="RiverShrine"]
-position = Vector2(45, 12)
-texture = ExtResource("21_lantern")
-offset = Vector2(0, -110.596)
 
 [node name="IronCompaniesBarracks" type="Node2D" parent="."]
 position = Vector2(3000, 1500)
@@ -366,57 +255,12 @@ theme_type_variation = &"EyebrowLabel"
 text = "GARRISON"
 horizontal_alignment = 1
 
-[node name="GarrisonTowerLeft" type="Sprite2D" parent="IronCompaniesBarracks"]
-position = Vector2(-54, -24)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -135.596)
-
-[node name="GarrisonTowerRight" type="Sprite2D" parent="IronCompaniesBarracks"]
-position = Vector2(54, -24)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -135.596)
-
-[node name="GarrisonWallLeft" type="Sprite2D" parent="IronCompaniesBarracks"]
-position = Vector2(-58, 22)
-texture = ExtResource("14_wall")
-offset = Vector2(0, -135.596)
-
-[node name="GarrisonWallRight" type="Sprite2D" parent="IronCompaniesBarracks"]
-position = Vector2(58, 22)
-texture = ExtResource("14_wall")
-offset = Vector2(0, -135.596)
-
-[node name="GarrisonSiegeTower" type="Sprite2D" parent="IronCompaniesBarracks"]
-position = Vector2(0, 8)
-texture = ExtResource("15_siege_tower")
-offset = Vector2(0, -135.596)
-
-[node name="GarrisonGate" type="Sprite2D" parent="IronCompaniesBarracks"]
-position = Vector2(0, 42)
-texture = ExtResource("12_gate")
-offset = Vector2(0, -135.596)
-
 [node name="LowerMarket" type="Node2D" parent="."]
 position = Vector2(1700, 1200)
 
 [node name="Facade" type="Sprite2D" parent="LowerMarket"]
 texture = ExtResource("46_lower_market_facade")
 offset = Vector2(0, -384)
-
-[node name="GreenStall" type="Sprite2D" parent="LowerMarket"]
-position = Vector2(-42, -12)
-texture = ExtResource("16_stall_green")
-offset = Vector2(0, -90.596)
-
-[node name="RedStall" type="Sprite2D" parent="LowerMarket"]
-position = Vector2(42, -12)
-texture = ExtResource("17_stall_red")
-offset = Vector2(0, -90.596)
-
-[node name="MarketCart" type="Sprite2D" parent="LowerMarket"]
-position = Vector2(0, 26)
-texture = ExtResource("22_cart")
-offset = Vector2(0, -90.596)
 
 [node name="ItemShop" type="Node2D" parent="."]
 position = Vector2(1700, 500)
@@ -435,21 +279,6 @@ theme_type_variation = &"EyebrowLabel"
 text = "ITEM SHOP"
 horizontal_alignment = 1
 
-[node name="StockStallLeft" type="Sprite2D" parent="ItemShop"]
-position = Vector2(-34, -14)
-texture = ExtResource("16_stall_green")
-offset = Vector2(0, -118.096)
-
-[node name="StockStallRight" type="Sprite2D" parent="ItemShop"]
-position = Vector2(34, -14)
-texture = ExtResource("16_stall_green")
-offset = Vector2(0, -118.096)
-
-[node name="ShopLantern" type="Sprite2D" parent="ItemShop"]
-position = Vector2(0, 30)
-texture = ExtResource("21_lantern")
-offset = Vector2(0, -118.096)
-
 [node name="EquipmentShop" type="Node2D" parent="."]
 position = Vector2(2400, 500)
 
@@ -466,21 +295,6 @@ offset_bottom = -205.0
 theme_type_variation = &"EyebrowLabel"
 text = "EQUIPMENT SHOP"
 horizontal_alignment = 1
-
-[node name="ForgeHouse" type="Sprite2D" parent="EquipmentShop"]
-position = Vector2(-22, -16)
-texture = ExtResource("8_house")
-offset = Vector2(0, -123.096)
-
-[node name="ForgeStall" type="Sprite2D" parent="EquipmentShop"]
-position = Vector2(32, 16)
-texture = ExtResource("17_stall_red")
-offset = Vector2(0, -123.096)
-
-[node name="ForgeBanner" type="Sprite2D" parent="EquipmentShop"]
-position = Vector2(-38, 24)
-texture = ExtResource("20_banner_red")
-offset = Vector2(0, -123.096)
 
 [node name="TownHall" type="Node2D" parent="."]
 position = Vector2(2400, 1100)
@@ -499,36 +313,6 @@ theme_type_variation = &"EyebrowLabel"
 text = "TOWN HALL"
 horizontal_alignment = 1
 
-[node name="HallWingLeft" type="Sprite2D" parent="TownHall"]
-position = Vector2(-46, -22)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -128.096)
-
-[node name="HallWingRight" type="Sprite2D" parent="TownHall"]
-position = Vector2(46, -22)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -128.096)
-
-[node name="HallCenter" type="Sprite2D" parent="TownHall"]
-position = Vector2(0, 8)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -128.096)
-
-[node name="HallGate" type="Sprite2D" parent="TownHall"]
-position = Vector2(0, 38)
-texture = ExtResource("12_gate")
-offset = Vector2(0, -128.096)
-
-[node name="HallBannerLeft" type="Sprite2D" parent="TownHall"]
-position = Vector2(-32, 24)
-texture = ExtResource("19_banner_green")
-offset = Vector2(0, -128.096)
-
-[node name="HallBannerRight" type="Sprite2D" parent="TownHall"]
-position = Vector2(32, 24)
-texture = ExtResource("20_banner_red")
-offset = Vector2(0, -128.096)
-
 [node name="ChefsHouse" type="Node2D" parent="."]
 position = Vector2(500, 1700)
 
@@ -546,21 +330,6 @@ theme_type_variation = &"EyebrowLabel"
 text = "CHEF'S HOUSE"
 horizontal_alignment = 1
 
-[node name="KitchenLeft" type="Sprite2D" parent="ChefsHouse"]
-position = Vector2(-30, -12)
-texture = ExtResource("8_house")
-offset = Vector2(0, -118.096)
-
-[node name="KitchenRight" type="Sprite2D" parent="ChefsHouse"]
-position = Vector2(30, -12)
-texture = ExtResource("8_house")
-offset = Vector2(0, -118.096)
-
-[node name="KitchenLantern" type="Sprite2D" parent="ChefsHouse"]
-position = Vector2(0, 34)
-texture = ExtResource("21_lantern")
-offset = Vector2(0, -118.096)
-
 [node name="PlayersHouse" type="Node2D" parent="."]
 position = Vector2(2400, 2100)
 
@@ -577,26 +346,6 @@ offset_bottom = -195.0
 theme_type_variation = &"EyebrowLabel"
 text = "VEX'S HOUSE"
 horizontal_alignment = 1
-
-[node name="HomeLeft" type="Sprite2D" parent="PlayersHouse"]
-position = Vector2(-34, -14)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -125.596)
-
-[node name="HomeRight" type="Sprite2D" parent="PlayersHouse"]
-position = Vector2(34, -14)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -125.596)
-
-[node name="HomeDoor" type="Sprite2D" parent="PlayersHouse"]
-position = Vector2(0, 34)
-texture = ExtResource("11_tower_door")
-offset = Vector2(0, -125.596)
-
-[node name="HomeLantern" type="Sprite2D" parent="PlayersHouse"]
-position = Vector2(30, 38)
-texture = ExtResource("21_lantern")
-offset = Vector2(0, -125.596)
 
 [node name="OakNorthWest" type="Sprite2D" parent="."]
 position = Vector2(95, 155)
@@ -671,24 +420,28 @@ offset = Vector2(0, -50.596)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassShrine" type="Sprite2D" parent="."]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(325, 705)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -50.596)
 
 [node name="GrassGarrison" type="Sprite2D" parent="."]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(1385, 705)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -50.596)
 
 [node name="FlowersWest" type="Sprite2D" parent="."]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(180, 760)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -50.596)
 
 [node name="FlowersEast" type="Sprite2D" parent="."]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(1170, 780)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -50.596)
 
 [node name="NorthEdgeTree01" type="Sprite2D" parent="."]
 position = Vector2(40, 70)
@@ -808,31 +561,6 @@ offset_bottom = -175.0
 theme_type_variation = &"EyebrowLabel"
 text = "FOUR ARMS TAVERN"
 horizontal_alignment = 1
-
-[node name="TavernWingLeft" type="Sprite2D" parent="FourArmsTavern"]
-position = Vector2(-42, -20)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -82.596)
-
-[node name="TavernWingRight" type="Sprite2D" parent="FourArmsTavern"]
-position = Vector2(42, -20)
-texture = ExtResource("9_tower")
-offset = Vector2(0, -82.596)
-
-[node name="TavernCenter" type="Sprite2D" parent="FourArmsTavern"]
-position = Vector2(0, 4)
-texture = ExtResource("8_house")
-offset = Vector2(0, -82.596)
-
-[node name="TavernStallLeft" type="Sprite2D" parent="FourArmsTavern"]
-position = Vector2(-34, 26)
-texture = ExtResource("17_stall_red")
-offset = Vector2(0, -82.596)
-
-[node name="TavernStallRight" type="Sprite2D" parent="FourArmsTavern"]
-position = Vector2(34, 26)
-texture = ExtResource("16_stall_green")
-offset = Vector2(0, -82.596)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(1700, 1200)
@@ -1331,9 +1059,10 @@ visible = false
 z_index = 21
 
 [node name="ChefsHousePot" type="Sprite2D" parent="."]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(430, 1727.5)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -50.596)
 
 [node name="PlayersHouseDoor" parent="." instance=ExtResource("7_interactable")]
 process_mode = 4
@@ -1812,9 +1541,10 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassBlobWest" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(500, 1049.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="PineBlobSouthwest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(300, 1421.4)
@@ -1845,9 +1575,10 @@ texture = ExtResource("22_cart")
 offset = Vector2(0, -59.0)
 
 [node name="PotBlobMarket" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(1075, 1184.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="RockBlobMarket" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1390, 1124.4)
@@ -1907,9 +1638,10 @@ texture = ExtResource("56_dom_laundry")
 offset = Vector2(0, -114.0)
 
 [node name="PotChefsHouse" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(385, 1729.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="LaundryPlayersHouse" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2545, 2098.4)
@@ -1923,14 +1655,16 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="FlowerPlayersHouse" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(2470, 2186.4)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -52.0)
 
 [node name="PotItemShop" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(1575, 519.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="StallItemShop" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1830, 580.4)
@@ -1938,9 +1672,10 @@ texture = ExtResource("52_dom_stall")
 offset = Vector2(0, -111.0)
 
 [node name="PotEquipmentShop" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(2285, 574.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="StreetLanternEquipmentShop" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2515, 577.4)
@@ -1980,21 +1715,24 @@ texture = ExtResource("21_lantern")
 offset = Vector2(0, -53.0)
 
 [node name="LanternTavernDoor" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(1590, 1671.4)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107.0)
 script = ExtResource("76_ambient_motion")
 phase = 0.4
 
 [node name="PotTavern" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.3216, 0.3216)
+offset = Vector2(0, -100)
 position = Vector2(1830, 1824.4)
 texture = ExtResource("34_pot_sprite")
-offset = Vector2(0, -55.0)
 
 [node name="LanternRegistry" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(610, 486.4)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107.0)
 script = ExtResource("76_ambient_motion")
 phase = 2.1
 
@@ -2009,9 +1747,10 @@ texture = ExtResource("21_lantern")
 offset = Vector2(0, -53.0)
 
 [node name="LanternMarketEast" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(1990, 1226.4)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107.0)
 script = ExtResource("76_ambient_motion")
 phase = 4.2
 
@@ -2052,9 +1791,10 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassEastField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(2680, 1884.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="OakNortheastField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(3280, 864.4)
@@ -2081,9 +1821,10 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassMidEast" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(1980, 764.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="OakSouthField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1450, 2104.4)
@@ -2098,24 +1839,28 @@ offset = Vector2(0, -52.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassSouthField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(1350, 2024.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="FlowerSouthField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(1550, 2151.4)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -52.0)
 
 [node name="GrassWestField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(250, 1154.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 [node name="FlowerWestField" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2516, 0.2516)
+offset = Vector2(0, -76)
 position = Vector2(320, 1051.4)
 texture = ExtResource("30_flower")
-offset = Vector2(0, -52.0)
 
 [node name="RockWestField" type="Sprite2D" parent="SetDressing"]
 position = Vector2(210, 1334.4)
@@ -2130,9 +1875,10 @@ offset = Vector2(0, -53.0)
 scale = Vector2(0.5, 0.5)
 
 [node name="GrassRiverside" type="Sprite2D" parent="SetDressing"]
+scale = Vector2(0.2456, 0.2456)
+offset = Vector2(0, -94)
 position = Vector2(700, 1854.4)
 texture = ExtResource("28_grass")
-offset = Vector2(0, -55.0)
 
 ; PROVISIONAL OWNER-BALANCE SURFACE: every placement, route, and prop count below is
 ; intentionally authored for review and may be tuned without changing game logic.
@@ -2235,16 +1981,18 @@ texture = ExtResource("56_dom_laundry")
 offset = Vector2(0, -113)
 
 [node name="LanternLowerMarketWest" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(1440, 1200)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107)
 script = ExtResource("76_ambient_motion")
 phase = 1.2
 
 [node name="LanternLowerMarketEast" type="Sprite2D" parent="TownscapeDressing/SoftDetails"]
+scale = Vector2(0.4651, 0.4651)
+offset = Vector2(0, -107)
 position = Vector2(2020, 1210)
 texture = ExtResource("55_dom_hanging_lantern")
-offset = Vector2(0, -107)
 script = ExtResource("76_ambient_motion")
 phase = 5.1
 

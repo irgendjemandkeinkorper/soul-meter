@@ -385,6 +385,8 @@ static func build() -> Theme:
 	t.set_type_variation("StatLabel", "Label")
 	t.set_font("font", "StatLabel", numeric)
 	t.set_font_size("font_size", "StatLabel", DS.FS_200)
+	t.set_type_variation("AimWarningLabel", "StatLabel")
+	t.set_color("font_color", "AimWarningLabel", DS.CINDER_3)
 
 	t.add_type("MutedLabel")
 	t.set_type_variation("MutedLabel", "Label")
@@ -528,6 +530,47 @@ static func build() -> Theme:
 	t.set_stylebox("focus", "DialogueChoice", _notched_style(29))
 	t.set_stylebox("disabled", "DialogueChoice", _notched_style(30))
 
+	return t
+
+
+## Readable ledger menus. A local theme keeps this pass scoped to the character,
+## inventory, and vendor screens while sharing the established DS material language.
+static func build_ledger() -> Theme:
+	var t := build()
+	t.default_font_size = DS.FS_600
+	t.set_font_size("font_size", "Label", DS.FS_600)
+	t.set_font_size("font_size", "TitleLabel", DS.FS_900)
+	t.set_font_size("font_size", "HeadingLabel", DS.FS_600)
+	t.set_font_size("font_size", "EyebrowLabel", DS.FS_300)
+	t.set_font_size("font_size", "StatLabel", DS.FS_500)
+	t.set_font_size("font_size", "QuoteLabel", DS.FS_600)
+	t.set_font_size("font_size", "TooltipLabel", DS.FS_600)
+	t.set_color("font_color", "MutedLabel", DS.ASH)
+	for type_name: String in ["Button", "OptionButton", "CheckButton"]:
+		t.set_font_size("font_size", type_name, DS.FS_400)
+	t.set_font_size("font_size", "ItemList", DS.FS_600)
+	t.set_constant("v_separation", "ItemList", DS.SPACE_6)
+	t.set_constant("h_separation", "ItemList", DS.SPACE_5)
+	for margin: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+		t.set_constant(margin, "ScreenShellMargin", DS.SPACE_9)
+	t.set_constant("separation", "ScreenShellColumn", DS.SPACE_8)
+	t.set_constant("separation", "InventoryColumns", DS.SPACE_8)
+	t.set_constant("separation", "MirrorPairRow", DS.SPACE_8)
+	t.set_constant("separation", "ScreenContentColumn", DS.SPACE_6)
+	t.set_constant("separation", "LedgerColumn", DS.SPACE_6)
+	t.set_type_variation("LedgerPanel", "PanelContainer")
+	t.set_stylebox("panel", "LedgerPanel", _notched_style(26, DS.SPACE_8))
+	t.set_type_variation("LedgerInset", "PanelContainer")
+	t.set_stylebox("panel", "LedgerInset", _notched_style(19, DS.SPACE_8))
+	t.set_type_variation("LedgerGrid", "GridContainer")
+	t.set_constant("h_separation", "LedgerGrid", DS.SPACE_8)
+	t.set_constant("v_separation", "LedgerGrid", DS.SPACE_5)
+	t.set_type_variation("LedgerRow", "HBoxContainer")
+	t.set_constant("separation", "LedgerRow", DS.SPACE_6)
+	t.set_type_variation("LedgerSection", "Label")
+	t.set_font("font", "LedgerSection", load(DS.FONT_DISPLAY))
+	t.set_font_size("font_size", "LedgerSection", DS.FS_600)
+	t.set_color("font_color", "LedgerSection", DS.PARCHMENT)
 	return t
 
 

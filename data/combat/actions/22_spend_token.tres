@@ -14,4 +14,5 @@ target_profile = &"self"
 center_pull = 10
 player_available = true
 class_resource_action = &"spend_token"
+description = "Spend one Failure Token to prevent fizzle on your next cast."
 ## PROVISIONAL — costs copied from the nearest PASS-compatible action; B11 owns final numbers.

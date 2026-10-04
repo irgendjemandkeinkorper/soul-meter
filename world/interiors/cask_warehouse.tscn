@@ -30,13 +30,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="InventoryPot" type="Sprite2D" parent="Room/CaskWarehouseDressing/SoftDetails"]
-position = Vector2(730, 180)
+position = Vector2(1460, 360)
 scale = Vector2(0.19, 0.19)
 texture = ExtResource("4_pot")
 offset = Vector2(0, -92)
 
 [node name="WarehouseLantern" type="Sprite2D" parent="Room/CaskWarehouseDressing/SoftDetails"]
-position = Vector2(480, 165)
+position = Vector2(960, 330)
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -107)
@@ -49,7 +49,7 @@ period = 4.3
 y_sort_enabled = true
 
 [node name="CaskCratesNorthwest" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
-position = Vector2(100, 230)
+position = Vector2(200, 460)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNorthwest"]
 scale = Vector2(0.24, 0.24)
@@ -62,7 +62,7 @@ shape = SubResource("crate_footprint")
 disabled = false
 
 [node name="CaskCratesNortheast" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
-position = Vector2(860, 230)
+position = Vector2(1720, 460)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/CaskCratesNortheast"]
 scale = Vector2(-0.24, 0.24)
@@ -75,7 +75,7 @@ shape = SubResource("crate_footprint")
 disabled = false
 
 [node name="SealedPotSoutheast" type="StaticBody2D" parent="Room/CaskWarehouseDressing/SolidProps"]
-position = Vector2(840, 500)
+position = Vector2(1680, 1000)
 
 [node name="Sprite2D" type="Sprite2D" parent="Room/CaskWarehouseDressing/SolidProps/SealedPotSoutheast"]
 scale = Vector2(0.21, 0.21)
@@ -88,7 +88,7 @@ shape = SubResource("pot_footprint")
 disabled = false
 
 [node name="SupplyCrate" parent="." instance=ExtResource("2_chest")]
-position = Vector2(150, 500)
+position = Vector2(300, 1000)
 display_name = "Supply Crate"
 prompt_text = "Open"
 interaction_flag = "loot_opened_cask_warehouse_supply_crate"

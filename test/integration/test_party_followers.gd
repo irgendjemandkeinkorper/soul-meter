@@ -89,19 +89,20 @@ func test_party_changed_adds_and_removes_followers_without_reloading() -> void:
 	assert_str(manager.followers()[0].party_member.id).is_equal("old-grumbrand")
 
 	# Replacing party data for the same identity keeps the field actor but
-	# refreshes the resource and its shared portrait.
+	# refreshes the identity without substituting a portrait bust for a walking sprite.
 	var retained_follower := manager.followers()[0]
 	var replacement := PartyMember.new()
 	replacement.id = candidates[1].id
 	replacement.display_name = candidates[1].display_name
-	var replacement_portrait := GradientTexture1D.new()
+	var replacement_portrait := load("res://assets/generated/portraits/player/likeness_01.png") as Texture2D
 	replacement.portrait = replacement_portrait
 	GameState.set_party([_lead(), replacement])
 	await runner.simulate_frames(2)
 	assert_bool(manager.followers()[0] == retained_follower).is_true()
 	assert_bool(manager.followers()[0].party_member == replacement).is_true()
 	var sprite := manager.followers()[0].get_node("Visual/Sprite2D") as Sprite2D
-	assert_bool(sprite.texture == replacement_portrait).is_true()
+	assert_str(sprite.texture.resource_path).is_equal(UnitArt.texture_path("crowd-acolyte-a"))
+	assert_bool(replacement.portrait == replacement_portrait).is_true()
 
 
 func test_sway_is_tunable_and_phase_offset_per_follower() -> void:

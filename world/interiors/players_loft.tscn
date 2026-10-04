@@ -1,8 +1,8 @@
 [gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="2_bench"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-stool.png" id="3_stool"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-bench--plank.png" id="2_bench"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-stool--round.png" id="3_stool"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="4_crates"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="5_lantern"]
 [ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="6_ambient_motion"]
@@ -31,13 +31,13 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="BedsideStool" type="Sprite2D" parent="PlayersLoftDressing/SoftDetails"]
-position = Vector2(610, 415)
-scale = Vector2(1, 1)
+position = Vector2(1220, 830)
+scale = Vector2(0.093, 0.0645)
 texture = ExtResource("3_stool")
 offset = Vector2(0, -39)
 
 [node name="HangingLantern" type="Sprite2D" parent="PlayersLoftDressing/SoftDetails"]
-position = Vector2(480, 190)
+position = Vector2(960, 380)
 scale = Vector2(0.24, 0.24)
 texture = ExtResource("5_lantern")
 offset = Vector2(0, -115)
@@ -50,10 +50,10 @@ period = 4.7
 y_sort_enabled = true
 
 [node name="SleepingCot" type="StaticBody2D" parent="PlayersLoftDressing/SolidProps"]
-position = Vector2(265, 415)
+position = Vector2(530, 830)
 
 [node name="Sprite2D" type="Sprite2D" parent="PlayersLoftDressing/SolidProps/SleepingCot"]
-scale = Vector2(1.125, 1.125)
+scale = Vector2(0.1724, 0.1441)
 texture = ExtResource("2_bench")
 offset = Vector2(0, -46)
 
@@ -62,7 +62,7 @@ position = Vector2(0, -7)
 shape = SubResource("bench_footprint")
 
 [node name="TravelStores" type="StaticBody2D" parent="PlayersLoftDressing/SolidProps"]
-position = Vector2(835, 510)
+position = Vector2(1670, 1020)
 
 [node name="Sprite2D" type="Sprite2D" parent="PlayersLoftDressing/SolidProps/TravelStores"]
 scale = Vector2(0.225, 0.225)

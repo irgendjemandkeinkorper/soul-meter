@@ -30,6 +30,18 @@ func commands() -> Array[StringName]:
 	return [&"record_name"]
 
 
+func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
+	var gate := super.query_command(action_id, target_id, payload)
+	if not bool(gate.allowed):
+		return gate
+	var target := host.actor_by_id(target_id) if host != null else null
+	if target == null or not target.is_alive() or not host.allies.has(target):
+		return command_refusal(&"no_target", "Record Name requires a living ally.")
+	if recorded_actor_ids.has(String(target_id)) or recorded_names.has(target.display_name.strip_edges()):
+		return command_refusal(&"class_resource_duplicate", "That name is already recorded in this battle.")
+	return gate
+
+
 func on_command(action_id: StringName, target_id: StringName) -> void:
 	if action_id != &"record_name" or target_id.is_empty():
 		return
@@ -77,9 +89,27 @@ func _queue_refund() -> void:
 	)
 
 
+func on_combatant_fell(target_id: StringName) -> void:
+	if String(target_id) in recorded_actor_ids:
+		_refund_actor(target_id)
+
+
+func on_battle_end(victory: bool) -> void:
+	if not victory or host == null:
+		return
+	for actor_id: String in recorded_actor_ids:
+		var actor := host.actor_by_id(StringName(actor_id))
+		if actor != null and actor.is_alive():
+			_refund_actor(actor.combat_id)
+
+
 func on_deferred_fired(entry: Dictionary) -> void:
 	if StringName(str(entry.get("label", ""))) == &"name_ledger_refund":
 		pending_breath_refunds = maxf(pending_breath_refunds - float(BREATH_REFUND), 0.0)
+
+
+func on_deferred_cancelled(entry: Dictionary, _by_id: StringName) -> void:
+	on_deferred_fired(entry)
 
 
 func snapshot() -> Dictionary:

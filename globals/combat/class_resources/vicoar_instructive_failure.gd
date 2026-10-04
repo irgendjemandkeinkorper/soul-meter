@@ -28,6 +28,17 @@ func commands() -> Array[StringName]:
 	return [&"spend_token"]
 
 
+func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
+	var gate := super.query_command(action_id, target_id, payload)
+	if not bool(gate.allowed):
+		return gate
+	if guaranteed_cast_armed:
+		return command_refusal(&"class_resource_armed", "Your guaranteed cast is already armed.")
+	if tokens <= 0:
+		return command_refusal(&"class_resource_empty", "No Failure Tokens banked. A fizzled cast banks one.")
+	return gate
+
+
 func on_command(action_id: StringName, _target_id: StringName) -> void:
 	if action_id != &"spend_token":
 		return

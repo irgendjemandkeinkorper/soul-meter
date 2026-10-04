@@ -32,7 +32,7 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="DutyRoster" type="Sprite2D" parent="GarrisonYardDressing/SoftDetails"]
-position = Vector2(110, 220)
+position = Vector2(220, 440)
 scale = Vector2(0.21, 0.21)
 texture = ExtResource("4_notice_board")
 offset = Vector2(0, -106)
@@ -41,7 +41,7 @@ offset = Vector2(0, -106)
 y_sort_enabled = true
 
 [node name="DrillSupplies" type="StaticBody2D" parent="GarrisonYardDressing/SolidProps"]
-position = Vector2(105, 500)
+position = Vector2(210, 1000)
 
 [node name="Sprite2D" type="Sprite2D" parent="GarrisonYardDressing/SolidProps/DrillSupplies"]
 scale = Vector2(0.225, 0.225)
@@ -53,7 +53,7 @@ position = Vector2(0, -9)
 shape = SubResource("supply_footprint")
 
 [node name="WatchBrazier" type="StaticBody2D" parent="GarrisonYardDressing/SolidProps"]
-position = Vector2(860, 460)
+position = Vector2(1720, 920)
 
 [node name="Sprite2D" type="Sprite2D" parent="GarrisonYardDressing/SolidProps/WatchBrazier"]
 scale = Vector2(0.21, 0.21)
@@ -72,17 +72,17 @@ shape = SubResource("brazier_footprint")
 y_sort_enabled = true
 
 [node name="YardGuardWest" parent="GarrisonYardDressing/AmbientOccupants" instance=ExtResource("6_ambient_villager")]
-position = Vector2(245, 350)
+position = Vector2(490, 700)
 villager_texture = ExtResource("7_guard_a")
-local_waypoints = PackedVector2Array(0, 0, 72, 4, 62, 54, 8, 48)
+local_waypoints = PackedVector2Array(0, 0, 144, 8, 124, 108, 16, 96)
 wander_speed = 17.0
 pause_duration = 1.8
 initial_pause = 0.3
 
 [node name="YardGuardEast" parent="GarrisonYardDressing/AmbientOccupants" instance=ExtResource("6_ambient_villager")]
-position = Vector2(575, 420)
+position = Vector2(1150, 840)
 villager_texture = ExtResource("8_guard_b")
-local_waypoints = PackedVector2Array(0, 0, 66, -12, 94, 36, 26, 52)
+local_waypoints = PackedVector2Array(0, 0, 132, -24, 188, 72, 52, 104)
 wander_speed = 16.0
 pause_duration = 2.1
 initial_pause = 1.0

@@ -46,7 +46,7 @@ static func current_band(vendor_id: String) -> StringName:
 	return Reputation.band(str(row.get("faction_id", "")))
 
 
-static func trade_status(vendor_id: String, band: StringName = &"") -> Dictionary:
+static func trade_status(vendor_id: String, band: StringName = &"", location_id: String = "") -> Dictionary:
 	var row := vendor(vendor_id)
 	if row.is_empty():
 		return {
@@ -88,7 +88,7 @@ static func trade_status(vendor_id: String, band: StringName = &"") -> Dictionar
 			"band": StringName(resolved_band),
 			"faction_id": StringName(faction_id),
 		}
-	return {
+	var result := {
 		"allowed": true,
 		"blocked_by": &"",
 		"nearest_unblock": {},
@@ -98,6 +98,34 @@ static func trade_status(vendor_id: String, band: StringName = &"") -> Dictionar
 		"band": StringName(resolved_band),
 		"faction_id": StringName(faction_id),
 	}
+	var service := SaveGame.world_structures.service_status(vendor_id)
+	if service.is_empty():
+		return result
+	var active_location := location_id if not location_id.is_empty() else _current_location_id()
+	var available: bool = service["available"]
+	var service_location: String = service["location_id"]
+	result["service_location_id"] = service_location
+	result["relocated"] = service["relocated"]
+	if not available or active_location != service_location:
+		var reason := "PREMISES UNAVAILABLE" if not available else "SERVICE IS AT ANOTHER LOCATION"
+		result.merge({
+			"allowed": false, "open": false,
+			"blocked_by": &"structure" if not available else &"service_location",
+			"reason": reason, "message": reason,
+			"nearest_unblock": {
+				"type": &"structure_restored" if not available else &"travel",
+				"structure_id": service["structure_id"], "location_id": service_location,
+			},
+		}, true)
+	return result
+
+
+static func _current_location_id() -> String:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.current_scene == null:
+		return ""
+	var location := LocationRegistry.by_scene(tree.current_scene.scene_file_path)
+	return String(location.id) if location != null else ""
 
 
 static func stock_entry(vendor_id: String, item_id: String) -> Dictionary:

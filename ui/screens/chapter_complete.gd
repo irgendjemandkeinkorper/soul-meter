@@ -5,8 +5,22 @@ var _summary := ""
 
 
 func _build() -> void:
+	_add_opaque_backdrop()
 	allow_back = false
 	var vbox := _make_shell_window("Chapter One Complete — The Broken Muster")
+	var company := HBoxContainer.new()
+	company.name = "CompanyPortraits"
+	company.theme_type_variation = "MirrorPairRow"
+	vbox.add_child(company)
+	for member: PartyMember in GameState.party:
+		var portrait := TextureRect.new()
+		portrait.texture = PartyMemberVisuals.ensure_portrait(member)
+		portrait.custom_minimum_size = Vector2(128, 128)
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		portrait.tooltip_text = member.display_name
+		company.add_child(portrait)
 	var verdict := Label.new()
 	verdict.text = _verdict_text()
 	verdict.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

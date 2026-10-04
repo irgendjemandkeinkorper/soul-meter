@@ -2853,6 +2853,10 @@
 						"type": "int",
 						"value": 2
 					},
+					"Anatomy": {
+						"type": "string",
+						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"head\":{\"display_name\":\"Head\",\"exposed\":true,\"hidden_by_cover\":false},\"leg\":{\"display_name\":\"Leg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
+					},
 					"Attack": {
 						"type": "int",
 						"value": 4
@@ -2925,6 +2929,10 @@
 					"Alacrity": {
 						"type": "int",
 						"value": 3
+					},
+					"Anatomy": {
+						"type": "string",
+						"value": "{\"torso\":{\"display_name\":\"Flank\",\"exposed\":true,\"hidden_by_cover\":true}}"
 					},
 					"Attack": {
 						"type": "int",
@@ -2999,6 +3007,10 @@
 						"type": "int",
 						"value": 4
 					},
+					"Anatomy": {
+						"type": "string",
+						"value": "{\"head\":{\"display_name\":\"Muzzle\",\"exposed\":true,\"hidden_by_cover\":false},\"leg\":{\"display_name\":\"Foreleg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Flank\",\"exposed\":true,\"hidden_by_cover\":true}}"
+					},
 					"Attack": {
 						"type": "int",
 						"value": 7
@@ -3071,6 +3083,10 @@
 					"Alacrity": {
 						"type": "int",
 						"value": 4
+					},
+					"Anatomy": {
+						"type": "string",
+						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"head\":{\"display_name\":\"Head\",\"exposed\":true,\"hidden_by_cover\":false},\"leg\":{\"display_name\":\"Leg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
 					},
 					"Attack": {
 						"type": "int",
@@ -3145,6 +3161,10 @@
 						"type": "int",
 						"value": 2
 					},
+					"Anatomy": {
+						"type": "string",
+						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"head\":{\"display_name\":\"Head\",\"exposed\":true,\"hidden_by_cover\":false},\"leg\":{\"display_name\":\"Leg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Throat\",\"exposed\":true,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
+					},
 					"Attack": {
 						"type": "int",
 						"value": 6
@@ -3217,6 +3237,10 @@
 					"Alacrity": {
 						"type": "int",
 						"value": 3
+					},
+					"Anatomy": {
+						"type": "string",
+						"value": "{\"arm\":{\"display_name\":\"Arm\",\"exposed\":true,\"hidden_by_cover\":false},\"head\":{\"display_name\":\"Helm\",\"exposed\":false,\"hidden_by_cover\":false},\"leg\":{\"display_name\":\"Leg\",\"exposed\":true,\"hidden_by_cover\":true},\"throat\":{\"display_name\":\"Gorget\",\"exposed\":false,\"hidden_by_cover\":false},\"torso\":{\"display_name\":\"Torso\",\"exposed\":true,\"hidden_by_cover\":true}}"
 					},
 					"Attack": {
 						"type": "int",
@@ -17196,12 +17220,19 @@
 				"_id": "535.0",
 				"_name": "Decorum",
 				"_type": "int"
+			},
+			{
+				"_category_id": "142.0",
+				"_default_value": "",
+				"_id": "536.0",
+				"_name": "Anatomy",
+				"_type": "string"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 535.0
+			"default": 536.0
 		}
 	},
 	"_version": 1

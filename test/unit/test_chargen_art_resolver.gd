@@ -97,3 +97,24 @@ func _write_test_png(path: String) -> void:
 	var image := Image.create(2, 2, false, Image.FORMAT_RGBA8)
 	image.fill(Color.WHITE)
 	assert_int(image.save_png(path)).is_equal(OK)
+
+
+func test_painted_portrait_and_field_likeness_survive_save_round_trip() -> void:
+	var member := PartyMember.new()
+	member.id = "custom-recruit"
+	member.portrait = ChargenArtResolverScript.portrait_texture("likeness_01")
+	var restored := PartyMember.from_dict(member.to_dict())
+	assert_str(PartyMemberVisuals.ensure_portrait(restored).resource_path).is_equal(
+		"res://assets/generated/portraits/player/likeness_01.png"
+	)
+	assert_str(PartyMemberVisuals.field_texture(restored).resource_path).is_equal(
+		UnitArtScript.texture_path("crowd-acolyte-a")
+	)
+
+
+func test_named_companion_keeps_its_existing_full_body_art() -> void:
+	var member := PartyMember.new()
+	member.id = "serai-lun"
+	assert_str(PartyMemberVisuals.field_texture(member).resource_path).is_equal(
+		UnitArtScript.texture_path("serai-lun")
+	)
