@@ -502,14 +502,23 @@ func _seat_with_admission_guarantee(actor: BattleActor, side: StringName) -> Dic
 ## True when some living ally's turn begins strictly before `actor`'s first projected turn.
 ## Read from `scheduler.peek_order()`, which projects from the same arithmetic `advance()`
 ## uses — asking the timeline is the only way this check cannot disagree with resolution.
+## The projection is deterministic, so a short peek is a prefix of a long one. Most answers
+## sit in the first few turns; projecting 400 turns of a 100-actor session for each admission
+## froze a chain-alert hop for seconds (#282). Deepen only while the answer is still open.
 func _party_acts_before(actor: BattleActor) -> bool:
-	var depth := maxi(16, (allies.size() + enemies.size() + 2) * 4)
-	for entry: Dictionary in scheduler.peek_order(depth):
-		var next := entry.get("actor") as BattleActor
-		if next == actor:
+	var max_depth := maxi(16, (allies.size() + enemies.size() + 2) * 4)
+	var depth := mini(8, max_depth)
+	while true:
+		var order := scheduler.peek_order(depth)
+		for entry: Dictionary in order:
+			var next := entry.get("actor") as BattleActor
+			if next == actor:
+				return false
+			if next != null and next.is_alive() and allies.has(next):
+				return true
+		if depth >= max_depth or order.size() < depth:
 			return false
-		if next != null and next.is_alive() and allies.has(next):
-			return true
+		depth = mini(depth * 2, max_depth)
 	return false
 
 

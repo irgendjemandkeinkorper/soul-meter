@@ -589,3 +589,38 @@ the live actor state, and the observer payload. Two presentation fixtures that e
 snapshot to fake a state now edit a `duplicate(true)` copy. A whole-tree run turned up no
 production write into a snapshot row. The rendered `screenshot_battle_screen` capture is
 pixel-identical. Still about 5 times over the D9 line.
+
+### Later on 2026-10-04 — admission checks A1 with a short projection first
+
+D9 calls 100 hostiles a presence budget and sets the design target at 30 or fewer in one
+session. The harness gains `--session-size N`: all 100 stay on the field and only N are
+admitted at the start; chain alerts admit the rest the way they would in play. Without
+`--decision-target`, the target is one decision per admitted hostile.
+
+Three runs per row, all `status: ok`:
+
+| Measurement (ms) | Before | After |
+|---|---|---|
+| Admission per hostile, mean (100 admitted) | 62.6 | **1.19–1.22** |
+| Admission per hostile, p95 (100 admitted) | 190 | 1.7–1.9 |
+| Admitting 99 hostiles, total | 6,202 | 118–121 |
+| Enemy decision, mean (30 admitted, chain alerts reach 94–95) | 84.5–88.1 | **10.1–11.2** |
+| Worst decision (30 admitted) | ~2,700 (one chain-alert hop) | 102–103 |
+| Enemy decision, mean (100 admitted) | 10.1–12.0 | 9.5–10.9 |
+
+With 30 admitted, the first chain-alert hop pulled 64 more hostiles into the session inside
+one decision. Each admission ran `_party_acts_before()` (invariant A1), which asked the
+scheduler for a projection of `(allies + enemies + 2) * 4` turns, about 400 here, and read
+only until the first ally or the newcomer. That was 30 ms per admission and grew with the
+session: one hop froze the field for 2.7 s.
+
+`_party_acts_before()` now peeks 8 turns and doubles the depth only while neither the
+newcomer nor a living ally has appeared, up to the same maximum. The projection is
+deterministic, so a short peek is a prefix of a long one and every answer is unchanged.
+`test_party_acts_before_matches_the_full_depth_projection` compares it with the full-depth
+projection on both schedulers across speeds and delays;
+`test_party_acts_before_deepens_until_the_answer_or_the_full_depth` uses a scripted order to
+put the answer at depths 5 to 200, which real fixtures do not reach.
+
+The remaining worst case at 30 admitted (about 100 ms) is the same hop admitting 64 hostiles
+in one decision, now about 1 ms each.

@@ -258,8 +258,9 @@ func _admit_remaining() -> void:
 	var per_hostile_ms: Array[float] = []
 	var refusals: Array[Dictionary] = []
 	var admitted := 1
+	var requested := mini(_requested_session_size(), _synthesized.size())
 	var started := Time.get_ticks_usec()
-	for index: int in range(1, _synthesized.size()):
+	for index: int in range(1, requested):
 		var hostile := _synthesized[index] as Node
 		var alert_started := Time.get_ticks_usec()
 		var accepted := bool(hostile.call("request_alert"))
@@ -284,10 +285,8 @@ func _admit_remaining() -> void:
 		"per_hostile_ms": per_hostile_ms,
 		"total_ms": _elapsed_ms(started, Time.get_ticks_usec()),
 	}
-	if admitted != _synthesized.size():
-		_add_error(
-			"Admitted %d of %d synthesized hostiles." % [admitted, _synthesized.size()]
-		)
+	if admitted != requested:
+		_add_error("Admitted %d of %d requested hostiles." % [admitted, requested])
 	for actor: BattleActor in (_battle.get("enemies") as Array):
 		_enemy_ids[actor.combat_id] = true
 
@@ -357,11 +356,26 @@ func _run_decision_window() -> Array[Dictionary]:
 	return turns
 
 
+## D9: 100 hostiles is a presence budget; the design target is <= 30 in one session.
+## `--session-size N` keeps all 100 on the field and admits only N into the session.
+func _requested_session_size() -> int:
+	var arguments := OS.get_cmdline_user_args()
+	var argument_index := arguments.find("--session-size")
+	if argument_index < 0:
+		return HOSTILE_COUNT
+	var raw_size := String(arguments[argument_index + 1]) if argument_index + 1 < arguments.size() else ""
+	if not raw_size.is_valid_int() or int(raw_size) <= 0 or int(raw_size) > HOSTILE_COUNT:
+		_add_error("--session-size requires an integer from 1 to %d." % HOSTILE_COUNT)
+		return HOSTILE_COUNT
+	return int(raw_size)
+
+
 func _requested_decision_target() -> int:
 	var arguments := OS.get_cmdline_user_args()
 	var argument_index := arguments.find("--decision-target")
 	if argument_index < 0:
-		return DECISION_TARGET
+		# One decision per hostile in the session: D9's "averaged over a round".
+		return _requested_session_size()
 	if argument_index + 1 >= arguments.size():
 		_add_error("--decision-target requires a positive integer count.")
 		return DECISION_TARGET
@@ -641,6 +655,7 @@ func _scenario_details() -> Dictionary:
 		"party_size": (_game_state.get("party") as Array).size(),
 		"ally_count": (_battle.get("allies") as Array).size(),
 		"enemy_count": (_battle.get("enemies") as Array).size(),
+		"session_size_requested": _requested_session_size(),
 		"fixture_unit_id": String(_synthesizer_constant("FIXTURE_UNIT_ID", &"")),
 		"fixture_ally_hp": FIXTURE_ALLY_HP,
 		"placement": {

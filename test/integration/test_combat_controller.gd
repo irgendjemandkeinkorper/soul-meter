@@ -1563,6 +1563,105 @@ func _cast_outcome_for_integrity(integrity: float) -> Dictionary:
 ##
 ## Admission is issued from inside the `enemy_turn_started` handler so it really is mid-enemy
 ## turn, not merely "after one".
+## #282: the A1 check deepens its projection only while the answer is open. A short peek is
+## a prefix of a long one, so every answer must match the full-depth projection it replaced.
+func test_party_acts_before_matches_the_full_depth_projection() -> void:
+	for use_charge_time: bool in [true, false]:
+		var local_rules := (
+			load("res://data/combat/combat_rules.tres") as CombatRules
+		).duplicate(true) as CombatRules
+		local_rules.use_charge_time = use_charge_time
+		var grid := GridBattlefieldModel.new()
+		grid.configure(local_rules)
+		grid.build_grid(_sized_grid_ground(12, 6))
+		var controller_under_test := CombatController.new()
+		controller_under_test.configure(CombatActionCatalog.all(), grid, local_rules)
+		var party: Array[BattleActor] = []
+		var foes: Array[BattleActor] = []
+		for index: int in 3:
+			var ally := _actor("Ally %d" % index, 400, 1, 0)
+			ally.attributes = {&"edge": index * 8}
+			party.append(ally)
+		for index: int in 12:
+			var foe := _actor("Foe %d" % index, 400, 1, 0)
+			foe.attributes = {&"edge": (index * 7) % 48}
+			foes.append(foe)
+		controller_under_test.start(party, foes, &"a1-depth")
+		var checked := 0
+		for edge: int in [0, 12, 30, 48]:
+			for delay: int in [0, 3, 10, 40, 120, 400, 1600]:
+				var newcomer := _actor("Newcomer %d-%d" % [edge, delay], 400, 1, 0)
+				newcomer.attributes = {&"edge": edge}
+				newcomer.combat_id = StringName("newcomer-%d-%d" % [edge, delay])
+				newcomer.side = &"enemy"
+				if not bool(controller_under_test.scheduler.admit(newcomer, delay).get("allowed", false)):
+					continue
+				var expected := _party_acts_before_full_depth(controller_under_test, newcomer)
+				assert_bool(controller_under_test._party_acts_before(newcomer)).override_failure_message(
+					"ct=%s edge=%d delay=%d" % [use_charge_time, edge, delay]
+				).is_equal(expected)
+				controller_under_test.scheduler.remove_participant(newcomer)
+				checked += 1
+		assert_int(checked).is_greater(20)
+
+
+## Real schedulers settle these fixtures within the first short peek, so the deepening is
+## driven here by a scripted order: the answer sits at a chosen depth, or nowhere.
+func test_party_acts_before_deepens_until_the_answer_or_the_full_depth() -> void:
+	var controller_under_test := CombatController.new()
+	var ally := _actor("Ally", 400, 1, 0)
+	var newcomer := _actor("Newcomer", 400, 1, 0)
+	controller_under_test.allies = [ally] as Array[BattleActor]
+	var crowd: Array[BattleActor] = []
+	for index: int in 30:
+		crowd.append(_actor("Foe %d" % index, 400, 1, 0))
+	controller_under_test.enemies = crowd
+	var scripted := ScriptedOrder.new()
+	controller_under_test.scheduler = scripted
+	# max depth here is (1 + 30 + 2) * 4 = 132.
+	for case: Array in [[5, -1, true], [20, -1, true], [40, 90, true], [90, 40, false], [-1, 60, false],
+			[-1, -1, false], [200, -1, false]]:
+		var ally_at: int = case[0]
+		var newcomer_at: int = case[1]
+		scripted.order.clear()
+		for index: int in 220:
+			var next: BattleActor = crowd[index % crowd.size()]
+			if index == ally_at:
+				next = ally
+			elif index == newcomer_at:
+				next = newcomer
+			scripted.order.append({"actor": next})
+		assert_bool(controller_under_test._party_acts_before(newcomer)).override_failure_message(
+			"ally at %d, newcomer at %d" % [ally_at, newcomer_at]
+		).is_equal(bool(case[2]))
+		assert_bool(controller_under_test._party_acts_before(newcomer)).is_equal(
+			_party_acts_before_full_depth(controller_under_test, newcomer)
+		)
+	assert_int(scripted.max_depth_asked).is_equal(132)
+
+
+class ScriptedOrder extends TurnScheduler:
+	var order: Array[Dictionary] = []
+	var max_depth_asked := 0
+
+	func peek_order(depth: int) -> Array[Dictionary]:
+		max_depth_asked = maxi(max_depth_asked, depth)
+		return order.slice(0, depth)
+
+
+func _party_acts_before_full_depth(controller_under_test: CombatController, actor: BattleActor) -> bool:
+	var depth := maxi(
+		16, (controller_under_test.allies.size() + controller_under_test.enemies.size() + 2) * 4
+	)
+	for entry: Dictionary in controller_under_test.scheduler.peek_order(depth):
+		var next := entry.get("actor") as BattleActor
+		if next == actor:
+			return false
+		if next != null and next.is_alive() and controller_under_test.allies.has(next):
+			return true
+	return false
+
+
 func test_a_fast_hostile_admitted_during_an_enemy_turn_still_acts_after_the_party() -> void:
 	var local_rules := (
 		load("res://data/combat/combat_rules.tres") as CombatRules

@@ -16,6 +16,8 @@ set -euo pipefail
 #     --scenario populated-grid --display-mode headless --profile -o profile.json
 #   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
 #     --scenario populated_field --display-mode headless --raw-samples -o field100.json
+#   GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
+#     --scenario populated_field --display-mode headless --session-size 30 -o field30.json
 
 godot_bin="${GODOT_BIN:-godot}"
 output_path=""
@@ -27,6 +29,7 @@ settle_ms_explicit=0
 raw_samples=0
 attribute_listeners=0
 decision_target=""
+session_size=""
 benchmark_data_dir="${SOUL_METER_BENCHMARK_DATA_DIR:-/tmp/soul-meter-godot-benchmark-data}"
 mkdir -p "$benchmark_data_dir"
 export XDG_DATA_HOME="$benchmark_data_dir"
@@ -70,6 +73,10 @@ while [[ $# -gt 0 ]]; do
 			decision_target="${2:-}"
 			shift 2
 			;;
+		--session-size)
+			session_size="${2:-}"
+			shift 2
+			;;
 		-h|--help)
 			sed -n '3,20p' "$0"
 			exit 0
@@ -108,8 +115,8 @@ if [[ "$profile_mode" -eq 1 && "$scenario" != "populated-grid" ]]; then
 	exit 2
 fi
 
-if [[ ( "$raw_samples" -eq 1 || "$attribute_listeners" -eq 1 || -n "$decision_target" ) && "$scenario" != "populated_field" ]]; then
-	echo "--raw-samples, --attribute-listeners and --decision-target are only available for --scenario populated_field" >&2
+if [[ ( "$raw_samples" -eq 1 || "$attribute_listeners" -eq 1 || -n "$decision_target" || -n "$session_size" ) && "$scenario" != "populated_field" ]]; then
+	echo "--raw-samples, --attribute-listeners, --decision-target and --session-size are only available for --scenario populated_field" >&2
 	exit 2
 fi
 
@@ -165,6 +172,9 @@ if [[ "$attribute_listeners" -eq 1 ]]; then
 fi
 if [[ -n "$decision_target" ]]; then
 	user_args+=("--decision-target" "$decision_target")
+fi
+if [[ -n "$session_size" ]]; then
+	user_args+=("--session-size" "$session_size")
 fi
 "$godot_bin" "${godot_args[@]}" --path . --script "$tool_script" \
 	"${user_args[@]}" >"$raw" 2>&1
