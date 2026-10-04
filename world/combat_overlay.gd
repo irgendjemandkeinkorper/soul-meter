@@ -22,11 +22,24 @@ var _hovered: Variant = null
 var _field: FieldMap
 var _original_colors: Dictionary = {}
 var _flashes: Dictionary = {}
+var _pending_defeats: Dictionary = {}
 var _theme: Theme
-var animate_events := true
+var animate_events := true:
+	set(value):
+		animate_events = value
+		if not value and is_inside_tree():
+			_settle_motion()
+			for effect: Node in get_children():
+				effect.queue_free()
 const NUMERIC_FONT := preload(DS.FONT_NUMERIC)
 const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
+const SpellCastScript := preload("res://ui/hud/spell_cast_effect.gd")
+const CombatMotionScript := preload("res://ui/hud/combat_motion.gd")
 const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
+
+
+func _ready() -> void:
+	GameState.setting_changed.connect(_on_setting_changed)
 
 
 func set_preview_target(actor_id: StringName) -> void:
@@ -58,18 +71,19 @@ func bind_actor(actor_id: StringName, node: Node2D) -> void:
 
 
 func _exit_tree() -> void:
-	for id: StringName in _moves.keys():
-		_stop_move(id)
-	for tween: Tween in _flashes.values():
-		if tween.is_valid():
-			tween.kill()
+	_settle_motion()
 	for node: Variant in _original_colors:
 		if is_instance_valid(node):
 			node.modulate = _original_colors[node]
 
 
 func is_animating() -> bool:
-	return not _moves.is_empty() or not _flashes.is_empty()
+	if not _moves.is_empty() or not _flashes.is_empty():
+		return true
+	for effect: Node in get_children():
+		if effect.get_script() == SpellCastScript and effect.is_animating():
+			return true
+	return false
 
 
 func cell_center(cell: Vector2i) -> Vector2:
@@ -117,6 +131,9 @@ func consume_event(event: CombatEvent) -> void:
 		&"battle_finished":
 			_active_id = &""
 			_target_id = &""
+	if animate_events and not _reduced_motion() and is_instance_valid(_nodes.get(event.actor_id)) \
+			and SpellCastScript.is_cast(event) and HitPulseScript.is_damaging_hit(event):
+		_pending_defeats[event.target_id] = event.get_instance_id()
 	_sync_actors(event)
 	if animate_events and event.type == &"action_resolved" and (event.data.get("path_cells", []) as Array).is_empty():
 		_play_action(event)
@@ -140,7 +157,7 @@ func _bind_field_actors(snapshot: Dictionary) -> void:
 
 
 func _sync_actors(event: CombatEvent) -> void:
-	if _grid == null:
+	if _grid == null or not is_instance_valid(_ground):
 		return
 	for id: StringName in _actors:
 		var node := _nodes.get(id) as Node2D
@@ -151,13 +168,14 @@ func _sync_actors(event: CombatEvent) -> void:
 		if cell == null:
 			continue
 		var path: Array = event.data.get("path_cells", [])
-		if animate_events and event.type == &"action_resolved" and id == event.actor_id and path.size() >= 2:
+		if animate_events and not _reduced_motion() and event.type == &"action_resolved" and id == event.actor_id and path.size() >= 2:
 			_stop_move(id)
-			var tween := create_tween()
-			_moves[id] = tween
+			var points := PackedVector2Array([node.global_position])
 			for index: int in range(1, path.size()):
 				if path[index] is Vector2i:
-					tween.tween_property(node, "global_position", _grid.cell_to_world(path[index]), DS.DUR_FAST)
+					points.append(_grid.cell_to_world(path[index]))
+			var tween := CombatMotionScript.along_path(self, points, _set_actor_position.bind(id))
+			_moves[id] = tween
 			tween.tween_callback(func() -> void: _moves.erase(id))
 		elif not _moves.has(id):
 			node.global_position = _grid.cell_to_world(cell)
@@ -166,8 +184,9 @@ func _sync_actors(event: CombatEvent) -> void:
 		if sprite != null and actor.has("facing"):
 			sprite.flip_h = str(actor["facing"]).contains("w")
 		if int(actor.get("hp", 1)) <= 0:
-			_stop_flash(id)
-			node.modulate.a = 0.35
+			if not _pending_defeats.has(id):
+				_stop_flash(id)
+				node.modulate.a = 0.35
 		elif not _flashes.has(id):
 			node.modulate = _original_colors.get(node, Color.WHITE)
 
@@ -175,7 +194,19 @@ func _sync_actors(event: CombatEvent) -> void:
 func _play_action(event: CombatEvent) -> void:
 	var attacker := _nodes.get(event.actor_id) as Node2D
 	var target := _nodes.get(event.target_id) as Node2D
-	if is_instance_valid(attacker) and is_instance_valid(target) and attacker != target:
+	if is_instance_valid(attacker) and SpellCastScript.is_cast(event):
+		var targets: Array[Callable] = []
+		for cell: Vector2i in FireField.cells_from_data(event.data.get("cells", [])):
+			targets.append(cell_center.bind(cell))
+		if targets.is_empty():
+			targets.append(_result_anchor.bind(event.target_id if is_instance_valid(target) else event.actor_id))
+		var spell := SpellCastScript.new()
+		spell.name = "SpellCast"
+		spell.setup(event, _result_anchor.bind(event.actor_id), targets, 1.0)
+		spell.impact_reached.connect(_present_action_result.bind(event), CONNECT_ONE_SHOT)
+		add_child(spell)
+		return
+	if not _reduced_motion() and is_instance_valid(attacker) and is_instance_valid(target) and attacker != target:
 		_stop_move(event.actor_id)
 		var home := attacker.global_position
 		var cell: Variant = _actor_cell(_actors.get(event.actor_id, {}))
@@ -183,16 +214,27 @@ func _play_action(event: CombatEvent) -> void:
 			home = _grid.cell_to_world(cell)
 		var lunge := create_tween()
 		_moves[event.actor_id] = lunge
-		lunge.tween_property(attacker, "global_position", home + (target.global_position - home).limit_length(DS.SPACE_4), DS.DUR_FAST)
-		lunge.tween_property(attacker, "global_position", home, DS.DUR_FAST)
+		lunge.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		var toward := home + (target.global_position - home).limit_length(DS.SPACE_4)
+		lunge.tween_method(_set_actor_position.bind(event.actor_id), attacker.global_position, toward, DS.DUR_FAST)
+		lunge.tween_method(_set_actor_position.bind(event.actor_id), toward, home, DS.DUR_FAST)
 		lunge.tween_callback(func() -> void: _moves.erase(event.actor_id))
+	_present_action_result(event)
+
+
+func _present_action_result(event: CombatEvent) -> void:
+	if _pending_defeats.get(event.target_id, 0) == event.get_instance_id():
+		_pending_defeats.erase(event.target_id)
+		_sync_actors(CombatEvent.new())
+	var target := _nodes.get(event.target_id) as Node2D
 	if not is_instance_valid(target):
 		return
-	if HitPulseScript.is_damaging_hit(event):
-		var pulse := HitPulseScript.new()
-		pulse.name = "HitPulse"
-		pulse.position = to_local(target.global_position) + Vector2(0, -DS.SPACE_8)
-		add_child(pulse)
+	if HitPulseScript.is_damaging_hit(event) and not _reduced_motion():
+		if not SpellCastScript.is_cast(event):
+			var pulse := HitPulseScript.new()
+			pulse.name = "HitPulse"
+			pulse.position = _result_anchor(event.target_id)
+			add_child(pulse)
 		_stop_flash(event.target_id)
 		# A defeated target keeps its fallen opacity; feedback must not revive its tint.
 		if int((_actors.get(event.target_id, {}) as Dictionary).get("hp", 1)) > 0:
@@ -213,10 +255,43 @@ func _play_action(event: CombatEvent) -> void:
 		_theme = ThemeBuilder.build()
 	pop.theme = _theme
 	add_child(pop)
-	pop.setup(event, func() -> Variant:
-		return to_local(target.global_position) + Vector2(0, -DS.SPACE_8) if is_instance_valid(target) else null,
+	pop.setup(event, _result_anchor.bind(event.target_id),
 		func() -> Rect2: return get_viewport_rect()
 	)
+
+
+func _result_anchor(id: StringName) -> Variant:
+	var target := _nodes.get(id) as Node2D
+	return to_local(target.global_position) + Vector2(0, -DS.SPACE_8) if is_instance_valid(target) else null
+
+
+func _set_actor_position(value: Vector2, id: StringName) -> void:
+	var node := _nodes.get(id) as Node2D
+	if is_instance_valid(node):
+		node.global_position = value
+		queue_redraw()
+
+
+func _reduced_motion() -> bool:
+	return bool(GameState.get_setting("accessibility", "reduced_motion", false))
+
+
+func _on_setting_changed(section: String, key: String, value: Variant) -> void:
+	if section == "accessibility" and key == "reduced_motion" and bool(value):
+		_settle_motion()
+		for effect: Node in get_children():
+			if effect.get_script() == HitPulseScript:
+				effect.queue_free()
+
+
+func _settle_motion() -> void:
+	for id: StringName in _moves.keys():
+		_stop_move(id)
+	for id: StringName in _flashes.keys():
+		_stop_flash(id)
+	_pending_defeats.clear()
+	_sync_actors(CombatEvent.new())
+	queue_redraw()
 
 
 func _stop_move(id: StringName) -> void:

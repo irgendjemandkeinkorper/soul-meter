@@ -18,6 +18,8 @@ signal pointer_cleared
 const UnitArtScript := preload("res://globals/unit_art.gd")
 const FieldOverlayScript := preload("res://world/combat_overlay.gd")
 const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
+const SpellCastScript := preload("res://ui/hud/spell_cast_effect.gd")
+const CombatMotionScript := preload("res://ui/hud/combat_motion.gd")
 const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
 const TargetPreviewScene := preload("res://ui/hud/target_preview.tscn")
 const BACKDROP_PATTERN := "res://assets/generated/backgrounds/combat/%s-battlefield-v1.png"
@@ -90,6 +92,9 @@ var _unit_nodes: Dictionary = {}
 var _field_overlay: FieldOverlayScript
 var _animate_events := true
 var _hit_flashes: Dictionary = {}
+var _moves: Dictionary = {}
+var _falls: Dictionary = {}
+var _pending_defeats: Dictionary = {}
 var _preview_id: StringName = &""
 var target_preview: PanelContainer
 
@@ -156,11 +161,16 @@ func _exit_tree() -> void:
 
 func set_replaying(replaying: bool) -> void:
 	_animate_events = not replaying
+	if replaying:
+		_settle_motion()
+		for effect: Node in _fx_layer.get_children():
+			effect.queue_free()
 	if is_instance_valid(_field_overlay):
 		_field_overlay.animate_events = not replaying
 
 
 func _ready() -> void:
+	GameState.setting_changed.connect(_on_setting_changed)
 	_backdrop = TextureRect.new()
 	_backdrop.name = "EnvironmentBackdrop"
 	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -187,7 +197,7 @@ func _ready() -> void:
 	add_child(target_preview)
 	resized.connect(
 		func() -> void:
-			_sync_units(false)
+			_settle_motion()
 			queue_redraw()
 	)
 	mouse_exited.connect(
@@ -228,8 +238,11 @@ func consume_event(event: CombatEvent) -> void:
 		_field_overlay.consume_event(event)
 		_field_overlay.set_pointer(_selected, _hovered)
 		return
+	if _animate_events and not _reduced_motion() and _unit_nodes.has(event.actor_id) \
+			and SpellCastScript.is_cast(event) and HitPulseScript.is_damaging_hit(event):
+		_pending_defeats[event.target_id] = event.get_instance_id()
 	var move_path := _path_cells(event.data.get("path_cells", []))
-	if event.type == &"action_resolved" and move_path.size() >= 2 \
+	if _animate_events and not _reduced_motion() and event.type == &"action_resolved" and move_path.size() >= 2 \
 			and _unit_nodes.has(event.actor_id):
 		_pending_path_id = event.actor_id
 		_pending_path = move_path
@@ -239,10 +252,11 @@ func consume_event(event: CombatEvent) -> void:
 	var animate_move := event.type == &"battlefield_changed"
 	_sync_units(animate_move)
 	if _animate_events and event.type == &"action_resolved" and move_path.is_empty():
-		_input_locked_until_msec = maxi(
-			_input_locked_until_msec,
-			Time.get_ticks_msec() + roundi(ACTION_FEEDBACK_SECONDS * 1000.0)
-		)
+		if not _reduced_motion():
+			var duration := SpellCastScript.DURATION if SpellCastScript.is_cast(event) else ACTION_FEEDBACK_SECONDS
+			_input_locked_until_msec = maxi(
+				_input_locked_until_msec, Time.get_ticks_msec() + roundi(duration * 1000.0)
+			)
 		_play_action_beat(event)
 	queue_redraw()
 
@@ -360,6 +374,9 @@ func clear_pointer() -> void:
 func pointer_input_available() -> bool:
 	if is_instance_valid(_field_overlay):
 		return _pointer_turn_available and not _field_overlay.is_animating()
+	for effect: Node in _fx_layer.get_children():
+		if effect.get_script() == SpellCastScript and effect.is_animating():
+			return false
 	return _pointer_turn_available and Time.get_ticks_msec() >= _input_locked_until_msec
 
 
@@ -633,6 +650,10 @@ func _sync_units(animate_move: bool) -> void:
 		return
 	_sync_cover_props()
 	if _tiles.is_empty() or _actors.is_empty():
+		for id: StringName in _moves.keys():
+			_stop_tween(_moves, id)
+		for id: StringName in _falls.keys():
+			_stop_tween(_falls, id)
 		for id: StringName in _hit_flashes.keys():
 			_stop_hit_flash(id)
 		for node: Node in _unit_nodes.values():
@@ -679,23 +700,25 @@ func _sync_units(animate_move: bool) -> void:
 		sprite.pivot_offset = Vector2(sprite.size.x * 0.5, sprite.size.y)
 		var destination := _sprite_pos_for_cell(sprite, cell, layout)
 		if id == _pending_path_id and _pending_path.size() >= 2:
-			# The sprite already stands on the path's first cell; slide it through
-			# the remaining waypoints the payload carried.
-			var slide := create_tween()
-			for index: int in range(1, _pending_path.size() - 1):
-				slide.tween_property(
-					sprite, "position",
-					_sprite_pos_for_cell(sprite, _pending_path[index], layout), DS.DUR_FAST
-				)
-				slide.tween_callback(_apply_painter_order)
-			slide.tween_property(sprite, "position", destination, DS.DUR_FAST)
-			slide.tween_callback(_apply_painter_order)
+			_stop_tween(_moves, id)
+			var points := PackedVector2Array([sprite.position])
+			for index: int in range(1, _pending_path.size()):
+				points.append(_sprite_pos_for_cell(sprite, _pending_path[index], layout))
+			var slide := CombatMotionScript.along_path(self, points, _set_unit_position.bind(id))
+			_moves[id] = slide
+			slide.tween_callback(func() -> void: _moves.erase(id))
 			_pending_path_id = &""
 			_pending_path = []
-		elif animate_move and sprite.position.distance_to(destination) > 1.0:
+		elif _moves.has(id):
+			# Turn/resource snapshots can arrive in the same frame as a committed move.
+			# Its tween owns position until it ends; do not teleport to the snapshot.
+			pass
+		elif animate_move and _animate_events and not _reduced_motion() and sprite.position.distance_to(destination) > 1.0:
 			var tween := create_tween()
-			tween.tween_property(sprite, "position", destination, DS.DUR_BASE)
-			tween.tween_callback(_apply_painter_order)
+			_moves[id] = tween
+			tween.tween_method(_set_unit_position.bind(id), sprite.position, destination, DS.DUR_BASE) \
+				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			tween.tween_callback(func() -> void: _moves.erase(id))
 		else:
 			sprite.position = destination
 		sprite.flip_h = String(actor.get("facing", "")).contains("w") \
@@ -703,25 +726,31 @@ func _sync_units(animate_move: bool) -> void:
 		var alive := int(actor.get("hp", 1)) > 0
 		var was_fallen := bool(_fallen.get(id, false))
 		if alive:
+			_stop_tween(_falls, id)
 			if not _hit_flashes.has(id):
 				sprite.modulate = Color.WHITE
 			sprite.rotation = 0.0
 			_fallen[id] = false
-		elif was_fallen or not _fallen.has(id):
+		elif _falls.has(id) or _pending_defeats.has(id):
+			pass
+		elif was_fallen or not _fallen.has(id) or not _animate_events or _reduced_motion():
 			# Already down, or first seen dead: settle in the fallen pose instantly.
 			sprite.modulate = KO_MODULATE
 			sprite.rotation = _fall_rotation(sprite)
 			_fallen[id] = true
 		else:
 			_stop_hit_flash(id)
-			_play_ko_fall(sprite)
+			_play_ko_fall(sprite, id)
 			_fallen[id] = true
 	for id: StringName in _unit_nodes.keys():
 		if not seen.has(id):
+			_stop_tween(_moves, id)
+			_stop_tween(_falls, id)
 			_stop_hit_flash(id)
 			(_unit_nodes[id] as Node).queue_free()
 			_unit_nodes.erase(id)
 			_fallen.erase(id)
+			_pending_defeats.erase(id)
 	_apply_painter_order()
 
 
@@ -787,20 +816,44 @@ func _sync_cover_props() -> void:
 func _play_action_beat(event: CombatEvent) -> void:
 	var attacker := _unit_nodes.get(event.actor_id) as TextureRect
 	var defender := _unit_nodes.get(event.target_id) as TextureRect
-	if attacker != null and defender != null and attacker != defender:
-		var home := attacker.position
+	if attacker != null and SpellCastScript.is_cast(event):
+		var targets: Array[Callable] = []
+		for cell: Vector2i in FireField.cells_from_data(event.data.get("cells", [])):
+			targets.append(cell_center.bind(cell))
+		if targets.is_empty():
+			targets.append(_result_anchor.bind(event.target_id if defender != null else event.actor_id))
+		var spell := SpellCastScript.new()
+		spell.name = "SpellCast"
+		spell.setup(event, _result_anchor.bind(event.actor_id), targets, float(_layout()["scale"]))
+		spell.impact_reached.connect(_present_action_result.bind(event), CONNECT_ONE_SHOT)
+		_fx_layer.add_child(spell)
+		return
+	if not _reduced_motion() and attacker != null and defender != null and attacker != defender:
+		_stop_tween(_moves, event.actor_id)
+		var home := _sprite_pos_for_cell(attacker, _cell_of(event.actor_id), _layout())
 		var toward := home + (defender.position - home).limit_length(DS.SPACE_4)
 		var lunge := create_tween()
-		lunge.tween_property(attacker, "position", toward, DS.DUR_FAST)
-		lunge.tween_property(attacker, "position", home, DS.DUR_FAST)
+		_moves[event.actor_id] = lunge
+		lunge.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		lunge.tween_method(_set_unit_position.bind(event.actor_id), attacker.position, toward, DS.DUR_FAST)
+		lunge.tween_method(_set_unit_position.bind(event.actor_id), toward, home, DS.DUR_FAST)
+		lunge.tween_callback(func() -> void: _moves.erase(event.actor_id))
+	_present_action_result(event)
+
+
+func _present_action_result(event: CombatEvent) -> void:
+	if _pending_defeats.get(event.target_id, 0) == event.get_instance_id():
+		_pending_defeats.erase(event.target_id)
+		_sync_units(false)
+	var defender := _unit_nodes.get(event.target_id) as TextureRect
 	# A felled defender is mid KO-fall — its fade tween owns modulate; flashing
 	# it back to white here would fight that tween frame-by-frame.
-	if defender != null and HitPulseScript.is_damaging_hit(event):
+	if defender != null and HitPulseScript.is_damaging_hit(event) and not _reduced_motion() and not SpellCastScript.is_cast(event):
 		var pulse := HitPulseScript.new()
 		pulse.name = "HitPulse"
 		pulse.position = defender.position + defender.size * Vector2(0.5, 0.45)
 		_fx_layer.add_child(pulse)
-	if defender != null and HitPulseScript.is_damaging_hit(event) and not bool(_fallen.get(event.target_id, false)):
+	if defender != null and HitPulseScript.is_damaging_hit(event) and not _reduced_motion() and not bool(_fallen.get(event.target_id, false)):
 		_stop_hit_flash(event.target_id)
 		var flash := create_tween()
 		_hit_flashes[event.target_id] = flash
@@ -848,12 +901,51 @@ func _fall_rotation(sprite: TextureRect) -> float:
 	return -KO_FALL_RADIANS if sprite.flip_h else KO_FALL_RADIANS
 
 
-func _play_ko_fall(sprite: TextureRect) -> void:
+func _play_ko_fall(sprite: TextureRect, id: StringName) -> void:
 	var fall := create_tween()
+	_falls[id] = fall
 	fall.set_parallel(true)
 	fall.tween_property(sprite, "rotation", _fall_rotation(sprite), DS.DUR_BASE) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	fall.tween_property(sprite, "modulate", KO_MODULATE, DS.DUR_BASE)
+	fall.chain().tween_callback(func() -> void: _falls.erase(id))
+
+
+func _set_unit_position(value: Vector2, id: StringName) -> void:
+	var unit := _unit_nodes.get(id) as TextureRect
+	if is_instance_valid(unit):
+		unit.position = value
+		_apply_painter_order()
+
+
+func _stop_tween(collection: Dictionary, id: StringName) -> void:
+	var tween := collection.get(id) as Tween
+	if tween != null and tween.is_valid():
+		tween.kill()
+	collection.erase(id)
+
+
+func _reduced_motion() -> bool:
+	return bool(GameState.get_setting("accessibility", "reduced_motion", false))
+
+
+func _on_setting_changed(section: String, key: String, value: Variant) -> void:
+	if section == "accessibility" and key == "reduced_motion" and bool(value):
+		_settle_motion()
+		for effect: Node in _fx_layer.get_children():
+			if effect.get_script() == HitPulseScript:
+				effect.queue_free()
+
+
+func _settle_motion() -> void:
+	for collection: Dictionary in [_moves, _falls, _hit_flashes]:
+		for id: StringName in collection.keys():
+			_stop_tween(collection, id)
+	_pending_path_id = &""
+	_pending_path.clear()
+	_pending_defeats.clear()
+	_input_locked_until_msec = 0
+	_sync_units(false)
 
 
 ## Accepts controller-projected cells only. Opaque position handles remain model-owned.
