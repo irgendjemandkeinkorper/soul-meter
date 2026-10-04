@@ -58,7 +58,7 @@ func test_live_cast_reaches_both_views_and_reports_damage_at_impact() -> void:
 	await await_millis(450)
 	assert_str((fx.get_node("DamagePop/Column/Outcome") as Label).text).is_equal("%d DAMAGE" % result.damage)
 	assert_str((overlay.get_node("DamagePop/Column/Outcome") as Label).text).is_equal("%d DAMAGE" % result.damage)
-	await await_millis(400)
+	await _await_settled(stage, overlay, 1500)
 	assert_bool(stage.pointer_input_available()).is_true()
 	assert_bool(overlay.is_animating()).is_false()
 	assert_object(fx.get_node_or_null("SpellCast")).is_null()
@@ -203,6 +203,16 @@ func test_leaving_battle_during_lunge_restores_borrowed_actor_position() -> void
 	assert_vector(actor.global_position).is_equal(home)
 	await await_millis(300)
 	assert_vector(actor.global_position).is_equal(home)
+
+
+## Effects run on frame deltas, which delta smoothing can hold behind the wall clock after a
+## slow frame, so a fixed sleep just past DURATION fails depending on what ran before. Wait on
+## the views themselves, bounded so a release that never comes still fails.
+func _await_settled(stage: BattleStageRegion, overlay: CombatOverlay, limit_ms: int) -> void:
+	var deadline := Time.get_ticks_msec() + limit_ms
+	while Time.get_ticks_msec() < deadline \
+			and (not stage.pointer_input_available() or overlay.is_animating()):
+		await get_tree().process_frame
 
 
 func _cast_event(fixture: Dictionary) -> CombatEvent:
