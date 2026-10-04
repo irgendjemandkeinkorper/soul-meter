@@ -1554,15 +1554,6 @@ func _cast_outcome_for_integrity(integrity: float) -> Dictionary:
 # ---- admission (same-map combat step 4): a mob joins a fight already running ----
 
 
-## F0 ruling 6 (2026-09-06), invariant A1, on the case the flat constant cannot cover: the
-## newcomer is the FASTEST actor on the field and is admitted DURING an enemy turn. At edge 48
-## it charges five times faster than the ally, so `admission_delay` alone buys roughly five
-## ticks against the ally's seventeen — it would act first, which is the exact unfairness the
-## delay exists to prevent. The controller must therefore escalate the delay until an ally
-## genuinely acts first, rather than seating the newcomer at the authored number and assuming.
-##
-## Admission is issued from inside the `enemy_turn_started` handler so it really is mid-enemy
-## turn, not merely "after one".
 ## #282: the A1 check deepens its projection only while the answer is open. A short peek is
 ## a prefix of a long one, so every answer must match the full-depth projection it replaced.
 func test_party_acts_before_matches_the_full_depth_projection() -> void:
@@ -1662,6 +1653,15 @@ func _party_acts_before_full_depth(controller_under_test: CombatController, acto
 	return false
 
 
+## F0 ruling 6 (2026-09-06), invariant A1, on the case the flat constant cannot cover: the
+## newcomer is the FASTEST actor on the field and is admitted DURING an enemy turn. At edge 48
+## it charges five times faster than the ally, so `admission_delay` alone buys roughly five
+## ticks against the ally's seventeen — it would act first, which is the exact unfairness the
+## delay exists to prevent. The controller must therefore escalate the delay until an ally
+## genuinely acts first, rather than seating the newcomer at the authored number and assuming.
+##
+## Admission is issued from inside the `enemy_turn_started` handler so it really is mid-enemy
+## turn, not merely "after one".
 func test_a_fast_hostile_admitted_during_an_enemy_turn_still_acts_after_the_party() -> void:
 	var local_rules := (
 		load("res://data/combat/combat_rules.tres") as CombatRules
