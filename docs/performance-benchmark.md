@@ -481,3 +481,29 @@ Three plain runs plus one attributed run on top of the HUD-listener changes abov
 
 `test_tile_snapshot_is_shared_until_a_tile_changes` covers the cache and the observer copy.
 Still about 25 times over the D9 line.
+
+### Later on 2026-10-04 — one path walk per enemy, not one per cell
+
+Three plain runs plus one attributed run, all `status: ok`.
+
+| Measurement (ms) | Tile cache | One walk |
+|---|---|---|
+| Enemy decision, mean | 49.1–50.8 | **25.5–26.7** |
+| Enemy decision, p95 | 73–81 | 27.7–28.8 |
+| Decision window, 104 decisions | 5,644–5,827 | 3,174–3,370 |
+
+Temporary timers (not committed) put `_best_enemy_position()` at 21.8 ms of a 49 ms decision.
+`reachable_positions()` still ran one capped Dijkstra walk per cell in the move box, up to 80
+of them. It now runs the walk once from the actor's cell to the cap and reads every cell's
+path from it. The walk settles cells in the same order a per-cell walk does (that walk only
+stops earlier), so each cell keeps the same path, the same CT cost and the same tie-breaks.
+`_deterministic_path()` is the same walk with a stop cell. 21.8 ms to 1.3 ms.
+`test_capped_reachable_positions_match_the_uncapped_brute_force` now also checks, cell by
+cell, that the shared walk's path equals a per-cell walk's path.
+
+Where a 26 ms decision goes now (timers, approximate): listeners about 15 ms per event
+(`BattleInterface` 5.8, the battle screen's `_refresh` 5.9 per turn, `BattleHUD` 2.6),
+`snapshot()` about 5.5 ms (turn order 2.8, enemy rows 1.8), Seam v2 observer copies 2.8 ms.
+Still about 13 times over the D9 line. Most of what is left is presentation redone for every
+enemy event. That is the batching #282 names, and it changes what the player sees during an
+enemy phase, so it needs a design call first.

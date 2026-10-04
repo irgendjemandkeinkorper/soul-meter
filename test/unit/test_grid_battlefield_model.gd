@@ -658,6 +658,21 @@ func test_capped_reachable_positions_match_the_uncapped_brute_force() -> void:
 	# The enclosed pocket is never reachable, whatever the budget.
 	assert_bool(model.reachable_positions(ally, 1000).has(model._handle_for_cell(Vector2i(2, 11)))) \
 		.is_false()
+	# #282: reachable_positions() reads every cell's path from one walk run to exhaustion. Each
+	# must be exactly the path a per-cell search stopping at that cell returns.
+	var origin := Vector2i(6, 6)
+	var origin_was_solid: bool = model._grid.is_point_solid(origin)
+	model._grid.set_point_solid(origin, false)
+	var tree: Dictionary = model._settled_paths(origin, INF)
+	for y in 14:
+		for x in 14:
+			var cell := Vector2i(x, y)
+			if cell == origin:
+				continue
+			assert_array(Array(model._settled_path(tree, origin, cell))).override_failure_message(
+				"path to %s differs between the shared walk and a per-cell walk" % cell
+			).is_equal(Array(model._deterministic_path(origin, cell)))
+	model._grid.set_point_solid(origin, origin_was_solid)
 
 
 func _tile_at(tiles: Array[Dictionary], cell: Vector2i) -> Dictionary:
