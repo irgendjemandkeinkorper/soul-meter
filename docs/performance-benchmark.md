@@ -558,3 +558,34 @@ whose turn begins more than one screen away.
 The rendered `screenshot_battle_screen` capture is pixel-identical to the one before this
 change. Synchronous listeners are now under 2 ms of a 16 ms decision; the rest is the
 controller, `snapshot()` and the Seam v2 observer copies. Still about 8 times over the D9 line.
+
+### Later on 2026-10-04 — actor and turn-order rows are read-only and shared
+
+Three plain runs plus one attributed run, all `status: ok`.
+
+| Measurement (ms) | Actor rows by reference | Read-only rows |
+|---|---|---|
+| Enemy decision, mean | 15.2–17.5 | **10.1–12.0** |
+| Enemy decision, p95 | 18.9–27.1 | 11.9–14.0 |
+| Ally turn with no enemy decision, mean | 25.7–28.8 | 21.3–26.3 |
+
+Temporary timers (not committed) split a 13 ms enemy decision: `snapshot()` 5.5 ms (turn
+order 2.6, enemy rows 1.7, the tile cache check 0.5), the Seam v2 observer copies about
+3.7 ms, listeners 1.3, `_best_enemy_position()` 1.2.
+
+1. **`allies`, `enemies` and `turn_order` are read-only.** `snapshot()` freezes each row and
+   its nested containers as it builds them, the same contract the tile array has. Every
+   nested value is already a fresh copy (`_actor_snapshots()` duplicates actor state; every
+   class resource's `snapshot()` builds a new dictionary), so the actors' live state stays
+   writable. `duplicate()` still hands a consumer a writable copy.
+2. **Observers share every read-only snapshot array.** `_observer_payload()` used to share
+   only the tiles; it now shares any read-only array in the snapshot and deep-copies the
+   rest. Three party observers no longer copy 100 enemy rows and 100 turn-order rows each.
+3. **Turn-order rows are copied shallowly.** Both schedulers build fresh flat entries for
+   every `round_overview()` / `peek_order()` call.
+
+`test_actor_and_turn_order_rows_are_read_only_copies_shared_with_observers` covers the rows,
+the live actor state, and the observer payload. Two presentation fixtures that edited a
+snapshot to fake a state now edit a `duplicate(true)` copy. A whole-tree run turned up no
+production write into a snapshot row. The rendered `screenshot_battle_screen` capture is
+pixel-identical. Still about 5 times over the D9 line.

@@ -923,12 +923,12 @@ func snapshot() -> Dictionary:
 		"balance_lock_until_round": balance_lock_until_round,
 		"threshold_effects_suppressed": threshold_effects_suppressed,
 		"active_actor_id": active_actor().combat_id if active_actor() else &"",
-		"allies": _actor_snapshots(allies),
-		"enemies": _actor_snapshots(enemies),
+		"allies": _frozen(_actor_snapshots(allies)),
+		"enemies": _frozen(_actor_snapshots(enemies)),
 		"tiles": _tile_snapshots(),
 		"weather": _weather_snapshot(),
 		"scheduler_mode": str(scheduler.to_dict().get("scheduler", "")) if scheduler != null else "",
-		"turn_order": _turn_order_snapshot(),
+		"turn_order": _frozen(_turn_order_snapshot()),
 		"movement": _movement_snapshot(),
 		"deferred": deferred_entries(),
 		"fire": {"lines": fire.snapshot(), "marks": _marks_snapshot()},
@@ -993,7 +993,8 @@ func _turn_order_snapshot() -> Array[Dictionary]:
 		var actor := entry.get("actor") as BattleActor
 		if actor == null:
 			continue
-		var row := entry.duplicate(true)
+		# Schedulers build fresh flat entries for every call; a shallow copy keeps theirs intact.
+		var row := entry.duplicate()
 		row.erase("actor")
 		row["actor_id"] = actor.combat_id
 		row["display_name"] = actor.display_name
@@ -2818,22 +2819,44 @@ func _emit_event(
 
 
 ## A private deep copy of a resolved action's payload for one observer, except the snapshot's
-## tile array: that is the shared read-only cache (see _tile_snapshots()), so an observer can
-## read it but not write to it, and copying 4,900 cells per observer is skipped (#282).
+## read-only arrays (tiles, allies, enemies, turn order): an observer can read those but not
+## write to them, so each observer shares them instead of copying 100 rows apiece (#282).
 func _observer_payload(data: Dictionary) -> Dictionary:
 	var snapshot_value: Variant = data.get("snapshot")
 	if not (snapshot_value is Dictionary):
 		return data.duplicate(true)
-	var tiles: Variant = (snapshot_value as Dictionary).get("tiles")
-	if not (tiles is Array) or not (tiles as Array).is_read_only():
-		return data.duplicate(true)
-	var shallow := data.duplicate()
+	var shared: Dictionary = {}
 	var snapshot_copy := (snapshot_value as Dictionary).duplicate()
-	snapshot_copy.erase("tiles")
+	for key: Variant in snapshot_copy.keys():
+		var value: Variant = snapshot_copy[key]
+		if value is Array and (value as Array).is_read_only():
+			shared[key] = value
+			snapshot_copy.erase(key)
+	var shallow := data.duplicate()
 	shallow["snapshot"] = snapshot_copy
 	var copy := shallow.duplicate(true)
-	(copy["snapshot"] as Dictionary)["tiles"] = tiles
+	(copy["snapshot"] as Dictionary).merge(shared)
 	return copy
+
+
+## Makes snapshot rows read-only, nested containers included, so presentation and observers
+## can hold them by reference; duplicate() hands back a writable copy (#282).
+static func _frozen(rows: Array[Dictionary]) -> Array[Dictionary]:
+	for row: Dictionary in rows:
+		_freeze(row)
+	rows.make_read_only()
+	return rows
+
+
+static func _freeze(value: Variant) -> void:
+	if value is Dictionary:
+		for nested: Variant in (value as Dictionary).values():
+			_freeze(nested)
+		(value as Dictionary).make_read_only()
+	elif value is Array:
+		for nested: Variant in value as Array:
+			_freeze(nested)
+		(value as Array).make_read_only()
 
 
 func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:

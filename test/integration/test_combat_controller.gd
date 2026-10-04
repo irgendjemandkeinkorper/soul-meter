@@ -936,6 +936,41 @@ func test_snapshot_reports_live_weather_and_charged_tiles() -> void:
 
 
 ## #282: the tile payload is one cached read-only array until a tile actually changes.
+## #282: actor and turn-order rows are read-only so presentation and Seam v2 observers can hold
+## them by reference. Freezing must never reach the actor's own live state.
+func test_actor_and_turn_order_rows_are_read_only_copies_shared_with_observers() -> void:
+	var local_controller := _grid_controller(true)
+	var snapshot := local_controller.snapshot()
+	for key: String in ["allies", "enemies", "turn_order"]:
+		var rows: Array = snapshot[key]
+		assert_bool(rows.is_read_only()).override_failure_message(key).is_true()
+		assert_bool(rows.is_empty()).override_failure_message(key).is_false()
+		assert_bool((rows[0] as Dictionary).is_read_only()).override_failure_message(key).is_true()
+	var row: Dictionary = (snapshot["allies"] as Array)[0]
+	assert_bool((row["anatomy"] as Dictionary).is_read_only()).is_true()
+	assert_bool((row["injuries"] as Dictionary).is_read_only()).is_true()
+	# The live actor keeps writable state; the next snapshot reads the change.
+	var actor: BattleActor = local_controller.allies[0]
+	assert_bool(actor.anatomy.is_read_only()).is_false()
+	assert_bool(actor.injuries.is_read_only()).is_false()
+	actor.injuries["test-location"] = {"severity": "minor"}
+	var after: Dictionary = (local_controller.snapshot()["allies"] as Array)[0]
+	assert_bool((after["injuries"] as Dictionary).has("test-location")).is_true()
+	# duplicate() still hands a consumer a writable copy.
+	var writable := row.duplicate(true)
+	writable["hp"] = 0
+	assert_int(int(writable["hp"])).is_equal(0)
+	# An observer's payload shares every read-only array and copies the rest.
+	var data := {"resolution": {"hit": true}, "snapshot": snapshot}
+	var copy := local_controller._observer_payload(data)
+	var copied_snapshot: Dictionary = copy["snapshot"]
+	for key: String in ["tiles", "allies", "enemies", "turn_order"]:
+		assert_bool(is_same(copied_snapshot[key], snapshot[key])).override_failure_message(key).is_true()
+	assert_bool(is_same(copied_snapshot, snapshot)).is_false()
+	assert_bool(is_same(copied_snapshot["movement"], snapshot["movement"])).is_false()
+	assert_dict(copied_snapshot["movement"]).is_equal(snapshot["movement"])
+
+
 func test_tile_snapshot_is_shared_until_a_tile_changes() -> void:
 	var local_controller := _grid_controller(true)
 	var first: Array = local_controller.snapshot()["tiles"]
