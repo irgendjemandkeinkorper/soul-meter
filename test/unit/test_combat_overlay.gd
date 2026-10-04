@@ -12,6 +12,19 @@ class FieldFixture extends FieldMap:
 		return grid
 
 
+class RosterField extends FieldFixture:
+	var roster: Array[Hostile] = []
+
+	func player() -> Player:
+		return null
+
+	func party_followers() -> PartyFollowers:
+		return null
+
+	func hostiles() -> Array[Hostile]:
+		return roster
+
+
 func test_region_forwards_frozen_payload_and_picks_transformed_field_cell() -> void:
 	var ground := _ground()
 	ground.position = Vector2(91, 64)
@@ -86,6 +99,44 @@ func test_snapshot_moves_existing_actor_and_does_not_create_duplicate_units() ->
 	assert_vector(actor.global_position).is_equal(grid.cell_to_world(Vector2i(1, 0)))
 	assert_int(overlay.get_child_count()).is_equal(0)
 	assert_int(actor.get_child_count()).is_equal(0)
+
+
+## Field nodes are bound when the snapshot roster changes, not on every event, so a hostile
+## admitted mid-session must still be bound and placed by the first snapshot that lists it.
+func test_hostile_admitted_mid_session_is_bound_by_the_first_snapshot_listing_it() -> void:
+	var ground := _ground()
+	var field := auto_free(RosterField.new()) as RosterField
+	field.layer = ground
+	field.grid = IsoGrid.new()
+	field.grid.build(ground)
+	add_child(field)
+	var root: Node2D = auto_free(Node2D.new())
+	root.name = "HostileFixture"
+	root.scene_file_path = "res://test/fixtures/hostile_field.tscn"
+	add_child(root)
+	var first := _hostile(root, "First")
+	var second := _hostile(root, "Second")
+	field.roster = [first]
+	var overlay := auto_free(Node2D.new()) as Node2D
+	overlay.set_script(load("res://world/combat_overlay.gd"))
+	add_child(overlay)
+	overlay.call("bind_field", field)
+	var opening := CombatEvent.new()
+	opening.type = &"battle_snapshot"
+	opening.data = {"snapshot": {"enemies": [
+		{"id": first.combat_id, "position": &"c:1,0,0", "hp": 9, "max_hp": 10},
+	]}}
+	overlay.call("consume_event", opening)
+	field.roster = [first, second]
+	var admitted := CombatEvent.new()
+	admitted.type = &"battle_snapshot"
+	admitted.data = {"snapshot": {"enemies": [
+		{"id": first.combat_id, "position": &"c:1,0,0", "hp": 9, "max_hp": 10},
+		{"id": second.combat_id, "position": &"c:0,0,0", "hp": 9, "max_hp": 10},
+	]}}
+	overlay.call("consume_event", admitted)
+	assert_vector(first.global_position).is_equal(field.grid.cell_to_world(Vector2i(1, 0)))
+	assert_vector(second.global_position).is_equal(field.grid.cell_to_world(Vector2i.ZERO))
 
 
 func test_move_survives_followup_snapshot_and_overlay_cleanup_restores_actor_color() -> void:
@@ -284,3 +335,11 @@ func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_th
 		"the camera returns to the player when the fight ends"
 	).is_equal(Vector2.ZERO)
 	assert_bool(overlay.call("pans_suppressed_for", &"enemy")).is_false()
+
+
+func _hostile(root: Node, node_name: String) -> Hostile:
+	var hostile := (load("res://actors/hostile/hostile.tscn") as PackedScene).instantiate() as Hostile
+	hostile.name = node_name
+	hostile.unit_id = &"bog-wight"
+	root.add_child(hostile)
+	return hostile

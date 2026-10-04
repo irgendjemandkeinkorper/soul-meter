@@ -71,6 +71,7 @@ var _tile_index_stale := false
 ## The payload array _tiles was read from. The controller hands out the same read-only array
 ## until a tile changes, so an identical one means there is nothing to re-read.
 var _tiles_source: Array = []
+## The snapshot's actor rows, by reference (read-only here; each snapshot builds fresh rows).
 var _actors: Array[Dictionary] = []
 var _backdrop_texture_cache: Dictionary = {}
 var _cover_texture_cache: Dictionary = {}
@@ -610,7 +611,7 @@ func _read_actors(snapshot: Dictionary) -> void:
 		if rows is Array:
 			for row: Variant in rows:
 				if row is Dictionary:
-					_actors.append((row as Dictionary).duplicate(true))
+					_actors.append(row as Dictionary)
 	_sync_background()
 
 

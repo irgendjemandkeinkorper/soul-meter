@@ -528,3 +528,33 @@ the one before this change.
 What is left per decision is mostly `BattleInterface.consume_event` (about 6 ms): the stage
 and field overlay, whose per-event work starts move and hit animations from that event's
 positions. Coalescing that needs a decision on how a 100-enemy phase should look.
+
+### Later on 2026-10-04 — the stage and field overlay stop copying the roster
+
+Three plain runs plus one attributed run, all `status: ok`.
+
+| Measurement (ms) | Once per frame | Actor rows by reference |
+|---|---|---|
+| Enemy decision, mean | 20.2–20.9 | **15.2–17.5** |
+| Enemy decision, p95 | — | 18.9–27.1 |
+| Ally turn with no enemy decision, mean | 32.2–34.2 | 25.7–28.8 |
+| `battle_interface.gd.consume_event`, self per call | 6.6 | 1.4 |
+
+Temporary timers (not committed) put the 6.6 ms almost entirely in reading actors: the
+stage region's `_read_actors()` 2.7 ms, the field overlay's actor pass about 3 ms (a deep
+copy of all 103 rows, `_bind_field_actors()` 0.9, `_sync_actors()` 0.6). Starting move and
+hit animations was not the cost: 3 of 137 events started one, and D9 already snaps an enemy
+whose turn begins more than one screen away.
+
+1. **Actor rows are held by reference.** `_actor_snapshots()` builds fresh rows for every
+   snapshot and neither the stage region nor the overlay writes to them, so both keep the
+   snapshot's own rows instead of deep-copying 103 of them per event.
+2. **The overlay binds field nodes when the roster changes.** `_bind_field_actors()` walked
+   every hostile and party node on every event. It now runs when the ordered list of actor
+   ids differs from the last one bound, which is admission and exit; `bind_field()` resets it.
+   `test_hostile_admitted_mid_session_is_bound_by_the_first_snapshot_listing_it` covers a
+   hostile that joins after the first snapshot.
+
+The rendered `screenshot_battle_screen` capture is pixel-identical to the one before this
+change. Synchronous listeners are now under 2 ms of a 16 ms decision; the rest is the
+controller, `snapshot()` and the Seam v2 observer copies. Still about 8 times over the D9 line.

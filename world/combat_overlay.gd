@@ -9,7 +9,10 @@ var _ground: TileMapLayer
 ## snapshot builds fresh ones). tile_at() hands out copies.
 var _tiles: Dictionary = {}
 var _tiles_source: Array = []  ## the payload array _tiles was read from; same array, same tiles
+## StringName -> the snapshot's actor row, by reference (read-only here; each snapshot builds
+## fresh rows).
 var _actors: Dictionary = {}
+var _bound_roster := PackedStringArray()  ## actor ids, in snapshot order, last bound to nodes
 var _nodes: Dictionary = {}
 var _moves: Dictionary = {}
 var _active_id: StringName
@@ -63,6 +66,7 @@ func set_preview_target(actor_id: StringName) -> void:
 
 func bind_field(field: FieldMap) -> void:
 	_field = field
+	_bound_roster = PackedStringArray()
 	z_index = 1
 	bind_grid(field.iso_grid(), field.ground())
 	var lead := field.player()
@@ -144,10 +148,16 @@ func consume_event(event: CombatEvent) -> void:
 				_tiles[Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))] = tile
 	if snapshot.has("allies") or snapshot.has("enemies"):
 		_actors.clear()
+		var roster := PackedStringArray()
 		for side: String in ["allies", "enemies"]:
 			for actor: Dictionary in snapshot.get(side, []):
-				_actors[StringName(str(actor.get("id", "")))] = actor.duplicate(true)
-		_bind_field_actors(snapshot)
+				var id := StringName(str(actor.get("id", "")))
+				_actors[id] = actor
+				roster.append(id)
+		# Binding walks every field node; the roster only changes on admission and exit.
+		if roster != _bound_roster:
+			_bound_roster = roster
+			_bind_field_actors(snapshot)
 	_reachable.clear()
 	_read_fields(snapshot)
 	var movement: Dictionary = snapshot.get("movement", {})
