@@ -88,6 +88,14 @@ var weather: Weather = Weather.new()
 ## measure application (residue-on-cast wiring is a separate authored-ability task).
 var tile_states: Array[TileState] = []
 var _tile_by_cell: Dictionary = {}  ## Vector2i -> TileState
+## The last `_tile_snapshots()` result and what it was built from (#282). Rebuilt only when the
+## terrain array, the encounter, or a live TileState's data changes; otherwise every snapshot
+## shares it. It is read-only, so a consumer that tries to write to it fails loudly.
+var _tiles_cache: Array[Dictionary] = []
+var _tiles_cache_terrain: Array[Dictionary] = []
+var _tiles_cache_encounter: StringName = &""
+var _tiles_cache_live: Dictionary = {}  ## Vector2i -> the TileState dict in _tiles_cache
+var _tiles_cache_cells: Dictionary = {}  ## Vector2i -> true: _tile_by_cell's keys at the build
 ## Khash prototype fire substrate (globals/combat/fire_field.gd): fire lines, Burning, Soaked.
 ## The controller applies every hazard/burn HP change through `_apply_resolution_writes()`.
 var fire: FireField = FireField.new()
@@ -996,15 +1004,24 @@ func _turn_order_snapshot() -> Array[Dictionary]:
 ## Keep the complete replay payload without allocating persistent state for untouched cells.
 ## Weather only changes already-charged cells, so untouched cells remain neutral.
 func _tile_snapshots() -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
 	if battlefield == null:
-		return result
+		return []
+	var terrain_rows := battlefield.tiles_snapshot()
+	if (
+		is_same(terrain_rows, _tiles_cache_terrain) and _tiles_cache_encounter == _encounter_id
+		and not _tiles_cache.is_empty() and _live_tiles_match_cache()
+	):
+		return _tiles_cache
+	var result: Array[Dictionary] = []
+	var live: Dictionary = {}
 	var neutral: Dictionary = TileState.create(_encounter_id, 0, 0).to_dict()
-	for terrain: Dictionary in battlefield.tiles_snapshot():
+	for terrain: Dictionary in terrain_rows:
 		var cell := Vector2i(int(terrain.get("x", 0)), int(terrain.get("y", 0)))
 		var tile: TileState = _tile_by_cell.get(cell)
 		if tile != null:
-			result.append(tile.to_dict())
+			var tile_data := tile.to_dict()
+			live[cell] = tile_data
+			result.append(tile_data)
 		else:
 			var data: Dictionary = neutral.duplicate()
 			data["x"] = cell.x
@@ -1012,7 +1029,31 @@ func _tile_snapshots() -> Array[Dictionary]:
 			data["height_delta"] = int(terrain.get("height_delta", 0))
 			data["cover"] = bool(terrain.get("cover", false))
 			result.append(data)
+	for data: Dictionary in result:
+		data.make_read_only()
+	result.make_read_only()
+	_tiles_cache = result
+	_tiles_cache_terrain = terrain_rows
+	_tiles_cache_encounter = _encounter_id
+	_tiles_cache_live = live
+	_tiles_cache_cells.clear()
+	for cell: Vector2i in _tile_by_cell:
+		_tiles_cache_cells[cell] = true
 	return result
+
+
+## True when the same cells have TileStates as at the last build and each still reads as
+## the dict the cache holds for it. A handful of to_dict() calls instead of 4,900.
+func _live_tiles_match_cache() -> bool:
+	if _tile_by_cell.size() != _tiles_cache_cells.size():
+		return false
+	for cell: Vector2i in _tile_by_cell:
+		if not _tiles_cache_cells.has(cell):
+			return false
+		if _tiles_cache_live.has(cell) \
+				and (_tile_by_cell[cell] as TileState).to_dict() != _tiles_cache_live[cell]:
+			return false
+	return true
 
 
 func _weather_snapshot() -> Dictionary:
@@ -2770,10 +2811,29 @@ func _emit_event(
 			if observer_resource.is_null():
 				continue
 			observer_resource.on_any_action(
-				event.actor_id, action_id, event.target_id, event.data.duplicate(true)
+				event.actor_id, action_id, event.target_id, _observer_payload(event.data)
 			)
 	if resolving_window:
 		_resolving = false
+
+
+## A private deep copy of a resolved action's payload for one observer, except the snapshot's
+## tile array: that is the shared read-only cache (see _tile_snapshots()), so an observer can
+## read it but not write to it, and copying 4,900 cells per observer is skipped (#282).
+func _observer_payload(data: Dictionary) -> Dictionary:
+	var snapshot_value: Variant = data.get("snapshot")
+	if not (snapshot_value is Dictionary):
+		return data.duplicate(true)
+	var tiles: Variant = (snapshot_value as Dictionary).get("tiles")
+	if not (tiles is Array) or not (tiles as Array).is_read_only():
+		return data.duplicate(true)
+	var shallow := data.duplicate()
+	var snapshot_copy := (snapshot_value as Dictionary).duplicate()
+	snapshot_copy.erase("tiles")
+	shallow["snapshot"] = snapshot_copy
+	var copy := shallow.duplicate(true)
+	(copy["snapshot"] as Dictionary)["tiles"] = tiles
+	return copy
 
 
 func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:

@@ -455,3 +455,29 @@ decision. What is left, largest first: the controller and scheduler (about 68 ms
 decision, including `snapshot()` rebuilding every tile), the field overlay's own per-event
 work (about 5 ms), and admission. Batching, off-screen skipping and the per-tick budget are
 still not built.
+
+### Later on 2026-10-04 — the tile payload is built once
+
+Three plain runs plus one attributed run on top of the HUD-listener changes above, all
+`status: ok`.
+
+| Measurement (ms) | After HUD listeners | Tile cache only | Tile cache + observer copies |
+|---|---|---|---|
+| Enemy decision, mean | 85–87 | 70.5–73.2 | **49.1–50.8** |
+| Enemy decision, p95 | 111–114 | 94–100 | 73–81 |
+| Decision window, 104 decisions | 9,680–9,904 | 7,996–8,312 | 5,644–5,827 |
+
+1. **`CombatController._tile_snapshots()` keeps its result.** It rebuilt one dictionary per
+   cell (4,900) for every snapshot, and a snapshot goes out with every event. It now returns
+   the same read-only array until the terrain array, the encounter, or the data of a live
+   `TileState` changes; checking costs one `to_dict()` per live `TileState`, not per cell.
+   Because the array is read-only, a consumer that tries to write to it gets an error instead
+   of corrupting every later event. The stage region and field overlay skip their tile pass
+   when the same array arrives again.
+2. **Seam v2 observers share the tiles.** Every resolved action handed each non-null class
+   resource a deep copy of the payload, snapshot tiles included: three party members, three
+   4,900-cell copies per action. `_observer_payload()` still deep-copies everything else and
+   passes the read-only tile array as is. No class resource reads tiles.
+
+`test_tile_snapshot_is_shared_until_a_tile_changes` covers the cache and the observer copy.
+Still about 25 times over the D9 line.

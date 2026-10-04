@@ -68,6 +68,9 @@ const NO_CELL := Vector2i(-999, -999)
 var _tiles: Array[Dictionary] = []
 var _tile_index: Dictionary = {}  # Vector2i -> the tile dictionary in _tiles; see _tile_lookup()
 var _tile_index_stale := false
+## The payload array _tiles was read from. The controller hands out the same read-only array
+## until a tile changes, so an identical one means there is nothing to re-read.
+var _tiles_source: Array = []
 var _actors: Array[Dictionary] = []
 var _backdrop_texture_cache: Dictionary = {}
 var _cover_texture_cache: Dictionary = {}
@@ -219,7 +222,8 @@ func consume_event(event: CombatEvent) -> void:
 	var snapshot: Dictionary = event.data.get("snapshot", {})
 	_encounter_id = StringName(str(snapshot.get("encounter_id", "")))
 	var tile_values: Variant = event.data.get("tiles", snapshot.get("tiles", []))
-	if tile_values is Array:
+	if tile_values is Array and not is_same(tile_values, _tiles_source):
+		_tiles_source = tile_values
 		_tiles.clear()
 		for value: Variant in tile_values:
 			if value is Dictionary:

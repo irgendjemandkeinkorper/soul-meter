@@ -935,6 +935,33 @@ func test_snapshot_reports_live_weather_and_charged_tiles() -> void:
 	assert_str(str((charged[0] as Dictionary)["charge_element_id"])).is_equal("zhur")
 
 
+## #282: the tile payload is one cached read-only array until a tile actually changes.
+func test_tile_snapshot_is_shared_until_a_tile_changes() -> void:
+	var local_controller := _grid_controller(true)
+	var first: Array = local_controller.snapshot()["tiles"]
+	assert_bool(first.is_read_only()).is_true()
+	assert_bool(is_same(local_controller.snapshot()["tiles"], first)).is_true()
+	# A tile created by a lookup reads as neutral: same content, so the array may stay.
+	var tile: TileState = local_controller.tile_state_at(Vector2i(0, 0))
+	var created: Array = local_controller.snapshot()["tiles"]
+	assert_array(created).is_equal(first)
+	# A charge on that tile must reach the next snapshot.
+	tile.apply_residue(&"zhur")
+	var charged: Array = local_controller.snapshot()["tiles"]
+	assert_bool(is_same(charged, created)).is_false()
+	var cell: Dictionary = charged.filter(
+		func(t: Variant) -> bool: return int((t as Dictionary)["x"]) == 0 and int((t as Dictionary)["y"]) == 0
+	)[0]
+	assert_str(str(cell["charge_element_id"])).is_equal("zhur")
+	assert_int(int(cell["charge_level"])).is_greater(0)
+	# An observer's private payload copy shares the read-only tiles and copies the rest.
+	var data := {"resolution": {"hit": true}, "snapshot": local_controller.snapshot()}
+	var copy := local_controller._observer_payload(data)
+	assert_bool(is_same((copy["snapshot"] as Dictionary)["tiles"], charged)).is_true()
+	assert_bool(is_same(copy["resolution"], data["resolution"])).is_false()
+	assert_dict(copy["resolution"]).is_equal(data["resolution"])
+
+
 func test_snapshot_preserves_encounter_identity_for_environment_presentation() -> void:
 	controller.start([ally], [enemy], &"dorthkor-vanguard")
 

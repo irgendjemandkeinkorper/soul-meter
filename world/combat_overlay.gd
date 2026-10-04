@@ -8,6 +8,7 @@ var _ground: TileMapLayer
 ## Vector2i -> the controller snapshot's tile dictionary, by reference (read-only here; each
 ## snapshot builds fresh ones). tile_at() hands out copies.
 var _tiles: Dictionary = {}
+var _tiles_source: Array = []  ## the payload array _tiles was read from; same array, same tiles
 var _actors: Dictionary = {}
 var _nodes: Dictionary = {}
 var _moves: Dictionary = {}
@@ -135,7 +136,8 @@ func set_pointer(selected: Variant, hovered: Variant) -> void:
 func consume_event(event: CombatEvent) -> void:
 	var snapshot: Dictionary = event.data.get("snapshot", {})
 	var tiles: Variant = event.data.get("tiles", snapshot.get("tiles", []))
-	if tiles is Array:
+	if tiles is Array and not is_same(tiles, _tiles_source):
+		_tiles_source = tiles
 		_tiles.clear()
 		for tile: Variant in tiles:
 			if tile is Dictionary:
