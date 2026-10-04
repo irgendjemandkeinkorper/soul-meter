@@ -35,7 +35,10 @@ func consume_event(event: CombatEvent) -> void:
 		_last_check_math.clear()
 	var snapshot_value: Variant = event.data.get("snapshot", {})
 	if snapshot_value is Dictionary:
-		_snapshot = snapshot_value.duplicate(true)
+		# The HUD never reads the board; leaving the tiles out skips copying every cell.
+		var shallow: Dictionary = (snapshot_value as Dictionary).duplicate()
+		shallow.erase("tiles")
+		_snapshot = shallow.duplicate(true)
 	if event.data.get("initiative") is Array:
 		_initiative = event.data.get("initiative", []).duplicate(true)
 	_consume_weaknesses(event)

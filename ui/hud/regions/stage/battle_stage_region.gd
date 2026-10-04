@@ -63,7 +63,11 @@ const KO_MODULATE := Color(0.5, 0.5, 0.56, 0.45)
 const KO_FALL_RADIANS := deg_to_rad(78.0)
 const NO_CELL := Vector2i(-999, -999)
 
+## Tile dictionaries are the controller snapshot's own, held by reference: each snapshot
+## builds fresh ones and no presentation code writes to them. Copies leave through _tile_at().
 var _tiles: Array[Dictionary] = []
+var _tile_index: Dictionary = {}  # Vector2i -> the tile dictionary in _tiles; see _tile_lookup()
+var _tile_index_stale := false
 var _actors: Array[Dictionary] = []
 var _backdrop_texture_cache: Dictionary = {}
 var _cover_texture_cache: Dictionary = {}
@@ -219,7 +223,8 @@ func consume_event(event: CombatEvent) -> void:
 		_tiles.clear()
 		for value: Variant in tile_values:
 			if value is Dictionary:
-				_tiles.append((value as Dictionary).duplicate(true))
+				_tiles.append(value)
+		_tile_index_stale = true
 	_read_actors(snapshot)
 	_set_movement(snapshot.get("movement", {}))
 	_read_fields(snapshot)
@@ -447,20 +452,27 @@ func _refresh_hover() -> void:
 			for path_cell: Variant in path_value:
 				if path_cell is Vector2i:
 					_hover_path.append(path_cell)
-	for tile: Dictionary in _tiles:
-		if Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0))) == _hovered:
-			tile_hovered.emit(tile.duplicate(true))
-			break
+	if _hovered != Vector2i(-1, -1) and _tile_lookup().has(_hovered):
+		tile_hovered.emit(_tile_at(_hovered))
 	queue_redraw()
 	if is_instance_valid(_field_overlay):
 		_field_overlay.set_pointer(_selected, _hovered)
 
 
 func _tile_at(cell: Vector2i) -> Dictionary:
-	for tile: Dictionary in _tiles:
-		if Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0))) == cell:
-			return tile.duplicate(true)
-	return {}
+	return (_tile_lookup().get(cell, {}) as Dictionary).duplicate(true)
+
+
+## Built on first lookup after a snapshot, so events that never look a tile up never pay for it.
+func _tile_lookup() -> Dictionary:
+	if _tile_index_stale:
+		_tile_index.clear()
+		for tile: Dictionary in _tiles:
+			var cell := Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))
+			if not _tile_index.has(cell):  # first wins, as the old linear scan did
+				_tile_index[cell] = tile
+		_tile_index_stale = false
+	return _tile_index
 
 
 func _actor_at(cell: Vector2i) -> StringName:

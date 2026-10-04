@@ -406,3 +406,52 @@ Next targets, largest first:
 
 The benchmark's decision timer folds silent forced passes into the next decision, so the
 p95 and max rows can include more than one enemy's work.
+
+## 2026-10-04 — populated field, HUD listeners — provisional — WSL2 headless, NOT reference-hardware acceptance evidence
+
+Same machine, scenario and caveats as 2026-10-03. Baseline is one attributed run of
+`feat/f2-populated-field-benchmark` with the combat-presentation work (#432) merged in, so
+the spell and motion code is the version that will ship. "After" is three plain runs plus
+one attributed run. All reports have `status: ok`.
+
+| Measurement (ms) | Baseline | After: run 1 / 2 / 3 | D9 line |
+|---|---|---|---|
+| Enemy decision, mean | 132 | **86 / 85 / 87** | **2** |
+| Enemy decision, p50 | 121 | 79 / 78 / 80 | — |
+| Enemy decision, p95 | 172 | 114 / 111 / 114 | — |
+| Decision window, 104 decisions | 13,037 (last turn only) | 9,749 / 9,680 / 9,904 (whole window) | — |
+| Idle field frame, p50 | — | 0.37 / 0.44 / 0.39 | — |
+
+| Listener, self time per call (ms) | Baseline | After |
+|---|---|---|
+| `battle_interface.gd.consume_event` | 35.7 | 9.0 |
+| `battle.gd._refresh` | 15.9 | 6.6 |
+| `battle_hud.gd.consume_event` | 14.0 | 2.6 |
+
+Temporary timers (not committed) split the 36 ms: the stage region 27 ms (10 copying 4,900
+tiles, 13 in the field overlay, which copied them again, 4 reading actors and movement), the
+CT timeline 7.4 ms, everything else under 0.3 ms. `_refresh` was 11 ms in
+`Battle.available_actions()`.
+
+What changed:
+
+1. **Tiles are held by reference.** The stage region and the field overlay deep-copied every
+   tile dictionary on every event. Each controller snapshot builds fresh tile dictionaries
+   and no presentation code writes to them, so both now keep the snapshot's own; anything
+   that hands a tile out (`_tile_at()`, `tile_at()`, `tile_hovered`) still returns a copy.
+2. **The stage looks tiles up by cell.** `_refresh_hover()` ran on every event and scanned
+   all 4,900 tiles for the hovered cell. A cell index is now built on first lookup after a
+   snapshot, and not at all when nothing is hovered.
+3. **`BattleHUD` leaves `tiles` out of its snapshot copy.** It never reads the board.
+4. **The CT timeline reuses its markers** instead of freeing and rebuilding one label per
+   combatant (103 here) on every event. 7.4 ms to under 0.1.
+5. **`CombatActionCatalog` keeps its loaded action Resources.** Nothing held a reference, so
+   the ResourceLoader cache dropped them and every `all()`, `player_actions()` and `by_id()`
+   call re-read all 59 files from disk: 8.6 of the 11 ms. Callers still get deep copies;
+   `by_id()` now copies one action instead of all of them.
+
+Still about 43 times over the D9 line. The listeners are now about 18 ms of an 86 ms
+decision. What is left, largest first: the controller and scheduler (about 68 ms per
+decision, including `snapshot()` rebuilding every tile), the field overlay's own per-event
+work (about 5 ms), and admission. Batching, off-screen skipping and the per-tick budget are
+still not built.

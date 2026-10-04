@@ -5,6 +5,8 @@ extends Node2D
 
 var _grid: IsoGrid
 var _ground: TileMapLayer
+## Vector2i -> the controller snapshot's tile dictionary, by reference (read-only here; each
+## snapshot builds fresh ones). tile_at() hands out copies.
 var _tiles: Dictionary = {}
 var _actors: Dictionary = {}
 var _nodes: Dictionary = {}
@@ -137,7 +139,7 @@ func consume_event(event: CombatEvent) -> void:
 		_tiles.clear()
 		for tile: Variant in tiles:
 			if tile is Dictionary:
-				_tiles[Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))] = tile.duplicate(true)
+				_tiles[Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))] = tile
 	if snapshot.has("allies") or snapshot.has("enemies"):
 		_actors.clear()
 		for side: String in ["allies", "enemies"]:
