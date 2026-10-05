@@ -114,7 +114,7 @@ func test_npc_and_enemy_sprite_origins_are_at_the_feet() -> void:
 		# The old negative-node-position expectation was stale after UnitArt moved grounding to offset.
 		assert_vector(sprite.offset) \
 			.override_failure_message("%s's painterly art must be offset to its feet" % name) \
-			.is_equal(UnitArtScript.PIVOT_OFFSET * UnitArtScript.WORLD_SCALE)
+			.is_equal_approx(UnitArtScript.PIVOT_OFFSET * sprite.scale.y, Vector2.ONE * 0.001)
 
 
 func test_actors_own_local_y_sort_does_not_leak_a_fixed_z_index() -> void:

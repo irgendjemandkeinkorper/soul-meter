@@ -68,3 +68,6 @@ func _apply_party_member() -> void:
 	if party_member == null or _sprite == null:
 		return
 	_sprite.texture = PartyMemberVisualsScript.field_texture(party_member)
+	if _sprite.has_meta(&"unit_art_world_scaled"):
+		# Each texture draws at its own target height; re-derive from the unscaled state.
+		UnitArt.apply_world_scale(_sprite, get_node_or_null("Shadow"))

@@ -75,9 +75,9 @@ func test_marshal_uses_story_dialogue_and_generated_isometric_model() -> void:
 	assert_str(sprite.texture.resource_path).starts_with(
 		"res://assets/generated/sprites/units/"
 	)
+	# Feet stay planted: the pivot shrinks by the same factor as the art.
 	assert_bool(sprite.offset.is_equal_approx(
-		preload("res://globals/unit_art.gd").PIVOT_OFFSET
-		* preload("res://globals/unit_art.gd").WORLD_SCALE
+		preload("res://globals/unit_art.gd").PIVOT_OFFSET * sprite.scale.y
 	)).is_true()
 	_free_interior(interior)
 

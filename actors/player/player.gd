@@ -85,6 +85,8 @@ func _refresh_member_art() -> void:
 	var texture := PartyMemberVisuals.field_texture(party_member())
 	if texture != null:
 		_sprite.texture = texture
+		# Each texture draws at its own target height; re-derive from the unscaled state.
+		UnitArt.apply_world_scale(_sprite, get_node_or_null("Shadow"))
 
 
 func _physics_process(delta: float) -> void:

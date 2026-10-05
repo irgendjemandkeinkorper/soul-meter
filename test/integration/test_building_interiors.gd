@@ -9,13 +9,13 @@ const WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wa
 const COUNTER_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-counter--bar.png"
 const SHARED_INTERIOR_SCENE_PATH := "res://world/interiors/building_interior.tscn"
 const MAX_SOLID_PROP_FOOTPRINT_SIZE := Vector2(120.0, 48.0)
-## The 1.2–1.4 door band was ratified (#210) against the pre-shrink player art.
-## UnitArt.WORLD_SCALE later shrank every field actor while environment art
-## stayed at authored size (owner directive 2026-08-31: maps read larger), so
-## the measured door/player ratio is the authored band divided by that scale.
-const UnitArtRef := preload("res://globals/unit_art.gd")
-const MIN_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.2 / UnitArtRef.WORLD_SCALE
-const MAX_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.4 / UnitArtRef.WORLD_SCALE
+## The 1.2–1.4 door band was ratified (#210) against the unscaled player art.
+## UnitArt later shrank field actors (0.55, then a per-texture factor to the
+## 112 px adult height, owner decisions 2026-08-31 / 2026-10-05) while
+## environment art stayed at authored size, so the band is checked against the
+## player's height before that factor.
+const MIN_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.2
+const MAX_DOOR_TO_PLAYER_HEIGHT_RATIO := 1.4
 const MAX_PROP_TO_DOOR_HEIGHT_RATIO := 1.0
 const MAX_ARCHITECTURE_TO_DOOR_HEIGHT_RATIO := 1.8
 const TALL_ARCHITECTURE_NAME_PARTS: Array[String] = ["Shelf", "Shelving", "Column"]
@@ -374,7 +374,8 @@ func test_all_registered_concrete_interiors_meet_scale_and_signage_contract() ->
 		if player_visual_height <= 0.0 or door_visual_height <= 0.0:
 			continue
 
-		var door_to_player_ratio := door_visual_height / player_visual_height
+		var player_world_factor := absf(player_sprite.scale.y)
+		var door_to_player_ratio := door_visual_height / (player_visual_height / player_world_factor)
 		assert_float(door_to_player_ratio) \
 			.override_failure_message(
 				"Door/player visual-height ratio %.3f must be at least %.1f: %s"
