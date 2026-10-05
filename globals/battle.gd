@@ -50,8 +50,13 @@ var _spawned_hostiles: Array[Hostile] = []
 ## field-grid model seats the party where it stands and the enemies across from it.
 var _set_piece_pending: bool = false
 var _set_piece_seats: Array[Vector2i] = []
-## PROVISIONAL: how many cells east of the player a set-piece's first enemy is seated when the
-## encounter authors no cells of its own (authored set-piece cells are #348's contract).
+## PROVISIONAL: where a set-piece's enemies are seated when the encounter authors no cells of
+## its own (authored set-piece cells are #348's contract). The first enemy stands this many
+## grid steps to the player's right on screen, so the two read side by side rather than one
+## drawn over the other; each further enemy stands SET_PIECE_ENEMY_ROW_STEPS below the last.
+const SET_PIECE_ENEMY_SCREEN_STEPS := 2
+const SET_PIECE_ENEMY_ROW_STEPS := 2
+## Grid fallback when the field has no IsoGrid to project screen directions through.
 const SET_PIECE_ENEMY_OFFSET := Vector2i(3, 0)
 ## True only for an ambient `start_session()` fight. A set-piece is also a session, but it
 ## keeps its authored encounter ledger; the per-group ledger and the flee rule below are the
@@ -771,8 +776,16 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 		initial[allies[index]] = seats[index]
 		taken[seats[index]] = true
 	var anchor: Vector2i = seats[0]
+	var grid := field.iso_grid()
+	var first_seat := (
+		_screen_steps(grid, anchor, Vector2.RIGHT, SET_PIECE_ENEMY_SCREEN_STEPS) if grid != null
+		else anchor + SET_PIECE_ENEMY_OFFSET
+	)
 	for index in enemies.size():
-		var wanted: Vector2i = anchor + SET_PIECE_ENEMY_OFFSET + Vector2i(0, index)
+		var wanted: Vector2i = (
+			_screen_steps(grid, first_seat, Vector2.DOWN, SET_PIECE_ENEMY_ROW_STEPS * index)
+			if grid != null else first_seat + Vector2i(0, index)
+		)
 		var found := model.seat_near(wanted, taken)
 		if not bool(found.get("ok", false)):
 			return
@@ -780,6 +793,15 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 		taken[found["cell"]] = true
 	if bool(model.configure_initial_cells(initial).get("allowed", false)):
 		_set_piece_seats.assign(seats)
+
+
+## The cell `steps` neighbour-steps from `from` in a screen direction; the field's TileMap owns
+## the projection, so this holds for any grid transform.
+func _screen_steps(grid: IsoGrid, from: Vector2i, direction: Vector2, steps: int) -> Vector2i:
+	var cell := from
+	for _step in steps:
+		cell = grid.screen_direction_to_neighbor(cell, direction)
+	return cell
 
 
 func _current_field_map() -> FieldMap:
