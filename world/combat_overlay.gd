@@ -5,8 +5,14 @@ extends Node2D
 
 var _grid: IsoGrid
 var _ground: TileMapLayer
+## Vector2i -> the controller snapshot's tile dictionary, by reference (read-only here; each
+## snapshot builds fresh ones). tile_at() hands out copies.
 var _tiles: Dictionary = {}
+var _tiles_source: Array = []  ## the payload array _tiles was read from; same array, same tiles
+## StringName -> the snapshot's actor row, by reference (read-only here; each snapshot builds
+## fresh rows).
 var _actors: Dictionary = {}
+var _bound_roster := PackedStringArray()  ## actor ids, in snapshot order, last bound to nodes
 var _nodes: Dictionary = {}
 var _moves: Dictionary = {}
 var _active_id: StringName
@@ -31,11 +37,22 @@ var animate_events := true:
 			_settle_motion()
 			for effect: Node in get_children():
 				effect.queue_free()
+## D6 camera: the field camera belongs to the player and keeps following them. The overlay
+## only drives its `offset`, so limits and smoothing stay the player's, and clearing the
+## offset at the end is all it takes to hand the view back.
+var _camera: Camera2D
+var _camera_anchor: Node2D
+var _camera_tween: Tween
+## Actor ids whose current turn began beyond one screen of margin (D9): no pan, no move
+## tween — the actor snaps between cells until its next turn starts nearer the view.
+var _suppressed: Dictionary = {}
 const NUMERIC_FONT := preload(DS.FONT_NUMERIC)
 const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
 const SpellCastScript := preload("res://ui/hud/spell_cast_effect.gd")
 const CombatMotionScript := preload("res://ui/hud/combat_motion.gd")
 const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
+## D9: how far past the visible rect an enemy may start its turn and still earn a pan.
+const CAMERA_MARGIN_SCREENS := 1.0
 
 
 func _ready() -> void:
@@ -49,8 +66,23 @@ func set_preview_target(actor_id: StringName) -> void:
 
 func bind_field(field: FieldMap) -> void:
 	_field = field
+	_bound_roster = PackedStringArray()
 	z_index = 1
 	bind_grid(field.iso_grid(), field.ground())
+	var lead := field.player()
+	if lead != null:
+		var camera := lead.get_node_or_null("Camera2D") as Camera2D
+		if camera != null:
+			bind_camera(camera, lead)
+
+
+func bind_camera(camera: Camera2D, anchor: Node2D) -> void:
+	_camera = camera
+	_camera_anchor = anchor
+
+
+func pans_suppressed_for(actor_id: StringName) -> bool:
+	return _suppressed.has(actor_id)
 
 
 func cell_at_viewport(point: Vector2) -> Vector2i:
@@ -67,6 +99,10 @@ func bind_grid(grid: IsoGrid, ground: TileMapLayer) -> void:
 func bind_actor(actor_id: StringName, node: Node2D) -> void:
 	_nodes[actor_id] = node
 	if is_instance_valid(node) and not _original_colors.has(node):
+		# A locked hostile's dim is its gate, not its colour. It is bound with the rest of the
+		# field at session start; its colour is recorded once it opens and can actually join.
+		if node is Hostile and not (node as Hostile).is_unlocked():
+			return
 		_original_colors[node] = node.modulate
 
 
@@ -75,6 +111,7 @@ func _exit_tree() -> void:
 	for node: Variant in _original_colors:
 		if is_instance_valid(node):
 			node.modulate = _original_colors[node]
+	_release_camera(false)
 
 
 func is_animating() -> bool:
@@ -103,17 +140,24 @@ func set_pointer(selected: Variant, hovered: Variant) -> void:
 func consume_event(event: CombatEvent) -> void:
 	var snapshot: Dictionary = event.data.get("snapshot", {})
 	var tiles: Variant = event.data.get("tiles", snapshot.get("tiles", []))
-	if tiles is Array:
+	if tiles is Array and not is_same(tiles, _tiles_source):
+		_tiles_source = tiles
 		_tiles.clear()
 		for tile: Variant in tiles:
 			if tile is Dictionary:
-				_tiles[Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))] = tile.duplicate(true)
+				_tiles[Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))] = tile
 	if snapshot.has("allies") or snapshot.has("enemies"):
 		_actors.clear()
+		var roster := PackedStringArray()
 		for side: String in ["allies", "enemies"]:
 			for actor: Dictionary in snapshot.get(side, []):
-				_actors[StringName(str(actor.get("id", "")))] = actor.duplicate(true)
-		_bind_field_actors(snapshot)
+				var id := StringName(str(actor.get("id", "")))
+				_actors[id] = actor
+				roster.append(id)
+		# Binding walks every field node; the roster only changes on admission and exit.
+		if roster != _bound_roster:
+			_bound_roster = roster
+			_bind_field_actors(snapshot)
 	_reachable.clear()
 	_read_fields(snapshot)
 	var movement: Dictionary = snapshot.get("movement", {})
@@ -125,12 +169,14 @@ func consume_event(event: CombatEvent) -> void:
 		&"turn_started", &"enemy_turn_started":
 			_active_id = event.actor_id
 			_target_id = &""
+			_focus_camera(event.actor_id, event.type == &"enemy_turn_started")
 		&"action_resolved":
 			_active_id = event.actor_id
 			_target_id = event.target_id
 		&"battle_finished":
 			_active_id = &""
 			_target_id = &""
+			_release_camera(animate_events)
 	if animate_events and not _reduced_motion() and is_instance_valid(_nodes.get(event.actor_id)) \
 			and SpellCastScript.is_cast(event) and HitPulseScript.is_damaging_hit(event):
 		_pending_defeats[event.target_id] = event.get_instance_id()
@@ -138,6 +184,59 @@ func consume_event(event: CombatEvent) -> void:
 	if animate_events and event.type == &"action_resolved" and (event.data.get("path_cells", []) as Array).is_empty():
 		_play_action(event)
 	queue_redraw()
+
+
+## The rect the player currently sees, in world space, from the camera the overlay drives.
+## Uses the intended centre (anchor + offset) rather than the smoothed one so a pan already
+## in flight is not re-decided against a half-way frame.
+func _view_rect() -> Rect2:
+	var size := _camera.get_viewport_rect().size / _camera.zoom
+	var center := _camera_anchor.global_position + _camera.offset
+	return Rect2(center - size * 0.5, size)
+
+
+func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
+	if not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
+		return
+	var node := _nodes.get(actor_id) as Node2D
+	if not is_instance_valid(node):
+		return
+	var view := _view_rect()
+	if view.has_point(node.global_position):
+		_suppressed.erase(actor_id)
+		return
+	if is_enemy and not view.grow_individual(
+		view.size.x * CAMERA_MARGIN_SCREENS, view.size.y * CAMERA_MARGIN_SCREENS,
+		view.size.x * CAMERA_MARGIN_SCREENS, view.size.y * CAMERA_MARGIN_SCREENS
+	).has_point(node.global_position):
+		_suppressed[actor_id] = true
+		return
+	_suppressed.erase(actor_id)
+	_pan_camera_to(node.global_position - _camera_anchor.global_position)
+
+
+func _release_camera(animated: bool) -> void:
+	_suppressed.clear()
+	if not is_instance_valid(_camera):
+		return
+	if animated:
+		_pan_camera_to(Vector2.ZERO)
+		return
+	if _camera_tween != null and _camera_tween.is_valid():
+		_camera_tween.kill()
+	_camera_tween = null
+	_camera.offset = Vector2.ZERO
+
+
+func _pan_camera_to(offset: Vector2) -> void:
+	if _camera_tween != null and _camera_tween.is_valid():
+		_camera_tween.kill()
+	_camera_tween = null
+	if not animate_events or not is_inside_tree():
+		_camera.offset = offset
+		return
+	_camera_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_camera_tween.tween_property(_camera, "offset", offset, DS.DUR_BASE)
 
 
 func _bind_field_actors(snapshot: Dictionary) -> void:
@@ -168,7 +267,10 @@ func _sync_actors(event: CombatEvent) -> void:
 		if cell == null:
 			continue
 		var path: Array = event.data.get("path_cells", [])
-		if animate_events and not _reduced_motion() and event.type == &"action_resolved" and id == event.actor_id and path.size() >= 2:
+		if (
+			animate_events and not _reduced_motion() and event.type == &"action_resolved"
+			and id == event.actor_id and path.size() >= 2 and not _suppressed.has(id)
+		):
 			_stop_move(id)
 			var points := PackedVector2Array([node.global_position])
 			for index: int in range(1, path.size()):

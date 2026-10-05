@@ -61,11 +61,24 @@ func request_keeper_encounter() -> void:
 	_start_trial_encounter(KEEPER_ENCOUNTER_ID)
 
 
+## The trial fights are set-pieces fought in the hall itself (#281 D5): Battle spawns the
+## warden or keeper as a Hostile where the party stands, and the deployment slate still opens
+## for them (F0 D3: deployment survives for scripted set-pieces).
 func _start_trial_encounter(encounter_id: StringName) -> void:
 	_active_trial_encounter = encounter_id
-	Battle.start(encounter_id)
-	if Battle.ended:
+	var field := find_child("FieldMap", true, false) as FieldMap
+	var opened: Dictionary = Battle.start_set_piece(field, encounter_id)
+	if not bool(opened.get("allowed", false)):
+		push_warning(
+			"Trial encounter '%s' refused: %s" % [encounter_id, opened.get("message", "")]
+		)
+	if not bool(opened.get("allowed", false)) or Battle.ended:
+		# A fight that never opened must not count as started, or the beat is lost for good.
 		_active_trial_encounter = &""
+		if encounter_id == WARDEN_ENCOUNTER_ID:
+			GameState.set_flag(WARDEN_STARTED_FLAG, false)
+		elif encounter_id == KEEPER_ENCOUNTER_ID:
+			GameState.set_flag(KEEPER_STARTED_FLAG, false)
 		return
 	trial_encounter_started.emit(encounter_id)
 	GameFlow.send_event("enter_set_piece")

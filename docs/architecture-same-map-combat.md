@@ -215,6 +215,37 @@ exist. Retiring those surfaces, camera behavior, authored Hostile migration, and
 Bog Wight acceptance remain required before #281 can close. The focused tests are in
 `test/unit/test_combat_overlay.gd`; the existing BattleInterface tests guard the frozen payload.
 
+### Ambient entry wired — 2026-09-19 (`feat/same-map-ambient`)
+
+Until this slice nothing in production called `Battle.start_session()`, and no world scene
+authored a `Hostile`; ambient combat was reachable only from the labs and the suite. Now the
+flow owns the edge: `GameFlow.watch_field_hostiles()` is armed in `_complete_scene_load()`, the
+first accepted alert opens the session and sends `enter_battle`, and Battle admits every later
+alert itself. `FieldMap.register_hostile()` (called from `Hostile._ready()`) keeps late-arriving
+hostiles on that path. `Battle._end_session()` settles the field per D7: dead hostiles stay
+`DOWNED` on the map (dim, walk-over), standing ones return to `IDLE` at full HP under the
+re-alert cooldown. `test_room` (Bog Wight, Loam Boar) and `dorthkor_road` (Breach Hound + Rift
+Scavenger) author `Hostile` nodes; `dorthkor-muster` and the Wound Lip post stay `Enemy`
+set-pieces. Evidence: `docs/qa/same-map-2026-09-19/`. The log-hidden Bog Wight acceptance is
+**not yet met** (stacked seating, no visible action beat) — see that README.
+
+### Set-pieces fought on the field — 2026-10-03 (`port/424-unique`)
+
+`Battle.start_set_piece(field, encounter)` no longer wraps a zone-battlefield `start()`. The
+battlefield is built from the field it is handed, the party is seated where it stands
+(`_seat_set_piece`, the same `resolve_placement()` the ambient path uses), and each encounter
+enemy gets a `Hostile` body that adopts the actor `start()` built (`Hostile.adopt_actor()`,
+`_spawn_set_piece_hostiles`). Spawned bodies are freed in `_end_session()`; authored hostiles
+are untouched. `can_fight_here(field, set_piece = true)` skips the no-combat-zone rule, because
+an authored encounter is placed by design (the Trial Hall is an interior); ambient alerts still
+honour it. The Lower Trial Hall gained a hidden `IsometricGround` so its `FieldMap` has a walk
+grid, and it keeps its deployment slate (`enter_set_piece`). The journey ambush sends
+`enter_battle` as it did before this slice, so it still opens without deployment.
+
+Enemy seating is PROVISIONAL (`SET_PIECE_ENEMY_OFFSET`, three cells east of the player, nearest
+free cell otherwise); authored set-piece cells are #348. Evidence:
+`docs/qa/same-map-2026-10-03/`.
+
 ### Step 8, weather half — landed 2026-09-08
 
 `LocationDefinition.weather_default` is authored per location (wilds = mozh, Dorthkor Road =

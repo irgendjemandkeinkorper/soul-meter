@@ -79,7 +79,8 @@ func test_move_survives_followup_snapshot_and_replay_cancels_motion() -> void:
 	var actor: Node2D = fixture.ally_node
 	var board_home := unit.position
 	var field_home := actor.global_position
-	var snapshot := controller.snapshot()
+	# Snapshot rows are read-only (#282); a fixture edits a writable copy.
+	var snapshot := controller.snapshot().duplicate(true)
 	snapshot.allies[0]["position"] = Vector2i(3, 0)
 	var event := CombatEvent.new()
 	event.type = &"action_resolved"
@@ -223,7 +224,7 @@ func _cast_event(fixture: Dictionary) -> CombatEvent:
 	event.target_id = controller.enemies[0].combat_id
 	event.data = {"verb": CombatAction.Verb.CAST, "damage": 7, "resolution": {
 		"hit": true, "fizzled": false, "composition": {"elements": ["khash"]},
-	}, "snapshot": controller.snapshot()}
+	}, "snapshot": controller.snapshot().duplicate(true)}
 	return event
 
 

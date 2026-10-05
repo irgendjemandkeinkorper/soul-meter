@@ -88,6 +88,14 @@ var weather: Weather = Weather.new()
 ## measure application (residue-on-cast wiring is a separate authored-ability task).
 var tile_states: Array[TileState] = []
 var _tile_by_cell: Dictionary = {}  ## Vector2i -> TileState
+## The last `_tile_snapshots()` result and what it was built from (#282). Rebuilt only when the
+## terrain array, the encounter, or a live TileState's data changes; otherwise every snapshot
+## shares it. It is read-only, so a consumer that tries to write to it fails loudly.
+var _tiles_cache: Array[Dictionary] = []
+var _tiles_cache_terrain: Array[Dictionary] = []
+var _tiles_cache_encounter: StringName = &""
+var _tiles_cache_live: Dictionary = {}  ## Vector2i -> the TileState dict in _tiles_cache
+var _tiles_cache_cells: Dictionary = {}  ## Vector2i -> true: _tile_by_cell's keys at the build
 ## Khash prototype fire substrate (globals/combat/fire_field.gd): fire lines, Burning, Soaked.
 ## The controller applies every hazard/burn HP change through `_apply_resolution_writes()`.
 var fire: FireField = FireField.new()
@@ -494,14 +502,23 @@ func _seat_with_admission_guarantee(actor: BattleActor, side: StringName) -> Dic
 ## True when some living ally's turn begins strictly before `actor`'s first projected turn.
 ## Read from `scheduler.peek_order()`, which projects from the same arithmetic `advance()`
 ## uses — asking the timeline is the only way this check cannot disagree with resolution.
+## The projection is deterministic, so a short peek is a prefix of a long one. Most answers
+## sit in the first few turns; projecting 400 turns of a 100-actor session for each admission
+## froze a chain-alert hop for seconds (#282). Deepen only while the answer is still open.
 func _party_acts_before(actor: BattleActor) -> bool:
-	var depth := maxi(16, (allies.size() + enemies.size() + 2) * 4)
-	for entry: Dictionary in scheduler.peek_order(depth):
-		var next := entry.get("actor") as BattleActor
-		if next == actor:
+	var max_depth := maxi(16, (allies.size() + enemies.size() + 2) * 4)
+	var depth := mini(8, max_depth)
+	while true:
+		var order := scheduler.peek_order(depth)
+		for entry: Dictionary in order:
+			var next := entry.get("actor") as BattleActor
+			if next == actor:
+				return false
+			if next != null and next.is_alive() and allies.has(next):
+				return true
+		if depth >= max_depth or order.size() < depth:
 			return false
-		if next != null and next.is_alive() and allies.has(next):
-			return true
+		depth = mini(depth * 2, max_depth)
 	return false
 
 
@@ -915,12 +932,12 @@ func snapshot() -> Dictionary:
 		"balance_lock_until_round": balance_lock_until_round,
 		"threshold_effects_suppressed": threshold_effects_suppressed,
 		"active_actor_id": active_actor().combat_id if active_actor() else &"",
-		"allies": _actor_snapshots(allies),
-		"enemies": _actor_snapshots(enemies),
+		"allies": _frozen(_actor_snapshots(allies)),
+		"enemies": _frozen(_actor_snapshots(enemies)),
 		"tiles": _tile_snapshots(),
 		"weather": _weather_snapshot(),
 		"scheduler_mode": str(scheduler.to_dict().get("scheduler", "")) if scheduler != null else "",
-		"turn_order": _turn_order_snapshot(),
+		"turn_order": _frozen(_turn_order_snapshot()),
 		"movement": _movement_snapshot(),
 		"deferred": deferred_entries(),
 		"fire": {"lines": fire.snapshot(), "marks": _marks_snapshot()},
@@ -985,7 +1002,8 @@ func _turn_order_snapshot() -> Array[Dictionary]:
 		var actor := entry.get("actor") as BattleActor
 		if actor == null:
 			continue
-		var row := entry.duplicate(true)
+		# Schedulers build fresh flat entries for every call; a shallow copy keeps theirs intact.
+		var row := entry.duplicate()
 		row.erase("actor")
 		row["actor_id"] = actor.combat_id
 		row["display_name"] = actor.display_name
@@ -996,15 +1014,24 @@ func _turn_order_snapshot() -> Array[Dictionary]:
 ## Keep the complete replay payload without allocating persistent state for untouched cells.
 ## Weather only changes already-charged cells, so untouched cells remain neutral.
 func _tile_snapshots() -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
 	if battlefield == null:
-		return result
+		return []
+	var terrain_rows := battlefield.tiles_snapshot()
+	if (
+		is_same(terrain_rows, _tiles_cache_terrain) and _tiles_cache_encounter == _encounter_id
+		and not _tiles_cache.is_empty() and _live_tiles_match_cache()
+	):
+		return _tiles_cache
+	var result: Array[Dictionary] = []
+	var live: Dictionary = {}
 	var neutral: Dictionary = TileState.create(_encounter_id, 0, 0).to_dict()
-	for terrain: Dictionary in battlefield.tiles_snapshot():
+	for terrain: Dictionary in terrain_rows:
 		var cell := Vector2i(int(terrain.get("x", 0)), int(terrain.get("y", 0)))
 		var tile: TileState = _tile_by_cell.get(cell)
 		if tile != null:
-			result.append(tile.to_dict())
+			var tile_data := tile.to_dict()
+			live[cell] = tile_data
+			result.append(tile_data)
 		else:
 			var data: Dictionary = neutral.duplicate()
 			data["x"] = cell.x
@@ -1012,7 +1039,31 @@ func _tile_snapshots() -> Array[Dictionary]:
 			data["height_delta"] = int(terrain.get("height_delta", 0))
 			data["cover"] = bool(terrain.get("cover", false))
 			result.append(data)
+	for data: Dictionary in result:
+		data.make_read_only()
+	result.make_read_only()
+	_tiles_cache = result
+	_tiles_cache_terrain = terrain_rows
+	_tiles_cache_encounter = _encounter_id
+	_tiles_cache_live = live
+	_tiles_cache_cells.clear()
+	for cell: Vector2i in _tile_by_cell:
+		_tiles_cache_cells[cell] = true
 	return result
+
+
+## True when the same cells have TileStates as at the last build and each still reads as
+## the dict the cache holds for it. A handful of to_dict() calls instead of 4,900.
+func _live_tiles_match_cache() -> bool:
+	if _tile_by_cell.size() != _tiles_cache_cells.size():
+		return false
+	for cell: Vector2i in _tile_by_cell:
+		if not _tiles_cache_cells.has(cell):
+			return false
+		if _tiles_cache_live.has(cell) \
+				and (_tile_by_cell[cell] as TileState).to_dict() != _tiles_cache_live[cell]:
+			return false
+	return true
 
 
 func _weather_snapshot() -> Dictionary:
@@ -2763,11 +2814,58 @@ func _emit_event(
 		# Seam v2 broadcast: every actor's resource sees every resolved action (Threads).
 		var action_id := StringName(str(event.data.get("action_id", "")))
 		for observer: BattleActor in allies + enemies:
-			_class_resource_of(observer).on_any_action(
-				event.actor_id, action_id, event.target_id, event.data.duplicate(true)
+			var observer_resource := _class_resource_of(observer)
+			# A null resource ignores the broadcast, so it gets no private copy of the payload.
+			# The copy carries the whole snapshot; one per bystander was 838 ms of every
+			# resolved action with 100 hostiles on the field (#282).
+			if observer_resource.is_null():
+				continue
+			observer_resource.on_any_action(
+				event.actor_id, action_id, event.target_id, _observer_payload(event.data)
 			)
 	if resolving_window:
 		_resolving = false
+
+
+## A private deep copy of a resolved action's payload for one observer, except the snapshot's
+## read-only arrays (tiles, allies, enemies, turn order): an observer can read those but not
+## write to them, so each observer shares them instead of copying 100 rows apiece (#282).
+func _observer_payload(data: Dictionary) -> Dictionary:
+	var snapshot_value: Variant = data.get("snapshot")
+	if not (snapshot_value is Dictionary):
+		return data.duplicate(true)
+	var shared: Dictionary = {}
+	var snapshot_copy := (snapshot_value as Dictionary).duplicate()
+	for key: Variant in snapshot_copy.keys():
+		var value: Variant = snapshot_copy[key]
+		if value is Array and (value as Array).is_read_only():
+			shared[key] = value
+			snapshot_copy.erase(key)
+	var shallow := data.duplicate()
+	shallow["snapshot"] = snapshot_copy
+	var copy := shallow.duplicate(true)
+	(copy["snapshot"] as Dictionary).merge(shared)
+	return copy
+
+
+## Makes snapshot rows read-only, nested containers included, so presentation and observers
+## can hold them by reference; duplicate() hands back a writable copy (#282).
+static func _frozen(rows: Array[Dictionary]) -> Array[Dictionary]:
+	for row: Dictionary in rows:
+		_freeze(row)
+	rows.make_read_only()
+	return rows
+
+
+static func _freeze(value: Variant) -> void:
+	if value is Dictionary:
+		for nested: Variant in (value as Dictionary).values():
+			_freeze(nested)
+		(value as Dictionary).make_read_only()
+	elif value is Array:
+		for nested: Variant in value as Array:
+			_freeze(nested)
+		(value as Array).make_read_only()
 
 
 func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:

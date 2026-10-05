@@ -2,6 +2,20 @@ extends GdUnitTestSuite
 
 const SCENE_PATH := "res://world/wound_lip.tscn"
 
+var _game_state_before: Dictionary
+
+
+## CleanedGuard is a same-map Hostile (#281): it retires itself in `_ready` when its group is
+## already flagged beaten, so a suite that cleared the post earlier in the run must not take
+## it away from this contract.
+func before_test() -> void:
+	_game_state_before = GameState.to_dict().duplicate(true)
+	GameState.set_flag("defeated_cleaned_jawbrace_guard", false)
+
+
+func after_test() -> void:
+	GameState.from_dict(_game_state_before)
+
 
 func test_scene_instantiates_with_gameplay_contract() -> void:
 	var packed_scene := load(SCENE_PATH) as PackedScene

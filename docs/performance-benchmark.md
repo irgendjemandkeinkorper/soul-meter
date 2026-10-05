@@ -23,6 +23,16 @@ GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
 # Gate T-9 populated-grid battle (rendered; requires an available display)
 DISPLAY=:0 GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
   --scenario populated-grid --display-mode rendered -o reports/fr904-grid-rendered.json
+
+# #282 F2 populated field: 100 synthesized hostiles, idle field, then an ambient session with
+# all 100 admitted and one round of enemy decisions timed (headless regression signal)
+GODOT_BIN=~/.local/bin/godot bash scripts/benchmark_performance.sh \
+  --scenario populated_field --display-mode headless --raw-samples \
+  -o reports/fr904-field100-headless.json
+# `--decision-target 5` shortens the decision window for a smoke run; the default is one
+# decision per admitted hostile (100).
+# `--attribute-listeners` adds `session.listeners`: self time per synchronous combat-event
+# listener during the decision window. Its proxies cost time, so compare only attributed runs.
 ```
 
 Or invoke the harness directly:
@@ -44,6 +54,8 @@ godot --headless --path . --script res://tools/performance_benchmark.gd
 | `town_npc_spawner` | Idle sprite count, per-sprite per-frame work, whether viewport culling exists |
 | `scene_baseline` | Authored node/Sprite2D counts for the target scene |
 | `environment` | OS, CPU, renderer, Godot build — runs are only comparable within one environment |
+| `session` (populated field only) | In-session frame window with every hostile admitted, admission timings, and the enemy AI decision distribution against the D9 2 ms line |
+| `scenario` (populated scenarios) | Scenario identity, counts, fixtures, placement, and `acceptance_evidence: false` |
 
 Percentiles rather than a mean: a mean hides the stutter a player actually notices. The p95/p99
 tail is the number that matters.
@@ -59,6 +71,12 @@ tail is the number that matters.
 - `--scenario populated-grid` instead targets the production battle screen with three existing
   party members, the existing two-enemy `dorthkor-vanguard` composition, an 8×4 grid, the
   charge-time scheduler, and a deterministic charged-tile rendering fixture on all 32 tiles.
+- `--scenario populated_field` targets `world/test_room.tscn` through GameFlow with three party
+  members and 100 synthesized `Hostile` instances (the D9 presence budget) placed row-major on
+  every other open cell outside the party's alert radius, registered through
+  `FieldMap.register_hostile`. Its `frame_time_ms` is the idle field with no session; its
+  `session` block is the same field after the production alert path opened an ambient session
+  and admitted all 100. See the 2026-10-03 section below.
 - Report carries `schema_version` so downstream diffing can detect format changes.
 
 Two runs are comparable only when `environment` matches. Comparing a laptop on battery to CI
@@ -277,3 +295,332 @@ settled baseline measured **6.859 ms p95**, while the initial full window carrie
 setup delta. That confirms the rendered tail has the same window defect. This remains one
 provisional WSLg/WSL2 profiling run, not the required three-run reference-hardware acceptance set;
 do not infer a budget change or Gate T-9 decision from it.
+
+## 2026-10-03 — populated field, 100 hostiles — provisional — WSL2 headless, NOT reference-hardware acceptance evidence
+
+First measurement for #282 (F2, the D9 scale budget). `tools/populated_field_benchmark.gd` on
+`world/test_room.tscn`: three party members, 100 synthesized bog-wights plus the two authored
+hostiles, Intel i5-13400F / 16 threads, Godot 4.7.1, headless `gl_compatibility`. Draw calls
+read 0, so nothing here says anything about rendering cost.
+
+Three runs at each of three points: before any change, after fix 1, and after fix 2 (both
+below). All nine reports have `status: ok` and no errors.
+
+| Measurement (ms) | Before: run 1 / 2 / 3 | After fix 1 | After fix 2 | D9 line |
+|---|---|---|---|---|
+| Idle field frame, p50 | 0.342 / 0.341 / 0.282 | 0.344 / 0.403 / 0.449 | 0.436 / 0.364 / 0.482 | — |
+| In-session frame, p50 (ally turn pending) | 0.381 / 0.332 / 0.350 | 0.321 / 0.432 / 0.306 | 0.425 / 0.404 / 0.412 | — |
+| First alert to visible battle HUD | 450 / 489 / 451 | 418 / 451 / 419 | 479 / 468 / 483 | — |
+| Admission, mean per hostile | 68.7 / 68.9 / 67.4 | 64.1 / 70.2 / 67.0 | 70.7 / 70.1 / 69.0 | — |
+| Admission, all 100 | 6801 / 6823 / 6676 | 6346 / 6951 / 6636 | 6997 / 6937 / 6836 | — |
+| Enemy decision, mean | 3486 / 3556 / 3422 | 2596 / 2651 / 2602 | **137 / 138 / 140** | **2** |
+| Enemy decision, p50 | 2344 / 2434 / 2292 | 1409 / 1559 / 1449 | 126 / 127 / 131 | — |
+| Enemy decision, p95 | 13195 / 13181 / 13050 | 12452 / 12416 / 12793 | 178 / 172 / 168 | — |
+| Enemy decision, max | 18345 / 18339 / 17950 | 17358 / 17480 / 16799 | 409 / 364 / 385 | — |
+| Decision window, 104 decisions | 360,635 (run 1) | — | 15,913 / 16,105 / 16,291 | — |
+| Ally turn with no enemy decision, mean | 577 (run 1) | 203 / 220 / 201 | 223 / 224 / 231 | — |
+
+Node count was 866 on the idle field and 1087 in session (before runs).
+
+### What the numbers say
+
+1. **Presence is cheap.** 100 idle hostiles cost under half a millisecond of process time per
+   frame. The D9 "presence budget" holds on this machine, headless.
+2. **A round is still not playable.** The D9 line is a 2 ms mean per enemy decision. Before
+   this slice the mean was about 3,500 ms and a round of 100 decisions took six minutes. After
+   both fixes it is about 138 ms and a round takes 16 s: 25 times faster, and still about 70
+   times over the line.
+3. **Admission is slow too.** About 67 ms per hostile, 6.3 to 7.0 s to admit 100.
+
+### Fix 1: no snapshot copy for class resources that ignore it
+
+`CombatController._emit_event()` broadcasts every resolved action to every combatant's class
+resource (Seam v2), handing each a deep copy of the event payload. The payload carries the full
+snapshot, which on this field includes 4,900 tile dictionaries. Enemies carry a
+`NullClassResource`, whose `on_any_action` does nothing, so 100 of those copies were made and
+thrown away per resolved action. The loop now skips null resources. No observer that reads the
+broadcast is affected.
+
+A scratch probe (not committed; same field, 100 admitted, no HUD attached) timed the pieces:
+
+| Piece | Before | After |
+|---|---|---|
+| `_emit_event(action_resolved)` | 838 ms | 28 to 31 ms |
+| `_emit_event` of a non-resolving event | 15 ms | 13 to 14 ms |
+| `snapshot()` | 21 ms | 17 ms |
+| of which `_tile_snapshots()` (4,900 tiles) | 15 ms | 14 ms |
+| deep copy of one snapshot | 9 ms | 8 ms |
+| `reachable_positions()` for one enemy (22 cells returned) | 32 ms | 29 ms |
+| `_best_enemy_position()` | 30 ms | 28 ms |
+| `Battle.admit()` x 99 | 7910 ms | 7102 to 7244 ms |
+
+### Fix 2: path searches stop at the move budget
+
+`--attribute-listeners` (added in this slice; see "Running it") showed the listeners were
+not the problem: they took 7 s of a 266 s decision window. Temporary timers in the
+controller's enemy loop (not committed) put 96% of each decision in `_best_enemy_position()`:
+2,573 ms mean of 2,677 ms.
+
+`GridBattlefieldModel.reachable_positions()` runs one `_deterministic_path()` search per cell
+in the move box (up to 80 cells). That search is a Dijkstra in GDScript that re-sorts its
+whole frontier on every pop and had no stopping rule other than reaching the destination. For
+a cell nothing can reach (walled in by the enemy's own side, which is what a crowd around the
+party looks like) it flooded the entire connected grid, 4,900 cells. Decisions got slower as
+enemies converged: 284 ms for the first, 3,597 ms mean once the party was surrounded.
+
+`reachable_positions()` now passes a cap to the search. A step costs `ceil(move_ct_cost * w)`
+CT and at most `sqrt(2) * w` search cost for the same weight, so any path whose search cost
+exceeds `budget * sqrt(2) / move_ct_cost` also exceeds the CT budget, and the cell would have
+been rejected anyway. Below the cap the search order, path and tie-breaks are unchanged.
+`path_query()`, `move()` and `move_query()` are uncapped, as before.
+`test_capped_reachable_positions_match_the_uncapped_brute_force` checks the capped answer
+against the uncapped one for five budgets on a field with elevation, a cliff-walled pocket
+and a ring of enemies with one gap.
+
+### Where the remaining 138 ms goes
+
+One attributed run after fix 2 (proxy overhead included, so its 135 ms mean is not directly
+comparable): 15.7 s decision window, 130 events, 125 `turn_resolved`.
+
+| Listener (self time) | Calls | Total ms | Mean ms per call |
+|---|---|---|---|
+| `combat_event` -> `battle_interface.gd.consume_event` | 130 | 4,690 | 36.1 |
+| `turn_resolved` -> `battle.gd._refresh` | 125 | 2,043 | 16.3 |
+| `combat_event` -> `battle_hud.gd.consume_event` | 130 | 1,867 | 14.4 |
+| `event_emitted` -> `battle.gd._on_combat_event` | 130 | 52 | 0.4 |
+| style tracker + combat audio | 260 | 4 | under 0.1 |
+| **Listeners total** | | **8,657** | |
+| Controller and scheduler (the rest of the window) | | about 7,000 | about 68 per decision |
+
+The listeners are now about 55% of the window. Measured earlier, inside the controller:
+`snapshot()` is about 14 ms per event (most of it 4,900 tile dictionaries), and one
+`reachable_positions()` call for an enemy with open ground around it about 30 ms.
+
+Next targets, largest first:
+
+1. `BattleInterface.consume_event` (36 ms per event) and the battle screen's `_refresh`
+   (16 ms per turn): presentation work redone per event for 100 enemies.
+2. `snapshot()` rebuilding every tile on every event.
+3. Admission, about 70 ms per hostile. Not looked at.
+4. The batching, off-screen skipping and per-tick budget that #282 names. None is built.
+
+The benchmark's decision timer folds silent forced passes into the next decision, so the
+p95 and max rows can include more than one enemy's work.
+
+## 2026-10-04 — populated field, HUD listeners — provisional — WSL2 headless, NOT reference-hardware acceptance evidence
+
+Same machine, scenario and caveats as 2026-10-03. Baseline is one attributed run of
+`feat/f2-populated-field-benchmark` with the combat-presentation work (#432) merged in, so
+the spell and motion code is the version that will ship. "After" is three plain runs plus
+one attributed run. All reports have `status: ok`.
+
+| Measurement (ms) | Baseline | After: run 1 / 2 / 3 | D9 line |
+|---|---|---|---|
+| Enemy decision, mean | 132 | **86 / 85 / 87** | **2** |
+| Enemy decision, p50 | 121 | 79 / 78 / 80 | — |
+| Enemy decision, p95 | 172 | 114 / 111 / 114 | — |
+| Decision window, 104 decisions | 13,037 (last turn only) | 9,749 / 9,680 / 9,904 (whole window) | — |
+| Idle field frame, p50 | — | 0.37 / 0.44 / 0.39 | — |
+
+| Listener, self time per call (ms) | Baseline | After |
+|---|---|---|
+| `battle_interface.gd.consume_event` | 35.7 | 9.0 |
+| `battle.gd._refresh` | 15.9 | 6.6 |
+| `battle_hud.gd.consume_event` | 14.0 | 2.6 |
+
+Temporary timers (not committed) split the 36 ms: the stage region 27 ms (10 copying 4,900
+tiles, 13 in the field overlay, which copied them again, 4 reading actors and movement), the
+CT timeline 7.4 ms, everything else under 0.3 ms. `_refresh` was 11 ms in
+`Battle.available_actions()`.
+
+What changed:
+
+1. **Tiles are held by reference.** The stage region and the field overlay deep-copied every
+   tile dictionary on every event. Each controller snapshot builds fresh tile dictionaries
+   and no presentation code writes to them, so both now keep the snapshot's own; anything
+   that hands a tile out (`_tile_at()`, `tile_at()`, `tile_hovered`) still returns a copy.
+2. **The stage looks tiles up by cell.** `_refresh_hover()` ran on every event and scanned
+   all 4,900 tiles for the hovered cell. A cell index is now built on first lookup after a
+   snapshot, and not at all when nothing is hovered.
+3. **`BattleHUD` leaves `tiles` out of its snapshot copy.** It never reads the board.
+4. **The CT timeline reuses its markers** instead of freeing and rebuilding one label per
+   combatant (103 here) on every event. 7.4 ms to under 0.1.
+5. **`CombatActionCatalog` keeps its loaded action Resources.** Nothing held a reference, so
+   the ResourceLoader cache dropped them and every `all()`, `player_actions()` and `by_id()`
+   call re-read all 59 files from disk: 8.6 of the 11 ms. Callers still get deep copies;
+   `by_id()` now copies one action instead of all of them.
+
+Still about 43 times over the D9 line. The listeners are now about 18 ms of an 86 ms
+decision. What is left, largest first: the controller and scheduler (about 68 ms per
+decision, including `snapshot()` rebuilding every tile), the field overlay's own per-event
+work (about 5 ms), and admission. Batching, off-screen skipping and the per-tick budget are
+still not built.
+
+### Later on 2026-10-04 — the tile payload is built once
+
+Three plain runs plus one attributed run on top of the HUD-listener changes above, all
+`status: ok`.
+
+| Measurement (ms) | After HUD listeners | Tile cache only | Tile cache + observer copies |
+|---|---|---|---|
+| Enemy decision, mean | 85–87 | 70.5–73.2 | **49.1–50.8** |
+| Enemy decision, p95 | 111–114 | 94–100 | 73–81 |
+| Decision window, 104 decisions | 9,680–9,904 | 7,996–8,312 | 5,644–5,827 |
+
+1. **`CombatController._tile_snapshots()` keeps its result.** It rebuilt one dictionary per
+   cell (4,900) for every snapshot, and a snapshot goes out with every event. It now returns
+   the same read-only array until the terrain array, the encounter, or the data of a live
+   `TileState` changes; checking costs one `to_dict()` per live `TileState`, not per cell.
+   Because the array is read-only, a consumer that tries to write to it gets an error instead
+   of corrupting every later event. The stage region and field overlay skip their tile pass
+   when the same array arrives again.
+2. **Seam v2 observers share the tiles.** Every resolved action handed each non-null class
+   resource a deep copy of the payload, snapshot tiles included: three party members, three
+   4,900-cell copies per action. `_observer_payload()` still deep-copies everything else and
+   passes the read-only tile array as is. No class resource reads tiles.
+
+`test_tile_snapshot_is_shared_until_a_tile_changes` covers the cache and the observer copy.
+Still about 25 times over the D9 line.
+
+### Later on 2026-10-04 — one path walk per enemy, not one per cell
+
+Three plain runs plus one attributed run, all `status: ok`.
+
+| Measurement (ms) | Tile cache | One walk |
+|---|---|---|
+| Enemy decision, mean | 49.1–50.8 | **25.5–26.7** |
+| Enemy decision, p95 | 73–81 | 27.7–28.8 |
+| Decision window, 104 decisions | 5,644–5,827 | 3,174–3,370 |
+
+Temporary timers (not committed) put `_best_enemy_position()` at 21.8 ms of a 49 ms decision.
+`reachable_positions()` still ran one capped Dijkstra walk per cell in the move box, up to 80
+of them. It now runs the walk once from the actor's cell to the cap and reads every cell's
+path from it. The walk settles cells in the same order a per-cell walk does (that walk only
+stops earlier), so each cell keeps the same path, the same CT cost and the same tie-breaks.
+`_deterministic_path()` is the same walk with a stop cell. 21.8 ms to 1.3 ms.
+`test_capped_reachable_positions_match_the_uncapped_brute_force` now also checks, cell by
+cell, that the shared walk's path equals a per-cell walk's path.
+
+Where a 26 ms decision goes now (timers, approximate): listeners about 15 ms per event
+(`BattleInterface` 5.8, the battle screen's `_refresh` 5.9 per turn, `BattleHUD` 2.6),
+`snapshot()` about 5.5 ms (turn order 2.8, enemy rows 1.8), Seam v2 observer copies 2.8 ms.
+Still about 13 times over the D9 line. Most of what is left is presentation redone for every
+enemy event. That is the batching #282 names, and it changes what the player sees during an
+enemy phase, so it needs a design call first.
+
+### Later on 2026-10-04 — the dock and HUD render once per frame
+
+| Measurement (ms) | One walk | Once per frame |
+|---|---|---|
+| Enemy decision, mean | 25.5–26.7 | **20.2–20.9** |
+| Ally turn with no enemy decision, mean | 70.5–81.7 | 32.2–34.2 |
+| Decision window, 104 decisions | 3,174–3,370 | 2,339–2,417 |
+
+The controller resolves a whole enemy phase inside one frame, so nothing is drawn between
+its events. The battle screen's dock (`_refresh`, 5.9 ms) and `BattleHUD` (snapshot copy and
+render, 2.6 ms) ran for every event anyway. Both now queue one deferred refresh, which runs
+before the frame draws. The decision window no longer contains that work. It runs **once in
+the frame after the phase**, roughly 8 ms by the per-call timings above, instead of once per
+event. `BattleHUD` still folds weaknesses and check math per event, reading the newest
+snapshot by reference. The rendered `screenshot_battle_screen` capture is pixel-identical to
+the one before this change.
+
+What is left per decision is mostly `BattleInterface.consume_event` (about 6 ms): the stage
+and field overlay, whose per-event work starts move and hit animations from that event's
+positions. Coalescing that needs a decision on how a 100-enemy phase should look.
+
+### Later on 2026-10-04 — the stage and field overlay stop copying the roster
+
+Three plain runs plus one attributed run, all `status: ok`.
+
+| Measurement (ms) | Once per frame | Actor rows by reference |
+|---|---|---|
+| Enemy decision, mean | 20.2–20.9 | **15.2–17.5** |
+| Enemy decision, p95 | — | 18.9–27.1 |
+| Ally turn with no enemy decision, mean | 32.2–34.2 | 25.7–28.8 |
+| `battle_interface.gd.consume_event`, self per call | 6.6 | 1.4 |
+
+Temporary timers (not committed) put the 6.6 ms almost entirely in reading actors: the
+stage region's `_read_actors()` 2.7 ms, the field overlay's actor pass about 3 ms (a deep
+copy of all 103 rows, `_bind_field_actors()` 0.9, `_sync_actors()` 0.6). Starting move and
+hit animations was not the cost: 3 of 137 events started one, and D9 already snaps an enemy
+whose turn begins more than one screen away.
+
+1. **Actor rows are held by reference.** `_actor_snapshots()` builds fresh rows for every
+   snapshot and neither the stage region nor the overlay writes to them, so both keep the
+   snapshot's own rows instead of deep-copying 103 of them per event.
+2. **The overlay binds field nodes when the roster changes.** `_bind_field_actors()` walked
+   every hostile and party node on every event. It now runs when the ordered list of actor
+   ids differs from the last one bound, which is admission and exit; `bind_field()` resets it.
+   `test_hostile_admitted_mid_session_is_bound_by_the_first_snapshot_listing_it` covers a
+   hostile that joins after the first snapshot.
+
+The rendered `screenshot_battle_screen` capture is pixel-identical to the one before this
+change. Synchronous listeners are now under 2 ms of a 16 ms decision; the rest is the
+controller, `snapshot()` and the Seam v2 observer copies. Still about 8 times over the D9 line.
+
+### Later on 2026-10-04 — actor and turn-order rows are read-only and shared
+
+Three plain runs plus one attributed run, all `status: ok`.
+
+| Measurement (ms) | Actor rows by reference | Read-only rows |
+|---|---|---|
+| Enemy decision, mean | 15.2–17.5 | **10.1–12.0** |
+| Enemy decision, p95 | 18.9–27.1 | 11.9–14.0 |
+| Ally turn with no enemy decision, mean | 25.7–28.8 | 21.3–26.3 |
+
+Temporary timers (not committed) split a 13 ms enemy decision: `snapshot()` 5.5 ms (turn
+order 2.6, enemy rows 1.7, the tile cache check 0.5), the Seam v2 observer copies about
+3.7 ms, listeners 1.3, `_best_enemy_position()` 1.2.
+
+1. **`allies`, `enemies` and `turn_order` are read-only.** `snapshot()` freezes each row and
+   its nested containers as it builds them, the same contract the tile array has. Every
+   nested value is already a fresh copy (`_actor_snapshots()` duplicates actor state; every
+   class resource's `snapshot()` builds a new dictionary), so the actors' live state stays
+   writable. `duplicate()` still hands a consumer a writable copy.
+2. **Observers share every read-only snapshot array.** `_observer_payload()` used to share
+   only the tiles; it now shares any read-only array in the snapshot and deep-copies the
+   rest. Three party observers no longer copy 100 enemy rows and 100 turn-order rows each.
+3. **Turn-order rows are copied shallowly.** Both schedulers build fresh flat entries for
+   every `round_overview()` / `peek_order()` call.
+
+`test_actor_and_turn_order_rows_are_read_only_copies_shared_with_observers` covers the rows,
+the live actor state, and the observer payload. Two presentation fixtures that edited a
+snapshot to fake a state now edit a `duplicate(true)` copy. A whole-tree run turned up no
+production write into a snapshot row. The rendered `screenshot_battle_screen` capture is
+pixel-identical. Still about 5 times over the D9 line.
+
+### Later on 2026-10-04 — admission checks A1 with a short projection first
+
+D9 calls 100 hostiles a presence budget and sets the design target at 30 or fewer in one
+session. The harness gains `--session-size N`: all 100 stay on the field and only N are
+admitted at the start; chain alerts admit the rest the way they would in play. Without
+`--decision-target`, the target is one decision per admitted hostile.
+
+Three runs per row, all `status: ok`:
+
+| Measurement (ms) | Before | After |
+|---|---|---|
+| Admission per hostile, mean (100 admitted) | 62.6 | **1.19–1.22** |
+| Admission per hostile, p95 (100 admitted) | 190 | 1.7–1.9 |
+| Admitting 99 hostiles, total | 6,202 | 118–121 |
+| Enemy decision, mean (30 admitted, chain alerts reach 94–95) | 84.5–88.1 | **10.1–11.2** |
+| Worst decision (30 admitted) | ~2,700 (one chain-alert hop) | 102–103 |
+| Enemy decision, mean (100 admitted) | 10.1–12.0 | 9.5–10.9 |
+
+With 30 admitted, the first chain-alert hop pulled 64 more hostiles into the session inside
+one decision. Each admission ran `_party_acts_before()` (invariant A1), which asked the
+scheduler for a projection of `(allies + enemies + 2) * 4` turns, about 400 here, and read
+only until the first ally or the newcomer. That was 30 ms per admission and grew with the
+session: one hop froze the field for 2.7 s.
+
+`_party_acts_before()` now peeks 8 turns and doubles the depth only while neither the
+newcomer nor a living ally has appeared, up to the same maximum. The projection is
+deterministic, so a short peek is a prefix of a long one and every answer is unchanged.
+`test_party_acts_before_matches_the_full_depth_projection` compares it with the full-depth
+projection on both schedulers across speeds and delays;
+`test_party_acts_before_deepens_until_the_answer_or_the_full_depth` uses a scripted order to
+put the answer at depths 5 to 200, which real fixtures do not reach.
+
+The remaining worst case at 30 admitted (about 100 ms) is the same hop admitting 64 hostiles
+in one decision, now about 1 ms each.
