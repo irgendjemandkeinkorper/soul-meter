@@ -161,14 +161,14 @@ Anything still open is open for a named reason, not because nobody has picked it
 | 3.3 | `party_member.gd` / `battle_actor.gd` | **done** — `xp` field, the legacy↔DRAMGID `attribute_value()` bridge, and `DramgidDerived.recompute` (live consumer: `ChargenBuild.to_party_member()`) | chargen wave; §6 freeze |
 | 3.4 | chargen + character sheet | **done** — the sheet reads `DramgidSchema.SKILL_GROUPS`; `ChargenData.SKILL_IDS`/`SKILL_LABELS` deleted | #394 |
 | 3.5 | `advancement.gd` | **done** — the Alchemy refund arrives through the schema-9 migration | #392 |
-| 3.6 | Pandora seeders + generators | **partial** — the Combatants category carries all seven attribute columns and they reach `BattleActor` 2026-09-07; the `check_skill` rename is still open, see the note under the table |  |
+| 3.6 | Pandora seeders + generators | **done** — the Combatants category carries all seven attribute columns and they reach `BattleActor` 2026-09-07; the 14 Defining Weakness `check_skill` rows re-seeded to `recall`/`undertone` 2026-10-02, see the note under the table |  |
 | 3.7 | `renown.gd` (Yothmeru) | **done** — see §3.7a for how its two halves were reconciled | #384 |
 | 3.8 | `save_migrations.gd` | **done** — schema 9, §2.1 steps 1/2/3/5; step 6 deferred with §3.3 | #392 |
 | 3.9 | combat rules | **partial** — to-hit/AP/CT attribute moved to Alacrity 2026-09-07; the CT *formula* (`6 + Reason/2`) and the damage power term are still F3b, after #281 |  |
 | 3.10 | dialogue + quest audit + docs | **done** — 14 authored checks and 4 code call sites renamed; the quest audit needed no change (it matches the shape of a `check(` call, not a literal id list) | #393, #395 |
 | 3.11 | tests | **rolling** — each surface above carried its own cases |  |
 
-**§3.6's attribute columns landed 2026-09-07; what is left is the `check_skill` rename.**
+**§3.6's attribute columns landed 2026-09-07; the `check_skill` rename landed 2026-10-02.**
 
 The original deferral said `Edge` was read by the to-hit rule and that moving that read to
 Alacrity was §3.9, blocked on #281 — so seeding seven columns would strand them. §3.9's
@@ -197,14 +197,18 @@ consumer that arrives — including #412's enemy stat scaling.
 The other half of §3.6 (Peoples `Leaning Primary`/`Leaning Secondary`) is display-only in F3 and
 `ChargenData.ANCESTRIES` already carries `lean_ids`, so it buys nothing on its own.
 
-**Still open in §3.6:** `tools/seed_phase_one_pandora.gd`'s 14 authored `check_skill` values
-are `lore`/`insight` — pre-DRAMGID ids whose renames are `recall`/`undertone`. They still
-*resolve*, through `DramgidSchema.LEGACY_SKILL_DEFINITIONS` and `attribute_value()`'s
-legacy bridge, so this is stale data rather than a live defect. It was left out of the column
-re-seed on purpose: those two ids are also the legacy-compat fixture in roughly thirty test
-files (`test_skill_check`, `test_advancement`, `test_party_member`, `test_save_game`), and the
-defaults mirroring them live in `combat_controller.gd` and an assertion in `generate_gloot.gd`.
-Renaming them is a data change with its own blast radius, not a rider on this one.
+**`check_skill` rename (closed 2026-10-02):** `tools/seed_phase_one_pandora.gd`'s 14 authored
+`check_skill` values were `lore`/`insight` — pre-DRAMGID ids whose renames are
+`recall`/`undertone`. They were re-seeded to the DRAMGID ids, `data.pandora` and
+`data/generated/combat_identity.json` regenerated with the documented tools, the
+`generate_gloot.gd` assertion now accepts only `recall`/`undertone`, and the two
+`combat_controller.gd` defaults read `recall`. The defining-strike fixtures in
+`test_combat_controller` and `test_wavec_tactical_gates` moved with the data. `lore`/`insight`
+remain, deliberately, where they are the subject under test: the legacy-compat cases in
+`test_skill_check`, `test_advancement`, `test_party_member`, `test_save_game` and the
+`test_save_migrations` v8→v9 fixture exercise `DramgidSchema.LEGACY_SKILL_DEFINITIONS` and the
+save-migration rename map, which still have to name both ids. The `Lore Minimum` column and
+its `lore_minimum` field are a discovery threshold, not a skill id, and keep their names.
 
 ### 3.0 The original plan (for reference)
 

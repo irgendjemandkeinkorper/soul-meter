@@ -670,7 +670,7 @@ func test_defining_strike_uses_skill_check_and_applies_authored_effect() -> void
 	assert_bool(result["check"]["success"]).is_true()
 	assert_int(result["check"]["roll"]).is_equal(1)
 	assert_float(result["check"]["effective_percent"]).is_equal(
-		SkillCheck.preview("lore", ally.source_member)
+		SkillCheck.preview("recall", ally.source_member)
 	)
 	assert_bool(result["effect_applied"]).is_true()
 	assert_bool(enemy.defining_effects["crippled"]).is_true()
@@ -743,7 +743,7 @@ func test_defining_strike_requires_selection_and_forecast_matches_resolution_con
 	assert_bool(forecast["allowed"]).is_true()
 	var pure_forecast: Dictionary = forecast["resolution"]
 	assert_int(forecast["ap_cost"]).is_equal(definition.ap_cost)
-	assert_float(forecast["chance"]).is_equal(SkillCheck.preview("lore", ally.source_member))
+	assert_float(forecast["chance"]).is_equal(SkillCheck.preview("recall", ally.source_member))
 	assert_str(String(pure_forecast["weakness_id"])).is_equal(String(weakness_id))
 	# The landed number is the TOP-LEVEL forecast damage (post-mitigation, computed
 	# through the same calculate_damage pipeline resolution uses). The nested
@@ -1449,8 +1449,8 @@ func _enemy_attack_outcome(use_stillpoint: bool) -> Dictionary:
 func _skilled_member() -> PartyMember:
 	var member := PartyMember.new()
 	member.id = "test-definer"
-	member.attributes = {"spark": 5, "pitch": 5}
-	member.skill_tiers = {"lore": "untrained", "insight": "untrained"}
+	member.attributes = {"reason": 5, "intuition": 5}
+	member.skill_tiers = {"recall": "untrained", "undertone": "untrained"}
 	return member
 
 
