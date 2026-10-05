@@ -40,6 +40,9 @@ image generation, model creation, renders, or an automated asset pipeline. Read
 "painterly" as the desired finish of the captured art, achievable through modeling,
 materials, textures, and lighting, rather than as a requirement to use text-to-image.
 
+For separately authorized agent-generated model drafts, follow
+[Part III's owner-gated draft policy](#owner-gated-agent-generated-model-drafts).
+
 Standing constraints carried over from the render pipeline (do not relax these just
 because the technique changed):
 - Isometric single-subject framing: one subject/tile per image, camera reads as
@@ -384,6 +387,29 @@ envy-to-generosity inheritance**. Do not fall back to the earlier assignments.
 **Solan are Vael**, explicitly confirmed by the author. This shared identity carries
 the Kalyi/Certainty-Bearer foundation below; the older vault's different Vael founding
 assignment does not override it.
+
+## Owner-gated agent-generated model drafts
+
+For separately authorized modeling work, agents may generate 3D models as
+**drafts for owner review**. The owner retains authority over appearance, canon,
+and acceptance. A generated model, or a sprite derived from it, must receive
+the owner's explicit approval before it ships.
+
+This draft permission extends the author-made modeling workflow described in
+Part I's Technique section. This Bible supplies design constraints; it does not
+itself commission a generation run or approve an asset batch. Meshy generation
+requires owner approval of the batch before it starts. Approval to generate a
+batch and approval of its finished assets are separate decisions.
+
+Drafts must follow the author-confirmed facts in this part and the shared
+material, palette, lighting, and capture constraints in Part I. Keep exploratory
+interpretations and unresolved appearance choices identified as such; generated
+output does not establish canon. Present drafts and their source/provenance for
+review before using them as production assets.
+
+Permission for a world-prop batch does not authorize a unit-model batch. Unit
+models require a separate go-ahead under the project action plan. Do not infer
+approval from an existing reference image or a generated result.
 
 ## The shared foundation: the Forge Principle
 
