@@ -7,6 +7,8 @@ extends Node2D
 ## decides whether that means "open a session" or "admit into the running one".
 signal hostile_alerted(hostile: Hostile)
 
+const FIELD_HUD_SCENE := "res://ui/hud/field_hud.tscn"
+
 var _combat_mode_active: bool = false
 var _restore_controls: Array[Callable] = []
 
@@ -74,6 +76,13 @@ func set_combat_mode(active: bool) -> void:
 				node.set_process_unhandled_input.bind(node.is_processing_unhandled_input())
 			)
 			node.set_process_unhandled_input(false)
+	# The battle HUD replaces the field HUD; its hotkey bar and objective would show between
+	# the battle panels.
+	for node: Node in root.find_children("*", "CanvasLayer", true, false):
+		if node.scene_file_path == FIELD_HUD_SCENE:
+			var hud := node as CanvasLayer
+			_restore_controls.append(hud.set.bind("visible", hud.visible))
+			hud.visible = false
 	for node: Node in root.find_children("*", "TravelExit", true, false):
 		var travel_exit := node as TravelExit
 		if travel_exit != null:
