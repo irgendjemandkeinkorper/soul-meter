@@ -52,6 +52,7 @@ ConsequenceTimeline="*res://globals/consequence_timeline.gd"
 DialogueLab="*res://globals/dialogue_lab.gd"
 QuestEditor="*res://globals/quest_editor.gd"
 WeftluminBootstrap="*res://addons/weftlumin/bootstrap.gd"
+SteamService="*res://globals/steam_service.gd"
 
 [dialogue_manager]
 

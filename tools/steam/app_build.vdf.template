@@ -1,0 +1,13 @@
+"AppBuild"
+{
+	"AppID" "@STEAM_APP_ID@"
+	"Desc" "@STEAM_BUILD_DESC@"
+	"Preview" "@STEAM_PREVIEW@"
+	"SetLive" "@STEAM_SET_LIVE@"
+	"ContentRoot" "@STEAM_CONTENT_ROOT@"
+	"BuildOutput" "@STEAM_BUILD_OUTPUT@"
+	"Depots"
+	{
+		"@STEAM_DEPOT_ID@" "@STEAM_DEPOT_VDF@"
+	}
+}
