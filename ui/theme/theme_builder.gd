@@ -208,6 +208,11 @@ static func build() -> Theme:
 	t.add_type("BattleTightColumn")
 	t.set_type_variation("BattleTightColumn", "VBoxContainer")
 	t.set_constant("separation", "BattleTightColumn", DS.SPACE_3)
+	# The active-unit plate's stats read as two short columns so the top rail stays compact.
+	t.add_type("BattleStatGrid")
+	t.set_type_variation("BattleStatGrid", "GridContainer")
+	t.set_constant("h_separation", "BattleStatGrid", DS.SPACE_6)
+	t.set_constant("v_separation", "BattleStatGrid", DS.SPACE_1)
 	t.add_type("BattleActionGrid")
 	t.set_type_variation("BattleActionGrid", "GridContainer")
 	t.set_constant("h_separation", "BattleActionGrid", DS.SPACE_4)
