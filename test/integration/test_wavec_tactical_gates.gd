@@ -58,6 +58,26 @@ func test_force_pass_has_a_bounded_zero_refund_exit_when_action_gates_are_closed
 	assert_int(controller.scheduler.to_dict()["consecutive_waits"][actor.combat_id]).is_equal(0)
 
 
+## A forced pass under charge time must end the turn: the pass itself is free, so it falls back
+## to the ratified wait twice, then forfeits. It never leaves the actor ready.
+func test_force_pass_ends_a_ready_actors_turn_under_charge_time() -> void:
+	var rules := _ct_rules()
+	var ally := _actor("ally")
+	ally.side = &"ally"
+	var enemy := _actor("enemy")
+	enemy.side = &"enemy"
+	var controller := CombatController.new()
+	controller.configure(CombatActionCatalog.all(), BattlefieldModel.create_default(rules), rules)
+	controller.start([ally], [enemy])
+	var actor := controller.active_actor()
+	var refund: int = load("res://globals/combat/charge_time_scheduler.gd").wait_refund_ct()
+	for expected_charge: int in [refund, refund, 0]:
+		controller.scheduler.grant_extra_turn(actor)
+		assert_int(controller.scheduler.charge_of(actor)).is_greater_equal(TurnScheduler.READY_AT)
+		controller._force_pass(actor)
+		assert_int(controller.scheduler.charge_of(actor)).is_equal(expected_charge)
+
+
 func test_gate_t4_queue_integrity_across_three_large_battles() -> void:
 	var reference_log: Array[StringName] = []
 	for battle_index in 3:

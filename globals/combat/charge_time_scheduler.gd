@@ -250,6 +250,16 @@ func commit(actor: BattleActor, action: CombatAction) -> Dictionary:
 	if not bool(gate.get("allowed", false)):
 		return gate
 	var cost := quote(actor, action)
+	# A free pass spends no charge, so a ready actor stays ready and advance() seats it again
+	# at once: a boxed-in enemy's forced pass looped forever. The AP scheduler marks a passing
+	# enemy as acted; here the pass is refused, and the caller falls back to the ratified wait
+	# (yield_turn) or a forfeit (force_advance).
+	if action != null and action.kind == CombatAction.Kind.PASS and cost <= 0:
+		return _blocked(
+			&"free_pass",
+			"%s must wait or act; a pass costs no charge." % actor.display_name,
+			{"wait": "yield_turn"},
+		)
 	var key := _key(actor)
 	# Overflow above READY_AT is preserved — being fast should stay an advantage.
 	_charge[key] = int(_charge[key]) - cost

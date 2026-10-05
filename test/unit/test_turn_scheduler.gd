@@ -398,6 +398,27 @@ func test_speed_nine_unit_acts_every_twelve_ticks_across_repeated_cycles() -> vo
 		assert_int(scheduler.charge_of(lone)).is_equal(0)
 
 
+## A pass that spends no charge would leave a ready actor ready, and advance() would seat it
+## again with no time passing. Charge time refuses it; a paid pass still commits.
+func test_charge_time_refuses_a_free_pass_and_commits_a_paid_one() -> void:
+	var scheduler := TurnScheduler.create_default(_rules())
+	var actor := _actor("boxed-in", 4)
+	var group: Array[BattleActor] = [actor]
+	scheduler.setup(group)
+	assert_bool(scheduler.advance().get("allowed", false)).is_true()
+	var charge := scheduler.charge_of(actor)
+	var free_pass := _action("free-pass", 0, CombatAction.Verb.DEFEND)
+	free_pass.kind = CombatAction.Kind.PASS
+	var refused := scheduler.commit(actor, free_pass)
+	assert_bool(refused.get("allowed", true)).is_false()
+	assert_str(String(refused.get("blocked_by", &""))).is_equal("free_pass")
+	assert_int(scheduler.charge_of(actor)).is_equal(charge)
+	var paid_pass := _action("paid-pass", 30, CombatAction.Verb.DEFEND)
+	paid_pass.kind = CombatAction.Kind.PASS
+	assert_bool(scheduler.commit(actor, paid_pass).get("allowed", false)).is_true()
+	assert_int(scheduler.charge_of(actor)).is_equal(charge - 30)
+
+
 func test_wait_refunds_cannot_produce_starvation() -> void:
 	# FR-102a's flat refund must never leave a unit unable to act again. After two waits the
 	# scheduler refuses a third, so this simulation commits the required non-wait action and
