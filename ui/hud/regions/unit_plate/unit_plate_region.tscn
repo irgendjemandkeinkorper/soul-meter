@@ -23,41 +23,45 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
 text = "ACTIVE UNIT"
-[node name="HP" type="Label" parent="Row/Stats"]
+[node name="StatGrid" type="GridContainer" parent="Row/Stats"]
+layout_mode = 2
+theme_type_variation = &"BattleStatGrid"
+columns = 2
+[node name="HP" type="Label" parent="Row/Stats/StatGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatLabel"
 text = "HP 0 / 0"
-[node name="Breath" type="Label" parent="Row/Stats"]
+[node name="Breath" type="Label" parent="Row/Stats/StatGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatLabel"
 text = "BREATH 0"
-[node name="Aftertones" type="Label" parent="Row/Stats"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"StatLabel"
-text = "AFTERTONES —"
-[node name="Tempo" type="Label" parent="Row/Stats"]
+[node name="Tempo" type="Label" parent="Row/Stats/StatGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatLabel"
 text = "TEMPO 0"
-[node name="Element" type="Label" parent="Row/Stats"]
+[node name="Aftertones" type="Label" parent="Row/Stats/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = "AFTERTONES —"
+[node name="Element" type="Label" parent="Row/Stats/StatGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"EyebrowLabel"
 text = "UNATTUNED"
-[node name="CT" type="Label" parent="Row/Stats"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"StatLabel"
-text = "CT 0 · SPD 0 · H0 · FACING E"
-[node name="Resource" type="Label" parent="Row/Stats"]
+[node name="Resource" type="Label" parent="Row/Stats/StatGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatLabel"
 text = ""
+[node name="CT" type="Label" parent="Row/Stats/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = "CT 0 · SPD 0 · H0 · FACING E"
 [node name="InjuryBadges" type="HFlowContainer" parent="Row/Stats"]
 unique_name_in_owner = true
 visible = false
