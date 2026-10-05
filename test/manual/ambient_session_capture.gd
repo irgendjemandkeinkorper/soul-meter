@@ -56,7 +56,12 @@ func test_ambient_bog_wight_fight_reads_with_the_log_hidden() -> void:
 	wight.realert_cooldown = 0.0
 	wight._set_sensor_enabled(true)
 	wight._check_initial_overlap()
-	await runner.simulate_frames(4)
+	# The alert lands on a physics tick, so the frame it opens on varies with load; wait for
+	# the session rather than a fixed frame count.
+	for _frame: int in 30:
+		if Battle.session_active:
+			break
+		await runner.simulate_frames(1)
 
 	assert_bool(Battle.session_active) \
 		.override_failure_message("walking into the wight must open an ambient session") \

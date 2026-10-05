@@ -155,10 +155,19 @@ func bind_field(field: FieldMap) -> void:
 	_field_overlay.name = "CombatOverlay"
 	field.add_child(_field_overlay)
 	_field_overlay.bind_field(field)
+	_sync_view_window()
+	if not resized.is_connected(_sync_view_window):
+		resized.connect(_sync_view_window)
 	_backdrop.hide()
 	_units_layer.hide()
 	_fx_layer.hide()
 	queue_redraw()
+
+
+## The field shows through this region only; the overlay frames the fight inside it.
+func _sync_view_window() -> void:
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_view_window(get_global_rect())
 
 
 func _exit_tree() -> void:

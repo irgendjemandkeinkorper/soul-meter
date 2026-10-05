@@ -43,6 +43,14 @@ var animate_events := true:
 var _camera: Camera2D
 var _camera_anchor: Node2D
 var _camera_tween: Tween
+## The screen rect the battle HUD leaves open over the field. Framing centres the fight in
+## it and visibility checks use it, so an actor behind a HUD panel counts as off-screen.
+## Empty means the whole viewport.
+var _view_window := Rect2()
+## The camera's own limits, lifted for the fight so it can centre a fight at a room's edge,
+## and handed back once the release pan lands.
+var _saved_limits: Array[int] = []
+var _roster_framed := false
 ## Actor ids whose current turn began beyond one screen of margin (D9): no pan, no move
 ## tween — the actor snaps between cells until its next turn starts nearer the view.
 var _suppressed: Dictionary = {}
@@ -79,6 +87,25 @@ func bind_field(field: FieldMap) -> void:
 func bind_camera(camera: Camera2D, anchor: Node2D) -> void:
 	_camera = camera
 	_camera_anchor = anchor
+	_roster_framed = false
+	_saved_limits = [camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]
+	# Start the fight from what the player was already looking at: the clamped centre.
+	camera.offset = _clamped_center(anchor.global_position) - anchor.global_position
+	camera.limit_left = -10000000
+	camera.limit_top = -10000000
+	camera.limit_right = 10000000
+	camera.limit_bottom = 10000000
+
+
+## `window` is in viewport pixels; see `_view_window`.
+func set_view_window(window: Rect2) -> void:
+	if window == _view_window:
+		return
+	_view_window = window
+	# The HUD lays out after the session's first events are replayed; re-centre once it has.
+	if _roster_framed:
+		_roster_framed = false
+		_frame_roster()
 
 
 func pans_suppressed_for(actor_id: StringName) -> bool:
@@ -104,6 +131,13 @@ func bind_actor(actor_id: StringName, node: Node2D) -> void:
 		if node is Hostile and not (node as Hostile).is_unlocked():
 			return
 		_original_colors[node] = node.modulate
+
+
+## A bound actor's node, or null once it is freed (Battle frees set-piece bodies with the
+## session, which can be before this overlay leaves the tree).
+func _node(id: StringName) -> Node2D:
+	var node: Variant = _nodes.get(id)
+	return node as Node2D if is_instance_valid(node) else null
 
 
 func _exit_tree() -> void:
@@ -181,6 +215,7 @@ func consume_event(event: CombatEvent) -> void:
 			and SpellCastScript.is_cast(event) and HitPulseScript.is_damaging_hit(event):
 		_pending_defeats[event.target_id] = event.get_instance_id()
 	_sync_actors(event)
+	_frame_roster()
 	if animate_events and event.type == &"action_resolved" and (event.data.get("path_cells", []) as Array).is_empty():
 		_play_action(event)
 	queue_redraw()
@@ -190,15 +225,63 @@ func consume_event(event: CombatEvent) -> void:
 ## Uses the intended centre (anchor + offset) rather than the smoothed one so a pan already
 ## in flight is not re-decided against a half-way frame.
 func _view_rect() -> Rect2:
-	var size := _camera.get_viewport_rect().size / _camera.zoom
+	var viewport := _camera.get_viewport_rect().size
+	var window := _window(viewport)
 	var center := _camera_anchor.global_position + _camera.offset
-	return Rect2(center - size * 0.5, size)
+	return Rect2(center + (window.position - viewport * 0.5) / _camera.zoom, window.size / _camera.zoom)
+
+
+func _window(viewport: Vector2) -> Rect2:
+	return _view_window if _view_window.has_area() else Rect2(Vector2.ZERO, viewport)
+
+
+## The camera offset that puts world point `point` at the centre of the open window.
+func _offset_framing(point: Vector2) -> Vector2:
+	var viewport := _camera.get_viewport_rect().size
+	var shift := (_window(viewport).get_center() - viewport * 0.5) / _camera.zoom
+	return point - shift - _camera_anchor.global_position
+
+
+## Once per session: centre every combatant in the window, so the opening shows both sides
+## rather than wherever the room camera happened to stop.
+func _frame_roster() -> void:
+	if _roster_framed or not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
+		return
+	var bounds := Rect2()
+	var found := false
+	for id: StringName in _actors:
+		var node := _node(id)
+		if not is_instance_valid(node):
+			continue
+		bounds = bounds.expand(node.global_position) if found else Rect2(node.global_position, Vector2.ZERO)
+		found = true
+	if not found:
+		return
+	_roster_framed = true
+	var view := _view_rect()
+	# A roster wider than the window frames the lead instead; turn focus pans to the rest.
+	var focus := bounds.get_center() if view.size.x >= bounds.size.x and view.size.y >= bounds.size.y \
+		else _camera_anchor.global_position
+	_pan_camera_to(_offset_framing(focus))
+
+
+## Where the camera would sit for `center` under its own (saved) limits.
+func _clamped_center(center: Vector2) -> Vector2:
+	if _saved_limits.size() != 4:
+		return center
+	var half := _camera.get_viewport_rect().size * 0.5 / _camera.zoom
+	var low := Vector2(_saved_limits[0], _saved_limits[1]) + half
+	var high := Vector2(_saved_limits[2], _saved_limits[3]) - half
+	return Vector2(
+		center.x if low.x > high.x else clampf(center.x, low.x, high.x),
+		center.y if low.y > high.y else clampf(center.y, low.y, high.y),
+	)
 
 
 func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
 	if not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
 		return
-	var node := _nodes.get(actor_id) as Node2D
+	var node := _node(actor_id)
 	if not is_instance_valid(node):
 		return
 	var view := _view_rect()
@@ -212,20 +295,37 @@ func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
 		_suppressed[actor_id] = true
 		return
 	_suppressed.erase(actor_id)
-	_pan_camera_to(node.global_position - _camera_anchor.global_position)
+	_pan_camera_to(_offset_framing(node.global_position))
 
 
 func _release_camera(animated: bool) -> void:
 	_suppressed.clear()
 	if not is_instance_valid(_camera):
 		return
-	if animated:
-		_pan_camera_to(Vector2.ZERO)
-		return
+	if animated and is_instance_valid(_camera_anchor):
+		# Pan to where the limited camera will sit, then restore the limits: no snap.
+		var anchor := _camera_anchor.global_position
+		_pan_camera_to(_clamped_center(anchor) - anchor)
+		if _camera_tween != null and _camera_tween.is_valid():
+			_camera_tween.tween_callback(_restore_camera_limits)
+			return
 	if _camera_tween != null and _camera_tween.is_valid():
 		_camera_tween.kill()
 	_camera_tween = null
+	_restore_camera_limits()
+
+
+func _restore_camera_limits() -> void:
+	if not is_instance_valid(_camera):
+		return
+	if _saved_limits.size() == 4:
+		_camera.limit_left = _saved_limits[0]
+		_camera.limit_top = _saved_limits[1]
+		_camera.limit_right = _saved_limits[2]
+		_camera.limit_bottom = _saved_limits[3]
+		_saved_limits.clear()
 	_camera.offset = Vector2.ZERO
+	_camera.reset_smoothing()
 
 
 func _pan_camera_to(offset: Vector2) -> void:
@@ -259,7 +359,7 @@ func _sync_actors(event: CombatEvent) -> void:
 	if _grid == null or not is_instance_valid(_ground):
 		return
 	for id: StringName in _actors:
-		var node := _nodes.get(id) as Node2D
+		var node := _node(id)
 		if not is_instance_valid(node):
 			continue
 		var actor: Dictionary = _actors[id]
@@ -294,8 +394,8 @@ func _sync_actors(event: CombatEvent) -> void:
 
 
 func _play_action(event: CombatEvent) -> void:
-	var attacker := _nodes.get(event.actor_id) as Node2D
-	var target := _nodes.get(event.target_id) as Node2D
+	var attacker := _node(event.actor_id)
+	var target := _node(event.target_id)
 	if is_instance_valid(attacker) and SpellCastScript.is_cast(event):
 		var targets: Array[Callable] = []
 		for cell: Vector2i in FireField.cells_from_data(event.data.get("cells", [])):
@@ -328,7 +428,7 @@ func _present_action_result(event: CombatEvent) -> void:
 	if _pending_defeats.get(event.target_id, 0) == event.get_instance_id():
 		_pending_defeats.erase(event.target_id)
 		_sync_actors(CombatEvent.new())
-	var target := _nodes.get(event.target_id) as Node2D
+	var target := _node(event.target_id)
 	if not is_instance_valid(target):
 		return
 	if HitPulseScript.is_damaging_hit(event) and not _reduced_motion():
@@ -363,12 +463,12 @@ func _present_action_result(event: CombatEvent) -> void:
 
 
 func _result_anchor(id: StringName) -> Variant:
-	var target := _nodes.get(id) as Node2D
+	var target := _node(id)
 	return to_local(target.global_position) + Vector2(0, -DS.SPACE_8) if is_instance_valid(target) else null
 
 
 func _set_actor_position(value: Vector2, id: StringName) -> void:
-	var node := _nodes.get(id) as Node2D
+	var node := _node(id)
 	if is_instance_valid(node):
 		node.global_position = value
 		queue_redraw()

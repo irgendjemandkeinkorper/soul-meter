@@ -23,6 +23,7 @@ var _active_trial_encounter: StringName = &""
 @onready var _skill_door_visual: Polygon2D = $SkillDoor/Visual
 @onready var _keeper_gate_shape: CollisionShape2D = $KeeperGate/CollisionShape2D
 @onready var _keeper_gate_visual: Polygon2D = $KeeperGate/Visual
+@onready var _entrance_instruction: Label = $EntranceInstruction
 
 
 func _ready() -> void:
@@ -66,6 +67,8 @@ func request_keeper_encounter() -> void:
 ## for them (F0 D3: deployment survives for scripted set-pieces).
 func _start_trial_encounter(encounter_id: StringName) -> void:
 	_active_trial_encounter = encounter_id
+	# The fight is on this floor now; the hall's world-space prompt would sit on the fighters.
+	_entrance_instruction.hide()
 	var field := find_child("FieldMap", true, false) as FieldMap
 	var opened: Dictionary = Battle.start_set_piece(field, encounter_id)
 	if not bool(opened.get("allowed", false)):
@@ -75,6 +78,7 @@ func _start_trial_encounter(encounter_id: StringName) -> void:
 	if not bool(opened.get("allowed", false)) or Battle.ended:
 		# A fight that never opened must not count as started, or the beat is lost for good.
 		_active_trial_encounter = &""
+		_entrance_instruction.show()
 		if encounter_id == WARDEN_ENCOUNTER_ID:
 			GameState.set_flag(WARDEN_STARTED_FLAG, false)
 		elif encounter_id == KEEPER_ENCOUNTER_ID:
@@ -94,6 +98,7 @@ func _on_battle_ended(result: BattleResult) -> void:
 		return
 	var resolved_encounter: StringName = _active_trial_encounter
 	_active_trial_encounter = &""
+	_entrance_instruction.show()
 	if not result.succeeded():
 		if resolved_encounter == WARDEN_ENCOUNTER_ID:
 			GameState.set_flag(WARDEN_STARTED_FLAG, false)
