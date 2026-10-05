@@ -40,5 +40,6 @@ func test_npc_presentation_is_scene_configured_not_name_configured() -> void:
 
 	assert_bool(sprite.region_rect == Rect2(17, 102, 16, 16)).is_true()
 	assert_bool(sprite.modulate == Color(0.8, 0.6, 0.2, 1.0)).is_true()
-	# Authored visual_scale, then the global field-actor shrink on top.
+	# Authored visual_scale, then the field-actor factor on top. With no texture to
+	# measure, that factor is the WORLD_SCALE fallback.
 	assert_bool(sprite.scale == Vector2(4.0, 4.0) * UnitArtScript.WORLD_SCALE).is_true()
