@@ -1,0 +1,19 @@
+{
+	"schema": "weftlumin.spawn_table.v1",
+	"id": "wilds-glade-ambient",
+	"scene_path": "res://world/test_room.tscn",
+	"slots": [
+		{
+			"id": "glade-south",
+			"anchor": "SpawnSlotGladeSouth",
+			"respawn_days": 1,
+			"entries": [
+				{"archetype_id": "bog-wight", "weight": 40},
+				{"archetype_id": "loam-maddened-boar", "weight": 40},
+				{"empty": true, "weight": 20}
+			],
+			"pack_size": {"min": 1, "max": 2}
+		}
+	],
+	"caps": {}
+}

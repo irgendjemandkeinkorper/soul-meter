@@ -22,6 +22,16 @@ enum State { IDLE, ALERTED, IN_COMBAT, DOWNED }
 @export var required_flag: String = ""
 
 const LOCKED_MODULATE := Color(0.6, 0.6, 0.6, 1.0)
+## #412 visual tells for a wild spawn's variation tier (`EnemyDerived.Tier`). PROVISIONAL values.
+## Size is the tell that works on every sprite today; the tint needs a tell mask beside the
+## unit's idle frame (`<frame>--tellmask.png`, eyes and claws) and is skipped where none exists.
+const TELL_SIZE_PER_TIER := 0.05
+const TELL_SHADER := preload("res://actors/hostile/variation_tell.gdshader")
+const TELL_MASK_SUFFIX := "--tellmask.png"
+const TELL_COLORS := {
+	EnemyDerived.Tier.STRONG: Color(1.0, 0.42, 0.12),
+	EnemyDerived.Tier.WEAK: Color(0.62, 0.7, 0.78),
+}
 const SENSOR_NAME := "AlertSensor"
 
 var combat_id: StringName
@@ -35,6 +45,8 @@ var _adopted: bool = false
 ## True once `spawn_into_slot()` handed this node a `SpawnDirector` roll: its `group_id` is a
 ## day-stamped slot group, not an `EncounterCatalog` encounter, and its actor is already built.
 var _from_spawn_slot: bool = false
+## `EnemyDerived.Tier` of a spawn-slot roll; TYPICAL (no tell) for everything else.
+var variation_tier: int = EnemyDerived.Tier.TYPICAL
 
 
 func _ready() -> void:
@@ -62,6 +74,7 @@ func _ready() -> void:
 		sprite.texture = load(UnitArt.texture_path(UnitArt.resolve(String(unit_id)))) as Texture2D
 		sprite.offset = UnitArt.PIVOT_OFFSET
 		UnitArt.apply_world_scale(sprite, get_node_or_null("Shadow"))
+		_apply_variation_tell(sprite)
 	if is_inside_tree():
 		GridPlacement.snap_to_walkable_cell(self, global_position)
 		var field := _field_map()
@@ -73,6 +86,26 @@ func _ready() -> void:
 			GameState.flag_changed.connect(_on_flag_changed)
 		_refresh_lock()
 	sync_cell.call_deferred()
+
+
+## #412: a stronger roll stands slightly larger and its eyes and claws run hot; a weaker one is
+## slightly smaller and dull. No text anywhere names the tier (owner, 2026-10-06).
+func _apply_variation_tell(sprite: Sprite2D) -> void:
+	if variation_tier == EnemyDerived.Tier.TYPICAL:
+		return
+	var factor := 1.0 + TELL_SIZE_PER_TIER * float(variation_tier)
+	sprite.scale *= factor
+	var shadow := get_node_or_null("Shadow") as Node2D
+	if shadow != null:
+		shadow.scale *= factor
+	var mask_path := UnitArt.texture_path(UnitArt.resolve(String(unit_id))).trim_suffix(".png") + TELL_MASK_SUFFIX
+	if not ResourceLoader.exists(mask_path):
+		return
+	var material := ShaderMaterial.new()
+	material.shader = TELL_SHADER
+	material.set_shader_parameter(&"tell_mask", load(mask_path))
+	material.set_shader_parameter(&"tell_color", TELL_COLORS[variation_tier])
+	sprite.material = material
 
 
 ## A beaten mob leaves the field: hide it, switch the sensor off, drop it out of physics, and
@@ -102,8 +135,14 @@ func adopt_actor(actor: BattleActor) -> void:
 ## Spawn-slot instantiation (#345): `SpawnDirector` built the actor from the archetype alone,
 ## because a slot group is not an encounter and must not be looked up as one. Called before
 ## `add_child`, like `adopt_actor()`.
-func spawn_into_slot(actor: BattleActor, slot_group_id: StringName, slot_combat_id: StringName) -> void:
+func spawn_into_slot(
+	actor: BattleActor,
+	slot_group_id: StringName,
+	slot_combat_id: StringName,
+	tier: int = EnemyDerived.Tier.TYPICAL,
+) -> void:
 	_actor = actor
+	variation_tier = tier
 	_from_spawn_slot = true
 	unit_id = actor.archetype_id
 	group_id = slot_group_id

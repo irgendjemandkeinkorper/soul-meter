@@ -24,28 +24,8 @@ extends SceneTree
 
 const CHARACTER_DIRECTORY := "res://canon/dom/characters"
 
-## Proposed curves, fitted against the six shipped archetypes by minimising
-## worst-case PERCENT drift rather than absolute drift — a 3 HP miss on the
-## 14 HP boar matters more than the same miss on the 36 HP guard, and an
-## absolute-error fit picks a curve that is kindest to the biggest enemy.
-##
-## `max_hp` takes a second term. Every single-driver fit tried leaves at least
-## one archetype 14%+ out; grit alone cannot separate the bog-wight from the
-## rift-scavenger, which share grit 2 and are authored 4 HP apart. Adding muster
-## does separate them and drops worst-case drift to 12.5%.
-const HP_BASE := 2.0
-const HP_PER_GRIT := 6.0
-const HP_PER_MUSTER := 2.0
-
-## 4 of 6 archetypes exact; the two misses are 1 point each.
-const ATTACK_BASE := 1.0
-const ATTACK_PER_MUSTER := 1.5
-
-## 5 of 6 exact. Note this rides GRIT, where the party's defense rides ALACRITY
-## (`DramgidDerived.defense`). That divergence is real and deliberate in the
-## authored data, not a fitting artifact — see the packet's §4.
-const DEFENSE_BASE := -2.5
-const DEFENSE_PER_GRIT := 1.25
+## The curves live in `EnemyDerived` (#412) since they shipped; this tool prints them against the
+## authored table rather than holding a second copy that could drift.
 
 ## The bands the packet asks the owner to choose between.
 const BANDS: Array[float] = [0.10, 0.15]
@@ -75,15 +55,15 @@ func _run() -> void:
 
 
 static func derived_max_hp(grit: int, muster: int) -> int:
-	return int(roundf(HP_BASE + HP_PER_GRIT * grit + HP_PER_MUSTER * muster))
+	return EnemyDerived.max_hp(grit, muster)
 
 
 static func derived_attack(muster: int) -> int:
-	return int(roundf(ATTACK_BASE + ATTACK_PER_MUSTER * muster))
+	return EnemyDerived.attack(muster)
 
 
 static func derived_defense(grit: int) -> int:
-	return maxi(int(roundf(DEFENSE_BASE + DEFENSE_PER_GRIT * grit)), 0)
+	return EnemyDerived.defense(grit)
 
 
 ## The variation seam, stated as one pure function so #412's implementation has
@@ -150,10 +130,10 @@ func _print_curve_fit(archetypes: Array[Dictionary]) -> void:
 	print("\n=== Proposed curves vs shipped ===")
 	print(
 		"max_hp  = round(%.1f + %.1f*grit + %.1f*muster)"
-		% [HP_BASE, HP_PER_GRIT, HP_PER_MUSTER]
+		% [EnemyDerived.HP_BASE, EnemyDerived.HP_PER_GRIT, EnemyDerived.HP_PER_MUSTER]
 	)
-	print("attack  = round(%.1f + %.1f*muster)" % [ATTACK_BASE, ATTACK_PER_MUSTER])
-	print("defense = max(round(%.1f + %.2f*grit), 0)" % [DEFENSE_BASE, DEFENSE_PER_GRIT])
+	print("attack  = round(%.1f + %.1f*muster)" % [EnemyDerived.ATTACK_BASE, EnemyDerived.ATTACK_PER_MUSTER])
+	print("defense = max(round(%.1f + %.2f*grit), 0)" % [EnemyDerived.DEFENSE_BASE, EnemyDerived.DEFENSE_PER_GRIT])
 	print("")
 	print("id                          hp  ->  hp'   d%    | atk -> atk' | def -> def'")
 	var worst_hp := 0.0

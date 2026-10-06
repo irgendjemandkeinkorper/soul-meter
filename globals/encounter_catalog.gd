@@ -157,6 +157,10 @@ static func _actor_from_row(row: Dictionary) -> BattleActor:
 	else:
 		for attribute_id: String in DramgidSchema.ATTRIBUTES:
 			actor.attributes[StringName(attribute_id)] = int(authored.get(attribute_id, 0))
+		# #412: an enemy with a DRAMGID block takes its combat numbers off the curve, set-pieces
+		# included (owner, 2026-10-06). The authored max_hp/attack/defense columns only survive
+		# for edge-only campaign packages, which carry no attributes to derive from.
+		EnemyDerived.derive(actor)
 	return actor
 
 

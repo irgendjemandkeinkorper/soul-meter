@@ -321,6 +321,10 @@ The three unfrozen rows share one blocker: their consumers still read
 > and no `edge` at all, so every player-built character was fighting with to-hit 0 and charge
 > speed 0. What remains blocked on #281 is the FORMULAS, not the names.
 >
+> **Superseded 2026-10-06:** #412 landed. Enemy `max_hp`/`attack`/`defense` now derive from
+> grit and muster through `EnemyDerived` (`docs/enemy-curve-packet.md`), and wild spawns vary
+> ±15% per instance. The original interim note follows.
+>
 > Enemy `max_hp`/`attack`/`defense` stay AUTHORED **for now — interim, tracked as #412**.
 > The owner ruled on 2026-09-07 that enemy attributes should drive those three numbers, and
 > that instances met in the wild should differ from each other: *"I don't want it to be a

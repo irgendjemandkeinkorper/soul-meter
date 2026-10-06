@@ -571,3 +571,6 @@ local_waypoints = PackedVector2Array(0, 0, 72, 8, 34, 36)
 wander_speed = 14.0
 pause_duration = 3.6
 initial_pause = 1.2
+
+[node name="SpawnSlotGladeSouth" type="Marker2D" parent="."]
+position = Vector2(1300, 780)
