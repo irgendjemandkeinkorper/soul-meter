@@ -75,6 +75,8 @@ var last_error := ""
 var unit_roster := UnitRoster.new()
 ## Opt-in physical world state, independent of a loaded field or combat session.
 var world_structures := WorldStructuresScript.new()
+## E4.1 (#345): per-map random spawn slots. Saved as the additive `spawn_state` key.
+var spawn_director := SpawnDirector.new()
 
 
 func _ready() -> void:
@@ -270,6 +272,7 @@ func capture_runtime_state() -> Dictionary:
 		"unit_roster": unit_roster.to_dict().duplicate(true),
 		"world_clock": WorldClock.to_dict().duplicate(true),
 		"world_structures": world_structures.to_dict(),
+		"spawn_state": spawn_director.to_dict(),
 		"class_resources": Battle.class_resources_to_dict(),
 	}
 
@@ -292,6 +295,7 @@ func restore_runtime_state(snapshot: Dictionary) -> bool:
 	unit_roster = roster if roster != null else UnitRoster.new()
 	WorldClock.from_dict(snapshot.get("world_clock", {}))
 	world_structures.from_dict(snapshot.get("world_structures", {}))
+	spawn_director.from_dict(snapshot.get("spawn_state", {}))
 	Battle.restore_class_resources(snapshot.get("class_resources", {}))
 	return restored
 
@@ -365,6 +369,7 @@ func _load_from(primary_path: String, fallback_path: String) -> bool:
 	unit_roster = loaded_roster if loaded_roster != null else UnitRoster.new()
 	WorldClock.from_dict(payload.get("world_clock", {}))
 	world_structures.from_dict(payload.get("world_structures", {}))
+	spawn_director.from_dict(payload.get("spawn_state", {}))
 	Battle.restore_class_resources(payload.get("class_resources", {}))
 	var destination := _destination_from_payload(payload)
 	if destination == null:
@@ -426,6 +431,8 @@ func _prepare_for_load(payload: Variant) -> Dictionary:
 		return _load_failure("Save world_clock data is corrupt.")
 	if not WorldStructuresScript.validate_save_data(migrated.get("world_structures", {})):
 		return _load_failure("Save world_structures data is corrupt.")
+	if not SpawnDirector.validate_save_data(migrated.get("spawn_state", {})):
+		return _load_failure("Save spawn_state data is corrupt.")
 	if migrated.has("location_id"):
 		var location_id: Variant = migrated.get("location_id")
 		if not location_id is String or (location_id as String).length() > 64:
@@ -559,6 +566,7 @@ func new_game() -> void:
 	unit_roster = UnitMigration.roster_from_party(GameState.party)
 	WorldClock.reset()
 	world_structures.from_dict({})
+	spawn_director.from_dict({})
 	var destination := LoadDestination.new(
 		LocationRegistry.DOM.id,
 		LocationRegistry.DOM.resolve_spawn(&"new_game")
@@ -587,6 +595,12 @@ func apply_pending_location(scene: Node) -> void:
 			player.global_position = marker.global_position
 	has_pending_player_position = false
 	pending_spawn_id = &"default"
+
+
+## §4.10 step 3: once per arrival, after the scene is current — rehydrate, then roll.
+func populate_spawn_slots(scene: Node) -> void:
+	if scene != null:
+		spawn_director.populate(scene)
 
 
 func apply_pending_position(scene: Node) -> void:
@@ -635,6 +649,8 @@ func _build_payload() -> Dictionary:
 		"world_clock": WorldClock.to_dict(),
 		# Additive opt-in envelope; older saves start with no structure overrides.
 		"world_structures": world_structures.to_dict(),
+		# #345 additive key (no schema bump): spawn-slot state; older saves start unrolled.
+		"spawn_state": spawn_director.to_dict(),
 		# #223 additive key (no schema bump): per-combatant class-resource state. Mid-battle save
 		# is not a Ch1 behaviour, so this is `{}` outside a live battle; loader defaults `{}`.
 		"class_resources": Battle.class_resources_to_dict(),

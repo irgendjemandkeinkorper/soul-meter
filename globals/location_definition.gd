@@ -17,6 +17,10 @@ extends Resource
 ## (Wound Lip = 3). Consumed as a Harmonic Accord INPUT via
 ## SkillCheck.location_fizzle_integrity() — never as a formula change.
 @export_range(0, 3) var thinning_tier := 0
+## §4.10 ruling 13: whether `SpawnDirector` may put random spawns here. `none` (towns, key quest
+## areas) refuses every spawn table; `limited` allows minor respawns under `SpawnMath`'s bounds;
+## `wilderness` takes full tables. New locations default to `limited` until authored.
+@export_enum("none", "limited", "wilderness") var respawn_policy: String = "limited"
 
 ## F0 D8 (#281 step 8): weather belongs to the LOCATION, not the encounter. An
 ## empty id is calm. `EncounterCatalog._WEATHER_DEFAULTS` used to hold this

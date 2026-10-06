@@ -524,3 +524,51 @@ func test_a_set_piece_opens_inside_a_no_combat_zone() -> void:
 	assert_bool(field.no_combat_zone()).is_true()
 	assert_bool(Battle.can_fight_here(field).get("allowed", true)).is_false()
 	assert_bool(Battle.can_fight_here(field, true).get("allowed", false)).is_true()
+
+
+## #345: a spawn-slot group is a day-stamped slot id, not an `EncounterCatalog` encounter. Its
+## last member falling must resolve through the same F0 ledger hook (XP, no `defeated_*` flag to
+## write) and clear the slot, without the hook ever treating the slot id as an encounter.
+func test_a_spawn_slot_group_resolves_through_the_ledger_and_clears_its_slot() -> void:
+	var clock_before := WorldClock.to_dict()
+	var field := await _field()
+	var anchor := Marker2D.new()
+	anchor.name = "SpawnSlotLedgerTest"
+	field.get_parent().add_child(anchor)
+	anchor.global_position = field.iso_grid().cell_to_world(Vector2i(30, 30))
+	SpawnDirector.set_tables_for_testing({TEST_ROOM_SCENE: [{
+		"schema": SpawnDirector.TABLE_SCHEMA,
+		"id": "ledger-test",
+		"scene_path": TEST_ROOM_SCENE,
+		"slots": [{
+			"id": "solo",
+			"anchor": "SpawnSlotLedgerTest",
+			"respawn_days": 1,
+			"entries": [{"archetype_id": "bog-wight", "weight": 1}],
+			"pack_size": {"min": 1, "max": 1},
+		}],
+	}]})
+	WorldClock.phase_count = 4 * WorldClock.PHASES.size()
+	var director := SpawnDirector.new()
+	var spawned := director.populate(field.get_parent(), {
+		"world_seed": 7, "day_index": 4, "respawn_policy": "wilderness",
+		"thinning_tier": 0, "zhavar_rung_index": 0,
+	})
+	assert_int(spawned.size()).is_equal(1)
+	var wight := spawned[0]
+	wight.realert_cooldown = 0.0
+	wight.sync_cell()
+	assert_bool(Battle.start_session(field, wight).get("allowed", false)).is_true()
+	var foe := wight.battle_actor()
+	foe.hp = 1
+
+	_drive_until_ended(foe)
+
+	assert_int(Battle.last_result.state).is_equal(BattleResult.State.VICTORY)
+	assert_int(wight.state).is_equal(Hostile.State.DOWNED)
+	assert_int(Battle.last_result.xp_awarded).is_greater(0)
+	var slot := director.slot_state("ledger-test", "solo")
+	assert_array(slot["members"]).is_empty()
+	assert_int(int(slot["cleared_day"])).is_equal(4)
+	SpawnDirector.set_tables_for_testing({}, true)
+	WorldClock.from_dict(clock_before)

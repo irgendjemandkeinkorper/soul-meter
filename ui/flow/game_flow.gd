@@ -681,6 +681,7 @@ func _complete_scene_load() -> void:
 			UIManager.open(UIManager.REGION_MAP)
 		return
 	SaveGame.apply_pending_location(current)
+	SaveGame.populate_spawn_slots(current)
 	var hub := FastTravelRegistry.by_scene(_target_scene)
 	if not hub.is_empty():
 		GameState.discover_fast_travel_hub(StringName(hub["id"]))
