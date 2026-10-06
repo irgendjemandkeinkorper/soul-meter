@@ -27,7 +27,11 @@ func test_catalog_returns_fresh_combatants_for_each_battle() -> void:
 	var second := EncounterCatalog.make_actors(EncounterIds.BOG_WIGHT)
 
 	assert_int(second[0].hp).is_equal(second[0].max_hp)
-	assert_int(second[0].hp).is_equal(20)
+	# #412: the bog-wight's HP comes off the enemy curve (grit 2, muster 2 -> 18), not a constant.
+	assert_int(second[0].hp).is_equal(
+		EnemyDerived.max_hp(second[0].attribute_value(&"grit"), second[0].attribute_value(&"muster"))
+	)
+	assert_int(second[0].hp).is_equal(18)
 
 
 func test_encounter_can_override_location_agreement_integrity() -> void:
