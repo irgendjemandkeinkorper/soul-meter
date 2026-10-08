@@ -1,0 +1,335 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+ERROR: Condition "_sock == -1" is true. Returning: FAILED
+   at: _inet_open (drivers/unix/net_socket_unix.cpp:288)
+ERROR: Condition "err != OK" is true. Returning: ERR_CANT_CREATE
+   at: listen (core/io/tcp_server.cpp:56)
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[38;2;218;165;32mIt was recognized that GdUnit4 is running in a test environment, therefore the GdUnit4 plugin will not be executed![0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+ERROR: Attempt to remove unregistered singleton: 'PhantomCameraManager'.
+   at: unregister_singleton (core/core_bind.cpp:2012)
+   GDScript backtrace (most recent call first):
+       [0] _exit_tree (res://addons/phantom_camera/scripts/managers/phantom_camera_manager.gd:85)
+ERROR: Attempt to remove unregistered singleton: 'PhantomCameraManager'.
+   at: unregister_singleton (core/core_bind.cpp:2012)
+   GDScript backtrace (most recent call first):
+       [0] _exit_tree (res://addons/phantom_camera/scripts/managers/phantom_camera_manager.gd:85)
+ERROR: Attempt to remove unregistered singleton: 'PhantomCameraManager'.
+   at: unregister_singleton (core/core_bind.cpp:2012)
+   GDScript backtrace (most recent call first):
+       [0] _exit_tree (res://addons/phantom_camera/scripts/managers/phantom_camera_manager.gd:85)
+WARNING: UID duplicate detected between res://test/fixtures/tscn/properties.tscn and res://test/fixtures/tscn/nodes.tscn.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1405)
+[   0% ] [90m[1mupdate_scripts_classes[22m | Started Registering global classes... (38 steps)[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   2% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   5% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   7% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  10% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  12% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  15% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  17% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  20% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  23% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  25% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  28% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  30% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  33% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  35% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  38% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  41% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  43% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  46% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  48% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  51% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  53% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  56% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  58% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  61% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  64% ] [90m[1mupdate_scripts_classes[22m | ForecastPanelRegion[39m[0m
+[  66% ] [90m[1mupdate_scripts_classes[22m | BattleStageRegion[39m[0m
+[  69% ] [90m[1mupdate_scripts_classes[22m | UnitPlateRegion[39m[0m
+[  71% ] [90m[1mupdate_scripts_classes[22m | BattleInterface[39m[0m
+[  74% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  76% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  79% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  82% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  84% ] [90m[1mupdate_scripts_classes[22m | InventoryScreen[39m[0m
+[  87% ] [90m[1mupdate_scripts_classes[22m | Screen[39m[0m
+[  89% ] [90m[1mupdate_scripts_classes[22m | ShopScreen[39m[0m
+[  92% ] [90m[1mupdate_scripts_classes[22m | ThemeBuilder[39m[0m
+[  94% ] [90m[1mupdate_scripts_classes[22m | CombatOverlay[39m[0m
+[92m[ DONE ][39m [1mupdate_scripts_classes[22m
+[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Started Scanning actions... (67 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | dom-bedroll--folded.png[39m[0m
+[   1% ] [90m[1m_update_scan_actions[22m | dom-bowl--earthenware.png[39m[0m
+[   2% ] [90m[1m_update_scan_actions[22m | dom-cinder-ink--vial-rack.png[39m[0m
+[   4% ] [90m[1m_update_scan_actions[22m | dom-covered-pot--kitchen.png[39m[0m
+[   5% ] [90m[1m_update_scan_actions[22m | dom-firewood--stacked.png[39m[0m
+[   7% ] [90m[1m_update_scan_actions[22m | dom-herb-box--planter.png[39m[0m
+[   8% ] [90m[1m_update_scan_actions[22m | dom-herb-bundle--hanging.png[39m[0m
+[  10% ] [90m[1m_update_scan_actions[22m | dom-inspection-lamp--hooded.png[39m[0m
+[  11% ] [90m[1m_update_scan_actions[22m | dom-ladle--hanging.png[39m[0m
+[  13% ] [90m[1m_update_scan_actions[22m | dom-ledger-lectern--civic.png[39m[0m
+[  14% ] [90m[1m_update_scan_actions[22m | dom-loam-bread--display.png[39m[0m
+[  16% ] [90m[1m_update_scan_actions[22m | dom-measuring-scoop--wood.png[39m[0m
+[  17% ] [90m[1m_update_scan_actions[22m | dom-notice-plinth--civic.png[39m[0m
+[  19% ] [90m[1m_update_scan_actions[22m | dom-plaque--blank.png[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | dom-practice-post--training.png[39m[0m
+[  22% ] [90m[1m_update_scan_actions[22m | dom-price-board--blank.png[39m[0m
+[  23% ] [90m[1m_update_scan_actions[22m | dom-rain-basin--stone.png[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | dom-repair-bench--equipment.png[39m[0m
+[  26% ] [90m[1m_update_scan_actions[22m | dom-shields--stacked.png[39m[0m
+[  27% ] [90m[1m_update_scan_actions[22m | dom-shop-bell--counter.png[39m[0m
+[  29% ] [90m[1m_update_scan_actions[22m | dom-tool-board--repair.png[39m[0m
+[  30% ] [90m[1m_update_scan_actions[22m | dom-wall-hook--iron.png[39m[0m
+[  32% ] [90m[1m_update_scan_actions[22m | dom-weapon-rack--axes.png[39m[0m
+[  33% ] [90m[1m_update_scan_actions[22m | dom-weapon-rack--spears.png[39m[0m
+[  35% ] [90m[1m_update_scan_actions[22m | deity-element-class-chart.csv[39m[0m
+[  36% ] [90m[1m_update_scan_actions[22m | accuracy-reasons-compact-1280.png[39m[0m
+[  38% ] [90m[1m_update_scan_actions[22m | accuracy-reasons-compact-1920.png[39m[0m
+[  39% ] [90m[1m_update_scan_actions[22m | accuracy-reasons-details-1280.png[39m[0m
+[  41% ] [90m[1m_update_scan_actions[22m | accuracy-reasons-details-1920.png[39m[0m
+[  42% ] [90m[1m_update_scan_actions[22m | serious-aim-1920.png[39m[0m
+[  44% ] [90m[1m_update_scan_actions[22m | serious-aim-details-1920.png[39m[0m
+[  45% ] [90m[1m_update_scan_actions[22m | active-injury-badges-1920.png[39m[0m
+[  47% ] [90m[1m_update_scan_actions[22m | serious-aim-1920.png[39m[0m
+[  48% ] [90m[1m_update_scan_actions[22m | serious-aim-details-1920.png[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | combat-result-field-1920.png[39m[0m
+[  51% ] [90m[1m_update_scan_actions[22m | combat-result-hit-1920.png[39m[0m
+[  52% ] [90m[1m_update_scan_actions[22m | combat-result-minor-1920.png[39m[0m
+[  54% ] [90m[1m_update_scan_actions[22m | combat-result-miss-1920.png[39m[0m
+[  55% ] [90m[1m_update_scan_actions[22m | combat-result-refresh-1920.png[39m[0m
+[  57% ] [90m[1m_update_scan_actions[22m | combat-result-serious-1920.png[39m[0m
+[  58% ] [90m[1m_update_scan_actions[22m | hit-feedback-field-1920.png[39m[0m
+[  60% ] [90m[1m_update_scan_actions[22m | hit-feedback-hit-1920.png[39m[0m
+[  61% ] [90m[1m_update_scan_actions[22m | hit-feedback-miss-1920.png[39m[0m
+[  63% ] [90m[1m_update_scan_actions[22m | injury-notice-compact-1920.png[39m[0m
+[  64% ] [90m[1m_update_scan_actions[22m | injury-notice-details-1920.png[39m[0m
+[  66% ] [90m[1m_update_scan_actions[22m | target-preview-board-1920.png[39m[0m
+[  67% ] [90m[1m_update_scan_actions[22m | target-preview-field-1920.png[39m[0m
+[  69% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  70% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  72% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  73% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  75% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  76% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  77% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  79% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  80% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  82% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  83% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  85% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  86% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  88% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  89% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  91% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  92% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  94% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  95% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[  97% ] [90m[1m_update_scan_actions[22m | logo.png[39m[0m
+[92m[ DONE ][39m [1m_update_scan_actions[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (66 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   1% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   2% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   4% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   5% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   7% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   8% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  10% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  11% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  13% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  14% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  16% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  17% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  19% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  20% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  22% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  23% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  25% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  26% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  28% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  29% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  31% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  32% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  34% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  35% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  37% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  38% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  40% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  41% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  43% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  44% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  46% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  47% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  49% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  50% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  52% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  53% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  55% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  56% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  58% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  59% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  61% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  62% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  64% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  65% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  67% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  68% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  70% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  71% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  73% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  74% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  76% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  77% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  79% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  80% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  82% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  83% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  85% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  86% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  88% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  89% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  91% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  92% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  94% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  95% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  97% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing pre-reimport operations...[39m[0m
+[   0% ] [90m[1mreimport[22m | combat-result-field-1920.png[39m[0m
+[   1% ] [90m[1mreimport[22m | combat-result-hit-1920.png[39m[0m
+[   2% ] [90m[1mreimport[22m | combat-result-minor-1920.png[39m[0m
+[   4% ] [90m[1mreimport[22m | combat-result-miss-1920.png[39m[0m
+[   5% ] [90m[1mreimport[22m | combat-result-refresh-1920.png[39m[0m
+[   7% ] [90m[1mreimport[22m | combat-result-serious-1920.png[39m[0m
+[   8% ] [90m[1mreimport[22m | hit-feedback-field-1920.png[39m[0m
+[  10% ] [90m[1mreimport[22m | hit-feedback-hit-1920.png[39m[0m
+[  11% ] [90m[1mreimport[22m | hit-feedback-miss-1920.png[39m[0m
+[  13% ] [90m[1mreimport[22m | injury-notice-compact-1920.png[39m[0m
+[  14% ] [90m[1mreimport[22m | injury-notice-details-1920.png[39m[0m
+[  16% ] [90m[1mreimport[22m | target-preview-board-1920.png[39m[0m
+[  17% ] [90m[1mreimport[22m | target-preview-field-1920.png[39m[0m
+[  19% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  20% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  22% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  23% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  25% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  26% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  28% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  29% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  31% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  32% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  34% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  35% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  37% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  38% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  40% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  41% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  43% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  44% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  46% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  47% ] [90m[1mreimport[22m | logo.png[39m[0m
+[  49% ] [90m[1mreimport[22m | dom-bedroll--folded.png[39m[0m
+[  50% ] [90m[1mreimport[22m | dom-bowl--earthenware.png[39m[0m
+[  52% ] [90m[1mreimport[22m | dom-cinder-ink--vial-rack.png[39m[0m
+[  53% ] [90m[1mreimport[22m | dom-covered-pot--kitchen.png[39m[0m
+[  55% ] [90m[1mreimport[22m | dom-firewood--stacked.png[39m[0m
+[  56% ] [90m[1mreimport[22m | dom-herb-box--planter.png[39m[0m
+[  58% ] [90m[1mreimport[22m | dom-herb-bundle--hanging.png[39m[0m
+[  59% ] [90m[1mreimport[22m | dom-inspection-lamp--hooded.png[39m[0m
+[  61% ] [90m[1mreimport[22m | dom-ladle--hanging.png[39m[0m
+[  62% ] [90m[1mreimport[22m | dom-ledger-lectern--civic.png[39m[0m
+[  64% ] [90m[1mreimport[22m | dom-loam-bread--display.png[39m[0m
+[  65% ] [90m[1mreimport[22m | dom-measuring-scoop--wood.png[39m[0m
+[  67% ] [90m[1mreimport[22m | dom-notice-plinth--civic.png[39m[0m
+[  68% ] [90m[1mreimport[22m | dom-plaque--blank.png[39m[0m
+[  70% ] [90m[1mreimport[22m | dom-practice-post--training.png[39m[0m
+[  71% ] [90m[1mreimport[22m | dom-price-board--blank.png[39m[0m
+[  73% ] [90m[1mreimport[22m | serious-aim-details-1920.png[39m[0m
+[  74% ] [90m[1mreimport[22m | serious-aim-1920.png[39m[0m
+[  76% ] [90m[1mreimport[22m | active-injury-badges-1920.png[39m[0m
+[  77% ] [90m[1mreimport[22m | serious-aim-details-1920.png[39m[0m
+[  79% ] [90m[1mreimport[22m | serious-aim-1920.png[39m[0m
+[  80% ] [90m[1mreimport[22m | accuracy-reasons-details-1920.png[39m[0m
+[  82% ] [90m[1mreimport[22m | accuracy-reasons-details-1280.png[39m[0m
+[  83% ] [90m[1mreimport[22m | accuracy-reasons-compact-1920.png[39m[0m
+[  85% ] [90m[1mreimport[22m | accuracy-reasons-compact-1280.png[39m[0m
+[  86% ] [90m[1mreimport[22m | dom-weapon-rack--spears.png[39m[0m
+[  88% ] [90m[1mreimport[22m | dom-weapon-rack--axes.png[39m[0m
+[  89% ] [90m[1mreimport[22m | dom-wall-hook--iron.png[39m[0m
+[  91% ] [90m[1mreimport[22m | dom-tool-board--repair.png[39m[0m
+[  92% ] [90m[1mreimport[22m | dom-shop-bell--counter.png[39m[0m
+[  94% ] [90m[1mreimport[22m | dom-shields--stacked.png[39m[0m
+[  95% ] [90m[1mreimport[22m | dom-repair-bench--equipment.png[39m[0m
+[  97% ] [90m[1mreimport[22m | dom-rain-basin--stone.png[39m[0m
+[  98% ] [90m[1mreimport[22m | Finalizing Asset Import...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (66 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing post-reimport operations...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
+[  33% ] [90m[1mloading_editor_layout[22m | Reopening scenes...[39m[0m
+[  50% ] [90m[1mloading_editor_layout[22m | Loading central editor layout...[39m[0m
+[  66% ] [90m[1mloading_editor_layout[22m | Loading plugin window layout...[39m[0m
+[  83% ] [90m[1mloading_editor_layout[22m | Editor layout ready.[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+ERROR: Failed to retrieve non-existent singleton 'PhantomCameraManager'.
+   at: get_singleton_object (core/config/engine.cpp:340)
+   GDScript backtrace (most recent call first):
+       [0] _assign_manager (res://addons/phantom_camera/scripts/panel/viewfinder/viewfinder.gd:570)
+       [1] scene_changed (res://addons/phantom_camera/scripts/panel/viewfinder/viewfinder.gd:621)
+ERROR: Condition "_sock == -1" is true. Returning: FAILED
+   at: _inet_open (drivers/unix/net_socket_unix.cpp:288)
+ERROR: Condition "err != OK" is true. Returning: ERR_CANT_CREATE
+   at: listen (core/io/tcp_server.cpp:56)
+ERROR: Cannot remove unknown dock "PandoraEditor" from the bottom panel.
+   at: remove_item (editor/gui/editor_bottom_panel.cpp:265)
+   GDScript backtrace (most recent call first):
+       [0] _exit_tree (res://addons/pandora/plugin.gd:54)
+ERROR: Attempt to remove unregistered singleton: 'PhantomCameraManager'.
+   at: unregister_singleton (core/core_bind.cpp:2012)
+   GDScript backtrace (most recent call first):
+       [0] _exit_tree (res://addons/phantom_camera/scripts/managers/phantom_camera_manager.gd:85)
+ERROR: Attempt to remove unregistered singleton: 'PhantomCameraManager'.
+   at: unregister_singleton (core/core_bind.cpp:2012)
+   GDScript backtrace (most recent call first):
+       [0] _exit_tree (res://addons/phantom_camera/scripts/managers/phantom_camera_manager.gd:85)
+ERROR: Attempt to remove unregistered singleton: 'PhantomCameraManager'.
+   at: unregister_singleton (core/core_bind.cpp:2012)
+   GDScript backtrace (most recent call first):
+       [0] _exit_tree (res://addons/phantom_camera/scripts/managers/phantom_camera_manager.gd:85)
+ERROR: Attempt to remove unregistered singleton: 'PhantomCameraManager'.
+   at: unregister_singleton (core/core_bind.cpp:2012)
+   GDScript backtrace (most recent call first):
+       [0] _exit_tree (res://addons/phantom_camera/scripts/managers/phantom_camera_manager.gd:85)
+ERROR: Cannot save file '/home/adamjroder/.config/godot/editor_settings-4.7.tres'.
+   at: save (scene/resources/resource_format_text.cpp:1768)
+ERROR: Error saving editor settings to /home/adamjroder/.config/godot/editor_settings-4.7.tres
+   at: save (editor/settings/editor_settings.cpp:1525)
+WARNING: 28426 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 482 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools11BucketLargeE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools11BucketSmallE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+ERROR: 16 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.

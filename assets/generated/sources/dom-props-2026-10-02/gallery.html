@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soul Meter — Dom prop assets</title>
+<style>
+:root {color-scheme:dark;--bg:#0c0e12;--card:#1b1f27;--ink:#e2e8f0;--muted:#94a3b8;--stage:#12151b;--size:256px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,serif;line-height:1.5}
+main{max-width:1500px;margin:auto;padding:32px 24px}
+h1{font-size:clamp(26px,4vw,40px);font-weight:500;margin:0}
+.subtitle{color:var(--muted);max-width:75ch}
+a{color:#d9ab45;text-underline-offset:3px}
+a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #22d3ee;outline-offset:4px}
+.controls{display:flex;flex-wrap:wrap;gap:16px;margin:28px 0 18px;padding:16px;background:var(--card)}
+label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:14px}
+select,input{min-height:40px;background:#12151b;color:var(--ink);border:1px solid #4e5665;padding:7px 10px;font:inherit;border-radius:0}
+#search{min-width:240px}
+.count{color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.card{background:var(--card);padding:12px;border:1px solid #343c49}
+.card[hidden]{display:none}
+.stage{height:264px;display:flex;justify-content:center;align-items:flex-end;background:var(--stage);overflow:hidden}
+.stage img{width:var(--size);height:var(--size);object-fit:contain}
+body[data-background="light"]{--stage:#b8b5ad}
+body[data-background="check"] .stage{background-color:#89909a;background-image:linear-gradient(45deg,#b9bec5 25%,transparent 25%),linear-gradient(-45deg,#b9bec5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#b9bec5 75%),linear-gradient(-45deg,transparent 75%,#b9bec5 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
+h2{font-size:18px;margin:14px 0 4px;font-weight:500}
+.card p{font-size:13px;color:var(--muted);margin:0 0 12px}
+.links{display:flex;gap:18px;font-size:14px}
+footer{color:var(--muted);font-size:14px;margin:32px 0}
+@media(max-width:400px){main{padding:20px 10px}.grid{grid-template-columns:1fr}#search{min-width:0;width:100%}}
+</style>
+</head>
+<body data-background="dark">
+<main>
+<h1>Soul Meter / Dom props</h1>
+<p class="subtitle">24 new assets for kitchens, shops, the garrison, civic rooms, and the player's home. Compare their silhouettes at game size or switch the background to inspect transparent edges.</p>
+<p><a href="review-sheet.png">Full review sheet</a> · <a href="batch.json">Prompts &amp; provenance</a></p>
+<div class="controls">
+<label>Find an asset<input id="search" type="search" placeholder="e.g. lantern, bread, shield"></label>
+<label><span id="category-label">Category</span><select id="category" aria-labelledby="category-label"><option value="all">All 24 assets</option><option value="kitchen">Kitchen</option><option value="shop">Shop</option><option value="equipment">Equipment</option><option value="civic">Civic</option><option value="home">Home</option><option value="garrison">Garrison</option></select></label>
+<label><span id="size-label">Preview size</span><select id="size" aria-labelledby="size-label"><option value="256">256 px · export</option><option value="128">128 px</option><option value="64">64 px · small prop</option><option value="32">32 px · thumbnail</option></select></label>
+<label><span id="background-label">Background</span><select id="background" aria-labelledby="background-label"><option value="dark">Dark stone</option><option value="light">Light neutral</option><option value="check">Transparency grid</option></select></label>
+</div>
+<p class="count" id="count" role="status">Showing 24 assets</p>
+<div class="grid" id="grid">
+<article class="card" data-category="kitchen" data-name="covered cooking pot"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-covered-pot--kitchen.png" alt="Covered cooking pot" width="256" height="256"></div><h2>Covered cooking pot</h2><p>kitchen · chefs house</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-covered-pot--kitchen.png" download>256 px PNG</a><a href="./dom-covered-pot--kitchen.png">Master</a></div></article>
+<article class="card" data-category="kitchen" data-name="hanging ladle"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-ladle--hanging.png" alt="Hanging ladle" width="256" height="256"></div><h2>Hanging ladle</h2><p>kitchen · chefs house</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-ladle--hanging.png" download>256 px PNG</a><a href="./dom-ladle--hanging.png">Master</a></div></article>
+<article class="card" data-category="kitchen" data-name="hanging herb bundle"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-herb-bundle--hanging.png" alt="Hanging herb bundle" width="256" height="256"></div><h2>Hanging herb bundle</h2><p>kitchen · chefs pantry</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-herb-bundle--hanging.png" download>256 px PNG</a><a href="./dom-herb-bundle--hanging-v2.png">Master</a></div></article>
+<article class="card" data-category="kitchen" data-name="stacked firewood"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-firewood--stacked.png" alt="Stacked firewood" width="256" height="256"></div><h2>Stacked firewood</h2><p>kitchen · chefs house</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-firewood--stacked.png" download>256 px PNG</a><a href="./dom-firewood--stacked.png">Master</a></div></article>
+<article class="card" data-category="kitchen" data-name="earthenware bowl"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-bowl--earthenware.png" alt="Earthenware bowl" width="256" height="256"></div><h2>Earthenware bowl</h2><p>kitchen · chefs house</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-bowl--earthenware.png" download>256 px PNG</a><a href="./dom-bowl--earthenware.png">Master</a></div></article>
+<article class="card" data-category="kitchen" data-name="herb planter"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-herb-box--planter.png" alt="Herb planter" width="256" height="256"></div><h2>Herb planter</h2><p>kitchen · chefs house</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-herb-box--planter.png" download>256 px PNG</a><a href="./dom-herb-box--planter.png">Master</a></div></article>
+<article class="card" data-category="shop" data-name="loam bread display"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-loam-bread--display.png" alt="Loam bread display" width="256" height="256"></div><h2>Loam bread display</h2><p>shop · item shop</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-loam-bread--display.png" download>256 px PNG</a><a href="./dom-loam-bread--display.png">Master</a></div></article>
+<article class="card" data-category="shop" data-name="cinder-ink vial rack"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-cinder-ink--vial-rack.png" alt="Cinder-ink vial rack" width="256" height="256"></div><h2>Cinder-ink vial rack</h2><p>shop · item shop</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-cinder-ink--vial-rack.png" download>256 px PNG</a><a href="./dom-cinder-ink--vial-rack.png">Master</a></div></article>
+<article class="card" data-category="shop" data-name="wooden measuring scoop"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-measuring-scoop--wood.png" alt="Wooden measuring scoop" width="256" height="256"></div><h2>Wooden measuring scoop</h2><p>shop · item shop</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-measuring-scoop--wood.png" download>256 px PNG</a><a href="./dom-measuring-scoop--wood.png">Master</a></div></article>
+<article class="card" data-category="shop" data-name="blank price board"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-price-board--blank.png" alt="Blank price board" width="256" height="256"></div><h2>Blank price board</h2><p>shop · item shop</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-price-board--blank.png" download>256 px PNG</a><a href="./dom-price-board--blank.png">Master</a></div></article>
+<article class="card" data-category="shop" data-name="shop counter bell"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-shop-bell--counter.png" alt="Shop counter bell" width="256" height="256"></div><h2>Shop counter bell</h2><p>shop · item shop</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-shop-bell--counter.png" download>256 px PNG</a><a href="./dom-shop-bell--counter.png">Master</a></div></article>
+<article class="card" data-category="equipment" data-name="spear rack"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-weapon-rack--spears.png" alt="Spear rack" width="256" height="256"></div><h2>Spear rack</h2><p>equipment · equipment shop</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-weapon-rack--spears.png" download>256 px PNG</a><a href="./dom-weapon-rack--spears.png">Master</a></div></article>
+<article class="card" data-category="equipment" data-name="axe rack"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-weapon-rack--axes.png" alt="Axe rack" width="256" height="256"></div><h2>Axe rack</h2><p>equipment · equipment shop</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-weapon-rack--axes.png" download>256 px PNG</a><a href="./dom-weapon-rack--axes.png">Master</a></div></article>
+<article class="card" data-category="equipment" data-name="repair bench"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-repair-bench--equipment.png" alt="Repair bench" width="256" height="256"></div><h2>Repair bench</h2><p>equipment · equipment forge</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-repair-bench--equipment.png" download>256 px PNG</a><a href="./dom-repair-bench--equipment.png">Master</a></div></article>
+<article class="card" data-category="equipment" data-name="repair tool board"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-tool-board--repair.png" alt="Repair tool board" width="256" height="256"></div><h2>Repair tool board</h2><p>equipment · equipment forge</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-tool-board--repair.png" download>256 px PNG</a><a href="./dom-tool-board--repair.png">Master</a></div></article>
+<article class="card" data-category="equipment" data-name="hooded inspection lamp"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-inspection-lamp--hooded.png" alt="Hooded inspection lamp" width="256" height="256"></div><h2>Hooded inspection lamp</h2><p>equipment · equipment shop</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-inspection-lamp--hooded.png" download>256 px PNG</a><a href="./dom-inspection-lamp--hooded.png">Master</a></div></article>
+<article class="card" data-category="civic" data-name="civic ledger lectern"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-ledger-lectern--civic.png" alt="Civic ledger lectern" width="256" height="256"></div><h2>Civic ledger lectern</h2><p>civic · town hall</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-ledger-lectern--civic.png" download>256 px PNG</a><a href="./dom-ledger-lectern--civic.png">Master</a></div></article>
+<article class="card" data-category="civic" data-name="public notice plinth"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-notice-plinth--civic.png" alt="Public notice plinth" width="256" height="256"></div><h2>Public notice plinth</h2><p>civic · town hall</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-notice-plinth--civic.png" download>256 px PNG</a><a href="./dom-notice-plinth--civic.png">Master</a></div></article>
+<article class="card" data-category="civic" data-name="blank civic plaque"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-plaque--blank.png" alt="Blank civic plaque" width="256" height="256"></div><h2>Blank civic plaque</h2><p>civic · town hall</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-plaque--blank.png" download>256 px PNG</a><a href="./dom-plaque--blank.png">Master</a></div></article>
+<article class="card" data-category="home" data-name="folded bedroll"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-bedroll--folded.png" alt="Folded bedroll" width="256" height="256"></div><h2>Folded bedroll</h2><p>home · players house</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-bedroll--folded.png" download>256 px PNG</a><a href="./dom-bedroll--folded.png">Master</a></div></article>
+<article class="card" data-category="home" data-name="rain-catch basin"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-rain-basin--stone.png" alt="Rain-catch basin" width="256" height="256"></div><h2>Rain-catch basin</h2><p>home · players house</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-rain-basin--stone.png" download>256 px PNG</a><a href="./dom-rain-basin--stone.png">Master</a></div></article>
+<article class="card" data-category="home" data-name="iron wall hook"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-wall-hook--iron.png" alt="Iron wall hook" width="256" height="256"></div><h2>Iron wall hook</h2><p>home · players house</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-wall-hook--iron.png" download>256 px PNG</a><a href="./dom-wall-hook--iron.png">Master</a></div></article>
+<article class="card" data-category="garrison" data-name="garrison shield stack"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-shields--stacked.png" alt="Garrison shield stack" width="256" height="256"></div><h2>Garrison shield stack</h2><p>garrison · iron companies</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-shields--stacked.png" download>256 px PNG</a><a href="./dom-shields--stacked.png">Master</a></div></article>
+<article class="card" data-category="garrison" data-name="garrison practice post"><div class="stage"><img src="../../sprites/interior/dom-props-2026-10-02/dom-practice-post--training.png" alt="Garrison practice post" width="256" height="256"></div><h2>Garrison practice post</h2><p>garrison · garrison yard</p><div class="links"><a href="../../sprites/interior/dom-props-2026-10-02/dom-practice-post--training.png" download>256 px PNG</a><a href="./dom-practice-post--training.png">Master</a></div></article>
+</div>
+<footer>Generated with built-in OpenAI image_gen, following the approved gothic mythopunk art bible and art-request.md section 8. Raster masters are retained. These are prepared assets awaiting placement in the game. Sprite origin: bottom center at (128, 240); centered Sprite2D offset: (0, -112). Tabletop and hanging props need placement relative to their supporting surface.</footer>
+</main>
+<script>
+const search = document.querySelector('#search');
+const category = document.querySelector('#category');
+const cards = [...document.querySelectorAll('.card')];
+function filter() {
+  const query = search.value.trim().toLowerCase();
+  let visible = 0;
+  for (const card of cards) {
+    const show = (category.value === 'all' || card.dataset.category === category.value) && card.dataset.name.includes(query);
+    card.hidden = !show;
+    if (show) visible++;
+  }
+  document.querySelector('#count').textContent = 'Showing ' + visible + ' of 24 assets';
+}
+search.addEventListener('input', filter);
+category.addEventListener('change', filter);
+document.querySelector('#size').addEventListener('change', event => document.documentElement.style.setProperty('--size', event.target.value + 'px'));
+document.querySelector('#background').addEventListener('change', event => document.body.dataset.background = event.target.value);
+</script>
+</body>
+</html>
