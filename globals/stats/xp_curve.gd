@@ -28,8 +28,8 @@ const XP_PER_KILL_PER_POINT := 4
 const MILESTONE_XP_LEVELS := 1
 
 ## Owner 2026-10-09: wild respawns stay farmable, but grinding must not outrun the
-## campaign's presumed difficulty. Two bounds, both PROVISIONAL until the owner signs
-## off on `docs/progression-bound-packet.md` (numbers from `tools/progression_sweep.gd`):
+## campaign's presumed difficulty. Two bounds, signed off by the owner 2026-10-09 in
+## `docs/progression-bound-packet.md` (numbers from `tools/progression_sweep.gd`):
 ## - a hard Chapter 1 level cap: one level above what a thorough, non-grinding run reaches;
 ## - kill XP scaled per member by the gap between their level and the foe's, so an
 ##   out-levelled foe pays a trickle and a member behind the curve catches up.

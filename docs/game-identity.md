@@ -65,9 +65,8 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
 
 - Perk cadence (every 3 levels?). **Still open as of 2026-09-08** — the kill-XP ruling above
   settles the XP *source*, not the curve or the cadence.
-- Chapter 1 level cap: **shape ruled 2026-10-09** (owner): a hard cap fitted from content plus
-  kill XP scaled by level gap, so wild farming cannot outrun the campaign. The number (7) and
-  the scaling constants await sign-off on `docs/progression-bound-packet.md`.
+- ~~Chapter 1 level cap~~ — **ruled 2026-10-09** (owner): cap 7 plus kill XP scaled by level
+  gap, so wild farming cannot outrun the campaign. Numbers in `docs/progression-bound-packet.md`.
 - Enemy stat variation in the wild (#412): band, which stats vary, whether it is visible, and
   whether named enemies vary. Recommendations with fitted numbers are on #412 and **await a
   ruling**.

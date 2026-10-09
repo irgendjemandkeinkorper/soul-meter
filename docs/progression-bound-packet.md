@@ -13,7 +13,7 @@ godot --headless --path . --script res://tools/progression_sweep.gd
 ```
 
 The constants live in `globals/stats/xp_curve.gd` (`XpCurve`, re-exported by `Advancement`).
-All are **PROVISIONAL until the owner signs off on this packet.**
+**Signed off by the owner 2026-10-09:** cap 7, scaling constants as written, and the stub-XP question (§5.2) left for later.
 
 ## 1. Chapter 1 XP budget
 
