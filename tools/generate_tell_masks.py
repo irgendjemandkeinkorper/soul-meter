@@ -11,6 +11,10 @@ The guard exposes only its eye slit; do not invent claws on its gauntlets.
 These definitions cover idle/SE/frame 0 only. A changed source or another frame
 needs a fresh trace; source hashes prevent silently applying stale coordinates.
 No source sprite, import setting, tint color, shader or pivot is changed.
+
+#451 (owner 2026-10-09: "noticeable but not in your face"): each traced part is
+feathered into a soft halo (HALO_* below) so a 2 px eye still reads at the
+~0.45 field scale. The halo is partial grey, so it tints less than the core.
 """
 
 import argparse
@@ -18,10 +22,16 @@ import hashlib
 import re
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 SPRITES = ROOT / "assets/generated/sprites/units"
+
+# #451 halo: grow each traced part by HALO_GROW_PX, soften it by HALO_BLUR_PX,
+# and cap it at HALO_LEVEL of full white. The traced core itself stays at 255.
+HALO_GROW_PX = 2
+HALO_BLUR_PX = 2.5
+HALO_LEVEL = 0.5
 
 # Polygon vertices are source-pixel coordinates; group names document anatomy.
 TRACES = {
@@ -156,6 +166,10 @@ def build_mask(archetype, trace):
         for polygons in trace["parts"].values():
             for polygon in polygons:
                 draw.polygon(polygon, fill=255)
+        halo = coverage.filter(ImageFilter.MaxFilter(2 * HALO_GROW_PX + 1))
+        halo = halo.filter(ImageFilter.GaussianBlur(HALO_BLUR_PX))
+        halo = halo.point(lambda v: round(v * HALO_LEVEL))
+        coverage = ImageChops.lighter(coverage, halo)
         # RGB is black even in fully transparent pixels. Alpha stays byte-exact;
         # do not multiply coverage by alpha here (the live shader already does).
         coverage = ImageChops.multiply(coverage, alpha.point(lambda a: 255 if a else 0))
