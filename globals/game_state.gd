@@ -881,16 +881,47 @@ func grant_milestone_level(milestone_id: StringName) -> bool:
 ## level them: a recruit the player built and left behind should still be usable
 ## when they come back for them.
 func award_party_xp(amount: int, cause: String) -> Dictionary:
-	var levels_gained := {}
 	if amount <= 0:
-		return levels_gained
+		return {}
+	return _award_each(func(_member: PartyMember) -> int: return amount, amount, cause)
+
+
+## Kill XP (owner 2026-10-09): each member earns by their OWN level against each foe's,
+## so a recruit behind the curve catches up and an out-levelled party earns a trickle.
+## `foes` holds one Vector2i(grit, muster) per defeated combatant.
+func award_party_kill_xp(foes: Array[Vector2i], cause: String) -> Dictionary:
+	if foes.is_empty():
+		return {}
+	return _award_each(
+		func(member: PartyMember) -> int: return kill_xp_for_member(member, foes),
+		kill_xp_for_lead(foes), cause
+	)
+
+
+## What `member` would earn for `foes` at their current level.
+static func kill_xp_for_member(member: PartyMember, foes: Array[Vector2i]) -> int:
+	var total := 0
+	for foe: Vector2i in foes:
+		total += Advancement.kill_xp_for(member.level, foe.x, foe.y)
+	return total
+
+
+## The figure a battle reports: what the party lead earns for `foes` right now.
+func kill_xp_for_lead(foes: Array[Vector2i]) -> int:
+	if party.is_empty():
+		return 0
+	return kill_xp_for_member(party[0], foes)
+
+
+func _award_each(amount_for: Callable, reported: int, cause: String) -> Dictionary:
+	var levels_gained := {}
 	for member: PartyMember in party:
-		var gained := Advancement.award_xp(member, amount)
+		var gained := Advancement.award_xp(member, amount_for.call(member))
 		if gained > 0:
 			levels_gained[member.id] = member.level
 	for member: PartyMember in custom_recruits:
-		Advancement.award_xp(member, amount)
-	xp_awarded.emit(amount, cause, levels_gained)
+		Advancement.award_xp(member, amount_for.call(member))
+	xp_awarded.emit(reported, cause, levels_gained)
 	party_changed.emit()
 	return levels_gained
 

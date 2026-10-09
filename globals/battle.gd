@@ -561,14 +561,11 @@ func _resolve_group(group_id: StringName, members: Array) -> void:
 	if not faction.is_empty():
 		Reputation.record("player", faction, delta, cause, scene)
 	_record_renown(outcome, &"reputation", 3.0, cause, scene)
-	var earned := 0
-	for actor: BattleActor in members:
-		earned += Advancement.xp_for_defeated(
-			actor.attribute_value(&"grit"), actor.attribute_value(&"muster")
-		)
+	var foes := _defeated_attributes(members)
+	var earned := GameState.kill_xp_for_lead(foes)
 	if earned > 0:
 		_session_xp += earned
-		var levels := GameState.award_party_xp(earned, "Cleared %s" % String(group_id))
+		var levels := GameState.award_party_kill_xp(foes, "Cleared %s" % String(group_id))
 		for member_id: Variant in levels:
 			_session_levels[member_id] = int(_session_levels.get(member_id, 0)) + int(levels[member_id])
 	_session_spoils.append_array(EncounterCatalog.roll_spoils(group_id))
@@ -1263,17 +1260,23 @@ func _apply_victory(result: BattleResult) -> void:
 ## fight the party has already won pays nothing, so an encounter cannot be farmed
 ## by walking out and back in.
 func _award_victory_xp(result: BattleResult) -> void:
-	var earned := 0
-	for foe: BattleActor in enemies:
-		earned += Advancement.xp_for_defeated(
-			foe.attribute_value(&"grit"), foe.attribute_value(&"muster")
-		)
+	var foes := _defeated_attributes(enemies)
+	var earned := GameState.kill_xp_for_lead(foes)
 	if earned <= 0:
 		return
 	result.xp_awarded = earned
-	result.levels_gained = GameState.award_party_xp(
-		earned, "Won %s" % String(encounter_id)
+	result.levels_gained = GameState.award_party_kill_xp(
+		foes, "Won %s" % String(encounter_id)
 	)
+
+
+## Kill XP scales per member against each foe (Advancement.kill_xp_for), so the award
+## carries the foes' grit and muster rather than a pre-summed total.
+func _defeated_attributes(foes: Array) -> Array[Vector2i]:
+	var attributes: Array[Vector2i] = []
+	for foe: BattleActor in foes:
+		attributes.append(Vector2i(foe.attribute_value(&"grit"), foe.attribute_value(&"muster")))
+	return attributes
 
 
 func _apply_flee_consequence(result: BattleResult, outcome: Dictionary) -> void:
