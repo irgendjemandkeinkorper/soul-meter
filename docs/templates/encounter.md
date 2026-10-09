@@ -10,7 +10,7 @@ An encounter is **Pandora data first** (FR-108). The runtime reads
 | `tools/seed_pandora.gd` `_encounter_rows()` (+ a row in `_seed_combatants()` for a new enemy) | The authored row — Pandora is canonical |
 | `data.pandora` + `data/generated/encounters.json` + `data/generated/encounter_ids.gd` | Regenerated: run the seed script, then `tools/generate_gloot.gd` (`Project → Tools → Regenerate GLoot prototypes`, or headless with `SOUL_METER_DRIFT_CHECK=1` to verify) |
 | `globals/encounter_catalog.gd` | `_FIELD_GRID_DATA[<id>]` (grid board), optional `_WEATHER_DEFAULTS[<id>]`, optional `_SPOILS[&<id>]` |
-| a scene placement | An `actors/enemy` instance with `encounter_id`, optional `required_flag` / `locked_message` |
+| a scene placement | An `actors/hostile/hostile.tscn` instance with `unit_id`, `group_id`, and optional `required_flag`; authored set-pieces use `Battle.start_set_piece(field, encounter_id)` |
 | `test/integration/test_<slug>_encounter.gd` | Starts the battle headless, both win and loss consequences write the ledger (pattern: `test/integration/test_combat_controller.gd`, `test_gate_t1_clearability.gd`) |
 
 ## Pandora row (`_seed_encounters` properties, in `_encounter_rows()` order)

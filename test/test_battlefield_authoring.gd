@@ -21,7 +21,7 @@ func before_test() -> void:
 	# A win writes its consequences into the autoloads (defeated/outcome flags,
 	# a faction-standing event, a renown event) and every start records combat
 	# knowledge. Snapshot them: a leaked `defeated_bog_wight` makes the wilds
-	# Enemy free itself on _ready in whichever suite loads test_room next.
+	# Hostile retire itself on _ready in whichever suite loads test_room next.
 	_original_flags = GameState.flags.duplicate(true)
 	_original_combat_knowledge = GameState.combat_knowledge.duplicate(true)
 	_original_reputation = Reputation.to_dict().duplicate(true)

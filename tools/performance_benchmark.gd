@@ -166,8 +166,8 @@ func _measure_battle_entry() -> bool:
 	if bool(_battle.get("ended")):
 		_add_error("Benchmark battle ended before the overlay could be opened.")
 		return false
-	# Mirrors actors/enemy/enemy.gd, then traverses the mandatory deployment
-	# substates before waiting for the battle overlay.
+	# Exercise the authored set-piece deployment substates before waiting for
+	# the field HUD. This standalone fixture starts Battle without a session.
 	await _advance_deployment_to_battle()
 	var completed := await _wait_until(
 		func() -> bool:

@@ -1,13 +1,10 @@
 extends Screen
-## Full-screen party combat view. Battle owns the rules; this screen is the
-## presentation layer and submits action IDs to the autoload.
+## Field battle HUD shell. BattleInterface owns event-driven presentation; this
+## screen supplies the command dock, audio, and outcome/loot controls.
 
-const BATTLE_STAGE_SCENE := preload("res://ui/screens/battle_stage.tscn")
-const BATTLE_HUD_SCENE := preload("res://ui/hud/battle_hud.tscn")
 const BATTLE_INTERFACE_SCENE := preload("res://ui/hud/battle_interface.tscn")
 const COMBAT_AUDIO := preload("res://audio/combat_audio.gd")
 
-var _stage: Control
 var _party_box: VBoxContainer
 var _enemy_lbl: Label
 var _balance_lbl: Label
@@ -19,7 +16,6 @@ var _end_turn_button: Button
 var _tactical_data_button: Button
 var _outcome_box: VBoxContainer
 var _action_buttons: Array[Button] = []
-var _battle_hud: BattleHUD
 var _battle_interface: BattleInterface
 var _combat_audio: Node
 var _weakness_dialog: Window
@@ -30,8 +26,8 @@ var _refresh_queued := false
 
 
 func _build() -> void:
-	# Battle is an overlay screen: the paused gameplay scene (and its FieldHUD) keeps
-	# rendering underneath, so the screen needs its own opaque ground.
+	# CombatOverlay draws the fight on the live field underneath this HUD. Only
+	# standalone tests/tools that start Battle without a session need a backdrop.
 	var backdrop := ColorRect.new()
 	backdrop.name = "Backdrop"
 	backdrop.color = DS.VOID_1
@@ -57,13 +53,6 @@ func _build() -> void:
 	stage_space.clip_contents = true
 	layout.add_child(stage_space)
 
-	if not Battle.session_active:
-		_stage = BATTLE_STAGE_SCENE.instantiate() as Control
-		_stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		stage_space.add_child(_stage)
-		Battle.combat_event.connect(Callable(_stage, "consume_event"))
-		Battle.replay_combat_events(Callable(_stage, "consume_event").bind(false))
-
 	_battle_interface = BATTLE_INTERFACE_SCENE.instantiate() as BattleInterface
 	_battle_interface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_battle_interface.z_index = 4
@@ -76,14 +65,6 @@ func _build() -> void:
 	_battle_interface.stage.set_replaying(false)
 	if Battle.controller != null and Battle.controller.scheduler != null:
 		_battle_interface.bind_controller(Battle.controller)
-
-	_battle_hud = BATTLE_HUD_SCENE.instantiate() as BattleHUD
-	_battle_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_battle_hud.z_index = 5
-	_battle_hud.visible = false
-	stage_space.add_child(_battle_hud)
-	Battle.combat_event.connect(_battle_hud.consume_event)
-	Battle.replay_combat_events(_battle_hud.consume_event)
 
 	_combat_audio = COMBAT_AUDIO.new() as Node
 	add_child(_combat_audio)
@@ -339,13 +320,11 @@ func _confirm_weakness() -> void:
 
 
 func _toggle_tactical_data() -> void:
-	if not is_instance_valid(_battle_hud):
+	if not is_instance_valid(_battle_interface):
 		return
-	_battle_hud.visible = not _battle_hud.visible
+	var shown := _battle_interface.toggle_tactical_data()
 	if is_instance_valid(_tactical_data_button):
-		_tactical_data_button.text = (
-			"CLOSE TACTICAL DATA" if _battle_hud.visible else "TACTICAL DATA"
-		)
+		_tactical_data_button.text = "CLOSE TACTICAL DATA" if shown else "TACTICAL DATA"
 
 
 ## The controller resolves a whole enemy phase inside one frame, and nothing is drawn between

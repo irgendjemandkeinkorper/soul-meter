@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://ui/hud/battle_interface.gd" id="1"]
 [ext_resource type="PackedScene" path="res://ui/hud/regions/unit_plate/unit_plate_region.tscn" id="2"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://ui/hud/regions/ct_timeline/ct_timeline_region.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://ui/hud/soul_gauge.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://ui/hud/injury_notice.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://ui/hud/regions/tactical_data/tactical_data_region.tscn" id="9"]
 
 [node name="BattleInterface" type="Control"]
 layout_mode = 3
@@ -66,6 +67,11 @@ offset_top = -24.0
 offset_right = 484.0
 offset_bottom = -24.0
 grow_vertical = 0
+
+[node name="TacticalData" parent="SafeFrame/Rows" instance=ExtResource("9")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
 
 [node name="CursorReadout" type="Label" parent="SafeFrame/Rows"]
 unique_name_in_owner = true

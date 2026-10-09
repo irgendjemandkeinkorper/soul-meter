@@ -139,8 +139,11 @@ consumer via `BattleInterface.consume_event()` forwarding, exactly like the othe
 presentation). Actor sprites are the field's own `Hostile`/`Player`/`PartyFollowers`
 nodes; region B moves them cell-to-cell on `move` events with the existing tween timing.
 
-`ui/screens/battle.tscn` and `battle_stage.tscn` are deleted; `ui/hud/battle_hud.tscn`
-(the FR-603 event-stream HUD) is folded into `BattleInterface` as planned by D4/#263. The
+The legacy battle stage is deleted; FR-603 tactical data lives in
+`ui/hud/regions/tactical_data/tactical_data_region.tscn`, folded into `BattleInterface`
+as planned by D4/#263. `ui/screens/battle.tscn` remains the single HUD shell mounted by
+`GameFlow`: it owns the command dock, audio, and outcome/loot controls, while
+`BattleInterface` is its only visual combat-event consumer. The
 camera (Phantom Camera) follows the player by default and pans to the active actor for
 the duration of that actor's turn when it is off-screen; enemy turns entirely off-screen
 resolve without a pan (F2 budget).
@@ -194,7 +197,7 @@ seam-v2 broadcast, `Reputation`/`Renown` APIs, the save schema.
 | 3 | Chart change (D3) + `set_combat_mode` instead of tree pause; deployment reachable only via `enter_set_piece` | `test_game_flow_battle_transitions.gd` |
 | 4 | `Hostile` actor + `Battle.start_session/admit` + `CombatController.admit/release` with `admission_delay` | `submit_action`-path test: a hostile admitted mid-session acts after the party's next turn |
 | 5 | Chain alert, one hop per round | test with three hostiles at 0/1/2 hops |
-| 6 | `CombatOverlay` + region B rewire; delete `battle.tscn`/`battle_stage.tscn`; fold `battle_hud` | replay test over the frozen event log renders the same tile payloads |
+| 6 | `CombatOverlay` + region B rewire; retire the legacy stage and actor; fold tactical data into `BattleInterface` within the existing HUD shell | replay tests over the frozen event payloads; Bog Wight field victory and proof pickup |
 | 7 | Session end (D7) with flee path behind the PROVISIONAL constant; ledger per group | victory/defeat/flee tests; `already_resolved` dedupe test |
 | 8 | `EncounterCatalog` slimming + `LocationRegistry.weather_default` (D8) | drift check passes; weather forecast==resolution test unchanged — **weather half LANDED 2026-09-08**, see below |
 
@@ -210,10 +213,16 @@ the canvas transform and field grid, so camera and field transforms do not intro
 projection. Live events drive movement, action feedback, HP readouts and facing markers.
 Historical replay restores positions without replaying animations on the live field actors.
 
-This is not completion of step 6: the legacy set-piece screen and hidden tactical HUD still
-exist. Retiring those surfaces, camera behavior, authored Hostile migration, and the log-hidden
-Bog Wight acceptance remain required before #281 can close. The focused tests are in
-`test/unit/test_combat_overlay.gd`; the existing BattleInterface tests guard the frozen payload.
+**Step 6 cleanup — #456.** The unused stage and encounter-trigger actor are retired. The
+FR-603 panel is now the hidden `TacticalDataRegion` inside `BattleInterface`, receiving the
+same `consume_event()` stream, with its existing DS variations and deferred rendering intact.
+The shell's TACTICAL DATA button toggles that region. The ported Bog Wight acceptance in
+`test/integration/test_game_flow_battle_transitions.gd` checks physics-driven ambient entry,
+one field HUD, a submitted strike, the downed body, the victory ledger, CONTINUE/loot exit,
+and collection of the unlocked proof on the same field. Rendered acceptance is still required;
+the test can save `bog-wight-hud.png` when `SOUL_METER_BOG_WIGHT_CAPTURE_DIR` is set on a display.
+The focused overlay tests remain in `test/unit/test_combat_overlay.gd`; BattleInterface tests
+guard the frozen payload. See `docs/qa/issue-456-handoff.md` for verification and limitations.
 
 ### Ambient entry wired — 2026-09-19 (`feat/same-map-ambient`)
 
