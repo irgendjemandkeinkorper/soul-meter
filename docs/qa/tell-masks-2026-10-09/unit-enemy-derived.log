@@ -1,0 +1,59 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[2J[H[38;2;233;150;122m
+--------------------------------------------------------------------------------------------------
+GdUnit4 Comandline Tool
+--------------------------------------------------------------------------------------------------[0m
+[38;2;218;165;32m
+Headless mode is ignored by option '--ignoreHeadlessMode'"
+
+Please note that tests that use UI interaction do not work correctly in headless mode.
+Godot 'InputEvents' are not transported by the Godot engine in headless mode and therefore
+have no effect in the test!
+[0m
+[38;2;100;149;237mInstalling GdUnit4 session system hooks.[0m
+[38;2;100;149;237mSession hook 'GdUnitHtmlTestReporter' installed.[0m
+[38;2;100;149;237mSession hook 'GdUnitXMLTestReporter' installed.[0m
+[38;2;0;206;209mRun Test Suite: [0m[38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_the_packet_table_and_the_live_curve_cannot_drift[0m[38;2;34;139;34m STARTED[0m[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_the_packet_table_and_the_live_curve_cannot_drift[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 44ms[0m
+[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_every_archetype_and_set_piece_reaches_combat_on_the_curve[0m[38;2;34;139;34m STARTED[0m[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_every_archetype_and_set_piece_reaches_combat_on_the_curve[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 6ms[0m
+[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_a_roll_is_a_pure_function_of_its_seed_and_stays_inside_the_band[0m[38;2;34;139;34m STARTED[0m[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_a_roll_is_a_pure_function_of_its_seed_and_stays_inside_the_band[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 17ms[0m
+[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_the_tell_marks_both_tails_and_leaves_most_spawns_unremarked[0m[38;2;34;139;34m STARTED[0m[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_the_tell_marks_both_tails_and_leaves_most_spawns_unremarked[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 9ms[0m
+[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_apply_moves_all_three_numbers_and_respects_the_floors[0m[38;2;34;139;34m STARTED[0m[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_apply_moves_all_three_numbers_and_respects_the_floors[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 7ms[0m
+[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_a_wild_pack_varies_and_a_reloaded_survivor_is_the_same_creature[0m[38;2;34;139;34m STARTED[0m[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_a_wild_pack_varies_and_a_reloaded_survivor_is_the_same_creature[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 12ms[0m
+[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_a_stronger_roll_stands_larger_than_a_weaker_one[0m[38;2;34;139;34m STARTED[0m[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_a_stronger_roll_stands_larger_than_a_weaker_one[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 12ms[0m
+[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_tell_masks_preserve_the_sprite_canvas_and_alpha[0m[38;2;34;139;34m STARTED[0m[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_tell_masks_preserve_the_sprite_canvas_and_alpha[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 63ms[0m
+[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_each_archetype_attaches_its_mask_only_for_a_tail_roll[0m[38;2;34;139;34m STARTED[0m[38;2;250;235;215m[0m
+  [38;2;250;235;215mres://test/unit/test_enemy_derived.gd[0m[38;2;250;235;215m > [0m[38;2;250;235;215mtest_each_archetype_attaches_its_mask_only_for_a_tail_roll[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 43ms[0m
+[38;2;250;235;215m[0m
+[38;2;30;144;255mStatistics:[0m[38;2;250;235;215m 9 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m[38;2;34;139;34m PASSED[0m[38;2;100;149;237m 237ms[0m
+[38;2;250;235;215m[0m
+[38;2;250;235;215m[0m
+[38;2;30;144;255mOverall Summary:[0m[38;2;255;255;255m 9 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |[0m
+[38;2;233;150;122mExecuted test suites: (1/1)[0m
+[38;2;233;150;122mExecuted test cases : (9/9)[0m
+[38;2;233;150;122mTotal execution time: 237ms[0m
+[38;2;255;255;255m [0m[38;2;100;149;237mOpen XML Report at: file:///home/adamjroder/projects/soul-meter-tell-masks/reports/report_2/results.xml[0m
+[38;2;100;149;237mOpen HTML Report at: file:///home/adamjroder/projects/soul-meter-tell-masks/reports/report_2/index.html[0m
+[38;2;233;150;122mExit code: 0[0m
+Finallize .. done
+WARNING: 3985 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 13 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

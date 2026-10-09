@@ -4,6 +4,10 @@ extends GdUnitTestSuite
 const PACKET := "res://docs/enemy-curve-packet.md"
 const FIXTURE_SCENE := "res://test/fixtures/variation_field.tscn"
 const HOSTILE_SCENE := "res://actors/hostile/hostile.tscn"
+const TELL_ARCHETYPES := [
+	"bog-wight", "loam-maddened-boar", "gnaal-breach-hound",
+	"gnaal-rift-scavenger", "mustered-bloodbellow", "cleaned-jawbrace-guard",
+]
 
 
 func after_test() -> void:
@@ -159,3 +163,72 @@ func test_a_stronger_roll_stands_larger_than_a_weaker_one() -> void:
 		sizes[tier] = (hostile.get_node("Sprite2D") as Sprite2D).scale.y
 	assert_float(sizes[EnemyDerived.Tier.STRONG]).is_greater(sizes[EnemyDerived.Tier.TYPICAL])
 	assert_float(sizes[EnemyDerived.Tier.WEAK]).is_less(sizes[EnemyDerived.Tier.TYPICAL])
+
+
+func test_tell_masks_preserve_the_sprite_canvas_and_alpha() -> void:
+	for archetype: String in TELL_ARCHETYPES:
+		var path := UnitArt.texture_path(archetype)
+		var mask_path := path.trim_suffix(".png") + Hostile.TELL_MASK_SUFFIX
+		assert_bool(FileAccess.file_exists(mask_path)).override_failure_message(mask_path).is_true()
+		if not FileAccess.file_exists(mask_path):
+			continue
+		# Read raw PNGs: importer alpha-border processing must not hide source drift.
+		var source := Image.new()
+		var mask := Image.new()
+		assert_int(source.load_png_from_buffer(FileAccess.get_file_as_bytes(path))).is_equal(OK)
+		assert_int(mask.load_png_from_buffer(FileAccess.get_file_as_bytes(mask_path))).is_equal(OK)
+		assert_vector(mask.get_size()).override_failure_message(archetype).is_equal(source.get_size())
+		source.convert(Image.FORMAT_RGBA8)
+		mask.convert(Image.FORMAT_RGBA8)
+		var source_bytes := source.get_data()
+		var mask_bytes := mask.get_data()
+		assert_int(mask_bytes.size()).is_equal(source_bytes.size())
+		if mask_bytes.size() != source_bytes.size():
+			continue
+		var alpha_matches := true
+		var grayscale := true
+		var transparent_is_black := true
+		var white_pixels := 0
+		var opaque_black_pixels := 0
+		for offset: int in range(0, mask_bytes.size(), 4):
+			var value: int = mask_bytes[offset]
+			alpha_matches = alpha_matches and mask_bytes[offset + 3] == source_bytes[offset + 3]
+			grayscale = grayscale and value == mask_bytes[offset + 1] and value == mask_bytes[offset + 2]
+			if mask_bytes[offset + 3] == 0:
+				transparent_is_black = transparent_is_black and value == 0
+			elif value == 255:
+				white_pixels += 1
+			elif value == 0 and mask_bytes[offset + 3] == 255:
+				opaque_black_pixels += 1
+		assert_bool(alpha_matches).override_failure_message(archetype + ": alpha changed").is_true()
+		assert_bool(grayscale).override_failure_message(archetype + ": RGB must be grayscale").is_true()
+		assert_bool(transparent_is_black).override_failure_message(archetype + ": transparent RGB").is_true()
+		assert_int(white_pixels).override_failure_message(archetype + ": empty tell").is_greater(0)
+		assert_int(opaque_black_pixels).override_failure_message(archetype + ": body must stay black").is_greater(white_pixels)
+
+
+func test_each_archetype_attaches_its_mask_only_for_a_tail_roll() -> void:
+	var root := _root()
+	for archetype: String in TELL_ARCHETYPES:
+		for tier: int in [EnemyDerived.Tier.WEAK, EnemyDerived.Tier.TYPICAL, EnemyDerived.Tier.STRONG]:
+			var hostile := (load(HOSTILE_SCENE) as PackedScene).instantiate() as Hostile
+			hostile.spawn_into_slot(
+				EncounterCatalog.make_actor(StringName(archetype)), &"mask:s:0",
+				StringName("mask:%s:%d" % [archetype, tier]), tier
+			)
+			root.add_child(hostile)
+			var sprite := hostile.get_node("Sprite2D") as Sprite2D
+			if tier == EnemyDerived.Tier.TYPICAL:
+				assert_object(sprite.material).is_null()
+				continue
+			var material := sprite.material as ShaderMaterial
+			assert_object(material).override_failure_message("%s tier=%d" % [archetype, tier]).is_not_null()
+			if material == null:
+				continue
+			assert_object(material.shader).is_same(Hostile.TELL_SHADER)
+			var mask := material.get_shader_parameter(&"tell_mask") as Texture2D
+			assert_object(mask).is_not_null()
+			if mask != null:
+				assert_str(mask.resource_path).is_equal(UnitArt.texture_path(archetype).trim_suffix(".png") + Hostile.TELL_MASK_SUFFIX)
+				assert_vector(mask.get_size()).is_equal(sprite.texture.get_size())
+			assert_bool(material.get_shader_parameter(&"tell_color") == Hostile.TELL_COLORS[tier]).is_true()
