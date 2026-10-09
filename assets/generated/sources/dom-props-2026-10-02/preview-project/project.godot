@@ -1,0 +1,9 @@
+; Isolated asset review project: no game autoloads or player saves.
+config_version=5
+
+[application]
+config/name="Soul Meter Prop Review"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.047, 0.055, 0.071, 1)

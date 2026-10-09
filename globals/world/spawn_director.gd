@@ -37,6 +37,8 @@ static var _tables_loaded := false
 ## `"<table_id>:<slot_id>"` -> `{group_id, spawned_day, cleared_day, members, blocked_by_cap}`;
 ## each member is `{archetype_id, downed}`.
 var _slots: Dictionary = {}
+## The world seed of the `populate()` call in progress; #412 salts each member's variation with it.
+var _world_seed: int = 0
 
 
 # --- Tables -------------------------------------------------------------------------------------
@@ -224,6 +226,7 @@ func populate(scene_root: Node, context: Dictionary = {}) -> Array[Hostile]:
 	if usable.is_empty():
 		return spawned
 	var cap := _scene_cap(usable, policy, rung)
+	_world_seed = int(context.get("world_seed", 0))
 
 	# Step 3a — rehydrate every surviving member before anything rolls, so the cap sees them.
 	var alive := 0
@@ -313,9 +316,16 @@ func _instantiate_members(anchor: Node2D, key: String, state: Dictionary) -> Arr
 		var actor := EncounterCatalog.make_actor(StringName(member["archetype_id"]))
 		if actor == null:
 			continue
+		# #412: a wild instance rolls its own numbers once, here, and they are frozen into the
+		# actor. The seed is persisted state (world seed, slot group, place in the pack), so a
+		# survivor rehydrated on a later visit is the same creature.
+		var variation := EnemyDerived.roll(EnemyDerived.spawn_seed(_world_seed, group_id, index))
+		EnemyDerived.apply(actor, variation)
 		var hostile := packed.instantiate() as Hostile
 		hostile.name = "Spawn_%s_%d" % [key.replace(":", "_"), index]
-		hostile.spawn_into_slot(actor, group_id, StringName("spawn:%s:%d" % [group_id, index]))
+		hostile.spawn_into_slot(
+			actor, group_id, StringName("spawn:%s:%d" % [group_id, index]), int(variation["tier"])
+		)
 		hostile.position = anchor.position + _pack_offset(index, members.size())
 		hostile.downed.connect(_on_member_downed.bind(key, String(group_id), index))
 		parent.add_child(hostile)

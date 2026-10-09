@@ -1,6 +1,14 @@
 # Enemy curves and per-instance variation — owner review packet
 
-**Issue:** #412. **Status:** analysis DONE, four rulings OPEN, implementation BLOCKED on #345.
+**Issue:** #412. **Status:** IMPLEMENTED 2026-10-06 in `globals/stats/enemy_derived.gd` on top of
+#345's `SpawnDirector`. The §2 curves shipped as written and are pinned to this file's table by
+`test/unit/test_enemy_derived.gd`.
+
+**Owner rulings, 2026-10-06** (they supersede the recommendations in §4 below where they differ):
+the curve applies to **every** enemy, set-pieces included, with no roll on set-pieces; wild spawns
+roll a **±15% gradient on HP, attack and defense**, each independently; no text names the roll,
+but the tails carry a subtle visual tell — about 5% larger or smaller, and an eye/claw tint once a
+tell mask exists for the unit's sprite.
 **Sweep:** `tools/enemy_curve_sweep.gd` — every number below is printed by it; re-run it rather
 than trusting this file.
 

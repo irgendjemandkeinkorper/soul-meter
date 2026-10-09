@@ -22,8 +22,7 @@ extends RefCounted
 ## attributes, and should vary between instances met in the wild — owner ruling
 ## 2026-09-07, tracked as #412. What #412 will not do is reuse this file: these
 ## curves span the party's point-buy range (2..5) and the shipped enemies run
-## wider and lower, so enemies need their own. Until #412 lands their three
-## combat numbers stay authored. See `tools/seed_pandora.gd`'s archetype note.
+## wider and lower, so enemies have their own curve in `EnemyDerived` (#412).
 ##
 ## Reasoning, grids and the migration report: `docs/dramgid-numbers.md`.
 ## Sweep: `tools/dramgid_derived_sweep.gd`. Pinned: `test/unit/test_dramgid_numbers.gd`.
