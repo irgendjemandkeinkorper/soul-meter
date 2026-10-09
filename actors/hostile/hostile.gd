@@ -3,6 +3,8 @@ extends CharacterBody2D
 ## Persistent field actor. Battle owns admission after an alert is accepted.
 
 signal alerted(hostile: Hostile)
+## Emitted once, the moment this hostile goes DOWNED. `SpawnDirector` listens to clear its slot.
+signal downed(hostile: Hostile)
 
 enum State { IDLE, ALERTED, IN_COMBAT, DOWNED }
 
@@ -30,6 +32,9 @@ var _cooldown_until_msec: int = 0
 ## True once `adopt_actor()` handed this node an actor Battle already built: a set-piece body
 ## spawned for a fight that is running now, not a scene-authored mob that persists between visits.
 var _adopted: bool = false
+## True once `spawn_into_slot()` handed this node a `SpawnDirector` roll: its `group_id` is a
+## day-stamped slot group, not an `EncounterCatalog` encounter, and its actor is already built.
+var _from_spawn_slot: bool = false
 
 
 func _ready() -> void:
@@ -41,7 +46,7 @@ func _ready() -> void:
 	# A set-piece body is exempt: whether its encounter runs again is its caller's gate, and the
 	# actor it stands in for is already in the controller — retiring the body would leave the
 	# fight with an enemy nobody can see.
-	if group_id != &"" and not _adopted:
+	if group_id != &"" and not _adopted and not _from_spawn_slot:
 		var defeated_flag := EncounterCatalog.defeated_flag(group_id)
 		if not defeated_flag.is_empty() and GameState.flag_is_true(defeated_flag):
 			_retire()
@@ -92,6 +97,18 @@ func adopt_actor(actor: BattleActor) -> void:
 	_adopted = true
 	unit_id = actor.archetype_id
 	combat_id = actor.combat_id
+
+
+## Spawn-slot instantiation (#345): `SpawnDirector` built the actor from the archetype alone,
+## because a slot group is not an encounter and must not be looked up as one. Called before
+## `add_child`, like `adopt_actor()`.
+func spawn_into_slot(actor: BattleActor, slot_group_id: StringName, slot_combat_id: StringName) -> void:
+	_actor = actor
+	_from_spawn_slot = true
+	unit_id = actor.archetype_id
+	group_id = slot_group_id
+	combat_id = slot_combat_id
+	actor.combat_id = slot_combat_id
 
 
 func battle_actor() -> BattleActor:
@@ -165,6 +182,7 @@ func alert_cooldown_active() -> bool:
 
 
 func mark_downed() -> void:
+	var was_downed := state == State.DOWNED
 	state = State.DOWNED
 	var actor := battle_actor()
 	if actor != null:
@@ -177,6 +195,8 @@ func mark_downed() -> void:
 	set_collision_layer_value(1, false)
 	collision_mask = 0
 	modulate = Color(0.55, 0.55, 0.55, 0.7)
+	if not was_downed:
+		downed.emit(self)
 
 
 ## D7: the session closed with this hostile still standing — the party fled or fell. It goes

@@ -8,6 +8,7 @@ id = &"wilds"
 scene_path = "res://world/test_room.tscn"
 harmonic_accord = 85.0
 thinning_tier = 1
+respawn_policy = "wilderness"
 weather_default = &"mozh"
 default_spawn_id = &"default"
 spawns = {
