@@ -222,3 +222,38 @@ func test_canon_tables_all_pass_validation() -> void:
 				if file_name.ends_with(".json"):
 					on_disk += 1
 	assert_int(count).is_equal(on_disk)
+
+
+## A pack placed inside alert range of where the party stands opens a fight on arrival (it broke
+## the #282 populated-field benchmark). Every canon slot's nearest member must sit outside the
+## alert radius of the scene's Player and of every arrival marker.
+func test_no_canon_slot_alerts_the_party_on_arrival() -> void:
+	var probe := (load("res://actors/hostile/hostile.tscn") as PackedScene).instantiate() as Hostile
+	var alert_radius := probe.alert_radius
+	probe.free()
+	var loaded := SpawnDirector.load_tables()
+	for scene_path: String in loaded:
+		var scene := (load(scene_path) as PackedScene).instantiate() as Node2D
+		var anchors: Array[String] = []
+		for table: Dictionary in loaded[scene_path]:
+			for slot: Dictionary in table.get("slots", []):
+				anchors.append(str(slot.get("anchor", "")))
+		var arrivals: Array[Node2D] = []
+		var player := scene.find_child("Player", true, false) as Node2D
+		if player != null:
+			arrivals.append(player)
+		for marker: Node in scene.find_children("Spawn*", "Marker2D", true, false):
+			if not anchors.has(String(marker.name)):
+				arrivals.append(marker as Node2D)
+		for anchor_name: String in anchors:
+			var anchor := scene.find_child(anchor_name, true, false) as Node2D
+			assert_object(anchor).override_failure_message("%s: no anchor %s" % [scene_path, anchor_name]).is_not_null()
+			if anchor == null:
+				continue
+			for arrival: Node2D in arrivals:
+				var nearest := anchor.position.distance_to(arrival.position) - SpawnDirector.PACK_SPACING
+				assert_float(nearest).override_failure_message(
+					"%s: %s's pack would stand %.0f px from %s, inside the %.0f px alert radius"
+					% [scene_path, anchor_name, nearest, arrival.name, alert_radius]
+				).is_greater(alert_radius)
+		scene.free()

@@ -50,7 +50,7 @@ func test_capture_a_strong_and_a_weak_wild_spawn() -> void:
 	add_child(scene)
 	await get_tree().process_frame
 	var player := scene.find_child("Player", true, false) as Node2D
-	player.global_position = Vector2(1300, 470)
+	player.global_position = (scene.find_child("SpawnSlotGladeSouth", true, false) as Node2D).position + Vector2(0, -310)
 	var spawned := SaveGame.spawn_director.populate(scene)
 	assert_int(spawned.size()).is_equal(2)
 	for hostile: Hostile in spawned:

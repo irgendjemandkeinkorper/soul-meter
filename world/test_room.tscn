@@ -573,4 +573,4 @@ pause_duration = 3.6
 initial_pause = 1.2
 
 [node name="SpawnSlotGladeSouth" type="Marker2D" parent="."]
-position = Vector2(1300, 780)
+position = Vector2(1450, 900)
