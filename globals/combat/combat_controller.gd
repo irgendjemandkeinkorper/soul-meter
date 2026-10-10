@@ -963,10 +963,13 @@ func _movement_snapshot() -> Dictionary:
 		return {}
 	var base_move_cost := maxi(1, rules.move_ct_cost if rules != null else 1)
 	var per_cell_ap := maxi(1, action.ap_cost)
-	var ct_budget := int(
-		float(int(actor.action_points / per_cell_ap) * base_move_cost)
-		/ CombatInjury.move_cost_multiplier(actor)
-	)
+	# Under charge time the budget is the actor's banked charge (owner ruling 2026-10-10,
+	# #281 G6a); the AP economy keeps its per-cell AP budget. A scheduler that prices moves
+	# by charge exposes `move_ct_budget()`, so the controller never names a concrete scheduler.
+	var raw_budget := int(actor.action_points / per_cell_ap) * base_move_cost
+	if scheduler != null and scheduler.has_method("move_ct_budget"):
+		raw_budget = int(scheduler.call("move_ct_budget", actor))
+	var ct_budget := int(float(raw_budget) / CombatInjury.move_cost_multiplier(actor))
 	var reachable: Array[Dictionary] = []
 	for destination: StringName in battlefield.reachable_positions(actor, ct_budget):
 		var query := move_query(destination)
@@ -983,6 +986,7 @@ func _movement_snapshot() -> Dictionary:
 		"action_id": ACTION_MOVE,
 		"per_cell_ap_cost": per_cell_ap,
 		"remaining_ap": actor.action_points,
+		"ct_budget": raw_budget,
 		"reachable": reachable,
 	}
 
@@ -1620,9 +1624,10 @@ func _pass_action() -> CombatAction:
 ## Whether `actor` can pay for `action` specifically, as opposed to `scheduler.can_act()`
 ## which only answers "is it structurally your turn". The AP scheduler exposes this via
 ## `can_afford()` (not part of the base `TurnScheduler` contract, since only a resource-
-## metered model needs it); the CT scheduler has no equivalent because every authored
-## action costs at most `maximum_action_ct_cost` (60) against a 100 threshold, so being
-## ready (`can_act()`) already implies being able to afford any authored action. This is
+## metered model needs it). The CT scheduler exposes it too, but only for moves: every
+## authored action costs at most `maximum_action_ct_cost` (60) against a 100 threshold, while a
+## move path is priced per cell and is capped at the actor's banked charge (owner ruling
+## 2026-10-10, #281 G6a). This is
 ## checked via `has_method()` rather than a concrete-type check so this file still never
 ## names `ApRoundScheduler` or `ChargeTimeScheduler`.
 func _can_afford(actor: BattleActor, action: CombatAction) -> Dictionary:

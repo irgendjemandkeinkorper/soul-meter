@@ -432,3 +432,39 @@ func test_fleeing_returns_a_standing_hostile_to_idle_at_full_hp() -> void:
 	assert_int(hostile.state).is_equal(Hostile.State.IDLE)
 	assert_int(actor.hp).is_equal(actor.max_hp)
 	assert_bool(hostile.get_collision_layer_value(1)).is_true()
+
+
+## #281 G6a: in an ambient session charge time is authoritative, and the ally's first turn
+## must still offer the move range. The party stops four cells from the authored wight, so
+## there are free cells on every side of the ally once the wight has taken its first turn.
+func test_ambient_ally_turn_offers_reachable_cells_under_charge_time() -> void:
+	var hostile := _field_scene.get_node("BogWight") as Hostile
+	var player := _field.player()
+	GameFlow.watch_field_hostiles()
+	await get_tree().physics_frame
+	player.global_position = _field.iso_grid().cell_to_world(hostile.cell + Vector2i(4, 0))
+	for _frame: int in 30:
+		if Battle.session_active:
+			break
+		await get_tree().physics_frame
+	await get_tree().process_frame
+	assert_bool(Battle.session_active).is_true()
+	var controller := Battle.controller
+	assert_bool(controller.rules.use_charge_time).is_true()
+	for _step: int in 20:
+		if controller.state == CombatController.State.ALLY_TURN:
+			break
+		controller.end_turn()
+	assert_int(controller.state).is_equal(CombatController.State.ALLY_TURN)
+
+	var movement: Dictionary = controller.snapshot().get("movement", {})
+	var reachable: Array = movement.get("reachable", [])
+	assert_bool(reachable.is_empty()) \
+		.override_failure_message(
+			"the ally's CT turn offers no reachable cells: %s" % str(movement)
+		) \
+		.is_false()
+	if reachable.is_empty():
+		return
+	var destination := StringName((reachable[0] as Dictionary).get("destination", &""))
+	assert_bool(bool(controller.move_query(destination).get("allowed", false))).is_true()

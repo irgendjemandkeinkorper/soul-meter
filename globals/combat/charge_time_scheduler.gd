@@ -143,6 +143,34 @@ func charge_of(actor: BattleActor) -> int:
 	return int(_charge.get(_key(actor), 0))
 
 
+## A party member's per-turn move budget is its banked charge, overflow included (owner ruling
+## 2026-10-10, #281 G6a). The controller bounds the move-range flood fill with this number and
+## `can_afford()` refuses a longer path at commit, so the range shown and the move allowed agree.
+func move_ct_budget(actor: BattleActor) -> int:
+	return maxi(0, charge_of(actor))
+
+
+## Whether `actor` can pay for `action` now. Same gate as can_act(), plus the banked-charge
+## budget for a move: a path priced above the actor's current charge is refused, so a move can
+## never drive charge negative. Other verbs are left to can_act() (their 30-60 CT price is always
+## covered by a ready actor's 100+). Enemy moves commit directly and keep their own cap.
+func can_afford(actor: BattleActor, action: CombatAction) -> Dictionary:
+	var gate := can_act(actor)
+	if not bool(gate.get("allowed", false)):
+		return gate
+	if action == null or action.kind != CombatAction.Kind.MOVE:
+		return gate
+	var cost := quote(actor, action)
+	var budget := move_ct_budget(actor)
+	if cost > budget:
+		return _blocked(
+			&"ct_budget",
+			"That path costs %d charge; %s has %d." % [cost, actor.display_name, budget],
+			{"type": &"ct_budget", "maximum": budget, "delta": cost - budget},
+		)
+	return gate
+
+
 func peek_order(depth: int) -> Array[Dictionary]:
 	var projected: Array[Dictionary] = []
 	if depth <= 0:

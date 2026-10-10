@@ -214,6 +214,15 @@ space. `CombatRules.move_ct_cost` is the single contact point. Movement has a pr
 `path_query()` returns a `ct_cost`. `CombatController` gives that cost to
 `scheduler.commit()`.
 
+**Party move budget under charge time — owner 2026-10-10: move budget = banked charge** (#281
+G6a). A party member's per-turn move range is its current charge, overflow included (100 or
+more on its turn), divided by the leg-injury move multiplier. `ChargeTimeScheduler.move_ct_budget()`
+supplies the number, `CombatController` bounds the flood fill with it, and
+`ChargeTimeScheduler.can_afford()` refuses a path priced above it at commit (`blocked_by:
+&"ct_budget"`), so the range shown and the move allowed agree and charge never goes negative.
+Moving spends that charge, so a long move delays the actor's next turn. Enemy AI keeps its
+separate `maximum_action_ct_cost` cap. The AP round economy keeps its per-cell AP budget.
+
 **A defect here is expensive and silent.** `path_query().ct_cost` must equal
 `scheduler.quote()`. If the two disagree, the timeline lies. FR-102a forbids this. Test the
 equality as an invariant. Do not test it as one example.
