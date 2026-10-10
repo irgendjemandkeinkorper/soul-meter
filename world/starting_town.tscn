@@ -810,9 +810,9 @@ z_index = 21
 
 [node name="TrialHallDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(1000, 520)
-scale = Vector2(0.189781022, 0.185483871)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("12_gate")
-offset = Vector2(0.5, -89.474086957)
+offset = Vector2(0.5, -114.073799998)
 
 [node name="MarshalCoiljaw" parent="." instance=ExtResource("5_npc")]
 position = Vector2(2450, 1212)
@@ -898,9 +898,9 @@ z_index = 21
 
 [node name="BellInspectionLantern" type="Sprite2D" parent="."]
 position = Vector2(2920, 295)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -115.10161194)
+offset = Vector2(0, -120.273800004)
 
 [node name="RiverShrineMarker" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(1030, 1530)
@@ -925,9 +925,9 @@ z_index = 21
 
 [node name="RiverShrineLantern" type="Sprite2D" parent="."]
 position = Vector2(1030, 1530)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -115.10161194)
+offset = Vector2(0, -120.273800004)
 
 [node name="ItemShopDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(1630, 552.5)
@@ -954,9 +954,9 @@ z_index = 21
 
 [node name="ItemShopBench" type="Sprite2D" parent="."]
 position = Vector2(1630, 552.5)
-scale = Vector2(0.153225806, 0.163522013)
+scale = Vector2(0.314465409, 0.314465409)
 texture = ExtResource("35_bench_sprite")
-offset = Vector2(0, -72.606307692)
+offset = Vector2(0, -97.275279931)
 
 [node name="EquipmentShopDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(2330, 547.5)
@@ -983,9 +983,9 @@ z_index = 21
 
 [node name="EquipmentShopBanner" type="Sprite2D" parent="."]
 position = Vector2(2330, 547.5)
-scale = Vector2(0.163636364, 0.153225806)
+scale = Vector2(0.322580645, 0.322580645)
 texture = ExtResource("20_banner_red")
-offset = Vector2(0, -121.363368421)
+offset = Vector2(0, -122.747600004)
 
 [node name="GarrisonDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(2920, 1520)
@@ -1011,9 +1011,9 @@ z_index = 21
 
 [node name="GarrisonBanner" type="Sprite2D" parent="."]
 position = Vector2(2920, 1520)
-scale = Vector2(0.163636364, 0.153225806)
+scale = Vector2(0.322580645, 0.322580645)
 texture = ExtResource("20_banner_red")
-offset = Vector2(0, -121.363368421)
+offset = Vector2(0, -122.747600004)
 
 [node name="TownHallDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(2320, 1122.5)
@@ -1039,9 +1039,9 @@ z_index = 21
 
 [node name="TownHallBanner" type="Sprite2D" parent="."]
 position = Vector2(2320, 1122.5)
-scale = Vector2(0.166666667, 0.161290323)
+scale = Vector2(0.322580645, 0.322580645)
 texture = ExtResource("19_banner_green")
-offset = Vector2(0, -109.0952)
+offset = Vector2(0, -116.547599981)
 
 [node name="ChefsHouseDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(430, 1727.5)
@@ -1098,9 +1098,9 @@ z_index = 21
 
 [node name="PlayersHouseLantern" type="Sprite2D" parent="."]
 position = Vector2(2330, 1925)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -115.10161194)
+offset = Vector2(0, -120.273800004)
 
 [node name="SavePoint" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(2540, 1925)
@@ -1126,9 +1126,9 @@ z_index = 21
 
 [node name="SavePointLantern" type="Sprite2D" parent="."]
 position = Vector2(2540, 1925)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -115.10161194)
+offset = Vector2(0, -120.273800004)
 modulate = Color(0.45, 1, 0.72, 1)
 
 [node name="RoadToTheWilds" parent="." instance=ExtResource("4_exit")]
@@ -1654,7 +1654,7 @@ offset = Vector2(0, -111.0)
 
 [node name="CartBlobMarket" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1310, 1163.4)
-scale = Vector2(0.270742358, 0.197580645)
+scale = Vector2(0.35483871, 0.35483871)
 texture = ExtResource("22_cart")
 offset = Vector2(0.5, -124)
 
@@ -1763,19 +1763,19 @@ texture = ExtResource("34_pot_sprite")
 
 [node name="StreetLanternEquipmentShop" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2515, 577.4)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -124)
 
 [node name="StreetLanternTownHallWest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2280, 1147.4)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -124)
 
 [node name="StreetLanternTownHallEast" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2520, 1147.4)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -124)
 
@@ -1793,13 +1793,13 @@ scale = Vector2(0.35, 0.35)
 
 [node name="CartIronCompanies" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2860, 1528.4)
-scale = Vector2(0.270742358, 0.197580645)
+scale = Vector2(0.35483871, 0.35483871)
 texture = ExtResource("22_cart")
 offset = Vector2(0.5, -124)
 
 [node name="StreetLanternIronCompanies" type="Sprite2D" parent="SetDressing"]
 position = Vector2(3140, 1517.4)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -124)
 
@@ -1827,13 +1827,13 @@ phase = 2.1
 
 [node name="StreetLanternTrialHall" type="Sprite2D" parent="SetDressing"]
 position = Vector2(890, 522.4)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -124)
 
 [node name="StreetLanternMarketSouth" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1560, 1292.4)
-scale = Vector2(0.333333333, 0.27016129)
+scale = Vector2(0.64516129, 0.64516129)
 texture = ExtResource("21_lantern")
 offset = Vector2(0, -124)
 
