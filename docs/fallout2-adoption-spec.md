@@ -731,7 +731,7 @@ payloads rather than UI combat arithmetic.
   `quest offer` claimed success on a completed quest although `offer()` no-ops
   there; now refuses and distinguishes already-active; (3) the inert suite
   snapshotted `GameState` but never restored it, leaking `dev_console_used` into
-  later suites. Suite **1085/0**. See `docs/dev-console.md`.
+  later suites. Suite **1085/0**. See `docs/weftlumin.md` (formerly `docs/dev-console.md`).
   ⚠ Third consecutive worker to claim the repo-standard gdUnit runner is
   unusable here and fall back to other means (reporting 5 failures that do not
   reproduce). It is not broken — always re-establish worker test evidence with

@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 
-const TimelineScript := preload("res://globals/consequence_timeline.gd")
+const TimelineScript := preload("res://weftlumin/panels/models/consequence_timeline.gd")
+const DevConsoleScript := preload("res://weftlumin/panels/models/dev_console.gd")
 
 var _reputation_before: Dictionary
 var _renown_before: Dictionary
@@ -14,12 +15,10 @@ func before_test() -> void:
 	Renown.from_dict({"log": [], "next_order": 0})
 	_timeline = auto_free(TimelineScript.new()) as Node
 	add_child(_timeline)
-	_timeline.set("force_enabled_for_tests", true)
+	assert_bool(bool(_timeline.call("host_in_panel"))).is_true()
 
 
 func after_test() -> void:
-	if _timeline != null:
-		_timeline.set("force_enabled_for_tests", false)
 	Reputation.from_dict(_reputation_before)
 	Renown.from_dict(_renown_before)
 
@@ -52,7 +51,7 @@ func test_live_arrival_order_wins_over_independent_ledger_order() -> void:
 func test_debug_provenance_is_classified_from_dev_console_prefix() -> void:
 	Reputation.record(
 		"player", "the-registry", 1.0,
-		DevConsole.DEBUG_CAUSE_PREFIX + "console-authored consequence", "test_room"
+		DevConsoleScript.DEBUG_CAUSE_PREFIX + "console-authored consequence", "test_room"
 	)
 	Renown.gain_reputation("player", 1.0, "genuine gameplay consequence", "test_room")
 
@@ -75,11 +74,13 @@ func test_retained_rows_are_capped_newest_first() -> void:
 
 
 func test_backfill_is_restored_and_uses_each_ledgers_own_history() -> void:
-	_timeline.set("force_enabled_for_tests", false)
+	# History recorded before a panel hosts the observer arrives as restored backfill.
 	Reputation.record("player", "mirror-choir", 5.0, "older faction event", "test_room")
 	Reputation.record("player", "mirror-choir", -2.0, "newer faction event", "test_room")
 	Renown.gain_infamy("player", 7.0, "restored infamy", "test_room")
-	_timeline.set("force_enabled_for_tests", true)
+	_timeline = auto_free(TimelineScript.new()) as Node
+	add_child(_timeline)
+	assert_bool(bool(_timeline.call("host_in_panel"))).is_true()
 
 	var rows: Array[Dictionary] = _timeline.call("rows")
 	assert_int(rows.size()).is_equal(3)

@@ -1,74 +1,28 @@
 class_name ConsequenceTimelineController
 extends Node
-## Debug-only, read-only consequence observer. Disabled builds remain completely inert.
+## Debug-only, read-only consequence observer, hosted by the Weftlumin timeline panel
+## (`weftlumin/panels/timeline_panel.gd`). Inert until a host enables it with host_in_panel().
 
 signal timeline_changed
 
-const OVERLAY_SCENE: PackedScene = preload("res://ui/debug/consequence_timeline.tscn")
-const TOGGLE_HOTKEY: Key = KEY_F4
+const DevConsoleModel := preload("res://weftlumin/panels/models/dev_console.gd")
 const MAX_RETAINED_ROWS: int = 200
-const ENVIRONMENT_VARIABLE: String = "SOUL_METER_CONSEQUENCE_TIMELINE"
 const REPUTATION_LEDGER: StringName = &"REPUTATION"
 const RENOWN_LEDGER: StringName = &"RENOWN"
 
-var force_enabled_for_tests: bool = false:
-	set(value):
-		force_enabled_for_tests = value
-		_refresh_activation()
-
 var _enabled: bool = false
 var _ledger_signals_connected: bool = false
-var _overlay_layer: CanvasLayer = null
 var _rows: Array[Dictionary] = []
 var _next_arrival: int = 0
-## True when a Weftlumin panel owns this instance (see host_in_panel()).
-var _panel_hosted: bool = false
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process_unhandled_key_input(false)
-	_refresh_activation()
 
 
 func _exit_tree() -> void:
 	_shutdown()
-
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	if not _enabled or not event is InputEventKey:
-		return
-	var key_event: InputEventKey = event as InputEventKey
-	if not key_event.pressed or key_event.echo:
-		return
-	if key_event.physical_keycode != TOGGLE_HOTKEY and key_event.keycode != TOGGLE_HOTKEY:
-		return
-	if _overlay_layer == null:
-		open_overlay()
-	else:
-		close_overlay()
-	get_viewport().set_input_as_handled()
-
-
-func open_overlay() -> void:
-	if not _enabled or _overlay_layer != null or _panel_hosted:
-		return
-	_overlay_layer = CanvasLayer.new()
-	_overlay_layer.name = "ConsequenceTimelineLayer"
-	_overlay_layer.layer = 1050
-	_overlay_layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_overlay_layer)
-	var overlay: ConsequenceTimelinePanel = OVERLAY_SCENE.instantiate() as ConsequenceTimelinePanel
-	overlay.name = "ConsequenceTimelineOverlay"
-	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay_layer.add_child(overlay)
-	overlay.configure(self)
-
-
-func close_overlay() -> void:
-	if not _enabled:
-		return
-	_close_overlay()
 
 
 func rows() -> Array[Dictionary]:
@@ -88,32 +42,19 @@ func summary() -> Dictionary:
 
 
 ## Weftlumin panel seam (architecture §4.5.5, §4.12). The panel that owns this instance
-## enables the observer; the shell owns activation, bindings and pause, so the F4 overlay, its
-## hotkey and the environment gate stand down. Refused on the autoload itself and in release
-## builds. The observer stays read-only.
+## enables the observer; the shell owns activation, bindings and pause. Refused in release
+## builds and outside the tree. The observer stays read-only.
 func host_in_panel() -> bool:
-	if not OS.is_debug_build() or not is_inside_tree() or get_parent() == get_tree().root:
+	if not OS.is_debug_build() or not is_inside_tree():
 		return false
-	_panel_hosted = true
 	_set_enabled(true)
-	set_process_unhandled_key_input(false)
 	return true
-
-
-func _refresh_activation() -> void:
-	if not is_inside_tree() or _panel_hosted:
-		return
-	var should_enable: bool = OS.is_debug_build() and (
-		OS.get_environment(ENVIRONMENT_VARIABLE) == "1" or force_enabled_for_tests
-	)
-	_set_enabled(should_enable)
 
 
 func _set_enabled(should_enable: bool) -> void:
 	if should_enable == _enabled:
 		return
 	_enabled = should_enable
-	set_process_unhandled_key_input(_enabled and not _panel_hosted)
 	if _enabled:
 		_load_backfill()
 		_connect_ledger_signals()
@@ -154,24 +95,14 @@ func _on_load_requested(_destination: LoadDestination) -> void:
 	if not _enabled:
 		return
 	# _load_backfill() already emits timeline_changed; emitting again here made an
-	# open overlay rebuild twice per load.
+	# open panel rebuild twice per load.
 	_load_backfill()
 
 
 func _shutdown() -> void:
 	_disconnect_ledger_signals()
-	_close_overlay()
 	_rows.clear()
 	_next_arrival = 0
-
-
-func _close_overlay() -> void:
-	if _overlay_layer == null:
-		return
-	var layer: CanvasLayer = _overlay_layer
-	_overlay_layer = null
-	remove_child(layer)
-	layer.free()
 
 
 func _on_reputation_changed(
@@ -278,7 +209,7 @@ func _reputation_row(
 		"source_order": event.order,
 		"arrival": -1,
 		"restored": restored,
-		"debug_injected": event.cause.begins_with(DevConsole.DEBUG_CAUSE_PREFIX),
+		"debug_injected": event.cause.begins_with(DevConsoleModel.DEBUG_CAUSE_PREFIX),
 	}
 
 
@@ -295,5 +226,5 @@ func _renown_row(event: RenownEvent, resulting: float, restored: bool) -> Dictio
 		"source_order": event.order,
 		"arrival": -1,
 		"restored": restored,
-		"debug_injected": event.cause.begins_with(DevConsole.DEBUG_CAUSE_PREFIX),
+		"debug_injected": event.cause.begins_with(DevConsoleModel.DEBUG_CAUSE_PREFIX),
 	}

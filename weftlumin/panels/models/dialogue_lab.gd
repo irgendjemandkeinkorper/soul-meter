@@ -1,68 +1,34 @@
 extends Node
-## Debug-only dialogue replay sandbox. Disabled builds remain completely inert.
+## Debug-only dialogue replay sandbox, hosted by the Weftlumin dialogue panel
+## (`weftlumin/panels/dialogue_panel.gd`). Inert until a host enables it with host_in_panel().
 
-## Panel-hosted presentation feed: what the F5 overlay's replay controls would receive.
+## Presentation feed for the hosting panel's replay controls.
 signal replay_changed(running: bool, setup: Dictionary)
 
-const DIALOGUE_LAB_SCENE := preload("res://ui/debug/dialogue_lab.tscn")
 const DIALOGUE_DIRECTORIES: Array[String] = [
 	"res://dialogue",
 	"res://dialogue/companions",
 ]
-const TOGGLE_HOTKEY: Key = KEY_F5
-const ENVIRONMENT_VARIABLE: String = "SOUL_METER_DIALOGUE_LAB"
+## Shown by the hosting panel when it declines to replay over live production content.
 const REFUSAL_WARNING := "Dialogue Lab refuses to open or replay over live production content."
-
-var force_enabled_for_tests: bool = false:
-	set(value):
-		force_enabled_for_tests = value
-		_refresh_activation()
 
 var _enabled: bool = false
 var _dialogue_signals_connected: bool = false
-var _overlay_layer: CanvasLayer = null
-var _panel: Control = null
-var _previous_paused: bool = false
-var _restore_pause_on_close: bool = false
 var _setup: Dictionary = {}
 var _current_resource: DialogueResource = null
 var _lab_balloon: Node = null
 var _lab_dialogue_running: bool = false
 var _production_dialogue_running: bool = false
-## True when a Weftlumin panel owns this instance (see host_in_panel()).
-var _panel_hosted: bool = false
 
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process_unhandled_key_input(false)
-	_refresh_activation()
 
 
 func _exit_tree() -> void:
 	_shutdown()
-
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	if not _enabled or not event is InputEventKey:
-		return
-	var key_event: InputEventKey = event as InputEventKey
-	if not key_event.pressed or key_event.echo:
-		return
-	if key_event.physical_keycode != TOGGLE_HOTKEY and key_event.keycode != TOGGLE_HOTKEY:
-		return
-	if _overlay_layer == null:
-		if _ownership_conflict_is_live():
-			push_warning(REFUSAL_WARNING)
-			return
-		if _setup.is_empty():
-			open_setup()
-		else:
-			_open_overlay(true)
-	else:
-		close_overlay()
-	get_viewport().set_input_as_handled()
 
 
 func is_enabled() -> bool:
@@ -82,24 +48,6 @@ func production_dialogue_is_live() -> bool:
 	if DialogueManager.get_current_scene.is_valid():
 		current_scene = DialogueManager.get_current_scene.call() as Node
 	return current_scene != null and _contains_other_dialogue_balloon(current_scene)
-
-
-func open_setup() -> void:
-	if not _enabled or _overlay_layer != null or _lab_dialogue_running or _panel_hosted:
-		return
-	if _ownership_conflict_is_live():
-		push_warning(REFUSAL_WARNING)
-		return
-	_previous_paused = get_tree().paused
-	get_tree().paused = true
-	_restore_pause_on_close = true
-	_open_overlay(false)
-
-
-func close_overlay() -> void:
-	if not _enabled:
-		return
-	_close_overlay()
 
 
 func dialogue_files() -> Array[String]:
@@ -195,7 +143,6 @@ func _start_session(
 	_apply_setup_state(_setup)
 	if not launch_dialogue:
 		return
-	_close_overlay()
 	_lab_dialogue_running = true
 	_lab_balloon = DialogueManager.show_dialogue_balloon(resource, title)
 	if _lab_balloon == null:
@@ -203,7 +150,6 @@ func _start_session(
 		_restore_saved_state()
 		return
 	_lab_balloon.tree_exited.connect(_on_lab_balloon_exited.bind(_lab_balloon), CONNECT_ONE_SHOT)
-	_open_overlay(true)
 
 
 func _normalize_setup(requested_setup: Dictionary) -> Dictionary:
@@ -339,45 +285,8 @@ func _disconnect_dialogue_signals() -> void:
 	_dialogue_signals_connected = false
 
 
-func _open_overlay(replay_controls: bool) -> void:
-	if not _enabled or _overlay_layer != null or _panel_hosted:
-		return
-	_overlay_layer = CanvasLayer.new()
-	_overlay_layer.name = "DialogueLabLayer"
-	_overlay_layer.layer = 1150
-	_overlay_layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_overlay_layer)
-	_panel = DIALOGUE_LAB_SCENE.instantiate() as Control
-	_panel.name = "DialogueLabOverlay"
-	_panel.process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay_layer.add_child(_panel)
-	_panel.call("configure", self, replay_controls)
-	_update_panel()
-
-
 func _update_panel() -> void:
-	if _panel != null and is_instance_valid(_panel):
-		_panel.call("update_replay_controls", _lab_dialogue_running, _setup)
-	if _panel_hosted:
-		replay_changed.emit(_lab_dialogue_running, _setup.duplicate(true))
-
-
-func _close_overlay() -> void:
-	if _overlay_layer == null:
-		return
-	var layer: CanvasLayer = _overlay_layer
-	var restore_pause := _restore_pause_on_close
-	_overlay_layer = null
-	_panel = null
-	_restore_pause_on_close = false
-	# Detached synchronously so the lab's own state is consistent the instant
-	# this returns, but freed deferred: every caller is a button `pressed`
-	# handler on a node this layer owns, so an immediate free would destroy the
-	# emitting button while its own emission is still unwinding.
-	remove_child(layer)
-	layer.queue_free()
-	if restore_pause:
-		get_tree().paused = _previous_paused
+	replay_changed.emit(_lab_dialogue_running, _setup.duplicate(true))
 
 
 func _dismiss_owned_dialogue() -> void:
@@ -400,7 +309,6 @@ func _end_session() -> void:
 	_setup.clear()
 	_current_resource = null
 	_lab_dialogue_running = false
-	_close_overlay()
 
 
 func _ownership_conflict_is_live() -> bool:
@@ -450,35 +358,23 @@ static func _is_allowed_dialogue_path(path: String) -> bool:
 
 
 ## Weftlumin panel seam (architecture §4.5.5, §4.8). The panel that owns this instance enables
-## the lab under the shell's sandbox token; the shell owns activation, bindings and pause, so the
-## F5 overlay, its hotkey and the environment gate stand down. Refused on the autoload itself and
-## in release builds. The replay lifecycle and its containment are unchanged.
+## the lab under the shell's sandbox token; the shell owns activation, bindings and pause.
+## Refused in release builds and outside the tree. The replay lifecycle and its containment are
+## unchanged.
 func host_in_panel(owner_token: StringName) -> bool:
 	if owner_token.is_empty():
 		return false
-	if not OS.is_debug_build() or not is_inside_tree() or get_parent() == get_tree().root:
+	if not OS.is_debug_build() or not is_inside_tree():
 		return false
-	_panel_hosted = true
 	sandbox_owner = owner_token
 	_set_enabled(true)
-	set_process_unhandled_key_input(false)
 	return true
-
-
-func _refresh_activation() -> void:
-	if not is_inside_tree() or _panel_hosted:
-		return
-	var should_enable: bool = OS.is_debug_build() and (
-		OS.get_environment(ENVIRONMENT_VARIABLE) == "1" or force_enabled_for_tests
-	)
-	_set_enabled(should_enable)
 
 
 func _set_enabled(should_enable: bool) -> void:
 	if should_enable == _enabled:
 		return
 	_enabled = should_enable
-	set_process_unhandled_key_input(_enabled and not _panel_hosted)
 	if _enabled:
 		_connect_dialogue_signals()
 	else:

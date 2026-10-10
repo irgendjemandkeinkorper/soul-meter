@@ -1,16 +1,20 @@
 extends GdUnitTestSuite
 
 const CampaignQuestLoaderScript: Script = preload("res://globals/campaign_quest_loader.gd")
+const CombatLabScript := preload("res://weftlumin/panels/models/combat_lab.gd")
 const FIRST_ID: String = "gdunit-campaign-encounters"
 const SECOND_ID: String = "gdunit-campaign-encounters-second"
 const ROOT: String = "user://gdunit-campaign-encounters-root"
 const FIRST_PATH: String = ROOT + "/" + FIRST_ID
 const SECOND_PATH: String = ROOT + "/" + SECOND_ID
 
+## The combat lab model, unhosted until a test hosts it the way its Weftlumin panel does.
+var _lab: Node = null
+
 
 func before_test() -> void:
-	CombatLab.stop_test_session()
-	CombatLab.force_enabled_for_tests = false
+	_lab = CombatLabScript.new() as Node
+	add_child(_lab)
 	Battle.controller = null
 	Battle.ended = true
 	EncounterCatalog.clear_runtime_encounters()
@@ -19,8 +23,10 @@ func before_test() -> void:
 
 
 func after_test() -> void:
-	CombatLab.stop_test_session()
-	CombatLab.force_enabled_for_tests = false
+	if _lab != null:
+		_lab.call("stop_test_session")
+		_lab.free()
+		_lab = null
 	EncounterCatalog.clear_runtime_encounters()
 	QuestRegistry.clear_runtime_quests()
 	Battle.controller = null
@@ -268,9 +274,10 @@ func test_combat_lab_lists_and_starts_registered_campaign_encounter() -> void:
 		"lab-fight": _runtime_definition("lab-fight"),
 	})).is_true()
 
-	assert_array(CombatLab.encounter_ids()).contains(["lab-fight"])
-	CombatLab.force_enabled_for_tests = true
-	CombatLab.start_test_session({
+	var listed: Array[StringName] = _lab.call("encounter_ids")
+	assert_array(listed).contains([&"lab-fight"])
+	assert_bool(bool(_lab.call("host_in_panel", CombatLabScript.SANDBOX_OWNER))).is_true()
+	_lab.call("start_test_session", {
 		"encounter_id": &"lab-fight",
 		"party_ids": [],
 		"seed": 42,

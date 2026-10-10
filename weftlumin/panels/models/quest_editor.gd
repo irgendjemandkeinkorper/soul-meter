@@ -1,77 +1,28 @@
 extends Node
-## Debug-only in-game authoring surface for campaign quest packages.
+## Debug-only in-game authoring model for campaign quest packages, hosted by the Weftlumin quest
+## panel (`weftlumin/panels/quest_panel.gd`). Inert until a host enables it with host_in_panel().
 
-const QUEST_EDITOR_SCENE_PATH: String = "res://ui/debug/quest_editor.tscn"
 const EncounterLoaderScript: Script = preload("res://globals/campaign_encounter_loader.gd")
-const TOGGLE_HOTKEY: Key = KEY_F6
-const ENVIRONMENT_VARIABLE: String = "SOUL_METER_QUEST_EDITOR"
 const CAMPAIGNS_ROOT: String = "user://campaigns"
 
+## Test-only redirect of the authoring root; honoured only for a safe `user://` path.
 var campaigns_root_for_tests: String = ""
-var force_enabled_for_tests: bool = false:
-	set(value):
-		force_enabled_for_tests = value
-		_refresh_activation()
 
 var _enabled: bool = false
-var _overlay_layer: CanvasLayer = null
 var _registered_rows: Array[Dictionary] = []
-## True when a Weftlumin panel owns this instance (see host_in_panel()).
-var _panel_hosted: bool = false
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process_unhandled_key_input(false)
-	_refresh_activation()
 
 
 func _exit_tree() -> void:
 	_shutdown()
 
 
-func _unhandled_key_input(event: InputEvent) -> void:
-	if not _enabled or not event is InputEventKey:
-		return
-	var key_event: InputEventKey = event as InputEventKey
-	if not key_event.pressed or key_event.echo:
-		return
-	if key_event.physical_keycode != TOGGLE_HOTKEY and key_event.keycode != TOGGLE_HOTKEY:
-		return
-	if _overlay_layer == null:
-		open_overlay()
-	else:
-		close_overlay()
-	get_viewport().set_input_as_handled()
-
-
 func is_enabled() -> bool:
 	return _enabled
-
-
-func open_overlay() -> void:
-	if not _enabled or _overlay_layer != null or _panel_hosted:
-		return
-	var overlay_scene: PackedScene = load(QUEST_EDITOR_SCENE_PATH) as PackedScene
-	if overlay_scene == null:
-		push_warning("QuestEditor: could not load the editor overlay scene.")
-		return
-	_overlay_layer = CanvasLayer.new()
-	_overlay_layer.name = "QuestEditorLayer"
-	_overlay_layer.layer = 1175
-	_overlay_layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_overlay_layer)
-	var overlay: Control = overlay_scene.instantiate() as Control
-	overlay.name = "QuestEditorOverlay"
-	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay_layer.add_child(overlay)
-	overlay.call("configure", self)
-
-
-func close_overlay() -> void:
-	if not _enabled:
-		return
-	_close_overlay()
 
 
 func campaign_ids() -> Array[String]:
@@ -585,48 +536,25 @@ static func _transaction_failure(file_path: String, message: String) -> Dictiona
 
 
 ## Weftlumin panel seam (architecture §4.5.5, §4.8). The panel that owns this instance enables
-## the authoring model; the shell owns activation, bindings and pause, so the F6 overlay, its
-## hotkey and the environment gate stand down. Refused on the autoload itself and in release
-## builds. Validation, transactional writes and conflict authorisation are unchanged.
+## the authoring model; the shell owns activation, bindings and pause. Refused in release builds
+## and outside the tree. Validation, transactional writes and conflict authorisation are unchanged.
 func host_in_panel() -> bool:
-	if not OS.is_debug_build() or not is_inside_tree() or get_parent() == get_tree().root:
+	if not OS.is_debug_build() or not is_inside_tree():
 		return false
-	_panel_hosted = true
 	_set_enabled(true)
-	set_process_unhandled_key_input(false)
 	return true
-
-
-func _refresh_activation() -> void:
-	if not is_inside_tree() or _panel_hosted:
-		return
-	var should_enable: bool = OS.is_debug_build() and (
-		OS.get_environment(ENVIRONMENT_VARIABLE) == "1" or force_enabled_for_tests
-	)
-	_set_enabled(should_enable)
 
 
 func _set_enabled(should_enable: bool) -> void:
 	if should_enable == _enabled:
 		return
 	_enabled = should_enable
-	set_process_unhandled_key_input(_enabled and not _panel_hosted)
 	if not _enabled:
 		_shutdown()
 
 
 func _shutdown() -> void:
-	_close_overlay()
 	_registered_rows.clear()
-
-
-func _close_overlay() -> void:
-	if _overlay_layer == null:
-		return
-	var layer: CanvasLayer = _overlay_layer
-	_overlay_layer = null
-	remove_child(layer)
-	layer.queue_free()
 
 
 static func _campaign_id_is_safe(campaign_id: String) -> bool:
@@ -643,8 +571,7 @@ func _package_path(campaign_id: String) -> String:
 
 func _campaigns_root() -> String:
 	if (
-		force_enabled_for_tests
-		and campaigns_root_for_tests.begins_with("user://")
+		campaigns_root_for_tests.begins_with("user://")
 		and not campaigns_root_for_tests.contains("\\")
 		and not campaigns_root_for_tests.contains("..")
 	):

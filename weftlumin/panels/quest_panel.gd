@@ -1,13 +1,13 @@
 class_name WeftluminQuestPanel
 extends SoulMeterToolPanel
-## Quest editor tab (§4.8): the F6 quest editor's model behind the panel contract — validate in
+## Quest editor tab (§4.8): the quest editor model behind the panel contract — validate in
 ## memory, transactional write, reload through the same loader, register, and refuse to reset
 ## live progress without explicit authorisation. All of that is the model's.
 ##
 ## The draft is edited as the exact JSON documents CampaignQuestLoader consumes (`campaign.json`
 ## and the quest files), so the panel can express every field the package format carries.
 
-const MODEL_SCRIPT := preload("res://globals/quest_editor.gd")
+const MODEL_SCRIPT := preload("res://weftlumin/panels/models/quest_editor.gd")
 
 var campaign_picker: OptionButton = null
 var campaign_editor: TextEdit = null

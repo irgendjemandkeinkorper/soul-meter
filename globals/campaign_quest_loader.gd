@@ -765,7 +765,7 @@ static func _load_routed_dialogue_titles(errors: Array[Dictionary]) -> Dictionar
 	## resource, and an exported build ships the compiled cues without the raw
 	## `~ title` source lines. Scraping the source text therefore works from the
 	## project tree and silently rejects EVERY campaign quest after export.
-	## `DialogueResource.get_cues()` is the same accessor `DialogueLab` uses.
+	## `DialogueResource.get_cues()` is the same accessor the Weftlumin dialogue lab model uses.
 	var dialogue_path: String = QuestRegistry.DOM_SIDE_QUEST_DIALOGUE_PATH
 	var resource: Resource = ResourceLoader.load(
 		dialogue_path, "", ResourceLoader.CACHE_MODE_REUSE

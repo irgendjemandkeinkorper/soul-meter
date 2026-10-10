@@ -1,10 +1,10 @@
 extends Node
-## Debug-only encounter sandbox. Disabled builds remain completely inert.
+## Debug-only encounter sandbox, hosted by the Weftlumin combat panel
+## (`weftlumin/panels/combat_lab_panel.gd`). Inert until a host enables it with host_in_panel().
 
-## Panel-hosted presentation feed: the inspector payload the F3 overlay would receive.
+## Presentation feed for the hosting panel's inspector.
 signal inspector_changed(payload: Dictionary)
 
-const COMBAT_LAB_SCENE := preload("res://ui/debug/combat_lab.tscn")
 const EXPORT_ROOT := "user://combat_lab"
 const AUTHORED_WEATHER := &"__authored_default__"
 const CALM := &""
@@ -21,26 +21,15 @@ const AIM_PROFILES := {
 		"injury": {"id": "throat-bruised", "chance_on_hit": 35, "min_damage": 1, "severity": "minor",
 			"effects": {"vocal_accuracy_pp": -10}}},
 }
-## PROVISIONAL owner surface: F3 may move after balance-facilitator playtesting.
-const TOGGLE_HOTKEY: Key = KEY_F3
-## Emitted by every entry point that declines to open — over a live production
-## battle, or over another debug lab's armed sandbox. It lives here, next to the
-## guard, so the tests that assert the refusal is audible match on this constant
-## instead of a copied literal.
+## Shown by the hosting panel when it declines to start over a live production battle
+## or over another tool's armed sandbox. It lives here, next to the guard, so the
+## tests that assert the refusal is audible match on this constant instead of a
+## copied literal.
 const REFUSAL_WARNING := (
 	"Combat Lab refuses to open over a running battle or another lab's session."
 )
 
-var force_enabled_for_tests: bool = false:
-	set(value):
-		force_enabled_for_tests = value
-		_refresh_activation()
-
 var _enabled: bool = false
-var _overlay_layer: CanvasLayer = null
-var _panel: Control = null
-var _previous_paused: bool = false
-var _restore_pause_on_close: bool = false
 var _lab_battle_running: bool = false
 var _battle_signals_connected: bool = false
 var _runtime_overrides_applied: bool = false
@@ -52,8 +41,6 @@ var _pending_forecast: Dictionary = {}
 var _last_comparison: Dictionary = {}
 var _aim_location: StringName = &"torso"
 var _aim_controller: CombatController = null
-## True when a Weftlumin panel owns this instance (see host_in_panel()).
-var _panel_hosted: bool = false
 ## A finished lab battle runs the PRODUCTION end-of-battle path, which accrues
 ## style points into SaveGame.ng_plus, can consume persistent SkillCheck expert
 ## rerolls, turns in quests, and mutates the tactical roster. Battle then
@@ -65,37 +52,10 @@ var last_export_path: String = ""
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process_unhandled_key_input(false)
-	_refresh_activation()
 
 
 func _exit_tree() -> void:
 	_shutdown()
-
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	if not _enabled or not event is InputEventKey:
-		return
-	var key_event := event as InputEventKey
-	if not key_event.pressed or key_event.echo:
-		return
-	if key_event.physical_keycode != TOGGLE_HOTKEY and key_event.keycode != TOGGLE_HOTKEY:
-		return
-	if _overlay_layer == null:
-		# A finished lab session keeps _setup so it can be restarted, so this
-		# branch stays reachable after the lab battle ends. Without the same
-		# ownership guard open_setup() carries, F3 during a LATER production
-		# battle would reopen the inspector on the stale prior session and
-		# render it over a live encounter it knows nothing about.
-		if _ownership_conflict_is_live():
-			push_warning(REFUSAL_WARNING)
-			return
-		if _lab_battle_running or not _setup.is_empty():
-			_open_overlay(true)
-		else:
-			open_setup()
-	else:
-		close_overlay()
-	get_viewport().set_input_as_handled()
 
 
 func is_enabled() -> bool:
@@ -129,32 +89,6 @@ func _ownership_conflict_is_live() -> bool:
 ## must still be allowed to replace — from another tool's.
 func another_sandbox_is_armed() -> bool:
 	return _sandbox().held_by_other(sandbox_owner)
-
-
-func open_setup() -> void:
-	if not _enabled or _overlay_layer != null or _lab_battle_running or _panel_hosted:
-		return
-	if _ownership_conflict_is_live():
-		push_warning(REFUSAL_WARNING)
-		return
-	_previous_paused = get_tree().paused
-	get_tree().paused = true
-	_restore_pause_on_close = true
-	_open_overlay(false)
-
-
-func close_overlay() -> void:
-	if _overlay_layer == null:
-		return
-	var layer: CanvasLayer = _overlay_layer
-	var restore_pause := _restore_pause_on_close
-	_overlay_layer = null
-	_panel = null
-	_restore_pause_on_close = false
-	remove_child(layer)
-	layer.free()
-	if restore_pause:
-		get_tree().paused = _previous_paused
 
 
 func encounter_ids() -> Array[StringName]:
@@ -226,7 +160,7 @@ func resolve_weather(
 
 ## Every mutating entry point is gated. Inertness is not just "does nothing on
 ## its own when disabled" — a disabled lab must not be *drivable* either, or the
-## force_enabled_for_tests seam is decorative and a stray call can start a real
+## host_in_panel() seam is decorative and a stray call can start a real
 ## Battle and connect signals in a shipped build.
 func start_lab_battle(requested_setup: Dictionary) -> void:
 	if not _enabled or _ownership_conflict_is_live():
@@ -242,15 +176,14 @@ func start_test_session(requested_setup: Dictionary) -> void:
 
 ## Ends a lab session. Safe to call when no session is running: it tears down
 ## only a battle the lab started, so it can never abort a production encounter
-## even though it is a public autoload surface.
+## even though it is a public model surface.
 func stop_test_session() -> void:
 	var owned_battle := _lab_battle_running
 	_disconnect_battle_signals()
 	_lab_battle_running = false
 	_restore_saved_state()
-	# Leaving session state behind made F3 open the inspector instead of the
-	# setup screen for whatever ran next, and left an unfinished global Battle
-	# visible to later suites.
+	# Leaving session state behind left a stale inspector for whatever ran
+	# next, and an unfinished global Battle visible to later suites.
 	_setup.clear()
 	_turn_rows.clear()
 	_outcome.clear()
@@ -434,7 +367,6 @@ func _start_session(requested_setup: Dictionary, enter_game_flow: bool) -> void:
 	SkillCheck.random_number_generator.seed = int(_setup.get("seed", 0))
 	_lab_battle_running = true
 	_connect_battle_signals()
-	close_overlay()
 	Battle.start(StringName(_setup["encounter_id"]))
 	if Battle.ended or Battle.controller == null:
 		_lab_battle_running = false
@@ -446,7 +378,6 @@ func _start_session(requested_setup: Dictionary, enter_game_flow: bool) -> void:
 	_latest_snapshot = Battle.controller.snapshot()
 	_capture_pending_forecast()
 	_record_playtest_usage()
-	_open_overlay(true)
 	if enter_game_flow:
 		GameFlow.send_event("enter_battle")
 	_update_panel()
@@ -722,27 +653,8 @@ func _disconnect_battle_signals() -> void:
 	_battle_signals_connected = false
 
 
-func _open_overlay(inspector: bool) -> void:
-	if not _enabled or _overlay_layer != null or _panel_hosted:
-		return
-	_overlay_layer = CanvasLayer.new()
-	_overlay_layer.name = "CombatLabLayer"
-	_overlay_layer.layer = 1200
-	_overlay_layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_overlay_layer)
-	_panel = COMBAT_LAB_SCENE.instantiate() as Control
-	_panel.name = "CombatLabOverlay"
-	_panel.process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay_layer.add_child(_panel)
-	_panel.call("configure", self, inspector)
-	_update_panel()
-
-
 func _update_panel() -> void:
-	if _panel != null and is_instance_valid(_panel):
-		_panel.call("update_inspector", _inspector_payload())
-	if _panel_hosted:
-		inspector_changed.emit(_inspector_payload())
+	inspector_changed.emit(_inspector_payload())
 
 
 func _inspector_payload() -> Dictionary:
@@ -902,35 +814,23 @@ func _record_playtest_usage() -> void:
 
 
 ## Weftlumin panel seam (architecture §4.5.5, §4.9). The panel that owns this instance enables
-## the lab under the shell's sandbox token; the shell owns activation, bindings and pause, so the
-## F3 overlay, its hotkey and the environment gate stand down. Refused on the autoload itself and
-## in release builds. Weather, forecast/resolution and containment rules are unchanged.
+## the lab under the shell's sandbox token; the shell owns activation, bindings and pause.
+## Refused in release builds and outside the tree. Weather, forecast/resolution and
+## containment rules are unchanged.
 func host_in_panel(owner_token: StringName) -> bool:
 	if owner_token.is_empty():
 		return false
-	if not OS.is_debug_build() or not is_inside_tree() or get_parent() == get_tree().root:
+	if not OS.is_debug_build() or not is_inside_tree():
 		return false
-	_panel_hosted = true
 	sandbox_owner = owner_token
 	_set_enabled(true)
-	set_process_unhandled_key_input(false)
 	return true
-
-
-func _refresh_activation() -> void:
-	if not is_inside_tree() or _panel_hosted:
-		return
-	var should_enable: bool = OS.is_debug_build() and (
-		OS.get_environment("SOUL_METER_COMBAT_LAB") == "1" or force_enabled_for_tests
-	)
-	_set_enabled(should_enable)
 
 
 func _set_enabled(should_enable: bool) -> void:
 	if should_enable == _enabled:
 		return
 	_enabled = should_enable
-	set_process_unhandled_key_input(_enabled and not _panel_hosted)
 	if not _enabled:
 		_shutdown()
 
@@ -941,7 +841,6 @@ func _shutdown() -> void:
 	# read it as a PRODUCTION encounter (the lab no longer claims it) and refuse
 	# to open over the very battle it had started.
 	var owned_battle := _lab_battle_running
-	close_overlay()
 	_disconnect_battle_signals()
 	_lab_battle_running = false
 	_restore_saved_state()

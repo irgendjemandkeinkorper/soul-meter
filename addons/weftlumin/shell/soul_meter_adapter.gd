@@ -62,7 +62,26 @@ func gameplay_scene_root() -> Node:
 
 
 func production_owner_live() -> bool:
-	return Battle.session_active or DialogueLab.production_dialogue_is_live()
+	return Battle.session_active or _production_dialogue_live()
+
+
+## True while a Dialogue Manager balloon is showing under the current scene. Formerly read from the
+## dialogue lab's autoload, which E2.5b (#337) removed; the dialogue panel's own model still applies
+## its finer lab-owned-balloon exclusion before starting a replay.
+func _production_dialogue_live() -> bool:
+	var current_scene: Node = null
+	if DialogueManager.get_current_scene.is_valid():
+		current_scene = DialogueManager.get_current_scene.call() as Node
+	return current_scene != null and _contains_dialogue_balloon(current_scene)
+
+
+static func _contains_dialogue_balloon(node: Node) -> bool:
+	for child: Node in node.get_children():
+		if child.get("dialogue_resource") is DialogueResource:
+			return true
+		if _contains_dialogue_balloon(child):
+			return true
+	return false
 
 
 func capture_runtime_state() -> Dictionary:

@@ -2,9 +2,9 @@ class_name SoulMeterToolPanel
 extends WeftluminPanel
 ## Shared hosting for the five re-hosted debug tools (architecture §4.5.5, E2.5a).
 ##
-## Each panel owns ONE private instance of its tool's model script — the same script the legacy
-## autoload runs — and enables it through the model's `host_in_panel()` seam. The autoload copy is
-## never touched, so the legacy F-key hosts keep working until E2.5b deletes them. The model is a
+## Each panel owns ONE private instance of its tool's model script (`weftlumin/panels/models/*`,
+## export-excluded) and enables it through the model's `host_in_panel()` seam; the legacy autoload
+## hosts were removed in E2.5b (#337), so the panel is the model's only host. The model is a
 ## child of the panel: it lives exactly as long as the dock that shows it, and its own
 ## `_exit_tree()` shutdown (restore, disconnect, tear down) runs when the shell closes.
 ##

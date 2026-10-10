@@ -4,7 +4,7 @@ extends SoulMeterToolPanel
 ## contract. Rows, ordering, retention, debug classification and restored-history backfill are
 ## the model's; this panel only lays them out.
 
-const MODEL_SCRIPT := preload("res://globals/consequence_timeline.gd")
+const MODEL_SCRIPT := preload("res://weftlumin/panels/models/consequence_timeline.gd")
 const COLUMNS: Array[String] = ["Time", "Ledger", "Change", "Provenance", "Cause", "Actor · scene"]
 
 var summary_label: Label = null

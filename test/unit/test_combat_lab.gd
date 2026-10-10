@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 
-const CombatLabScript := preload("res://globals/combat_lab.gd")
+const CombatLabScript := preload("res://weftlumin/panels/models/combat_lab.gd")
 const TEST_ENCOUNTER := &"combat-lab-catalog-probe"
 
 var _game_state_before: Dictionary
@@ -36,9 +36,9 @@ func before_test() -> void:
 	_skill_check_before = SkillCheck.to_dict().duplicate(true)
 	_lab = auto_free(CombatLabScript.new()) as Node
 	# Mutating entry points are gated on enablement, so a test that drives the
-	# lab must go through the ratified seam rather than around it.
+	# lab must go through the ratified seam (the panel-hosting hook) rather than around it.
 	add_child(_lab)
-	_lab.set("force_enabled_for_tests", true)
+	assert_bool(bool(_lab.call("host_in_panel", CombatLabScript.SANDBOX_OWNER))).is_true()
 
 
 func after_test() -> void:
@@ -342,10 +342,9 @@ func test_a_lab_session_does_not_leave_progression_behind() -> void:
 
 func test_a_disabled_lab_cannot_be_driven_into_starting_a_battle() -> void:
 	# Gate finding 3: inertness must mean "not drivable", not merely "does
-	# nothing unprompted" — otherwise force_enabled_for_tests is decorative.
+	# nothing unprompted" — otherwise the host_in_panel() seam is decorative.
 	var disabled := auto_free(CombatLabScript.new()) as Node
 	add_child(disabled)
-	disabled.set("force_enabled_for_tests", false)
 	Battle.controller = null
 	Battle.ended = true
 
@@ -399,29 +398,21 @@ func test_the_lab_refuses_to_open_or_start_over_a_running_production_battle() ->
 	assert_object(Battle.controller) \
 		.override_failure_message("The lab must not replace a running production battle") \
 		.is_same(production_controller)
-	# The refusal must be AUDIBLE, not silent — a developer pressing F3 and
-	# seeing nothing happen has no way to tell the lab from a broken hotkey.
-	await assert_error(Callable(_lab, "open_setup")) \
-		.is_push_warning(CombatLabScript.REFUSAL_WARNING)
 	assert_bool(bool(_lab.get("_lab_battle_running"))).is_false()
-	assert_object(_lab.get("_overlay_layer")) \
-		.override_failure_message("open_setup() must refuse over a live production battle") \
-		.is_null()
+	assert_bool(bool(_lab.call("production_battle_is_live"))).is_true()
 
-	# The hotkey is a SECOND entry point: a finished lab session keeps _setup,
-	# so F3 during a later real battle took the "reopen the inspector" branch,
-	# which did not go through open_setup()'s guard at all.
+	# The restart controls are SECOND entry points: a finished lab session keeps
+	# _setup, so a restart pressed during a later real battle must take the same
+	# guard. (The audible refusal is the hosting panel's status line, pinned in
+	# test_weftlumin_panels.gd.)
 	_lab.set("_setup", {"encounter_id": EncounterIds.LOAM_BOAR, "seed": 3})
-	var key := InputEventKey.new()
-	key.pressed = true
-	key.physical_keycode = CombatLabScript.TOGGLE_HOTKEY
+	_lab.call("restart_same_setup")
+	_lab.call("restart_new_seed")
 
-	await assert_error(Callable(_lab, "_unhandled_key_input").bind(key)) \
-		.is_push_warning(CombatLabScript.REFUSAL_WARNING)
-
-	assert_object(_lab.get("_overlay_layer")) \
-		.override_failure_message("F3 must not reopen a stale lab session over a live battle") \
-		.is_null()
+	assert_object(Battle.controller) \
+		.override_failure_message("A stale lab restart must not replace a live battle") \
+		.is_same(production_controller)
+	assert_bool(bool(_lab.get("_lab_battle_running"))).is_false()
 
 
 func test_the_progression_snapshot_does_not_reach_past_its_own_session() -> void:
