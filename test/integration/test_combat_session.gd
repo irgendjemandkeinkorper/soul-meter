@@ -64,17 +64,104 @@ func _hostile(
 
 
 ## Drives the live session until it ends or `guard` steps pass. On the party's turn it strikes
-## `target` when one is given, otherwise it guards; every other state just advances the clock.
-func _drive_until_ended(target: BattleActor = null, guard: int = 400) -> void:
+## `target` when one is given and the strike is legal, otherwise it guards; every other state
+## just advances the clock. A refused strike falls back to guarding, never to waiting (#479):
+## FR-102a refuses a third consecutive wait, and the party never moves here, so a foe that is
+## still out of reach after two waits would leave the loop refusing the same strike and the
+## same wait until the guard ran out. Guarding is a committed action that resets the streak and
+## hands the clock back to the foe, which is the one closing the distance.
+## With `require_end`, a guard that runs out (or a controller that disappears) before the battle
+## ends fails the test with a full diagnosis instead of a later null `last_result` (#479).
+func _drive_until_ended(
+	target: BattleActor = null, guard: int = 400, require_end: bool = true
+) -> bool:
 	var steps := 0
+	var refusals: Array[String] = []
 	while steps < guard and not Battle.ended and Battle.controller != null:
 		steps += 1
 		if Battle.controller.state == CombatController.State.ALLY_TURN:
 			var action := &"strike" if target != null and target.is_alive() else &"guard"
-			if not bool(Battle.controller.submit_action(action, target).get("allowed", false)):
-				Battle.controller.end_turn()
-		else:
-			Battle.controller.end_turn()
+			var submitted: Dictionary = Battle.controller.submit_action(action, target)
+			if not bool(submitted.get("allowed", false)) and action != &"guard":
+				refusals.append("step %d %s: %s" % [steps, action, _refusal_text(submitted)])
+				action = &"guard"
+				submitted = Battle.controller.submit_action(action)
+			if not bool(submitted.get("allowed", false)):
+				refusals.append("step %d %s: %s" % [steps, action, _refusal_text(submitted)])
+				if not Battle.controller.end_turn():
+					refusals.append(
+						"step %d end_turn: %s" % [steps, _refusal_text(Battle.controller.last_refusal)]
+					)
+		elif not Battle.controller.end_turn():
+			refusals.append("step %d end_turn outside ALLY_TURN" % steps)
+	if Battle.ended:
+		return true
+	if require_end:
+		fail(_drive_diagnosis(steps, guard, target, refusals))
+	return false
+
+
+func _refusal_text(refusal: Dictionary) -> String:
+	return "%s: %s" % [
+		str(refusal.get("blocked_by", refusal.get("reason", "?"))), str(refusal.get("message", "")),
+	]
+
+
+## Everything needed to tell a non-ending loop apart: who could not reach whom, why every
+## action was refused, and what the scheduler and event log last said.
+func _drive_diagnosis(
+	steps: int, guard: int, target: BattleActor, refusals: Array[String]
+) -> String:
+	var lines: Array[String] = [
+		"the battle did not end after %d of %d steps (Battle.ended=%s, session_active=%s)"
+		% [steps, guard, Battle.ended, Battle.session_active],
+	]
+	var controller := Battle.controller
+	if controller == null:
+		lines.append("Battle.controller is null")
+		return "\n".join(lines)
+	lines.append("controller state=%s round=%d active=%s" % [
+		CombatController.State.keys()[controller.state], controller.round_number,
+		controller.active_actor().display_name if controller.active_actor() != null else "<none>",
+	])
+	lines.append("scheduler=%s" % JSON.stringify(controller.scheduler.to_dict()))
+	var grid := controller.battlefield
+	for actor: BattleActor in controller.allies + controller.enemies:
+		lines.append("%s %s [%s] hp=%d/%d atk=%d def=%d ct_speed=%d guarding=%s cell=%s" % [
+			actor.side, actor.display_name, actor.combat_id, actor.hp, actor.max_hp,
+			actor.attack, actor.defense,
+			controller.rules.charge_speed_for(actor) if controller.rules != null else -1,
+			actor.guarding, str(grid.cell_of(actor)),
+		])
+	if target != null and not controller.allies.is_empty():
+		var ally_cell: Variant = grid.cell_of(controller.allies[0])
+		var foe_cell: Variant = grid.cell_of(target)
+		if ally_cell is Vector2i and foe_cell is Vector2i:
+			var delta: Vector2i = (foe_cell as Vector2i) - (ally_cell as Vector2i)
+			lines.append("ally->target delta=%s chebyshev=%d manhattan=%d" % [
+				delta, maxi(absi(delta.x), absi(delta.y)), absi(delta.x) + absi(delta.y),
+			])
+	var field := Battle._session_field
+	if is_instance_valid(field):
+		for hostile: Hostile in field.hostiles():
+			lines.append("field hostile %s state=%s pos=%s cell=%s cooldown=%s" % [
+				hostile.name, Hostile.State.keys()[hostile.state], hostile.global_position,
+				hostile.cell, hostile.alert_cooldown_active(),
+			])
+	lines.append("last refusals (%d total):" % refusals.size())
+	lines.append_array(refusals.slice(maxi(0, refusals.size() - 6)))
+	var tail: Array[String] = []
+	Battle.replay_combat_events(func(event: CombatEvent) -> void:
+		var data := event.data.duplicate()
+		data.erase("snapshot")
+		tail.append("#%d %s %s->%s %s" % [
+			event.sequence, event.type, event.actor_id, event.target_id,
+			JSON.stringify(data).left(320),
+		])
+	)
+	lines.append("event log tail (%d events):" % tail.size())
+	lines.append_array(tail.slice(maxi(0, tail.size() - 16)))
+	return "\n".join(lines)
 
 
 ## Three party members, one field cell between them: arrival and teleport reset both stack the
@@ -339,8 +426,8 @@ func test_downing_the_last_of_a_group_fires_its_ledger_and_marks_the_hostile_dow
 	foe.hp = 1
 	var events_before := Reputation.event_count()
 
-	_drive_until_ended(foe)
-
+	if not _drive_until_ended(foe):
+		return
 	assert_bool(Battle.ended).override_failure_message("the session never resolved").is_true()
 	assert_int(Battle.last_result.state).is_equal(BattleResult.State.VICTORY)
 	assert_bool(GameState.flag_is_true("defeated_bog_wight")).override_failure_message(
@@ -376,7 +463,7 @@ func test_a_group_resolves_when_its_last_member_falls_while_the_session_continue
 			if Battle.session_active and GameState.flag_is_true("defeated_bog_wight"):
 				seen_live_resolution[0] = true
 	)
-	_drive_until_ended(foe, 60)
+	_drive_until_ended(foe, 60, false)
 
 	assert_bool(seen_live_resolution[0]).override_failure_message(
 		"the bog-wight group must resolve while the boar keeps the session alive"
@@ -403,8 +490,8 @@ func test_session_ends_fled_after_two_measures_with_no_party_in_reach() -> void:
 	for follower: Node2D in field.party_followers().followers():
 		follower.global_position = field.player().global_position
 
-	_drive_until_ended(null, 200)
-
+	if not _drive_until_ended(null, 200):
+		return
 	assert_bool(Battle.ended).is_true()
 	assert_int(Battle.last_result.state).is_equal(BattleResult.State.FLED)
 	assert_int(wight.state).is_equal(Hostile.State.IDLE)
@@ -562,8 +649,10 @@ func test_a_spawn_slot_group_resolves_through_the_ledger_and_clears_its_slot() -
 	var foe := wight.battle_actor()
 	foe.hp = 1
 
-	_drive_until_ended(foe)
-
+	if not _drive_until_ended(foe):
+		SpawnDirector.set_tables_for_testing({}, true)
+		WorldClock.from_dict(clock_before)
+		return
 	assert_int(Battle.last_result.state).is_equal(BattleResult.State.VICTORY)
 	assert_int(wight.state).is_equal(Hostile.State.DOWNED)
 	assert_int(Battle.last_result.xp_awarded).is_greater(0)
@@ -572,3 +661,23 @@ func test_a_spawn_slot_group_resolves_through_the_ledger_and_clears_its_slot() -
 	assert_int(int(slot["cleared_day"])).is_equal(4)
 	SpawnDirector.set_tables_for_testing({}, true)
 	WorldClock.from_dict(clock_before)
+
+
+## #479: with the party seated one cell further out, the wight is still two cells away when the
+## party's third turn comes round (Vex charges at 5, the wight at 6 and walks three cells per
+## 60-CT move). The old drive loop answered every refused strike with a wait, hit FR-102a's
+## two-wait cap, and then refused the same strike and the same wait until its guard ran out:
+## the CI hang. The loop must commit an action instead, so the wight gets the clock back.
+func test_the_drive_loop_outlasts_the_wait_cap_when_the_foe_is_still_out_of_reach() -> void:
+	var field := await _field()
+	field.player().global_position = field.iso_grid().cell_to_world(Vector2i(35, 36))
+	var wight := _hostile(field, "Wight", Vector2i(30, 30))
+	var opened := Battle.start_session(field, wight)
+	assert_bool(opened.get("allowed", false)).is_true()
+	assert_that(opened["seats"][0]).is_equal(Vector2i(35, 36))
+	var foe := wight.battle_actor()
+	foe.hp = 1
+
+	if not _drive_until_ended(foe, 40):
+		return
+	assert_int(Battle.last_result.state).is_equal(BattleResult.State.VICTORY)
