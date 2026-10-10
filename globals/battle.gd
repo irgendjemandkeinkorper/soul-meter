@@ -1056,6 +1056,42 @@ func player_defend() -> void:
 	use_action(ACTION_GUARD)
 
 
+## Discard a tool-owned fight without outcomes, rewards, wounds, or autosave requests.
+## A sandbox owner restores runtime state separately; this only releases the live session.
+## No battle_ended signal: its listeners apply production consequences to a BattleResult.
+func abandon() -> void:
+	ended = true
+	_release_field_grid()
+	if controller != null:
+		if controller.event_emitted.is_connected(_on_combat_event):
+			controller.event_emitted.disconnect(_on_combat_event)
+		if controller.battle_finished.is_connected(_on_controller_finished):
+			controller.battle_finished.disconnect(_on_controller_finished)
+	controller = null
+	_end_session(null)
+	allies.clear()
+	enemies.clear()
+	_definition.clear()
+	_combat_history.clear()
+	encounter_id = &""
+	last_result = null
+	last_message = ""
+	last_speech_check.clear()
+	last_speech_option = &""
+	last_speech_succeeded = false
+	_resolved_groups.clear()
+	_session_spoils.clear()
+	_session_xp = 0
+	_session_levels.clear()
+	_measures_out_of_reach = 0
+	_set_piece_pending = false
+	_set_piece_seats.clear()
+	active_ally_index = 0
+	target_enemy_index = 0
+	balance = 0
+	enemy_rounds = 0
+
+
 func flee() -> void:
 	if not ended:
 		last_message = "The party disengages. Current wounds are preserved."
