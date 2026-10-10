@@ -28,9 +28,20 @@ var tile_charge: SpinBox = null
 var aim_fixture: CheckBox = null
 var anatomy_fixture: OptionButton = null
 var visibility_fixture: OptionButton = null
+## Styled inspector (#474): one column per readout, as the retired F3 inspector dock showed them.
+var inspector: HBoxContainer = null
+var aim_controls: VBoxContainer = null
 var aim_picker: OptionButton = null
+var aim_quote: Label = null
 var aim_submit: Button = null
-var inspector: TextEdit = null
+var session_label: Label = null
+var timeline_label: Label = null
+var forecast_label: Label = null
+var divergence_label: Label = null
+var field_label: Label = null
+var style_label: Label = null
+var turns_label: Label = null
+var export_label: Label = null
 var _last_payload: Dictionary = {}
 
 
@@ -128,22 +139,9 @@ func _build(content: VBoxContainer) -> void:
 	visibility_fixture = _fixture_option("VisibilityFixture", VISIBILITY_FIXTURES, "%s visibility")
 	fixture_row.add_child(visibility_fixture)
 
-	var aim_row := _row()
-	aim_row.name = "AimControls"
-	content.add_child(aim_row)
-	aim_picker = _fixture_option("AimLocation", AIM_LOCATIONS, "%s")
-	aim_picker.item_selected.connect(func(index: int) -> void:
-		model.call("select_lab_aim", StringName(str(aim_picker.get_item_metadata(index))))
-	)
-	aim_row.add_child(aim_picker)
-	aim_submit = _button("Fire lab shot", "SubmitAim", func() -> void: model.call("submit_lab_aim"))
-	aim_row.add_child(aim_submit)
-
-	inspector = _text_box("Inspector", false)
-	content.add_child(inspector)
-	# Session readout and aim sit directly under the setup/actions row; setup detail follows.
+	_build_inspector(content)
+	# The live inspector sits directly under the setup/actions row; setup detail follows.
 	content.move_child(inspector, 1)
-	content.move_child(aim_row, 2)
 	model.connect("inspector_changed", _on_inspector_changed)
 
 
@@ -253,64 +251,206 @@ func _on_inspector_changed(payload: Dictionary) -> void:
 	_render(payload)
 
 
+func _build_inspector(content: VBoxContainer) -> void:
+	inspector = _row()
+	inspector.name = "InspectorDock"
+	content.add_child(inspector)
+	aim_controls = _inspector_column("AimControls", "Called shots — provisional fixture")
+	aim_picker = _fixture_option("AimLocation", AIM_LOCATIONS, "%s")
+	aim_picker.item_selected.connect(func(index: int) -> void:
+		model.call("select_lab_aim", StringName(str(aim_picker.get_item_metadata(index))))
+	)
+	aim_controls.add_child(aim_picker)
+	aim_quote = _section_label(aim_controls, "AimQuote")
+	aim_submit = _button("Fire lab shot", "SubmitAim", func() -> void: model.call("submit_lab_aim"))
+	aim_controls.add_child(aim_submit)
+	var session := _inspector_column("Session", "Live resolution")
+	session_label = _section_label(session, "SessionState")
+	session.add_child(_label("CT timeline", &"EditorHeading"))
+	timeline_label = _section_label(session, "Timeline")
+	var forecast := _inspector_column("Forecast", "Forecast → resolution")
+	forecast_label = _section_label(forecast, "ForecastText")
+	divergence_label = _section_label(forecast, "Divergence", &"DangerLabel")
+	var field := _inspector_column("Field", "Live field")
+	field_label = _section_label(field, "FieldState")
+	var rows := _inspector_column("Rows", "Style tracker")
+	style_label = _section_label(rows, "Style")
+	rows.add_child(_label("Session rows", &"EditorHeading"))
+	turns_label = _section_label(rows, "Turns")
+	export_label = _section_label(rows, "ExportPath")
+
+
+func _inspector_column(node_name: String, heading: String) -> VBoxContainer:
+	var column := VBoxContainer.new()
+	column.name = node_name
+	column.theme_type_variation = &"EditorColumn"
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_child(_label(heading, &"EditorHeading"))
+	inspector.add_child(column)
+	return column
+
+
+static func _section_label(
+	column: VBoxContainer, node_name: String, variation: StringName = &"EditorLabel"
+) -> Label:
+	var label := _label("", variation, true)
+	label.name = node_name
+	column.add_child(label)
+	return label
+
+
+## Every visible inspector readout, column by column.
+func inspector_text() -> String:
+	var parts: PackedStringArray = []
+	if aim_controls.visible:
+		parts.append(aim_quote.text)
+	for label: Label in [session_label, timeline_label, forecast_label]:
+		parts.append(label.text)
+	if divergence_label.visible:
+		parts.append(divergence_label.text)
+	for label: Label in [field_label, style_label, turns_label, export_label]:
+		parts.append(label.text)
+	return "\n".join(parts)
+
+
 func _render(payload: Dictionary) -> void:
 	if inspector == null:
 		return
-	var aim_enabled := bool(payload.get("aim_enabled", false))
-	aim_picker.get_parent().visible = aim_enabled
-	var lines: PackedStringArray = []
+	aim_controls.visible = bool(payload.get("aim_enabled", false))
 	if payload.is_empty():
-		inspector.text = "No lab session. Choose an encounter and start a lab battle."
+		session_label.text = "No lab session. Choose an encounter and start a lab battle."
+	else:
+		session_label.text = "RUNNING" if bool(payload.get("running", false)) else "SESSION ENDED"
+	timeline_label.text = _timeline_text(payload.get("timeline", []))
+	_render_forecast(payload)
+	_render_aim(payload)
+	field_label.text = _field_text(payload)
+	style_label.text = _style_text(payload.get("style", {}))
+	turns_label.text = _turn_text(payload.get("turns", []), payload.get("outcome", {}))
+	var export_path := str(payload.get("last_export_path", ""))
+	export_label.text = "Export: %s" % (export_path if not export_path.is_empty() else "not exported")
+
+
+## The full aim quote: target, cost, hit chance, damage on hit, every accuracy term, injury.
+func _render_aim(payload: Dictionary) -> void:
+	if not aim_controls.visible:
 		return
-	lines.append("RUNNING" if bool(payload.get("running", false)) else "SESSION ENDED")
-	lines.append("TIMELINE")
-	for row_value: Variant in payload.get("timeline", []):
-		var row: Dictionary = row_value
-		lines.append("  %s — READY_AT %s · SPD %s · CHARGE %s · +%s ticks" % [
+	var location := str(payload.get("aim_location", "torso"))
+	for index: int in aim_picker.item_count:
+		if str(aim_picker.get_item_metadata(index)) == location:
+			aim_picker.select(index)
+	var quote: Dictionary = payload.get("aim_forecast", {})
+	aim_submit.disabled = not bool(quote.get("allowed", false))
+	if aim_submit.disabled:
+		aim_quote.text = str(quote.get("message", "Aim unavailable."))
+		return
+	var accuracy: Dictionary = (quote["resolution"] as Dictionary)["accuracy_breakdown"]
+	var terms: PackedStringArray = ["Base %d%%" % int(accuracy["base"])]
+	for modifier: Dictionary in accuracy["modifiers"]:
+		terms.append("%s %+d pp" % [str(modifier["label"]), int(modifier["percentage_points"])])
+	if int(accuracy["clamp_adjustment"]) != 0:
+		terms.append("Clamp %+d pp" % int(accuracy["clamp_adjustment"]))
+	var use_ct := str(quote.get("scheduler_mode", "ap")) == "ct"
+	var injury: Dictionary = quote.get("injury_forecast", {})
+	var injury_line := "Synthetic anatomy; no injury authored for this location."
+	if not injury.is_empty():
+		injury_line = "INJURY %s · %d%% ON HIT · %d%% OVERALL (needs %d damage)" % [
+			str(injury.get("id", "")), int(injury.get("chance_on_hit", 0)),
+			int(injury.get("overall_chance", 0)), int(injury.get("min_damage", 1)),
+		]
+	# AP compatibility: the lab quotes AP cost when the CT battlefield flag is off.
+	aim_quote.text = "%s · COST %d %s · HIT %d%%\n%d DAMAGE ON HIT\n%s\n%s" % [
+		str(quote.get("target_name", "")), int(quote["ct_cost"] if use_ct else quote["ap_cost"]),
+		"CT" if use_ct else "AP", int(accuracy["effective_hit_chance"]),
+		int(quote["damage_on_hit"]), " · ".join(terms), injury_line,
+	]
+
+
+func _render_forecast(payload: Dictionary) -> void:
+	var pending: Dictionary = payload.get("pending_forecast", {})
+	if pending.is_empty():
+		forecast_label.text = "Pending strike forecast unavailable; awaiting the next allied turn."
+	else:
+		var context: Dictionary = pending.get("context", {})
+		forecast_label.text = (
+			"%s → %s · %s\nForecast damage %d · power %s · scale %s · target HP %s · tick %s" % [
+				str(pending.get("actor", "?")), str(pending.get("target_id", "?")),
+				str(pending.get("action_id", "?")), int(pending.get("damage", 0)),
+				str((context.get("ability", {}) as Dictionary).get("power", "—")),
+				str((context.get("unit", {}) as Dictionary).get("attack_scale", "—")),
+				str((context.get("target", {}) as Dictionary).get("hp", "—")),
+				str(context.get("tick", "—")),
+			]
+		)
+	var comparison: Dictionary = payload.get("comparison", {})
+	var diverged := bool(comparison.get("diverged", false))
+	divergence_label.visible = diverged
+	divergence_label.text = "FORECAST / RESOLUTION DIVERGENCE\n%s" % "; ".join(
+		comparison.get("differences", [])
+	) if diverged else ""
+
+
+static func _timeline_text(rows: Array) -> String:
+	var lines: PackedStringArray = []
+	for row: Dictionary in rows:
+		lines.append("%s — READY_AT %s · SPD %s · CHARGE %s · +%s ticks" % [
 			str(row.get("display_name", row.get("actor_id", "?"))), str(row.get("ready_at", "—")),
 			str(row.get("speed", "—")), str(row.get("charge", "—")), str(row.get("ticks_until", "—")),
 		])
-	var pending: Dictionary = payload.get("pending_forecast", {})
-	lines.append("FORECAST %s" % (
-		"awaiting the next allied turn" if pending.is_empty() else "%s → %s · %s · damage %d" % [
-			str(pending.get("actor", "?")), str(pending.get("target_id", "?")),
-			str(pending.get("action_id", "?")), int(pending.get("damage", 0)),
-		]
-	))
-	var comparison: Dictionary = payload.get("comparison", {})
-	if bool(comparison.get("diverged", false)):
-		lines.append("FORECAST / RESOLUTION DIVERGENCE: %s" % "; ".join(
-			comparison.get("differences", [])
-		))
-	if aim_enabled:
-		var quote: Dictionary = payload.get("aim_forecast", {})
-		aim_submit.disabled = not bool(quote.get("allowed", false))
-		lines.append("AIM %s: %s" % [
-			str(payload.get("aim_location", "")),
-			str(quote.get("message", "")) if aim_submit.disabled else "hit %s%% · %s damage" % [
-				str((quote.get("resolution", {}) as Dictionary).get("accuracy_breakdown", {}).get(
-					"effective_hit_chance", "—"
-				)),
-				str(quote.get("damage_on_hit", "—")),
-			],
-		])
+	return "\n".join(lines) if not lines.is_empty() else "No scheduler rows."
+
+
+static func _field_text(payload: Dictionary) -> String:
 	var snapshot: Dictionary = payload.get("snapshot", {})
-	lines.append("FIELD balance %s · band %s" % [
-		str(snapshot.get("balance", "—")), str(snapshot.get("balance_band_id", "—")),
-	])
-	for tile_value: Variant in payload.get("combatant_tiles", []):
-		var tile_row: Dictionary = tile_value
-		lines.append("  %s @ %s" % [str(tile_row.get("actor", "?")), str(tile_row.get("position", {}))])
-	lines.append("STYLE %s" % str(payload.get("style", {})))
-	lines.append("TURNS %d" % (payload.get("turns", []) as Array).size())
-	for turn_value: Variant in payload.get("turns", []):
-		lines.append("  %s" % str(turn_value))
-	var outcome: Dictionary = payload.get("outcome", {})
+	var weather: Dictionary = snapshot.get("weather", {})
+	var weather_id := str(weather.get("element_id", ""))
+	var lines: PackedStringArray = [
+		"Balance %s · band %s" % [
+			str(snapshot.get("balance", "—")), str(snapshot.get("balance_band_id", "—")),
+		],
+		"Weather %s · tick %s" % [
+			"CALM" if weather_id.is_empty() else weather_id.to_upper(), str(weather.get("tick", "—")),
+		],
+	]
+	for row: Dictionary in payload.get("combatant_tiles", []):
+		var tile: Dictionary = row.get("tile", {})
+		var charge_id := str(tile.get("charge_element_id", ""))
+		lines.append("%s @ %s — %s %s" % [
+			str(row.get("actor", "?")), _position_text(row.get("position", {})),
+			"UNCHARGED" if charge_id.is_empty() else charge_id.to_upper(),
+			str(tile.get("charge_level", 0)),
+		])
+	return "\n".join(lines)
+
+
+static func _position_text(position: Dictionary) -> String:
+	if position.has("cell"):
+		var cell: Vector2i = position["cell"]
+		return "(%d, %d)" % [cell.x, cell.y]
+	return str(position) if not position.is_empty() else "—"
+
+
+static func _style_text(style: Dictionary) -> String:
+	return "Total %s · verb %s · balance %s · no-damage %s · speech %s" % [
+		str(style.get(&"total", 0)), str(style.get(&"verb_variety", 0)),
+		str(style.get(&"balance_management", 0)), str(style.get(&"no_damage_turns", 0)),
+		str(style.get(&"speech_resolutions", 0)),
+	]
+
+
+static func _turn_text(turns: Array, outcome: Dictionary) -> String:
+	var lines: PackedStringArray = []
+	for row: Dictionary in turns:
+		lines.append("%s. %s / %s — %s → %s%s" % [
+			str(row.get("turn", "?")), str(row.get("actor", "?")), str(row.get("action", "?")),
+			str(row.get("forecast", "—")), str(row.get("resolution", "—")),
+			"  DIVERGED" if bool(row.get("diverged", false)) else "",
+		])
 	if not outcome.is_empty():
-		lines.append("OUTCOME %s" % str(outcome))
-	var export_path := str(payload.get("last_export_path", ""))
-	lines.append("Export: %s" % (export_path if not export_path.is_empty() else "not exported"))
-	inspector.text = "\n".join(lines)
+		lines.append("Outcome: %s / %s" % [
+			str(outcome.get("state", "")), str(outcome.get("outcome_id", "")),
+		])
+	return "\n".join(lines) if not lines.is_empty() else "No resolved actions yet."
 
 
 func _spin(node_name: String, maximum: float) -> SpinBox:
