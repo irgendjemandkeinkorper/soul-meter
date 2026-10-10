@@ -484,6 +484,111 @@ func test_rendered_panels_capture() -> void:
 		current.visible = visible_before
 
 
+func _scene_panel(shell: WeftluminShell) -> WeftluminScenePanel:
+	var left := shell.root.find_child("TreePalette", true, false) as TabContainer
+	return left.get_node("Scene tree") as WeftluminScenePanel
+
+
+## E3.1a (#338): the scene panel takes the left "Scene tree" slot and its tree IS the model's
+## selection set; non-editable rows cannot be selected, and gestures land live and undo.
+func test_scene_panel_mounts_in_the_left_slot_and_its_tree_is_the_selection() -> void:
+	var shell := _open()
+	var panel := _scene_panel(shell)
+	assert_object(panel).is_not_null()
+	var left := shell.root.find_child("TreePalette", true, false) as TabContainer
+	assert_object(left.get_tab_control(0)).is_same(panel)
+	assert_int(left.get_tab_count()).is_equal(2)
+	assert_bool(panel.needs_sandbox).is_false()
+	assert_object(shell.scene_tree).override_failure_message(
+		"the built-in read-only tree is only the fallback when no host panel claims the slot"
+	).is_null()
+	panel.refresh({"scene_root": _field_scene})
+	assert_object(panel.model.scene_root).is_same(_field_scene)
+	assert_bool(panel.commands().is_empty()).is_false()
+
+	var npc := _field_scene.get_node("IrisIllepah") as Node2D
+	var spawn := _field_scene.get_node("SpawnDefault") as Node2D
+	assert_bool((panel._items[_field_scene.get_node("Floor")] as TreeItem).is_selectable(0)).is_false()
+	assert_bool((panel._items[npc] as TreeItem).is_selectable(0)).is_true()
+	_tree_select(panel, npc)
+	_tree_select(panel, spawn)
+	await get_tree().process_frame
+	assert_array(panel.model.selection()).contains_exactly_in_any_order([npc, spawn])
+	assert_object(panel.model.primary()).is_same(spawn)
+	assert_str(panel.status_text()).contains("2 selected")
+	assert_str(shell.inspector.text).contains("SpawnDefault")
+
+	var npc_before: Vector2 = npc.position
+	var spawn_before: Vector2 = spawn.position
+	assert_bool(bool(panel.model.nudge(Vector2(8.0, 0.0))["allowed"])).is_true()
+	assert_vector(npc.position).is_equal(npc_before + Vector2(8.0, 0.0))
+	assert_vector(spawn.position).is_equal(spawn_before + Vector2(8.0, 0.0))
+	# The rebuilt tree keeps showing the selection after a gesture.
+	assert_bool((panel._items[npc] as TreeItem).is_selected(0)).is_true()
+	(panel.find_child("Undo", true, false) as Button).pressed.emit()
+	assert_vector(npc.position).is_equal(npc_before)
+	assert_vector(spawn.position).is_equal(spawn_before)
+	# Delete removes the whole selection in one step; one undo puts both back.
+	(panel.find_child("Delete", true, false) as Button).pressed.emit()
+	assert_object(_field_scene.get_node_or_null("IrisIllepah")).is_null()
+	(panel.find_child("Undo", true, false) as Button).pressed.emit()
+	assert_object(_field_scene.get_node_or_null("IrisIllepah")).is_same(npc)
+	assert_object(_field_scene.get_node_or_null("SpawnDefault")).is_same(spawn)
+
+
+## What Tree does for a user's row click in SELECT_MULTI: select the cell, then emit
+## `multi_selected` (a script-side `TreeItem.select()` alone emits nothing).
+func _tree_select(panel: WeftluminScenePanel, node: Node) -> void:
+	var item: TreeItem = panel._items[node]
+	item.select(0)
+	panel.tree.multi_selected.emit(item, 0, true)
+
+
+func _click_row(panel: WeftluminScenePanel, node: Node, extend: bool) -> void:
+	var item: TreeItem = panel._items[node]
+	panel.tree.scroll_to_item(item)
+	await get_tree().process_frame
+	var point: Vector2 = (
+		panel.tree.get_global_transform_with_canvas() * panel.tree.get_item_area_rect(item).get_center()
+	)
+	for pressed: bool in [true, false]:
+		var click := InputEventMouseButton.new()
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.pressed = pressed
+		click.position = point
+		click.global_position = point
+		click.ctrl_pressed = extend
+		get_viewport().push_input(click)
+		await get_tree().process_frame
+
+
+func test_rendered_scene_panel_capture() -> void:
+	var capture_dir := OS.get_environment("SOUL_METER_WEFTLUMIN_SCENE_CAPTURE_DIR")
+	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	var shell := _open()
+	var panel := _scene_panel(shell)
+	panel.refresh({"scene_root": _field_scene})
+	# Real pointer input: a click, then Ctrl+clicks to extend the selection.
+	var picked: Array[Node2D] = []
+	for node_name: String in ["IrisIllepah", "SpawnDefault", "ReturnToDom"]:
+		var node := _field_scene.get_node(node_name) as Node2D
+		await _click_row(panel, node, not picked.is_empty())
+		picked.append(node)
+	await get_tree().create_timer(0.3).timeout
+	assert_array(panel.model.selection()).contains_exactly_in_any_order(picked)
+	assert_object(panel.model.primary()).is_same(picked.back())
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	assert_int(DirAccess.make_dir_recursive_absolute(capture_dir)).is_equal(OK)
+	var frame: Image = get_viewport().get_texture().get_image()
+	var left := shell.root.find_child("TreePalette", true, false) as Control
+	var dock: Rect2i = Rect2i(left.get_global_rect())
+	assert_int(frame.get_region(dock).save_png(capture_dir.path_join("weftlumin-scene-panel.png"))).is_equal(OK)
+	frame.resize(frame.get_width() / 2, frame.get_height() / 2, Image.INTERPOLATE_BILINEAR)
+	assert_int(frame.save_png(capture_dir.path_join("weftlumin-scene-panel-dock.png"))).is_equal(OK)
+
+
 func _campaign() -> Dictionary:
 	return {
 		"id": CAMPAIGN_ID,
