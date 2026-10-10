@@ -12,8 +12,8 @@ extends Node
 ## then disabling again must return to exactly that state — `test_weftlumin_inert.gd` compares
 ## the two snapshots field by field.
 ##
-## The activation shape is lifted from `globals/layout_mode.gd:8-11,69-86` deliberately: one
-## proven copy, not seven. See `docs/architecture-in-game-editor.md` §4.1, §4.5.1, §4.14.
+## The activation shape was lifted from the retired F10 layout tool's autoload (removed in #470)
+## deliberately: one proven copy, not seven. See `docs/architecture-in-game-editor.md` §4.1, §4.5.1, §4.14.
 
 ## Host adapter, loaded only if the host supplies one. It arrives with the shell in E2.3; until
 ## then this resolves to null and the fallback flag below carries the gate.

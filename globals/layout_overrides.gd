@@ -205,7 +205,7 @@ static func apply_to_scene(
 const LAYOUT_ACTOR_CLASSES: Array[StringName] = [&"NPC", &"BuildingDoor", &"TravelExit"]
 
 
-## The layout tool's editable predicate (layout_editor.gd `_is_editable`), shared so the
+## The layout tool's editable predicate (from the retired F10 overlay, #470), shared so the
 ## Weftlumin scene model applies the same rules. Dressing children, placed actors, spawn and
 ## anchor markers, and building facades.
 static func is_layout_editable(node: Node) -> bool:

@@ -35,12 +35,43 @@ const OP_SET := "set_property"
 const OP_ADD := "add_node"
 const OP_REMOVE := "remove_node"
 const SNAP_GRID := 8.0
-## Selection forgiveness for markers and small props (layout_editor.gd PICK_PADDING).
+## Selection forgiveness for markers and small props.
 const PICK_PADDING := 8.0
 ## Offset a duplicate lands at, one snap step down-right of its source.
 const DUPLICATE_OFFSET := Vector2(SNAP_GRID, SNAP_GRID)
 ## `LayoutOverrides.apply_to_scene` tags its additions with this, which is how they re-select.
 const ADDITION_META := &"layout_addition"
+const SESSION_META := &"weftlumin_scene_session"
+const SESSION_NODE := "_WeftluminSceneSession"
+const Recovery := preload("res://globals/layout_recovery.gd")
+const Patterns := preload("res://globals/layout_patterns.gd")
+const DEFAULT_COLLISION_SIZE := Vector2(64, 24)
+const MAX_FOOTPRINT := Vector2(120, 48)
+const PALETTE_RESULT_LIMIT := 240
+const PALETTE_CATEGORIES := [
+	{"label": "Town (fantasy kit)", "roots": ["res://assets/generated/sprites/fantasy-town-kit/"]},
+	{"label": "Castle", "roots": ["res://assets/generated/sprites/castle-kit/"]},
+	{"label": "Nature", "roots": ["res://assets/generated/sprites/nature-kit/"]},
+	{"label": "Terrain & ground", "roots": ["res://assets/generated/sprites/terrain/", "res://assets/generated/sprites/ground/"]},
+	{"label": "World objects", "roots": ["res://assets/generated/sprites/world/objects/"]},
+	{"label": "World locations", "roots": ["res://assets/generated/sprites/world/"]},
+	{"label": "Units & NPCs", "roots": ["res://assets/generated/sprites/units/"]},
+	{"label": "Mini characters", "roots": ["res://assets/generated/sprites/mini-characters/"]},
+	{"label": "Items", "roots": ["res://assets/generated/sprites/items/"]},
+]
+
+## The live scene owns its session without production signal connections to an unhosted
+## tool. This unowned, dormant node also releases detached undo targets when the scene exits.
+class SessionLifetime extends Node:
+	var model: WeftluminSceneModel
+
+	func _exit_tree() -> void:
+		if model == null:
+			return
+		model._checkpoint_on_scene_exit()
+		get_parent().remove_meta(SESSION_META)
+		model.dispose()
+		model = null
 
 enum Snap { OFF, GRID, CELL }
 enum Boundary { OUTSIDE, SCENE, INSTANCE, RUNTIME }
@@ -57,6 +88,13 @@ var grid: IsoGrid = null
 var editable_roots_provider: Callable = Callable()
 ## `(node: Node) -> bool`: the active sub-tool's predicate. Defaults to the layout tool's.
 var host_predicate: Callable = Callable()
+var texture_path := ""
+var pattern: Dictionary = {}
+var placement_layer: StringName = &"GroundDetails"
+var footprint := DEFAULT_COLLISION_SIZE
+var saved_document: Dictionary = {}
+var recovery_error: Error = OK
+var _persistent := false
 
 var _selection: Array[Node2D] = []
 var _primary: Node2D = null
@@ -78,6 +116,8 @@ func configure(root: Node, command_bus: WeftluminCommandBus = null) -> void:
 	dispose()
 	scene_root = root
 	document = LayoutOverrides.create_document(scene_path())
+	saved_document = document.duplicate(true)
+	_persistent = false
 	_selection.clear()
 	_primary = null
 	_drag.clear()
@@ -90,10 +130,65 @@ func configure(root: Node, command_bus: WeftluminCommandBus = null) -> void:
 	selection_changed.emit()
 
 
+## The live scene owns history across shell close/reopen; only a hosted scene opts into disk
+## recovery. Plain model instances (including command/replay tests) remain memory-only.
+static func session_for(root: Node) -> WeftluminSceneModel:
+	if root.has_meta(SESSION_META):
+		return root.get_meta(SESSION_META) as WeftluminSceneModel
+	var session := WeftluminSceneModel.new()
+	session.configure(root)
+	session._persistent = true
+	var restored: Dictionary = Recovery.load_scene(session.scene_path())
+	session.document = restored["working"]
+	session.saved_document = restored["saved"]
+	LayoutOverrides.apply_to_scene(root, session.document)
+	root.set_meta(SESSION_META, session)
+	var lifetime := root.get_node_or_null(NodePath(SESSION_NODE)) as SessionLifetime
+	if lifetime == null:
+		lifetime = SessionLifetime.new()
+		lifetime.name = SESSION_NODE
+		lifetime.process_mode = Node.PROCESS_MODE_DISABLED
+		root.add_child(lifetime)
+	lifetime.model = session
+	return session
+
+
+func is_dirty() -> bool:
+	return LayoutOverrides.to_json(document) != LayoutOverrides.to_json(saved_document)
+
+
+func save() -> Dictionary:
+	finish_pointer()
+	var error: Error = LayoutOverrides.save_file(LayoutOverrides.override_path_for_scene(scene_path()), document)
+	if error != OK:
+		return _blocked(&"save", &"writable_scratch", "Save failed: %s." % error_string(error))
+	saved_document = document.duplicate(true)
+	_checkpoint()
+	scene_changed.emit()
+	return _allowed()
+
+
+func _checkpoint() -> void:
+	if _persistent:
+		recovery_error = Recovery.checkpoint(scene_path(), document, saved_document)
+
+
+func _checkpoint_on_scene_exit() -> void:
+	# Godot clears Node.owner before the dying scene emits tree_exiting. The preview was
+	# already authorised at begin_drag; capture it for recovery before disposing its history.
+	# Do not weaken ownership checks or send new edits to a scene that is being destroyed.
+	for node: Variant in _drag.get("starts", {}):
+		if is_instance_valid(node) and scene_root.is_ancestor_of(node):
+			_record(node as Node2D)
+	_drag.clear()
+	_checkpoint()
+
+
 ## Free nodes this model detached (removed, or added then undone) that nothing re-attached.
-## The owner calls this when it is done with the model (the scene panel does on exit); a
+## The owner calls this when it is done with the model (a hosted scene does on exit); a
 ## RefCounted cannot run script from its own predelete.
 func dispose() -> void:
+	cancel_drag()
 	for record: Variant in _unique_gestures():
 		for step: Dictionary in (record as Dictionary)["steps"]:
 			var node: Variant = step.get("node")
@@ -101,10 +196,14 @@ func dispose() -> void:
 				(node as Node).free()
 	_gestures.clear()
 	_gesture = {}
+	# The bus owns bound model callbacks, so release our side of that reference cycle.
+	bus = null
+	_selection.clear()
+	_primary = null
 
 
 func scene_path() -> String:
-	return scene_root.scene_file_path if scene_root != null else ""
+	return scene_root.scene_file_path if is_instance_valid(scene_root) else ""
 
 
 func register_ops(command_bus: WeftluminCommandBus) -> void:
@@ -330,6 +429,59 @@ func pick_select(world_position: Vector2, additive: bool = false) -> Node2D:
 	return picked
 
 
+## Coordinates are supplied by the shell, after its GUI/canvas conversion. Modifier clicks
+## only change membership; a plain press on an existing member grabs the entire group.
+func pointer_input(event: InputEvent, world_position: Vector2) -> Dictionary:
+	if event is InputEventMouseButton:
+		var button := event as InputEventMouseButton
+		if button.button_index == MOUSE_BUTTON_RIGHT and button.pressed:
+			cancel_placement()
+		elif button.button_index == MOUSE_BUTTON_LEFT:
+			finish_pointer()
+			if not button.pressed:
+				return _allowed()
+			if not pattern.is_empty() or not texture_path.is_empty():
+				var outcome: Dictionary = stamp_pattern(world_position, button.alt_pressed) if not pattern.is_empty() else place_prop(world_position, button.alt_pressed)
+				if bool(outcome["allowed"]) and not button.shift_pressed:
+					cancel_placement()
+				return outcome
+			var additive: bool = button.ctrl_pressed or button.shift_pressed
+			var picked: Node2D = pick_select(world_position, additive)
+			if picked != null and not additive:
+				begin_drag(world_position)
+	elif event is InputEventMouseMotion:
+		var motion := event as InputEventMouseMotion
+		if not motion.button_mask & MOUSE_BUTTON_MASK_LEFT:
+			finish_pointer()
+		else:
+			drag_to(world_position, motion.alt_pressed or motion.shift_pressed)
+	return _allowed()
+
+
+func finish_pointer() -> void:
+	if not _drag.is_empty():
+		end_drag()
+
+
+func cancel_placement() -> void:
+	texture_path = ""
+	pattern = {}
+
+
+func choose_texture(path: String) -> void:
+	finish_pointer()
+	texture_path = path
+	pattern = {}
+	clear_selection()
+
+
+func choose_pattern(value: Dictionary) -> void:
+	finish_pointer()
+	pattern = value.duplicate(true)
+	texture_path = ""
+	clear_selection()
+
+
 # --- gestures ---------------------------------------------------------------------------------
 
 
@@ -339,6 +491,10 @@ func begin_drag(world_position: Vector2) -> bool:
 	var members: Array[Node2D] = selection()
 	if members.is_empty():
 		return false
+	# Ancestors move before descendants so selecting both cannot apply the delta twice.
+	members.sort_custom(func(a: Node2D, b: Node2D) -> bool:
+		return a.get_path().get_name_count() < b.get_path().get_name_count()
+	)
 	var offsets: Dictionary = {}
 	var starts: Dictionary = {}
 	for node: Node2D in members:
@@ -402,6 +558,20 @@ func set_selection_property(key: String, value: Variant) -> Dictionary:
 	for _node: Node2D in targets:
 		values.append(value)
 	return _run_gesture("Set %s" % key, _property_commands(targets, key, values))
+
+
+## Inspector edits preserve untouched fractional components and are one undo gesture.
+func set_primary_properties(values: Dictionary) -> Dictionary:
+	finish_pointer()
+	var lead: Node2D = primary()
+	if lead == null:
+		return _blocked(&"selection", &"editable_selection", "Select something first.")
+	var current: Dictionary = LayoutOverrides.capture_properties(lead)
+	var commands: Array[WeftluminCommand] = []
+	for key: String in values:
+		if current.get(key) != values[key]:
+			commands.append(command_for(lead, OP_SET, {"key": key, "value": values[key]}))
+	return _allowed() if commands.is_empty() else _run_gesture("Edit property", commands)
 
 
 func nudge(delta: Vector2) -> Dictionary:
@@ -468,6 +638,91 @@ func add_prop(addition: Dictionary) -> Dictionary:
 	if layer == null:
 		return _blocked(&"layer", &"dressing_layer", "No %s layer in this scene." % addition.get("layer", ""))
 	return _run_gesture("Place", [command_for(layer, OP_ADD, {"addition": addition.duplicate(true)})])
+
+
+func place_prop(world_position: Vector2, free_move: bool = false) -> Dictionary:
+	var layer := _layer(placement_layer) as Node2D
+	if layer == null:
+		return _blocked(&"layer", &"dressing_layer", "No %s layer in this scene." % placement_layer)
+	var at: Vector2 = layer.to_local(world_position if free_move else snap(world_position))
+	var size: Vector2 = footprint.clamp(Vector2.ONE, MAX_FOOTPRINT)
+	var addition := {
+		"layer": String(placement_layer), "texture": texture_path,
+		"name": _prop_name(layer, texture_path), "position": [at.x, at.y],
+		"scale": [1.0, 1.0], "collision": [size.x, size.y],
+	}
+	var outcome: Dictionary = add_prop(addition)
+	if bool(outcome["allowed"]):
+		select_only(layer.get_node_or_null(NodePath(str(addition["name"]))) as Node2D)
+	return outcome
+
+
+func save_pattern(label: String) -> Dictionary:
+	finish_pointer()
+	if selection().is_empty():
+		return _blocked(&"selection", &"editable_selection", "Select something first, then Ctrl+G.")
+	var outcome: Dictionary = Patterns.capture(selection(), label)
+	if not bool(outcome.get("allowed", false)):
+		return outcome
+	var captured: Dictionary = outcome["pattern"]
+	var error: Error = Patterns.save_file(Patterns.pattern_path_for_id(StringName(captured["id"])), captured)
+	if error != OK:
+		return _blocked(&"save", &"writable_library", "Pattern could not be saved: %s." % error_string(error))
+	return outcome
+
+
+func stamp_pattern(world_position: Vector2, free_move: bool = false) -> Dictionary:
+	var outcome: Dictionary = Patterns.stamp(
+		pattern, world_position if free_move else snap(world_position),
+		func(layer_name: StringName) -> Node2D: return _layer(layer_name) as Node2D,
+		_prop_name, 0.0,
+	)
+	if not bool(outcome.get("allowed", false)):
+		return outcome
+	var commands: Array[WeftluminCommand] = []
+	for addition: Dictionary in outcome["additions"]:
+		commands.append(command_for(_layer(StringName(addition["layer"])), OP_ADD, {"addition": addition}))
+	var result: Dictionary = _run_gesture("Stamp pattern", commands)
+	if bool(result["allowed"]):
+		var placed: Array[Node2D] = []
+		for command: WeftluminCommand in commands:
+			var node: Node2D = _added_node(command.id)
+			if node != null:
+				placed.append(node)
+		set_selection(placed)
+		result["skipped_layers"] = outcome.get("skipped_layers", [])
+	return result
+
+
+func _prop_name(layer: Node, path: String, reserved: PackedStringArray = PackedStringArray()) -> String:
+	var names: Dictionary = {}
+	for value: String in reserved:
+		names["%s/%s" % [layer.get_instance_id(), value]] = true
+	var base: String = path.get_file().get_basename().to_pascal_case()
+	return _unique_name(layer, "LayoutProp" if base.is_empty() else base, names)
+
+
+static func palette_entries(category_index: int, query: String) -> Array[Dictionary]:
+	var paths: Dictionary = {}
+	for path: String in PALETTE_CATEGORIES[clampi(category_index, 0, PALETTE_CATEGORIES.size() - 1)]["roots"]:
+		_scan_palette(path, paths)
+	var scored: Array[Dictionary] = []
+	for path: String in paths:
+		var score: int = Patterns.fuzzy_score(query.strip_edges(), path.trim_prefix("res://assets/generated/sprites/"))
+		if score >= 0:
+			scored.append({"path": path, "score": score})
+	scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["score"]) < int(b["score"]) if a["score"] != b["score"] else str(a["path"]) < str(b["path"])
+	)
+	return scored
+
+
+static func _scan_palette(path: String, paths: Dictionary) -> void:
+	for directory: String in DirAccess.get_directories_at(path):
+		_scan_palette(path.path_join(directory), paths)
+	for file: String in DirAccess.get_files_at(path):
+		if file.get_extension().to_lower() == "png":
+			paths[path.path_join(file)] = true
 
 
 func undo() -> Dictionary:
@@ -539,6 +794,7 @@ func _run_gesture(label: String, commands: Array[WeftluminCommand]) -> Dictionar
 	record["document_after"] = document.duplicate(true)
 	outcome["commands"] = record["ids"]
 	_prune_selection()
+	_checkpoint()
 	scene_changed.emit()
 	return outcome
 
@@ -637,8 +893,10 @@ func _apply_once(command: WeftluminCommand) -> Dictionary:
 			_record_removal(node as Node2D)
 			var parent: Node = node.get_parent()
 			var index: int = node.get_index()
+			var owners: Dictionary = {}
+			_capture_owners(node, owners)
 			parent.remove_child(node)
-			return {"op": OP_REMOVE, "node": node, "parent": parent, "index": index}
+			return {"op": OP_REMOVE, "node": node, "parent": parent, "index": index, "owners": owners}
 		OP_ADD:
 			var addition: Dictionary = (command.params["addition"] as Dictionary).duplicate(true)
 			LayoutOverrides.apply_to_scene(scene_root, _single(&"additions", addition))
@@ -676,17 +934,28 @@ func _attach(node: Node, step: Dictionary, attached: bool) -> void:
 	if attached and node.get_parent() == null and is_instance_valid(parent):
 		parent.add_child(node)
 		parent.move_child(node, mini(int(step["index"]), parent.get_child_count() - 1))
+		for member: Variant in step.get("owners", {}):
+			var owner_node: Variant = step["owners"][member]
+			if is_instance_valid(member) and is_instance_valid(owner_node) and (owner_node as Node).is_ancestor_of(member):
+				(member as Node).owner = owner_node
 	elif not attached and node.get_parent() != null:
 		node.get_parent().remove_child(node)
 
 
+func _capture_owners(node: Node, owners: Dictionary) -> void:
+	owners[node] = node.owner
+	for child: Node in node.get_children():
+		_capture_owners(child, owners)
+
+
 func _after_history() -> void:
 	_prune_selection()
+	_checkpoint()
 	selection_changed.emit()
 	scene_changed.emit()
 
 
-# --- document bookkeeping (mirrors layout_editor.gd) --------------------------------------------
+# --- document bookkeeping ----------------------------------------------------------------------
 
 
 func _record(node: Node2D) -> void:
@@ -809,9 +1078,9 @@ func _is_editable_instance(instance: Node) -> bool:
 func _prune_selection() -> void:
 	for index: int in range(_selection.size() - 1, -1, -1):
 		var node: Node2D = _selection[index]
-		if not is_instance_valid(node) or not scene_root.is_ancestor_of(node):
+		if not is_instance_valid(node) or not is_instance_valid(scene_root) or not scene_root.is_ancestor_of(node):
 			_selection.remove_at(index)
-	if _primary != null and not _selection.has(_primary):
+	if not is_instance_valid(_primary) or not _selection.has(_primary):
 		_primary = _selection.back() if not _selection.is_empty() else null
 
 

@@ -16,11 +16,62 @@ carried over below, restated for the panel host.
 | Combat Lab | `combat_lab_panel.gd` (Combat lab) | `combat_lab.gd` | `CombatLab` autoload, F3 overlay, `SOUL_METER_COMBAT_LAB` |
 | Dialogue Lab | `dialogue_panel.gd` (Dialogue lab) | `dialogue_lab.gd` | `DialogueLab` autoload, F5 overlay, `SOUL_METER_DIALOGUE_LAB` |
 | Quest editor | `quest_panel.gd` (Quest editor) | `quest_editor.gd` | `QuestEditor` autoload, F6 overlay, `SOUL_METER_QUEST_EDITOR` |
-| Layout mode | not yet a panel | `globals/layout_mode.gd` (unchanged) | **kept** — see below |
+| Scene layout | `scene_panel.gd` (Scene tree, Palette, Inspector) | `addons/weftlumin/core/scene_model.gd` | Former F10 overlay and autoload retired in #470 |
 
-**Layout mode is deliberately kept.** The Weftlumin scene panel cannot yet pick or drag nodes in
-the viewport, so `LayoutMode` (its autoload, `ui/debug/layout_editor*`, its tests and
-`docs/layout-mode.md`) stays as-is until that port lands in **#470**.
+Scene layout now runs through `WeftluminSceneModel` in the shell. F10 and
+`SOUL_METER_LAYOUT` no longer activate an editor; use the enablement below.
+
+## Scene layout
+
+Click an editable object in the centre viewport to select it. Ctrl-click or Shift-click toggles
+membership; clicking an existing member keeps the group and makes it primary. Dragging moves the
+group rigidly, with one undo step on release, including release over a dock. The primary chooses
+the snap: **8 px**, **Cell** through the scene's `IsoGrid`, or **No snap**. Alt (or Shift while
+dragging) temporarily bypasses snapping. A click without movement does not snap or create history.
+Empty space clears the selection. The existing free camera still uses middle-drag and wheel zoom.
+Selection outlines use the model's bounds, follow pan/zoom, and clip to the centre viewport.
+
+The Scene tree and viewport share one selection. The existing Inspector slot edits the primary's
+position, scale, rotation, skew, sprite flips, grayscale, and solid footprint. Arrow keys nudge;
+Delete, Ctrl+D, Ctrl+Z, Ctrl+Shift+Z/Ctrl+Y delete, duplicate, undo and redo. Text fields retain native
+editing shortcuts. Ctrl+S (or Save scratch) commits pending numeric input and saves the scratch
+document. Closing also commits pending input and the current drag.
+
+The existing Palette slot offers the former asset categories and fuzzy search. Select a texture,
+choose a dressing layer, then click to place; Shift repeats and Alt bypasses snap. Escape/right-click
+cancels placement. Ctrl+G saves the selected group under the pattern name; select a saved pattern
+and click to stamp it as one undo step. Patterns retain their relative spacing across layers.
+The adapter still decides editable roots, and the model enforces scene/instance ownership.
+
+History belongs to the live scene and survives closing/reopening the shell. Scratch changes are
+checkpointed through `LayoutRecovery`, including undo/redo, and restored on the next hosted scene
+session. Files retain the existing `user://layout_overrides/` and pattern-library formats. Runtime
+gameplay does not apply scratch documents while the editor is disabled. Scene exit closes the
+shell and releases detached history nodes. The shared replay/bake primitive remains
+`LayoutOverrides.apply_to_scene()`.
+
+The pinned layout behaviors now live in `test/integration/test_scene_pick_{controls,input,patterns,lifecycle,inert}.gd`
+and `test/unit/test_weftlumin_scene_model.gd`; layout schema, pattern-format, recovery and bake suites
+remain in place. The former floating panel's bounds check is replaced by an existing-dock containment
+check; shell activation/pause remains covered by `test_weftlumin_shell.gd` and `test_weftlumin_inert.gd`.
+
+### Rendered pick/drag evidence
+
+Rendered capture, under Xvfb or a display (omit `SOUL_METER_HEADLESS`):
+
+```bash
+SOUL_METER_SCENE_PICK_CAPTURE_DIR=/tmp/scene-pick-capture \
+SOUL_METER_TEST_DATA_DIR="$(mktemp -d)" \
+GODOT_BIN="$HOME/.local/bin/godot" \
+bash scripts/test.sh -a test/integration/test_scene_pick_input.gd
+```
+
+`test_rendered_pick_drag_capture` pushes fresh press/release events, picks and drags an object,
+checks the outline pixels at each step and its final position, and writes `01-picked.png`,
+`02-dragging.png` (mid-drag, before release) and `03-dropped.png`; the #470 evidence is in
+`docs/qa/viewport-pick-470-2026-10-10/`. Without
+the capture variable it returns immediately; requesting a capture under headless rendering fails.
+Headless tests do not establish visual correctness.
 
 ## Enablement and release safety
 
