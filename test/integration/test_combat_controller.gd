@@ -1933,3 +1933,109 @@ func test_release_takes_a_combatant_out_of_the_order_and_frees_its_cell() -> voi
 	var missing: Dictionary = controller_under_test.release(&"no-such-combatant")
 	assert_bool(missing.get("allowed", true)).is_false()
 	assert_str(String(missing.get("blocked_by", ""))).is_equal("unknown_target")
+
+
+# ---- #281 G6a: under charge time a party move spends banked charge (owner 2026-10-10) ----
+
+
+## One row of cells: the ally (Reason 5, speed 10) is ready at exactly 100 charge while the
+## slow enemy (Reason 0, speed 5) is still at 50, so the first turn is the ally's.
+func _ct_move_controller() -> CombatController:
+	var local_rules := (
+		load("res://data/combat/combat_rules.tres") as CombatRules
+	).duplicate(true) as CombatRules
+	local_rules.use_charge_time = true
+	var grid := GridBattlefieldModel.new()
+	grid.configure(local_rules)
+	grid.build_grid(_sized_grid_ground(14, 1))
+	var local_controller := CombatController.new()
+	local_controller.configure(CombatActionCatalog.all(), grid, local_rules)
+	var ally := _actor("Runner", 400, 1, 0)
+	ally.attributes = {&"edge": 0, &"reason": 5}
+	var foe := _actor("Sluggard", 400, 1, 0)
+	foe.attributes = {&"edge": 0, &"reason": 0}
+	local_controller.start([ally], [foe], &"ct-move")
+	return local_controller
+
+
+func _cell_of(local_controller: CombatController, actor: BattleActor) -> Vector2i:
+	var described: Dictionary = local_controller.battlefield.describe_position(
+		local_controller.battlefield.position_of(actor)
+	)
+	return described.get("cell", Vector2i(-1, -1))
+
+
+func _row_cell(x: int) -> StringName:
+	return StringName("c:%d,0,0" % x)
+
+
+func test_ct_move_range_is_the_actors_banked_charge() -> void:
+	var local_controller := _ct_move_controller()
+	var ally := local_controller.allies[0]
+	assert_int(local_controller.state).is_equal(CombatController.State.ALLY_TURN)
+	var charge := local_controller.scheduler.charge_of(ally)
+	assert_int(charge).is_equal(100)
+	# AP is never seeded under charge time; the range must not depend on it.
+	assert_int(ally.action_points).is_equal(0)
+
+	var movement: Dictionary = local_controller.snapshot().get("movement", {})
+	assert_int(int(movement.get("ct_budget", -1))).is_equal(charge)
+	var reachable: Array = movement.get("reachable", [])
+	assert_bool(reachable.is_empty()).is_false()
+	var farthest := 0
+	for row: Dictionary in reachable:
+		assert_int(int(row.get("ct_cost", 0))).is_less_equal(charge)
+		farthest = maxi(farthest, int(row.get("ct_cost", 0)))
+	assert_int(farthest).is_equal(charge)
+
+
+func test_ct_move_costing_more_than_banked_charge_is_refused_at_commit() -> void:
+	var local_controller := _ct_move_controller()
+	var ally := local_controller.allies[0]
+	var origin := _cell_of(local_controller, ally)
+	var charge := local_controller.scheduler.charge_of(ally)
+	var move_cost := local_controller.rules.move_ct_cost
+	var too_far := _row_cell(origin.x + charge / move_cost + 1)
+
+	var query := local_controller.move_query(too_far)
+	var result := local_controller.submit_action(&"move", null, {"destination": too_far})
+
+	assert_bool(bool(query.get("allowed", true))).is_false()
+	assert_str(String(query.get("blocked_by", &""))).is_equal("ct_budget")
+	assert_bool(bool(result.get("allowed", true))).is_false()
+	assert_str(String(result.get("blocked_by", &""))).is_equal("ct_budget")
+	assert_int(int((result.get("nearest_unblock", {}) as Dictionary).get("maximum", -1))) \
+		.is_equal(charge)
+	assert_int(local_controller.scheduler.charge_of(ally)).is_equal(charge)
+	assert_object(_cell_of(local_controller, ally)).is_equal(origin)
+	assert_int(local_controller.state).is_equal(CombatController.State.ALLY_TURN)
+
+
+func test_ct_long_move_spends_charge_and_delays_the_next_turn() -> void:
+	var ticks_to_next_turn := {}
+	for cells: int in [1, 5]:
+		var local_controller := _ct_move_controller()
+		var ally := local_controller.allies[0]
+		var origin := _cell_of(local_controller, ally)
+		var ticks_before := local_controller.scheduler.tick_count()
+		# Lambdas capture locals by value; the array is shared by reference.
+		var spent: Array[int] = []
+		local_controller.event_emitted.connect(
+			func(event: CombatEvent) -> void:
+				if event.type == &"action_resolved" and event.actor_id == ally.combat_id:
+					spent.append(int(event.data.get("ct_cost", -1)))
+		)
+
+		var result := local_controller.submit_action(
+			&"move", null, {"destination": _row_cell(origin.x + cells)}
+		)
+
+		assert_bool(bool(result.get("allowed", false))).is_true()
+		assert_array(spent).is_equal([cells * local_controller.rules.move_ct_cost])
+		assert_object(_cell_of(local_controller, ally)).is_equal(origin + Vector2i(cells, 0))
+		assert_int(local_controller.state).is_equal(CombatController.State.ALLY_TURN)
+		assert_object(local_controller.active_actor()).is_same(ally)
+		ticks_to_next_turn[cells] = local_controller.scheduler.tick_count() - ticks_before
+	# Speed 10: a 20-charge step is back in 2 ticks; spending all 100 takes 10.
+	assert_int(int(ticks_to_next_turn[1])).is_equal(2)
+	assert_int(int(ticks_to_next_turn[5])).is_equal(10)
