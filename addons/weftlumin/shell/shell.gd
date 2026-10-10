@@ -8,6 +8,9 @@ const MIN_ZOOM := 0.1
 const MAX_ZOOM := 8.0
 ## Bottom tabs the dock always offers (§4.5.5), placeholders until a host panel fills them.
 const BOTTOM_TABS: Array[String] = ["Console", "Command log", "Consequence timeline", "Validation"]
+## Left-dock slot a host panel with this title takes over (E3.1a's scene panel); the built-in
+## read-only tree stays as the fallback when no host panel claims it.
+const SCENE_TREE_TAB := "Scene tree"
 
 var adapter: WeftluminGameAdapter
 var root: Control
@@ -138,15 +141,14 @@ func _build_dock() -> void:
 	left.theme_type_variation = &"EditorTabContainer"
 	left.custom_minimum_size.x = root.get_theme_constant(&"dock_width", &"EditorPanel")
 	left_split.add_child(left)
-	var tree_panel := _panel("Scene tree", left)
-	scene_tree = Tree.new()
-	scene_tree.theme_type_variation = &"EditorTree"
-	tree_panel.add_child(scene_tree)
-	scene_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var scene_root: Node = adapter.gameplay_scene_root()
-	if scene_root != null:
-		_append_scene_node(scene_root, null)
-	scene_tree.item_selected.connect(_on_scene_selected)
+	var hosted: Array[WeftluminPanel] = _instantiate_host_panels()
+	var tree_index := hosted.find_custom(
+		func(candidate: WeftluminPanel) -> bool: return candidate.title == SCENE_TREE_TAB
+	)
+	if tree_index >= 0:
+		_mount(hosted.pop_at(tree_index), left)
+	else:
+		_build_scene_tree(_panel(SCENE_TREE_TAB, left))
 	var palette_panel := _panel("Palette", left)
 	var palette := Tree.new()
 	palette.theme_type_variation = &"EditorTree"
@@ -189,15 +191,6 @@ func _build_dock() -> void:
 	vertical.add_child(bottom_tabs)
 	# A host panel whose title names one of the fixed bottom tabs (§4.5.5) takes that slot;
 	# the rest follow in the order the host lists them.
-	var hosted: Array[WeftluminPanel] = []
-	for packed: PackedScene in adapter.panels():
-		var instance: Node = packed.instantiate()
-		var panel := instance as WeftluminPanel
-		if panel == null:
-			push_warning("Weftlumin panels must implement WeftluminPanel.")
-			instance.free()
-			continue
-		hosted.append(panel)
 	for panel_title: String in BOTTOM_TABS:
 		var index := hosted.find_custom(
 			func(candidate: WeftluminPanel) -> bool: return candidate.title == panel_title
@@ -209,6 +202,30 @@ func _build_dock() -> void:
 	for panel: WeftluminPanel in hosted:
 		_mount(panel, bottom_tabs)
 	bottom_tabs.tab_changed.connect(_on_tab_changed)
+
+
+func _instantiate_host_panels() -> Array[WeftluminPanel]:
+	var hosted: Array[WeftluminPanel] = []
+	for packed: PackedScene in adapter.panels():
+		var instance: Node = packed.instantiate()
+		var panel := instance as WeftluminPanel
+		if panel == null:
+			push_warning("Weftlumin panels must implement WeftluminPanel.")
+			instance.free()
+			continue
+		hosted.append(panel)
+	return hosted
+
+
+func _build_scene_tree(tree_panel: WeftluminPanel) -> void:
+	scene_tree = Tree.new()
+	scene_tree.theme_type_variation = &"EditorTree"
+	tree_panel.add_child(scene_tree)
+	scene_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var scene_root: Node = adapter.gameplay_scene_root()
+	if scene_root != null:
+		_append_scene_node(scene_root, null)
+	scene_tree.item_selected.connect(_on_scene_selected)
 
 
 func _mount(panel: WeftluminPanel, tabs: TabContainer) -> void:

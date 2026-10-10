@@ -199,6 +199,43 @@ static func apply_to_scene(
 	return summary
 
 
+## Actor scripts the layout tool may reposition. Matched by global class name, walking base
+## scripts, so this file never compiles the actor scripts (and their autoload references) into
+## the headless bake tool that also loads it.
+const LAYOUT_ACTOR_CLASSES: Array[StringName] = [&"NPC", &"BuildingDoor", &"TravelExit"]
+
+
+## The layout tool's editable predicate (layout_editor.gd `_is_editable`), shared so the
+## Weftlumin scene model applies the same rules. Dressing children, placed actors, spawn and
+## anchor markers, and building facades.
+static func is_layout_editable(node: Node) -> bool:
+	if node == null:
+		return false
+	var parent: Node = node.get_parent()
+	if parent != null and DRESSING_LAYERS.has(parent.name):
+		return true
+	var script: Script = node.get_script() as Script
+	while script != null:
+		if LAYOUT_ACTOR_CLASSES.has(script.get_global_name()):
+			return true
+		script = script.get_base_script()
+	if node is Marker2D:
+		var marker_name: String = String(node.name)
+		return marker_name.begins_with("Spawn") or "Anchor" in marker_name \
+			or node.name == &"VendorSpot" or node.name == &"NpcSpot"
+	if node is Sprite2D:
+		var sprite := node as Sprite2D
+		return sprite.texture != null and "building-facade" in sprite.texture.resource_path
+	return false
+
+
+## Keys `apply_properties` reads back from an edit entry, i.e. the properties a scene command can
+## set and still replay through `apply_to_scene`.
+const REPLAYABLE_PROPERTY_KEYS: Array[String] = [
+	"position", "scale", "rotation", "skew", "flip_h", "flip_v", "grayscale", "collision",
+]
+
+
 static func _create_addition(addition: Dictionary, layer_name: StringName) -> Node2D:
 	var texture_path: String = str(addition.get("texture", ""))
 	var texture: Texture2D = load(texture_path) as Texture2D
