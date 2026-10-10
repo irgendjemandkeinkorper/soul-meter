@@ -23,7 +23,7 @@ silently. Three facts shape the design:
 2. **Combat reads stats in files F1 owns right now.** `combat_rules.gd`, `resolution.gd`,
    `combat_controller.gd` read Edge (B§3, B§8). F3 therefore ships in two halves: **F3a** (schema,
    data, chargen, `SkillCheck`, dialogue, `Renown`, save 8) touches no combat file and starts now;
-   **F3b** (combat stat reads) lands after #281 merges (§3.9).
+   **F3b** (combat stat reads) landed 2026-10-10 (§3.9).
 3. **The 22-skill table exists only in a `proposed` RFC** (mono RFC-0005) while the Accepted
    character-creation file names 12 skills; the owner ratified "22 skills" in game-identity. This
    note adopts the RFC-0005 table **PROVISIONALLY** and asks the owner to ratify RFC-0005 in mono
@@ -164,7 +164,7 @@ Anything still open is open for a named reason, not because nobody has picked it
 | 3.6 | Pandora seeders + generators | **done** — the Combatants category carries all seven attribute columns and they reach `BattleActor` 2026-09-07; the 14 Defining Weakness `check_skill` rows re-seeded to `recall`/`undertone` 2026-10-02, see the note under the table |  |
 | 3.7 | `renown.gd` (Yothmeru) | **done** — see §3.7a for how its two halves were reconciled | #384 |
 | 3.8 | `save_migrations.gd` | **done** — schema 9, §2.1 steps 1/2/3/5; step 6 deferred with §3.3 | #392 |
-| 3.9 | combat rules | **partial** — to-hit/AP/CT attribute moved to Alacrity 2026-09-07; the CT *formula* (`6 + Reason/2`) and the damage power term are still F3b, after #281 |  |
+| 3.9 | combat rules | **DONE 2026-10-10** — to-hit/AP on Alacrity (2026-09-07); CT on Reason with the owner's `5 + reason` curve; damage power via `attack` derived from Muster; fizzle reads Intuition |  |
 | 3.10 | dialogue + quest audit + docs | **done** — 14 authored checks and 4 code call sites renamed; the quest audit needed no change (it matches the shape of a `check(` call, not a literal id list) | #393, #395 |
 | 3.11 | tests | **rolling** — each surface above carried its own cases |  |
 
@@ -222,7 +222,7 @@ its `lore_minimum` field are a discovery threshold, not a skill id, and keep the
 | 3.6 | Pandora seeders + generators + `campaign_encounter_loader.gd` | Columns per §2.2; drift checks green | F3a |
 | 3.7 | `globals/renown.gd` | **Yothmeru on Renown**: add signed `karma` ledger (`gain_karma(actor, base, cause, scene)` applies `× Doctrine/10` of the *player* at write time and records both `base` and `applied`), `karma_total()`, `karma_tier()` (seven tiers, thresholds from RFC-0007 via §6), `fame()` = reputation + infamy, `fame_tier()` (five tiers); `gain_reputation/gain_infamy` gain an optional `witness_factor` (default 1.0) and apply `× Decorum/10`; extreme-tier decay (Damned/Exalted/Legendary toward the boundary) runs on `WorldClock` day change only — never on a timer; `why("karma")` supported. Existing totals/API untouched so tavern gates keep working | F3a |
 | 3.8 | `globals/save_migrations.gd` | `CURRENT_SCHEMA_VERSION = 9`, `_migrate_v8_to_v9` per §2.1, fixture saves for v8→v9 (8 is the wheel rename, #371 — see §2.1) | F3a |
-| 3.9 | `globals/combat/combat_rules.gd`, `resolution.gd`, `combat_controller.gd` | **DONE 2026-09-07**: to-hit difference on Alacrity; `action_point_attribute`/`charge_speed_attribute` on Alacrity; the snapshot key and `PROVISIONAL_TO_HIT` constant renamed with their readers; `BattleActor.attribute_value()` resolves the legacy name both ways. **STILL F3b, after #281**: the CT *formula* `6 + Reason/2` (this moved the attribute, not the curve), `calculate_damage`'s power term on Muster, and `_fizzle_context` supplying Intuition | **partial** |
+| 3.9 | `globals/combat/combat_rules.gd`, `resolution.gd`, `combat_controller.gd` | **DONE 2026-09-07**: to-hit difference on Alacrity; `action_point_attribute`/`charge_speed_attribute` on Alacrity; the snapshot key and `PROVISIONAL_TO_HIT` constant renamed with their readers; `BattleActor.attribute_value()` resolves the legacy name both ways. **F3b DONE 2026-10-10**: CT keys on Reason, `5 + reason` (owner chose it over `6 + Reason/2`, docs/dramgid-numbers.md §7); `calculate_damage`'s power term is `effective_attack()`, which `DramgidDerived`/`EnemyDerived` derive from Muster; `_fizzle_context` reads Intuition | **done** |
 | 3.10 | Dialogue + quest audit + docs | §2.2 renames; `docs/dialogue-checks.md`; CLAUDE.md status line ("save schema 8") | F3a |
 | 3.11 | Tests | `test_chargen_data` rewritten to the schema; 147 legacy-id lines across `test/` (B§3) renamed by map; new: schema invariants (22 skills, each with a governing attribute; sum-22 validation), v7→v8 migration fixtures incl. Alchemy refund, Yothmeru shift/tier/decay, `karma_bonus` only on bellow/sway, `SkillCheck` API parity | F3a/F3b |
 

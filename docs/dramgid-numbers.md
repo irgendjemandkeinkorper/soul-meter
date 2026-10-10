@@ -132,7 +132,7 @@ The floor itself is the problem, and it is not a number this file can change: `b
 legacy rule is replaced by `Resolution` under same-map combat (§3.9 / #281). **Flagged for the
 owner, not silently tuned around.**
 
-## 7. `ct_speed(reason)` — reported, not applied
+## 7. `ct_speed(reason)` — **applied 2026-10-10: `5 + reason`** (owner ruling; `CombatRules`)
 
 §6 says "confirm or propose". The grid says the shipped shape barely functions:
 
@@ -147,9 +147,9 @@ buys Reason from 2 to 3 sees no change in initiative at all. **Proposed: `5 + re
 same base neighbourhood, four distinct values, and a 1.43× spread that matches the HP curve's
 restraint rather than the attack curve's.
 
-Not applied here. `CombatRules.charge_speed_attribute` is still `&"edge"` and
-`base_charge_speed`/`attribute_points_per_speed` are authored `Resource` data; changing the
-attribute is §3.9. This section is the evidence for that change when it lands.
+**Applied 2026-10-10 (§3.9 F3b).** The owner chose `5 + reason`: `CombatRules.charge_speed_attribute
+= &"reason"`, `base_charge_speed = 5`, `attribute_points_per_speed = 1`. Pinned by
+`test_dramgid_numbers.test_ct_keys_on_reason_and_ct_speed_stays_out_of_derived`.
 
 ## 8. `fizzle_reduction(intuition)` — verified, zero drift
 

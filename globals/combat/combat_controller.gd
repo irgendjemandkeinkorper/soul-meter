@@ -1850,8 +1850,10 @@ func _fizzle_context(actor: BattleActor, options: Dictionary) -> Dictionary:
 	if not context.has("harmonic_accord") and not context.has("agreement_integrity"):
 		context["harmonic_accord"] = agreement_integrity
 		context["agreement_integrity"] = agreement_integrity # alias wave, #329
+	# DRAMGID §3.9 F3b: Intuition replaced Pitch. The context key stays `pitch` because
+	# Resolution's fizzle inputs read it under that name.
 	if not context.has("pitch"):
-		context["pitch"] = actor.attribute_value(&"pitch")
+		context["pitch"] = actor.attribute_value(&"intuition")
 	if actor.source_member != null and not context.has("patron"):
 		context["patron"] = actor.source_member.patron
 	return context

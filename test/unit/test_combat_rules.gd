@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 
 func _actor(edge: int, maximum: int = 99) -> BattleActor:
 	var actor := BattleActor.new()
-	actor.attributes = {&"edge": edge}
+	actor.attributes = {&"edge": edge, &"reason": edge}
 	actor.max_action_points = maximum
 	return actor
 
