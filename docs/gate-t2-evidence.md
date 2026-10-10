@@ -175,3 +175,15 @@ runs — some ambient engine state interaction, root cause unidentified. Contain
 the gdUnit gate test spawn the canonical CLI harness as subprocesses and byte-compare
 stdout, which is the gate's actual evidence standard. If in-process determinism ever
 matters elsewhere, this note is the starting point.
+
+## Run 6 — CT keys on Reason (#283 F3b) — 2026-10-10
+
+The owner chose `charge speed = 5 + Reason` (docs/dramgid-numbers.md §7). The harness probe
+party had no Reason attribute, so the new curve ran it at speed 5 while catalog enemies ran at
+6–7. That is slower than any real party member (Reason 2..5 → 7..10), and the gate failed
+(positional defeat). The probe party is now authored at **Reason 2**, the floor of the real
+range (speed 7); nothing else changed. Rerun under the unchanged pre-registered rule: selection
+picked `phase2-mixed-whipsaw` (naive DEFEAT, 0/54); positional victory with both members alive.
+**Gate T-2: PASSED** on its first threshold clause. Sensitivity caveat: at Reason 1 (speed 6)
+the positional arm loses whipsaw, so the margin depends on the party being at least as fast as
+the enemies.

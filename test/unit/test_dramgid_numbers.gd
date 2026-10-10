@@ -130,7 +130,7 @@ func test_a_created_character_is_not_worse_than_the_pre_made_protagonist() -> vo
 	).is_greater_equal(protagonist.attack)
 
 
-func test_the_unfrozen_formulas_are_absent_on_purpose() -> void:
+func test_ct_keys_on_reason_and_ct_speed_stays_out_of_derived() -> void:
 	# §7 and the class doc: ct_speed / to-hit / the damage power term are NOT here.
 	# A helper appearing before its consumer is a stranded formula, and this is
 	# where that gets caught.
@@ -146,11 +146,15 @@ func test_the_unfrozen_formulas_are_absent_on_purpose() -> void:
 	assert_bool(probe.has_method("ct_speed")).override_failure_message(
 		"ct_speed() landed before §3.9 applied the curve — see docs/dramgid-numbers.md §7"
 	).is_false()
-	assert_str(String(CombatRules.new().charge_speed_attribute)).override_failure_message(
-		"charge_speed_attribute is neither `alacrity` (the 2026-09-07 rename) nor the "
-		+ "`edge` it replaced; if it now reads `reason`, §7 has been applied and this "
-		+ "test owes the CT curve a pin"
-	).is_equal("alacrity")
+	# §3.9 F3b applied 2026-10-10: CT keys on Reason with the owner's `5 + reason` curve.
+	var rules := CombatRules.new()
+	assert_str(String(rules.charge_speed_attribute)).is_equal("reason")
+	for reason: int in [2, 3, 4, 5]:
+		var actor := BattleActor.new()
+		actor.attributes = {"reason": reason}
+		assert_int(rules.charge_speed_for(actor)).override_failure_message(
+			"reason %d must charge at %d per tick (5 + reason)" % [reason, 5 + reason]
+		).is_equal(5 + reason)
 
 
 func _shipped_party() -> Array[PartyMember]:
