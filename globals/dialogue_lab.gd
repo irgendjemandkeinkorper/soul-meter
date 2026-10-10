@@ -1,6 +1,9 @@
 extends Node
 ## Debug-only dialogue replay sandbox. Disabled builds remain completely inert.
 
+## Panel-hosted presentation feed: what the F5 overlay's replay controls would receive.
+signal replay_changed(running: bool, setup: Dictionary)
+
 const DIALOGUE_LAB_SCENE := preload("res://ui/debug/dialogue_lab.tscn")
 const DIALOGUE_DIRECTORIES: Array[String] = [
 	"res://dialogue",
@@ -26,6 +29,8 @@ var _current_resource: DialogueResource = null
 var _lab_balloon: Node = null
 var _lab_dialogue_running: bool = false
 var _production_dialogue_running: bool = false
+## True when a Weftlumin panel owns this instance (see host_in_panel()).
+var _panel_hosted: bool = false
 
 
 
@@ -80,7 +85,7 @@ func production_dialogue_is_live() -> bool:
 
 
 func open_setup() -> void:
-	if not _enabled or _overlay_layer != null or _lab_dialogue_running:
+	if not _enabled or _overlay_layer != null or _lab_dialogue_running or _panel_hosted:
 		return
 	if _ownership_conflict_is_live():
 		push_warning(REFUSAL_WARNING)
@@ -245,6 +250,9 @@ func _apply_setup_state(setup: Dictionary) -> void:
 
 ## Owner id this lab holds the shared sandbox under.
 const SANDBOX_OWNER := &"dialogue_lab"
+## The id actually used. A Weftlumin panel hands over the shell's token so the lab's own
+## session arms and restores under the owner the shell already holds (§4.5.6).
+var sandbox_owner: StringName = SANDBOX_OWNER
 
 
 ## The shared sandbox, with this game's surfaces registered. Registration replaces by id, so
@@ -266,11 +274,11 @@ func _sandbox() -> WeftluminSandbox:
 ## armed session, but never someone else's.
 func sandbox_is_armed() -> bool:
 	var sandbox: WeftluminSandbox = _sandbox()
-	return sandbox.is_armed() and sandbox.owner() == SANDBOX_OWNER
+	return sandbox.is_armed() and sandbox.owner() == sandbox_owner
 
 
 func _capture_saved_state() -> void:
-	_sandbox().arm(SANDBOX_OWNER)
+	_sandbox().arm(sandbox_owner)
 
 
 ## Restores exactly once per session, then disarms.
@@ -332,7 +340,7 @@ func _disconnect_dialogue_signals() -> void:
 
 
 func _open_overlay(replay_controls: bool) -> void:
-	if not _enabled or _overlay_layer != null:
+	if not _enabled or _overlay_layer != null or _panel_hosted:
 		return
 	_overlay_layer = CanvasLayer.new()
 	_overlay_layer.name = "DialogueLabLayer"
@@ -350,6 +358,8 @@ func _open_overlay(replay_controls: bool) -> void:
 func _update_panel() -> void:
 	if _panel != null and is_instance_valid(_panel):
 		_panel.call("update_replay_controls", _lab_dialogue_running, _setup)
+	if _panel_hosted:
+		replay_changed.emit(_lab_dialogue_running, _setup.duplicate(true))
 
 
 func _close_overlay() -> void:
@@ -409,7 +419,7 @@ func _ownership_conflict_is_live() -> bool:
 ## up. The shared sandbox distinguishes our own armed session — which a restart
 ## must still be allowed to replace — from the other lab's.
 func another_sandbox_is_armed() -> bool:
-	return _sandbox().held_by_other(SANDBOX_OWNER)
+	return _sandbox().held_by_other(sandbox_owner)
 
 
 func _contains_other_dialogue_balloon(node: Node) -> bool:
@@ -439,16 +449,36 @@ static func _is_allowed_dialogue_path(path: String) -> bool:
 	return false
 
 
+## Weftlumin panel seam (architecture §4.5.5, §4.8). The panel that owns this instance enables
+## the lab under the shell's sandbox token; the shell owns activation, bindings and pause, so the
+## F5 overlay, its hotkey and the environment gate stand down. Refused on the autoload itself and
+## in release builds. The replay lifecycle and its containment are unchanged.
+func host_in_panel(owner_token: StringName) -> bool:
+	if owner_token.is_empty():
+		return false
+	if not OS.is_debug_build() or not is_inside_tree() or get_parent() == get_tree().root:
+		return false
+	_panel_hosted = true
+	sandbox_owner = owner_token
+	_set_enabled(true)
+	set_process_unhandled_key_input(false)
+	return true
+
+
 func _refresh_activation() -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or _panel_hosted:
 		return
 	var should_enable: bool = OS.is_debug_build() and (
 		OS.get_environment(ENVIRONMENT_VARIABLE) == "1" or force_enabled_for_tests
 	)
+	_set_enabled(should_enable)
+
+
+func _set_enabled(should_enable: bool) -> void:
 	if should_enable == _enabled:
 		return
 	_enabled = should_enable
-	set_process_unhandled_key_input(_enabled)
+	set_process_unhandled_key_input(_enabled and not _panel_hosted)
 	if _enabled:
 		_connect_dialogue_signals()
 	else:

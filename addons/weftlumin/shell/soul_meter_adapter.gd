@@ -35,6 +35,28 @@ func _set_field_huds_hidden(hidden: bool) -> void:
 			hud.visible = false
 
 
+## Soul Meter's tool panels (§4.1 `weftlumin/panels/`), in dock order. The directory is
+## export-excluded, so each scene loads lazily and a build without it mounts none (fails closed).
+const PANEL_SCENES: Array[String] = [
+	"res://weftlumin/panels/console_panel.tscn",
+	"res://weftlumin/panels/timeline_panel.tscn",
+	"res://weftlumin/panels/combat_lab_panel.tscn",
+	"res://weftlumin/panels/dialogue_panel.tscn",
+	"res://weftlumin/panels/quest_panel.tscn",
+]
+
+
+func panels() -> Array[PackedScene]:
+	var result: Array[PackedScene] = []
+	for path: String in PANEL_SCENES:
+		var packed: PackedScene = load(path) as PackedScene if ResourceLoader.exists(path) else null
+		if packed == null:
+			push_warning("Weftlumin: panel %s is missing; its tab stays a placeholder." % path)
+			continue
+		result.append(packed)
+	return result
+
+
 func gameplay_scene_root() -> Node:
 	return GameFlow.get_tree().current_scene
 
