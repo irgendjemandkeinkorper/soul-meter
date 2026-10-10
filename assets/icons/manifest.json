@@ -1,0 +1,388 @@
+{
+	"approval": "pending_owner_review",
+	"files": [
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/cast.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/cast.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/cast.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/definition.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/definition.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/definition.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/end-turn.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/end-turn.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/end-turn.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/focus.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/focus.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/focus.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/guard.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/guard.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/guard.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/item.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/item.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/item.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/move.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/move.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/move.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/paradox.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/paradox.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/paradox.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/speak.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/speak.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/speak.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/stabilize.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/stabilize.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/stabilize.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/strike.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/strike.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/strike.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/tactical-data.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/tactical-data.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/tactical-data.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/target.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/target.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/target.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/commands/withdraw.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/commands/withdraw.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/commands/withdraw.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/khash.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/khash.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/khash.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/khor.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/khor.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/khor.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/luth.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/luth.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/luth.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/mozh.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/mozh.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/mozh.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/sul.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/sul.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/sul.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/tham.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/tham.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/tham.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/vekh.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/vekh.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/vekh.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/vel.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/vel.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/vel.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/zhem.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/zhem.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/zhem.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/elements/zhur.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/elements/zhur.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/elements/zhur.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/items/consumables.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/items/consumables.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/items/consumables.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/items/materials.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/items/materials.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/items/materials.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/items/relics.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/items/relics.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/items/relics.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/items/tools.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/items/tools.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/items/tools.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/items/weapons.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/items/weapons.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/items/weapons.svg"
+		}
+	],
+	"generator": "tools/export_icons.gd",
+	"palette_source": "ui/theme/ds.gd",
+	"sizes": [
+		24,
+		64
+	]
+}

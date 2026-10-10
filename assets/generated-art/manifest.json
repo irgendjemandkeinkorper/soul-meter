@@ -1,0 +1,295 @@
+{
+  "schema_version": 1,
+  "batch": "298-first-batch",
+  "approval": "pending_owner_review",
+  "usage": "Review only. Owner approval required before merge or game use.",
+  "style_bible": "docs/art-aesthetics-bible.md",
+  "model_documentation": "https://ai.google.dev/gemini-api/docs/models/gemini-nano-banana-2.1",
+  "model_verified_on": "2026-10-09",
+  "seed_note": "Seed is sent as generationConfig.seed; remote outputs are not guaranteed byte-identical.",
+  "palette_source": "ui/theme/ds.gd",
+  "palette": [
+    "#07080B",
+    "#0C0E12",
+    "#12151B",
+    "#1B1F27",
+    "#232833",
+    "#2C323F",
+    "#2A303A",
+    "#3A414D",
+    "#4E5665",
+    "#6B7484",
+    "#5E4415",
+    "#946B2D",
+    "#B8860B",
+    "#D9AB45",
+    "#F0D089",
+    "#6B1FB0",
+    "#8A2BE2",
+    "#A855F7",
+    "#C99BFF",
+    "#7A1414",
+    "#991B1B",
+    "#EF4444",
+    "#06B6D4",
+    "#22D3EE",
+    "#F59E0B",
+    "#E2E8F0",
+    "#94A3B8",
+    "#64748B",
+    "#475569",
+    "#100D07",
+    "#7C6A2E",
+    "#8B5CF6",
+    "#4FA96A",
+    "#B8C0CC",
+    "#E8C46A",
+    "#FFE7A8",
+    "#8FE0A4",
+    "#2E8FB8",
+    "#7FCDE8",
+    "#D6B4FF",
+    "#8C7A5B",
+    "#C4AE85",
+    "#4B3F72",
+    "#8577C4",
+    "#7A8B3C",
+    "#B4C46B",
+    "#E0522F",
+    "#FF9A6E",
+    "#EDF2F8",
+    "#A6F0FA"
+  ],
+  "sources": [
+    {
+      "path": "docs/art-aesthetics-bible.md",
+      "sha256": "b3f1b9c70420cbcd8f28b16867f183325fdaaae48082d51636eb4d0bf603ce59",
+      "role": "prompt/palette/subject source"
+    },
+    {
+      "path": "ui/theme/ds.gd",
+      "sha256": "c01f5653834c9aa42c99501878cdd26cdba612b765f727d9f30fed8e6cfa817c",
+      "role": "prompt/palette/subject source"
+    },
+    {
+      "path": "assets/generated/sprites/manifests/units.json",
+      "sha256": "cac9b11a575c39afea2bc832ac5ed3c31ab09e381939c96e29fee8b66551b394",
+      "role": "prompt/palette/subject source"
+    },
+    {
+      "path": "art-request.md",
+      "sha256": "06a75a075e482afd1a4262a9e9266491c63e4644337357a774f44b6168a25103",
+      "role": "prompt/palette/subject source"
+    },
+    {
+      "path": "globals/game_state.gd",
+      "sha256": "a2957a99a52cfde4ea85a622f02556050f17459819fd587829aae52756a568e7",
+      "role": "prompt/palette/subject source"
+    },
+    {
+      "path": "docs/steam-store-page.md",
+      "sha256": "01e09fcc9a281fc6ae3fc86ceb3f4d6ebc17d9dbff49e276c2b64e1f706a5c43",
+      "role": "prompt/palette/subject source"
+    }
+  ],
+  "api_calls": 1,
+  "files": [
+    {
+      "path": "portraits/serai-lun.png",
+      "asset_class": "portraits",
+      "subject_id": "serai-lun",
+      "subject": "Serai-Lun",
+      "prompt": "Gothic mythopunk. Semi-realistic painterly digital illustration. Lighting: dramatic, directional key light with a darker falloff/vignette around the\nsubject. Avoid flat, evenly-lit \"asset kit\" lighting — every piece should look like it\nwas lit for atmosphere, not for orthographic clarity alone.\nPalette (consistent with `art-request.md`'s existing palette section — this batch is\nthe visual proof of it, not a departure):\n- Base surfaces: charcoal/near-black stone, blue-black masonry, wet dark iron.\n- Institutional metal: iron and tarnished bronze, reserved for ceremonial/important\n  elements (see the brazier's warm firelight accent against cold stone).\n- Magic/the Wound: restrained violet, cyan, pale bone-white — used as small local\n  accents, never an all-over glow.\n- Organic life: deep moss/algae green, damp peat brown, occasional demon-heat red-orange\n  (see Bog Wight's corrupted growth).\n- Overall: desaturated and dark by default, with a small number of deliberate saturated\n  accents per asset (fire, magic, decay) rather than broad bright color. Bust portrait of Serai-Lun. Existing character brief: - **Race:** Mirror-Veil Kes'reth.\n- **Age target:** late 20s to early 30s.\n- **Role:** Mirrorblade (Maiiam); precise duelist.\n- **Unique trait:** a narrow mirror shard or polished veil over one eye, reflecting a\n  slightly different expression than the visible face. Keep this subtle and unsettling.\n- **Costume and prop:** light duelist layers, segmented reflective plates, thin blade,\n  and a sash that catches light like broken glass.\n- **Read:** exact, elegant, dangerous, never bulky.\nAuthor's later race direction (overrides older brief and reference anatomy): — The Ashborn\n\n**Author foundation:** Nole's physician-like detachment, the \"armor of apathy,\" and\nthe clinical tally of the dead. Their sound is the measured count of **169 names**\nin a low monotone. Their **Clinical Heat** becomes slow, ashen combustion as the\nWaning consumes their forms. The supplied tiefling/Ashborn identity retains the\nhorned point of reference; the Mirror-Veil branch is removed.\n\n**Design reading:** let the contrast between bodily heat and controlled bearing guide\nthe design. Heat, ash, and endurance can be conveyed through material and posture\nwithout making every healthy Kes'reth an actively burning body. The count of names\nis an acoustic inheritance, not a requirement to engrave 169 marks onto every model.\n\n**Open:** horn arrangement, face, build, skin and ash palette, tail/feet anatomy, and\nthe healthy-to-combusting transition. The older ash-to-red skin range is historical\nreference, not a newly confirmed restriction., head and shoulders, three-quarter view, looking slightly off-camera. Semi-realistic painterly digital illustration. Transparent background, no frame, no border, no vignette, no text.\nUse only these DS palette colors: #07080B, #0C0E12, #12151B, #1B1F27, #232833, #2C323F, #2A303A, #3A414D, #4E5665, #6B7484, #5E4415, #946B2D, #B8860B, #D9AB45, #F0D089, #6B1FB0, #8A2BE2, #A855F7, #C99BFF, #7A1414, #991B1B, #EF4444, #06B6D4, #22D3EE, #F59E0B, #E2E8F0, #94A3B8, #64748B, #475569, #100D07, #7C6A2E, #8B5CF6, #4FA96A, #B8C0CC, #E8C46A, #FFE7A8, #8FE0A4, #2E8FB8, #7FCDE8, #D6B4FF, #8C7A5B, #C4AE85, #4B3F72, #8577C4, #7A8B3C, #B4C46B, #E0522F, #FF9A6E, #EDF2F8, #A6F0FA. Image 1 is a material and lighting reference only, never a layout or subject reference. Do not copy any text, obsolete element labels, controller glyphs, or UI from it. No emoji, text, watermark, frame, or UI. No cartoon proportions, black sticker outlines, neon, glossy plastic, or steampunk gears. Image 2 shows this exact existing companion, not a new character. Retain recognizable costume and identity, subject to the later race direction. Head and shoulders only, keep the whole head within the canvas with a small margin. For image transport only: if real alpha is unavailable, use a perfectly uniform #A6F0FA matte background for removal; never draw a checkerboard.",
+      "seed": 298000,
+      "model": "gemini-nano-banana-2.1",
+      "size": [
+        512,
+        512
+      ],
+      "aspect_ratio": "1:1",
+      "image_size": "1K",
+      "matte": "#A6F0FA",
+      "references": [
+        {
+          "path": "design/reference/tactical-ui-style-board.png",
+          "sha256": "8cf68cbf82af3c20140b8a23862b9a8080c8942c4dffc3cf2d870a2a2f768f55",
+          "role": "material and lighting style; no layout"
+        },
+        {
+          "path": "assets/generated/sprites/units/serai-lun/serai-lun--idle--se--f00.png",
+          "sha256": "675b99f1741659709cb81e1439d74807aea21372d1d717c4ca5cb8fae968e2f1",
+          "role": "existing companion identity"
+        }
+      ],
+      "status": "requesting",
+      "error": "Gemini HTTP 429; no automatic retry; response body withheld"
+    },
+    {
+      "path": "portraits/old-grumbrand.png",
+      "asset_class": "portraits",
+      "subject_id": "old-grumbrand",
+      "subject": "Old Grumbrand",
+      "prompt": "Gothic mythopunk. Semi-realistic painterly digital illustration. Lighting: dramatic, directional key light with a darker falloff/vignette around the\nsubject. Avoid flat, evenly-lit \"asset kit\" lighting — every piece should look like it\nwas lit for atmosphere, not for orthographic clarity alone.\nPalette (consistent with `art-request.md`'s existing palette section — this batch is\nthe visual proof of it, not a departure):\n- Base surfaces: charcoal/near-black stone, blue-black masonry, wet dark iron.\n- Institutional metal: iron and tarnished bronze, reserved for ceremonial/important\n  elements (see the brazier's warm firelight accent against cold stone).\n- Magic/the Wound: restrained violet, cyan, pale bone-white — used as small local\n  accents, never an all-over glow.\n- Organic life: deep moss/algae green, damp peat brown, occasional demon-heat red-orange\n  (see Bog Wight's corrupted growth).\n- Overall: desaturated and dark by default, with a small number of deliberate saturated\n  accents per asset (fire, magic, decay) rather than broad bright color. Bust portrait of Old Grumbrand. Existing character brief: - **Race:** Kaan Deepkin.\n- **Age target:** late 60s to early 70s.\n- **Role:** Lensbearer (Stuid); salvage veteran and defensive anchor.\n- **Unique trait:** a soot-stained salvage lens mounted over one eye with a faint internal\n  cyan light. His hands and cuffs should carry years of machine grease and ash.\n- **Costume and prop:** heavy patched coat, riveted harness, tool satchel, pry bar or\n  compact salvage instrument.\n- **Read:** durable, practical, kind only after checking whether something is trapped.\nAuthor's later race direction (overrides older brief and reference anatomy): — The Deepkin\n\n**Author foundation:** **Dieters's geological patience**, finding settled truth in\nwreckage. Their signature is tectonic grinding and geothermic resonance. Without\nthe Weft's binding, they revert to **inert, non-sentient rock**. The supplied dwarf\norientation and compatible older stone-fused description provide starting context.\n\n**Design reading:** material weight and settled structure should matter when exploring\ntheir bodies. Consider how their chosen anatomy bears loads and how a living surface\ndiffers from the inert rock it can become. Fungal symbiosis from the historical\nDeepkin account should not replace this stone-centered identity.\n\n**Open:** body proportions, mineral coverage and type, exposed flesh, hair/beard\nstructure, joint behavior, and the progression from healthy body to inert stone.\nSpecific minerals and an almost entirely stone body remain design choices., head and shoulders, three-quarter view, looking slightly off-camera. Semi-realistic painterly digital illustration. Transparent background, no frame, no border, no vignette, no text.\nUse only these DS palette colors: #07080B, #0C0E12, #12151B, #1B1F27, #232833, #2C323F, #2A303A, #3A414D, #4E5665, #6B7484, #5E4415, #946B2D, #B8860B, #D9AB45, #F0D089, #6B1FB0, #8A2BE2, #A855F7, #C99BFF, #7A1414, #991B1B, #EF4444, #06B6D4, #22D3EE, #F59E0B, #E2E8F0, #94A3B8, #64748B, #475569, #100D07, #7C6A2E, #8B5CF6, #4FA96A, #B8C0CC, #E8C46A, #FFE7A8, #8FE0A4, #2E8FB8, #7FCDE8, #D6B4FF, #8C7A5B, #C4AE85, #4B3F72, #8577C4, #7A8B3C, #B4C46B, #E0522F, #FF9A6E, #EDF2F8, #A6F0FA. Image 1 is a material and lighting reference only, never a layout or subject reference. Do not copy any text, obsolete element labels, controller glyphs, or UI from it. No emoji, text, watermark, frame, or UI. No cartoon proportions, black sticker outlines, neon, glossy plastic, or steampunk gears. Image 2 shows this exact existing companion, not a new character. Retain recognizable costume and identity, subject to the later race direction. Head and shoulders only, keep the whole head within the canvas with a small margin. For image transport only: if real alpha is unavailable, use a perfectly uniform #A6F0FA matte background for removal; never draw a checkerboard.",
+      "seed": 298001,
+      "model": "gemini-nano-banana-2.1",
+      "size": [
+        512,
+        512
+      ],
+      "aspect_ratio": "1:1",
+      "image_size": "1K",
+      "matte": "#A6F0FA",
+      "references": [
+        {
+          "path": "design/reference/tactical-ui-style-board.png",
+          "sha256": "8cf68cbf82af3c20140b8a23862b9a8080c8942c4dffc3cf2d870a2a2f768f55",
+          "role": "material and lighting style; no layout"
+        },
+        {
+          "path": "assets/generated/sprites/units/old-grumbrand/old-grumbrand--idle--se--f00.png",
+          "sha256": "eda7c17e51134f365e573a956c36478981edc25c0b658d3aab98847bbdd3abf1",
+          "role": "existing companion identity"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "path": "portraits/wyneth-hallow-tide.png",
+      "asset_class": "portraits",
+      "subject_id": "wyneth-hallow-tide",
+      "subject": "Wyneth Hallow-Tide",
+      "prompt": "Gothic mythopunk. Semi-realistic painterly digital illustration. Lighting: dramatic, directional key light with a darker falloff/vignette around the\nsubject. Avoid flat, evenly-lit \"asset kit\" lighting — every piece should look like it\nwas lit for atmosphere, not for orthographic clarity alone.\nPalette (consistent with `art-request.md`'s existing palette section — this batch is\nthe visual proof of it, not a departure):\n- Base surfaces: charcoal/near-black stone, blue-black masonry, wet dark iron.\n- Institutional metal: iron and tarnished bronze, reserved for ceremonial/important\n  elements (see the brazier's warm firelight accent against cold stone).\n- Magic/the Wound: restrained violet, cyan, pale bone-white — used as small local\n  accents, never an all-over glow.\n- Organic life: deep moss/algae green, damp peat brown, occasional demon-heat red-orange\n  (see Bog Wight's corrupted growth).\n- Overall: desaturated and dark by default, with a small number of deliberate saturated\n  accents per asset (fire, magic, decay) rather than broad bright color. Bust portrait of Wyneth Hallow-Tide. Existing character brief: - **Race:** Ghorr.\n- **Age target:** mid 30s to early 40s.\n- **Role:** River-Mother (Haeren); field healer.\n- **Unique trait:** a pale tide-line birthmark or scar rising from the wrist to the neck,\n  plus a small vial of living river water worn at the throat. The healer's hands should\n  look deliberately steady.\n- **Costume and prop:** layered blue-gray river coat, waxed cloth, reed or shell charms,\n  bandage roll, bone needle, and a practical healer's satchel. Avoid a generic white\n  fantasy cleric robe.\n- **Expression:** calm, observant, quietly stubborn; compassionate without looking soft.\n- **Attunement cue:** Luth, suggested through river-blue glass and wet highlights.\n- **Read:** the requested “river healer” identity should be instantly visible even in a\n  small tavern card., head and shoulders, three-quarter view, looking slightly off-camera. Semi-realistic painterly digital illustration. Transparent background, no frame, no border, no vignette, no text.\nUse only these DS palette colors: #07080B, #0C0E12, #12151B, #1B1F27, #232833, #2C323F, #2A303A, #3A414D, #4E5665, #6B7484, #5E4415, #946B2D, #B8860B, #D9AB45, #F0D089, #6B1FB0, #8A2BE2, #A855F7, #C99BFF, #7A1414, #991B1B, #EF4444, #06B6D4, #22D3EE, #F59E0B, #E2E8F0, #94A3B8, #64748B, #475569, #100D07, #7C6A2E, #8B5CF6, #4FA96A, #B8C0CC, #E8C46A, #FFE7A8, #8FE0A4, #2E8FB8, #7FCDE8, #D6B4FF, #8C7A5B, #C4AE85, #4B3F72, #8577C4, #7A8B3C, #B4C46B, #E0522F, #FF9A6E, #EDF2F8, #A6F0FA. Image 1 is a material and lighting reference only, never a layout or subject reference. Do not copy any text, obsolete element labels, controller glyphs, or UI from it. No emoji, text, watermark, frame, or UI. No cartoon proportions, black sticker outlines, neon, glossy plastic, or steampunk gears. Image 2 shows this exact existing companion, not a new character. Retain recognizable costume and identity, subject to the later race direction. Head and shoulders only, keep the whole head within the canvas with a small margin. For image transport only: if real alpha is unavailable, use a perfectly uniform #A6F0FA matte background for removal; never draw a checkerboard.",
+      "seed": 298002,
+      "model": "gemini-nano-banana-2.1",
+      "size": [
+        512,
+        512
+      ],
+      "aspect_ratio": "1:1",
+      "image_size": "1K",
+      "matte": "#A6F0FA",
+      "references": [
+        {
+          "path": "design/reference/tactical-ui-style-board.png",
+          "sha256": "8cf68cbf82af3c20140b8a23862b9a8080c8942c4dffc3cf2d870a2a2f768f55",
+          "role": "material and lighting style; no layout"
+        },
+        {
+          "path": "assets/generated/sprites/units/wyneth-hallow-tide/wyneth-hallow-tide--idle--se--f00.png",
+          "sha256": "5366b35b0eba607ededd1e7e71203e29d42082c1a881f92f9c0de4af8abbdaff",
+          "role": "existing companion identity"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "path": "portraits/ressa-quickfingers.png",
+      "asset_class": "portraits",
+      "subject_id": "ressa-quickfingers",
+      "subject": "Ressa Quickfingers",
+      "prompt": "Gothic mythopunk. Semi-realistic painterly digital illustration. Lighting: dramatic, directional key light with a darker falloff/vignette around the\nsubject. Avoid flat, evenly-lit \"asset kit\" lighting — every piece should look like it\nwas lit for atmosphere, not for orthographic clarity alone.\nPalette (consistent with `art-request.md`'s existing palette section — this batch is\nthe visual proof of it, not a departure):\n- Base surfaces: charcoal/near-black stone, blue-black masonry, wet dark iron.\n- Institutional metal: iron and tarnished bronze, reserved for ceremonial/important\n  elements (see the brazier's warm firelight accent against cold stone).\n- Magic/the Wound: restrained violet, cyan, pale bone-white — used as small local\n  accents, never an all-over glow.\n- Organic life: deep moss/algae green, damp peat brown, occasional demon-heat red-orange\n  (see Bog Wight's corrupted growth).\n- Overall: desaturated and dark by default, with a small number of deliberate saturated\n  accents per asset (fire, magic, decay) rather than broad bright color. Bust portrait of Ressa Quickfingers. Existing character brief: - **Race:** Vael.\n- **Age target:** mid 20s.\n- **Role:** Locksmirk (Fickah); fast opportunist and infiltrator.\n- **Unique trait:** one hand is always palming a lockpick or coin, while a small split\n  grin reveals a chipped tooth. Do not pose her as a generic assassin.\n- **Costume and prop:** cropped travel jacket, many hidden pockets, soft boots, compact\n  tool roll, and a ring of mismatched keys.\n- **Read:** quick, fragile, alert to exits and other people's pockets.\nAuthor's later race direction (overrides older brief and reference anatomy): (Solan) — The Certainty-Bearers\n\n**Author foundation:** Kalyi's cold leadership, formal logic, and synthesis-bridge\narchitecture. Their acoustic signature is a persistent high-frequency **B-flat**,\nthe resonance of QUINE's crystal substrate. As the Weft thins, tactile rigidity\nfails; structures soften into tonal instability and star-tech memories become static.\n\n**Design reading:** explore controlled, deliberate construction and the tactile\ndifference between something that holds its form and something losing that certainty.\nThe material story is rigidity becoming unstable. This does not yet prescribe a\ncrystal body, a machine body, or ordinary human anatomy.\n\n**Open:** silhouette, bodily substrate, facial structure, proportions, surface palette,\nand how loss of rigidity reads on a living person. The acoustic B-flat has no assigned\ncolor. Solmarch's association with Hard Certainty can inform culture without settling biology., head and shoulders, three-quarter view, looking slightly off-camera. Semi-realistic painterly digital illustration. Transparent background, no frame, no border, no vignette, no text.\nUse only these DS palette colors: #07080B, #0C0E12, #12151B, #1B1F27, #232833, #2C323F, #2A303A, #3A414D, #4E5665, #6B7484, #5E4415, #946B2D, #B8860B, #D9AB45, #F0D089, #6B1FB0, #8A2BE2, #A855F7, #C99BFF, #7A1414, #991B1B, #EF4444, #06B6D4, #22D3EE, #F59E0B, #E2E8F0, #94A3B8, #64748B, #475569, #100D07, #7C6A2E, #8B5CF6, #4FA96A, #B8C0CC, #E8C46A, #FFE7A8, #8FE0A4, #2E8FB8, #7FCDE8, #D6B4FF, #8C7A5B, #C4AE85, #4B3F72, #8577C4, #7A8B3C, #B4C46B, #E0522F, #FF9A6E, #EDF2F8, #A6F0FA. Image 1 is a material and lighting reference only, never a layout or subject reference. Do not copy any text, obsolete element labels, controller glyphs, or UI from it. No emoji, text, watermark, frame, or UI. No cartoon proportions, black sticker outlines, neon, glossy plastic, or steampunk gears. Image 2 shows this exact existing companion, not a new character. Retain recognizable costume and identity, subject to the later race direction. Head and shoulders only, keep the whole head within the canvas with a small margin. For image transport only: if real alpha is unavailable, use a perfectly uniform #A6F0FA matte background for removal; never draw a checkerboard.",
+      "seed": 298003,
+      "model": "gemini-nano-banana-2.1",
+      "size": [
+        512,
+        512
+      ],
+      "aspect_ratio": "1:1",
+      "image_size": "1K",
+      "matte": "#A6F0FA",
+      "references": [
+        {
+          "path": "design/reference/tactical-ui-style-board.png",
+          "sha256": "8cf68cbf82af3c20140b8a23862b9a8080c8942c4dffc3cf2d870a2a2f768f55",
+          "role": "material and lighting style; no layout"
+        },
+        {
+          "path": "assets/generated/sprites/units/ressa-quickfingers/ressa-quickfingers--idle--se--f00.png",
+          "sha256": "22c9446e956de6a4579f60c47b734da4459789f814bed2ce9ecff751d892bfb0",
+          "role": "existing companion identity"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "path": "portraits/korrath-ninefold.png",
+      "asset_class": "portraits",
+      "subject_id": "korrath-ninefold",
+      "subject": "Korrath Ninefold",
+      "prompt": "Gothic mythopunk. Semi-realistic painterly digital illustration. Lighting: dramatic, directional key light with a darker falloff/vignette around the\nsubject. Avoid flat, evenly-lit \"asset kit\" lighting — every piece should look like it\nwas lit for atmosphere, not for orthographic clarity alone.\nPalette (consistent with `art-request.md`'s existing palette section — this batch is\nthe visual proof of it, not a departure):\n- Base surfaces: charcoal/near-black stone, blue-black masonry, wet dark iron.\n- Institutional metal: iron and tarnished bronze, reserved for ceremonial/important\n  elements (see the brazier's warm firelight accent against cold stone).\n- Magic/the Wound: restrained violet, cyan, pale bone-white — used as small local\n  accents, never an all-over glow.\n- Organic life: deep moss/algae green, damp peat brown, occasional demon-heat red-orange\n  (see Bog Wight's corrupted growth).\n- Overall: desaturated and dark by default, with a small number of deliberate saturated\n  accents per asset (fire, magic, decay) rather than broad bright color. Bust portrait of Korrath Ninefold. Existing character brief: - **Race:** Orthos.\n- **Age target:** early to mid 40s.\n- **Role:** Ironbrand (Kero); renowned Steel Day bruiser.\n- **Unique trait:** nine small ritual scars or metal studs arranged in a deliberate line\n  across the brow or cheek, earned during the Steel Day tradition.\n- **Costume and prop:** broad ironbrand harness, worn gauntlet, heavy striking weapon,\n  and a ceremonial strip of red-black cloth.\n- **Read:** physically imposing, disciplined, and proud rather than savage.\nAuthor's later race direction (overrides older brief and reference anatomy): — The Witnesses / Dragonborn\n\n**Author foundation:** **Puer**, the pilot; spatial awareness and rhythmic navigation\nof darkness. The **Left-Right double-tap heartbeat** synchronizes with Dramgid's\norbit. Waning-induced temporal drift traps them in **six-minute** ancestral trauma loops.\nTheir supplied bodily reference is **Dragonborn**.\n\n**Design reading:** develop a distinctly Dramgid draconic humanoid whose bearing can\nsuggest orientation, balance, and a repeated left/right cadence. A designed pose or\ngesture may carry that rhythm; it need not become visible clockwork. The older\nKalyi/synthesis-frame account is not the basis for their anatomy in this pass.\n\n**Open:** head and muzzle, scales or other surface, horns, tail, limb proportions,\nand how strongly draconic the body reads. Wings and flight are not established by\nthe label. Temporal drift is a condition, not a requirement for a permanently distorted mesh., head and shoulders, three-quarter view, looking slightly off-camera. Semi-realistic painterly digital illustration. Transparent background, no frame, no border, no vignette, no text.\nUse only these DS palette colors: #07080B, #0C0E12, #12151B, #1B1F27, #232833, #2C323F, #2A303A, #3A414D, #4E5665, #6B7484, #5E4415, #946B2D, #B8860B, #D9AB45, #F0D089, #6B1FB0, #8A2BE2, #A855F7, #C99BFF, #7A1414, #991B1B, #EF4444, #06B6D4, #22D3EE, #F59E0B, #E2E8F0, #94A3B8, #64748B, #475569, #100D07, #7C6A2E, #8B5CF6, #4FA96A, #B8C0CC, #E8C46A, #FFE7A8, #8FE0A4, #2E8FB8, #7FCDE8, #D6B4FF, #8C7A5B, #C4AE85, #4B3F72, #8577C4, #7A8B3C, #B4C46B, #E0522F, #FF9A6E, #EDF2F8, #A6F0FA. Image 1 is a material and lighting reference only, never a layout or subject reference. Do not copy any text, obsolete element labels, controller glyphs, or UI from it. No emoji, text, watermark, frame, or UI. No cartoon proportions, black sticker outlines, neon, glossy plastic, or steampunk gears. Image 2 shows this exact existing companion, not a new character. Retain recognizable costume and identity, subject to the later race direction. Head and shoulders only, keep the whole head within the canvas with a small margin. For image transport only: if real alpha is unavailable, use a perfectly uniform #A6F0FA matte background for removal; never draw a checkerboard.",
+      "seed": 298004,
+      "model": "gemini-nano-banana-2.1",
+      "size": [
+        512,
+        512
+      ],
+      "aspect_ratio": "1:1",
+      "image_size": "1K",
+      "matte": "#A6F0FA",
+      "references": [
+        {
+          "path": "design/reference/tactical-ui-style-board.png",
+          "sha256": "8cf68cbf82af3c20140b8a23862b9a8080c8942c4dffc3cf2d870a2a2f768f55",
+          "role": "material and lighting style; no layout"
+        },
+        {
+          "path": "assets/generated/sprites/units/korrath-ninefold/korrath-ninefold--idle--se--f00.png",
+          "sha256": "59096fed4823505073560f1f1278c4a0a4a8d30301c1d161239f811219b32920",
+          "role": "existing companion identity"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "path": "portraits/maura-greyfen.png",
+      "asset_class": "portraits",
+      "subject_id": "maura-greyfen",
+      "subject": "Maura Greyfen",
+      "prompt": "Gothic mythopunk. Semi-realistic painterly digital illustration. Lighting: dramatic, directional key light with a darker falloff/vignette around the\nsubject. Avoid flat, evenly-lit \"asset kit\" lighting — every piece should look like it\nwas lit for atmosphere, not for orthographic clarity alone.\nPalette (consistent with `art-request.md`'s existing palette section — this batch is\nthe visual proof of it, not a departure):\n- Base surfaces: charcoal/near-black stone, blue-black masonry, wet dark iron.\n- Institutional metal: iron and tarnished bronze, reserved for ceremonial/important\n  elements (see the brazier's warm firelight accent against cold stone).\n- Magic/the Wound: restrained violet, cyan, pale bone-white — used as small local\n  accents, never an all-over glow.\n- Organic life: deep moss/algae green, damp peat brown, occasional demon-heat red-orange\n  (see Bog Wight's corrupted growth).\n- Overall: desaturated and dark by default, with a small number of deliberate saturated\n  accents per asset (fire, magic, decay) rather than broad bright color. Bust portrait of Maura Greyfen. Existing character brief: - **Race:** Snarlin.\n- **Age target:** late 30s to late 40s.\n- **Role:** Husk-bearer (Vhorr); Deep Salvage veteran.\n- **Unique trait:** a grayfen-colored patch of fur or skin that has gone permanently pale\n  around an old salvage wound; she wears a small sealed husk container as a trust token.\n- **Costume and prop:** weatherproof salvage coat, rope harness, hooked tool, and sealed\n  relic case. The clothing should look suited to climbing and extraction.\n- **Read:** guarded, notorious, and competent enough to survive without an audience., head and shoulders, three-quarter view, looking slightly off-camera. Semi-realistic painterly digital illustration. Transparent background, no frame, no border, no vignette, no text.\nUse only these DS palette colors: #07080B, #0C0E12, #12151B, #1B1F27, #232833, #2C323F, #2A303A, #3A414D, #4E5665, #6B7484, #5E4415, #946B2D, #B8860B, #D9AB45, #F0D089, #6B1FB0, #8A2BE2, #A855F7, #C99BFF, #7A1414, #991B1B, #EF4444, #06B6D4, #22D3EE, #F59E0B, #E2E8F0, #94A3B8, #64748B, #475569, #100D07, #7C6A2E, #8B5CF6, #4FA96A, #B8C0CC, #E8C46A, #FFE7A8, #8FE0A4, #2E8FB8, #7FCDE8, #D6B4FF, #8C7A5B, #C4AE85, #4B3F72, #8577C4, #7A8B3C, #B4C46B, #E0522F, #FF9A6E, #EDF2F8, #A6F0FA. Image 1 is a material and lighting reference only, never a layout or subject reference. Do not copy any text, obsolete element labels, controller glyphs, or UI from it. No emoji, text, watermark, frame, or UI. No cartoon proportions, black sticker outlines, neon, glossy plastic, or steampunk gears. Image 2 shows this exact existing companion, not a new character. Retain recognizable costume and identity, subject to the later race direction. Head and shoulders only, keep the whole head within the canvas with a small margin. For image transport only: if real alpha is unavailable, use a perfectly uniform #A6F0FA matte background for removal; never draw a checkerboard.",
+      "seed": 298005,
+      "model": "gemini-nano-banana-2.1",
+      "size": [
+        512,
+        512
+      ],
+      "aspect_ratio": "1:1",
+      "image_size": "1K",
+      "matte": "#A6F0FA",
+      "references": [
+        {
+          "path": "design/reference/tactical-ui-style-board.png",
+          "sha256": "8cf68cbf82af3c20140b8a23862b9a8080c8942c4dffc3cf2d870a2a2f768f55",
+          "role": "material and lighting style; no layout"
+        },
+        {
+          "path": "assets/generated/sprites/units/maura-greyfen/maura-greyfen--idle--se--f00.png",
+          "sha256": "dbfd851648f38ac95700cd98a0e9a04a37c4c459dc66af379b927fe05e0e02da",
+          "role": "existing companion identity"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "path": "steam-capsule/soul-meter.png",
+      "asset_class": "steam-capsule",
+      "subject": "Soul Meter capsule background",
+      "prompt": "Gothic mythopunk. Semi-realistic painterly digital illustration. Lighting: dramatic, directional key light with a darker falloff/vignette around the\nsubject. Avoid flat, evenly-lit \"asset kit\" lighting — every piece should look like it\nwas lit for atmosphere, not for orthographic clarity alone.\nPalette (consistent with `art-request.md`'s existing palette section — this batch is\nthe visual proof of it, not a departure):\n- Base surfaces: charcoal/near-black stone, blue-black masonry, wet dark iron.\n- Institutional metal: iron and tarnished bronze, reserved for ceremonial/important\n  elements (see the brazier's warm firelight accent against cold stone).\n- Magic/the Wound: restrained violet, cyan, pale bone-white — used as small local\n  accents, never an all-over glow.\n- Organic life: deep moss/algae green, damp peat brown, occasional demon-heat red-orange\n  (see Bog Wight's corrupted growth).\n- Overall: desaturated and dark by default, with a small number of deliberate saturated\n  accents per asset (fire, magic, decay) rather than broad bright color. Key art for a dark tactical fantasy RPG. A lone armoured figure seen from behind at the mouth of a rain-wet stone street, facing a vast dim city of four converging arms; one warm brazier burns at the near edge and everything beyond it is blue-black and failing. The figure is small in the frame.. Semi-realistic painterly digital illustration, cinematic composition, dramatic directional light with deep shadow. Desaturated charcoal and blue-black palette with a single warm ember light source. Clear negative space in the upper third for a title treatment. No text, no logo, no watermark, no border.\nUse only these DS palette colors: #07080B, #0C0E12, #12151B, #1B1F27, #232833, #2C323F, #2A303A, #3A414D, #4E5665, #6B7484, #5E4415, #946B2D, #B8860B, #D9AB45, #F0D089, #6B1FB0, #8A2BE2, #A855F7, #C99BFF, #7A1414, #991B1B, #EF4444, #06B6D4, #22D3EE, #F59E0B, #E2E8F0, #94A3B8, #64748B, #475569, #100D07, #7C6A2E, #8B5CF6, #4FA96A, #B8C0CC, #E8C46A, #FFE7A8, #8FE0A4, #2E8FB8, #7FCDE8, #D6B4FF, #8C7A5B, #C4AE85, #4B3F72, #8577C4, #7A8B3C, #B4C46B, #E0522F, #FF9A6E, #EDF2F8, #A6F0FA. Image 1 is a material and lighting reference only, never a layout or subject reference. Do not copy any text, obsolete element labels, controller glyphs, or UI from it. No emoji, text, watermark, frame, or UI. No cartoon proportions, black sticker outlines, neon, glossy plastic, or steampunk gears.",
+      "seed": 298006,
+      "model": "gemini-nano-banana-2.1",
+      "size": [
+        1920,
+        620
+      ],
+      "aspect_ratio": "21:9",
+      "image_size": "2K",
+      "references": [
+        {
+          "path": "design/reference/tactical-ui-style-board.png",
+          "sha256": "8cf68cbf82af3c20140b8a23862b9a8080c8942c4dffc3cf2d870a2a2f768f55",
+          "role": "material and lighting style; no layout"
+        }
+      ],
+      "status": "planned"
+    }
+  ]
+}
