@@ -224,6 +224,21 @@ the test can save `bog-wight-hud.png` when `SOUL_METER_BOG_WIGHT_CAPTURE_DIR` is
 The focused overlay tests remain in `test/unit/test_combat_overlay.gd`; BattleInterface tests
 guard the frozen payload. See `docs/qa/issue-456-handoff.md` for verification and limitations.
 
+**Beat presentation — #281.** The controller still resolves a whole enemy phase in the frame of
+the ally's command. `CombatOverlay` now presents the received events in emitted order and holds
+each beat before it presents the next one. A strike with a result holds for `BEAT_READ_SECONDS`.
+An enemy phase change holds for `TURN_CUE_SECONDS`, and a move holds for the length of its
+path. Holds space presentation only. They never reach the controller, and replay
+(`animate_events = false`) presents anything still queued at once, without holds. Highlights,
+HP bars and facing chevrons are drawn at the bound body, so they move with a slide or lunge. HP
+bars tick to the presented value. The result card names attacker → target, and the next card
+or turn cue retires the previous one. A KO fades the body to `KO_TINT` instead of making it
+transparent. Facing chevrons follow the grid neighbour the facing id names. In combat mode,
+`FieldMap` hides the labels and prompts of field interactables and travel exits, then restores
+them when the fight ends. HUD regions outside the field (dock HP, unit plate, CT strip) still
+read the live model, so they can show the end state of an enemy phase before the field
+presents it. Evidence: `docs/qa/combat-legibility-281-2026-10-10-after/`.
+
 ### Ambient entry wired — 2026-09-19 (`feat/same-map-ambient`)
 
 Until this slice nothing in production called `Battle.start_session()`, and no world scene
