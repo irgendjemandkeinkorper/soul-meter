@@ -270,7 +270,7 @@ func test_enter_battle_guard_refuses_a_no_combat_field_with_fr606_shape() -> voi
 	var guard: ExpressionGuard = GameFlow.get_node(
 		"StateChart/Root/Playing/Active/ToBattle"
 	).guard
-	assert_str(guard.expression).is_equal("can_fight_here")
+	assert_str(guard.expression).is_equal("can_fight_here and not editor_open")
 
 	GameFlow.send_event(&"enter_battle")
 	await get_tree().process_frame

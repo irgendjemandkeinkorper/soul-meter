@@ -134,13 +134,15 @@ func test_player_moves_right_when_holding_move_right() -> void:
 
 
 func test_holding_sprint_moves_the_player_materially_faster() -> void:
-	var sample_frames := 8
+	var sample_physics_ticks := 8
 
 	var walk_runner := scene_runner("res://world/test_room.tscn")
 	var walk_player: CharacterBody2D = walk_runner.find_child("Player", true, false)
+	await get_tree().physics_frame
 	var walk_start_x: float = walk_player.global_position.x
 	walk_runner.simulate_action_press("move_right")
-	await walk_runner.simulate_frames(sample_frames)
+	for _tick: int in sample_physics_ticks:
+		await get_tree().physics_frame
 	walk_runner.simulate_action_release("move_right")
 	var walk_distance: float = walk_player.global_position.x - walk_start_x
 	walk_runner.scene().queue_free()
@@ -148,15 +150,19 @@ func test_holding_sprint_moves_the_player_materially_faster() -> void:
 
 	var sprint_runner := scene_runner("res://world/test_room.tscn")
 	var sprint_player: CharacterBody2D = sprint_runner.find_child("Player", true, false)
+	await get_tree().physics_frame
 	var sprint_start_x: float = sprint_player.global_position.x
 	sprint_runner.simulate_action_press("sprint")
 	sprint_runner.simulate_action_press("move_right")
-	await sprint_runner.simulate_frames(sample_frames)
+	for _tick: int in sample_physics_ticks:
+		await get_tree().physics_frame
 	sprint_runner.simulate_action_release("move_right")
 	sprint_runner.simulate_action_release("sprint")
 	var sprint_distance: float = sprint_player.global_position.x - sprint_start_x
 
-	# 2.0x nominal; >=1.5x tolerates headless frame jitter without false greens.
+	# Compare equal simulation time: SceneRunner.simulate_frames waits on process_frame,
+	# whose cadence can differ between these samples during a whole-tree headless run.
+	# 2.0x nominal; >=1.5x still tolerates the cell-step boundary without weakening the gate.
 	assert_float(sprint_distance).is_greater(walk_distance * 1.5)
 
 

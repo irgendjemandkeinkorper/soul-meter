@@ -71,6 +71,8 @@ var _waiting_for_level := false
 ## Battle → Paused → Battle keeps the fight live (D3); this flag tells the Battle exit/enter
 ## hooks that they are bracketing a pause, not ending or starting a fight.
 var _battle_paused := false
+## The editor shares Paused, but owns neither the pause menu nor an existing pause.
+var _editor_owns_pause := false
 var _pending_fast_travel_cost := 0
 var _fast_travel_in_progress := false
 var _loading_fallback_scene := ""
@@ -147,6 +149,9 @@ func _ready() -> void:
 	# dead by definition.
 	$StateChart/Root/Playing/Active.state_exited.connect(_clear_pending_area)
 	$StateChart/Root/Playing/Active/ToPaused.taken.connect(_on_active_pause_taken)
+	$StateChart/Root/Playing/Active/ToEditorPaused.taken.connect(
+		_on_editor_pause_taken.bind(false)
+	)
 	$StateChart/Root/Playing/Paused.state_entered.connect(_on_paused_entered)
 	$StateChart/Root/Playing/Paused.state_exited.connect(_on_paused_exited)
 	var deployment_states := [
@@ -161,6 +166,9 @@ func _ready() -> void:
 	$StateChart/Root/Playing/Battle.state_entered.connect(_on_battle_entered)
 	$StateChart/Root/Playing/Battle.state_exited.connect(_on_battle_exited)
 	$StateChart/Root/Playing/Battle/ToPaused.taken.connect(_on_battle_pause_taken)
+	$StateChart/Root/Playing/Battle/ToEditorPaused.taken.connect(
+		_on_editor_pause_taken.bind(true)
+	)
 	$StateChart/Root/Playing/Paused/ToMenus.taken.connect(_on_paused_to_menus_taken)
 	$StateChart/Root/Playing/ChapterComplete.state_entered.connect(_on_chapter_complete_entered)
 	$StateChart/Root/Playing/ChapterComplete.state_exited.connect(_on_chapter_complete_exited)
@@ -187,6 +195,30 @@ func send_event(event: StringName) -> void:
 func _sync_battle_guard() -> void:
 	var access: Dictionary = Battle.can_fight_here()
 	chart.set_expression_property(&"can_fight_here", bool(access.get("allowed", false)))
+
+
+## Adapter seam. Only the chart's guarded pause transition acquires editor pause ownership.
+func set_editor_open(open: bool) -> void:
+	if bool(chart.get_expression_property(&"editor_open", false)) == open:
+		return
+	chart.set_expression_property(&"editor_open", open)
+	if open:
+		send_event(&"pause")
+	elif _editor_owns_pause:
+		_editor_owns_pause = false
+		if $StateChart/Root/Playing/Paused.active:
+			send_event(&"resume")
+		else:
+			# Loading or another chart owner may already have left Paused.
+			get_tree().paused = false
+
+
+func _on_editor_pause_taken(from_battle: bool) -> void:
+	_editor_owns_pause = true
+	if from_battle:
+		_on_battle_pause_taken()
+	else:
+		_on_active_pause_taken()
 
 
 func _on_active_pause_taken() -> void:
@@ -416,6 +448,9 @@ func _on_journey_battle_ended(result: BattleResult) -> void:
 ## TravelExit) — never call SceneLoader or change_scene_to_file() directly
 ## from game code (see the header note above).
 func travel(scene_path: String, spawn_id: StringName = &"default") -> bool:
+	# Ask the authored guard before staging any destination or clock/save mutation.
+	if not ($StateChart/Root/Playing/Active/ToLoading as Transition).evaluate_guard():
+		return false
 	var location := LocationRegistry.by_scene(scene_path)
 	if location == null:
 		if not GAMEPLAY_SCENES.has(scene_path):
@@ -581,6 +616,8 @@ func fast_travel(hub_id: StringName, current_scene_path: String = "") -> Diction
 ## Resolves a stable destination into GameFlow-owned scene state and asks the
 ## chart to enter its existing loading transition.
 func load_destination(destination: LoadDestination) -> bool:
+	if not ($StateChart/Root/Playing/Active/ToLoading as Transition).evaluate_guard():
+		return false
 	if not destination.scene_path.is_empty():
 		if not GAMEPLAY_SCENES.has(destination.scene_path):
 			push_error("Refusing load of unknown gameplay scene: %s" % destination.scene_path)
@@ -746,12 +783,13 @@ func _refund_pending_fast_travel() -> void:
 
 func _on_paused_entered() -> void:
 	get_tree().paused = true
-	UIManager.open(PAUSE_MENU, false, true)
+	if not bool(chart.get_expression_property(&"editor_open", false)):
+		UIManager.open(PAUSE_MENU, false, true)
 
 
 func _on_paused_exited() -> void:
 	UIManager.close_all()
-	get_tree().paused = false
+	get_tree().paused = _editor_owns_pause
 
 
 func _on_deployment_entered(step: int) -> void:
