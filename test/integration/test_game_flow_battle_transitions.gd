@@ -177,6 +177,11 @@ func test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory()
 	assert_bool(Battle.session_active).is_false()
 	assert_bool(proof._is_unlocked()).is_true()
 
+	# #473: ENCOUNTER RESOLVED waits until the field has presented the finishing beats.
+	var outcome_deadline := Time.get_ticks_msec() + 60000
+	while not bool(hud.call("outcome_shown")) and Time.get_ticks_msec() < outcome_deadline:
+		await get_tree().process_frame
+	assert_bool(bool(hud.call("outcome_shown"))).is_true()
 	var outcome := hud.get("_outcome_box") as VBoxContainer
 	(outcome.get_child(outcome.get_child_count() - 1) as Button).pressed.emit()
 	await get_tree().process_frame

@@ -236,12 +236,13 @@ func _on_tile_hovered(tile: Dictionary) -> void:
 		_aim_target = target
 		_refresh_aim_options(action, target)
 		_show_target_forecast(action, target)
-	# Hovered move quote is display-only (AP compatibility: gate T-10 — the AP
-	# number comes verbatim from the controller's move_query pricing).
+	# Hovered move quote is display-only: the stage renders the controller's move_query pricing
+	# in the active economy (#473: CT and the banked charge left under charge time, else AP).
 	else:
 		_clear_target_preview()
-		if stage.hovered_ap_cost() >= 0:
-			cursor_readout.text += " · MOVE %d AP" % stage.hovered_ap_cost()
+		var move_quote := stage.hovered_move_quote()
+		if not move_quote.is_empty():
+			cursor_readout.text += " · MOVE " + move_quote
 
 
 func _show_target_forecast(action: CombatAction, target: BattleActor) -> void:

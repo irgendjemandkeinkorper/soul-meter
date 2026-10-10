@@ -407,6 +407,27 @@ func test_enemy_phase_is_presented_beat_by_beat_after_the_players_strike() -> vo
 	assert_bool(overlay.is_animating()).is_false()
 
 
+## #473: the beat cursor is what the field shows now, not what the model has resolved. HUD
+## regions outside the field read it (and `beat_presented`) to stay behind the field.
+func test_beat_cursor_trails_the_received_stream_until_each_beat_is_presented() -> void:
+	var fixture := _duel()
+	var overlay: CombatOverlay = fixture.overlay
+	var presented: Array[CombatEvent] = []
+	overlay.beat_presented.connect(func(event: CombatEvent) -> void: presented.append(event))
+	var strike := _strike(&"ally", &"enemy", 11, 43, 7)
+	var enemy_turn := _event(&"enemy_turn_started", &"enemy", &"", 43, 7)
+	var reply := _strike(&"enemy", &"ally", 1, 42, 7)
+	for event: CombatEvent in [strike, enemy_turn, reply]:
+		overlay.consume_event(event)
+	assert_object(overlay.presented_event()).is_same(strike)
+	assert_array(presented).contains_exactly([strike])
+	await _await_event_presented(overlay, enemy_turn)
+	assert_object(overlay.presented_event()).is_same(enemy_turn)
+	await _await_presented(overlay)
+	assert_object(overlay.presented_event()).is_same(reply)
+	assert_array(presented).contains_exactly([strike, enemy_turn, reply])
+
+
 ## Replaying history (HUD reopen) or turning animation off presents anything still queued at
 ## once, in order, with no beat holds.
 func test_disabling_animation_flushes_queued_beats_in_order() -> void:

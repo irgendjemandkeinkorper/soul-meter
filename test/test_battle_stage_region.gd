@@ -369,3 +369,56 @@ func test_backdrop_theme_maps_every_catalog_prefix_and_resolution_never_crashes(
 	stage._encounter_id = &"dorthkor-muster"
 	stage._sync_background()
 	assert_str(stage.background_texture_path()).ends_with("dorthkor-road-battlefield-v1.png")
+
+
+## #473: the hovered move quote follows the active economy. Under charge time it is the
+## path's CT and the banked charge left after it (owner 2026-10-10: move budget = banked
+## charge); the AP round economy keeps its AP quote. Both come verbatim from the snapshot.
+func test_hovered_move_quote_names_ct_and_remaining_charge_under_charge_time() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var row := {
+		"destination": &"c:1,0,0", "ap_cost": 3, "ct_cost": 60,
+		"path_cells": [Vector2i(0, 0), Vector2i(1, 0)],
+	}
+	var event := CombatEvent.new()
+	event.data = {"snapshot": {
+		"scheduler_mode": "",
+		"tiles": [{"x": 0, "y": 0}, {"x": 1, "y": 0}],
+		"movement": {"ct_budget": 100, "reachable": [row]},
+	}}
+	stage.consume_event(event)
+	assert_str(stage.hovered_move_quote()).is_empty()
+	stage._hovered = Vector2i(1, 0)
+	assert_str(stage.hovered_move_quote()).is_equal("60 CT · 40 CT LEFT")
+	assert_str(stage.hovered_move_quote()).not_contains("AP")
+	assert_int(stage.hovered_ap_cost()).is_equal(3)
+
+	var ap_event := CombatEvent.new()
+	ap_event.data = {"snapshot": {
+		"scheduler_mode": "ap_round",
+		"tiles": [{"x": 0, "y": 0}, {"x": 1, "y": 0}],
+		"movement": {"ct_budget": 4, "reachable": [row]},
+	}}
+	stage.consume_event(ap_event)
+	stage._hovered = Vector2i(1, 0)
+	assert_str(stage.hovered_move_quote()).is_equal("3 AP")
+
+
+## #473: without a field overlay every event is presented as it arrives, so the stage's beat
+## cursor is the latest event and `beat_presented` fires once per event, in order.
+func test_stage_without_a_field_presents_each_event_as_its_beat() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var presented: Array[CombatEvent] = []
+	stage.beat_presented.connect(func(event: CombatEvent) -> void: presented.append(event))
+	assert_object(stage.presented_event()).is_null()
+	var first := CombatEvent.new()
+	first.data = {"tiles": [{"x": 0, "y": 0}]}
+	var second := CombatEvent.new()
+	second.data = {"tiles": [{"x": 0, "y": 0}]}
+	stage.consume_event(first)
+	stage.consume_event(second)
+	assert_array(presented).contains_exactly([first, second])
+	assert_object(stage.presented_event()).is_same(second)
+	assert_bool(stage.is_presenting_beats()).is_false()
