@@ -38,6 +38,7 @@ func _set_field_huds_hidden(hidden: bool) -> void:
 ## Soul Meter's tool panels (§4.1 `weftlumin/panels/`), in dock order. The directory is
 ## export-excluded, so each scene loads lazily and a build without it mounts none (fails closed).
 const PANEL_SCENES: Array[String] = [
+	"res://weftlumin/panels/scene_panel.tscn",
 	"res://weftlumin/panels/console_panel.tscn",
 	"res://weftlumin/panels/timeline_panel.tscn",
 	"res://weftlumin/panels/combat_lab_panel.tscn",
