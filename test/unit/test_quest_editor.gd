@@ -509,6 +509,7 @@ func test_ui_names_live_progress_and_requires_confirmation_before_force() -> voi
 	QuestRegistry.offer(active_quest)
 	active_quest.current_stage = 1
 	var panel: WeftluminQuestPanel = _mount_panel()
+	panel.show_json()
 	panel.campaign_editor.text = JSON.stringify(_campaign())
 	panel.quests_editor.text = JSON.stringify(quests)
 
@@ -583,20 +584,85 @@ func test_outcome_row_can_be_removed_below_loader_minimum_and_surfaces_error() -
 	var quests: Array[Dictionary] = [_quest("ui-outcomes")]
 	var saved: Dictionary = _editor.call("save_campaign", _campaign(), quests)
 	assert_bool(bool(saved.get("saved", false))).is_true()
-	# A draft edited below the loader minimum stays editable and validation surfaces
-	# the loader's own error (the panel edits the quest documents directly).
-	var below_minimum: Dictionary = _quest("ui-outcomes")
-	below_minimum["outcomes"] = [(below_minimum["outcomes"] as Array)[0]]
 	var panel: WeftluminQuestPanel = _mount_panel()
 	panel.load_campaign(CAMPAIGN_ID)
-	panel.quests_editor.text = JSON.stringify([below_minimum])
+	assert_int(panel.outcome_rows.size()).is_equal(2)
+
+	panel.remove_outcome_row(panel.outcome_rows[0])
+
+	var remaining_remove: Button = panel.outcome_rows[0]["remove"] as Button
+	assert_int(panel.outcome_rows.size()).is_equal(1)
+	assert_bool(remaining_remove.disabled).is_false()
+	assert_str(panel.outcome_requirement.text).contains("Current: 1")
+	# The surviving row is the second outcome, with its authored values intact.
+	var draft: Dictionary = panel.current_draft()
+	var outcomes: Array = ((draft["quests"] as Array)[0] as Dictionary)["outcomes"]
+	assert_int(outcomes.size()).is_equal(1)
+	assert_str(str((outcomes[0] as Dictionary)["id"])).is_equal("second")
+	var result: Dictionary = panel.validate()
+	assert_bool(_has_error_code(result.get("errors", []), "incomplete_outcome_schema")).is_true()
+	assert_str(panel.errors_label.text).contains("DomSideQuest requires at least two outcomes")
+	assert_str(panel.field_error("outcomes")).contains("DomSideQuest requires at least two outcomes")
+	assert_str(panel.status_text()).contains("NOT VALID")
+	assert_bool(FileAccess.file_exists(PACKAGE_PATH + "/quests/ui-outcomes.json")).is_true()
+
+
+func test_form_shows_each_loader_error_beside_its_field() -> void:
+	var quests: Array[Dictionary] = [_quest("ui-inline")]
+	assert_bool(bool((_editor.call("save_campaign", _campaign(), quests) as Dictionary).get("saved", false))).is_true()
+	var panel: WeftluminQuestPanel = _mount_panel()
+	panel.load_campaign(CAMPAIGN_ID)
+	panel.set_field("dialogue_title", "not_an_authored_dialogue_title")
+	panel.set_outcome_field(1, "id", "first")
+	panel.set_field("decision_prompt", "")
 
 	var result: Dictionary = panel.validate()
 
-	assert_bool(_has_error_code(result.get("errors", []), "incomplete_outcome_schema")).is_true()
-	assert_str(panel.errors_label.text).contains("DomSideQuest requires at least two outcomes")
-	assert_str(panel.status_text()).contains("NOT VALID")
-	assert_bool(FileAccess.file_exists(PACKAGE_PATH + "/quests/ui-outcomes.json")).is_true()
+	var errors: Array = result.get("errors", [])
+	assert_bool(_has_error_code(errors, "unknown_dialogue_title")).is_true()
+	assert_bool(_has_error_code(errors, "duplicate_outcome_id")).is_true()
+	assert_str(panel.field_error("dialogue_title")).contains("not_an_authored_dialogue_title")
+	assert_str(panel.outcome_field_error(1, "id")).contains("duplicated")
+	assert_str(panel.outcome_field_error(0, "id")).is_empty()
+	assert_str(panel.field_error("decision_prompt")).contains("decision_prompt")
+	assert_str(panel.field_error("quest_id")).is_empty()
+	# Fixing the fields clears their inline errors on the next validation.
+	panel.set_field("dialogue_title", "dom_side_dishonest_casks")
+	panel.set_outcome_field(1, "id", "second")
+	panel.set_field("decision_prompt", "Choose.")
+	assert_array(panel.validate().get("errors", [])).is_empty()
+	assert_str(panel.field_error("dialogue_title")).is_empty()
+	assert_str(panel.outcome_field_error(1, "id")).is_empty()
+	assert_str(panel.errors_label.text).is_equal("No loader errors.")
+
+
+func test_form_and_json_views_carry_one_draft_without_dropping_fields() -> void:
+	var panel: WeftluminQuestPanel = _mount_panel()
+	panel.new_draft()
+	panel.create_new_quest()
+	panel.set_field("campaign.id", CAMPAIGN_ID)
+	panel.set_field("quest_id", "from-form")
+	panel.set_outcome_field(0, "label", "Form label")
+	panel.show_json()
+	assert_bool(panel.json_view.visible).is_true()
+	assert_bool(panel.form_view.visible).is_false()
+	var quests: Variant = JSON.parse_string(panel.quests_editor.text)
+	assert_str(str((quests as Array)[0]["quest_id"])).is_equal("from-form")
+	assert_str(str((quests as Array)[0]["outcomes"][0]["label"])).is_equal("Form label")
+	# A field the form does not show survives a round trip through it.
+	var quest: Dictionary = _quest("from-json")
+	(quest["outcomes"] as Array)[0]["soul_delta"] = 2
+	panel.campaign_editor.text = JSON.stringify(_campaign())
+	panel.quests_editor.text = JSON.stringify([quest])
+	assert_bool(panel.show_form()).is_true()
+	assert_int(panel.outcome_rows.size()).is_equal(2)
+	assert_str(panel.current_draft()["quests"][0]["quest_id"]).is_equal("from-json")
+	assert_int(int(panel.current_draft()["quests"][0]["outcomes"][0]["soul_delta"])).is_equal(2)
+	# JSON that does not parse keeps the JSON view open.
+	panel.show_json()
+	panel.quests_editor.text = "[ not json"
+	assert_bool(panel.show_form()).is_false()
+	assert_bool(panel.json_view.visible).is_true()
 
 
 func test_loader_rejected_quest_is_not_written_or_registered() -> void:
@@ -635,20 +701,19 @@ func test_authoring_and_registration_do_not_mutate_campaign_state_or_quest_pools
 
 
 func test_new_quest_ui_makes_the_two_outcome_minimum_visible() -> void:
-	# The F6 overlay's guided new-quest form is retired (E2.5b). In the panel a new draft
-	# starts empty, and a quest without outcomes names the two-outcome minimum on validate.
 	var panel: WeftluminQuestPanel = _mount_panel()
 	panel.new_draft()
-	assert_str(panel.campaign_editor.text).is_equal("{}")
-	assert_str(panel.quests_editor.text).is_equal("[]")
-	var no_outcomes: Dictionary = _quest("ui-new")
-	no_outcomes["outcomes"] = []
-	panel.campaign_editor.text = JSON.stringify(_campaign())
-	panel.quests_editor.text = JSON.stringify([no_outcomes])
+	assert_bool(panel.quest_fields.visible).is_false()
 
-	panel.validate()
+	panel.create_new_quest()
 
-	assert_str(panel.errors_label.text).contains("at least two outcomes")
+	assert_bool(panel.quest_fields.visible).is_true()
+	assert_int(panel.outcome_rows.size()).is_equal(2)
+	assert_object(panel.outcome_requirement).is_not_null()
+	assert_str(panel.outcome_requirement.text).contains("Minimum 2 outcomes")
+	panel.add_outcome_row()
+	assert_int(panel.outcome_rows.size()).is_equal(3)
+	assert_str(panel.outcome_requirement.text).contains("Current: 3")
 
 
 ## The quest panel exactly as the shell mounts it, over a model rooted in the scratch tree.

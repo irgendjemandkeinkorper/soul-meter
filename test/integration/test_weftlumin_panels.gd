@@ -307,7 +307,7 @@ func test_combat_panel_session_runs_under_the_shell_sandbox_and_is_contained() -
 	assert_object(Battle.controller).is_not_null()
 	# The editor guard still owns the chart: a lab battle never enters the Battle state.
 	assert_bool(_active("Battle")).is_false()
-	assert_str(panel.inspector.text).contains("RUNNING")
+	assert_str(panel.session_label.text).contains("RUNNING")
 	var export_root := ProjectSettings.globalize_path(CombatLabScript.EXPORT_ROOT)
 	var export_root_existed := DirAccess.dir_exists_absolute(export_root)
 	var exported := panel.export_session()
@@ -325,6 +325,75 @@ func test_combat_panel_session_runs_under_the_shell_sandbox_and_is_contained() -
 	assert_bool(sandbox.is_armed()).is_false()
 	assert_object(Battle.controller).is_null()
 	assert_dict(GameState.to_dict()).is_equal(before)
+
+
+## #474: the styled inspector (the retired F3 InspectorDock) and its full aim quote.
+func test_combat_panel_inspector_shows_every_readout_and_the_full_aim_quote() -> void:
+	var shell := _open()
+	var panel := _panel(shell, "Combat lab") as WeftluminCombatLabPanel
+	_select(shell, "Combat lab")
+	assert_object(panel.find_child("InspectorDock", true, false)).is_same(panel.inspector)
+	assert_str(panel.session_label.text).contains("No lab session")
+	assert_bool(panel.aim_controls.visible).is_false()
+	await _start_low_cover_lab(panel)
+
+	assert_str(panel.session_label.text).is_equal("RUNNING")
+	assert_str(panel.timeline_label.text).contains("READY_AT")
+	assert_str(panel.forecast_label.text).is_not_empty()
+	assert_bool(panel.divergence_label.visible).is_false()
+	assert_str(panel.field_label.text).contains("Balance")
+	assert_str(panel.field_label.text).contains("Weather")
+	assert_str(panel.style_label.text).contains("Total")
+	assert_str(panel.turns_label.text).is_equal("No resolved actions yet.")
+	assert_str(panel.export_label.text).is_equal("Export: not exported")
+	assert_bool(panel.aim_controls.visible).is_true()
+
+	panel.model.call("select_lab_aim", &"torso")
+	assert_str(panel.aim_quote.text).is_equal("Low cover hides that location from here.")
+	assert_bool(panel.aim_submit.disabled).is_true()
+
+	panel.model.call("select_lab_aim", &"throat")
+	var quote: Dictionary = panel.model.call("aim_forecast")
+	assert_bool(bool(quote.get("allowed", false))).override_failure_message(str(quote)).is_true()
+	var accuracy: Dictionary = quote["resolution"]["accuracy_breakdown"]
+	var use_ct := str(quote.get("scheduler_mode", "ap")) == "ct"
+	var lines := panel.aim_quote.text.split("\n")
+	assert_int(lines.size()).is_equal(4)
+	assert_str(lines[0]).is_equal("%s · COST %d %s · HIT %d%%" % [
+		str(quote["target_name"]), int(quote["ct_cost"] if use_ct else quote["ap_cost"]),
+		"CT" if use_ct else "AP", int(accuracy["effective_hit_chance"]),
+	])
+	assert_str(lines[1]).is_equal("%d DAMAGE ON HIT" % int(quote["damage_on_hit"]))
+	assert_str(lines[2]).starts_with("Base %d%%" % int(accuracy["base"]))
+	for modifier: Dictionary in accuracy["modifiers"]:
+		assert_str(lines[2]).contains("%s %+d pp" % [str(modifier["label"]), int(modifier["percentage_points"])])
+	var injury: Dictionary = quote.get("injury_forecast", {})
+	if injury.is_empty():
+		assert_str(lines[3]).is_equal("Synthetic anatomy; no injury authored for this location.")
+	else:
+		assert_str(lines[3]).starts_with("INJURY %s · %d%% ON HIT" % [
+			str(injury["id"]), int(injury["chance_on_hit"]),
+		])
+	assert_bool(panel.aim_submit.disabled).is_false()
+	assert_str(panel.inspector_text()).contains(panel.aim_quote.text)
+	_select(shell, "Console")
+
+
+func _start_low_cover_lab(panel: WeftluminCombatLabPanel) -> void:
+	panel.encounter_picker.select(EncounterCatalog.all_ids().find(EncounterIds.BOG_WIGHT))
+	panel.aim_fixture.button_pressed = true
+	for index: int in panel.anatomy_fixture.item_count:
+		if str(panel.anatomy_fixture.get_item_metadata(index)) == "low_cover":
+			panel.anatomy_fixture.select(index)
+	var setup := panel.current_setup()
+	setup["seed"] = 42
+	panel.model.call("start_lab_battle", setup)
+	await get_tree().process_frame
+	var grid := Battle.controller.battlefield as GridBattlefieldModel
+	var ally_cell: Vector2i = grid.cell_of(Battle.controller.active_actor())
+	assert_bool(grid.displace(Battle.controller.enemies[0], ally_cell + Vector2i(2, 0))["allowed"]).is_true()
+	# The catalog seats the wight out of range; re-seat the fixture's cover beside its new cell.
+	panel.model.call("_seat_low_cover", Battle.controller)
 
 
 func test_combat_panel_refuses_over_a_live_production_battle() -> void:
@@ -436,6 +505,7 @@ func test_quest_panel_validates_saves_registers_and_requires_explicit_authorisat
 	var package_path := SCRATCH_CAMPAIGNS_ROOT.path_join(CAMPAIGN_ID)
 	var invalid := _quest("panel-live")
 	invalid["dialogue_title"] = "not_an_authored_dialogue_title"
+	panel.show_json()
 	panel.campaign_editor.text = JSON.stringify(_campaign())
 	panel.quests_editor.text = JSON.stringify([invalid])
 	var validation: Dictionary = panel.validate()
@@ -498,6 +568,65 @@ func test_rendered_panels_capture() -> void:
 	_select(shell, "Console")
 	if current != null:
 		current.visible = visible_before
+
+
+## #474: rendered dock crops of the guided quest form and the styled combat inspector, one per
+## scroll page of each panel (the dock is about 115 px tall at 1080p, so both forms scroll).
+func test_rendered_panel_forms_capture() -> void:
+	var capture_dir := OS.get_environment("SOUL_METER_WEFTLUMIN_FORMS_CAPTURE_DIR")
+	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	assert_int(DirAccess.make_dir_recursive_absolute(capture_dir)).is_equal(OK)
+	var shell := _open()
+	var quest := _panel(shell, "Quest editor") as WeftluminQuestPanel
+	quest.model.set("campaigns_root_for_tests", SCRATCH_CAMPAIGNS_ROOT)
+	_select(shell, "Quest editor")
+	quest.new_draft()
+	quest.create_new_quest()
+	quest.set_field("campaign.id", CAMPAIGN_ID)
+	quest.set_field("campaign.title", "Weftlumin Panel Test")
+	quest.set_field("quest_id", "panel-form")
+	quest.set_field("name", "Panel Form Quest")
+	quest.set_outcome_field(0, "id", "first")
+	quest.set_outcome_field(0, "label", "First")
+	quest.set_outcome_field(1, "id", "first")
+	quest.validate()
+	await _capture_pages(shell, quest, capture_dir, "quest-form")
+	quest.show_json()
+	await _capture_pages(shell, quest, capture_dir, "quest-json", 1)
+
+	var combat := _panel(shell, "Combat lab") as WeftluminCombatLabPanel
+	_select(shell, "Combat lab")
+	await _start_low_cover_lab(combat)
+	combat.model.call("select_lab_aim", &"throat")
+	await _capture_pages(shell, combat, capture_dir, "combat-inspector")
+	_select(shell, "Console")
+
+
+func _capture_pages(
+	shell: WeftluminShell, panel: SoulMeterToolPanel, capture_dir: String, stem: String,
+	max_pages: int = 12
+) -> void:
+	var scroll := panel.get_node("Scroll") as ScrollContainer
+	await get_tree().create_timer(0.2).timeout
+	var dock := Rect2i(shell.bottom_tabs.get_global_rect())
+	var bar := scroll.get_v_scroll_bar()
+	var page := 0
+	var offset := 0
+	while page < max_pages:
+		scroll.scroll_vertical = offset
+		await get_tree().process_frame
+		RenderingServer.force_draw()
+		await RenderingServer.frame_post_draw
+		var frame: Image = get_viewport().get_texture().get_image()
+		assert_int(frame.get_region(dock).save_png(
+			capture_dir.path_join("%s-%d.png" % [stem, page])
+		)).is_equal(OK)
+		page += 1
+		var end := int(bar.max_value - bar.page)
+		if offset >= end:
+			break
+		offset = mini(offset + int(scroll.size.y) - 16, end)
 
 
 func _scene_panel(shell: WeftluminShell) -> WeftluminScenePanel:
