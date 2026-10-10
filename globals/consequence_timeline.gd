@@ -21,6 +21,8 @@ var _ledger_signals_connected: bool = false
 var _overlay_layer: CanvasLayer = null
 var _rows: Array[Dictionary] = []
 var _next_arrival: int = 0
+## True when a Weftlumin panel owns this instance (see host_in_panel()).
+var _panel_hosted: bool = false
 
 
 func _ready() -> void:
@@ -49,7 +51,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func open_overlay() -> void:
-	if not _enabled or _overlay_layer != null:
+	if not _enabled or _overlay_layer != null or _panel_hosted:
 		return
 	_overlay_layer = CanvasLayer.new()
 	_overlay_layer.name = "ConsequenceTimelineLayer"
@@ -85,16 +87,33 @@ func summary() -> Dictionary:
 	}
 
 
+## Weftlumin panel seam (architecture §4.5.5, §4.12). The panel that owns this instance
+## enables the observer; the shell owns activation, bindings and pause, so the F4 overlay, its
+## hotkey and the environment gate stand down. Refused on the autoload itself and in release
+## builds. The observer stays read-only.
+func host_in_panel() -> bool:
+	if not OS.is_debug_build() or not is_inside_tree() or get_parent() == get_tree().root:
+		return false
+	_panel_hosted = true
+	_set_enabled(true)
+	set_process_unhandled_key_input(false)
+	return true
+
+
 func _refresh_activation() -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or _panel_hosted:
 		return
 	var should_enable: bool = OS.is_debug_build() and (
 		OS.get_environment(ENVIRONMENT_VARIABLE) == "1" or force_enabled_for_tests
 	)
+	_set_enabled(should_enable)
+
+
+func _set_enabled(should_enable: bool) -> void:
 	if should_enable == _enabled:
 		return
 	_enabled = should_enable
-	set_process_unhandled_key_input(_enabled)
+	set_process_unhandled_key_input(_enabled and not _panel_hosted)
 	if _enabled:
 		_load_backfill()
 		_connect_ledger_signals()

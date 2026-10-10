@@ -6,6 +6,8 @@ const TOGGLE_ACTION := &"weftlumin_toggle"
 const ZOOM_STEP := 1.1
 const MIN_ZOOM := 0.1
 const MAX_ZOOM := 8.0
+## Bottom tabs the dock always offers (§4.5.5), placeholders until a host panel fills them.
+const BOTTOM_TABS: Array[String] = ["Console", "Command log", "Consequence timeline", "Validation"]
 
 var adapter: WeftluminGameAdapter
 var root: Control
@@ -185,8 +187,9 @@ func _build_dock() -> void:
 	bottom_tabs.theme_type_variation = &"EditorTabContainer"
 	bottom_tabs.custom_minimum_size.y = root.get_theme_constant(&"dock_height", &"EditorTabContainer")
 	vertical.add_child(bottom_tabs)
-	for panel_title: String in ["Console", "Command log", "Consequence timeline", "Validation"]:
-		_panel(panel_title, bottom_tabs)
+	# A host panel whose title names one of the fixed bottom tabs (§4.5.5) takes that slot;
+	# the rest follow in the order the host lists them.
+	var hosted: Array[WeftluminPanel] = []
 	for packed: PackedScene in adapter.panels():
 		var instance: Node = packed.instantiate()
 		var panel := instance as WeftluminPanel
@@ -194,18 +197,30 @@ func _build_dock() -> void:
 			push_warning("Weftlumin panels must implement WeftluminPanel.")
 			instance.free()
 			continue
-		panel.name = panel.title
-		bottom_tabs.add_child(panel)
-		panel.configure(self)
+		hosted.append(panel)
+	for panel_title: String in BOTTOM_TABS:
+		var index := hosted.find_custom(
+			func(candidate: WeftluminPanel) -> bool: return candidate.title == panel_title
+		)
+		if index < 0:
+			_panel(panel_title, bottom_tabs)
+		else:
+			_mount(hosted.pop_at(index), bottom_tabs)
+	for panel: WeftluminPanel in hosted:
+		_mount(panel, bottom_tabs)
 	bottom_tabs.tab_changed.connect(_on_tab_changed)
+
+
+func _mount(panel: WeftluminPanel, tabs: TabContainer) -> void:
+	panel.name = panel.title
+	tabs.add_child(panel)
+	panel.configure(self)
 
 
 func _panel(panel_title: String, tabs: TabContainer) -> WeftluminPanel:
 	var panel := WeftluminPanel.new()
 	panel.title = panel_title
-	panel.name = panel_title
-	tabs.add_child(panel)
-	panel.configure(self)
+	_mount(panel, tabs)
 	return panel
 
 
@@ -287,6 +302,12 @@ func _on_tab_changed(index: int) -> void:
 		_selected_tab = index
 	else:
 		bottom_tabs.set_current_tab(_selected_tab)
+
+
+## Owner token the shell arms the shared sandbox under for `panel`. A sandbox panel hands it to
+## its model so the model's own session restarts under the holder rather than competing with it.
+func sandbox_token(panel: WeftluminPanel) -> StringName:
+	return _sandbox_token(panel)
 
 
 func _sandbox_token(panel: WeftluminPanel) -> StringName:

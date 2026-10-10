@@ -183,7 +183,11 @@ func test_shell_has_one_themed_root_and_required_docks() -> void:
 	assert_int(shell.get_child_count()).is_equal(1)
 	assert_object(shell.root.theme).is_same(shell.adapter.theme())
 	assert_vector(shell.root.size).is_equal(get_viewport().get_visible_rect().size)
-	assert_int(shell.bottom_tabs.get_tab_count()).is_equal(4)
+	# The four fixed bottom tabs (§4.5.5) lead; E2.5a's host panels fill or follow them.
+	assert_int(shell.bottom_tabs.get_tab_count()).is_equal(7)
+	for index: int in WeftluminShell.BOTTOM_TABS.size():
+		var tab := shell.bottom_tabs.get_tab_control(index) as WeftluminPanel
+		assert_str(tab.title).is_equal(WeftluminShell.BOTTOM_TABS[index])
 	assert_object(shell.root.find_child("TreePalette", true, false)).is_not_null()
 	assert_object(shell.root.find_child("Inspector", true, false)).is_not_null()
 	assert_object(shell.viewport_surface).is_not_null()

@@ -1,6 +1,9 @@
 extends Node
 ## Debug-only encounter sandbox. Disabled builds remain completely inert.
 
+## Panel-hosted presentation feed: the inspector payload the F3 overlay would receive.
+signal inspector_changed(payload: Dictionary)
+
 const COMBAT_LAB_SCENE := preload("res://ui/debug/combat_lab.tscn")
 const EXPORT_ROOT := "user://combat_lab"
 const AUTHORED_WEATHER := &"__authored_default__"
@@ -49,6 +52,8 @@ var _pending_forecast: Dictionary = {}
 var _last_comparison: Dictionary = {}
 var _aim_location: StringName = &"torso"
 var _aim_controller: CombatController = null
+## True when a Weftlumin panel owns this instance (see host_in_panel()).
+var _panel_hosted: bool = false
 ## A finished lab battle runs the PRODUCTION end-of-battle path, which accrues
 ## style points into SaveGame.ng_plus, can consume persistent SkillCheck expert
 ## rerolls, turns in quests, and mutates the tactical roster. Battle then
@@ -123,11 +128,11 @@ func _ownership_conflict_is_live() -> bool:
 ## up. The shared sandbox distinguishes our own armed session — which a restart
 ## must still be allowed to replace — from another tool's.
 func another_sandbox_is_armed() -> bool:
-	return _sandbox().held_by_other(SANDBOX_OWNER)
+	return _sandbox().held_by_other(sandbox_owner)
 
 
 func open_setup() -> void:
-	if not _enabled or _overlay_layer != null or _lab_battle_running:
+	if not _enabled or _overlay_layer != null or _lab_battle_running or _panel_hosted:
 		return
 	if _ownership_conflict_is_live():
 		push_warning(REFUSAL_WARNING)
@@ -718,7 +723,7 @@ func _disconnect_battle_signals() -> void:
 
 
 func _open_overlay(inspector: bool) -> void:
-	if not _enabled or _overlay_layer != null:
+	if not _enabled or _overlay_layer != null or _panel_hosted:
 		return
 	_overlay_layer = CanvasLayer.new()
 	_overlay_layer.name = "CombatLabLayer"
@@ -736,6 +741,8 @@ func _open_overlay(inspector: bool) -> void:
 func _update_panel() -> void:
 	if _panel != null and is_instance_valid(_panel):
 		_panel.call("update_inspector", _inspector_payload())
+	if _panel_hosted:
+		inspector_changed.emit(_inspector_payload())
 
 
 func _inspector_payload() -> Dictionary:
@@ -835,6 +842,9 @@ func _apply_party(selected_ids_value: Variant) -> void:
 
 ## Owner id this lab holds the shared sandbox under.
 const SANDBOX_OWNER := &"combat_lab"
+## The id actually used. A Weftlumin panel hands over the shell's token so the lab's own
+## session arms and restores under the owner the shell already holds (§4.5.6).
+var sandbox_owner: StringName = SANDBOX_OWNER
 
 
 ## The shared sandbox, with this game's surfaces registered. Registration replaces by id, so
@@ -857,11 +867,11 @@ func _sandbox() -> WeftluminSandbox:
 ## armed session, but never someone else's.
 func sandbox_is_armed() -> bool:
 	var sandbox: WeftluminSandbox = _sandbox()
-	return sandbox.is_armed() and sandbox.owner() == SANDBOX_OWNER
+	return sandbox.is_armed() and sandbox.owner() == sandbox_owner
 
 
 func _capture_saved_state() -> void:
-	_sandbox().arm(SANDBOX_OWNER)
+	_sandbox().arm(sandbox_owner)
 
 
 ## Restores exactly ONCE per session, then disarms.
@@ -891,16 +901,36 @@ func _record_playtest_usage() -> void:
 	})
 
 
+## Weftlumin panel seam (architecture §4.5.5, §4.9). The panel that owns this instance enables
+## the lab under the shell's sandbox token; the shell owns activation, bindings and pause, so the
+## F3 overlay, its hotkey and the environment gate stand down. Refused on the autoload itself and
+## in release builds. Weather, forecast/resolution and containment rules are unchanged.
+func host_in_panel(owner_token: StringName) -> bool:
+	if owner_token.is_empty():
+		return false
+	if not OS.is_debug_build() or not is_inside_tree() or get_parent() == get_tree().root:
+		return false
+	_panel_hosted = true
+	sandbox_owner = owner_token
+	_set_enabled(true)
+	set_process_unhandled_key_input(false)
+	return true
+
+
 func _refresh_activation() -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or _panel_hosted:
 		return
 	var should_enable: bool = OS.is_debug_build() and (
 		OS.get_environment("SOUL_METER_COMBAT_LAB") == "1" or force_enabled_for_tests
 	)
+	_set_enabled(should_enable)
+
+
+func _set_enabled(should_enable: bool) -> void:
 	if should_enable == _enabled:
 		return
 	_enabled = should_enable
-	set_process_unhandled_key_input(_enabled)
+	set_process_unhandled_key_input(_enabled and not _panel_hosted)
 	if not _enabled:
 		_shutdown()
 
