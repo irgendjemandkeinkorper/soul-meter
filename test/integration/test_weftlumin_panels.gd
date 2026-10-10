@@ -629,6 +629,85 @@ func _capture_pages(
 		offset = mini(offset + int(scroll.size.y) - 16, end)
 
 
+## #478: the guided quest form at the default dock height, then with the handle dragged taller
+## by real pointer edges. Frames are halved to keep evidence small; the log reports scroll pages.
+func test_rendered_dock_splitter_quest_form_capture() -> void:
+	var capture_dir := OS.get_environment("SOUL_METER_DOCK_SPLITTER_CAPTURE_DIR")
+	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	assert_int(DirAccess.make_dir_recursive_absolute(capture_dir)).is_equal(OK)
+	var current := get_tree().current_scene as CanvasItem
+	var visible_before := current.visible if current != null else false
+	if current != null:
+		current.hide()
+	var shell := _open()
+	shell.reset_dock_height()
+	var quest := _panel(shell, "Quest editor") as WeftluminQuestPanel
+	quest.model.set("campaigns_root_for_tests", SCRATCH_CAMPAIGNS_ROOT)
+	_select(shell, "Quest editor")
+	quest.new_draft()
+	quest.create_new_quest()
+	quest.set_field("campaign.id", CAMPAIGN_ID)
+	quest.set_field("campaign.title", "Weftlumin Panel Test")
+	quest.set_field("quest_id", "dock-splitter")
+	quest.set_field("name", "Dock Splitter Quest")
+	await get_tree().create_timer(0.3).timeout
+	var scroll := quest.get_node("Scroll") as ScrollContainer
+	var default_pages := _scroll_pages(scroll)
+	await _save_frame(capture_dir.path_join("quest-form-default.png"))
+
+	var handle := shell.dock_split.get_drag_area_control()
+	var start := handle.get_global_rect().get_center()
+	var target := start + Vector2(0, -shell.root.size.y * 0.3)
+	_pointer_move(start, false)
+	_pointer_button(start, true)
+	_pointer_move(target, true)
+	_pointer_button(target, false)
+	await get_tree().create_timer(0.3).timeout
+	var tall_pages := _scroll_pages(scroll)
+	await _save_frame(capture_dir.path_join("quest-form-dragged-taller.png"))
+	print("#478 dock %.0f px of %.0f; quest form scroll pages: default %.1f, dragged %.1f" % [
+		shell.dock_height(), shell.root.size.y, default_pages, tall_pages,
+	])
+	assert_float(tall_pages).is_less(default_pages)
+	shell.reset_dock_height()
+	_select(shell, "Console")
+	if current != null:
+		current.visible = visible_before
+
+
+## A fresh event per edge: push_input keeps the instance, so a shared event would mutate in flight.
+func _pointer_button(position: Vector2, pressed: bool) -> void:
+	var click := InputEventMouseButton.new()
+	click.position = position
+	click.global_position = position
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
+	click.pressed = pressed
+	get_viewport().push_input(click)
+
+
+func _pointer_move(position: Vector2, held: bool) -> void:
+	var motion := InputEventMouseMotion.new()
+	motion.position = position
+	motion.global_position = position
+	motion.button_mask = MOUSE_BUTTON_MASK_LEFT if held else 0
+	get_viewport().push_input(motion)
+
+
+func _scroll_pages(scroll: ScrollContainer) -> float:
+	var bar := scroll.get_v_scroll_bar()
+	return float(bar.max_value) / maxf(float(bar.page), 1.0)
+
+
+func _save_frame(path: String) -> void:
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	var frame: Image = get_viewport().get_texture().get_image()
+	frame.resize(frame.get_width() / 2, frame.get_height() / 2, Image.INTERPOLATE_LANCZOS)
+	assert_int(frame.save_png(path)).is_equal(OK)
+
+
 func _scene_panel(shell: WeftluminShell) -> WeftluminScenePanel:
 	var left := shell.root.find_child("TreePalette", true, false) as TabContainer
 	return left.get_node("Scene tree") as WeftluminScenePanel
