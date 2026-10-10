@@ -17,13 +17,29 @@ const UnitArtScript := preload("res://globals/unit_art.gd")
 @onready var injury_badges: HFlowContainer = %InjuryBadges
 
 var _unit: Dictionary = {}
+var _follows_beats := false
 
 
 func unit_snapshot() -> Dictionary:
 	return _unit.duplicate(true)
 
 
+## #473: read the plate from the battlefield's presented beats instead of the live event
+## stream, so during a sequenced enemy phase it never shows an outcome the field has not
+## presented yet. `beat_presented` carries each event once the field presents it.
+func follow_presented_beats(beat_presented: Signal) -> void:
+	_follows_beats = true
+	if not beat_presented.is_connected(present_event):
+		beat_presented.connect(present_event)
+
+
 func consume_event(event: CombatEvent) -> void:
+	if _follows_beats:
+		return
+	present_event(event)
+
+
+func present_event(event: CombatEvent) -> void:
 	var snapshot: Dictionary = event.data.get("snapshot", event.data)
 	var unit: Dictionary = snapshot.get("active_unit", snapshot.get("actor", {}))
 	if unit.is_empty():

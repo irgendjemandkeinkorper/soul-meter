@@ -3,6 +3,10 @@ extends Node2D
 ## Field-space presentation only. CombatEvent snapshots own state; IsoGrid owns projection.
 ## Actor nodes are borrowed, never duplicated, and no combat model is mutated here.
 
+## #473: emitted after each event is presented, in emitted order. HUD regions outside the field
+## follow this beat cursor so they never read ahead of what the field shows.
+signal beat_presented(event: CombatEvent)
+
 var _grid: IsoGrid
 var _ground: TileMapLayer
 ## Vector2i -> the controller snapshot's tile dictionary, by reference (read-only here; each
@@ -45,6 +49,7 @@ var _hp_tweens: Dictionary = {}
 ## the event stream, and nothing here feeds back into combat.
 var _queue: Array[CombatEvent] = []
 var _holding := false
+var _presented_event: CombatEvent  ## #473 beat cursor: the last event presented (read-only)
 var _beat: Tween
 var _theme: Theme
 var animate_events := true:
@@ -212,6 +217,12 @@ func is_presenting() -> bool:
 	return _holding or not _queue.is_empty()
 
 
+## #473 beat cursor: the event the field currently shows (null before the first). Read-only;
+## it never reaches the controller.
+func presented_event() -> CombatEvent:
+	return _presented_event
+
+
 func consume_event(event: CombatEvent) -> void:
 	if not animate_events:
 		_flush_queue()
@@ -224,6 +235,7 @@ func consume_event(event: CombatEvent) -> void:
 
 
 func _present(event: CombatEvent) -> void:
+	_presented_event = event
 	var snapshot: Dictionary = event.data.get("snapshot", {})
 	var tiles: Variant = event.data.get("tiles", snapshot.get("tiles", []))
 	if tiles is Array and not is_same(tiles, _tiles_source):
@@ -276,6 +288,7 @@ func _present(event: CombatEvent) -> void:
 	queue_redraw()
 	if animate_events:
 		_hold(_beat_seconds(event, path))
+	beat_presented.emit(event)
 
 
 ## How long `event` keeps the presentation before the next queued event is presented.

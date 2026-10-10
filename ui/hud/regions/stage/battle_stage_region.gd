@@ -14,6 +14,10 @@ signal tile_selected(tile: Dictionary)
 signal tile_hovered(tile: Dictionary)
 signal pointer_pressed(tile: Dictionary, actor_id: StringName)
 signal pointer_cleared
+## #473: the event the battlefield has just presented. With a field overlay this follows its
+## sequenced beats; without one every event is presented as it arrives. HUD regions outside the
+## field read this instead of the live stream so they never run ahead of the field.
+signal beat_presented(event: CombatEvent)
 
 const UnitArtScript := preload("res://globals/unit_art.gd")
 const FieldOverlayScript := preload("res://world/combat_overlay.gd")
@@ -82,6 +86,11 @@ var _target_id: StringName = &""
 var _selected := Vector2i(-1, -1)
 var _hovered := Vector2i(-1, -1)
 var _reachable: Dictionary = {}
+## #473: under charge time a move is priced in CT against the actor's banked charge (owner
+## 2026-10-10); `_move_budget` is the snapshot's `movement.ct_budget`, -1 when absent.
+var _charge_time := false
+var _move_budget := -1
+var _last_presented: CombatEvent
 var _hover_path: Array[Vector2i] = []
 var _pending_cells: Array[Vector2i] = []
 var _fire_cells: Dictionary = {}   # Vector2i -> true (burning now)
@@ -153,6 +162,7 @@ func bind_field(field: FieldMap) -> void:
 		_field_overlay.free()
 	_field_overlay = FieldOverlayScript.new()
 	_field_overlay.name = "CombatOverlay"
+	_field_overlay.beat_presented.connect(beat_presented.emit)
 	field.add_child(_field_overlay)
 	_field_overlay.bind_field(field)
 	_sync_view_window()
@@ -240,6 +250,8 @@ func consume_event(event: CombatEvent) -> void:
 				_tiles.append(value)
 		_tile_index_stale = true
 	_read_actors(snapshot)
+	if snapshot.has("scheduler_mode"):
+		_charge_time = str(snapshot.get("scheduler_mode", "")) != "ap_round"
 	_set_movement(snapshot.get("movement", {}))
 	_read_fields(snapshot)
 	match event.type:
@@ -257,6 +269,7 @@ func consume_event(event: CombatEvent) -> void:
 		_field_overlay.consume_event(event)
 		_field_overlay.set_pointer(_selected, _hovered)
 		return
+	_last_presented = event
 	if _animate_events and not _reduced_motion() and _unit_nodes.has(event.actor_id) \
 			and SpellCastScript.is_cast(event) and HitPulseScript.is_damaging_hit(event):
 		_pending_defeats[event.target_id] = event.get_instance_id()
@@ -278,6 +291,19 @@ func consume_event(event: CombatEvent) -> void:
 			)
 		_play_action_beat(event)
 	queue_redraw()
+	beat_presented.emit(event)
+
+
+## #473 beat cursor: the event the battlefield currently shows (null before the first).
+func presented_event() -> CombatEvent:
+	if is_instance_valid(_field_overlay):
+		return _field_overlay.presented_event()
+	return _last_presented
+
+
+## True while the field overlay still has beats to present (or is holding the last one).
+func is_presenting_beats() -> bool:
+	return is_instance_valid(_field_overlay) and _field_overlay.is_presenting()
 
 
 func rendered_tile_count() -> int:
@@ -415,6 +441,25 @@ func hovered_ap_cost() -> int:
 	return int(_reachable.get(_hovered, {}).get("ap_cost", -1))
 
 
+## #473: the hovered cell's move quote as the active economy prices it, "" off the reachable
+## set. Under charge time: the path's CT and the banked charge left after it (owner 2026-10-10:
+## move budget = banked charge), e.g. "30 CT · 70 CT LEFT". The AP economy keeps "2 AP".
+## Display-only: both numbers come verbatim from the controller's movement snapshot.
+func hovered_move_quote() -> String:
+	if not _reachable.has(_hovered):
+		return ""
+	return _move_quote(_reachable[_hovered] as Dictionary)
+
+
+func _move_quote(row: Dictionary) -> String:
+	if not _charge_time:
+		return "%d AP" % int(row.get("ap_cost", 0))
+	var ct_cost := int(row.get("ct_cost", 0))
+	if _move_budget < 0:
+		return "%d CT" % ct_cost
+	return "%d CT · %d CT LEFT" % [ct_cost, maxi(0, _move_budget - ct_cost)]
+
+
 func destination_for_cell(cell: Vector2i) -> StringName:
 	return StringName((_reachable.get(cell, {}) as Dictionary).get("destination", &""))
 
@@ -438,9 +483,11 @@ func cell_center(cell: Vector2i) -> Vector2:
 
 func _set_movement(value: Variant) -> void:
 	_reachable.clear()
+	_move_budget = -1
 	if value is not Dictionary:
 		_refresh_hover()
 		return
+	_move_budget = int((value as Dictionary).get("ct_budget", -1))
 	var rows: Variant = (value as Dictionary).get("reachable", [])
 	if rows is not Array:
 		_refresh_hover()
@@ -596,10 +643,13 @@ func _draw() -> void:
 			rim, rim_width
 		)
 		if cell == _hovered and _reachable.has(cell):
+			var quote := _move_quote(_reachable[cell] as Dictionary)
+			var quote_width := ThemeDB.fallback_font.get_string_size(
+				quote, HORIZONTAL_ALIGNMENT_LEFT, -1, 11
+			).x
 			draw_string(
-				ThemeDB.fallback_font, center + Vector2(-13.0, -half_h - 4.0),
-				"%d AP" % int((_reachable[cell] as Dictionary).get("ap_cost", 0)),
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#F2E4C9")
+				ThemeDB.fallback_font, center + Vector2(-quote_width * 0.5, -half_h - 4.0),
+				quote, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#F2E4C9")
 			)
 		if height > 0:
 			draw_string(

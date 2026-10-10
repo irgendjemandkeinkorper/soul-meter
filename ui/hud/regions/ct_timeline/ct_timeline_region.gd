@@ -4,6 +4,7 @@ extends PanelContainer
 const FORECAST_DEPTH := 8
 var _scheduler: TurnScheduler
 var _snapshot_order: Array[Dictionary] = []
+var _follows_beats := false
 @onready var markers: HBoxContainer = %Markers
 
 
@@ -13,7 +14,22 @@ func bind_scheduler(scheduler: TurnScheduler) -> void:
 
 
 
+## #473: read the strip from the battlefield's presented beats instead of the live event
+## stream, so during a sequenced enemy phase it never shows an order the field has not
+## presented yet. `beat_presented` carries each event once the field presents it.
+func follow_presented_beats(beat_presented: Signal) -> void:
+	_follows_beats = true
+	if not beat_presented.is_connected(present_event):
+		beat_presented.connect(present_event)
+
+
 func consume_event(event: CombatEvent) -> void:
+	if _follows_beats:
+		return
+	present_event(event)
+
+
+func present_event(event: CombatEvent) -> void:
 	var snapshot: Dictionary = event.data.get("snapshot", event.data)
 	var authored_order: Variant = snapshot.get("turn_order", [])
 	if authored_order is Array:

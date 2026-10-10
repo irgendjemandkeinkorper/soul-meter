@@ -23,6 +23,8 @@ var _weakness_picker: OptionButton
 var _weakness_forecast: Label
 var _selected_weakness_id: StringName = &""
 var _refresh_queued := false
+## #473: the result waits here until the field has presented the beats that led to it.
+var _pending_result: BattleResult
 
 
 func _build() -> void:
@@ -65,6 +67,12 @@ func _build() -> void:
 	_battle_interface.stage.set_replaying(false)
 	if Battle.controller != null and Battle.controller.scheduler != null:
 		_battle_interface.bind_controller(Battle.controller)
+	# #473: the dock, unit plate and CT strip follow the field's presented beats, not the live
+	# model, so a sequenced enemy phase never shows its end state before the field does.
+	var stage := _battle_interface.stage
+	stage.beat_presented.connect(_on_beat_presented)
+	_battle_interface.active_unit_plate.follow_presented_beats(stage.beat_presented)
+	_battle_interface.turn_timeline.follow_presented_beats(stage.beat_presented)
 
 	_combat_audio = COMBAT_AUDIO.new() as Node
 	add_child(_combat_audio)
@@ -350,13 +358,20 @@ func _refresh() -> void:
 	_balance_lbl.text = _balance_text()
 	_update_enemy_status()
 	_update_party_status()
-	_log_lbl.text = Battle.last_message
+	if not outcome_shown():
+		_log_lbl.text = Battle.last_message
 
 	var actions := Battle.available_actions()
+	var cell_battlefield := _battlefield_has_cells()
 	for i in _action_buttons.size():
 		if i >= actions.size():
 			_action_buttons[i].disabled = true
 			continue
+		# #473: on a cell battlefield a move is a click on a cell; the zone MOVE cards
+		# (FRONT/BACK/FLANK, and the destination-less MOVE) have nothing to aim at there.
+		_action_buttons[i].visible = not (
+			cell_battlefield and actions[i].kind == CombatAction.Kind.MOVE
+		)
 		var reason := Battle.action_lock_reason(actions[i])
 		var forecast := (
 			Battle.action_forecast(actions[i])
@@ -377,12 +392,44 @@ func _refresh() -> void:
 			_battle_interface.set_forecast_context(forecast_ctx)
 
 
+func _battlefield_has_cells() -> bool:
+	if Battle.controller == null or Battle.controller.battlefield == null:
+		return false
+	return bool(Battle.controller.battlefield.capabilities().get("cells", false))
+
+
+## #473: the actor rows of the snapshot the field currently presents, by combat id. Empty
+## before the first presented event; callers then fall back to the live actor.
+func _presented_rows() -> Dictionary:
+	var rows: Dictionary = {}
+	if not is_instance_valid(_battle_interface):
+		return rows
+	var event := _battle_interface.stage.presented_event()
+	if event == null:
+		return rows
+	var snapshot: Dictionary = event.data.get("snapshot", {})
+	for side: String in ["allies", "enemies"]:
+		for row: Variant in snapshot.get(side, []):
+			if row is Dictionary:
+				rows[StringName(str((row as Dictionary).get("id", "")))] = row
+	return rows
+
+
+## HP as the field presents it: the presented snapshot's row, else the live actor.
+func _presented_hp(actor: BattleActor, rows: Dictionary) -> Vector2i:
+	var row: Dictionary = rows.get(actor.combat_id, {})
+	if row.is_empty():
+		return Vector2i(actor.hp, actor.max_hp)
+	return Vector2i(int(row.get("hp", actor.hp)), int(row.get("max_hp", actor.max_hp)))
+
+
 func _update_enemy_status() -> void:
 	var target := Battle.current_target()
 	if target == null:
 		_enemy_lbl.text = "FOE  —"
 		return
-	_enemy_lbl.text = "FOE  %s  ·  HP %d / %d" % [target.display_name.to_upper(), target.hp, target.max_hp]
+	var hp := _presented_hp(target, _presented_rows())
+	_enemy_lbl.text = "FOE  %s  ·  HP %d / %d" % [target.display_name.to_upper(), hp.x, hp.y]
 
 
 ## One slim row per ally — the dock is 172px, so party status is a readout,
@@ -390,30 +437,32 @@ func _update_enemy_status() -> void:
 func _update_party_status() -> void:
 	for child in _party_box.get_children():
 		child.free()
+	var rows := _presented_rows()
 	for actor in Battle.allies:
+		var hp_now := _presented_hp(actor, rows)
 		var row := HBoxContainer.new()
 		row.theme_type_variation = "BattlePartyRow"
 		_party_box.add_child(row)
 		var marker := Label.new()
-		marker.text = "▶" if actor == Battle.current_ally() and actor.is_alive() else "·"
+		marker.text = "▶" if actor == Battle.current_ally() and hp_now.x > 0 else "·"
 		marker.custom_minimum_size = Vector2(12, 0)
 		marker.theme_type_variation = "EyebrowLabel"
 		row.add_child(marker)
 		var name_label := Label.new()
 		name_label.text = actor.display_name.to_upper()
-		if not actor.is_alive():
+		if hp_now.x <= 0:
 			name_label.text += "  ·  FALLEN"
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_label.theme_type_variation = "StatLabel"
 		row.add_child(name_label)
 		var hp := Label.new()
-		hp.text = "HP %d / %d" % [actor.hp, actor.max_hp]
+		hp.text = "HP %d / %d" % [hp_now.x, hp_now.y]
 		hp.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		hp.theme_type_variation = "StatLabel"
 		row.add_child(hp)
 		var bar := _make_meter(DS.METER_HEALTH_B)
-		bar.max_value = actor.max_hp
-		bar.value = actor.hp
+		bar.max_value = hp_now.y
+		bar.value = hp_now.x
 		bar.custom_minimum_size = Vector2(96, 8)
 		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(bar)
@@ -460,8 +509,41 @@ func _balance_text() -> String:
 	return "CHAOS  ◀  %s  ▶  ORDER" % ("+%d" % Battle.balance if Battle.balance > 0 else str(Battle.balance))
 
 
+## The model resolves the finishing blow in the frame of the command; the field presents it
+## over the next beats. The result is shown once the field has presented them (#473).
 func _on_battle_ended(result: BattleResult) -> void:
 	_refresh()
+	_pending_result = result
+	if is_instance_valid(_battle_interface) and _battle_interface.stage.is_presenting_beats():
+		set_process(true)
+		return
+	_show_outcome()
+
+
+func _on_beat_presented(_event: CombatEvent) -> void:
+	_queue_refresh()
+
+
+func _process(_delta: float) -> void:
+	if _pending_result == null:
+		set_process(false)
+		return
+	if is_instance_valid(_battle_interface) and _battle_interface.stage.is_presenting_beats():
+		return
+	set_process(false)
+	_refresh()
+	_show_outcome()
+
+
+func outcome_shown() -> bool:
+	return is_instance_valid(_outcome_box) and _outcome_box.visible
+
+
+func _show_outcome() -> void:
+	var result := _pending_result
+	_pending_result = null
+	if result == null or outcome_shown():
+		return
 	_actions_box.visible = false
 	_target_button.visible = false
 	_log_lbl.text = result.message
