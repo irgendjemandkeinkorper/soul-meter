@@ -1,13 +1,19 @@
 extends GdUnitTestSuite
 ## E2.5a (#336): the five re-hosted tool models behind the WeftluminPanel contract.
 ## Each test drives a pinned behaviour from docs/weftlumin-test-migration.md through the
-## panel the shell mounted, never through the legacy autoload.
+## panel the shell mounted. E2.5b (#337) removed the legacy autoloads, so the panel is the
+## models' only host.
 
 const FIELD := preload("res://world/test_room.tscn")
 const PLAYING := "StateChart/Root/Playing/"
-const DevConsoleScript := preload("res://globals/dev_console.gd")
-const CombatLabScript := preload("res://globals/combat_lab.gd")
-const DialogueLabScript := preload("res://globals/dialogue_lab.gd")
+const DevConsoleScript := preload("res://weftlumin/panels/models/dev_console.gd")
+const CombatLabScript := preload("res://weftlumin/panels/models/combat_lab.gd")
+const DialogueLabScript := preload("res://weftlumin/panels/models/dialogue_lab.gd")
+const QuestEditorScript := preload("res://weftlumin/panels/models/quest_editor.gd")
+const TimelineScript := preload("res://weftlumin/panels/models/consequence_timeline.gd")
+const RETIRED_AUTOLOADS: Array[String] = [
+	"DevConsole", "CombatLab", "ConsequenceTimeline", "DialogueLab", "QuestEditor",
+]
 const DOCK_ORDER: Array[String] = [
 	"Console", "Command log", "Consequence timeline", "Validation",
 	"Combat lab", "Dialogue lab", "Quest editor",
@@ -134,7 +140,6 @@ func _select(shell: WeftluminShell, panel_title: String) -> void:
 
 
 func test_five_tool_panels_mount_in_their_dock_slots_with_private_models() -> void:
-	var console_autoload_enabled: bool = bool(DevConsole.get("_enabled"))
 	var shell := _open()
 	var titles: Array[String] = []
 	for index: int in shell.bottom_tabs.get_tab_count():
@@ -160,21 +165,33 @@ func test_five_tool_panels_mount_in_their_dock_slots_with_private_models() -> vo
 			assert_object(command.get_object()).is_same(panel.model)
 			assert_bool(command.is_valid()).is_true()
 	assert_bool(_panel(shell, "Console").commands().is_empty()).is_false()
-	# The legacy autoload is a different instance and stays exactly as it was.
-	assert_bool(bool(DevConsole.get("_enabled"))).is_equal(console_autoload_enabled)
-	assert_object(_panel(shell, "Console").model).is_not_same(DevConsole)
-	# The hosted models never open their legacy overlays above the shell.
-	_panel(shell, "Console").model.call("open_console")
-	assert_int(_panel(shell, "Console").model.get_child_count()).is_equal(0)
+	# No legacy autoload remains to share state with; each panel's model is its own instance.
+	for autoload_name: String in RETIRED_AUTOLOADS:
+		assert_object(get_tree().root.get_node_or_null(autoload_name)) \
+			.override_failure_message(autoload_name).is_null()
+	# The hosted models carry no legacy overlay to open above the shell.
+	for panel_title: String in ["Console", "Consequence timeline", "Combat lab", "Dialogue lab", "Quest editor"]:
+		var model: Node = _panel(shell, panel_title).model
+		assert_int(model.get_child_count()).override_failure_message(panel_title).is_equal(0)
+		for method_name: String in ["open_console", "open_overlay", "open_setup"]:
+			assert_bool(model.has_method(method_name)) \
+				.override_failure_message("%s.%s" % [panel_title, method_name]).is_false()
 
 
-func test_hosting_seam_refuses_the_autoload_itself() -> void:
-	assert_bool(bool(DevConsole.call("host_in_panel"))).is_false()
-	assert_bool(bool(CombatLab.call("host_in_panel", &"weftlumin:1"))).is_false()
-	assert_bool(bool(DialogueLab.call("host_in_panel", &"weftlumin:1"))).is_false()
-	assert_bool(bool(QuestEditor.call("host_in_panel"))).is_false()
-	assert_bool(bool(ConsequenceTimeline.call("host_in_panel"))).is_false()
-	assert_bool(bool(DevConsole.get("_panel_hosted"))).is_false()
+func test_hosting_seam_refuses_detached_models_and_missing_sandbox_tokens() -> void:
+	# With the autoloads gone (E2.5b) the seam's remaining guards are: in the tree, and a
+	# sandbox panel must hand over the shell's owner token.
+	for script: Script in [DevConsoleScript, QuestEditorScript, TimelineScript]:
+		var detached: Node = auto_free(script.new()) as Node
+		assert_bool(bool(detached.call("host_in_panel"))).is_false()
+		assert_bool(bool(detached.get("_enabled"))).is_false()
+	for script: Script in [CombatLabScript, DialogueLabScript]:
+		var detached: Node = auto_free(script.new()) as Node
+		assert_bool(bool(detached.call("host_in_panel", &"weftlumin:1"))).is_false()
+		var tokenless: Node = auto_free(script.new()) as Node
+		add_child(tokenless)
+		assert_bool(bool(tokenless.call("host_in_panel", &""))).is_false()
+		assert_bool(bool(tokenless.get("_enabled"))).is_false()
 
 
 func test_console_panel_runs_the_interpreter_with_unchanged_provenance() -> void:
@@ -416,7 +433,6 @@ func test_quest_panel_validates_saves_registers_and_requires_explicit_authorisat
 	var shell := _open()
 	var panel := _panel(shell, "Quest editor") as WeftluminQuestPanel
 	panel.model.set("campaigns_root_for_tests", SCRATCH_CAMPAIGNS_ROOT)
-	panel.model.set("force_enabled_for_tests", true)
 	var package_path := SCRATCH_CAMPAIGNS_ROOT.path_join(CAMPAIGN_ID)
 	var invalid := _quest("panel-live")
 	invalid["dialogue_title"] = "not_an_authored_dialogue_title"

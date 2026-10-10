@@ -4,7 +4,7 @@ extends SoulMeterToolPanel
 ## Provenance is the interpreter's own — `[debug] ` causes, the `dev_console_used` marker and the
 ## recorder's `dev_console_command` events — so nothing here writes state.
 
-const MODEL_SCRIPT := preload("res://globals/dev_console.gd")
+const MODEL_SCRIPT := preload("res://weftlumin/panels/models/dev_console.gd")
 const QUICK_ACTIONS: Array[Array] = [
 	["Help", "help"], ["Flags", "flags"], ["Next phase", "phase next"], ["Clear", "clear"],
 ]
@@ -55,7 +55,7 @@ func commands() -> Array[Callable]:
 	return [Callable(model, "execute_command")]
 
 
-## Run one command through the interpreter exactly as the F1 overlay did.
+## Run one command through the interpreter.
 func submit(command: String) -> bool:
 	var ok: bool = bool(model.call("execute_command", command))
 	entry.clear()

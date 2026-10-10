@@ -1,6 +1,7 @@
 # Weftlumin test migration — E1.9 (#330)
 
 Status: migration plan plus a skipped skeleton. No existing test is deleted or weakened.
+Executed in E2.5b (#337): the five tool suites now target `weftlumin/panels/models/*`; see `docs/weftlumin.md`.
 Sources: `docs/architecture-in-game-editor.md` §2 row 3, §4.5.1, §4.12, §4.14;
 the interface contract at `8e0e5fbe`; and the test sources listed below.
 

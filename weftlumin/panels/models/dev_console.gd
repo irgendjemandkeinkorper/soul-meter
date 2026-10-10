@@ -1,5 +1,6 @@
 extends Node
-## Debug-build-only state console coordinator. Without explicit opt-in it is inert.
+## Debug-build-only state console interpreter, hosted by the Weftlumin console panel
+## (`weftlumin/panels/console_panel.gd`). Inert until a host enables it with host_in_panel().
 
 signal log_changed
 
@@ -8,25 +9,13 @@ const DEBUG_CAUSE_PREFIX := "[debug] "
 ## so debug-mutated state is never mistaken for honest play. Deliberately not
 ## settable from the console itself — see _command_flag().
 const USED_FLAG := "dev_console_used"
-const DEV_CONSOLE_SCENE: PackedScene = preload("res://ui/debug/dev_console.tscn")
-# PROVISIONAL owner surface: F1 may move after facilitator playtesting.
-const TOGGLE_HOTKEY: Key = KEY_F1
-
-var force_enabled_for_tests: bool = false:
-	set(value):
-		force_enabled_for_tests = value
-		_refresh_activation()
 
 var _enabled: bool = false
-var _overlay_layer: CanvasLayer = null
-var _previous_paused: bool = false
 var _log_entries: Array[Dictionary] = []
 var _history: Array[String] = []
 var _history_cursor: int = 0
 var _command_audit: Array[String] = []
 var _session_marked_used: bool = false
-## True when a Weftlumin panel owns this instance (see host_in_panel()).
-var _panel_hosted: bool = false
 
 
 static func is_debug_caused(cause: String) -> bool:
@@ -36,53 +25,6 @@ static func is_debug_caused(cause: String) -> bool:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process_unhandled_key_input(false)
-	_refresh_activation()
-
-
-func _exit_tree() -> void:
-	close_console()
-
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	if not _enabled or not event is InputEventKey:
-		return
-	var key_event := event as InputEventKey
-	if not key_event.pressed or key_event.echo:
-		return
-	if key_event.physical_keycode != TOGGLE_HOTKEY and key_event.keycode != TOGGLE_HOTKEY:
-		return
-	if _overlay_layer == null:
-		open_console()
-	else:
-		close_console()
-	get_viewport().set_input_as_handled()
-
-
-func open_console() -> void:
-	if not _enabled or _overlay_layer != null or _panel_hosted:
-		return
-	_previous_paused = get_tree().paused
-	get_tree().paused = true
-	_overlay_layer = CanvasLayer.new()
-	_overlay_layer.name = "DevConsoleLayer"
-	_overlay_layer.layer = 1100
-	_overlay_layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_overlay_layer)
-	var overlay: Control = DEV_CONSOLE_SCENE.instantiate() as Control
-	overlay.name = "DevConsoleOverlay"
-	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay_layer.add_child(overlay)
-	overlay.call("configure", self)
-
-
-func close_console() -> void:
-	if _overlay_layer == null:
-		return
-	var layer: CanvasLayer = _overlay_layer
-	_overlay_layer = null
-	remove_child(layer)
-	layer.free()
-	get_tree().paused = _previous_paused
 
 
 func execute_command(raw_command: String) -> bool:
@@ -487,36 +429,15 @@ func history_next() -> String:
 
 
 ## Weftlumin panel seam (architecture §4.5.5, §4.12). The panel that owns this instance
-## enables the interpreter; the shell owns activation, bindings and pause, so the F1 overlay,
-## its hotkey and the environment gate stand down. Refused on the autoload itself and in
-## release builds. Interpreter and provenance rules are unchanged.
+## enables the interpreter; the shell owns activation, bindings and pause. Refused in release
+## builds and outside the tree. Interpreter and provenance rules are unchanged.
 func host_in_panel() -> bool:
-	if not OS.is_debug_build() or not is_inside_tree() or get_parent() == get_tree().root:
+	if not OS.is_debug_build() or not is_inside_tree():
 		return false
-	_panel_hosted = true
-	_set_enabled(true)
-	set_process_unhandled_key_input(false)
-	return true
-
-
-func _refresh_activation() -> void:
-	if not is_inside_tree() or _panel_hosted:
-		return
-	var should_enable: bool = OS.is_debug_build() and (
-		OS.get_environment("SOUL_METER_DEV_CONSOLE") == "1" or force_enabled_for_tests
-	)
-	_set_enabled(should_enable)
-
-
-func _set_enabled(should_enable: bool) -> void:
-	if should_enable == _enabled:
-		return
-	_enabled = should_enable
-	set_process_unhandled_key_input(_enabled and not _panel_hosted)
-	if _enabled:
+	if not _enabled:
+		_enabled = true
 		_begin_session()
-	else:
-		close_console()
+	return true
 
 
 func _begin_session() -> void:

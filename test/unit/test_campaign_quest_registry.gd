@@ -119,7 +119,7 @@ func test_production_quest_consumers_use_runtime_aware_registry_accessor() -> vo
 	var consumer_paths: PackedStringArray = [
 		"res://ui/screens/journal.gd",
 		"res://ui/screens/debug_menu.gd",
-		"res://globals/dev_console.gd",
+		"res://weftlumin/panels/models/dev_console.gd",
 	]
 	for file_path: String in consumer_paths:
 		var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)

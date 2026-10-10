@@ -7,7 +7,7 @@ extends SoulMeterToolPanel
 ## `needs_sandbox`: the shell arms the shared sandbox under this panel's token on activation, and
 ## the model's replay sessions restart under that same token. Leaving the tab ends the session.
 
-const MODEL_SCRIPT := preload("res://globals/dialogue_lab.gd")
+const MODEL_SCRIPT := preload("res://weftlumin/panels/models/dialogue_lab.gd")
 
 var file_picker: OptionButton = null
 var title_picker: OptionButton = null
@@ -97,7 +97,7 @@ func commands() -> Array[Callable]:
 	]
 
 
-## Parse the seed editors into the setup the F5 setup screen would have submitted.
+## Parse the seed editors into the replay setup.
 ## Returns `{valid, setup}` or `{valid: false, error}`.
 func current_setup() -> Dictionary:
 	if file_picker.item_count == 0 or title_picker.item_count == 0:

@@ -172,7 +172,7 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	grid.build_grid(_two_cell_ground())
 	var action := CombatAction.make(&"aim-strike", "Aim strike", CombatAction.Kind.ATTACK, 0, 0, 0.0, 1)
 	action.ct_cost = 30
-	action.aim_profiles = preload("res://globals/combat_lab.gd").AIM_PROFILES.duplicate(true)
+	action.aim_profiles = preload("res://weftlumin/panels/models/combat_lab.gd").AIM_PROFILES.duplicate(true)
 	var actor := _cast_actor("Aimer", 30, 8)
 	var target := _cast_actor("Mark", 30, 1)
 	target.anatomy = {

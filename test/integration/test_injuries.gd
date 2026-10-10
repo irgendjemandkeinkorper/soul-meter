@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## Task 7: bounded location injuries, combat-local slice.
 
-const Lab := preload("res://globals/combat_lab.gd")
+const Lab := preload("res://weftlumin/panels/models/combat_lab.gd")
 
 
 func test_injury_needs_a_hit_and_the_authored_damage_and_applies_once_per_commit() -> void:

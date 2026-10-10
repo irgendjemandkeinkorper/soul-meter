@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 
-const DialogueLabScript := preload("res://globals/dialogue_lab.gd")
+const DialogueLabScript := preload("res://weftlumin/panels/models/dialogue_lab.gd")
+const CombatLabScript := preload("res://weftlumin/panels/models/combat_lab.gd")
 const TEST_FLAG := "dialogue_lab_test_flag"
 const TEST_FACTION := "the-registry"
 
@@ -18,13 +19,12 @@ func before_test() -> void:
 	QuestRegistry.reset()
 	_lab = auto_free(DialogueLabScript.new()) as Node
 	add_child(_lab)
-	_lab.set("force_enabled_for_tests", true)
+	assert_bool(bool(_lab.call("host_in_panel", DialogueLabScript.SANDBOX_OWNER))).is_true()
 
 
 func after_test() -> void:
 	if _lab != null:
 		_lab.call("end_session")
-		_lab.set("force_enabled_for_tests", false)
 	_restore_incoming_state()
 	_clear_test_battle()
 	get_tree().paused = false
@@ -46,16 +46,19 @@ func test_dialogue_files_and_titles_are_derived_from_disk_resources() -> void:
 	assert_array(actual_titles).is_equal(expected_titles)
 
 
-func test_enabled_lab_builds_and_closes_the_setup_overlay() -> void:
+func test_hosted_lab_builds_no_overlay_and_leaves_pause_to_the_shell() -> void:
+	# The F5 overlay and its pause ownership were retired with the autoload (E2.5b);
+	# the hosting panel presents the session and the shell owns pause.
 	var paused_before := get_tree().paused
 
-	_lab.call("open_setup")
+	_lab.call("start_test_session", _valid_setup())
 
-	assert_object(_lab.get("_overlay_layer")).is_not_null()
-	assert_int(_lab.get_child_count()).is_equal(1)
-	assert_bool(get_tree().paused).is_true()
-	_lab.call("close_overlay")
-	assert_object(_lab.get("_overlay_layer")).is_null()
+	var current: Dictionary = _lab.call("current_setup")
+	assert_bool(current.is_empty()).is_false()
+	assert_int(_lab.get_child_count()).is_equal(0)
+	assert_bool(get_tree().paused).is_equal(paused_before)
+	assert_bool("TOGGLE_HOTKEY" in (DialogueLabScript as Script).get_script_constant_map()).is_false()
+	_lab.call("end_session")
 	assert_bool(get_tree().paused).is_equal(paused_before)
 
 
@@ -113,19 +116,18 @@ func test_restored_snapshot_disarms_before_normal_progress_resumes() -> void:
 
 func test_disabled_lab_is_not_drivable() -> void:
 	var setup: Dictionary = _valid_setup()
-	_lab.call("end_session")
-	_lab.set("force_enabled_for_tests", false)
-	_lab.set("_setup", setup)
+	var disabled: Node = auto_free(DialogueLabScript.new()) as Node
+	add_child(disabled)
+	disabled.set("_setup", setup)
 
-	_lab.call("open_setup")
-	_lab.call("start_replay", setup)
-	_lab.call("start_test_session", setup)
-	_lab.call("replay_same_state")
-	_lab.call("reload_and_replay")
+	disabled.call("start_replay", setup)
+	disabled.call("start_test_session", setup)
+	disabled.call("replay_same_state")
+	disabled.call("reload_and_replay")
 
-	assert_bool(bool(_lab.call("sandbox_is_armed"))).is_false()
-	assert_object(_lab.get("_overlay_layer")).is_null()
-	assert_int(_lab.get_child_count()).is_equal(0)
+	assert_bool(bool(disabled.call("sandbox_is_armed"))).is_false()
+	assert_bool(SaveGame.runtime_sandbox_is_armed()).is_false()
+	assert_int(disabled.get_child_count()).is_equal(0)
 
 
 func test_every_replay_entry_point_refuses_over_a_live_battle() -> void:
@@ -134,7 +136,6 @@ func test_every_replay_entry_point_refuses_over_a_live_battle() -> void:
 	var production_controller: CombatController = Battle.controller
 	assert_object(production_controller).is_not_null()
 
-	_lab.call("open_setup")
 	_lab.call("start_replay", _valid_setup())
 	_lab.call("start_test_session", _valid_setup())
 	_lab.call("replay_same_state")
@@ -142,7 +143,7 @@ func test_every_replay_entry_point_refuses_over_a_live_battle() -> void:
 
 	assert_object(Battle.controller).is_same(production_controller)
 	assert_bool(bool(_lab.call("sandbox_is_armed"))).is_false()
-	assert_object(_lab.get("_overlay_layer")).is_null()
+	assert_int(_lab.get_child_count()).is_equal(0)
 
 
 func test_every_replay_entry_point_refuses_over_a_live_production_dialogue() -> void:
@@ -151,14 +152,13 @@ func test_every_replay_entry_point_refuses_over_a_live_production_dialogue() -> 
 	DialogueManager.dialogue_started.emit(resource)
 	_lab.set("_setup", _valid_setup())
 
-	_lab.call("open_setup")
 	_lab.call("start_replay", _valid_setup())
 	_lab.call("start_test_session", _valid_setup())
 	_lab.call("replay_same_state")
 	_lab.call("reload_and_replay")
 
 	assert_bool(bool(_lab.call("sandbox_is_armed"))).is_false()
-	assert_object(_lab.get("_overlay_layer")).is_null()
+	assert_int(_lab.get_child_count()).is_equal(0)
 	DialogueManager.dialogue_ended.emit(resource)
 
 
@@ -228,28 +228,30 @@ func test_the_combat_lab_cannot_start_inside_a_live_dialogue_lab_session() -> vo
 	# a non-LIFO restore reinstates this session's dirty state after it already
 	# cleaned up. They are mutually exclusive rather than nested.
 	var encounter := {"encounter_id": EncounterIds.BOG_WIGHT}
-	CombatLab.force_enabled_for_tests = true
+	var combat_lab: Node = auto_free(CombatLabScript.new()) as Node
+	add_child(combat_lab)
+	assert_bool(bool(combat_lab.call("host_in_panel", CombatLabScript.SANDBOX_OWNER))).is_true()
 
 	# Precondition: this exact call DOES arm a combat snapshot on its own, so the
 	# refusal below is attributable to the guard rather than to a setup the
 	# combat lab would have rejected anyway.
-	CombatLab.start_test_session(encounter)
-	assert_bool(bool(CombatLab.call("sandbox_is_armed"))) \
+	combat_lab.call("start_test_session", encounter)
+	assert_bool(bool(combat_lab.call("sandbox_is_armed"))) \
 		.override_failure_message("precondition: this setup must normally arm a snapshot") \
 		.is_true()
-	CombatLab.stop_test_session()
+	combat_lab.call("stop_test_session")
 
 	_lab.call("start_test_session", _valid_setup())
-	assert_bool(CombatLab.another_sandbox_is_armed()) \
+	assert_bool(bool(combat_lab.call("another_sandbox_is_armed"))) \
 		.override_failure_message("the combat lab must see this session's sandbox") \
 		.is_true()
-	CombatLab.start_test_session(encounter)
+	combat_lab.call("start_test_session", encounter)
 
-	assert_bool(bool(CombatLab.call("sandbox_is_armed"))) \
+	assert_bool(bool(combat_lab.call("sandbox_is_armed"))) \
 		.override_failure_message("the combat lab must not capture a dialogue-dirtied snapshot") \
 		.is_false()
 	_lab.call("end_session")
-	CombatLab.force_enabled_for_tests = false
+	combat_lab.call("stop_test_session")
 
 
 func _valid_setup() -> Dictionary:

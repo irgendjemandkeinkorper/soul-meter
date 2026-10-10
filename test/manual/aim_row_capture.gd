@@ -21,7 +21,7 @@ func test_aim_row_layout_fits_the_forecast_panel() -> void:
 	grid.build_grid(ground)
 	var action := CombatAction.make(&"aim-strike", "Aim strike", CombatAction.Kind.ATTACK, 0, 0, 0.0, 1)
 	action.ct_cost = 30
-	action.aim_profiles = preload("res://globals/combat_lab.gd").AIM_PROFILES.duplicate(true)
+	action.aim_profiles = preload("res://weftlumin/panels/models/combat_lab.gd").AIM_PROFILES.duplicate(true)
 	var actor := BattleActor.new()
 	actor.display_name = "Aimer"
 	actor.hp = 30

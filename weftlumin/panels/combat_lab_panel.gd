@@ -7,7 +7,7 @@ extends SoulMeterToolPanel
 ## the model's own session restarts under that same token instead of competing with it. Leaving
 ## the tab ends the lab session, matching the shell ending the sandbox it held for the panel.
 
-const MODEL_SCRIPT := preload("res://globals/combat_lab.gd")
+const MODEL_SCRIPT := preload("res://weftlumin/panels/models/combat_lab.gd")
 const ANATOMY_FIXTURES: Array[Array] = [
 	["Exposed anatomy", "exposed"], ["Arm covered", "covered_arm"],
 	["No throat", "no_throat"], ["Low cover", "low_cover"],
@@ -165,7 +165,7 @@ func commands() -> Array[Callable]:
 	]
 
 
-## The setup the F3 setup screen would have submitted for the current selections.
+## The lab setup for the current selections.
 func current_setup() -> Dictionary:
 	var party_ids: Array[StringName] = []
 	var root := party_tree.get_root()

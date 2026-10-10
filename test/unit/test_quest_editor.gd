@@ -1,13 +1,15 @@
 extends GdUnitTestSuite
 
 const CampaignQuestLoaderScript: Script = preload("res://globals/campaign_quest_loader.gd")
-const QuestEditorScript: Script = preload("res://globals/quest_editor.gd")
+const QuestEditorScript: Script = preload("res://weftlumin/panels/models/quest_editor.gd")
+const QuestPanelScene: PackedScene = preload("res://weftlumin/panels/quest_panel.tscn")
 const CAMPAIGN_ID: String = "gdunit-quest-editor"
 const SCRATCH_CAMPAIGNS_ROOT: String = "user://gdunit-quest-editor-campaigns"
 const PACKAGE_PATH: String = SCRATCH_CAMPAIGNS_ROOT + "/" + CAMPAIGN_ID
 const ESCAPE_PATH: String = "user://gdunit-quest-editor-escape.json"
 
 var _editor: Node = null
+var _panel: WeftluminQuestPanel = null
 var _incoming_runtime: Dictionary = {}
 
 
@@ -19,13 +21,13 @@ func before_test() -> void:
 	_editor = auto_free(QuestEditorScript.new()) as Node
 	add_child(_editor)
 	_editor.set("campaigns_root_for_tests", SCRATCH_CAMPAIGNS_ROOT)
-	_editor.set("force_enabled_for_tests", true)
+	assert_bool(bool(_editor.call("host_in_panel"))).is_true()
 
 
 func after_test() -> void:
-	if _editor != null:
-		_editor.call("close_overlay")
-		_editor.set("force_enabled_for_tests", false)
+	if _panel != null:
+		_panel.free()
+		_panel = null
 	QuestRegistry.clear_runtime_quests()
 	assert_bool(SaveGame.restore_runtime_state(_incoming_runtime)).is_true()
 	_remove_tree(SCRATCH_CAMPAIGNS_ROOT)
@@ -69,18 +71,14 @@ func test_dialogue_title_picker_distinguishes_campaign_and_committed_titles() ->
 		"~ %s\nCampaign Tester: Picker words.\n=> END\n" % campaign_title
 	)
 
-	_editor.call("open_overlay")
-	var layer: CanvasLayer = _editor.get("_overlay_layer") as CanvasLayer
-	assert_object(layer).is_not_null()
-	if layer == null:
-		return
-	var overlay: Control = layer.get_child(0) as Control
-	var picker: OptionButton = overlay.get("_dialogue_picker") as OptionButton
+	# The F6 overlay's picker is retired (E2.5b); the labelled options it rendered come
+	# straight from the model, which is what any panel picker consumes.
+	var options: Array[Dictionary] = _editor.call("dialogue_title_options", CAMPAIGN_ID)
 	var campaign_label_found: bool = false
 	var committed_label_found: bool = false
-	for index: int in picker.item_count:
-		var label: String = picker.get_item_text(index)
-		var title: String = str(picker.get_item_metadata(index))
+	for option: Dictionary in options:
+		var label: String = str(option.get("label", ""))
+		var title: String = str(option.get("title", ""))
 		if title == campaign_title and label.contains("CAMPAIGN"):
 			campaign_label_found = true
 		if title == "dom_side_dishonest_casks" and label.contains("COMMITTED"):
@@ -93,21 +91,21 @@ func test_dialogue_title_picker_distinguishes_campaign_and_committed_titles() ->
 func test_disabled_editor_is_not_drivable_and_writes_nothing() -> void:
 	var campaign: Dictionary = _campaign()
 	var quests: Array[Dictionary] = [_quest("disabled")]
-	_editor.set("force_enabled_for_tests", false)
+	var disabled: Node = auto_free(QuestEditorScript.new()) as Node
+	add_child(disabled)
+	disabled.set("campaigns_root_for_tests", SCRATCH_CAMPAIGNS_ROOT)
 
-	_editor.call("open_overlay")
-	var validation: Dictionary = _editor.call("validate_draft", campaign, quests)
-	var save_result: Dictionary = _editor.call("save_campaign", campaign, quests)
-	var reload_result: Dictionary = _editor.call("reload_campaign", CAMPAIGN_ID)
-	var draft: Dictionary = _editor.call("campaign_draft", CAMPAIGN_ID)
+	var validation: Dictionary = disabled.call("validate_draft", campaign, quests)
+	var save_result: Dictionary = disabled.call("save_campaign", campaign, quests)
+	var reload_result: Dictionary = disabled.call("reload_campaign", CAMPAIGN_ID)
+	var draft: Dictionary = disabled.call("campaign_draft", CAMPAIGN_ID)
 
 	assert_bool(validation.is_empty()).is_true()
 	assert_bool(save_result.is_empty()).is_true()
 	assert_bool(reload_result.is_empty()).is_true()
 	assert_bool(draft.is_empty()).is_true()
-	assert_object(_editor.get("_overlay_layer")).is_null()
-	assert_int(_editor.get_child_count()).is_equal(0)
-	assert_bool(_editor.is_processing_unhandled_key_input()).is_false()
+	assert_int(disabled.get_child_count()).is_equal(0)
+	assert_bool(disabled.is_processing_unhandled_key_input()).is_false()
 	assert_bool(DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(PACKAGE_PATH))).is_false()
 
 
@@ -510,26 +508,21 @@ func test_ui_names_live_progress_and_requires_confirmation_before_force() -> voi
 	var active_quest: DomSideQuest = runtime_quests[0]
 	QuestRegistry.offer(active_quest)
 	active_quest.current_stage = 1
-	_editor.call("open_overlay")
-	var layer: CanvasLayer = _editor.get("_overlay_layer") as CanvasLayer
-	assert_object(layer).is_not_null()
-	if layer == null:
-		return
-	var overlay: Control = layer.get_child(0) as Control
+	var panel: WeftluminQuestPanel = _mount_panel()
+	panel.campaign_editor.text = JSON.stringify(_campaign())
+	panel.quests_editor.text = JSON.stringify(quests)
 
-	overlay.call("_save_current")
+	panel.save()
 
-	var status: Label = overlay.get("_status") as Label
-	var confirm: Button = overlay.get("_force_registration_button") as Button
-	assert_str(status.text).contains(CAMPAIGN_ID + "/ui-live-progress")
-	assert_str(status.text).contains("Would reset live progress")
-	assert_bool(confirm.visible).is_true()
+	assert_str(panel.status_text()).contains(CAMPAIGN_ID + "/ui-live-progress")
+	assert_str(panel.status_text()).contains("Would reset live progress")
+	assert_bool(panel.authorize_button.visible).is_true()
 	assert_bool(QuestRegistry.is_active(active_quest)).is_true()
 	assert_int(active_quest.current_stage).is_equal(1)
 
-	overlay.call("_confirm_force_registration")
+	panel.authorize()
 
-	assert_bool(confirm.visible).is_false()
+	assert_bool(panel.authorize_button.visible).is_false()
 	assert_bool(QuestRegistry.is_active(active_quest)).is_false()
 	assert_int(active_quest.current_stage).is_equal(0)
 
@@ -590,24 +583,20 @@ func test_outcome_row_can_be_removed_below_loader_minimum_and_surfaces_error() -
 	var quests: Array[Dictionary] = [_quest("ui-outcomes")]
 	var saved: Dictionary = _editor.call("save_campaign", _campaign(), quests)
 	assert_bool(bool(saved.get("saved", false))).is_true()
-	_editor.call("open_overlay")
-	var layer: CanvasLayer = _editor.get("_overlay_layer") as CanvasLayer
-	assert_object(layer).is_not_null()
-	if layer == null:
-		return
-	var overlay: Control = layer.get_child(0) as Control
-	var rows: Array = overlay.get("_outcome_rows")
-	overlay.call("_remove_outcome_row", rows[0])
-	rows = overlay.get("_outcome_rows")
-	var remaining_remove: Button = (rows[0] as Dictionary).get("remove") as Button
-	var requirement: Label = overlay.get("_outcome_requirement") as Label
+	# A draft edited below the loader minimum stays editable and validation surfaces
+	# the loader's own error (the panel edits the quest documents directly).
+	var below_minimum: Dictionary = _quest("ui-outcomes")
+	below_minimum["outcomes"] = [(below_minimum["outcomes"] as Array)[0]]
+	var panel: WeftluminQuestPanel = _mount_panel()
+	panel.load_campaign(CAMPAIGN_ID)
+	panel.quests_editor.text = JSON.stringify([below_minimum])
 
-	assert_int(rows.size()).is_equal(1)
-	assert_bool(remaining_remove.disabled).is_false()
-	assert_str(requirement.text).contains("Current: 1")
-	overlay.call("_validate_current")
-	var validation_container: VBoxContainer = overlay.get("_validation_container") as VBoxContainer
-	assert_bool(_node_text_contains(validation_container, "DomSideQuest requires at least two outcomes")).is_true()
+	var result: Dictionary = panel.validate()
+
+	assert_bool(_has_error_code(result.get("errors", []), "incomplete_outcome_schema")).is_true()
+	assert_str(panel.errors_label.text).contains("DomSideQuest requires at least two outcomes")
+	assert_str(panel.status_text()).contains("NOT VALID")
+	assert_bool(FileAccess.file_exists(PACKAGE_PATH + "/quests/ui-outcomes.json")).is_true()
 
 
 func test_loader_rejected_quest_is_not_written_or_registered() -> void:
@@ -646,20 +635,30 @@ func test_authoring_and_registration_do_not_mutate_campaign_state_or_quest_pools
 
 
 func test_new_quest_ui_makes_the_two_outcome_minimum_visible() -> void:
-	_editor.call("open_overlay")
-	var layer: CanvasLayer = _editor.get("_overlay_layer") as CanvasLayer
-	assert_object(layer).is_not_null()
-	if layer == null:
-		return
-	var overlay: Control = layer.get_child(0) as Control
-	overlay.call("start_new_campaign")
-	overlay.call("create_new_quest")
-	var outcome_rows: Array = overlay.get("_outcome_rows")
-	var requirement: Label = overlay.get("_outcome_requirement") as Label
+	# The F6 overlay's guided new-quest form is retired (E2.5b). In the panel a new draft
+	# starts empty, and a quest without outcomes names the two-outcome minimum on validate.
+	var panel: WeftluminQuestPanel = _mount_panel()
+	panel.new_draft()
+	assert_str(panel.campaign_editor.text).is_equal("{}")
+	assert_str(panel.quests_editor.text).is_equal("[]")
+	var no_outcomes: Dictionary = _quest("ui-new")
+	no_outcomes["outcomes"] = []
+	panel.campaign_editor.text = JSON.stringify(_campaign())
+	panel.quests_editor.text = JSON.stringify([no_outcomes])
 
-	assert_int(outcome_rows.size()).is_equal(2)
-	assert_object(requirement).is_not_null()
-	assert_str(requirement.text).contains("Minimum 2 outcomes")
+	panel.validate()
+
+	assert_str(panel.errors_label.text).contains("at least two outcomes")
+
+
+## The quest panel exactly as the shell mounts it, over a model rooted in the scratch tree.
+func _mount_panel() -> WeftluminQuestPanel:
+	_panel = QuestPanelScene.instantiate() as WeftluminQuestPanel
+	add_child(_panel)
+	_panel.configure(null)
+	_panel.model.set("campaigns_root_for_tests", SCRATCH_CAMPAIGNS_ROOT)
+	_panel.refresh({})
+	return _panel
 
 
 func _campaign(campaign_id: String = CAMPAIGN_ID) -> Dictionary:

@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 
-const DevConsoleScript := preload("res://globals/dev_console.gd")
+const DevConsoleScript := preload("res://weftlumin/panels/models/dev_console.gd")
 
 var _console: Node
 var _original_game_state: Dictionary
@@ -21,18 +21,16 @@ func before_test() -> void:
 	_original_recorder_force = bool(PlaytestRecorder.force_enabled_for_tests)
 	_original_recorder_root = PlaytestRecorder.session_root_override
 	PlaytestRecorder.force_enabled_for_tests = false
-	_console = get_node_or_null("/root/DevConsole")
-	assert_object(_console).is_not_null()
-	if _console != null:
-		_console.call("close_console")
-		_console.set("force_enabled_for_tests", false)
-		_console.set("force_enabled_for_tests", true)
+	# A fresh panel-style host per test: the console model's only host is a Weftlumin panel.
+	_console = DevConsoleScript.new() as Node
+	add_child(_console)
+	assert_bool(bool(_console.call("host_in_panel"))).is_true()
 
 
 func after_test() -> void:
 	if _console != null:
-		_console.call("close_console")
-		_console.set("force_enabled_for_tests", false)
+		_console.free()
+		_console = null
 	var restored: bool = GameState.from_dict(_original_game_state)
 	assert_bool(restored).is_true()
 	Reputation.from_dict(_original_reputation)

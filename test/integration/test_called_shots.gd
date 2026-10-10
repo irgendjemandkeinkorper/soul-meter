@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 
-const Lab := preload("res://globals/combat_lab.gd")
+const Lab := preload("res://weftlumin/panels/models/combat_lab.gd")
 
 
 func test_each_visible_location_quotes_and_spends_both_authored_costs() -> void:
