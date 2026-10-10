@@ -8,12 +8,12 @@
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_iso"]
 [ext_resource type="Texture2D" path="res://assets/generated/backgrounds/world/dom-town-terrain-v1.png" id="99_terrain"]
 [ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="7_interactable"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/gate.png" id="12_gate"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/castle-kit/wall.png" id="14_wall"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/banner-green.png" id="19_banner_green"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/banner-red.png" id="20_banner_red"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/lantern.png" id="21_lantern"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/cart-high.png" id="22_cart"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-gate--arched.png" id="12_gate"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-wall--crenellated.png" id="14_wall"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-banner--green.png" id="19_banner_green"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-banner--red.png" id="20_banner_red"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-lantern--street.png" id="21_lantern"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-cart--high.png" id="22_cart"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--oak-a.png" id="23_tree_oak"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--oak-b.png" id="24_tree_default"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-tree--pine-a.png" id="25_tree_pine"]
@@ -26,7 +26,7 @@
 [ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="31_building_door"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-wooden-sign--decorative.png" id="33_sign_sprite"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-clay-pot--decorative.png" id="34_pot_sprite"]
-[ext_resource type="Texture2D" path="res://assets/generated/sprites/fantasy-town-kit/stall-bench.png" id="35_bench_sprite"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-stall-bench--plank.png" id="35_bench_sprite"]
 [ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="36_town_npcs"]
 [ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="37_blocking_tiles"]
 [ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="38_blocking_layer"]
@@ -810,8 +810,9 @@ z_index = 21
 
 [node name="TrialHallDoorSprite" type="Sprite2D" parent="."]
 position = Vector2(1000, 520)
+scale = Vector2(0.189781022, 0.185483871)
 texture = ExtResource("12_gate")
-offset = Vector2(0, -50.596)
+offset = Vector2(0.5, -89.474086957)
 
 [node name="MarshalCoiljaw" parent="." instance=ExtResource("5_npc")]
 position = Vector2(2450, 1212)
@@ -897,8 +898,9 @@ z_index = 21
 
 [node name="BellInspectionLantern" type="Sprite2D" parent="."]
 position = Vector2(2920, 295)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -50.596)
+offset = Vector2(0, -115.10161194)
 
 [node name="RiverShrineMarker" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(1030, 1530)
@@ -923,8 +925,9 @@ z_index = 21
 
 [node name="RiverShrineLantern" type="Sprite2D" parent="."]
 position = Vector2(1030, 1530)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -50.596)
+offset = Vector2(0, -115.10161194)
 
 [node name="ItemShopDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(1630, 552.5)
@@ -951,8 +954,9 @@ z_index = 21
 
 [node name="ItemShopBench" type="Sprite2D" parent="."]
 position = Vector2(1630, 552.5)
+scale = Vector2(0.153225806, 0.163522013)
 texture = ExtResource("35_bench_sprite")
-offset = Vector2(0, -50.596)
+offset = Vector2(0, -72.606307692)
 
 [node name="EquipmentShopDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(2330, 547.5)
@@ -979,8 +983,9 @@ z_index = 21
 
 [node name="EquipmentShopBanner" type="Sprite2D" parent="."]
 position = Vector2(2330, 547.5)
+scale = Vector2(0.163636364, 0.153225806)
 texture = ExtResource("20_banner_red")
-offset = Vector2(0, -50.596)
+offset = Vector2(0, -121.363368421)
 
 [node name="GarrisonDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(2920, 1520)
@@ -1006,8 +1011,9 @@ z_index = 21
 
 [node name="GarrisonBanner" type="Sprite2D" parent="."]
 position = Vector2(2920, 1520)
+scale = Vector2(0.163636364, 0.153225806)
 texture = ExtResource("20_banner_red")
-offset = Vector2(0, -50.596)
+offset = Vector2(0, -121.363368421)
 
 [node name="TownHallDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(2320, 1122.5)
@@ -1033,8 +1039,9 @@ z_index = 21
 
 [node name="TownHallBanner" type="Sprite2D" parent="."]
 position = Vector2(2320, 1122.5)
+scale = Vector2(0.166666667, 0.161290323)
 texture = ExtResource("19_banner_green")
-offset = Vector2(0, -50.596)
+offset = Vector2(0, -109.0952)
 
 [node name="ChefsHouseDoor" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(430, 1727.5)
@@ -1091,8 +1098,9 @@ z_index = 21
 
 [node name="PlayersHouseLantern" type="Sprite2D" parent="."]
 position = Vector2(2330, 1925)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -50.596)
+offset = Vector2(0, -115.10161194)
 
 [node name="SavePoint" parent="." instance=ExtResource("7_interactable")]
 position = Vector2(2540, 1925)
@@ -1118,8 +1126,9 @@ z_index = 21
 
 [node name="SavePointLantern" type="Sprite2D" parent="."]
 position = Vector2(2540, 1925)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -50.596)
+offset = Vector2(0, -115.10161194)
 modulate = Color(0.45, 1, 0.72, 1)
 
 [node name="RoadToTheWilds" parent="." instance=ExtResource("4_exit")]
@@ -1151,373 +1160,447 @@ y_sort_enabled = true
 
 [node name="WallTop01" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(170, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop02" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(310, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop03" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(450, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop04" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(590, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop05" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(730, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop06" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1150, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop07" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1290, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop08" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1430, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop09" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1570, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop10" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1710, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop11" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1850, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop12" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1990, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop13" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2130, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop14" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2270, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop15" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2410, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop16" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2830, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop17" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2970, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop18" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3110, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop19" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3250, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallTop20" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3390, 29.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom01" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(170, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom02" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(310, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom03" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(450, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom04" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(590, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom05" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(730, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom06" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(870, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom07" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1010, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom08" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1150, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom09" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1290, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom10" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1430, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom11" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1570, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom12" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1710, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom13" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1850, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom14" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(1990, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom15" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2130, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom16" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2270, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom17" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2410, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom18" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2550, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom19" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2690, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom20" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2830, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom21" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(2970, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom22" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3110, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom23" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3250, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallBottom24" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3390, 2229.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft01" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 159.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft02" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 289.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft03" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 419.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft04" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 549.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft05" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 679.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft06" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 809.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft07" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 939.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft08" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 1069.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft09" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 1199.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft10" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 1329.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft11" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 1459.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft12" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 1589.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft13" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 1719.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft14" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 1849.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft15" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 1979.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallLeft16" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(100, 2109.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightTop01" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 159.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightTop02" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 289.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightTop03" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 419.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightTop04" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 549.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightTop05" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 679.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightTop06" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 809.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightTop07" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 939.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightBottom01" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 1249.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightBottom02" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 1379.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightBottom03" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 1509.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightBottom04" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 1639.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightBottom05" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 1769.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightBottom06" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 1899.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="WallRightBottom07" type="Sprite2D" parent="BorderDressing"]
 position = Vector2(3500, 2029.4)
+scale = Vector2(0.258064516, 0.344537815)
 texture = ExtResource("14_wall")
-offset = Vector2(0, -65.0)
+offset = Vector2(0, -124)
 
 [node name="SetDressing" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -1571,8 +1654,9 @@ offset = Vector2(0, -111.0)
 
 [node name="CartBlobMarket" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1310, 1163.4)
+scale = Vector2(0.270742358, 0.197580645)
 texture = ExtResource("22_cart")
-offset = Vector2(0, -59.0)
+offset = Vector2(0.5, -124)
 
 [node name="PotBlobMarket" type="Sprite2D" parent="SetDressing"]
 scale = Vector2(0.3216, 0.3216)
@@ -1679,18 +1763,21 @@ texture = ExtResource("34_pot_sprite")
 
 [node name="StreetLanternEquipmentShop" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2515, 577.4)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -53.0)
+offset = Vector2(0, -124)
 
 [node name="StreetLanternTownHallWest" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2280, 1147.4)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -53.0)
+offset = Vector2(0, -124)
 
 [node name="StreetLanternTownHallEast" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2520, 1147.4)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -53.0)
+offset = Vector2(0, -124)
 
 [node name="BushBellHouse" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2875, 602.4)
@@ -1706,13 +1793,15 @@ scale = Vector2(0.35, 0.35)
 
 [node name="CartIronCompanies" type="Sprite2D" parent="SetDressing"]
 position = Vector2(2860, 1528.4)
+scale = Vector2(0.270742358, 0.197580645)
 texture = ExtResource("22_cart")
-offset = Vector2(0, -59.0)
+offset = Vector2(0.5, -124)
 
 [node name="StreetLanternIronCompanies" type="Sprite2D" parent="SetDressing"]
 position = Vector2(3140, 1517.4)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -53.0)
+offset = Vector2(0, -124)
 
 [node name="LanternTavernDoor" type="Sprite2D" parent="SetDressing"]
 scale = Vector2(0.4651, 0.4651)
@@ -1738,13 +1827,15 @@ phase = 2.1
 
 [node name="StreetLanternTrialHall" type="Sprite2D" parent="SetDressing"]
 position = Vector2(890, 522.4)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -53.0)
+offset = Vector2(0, -124)
 
 [node name="StreetLanternMarketSouth" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1560, 1292.4)
+scale = Vector2(0.333333333, 0.27016129)
 texture = ExtResource("21_lantern")
-offset = Vector2(0, -53.0)
+offset = Vector2(0, -124)
 
 [node name="LanternMarketEast" type="Sprite2D" parent="SetDressing"]
 scale = Vector2(0.4651, 0.4651)
