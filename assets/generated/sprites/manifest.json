@@ -3725,5 +3725,626 @@
   "catalog": {
     "path": "res://assets/generated/sprites/isometric_sprite_catalog.gd",
     "sha256": "bb70ba50e687eba00fc8a6332fd14201fa95a761b8562de2d43c3f963336cbe3"
+  },
+  "painted_batches": {
+    "dom-batch1-2026-10-09": {
+      "issue": 305,
+      "base_commit": "ecc4c61d5accfb845e56fd77c5dba06b1206e745",
+      "recipe_commit": "e64c0801",
+      "generator": "Built-in image_gen; headless Godot 4.7.1 alpha cleanup, chroma despill and Lanczos fit",
+      "house_style": "gothic mythopunk",
+      "style_document": "docs/art-aesthetics-bible.md",
+      "documentation": "docs/qa/dom-batch1-2026-10-09/README.md",
+      "contact_sheet": "docs/qa/dom-batch1-2026-10-09/contact-sheet.png",
+      "scale_contract": {
+        "source": "globals/unit_art.gd",
+        "adult_actor_height_px": 112,
+        "policy": "Preserve existing visible prop extents and bottom/center anchors with Sprite2D scale/offset only; actor art and scale remain unchanged."
+      },
+      "sprites": [
+        {
+          "id": "gate",
+          "replaces": "res://assets/generated/sprites/castle-kit/gate.png",
+          "output": "res://assets/generated/sprites/world/dom-gate--arched.png",
+          "output_sha256": "37bec15d81c2feee85b56e7f0e539d8b877893713816f46f03ae5511628b7b70",
+          "source": null,
+          "source_status": "Recovered from previous #305 run; original source/prompt unavailable in worktree; accepted PNG preserved byte-for-byte.",
+          "size": [
+            256,
+            256
+          ],
+          "alpha_rect": [
+            59,
+            4,
+            137,
+            248
+          ],
+          "previous_alpha_rect": [
+            115,
+            139,
+            26,
+            46
+          ],
+          "previous_drawn_size_px": [
+            26,
+            46
+          ],
+          "placements": [
+            {
+              "node_path": "TrialHallDoorSprite",
+              "previous_bottom_y": 6.404
+            }
+          ]
+        },
+        {
+          "id": "wall",
+          "replaces": "res://assets/generated/sprites/castle-kit/wall.png",
+          "output": "res://assets/generated/sprites/world/dom-wall--crenellated.png",
+          "output_sha256": "c0742e240affe83c25bcc1018fb375877f3a6a290488a2f53817ef3f209ad77e",
+          "source": null,
+          "source_status": "Recovered from previous #305 run; original source/prompt unavailable in worktree; accepted PNG preserved byte-for-byte.",
+          "size": [
+            256,
+            256
+          ],
+          "alpha_rect": [
+            4,
+            14,
+            248,
+            238
+          ],
+          "previous_alpha_rect": [
+            96,
+            111,
+            64,
+            82
+          ],
+          "previous_drawn_size_px": [
+            64,
+            82
+          ],
+          "placements": [
+            {
+              "node_path": "BorderDressing/WallTop01",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop02",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop03",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop04",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop05",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop06",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop07",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop08",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop09",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop10",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop11",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop12",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop13",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop14",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop15",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop16",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop17",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop18",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop19",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallTop20",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom01",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom02",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom03",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom04",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom05",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom06",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom07",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom08",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom09",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom10",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom11",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom12",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom13",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom14",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom15",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom16",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom17",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom18",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom19",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom20",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom21",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom22",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom23",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallBottom24",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft01",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft02",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft03",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft04",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft05",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft06",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft07",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft08",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft09",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft10",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft11",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft12",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft13",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft14",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft15",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallLeft16",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightTop01",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightTop02",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightTop03",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightTop04",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightTop05",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightTop06",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightTop07",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightBottom01",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightBottom02",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightBottom03",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightBottom04",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightBottom05",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightBottom06",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "BorderDressing/WallRightBottom07",
+              "previous_bottom_y": 0
+            }
+          ]
+        },
+        {
+          "id": "banner-green",
+          "replaces": "res://assets/generated/sprites/fantasy-town-kit/banner-green.png",
+          "output": "res://assets/generated/sprites/world/dom-banner--green.png",
+          "output_sha256": "3b0e74820f6f1f2af32d573c50ece195c2c51737f6a3065c003a564256c0e4c4",
+        "source": "/home/adamjroder/.codex/generated_images/01a124ee-af23-75b2-be48-7b0279998094/exec-5ad5dcd3-2476-4f92-b76d-930f1890ca2a.png",
+        "source_sha256": "685fd68cfbf13339d843e0d9222e4394e19ae4c17de16f8311088ef96adc97d8",
+          "source_status": "Generated with built-in image_gen in this run.",
+          "size": [
+            256,
+            256
+          ],
+          "alpha_rect": [
+            74,
+            4,
+            108,
+            248
+          ],
+          "previous_alpha_rect": [
+            119,
+            141,
+            18,
+            40
+          ],
+          "previous_drawn_size_px": [
+            18,
+            40
+          ],
+          "placements": [
+            {
+              "node_path": "TownHallBanner",
+              "previous_bottom_y": 2.404
+            }
+          ]
+        },
+        {
+          "id": "banner-red",
+          "replaces": "res://assets/generated/sprites/fantasy-town-kit/banner-red.png",
+          "output": "res://assets/generated/sprites/world/dom-banner--red.png",
+          "output_sha256": "03618209a8ee8842506446693a53133ae188219dcac2dd9fbd68a6542e86e674",
+        "source": "/home/adamjroder/.codex/generated_images/01a124ee-af23-75b2-be48-7b0279998094/exec-d1667970-4578-4942-876a-3a0e34c33423.png",
+        "source_sha256": "030d9371a74c273bb8216a72bd50fd9dfed4f1ea7ebd5f0b7902e7c1b03378b0",
+          "source_status": "Generated with built-in image_gen in this run.",
+          "size": [
+            256,
+            256
+          ],
+          "alpha_rect": [
+            73,
+            4,
+            110,
+            248
+          ],
+          "previous_alpha_rect": [
+            119,
+            141,
+            18,
+            38
+          ],
+          "previous_drawn_size_px": [
+            18,
+            38
+          ],
+          "placements": [
+            {
+              "node_path": "EquipmentShopBanner",
+              "previous_bottom_y": 0.404
+            },
+            {
+              "node_path": "GarrisonBanner",
+              "previous_bottom_y": 0.404
+            }
+          ]
+        },
+        {
+          "id": "lantern",
+          "replaces": "res://assets/generated/sprites/fantasy-town-kit/lantern.png",
+          "output": "res://assets/generated/sprites/world/dom-lantern--street.png",
+          "output_sha256": "0e4d223faee3ae9ba233cae9de25313ba1cad033840d1393fd1bf4d60dbf289d",
+        "source": "/home/adamjroder/.codex/generated_images/01a124ee-af23-75b2-be48-7b0279998094/exec-42c572b0-d00e-42ee-9c45-5e7dfd2cc2c0.png",
+        "source_sha256": "66a0d08e2456551b546b91b02e2957556f821c50b2639ecbed53a526deb321fb",
+          "source_status": "Generated with built-in image_gen in this run.",
+          "size": [
+            256,
+            256
+          ],
+          "alpha_rect": [
+            110,
+            4,
+            36,
+            248
+          ],
+          "previous_alpha_rect": [
+            122,
+            114,
+            12,
+            67
+          ],
+          "previous_drawn_size_px": [
+            12,
+            67
+          ],
+          "placements": [
+            {
+              "node_path": "BellInspectionLantern",
+              "previous_bottom_y": 2.404
+            },
+            {
+              "node_path": "RiverShrineLantern",
+              "previous_bottom_y": 2.404
+            },
+            {
+              "node_path": "PlayersHouseLantern",
+              "previous_bottom_y": 2.404
+            },
+            {
+              "node_path": "SavePointLantern",
+              "previous_bottom_y": 2.404
+            },
+            {
+              "node_path": "SetDressing/StreetLanternEquipmentShop",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "SetDressing/StreetLanternTownHallWest",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "SetDressing/StreetLanternTownHallEast",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "SetDressing/StreetLanternIronCompanies",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "SetDressing/StreetLanternTrialHall",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "SetDressing/StreetLanternMarketSouth",
+              "previous_bottom_y": 0
+            }
+          ]
+        },
+        {
+          "id": "cart-high",
+          "replaces": "res://assets/generated/sprites/fantasy-town-kit/cart-high.png",
+          "output": "res://assets/generated/sprites/world/dom-cart--high.png",
+          "output_sha256": "64a2e3eeec20703d1d58cdebc3a73b616fe893543a77a1496f575170eddb8515",
+        "source": "/home/adamjroder/.codex/generated_images/01a124ee-af23-75b2-be48-7b0279998094/exec-6a0992e6-d7f2-49fc-81fe-f643578bd3e0.png",
+        "source_sha256": "5f61e4db78a1f4f67704c88f752bccd83487503c2fad56c7e18f022c43c9c5dc",
+          "source_status": "Generated with built-in image_gen in this run.",
+          "size": [
+            256,
+            256
+          ],
+          "alpha_rect": [
+            13,
+            4,
+            229,
+            248
+          ],
+          "previous_alpha_rect": [
+            97,
+            138,
+            62,
+            49
+          ],
+          "previous_drawn_size_px": [
+            62,
+            49
+          ],
+          "placements": [
+            {
+              "node_path": "SetDressing/CartBlobMarket",
+              "previous_bottom_y": 0
+            },
+            {
+              "node_path": "SetDressing/CartIronCompanies",
+              "previous_bottom_y": 0
+            }
+          ]
+        },
+        {
+          "id": "stall-bench",
+          "replaces": "res://assets/generated/sprites/fantasy-town-kit/stall-bench.png",
+          "output": "res://assets/generated/sprites/world/dom-stall-bench--plank.png",
+          "output_sha256": "fac1643c961bdee3dc5dd16f471d6a2e7b65f22a199519d113f8a31b6c6eda7f",
+        "source": "/home/adamjroder/.codex/generated_images/01a124ee-af23-75b2-be48-7b0279998094/exec-70771ab1-dcfa-4975-828f-1a35c4cd94a6.png",
+        "source_sha256": "586c9aaef95bd4b30efef3dd4f29ce2b8c9c9da33d3f1ffbebb0c3fbc0c71a79",
+          "source_status": "Generated with built-in image_gen in this run.",
+          "size": [
+            256,
+            256
+          ],
+          "alpha_rect": [
+            4,
+            93,
+            248,
+            159
+          ],
+          "previous_alpha_rect": [
+            109,
+            161,
+            38,
+            26
+          ],
+          "previous_drawn_size_px": [
+            38,
+            26
+          ],
+          "placements": [
+            {
+              "node_path": "ItemShopBench",
+              "previous_bottom_y": 8.404
+            }
+          ]
+        }
+      ],
+      "terrain": {
+        "output": "res://assets/generated/backgrounds/world/dom-town-terrain-v1.png",
+        "output_sha256": "5c8ba7332496c504038417b21ac8ac24b96084b67a53c6df081c9a7d463f8cd6",
+        "status": "Existing full-size painted terrain plate verified and retained without regeneration.",
+        "size": [
+          2000,
+          1200
+        ],
+        "node_path": "TerrainBackdrop",
+        "position": [
+          1700,
+          1100
+        ],
+        "scale": [
+          1.8,
+          1.8
+        ],
+        "drawn_size_px": [
+          3600,
+          2160
+        ],
+        "z_index": -15
+      }
+    }
   }
 }
