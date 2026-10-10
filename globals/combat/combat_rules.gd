@@ -28,11 +28,12 @@ extends Resource
 # literals). The AP block above is retained deliberately — amendment §8.1 forbids removing AP
 # compatibility in the same change that first makes CT authoritative. ----
 
-## Charge gained per tick before per-actor variation. No `speed` attribute exists on BattleActor
-## today, so speed derives from an authored attribute the same way AP derives from `alacrity`.
-@export var base_charge_speed: int = 6
-@export var charge_speed_attribute: StringName = &"alacrity"
-@export var attribute_points_per_speed: int = 2
+## Charge gained per tick: `5 + Reason` (DRAMGID §3.9 F3b; owner 2026-10-10 chose this curve
+## from docs/dramgid-numbers.md §7 over `6 + Reason/2`, which gave only two distinct speeds
+## across the party's 2..5 range). Reason 2/3/4/5 -> 7/8/9/10.
+@export var base_charge_speed: int = 5
+@export var charge_speed_attribute: StringName = &"reason"
+@export var attribute_points_per_speed: int = 1
 @export var minimum_charge_speed: int = 1
 @export var maximum_charge_speed: int = 30
 

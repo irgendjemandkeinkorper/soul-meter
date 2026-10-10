@@ -25,7 +25,8 @@ func _actor(id: String, speed_attribute: int, hp: int = 20) -> BattleActor:
 	actor.combat_id = StringName(id)
 	actor.hp = hp
 	actor.max_hp = hp
-	actor.attributes = {&"edge": speed_attribute}
+	# CT keys on Reason (F3b), AP on Edge; one knob drives both so speed fixtures stay simple.
+	actor.attributes = {&"edge": speed_attribute, &"reason": speed_attribute}
 	return actor
 
 

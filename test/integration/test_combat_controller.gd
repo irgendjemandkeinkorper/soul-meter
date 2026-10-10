@@ -1575,12 +1575,12 @@ func test_a_boxed_in_enemy_under_charge_time_does_not_stall_the_battle() -> void
 	var party: Array[BattleActor] = []
 	for index: int in 3:
 		var ally := _actor("Slow Ally %d" % index, 400, 1, 0)
-		ally.attributes = {&"edge": 0}
+		ally.attributes = {&"edge": 0, &"reason": 0}
 		party.append(ally)
 	var foes: Array[BattleActor] = []
 	for index: int in 12:
 		var foe := _actor("Fast Foe %d" % index, 400, 1, 0)
-		foe.attributes = {&"edge": 48 - (index % 3)}
+		foe.attributes = {&"edge": 48 - (index % 3), &"reason": 48 - (index % 3)}
 		foes.append(foe)
 	var refused: Array[String] = []
 	controller_under_test.event_emitted.connect(
@@ -1718,11 +1718,11 @@ func test_a_fast_hostile_admitted_during_an_enemy_turn_still_acts_after_the_part
 	controller_under_test.configure(CombatActionCatalog.all(), grid, local_rules)
 
 	var ally := _actor("Slow Ally", 400, 1, 0)
-	ally.attributes = {&"edge": 0}
+	ally.attributes = {&"edge": 0, &"reason": 0}
 	var standing := _actor("Standing Foe", 400, 1, 0)
-	standing.attributes = {&"edge": 0}
+	standing.attributes = {&"edge": 0, &"reason": 0}
 	var newcomer := _actor("Quick Arrival", 400, 1, 0)
-	newcomer.attributes = {&"edge": 48}
+	newcomer.attributes = {&"edge": 48, &"reason": 48}
 
 	var acted: Array[String] = []
 	# Mutated in place, never reassigned: a lambda captures the local by value, so an

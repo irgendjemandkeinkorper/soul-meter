@@ -21,11 +21,16 @@ extends SceneTree
 ##   rider from the first amendment was dropped by the owner's final ruling (2026-08-24,
 ##   final-ruleset rerun): a party death against a full-strength squad is the decisive
 ##   differential. History and caveats: docs/gate-t2-evidence.md.
+## - Probe party Reason (2026-10-10, #283 F3b): CT now keys on Reason (`5 + Reason`). The probe
+##   party had no Reason, which would run it at 5 — below any real party member (Reason 2..5).
+##   It is authored at Reason 2, the floor of the real range. Run 6 in the evidence doc.
 ##
 ## Canonical invocation:
 ##   SOUL_METER_HEADLESS=1 godot --headless --path . \
 ##     --script res://tools/gate_t2_positional_depth.gd
 
+## Floor of the real party's Reason range; see the header note.
+const PROBE_REASON := 2
 const ENCOUNTER_ID := &"phase2-demon"  # rerun 1-3 fixed encounter; kept for the evidence trail
 const CANDIDATE_ENCOUNTERS: Array[StringName] = [
 	&"phase2-demon",
@@ -285,7 +290,7 @@ static func _actor(name: String, hp: int, attack: int, defense: int, edge: int) 
 	actor.max_hp = hp
 	actor.attack = attack
 	actor.defense = defense
-	actor.attributes = {&"edge": edge}
+	actor.attributes = {&"edge": edge, &"reason": PROBE_REASON}
 	return actor
 
 
