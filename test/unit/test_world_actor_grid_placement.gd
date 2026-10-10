@@ -1,6 +1,5 @@
 extends GdUnitTestSuite
 
-const EnemyScript := preload("res://actors/enemy/enemy.gd")
 const NpcScript := preload("res://actors/npc/npc.gd")
 const TILE_SIZE := Vector2i(64, 32)
 
@@ -60,24 +59,6 @@ func test_npc_ready_snaps_authored_position_to_cell_center() -> void:
 	world.add_child(npc)
 
 	assert_vector(npc.global_position).is_equal(_cell_center(ground, authored_position))
-
-
-func test_enemy_ready_snaps_authored_position_to_cell_center() -> void:
-	var world := _make_world()
-	var ground := world.get_node("IsometricGround") as TileMapLayer
-	var authored_position: Vector2 = (
-		ground.to_global(ground.map_to_local(Vector2i(3, 2))) + Vector2(-2.0, 1.0)
-	)
-	var enemy := EnemyScript.new() as Enemy
-	enemy.encounter_id = &"bog-wight"
-	enemy.add_child(Sprite2D.new())
-	enemy.get_child(0).name = "Sprite2D"
-	enemy.global_position = authored_position
-
-	world.add_child(enemy)
-
-	assert_bool(is_instance_valid(enemy)).is_true()
-	assert_vector(enemy.global_position).is_equal(_cell_center(ground, authored_position))
 
 
 func test_npc_ready_uses_nearest_walkable_center_when_authored_cell_is_blocked() -> void:

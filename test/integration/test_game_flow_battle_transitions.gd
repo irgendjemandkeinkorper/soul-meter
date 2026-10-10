@@ -19,9 +19,22 @@ const CHAPTER_COMPLETE_STATE := "StateChart/Root/Playing/ChapterComplete"
 var _field_scene: Node2D
 var _field: FieldMap
 var _loading_handler_was_connected: bool = false
+var _game_state_before: Dictionary
+var _reputation_before: Dictionary
+var _renown_before: Dictionary
+var _quests_before: Dictionary
+var _autosave_reason_before: String
 
 
 func before_test() -> void:
+	_game_state_before = GameState.to_dict().duplicate(true)
+	_reputation_before = Reputation.to_dict().duplicate(true)
+	_renown_before = Renown.to_dict().duplicate(true)
+	_quests_before = QuestRegistry.to_dict().duplicate(true)
+	_autosave_reason_before = SaveGame._pending_autosave_reason
+	GameState._seed_demo_data()
+	GameState.set_flag("defeated_bog_wight", false)
+	GameState.set_flag("field_debt_proof_looted", false)
 	_reset_battle()
 	_field_scene = FIELD_SCENE.instantiate() as Node2D
 	add_child(_field_scene)
@@ -56,6 +69,12 @@ func after_test() -> void:
 	_field_scene.free()
 	_field_scene = null
 	_field = null
+	GameState.from_dict(_game_state_before)
+	Reputation.from_dict(_reputation_before)
+	Renown.from_dict(_renown_before)
+	QuestRegistry.reset()
+	QuestRegistry.from_dict(_quests_before)
+	SaveGame._pending_autosave_reason = _autosave_reason_before
 
 
 func test_enter_battle_goes_directly_to_battle_and_pause_returns_there() -> void:
@@ -92,6 +111,125 @@ func test_enter_battle_goes_directly_to_battle_and_pause_returns_there() -> void
 	assert_bool(_state_is_active(ACTIVE_STATE)).is_true()
 	assert_bool(_field.combat_mode_active()).is_false()
 	assert_int(MusicDirector.get_context_stack().size()).is_equal(music_depth_before)
+
+
+## #281/#456: the authored wight alerts through physics, fights on this field, and
+## unlocks the proof through the victory ledger. Only its HP is shortened in this fixture.
+func test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory() -> void:
+	var hostile := _field_scene.get_node("BogWight") as Hostile
+	var player := _field.player()
+	var proof := _field_scene.get_node("FieldDebtProof") as Pickup
+	var field_id := _field_scene.get_instance_id()
+	assert_bool(proof._is_unlocked()).is_false()
+	GameFlow.watch_field_hostiles()
+	await get_tree().physics_frame
+	assert_bool(Battle.session_active).is_false()
+	player.global_position = _field.iso_grid().cell_to_world(
+		hostile.cell + Vector2i(1, 0)
+	)
+	for _frame: int in 30:
+		if Battle.session_active:
+			break
+		await get_tree().physics_frame
+	await get_tree().process_frame
+	assert_bool(Battle.session_active).is_true()
+	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
+	assert_bool(_state_is_active(DEPLOYMENT_SLATE_STATE)).is_false()
+	assert_bool(get_tree().paused).is_false()
+	assert_object(Battle._current_field_map()).is_same(_field)
+	assert_int(_field_scene.get_instance_id()).is_equal(field_id)
+	assert_int(UIManager._stack.size()).is_equal(1)
+	var hud := UIManager._stack.back() as Screen
+	var interface := hud.find_child("BattleInterface", true, false) as BattleInterface
+	assert_object(interface).is_not_null()
+	assert_int(hud.find_children("BattleInterface", "", true, false).size()).is_equal(1)
+	assert_object(_field.combat_overlay()).is_not_null()
+	assert_bool((hud.get_node("Backdrop") as ColorRect).visible).is_false()
+	assert_bool(interface.tactical_data_visible()).is_false()
+	# The command dock toggles the region in the one interface, not another HUD.
+	(hud.get("_tactical_data_button") as Button).pressed.emit()
+	assert_bool(interface.tactical_data_visible()).is_true()
+	(hud.get("_tactical_data_button") as Button).pressed.emit()
+	assert_bool(interface.tactical_data_visible()).is_false()
+	await _capture_bog_wight_hud()
+
+	var foe := hostile.battle_actor()
+	foe.hp = 1
+	var submitted_strike := false
+	for _step: int in 200:
+		if Battle.ended or Battle.controller == null:
+			break
+		if Battle.controller.state == CombatController.State.ALLY_TURN:
+			var result := Battle.controller.submit_action(&"strike", foe)
+			if bool(result.get("allowed", false)):
+				submitted_strike = true
+			else:
+				Battle.controller.end_turn()
+		else:
+			Battle.controller.end_turn()
+	await get_tree().process_frame
+	assert_bool(submitted_strike).is_true()
+	assert_bool(Battle.ended).is_true()
+	assert_int(Battle.last_result.state).is_equal(BattleResult.State.VICTORY)
+	assert_bool(GameState.flag_is_true("defeated_bog_wight")).is_true()
+	assert_int(hostile.state).is_equal(Hostile.State.DOWNED)
+	assert_bool(hostile.get_collision_layer_value(1)).is_false()
+	assert_bool(Battle.session_active).is_false()
+	assert_bool(proof._is_unlocked()).is_true()
+
+	var outcome := hud.get("_outcome_box") as VBoxContainer
+	(outcome.get_child(outcome.get_child_count() - 1) as Button).pressed.emit()
+	await get_tree().process_frame
+	if _state_is_active(BATTLE_STATE):
+		var loot := UIManager._stack.back() as LootPanel
+		assert_object(loot).is_not_null()
+		loot.dismissed.emit([] as Array[Dictionary])
+		await get_tree().process_frame
+	assert_bool(_state_is_active(ACTIVE_STATE)).is_true()
+	assert_bool(_field.combat_mode_active()).is_false()
+	assert_bool(player.is_physics_processing()).is_true()
+	assert_int(_field_scene.get_instance_id()).is_equal(field_id)
+	var item_id := proof.item_id
+	var count_before := GameState.item_count(item_id)
+	player.global_position = proof.global_position
+	for _frame: int in 4:
+		await get_tree().physics_frame
+	assert_bool(proof._player_in_range).is_true()
+	var interact := InputEventAction.new()
+	interact.action = &"interact"
+	interact.pressed = true
+	proof._unhandled_input(interact)
+	await get_tree().process_frame
+	assert_bool(GameState.flag_is_true("field_debt_proof_looted")).is_true()
+	assert_int(GameState.item_count(item_id)).is_equal(count_before + 1)
+	assert_bool(is_instance_valid(proof)).is_false()
+
+
+## Optional rendered evidence from the same production flow; never wait on a draw headlessly.
+func _capture_bog_wight_hud() -> void:
+	var capture_dir := OS.get_environment("SOUL_METER_BOG_WIGHT_CAPTURE_DIR")
+	if capture_dir.is_empty():
+		return
+	assert_str(DisplayServer.get_name()).is_not_equal("headless")
+	if DisplayServer.get_name() == "headless":
+		return
+	assert_int(DirAccess.make_dir_recursive_absolute(capture_dir)).is_equal(OK)
+	var boot := get_tree().current_scene as CanvasItem
+	var boot_visible := boot.visible if boot != null else false
+	if boot != null:
+		boot.hide()
+	var camera := _field.player().get_node("Camera2D") as Camera2D
+	camera.make_current()
+	camera.reset_smoothing()
+	await get_tree().create_timer(0.5).timeout
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	var image := get_viewport().get_texture().get_image()
+	var capture_path := capture_dir.path_join("bog-wight-hud.png")
+	assert_int(image.save_png(capture_path)).is_equal(OK)
+	print("BOG WIGHT HUD CAPTURE: ", capture_path)
+	if boot != null:
+		boot.visible = boot_visible
 
 
 func test_enter_set_piece_traverses_the_existing_deployment_chain() -> void:

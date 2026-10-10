@@ -104,8 +104,8 @@ func test_production_encounter_place_writes_a_spawn_position() -> void:
 
 
 func test_place_step_receives_the_live_battlefield_and_writes_a_spawn_position() -> void:
-	# Mirrors the real order of operations: the Enemy trigger calls Battle.start()
-	# BEFORE the chart enters deployment, so the model exists when PLACE opens (#202).
+	# Set-piece setup starts Battle before the chart enters deployment, so the
+	# model exists when PLACE opens (#202).
 	Battle.start(&"bog-wight")
 	assert_bool(Battle.ended).is_false()
 

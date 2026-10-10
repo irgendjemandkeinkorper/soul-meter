@@ -62,11 +62,9 @@ const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
 const CHARACTER_CREATION_SCREEN := preload("res://ui/screens/character_creation.tscn")
 const INTRO_NARRATION_SCREEN := preload("res://ui/screens/intro_narration.tscn")
 const DEPLOYMENT_SCREEN := preload("res://ui/screens/deployment/deployment.tscn")
-## The stage remains the existing battle screen until migration step 6 rewires
-## it as a field overlay; GameFlow already treats it as the battle HUD.
+## One field HUD shell: BattleInterface (including tactical data), command dock,
+## audio, and outcome controls. CombatOverlay renders the fight on the field.
 const BATTLE_HUD := preload("res://ui/screens/battle.tscn")
-## Performance tooling keeps the old resource name until its D6 migration.
-const BATTLE_SCREEN := BATTLE_HUD
 const CHAPTER_COMPLETE_SCREEN := preload("res://ui/screens/chapter_complete.tscn")
 
 var _waiting_for_level := false
@@ -703,8 +701,8 @@ func _complete_scene_load() -> void:
 ## F1 (#281): the first accepted alert on a field opens the ambient session. Battle only
 ## listens to a field once a session is live (it admits reinforcements itself), so before
 ## that point the flow is what turns "a hostile noticed the party" into the chart entering
-## Battle — the same edge `Enemy` takes by hand after `Battle.start()`. Idempotent: a field
-## can be arrived at more than once and the connection must not stack.
+## Battle, which mounts the field HUD. Idempotent: a field can be arrived at more
+## than once and the connection must not stack.
 func watch_field_hostiles() -> void:
 	var field: FieldMap = Battle._current_field_map()
 	if field == null:

@@ -14,6 +14,7 @@ const InjuryNoticeScript := preload("res://ui/hud/injury_notice.gd")
 @onready var act_target_panel: ForecastPanelRegion = %ActTargetPanel
 @onready var turn_timeline: CTTimelineRegion = %TurnTimeline
 @onready var cursor_readout: Label = %CursorReadout
+@onready var tactical_data: TacticalDataRegion = %TacticalData
 @onready var injury_notice: InjuryNoticeScript = %InjuryNotice
 @onready var injury_inspector: InjuryNoticeScript = %InjuryInspector
 var _controller: CombatController
@@ -56,6 +57,7 @@ func consume_event(event: CombatEvent) -> void:
 	weather_chip.consume_event(event)
 	act_target_panel.consume_event(event)
 	turn_timeline.consume_event(event)
+	tactical_data.consume_event(event)
 	if event.type in [&"action_resolved", &"turn_started", &"battle_finished"]:
 		_clear_target_preview()
 	if _controller != null and _aim_target != null:
@@ -66,6 +68,16 @@ func consume_event(event: CombatEvent) -> void:
 			snapshot_value is Dictionary and (snapshot_value as Dictionary).has("forecast_context")
 		):
 			_show_target_forecast(_controller.action_by_id(_selected_action_id), _aim_target)
+
+
+## The FR-603 panel is opt-in; returns its new visibility.
+func toggle_tactical_data() -> bool:
+	tactical_data.visible = not tactical_data.visible
+	return tactical_data.visible
+
+
+func tactical_data_visible() -> bool:
+	return tactical_data.visible
 
 
 func bind_scheduler(scheduler: TurnScheduler) -> void:

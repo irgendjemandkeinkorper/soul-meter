@@ -61,6 +61,25 @@ func test_region_e_renders_additive_ap_round_snapshot_payload() -> void:
 	assert_str((timeline.markers.get_child(1) as Label).text).contains("ACTED")
 
 
+func test_tactical_data_is_a_hidden_region_fed_by_the_interface_event_stream() -> void:
+	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
+	var interface := runner.scene() as BattleInterface
+	var tactical := interface.tactical_data
+	assert_object(tactical).is_not_null()
+	assert_bool(interface.tactical_data_visible()).is_false()
+	var event := CombatEvent.new()
+	event.type = &"action_resolved"
+	event.data = {"snapshot": {"balance": -35, "allies": [], "enemies": []}}
+	interface.consume_event(event)
+	await runner.simulate_frames(1)
+	var balance := tactical.find_child("BalanceValue", true, false) as Label
+	assert_str(balance.text).contains("-35")
+	assert_bool(interface.toggle_tactical_data()).is_true()
+	assert_bool(tactical.visible).is_true()
+	assert_bool(interface.toggle_tactical_data()).is_false()
+	assert_bool(tactical.visible).is_false()
+
+
 func test_production_battle_instantiates_the_overlay() -> void:
 	var source := FileAccess.get_file_as_string("res://ui/screens/battle.gd")
 	assert_str(source).contains("battle_interface.tscn")

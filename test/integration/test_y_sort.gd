@@ -35,10 +35,9 @@ const EXPECTED_BACKGROUND_Z_INDEX := {
 var _original_flags: Dictionary = {}
 
 
-## World scenes read GameState while they build: an Enemy whose encounter is
-## already flagged defeated queue_free()s itself in _ready() BEFORE it dresses
-## its sprite, so the node is still findable this frame but carries the
-## undressed enemy.tscn defaults. gdUnit runs suites in directory-enumeration
+## World scenes read GameState while they build: a Hostile whose group is
+## already flagged defeated retires itself in _ready() before dressing its
+## sprite. gdUnit runs suites in directory-enumeration
 ## order, which is not stable across CI runner images, so pin the fresh-field
 ## state these preconditions describe instead of inheriting whatever flags an
 ## earlier suite left in the autoload.
@@ -118,7 +117,7 @@ func test_npc_and_enemy_sprite_origins_are_at_the_feet() -> void:
 
 
 func test_actors_own_local_y_sort_does_not_leak_a_fixed_z_index() -> void:
-	# Player/NPC/Enemy each enable y_sort_enabled on themselves too — that is
+	# Player/NPC/Hostile each enable y_sort_enabled on themselves too — that is
 	# correct (it sorts their own Shadow vs Sprite2D children) and distinct
 	# from rule 1, which is about the WORLD scene's common parent. What rule
 	# 1 forbids is a *fixed* z_index on the sortable sprite itself.
