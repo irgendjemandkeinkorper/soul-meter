@@ -535,7 +535,58 @@ static func build() -> Theme:
 	t.set_stylebox("focus", "DialogueChoice", _notched_style(29))
 	t.set_stylebox("disabled", "DialogueChoice", _notched_style(30))
 
+	_build_editor_variations(t, display, body, numeric)
 	return t
+
+
+## Developer dock controls reuse the existing palette, fonts, spacing and notched frames.
+static func _build_editor_variations(t: Theme, display: Font, body: Font, numeric: Font) -> void:
+	for base: String in [
+		"Tree", "TabContainer", "SplitContainer", "HSplitContainer", "VSplitContainer",
+		"SpinBox", "OptionButton", "CheckBox", "TextEdit", "PopupMenu",
+	]:
+		var variation := "Editor" + base
+		t.set_type_variation(variation, base)
+		t.set_font("font", variation, numeric if base == "SpinBox" else body)
+		t.set_font_size("font_size", variation, DS.FS_400)
+		t.set_color("font_color", variation, DS.PARCHMENT)
+		t.set_color("font_disabled_color", variation, DS.ASH_DIM)
+	for base: String in ["SplitContainer", "HSplitContainer", "VSplitContainer"]:
+		t.set_constant("separation", "Editor" + base, DS.SPACE_4)
+	for base: String in ["Tree", "TabContainer", "PopupMenu"]:
+		t.set_stylebox("panel", "Editor" + base, _notched_style(26, DS.SPACE_4))
+	t.set_stylebox("selected", "EditorTree", _notched_style(29, DS.SPACE_2))
+	t.set_stylebox("selected_focus", "EditorTree", _notched_style(29, DS.SPACE_2))
+	t.set_color("font_selected_color", "EditorTree", DS.PARCHMENT)
+	t.set_constant("v_separation", "EditorTree", DS.SPACE_3)
+	for state: String in ["unselected", "hovered", "selected", "disabled"]:
+		t.set_stylebox("tab_" + state, "EditorTabContainer", _notched_style(
+			29 if state == "selected" else 26, DS.SPACE_4
+		))
+		t.set_color("font_" + state + "_color", "EditorTabContainer", DS.PARCHMENT)
+	for state: String in ["normal", "focus", "read_only"]:
+		t.set_stylebox(state, "EditorTextEdit", _notched_style(26, DS.SPACE_4))
+	t.set_color("caret_color", "EditorTextEdit", DS.PARCHMENT)
+	t.set_color("selection_color", "EditorTextEdit", DS.VIOLET_1)
+	t.set_stylebox("hover", "EditorPopupMenu", _notched_style(29, DS.SPACE_4))
+	t.set_type_variation("EditorPanel", "PanelContainer")
+	t.set_stylebox("panel", "EditorPanel", _notched_style(26, DS.SPACE_4))
+	t.set_constant("dock_width", "EditorPanel", DS.RAIL_W)
+	t.set_constant("dock_height", "EditorTabContainer", DS.SLOT_SIZE_LG * 2)
+	t.set_type_variation("EditorColumn", "VBoxContainer")
+	t.set_constant("separation", "EditorColumn", DS.SPACE_4)
+	t.set_type_variation("EditorRow", "HBoxContainer")
+	t.set_constant("separation", "EditorRow", DS.SPACE_4)
+	t.set_type_variation("EditorLabel", "Label")
+	t.set_font("font", "EditorLabel", body)
+	t.set_font_size("font_size", "EditorLabel", DS.FS_400)
+	t.set_color("font_color", "EditorLabel", DS.PARCHMENT)
+	t.set_type_variation("EditorHeading", "Label")
+	t.set_font("font", "EditorHeading", display)
+	t.set_font_size("font_size", "EditorHeading", DS.FS_400)
+	t.set_type_variation("EditorButton", "Button")
+	t.set_font("font", "EditorButton", display)
+	t.set_font_size("font_size", "EditorButton", DS.FS_300)
 
 
 ## Readable ledger menus. A local theme keeps this pass scoped to the character,

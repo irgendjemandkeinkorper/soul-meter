@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://ui/flow/game_flow.gd" id="1_flow"]
 [ext_resource type="Script" path="res://addons/godot_state_charts/state_chart.gd" id="2_chart"]
@@ -18,7 +18,15 @@ guard = SubResource("ExpressionGuard_garrison")
 
 [sub_resource type="Resource" id="ExpressionGuard_can_fight"]
 script = ExtResource("6_expression_guard")
-expression = "can_fight_here"
+expression = "can_fight_here and not editor_open"
+
+[sub_resource type="Resource" id="ExpressionGuard_editor_open"]
+script = ExtResource("6_expression_guard")
+expression = "editor_open"
+
+[sub_resource type="Resource" id="ExpressionGuard_editor_closed"]
+script = ExtResource("6_expression_guard")
+expression = "not editor_open"
 
 [sub_resource type="Resource" id="ExpressionGuard_resume_battle"]
 script = ExtResource("6_expression_guard")
@@ -35,6 +43,7 @@ script = ExtResource("1_flow")
 script = ExtResource("2_chart")
 initial_expression_properties = {
 "can_fight_here": false,
+"editor_open": false,
 "garrison_access_granted": false,
 "rep_iron_companies": 0.0,
 "resume_to_battle": false
@@ -104,6 +113,13 @@ script = ExtResource("4_atomic")
 script = ExtResource("5_transition")
 to = NodePath("../../Paused")
 event = &"pause"
+guard = SubResource("ExpressionGuard_editor_closed")
+
+[node name="ToEditorPaused" type="Node" parent="StateChart/Root/Playing/Active"]
+script = ExtResource("5_transition")
+to = NodePath("../../Paused")
+event = &"pause"
+guard = SubResource("ExpressionGuard_editor_open")
 
 [node name="ToBattle" type="Node" parent="StateChart/Root/Playing/Active"]
 script = ExtResource("5_transition")
@@ -120,6 +136,7 @@ event = &"enter_set_piece"
 script = ExtResource("5_transition")
 to = NodePath("../../Loading")
 event = &"travel"
+guard = SubResource("ExpressionGuard_editor_closed")
 
 [node name="ToGarrisonLoading" type="Node" parent="StateChart/Root/Playing/Active"]
 script = ExtResource("5_transition")
@@ -197,6 +214,13 @@ script = ExtResource("4_atomic")
 script = ExtResource("5_transition")
 to = NodePath("../../Paused")
 event = &"pause"
+guard = SubResource("ExpressionGuard_editor_closed")
+
+[node name="ToEditorPaused" type="Node" parent="StateChart/Root/Playing/Battle"]
+script = ExtResource("5_transition")
+to = NodePath("../../Paused")
+event = &"pause"
+guard = SubResource("ExpressionGuard_editor_open")
 
 [node name="ToActive" type="Node" parent="StateChart/Root/Playing/Battle"]
 script = ExtResource("5_transition")
