@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 ## E3.1a (#338): WeftluminSceneModel — pick, multi-select, both snaps, ownership boundaries, the
 ## node -> command mapping, and live apply == replay through LayoutOverrides.apply_to_scene.
 ##
-## The layout tool's pinned behaviours (test_layout_editor_patterns.gd, and the #338 port notes:
+## The layout tool's pinned behaviours (test_scene_pick_patterns.gd, and the #338 port notes:
 ## topmost-on-tie pick, rigid one-step group drag, whole-selection delete/duplicate/nudge) are
 ## driven here through the model. The fixture is a real saved scene with real instanced
 ## sub-scenes, because the ownership boundary is only meaningful on `Node.owner` as a loaded

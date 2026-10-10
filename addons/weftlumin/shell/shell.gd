@@ -2,6 +2,12 @@ class_name WeftluminShell
 extends CanvasLayer
 ## One modal dock. The host adapter owns pause policy; this node only owns editor UI/input.
 
+signal viewport_input(event: InputEvent, world_position: Vector2)
+signal viewport_released
+signal viewport_draw(surface: Control)
+signal viewport_shortcut(event: InputEventKey)
+signal closing
+
 const TOGGLE_ACTION := &"weftlumin_toggle"
 const ZOOM_STEP := 1.1
 const MIN_ZOOM := 0.1
@@ -38,7 +44,11 @@ func _ready() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.focus_mode = Control.FOCUS_ALL
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
-	root.gui_input.connect(func(_event: InputEvent) -> void: root.accept_event())
+	root.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventKey:
+			viewport_shortcut.emit(event as InputEventKey)
+		root.accept_event()
+	)
 	_previous_focus = get_viewport().gui_get_focus_owner()
 	_build_dock()
 	_open_camera()
@@ -55,6 +65,7 @@ func _release() -> void:
 	if not _opened:
 		return
 	_opened = false
+	closing.emit()
 	_end_owned_sandbox()
 	camera.enabled = false
 	if is_instance_valid(_previous_camera) and _previous_camera.is_inside_tree():
@@ -68,12 +79,13 @@ func _release() -> void:
 
 
 func close() -> void:
+	# Commit focused numeric text while the dock is still visible and owns GUI focus.
+	_release()
 	hide()
 	set_process_input(false)
 	set_process_shortcut_input(false)
 	set_process_unhandled_key_input(false)
 	set_process_unhandled_input(false)
-	_release()
 	if get_parent() == get_node_or_null("/root/WeftluminBootstrap"):
 		# Bootstrap frees synchronously; it must run after this shell's call returns.
 		get_parent().call_deferred("close")
@@ -86,6 +98,9 @@ func _input(event: InputEvent) -> void:
 		var button := event as InputEventMouseButton
 		if button.button_index == MOUSE_BUTTON_MIDDLE and not button.pressed:
 			_panning = false
+		if button.button_index == MOUSE_BUTTON_LEFT and not button.pressed:
+			# Finish even if the pointer now lies over a dock or outside the centre surface.
+			viewport_released.emit()
 	if InputMap.has_action(TOGGLE_ACTION) and event.is_action(TOGGLE_ACTION):
 		get_viewport().set_input_as_handled()
 		if event.is_action_pressed(TOGGLE_ACTION) and not event.is_echo():
@@ -94,7 +109,9 @@ func _input(event: InputEvent) -> void:
 
 ## Let focused dock controls receive GUI input first, then stop every remaining event
 ## before the host's unhandled-input shortcuts or physics picking can receive it.
-func _shortcut_input(_event: InputEvent) -> void:
+func _shortcut_input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		viewport_shortcut.emit(event as InputEventKey)
 	get_viewport().set_input_as_handled()
 
 
@@ -165,10 +182,13 @@ func _build_dock() -> void:
 	viewport_surface.name = "Viewport"
 	viewport_surface.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_surface.mouse_filter = Control.MOUSE_FILTER_STOP
+	viewport_surface.focus_mode = Control.FOCUS_ALL
+	viewport_surface.clip_contents = true
 	viewport_surface.gui_input.connect(_on_viewport_input)
+	viewport_surface.draw.connect(func() -> void: viewport_draw.emit(viewport_surface))
 	right_split.add_child(viewport_surface)
 	var hint := Label.new()
-	hint.text = "Middle-drag to pan · Wheel to zoom"
+	hint.text = "Click / drag · Ctrl/Shift select · Middle-drag pan · Wheel zoom"
 	hint.theme_type_variation = &"EditorLabel"
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	viewport_surface.add_child(hint)
@@ -273,8 +293,12 @@ func _open_camera() -> void:
 
 
 func _on_viewport_input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		viewport_shortcut.emit(event as InputEventKey)
 	if event is InputEventMouseButton:
 		var button := event as InputEventMouseButton
+		if button.button_index == MOUSE_BUTTON_LEFT and button.pressed:
+			viewport_surface.grab_focus()
 		if button.button_index == MOUSE_BUTTON_MIDDLE:
 			_panning = button.pressed
 		elif button.pressed and button.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
@@ -283,7 +307,17 @@ func _on_viewport_input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion and _panning:
 		camera.position -= (event as InputEventMouseMotion).relative / camera.zoom
 	camera.force_update_scroll()
+	if event is InputEventMouse and not _panning:
+		var position: Vector2 = (event as InputEventMouse).position
+		if Rect2(Vector2.ZERO, viewport_surface.size).has_point(position):
+			viewport_input.emit(event, viewport_to_world(position))
+	viewport_surface.queue_redraw()
 	viewport_surface.accept_event()
+
+
+func viewport_to_world(position: Vector2) -> Vector2:
+	var screen: Vector2 = viewport_surface.get_global_transform_with_canvas() * position
+	return get_viewport().canvas_transform.affine_inverse() * screen
 
 
 func production_owner_live() -> bool:

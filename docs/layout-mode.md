@@ -1,5 +1,9 @@
 # In-game layout mode
 
+> **Retired in #470.** The F10 overlay, its autoload and `SOUL_METER_LAYOUT` are gone; scene layout
+> now runs in the Weftlumin shell (F12). See `docs/weftlumin.md` § Scene layout. The text below is
+> kept as history for the scratch-file and recovery formats, which the scene model still uses.
+
 Layout mode is a debug-build-only map editing overlay. It is disabled by default and has no runtime behavior unless `SOUL_METER_LAYOUT=1` is present when the game starts.
 
 From the repository root, launch a debug build with:

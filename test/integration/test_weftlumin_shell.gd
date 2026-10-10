@@ -222,31 +222,56 @@ func test_free_camera_ignores_player_limits_and_restores_on_close() -> void:
 
 func test_input_is_consumed_and_toggle_closes_while_paused() -> void:
 	var shell := _open()
+	await get_tree().process_frame
 	var inventory := InputEventKey.new()
 	inventory.physical_keycode = KEY_I
 	inventory.pressed = true
 	get_viewport().push_input(inventory)
 	assert_bool(get_viewport().is_input_handled()).is_true()
 	assert_array(UIManager._stack).is_empty()
+	var inventory_release := InputEventKey.new()
+	inventory_release.physical_keycode = KEY_I
+	get_viewport().push_input(inventory_release)
+	var point: Vector2 = shell.viewport_surface.get_global_rect().get_center()
+	var hover := InputEventMouseMotion.new()
+	hover.position = point
+	hover.global_position = point
+	get_viewport().push_input(hover)
 	var pan := InputEventMouseButton.new()
 	pan.button_index = MOUSE_BUTTON_MIDDLE
 	pan.pressed = true
-	shell.viewport_surface.gui_input.emit(pan)
+	pan.button_mask = MOUSE_BUTTON_MASK_MIDDLE
+	pan.position = point
+	pan.global_position = point
+	get_viewport().push_input(pan)
 	var motion := InputEventMouseMotion.new()
 	motion.relative = Vector2(80, 40)
+	motion.position = point + motion.relative
+	motion.global_position = motion.position
+	motion.button_mask = MOUSE_BUTTON_MASK_MIDDLE
 	var before := shell.camera.position
-	shell.viewport_surface.gui_input.emit(motion)
+	get_viewport().push_input(motion)
 	assert_vector(shell.camera.position).is_not_equal(before)
 	# Releasing over chrome must stop a drag before the pointer returns to the viewport.
-	pan.pressed = false
-	get_viewport().push_input(pan)
+	var pan_release := InputEventMouseButton.new()
+	pan_release.button_index = MOUSE_BUTTON_MIDDLE
+	pan_release.position = shell.inspector.get_global_rect().get_center()
+	pan_release.global_position = pan_release.position
+	get_viewport().push_input(pan_release)
 	before = shell.camera.position
-	shell.viewport_surface.gui_input.emit(motion)
+	var returned := InputEventMouseMotion.new()
+	returned.position = point
+	returned.global_position = point
+	returned.relative = Vector2(80, 40)
+	get_viewport().push_input(returned)
 	assert_vector(shell.camera.position).is_equal(before)
 	var toggle := InputEventKey.new()
 	toggle.physical_keycode = KEY_F12
 	toggle.pressed = true
 	get_viewport().push_input(toggle)
+	var toggle_release := InputEventKey.new()
+	toggle_release.physical_keycode = KEY_F12
+	get_viewport().push_input(toggle_release)
 	await get_tree().process_frame
 	assert_int(WeftluminBootstrap.get_child_count()).is_equal(0)
 	assert_bool(get_tree().paused).is_false()
