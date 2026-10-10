@@ -328,3 +328,16 @@ func _two_cell_ground() -> TileMapLayer:
 	layer.set_cell(Vector2i(0, 0), 0, Vector2i.ZERO)
 	layer.set_cell(Vector2i(1, 0), 0, Vector2i.ZERO)
 	return layer
+
+
+## #281 G8: the cursor strip reads at HUD size and never prints an empty element slot.
+func test_cursor_strip_omits_empty_fields_and_reads_at_heading_size() -> void:
+	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
+	var interface := runner.scene() as BattleInterface
+	var plain := {"x": 33, "y": 47, "height_delta": 0, "charge_element_id": "", "charge_level": 0, "note": ""}
+	assert_str(interface.cell_readout(plain)).is_equal("(33,47) · HEIGHT 0")
+	var charged := {"x": 1, "y": 2, "height_delta": 2, "charge_element_id": "zhur", "charge_level": 2, "note": "reeds"}
+	assert_str(interface.cell_readout(charged)).is_equal("(1,2) · HEIGHT 2 · ZHUR 2 · reeds")
+	interface._on_tile_selected(plain)
+	assert_str(interface.cursor_readout.text).is_equal("(33,47) · HEIGHT 0")
+	assert_str(String(interface.cursor_readout.theme_type_variation)).is_equal("HeadingLabel")

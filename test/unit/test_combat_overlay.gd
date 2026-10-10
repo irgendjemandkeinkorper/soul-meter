@@ -170,6 +170,8 @@ func test_move_survives_followup_snapshot_and_overlay_cleanup_restores_actor_col
 	assert_vector(actor.global_position).is_equal(grid.cell_to_world(Vector2i(1, 0)))
 	followup.data["snapshot"]["allies"][0]["hp"] = 0
 	overlay.call("consume_event", followup)
+	await _await_presented(overlay)
+	await get_tree().create_timer(DS.DUR_SLOW * 2.0 + 0.1).timeout
 	assert_float(actor.modulate.a).is_less(1)
 	overlay.free()
 	assert_object(actor).is_not_null()
@@ -224,6 +226,7 @@ func test_action_feedback_uses_event_damage_without_changing_actor_state() -> vo
 	for hit: bool in [false, true]:
 		event.data["hit"] = hit
 		event.data["damage"] = 0
+		await _await_presented(overlay)
 		overlay.call("consume_event", event)
 		assert_object(overlay.get_node_or_null("HitPulse")).is_null()
 		assert_dict(overlay.get("_flashes")).is_empty()
@@ -233,6 +236,7 @@ func test_action_feedback_uses_event_damage_without_changing_actor_state() -> vo
 	event.data.erase("hit")
 	for resolution: Dictionary in [{"hit": false}, {"hit": true, "fizzled": true}]:
 		event.data["resolution"] = resolution
+		await _await_presented(overlay)
 		overlay.call("consume_event", event)
 		var expected := "FIZZLE" if bool(resolution.get("fizzled", false)) else "MISS"
 		assert_str((overlay.get_node("DamagePop/Column/Outcome") as Label).text).is_equal(expected)
@@ -242,14 +246,30 @@ func test_action_feedback_uses_event_damage_without_changing_actor_state() -> vo
 	# A late snapshot reporting a KO cancels an in-flight flash instead of restoring opacity.
 	event.data["hit"] = true
 	event.data["damage"] = 7
+	await _await_presented(overlay)
 	overlay.call("consume_event", event)
 	var defeated := CombatEvent.new()
 	defeated.type = &"battle_snapshot"
 	defeated.data = {"snapshot": event.data["snapshot"].duplicate(true)}
 	defeated.data["snapshot"]["enemies"][0]["hp"] = 0
 	overlay.call("consume_event", defeated)
-	await get_tree().create_timer(DS.DUR_SLOW + 0.1).timeout
-	assert_float(target.modulate.a).is_equal_approx(0.35, 0.001)
+	# #281 G1/G9: the KO snapshot waits for the strike's beat, then fades the body to the
+	# downed tint, which stays clearly visible rather than near-invisible.
+	assert_bool(overlay.call("is_presenting")).is_true()
+	assert_float(target.modulate.a).is_equal(1.0)
+	await _await_presented(overlay)
+	await get_tree().create_timer(DS.DUR_INSTANT).timeout
+	assert_float(target.modulate.a).is_less(1.0).is_greater(CombatOverlay.KO_TINT.a)
+	await get_tree().create_timer(DS.DUR_SLOW * 2.0 + 0.1).timeout
+	assert_float(target.modulate.a).is_equal_approx(CombatOverlay.KO_TINT.a, 0.001)
+	assert_float(target.modulate.a).is_greater_equal(0.75)
+
+
+## #281 G1: events behind a beat wait their turn; wait until the overlay has presented them.
+func _await_presented(overlay: Node, limit_ms: int = 4000) -> void:
+	var deadline := Time.get_ticks_msec() + limit_ms
+	while Time.get_ticks_msec() < deadline and bool(overlay.call("is_presenting")):
+		await get_tree().process_frame
 
 
 func _ground() -> TileMapLayer:
@@ -343,3 +363,180 @@ func _hostile(root: Node, node_name: String) -> Hostile:
 	hostile.unit_id = &"bog-wight"
 	root.add_child(hostile)
 	return hostile
+
+
+## #281 G1/G2/G4: the model resolves the enemy phase in the same frame as the player's strike.
+## The overlay must present those events in turn: the player's result card alone (naming who
+## acted on whom), the target highlight on the target during that beat, then the enemy's turn
+## cue, then the enemy's card replacing the player's, then the next ally turn.
+func test_enemy_phase_is_presented_beat_by_beat_after_the_players_strike() -> void:
+	var fixture := _duel()
+	var overlay: CombatOverlay = fixture.overlay
+	var strike := _strike(&"ally", &"enemy", 11, 43, 7)
+	var enemy_turn := _event(&"enemy_turn_started", &"enemy", &"", 43, 7)
+	var reply := _strike(&"enemy", &"ally", 1, 42, 7)
+	var ally_turn := _event(&"turn_started", &"ally", &"", 42, 7)
+	for event: CombatEvent in [strike, enemy_turn, reply, ally_turn]:
+		overlay.consume_event(event)
+	# Beat 1: the player's strike only.
+	assert_array(_cards(overlay)).contains_exactly(["Vex → Bog Wight|11 DAMAGE"])
+	assert_str(String(overlay._active_id)).is_equal("ally")
+	assert_str(String(overlay._target_id)).is_equal("enemy")
+	assert_float(overlay._hp_target[&"ally"]).is_equal(43.0)
+	assert_bool(overlay.is_presenting()).is_true()
+	assert_bool(overlay.is_animating()).override_failure_message(
+		"queued enemy beats keep pointer input locked"
+	).is_true()
+	await get_tree().create_timer(CombatOverlay.BEAT_READ_SECONDS * 0.5).timeout
+	assert_array(_cards(overlay)).contains_exactly(["Vex → Bog Wight|11 DAMAGE"])
+	# Beat 2: the enemy's turn cue moves the active highlight before it acts.
+	await _await_event_presented(overlay, enemy_turn)
+	assert_str(String(overlay._active_id)).is_equal("enemy")
+	assert_str(String(overlay._target_id)).is_empty()
+	assert_array(_cards(overlay)).override_failure_message(
+		"a new turn retires the previous beat's card"
+	).is_empty()
+	# Beat 3: the reply replaces the player's card rather than stacking on it.
+	await _await_event_presented(overlay, reply)
+	assert_array(_cards(overlay)).contains_exactly(["Bog Wight → Vex|1 DAMAGE"])
+	assert_str(String(overlay._active_id)).is_equal("enemy")
+	assert_str(String(overlay._target_id)).is_equal("ally")
+	assert_float(overlay._hp_target[&"ally"]).is_equal(42.0)
+	await _await_presented(overlay)
+	assert_str(String(overlay._active_id)).is_equal("ally")
+	assert_bool(overlay.is_animating()).is_false()
+
+
+## Replaying history (HUD reopen) or turning animation off presents anything still queued at
+## once, in order, with no beat holds.
+func test_disabling_animation_flushes_queued_beats_in_order() -> void:
+	var fixture := _duel()
+	var overlay: CombatOverlay = fixture.overlay
+	overlay.consume_event(_strike(&"ally", &"enemy", 11, 43, 7))
+	overlay.consume_event(_event(&"enemy_turn_started", &"enemy", &"", 43, 7))
+	overlay.consume_event(_event(&"turn_started", &"ally", &"", 43, 7))
+	assert_bool(overlay.is_presenting()).is_true()
+	overlay.animate_events = false
+	assert_bool(overlay.is_presenting()).is_false()
+	assert_str(String(overlay._active_id)).is_equal("ally")
+	assert_int(_cards(overlay).size()).is_zero()
+
+
+## #281 G2: highlights, HP bar and chevron are anchored to the moving body, not to the
+## destination cell the snapshot already reports.
+func test_unit_overlay_rides_the_moving_body() -> void:
+	var fixture := _duel()
+	var overlay: CombatOverlay = fixture.overlay
+	var grid: IsoGrid = fixture.grid
+	var ally: Node2D = fixture.ally
+	var move := _event(&"action_resolved", &"ally", &"", 43, 18)
+	move.data["path_cells"] = [Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)]
+	move.data["snapshot"]["allies"][0]["position"] = &"c:0,2,0"
+	overlay.consume_event(_event(&"turn_started", &"ally", &"", 43, 18))
+	overlay.consume_event(move)
+	await get_tree().create_timer(DS.DUR_FAST).timeout
+	var destination := overlay.cell_center(Vector2i(0, 2))
+	var anchor := overlay._body_anchor(&"ally", Vector2i(0, 2))
+	assert_vector(anchor).is_equal(overlay.to_local(ally.global_position))
+	assert_float(anchor.distance_to(destination)).is_greater(4.0)
+	await _await_presented(overlay)
+	assert_vector(overlay._body_anchor(&"ally", Vector2i(0, 2))).is_equal(destination)
+	assert_vector(ally.global_position).is_equal(grid.cell_to_world(Vector2i(0, 2)))
+
+
+## #281 G7: facing ids are grid directions. Each chevron points at the grid neighbour it
+## names, so "e" points down-right on the iso screen, not along screen +x.
+func test_facing_chevron_points_along_the_iso_grid() -> void:
+	var fixture := _duel()
+	var overlay: CombatOverlay = fixture.overlay
+	var grid: IsoGrid = fixture.grid
+	var cell := Vector2i(1, 1)
+	for facing: String in CombatOverlay.FACING_STEPS:
+		var step: Vector2i = CombatOverlay.FACING_STEPS[facing]
+		var expected := grid.cell_to_world(cell + step) - grid.cell_to_world(cell)
+		assert_vector(overlay.facing_vector(cell, facing)).is_equal(expected)
+	var east := overlay.facing_vector(cell, "e").normalized()
+	assert_float(east.y).is_greater(0.3)
+	assert_float(rad_to_deg(east.angle())).is_equal_approx(rad_to_deg(atan2(16.0, 32.0)), 0.5)
+	assert_float(overlay.facing_vector(cell, "n").normalized().y).is_less(-0.3)
+	assert_vector(overlay.facing_vector(cell, "")).is_equal(Vector2.ZERO)
+
+
+## #281 G10: the HP bar ticks down from the old value; the lost slice lingers, then drains.
+func test_hp_bar_ticks_to_the_presented_value() -> void:
+	var fixture := _duel()
+	var overlay: CombatOverlay = fixture.overlay
+	assert_float(overlay._shown_hp[&"enemy"]).is_equal(18.0)
+	overlay.consume_event(_strike(&"ally", &"enemy", 11, 43, 7))
+	assert_float(overlay._hp_target[&"enemy"]).is_equal(7.0)
+	await get_tree().create_timer(DS.DUR_SLOW * 0.4).timeout
+	var shown: float = overlay._shown_hp[&"enemy"]
+	assert_float(shown).is_less(18.0).is_greater(7.0)
+	assert_float(overlay._ghost_hp[&"enemy"]).is_equal(18.0)
+	await get_tree().create_timer(DS.DUR_SLOW * 3.0).timeout
+	assert_float(overlay._shown_hp[&"enemy"]).is_equal(7.0)
+	assert_float(overlay._ghost_hp[&"enemy"]).is_equal(7.0)
+
+
+func _duel() -> Dictionary:
+	var ground := _ground()
+	# The shipped field tilesets (ground_tileset.tres, combat_terrain_tiles.tres) use diamond-down.
+	ground.tile_set.tile_layout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
+	for y: int in 3:
+		for x: int in 2:
+			ground.set_cell(Vector2i(x, y), 0, Vector2i.ZERO)
+	var grid := IsoGrid.new()
+	grid.build(ground)
+	var overlay := auto_free(CombatOverlay.new()) as CombatOverlay
+	add_child(overlay)
+	overlay.bind_grid(grid, ground)
+	var ally := auto_free(Node2D.new()) as Node2D
+	var enemy := auto_free(Node2D.new()) as Node2D
+	add_child(ally)
+	add_child(enemy)
+	overlay.bind_actor(&"ally", ally)
+	overlay.bind_actor(&"enemy", enemy)
+	var opening := _event(&"battle_started", &"", &"", 43, 18)
+	overlay.animate_events = false
+	overlay.consume_event(opening)
+	overlay.animate_events = true
+	return {"overlay": overlay, "grid": grid, "ally": ally, "enemy": enemy}
+
+
+func _event(type: StringName, actor: StringName, target: StringName, ally_hp: int, enemy_hp: int) -> CombatEvent:
+	var event := CombatEvent.new()
+	event.type = type
+	event.actor_id = actor
+	event.target_id = target
+	event.data = {"snapshot": {
+		"allies": [{"id": &"ally", "display_name": "Vex", "position": &"c:0,0,0", "hp": ally_hp,
+			"max_hp": 44, "facing": "e"}],
+		"enemies": [{"id": &"enemy", "display_name": "Bog Wight", "position": &"c:1,0,0",
+			"hp": enemy_hp, "max_hp": 18, "facing": "w"}],
+	}}
+	return event
+
+
+func _strike(actor: StringName, target: StringName, damage: int, ally_hp: int, enemy_hp: int) -> CombatEvent:
+	var event := _event(&"action_resolved", actor, target, ally_hp, enemy_hp)
+	event.data["damage"] = damage
+	event.data["hit"] = true
+	return event
+
+
+func _cards(overlay: Node) -> Array[String]:
+	var cards: Array[String] = []
+	for child: Node in overlay.get_children():
+		if child.has_meta("result_target") and not child.has_meta("retiring") \
+				and not child.is_queued_for_deletion():
+			cards.append("%s|%s" % [
+				(child.get_node("Column/TargetName") as Label).text,
+				(child.get_node("Column/Outcome") as Label).text,
+			])
+	return cards
+
+
+func _await_event_presented(overlay: CombatOverlay, event: CombatEvent, limit_ms: int = 4000) -> void:
+	var deadline := Time.get_ticks_msec() + limit_ms
+	while Time.get_ticks_msec() < deadline and overlay._queue.has(event):
+		await get_tree().process_frame

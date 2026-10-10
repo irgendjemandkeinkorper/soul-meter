@@ -171,5 +171,56 @@ func test_set_combat_mode_disables_free_movement_and_travel_and_restores_them() 
 	await get_tree().process_frame
 
 
+## #281 G5: field names and E-prompts must not print over a fight. The FieldDebtProof pickup
+## shares the Bog Wight's authored spot on test_room, so its "Loamroot Sprig" sign and its
+## "LOCKED — …" prompt sat on the combatants all fight long. Combat mode hides every label
+## an interactable or travel exit owns, keeps them hidden even when a range change re-shows
+## the prompt mid-fight, and restores each label's own state when the fight ends.
+func test_combat_mode_hides_field_labels_and_prompts_and_restores_them() -> void:
+	GameState.set_flag("defeated_bog_wight", false)
+	var scene: Node = (load(TEST_ROOM_SCENE) as PackedScene).instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	var field: FieldMap = _find_field_map(scene)
+	var pickup := scene.find_child("FieldDebtProof", true, false) as Pickup
+	var travel_exit := scene.find_child("ReturnToDom", true, false) as TravelExit
+	var npc := scene.find_child("IrisIllepah", true, false) as NPC
+	var sign := pickup.get_node("Sign") as Label
+	var prompt := pickup.get_node("Prompt") as Label
+	prompt.visible = true  # the party stands in the pickup's range, as it does beside the wight
+	var labels: Array[Label] = [sign, prompt]
+	for owner_node: Node in [travel_exit, npc]:
+		for label: Node in owner_node.find_children("*", "Label", true, false):
+			labels.append(label as Label)
+	var before: Array[Color] = []
+	for label: Label in labels:
+		before.append(label.self_modulate)
+	assert_bool(_shows(sign)).is_true()
+	assert_bool(_shows(prompt)).is_true()
+
+	field.set_combat_mode(true)
+	for label: Label in labels:
+		assert_bool(_shows(label)).override_failure_message(
+			"%s must not show during combat" % label.get_path()
+		).is_false()
+	# Range changes keep toggling `visible` during a fight; the label stays hidden regardless.
+	pickup._on_body(field.player(), false)
+	pickup._on_body(field.player(), true)
+	assert_bool(prompt.visible).is_true()
+	assert_bool(_shows(prompt)).is_false()
+
+	field.set_combat_mode(false)
+	for index: int in labels.size():
+		assert_bool(labels[index].self_modulate.is_equal_approx(before[index])).is_true()
+	assert_bool(_shows(sign)).is_true()
+	assert_bool(_shows(prompt)).is_true()
+	scene.queue_free()
+	await get_tree().process_frame
+
+
+func _shows(label: Label) -> bool:
+	return label.is_visible_in_tree() and label.self_modulate.a > 0.0 and label.modulate.a > 0.0
+
+
 func _find_field_map(scene: Node) -> FieldMap:
 	return scene.find_child("FieldMap", true, false) as FieldMap

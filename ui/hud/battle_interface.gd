@@ -193,7 +193,30 @@ func set_forecast_context(context: Dictionary) -> void:
 
 
 func _on_tile_selected(tile: Dictionary) -> void:
-	cursor_readout.text = "(%d,%d) · HEIGHT %d · %s %d · %s" % [int(tile.get("x", 0)), int(tile.get("y", 0)), int(tile.get("height_delta", tile.get("height", 0))), str(tile.get("charge_element_id", "UNCHARGED")).to_upper(), int(tile.get("charge_level", 0)), str(tile.get("note", ""))]
+	cursor_readout.text = cell_readout(tile)
+
+
+## #281 G8: the strip names the cell, its height, who stands on it, and only the charge and
+## note fields the tile actually carries; an uncharged tile prints no empty element slot.
+func cell_readout(tile: Dictionary) -> String:
+	var cell := Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))
+	var parts := PackedStringArray([
+		"(%d,%d)" % [cell.x, cell.y],
+		"HEIGHT %d" % int(tile.get("height_delta", tile.get("height", 0))),
+	])
+	var occupant_id := stage._actor_at(cell)
+	if not occupant_id.is_empty() and _controller != null:
+		var occupant := _controller.actor_by_id(occupant_id)
+		if occupant != null:
+			parts.append(occupant.display_name.to_upper())
+	var element := str(tile.get("charge_element_id", "")).strip_edges()
+	var charge := int(tile.get("charge_level", 0))
+	if charge > 0:
+		parts.append("%s %d" % [element.to_upper() if not element.is_empty() else "CHARGE", charge])
+	var note := str(tile.get("note", "")).strip_edges()
+	if not note.is_empty():
+		parts.append(note)
+	return " · ".join(parts)
 
 
 func _on_tile_hovered(tile: Dictionary) -> void:
