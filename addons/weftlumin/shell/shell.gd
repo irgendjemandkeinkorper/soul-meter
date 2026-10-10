@@ -17,12 +17,22 @@ const BOTTOM_TABS: Array[String] = ["Console", "Command log", "Consequence timel
 ## Left-dock slot a host panel with this title takes over (E3.1a's scene panel); the built-in
 ## read-only tree stays as the fallback when no host panel claims it.
 const SCENE_TREE_TAB := "Scene tree"
+## #478 (owner ruling 2026-10-10): the bottom dock opens at this share of the screen height. A
+## layout ratio, not a size token; the clamps on either side of the handle are the DS
+## `dock_height` constant, so neither the bottom tab bar nor the viewport can be squeezed shut.
+const DEFAULT_DOCK_FRACTION := 0.3
+
+## Bottom-dock height the person dragged to, kept for the session across editor close and reopen
+## (in memory: the project has no editor-preferences store). Negative means "use the default".
+static var _remembered_dock_height := -1.0
 
 var adapter: WeftluminGameAdapter
 var root: Control
 var camera: Camera2D
 var viewport_surface: Control
 var bottom_tabs: TabContainer
+## Viewport / bottom-dock boundary; its drag handle resizes the bottom dock.
+var dock_split: VSplitContainer
 var scene_tree: Tree
 var inspector: Label
 var _previous_camera: Camera2D
@@ -32,6 +42,7 @@ var _sandbox_panel: WeftluminPanel
 var _opened := false
 var _panning := false
 var _selected_tab := 0
+var _drag_start_offset := 0
 
 
 func _ready() -> void:
@@ -152,6 +163,8 @@ func _build_dock() -> void:
 	var left_split := HSplitContainer.new()
 	left_split.theme_type_variation = &"EditorHSplitContainer"
 	left_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Max clamp: the viewport side keeps at least one dock height, however far the handle goes.
+	left_split.custom_minimum_size.y = root.get_theme_constant(&"dock_height", &"EditorTabContainer")
 	vertical.add_child(left_split)
 	var left := TabContainer.new()
 	left.name = "TreePalette"
@@ -222,6 +235,91 @@ func _build_dock() -> void:
 	for panel: WeftluminPanel in hosted:
 		_mount(panel, bottom_tabs)
 	bottom_tabs.tab_changed.connect(_on_tab_changed)
+	_build_dock_splitter(vertical)
+
+
+## #478: the VSplitContainer's own handle is the viewport / bottom-dock boundary. Its child
+## minimums are the clamps (`dock_height` on both sides); it opens at the remembered height or
+## the default share of the screen, and a double-click on the handle restores the default.
+func _build_dock_splitter(vertical: VSplitContainer) -> void:
+	dock_split = vertical
+	_apply_dock_height(_preferred_dock_height())
+	vertical.resized.connect(func() -> void: _apply_dock_height(_preferred_dock_height()))
+	vertical.drag_started.connect(func() -> void: _drag_start_offset = vertical.split_offset)
+	vertical.drag_ended.connect(_on_dock_drag_ended)
+	vertical.get_drag_area_control().gui_input.connect(_on_dock_handle_input)
+
+
+## The bottom dock's laid-out height.
+func dock_height() -> float:
+	return bottom_tabs.size.y
+
+
+## About 30% of the screen, never below the bottom dock's minimum.
+func default_dock_height() -> float:
+	return maxf(roundf(root.size.y * DEFAULT_DOCK_FRACTION), bottom_tabs.get_combined_minimum_size().y)
+
+
+## Resizes the bottom dock within its clamps and remembers it for the rest of the session.
+func set_dock_height(height: float) -> void:
+	_remembered_dock_height = _clamp_dock_height(height)
+	_apply_dock_height(_remembered_dock_height)
+
+
+## Returns the dock to the default height and forgets the remembered one.
+func reset_dock_height() -> void:
+	_remembered_dock_height = -1.0
+	_apply_dock_height(default_dock_height())
+
+
+func _preferred_dock_height() -> float:
+	return _remembered_dock_height if _remembered_dock_height > 0.0 else default_dock_height()
+
+
+## Smallest and largest bottom-dock heights: each side of the handle keeps its minimum size
+## (`dock_height` for both the bottom tabs and the viewport side).
+func dock_height_limits() -> Vector2:
+	var low := bottom_tabs.get_combined_minimum_size().y
+	var room := dock_split.size.y - float(dock_split.get_theme_constant(&"separation"))
+	var high := room - (dock_split.get_child(0) as Control).get_combined_minimum_size().y
+	return Vector2(low, maxf(low, high))
+
+
+## With the viewport side expanding, the split offset counts up from the bottom edge: the bottom
+## dock is `-split_offset` tall. Opening and resizing store the preferred height unclamped and let
+## the container clamp the layout, since panel minimums settle a frame or two after the resize.
+func _apply_dock_height(height: float) -> void:
+	dock_split.split_offset = -roundi(height)
+
+
+func _clamp_dock_height(height: float) -> float:
+	if dock_split.size.y <= 0.0:
+		return height
+	var limits := dock_height_limits()
+	return clampf(height, limits.x, limits.y)
+
+
+func _clamped_dock_height() -> float:
+	return _clamp_dock_height(float(-dock_split.split_offset))
+
+
+func _on_dock_drag_ended() -> void:
+	# A click without movement (including the first half of a double-click) leaves the size alone.
+	if dock_split.split_offset != _drag_start_offset:
+		_remembered_dock_height = _clamped_dock_height()
+
+
+func _on_dock_handle_input(event: InputEvent) -> void:
+	var button := event as InputEventMouseButton
+	if button == null or button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if button.pressed and button.double_click:
+		reset_dock_height()
+		# Handled here, so the handle does not also begin a drag from the reset position.
+		dock_split.get_drag_area_control().accept_event()
+	elif button.pressed:
+		# Start the drag from the laid-out boundary, never from an offset the layout clamped.
+		dock_split.split_offset = -roundi(dock_height())
 
 
 func _instantiate_host_panels() -> Array[WeftluminPanel]:
