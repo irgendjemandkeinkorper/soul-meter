@@ -14,9 +14,8 @@ func setup(event: CombatEvent, anchor_position: Callable, screen_bounds: Callabl
 	set_meta("result_target", target_id)
 	anchor = anchor_position
 	bounds = screen_bounds
-	var target := Feedback.target_snapshot(event)
 	var target_name := get_node("Column/TargetName") as Label
-	target_name.text = str(target.get("display_name", ""))
+	target_name.text = Feedback.headline(event)
 	target_name.visible = not target_name.text.is_empty()
 	(get_node("Column/Outcome") as Label).text = Feedback.result_text(event)
 	var injury := get_node("Column/Injury") as Label

@@ -29,11 +29,29 @@ var _field: FieldMap
 var _original_colors: Dictionary = {}
 var _flashes: Dictionary = {}
 var _pending_defeats: Dictionary = {}
+## #281 G9: KO fades and the ids already shown downed, so a later snapshot neither restarts
+## the fade nor snaps it.
+var _fades: Dictionary = {}
+var _downed: Dictionary = {}
+## #281 G10: the HP each bar draws (`_shown_hp`) eases to the presented snapshot value
+## (`_hp_target`); `_ghost_hp` trails behind it so the lost slice reads before it drains.
+var _shown_hp: Dictionary = {}
+var _ghost_hp: Dictionary = {}
+var _hp_target: Dictionary = {}
+var _hp_tweens: Dictionary = {}
+## #281 G1: the model resolves a whole enemy phase in one frame. Events are presented in
+## emitted order, and an action beat holds the presentation long enough to read before the
+## next event is presented. The queue only spaces presentation: order and content come from
+## the event stream, and nothing here feeds back into combat.
+var _queue: Array[CombatEvent] = []
+var _holding := false
+var _beat: Tween
 var _theme: Theme
 var animate_events := true:
 	set(value):
 		animate_events = value
 		if not value and is_inside_tree():
+			_flush_queue()
 			_settle_motion()
 			for effect: Node in get_children():
 				effect.queue_free()
@@ -61,6 +79,20 @@ const CombatMotionScript := preload("res://ui/hud/combat_motion.gd")
 const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
 ## D9: how far past the visible rect an enemy may start its turn and still earn a pan.
 const CAMERA_MARGIN_SCREENS := 1.0
+## #281 G1: how long an action beat with a result card stays alone on screen before the next
+## presented event. The card itself lives longer (combat_result.gd); the next card or the
+## next turn cue retires it, so a card never sits over a beat it does not describe.
+const BEAT_READ_SECONDS := 1.2
+## A turn start's cue: the active diamond lands on the actor before its action plays.
+const TURN_CUE_SECONDS := DS.DUR_SLOW
+## #281 G9: a downed body is dimmed, not hidden; it must stay clearly visible on the field.
+const KO_TINT := Color(0.6, 0.6, 0.66, 0.8)
+## #281 G7: CombatEvent facing ids are grid directions (GridBattlefieldModel._ORDER, by
+## atan2 over the cell delta), not screen directions.
+const FACING_STEPS := {
+	"e": Vector2i(1, 0), "se": Vector2i(1, 1), "s": Vector2i(0, 1), "sw": Vector2i(-1, 1),
+	"w": Vector2i(-1, 0), "nw": Vector2i(-1, -1), "n": Vector2i(0, -1), "ne": Vector2i(1, -1),
+}
 
 
 func _ready() -> void:
@@ -141,6 +173,8 @@ func _node(id: StringName) -> Node2D:
 
 
 func _exit_tree() -> void:
+	_queue.clear()
+	_end_hold()
 	_settle_motion()
 	for node: Variant in _original_colors:
 		if is_instance_valid(node):
@@ -148,8 +182,10 @@ func _exit_tree() -> void:
 	_release_camera(false)
 
 
+## True while bodies are in motion or presented beats are still waiting their turn. A lone
+## beat's reading hold does not count: the result outlives motion without gating input.
 func is_animating() -> bool:
-	if not _moves.is_empty() or not _flashes.is_empty():
+	if not _moves.is_empty() or not _flashes.is_empty() or not _queue.is_empty():
 		return true
 	for effect: Node in get_children():
 		if effect.get_script() == SpellCastScript and effect.is_animating():
@@ -171,7 +207,23 @@ func set_pointer(selected: Variant, hovered: Variant) -> void:
 	queue_redraw()
 
 
+## True until every received event has been presented and the last beat's hold has ended.
+func is_presenting() -> bool:
+	return _holding or not _queue.is_empty()
+
+
 func consume_event(event: CombatEvent) -> void:
+	if not animate_events:
+		_flush_queue()
+		_present(event)
+		return
+	if _holding or not _queue.is_empty():
+		_queue.append(event)
+		return
+	_present(event)
+
+
+func _present(event: CombatEvent) -> void:
 	var snapshot: Dictionary = event.data.get("snapshot", {})
 	var tiles: Variant = event.data.get("tiles", snapshot.get("tiles", []))
 	if tiles is Array and not is_same(tiles, _tiles_source):
@@ -203,6 +255,7 @@ func consume_event(event: CombatEvent) -> void:
 		&"turn_started", &"enemy_turn_started":
 			_active_id = event.actor_id
 			_target_id = &""
+			_retire_result_cards()
 			_focus_camera(event.actor_id, event.type == &"enemy_turn_started")
 		&"action_resolved":
 			_active_id = event.actor_id
@@ -215,10 +268,65 @@ func consume_event(event: CombatEvent) -> void:
 			and SpellCastScript.is_cast(event) and HitPulseScript.is_damaging_hit(event):
 		_pending_defeats[event.target_id] = event.get_instance_id()
 	_sync_actors(event)
+	_sync_hp()
 	_frame_roster()
-	if animate_events and event.type == &"action_resolved" and (event.data.get("path_cells", []) as Array).is_empty():
+	var path: Array = event.data.get("path_cells", [])
+	if animate_events and event.type == &"action_resolved" and path.is_empty():
 		_play_action(event)
 	queue_redraw()
+	if animate_events:
+		_hold(_beat_seconds(event, path))
+
+
+## How long `event` keeps the presentation before the next queued event is presented.
+func _beat_seconds(event: CombatEvent, path: Array) -> float:
+	match event.type:
+		&"enemy_turn_started":
+			return TURN_CUE_SECONDS
+		&"action_resolved":
+			if path.size() >= 2:
+				return DS.DUR_FAST * (path.size() if _moves.has(event.actor_id) else 1)
+			if SpellCastScript.is_cast(event) and is_instance_valid(_node(event.actor_id)):
+				return SpellCastScript.DURATION + BEAT_READ_SECONDS
+			if HitPulseScript.has_result(event):
+				return BEAT_READ_SECONDS
+			if not event.target_id.is_empty():
+				return DS.DUR_FAST * 2.0
+	return 0.0
+
+
+func _hold(seconds: float) -> void:
+	if seconds <= 0.0 or not is_inside_tree():
+		return
+	_end_hold()
+	_holding = true
+	_beat = create_tween()
+	_beat.tween_interval(seconds)
+	_beat.tween_callback(_release_hold)
+
+
+func _release_hold() -> void:
+	_holding = false
+	_beat = null
+	while not _queue.is_empty() and not _holding:
+		_present(_queue.pop_front())
+
+
+func _end_hold() -> void:
+	if _beat != null and _beat.is_valid():
+		_beat.kill()
+	_beat = null
+	_holding = false
+
+
+## Presents everything still waiting at once (replay, reduced presentation, teardown).
+func _flush_queue() -> void:
+	_end_hold()
+	var pending := _queue.duplicate()
+	_queue.clear()
+	for event: CombatEvent in pending:
+		_present(event)
+	_end_hold()
 
 
 ## The rect the player currently sees, in world space, from the camera the overlay drives.
@@ -388,9 +496,75 @@ func _sync_actors(event: CombatEvent) -> void:
 		if int(actor.get("hp", 1)) <= 0:
 			if not _pending_defeats.has(id):
 				_stop_flash(id)
-				node.modulate.a = 0.35
-		elif not _flashes.has(id):
-			node.modulate = _original_colors.get(node, Color.WHITE)
+				_fall(id, node)
+		else:
+			_downed.erase(id)
+			_stop_fade(id)
+			if not _flashes.has(id):
+				node.modulate = _original_colors.get(node, Color.WHITE)
+
+
+## #281 G9: a felled body fades to KO_TINT once, then stays there.
+func _fall(id: StringName, node: Node2D) -> void:
+	var fallen: Color = _original_colors.get(node, Color.WHITE) * KO_TINT
+	if _fades.has(id):
+		return
+	# Already down, or first seen down (a replayed or joined session): settle without a fade.
+	if _downed.has(id) or not _hp_target.has(id) or not animate_events or _reduced_motion():
+		node.modulate = fallen
+		_downed[id] = true
+		return
+	_downed[id] = true
+	var fade := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_fades[id] = fade
+	fade.tween_property(node, "modulate", fallen, DS.DUR_SLOW * 2.0)
+	fade.tween_callback(func() -> void: _fades.erase(id))
+
+
+func _stop_fade(id: StringName) -> void:
+	var tween := _fades.get(id) as Tween
+	if tween != null and tween.is_valid():
+		tween.kill()
+	_fades.erase(id)
+
+
+## #281 G10: each bar eases from what it showed to the presented HP; the lost slice lingers.
+func _sync_hp() -> void:
+	for id: StringName in _actors:
+		var hp := float(int((_actors[id] as Dictionary).get("hp", 0)))
+		if _hp_target.get(id, -1.0) == hp:
+			continue
+		var animate := _shown_hp.has(id) and animate_events and not _reduced_motion() and is_inside_tree()
+		_hp_target[id] = hp
+		_stop_hp(id)
+		if not animate:
+			_shown_hp[id] = hp
+			_ghost_hp[id] = hp
+			continue
+		_ghost_hp[id] = maxf(float(_ghost_hp.get(id, hp)), float(_shown_hp[id]))
+		var tick := create_tween().set_parallel(true)
+		_hp_tweens[id] = tick
+		tick.tween_method(_set_shown_hp.bind(id, _shown_hp), float(_shown_hp[id]), hp, DS.DUR_SLOW) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tick.tween_method(_set_shown_hp.bind(id, _ghost_hp), float(_ghost_hp[id]), minf(hp, float(_ghost_hp[id])), DS.DUR_SLOW) \
+			.set_delay(DS.DUR_SLOW + DS.DUR_BASE)
+		tick.chain().tween_callback(func() -> void:
+			_hp_tweens.erase(id)
+			_ghost_hp[id] = hp
+			queue_redraw()
+		)
+
+
+func _set_shown_hp(value: float, id: StringName, into: Dictionary) -> void:
+	into[id] = value
+	queue_redraw()
+
+
+func _stop_hp(id: StringName) -> void:
+	var tween := _hp_tweens.get(id) as Tween
+	if tween != null and tween.is_valid():
+		tween.kill()
+	_hp_tweens.erase(id)
 
 
 func _play_action(event: CombatEvent) -> void:
@@ -448,8 +622,10 @@ func _present_action_result(event: CombatEvent) -> void:
 			flash.tween_callback(func() -> void: _flashes.erase(event.target_id))
 	if not HitPulseScript.has_result(event):
 		return
+	# #281 G1: one result card on the field at a time. The next beat's card replaces the
+	# last one instead of stacking over it (adjacent combatants share screen space).
 	for previous: Node in get_children():
-		if previous.get_meta("result_target", &"") == event.target_id:
+		if previous.has_meta("result_target"):
 			remove_child(previous)
 			previous.queue_free()
 	var pop := CombatResultScene.instantiate()
@@ -460,6 +636,21 @@ func _present_action_result(event: CombatEvent) -> void:
 	pop.setup(event, _result_anchor.bind(event.target_id),
 		func() -> Rect2: return get_viewport_rect()
 	)
+
+
+## Fades out result cards from earlier beats (a new turn has begun).
+func _retire_result_cards() -> void:
+	for card: Node in get_children():
+		if not card.has_meta("result_target") or card.has_meta("retiring"):
+			continue
+		card.set_meta("retiring", true)
+		if not animate_events or not is_inside_tree():
+			remove_child(card)
+			card.queue_free()
+			continue
+		var fade := create_tween()
+		fade.tween_property(card, "modulate:a", 0.0, DS.DUR_BASE)
+		fade.tween_callback(card.queue_free)
 
 
 func _result_anchor(id: StringName) -> Variant:
@@ -491,6 +682,13 @@ func _settle_motion() -> void:
 		_stop_move(id)
 	for id: StringName in _flashes.keys():
 		_stop_flash(id)
+	for id: StringName in _fades.keys():
+		_stop_fade(id)
+	for id: StringName in _hp_tweens.keys():
+		_stop_hp(id)
+	for id: Variant in _hp_target:
+		_shown_hp[id] = _hp_target[id]
+		_ghost_hp[id] = _hp_target[id]
 	_pending_defeats.clear()
 	_sync_actors(CombatEvent.new())
 	queue_redraw()
@@ -595,32 +793,21 @@ func _draw() -> void:
 		if cell == _selected or cell == _hovered:
 			diamond.append(diamond[0])
 			draw_polyline(diamond, DS.TILE_SELECT_RIM, 2.0)
-	for actor: Dictionary in _actors.values():
+	# #281 G2: everything attached to a combatant is drawn at its body, so it travels with a
+	# move slide or lunge instead of waiting at the destination cell.
+	for id: StringName in _actors:
+		var actor: Dictionary = _actors[id]
 		var cell: Variant = _actor_cell(actor)
-		if cell == null or int(actor.get("hp", 0)) <= 0:
+		if cell == null:
 			continue
-		var center := cell_center(cell)
-		var hp := int(actor.get("hp", 0))
-		var max_hp := maxi(1, int(actor.get("max_hp", hp)))
-		draw_rect(Rect2(center + Vector2(-16, -36), Vector2(32, 3)), DS.STONE_1)
-		var fill_width := 32.0 * clampf(float(hp) / max_hp, 0, 1)
-		draw_rect(Rect2(center + Vector2(-16, -36), Vector2(fill_width, 3)), DS.STATE_CONSTANT)
-		draw_string(
-			NUMERIC_FONT, center + Vector2(-16, -42), str(hp),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 12, DS.PARCHMENT
-		)
-		var facing := str(actor.get("facing", ""))
-		var direction := Vector2(
-			float(facing.contains("e")) - float(facing.contains("w")),
-			float(facing.contains("s")) - float(facing.contains("n"))
-		).normalized()
-		if not direction.is_zero_approx():
-			var tip := center + direction * 18
-			var side := direction.orthogonal() * 4
-			draw_polyline(
-				PackedVector2Array([tip - direction * 6 + side, tip, tip - direction * 6 - side]),
-				DS.BRONZE_3, 2.0
-			)
+		var shown := float(_shown_hp.get(id, int(actor.get("hp", 0))))
+		var ghost := float(_ghost_hp.get(id, shown))
+		if shown <= 0.0 and ghost <= 0.0:
+			continue
+		var anchor := _body_anchor(id, cell)
+		_draw_hp(anchor, shown, ghost, maxi(1, int(actor.get("max_hp", int(actor.get("hp", 1))))))
+		if int(actor.get("hp", 0)) > 0:
+			_draw_facing(anchor, cell, str(actor.get("facing", "")))
 	for id: StringName in [_active_id, _preview_id if not _preview_id.is_empty() else _target_id]:
 		if not _actors.has(id):
 			continue
@@ -628,4 +815,56 @@ func _draw() -> void:
 		if cell != null:
 			var diamond := _diamond(cell)
 			diamond.append(diamond[0])
-			draw_polyline(diamond, DS.BRONZE_3 if id == _active_id else DS.CINDER_3, 2.0)
+			var shift := _body_anchor(id, cell) - cell_center(cell)
+			for index: int in diamond.size():
+				diamond[index] += shift
+			draw_polyline(diamond, DS.BRONZE_3 if id == _active_id else DS.CINDER_3, 3.0)
+
+
+## Where a combatant's body stands now: its bound node (mid-slide or mid-lunge), else its cell.
+func _body_anchor(id: StringName, cell: Vector2i) -> Vector2:
+	var node := _node(id)
+	return to_local(node.global_position) if is_instance_valid(node) else cell_center(cell)
+
+
+func _draw_hp(anchor: Vector2, shown: float, ghost: float, max_hp: int) -> void:
+	var bar := Rect2(anchor + Vector2(-18, -38), Vector2(36, 5))
+	draw_rect(bar.grow(1), DS.STONE_0)
+	draw_rect(bar, DS.STONE_1)
+	if ghost > shown:
+		var ghost_rect := bar
+		ghost_rect.size.x = bar.size.x * clampf(ghost / max_hp, 0, 1)
+		draw_rect(ghost_rect, DS.STATE_FEEDBACK)
+	var fill := bar
+	fill.size.x = bar.size.x * clampf(shown / max_hp, 0, 1)
+	draw_rect(fill, DS.STATE_CONSTANT)
+	var label := str(ceili(shown))
+	# Beside the bar, not above it: adjacent combatants' bars sit one iso step apart, and a
+	# number above one bar lands on its neighbour's.
+	var origin := bar.position + Vector2(bar.size.x + DS.SPACE_2, bar.size.y + 4)
+	draw_string_outline(NUMERIC_FONT, origin, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, DS.STONE_0)
+	draw_string(NUMERIC_FONT, origin, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, DS.PARCHMENT)
+
+
+## #281 G7: the chevron points along the grid neighbour the facing names, at the cell's rim.
+func _draw_facing(anchor: Vector2, cell: Vector2i, facing: String) -> void:
+	if not FACING_STEPS.has(facing) or _grid == null:
+		return
+	var reach := facing_vector(cell, facing) * 0.5
+	if reach.is_zero_approx():
+		return
+	var direction := reach.normalized()
+	var side := direction.orthogonal() * 9.0
+	var tip := anchor + reach + direction * 16.0
+	var base := anchor + reach - direction * 2.0
+	var arrow := PackedVector2Array([tip, base + side, base - side])
+	draw_colored_polygon(arrow, DS.BRONZE_4)
+	arrow.append(arrow[0])
+	draw_polyline(arrow, DS.STONE_0, 1.5)
+
+
+## The local-space step from `cell` to the neighbour its facing names (zero when unknown).
+func facing_vector(cell: Vector2i, facing: String) -> Vector2:
+	if not FACING_STEPS.has(facing) or _grid == null:
+		return Vector2.ZERO
+	return cell_center(cell + (FACING_STEPS[facing] as Vector2i)) - cell_center(cell)

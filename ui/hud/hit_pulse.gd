@@ -40,12 +40,32 @@ static func has_result(event: CombatEvent) -> bool:
 
 
 static func target_snapshot(event: CombatEvent) -> Dictionary:
+	return actor_snapshot(event, event.target_id)
+
+
+static func actor_snapshot(event: CombatEvent, actor_id: StringName) -> Dictionary:
+	if actor_id.is_empty():
+		return {}
 	var snapshot: Dictionary = event.data.get("snapshot", {})
 	for side: String in ["allies", "enemies"]:
 		for actor: Dictionary in snapshot.get(side, []):
-			if str(actor.get("id", "")) == String(event.target_id):
+			if str(actor.get("id", "")) == String(actor_id):
 				return actor
 	return {}
+
+
+## #281 G4: who acted on whom, from the event's own snapshot: "Vex → Bog Wight". A result
+## with no distinct actor (self-targeted, environmental) names the target alone.
+static func headline(event: CombatEvent) -> String:
+	var target_name := str(target_snapshot(event).get("display_name", ""))
+	var actor_name := ""
+	if event.actor_id != event.target_id:
+		actor_name = str(actor_snapshot(event, event.actor_id).get("display_name", ""))
+	if actor_name.is_empty():
+		return target_name
+	if target_name.is_empty():
+		return actor_name
+	return TranslationServer.translate("%s → %s") % [actor_name, target_name]
 
 
 ## A committed action may refresh a minor record even when its roll proposes serious.

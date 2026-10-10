@@ -51,3 +51,28 @@ func test_injury_uses_committed_record_severity_and_provenance_without_mutation(
 	event.data["resolution"]["injury"]["applies"] = true
 	event.data["resolution"]["hit"] = false
 	assert_str(Feedback.injury_text(event)).is_empty()
+
+
+## #281 G4: the card says who acted on whom, from the event's own snapshot.
+func test_headline_names_attacker_and_target() -> void:
+	var event := CombatEvent.new()
+	event.type = &"action_resolved"
+	event.actor_id = &"vex"
+	event.target_id = &"wight"
+	event.data = {"damage": 11, "hit": true, "snapshot": {
+		"allies": [{"id": "vex", "display_name": "Vex the Unbowed"}],
+		"enemies": [{"id": "wight", "display_name": "Bog Wight"}],
+	}}
+	assert_str(Feedback.headline(event)).is_equal("Vex the Unbowed → Bog Wight")
+	var card := auto_free((load("res://ui/hud/combat_result.tscn") as PackedScene).instantiate()) as Control
+	var parent := auto_free(Node2D.new()) as Node2D
+	add_child(parent)
+	parent.add_child(card)
+	card.call("setup", event, func() -> Vector2: return Vector2.ZERO, func() -> Rect2: return Rect2(0, 0, 800, 600))
+	assert_str((card.get_node("Column/TargetName") as Label).text).is_equal("Vex the Unbowed → Bog Wight")
+	assert_str((card.get_node("Column/Outcome") as Label).text).is_equal("11 DAMAGE")
+	# Self-targeted, or an actor the snapshot does not list: the target alone.
+	event.actor_id = &"wight"
+	assert_str(Feedback.headline(event)).is_equal("Bog Wight")
+	event.actor_id = &""
+	assert_str(Feedback.headline(event)).is_equal("Bog Wight")

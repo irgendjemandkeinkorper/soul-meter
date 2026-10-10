@@ -76,7 +76,7 @@ layout_mode = 2
 [node name="CursorReadout" type="Label" parent="SafeFrame/Rows"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"StatLabel"
+theme_type_variation = &"HeadingLabel"
 text = "CURSOR —"
 
 [node name="HotbarSoulGauge" type="HBoxContainer" parent="SafeFrame/Rows"]

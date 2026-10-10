@@ -76,6 +76,16 @@ func set_combat_mode(active: bool) -> void:
 				node.set_process_unhandled_input.bind(node.is_processing_unhandled_input())
 			)
 			node.set_process_unhandled_input(false)
+		# #281 G5: field names and prompts ("Loamroot Sprig", "LOCKED — …", "E — Take",
+		# "RETURN TO DOM") would print over the combatants. Their scripts toggle `visible` on
+		# range changes, which combat motion can trigger, so the labels go transparent instead.
+		if _is_field_interactable(node) or node is TravelExit:
+			for label: Node in node.find_children("*", "Label", true, false):
+				var canvas_label := label as Label
+				_restore_controls.append(
+					canvas_label.set.bind("self_modulate", canvas_label.self_modulate)
+				)
+				canvas_label.self_modulate = Color(canvas_label.self_modulate, 0.0)
 	# The battle HUD replaces the field HUD; its hotkey bar and objective would show between
 	# the battle panels.
 	for node: Node in root.find_children("*", "CanvasLayer", true, false):

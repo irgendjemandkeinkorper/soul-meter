@@ -5,6 +5,17 @@ const TOWN_PATH := "res://world/starting_town.tscn"
 const MANIFEST_PATH := "res://assets/generated/sprites/manifest.json"
 const BATCH_ID := "dom-batch1-2026-10-09"
 const FORBIDDEN_KITS := ["castle-kit", "fantasy-town-kit", "nature-kit", "kenney3d"]
+const SPRITE_DIR := "res://assets/generated/sprites/world/"
+## Drawn alpha-bounds height (px at zoom 1) per rescaled prop; absent textures keep their
+## #305 footprint. See docs/qa/town-prop-scale-464-2026-10-10/README.md.
+const PROP_DRAWN_HEIGHT_PX := {
+	SPRITE_DIR + "dom-gate--arched.png": 160.0,
+	SPRITE_DIR + "dom-lantern--street.png": 160.0,
+	SPRITE_DIR + "dom-cart--high.png": 88.0,
+	SPRITE_DIR + "dom-banner--green.png": 80.0,
+	SPRITE_DIR + "dom-banner--red.png": 80.0,
+	SPRITE_DIR + "dom-stall-bench--plank.png": 50.0,
+}
 
 
 func _batch() -> Dictionary:
@@ -64,23 +75,53 @@ func test_painted_sprites_have_clean_alpha_and_manifest_hashes() -> void:
 		assert_int(chroma_pixels).override_failure_message("Chroma residue in %s" % path).is_equal(0)
 
 
-func test_replacements_preserve_the_existing_drawn_footprints_and_anchors() -> void:
+func _drawn_rect(sprite: Sprite2D) -> Rect2:
+	var bounds := sprite.texture.get_image().get_used_rect()
+	var half := sprite.texture.get_size() * 0.5
+	var top_left := (Vector2(bounds.position) - half + sprite.offset) * sprite.scale
+	return Rect2(sprite.position + top_left, Vector2(bounds.size) * sprite.scale)
+
+
+func test_props_are_drawn_at_adult_relative_sizes_on_their_original_anchors() -> void:
+	# #464: alpha-bounds heights at zoom 1 beside the 112 px adult (UnitArt.TARGET_ACTOR_HEIGHT_PX),
+	# with uniform scale so the painted proportions are kept. The bottom anchor and horizontal
+	# center of every placement stay where #305 left them.
 	var records: Array = _batch().get("sprites", [])
 	assert_int(records.size()).is_equal(7)
 	var town := _town()
 	for record: Dictionary in records:
-		var expected_size := Vector2(record["previous_drawn_size_px"][0], record["previous_drawn_size_px"][1])
+		var output := str(record["output"])
+		var target_height: float = PROP_DRAWN_HEIGHT_PX.get(output, -1.0)
+		var previous_size := Vector2(record["previous_drawn_size_px"][0], record["previous_drawn_size_px"][1])
 		for placement: Dictionary in record["placements"]:
 			var sprite := town.get_node(str(placement["node_path"])) as Sprite2D
-			assert_str(sprite.texture.resource_path).is_equal(str(record["output"]))
+			assert_str(sprite.texture.resource_path).is_equal(output)
 			var bounds := sprite.texture.get_image().get_used_rect()
 			var drawn_size := Vector2(bounds.size) * sprite.scale
-			assert_float(drawn_size.x).is_equal_approx(expected_size.x, 0.1)
-			assert_float(drawn_size.y).is_equal_approx(expected_size.y, 0.1)
+			if target_height > 0.0:
+				assert_float(drawn_size.y).override_failure_message("%s height" % placement["node_path"]) \
+					.is_equal_approx(target_height, 0.1)
+				assert_float(sprite.scale.x).is_equal_approx(sprite.scale.y, 0.000001)
+			else:
+				assert_float(drawn_size.x).is_equal_approx(previous_size.x, 0.1)
+				assert_float(drawn_size.y).is_equal_approx(previous_size.y, 0.1)
 			var bottom := (float(bounds.end.y) - sprite.texture.get_height() * 0.5 + sprite.offset.y) * sprite.scale.y
 			assert_float(bottom).is_equal_approx(float(placement["previous_bottom_y"]), 0.1)
 			var center_x := (bounds.position.x + bounds.size.x * 0.5 - sprite.texture.get_width() * 0.5 + sprite.offset.x) * sprite.scale.x
 			assert_float(center_x).is_equal_approx(0.0, 0.1)
+
+
+func test_border_walls_stay_clear_of_the_players_house_door_and_spawn() -> void:
+	# The south wall row stands 97 px below Vex's spawn; a taller wall would draw over the
+	# player's house door and the spawned player (#464 keeps the walls at their #305 size).
+	var town := _town()
+	var spawn := (town.get_node("SpawnFromPlayersHouse") as Node2D).position
+	var door := (town.get_node("PlayersHouseEntrance") as Node2D).position
+	for sprite: Sprite2D in town.get_node("BorderDressing").get_children():
+		var rect := _drawn_rect(sprite)
+		for point: Vector2 in [spawn, door]:
+			assert_bool(rect.has_point(point)) \
+				.override_failure_message("%s draws over %s" % [sprite.name, point]).is_false()
 
 
 func test_dom_uses_the_full_size_painted_terrain_plate() -> void:
