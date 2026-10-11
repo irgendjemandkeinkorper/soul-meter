@@ -16,7 +16,7 @@ const RETIRED_AUTOLOADS: Array[String] = [
 ]
 const DOCK_ORDER: Array[String] = [
 	"Console", "Command log", "Consequence timeline", "Validation",
-	"Combat lab", "Dialogue lab", "Quest editor",
+	"Combat lab", "Dialogue lab", "Quest editor", "Locations",
 ]
 const REGISTRY := "the-registry"
 const CAMPAIGN_ID := "gdunit-weftlumin-panel"

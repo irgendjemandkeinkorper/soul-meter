@@ -17,6 +17,7 @@ carried over below, restated for the panel host.
 | Dialogue Lab | `dialogue_panel.gd` (Dialogue lab) | `dialogue_lab.gd` | `DialogueLab` autoload, F5 overlay, `SOUL_METER_DIALOGUE_LAB` |
 | Quest editor | `quest_panel.gd` (Quest editor) | `quest_editor.gd` | `QuestEditor` autoload, F6 overlay, `SOUL_METER_QUEST_EDITOR` |
 | Scene layout | `scene_panel.gd` (Scene tree, Palette, Inspector) | `addons/weftlumin/core/scene_model.gd` | Former F10 overlay and autoload retired in #470 |
+| Location metadata | `location_panel.gd` (Locations) | `location_metadata.gd` | New in E3.3a (#341); no legacy surface |
 
 Scene layout now runs through `WeftluminSceneModel` in the shell. F10 and
 `SOUL_METER_LAYOUT` no longer activate an editor; use the enablement below.
@@ -72,6 +73,34 @@ checks the outline pixels at each step and its final position, and writes `01-pi
 `docs/qa/viewport-pick-470-2026-10-10/`. Without
 the capture variable it returns immediately; requesting a capture under headless rendering fails.
 Headless tests do not establish visual correctness.
+
+## Locations
+
+The **Locations** bottom tab (E3.3a, #341) edits the hidden state of every location with a scene:
+Harmonic Accord, thinning tier, weather default (calm or an element on the wheel), no-combat zone,
+respawn policy, gameplay permission, default spawn, spawn aliases (`alias = spawn id`, one per
+line), and the arrival flag/checkpoint. Identity — id, scene and the `.tres` it bakes to — and the
+gazetteer facet (display name, patron, agreement, vault id) are read-only.
+
+- **Canon.** `canon/<hub>/locations/<id>.json` (`weftlumin.location.v1`) is the source.
+  `WeftluminLocationsKind` (`weftlumin/kinds/locations.gd`) validates it with attributed errors,
+  and `tools/generate_locations.gd` bakes it into `world/locations/**/*.tres` and
+  `data/generated/location_index.json`. A bake of unchanged canon is byte-identical to the
+  committed files; `scripts/check_generated_data.sh` runs it as the `LOCATIONS-GEN` drift stage.
+- **Drafts.** Save draft validates the whole location set with the edit applied and writes only
+  `user://weftlumin/location-drafts/locations/<id>.json`. The panel never writes `res://`.
+  **Bake preview** lists the definitions the generator would rewrite. To promote drafts, run the
+  generator with `SOUL_METER_LOCATION_DRAFTS=<globalized draft directory>`. It replaces the canon
+  documents of the same ids and regenerates. A draft cannot create a location.
+- **Not yet consumed.** The registries still preload the generated `.tres` files.
+  `FieldMap.no_combat_zone()` still derives the zone from the `res://world/interiors/` prefix,
+  and the panel notes any canon value the runtime would ignore. Reading the index and
+  `no_combat_zone` at runtime is E3.3b (#342).
+
+Rendered evidence of the tab (canon form, then a saved draft with its bake preview) is in
+`docs/qa/weftlumin-locations-341-2026-10-11/`. It comes from
+`test_rendered_location_panel_capture` in `test/integration/test_weftlumin_location_panel.gd`
+with `SOUL_METER_LOCATION_PANEL_CAPTURE_DIR` set under Xvfb.
 
 ## Enablement and release safety
 
@@ -235,5 +264,6 @@ registration are the model's.
 | Release build carries no tool code; unhosted models are inert | `test/integration/test_{dev_console,consequence_timeline,combat_lab,dialogue_lab,quest_editor}_inert.gd`, `test_weftlumin_inert.gd` |
 | Model behaviour | `test/unit/test_{dev_console_commands,consequence_timeline,combat_lab,dialogue_lab,quest_editor,campaign_encounters,campaign_quest_registry}.gd` |
 | Panels in the shell | `test/integration/test_weftlumin_panels.gd`, `test_weftlumin_shell.gd` |
+| Locations kind, generator, drift and drafts | `test/unit/test_weftlumin_locations_kind.gd`; panel: `test/integration/test_weftlumin_location_panel.gd` |
 
 The original file-to-behaviour migration plan is `docs/weftlumin-test-migration.md` (E1.9).
