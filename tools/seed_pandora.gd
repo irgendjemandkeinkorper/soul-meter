@@ -134,6 +134,13 @@ class CanonReader:
 			"noun": "location",
 			"schema": "weftlumin.location.v1",
 			"fields": ["id", "display_name", "epithet", "patron", "agreement", "vault_id"],
+			# E3.3a (#341): the same directory also holds scene-only location documents
+			# (Dom's interiors, the road, the wilds, the Wound Lip) that have no gazetteer
+			# facet and no Pandora entity. They are `WeftluminLocationsKind`'s, baked by
+			# tools/generate_locations.gd; this reader skips a document that carries a
+			# `scene_path` and no `vault_id`. A gazetteer document missing `vault_id` (no
+			# `scene_path`) is still refused below.
+			"skip_scene_only": true,
 		},
 		"lore": {
 			"noun": "lore entry",
@@ -179,6 +186,11 @@ class CanonReader:
 					push_error("CANON-SEED: %s must contain one JSON object." % document_path)
 					return []
 				var row: Dictionary = parser.data
+				if (
+					SCHEMAS.has(kind) and bool(SCHEMAS[kind].get("skip_scene_only", false))
+					and row.has("scene_path") and not row.has("vault_id")
+				):
+					continue
 				if SCHEMAS.has(kind):
 					if not _valid(kind, row, document_path, stable_ids):
 						return []

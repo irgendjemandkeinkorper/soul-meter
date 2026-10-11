@@ -2,12 +2,81 @@
   "schema": "weftlumin.location_index.v1",
   "locations": [
     {
+      "id": "bell_house_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/bell_house.tres",
+      "scene_path": "res://world/interiors/bell_house.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "bell_loft_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/bell_loft.tres",
+      "scene_path": "res://world/interiors/bell_loft.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "cask_warehouse_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/cask_warehouse.tres",
+      "scene_path": "res://world/interiors/cask_warehouse.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "chefs_house_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/chefs_house.tres",
+      "scene_path": "res://world/interiors/chefs_house.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "chefs_pantry_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/chefs_pantry.tres",
+      "scene_path": "res://world/interiors/chefs_pantry.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "council_chamber_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/council_chamber.tres",
+      "scene_path": "res://world/interiors/council_chamber.tscn",
+      "no_combat_zone": true
+    },
+    {
       "id": "deivel-zeit",
       "display_name": "Deivel Zeit",
       "epithet": "",
       "patron": "Haeren",
       "agreement": "90–92%",
-      "vault_id": "deivel"
+      "vault_id": "deivel",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
     },
     {
       "id": "dom",
@@ -15,7 +84,87 @@
       "epithet": "",
       "patron": "Kero",
       "agreement": "",
-      "vault_id": "dom"
+      "vault_id": "dom",
+      "definition_path": "res://world/locations/dom.tres",
+      "scene_path": "res://world/starting_town.tscn",
+      "no_combat_zone": false
+    },
+    {
+      "id": "dom_tavern_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/dom_tavern.tres",
+      "scene_path": "res://world/interiors/dom_tavern.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "dorthkor_road",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/dorthkor_road.tres",
+      "scene_path": "res://world/dorthkor_road.tscn",
+      "no_combat_zone": false
+    },
+    {
+      "id": "equipment_forge_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/equipment_forge.tres",
+      "scene_path": "res://world/interiors/equipment_forge.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "equipment_shop_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/equipment_shop.tres",
+      "scene_path": "res://world/interiors/equipment_shop.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "garrison_yard_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/garrison_yard.tres",
+      "scene_path": "res://world/interiors/garrison_yard.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "iron_companies_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/iron_companies.tres",
+      "scene_path": "res://world/interiors/iron_companies.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "item_shop_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/item_shop.tres",
+      "scene_path": "res://world/interiors/item_shop.tscn",
+      "no_combat_zone": true
     },
     {
       "id": "karrn-vash",
@@ -23,7 +172,10 @@
       "epithet": "",
       "patron": "Blidnisch",
       "agreement": "",
-      "vault_id": "karrn-vash"
+      "vault_id": "karrn-vash",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
     },
     {
       "id": "lefren",
@@ -31,7 +183,10 @@
       "epithet": "",
       "patron": "Fickah",
       "agreement": "",
-      "vault_id": "lefren"
+      "vault_id": "lefren",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
     },
     {
       "id": "loamgate",
@@ -39,7 +194,21 @@
       "epithet": "",
       "patron": "Vhorr",
       "agreement": "84–87%",
-      "vault_id": "loamgate"
+      "vault_id": "loamgate",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
+    },
+    {
+      "id": "lower_trial_hall_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/lower_trial_hall.tres",
+      "scene_path": "res://world/interiors/lower_trial_hall.tscn",
+      "no_combat_zone": true
     },
     {
       "id": "milinel",
@@ -47,7 +216,32 @@
       "epithet": "",
       "patron": "Izhakel",
       "agreement": "",
-      "vault_id": "milinel"
+      "vault_id": "milinel",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
+    },
+    {
+      "id": "players_house_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/players_house.tres",
+      "scene_path": "res://world/interiors/players_house.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "players_loft_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/players_loft.tres",
+      "scene_path": "res://world/interiors/players_loft.tscn",
+      "no_combat_zone": true
     },
     {
       "id": "pozor",
@@ -55,7 +249,32 @@
       "epithet": "",
       "patron": "Stuid",
       "agreement": "",
-      "vault_id": "pozor"
+      "vault_id": "pozor",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
+    },
+    {
+      "id": "registry_archive_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/registry_archive.tres",
+      "scene_path": "res://world/interiors/registry_archive.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "registry_stacks_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/registry_stacks.tres",
+      "scene_path": "res://world/interiors/registry_stacks.tscn",
+      "no_combat_zone": true
     },
     {
       "id": "rennen",
@@ -63,7 +282,32 @@
       "epithet": "",
       "patron": "Pazzah",
       "agreement": "",
-      "vault_id": "rennen"
+      "vault_id": "rennen",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
+    },
+    {
+      "id": "river_shrine_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/river_shrine.tres",
+      "scene_path": "res://world/interiors/river_shrine.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "shrine_undercroft_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/shrine_undercroft.tres",
+      "scene_path": "res://world/interiors/shrine_undercroft.tscn",
+      "no_combat_zone": true
     },
     {
       "id": "solmarch",
@@ -71,7 +315,32 @@
       "epithet": "",
       "patron": "Sulmae (the mask)",
       "agreement": "",
-      "vault_id": "solmarch"
+      "vault_id": "solmarch",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
+    },
+    {
+      "id": "town_hall_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/town_hall.tres",
+      "scene_path": "res://world/interiors/town_hall.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "trial_hall_interior",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/trial_hall.tres",
+      "scene_path": "res://world/interiors/trial_hall.tscn",
+      "no_combat_zone": true
     },
     {
       "id": "tweede",
@@ -79,7 +348,10 @@
       "epithet": "",
       "patron": "Vicoar",
       "agreement": "",
-      "vault_id": "tweede"
+      "vault_id": "tweede",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
     },
     {
       "id": "verspch",
@@ -87,7 +359,10 @@
       "epithet": "",
       "patron": "Ofshütje",
       "agreement": "",
-      "vault_id": "verspch"
+      "vault_id": "verspch",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
     },
     {
       "id": "vervulling",
@@ -95,7 +370,32 @@
       "epithet": "The Twinfire Capital",
       "patron": "Maiiam",
       "agreement": "91–93%",
-      "vault_id": "vervulling"
+      "vault_id": "vervulling",
+      "definition_path": "",
+      "scene_path": "",
+      "no_combat_zone": false
+    },
+    {
+      "id": "wilds",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/wilds.tres",
+      "scene_path": "res://world/test_room.tscn",
+      "no_combat_zone": false
+    },
+    {
+      "id": "wound_lip",
+      "display_name": "",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/wound_lip.tres",
+      "scene_path": "res://world/wound_lip.tscn",
+      "no_combat_zone": false
     }
   ]
 }
