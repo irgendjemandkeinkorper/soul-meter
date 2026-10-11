@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
-## Rendered evidence for #349: a live same-map session on the Wilds field, with the frozen
-## per-action accord context the active caster's forecast would use, read from the controller.
+## Rendered evidence for #349: a live same-map session on the Wilds field; an AccordZone is
+## placed over the caster and the frozen per-action accord and fizzle forecast change with it.
 ## Run explicitly with scripts/test.sh -a test/manual/accord_349_capture.gd (Xvfb).
 ## The caption is capture-only evidence, not shipped UI; the accord overlay is E6.2.
 
@@ -60,19 +60,37 @@ func test_live_field_session_accord_context() -> void:
 	var frozen := Battle.controller.accord_context_for(actor)
 	assert_bool(frozen.is_empty()).is_false()
 	var cell: Vector2i = frozen["cell"]
-	# No zone is authored anywhere yet, so the cell's accord is the battle's base exactly.
-	assert_float(float(frozen["harmonic_accord"])).is_equal(Battle.controller.agreement_integrity)
-	assert_float(float(frozen["harmonic_accord"])).is_equal(field.accord_base())
-	assert_float(field.accord_at(cell, Battle.controller.agreement_integrity)).is_equal(
-		float(frozen["harmonic_accord"])
-	)
+	# Wilds authors no zone, so the cell's accord is the battle's base exactly.
+	var base_accord := float(frozen["harmonic_accord"])
+	assert_float(base_accord).is_equal(Battle.controller.agreement_integrity)
+	assert_float(base_accord).is_equal(field.accord_base())
+	var intuition := actor.attribute_value(&"intuition")
+	var fizzle_before := SkillCheck.fizzle_percent(base_accord, "chord", 0, "phrase", intuition)
+
+	# Place an AccordZone over the caster, as Weftlumin's palette would, and re-forecast.
+	var zone := load("res://actors/accord_zone/accord_zone.tscn").instantiate() as AccordZone
+	zone.accord_delta = -40
+	zone.half_width_cells = 2
+	zone.half_height_cells = 2
+	field.add_child(zone)
+	zone.global_position = field.iso_grid().cell_to_world(cell)
+	Battle.controller.release_accord_context(actor)
+	var zoned := Battle.controller.accord_context_for(actor)
+	var zoned_accord := float(zoned["harmonic_accord"])
+	assert_float(zoned_accord).is_equal(base_accord - 40.0)
+	var fizzle_after := SkillCheck.fizzle_percent(zoned_accord, "chord", 0, "phrase", intuition)
+	assert_float(fizzle_after).is_greater(fizzle_before)
+	_draw_zone_cells(root, field, zone)
+
 	var caption_text := (
-		"#349 per-action accord  |  caster %s at cell %s  |  harmonic_accord %.1f"
-		+ "  (base %.1f + zone_delta %.1f + variation 0.0)  |  frozen: day %d, phase %s, weather '%s'"
+		"#349 AccordZone (accord_delta -40, 5x5 cells) placed over %s at %s\n"
+		+ "harmonic_accord %.0f -> %.0f   |   Chord-Phrase fizzle forecast %.0f%% -> %.0f%%"
+		+ "   |   frozen: day %d, %s, weather '%s'   |   Loom strength %.0f (FULL skills -%d pp)"
 	) % [
-		actor.display_name, str(cell), float(frozen["harmonic_accord"]), field.accord_base(),
-		field.zone_delta(cell), int(frozen["day_index"]), String(frozen["phase"]),
-		String(frozen["weather"]),
+		actor.display_name, str(cell), base_accord, zoned_accord, fizzle_before, fizzle_after,
+		int(zoned["day_index"]), String(zoned["phase"]), String(zoned["weather"]),
+		AccordMath.loom_strength(field.zone_delta(cell)),
+		SkillCheck.loom_penalty("sounding", field.zone_delta(cell)),
 	]
 	print("ACCORD ", caption_text)
 
@@ -109,7 +127,25 @@ func test_live_field_session_accord_context() -> void:
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	image.resize(1280, 720, Image.INTERPOLATE_LANCZOS)
-	assert_int(image.save_jpg("user://qa/accord-349-live-session.jpg", 0.82)).is_equal(OK)
-	print("SHOT accord-349-live-session ", ProjectSettings.globalize_path("user://qa"))
+	assert_int(image.save_jpg("user://qa/accord-349-zone-forecast.jpg", 0.82)).is_equal(OK)
+	print("SHOT accord-349-zone-forecast ", ProjectSettings.globalize_path("user://qa"))
 	screen.free()
 	Battle._end_session(null)
+
+
+## Capture-only highlight of the zone's covered cells (the shipped overlay is E6.2).
+func _draw_zone_cells(root: Node2D, field: FieldMap, zone: AccordZone) -> void:
+	var grid := field.iso_grid()
+	var anchor := field.zone_anchor_cell(zone)
+	var probe_x := grid.cell_to_world(anchor + Vector2i(1, 0)) - grid.cell_to_world(anchor)
+	var probe_y := grid.cell_to_world(anchor + Vector2i(0, 1)) - grid.cell_to_world(anchor)
+	for covered: Vector2i in zone.covered_cells(anchor):
+		var center := grid.cell_to_world(covered)
+		var tile := Polygon2D.new()
+		tile.polygon = PackedVector2Array([
+			center - (probe_x + probe_y) * 0.5, center + (probe_x - probe_y) * 0.5,
+			center + (probe_x + probe_y) * 0.5, center - (probe_x - probe_y) * 0.5,
+		])
+		tile.color = Color(0.35, 0.55, 0.95, 0.35)
+		tile.z_index = 1
+		root.add_child(tile)

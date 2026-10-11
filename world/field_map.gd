@@ -232,11 +232,45 @@ func accord_base() -> float:
 	return SkillCheck.location_fizzle_integrity(authored, path)
 
 
-## The ONE spatial accord seam. Returns 0.0 until the owner rules how per-cell accord is
-## authored (an `AccordZone` placeable or a Terrain `accord_delta` layer — architecture §8
-## item 5, still open). Whichever mechanism wins fills this function and nothing else.
-func zone_delta(_cell: Vector2i) -> float:
-	return 0.0
+## The ONE spatial accord seam: the sum of `accord_delta` over every `AccordZone` covering
+## `cell` (owner ruling 2026-10-11, architecture §8 item 5). 0.0 on a field with no zones, which
+## is what keeps zone-less maps on their exact pre-#349 numbers. Hush/Waning Loom pressure is
+## derived from this same value (`AccordMath.loom_strength()`).
+func zone_delta(cell: Vector2i) -> float:
+	var total := 0.0
+	for zone: AccordZone in accord_zones():
+		if zone.covers(cell, zone_anchor_cell(zone)):
+			total += float(zone.accord_delta)
+	return total
+
+
+## The elemental default at `cell`: the first covering zone (tree order) that authors one,
+## otherwise the location's `weather_default`.
+func element_default_at(cell: Vector2i) -> StringName:
+	for zone: AccordZone in accord_zones():
+		if zone.element_default != &"" and zone.covers(cell, zone_anchor_cell(zone)):
+			return zone.element_default
+	return weather_default()
+
+
+## Every AccordZone placed in this field, in tree order.
+func accord_zones() -> Array[AccordZone]:
+	var result: Array[AccordZone] = []
+	for node: Node in _field_root().find_children("*", "Node2D", true, false):
+		if node is AccordZone:
+			result.append(node as AccordZone)
+	return result
+
+
+## The cell a zone is anchored on, in the field's (and the battle grid's) cell space.
+func zone_anchor_cell(zone: AccordZone) -> Vector2i:
+	var grid := iso_grid()
+	if grid != null:
+		return grid.world_to_cell(zone.global_position)
+	var layer := ground()
+	if layer != null:
+		return layer.local_to_map(layer.to_local(zone.global_position))
+	return Vector2i.ZERO # a field without ground has no cell space to anchor in
 
 
 ## Effective accord at `cell`: `clamp(base_adjusted + zone_delta(cell) + variation, 0, 100)`.

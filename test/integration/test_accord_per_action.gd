@@ -3,14 +3,14 @@ extends GdUnitTestSuite
 ## caster's cell, and the frozen `(day_index, phase, weather, cell)` forecast context that makes
 ## forecast == resolution hold even when a phase tick lands between the two.
 ##
-## The spatial mechanism (AccordZone placeable vs Terrain `accord_delta`) awaits an owner ruling;
-## `FieldMap.zone_delta()` is the single seam it will fill and returns 0.0 until then.
+## Owner ruling 2026-10-11: the spatial source is the `AccordZone` placeable, and Hush/Waning
+## Loom pressure is derived from its `accord_delta`. `FieldMap.zone_delta()` sums the zones.
 
 
 # ---- FieldMap.accord_at ----
 
 
-func test_zone_delta_seam_is_neutral_until_a_mechanism_is_ruled() -> void:
+func test_a_field_without_zones_has_a_neutral_zone_delta() -> void:
 	var field := auto_free(FieldMap.new()) as FieldMap
 	for cell: Vector2i in [Vector2i.ZERO, Vector2i(3, 7), Vector2i(-4, 12)]:
 		assert_float(field.zone_delta(cell)).is_equal(0.0)
@@ -183,6 +183,108 @@ func test_an_explicit_frozen_context_replays_exactly() -> void:
 	assert_float(float(forecast["context"]["fizzle"]["harmonic_accord"])).is_equal(55.0)
 
 
+# ---- AccordZone ----
+
+
+func test_zone_delta_sums_every_zone_covering_the_cell() -> void:
+	var field := _zone_field()
+	_add_zone(field, Vector2i(3, 3), -20, Vector2i(1, 1))
+	_add_zone(field, Vector2i(4, 3), -5, Vector2i(0, 0))
+	_add_zone(field, Vector2i(8, 8), 15, Vector2i(1, 1))
+	assert_float(field.zone_delta(Vector2i(3, 3))).is_equal(-20.0)
+	assert_float(field.zone_delta(Vector2i(4, 3))).is_equal(-25.0) # overlap sums
+	assert_float(field.zone_delta(Vector2i(2, 2))).is_equal(-20.0) # extent edge
+	assert_float(field.zone_delta(Vector2i(1, 3))).is_equal(0.0) # just outside
+	assert_float(field.zone_delta(Vector2i(9, 7))).is_equal(15.0)
+	assert_int(field.accord_zones().size()).is_equal(3)
+
+
+func test_accord_at_applies_the_zone_and_clamps() -> void:
+	var field := _zone_field()
+	_add_zone(field, Vector2i(3, 3), -30, Vector2i(1, 1))
+	assert_float(field.accord_at(Vector2i(3, 3), 80.0)).is_equal(50.0)
+	assert_float(field.accord_at(Vector2i(0, 0), 80.0)).is_equal(80.0)
+	assert_float(field.accord_at(Vector2i(3, 3), 20.0)).is_equal(0.0)
+
+
+func test_zone_element_default_overrides_the_location_only_inside_the_zone() -> void:
+	var field := _zone_field()
+	var zone := _add_zone(field, Vector2i(3, 3), 0, Vector2i(1, 1))
+	zone.element_default = &"mozh"
+	assert_str(String(field.element_default_at(Vector2i(4, 4)))).is_equal("mozh")
+	assert_str(String(field.element_default_at(Vector2i(0, 0)))).is_equal(
+		String(field.weather_default())
+	)
+
+
+func test_a_negative_half_extent_covers_a_single_line() -> void:
+	var zone := auto_free(AccordZone.new()) as AccordZone
+	zone.half_width_cells = -3
+	zone.half_height_cells = 2
+	assert_int(zone.covered_cells(Vector2i(5, 5)).size()).is_equal(5)
+	assert_bool(zone.covers(Vector2i(5, 7), Vector2i(5, 5))).is_true()
+	assert_bool(zone.covers(Vector2i(6, 5), Vector2i(5, 5))).is_false()
+
+
+func test_a_placed_zone_changes_the_forecast_and_forecast_still_equals_resolution() -> void:
+	var plain := _cast_fixture()
+	var plain_controller: CombatController = plain["controller"]
+	var plain_field := _zone_field()
+	plain_controller.configure_accord_sampler(Battle._sample_accord.bind(plain_field, 90.0))
+	var without_zone := plain_controller.forecast_action(plain["cast"], plain["target"], plain["options"])
+
+	var zoned := _cast_fixture()
+	var controller: CombatController = zoned["controller"]
+	var field := _zone_field()
+	var caster_cell: Vector2i = controller.battlefield.cell_of(zoned["caster"])
+	_add_zone(field, caster_cell, -40, Vector2i(1, 1))
+	controller.configure_accord_sampler(Battle._sample_accord.bind(field, 90.0))
+	var forecast := controller.forecast_action(zoned["cast"], zoned["target"], zoned["options"])
+
+	assert_float(float(without_zone["context"]["fizzle"]["harmonic_accord"])).is_equal(90.0)
+	assert_float(float(forecast["context"]["fizzle"]["harmonic_accord"])).is_equal(50.0)
+	assert_float(float(forecast["fizzle_percent"])).is_greater(float(without_zone["fizzle_percent"]))
+	var committed := controller.submit_action(
+		(zoned["cast"] as CombatAction).id, zoned["target"], zoned["options"]
+	)
+	assert_float(float(committed["resolution"]["fizzle_percent"])).is_equal(
+		float(forecast["fizzle_percent"])
+	)
+
+
+# ---- Loom pressure derived from accord_delta ----
+
+
+func test_loom_strength_is_the_accord_deficit_only() -> void:
+	assert_float(AccordMath.loom_strength(-25.0)).is_equal(25.0)
+	assert_float(AccordMath.loom_strength(0.0)).is_equal(0.0)
+	assert_float(AccordMath.loom_strength(30.0)).is_equal(0.0)
+	assert_float(AccordMath.loom_strength(-250.0)).is_equal(100.0)
+
+
+func test_loom_penalty_follows_skill_sensitivity() -> void:
+	var service: SkillCheckService = auto_free(SkillCheckService.new())
+	var zone := auto_free(AccordZone.new()) as AccordZone
+	zone.accord_delta = -20
+	var full_share := AccordMath.loom_penalty(DramgidSchema.LoomSensitivity.FULL, -20.0)
+	var partial_share := AccordMath.loom_penalty(DramgidSchema.LoomSensitivity.PARTIAL, -20.0)
+	assert_int(full_share).is_equal(20)
+	assert_int(partial_share).is_equal(roundi(20.0 * AccordMath.LOOM_PARTIAL_SHARE))
+	for skill_id: String in DramgidSchema.SKILL_IDS:
+		var loom := int(DramgidSchema.SKILLS[skill_id]["loom"])
+		var expected := 0
+		if loom == DramgidSchema.LoomSensitivity.FULL:
+			expected = full_share
+		elif loom == DramgidSchema.LoomSensitivity.PARTIAL:
+			expected = partial_share
+		assert_int(service.loom_penalty(skill_id, zone)).override_failure_message(skill_id).is_equal(expected)
+		assert_int(service.loom_penalty(skill_id, -20.0)).is_equal(expected)
+		assert_int(service.loom_penalty(skill_id, 20.0)).is_equal(0)
+		assert_int(service.loom_penalty(skill_id, null)).is_equal(0)
+	for skill_id: String in DramgidSchema.ARMS_SKILL_IDS:
+		assert_int(service.loom_penalty(skill_id, -100.0)).is_equal(0)
+
+
 # ---- fixture ----
 
 
@@ -237,7 +339,7 @@ func _actor(name: String, hp: int, attack: int, defense: int) -> BattleActor:
 	return actor
 
 
-func _sized_grid_ground(width: int, height: int) -> TileMapLayer:
+func _sized_grid_ground(width: int, height: int, managed: bool = true) -> TileMapLayer:
 	var tile_set := TileSet.new()
 	tile_set.tile_size = Vector2i(64, 32)
 	var image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
@@ -246,9 +348,32 @@ func _sized_grid_ground(width: int, height: int) -> TileMapLayer:
 	source.texture_region_size = Vector2i(64, 32)
 	source.create_tile(Vector2i.ZERO)
 	tile_set.add_source(source, 0)
-	var layer := auto_free(TileMapLayer.new()) as TileMapLayer
+	var layer := TileMapLayer.new()
+	if managed:
+		auto_free(layer)
 	layer.tile_set = tile_set
 	for y in height:
 		for x in width:
 			layer.set_cell(Vector2i(x, y), 0, Vector2i.ZERO)
 	return layer
+
+
+func _zone_field() -> FieldMap:
+	var field := FieldMap.new()
+	field.name = "ZoneField"
+	var ground := _sized_grid_ground(12, 12, false)
+	ground.name = "IsometricGround"
+	field.add_child(ground)
+	add_child(field)
+	auto_free(field)
+	return field
+
+
+func _add_zone(field: FieldMap, anchor: Vector2i, delta: int, half_extent: Vector2i) -> AccordZone:
+	var zone := (load("res://actors/accord_zone/accord_zone.tscn") as PackedScene).instantiate() as AccordZone
+	zone.accord_delta = delta
+	zone.half_width_cells = half_extent.x
+	zone.half_height_cells = half_extent.y
+	field.add_child(zone)
+	zone.global_position = field.ground().to_global(field.ground().map_to_local(anchor))
+	return zone
