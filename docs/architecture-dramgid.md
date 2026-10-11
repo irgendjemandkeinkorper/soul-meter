@@ -141,8 +141,10 @@ additive keys and do not participate (`docs/architecture-in-game-editor.md` §4.
   attribute columns (ints, default 2); **Peoples** — add `Leaning Primary` / `Leaning Secondary`
   (attribute ids, display-only in F3; §5.4); **Classes** — no F3 change (perks are F5's `Perks`
   category). `data.pandora` re-seeded; `data/generated/encounters.json` enemy blocks carry seven
-  attributes; `campaign_encounter_loader.ENEMY_FIELDS` requires them (Weftlumin E5.2 later removes
-  grid/weather, not stats).
+  attributes; `campaign_encounter_loader.ENEMY_FIELDS` required them. *Superseded by Weftlumin
+  E5.2 (#348, 2026-10-11): the loader now refuses inline enemy stats as well as grid/weather — a
+  package enemy row is `{archetype_id}` only, so the `edge` fallback below is reachable only through
+  rows registered directly on `EncounterCatalog`.*
 - Chargen backgrounds (`globals/chargen_data.gd`) retrain to new skill ids; ancestry entries use the
   five scoped peoples (Vael, Kaan, Vaerin, Weftkin, Kes'reth) with their stated leanings (B§2).
 

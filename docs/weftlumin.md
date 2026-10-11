@@ -155,11 +155,17 @@ restart under that same token.
 
 - **Setup.** Encounters come from `EncounterCatalog` (including registered campaign encounters).
   Party choices combine the current party and recruitable candidates, capped at
-  `GameState.REQUIRED_COMPANIONS + 1`. Weather starts from the location's authored default (or
-  `CALM`) and is labelled as authored, absent or overridden. A tile seed sets cell, element and charge
+  `GameState.REQUIRED_COMPANIONS + 1`. "Opens on" picks the set-piece (the selected encounter) or a
+  living field hostile as hop 0. Weather starts from the live field's location default (or `CALM`)
+  and is labelled as location, absent or overridden; encounters carry no weather (§4.9). A tile seed sets cell, element and charge
   on the runtime `TileState`. Called-shot anatomy and visibility fixtures are lab-only.
-- **Production path.** `Battle.start(encounter_id)` then `GameFlow.send_event("enter_battle")`; the
-  lab never changes scenes or substitutes a controller.
+- **Production path** (E5.2, #348). `Battle.start_set_piece(field, encounter_id)`, or
+  `Battle.start_session(field, hostile)` for a field hostile, on the field production sessions use
+  (`Battle._current_field_map()`), then `GameFlow.send_event("enter_battle")`; the lab never changes
+  scenes or substitutes a controller. Before Battle is touched the setup must fit the board
+  (`CampaignEncounterLoader.fits_the_board`: deployable cells hold party + hostiles; a set-piece's
+  authored `ally_cells` are deployable here); a refusal is shown in the panel and leaves no battle
+  and no armed sandbox. Stop and restart release the lab's own session through `Battle.abandon()`.
 - **Inspector feed.** The model emits `inspector_changed(payload)` from `Battle.combat_event`,
   `turn_resolved`, `balance_changed` and `battle_ended` (no polling): scheduler order and READY_AT,
   the pending forecast, matching resolution, Balance, weather, tiles, style points, turns and outcome.

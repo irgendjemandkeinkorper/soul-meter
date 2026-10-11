@@ -94,30 +94,119 @@ func test_campaign_encounter_shadowing_committed_id_is_refused_with_attribution(
 	_assert_error(result, "campaign_encounter_shadows_committed", "encounter_id")
 
 
-func test_grid_too_small_is_refused_at_load_with_field_attribution() -> void:
-	var encounter: Dictionary = _encounter("too-small")
-	encounter["enemies"] = [{"archetype_id": "bog-wight"}, {"archetype_id": "bog-wight"}]
-	encounter["grid"] = {"dimensions": [2, 1], "cover": [], "elevation": []}
-
-	_assert_error(_validate(FIRST_PATH, FIRST_ID, encounter), "grid_cannot_fit_combatants", "grid.dimensions")
-
-
-func test_grid_too_small_for_normal_allies_is_refused_at_load_with_attribution() -> void:
-	var encounter: Dictionary = _encounter("too-small-for-allies")
-	encounter["grid"] = {"dimensions": [2, 1], "cover": [], "elevation": []}
+## Spec §4.9 / F0 D8: the grid derives from the field's tiles and weather is the location's.
+## A package that still authors either is refused with attribution, never quietly accepted.
+func test_an_encounter_that_authors_a_grid_is_refused_with_attribution() -> void:
+	var encounter: Dictionary = _encounter("gridded")
+	encounter["grid"] = {"dimensions": [7, 5], "cover": [], "elevation": []}
 	_write_package(FIRST_PATH, FIRST_ID, encounter)
 
 	var result: Dictionary = CampaignQuestLoaderScript.load_package(FIRST_PATH)
 
-	_assert_error(result, "grid_cannot_fit_combatants", "grid.dimensions")
-	assert_bool(EncounterCatalog.definition(&"too-small-for-allies").is_empty()).is_true()
+	_assert_error(result, "refused_encounter_field", "grid")
+	assert_bool(EncounterCatalog.definition(&"gridded").is_empty()).is_true()
 
 
-func test_unknown_element_id_is_refused() -> void:
-	var encounter: Dictionary = _encounter("unknown-element")
-	encounter["enemies"] = [_complete_enemy(10, "not-an-element")]
+func test_an_encounter_that_authors_weather_is_refused_with_attribution() -> void:
+	var encounter: Dictionary = _encounter("weathered")
+	encounter["weather_default"] = "mozh"
 
-	_assert_error(_validate(FIRST_PATH, FIRST_ID, encounter), "unknown_element_id", "enemies[0].element_id")
+	_assert_error(
+		_validate(FIRST_PATH, FIRST_ID, encounter), "refused_encounter_field", "weather_default"
+	)
+	# An empty (calm) weather_default still claims the location's weather for the encounter.
+	encounter["weather_default"] = ""
+	_assert_error(
+		_validate(FIRST_PATH, FIRST_ID, encounter), "refused_encounter_field", "weather_default"
+	)
+
+
+## #283: an enemy row names an archetype and nothing else. Every former ENEMY_FIELDS stat on a
+## row — alone or beside an archetype id — is refused, so no row can shadow its archetype.
+func test_six_stat_enemy_fields_are_refused_with_attribution() -> void:
+	var inline: Dictionary = _encounter("inline-stats")
+	inline["enemies"] = [_complete_enemy(10, "mozh")]
+	var inline_result: Dictionary = _validate(FIRST_PATH, FIRST_ID, inline)
+	for stat: String in [
+		"id", "display_name", "max_hp", "attack", "defense", "balance_affinity",
+		"balance_pressure", "element_id", "edge",
+	]:
+		_assert_error(inline_result, "refused_enemy_field", "enemies[0].%s" % stat)
+	_assert_error(inline_result, "missing_required_field", "enemies[0].archetype_id")
+
+	var shadowed: Dictionary = _encounter("shadowed-archetype")
+	shadowed["enemies"] = [{"archetype_id": "bog-wight", "max_hp": 999}]
+	_assert_error(
+		_validate(FIRST_PATH, FIRST_ID, shadowed), "refused_enemy_field", "enemies[0].max_hp"
+	)
+
+
+func test_set_piece_cells_are_validated_and_normalised() -> void:
+	var valid: Dictionary = _encounter("set-piece-fight")
+	valid["set_piece"] = {"ally_cells": [[1, 2], [2, 2], {"x": 3, "y": 2}]}
+	valid["group_id"] = "set-piece-group"
+	var loaded: Dictionary = _validate(FIRST_PATH, FIRST_ID, valid)
+	assert_array(loaded.get("errors", [])).is_empty()
+	var definition: Dictionary = (loaded["encounters"] as Dictionary)["set-piece-fight"]
+	assert_array(definition["set_piece"]["ally_cells"]).is_equal(
+		[Vector2i(1, 2), Vector2i(2, 2), Vector2i(3, 2)]
+	)
+
+	var broken: Dictionary = _encounter("set-piece-broken")
+	broken["set_piece"] = {
+		"ally_cells": [[1, 2], [1, 2], [1.5, 2], "here"], "enemy_cells": [[4, 4]],
+	}
+	broken["group_id"] = ""
+	var result: Dictionary = _validate(FIRST_PATH, FIRST_ID, broken)
+	_assert_error(result, "duplicate_set_piece_cell", "set_piece.ally_cells[1]")
+	_assert_error(result, "invalid_set_piece_cell", "set_piece.ally_cells[2]")
+	_assert_error(result, "invalid_set_piece_cell", "set_piece.ally_cells[3]")
+	_assert_error(result, "refused_encounter_field", "set_piece.enemy_cells")
+	_assert_error(result, "missing_required_field", "group_id")
+
+	var empty: Dictionary = _encounter("set-piece-empty")
+	empty["set_piece"] = {"ally_cells": []}
+	_assert_error(
+		_validate(FIRST_PATH, FIRST_ID, empty), "invalid_field_type", "set_piece.ally_cells"
+	)
+
+
+## The fits-the-board check now runs against a scene (spec §4.9): deployable cells must hold the
+## party and the hostiles, and authored set-piece cells must be deployable on that field.
+func test_fits_the_board_is_judged_against_the_field() -> void:
+	var scene: Node = (load("res://world/test_room.tscn") as PackedScene).instantiate()
+	add_child(scene)
+	auto_free(scene)
+	await get_tree().process_frame
+	var field := scene.find_child("FieldMap", true, false) as FieldMap
+	var deployable: Array[Vector2i] = CampaignEncounterLoader.deployable_cells(field)
+	assert_int(deployable.size()).is_greater(4)
+	var definition: Dictionary = {"enemies": [{}, {}]}
+
+	var fits: Dictionary = CampaignEncounterLoader.fits_the_board(definition, field, 4)
+	assert_bool(bool(fits["allowed"])).override_failure_message(str(fits)).is_true()
+	assert_int(int(fits["required"])).is_equal(6)
+	assert_int(int(fits["deployable"])).is_equal(deployable.size())
+
+	var crowded: Dictionary = CampaignEncounterLoader.fits_the_board(
+		definition, field, deployable.size()
+	)
+	assert_bool(bool(crowded["allowed"])).is_false()
+	assert_str(str(crowded["blocked_by"])).is_equal("board_too_small")
+
+	definition["set_piece"] = {"ally_cells": [deployable[0], Vector2i(-999, -999)]}
+	var off_board: Dictionary = CampaignEncounterLoader.fits_the_board(definition, field, 2)
+	assert_str(str(off_board["blocked_by"])).is_equal("set_piece_cell_not_deployable")
+
+	definition["set_piece"] = {"ally_cells": [deployable[0]]}
+	var short: Dictionary = CampaignEncounterLoader.fits_the_board(definition, field, 2)
+	assert_str(str(short["blocked_by"])).is_equal("set_piece_cells_short")
+
+	definition["set_piece"] = {"ally_cells": [deployable[0], deployable[1]]}
+	var fitted: Dictionary = CampaignEncounterLoader.fits_the_board(definition, field, 2)
+	assert_bool(bool(fitted["allowed"])).is_true()
+	var no_field: Dictionary = CampaignEncounterLoader.fits_the_board(definition, null, 2)
+	assert_str(str(no_field["blocked_by"])).is_equal("field_map")
 
 
 func test_unknown_archetype_id_is_refused() -> void:
@@ -277,6 +366,11 @@ func test_combat_lab_lists_and_starts_registered_campaign_encounter() -> void:
 	var listed: Array[StringName] = _lab.call("encounter_ids")
 	assert_array(listed).contains([&"lab-fight"])
 	assert_bool(bool(_lab.call("host_in_panel", CombatLabScript.SANDBOX_OWNER))).is_true()
+	# A lab session opens on the live field through Battle.start_set_piece, like production.
+	var scene: Node = (load("res://world/test_room.tscn") as PackedScene).instantiate()
+	add_child(scene)
+	auto_free(scene)
+	await get_tree().process_frame
 	_lab.call("start_test_session", {
 		"encounter_id": &"lab-fight",
 		"party_ids": [],
@@ -284,16 +378,7 @@ func test_combat_lab_lists_and_starts_registered_campaign_encounter() -> void:
 	})
 	assert_str(String(Battle.encounter_id)).is_equal("lab-fight")
 	assert_bool(Battle.ended).is_false()
-
-
-func test_non_positive_max_hp_is_refused_while_huge_max_hp_is_allowed() -> void:
-	var unplayable: Dictionary = _encounter("zero-hp")
-	unplayable["enemies"] = [_complete_enemy(0, "mozh")]
-	_assert_error(_validate(FIRST_PATH, FIRST_ID, unplayable), "unplayable_max_hp", "enemies[0].max_hp")
-
-	var huge: Dictionary = _encounter("huge-hp")
-	huge["enemies"] = [_complete_enemy(2_000_000_000, "mozh")]
-	assert_array(_validate(FIRST_PATH, FIRST_ID, huge).get("errors", [])).is_empty()
+	assert_bool(Battle.session_active).is_true()
 
 
 func _validate(package_path: String, campaign_id: String, encounter: Dictionary) -> Dictionary:
@@ -314,12 +399,6 @@ func _encounter(encounter_id: String) -> Dictionary:
 		"encounter_id": encounter_id,
 		"display_name": "Runtime Fight",
 		"enemies": [{"archetype_id": "bog-wight"}],
-		"grid": {
-			"dimensions": [7, 5],
-			"cover": [[2, 1]],
-			"elevation": [{"cell": [3, 1], "height": 2}],
-		},
-		"weather_default": "mozh",
 		"spoils": [{"item_id": ItemIds.MATERIALS_GRAVE_SALT, "quantity": 3}],
 		"outcomes": {"slain": {"faction": FactionIds.IRON_COMPANIES}},
 		"loss": {"faction": FactionIds.IRON_COMPANIES},
@@ -343,11 +422,6 @@ func _complete_enemy(max_hp: int, element_id: String) -> Dictionary:
 func _runtime_definition(encounter_id: String) -> Dictionary:
 	var definition: Dictionary = _encounter(encounter_id)
 	definition["enemies"] = [EncounterCatalog.committed_archetype("bog-wight")]
-	definition["grid"] = {
-		"dimensions": Vector2i(7, 5),
-		"cover": [Vector2i(2, 1)],
-		"elevation": {Vector2i(3, 1): 2},
-	}
 	return definition
 
 

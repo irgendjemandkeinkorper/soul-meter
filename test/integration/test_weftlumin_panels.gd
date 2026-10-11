@@ -411,6 +411,84 @@ func test_combat_panel_refuses_over_a_live_production_battle() -> void:
 	assert_bool(bool(panel.model.call("sandbox_is_armed"))).is_false()
 
 
+## E5.2 (#348, spec §4.9): the panel opens sessions only through Battle's two entry points —
+## the selected encounter as a set-piece, or a field hostile as hop 0 of an ambient session.
+func test_combat_panel_opens_set_piece_and_ambient_sessions_through_battle() -> void:
+	var shell := _open()
+	var panel := _panel(shell, "Combat lab") as WeftluminCombatLabPanel
+	_select(shell, "Combat lab")
+	panel.encounter_picker.select(EncounterCatalog.all_ids().find(EncounterIds.BOG_WIGHT))
+	panel.session_picker.select(0)
+	panel.start()
+	assert_bool(Battle.session_active).is_true()
+	assert_bool(bool(Battle.get("_ambient_session"))).is_false()
+	assert_str(String(Battle.encounter_id)).is_equal(String(EncounterIds.BOG_WIGHT))
+	assert_str(panel.field_label.text).contains("Set-piece · board")
+
+	var hostile := _field_scene.get_node("BogWight") as Hostile
+	panel.refresh({})
+	var hostile_index := -1
+	for index: int in panel.session_picker.item_count:
+		if str(panel.session_picker.get_item_metadata(index)) == str(hostile.get_path()):
+			hostile_index = index
+	assert_int(hostile_index).is_greater(0)
+	panel.session_picker.select(hostile_index)
+	panel.start()
+	assert_bool(Battle.session_active).is_true()
+	assert_bool(bool(Battle.get("_ambient_session"))).is_true()
+	assert_object(Battle.enemies[0]).is_same(hostile.battle_actor())
+	assert_str(panel.session_label.text).is_equal("RUNNING")
+	assert_str(panel.field_label.text).contains("Ambient session · board")
+	_select(shell, "Console")
+	assert_bool(Battle.session_active).is_false()
+
+
+## A start the board cannot hold is refused before Battle is touched, and the panel says so.
+func test_combat_panel_reports_a_board_refusal() -> void:
+	var definition := EncounterCatalog.definition(EncounterIds.BOG_WIGHT).duplicate(true)
+	definition["set_piece"] = {"ally_cells": [Vector2i(-999, -999)]}
+	assert_bool(EncounterCatalog.register_runtime_encounters({
+		"weftlumin-panel-off-board": definition,
+	})).is_true()
+	var shell := _open()
+	var panel := _panel(shell, "Combat lab") as WeftluminCombatLabPanel
+	_select(shell, "Combat lab")
+	panel.encounter_picker.clear()
+	panel.encounter_picker.add_item("weftlumin-panel-off-board")
+	panel.encounter_picker.set_item_metadata(0, &"weftlumin-panel-off-board")
+	panel.encounter_picker.select(0)
+	panel.start()
+	EncounterCatalog.clear_runtime_encounters()
+	assert_object(Battle.controller).is_null()
+	assert_str(panel.status_text()).starts_with("Session refused: Set-piece cell")
+	assert_str(panel.session_label.text).starts_with("REFUSED — ")
+	_select(shell, "Console")
+
+
+## #348: rendered capture of a lab session opened from the panel (set-piece on the test room).
+func test_rendered_encounter_session_capture() -> void:
+	var capture_dir := OS.get_environment("SOUL_METER_ENCOUNTERS_CAPTURE_DIR")
+	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	assert_int(DirAccess.make_dir_recursive_absolute(capture_dir)).is_equal(OK)
+	# The menu is the runner's current scene; hide it so the field the session opened on shows.
+	var current := get_tree().current_scene as CanvasItem
+	var visible_before := current.visible if current != null else false
+	if current != null:
+		current.hide()
+	var shell := _open()
+	var panel := _panel(shell, "Combat lab") as WeftluminCombatLabPanel
+	_select(shell, "Combat lab")
+	panel.encounter_picker.select(EncounterCatalog.all_ids().find(EncounterIds.LOAM_BOAR))
+	panel.start()
+	assert_bool(Battle.session_active).is_true()
+	await get_tree().create_timer(0.4).timeout
+	await _save_frame(capture_dir.path_join("combat-panel-set-piece-session.png"))
+	_select(shell, "Console")
+	if current != null:
+		current.visible = visible_before
+
+
 func test_sandbox_panels_exclude_each_other() -> void:
 	var shell := _open()
 	var combat := _panel(shell, "Combat lab") as WeftluminCombatLabPanel

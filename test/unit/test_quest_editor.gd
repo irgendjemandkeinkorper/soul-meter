@@ -176,8 +176,6 @@ func test_save_round_trips_existing_encounter_files_without_dropping_bytes() -> 
 		+ "  \"encounter_id\": \"editor-fight\",\n"
 		+ "  \"display_name\": \"Editor Fight\",\n"
 		+ "  \"enemies\": [{\"archetype_id\": \"bog-wight\"}],\n"
-		+ "  \"grid\": {\"dimensions\": [7, 5], \"cover\": [], \"elevation\": []},\n"
-		+ "  \"weather_default\": \"mozh\",\n"
 		+ "  \"spoils\": [{\"item_id\": \"materials/grave_salt\", \"quantity\": 7}],\n"
 		+ "  \"outcomes\": {\"slain\": {\"faction\": \"iron-companies\"}},\n"
 		+ "  \"loss\": {\"faction\": \"iron-companies\"}\n"
@@ -357,8 +355,6 @@ func test_authorized_reload_resets_active_quest_and_applies_encounter_changes() 
 	var encounter: Dictionary = {
 		"encounter_id": "editor-kind-fight", "display_name": "Original Fight",
 		"enemies": [{"archetype_id": "bog-wight"}],
-		"grid": {"dimensions": [7, 5], "cover": [], "elevation": []},
-		"weather_default": "",
 	}
 	_write_text(encounter_path, JSON.stringify(encounter))
 	var initial: Dictionary = _editor.call("reload_campaign", CAMPAIGN_ID)
