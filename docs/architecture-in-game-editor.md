@@ -501,6 +501,17 @@ starts sessions through `Battle.start_session(field, first_hostile)` / `start_se
 > and JSON has one number type — round-tripping them through canon rewrites `"minimum_balance":50`
 > as `50.0`, which is data drift bought for nothing. The post-#281 shape that would own them
 > properly (spoils, speech hooks, `group_id`) is E5.2's call.
+>
+> **Landed 2026-10-11 (E5.2, #348), the package half.** `campaign_encounter_loader.gd` refuses
+> `grid` and `weather_default` (`refused_encounter_field`) and every enemy-row key other than
+> `archetype_id` (`refused_enemy_field`; `ENEMY_FIELDS` is gone — the archetype owns the stats).
+> `set_piece: {ally_cells: [[x, y], ...]}` and `group_id` are validated for shape. The board check
+> is `CampaignEncounterLoader.fits_the_board(definition, field, party_size)`, judged against a
+> FieldMap (deployable = painted ground not statically blocked). The combat panel runs it and then
+> opens sessions only through `Battle.start_set_piece` / `Battle.start_session`. Not done here
+> (Battle API, #281): `Battle._seat_set_piece` does not yet seat the party on authored
+> `ally_cells`, and `Battle._weather_for_start` still honours a `weather_default` on a definition
+> registered directly through `EncounterCatalog` (no package can supply one now).
 
 ### 4.10 Random spawn system (ruling 5)
 

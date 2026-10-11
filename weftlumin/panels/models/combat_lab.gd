@@ -5,8 +5,13 @@ extends Node
 ## Presentation feed for the hosting panel's inspector.
 signal inspector_changed(payload: Dictionary)
 
+const EncounterLoaderScript: Script = preload("res://globals/campaign_encounter_loader.gd")
 const EXPORT_ROOT := "user://combat_lab"
+## Picker marker for "no override": the session runs under the field's own weather.
 const AUTHORED_WEATHER := &"__authored_default__"
+## How a lab session opened (spec §4.9): the two production entry points, nothing else.
+const SESSION_SET_PIECE := &"set_piece"
+const SESSION_AMBIENT := &"ambient"
 const CALM := &""
 const AIM_ACTION := &"lab-aimed-shot"
 ## Lab-only voice-tagged action used to show the throat rule (task 8).
@@ -41,6 +46,8 @@ var _pending_forecast: Dictionary = {}
 var _last_comparison: Dictionary = {}
 var _aim_location: StringName = &"torso"
 var _aim_controller: CombatController = null
+## Why the last start was refused (board fit or Battle's own refusal); empty after a start.
+var _refusal: Dictionary = {}
 ## A finished lab battle runs the PRODUCTION end-of-battle path, which accrues
 ## style points into SaveGame.ng_plus, can consume persistent SkillCheck expert
 ## rerolls, turns in quests, and mutates the tactical roster. Battle then
@@ -117,11 +124,12 @@ func party_candidates() -> Array[PartyMember]:
 	return result
 
 
-## `scene_path` defaults to the running scene. It is a parameter so the location
-## branch is reachable from a headless test, which has no world scene loaded and
-## would otherwise only ever see the calm fallback.
+## The weather a session opened from this lab would start under. F0 D8 (#281 step 8, §4.9):
+## weather is the LOCATION's — an encounter carries none (the loader refuses
+## `weather_default`). `scene_path` defaults to the live field's scene, then the running scene;
+## it is a parameter so the location branch is reachable from a headless test.
 func resolve_weather(
-	encounter_id: StringName,
+	_encounter_id: StringName,
 	override_enabled: bool,
 	override_id: StringName,
 	scene_path: String = "",
@@ -132,18 +140,12 @@ func resolve_weather(
 			"source": &"override",
 			"label": "CALM (override)" if override_id == CALM else "%s (override)" % String(override_id).to_upper(),
 		}
-	# F0 D8 (#281 step 8): weather is the LOCATION's. A campaign package may still
-	# author it on the encounter and that override wins; otherwise the lab reports
-	# whichever location it is standing in, which is what a real session would use.
-	var definition: Dictionary = EncounterCatalog.definition(encounter_id)
-	var authored := StringName(str(definition.get("weather_default", "")))
-	if authored != CALM:
-		return {
-			"element_id": authored,
-			"source": &"authored",
-			"label": "%s (authored default)" % String(authored).to_upper(),
-		}
 	var resolved_scene_path := scene_path
+	if resolved_scene_path.is_empty():
+		var field := field_map()
+		var field_root: Node = field.owner if field != null and field.owner != null else field
+		if field_root != null and not field_root.scene_file_path.is_empty():
+			resolved_scene_path = field_root.scene_file_path
 	if resolved_scene_path.is_empty():
 		var tree := get_tree()
 		var current_scene: Node = tree.current_scene if tree != null else null
@@ -156,6 +158,39 @@ func resolve_weather(
 			"label": "%s (location default)" % String(location.weather_default).to_upper(),
 		}
 	return {"element_id": CALM, "source": &"calm", "label": "CALM (no authored default)"}
+
+
+## The field a lab session is fought on: the one production sessions use (GameFlow asks Battle
+## the same way), so the lab never invents a board of its own.
+func field_map() -> FieldMap:
+	return Battle._current_field_map()
+
+
+## Living hostiles on the field, each a possible hop 0 for an ambient session.
+func field_hostiles() -> Array[Hostile]:
+	var result: Array[Hostile] = []
+	var field := field_map()
+	if field == null:
+		return result
+	for hostile: Hostile in field.hostiles():
+		if hostile.state != Hostile.State.DOWNED and hostile.battle_actor() != null:
+			result.append(hostile)
+	return result
+
+
+## Spec §4.9's "fits the board" check for a setup, against the live field: deployable cells
+## must hold the chosen party and the hostiles, and a set-piece's authored deployment cells must
+## be deployable here. Read-only; a start refuses on it before Battle is touched.
+func board_fit(requested_setup: Dictionary) -> Dictionary:
+	var field := field_map()
+	var party_size := _selected_party_size(requested_setup.get("party_ids", []))
+	var hostile := _setup_hostile(requested_setup)
+	if hostile != null:
+		return EncounterLoaderScript.fits_the_board({}, field, party_size, 1)
+	var encounter_id := StringName(str(requested_setup.get("encounter_id", "")))
+	return EncounterLoaderScript.fits_the_board(
+		EncounterCatalog.definition(encounter_id), field, party_size
+	)
 
 
 ## Every mutating entry point is gated. Inertness is not just "does nothing on
@@ -194,23 +229,15 @@ func stop_test_session() -> void:
 	_clear_lab_battle(owned_battle)
 
 
-## Tears down ONLY a battle the lab itself started. There is no Battle.abandon()
-## and flee() would run the production flee path, so this mirrors the field
-## teardown the existing suites use (test_travel_flow._clear_test_battle) —
-## including the encounter id, rosters and last_result, which a partial reset
-## would leave visible to whatever runs next.
+## Tears down ONLY a battle the lab itself started, through Battle's own release seam: the
+## session ends (set-piece bodies freed, field hostiles settled, the borrowed grid returned) and
+## no `battle_ended` fires, so no production consequence is applied to a lab result. The
+## sandbox restores runtime state separately.
 func _clear_lab_battle(owned: bool) -> void:
 	_aim_controller = null
-	if not owned or Battle.encounter_id.is_empty():
+	if not owned:
 		return
-	Battle.allies.clear()
-	Battle.enemies.clear()
-	Battle._definition.clear()
-	Battle._combat_history.clear()
-	Battle.controller = null
-	Battle.encounter_id = &""
-	Battle.last_result = null
-	Battle.ended = true
+	Battle.abandon()
 
 
 ## The restart controls are the LAST two entry points into Battle.start(). They
@@ -273,6 +300,11 @@ func build_session_markdown(
 		"## Setup",
 		"",
 		"- Encounter: `%s`" % str(setup.get("encounter_id", "")),
+		"- Session: `%s` via `%s`" % [
+			str(setup.get("session", SESSION_SET_PIECE)),
+			"Battle.start_session" if StringName(str(setup.get("session", ""))) == SESSION_AMBIENT
+			else "Battle.start_set_piece",
+		],
 		"- Party: `%s`" % "`, `".join(party_names),
 		"- Seed: `%s`" % str(setup.get("seed", 0)),
 		"- Weather: `%s` (%s)" % [
@@ -338,9 +370,17 @@ func compare_forecast_resolution(forecast: Dictionary, resolution: Dictionary) -
 	return {"diverged": not differences.is_empty(), "differences": differences}
 
 
+## Opens a lab session the way production does (spec §4.9): `Battle.start_set_piece(field,
+## encounter)` for a catalog encounter, or `Battle.start_session(field, hostile)` when the setup
+## names a field hostile as hop 0. The lab never builds a battle Battle would not.
 func _start_session(requested_setup: Dictionary, enter_game_flow: bool) -> void:
 	if requested_setup.is_empty():
 		return
+	# A restart replaces only the lab's OWN session; release it before the next one opens.
+	var replacing := _lab_battle_running
+	_disconnect_battle_signals()
+	_lab_battle_running = false
+	_clear_lab_battle(replacing)
 	# Rewind any prior session, THEN re-arm. Restoring without re-capturing left
 	# a restarted session with no armed snapshot — the original containment leak,
 	# reintroduced by the restore-once rule that was meant to close it. Every
@@ -356,6 +396,7 @@ func _start_session(requested_setup: Dictionary, enter_game_flow: bool) -> void:
 	_latest_snapshot.clear()
 	_pending_forecast.clear()
 	_last_comparison.clear()
+	_refusal.clear()
 	_runtime_overrides_applied = false
 	_apply_party(_setup.get("party_ids", []))
 	# Seed the ONE stochastic source a lab session can actually control.
@@ -365,12 +406,31 @@ func _start_session(requested_setup: Dictionary, enter_game_flow: bool) -> void:
 	# RandomNumberGenerator, so "same seed" never reproduced them. Global seed()
 	# also perturbed unrelated engine randomness for the rest of the process.
 	SkillCheck.random_number_generator.seed = int(_setup.get("seed", 0))
+	if _setup["session"] == SESSION_AMBIENT and _setup_hostile(_setup) == null:
+		_refuse_start({
+			"blocked_by": &"composition",
+			"message": "That hostile is no longer standing on the live field.",
+		})
+		return
+	var fit := board_fit(_setup)
+	_setup["board"] = {
+		"deployable": int(fit.get("deployable", 0)), "required": int(fit.get("required", 0)),
+	}
+	if not bool(fit.get("allowed", false)):
+		_refuse_start(fit)
+		return
 	_lab_battle_running = true
 	_connect_battle_signals()
-	Battle.start(StringName(_setup["encounter_id"]))
-	if Battle.ended or Battle.controller == null:
+	var field := field_map()
+	var hostile := _setup_hostile(_setup)
+	var opened: Dictionary = (
+		Battle.start_session(field, hostile) if hostile != null
+		else Battle.start_set_piece(field, StringName(_setup["encounter_id"]))
+	)
+	if not bool(opened.get("allowed", false)) or Battle.ended or Battle.controller == null:
+		_disconnect_battle_signals()
 		_lab_battle_running = false
-		_restore_saved_state()
+		_refuse_start(opened)
 		return
 	if not _runtime_overrides_applied:
 		_apply_runtime_overrides(Battle.controller, _setup)
@@ -383,10 +443,52 @@ func _start_session(requested_setup: Dictionary, enter_game_flow: bool) -> void:
 	_update_panel()
 
 
+## A refused start leaves no battle and no armed sandbox, and says why.
+func _refuse_start(refusal: Dictionary) -> void:
+	_refusal = {
+		"blocked_by": String(StringName(str(refusal.get("blocked_by", "")))),
+		"message": str(refusal.get("message", "The session could not open.")),
+	}
+	_restore_saved_state()
+	_update_panel()
+
+
+## The setup's hop-0 hostile, when it names one that is still alive on the live field.
+func _setup_hostile(setup: Dictionary) -> Hostile:
+	var path := str(setup.get("first_hostile", ""))
+	if path.is_empty() or not is_inside_tree():
+		return null
+	var hostile := get_tree().root.get_node_or_null(NodePath(path)) as Hostile
+	if hostile == null or not field_hostiles().has(hostile):
+		return null
+	return hostile
+
+
+func _selected_party_size(selected_ids_value: Variant) -> int:
+	var selected_ids: Array = selected_ids_value if selected_ids_value is Array else []
+	var known: Dictionary = {}
+	for member: PartyMember in party_candidates():
+		known[member.id] = true
+	var count := 0
+	var seen: Dictionary = {}
+	for selected_id: Variant in selected_ids:
+		var key := str(selected_id)
+		if known.has(key) and not seen.has(key):
+			seen[key] = true
+			count += 1
+	if count == 0:
+		count = GameState.party.size()
+	return clampi(count, 1, party_cap())
+
+
 func _normalize_setup(requested_setup: Dictionary) -> Dictionary:
 	var normalized := requested_setup.duplicate(true)
 	var encounter_id := StringName(normalized.get("encounter_id", &""))
 	normalized["encounter_id"] = encounter_id
+	normalized["session"] = (
+		SESSION_AMBIENT if not str(normalized.get("first_hostile", "")).is_empty()
+		else SESSION_SET_PIECE
+	)
 	var override_enabled := bool(normalized.get("weather_override_enabled", false))
 	var override_id := StringName(normalized.get("weather_override", &""))
 	normalized["weather"] = resolve_weather(encounter_id, override_enabled, override_id)
@@ -660,6 +762,7 @@ func _update_panel() -> void:
 func _inspector_payload() -> Dictionary:
 	return {
 		"running": _lab_battle_running,
+		"refusal": _refusal.duplicate(true),
 		"setup": _setup.duplicate(true),
 		"snapshot": _latest_snapshot.duplicate(true),
 		"timeline": _scheduler_timeline(),

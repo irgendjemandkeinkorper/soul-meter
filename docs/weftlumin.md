@@ -17,6 +17,7 @@ carried over below, restated for the panel host.
 | Dialogue Lab | `dialogue_panel.gd` (Dialogue lab) | `dialogue_lab.gd` | `DialogueLab` autoload, F5 overlay, `SOUL_METER_DIALOGUE_LAB` |
 | Quest editor | `quest_panel.gd` (Quest editor) | `quest_editor.gd` | `QuestEditor` autoload, F6 overlay, `SOUL_METER_QUEST_EDITOR` |
 | Scene layout | `scene_panel.gd` (Scene tree, Palette, Inspector) | `addons/weftlumin/core/scene_model.gd` | Former F10 overlay and autoload retired in #470 |
+| Location metadata | `location_panel.gd` (Locations) | `location_metadata.gd` | New in E3.3a (#341); no legacy surface |
 
 Scene layout now runs through `WeftluminSceneModel` in the shell. F10 and
 `SOUL_METER_LAYOUT` no longer activate an editor; use the enablement below.
@@ -107,6 +108,34 @@ Suites: `test/unit/test_weftlumin_{brushes,tile_painter,tile_bake}.gd` and
 a display), the integration suite writes the stroke preview and both overlays; the #340 evidence is
 in `docs/qa/weftlumin-painters-340-2026-10-11/`.
 
+## Locations
+
+The **Locations** bottom tab (E3.3a, #341) edits the hidden state of every location with a scene:
+Harmonic Accord, thinning tier, weather default (calm or an element on the wheel), no-combat zone,
+respawn policy, gameplay permission, default spawn, spawn aliases (`alias = spawn id`, one per
+line), and the arrival flag/checkpoint. Identity — id, scene and the `.tres` it bakes to — and the
+gazetteer facet (display name, patron, agreement, vault id) are read-only.
+
+- **Canon.** `canon/<hub>/locations/<id>.json` (`weftlumin.location.v1`) is the source.
+  `WeftluminLocationsKind` (`weftlumin/kinds/locations.gd`) validates it with attributed errors,
+  and `tools/generate_locations.gd` bakes it into `world/locations/**/*.tres` and
+  `data/generated/location_index.json`. A bake of unchanged canon is byte-identical to the
+  committed files; `scripts/check_generated_data.sh` runs it as the `LOCATIONS-GEN` drift stage.
+- **Drafts.** Save draft validates the whole location set with the edit applied and writes only
+  `user://weftlumin/location-drafts/locations/<id>.json`. The panel never writes `res://`.
+  **Bake preview** lists the definitions the generator would rewrite. To promote drafts, run the
+  generator with `SOUL_METER_LOCATION_DRAFTS=<globalized draft directory>`. It replaces the canon
+  documents of the same ids and regenerates. A draft cannot create a location.
+- **Not yet consumed.** The registries still preload the generated `.tres` files.
+  `FieldMap.no_combat_zone()` still derives the zone from the `res://world/interiors/` prefix,
+  and the panel notes any canon value the runtime would ignore. Reading the index and
+  `no_combat_zone` at runtime is E3.3b (#342).
+
+Rendered evidence of the tab (canon form, then a saved draft with its bake preview) is in
+`docs/qa/weftlumin-locations-341-2026-10-11/`. It comes from
+`test_rendered_location_panel_capture` in `test/integration/test_weftlumin_location_panel.gd`
+with `SOUL_METER_LOCATION_PANEL_CAPTURE_DIR` set under Xvfb.
+
 ## Enablement and release safety
 
 Open Weftlumin with **F12** (the remappable `weftlumin_toggle` action) in a debug build started
@@ -189,11 +218,17 @@ restart under that same token.
 
 - **Setup.** Encounters come from `EncounterCatalog` (including registered campaign encounters).
   Party choices combine the current party and recruitable candidates, capped at
-  `GameState.REQUIRED_COMPANIONS + 1`. Weather starts from the location's authored default (or
-  `CALM`) and is labelled as authored, absent or overridden. A tile seed sets cell, element and charge
+  `GameState.REQUIRED_COMPANIONS + 1`. "Opens on" picks the set-piece (the selected encounter) or a
+  living field hostile as hop 0. Weather starts from the live field's location default (or `CALM`)
+  and is labelled as location, absent or overridden; encounters carry no weather (§4.9). A tile seed sets cell, element and charge
   on the runtime `TileState`. Called-shot anatomy and visibility fixtures are lab-only.
-- **Production path.** `Battle.start(encounter_id)` then `GameFlow.send_event("enter_battle")`; the
-  lab never changes scenes or substitutes a controller.
+- **Production path** (E5.2, #348). `Battle.start_set_piece(field, encounter_id)`, or
+  `Battle.start_session(field, hostile)` for a field hostile, on the field production sessions use
+  (`Battle._current_field_map()`), then `GameFlow.send_event("enter_battle")`; the lab never changes
+  scenes or substitutes a controller. Before Battle is touched the setup must fit the board
+  (`CampaignEncounterLoader.fits_the_board`: deployable cells hold party + hostiles; a set-piece's
+  authored `ally_cells` are deployable here); a refusal is shown in the panel and leaves no battle
+  and no armed sandbox. Stop and restart release the lab's own session through `Battle.abandon()`.
 - **Inspector feed.** The model emits `inspector_changed(payload)` from `Battle.combat_event`,
   `turn_resolved`, `balance_changed` and `battle_ended` (no polling): scheduler order and READY_AT,
   the pending forecast, matching resolution, Balance, weather, tiles, style points, turns and outcome.
@@ -263,5 +298,6 @@ registration are the model's.
 | Release build carries no tool code; unhosted models are inert | `test/integration/test_{dev_console,consequence_timeline,combat_lab,dialogue_lab,quest_editor}_inert.gd`, `test_weftlumin_inert.gd` |
 | Model behaviour | `test/unit/test_{dev_console_commands,consequence_timeline,combat_lab,dialogue_lab,quest_editor,campaign_encounters,campaign_quest_registry}.gd` |
 | Panels in the shell | `test/integration/test_weftlumin_panels.gd`, `test_weftlumin_shell.gd` |
+| Locations kind, generator, drift and drafts | `test/unit/test_weftlumin_locations_kind.gd`; panel: `test/integration/test_weftlumin_location_panel.gd` |
 
 The original file-to-behaviour migration plan is `docs/weftlumin-test-migration.md` (E1.9).

@@ -98,6 +98,13 @@ The check temporarily registers the generator as an autoload, compares every gen
 without writing it, and restores the project configuration before exiting. A non-zero exit means
 regenerate locally and commit the resulting files.
 
+Location data has a second source: `canon/<hub>/locations/*.json` (`weftlumin.location.v1`)
+generates `world/locations/**/*.tres` and `data/generated/location_index.json` through
+`tools/generate_locations.gd` (E3.3a, #341). The same script runs its `LOCATIONS-GEN` stage,
+which also fails on a `.tres` under `world/locations/` that no canon document explains. After
+changing a location document, regenerate the same way (temporary autoload, no
+`SOUL_METER_DRIFT_CHECK`) and commit the canon and generated files together.
+
 You can also run tests from inside the editor: the gdUnit4 dock (bottom panel, once the addon
 is enabled — it's already registered in `project.godot`) shows the same suites with a
 run/debug button per test. Useful for stepping through a failure; the CLI is what CI would use.

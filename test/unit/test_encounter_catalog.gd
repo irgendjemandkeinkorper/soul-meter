@@ -193,9 +193,9 @@ func test_the_catalog_no_longer_authors_weather() -> void:
 		).is_false()
 
 
-## The boundary left standing: a campaign package authors `weather_default` on its
-## own encounter (`campaign_encounter_loader.gd` validates the key), and that row
-## still round-trips through the catalog untouched.
+## The catalog seam itself stays a plain store: a row registered directly still
+## round-trips untouched. Campaign packages can no longer reach it with weather —
+## `campaign_encounter_loader.gd` refuses `weather_default` (E5.2, #348; spec §4.9).
 func test_a_campaign_package_may_still_author_its_own_weather() -> void:
 	EncounterCatalog.register_runtime_encounters({
 		"package-weather": {
