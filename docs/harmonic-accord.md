@@ -2,7 +2,15 @@
 
 **Status:** design note for #328 (E1.7). The *shape* below is proposed and implemented in
 `globals/combat/accord_math.gd`; **every number is PROVISIONAL** and belongs to balance, not to
-this note. Nothing here is wired into combat — that is E6.1 (#349).
+this note.
+
+**Wiring status (#349, partial):** combat now samples accord **per action** from the caster's cell
+through `FieldMap.accord_at(cell)`, and the controller freezes `(day_index, phase, weather, cell)`
+on the first forecast so resolution reuses it (`CombatController.accord_context_for()`).
+Two terms are deliberately neutral, so every map keeps today's numbers:
+`FieldMap.zone_delta(cell)` returns 0.0 until the owner rules the zone mechanism (AccordZone
+placeable vs Terrain `accord_delta`, architecture §8 item 5), and `Battle._accord_variation()`
+returns 0.0 until wiring this note's `variation` is approved as a balance change.
 
 Harmonic Accord is Agreement Integrity renamed (#329, owner ruling 1). It is the world's
 willingness to let a casting hold. High accord means magic behaves; low accord means it fizzles.
@@ -124,8 +132,8 @@ Both warnings can fire at once, which only happens when the authored band is imp
 
 ## 5. What this note deliberately does not decide
 
-- **Where accord is sampled in combat** — E6.1 (#349). Today `CombatController` holds one float
-  per battle; per-cell sampling is a combat change that follows #281.
+- **Where accord is sampled in combat** — E6.1 (#349): per action, at the caster's cell, frozen
+  at forecast (see the wiring status above).
 - **`AccordZone` shape** — a placeable volume versus Terrain custom data is architecture ruling 8,
   still open.
 - **Authored per-location values** — C21 / #258.

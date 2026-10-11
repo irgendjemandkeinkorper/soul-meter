@@ -222,6 +222,32 @@ func weather_default() -> StringName:
 	return location.weather_default if location != null else &""
 
 
+## #349 / architecture §4.11: the location's authored Harmonic Accord with thinning already
+## subtracted — once, inside `SkillCheck.location_fizzle_integrity()`. Nothing downstream may
+## apply `thinning_tier` again.
+func accord_base() -> float:
+	var path := _scene_path()
+	var location := LocationRegistry.by_scene(path)
+	var authored := location.harmonic_accord if location != null else 100.0
+	return SkillCheck.location_fizzle_integrity(authored, path)
+
+
+## The ONE spatial accord seam. Returns 0.0 until the owner rules how per-cell accord is
+## authored (an `AccordZone` placeable or a Terrain `accord_delta` layer — architecture §8
+## item 5, still open). Whichever mechanism wins fills this function and nothing else.
+func zone_delta(_cell: Vector2i) -> float:
+	return 0.0
+
+
+## Effective accord at `cell`: `clamp(base_adjusted + zone_delta(cell) + variation, 0, 100)`.
+## `base_adjusted` defaults to `accord_base()`; Battle passes its own (encounter-overridable)
+## base so a battle and the field agree on one number. With no zone authored and no variation
+## this returns the base unchanged, which is what keeps zone-less maps on today's numbers.
+func accord_at(cell: Vector2i, base_adjusted: float = NAN, variation_value: float = 0.0) -> float:
+	var base := accord_base() if is_nan(base_adjusted) else base_adjusted
+	return AccordMath.accord_at(base, zone_delta(cell), variation_value)
+
+
 func no_combat_zone() -> bool:
 	return _scene_path().begins_with("res://world/interiors/")
 
