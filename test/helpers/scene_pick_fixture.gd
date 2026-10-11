@@ -4,6 +4,7 @@ extends GdUnitTestSuite
 const SHELL := preload("res://addons/weftlumin/shell/shell.tscn")
 const PANEL := preload("res://weftlumin/panels/scene_panel.tscn")
 const Recovery := preload("res://globals/layout_recovery.gd")
+const HOST_ADAPTER := preload("res://addons/weftlumin/shell/soul_meter_adapter.gd")
 
 class FixtureAdapter extends WeftluminGameAdapter:
 	var world: Node
@@ -17,6 +18,13 @@ class FixtureAdapter extends WeftluminGameAdapter:
 
 	func panels() -> Array[PackedScene]:
 		return [PANEL]
+
+	# E3.1b: the real registry and pickers, so the dock shows what the game declares.
+	func placeables() -> Array[WeftluminPlaceable]:
+		return HOST_ADAPTER.new().placeables()
+
+	func pickers() -> Dictionary:
+		return HOST_ADAPTER.new().pickers()
 
 	func set_editor_open(open: bool) -> void:
 		if open:

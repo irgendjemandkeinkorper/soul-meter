@@ -59,6 +59,48 @@ func panels() -> Array[PackedScene]:
 	return result
 
 
+## Ruling 8: the existing actor types, made placeable (§4.6.4). No new actor types. Each row is
+## `[id, label, palette group, scene path or engine class, node-name stem]`; scenes load lazily.
+## ZhavarTelegraph is absent: it is a plain `Node` screen overlay with no position, and the scene
+## model edits `Node2D`s only.
+const PLACEABLES: Array[Array] = [
+	[&"npc", "NPC", "Units & NPCs", "res://actors/npc/npc.tscn", "Npc"],
+	[&"hostile", "Hostile", "Units & NPCs", "res://actors/hostile/hostile.tscn", "Hostile"],
+	[&"building_door", "Building door", "Doors & exits", "res://actors/building_door/building_door.tscn", "BuildingDoor"],
+	[&"travel_exit", "Travel exit", "Doors & exits", "res://actors/travel_exit/travel_exit.tscn", "TravelExit"],
+	[&"interactable", "Interactable", "Interactables", "res://actors/interactable/interactable.tscn", "Interactable"],
+	[&"chest", "Chest", "Interactables", "res://actors/chest/chest.tscn", "Chest"],
+	[&"pickup", "Pickup", "Interactables", "res://actors/pickup/pickup.tscn", "Pickup"],
+	[&"switch", "Switch", "Interactables", "res://actors/switch/switch.tscn", "Switch"],
+	[&"spawn_marker", "Spawn marker", "Markers", "Marker2D", "SpawnMarker"],
+]
+## Semantic picker table; export-excluded with the panels, so a build without it has none.
+const PICKERS_SCRIPT := "res://weftlumin/panels/pickers.gd"
+
+
+func placeables() -> Array[WeftluminPlaceable]:
+	var result: Array[WeftluminPlaceable] = []
+	for row: Array in PLACEABLES:
+		var source: String = row[3]
+		var packed: PackedScene = null
+		if source.begins_with("res://"):
+			packed = load(source) as PackedScene if ResourceLoader.exists(source) else null
+			if packed == null:
+				push_warning("Weftlumin: placeable %s is missing." % source)
+				continue
+		result.append(WeftluminPlaceable.make(
+			row[0], row[1], row[2], packed, &"" if packed != null else StringName(source), row[4]
+		))
+	return result
+
+
+func pickers() -> Dictionary:
+	if not ResourceLoader.exists(PICKERS_SCRIPT):
+		return {}
+	var script: GDScript = load(PICKERS_SCRIPT) as GDScript
+	return script.new().table() if script != null else {}
+
+
 func gameplay_scene_root() -> Node:
 	return GameFlow.get_tree().current_scene
 

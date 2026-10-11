@@ -41,6 +41,9 @@ const PICK_PADDING := 8.0
 const DUPLICATE_OFFSET := Vector2(SNAP_GRID, SNAP_GRID)
 ## `LayoutOverrides.apply_to_scene` tags its additions with this, which is how they re-select.
 const ADDITION_META := &"layout_addition"
+## Tags an instance the model placed from a `WeftluminPlaceable` (E3.1b). Like a scratch
+## addition it is unowned, so it is scene content only through the command log.
+const PLACED_META := &"weftlumin_placed"
 const SESSION_META := &"weftlumin_scene_session"
 const SESSION_NODE := "_WeftluminSceneSession"
 const Recovery := preload("res://globals/layout_recovery.gd")
@@ -91,6 +94,11 @@ var host_predicate: Callable = Callable()
 var texture_path := ""
 var pattern: Dictionary = {}
 var placement_layer: StringName = &"GroundDetails"
+## The registry entry the next click places (§4.6.4), or null.
+var placeable: WeftluminPlaceable = null
+## `(world_position: Vector2) -> Variant`: the host's walkable-cell placement snap, returning the
+## open cell centre or null. Unset or null falls back to `snap()`.
+var placement_snap: Callable = Callable()
 var footprint := DEFAULT_COLLISION_SIZE
 var saved_document: Dictionary = {}
 var recovery_error: Error = OK
@@ -290,6 +298,8 @@ func is_editable(node: Node) -> bool:
 func _is_editable_under(node: Node, roots: Array[Node]) -> bool:
 	if not node is Node2D or node == scene_root or not bool(check(OP_SET, node)["allowed"]):
 		return false
+	if node.has_meta(PLACED_META):
+		return true
 	if host_predicate.is_valid() and bool(host_predicate.call(node)):
 		return true
 	for root: Node in roots:
@@ -440,8 +450,14 @@ func pointer_input(event: InputEvent, world_position: Vector2) -> Dictionary:
 			finish_pointer()
 			if not button.pressed:
 				return _allowed()
-			if not pattern.is_empty() or not texture_path.is_empty():
-				var outcome: Dictionary = stamp_pattern(world_position, button.alt_pressed) if not pattern.is_empty() else place_prop(world_position, button.alt_pressed)
+			if not pattern.is_empty() or not texture_path.is_empty() or placeable != null:
+				var outcome: Dictionary
+				if placeable != null:
+					outcome = place_placeable(world_position, button.alt_pressed)
+				elif not pattern.is_empty():
+					outcome = stamp_pattern(world_position, button.alt_pressed)
+				else:
+					outcome = place_prop(world_position, button.alt_pressed)
 				if bool(outcome["allowed"]) and not button.shift_pressed:
 					cancel_placement()
 				return outcome
@@ -466,12 +482,14 @@ func finish_pointer() -> void:
 func cancel_placement() -> void:
 	texture_path = ""
 	pattern = {}
+	placeable = null
 
 
 func choose_texture(path: String) -> void:
 	finish_pointer()
 	texture_path = path
 	pattern = {}
+	placeable = null
 	clear_selection()
 
 
@@ -479,6 +497,16 @@ func choose_pattern(value: Dictionary) -> void:
 	finish_pointer()
 	pattern = value.duplicate(true)
 	texture_path = ""
+	placeable = null
+	clear_selection()
+
+
+## Arm placement of a registry entry; the next click instances it.
+func choose_placeable(entry: WeftluminPlaceable) -> void:
+	finish_pointer()
+	placeable = entry
+	texture_path = ""
+	pattern = {}
 	clear_selection()
 
 
@@ -657,6 +685,83 @@ func place_prop(world_position: Vector2, free_move: bool = false) -> Dictionary:
 	return outcome
 
 
+## Instance the armed placeable under the scene root at the host's nearest open cell (Alt, or
+## snapping off, keeps the cursor position) and select it.
+func place_placeable(world_position: Vector2, free_move: bool = false) -> Dictionary:
+	if placeable == null:
+		return _blocked(&"placeable", &"chosen_placeable", "Choose a placeable first.")
+	if scene_root == null:
+		return _blocked(&"scene_boundary", &"node_in_scene", "No gameplay scene.")
+	var at: Vector2 = world_position
+	if not free_move and snap_mode != Snap.OFF:
+		var open_cell: Variant = placement_snap.call(world_position) if placement_snap.is_valid() else null
+		at = open_cell if open_cell is Vector2 else snap(world_position)
+	if scene_root is Node2D:
+		at = (scene_root as Node2D).to_local(at)
+	var exports: Dictionary = {}
+	for key: Variant in placeable.default_exports:
+		exports[str(key)] = var_to_str(placeable.default_exports[key])
+	var spec := {
+		"placeable": String(placeable.id), "scene": placeable.scene_path(),
+		"type": String(placeable.node_type),
+		"name": _unique_name(scene_root, placeable.base_name if not placeable.base_name.is_empty() else "Placed", {}),
+		"position": [at.x, at.y], "exports": exports,
+	}
+	return add_instance(scene_root, spec)
+
+
+## Add one instance from a complete `{placeable, scene, type, name, position, exports}` spec, as
+## the `add_node` command records it, and select it.
+func add_instance(parent: Node, spec: Dictionary) -> Dictionary:
+	if parent == null:
+		return _blocked(&"scene_boundary", &"node_in_scene", "No parent for the placement.")
+	var command: WeftluminCommand = command_for(parent, OP_ADD, {"instance": spec.duplicate(true)})
+	var outcome: Dictionary = _run_gesture("Place", [command])
+	if bool(outcome["allowed"]):
+		select_only(_added_node(command.id))
+	return outcome
+
+
+## Set one exported script property on the primary, as one undo step. The value is recorded as
+## `var_to_str` text, the encoding the `.tscn` patcher writes for primitives (§4.6.2).
+func set_primary_export(key: String, value: Variant) -> Dictionary:
+	finish_pointer()
+	var lead: Node2D = primary()
+	if lead == null:
+		return _blocked(&"selection", &"editable_selection", "Select something first.")
+	var text: String = var_to_str(value)
+	var refusal: Dictionary = _export_refusal(lead, key, text)
+	if not bool(refusal["allowed"]):
+		return refusal
+	if text == var_to_str(lead.get(key)):
+		return _allowed()
+	return _run_gesture("Edit %s" % key, [command_for(lead, OP_SET, {"export": key, "value_text": text})])
+
+
+## A script variable the editor shows: `@export`ed, so both script-declared and editor-visible.
+static func is_export(property: Dictionary) -> bool:
+	var usage: int = int(property.get("usage", 0))
+	return usage & PROPERTY_USAGE_SCRIPT_VARIABLE != 0 and usage & PROPERTY_USAGE_EDITOR != 0
+
+
+## Every exported script property of `node`, in declaration order (schema-agnostic, P8).
+static func exported_properties(node: Object) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if node == null:
+		return result
+	for property: Dictionary in node.get_property_list():
+		if is_export(property):
+			result.append(property)
+	return result
+
+
+static func export_property(node: Object, key: String) -> Dictionary:
+	for property: Dictionary in exported_properties(node):
+		if str(property["name"]) == key:
+			return property
+	return {}
+
+
 func save_pattern(label: String) -> Dictionary:
 	finish_pointer()
 	if selection().is_empty():
@@ -755,7 +860,7 @@ func command_for(node: Node, op: String, params: Dictionary = {}) -> WeftluminCo
 func command_constructors() -> Array[Callable]:
 	return [
 		set_selection_property, nudge, delete_selection, duplicate_selection, add_prop,
-		begin_drag, drag_to, end_drag,
+		begin_drag, drag_to, end_drag, set_primary_export, place_placeable, add_instance,
 	]
 
 
@@ -808,6 +913,8 @@ func _check_command(command: WeftluminCommand) -> Dictionary:
 		return refusal
 	match command.op:
 		OP_SET:
+			if command.params.has("export"):
+				return _export_refusal(node, str(command.params["export"]), str(command.params.get("value_text", "")))
 			var key: String = str(command.params.get("key", ""))
 			if not LayoutOverrides.REPLAYABLE_PROPERTY_KEYS.has(key):
 				return _blocked(
@@ -817,6 +924,8 @@ func _check_command(command: WeftluminCommand) -> Dictionary:
 			if not LayoutOverrides.capture_properties(node as Node2D).has(key):
 				return _blocked(&"property_schema", &"node_has_property", "%s has no %s." % [node.name, key])
 		OP_ADD:
+			if command.params.has("instance"):
+				return _instance_refusal(node, command.params["instance"] as Dictionary)
 			var addition: Dictionary = command.params.get("addition", {}) as Dictionary
 			var layer_name := StringName(str(addition.get("layer", "")))
 			# apply_to_scene places an addition in the FIRST layer of that name; refuse any other
@@ -837,10 +946,13 @@ func _capture(command: WeftluminCommand) -> Dictionary:
 		OP_SET:
 			if not node is Node2D:
 				return {}
+			if command.params.has("export"):
+				return {"value_text": var_to_str(node.get(str(command.params["export"])))}
 			var values: Dictionary = LayoutOverrides.capture_properties(node as Node2D)
 			return {"value": values.get(str(command.params.get("key", "")))}
 		OP_ADD:
-			var child_name: String = str((command.params.get("addition", {}) as Dictionary).get("name", ""))
+			var spec: Dictionary = command.params.get("addition", command.params.get("instance", {})) as Dictionary
+			var child_name: String = str(spec.get("name", ""))
 			return {"present": node != null and node.get_node_or_null(NodePath(child_name)) != null}
 	return {"present": node != null}
 
@@ -866,6 +978,9 @@ func _revert(command: WeftluminCommand) -> Dictionary:
 		_reapply(_gestures[command.id], false)
 		return _allowed()
 	var node: Node = _resolve(command)
+	if command.op == OP_SET and node is Node2D and command.params.has("export"):
+		_set_export(node, str(command.params["export"]), str(command.pre_state.get("value_text", "")))
+		return _allowed()
 	if command.op == OP_SET and node is Node2D:
 		LayoutOverrides.apply_properties(
 			node as Node2D, {str(command.params["key"]): command.pre_state.get("value")}
@@ -879,6 +994,11 @@ func _apply_once(command: WeftluminCommand) -> Dictionary:
 	var node: Node = _resolve(command)
 	match command.op:
 		OP_SET:
+			if command.params.has("export"):
+				var export_key: String = str(command.params["export"])
+				var before: String = str(command.pre_state.get("value_text", var_to_str(node.get(export_key))))
+				_set_export(node, export_key, str(command.params["value_text"]))
+				return {"op": OP_SET, "node": node, "export": export_key, "before": before, "after": str(command.params["value_text"])}
 			var key: String = str(command.params["key"])
 			var path: String = str(command.target["node"])
 			var edit := {"path": path}
@@ -898,6 +1018,11 @@ func _apply_once(command: WeftluminCommand) -> Dictionary:
 			parent.remove_child(node)
 			return {"op": OP_REMOVE, "node": node, "parent": parent, "index": index, "owners": owners}
 		OP_ADD:
+			if command.params.has("instance"):
+				var spec: Dictionary = command.params["instance"] as Dictionary
+				var placed: Node2D = _instantiate(spec)
+				node.add_child(placed)
+				return {"op": OP_ADD, "node": placed, "parent": node, "index": placed.get_index()}
 			var addition: Dictionary = (command.params["addition"] as Dictionary).duplicate(true)
 			LayoutOverrides.apply_to_scene(scene_root, _single(&"additions", addition))
 			var added: Node = node.get_node_or_null(NodePath(str(addition["name"])))
@@ -920,7 +1045,10 @@ func _reapply(record: Dictionary, forward: bool) -> void:
 		match String(step["op"]):
 			OP_SET:
 				var value: Variant = step["after"] if forward else step["before"]
-				LayoutOverrides.apply_properties(node as Node2D, {step["key"]: value})
+				if step.has("export"):
+					_set_export(node as Node, str(step["export"]), str(value))
+				else:
+					LayoutOverrides.apply_properties(node as Node2D, {step["key"]: value})
 			OP_REMOVE:
 				_attach(node as Node, step, not forward)
 			OP_ADD:
@@ -959,6 +1087,9 @@ func _after_history() -> void:
 
 
 func _record(node: Node2D) -> void:
+	# A placed instance lives in the command log only; the layout document cannot carry it.
+	if node.has_meta(PLACED_META):
+		return
 	var index: int = _addition_index(node)
 	if index >= 0:
 		var additions: Array = document["additions"]
@@ -978,6 +1109,8 @@ func _record(node: Node2D) -> void:
 
 
 func _record_removal(node: Node2D) -> void:
+	if node.has_meta(PLACED_META):
+		return
 	var index: int = _addition_index(node)
 	if index >= 0:
 		(document["additions"] as Array).remove_at(index)
@@ -1064,7 +1197,7 @@ func _collect_editable(node: Node, roots: Array[Node], output: Array[Node2D]) ->
 func _is_scratch(node: Node) -> bool:
 	var current: Node = node
 	while current != null and current != scene_root:
-		if current.has_meta(ADDITION_META) and current.owner == null:
+		if (current.has_meta(ADDITION_META) or current.has_meta(PLACED_META)) and current.owner == null:
 			return true
 		current = current.get_parent()
 	return false
@@ -1082,6 +1215,103 @@ func _prune_selection() -> void:
 			_selection.remove_at(index)
 	if not is_instance_valid(_primary) or not _selection.has(_primary):
 		_primary = _selection.back() if not _selection.is_empty() else null
+
+
+## Refusal shape for setting exported `key` on `node` from `var_to_str` text: the property must be
+## an export and the decoded value must be its declared type (an int widens to a float).
+func _export_refusal(node: Node, key: String, text: String) -> Dictionary:
+	var info: Dictionary = export_property(node, key)
+	if info.is_empty():
+		return _blocked(&"property_schema", &"exported_property", "%s has no exported %s." % [node.name, key])
+	if not _fits(info, str_to_var(text), node.get(key)):
+		return _blocked(
+			&"property_type", &"declared_type",
+			"%s expects %s, not %s." % [key, type_string(int(info["type"])), text],
+		)
+	return _allowed()
+
+
+static func _fits(info: Dictionary, value: Variant, current: Variant) -> bool:
+	var declared: int = int(info["type"])
+	if declared == TYPE_FLOAT and typeof(value) == TYPE_INT:
+		return true
+	if typeof(value) != declared or declared == TYPE_OBJECT:
+		return false
+	if declared == TYPE_ARRAY and current is Array:
+		return (current as Array).is_same_typed(value as Array)
+	return true
+
+
+static func _is_position(value: Variant) -> bool:
+	if not value is Array or (value as Array).size() != 2:
+		return false
+	for number: Variant in value:
+		if not (number is float or number is int) or not is_finite(float(number)):
+			return false
+	return true
+
+
+func _set_export(node: Node, key: String, text: String) -> void:
+	var value: Variant = str_to_var(text)
+	if int(export_property(node, key).get("type", TYPE_NIL)) == TYPE_FLOAT:
+		value = float(value)
+	node.set(key, value)
+
+
+func _instance_refusal(parent: Node, spec: Dictionary) -> Dictionary:
+	var child_name: String = str(spec.get("name", ""))
+	if child_name.is_empty() or child_name.validate_node_name() != child_name:
+		return _blocked(&"name", &"valid_name", "%s is not a valid node name." % child_name)
+	if parent.get_node_or_null(NodePath(child_name)) != null:
+		return _blocked(&"name", &"unique_name", "%s already has %s." % [parent.name, child_name])
+	if not _is_position(spec.get("position")):
+		return _blocked(&"property_schema", &"position_pair", "Instance position must be [x, y].")
+	var probe: Node2D = _instantiate(spec, false)
+	if probe == null:
+		return _blocked(
+			&"placeable", &"instantiable_placeable",
+			"Cannot instance %s as a Node2D." % (spec.get("scene", "") if not str(spec.get("scene", "")).is_empty() else spec.get("type", "")),
+		)
+	var refusal: Dictionary = _allowed()
+	var exports: Variant = spec.get("exports", {})
+	if not exports is Dictionary:
+		refusal = _blocked(&"property_schema", &"exports_object", "Instance exports must be an object.")
+	else:
+		for key: Variant in exports:
+			refusal = _export_refusal(probe, str(key), str(exports[key]))
+			if not bool(refusal["allowed"]):
+				break
+	probe.free()
+	return refusal
+
+
+## The node a spec describes: name, position and exports applied before it enters the tree, so
+## its `_ready` sees authored values. `configured == false` skips them (a validation probe).
+func _instantiate(spec: Dictionary, configured: bool = true) -> Node2D:
+	var path: String = str(spec.get("scene", ""))
+	var instance: Node = null
+	if not path.is_empty():
+		var packed: PackedScene = load(path) as PackedScene if ResourceLoader.exists(path) else null
+		instance = packed.instantiate() if packed != null else null
+	else:
+		var type_name := StringName(str(spec.get("type", "")))
+		if ClassDB.class_exists(type_name) and ClassDB.can_instantiate(type_name) and ClassDB.is_parent_class(type_name, &"Node2D"):
+			instance = ClassDB.instantiate(type_name) as Node
+	if not instance is Node2D:
+		if instance != null:
+			instance.free()
+		return null
+	var placed := instance as Node2D
+	if not configured:
+		return placed
+	placed.name = str(spec["name"])
+	var position: Array = spec["position"]
+	placed.position = Vector2(float(position[0]), float(position[1]))
+	var exports: Dictionary = spec.get("exports", {})
+	for key: Variant in exports:
+		_set_export(placed, str(key), str(exports[key]))
+	placed.set_meta(PLACED_META, str(spec.get("placeable", "")))
+	return placed
 
 
 func _layer(layer_name: StringName) -> Node:
