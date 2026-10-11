@@ -35,6 +35,18 @@ func test_set_property_inserts_and_refuses_invalid_targets_without_changes() -> 
 	assert_str(document.serialise()).is_equal(before)
 
 
+func test_set_property_inserts_after_a_body_without_a_stray_blank_line() -> void:
+	# #340: appending to a node that already has properties keeps the section layout exactly.
+	var original: String = '[gd_scene format=3]\n\n[node name="Root" type="Node"]\nvisible = false\n\n[node name="Child" type="Node" parent="."]\nvisible = false\n'
+	var document: RefCounted = Document.parse(original)
+	assert_bool(document.set_property(".", "process_mode", "1")).is_true()
+	assert_bool(document.set_property("Child", "process_mode", "2")).is_true()
+	assert_str(document.serialise()).is_equal(
+		'[gd_scene format=3]\n\n[node name="Root" type="Node"]\nvisible = false\nprocess_mode = 1\n\n'
+		+ '[node name="Child" type="Node" parent="."]\nvisible = false\nprocess_mode = 2\n'
+	)
+
+
 func test_set_property_refuses_mismatched_delimiters_without_changes() -> void:
 	var original: String = '[gd_scene format=3]\n[node name="Root" type="Node"]\n'
 	var document: RefCounted = Document.parse(original)

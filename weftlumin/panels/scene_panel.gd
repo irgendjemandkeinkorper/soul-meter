@@ -33,6 +33,8 @@ var _pattern_name: LineEdit
 var _pattern_list: Tree
 var _layer_picker: OptionButton
 var _syncing_properties := false
+## E3.2 (#340): Blocking / Terrain data painters and the walkability overlay.
+var paint_tools: WeftluminPaintTools = null
 ## E3.1b: the adapter's placeable registry and semantic pickers, and their dock controls.
 var placeables: Array[WeftluminPlaceable] = []
 var actor_palette: WeftluminPlaceablePalette
@@ -100,6 +102,7 @@ func refresh(payload: Dictionary) -> void:
 		if model.grid == null and model.snap_mode == WeftluminSceneModel.Snap.CELL:
 			set_snap_mode(WeftluminSceneModel.Snap.GRID)
 		snap_option.select(model.snap_mode)
+		_attach_painter(scene_root)
 	_rebuild()
 
 
@@ -150,11 +153,15 @@ func commit_pending_input() -> void:
 
 
 func _finish_pointer() -> void:
+	paint_tools.finish_pointer()
 	model.finish_pointer()
 	_redraw()
 
 
 func _on_viewport_input(event: InputEvent, world_position: Vector2) -> void:
+	if paint_tools.pointer_input(event, world_position):
+		_redraw()
+		return
 	_report(model.pointer_input(event, world_position))
 	if model.placeable == null and actor_palette != null:
 		actor_palette.clear_choice()
@@ -173,13 +180,19 @@ func selection_rects() -> Array[Rect2]:
 	var rectangles: Array[Rect2] = []
 	if _host == null or _host.viewport_surface == null:
 		return rectangles
-	var transform: Transform2D = _host.viewport_surface.get_global_transform_with_canvas().affine_inverse() * get_viewport().canvas_transform
+	var transform: Transform2D = world_to_surface()
 	for node: Node2D in model.selection():
 		rectangles.append((transform * model.bounds(node)).grow(DS.SPACE_1))
 	return rectangles
 
 
+## World -> centre-viewport surface coordinates (the inverse of the input route).
+func world_to_surface() -> Transform2D:
+	return _host.viewport_surface.get_global_transform_with_canvas().affine_inverse() * get_viewport().canvas_transform
+
+
 func _draw_selection(surface: Control) -> void:
+	paint_tools.draw_overlay(surface, world_to_surface())
 	var members: Array[Node2D] = model.selection()
 	var rectangles: Array[Rect2] = selection_rects()
 	for index: int in rectangles.size():
@@ -201,6 +214,7 @@ func _on_shortcut(event: InputEventKey) -> void:
 		return
 	match key:
 		KEY_ESCAPE:
+			paint_tools.cancel()
 			model.cancel_drag()
 			model.cancel_placement()
 			if actor_palette != null:
@@ -262,6 +276,10 @@ func _build() -> void:
 	edit_row.add_child(SoulMeterToolPanel._button(
 		"Delete", "Delete", func() -> void: _report(model.delete_selection())
 	))
+	paint_tools = WeftluminPaintTools.new()
+	paint_tools.colors = PAINT_COLORS
+	paint_tools.changed.connect(_redraw)
+	content.add_child(paint_tools)
 	status = SoulMeterToolPanel._label("", &"EditorLabel", true)
 	status.name = "Status"
 	content.add_child(status)
@@ -640,6 +658,83 @@ func _save_pattern() -> void:
 func _save() -> void:
 	commit_pending_input()
 	_report(model.save())
+
+
+## Soul Meter's paintable data layers (#340, §4.6.3). Blocking paints in its own cell space and
+## persists as `tile_map_data`. Terrain matches #281 step 2: a `CombatTerrainLayer` whose cells
+## `GridBattlefieldModel._read_authored_terrain()` reads as GROUND cells, authored as the
+## layer's exported cover/elevation cell lists — so it paints in the ground's lattice.
+func _attach_painter(scene_root: Node) -> void:
+	var painter: WeftluminTilePainter = (
+		WeftluminTilePainter.session_for(model) if _is_session() else WeftluminTilePainter.new()
+	)
+	painter.attach(model)
+	painter.clear_layers()
+	painter.production_live = func() -> bool: return is_instance_valid(_host) and _host.production_owner_live()
+	var ground: TileMapLayer = _field_layer(scene_root, "IsometricGround")
+	var blocking: TileMapLayer = _field_layer(scene_root, "Blocking")
+	var terrain := _field_layer(scene_root, "Terrain") as CombatTerrainLayer
+	if ground != null and ground.tile_set != null:
+		if blocking != null and blocking.tile_set != null:
+			painter.add_layer(&"Blocking", blocking, blocking, {"kind": WeftluminTilePainter.STORE_TILES}, [
+				{"label": "Blocked", "tile": [0, 0, 0, 0]},
+				{"label": "Erase", "tile": []},
+			], ground)
+		if terrain != null:
+			var lists: Dictionary = {}
+			for entry: Array in [
+				[CombatTerrainLayer.COVER_TILE, "cover_cells"],
+				[CombatTerrainLayer.ELEVATION_ONE_TILE, "elevation_one_cells"],
+				[CombatTerrainLayer.ELEVATION_TWO_TILE, "elevation_two_cells"],
+			]:
+				lists["%d,%d" % [entry[0].x, entry[0].y]] = entry[1]
+			painter.add_layer(&"Terrain", terrain, ground, {"kind": WeftluminTilePainter.STORE_LISTS, "source": 0, "lists": lists}, [
+				_terrain_value("Cover", CombatTerrainLayer.COVER_TILE, DS.MOTE_3),
+				_terrain_value("Elevation 1", CombatTerrainLayer.ELEVATION_ONE_TILE, DS.BRONZE_3),
+				_terrain_value("Elevation 2", CombatTerrainLayer.ELEVATION_TWO_TILE, DS.BRONZE_4),
+				{"label": "Erase", "tile": []},
+			], ground)
+		# The player's own grid (the instance click-to-move paths on), then the placement grid.
+		var live: IsoGrid = model.grid
+		if live == null:
+			live = IsoGrid.new()
+			live.build(ground, blocking, ClickMoveController.STATIC_CLEARANCE_CELLS, true)
+		painter.add_grid(live, ground, blocking, ClickMoveController.STATIC_CLEARANCE_CELLS, true,
+			"player path, clearance %d cell" % ClickMoveController.STATIC_CLEARANCE_CELLS)
+		var placement := IsoGrid.new()
+		placement.build(ground, blocking, GridPlacement.PLACEMENT_CLEARANCE_CELLS, true)
+		painter.add_grid(placement, ground, blocking, GridPlacement.PLACEMENT_CLEARANCE_CELLS, true,
+			"placement, clearance %d cells" % GridPlacement.PLACEMENT_CLEARANCE_CELLS)
+	paint_tools.bind(painter)
+
+
+## The overlay fill reuses the DS translucency for a layer drawn over the scene.
+const PAINT_COLORS := {
+	"blocked": Color(DS.CINDER_3, DS.FACADE_OCCLUDED_ALPHA),
+	"blocked_edge": DS.CINDER_2,
+	"walkable": Color(DS.STATE_CONSTANT, DS.FACADE_OCCLUDED_ALPHA),
+	"preview": DS.BRONZE_4,
+	"caption": DS.PARCHMENT,
+	"caption_back": DS.STONE_0,
+}
+
+
+static func _terrain_value(label: String, atlas: Vector2i, color: Color) -> Dictionary:
+	return {"label": label, "tile": [0, atlas.x, atlas.y, 0], "color": color}
+
+
+## A field's ground or blocking layer through its `FieldMap` (interiors name them `FieldGround` /
+## `FieldBlocking`); any other layer by name.
+static func _field_layer(scene_root: Node, layer_name: String) -> TileMapLayer:
+	if scene_root == null:
+		return null
+	var pending: Array[Node] = [scene_root]
+	while not pending.is_empty() and layer_name in ["IsometricGround", "Blocking"]:
+		var node: Node = pending.pop_front()
+		if node is FieldMap:
+			return (node as FieldMap).ground() if layer_name == "IsometricGround" else (node as FieldMap).blocking()
+		pending.append_array(node.get_children())
+	return scene_root.find_child(layer_name, true, false) as TileMapLayer
 
 
 static func _grid_for(scene_root: Node) -> IsoGrid:
