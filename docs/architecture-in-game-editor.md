@@ -460,6 +460,18 @@ hard-coded fields. Portrait/sprite pickers use the existing texture-level resolv
 > as `edge_delta` and `CombatRules.charge_speed_attribute` names. The tag names the shape that
 > actually ships — retagging is F3b, blocked on #281 (`docs/architecture-dramgid.md` §3.9). The
 > `recruit` kind is not opened yet (E5.1).
+>
+> **Landed 2026-10-11 (E5.1, #347), the editor half.** `WeftluminCharactersKind`
+> (`weftlumin/kinds/characters.gd`) holds the open kind and stat-schema registries. The adapter
+> declares `npc`, `archetype` and `recruit`, plus `dramgid.v1` and `six-stat.v1`. The shipped
+> canon flattened the shape shown above: `portrait_path` is a top-level string and the npc
+> placement is `placement_anchor` + `placement_offset`. The kind validates that landed shape, and
+> it accepts `sprite_unit_id` as an optional field. A `recruit` requires `vault_id`, which is
+> checked against the vault index by `PartyMember.vault_id_refusal`, never renamed and never
+> generated. The kind also requires the `recruit` block shown above. `CanonReader` and the seeders
+> do not open `recruit` yet. `tools/generate_gloot.gd` emits the roster and placements from canon
+> npc rows, and the output is byte-identical. The Characters panel is described in
+> `docs/weftlumin.md`.
 
 ### 4.8 Quests and dialogue wiring (rulings 4, 10)
 

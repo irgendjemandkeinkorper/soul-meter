@@ -28,6 +28,8 @@ extends Node
 ##   res://globals/default_fizzle_table.tres     — generated #88 runtime resource
 ##   res://data/generated/dom_npc_roster.json    — Dom's 60 authored townsfolk
 ##   res://data/generated/dom_npc_placements.json — scene anchors and offsets
+##       (both emitted from `canon/<hub>/characters/*.json`, `kind: "npc"`, through the
+##       town seeder's derivation — E5.1 / #347; Pandora still supplies the faction check)
 ##   res://dialogue/dom_townsfolk.dialogue       — thin generated placeholder dialogue
 ## `data/generated/location_index.json` is NOT emitted here: it is built from canon by
 ## tools/generate_locations.gd (E3.3a / #341), alongside the `world/locations` definitions.
@@ -72,6 +74,8 @@ const QUEST_INVOLVEMENT_TYPES := [
 	"giver", "target", "information", "gate", "state_change", "reputation_reaction"
 ]
 const StableIdsScript := preload("res://globals/stable_ids.gd")
+const SeedPandoraScript := preload("res://tools/seed_pandora.gd")
+const TownNpcSeederScript := preload("res://tools/seed_town_npcs.gd")
 ## #136's element interaction table. Kept in its own file so the matrix logic is
 ## reviewable on its own, but folded into this generator's single drift check so
 ## CI covers it like every other Pandora-derived artifact.
@@ -252,7 +256,6 @@ static func generate(check_only: bool = false) -> Dictionary:
 
 
 static func _npc_artifacts() -> Dictionary:
-	var root := _root_by_name("NPCs")
 	var faction_root := _root_by_name("Factions")
 	var valid_factions := {}
 	for faction: PandoraEntity in Pandora.get_all_entities(faction_root):
@@ -261,25 +264,47 @@ static func _npc_artifacts() -> Dictionary:
 		var faction_id := faction.get_string("Vault Id")
 		if not faction_id.is_empty():
 			valid_factions[faction_id] = true
+	return npc_artifacts_from_canon(
+		SeedPandoraScript.CanonReader.load("characters"), valid_factions
+	)
+
+
+## The roster, placements and placeholder dialogue from `canon/<hub>/characters/*.json`,
+## `kind: "npc"` (spec §4.7, E5.1 / #347). Each document goes through the town seeder's own
+## derivation (`seed_town_npcs.gd` `_npc()`: greetings, facing, idle phase, model index, the
+## organic outdoor scatter), so the rows are exactly the ones that seeder writes into Pandora
+## and the `CANON-SEED` drift stage keeps proving that. Other character kinds are skipped.
+static func npc_artifacts_from_canon(
+	documents: Array[Dictionary], valid_factions: Dictionary
+) -> Dictionary:
+	var seeder: Node = TownNpcSeederScript.new()
+	var townsfolk: Array[Dictionary] = []
+	for document: Dictionary in documents:
+		if String(document.get("kind", "")) != "npc":
+			continue
+		assert(
+			TownNpcSeederScript.PLACEMENT_ANCHORS.has(document.get("placement_anchor", "")),
+			"Dom NPC '%s' names an unknown placement anchor" % document.get("id", "")
+		)
+		townsfolk.append(seeder._npc(document))
+	seeder.free()
 
 	var rows_by_id := {}
 	var placements_by_id := {}
 	var display_names := {}
 	var quest_involved_count := 0
-	for entity: PandoraEntity in Pandora.get_all_entities(root):
-		if entity is PandoraCategory:
-			continue
-		if not entity.has_entity_property("Town Id") or entity.get_string("Town Id") != "dom":
+	for entity: Dictionary in townsfolk:
+		if String(entity["Town Id"]) != "dom":
 			continue
 
-		var npc_id := entity.get_string("NPC Id")
-		var display_name := entity.get_string("Display Name")
-		var role := entity.get_string("Role")
-		var home := entity.get_string("Home")
-		var district := entity.get_string("District")
-		var faction_id := entity.get_string("Faction Id")
-		var portrait_id := entity.get_string("Portrait Id")
-		var portrait_path := entity.get_string("Portrait Path")
+		var npc_id := String(entity["NPC Id"])
+		var display_name := String(entity["Display Name"])
+		var role := String(entity["Role"])
+		var home := String(entity["Home"])
+		var district := String(entity["District"])
+		var faction_id := String(entity["Faction Id"])
+		var portrait_id := String(entity["Portrait Id"])
+		var portrait_path := String(entity["Portrait Path"])
 		var dialogue_title := "dom_%s" % npc_id.replace("-", "_").replace("/", "_")
 		assert(
 			StableIdsScript.is_valid(StableIdsScript.ACTOR, npc_id),
@@ -309,7 +334,7 @@ static func _npc_artifacts() -> Dictionary:
 		)
 
 		var hooks: Array[Dictionary] = []
-		var hook_values := _parse_json_array(entity.get_string("Quest Hooks"), "Quest Hooks", npc_id)
+		var hook_values := _parse_json_array(String(entity["Quest Hooks"]), "Quest Hooks", npc_id)
 		for hook_value: Variant in hook_values:
 			assert(hook_value is Dictionary, "Dom NPC '%s' has a non-object quest hook" % npc_id)
 			var hook: Dictionary = hook_value.duplicate(true)
@@ -346,15 +371,15 @@ static func _npc_artifacts() -> Dictionary:
 
 		# Pandora offsets retain their authored units; Wave 3c doubles interior
 		# layout only. Marker anchors are already migrated in the room scenes.
-		var placement_scene := entity.get_string("Placement Scene")
+		var placement_scene := String(entity["Placement Scene"])
 		var layout_factor := 2.0 if placement_scene.begins_with("res://world/interiors/") else 1.0
 		var placement := {
 			"scene": placement_scene,
-			"anchor": entity.get_string("Placement Anchor"),
-			"offset": [entity.get_float("Placement X") * layout_factor, entity.get_float("Placement Y") * layout_factor],
-			"facing": entity.get_string("Facing"),
-			"idle_phase": entity.get_float("Idle Phase"),
-			"model_index": entity.get_integer("Model Index"),
+			"anchor": String(entity["Placement Anchor"]),
+			"offset": [float(entity["Placement X"]) * layout_factor, float(entity["Placement Y"]) * layout_factor],
+			"facing": String(entity["Facing"]),
+			"idle_phase": float(entity["Idle Phase"]),
+			"model_index": int(entity["Model Index"]),
 		}
 		assert(FileAccess.file_exists(placement["scene"]), "Missing placement scene for %s" % npc_id)
 		assert(not str(placement["anchor"]).is_empty(), "Missing placement anchor for %s" % npc_id)
@@ -376,14 +401,14 @@ static func _npc_artifacts() -> Dictionary:
 			"path": DOM_NPC_DIALOGUE_PATH,
 			"title": dialogue_title,
 			"stable_id": StableIdsScript.dialogue_node(dialogue_title),
-			"greeting": entity.get_string("Dialogue Greeting"),
-			"context": entity.get_string("Dialogue Context"),
-			"farewell": entity.get_string("Dialogue Farewell"),
+			"greeting": String(entity["Dialogue Greeting"]),
+			"context": String(entity["Dialogue Context"]),
+			"farewell": String(entity["Dialogue Farewell"]),
 			# Optional band-gated greeting variants (empty = no reactivity);
 			# the reaction faction is the NPC's own Faction Id.
-			"hostile": entity.get_string("Dialogue Hostile"),
-			"warm": entity.get_string("Dialogue Warm"),
-			"faction_id": entity.get_string("Faction Id"),
+			"hostile": String(entity["Dialogue Hostile"]),
+			"warm": String(entity["Dialogue Warm"]),
+			"faction_id": String(entity["Faction Id"]),
 		}
 		_validate_dialogue_text(npc_id, dialogue)
 		var portrait := {

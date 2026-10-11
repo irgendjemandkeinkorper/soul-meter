@@ -45,6 +45,7 @@ const PANEL_SCENES: Array[String] = [
 	"res://weftlumin/panels/dialogue_panel.tscn",
 	"res://weftlumin/panels/quest_panel.tscn",
 	"res://weftlumin/panels/location_panel.tscn",
+	"res://weftlumin/panels/character_panel.tscn",
 ]
 
 
@@ -91,6 +92,13 @@ func placeables() -> Array[WeftluminPlaceable]:
 		result.append(WeftluminPlaceable.make(
 			row[0], row[1], row[2], packed, &"" if packed != null else StringName(source), row[4]
 		))
+	return result
+
+
+## Authoring kinds (§4.2). The characters kind carries Soul Meter's open registries — character
+## kinds npc/archetype/recruit and stat schemas dramgid.v1/six-stat.v1 (§4.7, E5.1 / #347).
+func kinds() -> Array[WeftluminKind]:
+	var result: Array[WeftluminKind] = [WeftluminCharactersKind.soul_meter()]
 	return result
 
 
