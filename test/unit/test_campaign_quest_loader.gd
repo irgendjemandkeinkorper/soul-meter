@@ -87,8 +87,6 @@ func test_encounter_edit_preserves_unchanged_quest_resource_and_progress() -> vo
 	_write_json(PACKAGE_PATH + "/encounters/test.json", {
 		"encounter_id": "loader-test-fight", "display_name": "First fight",
 		"enemies": [{"archetype_id": "bog-wight"}],
-		"grid": {"dimensions": [7, 5], "cover": [], "elevation": []},
-		"weather_default": "",
 	})
 	var second: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH)
 	assert_array(second.errors).is_empty()

@@ -228,6 +228,11 @@ func test_the_combat_lab_cannot_start_inside_a_live_dialogue_lab_session() -> vo
 	# a non-LIFO restore reinstates this session's dirty state after it already
 	# cleaned up. They are mutually exclusive rather than nested.
 	var encounter := {"encounter_id": EncounterIds.BOG_WIGHT}
+	# The combat lab opens sessions on a live field (Battle.start_set_piece, spec §4.9).
+	var scene: Node = (load("res://world/test_room.tscn") as PackedScene).instantiate()
+	add_child(scene)
+	auto_free(scene)
+	await get_tree().process_frame
 	var combat_lab: Node = auto_free(CombatLabScript.new()) as Node
 	add_child(combat_lab)
 	assert_bool(bool(combat_lab.call("host_in_panel", CombatLabScript.SANDBOX_OWNER))).is_true()

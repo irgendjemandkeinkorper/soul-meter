@@ -478,6 +478,7 @@ func test_reseeding_spells_and_effects_creates_no_duplicates() -> void:
 
 
 func test_location_documents_cover_the_twelve_world_map_rows() -> void:
+	# Scene-only location documents (E3.3a / #341) share the directory and are skipped here.
 	var locations: Array[Dictionary] = SeedPandora.CanonReader.load("locations")
 	assert_int(locations.size()).is_equal(12)
 	for row: Dictionary in locations:
@@ -501,12 +502,21 @@ func test_the_generated_index_ids_are_the_canon_ids() -> void:
 	var index_ids: Array[String] = []
 	for row: Variant in index.get("locations", []):
 		index_ids.append(String((row as Dictionary)["id"]))
+	# Since E3.3a (#341) the index is built from canon by tools/generate_locations.gd and covers
+	# every location document — the twelve gazetteer cities this reader seeds AND the scene-only
+	# locations it skips — so every gazetteer id must be in it, under the same spelling.
 	var canon_ids: Array[String] = []
 	for row: Dictionary in SeedPandora.CanonReader.load("locations"):
 		canon_ids.append(String(row["id"]))
+	var errors: Array[Dictionary] = []
+	var all_ids: Array[String] = []
+	for row: Dictionary in WeftluminLocationsKind.load_canon(errors):
+		all_ids.append(String(row["id"]))
+	assert_array(errors).is_empty()
 	index_ids.sort()
-	canon_ids.sort()
-	assert_array(index_ids).is_equal(canon_ids)
+	all_ids.sort()
+	assert_array(index_ids).is_equal(all_ids)
+	assert_array(index_ids).contains(canon_ids)
 
 
 func test_the_agreement_field_stays_the_authored_string() -> void:

@@ -44,6 +44,7 @@ const PANEL_SCENES: Array[String] = [
 	"res://weftlumin/panels/combat_lab_panel.tscn",
 	"res://weftlumin/panels/dialogue_panel.tscn",
 	"res://weftlumin/panels/quest_panel.tscn",
+	"res://weftlumin/panels/location_panel.tscn",
 ]
 
 

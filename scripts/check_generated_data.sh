@@ -48,7 +48,7 @@ run_drift_check() {
 report_working_tree() {
 	echo "--- tracked files that differ from HEAD at failure time ---" >&2
 	git --no-pager status --porcelain -- . ':!project.godot' >&2 || true
-	git --no-pager diff -- assets/generated data/generated >&2 || true
+	git --no-pager diff -- assets/generated data/generated world/locations >&2 || true
 	echo "--- end working tree report ---" >&2
 }
 
@@ -60,6 +60,10 @@ run_drift_check \
 	"CanonSeedDriftCheck" \
 	"res://tools/seed_pandora.gd" \
 	"^CANON-SEED: no drift\.$"
+run_drift_check \
+	"LocationsDriftCheck" \
+	"res://tools/generate_locations.gd" \
+	"^LOCATIONS-GEN: no drift\.$"
 run_drift_check \
 	"IsometricSpriteDriftCheck" \
 	"res://tools/render_isometric_sprites.gd" \
