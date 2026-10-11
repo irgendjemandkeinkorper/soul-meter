@@ -70,8 +70,9 @@ patternable in it is refused outright.
 
 The format (`globals/layout_patterns.gd`, schema 1) is deliberately editor-agnostic: it knows
 about layers, textures, transforms, and offsets, and nothing about F10's UI. Weftlumin re-hosts
-the same library later without a migration. A pattern worth keeping can be promoted out of
-`user://` into the repo by hand — like scratch overrides, nothing under `user://` is canonical.
+the same library without a migration (#370). A pattern worth keeping is promoted out of
+`user://` into `res://weftlumin/patterns/` with the Weftlumin browser's **Promote to repo**. Like
+scratch overrides, nothing under `user://` is canonical. Repo patterns are read-only in the browser.
 
 ## Scratch override files
 
