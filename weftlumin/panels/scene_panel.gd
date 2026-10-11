@@ -35,6 +35,12 @@ var _layer_picker: OptionButton
 var _syncing_properties := false
 ## E3.2 (#340): Blocking / Terrain data painters and the walkability overlay.
 var paint_tools: WeftluminPaintTools = null
+## E3.1b: the adapter's placeable registry and semantic pickers, and their dock controls.
+var placeables: Array[WeftluminPlaceable] = []
+var actor_palette: WeftluminPlaceablePalette
+var export_inspector: WeftluminExportInspector
+var _pickers: Dictionary = {}
+var _placeable_scenes: Dictionary = {}
 
 
 func _init() -> void:
@@ -53,6 +59,12 @@ func configure(host: WeftluminShell) -> void:
 		# The adapter owns the editable-roots list; the panel only forwards to it.
 		model.editable_roots_provider = func(scene_root: Node) -> Array[Node]:
 			return adapter.editable_roots(scene_root)
+		placeables = adapter.placeables()
+		_pickers = adapter.pickers()
+	for entry: WeftluminPlaceable in placeables:
+		if entry.scene != null:
+			_placeable_scenes[entry.scene_path()] = true
+	_wire_model()
 	_build()
 	model.selection_changed.connect(_sync_to_tree)
 	model.scene_changed.connect(_rebuild)
@@ -80,6 +92,7 @@ func refresh(payload: Dictionary) -> void:
 		if model.bus == null:
 			model.configure(scene_root)
 		model.editable_roots_provider = provider
+		_wire_model()
 		model.selection_changed.connect(_sync_to_tree)
 		model.scene_changed.connect(_rebuild)
 		if scene_root != null and not scene_root.tree_exiting.is_connected(_on_scene_exiting):
@@ -91,6 +104,18 @@ func refresh(payload: Dictionary) -> void:
 		snap_option.select(model.snap_mode)
 		_attach_painter(scene_root)
 	_rebuild()
+
+
+## Placeable actors are editable wherever they stand (ruling 8), alongside the layout tool's own
+## predicate; placement snaps to the nearest open walkable cell (§4.6.4).
+func _wire_model() -> void:
+	model.host_predicate = func(node: Node) -> bool:
+		return LayoutOverrides.is_layout_editable(node) or _placeable_scenes.has(node.scene_file_path)
+	model.placement_snap = func(world_position: Vector2) -> Variant:
+		var scene_root := model.scene_root as Node2D
+		if scene_root == null or not scene_root.is_inside_tree():
+			return null
+		return GridPlacement.open_cell_center_near(scene_root, world_position)
 
 
 func commands() -> Array[Callable]:
@@ -138,6 +163,8 @@ func _on_viewport_input(event: InputEvent, world_position: Vector2) -> void:
 		_redraw()
 		return
 	_report(model.pointer_input(event, world_position))
+	if model.placeable == null and actor_palette != null:
+		actor_palette.clear_choice()
 	_refresh_inspector()
 	_redraw()
 
@@ -190,6 +217,8 @@ func _on_shortcut(event: InputEventKey) -> void:
 			paint_tools.cancel()
 			model.cancel_drag()
 			model.cancel_placement()
+			if actor_palette != null:
+				actor_palette.clear_choice()
 		KEY_DELETE: _report(model.delete_selection())
 		KEY_D:
 			if event.ctrl_pressed: _report(model.duplicate_selection())
@@ -359,7 +388,9 @@ func _refresh_status() -> void:
 		lines.append("%d selected · primary %s" % [members.size(), model.primary().name])
 	lines.append(SNAP_LABELS[model.snap_mode])
 	lines.append("Unsaved changes" if model.is_dirty() else "Saved")
-	if not model.texture_path.is_empty():
+	if model.placeable != null:
+		lines.append("Placing %s · Shift repeats" % model.placeable.display)
+	elif not model.texture_path.is_empty():
 		lines.append("Placing %s · Shift repeats" % model.texture_path.get_file())
 	elif not model.pattern.is_empty():
 		lines.append("Stamping %s · Shift repeats" % model.pattern.get("name", "pattern"))
@@ -375,6 +406,8 @@ func _refresh_inspector() -> void:
 		return
 	var lead: Node2D = model.primary()
 	_sync_properties(lead)
+	if export_inspector != null:
+		export_inspector.inspect(lead)
 	if lead == null:
 		_host.inspector.text = "INSPECTOR\nSelect a scene node."
 		return
@@ -423,6 +456,13 @@ func _mount_tools() -> void:
 		toggle.toggled.connect(_toggle_property.bind(String(entry[0])))
 		_properties.add_child(toggle)
 		_toggles[entry[0]] = toggle
+	export_inspector = WeftluminExportInspector.new()
+	export_inspector.pickers = _pickers
+	export_inspector.commit = func(key: String, value: Variant) -> Dictionary:
+		var outcome: Dictionary = model.set_primary_export(key, value)
+		_report(outcome)
+		return outcome
+	_properties.add_child(export_inspector)
 	var palette_slot: Node = _host.root.find_child("Palette", true, false)
 	if palette_slot != null:
 		for child: Node in palette_slot.get_children():
@@ -511,11 +551,30 @@ func _resize(factor: float) -> void:
 		_report(model.set_primary_properties({"scale": [signf(lead.scale.x) * clampf(absf(lead.scale.x) * factor, 0.01, 20), signf(lead.scale.y) * clampf(absf(lead.scale.y) * factor, 0.01, 20)]}))
 
 
+## The Palette slot holds two tabs: the former dressing palette (first, as before) and the
+## registry-driven actor palette (E3.1b).
 func _build_palette(slot: Node) -> void:
+	var tabs := TabContainer.new()
+	tabs.name = "PaletteTabs"
+	tabs.theme_type_variation = &"EditorTabContainer"
+	slot.add_child(tabs)
+	tabs.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var content := VBoxContainer.new()
+	content.name = "Dressing"
 	content.theme_type_variation = &"EditorColumn"
-	slot.add_child(content)
-	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	tabs.add_child(content)
+	actor_palette = WeftluminPlaceablePalette.new()
+	actor_palette.name = "Actors"
+	actor_palette.scorer = func(query: String, text: String) -> int:
+		return WeftluminSceneModel.Patterns.fuzzy_score(query, text)
+	actor_palette.set_placeables(placeables)
+	actor_palette.placeable_chosen.connect(func(entry: WeftluminPlaceable) -> void:
+		model.choose_placeable(entry)
+		_palette.deselect_all()
+		_pattern_list.deselect_all()
+		_refresh_status()
+	)
+	tabs.add_child(actor_palette)
 	_layer_picker = SoulMeterToolPanel._option("Layer")
 	for layer_name: StringName in LayoutOverrides.DRESSING_LAYERS:
 		_layer_picker.add_item(String(layer_name))
@@ -537,6 +596,7 @@ func _build_palette(slot: Node) -> void:
 	_palette.item_selected.connect(func() -> void:
 		model.choose_texture(str(_palette.get_selected().get_metadata(0)))
 		_pattern_list.deselect_all()
+		actor_palette.clear_choice()
 	)
 	_pattern_name = LineEdit.new()
 	_pattern_name.theme_type_variation = &"EditorLineEdit"
@@ -547,6 +607,7 @@ func _build_palette(slot: Node) -> void:
 	_pattern_list.item_selected.connect(func() -> void:
 		model.choose_pattern(_pattern_list.get_selected().get_metadata(0) as Dictionary)
 		_palette.deselect_all()
+		actor_palette.clear_choice()
 	)
 	_populate_palette()
 	_refresh_patterns()
