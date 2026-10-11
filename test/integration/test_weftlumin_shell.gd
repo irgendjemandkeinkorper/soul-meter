@@ -427,5 +427,101 @@ func test_rendered_dock_pointer_zoom_and_close() -> void:
 		current.visible = visible_before
 
 
+## #478: the viewport / bottom-dock boundary opens at about 30% of the screen and its clamps keep
+## both the bottom tab bar and the viewport usable.
+func test_dock_splitter_opens_at_default_share_and_clamps_both_sides() -> void:
+	var shell := _open()
+	shell.reset_dock_height()
+	await _layout()
+	var screen := shell.root.size.y
+	var expected := roundf(screen * WeftluminShell.DEFAULT_DOCK_FRACTION)
+	assert_float(shell.dock_height()).is_equal_approx(expected, 1.0)
+	assert_float(shell.dock_height()).is_equal_approx(shell.default_dock_height(), 1.0)
+	var minimum := float(shell.root.get_theme_constant(&"dock_height", &"EditorTabContainer"))
+	shell.set_dock_height(0.0)
+	await _layout()
+	assert_float(shell.dock_height()).is_equal_approx(minimum, 1.0)
+	assert_float(shell.bottom_tabs.get_tab_bar().size.y).is_greater(0.0)
+	shell.set_dock_height(screen * 4.0)
+	await _layout()
+	var viewport_side := shell.dock_split.get_child(0) as Control
+	assert_float(viewport_side.size.y).is_greater_equal(minimum)
+	assert_float(shell.viewport_surface.size.y).is_greater_equal(minimum)
+	assert_float(shell.dock_height()).is_less(screen)
+	shell.reset_dock_height()
+
+
+## Drag the handle with real pointer edges (a fresh press and release), then close and reopen: the
+## height survives for the session. A double-click on the handle restores the default and
+## forgets it.
+func test_dock_splitter_drag_resizes_persists_and_double_click_resets() -> void:
+	var shell := _open()
+	shell.reset_dock_height()
+	await _layout()
+	var default_height := shell.dock_height()
+	var handle := shell.dock_split.get_drag_area_control()
+	var start := handle.get_global_rect().get_center()
+	_move(start, false)
+	_press(start, true)
+	_move(start + Vector2(0, -120), true)
+	_press(start + Vector2(0, -120), false)
+	await _layout()
+	var dragged := shell.dock_height()
+	assert_float(dragged).is_greater(default_height + 60.0)
+	assert_float(shell.viewport_surface.size.y).is_greater(0.0)
+
+	shell.close()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_int(WeftluminBootstrap.get_child_count()).is_equal(0)
+	shell = _open()
+	await _layout()
+	assert_float(shell.dock_height()).is_equal_approx(dragged, 1.0)
+
+	# A plain click on the handle leaves the size alone.
+	handle = shell.dock_split.get_drag_area_control()
+	start = handle.get_global_rect().get_center()
+	_move(start, false)
+	_press(start, true)
+	_press(start, false)
+	await _layout()
+	assert_float(shell.dock_height()).is_equal_approx(dragged, 1.0)
+	_press(start, true, true)
+	_press(start, false)
+	await _layout()
+	assert_float(shell.dock_height()).is_equal_approx(default_height, 1.0)
+	shell.close()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	shell = _open()
+	await _layout()
+	assert_float(shell.dock_height()).is_equal_approx(default_height, 1.0)
+
+
+func _layout() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+## A fresh event per edge: push_input keeps the instance, so a shared event would mutate in flight.
+func _press(position: Vector2, pressed: bool, double_click := false) -> void:
+	var click := InputEventMouseButton.new()
+	click.position = position
+	click.global_position = position
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
+	click.pressed = pressed
+	click.double_click = double_click
+	get_viewport().push_input(click)
+
+
+func _move(position: Vector2, held: bool) -> void:
+	var motion := InputEventMouseMotion.new()
+	motion.position = position
+	motion.global_position = position
+	motion.button_mask = MOUSE_BUTTON_MASK_LEFT if held else 0
+	get_viewport().push_input(motion)
+
+
 func _transition(path: String) -> Transition:
 	return GameFlow.get_node(PLAYING + path) as Transition
