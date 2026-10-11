@@ -2,6 +2,8 @@ class_name WeftluminCombatLabPanel
 extends SoulMeterToolPanel
 ## Combat lab tab (§4.9): Combat Lab's model behind the panel contract. Weather resolution, the
 ## forecast == resolution tripwire, session markdown and sandbox containment are the model's.
+## Sessions open through production's two entry points only: `Battle.start_set_piece` for the
+## selected encounter, or `Battle.start_session` when "Opens on" names a field hostile.
 ##
 ## `needs_sandbox`: the shell arms the shared sandbox under this panel's token on activation, and
 ## the model's own session restarts under that same token instead of competing with it. Leaving
@@ -18,6 +20,8 @@ const AIM_LOCATIONS: Array[Array] = [
 ]
 
 var encounter_picker: OptionButton = null
+## "Opens on": the set-piece (selected encounter) or a living field hostile as hop 0.
+var session_picker: OptionButton = null
 var weather_picker: OptionButton = null
 var weather_source: Label = null
 var party_tree: Tree = null
@@ -76,8 +80,10 @@ func _build(content: VBoxContainer) -> void:
 		encounter_picker.set_item_metadata(encounter_picker.item_count - 1, encounter_id)
 	encounter_picker.item_selected.connect(func(_index: int) -> void: refresh_weather_source())
 	setup.add_child(encounter_picker)
+	session_picker = _option("OpensOn")
+	setup.add_child(session_picker)
 	weather_picker = _option("Weather")
-	weather_picker.add_item("Encounter default")
+	weather_picker.add_item("Field default")
 	weather_picker.set_item_metadata(0, model.call("authored_weather_marker"))
 	weather_picker.add_item("CALM (override)")
 	weather_picker.set_item_metadata(1, &"")
@@ -147,6 +153,7 @@ func _build(content: VBoxContainer) -> void:
 
 func refresh(_payload: Dictionary) -> void:
 	_populate_party()
+	_populate_session_picker()
 	refresh_weather_source()
 	_render(_last_payload)
 
@@ -175,6 +182,7 @@ func current_setup() -> Dictionary:
 	var authored_marker := StringName(model.call("authored_weather_marker"))
 	return {
 		"encounter_id": StringName(str(_selected_metadata(encounter_picker))),
+		"first_hostile": _first_hostile_path(),
 		"party_ids": party_ids,
 		"weather_override_enabled": weather_value != authored_marker,
 		"weather_override": &"" if weather_value == authored_marker else weather_value,
@@ -198,6 +206,9 @@ func start() -> void:
 	if bool(model.call("production_battle_is_live")) or bool(model.call("another_sandbox_is_armed")):
 		_set_status(MODEL_SCRIPT.REFUSAL_WARNING)
 	model.call("start_lab_battle", current_setup())
+	var refusal: Dictionary = _last_payload.get("refusal", {})
+	if not refusal.is_empty():
+		_set_status("Session refused: %s" % str(refusal.get("message", "")))
 
 
 func export_session() -> String:
@@ -218,6 +229,28 @@ func refresh_weather_source() -> void:
 		&"" if selected_weather == authored_marker else selected_weather,
 	)
 	weather_source.text = "In effect: %s" % str(resolved.get("label", "CALM"))
+
+
+func _first_hostile_path() -> String:
+	var selected: Variant = _selected_metadata(session_picker)
+	return str(selected) if selected != null else ""
+
+
+## Set-piece first, then every living hostile on the live field, by node path.
+func _populate_session_picker() -> void:
+	var selected := _first_hostile_path()
+	session_picker.clear()
+	session_picker.add_item("Set-piece — selected encounter")
+	session_picker.set_item_metadata(0, "")
+	for hostile: Hostile in model.call("field_hostiles"):
+		var actor := hostile.battle_actor()
+		session_picker.add_item("Ambient — %s (%s)" % [
+			actor.display_name if actor != null else String(hostile.name), String(hostile.name),
+		])
+		session_picker.set_item_metadata(session_picker.item_count - 1, str(hostile.get_path()))
+	for index: int in session_picker.item_count:
+		if str(session_picker.get_item_metadata(index)) == selected:
+			session_picker.select(index)
 
 
 func _populate_party() -> void:
@@ -317,8 +350,11 @@ func _render(payload: Dictionary) -> void:
 	if inspector == null:
 		return
 	aim_controls.visible = bool(payload.get("aim_enabled", false))
+	var refusal: Dictionary = payload.get("refusal", {})
 	if payload.is_empty():
 		session_label.text = "No lab session. Choose an encounter and start a lab battle."
+	elif not refusal.is_empty():
+		session_label.text = "REFUSED — %s" % str(refusal.get("message", ""))
 	else:
 		session_label.text = "RUNNING" if bool(payload.get("running", false)) else "SESSION ENDED"
 	timeline_label.text = _timeline_text(payload.get("timeline", []))
@@ -404,7 +440,13 @@ static func _field_text(payload: Dictionary) -> String:
 	var snapshot: Dictionary = payload.get("snapshot", {})
 	var weather: Dictionary = snapshot.get("weather", {})
 	var weather_id := str(weather.get("element_id", ""))
+	var setup: Dictionary = payload.get("setup", {})
+	var board: Dictionary = setup.get("board", {})
 	var lines: PackedStringArray = [
+		"%s · board %s deployable / %s needed" % [
+			"Ambient session" if str(setup.get("session", "")) == "ambient" else "Set-piece",
+			str(board.get("deployable", "—")), str(board.get("required", "—")),
+		],
 		"Balance %s · band %s" % [
 			str(snapshot.get("balance", "—")), str(snapshot.get("balance_band_id", "—")),
 		],

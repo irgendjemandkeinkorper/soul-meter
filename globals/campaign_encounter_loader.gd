@@ -3,17 +3,13 @@ extends RefCounted
 ## Structural validation and normalization for campaign-owned encounters.
 
 const PackageFilesScript: Script = preload("res://globals/campaign_package_files.gd")
-const ENEMY_FIELDS: Array[String] = [
-	"id",
-	"display_name",
-	"max_hp",
-	"attack",
-	"defense",
-	"balance_affinity",
-	"balance_pressure",
-	"element_id",
-	"edge",
-]
+## Post-F1 an encounter owns actors, spoils, outcomes, speech hooks and `group_id` — not a board
+## and not weather (spec §4.9, F0 D8). These are refused, never accepted and quietly ignored.
+const REFUSED_FIELDS: Dictionary = {
+	"grid": "absent (the grid derives from the field's tiles)",
+	"weather_default": "absent (weather is the location's)",
+}
+const INVALID_CELL := Vector2i(-1, -1)
 
 
 class EncountersKind extends WeftluminKind:
@@ -164,6 +160,15 @@ static func _validate_definition(
 	encounter_id: String, data: Dictionary, file_path: String, errors: Array[Dictionary]
 ) -> Dictionary:
 	var error_count: int = errors.size()
+	for refused_field: String in REFUSED_FIELDS:
+		if data.has(refused_field):
+			_add_error(
+				errors, file_path, refused_field, str(REFUSED_FIELDS[refused_field]),
+				"refused_encounter_field",
+				"Encounter field '%s' is refused: %s." % [
+					refused_field, str(REFUSED_FIELDS[refused_field])
+				]
+			)
 	var display_name: String = _required_string(
 		data, "display_name", file_path, "display_name", errors
 	)
@@ -189,18 +194,9 @@ static func _validate_definition(
 		if not enemy.is_empty():
 			enemies.append(enemy)
 
-	var grid: Dictionary = _validate_grid(
-		data.get("grid"), enemies.size(), file_path, errors
-	)
-	var weather_default: String = _required_string(
-		data, "weather_default", file_path, "weather_default", errors, true
-	)
-	if not weather_default.is_empty() and ElementWheel.index_of(weather_default) < 0:
-		_add_error(
-			errors, file_path, "weather_default", "empty (calm) or real element id",
-			"unknown_element_id",
-			"Weather element '%s' does not exist." % weather_default
-		)
+	if data.has("group_id"):
+		_required_string(data, "group_id", file_path, "group_id", errors)
+	var set_piece: Dictionary = _validate_set_piece(data.get("set_piece"), file_path, errors)
 	var spoils: Array = _validate_spoils(data.get("spoils", []), file_path, errors)
 	_validate_consequences(data, file_path, errors)
 	if errors.size() != error_count:
@@ -209,168 +205,186 @@ static func _validate_definition(
 	result["encounter_id"] = encounter_id
 	result["display_name"] = display_name
 	result["enemies"] = enemies
-	result["grid"] = grid
-	result["weather_default"] = weather_default
 	result["spoils"] = spoils
+	if data.has("set_piece"):
+		result["set_piece"] = set_piece
 	return result
 
 
+## An enemy row names a generated combatant archetype and nothing else. Stats, element and
+## identity are the archetype's (#283): a row that restates them would be a second, silently
+## diverging source of truth, so every other key is refused rather than ignored.
 static func _validate_enemy(
 	value: Variant, file_path: String, field: String, errors: Array[Dictionary]
 ) -> Dictionary:
 	if not value is Dictionary:
 		_add_error(
-			errors, file_path, field, "enemy object",
+			errors, file_path, field, "{\"archetype_id\": id} object",
 			"invalid_field_type", "Enemy row must be an object."
 		)
 		return {}
 	var row: Dictionary = value as Dictionary
-	if row.has("archetype_id"):
-		var archetype_id: String = str(row.get("archetype_id", ""))
-		var inherited: Dictionary = EncounterCatalog.committed_archetype(archetype_id)
-		if inherited.is_empty():
-			_add_error(
-				errors, file_path, field + ".archetype_id",
-				"existing generated combatant archetype id",
-				"unknown_archetype_id",
-				"Combatant archetype '%s' does not exist." % archetype_id
-			)
-		return inherited
-
-	var error_count: int = errors.size()
-	for required_field: String in ENEMY_FIELDS:
-		if not row.has(required_field):
-			_add_error(
-				errors, file_path, field + "." + required_field,
-				"required complete enemy stat field",
-				"missing_required_field",
-				"Complete enemy row requires '%s'." % required_field
-			)
-	for string_field: String in ["id", "display_name", "element_id"]:
-		if row.has(string_field) and (
-			not row[string_field] is String or str(row[string_field]).is_empty()
-		):
-			_add_error(
-				errors, file_path, field + "." + string_field, "non-empty string",
-				"invalid_field_type", "Enemy '%s' must be a non-empty string." % string_field
-			)
-	for number_field: String in [
-		"max_hp", "attack", "defense", "balance_affinity", "balance_pressure", "edge"
-	]:
-		if row.has(number_field) and not _is_whole_number(row[number_field]):
-			_add_error(
-				errors, file_path, field + "." + number_field, "integer",
-				"invalid_field_type", "Enemy '%s' must be an integer." % number_field
-			)
-	if row.has("max_hp") and _is_whole_number(row["max_hp"]) and int(row["max_hp"]) <= 0:
+	var refused: Array[String] = []
+	for key: Variant in row.keys():
+		if str(key) != "archetype_id":
+			refused.append(str(key))
+	refused.sort()
+	for key: String in refused:
 		_add_error(
-			errors, file_path, field + ".max_hp", "positive integer",
-			"unplayable_max_hp", "Enemy max_hp must be positive."
+			errors, file_path, field + "." + key,
+			"absent (the archetype owns every combat stat)",
+			"refused_enemy_field",
+			"Enemy field '%s' is refused; author it on the combatant archetype." % key
 		)
-	if row.has("element_id") and row["element_id"] is String:
-		var element_id: String = str(row["element_id"])
-		if not element_id.is_empty() and ElementWheel.index_of(element_id) < 0:
-			_add_error(
-				errors, file_path, field + ".element_id", "real element id",
-				"unknown_element_id", "Enemy element '%s' does not exist." % element_id
-			)
-	if errors.size() != error_count:
+	if not row.get("archetype_id") is String or str(row.get("archetype_id")).is_empty():
+		_add_error(
+			errors, file_path, field + ".archetype_id", "existing generated combatant archetype id",
+			"missing_required_field", "Enemy row requires 'archetype_id'."
+		)
 		return {}
-	var normalized: Dictionary = row.duplicate(true)
-	for number_field: String in [
-		"max_hp", "attack", "defense", "balance_affinity", "balance_pressure", "edge"
-	]:
-		normalized[number_field] = int(normalized[number_field])
-	return normalized
+	var archetype_id: String = str(row["archetype_id"])
+	var inherited: Dictionary = EncounterCatalog.committed_archetype(archetype_id)
+	if inherited.is_empty():
+		_add_error(
+			errors, file_path, field + ".archetype_id",
+			"existing generated combatant archetype id",
+			"unknown_archetype_id",
+			"Combatant archetype '%s' does not exist." % archetype_id
+		)
+	if not refused.is_empty():
+		return {}
+	return inherited
 
 
-static func _validate_grid(
-	value: Variant,
-	enemy_count: int,
-	file_path: String,
-	errors: Array[Dictionary]
+## `set_piece: {ally_cells: [[x, y], ...]}` — the authored deployment cells of a set-piece
+## (spec §4.9). Shape only: whether the cells exist and are deployable is a question about a
+## scene, answered by `fits_the_board()` against the field the encounter is fought on.
+static func _validate_set_piece(
+	value: Variant, file_path: String, errors: Array[Dictionary]
 ) -> Dictionary:
+	if value == null:
+		return {}
 	if not value is Dictionary:
 		_add_error(
-			errors, file_path, "grid", "grid object with dimensions",
-			"invalid_field_type", "Encounter requires its own grid object."
+			errors, file_path, "set_piece", "{ally_cells: [[x, y], ...]} object",
+			"invalid_field_type", "Encounter set_piece must be an object."
 		)
 		return {}
-	var raw_grid: Dictionary = value as Dictionary
-	var dimensions: Vector2i = _cell(raw_grid.get("dimensions"))
-	if dimensions == Vector2i(-1, -1):
+	var raw: Dictionary = value as Dictionary
+	for key: Variant in raw.keys():
+		if str(key) != "ally_cells":
+			_add_error(
+				errors, file_path, "set_piece." + str(key), "absent",
+				"refused_encounter_field",
+				"Set-piece field '%s' is refused; hostiles are placed in the scene." % str(key)
+			)
+	var raw_cells: Variant = raw.get("ally_cells")
+	if not raw_cells is Array or (raw_cells as Array).is_empty():
 		_add_error(
-			errors, file_path, "grid.dimensions", "[width, height] integer pair",
-			"invalid_grid_dimensions", "Grid dimensions must be two integers."
+			errors, file_path, "set_piece.ally_cells", "non-empty array of [x, y] cells",
+			"invalid_field_type", "Set-piece ally_cells must be a non-empty array."
 		)
 		return {}
-	var normal_ally_count: int = GameState.REQUIRED_COMPANIONS + 1
-	var required_rows: int = maxi(normal_ally_count, enemy_count)
-	if dimensions.x < 2 or dimensions.y < required_rows:
-		_add_error(
-			errors, file_path, "grid.dimensions",
-			"width >= 2 and height >= max(normal ally count, enemy count)",
-			"grid_cannot_fit_combatants",
-			"Grid %dx%d cannot fit %d allies and %d enemies; at least %d rows are required."
-			% [dimensions.x, dimensions.y, normal_ally_count, enemy_count, required_rows]
+	var cells: Array[Vector2i] = []
+	for index: int in (raw_cells as Array).size():
+		var cell: Vector2i = _cell((raw_cells as Array)[index])
+		var field: String = "set_piece.ally_cells[%d]" % index
+		if cell == INVALID_CELL:
+			_add_error(
+				errors, file_path, field, "[x, y] integer pair",
+				"invalid_set_piece_cell", "Set-piece cell must be an integer pair."
+			)
+		elif cells.has(cell):
+			_add_error(
+				errors, file_path, field, "distinct cell",
+				"duplicate_set_piece_cell", "Set-piece cell %s is authored twice." % cell
+			)
+		else:
+			cells.append(cell)
+	return {"ally_cells": cells}
+
+
+## The "fits the board" check, moved off the encounter and onto the scene (spec §4.9, F0 D8:
+## the grid derives from the field's tiles). A board fits when its deployable cells can hold the
+## party and every hostile, and — for a set-piece that authors deployment cells — when each of
+## those cells is deployable on THIS field and there are enough of them for the party.
+##
+## `hostile_count < 0` means "the encounter's own enemies". Refusals follow the FR-606 shape.
+static func fits_the_board(
+	definition: Dictionary,
+	field: FieldMap,
+	party_size: int = GameState.REQUIRED_COMPANIONS + 1,
+	hostile_count: int = -1
+) -> Dictionary:
+	if field == null or field.ground() == null or field.iso_grid() == null:
+		return _board_refusal(
+			&"field_map", "Combat requires a loaded field map with a ready grid.", 0, 0
 		)
-	var cover: Array[Vector2i] = []
-	var raw_cover: Variant = raw_grid.get("cover", [])
-	if not raw_cover is Array:
-		_add_error(
-			errors, file_path, "grid.cover", "array of [x, y] cells",
-			"invalid_field_type", "Grid cover must be an array."
+	var hostiles: int = hostile_count
+	if hostiles < 0:
+		hostiles = (definition.get("enemies", []) as Array).size()
+	var deployable: Dictionary = {}
+	for cell: Vector2i in deployable_cells(field):
+		deployable[cell] = true
+	var required: int = party_size + hostiles
+	if deployable.size() < required:
+		return _board_refusal(
+			&"board_too_small",
+			"The field has %d deployable cells; %d party and %d hostiles need %d."
+			% [deployable.size(), party_size, hostiles, required],
+			deployable.size(), required
 		)
-	else:
-		for index: int in (raw_cover as Array).size():
-			var cell: Vector2i = _cell((raw_cover as Array)[index])
-			if cell == Vector2i(-1, -1):
-				_add_error(
-					errors, file_path, "grid.cover[%d]" % index, "[x, y] integer pair",
-					"invalid_grid_cell", "Cover cell must be an integer pair."
+	var set_piece: Dictionary = definition.get("set_piece", {})
+	var ally_cells: Array = set_piece.get("ally_cells", [])
+	if not set_piece.is_empty():
+		for cell: Variant in ally_cells:
+			if not cell is Vector2i or not deployable.has(cell):
+				return _board_refusal(
+					&"set_piece_cell_not_deployable",
+					"Set-piece cell %s is not a deployable cell on this field." % str(cell),
+					deployable.size(), required
 				)
-			elif not _inside(cell, dimensions):
-				_add_error(
-					errors, file_path, "grid.cover[%d]" % index, "cell inside grid",
-					"grid_cell_outside_dimensions",
-					"Cover cell %s is outside the grid." % cell
-				)
-			else:
-				cover.append(cell)
-	var elevation: Dictionary = {}
-	var raw_elevation: Variant = raw_grid.get("elevation", [])
-	if not raw_elevation is Array:
-		_add_error(
-			errors, file_path, "grid.elevation",
-			"array of {cell: [x, y], height: integer}",
-			"invalid_field_type", "Grid elevation must be an array."
-		)
-	else:
-		for index: int in (raw_elevation as Array).size():
-			var elevation_value: Variant = (raw_elevation as Array)[index]
-			if not elevation_value is Dictionary:
-				_add_error(
-					errors, file_path, "grid.elevation[%d]" % index, "elevation object",
-					"invalid_grid_cell", "Elevation row must be an object."
-				)
-				continue
-			var elevation_row: Dictionary = elevation_value as Dictionary
-			var cell: Vector2i = _cell(elevation_row.get("cell"))
-			if cell == Vector2i(-1, -1) or not _is_whole_number(elevation_row.get("height")):
-				_add_error(
-					errors, file_path, "grid.elevation[%d]" % index,
-					"{cell: [x, y], height: integer}",
-					"invalid_grid_cell", "Elevation row requires an integer cell and height."
-				)
-			elif not _inside(cell, dimensions):
-				_add_error(
-					errors, file_path, "grid.elevation[%d].cell" % index,
-					"cell inside grid", "grid_cell_outside_dimensions",
-					"Elevation cell %s is outside the grid." % cell
-				)
-			else:
-				elevation[cell] = int(elevation_row["height"])
-	return {"dimensions": dimensions, "cover": cover, "elevation": elevation}
+		if ally_cells.size() < party_size:
+			return _board_refusal(
+				&"set_piece_cells_short",
+				"The set-piece authors %d deployment cells for a party of %d."
+				% [ally_cells.size(), party_size],
+				deployable.size(), required
+			)
+	return {
+		"allowed": true,
+		"blocked_by": &"",
+		"nearest_unblock": {},
+		"message": "",
+		"deployable": deployable.size(),
+		"required": required,
+	}
+
+
+## Painted ground cells that static scenery does not block. Whoever is standing on a cell does
+## not make it undeployable: the party and the hostiles are exactly what is being deployed.
+static func deployable_cells(field: FieldMap) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	if field == null or field.ground() == null or field.iso_grid() == null:
+		return cells
+	var grid: IsoGrid = field.iso_grid()
+	for cell: Vector2i in field.ground().get_used_cells():
+		if grid.is_in_bounds(cell) and not grid.is_blocked_for(cell, grid.occupant_of(cell)):
+			cells.append(cell)
+	return cells
+
+
+static func _board_refusal(
+	blocked_by: StringName, message: String, deployable: int, required: int
+) -> Dictionary:
+	return {
+		"allowed": false,
+		"blocked_by": blocked_by,
+		"nearest_unblock": {"type": &"field_map"},
+		"message": message,
+		"deployable": deployable,
+		"required": required,
+	}
 
 
 static func _validate_spoils(
@@ -529,11 +543,7 @@ static func _cell(value: Variant) -> Vector2i:
 		var values: Dictionary = value as Dictionary
 		if _is_whole_number(values.get("x")) and _is_whole_number(values.get("y")):
 			return Vector2i(int(values["x"]), int(values["y"]))
-	return Vector2i(-1, -1)
-
-
-static func _inside(cell: Vector2i, dimensions: Vector2i) -> bool:
-	return cell.x >= 0 and cell.y >= 0 and cell.x < dimensions.x and cell.y < dimensions.y
+	return INVALID_CELL
 
 
 ## Whole means EXACTLY whole, not approximately whole.

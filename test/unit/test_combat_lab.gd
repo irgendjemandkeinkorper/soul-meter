@@ -15,6 +15,8 @@ var _catalog_file_before: String
 var _ng_plus_before: Dictionary
 var _skill_check_before: Dictionary
 var _lab: Node
+## Every lab session opens on a live field (spec §4.9: Battle.start_set_piece/start_session).
+var _field: FieldMap
 
 
 func before_test() -> void:
@@ -39,6 +41,11 @@ func before_test() -> void:
 	# lab must go through the ratified seam (the panel-hosting hook) rather than around it.
 	add_child(_lab)
 	assert_bool(bool(_lab.call("host_in_panel", CombatLabScript.SANDBOX_OWNER))).is_true()
+	var scene: Node = (load("res://world/test_room.tscn") as PackedScene).instantiate()
+	add_child(scene)
+	auto_free(scene)
+	await get_tree().process_frame
+	_field = scene.find_child("FieldMap", true, false) as FieldMap
 
 
 func after_test() -> void:
@@ -486,6 +493,135 @@ func test_restart_controls_cannot_replace_a_running_production_battle() -> void:
 		.is_same(production_controller)
 
 
+## E5.2 (#348, spec §4.9): a catalog encounter opens through production's set-piece entry point,
+## on the live field, and stopping the lab releases the session and its spawned bodies.
+func test_a_lab_session_opens_a_set_piece_through_battle_start_set_piece() -> void:
+	_lab.call("start_test_session", {"encounter_id": EncounterIds.BOG_WIGHT, "seed": 21})
+
+	assert_bool(Battle.session_active).is_true()
+	assert_bool(bool(Battle.get("_ambient_session"))).is_false()
+	assert_str(String(Battle.encounter_id)).is_equal(String(EncounterIds.BOG_WIGHT))
+	var spawned: Array = (Battle.get("_spawned_hostiles") as Array).duplicate()
+	assert_int(spawned.size()).is_equal(Battle.enemies.size())
+	var setup: Dictionary = _lab.get("_setup")
+	assert_str(str(setup["session"])).is_equal("set_piece")
+	var board: Dictionary = setup["board"]
+	assert_int(int(board["deployable"])).is_greater_equal(int(board["required"]))
+	var no_turns: Array[Dictionary] = []
+	var markdown: String = _lab.call("build_session_markdown", setup, no_turns, {})
+	assert_str(markdown).contains("- Session: `set_piece` via `Battle.start_set_piece`")
+
+	_lab.call("stop_test_session")
+	assert_bool(Battle.session_active).is_false()
+	assert_object(Battle.controller).is_null()
+	await get_tree().process_frame
+	for body: Variant in spawned:
+		assert_bool(is_instance_valid(body)).override_failure_message(
+			"set-piece bodies exist only for the lab fight"
+		).is_false()
+
+
+## The ambient half: a field hostile is hop 0 of a `Battle.start_session` session.
+func test_an_ambient_lab_session_opens_on_a_field_hostile_through_battle_start_session() -> void:
+	var hostile := _field.get_parent().get_node("BogWight") as Hostile
+	var offered: Array[Hostile] = _lab.call("field_hostiles")
+	assert_array(offered).contains([hostile])
+
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.LOAM_BOAR, "first_hostile": str(hostile.get_path()),
+		"seed": 22,
+	})
+
+	assert_bool(Battle.session_active).is_true()
+	assert_bool(bool(Battle.get("_ambient_session"))).is_true()
+	assert_str(String(Battle.encounter_id)).is_empty()
+	assert_object(Battle.enemies[0]).is_same(hostile.battle_actor())
+	var setup: Dictionary = _lab.get("_setup")
+	assert_str(str(setup["session"])).is_equal("ambient")
+	var no_turns: Array[Dictionary] = []
+	assert_str(str(_lab.call("build_session_markdown", setup, no_turns, {}))).contains(
+		"via `Battle.start_session`"
+	)
+	_lab.call("stop_test_session")
+	assert_bool(Battle.session_active).is_false()
+
+
+## The fits-the-board check runs against the scene before Battle is touched, and a refusal is
+## reported rather than silent.
+func test_a_set_piece_that_does_not_fit_the_board_is_refused_before_battle_is_touched() -> void:
+	var definition := EncounterCatalog.definition(EncounterIds.BOG_WIGHT).duplicate(true)
+	definition["set_piece"] = {"ally_cells": [Vector2i(-999, -999)]}
+	EncounterCatalog._definitions[String(TEST_ENCOUNTER)] = definition
+	Battle.controller = null
+
+	_lab.call("start_test_session", {"encounter_id": TEST_ENCOUNTER, "seed": 23})
+
+	assert_object(Battle.controller).is_null()
+	assert_bool(Battle.session_active).is_false()
+	assert_bool(bool(_lab.call("sandbox_is_armed"))).is_false()
+	var payload: Dictionary = _lab.call("_inspector_payload")
+	assert_str(str(payload["refusal"]["blocked_by"])).is_equal("set_piece_cell_not_deployable")
+
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "first_hostile": "/root/NoSuchHostile", "seed": 24,
+	})
+	assert_object(Battle.controller).is_null()
+	payload = _lab.call("_inspector_payload")
+	assert_str(str(payload["refusal"]["blocked_by"])).is_equal("composition")
+
+	# A setup that fits clears the refusal.
+	_lab.call("start_test_session", {"encounter_id": EncounterIds.BOG_WIGHT, "seed": 25})
+	payload = _lab.call("_inspector_payload")
+	assert_dict(payload["refusal"]).is_empty()
+	assert_bool(bool(payload["running"])).is_true()
+
+
+## The forecast == resolution tripwire on a session the lab opened through start_set_piece: the
+## controller's own strike forecast is compared with the damage it resolved, and a divergence
+## stays loud after a later match.
+func test_the_tripwire_compares_a_session_strike_and_keeps_a_divergence_loud() -> void:
+	_lab.call("start_test_session", {
+		"encounter_id": EncounterIds.BOG_WIGHT, "party_ids": _current_party_ids(), "seed": 26,
+	})
+	var controller: CombatController = Battle.controller
+	assert_int(controller.state).is_equal(CombatController.State.ALLY_TURN)
+	var grid := controller.battlefield as GridBattlefieldModel
+	var ally_cell: Vector2i = grid.cell_of(controller.active_actor())
+	var target: BattleActor = controller.enemies[0]
+	assert_bool(grid.displace(target, ally_cell + Vector2i(1, 0))["allowed"]).is_true()
+	_lab.call("_capture_pending_forecast")
+	var pending: Dictionary = _lab.get("_pending_forecast")
+	assert_str(str(pending.get("action_id", ""))).is_equal("strike")
+
+	var result: Dictionary = controller.submit_action(&"strike", target)
+
+	assert_bool(bool(result.get("allowed", false))).override_failure_message(str(result)).is_true()
+	var rows: Array[Dictionary] = _lab.get("_turn_rows")
+	assert_str(str(rows[0]["action"])).is_equal("strike")
+	assert_bool(bool(rows[0]["compared"])).is_true()
+	assert_bool(bool(rows[0]["diverged"])).override_failure_message(str(rows[0])).is_false()
+	assert_int(int(rows[0]["forecast"])).is_equal(int(rows[0]["resolution"]))
+
+	# A planted divergence (forecast 7, resolution 9) stays the session's comparison even when
+	# a later action matches.
+	var event := CombatEvent.new()
+	event.actor_id = &"ally-x"
+	event.target_id = &"enemy-x"
+	event.data = {"action_id": &"strike", "damage": 9}
+	_lab.set("_pending_forecast", {
+		"actor_id": &"ally-x", "target_id": &"enemy-x", "action_id": &"strike", "damage": 7,
+	})
+	_lab.call("_record_resolution", event)
+	event.data = {"action_id": &"strike", "damage": 7}
+	_lab.set("_pending_forecast", {
+		"actor_id": &"ally-x", "target_id": &"enemy-x", "action_id": &"strike", "damage": 7,
+	})
+	_lab.call("_record_resolution", event)
+	var comparison: Dictionary = (_lab.call("_inspector_payload") as Dictionary)["comparison"]
+	assert_bool(bool(comparison["diverged"])).is_true()
+	assert_str(str(comparison["differences"])).contains("damage forecast 7 != resolution 9")
+
+
 func _current_party_ids() -> Array[StringName]:
 	var ids: Array[StringName] = []
 	for member: PartyMember in GameState.party:
@@ -493,9 +629,7 @@ func _current_party_ids() -> Array[StringName]:
 	return ids
 
 
+## The suite mounts one field per test in before_test; a second would split the field lookup.
 func _mount_test_room() -> FieldMap:
-	var scene: Node = (load("res://world/test_room.tscn") as PackedScene).instantiate()
-	add_child(scene)
-	auto_free(scene)
 	await get_tree().process_frame
-	return scene.find_child("FieldMap", true, false) as FieldMap
+	return _field
