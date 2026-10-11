@@ -18,13 +18,11 @@ extends WeftluminKind
 ## The `.tres` bake omits the fields the hand-written files omitted, in one fixed order, so a
 ## bake of unchanged canon is byte-identical to the committed definitions.
 ##
-## `no_combat_zone` is canon and is indexed, but nothing reads it yet: `FieldMap.no_combat_zone()`
-## still derives it from the `res://world/interiors/` path prefix. Moving that read onto the data
-## is registry consumption (E3.3b / #342), so `runtime_notes()` flags any document whose value
-## the runtime would currently ignore.
+## `no_combat_zone` is canon and indexed; `LocationRegistry` reads the index and
+## `FieldMap.no_combat_zone()` asks it (E3.3b / #342).
 ##
 ## `register()` stays the base refusal: a live runtime overlay is `LocationRegistry
-## .register_runtime()`, which is E3.3b's.
+## .register_runtime()`.
 
 const SCHEMA := "weftlumin.location.v1"
 const INDEX_SCHEMA := "weftlumin.location_index.v1"
@@ -258,18 +256,11 @@ static func weather_ids() -> Array[String]:
 	return ids
 
 
-## Non-blocking authoring notes for one normalised document.
-static func runtime_notes(row: Dictionary) -> Array[String]:
-	var notes: Array[String] = []
-	if not row.has("scene_path"):
-		return notes
-	var derived: bool = String(row["scene_path"]).begins_with(INTERIOR_SCENES_ROOT)
-	if bool(row["no_combat_zone"]) != derived:
-		notes.append(
-			"no_combat_zone=%s is canon, but FieldMap still derives %s from the scene path until E3.3b (#342)."
-			% [row["no_combat_zone"], derived]
-		)
-	return notes
+## Non-blocking authoring notes for one normalised document: canon values the runtime would
+## ignore. None today — `no_combat_zone` was the last, and `FieldMap.no_combat_zone()` reads it
+## through `LocationRegistry` since E3.3b (#342). Kept as the panel's and bake report's hook.
+static func runtime_notes(_row: Dictionary) -> Array[String]:
+	return []
 
 
 static func _is_stable_id(value: String) -> bool:

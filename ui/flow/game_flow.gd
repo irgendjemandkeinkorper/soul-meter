@@ -53,7 +53,9 @@ static var GARRISON_YARD_TRANSITION_ID: StringName = (
 static var GARRISON_YARD_SCENE: String = (
 	BuildingTransitionRegistry.GARRISON_YARD_ENTER.destination_scene
 )
-## Every scene UIManager should treat as "in gameplay" (see _in_gameplay()).
+## Every scene UIManager should treat as "in gameplay" (see _in_gameplay()). A snapshot of the
+## registry, refreshed on `LocationRegistry.locations_changed`; travel validation queries
+## `LocationRegistry.is_gameplay_scene()` directly (E3.3b / #342).
 var GAMEPLAY_SCENES: Array[String] = _gameplay_scenes()
 ## Project-owned, DS-styled scene running the Maaack LoadingScreen script —
 ## replaces the addon's stock grey screen (never edit the addon itself).
@@ -99,8 +101,14 @@ static func _gameplay_scenes() -> Array[String]:
 	return LocationRegistry.gameplay_scenes()
 
 
+func _on_locations_changed() -> void:
+	GAMEPLAY_SCENES = _gameplay_scenes()
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	if not LocationRegistry.locations_changed.is_connected(_on_locations_changed):
+		LocationRegistry.locations_changed.connect(_on_locations_changed)
 	# Standalone audits run as the SceneTree main loop and quit from _initialize().
 	# Do not start an unrelated asynchronous title-screen load that the audit will
 	# terminate mid-parse.
@@ -453,7 +461,7 @@ func travel(scene_path: String, spawn_id: StringName = &"default") -> bool:
 		return false
 	var location := LocationRegistry.by_scene(scene_path)
 	if location == null:
-		if not GAMEPLAY_SCENES.has(scene_path):
+		if not LocationRegistry.is_gameplay_scene(scene_path):
 			push_error("Refusing travel to non-gameplay scene: %s" % scene_path)
 			return false
 		if not _travel_to_gameplay_scene(scene_path, spawn_id):
@@ -619,7 +627,7 @@ func load_destination(destination: LoadDestination) -> bool:
 	if not ($StateChart/Root/Playing/Active/ToLoading as Transition).evaluate_guard():
 		return false
 	if not destination.scene_path.is_empty():
-		if not GAMEPLAY_SCENES.has(destination.scene_path):
+		if not LocationRegistry.is_gameplay_scene(destination.scene_path):
 			push_error("Refusing load of unknown gameplay scene: %s" % destination.scene_path)
 			return false
 		_target_scene = destination.scene_path
