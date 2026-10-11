@@ -43,6 +43,33 @@ cancels placement. Ctrl+G saves the selected group under the pattern name; selec
 and click to stamp it as one undo step. Patterns retain their relative spacing across layers.
 The adapter still decides editable roots, and the model enforces scene/instance ownership.
 
+### Actors palette and export inspector (E3.1b, #339)
+
+The Palette slot's **Actors** tab lists `adapter.placeables()` (`WeftluminPlaceable`: scene or
+engine class, display, group, default exports), filtered by group and the same fuzzy search. The
+Soul Meter registry is ruling 8's existing actor types: NPC, Hostile, BuildingDoor, TravelExit,
+SMInteractable, Chest, Pickup, InteractiveSwitch and a `Marker2D` spawn marker. ZhavarTelegraph
+is not offered: it is a positionless `Node` overlay and the scene model edits `Node2D`s. Choose an
+entry, then click: the instance lands under the scene root at the nearest open walkable cell
+(`GridPlacement.open_cell_center_near`; Alt or snap off keeps the cursor; Shift repeats), is
+selected, and is one undo step. Placed and existing placeable actors are selectable.
+
+Below the transform fields the Inspector lists the primary's exported script properties from
+`get_property_list()` (`PROPERTY_USAGE_SCRIPT_VARIABLE` + editor-visible), with `@export_group`
+headings and an editor per type and hint: check box, spin box (`@export_range` bounds), enum
+option, line edit, multiline text, `@export_file` choices, vector/rect spin boxes, colour button,
+and a `var_to_str` literal box for arrays and dictionaries. The adapter's `pickers()` table
+(`weftlumin/panels/pickers.gd`, export-excluded) claims properties by name and adds a Pick menu
+plus live validation: flags (grammar-checked through `quest_audit.flag_grammar_violations`),
+factions, locations, spawn ids (of the destination location), dialogue file and title, item ids
+and unit ids. A refused value is shown under its field and changes nothing.
+
+Every placement and export edit is a `scene` command (`add_node` with an `instance` spec;
+`set_property` with `export` + `value_text`), replayable from the command log. They are **not**
+part of the layout scratch document: Save scratch and recovery carry dressing only, so placed
+actors and export edits last for the live scene session until the scene bake (E3.5) consumes the
+log.
+
 History belongs to the live scene and survives closing/reopening the shell. Scratch changes are
 checkpointed through `LayoutRecovery`, including undo/redo, and restored on the next hosted scene
 session. Files retain the existing `user://layout_overrides/` and pattern-library formats. Runtime
@@ -229,5 +256,6 @@ registration are the model's.
 | Release build carries no tool code; unhosted models are inert | `test/integration/test_{dev_console,consequence_timeline,combat_lab,dialogue_lab,quest_editor}_inert.gd`, `test_weftlumin_inert.gd` |
 | Model behaviour | `test/unit/test_{dev_console_commands,consequence_timeline,combat_lab,dialogue_lab,quest_editor,campaign_encounters,campaign_quest_registry}.gd` |
 | Panels in the shell | `test/integration/test_weftlumin_panels.gd`, `test_weftlumin_shell.gd` |
+| Placeables and export inspector (#339) | `test/unit/test_weftlumin_placeables.gd`, `test/integration/test_weftlumin_palette_inspector.gd` (rendered capture with `SOUL_METER_WEFTLUMIN_PALETTE_CAPTURE_DIR`; evidence in `docs/qa/weftlumin-palette-339-2026-10-11/`) |
 
 The original file-to-behaviour migration plan is `docs/weftlumin-test-migration.md` (E1.9).
