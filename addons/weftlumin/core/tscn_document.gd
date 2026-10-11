@@ -56,7 +56,12 @@ func set_property(node_path: String, key: String, value_text: String) -> bool:
 	while insert_at > int(node["body_start_offset"]) and _source_text.substr(insert_at - 1, 1) in ["\n", "\r"]:
 		insert_at -= 1
 	var prefix: String = "" if insert_at == 0 or _source_text.substr(insert_at - 1, 1) == "\n" else _newline()
-	_replace_range(insert_at, insert_at, prefix + key + " = " + value + _newline())
+	# After a property line, the body's own line ending already follows the insertion point;
+	# adding another would leave a stray blank line inside or after the node.
+	var suffix: String = _newline()
+	if not prefix.is_empty() and _source_text.substr(insert_at, 1) in ["\n", "\r"]:
+		suffix = ""
+	_replace_range(insert_at, insert_at, prefix + key + " = " + value + suffix)
 	return true
 
 

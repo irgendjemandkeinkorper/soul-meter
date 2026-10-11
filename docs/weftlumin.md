@@ -73,6 +73,40 @@ checks the outline pixels at each step and its final position, and writes `01-pi
 the capture variable it returns immediately; requesting a capture under headless rendering fails.
 Headless tests do not establish visual correctness.
 
+### Data-layer painters (E3.2, #340)
+
+The Scene tree slot's **Paint data layers** toggle routes viewport clicks to the painters
+(`addons/weftlumin/shell/painter/`) instead of selection. Choose a layer, a brush (Cell, Rect, Line,
+Fill) and a value; press, drag and release paints one stroke, which is one `scene/paint_cells`
+command and one undo step (Ctrl+Z / Ctrl+Shift+Z). Right-click or Escape cancels a stroke.
+
+- **Blocking** paints in its own cell space (`local_to_map(to_local(world))`) and persists as its
+  `tile_map_data`. After every stroke, undo and redo, `IsoGrid.build()` re-runs on the player's own
+  grid (the `ClickMoveController` instance `FieldMap.iso_grid()` returns) and on a placement grid,
+  so walkability changes live.
+- **Terrain** matches #281 step 2: the `CombatTerrainLayer` whose cells
+  `GridBattlefieldModel._read_authored_terrain()` reads as ground cells, persisted as its exported
+  `cover_cells` / `elevation_one_cells` / `elevation_two_cells`. It paints in the ground's lattice and
+  keeps those lists in step with its tiles. No separate `terrain_tiles.tres` exists; the layer's
+  tile set is `world/nav/combat_terrain_tiles.tres`.
+- **Overlay.** The walkability overlay names the grid and clearance it shows: *player path,
+  clearance 1 cell* (`ClickMoveController.STATIC_CLEARANCE_CELLS`) or *placement, clearance 0 cells*
+  (`GridPlacement.PLACEMENT_CLEARANCE_CELLS`).
+- **Bake.** `WeftluminTileBake.bake(text, log_entries)` replays a log's effective `paint_cells`
+  stream against the `.tscn` text, verifying each recorded `pre_state` (cells and layer transform)
+  first, and writes through `TscnDocument.set_packed_bytes()` / `set_property()`. Painting is live
+  only until baked; the scene scratch file does not carry tiles.
+- **`normalize_blocking_scale`** exists only on the bake bus, never on a live scene. It re-authors a
+  scaled `Blocking` at scale 1 in its ground's lattice using the same five sample points as
+  `IsoGrid`, so placement walkability is identical; footprint cells just past the ground lattice are
+  kept (they still collide) and add the player's one-cell clearance on the lattice's edge row. Dom's
+  `Blocking` is **not** re-authored (ruling 9); `test_weftlumin_tile_bake.gd` dry-runs it in memory.
+
+Suites: `test/unit/test_weftlumin_{brushes,tile_painter,tile_bake}.gd` and
+`test/integration/test_weftlumin_painters.gd`. With `SOUL_METER_PAINTER_CAPTURE_DIR` set (under Xvfb or
+a display), the integration suite writes the stroke preview and both overlays; the #340 evidence is
+in `docs/qa/weftlumin-painters-340-2026-10-11/`.
+
 ## Enablement and release safety
 
 Open Weftlumin with **F12** (the remappable `weftlumin_toggle` action) in a debug build started
