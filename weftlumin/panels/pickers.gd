@@ -15,6 +15,9 @@ const QuestAudit := preload("res://tools/quest_audit.gd")
 const FACTION_IDS_SCRIPT := "res://data/generated/faction_ids.gd"
 const ITEM_IDS_SCRIPT := "res://data/generated/item_ids.gd"
 const DIALOGUE_ROOT := "res://dialogue"
+## Portrait plates (NPC busts at the top level, chargen likenesses under `player/`) and the
+## field-sprite units (`<root>/<unit id>/<unit id>--idle--se--f00.png`) — E5.1 / #347.
+const PORTRAIT_ROOT := "res://assets/generated/portraits"
 ## Properties that name the location a door or exit leads to, for its spawn-id choices.
 const DESTINATION_ID_PROPERTIES: Array[String] = ["destination_location_id", "target_location_id"]
 const DESTINATION_SCENE_PROPERTIES: Array[String] = ["destination_scene", "target_scene"]
@@ -33,6 +36,8 @@ func table() -> Dictionary:
 		"dialogue_titles": _entry("Dialogue title", ["dialogue_start"], _dialogue_titles, _validate_title),
 		"items": _entry("Item", ["item_id", "*_item_id"], _item_options, _validate_known.bind(_item_options)),
 		"units": _entry("Unit", ["unit_id"], _unit_options, _validate_known.bind(_unit_options)),
+		"portraits": _entry("Portrait", ["portrait_path"], _portrait_options, _validate_known.bind(_portrait_options)),
+		"sprites": _entry("Sprite", ["sprite_unit_id"], _sprite_options, _validate_known.bind(_sprite_options)),
 	}
 
 
@@ -106,6 +111,39 @@ func _unit_options(_node: Node) -> PackedStringArray:
 			if not unit_id.is_empty() and not EncounterCatalog.committed_archetype(unit_id).is_empty():
 				ids[unit_id] = true
 	return _sorted(ids.keys())
+
+
+# --- art (E5.1 / #347: portrait and sprite pickers) -----------------------------------------
+
+
+## Every portrait plate under the portrait root, as `res://` paths.
+func _portrait_options(_node: Node) -> PackedStringArray:
+	var paths: Array = []
+	_scan(PORTRAIT_ROOT, "png", paths)
+	return _sorted(paths)
+
+
+## Portrait preview through `ChargenArtResolver.portrait_texture`, the texture-level resolver
+## (existence is not validity). A path outside the portrait plates has no preview.
+static func portrait_texture(path: String) -> Texture2D:
+	if path.is_empty() or not path.begins_with(PORTRAIT_ROOT + "/") or path.contains(".."):
+		return null
+	return ChargenArtResolver.portrait_texture(path.get_file().get_basename(), path.get_base_dir().path_join("%s.png"))
+
+
+## Unit ids with an idle frame under `UnitArt.ROOT`.
+func _sprite_options(_node: Node) -> PackedStringArray:
+	var ids: Array = []
+	for unit_id: String in DirAccess.get_directories_at(UnitArt.ROOT):
+		if UnitArt.has_unit(unit_id):
+			ids.append(unit_id)
+	return _sorted(ids)
+
+
+static func sprite_texture(unit_id: String) -> Texture2D:
+	if not UnitArt.has_unit(unit_id):
+		return null
+	return load(UnitArt.texture_path(unit_id)) as Texture2D
 
 
 # --- dialogue (§4.8: wiring only, never prose) ------------------------------------------------

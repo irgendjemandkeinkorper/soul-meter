@@ -18,6 +18,7 @@ carried over below, restated for the panel host.
 | Quest editor | `quest_panel.gd` (Quest editor) | `quest_editor.gd` | `QuestEditor` autoload, F6 overlay, `SOUL_METER_QUEST_EDITOR` |
 | Scene layout | `scene_panel.gd` (Scene tree, Palette, Inspector) | `addons/weftlumin/core/scene_model.gd` | Former F10 overlay and autoload retired in #470 |
 | Location metadata | `location_panel.gd` (Locations) | `location_metadata.gd` | New in E3.3a (#341); no legacy surface |
+| Characters | `character_panel.gd` (Characters) | `character_roster.gd` | New in E5.1 (#347); no legacy surface |
 | Spawn tables | `spawn_panel.gd` (Spawns) | `spawn_tables_editor.gd` | New in E4.2 (#346); no legacy surface |
 
 Scene layout now runs through `WeftluminSceneModel` in the shell. F10 and
@@ -235,6 +236,46 @@ Rendered evidence of the tab (canon form, then a saved draft with its bake previ
 `test_rendered_location_panel_capture` in `test/integration/test_weftlumin_location_panel.gd`
 with `SOUL_METER_LOCATION_PANEL_CAPTURE_DIR` set under Xvfb.
 
+## Characters
+
+The **Characters** bottom tab (E5.1, #347) edits every `canon/<hub>/characters/<id>.json`
+(`weftlumin.character.v1`) — Dom's 60 townsfolk (`npc`), the six combat archetypes (`archetype`)
+and new recruits (`recruit`) — and creates new ones.
+
+- **Open registries.** `kind` and `stats.schema` are not enums. `WeftluminCharactersKind`
+  (`weftlumin/kinds/characters.gd`) holds what the host declares through
+  `register_character_kind` and `register_stat_schema`. Soul Meter's adapter
+  (`soul_meter_adapter.gd` `kinds()`) declares npc, archetype and recruit, plus `dramgid.v1`
+  and `six-stat.v1`. An undeclared kind or schema is refused. The npc and archetype contracts are
+  the same as `CanonReader`'s, and a test checks that they match.
+- **Generic form, opaque stats.** The form is built from the kind's contract. `stats` is shown
+  key by key in the order its schema declares, followed by any other keys. The editor does not
+  interpret stat values. `dramgid.v1` is checked through `DramgidSchema`: each attribute is
+  present and whole. `six-stat.v1` has no installed definition, so any object naming it passes.
+- **vault_id.** A recruit must name a lore-vault character when it is created. The id is checked
+  against `../dramgid-vault/index.json` (`type: "character"`) through
+  `PartyMember.vault_id_refusal`. If the vault is missing, the check refuses instead of passing.
+  A vault_id that has been set is never renamed (the field becomes read-only), and the editor
+  never fills one in.
+- **Pickers.** Portraits come from `assets/generated/portraits/**` and are previewed through
+  `ChargenArtResolver.portrait_texture`. Sprites come from the units under
+  `assets/generated/sprites/units/` and are previewed through `UnitArt`. Both are also semantic
+  pickers in `pickers.gd` (`portrait_path`, `sprite_unit_id`). `sprite_unit_id` is stored in
+  canon, but seeders still resolve art by character id, and the panel notes this.
+- **Drafts.** Save draft writes only to `user://weftlumin/character-drafts/characters/<id>.json`.
+  **Bake preview** lists the canon documents that would be created or updated. When an npc
+  changes, it also lists the roster and placements that `tools/generate_gloot.gd` would
+  regenerate. That generator now emits `dom_npc_roster.json` and `dom_npc_placements.json` from
+  canon npc rows, using the town seeder's own derivation, and the output is byte-identical
+  (`GLOOT-GEN` drift stage). No tool promotes character drafts into canon yet.
+- **Not yet consumed.** Recruits are not seeded, and the tavern bench is still
+  `GameState.recruitable_candidates()`. The generator still expects exactly 60 Dom NPCs.
+
+Rendered evidence (an npc with its pickers, archetype stats rendered from the schema, and a
+recruit refused without a vault_id) is in `docs/qa/weftlumin-characters-347-2026-10-11/`, from
+`test_rendered_character_panel_capture` in `test/integration/test_weftlumin_character_panel.gd`
+with `SOUL_METER_CHARACTER_PANEL_CAPTURE_DIR` set under Xvfb.
+
 ## Spawns
 
 The **Spawns** bottom tab (E4.2, #346, architecture §4.10) edits the spawn tables that
@@ -442,6 +483,7 @@ registration are the model's.
 | Placeables and export inspector (#339) | `test/unit/test_weftlumin_placeables.gd`, `test/integration/test_weftlumin_palette_inspector.gd` (rendered capture with `SOUL_METER_WEFTLUMIN_PALETTE_CAPTURE_DIR`; evidence in `docs/qa/weftlumin-palette-339-2026-10-11/`) |
 | Pattern library (#370) | `test/unit/test_weftlumin_pattern_library.gd`, `test/integration/test_scene_pick_pattern_browser.gd`; format: `test/unit/test_layout_patterns.gd` |
 | Locations kind, generator, drift and drafts | `test/unit/test_weftlumin_locations_kind.gd`; panel: `test/integration/test_weftlumin_location_panel.gd` |
+| Characters kind, registries, vault_id, roster-from-canon, pickers | `test/unit/test_weftlumin_characters_kind.gd`; panel: `test/integration/test_weftlumin_character_panel.gd` |
 | Spawn tables kind, panel, anchors and debug verbs (#346) | `test/unit/test_weftlumin_spawn_tables_kind.gd`, `test/unit/test_dev_console_spawn_verbs.gd`; panel: `test/integration/test_weftlumin_spawn_panel.gd` |
 
 The original file-to-behaviour migration plan is `docs/weftlumin-test-migration.md` (E1.9).

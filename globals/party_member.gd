@@ -21,6 +21,7 @@ const DEFAULT_BREATH_MAX := 15
 @export var discipline: String = ""
 @export var patron: String = ""
 ## Lore-vault entity id (dramgid-vault characters/<id>.md). Empty = no canon entry yet.
+## An authored recruit must name one (`vault_id_refusal`); it is never generated or renamed.
 @export var vault_id: String = ""
 @export var background: String = ""
 @export var flaw: String = ""
@@ -191,6 +192,24 @@ func attribute_value(attribute_id: StringName) -> int:
 	if not legacy.is_empty() and attributes.has(legacy):
 		return int(attributes[legacy])
 	return 0
+
+
+## vault_id validation hook (architecture-in-game-editor §4.3.1, E5.1 / #347). Pure: the caller
+## supplies the lore vault's character ids (id → name) — Weftlumin reads them from
+## `dramgid-vault/index.json`, production never does. Returns "" when `candidate` names a vault
+## character, otherwise why it does not. An empty id map refuses: an unchecked id is not a valid
+## one. Nothing here generates or derives an id.
+static func vault_id_refusal(candidate: String, vault_character_ids: Dictionary) -> String:
+	if candidate.is_empty():
+		return "A recruit must name its lore-vault character (vault_id); it is never generated."
+	for character: String in candidate:
+		if not character in "abcdefghijklmnopqrstuvwxyz0123456789-":
+			return "vault_id '%s' is not a vault id (lower-case letters, digits and '-')." % candidate
+	if vault_character_ids.is_empty():
+		return "The lore-vault index is unavailable, so vault_id '%s' cannot be checked." % candidate
+	if not vault_character_ids.has(candidate):
+		return "vault_id '%s' is not a character in the lore-vault index." % candidate
+	return ""
 
 
 static func _dictionary_from_save(value: Variant) -> Dictionary:
