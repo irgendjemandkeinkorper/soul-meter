@@ -1,0 +1,5 @@
+[
+  {"number": 305, "title": "Dom art batch", "headRefName": "feat/305-dom-art", "files": [{"path": "world/starting_town.tscn"}, {"path": "assets/generated/sprites/world/dom-bell.png"}]},
+  {"number": 350, "title": "Weftlumin heatmap", "headRefName": "feat/350-weftlumin", "files": [{"path": "addons/weftlumin/core/bake.gd"}]},
+  {"number": 999, "title": "This package's own branch", "headRefName": "weftlumin/dom-scene-bake", "files": [{"path": "world/starting_town.tscn"}]}
+]
