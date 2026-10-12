@@ -30,7 +30,7 @@ func _inspector() -> WeftluminExportInspector:
 func test_palette_lists_the_registry_by_group_with_fuzzy_search() -> void:
 	var palette := _actors()
 	assert_bool(shell.root.find_child("Palette", true, false).is_ancestor_of(palette)).is_true()
-	assert_int(panel.placeables.size()).is_equal(10)
+	assert_int(panel.placeables.size()).is_equal(11)
 	assert_int(palette.visible_entries().size()).is_equal(panel.placeables.size())
 	palette.set_group("Doors & exits")
 	var doors: Array[StringName] = []

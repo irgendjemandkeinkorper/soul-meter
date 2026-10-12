@@ -606,7 +606,7 @@ accord_at(cell) = clamp(SkillCheck.location_fizzle_integrity(base, scene) + zone
 - `zone_delta` (v2) = the sum of `AccordZone` volumes containing the cell — the **one new placeable**
   this note proposes (a data volume, not a trigger: exports `accord_delta`, optional `element_default`
   override for "this swamp corner is Mozh"). Alternative without a new type: `accord_delta` as Terrain
-  custom data painted per cell. Ruling needed (§8).
+  custom data painted per cell. **Ruled 2026-10-11: the `AccordZone` placeable** (§8 item 5).
 - `variation` = DeepSeek's bounded background function (±10 PROVISIONAL) of `day_index`, WorldClock
   phase, the zone's Zhavar rung, and weather element vs the location's patron element; deterministic
   from `(world_seed, day_index, phase)`.
@@ -863,8 +863,11 @@ Still open:
    small `Editor*` variation family (recommended).
 4. **Terrain data layer:** third `Terrain` `TileMapLayer` with project-owned tileset (recommended;
    must be the same choice the #281 implementer makes in step 2).
-5. **`AccordZone` as the one new placeable** for spatial accord/element overrides (recommended for v2),
-   or per-cell `accord_delta` Terrain data instead.
+5. ~~**`AccordZone` as the one new placeable** for spatial accord/element overrides (recommended for v2),
+   or per-cell `accord_delta` Terrain data instead.~~ **Ruled 2026-10-11 (owner): `AccordZone`
+   placeable.** Hush/Waning Loom strength is **derived from `accord_delta`** — no separate strength
+   field. Implemented in #349: `actors/accord_zone/`, `FieldMap.zone_delta()`/`accord_at()`,
+   `AccordMath.loom_strength()`/`loom_penalty()`, `SkillCheck.loom_penalty()`.
 6. **Re-author Dom's `Blocking` at scale 1** via a reviewed one-shot bake command (recommended).
 7. **Location JSON is canon; `world/locations/*.tres` become generated** (recommended).
 8. **God mode:** fold into the console once `debug_force_complete()` takes a `cause` (recommended), or

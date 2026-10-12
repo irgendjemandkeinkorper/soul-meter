@@ -2,7 +2,14 @@
 
 **Status:** design note for #328 (E1.7). The *shape* below is proposed and implemented in
 `globals/combat/accord_math.gd`; **every number is PROVISIONAL** and belongs to balance, not to
-this note. Nothing here is wired into combat — that is E6.1 (#349).
+this note.
+
+**Wiring status (#349):** combat samples accord **per action** from the caster's cell through
+`FieldMap.accord_at(cell)`, and the controller freezes `(day_index, phase, weather, cell)` on the
+first forecast so resolution reuses it (`CombatController.accord_context_for()`).
+`FieldMap.zone_delta(cell)` sums the `accord_delta` of every `AccordZone` covering the cell (0.0 on
+a map without zones, so those keep their exact numbers). This note's `variation` is **not wired**:
+`Battle._accord_variation()` returns 0.0 until wiring it is approved as a balance change.
 
 Harmonic Accord is Agreement Integrity renamed (#329, owner ruling 1). It is the world's
 willingness to let a casting hold. High accord means magic behaves; low accord means it fizzles.
@@ -124,9 +131,11 @@ Both warnings can fire at once, which only happens when the authored band is imp
 
 ## 5. What this note deliberately does not decide
 
-- **Where accord is sampled in combat** — E6.1 (#349). Today `CombatController` holds one float
-  per battle; per-cell sampling is a combat change that follows #281.
-- **`AccordZone` shape** — a placeable volume versus Terrain custom data is architecture ruling 8,
-  still open.
+- **Where accord is sampled in combat** — E6.1 (#349): per action, at the caster's cell, frozen
+  at forecast (see the wiring status above).
+- ~~**`AccordZone` shape**~~ — **ruled 2026-10-11 (owner): a placeable volume**
+  (`actors/accord_zone/`), not Terrain custom data. Hush/Waning Loom strength is derived from
+  `accord_delta` (`AccordMath.loom_strength()` = the accord deficit; FULL skills lose all of it,
+  PARTIAL skills `LOOM_PARTIAL_SHARE` of it — PROVISIONAL), with no separate strength field.
 - **Authored per-location values** — C21 / #258.
 - **Every number above.** They are provisional and marked so in code.

@@ -146,6 +146,30 @@ static func wheel_distance(first_index: int, second_index: int, wheel_size: int)
 	return mini(raw, wheel_size - raw)
 
 
+## Hush/Waning Loom pressure, derived from a cell's summed zone delta (owner ruling
+## 2026-10-11: AccordZone carries no separate strength field). Only a thinned cell presses on the
+## Loom: a zone that raises accord gives 0, never a bonus.
+static func loom_strength(zone_delta: float) -> float:
+	return clampf(-zone_delta, 0.0, 100.0)
+
+
+## Share of the Loom pressure a PARTIAL-sensitivity skill feels. PROVISIONAL (balance owns it).
+const LOOM_PARTIAL_SHARE := 0.5
+
+
+## Percentage points a skill check loses at a cell with `zone_delta`, by the skill's
+## `DramgidSchema.LoomSensitivity`. NONE is always 0 — ARMS skills
+## and Kits work at full strength in the Hush (canon guard).
+static func loom_penalty(loom_sensitivity: int, zone_delta: float) -> int:
+	var strength := loom_strength(zone_delta)
+	match loom_sensitivity:
+		DramgidSchema.LoomSensitivity.FULL:
+			return roundi(strength)
+		DramgidSchema.LoomSensitivity.PARTIAL:
+			return roundi(strength * LOOM_PARTIAL_SHARE)
+	return 0
+
+
 ## The §4.11 composition, clamped to the legal accord range.
 static func accord_at(base_adjusted: float, zone_delta: float, variation_value: float) -> float:
 	return clampf(base_adjusted + zone_delta + variation_value, 0.0, 100.0)

@@ -116,9 +116,23 @@ func _karma_tier_offset() -> int:
 	return 0
 
 
-## F4 defines Hush/Waning zone penalties. The hook is intentionally neutral now.
-func loom_penalty(_skill_name: String, _zone: Variant) -> int:
-	return 0
+## Hush/Waning Loom penalty in percentage points (#349; owner rulings 2026-09-08 and
+## 2026-10-11: Hush/Waning zones ARE AccordZone, strength derived from `accord_delta`).
+## `zone` is an `AccordZone`, or a cell's summed zone delta from `FieldMap.zone_delta(cell)`;
+## null or anything else is neutral. Not yet subtracted inside `preview()` — field verbs
+## (#284) opt in by passing the cell's zone delta.
+func loom_penalty(skill_name: String, zone: Variant) -> int:
+	var delta := 0.0
+	if zone is AccordZone:
+		delta = float((zone as AccordZone).accord_delta)
+	elif zone is float or zone is int:
+		delta = float(zone)
+	else:
+		return 0
+	var skill: Dictionary = DramgidSchemaScript.SKILLS.get(_normalize_skill_name(skill_name), {})
+	return AccordMath.loom_penalty(
+		int(skill.get("loom", DramgidSchemaScript.LoomSensitivity.NONE)), delta
+	)
 
 
 ## Resolve a committed check. `forced_rolls` exists for deterministic tests and

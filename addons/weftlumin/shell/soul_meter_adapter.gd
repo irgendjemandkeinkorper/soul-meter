@@ -77,6 +77,8 @@ const PLACEABLES: Array[Array] = [
 	[&"spawn_marker", "Spawn marker", "Markers", "Marker2D", "SpawnMarker"],
 	# §4.10: a spawn-slot anchor. The Spawns panel names each one `SpawnSlot<PascalCase slot id>`.
 	[&"spawn_slot", "Spawn slot", "Markers", "Marker2D", "SpawnSlot"],
+	# The one new type (owner ruling 2026-10-11, #349): a data volume, not a trigger.
+	[&"accord_zone", "Accord zone", "Markers", "res://actors/accord_zone/accord_zone.tscn", "AccordZone"],
 ]
 ## Semantic picker table; export-excluded with the panels, so a build without it has none.
 const PICKERS_SCRIPT := "res://weftlumin/panels/pickers.gd"

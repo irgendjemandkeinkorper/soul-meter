@@ -149,6 +149,10 @@ func start(encounter: Variant) -> void:
 		_casting_abilities(),
 	)
 	controller.configure_agreement_integrity(_agreement_integrity())
+	# An authored encounter's battlefield is not the field's cell space, so it samples no zone.
+	controller.configure_accord_sampler(
+		_sample_accord.bind(null, controller.agreement_integrity)
+	)
 	var weather_default := _weather_for_start()
 	if weather_default != &"":
 		var weather_result := controller.configure_weather(weather_default)
@@ -253,6 +257,11 @@ func start_session(field: FieldMap, first: Hostile) -> Dictionary:
 		available_actions(true), model, rules, null, _casting_abilities()
 	)
 	controller.configure_agreement_integrity(_agreement_integrity())
+	# Same-map combat: the battle grid IS the field grid (`build_grid(field.ground(), ...)`), so
+	# the caster's cell is a FieldMap cell and `field.accord_at()` answers for it.
+	controller.configure_accord_sampler(
+		_sample_accord.bind(field, controller.agreement_integrity)
+	)
 	var weather := field.weather_default()
 	if weather != &"":
 		var weather_result := controller.configure_weather(weather)
@@ -681,6 +690,35 @@ func _agreement_integrity(scene_path: String = "") -> float:
 		location_accord, resolved_scene_path
 	)
 	return EncounterCatalog.agreement_integrity(encounter_id, location_accord)
+
+
+## #349 / architecture §4.11 sampling instant: the accord context a forecast freezes. The
+## controller calls this once per actor per cell and reuses the record for resolution, so
+## `(day_index, phase, weather, cell)` cannot drift between forecast and commit.
+## `base_adjusted` is this battle's `_agreement_integrity()` (thinning subtracted once, encounter
+## override applied); `field` is null when the battlefield is not the field's own grid.
+func _sample_accord(
+	cell: Variant, weather_id: StringName, field: FieldMap, base_adjusted: float
+) -> Dictionary:
+	var frozen := {
+		"day_index": WorldClock.day_index(),
+		"phase": WorldClock.phase(),
+		"weather": weather_id,
+		"cell": cell,
+	}
+	var variation_value := _accord_variation(frozen)
+	if is_instance_valid(field) and cell is Vector2i:
+		frozen["harmonic_accord"] = field.accord_at(cell as Vector2i, base_adjusted, variation_value)
+	else:
+		frozen["harmonic_accord"] = AccordMath.accord_at(base_adjusted, 0.0, variation_value)
+	return frozen
+
+
+## Background variation for a frozen context. Deliberately 0.0: wiring E1.7's
+## `AccordMath.variation_for()` into live combat moves every map's accord by up to ±10, which is
+## a balance change awaiting its own go-ahead (#349 ships the frozen context it will read).
+func _accord_variation(_frozen: Dictionary) -> float:
+	return 0.0
 
 
 ## Reports whether a field can host same-map combat. Refusals retain the shared FR-606 query

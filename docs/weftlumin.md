@@ -52,7 +52,8 @@ The Palette slot's **Actors** tab lists `adapter.placeables()` (`WeftluminPlacea
 engine class, display, group, default exports), filtered by group and the same fuzzy search. The
 Soul Meter registry is ruling 8's existing actor types: NPC, Hostile, BuildingDoor, TravelExit,
 SMInteractable, Chest, Pickup, InteractiveSwitch, a `Marker2D` spawn marker and a `Marker2D`
-spawn-slot anchor (#346). ZhavarTelegraph
+spawn-slot anchor (#346), plus the one new type, `AccordZone` (owner ruling 2026-10-11, #349: a
+Harmonic Accord data volume). ZhavarTelegraph
 is not offered: it is a positionless `Node` overlay and the scene model edits `Node2D`s. Choose an
 entry, then click: the instance lands under the scene root at the nearest open walkable cell
 (`GridPlacement.open_cell_center_near`; Alt or snap off keeps the cursor; Shift repeats), is

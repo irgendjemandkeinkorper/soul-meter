@@ -75,8 +75,18 @@ var rules: CombatRules
 var skill_check_service: SkillCheckService
 var scheduler: TurnScheduler
 ## Location/encounter input for fizzle. Battle resolves it once at setup so
-## forecast and commit cannot observe different scene state.
+## forecast and commit cannot observe different scene state. It stays the per-battle fallback
+## whenever no accord sampler is configured (headless harnesses, Gate T-1/T-2, unit fixtures).
 var agreement_integrity: float = 100.0
+## #349 (architecture §4.11): per-action Harmonic Accord. `sampler(cell: Variant,
+## weather_id: StringName) -> Dictionary` returns `{day_index, phase, weather, harmonic_accord}`
+## for the caster's cell; empty means the single per-battle float above.
+var _accord_sampler: Callable = Callable()
+## Frozen accord contexts keyed by actor `combat_id`. The first forecast for an actor at a cell
+## samples once; every later forecast and the commit's resolution reuse that record, so
+## forecast == resolution holds even if a phase or weather tick lands between the two. Released
+## when the actor's action resolves or its next turn starts.
+var _frozen_accord: Dictionary = {}
 ## Issue #209: the live Weather instance. Ticks on the scheduler's real CT cadence
 ## (`_advance_weather()`), applies its per-measure feed/starve to `tile_states`, and
 ## feeds `Resolution` context. Stays at the UNCHARGED sentinel unless the encounter
@@ -243,6 +253,50 @@ func configure(
 
 func configure_agreement_integrity(value: float) -> void:
 	agreement_integrity = clampf(value, 0.0, 100.0)
+
+
+## #349: installs the per-action accord sampler (Battle supplies one bound to the field).
+## An empty Callable restores the single per-battle float.
+func configure_accord_sampler(sampler: Callable) -> void:
+	_accord_sampler = sampler
+	_frozen_accord.clear()
+
+
+## The frozen `(day_index, phase, weather, cell)` accord context for `actor`, sampling it on
+## first use at the actor's current cell. Empty when no sampler is configured; callers then use
+## `agreement_integrity`. A different cell than the frozen one (the caster moved) resamples.
+func accord_context_for(actor: BattleActor) -> Dictionary:
+	if actor == null or not _accord_sampler.is_valid():
+		return {}
+	var key := String(actor.combat_id)
+	var cell: Variant = battlefield.cell_of(actor) if battlefield != null else null
+	var frozen: Dictionary = _frozen_accord.get(key, {}) as Dictionary
+	if not frozen.is_empty() and _same_cell(frozen.get("cell"), cell):
+		return frozen
+	var sampled: Variant = _accord_sampler.call(cell, weather.element_id if weather != null else &"")
+	if not (sampled is Dictionary):
+		return {}
+	frozen = (sampled as Dictionary).duplicate(true)
+	frozen["cell"] = cell
+	frozen["harmonic_accord"] = clampf(
+		float(frozen.get("harmonic_accord", agreement_integrity)), 0.0, 100.0
+	)
+	_frozen_accord[key] = frozen
+	return frozen
+
+
+## Drops `actor`'s frozen accord context (all of them when `actor` is null).
+func release_accord_context(actor: BattleActor = null) -> void:
+	if actor == null:
+		_frozen_accord.clear()
+	else:
+		_frozen_accord.erase(String(actor.combat_id))
+
+
+static func _same_cell(first: Variant, second: Variant) -> bool:
+	if typeof(first) != typeof(second):
+		return false
+	return first == second
 
 
 ## Issue #209: authors this battle's weather element (from encounter data — the caller
@@ -746,6 +800,7 @@ func submit_action(
 			committed_action.class_resource_payload.duplicate(true),
 		)
 	var outcome := _apply_action(actor, target, committed_action, resolved_options)
+	release_accord_context(actor)
 	_finish_hold_turn(actor)
 	_check_holds()
 	outcome["action_id"] = action.id
@@ -1259,6 +1314,7 @@ func _drive_scheduler() -> void:
 			"measures_crossed": result.get("measures_crossed", 0),
 		}
 		if not is_continuation:
+			release_accord_context(actor)
 			_pay_hold_upkeep(actor)
 			if not bool(scheduler.can_act(actor).get("allowed", false)):
 				_last_turn_actor = actor
@@ -1853,8 +1909,19 @@ func _fizzle_context(actor: BattleActor, options: Dictionary) -> Dictionary:
 	var raw: Variant = options.get("fizzle", {})
 	var context: Dictionary = raw.duplicate(true) if raw is Dictionary else {}
 	if not context.has("harmonic_accord") and not context.has("agreement_integrity"):
-		context["harmonic_accord"] = agreement_integrity
-		context["agreement_integrity"] = agreement_integrity # alias wave, #329
+		# #349: an explicit frozen context (headless replay) wins; otherwise the actor's frozen
+		# per-action sample; otherwise the legacy per-battle float, byte-identical to before.
+		var frozen: Dictionary = (
+			options["accord_context"] as Dictionary
+			if options.get("accord_context") is Dictionary
+			else accord_context_for(actor)
+		)
+		var accord := agreement_integrity
+		if not frozen.is_empty():
+			accord = clampf(float(frozen.get("harmonic_accord", agreement_integrity)), 0.0, 100.0)
+			context["accord_context"] = frozen.duplicate(true)
+		context["harmonic_accord"] = accord
+		context["agreement_integrity"] = accord # alias wave, #329
 	# DRAMGID §3.9 F3b: Intuition replaced Pitch. The context key stays `pitch` because
 	# Resolution's fizzle inputs read it under that name.
 	if not context.has("pitch"):

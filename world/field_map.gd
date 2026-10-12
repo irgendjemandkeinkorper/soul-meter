@@ -222,6 +222,66 @@ func weather_default() -> StringName:
 	return location.weather_default if location != null else &""
 
 
+## #349 / architecture §4.11: the location's authored Harmonic Accord with thinning already
+## subtracted — once, inside `SkillCheck.location_fizzle_integrity()`. Nothing downstream may
+## apply `thinning_tier` again.
+func accord_base() -> float:
+	var path := _scene_path()
+	var location := LocationRegistry.by_scene(path)
+	var authored := location.harmonic_accord if location != null else 100.0
+	return SkillCheck.location_fizzle_integrity(authored, path)
+
+
+## The ONE spatial accord seam: the sum of `accord_delta` over every `AccordZone` covering
+## `cell` (owner ruling 2026-10-11, architecture §8 item 5). 0.0 on a field with no zones, which
+## is what keeps zone-less maps on their exact pre-#349 numbers. Hush/Waning Loom pressure is
+## derived from this same value (`AccordMath.loom_strength()`).
+func zone_delta(cell: Vector2i) -> float:
+	var total := 0.0
+	for zone: AccordZone in accord_zones():
+		if zone.covers(cell, zone_anchor_cell(zone)):
+			total += float(zone.accord_delta)
+	return total
+
+
+## The elemental default at `cell`: the first covering zone (tree order) that authors one,
+## otherwise the location's `weather_default`.
+func element_default_at(cell: Vector2i) -> StringName:
+	for zone: AccordZone in accord_zones():
+		if zone.element_default != &"" and zone.covers(cell, zone_anchor_cell(zone)):
+			return zone.element_default
+	return weather_default()
+
+
+## Every AccordZone placed in this field, in tree order.
+func accord_zones() -> Array[AccordZone]:
+	var result: Array[AccordZone] = []
+	for node: Node in _field_root().find_children("*", "Node2D", true, false):
+		if node is AccordZone:
+			result.append(node as AccordZone)
+	return result
+
+
+## The cell a zone is anchored on, in the field's (and the battle grid's) cell space.
+func zone_anchor_cell(zone: AccordZone) -> Vector2i:
+	var grid := iso_grid()
+	if grid != null:
+		return grid.world_to_cell(zone.global_position)
+	var layer := ground()
+	if layer != null:
+		return layer.local_to_map(layer.to_local(zone.global_position))
+	return Vector2i.ZERO # a field without ground has no cell space to anchor in
+
+
+## Effective accord at `cell`: `clamp(base_adjusted + zone_delta(cell) + variation, 0, 100)`.
+## `base_adjusted` defaults to `accord_base()`; Battle passes its own (encounter-overridable)
+## base so a battle and the field agree on one number. With no zone authored and no variation
+## this returns the base unchanged, which is what keeps zone-less maps on today's numbers.
+func accord_at(cell: Vector2i, base_adjusted: float = NAN, variation_value: float = 0.0) -> float:
+	var base := accord_base() if is_nan(base_adjusted) else base_adjusted
+	return AccordMath.accord_at(base, zone_delta(cell), variation_value)
+
+
 ## F0 ruling 2, read from canon `no_combat_zone` through the location index (E3.3b / #342).
 func no_combat_zone() -> bool:
 	return LocationRegistry.no_combat_zone_by_scene(_scene_path())
