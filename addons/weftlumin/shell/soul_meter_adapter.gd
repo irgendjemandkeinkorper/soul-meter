@@ -45,6 +45,7 @@ const PANEL_SCENES: Array[String] = [
 	"res://weftlumin/panels/dialogue_panel.tscn",
 	"res://weftlumin/panels/quest_panel.tscn",
 	"res://weftlumin/panels/location_panel.tscn",
+	"res://weftlumin/panels/spawn_panel.tscn",
 ]
 
 
@@ -73,6 +74,8 @@ const PLACEABLES: Array[Array] = [
 	[&"pickup", "Pickup", "Interactables", "res://actors/pickup/pickup.tscn", "Pickup"],
 	[&"switch", "Switch", "Interactables", "res://actors/switch/switch.tscn", "Switch"],
 	[&"spawn_marker", "Spawn marker", "Markers", "Marker2D", "SpawnMarker"],
+	# §4.10: a spawn-slot anchor. The Spawns panel names each one `SpawnSlot<PascalCase slot id>`.
+	[&"spawn_slot", "Spawn slot", "Markers", "Marker2D", "SpawnSlot"],
 ]
 ## Semantic picker table; export-excluded with the panels, so a build without it has none.
 const PICKERS_SCRIPT := "res://weftlumin/panels/pickers.gd"

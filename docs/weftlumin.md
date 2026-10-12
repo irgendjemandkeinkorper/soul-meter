@@ -18,6 +18,7 @@ carried over below, restated for the panel host.
 | Quest editor | `quest_panel.gd` (Quest editor) | `quest_editor.gd` | `QuestEditor` autoload, F6 overlay, `SOUL_METER_QUEST_EDITOR` |
 | Scene layout | `scene_panel.gd` (Scene tree, Palette, Inspector) | `addons/weftlumin/core/scene_model.gd` | Former F10 overlay and autoload retired in #470 |
 | Location metadata | `location_panel.gd` (Locations) | `location_metadata.gd` | New in E3.3a (#341); no legacy surface |
+| Spawn tables | `spawn_panel.gd` (Spawns) | `spawn_tables_editor.gd` | New in E4.2 (#346); no legacy surface |
 
 Scene layout now runs through `WeftluminSceneModel` in the shell. F10 and
 `SOUL_METER_LAYOUT` no longer activate an editor; use the enablement below.
@@ -49,7 +50,8 @@ The adapter still decides editable roots, and the model enforces scene/instance 
 The Palette slot's **Actors** tab lists `adapter.placeables()` (`WeftluminPlaceable`: scene or
 engine class, display, group, default exports), filtered by group and the same fuzzy search. The
 Soul Meter registry is ruling 8's existing actor types: NPC, Hostile, BuildingDoor, TravelExit,
-SMInteractable, Chest, Pickup, InteractiveSwitch and a `Marker2D` spawn marker. ZhavarTelegraph
+SMInteractable, Chest, Pickup, InteractiveSwitch, a `Marker2D` spawn marker and a `Marker2D`
+spawn-slot anchor (#346). ZhavarTelegraph
 is not offered: it is a positionless `Node` overlay and the scene model edits `Node2D`s. Choose an
 entry, then click: the instance lands under the scene root at the nearest open walkable cell
 (`GridPlacement.open_cell_center_near`; Alt or snap off keeps the cursor; Shift repeats), is
@@ -233,6 +235,43 @@ Rendered evidence of the tab (canon form, then a saved draft with its bake previ
 `test_rendered_location_panel_capture` in `test/integration/test_weftlumin_location_panel.gd`
 with `SOUL_METER_LOCATION_PANEL_CAPTURE_DIR` set under Xvfb.
 
+## Spawns
+
+The **Spawns** bottom tab (E4.2, #346, architecture §4.10) edits the spawn tables that
+`SpawnDirector` (E4.1, #345) reads, places their anchor markers, and shows each slot's live state.
+
+- **Canon.** `canon/<hub>/spawn_tables/<id>.json` (`weftlumin.spawn_table.v1`) is the source;
+  `SpawnDirector` reads it directly, so there is no bake. `WeftluminSpawnTablesKind`
+  (`weftlumin/kinds/spawn_tables.gd`) validates §4.10 step 5's invariants as attributed errors
+  (`field` is a path such as `slots[0].entries[1].weight`): every slot has a non-empty entry with
+  weight > 0, weights are positive integers, `respawn_days >= 1`, `1 <= pack_size.min <= max`, and
+  the anchor exists in the scene. It also applies the location's `respawn_policy` through
+  `SpawnMath.policy_violations()` (`none` refuses every table; `limited` enforces its provisional
+  bounds); a scene with no location document is `none`, as at runtime. An archetype missing from
+  the encounter catalog is a note, not an error.
+- **Editing.** Pick a table and a slot; edit the anchor, respawn days, pack size, the entries
+  (`archetype_id = weight` or `empty = weight`, one per line) and the table's `max_alive` (0 = the
+  policy default). Add slot gives the new slot the anchor `SpawnSlot<PascalCase id>`. Identity —
+  the table id and its scene — is read-only. **Save draft** validates the whole table set with the
+  edit applied and writes only `user://weftlumin/spawn-drafts/spawn_tables/<id>.json`, in the exact
+  layout of the canon files (an unchanged table saves byte-identical), so promoting a draft is
+  copying it over the canon file the identity line names. The panel never writes `res://`.
+- **Anchors.** **Place anchor** arms the scene model with the `spawn_slot` placeable (a `Marker2D`,
+  adapter `PLACEABLES`) named after the slot's anchor; the next viewport click places it at the
+  nearest open cell as one `add_node` command (undo/redo with the rest of the scene history). The
+  Palette's Actors tab offers the same placeable as **Spawn slot**. A marker placed in the live scene
+  satisfies the anchor invariant for drafts and is noted until the scene bake (E3.5) writes it to
+  the `.tscn`.
+- **Live state.** One line per slot from `SaveGame.spawn_director.slot_state()`: anchor present or
+  `MISSING`, never rolled / members alive with their day-stamped group / cleared day, and
+  blocked-by-cap. The panel reads state only.
+- **Debug verbs.** `respawn now <table:slot>` and `clear slot <table:slot>` are Console verbs, below.
+
+Rendered evidence (a placed `SpawnSlotGladeSouth` with its rolled pack, and the tab's live state) is
+in `docs/qa/weftlumin-spawns-346-2026-10-11/`, from `test_rendered_spawn_panel_capture` in
+`test/integration/test_weftlumin_spawn_panel.gd` with `SOUL_METER_SPAWN_PANEL_CAPTURE_DIR` set under
+Xvfb.
+
 ## Enablement and release safety
 
 Open Weftlumin with **F12** (the remappable `weftlumin_toggle` action) in a debug build started
@@ -281,6 +320,8 @@ lines instead of engine errors.
 | `quest complete <quest_id>` | Not available | Returns an error and changes no quest state (see below). |
 | `phase <morning\|afternoon\|evening\|night>` / `phase next` | `WorldClock.set_phase()` / `advance()` | Sets or advances the phase. |
 | `goto <scene-or-hub-id>` | `LocationRegistry`, then `GameFlow.travel()` | Requests legal travel; never `change_scene_to_file()`. |
+| `respawn now <table:slot>` | `SaveGame.spawn_director` (`to_dict()`/`from_dict()`, `populate()`) | `[debug]`: forgets the slot's state, takes the scene's spawn-slot hostiles off the field and repopulates, as a same-day re-entry would. The E4.1 roll is unchanged: same save and day, same result (`empty` included). Refused during combat. |
+| `clear slot <table:slot>` | `SaveGame.spawn_director` (`to_dict()`/`from_dict()`) | `[debug]`: removes the slot's hostiles and records it cleared today; it rolls again after its cadence. Refused during combat. |
 | `help` | Console read path | Lists commands. |
 
 `quest complete` stays refused: `QuestRegistry.debug_force_complete(quest)` accepts no cause, and
@@ -289,6 +330,9 @@ some resolvers append ledger events, so debug evidence would be indistinguishabl
 **Tagged provenance.** Every console-originated ledger write passes a cause beginning with the
 model's exported `DEBUG_CAUSE_PREFIX` (`[debug] `); `is_debug_caused(cause)` is the canonical test.
 Never add an untagged or post-hoc mutation path.
+`respawn now` and `clear slot` write no ledger (`SpawnDirector` takes no cause): they are listed in
+`help` and logged with the `[debug] ` prefix, and, like every command, set `dev_console_used`. They
+are live-state verbs, excluded from replay-equivalence (§4.4).
 
 **Session hygiene.** The first command of each hosted session sets the durable, write-once
 `dev_console_used` flag (not settable from the console). The model keeps a session command audit.
@@ -398,5 +442,6 @@ registration are the model's.
 | Placeables and export inspector (#339) | `test/unit/test_weftlumin_placeables.gd`, `test/integration/test_weftlumin_palette_inspector.gd` (rendered capture with `SOUL_METER_WEFTLUMIN_PALETTE_CAPTURE_DIR`; evidence in `docs/qa/weftlumin-palette-339-2026-10-11/`) |
 | Pattern library (#370) | `test/unit/test_weftlumin_pattern_library.gd`, `test/integration/test_scene_pick_pattern_browser.gd`; format: `test/unit/test_layout_patterns.gd` |
 | Locations kind, generator, drift and drafts | `test/unit/test_weftlumin_locations_kind.gd`; panel: `test/integration/test_weftlumin_location_panel.gd` |
+| Spawn tables kind, panel, anchors and debug verbs (#346) | `test/unit/test_weftlumin_spawn_tables_kind.gd`, `test/unit/test_dev_console_spawn_verbs.gd`; panel: `test/integration/test_weftlumin_spawn_panel.gd` |
 
 The original file-to-behaviour migration plan is `docs/weftlumin-test-migration.md` (E1.9).
