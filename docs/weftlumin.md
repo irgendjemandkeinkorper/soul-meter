@@ -68,8 +68,8 @@ and unit ids. A refused value is shown under its field and changes nothing.
 Every placement and export edit is a `scene` command (`add_node` with an `instance` spec;
 `set_property` with `export` + `value_text`), replayable from the command log. They are **not**
 part of the layout scratch document: Save scratch and recovery carry dressing only, so placed
-actors and export edits last for the live scene session until the scene bake (E3.5) consumes the
-log.
+actors and export edits last for the live scene session until the scene bake (E3.5, below)
+consumes the log.
 
 History belongs to the live scene and survives closing/reopening the shell. Scratch changes are
 checkpointed through `LayoutRecovery`, including undo/redo, and restored on the next hosted scene
@@ -160,6 +160,44 @@ Suites: `test/unit/test_weftlumin_{brushes,tile_painter,tile_bake}.gd` and
 `test/integration/test_weftlumin_painters.gd`. With `SOUL_METER_PAINTER_CAPTURE_DIR` set (under Xvfb or
 a display), the integration suite writes the stroke preview and both overlays; the #340 evidence is
 in `docs/qa/weftlumin-painters-340-2026-10-11/`.
+
+### Scene bake (E3.5, #344)
+
+`WeftluminBake.bake(entries, target_root, write, force)` (`addons/weftlumin/core/bake.gd`) turns a
+command log's effective `scene` stream into surgical `.tscn` text patches and returns a
+`weftlumin.bake.v1` report. Soul Meter reaches it through the `scenes` kind
+(`weftlumin/kinds/scenes.gd`, `WeftluminScenesKind`), whose documents are a package's
+`commands.jsonl` entries (`load_log()`, `validate()`).
+
+- **How.** Each scene is opened as text (`TscnDocument`) and as a fresh out-of-tree instance. A
+  scene model over that instance replays every layout, placement, export and removal command
+  (so `pre_state` drift and ownership refusals match the live editor), and the bake writes into the
+  text only the stored properties each command changed. Tile commands go through
+  `WeftluminTileBake` on the same document. New resources are declared once with their `uid://`;
+  a resized collision rectangle or the layout grayscale material becomes a `<Type>_weftlumin<N>`
+  sub-resource. Nothing is packed, so untouched lines stay byte-identical and the format stays 3.
+- **Report only by default.** Without `write` nothing is written (the load check uses one
+  transient copy under `user://` and deletes it). With `write`, each changed scene lands under
+  `target_root` (`res://` patches in place). A target that holds neither the source scene nor the
+  bake's output is refused unless `force`; `force` without `write` is an error. Any error in any
+  scene writes nothing.
+- **Validators.** Before writing, the baked text must load and instantiate, every section the log
+  did not touch must be byte-identical (declarations and `uid://` references included), and every
+  node the bake wrote must reload equal to the replayed edit. The `scenes` kind adds the scene
+  contracts: canon spawn markers, building-transition and NPC-placement anchors still resolve; Dom
+  keeps the `test_starting_town.gd` invariants; and Dom's `Blocking` is never re-authored
+  (ruling 9) — a log with `normalize_blocking_scale` on Dom is refused, and its transform, tile set
+  and script lines must stay unchanged.
+- **Limits.** A layout edit of a layer painted earlier in the same log is refused (bake them as
+  separate logs). Scripted nodes outside an instanced scene and resources with scripts cannot be
+  written. There is no bake button and no CLI yet; the PR flow is E7.1.
+
+The Dom fixture log is `test/fixtures/weftlumin/dom_scene_bake/commands.jsonl` (14 effective
+commands of every class above plus an undone nudge); `test/integration/test_weftlumin_scene_bake.gd`
+covers report and write modes, idempotence, live-session equivalence, Dom survival and the
+refusals, and records the fixture again with `SOUL_METER_SCENE_BAKE_RECORD_FIXTURE=1`. With
+`SOUL_METER_SCENE_BAKE_CAPTURE_DIR` set (under Xvfb or a display) it renders Dom before and after
+the fixture bake; the #344 evidence is in `docs/qa/weftlumin-bake-344-2026-10-11/`.
 
 ## Locations
 
