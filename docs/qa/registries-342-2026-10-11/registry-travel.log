@@ -1,0 +1,6 @@
+arrived: res://world/starting_town.tscn (index id 'dom', no_combat_zone=false)
+capture 01-dom-at-equipment-shop-door.jpg: OK
+door 'equipment_shop_enter' in range=true; _try_travel() accepted=true
+door 'equipment_shop_enter' -> res://world/interiors/equipment_shop.tscn (index id 'equipment_shop_interior', gameplay=true, spawn 'entry', FieldMap.no_combat_zone()=true)
+capture 02-equipment-shop-after-door-travel.jpg: OK
+REGISTRY-CAPTURE: ok

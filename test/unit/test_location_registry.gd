@@ -98,3 +98,142 @@ func test_the_effective_accord_lands_on_a_swept_row() -> void:
 			"'%s' resolves to %s, which the casting sweep never measured (rows: %s)"
 			% [location_id, effective, swept]
 		).is_true()
+
+
+## --- E3.3b (#342): the registry reads the baked index --------------------------
+
+func after_test() -> void:
+	LocationRegistry._clear_runtime()
+
+
+func _index_rows() -> Array[Dictionary]:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(LocationRegistry.INDEX_PATH))
+	assert_bool(parsed is Dictionary).is_true()
+	var rows: Array[Dictionary] = []
+	for row: Variant in (parsed as Dictionary)["locations"]:
+		if not str((row as Dictionary)["definition_path"]).is_empty():
+			rows.append(row as Dictionary)
+	return rows
+
+
+func test_all_is_exactly_the_index_rows_that_have_a_scene() -> void:
+	var rows: Array[Dictionary] = _index_rows()
+	assert_int(LocationRegistry.ALL.size()).is_equal(rows.size())
+	for index: int in rows.size():
+		var location: LocationDefinition = LocationRegistry.ALL[index]
+		assert_str(String(location.id)).is_equal(str(rows[index]["id"]))
+		assert_str(location.scene_path).is_equal(str(rows[index]["scene_path"]))
+		assert_str(location.resource_path).is_equal(str(rows[index]["definition_path"]))
+
+
+func test_named_consts_are_the_same_resources_the_index_loads() -> void:
+	var constants: Dictionary = (load("res://globals/location_registry.gd") as Script).get_script_constant_map()
+	var named := 0
+	for constant_name: String in constants:
+		var value: Variant = constants[constant_name]
+		if value is LocationDefinition:
+			named += 1
+			assert_bool(LocationRegistry.ALL.has(value)).override_failure_message(
+				"%s is not the instance in LocationRegistry.ALL" % constant_name
+			).is_true()
+			assert_object(LocationRegistry.by_id((value as LocationDefinition).id)).is_same(value)
+	assert_int(named).is_equal(LocationRegistry.ALL.size())
+
+
+func test_no_combat_zone_is_read_from_canon_and_matches_the_old_prefix_rule() -> void:
+	for row: Dictionary in _index_rows():
+		var scene_path := str(row["scene_path"])
+		assert_bool(LocationRegistry.no_combat_zone_by_scene(scene_path)).override_failure_message(
+			scene_path
+		).is_equal(bool(row["no_combat_zone"]))
+		# Players see no change: canon agrees with the rule the runtime used before #342.
+		assert_bool(bool(row["no_combat_zone"])).override_failure_message(scene_path).is_equal(
+			scene_path.begins_with("res://world/interiors/")
+		)
+	# An unindexed scene keeps the prefix rule.
+	assert_bool(LocationRegistry.no_combat_zone_by_scene("res://world/interiors/unbaked.tscn")).is_true()
+	assert_bool(LocationRegistry.no_combat_zone_by_scene("res://world/unbaked.tscn")).is_false()
+
+
+func _runtime_definition(location_id: StringName, scene_path: String) -> LocationDefinition:
+	var definition := LocationDefinition.new()
+	definition.id = location_id
+	definition.scene_path = scene_path
+	definition.spawns = {"from_dom": "from_dom"}
+	return definition
+
+
+func test_register_runtime_makes_an_unbaked_scene_a_travel_target() -> void:
+	var scene_path := "user://weftlumin/test-package/scenes/unbaked_grove.tscn"
+	var changes: Array[int] = [0]
+	var count_change := func() -> void: changes[0] += 1
+	LocationRegistry.locations_changed.connect(count_change)
+	var baked_size := LocationRegistry.ALL.size()
+	assert_bool(LocationRegistry.is_gameplay_scene(scene_path)).is_false()
+
+	var definition := _runtime_definition(&"unbaked-grove", scene_path)
+	assert_bool(LocationRegistry.register_runtime(definition)).is_true()
+
+	assert_int(changes[0]).is_equal(1)
+	assert_object(LocationRegistry.by_id(&"unbaked-grove")).is_same(definition)
+	assert_object(LocationRegistry.by_scene(scene_path)).is_same(definition)
+	assert_object(LocationRegistry.resolve(scene_path, &"unbaked-grove")).is_same(definition)
+	assert_str(LocationRegistry.by_scene(scene_path).resolve_spawn(&"from_dom")).is_equal("from_dom")
+	assert_bool(LocationRegistry.is_gameplay_scene(scene_path)).is_true()
+	assert_array(LocationRegistry.gameplay_scenes()).contains([scene_path])
+	assert_array(GameFlow.GAMEPLAY_SCENES).contains([scene_path])
+	assert_int(LocationRegistry.ALL.size()).override_failure_message(
+		"the runtime overlay must not change the baked set"
+	).is_equal(baked_size)
+
+	# Re-registering the same id replaces the overlay entry instead of duplicating it.
+	var revised := _runtime_definition(&"unbaked-grove", scene_path)
+	assert_bool(LocationRegistry.register_runtime(revised)).is_true()
+	assert_object(LocationRegistry.by_id(&"unbaked-grove")).is_same(revised)
+	assert_int(LocationRegistry.gameplay_scenes().count(scene_path)).is_equal(1)
+
+	LocationRegistry._clear_runtime()
+	assert_bool(LocationRegistry.is_gameplay_scene(scene_path)).is_false()
+	assert_array(GameFlow.GAMEPLAY_SCENES).not_contains([scene_path])
+	LocationRegistry.locations_changed.disconnect(count_change)
+
+
+func test_register_runtime_refuses_incomplete_or_baked_locations() -> void:
+	var changes: Array[int] = [0]
+	var count_change := func() -> void: changes[0] += 1
+	LocationRegistry.locations_changed.connect(count_change)
+	assert_bool(LocationRegistry.register_runtime(null)).is_false()
+	assert_bool(LocationRegistry.register_runtime(_runtime_definition(&"", "user://x.tscn"))).is_false()
+	assert_bool(LocationRegistry.register_runtime(_runtime_definition(&"no-scene", ""))).is_false()
+	assert_bool(LocationRegistry.register_runtime(
+		_runtime_definition(LocationRegistry.DOM.id, "user://elsewhere.tscn")
+	)).is_false()
+	assert_bool(LocationRegistry.register_runtime(
+		_runtime_definition(&"shadow-dom", LocationRegistry.DOM.scene_path)
+	)).is_false()
+	assert_object(LocationRegistry.by_id(LocationRegistry.DOM.id)).is_same(LocationRegistry.DOM)
+	assert_object(LocationRegistry.by_scene(LocationRegistry.DOM.scene_path)).is_same(LocationRegistry.DOM)
+	assert_int(changes[0]).is_zero()
+	LocationRegistry.locations_changed.disconnect(count_change)
+
+
+## Architecture §5 overlay boundary: a runtime registration writes nothing under canon/ or the index.
+func test_register_runtime_leaves_canon_and_the_index_byte_identical() -> void:
+	var before := _canon_hashes()
+	assert_bool(LocationRegistry.register_runtime(
+		_runtime_definition(&"boundary-probe", "user://weftlumin/probe/scenes/probe.tscn")
+	)).is_true()
+	assert_dict(_canon_hashes()).is_equal(before)
+
+
+func _canon_hashes() -> Dictionary:
+	var hashes: Dictionary = {LocationRegistry.INDEX_PATH: FileAccess.get_md5(LocationRegistry.INDEX_PATH)}
+	for hub: String in DirAccess.get_directories_at("res://canon"):
+		var directory := "res://canon".path_join(hub).path_join("locations")
+		if not DirAccess.dir_exists_absolute(directory):
+			continue
+		for filename: String in DirAccess.get_files_at(directory):
+			var path := directory.path_join(filename)
+			hashes[path] = FileAccess.get_md5(path)
+	assert_int(hashes.size()).is_greater(1)
+	return hashes

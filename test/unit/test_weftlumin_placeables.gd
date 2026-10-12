@@ -89,7 +89,7 @@ func test_the_registry_is_the_existing_actor_types_and_every_entry_places() -> v
 			assert_str(placed.scene_file_path).is_equal(entry.scene_path())
 	assert_array(ids).contains_exactly([
 		&"npc", &"hostile", &"building_door", &"travel_exit", &"interactable", &"chest",
-		&"pickup", &"switch", &"spawn_marker", &"accord_zone",
+		&"pickup", &"switch", &"spawn_marker", &"spawn_slot", &"accord_zone",
 	])
 	# Placements are command-log content only; the dressing scratch document is untouched.
 	assert_array(model.document["additions"] as Array).is_empty()

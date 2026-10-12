@@ -232,13 +232,15 @@ func test_validation_refuses_duplicate_ids_scenes_and_definitions() -> void:
 		assert_array(codes).contains([pair[1]])
 
 
-func test_runtime_notes_flag_a_no_combat_value_the_runtime_would_ignore() -> void:
+## E3.3b (#342): the runtime reads canon `no_combat_zone`, so a value off the interior-prefix rule
+## is no longer one the runtime would ignore.
+func test_runtime_notes_no_longer_flag_a_no_combat_value_off_the_prefix_rule() -> void:
 	var errors: Array[Dictionary] = []
 	var document: Dictionary = _valid_scene_document()
 	document["no_combat_zone"] = true
 	var batch: Array[Dictionary] = [document]
 	var rows: Array[Dictionary] = _kind.validate(batch, errors)
-	assert_int(WeftluminLocationsKind.runtime_notes(rows[0]).size()).is_equal(1)
+	assert_array(WeftluminLocationsKind.runtime_notes(rows[0])).is_empty()
 
 
 func test_definition_text_omits_script_defaults_in_the_committed_order() -> void:

@@ -29,6 +29,8 @@ extends RefCounted
 
 signal selection_changed
 signal scene_changed
+## The pattern library's files changed (a save, rename, delete or promotion, or its undo).
+signal patterns_changed
 
 const KIND := "scene"
 const OP_SET := "set_property"
@@ -93,6 +95,8 @@ var editable_roots_provider: Callable = Callable()
 var host_predicate: Callable = Callable()
 var texture_path := ""
 var pattern: Dictionary = {}
+## E3.1c (#370): the pattern library, whose writes are `pattern` commands on this model's bus.
+var library := WeftluminPatternLibrary.new()
 var placement_layer: StringName = &"GroundDetails"
 ## The registry entry the next click places (§4.6.4), or null.
 var placeable: WeftluminPlaceable = null
@@ -117,6 +121,7 @@ var _drag: Dictionary = {}
 
 func _init() -> void:
 	host_predicate = func(node: Node) -> bool: return LayoutOverrides.is_layout_editable(node)
+	library.changed.connect(patterns_changed.emit)
 
 
 ## Wrap `root`. A private in-memory bus is made when none is supplied.
@@ -217,6 +222,7 @@ func scene_path() -> String:
 func register_ops(command_bus: WeftluminCommandBus) -> void:
 	for op: String in [OP_SET, OP_ADD, OP_REMOVE]:
 		command_bus.register_document_op(KIND, op, _capture, _apply, _revert)
+	library.register_ops(command_bus)
 
 
 # --- ownership --------------------------------------------------------------------------------
@@ -769,10 +775,57 @@ func save_pattern(label: String) -> Dictionary:
 	var outcome: Dictionary = Patterns.capture(selection(), label)
 	if not bool(outcome.get("allowed", false)):
 		return outcome
-	var captured: Dictionary = outcome["pattern"]
-	var error: Error = Patterns.save_file(Patterns.pattern_path_for_id(StringName(captured["id"])), captured)
-	if error != OK:
-		return _blocked(&"save", &"writable_library", "Pattern could not be saved: %s." % error_string(error))
+	var saved: Dictionary = _run_library(library.save_command(outcome["pattern"], bus.package))
+	if not bool(saved["allowed"]):
+		return saved
+	outcome["commands"] = saved["commands"]
+	return outcome
+
+
+## Rename, delete or promote a library entry (`{pattern, source}` from `library.entries()`), each
+## one undo step. Repo patterns are read-only here; promotion is the only way into the repo.
+func rename_pattern(entry: Dictionary, display_name: String) -> Dictionary:
+	var refusal: Dictionary = _user_entry_refusal(entry, "renamed")
+	if not refusal.is_empty():
+		return refusal
+	return _run_library(library.rename_command(_entry_id(entry), display_name, bus.package))
+
+
+func delete_pattern(entry: Dictionary) -> Dictionary:
+	var refusal: Dictionary = _user_entry_refusal(entry, "deleted")
+	if not refusal.is_empty():
+		return refusal
+	return _run_library(library.delete_command(_entry_id(entry), bus.package))
+
+
+func promote_pattern(entry: Dictionary) -> Dictionary:
+	var refusal: Dictionary = _user_entry_refusal(entry, "promoted")
+	if not refusal.is_empty():
+		return refusal
+	return _run_library(library.promote_command(_entry_id(entry), bus.package))
+
+
+func _user_entry_refusal(entry: Dictionary, verb: String) -> Dictionary:
+	var named: String = str((entry.get("pattern", {}) as Dictionary).get("name", "That pattern"))
+	if str(entry.get("source", "")) == WeftluminPatternLibrary.SOURCE_REPO:
+		return _blocked(&"read_only", &"user_pattern", "%s is a repo pattern and cannot be %s here." % [named, verb])
+	if String(_entry_id(entry)).is_empty():
+		return _blocked(&"pattern", &"chosen_pattern", "Choose a pattern first.")
+	return {}
+
+
+static func _entry_id(entry: Dictionary) -> StringName:
+	return StringName(str((entry.get("pattern", {}) as Dictionary).get("id", "")))
+
+
+## One library command as one undo step. The armed brush is dropped when its pattern changes.
+func _run_library(command: WeftluminCommand) -> Dictionary:
+	finish_pointer()
+	var outcome: Dictionary = bus.execute(command)
+	if bool(outcome["allowed"]):
+		outcome["commands"] = PackedStringArray([command.id])
+		if command.op != WeftluminPatternLibrary.OP_SAVE and str(pattern.get("id", "")) == str(command.target.get("pattern", "")):
+			cancel_placement()
 	return outcome
 
 
