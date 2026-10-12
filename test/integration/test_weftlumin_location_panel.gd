@@ -182,14 +182,15 @@ func test_invalid_edits_are_refused_with_attributed_errors_and_write_nothing() -
 	assert_bool(DirAccess.dir_exists_absolute(SCRATCH_DRAFTS) and not DirAccess.get_files_at(SCRATCH_DRAFTS).is_empty()).is_false()
 
 
-func test_a_no_combat_value_the_runtime_ignores_shows_a_note() -> void:
+## E3.3b (#342): the runtime reads canon `no_combat_zone`, so a value off the interior-prefix rule is
+## no longer one it would ignore, and the panel shows no note for it.
+func test_a_no_combat_value_off_the_prefix_rule_shows_no_note() -> void:
 	var panel := _open_panel()
 	panel.select_location("wilds")
 	assert_bool(panel.notes_label.visible).is_false()
 	panel.set_field("no_combat_zone", true)
 	assert_bool(panel.save()).is_true()
-	assert_bool(panel.notes_label.visible).is_true()
-	assert_str(panel.notes_label.text).contains("E3.3b")
+	assert_bool(panel.notes_label.visible).is_false()
 
 
 ## Rendered evidence: the Locations tab for a macro location with a draft and its bake preview.

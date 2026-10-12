@@ -70,6 +70,8 @@ func execute_command(raw_command: String) -> bool:
 			return _command_phase(args)
 		"goto":
 			return _command_goto(args)
+		"respawn":
+			return _command_respawn_now(args)
 		"help":
 			if args.size() != 1:
 				return _usage("help")
@@ -84,8 +86,13 @@ func execute_command(raw_command: String) -> bool:
 			_append_line("quest complete <quest_id> (unavailable: provenance guard)")
 			_append_line("phase <morning|afternoon|evening|night|next>")
 			_append_line("goto <scene-or-hub-id>  |  help  |  clear")
+			_append_line("%srespawn now <table:slot>  |  %sclear slot <table:slot>" % [
+				DEBUG_CAUSE_PREFIX, DEBUG_CAUSE_PREFIX
+			])
 			return true
 		"clear":
+			if args.size() > 1 and args[1].to_lower() == "slot":
+				return _command_clear_slot(args)
 			if args.size() != 1:
 				return _usage("clear")
 			_log_entries.clear()
@@ -369,6 +376,121 @@ func _command_goto(args: PackedStringArray) -> bool:
 		return false
 	_append_line("Requested GameFlow travel to %s." % scene_path)
 	return true
+
+
+## `[debug] respawn now <table:slot>` (§4.10): forgets the slot's state so it is eligible today,
+## takes the scene's spawn-slot hostiles off the field and runs `SpawnDirector.populate()` again,
+## exactly as re-entering the scene on the same day would. The roll is E4.1's and unchanged: the
+## same save on the same day rolls the same result, `empty` included.
+func _command_respawn_now(args: PackedStringArray) -> bool:
+	if args.size() != 3 or args[1].to_lower() != "now":
+		return _usage("respawn now <table:slot>")
+	var target := _spawn_target(args[2])
+	if target.is_empty():
+		return false
+	var scene_root: Node = target["scene_root"]
+	var key := str(target["key"])
+	var director: SpawnDirector = SaveGame.spawn_director
+	_despawn_slot_hostiles(scene_root, target["prefixes"])
+	var data: Dictionary = director.to_dict()
+	(data["slots"] as Dictionary).erase(key)
+	director.from_dict(data)
+	var spawned := director.populate(scene_root)
+	var state: Dictionary = director.slot_state(str(target["table_id"]), str(target["slot_id"]))
+	var mine := 0
+	for hostile: Hostile in spawned:
+		if String(hostile.group_id).begins_with(key + ":"):
+			mine += 1
+	var outcome := "spawned nothing (refused table or missing anchor; see the error log)"
+	if mine > 0:
+		outcome = "spawned %d × %s as %s" % [
+			mine, (state["members"] as Array)[0]["archetype_id"], state["group_id"]
+		]
+	elif not state.is_empty() and bool(state["blocked_by_cap"]):
+		outcome = "blocked by the scene's max_alive cap"
+	elif not state.is_empty() and int(state["cleared_day"]) != SpawnDirector.NEVER_CLEARED:
+		outcome = "rolled empty; cleared on day %d" % int(state["cleared_day"])
+	_append_line("%srespawn now %s: %s (day %d)." % [
+		DEBUG_CAUSE_PREFIX, key, outcome, WorldClock.day_index()
+	])
+	return true
+
+
+## `[debug] clear slot <table:slot>`: takes the slot's hostiles off the field and records the slot
+## as cleared today, the state a defeated pack leaves; it rolls again after its cadence.
+func _command_clear_slot(args: PackedStringArray) -> bool:
+	if args.size() != 3:
+		return _usage("clear slot <table:slot>")
+	var target := _spawn_target(args[2])
+	if target.is_empty():
+		return false
+	var key := str(target["key"])
+	var director: SpawnDirector = SaveGame.spawn_director
+	var removed := _despawn_slot_hostiles(target["scene_root"], [key + ":"])
+	var day := WorldClock.day_index()
+	var data: Dictionary = director.to_dict()
+	var slots: Dictionary = data["slots"]
+	var row: Dictionary = slots.get(key, {
+		"group_id": "", "spawned_day": SpawnDirector.NEVER_CLEARED, "members": [],
+	})
+	row["members"] = []
+	row["cleared_day"] = day
+	row["blocked_by_cap"] = false
+	slots[key] = row
+	director.from_dict(data)
+	_append_line("%sclear slot %s: removed %d hostile(s); cleared on day %d." % [
+		DEBUG_CAUSE_PREFIX, key, removed, day
+	])
+	return true
+
+
+## Resolves `<table:slot>` against the spawn tables of the current gameplay scene. Refuses during
+## combat (the field's hostiles are the battle's) and outside a scene. Returns {} after an error.
+func _spawn_target(text: String) -> Dictionary:
+	var combat_active: bool = Battle.session_active or (Battle.controller != null and not Battle.ended)
+	if combat_active:
+		_refuse("Spawn slots cannot change during combat.")
+		return {}
+	var scene_root: Node = get_tree().current_scene
+	if scene_root == null or scene_root.scene_file_path.is_empty():
+		_refuse("No gameplay scene is loaded.")
+		return {}
+	var parts := text.split(":")
+	if parts.size() != 2 or parts[0].is_empty() or parts[1].is_empty():
+		_usage("<table:slot>")
+		return {}
+	var tables := SpawnDirector.tables_for_scene(scene_root.scene_file_path)
+	var prefixes: Array[String] = []
+	var found := false
+	for table: Dictionary in tables:
+		for slot: Dictionary in table["slots"]:
+			prefixes.append(SpawnDirector.slot_key(str(table["id"]), str(slot["id"])) + ":")
+			found = found or (str(table["id"]) == parts[0] and str(slot["id"]) == parts[1])
+	if not found:
+		_refuse("No spawn slot '%s' targets %s." % [text, scene_root.scene_file_path])
+		return {}
+	return {
+		"scene_root": scene_root, "table_id": parts[0], "slot_id": parts[1],
+		"key": SpawnDirector.slot_key(parts[0], parts[1]), "prefixes": prefixes,
+	}
+
+
+## Removes the live hostiles whose slot group starts with one of `prefixes`. Returns the count.
+func _despawn_slot_hostiles(scene_root: Node, prefixes: Array) -> int:
+	var doomed: Array[Hostile] = []
+	for node: Node in scene_root.find_children("*", "", true, false):
+		var hostile := node as Hostile
+		if hostile == null:
+			continue
+		for prefix: Variant in prefixes:
+			if String(hostile.group_id).begins_with(str(prefix)):
+				doomed.append(hostile)
+				break
+	for hostile: Hostile in doomed:
+		# Freed now, not queued: a re-roll reuses the node names in the same frame, and a
+		# just-spawned hostile's deferred `sync_cell()` must not run on a detached node.
+		hostile.free()
+	return doomed.size()
 
 
 func _quest_for_id(quest_id: int) -> Quest:

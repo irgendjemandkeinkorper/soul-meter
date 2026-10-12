@@ -1,6 +1,8 @@
 class_name LocationRegistry
 extends RefCounted
-## Central registry for gameplay location identity and safe travel targets.
+## Central registry for gameplay location identity and safe travel targets. The set of locations
+## comes from `data/generated/location_index.json` (E3.3b / #342); never hand-edit it, regenerate
+## with `tools/generate_locations.gd`.
 
 const DOM: LocationDefinition = preload("res://world/locations/dom.tres")
 const WILDS: LocationDefinition = preload("res://world/locations/wilds.tres")
@@ -59,43 +61,109 @@ const LOWER_TRIAL_HALL: LocationDefinition = preload(
 const DOM_TAVERN: LocationDefinition = preload(
 	"res://world/locations/interiors/dom_tavern.tres"
 )
-const ALL: Array[LocationDefinition] = [
-	DOM,
-	WILDS,
-	DORTHKOR,
-	WOUND_LIP,
-	REGISTRY_ARCHIVE,
-	BELL_HOUSE,
-	RIVER_SHRINE,
-	IRON_COMPANIES,
-	ITEM_SHOP,
-	EQUIPMENT_SHOP,
-	TOWN_HALL,
-	CHEFS_HOUSE,
-	PLAYERS_HOUSE,
-	TRIAL_HALL,
-	REGISTRY_STACKS,
-	BELL_LOFT,
-	SHRINE_UNDERCROFT,
-	GARRISON_YARD,
-	CASK_WAREHOUSE,
-	EQUIPMENT_FORGE,
-	COUNCIL_CHAMBER,
-	CHEFS_PANTRY,
-	PLAYERS_LOFT,
-	LOWER_TRIAL_HALL,
-	DOM_TAVERN,
-]
+## The baked index (`tools/generate_locations.gd`, E3.3a / #341). It owns WHICH locations exist;
+## the named consts above stay for code references and resolve to the same cached resources.
+const INDEX_PATH := "res://data/generated/location_index.json"
+const INDEX_SCHEMA := "weftlumin.location_index.v1"
+const _INTERIOR_SCENES_ROOT := "res://world/interiors/"
+
+
+## Static classes cannot declare signals, so the registry's lives on one shared emitter.
+class _Signals extends RefCounted:
+	signal locations_changed
+
+
+static var _signals: _Signals = _Signals.new()
+## Emitted after `register_runtime()` changes the set of known locations (E3.3b, §4.3.3).
+static var locations_changed: Signal = _signals.locations_changed
+## Every baked location with a scene, in index order (E3.3b / #342): read from the index, never a
+## hardcoded preload list. Runtime registrations are kept apart, in `_runtime`.
+static var ALL: Array[LocationDefinition] = []
+## Baked scene path -> canon `no_combat_zone`.
+static var _no_combat_zones: Dictionary = {}
+## In-session overlay (`register_runtime()`, P6): unbaked scenes, never written anywhere.
+static var _runtime: Array[LocationDefinition] = []
+static var _loaded := _load_index()
+
+
+static func _load_index() -> bool:
+	var index := load(INDEX_PATH) as JSON
+	if index == null or not index.data is Dictionary:
+		push_error("LocationRegistry: %s is missing or not a JSON object." % INDEX_PATH)
+		return false
+	var data: Dictionary = index.data
+	if str(data.get("schema", "")) != INDEX_SCHEMA:
+		push_error("LocationRegistry: %s is not %s." % [INDEX_PATH, INDEX_SCHEMA])
+		return false
+	for row: Variant in data.get("locations", []):
+		if not row is Dictionary:
+			continue
+		var entry: Dictionary = row
+		var definition_path := str(entry.get("definition_path", ""))
+		if definition_path.is_empty():
+			continue # gazetteer-only city: no scene to travel to
+		var location := load(definition_path) as LocationDefinition
+		if (
+			location == null
+			or String(location.id) != str(entry.get("id", ""))
+			or location.scene_path != str(entry.get("scene_path", ""))
+		):
+			push_error("LocationRegistry: index row '%s' does not match %s." % [
+				entry.get("id", ""), definition_path
+			])
+			continue
+		ALL.append(location)
+		_no_combat_zones[location.scene_path] = bool(entry.get("no_combat_zone", false))
+	return true
+
+
+## Registers an unbaked location for this session only (the overlay, P6), so a scene that exists
+## only as data can be travelled to. Refuses a definition without an id or scene, or one whose id or
+## scene a BAKED location already owns; re-registering a runtime id replaces it. Writes nothing.
+static func register_runtime(definition: LocationDefinition) -> bool:
+	if definition == null or definition.id.is_empty() or definition.scene_path.is_empty():
+		push_error("LocationRegistry.register_runtime: a location needs an id and a scene path.")
+		return false
+	for location in ALL:
+		if location.id == definition.id or location.scene_path == definition.scene_path:
+			push_error("LocationRegistry.register_runtime: '%s' collides with baked '%s'." % [
+				definition.id, location.id
+			])
+			return false
+	for index: int in range(_runtime.size() - 1, -1, -1):
+		var existing := _runtime[index]
+		if existing.id == definition.id or existing.scene_path == definition.scene_path:
+			_runtime.remove_at(index)
+	_runtime.append(definition)
+	locations_changed.emit()
+	return true
+
+
+## Drops every runtime registration. Not public API: test isolation only.
+static func _clear_runtime() -> void:
+	if _runtime.is_empty():
+		return
+	_runtime.clear()
+	locations_changed.emit()
+
+
+static func _known() -> Array[LocationDefinition]:
+	if _runtime.is_empty():
+		return ALL
+	var known: Array[LocationDefinition] = ALL.duplicate()
+	known.append_array(_runtime)
+	return known
+
 
 static func by_id(location_id: StringName) -> LocationDefinition:
-	for location in ALL:
+	for location in _known():
 		if location.id == location_id:
 			return location
 	return null
 
 
 static func by_scene(scene_path: String) -> LocationDefinition:
-	for location in ALL:
+	for location in _known():
 		if location.scene_path == scene_path:
 			return location
 	return null
@@ -124,9 +192,18 @@ static func thinning_tier_by_scene(scene_path: String) -> int:
 	return location.thinning_tier if location != null else 0
 
 
+## F0 ruling 2: whether the scene at `scene_path` refuses ambient combat. Baked locations answer
+## from canon `no_combat_zone`; any other scene (runtime registrations, fixtures) keeps the
+## `res://world/interiors/` prefix rule the runtime used before the index was read.
+static func no_combat_zone_by_scene(scene_path: String) -> bool:
+	if _no_combat_zones.has(scene_path):
+		return bool(_no_combat_zones[scene_path])
+	return scene_path.begins_with(_INTERIOR_SCENES_ROOT)
+
+
 static func gameplay_scenes() -> Array[String]:
 	var scenes: Array[String] = []
-	for location in ALL:
+	for location in _known():
 		if location.allowed_gameplay:
 			scenes.append(location.scene_path)
 	return scenes

@@ -31,6 +31,8 @@ var _palette_category: OptionButton
 var _palette_search: LineEdit
 var _pattern_name: LineEdit
 var _pattern_list: Tree
+## E3.1c (#370): list, arm, rename, delete, promote; `_pattern_name`/`_pattern_list` are its controls.
+var pattern_browser: WeftluminPatternBrowser
 var _layer_picker: OptionButton
 var _syncing_properties := false
 ## E3.2 (#340): Blocking / Terrain data painters and the walkability overlay.
@@ -68,6 +70,7 @@ func configure(host: WeftluminShell) -> void:
 	_build()
 	model.selection_changed.connect(_sync_to_tree)
 	model.scene_changed.connect(_rebuild)
+	model.patterns_changed.connect(_refresh_patterns)
 	refresh({"scene_root": adapter.gameplay_scene_root() if adapter != null else null})
 	if host != null:
 		host.viewport_input.connect(_on_viewport_input)
@@ -85,6 +88,7 @@ func refresh(payload: Dictionary) -> void:
 			model.scene_root.tree_exiting.disconnect(_on_scene_exiting)
 		model.selection_changed.disconnect(_sync_to_tree)
 		model.scene_changed.disconnect(_rebuild)
+		model.patterns_changed.disconnect(_refresh_patterns)
 		if not _is_session():
 			model.dispose()
 		var provider: Callable = model.editable_roots_provider
@@ -95,6 +99,8 @@ func refresh(payload: Dictionary) -> void:
 		_wire_model()
 		model.selection_changed.connect(_sync_to_tree)
 		model.scene_changed.connect(_rebuild)
+		model.patterns_changed.connect(_refresh_patterns)
+		_refresh_patterns()
 		if scene_root != null and not scene_root.tree_exiting.is_connected(_on_scene_exiting):
 			scene_root.tree_exiting.connect(_on_scene_exiting)
 		model.grid = _grid_for(scene_root)
@@ -129,6 +135,8 @@ func _exit_tree() -> void:
 			model.selection_changed.disconnect(_sync_to_tree)
 		if model.scene_changed.is_connected(_rebuild):
 			model.scene_changed.disconnect(_rebuild)
+		if model.patterns_changed.is_connected(_refresh_patterns):
+			model.patterns_changed.disconnect(_refresh_patterns)
 		if not _is_session():
 			model.dispose()
 
@@ -571,7 +579,7 @@ func _build_palette(slot: Node) -> void:
 	actor_palette.placeable_chosen.connect(func(entry: WeftluminPlaceable) -> void:
 		model.choose_placeable(entry)
 		_palette.deselect_all()
-		_pattern_list.deselect_all()
+		pattern_browser.clear_choice()
 		_refresh_status()
 	)
 	tabs.add_child(actor_palette)
@@ -595,19 +603,28 @@ func _build_palette(slot: Node) -> void:
 	_palette = _list_tree(content)
 	_palette.item_selected.connect(func() -> void:
 		model.choose_texture(str(_palette.get_selected().get_metadata(0)))
-		_pattern_list.deselect_all()
+		pattern_browser.clear_choice()
 		actor_palette.clear_choice()
 	)
-	_pattern_name = LineEdit.new()
-	_pattern_name.theme_type_variation = &"EditorLineEdit"
-	_pattern_name.placeholder_text = "Pattern name"
-	content.add_child(_pattern_name)
-	content.add_child(SoulMeterToolPanel._button("Save pattern (Ctrl+G)", "SavePattern", _save_pattern))
-	_pattern_list = _list_tree(content)
-	_pattern_list.item_selected.connect(func() -> void:
-		model.choose_pattern(_pattern_list.get_selected().get_metadata(0) as Dictionary)
+	pattern_browser = WeftluminPatternBrowser.new()
+	content.add_child(pattern_browser)
+	_pattern_name = pattern_browser.name_field
+	_pattern_list = pattern_browser.list
+	pattern_browser.save_requested.connect(func(_name: String) -> void: _save_pattern())
+	pattern_browser.pattern_chosen.connect(func(entry: Dictionary) -> void:
+		model.choose_pattern(entry["pattern"] as Dictionary)
 		_palette.deselect_all()
 		actor_palette.clear_choice()
+		_refresh_status()
+	)
+	pattern_browser.rename_requested.connect(func(entry: Dictionary, display_name: String) -> void:
+		_report(model.rename_pattern(entry, display_name))
+	)
+	pattern_browser.delete_requested.connect(func(entry: Dictionary) -> void:
+		_report(model.delete_pattern(entry))
+	)
+	pattern_browser.promote_requested.connect(func(entry: Dictionary) -> void:
+		_report(model.promote_pattern(entry))
 	)
 	_populate_palette()
 	_refresh_patterns()
@@ -639,20 +656,14 @@ func _populate_palette() -> void:
 
 
 func _refresh_patterns() -> void:
-	if _pattern_list == null:
+	if pattern_browser == null:
 		return
-	_pattern_list.clear()
-	var root_item: TreeItem = _pattern_list.create_item()
-	for pattern: Dictionary in WeftluminSceneModel.Patterns.list_patterns():
-		var item: TreeItem = _pattern_list.create_item(root_item)
-		item.set_text(0, "%s (%d)" % [pattern["name"], (pattern["nodes"] as Array).size()])
-		item.set_metadata(0, pattern)
+	pattern_browser.set_entries(model.library.entries())
 
 
 func _save_pattern() -> void:
 	commit_pending_input()
 	_report(model.save_pattern(_pattern_name.text if _pattern_name != null else ""))
-	_refresh_patterns()
 
 
 func _save() -> void:
