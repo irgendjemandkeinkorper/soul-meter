@@ -20,6 +20,7 @@ carried over below, restated for the panel host.
 | Location metadata | `location_panel.gd` (Locations) | `location_metadata.gd` | New in E3.3a (#341); no legacy surface |
 | Characters | `character_panel.gd` (Characters) | `character_roster.gd` | New in E5.1 (#347); no legacy surface |
 | Spawn tables | `spawn_panel.gd` (Spawns) | `spawn_tables_editor.gd` | New in E4.2 (#346); no legacy surface |
+| Accord overlay | `accord_overlay.gd` (Accord overlay) | none (read-only) | New in E6.2 (#350); no legacy surface |
 
 Scene layout now runs through `WeftluminSceneModel` in the shell. F10 and
 `SOUL_METER_LAYOUT` no longer activate an editor; use the enablement below.
@@ -202,6 +203,39 @@ covers report and write modes, idempotence, live-session equivalence, Dom surviv
 refusals, and records the fixture again with `SOUL_METER_SCENE_BAKE_RECORD_FIXTURE=1`. With
 `SOUL_METER_SCENE_BAKE_CAPTURE_DIR` set (under Xvfb or a display) it renders Dom before and after
 the fixture bake; the #344 evidence is in `docs/qa/weftlumin-bake-344-2026-10-11/`.
+
+### Accord overlay and saturation lint (E6.2, #350)
+
+The **Accord overlay** bottom tab draws hidden per-area state over the centre viewport once
+**Show overlay** is ticked (off by default; it then draws whichever tab is showing). Layers:
+**Accord heatmap** (per ground cell, `clamp(base_adjusted + zone_delta, 0, 100)` between the DS
+stops violet 0 / gild 50 / constant-green 100, with each `AccordZone`'s cells outlined and its
+anchor labelled with its delta and elemental default), **Weather element** (badge: the live
+battle's `Weather` element, else the location's `weather_default`), **Tile charge** (the live
+controller's `TileState`s with charge or Hush), and **Walkability** (the player's own
+`FieldMap.iso_grid()`, clearance 1 cell). Hovering a cell shows its accord, zone delta,
+elemental default, charge and walkability.
+
+- **Read-only.** It reads `FieldMap` and the live `CombatController` only — it iterates the
+  controller's existing `tile_states` and never calls `tile_state_at()`, which creates tiles —
+  and changes no accord, charge or weather number. In a battle the base is the controller's
+  `agreement_integrity` (what combat samples); otherwise `FieldMap.accord_base()`.
+- **No variation.** E1.7's variation is held at 0.0 in live combat, so the heatmap does not
+  preview it; the caption says *variation not applied (E1.7 held at 0.0)*.
+- **Saturation lint.** `WeftluminScenesKind.accord_saturation` is a `scenes` bake validator
+  (§4.11): it warns when `base_adjusted + max(zone_delta) + 10 > 100` or
+  `base_adjusted + min(zone_delta) − 10 < 0` over the baked field's ground cells
+  (`AccordMath.saturation_warnings()`). Its entries carry `"severity": "warning"`, which
+  `WeftluminBake` routes to the report's `warnings` and `lint.warnings` instead of `errors`, so a
+  warning never blocks a write. The panel shows the same warnings for the live field.
+  Every location authored at 95 with no thinning (Dom and the interiors) warns high today
+  (95 + 0 + 10 > 100), because the ±10 band is provisional.
+
+Suites: `test/unit/test_weftlumin_accord_saturation.gd`,
+`test/integration/test_weftlumin_accord_overlay.gd`. With `SOUL_METER_ACCORD_OVERLAY_CAPTURE_DIR`
+set (under Xvfb or a display) the integration suite renders the heatmap over the Wilds with two
+zones, a charged tile and a live battle; the #350 evidence is in
+`docs/qa/accord-heatmap-350-2026-10-12/`.
 
 ## Locations
 
@@ -486,5 +520,6 @@ registration are the model's.
 | Locations kind, generator, drift and drafts | `test/unit/test_weftlumin_locations_kind.gd`; panel: `test/integration/test_weftlumin_location_panel.gd` |
 | Characters kind, registries, vault_id, roster-from-canon, pickers | `test/unit/test_weftlumin_characters_kind.gd`; panel: `test/integration/test_weftlumin_character_panel.gd` |
 | Spawn tables kind, panel, anchors and debug verbs (#346) | `test/unit/test_weftlumin_spawn_tables_kind.gd`, `test/unit/test_dev_console_spawn_verbs.gd`; panel: `test/integration/test_weftlumin_spawn_panel.gd` |
+| Accord overlay and bake saturation lint (#350) | `test/unit/test_weftlumin_accord_saturation.gd`; panel: `test/integration/test_weftlumin_accord_overlay.gd` |
 
 The original file-to-behaviour migration plan is `docs/weftlumin-test-migration.md` (E1.9).
