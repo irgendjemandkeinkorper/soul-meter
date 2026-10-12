@@ -217,10 +217,16 @@ gazetteer facet (display name, patron, agreement, vault id) are read-only.
   **Bake preview** lists the definitions the generator would rewrite. To promote drafts, run the
   generator with `SOUL_METER_LOCATION_DRAFTS=<globalized draft directory>`. It replaces the canon
   documents of the same ids and regenerates. A draft cannot create a location.
-- **Not yet consumed.** The registries still preload the generated `.tres` files.
-  `FieldMap.no_combat_zone()` still derives the zone from the `res://world/interiors/` prefix,
-  and the panel notes any canon value the runtime would ignore. Reading the index and
-  `no_combat_zone` at runtime is E3.3b (#342).
+- **Runtime.** `LocationRegistry.ALL` is read from the index (E3.3b, #342); the named consts
+  (`LocationRegistry.DOM`, ...) resolve to the same resources. `FieldMap.no_combat_zone()` reads
+  canon `no_combat_zone` through `LocationRegistry.no_combat_zone_by_scene()`.
+  `LocationRegistry.register_runtime(def)` registers an unbaked location for the session and emits
+  `LocationRegistry.locations_changed`; `GameFlow` validates travel with
+  `LocationRegistry.is_gameplay_scene()`. `WorldMapRegistry`, `FastTravelRegistry` and
+  `BuildingTransitionRegistry` still hold their own tables: `weftlumin.location.v1` has no world-map,
+  hub or transition facet for them to read yet.
+  Rendered evidence of a new game travelling Dom -> Equipment Shop through the index-driven
+  registry is in `docs/qa/registries-342-2026-10-11/`, from `test/manual/registry_travel_capture.gd`.
 
 Rendered evidence of the tab (canon form, then a saved draft with its bake preview) is in
 `docs/qa/weftlumin-locations-341-2026-10-11/`. It comes from

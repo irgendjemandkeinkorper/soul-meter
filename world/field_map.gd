@@ -222,8 +222,9 @@ func weather_default() -> StringName:
 	return location.weather_default if location != null else &""
 
 
+## F0 ruling 2, read from canon `no_combat_zone` through the location index (E3.3b / #342).
 func no_combat_zone() -> bool:
-	return _scene_path().begins_with("res://world/interiors/")
+	return LocationRegistry.no_combat_zone_by_scene(_scene_path())
 
 
 func _scene_path() -> String:
