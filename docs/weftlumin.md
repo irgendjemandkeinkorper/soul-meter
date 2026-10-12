@@ -101,6 +101,32 @@ checks the outline pixels at each step and its final position, and writes `01-pi
 the capture variable it returns immediately; requesting a capture under headless rendering fails.
 Headless tests do not establish visual correctness.
 
+### Pattern library (E3.1c, #370)
+
+The Palette slot's Dressing tab hosts the pattern browser (`addons/weftlumin/shell/patterns/pattern_browser.gd`)
+over `WeftluminPatternLibrary` (`addons/weftlumin/core/pattern_library.gd`). The format is unchanged:
+`globals/layout_patterns.gd` schema 1 captures and stamps, with world-space offsets from the selection
+anchor and a name resolver that receives the names already reserved by the same stamp.
+
+Select props, type a name and press Save pattern or Ctrl+G. Choose a row to arm it as a brush and fill
+the name field; click to stamp (Shift repeats, Alt bypasses snap). Stamped props stay selected, so they
+can be rearranged and saved again under the same name. Rename uses the name field. Delete removes the
+user file. **Promote to repo** moves a user pattern byte for byte from `user://layout_patterns/` to
+`res://weftlumin/patterns/`, replacing a repo pattern with the same id.
+
+Repo rows are marked `repo, read-only`. Rename, Delete and Promote are disabled for them, and the model
+refuses those operations. A repo pattern can still be armed. Saving under its name writes a user copy
+that shadows it in the list; promoting that copy updates the repo pattern.
+
+Each save, stamp, rename, delete and promotion is one undo step on the scene history. Library writes are
+`pattern` document commands (`save`, `rename`, `delete`, `promote`). Their `pre_state` is the touched
+files' prior content, so undo restores those files exactly. Rename changes only the top-level `id` and
+`name` values. Integers stay integers because the library does not re-serialize the document.
+
+Rendered capture: `SOUL_METER_PATTERN_CAPTURE_DIR=<dir>` with
+`test/integration/test_scene_pick_pattern_browser.gd` under Xvfb. The #370 evidence is in
+`docs/qa/weftlumin-patterns-370-2026-10-11/`.
+
 ### Data-layer painters (E3.2, #340)
 
 The Scene tree slot's **Paint data layers** toggle routes viewport clicks to the painters
@@ -326,6 +352,7 @@ registration are the model's.
 | Model behaviour | `test/unit/test_{dev_console_commands,consequence_timeline,combat_lab,dialogue_lab,quest_editor,campaign_encounters,campaign_quest_registry}.gd` |
 | Panels in the shell | `test/integration/test_weftlumin_panels.gd`, `test_weftlumin_shell.gd` |
 | Placeables and export inspector (#339) | `test/unit/test_weftlumin_placeables.gd`, `test/integration/test_weftlumin_palette_inspector.gd` (rendered capture with `SOUL_METER_WEFTLUMIN_PALETTE_CAPTURE_DIR`; evidence in `docs/qa/weftlumin-palette-339-2026-10-11/`) |
+| Pattern library (#370) | `test/unit/test_weftlumin_pattern_library.gd`, `test/integration/test_scene_pick_pattern_browser.gd`; format: `test/unit/test_layout_patterns.gd` |
 | Locations kind, generator, drift and drafts | `test/unit/test_weftlumin_locations_kind.gd`; panel: `test/integration/test_weftlumin_location_panel.gd` |
 
 The original file-to-behaviour migration plan is `docs/weftlumin-test-migration.md` (E1.9).
