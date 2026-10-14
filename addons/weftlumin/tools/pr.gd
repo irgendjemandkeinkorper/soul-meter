@@ -109,11 +109,12 @@ func run(package: Dictionary, options: Dictionary) -> Dictionary:
 		_say("  %s %s" % ["$" if execute else "would run:", step["display"]])
 	if not execute:
 		return report
-	_execute(report, steps, worktree, body, message)
+	_execute(report, steps, worktree, body, message, open_prs as Array, force)
 	return report
 
 
-func _execute(report: Dictionary, steps: Array[Dictionary], worktree: String, body: String, message: String) -> void:
+func _execute(report: Dictionary, steps: Array[Dictionary], worktree: String, body: String, message: String,
+		open_prs: Array, force: bool) -> void:
 	var pr: Dictionary = report["pr"]
 	var scratch: String = OS.get_user_data_dir().path_join("weftlumin").path_join("pr").path_join(str(report["package"]))
 	DirAccess.make_dir_recursive_absolute(scratch)
@@ -123,11 +124,15 @@ func _execute(report: Dictionary, steps: Array[Dictionary], worktree: String, bo
 		var arguments: PackedStringArray = PackedStringArray(step["args"])
 		for index: int in arguments.size():
 			arguments[index] = arguments[index].replace("{scratch}", scratch)
+		var report_path: String = str(step.get("report", "")).replace("{scratch}", scratch)
+		if not report_path.is_empty() and FileAccess.file_exists(report_path):
+			# A report left by an earlier run must not vouch for this one.
+			DirAccess.remove_absolute(report_path)
 		var result: Dictionary = cli.call("execute", str(step["program"]), arguments)
 		var ok: bool = int(result.get("exit_code", 1)) == 0
-		if step.has("report"):
+		if not report_path.is_empty():
 			# A Godot step is judged by the report it writes, not its exit code (teardown aborts).
-			var written: Variant = JSON.parse_string(FileAccess.get_file_as_string(str(step["report"]).replace("{scratch}", scratch)))
+			var written: Variant = JSON.parse_string(FileAccess.get_file_as_string(report_path))
 			ok = written is Dictionary and ((written as Dictionary).get("errors", []) as Array).is_empty() \
 				and int((written as Dictionary).get("exit_code", 1)) == 0
 		(pr["executed"] as Array).append({"step": step["name"], "ok": ok})
@@ -136,8 +141,33 @@ func _execute(report: Dictionary, steps: Array[Dictionary], worktree: String, bo
 			(report["errors"] as Array).append(cli.call("attributed", worktree, step["name"], "a successful step", "pr_step_failed",
 				"%s failed: %s" % [step["display"], str(result.get("output", "")).strip_edges().right(2000)]))
 			return
+		if step["name"] == "staged files" and not _staged_overlap_clear(report, str(result.get("output", "")), open_prs, force):
+			return
 		if step["name"] == "gh pr create":
 			pr["url"] = str(result.get("output", "")).strip_edges()
+
+
+## The regen and drift stages can touch more than the dry-run plan named, so the overlap scan
+## runs again on what was actually staged, before anything is committed or pushed.
+func _staged_overlap_clear(report: Dictionary, output: String, open_prs: Array, force: bool) -> bool:
+	var pr: Dictionary = report["pr"]
+	var staged: Array[String] = []
+	for line: String in output.split("\n", false):
+		if not line.strip_edges().is_empty():
+			staged.append(line.strip_edges())
+	staged.sort()
+	pr["staged_files"] = staged
+	var overlaps: Array[Dictionary] = overlapping(staged, open_prs, str(pr["branch"]))
+	pr["overlap"]["staged_overlaps"] = overlaps
+	if overlaps.is_empty() or force:
+		return true
+	report["refused_overlap"] = overlaps
+	_say("pr %s: refused_overlap — the staged files overlap %d open PR(s); nothing committed (worktree %s kept)" % [
+		report["package"], overlaps.size(), pr["worktree"],
+	])
+	for overlap: Dictionary in overlaps:
+		_say("  #%s %s: %s" % [overlap["pr"], overlap["branch"], ", ".join(PackedStringArray(overlap["files"]))])
+	return false
 
 
 ## The ordered plan. Each step: `{name, program, args, display}`; Godot steps add `report`.
@@ -147,7 +177,9 @@ func plan_steps(package: Dictionary, pr: Dictionary, worktree: String) -> Array[
 	var godot: String = OS.get_executable_path()
 	var package_dir: String = ProjectSettings.globalize_path(str(package["dir"]))
 	var branch: String = pr["branch"]
-	steps.append(_step("worktree", "git", ["-C", repo, "worktree", "add", "-b", branch, worktree, str(pr["base"])]))
+	# Start from the remote base, not whatever the local branch happens to be.
+	steps.append(_step("fetch", "git", ["-C", repo, "fetch", "origin", str(pr["base"])]))
+	steps.append(_step("worktree", "git", ["-C", repo, "worktree", "add", "-b", branch, worktree, "origin/" + str(pr["base"])]))
 	steps.append(_step("import", godot, ["--headless", "--path", worktree, "--import"]))
 	var bake: Dictionary = _step("bake --write", godot, [
 		"--headless", "--path", worktree, "--script", CLI_ENTRY, "--", "bake", package_dir, "--write", "--report", "{scratch}/bake.json",
@@ -170,6 +202,7 @@ func plan_steps(package: Dictionary, pr: Dictionary, worktree: String) -> Array[
 	if bool(pr.get("drift_stage", false)):
 		steps.append(_step("drift stages", "bash", ["-c", 'cd "$1" && GODOT_BIN="$2" bash %s' % DRIFT_STAGE, "weftlumin-pr", worktree, godot]))
 	steps.append(_step("git add", "git", ["-C", worktree, "add", "-A"]))
+	steps.append(_step("staged files", "git", ["-C", worktree, "diff", "--cached", "--name-only"]))
 	steps.append(_step("git commit", "git", ["-C", worktree, "commit", "-F", "{scratch}/commit.txt"]))
 	steps.append(_step("git push", "git", ["-C", worktree, "push", "-u", "origin", branch]))
 	var create: Array = ["-c", 'cd "$1" && shift && exec gh "$@"', "weftlumin-pr", worktree,

@@ -25,6 +25,8 @@ var _executed: Array = []
 
 func after_test() -> void:
 	_remove_tree(SCRATCH)
+	_remove_tree(OS.get_user_data_dir().path_join("weftlumin/pr").path_join(PACKAGE))
+	_executed.clear()
 
 
 # --- argument parsing and output ----------------------------------------------------------------
@@ -306,15 +308,20 @@ func test_pr_is_a_dry_run_by_default_and_plans_the_flow() -> void:
 	var names: Array = []
 	for step: Dictionary in pr["steps"]:
 		names.append(step["name"])
-	assert_str(str(names[0])).is_equal("worktree")
+	assert_array(names.slice(0, 2)).contains_exactly(["fetch", "worktree"])
+	assert_array(pr["steps"][1]["args"]).contains(["origin/main"])
+	assert_int(names.find("staged files")).is_greater(names.find("git add"))
+	assert_int(names.find("staged files")).is_less(names.find("git commit"))
 	assert_array(names).contains(["bake --write", "lint", "git commit", "git push", "gh pr create", "test test/integration/test_starting_town.gd"])
 	assert_str(str(pr["steps"].back()["display"])).ends_with("--draft")
 	assert_str(str(pr["body"])).contains("Closes #351")
 	assert_str(str(pr["body"])).contains("weftlumin.bake.v1")
 	assert_str(str(pr["commit_message"])).contains("Closes #351")
 	assert_str(str(pr["commit_message"])).ends_with("Co-Authored-By: Example <x@example.com>\n")
-	for line: String in result["lines"]:
-		assert_bool(line.contains("--label") or line.contains("--milestone") or line.contains("--assignee")).override_failure_message(line).is_false()
+	# Judge the argv that would run, not only the printed plan.
+	for step: Dictionary in pr["steps"]:
+		for arg: Variant in step["args"]:
+			assert_bool(str(arg) in ["--label", "--milestone", "--assignee", "-l", "-m", "-a"]).override_failure_message(str(step["args"])).is_false()
 	assert_dict(_hashes()).is_equal(hashes)
 
 
@@ -334,6 +341,69 @@ func test_pr_refuses_an_overlap_with_exit_three_unless_forced() -> void:
 	assert_array(forced["report"]["pr"]["overlap"]["overlaps"]).has_size(1)
 	assert_array(forced["report"]["pr"]["steps"]).is_not_empty()
 	assert_array(_executed).is_empty()
+
+
+func test_pr_execute_runs_the_plan_in_order_and_captures_the_url() -> void:
+	var result: Dictionary = _run_execute(PackedStringArray(["world/starting_town.tscn"]), [])
+	assert_str(_status(result)).is_equal("WEFTLUMIN: pr ok exit=0")
+	var pr: Dictionary = result["report"]["pr"]
+	var executed: Array = []
+	for entry: Dictionary in pr["executed"]:
+		executed.append(entry["step"])
+		assert_bool(bool(entry["ok"])).override_failure_message(str(entry)).is_true()
+	var planned: Array = []
+	for step: Dictionary in pr["steps"]:
+		planned.append(step["name"])
+	assert_array(executed).is_equal(planned)
+	assert_str(str(pr["url"])).is_equal("https://example.invalid/pull/1")
+	assert_array(pr["staged_files"]).contains_exactly(["world/starting_town.tscn"])
+	# The worktree is cut from the fetched remote base.
+	assert_array(_executed[0][1]).contains(["fetch", "origin", "main"])
+	assert_array(_executed[1][1]).contains(["origin/main"])
+
+
+func test_pr_execute_ignores_a_stale_step_report() -> void:
+	var scratch: String = OS.get_user_data_dir().path_join("weftlumin/pr").path_join(PACKAGE)
+	DirAccess.make_dir_recursive_absolute(scratch)
+	_write(scratch.path_join("bake.json"), JSON.stringify({"errors": [], "exit_code": 0}))
+	# The bake step "crashes": it exits non-zero and writes no report of its own.
+	var result: Dictionary = _run_execute(PackedStringArray(["world/starting_town.tscn"]), [], "bake")
+	assert_str(_status(result)).is_equal("WEFTLUMIN: pr errors exit=1")
+	assert_str(str(result["report"]["pr"]["executed"].back()["step"])).is_equal("bake --write")
+	assert_bool(bool(result["report"]["pr"]["executed"].back()["ok"])).is_false()
+	for call: Array in _executed:
+		assert_bool("commit" in Array(call[1]) or "push" in Array(call[1])).override_failure_message(str(call)).is_false()
+
+
+func test_pr_execute_refuses_an_overlap_in_the_staged_files_before_committing() -> void:
+	# The plan names only Dom; regen staged data.pandora, which open PR #42 also changes.
+	var open_prs: Array = [{"number": 42, "title": "data", "headRefName": "feat/data", "files": [{"path": "data.pandora"}]}]
+	var result: Dictionary = _run_execute(PackedStringArray(["world/starting_town.tscn", "data.pandora"]), open_prs)
+	assert_int(result["exit_code"]).is_equal(CliScript.EXIT_OVERLAP)
+	assert_str(_status(result)).is_equal("WEFTLUMIN: pr refused_overlap exit=3")
+	assert_int(int(result["report"]["refused_overlap"][0]["pr"])).is_equal(42)
+	assert_str(str(result["report"]["pr"]["executed"].back()["step"])).is_equal("staged files")
+	for call: Array in _executed:
+		assert_bool("commit" in Array(call[1]) or "push" in Array(call[1])).override_failure_message(str(call)).is_false()
+
+
+func test_a_package_id_or_hub_that_is_not_a_path_component_is_refused() -> void:
+	_write(SCRATCH + "/escape/campaign.json", JSON.stringify({"schema": "weftlumin.package.v1", "id": "../escape", "hub": "../../..", "kinds": []}))
+	var result: Dictionary = _run(PackedStringArray(["validate", SCRATCH + "/escape"]))
+	assert_str(_status(result)).is_equal("WEFTLUMIN: validate errors exit=1")
+	assert_array(_codes(result["report"]["errors"])).contains(["invalid_package_id", "invalid_hub"])
+	var pr: Dictionary = _run(PackedStringArray(["pr", SCRATCH + "/escape"]))
+	assert_array(pr["report"]["pr"]["steps"]).is_empty()
+
+
+func test_apply_refuses_project_paths_spelled_through_user_or_absolute_paths() -> void:
+	var root: String = ProjectSettings.globalize_path("res://").trim_suffix("/")
+	var user: String = OS.get_user_data_dir()
+	var ups: String = "../".repeat(user.split("/", false).size())
+	for spelled: String in [root.path_join("test/fixtures/weftlumin/cli_scratch"), "user://" + ups + root.trim_prefix("/") + "/test/fixtures/weftlumin/cli_scratch"]:
+		var result: Dictionary = _run(PackedStringArray(["apply", spelled, FIXTURE_LOG]))
+		assert_array(_codes(result["report"]["errors"])).override_failure_message(spelled).contains_exactly(["scratch_only"])
+	assert_bool(DirAccess.dir_exists_absolute("res://test/fixtures/weftlumin/cli_scratch")).is_false()
 
 
 func test_the_kind_to_test_glob_map_is_the_adapters() -> void:
@@ -394,6 +464,29 @@ func _run(args: PackedStringArray) -> Dictionary:
 		return {"exit_code": 1, "output": ""}
 	)
 	return cli.call("run", args)
+
+
+## `pr --execute` against a recording runner. Godot steps get a clean report unless their step
+## name contains `fail_step`; `git diff --cached` lists `staged`; nothing real runs.
+func _run_execute(staged: PackedStringArray, open_prs: Array, fail_step: String = "") -> Dictionary:
+	_write(SCRATCH + "/open_prs.json", JSON.stringify(open_prs))
+	var cli: RefCounted = CliScript.new(AdapterScript.new())
+	cli.set("echo", false)
+	cli.set("runner", func(program: String, arguments: PackedStringArray) -> Dictionary:
+		_executed.append([program, arguments])
+		var report_at: int = arguments.find("--report")
+		if report_at >= 0:
+			var verb: String = arguments[arguments.find("--") + 1]
+			if not fail_step.is_empty() and verb.contains(fail_step):
+				return {"exit_code": 134, "output": "crashed"}
+			_write(arguments[report_at + 1], JSON.stringify({"errors": [], "exit_code": 0}))
+		if arguments.has("--cached"):
+			return {"exit_code": 0, "output": "\n".join(staged) + "\n"}
+		if arguments.has("create"):
+			return {"exit_code": 0, "output": "https://example.invalid/pull/1\n"}
+		return {"exit_code": 0, "output": ""}
+	)
+	return cli.call("run", PackedStringArray(["pr", FIXTURE, "--execute", "--open-prs", SCRATCH + "/open_prs.json", "--worktree", SCRATCH + "/wt"]))
 
 
 func _status(result: Dictionary) -> String:

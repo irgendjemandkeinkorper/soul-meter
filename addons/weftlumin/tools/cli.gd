@@ -250,6 +250,13 @@ func load_package(path: String) -> Dictionary:
 			break
 	package["id"] = str(manifest.get("id", log_package if not log_package.is_empty() else dir.trim_suffix("/").get_file()))
 	package["hub"] = str(manifest.get("hub", ""))
+	# Both become path components (scratch dirs, worktree, `canon/<hub>/`); refuse anything else.
+	if not is_package_token(str(package["id"])):
+		errors.append(attributed(manifest_path, "id", "lowercase letters, digits, '-' or '_'", "invalid_package_id",
+			"Package id %s is not a plain path component." % JSON.stringify(package["id"])))
+	if not str(package["hub"]).is_empty() and not is_package_token(str(package["hub"])):
+		errors.append(attributed(manifest_path, "hub", "lowercase letters, digits, '-' or '_'", "invalid_hub",
+			"Hub %s is not a plain path component." % JSON.stringify(package["hub"])))
 	package["title"] = str(manifest.get("title", package["id"]))
 	if not package["manifest_present"]:
 		manifest = {"schema": WeftluminPackage.SCHEMA, "id": package["id"], "kinds": inferred}
@@ -297,8 +304,49 @@ static func normalise_path(path: String) -> String:
 	return simplified
 
 
+## True for any path that lands in the project once `user://`, `..` and symlinks are resolved.
 static func is_inside_project(path: String) -> bool:
-	return normalise_path(path).begins_with("res://")
+	var value: String = normalise_path(path)
+	if value.begins_with("res://"):
+		return true
+	var root: String = resolve_links(ProjectSettings.globalize_path("res://").simplify_path().trim_suffix("/"))
+	var resolved: String = resolve_links(ProjectSettings.globalize_path(value).simplify_path().trim_suffix("/"))
+	return resolved == root or resolved.begins_with(root + "/")
+
+
+## `path` with every existing symlinked component replaced by its target (bounded, so a link
+## loop cannot hang). Components that do not exist yet are kept as written.
+static func resolve_links(path: String) -> String:
+	var resolved: String = path
+	for _hop: int in 32:
+		var changed: bool = false
+		var prefix: String = ""
+		var parts: PackedStringArray = resolved.split("/", false)
+		for index: int in parts.size():
+			var parent: String = prefix if not prefix.is_empty() else ("/" if resolved.begins_with("/") else "")
+			prefix = parent.path_join(parts[index]) if not parent.is_empty() else parts[index]
+			var dir := DirAccess.open(parent if not parent.is_empty() else ".")
+			if dir == null or not dir.is_link(parts[index]):
+				continue
+			var target: String = dir.read_link(parts[index])
+			if not target.is_absolute_path():
+				target = parent.path_join(target)
+			var rest: PackedStringArray = parts.slice(index + 1)
+			resolved = (target.path_join("/".join(rest)) if not rest.is_empty() else target).simplify_path()
+			changed = true
+			break
+		if not changed:
+			return resolved
+	return resolved
+
+
+static func is_package_token(value: String) -> bool:
+	if value.is_empty():
+		return false
+	for character: String in value:
+		if not (character in "abcdefghijklmnopqrstuvwxyz0123456789-_"):
+			return false
+	return true
 
 
 func _kinds() -> Array[WeftluminKind]:
