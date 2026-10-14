@@ -166,7 +166,9 @@ func test_live_battle_supplies_weather_and_charge_without_mutating_tiles() -> vo
 	await _open_shell()
 	panel.set_overlay_visible(true)
 	_motion(_screen(cell))
-	await _render()
+	# Hover is read state, not pixels: never wait on a draw, which never arrives headlessly.
+	panel._redraw()
+	await get_tree().process_frame
 	assert_str(panel.hover_label.text).contains("charge Khash 2")
 	assert_int(controller.tile_states.size()).is_equal(tiles_before)
 	assert_array(controller.tile_states.map(func(tile: TileState) -> Dictionary: return tile.to_dict())).is_equal(snapshot)
