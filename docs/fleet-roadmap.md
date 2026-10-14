@@ -114,6 +114,11 @@ merges; F1 and F2 gate D3/D4.
 | F6 | Hollowing band: Soul-zero state with dialogue conditions and companion barks; "acts of Agreement" as a tagged quest outcome crediting the gauge | Codex; Kimi dialogue drafts | M |
 | F7 | Canon proposals: hollowing in-fiction, what an act of Agreement looks like per faction | Ollama → Kimi rewrite | S |
 
+### Weftlumin authoring (agents)
+
+Scene, canon-document, quest and encounter changes go through a Weftlumin package and the headless
+CLI, not hand edits: `docs/weftlumin-agents.md` (E7.3, #353).
+
 ### Wave E — Acceptance
 
 4-archetype full playthroughs, §3 metrics gate (#106). Owner-led with Codex fixes.
