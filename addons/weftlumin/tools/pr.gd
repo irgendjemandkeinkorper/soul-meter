@@ -26,6 +26,14 @@ const CLI_ENTRY := "res://addons/weftlumin/tools/weftlumin.gd"
 const DEFAULT_BASE := "main"
 const TEST_RUNNER := "scripts/test.sh"
 const DRIFT_STAGE := "scripts/check_generated_data.sh"
+## `gh pr list --limit`; a result this long may have dropped PRs.
+const OPEN_PR_LIMIT := 200
+## gh lists at most this many files per PR; a PR at the cap may change more.
+const GH_FILES_PER_PR := 100
+## GitHub refuses PR bodies longer than this.
+const BODY_LIMIT := 65536
+## Seconds a cancelled `--execute` run gets to stop on its own before `poll()` kills it.
+const CANCEL_GRACE_SEC := 5.0
 
 var cli: RefCounted = null
 
@@ -75,7 +83,7 @@ func run(package: Dictionary, options: Dictionary) -> Dictionary:
 		pr["overlap"] = {"checked": true, "source": path, "open_prs": (open_prs as Array).size()}
 	elif execute:
 		var listed: Dictionary = cli.call("execute", "gh", PackedStringArray([
-			"pr", "list", "--state", "open", "--base", base, "--limit", "200", "--json", "number,title,headRefName,files",
+			"pr", "list", "--state", "open", "--base", base, "--limit", str(OPEN_PR_LIMIT), "--json", "number,title,headRefName,files",
 		]))
 		open_prs = JSON.parse_string(str(listed.get("output", ""))) if int(listed.get("exit_code", 1)) == 0 else null
 		if not open_prs is Array:
@@ -83,6 +91,10 @@ func run(package: Dictionary, options: Dictionary) -> Dictionary:
 			return report
 		pr["overlap"] = {"checked": true, "source": "gh pr list", "open_prs": (open_prs as Array).size()}
 	if open_prs is Array:
+		var truncated: Array[String] = scan_truncation(open_prs as Array)
+		pr["overlap"]["truncated"] = truncated
+		for warning: String in truncated:
+			_say("pr %s: WARNING %s" % [package["id"], warning])
 		var overlaps: Array[Dictionary] = overlapping(changed, open_prs as Array, str(pr["branch"]))
 		pr["overlap"]["overlaps"] = overlaps
 		if not overlaps.is_empty() and not force:
@@ -96,6 +108,9 @@ func run(package: Dictionary, options: Dictionary) -> Dictionary:
 
 	var worktree: String = str(options.get("--worktree", default_worktree(str(package["id"]))))
 	pr["worktree"] = worktree
+	if DirAccess.dir_exists_absolute(worktree):
+		pr["leftover"] = cleanup_hint(worktree, str(pr["branch"]))
+		_say("pr %s: WARNING %s already exists, so the worktree step will fail. %s" % [package["id"], worktree, pr["leftover"]])
 	var body: String = pr_body(report, issue)
 	var message: String = commit_message(package, report, issue, options.get("--trailer", []) as Array)
 	pr["body"] = body
@@ -109,18 +124,23 @@ func run(package: Dictionary, options: Dictionary) -> Dictionary:
 		_say("  %s %s" % ["$" if execute else "would run:", step["display"]])
 	if not execute:
 		return report
-	_execute(report, steps, worktree, body, message, open_prs as Array, force)
+	_execute(report, steps, worktree, body, message, open_prs as Array, force, str(options.get("--cancel-file", "")))
 	return report
 
 
 func _execute(report: Dictionary, steps: Array[Dictionary], worktree: String, body: String, message: String,
-		open_prs: Array, force: bool) -> void:
+		open_prs: Array, force: bool, cancel_file: String = "") -> void:
 	var pr: Dictionary = report["pr"]
 	var scratch: String = OS.get_user_data_dir().path_join("weftlumin").path_join("pr").path_join(str(report["package"]))
 	DirAccess.make_dir_recursive_absolute(scratch)
 	cli.call("write_text_atomically", scratch.path_join("body.md"), body)
 	cli.call("write_text_atomically", scratch.path_join("commit.txt"), message)
 	for step: Dictionary in steps:
+		if not cancel_file.is_empty() and FileAccess.file_exists(cancel_file):
+			(report["errors"] as Array).append(cli.call("attributed", worktree, step["name"], "an uncancelled run", "pr_cancelled",
+				"Cancelled before %s; nothing after it ran." % step["display"]))
+			_say("  cancelled before %s" % step["name"])
+			return
 		var arguments: PackedStringArray = PackedStringArray(step["args"])
 		for index: int in arguments.size():
 			arguments[index] = arguments[index].replace("{scratch}", scratch)
@@ -138,8 +158,11 @@ func _execute(report: Dictionary, steps: Array[Dictionary], worktree: String, bo
 		(pr["executed"] as Array).append({"step": step["name"], "ok": ok})
 		_say("  %s %s" % ["ok" if ok else "FAILED", step["name"]])
 		if not ok:
-			(report["errors"] as Array).append(cli.call("attributed", worktree, step["name"], "a successful step", "pr_step_failed",
-				"%s failed: %s" % [step["display"], str(result.get("output", "")).strip_edges().right(2000)]))
+			var detail: String = "%s failed: %s" % [step["display"], str(result.get("output", "")).strip_edges().right(2000)]
+			if step["name"] != "fetch":
+				# Every later step runs in the worktree the run leaves behind; a rerun needs it gone.
+				detail += " " + cleanup_hint(worktree, str(pr["branch"]))
+			(report["errors"] as Array).append(cli.call("attributed", worktree, step["name"], "a successful step", "pr_step_failed", detail))
 			return
 		if step["name"] == "staged files" and not _staged_overlap_clear(report, str(result.get("output", "")), open_prs, force):
 			return
@@ -264,6 +287,23 @@ static func overlapping(changed: Array[String], open_prs: Array, own_branch: Str
 	return overlaps
 
 
+## Warnings when the open-PR list may be incomplete: the list hit `--limit`, or a PR hit gh's
+## per-PR file cap. Either can hide an overlap.
+static func scan_truncation(open_prs: Array) -> Array[String]:
+	var warnings: Array[String] = []
+	if open_prs.size() >= OPEN_PR_LIMIT:
+		warnings.append("gh listed %d open PRs, its limit; older PRs were not scanned for overlap." % open_prs.size())
+	for value: Variant in open_prs:
+		if value is Dictionary and ((value as Dictionary).get("files", []) as Array).size() >= GH_FILES_PER_PR:
+			warnings.append("PR #%s lists %d files, gh's cap; files past it were not scanned for overlap." % [
+				(value as Dictionary).get("number", "?"), ((value as Dictionary)["files"] as Array).size()])
+	return warnings
+
+
+static func cleanup_hint(worktree: String, branch: String) -> String:
+	return "Remove it before a rerun: git worktree remove --force %s && git branch -D %s" % [worktree, branch]
+
+
 ## Test files matching the host's globs (`test/unit/test_quest_*`, or a file path), sorted.
 ## Globs with no `*` and no match, such as a drift script, are dropped here.
 static func expand_test_globs(globs: Array[String]) -> Array[String]:
@@ -314,10 +354,20 @@ static func pr_body(report: Dictionary, issue: String) -> String:
 			lines.append("- %s" % JSON.stringify(str(text)))
 	var shown: Dictionary = report.duplicate(true)
 	shown.erase("pr")
-	lines.append_array(["", "<details><summary>weftlumin.bake.v1 report</summary>", "", "```json", JSON.stringify(shown, "  ", false), "```", "", "</details>"])
+	var closing: Array[String] = []
 	if not issue.is_empty():
-		lines.append_array(["", "Closes #%s" % issue])
-	return "\n".join(lines) + "\n"
+		closing.assign(["", "Closes #%s" % issue])
+	var details: Array[String] = ["", "<details><summary>weftlumin.bake.v1 report</summary>", "", "```json", JSON.stringify(shown, "  ", false), "```", "", "</details>"]
+	var body: String = "\n".join(lines + details + closing) + "\n"
+	if body.length() <= BODY_LIMIT:
+		return body
+	# GitHub would refuse the body after the branch is already pushed; drop the JSON, keep the summary.
+	details = ["", "_The full weftlumin.bake.v1 report (%d characters) is too long for a PR body; run `bake` on the package to see it._" % JSON.stringify(shown).length()]
+	var tail: String = "\n".join(details + closing) + "\n"
+	var head: String = "\n".join(lines)
+	if head.length() + 1 + tail.length() > BODY_LIMIT:
+		head = head.left(BODY_LIMIT - tail.length() - 64) + "\n\n_(list truncated)_"
+	return head + "\n" + tail
 
 
 static func commit_message(package: Dictionary, report: Dictionary, issue: String, trailers: Array) -> String:
@@ -346,10 +396,16 @@ static func launch(arguments: PackedStringArray, report_path: String) -> Diction
 	if not OS.is_debug_build():
 		handle["message"] = "Bake & PR runs only in debug builds."
 		return handle
+	if not FileAccess.file_exists(CLI_ENTRY):
+		# Exports exclude tools/*; a child started without it would only ever read as "failed".
+		handle["message"] = "This build has no Weftlumin CLI (%s); run Bake & PR from the editor or a source checkout." % CLI_ENTRY
+		return handle
 	var report: String = ProjectSettings.globalize_path(report_path)
-	if FileAccess.file_exists(report):
-		DirAccess.remove_absolute(report)
+	for stale: String in [report, report + ".cancel"]:
+		if FileAccess.file_exists(stale):
+			DirAccess.remove_absolute(stale)
 	var full: PackedStringArray = launch_arguments(arguments, report)
+	handle["executing"] = arguments.has("--execute")
 	handle["arguments"] = full
 	var pid: int = OS.create_process(OS.get_executable_path(), full)
 	handle["pid"] = pid
@@ -363,6 +419,8 @@ static func launch_arguments(arguments: PackedStringArray, report_path: String) 
 	var full: PackedStringArray = ["--headless", "--path", ProjectSettings.globalize_path("res://").trim_suffix("/"), "--script", CLI_ENTRY, "--"]
 	full.append_array(arguments)
 	full.append_array(["--report", ProjectSettings.globalize_path(report_path)])
+	if arguments.has("--execute"):
+		full.append_array(["--cancel-file", ProjectSettings.globalize_path(report_path) + ".cancel"])
 	return full
 
 
@@ -370,6 +428,7 @@ static func launch_arguments(arguments: PackedStringArray, report_path: String) 
 ## contents, not the process exit code); a process gone without one means failed.
 static func poll(handle: Dictionary) -> Dictionary:
 	if bool(handle.get("cancelled", false)):
+		_reap(handle)
 		return {"state": "cancelled", "report": {}}
 	var report_path: String = ProjectSettings.globalize_path(str(handle.get("report_path", "")))
 	if FileAccess.file_exists(report_path):
@@ -382,9 +441,30 @@ static func poll(handle: Dictionary) -> Dictionary:
 	return {"state": "failed", "report": {}}
 
 
+## A cancelled `--execute` run that has not stopped within the grace period is killed outright.
+static func _reap(handle: Dictionary) -> void:
+	var pid: int = int(handle.get("pid", -1))
+	if pid > 0 and OS.is_process_running(pid) and Time.get_ticks_msec() >= int(handle.get("kill_at_msec", 0)):
+		OS.kill(pid)
+
+
 ## Stop a launched run. The handle is marked cancelled even if the process already ended.
+##
+## A report-only run is killed at once. An `--execute` run may have a `git push` or `gh pr create`
+## child in flight, and killing only the parent would orphan it. Instead the cancel file stops the
+## step loop, the children are terminated (`pkill -P`, or `taskkill /T` on Windows, which takes the
+## whole tree), and `poll()` kills the parent if it is still up after `CANCEL_GRACE_SEC`.
 static func cancel(handle: Dictionary) -> Dictionary:
 	var pid: int = int(handle.get("pid", -1))
-	var killed: Error = OS.kill(pid) if pid > 0 and OS.is_process_running(pid) else OK
 	handle["cancelled"] = true
-	return {"ok": killed == OK, "state": "cancelled"}
+	if pid <= 0 or not OS.is_process_running(pid):
+		return {"ok": true, "state": "cancelled"}
+	if not bool(handle.get("executing", false)):
+		return {"ok": OS.kill(pid) == OK, "state": "cancelled"}
+	var marker := FileAccess.open(ProjectSettings.globalize_path(str(handle.get("report_path", ""))) + ".cancel", FileAccess.WRITE)
+	if marker != null:
+		marker.close()
+	handle["kill_at_msec"] = Time.get_ticks_msec() + int(CANCEL_GRACE_SEC * 1000.0)
+	var reaper: int = OS.create_process("taskkill", ["/F", "/T", "/PID", str(pid)]) if OS.get_name() == "Windows" \
+		else OS.create_process("pkill", ["-TERM", "-P", str(pid)])
+	return {"ok": reaper > 0, "state": "cancelled"}

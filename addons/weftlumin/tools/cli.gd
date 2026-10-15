@@ -32,7 +32,7 @@ const EXIT_USAGE := 2
 const EXIT_OVERLAP := 3
 const VERBS: Array[String] = ["validate", "apply", "bake", "regen", "lint", "pr", "help"]
 ## Flags that take a value; every other `--flag` is a switch.
-const VALUE_FLAGS: Array[String] = ["--report", "--issue", "--open-prs", "--worktree", "--trailer", "--adapter", "--base"]
+const VALUE_FLAGS: Array[String] = ["--report", "--issue", "--open-prs", "--worktree", "--trailer", "--adapter", "--base", "--cancel-file"]
 const SWITCHES: Array[String] = ["--write", "--force", "--draft", "--execute", "--quiet"]
 const MANIFEST_FILE := "campaign.json"
 const LOG_FILE := "commands.jsonl"
