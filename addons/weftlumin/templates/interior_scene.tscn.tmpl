@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
+
+[node name="{{root}}" type="Node2D"]
+y_sort_enabled = true
+
+[node name="Room" parent="." instance=ExtResource("1_interior")]
+building_name = "{{display_name}}"
+
+[node name="{{dressing}}" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="SoftDetails" type="Node2D" parent="{{dressing}}"]
+y_sort_enabled = true
+
+[node name="SolidProps" type="Node2D" parent="{{dressing}}"]
+y_sort_enabled = true

@@ -1,0 +1,89 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
+[ext_resource type="Texture2D" path="{{backdrop}}" id="2_backdrop"]
+[ext_resource type="Script" path="res://world/isometric_blockout.gd" id="3_iso"]
+[ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="4_blocking_tiles"]
+[ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="5_blocking_layer"]
+[ext_resource type="Script" path="res://world/nav/combat_terrain_layer.gd" id="6_terrain"]
+[ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="7_player"]
+[ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
+[ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="9_hud"]
+
+[sub_resource type="RectangleShape2D" id="shape_h"]
+size = Vector2({{width}}, 40)
+
+[sub_resource type="RectangleShape2D" id="shape_v"]
+size = Vector2(40, {{height}})
+
+[node name="{{root}}" type="Node2D"]
+texture_filter = 2
+y_sort_enabled = true
+
+[node name="FieldMap" type="Node2D" parent="."]
+script = ExtResource("1_field_map")
+
+[node name="TerrainBackdrop" type="Sprite2D" parent="."]
+z_index = -15
+position = Vector2({{center_x}}, {{center_y}})
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("2_backdrop")
+
+[node name="IsometricGround" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2({{ground_x}}, {{ground_y}})
+script = ExtResource("3_iso")
+map_size = Vector2i({{cells_x}}, {{cells_y}})
+ground_style = 2
+road_axis = 0
+
+[node name="Blocking" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2({{ground_x}}, {{ground_y}})
+tile_set = ExtResource("4_blocking_tiles")
+script = ExtResource("5_blocking_layer")
+
+[node name="Terrain" type="TileMapLayer" parent="."]
+visible = false
+script = ExtResource("6_terrain")
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="ColTop" type="CollisionShape2D" parent="Walls"]
+position = Vector2({{center_x}}, 20)
+shape = SubResource("shape_h")
+
+[node name="ColBottom" type="CollisionShape2D" parent="Walls"]
+position = Vector2({{center_x}}, {{bottom_wall}})
+shape = SubResource("shape_h")
+
+[node name="ColLeft" type="CollisionShape2D" parent="Walls"]
+position = Vector2(20, {{center_y}})
+shape = SubResource("shape_v")
+
+[node name="ColRight" type="CollisionShape2D" parent="Walls"]
+position = Vector2({{right_wall}}, {{center_y}})
+shape = SubResource("shape_v")
+
+[node name="Player" parent="." instance=ExtResource("7_player")]
+position = Vector2({{center_x}}, {{center_y}})
+camera_bounds = Rect2i(0, 0, {{width}}, {{height}})
+
+[node name="PartyFollowers" parent="." instance=ExtResource("8_followers")]
+
+[node name="SpawnDefault" type="Marker2D" parent="."]
+position = Vector2(180, {{center_y}})
+
+[node name="FieldHUD" parent="." instance=ExtResource("9_hud")]
+
+[node name="{{dressing}}" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="GroundDetails" type="Node2D" parent="{{dressing}}"]
+z_index = -2
+
+[node name="SoftDetails" type="Node2D" parent="{{dressing}}"]
+y_sort_enabled = true
+
+[node name="SolidProps" type="Node2D" parent="{{dressing}}"]
+y_sort_enabled = true

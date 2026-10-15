@@ -97,6 +97,8 @@ var texture_path := ""
 var pattern: Dictionary = {}
 ## E3.1c (#370): the pattern library, whose writes are `pattern` commands on this model's bus.
 var library := WeftluminPatternLibrary.new()
+## The `new_scene` op (E3.4); it has no target node, so it is not one of this model's handlers.
+var creator := WeftluminSceneCreator.new()
 var placement_layer: StringName = &"GroundDetails"
 ## The registry entry the next click places (§4.6.4), or null.
 var placeable: WeftluminPlaceable = null
@@ -223,6 +225,7 @@ func register_ops(command_bus: WeftluminCommandBus) -> void:
 	for op: String in [OP_SET, OP_ADD, OP_REMOVE]:
 		command_bus.register_document_op(KIND, op, _capture, _apply, _revert)
 	library.register_ops(command_bus)
+	creator.register_ops(command_bus)
 
 
 # --- ownership --------------------------------------------------------------------------------
