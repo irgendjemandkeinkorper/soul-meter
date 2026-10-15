@@ -29,6 +29,9 @@ extends TurnScheduler
 ##      split never reorders the survivors.
 
 var _rules: CombatRules
+## Loop passes `peek_order()` may spend (one per idle tick and one per projected turn).
+const PEEK_GUARD := 10000
+
 var _seats: Array[BattleActor] = []
 var _charge: Dictionary = {}          # combat_id -> int
 var _speed: Dictionary = {}           # combat_id -> int
@@ -176,48 +179,54 @@ func peek_order(depth: int) -> Array[Dictionary]:
 	if depth <= 0:
 		return projected
 	# Projected from the same arithmetic advance() uses — FR-102a: the timeline must never lie.
-	var simulated: Dictionary = {}
+	# Packed arrays and skipped idle ticks: the snapshot calls this on every combat event, and
+	# with 100 hostiles a tick-by-tick walk over dictionaries cost ~2.6 ms per event (#282).
+	var actors: Array[BattleActor] = []
+	var charge := PackedInt64Array()
+	var speed := PackedInt64Array()
+	var seat := PackedInt64Array()
 	for actor in _seats:
 		if actor.is_alive():
-			simulated[_key(actor)] = int(_charge.get(_key(actor), 0))
+			var key := _key(actor)
+			actors.append(actor)
+			charge.append(int(_charge.get(key, 0)))
+			speed.append(maxi(1, int(_speed.get(key, 1))))
+			seat.append(int(_seat_of.get(key, 0)))
+	var count := actors.size()
+	if count == 0:
+		return projected
+	# Assume a median action so the projection past the first entry stays honest about
+	# being an estimate of intent, not a promise about a choice not yet made.
+	var assumed: int = _rules.minimum_action_ct_cost if _rules != null else 30
 	var ticks := 0
 	var guard := 0
-	while projected.size() < depth and guard < 10000:
-		guard += 1
-		var ready: Array[BattleActor] = []
-		for actor in _seats:
-			if actor.is_alive() and int(simulated.get(_key(actor), 0)) >= READY_AT:
-				ready.append(actor)
-		if ready.is_empty():
-			var any := false
-			for actor in _seats:
-				if not actor.is_alive():
-					continue
-				any = true
-				var key := _key(actor)
-				simulated[key] = int(simulated[key]) + maxi(1, int(_speed.get(key, 1)))
-			if not any:
+	while projected.size() < depth and guard < PEEK_GUARD:
+		# The ready actor with the most charge, then the lowest seat (the advance() order).
+		var best := -1
+		for index: int in count:
+			if charge[index] >= READY_AT and (
+				best < 0 or charge[index] > charge[best]
+				or (charge[index] == charge[best] and seat[index] < seat[best])
+			):
+				best = index
+		if best < 0:
+			# Every idle tick adds each actor's speed, so jump straight to the first tick at
+			# which anyone is ready. One loop pass per idle tick is what the guard counts.
+			var wait: int = PEEK_GUARD
+			for index: int in count:
+				wait = mini(wait, ceili(float(READY_AT - charge[index]) / float(speed[index])))
+			if guard + wait >= PEEK_GUARD:
 				break
-			ticks += 1
+			for index: int in count:
+				charge[index] += wait * speed[index]
+			ticks += wait
+			guard += wait
 			continue
-		ready.sort_custom(func(a: BattleActor, b: BattleActor) -> bool:
-			var ca := int(simulated.get(_key(a), 0))
-			var cb := int(simulated.get(_key(b), 0))
-			if ca != cb:
-				return ca > cb
-			return int(_seat_of.get(_key(a), 0)) < int(_seat_of.get(_key(b), 0))
-		)
-		var next: BattleActor = ready[0]
+		guard += 1
 		projected.append({
-			"actor": next,
-			"charge": int(simulated.get(_key(next), 0)),
-			"ticks_until": ticks,
-			"seat": int(_seat_of.get(_key(next), 0)),
+			"actor": actors[best], "charge": charge[best], "ticks_until": ticks, "seat": seat[best],
 		})
-		# Assume a median action so the projection past the first entry stays honest about
-		# being an estimate of intent, not a promise about a choice not yet made.
-		var assumed: int = _rules.minimum_action_ct_cost if _rules != null else 30
-		simulated[_key(next)] = int(simulated.get(_key(next), 0)) - assumed
+		charge[best] -= assumed
 	return projected
 
 

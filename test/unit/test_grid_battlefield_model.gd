@@ -827,3 +827,35 @@ func test_visibility_composes_the_worst_cell_and_rejects_unknown_levels() -> voi
 	assert_bool(model.set_visibility(Vector2i(4, 0), &"clear")["allowed"]).is_true()
 	assert_bool(model.set_visibility(Vector2i(0, 0), &"clear")["allowed"]).is_true()
 	assert_str(String(model.visibility_between(ally, enemy)["level"])).is_equal("clear")
+
+
+## #282: while a path memo is open, every uncapped query from the actor's cell reads one shared
+## search. Each answer (refusals included) must be exactly the per-destination search's.
+func test_path_memo_answers_exactly_what_per_destination_searches_do() -> void:
+	var model := _model(14, 14)
+	model.set_elevation(Vector2i(7, 4), 2)
+	model.set_elevation(Vector2i(8, 4), 3)
+	for cell: Vector2i in [Vector2i(1, 10), Vector2i(2, 10), Vector2i(3, 10), Vector2i(3, 11), Vector2i(3, 12), Vector2i(2, 12), Vector2i(1, 12), Vector2i(1, 11)]:
+		model.set_cliff(cell, true)
+	var ally := _actor("ally")
+	var other := _actor("other")
+	var enemy := _actor("enemy")
+	assert_bool(model.configure_initial_cells({ally: Vector2i(6, 6), other: Vector2i(9, 9), enemy: Vector2i(7, 6)}).get("allowed", false)).is_true()
+	var allies: Array[BattleActor] = [ally, other]
+	var enemies: Array[BattleActor] = [enemy]
+	model.setup(allies, enemies)
+	var expected: Dictionary = {}
+	for y in 14:
+		for x in 14:
+			var handle := model._handle_for_cell(Vector2i(x, y))
+			expected[handle] = [model.path_query(ally, handle), model.path_query(other, handle)]
+	# A budget that settles only part of the grid: cells past it must still get the full answer.
+	model.begin_path_memo(ally, 40)
+	assert_bool(model._path_memo.is_empty()).is_false()
+	assert_int((model._path_memo["tree"]["settled"] as Dictionary).size()).is_less(14 * 14)
+	for handle: StringName in expected:
+		assert_dict(model.path_query(ally, handle)).override_failure_message(String(handle)).is_equal(expected[handle][0])
+		# Another actor's queries never read the memo.
+		assert_dict(model.path_query(other, handle)).override_failure_message(String(handle)).is_equal(expected[handle][1])
+	model.end_path_memo()
+	assert_bool(model._path_memo.is_empty()).is_true()
