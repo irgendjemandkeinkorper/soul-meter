@@ -3,6 +3,7 @@
 class_name VendorIds
 
 const ASHLINE_SCRIPTORIUM := "ashline-scriptorium"
+const FORD_CHANDLERY := "ford-chandlery"
 const FOUR_ARMS_FISH := "four-arms-fish"
 const HEARTHLOAF_BAKERY := "hearthloaf-bakery"
 const HELD_FLAME_SHRINE := "held-flame-shrine"

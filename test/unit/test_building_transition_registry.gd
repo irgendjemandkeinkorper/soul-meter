@@ -21,6 +21,9 @@ const BUILDING_IDS: Array[StringName] = [
 	&"chefs_pantry",
 	&"players_loft",
 	&"lower_trial_hall",
+	# Kesselford (hub 2, C1 / #238).
+	&"kesselford_wayhouse",
+	&"kesselford_chandlery",
 ]
 
 

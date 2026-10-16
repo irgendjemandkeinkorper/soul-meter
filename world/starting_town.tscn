@@ -2375,3 +2375,14 @@ local_waypoints = PackedVector2Array(0, 0, 54, -14, 78, 22, 28, 48)
 wander_speed = 16.0
 pause_duration = 3.0
 initial_pause = 1.9
+[node name="SpawnFromKesselford" type="Marker2D" parent="."]
+position = Vector2(280, 1250)
+
+[node name="FordRoad" parent="." instance=ExtResource("4_exit")]
+position = Vector2(100, 1250)
+target_scene = "res://world/kesselford.tscn"
+label_text = "FORD ROAD TO KESSELFORD"
+required_flags = PackedStringArray("tutorial_road_open", "chapter_one_free_roam")
+locked_message = "Marshal Coiljaw must issue a field commission."
+spawn_id = &"from_dom"
+

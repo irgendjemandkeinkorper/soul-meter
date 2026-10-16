@@ -1,5 +1,6 @@
 extends Node
-## Idempotent Pandora migration for Dom's authored vendor economy.
+## Idempotent Pandora migration for the hubs' authored vendor economy (Dom, and Kesselford's
+## Ford Chandlery since C1 / #238). Run through `scripts/seed_town_npcs.sh`.
 ##
 ## The NPC roster is owned by the parallel town-roster task. These records use
 ## stable, provisional NPC ids and deliberately do not create NPC entities,
@@ -48,9 +49,10 @@ func _ready() -> void:
 	_seed_items(items)
 
 	var vendors := _ensure_root("Vendors", VENDOR_PROPERTIES)
-	_seed_vendors(vendors)
+	var vendor_count := _seed_vendors(vendors)
 	Pandora.save_data()
-	print("VENDOR-SEED: 12 Dom vendors and economy items present.")
+	# Twelve Dom vendors and Kesselford's Ford Chandlery (C1 / #238).
+	print("VENDOR-SEED: %d vendors and economy items present." % vendor_count)
 	get_tree().quit()
 
 
@@ -191,7 +193,7 @@ func _item(
 	}
 
 
-func _seed_vendors(root: PandoraCategory) -> void:
+func _seed_vendors(root: PandoraCategory) -> int:
 	var standard_prices := {
 		"hostile": {"buy": 1.35, "sell": 0.55},
 		"cold": {"buy": 1.15, "sell": 0.75},
@@ -354,9 +356,27 @@ func _seed_vendors(root: PandoraCategory) -> void:
 			],
 			_restock("every_two_days", 2), []
 		),
+		# Kesselford (hub 2, C1 / #238): the chandlery by the ford. PROVISIONAL: stock and
+		# modifiers are a first pass; the proposal's "prices that flex with the crossing's mood"
+		# is not modelled yet.
+		_vendor(
+			"ford-chandlery", "Ford Chandlery", "kesselford-chandler",
+			"kesselford/ford-chandlery", "Ford Chandlery counter", "wayfare-menders",
+			"commerce", 1.1, 0.45, "cold", "", standard_prices,
+			[
+				_stock("materials/lamp_oil", 8),
+				_stock("consumables/salted_riverfish", 6),
+				_stock("consumables/loam_bread", 6),
+				_stock("tools/surveyors_chalk", 3),
+				_stock("materials/binding_thread", 4, "warm"),
+			],
+			_restock("every_two_days", 2),
+			[_reaction("stock", "Warm standing with the Menders opens their reserve of binding thread.", "warm")]
+		),
 	]
 	for row in rows:
 		_upsert(root, row["entity_name"], row["values"])
+	return rows.size()
 
 
 func _vendor(

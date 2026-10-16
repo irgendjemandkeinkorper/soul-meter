@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"kesselford_chandlery_enter"
+building_id = &"kesselford_chandlery"
+building_name = "Ford Chandlery"
+direction = "enter"
+source_scene = "res://world/kesselford.tscn"
+source_anchor = &"ChandleryDoor"
+source_position = Vector2(1900, 700)
+destination_scene = "res://world/interiors/kesselford_chandlery.tscn"
+destination_location_id = &"kesselford_chandlery"
+spawn_id = &"entry"
+destination_spawn_position = Vector2(960, 1098.6)
+prompt_text = "E — Enter"

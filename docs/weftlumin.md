@@ -260,8 +260,11 @@ command with `WeftluminSceneCreator.command(params, package, errors)`.
   `size_cells` sets the grid. The room scales from test_room's 70 cells to 2000×1200 px.
   `CombatOverlay` is omitted, as in every current scene.
 - **The interior template** instances `world/interiors/building_interior.tscn`, as `bell_loft`
-  does. Canon `no_combat_zone` is `true`, and `register_runtime(definition, true)` carries that
-  flag to the unbaked scene.
+  does, and carries the dressing floor every concrete interior must meet
+  (`test_building_interiors.gd`): one `AmbientPropMotion` hanging lantern under `SoftDetails` and
+  one `StaticBody2D` wall bench under `SolidProps`; a package adds the rest. Canon
+  `no_combat_zone` is `true`, and `register_runtime(definition, true)` carries that flag to the
+  unbaked scene.
 - **Location document.**
   - It names the baked paths: `res://world/<id>.tscn` (interiors under `world/interiors/`) and the
     matching `world/locations/…/<id>.tres`.
@@ -272,10 +275,26 @@ command with `WeftluminSceneCreator.command(params, package, errors)`.
   renders the template again from the logged params, so the bake does not depend on the scratch
   file and works in a fresh worktree. It replays the scene's later edits, which name the scratch
   path, onto that text and writes the baked path under `target_root`.
-- **Limits.**
-  - A new interior has no exit transition yet: `BuildingTransitionRegistry` is not data-driven (#342).
-  - A new field has no travel exit back.
-  - Add both by hand, or after #342 lands.
+- **Hub-capable fields (C1 / #238).** The field template carries `world/chapter_location.gd` on
+  its root (arrival flag and checkpoint from the location document) and an `OutdoorTownsfolk`
+  `TownNpcSpawner`. The spawner resolves its town from the scene through
+  `FastTravelRegistry.by_scene()` and reads that hub's generated roster and placements
+  (`NpcRoster.roster_path()` / `placements_path()`); in a scene that is not a fast-travel hub it
+  stays idle. Characters whose `placement_anchor` row names the hub (`tools/seed_town_npcs.gd`
+  `PLACEMENT_ANCHORS`, `"town"`) land in that hub's artifacts, and their routine coordinates are
+  the hub scene's (`NpcRoutines.hub_scene()`).
+- **Limits.** These stay hand-wired in the same PR as the package (Kesselford, #238, is the
+  worked example):
+  - `FastTravelRegistry._HUBS` (which makes the scene a hub), `WorldMapRegistry` rows and the
+    `LocationRegistry` named consts a test requires for every baked location.
+  - An interior's `BuildingTransitionRegistry` `.tres` pair and preload consts (#342); the
+    package sets the interior `Room`'s `exit_transition_id` export to `<name>_exit`, and the exit's
+    `source_anchor` is `Room/ExitDoor`.
+  - The placement anchor rows in `tools/seed_town_npcs.gd` and the vendor row in
+    `tools/seed_town_vendors.gd` (then `scripts/seed_town_npcs.sh` / the vendor seeder and
+    `regen --write`), plus `BuildingInterior.VENDORS_BY_INTERIOR`.
+  - The reverse travel exit lives in the other scene's log (Dom's `FordRoad` is two `add_node`
+    commands on `res://world/starting_town.tscn` in the same package).
 
 ## Locations
 

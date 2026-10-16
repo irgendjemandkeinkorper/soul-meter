@@ -277,9 +277,11 @@ func bake_package_documents(
 		(report["written"] as Array).append_array(artifacts.get("written", []))
 		errors.append_array(artifacts.get("errors", []))
 	if npc_changed:
-		(report["regenerated"] as Array).append_array([
-			"res://data/generated/dom_npc_roster.json", "res://data/generated/dom_npc_placements.json",
-		])
+		# Every hub's roster and placements regenerate together (C1 / #238).
+		for town_id: String in NpcRoster.town_ids():
+			(report["regenerated"] as Array).append_array([
+				NpcRoster.roster_path(town_id), NpcRoster.placements_path(town_id),
+			])
 	report["summary"] = "%d package document(s), %d canon change(s)" % [targets.size(), changed]
 	return report
 

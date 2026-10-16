@@ -28,7 +28,6 @@ extends WeftluminKind
 const DOM_SCENE := "res://world/starting_town.tscn"
 const TownScript := preload("res://world/starting_town.gd")
 const TRANSITIONS_DIR := "res://actors/building_door/transitions"
-const NPC_PLACEMENTS := "res://data/generated/dom_npc_placements.json"
 const BLOCKING_LINES: Array[String] = ["position", "scale", "tile_set", "script"]
 ## Dom's landmarks and dressing pinned by `test_starting_town.gd`.
 const DOM_LANDMARKS: Array[String] = [
@@ -141,16 +140,25 @@ func location_contract(context: Dictionary) -> Array[Dictionary]:
 			var transition := load(TRANSITIONS_DIR.path_join(filename.trim_suffix(".remap"))) as BuildingTransitionDefinition
 			if transition != null and transition.source_scene == scene and not transition.source_anchor.is_empty():
 				required[str(transition.source_anchor)] = "transition anchor of %s" % filename
-	var placements: Variant = JSON.parse_string(FileAccess.get_file_as_string(NPC_PLACEMENTS)) if FileAccess.file_exists(NPC_PLACEMENTS) else null
-	if placements is Dictionary and (placements as Dictionary).get("placements") is Dictionary:
-		for placement: Variant in ((placements as Dictionary)["placements"] as Dictionary).values():
-			if placement is Dictionary and str((placement as Dictionary).get("scene", "")) == scene:
-				required[str((placement as Dictionary).get("anchor", ""))] = "NPC placement anchor"
+	# Every hub's generated placements (C1 / #238), read from disk: a bake runs right after a
+	# regen, and NpcRoster's static cache may predate it.
+	for town_id: String in NpcRoster.town_ids():
+		var placements_path: String = NpcRoster.placements_path(town_id)
+		var placements: Variant = JSON.parse_string(FileAccess.get_file_as_string(placements_path)) if FileAccess.file_exists(placements_path) else null
+		if placements is Dictionary and (placements as Dictionary).get("placements") is Dictionary:
+			for placement: Variant in ((placements as Dictionary)["placements"] as Dictionary).values():
+				if placement is Dictionary and str((placement as Dictionary).get("scene", "")) == scene:
+					required[str((placement as Dictionary).get("anchor", ""))] = "NPC placement anchor (%s)" % town_id
 	var anchors: Array = required.keys()
 	anchors.sort()
 	for anchor: String in anchors:
-		if not anchor.is_empty() and instance.get_node_or_null(NodePath(anchor)) == null:
-			found.append(_error(scene, anchor, required[anchor], "location_contract", "The baked scene lost %s (%s)." % [anchor, required[anchor]]))
+		# A path resolves from the root; a bare name resolves the way BuildingInterior resolves
+		# placement anchors (`find_child`), so an anchor under an instanced `Room` still counts.
+		if anchor.is_empty() or instance.get_node_or_null(NodePath(anchor)) != null:
+			continue
+		if not anchor.contains("/") and instance.find_child(anchor, true, false) != null:
+			continue
+		found.append(_error(scene, anchor, required[anchor], "location_contract", "The baked scene lost %s (%s)." % [anchor, required[anchor]]))
 	return found
 
 

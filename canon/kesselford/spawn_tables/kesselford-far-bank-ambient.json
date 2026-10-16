@@ -1,0 +1,19 @@
+{
+	"schema": "weftlumin.spawn_table.v1",
+	"id": "kesselford-far-bank-ambient",
+	"scene_path": "res://world/kesselford.tscn",
+	"slots": [
+		{
+			"id": "far-bank",
+			"anchor": "SpawnSlotFarBank",
+			"respawn_days": 3,
+			"entries": [
+				{"archetype_id": "bog-wight", "weight": 15},
+				{"archetype_id": "loam-maddened-boar", "weight": 15},
+				{"empty": true, "weight": 70}
+			],
+			"pack_size": {"min": 1, "max": 1}
+		}
+	],
+	"caps": {"max_alive": 1}
+}

@@ -3,7 +3,6 @@ extends Node2D
 ## Shared structural room used by each named building interior.
 
 const NpcScene := preload("res://actors/npc/npc.tscn")
-const NpcPlacementsData: JSON = preload("res://data/generated/dom_npc_placements.json")
 const VendorData := preload("res://globals/vendor_registry.gd")
 const VendorIdsData := preload("res://data/generated/vendor_ids.gd")
 const FALLBACK_FLOOR_TEXTURE := preload("res://assets/generated/sprites/interior/dom-interior-floor--stone-flag.png")
@@ -38,6 +37,8 @@ const VENDORS_BY_INTERIOR := {
 	],
 	"res://world/interiors/players_house.tscn": [VendorIdsData.WAYFARERS_MEASURE],
 	"res://world/interiors/river_shrine.tscn": [VendorIdsData.HELD_FLAME_SHRINE],
+	# Kesselford (hub 2, C1 / #238).
+	"res://world/interiors/kesselford_chandlery.tscn": [VendorIdsData.FORD_CHANDLERY],
 	"res://world/interiors/town_hall.tscn": [VendorIdsData.ASHLINE_SCRIPTORIUM],
 	"res://world/interiors/trial_hall.tscn": [VendorIdsData.UNDERSTEP_EXCHANGE],
 }
@@ -108,8 +109,9 @@ static func configure_room_camera(room: Node2D) -> void:
 
 func _populate_townsfolk() -> void:
 	var interior_path := _interior_scene_path()
-	var root: Dictionary = NpcPlacementsData.data
-	var placements: Dictionary = root.get("placements", {})
+	# Every hub's generated placements, merged: an interior belongs to whichever hub placed
+	# NPCs in it (C1 / #238).
+	var placements: Dictionary = NpcRoster.placements()
 	var placement_ids: Array = placements.keys()
 	placement_ids.sort()
 	for value: Variant in placement_ids:
