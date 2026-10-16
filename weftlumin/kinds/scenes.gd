@@ -17,6 +17,10 @@ extends WeftluminKind
 ##   roots with facades, the named landmarks and dressing, the hidden legacy tavern facade, a
 ##   y-sorted root with no `ColorRect`, no blockout waterline or `BuildingBoundaries`, and an
 ##   authored `Blocking` layer (tile set, script, more than 200 cells).
+## - **Saturation lint** (E6.2 / #350, architecture §4.11). A *warning*, never a refusal: when a
+##   baked field's `base_adjusted + max(zone_delta) + 10 > 100` or `base_adjusted +
+##   min(zone_delta) - 10 < 0` (`AccordMath.saturation_warnings()`), the report carries it under
+##   `warnings` and `lint.warnings` and the bake still writes.
 ##
 ## There is no runtime overlay for scenes: placements and export edits live in the live scene
 ## session until baked, so `register()` keeps the base refusal.
@@ -90,7 +94,7 @@ func bake(normalised: Array[Dictionary], target_root: String, write: bool, force
 
 
 func contract_validators() -> Array[Callable]:
-	return [dom_blocking_ruling, location_contract, dom_contract]
+	return [dom_blocking_ruling, location_contract, dom_contract, accord_saturation]
 
 
 # --- validators: (context) -> Array[Dictionary] -----------------------------------------------
@@ -177,6 +181,74 @@ func dom_contract(context: Dictionary) -> Array[Dictionary]:
 		var script: Script = blocking.get_script() as Script
 		expect.call(script != null and script.resource_path == "res://world/nav/blocking_layer.gd", "Blocking:script", "Blocking must keep its script.")
 	return found
+
+
+## §4.11 saturation lint over the baked field. `base_adjusted` is the location's authored accord
+## with thinning subtracted once (`SkillCheck.location_fizzle_integrity()`, as
+## `FieldMap.accord_base()` computes it for the live scene); the zone range comes from the
+## baked `AccordZone`s over the field's ground cells. A scene with no `FieldMap` or no location
+## has no accord to lint. Entries carry `"severity": "warning"`, so they never block the write.
+func accord_saturation(context: Dictionary) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	var scene: String = context["scene"]
+	var field: FieldMap = field_map_in(context["instance"] as Node)
+	var location: LocationDefinition = LocationRegistry.by_scene(scene)
+	if field == null or location == null:
+		return found
+	var base: float = SkillCheck.location_fizzle_integrity(location.harmonic_accord, scene)
+	var span: Vector2 = zone_delta_range(field)
+	for message: String in AccordMath.saturation_warnings(base, span.x, span.y, String(location.id)):
+		var warning: Dictionary = _error(
+			scene, "harmonic_accord", "base_adjusted + zone_delta ± %d within 0..100" % int(AccordMath.MAX_VARIATION),
+			"accord_saturation", message,
+		)
+		warning["severity"] = "warning"
+		found.append(warning)
+	return found
+
+
+## The first `FieldMap` at or under `root` (breadth-first), or null.
+static func field_map_in(root: Node) -> FieldMap:
+	var pending: Array[Node] = []
+	if root != null:
+		pending.append(root)
+	while not pending.is_empty():
+		var node: Node = pending.pop_front()
+		if node is FieldMap:
+			return node as FieldMap
+		pending.append_array(node.get_children())
+	return null
+
+
+## Every ground cell `AccordZone`s cover, with the summed delta there: `{Vector2i: float}`.
+## Read through `FieldMap` (`accord_zones()`, `zone_anchor_cell()`), the same anchors and
+## coverage `FieldMap.zone_delta()` sums. Cells off the ground are dropped.
+static func covered_zone_deltas(field: FieldMap) -> Dictionary:
+	var deltas: Dictionary = {}
+	var ground: TileMapLayer = field.ground()
+	if ground == null:
+		return deltas
+	for zone: AccordZone in field.accord_zones():
+		for cell: Vector2i in zone.covered_cells(field.zone_anchor_cell(zone)):
+			if ground.get_cell_source_id(cell) != -1:
+				deltas[cell] = float(deltas.get(cell, 0.0)) + float(zone.accord_delta)
+	return deltas
+
+
+## `Vector2(min, max)` of `zone_delta` over the field's ground cells. Uncovered ground counts as
+## 0; a field with no ground cells reports `Vector2.ZERO`.
+static func zone_delta_range(field: FieldMap) -> Vector2:
+	var deltas: Dictionary = covered_zone_deltas(field)
+	var ground: TileMapLayer = field.ground()
+	var cell_count: int = ground.get_used_cells().size() if ground != null else 0
+	var low: float = 0.0
+	var high: float = 0.0
+	var first: bool = deltas.size() >= cell_count
+	for value: float in deltas.values():
+		low = value if first else minf(low, value)
+		high = value if first else maxf(high, value)
+		first = false
+	return Vector2(low, high)
 
 
 static func _block(document: TscnDocument, path: String) -> Dictionary:
