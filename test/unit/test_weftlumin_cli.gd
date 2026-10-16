@@ -25,7 +25,15 @@ var _executed: Array = []
 
 func after_test() -> void:
 	_remove_tree(SCRATCH)
-	_remove_tree(OS.get_user_data_dir().path_join("weftlumin/pr").path_join(PACKAGE))
+	var pr_scratch: String = OS.get_user_data_dir().path_join("weftlumin/pr")
+	_remove_tree(pr_scratch.path_join(PACKAGE))
+	# `pr --execute` creates `user://weftlumin/pr/<package>`; removing only the package leaves the
+	# empty parents behind, and `test_weftlumin_inert` asserts `user://weftlumin` is absent. Prune
+	# them while empty so the two suites pass in either order. `remove_absolute` never removes a
+	# directory that still holds anything.
+	for parent: String in [pr_scratch, pr_scratch.get_base_dir()]:
+		if DirAccess.dir_exists_absolute(parent):
+			DirAccess.remove_absolute(parent)
 	_executed.clear()
 
 
