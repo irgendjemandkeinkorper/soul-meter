@@ -397,15 +397,22 @@ func regen(write: bool) -> Dictionary:
 	var after: String = JSON.stringify(Pandora._entity_backend.save_data()) + JSON.stringify(Pandora._id_generator.save_data())
 	if not seeded:
 		stages.append({"name": "CANON-SEED", "ok": false, "message": "canon failed its seed preflight; see the errors above."})
+		if write:
+			# Generating from an unseeded Pandora would write artifacts from stale data.
+			return {"stages": stages, "errors": [], "regenerated": regenerated}
 	elif write:
 		if after != before:
 			Pandora.save_data()
 			regenerated.append("res://data.pandora")
 		stages.append({"name": "CANON-SEED", "ok": true, "message": "seeded%s." % (" and saved data.pandora" if after != before else "; data.pandora unchanged")})
 		var generated: Dictionary = gloot.call("generate", false)
+		var generated_ok: bool = generated.has("count")
 		regenerated.append("res://data/generated/")
-		stages.append({"name": "DATA-GEN", "ok": true, "message": "wrote %d item prototypes, %d encounters, %d Dom NPCs." % [
-			int(generated.get("count", 0)), int(generated.get("encounter_count", 0)), int(generated.get("npc_count", 0))]})
+		stages.append({"name": "DATA-GEN", "ok": generated_ok, "message": "wrote %d item prototypes, %d encounters, %d Dom NPCs." % [
+			int(generated.get("count", 0)), int(generated.get("encounter_count", 0)), int(generated.get("npc_count", 0))]
+			if generated_ok else "the generator returned no result."})
+		if not generated_ok:
+			return {"stages": stages, "errors": [], "regenerated": regenerated}
 	else:
 		stages.append({"name": "CANON-SEED", "ok": after == before,
 			"message": "no drift." if after == before else "drift — re-seed Pandora from canon before committing."})
