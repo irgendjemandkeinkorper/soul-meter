@@ -83,6 +83,8 @@ static var ALL: Array[LocationDefinition] = []
 static var _no_combat_zones: Dictionary = {}
 ## In-session overlay (`register_runtime()`, P6): unbaked scenes, never written anywhere.
 static var _runtime: Array[LocationDefinition] = []
+## `no_combat_zone` of runtime registrations, by scene path; `LocationDefinition` carries no such field.
+static var _runtime_no_combat: Dictionary = {}
 static var _loaded := _load_index()
 
 
@@ -120,7 +122,9 @@ static func _load_index() -> bool:
 ## Registers an unbaked location for this session only (the overlay, P6), so a scene that exists
 ## only as data can be travelled to. Refuses a definition without an id or scene, or one whose id or
 ## scene a BAKED location already owns; re-registering a runtime id replaces it. Writes nothing.
-static func register_runtime(definition: LocationDefinition) -> bool:
+## `no_combat_zone` is the location's canon flag (an unbaked interior's scene path cannot satisfy
+## the `res://world/interiors/` prefix rule).
+static func register_runtime(definition: LocationDefinition, no_combat_zone: bool = false) -> bool:
 	if definition == null or definition.id.is_empty() or definition.scene_path.is_empty():
 		push_error("LocationRegistry.register_runtime: a location needs an id and a scene path.")
 		return false
@@ -133,10 +137,24 @@ static func register_runtime(definition: LocationDefinition) -> bool:
 	for index: int in range(_runtime.size() - 1, -1, -1):
 		var existing := _runtime[index]
 		if existing.id == definition.id or existing.scene_path == definition.scene_path:
+			_runtime_no_combat.erase(existing.scene_path)
 			_runtime.remove_at(index)
 	_runtime.append(definition)
+	_runtime_no_combat[definition.scene_path] = no_combat_zone
 	locations_changed.emit()
 	return true
+
+
+## Drops one runtime registration (undo of the command that registered it). False when `location_id`
+## is not a runtime registration; baked locations are never removed.
+static func unregister_runtime(location_id: StringName) -> bool:
+	for index: int in _runtime.size():
+		if _runtime[index].id == location_id:
+			_runtime_no_combat.erase(_runtime[index].scene_path)
+			_runtime.remove_at(index)
+			locations_changed.emit()
+			return true
+	return false
 
 
 ## Drops every runtime registration. Not public API: test isolation only.
@@ -144,6 +162,7 @@ static func _clear_runtime() -> void:
 	if _runtime.is_empty():
 		return
 	_runtime.clear()
+	_runtime_no_combat.clear()
 	locations_changed.emit()
 
 
@@ -198,6 +217,8 @@ static func thinning_tier_by_scene(scene_path: String) -> int:
 static func no_combat_zone_by_scene(scene_path: String) -> bool:
 	if _no_combat_zones.has(scene_path):
 		return bool(_no_combat_zones[scene_path])
+	if _runtime_no_combat.has(scene_path):
+		return bool(_runtime_no_combat[scene_path])
 	return scene_path.begins_with(_INTERIOR_SCENES_ROOT)
 
 

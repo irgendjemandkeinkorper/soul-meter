@@ -80,6 +80,8 @@ static func bake(
 	var validators: Array = options.get("validators", []) as Array
 	var groups: Dictionary = {}
 	var order: Array[String] = []
+	# Scenes a `new_scene` in this log creates: scratch path → normalised params (E3.4).
+	var created: Dictionary = {}
 	var skipped: int = 0
 	for data: Dictionary in WeftluminCommandBus.effective_stream(entries):
 		if str(data.get("kind", "")) != SCENE_KIND:
@@ -95,17 +97,28 @@ static func bake(
 		if not groups.has(scene):
 			groups[scene] = []
 			order.append(scene)
+		if str(data.get("op", "")) == WeftluminSceneCreator.OP_NEW_SCENE:
+			var problems: Array[String] = []
+			var params: Dictionary = WeftluminSceneTemplate.normalise(data.get("params", {}) as Dictionary, problems)
+			if params.is_empty() or not (groups[scene] as Array).is_empty():
+				errors.append(_attributed(scene, "commands", "one valid new_scene before the scene's edits", "invalid_new_scene",
+					"; ".join(PackedStringArray(problems)) if not problems.is_empty() else "%s has edits before its new_scene." % scene))
+				continue
+			created[scene] = params
+			continue
 		(groups[scene] as Array).append(data)
 	report["skipped_ops"] = skipped
 	var outputs: Dictionary = {}
 	var total_ops: int = 0
 	for scene: String in order:
-		var result: Dictionary = bake_scene(scene, groups[scene], validators)
+		# A created scene bakes from its template, rendered again from the log, onto its baked path.
+		var source: String = WeftluminSceneTemplate.render(created[scene]) if created.has(scene) else ""
+		var result: Dictionary = bake_scene(scene, groups[scene], validators, source)
 		var scene_errors: Array = result["errors"]
 		errors.append_array(scene_errors)
 		(report["warnings"] as Array).append_array(result["warnings"])
 		(report["normalized"] as Array).append_array(result["reports"])
-		var target: String = retarget(scene, target_root)
+		var target: String = retarget(WeftluminSceneTemplate.baked_scene_path(created[scene]) if created.has(scene) else scene, target_root)
 		var action: String = "refused"
 		if scene_errors.is_empty():
 			var baked: String = result["text"]
@@ -144,14 +157,15 @@ static func bake(
 
 ## Bake one scene's commands (in log order, already effective). `{source, text, ops, errors,
 ## warnings, reports}`; `text` is the baked scene text when `errors` is empty.
-static func bake_scene(scene: String, commands: Array, validators: Array = []) -> Dictionary:
+## `source`, when given, is the scene's text in place of its file (a scene `new_scene` creates).
+static func bake_scene(scene: String, commands: Array, validators: Array = [], source: String = "") -> Dictionary:
 	var result: Dictionary = {"source": "", "text": "", "ops": 0, "errors": [], "warnings": [], "reports": []}
 	var errors: Array = result["errors"]
-	if not FileAccess.file_exists(scene):
+	if source.is_empty() and not FileAccess.file_exists(scene):
 		errors.append(_attributed(scene, "$", "an existing .tscn", "missing_scene", "No scene file at %s." % scene))
 		return result
 	var session := WeftluminBake.new()
-	if not session._open(scene):
+	if not session._open(scene, source):
 		errors.append(session._error)
 		session.close()
 		return result
@@ -217,15 +231,22 @@ func document() -> TscnDocument:
 # --- session ----------------------------------------------------------------------------------
 
 
-func _open(scene: String) -> bool:
+func _open(scene: String, source: String = "") -> bool:
 	scene_path = scene
-	source_text = FileAccess.get_file_as_string(scene)
+	source_text = source if not source.is_empty() else FileAccess.get_file_as_string(scene)
 	tiles = WeftluminTileBake.open(source_text, scene)
-	var packed := ResourceLoader.load(scene, "PackedScene", ResourceLoader.CACHE_MODE_IGNORE) as PackedScene
-	if packed == null or not packed.can_instantiate():
-		_error = _attributed(scene, "$", "a loadable scene", "unloadable_scene", "%s does not load as a scene." % scene)
-		return false
-	oracle = packed.instantiate()
+	if not source.is_empty():
+		var load_errors: Array[Dictionary] = []
+		oracle = _load(source_text, load_errors)
+		if oracle == null:
+			_error = load_errors[0] if not load_errors.is_empty() else _attributed(scene, "$", "a loadable scene", "unloadable_scene", "The template does not load.")
+			return false
+	else:
+		var packed := ResourceLoader.load(scene, "PackedScene", ResourceLoader.CACHE_MODE_IGNORE) as PackedScene
+		if packed == null or not packed.can_instantiate():
+			_error = _attributed(scene, "$", "a loadable scene", "unloadable_scene", "%s does not load as a scene." % scene)
+			return false
+		oracle = packed.instantiate()
 	# An ignored-cache load leaves the path unset; the model reads editable paths through it.
 	oracle.scene_file_path = scene
 	model = WeftluminSceneModel.new()

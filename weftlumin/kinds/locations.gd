@@ -179,7 +179,7 @@ func _normalise_scene(document: Dictionary, file: String, row: Dictionary, error
 	var scene_path: Variant = document.get("scene_path")
 	if not scene_path is String or not scene_path.begins_with("res://") or scene_path.get_extension() != "tscn":
 		errors.append(_error(file, "scene_path", "res:// path to a .tscn", "invalid_scene_path"))
-	elif not FileAccess.file_exists(scene_path):
+	elif not FileAccess.file_exists(scene_path) and not _package_creates(file, scene_path):
 		errors.append(_error(file, "scene_path", "an existing scene", "missing_scene",
 			"Scene '%s' does not exist." % scene_path))
 	else:
@@ -249,6 +249,15 @@ func _normalise_scene(document: Dictionary, file: String, row: Dictionary, error
 
 
 ## Calm (`""`) plus every element on the generated wheel: weather is an element (F0 D8).
+## True when `file` is a package document (`<package>/locations/<id>.json`) whose package already
+## holds the scene `new_scene` rendered for it (`<package>/scenes/<name>.tscn`): the bake writes
+## `scene_path` from that scene, so it need not exist yet (E3.4).
+static func _package_creates(file: String, scene_path: String) -> bool:
+	var package: String = file.get_base_dir().get_base_dir()
+	return file.get_base_dir().get_file() == "locations" and not package.begins_with("res://") \
+		and FileAccess.file_exists(package.path_join("scenes").path_join(scene_path.get_file()))
+
+
 static func weather_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for element: StringName in ElementMatrixRows.WHEEL_ORDER:

@@ -237,6 +237,46 @@ set (under Xvfb or a display) the integration suite renders the heatmap over the
 zones, a charged tile and a live battle; the #350 evidence is in
 `docs/qa/accord-heatmap-350-2026-10-12/`.
 
+### New scene (E3.4, #343)
+
+`new_scene {hub, id, size_cells, backdrop, template, display_name}` creates a playable location
+without touching `res://`. It is a `scene`-kind document op, `WeftluminSceneCreator`
+(`addons/weftlumin/core/scene_creator.gd`), and the scene model registers it on its bus. Build the
+command with `WeftluminSceneCreator.command(params, package, errors)`.
+
+- **What it writes.** It renders `addons/weftlumin/templates/field_scene.tscn.tmpl` or
+  `interior_scene.tscn.tmpl` (`WeftluminSceneTemplate`) to
+  `user://weftlumin/<package>/scenes/<id>.tscn`. It writes the package's
+  `locations/<id>.json` and creates or extends `campaign.json` with the hub and the `scenes` and
+  `locations` kinds. Then it registers the location live: `LocationRegistry.register_runtime()`
+  with the scratch scene path. Undo restores the three files and unregisters the location.
+- **Travelling is a separate step.** `WeftluminSceneCreator.travel_to(id)` goes through
+  `GameFlow.travel()`. A replayed log must never travel.
+- **The field template** mirrors `world/test_room.tscn`:
+  - a `FieldMap` child, backdrop, and hidden `IsometricGround`/`Blocking`/`Terrain` layers;
+  - walls, `Player`, `PartyFollowers`, `SpawnDefault` and `FieldHUD`;
+  - `<Id>Dressing/{GroundDetails,SoftDetails,SolidProps}`.
+
+  `size_cells` sets the grid. The room scales from test_room's 70 cells to 2000×1200 px.
+  `CombatOverlay` is omitted, as in every current scene.
+- **The interior template** instances `world/interiors/building_interior.tscn`, as `bell_loft`
+  does. Canon `no_combat_zone` is `true`, and `register_runtime(definition, true)` carries that
+  flag to the unbaked scene.
+- **Location document.**
+  - It names the baked paths: `res://world/<id>.tscn` (interiors under `world/interiors/`) and the
+    matching `world/locations/…/<id>.tres`.
+  - Other values are `LocationDefinition` defaults, for the owner to set in the location panel.
+  - The locations kind accepts its not-yet-existing `scene_path` while the package holds the
+    rendered scene.
+- **Bake.** `WeftluminBake` reads a `new_scene` entry as the start of that scene's group. It
+  renders the template again from the logged params, so the bake does not depend on the scratch
+  file and works in a fresh worktree. It replays the scene's later edits, which name the scratch
+  path, onto that text and writes the baked path under `target_root`.
+- **Limits.**
+  - A new interior has no exit transition yet: `BuildingTransitionRegistry` is not data-driven (#342).
+  - A new field has no travel exit back.
+  - Add both by hand, or after #342 lands.
+
 ## Locations
 
 The **Locations** bottom tab (E3.3a, #341) edits the hidden state of every location with a scene:
