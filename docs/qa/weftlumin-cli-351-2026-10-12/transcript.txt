@@ -1,0 +1,141 @@
+# weftlumin.gd CLI transcript — 2026-10-12T22:40Z, Godot 4.7.1.stable.official.a13da4feb, HEAD 730d6152 + working tree
+# Dom fixture: test/fixtures/weftlumin/dom_scene_bake/commands.jsonl; isolated XDG_DATA_HOME
+$ sha1sum world/starting_town.tscn
+36e536230ac54071b082c9854510e45ab4ad2b95  world/starting_town.tscn
+
+$ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- validate test/fixtures/weftlumin/dom_scene_bake
+validate dom-scene-bake: 1 kind(s), 0 error(s)
+WEFTLUMIN-REPORT {"schema":"weftlumin.cli.v1","verb":"validate","package":"dom-scene-bake","dir":"res://test/fixtures/weftlumin/dom_scene_bake","kinds":["scenes"],"counts":{"scenes":16},"errors":[],"warnings":[],"exit_code":0} …(truncated; full JSON in the --report file)
+WEFTLUMIN: validate ok exit=0
+[process exit code: 0]
+
+$ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- lint test/fixtures/weftlumin/dom_scene_bake
+lint dom-scene-bake: 0 error(s), 0 warning(s), 0 POT delta string(s), 0 response condition(s) in 0 dialogue file(s)
+WEFTLUMIN-REPORT {"schema":"weftlumin.lint.v1","verb":"lint","package":"dom-scene-bake","lint_errors":[],"warnings":[],"pot_delta":[],"dialogue_conditions":0,"errors":[],"exit_code":0} …(truncated; full JSON in the --report file)
+WEFTLUMIN: lint ok exit=0
+[process exit code: 0]
+
+$ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- bake test/fixtures/weftlumin/dom_scene_bake --report user://cli/bake.json
+bake dom-scene-bake (report): scenes: 14 scene ops in 1 scenes, 1 changed, 0 written, 0 errors
+  update scenes res://world/starting_town.tscn (14 ops)
+WEFTLUMIN-REPORT {"schema":"weftlumin.bake.v1","package":"dom-scene-bake","mode":"report","planned":[{"kind":"scenes","path":"res://world/starting_town.tscn","target":"res://world/starting_town.tscn","ops":14,"action":"update"}],"written":[],"regenerated":[],"lint":{"errors":0,"warnings":0,"pot_delta":[]},"refused_overlap":[],"errors":[],"summary":"scenes: 14 scene ops in 1 scenes, 1 changed, 0 written, 0 errors","skipped_ops":0,"normalized":[],"exit_code":0} …(truncated; full JSON in the --report file)
+WEFTLUMIN: bake ok exit=0
+[process exit code: 0]
+
+$ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- apply user://weftlumin/dom-scene-bake test/fixtures/weftlumin/dom_scene_bake/commands.jsonl
+apply dom-scene-bake: 14 scene op(s) replayed in 1 scene(s), 0 live verb(s), 2 written, 0 error(s)
+WEFTLUMIN-REPORT {"schema":"weftlumin.cli.v1","verb":"apply","package":"dom-scene-bake","dir":"user://weftlumin/dom-scene-bake","log":"res://test/fixtures/weftlumin/dom_scene_bake/commands.jsonl","replayed":[{"scene":"res://world/starting_town.tscn","ops":14,"scratch":"user://weftlumin/dom-scene-bake/scratch/world/starting_town.tscn"}],"live":[],"skipped_ops":0,"written":["user://weftlumin/dom-scene-bake/scratch/world/starting_town.tscn","user://weftlumin/dom-scene-bake/commands.jsonl"],"errors":[],"exit_code":0} …(truncated; full JSON in the --report file)
+WEFTLUMIN: apply ok exit=0
+[process exit code: 0]
+
+$ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- regen
+regen GLOOT-GEN: ok no drift.
+regen CANON-SEED: ok no drift.
+regen LOCATIONS-GEN: ok no drift.
+regen ISO-SPRITE-GEN: ok no drift.
+WEFTLUMIN-REPORT {"schema":"weftlumin.cli.v1","verb":"regen","mode":"report","stages":[{"name":"GLOOT-GEN","ok":true,"message":"no drift."},{"name":"CANON-SEED","ok":true,"message":"no drift."},{"name":"LOCATIONS-GEN","ok":true,"message":"no drift."},{"name":"ISO-SPRITE-GEN","ok":true,"message":"no drift."}],"regenerated":[],"errors":[],"exit_code":0} …(truncated; full JSON in the --report file)
+WEFTLUMIN: regen ok exit=0
+[process exit code: 0]
+
+$ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- pr test/fixtures/weftlumin/dom_scene_bake --issue 351 --draft
+bake dom-scene-bake (report): scenes: 14 scene ops in 1 scenes, 1 changed, 0 written, 0 errors
+  update scenes res://world/starting_town.tscn (14 ops)
+pr dom-scene-bake: overlap not checked (dry run; pass --open-prs FILE, or --execute to ask gh)
+pr dom-scene-bake: dry-run plan, branch weftlumin/dom-scene-bake, 1 changed file(s), 3 affected test file(s)
+  would run: git -C /home/adamjroder/projects/sm-351 worktree add -b weftlumin/dom-scene-bake /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake main
+  would run: godot --headless --path /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake --import
+  would run: godot --headless --path /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake --script res://addons/weftlumin/tools/weftlumin.gd -- bake /home/adamjroder/projects/sm-351/test/fixtures/weftlumin/dom_scene_bake --write --report {scratch}/bake.json
+  would run: godot --headless --path /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake --script res://addons/weftlumin/tools/weftlumin.gd -- lint /home/adamjroder/projects/sm-351/test/fixtures/weftlumin/dom_scene_bake --report {scratch}/lint.json
+  would run: bash -c "cd \"$1\" && GODOT_BIN=\"$2\" bash scripts/test.sh -a \"$3\"" weftlumin-pr /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake /home/adamjroder/.local/bin/godot test/integration/test_field_room.gd
+  would run: bash -c "cd \"$1\" && GODOT_BIN=\"$2\" bash scripts/test.sh -a \"$3\"" weftlumin-pr /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake /home/adamjroder/.local/bin/godot test/integration/test_starting_town.gd
+  would run: bash -c "cd \"$1\" && GODOT_BIN=\"$2\" bash scripts/test.sh -a \"$3\"" weftlumin-pr /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake /home/adamjroder/.local/bin/godot test/integration/test_travel_flow.gd
+  would run: git -C /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake add -A
+  would run: git -C /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake commit -F {scratch}/commit.txt
+  would run: git -C /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake push -u origin weftlumin/dom-scene-bake
+  would run: gh pr create --base main --head weftlumin/dom-scene-bake --title "Weftlumin: dom-scene-bake" --body-file {scratch}/body.md --draft
+WEFTLUMIN-REPORT {"schema":"weftlumin.bake.v1","package":"dom-scene-bake","mode":"pr-dry-run","planned":[{"kind":"scenes","path":"res://world/starting_town.tscn","target":"res://world/starting_town.tscn","ops":14,"action":"update"}],"written":[],"regenerated":[],"lint":{"errors":0,"warnings":0,"pot_delta":[]},"refused_overlap":[],"errors":[],"summary":"scenes: 14 scene ops in 1 scenes, 1 changed, 0 written, 0 errors","skipped_ops":0,"normalized":[],"pr":{"dry_run":true,"branch":"weftlumin/dom-scene-bake","base":"main","issue":"351","draft":true,"worktree":"/home/adamjroder/projects/sm-351-weftlumin-dom-scene-b …(truncated; full JSON in the --report file)
+WEFTLUMIN: pr ok exit=0
+[process exit code: 0]
+
+$ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- pr test/fixtures/weftlumin/dom_scene_bake --issue 351 --draft --open-prs test/fixtures/weftlumin/cli/open_prs.json
+bake dom-scene-bake (report): scenes: 14 scene ops in 1 scenes, 1 changed, 0 written, 0 errors
+  update scenes res://world/starting_town.tscn (14 ops)
+pr dom-scene-bake: refused_overlap — 1 open PR(s) touch the same files; pass --force to open anyway
+  #305 feat/305-dom-art: world/starting_town.tscn
+WEFTLUMIN-REPORT {"schema":"weftlumin.bake.v1","package":"dom-scene-bake","mode":"pr-dry-run","planned":[{"kind":"scenes","path":"res://world/starting_town.tscn","target":"res://world/starting_town.tscn","ops":14,"action":"update"}],"written":[],"regenerated":[],"lint":{"errors":0,"warnings":0,"pot_delta":[]},"refused_overlap":[{"pr":305,"title":"Dom art batch","branch":"feat/305-dom-art","files":["world/starting_town.tscn"]}],"errors":[],"summary":"scenes: 14 scene ops in 1 scenes, 1 changed, 0 written, 0 errors","skipped_ops":0,"normalized":[],"pr":{"dry_run":true,"branch":"weftlumin/dom-scene-bake","base":" …(truncated; full JSON in the --report file)
+WEFTLUMIN: pr refused_overlap exit=3
+[process exit code: 3]
+
+$ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- pr test/fixtures/weftlumin/dom_scene_bake --issue 351 --draft --open-prs test/fixtures/weftlumin/cli/open_prs.json --force
+bake dom-scene-bake (report): scenes: 14 scene ops in 1 scenes, 1 changed, 0 written, 0 errors
+  update scenes res://world/starting_town.tscn (14 ops)
+pr dom-scene-bake: dry-run plan, branch weftlumin/dom-scene-bake, 1 changed file(s), 3 affected test file(s)
+  would run: git -C /home/adamjroder/projects/sm-351 worktree add -b weftlumin/dom-scene-bake /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake main
+  would run: godot --headless --path /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake --import
+  would run: godot --headless --path /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake --script res://addons/weftlumin/tools/weftlumin.gd -- bake /home/adamjroder/projects/sm-351/test/fixtures/weftlumin/dom_scene_bake --write --report {scratch}/bake.json
+  would run: godot --headless --path /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake --script res://addons/weftlumin/tools/weftlumin.gd -- lint /home/adamjroder/projects/sm-351/test/fixtures/weftlumin/dom_scene_bake --report {scratch}/lint.json
+  would run: bash -c "cd \"$1\" && GODOT_BIN=\"$2\" bash scripts/test.sh -a \"$3\"" weftlumin-pr /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake /home/adamjroder/.local/bin/godot test/integration/test_field_room.gd
+  would run: bash -c "cd \"$1\" && GODOT_BIN=\"$2\" bash scripts/test.sh -a \"$3\"" weftlumin-pr /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake /home/adamjroder/.local/bin/godot test/integration/test_starting_town.gd
+  would run: bash -c "cd \"$1\" && GODOT_BIN=\"$2\" bash scripts/test.sh -a \"$3\"" weftlumin-pr /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake /home/adamjroder/.local/bin/godot test/integration/test_travel_flow.gd
+  would run: git -C /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake add -A
+  would run: git -C /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake commit -F {scratch}/commit.txt
+  would run: git -C /home/adamjroder/projects/sm-351-weftlumin-dom-scene-bake push -u origin weftlumin/dom-scene-bake
+  would run: gh pr create --base main --head weftlumin/dom-scene-bake --title "Weftlumin: dom-scene-bake" --body-file {scratch}/body.md --draft
+WEFTLUMIN-REPORT {"schema":"weftlumin.bake.v1","package":"dom-scene-bake","mode":"pr-dry-run","planned":[{"kind":"scenes","path":"res://world/starting_town.tscn","target":"res://world/starting_town.tscn","ops":14,"action":"update"}],"written":[],"regenerated":[],"lint":{"errors":0,"warnings":0,"pot_delta":[]},"refused_overlap":[],"errors":[],"summary":"scenes: 14 scene ops in 1 scenes, 1 changed, 0 written, 0 errors","skipped_ops":0,"normalized":[],"pr":{"dry_run":true,"branch":"weftlumin/dom-scene-bake","base":"main","issue":"351","draft":true,"worktree":"/home/adamjroder/projects/sm-351-weftlumin-dom-scene-b …(truncated; full JSON in the --report file)
+WEFTLUMIN: pr ok exit=0
+[process exit code: 0]
+
+$ sha1sum world/starting_town.tscn   # unchanged by every report-mode run above
+36e536230ac54071b082c9854510e45ab4ad2b95  world/starting_town.tscn
+
+$ git status --short
+ M addons/weftlumin/core/adapter.gd
+ M addons/weftlumin/shell/soul_meter_adapter.gd
+?? addons/weftlumin/tools/
+?? test/fixtures/weftlumin/cli/
+?? test/unit/test_weftlumin_cli.gd
+?? test/unit/test_weftlumin_cli.gd.uid
+
+# Write gating: bake --write patches res:// in place; the patch is reverted right after.
+
+$ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- bake test/fixtures/weftlumin/dom_scene_bake --write
+bake dom-scene-bake (write): scenes: 14 scene ops in 1 scenes, 1 changed, 1 written, 0 errors
+  update scenes res://world/starting_town.tscn (14 ops)
+  wrote res://world/starting_town.tscn
+WEFTLUMIN-REPORT {"schema":"weftlumin.bake.v1","package":"dom-scene-bake","mode":"write","planned":[{"kind":"scenes","path":"res://world/starting_town.tscn","target":"res://world/starting_town.tscn","ops":14,"action":"update"}],"written":["res://world/starting_town.tscn"],"regenerated":[],"lint":{"errors":0,"warnings":0,"pot_delta":[]},"refused_overlap":[],"errors":[],"summary":"scenes: 14 scene ops in 1 scenes, 1 changed, 1 written, 0 errors","skipped_ops":0,"normalized":[],"exit_code":0} …(truncated; full JSON in the --report file)
+WEFTLUMIN: bake ok exit=0
+[process exit code: 0]
+$ git diff --stat -- world/starting_town.tscn
+ world/starting_town.tscn | 58 ++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 51 insertions(+), 7 deletions(-)
+$ git checkout -- world/starting_town.tscn && sha1sum world/starting_town.tscn
+36e536230ac54071b082c9854510e45ab4ad2b95  world/starting_town.tscn
+
+# Full bake report (user://cli/bake.json):
+{
+  "schema": "weftlumin.bake.v1",
+  "package": "dom-scene-bake",
+  "mode": "report",
+  "planned": [
+    {
+      "kind": "scenes",
+      "path": "res://world/starting_town.tscn",
+      "target": "res://world/starting_town.tscn",
+      "ops": 14,
+      "action": "update"
+    }
+  ],
+  "written": [],
+  "regenerated": [],
+  "lint": {
+    "errors": 0,
+    "warnings": 0,
+    "pot_delta": []
+  },
+  "refused_overlap": [],
+  "errors": [],
+  "summary": "scenes: 14 scene ops in 1 scenes, 1 changed, 0 written, 0 errors",
+  "skipped_ops": 0,
+  "normalized": [],
+  "exit_code": 0
+}

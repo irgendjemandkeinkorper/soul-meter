@@ -195,7 +195,7 @@ command log's effective `scene` stream into surgical `.tscn` text patches and re
   and script lines must stay unchanged.
 - **Limits.** A layout edit of a layer painted earlier in the same log is refused (bake them as
   separate logs). Scripted nodes outside an instanced scene and resources with scripts cannot be
-  written. There is no bake button and no CLI yet; the PR flow is E7.1.
+  written. There is no in-game bake button yet; the headless CLI and PR flow are below (E7.1).
 
 The Dom fixture log is `test/fixtures/weftlumin/dom_scene_bake/commands.jsonl` (14 effective
 commands of every class above plus an undone nudge); `test/integration/test_weftlumin_scene_bake.gd`
@@ -347,6 +347,72 @@ Rendered evidence (a placed `SpawnSlotGladeSouth` with its rolled pack, and the 
 in `docs/qa/weftlumin-spawns-346-2026-10-11/`, from `test_rendered_spawn_panel_capture` in
 `test/integration/test_weftlumin_spawn_panel.gd` with `SOUL_METER_SPAWN_PANEL_CAPTURE_DIR` set under
 Xvfb.
+
+## Headless CLI and PR flow (E7.1, #351)
+
+`addons/weftlumin/tools/weftlumin.gd` runs the same code as the editor without a window
+(architecture §4.13). It is a thin `SceneTree` entry. It loads `cli.gd` inside `_initialize()`,
+after the autoloads exist, and runs the subcommand on the first frame, once they are ready.
+
+```
+godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- <subcommand> [args] [--report <path>]
+  validate <package_dir>                   manifest + every kind, attributed errors
+  apply    <package_dir> <commands.jsonl>  replay onto fresh instances; scratch only (never res://)
+  bake     <package_dir> [--write] [--force]  weftlumin.bake.v1 report; writes only with --write
+  regen    [--write]                       drift stages; seeds Pandora and regenerates only with --write
+  lint     <package_dir>                   [if /] lint, quest_audit statics, flag grammar, POT delta
+  pr       <package_dir> [--issue N] [--draft] [--force] [--execute] [--open-prs FILE]
+```
+
+- **Package directory.** `campaign.json` is the optional manifest (`weftlumin.package.v1`).
+  `commands.jsonl` is the scene command log. `locations/`, `characters/` and `spawn_tables/` hold
+  canon documents. A document replaces the canon document with the same id, or is new under
+  `canon/<hub>/`. `quests/` and `encounters/` are validated through `CampaignQuestLoader`, and
+  `dialogue/**/*.dialogue` is linted. Without a manifest, the id comes from the log and the kinds
+  are the ones present. The Dom fixture (`test/fixtures/weftlumin/dom_scene_bake`) is a valid
+  package.
+- **Output.** Each run prints human-readable lines, then `WEFTLUMIN-REPORT <json>`, then
+  `WEFTLUMIN: <verb> <ok|errors|usage|refused_overlap> exit=<0|1|2|3>`. `--report` writes the
+  same JSON to a file atomically. Godot can abort at teardown, so judge that line or the file,
+  never the process exit code.
+- **Same path as the UI.** `apply` and `bake` replay through `WeftluminBake` and
+  `WeftluminCommandBus.replay()`, so `pre_state` drift refuses as it does in the editor. Logged
+  live-state verbs (`{"kind": "console", "op": "execute", "params": {"command": "…"}}`) run
+  against the live autoloads through the console interpreter (`weftlumin/panels/live_verbs.gd`, which is export-excluded like the panels). They keep its `[debug] `
+  provenance and are excluded from replay. Game-specific work goes through new
+  `WeftluminGameAdapter` hooks implemented in `soul_meter_adapter.gd`: `cli_kinds`, package
+  validate/bake, scene contracts, `lint_package`, `pot_files`, `player_facing_keys`, `regen`,
+  `run_live_verb` and `affected_test_globs`.
+- **Lint.** It runs a GDScript port of `tools/lint_dialogue_conditions.py`, with the same codes
+  and the same self-test cases. CI still runs the Python lint before Godot exists. It also runs
+  `quest_audit`'s statics over the package. Flag grammar violations are errors here because a
+  package's flags are new. It also checks softlocks in checked responses and phase reachability
+  for the givers of package quests. Finally, it reports a POT delta: player-facing strings that
+  the package adds and that neither `locale/project.pot` nor `data/generated/items.pot` contains.
+  These are dialogue lines (heuristic) and the string exports in
+  `PLAYER_FACING_KEYS`. The delta is reported only and never written, because regenerating the
+  POT is still an editor-machine chore. `bake --write` refuses when lint has errors.
+- **`pr` is a dry run unless `--execute`.** The dry run bakes in report mode, lints, and expands
+  the adapter's fixed kind → test-glob map (scenes → `test_starting_town`, `test_field_room`,
+  `test_travel_*`; quests → `test_quest_*`, `test_campaign_*`; encounters and spawn tables →
+  `test_encounter_*`, `test_spawn_*`; characters → `test_party_*`, `test_npc_*`; canon → the drift
+  stages). It then prints the plan. The plan creates a `weftlumin/<package id>` worktree, imports,
+  runs `bake --write` there (plus `regen --write` when the bake lists regenerated files), runs lint
+  and the affected tests, and commits. The commit carries `Closes #N` and only the `--trailer`
+  values given. The plan then pushes and runs `gh pr create [--draft]`, with the bake report and
+  `Closes #N` as the body. A dry run starts no process and makes no network call. The overlap scan
+  reads `--open-prs FILE` (`gh pr list --json number,title,headRefName,files`). Otherwise it reports
+  itself unchecked; `--execute` asks `gh`. If a planned file is also changed by an open PR, the run
+  is refused with `refused_overlap` and exit 3 unless `--force`. It never sets labels, milestones or
+  assignees.
+- **Launcher.** `pr.gd` `launch()` / `poll()` / `cancel()` start the CLI as a detached headless
+  Godot through `OS.create_process` (debug builds only, never `OS.execute`). They poll its
+  `--report` file and can kill the process. The in-game **Bake & PR** button is not wired yet; it
+  needs a package panel to host it.
+
+`test/unit/test_weftlumin_cli.gd` covers every verb in-process, the overlap refusal, the
+launcher and the `[if /]` port. Its process runner fails the test if anything is executed. A
+transcript of each verb run against the Dom fixture is in `docs/qa/weftlumin-cli-351-2026-10-12/`.
 
 ## Enablement and release safety
 
@@ -521,5 +587,6 @@ registration are the model's.
 | Characters kind, registries, vault_id, roster-from-canon, pickers | `test/unit/test_weftlumin_characters_kind.gd`; panel: `test/integration/test_weftlumin_character_panel.gd` |
 | Spawn tables kind, panel, anchors and debug verbs (#346) | `test/unit/test_weftlumin_spawn_tables_kind.gd`, `test/unit/test_dev_console_spawn_verbs.gd`; panel: `test/integration/test_weftlumin_spawn_panel.gd` |
 | Accord overlay and bake saturation lint (#350) | `test/unit/test_weftlumin_accord_saturation.gd`; panel: `test/integration/test_weftlumin_accord_overlay.gd` |
+| Headless CLI verbs, `[if /]` port, POT delta, overlap refusal, launcher (#351) | `test/unit/test_weftlumin_cli.gd`; transcript in `docs/qa/weftlumin-cli-351-2026-10-12/` |
 
 The original file-to-behaviour migration plan is `docs/weftlumin-test-migration.md` (E1.9).

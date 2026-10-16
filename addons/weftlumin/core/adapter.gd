@@ -80,3 +80,68 @@ func canon_root() -> String:
 ## Optional recorder event sink supplied by the host.
 func recorder() -> Node:
 	return null
+
+
+# --- Headless CLI (§4.13, E7.1). `addons/weftlumin/tools/weftlumin.gd` calls these; the base
+# stubs make no claim, so a host without them validates and bakes nothing game-specific.
+
+
+## Kinds the CLI validates and bakes from a package directory, keyed by kind id. A kind with a
+## `subdir` reads `<package>/<subdir>/*.<ext>`; the `scenes` kind reads `<package>/commands.jsonl`.
+func cli_kinds() -> Array[WeftluminKind]:
+	return kinds()
+
+
+## Validate one kind's package documents against the host's canon. Attributed errors. `package`
+## is the CLI's loaded package (`dir`, `id`, `hub`, `manifest`, `kinds`, `log_entries`, `dialogue`).
+@warning_ignore("unused_parameter")
+func validate_package_documents(kind: WeftluminKind, documents: Array[Dictionary], package: Dictionary) -> Array[Dictionary]:
+	return []
+
+
+## Bake one kind's package documents (`weftlumin.bake.v1`-shaped report). Writes only when `write`.
+@warning_ignore("unused_parameter")
+func bake_package_documents(
+	kind: WeftluminKind, documents: Array[Dictionary], package: Dictionary, write: bool, force: bool,
+) -> Dictionary:
+	return {}
+
+
+## Contract validators the scene bake runs before anything is written (`WeftluminBake` options).
+func scene_bake_validators() -> Array[Callable]:
+	return []
+
+
+## Host lint over a loaded package: `{errors: Array[Dictionary], warnings: Array[Dictionary]}`.
+@warning_ignore("unused_parameter")
+func lint_package(package: Dictionary) -> Dictionary:
+	return {"errors": [], "warnings": []}
+
+
+## Translation template files whose msgids count as "already in the POT pipeline".
+func pot_files() -> Array[String]:
+	return []
+
+
+## Scene-export keys whose string values are player-facing (POT-delta candidates).
+func player_facing_keys() -> Array[String]:
+	return []
+
+
+## Seed and regenerate derived data from canon. Report-only (drift checks) unless `write`.
+## `{stages: [{name, ok, message}], errors, regenerated}`.
+@warning_ignore("unused_parameter")
+func regen(write: bool) -> Dictionary:
+	return {"stages": [], "errors": [], "regenerated": []}
+
+
+## Run one logged live-state verb against the running autoloads. `{handled, ok, output}`.
+@warning_ignore("unused_parameter")
+func run_live_verb(entry: Dictionary) -> Dictionary:
+	return {"handled": false, "ok": false, "output": []}
+
+
+## The fixed kind → test-glob map the PR flow runs as "affected" tests (res-relative globs).
+@warning_ignore("unused_parameter")
+func affected_test_globs(kind_ids: Array[String]) -> Array[String]:
+	return []
