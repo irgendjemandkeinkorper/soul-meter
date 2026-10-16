@@ -1026,6 +1026,10 @@ func _movement_snapshot() -> Dictionary:
 		raw_budget = int(scheduler.call("move_ct_budget", actor))
 	var ct_budget := int(float(raw_budget) / CombatInjury.move_cost_multiplier(actor))
 	var reachable: Array[Dictionary] = []
+	# Every quote below starts from the actor's cell: one shared search, not one per cell (#282).
+	var memo := battlefield.has_method("begin_path_memo")
+	if memo:
+		battlefield.call("begin_path_memo", actor, ct_budget)
 	for destination: StringName in battlefield.reachable_positions(actor, ct_budget):
 		var query := move_query(destination)
 		if not bool(query.get("allowed", false)):
@@ -1037,6 +1041,8 @@ func _movement_snapshot() -> Dictionary:
 			"path": (query.get("path", []) as Array).duplicate(),
 			"path_cells": _describe_path_cells(query.get("path", [])),
 		})
+	if memo:
+		battlefield.call("end_path_memo")
 	return {
 		"action_id": ACTION_MOVE,
 		"per_cell_ap_cost": per_cell_ap,
@@ -2887,6 +2893,8 @@ func _emit_event(
 		_class_resource_of(actor).on_action(event)
 		# Seam v2 broadcast: every actor's resource sees every resolved action (Threads).
 		var action_id := StringName(str(event.data.get("action_id", "")))
+		# Built on the first observer that needs it, then shared read-only by all of them.
+		var observer_payload: Dictionary = {}
 		for observer: BattleActor in allies + enemies:
 			var observer_resource := _class_resource_of(observer)
 			# A null resource ignores the broadcast, so it gets no private copy of the payload.
@@ -2894,16 +2902,17 @@ func _emit_event(
 			# resolved action with 100 hostiles on the field (#282).
 			if observer_resource.is_null():
 				continue
-			observer_resource.on_any_action(
-				event.actor_id, action_id, event.target_id, _observer_payload(event.data)
-			)
+			if observer_payload.is_empty():
+				observer_payload = _observer_payload(event.data)
+			observer_resource.on_any_action(event.actor_id, action_id, event.target_id, observer_payload)
 	if resolving_window:
 		_resolving = false
 
 
-## A private deep copy of a resolved action's payload for one observer, except the snapshot's
-## read-only arrays (tiles, allies, enemies, turn order): an observer can read those but not
-## write to them, so each observer shares them instead of copying 100 rows apiece (#282).
+## A read-only deep copy of a resolved action's payload, built once per action and shared by
+## every observer. The snapshot's read-only arrays (tiles, allies, enemies, turn order) are shared
+## as they are instead of copied; the rest is copied once and frozen, so no observer can change
+## what the next one reads. One private copy per observer was ~1.2 ms each with 100 hostiles (#282).
 func _observer_payload(data: Dictionary) -> Dictionary:
 	var snapshot_value: Variant = data.get("snapshot")
 	if not (snapshot_value is Dictionary):
@@ -2919,6 +2928,7 @@ func _observer_payload(data: Dictionary) -> Dictionary:
 	shallow["snapshot"] = snapshot_copy
 	var copy := shallow.duplicate(true)
 	(copy["snapshot"] as Dictionary).merge(shared)
+	_freeze(copy)
 	return copy
 
 
@@ -2932,6 +2942,9 @@ static func _frozen(rows: Array[Dictionary]) -> Array[Dictionary]:
 
 
 static func _freeze(value: Variant) -> void:
+	# Already-frozen containers (the shared snapshot arrays) are frozen all the way down.
+	if (value is Dictionary and (value as Dictionary).is_read_only()) or (value is Array and (value as Array).is_read_only()):
+		return
 	if value is Dictionary:
 		for nested: Variant in (value as Dictionary).values():
 			_freeze(nested)

@@ -670,6 +670,10 @@ func describe_position(position: StringName) -> Dictionary:
 ## Budget-bounded flood fill (architecture doc §1.6). Scans an expanding box around the actor
 ## and keeps every cell `path_query()` (the same A* this model uses for real moves) reports
 ## reachable within `ct_budget` — so the range display and an actual move never disagree.
+## `begin_path_memo()`'s shared search: `{origin, tree}`, or empty.
+var _path_memo: Dictionary = {}
+
+
 func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName]:
 	var result: Array[StringName] = []
 	var handles: Array[String] = []
@@ -716,7 +720,33 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 ## `reachable_positions()` all route through it so the quoted cost and the paid cost can never
 ## drift apart (doc §1.7).
 func path_query(actor: BattleActor, destination: StringName) -> Dictionary:
+	if not _path_memo.is_empty() and has_combatant(actor) and _cells.get(actor.combat_id) == _path_memo["origin"]:
+		var parsed := _parse_handle(destination)
+		# Only a cell the capped search settled has its uncapped path in the tree.
+		if bool(parsed.get("ok", false)) and ((_path_memo["tree"] as Dictionary)["settled"] as Dictionary).has(parsed["cell"]):
+			return _path_query(actor, destination, INF, _path_memo["tree"])
 	return _path_query(actor, destination, INF)
+
+
+## While a caller asks many uncapped path queries from one actor's cell (the movement snapshot
+## quotes every reachable cell), one search from that cell, capped at `ct_budget`, answers every
+## cell it settles. It settles cells in the order each per-destination search would, so every
+## path and cost is unchanged (#282). A cell it did not settle, a query from any other cell, or
+## any query after `end_path_memo()` searches as before. Nothing may move between the two.
+func begin_path_memo(actor: BattleActor, ct_budget: int) -> void:
+	_path_memo = {}
+	if _grid == null or not has_combatant(actor) or not _cells.has(actor.combat_id):
+		return
+	var origin: Vector2i = _cells[actor.combat_id]
+	var was_solid := _grid.is_point_solid(origin)
+	_grid.set_point_solid(origin, false)
+	var tree := _settled_paths(origin, _search_cost_cap(ct_budget))
+	_grid.set_point_solid(origin, was_solid)
+	_path_memo = {"origin": origin, "tree": tree}
+
+
+func end_path_memo() -> void:
+	_path_memo = {}
 
 
 ## `path_query()` with the search stopped once every unsettled cell costs more than
