@@ -47,6 +47,8 @@ const PANEL_SCENES: Array[String] = [
 	"res://weftlumin/panels/location_panel.tscn",
 	"res://weftlumin/panels/spawn_panel.tscn",
 	"res://weftlumin/panels/character_panel.tscn",
+	# E6.2 (#350): read-only accord / weather / charge / walkability overlay.
+	"res://weftlumin/panels/accord_overlay.tscn",
 ]
 
 
