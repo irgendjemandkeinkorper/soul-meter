@@ -17,6 +17,15 @@ const _HUBS: Array[Dictionary] = [
 		# Provisional economy tuning, not lore. Centralized for a later balance pass.
 		"base_cost_gp": 25,
 	},
+	{
+		# Hub 2 (C1 / #238; vault proposal approved 2026-10-16). The id is the `canon/<hub>/`
+		# directory and the location id; NpcRoster and TownNpcSpawner key the hub's townsfolk on it.
+		"id": &"kesselford",
+		"scene_path": "res://world/kesselford.tscn",
+		"display_name": "Kesselford",
+		# PROVISIONAL: a longer road than Dom's local routes; balance pass owns the number.
+		"base_cost_gp": 40,
+	},
 ]
 
 

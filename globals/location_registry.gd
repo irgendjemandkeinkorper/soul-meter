@@ -61,6 +61,14 @@ const LOWER_TRIAL_HALL: LocationDefinition = preload(
 const DOM_TAVERN: LocationDefinition = preload(
 	"res://world/locations/interiors/dom_tavern.tres"
 )
+# Kesselford, hub 2 (C1 / #238): baked by the Weftlumin `kesselford` package.
+const KESSELFORD: LocationDefinition = preload("res://world/locations/kesselford.tres")
+const KESSELFORD_WAYHOUSE: LocationDefinition = preload(
+	"res://world/locations/interiors/kesselford_wayhouse.tres"
+)
+const KESSELFORD_CHANDLERY: LocationDefinition = preload(
+	"res://world/locations/interiors/kesselford_chandlery.tres"
+)
 ## The baked index (`tools/generate_locations.gd`, E3.3a / #341). It owns WHICH locations exist;
 ## the named consts above stay for code references and resolve to the same cached resources.
 const INDEX_PATH := "res://data/generated/location_index.json"

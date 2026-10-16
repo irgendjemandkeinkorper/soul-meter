@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://cuqqli0i4dlel"
+path="res://.godot/imported/kesselford_townsfolk.dialogue-53078de3b4091d49a8c7472d7438975b.tres"
+
+[deps]
+
+source_file="res://dialogue/kesselford_townsfolk.dialogue"
+dest_files=["res://.godot/imported/kesselford_townsfolk.dialogue-53078de3b4091d49a8c7472d7438975b.tres"]
+
+[params]
+
+defaults=true

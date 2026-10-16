@@ -1,0 +1,71 @@
+{
+  "town_id": "kesselford",
+  "placements": {
+    "kesselford-bell-ringer": {
+      "scene": "res://world/kesselford.tscn",
+      "anchor": "FloodBell",
+      "offset": [
+        33.0,
+        -9.0
+      ],
+      "facing": "west",
+      "idle_phase": 1.56,
+      "model_index": 9
+    },
+    "kesselford-ferry-keeper": {
+      "scene": "res://world/kesselford.tscn",
+      "anchor": "FerryStage",
+      "offset": [
+        -26.0,
+        32.0
+      ],
+      "facing": "west",
+      "idle_phase": 1.739,
+      "model_index": 24
+    },
+    "kesselford-grain-factor": {
+      "scene": "res://world/interiors/kesselford_wayhouse.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        240.0,
+        24.0
+      ],
+      "facing": "west",
+      "idle_phase": 0.15,
+      "model_index": 1
+    },
+    "kesselford-mender-pair-elder": {
+      "scene": "res://world/kesselford.tscn",
+      "anchor": "MenderStone",
+      "offset": [
+        -61.0,
+        -5.0
+      ],
+      "facing": "east",
+      "idle_phase": 2.865,
+      "model_index": 20
+    },
+    "kesselford-mender-pair-junior": {
+      "scene": "res://world/kesselford.tscn",
+      "anchor": "MenderStone",
+      "offset": [
+        72.0,
+        11.0
+      ],
+      "facing": "west",
+      "idle_phase": 1.038,
+      "model_index": 5
+    },
+    "kesselford-wayhouse-keeper": {
+      "scene": "res://world/interiors/kesselford_wayhouse.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "facing": "east",
+      "idle_phase": 2.735,
+      "model_index": 16
+    }
+  }
+}

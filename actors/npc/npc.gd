@@ -169,12 +169,12 @@ func _apply_routine() -> bool:
 	var row := NpcRoutines.placement(actor_id, WorldClock.phase())
 	if row.is_empty():
 		return false
-	# Routine positions are HUB_SCENE coordinates; never apply them elsewhere.
-	# Judge by the scene THIS NPC lives in, not get_tree().current_scene — under
-	# the test harness current_scene is the runner (or null), which let hub
-	# routines clobber interior placements (the 3 pre-2026-08-31
+	# Routine positions are the NPC's own hub-scene coordinates; never apply them
+	# elsewhere. Judge by the scene THIS NPC lives in, not get_tree().current_scene
+	# — under the test harness current_scene is the runner (or null), which let
+	# hub routines clobber interior placements (the 3 pre-2026-08-31
 	# test_interior_population failures).
-	if _containing_scene_path() != NpcRoutines.HUB_SCENE:
+	if _containing_scene_path() != NpcRoutines.hub_scene(actor_id):
 		return false
 	var present := bool(row.get("present", false))
 	if present:

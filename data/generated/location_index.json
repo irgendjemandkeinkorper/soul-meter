@@ -178,6 +178,39 @@
       "no_combat_zone": false
     },
     {
+      "id": "kesselford",
+      "display_name": "Kesselford",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/kesselford.tres",
+      "scene_path": "res://world/kesselford.tscn",
+      "no_combat_zone": false
+    },
+    {
+      "id": "kesselford_chandlery",
+      "display_name": "Ford Chandlery",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/kesselford_chandlery.tres",
+      "scene_path": "res://world/interiors/kesselford_chandlery.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "kesselford_wayhouse",
+      "display_name": "Ferry Bell Wayhouse",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/kesselford_wayhouse.tres",
+      "scene_path": "res://world/interiors/kesselford_wayhouse.tscn",
+      "no_combat_zone": true
+    },
+    {
       "id": "lefren",
       "display_name": "Lefren",
       "epithet": "",

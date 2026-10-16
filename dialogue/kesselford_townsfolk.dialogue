@@ -1,0 +1,65 @@
+~ kesselford_kesselford_bell_ringer
+if Reputation.band("wayfare-menders") == "hostile" or Reputation.band("wayfare-menders") == "cold"
+	Hesk Waterward: Bell's not for talk. Move along.
+elif Reputation.band("wayfare-menders") == "warm" or Reputation.band("wayfare-menders") == "allied"
+	Hesk Waterward: Water's quiet. Means nothing, but it's quiet.
+else
+	Hesk Waterward: Mind the bell. If it rings, you stand where you are.
+Hesk Waterward: Hesk rings the flood bell when the water turns wrong and has rung it three times this month on no rain at all.
+Hesk Waterward: Cross in the safe hours or sleep on this bank.
+=> END
+
+~ kesselford_kesselford_ferry_keeper
+if Reputation.band("wayfare-menders") == "hostile" or Reputation.band("wayfare-menders") == "cold"
+	Orla Chainwright: You can wait on the bank like everyone else.
+elif Reputation.band("wayfare-menders") == "warm" or Reputation.band("wayfare-menders") == "allied"
+	Orla Chainwright: Step aboard; the river's in a listening mood today.
+else
+	Orla Chainwright: Keep your footing, traveler.
+Orla Chainwright: Orla chains the ferry to both banks before dawn and will not unchain it for anyone while the water runs the wrong colour.
+Orla Chainwright: Leave me a true count when you return.
+=> END
+
+~ kesselford_kesselford_grain_factor
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Factor Wendel Marrow: Unless you can sing a river down, you are no use to me.
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Factor Wendel Marrow: If you hear the bell go quiet, come find me first.
+else
+	Factor Wendel Marrow: Mind the bell. If it rings, you stand where you are.
+Factor Wendel Marrow: Wendel has been waiting four days for a safe hour to cross with the Table's grain, and the Table does not pay for waiting.
+Factor Wendel Marrow: Cross in the safe hours or sleep on this bank.
+=> END
+
+~ kesselford_kesselford_mender_pair_elder
+if Reputation.band("wayfare-menders") == "hostile" or Reputation.band("wayfare-menders") == "cold"
+	Mender Ivo Threnlow: The charter does not oblige me to speak with you.
+elif Reputation.band("wayfare-menders") == "warm" or Reputation.band("wayfare-menders") == "allied"
+	Mender Ivo Threnlow: Walk with us at dawn, if you want to hear what the river says back.
+else
+	Mender Ivo Threnlow: Mind the bell. If it rings, you stand where you are.
+Mender Ivo Threnlow: Ivo sings the ford open every dawn and, lately, only ever in a pair, so someone is there to catch the note that does not come back.
+Mender Ivo Threnlow: Cross in the safe hours or sleep on this bank.
+=> END
+
+~ kesselford_kesselford_mender_pair_junior
+if Reputation.band("wayfare-menders") == "hostile" or Reputation.band("wayfare-menders") == "cold"
+	Mender Nessa Quill: Ivo says I should not talk to you.
+elif Reputation.band("wayfare-menders") == "warm" or Reputation.band("wayfare-menders") == "allied"
+	Mender Nessa Quill: The map is honest even when the river is not. Ask me anything.
+else
+	Mender Nessa Quill: Mind the bell. If it rings, you stand where you are.
+Mender Nessa Quill: Nessa keeps the Menders' monthly map and will tell anyone who asks how many safe hours the ford lost this year.
+Mender Nessa Quill: Cross in the safe hours or sleep on this bank.
+=> END
+
+~ kesselford_kesselford_wayhouse_keeper
+if Reputation.band("wayfare-menders") == "hostile" or Reputation.band("wayfare-menders") == "cold"
+	Dagny Kettlebrook: Beds are full. They are always full for your sort.
+elif Reputation.band("wayfare-menders") == "warm" or Reputation.band("wayfare-menders") == "allied"
+	Dagny Kettlebrook: A dry bed and a hot kettle. Pay when the river lets you leave.
+else
+	Dagny Kettlebrook: Mind the bell. If it rings, you stand where you are.
+Dagny Kettlebrook: Dagny prices a bed by the crossing's mood and has not had a cheap night since midsummer.
+Dagny Kettlebrook: Cross in the safe hours or sleep on this bank.
+=> END

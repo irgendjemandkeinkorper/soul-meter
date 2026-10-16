@@ -112,7 +112,8 @@ func test_panel_mounts_and_builds_each_kind_from_its_contract() -> void:
 	assert_object(panel.model.get_parent()).is_same(panel)
 	assert_bool(panel.model.call("is_enabled")).is_true()
 	assert_bool(panel.needs_sandbox).is_false()
-	assert_int(panel.character_ids().size()).is_equal(66)
+	# Sixty Dom and six Kesselford npcs plus the six archetypes (C1 / #238).
+	assert_int(panel.character_ids().size()).is_equal(72)
 	assert_int(panel.character_ids("archetype").size()).is_equal(6)
 	panel.select_character("sella-varn")
 	assert_str(panel.identity_label.text).contains("sella-varn · npc")

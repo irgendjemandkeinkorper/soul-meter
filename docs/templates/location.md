@@ -99,10 +99,11 @@ deliberate rather than an omission.
 ```
 
 `globals/npc_routines.gd` reads those fields and keeps only the FR-504a rules canon does not
-carry — `ROUTINE_CAP`, `HUB_SCENE`, the `ABSENT` sentinel.
-
-Note: `NpcRoutines.HUB_SCENE` is currently Dom only; hubs 2–3 need that constant widened
-(one-line change, list it in the handoff — do not do it silently).
+carry — `ROUTINE_CAP`, the `ABSENT` sentinel, and `hub_scene(npc_id)`: the scene the routine's
+coordinates belong to is the location named like the NPC's `canon/<hub>/` directory
+(`dom` → `starting_town.tscn`, `kesselford` → `kesselford.tscn`; C1 / #238). `HUB_SCENE` is
+Dom's scene, the fallback for a hub directory with no location. A hub is a `FastTravelRegistry`
+row; see `docs/weftlumin.md` "New scene" for the hand-wired pieces a new hub still needs.
 
 ## Flag grammar
 

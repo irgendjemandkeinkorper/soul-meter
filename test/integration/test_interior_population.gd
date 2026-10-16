@@ -1,17 +1,21 @@
 extends GdUnitTestSuite
 
-const NpcPlacementsData: JSON = preload("res://data/generated/dom_npc_placements.json")
 const NpcRosterScript := preload("res://globals/npc_roster.gd")
 const VendorData := preload("res://globals/vendor_registry.gd")
 const VendorIdsData := preload("res://data/generated/vendor_ids.gd")
 
 var _game_state_before: Dictionary = {}
 var _reputation_before: Dictionary = {}
+var _zhavar_before: Dictionary = {}
 
 
 func before_test() -> void:
 	_game_state_before = GameState.to_dict()
 	_reputation_before = Reputation.to_dict()
+	# A raised Zhavar rewires rumor-carrying townsfolk (NpcReactions), and the
+	# generated-title assertions below presume the quiet default.
+	_zhavar_before = SaveGame.zhavar.duplicate(true)
+	SaveGame.zhavar.clear()
 	UIManager.close_all()
 
 
@@ -19,11 +23,13 @@ func after_test() -> void:
 	UIManager.close_all()
 	GameState.from_dict(_game_state_before)
 	Reputation.from_dict(_reputation_before)
+	SaveGame.zhavar = _zhavar_before.duplicate(true)
 
 
-func test_all_thirty_indoor_npcs_use_generated_positions_and_dialogue_titles() -> void:
-	var root: Dictionary = NpcPlacementsData.data
-	var placements: Dictionary = root["placements"]
+func test_all_thirty_two_indoor_npcs_use_generated_positions_and_dialogue_titles() -> void:
+	# Every hub's placements, merged: Dom's thirty indoor townsfolk plus the two in
+	# Kesselford's wayhouse (C1 / #238).
+	var placements: Dictionary = NpcRosterScript.placements()
 	var placed_ids := {}
 	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
 		var interior := _instantiate_interior(entry.destination_scene)
@@ -51,7 +57,7 @@ func test_all_thirty_indoor_npcs_use_generated_positions_and_dialogue_titles() -
 			assert_bool(npc.is_in_group(&"indoor_npc")).is_true()
 			placed_ids[npc_id] = true
 		_free_interior(interior)
-	assert_int(placed_ids.size()).is_equal(30)
+	assert_int(placed_ids.size()).is_equal(32)
 
 
 func test_marshal_uses_story_dialogue_and_generated_isometric_model() -> void:
@@ -93,7 +99,8 @@ func test_npc_body_collision_matches_the_character_feet_footprint() -> void:
 	npc.queue_free()
 
 
-func test_all_twelve_generated_vendors_are_reachable_in_interiors() -> void:
+func test_all_thirteen_generated_vendors_are_reachable_in_interiors() -> void:
+	# Twelve Dom vendors plus Kesselford's Ford Chandlery (C1 / #238).
 	var placed_ids := {}
 	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
 		var interior := _instantiate_interior(entry.destination_scene)
@@ -108,7 +115,7 @@ func test_all_twelve_generated_vendors_are_reachable_in_interiors() -> void:
 			assert_float(npc.interaction_radius).is_greater(0.0)
 			placed_ids[npc.vendor_id] = true
 		_free_interior(interior)
-	assert_int(placed_ids.size()).is_equal(12)
+	assert_int(placed_ids.size()).is_equal(13)
 	for row: Dictionary in VendorData.all_vendors():
 		assert_bool(placed_ids.has(str(row["id"]))).is_true()
 

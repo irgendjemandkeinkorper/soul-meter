@@ -15601,6 +15601,729 @@
 						"value": "vex"
 					}
 				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "537.0",
+				"_index": 0,
+				"_name": "Orla Chainwright",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Keeps the chained ferry at Kesselford's ford and reads the river's mood before anyone else is awake."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Orla chains the ferry to both banks before dawn and will not unchain it for anyone while the water runs the wrong colour."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "You can wait on the bank like everyone else."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Step aboard; the river's in a listening mood today."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Orla Chainwright"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Bank"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Keeper of the chained ferry"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Ferry Stage"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.739
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 24
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-ferry-keeper"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "FerryStage"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/kesselford.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -26.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 32.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-ferry-keeper"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Ferry keeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "538.0",
+				"_index": 0,
+				"_name": "Hesk Waterward",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Watches the ford from the bell post and rings when the river rises on no rain."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Hesk rings the flood bell when the water turns wrong and has rung it three times this month on no rain at all."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Bell's not for talk. Move along."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Water's quiet. Means nothing, but it's quiet."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Hesk Waterward"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Flood-bell ringer"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Bell post, Ford Square"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.56
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 9
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-bell-ringer"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "FloodBell"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/kesselford.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 33.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": -9.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-bell-ringer"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Flood-bell ringer"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "539.0",
+				"_index": 0,
+				"_name": "Mender Ivo Threnlow",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "The senior Mender of Kesselford's dawn pair; sings the ford clear and counts the notes that come back late."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Ivo sings the ford open every dawn and, lately, only ever in a pair, so someone is there to catch the note that does not come back."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The charter does not oblige me to speak with you."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Walk with us at dawn, if you want to hear what the river says back."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Mender Ivo Threnlow"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Senior of the dawn pair"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Mender Stone"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.865
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 20
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-mender-pair-elder"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "MenderStone"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/kesselford.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -61.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": -5.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-mender-pair-elder"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Wayfare-Mender"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "540.0",
+				"_index": 0,
+				"_name": "Mender Nessa Quill",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "The junior Mender of the dawn pair; keeps the monthly map of where the weather-songs still hold."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Nessa keeps the Menders' monthly map and will tell anyone who asks how many safe hours the ford lost this year."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Ivo says I should not talk to you."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "The map is honest even when the river is not. Ask me anything."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Mender Nessa Quill"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Junior of the dawn pair"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Mender Stone"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.038
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 5
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-mender-pair-junior"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "MenderStone"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/kesselford.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 72.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 11.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-mender-pair-junior"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Wayfare-Mender (apprentice)"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "541.0",
+				"_index": 0,
+				"_name": "Dagny Kettlebrook",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Keeps the Ferry Bell Wayhouse, where travellers wait out the ford's moods."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Dagny prices a bed by the crossing's mood and has not had a cheap night since midsummer."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Beds are full. They are always full for your sort."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "A dry bed and a hot kettle. Pay when the river lets you leave."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Dagny Kettlebrook"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Keeper of the Ferry Bell"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Ferry Bell Wayhouse"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.735
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 16
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-wayhouse-keeper"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/kesselford_wayhouse.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-wayhouse-keeper"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Wayhouse keeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "542.0",
+				"_index": 0,
+				"_name": "Factor Wendel Marrow",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "A Grain-Factors' Table agent stranded at Kesselford with a consignment and no safe hour to cross."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Wendel has been waiting four days for a safe hour to cross with the Table's grain, and the Table does not pay for waiting."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Unless you can sing a river down, you are no use to me."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "If you hear the bell go quiet, come find me first."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Factor Wendel Marrow"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Stranded on the wrong bank"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Ferry Bell Wayhouse (lodging)"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 0.15
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 1
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-grain-factor"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/kesselford_wayhouse.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 120.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 12.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-grain-factor"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Grain factor"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "543.0",
+				"_index": 0,
+				"_name": "Ford Chandlery",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Warm standing with the Menders opens their reserve of binding thread.\",\"minimum_band\":\"warm\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.1
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Ford Chandlery"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"materials/lamp_oil\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"consumables/salted_riverfish\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"consumables/loam_bread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"tools/surveyors_chalk\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":3},{\"item_id\":\"materials/binding_thread\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":4}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-chandler"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":2,\"mode\":\"every_two_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.45
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "kesselford/ford-chandlery"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Ford Chandlery counter"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "ford-chandlery"
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -17232,7 +17955,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 536.0
+			"default": 543.0
 		}
 	},
 	"_version": 1
