@@ -127,6 +127,11 @@ wondering why their zone does nothing.
 
 Both warnings can fire at once, which only happens when the authored band is impossible.
 
+**Wiring (#350):** the lint runs in the `scenes` bake as `WeftluminScenesKind.accord_saturation`
+over the baked field's `AccordZone`s, as a non-blocking warning (`warnings` / `lint.warnings` in
+the bake report). `base_adjusted` is the location's accord with thinning subtracted once. With
+the provisional ±10, every location authored at 95 and tier 0 warns high.
+
 ---
 
 ## 5. What this note deliberately does not decide

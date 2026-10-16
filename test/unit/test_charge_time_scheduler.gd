@@ -168,3 +168,66 @@ func test_large_queue_is_deterministic_fair_and_interrupt_safe_across_battles() 
 			reference_order = observed_order.duplicate()
 		else:
 			assert_array(observed_order).is_equal(reference_order)
+
+
+## #282: `peek_order()` skips idle ticks and reads packed arrays; it must project exactly what the
+## tick-by-tick walk it replaced did, ties, dead seats, negative (admitted) charge and all.
+func test_peek_order_matches_the_tick_by_tick_projection() -> void:
+	var random := RandomNumberGenerator.new()
+	random.seed = 282
+	for trial: int in 40:
+		var actors: Array[BattleActor] = []
+		for index: int in random.randi_range(1, 40):
+			actors.append(_actor("a%d" % index, random.randi_range(-4, 30), 0 if random.randf() < 0.1 else 10))
+		var scheduler := _scheduler(actors)
+		for actor: BattleActor in actors:
+			scheduler._charge[actor.combat_id] = random.randi_range(-120, 140)
+		for depth: int in [1, 8, 25]:
+			var expected: Array[Dictionary] = _reference_peek(scheduler, depth)
+			var actual: Array[Dictionary] = scheduler.peek_order(depth)
+			assert_int(actual.size()).override_failure_message("trial %d depth %d" % [trial, depth]).is_equal(expected.size())
+			for index: int in mini(actual.size(), expected.size()):
+				assert_dict(actual[index]).override_failure_message("trial %d depth %d entry %d" % [trial, depth, index]).is_equal(expected[index])
+
+
+## The projection as it was before #282: one loop pass per tick over dictionaries.
+static func _reference_peek(scheduler: TurnScheduler, depth: int) -> Array[Dictionary]:
+	var projected: Array[Dictionary] = []
+	var simulated: Dictionary = {}
+	for actor: BattleActor in scheduler._seats:
+		if actor.is_alive():
+			simulated[actor.combat_id] = int(scheduler._charge.get(actor.combat_id, 0))
+	var ticks := 0
+	var guard := 0
+	while projected.size() < depth and guard < 10000:
+		guard += 1
+		var ready: Array[BattleActor] = []
+		for actor: BattleActor in scheduler._seats:
+			if actor.is_alive() and int(simulated.get(actor.combat_id, 0)) >= scheduler.READY_AT:
+				ready.append(actor)
+		if ready.is_empty():
+			var any := false
+			for actor: BattleActor in scheduler._seats:
+				if not actor.is_alive():
+					continue
+				any = true
+				simulated[actor.combat_id] = int(simulated[actor.combat_id]) + maxi(1, int(scheduler._speed.get(actor.combat_id, 1)))
+			if not any:
+				break
+			ticks += 1
+			continue
+		ready.sort_custom(func(a: BattleActor, b: BattleActor) -> bool:
+			var ca := int(simulated.get(a.combat_id, 0))
+			var cb := int(simulated.get(b.combat_id, 0))
+			if ca != cb:
+				return ca > cb
+			return int(scheduler._seat_of.get(a.combat_id, 0)) < int(scheduler._seat_of.get(b.combat_id, 0))
+		)
+		var next: BattleActor = ready[0]
+		projected.append({
+			"actor": next, "charge": int(simulated.get(next.combat_id, 0)), "ticks_until": ticks,
+			"seat": int(scheduler._seat_of.get(next.combat_id, 0)),
+		})
+		var assumed: int = scheduler._rules.minimum_action_ct_cost if scheduler._rules != null else 30
+		simulated[next.combat_id] = int(simulated.get(next.combat_id, 0)) - assumed
+	return projected

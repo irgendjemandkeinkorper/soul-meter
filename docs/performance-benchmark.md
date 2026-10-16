@@ -624,3 +624,48 @@ put the answer at depths 5 to 200, which real fixtures do not reach.
 
 The remaining worst case at 30 admitted (about 100 ms) is the same hop admitting 64 hostiles
 in one decision, now about 1 ms each.
+
+## 2026-10-15 — populated field, 100 hostiles — provisional — WSL2 headless, NOT reference-hardware acceptance evidence
+
+`--scenario populated_field --display-mode headless`, 104 enemy decisions per run, three runs
+per column, all `status: ok`. "No-decision turn" is an ally turn that triggers no enemy
+decision (`zero_decision_turn_ms`).
+
+| Measurement (ms) | Before | Fixes 1+2 | Fixes 1+2+3 |
+|---|---|---|---|
+| Enemy decision, mean | 10.73–11.26 | 8.68–8.70 | **7.05–7.11** |
+| Enemy decision, p50 | ~8.2 | ~6.0 | 5.93–6.04 |
+| Enemy decision, p95 | — | — | 8.74–8.81 |
+| Worst decision | ~249 | — | 50.6–52.8 |
+| No-decision turn, mean | ~518 | ~517 | **73.6–75.5** |
+
+A temporary per-section profile of the decision window showed the observer snapshot at 4.7 s
+per run, 4.3 s of it in the movement quote, against 0.3 s for enemy decisions.
+
+### Fix 1: `peek_order()` packs its state and jumps idle ticks
+
+`ChargeTimeScheduler.peek_order()` advanced the projection one tick at a time and copied
+dictionaries per tick. It now keeps charge, speed and delay in packed arrays and jumps
+straight to the next tick where someone reaches the threshold. `PEEK_GUARD` bounds the loop.
+`test_peek_order_matches_the_tick_by_tick_projection` compares it with the old tick-by-tick
+projection over 40 random rosters.
+
+### Fix 2: one frozen observer payload per action
+
+`CombatController` built and froze the observer payload once per listener. It now builds it
+once per action and hands every observer the same read-only copy; `_freeze` skips containers
+that are already read-only. `test_combat_controller.gd` asserts that the payload is shared and frozen.
+
+### Fix 3: one path search per movement quote
+
+`_movement_snapshot()` quoted every reachable cell with its own uncapped `path_query()`.
+`GridBattlefieldModel.begin_path_memo(actor, ct_budget)` now runs one search from the actor's
+cell, capped at the move budget, and `path_query()` answers every cell it settled from that
+tree. Other cells, queries from other origins, and queries after `end_path_memo()` search as
+before. The search settles cells in the order each per-destination search would, so every
+path and cost is unchanged.
+`test_path_memo_answers_exactly_what_per_destination_searches_do` compares the two on a
+budget that settles only part of the grid.
+
+An uncapped memo search made things worse: it flooded all 4,900 cells per snapshot (mean
+about 25 ms, no-decision turns about 2,160 ms). Capping it at the budget fixed that.

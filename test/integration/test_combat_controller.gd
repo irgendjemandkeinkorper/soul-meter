@@ -977,6 +977,11 @@ func test_actor_and_turn_order_rows_are_read_only_copies_shared_with_observers()
 	assert_bool(is_same(copied_snapshot, snapshot)).is_false()
 	assert_bool(is_same(copied_snapshot["movement"], snapshot["movement"])).is_false()
 	assert_dict(copied_snapshot["movement"]).is_equal(snapshot["movement"])
+	# One payload is shared by every observer, so it is frozen: none can change what the next reads.
+	assert_bool(copy.is_read_only()).is_true()
+	assert_bool(copied_snapshot.is_read_only()).is_true()
+	assert_bool((copy["resolution"] as Dictionary).is_read_only()).is_true()
+	assert_bool((data["resolution"] as Dictionary).is_read_only()).is_false()
 
 
 func test_tile_snapshot_is_shared_until_a_tile_changes() -> void:

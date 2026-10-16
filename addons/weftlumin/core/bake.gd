@@ -22,7 +22,9 @@ extends RefCounted
 ## bake wrote reloads equal to the oracle) and the host's contract validators
 ## (`options.validators`: `(context: Dictionary) -> Array` of attributed errors, context keys
 ## `scene, source_text, baked_text, source_document, document, commands, instance`). One error
-## anywhere writes nothing at all.
+## anywhere writes nothing at all. A validator entry with `"severity": "warning"` is a lint
+## warning instead (E6.2: the Harmonic Accord saturation lint): it lands in the report's
+## `warnings` and `lint.warnings`, and never blocks a write.
 ##
 ## `write` writes each changed scene to `target_root` (`res://` patches in place). A target that
 ## exists and is neither the bake's source text nor its output (something else was written there)
@@ -50,6 +52,8 @@ var oracle: Node = null
 ## Node paths whose block this bake wrote (set properties, override blocks, added nodes).
 var touched: Dictionary = {}
 var removed: Array[String] = []
+## Validator entries marked `"severity": "warning"` by the last `validate()`; they never block.
+var lint_warnings: Array[Dictionary] = []
 
 var _detached: Array[Node] = []
 var _created_sub_ids: Array[String] = []
@@ -68,7 +72,7 @@ static func bake(
 		"mode": "write" if write else "report",
 		"planned": [], "written": [], "regenerated": [],
 		"lint": {"errors": 0, "warnings": 0, "pot_delta": []},
-		"refused_overlap": [], "errors": [], "skipped_ops": 0, "normalized": [], "summary": "",
+		"refused_overlap": [], "errors": [], "warnings": [], "skipped_ops": 0, "normalized": [], "summary": "",
 	}
 	var errors: Array = report["errors"]
 	if force and not write:
@@ -112,6 +116,7 @@ static func bake(
 		var result: Dictionary = bake_scene(scene, groups[scene], validators, source)
 		var scene_errors: Array = result["errors"]
 		errors.append_array(scene_errors)
+		(report["warnings"] as Array).append_array(result["warnings"])
 		(report["normalized"] as Array).append_array(result["reports"])
 		var target: String = retarget(WeftluminSceneTemplate.baked_scene_path(created[scene]) if created.has(scene) else scene, target_root)
 		var action: String = "refused"
@@ -143,6 +148,7 @@ static func bake(
 				errors.append(_attributed(target, "$", "writable target", "write_failed", "Writing failed (error %d)." % written))
 				break
 			(report["written"] as Array).append(target)
+	(report["lint"] as Dictionary)["warnings"] = (report["warnings"] as Array).size()
 	report["summary"] = "%d scene ops in %d scenes, %d changed, %d written, %d errors" % [
 		total_ops, order.size(), outputs.size(), (report["written"] as Array).size(), errors.size(),
 	]
@@ -150,10 +156,10 @@ static func bake(
 
 
 ## Bake one scene's commands (in log order, already effective). `{source, text, ops, errors,
-## reports}`; `text` is the baked scene text when `errors` is empty.
+## warnings, reports}`; `text` is the baked scene text when `errors` is empty.
 ## `source`, when given, is the scene's text in place of its file (a scene `new_scene` creates).
 static func bake_scene(scene: String, commands: Array, validators: Array = [], source: String = "") -> Dictionary:
-	var result: Dictionary = {"source": "", "text": "", "ops": 0, "errors": [], "reports": []}
+	var result: Dictionary = {"source": "", "text": "", "ops": 0, "errors": [], "warnings": [], "reports": []}
 	var errors: Array = result["errors"]
 	if source.is_empty() and not FileAccess.file_exists(scene):
 		errors.append(_attributed(scene, "$", "an existing .tscn", "missing_scene", "No scene file at %s." % scene))
@@ -179,6 +185,7 @@ static func bake_scene(scene: String, commands: Array, validators: Array = [], s
 		result["text"] = session.tiles.text()
 		result["ops"] = (outcome.get("applied", []) as Array).size()
 		errors.append_array(session.validate(result["text"], commands, validators))
+		(result["warnings"] as Array).append_array(session.lint_warnings)
 	result["reports"] = session.tiles.reports.duplicate(true)
 	session.close()
 	return result
@@ -557,8 +564,10 @@ func _reparse(text: String) -> void:
 
 
 ## Built-in validators, then the host's. Attributed errors; empty when the bake may be written.
+## Host entries with `"severity": "warning"` go to `lint_warnings` instead.
 func validate(text: String, commands: Array, validators: Array) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
+	lint_warnings.clear()
 	var source_document: TscnDocument = TscnDocument.parse(source_text)
 	var baked_document: TscnDocument = TscnDocument.parse(text)
 	found.append_array(_structural_errors(source_document, baked_document))
@@ -577,7 +586,9 @@ func validate(text: String, commands: Array, validators: Array) -> Array[Diction
 		var result: Variant = (validator as Callable).call(context)
 		if result is Array:
 			for entry: Variant in result:
-				if entry is Dictionary:
+				if entry is Dictionary and str((entry as Dictionary).get("severity", "")) == "warning":
+					lint_warnings.append(entry as Dictionary)
+				elif entry is Dictionary:
 					found.append(entry as Dictionary)
 	instance.free()
 	return found
