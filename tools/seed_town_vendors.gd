@@ -373,6 +373,22 @@ func _seed_vendors(root: PandoraCategory) -> int:
 			_restock("every_two_days", 2),
 			[_reaction("stock", "Warm standing with the Menders opens their reserve of binding thread.", "warm")]
 		),
+		# Ashlaren (hub 3, C2 / #239): the Flat Bell's counter on the grain road. PROVISIONAL stock
+		# and modifiers; the Factors' certified grain reaches the counter as bread, not sacks.
+		_vendor(
+			"flat-bell-provisions", "Flat Bell Provisions", "ashlaren-flat-bell-keeper",
+			"ashlaren/flat-bell-provisions", "The Flat Bell counter", "grain-factors-table",
+			"commerce", 1.05, 0.5, "cold", "", standard_prices,
+			[
+				_stock("consumables/loam_bread", 10),
+				_stock("consumables/hearthloaf", 6),
+				_stock("materials/lamp_oil", 4),
+				_stock("materials/binding_thread", 3),
+				_stock("materials/scribes_vellum", 2, "warm"),
+			],
+			_restock("every_two_days", 2),
+			[_reaction("stock", "Warm standing with the Factors' Table opens the counter's vellum.", "warm")]
+		),
 	]
 	for row in rows:
 		_upsert(root, row["entity_name"], row["values"])

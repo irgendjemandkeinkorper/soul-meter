@@ -26,8 +26,8 @@ func after_test() -> void:
 
 func test_registry_contains_only_valid_ratified_hubs() -> void:
 	assert_array(FastTravelRegistry.validate()).is_empty()
-	# Dom and Kesselford (hub 2, C1 / #238).
-	assert_int(FastTravelRegistry.all().size()).is_equal(2)
+	# Dom, Kesselford (hub 2, C1 / #238) and Ashlaren (hub 3, C2 / #239).
+	assert_int(FastTravelRegistry.all().size()).is_equal(3)
 	var dom := FastTravelRegistry.by_id(&"dom")
 	assert_str(dom["scene_path"]).is_equal("res://world/starting_town.tscn")
 	assert_str(dom["display_name"]).is_equal("Dom")

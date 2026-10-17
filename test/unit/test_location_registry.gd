@@ -2,8 +2,9 @@ extends GdUnitTestSuite
 
 
 func test_current_locations_are_registered_as_gameplay_only() -> void:
-	# 25 Dom-era locations plus Kesselford and its two interiors (C1 / #238).
-	assert_int(LocationRegistry.ALL.size()).is_equal(28)
+	# 25 Dom-era locations plus Kesselford and its two interiors (C1 / #238) and Ashlaren and
+	# its two interiors (C2 / #239).
+	assert_int(LocationRegistry.ALL.size()).is_equal(31)
 	for location in LocationRegistry.ALL:
 		assert_bool(location.allowed_gameplay).is_true()
 		assert_bool(LocationRegistry.is_gameplay_scene(location.scene_path)).is_true()
@@ -43,6 +44,8 @@ func test_the_authored_accord_matches_the_ratified_rule() -> void:
 	var expected := {
 		&"dom": 95.0, &"wilds": 85.0, &"dorthkor_road": 70.0, &"wound_lip": 55.0,
 		&"kesselford": 85.0,
+		# Ashlaren (hub 3, C2 / #239) is tier 0: the grain road's last working market.
+		&"ashlaren": 95.0,
 	}
 	for location_id: StringName in expected:
 		var location := LocationRegistry.by_id(location_id)

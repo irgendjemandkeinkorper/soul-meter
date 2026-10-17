@@ -26,6 +26,15 @@ const _HUBS: Array[Dictionary] = [
 		# PROVISIONAL: a longer road than Dom's local routes; balance pass owns the number.
 		"base_cost_gp": 40,
 	},
+	{
+		# Hub 3 (C2 / #239; vault proposal approved 2026-10-16): the grain-road market town past
+		# Kesselford. Same contract as Kesselford's row.
+		"id": &"ashlaren",
+		"scene_path": "res://world/ashlaren.tscn",
+		"display_name": "Ashlaren",
+		# PROVISIONAL: two roads out from Dom; balance pass owns the number.
+		"base_cost_gp": 60,
+	},
 ]
 
 

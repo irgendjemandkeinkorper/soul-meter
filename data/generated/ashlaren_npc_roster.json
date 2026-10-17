@@ -1,0 +1,282 @@
+{
+  "town_id": "ashlaren",
+  "dialogue_path": "res://dialogue/ashlaren_townsfolk.dialogue",
+  "npcs": {
+    "ashlaren-bell-warden": {
+      "id": "ashlaren-bell-warden",
+      "stable_id": {
+        "kind": "actor",
+        "id": "ashlaren-bell-warden"
+      },
+      "display_name": "Warden Tamsin Flatbell",
+      "role": "Bell warden",
+      "home": "Shrine bell, Weighing Square",
+      "district": "Weighing Square",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "ashlaren-bell-warden",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "WF",
+        "mark": "F9FA",
+        "palette_index": 1
+      },
+      "dialogue": {
+        "path": "res://dialogue/ashlaren_townsfolk.dialogue",
+        "title": "ashlaren_ashlaren_bell_warden",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "ashlaren_ashlaren_bell_warden"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Tamsin rings the shrine-bell at every weighing and writes down which days it sounds flat.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "Stand clear of the rope.",
+        "warm": "Listen for it at the next weighing. You'll hear what I mean.",
+        "faction_id": "grain-factors-table"
+      },
+      "placement": {
+        "scene": "res://world/ashlaren.tscn",
+        "anchor": "ShrineBell",
+        "offset": [
+          -23.0,
+          140.0
+        ],
+        "facing": "west",
+        "idle_phase": 1.717,
+        "model_index": 8
+      }
+    },
+    "ashlaren-ghorr-steward": {
+      "id": "ashlaren-ghorr-steward",
+      "stable_id": {
+        "kind": "actor",
+        "id": "ashlaren-ghorr-steward"
+      },
+      "display_name": "Steward Ilse Furrowgood",
+      "role": "Ghorr steward",
+      "home": "Near fields",
+      "district": "Weighing Square",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "ashlaren-ghorr-steward",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "SF",
+        "mark": "BC0E",
+        "palette_index": 9
+      },
+      "dialogue": {
+        "path": "res://dialogue/ashlaren_townsfolk.dialogue",
+        "title": "ashlaren_ashlaren_ghorr_steward",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "ashlaren_ashlaren_ghorr_steward"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Ilse wants the sealed sack opened and studied; the rot in her fields skips the weedy margins and takes the bred rows.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "Factors' friends get Factors' answers.",
+        "warm": "Walk my furrows and tell me the Waning only touches castings.",
+        "faction_id": "grain-factors-table"
+      },
+      "placement": {
+        "scene": "res://world/ashlaren.tscn",
+        "anchor": "WeighingBoard",
+        "offset": [
+          34.0,
+          11.0
+        ],
+        "facing": "west",
+        "idle_phase": 2.964,
+        "model_index": 19
+      }
+    },
+    "ashlaren-head-factor": {
+      "id": "ashlaren-head-factor",
+      "stable_id": {
+        "kind": "actor",
+        "id": "ashlaren-head-factor"
+      },
+      "display_name": "Factor Brannoc Ledgerwell",
+      "role": "Head factor",
+      "home": "Factors' Weighing Hall",
+      "district": "Weighing Square",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "ashlaren-head-factor",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "FL",
+        "mark": "1ED4",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/ashlaren_townsfolk.dialogue",
+        "title": "ashlaren_ashlaren_head_factor",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "ashlaren_ashlaren_head_factor"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Brannoc certifies every sack that leaves Ashlaren and has lately certified the same sack twice, once full and once empty.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "The Table does not weigh for strangers.",
+        "warm": "Honest measure, honest price. Ask the clerk for the day's weights.",
+        "faction_id": "grain-factors-table"
+      },
+      "placement": {
+        "scene": "res://world/interiors/ashlaren_weighing_hall.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ],
+        "facing": "east",
+        "idle_phase": 2.074,
+        "model_index": 12
+      }
+    },
+    "ashlaren-miller": {
+      "id": "ashlaren-miller",
+      "stable_id": {
+        "kind": "actor",
+        "id": "ashlaren-miller"
+      },
+      "display_name": "Miller Gaut Stonebrook",
+      "role": "Miller",
+      "home": "The Flat Bell",
+      "district": "Weighing Square",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "ashlaren-miller",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "MS",
+        "mark": "6A75",
+        "palette_index": 9
+      },
+      "dialogue": {
+        "path": "res://dialogue/ashlaren_townsfolk.dialogue",
+        "title": "ashlaren_ashlaren_miller",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "ashlaren_ashlaren_miller"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Gaut grinds whatever the Factors certify and has stopped tasting the bread.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "Mill's spoken for.",
+        "warm": "Flour's fine. Bread's fine. Bell says so, some days.",
+        "faction_id": "grain-factors-table"
+      },
+      "placement": {
+        "scene": "res://world/interiors/ashlaren_millhouse.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ],
+        "facing": "west",
+        "idle_phase": 1.546,
+        "model_index": 15
+      }
+    },
+    "ashlaren-warehouse-watch": {
+      "id": "ashlaren-warehouse-watch",
+      "stable_id": {
+        "kind": "actor",
+        "id": "ashlaren-warehouse-watch"
+      },
+      "display_name": "Pell Haskard",
+      "role": "Warehouse watch",
+      "home": "Warehouse yard",
+      "district": "Warehouse Yard",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "ashlaren-warehouse-watch",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "PH",
+        "mark": "1016",
+        "palette_index": 5
+      },
+      "dialogue": {
+        "path": "res://dialogue/ashlaren_townsfolk.dialogue",
+        "title": "ashlaren_ashlaren_warehouse_watch",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "ashlaren_ashlaren_warehouse_watch"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Pell has orders that nobody opens the certified-empty sack, and no orders about what to do if it gets heavier.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "Yard's closed. Sack's closed. Go on.",
+        "warm": "It's heavier than it was. Don't tell the Factor I said that.",
+        "faction_id": "grain-factors-table"
+      },
+      "placement": {
+        "scene": "res://world/ashlaren.tscn",
+        "anchor": "SealedSackCrates",
+        "offset": [
+          -83.0,
+          53.0
+        ],
+        "facing": "east",
+        "idle_phase": 4.986,
+        "model_index": 4
+      }
+    },
+    "ashlaren-weigh-clerk": {
+      "id": "ashlaren-weigh-clerk",
+      "stable_id": {
+        "kind": "actor",
+        "id": "ashlaren-weigh-clerk"
+      },
+      "display_name": "Clerk Odile Marrowby",
+      "role": "Weigh clerk",
+      "home": "Factors' Weighing Hall",
+      "district": "Weighing Square",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "ashlaren-weigh-clerk",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "CM",
+        "mark": "FF00",
+        "palette_index": 2
+      },
+      "dialogue": {
+        "path": "res://dialogue/ashlaren_townsfolk.dialogue",
+        "title": "ashlaren_ashlaren_weigh_clerk",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "ashlaren_ashlaren_weigh_clerk"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Odile keeps two sets of weights and checks the bell before choosing which to set on the scale.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "The weights are not for handling.",
+        "warm": "Bell rang true this morning. These are the honest ones; I think.",
+        "faction_id": "grain-factors-table"
+      },
+      "placement": {
+        "scene": "res://world/interiors/ashlaren_weighing_hall.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          240.0,
+          24.0
+        ],
+        "facing": "west",
+        "idle_phase": 3.022,
+        "model_index": 23
+      }
+    }
+  }
+}

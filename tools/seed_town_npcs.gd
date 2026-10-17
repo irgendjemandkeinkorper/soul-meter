@@ -9,9 +9,10 @@ extends Node
 
 const TOWN_SCENE := "res://world/starting_town.tscn"
 const KESSELFORD_SCENE := "res://world/kesselford.tscn"
+const ASHLAREN_SCENE := "res://world/ashlaren.tscn"
 ## Town id -> its hub scene; outdoor anchors in that scene get the organic scatter.
-const TOWN_SCENES := {"dom": TOWN_SCENE, "kesselford": KESSELFORD_SCENE}
-const TOWN_NAMES := {"dom": "Dom", "kesselford": "Kesselford"}
+const TOWN_SCENES := {"dom": TOWN_SCENE, "kesselford": KESSELFORD_SCENE, "ashlaren": ASHLAREN_SCENE}
+const TOWN_NAMES := {"dom": "Dom", "kesselford": "Kesselford", "ashlaren": "Ashlaren"}
 const SeedPandora := preload("res://tools/seed_pandora.gd")
 const TOWNSFOLK_MODEL_COUNT := 26
 const DEFAULT_OUTDOOR_JITTER := Vector2i(26, 20)
@@ -89,6 +90,16 @@ const PLACEMENT_ANCHORS := {
 	"kesselford_bell": {"scene": KESSELFORD_SCENE, "anchor": "FloodBell", "town": "kesselford"},
 	"kesselford_square": {"scene": KESSELFORD_SCENE, "anchor": "MenderStone", "town": "kesselford"},
 	"kesselford_wayhouse": {"scene": KESSELFORD_SCENE, "anchor": "WayhouseDoor", "town": "kesselford"},
+	# Ashlaren (hub 3, C2 / #239). Outdoor anchors name dressing props in `ashlaren.tscn`.
+	"ashlaren_hall_i": {
+		"scene": "res://world/interiors/ashlaren_weighing_hall.tscn", "anchor": "NpcSpot", "town": "ashlaren",
+	},
+	"ashlaren_millhouse_i": {
+		"scene": "res://world/interiors/ashlaren_millhouse.tscn", "anchor": "NpcSpot", "town": "ashlaren",
+	},
+	"ashlaren_bell": {"scene": ASHLAREN_SCENE, "anchor": "ShrineBell", "town": "ashlaren"},
+	"ashlaren_board": {"scene": ASHLAREN_SCENE, "anchor": "WeighingBoard", "town": "ashlaren"},
+	"ashlaren_yard": {"scene": ASHLAREN_SCENE, "anchor": "SealedSackCrates", "town": "ashlaren"},
 }
 
 

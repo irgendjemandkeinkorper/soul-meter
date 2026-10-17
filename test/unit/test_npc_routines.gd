@@ -144,6 +144,8 @@ func test_hub_scene_resolves_each_routined_npc_to_its_own_hub() -> void:
 	assert_str(NpcRoutines.hub_scene("sella-varn")).is_equal("res://world/starting_town.tscn")
 	assert_str(NpcRoutines.hub_scene("kesselford-bell-ringer")).is_equal("res://world/kesselford.tscn")
 	assert_str(String(NpcRoutines.HUBS_BY_NPC["kesselford-ferry-keeper"])).is_equal("kesselford")
+	assert_str(NpcRoutines.hub_scene("ashlaren-bell-warden")).is_equal("res://world/ashlaren.tscn")
+	assert_str(String(NpcRoutines.HUBS_BY_NPC["ashlaren-head-factor"])).is_equal("ashlaren")
 	assert_str(NpcRoutines.hub_scene("no-such-npc")).is_equal(NpcRoutines.HUB_SCENE)
 
 

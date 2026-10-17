@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="LocationDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/location_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"ashlaren"
+scene_path = "res://world/ashlaren.tscn"
+harmonic_accord = 95.0
+default_spawn_id = &"default"
+arrival_flag = "chapter_ashlaren_reached"
+arrival_checkpoint = "location-arrival"
+spawns = {
+"default": "default",
+"from_ashlaren_millhouse": "from_ashlaren_millhouse",
+"from_ashlaren_weighing_hall": "from_ashlaren_weighing_hall",
+"from_kesselford": "from_kesselford"
+}

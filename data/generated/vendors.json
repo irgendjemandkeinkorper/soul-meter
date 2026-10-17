@@ -66,6 +66,85 @@
       }
     ]
   },
+  "flat-bell-provisions": {
+    "id": "flat-bell-provisions",
+    "display_name": "Flat Bell Provisions",
+    "npc_id": "ashlaren-flat-bell-keeper",
+    "site_id": "ashlaren/flat-bell-provisions",
+    "site_name": "The Flat Bell counter",
+    "faction_id": "grain-factors-table",
+    "trade_mode": "commerce",
+    "buy_modifier": 1.05,
+    "sell_modifier": 0.5,
+    "minimum_band": "cold",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "consumables/loam_bread",
+        "quantity": 10,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "consumables/hearthloaf",
+        "quantity": 6,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/lamp_oil",
+        "quantity": 4,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/binding_thread",
+        "quantity": 3,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/scribes_vellum",
+        "quantity": 2,
+        "minimum_band": "warm",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 2.0,
+      "mode": "every_two_days"
+    },
+    "band_reactions": [
+      {
+        "kind": "stock",
+        "maximum_band": "",
+        "message": "Warm standing with the Factors' Table opens the counter's vellum.",
+        "minimum_band": "warm"
+      }
+    ]
+  },
   "ford-chandlery": {
     "id": "ford-chandlery",
     "display_name": "Ford Chandlery",

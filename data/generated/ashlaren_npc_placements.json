@@ -1,0 +1,71 @@
+{
+  "town_id": "ashlaren",
+  "placements": {
+    "ashlaren-bell-warden": {
+      "scene": "res://world/ashlaren.tscn",
+      "anchor": "ShrineBell",
+      "offset": [
+        -23.0,
+        140.0
+      ],
+      "facing": "west",
+      "idle_phase": 1.717,
+      "model_index": 8
+    },
+    "ashlaren-ghorr-steward": {
+      "scene": "res://world/ashlaren.tscn",
+      "anchor": "WeighingBoard",
+      "offset": [
+        34.0,
+        11.0
+      ],
+      "facing": "west",
+      "idle_phase": 2.964,
+      "model_index": 19
+    },
+    "ashlaren-head-factor": {
+      "scene": "res://world/interiors/ashlaren_weighing_hall.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "facing": "east",
+      "idle_phase": 2.074,
+      "model_index": 12
+    },
+    "ashlaren-miller": {
+      "scene": "res://world/interiors/ashlaren_millhouse.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "facing": "west",
+      "idle_phase": 1.546,
+      "model_index": 15
+    },
+    "ashlaren-warehouse-watch": {
+      "scene": "res://world/ashlaren.tscn",
+      "anchor": "SealedSackCrates",
+      "offset": [
+        -83.0,
+        53.0
+      ],
+      "facing": "east",
+      "idle_phase": 4.986,
+      "model_index": 4
+    },
+    "ashlaren-weigh-clerk": {
+      "scene": "res://world/interiors/ashlaren_weighing_hall.tscn",
+      "anchor": "NpcSpot",
+      "offset": [
+        240.0,
+        24.0
+      ],
+      "facing": "west",
+      "idle_phase": 3.022,
+      "model_index": 23
+    }
+  }
+}
