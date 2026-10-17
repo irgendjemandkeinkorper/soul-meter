@@ -2,7 +2,9 @@ extends GdUnitTestSuite
 
 
 func test_current_locations_are_registered_as_gameplay_only() -> void:
-	assert_int(LocationRegistry.ALL.size()).is_equal(25)
+	# 25 Dom-era locations plus Kesselford and its two interiors (C1 / #238) and Ashlaren and
+	# its two interiors (C2 / #239).
+	assert_int(LocationRegistry.ALL.size()).is_equal(31)
 	for location in LocationRegistry.ALL:
 		assert_bool(location.allowed_gameplay).is_true()
 		assert_bool(LocationRegistry.is_gameplay_scene(location.scene_path)).is_true()
@@ -35,11 +37,15 @@ const SWEPT_EFFECTIVE: Array[float] = [95.0, 80.0, 60.0, 40.0]
 
 
 func test_the_authored_accord_matches_the_ratified_rule() -> void:
-	# The four macro locations are the swept rows. A fifth location authored
-	# off the rule is allowed (§3 says so) but has to be deliberate, so this
-	# names the four rather than looping the registry.
+	# The four Dom-era macro locations are the swept rows; Kesselford (hub 2,
+	# C1 / #238) sits at tier 1 and takes its accord from the rule. A location
+	# authored off the rule is allowed (§3 says so) but has to be deliberate, so
+	# this names them rather than looping the registry.
 	var expected := {
 		&"dom": 95.0, &"wilds": 85.0, &"dorthkor_road": 70.0, &"wound_lip": 55.0,
+		&"kesselford": 85.0,
+		# Ashlaren (hub 3, C2 / #239) is tier 0: the grain road's last working market.
+		&"ashlaren": 95.0,
 	}
 	for location_id: StringName in expected:
 		var location := LocationRegistry.by_id(location_id)
@@ -69,19 +75,43 @@ func test_no_location_still_carries_the_neutral_default() -> void:
 		).is_not_equal(100.0)
 
 
-func test_dom_interiors_inherit_their_hub_accord() -> void:
-	# §3: interiors are not on the wilds->front axis, so they take the hub's
-	# value. Without this a Dom interior would cast better than Dom's street.
-	var dom := LocationRegistry.by_id(&"dom")
+func test_interiors_inherit_their_hub_accord() -> void:
+	# §3: interiors are not on the wilds->front axis, so they take their hub's
+	# value. Without this an interior would cast better than the street outside
+	# it. The hub is whatever the interior's exit door chain finally reaches.
 	for location in LocationRegistry.ALL:
 		if not location.scene_path.contains("/interiors/"):
 			continue
+		var hub := _hub_of(location)
+		assert_object(hub).override_failure_message(
+			"interior '%s' has no exit chain back to a hub" % location.id
+		).is_not_null()
 		assert_float(location.harmonic_accord).override_failure_message(
-			"interior '%s' does not match Dom's accord" % location.id
-		).is_equal(dom.harmonic_accord)
+			"interior '%s' does not match its hub's accord" % location.id
+		).is_equal(hub.harmonic_accord)
 		assert_int(location.thinning_tier).override_failure_message(
 			"interior '%s' carries a thinning tier; interiors are off the axis" % location.id
 		).is_zero()
+
+
+## Follows exit transitions (loft -> house -> street) until the scene is no longer an interior.
+## An interior with no door of its own (the Four Arms tavern is entered by the quest flow) is Dom's.
+func _hub_of(location: LocationDefinition) -> LocationDefinition:
+	var current := location
+	for _hop: int in 4:
+		var exit: BuildingTransitionDefinition = null
+		for transition in BuildingTransitionRegistry.EXITS:
+			if transition.source_scene == current.scene_path:
+				exit = transition
+				break
+		if exit == null:
+			return LocationRegistry.by_id(&"dom") if current == location else null
+		current = LocationRegistry.by_id(exit.destination_location_id)
+		if current == null:
+			return null
+		if not current.scene_path.contains("/interiors/"):
+			return current
+	return null
 
 
 func test_the_effective_accord_lands_on_a_swept_row() -> void:

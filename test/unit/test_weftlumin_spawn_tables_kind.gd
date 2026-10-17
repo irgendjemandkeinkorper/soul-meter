@@ -67,7 +67,12 @@ func test_committed_canon_validates_and_its_canonical_text_is_byte_identical() -
 		assert_str(WeftluminSpawnTablesKind.canon_text(row)).is_equal(FileAccess.get_file_as_string(path))
 		# The kind and the runtime agree: what the kind accepts, SpawnDirector loads.
 		assert_array(Array(SpawnDirector.table_problems(row))).is_empty()
-	assert_str(WeftluminSpawnTablesKind.canon_text(normalised[0])).is_equal(FileAccess.get_file_as_string(CANON_FILE))
+	# Canon now holds more than one table (Kesselford, C1 / #238); pin the Dom fixture by id.
+	var glade: Dictionary = {}
+	for candidate: Dictionary in normalised:
+		if candidate["id"] == "wilds-glade-ambient":
+			glade = candidate
+	assert_str(WeftluminSpawnTablesKind.canon_text(glade)).is_equal(FileAccess.get_file_as_string(CANON_FILE))
 
 
 func test_a_valid_table_normalises_numbers_to_ints_and_drops_meta_keys() -> void:
@@ -132,6 +137,56 @@ func test_a_marker_placed_in_the_live_scene_satisfies_the_anchor_invariant() -> 
 	assert_bool(_has(_errors_for(table), "slots[0].anchor", "missing_anchor")).is_true()
 	_kind.extra_anchors = {SCENE: ["SpawnSlotHollowEast"]}
 	assert_array(_errors_for(table)).is_empty()
+
+
+func test_a_package_that_creates_the_scene_satisfies_the_scene_and_anchor_invariants() -> void:
+	# A package's `new_scene` renders the scene into `<package>/scenes/` before the bake writes
+	# it to `res://`; a table in the same package may name that scene and the markers the
+	# package's `add_node` commands place in it (C2 / #239, mirrors the locations kind).
+	var package := create_temp_dir("weftlumin_fixture_package")
+	DirAccess.make_dir_recursive_absolute(package.path_join("scenes"))
+	DirAccess.make_dir_recursive_absolute(package.path_join("spawn_tables"))
+	var rendered := FileAccess.open(package.path_join("scenes/fixture_field.tscn"), FileAccess.WRITE)
+	rendered.store_string('[gd_scene format=3]\n\n[node name="FixtureField" type="Node2D"]\n\n'
+		+ '[node name="SpawnSlotRendered" type="Marker2D" parent="."]\n')
+	rendered.close()
+	var log := FileAccess.open(package.path_join("commands.jsonl"), FileAccess.WRITE)
+	log.store_line(JSON.stringify({
+		"op": "add_node", "target": {"scene": "user://weftlumin/fixture/scenes/fixture_field.tscn", "node": "."},
+		"params": {"instance": {"placeable": "spawn_slot", "name": "SpawnSlotCommanded", "position": [1.0, 2.0]}},
+	}))
+	log.store_line(JSON.stringify({
+		"op": "add_node", "target": {"scene": "user://weftlumin/fixture/scenes/other.tscn", "node": "."},
+		"params": {"instance": {"placeable": "spawn_slot", "name": "SpawnSlotElsewhere", "position": [1.0, 2.0]}},
+	}))
+	log.close()
+	var scene := "res://world/fixture_field.tscn"
+	# The package's own location document supplies the respawn policy before the bake lands it
+	# in canon; the canon read stays the fallback (so the test seam is cleared here).
+	DirAccess.make_dir_recursive_absolute(package.path_join("locations"))
+	var location := FileAccess.open(package.path_join("locations/fixture_field.json"), FileAccess.WRITE)
+	location.store_string(JSON.stringify({
+		"schema": WeftluminLocationsKind.SCHEMA, "id": "fixture_field", "scene_path": scene,
+		"respawn_policy": "wilderness",
+	}))
+	location.close()
+	_kind.policies_for_tests = {}
+	var table := _table([_slot("rendered", "SpawnSlotRendered"), _slot("commanded", "SpawnSlotCommanded")])
+	table["scene_path"] = scene
+	table[WeftluminSpawnTablesKind.META_FILE] = package.path_join("spawn_tables/fixture.json")
+	var errors: Array[Dictionary] = []
+	var documents: Array[Dictionary] = [table]
+	assert_int(_kind.validate(documents, errors).size()).override_failure_message(str(errors)).is_equal(1)
+	assert_array(errors).is_empty()
+
+	var elsewhere := _table([_slot("elsewhere", "SpawnSlotElsewhere")])
+	elsewhere["scene_path"] = scene
+	elsewhere[WeftluminSpawnTablesKind.META_FILE] = package.path_join("spawn_tables/elsewhere.json")
+	errors.clear()
+	documents = [elsewhere]
+	_kind.validate(documents, errors)
+	assert_int(errors.size()).override_failure_message(str(errors)).is_equal(1)
+	assert_str(String(errors[0]["code"])).is_equal("missing_anchor")
 
 
 func test_respawn_policy_refusals_are_attributed_to_the_table() -> void:

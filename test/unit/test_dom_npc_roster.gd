@@ -75,7 +75,8 @@ func test_every_portrait_descriptor_is_stable_distinct_and_resolvable() -> void:
 		]
 		assert_bool(signatures.has(signature)).is_false()
 		signatures[signature] = true
-	assert_int(signatures.size()).is_equal(60)
+	# Every hub's roster: Dom's sixty plus Kesselford's six (C1 / #238) and Ashlaren's six (C2 / #239).
+	assert_int(signatures.size()).is_equal(72)
 
 
 func test_portrait_component_uses_generated_unit_art_without_node_overrides() -> void:
@@ -170,11 +171,20 @@ func test_real_portrait_seam_matches_party_member_source_image_allowlist() -> vo
 
 
 func test_every_npc_dialogue_title_parses_and_contains_three_real_lines() -> void:
-	var resource: DialogueResource = load(DIALOGUE_PATH)
-	assert_object(resource).is_not_null()
-	var source := FileAccess.get_file_as_string(DIALOGUE_PATH)
+	# Each hub generates its own townsfolk file, so the resource is per row (C1 / #238).
+	var resources: Dictionary = {}
+	var sources: Dictionary = {}
 	for row: Dictionary in NpcRosterScript.all():
 		var dialogue: Dictionary = row["dialogue"]
+		var path := str(dialogue["path"])
+		if not resources.has(path):
+			resources[path] = load(path) as DialogueResource
+			sources[path] = FileAccess.get_file_as_string(path)
+		var resource: DialogueResource = resources[path]
+		assert_object(resource).override_failure_message("no dialogue resource at %s" % path).is_not_null()
+		if resource == null:
+			continue
+		var source: String = sources[path]
 		assert_bool(
 			StableIds.is_valid_record(StableIds.DIALOGUE_NODE, dialogue["stable_id"])
 		).is_true()

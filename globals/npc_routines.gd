@@ -21,9 +21,12 @@ extends RefCounted
 
 const ROUTINE_CAP := 15
 
-## Routine positions are authored in THIS scene's coordinates. An NPC node in
-## any other scene ignores the table even if its id matches, so a future
-## interior placement cannot inherit town coordinates.
+## Routine positions are authored in the NPC's own hub scene's coordinates (the
+## hub is the `canon/<hub>/` directory the document lives in; `hub_scene()`
+## resolves it). An NPC node in any other scene ignores the table even if its id
+## matches, so an interior placement cannot inherit town coordinates. This
+## constant is Dom's scene, the fallback for a hub directory that names no
+## location.
 const HUB_SCENE := "res://world/starting_town.tscn"
 
 ## Marker meaning "not in the hub this phase" — hidden, non-interactable,
@@ -47,6 +50,11 @@ static var ROUTINES: Dictionary = {}
 ## findable in every phase rather than gaining a routine.
 static var DECLARED_PHASE_AGNOSTIC: Array[String] = []
 
+## npc_id → the `canon/<hub>/` directory name of the routined NPC's document. A
+## hub directory is named after its location id (`dom`, `kesselford`), which is
+## how `hub_scene()` finds the scene the routine's coordinates belong to.
+static var HUBS_BY_NPC: Dictionary = {}
+
 
 ## Read once, when the class is first loaded. `tools/seed_pandora.gd` owns the
 ## authoring-time contract for these documents, but it lives under `tools/`,
@@ -57,10 +65,23 @@ static func _static_init() -> void:
 	var canon := _read_canon()
 	ROUTINES = canon["routines"]
 	DECLARED_PHASE_AGNOSTIC = canon["phase_agnostic"]
+	HUBS_BY_NPC = canon["hubs"]
 
 
 static func has_routine(npc_id: String) -> bool:
 	return ROUTINES.has(npc_id)
+
+
+## The scene whose coordinates `npc_id`'s routine is authored in: the scene of
+## the location named like the NPC's hub directory. Resolved at call time, not at
+## class load, so the registry index is read only when a routine is applied.
+## Unknown NPCs and hub directories with no location fall back to Dom's scene.
+static func hub_scene(npc_id: String) -> String:
+	var hub := String(HUBS_BY_NPC.get(npc_id, ""))
+	if hub.is_empty():
+		return HUB_SCENE
+	var location: LocationDefinition = LocationRegistry.by_id(StringName(hub))
+	return location.scene_path if location != null else HUB_SCENE
 
 
 ## The placement for one NPC in one phase.
@@ -105,6 +126,7 @@ static func routine_count() -> int:
 static func _read_canon() -> Dictionary:
 	var routines: Dictionary = {}
 	var phase_agnostic: Array[String] = []
+	var hubs_by_npc: Dictionary = {}
 	var hubs: PackedStringArray = []
 	if DirAccess.dir_exists_absolute(CANON_ROOT):
 		hubs = DirAccess.get_directories_at(CANON_ROOT)
@@ -124,6 +146,8 @@ static func _read_canon() -> Dictionary:
 			var npc_id := String(document.get("id", ""))
 			if npc_id.is_empty():
 				continue
+			# Every NPC knows its hub, routined or not (C1 / #238).
+			hubs_by_npc[npc_id] = hub
 			var routine := _routine_rows(document.get("routine"), npc_id)
 			if not routine.is_empty():
 				routines[npc_id] = routine
@@ -132,7 +156,7 @@ static func _read_canon() -> Dictionary:
 			# if the reader reports it rather than quietly preferring one field.
 			if bool(document.get("phase_agnostic", false)):
 				phase_agnostic.append(npc_id)
-	return {"routines": routines, "phase_agnostic": phase_agnostic}
+	return {"routines": routines, "phase_agnostic": phase_agnostic, "hubs": hubs_by_npc}
 
 
 static func _read_document(document_path: String) -> Dictionary:

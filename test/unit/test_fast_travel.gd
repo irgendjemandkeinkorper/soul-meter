@@ -26,11 +26,17 @@ func after_test() -> void:
 
 func test_registry_contains_only_valid_ratified_hubs() -> void:
 	assert_array(FastTravelRegistry.validate()).is_empty()
-	assert_int(FastTravelRegistry.all().size()).is_equal(1)
+	# Dom, Kesselford (hub 2, C1 / #238) and Ashlaren (hub 3, C2 / #239).
+	assert_int(FastTravelRegistry.all().size()).is_equal(3)
 	var dom := FastTravelRegistry.by_id(&"dom")
 	assert_str(dom["scene_path"]).is_equal("res://world/starting_town.tscn")
 	assert_str(dom["display_name"]).is_equal("Dom")
 	assert_int(dom["base_cost_gp"]).is_greater(0)
+	var kesselford := FastTravelRegistry.by_id(&"kesselford")
+	assert_str(kesselford["scene_path"]).is_equal("res://world/kesselford.tscn")
+	assert_str(kesselford["display_name"]).is_equal("Kesselford")
+	assert_int(kesselford["base_cost_gp"]).is_greater(int(dom["base_cost_gp"]))
+	assert_str(str(FastTravelRegistry.by_scene("res://world/kesselford.tscn").get("id", ""))).is_equal("kesselford")
 
 
 func test_discovery_survives_game_state_round_trip() -> void:

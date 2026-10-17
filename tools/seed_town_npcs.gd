@@ -1,12 +1,18 @@
 extends Node
-## Idempotent Pandora migration for Dom's authored townsfolk roster.
+## Idempotent Pandora migration for the hubs' authored townsfolk rosters.
 ##
-## The roster itself lives in `canon/dom/characters` (`kind: "npc"`); this script reads it,
+## The rosters live in `canon/<hub>/characters` (`kind: "npc"`); this script reads them,
 ## derives the fields canon deliberately does not carry, and writes the Pandora NPC category.
 ## Pandora remains canonical after it runs; tools/generate_gloot.gd is the one-way path to
-## runtime data.
+## runtime data. An NPC's town is the town of its placement anchor (`PLACEMENT_ANCHORS`),
+## which is how a second hub's townsfolk reach their own roster (C1 / #238).
 
 const TOWN_SCENE := "res://world/starting_town.tscn"
+const KESSELFORD_SCENE := "res://world/kesselford.tscn"
+const ASHLAREN_SCENE := "res://world/ashlaren.tscn"
+## Town id -> its hub scene; outdoor anchors in that scene get the organic scatter.
+const TOWN_SCENES := {"dom": TOWN_SCENE, "kesselford": KESSELFORD_SCENE, "ashlaren": ASHLAREN_SCENE}
+const TOWN_NAMES := {"dom": "Dom", "kesselford": "Kesselford", "ashlaren": "Ashlaren"}
 const SeedPandora := preload("res://tools/seed_pandora.gd")
 const TOWNSFOLK_MODEL_COUNT := 26
 const DEFAULT_OUTDOOR_JITTER := Vector2i(26, 20)
@@ -72,6 +78,28 @@ const PLACEMENT_ANCHORS := {
 	"town_tavern": {"scene": TOWN_SCENE, "anchor": "FourArmsTavern"},
 	"town_north_road": {"scene": TOWN_SCENE, "anchor": "NorthRoad"},
 	"town_wound_lip": {"scene": TOWN_SCENE, "anchor": "WoundLip"},
+	# Kesselford (hub 2, C1 / #238). Rows without a `town` are Dom's; a row's town decides the
+	# roster its NPCs land in. Outdoor anchors name dressing props and doors in `kesselford.tscn`.
+	"kesselford_wayhouse_i": {
+		"scene": "res://world/interiors/kesselford_wayhouse.tscn", "anchor": "NpcSpot", "town": "kesselford",
+	},
+	"kesselford_chandlery_i": {
+		"scene": "res://world/interiors/kesselford_chandlery.tscn", "anchor": "NpcSpot", "town": "kesselford",
+	},
+	"kesselford_ferry": {"scene": KESSELFORD_SCENE, "anchor": "FerryStage", "town": "kesselford"},
+	"kesselford_bell": {"scene": KESSELFORD_SCENE, "anchor": "FloodBell", "town": "kesselford"},
+	"kesselford_square": {"scene": KESSELFORD_SCENE, "anchor": "MenderStone", "town": "kesselford"},
+	"kesselford_wayhouse": {"scene": KESSELFORD_SCENE, "anchor": "WayhouseDoor", "town": "kesselford"},
+	# Ashlaren (hub 3, C2 / #239). Outdoor anchors name dressing props in `ashlaren.tscn`.
+	"ashlaren_hall_i": {
+		"scene": "res://world/interiors/ashlaren_weighing_hall.tscn", "anchor": "NpcSpot", "town": "ashlaren",
+	},
+	"ashlaren_millhouse_i": {
+		"scene": "res://world/interiors/ashlaren_millhouse.tscn", "anchor": "NpcSpot", "town": "ashlaren",
+	},
+	"ashlaren_bell": {"scene": ASHLAREN_SCENE, "anchor": "ShrineBell", "town": "ashlaren"},
+	"ashlaren_board": {"scene": ASHLAREN_SCENE, "anchor": "WeighingBoard", "town": "ashlaren"},
+	"ashlaren_yard": {"scene": ASHLAREN_SCENE, "anchor": "SealedSackCrates", "town": "ashlaren"},
 }
 
 
@@ -88,7 +116,7 @@ func _ready() -> void:
 		return
 	_seed_npcs()
 	Pandora.save_data()
-	print("DOM-NPC-SEED: 60 authored townsfolk present.")
+	print("DOM-NPC-SEED: %d authored townsfolk present." % _townsfolk_rows().size())
 	get_tree().quit()
 
 
@@ -109,7 +137,7 @@ func _seed_npcs() -> void:
 			_assign(entity, property_name, row[property_name])
 
 
-## Reads the authored roster from `canon/dom/characters`, `kind: "npc"`. Everything the
+## Reads the authored rosters from `canon/<hub>/characters`, `kind: "npc"`. Everything the
 ## seeder writes beyond these fields — greetings, facing, idle phase, model index, the
 ## organic outdoor scatter — is derived below and deliberately stays out of canon.
 func _townsfolk_rows() -> Array[Dictionary]:
@@ -146,8 +174,9 @@ func _npc(document: Dictionary) -> Dictionary:
 	var offset := Vector2(float(offset_pair[0]), float(offset_pair[1]))
 	var placement_key: String = document["placement_anchor"]
 	var placement: Dictionary = PLACEMENT_ANCHORS[placement_key]
+	var town_id: String = String(placement.get("town", "dom"))
 	var placement_offset := offset
-	if placement["scene"] == TOWN_SCENE:
+	if placement["scene"] == TOWN_SCENES[town_id]:
 		placement_offset = _organic_outdoor_offset(npc_id, district, placement_key, offset)
 	var hooks: Array[Dictionary] = []
 	if not involvement.is_empty():
@@ -169,14 +198,14 @@ func _npc(document: Dictionary) -> Dictionary:
 	# not what the seeder can work out for itself.
 	var bio: String = document["bio"]
 	if bio.is_empty():
-		bio = "%s of Dom's %s." % [role, district]
+		bio = "%s of %s's %s." % [role, TOWN_NAMES[town_id], district]
 	return {
 		"Display Name": document["display_name"],
 		"Epithet": document["epithet"],
 		"Bio": bio,
 		"Vault Id": document["vault_id"],
 		"NPC Id": npc_id,
-		"Town Id": "dom",
+		"Town Id": town_id,
 		"Role": role,
 		"Home": document["home"],
 		"District": district,
@@ -257,6 +286,10 @@ func _greeting(district: String) -> String:
 			return "Yield is an honest word here."
 		"Jawbrace":
 			return "Hold at the brace and state your business."
+		"Ford Square":
+			return "Mind the bell. If it rings, you stand where you are."
+		"Ferry Stage":
+			return "River's been moody. Ask before you step on the chain."
 		_:
 			return "Keep your footing, traveler."
 
@@ -271,6 +304,10 @@ func _farewell(district: String) -> String:
 			return "Stand straight when the drum sounds."
 		"Jawbrace":
 			return "Cross unarmed or do not cross."
+		"Ford Square":
+			return "Cross in the safe hours or sleep on this bank."
+		"Ferry Stage":
+			return "Keep a hand on the chain and your eyes off the water."
 		_:
 			return "Leave me a true count when you return."
 

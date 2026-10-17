@@ -76,9 +76,15 @@ func _canon_document(character_id: String) -> Dictionary:
 func test_every_canon_character_validates_and_the_bake_is_clean() -> void:
 	var rows: Array[Dictionary] = _canon()
 	var kinds: Dictionary = {}
+	var npcs_by_hub: Dictionary = {}
 	for row: Dictionary in rows:
 		kinds[row["kind"]] = int(kinds.get(row["kind"], 0)) + 1
-	assert_dict(kinds).is_equal({"npc": 60, "archetype": 6})
+		if row["kind"] == "npc":
+			var hub: String = String(row[WeftluminCharactersKind.META_HUB])
+			npcs_by_hub[hub] = int(npcs_by_hub.get(hub, 0)) + 1
+	assert_dict(kinds).is_equal({"npc": 72, "archetype": 6})
+	# Dom's sixty stay exactly sixty; Kesselford (C1 / #238) and Ashlaren (C2 / #239) add six each.
+	assert_dict(npcs_by_hub).is_equal({"dom": 60, "kesselford": 6, "ashlaren": 6})
 	var report: Dictionary = _kind.bake(rows, "res://", false, false)
 	assert_bool(WeftluminCharactersKind.report_is_clean(report)).override_failure_message(str(report)).is_true()
 	assert_array(report["regenerated"]).is_empty()

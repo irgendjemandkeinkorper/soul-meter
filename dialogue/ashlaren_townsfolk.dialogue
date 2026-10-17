@@ -1,0 +1,65 @@
+~ ashlaren_ashlaren_bell_warden
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Warden Tamsin Flatbell: Stand clear of the rope.
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Warden Tamsin Flatbell: Listen for it at the next weighing. You'll hear what I mean.
+else
+	Warden Tamsin Flatbell: Keep your footing, traveler.
+Warden Tamsin Flatbell: Tamsin rings the shrine-bell at every weighing and writes down which days it sounds flat.
+Warden Tamsin Flatbell: Leave me a true count when you return.
+=> END
+
+~ ashlaren_ashlaren_ghorr_steward
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Steward Ilse Furrowgood: Factors' friends get Factors' answers.
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Steward Ilse Furrowgood: Walk my furrows and tell me the Waning only touches castings.
+else
+	Steward Ilse Furrowgood: Keep your footing, traveler.
+Steward Ilse Furrowgood: Ilse wants the sealed sack opened and studied; the rot in her fields skips the weedy margins and takes the bred rows.
+Steward Ilse Furrowgood: Leave me a true count when you return.
+=> END
+
+~ ashlaren_ashlaren_head_factor
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Factor Brannoc Ledgerwell: The Table does not weigh for strangers.
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Factor Brannoc Ledgerwell: Honest measure, honest price. Ask the clerk for the day's weights.
+else
+	Factor Brannoc Ledgerwell: Keep your footing, traveler.
+Factor Brannoc Ledgerwell: Brannoc certifies every sack that leaves Ashlaren and has lately certified the same sack twice, once full and once empty.
+Factor Brannoc Ledgerwell: Leave me a true count when you return.
+=> END
+
+~ ashlaren_ashlaren_miller
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Miller Gaut Stonebrook: Mill's spoken for.
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Miller Gaut Stonebrook: Flour's fine. Bread's fine. Bell says so, some days.
+else
+	Miller Gaut Stonebrook: Keep your footing, traveler.
+Miller Gaut Stonebrook: Gaut grinds whatever the Factors certify and has stopped tasting the bread.
+Miller Gaut Stonebrook: Leave me a true count when you return.
+=> END
+
+~ ashlaren_ashlaren_warehouse_watch
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Pell Haskard: Yard's closed. Sack's closed. Go on.
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Pell Haskard: It's heavier than it was. Don't tell the Factor I said that.
+else
+	Pell Haskard: Keep your footing, traveler.
+Pell Haskard: Pell has orders that nobody opens the certified-empty sack, and no orders about what to do if it gets heavier.
+Pell Haskard: Leave me a true count when you return.
+=> END
+
+~ ashlaren_ashlaren_weigh_clerk
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Clerk Odile Marrowby: The weights are not for handling.
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Clerk Odile Marrowby: Bell rang true this morning. These are the honest ones; I think.
+else
+	Clerk Odile Marrowby: Keep your footing, traveler.
+Clerk Odile Marrowby: Odile keeps two sets of weights and checks the bell before choosing which to set on the scale.
+Clerk Odile Marrowby: Leave me a true count when you return.
+=> END

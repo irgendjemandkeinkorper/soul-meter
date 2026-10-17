@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Applies the idempotent Dom roster migration, then regenerates every
-# Pandora-derived artifact through the project's canonical generator.
+# Applies the idempotent hub roster and vendor migrations (every `canon/<hub>/` roster and
+# `tools/seed_town_vendors.gd`), then regenerates every Pandora-derived artifact through
+# the project's canonical generator.
 project_file="project.godot"
 godot_bin="${GODOT_BIN:-godot}"
 project_backup="$(mktemp)"
@@ -40,8 +41,12 @@ run_tool() {
 run_tool \
 	"TownNpcSeed" \
 	"res://tools/seed_town_npcs.gd" \
-	"DOM-NPC-SEED: 60 authored townsfolk present\."
+	"DOM-NPC-SEED: [0-9]+ authored townsfolk present\."
+run_tool \
+	"TownVendorSeed" \
+	"res://tools/seed_town_vendors.gd" \
+	"VENDOR-SEED: [0-9]+ vendors and economy items present\."
 run_tool \
 	"TownNpcGenerator" \
 	"res://tools/generate_gloot.gd" \
-	"DATA-GEN: wrote [0-9]+ item prototypes, [0-9]+ vendors, [0-9]+ encounters, and 60 Dom NPCs\."
+	"DATA-GEN: wrote [0-9]+ item prototypes, [0-9]+ vendors, [0-9]+ encounters, and [0-9]+ Dom NPCs\."

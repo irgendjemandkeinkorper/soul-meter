@@ -1,15 +1,18 @@
 class_name TownNpcSpawner
 extends Node
-## Populates Dom's outdoor townsfolk from the generated roster and placement data.
-## Positions and dialogue routes stay downstream of Pandora; this scene owns only
+## Populates a hub's outdoor townsfolk from its generated roster and placement data.
+## Positions and dialogue routes stay downstream of Pandora; this node owns only
 ## the runtime wiring for deterministic 3D-rendered sprite presentation.
+##
+## The hub is the fast-travel hub whose scene is the parent scene
+## (`FastTravelRegistry.by_scene()`), and its artifacts are
+## `NpcRoster.roster_path()` / `placements_path()` for that id (C1 / #238). Every
+## field scene the Weftlumin template renders carries this node; in a scene that
+## is not a hub it has nothing to spawn and stays idle.
 
 const NPC_SCENE: PackedScene = preload("res://actors/npc/npc.tscn")
 const UnitArtScript := preload("res://globals/unit_art.gd")
 
-const ROSTER_PATH := "res://data/generated/dom_npc_roster.json"
-const PLACEMENTS_PATH := "res://data/generated/dom_npc_placements.json"
-const TOWN_SCENE_PATH := "res://world/starting_town.tscn"
 const GENERATED_GROUP := &"generated_townsfolk"
 const GENERATED_INTERACTION_RADIUS := 48.0
 const IDLE_AMPLITUDE := 1.25
@@ -64,7 +67,9 @@ func _populate_town() -> void:
 	var models := sprite_models()
 
 	_upgrade_legacy_townsfolk(town, models)
-	_spawn_generated_townsfolk(town, models)
+	var hub: Dictionary = FastTravelRegistry.by_scene(town.scene_file_path)
+	if not hub.is_empty():
+		_spawn_generated_townsfolk(town, models, String(hub["id"]))
 	set_process(not _idle_sprites.is_empty())
 
 
@@ -83,20 +88,21 @@ func _upgrade_legacy_townsfolk(town: Node2D, models: PackedStringArray) -> void:
 		model_index += 1
 
 
-func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray) -> void:
-	var roster_data := _read_json_dictionary(ROSTER_PATH)
-	var placements_data := _read_json_dictionary(PLACEMENTS_PATH)
+func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray, town_id: String) -> void:
+	var roster_data := _read_json_dictionary(NpcRoster.roster_path(town_id))
+	var placements_data := _read_json_dictionary(NpcRoster.placements_path(town_id))
 	var roster_value: Variant = roster_data.get("npcs", {})
 	var placements_value: Variant = placements_data.get("placements", {})
 	if not roster_value is Dictionary or not placements_value is Dictionary:
-		push_error("Generated Dom NPC data does not contain dictionary records.")
+		push_error("Generated %s NPC data does not contain dictionary records." % town_id)
 		return
 	var roster := roster_value as Dictionary
 	var placements := placements_value as Dictionary
+	var town_scene_path: String = town.scene_file_path
 	var outdoor_ids := PackedStringArray()
 	for npc_id: String in placements:
 		var placement_value: Variant = placements[npc_id]
-		if placement_value is Dictionary and placement_value.get("scene", "") == TOWN_SCENE_PATH:
+		if placement_value is Dictionary and placement_value.get("scene", "") == town_scene_path:
 			outdoor_ids.append(npc_id)
 	outdoor_ids.sort()
 

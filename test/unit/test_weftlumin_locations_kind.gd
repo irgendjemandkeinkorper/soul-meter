@@ -6,7 +6,7 @@ extends GdUnitTestSuite
 
 const GeneratorScript := preload("res://tools/generate_locations.gd")
 const SCRATCH := "user://gdunit-weftlumin-locations"
-const MACRO_IDS: Array[String] = ["dom", "dorthkor_road", "wilds", "wound_lip"]
+const MACRO_IDS: Array[String] = ["ashlaren", "dom", "dorthkor_road", "kesselford", "wilds", "wound_lip"]
 
 var _kind: WeftluminLocationsKind
 
@@ -64,7 +64,7 @@ func _codes(document: Dictionary) -> Array[String]:
 # --- Canon and the committed artifacts -------------------------------------------------------
 
 
-func test_canon_holds_the_four_macro_and_twenty_one_interior_scenes_plus_the_cities() -> void:
+func test_canon_holds_the_six_macro_and_twenty_five_interior_scenes_plus_the_cities() -> void:
 	var rows: Array[Dictionary] = _canon()
 	var scenes: Array[Dictionary] = _scene_rows(rows)
 	assert_int(scenes.size()).is_equal(LocationRegistry.ALL.size())
@@ -72,7 +72,9 @@ func test_canon_holds_the_four_macro_and_twenty_one_interior_scenes_plus_the_cit
 	for row: Dictionary in scenes:
 		if String(row["definition_path"]).begins_with("res://world/locations/interiors/"):
 			interiors += 1
-	assert_int(interiors).is_equal(21)
+	# Dom's twenty-one plus Kesselford's wayhouse and chandlery (C1 / #238) and Ashlaren's
+	# weighing hall and millhouse (C2 / #239).
+	assert_int(interiors).is_equal(25)
 	assert_int(scenes.size() - interiors).is_equal(MACRO_IDS.size())
 	# The twelve gazetteer cities stay; Dom is the one location carrying both facets.
 	var gazetteer: int = 0

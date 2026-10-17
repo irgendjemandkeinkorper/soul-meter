@@ -7,9 +7,11 @@ func test_macro_locations_use_location_registry_scenes_and_normalized_coordinate
 		&"wilds": LocationRegistry.WILDS.scene_path,
 		&"dorthkor-road": LocationRegistry.DORTHKOR.scene_path,
 		&"wound-lip": LocationRegistry.WOUND_LIP.scene_path,
+		&"kesselford": LocationRegistry.KESSELFORD.scene_path,
+		&"ashlaren": LocationRegistry.ASHLAREN.scene_path,
 	}
 	var locations := WorldMapRegistry.all_locations()
-	assert_int(locations.size()).is_equal(4)
+	assert_int(locations.size()).is_equal(6)
 	for location: Dictionary in locations:
 		var location_id := StringName(location["id"])
 		var coordinate: Vector2 = location["map_coordinate"]
@@ -20,7 +22,7 @@ func test_macro_locations_use_location_registry_scenes_and_normalized_coordinate
 
 func test_routes_are_read_only_copies_with_valid_existing_encounters() -> void:
 	var routes := WorldMapRegistry.all_routes()
-	assert_int(routes.size()).is_equal(3)
+	assert_int(routes.size()).is_equal(5)
 	routes[0]["phases_cost"] = -1
 	assert_int(int(WorldMapRegistry.all_routes()[0]["phases_cost"])).is_greater(0)
 

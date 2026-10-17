@@ -2,6 +2,39 @@
   "schema": "weftlumin.location_index.v1",
   "locations": [
     {
+      "id": "ashlaren",
+      "display_name": "Ashlaren",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/ashlaren.tres",
+      "scene_path": "res://world/ashlaren.tscn",
+      "no_combat_zone": false
+    },
+    {
+      "id": "ashlaren_millhouse",
+      "display_name": "The Flat Bell",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/ashlaren_millhouse.tres",
+      "scene_path": "res://world/interiors/ashlaren_millhouse.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "ashlaren_weighing_hall",
+      "display_name": "Factors' Weighing Hall",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/ashlaren_weighing_hall.tres",
+      "scene_path": "res://world/interiors/ashlaren_weighing_hall.tscn",
+      "no_combat_zone": true
+    },
+    {
       "id": "bell_house_interior",
       "display_name": "",
       "epithet": "",
@@ -176,6 +209,39 @@
       "definition_path": "",
       "scene_path": "",
       "no_combat_zone": false
+    },
+    {
+      "id": "kesselford",
+      "display_name": "Kesselford",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/kesselford.tres",
+      "scene_path": "res://world/kesselford.tscn",
+      "no_combat_zone": false
+    },
+    {
+      "id": "kesselford_chandlery",
+      "display_name": "Ford Chandlery",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/kesselford_chandlery.tres",
+      "scene_path": "res://world/interiors/kesselford_chandlery.tscn",
+      "no_combat_zone": true
+    },
+    {
+      "id": "kesselford_wayhouse",
+      "display_name": "Ferry Bell Wayhouse",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/interiors/kesselford_wayhouse.tres",
+      "scene_path": "res://world/interiors/kesselford_wayhouse.tscn",
+      "no_combat_zone": true
     },
     {
       "id": "lefren",

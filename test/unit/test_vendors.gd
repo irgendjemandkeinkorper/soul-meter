@@ -29,9 +29,11 @@ func after_test() -> void:
 		GameState.inventory_changed.connect(Callable(QuestRegistry, "_on_inventory_changed"))
 
 
-func test_twelve_generated_vendors_have_authored_economy_fields() -> void:
+func test_generated_vendors_have_authored_economy_fields() -> void:
+	# Twelve Dom vendors plus Kesselford's Ford Chandlery (C1 / #238) and Ashlaren's Flat Bell
+	# (C2 / #239).
 	var vendors := VendorData.all_vendors()
-	assert_int(vendors.size()).is_equal(12)
+	assert_int(vendors.size()).is_equal(14)
 	var ids := {}
 	var npc_ids := {}
 	for vendor: Dictionary in vendors:
@@ -48,8 +50,8 @@ func test_twelve_generated_vendors_have_authored_economy_fields() -> void:
 		assert_bool(str(vendor["restock"].get("mode", "")).is_empty()).is_false()
 		ids[vendor_id] = true
 		npc_ids[npc_id] = true
-	assert_int(ids.size()).is_equal(12)
-	assert_int(npc_ids.size()).is_equal(12)
+	assert_int(ids.size()).is_equal(14)
+	assert_int(npc_ids.size()).is_equal(14)
 
 
 func test_fr_402_has_at_least_three_explicit_band_gated_reactions() -> void:

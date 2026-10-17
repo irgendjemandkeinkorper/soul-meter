@@ -15601,6 +15601,1452 @@
 						"value": "vex"
 					}
 				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "537.0",
+				"_index": 0,
+				"_name": "Orla Chainwright",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Keeps the chained ferry at Kesselford's ford and reads the river's mood before anyone else is awake."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Orla chains the ferry to both banks before dawn and will not unchain it for anyone while the water runs the wrong colour."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "You can wait on the bank like everyone else."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Step aboard; the river's in a listening mood today."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Orla Chainwright"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Bank"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Keeper of the chained ferry"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Ferry Stage"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.739
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 24
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-ferry-keeper"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "FerryStage"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/kesselford.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -26.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 32.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-ferry-keeper"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Ferry keeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "538.0",
+				"_index": 0,
+				"_name": "Hesk Waterward",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Watches the ford from the bell post and rings when the river rises on no rain."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Hesk rings the flood bell when the water turns wrong and has rung it three times this month on no rain at all."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Bell's not for talk. Move along."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Water's quiet. Means nothing, but it's quiet."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Hesk Waterward"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Flood-bell ringer"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Bell post, Ford Square"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.56
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 9
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-bell-ringer"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "FloodBell"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/kesselford.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 33.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": -9.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-bell-ringer"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Flood-bell ringer"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "539.0",
+				"_index": 0,
+				"_name": "Mender Ivo Threnlow",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "The senior Mender of Kesselford's dawn pair; sings the ford clear and counts the notes that come back late."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Ivo sings the ford open every dawn and, lately, only ever in a pair, so someone is there to catch the note that does not come back."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The charter does not oblige me to speak with you."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Walk with us at dawn, if you want to hear what the river says back."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Mender Ivo Threnlow"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Senior of the dawn pair"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Mender Stone"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.865
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 20
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-mender-pair-elder"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "MenderStone"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/kesselford.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -61.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": -5.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-mender-pair-elder"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Wayfare-Mender"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "540.0",
+				"_index": 0,
+				"_name": "Mender Nessa Quill",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "The junior Mender of the dawn pair; keeps the monthly map of where the weather-songs still hold."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Nessa keeps the Menders' monthly map and will tell anyone who asks how many safe hours the ford lost this year."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Ivo says I should not talk to you."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "The map is honest even when the river is not. Ask me anything."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Mender Nessa Quill"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Junior of the dawn pair"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Mender Stone"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.038
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 5
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-mender-pair-junior"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "MenderStone"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/kesselford.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 72.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 11.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-mender-pair-junior"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Wayfare-Mender (apprentice)"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "541.0",
+				"_index": 0,
+				"_name": "Dagny Kettlebrook",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Keeps the Ferry Bell Wayhouse, where travellers wait out the ford's moods."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Dagny prices a bed by the crossing's mood and has not had a cheap night since midsummer."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Beds are full. They are always full for your sort."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "A dry bed and a hot kettle. Pay when the river lets you leave."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Dagny Kettlebrook"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Keeper of the Ferry Bell"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Ferry Bell Wayhouse"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.735
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 16
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-wayhouse-keeper"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/kesselford_wayhouse.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-wayhouse-keeper"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Wayhouse keeper"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "542.0",
+				"_index": 0,
+				"_name": "Factor Wendel Marrow",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "A Grain-Factors' Table agent stranded at Kesselford with a consignment and no safe hour to cross."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Wendel has been waiting four days for a safe hour to cross with the Table's grain, and the Table does not pay for waiting."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Cross in the safe hours or sleep on this bank."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the bell. If it rings, you stand where you are."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Unless you can sing a river down, you are no use to me."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "If you hear the bell go quiet, come find me first."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Factor Wendel Marrow"
+					},
+					"District": {
+						"type": "string",
+						"value": "Ford Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Stranded on the wrong bank"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Ferry Bell Wayhouse (lodging)"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 0.15
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 1
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-grain-factor"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/kesselford_wayhouse.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 120.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 12.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "kesselford-grain-factor"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Grain factor"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "kesselford"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "543.0",
+				"_index": 0,
+				"_name": "Ford Chandlery",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Warm standing with the Menders opens their reserve of binding thread.\",\"minimum_band\":\"warm\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.1
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Ford Chandlery"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"materials/lamp_oil\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":8},{\"item_id\":\"consumables/salted_riverfish\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"consumables/loam_bread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"tools/surveyors_chalk\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":3},{\"item_id\":\"materials/binding_thread\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":4}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "kesselford-chandler"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":2,\"mode\":\"every_two_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.45
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "kesselford/ford-chandlery"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "Ford Chandlery counter"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "ford-chandlery"
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "544.0",
+				"_index": 0,
+				"_name": "Factor Brannoc Ledgerwell",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Head of the Grain Factors' inland counting-house, where Ghorr-stewarded harvests are weighed and sent on."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Brannoc certifies every sack that leaves Ashlaren and has lately certified the same sack twice, once full and once empty."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The Table does not weigh for strangers."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Honest measure, honest price. Ask the clerk for the day's weights."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Factor Brannoc Ledgerwell"
+					},
+					"District": {
+						"type": "string",
+						"value": "Weighing Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Keeper of the inland ledger"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Factors' Weighing Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.074
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 12
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "ashlaren-head-factor"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/ashlaren_weighing_hall.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "ashlaren-head-factor"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Head factor"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "ashlaren"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "545.0",
+				"_index": 0,
+				"_name": "Clerk Odile Marrowby",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "The weighing hall's clerk; keeps one set of weights for the days the bell agrees and one for the days it does not."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Odile keeps two sets of weights and checks the bell before choosing which to set on the scale."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The weights are not for handling."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Bell rang true this morning. These are the honest ones; I think."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Clerk Odile Marrowby"
+					},
+					"District": {
+						"type": "string",
+						"value": "Weighing Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Keeper of both sets of weights"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Factors' Weighing Hall"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.022
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 23
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "ashlaren-weigh-clerk"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/ashlaren_weighing_hall.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 120.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 12.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "ashlaren-weigh-clerk"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Weigh clerk"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "ashlaren"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "546.0",
+				"_index": 0,
+				"_name": "Warden Tamsin Flatbell",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Rings Ashlaren's shrine-bell to seal honest measure and keeps the list of flat days."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Tamsin rings the shrine-bell at every weighing and writes down which days it sounds flat."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Stand clear of the rope."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Listen for it at the next weighing. You'll hear what I mean."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Warden Tamsin Flatbell"
+					},
+					"District": {
+						"type": "string",
+						"value": "Weighing Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Ringer of the weighing bell"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Shrine bell, Weighing Square"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.717
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 8
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "ashlaren-bell-warden"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "ShrineBell"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/ashlaren.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -23.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 140.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "ashlaren-bell-warden"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Bell warden"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "ashlaren"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "547.0",
+				"_index": 0,
+				"_name": "Steward Ilse Furrowgood",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "A Ghorr steward whose precise, bred grain rots while the loose margins hold; wants the anomaly studied, not buried."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Ilse wants the sealed sack opened and studied; the rot in her fields skips the weedy margins and takes the bred rows."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Factors' friends get Factors' answers."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Walk my furrows and tell me the Waning only touches castings."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Steward Ilse Furrowgood"
+					},
+					"District": {
+						"type": "string",
+						"value": "Weighing Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Ghorr steward of the near fields"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Near fields"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.964
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 19
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "ashlaren-ghorr-steward"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "WeighingBoard"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/ashlaren.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 34.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 11.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "ashlaren-ghorr-steward"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Ghorr steward"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "ashlaren"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "548.0",
+				"_index": 0,
+				"_name": "Pell Haskard",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Guards the warehouse where the twice-certified sack sits unopened; never leaves the yard."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Pell has orders that nobody opens the certified-empty sack, and no orders about what to do if it gets heavier."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Yard's closed. Sack's closed. Go on."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "It's heavier than it was. Don't tell the Factor I said that."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Pell Haskard"
+					},
+					"District": {
+						"type": "string",
+						"value": "Warehouse Yard"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Watch of the sealed warehouse"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Warehouse yard"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 4.986
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 4
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "ashlaren-warehouse-watch"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "SealedSackCrates"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/ashlaren.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -83.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 53.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "ashlaren-warehouse-watch"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Warehouse watch"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "ashlaren"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "549.0",
+				"_index": 0,
+				"_name": "Miller Gaut Stonebrook",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Runs the millhouse beside the Flat Bell; grinds the certified grain and keeps his doubts to himself."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Gaut grinds whatever the Factors certify and has stopped tasting the bread."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Mill's spoken for."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Flour's fine. Bread's fine. Bell says so, some days."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Miller Gaut Stonebrook"
+					},
+					"District": {
+						"type": "string",
+						"value": "Weighing Square"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Miller of the grain road"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Home": {
+						"type": "string",
+						"value": "The Flat Bell"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.546
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 15
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "ashlaren-miller"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "NpcSpot"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/interiors/ashlaren_millhouse.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 0.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "ashlaren-miller"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Miller"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "ashlaren"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "316.0",
+				"_icon_color": "ffffff00",
+				"_id": "550.0",
+				"_index": 0,
+				"_name": "Flat Bell Provisions",
+				"_property_overrides": {
+					"Band Price Modifiers": {
+						"type": "string",
+						"value": "{\"allied\":{\"buy\":0.8,\"sell\":1.2},\"cold\":{\"buy\":1.15,\"sell\":0.75},\"hostile\":{\"buy\":1.35,\"sell\":0.55},\"neutral\":{\"buy\":1.0,\"sell\":1.0},\"warm\":{\"buy\":0.9,\"sell\":1.1}}"
+					},
+					"Band Reactions": {
+						"type": "string",
+						"value": "[{\"kind\":\"stock\",\"maximum_band\":\"\",\"message\":\"Warm standing with the Factors' Table opens the counter's vellum.\",\"minimum_band\":\"warm\"}]"
+					},
+					"Buy Modifier": {
+						"type": "float",
+						"value": 1.05
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Flat Bell Provisions"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "grain-factors-table"
+					},
+					"Inventory": {
+						"type": "string",
+						"value": "[{\"item_id\":\"consumables/loam_bread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":10},{\"item_id\":\"consumables/hearthloaf\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":6},{\"item_id\":\"materials/lamp_oil\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":4},{\"item_id\":\"materials/binding_thread\",\"maximum_band\":\"\",\"minimum_band\":\"\",\"quantity\":3},{\"item_id\":\"materials/scribes_vellum\",\"maximum_band\":\"\",\"minimum_band\":\"warm\",\"quantity\":2}]"
+					},
+					"Maximum Band": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Band": {
+						"type": "string",
+						"value": "cold"
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "ashlaren-flat-bell-keeper"
+					},
+					"Restock": {
+						"type": "string",
+						"value": "{\"interval\":2,\"mode\":\"every_two_days\"}"
+					},
+					"Sell Modifier": {
+						"type": "float",
+						"value": 0.5
+					},
+					"Site Id": {
+						"type": "string",
+						"value": "ashlaren/flat-bell-provisions"
+					},
+					"Site Name": {
+						"type": "string",
+						"value": "The Flat Bell counter"
+					},
+					"Trade Mode": {
+						"type": "string",
+						"value": "commerce"
+					},
+					"Vendor Id": {
+						"type": "string",
+						"value": "flat-bell-provisions"
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -17232,7 +18678,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 536.0
+			"default": 550.0
 		}
 	},
 	"_version": 1
