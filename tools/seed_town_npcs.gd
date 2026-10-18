@@ -10,9 +10,16 @@ extends Node
 const TOWN_SCENE := "res://world/starting_town.tscn"
 const KESSELFORD_SCENE := "res://world/kesselford.tscn"
 const ASHLAREN_SCENE := "res://world/ashlaren.tscn"
-## Town id -> its hub scene; outdoor anchors in that scene get the organic scatter.
-const TOWN_SCENES := {"dom": TOWN_SCENE, "kesselford": KESSELFORD_SCENE, "ashlaren": ASHLAREN_SCENE}
-const TOWN_NAMES := {"dom": "Dom", "kesselford": "Kesselford", "ashlaren": "Ashlaren"}
+const LONG_VERGE_SCENE := "res://world/long_verge.tscn"
+## Town id -> its scene; outdoor anchors in that scene get the organic scatter. A town is a hub
+## or, since C3 / #240, any baked location with a roster (the Verge's Company camp).
+const TOWN_SCENES := {
+	"dom": TOWN_SCENE, "kesselford": KESSELFORD_SCENE, "ashlaren": ASHLAREN_SCENE,
+	"long_verge": LONG_VERGE_SCENE,
+}
+const TOWN_NAMES := {
+	"dom": "Dom", "kesselford": "Kesselford", "ashlaren": "Ashlaren", "long_verge": "the Long Verge",
+}
 const SeedPandora := preload("res://tools/seed_pandora.gd")
 const TOWNSFOLK_MODEL_COUNT := 26
 const DEFAULT_OUTDOOR_JITTER := Vector2i(26, 20)
@@ -100,6 +107,13 @@ const PLACEMENT_ANCHORS := {
 	"ashlaren_bell": {"scene": ASHLAREN_SCENE, "anchor": "ShrineBell", "town": "ashlaren"},
 	"ashlaren_board": {"scene": ASHLAREN_SCENE, "anchor": "WeighingBoard", "town": "ashlaren"},
 	"ashlaren_yard": {"scene": ASHLAREN_SCENE, "anchor": "SealedSackCrates", "town": "ashlaren"},
+	# The Long Verge (location 7, C3 / #240): every anchor is outdoors, a dressing prop in
+	# `long_verge.tscn` (the camp, the black-band cairn, the roadside grave).
+	"long_verge_camp": {"scene": LONG_VERGE_SCENE, "anchor": "PaymastersTent", "town": "long_verge"},
+	"long_verge_cairn": {"scene": LONG_VERGE_SCENE, "anchor": "BlackBandCairn", "town": "long_verge"},
+	"long_verge_drum": {"scene": LONG_VERGE_SCENE, "anchor": "MusterDrum", "town": "long_verge"},
+	"long_verge_fire": {"scene": LONG_VERGE_SCENE, "anchor": "CampFire", "town": "long_verge"},
+	"long_verge_grave": {"scene": LONG_VERGE_SCENE, "anchor": "GraveMarker", "town": "long_verge"},
 }
 
 

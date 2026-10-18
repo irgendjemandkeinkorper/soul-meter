@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://cj3s2eu1gdfyo"
+path="res://.godot/imported/long_verge_townsfolk.dialogue-b636c94db02018838297a2681e772754.tres"
+
+[deps]
+
+source_file="res://dialogue/long_verge_townsfolk.dialogue"
+dest_files=["res://.godot/imported/long_verge_townsfolk.dialogue-b636c94db02018838297a2681e772754.tres"]
+
+[params]
+
+defaults=true

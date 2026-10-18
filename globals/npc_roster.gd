@@ -2,12 +2,14 @@ class_name NpcRoster
 extends RefCounted
 ## Runtime seam for Pandora-generated NPC data.
 ##
-## Every fast-travel hub owns one generated roster and one placements file
+## Every town owns one generated roster and one placements file
 ## (`tools/generate_gloot.gd`, C1 / #238): `<town>_npc_roster.json` and
 ## `<town>_npc_placements.json`. This reader merges them, so an NPC id is looked
-## up the same way whichever hub it belongs to. `FastTravelRegistry` is the one
-## hand-wired list of hubs; a hub without generated files simply contributes
-## nothing.
+## up the same way whichever town it belongs to. A town is a fast-travel hub
+## (`FastTravelRegistry`, the hand-wired list) or any other baked location whose
+## id names a `canon/<town>/` directory the seeder wrote a roster for (C3 / #240:
+## The Long Verge is wilds with a Company camp, not a hub). A town without
+## generated files simply contributes nothing.
 ##
 ## Portrait art remains data: a safe source-image path is loaded when present;
 ## otherwise the dialogue portrait renders the generated monogram descriptor.
@@ -23,11 +25,16 @@ static var _placements: Dictionary = {}
 static var _ids_by_display_name: Dictionary = {}
 
 
-## The hubs whose generated NPC artifacts this reader merges, in registry order.
+## The towns whose generated NPC artifacts this reader merges: the fast-travel hubs in
+## registry order, then every other baked location with a roster file, in index order.
 static func town_ids() -> Array[String]:
 	var result: Array[String] = []
 	for hub: Dictionary in FastTravelRegistry.all():
 		result.append(String(hub["id"]))
+	for location: LocationDefinition in LocationRegistry.ALL:
+		var town_id := String(location.id)
+		if not result.has(town_id) and FileAccess.file_exists(roster_path(town_id)):
+			result.append(town_id)
 	return result
 
 

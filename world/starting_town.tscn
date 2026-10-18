@@ -2386,3 +2386,14 @@ required_flags = PackedStringArray("tutorial_road_open", "chapter_one_free_roam"
 locked_message = "Marshal Coiljaw must issue a field commission."
 spawn_id = &"from_dom"
 
+[node name="SpawnFromLongVerge" type="Marker2D" parent="."]
+position = Vector2(280, 1050)
+
+[node name="MoorRoad" parent="." instance=ExtResource("4_exit")]
+position = Vector2(100, 1050)
+target_scene = "res://world/long_verge.tscn"
+label_text = "MOOR ROAD TO THE LONG VERGE"
+required_flags = PackedStringArray("tutorial_road_open", "chapter_one_free_roam")
+locked_message = "Marshal Coiljaw must issue a field commission."
+spawn_id = &"from_dom"
+

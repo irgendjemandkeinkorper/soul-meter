@@ -1,0 +1,60 @@
+{
+  "town_id": "long_verge",
+  "placements": {
+    "long-verge-cairn-warden": {
+      "scene": "res://world/long_verge.tscn",
+      "anchor": "BlackBandCairn",
+      "offset": [
+        23.0,
+        134.0
+      ],
+      "facing": "west",
+      "idle_phase": 5.638,
+      "model_index": 11
+    },
+    "long-verge-old-soldier": {
+      "scene": "res://world/long_verge.tscn",
+      "anchor": "CampFire",
+      "offset": [
+        64.0,
+        92.0
+      ],
+      "facing": "west",
+      "idle_phase": 5.055,
+      "model_index": 7
+    },
+    "long-verge-paymaster": {
+      "scene": "res://world/long_verge.tscn",
+      "anchor": "PaymastersTent",
+      "offset": [
+        9.0,
+        129.0
+      ],
+      "facing": "east",
+      "idle_phase": 1.961,
+      "model_index": 0
+    },
+    "long-verge-recruit": {
+      "scene": "res://world/long_verge.tscn",
+      "anchor": "GraveMarker",
+      "offset": [
+        -65.0,
+        91.0
+      ],
+      "facing": "east",
+      "idle_phase": 3.312,
+      "model_index": 18
+    },
+    "long-verge-sergeant": {
+      "scene": "res://world/long_verge.tscn",
+      "anchor": "MusterDrum",
+      "offset": [
+        26.0,
+        120.0
+      ],
+      "facing": "west",
+      "idle_phase": 2.062,
+      "model_index": 22
+    }
+  }
+}

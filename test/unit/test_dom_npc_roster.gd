@@ -75,8 +75,9 @@ func test_every_portrait_descriptor_is_stable_distinct_and_resolvable() -> void:
 		]
 		assert_bool(signatures.has(signature)).is_false()
 		signatures[signature] = true
-	# Every hub's roster: Dom's sixty plus Kesselford's six (C1 / #238) and Ashlaren's six (C2 / #239).
-	assert_int(signatures.size()).is_equal(72)
+	# Every town's roster: Dom's sixty plus Kesselford's six (C1 / #238), Ashlaren's six
+	# (C2 / #239) and the Long Verge's five (C3 / #240).
+	assert_int(signatures.size()).is_equal(77)
 
 
 func test_portrait_component_uses_generated_unit_art_without_node_overrides() -> void:

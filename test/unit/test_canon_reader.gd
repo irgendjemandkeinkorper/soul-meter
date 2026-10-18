@@ -685,8 +685,9 @@ func test_the_roster_loads_as_seventy_two_npc_characters() -> void:
 		if String(character["kind"]) == "npc":
 			npcs.append(character)
 
-	# Dom's sixty plus Kesselford's six (C1 / #238) and Ashlaren's six (C2 / #239).
-	assert_int(npcs.size()).is_equal(72)
+	# Dom's sixty plus Kesselford's six (C1 / #238), Ashlaren's six (C2 / #239) and the Long
+	# Verge's five (C3 / #240).
+	assert_int(npcs.size()).is_equal(77)
 
 
 func test_character_order_is_authored_rather_than_alphabetical() -> void:

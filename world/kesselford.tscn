@@ -411,3 +411,12 @@ target_scene = "res://world/ashlaren.tscn"
 label_text = "GRAIN ROAD TO ASHLAREN"
 spawn_id = &"from_kesselford"
 
+[node name="SpawnFromLongVerge" type="Marker2D" parent="."]
+position = Vector2(220, 1150)
+
+[node name="MoorTrack" parent="." instance=ExtResource("1_weftlumin")]
+position = Vector2(60, 1150)
+target_scene = "res://world/long_verge.tscn"
+label_text = "MOOR TRACK TO THE LONG VERGE"
+spawn_id = &"from_kesselford"
+

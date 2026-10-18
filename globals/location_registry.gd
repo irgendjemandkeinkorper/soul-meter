@@ -77,6 +77,9 @@ const ASHLAREN_WEIGHING_HALL: LocationDefinition = preload(
 const ASHLAREN_MILLHOUSE: LocationDefinition = preload(
 	"res://world/locations/interiors/ashlaren_millhouse.tres"
 )
+# The Long Verge, location 7 (C3 / #240): the Companies' moor-road between Dom and Kesselford,
+# baked by the Weftlumin `long-verge` package. Wilds, not a hub: no fast-travel row.
+const LONG_VERGE: LocationDefinition = preload("res://world/locations/long_verge.tres")
 ## The baked index (`tools/generate_locations.gd`, E3.3a / #341). It owns WHICH locations exist;
 ## the named consts above stay for code references and resolve to the same cached resources.
 const INDEX_PATH := "res://data/generated/location_index.json"

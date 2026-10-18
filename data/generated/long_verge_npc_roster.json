@@ -1,0 +1,236 @@
+{
+  "town_id": "long_verge",
+  "dialogue_path": "res://dialogue/long_verge_townsfolk.dialogue",
+  "npcs": {
+    "long-verge-cairn-warden": {
+      "id": "long-verge-cairn-warden",
+      "stable_id": {
+        "kind": "actor",
+        "id": "long-verge-cairn-warden"
+      },
+      "display_name": "Cairn-Warden Mabbe Sloe",
+      "role": "Cairn warden",
+      "home": "The road between the cairns",
+      "district": "The Thin Stretch",
+      "faction_id": "iron-companies",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "long-verge-cairn-warden",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "CS",
+        "mark": "9B40",
+        "palette_index": 9
+      },
+      "dialogue": {
+        "path": "res://dialogue/long_verge_townsfolk.dialogue",
+        "title": "long_verge_long_verge_cairn_warden",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "long_verge_long_verge_cairn_warden"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Mabbe re-bands the mile-cairns by the only method the Companies trust: where the road last cost them someone.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "Keep off the banded stretch. I won't paint you a cairn.",
+        "warm": "Third past the split stone has a fresh band. Wasn't there last month. The thin's walking toward home.",
+        "faction_id": "iron-companies"
+      },
+      "placement": {
+        "scene": "res://world/long_verge.tscn",
+        "anchor": "BlackBandCairn",
+        "offset": [
+          23.0,
+          134.0
+        ],
+        "facing": "west",
+        "idle_phase": 5.638,
+        "model_index": 11
+      }
+    },
+    "long-verge-old-soldier": {
+      "id": "long-verge-old-soldier",
+      "stable_id": {
+        "kind": "actor",
+        "id": "long-verge-old-soldier"
+      },
+      "display_name": "Jory Fennick",
+      "role": "Retired Company soldier",
+      "home": "Camp fire, Company camp",
+      "district": "Company Camp",
+      "faction_id": "iron-companies",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "long-verge-old-soldier",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "JF",
+        "mark": "096A",
+        "palette_index": 2
+      },
+      "dialogue": {
+        "path": "res://dialogue/long_verge_townsfolk.dialogue",
+        "title": "long_verge_long_verge_old_soldier",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "long_verge_long_verge_old_soldier"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Jory remembers when the road had three bad stretches and says the cairns have been walking toward Dom ever since.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "Sit somewhere else.",
+        "warm": "Three. There were three. Ask the paymaster why his map says eleven and watch his hands.",
+        "faction_id": "iron-companies"
+      },
+      "placement": {
+        "scene": "res://world/long_verge.tscn",
+        "anchor": "CampFire",
+        "offset": [
+          64.0,
+          92.0
+        ],
+        "facing": "west",
+        "idle_phase": 5.055,
+        "model_index": 7
+      }
+    },
+    "long-verge-paymaster": {
+      "id": "long-verge-paymaster",
+      "stable_id": {
+        "kind": "actor",
+        "id": "long-verge-paymaster"
+      },
+      "display_name": "Paymaster Odric Tallowmere",
+      "role": "Company paymaster",
+      "home": "Paymaster's tent, Company camp",
+      "district": "Company Camp",
+      "faction_id": "iron-companies",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "long-verge-paymaster",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "PT",
+        "mark": "E5C1",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/long_verge_townsfolk.dialogue",
+        "title": "long_verge_long_verge_paymaster",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "long_verge_long_verge_paymaster"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Odric pays the column by the cairn count and wants a stretch re-marked whose bands no longer match the thin.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "The Companies pay for surveys, not for questions.",
+        "warm": "Walk the stretch past the split stone with me. Count the bands, then tell me what you felt.",
+        "faction_id": "iron-companies"
+      },
+      "placement": {
+        "scene": "res://world/long_verge.tscn",
+        "anchor": "PaymastersTent",
+        "offset": [
+          9.0,
+          129.0
+        ],
+        "facing": "east",
+        "idle_phase": 1.961,
+        "model_index": 0
+      }
+    },
+    "long-verge-recruit": {
+      "id": "long-verge-recruit",
+      "stable_id": {
+        "kind": "actor",
+        "id": "long-verge-recruit"
+      },
+      "display_name": "Recruit Tessaly Brack",
+      "role": "Company recruit",
+      "home": "Grave watch, south shoulder",
+      "district": "The Grave Shoulder",
+      "faction_id": "iron-companies",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "long-verge-recruit",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "RB",
+        "mark": "7470",
+        "palette_index": 4
+      },
+      "dialogue": {
+        "path": "res://dialogue/long_verge_townsfolk.dialogue",
+        "title": "long_verge_long_verge_recruit",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "long_verge_long_verge_recruit"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Tessaly stands watch over the unnamed grave and has noticed the thin streaks converge on it.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "Move along. Nothing here to read.",
+        "warm": "They're not on the map, the ones under here. The paymaster says there was no rout. The ground disagrees.",
+        "faction_id": "iron-companies"
+      },
+      "placement": {
+        "scene": "res://world/long_verge.tscn",
+        "anchor": "GraveMarker",
+        "offset": [
+          -65.0,
+          91.0
+        ],
+        "facing": "east",
+        "idle_phase": 3.312,
+        "model_index": 18
+      }
+    },
+    "long-verge-sergeant": {
+      "id": "long-verge-sergeant",
+      "stable_id": {
+        "kind": "actor",
+        "id": "long-verge-sergeant"
+      },
+      "display_name": "Sergeant Iwan Corrow",
+      "role": "Column sergeant",
+      "home": "Muster drum, Company camp",
+      "district": "Company Camp",
+      "faction_id": "iron-companies",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "long-verge-sergeant",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "SC",
+        "mark": "6DD3",
+        "palette_index": 7
+      },
+      "dialogue": {
+        "path": "res://dialogue/long_verge_townsfolk.dialogue",
+        "title": "long_verge_long_verge_sergeant",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "long_verge_long_verge_sergeant"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Iwan drums the column over the Verge so the recruits learn that the world, not an enemy, is what thins.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "Column's under contract. Clear the drum.",
+        "warm": "First time over the Verge? Keep your Phrases in your mouth past the black bands. Notes only there.",
+        "faction_id": "iron-companies"
+      },
+      "placement": {
+        "scene": "res://world/long_verge.tscn",
+        "anchor": "MusterDrum",
+        "offset": [
+          26.0,
+          120.0
+        ],
+        "facing": "west",
+        "idle_phase": 2.062,
+        "model_index": 22
+      }
+    }
+  }
+}

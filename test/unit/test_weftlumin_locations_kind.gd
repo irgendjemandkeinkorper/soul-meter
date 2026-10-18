@@ -6,7 +6,9 @@ extends GdUnitTestSuite
 
 const GeneratorScript := preload("res://tools/generate_locations.gd")
 const SCRATCH := "user://gdunit-weftlumin-locations"
-const MACRO_IDS: Array[String] = ["ashlaren", "dom", "dorthkor_road", "kesselford", "wilds", "wound_lip"]
+const MACRO_IDS: Array[String] = [
+	"ashlaren", "dom", "dorthkor_road", "kesselford", "long_verge", "wilds", "wound_lip"
+]
 
 var _kind: WeftluminLocationsKind
 
@@ -64,7 +66,7 @@ func _codes(document: Dictionary) -> Array[String]:
 # --- Canon and the committed artifacts -------------------------------------------------------
 
 
-func test_canon_holds_the_six_macro_and_twenty_five_interior_scenes_plus_the_cities() -> void:
+func test_canon_holds_the_seven_macro_and_twenty_five_interior_scenes_plus_the_cities() -> void:
 	var rows: Array[Dictionary] = _canon()
 	var scenes: Array[Dictionary] = _scene_rows(rows)
 	assert_int(scenes.size()).is_equal(LocationRegistry.ALL.size())
