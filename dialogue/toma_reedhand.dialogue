@@ -8,8 +8,12 @@ Toma Reedhand: The river is two streets below us, but the shrine still gets wet 
 	do Renown.gain_reputation("player", 1.0, "Asked after the river shrine's memory", "dom")
 	Toma Reedhand: Every promise carried downstream, and every name spoken over still water. If you visit, leave something honest behind. A word is enough.
 	=> END
-- "I left a word at the shrine." [if GameState.get_flag("dom_shrine_visited") /]
-	Toma Reedhand: Then the river has one more thing to carry. Try not to make it carry you.
+## `dom_shrine_asked` is written by the question above; Toma hears it back here.
+- "I left a word at the shrine." [if GameState.get_flag("dom_shrine_visited") and GameState.get_flag("dom_shrine_asked") /]
+	Toma Reedhand: You asked what it remembers first, and then you went. Most do one or the other. The river has one more thing to carry; try not to make it carry you.
+	=> END
+- "I left a word at the shrine." [if GameState.get_flag("dom_shrine_visited") and not GameState.get_flag("dom_shrine_asked") /]
+	Toma Reedhand: Without asking what it remembers? Then the river has one more thing to carry. Try not to make it carry you.
 	=> END
 - "The river's been carrying a sound from the east." [if SaveGame.zhavar_rung("wilds") != "low" /]
 	Toma Reedhand: You hear it too, then. Like a bell that hasn't decided to ring. The boatmen say the east country is being heard further than it should be, and things that listen have started turning their heads.

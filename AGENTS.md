@@ -13,6 +13,7 @@ Soul Meter is a dialogue-and-consequence CRPG in Era 3 of the Dramgid Cycle: 2D 
 | Scene, dependency, or import behavior | `project.godot` and `DEPENDENCIES.md` |
 | UI presentation | `design/DESIGN_SYSTEM.md`, `ui/theme/ds.gd`, `ui/theme/theme_builder.gd` |
 | Tests or runtime verification | `docs/agent-verification.md`, then the relevant section of `docs/testing.md` |
+| Anything waiting on the owner (rulings, approvals, things only they can provide) | `docs/owner-decisions.md` — the running list; add to it, never resolve an item silently |
 
 Read only the sources needed for the affected behavior. Use `docs/project-map.md` for unfamiliar subsystems. Historical progress is in `docs/status/2026-09-12-inherited-project-status.md`; verify it against current code before relying on completion claims.
 

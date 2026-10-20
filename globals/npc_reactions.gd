@@ -173,12 +173,24 @@ static func rule_is_valid(rule: Dictionary) -> bool:
 	var band := StringName(rule.get("minimum_reputation_band", &""))
 	var zone := str(rule.get("zhavar_zone", ""))
 	var rung := str(rule.get("minimum_zhavar_rung", ""))
+	var fame_tier := str(rule.get("minimum_fame_tier", ""))
+	var karma_floor := str(rule.get("minimum_karma_tier", ""))
+	var karma_ceiling := str(rule.get("maximum_karma_tier", ""))
 	if rule.has("hollowing") and not rule["hollowing"] is bool:
 		return false
 	if (
 		flag.is_empty() and faction.is_empty() and zone.is_empty()
+		and fame_tier.is_empty() and karma_floor.is_empty() and karma_ceiling.is_empty()
 		and not rule.has("hollowing")
 	):
+		return false
+	# Yothmeru tier names come from Renown's RFC ladders; an unknown name is a
+	# typo that would otherwise fail shut forever without anyone noticing.
+	if not fame_tier.is_empty() and not Renown.FAME_TIER_NAMES.has(fame_tier):
+		return false
+	if not karma_floor.is_empty() and not Renown.KARMA_TIER_NAMES.has(karma_floor):
+		return false
+	if not karma_ceiling.is_empty() and not Renown.KARMA_TIER_NAMES.has(karma_ceiling):
 		return false
 	if faction.is_empty() != band.is_empty():
 		return false
@@ -224,6 +236,18 @@ static func _matches(rule: Dictionary) -> bool:
 	if not zone.is_empty() and not _zhavar_at_least(
 		zone, str(rule.get("minimum_zhavar_rung", ""))
 	):
+		return false
+	# Yothmeru tier gates (docs/yothmeru-world-effects-packet.md §3B): floors and
+	# a ceiling on the RFC ladders, read through Renown so the ladder order has
+	# one owner. Nothing authored uses them until the packet is ruled.
+	var fame_tier := str(rule.get("minimum_fame_tier", ""))
+	if not fame_tier.is_empty() and not Renown.fame_tier_at_least(fame_tier):
+		return false
+	var karma_floor := str(rule.get("minimum_karma_tier", ""))
+	if not karma_floor.is_empty() and not Renown.karma_tier_at_least(karma_floor):
+		return false
+	var karma_ceiling := str(rule.get("maximum_karma_tier", ""))
+	if not karma_ceiling.is_empty() and not Renown.karma_tier_at_most(karma_ceiling):
 		return false
 	var faction := str(rule.get("reputation_faction", ""))
 	if faction.is_empty():

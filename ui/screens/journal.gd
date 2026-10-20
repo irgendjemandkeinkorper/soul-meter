@@ -8,6 +8,8 @@ const RECENT_CONSEQUENCE_LIMIT := 6
 
 
 func _build() -> void:
+	# Journal reads over the live scene; cover it like every other full-page screen.
+	_add_opaque_backdrop()
 	var vbox := _make_shell_window("Journal")
 
 	var thread := _section("Current thread  ·  " + ChapterOneProgress.title())
