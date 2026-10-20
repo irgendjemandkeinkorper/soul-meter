@@ -303,6 +303,11 @@ command with `WeftluminSceneCreator.command(params, package, errors)`.
     import (`godot --headless --path . --import`) so its `.import` sidecar and the suite-loadable
     resource exist, and commit the sidecar beside it (C4 / #241 hit `No loader found for resource`
     in `test_dom_npc_roster` until the import ran).
+  - Real ambient talk for a town's roster is hand-authored in `dialogue/locations/<town>.dialogue`
+    (C25 / #262) under the generated titles (`<town>_<npc_id>`), opening with the
+    `PROVISIONAL — CANON REVIEW REQUIRED` header; `NpcRoster.dialogue_route()` sends a spawned
+    NPC there per title and the generated file stays the fallback, so neither is edited to
+    change the other (`test/unit/test_location_dialogue.gd`).
   - The reverse travel exit lives in the other scene's log (Dom's `FordRoad` is two `add_node`
     commands on `res://world/starting_town.tscn` in the same package).
 

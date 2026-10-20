@@ -16,6 +16,9 @@ extends RefCounted
 
 const ROSTER_PATH_TEMPLATE := "res://data/generated/%s_npc_roster.json"
 const PLACEMENTS_PATH_TEMPLATE := "res://data/generated/%s_npc_placements.json"
+## C25 (#262): the hand-authored ambient dialogue for a roster town, one file per town under the
+## generated title scheme. Optional; a town without one keeps its generated placeholder.
+const LOCATION_DIALOGUE_PATH_TEMPLATE := "res://dialogue/locations/%s.dialogue"
 const SAFE_PORTRAIT_EXTENSIONS := ["png", "jpg", "jpeg", "svg", "webp", "tga"]
 const UNIT_PORTRAIT_TEMPLATE := "res://assets/generated/sprites/units/%s/%s--idle--se--f00.png"
 
@@ -44,6 +47,26 @@ static func roster_path(town_id: String) -> String:
 
 static func placements_path(town_id: String) -> String:
 	return PLACEMENTS_PATH_TEMPLATE % town_id
+
+
+static func location_dialogue_path(town_id: String) -> String:
+	return LOCATION_DIALOGUE_PATH_TEMPLATE % town_id
+
+
+## The file a roster NPC talks from: the town's authored location dialogue when it carries the
+## NPC's generated title, else `generated_path` (the `<town>_townsfolk.dialogue` that
+## tools/generate_gloot.gd owns and nothing hand-edits). Read through the imported resource,
+## never the source text, so an exported build routes the same way the editor does.
+static func dialogue_route(town_id: String, generated_path: String, title: String) -> String:
+	if title.is_empty():
+		return generated_path
+	var authored_path := location_dialogue_path(town_id)
+	if not ResourceLoader.exists(authored_path):
+		return generated_path
+	var authored := load(authored_path) as DialogueResource
+	if authored == null or not authored.get_cues().has(title):
+		return generated_path
+	return authored_path
 
 
 static func all() -> Array[Dictionary]:

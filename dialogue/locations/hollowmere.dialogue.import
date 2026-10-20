@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://3sfbi36os0it"
+path="res://.godot/imported/hollowmere.dialogue-e4e799c259e0d9d46baf8bb4f31b95b0.tres"
+
+[deps]
+
+source_file="res://dialogue/locations/hollowmere.dialogue"
+dest_files=["res://.godot/imported/hollowmere.dialogue-e4e799c259e0d9d46baf8bb4f31b95b0.tres"]
+
+[params]
+
+defaults=true

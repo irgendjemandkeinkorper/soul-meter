@@ -156,8 +156,11 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray, town_id
 		var idle_phase := float(placement.get("idle_phase", 0.0))
 		npc.name = _node_name(npc_id)
 		npc.npc_name = str(row.get("display_name", npc_id))
-		npc.dialogue_path = str(dialogue.get("path", ""))
-		npc.dialogue_start = str(dialogue.get("title", ""))
+		# C25 (#262): an authored `dialogue/locations/<town>.dialogue` wins per title; the
+		# generated townsfolk file stays the fallback.
+		var title := str(dialogue.get("title", ""))
+		npc.dialogue_path = NpcRoster.dialogue_route(town_id, str(dialogue.get("path", "")), title)
+		npc.dialogue_start = title
 		npc.position = town.to_local(anchor.global_position) + Vector2(
 			float(offset_value[0]), float(offset_value[1])
 		)

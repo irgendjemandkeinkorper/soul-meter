@@ -1,0 +1,75 @@
+# PROVISIONAL — CANON REVIEW REQUIRED: all dialogue prose and option text in this file.
+# C25 (#262): ambient talk for Hollowmere's three posted outsiders, drafted only from the
+# approved proposal (dramgid-vault/proposals/locations/hollowmere.md) and the canon documents
+# in canon/hollowmere/characters/. Titles follow the generated scheme (<town>_<npc_id>);
+# TownNpcSpawner routes a roster NPC here when its title exists and otherwise to the generated
+# dialogue/hollowmere_townsfolk.dialogue, which tools/generate_gloot.gd owns. The band-gated
+# greetings are the canon dialogue_hostile / dialogue_warm lines verbatim. No quest content:
+# the proposal's side-quest premise is alluded to, never offered, resolved, or flagged.
+
+~ hollowmere_hollowmere_watcher
+if Reputation.band("widow-watchers") == "hostile" or Reputation.band("widow-watchers") == "cold"
+	Watcher Ysolde Marrow: Stand off the stilt. The water has enough to remember.
+	=> END
+elif Reputation.band("widow-watchers") == "warm" or Reputation.band("widow-watchers") == "allied"
+	Watcher Ysolde Marrow: Read yesterday's sentence before you ask me anything. Then tell me whether it was yesterday's.
+else
+	Watcher Ysolde Marrow: Mind the planks. The water under them is late.
+Watcher Ysolde Marrow: One sentence a day. That is the whole post. I write what the mere did and the envoy carries it out.
+Watcher Ysolde Marrow: I stopped signing them. A name on the page started to feel like a claim the water might answer.
+- "What did you write today?"
+	Watcher Ysolde Marrow: The water remembered the wrong sky again. Same as most days.
+	Watcher Ysolde Marrow: Look at it. The wind crosses the reeds and the water moves a beat after. It is being told the weather, not feeling it.
+	Watcher Ysolde Marrow: Some mornings the sentence comes before the day it describes. I do not write that part down. The elders can count for themselves.
+	=> END
+- "Why keep an observer here at all?"
+	Watcher Ysolde Marrow: Because the mere goes wrong in the same spiral the storms draw toward Verspch. Whatever reaches the front reaches this water first.
+	Watcher Ysolde Marrow: Every camp out there reads tomorrow's weather off my one line. That is worth a woman on a stilt. Ask the elders whether it is worth more than that.
+	=> END
+- "I will leave you to it."
+	Watcher Ysolde Marrow: Write down what you saw before it changes.
+	=> END
+
+~ hollowmere_hollowmere_envoy
+if Reputation.band("widow-watchers") == "hostile" or Reputation.band("widow-watchers") == "cold"
+	Envoy Brannoc Quell: The elders' business. Walk on.
+	=> END
+elif Reputation.band("widow-watchers") == "warm" or Reputation.band("widow-watchers") == "allied"
+	Envoy Brannoc Quell: Every camp on the front reads tomorrow's weather off her sentence. Ask what that costs her before you ask her to stop.
+else
+	Envoy Brannoc Quell: You have come further than the map admits.
+Envoy Brannoc Quell: I run the reed track. Her sentence goes out toward the escarpment with me and the elders' answer comes back in. Mostly the answer is: stay.
+Envoy Brannoc Quell: I used to read the sentences on the way. I stopped. A runner who knows tomorrow's weather starts walking differently, and the track notices.
+- "What happened to this place?"
+	Envoy Brannoc Quell: The fish thinned first. Then the reeds came up in spirals no hand planted. Then the water started arriving a beat behind the wind.
+	Envoy Brannoc Quell: There were camps once. Reed-cutters, fishers. The stilt-houses are theirs. Nobody argued with the water about it; they just stopped coming.
+	=> END
+- "Who wants her out?"
+	Envoy Brannoc Quell: Scholars near the Conservatory. They say the mere is taking her mind a sentence at a time. They are not wrong about the price.
+	Envoy Brannoc Quell: The elders say the front has no other warning. They are not wrong either. I carry both answers and deliver one.
+	=> END
+- "I will be on my way."
+	Envoy Brannoc Quell: Carry word out if we do not.
+	=> END
+
+~ hollowmere_hollowmere_mender
+if Reputation.band("wayfare-menders") == "hostile" or Reputation.band("wayfare-menders") == "cold"
+	Mender Corrin Vell: The instruments are the Menders'. The readings are not for sale.
+	=> END
+elif Reputation.band("wayfare-menders") == "warm" or Reputation.band("wayfare-menders") == "allied"
+	Mender Corrin Vell: The needle sits lower here than anywhere I have filed near Dom. Phrases fail outright. Keep to Notes, and keep them short.
+else
+	Mender Corrin Vell: Keep your voice to Notes out here.
+Mender Corrin Vell: I file the mere's Agreement reading for the Menders. One stake, one needle, one line in a ledger nobody at Dom wants to turn to.
+Mender Corrin Vell: Lately I file her sentence beside it. The needle and the sentence move together. I have not written down which one moves first.
+- "How low is the reading?"
+	Mender Corrin Vell: Lower than any instrument I have filed near Dom. A Phrase comes apart here before it leaves your mouth.
+	Mender Corrin Vell: Notes hold, mostly. Some come back altered, as if something patient repeated them to see how they fit. That is the part I underline.
+	=> END
+- "Is it safe to be posted here?"
+	Mender Corrin Vell: Safe is a word for the ford country. Here you count what the water takes and you make sure it is not you.
+	Mender Corrin Vell: The Watcher has stood on that stilt longer than any Mender would be allowed to. Say that to the elders, not to me.
+	=> END
+- "I will keep to the landing."
+	Mender Corrin Vell: If the water answers, do not answer back.
+	=> END

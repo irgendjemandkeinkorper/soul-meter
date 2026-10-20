@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://gx8sua7wpyab"
+path="res://.godot/imported/kesselford.dialogue-1db616c9aec45b8500b408175519f327.tres"
+
+[deps]
+
+source_file="res://dialogue/locations/kesselford.dialogue"
+dest_files=["res://.godot/imported/kesselford.dialogue-1db616c9aec45b8500b408175519f327.tres"]
+
+[params]
+
+defaults=true

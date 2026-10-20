@@ -139,7 +139,10 @@ func test_townsfolk_spawn_from_the_ashlaren_roster_at_their_anchors() -> void:
 		# Generated townsfolk carry their roster id as metadata (see TownNpcSpawner).
 		var npc_id := str(npc.get_meta(&"npc_id", ""))
 		seen.append(npc_id)
-		assert_str(npc.dialogue_path).is_equal("res://dialogue/ashlaren_townsfolk.dialogue")
+		# C25 (#262): the authored location file wins per title, the generated one is the fallback.
+		assert_str(npc.dialogue_path).is_equal(
+			NpcRoster.dialogue_route("ashlaren", "res://dialogue/ashlaren_townsfolk.dialogue", npc.dialogue_start)
+		)
 		assert_bool(FileAccess.file_exists(npc.dialogue_path)).is_true()
 		var placement: Dictionary = placements.get(npc_id, {})
 		var anchor := town.find_child(str(placement.get("anchor", "")), true, false) as Node2D

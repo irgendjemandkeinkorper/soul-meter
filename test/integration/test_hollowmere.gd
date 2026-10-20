@@ -172,7 +172,10 @@ func test_the_posted_outsiders_spawn_from_the_hollowmere_roster_at_their_anchors
 			continue
 		var npc_id := str(npc.get_meta(&"npc_id", ""))
 		seen.append(npc_id)
-		assert_str(npc.dialogue_path).is_equal("res://dialogue/hollowmere_townsfolk.dialogue")
+		# C25 (#262): the authored location file wins per title, the generated one is the fallback.
+		assert_str(npc.dialogue_path).is_equal(
+			NpcRoster.dialogue_route("hollowmere", "res://dialogue/hollowmere_townsfolk.dialogue", npc.dialogue_start)
+		)
 		assert_bool(FileAccess.file_exists(npc.dialogue_path)).is_true()
 		var placement: Dictionary = placements.get(npc_id, {})
 		var anchor := mere.find_child(str(placement.get("anchor", "")), true, false) as Node2D

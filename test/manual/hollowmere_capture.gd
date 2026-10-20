@@ -120,6 +120,36 @@ func _drive() -> bool:
 		road.scene_path, WorldClock.phase(), player.global_position, _marker("SpawnFromHollowmere"),
 	])
 	await _shoot("05-dorthkor-road-arrival-from-mere.jpg")
+
+	# C25 (#262): over the track once more, then open the Mender's talk, which must come from the
+	# authored dialogue/locations/hollowmere.dialogue rather than the generated placeholder.
+	var track_again := _exit("ReedTrack")
+	if track_again == null:
+		return _fail("the Dorthkor Road lost its ReedTrack exit on the way back")
+	player.global_position = track_again.global_position
+	if not await _wait_for(_arrived.bind(mere.scene_path), 60.0):
+		return _fail("ReedTrack never arrived at Hollowmere a second time")
+	player = _player()
+	await _frames(20)
+	var mender := get_tree().current_scene.find_child("HollowmereMender", true, false) as NPC
+	if mender == null:
+		return _fail("HollowmereMender did not spawn")
+	_note("mender route: %s > %s" % [mender.dialogue_path, mender.dialogue_start])
+	player.global_position = mender.global_position + Vector2(0, 48)
+	await _frames(20)
+	var started: Array[String] = []
+	DialogueManager.dialogue_started.connect(
+		func(resource: DialogueResource) -> void: started.append(resource.resource_path)
+	)
+	var press := InputEventAction.new()
+	press.action = "interact"
+	press.pressed = true
+	Input.parse_input_event(press)
+	await _frames(40)
+	_note("dialogue started from: %s" % ", ".join(started))
+	await _shoot("06-hollowmere-mender-talk.jpg")
+	if started.is_empty() or not started[0].ends_with("dialogue/locations/hollowmere.dialogue"):
+		return _fail("the Mender did not open the authored location dialogue")
 	return true
 
 

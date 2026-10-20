@@ -188,7 +188,10 @@ func test_the_camp_spawns_from_the_long_verge_roster_at_its_anchors() -> void:
 			continue
 		var npc_id := str(npc.get_meta(&"npc_id", ""))
 		seen.append(npc_id)
-		assert_str(npc.dialogue_path).is_equal("res://dialogue/long_verge_townsfolk.dialogue")
+		# C25 (#262): the authored location file wins per title, the generated one is the fallback.
+		assert_str(npc.dialogue_path).is_equal(
+			NpcRoster.dialogue_route("long_verge", "res://dialogue/long_verge_townsfolk.dialogue", npc.dialogue_start)
+		)
 		assert_bool(FileAccess.file_exists(npc.dialogue_path)).is_true()
 		var placement: Dictionary = placements.get(npc_id, {})
 		var anchor := verge.find_child(str(placement.get("anchor", "")), true, false) as Node2D
