@@ -280,7 +280,8 @@ command with `WeftluminSceneCreator.command(params, package, errors)`.
   `TownNpcSpawner`. The spawner resolves its town from the scene through
   `FastTravelRegistry.by_scene()`, or else through the baked location the scene is when
   `NpcRoster.town_ids()` lists it (C3 / #240: The Long Verge is a wilds road with a Company camp,
-  a roster town that is not a fast-travel hub), and reads that town's generated roster and
+  a roster town that is not a fast-travel hub; C4 / #241: Hollowmere is the same pattern, three
+  posted outsiders at a drowned mere off the Dorthkor Road), and reads that town's generated roster and
   placements (`NpcRoster.roster_path()` / `placements_path()`); in a scene with no roster it
   stays idle. Characters whose `placement_anchor` row names the town (`tools/seed_town_npcs.gd`
   `PLACEMENT_ANCHORS`, `"town"`; the town id is the `canon/<town>/` directory and the location
@@ -298,6 +299,10 @@ command with `WeftluminSceneCreator.command(params, package, errors)`.
     `tools/seed_town_npcs.gd` and the vendor row in `tools/seed_town_vendors.gd` (then
     `scripts/seed_town_npcs.sh` / the vendor seeder and `regen --write`), plus
     `BuildingInterior.VENDORS_BY_INTERIOR`.
+  - A town's first roster adds a generated `dialogue/<town>_townsfolk.dialogue`; run one headless
+    import (`godot --headless --path . --import`) so its `.import` sidecar and the suite-loadable
+    resource exist, and commit the sidecar beside it (C4 / #241 hit `No loader found for resource`
+    in `test_dom_npc_roster` until the import ran).
   - The reverse travel exit lives in the other scene's log (Dom's `FordRoad` is two `add_node`
     commands on `res://world/starting_town.tscn` in the same package).
 

@@ -47,7 +47,7 @@ func test_load_returns_all_factions_with_unique_stable_ids() -> void:
 	var factions: Array[Dictionary] = SeedPandora.CanonReader.load("factions")
 	var stable_ids: Dictionary = {}
 
-	assert_int(factions.size()).is_equal(18)
+	assert_int(factions.size()).is_equal(19)
 	for faction: Dictionary in factions:
 		assert_str(faction.get("schema", "")).is_equal("weftlumin.faction.v1")
 		assert_str(faction.get("id", "")).is_not_empty()
@@ -685,9 +685,9 @@ func test_the_roster_loads_as_seventy_two_npc_characters() -> void:
 		if String(character["kind"]) == "npc":
 			npcs.append(character)
 
-	# Dom's sixty plus Kesselford's six (C1 / #238), Ashlaren's six (C2 / #239) and the Long
-	# Verge's five (C3 / #240).
-	assert_int(npcs.size()).is_equal(77)
+	# Dom's sixty plus Kesselford's six (C1 / #238), Ashlaren's six (C2 / #239), the Long
+	# Verge's five (C3 / #240) and Hollowmere's three (C4 / #241).
+	assert_int(npcs.size()).is_equal(80)
 
 
 func test_character_order_is_authored_rather_than_alphabetical() -> void:

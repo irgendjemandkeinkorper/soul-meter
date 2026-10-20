@@ -17592,6 +17592,31 @@
 						"value": ""
 					}
 				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "556.0",
+				"_index": 0,
+				"_name": "the-widow-watchers",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Widow-Watchers"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Verspch"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Verspch's old Giant devotional strand, the mortal keepers of the Widowed Tides' rites, quietly consulted as the unanswering storms spiral in."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "widow-watchers"
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -19223,7 +19248,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 555.0
+			"default": 556.0
 		}
 	},
 	"_version": 1

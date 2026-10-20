@@ -12,6 +12,9 @@ const KESSELFORD_ID: StringName = &"kesselford"
 const ASHLAREN_ID: StringName = &"ashlaren"
 ## Location 7 (C3 / #240): the high moor-road between Dom and the ford country. Wilds, not a hub.
 const LONG_VERGE_ID: StringName = &"long-verge"
+## Location 8 (C4 / #241): the drowned mere past the Dorthkor Road, where the front's weather is
+## read early. Wilds, not a hub.
+const HOLLOWMERE_ID: StringName = &"hollowmere"
 
 
 static func all_locations() -> Array[Dictionary]:
@@ -90,6 +93,13 @@ static func _location_rows() -> Array[Dictionary]:
 			"id": LONG_VERGE_ID,
 			"scene_path": LocationRegistry.LONG_VERGE.scene_path,
 			"map_coordinate": Vector2(0.32, 0.4),
+		},
+		{
+			# The quiet mere on the front-ward side of the wilds (vault proposal): off the Dorthkor
+			# Road, short of the Wound Lip, where the Agreement reads lower than anywhere near Dom.
+			"id": HOLLOWMERE_ID,
+			"scene_path": LocationRegistry.HOLLOWMERE.scene_path,
+			"map_coordinate": Vector2(0.78, 0.32),
 		},
 	]
 
@@ -217,6 +227,22 @@ static func _route_rows() -> Array[Dictionary]:
 			"encounter_table": [
 				{"encounter_id": &"bog-wight", "weight": 1},
 				{"encounter_id": &"loam-boar", "weight": 1},
+			],
+			"min_encounters": 0,
+			"max_encounters": 1,
+		},
+		{
+			# PROVISIONAL (C4 / #241): the reed track off the Dorthkor Road down to the mere. Short,
+			# and the dead walk the shallows: the thin here is deeper than on any road near Dom.
+			"id": &"dorthkor-road-hollowmere",
+			"origin_id": DORTHKOR_ROAD_ID,
+			"destination_id": HOLLOWMERE_ID,
+			"steps": 5,
+			"phases_cost": 1,
+			"risk_tier": &"high",
+			"risk_modifier": 15.0,
+			"encounter_table": [
+				{"encounter_id": &"bog-wight", "weight": 3},
 			],
 			"min_encounters": 0,
 			"max_encounters": 1,

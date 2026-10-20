@@ -80,6 +80,9 @@ const ASHLAREN_MILLHOUSE: LocationDefinition = preload(
 # The Long Verge, location 7 (C3 / #240): the Companies' moor-road between Dom and Kesselford,
 # baked by the Weftlumin `long-verge` package. Wilds, not a hub: no fast-travel row.
 const LONG_VERGE: LocationDefinition = preload("res://world/locations/long_verge.tres")
+# Hollowmere, location 8 (C4 / #241): the drowned mere off the Dorthkor Road on the front-ward
+# wilds, baked by the Weftlumin `hollowmere` package. Wilds, not a hub: no fast-travel row.
+const HOLLOWMERE: LocationDefinition = preload("res://world/locations/hollowmere.tres")
 ## The baked index (`tools/generate_locations.gd`, E3.3a / #341). It owns WHICH locations exist;
 ## the named consts above stay for code references and resolve to the same cached resources.
 const INDEX_PATH := "res://data/generated/location_index.json"
