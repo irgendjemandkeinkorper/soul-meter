@@ -106,6 +106,76 @@ It stops at the first failed step, and the report's `pr.executed` shows where. T
 
 Pushing and opening a PR are outward-facing. Run `--execute` only when the issue or the owner authorizes it. Otherwise hand off the dry-run plan.
 
+## 5. A new location, end to end
+
+Hollowmere (`7b39b9a7`, C4 / #241) is the current worked example; the Long Verge (`9d13d10f`) and
+the two hubs (#501, #502) have the same shape. `docs/weftlumin.md` § "New scene" lists what stays
+hand-wired; this is the order of work and the refusals you will meet.
+
+1. **Authority.** An owner-approved vault proposal (`../dramgid-vault/proposals/locations/<id>.md`)
+   plus its issue. Every name, number and line beyond the proposal is PROVISIONAL: list it under
+   items 4 (names and values) and 9 (prose) of `docs/owner-decisions.md`, never resolve it.
+2. **Package** (outside the repository). `campaign.json` with kinds
+   `["scenes", "locations", "characters", "spawn_tables"]`. The log opens with one `new_scene`
+   (`template: "field"`, `size_cells: [105, 105]` is the 3000×1800 room; the root `<PascalId>`
+   carries `chapter_location.gd`, `Player`, `SpawnDefault`, `OutdoorTownsfolk` and
+   `<PascalId>Dressing/{GroundDetails,SoftDetails,SolidProps}`), then `add_node` ops: an
+   `addition` is a dressing prop (`layer`, `name`, `texture`, `position`, `scale`, optional
+   `collision`, `flip_h`; `SolidProps` bake to a `StaticBody2D`), an `instance` is a placeable
+   (`spawn_marker`, `spawn_slot`, `travel_exit`, `hostile`, `npc`, `chest`) with exports as
+   `var_to_str` text, for example `"spawn_id": "&\"from_hollowmere\""`. The neighbour's reverse
+   exit and spawn marker are `add_node` ops in the same log whose target scene is
+   `res://world/<neighbour>.tscn`. Write a generator script for a log of a hundred ops; ids are
+   ULIDs (10 time, 6 sequence, 10 random Crockford characters) that increase line by line.
+   Canon documents: `locations/<id>.json` (accord and tier from `docs/thinning-gradient.md`,
+   tiers 0–3 read 95/85/70/55; `respawn_policy`; `spawns` with `from_<neighbour>`), an overlay
+   `locations/<neighbour>.json` that only adds `from_<id>` to its spawns, one
+   `characters/<id>-<role>.json` per NPC, and `spawn_tables/<id>-ambient.json` whose slots name
+   `SpawnSlot*` markers and committed archetypes.
+   - Character `order` is global and contiguous across all locations (`test_canon_reader` pins
+     it); after Hollowmere the next free order is 86.
+   - `faction_id` must be a canon faction (`canon/dom/factions/<id>.json`); add the document
+     first when the vault faction is not seeded yet, or the generator asserts.
+   - At most one routined NPC per location (`NpcRoutines.ROUTINE_CAP`); the others declare
+     `phase_agnostic: true`. Keep one phase-agnostic outdoor NPC for the prompt-range test.
+3. **Render, validate, bake, regen.** Keep the log beside the package, not inside it:
+
+   ```bash
+   W apply    $PKG $LOG                 # writes $PKG/commands.jsonl and $PKG/scratch/world/*.tscn
+   cp $PKG/scratch/world/<id>.tscn $PKG/scenes/<id>.tscn   # validate needs the rendered scene for a scene_path that does not exist yet
+   W validate $PKG
+   W bake     $PKG --write              # scene, neighbour patch, canon/<id>/, .tres, location_index.json, lint
+   W regen    --write                   # Pandora seed, rosters, placements, <id>_townsfolk.dialogue, FactionIds / NpcIds
+   ```
+
+   A second `bake --write` against the already patched neighbour refuses with `pre_state_drift`;
+   `git checkout -- world/<neighbour>.tscn`, delete the baked outputs, bake again. The patch is
+   byte-identical across bakes.
+4. **Hand-wire**, in this order, because the registry preloads need the baked `.tres`:
+   `LocationRegistry.<ID>`, `WorldMapRegistry` location and route rows (PROVISIONAL numbers),
+   `tools/seed_town_npcs.gd` town, name, placement-anchor rows and the district greeting and
+   farewell pair, no `FastTravelRegistry._HUBS` row for a wilds roster town. Then
+   `godot --headless --path . --import`: the new `.dialogue` sidecar, the new scripts' `.uid`
+   files and the `locale/translations_pot_files` entry are all import output; commit them.
+5. **Verify.** `test/integration/test_<id>.gd` from `test_hollowmere.gd` (scene contract,
+   registries, spawn-table anchors, reverse exit, roster spawn at anchors, talk prompt, movement).
+   Bump the merged count literals: `test_canon_reader` (factions), `test_dom_npc_roster` and
+   `test_weftlumin_characters_kind` (NPCs, `npcs_by_hub`), `test_weftlumin_character_panel`
+   (rows), `test_location_registry` (locations), `test_weftlumin_locations_kind` (`MACRO_IDS`),
+   `test_world_map_registry` (locations, routes). Run the affected suites,
+   `scripts/check_generated_data.sh`, `tools/quest_audit.gd`, then a capture
+   (`test/manual/<id>_capture.gd`, a temporary autoload under Xvfb that walks the real exits) and
+   look at the frames. Dom's exits gate differently: `NorthRoad` reads the single
+   `required_flag = "chapter_dorthkor_commissioned"`, the wilds exits accept any of
+   `tutorial_road_open` / `chapter_one_free_roam`.
+6. **Prose.** The generated `<id>_townsfolk.dialogue` is a placeholder. Real ambient talk goes
+   in `dialogue/locations/<id>.dialogue` under the generated titles (C25 / #262): the canon
+   `dialogue_hostile` / `dialogue_warm` lines verbatim as the band gates, no quest content, the
+   `PROVISIONAL — CANON REVIEW REQUIRED` header; `test/unit/test_location_dialogue.gd` holds it to
+   that.
+7. **Commit** on the content branch with `Closes #N` and the handoff below; `pr --execute` only
+   when the issue authorizes a push.
+
 ## Never
 
 - **Never hand-edit what the bake owns.** That covers `.tscn` patches, `canon/`, `world/locations/*.tres`, `data.pandora` and `data/generated/*`. Change the package and re-bake. Pandora is never written from generated artifacts.
