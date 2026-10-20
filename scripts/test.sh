@@ -7,6 +7,10 @@ godot_bin="${GODOT_BIN:-godot}"
 test_data_dir="${SOUL_METER_TEST_DATA_DIR:-/tmp/soul-meter-godot-data}"
 mkdir -p "$test_data_dir"
 export XDG_DATA_HOME="$test_data_dir"
+# The suites that write recorder sessions (test_weftlumin_panels, test_dev_console_commands,
+# test_combat_lab_inert) read this variable directly and have no fallback: left unset, they
+# write into the working directory (an untracked weftlumin-console/ in the repo root).
+export SOUL_METER_TEST_DATA_DIR="$test_data_dir"
 
 # Some display backends emit errors before gdUnit4 starts when XDG_RUNTIME_DIR is
 # absent. Give test runs a private, permission-correct runtime directory while
