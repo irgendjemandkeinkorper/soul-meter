@@ -10,6 +10,7 @@ var original_quests: Dictionary
 var original_soul_meter: float
 var original_autosave_reason: String
 var original_party: Array[PartyMember] = []
+var original_zhavar: Dictionary = {}
 
 
 func before_test() -> void:
@@ -20,6 +21,12 @@ func before_test() -> void:
 	original_quests = QuestRegistry.to_dict().duplicate(true)
 	original_soul_meter = GameState.soul_meter
 	original_autosave_reason = SaveGame._pending_autosave_reason
+	# resolve_broken_muster() raises the wilds Zhavar rung (FR-308) and a rung never
+	# lowers, so the suite starts from the quiet ladder and hands back what it inherited;
+	# otherwise every later suite in a whole-tree run meets a tolling wilds (the Dom
+	# rumor-carriers rewire onto dom_zhavar_rumors.dialogue, test_town_townsfolk).
+	original_zhavar = SaveGame.zhavar.duplicate(true)
+	SaveGame.zhavar.clear()
 	GameState.flags.clear()
 	Reputation.from_dict({})
 	Renown.from_dict({})
@@ -35,7 +42,11 @@ func after_test() -> void:
 	Reputation.from_dict(original_reputation)
 	Renown.from_dict(original_renown)
 	SaveGame._pending_autosave_reason = original_autosave_reason
+	SaveGame.zhavar = original_zhavar.duplicate(true)
 	GameState.party = original_party
+	# Granting quest rewards queues a full-screen reward reveal on UIManager; drop it so it
+	# cannot swallow a later suite's focus or clicks.
+	UIManager.reset_reward_reveals()
 
 
 ## #285 / game-identity ruling 9: XP comes from combat AND quests. Before this,

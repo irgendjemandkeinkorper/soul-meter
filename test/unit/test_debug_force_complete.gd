@@ -34,6 +34,9 @@ func after_test() -> void:
 	Renown.from_dict(_original_renown)
 	QuestRegistry.reset()
 	QuestRegistry.from_dict(_original_quests)
+	# Granting quest rewards queues a full-screen reward reveal on UIManager; drop it so it
+	# cannot swallow a later suite's focus or clicks.
+	UIManager.reset_reward_reveals()
 
 
 func test_fetch_quest_grants_items_and_completes_with_reward() -> void:

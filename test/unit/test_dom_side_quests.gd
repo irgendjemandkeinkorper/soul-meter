@@ -26,6 +26,9 @@ func after_test() -> void:
 	Reputation.from_dict(original_reputation)
 	QuestRegistry.reset()
 	QuestRegistry.from_dict(original_quests)
+	# Granting quest rewards queues a full-screen reward reveal on UIManager; drop it so it
+	# cannot swallow a later suite's focus or clicks.
+	UIManager.reset_reward_reveals()
 
 
 func test_ten_side_quests_are_registered_to_authored_npc_stable_ids() -> void:

@@ -41,6 +41,9 @@ func after_test() -> void:
 	PlaytestRecorder.session_root_override = _original_recorder_root
 	PlaytestRecorder.force_enabled_for_tests = _original_recorder_force
 	get_tree().paused = false
+	# Granting quest rewards queues a full-screen reward reveal on UIManager; drop it so it
+	# cannot swallow a later suite's focus or clicks.
+	UIManager.reset_reward_reveals()
 
 
 func test_flag_flags_soul_and_gp_commands_use_game_state_public_apis() -> void:

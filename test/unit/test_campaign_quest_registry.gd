@@ -18,6 +18,9 @@ func after_test() -> void:
 	QuestRegistry.clear_runtime_quests()
 	QuestRegistry.reset()
 	QuestRegistry.from_dict(_original_quests)
+	# Granting quest rewards queues a full-screen reward reveal on UIManager; drop it so it
+	# cannot swallow a later suite's focus or clicks.
+	UIManager.reset_reward_reveals()
 
 
 func test_quest_only_replacement_is_atomic_and_legacy_clear_still_clears_both() -> void:

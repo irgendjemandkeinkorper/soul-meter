@@ -89,6 +89,9 @@ func after_test() -> void:
 	GameFlow._target_scene = original_flow_target_scene
 	GameFlow._target_spawn_id = original_flow_target_spawn
 	GameFlow.travel_plan = original_travel_plan
+	# Granting quest rewards queues a full-screen reward reveal on UIManager; drop it so it
+	# cannot swallow a later suite's focus or clicks.
+	UIManager.reset_reward_reveals()
 
 
 func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void:
