@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://actors/building_door/building_transition_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"ashlaren_weighing_hall_exit"
+building_id = &"ashlaren_weighing_hall"
+building_name = "Factors' Weighing Hall"
+direction = "exit"
+source_scene = "res://world/interiors/ashlaren_weighing_hall.tscn"
+source_anchor = &"Room/ExitDoor"
+source_position = Vector2(960, 1200)
+destination_scene = "res://world/ashlaren.tscn"
+destination_location_id = &"ashlaren"
+spawn_id = &"from_ashlaren_weighing_hall"
+destination_spawn_position = Vector2(1150, 790)
+prompt_text = "E — RETURN"

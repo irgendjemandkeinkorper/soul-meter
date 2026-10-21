@@ -8,8 +8,9 @@ func test_committed_generated_data_matches_pandora() -> void:
 		Pandora.load_data()
 	var result: Dictionary = Generator.generate(true)
 	assert_bool(result.drift).is_false()
-	# Twelve Dom vendors plus Kesselford's Ford Chandlery (C1 / #238).
-	assert_int(result.vendor_count).is_equal(13)
+	# Twelve Dom vendors plus Kesselford's Ford Chandlery (C1 / #238) and Ashlaren's Flat Bell
+	# (C2 / #239).
+	assert_int(result.vendor_count).is_equal(14)
 	assert_int(result.count).is_equal(22)
 
 

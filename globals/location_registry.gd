@@ -69,6 +69,14 @@ const KESSELFORD_WAYHOUSE: LocationDefinition = preload(
 const KESSELFORD_CHANDLERY: LocationDefinition = preload(
 	"res://world/locations/interiors/kesselford_chandlery.tres"
 )
+# Ashlaren, hub 3 (C2 / #239): baked by the Weftlumin `ashlaren` package.
+const ASHLAREN: LocationDefinition = preload("res://world/locations/ashlaren.tres")
+const ASHLAREN_WEIGHING_HALL: LocationDefinition = preload(
+	"res://world/locations/interiors/ashlaren_weighing_hall.tres"
+)
+const ASHLAREN_MILLHOUSE: LocationDefinition = preload(
+	"res://world/locations/interiors/ashlaren_millhouse.tres"
+)
 ## The baked index (`tools/generate_locations.gd`, E3.3a / #341). It owns WHICH locations exist;
 ## the named consts above stay for code references and resolve to the same cached resources.
 const INDEX_PATH := "res://data/generated/location_index.json"

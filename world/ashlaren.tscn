@@ -1,0 +1,494 @@
+[gd_scene load_steps=42 format=3]
+
+[ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
+[ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
+[ext_resource type="Texture2D" path="res://assets/generated/backgrounds/world/dom-town-terrain-v1.png" id="2_backdrop"]
+[ext_resource type="Script" path="res://world/isometric_blockout.gd" id="3_iso"]
+[ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="4_blocking_tiles"]
+[ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="5_blocking_layer"]
+[ext_resource type="Script" path="res://world/nav/combat_terrain_layer.gd" id="6_terrain"]
+[ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="7_player"]
+[ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
+[ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="9_hud"]
+[ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="10_townsfolk"]
+
+[ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="1_weftlumin"]
+
+[ext_resource type="PackedScene" path="res://actors/building_door/building_door.tscn" id="2_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://cxwbhb8wlct4j" path="res://assets/generated/sprites/world/dom-town-hall--building-facade.png" id="3_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://edybddken7dn" path="res://assets/generated/sprites/world/dom-lower-market--building-facade.png" id="4_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://dal3oafh1nxha" path="res://assets/generated/sprites/world/dom-bell-house--building-facade.png" id="5_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://bpty3kq81em1m" path="res://assets/generated/sprites/world/dom-notice-board--decorative.png" id="6_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://dgyog8x2tb5e6" path="res://assets/generated/sprites/world/dom-market-stall--decorative.png" id="7_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://btmgm4niby156" path="res://assets/generated/sprites/world/dom-cart--high.png" id="8_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://p8eeltnmwh4p" path="res://assets/generated/sprites/world/dom-wall--crenellated.png" id="9_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://c8ojlopqsjh05" path="res://assets/generated/sprites/world/dom-brazier-iron--street.png" id="10_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://cbcignudh2o0n" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="11_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://dxal5cq38purj" path="res://assets/generated/sprites/world/dom-tree--oak-a.png" id="12_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://rfbvliocflns" path="res://assets/generated/sprites/world/dom-tree--oak-b.png" id="13_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://degg0fmsjtmpi" path="res://assets/generated/sprites/world/dom-banner--green.png" id="14_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://cns08eyect4cy" path="res://assets/generated/sprites/world/dom-lantern--street.png" id="15_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://b6y1xsgnd0k5p" path="res://assets/generated/sprites/world/dom-stone-paving--tile.png" id="16_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://8xcl3tlov04s" path="res://assets/generated/sprites/world/dom-cobble-edge--outer.png" id="17_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://b5vm6rdghg77h" path="res://assets/generated/sprites/world/dom-grass-tuft--decorative.png" id="18_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://cctyf6wk7gxkg" path="res://assets/generated/sprites/world/dom-flower-cluster--decorative.png" id="19_weftlumin"]
+
+[sub_resource type="RectangleShape2D" id="shape_h"]
+size = Vector2(3000, 40)
+
+[sub_resource type="RectangleShape2D" id="shape_v"]
+size = Vector2(40, 1800)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin1"]
+size = Vector2(470, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin2"]
+size = Vector2(380, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin3"]
+size = Vector2(90, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin4"]
+size = Vector2(130, 36)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin5"]
+size = Vector2(160, 50)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin6"]
+size = Vector2(200, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin7"]
+size = Vector2(60, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin8"]
+size = Vector2(110, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin9"]
+size = Vector2(90, 34)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin10"]
+size = Vector2(70, 30)
+
+[node name="Ashlaren" type="Node2D"]
+texture_filter = 2
+y_sort_enabled = true
+script = ExtResource("0_location")
+
+[node name="FieldMap" type="Node2D" parent="."]
+script = ExtResource("1_field_map")
+
+[node name="TerrainBackdrop" type="Sprite2D" parent="."]
+z_index = -15
+position = Vector2(1500, 900)
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("2_backdrop")
+
+[node name="IsometricGround" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(1500, -780)
+script = ExtResource("3_iso")
+map_size = Vector2i(105, 105)
+ground_style = 2
+road_axis = 0
+
+[node name="Blocking" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(1500, -780)
+tile_set = ExtResource("4_blocking_tiles")
+script = ExtResource("5_blocking_layer")
+
+[node name="Terrain" type="TileMapLayer" parent="."]
+visible = false
+script = ExtResource("6_terrain")
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="ColTop" type="CollisionShape2D" parent="Walls"]
+position = Vector2(1500, 20)
+shape = SubResource("shape_h")
+
+[node name="ColBottom" type="CollisionShape2D" parent="Walls"]
+position = Vector2(1500, 1780)
+shape = SubResource("shape_h")
+
+[node name="ColLeft" type="CollisionShape2D" parent="Walls"]
+position = Vector2(20, 900)
+shape = SubResource("shape_v")
+
+[node name="ColRight" type="CollisionShape2D" parent="Walls"]
+position = Vector2(2980, 900)
+shape = SubResource("shape_v")
+
+[node name="Player" parent="." instance=ExtResource("7_player")]
+position = Vector2(1500, 900)
+camera_bounds = Rect2i(0, 0, 3000, 1800)
+
+[node name="PartyFollowers" parent="." instance=ExtResource("8_followers")]
+
+[node name="SpawnDefault" type="Marker2D" parent="."]
+position = Vector2(180, 900)
+
+[node name="FieldHUD" parent="." instance=ExtResource("9_hud")]
+
+[node name="OutdoorTownsfolk" type="Node" parent="."]
+script = ExtResource("10_townsfolk")
+
+[node name="AshlarenDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="GroundDetails" type="Node2D" parent="AshlarenDressing"]
+z_index = -2
+
+[node name="PavingGrainRoad01" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(420, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="PavingGrainRoad02" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(676, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="PavingGrainRoad03" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(932, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="PavingGrainRoad04" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(1188, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="PavingGrainRoad05" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(1444, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="PavingGrainRoad06" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(1700, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="PavingGrainRoad07" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(1956, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="PavingGrainRoad08" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(2212, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="PavingGrainRoad09" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(2468, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="PavingGrainRoad10" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(2724, 900)
+scale = Vector2(1, 0.7)
+texture = ExtResource("16_weftlumin")
+
+[node name="CobbleMarket01" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(1200, 1050)
+texture = ExtResource("17_weftlumin")
+
+[node name="CobbleMarket02" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(1800, 1050)
+texture = ExtResource("17_weftlumin")
+
+[node name="CobbleMarket03" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(1200, 1260)
+texture = ExtResource("17_weftlumin")
+
+[node name="CobbleMarket04" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(1800, 1260)
+texture = ExtResource("17_weftlumin")
+
+[node name="GrassTuft01" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(700, 400)
+texture = ExtResource("18_weftlumin")
+
+[node name="GrassTuft02" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(900, 1500)
+texture = ExtResource("18_weftlumin")
+
+[node name="GrassTuft03" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(2300, 350)
+texture = ExtResource("18_weftlumin")
+
+[node name="GrassTuft04" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(2700, 800)
+texture = ExtResource("18_weftlumin")
+
+[node name="GrassTuft05" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(600, 1250)
+texture = ExtResource("18_weftlumin")
+
+[node name="GrassTuft06" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(2200, 1650)
+texture = ExtResource("18_weftlumin")
+
+[node name="FlowerCluster01" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(800, 600)
+texture = ExtResource("19_weftlumin")
+
+[node name="FlowerCluster02" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(2650, 450)
+texture = ExtResource("19_weftlumin")
+
+[node name="FlowerCluster03" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(750, 1650)
+texture = ExtResource("19_weftlumin")
+
+[node name="FlowerCluster04" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
+position = Vector2(2100, 1450)
+texture = ExtResource("19_weftlumin")
+
+[node name="SoftDetails" type="Node2D" parent="AshlarenDressing"]
+y_sort_enabled = true
+
+[node name="FactorsBanner" type="Sprite2D" parent="AshlarenDressing/SoftDetails"]
+position = Vector2(980, 720)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("14_weftlumin")
+offset = Vector2(0, -102)
+
+[node name="LanternHallWest" type="Sprite2D" parent="AshlarenDressing/SoftDetails"]
+position = Vector2(1000, 712)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("15_weftlumin")
+offset = Vector2(0, -118)
+
+[node name="LanternHallEast" type="Sprite2D" parent="AshlarenDressing/SoftDetails"]
+position = Vector2(1300, 712)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("15_weftlumin")
+offset = Vector2(0, -118)
+
+[node name="LanternMillWest" type="Sprite2D" parent="AshlarenDressing/SoftDetails"]
+position = Vector2(1750, 712)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("15_weftlumin")
+offset = Vector2(0, -118)
+
+[node name="LanternMillEast" type="Sprite2D" parent="AshlarenDressing/SoftDetails"]
+position = Vector2(2050, 712)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("15_weftlumin")
+offset = Vector2(0, -118)
+
+[node name="SolidProps" type="Node2D" parent="AshlarenDressing"]
+y_sort_enabled = true
+[node name="WeighingHallFacade" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(1150, 700)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/WeighingHallFacade"]
+texture = ExtResource("3_weftlumin")
+offset = Vector2(0, -384)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WeighingHallFacade"]
+shape = SubResource("RectangleShape2D_weftlumin1")
+
+[node name="MillhouseFacade" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(1900, 700)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/MillhouseFacade"]
+texture = ExtResource("4_weftlumin")
+offset = Vector2(0, -384)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/MillhouseFacade"]
+shape = SubResource("RectangleShape2D_weftlumin1")
+
+[node name="ShrineBell" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(2500, 600)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/ShrineBell"]
+texture = ExtResource("5_weftlumin")
+offset = Vector2(0, -307)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/ShrineBell"]
+shape = SubResource("RectangleShape2D_weftlumin2")
+
+[node name="WeighingBoard" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(1525, 780)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/WeighingBoard"]
+texture = ExtResource("6_weftlumin")
+offset = Vector2(0, -128)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WeighingBoard"]
+shape = SubResource("RectangleShape2D_weftlumin3")
+
+[node name="MarketStallWest" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(1350, 1150)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/MarketStallWest"]
+texture = ExtResource("7_weftlumin")
+offset = Vector2(0, -128)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/MarketStallWest"]
+shape = SubResource("RectangleShape2D_weftlumin4")
+
+[node name="MarketStallEast" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(1650, 1150)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/MarketStallEast"]
+texture = ExtResource("7_weftlumin")
+offset = Vector2(0, -128)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/MarketStallEast"]
+shape = SubResource("RectangleShape2D_weftlumin4")
+
+[node name="GrainCart" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(2250, 1000)
+scale = Vector2(0.6, 0.6)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/GrainCart"]
+texture = ExtResource("8_weftlumin")
+offset = Vector2(0.5, -124)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/GrainCart"]
+shape = SubResource("RectangleShape2D_weftlumin5")
+
+[node name="WarehouseWallWest" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(2480, 1180)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/WarehouseWallWest"]
+texture = ExtResource("9_weftlumin")
+offset = Vector2(0, -128)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WarehouseWallWest"]
+shape = SubResource("RectangleShape2D_weftlumin6")
+
+[node name="WarehouseWallEast" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(2736, 1180)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/WarehouseWallEast"]
+texture = ExtResource("9_weftlumin")
+offset = Vector2(0, -128)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WarehouseWallEast"]
+shape = SubResource("RectangleShape2D_weftlumin6")
+
+[node name="YardBrazier" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(2300, 1300)
+scale = Vector2(0.5, 0.5)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/YardBrazier"]
+texture = ExtResource("10_weftlumin")
+offset = Vector2(0, -64)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/YardBrazier"]
+shape = SubResource("RectangleShape2D_weftlumin7")
+
+[node name="SealedSackCrates" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(2600, 1330)
+scale = Vector2(0.6, 0.6)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/SealedSackCrates"]
+texture = ExtResource("11_weftlumin")
+offset = Vector2(0, -77)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/SealedSackCrates"]
+shape = SubResource("RectangleShape2D_weftlumin8")
+
+[node name="YardCrates" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(2440, 1290)
+scale = Vector2(0.5, 0.5)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/YardCrates"]
+texture = ExtResource("11_weftlumin")
+offset = Vector2(0, -64)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/YardCrates"]
+shape = SubResource("RectangleShape2D_weftlumin9")
+
+[node name="OakNorthWest" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(420, 330)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/OakNorthWest"]
+texture = ExtResource("12_weftlumin")
+offset = Vector2(0, -205)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/OakNorthWest"]
+shape = SubResource("RectangleShape2D_weftlumin10")
+
+[node name="OakSouthWest" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(460, 1560)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/OakSouthWest"]
+texture = ExtResource("13_weftlumin")
+offset = Vector2(0, -205)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/OakSouthWest"]
+shape = SubResource("RectangleShape2D_weftlumin10")
+
+[node name="OakNorthEast" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(2840, 260)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/OakNorthEast"]
+texture = ExtResource("13_weftlumin")
+offset = Vector2(0, -205)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/OakNorthEast"]
+shape = SubResource("RectangleShape2D_weftlumin10")
+
+[node name="OakSouthEast" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
+position = Vector2(2860, 1700)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="AshlarenDressing/SolidProps/OakSouthEast"]
+texture = ExtResource("12_weftlumin")
+offset = Vector2(0, -205)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/OakSouthEast"]
+shape = SubResource("RectangleShape2D_weftlumin10")
+
+[node name="SpawnFromKesselford" type="Marker2D" parent="."]
+position = Vector2(260, 900)
+
+[node name="SpawnFromAshlarenWeighingHall" type="Marker2D" parent="."]
+position = Vector2(1150, 790)
+
+[node name="SpawnFromAshlarenMillhouse" type="Marker2D" parent="."]
+position = Vector2(1900, 790)
+
+[node name="SpawnSlotFieldMargin" type="Marker2D" parent="."]
+position = Vector2(2900, 1450)
+
+[node name="RoadToKesselford" parent="." instance=ExtResource("1_weftlumin")]
+position = Vector2(60, 900)
+target_scene = "res://world/kesselford.tscn"
+label_text = "GRAIN ROAD TO KESSELFORD"
+spawn_id = &"from_ashlaren"
+
+[node name="WeighingHallDoor" parent="." instance=ExtResource("2_weftlumin")]
+position = Vector2(1150, 700)
+transition_id = &"ashlaren_weighing_hall_enter"
+
+[node name="MillhouseDoor" parent="." instance=ExtResource("2_weftlumin")]
+position = Vector2(1900, 700)
+transition_id = &"ashlaren_millhouse_enter"
+

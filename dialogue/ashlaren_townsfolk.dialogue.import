@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://qnn4arg8tih0"
+path="res://.godot/imported/ashlaren_townsfolk.dialogue-da84cb81e0bb0fa745ff41f9074956d4.tres"
+
+[deps]
+
+source_file="res://dialogue/ashlaren_townsfolk.dialogue"
+dest_files=["res://.godot/imported/ashlaren_townsfolk.dialogue-da84cb81e0bb0fa745ff41f9074956d4.tres"]
+
+[params]
+
+defaults=true

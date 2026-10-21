@@ -383,7 +383,11 @@ The **Spawns** bottom tab (E4.2, #346, architecture §4.10) edits the spawn tabl
   the anchor exists in the scene. It also applies the location's `respawn_policy` through
   `SpawnMath.policy_violations()` (`none` refuses every table; `limited` enforces its provisional
   bounds); a scene with no location document is `none`, as at runtime. An archetype missing from
-  the encounter catalog is a note, not an error.
+  the encounter catalog is a note, not an error. Inside a package, a table may name a scene the
+  same package creates with `new_scene` before the bake writes it: the rendered template under
+  `<package>/scenes/` plus the names the package's `add_node` commands place stand in for the
+  `.tscn`, and the package's own `locations/*.json` supply the `respawn_policy` ahead of canon
+  (C2 / #239; mirrors the locations kind).
 - **Editing.** Pick a table and a slot; edit the anchor, respawn days, pack size, the entries
   (`archetype_id = weight` or `empty = weight`, one per line) and the table's `max_alive` (0 = the
   policy default). Add slot gives the new slot the anchor `SpawnSlot<PascalCase id>`. Identity —

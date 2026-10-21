@@ -1,0 +1,18 @@
+{
+	"schema": "weftlumin.spawn_table.v1",
+	"id": "ashlaren-field-margin-ambient",
+	"scene_path": "res://world/ashlaren.tscn",
+	"slots": [
+		{
+			"id": "field-margin",
+			"anchor": "SpawnSlotFieldMargin",
+			"respawn_days": 3,
+			"entries": [
+				{"archetype_id": "loam-maddened-boar", "weight": 15},
+				{"empty": true, "weight": 85}
+			],
+			"pack_size": {"min": 1, "max": 1}
+		}
+	],
+	"caps": {"max_alive": 1}
+}

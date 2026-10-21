@@ -135,6 +135,19 @@ const KESSELFORD_CHANDLERY_ENTER: BuildingTransitionDefinition = preload(
 const KESSELFORD_CHANDLERY_EXIT: BuildingTransitionDefinition = preload(
 	"res://actors/building_door/transitions/kesselford_chandlery_exit.tres"
 )
+# Ashlaren (hub 3, C2 / #239): the Factors' weighing hall and the Flat Bell millhouse.
+const ASHLAREN_WEIGHING_HALL_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/ashlaren_weighing_hall_enter.tres"
+)
+const ASHLAREN_WEIGHING_HALL_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/ashlaren_weighing_hall_exit.tres"
+)
+const ASHLAREN_MILLHOUSE_ENTER: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/ashlaren_millhouse_enter.tres"
+)
+const ASHLAREN_MILLHOUSE_EXIT: BuildingTransitionDefinition = preload(
+	"res://actors/building_door/transitions/ashlaren_millhouse_exit.tres"
+)
 
 const ENTRIES: Array[BuildingTransitionDefinition] = [
 	REGISTRY_ARCHIVE_ENTER,
@@ -159,6 +172,8 @@ const ENTRIES: Array[BuildingTransitionDefinition] = [
 	LOWER_TRIAL_HALL_ENTER,
 	KESSELFORD_WAYHOUSE_ENTER,
 	KESSELFORD_CHANDLERY_ENTER,
+	ASHLAREN_WEIGHING_HALL_ENTER,
+	ASHLAREN_MILLHOUSE_ENTER,
 ]
 const EXITS: Array[BuildingTransitionDefinition] = [
 	REGISTRY_ARCHIVE_EXIT,
@@ -183,6 +198,8 @@ const EXITS: Array[BuildingTransitionDefinition] = [
 	LOWER_TRIAL_HALL_EXIT,
 	KESSELFORD_WAYHOUSE_EXIT,
 	KESSELFORD_CHANDLERY_EXIT,
+	ASHLAREN_WEIGHING_HALL_EXIT,
+	ASHLAREN_MILLHOUSE_EXIT,
 ]
 const ALL: Array[BuildingTransitionDefinition] = [
 	REGISTRY_ARCHIVE_ENTER,
@@ -229,6 +246,10 @@ const ALL: Array[BuildingTransitionDefinition] = [
 	KESSELFORD_WAYHOUSE_EXIT,
 	KESSELFORD_CHANDLERY_ENTER,
 	KESSELFORD_CHANDLERY_EXIT,
+	ASHLAREN_WEIGHING_HALL_ENTER,
+	ASHLAREN_WEIGHING_HALL_EXIT,
+	ASHLAREN_MILLHOUSE_ENTER,
+	ASHLAREN_MILLHOUSE_EXIT,
 ]
 
 

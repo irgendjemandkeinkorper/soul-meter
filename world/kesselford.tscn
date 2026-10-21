@@ -402,3 +402,12 @@ transition_id = &"kesselford_wayhouse_enter"
 position = Vector2(1900, 700)
 transition_id = &"kesselford_chandlery_enter"
 
+[node name="SpawnFromAshlaren" type="Marker2D" parent="."]
+position = Vector2(2760, 700)
+
+[node name="GrainRoad" parent="." instance=ExtResource("1_weftlumin")]
+position = Vector2(2940, 700)
+target_scene = "res://world/ashlaren.tscn"
+label_text = "GRAIN ROAD TO ASHLAREN"
+spawn_id = &"from_kesselford"
+

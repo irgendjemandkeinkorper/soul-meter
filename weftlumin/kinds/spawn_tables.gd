@@ -43,6 +43,8 @@ var canon_root: String = CANON_ROOT
 var _policies: Dictionary = {}
 var _policies_loaded: bool = false
 var _anchor_cache: Dictionary = {}
+## Package dir -> `scene_path` -> `respawn_policy` from that package's location documents.
+var _package_policy_cache: Dictionary = {}
 
 
 func _init() -> void:
@@ -131,7 +133,7 @@ func normalise(document: Dictionary, file: String, errors: Array[Dictionary]) ->
 	var scene_ok: bool = false
 	if not scene_path is String or not String(scene_path).begins_with("res://") or String(scene_path).get_extension() != "tscn":
 		errors.append(_error(file, "scene_path", "res:// path to a .tscn", "invalid_scene_path"))
-	elif not FileAccess.file_exists(scene_path):
+	elif not FileAccess.file_exists(scene_path) and _package_scene(file, String(scene_path)).is_empty():
 		errors.append(_error(file, "scene_path", "an existing scene", "missing_scene",
 			"Scene '%s' does not exist." % scene_path))
 	else:
@@ -143,7 +145,9 @@ func normalise(document: Dictionary, file: String, errors: Array[Dictionary]) ->
 	if not raw_slots is Array or (raw_slots as Array).is_empty():
 		errors.append(_error(file, "slots", "a non-empty array of slots", "invalid_slots"))
 	else:
-		var anchors: Dictionary = scene_anchors(String(scene_path)) if scene_ok else {}
+		var anchors: Dictionary = {}
+		if scene_ok:
+			anchors = scene_anchors(String(scene_path), _package_scene(file, String(scene_path)))
 		var seen_slots: Dictionary = {}
 		for index: int in (raw_slots as Array).size():
 			var raw_slot: Variant = (raw_slots as Array)[index]
@@ -179,9 +183,9 @@ func normalise(document: Dictionary, file: String, errors: Array[Dictionary]) ->
 	row["caps"] = caps
 
 	if errors.size() == error_count and scene_ok:
-		var policy: String = policy_for_scene(String(scene_path))
+		var policy: String = policy_for_scene(String(scene_path), _package_dir(file))
 		var violations: PackedStringArray = SpawnMath.policy_violations(policy, row)
-		if not has_location(String(scene_path)) and not violations.is_empty():
+		if not has_location(String(scene_path), _package_dir(file)) and not violations.is_empty():
 			violations = PackedStringArray([
 				"No location document targets %s, so SpawnDirector treats it as respawn_policy \"none\"." % scene_path
 			])
@@ -282,14 +286,18 @@ static func notes(row: Dictionary) -> Array[String]:
 # --- Scene and location lookups ------------------------------------------------------------
 
 
-## Names of every node in the scene file, plus `extra_anchors` for it. Read once per scene.
-func scene_anchors(scene_path: String) -> Dictionary:
+## Names of every node in the scene file, plus `extra_anchors` for it. Read once per scene. For a
+## scene the package creates (`package_scene`, see `_package_scene`), the rendered template's
+## nodes plus the ones the package's `add_node` commands place in it stand in for the file.
+func scene_anchors(scene_path: String, package_scene: String = "") -> Dictionary:
 	if not _anchor_cache.has(scene_path):
 		var names: Dictionary = {}
 		if FileAccess.file_exists(scene_path):
-			var document: TscnDocument = TscnDocument.parse(FileAccess.get_file_as_string(scene_path))
-			for node: Dictionary in document.nodes:
-				names[str((node["attributes"] as Dictionary).get("name", ""))] = true
+			_collect_node_names(scene_path, names)
+		elif not package_scene.is_empty():
+			_collect_node_names(package_scene, names)
+			for name: String in _package_added_names(package_scene):
+				names[name] = true
 		_anchor_cache[scene_path] = names
 	var result: Dictionary = (_anchor_cache[scene_path] as Dictionary).duplicate()
 	for extra: Variant in extra_anchors.get(scene_path, []):
@@ -297,24 +305,101 @@ func scene_anchors(scene_path: String) -> Dictionary:
 	return result
 
 
+static func _collect_node_names(scene_path: String, names: Dictionary) -> void:
+	var document: TscnDocument = TscnDocument.parse(FileAccess.get_file_as_string(scene_path))
+	for node: Dictionary in document.nodes:
+		names[str((node["attributes"] as Dictionary).get("name", ""))] = true
+
+
+## The Weftlumin package (outside `res://`) a `spawn_tables/<id>.json` document belongs to, or ""
+## for canon and test fixtures. Mirrors `WeftluminLocationsKind._package_creates` (C2 / #239).
+static func _package_dir(file: String) -> String:
+	var package: String = file.get_base_dir().get_base_dir()
+	if file.get_base_dir().get_file() != "spawn_tables" or package.is_empty() or package.begins_with("res://"):
+		return ""
+	return package
+
+
+## The package's rendered scene for `scene_path` when the package creates it with `new_scene`,
+## else "".
+static func _package_scene(file: String, scene_path: String) -> String:
+	var package: String = _package_dir(file)
+	if package.is_empty():
+		return ""
+	var rendered: String = package.path_join("scenes").path_join(scene_path.get_file())
+	return rendered if FileAccess.file_exists(rendered) else ""
+
+
+## `scene_path` -> `respawn_policy` from the package's own `locations/*.json`, which overlay canon
+## by id and reach it only when the bake writes. Read once per package.
+func _package_policies(package: String) -> Dictionary:
+	if package.is_empty():
+		return {}
+	if not _package_policy_cache.has(package):
+		var policies: Dictionary = {}
+		var folder: String = package.path_join("locations")
+		var names: PackedStringArray = DirAccess.get_files_at(folder) if DirAccess.dir_exists_absolute(folder) else PackedStringArray()
+		for name: String in names:
+			if name.get_extension() != "json":
+				continue
+			var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join(name)))
+			if not parsed is Dictionary:
+				continue
+			var scene: Variant = (parsed as Dictionary).get("scene_path")
+			var policy: Variant = (parsed as Dictionary).get("respawn_policy")
+			if scene is String and policy is String:
+				policies[scene] = policy
+		_package_policy_cache[package] = policies
+	return _package_policy_cache[package]
+
+
+## Node names the package's `add_node` commands give `package_scene`, matched by file name: the
+## log addresses package scenes as `user://weftlumin/<package>/scenes/<id>.tscn`.
+static func _package_added_names(package_scene: String) -> Array[String]:
+	var names: Array[String] = []
+	var log_path: String = package_scene.get_base_dir().get_base_dir().path_join("commands.jsonl")
+	if not FileAccess.file_exists(log_path):
+		return names
+	for line: String in FileAccess.get_file_as_string(log_path).split("\n", false):
+		var parsed: Variant = JSON.parse_string(line)
+		if not parsed is Dictionary or String((parsed as Dictionary).get("op", "")) != "add_node":
+			continue
+		var target: Dictionary = (parsed as Dictionary).get("target", {})
+		if String(target.get("scene", "")).get_file() != package_scene.get_file():
+			continue
+		var params: Dictionary = (parsed as Dictionary).get("params", {})
+		for shape: String in ["instance", "addition"]:
+			var spec: Variant = params.get(shape)
+			if spec is Dictionary and (spec as Dictionary).has("name"):
+				names.append(String((spec as Dictionary)["name"]))
+	return names
+
+
 ## Forget cached scene reads (the panel calls this on reload).
 func clear_caches() -> void:
 	_anchor_cache.clear()
+	_package_policy_cache.clear()
 	_policies.clear()
 	_policies_loaded = false
 
 
 ## The `respawn_policy` of the location whose scene is `scene_path`, or `none` with no location.
-func policy_for_scene(scene_path: String) -> String:
+## A package's own location documents (`package`, see `_package_dir`) take precedence over canon.
+func policy_for_scene(scene_path: String, package: String = "") -> String:
 	if not policies_for_tests.is_empty():
 		return String(policies_for_tests.get(scene_path, "none"))
+	var packaged: Dictionary = _package_policies(package)
+	if packaged.has(scene_path):
+		return String(packaged[scene_path])
 	_load_policies()
 	return String(_policies.get(scene_path, "none"))
 
 
-func has_location(scene_path: String) -> bool:
+func has_location(scene_path: String, package: String = "") -> bool:
 	if not policies_for_tests.is_empty():
 		return policies_for_tests.has(scene_path)
+	if _package_policies(package).has(scene_path):
+		return true
 	_load_policies()
 	return _policies.has(scene_path)
 

@@ -549,7 +549,7 @@ func test_all_ten_wired_town_doors_complete_a_real_scene_round_trip() -> void:
 		_round_trip(entry.building_id)
 
 
-func test_all_twelve_additional_transitions_complete_a_real_scene_round_trip() -> void:
+func test_all_fourteen_additional_transitions_complete_a_real_scene_round_trip() -> void:
 	GameState.set_flag("dom_dishonest_casks_traced", true)
 	GameState.set_flag("deep_trial_open", true)
 	Reputation.from_dict({})
@@ -560,8 +560,9 @@ func test_all_twelve_additional_transitions_complete_a_real_scene_round_trip() -
 			continue
 		_round_trip(entry.building_id)
 		round_trip_count += 1
-	# Dom's ten plus Kesselford's wayhouse and chandlery (C1 / #238).
-	assert_int(round_trip_count).is_equal(12)
+	# Dom's ten plus Kesselford's wayhouse and chandlery (C1 / #238) and Ashlaren's weighing hall
+	# and millhouse (C2 / #239).
+	assert_int(round_trip_count).is_equal(14)
 
 
 func test_starting_town_hides_debug_markers_behind_rendered_props() -> void:

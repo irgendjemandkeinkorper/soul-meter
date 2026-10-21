@@ -4,6 +4,12 @@ class_name NpcIds
 
 const AELA_QUIETFORGE := "aela-quietforge"
 const ARVEK_STORMCUP := "arvek-stormcup"
+const ASHLAREN_BELL_WARDEN := "ashlaren-bell-warden"
+const ASHLAREN_GHORR_STEWARD := "ashlaren-ghorr-steward"
+const ASHLAREN_HEAD_FACTOR := "ashlaren-head-factor"
+const ASHLAREN_MILLER := "ashlaren-miller"
+const ASHLAREN_WAREHOUSE_WATCH := "ashlaren-warehouse-watch"
+const ASHLAREN_WEIGH_CLERK := "ashlaren-weigh-clerk"
 const BRANEK_COILJAW := "branek-coiljaw"
 const BRANNIC_LOWDRUM := "brannic-lowdrum"
 const BREK_SALTJAW := "brek-saltjaw"

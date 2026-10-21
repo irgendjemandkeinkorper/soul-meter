@@ -13,6 +13,7 @@ arrival_flag = "chapter_kesselford_reached"
 arrival_checkpoint = "location-arrival"
 spawns = {
 "default": "default",
+"from_ashlaren": "from_ashlaren",
 "from_dom": "from_dom",
 "from_kesselford_chandlery": "from_kesselford_chandlery",
 "from_kesselford_wayhouse": "from_kesselford_wayhouse"

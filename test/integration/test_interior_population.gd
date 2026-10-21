@@ -26,9 +26,9 @@ func after_test() -> void:
 	SaveGame.zhavar = _zhavar_before.duplicate(true)
 
 
-func test_all_thirty_two_indoor_npcs_use_generated_positions_and_dialogue_titles() -> void:
+func test_all_thirty_five_indoor_npcs_use_generated_positions_and_dialogue_titles() -> void:
 	# Every hub's placements, merged: Dom's thirty indoor townsfolk plus the two in
-	# Kesselford's wayhouse (C1 / #238).
+	# Kesselford's wayhouse (C1 / #238) and the three in Ashlaren's hall and millhouse (C2 / #239).
 	var placements: Dictionary = NpcRosterScript.placements()
 	var placed_ids := {}
 	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
@@ -57,7 +57,7 @@ func test_all_thirty_two_indoor_npcs_use_generated_positions_and_dialogue_titles
 			assert_bool(npc.is_in_group(&"indoor_npc")).is_true()
 			placed_ids[npc_id] = true
 		_free_interior(interior)
-	assert_int(placed_ids.size()).is_equal(32)
+	assert_int(placed_ids.size()).is_equal(35)
 
 
 func test_marshal_uses_story_dialogue_and_generated_isometric_model() -> void:
@@ -99,8 +99,9 @@ func test_npc_body_collision_matches_the_character_feet_footprint() -> void:
 	npc.queue_free()
 
 
-func test_all_thirteen_generated_vendors_are_reachable_in_interiors() -> void:
-	# Twelve Dom vendors plus Kesselford's Ford Chandlery (C1 / #238).
+func test_all_fourteen_generated_vendors_are_reachable_in_interiors() -> void:
+	# Twelve Dom vendors plus Kesselford's Ford Chandlery (C1 / #238) and Ashlaren's Flat Bell
+	# (C2 / #239).
 	var placed_ids := {}
 	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
 		var interior := _instantiate_interior(entry.destination_scene)
@@ -115,7 +116,7 @@ func test_all_thirteen_generated_vendors_are_reachable_in_interiors() -> void:
 			assert_float(npc.interaction_radius).is_greater(0.0)
 			placed_ids[npc.vendor_id] = true
 		_free_interior(interior)
-	assert_int(placed_ids.size()).is_equal(13)
+	assert_int(placed_ids.size()).is_equal(14)
 	for row: Dictionary in VendorData.all_vendors():
 		assert_bool(placed_ids.has(str(row["id"]))).is_true()
 

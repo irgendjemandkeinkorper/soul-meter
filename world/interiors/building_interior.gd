@@ -39,6 +39,8 @@ const VENDORS_BY_INTERIOR := {
 	"res://world/interiors/river_shrine.tscn": [VendorIdsData.HELD_FLAME_SHRINE],
 	# Kesselford (hub 2, C1 / #238).
 	"res://world/interiors/kesselford_chandlery.tscn": [VendorIdsData.FORD_CHANDLERY],
+	# Ashlaren (hub 3, C2 / #239).
+	"res://world/interiors/ashlaren_millhouse.tscn": [VendorIdsData.FLAT_BELL_PROVISIONS],
 	"res://world/interiors/town_hall.tscn": [VendorIdsData.ASHLINE_SCRIPTORIUM],
 	"res://world/interiors/trial_hall.tscn": [VendorIdsData.UNDERSTEP_EXCHANGE],
 }
