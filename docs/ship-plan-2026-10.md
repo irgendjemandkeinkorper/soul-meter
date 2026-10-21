@@ -120,3 +120,13 @@ Owner: ratify this doc; close or merge the four stale PRs; start the Steamworks 
    before launch. Signing up on 2026-09-04 is the critical path for an early-October date.
 3. ~~Stub visibility~~ RESOLVED 2026-09-04: visible in-world, signposted.
 4. ~~Image model~~ RESOLVED 2026-09-04: Gemini image API, style board as reference.
+5. ~~Location names~~ RESOLVED 2026-10-16: the four gold-cut vault proposals are approved —
+   Kesselford (hub 2, #238), Ashlaren (hub 3, #239), The Long Verge (location 7, #240),
+   Hollowmere (location 8, #241). Their flagged inventions stay flagged in the vault pages.
+6. ~~Progression numbers (#285)~~ RESOLVED 2026-10-16: Chapter 1 level cap **6**; a perk at
+   levels **2, 4, 6**. PROVISIONAL and DeepSeek-tunable; perks may now be authored as Pandora data.
+7. ~~FR-904 gate (#282, #175)~~ RESOLVED 2026-10-16: **frame time is the gate** (p95 ≤ 16.67 ms
+   on reference hardware, per `docs/fr-904-runbook.md`). The D9 2 ms per-decision line is
+   advisory: a tracked regression signal, not an acceptance criterion.
+8. ~~Steam at gold~~ RESOLVED 2026-10-16: **no Steam for gold.** The gold build is a direct
+   Windows build; #299 (Steamworks) moves post-launch. The milestone name is now historical.
