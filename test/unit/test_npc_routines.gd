@@ -7,7 +7,7 @@ extends GdUnitTestSuite
 ## also pins the read itself: the table has to come off disk, and it has to
 ## arrive with the coordinates the GDScript table used to hold.
 
-const CANON_CHARACTERS := "res://canon/dom/characters"
+const CANON_ROOT := "res://canon"
 
 
 func test_routine_count_is_within_the_cap() -> void:
@@ -115,7 +115,11 @@ func test_the_dom_routine_roster_is_unchanged_by_the_canon_move() -> void:
 	assert_array(NpcRoutines.ROUTINES.keys()).contains(
 		["sella-varn", "toma-reedhand", "hadrik-vale"]
 	)
-	assert_int(NpcRoutines.routine_count()).is_equal(3)
+	var dom_routines: int = 0
+	for npc_id: String in NpcRoutines.ROUTINES:
+		if String(NpcRoutines.HUBS_BY_NPC.get(npc_id, "")) == "dom":
+			dom_routines += 1
+	assert_int(dom_routines).is_equal(3)
 	assert_vector(NpcRoutines.placement("sella-varn", &"morning")["position"]).is_equal(
 		Vector2(2820, 1525)
 	)
@@ -127,11 +131,26 @@ func test_the_dom_routine_roster_is_unchanged_by_the_canon_move() -> void:
 	assert_vector(NpcRoutines.placement("hadrik-vale", &"afternoon")["position"]).is_equal(
 		NpcRoutines.placement("hadrik-vale", &"morning")["position"]
 	)
-	assert_array(NpcRoutines.DECLARED_PHASE_AGNOSTIC).is_equal(["branek-coiljaw"])
+	# Dom's declared list is still the marshal alone; other hubs declare their own.
+	var dom_agnostic: Array[String] = []
+	for npc_id: String in NpcRoutines.DECLARED_PHASE_AGNOSTIC:
+		if String(NpcRoutines.HUBS_BY_NPC.get(npc_id, "")) == "dom":
+			dom_agnostic.append(npc_id)
+	assert_array(dom_agnostic).is_equal(["branek-coiljaw"])
+
+
+func test_hub_scene_resolves_each_routined_npc_to_its_own_hub() -> void:
+	# C1 / #238: routine coordinates belong to the hub whose canon directory holds the NPC.
+	assert_str(NpcRoutines.hub_scene("sella-varn")).is_equal("res://world/starting_town.tscn")
+	assert_str(NpcRoutines.hub_scene("kesselford-bell-ringer")).is_equal("res://world/kesselford.tscn")
+	assert_str(String(NpcRoutines.HUBS_BY_NPC["kesselford-ferry-keeper"])).is_equal("kesselford")
+	assert_str(NpcRoutines.hub_scene("no-such-npc")).is_equal(NpcRoutines.HUB_SCENE)
 
 
 func _document(npc_id: String) -> Dictionary:
-	var path := CANON_CHARACTERS.path_join("%s.json" % npc_id)
+	# A routined NPC's document lives under the hub that holds it (C1 / #238).
+	var hub := String(NpcRoutines.HUBS_BY_NPC.get(npc_id, "dom"))
+	var path := CANON_ROOT.path_join(hub).path_join("characters").path_join("%s.json" % npc_id)
 	var file := FileAccess.open(path, FileAccess.READ)
 	assert_object(file).override_failure_message("no canon document at %s" % path).is_not_null()
 	var parsed: Variant = JSON.parse_string(file.get_as_text())

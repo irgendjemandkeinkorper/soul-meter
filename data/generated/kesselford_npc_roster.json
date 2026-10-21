@@ -1,0 +1,282 @@
+{
+  "town_id": "kesselford",
+  "dialogue_path": "res://dialogue/kesselford_townsfolk.dialogue",
+  "npcs": {
+    "kesselford-bell-ringer": {
+      "id": "kesselford-bell-ringer",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kesselford-bell-ringer"
+      },
+      "display_name": "Hesk Waterward",
+      "role": "Flood-bell ringer",
+      "home": "Bell post, Ford Square",
+      "district": "Ford Square",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "kesselford-bell-ringer",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "HW",
+        "mark": "DD3F",
+        "palette_index": 1
+      },
+      "dialogue": {
+        "path": "res://dialogue/kesselford_townsfolk.dialogue",
+        "title": "kesselford_kesselford_bell_ringer",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "kesselford_kesselford_bell_ringer"
+        },
+        "greeting": "Mind the bell. If it rings, you stand where you are.",
+        "context": "Hesk rings the flood bell when the water turns wrong and has rung it three times this month on no rain at all.",
+        "farewell": "Cross in the safe hours or sleep on this bank.",
+        "hostile": "Bell's not for talk. Move along.",
+        "warm": "Water's quiet. Means nothing, but it's quiet.",
+        "faction_id": "wayfare-menders"
+      },
+      "placement": {
+        "scene": "res://world/kesselford.tscn",
+        "anchor": "FloodBell",
+        "offset": [
+          33.0,
+          -9.0
+        ],
+        "facing": "west",
+        "idle_phase": 1.56,
+        "model_index": 9
+      }
+    },
+    "kesselford-ferry-keeper": {
+      "id": "kesselford-ferry-keeper",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kesselford-ferry-keeper"
+      },
+      "display_name": "Orla Chainwright",
+      "role": "Ferry keeper",
+      "home": "Ferry Stage",
+      "district": "Ford Bank",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "kesselford-ferry-keeper",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "OC",
+        "mark": "060B",
+        "palette_index": 1
+      },
+      "dialogue": {
+        "path": "res://dialogue/kesselford_townsfolk.dialogue",
+        "title": "kesselford_kesselford_ferry_keeper",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "kesselford_kesselford_ferry_keeper"
+        },
+        "greeting": "Keep your footing, traveler.",
+        "context": "Orla chains the ferry to both banks before dawn and will not unchain it for anyone while the water runs the wrong colour.",
+        "farewell": "Leave me a true count when you return.",
+        "hostile": "You can wait on the bank like everyone else.",
+        "warm": "Step aboard; the river's in a listening mood today.",
+        "faction_id": "wayfare-menders"
+      },
+      "placement": {
+        "scene": "res://world/kesselford.tscn",
+        "anchor": "FerryStage",
+        "offset": [
+          -26.0,
+          32.0
+        ],
+        "facing": "west",
+        "idle_phase": 1.739,
+        "model_index": 24
+      }
+    },
+    "kesselford-grain-factor": {
+      "id": "kesselford-grain-factor",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kesselford-grain-factor"
+      },
+      "display_name": "Factor Wendel Marrow",
+      "role": "Grain factor",
+      "home": "Ferry Bell Wayhouse (lodging)",
+      "district": "Ford Square",
+      "faction_id": "grain-factors-table",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "kesselford-grain-factor",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "FM",
+        "mark": "479D",
+        "palette_index": 3
+      },
+      "dialogue": {
+        "path": "res://dialogue/kesselford_townsfolk.dialogue",
+        "title": "kesselford_kesselford_grain_factor",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "kesselford_kesselford_grain_factor"
+        },
+        "greeting": "Mind the bell. If it rings, you stand where you are.",
+        "context": "Wendel has been waiting four days for a safe hour to cross with the Table's grain, and the Table does not pay for waiting.",
+        "farewell": "Cross in the safe hours or sleep on this bank.",
+        "hostile": "Unless you can sing a river down, you are no use to me.",
+        "warm": "If you hear the bell go quiet, come find me first.",
+        "faction_id": "grain-factors-table"
+      },
+      "placement": {
+        "scene": "res://world/interiors/kesselford_wayhouse.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          240.0,
+          24.0
+        ],
+        "facing": "west",
+        "idle_phase": 0.15,
+        "model_index": 1
+      }
+    },
+    "kesselford-mender-pair-elder": {
+      "id": "kesselford-mender-pair-elder",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kesselford-mender-pair-elder"
+      },
+      "display_name": "Mender Ivo Threnlow",
+      "role": "Wayfare-Mender",
+      "home": "Mender Stone",
+      "district": "Ford Square",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "kesselford-mender-pair-elder",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "MT",
+        "mark": "1233",
+        "palette_index": 7
+      },
+      "dialogue": {
+        "path": "res://dialogue/kesselford_townsfolk.dialogue",
+        "title": "kesselford_kesselford_mender_pair_elder",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "kesselford_kesselford_mender_pair_elder"
+        },
+        "greeting": "Mind the bell. If it rings, you stand where you are.",
+        "context": "Ivo sings the ford open every dawn and, lately, only ever in a pair, so someone is there to catch the note that does not come back.",
+        "farewell": "Cross in the safe hours or sleep on this bank.",
+        "hostile": "The charter does not oblige me to speak with you.",
+        "warm": "Walk with us at dawn, if you want to hear what the river says back.",
+        "faction_id": "wayfare-menders"
+      },
+      "placement": {
+        "scene": "res://world/kesselford.tscn",
+        "anchor": "MenderStone",
+        "offset": [
+          -61.0,
+          -5.0
+        ],
+        "facing": "east",
+        "idle_phase": 2.865,
+        "model_index": 20
+      }
+    },
+    "kesselford-mender-pair-junior": {
+      "id": "kesselford-mender-pair-junior",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kesselford-mender-pair-junior"
+      },
+      "display_name": "Mender Nessa Quill",
+      "role": "Wayfare-Mender (apprentice)",
+      "home": "Mender Stone",
+      "district": "Ford Square",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "kesselford-mender-pair-junior",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "MQ",
+        "mark": "47E2",
+        "palette_index": 6
+      },
+      "dialogue": {
+        "path": "res://dialogue/kesselford_townsfolk.dialogue",
+        "title": "kesselford_kesselford_mender_pair_junior",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "kesselford_kesselford_mender_pair_junior"
+        },
+        "greeting": "Mind the bell. If it rings, you stand where you are.",
+        "context": "Nessa keeps the Menders' monthly map and will tell anyone who asks how many safe hours the ford lost this year.",
+        "farewell": "Cross in the safe hours or sleep on this bank.",
+        "hostile": "Ivo says I should not talk to you.",
+        "warm": "The map is honest even when the river is not. Ask me anything.",
+        "faction_id": "wayfare-menders"
+      },
+      "placement": {
+        "scene": "res://world/kesselford.tscn",
+        "anchor": "MenderStone",
+        "offset": [
+          72.0,
+          11.0
+        ],
+        "facing": "west",
+        "idle_phase": 1.038,
+        "model_index": 5
+      }
+    },
+    "kesselford-wayhouse-keeper": {
+      "id": "kesselford-wayhouse-keeper",
+      "stable_id": {
+        "kind": "actor",
+        "id": "kesselford-wayhouse-keeper"
+      },
+      "display_name": "Dagny Kettlebrook",
+      "role": "Wayhouse keeper",
+      "home": "Ferry Bell Wayhouse",
+      "district": "Ford Square",
+      "faction_id": "wayfare-menders",
+      "quest_hooks": [],
+      "portrait": {
+        "id": "kesselford-wayhouse-keeper",
+        "kind": "monogram",
+        "asset_path": "",
+        "monogram": "DK",
+        "mark": "AFC0",
+        "palette_index": 8
+      },
+      "dialogue": {
+        "path": "res://dialogue/kesselford_townsfolk.dialogue",
+        "title": "kesselford_kesselford_wayhouse_keeper",
+        "stable_id": {
+          "kind": "dialogue_node",
+          "id": "kesselford_kesselford_wayhouse_keeper"
+        },
+        "greeting": "Mind the bell. If it rings, you stand where you are.",
+        "context": "Dagny prices a bed by the crossing's mood and has not had a cheap night since midsummer.",
+        "farewell": "Cross in the safe hours or sleep on this bank.",
+        "hostile": "Beds are full. They are always full for your sort.",
+        "warm": "A dry bed and a hot kettle. Pay when the river lets you leave.",
+        "faction_id": "wayfare-menders"
+      },
+      "placement": {
+        "scene": "res://world/interiors/kesselford_wayhouse.tscn",
+        "anchor": "NpcSpot",
+        "offset": [
+          0.0,
+          0.0
+        ],
+        "facing": "east",
+        "idle_phase": 2.735,
+        "model_index": 16
+      }
+    }
+  }
+}

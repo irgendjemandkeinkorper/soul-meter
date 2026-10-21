@@ -66,6 +66,85 @@
       }
     ]
   },
+  "ford-chandlery": {
+    "id": "ford-chandlery",
+    "display_name": "Ford Chandlery",
+    "npc_id": "kesselford-chandler",
+    "site_id": "kesselford/ford-chandlery",
+    "site_name": "Ford Chandlery counter",
+    "faction_id": "wayfare-menders",
+    "trade_mode": "commerce",
+    "buy_modifier": 1.1,
+    "sell_modifier": 0.45,
+    "minimum_band": "cold",
+    "maximum_band": "",
+    "band_price_modifiers": {
+      "allied": {
+        "buy": 0.8,
+        "sell": 1.2
+      },
+      "cold": {
+        "buy": 1.15,
+        "sell": 0.75
+      },
+      "hostile": {
+        "buy": 1.35,
+        "sell": 0.55
+      },
+      "neutral": {
+        "buy": 1.0,
+        "sell": 1.0
+      },
+      "warm": {
+        "buy": 0.9,
+        "sell": 1.1
+      }
+    },
+    "stock": [
+      {
+        "item_id": "materials/lamp_oil",
+        "quantity": 8,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "consumables/salted_riverfish",
+        "quantity": 6,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "consumables/loam_bread",
+        "quantity": 6,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "tools/surveyors_chalk",
+        "quantity": 3,
+        "minimum_band": "",
+        "maximum_band": ""
+      },
+      {
+        "item_id": "materials/binding_thread",
+        "quantity": 4,
+        "minimum_band": "warm",
+        "maximum_band": ""
+      }
+    ],
+    "restock": {
+      "interval": 2.0,
+      "mode": "every_two_days"
+    },
+    "band_reactions": [
+      {
+        "kind": "stock",
+        "maximum_band": "",
+        "message": "Warm standing with the Menders opens their reserve of binding thread.",
+        "minimum_band": "warm"
+      }
+    ]
+  },
   "four-arms-fish": {
     "id": "four-arms-fish",
     "display_name": "Four Arms Fish",

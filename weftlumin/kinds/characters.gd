@@ -726,9 +726,11 @@ func bake(normalised: Array[Dictionary], target_root: String, write: bool, force
 			file.close()
 			(report["written"] as Array).append(path)
 	if npc_changed:
-		report["regenerated"] = [
-			"res://data/generated/dom_npc_roster.json", "res://data/generated/dom_npc_placements.json",
-		]
+		# Every hub's roster and placements regenerate together (C1 / #238).
+		var regenerated: Array = []
+		for town_id: String in NpcRoster.town_ids():
+			regenerated.append_array([NpcRoster.roster_path(town_id), NpcRoster.placements_path(town_id)])
+		report["regenerated"] = regenerated
 	var orphan_errors: Array[Dictionary] = []
 	for document: Dictionary in load_canon(orphan_errors, _retarget(CANON_ROOT, target_root)):
 		var logical: String = CANON_ROOT.path_join(String(document[META_HUB])).path_join("characters") \

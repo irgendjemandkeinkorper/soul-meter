@@ -1,11 +1,13 @@
 class_name WorldMapRegistry
 extends RefCounted
-## Read-only geographic data for the four current macro locations.
+## Read-only geographic data for the five current macro locations.
 
 const DOM_ID: StringName = &"dom"
 const WILDS_ID: StringName = &"wilds"
 const DORTHKOR_ROAD_ID: StringName = &"dorthkor-road"
 const WOUND_LIP_ID: StringName = &"wound-lip"
+## Hub 2 (C1 / #238); the id is the LocationRegistry / fast-travel id.
+const KESSELFORD_ID: StringName = &"kesselford"
 
 
 static func all_locations() -> Array[Dictionary]:
@@ -65,6 +67,12 @@ static func _location_rows() -> Array[Dictionary]:
 			"id": WOUND_LIP_ID,
 			"scene_path": LocationRegistry.WOUND_LIP.scene_path,
 			"map_coordinate": Vector2(0.85, 0.55),
+		},
+		{
+			# West of Dom along the inland road, at the river crossing (vault proposal).
+			"id": KESSELFORD_ID,
+			"scene_path": LocationRegistry.KESSELFORD.scene_path,
+			"map_coordinate": Vector2(0.2, 0.4),
 		},
 	]
 
@@ -126,5 +134,22 @@ static func _route_rows() -> Array[Dictionary]:
 			],
 			"min_encounters": 1,
 			"max_encounters": 3,
+		},
+		{
+			# PROVISIONAL (C1 / #238): a kept road between two hubs, longer than the Wilds walk
+			# but no riskier; tune after encounter-frequency playtests.
+			"id": &"dom-kesselford",
+			"origin_id": DOM_ID,
+			"destination_id": KESSELFORD_ID,
+			"steps": 10,
+			"phases_cost": 2,
+			"risk_tier": &"low",
+			"risk_modifier": 5.0,
+			"encounter_table": [
+				{"encounter_id": &"loam-boar", "weight": 2},
+				{"encounter_id": &"bog-wight", "weight": 1},
+			],
+			"min_encounters": 0,
+			"max_encounters": 1,
 		},
 	]

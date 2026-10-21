@@ -67,7 +67,12 @@ func test_committed_canon_validates_and_its_canonical_text_is_byte_identical() -
 		assert_str(WeftluminSpawnTablesKind.canon_text(row)).is_equal(FileAccess.get_file_as_string(path))
 		# The kind and the runtime agree: what the kind accepts, SpawnDirector loads.
 		assert_array(Array(SpawnDirector.table_problems(row))).is_empty()
-	assert_str(WeftluminSpawnTablesKind.canon_text(normalised[0])).is_equal(FileAccess.get_file_as_string(CANON_FILE))
+	# Canon now holds more than one table (Kesselford, C1 / #238); pin the Dom fixture by id.
+	var glade: Dictionary = {}
+	for candidate: Dictionary in normalised:
+		if candidate["id"] == "wilds-glade-ambient":
+			glade = candidate
+	assert_str(WeftluminSpawnTablesKind.canon_text(glade)).is_equal(FileAccess.get_file_as_string(CANON_FILE))
 
 
 func test_a_valid_table_normalises_numbers_to_ints_and_drops_meta_keys() -> void:

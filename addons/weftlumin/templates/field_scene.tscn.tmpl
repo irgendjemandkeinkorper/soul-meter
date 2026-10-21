@@ -1,5 +1,6 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=13 format=3]
 
+[ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
 [ext_resource type="Texture2D" path="{{backdrop}}" id="2_backdrop"]
 [ext_resource type="Script" path="res://world/isometric_blockout.gd" id="3_iso"]
@@ -9,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="7_player"]
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="9_hud"]
+[ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="10_townsfolk"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2({{width}}, 40)
@@ -19,6 +21,7 @@ size = Vector2(40, {{height}})
 [node name="{{root}}" type="Node2D"]
 texture_filter = 2
 y_sort_enabled = true
+script = ExtResource("0_location")
 
 [node name="FieldMap" type="Node2D" parent="."]
 script = ExtResource("1_field_map")
@@ -75,6 +78,9 @@ camera_bounds = Rect2i(0, 0, {{width}}, {{height}})
 position = Vector2(180, {{center_y}})
 
 [node name="FieldHUD" parent="." instance=ExtResource("9_hud")]
+
+[node name="OutdoorTownsfolk" type="Node" parent="."]
+script = ExtResource("10_townsfolk")
 
 [node name="{{dressing}}" type="Node2D" parent="."]
 y_sort_enabled = true

@@ -46,9 +46,15 @@ const ITEM_ICON_DIR := "res://assets/generated/sprites/items"
 const ITEM_IDS_PATH := OUT_DIR + "/item_ids.gd"
 const FACTION_IDS_PATH := OUT_DIR + "/faction_ids.gd"
 const NPC_IDS_PATH := OUT_DIR + "/npc_ids.gd"
+## Dom's generated NPC artifacts (`npc_roster_path("dom")` and friends); every hub gets the same
+## three files under its own town id (C1 / #238).
+const DOM_TOWN_ID := "dom"
 const DOM_NPC_ROSTER_PATH := OUT_DIR + "/dom_npc_roster.json"
 const DOM_NPC_PLACEMENTS_PATH := OUT_DIR + "/dom_npc_placements.json"
 const DOM_NPC_DIALOGUE_PATH := "res://dialogue/dom_townsfolk.dialogue"
+## Dom's authored roster invariants; later hubs have no such floor.
+const DOM_ROSTER_SIZE := 60
+const DOM_QUEST_HOOK_FLOOR := 50
 const VENDORS_PATH := OUT_DIR + "/vendors.json"
 const VENDOR_IDS_PATH := OUT_DIR + "/vendor_ids.gd"
 const ENCOUNTERS_PATH := OUT_DIR + "/encounters.json"
@@ -171,9 +177,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 	var faction_ids_text := _vault_ids_source("Factions", "FactionIds")
 	var npc_ids_text := _npc_ids_source()
 	var npc_artifacts := _npc_artifacts()
-	var npc_roster_text: String = npc_artifacts["roster_json"]
-	var npc_placements_text: String = npc_artifacts["placements_json"]
-	var npc_dialogue_text: String = npc_artifacts["dialogue"]
+	var npc_towns: Dictionary = npc_artifacts["towns"]
 	var vendor_artifacts := _vendor_artifacts(protos)
 	var vendors_text: String = vendor_artifacts["json"]
 	var vendor_ids_text: String = vendor_artifacts["ids"]
@@ -201,9 +205,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		or _differs(ITEM_IDS_PATH, ids_text)
 		or _differs(FACTION_IDS_PATH, faction_ids_text)
 		or _differs(NPC_IDS_PATH, npc_ids_text)
-		or _differs(DOM_NPC_ROSTER_PATH, npc_roster_text)
-		or _differs(DOM_NPC_PLACEMENTS_PATH, npc_placements_text)
-		or _differs(DOM_NPC_DIALOGUE_PATH, npc_dialogue_text)
+		or _npc_artifacts_differ(npc_towns)
 		or _differs(VENDORS_PATH, vendors_text)
 		or _differs(VENDOR_IDS_PATH, vendor_ids_text)
 		or _differs(ENCOUNTERS_PATH, encounters_text)
@@ -225,12 +227,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		_write(ITEM_IDS_PATH, ids_text)
 		_write(FACTION_IDS_PATH, faction_ids_text)
 		_write(NPC_IDS_PATH, npc_ids_text)
-		_write(DOM_NPC_ROSTER_PATH, npc_roster_text)
-		_write(DOM_NPC_PLACEMENTS_PATH, npc_placements_text)
-		DirAccess.make_dir_recursive_absolute(
-			ProjectSettings.globalize_path(DOM_NPC_DIALOGUE_PATH.get_base_dir())
-		)
-		_write(DOM_NPC_DIALOGUE_PATH, npc_dialogue_text)
+		_write_npc_artifacts(npc_towns)
 		_write(VENDORS_PATH, vendors_text)
 		_write(VENDOR_IDS_PATH, vendor_ids_text)
 		_write(ENCOUNTERS_PATH, encounters_text)
@@ -255,6 +252,30 @@ static func generate(check_only: bool = false) -> Dictionary:
 	}
 
 
+## True when any town's committed roster, placements or dialogue differs from `towns`.
+static func _npc_artifacts_differ(towns: Dictionary) -> bool:
+	for town_id: String in towns:
+		var town: Dictionary = towns[town_id]
+		if (
+			_differs(town["roster_path"], town["roster_json"])
+			or _differs(town["placements_path"], town["placements_json"])
+			or _differs(town["dialogue_path"], town["dialogue"])
+		):
+			return true
+	return false
+
+
+static func _write_npc_artifacts(towns: Dictionary) -> void:
+	for town_id: String in towns:
+		var town: Dictionary = towns[town_id]
+		_write(town["roster_path"], town["roster_json"])
+		_write(town["placements_path"], town["placements_json"])
+		DirAccess.make_dir_recursive_absolute(
+			ProjectSettings.globalize_path(String(town["dialogue_path"]).get_base_dir())
+		)
+		_write(town["dialogue_path"], town["dialogue"])
+
+
 static func _npc_artifacts() -> Dictionary:
 	var faction_root := _root_by_name("Factions")
 	var valid_factions := {}
@@ -270,33 +291,73 @@ static func _npc_artifacts() -> Dictionary:
 
 
 ## The roster, placements and placeholder dialogue from `canon/<hub>/characters/*.json`,
-## `kind: "npc"` (spec §4.7, E5.1 / #347). Each document goes through the town seeder's own
-## derivation (`seed_town_npcs.gd` `_npc()`: greetings, facing, idle phase, model index, the
-## organic outdoor scatter), so the rows are exactly the ones that seeder writes into Pandora
-## and the `CANON-SEED` drift stage keeps proving that. Other character kinds are skipped.
+## `kind: "npc"` (spec §4.7, E5.1 / #347), one artifact set per town. Each document goes through
+## the town seeder's own derivation (`seed_town_npcs.gd` `_npc()`: greetings, facing, idle phase,
+## model index, the organic outdoor scatter), so the rows are exactly the ones that seeder writes
+## into Pandora and the `CANON-SEED` drift stage keeps proving that. Other character kinds are
+## skipped. An NPC's town is the town of its placement anchor (`Town Id`, C1 / #238).
+##
+## Dom's artifacts come back under the historical keys (`roster_json`, `placements_json`,
+## `dialogue`, `count`); every town's, Dom included, under `towns[town_id]` with its artifact
+## paths. Dom keeps its authored invariants (exactly 60 townsfolk, at least 50 carrying a quest
+## hook); a later hub has no such floor yet.
 static func npc_artifacts_from_canon(
 	documents: Array[Dictionary], valid_factions: Dictionary
 ) -> Dictionary:
 	var seeder: Node = TownNpcSeederScript.new()
-	var townsfolk: Array[Dictionary] = []
+	var townsfolk_by_town := {}
 	for document: Dictionary in documents:
 		if String(document.get("kind", "")) != "npc":
 			continue
 		assert(
 			TownNpcSeederScript.PLACEMENT_ANCHORS.has(document.get("placement_anchor", "")),
-			"Dom NPC '%s' names an unknown placement anchor" % document.get("id", "")
+			"NPC '%s' names an unknown placement anchor" % document.get("id", "")
 		)
-		townsfolk.append(seeder._npc(document))
+		var entity: Dictionary = seeder._npc(document)
+		var town_id := String(entity["Town Id"])
+		if not townsfolk_by_town.has(town_id):
+			townsfolk_by_town[town_id] = []
+		(townsfolk_by_town[town_id] as Array).append(entity)
 	seeder.free()
 
+	var town_ids: Array = townsfolk_by_town.keys()
+	town_ids.sort()
+	var towns := {}
+	for town_id: String in town_ids:
+		towns[town_id] = _town_npc_artifacts(town_id, townsfolk_by_town[town_id], valid_factions)
+	var dom: Dictionary = towns.get(DOM_TOWN_ID, {})
+	return {
+		"roster_json": dom.get("roster_json", ""),
+		"placements_json": dom.get("placements_json", ""),
+		"dialogue": dom.get("dialogue", ""),
+		"count": int(dom.get("count", 0)),
+		"towns": towns,
+	}
+
+
+## Where one town's generated NPC artifacts live.
+static func npc_roster_path(town_id: String) -> String:
+	return OUT_DIR + "/%s_npc_roster.json" % town_id
+
+
+static func npc_placements_path(town_id: String) -> String:
+	return OUT_DIR + "/%s_npc_placements.json" % town_id
+
+
+static func npc_dialogue_path(town_id: String) -> String:
+	return "res://dialogue/%s_townsfolk.dialogue" % town_id
+
+
+## One town's roster, placements and placeholder dialogue source from its seeder rows.
+static func _town_npc_artifacts(
+	town_id: String, townsfolk: Array, valid_factions: Dictionary
+) -> Dictionary:
+	var dialogue_path := npc_dialogue_path(town_id)
 	var rows_by_id := {}
 	var placements_by_id := {}
 	var display_names := {}
 	var quest_involved_count := 0
 	for entity: Dictionary in townsfolk:
-		if String(entity["Town Id"]) != "dom":
-			continue
-
 		var npc_id := String(entity["NPC Id"])
 		var display_name := String(entity["Display Name"])
 		var role := String(entity["Role"])
@@ -305,49 +366,49 @@ static func npc_artifacts_from_canon(
 		var faction_id := String(entity["Faction Id"])
 		var portrait_id := String(entity["Portrait Id"])
 		var portrait_path := String(entity["Portrait Path"])
-		var dialogue_title := "dom_%s" % npc_id.replace("-", "_").replace("/", "_")
+		var dialogue_title := "%s_%s" % [town_id, npc_id.replace("-", "_").replace("/", "_")]
 		assert(
 			StableIdsScript.is_valid(StableIdsScript.ACTOR, npc_id),
-			"Dom NPC has invalid stable actor ID: %s" % npc_id
+			"NPC has invalid stable actor ID: %s" % npc_id
 		)
-		assert(not rows_by_id.has(npc_id), "Duplicate Dom NPC ID: %s" % npc_id)
-		assert(not display_name.is_empty(), "Dom NPC '%s' has no display name" % npc_id)
-		assert(not display_names.has(display_name), "Duplicate Dom NPC display name: %s" % display_name)
-		assert(not role.is_empty(), "Dom NPC '%s' has no role/trade" % npc_id)
-		assert(not home.is_empty(), "Dom NPC '%s' has no home" % npc_id)
-		assert(not district.is_empty(), "Dom NPC '%s' has no district" % npc_id)
+		assert(not rows_by_id.has(npc_id), "Duplicate NPC ID: %s" % npc_id)
+		assert(not display_name.is_empty(), "NPC '%s' has no display name" % npc_id)
+		assert(not display_names.has(display_name), "Duplicate NPC display name: %s" % display_name)
+		assert(not role.is_empty(), "NPC '%s' has no role/trade" % npc_id)
+		assert(not home.is_empty(), "NPC '%s' has no home" % npc_id)
+		assert(not district.is_empty(), "NPC '%s' has no district" % npc_id)
 		assert(
 			valid_factions.has(faction_id),
-			"Dom NPC '%s' references unknown vault faction '%s'" % [npc_id, faction_id]
+			"NPC '%s' references unknown vault faction '%s'" % [npc_id, faction_id]
 		)
 		assert(
 			StableIdsScript.is_valid(StableIdsScript.ACTOR, portrait_id),
-			"Dom NPC '%s' has invalid portrait ID '%s'" % [npc_id, portrait_id]
+			"NPC '%s' has invalid portrait ID '%s'" % [npc_id, portrait_id]
 		)
 		assert(
 			portrait_path.is_empty() or _is_safe_portrait_path(portrait_path),
-			"Dom NPC '%s' has unsafe portrait path '%s'" % [npc_id, portrait_path]
+			"NPC '%s' has unsafe portrait path '%s'" % [npc_id, portrait_path]
 		)
 		assert(
 			StableIdsScript.is_valid(StableIdsScript.DIALOGUE_NODE, dialogue_title),
-			"Dom NPC '%s' has invalid dialogue title" % npc_id
+			"NPC '%s' has invalid dialogue title" % npc_id
 		)
 
 		var hooks: Array[Dictionary] = []
 		var hook_values := _parse_json_array(String(entity["Quest Hooks"]), "Quest Hooks", npc_id)
 		for hook_value: Variant in hook_values:
-			assert(hook_value is Dictionary, "Dom NPC '%s' has a non-object quest hook" % npc_id)
+			assert(hook_value is Dictionary, "NPC '%s' has a non-object quest hook" % npc_id)
 			var hook: Dictionary = hook_value.duplicate(true)
 			var quest_id := str(hook.get("quest_id", ""))
 			var involvement := str(hook.get("involvement", ""))
 			var state_source := str(hook.get("state_source", ""))
 			assert(
 				StableIdsScript.is_valid(StableIdsScript.QUEST, quest_id),
-				"Dom NPC '%s' has invalid quest-hook ID '%s'" % [npc_id, quest_id]
+				"NPC '%s' has invalid quest-hook ID '%s'" % [npc_id, quest_id]
 			)
 			assert(
 				involvement in QUEST_INVOLVEMENT_TYPES,
-				"Dom NPC '%s' has invalid quest involvement '%s'" % [npc_id, involvement]
+				"NPC '%s' has invalid quest involvement '%s'" % [npc_id, involvement]
 			)
 			assert(not str(hook.get("summary", "")).is_empty(), "Quest hook has no summary")
 			if involvement in ["gate", "state_change"]:
@@ -355,7 +416,7 @@ static func npc_artifacts_from_canon(
 				var world_fact_id := str(hook.get("world_fact_id", ""))
 				assert(
 					StableIdsScript.is_valid(StableIdsScript.WORLD_FACT, world_fact_id),
-					"Dom NPC '%s' has invalid world-fact ID" % npc_id
+					"NPC '%s' has invalid world-fact ID" % npc_id
 				)
 				hook["world_fact_stable_id"] = StableIdsScript.world_fact(world_fact_id)
 			elif involvement == "reputation_reaction":
@@ -385,20 +446,20 @@ static func npc_artifacts_from_canon(
 		assert(not str(placement["anchor"]).is_empty(), "Missing placement anchor for %s" % npc_id)
 		assert(
 			placement["facing"] in ["east", "west"],
-			"Dom NPC '%s' has invalid facing '%s'" % [npc_id, placement["facing"]]
+			"NPC '%s' has invalid facing '%s'" % [npc_id, placement["facing"]]
 		)
 		assert(
 			float(placement["idle_phase"]) >= 0.0 and float(placement["idle_phase"]) < TAU,
-			"Dom NPC '%s' has an invalid idle phase" % npc_id
+			"NPC '%s' has an invalid idle phase" % npc_id
 		)
 		assert(
 			int(placement["model_index"]) >= 0
 			and int(placement["model_index"]) < TOWNSFOLK_MODEL_COUNT,
-			"Dom NPC '%s' has an invalid model index" % npc_id
+			"NPC '%s' has an invalid model index" % npc_id
 		)
 
 		var dialogue := {
-			"path": DOM_NPC_DIALOGUE_PATH,
+			"path": dialogue_path,
 			"title": dialogue_title,
 			"stable_id": StableIdsScript.dialogue_node(dialogue_title),
 			"greeting": String(entity["Dialogue Greeting"]),
@@ -435,8 +496,15 @@ static func npc_artifacts_from_canon(
 		placements_by_id[npc_id] = placement
 		display_names[display_name] = true
 
-	assert(rows_by_id.size() == 60, "Dom roster must contain exactly 60 NPCs")
-	assert(quest_involved_count >= 50, "At least 50 Dom NPCs must carry a quest hook")
+	if town_id == DOM_TOWN_ID:
+		assert(
+			rows_by_id.size() == DOM_ROSTER_SIZE,
+			"Dom roster must contain exactly %d NPCs" % DOM_ROSTER_SIZE
+		)
+		assert(
+			quest_involved_count >= DOM_QUEST_HOOK_FLOOR,
+			"At least %d Dom NPCs must carry a quest hook" % DOM_QUEST_HOOK_FLOOR
+		)
 	var npc_ids: Array = rows_by_id.keys()
 	npc_ids.sort()
 	var ordered_rows := {}
@@ -445,20 +513,23 @@ static func npc_artifacts_from_canon(
 		ordered_rows[npc_id] = rows_by_id[npc_id]
 		ordered_placements[npc_id] = placements_by_id[npc_id]
 	var roster := {
-		"town_id": "dom",
-		"dialogue_path": DOM_NPC_DIALOGUE_PATH,
+		"town_id": town_id,
+		"dialogue_path": dialogue_path,
 		"npcs": ordered_rows,
 	}
-	var placements := {"town_id": "dom", "placements": ordered_placements}
+	var placements := {"town_id": town_id, "placements": ordered_placements}
 	return {
 		"roster_json": JSON.stringify(roster, "  ", false) + "\n",
 		"placements_json": JSON.stringify(placements, "  ", false) + "\n",
-		"dialogue": _dom_dialogue_source(ordered_rows),
+		"dialogue": _townsfolk_dialogue_source(ordered_rows),
 		"count": ordered_rows.size(),
+		"roster_path": npc_roster_path(town_id),
+		"placements_path": npc_placements_path(town_id),
+		"dialogue_path": dialogue_path,
 	}
 
 
-static func _dom_dialogue_source(rows: Dictionary) -> String:
+static func _townsfolk_dialogue_source(rows: Dictionary) -> String:
 	var source := ""
 	for npc_id: String in rows:
 		var row: Dictionary = rows[npc_id]
