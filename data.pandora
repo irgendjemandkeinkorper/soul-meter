@@ -17047,6 +17047,576 @@
 						"value": "flat-bell-provisions"
 					}
 				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "551.0",
+				"_index": 0,
+				"_name": "Paymaster Odric Tallowmere",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Keeps the Company's pay-table on the moor-road and the map of eleven bad stretches that the oldest soldiers say used to show three."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Odric pays the column by the cairn count and wants a stretch re-marked whose bands no longer match the thin."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The Companies pay for surveys, not for questions."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Walk the stretch past the split stone with me. Count the bands, then tell me what you felt."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Paymaster Odric Tallowmere"
+					},
+					"District": {
+						"type": "string",
+						"value": "Company Camp"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Paymaster of the Verge column"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Paymaster's tent, Company camp"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.961
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 0
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "long-verge-paymaster"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "PaymastersTent"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/long_verge.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 9.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 129.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "long-verge-paymaster"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Company paymaster"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "long_verge"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "552.0",
+				"_index": 0,
+				"_name": "Cairn-Warden Mabbe Sloe",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Walks the Verge with a pot of black and re-bands the cairns the Company's casters lost people mapping."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Mabbe re-bands the mile-cairns by the only method the Companies trust: where the road last cost them someone."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Keep off the banded stretch. I won't paint you a cairn."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Third past the split stone has a fresh band. Wasn't there last month. The thin's walking toward home."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Cairn-Warden Mabbe Sloe"
+					},
+					"District": {
+						"type": "string",
+						"value": "The Thin Stretch"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Keeper of the black bands"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "The road between the cairns"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.638
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 11
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "long-verge-cairn-warden"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "BlackBandCairn"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/long_verge.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 23.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 134.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "long-verge-cairn-warden"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Cairn warden"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "long_verge"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "553.0",
+				"_index": 0,
+				"_name": "Sergeant Iwan Corrow",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Marches the new recruits up the moor-road to contract and makes sure the drum sounds before the first bad stretch."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Iwan drums the column over the Verge so the recruits learn that the world, not an enemy, is what thins."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Column's under contract. Clear the drum."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "First time over the Verge? Keep your Phrases in your mouth past the black bands. Notes only there."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Sergeant Iwan Corrow"
+					},
+					"District": {
+						"type": "string",
+						"value": "Company Camp"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Drill sergeant of the Verge column"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Muster drum, Company camp"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 2.062
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 22
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "long-verge-sergeant"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "MusterDrum"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/long_verge.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 26.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 120.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "long-verge-sergeant"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Column sergeant"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "long_verge"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "554.0",
+				"_index": 0,
+				"_name": "Jory Fennick",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Marched the Verge when the maps showed three bad stretches; sits at the camp fire now and counts eleven."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Jory remembers when the road had three bad stretches and says the cairns have been walking toward Dom ever since."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Sit somewhere else."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Three. There were three. Ask the paymaster why his map says eleven and watch his hands."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Jory Fennick"
+					},
+					"District": {
+						"type": "string",
+						"value": "Company Camp"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Veteran of three bad stretches"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Camp fire, Company camp"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 5.055
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 7
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "long-verge-old-soldier"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "CampFire"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/long_verge.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 64.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 92.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "long-verge-old-soldier"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Retired Company soldier"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "long_verge"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "555.0",
+				"_index": 0,
+				"_name": "Recruit Tessaly Brack",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "A new recruit posted to watch the roadside grave nobody will name, who has started hearing the streaks move at night."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Tessaly stands watch over the unnamed grave and has noticed the thin streaks converge on it."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Leave me a true count when you return."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your footing, traveler."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Move along. Nothing here to read."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "They're not on the map, the ones under here. The paymaster says there was no rout. The ground disagrees."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Recruit Tessaly Brack"
+					},
+					"District": {
+						"type": "string",
+						"value": "The Grave Shoulder"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "First march over the Verge"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "iron-companies"
+					},
+					"Home": {
+						"type": "string",
+						"value": "Grave watch, south shoulder"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.312
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 18
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "long-verge-recruit"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "GraveMarker"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/long_verge.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -65.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 91.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "long-verge-recruit"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Company recruit"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "long_verge"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "84",
+				"_icon_color": "ffffff00",
+				"_id": "556.0",
+				"_index": 0,
+				"_name": "the-widow-watchers",
+				"_property_overrides": {
+					"Display Name": {
+						"type": "string",
+						"value": "The Widow-Watchers"
+					},
+					"Seat": {
+						"type": "string",
+						"value": "Verspch"
+					},
+					"Summary": {
+						"type": "string",
+						"value": "Verspch's old Giant devotional strand, the mortal keepers of the Widowed Tides' rites, quietly consulted as the unanswering storms spiral in."
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": "widow-watchers"
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -18678,7 +19248,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 550.0
+			"default": 556.0
 		}
 	},
 	"_version": 1

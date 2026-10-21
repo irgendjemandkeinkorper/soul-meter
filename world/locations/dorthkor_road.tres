@@ -13,5 +13,6 @@ default_spawn_id = &"default"
 arrival_flag = "chapter_dorthkor_reached"
 arrival_checkpoint = "location-arrival"
 spawns = {
-"from_dom": "from_dom"
+"from_dom": "from_dom",
+"from_hollowmere": "from_hollowmere"
 }

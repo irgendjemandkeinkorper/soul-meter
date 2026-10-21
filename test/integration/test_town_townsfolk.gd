@@ -11,6 +11,28 @@ const TOWN_SCENE_PATH := "res://world/starting_town.tscn"
 ## outdoor townsfolk shows its own named unit art via npc_id).
 const GENERATED_MODEL_POOL_SIZE := 26
 
+var _game_state_before: Dictionary = {}
+var _reputation_before: Dictionary = {}
+var _zhavar_before: Dictionary = {}
+
+
+func before_test() -> void:
+	# The generated-path assertions presume the quiet world of a fresh boot. A raised wilds
+	# Zhavar rung rewires the rumor-carrying townsfolk onto dom_zhavar_rumors.dialogue and a
+	# reputation band rewires the band-reactive ones (NpcReactions), so the suite starts from
+	# the empty ladder and ledger and hands back whatever the whole-tree run had accumulated.
+	_game_state_before = GameState.to_dict().duplicate(true)
+	_reputation_before = Reputation.to_dict().duplicate(true)
+	_zhavar_before = SaveGame.zhavar.duplicate(true)
+	SaveGame.zhavar.clear()
+	Reputation.from_dict({})
+
+
+func after_test() -> void:
+	GameState.from_dict(_game_state_before)
+	Reputation.from_dict(_reputation_before)
+	SaveGame.zhavar = _zhavar_before.duplicate(true)
+
 
 func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 	var roster: Dictionary = _json(ROSTER_PATH)["npcs"]

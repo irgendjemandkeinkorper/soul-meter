@@ -16,6 +16,12 @@ func before_test() -> void:
 	_configure_sway(95.0)
 
 
+func after_test() -> void:
+	# Granting quest rewards queues a full-screen reward reveal on UIManager; drop it so it
+	# cannot swallow a later suite's focus or clicks.
+	UIManager.reset_reward_reveals()
+
+
 func test_building_checked_choice_consumes_no_rng_or_check_log_entry() -> void:
 	var resource := load(DIALOGUE_PATH) as DialogueResource
 	var rng_state_before: int = SkillCheck.random_number_generator.state

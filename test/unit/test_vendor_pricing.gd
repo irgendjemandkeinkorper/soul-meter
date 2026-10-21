@@ -36,6 +36,9 @@ func after_test() -> void:
 	QuestRegistry.from_dict(quests_before_test)
 	if quest_inventory_listener_disconnected:
 		GameState.inventory_changed.connect(Callable(QuestRegistry, "_on_inventory_changed"))
+	# Granting quest rewards queues a full-screen reward reveal on UIManager; drop it so it
+	# cannot swallow a later suite's focus or clicks.
+	UIManager.reset_reward_reveals()
 
 
 func test_iron_and_thread_buy_prices_follow_the_reputation_band() -> void:

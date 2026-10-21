@@ -17,6 +17,7 @@ spawns = {
 "from_iron_companies": "from_iron_companies",
 "from_item_shop": "from_item_shop",
 "from_kesselford": "from_kesselford",
+"from_long_verge": "from_long_verge",
 "from_players_house": "from_players_house",
 "from_registry_archive": "from_registry_archive",
 "from_river_shrine": "from_river_shrine",

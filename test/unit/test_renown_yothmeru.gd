@@ -440,3 +440,29 @@ func test_an_unknown_kind_in_a_save_is_replayed_rather_than_dropped() -> void:
 	})
 	assert_int(Renown.history().size()).is_equal(1)
 	assert_float(Renown.reputation()).is_equal_approx(7.0, 0.001)
+
+
+func test_fame_tier_at_least_is_a_floor_on_the_rfc_ladder() -> void:
+	Renown.from_dict({})
+	assert_bool(Renown.fame_tier_at_least("Unknown")).is_true()
+	assert_bool(Renown.fame_tier_at_least("Whispered")).is_false()
+
+	Renown.gain_reputation("player", 200.0, "boundary probe")
+	assert_str(Renown.fame_tier()).is_equal("Known")
+	assert_bool(Renown.fame_tier_at_least("Whispered")).is_true()
+	assert_bool(Renown.fame_tier_at_least("Known")).is_true()
+	assert_bool(Renown.fame_tier_at_least("Renowned")).is_false()
+	# A name that is not on the ladder never opens a gate.
+	assert_bool(Renown.fame_tier_at_least("Famous")).is_false()
+
+
+func test_karma_tier_floor_and_ceiling_read_uncertain_on_a_fresh_ledger() -> void:
+	Renown.from_dict({})
+	assert_bool(Renown.karma_tier_at_least("Uncertain")).is_true()
+	assert_bool(Renown.karma_tier_at_least("Troubled")).is_true()
+	assert_bool(Renown.karma_tier_at_least("Upright")).is_false()
+	assert_bool(Renown.karma_tier_at_most("Uncertain")).is_true()
+	assert_bool(Renown.karma_tier_at_most("Upright")).is_true()
+	assert_bool(Renown.karma_tier_at_most("Troubled")).is_false()
+	assert_bool(Renown.karma_tier_at_least("Saintly")).is_false()
+	assert_bool(Renown.karma_tier_at_most("Saintly")).is_false()

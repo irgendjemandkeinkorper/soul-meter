@@ -1,6 +1,13 @@
 extends GdUnitTestSuite
 
 
+func before_test() -> void:
+	# The notice is driven by focus and by clicks at screen positions, so nothing may sit above
+	# the HUD: close any screen and drop any reward reveal an earlier suite left on UIManager.
+	UIManager.close_all()
+	UIManager.reset_reward_reveals()
+
+
 func test_notice_queues_committed_records_without_overwriting_open_details() -> void:
 	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
 	var interface := runner.scene() as BattleInterface

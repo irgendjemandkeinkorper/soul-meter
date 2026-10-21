@@ -235,15 +235,32 @@ The four test suites flagged as potentially flaky under headless rendering and n
 
 All 18 test cases passed in this sample (0 failures / 0 skips). A passing sample does not rule out intermittent failures; keep using Xvfb for input-dependent integration tests as described above.
 
-### Whole-tree order dependence (open, 2026-09-15)
+### Whole-tree order dependence (opened 2026-09-15, closed 2026-10-21)
 
-A full `scripts/test.sh -a test` run fails four integration suites that pass when run on their
-own, both on the same commit and on the commit before it: `test/integration/test_town_townsfolk.gd`
-(townsfolk dialogue path), `test/integration/test_interior_population.gd` (indoor NPC dialogue
-titles), `test/integration/test_consequence_notices.gd` (FIFO cap at three) and
-`test/integration/test_field_room.gd` (sprint speed). The failures depend on what ran before
-them, so the likely cause is state leaking between suites through an autoload. Untriaged; run
-those four in isolation until it is fixed, and do not use their whole-tree result as a signal.
+A full `scripts/test.sh -a test` run used to fail suites that pass on their own. Two leaks
+through autoloads were found and closed on 2026-10-21; both are the shape to expect next time:
+
+- **`SaveGame.zhavar`.** `QuestRegistry.resolve_broken_muster()` raises the wilds Zhavar rung
+  and a rung never lowers. `test_quest_registry` left it raised, so every later Dom scene spawned
+  the rumor-carrying townsfolk on `dom_zhavar_rumors.dialogue` (`NpcReactions`) and
+  `test_town_townsfolk` failed on the dialogue path. A suite that raises a rung now restores
+  `SaveGame.zhavar` in `after_test()`; a suite that asserts the quiet world (NPC dialogue routes,
+  presence) clears it in `before_test()` the way `test_interior_population` does.
+- **`UIManager` reward reveals.** Every `quest_rewards_granted` emission (force-completing,
+  suspending a stub, resolving a side quest or ruling) queues a full-screen reward reveal on the
+  `UIManager` CanvasLayer that stays up until dismissed, owns the mouse, and answers `ui_accept`
+  by showing the next one and grabbing focus. `test_debug_menu` and `test_stub_side_quests` left
+  one up, so `test_injury_notice`'s focused dismiss and badge click went to the reveal instead.
+  A suite that grants quest rewards now calls `UIManager.reset_reward_reveals()` in
+  `after_test()`; an input-driven HUD suite calls `UIManager.close_all()` and
+  `UIManager.reset_reward_reveals()` in `before_test()`.
+
+`test_consequence_notices` and `test_field_room`, listed here in September, have not failed in
+recent whole-tree runs. When a suite fails only in the full run, do not relabel it flaky: the
+command tool takes `-a` more than once, so pair each earlier suite of the run order (the order is
+in `reports/report_N/results.xml`) with the victim, eight pairs at a time, and the leaker names
+itself; a throwaway suite that prints `get_tree().root`'s children, `gui_get_focus_owner()` and
+the autoload state after the leaker shows what it left behind.
 
 ## Manual tests
 

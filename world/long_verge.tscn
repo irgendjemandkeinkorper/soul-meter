@@ -1,0 +1,662 @@
+[gd_scene load_steps=51 format=3]
+
+[ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
+[ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
+[ext_resource type="Texture2D" path="res://assets/generated/backgrounds/world/dorthkor-road-terrain-v1.png" id="2_backdrop"]
+[ext_resource type="Script" path="res://world/isometric_blockout.gd" id="3_iso"]
+[ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="4_blocking_tiles"]
+[ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="5_blocking_layer"]
+[ext_resource type="Script" path="res://world/nav/combat_terrain_layer.gd" id="6_terrain"]
+[ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="7_player"]
+[ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
+[ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="9_hud"]
+[ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="10_townsfolk"]
+
+[ext_resource type="Texture2D" uid="uid://ct8n074851odr" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road--straight.png" id="1_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://ljel83slgear" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road--broken.png" id="2_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://d1pkdxeyoac7j" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road-standing-ripple--decorative.png" id="3_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://3815fldtaapj" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road--grass-shoulder.png" id="4_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://b7xdn4j1qyo6r" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road--memorial.png" id="5_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://fxe8e5w8jo8l" path="res://assets/generated/sprites/world/dom-puddle--shallow.png" id="6_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://bufrvpg6il5kf" path="res://assets/generated/sprites/world/dom-mud-edge--transition.png" id="7_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://b5vm6rdghg77h" path="res://assets/generated/sprites/world/dom-grass-tuft--decorative.png" id="8_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://2mk5me7svhbp" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-memorial-marker--decorative.png" id="9_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://b3w5i7wnuds3x" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-breach-warning-post--decorative.png" id="10_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://d4c16y0avh366" path="res://assets/generated/sprites/world/dom-rock--mossy.png" id="11_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://ul60lcwv08qh" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-camp-tent--decorative.png" id="12_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://da5riivuoq8e7" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-supply-cart--decorative.png" id="13_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://d0x2e17kxjn0q" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road-drum--decorative.png" id="14_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://cbcignudh2o0n" path="res://assets/generated/sprites/world/dom-crate-wood--stacked.png" id="15_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://dt1feb32pmne7" path="res://assets/generated/sprites/world/jawbrace/jawbrace-warning-plate--decorative.png" id="16_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://dd0qlcpttdeu6" path="res://assets/generated/sprites/world/dom-moss-statue-fragment--decorative.png" id="17_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://mevnpnv5d1x8" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-standing-stone--decorative.png" id="18_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://w28y6sfud61l" path="res://assets/generated/sprites/world/dom-tree--pine-a.png" id="19_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://dnoguas8ewcdu" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-fallen-log--decorative.png" id="20_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://mwqdilxdtw66" path="res://assets/generated/sprites/world/loamroot-grove/loamroot-old-stump--decorative.png" id="21_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://8otmbvglpuwf" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-campfire--decorative.png" id="22_weftlumin"]
+
+[ext_resource type="Texture2D" uid="uid://d0yhb48jmtjt3" path="res://assets/generated/sprites/world/dom-bush--low.png" id="23_weftlumin"]
+
+[ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="24_weftlumin"]
+
+[ext_resource type="PackedScene" path="res://actors/hostile/hostile.tscn" id="25_weftlumin"]
+
+[sub_resource type="RectangleShape2D" id="shape_h"]
+size = Vector2(3000, 40)
+
+[sub_resource type="RectangleShape2D" id="shape_v"]
+size = Vector2(40, 1800)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin1"]
+size = Vector2(60, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin2"]
+size = Vector2(50, 26)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin3"]
+size = Vector2(150, 44)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin4"]
+size = Vector2(100, 36)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin5"]
+size = Vector2(200, 50)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin6"]
+size = Vector2(170, 46)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin7"]
+size = Vector2(120, 36)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin8"]
+size = Vector2(70, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin9"]
+size = Vector2(40, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin10"]
+size = Vector2(90, 34)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin11"]
+size = Vector2(80, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin12"]
+size = Vector2(120, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin13"]
+size = Vector2(60, 30)
+
+[node name="LongVerge" type="Node2D"]
+texture_filter = 2
+y_sort_enabled = true
+script = ExtResource("0_location")
+
+[node name="FieldMap" type="Node2D" parent="."]
+script = ExtResource("1_field_map")
+
+[node name="TerrainBackdrop" type="Sprite2D" parent="."]
+z_index = -15
+position = Vector2(1500, 900)
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("2_backdrop")
+
+[node name="IsometricGround" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(1500, -780)
+script = ExtResource("3_iso")
+map_size = Vector2i(105, 105)
+ground_style = 2
+road_axis = 0
+
+[node name="Blocking" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(1500, -780)
+tile_set = ExtResource("4_blocking_tiles")
+script = ExtResource("5_blocking_layer")
+
+[node name="Terrain" type="TileMapLayer" parent="."]
+visible = false
+script = ExtResource("6_terrain")
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="ColTop" type="CollisionShape2D" parent="Walls"]
+position = Vector2(1500, 20)
+shape = SubResource("shape_h")
+
+[node name="ColBottom" type="CollisionShape2D" parent="Walls"]
+position = Vector2(1500, 1780)
+shape = SubResource("shape_h")
+
+[node name="ColLeft" type="CollisionShape2D" parent="Walls"]
+position = Vector2(20, 900)
+shape = SubResource("shape_v")
+
+[node name="ColRight" type="CollisionShape2D" parent="Walls"]
+position = Vector2(2980, 900)
+shape = SubResource("shape_v")
+
+[node name="Player" parent="." instance=ExtResource("7_player")]
+position = Vector2(1500, 900)
+camera_bounds = Rect2i(0, 0, 3000, 1800)
+
+[node name="PartyFollowers" parent="." instance=ExtResource("8_followers")]
+
+[node name="SpawnDefault" type="Marker2D" parent="."]
+position = Vector2(180, 900)
+
+[node name="FieldHUD" parent="." instance=ExtResource("9_hud")]
+
+[node name="OutdoorTownsfolk" type="Node" parent="."]
+script = ExtResource("10_townsfolk")
+
+[node name="LongVergeDressing" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="GroundDetails" type="Node2D" parent="LongVergeDressing"]
+z_index = -2
+
+[node name="MoorRoad01" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(300, 900)
+texture = ExtResource("1_weftlumin")
+
+[node name="MoorRoad02" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(540, 900)
+texture = ExtResource("1_weftlumin")
+
+[node name="MoorRoad03" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(780, 900)
+texture = ExtResource("1_weftlumin")
+
+[node name="MoorRoad04" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1020, 900)
+texture = ExtResource("2_weftlumin")
+
+[node name="MoorRoad05" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1260, 900)
+texture = ExtResource("1_weftlumin")
+
+[node name="MoorRoad06" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1500, 900)
+texture = ExtResource("1_weftlumin")
+
+[node name="MoorRoad07" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1740, 900)
+texture = ExtResource("1_weftlumin")
+
+[node name="MoorRoad08" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1980, 900)
+texture = ExtResource("1_weftlumin")
+
+[node name="MoorRoad09" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(2220, 900)
+texture = ExtResource("1_weftlumin")
+
+[node name="MoorRoad10" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(2460, 900)
+texture = ExtResource("2_weftlumin")
+
+[node name="MoorRoad11" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(2700, 900)
+texture = ExtResource("1_weftlumin")
+
+[node name="ThinStreakRipple01" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1020, 880)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("3_weftlumin")
+
+[node name="ThinStreakRipple02" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(2460, 880)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("3_weftlumin")
+
+[node name="GrassShoulder01" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(700, 760)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("4_weftlumin")
+
+[node name="GrassShoulder02" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1800, 760)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("4_weftlumin")
+
+[node name="GrassShoulder03" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1300, 1040)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("4_weftlumin")
+
+[node name="GrassShoulder04" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(2300, 1040)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("4_weftlumin")
+
+[node name="GraveGround" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1500, 1440)
+scale = Vector2(1.2, 1.2)
+texture = ExtResource("5_weftlumin")
+
+[node name="MoorPuddle01" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(420, 1320)
+scale = Vector2(1.1, 1.1)
+texture = ExtResource("6_weftlumin")
+
+[node name="MoorPuddle02" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(560, 1420)
+scale = Vector2(1.1, 1.1)
+texture = ExtResource("6_weftlumin")
+
+[node name="MudEdgeSouthWest" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(480, 1520)
+texture = ExtResource("7_weftlumin")
+
+[node name="GrassTuft01" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(600, 520)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("8_weftlumin")
+
+[node name="GrassTuft02" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1500, 600)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("8_weftlumin")
+
+[node name="GrassTuft03" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(2600, 1200)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("8_weftlumin")
+
+[node name="GrassTuft04" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(1000, 1500)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("8_weftlumin")
+
+[node name="GrassTuft05" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(2000, 1300)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("8_weftlumin")
+
+[node name="GrassTuft06" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
+position = Vector2(300, 1050)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("8_weftlumin")
+
+[node name="SoftDetails" type="Node2D" parent="LongVergeDressing"]
+y_sort_enabled = true
+
+[node name="CampFire" type="Sprite2D" parent="LongVergeDressing/SoftDetails"]
+position = Vector2(2050, 610)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("22_weftlumin")
+
+[node name="MoorBush01" type="Sprite2D" parent="LongVergeDressing/SoftDetails"]
+position = Vector2(450, 1200)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("23_weftlumin")
+
+[node name="MoorBush02" type="Sprite2D" parent="LongVergeDressing/SoftDetails"]
+position = Vector2(1150, 720)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("23_weftlumin")
+flip_h = true
+
+[node name="MoorBush03" type="Sprite2D" parent="LongVergeDressing/SoftDetails"]
+position = Vector2(1750, 1130)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("23_weftlumin")
+
+[node name="MoorBush04" type="Sprite2D" parent="LongVergeDressing/SoftDetails"]
+position = Vector2(2550, 1300)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("23_weftlumin")
+flip_h = true
+
+[node name="MoorBush05" type="Sprite2D" parent="LongVergeDressing/SoftDetails"]
+position = Vector2(2800, 660)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("23_weftlumin")
+
+[node name="MoorBush06" type="Sprite2D" parent="LongVergeDressing/SoftDetails"]
+position = Vector2(850, 460)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("23_weftlumin")
+flip_h = true
+
+[node name="SolidProps" type="Node2D" parent="LongVergeDressing"]
+y_sort_enabled = true
+[node name="MileCairnWest" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(500, 1010)
+scale = Vector2(0.7, 0.7)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MileCairnWest"]
+texture = ExtResource("9_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MileCairnWest"]
+shape = SubResource("RectangleShape2D_weftlumin1")
+
+[node name="MileCairnMid" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1900, 790)
+scale = Vector2(0.7, 0.7)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MileCairnMid"]
+texture = ExtResource("9_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MileCairnMid"]
+shape = SubResource("RectangleShape2D_weftlumin1")
+
+[node name="MileCairnEast" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2660, 1010)
+scale = Vector2(0.7, 0.7)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MileCairnEast"]
+texture = ExtResource("9_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MileCairnEast"]
+shape = SubResource("RectangleShape2D_weftlumin1")
+
+[node name="BlackBandCairn" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(900, 1010)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/BlackBandCairn"]
+texture = ExtResource("10_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/BlackBandCairn"]
+shape = SubResource("RectangleShape2D_weftlumin2")
+
+[node name="FreshBandCairn" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2460, 790)
+scale = Vector2(0.75, 0.75)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/FreshBandCairn"]
+texture = ExtResource("10_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/FreshBandCairn"]
+shape = SubResource("RectangleShape2D_weftlumin2")
+
+[node name="SplitStone" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1400, 1070)
+scale = Vector2(1.3, 1.3)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/SplitStone"]
+texture = ExtResource("11_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/SplitStone"]
+shape = SubResource("RectangleShape2D_weftlumin3")
+
+[node name="SplitStoneHalf" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1500, 1090)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/SplitStoneHalf"]
+texture = ExtResource("11_weftlumin")
+flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/SplitStoneHalf"]
+shape = SubResource("RectangleShape2D_weftlumin4")
+
+[node name="PaymastersTent" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2200, 560)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/PaymastersTent"]
+texture = ExtResource("12_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/PaymastersTent"]
+shape = SubResource("RectangleShape2D_weftlumin5")
+
+[node name="ColumnTent" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1930, 480)
+scale = Vector2(0.7, 0.7)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/ColumnTent"]
+texture = ExtResource("12_weftlumin")
+flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/ColumnTent"]
+shape = SubResource("RectangleShape2D_weftlumin6")
+
+[node name="PayCart" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2430, 640)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/PayCart"]
+texture = ExtResource("13_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/PayCart"]
+shape = SubResource("RectangleShape2D_weftlumin7")
+
+[node name="MusterDrum" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2080, 690)
+scale = Vector2(0.6, 0.6)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MusterDrum"]
+texture = ExtResource("14_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MusterDrum"]
+shape = SubResource("RectangleShape2D_weftlumin1")
+
+[node name="CampCrates" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2330, 720)
+scale = Vector2(0.7, 0.7)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/CampCrates"]
+texture = ExtResource("15_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/CampCrates"]
+shape = SubResource("RectangleShape2D_weftlumin8")
+
+[node name="GraveMarker" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1500, 1380)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/GraveMarker"]
+texture = ExtResource("16_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/GraveMarker"]
+shape = SubResource("RectangleShape2D_weftlumin8")
+
+[node name="UnnamedStoneWest" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1380, 1450)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/UnnamedStoneWest"]
+texture = ExtResource("17_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/UnnamedStoneWest"]
+shape = SubResource("RectangleShape2D_weftlumin1")
+
+[node name="UnnamedStoneEast" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1620, 1450)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/UnnamedStoneEast"]
+texture = ExtResource("17_weftlumin")
+flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/UnnamedStoneEast"]
+shape = SubResource("RectangleShape2D_weftlumin1")
+
+[node name="GraveStanding" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1500, 1520)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/GraveStanding"]
+texture = ExtResource("18_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/GraveStanding"]
+shape = SubResource("RectangleShape2D_weftlumin8")
+
+[node name="MoorPine01" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(300, 400)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorPine01"]
+texture = ExtResource("19_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine01"]
+shape = SubResource("RectangleShape2D_weftlumin9")
+
+[node name="MoorPine02" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(720, 300)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorPine02"]
+texture = ExtResource("19_weftlumin")
+flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine02"]
+shape = SubResource("RectangleShape2D_weftlumin9")
+
+[node name="MoorPine03" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1220, 360)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorPine03"]
+texture = ExtResource("19_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine03"]
+shape = SubResource("RectangleShape2D_weftlumin9")
+
+[node name="MoorPine04" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2700, 340)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorPine04"]
+texture = ExtResource("19_weftlumin")
+flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine04"]
+shape = SubResource("RectangleShape2D_weftlumin9")
+
+[node name="MoorPine05" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2850, 1420)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorPine05"]
+texture = ExtResource("19_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine05"]
+shape = SubResource("RectangleShape2D_weftlumin9")
+
+[node name="MoorPine06" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(240, 1560)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorPine06"]
+texture = ExtResource("19_weftlumin")
+flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine06"]
+shape = SubResource("RectangleShape2D_weftlumin9")
+
+[node name="MoorPine07" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1000, 1640)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorPine07"]
+texture = ExtResource("19_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine07"]
+shape = SubResource("RectangleShape2D_weftlumin9")
+
+[node name="MoorPine08" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2300, 1580)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorPine08"]
+texture = ExtResource("19_weftlumin")
+flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine08"]
+shape = SubResource("RectangleShape2D_weftlumin9")
+
+[node name="MoorRockNorth" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(1600, 420)
+scale = Vector2(0.7, 0.7)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorRockNorth"]
+texture = ExtResource("11_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorRockNorth"]
+shape = SubResource("RectangleShape2D_weftlumin10")
+
+[node name="MoorRockSouth" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(620, 1360)
+scale = Vector2(0.6, 0.6)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/MoorRockSouth"]
+texture = ExtResource("11_weftlumin")
+flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorRockSouth"]
+shape = SubResource("RectangleShape2D_weftlumin11")
+
+[node name="FallenLog" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(2700, 1160)
+scale = Vector2(0.9, 0.9)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/FallenLog"]
+texture = ExtResource("20_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/FallenLog"]
+shape = SubResource("RectangleShape2D_weftlumin12")
+
+[node name="OldStump" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
+position = Vector2(360, 720)
+scale = Vector2(0.8, 0.8)
+
+[node name="Sprite2D" type="Sprite2D" parent="LongVergeDressing/SolidProps/OldStump"]
+texture = ExtResource("21_weftlumin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/OldStump"]
+shape = SubResource("RectangleShape2D_weftlumin13")
+
+[node name="SpawnFromDom" type="Marker2D" parent="."]
+position = Vector2(2800, 900)
+
+[node name="SpawnFromKesselford" type="Marker2D" parent="."]
+position = Vector2(200, 900)
+
+[node name="SpawnSlotBlackBand" type="Marker2D" parent="."]
+position = Vector2(900, 1190)
+
+[node name="SpawnSlotGraveMound" type="Marker2D" parent="."]
+position = Vector2(1500, 1620)
+
+[node name="RoadToDom" parent="." instance=ExtResource("24_weftlumin")]
+position = Vector2(2940, 900)
+target_scene = "res://world/starting_town.tscn"
+label_text = "MOOR ROAD TO DOM"
+spawn_id = &"from_long_verge"
+
+[node name="RoadToKesselford" parent="." instance=ExtResource("24_weftlumin")]
+position = Vector2(60, 900)
+target_scene = "res://world/kesselford.tscn"
+label_text = "MOOR ROAD TO KESSELFORD"
+spawn_id = &"from_long_verge"
+
+[node name="GraveWatch" parent="." instance=ExtResource("25_weftlumin")]
+position = Vector2(1560, 1290)
+unit_id = &"bog-wight"
+group_id = &"bog-wight"
+

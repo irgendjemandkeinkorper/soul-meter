@@ -176,6 +176,26 @@ func fame_tier_index() -> int:
 	return _tier_index(fame(), FAME_TIER_FLOORS)
 
 
+## Tier-name floors and ceilings on the RFC ladders, for reaction rules and
+## dialogue conditions (`Renown.fame_tier_at_least("Known")`). Floors, like the
+## reputation band gate: Known stays open at Renowned. A name that is not on the
+## ladder never opens a gate — a typo must fail shut.
+## docs/yothmeru-world-effects-packet.md §5.
+func fame_tier_at_least(minimum_tier: String) -> bool:
+	var wanted := FAME_TIER_NAMES.find(minimum_tier)
+	return wanted >= 0 and fame_tier_index() >= wanted
+
+
+func karma_tier_at_least(minimum_tier: String) -> bool:
+	var wanted := KARMA_TIER_NAMES.find(minimum_tier)
+	return wanted >= 0 and karma_tier_index() >= wanted
+
+
+func karma_tier_at_most(maximum_tier: String) -> bool:
+	var wanted := KARMA_TIER_NAMES.find(maximum_tier)
+	return wanted >= 0 and karma_tier_index() <= wanted
+
+
 ## The most recent reasons behind one meter, newest first — same shape as
 ## Reputation.why().
 func why(kind: StringName, limit: int = 5) -> Array[RenownEvent]:

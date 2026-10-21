@@ -509,3 +509,12 @@ local_waypoints = PackedVector2Array(0, 0, 120, 22, 250, 0)
 wander_speed = 21.0
 pause_duration = 1.8
 initial_pause = 1.1
+[node name="SpawnFromHollowmere" type="Marker2D" parent="."]
+position = Vector2(1620, 500)
+
+[node name="ReedTrack" parent="." instance=ExtResource("5_exit")]
+position = Vector2(1740, 500)
+target_scene = "res://world/hollowmere.tscn"
+label_text = "REED TRACK TO HOLLOWMERE"
+spawn_id = &"from_dorthkor_road"
+

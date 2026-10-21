@@ -1,0 +1,28 @@
+{
+	"schema": "weftlumin.spawn_table.v1",
+	"id": "long-verge-black-band-ambient",
+	"scene_path": "res://world/long_verge.tscn",
+	"slots": [
+		{
+			"id": "black-band",
+			"anchor": "SpawnSlotBlackBand",
+			"respawn_days": 2,
+			"entries": [
+				{"archetype_id": "bog-wight", "weight": 20},
+				{"empty": true, "weight": 80}
+			],
+			"pack_size": {"min": 1, "max": 1}
+		},
+		{
+			"id": "grave-mound",
+			"anchor": "SpawnSlotGraveMound",
+			"respawn_days": 3,
+			"entries": [
+				{"archetype_id": "bog-wight", "weight": 25},
+				{"empty": true, "weight": 75}
+			],
+			"pack_size": {"min": 1, "max": 2}
+		}
+	],
+	"caps": {"max_alive": 2}
+}

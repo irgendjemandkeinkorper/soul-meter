@@ -1,0 +1,54 @@
+~ long_verge_long_verge_cairn_warden
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Cairn-Warden Mabbe Sloe: Keep off the banded stretch. I won't paint you a cairn.
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Cairn-Warden Mabbe Sloe: Third past the split stone has a fresh band. Wasn't there last month. The thin's walking toward home.
+else
+	Cairn-Warden Mabbe Sloe: Keep your footing, traveler.
+Cairn-Warden Mabbe Sloe: Mabbe re-bands the mile-cairns by the only method the Companies trust: where the road last cost them someone.
+Cairn-Warden Mabbe Sloe: Leave me a true count when you return.
+=> END
+
+~ long_verge_long_verge_old_soldier
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Jory Fennick: Sit somewhere else.
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Jory Fennick: Three. There were three. Ask the paymaster why his map says eleven and watch his hands.
+else
+	Jory Fennick: Keep your footing, traveler.
+Jory Fennick: Jory remembers when the road had three bad stretches and says the cairns have been walking toward Dom ever since.
+Jory Fennick: Leave me a true count when you return.
+=> END
+
+~ long_verge_long_verge_paymaster
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Paymaster Odric Tallowmere: The Companies pay for surveys, not for questions.
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Paymaster Odric Tallowmere: Walk the stretch past the split stone with me. Count the bands, then tell me what you felt.
+else
+	Paymaster Odric Tallowmere: Keep your footing, traveler.
+Paymaster Odric Tallowmere: Odric pays the column by the cairn count and wants a stretch re-marked whose bands no longer match the thin.
+Paymaster Odric Tallowmere: Leave me a true count when you return.
+=> END
+
+~ long_verge_long_verge_recruit
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Recruit Tessaly Brack: Move along. Nothing here to read.
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Recruit Tessaly Brack: They're not on the map, the ones under here. The paymaster says there was no rout. The ground disagrees.
+else
+	Recruit Tessaly Brack: Keep your footing, traveler.
+Recruit Tessaly Brack: Tessaly stands watch over the unnamed grave and has noticed the thin streaks converge on it.
+Recruit Tessaly Brack: Leave me a true count when you return.
+=> END
+
+~ long_verge_long_verge_sergeant
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Sergeant Iwan Corrow: Column's under contract. Clear the drum.
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Sergeant Iwan Corrow: First time over the Verge? Keep your Phrases in your mouth past the black bands. Notes only there.
+else
+	Sergeant Iwan Corrow: Keep your footing, traveler.
+Sergeant Iwan Corrow: Iwan drums the column over the Verge so the recruits learn that the world, not an enemy, is what thins.
+Sergeant Iwan Corrow: Leave me a true count when you return.
+=> END

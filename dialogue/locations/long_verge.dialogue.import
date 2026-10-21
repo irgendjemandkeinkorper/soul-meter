@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://dyt8loos4l4rt"
+path="res://.godot/imported/long_verge.dialogue-4fbca74f5625c29c7918a0adce8262d4.tres"
+
+[deps]
+
+source_file="res://dialogue/locations/long_verge.dialogue"
+dest_files=["res://.godot/imported/long_verge.dialogue-4fbca74f5625c29c7918a0adce8262d4.tres"]
+
+[params]
+
+defaults=true

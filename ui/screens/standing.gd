@@ -9,6 +9,8 @@ var _factions: Array[String] = []
 
 
 func _build() -> void:
+	# Standing opens over the journal or the live scene; cover it like every other full-page screen.
+	_add_opaque_backdrop()
 	var vbox := _make_shell_window("Standing")
 
 	var global_row := HBoxContainer.new()

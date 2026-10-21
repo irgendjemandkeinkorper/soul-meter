@@ -2,18 +2,23 @@ class_name NpcRoster
 extends RefCounted
 ## Runtime seam for Pandora-generated NPC data.
 ##
-## Every fast-travel hub owns one generated roster and one placements file
+## Every town owns one generated roster and one placements file
 ## (`tools/generate_gloot.gd`, C1 / #238): `<town>_npc_roster.json` and
 ## `<town>_npc_placements.json`. This reader merges them, so an NPC id is looked
-## up the same way whichever hub it belongs to. `FastTravelRegistry` is the one
-## hand-wired list of hubs; a hub without generated files simply contributes
-## nothing.
+## up the same way whichever town it belongs to. A town is a fast-travel hub
+## (`FastTravelRegistry`, the hand-wired list) or any other baked location whose
+## id names a `canon/<town>/` directory the seeder wrote a roster for (C3 / #240:
+## The Long Verge is wilds with a Company camp, not a hub). A town without
+## generated files simply contributes nothing.
 ##
 ## Portrait art remains data: a safe source-image path is loaded when present;
 ## otherwise the dialogue portrait renders the generated monogram descriptor.
 
 const ROSTER_PATH_TEMPLATE := "res://data/generated/%s_npc_roster.json"
 const PLACEMENTS_PATH_TEMPLATE := "res://data/generated/%s_npc_placements.json"
+## C25 (#262): the hand-authored ambient dialogue for a roster town, one file per town under the
+## generated title scheme. Optional; a town without one keeps its generated placeholder.
+const LOCATION_DIALOGUE_PATH_TEMPLATE := "res://dialogue/locations/%s.dialogue"
 const SAFE_PORTRAIT_EXTENSIONS := ["png", "jpg", "jpeg", "svg", "webp", "tga"]
 const UNIT_PORTRAIT_TEMPLATE := "res://assets/generated/sprites/units/%s/%s--idle--se--f00.png"
 
@@ -23,11 +28,16 @@ static var _placements: Dictionary = {}
 static var _ids_by_display_name: Dictionary = {}
 
 
-## The hubs whose generated NPC artifacts this reader merges, in registry order.
+## The towns whose generated NPC artifacts this reader merges: the fast-travel hubs in
+## registry order, then every other baked location with a roster file, in index order.
 static func town_ids() -> Array[String]:
 	var result: Array[String] = []
 	for hub: Dictionary in FastTravelRegistry.all():
 		result.append(String(hub["id"]))
+	for location: LocationDefinition in LocationRegistry.ALL:
+		var town_id := String(location.id)
+		if not result.has(town_id) and FileAccess.file_exists(roster_path(town_id)):
+			result.append(town_id)
 	return result
 
 
@@ -37,6 +47,26 @@ static func roster_path(town_id: String) -> String:
 
 static func placements_path(town_id: String) -> String:
 	return PLACEMENTS_PATH_TEMPLATE % town_id
+
+
+static func location_dialogue_path(town_id: String) -> String:
+	return LOCATION_DIALOGUE_PATH_TEMPLATE % town_id
+
+
+## The file a roster NPC talks from: the town's authored location dialogue when it carries the
+## NPC's generated title, else `generated_path` (the `<town>_townsfolk.dialogue` that
+## tools/generate_gloot.gd owns and nothing hand-edits). Read through the imported resource,
+## never the source text, so an exported build routes the same way the editor does.
+static func dialogue_route(town_id: String, generated_path: String, title: String) -> String:
+	if title.is_empty():
+		return generated_path
+	var authored_path := location_dialogue_path(town_id)
+	if not ResourceLoader.exists(authored_path):
+		return generated_path
+	var authored := load(authored_path) as DialogueResource
+	if authored == null or not authored.get_cues().has(title):
+		return generated_path
+	return authored_path
 
 
 static func all() -> Array[Dictionary]:

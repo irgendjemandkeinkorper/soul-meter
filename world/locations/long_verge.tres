@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="LocationDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/location_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"long_verge"
+scene_path = "res://world/long_verge.tscn"
+harmonic_accord = 85.0
+thinning_tier = 1
+respawn_policy = "wilderness"
+default_spawn_id = &"default"
+arrival_flag = "chapter_long_verge_reached"
+arrival_checkpoint = "location-arrival"
+spawns = {
+"default": "default",
+"from_dom": "from_dom",
+"from_kesselford": "from_kesselford"
+}

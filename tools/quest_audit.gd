@@ -17,17 +17,28 @@ extends SceneTree
 ##    words are the likely offenders. A reported read-back is evidence, not proof.
 ##
 ## 2. Flag names built by format string are invisible to the scanner. The regex
-##    only captures a literal after `get_flag(`, so game code doing
-##    `get_flag("quest_%d_resolution" % id)` is captured as the unsubstituted
-##    template. This can both invent orphans and hide real ones.
+##    only captures a literal after `get_flag(`, so a read written as
+##    `get_flag("quest_%d_resolution" % id)` is never seen. A format-string
+##    WRITE is treated as a prefix site (every read flag sharing its prefix
+##    counts as written), so it cannot invent an orphan, but it can hide one.
+##    Reads and writes that go through a script constant (`const X := "flag"`
+##    then `flag_is_true(X)`) ARE resolved, per file.
 ##
 ## 3. The side-quest ratio denominator is per RESOLUTION across all side quests
 ##    combined, not per quest. A five-branch quest therefore weighs more than a
 ##    two-branch one. This is a deliberate choice, recorded here because it is
 ##    not self-evident from the output.
-## 4. Skill-check route detection is indentation- and token-based. It rejects
-##    obvious checked, completed, final-resolution, and prerequisite-gated
-##    alternatives, but cannot prove that every runtime state can reach a route.
+## 4. Skill-check route detection is indentation- and token-based. A checked
+##    response that names a quest needs an unchecked sibling open at the same
+##    quest stage (same is_active / is_done polarity); one that names no quest
+##    needs another writer of a flag its success branch writes — an unchecked
+##    dialogue line, a script (literal or constant), a scene property, or an
+##    encounter consequence map. It cannot prove that every runtime state can
+##    reach that route.
+## 5. Companion quests resolve through one completion flag plus a Renown line
+##    whose cause names the branch (resolve_companion_quest). Their outcomes
+##    are distinct by that cause, and "read back" means the completion flag is
+##    read: the branch itself leaves no flag to read, by design.
 ##
 ## Because of 1 and 2 this tool is a debt-finder, not a proof of compliance.
 ## FR-906's human playtest pass remains the check on whether consequences are
@@ -38,6 +49,8 @@ const STRICT_ENV := "SOUL_METER_QUEST_AUDIT_STRICT"
 const REGISTRY_PATH := "res://globals/quest_registry.gd"
 const QUEST_DIRECTORY := "res://quests"
 const DIALOGUE_DIRECTORY := "res://dialogue"
+## Encounter consequence maps live here; they write flags without a set_flag call.
+const PANDORA_PATH := "res://data.pandora"
 ## Keep the standalone SceneTree entrypoint free of autoload-dependent gameplay classes.
 const ACT_OF_AGREEMENT_TAG := "act_of_agreement"
 ## Template conformance (docs/templates/*.md) scans every LocationDefinition here.
@@ -168,7 +181,8 @@ static func audit_project(strict: bool = false) -> Dictionary:
 			_source_files(QUEST_DIRECTORY, PackedStringArray(["tres"])),
 			_source_files(LOCATION_DIRECTORY, PackedStringArray(["tres"]))
 		),
-		read_back_coverage
+		read_back_coverage,
+		_softlock_writer_sources(readback_sources)
 	)
 
 
@@ -180,7 +194,8 @@ static func build_report(
 	quest_critical_ids: PackedStringArray = PackedStringArray(),
 	dialogue_sources: Dictionary = {},
 	template_violations: Array[Dictionary] = [],
-	read_back_coverage: Array[Dictionary] = []
+	read_back_coverage: Array[Dictionary] = [],
+	writer_sources: Dictionary = {}
 ) -> Dictionary:
 	if read_back_coverage.is_empty() and not quest_results.is_empty():
 		var readback_sources := _readback_sources(dialogue_sources)
@@ -303,7 +318,9 @@ static func build_report(
 			violation
 		)
 
-	var check_findings := check_softlock_violations(dialogue_sources)
+	if writer_sources.is_empty() and not dialogue_sources.is_empty():
+		writer_sources = _softlock_writer_sources(_readback_sources(dialogue_sources))
+	var check_findings := check_softlock_violations(dialogue_sources, writer_sources)
 	for finding: Dictionary in check_findings:
 		var details := finding.duplicate()
 		var finding_severity := str(details.get("severity", "error"))
@@ -547,13 +564,15 @@ static func scan_flag_sources(paths: PackedStringArray) -> Dictionary:
 	# format-string write-site as writing every READ flag that matches its
 	# prefix, so per-zone flags don't surface as orphans while an unread typo
 	# still would.
-	var format_set_regex := _regex('(?:GameState\\.)?set_flag\\(\\s*["\\\']([^"\\\']+)%s["\\\']')
+	var format_set_regex := _regex(
+		'(?:GameState\\.)?set_flag\\(\\s*["\\\']([^"\\\'%]+)%[sd]["\\\']'
+	)
 	var written_prefixes := {}
 	for path: String in paths:
 		var source := FileAccess.get_file_as_string(path)
 		for result: RegExMatch in set_regex.search_all(source):
-			# A "%s" literal is a format-string site; the prefix rule below owns it.
-			if "%s" in result.get_string(1):
+			# A "%s" / "%d" literal is a format-string site; the prefix rule below owns it.
+			if "%" in result.get_string(1):
 				continue
 			written[result.get_string(1)] = true
 		for result: RegExMatch in get_regex.search_all(source):
@@ -604,7 +623,9 @@ static func _collect_quest_results(
 			quest["outcomes"] = _dom_side_outcomes(resource, resolution_flag)
 
 	for path: String in dialogue_sources:
-		_parse_dialogue_resolutions(path, dialogue_sources[path], results_by_constant)
+		_parse_dialogue_resolutions(
+			path, dialogue_sources[path], results_by_constant, metadata.get("companion_flags", {})
+		)
 
 	var results: Array[Dictionary] = []
 	for value: Variant in results_by_constant.values():
@@ -671,7 +692,10 @@ const RESOLVER_TARGETS := {
 
 
 static func _parse_dialogue_resolutions(
-	path: String, source: String, results_by_constant: Dictionary
+	path: String,
+	source: String,
+	results_by_constant: Dictionary,
+	companion_flags: Dictionary = {}
 ) -> void:
 	var lines := source.split("\n")
 	var turn_in_regex := _regex(
@@ -682,6 +706,11 @@ static func _parse_dialogue_resolutions(
 			'QuestRegistry\\.(%s)\\("([^"]+)"'
 			% "|".join(PackedStringArray(RESOLVER_TARGETS.keys()))
 		)
+	)
+	# resolve_companion_quest("<companion>", QuestRegistry.<CONST>, <renown>, "<cause>")
+	var companion_regex := _regex(
+		'QuestRegistry\\.resolve_companion_quest\\(\\s*"([^"]+)",\\s*QuestRegistry\\.([A-Z0-9_]+),'
+		+ '\\s*([0-9.]+),\\s*"([^"]+)"'
 	)
 	for line_index: int in lines.size():
 		var line := lines[line_index]
@@ -698,6 +727,23 @@ static func _parse_dialogue_resolutions(
 					)
 				)
 				continue
+		var companion := companion_regex.search(line)
+		if companion != null:
+			var companion_constant := companion.get_string(2)
+			var completion_flag := str(companion_flags.get(companion.get_string(1), ""))
+			if results_by_constant.has(companion_constant) and not completion_flag.is_empty():
+				var companion_quest: Dictionary = results_by_constant[companion_constant]
+				var companion_outcomes: Array[Dictionary] = companion_quest["outcomes"]
+				companion_outcomes.append(
+					_companion_outcome(
+						completion_flag,
+						companion.get_string(3),
+						companion.get_string(4),
+						path,
+						line_index
+					)
+				)
+			continue
 		var resolver := resolver_regex.search(line)
 		if resolver == null:
 			continue
@@ -722,6 +768,23 @@ static func _parse_dialogue_resolutions(
 		)
 
 
+## One companion branch. Both branches of a companion quest write the same
+## completion flag; the Renown cause is what tells them apart (limitation 5).
+static func _companion_outcome(
+	completion_flag: String, renown_delta: String, cause: String, path: String, line_index: int
+) -> Dictionary:
+	return {
+		"id": cause,
+		"state_writes": ["%s=true" % completion_flag],
+		"ledger_events": ["renown:+%s:%s" % [renown_delta, cause]],
+		"readback_flag": completion_flag,
+		"readback_kind": "completion",
+		"read_back": false,
+		"source": path,
+		"line": line_index + 1,
+	}
+
+
 static func _direct_outcome(
 	quest: Dictionary,
 	outcome_id: String,
@@ -734,7 +797,11 @@ static func _direct_outcome(
 	var ledger_events: Array[String] = []
 	var readback_flag := ""
 	var quest_id := int((quest["resource"] as Resource).get("id"))
-	var item_id := str((quest["resource"] as Resource).get("item_id"))
+	# Only FetchQuest carries `item_id`. A FlagQuest answers null, and str(null)
+	# is "<null>" — non-empty — which is how deep_trial once gained a phantom
+	# `quest_3_resolution` write.
+	var item_id_value: Variant = (quest["resource"] as Resource).get("item_id")
+	var item_id := str(item_id_value) if item_id_value is String else ""
 	if not item_id.is_empty():
 		readback_flag = "quest_%d_resolution" % quest_id
 		state_writes.append("%s=%s" % [readback_flag, outcome_id])
@@ -945,11 +1012,22 @@ static func _classify_readbacks(
 			var flag := str(outcome.get("readback_flag", ""))
 			var outcome_id := str(outcome.get("id", ""))
 			var has_readback := false
-			if not flag.is_empty():
+			if str(outcome.get("readback_kind", "")) == "completion":
+				has_readback = _flag_read_in_sources(flag, sources)
+			elif not flag.is_empty():
 				has_readback = _has_flag_readback(flag, outcome_id, sources)
 			if not has_readback and outcomes.size() == 1:
 				has_readback = _has_later_completion_readback(quest, outcome, sources)
 			outcome["read_back"] = has_readback
+
+
+## Exact read of one flag anywhere: a literal `get_flag("x"` / `flag_is_true("x"`,
+## or a script constant that resolves to it.
+static func _flag_read_in_sources(flag: String, sources: Dictionary) -> bool:
+	for source_value: Variant in sources.values():
+		if _source_reads_flag(str(source_value), flag):
+			return true
+	return _constant_flag_reads(sources).has(flag)
 
 
 static func _has_flag_readback(flag: String, outcome_id: String, sources: Dictionary) -> bool:
@@ -1024,12 +1102,16 @@ static func _project_flag_access(
 
 	# Non-dialogue consumers include fact requirements, prices, encounters, and
 	# presence/presentation scripts. Literal flag references there count as reads.
+	var constant_reads := _constant_flag_reads(readback_sources)
 	for source_value: Variant in readback_sources.values():
 		var source := str(source_value)
 		for flag_value: Variant in written.keys():
 			var flag := str(flag_value)
 			if _source_reads_flag(source, flag):
 				read[flag] = true
+	for flag_value: Variant in written.keys():
+		if constant_reads.has(str(flag_value)):
+			read[str(flag_value)] = true
 
 	# A read whose name is authored in runtime data has a data-driven writer even
 	# when the actual set_flag call receives the key through a variable.
@@ -1037,17 +1119,61 @@ static func _project_flag_access(
 		var flag := str(flag_value)
 		if not written.has(flag) and _has_authored_runtime_value(flag, readback_sources, pandora_source):
 			written[flag] = true
-	return _flag_access_result(written, read)
+	var result := _flag_access_result(written, read)
+
+	# A resolution flag an outcome names is the readbacks category's finding
+	# (main_/side_resolution_not_read_back). Listing it here as well is the same
+	# debt reported twice, under a name an author has to decode.
+	var readback_flags := {}
+	for quest: Dictionary in quest_results:
+		for outcome: Dictionary in quest.get("outcomes", []):
+			readback_flags[str(outcome.get("readback_flag", ""))] = true
+	var orphans := PackedStringArray()
+	for flag: String in result["written_never_read"]:
+		if not readback_flags.has(flag):
+			orphans.append(flag)
+	result["written_never_read"] = orphans
+	return result
 
 
 static func _source_reads_flag(source: String, flag: String) -> bool:
 	if 'get_flag("%s"' % flag in source:
+		return true
+	if 'flag_is_true("%s"' % flag in source:
 		return true
 	if "FLAG_NON_EMPTY" in source and '"%s"' % flag in source:
 		return true
 	if "required_flags" in source and '"%s"' % flag in source:
 		return true
 	return false
+
+
+## `const NAME := "flag"` declarations in one script, NAME -> flag.
+static func _constant_flag_names(source: String) -> Dictionary:
+	var names := {}
+	var const_regex := _regex(
+		'const\\s+([A-Z_][A-Z0-9_]*)(?:\\s*:\\s*String)?\\s*:?=\\s*"([^"]+)"'
+	)
+	for result: RegExMatch in const_regex.search_all(source):
+		names[result.get_string(1)] = result.get_string(2)
+	return names
+
+
+## Flags read through a script constant: `get_flag(NAME` / `flag_is_true(NAME`
+## in the same file that declares NAME. The literal-only read regex cannot see
+## these, which is how a flag only a scene script consumes (the trial hall's
+## keeper-fight request) surfaced as written-never-read.
+static func _constant_flag_reads(sources: Dictionary) -> Dictionary:
+	var reads := {}
+	for path: String in sources:
+		if path.get_extension().to_lower() != "gd":
+			continue
+		var source := str(sources[path])
+		var names := _constant_flag_names(source)
+		for name: String in names:
+			if _regex("(?:get_flag|flag_is_true)\\(\\s*%s\\b" % name).search(source) != null:
+				reads[str(names[name])] = true
+	return reads
 
 
 static func _has_authored_runtime_value(
@@ -1216,13 +1342,45 @@ static func _quest_metadata(registry_source: String) -> Dictionary:
 		var story_end := registry_source.find("]", array_open) if array_open >= 0 else -1
 		if array_open < 0 or story_end < 0:
 			push_warning("quest_audit: could not parse STORY_QUESTS array; main quests unclassified")
-			return {"by_constant": by_constant, "main_constants": main_constants}
+			return {
+		"by_constant": by_constant,
+		"main_constants": main_constants,
+		"companion_flags": _companion_completion_flags(registry_source),
+	}
 		var story_block := registry_source.substr(array_open, story_end - array_open + 1)
 		for result: RegExMatch in _regex("[A-Z][A-Z0-9_]+").search_all(story_block):
 			var name := result.get_string()
 			if by_constant.has(name):
 				main_constants[name] = true
-	return {"by_constant": by_constant, "main_constants": main_constants}
+	return {
+		"by_constant": by_constant,
+		"main_constants": main_constants,
+		"companion_flags": _companion_completion_flags(registry_source),
+	}
+
+
+## COMPANION_QUEST_COMPLETION_FLAGS, companion id -> completion flag, read from
+## the registry text so the audit never instantiates the autoload.
+static func _companion_completion_flags(registry_source: String) -> Dictionary:
+	var flags := {}
+	var dict_match := _regex(
+		'COMPANION_QUEST_COMPLETION_FLAGS\\s*:?=\\s*\\{([^}]*)\\}'
+	).search(registry_source)
+	if dict_match == null:
+		return flags
+	var entry_regex := _regex('["\\\']([^"\\\']+)["\\\']\\s*:\\s*["\\\']([^"\\\']+)["\\\']')
+	for result: RegExMatch in entry_regex.search_all(dict_match.get_string(1)):
+		flags[result.get_string(1)] = result.get_string(2)
+	return flags
+
+
+## The read-back sources plus data.pandora, whose encounter consequence maps
+## write flags without any set_flag call (see _flag_writers_outside_checks).
+static func _softlock_writer_sources(readback_sources: Dictionary) -> Dictionary:
+	var sources := readback_sources.duplicate()
+	if FileAccess.file_exists(PANDORA_PATH):
+		sources[PANDORA_PATH] = FileAccess.get_file_as_string(PANDORA_PATH)
+	return sources
 
 
 static func _readback_sources(dialogue_sources: Dictionary) -> Dictionary:
@@ -1285,8 +1443,11 @@ static func _flag_access_result(written: Dictionary, read: Dictionary) -> Dictio
 ## response lines, then the response's indented branch is inspected. The quest
 ## constant cross-reference rejects checked, completed, final-resolution, and
 ## prerequisite-gated responses, but remains a heuristic and only emits a warning.
-static func check_softlock_violations(dialogue_sources: Dictionary) -> Array[Dictionary]:
+static func check_softlock_violations(
+	dialogue_sources: Dictionary, writer_sources: Dictionary = {}
+) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
+	var outside_writers := _flag_writers_outside_checks(dialogue_sources, writer_sources)
 	for path: String in dialogue_sources:
 		var source := str(dialogue_sources[path])
 		var lines := source.split("\n")
@@ -1353,13 +1514,24 @@ static func check_softlock_violations(dialogue_sources: Dictionary) -> Array[Dic
 
 			var quest_match := _regex("QuestRegistry\\.([A-Z][A-Z0-9_]*)").search(response_line)
 			var quest_constant := quest_match.get_string(1) if quest_match != null else ""
-			if quest_constant.is_empty() or not _has_alternate_quest_response(
-				lines, line_index, branch_end, quest_constant
-			):
+			var success_end := else_line if else_line >= 0 else branch_lines.size()
+			var success_effects := _success_effects(branch_lines, success_line + 1, success_end)
+			var has_route := false
+			if not quest_constant.is_empty():
+				has_route = _has_alternate_quest_response(
+					lines, line_index, branch_end, quest_constant
+				)
+			if not has_route:
+				# No sibling at the same quest stage — the trial hall's checks name
+				# no quest at all. The route may still be a scene script, a pickup,
+				# or an encounter map writing the same flag the success branch does.
+				has_route = _effects_have_outside_route(success_effects, outside_writers)
+			if not has_route:
 				var possible_softlock := identity.duplicate()
 				possible_softlock["code"] = "checked_response_may_be_only_acquisition_route"
 				possible_softlock["severity"] = "warning"
 				possible_softlock["quest_constant"] = quest_constant
+				possible_softlock["success_effects"] = success_effects
 				findings.append(possible_softlock)
 
 			line_index = branch_end
@@ -1378,10 +1550,105 @@ static func _has_check_continuation(lines: PackedStringArray, start: int, end: i
 	return false
 
 
+## What a checked response's success branch achieves, as sortable keys:
+## `flag:<name>` for a `set_flag("<name>"`, `offer:<CONST>` for an offer.
+static func _success_effects(lines: PackedStringArray, start: int, end: int) -> Array[String]:
+	var effects := {}
+	for index: int in range(maxi(start, 0), mini(end, lines.size())):
+		_collect_effects(lines[index], effects)
+	var result: Array[String] = []
+	for key: Variant in effects:
+		result.append(str(key))
+	result.sort()
+	return result
+
+
+static func _collect_effects(line: String, effects: Dictionary) -> void:
+	var set_match := _regex('set_flag\\(\\s*"([^"]+)"').search(line)
+	if set_match != null and "%" not in set_match.get_string(1):
+		effects["flag:%s" % set_match.get_string(1)] = true
+	var offer_match := _regex(
+		'QuestRegistry\\.offer(?:_side_quest)?\\(\\s*QuestRegistry\\.([A-Z][A-Z0-9_]*)'
+	).search(line)
+	if offer_match != null:
+		effects["offer:%s" % offer_match.get_string(1)] = true
+
+
+## An empty effect list is NOT a route: a check whose success only jumps or
+## speaks is reported like before, so a gate hidden behind a jump stays visible.
+static func _effects_have_outside_route(effects: Array[String], writers: Dictionary) -> bool:
+	for effect: String in effects:
+		if writers.has(effect):
+			return true
+	return false
+
+
+## Every flag write and quest offer that does not sit inside a checked response:
+## unchecked dialogue lines, scripts (literal or through a constant), scene
+## properties (`completion_flag = "x"`, `interaction_flag = "x"`), and the
+## encounter consequence maps in data.pandora. Keys as in _success_effects.
+static func _flag_writers_outside_checks(
+	dialogue_sources: Dictionary, writer_sources: Dictionary
+) -> Dictionary:
+	var writers := {}
+	for path: String in dialogue_sources:
+		var lines := str(dialogue_sources[path]).split("\n")
+		var line_index := 0
+		while line_index < lines.size():
+			var line := str(lines[line_index])
+			var stripped := line.strip_edges()
+			if stripped.begins_with("- ") and "[if " in line and "check(" in line:
+				line_index = _response_branch_end(lines, line_index, _leading_indent(line))
+				continue
+			_collect_effects(line, writers)
+			line_index += 1
+	var scene_flag_regex := _regex('(?m)^\\s*[a-z_]*flag[a-z_]*\\s*=\\s*"([^"]+)"')
+	var pandora_flag_regex := _regex('\\\\"([a-z][a-z0-9_]+)\\\\":\\\\"\\$')
+	for path: String in writer_sources:
+		var source := str(writer_sources[path])
+		var extension := path.get_extension().to_lower()
+		if path.ends_with("data.pandora"):
+			for result: RegExMatch in pandora_flag_regex.search_all(source):
+				writers["flag:%s" % result.get_string(1)] = true
+		elif extension == "gd":
+			for line: String in source.split("\n"):
+				_collect_effects(line, writers)
+			var names := _constant_flag_names(source)
+			for name: String in names:
+				if _regex("set_flag\\(\\s*%s\\b" % name).search(source) != null:
+					writers["flag:%s" % str(names[name])] = true
+		elif extension == "tscn" or extension == "tres":
+			for result: RegExMatch in scene_flag_regex.search_all(source):
+				writers["flag:%s" % result.get_string(1)] = true
+	return writers
+
+
+## Which stage of a quest a response line is open at: `is_active` polarity and
+## whether it requires the quest done. "active/open", "inactive/open", "-/done"…
+static func _quest_stage(line: String, needle: String) -> String:
+	var active_needle := "QuestRegistry.is_active(%s)" % needle
+	var done_needle := "QuestRegistry.is_done(%s)" % needle
+	var active := "-"
+	if ("not " + active_needle) in line:
+		active = "inactive"
+	elif active_needle in line:
+		active = "active"
+	var done := "open"
+	if done_needle in line and ("not " + done_needle) not in line:
+		done = "done"
+	return "%s/%s" % [active, done]
+
+
 static func _has_alternate_quest_response(
 	lines: PackedStringArray, checked_start: int, checked_end: int, quest_constant: String
 ) -> bool:
 	var needle := "QuestRegistry.%s" % quest_constant
+	# A route only counts when it is open at the same stage of the quest as the
+	# checked response: an offer line (`not is_active`) is no alternative to a
+	# mid-quest check (`is_active`), and vice versa. Before this, every offer
+	# line was rejected outright, so a pre-offer check — the Council elder's
+	# undertone read — always reported the plain offer beside it as missing.
+	var checked_stage := _quest_stage(lines[checked_start], needle)
 	for line_index in lines.size():
 		if line_index >= checked_start and line_index < checked_end:
 			continue
@@ -1390,9 +1657,7 @@ static func _has_alternate_quest_response(
 			continue
 		if "check(" in line:
 			continue
-		if "not QuestRegistry.is_active(%s)" % needle in line:
-			continue
-		if "QuestRegistry.is_done(%s)" % needle in line:
+		if _quest_stage(line, needle) != checked_stage:
 			continue
 		if "QuestRegistry.flags_met(%s)" % needle in line:
 			continue

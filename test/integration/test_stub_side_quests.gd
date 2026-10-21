@@ -30,6 +30,9 @@ func after_test() -> void:
 	Reputation.from_dict(_reputation_backup)
 	QuestRegistry.reset()
 	QuestRegistry.from_dict(_quests_backup)
+	# suspend_stub() publishes a reward summary; UIManager raises a full-screen reward reveal
+	# for it that outlives the suite and swallows the next suite's input.
+	UIManager.reset_reward_reveals()
 
 
 func _open(stub: StubSideQuest) -> void:

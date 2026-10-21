@@ -4,11 +4,12 @@ extends Node
 ## Positions and dialogue routes stay downstream of Pandora; this node owns only
 ## the runtime wiring for deterministic 3D-rendered sprite presentation.
 ##
-## The hub is the fast-travel hub whose scene is the parent scene
-## (`FastTravelRegistry.by_scene()`), and its artifacts are
-## `NpcRoster.roster_path()` / `placements_path()` for that id (C1 / #238). Every
-## field scene the Weftlumin template renders carries this node; in a scene that
-## is not a hub it has nothing to spawn and stays idle.
+## The town is the fast-travel hub whose scene is the parent scene
+## (`FastTravelRegistry.by_scene()`), or else the baked location the scene is when
+## `NpcRoster.town_ids()` lists it (C3 / #240: a wilds location with a camp roster).
+## Its artifacts are `NpcRoster.roster_path()` / `placements_path()` for that id
+## (C1 / #238). Every field scene the Weftlumin template renders carries this
+## node; in a scene with no roster it has nothing to spawn and stays idle.
 
 const NPC_SCENE: PackedScene = preload("res://actors/npc/npc.tscn")
 const UnitArtScript := preload("res://globals/unit_art.gd")
@@ -67,10 +68,21 @@ func _populate_town() -> void:
 	var models := sprite_models()
 
 	_upgrade_legacy_townsfolk(town, models)
-	var hub: Dictionary = FastTravelRegistry.by_scene(town.scene_file_path)
-	if not hub.is_empty():
-		_spawn_generated_townsfolk(town, models, String(hub["id"]))
+	var town_id := _town_id(town.scene_file_path)
+	if not town_id.is_empty():
+		_spawn_generated_townsfolk(town, models, town_id)
 	set_process(not _idle_sprites.is_empty())
+
+
+## The roster town `scene_path` belongs to, or "" when nothing is generated for it.
+static func _town_id(scene_path: String) -> String:
+	var hub: Dictionary = FastTravelRegistry.by_scene(scene_path)
+	if not hub.is_empty():
+		return String(hub["id"])
+	var location: LocationDefinition = LocationRegistry.by_scene(scene_path)
+	if location != null and NpcRoster.town_ids().has(String(location.id)):
+		return String(location.id)
+	return ""
 
 
 func _upgrade_legacy_townsfolk(town: Node2D, models: PackedStringArray) -> void:
@@ -144,8 +156,11 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray, town_id
 		var idle_phase := float(placement.get("idle_phase", 0.0))
 		npc.name = _node_name(npc_id)
 		npc.npc_name = str(row.get("display_name", npc_id))
-		npc.dialogue_path = str(dialogue.get("path", ""))
-		npc.dialogue_start = str(dialogue.get("title", ""))
+		# C25 (#262): an authored `dialogue/locations/<town>.dialogue` wins per title; the
+		# generated townsfolk file stays the fallback.
+		var title := str(dialogue.get("title", ""))
+		npc.dialogue_path = NpcRoster.dialogue_route(town_id, str(dialogue.get("path", "")), title)
+		npc.dialogue_start = title
 		npc.position = town.to_local(anchor.global_position) + Vector2(
 			float(offset_value[0]), float(offset_value[1])
 		)

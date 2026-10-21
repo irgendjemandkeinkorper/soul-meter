@@ -466,3 +466,263 @@ func test_template_conformance_passes_on_shipped_content() -> void:
 
 	assert_bool(bool(report["metrics"]["template_conformance"]["passes"])).is_true()
 	assert_int(int(report["metrics"]["template_conformance"]["errors"])).is_equal(0)
+
+
+# --- Skill-check routes (check_softlocks) ------------------------------------
+
+
+## A pre-offer check and a plain offer at the same quest stage: not a soft-lock.
+const CHECK_PRE_OFFER_WITH_PLAIN_OFFER := '''~ charge
+- "Ask first." [#tag=UNDERTONE] [if not QuestRegistry.is_active(QuestRegistry.ROAD) and not QuestRegistry.is_done(QuestRegistry.ROAD) and check("undertone", 40) /]
+	do SkillCheck.resolve("undertone")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("chapter_charge_understood", true)
+		do QuestRegistry.offer(QuestRegistry.ROAD)
+		=> END
+	else
+		do GameState.set_flag("chapter_charge_check_failed", true)
+		=> charge
+- "I will carry it." [if not QuestRegistry.is_active(QuestRegistry.ROAD) and not QuestRegistry.is_done(QuestRegistry.ROAD) /]
+	do QuestRegistry.offer(QuestRegistry.ROAD)
+	=> END
+- "Already mine." [if QuestRegistry.is_active(QuestRegistry.ROAD) /]
+	=> END
+'''
+
+## A mid-quest check whose only sibling is the offer: the offer is an earlier
+## stage, not an alternative, so this IS a soft-lock candidate.
+const CHECK_MID_QUEST_WITH_ONLY_OFFER := '''~ hub
+- "Trace it." [#tag=SWAY] [if QuestRegistry.is_active(QuestRegistry.CASKS) and not GameState.get_flag("dom_casks_traced") and check("sway", 40) /]
+	do SkillCheck.resolve("sway")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_casks_traced", true)
+		=> END
+	else
+		do GameState.set_flag("dom_casks_check_failed", true)
+		=> END
+- "What happened?" [if not QuestRegistry.is_active(QuestRegistry.CASKS) and not QuestRegistry.is_done(QuestRegistry.CASKS) /]
+	do QuestRegistry.offer(QuestRegistry.CASKS)
+	=> END
+'''
+
+const CHECK_MID_QUEST_WITH_SAME_STAGE_ROUTE := '''~ hub
+- "Trace it." [#tag=SWAY] [if QuestRegistry.is_active(QuestRegistry.CASKS) and not GameState.get_flag("dom_casks_traced") and check("sway", 40) /]
+	do SkillCheck.resolve("sway")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("dom_casks_traced", true)
+		=> END
+	else
+		do GameState.set_flag("dom_casks_check_failed", true)
+		=> END
+- "Ask the cooper instead." [if QuestRegistry.is_active(QuestRegistry.CASKS) and not GameState.get_flag("dom_casks_traced") /]
+	do GameState.set_flag("dom_casks_traced", true)
+	=> END
+'''
+
+## No quest constant at all: the route has to come from whatever else writes
+## the flag the success branch writes.
+const CHECK_WITHOUT_QUEST := '''~ trial_aide
+- "Ask to pass." [#tag=UNDERTONE] [if not GameState.get_flag("tutorial_gauntlet_complete") and check("undertone", 40) /]
+	do SkillCheck.resolve("undertone")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("tutorial_gauntlet_complete", true)
+		=> END
+	else
+		do GameState.set_flag("tutorial_aide_skip_failed", true)
+		=> END
+- "I will take the trial."
+	=> END
+'''
+
+const SCENE_SCRIPT_WRITER := '''extends Node2D
+
+const OPENING_COMPLETE_FLAG := "tutorial_gauntlet_complete"
+
+
+func _on_battle_ended() -> void:
+	GameState.set_flag(OPENING_COMPLETE_FLAG, true)
+'''
+
+const SCENE_PICKUP_WRITER := '''[node name="TrialDoorKey" parent="." instance=ExtResource("5_pickup")]
+completion_flag = "tutorial_gauntlet_complete"
+'''
+
+const OTHER_DIALOGUE_WRITER := '''~ start
+do GameState.set_flag("tutorial_gauntlet_complete", true)
+=> END
+'''
+
+
+func _softlock_codes(findings: Array[Dictionary]) -> Array[String]:
+	var codes: Array[String] = []
+	for finding: Dictionary in findings:
+		codes.append(str(finding["code"]))
+	return codes
+
+
+func test_check_route_accepts_a_plain_offer_at_the_same_quest_stage() -> void:
+	var findings := QuestAuditScript.check_softlock_violations(
+		{"res://dialogue/elder.dialogue": CHECK_PRE_OFFER_WITH_PLAIN_OFFER}
+	)
+	assert_array(_softlock_codes(findings)).not_contains(
+		["checked_response_may_be_only_acquisition_route"]
+	)
+
+
+func test_check_route_rejects_an_offer_as_a_route_for_a_mid_quest_check() -> void:
+	var findings := QuestAuditScript.check_softlock_violations(
+		{"res://dialogue/casks.dialogue": CHECK_MID_QUEST_WITH_ONLY_OFFER}
+	)
+	assert_array(_softlock_codes(findings)).contains_exactly(
+		["checked_response_may_be_only_acquisition_route"]
+	)
+	assert_str(str(findings[0]["quest_constant"])).is_equal("CASKS")
+
+	findings = QuestAuditScript.check_softlock_violations(
+		{"res://dialogue/casks.dialogue": CHECK_MID_QUEST_WITH_SAME_STAGE_ROUTE}
+	)
+	assert_int(findings.size()).is_equal(0)
+
+
+func test_check_without_quest_needs_another_writer_of_its_success_flag() -> void:
+	var dialogue := {"res://dialogue/hall.dialogue": CHECK_WITHOUT_QUEST}
+
+	var findings := QuestAuditScript.check_softlock_violations(dialogue, {})
+	assert_array(_softlock_codes(findings)).contains_exactly(
+		["checked_response_may_be_only_acquisition_route"]
+	)
+	assert_array(findings[0]["success_effects"]).contains_exactly(["flag:tutorial_gauntlet_complete"])
+
+	findings = QuestAuditScript.check_softlock_violations(
+		dialogue, {"res://world/hall.gd": SCENE_SCRIPT_WRITER}
+	)
+	assert_int(findings.size()).is_equal(0)
+
+	findings = QuestAuditScript.check_softlock_violations(
+		dialogue, {"res://world/hall.tscn": SCENE_PICKUP_WRITER}
+	)
+	assert_int(findings.size()).is_equal(0)
+
+	var two_files := dialogue.duplicate()
+	two_files["res://dialogue/other.dialogue"] = OTHER_DIALOGUE_WRITER
+	findings = QuestAuditScript.check_softlock_violations(two_files, {})
+	assert_int(findings.size()).is_equal(0)
+
+
+func test_shipped_dialogue_has_no_check_only_routes() -> void:
+	var report := QuestAuditScript.audit_project(false)
+
+	assert_int(int(report["categories"]["check_softlocks"]["count"])).is_equal(0)
+
+
+# --- Orphan scanner blind spots ----------------------------------------------
+
+
+func test_flag_reads_through_constants_and_flag_is_true_count_as_reads() -> void:
+	var quest_results: Array[Dictionary] = []
+	var dialogue_sources := {FLAG_FIXTURE: FileAccess.get_file_as_string(FLAG_FIXTURE)}
+	var through_constant := '''const WRITE_ONLY_FLAG := "write_only"
+
+
+func _ready() -> void:
+	if GameState.flag_is_true(WRITE_ONLY_FLAG):
+		pass
+'''
+	var literal := '''func _ready() -> void:
+	if GameState.flag_is_true("write_only"):
+		pass
+'''
+
+	var access := QuestAuditScript._project_flag_access(quest_results, dialogue_sources, {})
+	assert_array(access["written_never_read"]).contains(["write_only"])
+
+	access = QuestAuditScript._project_flag_access(
+		quest_results, dialogue_sources, {"res://world/scene.gd": through_constant}
+	)
+	assert_array(access["written_never_read"]).not_contains(["write_only"])
+
+	access = QuestAuditScript._project_flag_access(
+		quest_results, dialogue_sources, {"res://world/scene.gd": literal}
+	)
+	assert_array(access["written_never_read"]).not_contains(["write_only"])
+
+
+func test_format_string_flag_writes_are_prefix_sites_not_literal_orphans() -> void:
+	var flags := QuestAuditScript.scan_flag_sources(
+		PackedStringArray(["res://quests/fetch_quest.gd"])
+	)
+
+	assert_array(flags["written"]).not_contains(["quest_%d_resolution"])
+
+
+func test_outcome_readback_flags_belong_to_the_readback_category_not_orphans() -> void:
+	var quest_results: Array[Dictionary] = [
+		{
+			"quest_id": "sprigs",
+			"quest_name": "Sprigs",
+			"kind": "side",
+			"constant": "SPRIGS",
+			"outcomes": [
+				{
+					"id": "returned",
+					"state_writes": ["quest_1_resolution=returned"],
+					"ledger_events": [],
+					"readback_flag": "quest_1_resolution",
+					"read_back": false,
+				}
+			],
+		}
+	]
+	var dialogue_sources := {FLAG_FIXTURE: FileAccess.get_file_as_string(FLAG_FIXTURE)}
+
+	var access := QuestAuditScript._project_flag_access(quest_results, dialogue_sources, {})
+
+	assert_array(access["written"]).contains(["quest_1_resolution"])
+	assert_array(access["written_never_read"]).not_contains(["quest_1_resolution"])
+
+
+func test_direct_outcome_names_a_fetch_resolution_flag_only_for_fetch_quests() -> void:
+	var flag_quest := FlagQuest.new()
+	flag_quest.id = 3
+	var quest := {"resource": flag_quest, "constant": "DEEP"}
+	var lines := PackedStringArray(
+		[
+			'	do QuestRegistry.turn_in(QuestRegistry.DEEP, "sealed", false)',
+			'	do GameState.set_flag("deep_resolution", "sealed")',
+			"	=> END",
+		]
+	)
+
+	var outcome := QuestAuditScript._direct_outcome(
+		quest, "sealed", false, "res://dialogue/deep.dialogue", 0, lines
+	)
+
+	assert_array(outcome["state_writes"]).contains_exactly(["deep_resolution=sealed"])
+	assert_str(str(outcome["readback_flag"])).is_equal("deep_resolution")
+
+
+# --- Companion quests ----------------------------------------------------------
+
+
+func test_companion_resolutions_are_two_distinct_completion_read_back_outcomes() -> void:
+	var registry_source := FileAccess.get_file_as_string("res://globals/quest_registry.gd")
+	var metadata := QuestAuditScript._quest_metadata(registry_source)
+	var path := "res://dialogue/companions/korrath_ninefold.dialogue"
+	var dialogue_sources := {path: FileAccess.get_file_as_string(path)}
+
+	var results := QuestAuditScript._collect_quest_results(metadata, dialogue_sources)
+	var korrath: Dictionary = {}
+	for quest: Dictionary in results:
+		if str(quest["constant"]) == "KORRATH_QUEST":
+			korrath = quest
+	assert_bool(korrath.is_empty()).is_false()
+	var outcomes: Array[Dictionary] = QuestAuditScript._typed_dictionaries(korrath["outcomes"])
+	assert_int(outcomes.size()).is_equal(2)
+	assert_int(QuestAuditScript.distinct_outcome_count(outcomes)).is_equal(2)
+	assert_array(outcomes[0]["state_writes"]).contains_exactly(
+		["party_korrath_ninefold_resolved=true"]
+	)
+
+	QuestAuditScript._classify_readbacks(results, dialogue_sources)
+	for outcome: Dictionary in korrath["outcomes"]:
+		assert_bool(bool(outcome["read_back"])).is_true()

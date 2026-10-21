@@ -36,6 +36,12 @@ Marshal Coiljaw: Dorthkor's road-drum stopped halfway through the breach warning
 	do GameState.set_flag("reported_bloodbellow", true)
 	Marshal Coiljaw: The road is quieter. The missing answer remains. We work with what survived—give me your ruling.
 	=> hub
+## Battle writes `dorthkor_muster_cause` from the encounter's consequence map
+## (the ledger sentence for how the Bloodbellow ended). The Marshal reads the
+## roll's wording back so the deed the player chose is heard, not only tallied.
+- "How will the roll record the muster?" [if GameState.get_flag("reported_bloodbellow") and GameState.get_flag("dorthkor_muster_cause", "") != "" /]
+	Marshal Coiljaw: As it happened, and in the words the road left us: "{{GameState.get_flag("dorthkor_muster_cause")}}." The Four Arms keeps the deed, not the mood.
+	=> hub
 - "The demons are the immediate threat. Fortify the road first." [#tag=IRON-COMPANIES] [#consequence=Dom turns its shield toward the Breach.] [if QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD) and QuestRegistry.flags_met(QuestRegistry.DORTHKOR_ROAD) and GameState.get_flag("reported_bloodbellow") /]
 	do QuestRegistry.resolve_broken_muster("demons-first")
 	Marshal Coiljaw: Right priority. Not the whole truth—but the wall deals with what reaches it first. The Companies march tonight.

@@ -1,0 +1,118 @@
+# PROVISIONAL — CANON REVIEW REQUIRED: all dialogue prose and option text in this file.
+# C25 (#262): ambient talk for The Long Verge's 5 posted townsfolk, drafted only from the
+# approved proposal (dramgid-vault/proposals/locations/the-long-verge.md) and the canon documents
+# in canon/long_verge/characters/. Titles follow the generated scheme (<town>_<npc_id>);
+# TownNpcSpawner routes a roster NPC here when its title exists and otherwise to the generated
+# dialogue/long_verge_townsfolk.dialogue, which tools/generate_gloot.gd owns. The band-gated
+# greetings are the canon dialogue_hostile / dialogue_warm lines verbatim. No quest content:
+# the proposal's side-quest premise is alluded to, never offered, resolved, or flagged.
+
+~ long_verge_long_verge_cairn_warden
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Cairn-Warden Mabbe Sloe: Keep off the banded stretch. I won't paint you a cairn.
+	=> END
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Cairn-Warden Mabbe Sloe: Third past the split stone has a fresh band. Wasn't there last month. The thin's walking toward home.
+else
+	Cairn-Warden Mabbe Sloe: Keep your footing, traveler.
+Cairn-Warden Mabbe Sloe: I walk the Verge with a pot of black and re-band the mile-cairns.
+Cairn-Warden Mabbe Sloe: I band them where the road last cost the Company someone. It is the only method the Companies trust.
+- "Why do the cairns move?"
+	Cairn-Warden Mabbe Sloe: They walk toward Dom, a band at a time. A black band goes where the thin has gone.
+	Cairn-Warden Mabbe Sloe: I paint what the road shows me. I do not ask it why.
+	=> END
+- "What does a band mean?"
+	Cairn-Warden Mabbe Sloe: Notes only past it. Phrases come apart in the hand there.
+	Cairn-Warden Mabbe Sloe: A mile of solid road, then a band, then a hundred yards of thin.
+	=> END
+- "I will keep to the road."
+	Cairn-Warden Mabbe Sloe: Leave me a true count when you return.
+	=> END
+
+~ long_verge_long_verge_old_soldier
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Jory Fennick: Sit somewhere else.
+	=> END
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Jory Fennick: Three. There were three. Ask the paymaster why his map says eleven and watch his hands.
+else
+	Jory Fennick: Keep your footing, traveler.
+Jory Fennick: I marched the Verge when it had three bad stretches. I sit at the camp fire now and count eleven.
+Jory Fennick: The cairns have been walking toward Dom ever since.
+- "Why eleven?"
+	Jory Fennick: The maps say eleven. I count eleven. I still remember three.
+	Jory Fennick: Something changed and nobody wrote down when.
+	=> END
+- "What was the road like then?"
+	Jory Fennick: A mile of solid road, then a hundred yards of thin, then road again. Three of them. You could learn them.
+	Jory Fennick: Now I learn a new one every season.
+	=> END
+- "I will let you have the fire."
+	Jory Fennick: Leave me a true count when you return.
+	=> END
+
+~ long_verge_long_verge_paymaster
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Paymaster Odric Tallowmere: The Companies pay for surveys, not for questions.
+	=> END
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Paymaster Odric Tallowmere: Walk the stretch past the split stone with me. Count the bands, then tell me what you felt.
+else
+	Paymaster Odric Tallowmere: Keep your footing, traveler.
+Paymaster Odric Tallowmere: I keep the Company's pay-table on the moor-road. I pay the column by the cairn count.
+Paymaster Odric Tallowmere: I keep the map of eleven bad stretches. The oldest soldiers say it used to show three.
+- "Why eleven stretches?"
+	Paymaster Odric Tallowmere: The map says eleven. I pay by the map.
+	Paymaster Odric Tallowmere: One stretch has cairns whose bands no longer match the thin. It is on my mind.
+	=> END
+- "How are the soldiers paid?"
+	Paymaster Odric Tallowmere: By the cairn count. The more bands, the more the road costs the column.
+	Paymaster Odric Tallowmere: I pay what the cairns say and nothing the soldiers say.
+	=> END
+- "I will not hold up the pay-table."
+	Paymaster Odric Tallowmere: Leave me a true count when you return.
+	=> END
+
+~ long_verge_long_verge_recruit
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Recruit Tessaly Brack: Move along. Nothing here to read.
+	=> END
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Recruit Tessaly Brack: They're not on the map, the ones under here. The paymaster says there was no rout. The ground disagrees.
+else
+	Recruit Tessaly Brack: Keep your footing, traveler.
+Recruit Tessaly Brack: I stand watch over a roadside grave nobody will name.
+Recruit Tessaly Brack: At night I hear the streaks move. In the morning the thin has gathered on the grave.
+- "Whose grave is it?"
+	Recruit Tessaly Brack: Nobody will name it. I was posted here to watch, not to ask.
+	Recruit Tessaly Brack: The paymaster says there was no rout.
+	=> END
+- "What do you hear at night?"
+	Recruit Tessaly Brack: The streaks shifting in the dark. I cannot say it better than that.
+	Recruit Tessaly Brack: They all lean toward this ground.
+	=> END
+- "I will leave you on your watch."
+	Recruit Tessaly Brack: Leave me a true count when you return.
+	=> END
+
+~ long_verge_long_verge_sergeant
+if Reputation.band("iron-companies") == "hostile" or Reputation.band("iron-companies") == "cold"
+	Sergeant Iwan Corrow: Column's under contract. Clear the drum.
+	=> END
+elif Reputation.band("iron-companies") == "warm" or Reputation.band("iron-companies") == "allied"
+	Sergeant Iwan Corrow: First time over the Verge? Keep your Phrases in your mouth past the black bands. Notes only there.
+else
+	Sergeant Iwan Corrow: Keep your footing, traveler.
+Sergeant Iwan Corrow: I march the new recruits up the moor-road to contract.
+Sergeant Iwan Corrow: I make sure the drum sounds before the first bad stretch.
+- "Why the drum?"
+	Sergeant Iwan Corrow: So the recruits learn that it is the world that thins, not an enemy.
+	Sergeant Iwan Corrow: A drum gives them something to step to when a Phrase comes apart in the hand.
+	=> END
+- "Is the road dangerous?"
+	Sergeant Iwan Corrow: A day out of Dom the first black band comes up beside the road. The column crosses it in step, and nobody stops to try a Phrase.
+	Sergeant Iwan Corrow: The black-banded cairns say where. Notes only past the bands.
+	=> END
+- "I will not hold up the column."
+	Sergeant Iwan Corrow: Leave me a true count when you return.
+	=> END

@@ -2,9 +2,9 @@ extends GdUnitTestSuite
 
 
 func test_current_locations_are_registered_as_gameplay_only() -> void:
-	# 25 Dom-era locations plus Kesselford and its two interiors (C1 / #238) and Ashlaren and
-	# its two interiors (C2 / #239).
-	assert_int(LocationRegistry.ALL.size()).is_equal(31)
+	# 25 Dom-era locations plus Kesselford and its two interiors (C1 / #238), Ashlaren and
+	# its two interiors (C2 / #239), The Long Verge (C3 / #240) and Hollowmere (C4 / #241).
+	assert_int(LocationRegistry.ALL.size()).is_equal(33)
 	for location in LocationRegistry.ALL:
 		assert_bool(location.allowed_gameplay).is_true()
 		assert_bool(LocationRegistry.is_gameplay_scene(location.scene_path)).is_true()

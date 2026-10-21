@@ -1,0 +1,140 @@
+# PROVISIONAL — CANON REVIEW REQUIRED: all dialogue prose and option text in this file.
+# C25 (#262): ambient talk for Ashlaren's 6 posted townsfolk, drafted only from the
+# approved proposal (dramgid-vault/proposals/locations/ashlaren.md) and the canon documents
+# in canon/ashlaren/characters/. Titles follow the generated scheme (<town>_<npc_id>);
+# TownNpcSpawner routes a roster NPC here when its title exists and otherwise to the generated
+# dialogue/ashlaren_townsfolk.dialogue, which tools/generate_gloot.gd owns. The band-gated
+# greetings are the canon dialogue_hostile / dialogue_warm lines verbatim. No quest content:
+# the proposal's side-quest premise is alluded to, never offered, resolved, or flagged.
+
+~ ashlaren_ashlaren_bell_warden
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Warden Tamsin Flatbell: Stand clear of the rope.
+	=> END
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Warden Tamsin Flatbell: Listen for it at the next weighing. You'll hear what I mean.
+else
+	Warden Tamsin Flatbell: Keep your footing, traveler.
+Warden Tamsin Flatbell: I ring the shrine-bell at every weighing. I write down the days it sounds flat.
+Warden Tamsin Flatbell: Some days it rings true and some days flat. I keep the list of both.
+- "What does flat sound like?"
+	Warden Tamsin Flatbell: Like a bell that agrees with nothing. The sound comes out and the measure is not sealed.
+	Warden Tamsin Flatbell: You will know it when you hear it beside a true day.
+	=> END
+- "Why keep the list?"
+	Warden Tamsin Flatbell: The Factors keep two sets of weights, one for the days the bell agrees. The list tells them which.
+	Warden Tamsin Flatbell: I write it plain. What they do with it is their business.
+	=> END
+- "I will keep clear of the rope."
+	Warden Tamsin Flatbell: Leave me a true count when you return.
+	=> END
+
+~ ashlaren_ashlaren_ghorr_steward
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Steward Ilse Furrowgood: Factors' friends get Factors' answers.
+	=> END
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Steward Ilse Furrowgood: Walk my furrows and tell me the Waning only touches castings.
+else
+	Steward Ilse Furrowgood: Keep your footing, traveler.
+Steward Ilse Furrowgood: The rot in my fields skips the weedy margins and takes the bred rows.
+Steward Ilse Furrowgood: I want the sealed sack opened and studied, not buried.
+- "Why does it skip the margins?"
+	Steward Ilse Furrowgood: I do not know. The loose, weedy grain holds and the precise grain rots.
+	Steward Ilse Furrowgood: No blight follows that pattern. I have walked every furrow.
+	=> END
+- "Who keeps the sack shut?"
+	Steward Ilse Furrowgood: The Factors. A certified sack is worth more closed than opened.
+	Steward Ilse Furrowgood: I am a Ghorr steward. I count what I can and I want the rest looked at.
+	=> END
+- "I will let you get back to your furrows."
+	Steward Ilse Furrowgood: Leave me a true count when you return.
+	=> END
+
+~ ashlaren_ashlaren_head_factor
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Factor Brannoc Ledgerwell: The Table does not weigh for strangers.
+	=> END
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Factor Brannoc Ledgerwell: Honest measure, honest price. Ask the clerk for the day's weights.
+else
+	Factor Brannoc Ledgerwell: Keep your footing, traveler.
+Factor Brannoc Ledgerwell: I certify every sack that leaves Ashlaren. Lately I certified the same sack twice.
+Factor Brannoc Ledgerwell: Once full and once empty. Both entries stand in the ledger.
+- "How can one sack be both?"
+	Factor Brannoc Ledgerwell: The scale weighed it twice and the bell sealed both. I did not argue with either.
+	Factor Brannoc Ledgerwell: Ask the clerk which weights she used.
+	=> END
+- "What happens to the sack?"
+	Factor Brannoc Ledgerwell: It sits in the warehouse. Nobody opens it.
+	Factor Brannoc Ledgerwell: The Table's certification is worth what people believe it is worth.
+	=> END
+- "I will not take more of your time."
+	Factor Brannoc Ledgerwell: Leave me a true count when you return.
+	=> END
+
+~ ashlaren_ashlaren_miller
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Miller Gaut Stonebrook: Mill's spoken for.
+	=> END
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Miller Gaut Stonebrook: Flour's fine. Bread's fine. Bell says so, some days.
+else
+	Miller Gaut Stonebrook: Keep your footing, traveler.
+Miller Gaut Stonebrook: I run the millhouse beside the Flat Bell. I grind what the Factors certify.
+Miller Gaut Stonebrook: I have stopped tasting the bread. I keep my doubts to myself.
+- "Is the flour sound?"
+	Miller Gaut Stonebrook: It is certified. That is all I grind by.
+	Miller Gaut Stonebrook: The bell says so, some days.
+	=> END
+- "Why stop tasting it?"
+	Miller Gaut Stonebrook: A miller who tastes starts to wonder, and I have a mill to run.
+	Miller Gaut Stonebrook: Ask me again when the bell rings true.
+	=> END
+- "I will let the mill turn."
+	Miller Gaut Stonebrook: Leave me a true count when you return.
+	=> END
+
+~ ashlaren_ashlaren_warehouse_watch
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Pell Haskard: Yard's closed. Sack's closed. Go on.
+	=> END
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Pell Haskard: It's heavier than it was. Don't tell the Factor I said that.
+else
+	Pell Haskard: Keep your footing, traveler.
+Pell Haskard: I guard the warehouse yard. I never leave it.
+Pell Haskard: My orders say nobody opens the certified-empty sack. They say nothing about what to do if it changes.
+- "What is in the sack?"
+	Pell Haskard: Certified empty. Certified full too, once. I stand beside it all day.
+	Pell Haskard: Nobody opens it. Those are the orders.
+	=> END
+- "Who gives the orders?"
+	Pell Haskard: The Factor's office. I take them at the gate and keep them in the yard.
+	Pell Haskard: I keep them. I do not read into them.
+	=> END
+- "I will leave you to your yard."
+	Pell Haskard: Leave me a true count when you return.
+	=> END
+
+~ ashlaren_ashlaren_weigh_clerk
+if Reputation.band("grain-factors-table") == "hostile" or Reputation.band("grain-factors-table") == "cold"
+	Clerk Odile Marrowby: The weights are not for handling.
+	=> END
+elif Reputation.band("grain-factors-table") == "warm" or Reputation.band("grain-factors-table") == "allied"
+	Clerk Odile Marrowby: Bell rang true this morning. These are the honest ones; I think.
+else
+	Clerk Odile Marrowby: Keep your footing, traveler.
+Clerk Odile Marrowby: I keep two sets of weights. One for the days the bell agrees, one for the days it does not.
+Clerk Odile Marrowby: Before I put weights on the scale I check the bell.
+- "Which set is the honest one?"
+	Clerk Odile Marrowby: The set the bell agrees with, if the bell is honest. I cannot say which of the two is wrong.
+	Clerk Odile Marrowby: I check, and I choose, and I write down which.
+	=> END
+- "Who sees the weights?"
+	Clerk Odile Marrowby: Only I handle them. The Factor reads the day's weights off my sheet.
+	Clerk Odile Marrowby: The sheet is true to the set I used. I will say that much.
+	=> END
+- "I will not touch the scale."
+	Clerk Odile Marrowby: Leave me a true count when you return.
+	=> END

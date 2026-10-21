@@ -31,6 +31,9 @@ func after_test() -> void:
 	QuestRegistry.reset()
 	QuestRegistry.from_dict(_original_quests)
 	UIManager.close_all()
+	# Every force-completed quest emits quest_rewards_granted, and UIManager answers each with a
+	# full-screen reward reveal that stays up (and owns ui_accept / the mouse) until dismissed.
+	UIManager.reset_reward_reveals()
 
 
 func test_screen_builds_with_a_row_per_quest_and_sweep_completes_them() -> void:

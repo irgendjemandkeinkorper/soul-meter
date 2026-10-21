@@ -178,6 +178,17 @@
       "no_combat_zone": true
     },
     {
+      "id": "hollowmere",
+      "display_name": "Hollowmere",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/hollowmere.tres",
+      "scene_path": "res://world/hollowmere.tscn",
+      "no_combat_zone": false
+    },
+    {
       "id": "iron_companies_interior",
       "display_name": "",
       "epithet": "",
@@ -263,6 +274,17 @@
       "vault_id": "loamgate",
       "definition_path": "",
       "scene_path": "",
+      "no_combat_zone": false
+    },
+    {
+      "id": "long_verge",
+      "display_name": "The Long Verge",
+      "epithet": "",
+      "patron": "",
+      "agreement": "",
+      "vault_id": "",
+      "definition_path": "res://world/locations/long_verge.tres",
+      "scene_path": "res://world/long_verge.tscn",
       "no_combat_zone": false
     },
     {

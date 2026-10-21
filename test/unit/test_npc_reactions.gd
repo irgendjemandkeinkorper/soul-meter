@@ -430,3 +430,33 @@ func _make_spawned_npc(id: String, path: String, title: String) -> HubNpc:
 	npc.add_child(sprite)
 	add_child(npc)
 	return npc
+
+
+# --- Yothmeru tier gates (docs/yothmeru-world-effects-packet.md §5) -----------
+
+
+func test_a_fame_tier_gate_is_a_floor_on_the_rfc_ladder() -> void:
+	var renown_before := Renown.to_dict()
+	Renown.from_dict({})
+	var rule := {"minimum_fame_tier": "Whispered", "present": true}
+	assert_bool(NpcReactions.rule_is_valid(rule)).is_true()
+	assert_bool(NpcReactions._matches(rule)).is_false()
+
+	Renown.gain_reputation("player", Renown.FAME_TIER_FLOORS[1], "test", "test")
+	assert_bool(NpcReactions._matches(rule)).is_true()
+	assert_bool(NpcReactions._matches({"minimum_fame_tier": "Known", "present": true})).is_false()
+	Renown.from_dict(renown_before)
+
+
+func test_karma_tier_gates_validate_names_and_bound_both_ends() -> void:
+	var renown_before := Renown.to_dict()
+	Renown.from_dict({})
+	assert_bool(NpcReactions.rule_is_valid({"minimum_karma_tier": "Upright", "present": true})).is_true()
+	assert_bool(NpcReactions.rule_is_valid({"maximum_karma_tier": "Troubled", "present": true})).is_true()
+	assert_bool(NpcReactions.rule_is_valid({"minimum_karma_tier": "Saintly", "present": true})).is_false()
+	assert_bool(NpcReactions.rule_is_valid({"minimum_fame_tier": "Famous", "present": true})).is_false()
+	# A fresh ledger is Uncertain: an Upright floor is shut, an Uncertain ceiling is open.
+	assert_bool(NpcReactions._matches({"minimum_karma_tier": "Upright", "present": true})).is_false()
+	assert_bool(NpcReactions._matches({"maximum_karma_tier": "Uncertain", "present": true})).is_true()
+	assert_bool(NpcReactions._matches({"maximum_karma_tier": "Troubled", "present": true})).is_false()
+	Renown.from_dict(renown_before)

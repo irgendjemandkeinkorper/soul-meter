@@ -1,0 +1,38 @@
+{
+  "town_id": "hollowmere",
+  "placements": {
+    "hollowmere-envoy": {
+      "scene": "res://world/hollowmere.tscn",
+      "anchor": "EnvoyFire",
+      "offset": [
+        -92.0,
+        79.0
+      ],
+      "facing": "east",
+      "idle_phase": 0.36,
+      "model_index": 14
+    },
+    "hollowmere-mender": {
+      "scene": "res://world/hollowmere.tscn",
+      "anchor": "InstrumentStake",
+      "offset": [
+        39.0,
+        123.0
+      ],
+      "facing": "west",
+      "idle_phase": 3.206,
+      "model_index": 25
+    },
+    "hollowmere-watcher": {
+      "scene": "res://world/hollowmere.tscn",
+      "anchor": "WatchPost",
+      "offset": [
+        -24.0,
+        136.0
+      ],
+      "facing": "east",
+      "idle_phase": 1.127,
+      "model_index": 3
+    }
+  }
+}

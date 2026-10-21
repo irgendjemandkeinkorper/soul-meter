@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://dtlxxhjsvtkmb"
+path="res://.godot/imported/hollowmere_townsfolk.dialogue-c84e9f171161ef387714a23101a61d1c.tres"
+
+[deps]
+
+source_file="res://dialogue/hollowmere_townsfolk.dialogue"
+dest_files=["res://.godot/imported/hollowmere_townsfolk.dialogue-c84e9f171161ef387714a23101a61d1c.tres"]
+
+[params]
+
+defaults=true

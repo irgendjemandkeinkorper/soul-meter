@@ -1,0 +1,32 @@
+~ hollowmere_hollowmere_envoy
+if Reputation.band("widow-watchers") == "hostile" or Reputation.band("widow-watchers") == "cold"
+	Envoy Brannoc Quell: The elders' business. Walk on.
+elif Reputation.band("widow-watchers") == "warm" or Reputation.band("widow-watchers") == "allied"
+	Envoy Brannoc Quell: Every camp on the front reads tomorrow's weather off her sentence. Ask what that costs her before you ask her to stop.
+else
+	Envoy Brannoc Quell: You have come further than the map admits.
+Envoy Brannoc Quell: Brannoc runs the Watcher's reports out to the elders, who want her left where she is: hers is the only early warning the front has.
+Envoy Brannoc Quell: Carry word out if we do not.
+=> END
+
+~ hollowmere_hollowmere_mender
+if Reputation.band("wayfare-menders") == "hostile" or Reputation.band("wayfare-menders") == "cold"
+	Mender Corrin Vell: The instruments are the Menders'. The readings are not for sale.
+elif Reputation.band("wayfare-menders") == "warm" or Reputation.band("wayfare-menders") == "allied"
+	Mender Corrin Vell: The needle sits lower here than anywhere I have filed near Dom. Phrases fail outright. Keep to Notes, and keep them short.
+else
+	Mender Corrin Vell: Keep your voice to Notes out here.
+Mender Corrin Vell: Corrin files the mere's Agreement reading for the Menders and has started filing the Watcher's sentences beside it.
+Mender Corrin Vell: If the water answers, do not answer back.
+=> END
+
+~ hollowmere_hollowmere_watcher
+if Reputation.band("widow-watchers") == "hostile" or Reputation.band("widow-watchers") == "cold"
+	Watcher Ysolde Marrow: Stand off the stilt. The water has enough to remember.
+elif Reputation.band("widow-watchers") == "warm" or Reputation.band("widow-watchers") == "allied"
+	Watcher Ysolde Marrow: Read yesterday's sentence before you ask me anything. Then tell me whether it was yesterday's.
+else
+	Watcher Ysolde Marrow: Mind the planks. The water under them is late.
+Watcher Ysolde Marrow: Ysolde writes one sentence about the mere each day and has stopped signing it; lately the sentences describe tomorrow.
+Watcher Ysolde Marrow: Write down what you saw before it changes.
+=> END
