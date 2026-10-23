@@ -1,0 +1,1 @@
+{"schema":"weftlumin.route.v1","id":"dom-wilds","origin_id":"dom","destination_id":"wilds","steps":8,"phases_cost":2,"risk_tier":"low","risk_modifier":5.0,"encounter_table":[{"encounter_id":"loam-boar","weight":3},{"encounter_id":"bog-wight","weight":1}],"min_encounters":0,"max_encounters":1}

@@ -184,6 +184,7 @@ const AFFECTED_TESTS: Dictionary = {
 	"spawn_tables": ["test/unit/test_encounter_*", "test/unit/test_spawn_*"],
 	"characters": ["test/unit/test_party_*", "test/unit/test_npc_*", DRIFT_STAGES],
 	"locations": [DRIFT_STAGES],
+	"routes": ["test/unit/test_world_map_registry.gd", "test/unit/test_weftlumin_routes_kind.gd", "test/integration/test_travel_*", DRIFT_STAGES],
 	"canon": [DRIFT_STAGES],
 }
 
@@ -191,7 +192,8 @@ const AFFECTED_TESTS: Dictionary = {
 ## Every kind a package can carry. `kinds()` stays the shell's list; the CLI reads all of them.
 func cli_kinds() -> Array[WeftluminKind]:
 	var result: Array[WeftluminKind] = [
-		WeftluminScenesKind.new(), WeftluminLocationsKind.new(), WeftluminCharactersKind.soul_meter(),
+		WeftluminScenesKind.new(), WeftluminLocationsKind.new(), WeftluminRoutesKind.new(),
+		WeftluminCharactersKind.soul_meter(),
 		WeftluminSpawnTablesKind.new(), CampaignQuestLoader.QuestsKind.new(),
 		CampaignEncounterLoader.EncountersKind.new(),
 	]
@@ -207,6 +209,8 @@ func validate_package_documents(kind: WeftluminKind, documents: Array[Dictionary
 	match String(kind.id):
 		"scenes":
 			pass  # The CLI validates the log itself; replay and contracts are the bake's.
+		"locations", "routes":
+			_geography_overlay(package, kind.id, documents, errors)
 		"quests", "encounters":
 			# Campaign kinds validate as a whole package through the F6 loader, once.
 			if String(kind.id) == "encounters" and (package.get("kinds", []) as Array).has("quests"):
@@ -241,7 +245,11 @@ func bake_package_documents(
 		return report
 	var merged: Dictionary = _overlay_canon(kind, documents, package, errors)
 	var normalised: Array[Dictionary] = []
-	if errors.is_empty():
+	var geography: Dictionary = {}
+	if String(kind.id) in ["locations", "routes"]:
+		geography = _geography_overlay(package, kind.id, documents, errors)
+		normalised.assign(geography[String(kind.id)])
+	elif errors.is_empty():
 		normalised = kind.validate(merged["documents"], errors)
 	if not errors.is_empty():
 		report["summary"] = "refused: %d error(s)" % errors.size()
@@ -269,8 +277,10 @@ func bake_package_documents(
 				errors.append(_cli_error(path, "$", "a writable canon document", "write_failed", "Writing failed (error %d)." % written))
 				continue
 			(report["written"] as Array).append(path)
-	if String(kind.id) == "locations":
-		var artifacts: Dictionary = kind.bake(normalised, "res://", write, force)
+	if String(kind.id) in ["locations", "routes"]:
+		var locations_kind := WeftluminLocationsKind.new()
+		locations_kind.route_documents = geography["routes"]
+		var artifacts: Dictionary = locations_kind.bake(geography["locations"], "res://", write, force)
 		for planned: Dictionary in artifacts.get("planned", []):
 			if str(planned.get("action", "")) != "unchanged":
 				(report["planned"] as Array).append(planned)
@@ -284,6 +294,25 @@ func bake_package_documents(
 			])
 	report["summary"] = "%d package document(s), %d canon change(s)" % [targets.size(), changed]
 	return report
+
+
+## Validate both sets together, including package locations that do not exist in canon yet.
+func _geography_overlay(
+	package: Dictionary, kind_id: StringName, documents: Array[Dictionary], errors: Array[Dictionary],
+) -> Dictionary:
+	var locations_kind := WeftluminLocationsKind.new()
+	var routes_kind := WeftluminRoutesKind.new()
+	var package_documents: Dictionary = (package.get("documents", {}) as Dictionary).duplicate(true)
+	package_documents[String(kind_id)] = documents
+	var locations: Array[Dictionary] = []
+	locations.assign(package_documents.get("locations", []))
+	var routes: Array[Dictionary] = []
+	routes.assign(package_documents.get("routes", []))
+	var location_set: Dictionary = _overlay_canon(locations_kind, locations, package, errors)
+	var route_set: Dictionary = _overlay_canon(routes_kind, routes, package, errors)
+	locations = locations_kind.validate(location_set["documents"], errors)
+	routes = routes_kind.validate_with_locations(route_set["documents"], locations, errors)
+	return {"locations": locations, "routes": routes}
 
 
 ## `{documents, targets}`: canon with the package documents laid over it by id, and each package
@@ -310,8 +339,16 @@ func _overlay_canon(kind: WeftluminKind, documents: Array[Dictionary], package: 
 			targets[row_id] = str(replaced.get("$file", ""))
 			canon[by_id[row_id]] = row
 		else:
-			row["$hub"] = hub
-			targets[row_id] = CANON_ROOT.path_join(hub).path_join(kind.subdir).path_join("%s.json" % row_id)
+			var target_hub: String = hub
+			if kind is WeftluminRoutesKind:
+				# A route is filed beside its origin, including when the package edits another hub.
+				var origins: Array[Dictionary] = WeftluminLocationsKind.load_canon(errors)
+				for origin: Dictionary in origins:
+					if origin.get("id") == row.get("origin_id"):
+						target_hub = str(origin["$hub"])
+						break
+			row["$hub"] = target_hub
+			targets[row_id] = CANON_ROOT.path_join(target_hub).path_join(kind.subdir).path_join("%s.json" % row_id)
 			by_id[row_id] = canon.size()
 			canon.append(row)
 	return {"documents": canon, "targets": targets}

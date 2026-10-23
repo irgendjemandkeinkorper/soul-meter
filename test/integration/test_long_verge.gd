@@ -100,8 +100,8 @@ func test_registries_agree_on_the_long_verge() -> void:
 	assert_dict(FastTravelRegistry.by_id(&"long_verge")).is_empty()
 	assert_dict(FastTravelRegistry.by_scene(LONG_VERGE)).is_empty()
 	assert_array(FastTravelRegistry.validate()).is_empty()
-	assert_str(str(WorldMapRegistry.location(&"long-verge").get("scene_path", ""))).is_equal(LONG_VERGE)
-	for pair: Array in [[&"dom", &"long-verge"], [&"long-verge", &"kesselford"]]:
+	assert_str(str(WorldMapRegistry.location(&"long_verge").get("scene_path", ""))).is_equal(LONG_VERGE)
+	for pair: Array in [[&"dom", &"long_verge"], [&"long_verge", &"kesselford"]]:
 		var route := WorldMapRegistry.route_between(pair[0], pair[1])
 		assert_dict(route).override_failure_message("route %s-%s missing" % pair).is_not_empty()
 		for entry: Dictionary in route.get("encounter_table", []):

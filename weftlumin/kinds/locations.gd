@@ -4,7 +4,7 @@ extends WeftluminKind
 ## documents in the `weftlumin.location.v1` schema, baked to `world/locations/**/*.tres`
 ## (`LocationDefinition`) and `data/generated/location_index.json`.
 ##
-## A location document carries up to two facets, and at least one:
+## A location document requires a gazetteer or scene facet:
 ##
 ## - **Gazetteer** (E1.4e / #323): `display_name`, `epithet`, `patron`, `agreement`, `vault_id`.
 ##   The twelve world-map cities. `tools/seed_pandora.gd` seeds this facet into Pandora; this
@@ -12,6 +12,8 @@ extends WeftluminKind
 ## - **Scene**: everything a `LocationDefinition` holds, plus `definition_path` (where the
 ##   `.tres` bakes to — today's committed paths are referenced by `LocationRegistry`'s preload
 ##   consts, so they are data, not derived from the id) and `no_combat_zone`.
+## - Optional scene-backed travel facets: `world_map` coordinates and `fast_travel` cost.
+##   Routes are separate documents; this bake combines both kinds in the v2 index.
 ##
 ## Dom is the only location carrying both today. Every scene field is REQUIRED when the facet is
 ## present, defaults included: canon states its values instead of inheriting them from a script.
@@ -25,7 +27,7 @@ extends WeftluminKind
 ## .register_runtime()`.
 
 const SCHEMA := "weftlumin.location.v1"
-const INDEX_SCHEMA := "weftlumin.location_index.v1"
+const INDEX_SCHEMA := "weftlumin.location_index.v2"
 const BAKE_SCHEMA := "weftlumin.bake.v1"
 const CANON_ROOT := "res://canon"
 const INDEX_PATH := "res://data/generated/location_index.json"
@@ -46,6 +48,10 @@ const MAX_THINNING_TIER := 3
 ## Load-time-only keys `load_canon()` attaches for error attribution; never written back.
 const META_FILE := "$file"
 const META_HUB := "$hub"
+const TRAVEL_FACETS: Array[String] = ["world_map", "fast_travel"]
+
+## Null reads canon; the generator/package bake supplies its own complete route overlay.
+var route_documents: Variant = null
 
 
 func _init() -> void:
@@ -132,6 +138,7 @@ func _normalise(document: Dictionary, file: String, errors: Array[Dictionary]) -
 	var allowed: Array[String] = ["schema", "id", META_FILE, META_HUB]
 	allowed.append_array(GAZETTEER_FIELDS)
 	allowed.append_array(SCENE_FIELDS)
+	allowed.append_array(TRAVEL_FACETS)
 	for key: Variant in document.keys():
 		if not allowed.has(String(key)):
 			errors.append(_error(file, String(key), "a weftlumin.location.v1 field", "unknown_field"))
@@ -164,7 +171,46 @@ func _normalise(document: Dictionary, file: String, errors: Array[Dictionary]) -
 		_normalise_scene(document, file, row, errors)
 	elif not has_gazetteer:
 		errors.append(_error(file, "$", "a gazetteer or scene facet", "empty_location"))
+	_normalise_travel_facets(document, file, row, errors)
 	return row if errors.size() == error_count else {}
+
+
+func _normalise_travel_facets(document: Dictionary, file: String, row: Dictionary, errors: Array[Dictionary]) -> void:
+	for facet: String in TRAVEL_FACETS:
+		if not document.has(facet):
+			continue
+		if not row.has("scene_path"):
+			errors.append(_error(file, facet, "a scene-backed location", "missing_scene_facet"))
+		var value: Variant = document[facet]
+		var field: String = "map_coordinate" if facet == "world_map" else "base_cost_gp"
+		if not value is Dictionary:
+			errors.append(_error(file, facet, "an object containing %s" % field, "invalid_field_type"))
+			continue
+		for key: Variant in value:
+			if key != field:
+				errors.append(_error(file, "%s.%s" % [facet, key], field, "unknown_field"))
+		if facet == "world_map":
+			var coordinate: Variant = value.get(field)
+			if not coordinate is Array or coordinate.size() != 2:
+				errors.append(_error(file, facet + "." + field, "two numbers from 0 to 1", "out_of_range"))
+				continue
+			var valid: bool = true
+			for component: Variant in coordinate:
+				valid = valid and (component is int or component is float) \
+					and is_finite(float(component)) and float(component) >= 0.0 and float(component) <= 1.0
+			if not valid:
+				errors.append(_error(file, facet + "." + field, "two numbers from 0 to 1", "out_of_range"))
+			else:
+				row[facet] = {field: [float(coordinate[0]), float(coordinate[1])]}
+		else:
+			if document.get("allowed_gameplay") != true:
+				errors.append(_error(file, facet, "allowed_gameplay = true", "non_gameplay_hub"))
+			var cost: Variant = value.get(field)
+			if not (cost is int or cost is float) or not is_finite(float(cost)) \
+				or float(cost) != floorf(float(cost)) or float(cost) < 0.0:
+				errors.append(_error(file, facet + "." + field, "integer >= 0", "out_of_range"))
+			else:
+				row[facet] = {field: int(cost)}
 
 
 func _normalise_scene(document: Dictionary, file: String, row: Dictionary, errors: Array[Dictionary]) -> void:
@@ -327,6 +373,9 @@ static func canon_text(row: Dictionary) -> String:
 	for key: String in SCENE_FIELDS:
 		if row.has(key):
 			ordered[key] = int(row[key]) if key == "thinning_tier" else row[key]
+	for key: String in TRAVEL_FACETS:
+		if row.has(key):
+			ordered[key] = row[key]
 	return JSON.stringify(ordered, "", false) + "\n"
 
 
@@ -374,7 +423,7 @@ static func definition_text(row: Dictionary) -> String:
 ## One index row per location, sorted by id. The six E1.4e columns keep their meaning (empty
 ## strings where a scene-only location has no gazetteer facet); the scene columns are empty /
 ## false for a city with no playable scene.
-static func index_text(normalised: Array[Dictionary]) -> String:
+static func index_text(normalised: Array[Dictionary], routes: Array[Dictionary] = []) -> String:
 	var rows: Array[Dictionary] = []
 	for row: Dictionary in normalised:
 		rows.append({
@@ -387,19 +436,37 @@ static func index_text(normalised: Array[Dictionary]) -> String:
 			"definition_path": String(row.get("definition_path", "")),
 			"scene_path": String(row.get("scene_path", "")),
 			"no_combat_zone": bool(row.get("no_combat_zone", false)),
+			"world_map": row.get("world_map"),
+			"fast_travel": row.get("fast_travel"),
+			"transition": null,
 		})
 	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
-	return JSON.stringify({"schema": INDEX_SCHEMA, "locations": rows}, "  ", false) + "\n"
+	var route_rows: Array[Dictionary] = []
+	for route: Dictionary in routes:
+		var entry: Dictionary = route.duplicate(true)
+		entry.erase("schema")
+		route_rows.append(entry)
+	route_rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
+	return JSON.stringify({"schema": INDEX_SCHEMA, "locations": rows, "routes": route_rows}, "  ", false) + "\n"
 
 
 ## res:// path → text for every artifact this kind bakes.
-static func artifacts(normalised: Array[Dictionary]) -> Dictionary:
+static func artifacts(normalised: Array[Dictionary], routes: Array[Dictionary] = []) -> Dictionary:
 	var result: Dictionary = {}
 	for row: Dictionary in normalised:
 		if row.has("definition_path"):
 			result[row["definition_path"]] = definition_text(row)
-	result[INDEX_PATH] = index_text(normalised)
+	result[INDEX_PATH] = index_text(normalised, routes)
 	return result
+
+
+func validate_routes(locations: Array[Dictionary], errors: Array[Dictionary]) -> Array[Dictionary]:
+	var documents: Array[Dictionary] = []
+	if route_documents == null:
+		documents = WeftluminRoutesKind.load_canon(errors)
+	else:
+		documents.assign(route_documents)
+	return WeftluminRoutesKind.new().validate_with_locations(documents, locations, errors)
 
 
 # --- Bake ----------------------------------------------------------------------------------
@@ -417,7 +484,13 @@ func bake(normalised: Array[Dictionary], target_root: String, write: bool, force
 		"lint": {"errors": 0, "warnings": 0, "pot_delta": []},
 		"refused_overlap": [], "errors": [], "summary": "",
 	}
-	var texts: Dictionary = artifacts(normalised)
+	var errors: Array[Dictionary] = []
+	var routes: Array[Dictionary] = validate_routes(normalised, errors)
+	if not errors.is_empty():
+		report["errors"] = errors
+		report["summary"] = "refused: invalid routes; nothing written"
+		return report
+	var texts: Dictionary = artifacts(normalised, routes)
 	var paths: Array = texts.keys()
 	paths.sort()
 	var changed: int = 0

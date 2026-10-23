@@ -1,5 +1,5 @@
 {
-  "schema": "weftlumin.location_index.v1",
+  "schema": "weftlumin.location_index.v2",
   "locations": [
     {
       "id": "ashlaren",
@@ -10,7 +10,17 @@
       "vault_id": "",
       "definition_path": "res://world/locations/ashlaren.tres",
       "scene_path": "res://world/ashlaren.tscn",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": {
+        "map_coordinate": [
+          0.1,
+          0.22
+        ]
+      },
+      "fast_travel": {
+        "base_cost_gp": 60
+      },
+      "transition": null
     },
     {
       "id": "ashlaren_millhouse",
@@ -21,7 +31,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/ashlaren_millhouse.tres",
       "scene_path": "res://world/interiors/ashlaren_millhouse.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "ashlaren_weighing_hall",
@@ -32,7 +45,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/ashlaren_weighing_hall.tres",
       "scene_path": "res://world/interiors/ashlaren_weighing_hall.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "bell_house_interior",
@@ -43,7 +59,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/bell_house.tres",
       "scene_path": "res://world/interiors/bell_house.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "bell_loft_interior",
@@ -54,7 +73,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/bell_loft.tres",
       "scene_path": "res://world/interiors/bell_loft.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "cask_warehouse_interior",
@@ -65,7 +87,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/cask_warehouse.tres",
       "scene_path": "res://world/interiors/cask_warehouse.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "chefs_house_interior",
@@ -76,7 +101,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/chefs_house.tres",
       "scene_path": "res://world/interiors/chefs_house.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "chefs_pantry_interior",
@@ -87,7 +115,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/chefs_pantry.tres",
       "scene_path": "res://world/interiors/chefs_pantry.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "council_chamber_interior",
@@ -98,7 +129,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/council_chamber.tres",
       "scene_path": "res://world/interiors/council_chamber.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "deivel-zeit",
@@ -109,7 +143,10 @@
       "vault_id": "deivel",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "dom",
@@ -120,7 +157,17 @@
       "vault_id": "dom",
       "definition_path": "res://world/locations/dom.tres",
       "scene_path": "res://world/starting_town.tscn",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": {
+        "map_coordinate": [
+          0.45,
+          0.55
+        ]
+      },
+      "fast_travel": {
+        "base_cost_gp": 25
+      },
+      "transition": null
     },
     {
       "id": "dom_tavern_interior",
@@ -131,18 +178,29 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/dom_tavern.tres",
       "scene_path": "res://world/interiors/dom_tavern.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "dorthkor_road",
-      "display_name": "",
+      "display_name": "Dorthkor Road",
       "epithet": "",
       "patron": "",
       "agreement": "",
       "vault_id": "",
       "definition_path": "res://world/locations/dorthkor_road.tres",
       "scene_path": "res://world/dorthkor_road.tscn",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": {
+        "map_coordinate": [
+          0.65,
+          0.25
+        ]
+      },
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "equipment_forge_interior",
@@ -153,7 +211,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/equipment_forge.tres",
       "scene_path": "res://world/interiors/equipment_forge.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "equipment_shop_interior",
@@ -164,7 +225,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/equipment_shop.tres",
       "scene_path": "res://world/interiors/equipment_shop.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "garrison_yard_interior",
@@ -175,7 +239,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/garrison_yard.tres",
       "scene_path": "res://world/interiors/garrison_yard.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "hollowmere",
@@ -186,7 +253,15 @@
       "vault_id": "",
       "definition_path": "res://world/locations/hollowmere.tres",
       "scene_path": "res://world/hollowmere.tscn",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": {
+        "map_coordinate": [
+          0.78,
+          0.32
+        ]
+      },
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "iron_companies_interior",
@@ -197,7 +272,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/iron_companies.tres",
       "scene_path": "res://world/interiors/iron_companies.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "item_shop_interior",
@@ -208,7 +286,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/item_shop.tres",
       "scene_path": "res://world/interiors/item_shop.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "karrn-vash",
@@ -219,7 +300,10 @@
       "vault_id": "karrn-vash",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "kesselford",
@@ -230,7 +314,17 @@
       "vault_id": "",
       "definition_path": "res://world/locations/kesselford.tres",
       "scene_path": "res://world/kesselford.tscn",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": {
+        "map_coordinate": [
+          0.2,
+          0.4
+        ]
+      },
+      "fast_travel": {
+        "base_cost_gp": 40
+      },
+      "transition": null
     },
     {
       "id": "kesselford_chandlery",
@@ -241,7 +335,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/kesselford_chandlery.tres",
       "scene_path": "res://world/interiors/kesselford_chandlery.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "kesselford_wayhouse",
@@ -252,7 +349,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/kesselford_wayhouse.tres",
       "scene_path": "res://world/interiors/kesselford_wayhouse.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "lefren",
@@ -263,7 +363,10 @@
       "vault_id": "lefren",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "loamgate",
@@ -274,7 +377,10 @@
       "vault_id": "loamgate",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "long_verge",
@@ -285,7 +391,15 @@
       "vault_id": "",
       "definition_path": "res://world/locations/long_verge.tres",
       "scene_path": "res://world/long_verge.tscn",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": {
+        "map_coordinate": [
+          0.32,
+          0.4
+        ]
+      },
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "lower_trial_hall_interior",
@@ -296,7 +410,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/lower_trial_hall.tres",
       "scene_path": "res://world/interiors/lower_trial_hall.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "milinel",
@@ -307,7 +424,10 @@
       "vault_id": "milinel",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "players_house_interior",
@@ -318,7 +438,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/players_house.tres",
       "scene_path": "res://world/interiors/players_house.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "players_loft_interior",
@@ -329,7 +452,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/players_loft.tres",
       "scene_path": "res://world/interiors/players_loft.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "pozor",
@@ -340,7 +466,10 @@
       "vault_id": "pozor",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "registry_archive_interior",
@@ -351,7 +480,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/registry_archive.tres",
       "scene_path": "res://world/interiors/registry_archive.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "registry_stacks_interior",
@@ -362,7 +494,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/registry_stacks.tres",
       "scene_path": "res://world/interiors/registry_stacks.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "rennen",
@@ -373,7 +508,10 @@
       "vault_id": "rennen",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "river_shrine_interior",
@@ -384,7 +522,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/river_shrine.tres",
       "scene_path": "res://world/interiors/river_shrine.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "shrine_undercroft_interior",
@@ -395,7 +536,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/shrine_undercroft.tres",
       "scene_path": "res://world/interiors/shrine_undercroft.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "solmarch",
@@ -406,7 +550,10 @@
       "vault_id": "solmarch",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "town_hall_interior",
@@ -417,7 +564,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/town_hall.tres",
       "scene_path": "res://world/interiors/town_hall.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "trial_hall_interior",
@@ -428,7 +578,10 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/trial_hall.tres",
       "scene_path": "res://world/interiors/trial_hall.tscn",
-      "no_combat_zone": true
+      "no_combat_zone": true,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "tweede",
@@ -439,7 +592,10 @@
       "vault_id": "tweede",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "verspch",
@@ -450,7 +606,10 @@
       "vault_id": "verspch",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "vervulling",
@@ -461,29 +620,231 @@
       "vault_id": "vervulling",
       "definition_path": "",
       "scene_path": "",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": null,
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "wilds",
-      "display_name": "",
+      "display_name": "Wilds",
       "epithet": "",
       "patron": "",
       "agreement": "",
       "vault_id": "",
       "definition_path": "res://world/locations/wilds.tres",
       "scene_path": "res://world/test_room.tscn",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": {
+        "map_coordinate": [
+          0.15,
+          0.75
+        ]
+      },
+      "fast_travel": null,
+      "transition": null
     },
     {
       "id": "wound_lip",
-      "display_name": "",
+      "display_name": "Wound Lip",
       "epithet": "",
       "patron": "",
       "agreement": "",
       "vault_id": "",
       "definition_path": "res://world/locations/wound_lip.tres",
       "scene_path": "res://world/wound_lip.tscn",
-      "no_combat_zone": false
+      "no_combat_zone": false,
+      "world_map": {
+        "map_coordinate": [
+          0.85,
+          0.55
+        ]
+      },
+      "fast_travel": null,
+      "transition": null
+    }
+  ],
+  "routes": [
+    {
+      "id": "dom-dorthkor_road",
+      "origin_id": "dom",
+      "destination_id": "dorthkor_road",
+      "steps": 12,
+      "phases_cost": 3,
+      "risk_tier": "moderate",
+      "risk_modifier": 15.0,
+      "encounter_table": [
+        {
+          "encounter_id": "loam-boar",
+          "weight": 2
+        },
+        {
+          "encounter_id": "dorthkor-vanguard",
+          "weight": 1
+        }
+      ],
+      "band_encounter_weights": {
+        "faction_id": "iron-companies",
+        "bands": {
+          "hostile": {
+            "dorthkor-vanguard": 3
+          },
+          "cold": {
+            "dorthkor-vanguard": 2
+          },
+          "warm": {
+            "dorthkor-vanguard": 1
+          },
+          "allied": {
+            "dorthkor-vanguard": 0
+          }
+        }
+      },
+      "min_encounters": 1,
+      "max_encounters": 2
+    },
+    {
+      "id": "dom-kesselford",
+      "origin_id": "dom",
+      "destination_id": "kesselford",
+      "steps": 10,
+      "phases_cost": 2,
+      "risk_tier": "low",
+      "risk_modifier": 5.0,
+      "encounter_table": [
+        {
+          "encounter_id": "loam-boar",
+          "weight": 2
+        },
+        {
+          "encounter_id": "bog-wight",
+          "weight": 1
+        }
+      ],
+      "min_encounters": 0,
+      "max_encounters": 1
+    },
+    {
+      "id": "dom-long_verge",
+      "origin_id": "dom",
+      "destination_id": "long_verge",
+      "steps": 6,
+      "phases_cost": 1,
+      "risk_tier": "moderate",
+      "risk_modifier": 10.0,
+      "encounter_table": [
+        {
+          "encounter_id": "bog-wight",
+          "weight": 2
+        },
+        {
+          "encounter_id": "loam-boar",
+          "weight": 1
+        }
+      ],
+      "min_encounters": 0,
+      "max_encounters": 1
+    },
+    {
+      "id": "dom-wilds",
+      "origin_id": "dom",
+      "destination_id": "wilds",
+      "steps": 8,
+      "phases_cost": 2,
+      "risk_tier": "low",
+      "risk_modifier": 5.0,
+      "encounter_table": [
+        {
+          "encounter_id": "loam-boar",
+          "weight": 3
+        },
+        {
+          "encounter_id": "bog-wight",
+          "weight": 1
+        }
+      ],
+      "min_encounters": 0,
+      "max_encounters": 1
+    },
+    {
+      "id": "dom-wound_lip",
+      "origin_id": "dom",
+      "destination_id": "wound_lip",
+      "steps": 16,
+      "phases_cost": 4,
+      "risk_tier": "high",
+      "risk_modifier": 30.0,
+      "encounter_table": [
+        {
+          "encounter_id": "bog-wight",
+          "weight": 2
+        },
+        {
+          "encounter_id": "dorthkor-vanguard",
+          "weight": 2
+        }
+      ],
+      "min_encounters": 1,
+      "max_encounters": 3
+    },
+    {
+      "id": "dorthkor_road-hollowmere",
+      "origin_id": "dorthkor_road",
+      "destination_id": "hollowmere",
+      "steps": 5,
+      "phases_cost": 1,
+      "risk_tier": "high",
+      "risk_modifier": 15.0,
+      "encounter_table": [
+        {
+          "encounter_id": "bog-wight",
+          "weight": 3
+        }
+      ],
+      "min_encounters": 0,
+      "max_encounters": 1
+    },
+    {
+      "id": "kesselford-ashlaren",
+      "origin_id": "kesselford",
+      "destination_id": "ashlaren",
+      "steps": 8,
+      "phases_cost": 2,
+      "risk_tier": "low",
+      "risk_modifier": 5.0,
+      "encounter_table": [
+        {
+          "encounter_id": "loam-boar",
+          "weight": 3
+        },
+        {
+          "encounter_id": "bog-wight",
+          "weight": 1
+        }
+      ],
+      "min_encounters": 0,
+      "max_encounters": 1
+    },
+    {
+      "id": "long_verge-kesselford",
+      "origin_id": "long_verge",
+      "destination_id": "kesselford",
+      "steps": 6,
+      "phases_cost": 1,
+      "risk_tier": "low",
+      "risk_modifier": 5.0,
+      "encounter_table": [
+        {
+          "encounter_id": "bog-wight",
+          "weight": 1
+        },
+        {
+          "encounter_id": "loam-boar",
+          "weight": 1
+        }
+      ],
+      "min_encounters": 0,
+      "max_encounters": 1
     }
   ]
 }

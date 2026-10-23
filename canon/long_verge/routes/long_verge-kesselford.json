@@ -1,0 +1,1 @@
+{"schema":"weftlumin.route.v1","id":"long_verge-kesselford","origin_id":"long_verge","destination_id":"kesselford","steps":6,"phases_cost":1,"risk_tier":"low","risk_modifier":5.0,"encounter_table":[{"encounter_id":"bog-wight","weight":1},{"encounter_id":"loam-boar","weight":1}],"min_encounters":0,"max_encounters":1}

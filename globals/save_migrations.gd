@@ -20,7 +20,12 @@ const ELEMENT_RENAMES_V8: Dictionary = {
 ## DRAMGID deletes Alchemy outright rather than renaming it, which is why it is the
 ## one skill id the rename table maps to an empty string.
 const ALCHEMY_SKILL_ID := "alchemy"
-const CURRENT_SCHEMA_VERSION := 9
+const CURRENT_SCHEMA_VERSION := 10
+const LOCATION_RENAMES_V10: Dictionary = {
+	"dorthkor-road": "dorthkor_road",
+	"wound-lip": "wound_lip",
+	"long-verge": "long_verge",
+}
 
 
 static func prepare(payload: Variant) -> Dictionary:
@@ -53,6 +58,8 @@ static func prepare(payload: Variant) -> Dictionary:
 		migrated = _migrate_v7_to_v8(migrated)
 	if source_version <= 8:
 		migrated = _migrate_v8_to_v9(migrated)
+	if source_version <= 9:
+		migrated = _migrate_v9_to_v10(migrated)
 	migrated["skill_check"] = SkillCheckService.normalize_save_data(
 		migrated.get("skill_check", {})
 	)
@@ -235,6 +242,28 @@ static func _migrate_v8_to_v9(source: Dictionary) -> Dictionary:
 		migrated["game_state"] = state
 
 	migrated["skill_check"] = _rename_reroll_skill_ids(migrated.get("skill_check", {}))
+	return migrated
+
+
+## World-map ids now share the location ids already used by scenes and fast-travel flags.
+static func _migrate_v9_to_v10(source: Dictionary) -> Dictionary:
+	var migrated: Dictionary = source.duplicate(true)
+	var state: Variant = migrated.get("game_state")
+	if not state is Dictionary:
+		return migrated
+	var plan: Variant = state.get("travel_plan")
+	if plan is Dictionary:
+		for field: String in ["origin_id", "destination_id"]:
+			if plan.has(field) and plan[field] is String:
+				plan[field] = LOCATION_RENAMES_V10.get(plan[field], plan[field])
+	var flags: Variant = state.get("flags")
+	if flags is Dictionary:
+		for old_id: String in LOCATION_RENAMES_V10:
+			var old_key: String = "world_location_discovered:" + old_id
+			if flags.has(old_key):
+				var new_key: String = "world_location_discovered:" + String(LOCATION_RENAMES_V10[old_id])
+				flags[new_key] = flags[old_key]
+				flags.erase(old_key)
 	return migrated
 
 

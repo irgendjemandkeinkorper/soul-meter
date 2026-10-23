@@ -234,5 +234,5 @@ func test_migrating_an_already_migrated_payload_changes_nothing_further() -> voi
 	).is_equal(int((first["attributes"] as Dictionary)["doctrine"]))
 
 
-func test_the_envelope_reports_schema_nine() -> void:
-	assert_int(int(_prepared(_payload([_member()]))["schema_version"])).is_equal(9)
+func test_the_envelope_reports_the_current_schema() -> void:
+	assert_int(int(_prepared(_payload([_member()]))["schema_version"])).is_equal(SaveMigrations.CURRENT_SCHEMA_VERSION)

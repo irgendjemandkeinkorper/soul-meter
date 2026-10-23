@@ -61,12 +61,23 @@ func test_map_builds_one_marker_per_registry_location_at_normalized_coordinate()
 		assert_float(actual.y).is_equal_approx(expected.y, 1.0)
 
 
+func test_location_identity_and_names_come_from_canon() -> void:
+	var rows: Array[Dictionary] = RegionMapScript.locations_for(LocationRegistry.LONG_VERGE.scene_path)
+	for row: Dictionary in rows:
+		assert_bool(bool(row["is_current"])).is_equal(row["id"] == &"long_verge")
+	assert_str(RegionMapScript._display_name(&"long_verge")).is_equal("The Long Verge")
+	assert_str(RegionMapScript._display_name(&"dorthkor_road")).is_equal("Dorthkor Road")
+	assert_str(RegionMapScript._display_name(&"wound_lip")).is_equal("Wound Lip")
+	assert_str(RegionMapScript._display_name(&"wilds")).is_equal("Wilds")
+
+
 func test_undiscovered_markers_remain_visible_but_gated() -> void:
 	GameState.discover_world_location(&"dom")
 	var rows: Array[Dictionary] = RegionMapScript.locations_for(GameFlow.TOWN_SCENE)
 	assert_int(rows.size()).is_equal(WorldMapRegistry.all_locations().size())
-	assert_bool(bool(rows[0]["is_current"])).is_true()
-	assert_bool(bool(rows[1]["is_discovered"])).is_false()
+	for row: Dictionary in rows:
+		assert_bool(bool(row["is_current"])).is_equal(row["id"] == &"dom")
+		assert_bool(bool(row["is_discovered"])).is_equal(row["id"] == &"dom")
 
 	var runner = scene_runner("res://ui/screens/region_map.tscn")
 	await runner.simulate_frames(3)
@@ -78,16 +89,16 @@ func test_undiscovered_markers_remain_visible_but_gated() -> void:
 
 func test_selecting_connected_destination_and_committing_creates_plan() -> void:
 	GameState.discover_world_location(&"dom")
-	GameState.discover_world_location(&"dorthkor-road")
+	GameState.discover_world_location(&"dorthkor_road")
 	var runner = scene_runner("res://ui/screens/region_map.tscn")
 	await runner.simulate_frames(3)
 	var screen: RegionMapScreen = runner.scene() as RegionMapScreen
-	screen._select_location(&"dorthkor-road")
+	screen._select_location(&"dorthkor_road")
 	screen._travel_selected()
 
 	assert_object(GameFlow.travel_plan).is_not_null()
 	assert_str(GameFlow.travel_plan.origin_id).is_equal("dom")
-	assert_str(GameFlow.travel_plan.destination_id).is_equal("dorthkor-road")
+	assert_str(GameFlow.travel_plan.destination_id).is_equal("dorthkor_road")
 	assert_bool((runner.find_child("CancelJourneyButton", true, false) as Button).visible).is_true()
 
 
@@ -177,7 +188,7 @@ func _traveler() -> PartyMember:
 func _prompt_plan(seed: int, state: TravelPlan.State, progress: int) -> TravelPlan:
 	var plan := TravelPlan.new()
 	plan.origin_id = &"dom"
-	plan.destination_id = &"dorthkor-road"
+	plan.destination_id = &"dorthkor_road"
 	plan.progress_step = progress
 	plan.total_steps = 12
 	plan.rng_seed = seed
@@ -197,7 +208,7 @@ func _install_plan(plan: TravelPlan) -> void:
 
 
 func _avoidance_chance() -> float:
-	var route: Dictionary = WorldMapRegistry.route_between(&"dom", &"dorthkor-road")
+	var route: Dictionary = WorldMapRegistry.route_between(&"dom", &"dorthkor_road")
 	return EncounterDirector.avoidance_chance(route, GameState.party)
 
 
