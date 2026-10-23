@@ -245,30 +245,41 @@ never generates one (canon proposals are the Ollama worker's job).
 that touch canon therefore also carry the regenerated `data.pandora` and `data/generated` diffs; the
 PR body lists the regenerated files separately from the authored ones.
 
-**4.3.3 Registries become data-driven** (prerequisite for ruling 3). A location document
-`canon/<hub>/locations/<id>.json` carries everything today's four hardcoded arrays hold:
+**4.3.3 Registries become data-driven** (prerequisite for ruling 3; shipped in #342, 2026-10-23).
+A location document `canon/<hub>/locations/<id>.json` carries the scene facet plus optional travel
+and door facets; roads are their own documents. The shipped shape (ruling A1 + B1 of 2026-10-22):
 
 ```json
-{ "schema": "weftlumin.location.v1", "id": "loamroot-grove", "display_name": "Loamroot Grove",
-  "scene_path": "res://world/loamroot_grove.tscn", "allowed_gameplay": true,
-  "default_spawn_id": "default", "spawns": {"from_dom": "from_dom"},
-  "arrival_flag": "chapter_loamroot_reached", "arrival_checkpoint": "location-arrival",
-  "harmonic_accord": 82.0, "thinning_tier": 1, "weather_default": "mozh", "no_combat_zone": false,
-  "respawn_policy": "wilderness",
-  "world_map": {"position": [420, 310], "routes": [{"to": "dom", "danger_rank": 1, "encounter_table": "wilds-road"}]},
-  "fast_travel_hub": false,
-  "transitions": [{"id": "grove-shrine-door", "destination": "res://world/interiors/grove_shrine.tscn", "spawn_id": "from_grove"}],
-  "vault_id": "loamroot-grove" }
+{ "schema": "weftlumin.location.v1", "id": "kesselford_wayhouse", "display_name": "Ferry Bell Wayhouse",
+  "definition_path": "res://world/locations/interiors/kesselford_wayhouse.tres",
+  "scene_path": "res://world/interiors/kesselford_wayhouse.tscn", "allowed_gameplay": true,
+  "default_spawn_id": "entry", "spawns": {"entry": "entry"}, "arrival_flag": "", "arrival_checkpoint": "",
+  "harmonic_accord": 85.0, "thinning_tier": 0, "weather_default": "", "no_combat_zone": true,
+  "respawn_policy": "limited",
+  "transition": { "building_id": "kesselford_wayhouse", "building_name": "Ferry Bell Wayhouse",
+    "source_scene": "res://world/kesselford.tscn", "source_anchor": "WayhouseDoor",
+    "source_position": [1150.0, 700.0], "prompt_text": "E — Enter", "spawn_id": "entry",
+    "destination_spawn_position": [960.0, 1098.6], "required_flag": "", "reputation_faction": "",
+    "minimum_reputation_band": "", "locked_message": "This door is locked.",
+    "exit": { "source_anchor": "Room/ExitDoor", "source_position": [960.0, 1200.0],
+      "spawn_id": "from_kesselford_wayhouse", "destination_spawn_position": [1150.0, 790.0],
+      "prompt_text": "E — RETURN" } } }
 ```
 
-The bake generates `world/locations/<id>.tres` (`LocationDefinition`, never hand-edited after migration)
-and `data/generated/location_index.json`; `LocationRegistry.ALL`, `WorldMapRegistry._location_rows()`,
-`FastTravelRegistry._HUBS`, `BuildingTransitionRegistry` read the index. Named preload consts
-(`LocationRegistry.DOM`…) stay for code references. A live `LocationRegistry.register_runtime(def)` lets
-an unbaked scene be travelled to in-session (overlay, P6). `GameFlow.GAMEPLAY_SCENES` is a cache
-computed once at load (`ui/flow/game_flow.gd:57,89-92`), so travel validation must query
-`LocationRegistry.is_gameplay_scene()` dynamically (or refresh on a `locations_changed` signal) — a
-`GameFlow` touch that waits for the F1 + F3 freeze to lift and rides E3.3b.
+A macro location carries `"world_map": {"map_coordinate": [x, y]}` (0–1) and a hub
+`"fast_travel": {"base_cost_gp": n}`. Routes are `canon/<origin hub>/routes/<origin>-<destination>.json`
+(`weftlumin.route.v1`: steps, phase cost, risk, integer encounter weights, optional band overrides
+≥ 0, one document per location pair). Map ids are location ids; save schema 10 migrated the three
+hyphenated ones.
+
+The bake generates `world/locations/**/*.tres` (`LocationDefinition`), the door pairs
+`actors/building_door/transitions/<building_id>_{enter,exit}.tres` (the exit derived from the enter)
+and `data/generated/location_index.json` (v2: nullable `world_map` / `fast_travel` / `transition`
+columns and a `routes` array); none is hand-edited. `LocationRegistry.ALL`, `WorldMapRegistry`,
+`FastTravelRegistry` and `BuildingTransitionRegistry` read the index. Named preload consts stay only
+where code references them (`LocationRegistry.DOM`…, `BuildingTransitionRegistry.GARRISON_YARD_ENTER`).
+A live `LocationRegistry.register_runtime(def)` lets an unbaked scene be travelled to in-session
+(overlay, P6), and `GameFlow` validates travel with `LocationRegistry.is_gameplay_scene()`.
 
 ### 4.4 Commands, undo, log
 

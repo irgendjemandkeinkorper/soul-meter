@@ -287,14 +287,14 @@ command with `WeftluminSceneCreator.command(params, package, errors)`.
   `PLACEMENT_ANCHORS`, `"town"`; the town id is the `canon/<town>/` directory and the location
   id) land in that town's artifacts, and their routine coordinates are the town scene's
   (`NpcRoutines.hub_scene()`).
+- **Travel and doors are canon (#342).** A hub's `fast_travel` facet, a map node's `world_map`
+  facet, `weftlumin.route.v1` route documents and an interior's `transition` facet replace the
+  registry rows that used to be hand-wired; the bake writes the index and the door `.tres` pair.
+  The package still sets the interior `Room`'s `exit_transition_id` export to `<name>_exit`, and
+  the facet's exit `source_anchor` is `Room/ExitDoor`.
 - **Limits.** These stay hand-wired in the same PR as the package (Kesselford, #238, is the
   worked example):
-  - `FastTravelRegistry._HUBS` (which makes the scene a hub; a wilds location with a roster
-    skips this row), `WorldMapRegistry` rows and the `LocationRegistry` named consts a test
-    requires for every baked location.
-  - An interior's `BuildingTransitionRegistry` `.tres` pair and preload consts (#342); the
-    package sets the interior `Room`'s `exit_transition_id` export to `<name>_exit`, and the exit's
-    `source_anchor` is `Room/ExitDoor`.
+  - The `LocationRegistry` named consts a test requires for every baked location.
   - The placement anchor rows and `TOWN_SCENES` / `TOWN_NAMES` entries in
     `tools/seed_town_npcs.gd` and the vendor row in `tools/seed_town_vendors.gd` (then
     `scripts/seed_town_npcs.sh` / the vendor seeder and `regen --write`), plus
@@ -328,8 +328,14 @@ gazetteer facet (display name, patron, agreement, vault id) are read-only.
   `fast_travel: {base_cost_gp: n}` facets. Coordinates are in 0–1; hub costs are non-negative
   integers and require gameplay permission. `canon/<hub>/routes/<origin_id>-<destination_id>.json`
   (`weftlumin.route.v1`) lives in the origin's package and uses the same validation/bake path.
-  The generator writes `weftlumin.location_index.v2`: every v1 location field, nullable travel
-  facets, reserved `transition: null`, and routes sorted by id. Existing provisional tuning is
+  PR 3 adds the optional interior `transition` facet: the door that enters the interior
+  (building id and name, source scene and anchor, positions, prompt, spawn, the four gates stated
+  with their values) plus an `exit` object of five door values. The bake writes
+  `actors/building_door/transitions/<building_id>_{enter,exit}.tres`; the exit's scenes and
+  destination location are derived from the enter. The source scene must belong to another
+  scene-backed location, and a building has one door pair. The generator writes
+  `weftlumin.location_index.v2`: every v1 location field, nullable travel and door facets, and
+  routes sorted by id. Existing provisional tuning is
   documented in [canon/routes.md](../canon/routes.md).
 - **Drafts.** Save draft validates the whole location set with the edit applied and writes only
   `user://weftlumin/location-drafts/locations/<id>.json`. The panel never writes `res://`.
@@ -343,8 +349,9 @@ gazetteer facet (display name, patron, agreement, vault id) are read-only.
   `LocationRegistry.locations_changed`; `GameFlow` validates travel with
   `LocationRegistry.is_gameplay_scene()`. `WorldMapRegistry` now caches the index's world-map
   locations and routes, using location ids throughout; save schema 10 migrates the three former
-  hyphenated map ids in journeys and discovery flags. `FastTravelRegistry` and
-  `BuildingTransitionRegistry` still hold their own tables pending PRs 2 and 3 of #342.
+  hyphenated map ids in journeys and discovery flags. `FastTravelRegistry` reads the hubs with a
+  `fast_travel` facet (Dom first, then by id), and `BuildingTransitionRegistry` loads the door
+  pairs the index lists, in index order. Runtime door lookups go through `by_id()`.
   Rendered evidence of a new game travelling Dom -> Equipment Shop through the index-driven
   registry is in `docs/qa/registries-342-2026-10-11/`, from `test/manual/registry_travel_capture.gd`.
 
