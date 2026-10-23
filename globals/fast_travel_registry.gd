@@ -2,68 +2,65 @@ class_name FastTravelRegistry
 extends RefCounted
 ## Read-only runtime index for FR-503 fast-travel hubs.
 ##
-## Design choice: Pandora remains canonical and nothing writes back. The current
-## Pandora data has no ratified hub/travel-cost entity contract, so this registry
-## deliberately duplicates the small amount of already-ratified LocationRegistry
-## metadata needed by the UI. Migrate this table to generated Pandora output once
-## hub entities and their vault-backed lore entries are ratified; do not hand-edit
-## data.pandora to satisfy this screen.
+## Canon location documents own hub membership and provisional costs. The bake
+## writes their fast_travel facets to the location index; nothing writes back.
 
-const _HUBS: Array[Dictionary] = [
-	{
-		"id": &"dom",
-		"scene_path": "res://world/starting_town.tscn",
-		"display_name": "Dom",
-		# Provisional economy tuning, not lore. Centralized for a later balance pass.
-		"base_cost_gp": 25,
-	},
-	{
-		# Hub 2 (C1 / #238; vault proposal approved 2026-10-16). The id is the `canon/<hub>/`
-		# directory and the location id; NpcRoster and TownNpcSpawner key the hub's townsfolk on it.
-		"id": &"kesselford",
-		"scene_path": "res://world/kesselford.tscn",
-		"display_name": "Kesselford",
-		# PROVISIONAL: a longer road than Dom's local routes; balance pass owns the number.
-		"base_cost_gp": 40,
-	},
-	{
-		# Hub 3 (C2 / #239; vault proposal approved 2026-10-16): the grain-road market town past
-		# Kesselford. Same contract as Kesselford's row.
-		"id": &"ashlaren",
-		"scene_path": "res://world/ashlaren.tscn",
-		"display_name": "Ashlaren",
-		# PROVISIONAL: two roads out from Dom; balance pass owns the number.
-		"base_cost_gp": 60,
-	},
-]
+static var _hubs: Array[Dictionary] = []
+static var _loaded: bool = _load_index()
 
 
 static func all() -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for hub: Dictionary in _HUBS:
-		result.append(hub.duplicate(true))
-	return result
+	return _hubs.duplicate(true)
 
 
 static func by_id(hub_id: StringName) -> Dictionary:
-	for hub: Dictionary in _HUBS:
+	for hub: Dictionary in _hubs:
 		if hub["id"] == hub_id:
 			return hub.duplicate(true)
 	return {}
 
 
 static func by_scene(scene_path: String) -> Dictionary:
-	for hub: Dictionary in _HUBS:
+	for hub: Dictionary in _hubs:
 		if hub["scene_path"] == scene_path:
 			return hub.duplicate(true)
 	return {}
+
+
+static func _load_index() -> bool:
+	var index: JSON = load(LocationRegistry.INDEX_PATH) as JSON
+	if index == null or not index.data is Dictionary:
+		push_error("FastTravelRegistry: missing or invalid location index.")
+		return false
+	var data: Dictionary = index.data
+	if data.get("schema") != LocationRegistry.INDEX_SCHEMA:
+		push_error("FastTravelRegistry: unsupported location index schema.")
+		return false
+	for row: Dictionary in data.get("locations", []):
+		var facet: Variant = row.get("fast_travel")
+		if not facet is Dictionary:
+			continue
+		_hubs.append({
+			"id": StringName(row["id"]),
+			"scene_path": String(row["scene_path"]),
+			"display_name": String(row["display_name"]),
+			"base_cost_gp": int(facet["base_cost_gp"]),
+		})
+	# Public order is dom first, then the remaining hubs by id. NpcRoster.town_ids()
+	# forwards this order; unique NPC ids and display names across the town rosters
+	# keep its merge unchanged (handoff §2.2).
+	_hubs.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["id"] == &"dom" or b["id"] == &"dom":
+			return a["id"] == &"dom" and b["id"] != &"dom"
+		return String(a["id"]) < String(b["id"]))
+	return true
 
 
 static func validate() -> PackedStringArray:
 	var errors := PackedStringArray()
 	var seen_ids: Dictionary = {}
 	var seen_scenes: Dictionary = {}
-	for hub: Dictionary in _HUBS:
+	for hub: Dictionary in _hubs:
 		var hub_id := StringName(hub.get("id", &""))
 		var scene_path := str(hub.get("scene_path", ""))
 		if hub_id.is_empty() or seen_ids.has(hub_id):

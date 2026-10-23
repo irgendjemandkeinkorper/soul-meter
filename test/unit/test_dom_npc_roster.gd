@@ -11,6 +11,12 @@ const INVOLVEMENT_TYPES := [
 ]
 
 
+func test_town_ids_start_with_dom_then_the_remaining_hubs_by_id() -> void:
+	assert_array(NpcRosterScript.town_ids().slice(0, 3)).contains_exactly([
+		"dom", "ashlaren", "kesselford"
+	])
+
+
 func test_generated_dom_roster_has_exactly_sixty_complete_unique_people() -> void:
 	var data := _json(ROSTER_PATH)
 	var npcs: Dictionary = data["npcs"]
