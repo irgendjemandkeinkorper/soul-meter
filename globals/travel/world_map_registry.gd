@@ -163,7 +163,7 @@ static func _route_rows() -> Array[Dictionary]:
 			"max_encounters": 3,
 		},
 		{
-			# PROVISIONAL (C1 / #238): a kept road between two hubs, longer than the Wilds walk
+			# Ratified 2026-10-22 (C1 / #238; owner item 4), tunable in the balance pass: a kept road between two hubs, longer than the Wilds walk
 			# but no riskier; tune after encounter-frequency playtests.
 			"id": &"dom-kesselford",
 			"origin_id": DOM_ID,
@@ -180,7 +180,7 @@ static func _route_rows() -> Array[Dictionary]:
 			"max_encounters": 1,
 		},
 		{
-			# PROVISIONAL (C2 / #239): the grain road between Kesselford and Ashlaren, a shorter and
+			# Ratified 2026-10-22 (C2 / #239; owner item 4), tunable in the balance pass: the grain road between Kesselford and Ashlaren, a shorter and
 			# busier stretch than the Dom road. Tune after encounter-frequency playtests.
 			"id": &"kesselford-ashlaren",
 			"origin_id": KESSELFORD_ID,
@@ -197,7 +197,7 @@ static func _route_rows() -> Array[Dictionary]:
 			"max_encounters": 1,
 		},
 		{
-			# PROVISIONAL (C3 / #240): the high road out of Dom onto the Verge. Half the Ford Road's
+			# Ratified 2026-10-22 (C3 / #240; owner item 4), tunable in the balance pass: the high road out of Dom onto the Verge. Half the Ford Road's
 			# length, but the Agreement thins in streaks up here, so the dead walk it more often
 			# than boars do. Tune after encounter-frequency playtests.
 			"id": &"dom-long-verge",
@@ -215,7 +215,7 @@ static func _route_rows() -> Array[Dictionary]:
 			"max_encounters": 1,
 		},
 		{
-			# PROVISIONAL (C3 / #240): the moor track down from the Verge into the ford country.
+			# Ratified 2026-10-22 (C3 / #240; owner item 4), tunable in the balance pass: the moor track down from the Verge into the ford country.
 			# The same stretch the Companies march; the Ford Road below stays the kept road.
 			"id": &"long-verge-kesselford",
 			"origin_id": LONG_VERGE_ID,
@@ -232,7 +232,7 @@ static func _route_rows() -> Array[Dictionary]:
 			"max_encounters": 1,
 		},
 		{
-			# PROVISIONAL (C4 / #241): the reed track off the Dorthkor Road down to the mere. Short,
+			# Ratified 2026-10-22 (C4 / #241; owner item 4), tunable in the balance pass: the reed track off the Dorthkor Road down to the mere. Short,
 			# and the dead walk the shallows: the thin here is deeper than on any road near Dom.
 			"id": &"dorthkor-road-hollowmere",
 			"origin_id": DORTHKOR_ROAD_ID,
