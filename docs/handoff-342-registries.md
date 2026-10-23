@@ -66,8 +66,10 @@ location ids (§1.4):
 
 `band_encounter_weights` is an optional object with today's shape (`faction_id`, `bands` →
 band → encounter id → weight); only `dom-dorthkor_road` carries it. Validation: both endpoint ids
-resolve to scene-backed location documents; `encounter_id`s exist in `EncounterCatalog`; weights
-> 0; `min_encounters ≤ max_encounters`; `risk_tier` is one of the values the code accepts today;
+resolve to scene-backed location documents; `encounter_id`s exist in `EncounterCatalog`; base
+`encounter_table` weights > 0 and `band_encounter_weights` overrides ≥ 0 (the Allied override on
+`dom-dorthkor_road` is 0 today and moves byte-for-byte; a 0 override means that band never meets that
+encounter); `min_encounters ≤ max_encounters`; `risk_tier` is one of the values the code accepts today;
 `id` equals `<origin_id>-<destination_id>`. Add the kind to the same validate/bake path the
 locations kind uses, and to `addons/weftlumin` package manifests where kinds are enumerated.
 
