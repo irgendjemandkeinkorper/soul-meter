@@ -1,5 +1,7 @@
 extends GdUnitTestSuite
 
+const VALUE_FIXTURE := "res://test/fixtures/building_transitions_342.json"
+
 const BUILDING_IDS: Array[StringName] = [
 	&"registry_archive",
 	&"bell_house",
@@ -99,3 +101,38 @@ func test_every_interior_location_resolves_its_entry_spawn() -> void:
 		assert_object(location).is_not_null()
 		assert_str(location.default_spawn_id).is_equal("entry")
 		assert_str(location.resolve_spawn(&"entry")).is_equal("entry")
+
+
+## Captured before the #342 PR 3 migration, including every omitted script default.
+## The fixture records its source revisions; the 48 resources were identical to main.
+func test_generated_transitions_match_every_original_export_and_resource_header() -> void:
+	var fixture: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(VALUE_FIXTURE))
+	var resources: Array = fixture["resources"]
+	assert_int(resources.size()).is_equal(48)
+	var paths: Array[String] = []
+	for row: Dictionary in resources:
+		var path: String = row["path"]
+		paths.append(path)
+		var transition: BuildingTransitionDefinition = load(path) as BuildingTransitionDefinition
+		assert_object(transition).override_failure_message(path).is_not_null()
+		var fields: Dictionary = row["fields"]
+		var exported: Array[String] = []
+		for property: Dictionary in transition.get_property_list():
+			var usage: int = int(property["usage"])
+			if usage & PROPERTY_USAGE_SCRIPT_VARIABLE and usage & PROPERTY_USAGE_EDITOR:
+				exported.append(String(property["name"]))
+		assert_array(exported).contains_exactly(fields.keys())
+		for field: String in fields:
+			var expected: Variant = str_to_var(fields[field])
+			var actual: Variant = transition.get(field)
+			var context: String = "%s: %s" % [path, field]
+			assert_int(typeof(actual)).override_failure_message(context).is_equal(typeof(expected))
+			assert_bool(actual == expected).override_failure_message(context).is_true()
+		# Includes the resource UID when present; never silently replaces a scene reference.
+		assert_str(FileAccess.get_file_as_string(path).get_slice("\n", 0)) \
+			.override_failure_message(path).is_equal(row["header"])
+	var committed: Array[String] = []
+	for filename: String in DirAccess.get_files_at("res://actors/building_door/transitions"):
+		if filename.ends_with(".tres"):
+			committed.append("res://actors/building_door/transitions/" + filename)
+	assert_array(committed).contains_exactly(paths)
