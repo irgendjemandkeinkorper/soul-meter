@@ -14,6 +14,11 @@ extends WeftluminKind
 ##   consts, so they are data, not derived from the id) and `no_combat_zone`.
 ## - Optional scene-backed travel facets: `world_map` coordinates and `fast_travel` cost.
 ##   Routes are separate documents; this bake combines both kinds in the v2 index.
+## - Optional `transition` facet on an interior (#342 PR 3): the door that enters it. The bake
+##   writes the enter and exit `BuildingTransitionDefinition` pair under
+##   `actors/building_door/transitions/`; the exit is derived (it leaves this interior's scene for
+##   the enter's `source_scene` and the location that owns it) except for the five door values in
+##   the facet's `exit` object. Canon states every gate value, defaults included.
 ##
 ## Dom is the only location carrying both today. Every scene field is REQUIRED when the facet is
 ## present, defaults included: canon states its values instead of inheriting them from a script.
@@ -49,6 +54,23 @@ const MAX_THINNING_TIER := 3
 const META_FILE := "$file"
 const META_HUB := "$hub"
 const TRAVEL_FACETS: Array[String] = ["world_map", "fast_travel"]
+const TRANSITIONS_ROOT := "res://actors/building_door/transitions/"
+const TRANSITION_SCRIPT := "res://actors/building_door/building_transition_definition.gd"
+## Canonical key order of the `transition` facet; also the order its canon text is written in.
+const TRANSITION_FIELDS: Array[String] = [
+	"building_id", "building_name", "source_scene", "source_anchor", "source_position",
+	"prompt_text", "spawn_id", "destination_spawn_position", "required_flag",
+	"reputation_faction", "minimum_reputation_band", "locked_message", "exit",
+]
+const TRANSITION_EXIT_FIELDS: Array[String] = [
+	"source_anchor", "source_position", "spawn_id", "destination_spawn_position", "prompt_text",
+]
+## `BuildingTransitionDefinition`'s script defaults for the four gate fields. The `.tres` bake
+## omits a gate equal to its default, as the hand-written files did; exits never carry a gate.
+const TRANSITION_GATE_DEFAULTS: Dictionary = {
+	"required_flag": "", "reputation_faction": "", "minimum_reputation_band": "",
+	"locked_message": "This door is locked.",
+}
 
 ## Null reads canon; the generator/package bake supplies its own complete route overlay.
 var route_documents: Variant = null
@@ -127,10 +149,41 @@ func validate(documents: Array[Dictionary], errors: Array[Dictionary]) -> Array[
 						"'%s' is also used by location '%s'." % [value, seen[value]]))
 				seen[value] = location_id
 		normalised.append(row)
+	_validate_doors(normalised, errors)
 	if errors.size() != error_count:
 		return []
 	normalised.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
 	return normalised
+
+
+## A door enters from a scene-backed location other than its own interior, and one building
+## has one door pair.
+static func _validate_doors(normalised: Array[Dictionary], errors: Array[Dictionary]) -> void:
+	var scenes: Dictionary = _scene_owners(normalised)
+	var buildings: Dictionary = {}
+	for row: Dictionary in normalised:
+		if not row.has("transition"):
+			continue
+		var facet: Dictionary = row["transition"]
+		var file: String = String(row["id"])
+		var building_id: String = String(facet.get("building_id", ""))
+		if buildings.has(building_id):
+			errors.append(_error(file, "transition.building_id", "unique building id", "duplicate_building",
+				"Building '%s' is also entered from location '%s'." % [building_id, buildings[building_id]]))
+		buildings[building_id] = row["id"]
+		var source: String = String(facet.get("source_scene", ""))
+		if not scenes.has(source) or source == String(row.get("scene_path", "")):
+			errors.append(_error(file, "transition.source_scene", "another scene-backed location's scene",
+				"unknown_source_scene"))
+
+
+## scene_path → location id for every scene-backed row.
+static func _scene_owners(normalised: Array[Dictionary]) -> Dictionary:
+	var owners: Dictionary = {}
+	for row: Dictionary in normalised:
+		if row.has("scene_path"):
+			owners[String(row["scene_path"])] = String(row["id"])
+	return owners
 
 
 func _normalise(document: Dictionary, file: String, errors: Array[Dictionary]) -> Dictionary:
@@ -139,6 +192,7 @@ func _normalise(document: Dictionary, file: String, errors: Array[Dictionary]) -
 	allowed.append_array(GAZETTEER_FIELDS)
 	allowed.append_array(SCENE_FIELDS)
 	allowed.append_array(TRAVEL_FACETS)
+	allowed.append("transition")
 	for key: Variant in document.keys():
 		if not allowed.has(String(key)):
 			errors.append(_error(file, String(key), "a weftlumin.location.v1 field", "unknown_field"))
@@ -172,7 +226,67 @@ func _normalise(document: Dictionary, file: String, errors: Array[Dictionary]) -
 	elif not has_gazetteer:
 		errors.append(_error(file, "$", "a gazetteer or scene facet", "empty_location"))
 	_normalise_travel_facets(document, file, row, errors)
+	_normalise_transition(document, file, row, errors)
 	return row if errors.size() == error_count else {}
+
+
+func _normalise_transition(document: Dictionary, file: String, row: Dictionary, errors: Array[Dictionary]) -> void:
+	if not document.has("transition"):
+		return
+	if not row.has("scene_path"):
+		errors.append(_error(file, "transition", "a scene-backed location", "missing_scene_facet"))
+	var value: Variant = document["transition"]
+	if not value is Dictionary:
+		errors.append(_error(file, "transition", "a door object", "invalid_field_type"))
+		return
+	var facet: Dictionary = {}
+	_normalise_door(value, TRANSITION_FIELDS, "transition", file, facet, errors)
+	var exit: Variant = value.get("exit")
+	if not exit is Dictionary:
+		errors.append(_error(file, "transition.exit", "an exit door object", "invalid_field_type"))
+	else:
+		var exit_facet: Dictionary = {}
+		_normalise_door(exit, TRANSITION_EXIT_FIELDS, "transition.exit", file, exit_facet, errors)
+		facet["exit"] = exit_facet
+	row["transition"] = facet
+
+
+## Validates one door object against `fields` (every key required, none extra) into `out`, in
+## `fields` order. `exit` is the nested object, handled by the caller.
+static func _normalise_door(
+	value: Dictionary, fields: Array[String], prefix: String, file: String, out: Dictionary,
+	errors: Array[Dictionary],
+) -> void:
+	for key: Variant in value:
+		if not fields.has(String(key)):
+			errors.append(_error(file, "%s.%s" % [prefix, key], " | ".join(fields), "unknown_field"))
+	for field: String in fields:
+		if field == "exit":
+			continue
+		var path: String = "%s.%s" % [prefix, field]
+		var item: Variant = value.get(field)
+		if field.ends_with("_position"):
+			if not item is Array or item.size() != 2 or not _finite_pair(item):
+				errors.append(_error(file, path, "two numbers", "invalid_field_type"))
+			else:
+				out[field] = [float(item[0]), float(item[1])]
+		elif not item is String:
+			errors.append(_error(file, path, "string", "invalid_field_type"))
+		elif field == "building_id" and not _is_stable_id(item):
+			errors.append(_error(file, path, "lower-case stable id ([a-z0-9_-]+)", "invalid_id"))
+		elif field == "spawn_id" and String(item).strip_edges().is_empty():
+			errors.append(_error(file, path, "non-empty spawn id", "invalid_spawn"))
+		elif field == "source_scene" and (not String(item).begins_with("res://") or String(item).get_extension() != "tscn"):
+			errors.append(_error(file, path, "res:// path to a .tscn", "invalid_scene_path"))
+		else:
+			out[field] = item
+
+
+static func _finite_pair(pair: Array) -> bool:
+	for component: Variant in pair:
+		if not (component is int or component is float) or not is_finite(float(component)):
+			return false
+	return true
 
 
 func _normalise_travel_facets(document: Dictionary, file: String, row: Dictionary, errors: Array[Dictionary]) -> void:
@@ -376,6 +490,8 @@ static func canon_text(row: Dictionary) -> String:
 	for key: String in TRAVEL_FACETS:
 		if row.has(key):
 			ordered[key] = row[key]
+	if row.has("transition"):
+		ordered["transition"] = row["transition"]
 	return JSON.stringify(ordered, "", false) + "\n"
 
 
@@ -438,7 +554,7 @@ static func index_text(normalised: Array[Dictionary], routes: Array[Dictionary] 
 			"no_combat_zone": bool(row.get("no_combat_zone", false)),
 			"world_map": row.get("world_map"),
 			"fast_travel": row.get("fast_travel"),
-			"transition": null,
+			"transition": row.get("transition"),
 		})
 	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
 	var route_rows: Array[Dictionary] = []
@@ -456,8 +572,70 @@ static func artifacts(normalised: Array[Dictionary], routes: Array[Dictionary] =
 	for row: Dictionary in normalised:
 		if row.has("definition_path"):
 			result[row["definition_path"]] = definition_text(row)
+	result.merge(transition_texts(normalised))
 	result[INDEX_PATH] = index_text(normalised, routes)
 	return result
+
+
+## res:// path → `BuildingTransitionDefinition` text for the enter and exit of every door facet.
+static func transition_texts(normalised: Array[Dictionary]) -> Dictionary:
+	var owners: Dictionary = _scene_owners(normalised)
+	var result: Dictionary = {}
+	for row: Dictionary in normalised:
+		if not row.has("transition"):
+			continue
+		var facet: Dictionary = row["transition"]
+		var exit: Dictionary = facet["exit"]
+		var building_id: String = facet["building_id"]
+		var enter_fields: Dictionary = facet.duplicate()
+		enter_fields.erase("exit")
+		enter_fields.merge({
+			"id": building_id + "_enter", "direction": "enter",
+			"destination_scene": row["scene_path"], "destination_location_id": row["id"],
+		})
+		var exit_fields: Dictionary = exit.duplicate()
+		exit_fields.merge(TRANSITION_GATE_DEFAULTS)
+		exit_fields.merge({
+			"id": building_id + "_exit", "building_id": building_id,
+			"building_name": facet["building_name"], "direction": "exit",
+			"source_scene": row["scene_path"], "destination_scene": facet["source_scene"],
+			"destination_location_id": owners.get(facet["source_scene"], ""),
+		})
+		for fields: Dictionary in [enter_fields, exit_fields]:
+			result[TRANSITIONS_ROOT + String(fields["id"]) + ".tres"] = transition_text(fields)
+	return result
+
+
+## The resource text the hand-written transitions held: twelve fields always, in the script's
+## export order, then each gate only when it differs from the script default.
+static func transition_text(fields: Dictionary) -> String:
+	var lines: Array[String] = [
+		'[gd_resource type="Resource" script_class="BuildingTransitionDefinition" load_steps=2 format=3]',
+		"",
+		'[ext_resource type="Script" path="%s" id="1_definition"]' % TRANSITION_SCRIPT,
+		"",
+		"[resource]",
+		'script = ExtResource("1_definition")',
+	]
+	var names: Array[String] = ["id", "building_id", "source_anchor", "destination_location_id", "spawn_id", "minimum_reputation_band"]
+	for field: String in [
+		"id", "building_id", "building_name", "direction", "source_scene", "source_anchor",
+		"source_position", "destination_scene", "destination_location_id", "spawn_id",
+		"destination_spawn_position", "prompt_text", "required_flag", "reputation_faction",
+		"minimum_reputation_band", "locked_message",
+	]:
+		var value: Variant = fields[field]
+		if TRANSITION_GATE_DEFAULTS.has(field) and value == TRANSITION_GATE_DEFAULTS[field]:
+			continue
+		var typed: Variant
+		if field.ends_with("_position"):
+			typed = Vector2(float(value[0]), float(value[1]))
+		elif names.has(field):
+			typed = StringName(str(value))
+		else:
+			typed = str(value)
+		lines.append("%s = %s" % [field, var_to_str(typed)])
+	return "\n".join(lines) + "\n"
 
 
 func validate_routes(locations: Array[Dictionary], errors: Array[Dictionary]) -> Array[Dictionary]:
@@ -515,7 +693,9 @@ func bake(normalised: Array[Dictionary], target_root: String, write: bool, force
 			file.store_string(texts[path])
 			file.close()
 			(report["written"] as Array).append(path)
-	for path: String in _committed_definitions(target_root):
+	var committed: Array[String] = _committed_definitions(target_root)
+	committed.append_array(_committed_under(TRANSITIONS_ROOT, target_root))
+	for path: String in committed:
 		if not texts.has(path):
 			(report["orphans"] as Array).append(path)
 	for row: Dictionary in normalised:
@@ -545,8 +725,13 @@ static func _retarget(path: String, target_root: String) -> String:
 
 ## Every committed `.tres` under the definitions root, as `res://` paths, sorted.
 static func _committed_definitions(target_root: String) -> Array[String]:
+	return _committed_under(DEFINITIONS_ROOT, target_root)
+
+
+## Every committed `.tres` under `root` (recursively), as `res://` paths, sorted.
+static func _committed_under(root: String, target_root: String) -> Array[String]:
 	var found: Array[String] = []
-	var pending: Array[String] = [DEFINITIONS_ROOT.trim_suffix("/")]
+	var pending: Array[String] = [root.trim_suffix("/")]
 	while not pending.is_empty():
 		var directory: String = pending.pop_back()
 		var physical: String = _retarget(directory, target_root)

@@ -50,7 +50,7 @@ func _drive() -> bool:
 		GameFlow.TOWN_SCENE, dom.id, LocationRegistry.no_combat_zone_by_scene(GameFlow.TOWN_SCENE),
 	])
 
-	var transition := BuildingTransitionRegistry.EQUIPMENT_SHOP_ENTER
+	var transition := BuildingTransitionRegistry.by_id(&"equipment_shop_enter")
 	var door := _door_for(transition.id)
 	if door == null:
 		return _fail("no Equipment Shop door in Dom")

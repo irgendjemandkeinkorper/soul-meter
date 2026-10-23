@@ -183,7 +183,7 @@ const AFFECTED_TESTS: Dictionary = {
 	"encounters": ["test/unit/test_encounter_*", "test/unit/test_spawn_*"],
 	"spawn_tables": ["test/unit/test_encounter_*", "test/unit/test_spawn_*"],
 	"characters": ["test/unit/test_party_*", "test/unit/test_npc_*", DRIFT_STAGES],
-	"locations": [DRIFT_STAGES],
+	"locations": ["test/unit/test_weftlumin_locations_kind.gd", "test/unit/test_building_transition_registry.gd", "test/integration/test_building_interiors.gd", DRIFT_STAGES],
 	"routes": ["test/unit/test_world_map_registry.gd", "test/unit/test_weftlumin_routes_kind.gd", "test/integration/test_travel_*", DRIFT_STAGES],
 	"canon": [DRIFT_STAGES],
 }

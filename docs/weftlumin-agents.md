@@ -25,6 +25,7 @@ Keep the package **outside the repository**, for example `$TMPDIR/weftlumin/<id>
   campaign.json          manifest (optional, recommended)
   commands.jsonl         scene command log (kind "scenes")
   locations/*.json       canon documents: replace the canon doc with the same id, or add one under canon/<hub>/
+  routes/*.json          weftlumin.route.v1, filed with the origin location (#342)
   characters/*.json
   spawn_tables/*.json
   quests/*.json          validated through CampaignQuestLoader (no canon bake target yet)
@@ -131,7 +132,11 @@ hand-wired; this is the order of work and the refusals you will meet.
    tiers 0–3 read 95/85/70/55; `respawn_policy`; `spawns` with `from_<neighbour>`), an overlay
    `locations/<neighbour>.json` that only adds `from_<id>` to its spawns, one
    `characters/<id>-<role>.json` per NPC, and `spawn_tables/<id>-ambient.json` whose slots name
-   `SpawnSlot*` markers and committed archetypes.
+   `SpawnSlot*` markers and committed archetypes. Travel and doors are canon too (#342): the
+   location document carries its `world_map` facet (and `fast_travel` only for a hub), each new
+   road is a `routes/<origin>-<destination>.json` document (PROVISIONAL numbers), and an interior
+   document carries the `transition` facet for its door. The bake writes the index and the door
+   `.tres` pair; no registry is edited by hand.
    - Character `order` is global and contiguous across all locations (`test_canon_reader` pins
      it); after Hollowmere the next free order is 86.
    - `faction_id` must be a canon faction (`canon/dom/factions/<id>.json`); add the document
@@ -152,9 +157,8 @@ hand-wired; this is the order of work and the refusals you will meet.
    `git checkout -- world/<neighbour>.tscn`, delete the baked outputs, bake again. The patch is
    byte-identical across bakes.
 4. **Hand-wire**, in this order, because the registry preloads need the baked `.tres`:
-   `LocationRegistry.<ID>`, `WorldMapRegistry` location and route rows (PROVISIONAL numbers),
-   `tools/seed_town_npcs.gd` town, name, placement-anchor rows and the district greeting and
-   farewell pair, no `FastTravelRegistry._HUBS` row for a wilds roster town. Then
+   `LocationRegistry.<ID>`, then `tools/seed_town_npcs.gd` town, name, placement-anchor rows and
+   the district greeting and farewell pair. Then
    `godot --headless --path . --import`: the new `.dialogue` sidecar, the new scripts' `.uid`
    files and the `locale/translations_pot_files` entry are all import output; commit them.
 5. **Verify.** `test/integration/test_<id>.gd` from `test_hollowmere.gd` (scene contract,
