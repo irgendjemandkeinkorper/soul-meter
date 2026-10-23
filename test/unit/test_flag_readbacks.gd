@@ -7,6 +7,7 @@ extends GdUnitTestSuite
 const COUNCIL_ELDER := "res://dialogue/council_elder.dialogue"
 const TOMA := "res://dialogue/toma_reedhand.dialogue"
 const MARSHAL := "res://dialogue/marshal_coiljaw.dialogue"
+const IRIS := "res://dialogue/iris_illepah.dialogue"
 
 var _flags_before: Dictionary
 
@@ -59,6 +60,51 @@ func test_marshal_reads_the_muster_cause_back_from_the_roll() -> void:
 	var line := await _line_after(resource, "hub", "How will the roll record")
 	assert_str(line.text).contains("Destroyed the Bloodbellow by force")
 	assert_str(line.text).not_contains("{{")
+
+
+func test_marshal_reads_the_field_debt_reward_back() -> void:
+	var resource := load(MARSHAL) as DialogueResource
+	var before_done := await _allowed_response(resource, "hub", "What did the field proof buy")
+	assert_object(before_done).is_null()
+
+	# Done implies the flag: resolve_field_debt / FetchQuest.complete write it in the
+	# same call, so "done, no flag" is not a state the game produces and is not probed.
+	QuestSystem.completed.add_quest(QuestRegistry.FIELD_DEBT)
+
+	var expected := {
+		"companies": "road roster",
+		"seeders": "night in the grove",
+		"registry": "numbered drawer",
+		"balance": "same small entry",
+	}
+	for reward_id: String in expected:
+		GameState.set_flag("field_debt_reward", reward_id)
+		var line := await _line_after(resource, "hub", "What did the field proof buy")
+		assert_str(line.text).override_failure_message(
+			"field_debt_reward=%s heard back the wrong ledger" % reward_id
+		).contains(expected[reward_id])
+
+
+func test_iris_reads_the_loamroot_resolution_back() -> void:
+	var resource := load(IRIS) as DialogueResource
+	var before_done := await _allowed_response(resource, "hub", "How are the sprigs?")
+	assert_object(before_done).is_null()
+
+	# Done implies the flag: resolve_field_debt / FetchQuest.complete write it in the
+	# same call, so "done, no flag" is not a state the game produces and is not probed.
+	QuestSystem.completed.add_quest(QuestRegistry.LOAMROOT_SPRIGS)
+
+	var expected := {
+		"returned": "Rooted where they were meant to be",
+		"communion": "a beat after the others",
+		"registry": "three holes past the treeline",
+	}
+	for resolution: String in expected:
+		GameState.set_flag("quest_1_resolution", resolution)
+		var line := await _line_after(resource, "hub", "How are the sprigs?")
+		assert_str(line.text).override_failure_message(
+			"quest_1_resolution=%s heard back the wrong grove" % resolution
+		).contains(expected[resolution])
 
 
 func _line_after(resource: DialogueResource, title: String, response_text: String) -> DialogueLine:

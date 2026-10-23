@@ -89,6 +89,7 @@ const LEGACY_FLAGS := {
 	"defeated_breach_hound": "verb-first; encounter defeat flags predate the domain rule",
 	"defeated_mustered_dead": "verb-first; encounter defeat flags predate the domain rule",
 	"prototype_extended_content": "build toggle, not quest state; no domain applies",
+	"quest_1_resolution": "FetchQuest.complete's quest_%d_resolution template, substituted for Loamroot Sprigs; ships in saves since the first fetch quest, read back since 2026-10-22",
 	"reached": "chapter-stage shorthand written by seed tooling",
 	"read_only": "audit self-test fixture name",
 	"reported_bloodbellow": "predates the domain rule; ships in Chapter One saves",
