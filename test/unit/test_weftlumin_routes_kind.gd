@@ -76,6 +76,30 @@ func test_duplicate_routes_are_refused() -> void:
 	assert_str(errors[0]["code"]).is_equal("duplicate_id")
 
 
+func test_reversed_pair_is_a_duplicate_route() -> void:
+	var reversed: Dictionary = _route()
+	reversed["id"] = "%s-%s" % [reversed["destination_id"], reversed["origin_id"]]
+	var origin: String = reversed["origin_id"]
+	reversed["origin_id"] = reversed["destination_id"]
+	reversed["destination_id"] = origin
+	var errors: Array[Dictionary] = []
+	var documents: Array[Dictionary] = [_route(), reversed]
+	assert_array(WeftluminRoutesKind.new().validate(documents, errors)).is_empty()
+	assert_str(errors[0]["code"]).is_equal("duplicate_pair")
+
+
+func test_fractional_weights_are_refused_in_base_and_band_tables() -> void:
+	var document: Dictionary = _route()
+	document["encounter_table"][0]["weight"] = 0.5
+	assert_str(_errors(document)[0]["code"]).is_equal("out_of_range")
+	var banded: Dictionary = _route()
+	var bands: Dictionary = banded["band_encounter_weights"]["bands"]
+	var band: String = String(bands.keys()[0])
+	var encounter: String = String(bands[band].keys()[0])
+	bands[band][encounter] = 1.5
+	assert_str(_errors(banded)[0]["code"]).is_equal("out_of_range")
+
+
 func test_base_weights_require_positive_numbers_and_known_encounters() -> void:
 	for value: Variant in [0, -1, "2", null]:
 		var document: Dictionary = _route()

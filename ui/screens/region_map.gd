@@ -614,8 +614,12 @@ static func _display_name(identifier: StringName) -> String:
 	if index != null and index.data is Dictionary:
 		for row: Dictionary in index.data.get("locations", []):
 			if StringName(row.get("id", "")) == identifier:
-				return String(row.get("display_name", ""))
-	# Encounter prompts also use this fallback for an unknown encounter.
+				var authored: String = String(row.get("display_name", ""))
+				if not authored.is_empty():
+					return authored
+				break
+	# Encounter prompts also use this fallback for an unknown encounter, and a map node whose
+	# document has no display_name yet renders its prettified id instead of a blank marker.
 	return String(identifier).replace("-", " ").replace("_", " ").capitalize()
 
 

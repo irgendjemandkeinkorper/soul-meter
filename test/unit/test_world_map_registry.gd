@@ -281,3 +281,20 @@ static func _expected_route_rows() -> Array[Dictionary]:
 			"max_encounters": 1,
 		},
 	]
+
+
+func test_dom_is_first_and_the_rest_follow_id_order() -> void:
+	var ids: Array[String] = []
+	for location: Dictionary in WorldMapRegistry.all_locations():
+		ids.append(String(location["id"]))
+	assert_str(ids[0]).is_equal("dom")
+	var rest: Array[String] = ids.slice(1)
+	var sorted_rest: Array[String] = rest.duplicate()
+	sorted_rest.sort()
+	assert_array(rest).is_equal(sorted_rest)
+
+
+func test_encounter_tables_stay_untyped_like_the_former_literal() -> void:
+	for route: Dictionary in WorldMapRegistry.all_routes():
+		var table: Array = route["encounter_table"]
+		assert_bool(table.is_typed()).is_false()

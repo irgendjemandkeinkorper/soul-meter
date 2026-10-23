@@ -78,7 +78,7 @@ const ASHLAREN_MILLHOUSE: LocationDefinition = preload(
 	"res://world/locations/interiors/ashlaren_millhouse.tres"
 )
 # The Long Verge, location 7 (C3 / #240): the Companies' moor-road between Dom and Kesselford,
-# baked by the Weftlumin `long-verge` package. Wilds, not a hub: no fast-travel row.
+# baked by the Weftlumin `long_verge` package. Wilds, not a hub: no fast-travel row.
 const LONG_VERGE: LocationDefinition = preload("res://world/locations/long_verge.tres")
 # Hollowmere, location 8 (C4 / #241): the drowned mere off the Dorthkor Road on the front-ward
 # wilds, baked by the Weftlumin `hollowmere` package. Wilds, not a hub: no fast-travel row.

@@ -63,6 +63,7 @@ func validate_with_locations(
 			scenes[location["id"]] = true
 	var rows: Array[Dictionary] = []
 	var seen: Dictionary = {}
+	var pairs: Dictionary = {}
 	for index: int in documents.size():
 		var document: Dictionary = documents[index]
 		var file: String = String(document.get("$file", "routes[%d]" % index))
@@ -72,6 +73,14 @@ func validate_with_locations(
 		if seen.has(row["id"]):
 			errors.append(_error(file, "id", "unique route id", "duplicate_id"))
 		seen[row["id"]] = true
+		# Routes are bidirectional (WorldMapRegistry.route_between checks both directions), so a
+		# second document for the reversed pair would be a silent duplicate.
+		var endpoints: Array[String] = [String(row["origin_id"]), String(row["destination_id"])]
+		endpoints.sort()
+		var pair: String = "|".join(endpoints)
+		if pairs.has(pair):
+			errors.append(_error(file, "id", "one route per location pair (%s exists)" % pairs[pair], "duplicate_pair"))
+		pairs[pair] = String(row["id"])
 		rows.append(row)
 	if errors.size() != error_count:
 		return []
@@ -146,8 +155,9 @@ func _normalise(document: Dictionary, scenes: Dictionary, file: String, errors: 
 	return _ordered(row)
 
 
-static func _weight(value: Variant) -> Variant:
-	return int(value) if float(value) == floorf(float(value)) else float(value)
+static func _weight(value: Variant) -> int:
+	# _validate_weight has already refused fractional values; the registry contract is int.
+	return int(value)
 
 
 static func _number(value: Variant) -> bool:
@@ -161,8 +171,11 @@ static func _validate_encounter(value: Variant, file: String, field: String, err
 
 static func _validate_weight(value: Variant, override: bool, file: String, field: String, errors: Array[Dictionary]) -> void:
 	# Allied's existing zero override disables that encounter; only base weights must be positive.
-	if not _number(value) or float(value) < 0.0 or (not override and float(value) == 0.0):
-		errors.append(_error(file, field, "weight >= 0" if override else "weight > 0", "out_of_range"))
+	# Weights must be whole numbers: WorldMapRegistry truncates with int(), so 0.5 would silently
+	# become 0 and EncounterDirector would drop the encounter.
+	var integral: bool = _number(value) and float(value) == floorf(float(value))
+	if not integral or float(value) < 0.0 or (not override and float(value) == 0.0):
+		errors.append(_error(file, field, "integer weight >= 0" if override else "integer weight > 0", "out_of_range"))
 
 
 static func _validate_bands(value: Variant, file: String, errors: Array[Dictionary]) -> void:

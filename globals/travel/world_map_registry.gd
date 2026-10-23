@@ -84,6 +84,13 @@ static func _load_index() -> bool:
 			"scene_path": String(row["scene_path"]),
 			"map_coordinate": Vector2(float(coordinate[0]), float(coordinate[1])),
 		})
+	# The index is sorted by id. Public rows list `dom` first and then follow id order: the same
+	# rule FastTravelRegistry applies to hubs (handoff §2.2), so the first row is always the
+	# starting town for callers that take the first discovered or selectable location.
+	_locations.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["id"] == DOM_ID or b["id"] == DOM_ID:
+			return a["id"] == DOM_ID and b["id"] != DOM_ID
+		return String(a["id"]) < String(b["id"]))
 	for row: Dictionary in data.get("routes", []):
 		var route: Dictionary = row.duplicate(true)
 		for key: String in ["id", "origin_id", "destination_id", "risk_tier"]:
@@ -92,11 +99,11 @@ static func _load_index() -> bool:
 			route[key] = int(row[key])
 		route["risk_modifier"] = float(row["risk_modifier"])
 		# JSON numbers/strings return to the original public Variant types at this boundary.
-		var encounters: Array[Dictionary] = []
+		# Untyped on purpose: the former literal was an untyped Array and Array(typed) stays typed.
+		var encounters: Array = []
 		for entry: Dictionary in row["encounter_table"]:
 			encounters.append({"encounter_id": StringName(entry["encounter_id"]), "weight": int(entry["weight"])})
-		# The former literal was an untyped Array.
-		route["encounter_table"] = Array(encounters)
+		route["encounter_table"] = encounters
 		if row.has("band_encounter_weights"):
 			var source: Dictionary = row["band_encounter_weights"]
 			var bands: Dictionary = {}

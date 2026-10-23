@@ -115,6 +115,14 @@ Acceptance for PR 1: `test_world_map_registry`, `test_travel_plan`, `test_travel
 `test_long_verge`, `test_hollowmere`, `test_kesselford`, `test_ashlaren`, `test_first_chapter_journey`
 green; `tools/quest_audit.gd` 0 errors; the regenerated index committed; canon documents valid.
 
+Row order (added 2026-10-22 after review): the index is sorted by id, which is not the old
+authored order. `all_locations()` lists `dom` first and then follows id order — the same rule
+§2.2 gives FastTravelRegistry — so `RegionMap._resolve_origin_id()`'s fallback and the first
+pre-selected marker stay deterministic with the starting town in front. Values are unchanged;
+only the order of `all_locations()` / `all_routes()` differs from the old tables (routes stay in
+id order). Weights are whole numbers (the registry truncates with `int()`), and one document per
+unordered location pair (`route_between` is bidirectional).
+
 ## 2. PR 2 — FastTravelRegistry
 
 ### 2.1 `_HUBS` is replaced by the index rows that carry a `fast_travel` facet, in index order

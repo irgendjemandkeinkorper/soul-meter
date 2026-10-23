@@ -95,7 +95,7 @@ func test_registries_agree_on_hollowmere() -> void:
 	assert_array(FastTravelRegistry.validate()).is_empty()
 	assert_str(str(WorldMapRegistry.location(&"hollowmere").get("scene_path", ""))).is_equal(HOLLOWMERE)
 	var route := WorldMapRegistry.route_between(&"dorthkor_road", &"hollowmere")
-	assert_dict(route).override_failure_message("route dorthkor-road-hollowmere missing").is_not_empty()
+	assert_dict(route).override_failure_message("route dorthkor_road-hollowmere missing").is_not_empty()
 	for entry: Dictionary in route.get("encounter_table", []):
 		assert_bool(EncounterCatalog.has_committed(String(entry["encounter_id"]))).is_true()
 	# The Breach road stays what it was: the mere is a branch off it, not a change to it.
