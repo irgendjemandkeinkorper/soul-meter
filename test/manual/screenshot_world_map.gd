@@ -18,7 +18,7 @@ func test_capture_world_map() -> void:
 	screen.theme = ThemeBuilder.build()
 	await runner.simulate_frames(10)
 	var map_screen := screen as RegionMapScreen
-	map_screen._select_location(&"dorthkor-road")
+	map_screen._select_location(&"dorthkor_road")
 	await runner.simulate_frames(5)
 	var boot_scene := screen.get_tree().current_scene
 	if boot_scene != null and boot_scene != screen:

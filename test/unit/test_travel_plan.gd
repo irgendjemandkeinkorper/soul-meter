@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 func _plan_for(state: TravelPlan.State) -> TravelPlan:
 	var plan := TravelPlan.new()
 	plan.origin_id = &"dom"
-	plan.destination_id = &"dorthkor-road"
+	plan.destination_id = &"dorthkor_road"
 	plan.progress_step = 4
 	plan.total_steps = 12
 	plan.elapsed_phases = 1

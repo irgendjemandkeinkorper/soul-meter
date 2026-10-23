@@ -142,8 +142,8 @@ func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void
 	await _choose_response(elder_dialogue, "start", "carry the Council's charge")
 	assert_bool(QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD)).is_true()
 	assert_str(QuestRegistry.DORTHKOR_ROAD.quest_giver).is_equal("Themka Gaath")
-	assert_bool(GameFlow.start_journey(&"dom", &"dorthkor-road")).is_true()
-	assert_str(GameFlow.travel_plan.destination_id).is_equal("dorthkor-road")
+	assert_bool(GameFlow.start_journey(&"dom", &"dorthkor_road")).is_true()
+	assert_str(GameFlow.travel_plan.destination_id).is_equal("dorthkor_road")
 	remove_child(chamber)
 
 
