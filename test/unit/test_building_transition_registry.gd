@@ -136,3 +136,39 @@ func test_generated_transitions_match_every_original_export_and_resource_header(
 		if filename.ends_with(".tres"):
 			committed.append("res://actors/building_door/transitions/" + filename)
 	assert_array(committed).contains_exactly(paths)
+
+
+func test_registry_lists_come_from_the_index_and_share_the_preloaded_instances() -> void:
+	assert_int(BuildingTransitionRegistry.ENTRIES.size()).is_equal(24)
+	assert_int(BuildingTransitionRegistry.EXITS.size()).is_equal(24)
+	assert_int(BuildingTransitionRegistry.ALL.size()).is_equal(48)
+	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
+		assert_bool(entry.is_entry()).override_failure_message(String(entry.id)).is_true()
+	for exit: BuildingTransitionDefinition in BuildingTransitionRegistry.EXITS:
+		assert_bool(exit.is_exit()).override_failure_message(String(exit.id)).is_true()
+	# GameFlow keys the garrison permission on this const; the index must yield the same object.
+	assert_object(BuildingTransitionRegistry.by_id(&"garrison_yard_enter")) \
+		.is_same(BuildingTransitionRegistry.GARRISON_YARD_ENTER)
+
+
+func test_every_door_in_every_scene_resolves_its_transition() -> void:
+	var pending: Array[String] = ["res://world"]
+	var doors: int = 0
+	while not pending.is_empty():
+		var directory: String = pending.pop_back()
+		for child: String in DirAccess.get_directories_at(directory):
+			pending.append(directory.path_join(child))
+		for filename: String in DirAccess.get_files_at(directory):
+			if filename.get_extension() != "tscn":
+				continue
+			var path: String = directory.path_join(filename)
+			for line: String in FileAccess.get_file_as_string(path).split("\n"):
+				# Town doors export `transition_id`; an interior's root exports its `exit_transition_id`.
+				var value: String = line.get_slice(" = ", 1)
+				if not (line.begins_with("transition_id = ") or line.begins_with("exit_transition_id = ")):
+					continue
+				doors += 1
+				var transition_id: StringName = str_to_var(value)
+				assert_object(BuildingTransitionRegistry.by_id(transition_id)) \
+					.override_failure_message("%s: %s" % [path, transition_id]).is_not_null()
+	assert_int(doors).is_equal(BuildingTransitionRegistry.ALL.size())
