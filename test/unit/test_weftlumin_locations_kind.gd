@@ -95,7 +95,10 @@ func test_canon_bakes_to_the_committed_artifacts_byte_for_byte() -> void:
 		assert_str(String(entry["action"])).override_failure_message(String(entry["path"])).is_equal("unchanged")
 	assert_array(report["orphans"]).is_empty()
 	assert_bool(WeftluminLocationsKind.report_is_clean(report)).is_true()
-	assert_int((report["planned"] as Array).size()).is_equal(LocationRegistry.ALL.size() + 1)
+	# One definition per scene location, the enter/exit pair per door facet, and the index.
+	assert_int((report["planned"] as Array).size()).is_equal(
+		LocationRegistry.ALL.size() + BuildingTransitionRegistry.ALL.size() + 1
+	)
 
 
 func test_the_generator_is_deterministic_and_matches_the_committed_files() -> void:
@@ -104,7 +107,9 @@ func test_the_generator_is_deterministic_and_matches_the_committed_files() -> vo
 	for target: String in [first, second]:
 		var result: Dictionary = GeneratorScript.generate(false, WeftluminLocationsKind.CANON_ROOT, target)
 		assert_array(result["errors"]).is_empty()
-		assert_int((result["report"]["written"] as Array).size()).is_equal(LocationRegistry.ALL.size() + 1)
+		assert_int((result["report"]["written"] as Array).size()).is_equal(
+			LocationRegistry.ALL.size() + BuildingTransitionRegistry.ALL.size() + 1
+		)
 	for path: String in WeftluminLocationsKind.artifacts(_canon()):
 		var relative: String = path.trim_prefix("res://")
 		var committed: PackedByteArray = FileAccess.get_file_as_bytes(path)
@@ -145,14 +150,17 @@ func test_every_baked_definition_loads_with_the_registry_values() -> void:
 
 
 func test_canon_documents_are_stored_in_canonical_text() -> void:
+	# Validated together: a door facet's source scene belongs to another document (#342 PR 3).
 	var errors: Array[Dictionary] = []
-	for document: Dictionary in WeftluminLocationsKind.load_canon(errors):
+	var documents: Array[Dictionary] = WeftluminLocationsKind.load_canon(errors)
+	var by_id: Dictionary = {}
+	for row: Dictionary in _kind.validate(documents.duplicate(true), errors):
+		by_id[row["id"]] = row
+	assert_array(errors).override_failure_message(str(errors)).is_empty()
+	for document: Dictionary in documents:
 		var path: String = document[WeftluminLocationsKind.META_FILE]
-		var batch: Array[Dictionary] = [document.duplicate(true)]
-		var normalised: Array[Dictionary] = _kind.validate(batch, errors)
-		assert_str(WeftluminLocationsKind.canon_text(normalised[0])).override_failure_message(path) \
+		assert_str(WeftluminLocationsKind.canon_text(by_id[document["id"]])).override_failure_message(path) \
 			.is_equal(FileAccess.get_file_as_string(path))
-	assert_array(errors).is_empty()
 
 
 func test_index_rows_cover_every_canon_location_with_both_facets() -> void:
@@ -172,6 +180,12 @@ func test_index_rows_cover_every_canon_location_with_both_facets() -> void:
 	assert_bool(rows["loamgate"]["world_map"] == null).is_true()
 	assert_bool(rows["long_verge"]["fast_travel"] == null).is_true()
 	assert_bool(rows["dom"]["transition"] == null).is_true()
+	assert_bool(rows["dom_tavern_interior"]["transition"] == null).is_true()
+	assert_str(String(rows["kesselford_wayhouse"]["transition"]["building_id"])).is_equal("kesselford_wayhouse")
+	var doors: int = 0
+	for row: Dictionary in parsed["locations"]:
+		doors += 1 if row["transition"] is Dictionary else 0
+	assert_int(doors).is_equal(24)
 	assert_int((parsed["routes"] as Array).size()).is_equal(8)
 
 
@@ -418,3 +432,107 @@ func _remove_tree(path: String) -> void:
 	for file_name: String in DirAccess.get_files_at(absolute):
 		DirAccess.remove_absolute(absolute.path_join(file_name))
 	DirAccess.remove_absolute(absolute)
+
+
+# --- Door transitions (#342 PR 3) --------------------------------------------------------------
+
+
+func _door_batch() -> Array[Dictionary]:
+	var outside: Dictionary = _valid_scene_document()
+	var interior: Dictionary = _valid_scene_document()
+	interior["id"] = "probe_interior"
+	interior["definition_path"] = "res://world/locations/interiors/probe_interior.tres"
+	interior["scene_path"] = "res://world/interiors/kesselford_wayhouse.tscn"
+	interior["transition"] = {
+		"building_id": "probe_house", "building_name": "Probe House",
+		"source_scene": "res://world/test_room.tscn", "source_anchor": "ProbeDoor",
+		"source_position": [10, 20.5], "prompt_text": "E — Enter", "spawn_id": "entry",
+		"destination_spawn_position": [30, 40], "required_flag": "probe_open",
+		"reputation_faction": "", "minimum_reputation_band": "",
+		"locked_message": "This door is locked.",
+		"exit": {
+			"source_anchor": "Room/ExitDoor", "source_position": [1, 2], "spawn_id": "from_probe_house",
+			"destination_spawn_position": [3, 4], "prompt_text": "E — RETURN",
+		},
+	}
+	return [outside, interior]
+
+
+func _door_codes(batch: Array[Dictionary]) -> Array[String]:
+	var errors: Array[Dictionary] = []
+	assert_array(_kind.validate(batch, errors)).is_empty()
+	var codes: Array[String] = []
+	for error: Dictionary in errors:
+		codes.append(String(error["code"]))
+	return codes
+
+
+func test_a_door_facet_bakes_an_enter_and_a_derived_exit() -> void:
+	var errors: Array[Dictionary] = []
+	var rows: Array[Dictionary] = _kind.validate(_door_batch(), errors)
+	assert_array(errors).override_failure_message(str(errors)).is_empty()
+	var texts: Dictionary = WeftluminLocationsKind.transition_texts(rows)
+	var root: String = WeftluminLocationsKind.TRANSITIONS_ROOT
+	assert_array(texts.keys()).contains_exactly([root + "probe_house_enter.tres", root + "probe_house_exit.tres"])
+	var enter: String = texts[root + "probe_house_enter.tres"]
+	assert_str(enter).contains('destination_scene = "res://world/interiors/kesselford_wayhouse.tscn"')
+	assert_str(enter).contains('destination_location_id = &"probe_interior"')
+	assert_str(enter).contains("source_position = Vector2(10, 20.5)")
+	assert_str(enter).contains('required_flag = "probe_open"')
+	# A gate equal to the script default is omitted, as the hand-written files did.
+	assert_bool(enter.contains("locked_message")).is_false()
+	var exit: String = texts[root + "probe_house_exit.tres"]
+	assert_str(exit).contains('id = &"probe_house_exit"')
+	assert_str(exit).contains('source_scene = "res://world/interiors/kesselford_wayhouse.tscn"')
+	assert_str(exit).contains('destination_scene = "res://world/test_room.tscn"')
+	assert_str(exit).contains('destination_location_id = &"probe_location"')
+	assert_str(exit).contains('building_name = "Probe House"')
+	assert_bool(exit.contains("required_flag")).is_false()
+
+
+func test_door_facets_refuse_malformed_and_unknown_fields() -> void:
+	for change: Array in [
+		["building_id", "Probe House"], ["source_position", [1]], ["spawn_id", " "],
+		["source_scene", "world/test_room"], ["prompt_text", 3], ["extra", true],
+	]:
+		var batch: Array[Dictionary] = _door_batch()
+		batch[1]["transition"][change[0]] = change[1]
+		assert_array(_door_codes(batch)).override_failure_message(str(change)).is_not_empty()
+	var missing_exit_field: Array[Dictionary] = _door_batch()
+	(missing_exit_field[1]["transition"]["exit"] as Dictionary).erase("source_position")
+	assert_array(_door_codes(missing_exit_field)).contains(["invalid_field_type"])
+	var exit_gate: Array[Dictionary] = _door_batch()
+	exit_gate[1]["transition"]["exit"]["required_flag"] = "x"
+	assert_array(_door_codes(exit_gate)).contains(["unknown_field"])
+
+
+func test_a_door_needs_a_scene_another_location_owns_and_a_unique_building() -> void:
+	var own_scene: Array[Dictionary] = _door_batch()
+	own_scene[1]["transition"]["source_scene"] = own_scene[1]["scene_path"]
+	assert_array(_door_codes(own_scene)).contains(["unknown_source_scene"])
+	var unowned: Array[Dictionary] = _door_batch()
+	unowned[1]["transition"]["source_scene"] = "res://world/kesselford.tscn"
+	assert_array(_door_codes(unowned)).contains(["unknown_source_scene"])
+	var gazetteer_only: Array[Dictionary] = _door_batch()
+	var city: Dictionary = {
+		"schema": "weftlumin.location.v1", "id": "probe_city", "display_name": "Probe", "epithet": "",
+		"patron": "", "agreement": "", "vault_id": "", "transition": gazetteer_only[1]["transition"],
+	}
+	gazetteer_only.append(city)
+	assert_array(_door_codes(gazetteer_only)).contains(["missing_scene_facet"])
+	var twice: Array[Dictionary] = _door_batch()
+	var second: Dictionary = twice[1].duplicate(true)
+	second["id"] = "probe_interior_two"
+	second["definition_path"] = "res://world/locations/interiors/probe_two.tres"
+	second["scene_path"] = "res://world/interiors/kesselford_chandlery.tscn"
+	twice.append(second)
+	assert_array(_door_codes(twice)).contains(["duplicate_building"])
+
+
+func test_an_orphan_transition_is_drift() -> void:
+	var target: String = SCRATCH.path_join("out")
+	assert_array(GeneratorScript.generate(false, WeftluminLocationsKind.CANON_ROOT, target)["errors"]).is_empty()
+	_write(target.path_join("actors/building_door/transitions/stray_enter.tres"), "[gd_resource]\n")
+	var result: Dictionary = GeneratorScript.generate(true, WeftluminLocationsKind.CANON_ROOT, target)
+	assert_bool(result["drift"]).is_true()
+	assert_array(result["report"]["orphans"]).contains_exactly(["res://actors/building_door/transitions/stray_enter.tres"])
