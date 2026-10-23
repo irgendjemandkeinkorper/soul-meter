@@ -1,0 +1,1 @@
+{"schema":"weftlumin.route.v1","id":"dom-long_verge","origin_id":"dom","destination_id":"long_verge","steps":6,"phases_cost":1,"risk_tier":"moderate","risk_modifier":10.0,"encounter_table":[{"encounter_id":"bog-wight","weight":2},{"encounter_id":"loam-boar","weight":1}],"min_encounters":0,"max_encounters":1}

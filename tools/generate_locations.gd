@@ -79,6 +79,8 @@ static func generate(
 	if not errors.is_empty():
 		return result
 	var normalised: Array[Dictionary] = kind.validate(documents, errors)
+	kind.route_documents = WeftluminRoutesKind.load_canon(errors, canon_root)
+	kind.validate_routes(normalised, errors)
 	if not errors.is_empty():
 		return result
 	if not check_only:

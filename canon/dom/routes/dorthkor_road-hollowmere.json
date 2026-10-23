@@ -1,0 +1,1 @@
+{"schema":"weftlumin.route.v1","id":"dorthkor_road-hollowmere","origin_id":"dorthkor_road","destination_id":"hollowmere","steps":5,"phases_cost":1,"risk_tier":"high","risk_modifier":15.0,"encounter_table":[{"encounter_id":"bog-wight","weight":3}],"min_encounters":0,"max_encounters":1}

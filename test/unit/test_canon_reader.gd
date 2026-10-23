@@ -497,7 +497,7 @@ func test_the_generated_index_ids_are_the_canon_ids() -> void:
 	var parsed: Variant = JSON.parse_string(raw)
 	assert_bool(parsed is Dictionary).is_true()
 	var index: Dictionary = parsed
-	assert_str(String(index.get("schema", ""))).is_equal("weftlumin.location_index.v1")
+	assert_str(String(index.get("schema", ""))).is_equal("weftlumin.location_index.v2")
 
 	var index_ids: Array[String] = []
 	for row: Variant in index.get("locations", []):

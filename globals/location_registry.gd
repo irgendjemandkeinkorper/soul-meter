@@ -86,7 +86,7 @@ const HOLLOWMERE: LocationDefinition = preload("res://world/locations/hollowmere
 ## The baked index (`tools/generate_locations.gd`, E3.3a / #341). It owns WHICH locations exist;
 ## the named consts above stay for code references and resolve to the same cached resources.
 const INDEX_PATH := "res://data/generated/location_index.json"
-const INDEX_SCHEMA := "weftlumin.location_index.v1"
+const INDEX_SCHEMA := "weftlumin.location_index.v2"
 const _INTERIOR_SCENES_ROOT := "res://world/interiors/"
 
 
