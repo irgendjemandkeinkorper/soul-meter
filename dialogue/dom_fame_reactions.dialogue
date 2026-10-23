@@ -1,0 +1,39 @@
+# PROVISIONAL — CANON REVIEW REQUIRED: every line in this file (owner item 9, added 2026-10-22).
+#
+# Yothmeru Fame routes for Dom (owner item 1, option B, ruled 2026-10-22). Each title is
+# what one townsperson says once the player's Fame tier reaches the floor named in
+# `globals/npc_reactions.gd`: Whispered = "I've heard of you", Known = approached.
+# `dialogue/dom_townsfolk.dialogue` stays the generated neutral fallback and is never
+# hand-edited (tools/generate_gloot.gd owns it). Nobody here names a tier; Dom does
+# not know the ladder, it only knows how often a name comes up.
+
+~ dom_gerren_pike_whispered
+Gerren Pike: Mind the sparks. You are the one the barracks has started saying the name of. Half of them say it wrong, so do not get proud yet.
+Gerren Pike: A pike does not care whose hand it is in. The soldiers do. Give it a month and they will have the name right, and then they will start asking it for things.
+=> END
+
+~ dom_orrik_cinderjaw_whispered
+Orrik Cinderjaw: Sit, if you are sitting. Two chairs this week told me about you before I asked, and neither told it the same way.
+Orrik Cinderjaw: That is how a name starts in the Lower Market. Wrong twice, then right once, then nobody remembers it was ever wrong.
+=> END
+
+~ dom_dorran_rask_known
+Dorran Rask: Stop a moment. I know those boots. Not the leather, the walk. The North Arm has been describing it for a month.
+Dorran Rask: Leave them with me a night and I will sole them for the Trial Roads, where every climb leans the same way. No charge. A cobbler who has shod a name the gate knows does not ask for coin; the gate pays him in custom for a year.
+- "Take them."
+	Dorran Rask: By the morning bell. Walk careful to the gatehouse. It is a short road, and a known face still trips on it.
+	=> END
+- "I will keep what I have."
+	Dorran Rask: Then at least let me look at the heel. There. That is where the Verge took its toll. Mind it.
+	=> END
+
+~ dom_edda_broadmark_known
+Edda Broadmark: You. No, I know you do not know me. That is the point. I read the Companies' standing before I read a volunteer's scars, and your name reached the barracks before your standing did.
+Edda Broadmark: The Companies keep a contract board for names the town already says. Yours would go on it. It obliges you to nothing. It obliges the Companies to hear you first when you come to this door.
+- "Post it." [#tag=IRON-COMPANIES] [#consequence=Iron Companies +3]
+	do Reputation.record("player", "iron-companies", 3.0, "Let the Companies post a known name on the contract board", "dom")
+	Edda Broadmark: Posted. It is in the book, and the book outlives the both of us.
+	=> END
+- "Keep my name off your board."
+	Edda Broadmark: Then it stays off. The Companies did not make you known; they only noticed. That is still the harder half.
+	=> END

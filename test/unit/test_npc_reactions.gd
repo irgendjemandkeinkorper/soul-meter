@@ -460,3 +460,45 @@ func test_karma_tier_gates_validate_names_and_bound_both_ends() -> void:
 	assert_bool(NpcReactions._matches({"maximum_karma_tier": "Uncertain", "present": true})).is_true()
 	assert_bool(NpcReactions._matches({"maximum_karma_tier": "Troubled", "present": true})).is_false()
 	Renown.from_dict(renown_before)
+
+
+func test_dom_fame_routes_open_at_their_tier_and_not_below() -> void:
+	# Option B (owner item 1, 2026-10-22): Fame changes what Dom says, on the
+	# surfaces that already exist. Whispered opens "heard of you", Known opens
+	# the approaches; nothing fires for an Unknown name.
+	var renown_before := Renown.to_dict()
+	Renown.from_dict({})
+	for npc_id: String in ["gerren-pike", "orrik-cinderjaw", "dorran-rask", "edda-broadmark"]:
+		assert_bool(NpcReactions.resolve(npc_id).is_empty()).override_failure_message(
+			"'%s' has a Fame route open for an Unknown name" % npc_id
+		).is_true()
+
+	Renown.gain_reputation("player", Renown.FAME_TIER_FLOORS[1], "test", "test")
+	assert_str(String(Renown.fame_tier())).is_equal("Whispered")
+	assert_str(str(NpcReactions.resolve("gerren-pike").get("dialogue_title", ""))).is_equal(
+		"dom_gerren_pike_whispered"
+	)
+	assert_str(str(NpcReactions.resolve("orrik-cinderjaw").get("dialogue_title", ""))).is_equal(
+		"dom_orrik_cinderjaw_whispered"
+	)
+	assert_bool(NpcReactions.resolve("dorran-rask").is_empty()).is_true()
+	assert_bool(NpcReactions.resolve("edda-broadmark").is_empty()).is_true()
+
+	Renown.gain_reputation(
+		"player", Renown.FAME_TIER_FLOORS[2] - Renown.FAME_TIER_FLOORS[1], "test", "test"
+	)
+	assert_str(String(Renown.fame_tier())).is_equal("Known")
+	assert_str(str(NpcReactions.resolve("dorran-rask").get("dialogue_title", ""))).is_equal(
+		"dom_dorran_rask_known"
+	)
+	assert_str(str(NpcReactions.resolve("edda-broadmark").get("dialogue_title", ""))).is_equal(
+		"dom_edda_broadmark_known"
+	)
+
+	# A warm Company standing still wins Edda's escort over the Fame approach:
+	# the band rule is listed first and `resolve()` returns the first match.
+	Reputation.record("player", "iron-companies", Reputation.BAND_WARM, "test", "test")
+	assert_str(str(NpcReactions.resolve("edda-broadmark").get("dialogue_title", ""))).is_equal(
+		"dom_edda_broadmark_warm"
+	)
+	Renown.from_dict(renown_before)
