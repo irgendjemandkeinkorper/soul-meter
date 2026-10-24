@@ -330,3 +330,63 @@ func test_injured_hands_block_field_care_but_a_hurt_throat_does_not_and_combat_s
 	assert_bool((GameState.party[0] as PartyMember).injuries.has("throat")).is_true()
 	assert_int(GameState.item_count(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE)).is_equal(1)
 	GameState.remove_items(ItemIds.CONSUMABLES_BITTERLEAF_POULTICE, 1)
+
+
+## #285: the Perks section offers the pending pick, records it, and shows a gated capstone
+## with its refusal instead of hiding it.
+func test_perks_section_offers_the_pick_and_records_it() -> void:
+	var vex := _vex()
+	vex.class_id = "mirrorblade"
+	GameState.party = [vex]
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
+	await runner.simulate_frames(2)
+
+	var choice := runner.find_child("PerkChoice", true, false) as Label
+	assert_object(choice).is_not_null()
+	assert_str(choice.text).contains("level-2")
+	var button := runner.find_child("Perk_mirrorblade-second-footing", true, false) as Button
+	assert_object(button).is_not_null()
+	assert_bool(button.disabled).is_false()
+	button.pressed.emit()
+	await runner.simulate_frames(1)
+
+	assert_array(Array(vex.perk_ids)).is_equal(["mirrorblade-second-footing"])
+	var picked := runner.find_child("Picked_mirrorblade-second-footing", true, false) as Label
+	assert_object(picked).is_not_null()
+	assert_str(picked.text).is_equal("Lv 2  Second Footing  (planned)")
+	assert_object(runner.find_child("PerkChoice", true, false)).is_null()
+	assert_str((runner.find_child("NextPerk", true, false) as Label).text).is_equal("Next pick at level 4.")
+
+
+func test_a_gated_capstone_is_shown_disabled_with_its_refusal() -> void:
+	var renown_before := Renown.to_dict().duplicate(true)
+	Renown.from_dict({})
+	var vex := _vex()
+	vex.class_id = "mirrorblade"
+	vex.level = 6
+	vex.perk_ids = PackedStringArray(["mirrorblade-second-footing", "mirrorblade-reflection"])
+	GameState.party = [vex]
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
+	await runner.simulate_frames(2)
+
+	var gated := runner.find_child("Perk_mirrorblade-known-edge", true, false) as Button
+	var open := runner.find_child("Perk_mirrorblade-even-hand", true, false) as Button
+	assert_object(gated).is_not_null()
+	assert_object(open).is_not_null()
+	assert_bool(gated.disabled).is_true()
+	assert_bool(open.disabled).is_false()
+	var column := runner.find_child("PerksColumn", true, false) as VBoxContainer
+	var texts: Array[String] = []
+	for child: Node in column.get_children():
+		if child is Label:
+			texts.append((child as Label).text)
+	assert_bool(texts.any(func(t: String) -> bool: return t.contains("Needs Fame: Known or more."))).is_true()
+	Renown.from_dict(renown_before)
+
+
+func test_a_member_without_a_patron_class_has_no_perks() -> void:
+	GameState.party = [_vex()]
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
+	await runner.simulate_frames(2)
+	assert_object(runner.find_child("NoPerks", true, false)).is_not_null()
+	assert_object(runner.find_child("PerkChoice", true, false)).is_null()

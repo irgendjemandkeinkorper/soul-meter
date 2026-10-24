@@ -11,7 +11,7 @@ extends Node
 ##   res://data/generated/item_ids.gd           — ItemIds constants; no literal
 ##       item path strings in code, ever
 ##   res://data/generated/items.pot             — gettext template for generated
-##       item keys. English source text is retained as an extracted comment;
+##       item and perk keys. English source text is retained as an extracted comment;
 ##       runtime falls back to Pandora when a key is untranslated.
 ##   res://data/generated/vendors.json          — Dom vendor catalogs, standing
 ##       gates, price modifiers, and restock policies
@@ -20,6 +20,7 @@ extends Node
 ##       regeneration so translated rows survive data changes.
 ##   res://data/generated/encounters.json        — expanded encounter groups
 ##   res://data/generated/encounter_ids.gd       — stable EncounterIds constants
+##   res://data/generated/perks.json             — patron-class perks (#285), class then level
 ##   res://data/generated/elements.json          — elements, Triads, and casting tables
 ##   res://data/generated/fizzle_table.json      — fizzle formula inputs
 ##   res://data/generated/element_matrix.json     — #136 element interaction table
@@ -64,6 +65,7 @@ const FIZZLE_JSON_PATH := OUT_DIR + "/fizzle_table.json"
 const ELEMENT_MATRIX_JSON_PATH := OUT_DIR + "/element_matrix.json"
 const ELEMENT_MATRIX_ROWS_PATH := OUT_DIR + "/element_matrix_rows.gd"
 const COMBAT_IDENTITY_PATH := OUT_DIR + "/combat_identity.json"
+const PERKS_PATH := OUT_DIR + "/perks.json"
 const ELEMENTS_DATA_PATH := "res://globals/elements/elements_data.gd"
 const FIZZLE_TABLE_PATH := "res://globals/default_fizzle_table.tres"
 const POT_PATH := OUT_DIR + "/items.pot"
@@ -194,9 +196,11 @@ static func generate(check_only: bool = false) -> Dictionary:
 	var element_matrix_text: String = element_matrix_artifacts["json"]
 	var element_matrix_rows_text: String = element_matrix_artifacts["gd"]
 	var combat_identity_text := _combat_identity_artifact()
+	var perks := _perk_rows()
+	var perks_text := JSON.stringify(perks, "  ", false) + "\n"
 
-	# --- artifact 3: gettext template of generated item keys ---
-	var item_entries := _item_entries(protos, paths)
+	# --- artifact 3: gettext template of generated item and perk keys ---
+	var item_entries := _item_entries(protos, paths) + _perk_entries(perks)
 	var pot := _build_pot(item_entries)
 	var locale_po := _merge_locale_po(LOCALE_PO_PATH, item_entries)
 
@@ -217,6 +221,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		or _differs(ELEMENT_MATRIX_JSON_PATH, element_matrix_text)
 		or _differs(ELEMENT_MATRIX_ROWS_PATH, element_matrix_rows_text)
 		or _differs(COMBAT_IDENTITY_PATH, combat_identity_text)
+		or _differs(PERKS_PATH, perks_text)
 		or _differs(POT_PATH, pot)
 		or _po_needs_merge(LOCALE_PO_PATH, item_entries)
 	)
@@ -239,6 +244,7 @@ static func generate(check_only: bool = false) -> Dictionary:
 		_write(ELEMENT_MATRIX_JSON_PATH, element_matrix_text)
 		_write(ELEMENT_MATRIX_ROWS_PATH, element_matrix_rows_text)
 		_write(COMBAT_IDENTITY_PATH, combat_identity_text)
+		_write(PERKS_PATH, perks_text)
 		_write(POT_PATH, pot)
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://locale"))
 		_write(LOCALE_PO_PATH, locale_po)
@@ -721,6 +727,54 @@ static func _item_entries(protos: Dictionary, paths: Array) -> Array[Dictionary]
 				"source": str(protos[p]["description"]),
 			}
 		)
+	return entries
+
+
+## Perk rows in the order the sheet lists them: class in `ClassCatalog` order, then level,
+## then id, so a capstone pair always reads in the same order and the drift check is stable.
+static func _perk_rows() -> Array[Dictionary]:
+	var class_order := {}
+	for class_id: String in ClassCatalog.ids():
+		class_order[class_id] = class_order.size()
+	var rows: Array[Dictionary] = []
+	for entity: PandoraEntity in Pandora.get_all_entities(_root_by_name("Perks")):
+		if entity is PandoraCategory:
+			continue
+		var class_id := entity.get_string("Class Id")
+		assert(class_order.has(class_id), "Perk names unknown class %s" % class_id)
+		rows.append({
+			"id": entity.get_string("Perk Id"),
+			"display_name": entity.get_string("Display Name"),
+			"class_id": class_id,
+			"level": entity.get_integer("Level"),
+			"slot": entity.get_string("Slot"),
+			"minimum_fame_tier": entity.get_string("Minimum Fame Tier"),
+			"minimum_karma_tier": entity.get_string("Minimum Karma Tier"),
+			"maximum_karma_tier": entity.get_string("Maximum Karma Tier"),
+			"blurb": entity.get_string("Blurb"),
+			"vault_id": entity.get_string("Vault Id"),
+		})
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["class_id"] != b["class_id"]:
+			return int(class_order[a["class_id"]]) < int(class_order[b["class_id"]])
+		if int(a["level"]) != int(b["level"]):
+			return int(a["level"]) < int(b["level"])
+		return str(a["id"]) < str(b["id"])
+	)
+	assert(not rows.is_empty(), "Pandora has no Perks")
+	return rows
+
+
+static func _perk_entries(perks: Array[Dictionary]) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for row: Dictionary in perks:
+		for field: String in ["name", "blurb"]:
+			entries.append({
+				"key": PerkCatalog.key_for(str(row["id"]), field),
+				"path": "perks/%s" % row["id"],
+				"field": "display name" if field == "name" else "blurb",
+				"source": str(row["display_name"] if field == "name" else row["blurb"]),
+			})
 	return entries
 
 

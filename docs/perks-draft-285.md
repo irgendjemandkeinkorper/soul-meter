@@ -1,11 +1,17 @@
 # Perk lists per patron class — draft for review (#285, owner item 2)
 
-**Status: review only. No perk code exists** (`grep -ri perk globals ui data` → nothing). The owner ruled on
-2026-10-16 and confirmed on 2026-10-22: Chapter 1 level cap **6**, perks at levels **2 / 4 / 6**. That is
-three picks per character in Chapter 1, and the third is the earned one: the progression sweep
-(`tools/progression_sweep.gd`, cap 6) puts a thorough run at level 5 without wild fighting and at 6 with
-it. This draft proposes the three picks for each of the ten classes and the Pandora shape they live in,
-so #285 can be handed to Codex after approval. DeepSeek owns every number; they are written `[n]`.
+**Status: approved 2026-10-24** (owner item 22: `perks: approved`, `perks karma gate: wait`).
+**Slice 1 landed (#285 PR 1):** the 40 perks are canon (`canon/dom/perks/*.json`, `weftlumin.perk.v1`,
+flat gate fields `minimum_fame_tier` / `minimum_karma_tier` / `maximum_karma_tier`), seeded into the
+Pandora `Perks` root and emitted to `data/generated/perks.json` with `PERK_*` keys in the POT;
+`PerkCatalog` reads them, `PartyMember.perk_ids` records picks (no save bump), and the character sheet
+offers each pick at levels 2 / 4 / 6. Karma gates are authored but not enforced
+(`PerkCatalog.KARMA_GATES_LIVE := false`) until Karma has writers. No perk effect is wired in this slice:
+the sheet marks every pick "(planned)" except Jam the Gears and Nothing Wasted, which already shipped as
+class features. Blurbs carrying a `[n]` below are worded without the number in canon until the effect
+slice sets it. `effect.op` (§3) arrives with that slice.
+
+The text below is the approved draft as reviewed.
 
 Sources: `globals/stats/class_catalog.gd` (resource, signature, kit skills), `docs/class-resources-numbers.md`
 (B11, the caps the level-2 perks move), `docs/ideas/class-kits-first-nine.md` § Shared kit rules ("when

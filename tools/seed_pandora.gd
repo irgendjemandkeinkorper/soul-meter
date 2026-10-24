@@ -119,6 +119,15 @@ class CanonReader:
 			"outcomes": ["win", "loss"],
 			"refused": ["grid", "weather_default"],
 		},
+		"perks": {
+			"noun": "perk",
+			"schema": "weftlumin.perk.v1",
+			"fields": [
+				"id", "display_name", "class_id", "slot", "blurb", "vault_id",
+				"minimum_fame_tier", "minimum_karma_tier", "maximum_karma_tier",
+			],
+			"integers": ["level"],
+		},
 		"items": {
 			"noun": "item",
 			"schema": "weftlumin.item.v1",
@@ -535,6 +544,9 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 	var encounters: Array[Dictionary] = CanonReader.load("encounters", canon_root)
 	if archetypes.is_empty() or encounters.is_empty():
 		return false
+	var perks: Array[Dictionary] = CanonReader.load("perks", canon_root)
+	if perks.is_empty() or not perks_are_valid(perks, classes):
+		return false
 	if not _encounters_name_real_archetypes(encounters, archetypes):
 		return false
 	if (
@@ -549,7 +561,7 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 	if Pandora.get_all_roots().is_empty():
 		_seed(
 			factions, elements, classes, peoples, items, spells, effects, locations, lore,
-			archetypes, encounters
+			archetypes, encounters, perks
 		)
 	else:
 		_apply_elements(elements)
@@ -563,6 +575,7 @@ func _seed_from_canon(canon_root: String = CanonReader.CANON_ROOT) -> bool:
 		_apply_lore(lore)
 		_apply_combatants(archetypes)
 		_apply_encounters(encounters)
+		_apply_perks(perks)
 	return true
 
 
@@ -694,7 +707,8 @@ func _seed(
 	locations: Array[Dictionary],
 	lore: Array[Dictionary],
 	archetypes: Array[Dictionary],
-	encounters: Array[Dictionary]
+	encounters: Array[Dictionary],
+	perks: Array[Dictionary]
 ) -> void:
 	_apply_elements(elements)
 	_apply_classes(classes)
@@ -708,6 +722,7 @@ func _seed(
 	_apply_encounters(encounters)
 	_apply_locations(locations)
 	_apply_lore(lore)
+	_apply_perks(perks)
 
 
 # --- Elements: the Wheel of Ten (closed canon set; canon/<hub>/elements) -----------------
@@ -1229,6 +1244,94 @@ func _apply_encounters(encounters: Array[Dictionary]) -> void:
 		_assign(entity, "Defeated Flag", row["defeated_flag"])
 		_assign_outcome(entity, "Win", row["win"])
 		_assign_outcome(entity, "Loss", row["loss"])
+
+
+# --- Perks: three picks per patron class at levels 2 / 4 / 6 (#285, owner item 22) -----------
+
+
+const PERK_SLOT_LEVELS := {"resource": 2, "signature": 4, "capstone": 6}
+## How many perks each class offers at each level: one resource perk, one signature, and a
+## capstone pair so no character is locked out of a level-6 pick by the ledger (owner item 22).
+const PERK_COUNT_PER_LEVEL := {2: 1, 4: 1, 6: 2}
+const RenownScript := preload("res://globals/renown.gd")
+
+
+## The rule of three, checked before anything is written: every perk names a real class, sits
+## at the level its slot belongs to, gates only on real tier names, and every class has exactly
+## one resource perk, one signature and a capstone pair. Static so tests can feed it documents.
+static func perks_are_valid(perks: Array[Dictionary], classes: Array[Dictionary]) -> bool:
+	var counts: Dictionary = {}
+	for row: Dictionary in classes:
+		counts[row["id"]] = {2: 0, 4: 0, 6: 0}
+	for row: Dictionary in perks:
+		var perk_id: String = row["id"]
+		if not counts.has(row["class_id"]):
+			push_error("CANON-SEED: perk '%s' names unknown class '%s'." % [perk_id, row["class_id"]])
+			return false
+		if not PERK_SLOT_LEVELS.has(row["slot"]):
+			push_error("CANON-SEED: perk '%s' has unknown slot '%s'." % [perk_id, row["slot"]])
+			return false
+		var level := int(row["level"])
+		if float(level) != float(row["level"]) or level != int(PERK_SLOT_LEVELS[row["slot"]]):
+			push_error(
+				"CANON-SEED: perk '%s' is a %s perk and must sit at level %d."
+				% [perk_id, row["slot"], PERK_SLOT_LEVELS[row["slot"]]]
+			)
+			return false
+		for gate: Array in [
+			["minimum_fame_tier", RenownScript.FAME_TIER_NAMES],
+			["minimum_karma_tier", RenownScript.KARMA_TIER_NAMES],
+			["maximum_karma_tier", RenownScript.KARMA_TIER_NAMES],
+		]:
+			var tier: String = row[gate[0]]
+			if not tier.is_empty() and not (gate[1] as PackedStringArray).has(tier):
+				push_error(
+					"CANON-SEED: perk '%s' gates on unknown tier '%s' (%s)." % [perk_id, tier, gate[0]]
+				)
+				return false
+		counts[row["class_id"]][level] += 1
+	for class_id: String in counts:
+		for level: int in PERK_COUNT_PER_LEVEL:
+			if int(counts[class_id][level]) != int(PERK_COUNT_PER_LEVEL[level]):
+				push_error(
+					"CANON-SEED: class '%s' needs %d perk(s) at level %d, has %d."
+					% [class_id, PERK_COUNT_PER_LEVEL[level], level, counts[class_id][level]]
+				)
+				return false
+	return true
+
+
+func _apply_perks(perks: Array[Dictionary]) -> void:
+	var root: PandoraCategory = _ensure_root("Perks")
+	for property_spec: Array in [
+		["Perk Id", "string"],
+		["Display Name", "string"],
+		["Class Id", "string"],
+		["Level", "int"],
+		["Slot", "string"],
+		["Minimum Fame Tier", "string"],
+		["Minimum Karma Tier", "string"],
+		["Maximum Karma Tier", "string"],
+		["Blurb", "string"],
+		["Vault Id", "string"],
+	]:
+		if not root.has_entity_property(property_spec[0]):
+			Pandora.create_property(root, property_spec[0], property_spec[1])
+
+	for row: Dictionary in perks:
+		var entity: PandoraEntity = _find_by_id_property(root, "Perk Id", row["id"])
+		if entity == null:
+			entity = Pandora.create_entity(row["id"], root)
+		_assign(entity, "Perk Id", row["id"])
+		_assign(entity, "Display Name", row["display_name"])
+		_assign(entity, "Class Id", row["class_id"])
+		_assign(entity, "Level", int(row["level"]))
+		_assign(entity, "Slot", row["slot"])
+		_assign(entity, "Minimum Fame Tier", row["minimum_fame_tier"])
+		_assign(entity, "Minimum Karma Tier", row["minimum_karma_tier"])
+		_assign(entity, "Maximum Karma Tier", row["maximum_karma_tier"])
+		_assign(entity, "Blurb", row["blurb"])
+		_assign(entity, "Vault Id", row["vault_id"])
 
 
 ## A `null` outcome writes the flat legacy absence the old authored rows carried: no faction,

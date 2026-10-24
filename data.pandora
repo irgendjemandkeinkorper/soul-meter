@@ -231,6 +231,13 @@
 				"_id": "496.0",
 				"_index": 0,
 				"_name": "Unit Loadout"
+			},
+			{
+				"_category_id": "",
+				"_icon_color": "ffffff00",
+				"_id": "557.0",
+				"_index": 0,
+				"_name": "Perks"
 			}
 		],
 		"_entities": [
@@ -17617,6 +17624,1966 @@
 						"value": "widow-watchers"
 					}
 				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "568.0",
+				"_index": 0,
+				"_name": "flamebinder-carried-lesson",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "One banked token survives to the next battle."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "flamebinder"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Carried Lesson"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "flamebinder-carried-lesson"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "569.0",
+				"_index": 0,
+				"_name": "flamebinder-second-casting",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Once per encounter, spend two banked tokens to turn a fizzle into a success after the fact."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "flamebinder"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Second Casting"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "flamebinder-second-casting"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "570.0",
+				"_index": 0,
+				"_name": "flamebinder-spectacular-failure",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A fizzle in a populated zone banks two tokens: somebody saw it."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "flamebinder"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Spectacular Failure"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": "Whispered"
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "flamebinder-spectacular-failure"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "571.0",
+				"_index": 0,
+				"_name": "flamebinder-third-lesson",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Raises the Failure Token cap."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "flamebinder"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Third Lesson"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "flamebinder-third-lesson"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "572.0",
+				"_index": 0,
+				"_name": "husk-bearer-feed-the-husk",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A Hunger tick that kills refunds some Hunger."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "husk-bearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Feed the Husk"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": "Troubled"
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "husk-bearer-feed-the-husk"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "573.0",
+				"_index": 0,
+				"_name": "husk-bearer-nothing-wasted",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A kill from your damage-over-time effect returns 1 Breath, including the final enemy's death."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "husk-bearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Nothing Wasted"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "husk-bearer-nothing-wasted"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "574.0",
+				"_index": 0,
+				"_name": "husk-bearer-patient-hunger",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Raises the Hunger cap."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "husk-bearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Patient Hunger"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "husk-bearer-patient-hunger"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "575.0",
+				"_index": 0,
+				"_name": "husk-bearer-slow-rot",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A Hunger tick survives one round after its target is cured or jammed."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "husk-bearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Slow Rot"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "husk-bearer-slow-rot"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "576.0",
+				"_index": 0,
+				"_name": "ironbrand-debt-collected",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A Scar spent on an attack that downs its target is returned."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "ironbrand"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Debt Collected"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": "Troubled"
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "ironbrand-debt-collected"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "577.0",
+				"_index": 0,
+				"_name": "ironbrand-debt-of-arms",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Trade current HP for a damage or buff spike on yourself or an ally."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "ironbrand"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Debt of Arms"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "ironbrand-debt-of-arms"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "578.0",
+				"_index": 0,
+				"_name": "ironbrand-first-blood",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "The first Scar each battle is banked when combat starts, before any damage."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "ironbrand"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "First Blood"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "ironbrand-first-blood"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "579.0",
+				"_index": 0,
+				"_name": "ironbrand-thick-hide",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Raises the Scar cap."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "ironbrand"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Thick Hide"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "ironbrand-thick-hide"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "580.0",
+				"_index": 0,
+				"_name": "lensbearer-kept-focus",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "One unspent Clarity carries into the next battle."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "lensbearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Kept Focus"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "lensbearer-kept-focus"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "581.0",
+				"_index": 0,
+				"_name": "lensbearer-read-aloud",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A forecast you reveal is shown to the whole party for that turn."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "lensbearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Read Aloud"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": "Known"
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "lensbearer-read-aloud"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "582.0",
+				"_index": 0,
+				"_name": "lensbearer-sacred-clarity",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Force a target's next action to be telegraphed to the whole party, at Fading cost."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "lensbearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Sacred Clarity"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "lensbearer-sacred-clarity"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "583.0",
+				"_index": 0,
+				"_name": "lensbearer-wider-lens",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Start each battle with more Clarity."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "lensbearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Wider Lens"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "lensbearer-wider-lens"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "584.0",
+				"_index": 0,
+				"_name": "locksmirk-jam-the-gears",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Spend 1 Soul to cancel an enemy's pending action and queued effects. If nothing is pending, Jam waits and retries on your turns."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "locksmirk"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Jam the Gears"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "locksmirk-jam-the-gears"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "585.0",
+				"_index": 0,
+				"_name": "locksmirk-jammed-twice",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A Jam that finds nothing pending also delays the target's next action."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "locksmirk"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Jammed Twice"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "locksmirk-jammed-twice"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "586.0",
+				"_index": 0,
+				"_name": "locksmirk-pocketed-gear",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A Jam that cancels something refunds its Soul."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "locksmirk"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Pocketed Gear"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": "Troubled"
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "locksmirk-pocketed-gear"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "587.0",
+				"_index": 0,
+				"_name": "locksmirk-second-pick",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Jam the Gears may wait and retry on ally turns as well as your own."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "locksmirk"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Second Pick"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "locksmirk-second-pick"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "588.0",
+				"_index": 0,
+				"_name": "mirrorblade-even-hand",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "The first fizzle each battle does not unbalance you."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "mirrorblade"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Even Hand"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "mirrorblade-even-hand"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "589.0",
+				"_index": 0,
+				"_name": "mirrorblade-known-edge",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "The first enemy to act against the Mirrorblade each battle acts late: it has heard of you."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "mirrorblade"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Known Edge"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": "Known"
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "mirrorblade-known-edge"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "590.0",
+				"_index": 0,
+				"_name": "mirrorblade-reflection",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Once per encounter, redirect an incoming spell effect back at its caster at reduced power."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "mirrorblade"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Reflection"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "mirrorblade-reflection"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "591.0",
+				"_index": 0,
+				"_name": "mirrorblade-second-footing",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Once per battle, repeating Strike or Guard a third time does not break Balance."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "mirrorblade"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Second Footing"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "mirrorblade-second-footing"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "592.0",
+				"_index": 0,
+				"_name": "oathclock-longer-docket",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Hold more Sentences."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "oathclock"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Longer Docket"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "oathclock-longer-docket"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "593.0",
+				"_index": 0,
+				"_name": "oathclock-prompt-court",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Sentences fall due one round sooner."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "oathclock"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Prompt Court"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "oathclock-prompt-court"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "594.0",
+				"_index": 0,
+				"_name": "oathclock-public-verdict",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A Sentence filed while an ally is adjacent cannot be Jammed."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "oathclock"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Public Verdict"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": "Upright"
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "oathclock-public-verdict"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "595.0",
+				"_index": 0,
+				"_name": "oathclock-sequenced-verdict",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Bank a powerful delayed verdict that resolves on a fixed future turn."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "oathclock"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Sequenced Verdict"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "oathclock-sequenced-verdict"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "596.0",
+				"_index": 0,
+				"_name": "river-mother-last-washing",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "When an ally hits 0 HP, spend a Ledger entry to stabilize them."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "river-mother"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Last Washing"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "river-mother-last-washing"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "597.0",
+				"_index": 0,
+				"_name": "river-mother-longer-ledger",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "The Name-Ledger holds more names."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "river-mother"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Longer Ledger"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "river-mother-longer-ledger"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "598.0",
+				"_index": 0,
+				"_name": "river-mother-names-carried",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "When a recorded ally falls, the Breath refund reaches every recorded ally, not only the River-Mother."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "river-mother"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Names Carried"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": "Upright"
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "river-mother-names-carried"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "599.0",
+				"_index": 0,
+				"_name": "river-mother-own-name-twice",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Your own name may be recorded twice per battle, and pays twice."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "river-mother"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Own Name Twice"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "river-mother-own-name-twice"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "600.0",
+				"_index": 0,
+				"_name": "stormbearer-grounded",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "The lowest Attribution result is read as the next one up."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "stormbearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Grounded"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "stormbearer-grounded"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "601.0",
+				"_index": 0,
+				"_name": "stormbearer-named-storm",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Attribution rolls on a wider table, not the usual three rows."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "stormbearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Named Storm"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": "Known"
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "stormbearer-named-storm"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "602.0",
+				"_index": 0,
+				"_name": "stormbearer-steadier-hand",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Reroll one Attribution result per battle."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "stormbearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Steadier Hand"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "stormbearer-steadier-hand"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "603.0",
+				"_index": 0,
+				"_name": "stormbearer-tuned-thunder",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "An ability critical hit chains into a second, random effect."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "stormbearer"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Tuned Thunder"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "stormbearer-tuned-thunder"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "604.0",
+				"_index": 0,
+				"_name": "threadwalker-doubled-knot",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A contract may be placed twice on the same enemy."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "threadwalker"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Doubled Knot"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "threadwalker-doubled-knot"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "605.0",
+				"_index": 0,
+				"_name": "threadwalker-fourth-thread",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Hold more contracts."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "threadwalker"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Fourth Thread"
+					},
+					"Level": {
+						"type": "int",
+						"value": 2
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "threadwalker-fourth-thread"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "resource"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "606.0",
+				"_index": 0,
+				"_name": "threadwalker-known-contract",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "A bound enemy's first attack after binding is delayed: it has heard what the thread costs."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "threadwalker"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Known Contract"
+					},
+					"Level": {
+						"type": "int",
+						"value": 6
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": "Known"
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "threadwalker-known-contract"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "capstone"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "557.0",
+				"_icon_color": "ffffff00",
+				"_id": "607.0",
+				"_index": 0,
+				"_name": "threadwalker-the-unspoken-term",
+				"_property_overrides": {
+					"Blurb": {
+						"type": "string",
+						"value": "Bind Threads with more conditions and choose when to cash them in."
+					},
+					"Class Id": {
+						"type": "string",
+						"value": "threadwalker"
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "The Unspoken Term"
+					},
+					"Level": {
+						"type": "int",
+						"value": 4
+					},
+					"Maximum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Fame Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Minimum Karma Tier": {
+						"type": "string",
+						"value": ""
+					},
+					"Perk Id": {
+						"type": "string",
+						"value": "threadwalker-the-unspoken-term"
+					},
+					"Slot": {
+						"type": "string",
+						"value": "signature"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -19243,12 +21210,82 @@
 				"_id": "536.0",
 				"_name": "Anatomy",
 				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "558.0",
+				"_name": "Perk Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "559.0",
+				"_name": "Display Name",
+				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "560.0",
+				"_name": "Class Id",
+				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": 0,
+				"_id": "561.0",
+				"_name": "Level",
+				"_type": "int"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "562.0",
+				"_name": "Slot",
+				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "563.0",
+				"_name": "Minimum Fame Tier",
+				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "564.0",
+				"_name": "Minimum Karma Tier",
+				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "565.0",
+				"_name": "Maximum Karma Tier",
+				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "566.0",
+				"_name": "Blurb",
+				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "567.0",
+				"_name": "Vault Id",
+				"_type": "string"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 556.0
+			"default": 607.0
 		}
 	},
 	"_version": 1

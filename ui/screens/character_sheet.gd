@@ -250,6 +250,9 @@ func _rebuild_sheet() -> void:
 		wheel_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		side_column.add_child(wheel_caption)
 
+	# --- Perks (#285): picks at levels 2 / 4 / 6 ---
+	_render_perks(side_column, member)
+
 	# --- Injuries (called-shots 10C): serious records and qualified field treatment ---
 	_render_injuries(main_column, member)
 
@@ -459,6 +462,79 @@ func _derivation_tooltip(member: PartyMember, skill_id: String, effective: float
 		"effective %d%% = attribute × 8  +  %s tier bonus  +  %d%% advancement"
 		% [int(effective), tier.capitalize(), int(bought)]
 	)
+
+
+## Picked perks first, then the open pick (if any) as one button per offer. A gated capstone
+## stays visible with its refusal so the player can see what the ledger would open.
+func _render_perks(column: VBoxContainer, member: PartyMember) -> void:
+	column.add_child(_section("Perks"))
+	var perks_column := VBoxContainer.new()
+	perks_column.name = "PerksColumn"
+	perks_column.theme_type_variation = "LedgerColumn"
+	column.add_child(perks_column)
+	if PerkCatalog.for_class(member.class_id).is_empty():
+		perks_column.add_child(_perk_label("NoPerks", "(no patron-class perks)", "MutedLabel"))
+		return
+	for perk: Dictionary in PerkCatalog.picked(member):
+		var title := "Lv %d  %s" % [int(perk["level"]), PerkCatalog.display_name(perk)]
+		if not PerkCatalog.is_in_play(str(perk["id"])):
+			title += "  (planned)"
+		perks_column.add_child(_perk_label("Picked_%s" % perk["id"], title, ""))
+		perks_column.add_child(_perk_label("", PerkCatalog.blurb(perk), "MutedLabel"))
+	var pending := PerkCatalog.pending_level(member)
+	if pending == 0:
+		var next_level := 0
+		for level: int in PerkCatalog.PICK_LEVELS:
+			if level > member.level:
+				next_level = level
+				break
+		if next_level > 0:
+			perks_column.add_child(
+				_perk_label("NextPerk", "Next pick at level %d." % next_level, "MutedLabel")
+			)
+		return
+	perks_column.add_child(
+		_perk_label("PerkChoice", "Choose a level-%d perk:" % pending, "HeadingLabel")
+	)
+	var in_combat := _combat_active()
+	for perk: Dictionary in PerkCatalog.offers(member):
+		var button := Button.new()
+		button.name = "Perk_%s" % perk["id"]
+		button.text = PerkCatalog.display_name(perk)
+		button.tooltip_text = PerkCatalog.blurb(perk)
+		var refusal := PerkCatalog.gate_refusal(perk)
+		button.disabled = in_combat or not refusal.is_empty()
+		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		button.pressed.connect(_on_perk_pressed.bind(str(perk["id"])))
+		perks_column.add_child(button)
+		var note := PerkCatalog.blurb(perk)
+		if not refusal.is_empty():
+			note += "  " + refusal
+		perks_column.add_child(_perk_label("", note, "MutedLabel"))
+	if in_combat:
+		perks_column.add_child(
+			_perk_label("PerkCombatNote", "Choose after the fight.", "MutedLabel")
+		)
+
+
+func _perk_label(node_name: String, text: String, variation: String) -> Label:
+	var label := Label.new()
+	if not node_name.is_empty():
+		label.name = node_name
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if not variation.is_empty():
+		label.theme_type_variation = variation
+	return label
+
+
+func _on_perk_pressed(perk_id: String) -> void:
+	if _selected_member == null:
+		return
+	var result := PerkCatalog.pick(_selected_member, perk_id)
+	if not bool(result.get("allowed", false)):
+		return
+	_rebuild_sheet()
 
 
 func _on_buy_pressed(skill_id: String) -> void:

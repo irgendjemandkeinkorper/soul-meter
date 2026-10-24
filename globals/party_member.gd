@@ -43,6 +43,9 @@ const DEFAULT_BREATH_MAX := 15
 ## Unspent point-buy advancement points (#98, D3; granted by story milestones —
 ## see GameState.grant_milestone_level and globals/advancement.gd).
 @export var advancement_points: int = 0
+## Perk ids picked at levels 2 / 4 / 6 (#285, `PerkCatalog`). Empty by default, so a save from
+## before perks loads unchanged and the member simply has picks waiting.
+@export var perk_ids: PackedStringArray = PackedStringArray()
 @export var hp: int = 10
 @export var max_hp: int = 10
 @export var breath: int = DEFAULT_BREATH_MAX
@@ -101,6 +104,7 @@ func to_dict() -> Dictionary:
 		"level": level,
 		"xp": xp,
 		"advancement_points": advancement_points,
+		"perk_ids": Array(perk_ids),
 		"hp": hp,
 		"max_hp": max_hp,
 		"breath": breath,
@@ -140,6 +144,11 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.level = int(data.get("level", 1))
 	member.xp = maxi(int(data.get("xp", 0)), 0)
 	member.advancement_points = maxi(int(data.get("advancement_points", 0)), 0)
+	var saved_perks: Variant = data.get("perk_ids", [])
+	if saved_perks is Array or saved_perks is PackedStringArray:
+		for perk_id: Variant in saved_perks:
+			if perk_id is String and not (perk_id as String).is_empty():
+				member.perk_ids.append(perk_id)
 	member.hp = int(data.get("hp", 10))
 	member.max_hp = int(data.get("max_hp", 10))
 	member.breath_max = maxi(int(data.get("breath_max", DEFAULT_BREATH_MAX)), 0)
