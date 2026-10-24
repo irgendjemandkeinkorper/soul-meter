@@ -62,11 +62,12 @@ const SET_PIECE_ENEMY_OFFSET := Vector2i(3, 0)
 ## keeps its authored encounter ledger; the per-group ledger and the flee rule below are the
 ## ambient path's (F0 D7).
 var _ambient_session := false
-## D7 PROVISIONAL (ruled 2026-09-04, numbers open to tuning): the session ends FLED once no
-## living hostile has had any party member inside `alert_radius × FLEE_RADIUS_FACTOR` for
-## FLEE_MEASURES consecutive measures. The test flips these through the constants.
-const PROVISIONAL_FLEE_RADIUS_FACTOR := 1.5
-const PROVISIONAL_FLEE_MEASURES := 2
+## D7 (ruled 2026-09-04, ratified by the owner 2026-10-22, #506): an ambient session ends FLED
+## once no living hostile has had any party member inside `alert_radius × FLEE_RADIUS_FACTOR`
+## for FLEE_MEASURES consecutive measures. Set pieces stay committed. `alert_radius` itself is
+## still PROVISIONAL (balance pass).
+const FLEE_RADIUS_FACTOR := 1.5
+const FLEE_MEASURES := 2
 var _measures_out_of_reach := 0
 var _resolved_groups: Dictionary = {}  ## StringName (group_id) -> true once its ledger fired
 var _session_spoils: Array[Dictionary] = []
@@ -618,7 +619,7 @@ func _check_session_flee() -> void:
 		if actor == null or not actor.is_alive():
 			continue
 		any_living = true
-		var reach := hostile.alert_radius * PROVISIONAL_FLEE_RADIUS_FACTOR
+		var reach := hostile.alert_radius * FLEE_RADIUS_FACTOR
 		for position: Vector2 in party:
 			if hostile.global_position.distance_to(position) <= reach:
 				any_in_reach = true
@@ -629,7 +630,7 @@ func _check_session_flee() -> void:
 		_measures_out_of_reach = 0
 		return
 	_measures_out_of_reach += 1
-	if _measures_out_of_reach >= PROVISIONAL_FLEE_MEASURES:
+	if _measures_out_of_reach >= FLEE_MEASURES:
 		controller.force_finish(CombatController.ResultState.FLED, OUTCOME_FLED)
 
 
