@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://dobcpmbgpgbw6"
+path="res://.godot/imported/dom_fame_reactions.dialogue-fa13247b78b95cce5a5921cae1d73fa7.tres"
+
+[deps]
+
+source_file="res://dialogue/dom_fame_reactions.dialogue"
+dest_files=["res://.godot/imported/dom_fame_reactions.dialogue-fa13247b78b95cce5a5921cae1d73fa7.tres"]
+
+[params]
+
+defaults=true

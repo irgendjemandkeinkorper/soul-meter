@@ -415,7 +415,10 @@ func turn_in(
 		# Ruling 9 (2026-09-02): XP comes from combat AND quests. Gated on
 		# `not was_done` so a re-entrant turn-in cannot pay twice — the same guard
 		# the reward summary already uses, for the same reason.
-		if not was_done:
+		# Owner 2026-10-22: a stub left "to be continued" is not a completed quest and
+		# pays no quest XP; that is what fits the Chapter 1 cap at 6
+		# (`docs/progression-bound-packet.md` §5.2).
+		if not was_done and not _is_suspended_stub(quest, resolution):
 			GameState.award_party_xp(
 				Advancement.XP_PER_QUEST, "Completed %s" % quest.resource_path.get_file()
 			)
@@ -431,6 +434,10 @@ func turn_in(
 				_humanize_reward_id(resolution),
 				_default_reward_entries(quest)
 			)
+
+
+func _is_suspended_stub(quest: Quest, resolution: String) -> bool:
+	return quest is StubSideQuest and resolution == StubSideQuest.TO_BE_CONTINUED
 
 
 func resolve_broken_muster(ruling_id: StringName) -> bool:
