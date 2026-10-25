@@ -262,7 +262,8 @@ msgid "PERK_MIRRORBLADE_KNOWN_EDGE_NAME"
 msgstr ""
 
 #. perks/mirrorblade-known-edge — blurb
-#. English source: The first enemy to act against the Mirrorblade each battle acts late: it has heard of you.
+#. English source: The first enemy to act against the Mirrorblade each battle acts 20 CT late: it has heard of you.
+#, fuzzy
 msgid "PERK_MIRRORBLADE_KNOWN_EDGE_BLURB"
 msgstr ""
 
@@ -272,7 +273,8 @@ msgid "PERK_RIVER_MOTHER_LONGER_LEDGER_NAME"
 msgstr ""
 
 #. perks/river-mother-longer-ledger — blurb
-#. English source: The Name-Ledger holds more names.
+#. English source: The first name to pay each battle pays twice.
+#, fuzzy
 msgid "PERK_RIVER_MOTHER_LONGER_LEDGER_BLURB"
 msgstr ""
 
@@ -312,7 +314,8 @@ msgid "PERK_IRONBRAND_THICK_HIDE_NAME"
 msgstr ""
 
 #. perks/ironbrand-thick-hide — blurb
-#. English source: Raises the Scar cap.
+#. English source: Raises the Scar cap by 1.
+#, fuzzy
 msgid "PERK_IRONBRAND_THICK_HIDE_BLURB"
 msgstr ""
 
@@ -352,7 +355,8 @@ msgid "PERK_LENSBEARER_WIDER_LENS_NAME"
 msgstr ""
 
 #. perks/lensbearer-wider-lens — blurb
-#. English source: Start each battle with more Clarity.
+#. English source: Start each battle with 1 more Clarity, and hold 1 more.
+#, fuzzy
 msgid "PERK_LENSBEARER_WIDER_LENS_BLURB"
 msgstr ""
 
@@ -392,7 +396,8 @@ msgid "PERK_HUSK_BEARER_PATIENT_HUNGER_NAME"
 msgstr ""
 
 #. perks/husk-bearer-patient-hunger — blurb
-#. English source: Raises the Hunger cap.
+#. English source: Raises the Hunger cap by 1.
+#, fuzzy
 msgid "PERK_HUSK_BEARER_PATIENT_HUNGER_BLURB"
 msgstr ""
 
@@ -402,7 +407,8 @@ msgid "PERK_HUSK_BEARER_NOTHING_WASTED_NAME"
 msgstr ""
 
 #. perks/husk-bearer-nothing-wasted — blurb
-#. English source: A kill from your damage-over-time effect returns 1 Breath, including the final enemy's death.
+#. English source: A kill from your damage-over-time effect returns 3 Breath, including the final enemy's death.
+#, fuzzy
 msgid "PERK_HUSK_BEARER_NOTHING_WASTED_BLURB"
 msgstr ""
 
@@ -412,7 +418,8 @@ msgid "PERK_HUSK_BEARER_FEED_THE_HUSK_NAME"
 msgstr ""
 
 #. perks/husk-bearer-feed-the-husk — blurb
-#. English source: A Hunger tick that kills refunds some Hunger.
+#. English source: A Hunger tick that kills refunds 1 Hunger.
+#, fuzzy
 msgid "PERK_HUSK_BEARER_FEED_THE_HUSK_BLURB"
 msgstr ""
 
@@ -432,7 +439,8 @@ msgid "PERK_FLAMEBINDER_THIRD_LESSON_NAME"
 msgstr ""
 
 #. perks/flamebinder-third-lesson — blurb
-#. English source: Raises the Failure Token cap.
+#. English source: Raises the Failure Token cap by 1.
+#, fuzzy
 msgid "PERK_FLAMEBINDER_THIRD_LESSON_BLURB"
 msgstr ""
 
@@ -502,7 +510,8 @@ msgid "PERK_STORMBEARER_NAMED_STORM_NAME"
 msgstr ""
 
 #. perks/stormbearer-named-storm — blurb
-#. English source: Attribution rolls on a wider table, not the usual three rows.
+#. English source: Attribution draws twice and keeps the higher result.
+#, fuzzy
 msgid "PERK_STORMBEARER_NAMED_STORM_BLURB"
 msgstr ""
 
@@ -512,7 +521,8 @@ msgid "PERK_OATHCLOCK_LONGER_DOCKET_NAME"
 msgstr ""
 
 #. perks/oathclock-longer-docket — blurb
-#. English source: Hold more Sentences.
+#. English source: Hold 1 more Sentence.
+#, fuzzy
 msgid "PERK_OATHCLOCK_LONGER_DOCKET_BLURB"
 msgstr ""
 
@@ -572,7 +582,8 @@ msgid "PERK_LOCKSMIRK_JAMMED_TWICE_NAME"
 msgstr ""
 
 #. perks/locksmirk-jammed-twice — blurb
-#. English source: A Jam that finds nothing pending also delays the target's next action.
+#. English source: A Jam that finds nothing pending also delays the target's next action by 20 CT.
+#, fuzzy
 msgid "PERK_LOCKSMIRK_JAMMED_TWICE_BLURB"
 msgstr ""
 
@@ -592,7 +603,8 @@ msgid "PERK_THREADWALKER_FOURTH_THREAD_NAME"
 msgstr ""
 
 #. perks/threadwalker-fourth-thread — blurb
-#. English source: Hold more contracts.
+#. English source: Hold 1 more contract.
+#, fuzzy
 msgid "PERK_THREADWALKER_FOURTH_THREAD_BLURB"
 msgstr ""
 
@@ -622,7 +634,8 @@ msgid "PERK_THREADWALKER_KNOWN_CONTRACT_NAME"
 msgstr ""
 
 #. perks/threadwalker-known-contract — blurb
-#. English source: A bound enemy's first attack after binding is delayed: it has heard what the thread costs.
+#. English source: A bound enemy's first attack after binding is delayed 20 CT: it has heard what the thread costs.
+#, fuzzy
 msgid "PERK_THREADWALKER_KNOWN_CONTRACT_BLURB"
 msgstr ""
 

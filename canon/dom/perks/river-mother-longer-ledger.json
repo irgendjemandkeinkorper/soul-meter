@@ -1,1 +1,1 @@
-{"schema":"weftlumin.perk.v1","id":"river-mother-longer-ledger","display_name":"Longer Ledger","class_id":"river-mother","level":2,"slot":"resource","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"The Name-Ledger holds more names.","vault_id":""}
+{"schema":"weftlumin.perk.v1","id":"river-mother-longer-ledger","display_name":"Longer Ledger","class_id":"river-mother","level":2,"slot":"resource","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"The first name to pay each battle pays twice.","vault_id":""}

@@ -176,6 +176,6 @@ func test_text_falls_back_to_the_english_source_and_keys_are_stable() -> void:
 	assert_str(PerkCatalog.key_for("ironbrand-thick-hide", "name")).is_equal("PERK_IRONBRAND_THICK_HIDE_NAME")
 	assert_str(PerkCatalog.key_for("ironbrand-thick-hide", "blurb")).is_equal("PERK_IRONBRAND_THICK_HIDE_BLURB")
 	assert_str(PerkCatalog.display_name(perk)).is_equal("Thick Hide")
-	assert_str(PerkCatalog.blurb(perk)).is_equal("Raises the Scar cap.")
+	assert_str(PerkCatalog.blurb(perk)).is_equal("Raises the Scar cap by 1.")
 	var pot := FileAccess.get_file_as_string("res://data/generated/items.pot")
 	assert_str(pot).contains('msgid "PERK_IRONBRAND_THICK_HIDE_NAME"')

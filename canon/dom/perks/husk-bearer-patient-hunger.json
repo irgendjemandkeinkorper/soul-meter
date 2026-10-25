@@ -1,1 +1,1 @@
-{"schema":"weftlumin.perk.v1","id":"husk-bearer-patient-hunger","display_name":"Patient Hunger","class_id":"husk-bearer","level":2,"slot":"resource","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"Raises the Hunger cap.","vault_id":""}
+{"schema":"weftlumin.perk.v1","id":"husk-bearer-patient-hunger","display_name":"Patient Hunger","class_id":"husk-bearer","level":2,"slot":"resource","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"Raises the Hunger cap by 1.","vault_id":""}

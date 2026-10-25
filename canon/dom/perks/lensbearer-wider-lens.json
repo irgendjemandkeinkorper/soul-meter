@@ -1,1 +1,1 @@
-{"schema":"weftlumin.perk.v1","id":"lensbearer-wider-lens","display_name":"Wider Lens","class_id":"lensbearer","level":2,"slot":"resource","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"Start each battle with more Clarity.","vault_id":""}
+{"schema":"weftlumin.perk.v1","id":"lensbearer-wider-lens","display_name":"Wider Lens","class_id":"lensbearer","level":2,"slot":"resource","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"Start each battle with 1 more Clarity, and hold 1 more.","vault_id":""}

@@ -8,8 +8,8 @@ Pandora `Perks` root and emitted to `data/generated/perks.json` with `PERK_*` ke
 offers each pick at levels 2 / 4 / 6. Karma gates are authored but not enforced
 (`PerkCatalog.KARMA_GATES_LIVE := false`) until Karma has writers. No perk effect is wired in this slice:
 the sheet marks every pick "(planned)" except Jam the Gears and Nothing Wasted, which already shipped as
-class features. Blurbs carrying a `[n]` below are worded without the number in canon until the effect
-slice sets it. `effect.op` (§3) arrives with that slice.
+class features. The `[n]` values below were ruled on 2026-10-25 (§6) and the canon blurbs carry them, with
+Longer Ledger and Named Storm reworded per §6 flags B and C. `effect.op` (§3) arrives with the effect slice.
 
 The text below is the approved draft as reviewed.
 
@@ -175,10 +175,11 @@ perks: approved                 (or edit rows in place and say "perks: as edited
 perks karma gates: wait         (ship the four Karma capstones ungated until the act table lands) | gate
 ```
 
-## 6. Proposed numbers (2026-10-25, PROVISIONAL, owner item 24)
+## 6. Numbers (ruled 2026-10-25, owner items 24 and 6)
 
-**Nothing here is applied.** The canon blurbs stay number-free until you answer item 24; the effect slice
-then writes these values. Every number is a **delta on the class's current value**, so it holds whichever
+**Ruled 2026-10-25:** `24: as proposed`, flags B and C as recommended, and item 6 ratified B11, so the
+"if item 6 lands B11" column is the live one and flag C's fallback applies. The canon blurbs now carry
+these numbers; the effect slice wires them. Every number is a **delta on the class's current value**, so it holds whichever
 way item 6 (B11) lands. Both columns are shown where B11 would move the base.
 
 Scale used for the CT delays: a participant acts at 100 CT, gains Speed 7–10 per tick (5 + Reason), and an

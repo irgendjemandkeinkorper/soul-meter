@@ -17781,7 +17781,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Raises the Failure Token cap."
+						"value": "Raises the Failure Token cap by 1."
 					},
 					"Class Id": {
 						"type": "string",
@@ -17830,7 +17830,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "A Hunger tick that kills refunds some Hunger."
+						"value": "A Hunger tick that kills refunds 1 Hunger."
 					},
 					"Class Id": {
 						"type": "string",
@@ -17879,7 +17879,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "A kill from your damage-over-time effect returns 1 Breath, including the final enemy's death."
+						"value": "A kill from your damage-over-time effect returns 3 Breath, including the final enemy's death."
 					},
 					"Class Id": {
 						"type": "string",
@@ -17928,7 +17928,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Raises the Hunger cap."
+						"value": "Raises the Hunger cap by 1."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18173,7 +18173,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Raises the Scar cap."
+						"value": "Raises the Scar cap by 1."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18369,7 +18369,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Start each battle with more Clarity."
+						"value": "Start each battle with 1 more Clarity, and hold 1 more."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18467,7 +18467,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "A Jam that finds nothing pending also delays the target's next action."
+						"value": "A Jam that finds nothing pending also delays the target's next action by 20 CT."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18663,7 +18663,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "The first enemy to act against the Mirrorblade each battle acts late: it has heard of you."
+						"value": "The first enemy to act against the Mirrorblade each battle acts 20 CT late: it has heard of you."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18810,7 +18810,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Hold more Sentences."
+						"value": "Hold 1 more Sentence."
 					},
 					"Class Id": {
 						"type": "string",
@@ -19055,7 +19055,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "The Name-Ledger holds more names."
+						"value": "The first name to pay each battle pays twice."
 					},
 					"Class Id": {
 						"type": "string",
@@ -19251,7 +19251,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Attribution rolls on a wider table, not the usual three rows."
+						"value": "Attribution draws twice and keeps the higher result."
 					},
 					"Class Id": {
 						"type": "string",
@@ -19447,7 +19447,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Hold more contracts."
+						"value": "Hold 1 more contract."
 					},
 					"Class Id": {
 						"type": "string",
@@ -19496,7 +19496,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "A bound enemy's first attack after binding is delayed: it has heard what the thread costs."
+						"value": "A bound enemy's first attack after binding is delayed 20 CT: it has heard what the thread costs."
 					},
 					"Class Id": {
 						"type": "string",

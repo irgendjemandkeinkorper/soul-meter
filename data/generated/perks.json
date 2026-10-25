@@ -44,7 +44,7 @@
     "minimum_fame_tier": "Known",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "The first enemy to act against the Mirrorblade each battle acts late: it has heard of you.",
+    "blurb": "The first enemy to act against the Mirrorblade each battle acts 20 CT late: it has heard of you.",
     "vault_id": ""
   },
   {
@@ -56,7 +56,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "The Name-Ledger holds more names.",
+    "blurb": "The first name to pay each battle pays twice.",
     "vault_id": ""
   },
   {
@@ -104,7 +104,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Raises the Scar cap.",
+    "blurb": "Raises the Scar cap by 1.",
     "vault_id": ""
   },
   {
@@ -152,7 +152,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Start each battle with more Clarity.",
+    "blurb": "Start each battle with 1 more Clarity, and hold 1 more.",
     "vault_id": ""
   },
   {
@@ -200,7 +200,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Raises the Hunger cap.",
+    "blurb": "Raises the Hunger cap by 1.",
     "vault_id": ""
   },
   {
@@ -212,7 +212,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "A kill from your damage-over-time effect returns 1 Breath, including the final enemy's death.",
+    "blurb": "A kill from your damage-over-time effect returns 3 Breath, including the final enemy's death.",
     "vault_id": ""
   },
   {
@@ -224,7 +224,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "Troubled",
-    "blurb": "A Hunger tick that kills refunds some Hunger.",
+    "blurb": "A Hunger tick that kills refunds 1 Hunger.",
     "vault_id": ""
   },
   {
@@ -248,7 +248,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Raises the Failure Token cap.",
+    "blurb": "Raises the Failure Token cap by 1.",
     "vault_id": ""
   },
   {
@@ -332,7 +332,7 @@
     "minimum_fame_tier": "Known",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Attribution rolls on a wider table, not the usual three rows.",
+    "blurb": "Attribution draws twice and keeps the higher result.",
     "vault_id": ""
   },
   {
@@ -344,7 +344,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Hold more Sentences.",
+    "blurb": "Hold 1 more Sentence.",
     "vault_id": ""
   },
   {
@@ -416,7 +416,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "A Jam that finds nothing pending also delays the target's next action.",
+    "blurb": "A Jam that finds nothing pending also delays the target's next action by 20 CT.",
     "vault_id": ""
   },
   {
@@ -440,7 +440,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Hold more contracts.",
+    "blurb": "Hold 1 more contract.",
     "vault_id": ""
   },
   {
@@ -476,7 +476,7 @@
     "minimum_fame_tier": "Known",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "A bound enemy's first attack after binding is delayed: it has heard what the thread costs.",
+    "blurb": "A bound enemy's first attack after binding is delayed 20 CT: it has heard what the thread costs.",
     "vault_id": ""
   }
 ]
