@@ -160,15 +160,28 @@ func test_a_fame_gate_holds_until_the_tier_is_reached() -> void:
 
 ## Owner item 22, `perks karma gate: wait`: until Karma has writers the Karma-gated capstones
 ## are offered ungated; their gate stays authored in canon.
-func test_karma_gates_wait_while_karma_has_no_writers() -> void:
-	assert_bool(PerkCatalog.KARMA_GATES_LIVE).is_false()
+func test_karma_gates_hold_now_that_karma_has_writers() -> void:
 	var member := _member("ironbrand", 6)
 	member.perk_ids = PackedStringArray([_first_at("ironbrand", 2), _first_at("ironbrand", 4)])
 	var gated := _first_at("ironbrand", 6, true)
 	assert_str(str(PerkCatalog.definition(gated)["maximum_karma_tier"])).is_equal("Troubled")
-	assert_bool(Renown.karma_tier_at_most("Troubled")).is_false()
+	assert_str(Renown.karma_tier()).is_equal("Uncertain")
+	assert_str(PerkCatalog.gate_refusal(PerkCatalog.definition(gated))).is_equal("Needs Karma: Troubled or worse.")
+	assert_bool(PerkCatalog.pick(member, gated)["allowed"]).is_false()
+
+	for i in 40:
+		if Renown.karma_tier_at_most("Troubled"):
+			break
+		KarmaActs.record(KarmaActs.CAUGHT_PICKPOCKETING_BASE, "test: caught again", "field")
+	assert_str(Renown.karma_tier()).is_equal("Troubled")
 	assert_str(PerkCatalog.gate_refusal(PerkCatalog.definition(gated))).is_empty()
 	assert_bool(PerkCatalog.pick(member, gated)["allowed"]).is_true()
+
+
+func test_an_upright_floor_refuses_an_uncertain_soul() -> void:
+	var upright := PerkCatalog.definition("oathclock-public-verdict")
+	assert_str(str(upright["minimum_karma_tier"])).is_equal("Upright")
+	assert_str(PerkCatalog.gate_refusal(upright)).is_equal("Needs Karma: Upright or better.")
 
 
 func test_text_falls_back_to_the_english_source_and_keys_are_stable() -> void:

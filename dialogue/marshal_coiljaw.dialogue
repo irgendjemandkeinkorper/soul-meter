@@ -84,6 +84,7 @@ Marshal Coiljaw: Dorthkor's road-drum stopped halfway through the breach warning
 	do Reputation.record("player", "ironbrand-sentinels", 6.0, "Joined the Sentinels and Companies for the Deep Trial", "dom")
 	do Reputation.record("player", "iron-companies", 6.0, "Joined the Sentinels and Companies for the Deep Trial", "dom")
 	do Renown.gain_reputation("player", 12.0, "Made the Deep Trial answer to both lines", "dom")
+	do Renown.gain_karma("player", 5.0, "Let neither line call the other expendable", "dom")
 	Marshal Coiljaw: The Sentinels know the Wound. The Bloodbellows know the names it stole. Both go, and neither gets to call the other expendable.
 	=> END
 - "What did the first ledge buy us?" [if GameState.get_flag("prototype_extended_content") and QuestRegistry.is_done(QuestRegistry.DEEP_TRIAL) /]

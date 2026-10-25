@@ -165,12 +165,11 @@ func test_fickah_and_locksmirk_keep_a_five_percent_floor() -> void:
 ## inheriting whatever the previous test left behind.
 func _given_karma(total: float) -> void:
 	Renown.from_dict({})
-	# Doctrine 10 makes the write multiplier exactly 1.0, so `total` is the Karma
-	# that lands. Above the 2..5 point-buy range on purpose: this is a test fixing
-	# a multiplier, not a legal character.
+	# Doctrine 5 makes the Karma write multiplier exactly 1.0 (Renown.KARMA_SCALE_DIVISOR),
+	# so `total` is the Karma that lands.
 	var member := PartyMember.new()
 	member.id = GameState.PROTAGONIST_ID
-	member.attributes = {"doctrine": 10, "decorum": 10}
+	member.attributes = {"doctrine": 5, "decorum": 10}
 	var party: Array[PartyMember] = [member]
 	GameState.party = party
 	if not is_zero_approx(total):

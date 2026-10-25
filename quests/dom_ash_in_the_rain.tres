@@ -18,6 +18,7 @@ dialogue_title = "dom_side_ash_in_the_rain"
 decision_prompt = "Decide whether the clean cistern first reopens the hospice table or steadies the lower-market ration."
 resolution_flag = "dom_ash_in_the_rain_resolution"
 outcome_ids = PackedStringArray("hospice-first", "market-first")
+outcome_karma_bases = PackedFloat32Array(5.0, 0.0)
 outcome_labels = PackedStringArray("Reserve the clean water for the hospice and its charfire table.", "Send the clean reserve through the lower-market ration line.")
 outcome_faction_ids = PackedStringArray("hospice-chain", "grain-factors-table")
 outcome_reputation_deltas = PackedFloat32Array(6.0, 6.0)

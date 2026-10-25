@@ -18,6 +18,7 @@ dialogue_title = "dom_side_dishonest_casks"
 decision_prompt = "Decide whether to seal the water immediately or keep the forges sounding under Concord watch."
 resolution_flag = "dom_dishonest_casks_resolution"
 outcome_ids = PackedStringArray("halt-the-water", "keep-the-roar")
+outcome_karma_bases = PackedFloat32Array(5.0, 0.0)
 outcome_labels = PackedStringArray("Seal the suspect casks until clean water arrives.", "Keep the forges sounding under a guarded water rotation.")
 outcome_faction_ids = PackedStringArray("trial-council", "shattersteel-concord")
 outcome_reputation_deltas = PackedFloat32Array(6.0, 6.0)

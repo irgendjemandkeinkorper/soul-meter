@@ -18,6 +18,7 @@ dialogue_title = "dom_side_smoothed_weights"
 decision_prompt = "Decide whether to void the altered trials or preserve the candidates' ranks and repeat the Pillar publicly."
 resolution_flag = "dom_smoothed_weights_resolution"
 outcome_ids = PackedStringArray("void-the-trials", "repeat-with-ranks-held")
+outcome_karma_bases = PackedFloat32Array(10.0, 0.0)
 outcome_labels = PackedStringArray("Void every trial touched by the altered weights.", "Preserve the ranks but repeat the Pillar in public with honest weights.")
 outcome_faction_ids = PackedStringArray("trial-council", "trial-council")
 outcome_reputation_deltas = PackedFloat32Array(6.0, -4.0)

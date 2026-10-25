@@ -34,6 +34,10 @@ const ACT_OF_AGREEMENT_TAG := "act_of_agreement"
 ## Optional parallel reward metadata. Empty arrays preserve every existing resource.
 @export var outcome_tags: Array[PackedStringArray] = []
 @export var outcome_soul_deltas: PackedFloat32Array = []
+## Karma base per outcome (owner item 21, `docs/karma-acts-draft.md` §2). Optional: empty means
+## every outcome is 0, which writes nothing. When present it has one finite entry per outcome
+## inside the Chapter 1 scale of ±20.
+@export var outcome_karma_bases: PackedFloat32Array = []
 
 
 func outcome_count() -> int:
@@ -75,6 +79,7 @@ func outcome_for(outcome_id: String) -> Dictionary:
 		"readback": outcome_readbacks[index],
 		"tags": outcome_tags[index].duplicate() if not outcome_tags.is_empty() else PackedStringArray(),
 		"soul_delta": outcome_soul_deltas[index] if not outcome_soul_deltas.is_empty() else 0.0,
+		"karma_base": outcome_karma_bases[index] if not outcome_karma_bases.is_empty() else 0.0,
 	}
 
 
@@ -88,7 +93,22 @@ func has_complete_outcome_schema() -> bool:
 		and outcome_causes.size() == count
 		and outcome_readbacks.size() == count
 		and has_valid_reward_schema()
+		and has_valid_karma_schema()
 	)
+
+
+const KARMA_BASE_LIMIT := 20.0
+
+
+func has_valid_karma_schema() -> bool:
+	if outcome_karma_bases.is_empty():
+		return true
+	if outcome_karma_bases.size() != outcome_count():
+		return false
+	for base: float in outcome_karma_bases:
+		if not is_finite(base) or absf(base) > KARMA_BASE_LIMIT:
+			return false
+	return true
 
 
 func has_valid_reward_schema() -> bool:

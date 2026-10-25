@@ -1,11 +1,17 @@
-# Karma act table — draft for review (owner item 1, `karma acts: yes`)
+# Karma act table (owner item 1, `karma acts: yes`)
 
-**Status: review only. Nothing here is wired.** The owner ruled option B on 2026-10-22 (tier gates on
-existing surfaces) and asked for this table. `Renown.gain_karma(actor, base, cause, scene)` exists and
-applies `base × Doctrine / 10` (`Renown.ATTRIBUTE_SCALE_DIVISOR`), but **no game code calls it**: Karma
-is a shipped ledger with no writers, so every Karma gate authored today is unreachable content. This
-table proposes a base per act for every ledger write Chapter 1 already makes with a moral reading, so
-the writers can be added in one pass after approval.
+**Status: approved and wired.** Owner item 21 approved the table and a theft cap of 25 on 2026-10-24;
+on 2026-10-25 the owner ruled the Doctrine scale, turned the perk Karma gates on, and approved three
+provisional Dom Karma routes. Writers: `globals/karma_acts.gd` (`KarmaActs.record`, `record_theft`),
+the rulings dictionaries in `globals/quest_registry.gd`, `outcome_karma_bases` on `quests/dom_*.tres`,
+and inline `Renown.gain_karma` lines in `dialogue/iris_illepah.dialogue` and
+`dialogue/marshal_coiljaw.dialogue`.
+
+**Scale ruling (2026-10-25): Doctrine 5 = 1.0×.** Karma lands as `base × Doctrine / 5`
+(`Renown.KARMA_SCALE_DIVISOR = DramgidSchema.ATTRIBUTE_CAP`). Doctrine runs 2–5, so a thorough virtuous
+run (+110 base) lands between +44 (Doctrine 2, Uncertain) and +110 (Doctrine 5, Upright); Upright is
+reachable from Doctrine 3. Fame's Decorum shift keeps the old /10 divisor. §1's "Doctrine 10" sums below
+predate the ruling; read them as Doctrine 5.
 
 Sources: RFC-0007 §4 (`dramgid-mono/00-governance/rfcs/imports/ledger/RFC-0007-yothmeru-reputation.md`,
 whose OQ-0032 calls its own values placeholders), `docs/yothmeru-world-effects-packet.md` §4.4, and the
@@ -90,10 +96,10 @@ populated area (−10), bank Harmony (+25) / harvest Aftertones (−10). None of
 in Chapter 1. They stay in the RFC as the scale's anchors; the first content that authors one takes the
 RFC base unless this table says otherwise.
 
-## 3. How it would be wired (after approval; Codex, one PR)
+## 3. How it was wired
 
 1. **Data, not code, where the act already lives in data.** `quests/*.tres` gain
-   `outcome_karma_deltas: PackedFloat32Array` beside `outcome_reputation_deltas`; the rulings dictionaries
+   `outcome_karma_bases: PackedFloat32Array` beside `outcome_reputation_deltas`; the rulings dictionaries
    (`BROKEN_MUSTER_RULINGS`, `ACT_ONE_HOOK_RULINGS`, `FIELD_DEBT_REWARDS`) gain a `"karma": base` key;
    `QuestRegistry` calls `Renown.gain_karma("player", base, cause, scene)` in the same place it records
    reputation, with the outcome's existing cause string. Dialogue-only acts (Iris, theft) call it inline.
@@ -109,7 +115,7 @@ RFC base unless this table says otherwise.
 
 ## 4. What this draft does not decide
 
-- The Doctrine divisor (10.0, `ATTRIBUTE_SCALE_DIVISOR`) and the decay rule — shipped, DRAMGID §6 freeze.
+- The decay rule — shipped, DRAMGID §6 freeze. (The Doctrine divisor was ruled 2026-10-25; see the status.)
 - Whether Fame should scale by Decorum (packet §4.1, owner item 20).
 - Any base above ±20 — nothing in Chapter 1 earns one, and the RFC owns the anchors.
 

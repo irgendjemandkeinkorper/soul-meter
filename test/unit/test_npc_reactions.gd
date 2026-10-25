@@ -502,3 +502,36 @@ func test_dom_fame_routes_open_at_their_tier_and_not_below() -> void:
 		"dom_edda_broadmark_warm"
 	)
 	Renown.from_dict(renown_before)
+
+
+func test_dom_karma_routes_open_at_their_tier() -> void:
+	# Owner, 2026-10-25: Karma has writers, so the Karma routes ship. Troubled
+	# outranks Fame for Gerren and Orrik; Holst's Upright line sits behind his band route.
+	var renown_before := Renown.to_dict()
+	Renown.from_dict({})
+	Renown.gain_reputation("player", Renown.FAME_TIER_FLOORS[1], "test", "test")
+	assert_str(str(NpcReactions.resolve("gerren-pike").get("dialogue_title", ""))).is_equal(
+		"dom_gerren_pike_whispered"
+	)
+	assert_bool(NpcReactions.resolve("holst-brinevein").is_empty()).is_true()
+
+	Renown.gain_karma("player", -200.0, "test", "test")
+	assert_str(Renown.karma_tier()).is_equal("Troubled")
+	assert_str(str(NpcReactions.resolve("gerren-pike").get("dialogue_title", ""))).is_equal(
+		"dom_gerren_pike_troubled"
+	)
+	assert_str(str(NpcReactions.resolve("orrik-cinderjaw").get("dialogue_title", ""))).is_equal(
+		"dom_orrik_cinderjaw_troubled"
+	)
+
+	Renown.from_dict({})
+	Renown.gain_karma("player", 200.0, "test", "test")
+	assert_str(Renown.karma_tier()).is_equal("Upright")
+	assert_str(str(NpcReactions.resolve("holst-brinevein").get("dialogue_title", ""))).is_equal(
+		"dom_holst_brinevein_upright"
+	)
+	Reputation.record("player", "wayfare-menders", Reputation.BAND_WARM, "test", "test")
+	assert_str(str(NpcReactions.resolve("holst-brinevein").get("dialogue_title", ""))).is_equal(
+		"dom_holst_brinevein_warm"
+	)
+	Renown.from_dict(renown_before)

@@ -67,6 +67,11 @@ const FAME_TIER_FLOORS: PackedFloat64Array = [0.0, 50.0, 200.0, 450.0, 750.0]
 ## every multiplier 0.2×..0.5×. Implemented as the RFC writes it rather than
 ## silently rescaled — see owner ruling 9.
 const ATTRIBUTE_SCALE_DIVISOR := 10.0
+## Owner ruling 2026-10-25 (Karma wiring, `docs/karma-acts-draft.md`): Karma alone is rescaled so
+## the top of DRAMGID's point-buy reads as the RFC's 1.0x. Doctrine 5 = 1.0x, Doctrine 2 = 0.4x.
+## At /10 a perfect virtuous Chapter 1 run reached Upright only at Doctrine 5. Fame's recorded
+## Decorum shift keeps ATTRIBUTE_SCALE_DIVISOR (Fame itself is raw, owner item 20).
+const KARMA_SCALE_DIVISOR := float(DramgidSchema.ATTRIBUTE_CAP)
 
 ## PROVISIONAL magnitude, live mechanism. RFC-0007 §5: only the extreme tiers
 ## decay, by "a fixed percentage of the excess, per week", asymptotically, never
@@ -124,7 +129,7 @@ func gain_infamy(
 
 ## Yothmeru's signed axis. Unlike the two meters above, the RFC's multiplier is
 ## live here: `base` is what the author wrote and the Karma total moves by
-## `base × Doctrine / ATTRIBUTE_SCALE_DIVISOR`, read off the protagonist at
+## `base × Doctrine / KARMA_SCALE_DIVISOR`, read off the protagonist at
 ## write time. Both figures are recorded on the event.
 func gain_karma(actor: String, base: float, cause: String, scene: String = "") -> RenownEvent:
 	return _record(actor, &"karma", base, cause, scene, 1.0)
@@ -234,7 +239,10 @@ func _record(
 	e.witness_factor = witness_factor
 	# Karma is the one axis whose multiplier is live — see the header for why the
 	# other two record their scaled figure instead of applying it.
-	e.applied = base * _attribute_scale(DramgidSchema.ATTR_DOCTRINE) if kind == &"karma" else base
+	e.applied = (
+		base * _attribute_scale(DramgidSchema.ATTR_DOCTRINE, KARMA_SCALE_DIVISOR)
+		if kind == &"karma" else base
+	)
 	e.delta = e.applied
 	e.fame_shift = (
 		absf(base) * witness_factor * _attribute_scale(DramgidSchema.ATTR_DECORUM)
@@ -304,7 +312,9 @@ func _tier_index(score: float, floors: PackedFloat64Array) -> int:
 ## A missing protagonist (a bare test harness, or a write before New Game) scales
 ## by 1.0 rather than zeroing the act — an unrecorded consequence is worse than
 ## an unscaled one.
-func _attribute_scale(attribute_id: StringName) -> float:
+func _attribute_scale(
+	attribute_id: StringName, divisor: float = ATTRIBUTE_SCALE_DIVISOR
+) -> float:
 	var state: Node = get_node_or_null(^"/root/GameState")
 	if state == null or not state.has_method("protagonist"):
 		return 1.0
@@ -316,7 +326,7 @@ func _attribute_scale(attribute_id: StringName) -> float:
 	# which would freeze Karma at zero rather than scale it. Owner ruling 5 sets
 	# migrated characters to the floor, so read the floor for them too.
 	var value := maxi(member.attribute_value(attribute_id), DramgidSchema.ATTRIBUTE_FLOOR)
-	return float(value) / ATTRIBUTE_SCALE_DIVISOR
+	return float(value) / divisor
 
 
 # --- extreme-tier decay (RFC-0007 §5) ---------------------------------------
