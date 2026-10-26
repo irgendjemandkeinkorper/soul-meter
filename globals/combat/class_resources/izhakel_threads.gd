@@ -8,6 +8,8 @@ const MAX_THREADS := 3  # PROVISIONAL — B11 owns the cap
 const KIND_HOSTILITY := &"hostility"
 const KIND_WITNESS := &"witness"
 const KIND_DAYLIGHT := &"daylight"
+## The Unspoken Term (#285 slice 4, ruled 2026-10-26): a Hostility contract keyed on a CAST.
+const KIND_HOSTILITY_CAST := &"hostility_cast"
 
 var threads: Array[Dictionary] = []
 
@@ -18,19 +20,27 @@ func max_threads() -> int:
 
 
 func commands() -> Array[StringName]:
-	return [&"bind_hostility", &"bind_witness"]
+	return [&"bind_hostility", &"bind_witness", &"bind_cast", &"cash_in"]
 
 
 func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
 	var gate := super.query_command(action_id, target_id, payload)
 	if not bool(gate.allowed):
 		return gate
+	if action_id in [&"bind_cast", &"cash_in"]:
+		var missing := perk_refusal("unspoken_term", "The Unspoken Term")
+		if not missing.is_empty():
+			return missing
+	if action_id == &"cash_in":
+		if target_id.is_empty() or _first_cashable(target_id) < 0:
+			return command_refusal(&"no_contract", "That enemy carries no Hostility contract to cash in.")
+		return gate
 	if threads.size() >= max_threads():
 		return command_refusal(&"class_resource_full", "All Threads are bound. Wait for a contract to trigger.")
 	if target_id.is_empty() or host == null:
 		return command_refusal(&"no_target", "Touch a living enemy to bind the contract.")
 	var kind := _kind_of_command(action_id)
-	if kind == KIND_HOSTILITY and (not payload.get("amount") is int or int(payload.amount) <= 0):
+	if kind in [KIND_HOSTILITY, KIND_HOSTILITY_CAST] and (not payload.get("amount") is int or int(payload.amount) <= 0):
 		return command_refusal(&"class_resource_payload", "The contract needs a positive payoff.")
 	# Doubled Knot (#285 slice 3): the same contract may sit on one enemy twice.
 	if contract_count(target_id, kind) >= maxi(perk_total("contract_twice"), 1):
@@ -41,10 +51,17 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 func execute_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> void:
 	if not bool(query_command(action_id, target_id, payload).allowed):
 		return
+	if action_id == &"cash_in":
+		cash_in(target_id)
+		return
 	# Known Contract (#285 slice 3): the bound enemy has heard what the thread costs.
 	if perk_total("delay_on_bind") > 0 and host != null:
 		host.delay_actor(target_id, perk_total("delay_on_bind"))
 	match _kind_of_command(action_id):
+		KIND_HOSTILITY_CAST:
+			bind_thread(target_id, {"verb": CombatAction.Verb.CAST}, {
+				"writes": [{"kind": "hp", "target_id": String(target_id), "amount": int(payload.amount)}],
+			}, KIND_HOSTILITY_CAST)
 		KIND_HOSTILITY:
 			bind_thread(target_id, {"verb": CombatAction.Verb.ATTACK}, {
 				"writes": [{"kind": "hp", "target_id": String(target_id), "amount": int(payload.amount)}],
@@ -124,7 +141,33 @@ func release_witness(target_id: StringName) -> Array[Dictionary]:
 
 
 static func _kind_of_command(action_id: StringName) -> StringName:
-	return KIND_WITNESS if action_id == &"bind_witness" else KIND_HOSTILITY
+	match action_id:
+		&"bind_witness":
+			return KIND_WITNESS
+		&"bind_cast":
+			return KIND_HOSTILITY_CAST
+	return KIND_HOSTILITY
+
+
+## The Unspoken Term: fire one bound Hostility contract's payoff now and free its slot.
+func cash_in(target_id: StringName) -> bool:
+	var index := _first_cashable(target_id)
+	if index < 0:
+		return false
+	var queued: Dictionary = enqueue_deferred(threads[index].get("payoff", {}), {"delay_rounds": 0}, &"thread")
+	if not bool(queued.get("allowed", false)):
+		return false
+	threads.remove_at(index)
+	return true
+
+
+func _first_cashable(target_id: StringName) -> int:
+	for index in threads.size():
+		var thread: Dictionary = threads[index]
+		if str(thread.get("target_id", "")) == String(target_id) and not bool(thread.get("triggered", false)) \
+				and str(thread.get("kind", KIND_HOSTILITY)) in [String(KIND_HOSTILITY), String(KIND_HOSTILITY_CAST)]:
+			return index
+	return -1
 
 
 func on_any_action(

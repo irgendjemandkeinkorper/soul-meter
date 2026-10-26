@@ -370,8 +370,9 @@ func test_a_gated_capstone_is_shown_disabled_with_its_refusal() -> void:
 	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
 	await runner.simulate_frames(2)
 
+	# Reflection is wired since #285 slice 4, so it no longer reads "(planned)".
 	assert_str((runner.find_child("Picked_mirrorblade-reflection", true, false) as Label).text).is_equal(
-		"Lv 4  Reflection  (planned)"
+		"Lv 4  Reflection"
 	)
 	var gated := runner.find_child("Perk_mirrorblade-known-edge", true, false) as Button
 	var open := runner.find_child("Perk_mirrorblade-even-hand", true, false) as Button

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"reflection"
+display_name = "Reflection"
+kind = 5
+verb = 3
+ap_cost = 1
+ct_cost = 1
+target_profile = &"self"
+player_available = true
+class_resource_action = &"reflection"
+description = "Raise Reflection. The next enemy attack against you this battle deals half to you and half back to the attacker. Needs the Reflection perk."
+## PROVISIONAL (#285 slice 4): costs follow Spend Scars.

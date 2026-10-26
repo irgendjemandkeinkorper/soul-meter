@@ -16,6 +16,55 @@ var footing_spent: bool = false
 var even_hand_spent: bool = false
 ## Known Edge (#285 slice 3): spent once an enemy has acted against the Mirrorblade.
 var known_edge_spent: bool = false
+## Reflection (#285 slice 4, ruled 2026-10-26): armed by the command, spent by the next enemy
+## attack against her. Once per battle.
+var reflection_armed: bool = false
+var reflection_used: bool = false
+
+
+func commands() -> Array[StringName]:
+	return [&"reflection"]
+
+
+func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
+	var gate := super.query_command(action_id, target_id, payload)
+	if not bool(gate.allowed):
+		return gate
+	var missing := perk_refusal("reflect_next_attack", "Reflection")
+	if not missing.is_empty():
+		return missing
+	if reflection_armed:
+		return command_refusal(&"class_resource_armed", "Reflection is already raised.")
+	if reflection_used:
+		return command_refusal(&"class_resource_spent", "Reflection is spent for this battle.")
+	return gate
+
+
+func on_command(action_id: StringName, _target_id: StringName) -> void:
+	if action_id == &"reflection" and perk_total("reflect_next_attack") > 0 and not reflection_used:
+		reflection_armed = true
+
+
+## The armed Reflection keeps `100 - reflect_next_attack` percent of an enemy's hit and sends
+## the rest back to the attacker (a deferred write, through the controller's one write path).
+func adjust_incoming_hp(actor_id: StringName, target_id: StringName, before: int, after: int) -> int:
+	if not reflection_armed or target_id != owner_id or host == null:
+		return after
+	var attacker := host.actor_by_id(actor_id)
+	if attacker == null or not host.enemies.has(attacker):
+		return after
+	var loss := before - after
+	var reflected := loss * perk_total("reflect_next_attack") / 100
+	reflection_armed = false
+	reflection_used = true
+	if reflected <= 0:
+		return after
+	enqueue_deferred(
+		{"writes": [{"kind": "hp", "target_id": String(actor_id), "amount": reflected}]},
+		{"delay_rounds": 0},
+		&"reflection",
+	)
+	return after + reflected
 
 
 func on_action(event: CombatEvent) -> void:
@@ -102,6 +151,8 @@ func to_dict() -> Dictionary:
 	data["footing_spent"] = footing_spent
 	data["even_hand_spent"] = even_hand_spent
 	data["known_edge_spent"] = known_edge_spent
+	data["reflection_armed"] = reflection_armed
+	data["reflection_used"] = reflection_used
 	return data
 
 
@@ -113,3 +164,5 @@ func from_dict(data: Dictionary) -> void:
 	footing_spent = bool(data.get("footing_spent", false))
 	even_hand_spent = bool(data.get("even_hand_spent", false))
 	known_edge_spent = bool(data.get("known_edge_spent", false))
+	reflection_armed = bool(data.get("reflection_armed", false))
+	reflection_used = bool(data.get("reflection_used", false))

@@ -10,8 +10,9 @@ offers each pick at levels 2 / 4 / 6. Karma gates are enforced since the Karma a
 and the canon blurbs carry them, with Longer Ledger and Named Storm reworded per §6 flags B and C.
 **Slice 2 landed (#285 PR 2): all ten level-2 resource perks work** (§7). Canon carries flat
 `effect_op` / `effect_value` fields (not the nested `effect` object sketched in §3); the seed refuses an op
-outside `PerkCatalog.EFFECT_OPS`. **Slice 3 landed (#285 PR 3): 17 of the 20 capstones work** (§8). Still
-"(planned)": the eight new signatures and three capstones (Kept Focus, Carried Lesson, Read Aloud). Jam the
+outside `PerkCatalog.EFFECT_OPS`. **Slice 3 landed (#285 PR 3): 17 of the 20 capstones work** (§8). **Slice 4
+landed (#285 PR 4): seven signatures plus Kept Focus and Carried Lesson work** (§9). Still "(planned)":
+**Sacred Clarity** and **Read Aloud**, which wait on an enemy-intents slice (owner, 2026-10-26). Jam the
 Gears and Nothing Wasted shipped as class features.
 
 The text below is the approved draft as reviewed.
@@ -288,3 +289,46 @@ entries after replacing the queue, so a resource may queue a follow-up from `on_
 
 Left for slice 4 with the signatures: **Kept Focus** and **Carried Lesson** (state that crosses battles,
 stored on the `PartyMember`) and **Read Aloud** (a party-wide forecast reveal in the HUD).
+
+## 9. Slice 4: the signatures (wired 2026-10-26)
+
+Owner rulings 2026-10-26, all as recommended:
+
+- **Reflection:** a command raises it; the next *enemy attack* against her this battle deals half to her
+  and half back to the attacker. Once per battle. Enemies never cast, so "spell" became "attack".
+- **Last Washing:** automatic. A recorded ally who would fall is left at 1 HP; their name is struck from
+  the Ledger, pays no Breath, and cannot be recorded again this battle. There is no downed prompt to
+  spend an entry from.
+- **Debt of Arms:** a command pays 6 HP (never below 1; the loss banks a Scar) and the chosen ally's, or
+  her own, next attack deals 6 more damage.
+- **Second Casting:** automatic. With two tokens banked, the first fizzle each battle becomes a success
+  and spends both; that fizzle banks none. Deterministic, so forecast equals commit.
+- **Tuned Thunder:** Attribution's highest row is the storm's critical. It draws again from a derived
+  key and adds that row's bonus too.
+- **Sequenced Verdict:** 18 damage three rounds after filing, once per battle. It takes a Ledger slot
+  and a Jam can still cancel it.
+- **The Unspoken Term:** a second contract condition (the target's next CAST) and a Cash In command
+  that fires one Hostility contract's payoff now and frees the slot. **Known gap:** enemies never cast
+  in Chapter 1, so a cast contract cannot trigger until they do; Cash In still pays it out.
+- **Sacred Clarity** and **Read Aloud:** deferred to an enemy-intents slice (no telegraph or intent
+  preview exists to build them on).
+
+| perk | op | how |
+|---|---|---|
+| Reflection | `reflect_next_attack` 50 | command `reflection`; `adjust_incoming_hp` keeps 50%, defers the rest at the attacker |
+| Last Washing | `stabilize_recorded` 1 | `adjust_incoming_hp` on any ally's loss; `struck_actor_ids` refuses a re-record |
+| Debt of Arms | `debt_of_arms` 6 | command `debt_of_arms` (ally or self); deferred HP write on the payer; `bonus_damage` via `on_ally_cast_forecast` |
+| Second Casting | `second_casting` 2 | `on_cast_forecast` offers `second_casting`; Resolution returns `second_cast` |
+| Tuned Thunder | `chain_on_top_row` 1 | `hidden_draw.chain_top`; Resolution adds a `\|thunder` draw, records `chained_row_id` |
+| Sequenced Verdict | `sequenced_verdict` 1 | command `sequenced_verdict`, payload 18 / 3 rounds, `verdict_used` |
+| The Unspoken Term | `unspoken_term` 1 | commands `bind_cast` (kind `hostility_cast`, verb CAST) and `cash_in` |
+| Kept Focus | `carry_one_clarity` 1 | `carry_out()` at battle end; arrives above the cap (`carried_in`) |
+| Carried Lesson | `carry_one_token` 1 | `carry_out()` at battle end; arrives within the token cap |
+
+New seams: `ClassResource.adjust_incoming_hp()` (the target's resource first, then every other resource;
+the write changes in place before HP lands), `on_ally_cast_forecast()` (merged into an ally's forecast
+context after the owner's own channel), `carry_out()` / `receive_carry()` (stored on
+`PartyMember.carried_resource`, spent when the next battle attaches the resource), and `perk_refusal()`
+for a command a perk unlocks. Resolution gained a flat `bonus_damage` term on a landed, unfizzled hit.
+New buttons: `68_reflection`, `69_debt_of_arms`, `70_sequenced_verdict`, `71_cash_in`, `72_bind_cast`
+(costs provisional, copied from the nearest existing command).

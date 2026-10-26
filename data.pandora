@@ -17646,11 +17646,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "carry_one_token"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -17691,7 +17691,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Once per encounter, spend two banked tokens to turn a fizzle into a success after the fact."
+						"value": "Once per battle, with two tokens banked, your first fizzle becomes a success and spends both tokens."
 					},
 					"Class Id": {
 						"type": "string",
@@ -17703,11 +17703,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "second_casting"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 2
 					},
 					"Level": {
 						"type": "int",
@@ -18147,7 +18147,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Trade current HP for a damage or buff spike on yourself or an ally."
+						"value": "Pay 6 HP (never below 1): you or an ally deal 6 more damage with the next attack."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18159,11 +18159,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "debt_of_arms"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 6
 					},
 					"Level": {
 						"type": "int",
@@ -18330,11 +18330,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "carry_one_clarity"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18888,7 +18888,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Once per encounter, redirect an incoming spell effect back at its caster at reduced power."
+						"value": "Once per battle, raise Reflection: the next enemy attack against you deals half to you and half back to the attacker."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18900,11 +18900,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "reflect_next_attack"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 50
 					},
 					"Level": {
 						"type": "int",
@@ -19173,7 +19173,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Bank a powerful delayed verdict that resolves on a fixed future turn."
+						"value": "Once per battle, file a Verdict: 18 damage three rounds later. It takes a Ledger slot and a Jam can still cancel it."
 					},
 					"Class Id": {
 						"type": "string",
@@ -19185,11 +19185,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "sequenced_verdict"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -19230,7 +19230,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "When an ally hits 0 HP, spend a Ledger entry to stabilize them."
+						"value": "A recorded ally who would fall is left at 1 HP instead. Their name is struck from the Ledger and pays no Breath."
 					},
 					"Class Id": {
 						"type": "string",
@@ -19242,11 +19242,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "stabilize_recorded"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -19629,7 +19629,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "An ability critical hit chains into a second, random effect."
+						"value": "When Attribution draws its highest row, the storm draws again and adds that row's bonus."
 					},
 					"Class Id": {
 						"type": "string",
@@ -19641,11 +19641,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "chain_on_top_row"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -19857,7 +19857,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Bind Threads with more conditions and choose when to cash them in."
+						"value": "Bind a contract on an enemy's next cast, and Cash In a Hostility contract to fire its payoff now."
 					},
 					"Class Id": {
 						"type": "string",
@@ -19869,11 +19869,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "unspoken_term"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",

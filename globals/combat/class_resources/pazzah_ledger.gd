@@ -10,6 +10,8 @@ const MAX_ENTRIES := 3  # PROVISIONAL — B11 owns the cap
 
 var entries: Array[Dictionary] = []
 var ready: Array[Dictionary] = []
+## Sequenced Verdict (#285 slice 4, ruled 2026-10-26): one per battle.
+var verdict_used: bool = false
 
 
 ## The live cap: MAX_ENTRIES plus any picked `cap_delta` perk (Longer Docket, #285 slice 2).
@@ -18,13 +20,19 @@ func max_entries() -> int:
 
 
 func commands() -> Array[StringName]:
-	return [&"file_sentence"]
+	return [&"file_sentence", &"sequenced_verdict"]
 
 
 func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
 	var gate := super.query_command(action_id, target_id, payload)
 	if not bool(gate.allowed):
 		return gate
+	if action_id == &"sequenced_verdict":
+		var missing := perk_refusal("sequenced_verdict", "Sequenced Verdict")
+		if not missing.is_empty():
+			return missing
+		if verdict_used:
+			return command_refusal(&"class_resource_spent", "The Verdict is spent for this battle.")
 	if entries.size() >= max_entries():
 		return command_refusal(&"class_resource_full", "The Ledger is full. Wait for a sentence to resolve.")
 	if target_id.is_empty() or host == null:
@@ -37,9 +45,11 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 func execute_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> void:
 	if not bool(query_command(action_id, target_id, payload).allowed):
 		return
-	queue_effect(action_id, int(payload.delay_rounds), {
+	var filed := queue_effect(action_id, int(payload.delay_rounds), {
 		"writes": [{"kind": "hp", "target_id": String(target_id), "amount": int(payload.amount)}],
 	})
+	if filed and action_id == &"sequenced_verdict":
+		verdict_used = true
 
 
 func queue_effect(effect_id: StringName, turns: int, payload: Dictionary = {}) -> bool:
@@ -105,6 +115,7 @@ func to_dict() -> Dictionary:
 	var data: Dictionary = super.to_dict()
 	data["entries"] = entries.duplicate(true)
 	data["ready"] = ready.duplicate(true)
+	data["verdict_used"] = verdict_used
 	return data
 
 
@@ -112,6 +123,7 @@ func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
 	entries.clear()
 	ready.clear()
+	verdict_used = bool(data.get("verdict_used", false))
 	var raw_entries: Variant = data.get("entries", [])
 	if raw_entries is Array:
 		for raw_entry: Variant in raw_entries as Array:

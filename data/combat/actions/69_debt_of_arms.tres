@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"debt-of-arms"
+display_name = "Debt of Arms"
+kind = 5
+verb = 3
+ap_cost = 1
+ct_cost = 1
+target_profile = &"encounter"
+player_available = true
+class_resource_action = &"debt_of_arms"
+class_resource_target = "ally"
+description = "Pay 6 HP (never below 1). You or an ally deal 6 more damage with the next attack. Needs the Debt of Arms perk."
+## PROVISIONAL (#285 slice 4): costs follow Spend Scars; target profile follows Record Name.

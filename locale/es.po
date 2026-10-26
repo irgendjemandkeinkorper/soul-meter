@@ -243,7 +243,8 @@ msgid "PERK_MIRRORBLADE_REFLECTION_NAME"
 msgstr ""
 
 #. perks/mirrorblade-reflection — blurb
-#. English source: Once per encounter, redirect an incoming spell effect back at its caster at reduced power.
+#. English source: Once per battle, raise Reflection: the next enemy attack against you deals half to you and half back to the attacker.
+#, fuzzy
 msgid "PERK_MIRRORBLADE_REFLECTION_BLURB"
 msgstr ""
 
@@ -286,7 +287,8 @@ msgid "PERK_RIVER_MOTHER_LAST_WASHING_NAME"
 msgstr ""
 
 #. perks/river-mother-last-washing — blurb
-#. English source: When an ally hits 0 HP, spend a Ledger entry to stabilize them.
+#. English source: A recorded ally who would fall is left at 1 HP instead. Their name is struck from the Ledger and pays no Breath.
+#, fuzzy
 msgid "PERK_RIVER_MOTHER_LAST_WASHING_BLURB"
 msgstr ""
 
@@ -327,7 +329,8 @@ msgid "PERK_IRONBRAND_DEBT_OF_ARMS_NAME"
 msgstr ""
 
 #. perks/ironbrand-debt-of-arms — blurb
-#. English source: Trade current HP for a damage or buff spike on yourself or an ally.
+#. English source: Pay 6 HP (never below 1): you or an ally deal 6 more damage with the next attack.
+#, fuzzy
 msgid "PERK_IRONBRAND_DEBT_OF_ARMS_BLURB"
 msgstr ""
 
@@ -453,7 +456,8 @@ msgid "PERK_FLAMEBINDER_SECOND_CASTING_NAME"
 msgstr ""
 
 #. perks/flamebinder-second-casting — blurb
-#. English source: Once per encounter, spend two banked tokens to turn a fizzle into a success after the fact.
+#. English source: Once per battle, with two tokens banked, your first fizzle becomes a success and spends both tokens.
+#, fuzzy
 msgid "PERK_FLAMEBINDER_SECOND_CASTING_BLURB"
 msgstr ""
 
@@ -495,7 +499,8 @@ msgid "PERK_STORMBEARER_TUNED_THUNDER_NAME"
 msgstr ""
 
 #. perks/stormbearer-tuned-thunder — blurb
-#. English source: An ability critical hit chains into a second, random effect.
+#. English source: When Attribution draws its highest row, the storm draws again and adds that row's bonus.
+#, fuzzy
 msgid "PERK_STORMBEARER_TUNED_THUNDER_BLURB"
 msgstr ""
 
@@ -537,7 +542,8 @@ msgid "PERK_OATHCLOCK_SEQUENCED_VERDICT_NAME"
 msgstr ""
 
 #. perks/oathclock-sequenced-verdict — blurb
-#. English source: Bank a powerful delayed verdict that resolves on a fixed future turn.
+#. English source: Once per battle, file a Verdict: 18 damage three rounds later. It takes a Ledger slot and a Jam can still cancel it.
+#, fuzzy
 msgid "PERK_OATHCLOCK_SEQUENCED_VERDICT_BLURB"
 msgstr ""
 
@@ -620,7 +626,8 @@ msgid "PERK_THREADWALKER_THE_UNSPOKEN_TERM_NAME"
 msgstr ""
 
 #. perks/threadwalker-the-unspoken-term — blurb
-#. English source: Bind Threads with more conditions and choose when to cash them in.
+#. English source: Bind a contract on an enemy's next cast, and Cash In a Hostility contract to fire its payoff now.
+#, fuzzy
 msgid "PERK_THREADWALKER_THE_UNSPOKEN_TERM_BLURB"
 msgstr ""
 

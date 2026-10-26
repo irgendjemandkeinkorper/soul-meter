@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"cash-in"
+display_name = "Cash In"
+kind = 5
+verb = 3
+ap_cost = 1
+ct_cost = 1
+target_profile = &"ranged"
+player_available = true
+class_resource_action = &"cash_in"
+class_resource_target = "enemy"
+description = "Fire one Hostility contract on this enemy now and free its Thread. Needs The Unspoken Term perk."
+## PROVISIONAL (#285 slice 4): costs follow Spend Scars.

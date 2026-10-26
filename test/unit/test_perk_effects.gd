@@ -74,7 +74,9 @@ func test_wired_perks_are_in_play_and_the_rest_stay_planned() -> void:
 		assert_bool(PerkCatalog.is_in_play(perk_id)).override_failure_message(perk_id).is_true()
 	assert_bool(PerkCatalog.is_in_play("mirrorblade-second-footing")).is_true()
 	assert_bool(PerkCatalog.is_in_play("stormbearer-steadier-hand")).is_true()
-	assert_bool(PerkCatalog.is_in_play("mirrorblade-reflection")).is_false()
+	assert_bool(PerkCatalog.is_in_play("mirrorblade-reflection")).is_true()
+	# Sacred Clarity waits on the enemy-intents slice (ruled 2026-10-26).
+	assert_bool(PerkCatalog.is_in_play("lensbearer-sacred-clarity")).is_false()
 
 
 func test_second_footing_forgives_one_unbalancing_repeat_per_battle() -> void:

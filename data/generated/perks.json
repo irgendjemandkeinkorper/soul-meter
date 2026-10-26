@@ -22,9 +22,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Once per encounter, redirect an incoming spell effect back at its caster at reduced power.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "Once per battle, raise Reflection: the next enemy attack against you deals half to you and half back to the attacker.",
+    "effect_op": "reflect_next_attack",
+    "effect_value": 50,
     "vault_id": ""
   },
   {
@@ -78,9 +78,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "When an ally hits 0 HP, spend a Ledger entry to stabilize them.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "A recorded ally who would fall is left at 1 HP instead. Their name is struck from the Ledger and pays no Breath.",
+    "effect_op": "stabilize_recorded",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -134,9 +134,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Trade current HP for a damage or buff spike on yourself or an ally.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "Pay 6 HP (never below 1): you or an ally deal 6 more damage with the next attack.",
+    "effect_op": "debt_of_arms",
+    "effect_value": 6,
     "vault_id": ""
   },
   {
@@ -205,8 +205,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "One unspent Clarity carries into the next battle.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "carry_one_clarity",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -302,9 +302,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Once per encounter, spend two banked tokens to turn a fizzle into a success after the fact.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "Once per battle, with two tokens banked, your first fizzle becomes a success and spends both tokens.",
+    "effect_op": "second_casting",
+    "effect_value": 2,
     "vault_id": ""
   },
   {
@@ -317,8 +317,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "One banked token survives to the next battle.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "carry_one_token",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -358,9 +358,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "An ability critical hit chains into a second, random effect.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "When Attribution draws its highest row, the storm draws again and adds that row's bonus.",
+    "effect_op": "chain_on_top_row",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -414,9 +414,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Bank a powerful delayed verdict that resolves on a fixed future turn.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "Once per battle, file a Verdict: 18 damage three rounds later. It takes a Ledger slot and a Jam can still cancel it.",
+    "effect_op": "sequenced_verdict",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -526,9 +526,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Bind Threads with more conditions and choose when to cash them in.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "Bind a contract on an enemy's next cast, and Cash In a Hostility contract to fire its payoff now.",
+    "effect_op": "unspoken_term",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
