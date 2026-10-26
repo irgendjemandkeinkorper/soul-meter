@@ -6,10 +6,12 @@ flat gate fields `minimum_fame_tier` / `minimum_karma_tier` / `maximum_karma_tie
 Pandora `Perks` root and emitted to `data/generated/perks.json` with `PERK_*` keys in the POT;
 `PerkCatalog` reads them, `PartyMember.perk_ids` records picks (no save bump), and the character sheet
 offers each pick at levels 2 / 4 / 6. Karma gates are enforced since the Karma acts were wired
-(owner, 2026-10-25; `docs/karma-acts-draft.md`). No perk effect is wired in this slice:
-the sheet marks every pick "(planned)" except Jam the Gears and Nothing Wasted, which already shipped as
-class features. The `[n]` values below were ruled on 2026-10-25 (§6) and the canon blurbs carry them, with
-Longer Ledger and Named Storm reworded per §6 flags B and C. `effect.op` (§3) arrives with the effect slice.
+(owner, 2026-10-25; `docs/karma-acts-draft.md`). The `[n]` values below were ruled on 2026-10-25 (§6)
+and the canon blurbs carry them, with Longer Ledger and Named Storm reworded per §6 flags B and C.
+**Slice 2 landed (#285 PR 2): all ten level-2 resource perks work** (§7). Canon carries flat
+`effect_op` / `effect_value` fields (not the nested `effect` object sketched in §3); the seed refuses an op
+outside `PerkCatalog.EFFECT_OPS`. The sheet still marks the signatures and capstones "(planned)", except
+Jam the Gears and Nothing Wasted, which shipped as class features.
 
 The text below is the approved draft as reviewed.
 
@@ -220,3 +222,26 @@ Answer format:
 24: as proposed                (numbers, plus B and C as recommended)
 24: B alternative | C as written   (per flag, if you differ)
 ```
+
+## 7. Slice 2: the level-2 resource perks (wired 2026-10-26)
+
+The owner ruled the two that were ambiguous on 2026-10-26, both as recommended:
+
+- **Steadier Hand:** once per battle, an Attribution draw that lands the table's lowest row is drawn
+  again automatically (derived seed, so forecast still equals commit). No new UI. Blurb reworded to match.
+- **Second Footing:** once per battle, the repeat that would unbalance is forgiven; the next one
+  unbalances. The old "a third time" did not match the live trigger (`UNBALANCED_AFTER_STREAK` = 2).
+  Blurb reworded to "Once per battle, repeating Strike or Guard does not break Balance."
+
+| perk | op | where it acts |
+|---|---|---|
+| Thick Hide, Patient Hunger, Third Lesson, Longer Docket, Fourth Thread | `cap_delta` 1 | `max_scars()` / `max_hunger()` / `max_tokens()` / `max_entries()` / `max_threads()` |
+| Wider Lens | `cap_delta` 1 | `max_clarity()`; the starting Clarity follows the cap |
+| Longer Ledger | `first_payer_multiplier` 2 | the first Name-Ledger refund each battle |
+| Second Pick | `retry_on_ally_turns` 1 | an armed Jam also retries on `on_ally_turn_start()` |
+| Second Footing | `forgive_streak_once` 1 | `MaiiamBalance.on_action` |
+| Steadier Hand | `redraw_lowest_once` 1 | `hidden_draw.redraw_lowest` → `Resolution` |
+
+Perks reach a resource through `ClassResource.apply_perks()` when the controller attaches it from the
+`PartyMember`. `to_dict()` carries `perk_ids`; a save written before slice 2 reads them off the member on
+restore. Caps are the `MAX_*` constants plus the perk, so B11's constant changes merge without touching this.

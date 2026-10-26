@@ -353,7 +353,8 @@ func test_perks_section_offers_the_pick_and_records_it() -> void:
 	assert_array(Array(vex.perk_ids)).is_equal(["mirrorblade-second-footing"])
 	var picked := runner.find_child("Picked_mirrorblade-second-footing", true, false) as Label
 	assert_object(picked).is_not_null()
-	assert_str(picked.text).is_equal("Lv 2  Second Footing  (planned)")
+	# In play since #285 slice 2, so no "(planned)" marker.
+	assert_str(picked.text).is_equal("Lv 2  Second Footing")
 	assert_object(runner.find_child("PerkChoice", true, false)).is_null()
 	assert_str((runner.find_child("NextPerk", true, false) as Label).text).is_equal("Next pick at level 4.")
 
@@ -369,6 +370,9 @@ func test_a_gated_capstone_is_shown_disabled_with_its_refusal() -> void:
 	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
 	await runner.simulate_frames(2)
 
+	assert_str((runner.find_child("Picked_mirrorblade-reflection", true, false) as Label).text).is_equal(
+		"Lv 4  Reflection  (planned)"
+	)
 	var gated := runner.find_child("Perk_mirrorblade-known-edge", true, false) as Button
 	var open := runner.find_child("Perk_mirrorblade-even-hand", true, false) as Button
 	assert_object(gated).is_not_null()

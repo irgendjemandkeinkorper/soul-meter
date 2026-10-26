@@ -17644,6 +17644,14 @@
 						"type": "string",
 						"value": "Carried Lesson"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -17692,6 +17700,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Second Casting"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -17742,6 +17758,14 @@
 						"type": "string",
 						"value": "Spectacular Failure"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -17790,6 +17814,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Third Lesson"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": "cap_delta"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -17840,6 +17872,14 @@
 						"type": "string",
 						"value": "Feed the Husk"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -17888,6 +17928,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Nothing Wasted"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -17938,6 +17986,14 @@
 						"type": "string",
 						"value": "Patient Hunger"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": "cap_delta"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 1
+					},
 					"Level": {
 						"type": "int",
 						"value": 2
@@ -17986,6 +18042,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Slow Rot"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -18036,6 +18100,14 @@
 						"type": "string",
 						"value": "Debt Collected"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -18084,6 +18156,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Debt of Arms"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -18134,6 +18214,14 @@
 						"type": "string",
 						"value": "First Blood"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -18182,6 +18270,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Thick Hide"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": "cap_delta"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18232,6 +18328,14 @@
 						"type": "string",
 						"value": "Kept Focus"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -18280,6 +18384,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Read Aloud"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -18330,6 +18442,14 @@
 						"type": "string",
 						"value": "Sacred Clarity"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 4
@@ -18378,6 +18498,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Wider Lens"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": "cap_delta"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18428,6 +18556,14 @@
 						"type": "string",
 						"value": "Jam the Gears"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 4
@@ -18476,6 +18612,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Jammed Twice"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -18526,6 +18670,14 @@
 						"type": "string",
 						"value": "Pocketed Gear"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -18574,6 +18726,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Second Pick"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": "retry_on_ally_turns"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18624,6 +18784,14 @@
 						"type": "string",
 						"value": "Even Hand"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -18672,6 +18840,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Known Edge"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -18722,6 +18898,14 @@
 						"type": "string",
 						"value": "Reflection"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 4
@@ -18761,7 +18945,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Once per battle, repeating Strike or Guard a third time does not break Balance."
+						"value": "Once per battle, repeating Strike or Guard does not break Balance."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18770,6 +18954,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Second Footing"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": "forgive_streak_once"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18820,6 +19012,14 @@
 						"type": "string",
 						"value": "Longer Docket"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": "cap_delta"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 1
+					},
 					"Level": {
 						"type": "int",
 						"value": 2
@@ -18868,6 +19068,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Prompt Court"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -18918,6 +19126,14 @@
 						"type": "string",
 						"value": "Public Verdict"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -18966,6 +19182,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Sequenced Verdict"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -19016,6 +19240,14 @@
 						"type": "string",
 						"value": "Last Washing"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 4
@@ -19064,6 +19296,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Longer Ledger"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": "first_payer_multiplier"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 2
 					},
 					"Level": {
 						"type": "int",
@@ -19114,6 +19354,14 @@
 						"type": "string",
 						"value": "Names Carried"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -19162,6 +19410,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Own Name Twice"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -19212,6 +19468,14 @@
 						"type": "string",
 						"value": "Grounded"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -19261,6 +19525,14 @@
 						"type": "string",
 						"value": "Named Storm"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -19300,7 +19572,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Reroll one Attribution result per battle."
+						"value": "Once per battle, an Attribution draw that lands the lowest result is drawn again."
 					},
 					"Class Id": {
 						"type": "string",
@@ -19309,6 +19581,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Steadier Hand"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": "redraw_lowest_once"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -19359,6 +19639,14 @@
 						"type": "string",
 						"value": "Tuned Thunder"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 4
@@ -19407,6 +19695,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "Doubled Knot"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -19457,6 +19753,14 @@
 						"type": "string",
 						"value": "Fourth Thread"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": "cap_delta"
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 1
+					},
 					"Level": {
 						"type": "int",
 						"value": 2
@@ -19506,6 +19810,14 @@
 						"type": "string",
 						"value": "Known Contract"
 					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
+					},
 					"Level": {
 						"type": "int",
 						"value": 6
@@ -19554,6 +19866,14 @@
 					"Display Name": {
 						"type": "string",
 						"value": "The Unspoken Term"
+					},
+					"Effect Op": {
+						"type": "string",
+						"value": ""
+					},
+					"Effect Value": {
+						"type": "int",
+						"value": 0
 					},
 					"Level": {
 						"type": "int",
@@ -21280,12 +21600,26 @@
 				"_id": "567.0",
 				"_name": "Vault Id",
 				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": "",
+				"_id": "608.0",
+				"_name": "Effect Op",
+				"_type": "string"
+			},
+			{
+				"_category_id": "557.0",
+				"_default_value": 0,
+				"_id": "609.0",
+				"_name": "Effect Value",
+				"_type": "int"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 607.0
+			"default": 609.0
 		}
 	},
 	"_version": 1

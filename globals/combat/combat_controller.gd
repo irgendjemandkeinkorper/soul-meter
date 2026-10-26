@@ -1331,6 +1331,9 @@ func _drive_scheduler() -> void:
 			if not is_continuation:
 				_emit_event(&"turn_started", actor, null, turn_payload)
 				_class_resource_of(actor).on_turn_start()
+				for other: BattleActor in allies:
+					if other != actor and other.is_alive():
+						_class_resource_of(other).on_ally_turn_start(actor.combat_id)
 			_last_turn_actor = actor
 			_last_side = &"ally"
 			active_ally_index = allies.find(actor)
@@ -3140,12 +3143,15 @@ func _living(group: Array[BattleActor]) -> Array[BattleActor]:
 
 ## #223 class-resource seam. Attach from the PartyMember's patron; enemies and ad-hoc actors
 ## (no `source_member`) get the Null resource. An actor that already carries a non-null
-## resource (restored from a save, or set by a test) keeps it.
+## resource (restored from a save, or set by a test) keeps it, perks included. A new one takes
+## the member's picked perks (#285 slice 2).
 func _attach_class_resources(group: Array[BattleActor]) -> void:
 	for actor in group:
 		if actor.class_resource == null:
 			var patron: String = actor.source_member.patron if actor.source_member != null else ""
 			actor.class_resource = ClassResourceRegistry.for_patron(patron)
+			if actor.source_member != null:
+				actor.class_resource.apply_perks(actor.source_member.perk_ids)
 		actor.class_resource.owner_id = actor.combat_id
 		actor.class_resource.host = self
 
@@ -3231,10 +3237,10 @@ func _query_effect_gate(actor: BattleActor, action: CombatAction, options: Dicti
 				&"class_resource", "%s files through the Pazzah Ledger." % action.display_name,
 				{"type": &"patron", "patron": &"pazzah"},
 			)
-		if (resource as PazzahLedger).entries.size() >= PazzahLedger.MAX_ENTRIES:
+		if (resource as PazzahLedger).entries.size() >= (resource as PazzahLedger).max_entries():
 			return _blocked(
-				&"ledger_full", "The Ledger holds %d entries; wait for one to fire." % PazzahLedger.MAX_ENTRIES,
-				{"type": &"ledger_capacity", "max": PazzahLedger.MAX_ENTRIES},
+				&"ledger_full", "The Ledger holds %d entries; wait for one to fire." % (resource as PazzahLedger).max_entries(),
+				{"type": &"ledger_capacity", "max": (resource as PazzahLedger).max_entries()},
 			)
 	if payload.has("requires_jam_within"):
 		var window := int(payload.get("requires_jam_within", 1))
@@ -5006,6 +5012,10 @@ func restore_class_resources(data: Dictionary) -> void:
 		var entry: Variant = data.get(String(actor.combat_id), null)
 		if entry is Dictionary:
 			actor.class_resource = ClassResourceRegistry.from_dict(entry)
+			# A save from before #285 slice 2 carries no perks; read them off the member. Set
+			# directly, not through apply_perks(): restored state must not be reset.
+			if not (entry as Dictionary).has("perk_ids") and actor.source_member != null:
+				actor.class_resource.perk_ids = actor.source_member.perk_ids.duplicate()
 			actor.class_resource.owner_id = actor.combat_id
 			actor.class_resource.host = self
 	var queue: Variant = data.get(DEFERRED_SAVE_KEY, {})

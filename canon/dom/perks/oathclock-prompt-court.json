@@ -1,1 +1,1 @@
-{"schema":"weftlumin.perk.v1","id":"oathclock-prompt-court","display_name":"Prompt Court","class_id":"oathclock","level":6,"slot":"capstone","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"Sentences fall due one round sooner.","vault_id":""}
+{"schema":"weftlumin.perk.v1","id":"oathclock-prompt-court","display_name":"Prompt Court","class_id":"oathclock","level":6,"slot":"capstone","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"Sentences fall due one round sooner.","effect_op":"","effect_value":0,"vault_id":""}
