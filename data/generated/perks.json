@@ -36,9 +36,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "The first fizzle each battle does not unbalance you.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "The first fizzle each battle returns you to Balance.",
+    "effect_op": "fizzle_rebalances_once",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -51,8 +51,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "The first enemy to act against the Mirrorblade each battle acts 20 CT late: it has heard of you.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "delay_first_attacker",
+    "effect_value": 20,
     "vault_id": ""
   },
   {
@@ -93,8 +93,8 @@
     "minimum_karma_tier": "Upright",
     "maximum_karma_tier": "",
     "blurb": "When a recorded ally falls, the Breath refund reaches every recorded ally, not only the River-Mother.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "refund_reaches_all_recorded",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -107,8 +107,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "Your own name may be recorded twice per battle, and pays twice.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "own_name_twice",
+    "effect_value": 2,
     "vault_id": ""
   },
   {
@@ -149,8 +149,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "Troubled",
     "blurb": "A Scar spent on an attack that downs its target is returned.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "refund_scar_on_down",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -163,8 +163,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "The first Scar each battle is banked when combat starts, before any damage.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "bank_scar_at_start",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -261,8 +261,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "Troubled",
     "blurb": "A Hunger tick that kills refunds 1 Hunger.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "hunger_on_dot_kill",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -274,9 +274,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "A Hunger tick survives one round after its target is cured or jammed.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "A Hunger tick that is Jammed still lands one round later.",
+    "effect_op": "linger_after_cancel",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -330,9 +330,9 @@
     "minimum_fame_tier": "Whispered",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "A fizzle in a populated zone banks two tokens: somebody saw it.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "A fizzle with an ally within 2 tiles banks two tokens: somebody saw it.",
+    "effect_op": "witnessed_fizzle_bonus",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -373,8 +373,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "The lowest Attribution result is read as the next one up.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "floor_lowest_draw",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -387,8 +387,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "Attribution draws twice and keeps the higher result.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "draw_twice_keep_higher",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -429,8 +429,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "Sentences fall due one round sooner.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "sentence_sooner",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -443,8 +443,8 @@
     "minimum_karma_tier": "Upright",
     "maximum_karma_tier": "",
     "blurb": "A Sentence filed while an ally is adjacent cannot be Jammed.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "unjammable_with_ally_adjacent",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -485,8 +485,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "A Jam that finds nothing pending also delays the target's next action by 20 CT.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "delay_on_armed_jam",
+    "effect_value": 20,
     "vault_id": ""
   },
   {
@@ -498,9 +498,9 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "Troubled",
-    "blurb": "A Jam that cancels something refunds its Soul.",
-    "effect_op": "",
-    "effect_value": 0,
+    "blurb": "A Jam that cancels something makes your next Jam this battle free.",
+    "effect_op": "free_jam_after_cancel",
+    "effect_value": 1,
     "vault_id": ""
   },
   {
@@ -541,8 +541,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "A contract may be placed twice on the same enemy.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "contract_twice",
+    "effect_value": 2,
     "vault_id": ""
   },
   {
@@ -555,8 +555,8 @@
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
     "blurb": "A bound enemy's first attack after binding is delayed 20 CT: it has heard what the thread costs.",
-    "effect_op": "",
-    "effect_value": 0,
+    "effect_op": "delay_on_bind",
+    "effect_value": 20,
     "vault_id": ""
   }
 ]

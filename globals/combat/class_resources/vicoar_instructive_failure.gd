@@ -13,10 +13,18 @@ func max_tokens() -> int:
 	return MAX_TOKENS + perk_total("cap_delta")
 
 
+## Spectacular Failure (#285 slice 3, ruled 2026-10-26): with a living ally within 2 cells,
+## somebody saw it, and the fizzle banks one more token.
+const WITNESS_RADIUS := 2
+
+
 func on_fizzle(_resolution: Dictionary) -> void:
 	if guaranteed_cast_armed:
 		return
-	tokens = mini(tokens + 1, max_tokens())
+	var banked := 1
+	if perk_total("witnessed_fizzle_bonus") > 0 and host != null and host.allies_within(owner_id, WITNESS_RADIUS) > 0:
+		banked += perk_total("witnessed_fizzle_bonus")
+	tokens = mini(tokens + banked, max_tokens())
 
 
 func spend_token() -> bool:

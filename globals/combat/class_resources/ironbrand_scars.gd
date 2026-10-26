@@ -23,6 +23,12 @@ func max_scars() -> int:
 	return MAX_SCARS + perk_total("cap_delta")
 
 
+## First Blood (#285 slice 3): the first Scar each battle is banked when combat starts.
+func _on_perks_applied() -> void:
+	if perk_total("bank_scar_at_start") > 0:
+		scars = mini(maxi(scars, perk_total("bank_scar_at_start")), max_scars())
+
+
 func on_damage_taken(amount: int, _source_id: StringName) -> void:
 	if amount <= 0:
 		return
@@ -75,8 +81,23 @@ func on_action(event: CombatEvent) -> void:
 	if not guaranteed_hit_armed:
 		return
 	var data: Dictionary = event.data
-	if data.has("resolution") and not (data.get("resolution", {}) as Dictionary).is_empty():
+	var resolution: Dictionary = data.get("resolution", {}) as Dictionary
+	if not resolution.is_empty():
 		guaranteed_hit_armed = false
+		# Debt Collected (#285 slice 3): the Scar comes back when the guaranteed hit downs its target.
+		if perk_total("refund_scar_on_down") > 0 and _downed(resolution, String(event.target_id)):
+			scars = mini(scars + perk_total("refund_scar_on_down"), max_scars())
+
+
+static func _downed(resolution: Dictionary, target_id: String) -> bool:
+	if target_id.is_empty():
+		return false
+	for raw: Variant in resolution.get("writes", []):
+		if raw is Dictionary and str((raw as Dictionary).get("kind", "")) == "hp" \
+				and str((raw as Dictionary).get("target_id", "")) == target_id \
+				and int((raw as Dictionary).get("after", 1)) <= 0:
+			return true
+	return false
 
 
 func snapshot() -> Dictionary:

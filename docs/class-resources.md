@@ -226,3 +226,5 @@ the resource from the `PartyMember`. Read them only through `perk_total(op)`; th
 (`PerkCatalog.EFFECT_OPS`, `docs/perks-draft-285.md` §7). Override `_on_perks_applied()` for state that
 follows a perk at battle start (Stuid's starting Clarity), and `on_ally_turn_start()` for a hook on other
 allies' turns. Keep the `MAX_*` constants as the base; expose the live cap as a `max_*()` method.
+Slice 3 adds `waives_soul_cost(action_id)` (skip a class command's Soul spend; never raise the Gauge) and two
+controller services: `host.delay_actor(id, ct)` (charge time only) and `host.allies_within(id, radius)`.

@@ -26,9 +26,20 @@ const IN_PLAY: Dictionary = {
 ##   retry_on_ally_turns    — an armed Jam also retries when an ally's turn starts
 ##   forgive_streak_once    — once per battle, the repeat that would unbalance does not
 ##   redraw_lowest_once     — once per battle, a hidden draw landing the lowest row draws again
+## Capstones (#285 slice 3; CT values are a delay, Breath/Hunger/Scar values a count):
+##   bank_scar_at_start, refund_scar_on_down, hunger_on_dot_kill, linger_after_cancel,
+##   floor_lowest_draw, draw_twice_keep_higher, sentence_sooner, unjammable_with_ally_adjacent,
+##   own_name_twice (recordings), refund_reaches_all_recorded, contract_twice (per enemy),
+##   delay_on_bind, delay_first_attacker, delay_on_armed_jam (CT), fizzle_rebalances_once,
+##   free_jam_after_cancel, witnessed_fizzle_bonus (extra tokens)
 const EFFECT_OPS: PackedStringArray = [
 	"", "cap_delta", "first_payer_multiplier", "retry_on_ally_turns",
 	"forgive_streak_once", "redraw_lowest_once",
+	"bank_scar_at_start", "refund_scar_on_down", "hunger_on_dot_kill", "linger_after_cancel",
+	"floor_lowest_draw", "draw_twice_keep_higher", "sentence_sooner",
+	"unjammable_with_ally_adjacent", "own_name_twice", "refund_reaches_all_recorded",
+	"contract_twice", "delay_on_bind", "delay_first_attacker", "delay_on_armed_jam",
+	"fizzle_rebalances_once", "free_jam_after_cancel", "witnessed_fizzle_bonus",
 ]
 
 static var _rows: Array[Dictionary] = []

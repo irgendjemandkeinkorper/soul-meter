@@ -320,6 +320,17 @@ static func resolve(context: Dictionary) -> Dictionary:
 				context, ability_id, unit, target, str(hidden_draw.get("seed_key", ""))
 			)
 			var row := _dictionary(rows[(draw_roll - 1) % rows.size()])
+			# Named Storm (#285 slice 3): a second draw from a derived key; the higher row stands.
+			var storm_row_id := ""
+			if bool(hidden_draw.get("draw_twice_keep_higher", false)):
+				var storm_roll := _deterministic_draw_roll(
+					context, ability_id, unit, target, str(hidden_draw.get("seed_key", "")) + "|storm"
+				)
+				var storm_row := _dictionary(rows[(storm_roll - 1) % rows.size()])
+				storm_row_id = str(storm_row.get("id", ""))
+				if int(storm_row.get("bonus_damage", 0)) > int(row.get("bonus_damage", 0)):
+					row = storm_row
+					draw_roll = storm_roll
 			# Steadier Hand (#285 slice 2): a lowest-row result draws once more from a derived
 			# key, still deterministic, so forecast and commit agree. The second draw stands.
 			var first_row_id := ""
@@ -329,6 +340,13 @@ static func resolve(context: Dictionary) -> Dictionary:
 					context, ability_id, unit, target, str(hidden_draw.get("seed_key", "")) + "|redraw"
 				)
 				row = _dictionary(rows[(draw_roll - 1) % rows.size()])
+			# Grounded (#285 slice 3): a lowest row reads as the next one up.
+			var grounded_from := ""
+			if bool(hidden_draw.get("floor_lowest", false)) and _is_lowest_row(row, rows):
+				var next_up := _next_row_up(row, rows)
+				if not next_up.is_empty():
+					grounded_from = str(row.get("id", ""))
+					row = next_up
 			draw_bonus = int(row.get("bonus_damage", 0))
 			draw_result = {
 				"table_id": str(hidden_draw.get("table_id", "")),
@@ -340,6 +358,10 @@ static func resolve(context: Dictionary) -> Dictionary:
 			if not first_row_id.is_empty():
 				draw_result["redrawn"] = true
 				draw_result["first_row_id"] = first_row_id
+			if not storm_row_id.is_empty():
+				draw_result["storm_row_id"] = storm_row_id
+			if not grounded_from.is_empty():
+				draw_result["grounded_from"] = grounded_from
 			breakdown.append(_step("hidden_draw", "Hidden draw: %s" % str(row.get("id", "?")), float(draw_bonus), "add"))
 	var damage := maxi(roundi(scaled_damage) + detonation_bonus + draw_bonus, 0)
 	if fizzled:
@@ -680,6 +702,19 @@ static func _is_lowest_row(row: Dictionary, rows: Array) -> bool:
 		if other is Dictionary and int((other as Dictionary).get("bonus_damage", 0)) < bonus:
 			return false
 	return true
+
+
+## The row with the smallest bonus above `row`'s, or {} when `row` is already the highest.
+static func _next_row_up(row: Dictionary, rows: Array) -> Dictionary:
+	var bonus := int(row.get("bonus_damage", 0))
+	var best: Dictionary = {}
+	for other: Variant in rows:
+		if not other is Dictionary:
+			continue
+		var other_bonus := int((other as Dictionary).get("bonus_damage", 0))
+		if other_bonus > bonus and (best.is_empty() or other_bonus < int(best.get("bonus_damage", 0))):
+			best = (other as Dictionary).duplicate(true)
+	return best
 
 
 static func _fizzle_percent(

@@ -196,6 +196,12 @@ func admit(_actor: BattleActor, _delay_ct: int = 0) -> Dictionary:
 	return _blocked(&"unimplemented", "TurnScheduler.admit() must be implemented.", {})
 
 
+## Pushes a seated actor's next turn `ct` charge later (perk capstones, #285 slice 3: "acts 20 CT
+## late"). Nobody else moves. A model with no charge (the AP round economy) refuses.
+func delay(_actor: BattleActor, _ct: int) -> Dictionary:
+	return _blocked(&"no_charge_time", "Only charge time can delay a turn.", {})
+
+
 ## Drops a participant (death, flight, a speech-driven split). Everyone else keeps their banked
 ## CT and their seat, so removal never silently reorders the queue.
 func remove_participant(_actor: BattleActor) -> void:

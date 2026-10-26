@@ -434,6 +434,16 @@ func admit(actor: BattleActor, delay_ct: int = 0) -> Dictionary:
 	return _allowed({"charge": int(_charge[key]), "seat": int(_seat_of[key])})
 
 
+func delay(actor: BattleActor, ct: int) -> Dictionary:
+	var key := _key(actor) if actor != null else &""
+	if actor == null or not _seat_of.has(key):
+		return _blocked(&"not_participating", "There is no seated combatant to delay.", {})
+	if ct <= 0:
+		return _blocked(&"no_delay", "A delay must be positive.", {})
+	_charge[key] = int(_charge[key]) - ct
+	return _allowed({"charge": int(_charge[key])})
+
+
 func remove_participant(actor: BattleActor) -> void:
 	var key := _key(actor)
 	if not _seat_of.has(key):

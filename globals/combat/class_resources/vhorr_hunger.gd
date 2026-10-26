@@ -96,9 +96,19 @@ func on_deferred_cancelled(entry: Dictionary, _by_id: StringName) -> void:
 		for raw: Variant in effect.get("writes", []):
 			if raw is Dictionary:
 				pending_dot_targets.erase(String(raw.get("target_id", "")))
+		# Slow Rot (#285 slice 3): a Jammed tick survives one round, once, and does not chain.
+		if perk_total("linger_after_cancel") > 0 and not bool(effect.get("lingering", false)):
+			enqueue_deferred(
+				{"writes": (effect.get("writes", []) as Array).duplicate(true), "lingering": true},
+				{"delay_rounds": 1},
+				&"hunger_dot_lingering",
+			)
 
 
 func on_kill(_target_id: StringName, cause: StringName) -> void:
+	if cause == &"dot" and perk_total("hunger_on_dot_kill") > 0:
+		# Feed the Husk (#285 slice 3): the killing tick carries Hunger into the next target.
+		hunger = mini(hunger + perk_total("hunger_on_dot_kill"), max_hunger())
 	if cause == &"dot":
 		pending_breath_refunds += float(BREATH_REFUND)
 		enqueue_deferred(

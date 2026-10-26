@@ -37,9 +37,18 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 	var target := host.actor_by_id(target_id) if host != null else null
 	if target == null or not target.is_alive() or not host.allies.has(target):
 		return command_refusal(&"no_target", "Record Name requires a living ally.")
-	if recorded_actor_ids.has(String(target_id)) or recorded_names.has(target.display_name.strip_edges()):
+	if recorded_actor_ids.count(String(target_id)) >= _record_limit(target_id) or (
+		target_id != owner_id and recorded_names.has(target.display_name.strip_edges())
+	):
 		return command_refusal(&"class_resource_duplicate", "That name is already recorded in this battle.")
 	return gate
+
+
+## Own Name Twice (#285 slice 3): the River-Mother's own name may be recorded twice per battle.
+func _record_limit(target_id: StringName) -> int:
+	if target_id == owner_id and perk_total("own_name_twice") > 0:
+		return perk_total("own_name_twice")
+	return 1
 
 
 func on_command(action_id: StringName, target_id: StringName) -> void:
@@ -49,7 +58,9 @@ func on_command(action_id: StringName, target_id: StringName) -> void:
 	if target == null or not target.is_alive() or not host.allies.has(target):
 		return
 	var name: String = target.display_name
-	if not record_name(name, true):
+	if recorded_actor_ids.count(String(target_id)) >= _record_limit(target_id):
+		return
+	if not record_name(name, true) and not recorded_actor_ids.has(String(target_id)):
 		return
 	recorded_actor_ids.append(String(target_id))
 
@@ -65,7 +76,7 @@ func on_any_action(
 		var kind := StringName(str(write.get("kind", "")))
 		var target_id := String(write.get("target_id", ""))
 		if int(write.get("after", 1)) <= 0 and kind in [&"hp", &"dot"] and target_id in recorded_actor_ids:
-			_refund_actor(StringName(target_id))
+			_refund_actor(StringName(target_id), true)
 	if host != null and not host.has_living_enemies():
 		for actor_id: String in recorded_actor_ids:
 			var actor := host.actor_by_id(StringName(actor_id))
@@ -76,29 +87,37 @@ func on_any_action(
 ## Longer Ledger (#285 slice 2, ruled 2026-10-25 flag B): the first name to pay each battle
 ## pays `first_payer_multiplier` times. "First" is the first refund this battle, whichever path
 ## paid it; `refunded_actor_ids` is per battle, so it is empty exactly once.
-func _refund_actor(actor_id: StringName) -> void:
+## A name recorded twice (Own Name Twice) pays once per recording. Names Carried (#285 slice 3):
+## when a recorded ally FALLS, every other living recorded ally gets the base refund too.
+func _refund_actor(actor_id: StringName, fell: bool = false) -> void:
 	if actor_id.is_empty() or actor_id in refunded_actor_ids:
 		return
-	var amount := BREATH_REFUND
+	var amount := BREATH_REFUND * maxi(recorded_actor_ids.count(String(actor_id)), 1)
 	var multiplier := perk_total("first_payer_multiplier")
 	if refunded_actor_ids.is_empty() and multiplier > 1:
 		amount *= multiplier
 	refunded_actor_ids.append(String(actor_id))
 	pending_breath_refunds += float(amount)
-	_queue_refund(amount)
+	var carried: Array[String] = []
+	if fell and perk_total("refund_reaches_all_recorded") > 0 and host != null:
+		for recorded_id: String in recorded_actor_ids:
+			var ally := host.actor_by_id(StringName(recorded_id))
+			if recorded_id != String(actor_id) and recorded_id != String(owner_id) \
+					and recorded_id not in carried and ally != null and ally.is_alive():
+				carried.append(recorded_id)
+	_queue_refund(amount, carried)
 
 
-func _queue_refund(amount: int = BREATH_REFUND) -> void:
-	enqueue_deferred(
-		{"writes": [{"kind": "breath", "target_id": String(owner_id), "amount": amount}]},
-		{"delay_rounds": 0},
-		&"name_ledger_refund",
-	)
+func _queue_refund(amount: int = BREATH_REFUND, carried: Array[String] = []) -> void:
+	var writes: Array = [{"kind": "breath", "target_id": String(owner_id), "amount": amount}]
+	for ally_id: String in carried:
+		writes.append({"kind": "breath", "target_id": ally_id, "amount": BREATH_REFUND})
+	enqueue_deferred({"writes": writes}, {"delay_rounds": 0}, &"name_ledger_refund")
 
 
 func on_combatant_fell(target_id: StringName) -> void:
 	if String(target_id) in recorded_actor_ids:
-		_refund_actor(target_id)
+		_refund_actor(target_id, true)
 
 
 func on_battle_end(victory: bool) -> void:
@@ -115,7 +134,8 @@ func on_deferred_fired(entry: Dictionary) -> void:
 		pending_breath_refunds = maxf(pending_breath_refunds - _entry_amount(entry), 0.0)
 
 
-## The Breath an entry carries; BREATH_REFUND for an entry queued before Longer Ledger existed.
+## The Breath an entry carries to the River-Mother herself (the first write); Names Carried's
+## writes to other allies are not hers to settle. BREATH_REFUND for an older entry.
 func _entry_amount(entry: Dictionary) -> float:
 	var effect: Variant = entry.get("effect", {})
 	if effect is Dictionary:

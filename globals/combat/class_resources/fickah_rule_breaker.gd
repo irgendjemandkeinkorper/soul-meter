@@ -8,6 +8,9 @@ extends ClassResource
 const FIZZLE_FLOOR_PERCENT := SkillCheckService.FIZZLE_FLOOR_PERCENT
 
 var jam_target_id: StringName = &""
+## Pocketed Gear (#285 slice 3, ruled 2026-10-26): a Jam that cancelled something makes the
+## next Jam this battle cost no Soul. A waiver, never a refund: the Gauge does not rise.
+var free_jam_banked: bool = false
 
 
 func commands() -> Array[StringName]:
@@ -30,17 +33,32 @@ func on_command(action_id: StringName, target_id: StringName) -> void:
 		jam_the_gears(target_id)
 
 
+func waives_soul_cost(action_id: StringName) -> bool:
+	return action_id == &"jam_the_gears" and free_jam_banked
+
+
 func jam_the_gears(target_id: StringName) -> bool:
 	if target_id.is_empty() or not jam_target_id.is_empty():
 		return false
+	# The controller skipped the Soul for this Jam if one was banked; it is spent now.
+	free_jam_banked = false
 	var result: Dictionary = request_cancel(target_id, &"any")
 	var blocked_by: StringName = StringName(str(result.get("blocked_by", "")))
 	if not bool(result.get("allowed", false)) and (
 		blocked_by == &"nothing_to_cancel" or blocked_by == &"resolving"
 	):
 		jam_target_id = target_id
+		# Jammed Twice (#285 slice 3): finding nothing pending also makes the target late.
+		if perk_total("delay_on_armed_jam") > 0 and host != null:
+			host.delay_actor(target_id, perk_total("delay_on_armed_jam"))
 		return false
+	_on_cancelled(bool(result.get("allowed", false)))
 	return bool(result.get("allowed", false))
+
+
+func _on_cancelled(cancelled: bool) -> void:
+	if cancelled and perk_total("free_jam_after_cancel") > 0:
+		free_jam_banked = true
 
 
 func has_armed_jam() -> bool:
@@ -67,6 +85,7 @@ func _retry_jam() -> void:
 	var result: Dictionary = request_cancel(jam_target_id, &"any")
 	if bool(result.get("allowed", false)):
 		jam_target_id = &""
+		_on_cancelled(true)
 
 
 func snapshot() -> Dictionary:
@@ -82,9 +101,11 @@ func snapshot() -> Dictionary:
 func to_dict() -> Dictionary:
 	var data: Dictionary = super.to_dict()
 	data["jam_target_id"] = String(jam_target_id)
+	data["free_jam_banked"] = free_jam_banked
 	return data
 
 
 func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
 	jam_target_id = StringName(str(data.get("jam_target_id", "")))
+	free_jam_banked = bool(data.get("free_jam_banked", false))
