@@ -12,11 +12,24 @@ const MAX_CLARITY := 3  # B11, ratified 2026-10-25 (owner item 6).
 
 var clarity: int = MAX_CLARITY
 var reveal_armed: bool = false
+## Kept Focus (#285 slice 4): Clarity carried in from the last battle, held above the cap.
+var carried_in: int = 0
 
 
 ## The live cap: MAX_CLARITY plus any picked `cap_delta` perk (Wider Lens, #285 slice 2).
 func max_clarity() -> int:
 	return MAX_CLARITY + perk_total("cap_delta")
+
+
+## Kept Focus: one unspent Clarity carries into the next battle, on top of a full start.
+func carry_out() -> Dictionary:
+	var kept := mini(clarity, perk_total("carry_one_clarity"))
+	return {"clarity": kept} if kept > 0 else {}
+
+
+func receive_carry(carried: Dictionary) -> void:
+	carried_in = maxi(int(carried.get("clarity", 0)), 0)
+	clarity += carried_in
 
 
 ## Wider Lens raises the start with the cap: start and cap are both 3, so a higher cap alone
@@ -89,10 +102,12 @@ func to_dict() -> Dictionary:
 	var data: Dictionary = super.to_dict()
 	data["clarity"] = clarity
 	data["reveal_armed"] = reveal_armed
+	data["carried_in"] = carried_in
 	return data
 
 
 func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
-	clarity = clampi(int(data.get("clarity", max_clarity())), 0, max_clarity())
+	carried_in = maxi(int(data.get("carried_in", 0)), 0)
+	clarity = clampi(int(data.get("clarity", max_clarity())), 0, max_clarity() + carried_in)
 	reveal_armed = bool(data.get("reveal_armed", false))

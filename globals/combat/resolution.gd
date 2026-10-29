@@ -160,6 +160,12 @@ static func resolve(context: Dictionary) -> Dictionary:
 			fizzle_overridden = true
 		fizzle_roll = _deterministic_fizzle_roll(context, ability_id, unit, target)
 		fizzled = fizzle_roll <= fizzle_percent
+	# Second Casting (#285 slice 4): the resource offers to turn THIS fizzle into a success after
+	# the fact. Same context at forecast and commit, so both read the conversion.
+	var second_cast := false
+	if fizzled and bool(context.get("second_casting", false)):
+		fizzled = false
+		second_cast = true
 
 	var breath_cost := maxi(int(ability.get("breath_cost", ability.get("mp_cost", 0))), 0)
 	var breath_before := maxi(int(unit.get("breath", 0)), 0)
@@ -348,6 +354,16 @@ static func resolve(context: Dictionary) -> Dictionary:
 					grounded_from = str(row.get("id", ""))
 					row = next_up
 			draw_bonus = int(row.get("bonus_damage", 0))
+			# Tuned Thunder (#285 slice 4): the storm's top row is its critical; it chains a second
+			# draw from a derived key and adds that row's bonus too.
+			var chained_row_id := ""
+			if bool(hidden_draw.get("chain_top", false)) and _is_highest_row(row, rows):
+				var chain_roll := _deterministic_draw_roll(
+					context, ability_id, unit, target, str(hidden_draw.get("seed_key", "")) + "|thunder"
+				)
+				var chained := _dictionary(rows[(chain_roll - 1) % rows.size()])
+				chained_row_id = str(chained.get("id", ""))
+				draw_bonus += int(chained.get("bonus_damage", 0))
 			draw_result = {
 				"table_id": str(hidden_draw.get("table_id", "")),
 				"seed_key": str(hidden_draw.get("seed_key", "")),
@@ -362,8 +378,16 @@ static func resolve(context: Dictionary) -> Dictionary:
 				draw_result["storm_row_id"] = storm_row_id
 			if not grounded_from.is_empty():
 				draw_result["grounded_from"] = grounded_from
+			if not chained_row_id.is_empty():
+				draw_result["chained_row_id"] = chained_row_id
 			breakdown.append(_step("hidden_draw", "Hidden draw: %s" % str(row.get("id", "?")), float(draw_bonus), "add"))
-	var damage := maxi(roundi(scaled_damage) + detonation_bonus + draw_bonus, 0)
+	# Debt of Arms (#285 slice 4): a flat bonus a class resource adds to one landed attack.
+	var paid_bonus := 0
+	if not fizzled and hit and direct_damage_enabled:
+		paid_bonus = int(context.get("bonus_damage", 0))
+		if paid_bonus != 0:
+			breakdown.append(_step("bonus_damage", "Debt of Arms", float(paid_bonus), "add"))
+	var damage := maxi(roundi(scaled_damage) + detonation_bonus + draw_bonus + paid_bonus, 0)
 	if fizzled:
 		hit = false
 		damage = 0
@@ -532,6 +556,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"writes": writes,
 		"fizzle_overridden": fizzle_overridden,
 		"hidden_draw": draw_result,
+		"second_cast": second_cast,
 		"reveal": bool(context.get("reveal", false)),
 	}
 	var injury_profile := _dictionary(context.get("injury", {}))
@@ -700,6 +725,14 @@ static func _is_lowest_row(row: Dictionary, rows: Array) -> bool:
 	var bonus := int(row.get("bonus_damage", 0))
 	for other: Variant in rows:
 		if other is Dictionary and int((other as Dictionary).get("bonus_damage", 0)) < bonus:
+			return false
+	return true
+
+
+static func _is_highest_row(row: Dictionary, rows: Array) -> bool:
+	var bonus := int(row.get("bonus_damage", 0))
+	for other: Variant in rows:
+		if other is Dictionary and int((other as Dictionary).get("bonus_damage", 0)) > bonus:
 			return false
 	return true
 

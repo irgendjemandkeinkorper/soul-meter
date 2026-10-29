@@ -2021,6 +2021,24 @@ func _finalize_resolution_damage(
 	return finalized
 
 
+## #285 slice 4: resources may soften an HP loss before it lands (Reflection on the target,
+## Last Washing from any ally). The write is changed IN PLACE, so every later reader of the
+## resolution (logs, refunds, the fall check) sees the HP that actually landed.
+func _adjust_incoming_hp(actor: BattleActor, target: BattleActor, write: Dictionary) -> void:
+	var before := target.hp
+	var after := int(write.get("after", before))
+	if after >= before:
+		return
+	var adjusted := _class_resource_of(target).adjust_incoming_hp(actor.combat_id, target.combat_id, before, after)
+	for other: BattleActor in allies + enemies:
+		if other != target:
+			adjusted = _class_resource_of(other).adjust_incoming_hp(actor.combat_id, target.combat_id, before, adjusted)
+	adjusted = clampi(adjusted, 0, before)
+	if adjusted != after:
+		write["after"] = adjusted
+		write["delta"] = adjusted - before
+
+
 func _apply_resolution_writes(
 	actor: BattleActor,
 	target: BattleActor,
@@ -2032,6 +2050,7 @@ func _apply_resolution_writes(
 		match StringName(write.get("kind", "")):
 			&"hp":
 				var hp_before := target.hp
+				_adjust_incoming_hp(actor, target, write)
 				target.hp = int(write.get("after", target.hp))
 				# #223 class-resource hooks fire from the one place HP actually changes.
 				var lost := hp_before - target.hp
@@ -2044,6 +2063,7 @@ func _apply_resolution_writes(
 				# Seam v2: damage-over-time is an HP loss whose kill cause is &"dot" regardless of
 				# the action that queued it (Husk-bearer Hunger keys refunds on that cause).
 				var dot_before := target.hp
+				_adjust_incoming_hp(actor, target, write)
 				target.hp = int(write.get("after", target.hp))
 				var dot_lost := dot_before - target.hp
 				if dot_lost > 0:
@@ -2368,6 +2388,15 @@ func forecast_context(
 		# and `{"fizzle": {"mastery": true}}` keeps fizzle.patron/pitch. A shallow merge replaced
 		# the whole sub-dict (found by the B1–B5 review).
 		deep_merge(context, overrides)
+	# #285 slice 4: an ally's resource may add to this actor's cast (Debt of Arms' paid bonus).
+	# Same call at forecast and commit, like the owner's own channel above.
+	if allies.has(actor):
+		for other: BattleActor in allies:
+			if other == actor:
+				continue
+			var ally_overrides := _class_resource_of(other).on_ally_cast_forecast(actor.combat_id, context.duplicate(true))
+			if not ally_overrides.is_empty():
+				deep_merge(context, ally_overrides)
 	# Seam v2 channel: ONE top-level `reveal` key. Dayspring (unit.reveal, A5) and ClassResource
 	# reveal overrides both land here so Resolution and the panel read one shape.
 	context["reveal"] = _is_revealed(actor) or _is_exposed_now(target) or bool(context.get("reveal", false))
@@ -2871,6 +2900,9 @@ func _finish(result_state: ResultState, outcome_id: StringName) -> void:
 		release_hold(holder_id, "battle_ended")
 	for actor: BattleActor in allies + enemies:
 		_class_resource_of(actor).on_battle_end(result_state == ResultState.VICTORY)
+		# #285 slice 4: Kept Focus / Carried Lesson write what crosses into the next battle.
+		if actor.source_member != null and not _class_resource_of(actor).is_null():
+			actor.source_member.carried_resource = _class_resource_of(actor).carry_out()
 	state = State.FINISHED
 	_settle_due_breath_refunds()
 	_emit_event(&"battle_finished", null, null, {"result": result_state, "outcome_id": outcome_id})
@@ -3154,6 +3186,8 @@ func _attach_class_resources(group: Array[BattleActor]) -> void:
 			actor.class_resource = ClassResourceRegistry.for_patron(patron)
 			if actor.source_member != null:
 				actor.class_resource.apply_perks(actor.source_member.perk_ids)
+				actor.class_resource.receive_carry(actor.source_member.carried_resource)
+				actor.source_member.carried_resource = {}
 		actor.class_resource.owner_id = actor.combat_id
 		actor.class_resource.host = self
 

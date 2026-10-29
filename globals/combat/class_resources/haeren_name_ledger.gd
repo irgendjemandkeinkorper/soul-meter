@@ -17,6 +17,9 @@ var recorded_names: Array[String] = []
 var recorded_actor_ids: Array[String] = []
 var refunded_actor_ids: Array[String] = []
 var pending_breath_refunds: float = 0.0
+## Last Washing (#285 slice 4, ruled 2026-10-26): recorded allies kept at 1 HP; their names are
+## struck and pay no Breath, and cannot be recorded again this battle.
+var struck_actor_ids: Array[String] = []
 
 
 func record_name(name: String, _saved: bool) -> bool:
@@ -38,11 +41,26 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 	var target := host.actor_by_id(target_id) if host != null else null
 	if target == null or not target.is_alive() or not host.allies.has(target):
 		return command_refusal(&"no_target", "Record Name requires a living ally.")
+	if String(target_id) in struck_actor_ids:
+		return command_refusal(&"class_resource_struck", "That name was struck by the Last Washing.")
 	if recorded_actor_ids.count(String(target_id)) >= _record_limit(target_id) or (
 		target_id != owner_id and recorded_names.has(target.display_name.strip_edges())
 	):
 		return command_refusal(&"class_resource_duplicate", "That name is already recorded in this battle.")
 	return gate
+
+
+## Last Washing: a recorded ally who would fall is left at 1 HP and their name is struck.
+func adjust_incoming_hp(_actor_id: StringName, target_id: StringName, _before: int, after: int) -> int:
+	if after > 0 or perk_total("stabilize_recorded") <= 0:
+		return after
+	var key := String(target_id)
+	if key not in recorded_actor_ids or key in refunded_actor_ids:
+		return after
+	while recorded_actor_ids.has(key):
+		recorded_actor_ids.erase(key)
+	struck_actor_ids.append(key)
+	return perk_total("stabilize_recorded")
 
 
 ## Own Name Twice (#285 slice 3): the River-Mother's own name may be recorded twice per battle.
@@ -165,6 +183,7 @@ func to_dict() -> Dictionary:
 	data["recorded_actor_ids"] = recorded_actor_ids.duplicate()
 	data["refunded_actor_ids"] = refunded_actor_ids.duplicate()
 	data["pending_breath_refunds"] = pending_breath_refunds
+	data["struck_actor_ids"] = struck_actor_ids.duplicate()
 	return data
 
 
@@ -185,6 +204,10 @@ func from_dict(data: Dictionary) -> void:
 		var refunded_id := str(value)
 		if not refunded_id.is_empty() and refunded_id not in refunded_actor_ids:
 			refunded_actor_ids.append(refunded_id)
+	struck_actor_ids.clear()
+	for value: Variant in data.get("struck_actor_ids", []):
+		if not str(value).is_empty():
+			struck_actor_ids.append(str(value))
 	# A save written before the Soul->Breath swap carries the old key; read either.
 	pending_breath_refunds = maxf(
 		float(data.get("pending_breath_refunds", data.get("pending_soul_refunds", 0.0))), 0.0

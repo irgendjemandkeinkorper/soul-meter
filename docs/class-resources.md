@@ -228,3 +228,12 @@ follows a perk at battle start (Stuid's starting Clarity), and `on_ally_turn_sta
 allies' turns. Keep the `MAX_*` constants as the base; expose the live cap as a `max_*()` method.
 Slice 3 adds `waives_soul_cost(action_id)` (skip a class command's Soul spend; never raise the Gauge) and two
 controller services: `host.delay_actor(id, ct)` (charge time only) and `host.allies_within(id, radius)`.
+Slice 4 (`docs/perks-draft-285.md` §9) adds four virtuals. `adjust_incoming_hp(actor_id, target_id, before,
+after) -> int` may soften an HP or DoT loss before it lands; the controller asks the target's resource first,
+then every other one, and clamps to `0..before`. `on_ally_cast_forecast(actor_id, context)` returns
+overrides for an ally's forecast, merged the same way at forecast and commit. `carry_out()` /
+`receive_carry(carried)` move state across battles through `PartyMember.carried_resource`. A command that
+a perk unlocks refuses through `perk_refusal(op, perk_name)` (`blocked_by = perk_missing`). Resolution reads
+`bonus_damage` (flat, landed hits only), `second_casting` (turns a fizzle into a success, reported as
+`second_cast`), and `hidden_draw.chain_top`.
+

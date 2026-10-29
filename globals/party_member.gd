@@ -46,6 +46,9 @@ const DEFAULT_BREATH_MAX := 15
 ## Perk ids picked at levels 2 / 4 / 6 (#285, `PerkCatalog`). Empty by default, so a save from
 ## before perks loads unchanged and the member simply has picks waiting.
 @export var perk_ids: PackedStringArray = PackedStringArray()
+## #285 slice 4: what a perk carries from one battle into the next (Kept Focus: {"clarity": 1},
+## Carried Lesson: {"tokens": 1}). Written at battle end, consumed at the next battle's start.
+@export var carried_resource: Dictionary = {}
 @export var hp: int = 10
 @export var max_hp: int = 10
 @export var breath: int = DEFAULT_BREATH_MAX
@@ -105,6 +108,7 @@ func to_dict() -> Dictionary:
 		"xp": xp,
 		"advancement_points": advancement_points,
 		"perk_ids": Array(perk_ids),
+		"carried_resource": carried_resource.duplicate(true),
 		"hp": hp,
 		"max_hp": max_hp,
 		"breath": breath,
@@ -149,6 +153,9 @@ static func from_dict(data: Dictionary) -> PartyMember:
 		for perk_id: Variant in saved_perks:
 			if perk_id is String and not (perk_id as String).is_empty():
 				member.perk_ids.append(perk_id)
+	var carried: Variant = data.get("carried_resource", {})
+	if carried is Dictionary:
+		member.carried_resource = (carried as Dictionary).duplicate(true)
 	member.hp = int(data.get("hp", 10))
 	member.max_hp = int(data.get("max_hp", 10))
 	member.breath_max = maxi(int(data.get("breath_max", DEFAULT_BREATH_MAX)), 0)

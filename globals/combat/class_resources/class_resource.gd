@@ -189,6 +189,34 @@ func request_cancel(target_id: StringName, kind: StringName = &"any") -> Diction
 	return host.request_cancel(owner_id, target_id, kind)
 
 
+## #285 slice 4: return a HIGHER `after` to soften an HP loss before it lands. Called on the
+## target's resource first, then every other resource; each sees the previous answer.
+func adjust_incoming_hp(_actor_id: StringName, _target_id: StringName, _before: int, after: int) -> int:
+	return after
+
+
+## #285 slice 4: overrides merged into an ALLY's cast context (Debt of Arms). Same contract as
+## `on_cast_forecast()`: pure, called identically at forecast and commit.
+func on_ally_cast_forecast(_actor_id: StringName, _context: Dictionary) -> Dictionary:
+	return {}
+
+
+## #285 slice 4: what crosses into the next battle (Kept Focus, Carried Lesson), and its intake.
+func carry_out() -> Dictionary:
+	return {}
+
+
+func receive_carry(_carried: Dictionary) -> void:
+	pass
+
+
+## Refusal for a signature command the owner has not picked (#285 slice 4).
+func perk_refusal(op: String, perk_name: String) -> Dictionary:
+	if perk_total(op) > 0:
+		return {}
+	return command_refusal(&"perk_missing", "Needs the %s perk." % perk_name)
+
+
 ## The controller asks before charging a class command's Soul (Pocketed Gear, #285 slice 3).
 ## True skips the spend; the Gauge never rises.
 func waives_soul_cost(_action_id: StringName) -> bool:

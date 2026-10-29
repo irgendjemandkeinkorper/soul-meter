@@ -16,6 +16,9 @@ const MAX_SCARS := 3  # B11, ratified 2026-10-25 (owner item 6): reached under p
 
 var scars: int = 0
 var guaranteed_hit_armed: bool = false
+## Debt of Arms (#285 slice 4, ruled 2026-10-26): whose next attack carries the paid bonus.
+var debt_target_id: StringName = &""
+const DEBT_HP := 6
 
 
 ## The live cap: MAX_SCARS plus any picked `cap_delta` perk (Thick Hide, #285 slice 2).
@@ -49,13 +52,15 @@ func spend_scar() -> bool:
 ## is consumed by the owner's next resolved action, exactly as `spend_scar()`
 ## describes. The command adds no second path — it only exposes the existing one.
 func commands() -> Array[StringName]:
-	return [&"spend_scars"]
+	return [&"spend_scars", &"debt_of_arms"]
 
 
 func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
 	var gate := super.query_command(action_id, target_id, payload)
 	if not bool(gate.allowed):
 		return gate
+	if action_id == &"debt_of_arms":
+		return _query_debt(target_id, gate)
 	if guaranteed_hit_armed:
 		return command_refusal(&"class_resource_armed", "Your guaranteed hit is already armed. Resolve an attack first.")
 	if scars <= 0:
@@ -63,16 +68,67 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 	return gate
 
 
-func on_command(action_id: StringName, _target_id: StringName) -> void:
+func on_command(action_id: StringName, target_id: StringName) -> void:
+	if action_id == &"debt_of_arms":
+		_pay_debt(target_id)
+		return
 	if action_id != &"spend_scars":
 		return
 	spend_scar()
 
 
+func _query_debt(target_id: StringName, gate: Dictionary) -> Dictionary:
+	var missing := perk_refusal("debt_of_arms", "Debt of Arms")
+	if not missing.is_empty():
+		return missing
+	if not debt_target_id.is_empty():
+		return command_refusal(&"class_resource_armed", "A debt is already owed. Resolve that attack first.")
+	var owner := host.actor_by_id(owner_id) if host != null else null
+	var target := host.actor_by_id(target_id) if host != null else null
+	if target == null or not target.is_alive() or not host.allies.has(target):
+		return command_refusal(&"no_target", "Debt of Arms needs a living ally, or yourself.")
+	if owner == null or owner.hp <= 1:
+		return command_refusal(&"class_resource_empty", "Not enough HP left to pay the debt.")
+	return gate
+
+
+## Pays up to DEBT_HP (never below 1 HP) through the controller's write path, so the loss banks
+## a Scar like any other; the target's next landed attack carries `debt_of_arms` bonus damage.
+func _pay_debt(target_id: StringName) -> void:
+	var owner := host.actor_by_id(owner_id) if host != null else null
+	if owner == null or owner.hp <= 1 or not debt_target_id.is_empty() or perk_total("debt_of_arms") <= 0:
+		return
+	debt_target_id = target_id
+	enqueue_deferred(
+		{"writes": [{"kind": "hp", "target_id": String(owner_id), "amount": mini(DEBT_HP, owner.hp - 1)}]},
+		{"delay_rounds": 0},
+		&"debt_of_arms",
+	)
+
+
+func on_ally_cast_forecast(actor_id: StringName, _context: Dictionary) -> Dictionary:
+	if debt_target_id.is_empty() or actor_id != debt_target_id:
+		return {}
+	return {"bonus_damage": perk_total("debt_of_arms")}
+
+
+## The debt is settled by the target's next resolved attack or cast, hit or miss.
+func on_any_action(
+	actor_id: StringName, _action_id: StringName, _target_id: StringName, outcome: Dictionary
+) -> void:
+	if debt_target_id.is_empty() or actor_id != debt_target_id:
+		return
+	if not (outcome.get("resolution", {}) as Dictionary).is_empty():
+		debt_target_id = &""
+
+
 func on_cast_forecast(_context: Dictionary) -> Dictionary:
+	var overrides := {}
 	if guaranteed_hit_armed:
-		return {"to_hit_enabled": false}
-	return {}
+		overrides["to_hit_enabled"] = false
+	if not debt_target_id.is_empty() and debt_target_id == owner_id:
+		overrides["bonus_damage"] = perk_total("debt_of_arms")
+	return overrides
 
 
 func on_action(event: CombatEvent) -> void:
@@ -114,6 +170,7 @@ func to_dict() -> Dictionary:
 	var data := super.to_dict()
 	data["scars"] = scars
 	data["guaranteed_hit_armed"] = guaranteed_hit_armed
+	data["debt_target_id"] = String(debt_target_id)
 	return data
 
 
@@ -121,3 +178,4 @@ func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
 	scars = clampi(int(data.get("scars", 0)), 0, max_scars())
 	guaranteed_hit_armed = bool(data.get("guaranteed_hit_armed", false))
+	debt_target_id = StringName(str(data.get("debt_target_id", "")))

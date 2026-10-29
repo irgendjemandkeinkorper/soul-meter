@@ -37,6 +37,8 @@ func on_cast_forecast(context: Dictionary) -> Dictionary:
 		"draw_twice_keep_higher": perk_total("draw_twice_keep_higher") > 0,
 		# Grounded (#285 slice 3): the lowest row reads as the next one up.
 		"floor_lowest": perk_total("floor_lowest_draw") > 0,
+		# Tuned Thunder (#285 slice 4): the top row chains a second draw.
+		"chain_top": perk_total("chain_on_top_row") > 0,
 	}}
 
 

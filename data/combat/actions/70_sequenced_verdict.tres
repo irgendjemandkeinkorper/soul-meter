@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CombatAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://globals/combat_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+id = &"sequenced-verdict"
+display_name = "Sequenced Verdict"
+kind = 5
+verb = 3
+ap_cost = 2
+ct_cost = 2
+soul_cost = 1.0
+target_profile = &"ranged"
+player_available = true
+class_resource_action = &"sequenced_verdict"
+class_resource_target = "enemy"
+class_resource_payload = {"amount": 18, "delay_rounds": 3}
+description = "File a Verdict: 18 damage in three rounds. Takes a Ledger slot; a Jam can still cancel it. Once per battle. Needs the Sequenced Verdict perk."
+## PROVISIONAL (#285 slice 4): costs follow File Sentence.

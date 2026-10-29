@@ -32,6 +32,10 @@ const IN_PLAY: Dictionary = {
 ##   own_name_twice (recordings), refund_reaches_all_recorded, contract_twice (per enemy),
 ##   delay_on_bind, delay_first_attacker, delay_on_armed_jam (CT), fizzle_rebalances_once,
 ##   free_jam_after_cancel, witnessed_fizzle_bonus (extra tokens)
+## Signatures (#285 slice 4, ruled 2026-10-26):
+##   reflect_next_attack (percent sent back), stabilize_recorded (HP left), debt_of_arms (HP paid
+##   and damage added), second_casting (tokens spent), chain_on_top_row, sequenced_verdict,
+##   unspoken_term; carry_one_clarity, carry_one_token (count carried into the next battle)
 const EFFECT_OPS: PackedStringArray = [
 	"", "cap_delta", "first_payer_multiplier", "retry_on_ally_turns",
 	"forgive_streak_once", "redraw_lowest_once",
@@ -40,6 +44,8 @@ const EFFECT_OPS: PackedStringArray = [
 	"unjammable_with_ally_adjacent", "own_name_twice", "refund_reaches_all_recorded",
 	"contract_twice", "delay_on_bind", "delay_first_attacker", "delay_on_armed_jam",
 	"fizzle_rebalances_once", "free_jam_after_cancel", "witnessed_fizzle_bonus",
+	"reflect_next_attack", "stabilize_recorded", "debt_of_arms", "second_casting",
+	"chain_on_top_row", "sequenced_verdict", "unspoken_term", "carry_one_clarity", "carry_one_token",
 ]
 
 static var _rows: Array[Dictionary] = []
