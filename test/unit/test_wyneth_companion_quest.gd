@@ -9,6 +9,7 @@ var _original_party: Array[PartyMember]
 var _original_flags: Dictionary
 var _original_renown: Dictionary
 var _original_quests: Dictionary
+var _original_soul: float
 
 
 func before_test() -> void:
@@ -16,6 +17,7 @@ func before_test() -> void:
 	_original_flags = GameState.flags.duplicate(true)
 	_original_renown = Renown.to_dict().duplicate(true)
 	_original_quests = QuestRegistry.to_dict().duplicate(true)
+	_original_soul = GameState.soul_meter
 	GameState.flags.clear()
 	Renown.from_dict({})
 	QuestRegistry.reset()
@@ -27,6 +29,7 @@ func after_test() -> void:
 	Renown.from_dict(_original_renown)
 	QuestRegistry.reset()
 	QuestRegistry.from_dict(_original_quests)
+	GameState.soul_meter = _original_soul
 
 
 func _wyneth() -> PartyMember:

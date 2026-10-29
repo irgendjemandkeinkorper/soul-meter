@@ -244,6 +244,23 @@ func test_the_only_soul_income_channel_has_authored_content() -> void:
 	).is_not_empty()
 
 
+## #519 (owner 2026-10-29): the ruled acts of Agreement, each +8. A dilemma side that is not
+## listed here must stay neutral, so adding one is an owner ruling, not a data edit.
+func test_the_ruled_acts_of_agreement_are_exactly_these() -> void:
+	var agreements: Dictionary = {}
+	for quest: DomSideQuest in QuestRegistry.DOM_SIDE_QUESTS:
+		for index in quest.outcome_count():
+			if quest.outcome_tags.is_empty() or not quest.outcome_tags[index].has(DomSideQuest.ACT_OF_AGREEMENT_TAG):
+				continue
+			agreements["%s:%s" % [quest.stable_id, quest.outcome_ids[index]]] = quest.outcome_soul_deltas[index]
+	assert_dict(agreements).is_equal({
+		"dom/side/living-tag:restore-the-name": 8.0,
+		"dom/side/rainbound-register:restore-the-entry": 8.0,
+		"dom/side/unclaimed-bed:return-the-name": 8.0,
+		"dom/side/cold-bowl:bring-them-home": 8.0,
+	})
+
+
 func test_every_authored_reward_schema_is_valid() -> void:
 	for quest: DomSideQuest in QuestRegistry.DOM_SIDE_QUESTS:
 		assert_bool(quest.has_valid_reward_schema()).override_failure_message(
