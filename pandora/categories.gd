@@ -30,6 +30,7 @@ const UNITS = "474.0"
 const UNIT_JOBS = "485.0"
 const UNIT_ATTUNEMENT = "491.0"
 const UNIT_LOADOUT = "496.0"
+const PERKS = "557.0"
 
 
 class ItemsCategories:

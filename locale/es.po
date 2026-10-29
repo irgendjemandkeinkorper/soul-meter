@@ -226,6 +226,419 @@ msgstr ""
 msgid "ITEM_WEAPONS_TAUBSTUMMER_AXE_DESC"
 msgstr ""
 
+#. perks/mirrorblade-second-footing — display name
+#. English source: Second Footing
+msgid "PERK_MIRRORBLADE_SECOND_FOOTING_NAME"
+msgstr ""
+
+#. perks/mirrorblade-second-footing — blurb
+#. English source: Once per battle, repeating Strike or Guard a third time does not break Balance.
+msgid "PERK_MIRRORBLADE_SECOND_FOOTING_BLURB"
+msgstr ""
+
+#. perks/mirrorblade-reflection — display name
+#. English source: Reflection
+msgid "PERK_MIRRORBLADE_REFLECTION_NAME"
+msgstr ""
+
+#. perks/mirrorblade-reflection — blurb
+#. English source: Once per encounter, redirect an incoming spell effect back at its caster at reduced power.
+msgid "PERK_MIRRORBLADE_REFLECTION_BLURB"
+msgstr ""
+
+#. perks/mirrorblade-even-hand — display name
+#. English source: Even Hand
+msgid "PERK_MIRRORBLADE_EVEN_HAND_NAME"
+msgstr ""
+
+#. perks/mirrorblade-even-hand — blurb
+#. English source: The first fizzle each battle does not unbalance you.
+msgid "PERK_MIRRORBLADE_EVEN_HAND_BLURB"
+msgstr ""
+
+#. perks/mirrorblade-known-edge — display name
+#. English source: Known Edge
+msgid "PERK_MIRRORBLADE_KNOWN_EDGE_NAME"
+msgstr ""
+
+#. perks/mirrorblade-known-edge — blurb
+#. English source: The first enemy to act against the Mirrorblade each battle acts 20 CT late: it has heard of you.
+#, fuzzy
+msgid "PERK_MIRRORBLADE_KNOWN_EDGE_BLURB"
+msgstr ""
+
+#. perks/river-mother-longer-ledger — display name
+#. English source: Longer Ledger
+msgid "PERK_RIVER_MOTHER_LONGER_LEDGER_NAME"
+msgstr ""
+
+#. perks/river-mother-longer-ledger — blurb
+#. English source: The first name to pay each battle pays twice.
+#, fuzzy
+msgid "PERK_RIVER_MOTHER_LONGER_LEDGER_BLURB"
+msgstr ""
+
+#. perks/river-mother-last-washing — display name
+#. English source: Last Washing
+msgid "PERK_RIVER_MOTHER_LAST_WASHING_NAME"
+msgstr ""
+
+#. perks/river-mother-last-washing — blurb
+#. English source: When an ally hits 0 HP, spend a Ledger entry to stabilize them.
+msgid "PERK_RIVER_MOTHER_LAST_WASHING_BLURB"
+msgstr ""
+
+#. perks/river-mother-names-carried — display name
+#. English source: Names Carried
+msgid "PERK_RIVER_MOTHER_NAMES_CARRIED_NAME"
+msgstr ""
+
+#. perks/river-mother-names-carried — blurb
+#. English source: When a recorded ally falls, the Breath refund reaches every recorded ally, not only the River-Mother.
+msgid "PERK_RIVER_MOTHER_NAMES_CARRIED_BLURB"
+msgstr ""
+
+#. perks/river-mother-own-name-twice — display name
+#. English source: Own Name Twice
+msgid "PERK_RIVER_MOTHER_OWN_NAME_TWICE_NAME"
+msgstr ""
+
+#. perks/river-mother-own-name-twice — blurb
+#. English source: Your own name may be recorded twice per battle, and pays twice.
+msgid "PERK_RIVER_MOTHER_OWN_NAME_TWICE_BLURB"
+msgstr ""
+
+#. perks/ironbrand-thick-hide — display name
+#. English source: Thick Hide
+msgid "PERK_IRONBRAND_THICK_HIDE_NAME"
+msgstr ""
+
+#. perks/ironbrand-thick-hide — blurb
+#. English source: Raises the Scar cap by 1.
+#, fuzzy
+msgid "PERK_IRONBRAND_THICK_HIDE_BLURB"
+msgstr ""
+
+#. perks/ironbrand-debt-of-arms — display name
+#. English source: Debt of Arms
+msgid "PERK_IRONBRAND_DEBT_OF_ARMS_NAME"
+msgstr ""
+
+#. perks/ironbrand-debt-of-arms — blurb
+#. English source: Trade current HP for a damage or buff spike on yourself or an ally.
+msgid "PERK_IRONBRAND_DEBT_OF_ARMS_BLURB"
+msgstr ""
+
+#. perks/ironbrand-debt-collected — display name
+#. English source: Debt Collected
+msgid "PERK_IRONBRAND_DEBT_COLLECTED_NAME"
+msgstr ""
+
+#. perks/ironbrand-debt-collected — blurb
+#. English source: A Scar spent on an attack that downs its target is returned.
+msgid "PERK_IRONBRAND_DEBT_COLLECTED_BLURB"
+msgstr ""
+
+#. perks/ironbrand-first-blood — display name
+#. English source: First Blood
+msgid "PERK_IRONBRAND_FIRST_BLOOD_NAME"
+msgstr ""
+
+#. perks/ironbrand-first-blood — blurb
+#. English source: The first Scar each battle is banked when combat starts, before any damage.
+msgid "PERK_IRONBRAND_FIRST_BLOOD_BLURB"
+msgstr ""
+
+#. perks/lensbearer-wider-lens — display name
+#. English source: Wider Lens
+msgid "PERK_LENSBEARER_WIDER_LENS_NAME"
+msgstr ""
+
+#. perks/lensbearer-wider-lens — blurb
+#. English source: Start each battle with 1 more Clarity, and hold 1 more.
+#, fuzzy
+msgid "PERK_LENSBEARER_WIDER_LENS_BLURB"
+msgstr ""
+
+#. perks/lensbearer-sacred-clarity — display name
+#. English source: Sacred Clarity
+msgid "PERK_LENSBEARER_SACRED_CLARITY_NAME"
+msgstr ""
+
+#. perks/lensbearer-sacred-clarity — blurb
+#. English source: Force a target's next action to be telegraphed to the whole party, at Fading cost.
+msgid "PERK_LENSBEARER_SACRED_CLARITY_BLURB"
+msgstr ""
+
+#. perks/lensbearer-kept-focus — display name
+#. English source: Kept Focus
+msgid "PERK_LENSBEARER_KEPT_FOCUS_NAME"
+msgstr ""
+
+#. perks/lensbearer-kept-focus — blurb
+#. English source: One unspent Clarity carries into the next battle.
+msgid "PERK_LENSBEARER_KEPT_FOCUS_BLURB"
+msgstr ""
+
+#. perks/lensbearer-read-aloud — display name
+#. English source: Read Aloud
+msgid "PERK_LENSBEARER_READ_ALOUD_NAME"
+msgstr ""
+
+#. perks/lensbearer-read-aloud — blurb
+#. English source: A forecast you reveal is shown to the whole party for that turn.
+msgid "PERK_LENSBEARER_READ_ALOUD_BLURB"
+msgstr ""
+
+#. perks/husk-bearer-patient-hunger — display name
+#. English source: Patient Hunger
+msgid "PERK_HUSK_BEARER_PATIENT_HUNGER_NAME"
+msgstr ""
+
+#. perks/husk-bearer-patient-hunger — blurb
+#. English source: Raises the Hunger cap by 1.
+#, fuzzy
+msgid "PERK_HUSK_BEARER_PATIENT_HUNGER_BLURB"
+msgstr ""
+
+#. perks/husk-bearer-nothing-wasted — display name
+#. English source: Nothing Wasted
+msgid "PERK_HUSK_BEARER_NOTHING_WASTED_NAME"
+msgstr ""
+
+#. perks/husk-bearer-nothing-wasted — blurb
+#. English source: A kill from your damage-over-time effect returns 3 Breath, including the final enemy's death.
+#, fuzzy
+msgid "PERK_HUSK_BEARER_NOTHING_WASTED_BLURB"
+msgstr ""
+
+#. perks/husk-bearer-feed-the-husk — display name
+#. English source: Feed the Husk
+msgid "PERK_HUSK_BEARER_FEED_THE_HUSK_NAME"
+msgstr ""
+
+#. perks/husk-bearer-feed-the-husk — blurb
+#. English source: A Hunger tick that kills refunds 1 Hunger.
+#, fuzzy
+msgid "PERK_HUSK_BEARER_FEED_THE_HUSK_BLURB"
+msgstr ""
+
+#. perks/husk-bearer-slow-rot — display name
+#. English source: Slow Rot
+msgid "PERK_HUSK_BEARER_SLOW_ROT_NAME"
+msgstr ""
+
+#. perks/husk-bearer-slow-rot — blurb
+#. English source: A Hunger tick survives one round after its target is cured or jammed.
+msgid "PERK_HUSK_BEARER_SLOW_ROT_BLURB"
+msgstr ""
+
+#. perks/flamebinder-third-lesson — display name
+#. English source: Third Lesson
+msgid "PERK_FLAMEBINDER_THIRD_LESSON_NAME"
+msgstr ""
+
+#. perks/flamebinder-third-lesson — blurb
+#. English source: Raises the Failure Token cap by 1.
+#, fuzzy
+msgid "PERK_FLAMEBINDER_THIRD_LESSON_BLURB"
+msgstr ""
+
+#. perks/flamebinder-second-casting — display name
+#. English source: Second Casting
+msgid "PERK_FLAMEBINDER_SECOND_CASTING_NAME"
+msgstr ""
+
+#. perks/flamebinder-second-casting — blurb
+#. English source: Once per encounter, spend two banked tokens to turn a fizzle into a success after the fact.
+msgid "PERK_FLAMEBINDER_SECOND_CASTING_BLURB"
+msgstr ""
+
+#. perks/flamebinder-carried-lesson — display name
+#. English source: Carried Lesson
+msgid "PERK_FLAMEBINDER_CARRIED_LESSON_NAME"
+msgstr ""
+
+#. perks/flamebinder-carried-lesson — blurb
+#. English source: One banked token survives to the next battle.
+msgid "PERK_FLAMEBINDER_CARRIED_LESSON_BLURB"
+msgstr ""
+
+#. perks/flamebinder-spectacular-failure — display name
+#. English source: Spectacular Failure
+msgid "PERK_FLAMEBINDER_SPECTACULAR_FAILURE_NAME"
+msgstr ""
+
+#. perks/flamebinder-spectacular-failure — blurb
+#. English source: A fizzle in a populated zone banks two tokens: somebody saw it.
+msgid "PERK_FLAMEBINDER_SPECTACULAR_FAILURE_BLURB"
+msgstr ""
+
+#. perks/stormbearer-steadier-hand — display name
+#. English source: Steadier Hand
+msgid "PERK_STORMBEARER_STEADIER_HAND_NAME"
+msgstr ""
+
+#. perks/stormbearer-steadier-hand — blurb
+#. English source: Reroll one Attribution result per battle.
+msgid "PERK_STORMBEARER_STEADIER_HAND_BLURB"
+msgstr ""
+
+#. perks/stormbearer-tuned-thunder — display name
+#. English source: Tuned Thunder
+msgid "PERK_STORMBEARER_TUNED_THUNDER_NAME"
+msgstr ""
+
+#. perks/stormbearer-tuned-thunder — blurb
+#. English source: An ability critical hit chains into a second, random effect.
+msgid "PERK_STORMBEARER_TUNED_THUNDER_BLURB"
+msgstr ""
+
+#. perks/stormbearer-grounded — display name
+#. English source: Grounded
+msgid "PERK_STORMBEARER_GROUNDED_NAME"
+msgstr ""
+
+#. perks/stormbearer-grounded — blurb
+#. English source: The lowest Attribution result is read as the next one up.
+msgid "PERK_STORMBEARER_GROUNDED_BLURB"
+msgstr ""
+
+#. perks/stormbearer-named-storm — display name
+#. English source: Named Storm
+msgid "PERK_STORMBEARER_NAMED_STORM_NAME"
+msgstr ""
+
+#. perks/stormbearer-named-storm — blurb
+#. English source: Attribution draws twice and keeps the higher result.
+#, fuzzy
+msgid "PERK_STORMBEARER_NAMED_STORM_BLURB"
+msgstr ""
+
+#. perks/oathclock-longer-docket — display name
+#. English source: Longer Docket
+msgid "PERK_OATHCLOCK_LONGER_DOCKET_NAME"
+msgstr ""
+
+#. perks/oathclock-longer-docket — blurb
+#. English source: Hold 1 more Sentence.
+#, fuzzy
+msgid "PERK_OATHCLOCK_LONGER_DOCKET_BLURB"
+msgstr ""
+
+#. perks/oathclock-sequenced-verdict — display name
+#. English source: Sequenced Verdict
+msgid "PERK_OATHCLOCK_SEQUENCED_VERDICT_NAME"
+msgstr ""
+
+#. perks/oathclock-sequenced-verdict — blurb
+#. English source: Bank a powerful delayed verdict that resolves on a fixed future turn.
+msgid "PERK_OATHCLOCK_SEQUENCED_VERDICT_BLURB"
+msgstr ""
+
+#. perks/oathclock-prompt-court — display name
+#. English source: Prompt Court
+msgid "PERK_OATHCLOCK_PROMPT_COURT_NAME"
+msgstr ""
+
+#. perks/oathclock-prompt-court — blurb
+#. English source: Sentences fall due one round sooner.
+msgid "PERK_OATHCLOCK_PROMPT_COURT_BLURB"
+msgstr ""
+
+#. perks/oathclock-public-verdict — display name
+#. English source: Public Verdict
+msgid "PERK_OATHCLOCK_PUBLIC_VERDICT_NAME"
+msgstr ""
+
+#. perks/oathclock-public-verdict — blurb
+#. English source: A Sentence filed while an ally is adjacent cannot be Jammed.
+msgid "PERK_OATHCLOCK_PUBLIC_VERDICT_BLURB"
+msgstr ""
+
+#. perks/locksmirk-second-pick — display name
+#. English source: Second Pick
+msgid "PERK_LOCKSMIRK_SECOND_PICK_NAME"
+msgstr ""
+
+#. perks/locksmirk-second-pick — blurb
+#. English source: Jam the Gears may wait and retry on ally turns as well as your own.
+msgid "PERK_LOCKSMIRK_SECOND_PICK_BLURB"
+msgstr ""
+
+#. perks/locksmirk-jam-the-gears — display name
+#. English source: Jam the Gears
+msgid "PERK_LOCKSMIRK_JAM_THE_GEARS_NAME"
+msgstr ""
+
+#. perks/locksmirk-jam-the-gears — blurb
+#. English source: Spend 1 Soul to cancel an enemy's pending action and queued effects. If nothing is pending, Jam waits and retries on your turns.
+msgid "PERK_LOCKSMIRK_JAM_THE_GEARS_BLURB"
+msgstr ""
+
+#. perks/locksmirk-jammed-twice — display name
+#. English source: Jammed Twice
+msgid "PERK_LOCKSMIRK_JAMMED_TWICE_NAME"
+msgstr ""
+
+#. perks/locksmirk-jammed-twice — blurb
+#. English source: A Jam that finds nothing pending also delays the target's next action by 20 CT.
+#, fuzzy
+msgid "PERK_LOCKSMIRK_JAMMED_TWICE_BLURB"
+msgstr ""
+
+#. perks/locksmirk-pocketed-gear — display name
+#. English source: Pocketed Gear
+msgid "PERK_LOCKSMIRK_POCKETED_GEAR_NAME"
+msgstr ""
+
+#. perks/locksmirk-pocketed-gear — blurb
+#. English source: A Jam that cancels something refunds its Soul.
+msgid "PERK_LOCKSMIRK_POCKETED_GEAR_BLURB"
+msgstr ""
+
+#. perks/threadwalker-fourth-thread — display name
+#. English source: Fourth Thread
+msgid "PERK_THREADWALKER_FOURTH_THREAD_NAME"
+msgstr ""
+
+#. perks/threadwalker-fourth-thread — blurb
+#. English source: Hold 1 more contract.
+#, fuzzy
+msgid "PERK_THREADWALKER_FOURTH_THREAD_BLURB"
+msgstr ""
+
+#. perks/threadwalker-the-unspoken-term — display name
+#. English source: The Unspoken Term
+msgid "PERK_THREADWALKER_THE_UNSPOKEN_TERM_NAME"
+msgstr ""
+
+#. perks/threadwalker-the-unspoken-term — blurb
+#. English source: Bind Threads with more conditions and choose when to cash them in.
+msgid "PERK_THREADWALKER_THE_UNSPOKEN_TERM_BLURB"
+msgstr ""
+
+#. perks/threadwalker-doubled-knot — display name
+#. English source: Doubled Knot
+msgid "PERK_THREADWALKER_DOUBLED_KNOT_NAME"
+msgstr ""
+
+#. perks/threadwalker-doubled-knot — blurb
+#. English source: A contract may be placed twice on the same enemy.
+msgid "PERK_THREADWALKER_DOUBLED_KNOT_BLURB"
+msgstr ""
+
+#. perks/threadwalker-known-contract — display name
+#. English source: Known Contract
+msgid "PERK_THREADWALKER_KNOWN_CONTRACT_NAME"
+msgstr ""
+
+#. perks/threadwalker-known-contract — blurb
+#. English source: A bound enemy's first attack after binding is delayed 20 CT: it has heard what the thread costs.
+#, fuzzy
+msgid "PERK_THREADWALKER_KNOWN_CONTRACT_BLURB"
+msgstr ""
+
 #: dialogue/marshal_coiljaw.dialogue
 msgctxt "dialogue"
 msgid "Dorthkor's road-drum stopped halfway through the breach warning. Demons first. Then one clean beat in a dead company's cadence."

@@ -195,3 +195,16 @@ func test_anatomy_defaults_to_the_humanoid_silhouette_round_trips_and_legacy_sav
 	legacy.erase("anatomy")
 	assert_dict(PartyMember.from_dict(legacy).anatomy).is_equal(PartyMember.HUMANOID_ANATOMY)
 	assert_dict(BattleActor.from_party_member(loaded, 0).anatomy).is_equal(member.anatomy)
+
+
+func test_perk_ids_round_trip_and_legacy_saves_load_with_none() -> void:
+	var member := PartyMember.new()
+	member.perk_ids = PackedStringArray(["ironbrand-thick-hide", "ironbrand-debt-of-arms"])
+	var restored := PartyMember.from_dict(member.to_dict())
+	assert_array(Array(restored.perk_ids)).is_equal(["ironbrand-thick-hide", "ironbrand-debt-of-arms"])
+
+	var legacy := member.to_dict()
+	legacy.erase("perk_ids")
+	assert_int(PartyMember.from_dict(legacy).perk_ids.size()).is_equal(0)
+	legacy["perk_ids"] = ["", 7, "ironbrand-thick-hide"]
+	assert_array(Array(PartyMember.from_dict(legacy).perk_ids)).is_equal(["ironbrand-thick-hide"])

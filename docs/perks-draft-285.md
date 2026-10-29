@@ -1,11 +1,17 @@
 # Perk lists per patron class — draft for review (#285, owner item 2)
 
-**Status: review only. No perk code exists** (`grep -ri perk globals ui data` → nothing). The owner ruled on
-2026-10-16 and confirmed on 2026-10-22: Chapter 1 level cap **6**, perks at levels **2 / 4 / 6**. That is
-three picks per character in Chapter 1, and the third is the earned one: the progression sweep
-(`tools/progression_sweep.gd`, cap 6) puts a thorough run at level 5 without wild fighting and at 6 with
-it. This draft proposes the three picks for each of the ten classes and the Pandora shape they live in,
-so #285 can be handed to Codex after approval. DeepSeek owns every number; they are written `[n]`.
+**Status: approved 2026-10-24** (owner item 22: `perks: approved`, `perks karma gate: wait`).
+**Slice 1 landed (#285 PR 1):** the 40 perks are canon (`canon/dom/perks/*.json`, `weftlumin.perk.v1`,
+flat gate fields `minimum_fame_tier` / `minimum_karma_tier` / `maximum_karma_tier`), seeded into the
+Pandora `Perks` root and emitted to `data/generated/perks.json` with `PERK_*` keys in the POT;
+`PerkCatalog` reads them, `PartyMember.perk_ids` records picks (no save bump), and the character sheet
+offers each pick at levels 2 / 4 / 6. Karma gates are authored but not enforced
+(`PerkCatalog.KARMA_GATES_LIVE := false`) until Karma has writers. No perk effect is wired in this slice:
+the sheet marks every pick "(planned)" except Jam the Gears and Nothing Wasted, which already shipped as
+class features. The `[n]` values below were ruled on 2026-10-25 (§6) and the canon blurbs carry them, with
+Longer Ledger and Named Storm reworded per §6 flags B and C. `effect.op` (§3) arrives with the effect slice.
+
+The text below is the approved draft as reviewed.
 
 Sources: `globals/stats/class_catalog.gd` (resource, signature, kit skills), `docs/class-resources-numbers.md`
 (B11, the caps the level-2 perks move), `docs/ideas/class-kits-first-nine.md` § Shared kit rules ("when
@@ -167,4 +173,50 @@ A new canon kind `perks`, one document per perk, generated like every other kind
 ```
 perks: approved                 (or edit rows in place and say "perks: as edited")
 perks karma gates: wait         (ship the four Karma capstones ungated until the act table lands) | gate
+```
+
+## 6. Numbers (ruled 2026-10-25, owner items 24 and 6)
+
+**Ruled 2026-10-25:** `24: as proposed`, flags B and C as recommended, and item 6 ratified B11, so the
+"if item 6 lands B11" column is the live one and flag C's fallback applies. The canon blurbs now carry
+these numbers; the effect slice wires them. Every number is a **delta on the class's current value**, so it holds whichever
+way item 6 (B11) lands. Both columns are shown where B11 would move the base.
+
+Scale used for the CT delays: a participant acts at 100 CT, gains Speed 7–10 per tick (5 + Reason), and an
+action costs 30–60, so one turn is about 45 CT or 5 ticks. **20 CT is a step's cost (`move` = 20): a bit
+under half a turn.** It reads as "late", never as a skipped turn.
+
+| perk | class | `[n]` | proposed | base today → with perk | if item 6 lands B11 | why |
+|---|---|---|---|---|---|---|
+| Thick Hide | Ironbrand | Scar cap | **+1** | 5 → 6 | 3 → 4 | B11 §3: at 3 the cap binds by round 3 under pressure; +1 buys one more banked round. At today's 5 the cap rarely binds, so this perk is weak until item 6 is ruled (flag A). |
+| Patient Hunger | Husk-bearer | Hunger cap | **+1** | 5 → 6 | 3 → 4 | B11 §4 table: at cap 4 the DoT alone kills a 36 HP enemy in round 12 instead of 14. Still pressure, not a solo kill. |
+| Third Lesson | Flamebinder | Failure Token cap | **+1** | 3 → 4 | 3 → 4 | B11 §7: cap 3 only wastes tokens on deep-front Songs (6–9 banked), so +1 is a front-line perk. Dom stays inert either way (B11 flag). |
+| Longer Docket | Oathclock | Sentences held | **+1** | 3 → 4 | 3 → 4 | B11 budget table: 4 entries is one every 2.5 rounds in a 10-round fight. 5 would be effectively uncapped. |
+| Fourth Thread | Threadwalker | contracts held | **+1** | 3 → 4 | 3 → 4 | The name already says four. Same budget reading as above. |
+| Wider Lens | Lensbearer | Clarity at battle start | **+1** | 3 → 4 | 3 → 4 | Start and cap are both 3 today, so the perk raises **both** to 4; otherwise the extra point is clipped on turn one. |
+| Feed the Husk | Husk-bearer | Hunger refunded on a killing tick | **1** | — | — | One point of a 3-point bar (B11) carries the DoT's strength into the next target. 2 would refill most of the bar from one kill. |
+| Known Edge | Mirrorblade | CT delay | **20** | — | — | A step's cost. |
+| Known Contract | Threadwalker | CT delay | **20** | — | — | Same unit, so the two Fame capstones match. |
+| Jammed Twice | Locksmirk | CT delay | **20** | — | — | Same unit. Cancelling a pending action stays the bigger effect. |
+
+### Flags (need a word from you, not a number)
+
+- **A. Thick Hide depends on item 6.** At today's Scar cap of 5, +1 is close to invisible (B11 §3: the cap
+  almost never binds). Either rule item 6 first or accept a weak perk until you do.
+- **B. Longer Ledger has nothing to lengthen.** The Name-Ledger has **no capacity** in code
+  (`haeren_name_ledger.gd`: any living ally can be recorded once per battle), so "holds [n] more names" can't
+  be wired. Recommended replacement, same slot and theme: **"The first name to pay each battle pays twice."**
+  It stays in B11's unit (a name is worth a Note). Alternative: "+1 Breath on every paid name", which breaks
+  that unit.
+- **C. Named Storm collides with item 6.** It reads "rolls on the wider table B11 §6 proposes". If item 6
+  adopts that tailed table for every Stormbearer, the perk becomes nothing. Recommended fallback if that
+  happens: **"draw twice and keep the higher"**. On the tailed table `[1, 1, 2, 2, 3, 6]` that lifts the
+  mean from 2.50 to 3.36 and makes the 6 come up 31 % of the time instead of 17 %. If item 6 keeps the
+  shipped table, Named Storm stays as written.
+
+Answer format:
+
+```
+24: as proposed                (numbers, plus B and C as recommended)
+24: B alternative | C as written   (per flag, if you differ)
 ```
