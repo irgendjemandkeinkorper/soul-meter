@@ -371,7 +371,8 @@ msgid "PERK_LENSBEARER_SACRED_CLARITY_NAME"
 msgstr ""
 
 #. perks/lensbearer-sacred-clarity — blurb
-#. English source: Force a target's next action to be telegraphed to the whole party, at Fading cost.
+#. English source: Spend 1 Clarity to read an enemy: its next target, aim and odds are shown, and it is held to them.
+#, fuzzy
 msgid "PERK_LENSBEARER_SACRED_CLARITY_BLURB"
 msgstr ""
 
@@ -391,7 +392,8 @@ msgid "PERK_LENSBEARER_READ_ALOUD_NAME"
 msgstr ""
 
 #. perks/lensbearer-read-aloud — blurb
-#. English source: A forecast you reveal is shown to the whole party for that turn.
+#. English source: While your reveal is armed, allies' spell forecasts this round show their true terms too.
+#, fuzzy
 msgid "PERK_LENSBEARER_READ_ALOUD_BLURB"
 msgstr ""
 

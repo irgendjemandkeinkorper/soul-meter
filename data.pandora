@@ -18375,7 +18375,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "A forecast you reveal is shown to the whole party for that turn."
+						"value": "While your reveal is armed, allies' spell forecasts this round show their true terms too."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18387,11 +18387,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "read_aloud"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18432,7 +18432,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Force a target's next action to be telegraphed to the whole party, at Fading cost."
+						"value": "Spend 1 Clarity to read an enemy: its next target, aim and odds are shown, and it is held to them."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18444,11 +18444,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "sacred_clarity"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
