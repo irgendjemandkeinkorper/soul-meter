@@ -13,7 +13,8 @@ extends RefCounted
 ## forecast == resolution by construction: there is no second calculator.
 ##
 ## Contract detail and the B1–B10 authoring recipe: `docs/class-resources.md`.
-## Numbers (caps, refund sizes, floors) belong to B11; anything hard-coded here is PROVISIONAL.
+## Numbers (caps, refund sizes, floors) belong to B11 (`docs/class-resources-numbers.md`,
+## ratified 2026-10-25); a new number added here is PROVISIONAL until B11 covers it.
 
 ## Patron id this resource serves — the lower-case, diacritic-free form of `PartyMember.patron`
 ## (see `ClassResourceRegistry.normalize_patron()`), e.g. &"kero".
