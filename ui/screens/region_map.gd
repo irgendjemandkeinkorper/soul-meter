@@ -274,14 +274,15 @@ func _build_hud() -> void:
 
 static func locations_for(current_scene_path: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
+	var current_location: LocationDefinition = LocationRegistry.by_scene(current_scene_path)
 	for raw_location: Dictionary in WorldMapRegistry.all_locations():
 		var row: Dictionary = raw_location.duplicate(true)
 		var location_id := StringName(row.get("id", &""))
-		var is_current := current_scene_path == str(row.get("scene_path", ""))
+		var is_current: bool = current_location != null and current_location.id == location_id
 		row["display_name"] = _display_name(location_id)
 		row["is_current"] = is_current
 		row["is_discovered"] = is_current or GameState.is_world_location_discovered(location_id)
-		var definition := LocationRegistry.by_scene(str(row.get("scene_path", "")))
+		var definition: LocationDefinition = LocationRegistry.by_id(location_id)
 		row["thinning_tier"] = definition.thinning_tier if definition != null else 0
 		result.append(row)
 	return result
@@ -578,10 +579,9 @@ func _is_selectable(location: Dictionary) -> bool:
 func _resolve_origin_id() -> StringName:
 	if _has_live_plan():
 		return GameFlow.travel_plan.origin_id
-	var current_scene := _current_scene_path()
-	for location: Dictionary in _locations:
-		if str(location.get("scene_path", "")) == current_scene:
-			return StringName(location["id"])
+	var current_location: LocationDefinition = LocationRegistry.by_scene(_current_scene_path())
+	if current_location != null and not WorldMapRegistry.location(current_location.id).is_empty():
+		return current_location.id
 	# Directly-instanced integration scenes have no underlying gameplay scene.
 	# The first discovered registry location gives those tests a deterministic origin.
 	for location: Dictionary in _locations:
@@ -610,6 +610,16 @@ func _pending_encounter_id() -> StringName:
 
 
 static func _display_name(identifier: StringName) -> String:
+	var index: JSON = load(LocationRegistry.INDEX_PATH) as JSON
+	if index != null and index.data is Dictionary:
+		for row: Dictionary in index.data.get("locations", []):
+			if StringName(row.get("id", "")) == identifier:
+				var authored: String = String(row.get("display_name", ""))
+				if not authored.is_empty():
+					return authored
+				break
+	# Encounter prompts also use this fallback for an unknown encounter, and a map node whose
+	# document has no display_name yet renders its prettified id instead of a blank marker.
 	return String(identifier).replace("-", " ").replace("_", " ").capitalize()
 
 

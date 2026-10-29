@@ -157,7 +157,7 @@ func test_canon_documents_are_stored_in_canonical_text() -> void:
 
 func test_index_rows_cover_every_canon_location_with_both_facets() -> void:
 	var parsed: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(WeftluminLocationsKind.INDEX_PATH))
-	assert_str(String(parsed["schema"])).is_equal("weftlumin.location_index.v1")
+	assert_str(String(parsed["schema"])).is_equal("weftlumin.location_index.v2")
 	var rows: Dictionary = {}
 	for row: Dictionary in parsed["locations"]:
 		rows[row["id"]] = row
@@ -167,9 +167,58 @@ func test_index_rows_cover_every_canon_location_with_both_facets() -> void:
 	assert_str(String(rows["loamgate"]["scene_path"])).is_empty()
 	assert_bool(bool(rows["bell_house_interior"]["no_combat_zone"])).is_true()
 	assert_bool(bool(rows["wilds"]["no_combat_zone"])).is_false()
+	assert_dict(rows["dom"]["world_map"]).is_equal({"map_coordinate": [0.45, 0.55]})
+	assert_int(int(rows["dom"]["fast_travel"]["base_cost_gp"])).is_equal(25)
+	assert_bool(rows["loamgate"]["world_map"] == null).is_true()
+	assert_bool(rows["long_verge"]["fast_travel"] == null).is_true()
+	assert_bool(rows["dom"]["transition"] == null).is_true()
+	assert_int((parsed["routes"] as Array).size()).is_equal(8)
 
 
 # --- Validation --------------------------------------------------------------------------------
+
+
+func test_travel_facets_are_optional_and_accept_boundary_values() -> void:
+	for coordinate: Array in [[0, 1], [1, 0], [0.2, 0.4]]:
+		var document: Dictionary = _valid_scene_document()
+		document["world_map"] = {"map_coordinate": coordinate}
+		document["fast_travel"] = {"base_cost_gp": 0.0}
+		var errors: Array[Dictionary] = []
+		var batch: Array[Dictionary] = [document]
+		var rows: Array[Dictionary] = _kind.validate(batch, errors)
+		assert_array(errors).is_empty()
+		assert_int(typeof(rows[0]["fast_travel"]["base_cost_gp"])).is_equal(TYPE_INT)
+		assert_str(WeftluminLocationsKind.canon_text(rows[0])).contains('"fast_travel":{"base_cost_gp":0}')
+		assert_bool(WeftluminLocationsKind.definition_text(rows[0]).contains("world_map")).is_false()
+
+
+func test_travel_facets_reject_malformed_coordinates_and_costs() -> void:
+	for coordinate: Variant in [[], [0], [0, 1, 0], [-0.1, 0.5], [0.5, 1.1], ["0", 1], null]:
+		var document: Dictionary = _valid_scene_document()
+		document["world_map"] = {"map_coordinate": coordinate}
+		assert_array(_codes(document)).contains(["out_of_range"])
+	for cost: Variant in [-1, 0.5, "25", null]:
+		var document: Dictionary = _valid_scene_document()
+		document["fast_travel"] = {"base_cost_gp": cost}
+		assert_array(_codes(document)).contains(["out_of_range"])
+	for facet: String in ["world_map", "fast_travel"]:
+		var document: Dictionary = _valid_scene_document()
+		document[facet] = []
+		assert_array(_codes(document)).contains(["invalid_field_type"])
+
+
+func test_travel_facets_require_a_scene_and_fast_travel_requires_gameplay() -> void:
+	for facet: String in ["world_map", "fast_travel"]:
+		var city: Dictionary = {
+			"schema": WeftluminLocationsKind.SCHEMA, "id": "city", "display_name": "City",
+			"epithet": "", "patron": "", "agreement": "", "vault_id": "",
+		}
+		city[facet] = {"map_coordinate": [0, 1]} if facet == "world_map" else {"base_cost_gp": 0}
+		assert_array(_codes(city)).contains(["missing_scene_facet"])
+	var document: Dictionary = _valid_scene_document()
+	document["allowed_gameplay"] = false
+	document["fast_travel"] = {"base_cost_gp": 25}
+	assert_array(_codes(document)).contains(["non_gameplay_hub"])
 
 
 func test_a_valid_scene_document_normalises_to_typed_values() -> void:

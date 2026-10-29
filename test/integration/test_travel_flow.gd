@@ -92,15 +92,15 @@ func after_test() -> void:
 
 
 func test_start_journey_builds_and_persists_plan_without_mutating_on_invalid_route() -> void:
-	assert_bool(GameFlow.start_journey(&"dom", &"dorthkor-road")).is_true()
+	assert_bool(GameFlow.start_journey(&"dom", &"dorthkor_road")).is_true()
 	var plan: TravelPlan = GameFlow.travel_plan
 	assert_object(plan).is_not_null()
 	assert_str(plan.origin_id).is_equal("dom")
-	assert_str(plan.destination_id).is_equal("dorthkor-road")
+	assert_str(plan.destination_id).is_equal("dorthkor_road")
 	assert_int(plan.progress_step).is_zero()
 	assert_int(plan.total_steps).is_equal(12)
 	assert_int(int(plan.state)).is_equal(TravelPlan.State.EN_ROUTE)
-	var route: Dictionary = WorldMapRegistry.route_between(&"dom", &"dorthkor-road")
+	var route: Dictionary = WorldMapRegistry.route_between(&"dom", &"dorthkor_road")
 	assert_array(plan.encounter_schedule).is_equal(
 		EncounterDirector.build_schedule(route, plan.rng_seed)
 	)
@@ -333,6 +333,29 @@ func test_in_battle_save_reloads_to_a_resumable_avoid_prompt() -> void:
 	assert_int(int(restored.state)).is_equal(TravelPlan.State.IN_BATTLE)
 
 
+func test_v9_journey_save_load_migrates_ids_and_resumes_the_same_encounter() -> void:
+	var chance: float = _avoidance_chance()
+	var plan: TravelPlan = _prompt_plan(_seed_for_avoidance(chance, true))
+	plan.progress_step = 2
+	_install_plan(plan)
+	var payload: Dictionary = SaveGame._build_payload()
+	payload["schema_version"] = 9
+	payload["game_state"]["travel_plan"]["destination_id"] = "dorthkor-road"
+	payload["game_state"]["flags"]["world_location_discovered:dorthkor-road"] = true
+	var file: FileAccess = FileAccess.open(SaveGame.save_path, FileAccess.WRITE)
+	file.store_var(payload)
+	file.close()
+	GameState.travel_plan = {}
+	GameFlow.travel_plan = null
+	assert_bool(SaveGame.load_save()).is_true()
+	assert_dict(GameFlow.travel_plan.to_dict()).is_equal(plan.to_dict())
+	assert_bool(GameState.is_world_location_discovered(&"dorthkor_road")).is_true()
+	assert_bool(GameState.flags.has("world_location_discovered:dorthkor-road")).is_false()
+	var result: Dictionary = GameFlow.resolve_encounter_prompt(true)
+	assert_str(result["event"]).is_equal("avoided")
+	assert_bool(bool(GameFlow.travel_plan.encounter_schedule[0]["resolved"])).is_true()
+
+
 func test_prompt_state_with_no_reached_slot_reloads_to_en_route() -> void:
 	var plan := _prompt_plan(41)
 	plan.progress_step = 0
@@ -407,7 +430,7 @@ func _traveler() -> PartyMember:
 func _prompt_plan(seed: int) -> TravelPlan:
 	var plan := TravelPlan.new()
 	plan.origin_id = &"dom"
-	plan.destination_id = &"dorthkor-road"
+	plan.destination_id = &"dorthkor_road"
 	plan.progress_step = 0
 	plan.total_steps = 12
 	plan.rng_seed = seed
@@ -435,7 +458,7 @@ func _assert_spoil_counts(spoils: Array[Dictionary], counts_before: Dictionary) 
 
 
 func _avoidance_chance() -> float:
-	var route: Dictionary = WorldMapRegistry.route_between(&"dom", &"dorthkor-road")
+	var route: Dictionary = WorldMapRegistry.route_between(&"dom", &"dorthkor_road")
 	return EncounterDirector.avoidance_chance(route, GameState.party)
 
 

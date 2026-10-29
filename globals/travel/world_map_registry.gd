@@ -1,20 +1,25 @@
 class_name WorldMapRegistry
 extends RefCounted
-## Read-only geographic data for the five current macro locations.
+## Read-only geographic data from the baked location index. Public rows are defensive copies.
 
 const DOM_ID: StringName = &"dom"
 const WILDS_ID: StringName = &"wilds"
-const DORTHKOR_ROAD_ID: StringName = &"dorthkor-road"
-const WOUND_LIP_ID: StringName = &"wound-lip"
+const DORTHKOR_ROAD_ID: StringName = &"dorthkor_road"
+const WOUND_LIP_ID: StringName = &"wound_lip"
 ## Hub 2 (C1 / #238); the id is the LocationRegistry / fast-travel id.
 const KESSELFORD_ID: StringName = &"kesselford"
 ## Hub 3 (C2 / #239): the grain-road market town past Kesselford.
 const ASHLAREN_ID: StringName = &"ashlaren"
 ## Location 7 (C3 / #240): the high moor-road between Dom and the ford country. Wilds, not a hub.
-const LONG_VERGE_ID: StringName = &"long-verge"
+const LONG_VERGE_ID: StringName = &"long_verge"
 ## Location 8 (C4 / #241): the drowned mere past the Dorthkor Road, where the front's weather is
 ## read early. Wilds, not a hub.
 const HOLLOWMERE_ID: StringName = &"hollowmere"
+
+
+static var _locations: Array[Dictionary] = []
+static var _routes: Array[Dictionary] = []
+static var _loaded: bool = _load_index()
 
 
 static func all_locations() -> Array[Dictionary]:
@@ -53,198 +58,60 @@ static func routes_from(location_id: StringName) -> Array[Dictionary]:
 
 
 static func _location_rows() -> Array[Dictionary]:
-	# Coordinates are normalized map-space values, independent of viewport size.
-	return [
-		{
-			"id": DOM_ID,
-			"scene_path": LocationRegistry.DOM.scene_path,
-			"map_coordinate": Vector2(0.45, 0.55),
-		},
-		{
-			"id": WILDS_ID,
-			"scene_path": LocationRegistry.WILDS.scene_path,
-			"map_coordinate": Vector2(0.15, 0.75),
-		},
-		{
-			"id": DORTHKOR_ROAD_ID,
-			"scene_path": LocationRegistry.DORTHKOR.scene_path,
-			"map_coordinate": Vector2(0.65, 0.25),
-		},
-		{
-			"id": WOUND_LIP_ID,
-			"scene_path": LocationRegistry.WOUND_LIP.scene_path,
-			"map_coordinate": Vector2(0.85, 0.55),
-		},
-		{
-			# West of Dom along the inland road, at the river crossing (vault proposal).
-			"id": KESSELFORD_ID,
-			"scene_path": LocationRegistry.KESSELFORD.scene_path,
-			"map_coordinate": Vector2(0.2, 0.4),
-		},
-		{
-			# Past Kesselford on the grain road, inland toward the Ghorr fields (vault proposal).
-			"id": ASHLAREN_ID,
-			"scene_path": LocationRegistry.ASHLAREN.scene_path,
-			"map_coordinate": Vector2(0.1, 0.22),
-		},
-		{
-			# The exposed moor-road the Company columns march between Dom and the ford country
-			# (vault proposal): above the river valley the Ford Road follows.
-			"id": LONG_VERGE_ID,
-			"scene_path": LocationRegistry.LONG_VERGE.scene_path,
-			"map_coordinate": Vector2(0.32, 0.4),
-		},
-		{
-			# The quiet mere on the front-ward side of the wilds (vault proposal): off the Dorthkor
-			# Road, short of the Wound Lip, where the Agreement reads lower than anywhere near Dom.
-			"id": HOLLOWMERE_ID,
-			"scene_path": LocationRegistry.HOLLOWMERE.scene_path,
-			"map_coordinate": Vector2(0.78, 0.32),
-		},
-	]
+	return _locations.duplicate(true)
 
 
 static func _route_rows() -> Array[Dictionary]:
-	# Route values are mechanical tuning, not additional encounter or lore content.
-	return [
-		{
-			"id": &"dom-wilds",
-			"origin_id": DOM_ID,
-			"destination_id": WILDS_ID,
-			"steps": 8,
-			"phases_cost": 2,
-			"risk_tier": &"low",
-			"risk_modifier": 5.0,
-			"encounter_table": [
-				{"encounter_id": &"loam-boar", "weight": 3},
-				{"encounter_id": &"bog-wight", "weight": 1},
-			],
-			"min_encounters": 0,
-			"max_encounters": 1,
-		},
-		{
-			"id": &"dom-dorthkor-road",
-			"origin_id": DOM_ID,
-			"destination_id": DORTHKOR_ROAD_ID,
-			"steps": 12,
-			"phases_cost": 3,
-			"risk_tier": &"moderate",
-			"risk_modifier": 15.0,
-			"encounter_table": [
-				{"encounter_id": &"loam-boar", "weight": 2},
-				{"encounter_id": &"dorthkor-vanguard", "weight": 1},
-			],
-			# PROVISIONAL: tune after encounter-frequency playtests. Neutral keeps base weights.
-			"band_encounter_weights": {
-				"faction_id": &"iron-companies",
-				"bands": {
-					&"hostile": {&"dorthkor-vanguard": 3},
-					&"cold": {&"dorthkor-vanguard": 2},
-					&"warm": {&"dorthkor-vanguard": 1},
-					&"allied": {&"dorthkor-vanguard": 0},
-				},
-			},
-			"min_encounters": 1,
-			"max_encounters": 2,
-		},
-		{
-			"id": &"dom-wound-lip",
-			"origin_id": DOM_ID,
-			"destination_id": WOUND_LIP_ID,
-			"steps": 16,
-			"phases_cost": 4,
-			"risk_tier": &"high",
-			"risk_modifier": 30.0,
-			"encounter_table": [
-				{"encounter_id": &"bog-wight", "weight": 2},
-				{"encounter_id": &"dorthkor-vanguard", "weight": 2},
-			],
-			"min_encounters": 1,
-			"max_encounters": 3,
-		},
-		{
-			# Ratified 2026-10-22 (C1 / #238; owner item 4), tunable in the balance pass: a kept road between two hubs, longer than the Wilds walk
-			# but no riskier; tune after encounter-frequency playtests.
-			"id": &"dom-kesselford",
-			"origin_id": DOM_ID,
-			"destination_id": KESSELFORD_ID,
-			"steps": 10,
-			"phases_cost": 2,
-			"risk_tier": &"low",
-			"risk_modifier": 5.0,
-			"encounter_table": [
-				{"encounter_id": &"loam-boar", "weight": 2},
-				{"encounter_id": &"bog-wight", "weight": 1},
-			],
-			"min_encounters": 0,
-			"max_encounters": 1,
-		},
-		{
-			# Ratified 2026-10-22 (C2 / #239; owner item 4), tunable in the balance pass: the grain road between Kesselford and Ashlaren, a shorter and
-			# busier stretch than the Dom road. Tune after encounter-frequency playtests.
-			"id": &"kesselford-ashlaren",
-			"origin_id": KESSELFORD_ID,
-			"destination_id": ASHLAREN_ID,
-			"steps": 8,
-			"phases_cost": 2,
-			"risk_tier": &"low",
-			"risk_modifier": 5.0,
-			"encounter_table": [
-				{"encounter_id": &"loam-boar", "weight": 3},
-				{"encounter_id": &"bog-wight", "weight": 1},
-			],
-			"min_encounters": 0,
-			"max_encounters": 1,
-		},
-		{
-			# Ratified 2026-10-22 (C3 / #240; owner item 4), tunable in the balance pass: the high road out of Dom onto the Verge. Half the Ford Road's
-			# length, but the Agreement thins in streaks up here, so the dead walk it more often
-			# than boars do. Tune after encounter-frequency playtests.
-			"id": &"dom-long-verge",
-			"origin_id": DOM_ID,
-			"destination_id": LONG_VERGE_ID,
-			"steps": 6,
-			"phases_cost": 1,
-			"risk_tier": &"moderate",
-			"risk_modifier": 10.0,
-			"encounter_table": [
-				{"encounter_id": &"bog-wight", "weight": 2},
-				{"encounter_id": &"loam-boar", "weight": 1},
-			],
-			"min_encounters": 0,
-			"max_encounters": 1,
-		},
-		{
-			# Ratified 2026-10-22 (C3 / #240; owner item 4), tunable in the balance pass: the moor track down from the Verge into the ford country.
-			# The same stretch the Companies march; the Ford Road below stays the kept road.
-			"id": &"long-verge-kesselford",
-			"origin_id": LONG_VERGE_ID,
-			"destination_id": KESSELFORD_ID,
-			"steps": 6,
-			"phases_cost": 1,
-			"risk_tier": &"low",
-			"risk_modifier": 5.0,
-			"encounter_table": [
-				{"encounter_id": &"bog-wight", "weight": 1},
-				{"encounter_id": &"loam-boar", "weight": 1},
-			],
-			"min_encounters": 0,
-			"max_encounters": 1,
-		},
-		{
-			# Ratified 2026-10-22 (C4 / #241; owner item 4), tunable in the balance pass: the reed track off the Dorthkor Road down to the mere. Short,
-			# and the dead walk the shallows: the thin here is deeper than on any road near Dom.
-			"id": &"dorthkor-road-hollowmere",
-			"origin_id": DORTHKOR_ROAD_ID,
-			"destination_id": HOLLOWMERE_ID,
-			"steps": 5,
-			"phases_cost": 1,
-			"risk_tier": &"high",
-			"risk_modifier": 15.0,
-			"encounter_table": [
-				{"encounter_id": &"bog-wight", "weight": 3},
-			],
-			"min_encounters": 0,
-			"max_encounters": 1,
-		},
-	]
+	return _routes.duplicate(true)
+
+
+static func _load_index() -> bool:
+	var index: JSON = load(LocationRegistry.INDEX_PATH) as JSON
+	if index == null or not index.data is Dictionary:
+		push_error("WorldMapRegistry: missing or invalid location index.")
+		return false
+	var data: Dictionary = index.data
+	if data.get("schema") != LocationRegistry.INDEX_SCHEMA:
+		push_error("WorldMapRegistry: unsupported location index schema.")
+		return false
+	for row: Dictionary in data.get("locations", []):
+		var facet: Variant = row.get("world_map")
+		if not facet is Dictionary:
+			continue
+		var coordinate: Array = facet["map_coordinate"]
+		_locations.append({
+			"id": StringName(row["id"]),
+			"scene_path": String(row["scene_path"]),
+			"map_coordinate": Vector2(float(coordinate[0]), float(coordinate[1])),
+		})
+	# The index is sorted by id. Public rows list `dom` first and then follow id order: the same
+	# rule FastTravelRegistry applies to hubs (handoff §2.2), so the first row is always the
+	# starting town for callers that take the first discovered or selectable location.
+	_locations.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["id"] == DOM_ID or b["id"] == DOM_ID:
+			return a["id"] == DOM_ID and b["id"] != DOM_ID
+		return String(a["id"]) < String(b["id"]))
+	for row: Dictionary in data.get("routes", []):
+		var route: Dictionary = row.duplicate(true)
+		for key: String in ["id", "origin_id", "destination_id", "risk_tier"]:
+			route[key] = StringName(row[key])
+		for key: String in ["steps", "phases_cost", "min_encounters", "max_encounters"]:
+			route[key] = int(row[key])
+		route["risk_modifier"] = float(row["risk_modifier"])
+		# JSON numbers/strings return to the original public Variant types at this boundary.
+		# Untyped on purpose: the former literal was an untyped Array and Array(typed) stays typed.
+		var encounters: Array = []
+		for entry: Dictionary in row["encounter_table"]:
+			encounters.append({"encounter_id": StringName(entry["encounter_id"]), "weight": int(entry["weight"])})
+		route["encounter_table"] = encounters
+		if row.has("band_encounter_weights"):
+			var source: Dictionary = row["band_encounter_weights"]
+			var bands: Dictionary = {}
+			for band: String in source["bands"]:
+				var weights: Dictionary = {}
+				for encounter: String in source["bands"][band]:
+					weights[StringName(encounter)] = int(source["bands"][band][encounter])
+				bands[StringName(band)] = weights
+			route["band_encounter_weights"] = {"faction_id": StringName(source["faction_id"]), "bands": bands}
+		_routes.append(route)
+	return true

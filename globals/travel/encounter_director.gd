@@ -122,13 +122,10 @@ static func _thinning_tier_for_route(route: Dictionary) -> int:
 	var tier := 0
 	for key: String in ["origin_id", "destination_id"]:
 		var location_id := StringName(route.get(key, &""))
-		var map_location := WorldMapRegistry.location(location_id)
-		if map_location.is_empty():
+		var location: LocationDefinition = LocationRegistry.by_id(location_id)
+		if location == null:
 			continue
-		tier = maxi(
-			tier,
-			LocationRegistry.thinning_tier_by_scene(str(map_location.get("scene_path", ""))),
-		)
+		tier = maxi(tier, location.thinning_tier)
 	return tier
 
 

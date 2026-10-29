@@ -9,7 +9,7 @@ func test_schema_five_defaults_expert_rerolls_to_zero_used() -> void:
 	var prepared: Dictionary = SaveMigrations.prepare(payload)
 
 	assert_bool(prepared["ok"]).is_true()
-	assert_int(prepared["payload"]["schema_version"]).is_equal(9)
+	assert_int(prepared["payload"]["schema_version"]).is_equal(SaveMigrations.CURRENT_SCHEMA_VERSION)
 	assert_bool(
 		(prepared["payload"]["skill_check"]["expert_rerolls_used"] as Dictionary).is_empty()
 	).is_true()
@@ -66,7 +66,7 @@ func test_schema_six_fixture_gains_the_default_world_clock() -> void:
 
 	var prepared: Dictionary = SaveMigrations.prepare(payload)
 	assert_bool(prepared["ok"]).is_true()
-	assert_int(prepared["payload"]["schema_version"]).is_equal(9)
+	assert_int(prepared["payload"]["schema_version"]).is_equal(SaveMigrations.CURRENT_SCHEMA_VERSION)
 	assert_str(str(prepared["payload"]["world_clock"]["phase"])).is_equal("morning")
 
 
@@ -121,6 +121,85 @@ func _schema_five_payload() -> Dictionary:
 	}
 
 
+func test_v9_world_map_ids_migrate_in_both_plan_endpoints_and_discovery_flags() -> void:
+	var renames: Dictionary = {
+		"dorthkor-road": "dorthkor_road", "wound-lip": "wound_lip", "long-verge": "long_verge",
+	}
+	for old_id: String in renames:
+		for endpoint: String in ["origin_id", "destination_id"]:
+			var plan: Dictionary = {
+				"origin_id": "dom", "destination_id": "dom", "progress_step": 3, "total_steps": 12,
+				"elapsed_phases": 1, "rng_seed": 42, "state": TravelPlan.State.AVOID_PROMPT,
+				"encounter_schedule": [{"at_step": 3, "encounter_id": "loam-boar", "resolved": false}],
+			}
+			plan[endpoint] = old_id
+			var payload: Dictionary = {
+				"schema_version": 9, "location_id": renames[old_id],
+				"game_state": {"travel_plan": plan, "flags": {
+					"world_location_discovered:" + old_id: true,
+					"world_location_discovered:dom": true,
+					"fast_travel_hub_discovered:dom": true,
+					"unrelated": false,
+				}},
+				"marker": {"preserve": true},
+			}
+			var before: Dictionary = payload.duplicate(true)
+			var prepared: Dictionary = SaveMigrations.prepare(payload)
+			assert_bool(prepared["ok"]).is_true()
+			assert_int(prepared["payload"]["schema_version"]).is_equal(10)
+			var state: Dictionary = prepared["payload"]["game_state"]
+			var expected_plan: Dictionary = plan.duplicate(true)
+			expected_plan[endpoint] = renames[old_id]
+			assert_dict(state["travel_plan"]).is_equal(expected_plan)
+			assert_dict(state["flags"]).is_equal({
+				"world_location_discovered:" + String(renames[old_id]): true,
+				"world_location_discovered:dom": true, "fast_travel_hub_discovered:dom": true,
+				"unrelated": false,
+			})
+			assert_str(prepared["payload"]["location_id"]).is_equal(renames[old_id])
+			assert_dict(prepared["payload"]["marker"]).is_equal(payload["marker"])
+			assert_dict(payload).is_equal(before)
+			var restored: TravelPlan = TravelPlan.from_dict(state["travel_plan"])
+			restored.reconcile()
+			assert_dict(WorldMapRegistry.route_between(restored.origin_id, restored.destination_id)).is_not_empty()
+			assert_int(restored.progress_step).is_equal(3)
+			assert_int(restored.state).is_equal(TravelPlan.State.AVOID_PROMPT)
+
+
+func test_v10_migration_preserves_false_flags_and_unrelated_id_substrings() -> void:
+	var source: Dictionary = {"game_state": {"flags": {
+		"world_location_discovered:long-verge": false,
+		"world_location_discovered:long-verge-camp": true,
+		"fast_travel_hub_discovered:long_verge": false,
+	}, "travel_plan": {"origin_id": "dom", "destination_id": "unknown"}}}
+	var result: Dictionary = SaveMigrations._migrate_v9_to_v10(source)
+	assert_dict(result["game_state"]["flags"]).is_equal({
+		"world_location_discovered:long_verge": false,
+		"world_location_discovered:long-verge-camp": true,
+		"fast_travel_hub_discovered:long_verge": false,
+	})
+	assert_dict(result["game_state"]["travel_plan"]).is_equal(source["game_state"]["travel_plan"])
+	assert_dict(SaveMigrations._migrate_v9_to_v10(result)).is_equal(result)
+
+
+func test_v10_migration_leaves_missing_or_malformed_optional_blocks_alone() -> void:
+	for source: Dictionary in [
+		{}, {"game_state": null}, {"game_state": []}, {"game_state": {}},
+		{"game_state": {"travel_plan": null, "flags": []}},
+		{"game_state": {"travel_plan": {}, "flags": {}}},
+		{"game_state": {"travel_plan": {"origin_id": null, "destination_id": 7}}},
+	]:
+		assert_dict(SaveMigrations._migrate_v9_to_v10(source)).is_equal(source)
+
+
+func test_preparing_a_current_save_is_idempotent() -> void:
+	var prepared: Dictionary = SaveMigrations.prepare({
+		"schema_version": 9,
+		"game_state": {"travel_plan": {"origin_id": "long-verge", "destination_id": "kesselford"}},
+	})
+	assert_dict(SaveMigrations.prepare(prepared["payload"])["payload"]).is_equal(prepared["payload"])
+
+
 func _fixture(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	assert_object(file).is_not_null()
@@ -142,7 +221,7 @@ func test_schema_seven_fixture_renames_every_element_id_except_khor() -> void:
 	var prepared: Dictionary = SaveMigrations.prepare(payload)
 
 	assert_bool(prepared["ok"]).is_true()
-	assert_int(prepared["payload"]["schema_version"]).is_equal(9)
+	assert_int(prepared["payload"]["schema_version"]).is_equal(SaveMigrations.CURRENT_SCHEMA_VERSION)
 
 	var attunements: Dictionary = prepared["payload"]["tactical"]["unit_attunement"]
 	assert_bool(attunements.is_empty()).is_false()

@@ -1,0 +1,1 @@
+{"schema":"weftlumin.route.v1","id":"dom-wound_lip","origin_id":"dom","destination_id":"wound_lip","steps":16,"phases_cost":4,"risk_tier":"high","risk_modifier":30.0,"encounter_table":[{"encounter_id":"bog-wight","weight":2},{"encounter_id":"dorthkor-vanguard","weight":2}],"min_encounters":1,"max_encounters":3}

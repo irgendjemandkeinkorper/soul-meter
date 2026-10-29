@@ -324,6 +324,13 @@ gazetteer facet (display name, patron, agreement, vault id) are read-only.
   and `tools/generate_locations.gd` bakes it into `world/locations/**/*.tres` and
   `data/generated/location_index.json`. A bake of unchanged canon is byte-identical to the
   committed files; `scripts/check_generated_data.sh` runs it as the `LOCATIONS-GEN` drift stage.
+  PR 1 of #342 adds optional scene-backed `world_map: {map_coordinate: [x, y]}` and
+  `fast_travel: {base_cost_gp: n}` facets. Coordinates are in 0–1; hub costs are non-negative
+  integers and require gameplay permission. `canon/<hub>/routes/<origin_id>-<destination_id>.json`
+  (`weftlumin.route.v1`) lives in the origin's package and uses the same validation/bake path.
+  The generator writes `weftlumin.location_index.v2`: every v1 location field, nullable travel
+  facets, reserved `transition: null`, and routes sorted by id. Existing provisional tuning is
+  documented in [canon/routes.md](../canon/routes.md).
 - **Drafts.** Save draft validates the whole location set with the edit applied and writes only
   `user://weftlumin/location-drafts/locations/<id>.json`. The panel never writes `res://`.
   **Bake preview** lists the definitions the generator would rewrite. To promote drafts, run the
@@ -334,9 +341,10 @@ gazetteer facet (display name, patron, agreement, vault id) are read-only.
   canon `no_combat_zone` through `LocationRegistry.no_combat_zone_by_scene()`.
   `LocationRegistry.register_runtime(def)` registers an unbaked location for the session and emits
   `LocationRegistry.locations_changed`; `GameFlow` validates travel with
-  `LocationRegistry.is_gameplay_scene()`. `WorldMapRegistry`, `FastTravelRegistry` and
-  `BuildingTransitionRegistry` still hold their own tables: `weftlumin.location.v1` has no world-map,
-  hub or transition facet for them to read yet.
+  `LocationRegistry.is_gameplay_scene()`. `WorldMapRegistry` now caches the index's world-map
+  locations and routes, using location ids throughout; save schema 10 migrates the three former
+  hyphenated map ids in journeys and discovery flags. `FastTravelRegistry` and
+  `BuildingTransitionRegistry` still hold their own tables pending PRs 2 and 3 of #342.
   Rendered evidence of a new game travelling Dom -> Equipment Shop through the index-driven
   registry is in `docs/qa/registries-342-2026-10-11/`, from `test/manual/registry_travel_capture.gd`.
 
@@ -443,7 +451,7 @@ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- <subco
 ```
 
 - **Package directory.** `campaign.json` is the optional manifest (`weftlumin.package.v1`).
-  `commands.jsonl` is the scene command log. `locations/`, `characters/` and `spawn_tables/` hold
+  `commands.jsonl` is the scene command log. `locations/`, `routes/`, `characters/` and `spawn_tables/` hold
   canon documents. A document replaces the canon document with the same id, or is new under
   `canon/<hub>/`. `quests/` and `encounters/` are validated through `CampaignQuestLoader`, and
   `dialogue/**/*.dialogue` is linted. Without a manifest, the id comes from the log and the kinds
