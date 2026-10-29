@@ -23,7 +23,7 @@ const _HUBS: Array[Dictionary] = [
 		"id": &"kesselford",
 		"scene_path": "res://world/kesselford.tscn",
 		"display_name": "Kesselford",
-		# PROVISIONAL: a longer road than Dom's local routes; balance pass owns the number.
+		# Ratified 2026-10-22 (owner item 4); a longer road than Dom's local routes; the balance pass may still tune it.
 		"base_cost_gp": 40,
 	},
 	{
@@ -32,7 +32,7 @@ const _HUBS: Array[Dictionary] = [
 		"id": &"ashlaren",
 		"scene_path": "res://world/ashlaren.tscn",
 		"display_name": "Ashlaren",
-		# PROVISIONAL: two roads out from Dom; balance pass owns the number.
+		# Ratified 2026-10-22 (owner item 4); two roads out from Dom; the balance pass may still tune it.
 		"base_cost_gp": 60,
 	},
 ]

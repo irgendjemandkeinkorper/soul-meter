@@ -63,10 +63,11 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
 
 ## Open questions (not resolved here; do not resolve silently)
 
-- Perk cadence (every 3 levels?). **Still open as of 2026-09-08** — the kill-XP ruling above
-  settles the XP *source*, not the curve or the cadence.
-- ~~Chapter 1 level cap~~ — **ruled 2026-10-09** (owner): cap 7 plus kill XP scaled by level
-  gap, so wild farming cannot outrun the campaign. Numbers in `docs/progression-bound-packet.md`.
+- ~~Perk cadence~~ — **ruled 2026-10-16, confirmed 2026-10-22** (owner): a perk at levels 2, 4 and 6,
+  three reachable per patron class in Chapter 1. Perk lists are drafted as Pandora data for approval.
+- ~~Chapter 1 level cap~~ — **ruled 2026-10-09, revised 2026-10-22** (owner): cap **6** plus kill XP
+  scaled by level gap, so wild farming cannot outrun the campaign; suspended stubs pay no quest XP.
+  Numbers in `docs/progression-bound-packet.md`.
 - Enemy stat variation in the wild (#412): band, which stats vary, whether it is visible, and
   whether named enemies vary. Recommendations with fitted numbers are on #412 and **await a
   ruling**.

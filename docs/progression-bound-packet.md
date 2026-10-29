@@ -15,12 +15,17 @@ godot --headless --path . --script res://tools/progression_sweep.gd
 The constants live in `globals/stats/xp_curve.gd` (`XpCurve`, re-exported by `Advancement`).
 **Signed off by the owner 2026-10-09:** cap 7, scaling constants as written, and the stub-XP question (§5.2) left for later.
 
+**Owner 2026-10-22 (confirming the 2026-10-16 ruling on #285):** cap **6**, a perk at levels 2, 4 and 6,
+and a suspended side-quest stub pays **no** quest XP. `CHAPTER_LEVEL_CAP = 6` and the stub change in
+`QuestRegistry.turn_in` landed the same day; the §2 table's "no" rows are now the live path, and the
+sweep's heading reads "cap 6". Nothing else in this packet changed.
+
 ## 1. Chapter 1 XP budget
 
 | Source | Count | XP each | Total |
 |---|---|---|---|
 | Quests (`QuestRegistry.ALL_QUESTS`) | 22 | 40 | 880 |
-| Suspended stubs (pay today, see §5) | 6 | 40 | 240 |
+| Suspended stubs (paid 40 each until 2026-10-22, see §5.2) | 6 | 0 | 0 |
 | Set pieces (bog-wight 18, loam-boar 18, vanguard 48, muster 30, jawbrace 34) | 5 | — | 148 |
 | Broken Muster milestone | 1 | one level at current level | ~400 |
 
@@ -37,6 +42,10 @@ milestone after the third):
 | no | on | 5 (+355) |
 | yes (today) | off | 6 (+168) |
 | yes (today) | on | 6 (+176) |
+
+**Superseded 2026-10-22:** with stubs paying nothing, the "no" rows apply, a thorough run reaches
+L5, and the same rule gives **`CHAPTER_LEVEL_CAP = 6`**, which is now the constant. The 2026-10-09
+reasoning, kept for the record:
 
 **Recommendation: `CHAPTER_LEVEL_CAP = 7`.** That leaves one level of headroom over a thorough
 run, so a player who fights the wilds earns a real reward, but no amount of farming goes
@@ -64,7 +73,8 @@ Wild kills needed to gain one level (glade table: bog-wight and loam boar, both 
 | 3 | 17 | 24 |
 | 4 | 23 | 58 |
 | 5 | 28 | 250 |
-| 6 | 34 | 300 |
+
+The row for level 6 is gone since 2026-10-22: 6 is the cap, so there is no level to buy from it.
 
 Before this change, five days of farming the glade bought a level at L5. Now it takes ~250
 kills. Early levels are untouched, so a new player is not punished for fighting.
@@ -75,8 +85,10 @@ on the same two archetypes, so the figures above are unchanged.
 
 ## 5. Owner questions (recommendations, not decisions)
 
-1. **Cap 7?** Recommended (see §2).
+1. **Cap 7?** Recommended (see §2). *Answered 2026-10-09: 7. Revised 2026-10-22: 6, see the header.*
 2. **Should suspended stubs pay quest XP?** Today `suspend_stub()` runs through `turn_in()`,
    which pays 40 XP for a "to be continued" ending. That looks unintended. If stubs stop
    paying, a thorough run reaches L5 and the same rule gives a cap of **6**. Not changed here.
+   *Answered 2026-10-22: stubs pay nothing; the cap is 6.*
 3. **Scaling numbers** (−30%/level, 10% floor, +25%/level, 150% ceiling): fine as a first cut?
+   *Signed off 2026-10-09.*

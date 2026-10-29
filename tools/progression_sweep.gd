@@ -41,7 +41,7 @@ func _initialize() -> void:
 	var set_pieces := _set_pieces()
 	print("== Chapter 1 XP budget ==")
 	print("quests (ALL_QUESTS)          %d x %d = %d" % [quest_count, XpCurve.XP_PER_QUEST, quest_count * XpCurve.XP_PER_QUEST])
-	print("suspended stubs (pay today)  %d x %d = %d" % [stub_count, XpCurve.XP_PER_QUEST, stub_count * XpCurve.XP_PER_QUEST])
+	print("suspended stubs (pay nothing since 2026-10-22; both rows kept below) %d x %d = %d" % [stub_count, XpCurve.XP_PER_QUEST, stub_count * XpCurve.XP_PER_QUEST])
 	for piece: Dictionary in set_pieces:
 		print("set piece %-22s foe levels %s  base XP %d" % [piece.id, str(piece.levels), piece.base])
 	print("milestone: one level's XP at the member's level, after set piece %d" % MILESTONES_AFTER_SET_PIECE)

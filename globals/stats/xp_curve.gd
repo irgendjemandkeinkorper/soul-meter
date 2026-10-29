@@ -34,7 +34,10 @@ const MILESTONE_XP_LEVELS := 1
 ## - kill XP scaled per member by the gap between their level and the foe's, so an
 ##   out-levelled foe pays a trickle and a member behind the curve catches up.
 ## Quest and milestone XP are never scaled; only the cap applies to them.
-const CHAPTER_LEVEL_CAP := 7
+## Owner 2026-10-22 (confirming the 2026-10-16 ruling on #285): the cap is 6. A stub
+## suspended "to be continued" pays no quest XP (`QuestRegistry.turn_in`), so a thorough,
+## non-grinding run reaches 5 and the same rule fits the cap one level above it.
+const CHAPTER_LEVEL_CAP := 6
 ## A foe's level is read off the same two attributes its XP is: grit + muster - 2.
 const ENEMY_LEVEL_OFFSET := 2
 ## Each level the member is ABOVE the foe takes this share off the kill...

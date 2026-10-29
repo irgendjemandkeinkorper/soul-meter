@@ -58,7 +58,9 @@ func test_a_member_behind_the_foe_catches_up_to_the_ceiling() -> void:
 
 
 func test_each_member_earns_by_their_own_level() -> void:
-	var veteran := _member("veteran", 6)
+	# One level under the cap: a member AT the cap earns nothing by design (see
+	# test_no_award_carries_a_member_past_the_chapter_cap), which is not what this case pins.
+	var veteran := _member("veteran", Advancement.CHAPTER_LEVEL_CAP - 1)
 	var recruit := _member("recruit", 1)
 	GameState.party = [veteran, recruit] as Array[PartyMember]
 	GameState.custom_recruits = [] as Array[PartyMember]
@@ -72,7 +74,8 @@ func test_each_member_earns_by_their_own_level() -> void:
 
 
 func test_quest_xp_is_never_scaled() -> void:
-	var veteran := _member("veteran", 6)
+	# One level under the cap, for the same reason as the case above.
+	var veteran := _member("veteran", Advancement.CHAPTER_LEVEL_CAP - 1)
 	var recruit := _member("recruit", 1)
 	GameState.party = [veteran, recruit] as Array[PartyMember]
 	GameState.custom_recruits = [] as Array[PartyMember]
