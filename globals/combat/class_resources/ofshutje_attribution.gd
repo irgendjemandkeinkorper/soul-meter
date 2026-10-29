@@ -2,13 +2,17 @@ class_name OfshutjeAttribution
 extends ClassResource
 ## Stormbearer — Ofshütje: Attribution. The storm chooses the effect.
 ##
-## The table is deliberately a small PROVISIONAL placeholder until B11 supplies the authored
-## floor/variance table. Resolution consumes this same table through the hidden-draw channel.
+## B11 (ratified 2026-10-25, owner item 6): the tailed table. Same floor of 1, mean 2.5, and a
+## 1-in-6 result worth waiting for. Row weights are repeated rows because the hidden draw is
+## uniform over `rows`. Resolution consumes this same table through the hidden-draw channel.
 
 const EFFECT_TABLE := [
 	{"id": "surge", "bonus_damage": 1},
+	{"id": "surge", "bonus_damage": 1},
+	{"id": "fork", "bonus_damage": 2},
 	{"id": "fork", "bonus_damage": 2},
 	{"id": "thunder", "bonus_damage": 3},
+	{"id": "tempest", "bonus_damage": 6},
 ]
 
 var last_effect_id: StringName = &""

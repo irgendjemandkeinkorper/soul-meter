@@ -3,9 +3,9 @@ extends ClassResource
 ## Maiiam — Mirrorblade: Balance. Alternating strike/guard stays Balanced; spamming one side
 ## becomes Unbalanced with stronger hits and rising fizzle.
 
-const UNBALANCED_AFTER_STREAK := 2 # PROVISIONAL — B11 owns tuning.
-const UNBALANCED_DAMAGE_MULTIPLIER := 1.25 # PROVISIONAL — B11 owns tuning.
-const UNBALANCED_FIZZLE_INTEGRITY_PENALTY := 15.0 # PROVISIONAL — B11 owns tuning.
+const UNBALANCED_AFTER_STREAK := 2 # B11, ratified 2026-10-25 (owner item 6).
+const UNBALANCED_DAMAGE_MULTIPLIER := 1.25 # B11, ratified 2026-10-25 (owner item 6).
+const UNBALANCED_FIZZLE_INTEGRITY_PENALTY := 15.0 # B11, ratified 2026-10-25 (owner item 6).
 
 var last_side: StringName = &""
 var side_streak: int = 0

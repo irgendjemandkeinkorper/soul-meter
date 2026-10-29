@@ -8,9 +8,10 @@ extends ClassResource
 ## Agreement is a tagged quest outcome — not something a combat resource can mint. Naming the
 ## fallen is arguably the closest a class comes to one, so if the owner wants this specific
 ## refund to credit Soul, the change is to route it through the quest system's tagged path,
-## not to reopen a second income channel here. Magnitude unchanged; B11 owns the number.
+## not to reopen a second income channel here. B11 (ratified 2026-10-25) set the refund to 3:
+## one name returns exactly one Note.
 
-const BREATH_REFUND := 1 # PROVISIONAL — B11 owns tuning.
+const BREATH_REFUND := 3 # B11, ratified 2026-10-25 (owner item 6).
 
 var recorded_names: Array[String] = []
 var recorded_actor_ids: Array[String] = []
