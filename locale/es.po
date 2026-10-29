@@ -232,7 +232,8 @@ msgid "PERK_MIRRORBLADE_SECOND_FOOTING_NAME"
 msgstr ""
 
 #. perks/mirrorblade-second-footing — blurb
-#. English source: Once per battle, repeating Strike or Guard a third time does not break Balance.
+#. English source: Once per battle, repeating Strike or Guard does not break Balance.
+#, fuzzy
 msgid "PERK_MIRRORBLADE_SECOND_FOOTING_BLURB"
 msgstr ""
 
@@ -480,7 +481,8 @@ msgid "PERK_STORMBEARER_STEADIER_HAND_NAME"
 msgstr ""
 
 #. perks/stormbearer-steadier-hand — blurb
-#. English source: Reroll one Attribution result per battle.
+#. English source: Once per battle, an Attribution draw that lands the lowest result is drawn again.
+#, fuzzy
 msgid "PERK_STORMBEARER_STEADIER_HAND_BLURB"
 msgstr ""
 

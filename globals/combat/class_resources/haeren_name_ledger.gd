@@ -74,17 +74,24 @@ func on_any_action(
 				_refund_actor(actor.combat_id)
 
 
+## Longer Ledger (#285 slice 2, ruled 2026-10-25 flag B): the first name to pay each battle
+## pays `first_payer_multiplier` times. "First" is the first refund this battle, whichever path
+## paid it; `refunded_actor_ids` is per battle, so it is empty exactly once.
 func _refund_actor(actor_id: StringName) -> void:
 	if actor_id.is_empty() or actor_id in refunded_actor_ids:
 		return
+	var amount := BREATH_REFUND
+	var multiplier := perk_total("first_payer_multiplier")
+	if refunded_actor_ids.is_empty() and multiplier > 1:
+		amount *= multiplier
 	refunded_actor_ids.append(String(actor_id))
-	pending_breath_refunds += float(BREATH_REFUND)
-	_queue_refund()
+	pending_breath_refunds += float(amount)
+	_queue_refund(amount)
 
 
-func _queue_refund() -> void:
+func _queue_refund(amount: int = BREATH_REFUND) -> void:
 	enqueue_deferred(
-		{"writes": [{"kind": "breath", "target_id": String(owner_id), "amount": BREATH_REFUND}]},
+		{"writes": [{"kind": "breath", "target_id": String(owner_id), "amount": amount}]},
 		{"delay_rounds": 0},
 		&"name_ledger_refund",
 	)
@@ -106,7 +113,17 @@ func on_battle_end(victory: bool) -> void:
 
 func on_deferred_fired(entry: Dictionary) -> void:
 	if StringName(str(entry.get("label", ""))) == &"name_ledger_refund":
-		pending_breath_refunds = maxf(pending_breath_refunds - float(BREATH_REFUND), 0.0)
+		pending_breath_refunds = maxf(pending_breath_refunds - _entry_amount(entry), 0.0)
+
+
+## The Breath an entry carries; BREATH_REFUND for an entry queued before Longer Ledger existed.
+func _entry_amount(entry: Dictionary) -> float:
+	var effect: Variant = entry.get("effect", {})
+	if effect is Dictionary:
+		for raw: Variant in (effect as Dictionary).get("writes", []):
+			if raw is Dictionary and str((raw as Dictionary).get("kind", "")) == "breath":
+				return float((raw as Dictionary).get("amount", BREATH_REFUND))
+	return float(BREATH_REFUND)
 
 
 func on_deferred_cancelled(entry: Dictionary, _by_id: StringName) -> void:

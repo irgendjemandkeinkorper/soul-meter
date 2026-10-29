@@ -12,6 +12,11 @@ const KIND_DAYLIGHT := &"daylight"
 var threads: Array[Dictionary] = []
 
 
+## The live cap: MAX_THREADS plus any picked `cap_delta` perk (Fourth Thread, #285 slice 2).
+func max_threads() -> int:
+	return MAX_THREADS + perk_total("cap_delta")
+
+
 func commands() -> Array[StringName]:
 	return [&"bind_hostility", &"bind_witness"]
 
@@ -20,7 +25,7 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 	var gate := super.query_command(action_id, target_id, payload)
 	if not bool(gate.allowed):
 		return gate
-	if threads.size() >= MAX_THREADS:
+	if threads.size() >= max_threads():
 		return command_refusal(&"class_resource_full", "All Threads are bound. Wait for a contract to trigger.")
 	if target_id.is_empty() or host == null:
 		return command_refusal(&"no_target", "Touch a living enemy to bind the contract.")
@@ -52,7 +57,7 @@ func execute_command(action_id: StringName, target_id: StringName, payload: Dict
 
 
 func bind_thread(target_id: StringName, condition: Dictionary, payoff: Dictionary, kind: StringName = KIND_HOSTILITY) -> bool:
-	if target_id.is_empty() or condition.is_empty() or threads.size() >= MAX_THREADS:
+	if target_id.is_empty() or condition.is_empty() or threads.size() >= max_threads():
 		return false
 	threads.append({
 		"target_id": String(target_id),
@@ -73,7 +78,7 @@ func has_contract(target_id: StringName, kind: StringName) -> bool:
 
 ## Witness Weaver Tier 2 gate: a free Thread, no duplicate, and only one moving revelation.
 func query_daylight(target_id: StringName) -> Dictionary:
-	if threads.size() >= MAX_THREADS:
+	if threads.size() >= max_threads():
 		return command_refusal(&"class_resource_full", "All Threads are bound. Wait for a contract to trigger.")
 	if has_contract(target_id, KIND_DAYLIGHT):
 		return command_refusal(&"class_resource_duplicate", "That enemy already carries a Term of Daylight.")
@@ -166,7 +171,7 @@ func snapshot() -> Dictionary:
 		"patron_id": String(patron_id),
 		"label": "Threads",
 		"value": threads.size(),
-		"max": MAX_THREADS,
+		"max": max_threads(),
 		"pending": threads.duplicate(true),
 	}
 
@@ -185,5 +190,5 @@ func from_dict(data: Dictionary) -> void:
 		for raw_thread: Variant in raw_threads as Array:
 			if raw_thread is Dictionary:
 				threads.append((raw_thread as Dictionary).duplicate(true))
-				if threads.size() >= MAX_THREADS:
+				if threads.size() >= max_threads():
 					break

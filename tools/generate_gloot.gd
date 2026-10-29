@@ -752,6 +752,8 @@ static func _perk_rows() -> Array[Dictionary]:
 			"minimum_karma_tier": entity.get_string("Minimum Karma Tier"),
 			"maximum_karma_tier": entity.get_string("Maximum Karma Tier"),
 			"blurb": entity.get_string("Blurb"),
+			"effect_op": entity.get_string("Effect Op"),
+			"effect_value": entity.get_integer("Effect Value"),
 			"vault_id": entity.get_string("Vault Id"),
 		})
 	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:

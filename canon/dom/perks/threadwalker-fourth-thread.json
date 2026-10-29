@@ -1,1 +1,1 @@
-{"schema":"weftlumin.perk.v1","id":"threadwalker-fourth-thread","display_name":"Fourth Thread","class_id":"threadwalker","level":2,"slot":"resource","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"Hold 1 more contract.","vault_id":""}
+{"schema":"weftlumin.perk.v1","id":"threadwalker-fourth-thread","display_name":"Fourth Thread","class_id":"threadwalker","level":2,"slot":"resource","minimum_fame_tier":"","minimum_karma_tier":"","maximum_karma_tier":"","blurb":"Hold 1 more contract.","effect_op":"cap_delta","effect_value":1,"vault_id":""}

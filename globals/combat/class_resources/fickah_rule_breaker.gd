@@ -48,6 +48,16 @@ func has_armed_jam() -> bool:
 
 
 func on_turn_start() -> void:
+	_retry_jam()
+
+
+## Second Pick (#285 slice 2): an armed Jam also retries when an ally's turn starts.
+func on_ally_turn_start(_actor_id: StringName) -> void:
+	if perk_total("retry_on_ally_turns") > 0:
+		_retry_jam()
+
+
+func _retry_jam() -> void:
 	if jam_target_id.is_empty() or host == null:
 		return
 	var target := host.actor_by_id(jam_target_id) if host != null else null

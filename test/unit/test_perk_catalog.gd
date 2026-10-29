@@ -61,7 +61,7 @@ func test_generated_perks_match_canon_field_for_field() -> void:
 				continue
 			var generated: Variant = row.get(field)
 			var authored: Variant = document[field]
-			if field == "level":
+			if field in ["level", "effect_value"]:
 				# JSON has one number type: both sides arrive as floats.
 				generated = int(generated)
 				authored = int(authored)
@@ -80,6 +80,8 @@ func test_the_rule_of_three_accepts_canon_and_refuses_each_break() -> void:
 		["slot", "flourish", "CANON-SEED: perk 'mirrorblade-second-footing' has unknown slot 'flourish'."],
 		["level", 4.0, "CANON-SEED: perk 'mirrorblade-second-footing' is a resource perk and must sit at level 2."],
 		["minimum_fame_tier", "Famous", "CANON-SEED: perk 'mirrorblade-second-footing' gates on unknown tier 'Famous' (minimum_fame_tier)."],
+		["effect_op", "cap_delt", "CANON-SEED: perk 'mirrorblade-second-footing' has unknown effect op 'cap_delt'."],
+		["effect_value", 0.0, "CANON-SEED: perk 'mirrorblade-second-footing' needs an effect value exactly when it has an op."],
 	]
 	for case: Array in cases:
 		var broken: Array[Dictionary] = []

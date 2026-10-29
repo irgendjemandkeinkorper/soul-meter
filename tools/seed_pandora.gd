@@ -124,9 +124,9 @@ class CanonReader:
 			"schema": "weftlumin.perk.v1",
 			"fields": [
 				"id", "display_name", "class_id", "slot", "blurb", "vault_id",
-				"minimum_fame_tier", "minimum_karma_tier", "maximum_karma_tier",
+				"minimum_fame_tier", "minimum_karma_tier", "maximum_karma_tier", "effect_op",
 			],
-			"integers": ["level"],
+			"integers": ["level", "effect_value"],
 		},
 		"items": {
 			"noun": "item",
@@ -1254,6 +1254,7 @@ const PERK_SLOT_LEVELS := {"resource": 2, "signature": 4, "capstone": 6}
 ## capstone pair so no character is locked out of a level-6 pick by the ledger (owner item 22).
 const PERK_COUNT_PER_LEVEL := {2: 1, 4: 1, 6: 2}
 const RenownScript := preload("res://globals/renown.gd")
+const PerkCatalogScript := preload("res://globals/stats/perk_catalog.gd")
 
 
 ## The rule of three, checked before anything is written: every perk names a real class, sits
@@ -1289,6 +1290,15 @@ static func perks_are_valid(perks: Array[Dictionary], classes: Array[Dictionary]
 					"CANON-SEED: perk '%s' gates on unknown tier '%s' (%s)." % [perk_id, tier, gate[0]]
 				)
 				return false
+		# The op is what the engine reads (docs/perks-draft-285.md §3): an unknown op fails the
+		# bake, not the runtime. An empty op is a perk whose effect is not wired yet.
+		var op: String = row["effect_op"]
+		if not PerkCatalogScript.EFFECT_OPS.has(op):
+			push_error("CANON-SEED: perk '%s' has unknown effect op '%s'." % [perk_id, op])
+			return false
+		if op.is_empty() != (int(row["effect_value"]) == 0):
+			push_error("CANON-SEED: perk '%s' needs an effect value exactly when it has an op." % perk_id)
+			return false
 		counts[row["class_id"]][level] += 1
 	for class_id: String in counts:
 		for level: int in PERK_COUNT_PER_LEVEL:
@@ -1313,6 +1323,8 @@ func _apply_perks(perks: Array[Dictionary]) -> void:
 		["Minimum Karma Tier", "string"],
 		["Maximum Karma Tier", "string"],
 		["Blurb", "string"],
+		["Effect Op", "string"],
+		["Effect Value", "int"],
 		["Vault Id", "string"],
 	]:
 		if not root.has_entity_property(property_spec[0]):
@@ -1331,6 +1343,8 @@ func _apply_perks(perks: Array[Dictionary]) -> void:
 		_assign(entity, "Minimum Karma Tier", row["minimum_karma_tier"])
 		_assign(entity, "Maximum Karma Tier", row["maximum_karma_tier"])
 		_assign(entity, "Blurb", row["blurb"])
+		_assign(entity, "Effect Op", row["effect_op"])
+		_assign(entity, "Effect Value", int(row["effect_value"]))
 		_assign(entity, "Vault Id", row["vault_id"])
 
 

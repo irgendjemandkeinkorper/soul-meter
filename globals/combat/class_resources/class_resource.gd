@@ -26,6 +26,26 @@ var owner_id: StringName = &""
 ## and `request_cancel()` — and is null for a resource that lives outside a battle (unit tests,
 ## a save being restored before `Battle.start()`), in which case those helpers refuse.
 var host: CombatController = null
+## #285 slice 2: the owner's picked perks (`PartyMember.perk_ids`), set by the controller when
+## attached and carried through `to_dict()` so a restored battle keeps them. A resource reads
+## them only through `perk_total()`; the op and value live in canon (`PerkCatalog.EFFECT_OPS`).
+var perk_ids: PackedStringArray = []
+
+
+## Called by the controller when attached. Subclasses react in `_on_perks_applied()`.
+func apply_perks(ids: PackedStringArray) -> void:
+	perk_ids = ids.duplicate()
+	_on_perks_applied()
+
+
+## Sum of the picked perks' `effect_value` for `op`; 0 without a matching perk.
+func perk_total(op: String) -> int:
+	return PerkCatalog.effect_total(perk_ids, op)
+
+
+## Override to move state that depends on a perk (a starting value that tracks a cap).
+func _on_perks_applied() -> void:
+	pass
 
 
 ## Fires after every `action_resolved` event whose actor is the owner. `event.data` carries the
@@ -169,6 +189,12 @@ func request_cancel(target_id: StringName, kind: StringName = &"any") -> Diction
 	return host.request_cancel(owner_id, target_id, kind)
 
 
+## Fires on every OTHER ally's turn start (the owner's own turn is `on_turn_start()`).
+## Locksmirk's Second Pick retries an armed Jam here.
+func on_ally_turn_start(_actor_id: StringName) -> void:
+	pass
+
+
 ## HUD-facing view: what the unit plate shows. Keep it small and stable.
 func snapshot() -> Dictionary:
 	return {"patron_id": String(patron_id)}
@@ -176,12 +202,17 @@ func snapshot() -> Dictionary:
 
 ## Serialization — round-trips through `from_dict()`. Subclasses extend both.
 func to_dict() -> Dictionary:
-	return {"patron_id": String(patron_id), "owner_id": String(owner_id)}
+	return {"patron_id": String(patron_id), "owner_id": String(owner_id), "perk_ids": Array(perk_ids)}
 
 
+## Perks are read BEFORE a subclass clamps its own state against a cap a perk raises. A save
+## written before slice 2 has no `perk_ids`; the controller re-applies them from the member.
 func from_dict(data: Dictionary) -> void:
 	patron_id = StringName(str(data.get("patron_id", String(patron_id))))
 	owner_id = StringName(str(data.get("owner_id", String(owner_id))))
+	perk_ids = PackedStringArray()
+	for value: Variant in data.get("perk_ids", []):
+		perk_ids.append(str(value))
 
 
 func is_null() -> bool:

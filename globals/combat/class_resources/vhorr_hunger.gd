@@ -17,11 +17,16 @@ var pending_breath_refunds: float = 0.0
 var pending_dot_targets: Array[String] = []
 
 
+## The live cap: MAX_HUNGER plus any picked `cap_delta` perk (Patient Hunger, #285 slice 2).
+func max_hunger() -> int:
+	return MAX_HUNGER + perk_total("cap_delta")
+
+
 func on_action(event: CombatEvent) -> void:
 	var resolution: Dictionary = event.data.get("resolution", {}) as Dictionary
 	for write_value: Variant in resolution.get("writes", []):
 		if write_value is Dictionary and StringName(str((write_value as Dictionary).get("kind", ""))) == &"dot":
-			hunger = mini(hunger + 1, MAX_HUNGER)
+			hunger = mini(hunger + 1, max_hunger())
 	if resolution.is_empty() or bool(resolution.get("fizzled", false)):
 		return
 	# Utility compositions cannot seed a damaging Hunger effect, even on contact.
@@ -38,7 +43,7 @@ func on_action(event: CombatEvent) -> void:
 	if not bool(resolution.get("hit", true)):
 		return
 	var target_id := String(event.target_id)
-	hunger = mini(hunger + 1, MAX_HUNGER)
+	hunger = mini(hunger + 1, max_hunger())
 	if target_id in pending_dot_targets:
 		return
 	_queue_hunger_dot(event.target_id)
@@ -70,7 +75,7 @@ func on_deferred_fired(entry: Dictionary) -> void:
 	var target_key := String(write.get("target_id", ""))
 	pending_dot_targets.erase(target_key)
 	if int(write.get("before", 0)) > int(write.get("after", 0)):
-		hunger = mini(hunger + 1, MAX_HUNGER)
+		hunger = mini(hunger + 1, max_hunger())
 	if int(write.get("after", 0)) > 0:
 		_queue_hunger_dot(StringName(str(write.get("target_id", ""))))
 
@@ -79,7 +84,7 @@ func on_deferred_fired(entry: Dictionary) -> void:
 ## The chain itself is untouched; only the Hunger count moves, as it does for a queued tick.
 func on_extra_tick(write: Dictionary) -> void:
 	if int(write.get("before", 0)) > int(write.get("after", 0)):
-		hunger = mini(hunger + 1, MAX_HUNGER)
+		hunger = mini(hunger + 1, max_hunger())
 
 
 func on_deferred_cancelled(entry: Dictionary, _by_id: StringName) -> void:
@@ -112,7 +117,7 @@ func snapshot() -> Dictionary:
 		"patron_id": String(patron_id),
 		"label": "Hunger",
 		"value": hunger,
-		"max": MAX_HUNGER,
+		"max": max_hunger(),
 		"hidden_on_plate": true,
 		"pending_breath_refunds": pending_breath_refunds,
 	}
@@ -128,7 +133,7 @@ func to_dict() -> Dictionary:
 
 func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
-	hunger = clampi(int(data.get("hunger", 0)), 0, MAX_HUNGER)
+	hunger = clampi(int(data.get("hunger", 0)), 0, max_hunger())
 	# A save written before the Soul->Breath swap carries the old key; read either, so an
 	# in-flight refund is not silently dropped by loading an older battle.
 	pending_breath_refunds = maxf(

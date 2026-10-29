@@ -14,6 +14,17 @@ var clarity: int = MAX_CLARITY
 var reveal_armed: bool = false
 
 
+## The live cap: MAX_CLARITY plus any picked `cap_delta` perk (Wider Lens, #285 slice 2).
+func max_clarity() -> int:
+	return MAX_CLARITY + perk_total("cap_delta")
+
+
+## Wider Lens raises the start with the cap: start and cap are both 3, so a higher cap alone
+## would leave the extra point empty on turn one (docs/perks-draft-285.md §6).
+func _on_perks_applied() -> void:
+	clarity = max_clarity()
+
+
 func spend_clarity() -> bool:
 	if clarity <= 0 or reveal_armed:
 		return false
@@ -69,7 +80,7 @@ func snapshot() -> Dictionary:
 		"patron_id": String(patron_id),
 		"label": "Clarity",
 		"value": clarity,
-		"max": MAX_CLARITY,
+		"max": max_clarity(),
 		"armed": reveal_armed,
 	}
 
@@ -83,5 +94,5 @@ func to_dict() -> Dictionary:
 
 func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
-	clarity = clampi(int(data.get("clarity", MAX_CLARITY)), 0, MAX_CLARITY)
+	clarity = clampi(int(data.get("clarity", max_clarity())), 0, max_clarity())
 	reveal_armed = bool(data.get("reveal_armed", false))

@@ -320,6 +320,15 @@ static func resolve(context: Dictionary) -> Dictionary:
 				context, ability_id, unit, target, str(hidden_draw.get("seed_key", ""))
 			)
 			var row := _dictionary(rows[(draw_roll - 1) % rows.size()])
+			# Steadier Hand (#285 slice 2): a lowest-row result draws once more from a derived
+			# key, still deterministic, so forecast and commit agree. The second draw stands.
+			var first_row_id := ""
+			if bool(hidden_draw.get("redraw_lowest", false)) and _is_lowest_row(row, rows):
+				first_row_id = str(row.get("id", ""))
+				draw_roll = _deterministic_draw_roll(
+					context, ability_id, unit, target, str(hidden_draw.get("seed_key", "")) + "|redraw"
+				)
+				row = _dictionary(rows[(draw_roll - 1) % rows.size()])
 			draw_bonus = int(row.get("bonus_damage", 0))
 			draw_result = {
 				"table_id": str(hidden_draw.get("table_id", "")),
@@ -328,6 +337,9 @@ static func resolve(context: Dictionary) -> Dictionary:
 				"row_id": str(row.get("id", "")),
 				"row": row.duplicate(true),
 			}
+			if not first_row_id.is_empty():
+				draw_result["redrawn"] = true
+				draw_result["first_row_id"] = first_row_id
 			breakdown.append(_step("hidden_draw", "Hidden draw: %s" % str(row.get("id", "?")), float(draw_bonus), "add"))
 	var damage := maxi(roundi(scaled_damage) + detonation_bonus + draw_bonus, 0)
 	if fizzled:
@@ -660,6 +672,14 @@ static func _deterministic_draw_roll(
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(key)
 	return rng.randi_range(1, 100)
+
+
+static func _is_lowest_row(row: Dictionary, rows: Array) -> bool:
+	var bonus := int(row.get("bonus_damage", 0))
+	for other: Variant in rows:
+		if other is Dictionary and int((other as Dictionary).get("bonus_damage", 0)) < bonus:
+			return false
+	return true
 
 
 static func _fizzle_percent(

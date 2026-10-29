@@ -18,10 +18,15 @@ var scars: int = 0
 var guaranteed_hit_armed: bool = false
 
 
+## The live cap: MAX_SCARS plus any picked `cap_delta` perk (Thick Hide, #285 slice 2).
+func max_scars() -> int:
+	return MAX_SCARS + perk_total("cap_delta")
+
+
 func on_damage_taken(amount: int, _source_id: StringName) -> void:
 	if amount <= 0:
 		return
-	scars = mini(scars + 1, MAX_SCARS)
+	scars = mini(scars + 1, max_scars())
 
 
 ## Arms a guaranteed hit for the owner's next resolved action. Returns false when no Scar is
@@ -79,7 +84,7 @@ func snapshot() -> Dictionary:
 		"patron_id": String(patron_id),
 		"label": "Scars",
 		"value": scars,
-		"max": MAX_SCARS,
+		"max": max_scars(),
 		"armed": guaranteed_hit_armed,
 	}
 
@@ -93,5 +98,5 @@ func to_dict() -> Dictionary:
 
 func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
-	scars = clampi(int(data.get("scars", 0)), 0, MAX_SCARS)
+	scars = clampi(int(data.get("scars", 0)), 0, max_scars())
 	guaranteed_hit_armed = bool(data.get("guaranteed_hit_armed", false))

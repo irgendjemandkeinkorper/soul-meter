@@ -218,3 +218,11 @@ explicit duration-freeze effect (owner decision, 2026-09-16); no migration is ne
 - Which patron a companion has → `PartyMember.patron` is content, not code.
 - Guaranteed-crit: Resolution has no crit channel; Scars ships guaranteed-hit only until one
   is ratified.
+
+## Perks (#285 slice 2)
+
+`ClassResource.perk_ids` holds the owner's picked perks, set by `apply_perks()` when the controller attaches
+the resource from the `PartyMember`. Read them only through `perk_total(op)`; the op and its value are canon
+(`PerkCatalog.EFFECT_OPS`, `docs/perks-draft-285.md` §7). Override `_on_perks_applied()` for state that
+follows a perk at battle start (Stuid's starting Clarity), and `on_ally_turn_start()` for a hook on other
+allies' turns. Keep the `MAX_*` constants as the base; expose the live cap as a `max_*()` method.

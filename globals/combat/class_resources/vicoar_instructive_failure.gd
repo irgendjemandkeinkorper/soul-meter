@@ -8,10 +8,15 @@ const MAX_TOKENS := 3 # B11, ratified 2026-10-25 (owner item 6).
 var tokens: int = 0
 var guaranteed_cast_armed: bool = false
 
+## The live cap: MAX_TOKENS plus any picked `cap_delta` perk (Third Lesson, #285 slice 2).
+func max_tokens() -> int:
+	return MAX_TOKENS + perk_total("cap_delta")
+
+
 func on_fizzle(_resolution: Dictionary) -> void:
 	if guaranteed_cast_armed:
 		return
-	tokens = mini(tokens + 1, MAX_TOKENS)
+	tokens = mini(tokens + 1, max_tokens())
 
 
 func spend_token() -> bool:
@@ -61,7 +66,7 @@ func on_action(event: CombatEvent) -> void:
 	if resolution.is_empty():
 		return
 	if bool(resolution.get("fizzled", false)):
-		tokens = mini(tokens + 1, MAX_TOKENS)
+		tokens = mini(tokens + 1, max_tokens())
 	guaranteed_cast_armed = false
 
 
@@ -70,7 +75,7 @@ func snapshot() -> Dictionary:
 		"patron_id": String(patron_id),
 		"label": "Failure Tokens",
 		"value": tokens,
-		"max": MAX_TOKENS,
+		"max": max_tokens(),
 		"armed": guaranteed_cast_armed,
 	}
 
@@ -84,5 +89,5 @@ func to_dict() -> Dictionary:
 
 func from_dict(data: Dictionary) -> void:
 	super.from_dict(data)
-	tokens = clampi(int(data.get("tokens", 0)), 0, MAX_TOKENS)
+	tokens = clampi(int(data.get("tokens", 0)), 0, max_tokens())
 	guaranteed_cast_armed = bool(data.get("guaranteed_cast_armed", false))

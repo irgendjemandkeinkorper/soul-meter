@@ -11,13 +11,25 @@ extends RefCounted
 
 const DATA_PATH := "res://data/generated/perks.json"
 const PICK_LEVELS: Array[int] = [2, 4, 6]
-## Perks whose effect is already in play. Jam the Gears and Nothing Wasted shipped as class
-## features before the cadence existed; every other perk is recorded when picked and gains its
-## effect in a later #285 slice, so the sheet marks it planned rather than pretend it works.
+## Perks whose effect is already in play without an op. Jam the Gears and Nothing Wasted
+## shipped as class features before the cadence existed. Any perk with an `effect_op` is in
+## play too; the rest are recorded when picked and gain their effect in a later #285 slice, so
+## the sheet marks them planned rather than pretend they work.
 const IN_PLAY: Dictionary = {
 	"locksmirk-jam-the-gears": true,
 	"husk-bearer-nothing-wasted": true,
 }
+## What the engine reads (docs/perks-draft-285.md §3). The seed refuses any other op, so a typo
+## fails the bake. "" is a perk with no wired effect yet.
+##   cap_delta              — the class resource's cap rises by `effect_value`
+##   first_payer_multiplier — the first recorded name to pay each battle pays `effect_value`×
+##   retry_on_ally_turns    — an armed Jam also retries when an ally's turn starts
+##   forgive_streak_once    — once per battle, the repeat that would unbalance does not
+##   redraw_lowest_once     — once per battle, a hidden draw landing the lowest row draws again
+const EFFECT_OPS: PackedStringArray = [
+	"", "cap_delta", "first_payer_multiplier", "retry_on_ally_turns",
+	"forgive_streak_once", "redraw_lowest_once",
+]
 
 static var _rows: Array[Dictionary] = []
 static var _by_id: Dictionary = {}
@@ -44,7 +56,18 @@ static func for_class(class_id: String) -> Array[Dictionary]:
 
 
 static func is_in_play(perk_id: String) -> bool:
-	return IN_PLAY.has(perk_id)
+	return IN_PLAY.has(perk_id) or not str(definition(perk_id).get("effect_op", "")).is_empty()
+
+
+## Sum of `effect_value` over the picked perks carrying `op`. 0 when none does, so a caller
+## can add it unconditionally. Unknown ids are skipped, like `picked()`.
+static func effect_total(perk_ids: PackedStringArray, op: String) -> int:
+	var total := 0
+	for perk_id: String in perk_ids:
+		var row := definition(perk_id)
+		if str(row.get("effect_op", "")) == op:
+			total += int(row.get("effect_value", 0))
+	return total
 
 
 ## The perks a member has picked, in pick-level order. Ids the catalog no longer knows are

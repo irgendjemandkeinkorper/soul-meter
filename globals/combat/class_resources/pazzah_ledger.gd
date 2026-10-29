@@ -12,6 +12,11 @@ var entries: Array[Dictionary] = []
 var ready: Array[Dictionary] = []
 
 
+## The live cap: MAX_ENTRIES plus any picked `cap_delta` perk (Longer Docket, #285 slice 2).
+func max_entries() -> int:
+	return MAX_ENTRIES + perk_total("cap_delta")
+
+
 func commands() -> Array[StringName]:
 	return [&"file_sentence"]
 
@@ -20,7 +25,7 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 	var gate := super.query_command(action_id, target_id, payload)
 	if not bool(gate.allowed):
 		return gate
-	if entries.size() >= MAX_ENTRIES:
+	if entries.size() >= max_entries():
 		return command_refusal(&"class_resource_full", "The Ledger is full. Wait for a sentence to resolve.")
 	if target_id.is_empty() or host == null:
 		return command_refusal(&"no_target", "Choose a living enemy for the sentence.")
@@ -38,7 +43,7 @@ func execute_command(action_id: StringName, target_id: StringName, payload: Dict
 
 
 func queue_effect(effect_id: StringName, turns: int, payload: Dictionary = {}) -> bool:
-	if effect_id.is_empty() or turns <= 0 or entries.size() >= MAX_ENTRIES:
+	if effect_id.is_empty() or turns <= 0 or entries.size() >= max_entries():
 		return false
 	var raw_writes: Variant = payload.get("writes", [])
 	if not raw_writes is Array or (raw_writes as Array).is_empty():
@@ -85,7 +90,7 @@ func snapshot() -> Dictionary:
 		"patron_id": String(patron_id),
 		"label": "Ledger",
 		"value": entries.size(),
-		"max": MAX_ENTRIES,
+		"max": max_entries(),
 		"pending": entries.duplicate(true),
 		"ready": ready.duplicate(true),
 	}
@@ -107,7 +112,7 @@ func from_dict(data: Dictionary) -> void:
 		for raw_entry: Variant in raw_entries as Array:
 			if raw_entry is Dictionary:
 				entries.append((raw_entry as Dictionary).duplicate(true))
-				if entries.size() >= MAX_ENTRIES:
+				if entries.size() >= max_entries():
 					break
 	var raw_ready: Variant = data.get("ready", [])
 	if raw_ready is Array:

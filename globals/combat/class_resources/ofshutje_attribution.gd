@@ -18,6 +18,8 @@ const EFFECT_TABLE := [
 var last_effect_id: StringName = &""
 var last_effect_floor: int = 0
 var last_effect_revealed: bool = false
+## Steadier Hand (#285 slice 2, ruled 2026-10-26): spent once a draw has been redrawn this battle.
+var redraw_spent: bool = false
 
 
 func on_cast_forecast(context: Dictionary) -> Dictionary:
@@ -28,6 +30,9 @@ func on_cast_forecast(context: Dictionary) -> Dictionary:
 		"table_id": "ofshutje_attribution",
 		"seed_key": "ofshutje",
 		"rows": EFFECT_TABLE.duplicate(true),
+		# Resolution redraws a lowest-row result once; the forecast carries the same flag, so
+		# the forecast and the commit still draw the same row.
+		"redraw_lowest": not redraw_spent and perk_total("redraw_lowest_once") > 0,
 	}}
 
 
@@ -40,6 +45,8 @@ func on_action(event: CombatEvent) -> void:
 	var draw: Dictionary = resolution.get("hidden_draw", {})
 	if draw.is_empty():
 		return
+	if bool(draw.get("redrawn", false)):
+		redraw_spent = true
 	var chosen: Dictionary = draw.get("row", {})
 	last_effect_id = StringName(str(draw.get("row_id", chosen.get("id", ""))))
 	last_effect_floor = int(chosen.get("bonus_damage", 0))
@@ -61,6 +68,7 @@ func to_dict() -> Dictionary:
 	data["last_effect_id"] = String(last_effect_id)
 	data["last_effect_floor"] = last_effect_floor
 	data["last_effect_revealed"] = last_effect_revealed
+	data["redraw_spent"] = redraw_spent
 	return data
 
 
@@ -69,3 +77,4 @@ func from_dict(data: Dictionary) -> void:
 	last_effect_id = StringName(str(data.get("last_effect_id", "")))
 	last_effect_floor = int(data.get("last_effect_floor", 0))
 	last_effect_revealed = bool(data.get("last_effect_revealed", false))
+	redraw_spent = bool(data.get("redraw_spent", false))
