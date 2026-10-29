@@ -503,6 +503,12 @@ godot --headless --path . --script addons/weftlumin/tools/weftlumin.gd -- <subco
   `--report` file and can kill the process. The in-game **Bake & PR** button is not wired yet; it
   needs a package panel to host it.
 
+- **CI (#352).** Every PR runs `scripts/weftlumin_ci.sh lint` (validate and lint the committed
+  Dom fixture). `.github/workflows/weftlumin-nightly.yml` runs `scripts/weftlumin_ci.sh replay`
+  nightly: `apply` into scratch and `bake --write` into `res://` must write byte-identical scenes,
+  and the tree must be clean afterwards. `scripts/weftlumin_overlap_check.sh [package]` runs the
+  `pr` overlap scan alone against live open PRs (exit 3 on an overlap).
+
 `test/unit/test_weftlumin_cli.gd` covers every verb in-process, the overlap refusal, the
 launcher and the `[if /]` port. Its process runner fails the test if anything is executed. A
 transcript of each verb run against the Dom fixture is in `docs/qa/weftlumin-cli-351-2026-10-12/`.
