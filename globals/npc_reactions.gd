@@ -11,6 +11,11 @@ const BAND_REACTION_DIALOGUE := "res://dialogue/dom_band_reactions.dialogue"
 ## FR-308 rumor routes: what Dom says about a zone it can hear getting louder.
 const ZHAVAR_RUMOR_DIALOGUE := "res://dialogue/dom_zhavar_rumors.dialogue"
 
+## Yothmeru Fame routes (owner item 1, option B, 2026-10-22): what Dom says once a
+## name is Whispered ("I've heard of you") or Known (approached). PROVISIONAL prose,
+## owner item 9. Karma routes wait for Karma writers (`docs/karma-acts-draft.md`).
+const FAME_REACTION_DIALOGUE := "res://dialogue/dom_fame_reactions.dialogue"
+
 ## npc_id -> ordered reaction rules. A rule may gate on a flag, reputation, the
 ## protagonist's hollowing state, or any combination, and may override presence
 ## and/or an existing dialogue route.
@@ -71,6 +76,14 @@ const REACTIONS: Dictionary = {
 			"dialogue_path": BAND_REACTION_DIALOGUE,
 			"dialogue_title": "dom_edda_broadmark_warm",
 		},
+		# Listed AFTER the band route on purpose: a warm friend gets the escort, a
+		# Known stranger gets approached about the contract board. `resolve()`
+		# returns the first match.
+		{
+			"minimum_fame_tier": "Known",
+			"dialogue_path": FAME_REACTION_DIALOGUE,
+			"dialogue_title": "dom_edda_broadmark_known",
+		},
 	],
 	"drann-wetiron": [
 		{
@@ -94,6 +107,31 @@ const REACTIONS: Dictionary = {
 			"minimum_reputation_band": &"warm",
 			"dialogue_path": BAND_REACTION_DIALOGUE,
 			"dialogue_title": "dom_holst_brinevein_warm",
+		},
+	],
+	# --- Yothmeru Fame routes (option B, 2026-10-22) ---------------------------
+	# Whispered is reachable for every player by the end of Act I; Known needs a
+	# fighting player (`docs/yothmeru-world-effects-packet.md` §2). Two "heard of
+	# you" lines from people who hear soldiers and customers talk, one approach.
+	"gerren-pike": [
+		{
+			"minimum_fame_tier": "Whispered",
+			"dialogue_path": FAME_REACTION_DIALOGUE,
+			"dialogue_title": "dom_gerren_pike_whispered",
+		},
+	],
+	"orrik-cinderjaw": [
+		{
+			"minimum_fame_tier": "Whispered",
+			"dialogue_path": FAME_REACTION_DIALOGUE,
+			"dialogue_title": "dom_orrik_cinderjaw_whispered",
+		},
+	],
+	"dorran-rask": [
+		{
+			"minimum_fame_tier": "Known",
+			"dialogue_path": FAME_REACTION_DIALOGUE,
+			"dialogue_title": "dom_dorran_rask_known",
 		},
 	],
 	# --- FR-308 Zhavar rumor routes -------------------------------------------
