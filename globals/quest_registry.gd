@@ -791,6 +791,11 @@ func _offer_companion_quests_for_party() -> void:
 			offer(quest)
 
 
+## PROVISIONAL (owner item 5): Soul returned by resolving a companion quest, matching the
+## side-quest acts of Agreement (+8, ruled 2026-10-29, #519).
+const COMPANION_AGREEMENT_SOUL := 8.0
+
+
 ## Completes a companion's personal quest and records its one Renown write.
 ## Dialogue supplies the branch reward as data, while this method owns the
 ## completion flag and validates the full contract before changing any state.
@@ -830,12 +835,20 @@ func resolve_companion_quest(
 		GameState.set_flag(completion_flag, false)
 		return false
 	Renown.gain_reputation("player", renown_delta, cause, "party")
+	# #519 (owner 2026-10-29): a companion quest resolved either way is an act of Agreement.
+	# Through set_soul_meter, so a husked Gauge still stops at its recovery ceiling.
+	var soul_before := GameState.soul_meter
+	GameState.set_soul_meter(soul_before + COMPANION_AGREEMENT_SOUL)
+	var soul_credited := GameState.soul_meter - soul_before
 	SaveGame.request_autosave("companion-quest-resolved")
 	_publish_reward_summary(
 		active_quest,
 		"resolved",
 		"Companion bond",
-		[_reward_entry("renown", "renown", renown_delta, cause)]
+		[
+			_reward_entry("renown", "renown", renown_delta, cause),
+			_reward_entry("soul", DomSideQuest.ACT_OF_AGREEMENT_TAG, soul_credited, "Act of Agreement"),
+		]
 	)
 	return true
 

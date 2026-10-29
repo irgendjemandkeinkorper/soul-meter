@@ -6,6 +6,7 @@ var _original_party: Array[PartyMember]
 var _original_flags: Dictionary
 var _original_renown: Dictionary
 var _original_quests: Dictionary
+var _original_soul: float
 
 
 func before_test() -> void:
@@ -13,6 +14,7 @@ func before_test() -> void:
 	_original_flags = GameState.flags.duplicate(true)
 	_original_renown = Renown.to_dict().duplicate(true)
 	_original_quests = QuestRegistry.to_dict().duplicate(true)
+	_original_soul = GameState.soul_meter
 	_reset_case()
 
 
@@ -22,6 +24,7 @@ func after_test() -> void:
 	Renown.from_dict(_original_renown)
 	QuestRegistry.reset()
 	QuestRegistry.from_dict(_original_quests)
+	GameState.soul_meter = _original_soul
 
 
 func test_all_authored_dialogue_branches_resolve_with_exactly_one_consequence() -> void:
@@ -66,6 +69,10 @@ func test_all_authored_dialogue_branches_resolve_with_exactly_one_consequence() 
 		).is_equal(String(branch_case["cause"]))
 		assert_str(events[0].actor).is_equal("player")
 		assert_str(events[0].scene).is_equal("party")
+		# #519: either answer is an act of Agreement.
+		assert_float(GameState.soul_meter).override_failure_message(
+			"%s did not return the Agreement Soul" % label
+		).is_equal_approx(50.0 + QuestRegistry.COMPANION_AGREEMENT_SOUL, 0.001)
 
 
 func test_rejections_leave_flags_quest_state_and_append_only_ledger_untouched() -> void:
@@ -106,6 +113,7 @@ func test_rejections_leave_flags_quest_state_and_append_only_ledger_untouched() 
 		var flags_before: Dictionary = GameState.flags.duplicate(true)
 		var quests_before: Dictionary = QuestRegistry.to_dict().duplicate(true)
 		var renown_before: Dictionary = Renown.to_dict().duplicate(true)
+		var soul_before_rejection := GameState.soul_meter
 
 		var accepted: bool = QuestRegistry.resolve_companion_quest(
 			String(rejection_case["companion_id"]),
@@ -124,6 +132,9 @@ func test_rejections_leave_flags_quest_state_and_append_only_ledger_untouched() 
 		assert_dict(Renown.to_dict()).override_failure_message(
 			"%s rewrote or appended to the Renown ledger" % label
 		).is_equal(renown_before)
+		assert_float(GameState.soul_meter).override_failure_message(
+			"%s paid Soul" % label
+		).is_equal(soul_before_rejection)
 
 
 func test_valid_resolution_can_retry_after_contract_rejection() -> void:
@@ -164,6 +175,7 @@ func test_dialogue_reentry_after_resolution_is_idempotent() -> void:
 	var flags_before: Dictionary = GameState.flags.duplicate(true)
 	var quests_before: Dictionary = QuestRegistry.to_dict().duplicate(true)
 	var renown_before: Dictionary = Renown.to_dict().duplicate(true)
+	var soul_before := GameState.soul_meter
 
 	var hub: DialogueLine = await _line_with_responses(resource, "hub")
 	var acknowledgement: DialogueResponse = _find_allowed_response(
@@ -179,6 +191,7 @@ func test_dialogue_reentry_after_resolution_is_idempotent() -> void:
 	assert_dict(GameState.flags).is_equal(flags_before)
 	assert_dict(QuestRegistry.to_dict()).is_equal(quests_before)
 	assert_dict(Renown.to_dict()).is_equal(renown_before)
+	assert_float(GameState.soul_meter).override_failure_message("re-entry paid Soul twice").is_equal(soul_before)
 
 
 func test_dialogues_do_not_write_completion_flags_directly() -> void:
@@ -195,7 +208,35 @@ func test_dialogues_do_not_write_completion_flags_directly() -> void:
 		assert_int(source.count("QuestRegistry.resolve_companion_quest(")).is_equal(2)
 
 
+func test_agreement_soul_respects_the_husked_recovery_ceiling_and_reports_it() -> void:
+	GameState.set_soul_meter(10.0)
+	GameState.set_soul_meter(0.0)
+	assert_bool(GameState.is_husked()).is_true()
+	var ceiling := GameState.husked_recovery_ceiling()
+	assert_float(ceiling).is_less(QuestRegistry.COMPANION_AGREEMENT_SOUL)
+	var summaries: Array[Dictionary] = []
+	var record_summary := func(summary: Dictionary) -> void: summaries.append(summary)
+	QuestRegistry.quest_rewards_granted.connect(record_summary)
+	QuestRegistry.offer(QuestRegistry.SERAI_LUN_QUEST)
+	var resolved := QuestRegistry.resolve_companion_quest(
+		"serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0,
+		"Told Serai-Lun the line matters with or without a witness"
+	)
+	QuestRegistry.quest_rewards_granted.disconnect(record_summary)
+	assert_bool(resolved).is_true()
+	assert_float(GameState.soul_meter).is_equal_approx(ceiling, 0.001)
+	var entries: Array = summaries[0]["entries"]
+	assert_dict(entries[1]).contains_key_value("kind", "soul")
+	assert_float(float(entries[1]["delta"])).is_equal_approx(ceiling, 0.001)
+	var again := QuestRegistry.resolve_companion_quest(
+		"serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0, "again"
+	)
+	assert_bool(again).is_false()
+	assert_float(GameState.soul_meter).override_failure_message("a repeat paid Soul").is_equal_approx(ceiling, 0.001)
+
+
 func _reset_case() -> void:
+	GameState.soul_meter = 50.0
 	GameState.flags.clear()
 	Renown.from_dict({})
 	QuestRegistry.reset()
