@@ -205,6 +205,9 @@ const HOLDS_SAVE_KEY := "__holds__"
 ## One owned Note per holder. held_by survives Aftertone array edits; upkeep_paid spans
 ## any CT recharge between paying upkeep and taking the first action of that turn.
 var _holds: Dictionary = {}
+## #285 slice 5: intents locked by Sacred Clarity, {enemy combat_id: {action_id, target_id,
+## aim_location, read_by}}. Battle-scoped; spent by that enemy's next turn.
+var _locked_intents: Dictionary = {}
 ## Effects that only ever address an object or a working, never a creature or a cell.
 const _OBJECT_ONLY_EFFECTS: Array[StringName] = [&"reclaim", &"rot_the_brace", &"sever", &"hold_note", &"anchor"]
 var _encounter_id: StringName = &""
@@ -440,6 +443,7 @@ func start(
 	_feast.clear()
 	material.reset()
 	_holds.clear()
+	_locked_intents.clear()
 	for combatant: BattleActor in allies + enemies:
 		combatant.impositions.clear()
 	_assign_combat_ids(allies, &"ally", encounter_id)
@@ -1065,6 +1069,7 @@ func _turn_order_snapshot() -> Array[Dictionary]:
 		order = scheduler.round_overview()
 	else:
 		order = scheduler.peek_order(8)
+	var shown_once: Dictionary = {}
 	for entry: Dictionary in order:
 		var actor := entry.get("actor") as BattleActor
 		if actor == null:
@@ -1074,6 +1079,11 @@ func _turn_order_snapshot() -> Array[Dictionary]:
 		row.erase("actor")
 		row["actor_id"] = actor.combat_id
 		row["display_name"] = actor.display_name
+		# #285 slice 5: a read enemy's NEXT marker carries its locked intent (region E shows it);
+		# the lock is one turn, so later CT forecast entries stay plain.
+		if _locked_intents.has(actor.combat_id) and not shown_once.has(actor.combat_id):
+			shown_once[actor.combat_id] = true
+			row["intent"] = shown_intent(actor)
 		result.append(row)
 	return result
 
@@ -1414,7 +1424,11 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 ## attack affordability is checked only after a target is in range.
 func _resolve_enemy_actor(actor: BattleActor) -> void:
 	var enemy_action := action_by_id(&"enemy-strike")
-	var target := _first_living(allies)
+	# #285 slice 5: the turn executes the enemy's plan, so a locked (read) intent and an unread
+	# enemy run the same path. The lock is spent by this turn whatever it does.
+	var plan := plan_enemy_turn(actor)
+	_locked_intents.erase(actor.combat_id)
+	var target := actor_by_id(StringName(str(plan.get("target_id", ""))))
 	if target == null:
 		return
 	var targeting := battlefield.target_query(actor, target, enemy_action.target_profile)
@@ -1429,7 +1443,13 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 		)
 		_force_pass(actor)
 		return
-	var aim_options := choose_enemy_aim(actor, target, enemy_action)
+	var aim_options: Dictionary = {}
+	if str(plan.get("kind", "")) == "strike":
+		if not str(plan.get("aim_location", "")).is_empty():
+			aim_options = {"aim_location": str(plan["aim_location"])}
+	else:
+		# Planned as an advance, but the target came into reach: aim as an unread enemy would.
+		aim_options = choose_enemy_aim(actor, target, enemy_action)
 	var resolution_gate := _query_attack_resolution(actor, target, enemy_action, aim_options)
 	if not bool(resolution_gate.get("allowed", false)):
 		_emit_event(
@@ -1464,6 +1484,97 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 	_emit_event(&"action_resolved", actor, target, outcome)
 	scheduler.release(actor)
 	_change_balance(actor.balance_affinity * actor.balance_pressure, actor)
+
+
+## #285 slice 5: the enemy's next action, written down before its turn as `{kind, action_id,
+## target_id, aim_location}`; `kind` is "strike" or "advance" (out of reach on a cell board).
+## Unread, it is the Chapter 1 plan: strike the first living ally with the best forecast aim.
+## Read (Sacred Clarity), the target and aim are held unless the target has fallen or the aim
+## has closed. Forecast data only, so planning early and planning at turn time agree.
+func plan_enemy_turn(actor: BattleActor) -> Dictionary:
+	var enemy_action := action_by_id(&"enemy-strike")
+	var locked: Dictionary = _locked_intents.get(actor.combat_id, {})
+	var target := actor_by_id(StringName(str(locked.get("target_id", ""))))
+	var held := target != null and target.is_alive() and allies.has(target)
+	if not held:
+		target = _first_living(allies)
+	if target == null or enemy_action == null:
+		return {}
+	var plan := {
+		"kind": "strike", "action_id": String(enemy_action.id),
+		"target_id": String(target.combat_id), "aim_location": "",
+	}
+	var targeting := battlefield.target_query(actor, target, enemy_action.target_profile)
+	if not bool(targeting.get("allowed", false)) and bool(battlefield.capabilities().get("cells", false)):
+		plan["kind"] = "advance"
+		return plan
+	var locked_aim := StringName(str(locked.get("aim_location", "")))
+	if held and str(locked.get("kind", "")) == "strike" and (
+		locked_aim.is_empty() or _enemy_aim_open(actor, target, enemy_action, locked_aim)
+	):
+		plan["aim_location"] = String(locked_aim)
+	else:
+		plan["aim_location"] = str(choose_enemy_aim(actor, target, enemy_action).get("aim_location", ""))
+	return plan
+
+
+func _enemy_aim_open(actor: BattleActor, target: BattleActor, action: CombatAction, location: StringName) -> bool:
+	return (
+		not target.injuries.has(str(location))
+		and bool(_query_aim(actor, target, action, location).get("allowed", false))
+		and _enemy_can_pay(actor, CalledShot.priced_action(action, location))
+	)
+
+
+## Sacred Clarity: lock a living enemy's plan as it stands now. One read per enemy at a time.
+func lock_enemy_intent(enemy_id: StringName, read_by: StringName) -> Dictionary:
+	var enemy := actor_by_id(enemy_id)
+	if enemy == null or not enemy.is_alive() or not enemies.has(enemy):
+		return _blocked(&"no_target", "Sacred Clarity needs a living enemy.", {"type": &"living_enemy"})
+	if _locked_intents.has(enemy_id):
+		return _blocked(&"intent_read", "%s is already read." % enemy.display_name, {})
+	var plan := plan_enemy_turn(enemy)
+	if plan.is_empty():
+		return _blocked(&"no_target", "%s has no one to act against." % enemy.display_name, {})
+	plan["read_by"] = String(read_by)
+	_locked_intents[enemy_id] = plan
+	return _allowed({"intent": shown_intent(enemy)})
+
+
+func is_intent_locked(enemy_id: StringName) -> bool:
+	return _locked_intents.has(enemy_id)
+
+
+## What a read enemy shows: its plan plus live odds from the same forecast the player's attacks
+## use (hit %, damage on hit, injury chance on hit). The choice is locked; the numbers follow
+## the board. `{}` for an unread enemy.
+func shown_intent(enemy: BattleActor) -> Dictionary:
+	if enemy == null or not _locked_intents.has(enemy.combat_id):
+		return {}
+	var shown := plan_enemy_turn(enemy)
+	var target := actor_by_id(StringName(str(shown.get("target_id", ""))))
+	if target == null:
+		return {}
+	shown["target_name"] = target.display_name
+	if str(shown["kind"]) != "strike":
+		return shown
+	var action := action_by_id(StringName(str(shown["action_id"])))
+	var options := {}
+	if not str(shown["aim_location"]).is_empty():
+		options["aim_location"] = str(shown["aim_location"])
+	var context := forecast_context(enemy, target, action, options)
+	if context.is_empty():
+		return shown
+	var breakdown := Resolution.accuracy_breakdown(context)
+	var damage_on_hit := _forecast_damage_on_hit(context, target)
+	var injury: Dictionary = context.get("injury", {})
+	shown["hit_chance"] = int(breakdown.get("effective_hit_chance", breakdown.get("hit_chance", 0)))
+	shown["damage_on_hit"] = damage_on_hit
+	shown["injury_chance"] = (
+		int(injury.get("chance_on_hit", 0))
+		if not injury.is_empty() and damage_on_hit >= int(injury.get("min_damage", 1)) else 0
+	)
+	return shown
 
 
 ## PROVISIONAL (called-shots task 12): how many HP of expected damage one full injury is
@@ -3032,6 +3143,7 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"exposed": _is_exposed_now(actor),
 			"class_resource": _class_resource_of(actor).snapshot(),
 			"impositions": actor.impositions.duplicate(true),
+			"intent": shown_intent(actor),
 		})
 	return result
 

@@ -63,14 +63,13 @@ func test_pocketed_gear_waives_the_next_jam_and_never_refunds() -> void:
 	assert_bool(plain.waives_soul_cost(&"jam_the_gears")).is_false()
 
 
-func test_every_capstone_but_read_aloud_is_in_play() -> void:
+func test_every_perk_is_in_play() -> void:
 	var planned: Array[String] = []
 	for row: Dictionary in PerkCatalog.all():
-		if int(row["level"]) == 6 and not PerkCatalog.is_in_play(str(row["id"])):
+		if not PerkCatalog.is_in_play(str(row["id"])):
 			planned.append(str(row["id"]))
-	planned.sort()
-	# Read Aloud waits on the enemy-intents slice with Sacred Clarity (ruled 2026-10-26).
-	assert_array(planned).is_equal(["lensbearer-read-aloud"])
+	# Read Aloud and Sacred Clarity closed the list (#285 slice 5, ruled 2026-10-29).
+	assert_array(planned).is_empty()
 
 
 func _resource(patron: String, perk_id: String) -> ClassResource:

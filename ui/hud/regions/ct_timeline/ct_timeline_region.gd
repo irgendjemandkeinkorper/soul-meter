@@ -81,6 +81,26 @@ func refresh() -> void:
 			):
 				wait_cap = " · WAIT CAP"
 			marker.text = "%s\nCT %d → 100%s" % [display_name, int(entry.get("charge", 0)), wait_cap]
+		var intent: Dictionary = entry.get("intent", {})
+		if not intent.is_empty():
+			marker.text += "\n" + intent_line(intent)
+
+
+## #285 slice 5: a read enemy's locked intent, e.g. "→ Kero · head · 70% · 9 dmg · 25% injury".
+## Every number is the controller's own forecast; this only formats it.
+static func intent_line(intent: Dictionary) -> String:
+	var parts: PackedStringArray = ["→ %s" % str(intent.get("target_name", "?"))]
+	if str(intent.get("kind", "")) != "strike":
+		parts.append("advancing")
+		return " · ".join(parts)
+	if not str(intent.get("aim_location", "")).is_empty():
+		parts.append(str(intent["aim_location"]))
+	if intent.has("hit_chance"):
+		parts.append("%d%%" % int(intent["hit_chance"]))
+		parts.append("%d dmg" % int(intent.get("damage_on_hit", 0)))
+		if int(intent.get("injury_chance", 0)) > 0:
+			parts.append("%d%% injury" % int(intent["injury_chance"]))
+	return " · ".join(parts)
 
 
 func marker_count() -> int:

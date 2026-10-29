@@ -46,6 +46,7 @@ const EFFECT_OPS: PackedStringArray = [
 	"fizzle_rebalances_once", "free_jam_after_cancel", "witnessed_fizzle_bonus",
 	"reflect_next_attack", "stabilize_recorded", "debt_of_arms", "second_casting",
 	"chain_on_top_row", "sequenced_verdict", "unspoken_term", "carry_one_clarity", "carry_one_token",
+	"sacred_clarity", "read_aloud",
 ]
 
 static var _rows: Array[Dictionary] = []

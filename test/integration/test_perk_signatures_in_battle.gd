@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## #285 slice 4 in a live controller: the level-4 signatures and the two carry capstones
-## (rulings 2026-10-26). Sacred Clarity and Read Aloud wait on the enemy-intents slice.
+## (rulings 2026-10-26). Sacred Clarity and Read Aloud: test_enemy_intents.gd (slice 5).
 
 var _controllers: Array[CombatController] = []
 var _soul_before: float

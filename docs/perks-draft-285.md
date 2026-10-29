@@ -11,9 +11,9 @@ and the canon blurbs carry them, with Longer Ledger and Named Storm reworded per
 **Slice 2 landed (#285 PR 2): all ten level-2 resource perks work** (§7). Canon carries flat
 `effect_op` / `effect_value` fields (not the nested `effect` object sketched in §3); the seed refuses an op
 outside `PerkCatalog.EFFECT_OPS`. **Slice 3 landed (#285 PR 3): 17 of the 20 capstones work** (§8). **Slice 4
-landed (#285 PR 4): seven signatures plus Kept Focus and Carried Lesson work** (§9). Still "(planned)":
-**Sacred Clarity** and **Read Aloud**, which wait on an enemy-intents slice (owner, 2026-10-26). Jam the
-Gears and Nothing Wasted shipped as class features.
+landed (#285 PR 4): seven signatures plus Kept Focus and Carried Lesson work** (§9). **Slice 5 landed
+(#285 PR 5, #517): Sacred Clarity and Read Aloud work, on enemy intents** (§10). Every perk is now in play.
+Jam the Gears and Nothing Wasted shipped as class features.
 
 The text below is the approved draft as reviewed.
 
@@ -332,3 +332,16 @@ context after the owner's own channel), `carry_out()` / `receive_carry()` (store
 for a command a perk unlocks. Resolution gained a flat `bonus_damage` term on a landed, unfizzled hit.
 New buttons: `68_reflection`, `69_debt_of_arms`, `70_sequenced_verdict`, `71_cash_in`, `72_bind_cast`
 (costs provisional, copied from the nearest existing command).
+
+## 10. Slice 5: enemy intents, Sacred Clarity and Read Aloud (wired 2026-10-29)
+
+Owner rulings 2026-10-29, all as recommended; the packet is `docs/enemy-intents-draft.md`.
+
+| perk | op | how |
+|---|---|---|
+| Sacred Clarity | `sacred_clarity` 1 | command `sacred_clarity` (enemy in line of sight); spends 1 Clarity; `CombatController.lock_enemy_intent()` holds the target and aim for that enemy's next turn; the turn-order marker shows `shown_intent()` |
+| Read Aloud | `read_aloud` 1 | `on_ally_cast_forecast` returns `reveal` for an ally's spell while the reveal is armed, in the round it was armed (`armed_round`) |
+
+New seams: `CombatController.plan_enemy_turn()` (the one enemy plan; `_resolve_enemy_actor` executes it),
+`lock_enemy_intent()`, `is_intent_locked()`, `shown_intent()`; `intent` on enemy snapshot rows and on a read
+enemy's next `turn_order` row; `CTTimelineRegion.intent_line()`.
