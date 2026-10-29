@@ -13,7 +13,7 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
 | 3 | design | **Soul returns only through acts of Agreement** (promises kept, companion quests resolved well, places re-Agreed). Never rest, never potions. The meter trends down across a chapter. |
 | 4 | function | **Combat is the tactical centerpiece.** Fights are frequent and deep. Soul is one resource among several in battle; grid mastery is its own reward. |
 | 5 | design | **Fallout 2 lineage, not FFT.** Party of 4–6 on the map; up to ~100 hostile mobs on a map at once. Turn-based tactical combat, not squad-tactics. |
-| 6 | function | **Same-map combat.** Combat mode toggles on the field scene. No deployment for ambient fights; off-screen mobs join the CT order when alerted. Deployment survives only for scripted set-pieces. |
+| 6 | function | **Same-map combat.** Combat mode toggles on the field scene. No deployment for ambient fights; off-screen mobs join the CT order when alerted. Deployment survives only for scripted set-pieces. Ambient fights can be fled by leaving the alert radius; set-pieces cannot (ruled 2026-10-22, #506). |
 | 7 | design | **Fallout-full field game.** Skill checks on objects, lockpicking, stealing, barter, loot. Stats matter outside combat. |
 | 8 | function | **Class = identity, DRAMGID = what you can DO.** Patron class grants unique abilities and functions; DRAMGID attributes + the 22 skills decide what you do with them. A warrior may invest in academic skills and keep weaker class abilities. DRAMGID (Doctrine, Reason, Alacrity, Muster, Grit, Intuition, Decorum) replaces SPECIAL and the old six-stat build; source: dramgid-mono RFC-0001 + `04-world/systems/character-creation.md`, Yothmeru Karma/Fame. |
 | 9 | design | **Progression = XP levels + skill points + class perks.** Fallout skeleton: skill points into the 22 skills, a perk every N levels from patron-class lists, attributes fixed at creation (22-point buy) except rare story boosts. A few perks gate on Karma/Fame bands. |
@@ -63,13 +63,13 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
 
 ## Open questions (not resolved here; do not resolve silently)
 
-- Perk cadence (every 3 levels?). **Still open as of 2026-09-08** — the kill-XP ruling above
-  settles the XP *source*, not the curve or the cadence.
-- ~~Chapter 1 level cap~~ — **ruled 2026-10-09** (owner): cap 7 plus kill XP scaled by level
-  gap, so wild farming cannot outrun the campaign. Numbers in `docs/progression-bound-packet.md`.
+- ~~Perk cadence~~ — **ruled 2026-10-16, confirmed 2026-10-22** (owner): a perk at levels 2, 4 and 6,
+  three reachable per patron class in Chapter 1. Perk lists are drafted as Pandora data for approval.
+- ~~Chapter 1 level cap~~ — **ruled 2026-10-09, revised 2026-10-22** (owner): cap **6** plus kill XP
+  scaled by level gap, so wild farming cannot outrun the campaign; suspended stubs pay no quest XP.
+  Numbers in `docs/progression-bound-packet.md`.
 - Enemy stat variation in the wild (#412): band, which stats vary, whether it is visible, and
   whether named enemies vary. Recommendations with fitted numbers are on #412 and **await a
   ruling**.
 - Which of the 22 skills the Chapter 1 content actually checks (minimum viable set).
-- Whether ambient same-map fights can be fled by leaving the alert radius (Fallout allows it).
 - Loot density target for a Fallout-full field game in a world with a Mirror Shop.

@@ -130,3 +130,22 @@ Owner: ratify this doc; close or merge the four stale PRs; start the Steamworks 
    advisory: a tracked regression signal, not an acceptance criterion.
 8. ~~Steam at gold~~ RESOLVED 2026-10-16: **no Steam for gold.** The gold build is a direct
    Windows build; #299 (Steamworks) moves post-launch. The milestone name is now historical.
+9. ~~Level cap and perks (#285)~~ RESOLVED 2026-10-22, confirming 2026-10-16: cap **6** (code now
+   follows), a perk at levels 2, 4, 6, and a suspended side-quest stub pays **no** quest XP, which is
+   what fits the cap at 6 (`docs/progression-bound-packet.md` §5.2).
+10. ~~Canon format and ids for the world map, fast travel and transitions (#342)~~ RESOLVED
+    2026-10-22: optional facets on the location document plus a `weftlumin.route.v1` document per
+    route (A1); the location id wins, with one v9 → v10 save migration (B1).
+    `docs/registries-data-driven-packet.md`.
+11. ~~Karma and Fame in the world~~ RESOLVED 2026-10-22: option **B**, tier gates on surfaces that
+    already exist, no prices, no new numbers; a Karma act table is drafted for review
+    (`docs/yothmeru-world-effects-packet.md`). Its §4.1–4.3 sub-rulings are still open.
+12. ~~Four locations ratified~~ RESOLVED 2026-10-22: Kesselford, Ashlaren, The Long Verge and
+    Hollowmere as authored, names and values; the balance pass may still tune the numbers.
+13. ~~Gemini art pipeline (#298)~~ RESOLVED 2026-10-22: dropped for gold; #298 moves post-launch;
+    the 29 icons in PR #457 stay under the owner's art review.
+14. ~~Quest content calls~~ RESOLVED 2026-10-22: `bellhouse_repair` keeps one ending; `field_debt`
+    and `loamroot_sprigs` get read-back lines (PROVISIONAL, prose review).
+15. ~~Fleeing ambient fights~~ RESOLVED 2026-10-22: yes, walking out of the alert radius ends a wild
+    same-map fight; set pieces and story encounters stay committed. Implementation issue to file.
+16. ~~Stale worktrees~~ RESOLVED 2026-10-22: prune merged and clean only (56 removed, 33 remain).
