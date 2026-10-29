@@ -130,9 +130,11 @@ unordered location pair (`route_between` is bidirectional).
 comes from the row's gazetteer field. `validate()` keeps every check it has (unique ids and scenes,
 cost ≥ 0, id and scene agree with `LocationRegistry`, `allowed_gameplay`).
 
-### 2.2 Order matters to one caller: `NpcRoster.town_ids()` lists hubs first "in registry order".
-Today that order is dom, kesselford, ashlaren; sorted-by-id gives ashlaren first. Keep today's
-behaviour by ordering hubs with `dom` first, then by id, and say so in a comment and a test. (This
+### 2.2 Order: `dom` first, then the other hubs by id (dom, ashlaren, kesselford).
+`NpcRoster.town_ids()` forwards this order and it changes from today's dom, kesselford,
+ashlaren. Ruled harmless on 2026-10-23: no NPC id or display name repeats across the town
+rosters, so the merge in `NpcRoster._ensure_loaded()` gives the same result, and every test
+uses an unordered `contains`. Say so in a comment and assert the new order in a test. (This
 is the only ordering rule; do not invent a priority field.)
 
 ### 2.3 Value identity: fixture copy of today's `_HUBS` in `test/unit/test_fast_travel.gd`,
