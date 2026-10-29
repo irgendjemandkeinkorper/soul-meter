@@ -6,6 +6,8 @@ extends Node
 ## committed artifacts, through `WeftluminLocationsKind.bake()`:
 ##   res://world/locations/**/*.tres          — one `LocationDefinition` per document with a
 ##       scene facet, at the document's `definition_path`
+##   res://actors/building_door/transitions/*.tres — the enter/exit `BuildingTransitionDefinition`
+##       pair for each interior document with a `transition` facet (#342 PR 3)
 ##   res://data/generated/location_index.json — every location (cities and scenes), by id
 ## Nothing here reads or writes `data.pandora`: the gazetteer facet reaches Pandora through
 ## `tools/seed_pandora.gd`, and this index is built from canon directly.

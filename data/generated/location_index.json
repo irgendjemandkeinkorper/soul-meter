@@ -34,7 +34,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "ashlaren_millhouse",
+        "building_name": "The Flat Bell",
+        "source_scene": "res://world/ashlaren.tscn",
+        "source_anchor": "MillhouseDoor",
+        "source_position": [
+          1900.0,
+          700.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "Room/ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_ashlaren_millhouse",
+          "destination_spawn_position": [
+            1900.0,
+            790.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "ashlaren_weighing_hall",
@@ -48,7 +80,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "ashlaren_weighing_hall",
+        "building_name": "Factors' Weighing Hall",
+        "source_scene": "res://world/ashlaren.tscn",
+        "source_anchor": "WeighingHallDoor",
+        "source_position": [
+          1150.0,
+          700.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "Room/ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_ashlaren_weighing_hall",
+          "destination_spawn_position": [
+            1150.0,
+            790.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "bell_house_interior",
@@ -62,7 +126,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "bell_house",
+        "building_name": "Bell House",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "BellHouse",
+        "source_position": [
+          3000.0,
+          522.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "dom_bell_quest_open",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "Sella has not asked you to examine the bell.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_bell_house",
+          "destination_spawn_position": [
+            3000.0,
+            522.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "bell_loft_interior",
@@ -76,7 +172,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "bell_loft",
+        "building_name": "Bell Loft",
+        "source_scene": "res://world/interiors/bell_house.tscn",
+        "source_anchor": "BellLoftDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_bell_loft",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "cask_warehouse_interior",
@@ -90,7 +218,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "cask_warehouse",
+        "building_name": "Cask Warehouse",
+        "source_scene": "res://world/interiors/item_shop.tscn",
+        "source_anchor": "CaskWarehouseDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "dom_dishonest_casks_traced",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "Trace the dishonest casks before entering the warehouse.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_cask_warehouse",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "chefs_house_interior",
@@ -104,7 +264,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "chefs_house",
+        "building_name": "Chef's House",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "ChefsHouse",
+        "source_position": [
+          500.0,
+          1711.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_chefs_house",
+          "destination_spawn_position": [
+            500.0,
+            1751.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "chefs_pantry_interior",
@@ -118,7 +310,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "chefs_pantry",
+        "building_name": "Chef's Pantry",
+        "source_scene": "res://world/interiors/chefs_house.tscn",
+        "source_anchor": "ChefsPantryDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_chefs_pantry",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "council_chamber_interior",
@@ -132,7 +356,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "council_chamber",
+        "building_name": "Council Chamber",
+        "source_scene": "res://world/interiors/town_hall.tscn",
+        "source_anchor": "CouncilChamberDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_council_chamber",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "deivel-zeit",
@@ -214,7 +470,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "equipment_forge",
+        "building_name": "Equipment Forge",
+        "source_scene": "res://world/interiors/equipment_shop.tscn",
+        "source_anchor": "EquipmentForgeDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_equipment_forge",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "equipment_shop_interior",
@@ -228,7 +516,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "equipment_shop",
+        "building_name": "Equipment Shop",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "EquipmentShop",
+        "source_position": [
+          2400.0,
+          530.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_equipment_shop",
+          "destination_spawn_position": [
+            2400.0,
+            565.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "garrison_yard_interior",
@@ -242,7 +562,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "garrison_yard",
+        "building_name": "Garrison Yard",
+        "source_scene": "res://world/interiors/iron_companies.tscn",
+        "source_anchor": "GarrisonYardDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "iron-companies",
+        "minimum_reputation_band": "warm",
+        "locked_message": "Earn warm standing with the Iron Companies to enter.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_garrison_yard",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "hollowmere",
@@ -275,7 +627,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "iron_companies",
+        "building_name": "Iron Companies",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "IronCompaniesBarracks",
+        "source_position": [
+          3000.0,
+          1486.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_iron_companies",
+          "destination_spawn_position": [
+            3000.0,
+            1576.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "item_shop_interior",
@@ -289,7 +673,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "item_shop",
+        "building_name": "Item Shop",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "ItemShop",
+        "source_position": [
+          1700.0,
+          449.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_item_shop",
+          "destination_spawn_position": [
+            1700.0,
+            489.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "karrn-vash",
@@ -338,7 +754,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "kesselford_chandlery",
+        "building_name": "Ford Chandlery",
+        "source_scene": "res://world/kesselford.tscn",
+        "source_anchor": "ChandleryDoor",
+        "source_position": [
+          1900.0,
+          700.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "Room/ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_kesselford_chandlery",
+          "destination_spawn_position": [
+            1900.0,
+            790.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "kesselford_wayhouse",
@@ -352,7 +800,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "kesselford_wayhouse",
+        "building_name": "Ferry Bell Wayhouse",
+        "source_scene": "res://world/kesselford.tscn",
+        "source_anchor": "WayhouseDoor",
+        "source_position": [
+          1150.0,
+          700.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "Room/ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_kesselford_wayhouse",
+          "destination_spawn_position": [
+            1150.0,
+            790.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "lefren",
@@ -413,7 +893,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "lower_trial_hall",
+        "building_name": "Lower Trial Hall",
+        "source_scene": "res://world/interiors/trial_hall.tscn",
+        "source_anchor": "LowerTrialHallDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "deep_trial_open",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "Coiljaw has not opened the Deep Trial.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_lower_trial_hall",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "milinel",
@@ -441,7 +953,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "players_house",
+        "building_name": "Player's House",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "PlayersHouse",
+        "source_position": [
+          2400.0,
+          2092.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_players_house",
+          "destination_spawn_position": [
+            2400.0,
+            2132.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "players_loft_interior",
@@ -455,7 +999,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "players_loft",
+        "building_name": "Player's Loft",
+        "source_scene": "res://world/interiors/players_house.tscn",
+        "source_anchor": "PlayersLoftDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_players_loft",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "pozor",
@@ -483,7 +1059,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "registry_archive",
+        "building_name": "Registry Archive",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "RegistryArchive",
+        "source_position": [
+          500.0,
+          515.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_registry_archive",
+          "destination_spawn_position": [
+            500.0,
+            515.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "registry_stacks_interior",
@@ -497,7 +1105,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "registry_stacks",
+        "building_name": "Registry Stacks",
+        "source_scene": "res://world/interiors/registry_archive.tscn",
+        "source_anchor": "RegistryStacksDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_registry_stacks",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "rennen",
@@ -525,7 +1165,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "river_shrine",
+        "building_name": "River Shrine",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "RiverShrine",
+        "source_position": [
+          1100.0,
+          1685.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_river_shrine",
+          "destination_spawn_position": [
+            1100.0,
+            1705.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "shrine_undercroft_interior",
@@ -539,7 +1211,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "shrine_undercroft",
+        "building_name": "Shrine Undercroft",
+        "source_scene": "res://world/interiors/river_shrine.tscn",
+        "source_anchor": "ShrineUndercroftDoor",
+        "source_position": [
+          1600.0,
+          80.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_shrine_undercroft",
+          "destination_spawn_position": [
+            1600.0,
+            300.0
+          ],
+          "prompt_text": "E — RETURN"
+        }
+      }
     },
     {
       "id": "solmarch",
@@ -567,7 +1271,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "town_hall",
+        "building_name": "Town Hall",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "TownHall",
+        "source_position": [
+          2400.0,
+          1111.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_town_hall",
+          "destination_spawn_position": [
+            2400.0,
+            1186.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "trial_hall_interior",
@@ -581,7 +1317,39 @@
       "no_combat_zone": true,
       "world_map": null,
       "fast_travel": null,
-      "transition": null
+      "transition": {
+        "building_id": "trial_hall",
+        "building_name": "Trial Hall",
+        "source_scene": "res://world/starting_town.tscn",
+        "source_anchor": "TrialHall",
+        "source_position": [
+          1000.0,
+          520.0
+        ],
+        "prompt_text": "E — Enter",
+        "spawn_id": "entry",
+        "destination_spawn_position": [
+          960.0,
+          1098.6
+        ],
+        "required_flag": "",
+        "reputation_faction": "",
+        "minimum_reputation_band": "",
+        "locked_message": "This door is locked.",
+        "exit": {
+          "source_anchor": "ExitDoor",
+          "source_position": [
+            960.0,
+            1200.0
+          ],
+          "spawn_id": "from_trial_hall",
+          "destination_spawn_position": [
+            1000.0,
+            605.0
+          ],
+          "prompt_text": "E — EXIT"
+        }
+      }
     },
     {
       "id": "tweede",
