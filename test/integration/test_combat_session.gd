@@ -474,8 +474,8 @@ func test_a_group_resolves_when_its_last_member_falls_while_the_session_continue
 	Reputation.from_dict(reputation_before)
 
 
-## D7 flee rule (ruled 2026-09-04, PROVISIONAL numbers): two full measures with no party member
-## inside `alert_radius × 1.5` of any living hostile ends the session FLED. Survivors go back to
+## D7 flee rule (ratified 2026-10-22, #506): `Battle.FLEE_MEASURES` full measures with no party
+## member inside `alert_radius × Battle.FLEE_RADIUS_FACTOR` of any living hostile ends the session FLED. Survivors go back to
 ## IDLE at full HP and the ledger writes nothing.
 func test_session_ends_fled_after_two_measures_with_no_party_in_reach() -> void:
 	var reputation_before := Reputation.to_dict().duplicate(true)
@@ -500,6 +500,40 @@ func test_session_ends_fled_after_two_measures_with_no_party_in_reach() -> void:
 	assert_int(Reputation.event_count()).is_equal(events_before)
 	assert_bool(Battle.session_active).is_false()
 	Reputation.from_dict(reputation_before)
+
+
+## #506: the flee rule is the ambient path's. A set piece under the same geometry (party far
+## outside every body's reach) stays committed; the flee counter never moves.
+func test_a_set_piece_cannot_be_fled_by_distance() -> void:
+	var field := await _field()
+	var opened := Battle.start_set_piece(field, &"dorthkor-vanguard")
+	assert_bool(opened.get("allowed", false)).override_failure_message(
+		"the set-piece must open: %s" % opened.get("message", "")
+	).is_true()
+	var far := Vector2.ZERO
+	for body: Hostile in Battle._spawned_hostiles:
+		far = far.max(body.global_position + Vector2(body.alert_radius * 4.0, 0))
+	field.player().global_position = far
+	for follower: Node2D in field.party_followers().followers():
+		follower.global_position = far
+
+	# The per-measure check runs with the party out of every body's reach: an ambient session
+	# would end FLED after FLEE_MEASURES calls; a set piece must ignore it.
+	for i in Battle.FLEE_MEASURES + 1:
+		Battle._check_session_flee()
+	assert_int(Battle._measures_out_of_reach).override_failure_message(
+		"a set piece must not count measures toward a flight"
+	).is_equal(0)
+	assert_bool(Battle.ended).override_failure_message(
+		"a set piece ended on the flee check"
+	).is_false()
+	assert_bool(Battle.session_active).is_true()
+
+	_drive_until_ended(null, Battle.FLEE_MEASURES * 40, false)
+	if Battle.ended:
+		assert_int(Battle.last_result.state).override_failure_message(
+			"a set piece ended FLED by distance"
+		).is_not_equal(BattleResult.State.FLED)
 
 
 ## A field torn down under a live session (save load, fixture teardown) must not leave Battle

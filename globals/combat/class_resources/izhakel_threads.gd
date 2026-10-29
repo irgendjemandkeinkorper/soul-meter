@@ -4,7 +4,7 @@ extends ClassResource
 ##
 ## Conditions are data. Seam v2 broadcasts every resolved action so all actors can be watched.
 
-const MAX_THREADS := 3  # PROVISIONAL — B11 owns the cap
+const MAX_THREADS := 3  # B11, ratified 2026-10-25 (owner item 6).
 const KIND_HOSTILITY := &"hostility"
 const KIND_WITNESS := &"witness"
 const KIND_DAYLIGHT := &"daylight"
