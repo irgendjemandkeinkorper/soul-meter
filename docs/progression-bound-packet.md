@@ -69,6 +69,10 @@ Wild kills needed to gain one level (glade table: bog-wight and loam boar, both 
 Before this change, five days of farming the glade bought a level at L5. Now it takes ~250
 kills. Early levels are untouched, so a new player is not punished for fighting.
 
+Re-run 2026-10-21, after Kesselford, Ashlaren, The Long Verge and Hollowmere landed with their own
+ambient tables (`tools/progression_sweep.gd` now reads every `canon/<hub>/`): all five tables draw
+on the same two archetypes, so the figures above are unchanged.
+
 ## 5. Owner questions (recommendations, not decisions)
 
 1. **Cap 7?** Recommended (see §2).
