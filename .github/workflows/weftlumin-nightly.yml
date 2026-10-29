@@ -1,0 +1,49 @@
+name: Weftlumin nightly replay
+
+# #352: replays the committed fixture package through both CLI paths every night. `apply` writes
+# scratch and `bake --write` writes res://; the scenes must match byte for byte, which proves
+# replay is deterministic and that the CLI and the editor bake agree. The tree is restored after.
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GODOT_VERSION: 4.7.1-stable
+      GODOT_BIN: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot engine
+        uses: actions/cache@v4
+        with:
+          path: /tmp/godot
+          key: godot-${{ runner.os }}-${{ env.GODOT_VERSION }}-engine
+
+      - name: Install Godot
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          if [ ! -x "$GODOT_BIN" ]; then
+            wget -q "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip" -O /tmp/godot.zip
+            unzip -q /tmp/godot.zip -d /tmp/godot
+            chmod +x "$GODOT_BIN"
+          fi
+
+      - name: Import project
+        run: |
+          "$GODOT_BIN" --headless --path . --import --quit || true
+          "$GODOT_BIN" --headless --path . --import --quit
+
+      - name: Validate and lint the fixture
+        run: bash scripts/weftlumin_ci.sh lint
+
+      - name: Replay the fixture through apply and bake --write
+        run: bash scripts/weftlumin_ci.sh replay
+
+      - name: Tree is clean after replay
+        run: git diff --exit-code

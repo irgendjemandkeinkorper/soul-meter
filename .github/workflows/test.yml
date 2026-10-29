@@ -60,6 +60,11 @@ jobs:
       - name: Check canon/Pandora/generated-data drift
         run: SOUL_METER_DRIFT_CHECK=1 GODOT_BIN="$GODOT_BIN" bash scripts/check_generated_data.sh
 
+      # #352: the Weftlumin CLI validates and lints the committed fixture package. Judged by the
+      # CLI's own result line, never Godot's exit code (docs/weftlumin.md).
+      - name: Weftlumin validate and lint
+        run: GODOT_BIN="$GODOT_BIN" bash scripts/weftlumin_ci.sh lint
+
       - name: Run gdUnit4 headless suite
         run: SOUL_METER_HEADLESS=1 GODOT_BIN="$GODOT_BIN" bash scripts/test.sh -a test
 
