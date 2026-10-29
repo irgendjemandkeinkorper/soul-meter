@@ -214,9 +214,9 @@ func test_river_mother_observes_deferred_ally_falls_once() -> void:
 	})
 	controller._fire_due_deferred()
 	controller._fire_due_deferred()
-	assert_int(owner.breath).is_equal(1)
+	assert_int(owner.breath).is_equal(HaerenNameLedger.BREATH_REFUND)
 	controller._finish(CombatController.ResultState.VICTORY, &"peace")
-	assert_int(owner.breath).is_equal(1)
+	assert_int(owner.breath).is_equal(HaerenNameLedger.BREATH_REFUND)
 
 
 func test_finish_settles_only_due_refunds_and_never_advances_offensive_effects() -> void:
@@ -230,7 +230,7 @@ func test_finish_settles_only_due_refunds_and_never_advances_offensive_effects()
 	var round_before := controller.round_number
 	controller._finish(CombatController.ResultState.VICTORY, &"peace")
 	controller._finish(CombatController.ResultState.VICTORY, &"peace")
-	assert_int(owner.breath).is_equal(1)
+	assert_int(owner.breath).is_equal(HaerenNameLedger.BREATH_REFUND)
 	assert_int(enemy.hp).is_equal(100)
 	assert_int(controller.round_number).is_equal(round_before)
 	assert_float((owner.class_resource as HaerenNameLedger).pending_breath_refunds).is_equal(0.0)

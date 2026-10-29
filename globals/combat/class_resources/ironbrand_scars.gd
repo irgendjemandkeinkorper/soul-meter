@@ -5,14 +5,14 @@ extends ClassResource
 ## Vault `systems/magic-system.md` §Per-class resources: "Taking (or self-inflicting) damage
 ## banks Scars; spend them for guaranteed-hit / guaranteed-crit windows."
 ##
-## Mechanics here: every HP loss banks one Scar (cap `MAX_SCARS`, PROVISIONAL — B11 owns the
-## number). `spend_scar()` arms a guaranteed-hit window; `on_cast_forecast()` expresses it as
+## Mechanics here: every HP loss banks one Scar (cap `MAX_SCARS`, B11, ratified
+## 2026-10-25). `spend_scar()` arms a guaranteed-hit window; `on_cast_forecast()` expresses it as
 ## `{"to_hit_enabled": false}` — Resolution's existing "no to-hit roll" channel — so the forecast
 ## and the commit both see a certain hit. The window is consumed by the owner's next resolved
 ## action (`on_action`), never by a forecast. Guaranteed-crit is #226's job (no crit channel
 ## exists in Resolution yet; do not invent one here).
 
-const MAX_SCARS := 5  # PROVISIONAL — B11 numeric pass
+const MAX_SCARS := 3  # B11, ratified 2026-10-25 (owner item 6): reached under pressure, so banking is a choice.
 
 var scars: int = 0
 var guaranteed_hit_armed: bool = false

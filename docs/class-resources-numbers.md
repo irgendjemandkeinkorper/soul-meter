@@ -4,8 +4,9 @@ Every number in `globals/combat/class_resources/*.gd` shipped marked
 `PROVISIONAL — B11 owns tuning`. This is B11: the reading of those numbers, the
 sweep that produced it, and one proposed value per constant.
 
-**Nothing here is applied.** The issue's boundary is explicit — values land in
-`.tres`/constants *after owner review*. This document is the review packet.
+**Ratified 2026-10-25 (owner item 6, `6: ratify B11`).** Every proposed value
+below is now the live constant. The flags in §7 and the open questions in §8 are
+design calls and stay open.
 
 - Sweep tool: `tools/class_resource_sweep.gd` (read-only)
   ```
@@ -32,23 +33,24 @@ recommendations below move. That is why the assumption table is first.
 
 ## 2. Summary — shipped vs proposed
 
-| constant | shipped | proposed | verdict |
+| constant | live | before 2026-10-25 | verdict |
 |---|---|---|---|
-| `IronbrandScars.MAX_SCARS` | 5 | **3** | change |
-| `VicoarInstructiveFailure.MAX_TOKENS` | 3 | **3** | keep |
-| `VhorrHunger.MAX_HUNGER` | 5 | **3** | change |
-| `VhorrHunger.BREATH_REFUND` | 1 | **3** | change |
-| `HaerenNameLedger.BREATH_REFUND` | 1 | **3** | change |
-| `StuidClarity.MAX_CLARITY` | 3 | **3** | keep |
-| `PazzahLedger.MAX_ENTRIES` | 3 | **3** | keep |
-| `IzhakelThreads.MAX_THREADS` | 3 | **3** | keep |
-| `MaiiamBalance.UNBALANCED_AFTER_STREAK` | 2 | **2** | keep |
-| `MaiiamBalance.UNBALANCED_DAMAGE_MULTIPLIER` | 1.25 | **1.25** | keep |
-| `MaiiamBalance.UNBALANCED_FIZZLE_INTEGRITY_PENALTY` | 15.0 | **15.0** | keep |
-| `SkillCheckService.FIZZLE_FLOOR_PERCENT` | 5.0 | **5.0** | keep, with a flag |
-| `OfshutjeAttribution.EFFECT_TABLE` | 3 rows | **6 rows** | change |
+| `IronbrandScars.MAX_SCARS` | 3 | 5 | changed |
+| `VicoarInstructiveFailure.MAX_TOKENS` | 3 | 3 | kept |
+| `VhorrHunger.MAX_HUNGER` | 3 | 5 | changed |
+| `VhorrHunger.BREATH_REFUND` | 3 | 1 | changed |
+| `HaerenNameLedger.BREATH_REFUND` | 3 | 1 | changed |
+| `StuidClarity.MAX_CLARITY` | 3 | 3 | kept |
+| `PazzahLedger.MAX_ENTRIES` | 3 | 3 | kept |
+| `IzhakelThreads.MAX_THREADS` | 3 | 3 | kept |
+| `MaiiamBalance.UNBALANCED_AFTER_STREAK` | 2 | 2 | kept |
+| `MaiiamBalance.UNBALANCED_DAMAGE_MULTIPLIER` | 1.25 | 1.25 | kept |
+| `MaiiamBalance.UNBALANCED_FIZZLE_INTEGRITY_PENALTY` | 15.0 | 15.0 | kept |
+| `SkillCheckService.FIZZLE_FLOOR_PERCENT` | 5.0 | 5.0 | kept, with a flag |
+| `OfshutjeAttribution.EFFECT_TABLE` | 6 rows | 3 rows | changed (tailed) |
 
-Eight of thirteen are already right. The five that move are below.
+Eight of thirteen were already right. The five that moved are below; the sections keep the
+reasoning as it was reviewed.
 
 ## 3. Kero — Ironbrand: Scars
 

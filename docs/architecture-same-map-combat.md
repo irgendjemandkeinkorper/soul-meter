@@ -154,8 +154,9 @@ resolve without a pan (F2 budget).
 - **Flee (ruled 2026-09-04):** the session ends as `FLED`
   when no living hostile has any party member inside `alert_radius × 1.5` for two full CT
   rounds; fled hostiles return to `IDLE` at full HP, downed ones stay down. Ledger writes
-  nothing for fled groups. *Ruled 2026-09-04 (accepted); the code path ships with
-  a `PROVISIONAL` constant so the test can flip it.*
+  nothing for fled groups. Set pieces cannot be fled this way; they stay committed.
+  *Ruled 2026-09-04 (accepted); ratified by the owner 2026-10-22 (#506). The code names the
+  numbers `FLEE_RADIUS_FACTOR` and `FLEE_MEASURES`; only `alert_radius` stays PROVISIONAL.*
 - The ledger (`Reputation.record` / `Renown` / spoils / `defeated_flag`) fires **per
   `group_id`** at the moment that group's last member is downed, not per session. The
   existing `already_resolved` dedupe keys on `group_id` and keeps working. Checkpoint
@@ -198,7 +199,7 @@ seam-v2 broadcast, `Reputation`/`Renown` APIs, the save schema.
 | 4 | `Hostile` actor + `Battle.start_session/admit` + `CombatController.admit/release` with `admission_delay` | `submit_action`-path test: a hostile admitted mid-session acts after the party's next turn |
 | 5 | Chain alert, one hop per round | test with three hostiles at 0/1/2 hops |
 | 6 | `CombatOverlay` + region B rewire; retire the legacy stage and actor; fold tactical data into `BattleInterface` within the existing HUD shell | replay tests over the frozen event payloads; Bog Wight field victory and proof pickup |
-| 7 | Session end (D7) with flee path behind the PROVISIONAL constant; ledger per group | victory/defeat/flee tests; `already_resolved` dedupe test |
+| 7 | Session end (D7) with the flee path (`FLEE_RADIUS_FACTOR`, `FLEE_MEASURES`); ledger per group | victory/defeat/flee tests; `already_resolved` dedupe test |
 | 8 | `EncounterCatalog` slimming + `LocationRegistry.weather_default` (D8) | drift check passes; weather forecast==resolution test unchanged — **weather half LANDED 2026-09-08**, see below |
 
 Steps 1–3 can run as one Codex handoff; 4–5 as a second; 6 as a third (largest); 7–8 as a
