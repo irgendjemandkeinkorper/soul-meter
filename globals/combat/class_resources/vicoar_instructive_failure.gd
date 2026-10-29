@@ -3,7 +3,7 @@ extends ClassResource
 ## Vicoar — Flamebinder: Instructive Failure. A fizzle banks a token; spending one guarantees a
 ## later cast.
 
-const MAX_TOKENS := 3 # PROVISIONAL — B11 owns tuning.
+const MAX_TOKENS := 3 # B11, ratified 2026-10-25 (owner item 6).
 
 var tokens: int = 0
 var guaranteed_cast_armed: bool = false
