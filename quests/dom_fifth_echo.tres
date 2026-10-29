@@ -18,6 +18,7 @@ dialogue_title = "dom_side_fifth_echo"
 decision_prompt = "Decide whether to damp the extra reply or write it into Dom's warning cadence."
 resolution_flag = "dom_fifth_echo_resolution"
 outcome_ids = PackedStringArray("damp-the-echo", "keep-the-warning")
+outcome_karma_bases = PackedFloat32Array(0.0, 5.0)
 outcome_labels = PackedStringArray("Damp the fifth echo and restore the four-beat signal.", "Keep the fifth echo as a public warning beat.")
 outcome_faction_ids = PackedStringArray("trial-council", "kord-rite")
 outcome_reputation_deltas = PackedFloat32Array(6.0, 5.0)

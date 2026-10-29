@@ -18,6 +18,7 @@ dialogue_title = "dom_side_rainbound_register"
 decision_prompt = "Decide whether the crossed-out traveler remains an active witness or becomes a closed entry so the road can reopen."
 resolution_flag = "dom_rainbound_register_resolution"
 outcome_ids = PackedStringArray("restore-the-entry", "close-the-road-name")
+outcome_karma_bases = PackedFloat32Array(5.0, 0.0)
 outcome_labels = PackedStringArray("Restore the crossed-out name as an active witness.", "Close the disputed entry and release the night road.")
 outcome_faction_ids = PackedStringArray("rennen", "trial-council")
 outcome_reputation_deltas = PackedFloat32Array(6.0, 5.0)

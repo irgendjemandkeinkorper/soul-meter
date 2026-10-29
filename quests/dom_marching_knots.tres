@@ -18,6 +18,7 @@ dialogue_title = "dom_side_marching_knots"
 decision_prompt = "Decide whether the retied net is restricted Wound-Watch evidence or a warning displayed at the river shrine."
 resolution_flag = "dom_marching_knots_resolution"
 outcome_ids = PackedStringArray("give-it-to-the-watch", "hang-it-at-the-shrine")
+outcome_karma_bases = PackedFloat32Array(0.0, 5.0)
 outcome_labels = PackedStringArray("Give the marching net to the outer-chain watch.", "Hang the net at the river shrine where every harbor hand can read it.")
 outcome_faction_ids = PackedStringArray("ironbrand-sentinels", "wayfare-menders")
 outcome_reputation_deltas = PackedFloat32Array(6.0, 6.0)

@@ -5,8 +5,8 @@
 flat gate fields `minimum_fame_tier` / `minimum_karma_tier` / `maximum_karma_tier`), seeded into the
 Pandora `Perks` root and emitted to `data/generated/perks.json` with `PERK_*` keys in the POT;
 `PerkCatalog` reads them, `PartyMember.perk_ids` records picks (no save bump), and the character sheet
-offers each pick at levels 2 / 4 / 6. Karma gates are authored but not enforced
-(`PerkCatalog.KARMA_GATES_LIVE := false`) until Karma has writers. No perk effect is wired in this slice:
+offers each pick at levels 2 / 4 / 6. Karma gates are enforced since the Karma acts were wired
+(owner, 2026-10-25; `docs/karma-acts-draft.md`). No perk effect is wired in this slice:
 the sheet marks every pick "(planned)" except Jam the Gears and Nothing Wasted, which already shipped as
 class features. The `[n]` values below were ruled on 2026-10-25 (§6) and the canon blurbs carry them, with
 Longer Ledger and Named Storm reworded per §6 flags B and C. `effect.op` (§3) arrives with the effect slice.

@@ -13,7 +13,8 @@ const ZHAVAR_RUMOR_DIALOGUE := "res://dialogue/dom_zhavar_rumors.dialogue"
 
 ## Yothmeru Fame routes (owner item 1, option B, 2026-10-22): what Dom says once a
 ## name is Whispered ("I've heard of you") or Known (approached). PROVISIONAL prose,
-## owner item 9. Karma routes wait for Karma writers (`docs/karma-acts-draft.md`).
+## owner item 9. Karma routes (owner, 2026-10-25) live in the same file: two
+## "I've heard what kind" at a Troubled ceiling, one Upright floor.
 const FAME_REACTION_DIALOGUE := "res://dialogue/dom_fame_reactions.dialogue"
 
 ## npc_id -> ordered reaction rules. A rule may gate on a flag, reputation, the
@@ -108,12 +109,26 @@ const REACTIONS: Dictionary = {
 			"dialogue_path": BAND_REACTION_DIALOGUE,
 			"dialogue_title": "dom_holst_brinevein_warm",
 		},
+		# Karma route (2026-10-25), AFTER the band rule: a Mender friend gets the
+		# route itself; an Upright stranger gets told where to ask for it.
+		{
+			"minimum_karma_tier": "Upright",
+			"dialogue_path": FAME_REACTION_DIALOGUE,
+			"dialogue_title": "dom_holst_brinevein_upright",
+		},
 	],
 	# --- Yothmeru Fame routes (option B, 2026-10-22) ---------------------------
 	# Whispered is reachable for every player by the end of Act I; Known needs a
 	# fighting player (`docs/yothmeru-world-effects-packet.md` §2). Two "heard of
 	# you" lines from people who hear soldiers and customers talk, one approach.
+	# Karma routes (2026-10-25) are listed FIRST: what kind of name it is
+	# outranks how often it comes up.
 	"gerren-pike": [
+		{
+			"maximum_karma_tier": "Troubled",
+			"dialogue_path": FAME_REACTION_DIALOGUE,
+			"dialogue_title": "dom_gerren_pike_troubled",
+		},
 		{
 			"minimum_fame_tier": "Whispered",
 			"dialogue_path": FAME_REACTION_DIALOGUE,
@@ -121,6 +136,11 @@ const REACTIONS: Dictionary = {
 		},
 	],
 	"orrik-cinderjaw": [
+		{
+			"maximum_karma_tier": "Troubled",
+			"dialogue_path": FAME_REACTION_DIALOGUE,
+			"dialogue_title": "dom_orrik_cinderjaw_troubled",
+		},
 		{
 			"minimum_fame_tier": "Whispered",
 			"dialogue_path": FAME_REACTION_DIALOGUE,
@@ -277,7 +297,7 @@ static func _matches(rule: Dictionary) -> bool:
 		return false
 	# Yothmeru tier gates (docs/yothmeru-world-effects-packet.md §3B): floors and
 	# a ceiling on the RFC ladders, read through Renown so the ladder order has
-	# one owner. Nothing authored uses them until the packet is ruled.
+	# one owner.
 	var fame_tier := str(rule.get("minimum_fame_tier", ""))
 	if not fame_tier.is_empty() and not Renown.fame_tier_at_least(fame_tier):
 		return false

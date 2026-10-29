@@ -18,6 +18,7 @@ dialogue_title = "dom_side_unclaimed_bed"
 decision_prompt = "Decide whether to return the veteran's name to the Company hall or preserve the refuge of an unnamed hospice bed."
 resolution_flag = "dom_unclaimed_bed_resolution"
 outcome_ids = PackedStringArray("return-the-name", "keep-the-confidence")
+outcome_karma_bases = PackedFloat32Array(0.0, 5.0)
 outcome_labels = PackedStringArray("Return the veteran's name and debt to the Company hall.", "Keep the veteran's confidence under hospice protection.")
 outcome_faction_ids = PackedStringArray("iron-companies", "hospice-chain")
 outcome_reputation_deltas = PackedFloat32Array(5.0, 6.0)

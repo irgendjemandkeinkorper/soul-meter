@@ -179,6 +179,8 @@ const BROKEN_MUSTER_RULINGS := {
 		],
 		"renown": 14.0,
 		"renown_cause": "Made Dom bear the honest cost of two fronts",
+		"karma": 10.0,
+		"karma_cause": "Refused to call either line expendable",
 	},
 }
 
@@ -189,6 +191,8 @@ const BROKEN_MUSTER_RULINGS := {
 ## is that the player is now the only person in Dom holding a true number and
 ## nobody knows to ask them for it. The absence is asserted in the e2e suite so a
 ## later reader cannot mistake it for a row someone forgot to fill in.
+## Karma is the one ledger that sees it (owner item 21): bearing the shortfall alone
+## and unwitnessed is RFC-0007's banking case, worth +15.
 const ACT_ONE_HOOK_RULINGS := {
 	"sound-the-shortfall": {
 		"reputation": [
@@ -205,6 +209,8 @@ const ACT_ONE_HOOK_RULINGS := {
 		],
 		"renown": 12.0,
 		"renown_cause": "Told Dom what its own rite was no longer answering",
+		"karma": 10.0,
+		"karma_cause": "Took the truth of the Roar into the open",
 	},
 	"seal-the-measure": {
 		"reputation": [
@@ -221,11 +227,15 @@ const ACT_ONE_HOOK_RULINGS := {
 		],
 		"renown": 4.0,
 		"renown_cause": "Carried a hard measurement to the bench that asked for it",
+		"karma": -5.0,
+		"karma_cause": "Gave an honest count in private and left the shrines guessing",
 	},
 	"carry-it-yourself": {
 		"reputation": [],
 		"renown": 0.0,
 		"renown_cause": "",
+		"karma": 15.0,
+		"karma_cause": "Carried the shortfall alone, where no one would see it",
 	},
 }
 
@@ -248,6 +258,8 @@ const FIELD_DEBT_REWARDS := {
 	"balance": {
 		"title": "Split the credit honestly",
 		"consequence": "Iron Companies +5  ·  Ssae-Seeders +5  ·  Registry +5",
+		"karma": 5.0,
+		"karma_cause": "Split the field credit honestly",
 		"reputation": [
 			{"faction": "iron-companies", "delta": 5.0},
 			{"faction": "ssae-seeders", "delta": 5.0},
@@ -499,6 +511,7 @@ func resolve_broken_muster(ruling_id: StringName) -> bool:
 		"dom"
 	)
 	reward_entries.append(_reward_entry("renown", "renown", float(ruling.get("renown", 0.0)), str(ruling.get("renown_cause", ""))))
+	KarmaActs.record(float(ruling.get("karma", 0.0)), str(ruling.get("karma_cause", "")), "dom")
 	# Milestone leveling (#98, owner 2026-08-24): the Broken Muster ruling is Chapter
 	# 1's first authored level milestone. PROVISIONAL content pick — the milestone
 	# LIST is authoring; the mechanism is ratified.
@@ -582,6 +595,7 @@ func resolve_unanswered_roar(ruling_id: StringName) -> bool:
 		reward_entries.append(
 			_reward_entry("renown", "renown", renown_delta, str(ruling.get("renown_cause", "")))
 		)
+	KarmaActs.record(float(ruling.get("karma", 0.0)), str(ruling.get("karma_cause", "")), "dom")
 	# The hook itself. Chapter Two's entry condition reads this flag, not the
 	# resolution — see docs/act-one-beat-sheet.md §6.
 	GameState.set_flag("chapter_two_hook_open", true)
@@ -638,6 +652,7 @@ func resolve_field_debt(reward_id: StringName) -> bool:
 				)
 				reward_entries.append(_reward_entry("faction", faction, float(row.get("delta", 0.0)), cause))
 	GameState.set_flag("field_debt_reward", String(reward_id))
+	KarmaActs.record(float(reward.get("karma", 0.0)), str(reward.get("karma_cause", "")), "field")
 	Renown.gain_reputation("player", 6.0, "Returned proof from the first field commission", "field")
 	reward_entries.append(_reward_entry("renown", "renown", 6.0, "Returned proof from the first field commission"))
 	SaveGame.request_autosave("field-debt-rewarded")
@@ -682,6 +697,7 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 		"dom"
 	)
 	GameState.set_flag(quest.resolution_flag, str(outcome["id"]))
+	KarmaActs.record(float(outcome["karma_base"]), str(outcome["cause"]), "dom")
 	var reward_entries: Array[Dictionary] = [
 		_reward_entry(
 			"faction",

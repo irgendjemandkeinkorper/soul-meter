@@ -55,7 +55,7 @@ func test_karma_tiers_match_the_rfc_at_every_boundary() -> void:
 		600.0: "Exalted", 1000.0: "Exalted",
 	}
 	for score: float in expected:
-		_given_protagonist(10, 10)  # scale 1.0, so base lands unchanged
+		_given_protagonist(5, 10)  # Karma and Decorum scales both 1.0, so base lands unchanged
 		Renown.from_dict({})
 		Renown.gain_karma("player", score, "boundary probe")
 		assert_str(Renown.karma_tier()).override_failure_message(
@@ -86,7 +86,7 @@ func test_karma_tier_offset_is_the_signed_distance_from_uncertain() -> void:
 		-900.0: -3, -400.0: -2, -100.0: -1, 0.0: 0, 100.0: 1, 400.0: 2, 900.0: 3,
 	}
 	for score: float in expected:
-		_given_protagonist(10, 10)
+		_given_protagonist(5, 10)
 		Renown.from_dict({})
 		Renown.gain_karma("player", score, "offset probe")
 		assert_int(Renown.karma_tier_offset()).override_failure_message(
@@ -107,14 +107,15 @@ func test_a_fresh_ledger_reads_uncertain_and_unknown() -> void:
 func test_karma_applies_the_doctrine_multiplier_and_records_both_figures() -> void:
 	_given_protagonist(4, 2)
 	var event := Renown.gain_karma("player", -40.0, "Betrayed an ally")
-	# base × Doctrine / 10 — the RFC's formula, as written.
+	# base × Doctrine / 5 — the RFC's formula with its 1.0x moved to Doctrine 5 (owner ruling
+	# 2026-10-25), because DRAMGID's point-buy tops out at 5.
 	assert_float(event.base).is_equal_approx(-40.0, 0.001)
-	assert_float(event.applied).is_equal_approx(-16.0, 0.001)
-	assert_float(Renown.karma_total()).is_equal_approx(-16.0, 0.001)
+	assert_float(event.applied).is_equal_approx(-32.0, 0.001)
+	assert_float(Renown.karma_total()).is_equal_approx(-32.0, 0.001)
 
 
 func test_karma_is_clamped_to_the_rfc_range() -> void:
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_karma("player", 5000.0, "Saved everyone, repeatedly")
 	assert_float(Renown.karma_total()).is_equal_approx(Renown.KARMA_MAX, 0.001)
 	Renown.gain_karma("player", -50000.0, "Undid all of it")
@@ -161,7 +162,7 @@ func test_an_unmigrated_character_scales_by_the_attribute_floor() -> void:
 	var party: Array[PartyMember] = [member]
 	GameState.party = party
 	var event := Renown.gain_karma("player", 100.0, "Pre-migration act")
-	var floor_scale := float(DramgidSchema.ATTRIBUTE_FLOOR) / Renown.ATTRIBUTE_SCALE_DIVISOR
+	var floor_scale := float(DramgidSchema.ATTRIBUTE_FLOOR) / Renown.KARMA_SCALE_DIVISOR
 	assert_float(event.applied).is_equal_approx(100.0 * floor_scale, 0.001)
 
 
@@ -202,7 +203,7 @@ func test_fame_is_reputation_plus_infamy() -> void:
 
 
 func test_karma_is_independent_of_the_other_two_meters() -> void:
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_karma("player", -150.0, "Murdered an innocent")
 	assert_float(Renown.reputation()).is_equal_approx(0.0, 0.001)
 	assert_float(Renown.infamy()).is_equal_approx(0.0, 0.001)
@@ -214,7 +215,7 @@ func test_karma_is_independent_of_the_other_two_meters() -> void:
 
 func test_only_the_extreme_tiers_decay() -> void:
 	for score: float in [-500.0, -100.0, 0.0, 100.0, 500.0]:
-		_given_protagonist(10, 10)
+		_given_protagonist(5, 10)
 		Renown.from_dict({})
 		Renown.gain_karma("player", score, "settle")
 		Renown.decay_one_day(-1)
@@ -224,7 +225,7 @@ func test_only_the_extreme_tiers_decay() -> void:
 
 
 func test_damned_and_exalted_drift_toward_their_boundary() -> void:
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_karma("player", 800.0, "Exalted")
 	Renown.decay_one_day(-1)
 	var after := Renown.karma_total()
@@ -244,7 +245,7 @@ func test_damned_and_exalted_drift_toward_their_boundary() -> void:
 
 
 func test_decay_is_asymptotic_and_never_reaches_the_boundary() -> void:
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_karma("player", 900.0, "Exalted")
 	for _day: int in 400:
 		Renown.decay_one_day(-1)
@@ -257,7 +258,7 @@ func test_decay_is_asymptotic_and_never_reaches_the_boundary() -> void:
 func test_seven_days_of_decay_equals_the_weekly_fraction() -> void:
 	# The per-day rate is defined so that seven of them compound to exactly
 	# DECAY_FRACTION_PER_WEEK of the excess — the unit the RFC states.
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_karma("player", 1000.0, "Exalted")
 	var excess := 1000.0 - 600.0
 	for _day: int in Renown.DAYS_PER_WEEK:
@@ -267,7 +268,7 @@ func test_seven_days_of_decay_equals_the_weekly_fraction() -> void:
 
 
 func test_legendary_fame_decays_without_touching_the_gated_meters() -> void:
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_reputation("player", 900.0, "Legendary")
 	Renown.decay_one_day(-1)
 	assert_bool(Renown.fame() < 900.0).override_failure_message(
@@ -279,7 +280,7 @@ func test_legendary_fame_decays_without_touching_the_gated_meters() -> void:
 
 
 func test_the_same_world_day_only_decays_once() -> void:
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_karma("player", 900.0, "Exalted")
 	Renown.decay_one_day(4)
 	var after_first := Renown.karma_total()
@@ -292,7 +293,7 @@ func test_the_same_world_day_only_decays_once() -> void:
 
 
 func test_decay_appends_to_the_ledger_rather_than_editing_a_total() -> void:
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_karma("player", 900.0, "Exalted")
 	Renown.decay_one_day(-1)
 	var karma_events := Renown.why(&"karma", 5)
@@ -407,7 +408,7 @@ func test_a_pre_yothmeru_save_loads_with_its_totals_intact() -> void:
 
 
 func test_a_round_trip_does_not_replay_a_day_that_was_already_decayed() -> void:
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_karma("player", 900.0, "Exalted")
 	Renown.decay_one_day(3)
 	var after_decay := Renown.karma_total()
@@ -420,7 +421,7 @@ func test_a_round_trip_does_not_replay_a_day_that_was_already_decayed() -> void:
 
 
 func test_why_reports_karma_reasons_newest_first() -> void:
-	_given_protagonist(10, 10)
+	_given_protagonist(5, 10)
 	Renown.gain_karma("player", -20.0, "Casual public cruelty")
 	Renown.gain_karma("player", 25.0, "Banked Harmony to repair a zone")
 	var reasons := Renown.why(&"karma", 2)

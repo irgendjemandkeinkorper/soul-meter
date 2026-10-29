@@ -3,6 +3,8 @@
 # Yothmeru Fame routes for Dom (owner item 1, option B, ruled 2026-10-22). Each title is
 # what one townsperson says once the player's Fame tier reaches the floor named in
 # `globals/npc_reactions.gd`: Whispered = "I've heard of you", Known = approached.
+# Karma routes (owner, 2026-10-25): Troubled or worse = "I've heard what kind";
+# Upright or better = trusted with a little more than the fallback.
 # `dialogue/dom_townsfolk.dialogue` stays the generated neutral fallback and is never
 # hand-edited (tools/generate_gloot.gd owns it). Nobody here names a tier; Dom does
 # not know the ladder, it only knows how often a name comes up.
@@ -37,3 +39,18 @@ Edda Broadmark: The Companies keep a contract board for names the town already s
 - "Keep my name off your board."
 	Edda Broadmark: Then it stays off. The Companies did not make you known; they only noticed. That is still the harder half.
 	=> END
+
+~ dom_gerren_pike_troubled
+Gerren Pike: Keep your hands where I can see them while I work. Nothing personal. The barracks talk, and what they say about you is not about your pike arm.
+Gerren Pike: A soldier forgives a lot. Not a hand in a mate's kit. Polish your own steel and the talk dies down. It always does, slower than you would like.
+=> END
+
+~ dom_orrik_cinderjaw_troubled
+Orrik Cinderjaw: I will cut, but I cut facing the door today. Chairs talk, and the chairs have been talking about where your hands go when nobody is looking.
+Orrik Cinderjaw: The Lower Market does not hang anyone for it. It just stops leaving the till open. You will notice the till.
+=> END
+
+~ dom_holst_brinevein_upright
+Holst Brinevein: You are the one who keeps doing the decent thing where nobody is counting. The harbor counts anyway. It just does not say so.
+Holst Brinevein: I do not give the sea-mouth route to strangers. The Mender lodge does not either, but ask them. Tell them Holst said you were worth the asking.
+=> END

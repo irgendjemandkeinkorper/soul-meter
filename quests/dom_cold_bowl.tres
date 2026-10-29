@@ -18,6 +18,7 @@ dialogue_title = "dom_side_cold_bowl"
 decision_prompt = "Decide whether the veteran returns to the Company roll or leaves it without being branded a deserter."
 resolution_flag = "dom_cold_bowl_resolution"
 outcome_ids = PackedStringArray("bring-them-home", "release-the-roll")
+outcome_karma_bases = PackedFloat32Array(0.0, 5.0)
 outcome_labels = PackedStringArray("Bring the veteran home without a desertion charge.", "Release the veteran from the roll and keep the table place open.")
 outcome_faction_ids = PackedStringArray("iron-companies", "hospice-chain")
 outcome_reputation_deltas = PackedFloat32Array(6.0, 5.0)

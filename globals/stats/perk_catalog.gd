@@ -11,10 +11,6 @@ extends RefCounted
 
 const DATA_PATH := "res://data/generated/perks.json"
 const PICK_LEVELS: Array[int] = [2, 4, 6]
-## Owner item 22, `perks karma gate: wait`: the four Karma-gated capstones are offered ungated
-## until Karma has writers (docs/karma-acts-draft.md). Fame gates are live. Flip this when the
-## Karma acts land; the gates are already authored in canon.
-const KARMA_GATES_LIVE := false
 ## Perks whose effect is already in play. Jam the Gears and Nothing Wasted shipped as class
 ## features before the cadence existed; every other perk is recorded when picked and gains its
 ## effect in a later #285 slice, so the sheet marks it planned rather than pretend it works.
@@ -98,12 +94,11 @@ static func offers(member: PartyMember) -> Array[Dictionary]:
 
 ## Empty when the perk's gate is open, otherwise the sentence the sheet shows. Reads the
 ## live ledgers through Renown's tier helpers, the same ones NPC reactions use.
+## Karma gates went live with the Karma act writers (owner, 2026-10-25); item 22 had held them.
 static func gate_refusal(perk: Dictionary) -> String:
 	var fame := str(perk.get("minimum_fame_tier", ""))
 	if not fame.is_empty() and not Renown.fame_tier_at_least(fame):
 		return "Needs Fame: %s or more." % fame
-	if not KARMA_GATES_LIVE:
-		return ""
 	var karma_floor := str(perk.get("minimum_karma_tier", ""))
 	if not karma_floor.is_empty() and not Renown.karma_tier_at_least(karma_floor):
 		return "Needs Karma: %s or better." % karma_floor

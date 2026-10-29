@@ -18,6 +18,7 @@ dialogue_title = "dom_side_living_tag"
 decision_prompt = "Decide whether the empty plate belongs in Wound-Watch quarantine or the living guard's name belongs back on it."
 resolution_flag = "dom_living_tag_resolution"
 outcome_ids = PackedStringArray("quarantine-the-plate", "restore-the-name")
+outcome_karma_bases = PackedFloat32Array(0.0, 10.0)
 outcome_labels = PackedStringArray("Quarantine the plate as Wound-Watch evidence.", "Strike the false death entry and return the guard's name.")
 outcome_faction_ids = PackedStringArray("ironbrand-sentinels", "trial-council")
 outcome_reputation_deltas = PackedFloat32Array(6.0, 5.0)

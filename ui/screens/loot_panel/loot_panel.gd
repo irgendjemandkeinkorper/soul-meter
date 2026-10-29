@@ -138,6 +138,7 @@ func _record_theft_if_needed() -> void:
 		"Took goods from %s" % _source_name,
 		_current_scene_path(),
 	)
+	KarmaActs.record_theft("Took goods from %s" % _source_name, _current_scene_path())
 
 
 func _is_owned() -> bool:

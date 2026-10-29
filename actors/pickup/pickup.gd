@@ -45,6 +45,7 @@ func _apply_interaction() -> void:
 			"Took goods from %s" % display_name,
 			_current_scene_path(),
 		)
+		KarmaActs.record_theft("Took goods from %s" % display_name, _current_scene_path())
 	if not completion_flag.is_empty():
 		GameState.set_flag(completion_flag, true)
 	queue_free()

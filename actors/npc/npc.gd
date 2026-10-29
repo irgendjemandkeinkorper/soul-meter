@@ -352,6 +352,7 @@ const CAUGHT_REPUTATION_DELTA := -3.0
 func _record_caught() -> void:
 	var scene := _containing_scene_path()
 	Renown.gain_infamy("player", CAUGHT_INFAMY, "Caught with a hand in a pocket.", scene)
+	KarmaActs.record(KarmaActs.CAUGHT_PICKPOCKETING_BASE, "Caught with a hand in a pocket.", scene)
 	if not pocket_faction.is_empty():
 		Reputation.record(
 			"player",

@@ -18,6 +18,7 @@ dialogue_title = "dom_side_last_safe_course"
 decision_prompt = "Decide whether the verified route becomes common harbor knowledge or remains a guarded rescue lane."
 resolution_flag = "dom_last_safe_course_resolution"
 outcome_ids = PackedStringArray("publish-the-course", "guard-the-course")
+outcome_karma_bases = PackedFloat32Array(5.0, 0.0)
 outcome_labels = PackedStringArray("Publish the course to every Drownedmouth pilot.", "Reserve the course for rescue crews and the outer-chain watch.")
 outcome_faction_ids = PackedStringArray("wayfare-menders", "ironbrand-sentinels")
 outcome_reputation_deltas = PackedFloat32Array(6.0, 6.0)
