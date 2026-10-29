@@ -6,7 +6,7 @@ extends ClassResource
 ## later regardless of what happens between." The controller owns the deferred scheduler;
 ## this resource only records its entries and completion events.
 
-const MAX_ENTRIES := 3  # PROVISIONAL — B11 owns the cap
+const MAX_ENTRIES := 3  # B11, ratified 2026-10-25 (owner item 6).
 
 var entries: Array[Dictionary] = []
 var ready: Array[Dictionary] = []

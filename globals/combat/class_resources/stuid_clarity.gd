@@ -8,7 +8,7 @@ extends ClassResource
 ## The armed reveal is returned through the shared forecast context and consumed only after
 ## the owner's cast outcome is committed.
 
-const MAX_CLARITY := 3  # PROVISIONAL — B11 owns the cap
+const MAX_CLARITY := 3  # B11, ratified 2026-10-25 (owner item 6).
 
 var clarity: int = MAX_CLARITY
 var reveal_armed: bool = false

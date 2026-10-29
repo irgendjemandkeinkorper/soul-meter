@@ -101,7 +101,7 @@ func test_the_shipped_table_is_what_the_sweep_says_it_is() -> void:
 	var bonuses: Array = []
 	for row: Dictionary in OfshutjeAttribution.EFFECT_TABLE:
 		bonuses.append(int(row.get("bonus_damage", 0)))
-	assert_dict(Sweep.table_stats(bonuses)).is_equal(Sweep.table_stats([1, 2, 3]))
+	assert_dict(Sweep.table_stats(bonuses)).is_equal(Sweep.table_stats([1, 1, 2, 2, 3, 6]))
 
 
 func test_every_provisional_constant_is_in_the_review_packet() -> void:
