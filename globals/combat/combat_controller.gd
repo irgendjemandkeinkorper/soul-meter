@@ -678,9 +678,10 @@ func query_action(
 		)
 		if not bool(command_gate.get("allowed", false)):
 			return command_gate
-		if _soul_meter() < action.soul_cost:
-			return _blocked(&"soul", "Requires %d Soul." % int(action.soul_cost), {
-				"type": &"soul", "minimum": action.soul_cost,
+		var command_soul := _class_soul_cost(actor, action)
+		if _soul_meter() < command_soul:
+			return _blocked(&"soul", "Requires %d Soul." % int(command_soul), {
+				"type": &"soul", "minimum": command_soul,
 			})
 	if action.kind == CombatAction.Kind.MOVE:
 		var movement := battlefield.move_query(actor, _move_destination(action, options))
@@ -792,8 +793,9 @@ func submit_action(
 		# The proposed spent-use rule: the allowance is consumed at commit, fizzle or not.
 		_refrain_uses[String(actor.combat_id)] = int(_refrain_uses.get(String(actor.combat_id), 0)) + 1
 	if committed_action.kind == CombatAction.Kind.PASS and not committed_action.class_resource_action.is_empty():
-		if committed_action.soul_cost > 0.0:
-			_set_soul_meter(_soul_meter() - committed_action.soul_cost)
+		var command_soul := _class_soul_cost(actor, committed_action)
+		if command_soul > 0.0:
+			_set_soul_meter(_soul_meter() - command_soul)
 		_class_resource_of(actor).execute_command(
 			committed_action.class_resource_action,
 			target.combat_id if target != null else &"",
@@ -3156,6 +3158,46 @@ func _attach_class_resources(group: Array[BattleActor]) -> void:
 		actor.class_resource.host = self
 
 
+## A class command's Soul price after the resource's say (Pocketed Gear's free Jam, #285 slice 3).
+## The Gauge never rises here: a waiver only skips a spend.
+func _class_soul_cost(actor: BattleActor, action: CombatAction) -> float:
+	if action.soul_cost <= 0.0:
+		return 0.0
+	if _class_resource_of(actor).waives_soul_cost(action.class_resource_action):
+		return 0.0
+	return action.soul_cost
+
+
+## #285 slice 3: pushes `actor_id`'s next turn `ct` charge later. AP rounds refuse (no charge).
+func delay_actor(actor_id: StringName, ct: int) -> Dictionary:
+	var actor := _actor_by_id(actor_id)
+	if actor == null or not actor.is_alive():
+		return _blocked(&"no_target", "Only a living combatant can be delayed.", {})
+	return scheduler.delay(actor, ct)
+
+
+## #285 slice 3: how many OTHER living allies of `actor_id` stand within `radius` cells
+## (Chebyshev, the grid's own measure). A model without cells counts allies sharing the zone.
+func allies_within(actor_id: StringName, radius: int) -> int:
+	var actor := _actor_by_id(actor_id)
+	if actor == null:
+		return 0
+	var group := allies if allies.has(actor) else enemies
+	var origin: Variant = battlefield.cell_of(actor) if battlefield != null else null
+	var count := 0
+	for other: BattleActor in group:
+		if other == actor or not other.is_alive():
+			continue
+		var cell: Variant = battlefield.cell_of(other) if battlefield != null else null
+		if origin is Vector2i and cell is Vector2i:
+			var delta: Vector2i = (cell as Vector2i) - (origin as Vector2i)
+			if maxi(absi(delta.x), absi(delta.y)) <= radius:
+				count += 1
+		elif origin == null and battlefield != null and battlefield.position_of(other) == battlefield.position_of(actor):
+			count += 1
+	return count
+
+
 func _class_resource_of(actor: BattleActor) -> ClassResource:
 	if actor == null:
 		return NullClassResource.new()
@@ -4816,8 +4858,10 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 		return _blocked(&"unknown_target", "That combatant is not in this battle.", {})
 	var cancelled: Array[Dictionary] = []
 	var untraceable := 0
+	var unjammable := 0
 	if kind == &"deferred" or kind == &"any":
 		var kept: Array[Dictionary] = []
+		var notify: Array[Dictionary] = []
 		for entry: Dictionary in _deferred:
 			if StringName(str(entry.get("source_id", ""))) == target_id:
 				if _fed_in_the_dark(target, entry):
@@ -4825,11 +4869,20 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 					untraceable += 1
 					kept.append(entry)
 					continue
+				if bool(entry.get("unjammable", false)):
+					# Public Verdict (#285 slice 3): a Sentence filed beside an ally stands.
+					unjammable += 1
+					kept.append(entry)
+					continue
 				cancelled.append(entry.duplicate(true))
-				_class_resource_of(target).on_deferred_cancelled(entry.duplicate(true), requester_id)
+				notify.append(entry.duplicate(true))
 			else:
 				kept.append(entry)
 		_deferred = kept
+		# Notified AFTER the queue is replaced, so a resource may queue a follow-up here (Slow
+		# Rot's lingering tick) without the reassignment above discarding it.
+		for entry: Dictionary in notify:
+			_class_resource_of(target).on_deferred_cancelled(entry, requester_id)
 	if kind == &"committed" or kind == &"any":
 		if _resolving and target == active_actor():
 			# The target's action is mid-delivery and its commit is still unreleased.
@@ -4844,6 +4897,11 @@ func request_cancel(requester_id: StringName, target_id: StringName, kind: Strin
 			return _blocked(
 				&"source_untraceable", "%s's Hunger cannot be traced while its source is concealed." % target.display_name,
 				{"kind": String(kind), "untraceable": untraceable},
+			)
+		if unjammable > 0:
+			return _blocked(
+				&"verdict_public", "%s's Sentence was filed in public; it cannot be Jammed." % target.display_name,
+				{"kind": String(kind), "unjammable": unjammable},
 			)
 		return _blocked(&"nothing_to_cancel", "%s has nothing in flight." % target.display_name, {"kind": String(kind)})
 	var payload := {"requester_id": String(requester_id), "kind": String(kind), "cancelled": cancelled.duplicate(true)}

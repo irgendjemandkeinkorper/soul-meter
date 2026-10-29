@@ -189,6 +189,12 @@ func request_cancel(target_id: StringName, kind: StringName = &"any") -> Diction
 	return host.request_cancel(owner_id, target_id, kind)
 
 
+## The controller asks before charging a class command's Soul (Pocketed Gear, #285 slice 3).
+## True skips the spend; the Gauge never rises.
+func waives_soul_cost(_action_id: StringName) -> bool:
+	return false
+
+
 ## Fires on every OTHER ally's turn start (the owner's own turn is `on_turn_start()`).
 ## Locksmirk's Second Pick retries an armed Jam here.
 func on_ally_turn_start(_actor_id: StringName) -> void:

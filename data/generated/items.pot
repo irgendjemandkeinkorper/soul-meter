@@ -251,7 +251,7 @@ msgid "PERK_MIRRORBLADE_EVEN_HAND_NAME"
 msgstr ""
 
 #. perks/mirrorblade-even-hand — blurb
-#. English source: The first fizzle each battle does not unbalance you.
+#. English source: The first fizzle each battle returns you to Balance.
 msgid "PERK_MIRRORBLADE_EVEN_HAND_BLURB"
 msgstr ""
 
@@ -421,7 +421,7 @@ msgid "PERK_HUSK_BEARER_SLOW_ROT_NAME"
 msgstr ""
 
 #. perks/husk-bearer-slow-rot — blurb
-#. English source: A Hunger tick survives one round after its target is cured or jammed.
+#. English source: A Hunger tick that is Jammed still lands one round later.
 msgid "PERK_HUSK_BEARER_SLOW_ROT_BLURB"
 msgstr ""
 
@@ -461,7 +461,7 @@ msgid "PERK_FLAMEBINDER_SPECTACULAR_FAILURE_NAME"
 msgstr ""
 
 #. perks/flamebinder-spectacular-failure — blurb
-#. English source: A fizzle in a populated zone banks two tokens: somebody saw it.
+#. English source: A fizzle with an ally within 2 tiles banks two tokens: somebody saw it.
 msgid "PERK_FLAMEBINDER_SPECTACULAR_FAILURE_BLURB"
 msgstr ""
 
@@ -581,7 +581,7 @@ msgid "PERK_LOCKSMIRK_POCKETED_GEAR_NAME"
 msgstr ""
 
 #. perks/locksmirk-pocketed-gear — blurb
-#. English source: A Jam that cancels something refunds its Soul.
+#. English source: A Jam that cancels something makes your next Jam this battle free.
 msgid "PERK_LOCKSMIRK_POCKETED_GEAR_BLURB"
 msgstr ""
 

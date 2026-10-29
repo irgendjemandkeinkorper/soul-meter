@@ -33,6 +33,10 @@ func on_cast_forecast(context: Dictionary) -> Dictionary:
 		# Resolution redraws a lowest-row result once; the forecast carries the same flag, so
 		# the forecast and the commit still draw the same row.
 		"redraw_lowest": not redraw_spent and perk_total("redraw_lowest_once") > 0,
+		# Named Storm (#285 slice 3): draw twice, keep the higher row.
+		"draw_twice_keep_higher": perk_total("draw_twice_keep_higher") > 0,
+		# Grounded (#285 slice 3): the lowest row reads as the next one up.
+		"floor_lowest": perk_total("floor_lowest_draw") > 0,
 	}}
 
 

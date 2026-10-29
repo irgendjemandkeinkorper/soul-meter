@@ -10,8 +10,9 @@ offers each pick at levels 2 / 4 / 6. Karma gates are enforced since the Karma a
 and the canon blurbs carry them, with Longer Ledger and Named Storm reworded per §6 flags B and C.
 **Slice 2 landed (#285 PR 2): all ten level-2 resource perks work** (§7). Canon carries flat
 `effect_op` / `effect_value` fields (not the nested `effect` object sketched in §3); the seed refuses an op
-outside `PerkCatalog.EFFECT_OPS`. The sheet still marks the signatures and capstones "(planned)", except
-Jam the Gears and Nothing Wasted, which shipped as class features.
+outside `PerkCatalog.EFFECT_OPS`. **Slice 3 landed (#285 PR 3): 17 of the 20 capstones work** (§8). Still
+"(planned)": the eight new signatures and three capstones (Kept Focus, Carried Lesson, Read Aloud). Jam the
+Gears and Nothing Wasted shipped as class features.
 
 The text below is the approved draft as reviewed.
 
@@ -245,3 +246,45 @@ The owner ruled the two that were ambiguous on 2026-10-26, both as recommended:
 Perks reach a resource through `ClassResource.apply_perks()` when the controller attaches it from the
 `PartyMember`. `to_dict()` carries `perk_ids`; a save written before slice 2 reads them off the member on
 restore. Caps are the `MAX_*` constants plus the perk, so B11's constant changes merge without touching this.
+
+## 8. Slice 3: the capstones (wired 2026-10-26)
+
+Owner rulings 2026-10-26, all as recommended:
+
+- **Pocketed Gear:** a Jam that cancels something makes the next Jam this battle cost no Soul. A refund
+  would raise the Gauge, which ruling 3 reserves for acts of Agreement; a waiver only skips a spend.
+- **Even Hand:** the first fizzle each battle returns the Mirrorblade to Balance (a fizzle never
+  unbalanced in live code, so the old wording described nothing).
+- **Spectacular Failure:** "populated" means a living ally within 2 cells (a zone battlefield counts the
+  shared zone).
+
+Agent reading, flagged for review under owner item 9: **Slow Rot** read "after its target is cured or
+jammed". There is no cure, and a Jam names the DoT's *source*, so the blurb now reads "A Hunger tick that
+is Jammed still lands one round later."
+
+| capstone | op | how |
+|---|---|---|
+| First Blood | `bank_scar_at_start` 1 | starts the battle with one Scar |
+| Debt Collected | `refund_scar_on_down` 1 | the guaranteed hit that downs its target returns the Scar |
+| Feed the Husk | `hunger_on_dot_kill` 1 | `on_kill(dot)` |
+| Slow Rot | `linger_after_cancel` 1 | a Jammed tick is re-queued once, one round later; it does not chain |
+| Grounded | `floor_lowest_draw` 1 | a lowest row reads as the next row up (`Resolution`) |
+| Named Storm | `draw_twice_keep_higher` 1 | second draw from a derived seed, higher row kept |
+| Prompt Court | `sentence_sooner` 1 | due one round sooner, never sooner than next round |
+| Public Verdict | `unjammable_with_ally_adjacent` 1 | entry flagged `unjammable`; the Jam refuses `verdict_public` |
+| Own Name Twice | `own_name_twice` 2 | her own name recorded twice; pays once per recording |
+| Names Carried | `refund_reaches_all_recorded` 1 | a FALL also refunds every other living recorded ally |
+| Doubled Knot | `contract_twice` 2 | up to two of the same contract on one enemy |
+| Known Contract | `delay_on_bind` 20 | binding delays the bound enemy 20 CT |
+| Known Edge | `delay_first_attacker` 20 | the first enemy to act against her is delayed 20 CT |
+| Jammed Twice | `delay_on_armed_jam` 20 | a Jam with nothing pending delays the target 20 CT |
+| Even Hand | `fizzle_rebalances_once` 1 | `on_fizzle` resets the streak once |
+| Pocketed Gear | `free_jam_after_cancel` 1 | `waives_soul_cost()`; the controller skips the spend |
+| Spectacular Failure | `witnessed_fizzle_bonus` 1 | one extra token when `allies_within(2)` > 0 |
+
+New seams: `TurnScheduler.delay(actor, ct)` (charge time only; AP rounds refuse), `CombatController.delay_actor()`
+and `allies_within()`, and `ClassResource.waives_soul_cost()`. `request_cancel()` now notifies cancelled
+entries after replacing the queue, so a resource may queue a follow-up from `on_deferred_cancelled()`.
+
+Left for slice 4 with the signatures: **Kept Focus** and **Carried Lesson** (state that crosses battles,
+stored on the `PartyMember`) and **Read Aloud** (a party-wide forecast reveal in the HUD).

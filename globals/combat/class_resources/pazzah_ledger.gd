@@ -48,8 +48,13 @@ func queue_effect(effect_id: StringName, turns: int, payload: Dictionary = {}) -
 	var raw_writes: Variant = payload.get("writes", [])
 	if not raw_writes is Array or (raw_writes as Array).is_empty():
 		return false
+	# Prompt Court (#285 slice 3): due one round sooner, never sooner than the next round.
+	var due := {"delay_rounds": maxi(turns - perk_total("sentence_sooner"), 1)}
+	# Public Verdict (#285 slice 3): filed with an ally adjacent, the Sentence cannot be Jammed.
+	if perk_total("unjammable_with_ally_adjacent") > 0 and host != null and host.allies_within(owner_id, 1) > 0:
+		due["unjammable"] = true
 	var queued: Dictionary = enqueue_deferred(
-		{"writes": (raw_writes as Array).duplicate(true)}, {"delay_rounds": turns}, effect_id
+		{"writes": (raw_writes as Array).duplicate(true)}, due, effect_id
 	)
 	if not bool(queued.get("allowed", false)):
 		return false

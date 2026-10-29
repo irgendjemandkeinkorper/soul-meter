@@ -32,7 +32,8 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 	var kind := _kind_of_command(action_id)
 	if kind == KIND_HOSTILITY and (not payload.get("amount") is int or int(payload.amount) <= 0):
 		return command_refusal(&"class_resource_payload", "The contract needs a positive payoff.")
-	if has_contract(target_id, kind):
+	# Doubled Knot (#285 slice 3): the same contract may sit on one enemy twice.
+	if contract_count(target_id, kind) >= maxi(perk_total("contract_twice"), 1):
 		return command_refusal(&"class_resource_duplicate", "That enemy already carries this contract.")
 	return gate
 
@@ -40,6 +41,9 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 func execute_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> void:
 	if not bool(query_command(action_id, target_id, payload).allowed):
 		return
+	# Known Contract (#285 slice 3): the bound enemy has heard what the thread costs.
+	if perk_total("delay_on_bind") > 0 and host != null:
+		host.delay_actor(target_id, perk_total("delay_on_bind"))
 	match _kind_of_command(action_id):
 		KIND_HOSTILITY:
 			bind_thread(target_id, {"verb": CombatAction.Verb.ATTACK}, {
@@ -67,6 +71,14 @@ func bind_thread(target_id: StringName, condition: Dictionary, payoff: Dictionar
 		"triggered": false,
 	})
 	return true
+
+
+func contract_count(target_id: StringName, kind: StringName) -> int:
+	var count := 0
+	for thread: Dictionary in threads:
+		if str(thread.get("target_id", "")) == String(target_id) and str(thread.get("kind", KIND_HOSTILITY)) == String(kind):
+			count += 1
+	return count
 
 
 func has_contract(target_id: StringName, kind: StringName) -> bool:

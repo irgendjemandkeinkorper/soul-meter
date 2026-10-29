@@ -17748,7 +17748,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "A fizzle in a populated zone banks two tokens: somebody saw it."
+						"value": "A fizzle with an ally within 2 tiles banks two tokens: somebody saw it."
 					},
 					"Class Id": {
 						"type": "string",
@@ -17760,11 +17760,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "witnessed_fizzle_bonus"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -17874,11 +17874,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "hunger_on_dot_kill"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18033,7 +18033,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "A Hunger tick survives one round after its target is cured or jammed."
+						"value": "A Hunger tick that is Jammed still lands one round later."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18045,11 +18045,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "linger_after_cancel"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18102,11 +18102,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "refund_scar_on_down"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18216,11 +18216,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "bank_scar_at_start"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18615,11 +18615,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "delay_on_armed_jam"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 20
 					},
 					"Level": {
 						"type": "int",
@@ -18660,7 +18660,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "A Jam that cancels something refunds its Soul."
+						"value": "A Jam that cancels something makes your next Jam this battle free."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18672,11 +18672,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "free_jam_after_cancel"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18774,7 +18774,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "The first fizzle each battle does not unbalance you."
+						"value": "The first fizzle each battle returns you to Balance."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18786,11 +18786,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "fizzle_rebalances_once"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -18843,11 +18843,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "delay_first_attacker"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 20
 					},
 					"Level": {
 						"type": "int",
@@ -19071,11 +19071,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "sentence_sooner"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -19128,11 +19128,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "unjammable_with_ally_adjacent"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -19356,11 +19356,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "refund_reaches_all_recorded"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -19413,11 +19413,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "own_name_twice"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 2
 					},
 					"Level": {
 						"type": "int",
@@ -19470,11 +19470,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "floor_lowest_draw"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -19527,11 +19527,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "draw_twice_keep_higher"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 1
 					},
 					"Level": {
 						"type": "int",
@@ -19698,11 +19698,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "contract_twice"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 2
 					},
 					"Level": {
 						"type": "int",
@@ -19812,11 +19812,11 @@
 					},
 					"Effect Op": {
 						"type": "string",
-						"value": ""
+						"value": "delay_on_bind"
 					},
 					"Effect Value": {
 						"type": "int",
-						"value": 0
+						"value": 20
 					},
 					"Level": {
 						"type": "int",

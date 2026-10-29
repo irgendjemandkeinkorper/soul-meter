@@ -12,6 +12,10 @@ var side_streak: int = 0
 var unbalanced: bool = false
 ## Second Footing (#285 slice 2, ruled 2026-10-26): spent once it forgives a repeat this battle.
 var footing_spent: bool = false
+## Even Hand (#285 slice 3, ruled 2026-10-26): spent by the first fizzle this battle.
+var even_hand_spent: bool = false
+## Known Edge (#285 slice 3): spent once an enemy has acted against the Mirrorblade.
+var known_edge_spent: bool = false
 
 
 func on_action(event: CombatEvent) -> void:
@@ -33,6 +37,32 @@ func on_action(event: CombatEvent) -> void:
 		footing_spent = true
 		side_streak -= 1
 	unbalanced = side_streak >= UNBALANCED_AFTER_STREAK
+
+
+## Even Hand: the first fizzle each battle returns the Mirrorblade to Balance.
+func on_fizzle(_resolution: Dictionary) -> void:
+	if even_hand_spent or perk_total("fizzle_rebalances_once") <= 0:
+		return
+	even_hand_spent = true
+	last_side = &""
+	side_streak = 0
+	unbalanced = false
+
+
+## Known Edge: the first enemy to act against the Mirrorblade each battle has heard of her,
+## and its next turn comes `delay_first_attacker` CT late.
+func on_any_action(
+	actor_id: StringName, _action_id: StringName, target_id: StringName, _outcome: Dictionary
+) -> void:
+	if known_edge_spent or target_id != owner_id or host == null:
+		return
+	if perk_total("delay_first_attacker") <= 0:
+		return
+	var actor := host.actor_by_id(actor_id)
+	if actor == null or not host.enemies.has(actor):
+		return
+	known_edge_spent = true
+	host.delay_actor(actor_id, perk_total("delay_first_attacker"))
 
 
 func on_cast_forecast(context: Dictionary) -> Dictionary:
@@ -70,6 +100,8 @@ func to_dict() -> Dictionary:
 	data["side_streak"] = side_streak
 	data["unbalanced"] = unbalanced
 	data["footing_spent"] = footing_spent
+	data["even_hand_spent"] = even_hand_spent
+	data["known_edge_spent"] = known_edge_spent
 	return data
 
 
@@ -79,3 +111,5 @@ func from_dict(data: Dictionary) -> void:
 	side_streak = maxi(int(data.get("side_streak", 0)), 0)
 	unbalanced = bool(data.get("unbalanced", false))
 	footing_spent = bool(data.get("footing_spent", false))
+	even_hand_spent = bool(data.get("even_hand_spent", false))
+	known_edge_spent = bool(data.get("known_edge_spent", false))
