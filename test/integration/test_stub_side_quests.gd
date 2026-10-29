@@ -13,6 +13,7 @@ var _flags_backup: Dictionary = {}
 var _soul_backup: float = 0.0
 var _reputation_backup: Dictionary = {}
 var _quests_backup: Dictionary = {}
+var _party_backup: Array[PartyMember] = []
 
 
 func before_test() -> void:
@@ -20,6 +21,7 @@ func before_test() -> void:
 	_soul_backup = GameState.soul_meter
 	_reputation_backup = Reputation.to_dict().duplicate(true)
 	_quests_backup = QuestRegistry.to_dict().duplicate(true)
+	_party_backup = GameState.party.duplicate()
 	QuestRegistry.reset()
 
 
@@ -30,6 +32,7 @@ func after_test() -> void:
 	Reputation.from_dict(_reputation_backup)
 	QuestRegistry.reset()
 	QuestRegistry.from_dict(_quests_backup)
+	GameState.party = _party_backup
 	# suspend_stub() publishes a reward summary; UIManager raises a full-screen reward reveal
 	# for it that outlives the suite and swallows the next suite's input.
 	UIManager.reset_reward_reveals()
@@ -153,6 +156,27 @@ func test_suspending_a_stub_completes_it_and_sets_the_resume_flag() -> void:
 	assert_bool(bool(GameState.get_flag(stub.resume_flag, false))).override_failure_message(
 		"the resume flag is what a post-launch update keys on; it was not set"
 	).is_true()
+
+
+func test_suspending_a_stub_pays_no_quest_xp() -> void:
+	# Owner 2026-10-22 (`docs/progression-bound-packet.md` §5.2): a stub left "to be
+	# continued" is not a completed quest. Paying it would lift a thorough run onto the
+	# Chapter 1 cap instead of one level below it.
+	var member := PartyMember.new()
+	member.id = "test-stub-xp"
+	member.level = 1
+	member.xp = 0
+	member.advancement_points = 0
+	GameState.party = [member]
+	var stub: StubSideQuest = QuestRegistry.STUB_SIDE_QUESTS[2]
+	_open(stub)
+
+	assert_bool(QuestRegistry.suspend_stub(stub)).is_true()
+
+	assert_int(member.xp).override_failure_message(
+		"suspending a stub paid quest XP; a stub is not a completed quest"
+	).is_equal(0)
+	assert_int(member.level).is_equal(1)
 
 
 func test_suspending_writes_no_reputation_row() -> void:

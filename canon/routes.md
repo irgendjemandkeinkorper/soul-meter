@@ -8,8 +8,11 @@ The #342 move preserves all existing numbers. These remain **PROVISIONAL**:
 
 - `dom-dorthkor_road` reputation-band weights: Neutral keeps the base weights; Allied's zero
   override disables that encounter. Base encounter weights must be positive; overrides may be zero.
-- C1 (`dom-kesselford`), C2 (`kesselford-ashlaren`), C3 (`dom-long_verge`,
-  `long_verge-kesselford`) and C4 (`dorthkor_road-hollowmere`) route tuning. The existing
-  encounter-frequency playtests and balance pass still own these numbers.
-- Location `fast_travel.base_cost_gp`: Dom 25, Kesselford 40, Ashlaren 60. Adding these facets
-  does not change the fast-travel registry in PR 1.
+- Dom's `fast_travel.base_cost_gp` (25).
+
+Ratified as authored on 2026-10-22 (owner item 4), still tunable in the balance pass after
+encounter-frequency playtests:
+
+- C1 (`dom-kesselford`), C2 (`kesselford-ashlaren`), C3 (`dom-long_verge`, `long_verge-kesselford`)
+  and C4 (`dorthkor_road-hollowmere`) route numbers.
+- `fast_travel.base_cost_gp` for Kesselford (40) and Ashlaren (60).
