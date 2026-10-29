@@ -7,10 +7,10 @@ extends ClassResource
 ## 2026-09-08 on #286): the Gauge rises ONLY through an act of Agreement — a tagged quest
 ## outcome — and a kill is the opposite of one. The refund keeps its magnitude and moves to
 ## Breath, the adjacent per-battle casting pool, so the class economy is a currency swap
-## rather than a deletion. B11 still owns the number.
+## rather than a deletion. B11 (ratified 2026-10-25) set it to 3.
 
-const MAX_HUNGER := 5 # PROVISIONAL — B11 owns tuning.
-const BREATH_REFUND := 1 # PROVISIONAL — B11 owns tuning.
+const MAX_HUNGER := 3 # B11, ratified 2026-10-25 (owner item 6): pressure, not a solo kill.
+const BREATH_REFUND := 3 # B11, ratified 2026-10-25 (owner item 6): one kill returns one Note.
 
 var hunger: int = 0
 var pending_breath_refunds: float = 0.0
