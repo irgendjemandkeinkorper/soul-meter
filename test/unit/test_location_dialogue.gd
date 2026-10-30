@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 ## title; the generated `<town>_townsfolk.dialogue` (tools/generate_gloot.gd owns it, never
 ## hand-edited) stays the fallback for any title the authored file does not carry.
 
-const PROVISIONAL_HEADER := "# PROVISIONAL — CANON REVIEW REQUIRED"
+const REVIEWED_HEADER := "# Canon-reviewed: owner approved 2026-10-30 (item 9)."
 ## The C25 towns: every roster NPC of each must have an authored title.
 const AUTHORED_SCENES: Dictionary = {
 	"kesselford": "res://world/kesselford.tscn",
@@ -45,8 +45,8 @@ func test_every_authored_location_file_covers_its_roster_with_ambient_lines_only
 		var resource := load(path) as DialogueResource
 		assert_object(resource).override_failure_message("%s does not import" % path).is_not_null()
 		var source := FileAccess.get_file_as_string(path)
-		assert_bool(source.begins_with(PROVISIONAL_HEADER)) \
-			.override_failure_message("%s must open with the PROVISIONAL header" % path).is_true()
+		assert_bool(source.begins_with(REVIEWED_HEADER)) \
+			.override_failure_message("%s must open with the canon-reviewed header" % path).is_true()
 		for token: String in FORBIDDEN_TOKENS:
 			assert_bool(source.contains(token)) \
 				.override_failure_message("%s carries forbidden token %s" % [path, token.strip_edges()]) \

@@ -7641,7 +7641,7 @@
 					},
 					"Dialogue Context": {
 						"type": "string",
-						"value": "PROVISIONAL — CANON REVIEW REQUIRED: The Council elder waits to send a proven traveler beyond Dom."
+						"value": "The Council elder waits to send a proven traveler beyond Dom."
 					},
 					"Dialogue Farewell": {
 						"type": "string",
@@ -19904,6 +19904,333 @@
 						"value": ""
 					}
 				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "610.0",
+				"_index": 0,
+				"_name": "Watcher Ysolde Marrow",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "The Widow-Watchers' single observer at Hollowmere, posted where the front's weather can be read early, who writes one unsigned sentence a day about the water."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Ysolde writes one sentence about the mere each day and has stopped signing it; lately the sentences describe tomorrow."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Write down what you saw before it changes."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Mind the planks. The water under them is late."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "Stand off the stilt. The water has enough to remember."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Read yesterday's sentence before you ask me anything. Then tell me whether it was yesterday's."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Watcher Ysolde Marrow"
+					},
+					"District": {
+						"type": "string",
+						"value": "The Watch Stilt"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "The mere's one observer"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "widow-watchers"
+					},
+					"Home": {
+						"type": "string",
+						"value": "The watch-stilt"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 1.127
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 3
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "hollowmere-watcher"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "WatchPost"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/hollowmere.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -24.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 136.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "hollowmere-watcher"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Widow-Watcher observer"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "hollowmere"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "611.0",
+				"_index": 0,
+				"_name": "Envoy Brannoc Quell",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "Carries the Watcher's daily sentence back toward the escarpment and the elders' answer out again, and has stopped reading the sentences on the way."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Brannoc runs the Watcher's reports out to the elders, who want her left where she is: hers is the only early warning the front has."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "Carry word out if we do not."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "You have come further than the map admits."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The elders' business. Walk on."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "Every camp on the front reads tomorrow's weather off her sentence. Ask what that costs her before you ask her to stop."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Envoy Brannoc Quell"
+					},
+					"District": {
+						"type": "string",
+						"value": "The Approach"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "The elders' runner to the mere"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "east"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "widow-watchers"
+					},
+					"Home": {
+						"type": "string",
+						"value": "A tent on the approach"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 0.36
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 14
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "hollowmere-envoy"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "EnvoyFire"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/hollowmere.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": -92.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 79.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "hollowmere-envoy"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Widow-Watchers' envoy"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "hollowmere"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
+			},
+			{
+				"_category_id": "96",
+				"_icon_color": "ffffff00",
+				"_id": "612.0",
+				"_index": 0,
+				"_name": "Mender Corrin Vell",
+				"_property_overrides": {
+					"Bio": {
+						"type": "string",
+						"value": "A Wayfare Mender posted to file the mere's Agreement reading, which sits lower than any instrument near Dom, and who has begun filing the Watcher's sentences beside it."
+					},
+					"Dialogue Context": {
+						"type": "string",
+						"value": "Corrin files the mere's Agreement reading for the Menders and has started filing the Watcher's sentences beside it."
+					},
+					"Dialogue Farewell": {
+						"type": "string",
+						"value": "If the water answers, do not answer back."
+					},
+					"Dialogue Greeting": {
+						"type": "string",
+						"value": "Keep your voice to Notes out here."
+					},
+					"Dialogue Hostile": {
+						"type": "string",
+						"value": "The instruments are the Menders'. The readings are not for sale."
+					},
+					"Dialogue Warm": {
+						"type": "string",
+						"value": "The needle sits lower here than anywhere I have filed near Dom. Phrases fail outright. Keep to Notes, and keep them short."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Mender Corrin Vell"
+					},
+					"District": {
+						"type": "string",
+						"value": "The Reed Landing"
+					},
+					"Epithet": {
+						"type": "string",
+						"value": "Reads the mere's instruments"
+					},
+					"Facing": {
+						"type": "string",
+						"value": "west"
+					},
+					"Faction Id": {
+						"type": "string",
+						"value": "wayfare-menders"
+					},
+					"Home": {
+						"type": "string",
+						"value": "The instrument stake"
+					},
+					"Idle Phase": {
+						"type": "float",
+						"value": 3.206
+					},
+					"Model Index": {
+						"type": "int",
+						"value": 25
+					},
+					"NPC Id": {
+						"type": "string",
+						"value": "hollowmere-mender"
+					},
+					"Placement Anchor": {
+						"type": "string",
+						"value": "InstrumentStake"
+					},
+					"Placement Scene": {
+						"type": "string",
+						"value": "res://world/hollowmere.tscn"
+					},
+					"Placement X": {
+						"type": "float",
+						"value": 39.0
+					},
+					"Placement Y": {
+						"type": "float",
+						"value": 123.0
+					},
+					"Portrait Id": {
+						"type": "string",
+						"value": "hollowmere-mender"
+					},
+					"Portrait Path": {
+						"type": "string",
+						"value": ""
+					},
+					"Quest Hooks": {
+						"type": "string",
+						"value": "[]"
+					},
+					"Role": {
+						"type": "string",
+						"value": "Wayfare Mender instrument-reader"
+					},
+					"Town Id": {
+						"type": "string",
+						"value": "hollowmere"
+					},
+					"Vault Id": {
+						"type": "string",
+						"value": ""
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -21619,7 +21946,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 609.0
+			"default": 612.0
 		}
 	},
 	"_version": 1
