@@ -7721,7 +7721,7 @@
 					},
 					"Quest Hooks": {
 						"type": "string",
-						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/themka-gaath/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"PROVISIONAL — CANON REVIEW REQUIRED: Gives the opening charge to travel to Dorthkor Road.\"}]"
+						"value": "[{\"involvement\":\"giver\",\"quest_id\":\"dom/themka-gaath/giver\",\"state_source\":\"QuestRegistry\",\"summary\":\"Gives the opening charge to travel to Dorthkor Road.\"}]"
 					},
 					"Role": {
 						"type": "string",
@@ -18375,7 +18375,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "While your reveal is armed, allies' spell forecasts this round show their true terms too."
+						"value": "While Reveal is prepared, allies' spell forecasts show their true terms this round."
 					},
 					"Class Id": {
 						"type": "string",
@@ -18432,7 +18432,7 @@
 				"_property_overrides": {
 					"Blurb": {
 						"type": "string",
-						"value": "Spend 1 Clarity to read an enemy: its next target, aim and odds are shown, and it is held to them."
+						"value": "Spend 1 Clarity to scan an enemy: its target, aim, weakness, resistance and odds are shown, and it is held to them."
 					},
 					"Class Id": {
 						"type": "string",

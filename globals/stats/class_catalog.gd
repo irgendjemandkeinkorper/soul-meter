@@ -59,7 +59,7 @@ const ALL: Array[Dictionary] = [
 		"resource": "Clarity",
 		"resource_blurb": "Start each battle with three Clarity. Spend one to reveal true spell forecast terms until your next committed cast.",
 		"signature": "Sacred Clarity",
-		"signature_blurb": "Spend 1 Clarity to read an enemy: its next target, aim and odds are shown, and it is held to them.",
+		"signature_blurb": "Spend 1 Clarity to scan an enemy: its target, aim, weakness, resistance and odds are shown, and it is held to them.",
 		"suggested_major": "sul", "suggested_minor": "vel", "chord": "Verdance",
 		"retired_disciplines": [], "watch_disciplines": [], "notes": "",
 	},

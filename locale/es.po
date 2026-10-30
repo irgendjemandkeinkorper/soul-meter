@@ -371,7 +371,7 @@ msgid "PERK_LENSBEARER_SACRED_CLARITY_NAME"
 msgstr ""
 
 #. perks/lensbearer-sacred-clarity — blurb
-#. English source: Spend 1 Clarity to read an enemy: its next target, aim and odds are shown, and it is held to them.
+#. English source: Spend 1 Clarity to scan an enemy: its target, aim, weakness, resistance and odds are shown, and it is held to them.
 #, fuzzy
 msgid "PERK_LENSBEARER_SACRED_CLARITY_BLURB"
 msgstr ""
@@ -392,7 +392,7 @@ msgid "PERK_LENSBEARER_READ_ALOUD_NAME"
 msgstr ""
 
 #. perks/lensbearer-read-aloud — blurb
-#. English source: While your reveal is armed, allies' spell forecasts this round show their true terms too.
+#. English source: While Reveal is prepared, allies' spell forecasts show their true terms this round.
 #, fuzzy
 msgid "PERK_LENSBEARER_READ_ALOUD_BLURB"
 msgstr ""

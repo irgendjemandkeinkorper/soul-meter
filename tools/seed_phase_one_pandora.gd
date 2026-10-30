@@ -274,7 +274,7 @@ func _seed_trial_gauntlet() -> void:
 		push_error("Trial gauntlet seed requires Combatants and Encounters roots.")
 		return
 
-	# PROVISIONAL — CANON REVIEW REQUIRED: encounter names and outcome prose.
+	# Canon-reviewed 2026-10-30 (item 9): encounter names and outcome prose.
 	_upsert(combatants, "Trial Warden", {
 		"Combatant Id": "trial-warden",
 		"Display Name": "Trial Warden",
@@ -385,7 +385,7 @@ func _seed_defining_weaknesses() -> void:
 		_weakness_row("Mustered Bloodbellow — Mustered Weapon", "mustered-bloodbellow", "mustered-bloodbellow/disarm", "the hand that holds it", "undertone", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
 		_weakness_row("Cleaned Guard — Binding Oath", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/binding-oath", "the oath that binds it", "recall", 0.0, 0, "bind_break", {"binding_broken": true, "defense_delta": -2}),
 		_weakness_row("Cleaned Guard — Gripping Hand", "cleaned-jawbrace-guard", "cleaned-jawbrace-guard/disarm", "the hand that holds it", "undertone", 40.0, 1, "disarm", {"attack_delta": -2, "disarmed": true}),
-		# PROVISIONAL — CANON REVIEW REQUIRED: trial combatant weakness names.
+		# Canon-reviewed 2026-10-30 (item 9): trial combatant weakness names.
 		_weakness_row("Trial Warden — Joint", "trial-warden", "trial-warden/joint", "the joint", "recall", 0.0, 0, "cripple", {"crippled": true, "max_ap_delta": -1}),
 		_weakness_row("Trial Keeper — Gripping Hand", "trial-keeper", "trial-keeper/disarm", "the hand that holds it", "undertone", 0.0, 0, "disarm", {"attack_delta": -2, "disarmed": true}),
 	]
