@@ -2646,7 +2646,7 @@
           "involvement": "giver",
           "quest_id": "dom/themka-gaath/giver",
           "state_source": "QuestRegistry",
-          "summary": "PROVISIONAL — CANON REVIEW REQUIRED: Gives the opening charge to travel to Dorthkor Road.",
+          "summary": "Gives the opening charge to travel to Dorthkor Road.",
           "stable_id": {
             "kind": "quest",
             "id": "dom/themka-gaath/giver"

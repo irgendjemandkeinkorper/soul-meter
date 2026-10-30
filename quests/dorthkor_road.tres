@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="FlagQuest" load_steps=2 format=3]
 
-; PROVISIONAL — CANON REVIEW REQUIRED: Wave O acquisition prose is in council_elder.dialogue.
+; Canon-reviewed: owner approved 2026-10-30 (item 9). Wave O acquisition prose is in council_elder.dialogue.
 ; TODO(content wave): continue the existing Chapter 1 arc after arrival confirmation.
 
 [ext_resource type="Script" path="res://quests/flag_quest.gd" id="1_flag"]

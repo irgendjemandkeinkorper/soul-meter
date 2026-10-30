@@ -1538,15 +1538,31 @@ func lock_enemy_intent(enemy_id: StringName, read_by: StringName) -> Dictionary:
 		return _blocked(&"no_target", "%s has no one to act against." % enemy.display_name, {})
 	plan["read_by"] = String(read_by)
 	_locked_intents[enemy_id] = plan
+	_discover_by_scan(enemy)
 	return _allowed({"intent": shown_intent(enemy)})
+
+
+## The scan names every authored defining weakness and marks it discovered, exactly as a passed
+## Undertone or Recall check would (owner ruling 2026-10-30), so a Defining Strike can use it.
+func _discover_by_scan(enemy: BattleActor) -> void:
+	if enemy.archetype_id.is_empty():
+		return
+	var game_state := _game_state()
+	for weakness: Dictionary in CombatIdentityCatalog.weaknesses_for(enemy.archetype_id):
+		var weakness_id := StringName(str(weakness.get("id", "")))
+		if game_state != null:
+			game_state.call("discover_weakness", enemy.archetype_id, weakness_id)
+		if weakness_id not in enemy.discovered_weakness_ids:
+			enemy.discovered_weakness_ids.append(weakness_id)
 
 
 func is_intent_locked(enemy_id: StringName) -> bool:
 	return _locked_intents.has(enemy_id)
 
 
-## What a read enemy shows: its plan plus live odds from the same forecast the player's attacks
-## use (hit %, damage on hit, injury chance on hit). The choice is locked; the numbers follow
+## What a read enemy shows: its plan, its defining weaknesses and elemental resistances, plus
+## live odds from the same forecast the player's attacks use (hit %, damage on hit, injury
+## chance on hit). The choice is locked; the numbers follow
 ## the board. `{}` for an unread enemy.
 func shown_intent(enemy: BattleActor) -> Dictionary:
 	if enemy == null or not _locked_intents.has(enemy.combat_id):
@@ -1556,6 +1572,9 @@ func shown_intent(enemy: BattleActor) -> Dictionary:
 	if target == null:
 		return {}
 	shown["target_name"] = target.display_name
+	shown["weaknesses"] = _scanned_weaknesses(enemy)
+	shown["element"] = String(enemy.element_id)
+	shown["resists"] = _scanned_resistances(enemy)
 	if str(shown["kind"]) != "strike":
 		return shown
 	var action := action_by_id(StringName(str(shown["action_id"])))
@@ -1575,6 +1594,29 @@ func shown_intent(enemy: BattleActor) -> Dictionary:
 		if not injury.is_empty() and damage_on_hit >= int(injury.get("min_damage", 1)) else 0
 	)
 	return shown
+
+
+func _scanned_weaknesses(enemy: BattleActor) -> PackedStringArray:
+	var names: PackedStringArray = []
+	if enemy.archetype_id.is_empty():
+		return names
+	for weakness: Dictionary in CombatIdentityCatalog.weaknesses_for(enemy.archetype_id):
+		names.append(str(weakness.get("display_name", weakness.get("id", ""))))
+	return names
+
+
+## The elements this enemy's attunement prices below full damage: its own and its two wheel
+## neighbours (element matrix target axis, `same` 0.5 and `neighbour` 0.75). An unattuned enemy
+## resists nothing.
+func _scanned_resistances(enemy: BattleActor) -> PackedStringArray:
+	var resisted: PackedStringArray = []
+	if enemy.element_id.is_empty():
+		return resisted
+	for element: StringName in ElementWheel.ORDER:
+		var steps := ElementWheel.distance(element, enemy.element_id)
+		if steps >= 0 and steps <= 1:
+			resisted.append(String(element))
+	return resisted
 
 
 ## PROVISIONAL (called-shots task 12): how many HP of expected damage one full injury is

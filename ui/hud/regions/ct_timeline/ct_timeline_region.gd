@@ -92,7 +92,7 @@ static func intent_line(intent: Dictionary) -> String:
 	var parts: PackedStringArray = ["→ %s" % str(intent.get("target_name", "?"))]
 	if str(intent.get("kind", "")) != "strike":
 		parts.append("advancing")
-		return " · ".join(parts)
+		return " · ".join(parts + _scan_parts(intent))
 	if not str(intent.get("aim_location", "")).is_empty():
 		parts.append(str(intent["aim_location"]))
 	if intent.has("hit_chance"):
@@ -100,7 +100,18 @@ static func intent_line(intent: Dictionary) -> String:
 		parts.append("%d dmg" % int(intent.get("damage_on_hit", 0)))
 		if int(intent.get("injury_chance", 0)) > 0:
 			parts.append("%d%% injury" % int(intent["injury_chance"]))
-	return " · ".join(parts)
+	return " · ".join(parts + _scan_parts(intent))
+
+
+static func _scan_parts(intent: Dictionary) -> PackedStringArray:
+	var parts: PackedStringArray = []
+	var weaknesses: PackedStringArray = intent.get("weaknesses", PackedStringArray())
+	if not weaknesses.is_empty():
+		parts.append("weak: %s" % ", ".join(weaknesses))
+	var resists: PackedStringArray = intent.get("resists", PackedStringArray())
+	if not resists.is_empty():
+		parts.append("resists %s" % ", ".join(resists))
+	return parts
 
 
 func marker_count() -> int:
