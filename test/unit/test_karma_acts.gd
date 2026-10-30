@@ -144,7 +144,8 @@ func test_upright_is_reachable_from_doctrine_three() -> void:
 		best += top
 	# Dialogue-only acts: witnessed-descent 5, Loamroot communion 10, Iris's vein 5.
 	best += 20.0
-	assert_float(best).is_equal(110.0)
+	# 110 through item 24; the Hollowmere stake (item 25, 2026-10-30) adds its +5.
+	assert_float(best).is_equal(115.0)
 	var upright_floor := float(Renown.KARMA_TIER_FLOORS[Renown.KARMA_TIER_NAMES.find("Upright")])
 	assert_float(best * 3.0 / Renown.KARMA_SCALE_DIVISOR).is_greater_equal(upright_floor)
 	assert_float(Renown.KARMA_SCALE_DIVISOR).is_equal(float(DramgidSchema.ATTRIBUTE_CAP))

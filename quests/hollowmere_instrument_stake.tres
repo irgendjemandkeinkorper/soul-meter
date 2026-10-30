@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="DomSideQuest" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://quests/dom_side_quest.gd" id="1_side"]
+
+[resource]
+script = ExtResource("1_side")
+id = 29
+quest_name = "The Instrument Stake"
+quest_description = "Mender Corrin Vell's needle files lower at every reading, and spiral reeds have grown in around the instrument stake. Corrin can sing the stake's corner of the mere back into holding, or file the true reading so Verspch redraws the map."
+quest_objective = "Read the Watcher's latest sentence against the needle."
+required_flags = PackedStringArray("hollowmere_instrument_stake_read")
+objectives = PackedStringArray("Compare the Watcher's filed sentence with Corrin's needle.", "Return to Corrin Vell and decide what the Menders do with the stake.")
+stable_id = "hollowmere/side/instrument-stake"
+ledger_scene = "hollowmere"
+dialogue_path = "res://dialogue/hollowmere_side_quests.dialogue"
+giver_actor_id = "hollowmere-mender"
+participant_actor_ids = PackedStringArray("hollowmere-mender", "hollowmere-watcher")
+hook_ids = PackedStringArray("hollowmere/hollowmere-mender/giver", "hollowmere/hollowmere-watcher/information")
+dialogue_title = "hollowmere_side_instrument_stake"
+decision_prompt = "Decide whether Corrin sings the stake's corner back into holding or files the true reading for Verspch."
+resolution_flag = "hollowmere_instrument_stake_resolution"
+outcome_ids = PackedStringArray("hold-the-stake", "file-the-true-reading")
+outcome_labels = PackedStringArray("Keep the beat while Corrin sings the stake's corner back into holding.", "File the true reading and let Verspch redraw the map.")
+outcome_faction_ids = PackedStringArray("wayfare-menders", "wayfare-menders")
+outcome_reputation_deltas = PackedFloat32Array(6.0, 4.0)
+outcome_causes = PackedStringArray("Kept the beat while a Mender sang the Hollowmere stake back into holding", "Filed Hollowmere's true Agreement reading to Verspch")
+outcome_readbacks = PackedStringArray("The needle at the stake holds a finger higher than the rest of the mere, and the reeds around it grow straight.", "The Menders' map of Hollowmere came back from Verspch smaller, and every line on it is true.")
+outcome_tags = Array[PackedStringArray]([PackedStringArray("act_of_agreement"), PackedStringArray()])
+outcome_soul_deltas = PackedFloat32Array(8, 0)
+outcome_karma_bases = PackedFloat32Array(5.0, 5.0)
+outcome_restores_agreement = Array[PackedStringArray]([PackedStringArray("hollowmere-reed-landing"), PackedStringArray()])

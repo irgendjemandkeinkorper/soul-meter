@@ -1,0 +1,44 @@
+# PROVISIONAL — CANON REVIEW REQUIRED: all dialogue prose and option text in this file (owner item 25, added 2026-10-30).
+~ hollowmere_side_instrument_stake
+Mender Corrin Vell: The needle files lower every time I read it, and the reeds have started to spiral in around the stake. Either the mere is going or my instrument is.
+=> hollowmere_side_instrument_stake_hub
+
+~ hollowmere_side_instrument_stake_hub
+- "Let me help with the stake." [if not QuestRegistry.is_active(QuestRegistry.INSTRUMENT_STAKE) and not QuestRegistry.is_done(QuestRegistry.INSTRUMENT_STAKE) /]
+	do QuestRegistry.offer_side_quest(QuestRegistry.INSTRUMENT_STAKE)
+	Mender Corrin Vell: I file the Watcher's sentences beside the needle. Read her latest against today's reading and tell me which one is lying.
+	=> END
+- "Her sentence and your needle say the same thing." [if QuestRegistry.is_active(QuestRegistry.INSTRUMENT_STAKE) and not GameState.get_flag("hollowmere_instrument_stake_read") /]
+	do GameState.set_flag("hollowmere_instrument_stake_read", true)
+	Mender Corrin Vell: Then neither is lying, and the stake is going. I can sing this corner back into holding, a little. Or I can file the truth and let Verspch draw the map smaller.
+	=> END
+- "Listen to the water under the stake." [#tag=Sounding] [if QuestRegistry.is_active(QuestRegistry.INSTRUMENT_STAKE) and not GameState.get_flag("hollowmere_instrument_stake_read") and not GameState.get_flag("hollowmere_instrument_stake_check_failed") and check("sounding", 45) /]
+	do SkillCheck.resolve("sounding")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("hollowmere_instrument_stake_read", true)
+		Mender Corrin Vell: You heard it arrive a beat behind the wind. So did the needle. The stake is going, not the instrument.
+		=> END
+	else
+		do GameState.set_flag("hollowmere_instrument_stake_check_failed", true)
+		Mender Corrin Vell: The water will not answer you either. Read the Watcher's sentence instead.
+		=> END
+- "Read the Watcher's sentence against the needle." [if QuestRegistry.is_active(QuestRegistry.INSTRUMENT_STAKE) and GameState.get_flag("hollowmere_instrument_stake_check_failed") and not GameState.get_flag("hollowmere_instrument_stake_read") /]
+	Mender Corrin Vell: Her sentences are filed beside the readings. Compare them, then come back.
+	=> END
+- "Sing the corner back. I'll keep the beat." [#consequence=The Reed Landing is re-Agreed: casting near the stake holds again] [if QuestRegistry.is_active(QuestRegistry.INSTRUMENT_STAKE) and QuestRegistry.flags_met(QuestRegistry.INSTRUMENT_STAKE) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.INSTRUMENT_STAKE, "hold-the-stake")
+	Mender Corrin Vell: The song nudges. It does not command. This corner will hold, and the rest of the mere will not notice.
+	=> END
+- "File the true reading." [#consequence=The Menders redraw Hollowmere smaller and truer] [if QuestRegistry.is_active(QuestRegistry.INSTRUMENT_STAKE) and QuestRegistry.flags_met(QuestRegistry.INSTRUMENT_STAKE) /]
+	do QuestRegistry.resolve_side_quest(QuestRegistry.INSTRUMENT_STAKE, "file-the-true-reading")
+	Mender Corrin Vell: Then the map will be smaller, and every line on it will be true. Verspch will thank you for that later.
+	=> END
+- "Does the stake still hold?" [if QuestRegistry.is_done(QuestRegistry.INSTRUMENT_STAKE) and GameState.get_flag("hollowmere_instrument_stake_resolution") == "hold-the-stake" /]
+	Mender Corrin Vell: The needle at the stake holds a finger higher than the rest of the mere, and the reeds around it grow straight.
+	=> END
+- "What came back from Verspch?" [if QuestRegistry.is_done(QuestRegistry.INSTRUMENT_STAKE) and GameState.get_flag("hollowmere_instrument_stake_resolution") == "file-the-true-reading" /]
+	Mender Corrin Vell: The Menders' map of Hollowmere came back from Verspch smaller, and every line on it is true.
+	=> END
+- "Not yet."
+	Mender Corrin Vell: If the water answers, do not answer back.
+	=> END

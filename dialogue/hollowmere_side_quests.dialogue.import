@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://cgec1opdci71o"
+path="res://.godot/imported/hollowmere_side_quests.dialogue-827802bd16c737de5426633aebbfff2f.tres"
+
+[deps]
+
+source_file="res://dialogue/hollowmere_side_quests.dialogue"
+dest_files=["res://.godot/imported/hollowmere_side_quests.dialogue-827802bd16c737de5426633aebbfff2f.tres"]
+
+[params]
+
+defaults=true

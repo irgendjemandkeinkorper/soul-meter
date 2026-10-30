@@ -28,6 +28,7 @@ const FIFTH_ECHO: DomSideQuest = preload("res://quests/dom_fifth_echo.tres")
 const MARCHING_KNOTS: DomSideQuest = preload("res://quests/dom_marching_knots.tres")
 const ASH_IN_THE_RAIN: DomSideQuest = preload("res://quests/dom_ash_in_the_rain.tres")
 const SMOOTHED_WEIGHTS: DomSideQuest = preload("res://quests/dom_smoothed_weights.tres")
+const INSTRUMENT_STAKE: DomSideQuest = preload("res://quests/hollowmere_instrument_stake.tres")
 ## S8 (#302): side quests 5-10 ship VISIBLE and unfinished. See StubSideQuest.
 const STUB_CADENCE: StubSideQuest = preload("res://quests/stub_impossible_cadence.tres")
 const STUB_CONDITION: StubSideQuest = preload("res://quests/stub_hidden_condition.tres")
@@ -86,6 +87,10 @@ const DOM_SIDE_QUESTS: Array[DomSideQuest] = [
 	ASH_IN_THE_RAIN,
 	SMOOTHED_WEIGHTS,
 ]
+## Choice-resolved side quests outside Dom (owner item 25, 2026-10-30: the Hollowmere stake is
+## Chapter 1's re-Agreed place). Kept out of DOM_SIDE_QUESTS, whose size is Dom's "RESOLVED n"
+## denominator on the chapter-complete screen; they route through `_registered_side_quests()`.
+const FIELD_SIDE_QUESTS: Array[DomSideQuest] = [INSTRUMENT_STAKE]
 ## The six S8 stubs. Deliberately NOT in DOM_SIDE_QUESTS: that array is the ten
 ## RESOLVABLE Dom side quests and `ui/screens/chapter_complete.gd` renders
 ## "RESOLVED n / <its size>", so counting six unfinishable threads in that
@@ -118,6 +123,7 @@ const ALL_QUESTS: Array[Quest] = [
 	MARCHING_KNOTS,
 	ASH_IN_THE_RAIN,
 	SMOOTHED_WEIGHTS,
+	INSTRUMENT_STAKE,
 	SERAI_LUN_QUEST,
 	WYNETH_QUEST,
 	GRUMBRAND_QUEST,
@@ -359,6 +365,7 @@ func restorable_agreement_ids() -> Dictionary:
 
 func _registered_side_quests() -> Array[DomSideQuest]:
 	var quests: Array[DomSideQuest] = DOM_SIDE_QUESTS.duplicate()
+	quests.append_array(FIELD_SIDE_QUESTS)
 	for stub: StubSideQuest in STUB_SIDE_QUESTS:
 		quests.append(stub)
 	quests.append_array(_runtime_quests)
@@ -705,10 +712,10 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 		str(outcome["faction_id"]),
 		float(outcome["reputation_delta"]),
 		str(outcome["cause"]),
-		"dom"
+		quest.ledger_scene
 	)
 	GameState.set_flag(quest.resolution_flag, str(outcome["id"]))
-	KarmaActs.record(float(outcome["karma_base"]), str(outcome["cause"]), "dom")
+	KarmaActs.record(float(outcome["karma_base"]), str(outcome["cause"]), quest.ledger_scene)
 	var reward_entries: Array[Dictionary] = [
 		_reward_entry(
 			"faction",
@@ -1000,11 +1007,13 @@ func dialogue_route_for_actor(
 				"error": "",
 				"source": str(campaign_resource.get_meta(&"campaign_source", "")),
 			}
+		var quest_dialogue := DOM_SIDE_QUEST_DIALOGUE_PATH
+		if side_quest is StubSideQuest:
+			quest_dialogue = STUB_SIDE_QUEST_DIALOGUE_PATH
+		elif not side_quest.dialogue_path.is_empty():
+			quest_dialogue = side_quest.dialogue_path
 		return _resolved_dialogue_route(
-			(
-				STUB_SIDE_QUEST_DIALOGUE_PATH if side_quest is StubSideQuest
-				else DOM_SIDE_QUEST_DIALOGUE_PATH
-			),
+			quest_dialogue,
 			side_quest.dialogue_title
 		)
 	return _resolved_dialogue_route(fallback_path, fallback_title)

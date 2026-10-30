@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=3]
+[gd_scene load_steps=59 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
@@ -73,6 +73,7 @@
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="30_weftlumin"]
 
 [ext_resource type="PackedScene" path="res://actors/hostile/hostile.tscn" id="31_weftlumin"]
+[ext_resource type="PackedScene" path="res://actors/accord_zone/accord_zone.tscn" id="32_accord"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(3000, 40)
@@ -933,6 +934,13 @@ texture = ExtResource("29_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HollowmereDressing/SolidProps/OldStump"]
 shape = SubResource("RectangleShape2D_weftlumin7")
+
+[node name="ReedLandingAccord" parent="." instance=ExtResource("32_accord")]
+position = Vector2(1000, 1250)
+accord_delta = -15
+agreement_id = &"hollowmere-reed-landing"
+half_width_cells = 2
+half_height_cells = 1
 
 [node name="SpawnFromDorthkorRoad" type="Marker2D" parent="."]
 position = Vector2(200, 900)

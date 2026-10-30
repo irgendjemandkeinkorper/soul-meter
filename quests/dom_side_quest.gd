@@ -19,6 +19,11 @@ extends FlagQuest
 const ACT_OF_AGREEMENT_TAG := "act_of_agreement"
 
 @export var stable_id: String = ""
+## Where the quest's ledger writes are filed (`Reputation.record`, `KarmaActs.record`). The ten
+## Dom quests keep the default; a side quest outside Dom names its own location.
+@export var ledger_scene: String = "dom"
+## The `.dialogue` file holding `dialogue_title`. Empty keeps the shared Dom side-quest file.
+@export_file("*.dialogue") var dialogue_path: String = ""
 @export var giver_actor_id: String = ""
 @export var participant_actor_ids: PackedStringArray = []
 @export var hook_ids: PackedStringArray = []

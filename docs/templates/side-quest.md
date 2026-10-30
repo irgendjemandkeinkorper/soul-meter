@@ -41,6 +41,7 @@ From `quests/dom_side_quest.gd`:
 | `outcome_tags` | optional parallel tag arrays; `act_of_agreement` marks the only Soul-income outcome type |
 | `outcome_soul_deltas` | optional parallel non-negative deltas; positive exactly when the matching outcome has `act_of_agreement` |
 | `outcome_restores_agreement` | optional parallel arrays of `AccordZone.agreement_id`s the outcome re-Agrees (#520); non-empty only on an `act_of_agreement` outcome. JSON packages use `restores_agreement` per outcome |
+| `ledger_scene` / `dialogue_path` | where ledger writes are filed (default `dom`) and the `.dialogue` file holding `dialogue_title` (default `dialogue/dom_side_quests.dialogue`); a quest outside Dom sets both and joins `QuestRegistry.FIELD_SIDE_QUESTS` |
 
 `has_complete_outcome_schema()` requires the six base `outcome_*` arrays to be the same length.
 The two reward arrays may both be empty for backward compatibility; when present, both match that
