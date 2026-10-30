@@ -1,4 +1,4 @@
-# PROVISIONAL — CANON REVIEW REQUIRED: Trial Aide, Trial Keeper, and all lines below.
+# Canon-reviewed: owner approved 2026-10-30 (item 9).
 ~ trial_aide
 Trial Aide: The lower hall is ready. You may take the trial, or show that you already understand its purpose.
 - "Read the trial's intent and ask to pass." [#tag=UNDERTONE] [if not GameState.get_flag("tutorial_gauntlet_complete") and not GameState.get_flag("tutorial_aide_skip_failed") and check("undertone", 40) /]

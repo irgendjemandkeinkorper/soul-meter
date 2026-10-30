@@ -100,7 +100,7 @@ Marshal Coiljaw: Dorthkor's road-drum stopped halfway through the breach warning
 	do QuestRegistry.offer(QuestRegistry.FIELD_DEBT)
 	Marshal Coiljaw: Then take the east road. A Bog Wight has been feeding on the grove's edge. Bring me the loamroot token it leaves behind, and we will decide who gets the credit.
 	=> END
-## PROVISIONAL — CANON REVIEW REQUIRED (owner item 9, 2026-10-22). `field_debt_reward` is
+## Canon-reviewed: owner approved 2026-10-30 (item 9). `field_debt_reward` is
 ## written by `QuestRegistry.resolve_field_debt` in `field_debt_rewards` below; the Marshal
 ## reads the chosen ledger back here so the reward the player picked is heard, not only tallied.
 - "What did the field proof buy, in the end?" [if QuestRegistry.is_done(QuestRegistry.FIELD_DEBT) and GameState.get_flag("field_debt_reward") == "companies" /]

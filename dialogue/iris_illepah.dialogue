@@ -60,7 +60,7 @@ Iris Illepah: Ask, then. The light is long and the sweeping is done.
 	do Renown.gain_karma("player", -10.0, "Seized living specimens under a claim", "field")
 	Iris Illepah: Custody. A clean word for a locked drawer. Take them, then. When the drawer begins to root, tell your clerks I warned them.
 	=> hub
-## PROVISIONAL — CANON REVIEW REQUIRED (owner item 9, 2026-10-22). `quest_1_resolution` is
+## Canon-reviewed: owner approved 2026-10-30 (item 9). `quest_1_resolution` is
 ## written by `FetchQuest.complete` when the sprigs are turned in above; Iris reads the
 ## resolution back here so the grove remembers how the sprigs came home, not only that they did.
 - "How are the sprigs?" [if QuestRegistry.is_done(QuestRegistry.LOAMROOT_SPRIGS) and GameState.get_flag("quest_1_resolution") == "returned" /]
