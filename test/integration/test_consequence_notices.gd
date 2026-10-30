@@ -60,7 +60,12 @@ func test_queue_preserves_fifo_order_and_caps_visible_notices_at_three() -> void
 	])
 	assert_int(notices.pending_notice_count()).is_equal(1)
 
-	await await_millis(140)
+	# Wait on the queue, not the clock: a fixed 140 ms raced the 0.1 s notice lifetime on a slow
+	# headless frame, so the fourth notice was sometimes still pending when it was read.
+	var deadline := Time.get_ticks_msec() + 2000
+	while notices.pending_notice_count() > 0 and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	assert_int(notices.pending_notice_count()).is_equal(0)
 	var after_first_exit: Array[String] = notices.visible_notice_texts()
 	assert_int(after_first_exit.size()).is_less_equal(3)
 	assert_array(after_first_exit).contains(["IRON COMPANIES WILL REMEMBER — Fourth oath"])
