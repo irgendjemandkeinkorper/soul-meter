@@ -392,6 +392,13 @@ func test_every_registered_quest_has_a_playable_dialogue_starter() -> void:
 	)
 	reached[QuestRegistry.MAURA_QUEST.id] = true
 
+	# Item 25: the Hollowmere stake starts from its giver's routed side-quest dialogue.
+	var stake := QuestRegistry.INSTRUMENT_STAKE
+	await _start_quest_from_dialogue(
+		stake, stake.dialogue_path, "hollowmere_side_instrument_stake", "Let me help with the stake"
+	)
+	reached[stake.id] = true
+
 	assert_int(reached.size()).is_equal(QuestRegistry.ALL_QUESTS.size())
 	for quest: Quest in QuestRegistry.ALL_QUESTS:
 		assert_bool(reached.has(quest.id)).is_true()

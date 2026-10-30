@@ -82,3 +82,19 @@ and what the act is in-world, is new canon that this packet does not invent.
 About half a day: the export and flag, the `zone_delta` skip, the outcome field and its
 resolution, the lint rule, and tests. The tests cover the restored delta, fizzle before and after,
 the husk ceiling, save round-trip and the dead-id lint.
+
+## 6. Chapter 1 content (owner item 25, ruled 2026-10-30)
+
+**The Instrument Stake** (`quests/hollowmere_instrument_stake.tres`,
+`dialogue/hollowmere_side_quests.dialogue`, which carries the PROVISIONAL canon-review header).
+Mender Corrin Vell's needle at the Reed Landing files lower at every reading. The player reads the
+Watcher's filed sentence against the needle (or passes Sounding 45). Then:
+
+| outcome | effect |
+|---|---|
+| `hold-the-stake` | re-Agrees `hollowmere-reed-landing` (the `ReedLandingAccord` zone, −15, 5×3 cells at the stake): +8 Soul, Menders +6, Karma +5 |
+| `file-the-true-reading` | the honest reading goes to Verspch: Menders +4, Karma +5, no Soul; the zone stays thin |
+
+The quest sits in `QuestRegistry.FIELD_SIDE_QUESTS`, outside Dom's chapter-complete
+denominator. Its ledger writes are filed under `hollowmere`, through the new
+`DomSideQuest.ledger_scene`.
