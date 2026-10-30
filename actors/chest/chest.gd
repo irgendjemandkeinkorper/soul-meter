@@ -85,6 +85,7 @@ func _apply_table_search() -> void:
 ## draw loop, where they would be re-rolled per row.
 func _resolve_table_skills() -> Dictionary:
 	var outcomes := {}
+	var zone_delta := FieldMap.zone_delta_for(self)
 	for skill: String in LootTableRegistry.skills_required(loot_table_id):
 		if not DramgidSchema.is_skill(skill):
 			push_warning(
@@ -96,7 +97,8 @@ func _resolve_table_skills() -> Dictionary:
 		var check: Dictionary = SkillCheck.resolve(
 			skill,
 			null,
-			LootTableRegistry.modifier_for_skill(loot_table_id, skill),
+			LootTableRegistry.modifier_for_skill(loot_table_id, skill)
+			- SkillCheck.loom_penalty(skill, zone_delta),
 			"loot-%s" % container_id
 		)
 		outcomes[skill] = bool(check.get("success", false))

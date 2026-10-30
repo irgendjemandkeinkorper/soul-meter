@@ -80,6 +80,9 @@ var flags: Dictionary = {}
 var world_seed: int = 0
 var soul_meter: float = 50.0:
 	set = set_soul_meter
+## The lowest the Gauge has been this run. Chapter One's ledger reads it back beside the
+## final value, so a chapter that went to the edge and came back says so.
+var soul_lowest: float = 50.0
 var gp: int = DEFAULT_GP:
 	set = set_gp
 var party: Array[PartyMember] = []
@@ -147,6 +150,7 @@ func set_soul_meter(value: float) -> void:
 	var pre_zero_value := soul_meter
 	var ceiling := husked_recovery_ceiling() if has_been_husked() else 100.0
 	soul_meter = clampf(value, 0.0, ceiling)
+	soul_lowest = minf(soul_lowest, soul_meter)
 	soul_meter_changed.emit(soul_meter)
 	if is_zero_approx(soul_meter):
 		if not is_husked():
@@ -1137,6 +1141,7 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(true),
 		"world_seed": world_seed,
 		"soul_meter": soul_meter,
+		"soul_lowest": soul_lowest,
 		"gp": gp,
 		"party": party_rows,
 		"custom_recruits": custom_recruit_rows,
@@ -1169,6 +1174,8 @@ func from_dict(data: Dictionary) -> bool:
 	else:
 		regenerate_world_seed()
 	soul_meter = float(data.get("soul_meter", 50.0))
+	# Additive key: a save from before the ledger read it back starts from the loaded value.
+	soul_lowest = minf(float(data.get("soul_lowest", soul_meter)), soul_meter)
 	gp = maxi(0, int(data.get("gp", DEFAULT_GP)))
 	vendor_stock = data.get("vendor_stock", {}).duplicate(true)
 	vendor_restock_cycles = data.get("vendor_restock_cycles", {}).duplicate(true)

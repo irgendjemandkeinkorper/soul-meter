@@ -119,8 +119,9 @@ func _karma_tier_offset() -> int:
 ## Hush/Waning Loom penalty in percentage points (#349; owner rulings 2026-09-08 and
 ## 2026-10-11: Hush/Waning zones ARE AccordZone, strength derived from `accord_delta`).
 ## `zone` is an `AccordZone`, or a cell's summed zone delta from `FieldMap.zone_delta(cell)`;
-## null or anything else is neutral. Not yet subtracted inside `preview()` — field verbs
-## (#284) opt in by passing the cell's zone delta.
+## null or anything else is neutral. Not subtracted inside `preview()`: field verbs (#284)
+## subtract it from their situational modifier — locks, loot-table rows and pockets read
+## `FieldMap.zone_delta_for(self)`. Dialogue checks read no zone.
 func loom_penalty(skill_name: String, zone: Variant) -> int:
 	var delta := 0.0
 	if zone is AccordZone:

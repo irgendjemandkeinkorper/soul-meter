@@ -173,8 +173,12 @@ func attempt_skill_lock() -> Dictionary:
 		)
 		GameState.set_flag(lock_picked_flag(), true)
 		return {"attempted": false, "success": true}
+	# Hush/Waning pressure at the lock (ruling 2026-09-08: the zone IS the AccordZone under it).
 	var check: Dictionary = SkillCheck.resolve(
-		lock_skill, null, lock_modifier, "lock-%s" % lock_id
+		lock_skill,
+		null,
+		lock_modifier - SkillCheck.loom_penalty(lock_skill, FieldMap.zone_delta_for(self)),
+		"lock-%s" % lock_id
 	)
 	var succeeded := bool(check.get("success", false))
 	GameState.set_flag(lock_picked_flag() if succeeded else lock_failed_flag(), true)

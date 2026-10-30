@@ -27,6 +27,9 @@ func _ready() -> void:
 	var hollowing_handler := Callable(self, "_on_hollowing_state_changed")
 	if not GameState.hollowing_state_changed.is_connected(hollowing_handler):
 		GameState.hollowing_state_changed.connect(hollowing_handler)
+	var xp_handler := Callable(self, "_on_xp_awarded")
+	if not GameState.xp_awarded.is_connected(xp_handler):
+		GameState.xp_awarded.connect(xp_handler)
 	_flush_pending()
 
 
@@ -40,6 +43,9 @@ func _exit_tree() -> void:
 	var hollowing_handler := Callable(self, "_on_hollowing_state_changed")
 	if GameState.hollowing_state_changed.is_connected(hollowing_handler):
 		GameState.hollowing_state_changed.disconnect(hollowing_handler)
+	var xp_handler := Callable(self, "_on_xp_awarded")
+	if GameState.xp_awarded.is_connected(xp_handler):
+		GameState.xp_awarded.disconnect(xp_handler)
 
 
 func _notification(what: int) -> void:
@@ -96,6 +102,29 @@ func _on_hollowing_state_changed(active: bool) -> void:
 	_enqueue('%s — "%s"' % [
 		str(speaker["display_name"]).to_upper(), str(speaker["line"])
 	])
+
+
+## Ruling 9 progression read-back. XP lands silently otherwise: the sheet is the only place
+## a level or a perk shows, and nothing told the player to open it. A perk level says so
+## because the pick is manual (`PerkCatalog.pick()` from the sheet).
+func _on_xp_awarded(_amount: int, _cause: String, levels_gained: Dictionary) -> void:
+	for member_id: Variant in levels_gained:
+		var level := int(levels_gained[member_id])
+		var hint := (
+			"a perk awaits on the sheet"
+			if PerkCatalog.PICK_LEVELS.has(level)
+			else "skill points to spend"
+		)
+		_enqueue(
+			"%s REACHES LEVEL %d — %s" % [_member_name(str(member_id)).to_upper(), level, hint]
+		)
+
+
+func _member_name(member_id: String) -> String:
+	for member: PartyMember in GameState.party:
+		if member.id == member_id:
+			return member.display_name
+	return member_id
 
 
 ## Deduplicates by the event's LEDGER IDENTITY, not by object identity.
