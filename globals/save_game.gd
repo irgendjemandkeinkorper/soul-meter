@@ -556,6 +556,7 @@ func new_game() -> void:
 	GameState.regenerate_world_seed()
 	_apply_runtime_feature_flags()
 	GameState.soul_meter = 50.0
+	GameState.soul_lowest = 50.0 # after the setter, which only ever lowers it
 	GameState._seed_demo_data()
 	Reputation.from_dict({})
 	Renown.from_dict({})

@@ -1209,36 +1209,6 @@ static func calculate_damage(
 	)
 
 
-func _advance_party_turn() -> void:
-	var next := _next_living_index(allies, active_ally_index)
-	if next > active_ally_index:
-		active_ally_index = next
-		return
-	_resolve_enemy_round()
-	if _has_living(allies):
-		active_ally_index = _next_living_index(allies, -1)
-	else:
-		_finish(BattleResult.State.DEFEAT, &"defeat")
-
-
-func _resolve_enemy_round() -> void:
-	enemy_rounds += 1
-	for foe in enemies:
-		if not foe.is_alive():
-			continue
-		var index := _next_living_index(allies, -1)
-		if index < 0:
-			return
-		var target := allies[index]
-		var damage := maxi(1, foe.attack - target.defense)
-		if target.guarding:
-			damage = maxi(1, damage / 2)
-			target.guarding = false
-		target.hp = maxi(0, target.hp - damage)
-		shift_balance(foe.balance_affinity * foe.balance_pressure)
-		last_message += " %s strikes %s for %d." % [foe.display_name, target.display_name, damage]
-
-
 func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 	if ended:
 		return

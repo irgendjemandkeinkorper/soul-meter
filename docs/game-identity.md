@@ -41,6 +41,10 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
   > `loom_penalty` out of F4 (#284) and makes it a consumer of E6.1 (#349); the field verbs
   > themselves stay in #284 and are unblocked. `DramgidSchema.SKILLS` already carries the
   > per-skill `loom` field (5 skills FULL, 5 PARTIAL), so only the zone read is missing.
+  >
+  > *Status 2026-10-30:* `loom_penalty` is live and reads `FieldMap.zone_delta()`; locks,
+  > loot-table rows and pickpockets subtract it from their situational modifier through
+  > `FieldMap.zone_delta_for(self)`. Dialogue checks do not read a zone.
 - **Progression (ruling 9).** XP source is combat + quests; perk lists per patron class are new
   Pandora data.
   > **Owner ruling, 2026-09-08 — kill-XP is in, and this supersedes #98 D3.** Asked directly
