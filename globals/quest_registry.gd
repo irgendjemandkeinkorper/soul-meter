@@ -346,6 +346,17 @@ func all_quests() -> Array[Quest]:
 	return quests
 
 
+## Every `AccordZone.agreement_id` some registered outcome can re-Agree (#520). The Weftlumin
+## scenes bake warns about a zone id outside this set: a place nothing can restore.
+func restorable_agreement_ids() -> Dictionary:
+	var ids: Dictionary = {}
+	for quest: DomSideQuest in _registered_side_quests():
+		for restored: PackedStringArray in quest.outcome_restores_agreement:
+			for agreement_id: String in restored:
+				ids[agreement_id] = true
+	return ids
+
+
 func _registered_side_quests() -> Array[DomSideQuest]:
 	var quests: Array[DomSideQuest] = DOM_SIDE_QUESTS.duplicate()
 	for stub: StubSideQuest in STUB_SIDE_QUESTS:
@@ -716,6 +727,8 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 				"soul", DomSideQuest.ACT_OF_AGREEMENT_TAG, soul_credited, "Act of Agreement"
 			)
 		)
+	for agreement_id: String in outcome["restores_agreement"]:
+		GameState.set_flag(AccordMath.agreement_flag(StringName(agreement_id)), true)
 	SaveGame.request_autosave("dom-side-quest-resolved")
 	_publish_reward_summary(
 		active_quest,

@@ -589,6 +589,7 @@ static func _validate_quest(
 				)
 			outcome_ids[outcome_id] = true
 		_validate_outcome_soul_reward(outcome, file_path, field_prefix, errors)
+		_validate_outcome_agreements(outcome, file_path, field_prefix, errors)
 
 
 static func _validate_outcome_soul_reward(
@@ -649,6 +650,38 @@ static func _validate_outcome_soul_reward(
 		)
 
 
+## `restores_agreement` (#520): optional unique `AccordZone.agreement_id`s, and only on an
+## act_of_agreement outcome, which is what pays the Soul.
+static func _validate_outcome_agreements(
+	outcome: Dictionary, file_path: String, field_prefix: String, errors: Array[Dictionary]
+) -> void:
+	var value: Variant = outcome.get("restores_agreement", [])
+	if not value is Array:
+		_add_error(
+			errors, file_path, field_prefix + ".restores_agreement", "array of non-empty strings",
+			"invalid_field_type", "Expected restores_agreement to be an array."
+		)
+		return
+	var ids: Array = value as Array
+	var seen: Dictionary = {}
+	for index in ids.size():
+		var id_field := "%s.restores_agreement[%d]" % [field_prefix, index]
+		if not ids[index] is String or str(ids[index]).strip_edges().is_empty() or seen.has(str(ids[index])):
+			_add_error(
+				errors, file_path, id_field, "unique non-empty string", "invalid_agreement_id",
+				"Expected a unique, non-empty agreement id."
+			)
+			continue
+		seen[str(ids[index])] = true
+	var tags: Variant = outcome.get("tags", [])
+	if not ids.is_empty() and not (tags is Array and (tags as Array).has(DomSideQuest.ACT_OF_AGREEMENT_TAG)):
+		_add_error(
+			errors, file_path, field_prefix + ".restores_agreement",
+			"only on an act_of_agreement outcome", "invalid_agreement_contract",
+			"Re-Agreeing a place is an act of Agreement and must carry the act_of_agreement tag."
+		)
+
+
 static func _quest_from_data(
 	quest_data: Dictionary, identity: String, runtime_id: int
 ) -> DomSideQuest:
@@ -678,6 +711,7 @@ static func _quest_from_data(
 		quest.outcome_readbacks.append(str(outcome["readback"]))
 		quest.outcome_tags.append(PackedStringArray(outcome.get("tags", [])))
 		quest.outcome_soul_deltas.append(float(outcome.get("soul_delta", 0.0)))
+		quest.outcome_restores_agreement.append(PackedStringArray(outcome.get("restores_agreement", [])))
 	return quest
 
 

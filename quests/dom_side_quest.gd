@@ -38,6 +38,10 @@ const ACT_OF_AGREEMENT_TAG := "act_of_agreement"
 ## every outcome is 0, which writes nothing. When present it has one finite entry per outcome
 ## inside the Chapter 1 scale of ±20.
 @export var outcome_karma_bases: PackedFloat32Array = []
+## The `AccordZone.agreement_id`s each outcome re-Agrees (#520, owner rulings 2026-10-29).
+## Optional: empty restores nothing. When present it has one list per outcome, and a non-empty
+## list belongs only to an act_of_agreement outcome, which pays the Soul.
+@export var outcome_restores_agreement: Array[PackedStringArray] = []
 
 
 func outcome_count() -> int:
@@ -80,6 +84,10 @@ func outcome_for(outcome_id: String) -> Dictionary:
 		"tags": outcome_tags[index].duplicate() if not outcome_tags.is_empty() else PackedStringArray(),
 		"soul_delta": outcome_soul_deltas[index] if not outcome_soul_deltas.is_empty() else 0.0,
 		"karma_base": outcome_karma_bases[index] if not outcome_karma_bases.is_empty() else 0.0,
+		"restores_agreement": (
+			outcome_restores_agreement[index].duplicate()
+			if not outcome_restores_agreement.is_empty() else PackedStringArray()
+		),
 	}
 
 
@@ -94,6 +102,7 @@ func has_complete_outcome_schema() -> bool:
 		and outcome_readbacks.size() == count
 		and has_valid_reward_schema()
 		and has_valid_karma_schema()
+		and has_valid_agreement_schema()
 	)
 
 
@@ -108,6 +117,25 @@ func has_valid_karma_schema() -> bool:
 	for base: float in outcome_karma_bases:
 		if not is_finite(base) or absf(base) > KARMA_BASE_LIMIT:
 			return false
+	return true
+
+
+func has_valid_agreement_schema() -> bool:
+	if outcome_restores_agreement.is_empty():
+		return true
+	if outcome_restores_agreement.size() != outcome_count():
+		return false
+	for index in outcome_count():
+		var ids := outcome_restores_agreement[index]
+		if ids.is_empty():
+			continue
+		if outcome_tags.is_empty() or not outcome_tags[index].has(ACT_OF_AGREEMENT_TAG):
+			return false
+		var seen: Dictionary = {}
+		for agreement_id: String in ids:
+			if agreement_id.strip_edges().is_empty() or seen.has(agreement_id):
+				return false
+			seen[agreement_id] = true
 	return true
 
 

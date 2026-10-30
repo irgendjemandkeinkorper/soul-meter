@@ -21,6 +21,15 @@ extends RefCounted
 ##
 ## ALL NUMBERS BELOW ARE **PROVISIONAL**. #328 owns the shape; balance owns the values.
 
+## The GameState flag that records a re-Agreed place (#520). A string key only; the read and
+## the write live in `AccordZone.is_reagreed()` and `QuestRegistry.resolve_side_quest()`.
+const AGREEMENT_FLAG_PREFIX := "agreement."
+
+
+static func agreement_flag(agreement_id: StringName) -> String:
+	return AGREEMENT_FLAG_PREFIX + String(agreement_id)
+
+
 ## The bound the architecture note fixes at ±10 and the saturation lint is written against.
 const MAX_VARIATION := 10.0
 const MIN_VARIATION := -10.0

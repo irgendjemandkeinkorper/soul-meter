@@ -124,7 +124,7 @@ func _karma_tier_offset() -> int:
 func loom_penalty(skill_name: String, zone: Variant) -> int:
 	var delta := 0.0
 	if zone is AccordZone:
-		delta = float((zone as AccordZone).accord_delta)
+		delta = float((zone as AccordZone).effective_delta())
 	elif zone is float or zone is int:
 		delta = float(zone)
 	else:
