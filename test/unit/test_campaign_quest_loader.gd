@@ -685,6 +685,30 @@ func test_agreement_reward_metadata_fans_out_into_optional_runtime_arrays() -> v
 	assert_float(quest.outcome_soul_deltas[1]).is_equal(0.0)
 
 
+func test_restores_agreement_loads_on_an_agreement_outcome_and_is_refused_elsewhere() -> void:
+	var authored := _quest("reagreed", "Reagreed Quest")
+	var first_outcome: Dictionary = authored["outcomes"][0]
+	first_outcome["tags"] = [DomSideQuest.ACT_OF_AGREEMENT_TAG]
+	first_outcome["soul_delta"] = 8.0
+	first_outcome["restores_agreement"] = ["mere-shrine"]
+	_write_json(PACKAGE_PATH + "/quests/reagreed.json", authored)
+	var refused := _quest("reagreed-untagged", "Untagged Reagreed Quest")
+	(refused["outcomes"][1] as Dictionary)["restores_agreement"] = ["mere-shrine"]
+	_write_json(PACKAGE_PATH + "/quests/reagreed-untagged.json", refused)
+
+	var result: Dictionary = CampaignQuestLoaderScript.load_package(PACKAGE_PATH, false)
+
+	assert_int(result["quests"].size()).is_equal(1)
+	var quest: DomSideQuest = result["quests"][0] as DomSideQuest
+	assert_array(quest.outcome_restores_agreement[0]).contains_exactly(["mere-shrine"])
+	assert_array(quest.outcome_restores_agreement[1]).is_empty()
+	assert_bool(quest.has_complete_outcome_schema()).is_true()
+	assert_bool(_has_error_code(
+		result["errors"], "quests/reagreed-untagged.json", "outcomes[1].restores_agreement",
+		"invalid_agreement_contract"
+	)).is_true()
+
+
 func test_positive_soul_reward_without_agreement_tag_is_rejected() -> void:
 	var authored := _quest("invalid-reward", "Invalid Reward Quest")
 	(authored["outcomes"][0] as Dictionary)["soul_delta"] = 7.0

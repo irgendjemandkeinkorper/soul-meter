@@ -234,13 +234,14 @@ func accord_base() -> float:
 
 ## The ONE spatial accord seam: the sum of `accord_delta` over every `AccordZone` covering
 ## `cell` (owner ruling 2026-10-11, architecture §8 item 5). 0.0 on a field with no zones, which
-## is what keeps zone-less maps on their exact pre-#349 numbers. Hush/Waning Loom pressure is
+## is what keeps zone-less maps on their exact pre-#349 numbers. A re-Agreed zone (#520)
+## contributes its `effective_delta()`. Hush/Waning Loom pressure is
 ## derived from this same value (`AccordMath.loom_strength()`).
 func zone_delta(cell: Vector2i) -> float:
 	var total := 0.0
 	for zone: AccordZone in accord_zones():
 		if zone.covers(cell, zone_anchor_cell(zone)):
-			total += float(zone.accord_delta)
+			total += float(zone.effective_delta())
 	return total
 
 

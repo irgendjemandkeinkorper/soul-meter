@@ -93,7 +93,7 @@ func bake(normalised: Array[Dictionary], target_root: String, write: bool, force
 
 
 func contract_validators() -> Array[Callable]:
-	return [dom_blocking_ruling, location_contract, dom_contract, accord_saturation]
+	return [dom_blocking_ruling, location_contract, dom_contract, accord_saturation, agreement_zones]
 
 
 # --- validators: (context) -> Array[Dictionary] -----------------------------------------------
@@ -212,6 +212,39 @@ func accord_saturation(context: Dictionary) -> Array[Dictionary]:
 		)
 		warning["severity"] = "warning"
 		found.append(warning)
+	return found
+
+
+## #520 re-Agreement lint over the baked field's `AccordZone`s, as warnings: an
+## `agreement_id` used twice in one scene, one on a zone with no negative delta to lift, or one
+## no registered quest outcome restores (a place the player can never re-Agree).
+func agreement_zones(context: Dictionary) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	var scene: String = context["scene"]
+	var field: FieldMap = field_map_in(context["instance"] as Node)
+	if field == null:
+		return found
+	var restorable: Dictionary = QuestRegistry.restorable_agreement_ids()
+	var seen: Dictionary = {}
+	for zone: AccordZone in field.accord_zones():
+		var id := String(zone.agreement_id)
+		if id.is_empty():
+			continue
+		var problems: PackedStringArray = []
+		if seen.has(id):
+			problems.append("agreement_id '%s' is used by more than one zone" % id)
+		if zone.accord_delta >= 0:
+			problems.append("agreement_id '%s' is on a zone with no negative delta to lift" % id)
+		if not restorable.has(id):
+			problems.append("no quest outcome restores agreement_id '%s'" % id)
+		seen[id] = true
+		for message: String in problems:
+			var warning: Dictionary = _error(
+				scene, "agreement_id", "unique, on a thinning zone, restored by an outcome",
+				"agreement_zone", message,
+			)
+			warning["severity"] = "warning"
+			found.append(warning)
 	return found
 
 
