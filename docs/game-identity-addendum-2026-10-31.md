@@ -1,6 +1,6 @@
 # Game identity addendum — 2026-10-31
 
-**Status: PROPOSAL for owner ratification — not ratified.**
+**Status: §1 RATIFIED 2026-10-31 (owner, item 27) and recorded in `docs/game-identity.md` under “Addendum 2026-10-31”. §2 remains implementation under R13–R15, answered the same day.**
 
 This proposal does not edit, supersede, or silently extend `docs/game-identity.md`. If the owner
 ratifies it with the literal reply at the end, only the three design statements in §1 become
