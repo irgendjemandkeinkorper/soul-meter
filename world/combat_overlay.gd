@@ -502,10 +502,10 @@ func _sync_actors(event: CombatEvent) -> void:
 			tween.tween_callback(func() -> void: _moves.erase(id))
 		elif not _moves.has(id):
 			node.global_position = _grid.cell_to_world(cell)
-		# Keep the actor's scene-authored art; facing is a presentation property only.
+		# Keep scene identity; UnitFrames selects authored directions or the se mirror.
 		var sprite := node.find_child("Sprite2D", true, false) as Sprite2D
 		if sprite != null and actor.has("facing"):
-			sprite.flip_h = str(actor["facing"]).contains("w")
+			UnitArt.apply_idle_facing(sprite, str(actor["facing"]))
 		if int(actor.get("hp", 1)) <= 0:
 			if not _pending_defeats.has(id):
 				_stop_flash(id)

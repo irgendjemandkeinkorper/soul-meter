@@ -426,7 +426,11 @@ func _apply_visual_identity() -> void:
 
 func apply_isometric_visual(model_name: String, facing: String = "east") -> bool:
 	var resolved_id := UnitArtScript.resolve(model_name)
-	var texture := load(UnitArtScript.texture_path(resolved_id)) as Texture2D
+	var direction := "e" if facing == "east" else ("w" if facing == "west" else facing)
+	var frame := UnitFrames.lookup(resolved_id, "idle", direction, 0)
+	if frame.path.is_empty():
+		return false
+	var texture := load(frame.path) as Texture2D
 	if texture == null:
 		push_error("Could not load generated NPC sprite for '%s'." % model_name)
 		return false
@@ -442,7 +446,7 @@ func apply_isometric_visual(model_name: String, facing: String = "east") -> bool
 	sprite.offset = UnitArtScript.PIVOT_OFFSET
 	sprite.scale = Vector2.ONE
 	sprite.modulate = Color.WHITE
-	sprite.flip_h = facing == "west"
+	sprite.flip_h = frame.flip
 	# Absolutes above reset any prior application — clear the guard so the
 	# world scale re-applies to the fresh unscaled state.
 	if sprite.has_meta(&"unit_art_world_scaled"):
