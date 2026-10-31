@@ -213,6 +213,7 @@ Do not decide: race mix numbers for hubs other than Dom (ship the table empty wi
 canon); any state list beyond §5.
 
 **U1 — Identity sheets (Codex image tool; needs owner "go U1"). ≈3 sessions.**
+**Filed:** #537 (2026-10-31, batch approved `28: b go`), branch `codex/unit-art-u1`.
 Objective: one review sheet per Chapter 1 race (seven) and per class kit (ten) that *proposes*
 answers to the bible's Open lines so the owner can rule once, in pictures. Each race sheet: front,
 three-quarter and back turnaround; one healthy and one Waning-touched state; one Dom-dressed
