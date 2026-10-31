@@ -30,24 +30,31 @@ rechecks the labels:
 # gh issue create --title '[Roadmap P2.4] Append-only Soul log and playtest export' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.4)"
 # gh issue create --title '[Roadmap P2.5] Make the hollowing recovery price legible' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.5)"
 # gh issue create --title '[Roadmap P2.6] Agreement-route unavoidable spend (R3 curve)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.6)"
+# gh issue create --title '[Roadmap P2.7] PROVISIONAL Hollow negatives package' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.7)"
+# gh issue create --title '[Roadmap P2.8] PROVISIONAL Name-Ledger recovery route' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.8)"
 # gh issue create --title '[Roadmap P3.1] Intent-planner performance and legibility spike' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.1)"
 # gh issue create --title '[Roadmap P3.2] Retire the AP scheduler shim' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.2)"
 # gh issue create --title '[Roadmap P3.3] Implement the selected uncapped intent planner' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.3)"
 # gh issue create --title '[Roadmap P3.4] Approved enemy archetype abilities' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.4)"
 # gh issue create --title '[Roadmap P3.5] Encounter templates, spawn breadth and verb coverage' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.5)"
 # gh issue create --title '[Roadmap P3.6] Complete or collapse balance bands' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.6)"
+# gh issue create --title '[Roadmap P3.7] Telegraph the dorthkor-vanguard reinforcement chain' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.7)"
+# gh issue create --title '[Roadmap P3.8] Emit ambient-combat admission events' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.8)"
+# gh issue create --title '[Roadmap P3.9] Show pending reinforcements in the CT strip' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.9)"
+# gh issue create --title '[Roadmap P3.10] Serai-Lun killing-or-mercy reaction data' --milestone 'Roadmap Phase 3 — Enemies that play the game' --body "$(body_for P3.10)"
 # gh issue create --title '[Roadmap P4.1] PROVISIONAL four-person Chapter 1 party' --milestone 'Roadmap Phase 4 — Company' --label delegated-to-codex --body "$(body_for P4.1)"
 # gh issue create --title '[Roadmap P4.2] Reactive companion bark triggers' --milestone 'Roadmap Phase 4 — Company' --label delegated-to-codex --body "$(body_for P4.2)"
 # gh issue create --title '[Roadmap P4.3] TravelPlan banter beats' --milestone 'Roadmap Phase 4 — Company' --label delegated-to-codex --body "$(body_for P4.3)"
 # gh issue create --title '[Roadmap P4.4] Auditable companion quest outcomes' --milestone 'Roadmap Phase 4 — Company' --label delegated-to-codex --body "$(body_for P4.4)"
 # gh issue create --title '[Roadmap P4.5] Main-ruling companion interjections' --milestone 'Roadmap Phase 4 — Company' --body "$(body_for P4.5)"
 # gh issue create --title '[Roadmap P5.1] Kesselford and Ashlaren side-quest set' --milestone 'Roadmap Phase 5 — Hours' --body "$(body_for P5.1)"
-# gh issue create --title '[Roadmap P5.2] Connective main-quest set-pieces' --milestone 'Roadmap Phase 5 — Hours' --body "$(body_for P5.2)"
+# gh issue create --title '[Roadmap P5.2] Three mandatory main-ruling CT set-pieces' --milestone 'Roadmap Phase 5 — Hours' --body "$(body_for P5.2)"
 # gh issue create --title '[Roadmap P5.3] Resolve every stub quest' --milestone 'Roadmap Phase 5 — Hours' --body "$(body_for P5.3)"
 # gh issue create --title '[Roadmap P5.4] Playtime clock and critical-path estimator' --milestone 'Roadmap Phase 5 — Hours' --label delegated-to-codex --body "$(body_for P5.4)"
+# gh issue create --title '[Roadmap P5.5] Talk, Tread or Soul bypass audit' --milestone 'Roadmap Phase 5 — Hours' --body "$(body_for P5.5)"
 # gh issue create --title '[Roadmap P6.1] Codex teaching entries and first-spend beat' --milestone 'Roadmap Phase 6 — Teach, test, polish' --body "$(body_for P6.1)"
 # gh issue create --title '[Roadmap P6.2] FR-607 accessibility baseline' --milestone 'Roadmap Phase 6 — Teach, test, polish' --label delegated-to-codex --body "$(body_for P6.2)"
-# gh issue create --title '[Roadmap P6.3] Presentation pass and Chapter 1 language menu' --milestone 'Roadmap Phase 6 — Teach, test, polish' --label delegated-to-codex --body "$(body_for P6.3)"
+# gh issue create --title '[Roadmap P6.3] PROVISIONAL functional presentation and Chapter 1 language menu' --milestone 'Roadmap Phase 6 — Teach, test, polish' --label delegated-to-codex --body "$(body_for P6.3)"
 # gh issue create --title '[Roadmap P6.4] Gate T-6 outside-tester evidence' --milestone 'Roadmap Phase 6 — Teach, test, polish' --body "$(body_for P6.4)"
 # gh issue create --title '[Roadmap P6.5] Final FR-904 rendered reference run' --milestone 'Roadmap Phase 6 — Teach, test, polish' --body "$(body_for P6.5)"
 # gh issue create --title '[Roadmap P6.6] Four viable-build playthrough checklists' --milestone 'Roadmap Phase 6 — Teach, test, polish' --body "$(body_for P6.6)"
@@ -389,6 +396,83 @@ set the final numbers; R3's answer fixes the band and owner item 5 fixes the cos
 
 **Depends on:** R1, R3; P2.1 and P2.4; Phase 1 acceptance.
 
+### P2.7 — PROVISIONAL Hollow negatives package
+
+**Title:** [Roadmap P2.7] PROVISIONAL Hollow negatives package
+
+**Milestone:** Proposed `Roadmap Phase 2 — Soul: make the meter mean it`; confirm it exists before
+filing.
+
+**Labels:** `delegated-to-codex`
+
+**Objective:** Make active Hollow at Soul exactly zero strongly felt but still playable, while
+preserving the permanent scar after the first positive Soul write clears the active state.
+
+**Scope:** `../dramgid-vault/cosmology/souls.md` (the authoritative “Reaching zero —
+husking-while-alive” ruling), `globals/game_state.gd`, `globals/elements/casting_gate.gd`,
+`globals/npc_reactions.gd`, `globals/companion_barks.gd`,
+`ui/hud/consequence_notices.gd`, `ui/hud/soul_gauge.gd`, `ui/screens/tavern.gd`,
+`globals/vendor_registry.gd`, `globals/fast_travel_registry.gd`,
+`globals/travel/travel_plan.gd`, `ui/screens/journal.gd`, approved dialogue conditions and
+focused save, dialogue, vendor and travel fixtures.
+
+**Deliverables:** PROVISIONAL lost dialogue options, new-recruit gating, loss of the favorable
+Sway bargaining benefit, refusal of elective solo travel with companion-supported and explicit
+recovery travel preserved, a displayed permanent ceiling, and a journal recovery lead; retain
+the existing casting refusal, NPC reaction, witness bark and consequence notice. The ceiling is
+PROVISIONAL `0.5 ×` the Soul value immediately before the first zero, pending R13.
+
+**Acceptance checks (binary, instrument named):** `test/unit/test_husked_state.gd`,
+`test/unit/test_dialogue_checks.gd`, `test/unit/test_vendor_pricing.gd`,
+`test/integration/test_travel_flow.gd` and a rendered Soul-gauge capture must show every listed
+restriction at zero, no elective-solo-travel soft-lock, active restrictions clearing on the
+first positive write, and the ceiling remaining. A missing restriction, passive-rest recovery,
+unreachable recovery travel, peak-Soul ceiling basis or cleared scar fails.
+
+**Do-not-decide boundary:** Do not ratify R13, change what enters or exits active Hollow, add a
+new penalty system, invent dialogue, remove the permanent scar, or make passive rest regenerate
+Soul.
+
+**Depends on:** R13; P2.3–P2.5; owner approval of blocked choices and journal prose.
+
+### P2.8 — PROVISIONAL Name-Ledger recovery route
+
+**Title:** [Roadmap P2.8] PROVISIONAL Name-Ledger recovery route
+
+**Milestone:** Proposed `Roadmap Phase 2 — Soul: make the meter mean it`; confirm it exists before
+filing.
+
+**Labels:** None — the Agreement act and its prose remain owner/Claude-owned until approved.
+
+**Objective:** Give an actively Hollow player a legible, repeatable act of Agreement that can
+raise Soul above zero without requiring Wyneth's recruitment or leaving her one-shot companion
+quest unresolved.
+
+**Scope:** `../dramgid-vault/cosmology/souls.md` (the authoritative “Reaching zero —
+husking-while-alive” and River-Mother Name-Ledger lore),
+`globals/combat/class_resources/haeren_name_ledger.gd` as a boundary reference,
+`globals/quest_registry.gd`, approved River-Mother NPC dialogue/quest outcomes,
+`ui/screens/journal.gd`, the Soul log from P2.4, `tools/quest_audit.gd` and journey/save fixtures.
+
+**Deliverables:** An owner-approved PROVISIONAL NPC-side act in which a River-Mother records the
+player's name, or another owner-approved repeatable Agreement act; an Agreement-tagged positive
+Soul write through the quest path; a journal lead; persistence and repeat-use coverage. The
+combat class resource remains what it is: recording a fallen or saved ally's name returns Breath
+to its caster and does not itself mint Soul.
+
+**Acceptance checks (binary, instrument named):** `test/e2e/test_first_chapter_journey.gd`,
+`test/unit/test_husked_state.gd`, the Soul-log export and `tools/quest_audit.gd` must take a
+zero-Soul save with no recruited Wyneth through the approved Agreement act, record the positive
+write once, clear active Hollow, preserve the ceiling, and demonstrate the approved repeatable
+cadence. A combat-resource Soul write, passive-rest write, recruitment dependency, one-shot
+dead end or missing journal lead fails.
+
+**Do-not-decide boundary:** Do not treat the Name-Ledger class resource as a world ritual, choose
+the NPC or alternative Agreement act, set its Soul amount or cadence, write canon prose, require
+Wyneth, or add a second non-Agreement Soul-income channel without owner approval.
+
+**Depends on:** R13; P2.4 and P2.7; owner approval of the PROVISIONAL mechanism and prose.
+
 ## Phase 3 — proposed milestone: Roadmap Phase 3 — Enemies that play the game
 
 ### P3.1 — Intent-planner performance and legibility spike
@@ -567,6 +651,135 @@ identity or create a new combat resource without owner approval.
 
 **Depends on:** R5 answered `approve, five` or `approve, three`; P3.3 and P3.4.
 
+### P3.7 — Telegraph the `dorthkor-vanguard` reinforcement chain
+
+**Title:** [Roadmap P3.7] Telegraph the dorthkor-vanguard reinforcement chain
+
+**Milestone:** Proposed `Roadmap Phase 3 — Enemies that play the game`; confirm it exists before
+filing.
+
+**Labels:** `delegated-to-codex`
+
+**Objective:** Stage the first proven beat as the ambient `dorthkor-vanguard` fight on Dorthkor
+Road, with successive alerted groups readable before they enter the same CT combat session.
+
+**Scope:** `world/dorthkor_road.tscn`, `actors/hostile/hostile.gd`, `world/field_map.gd`, existing
+alert and chain radii, project-owned presentation surfaces, `test/integration/test_dorthkor_road.gd`
+and rendered field evidence.
+
+**Deliverables:** Approved same-map hostile placement, a pre-alert telegraph for each group, a
+readable propagation boundary, and colour-independent warning cues that preserve the existing
+one-hop-per-measure ambient admission behavior.
+
+**Acceptance checks (binary, instrument named):** `test/integration/test_dorthkor_road.gd` and a
+rendered slice capture must show the player seeing each warning before contact, the first alert
+opening one CT session, and later groups joining without a combat restart. An invisible warning,
+AP deployment, chained set-piece path, hue-only cue or restarted session fails.
+
+**Do-not-decide boundary:** Do not invent Dorthkor canon, alter enemy abilities or alert math,
+turn this ambient proof into Dorthkor Dead Muster, or claim a headless fixture proves rendered
+legibility.
+
+**Depends on:** R15; P3.3; Phase 2 acceptance; approved staging direction. P3.5 runs in parallel and
+is needed for Phase 3 acceptance, not for this proof.
+
+### P3.8 — Emit ambient-combat admission events
+
+**Title:** [Roadmap P3.8] Emit ambient-combat admission events
+
+**Milestone:** Proposed `Roadmap Phase 3 — Enemies that play the game`; confirm it exists before
+filing.
+
+**Labels:** `delegated-to-codex`
+
+**Objective:** Give presentation code an authoritative event when an alerted actor joins an
+already-running ambient CT session.
+
+**Scope:** `globals/battle.gd`, `world/field_map.gd`, `actors/hostile/hostile.gd`, the existing
+`Battle.admit()` path and `test/integration/test_combat_session.gd`.
+
+**Deliverables:** A typed admission signal carrying the admitted actor and CT placement needed by
+consumers, emitted once from the existing admission path without restarting or duplicating the
+combatant.
+
+**Acceptance checks (binary, instrument named):** `test/integration/test_combat_session.gd` must
+record one admission event per admitted actor, matching the actor and resulting CT order while
+the original session identity remains unchanged. A missing or duplicate event, mismatched actor,
+duplicate combatant, reordered existing actor or session restart fails.
+
+**Do-not-decide boundary:** Do not replace CT scheduling, create a second admission path, change
+alert propagation, expose mutable battle state through the signal, or route deployed AP
+set-pieces through this slice.
+
+**Depends on:** P3.3 and P3.7.
+
+### P3.9 — Show pending reinforcements in the CT strip
+
+**Title:** [Roadmap P3.9] Show pending reinforcements in the CT strip
+
+**Milestone:** Proposed `Roadmap Phase 3 — Enemies that play the game`; confirm it exists before
+filing.
+
+**Labels:** `delegated-to-codex`
+
+**Objective:** Let a player distinguish combatants already in CT from alerted reinforcements
+that are still pending, then understand an admitted enemy's intent through Old Grumbrand's
+existing Sacred Clarity.
+
+**Scope:** `ui/hud/regions/ct_timeline/ct_timeline_region.gd`, `world/field_map.gd`,
+`globals/battle.gd`, P3.8's admission event,
+`globals/combat/class_resources/stuid_clarity.gd`, existing DS/theme tokens,
+`test/integration/test_combat_presentation.gd` and `test/integration/test_enemy_intents.gd`.
+
+**Deliverables:** A pending-reinforcement row, deterministic transition into the live CT order,
+shape/text or position cues independent of hue, and intent read-back for admitted enemies when
+Sacred Clarity is active.
+
+**Acceptance checks (binary, instrument named):** A rendered CT-strip capture,
+`test/integration/test_combat_presentation.gd` and `test/integration/test_enemy_intents.gd` must
+identify the next actor, distinguish every pending actor without colour, remove the pending row
+entry on admission, preserve CT order, and show the admitted enemy's revealed intent under
+Sacred Clarity. A stale/duplicate row, hue-only state, order mismatch or hidden revealed intent
+fails.
+
+**Do-not-decide boundary:** Do not invent enemy intents, expose unrevealed intent, change Sacred
+Clarity, set a new forecast horizon, add per-node theme overrides or redesign the CT scheduler.
+
+**Depends on:** R15; P3.8; existing Sacred Clarity behavior.
+
+### P3.10 — Serai-Lun killing-or-mercy reaction data
+
+**Title:** [Roadmap P3.10] Serai-Lun killing-or-mercy reaction data
+
+**Milestone:** Proposed `Roadmap Phase 3 — Enemies that play the game`; confirm it exists before
+filing.
+
+**Labels:** None — Serai-Lun's reaction and voice remain owner/Claude-owned until approved.
+
+**Objective:** Complete the Phase 3 C+reaction proof with Vex, ungated Serai-Lun and Old
+Grumbrand: Serai records and reads back the approved killing-or-mercy outcome without becoming
+hostile to Vex.
+
+**Scope:** `dialogue/companions/serai_lun.dialogue`, `globals/companion_barks.gd`,
+`globals/game_state.gd`, `globals/save_game.gd`, approved trigger data, localization extraction,
+the chapter journey and save round-trip fixtures.
+
+**Deliverables:** Owner-approved killing and mercy reaction data, one trigger at the resolved
+slice outcome, a save-compatible durable result, and a later read-back; no ally-to-enemy side
+transfer or hostile companion turn.
+
+**Acceptance checks (binary, instrument named):** `test/e2e/test_first_chapter_journey.gd`, save
+round-trip coverage and the rendered slice capture must exercise both approved outcomes, fire
+only the matching Serai reaction once, preserve it after load, and keep Serai allied. A missing,
+duplicate, wrong-outcome or non-durable reaction, a gated-party dependency, or any hostile side
+switch fails.
+
+**Do-not-decide boundary:** Do not write Serai's voice, choose a refusal/departure consequence,
+invent a loyalty system or hostile-turn cause, change her recruitment gate, or move broader
+Phase 4 companion work into this issue.
+
+**Depends on:** R15; P3.7–P3.9; owner approval of the reaction prose and durable outcome.
+
 ## Phase 4 — proposed milestone: Roadmap Phase 4 — Company
 
 ### P4.1 — PROVISIONAL four-person Chapter 1 party
@@ -734,32 +947,46 @@ hand-edit generated data or change the Phase 2 Soul economy.
 
 **Depends on:** Fixed R8 = `hold`; Phase 1 and Phase 2 acceptance; owner-approved quest packets.
 
-### P5.2 — Connective main-quest set-pieces
+### P5.2 — Three mandatory main-ruling CT set-pieces
 
-**Title:** [Roadmap P5.2] Connective main-quest set-pieces
+**Title:** [Roadmap P5.2] Three mandatory main-ruling CT set-pieces
 
 **Milestone:** Proposed `Roadmap Phase 5 — Hours`; confirm it exists before filing.
 
 **Labels:** None — main-quest and set-piece design stay owner/Claude-owned until approved.
 
-**Objective:** Connect Dorthkor Road, the Wound Lip and Hollowmere with authored main-quest beats
-that use the finished enemy grammar.
+**Objective:** Hold exactly three unavoidable CT entries (count agreed 2026-10-31; identities
+PROVISIONAL, R14): the existing quest-required Dorthkor Dead Muster for The Broken Muster and Empty
+Post for The Deep Trial, and a newly authored Hollowmere set-piece tied to The Unanswered Roar
+(PROVISIONAL working name; bridge needs owner approval).
 
-**Scope:** Approved main-quest dialogue/resources, the three existing locations, set-piece
-deployment exception, Phase 3 encounter templates, quest audit and journey fixtures.
+**Scope:** `canon/dom/encounters/dorthkor-muster.json`,
+`canon/dom/encounters/jawbrace-empty-post.json`, `world/dorthkor_road.tscn`,
+`world/wound_lip.tscn`, `world/hollowmere.tscn`, `quests/main/the_unanswered_roar.tres`,
+`globals/quest_registry.gd`, Phase 3 CT encounter grammar, `tools/quest_audit.gd` and journey
+fixtures.
 
-**Deliverables:** One approved connective beat and scripted set-piece per named location, explicit
-entry/exit state, consequences and read-back.
+**Deliverables:** Verified unavoidable entry, CT-order play and retained non-kill resolutions for
+the existing Dorthkor Dead Muster (`dorthkor-muster`) and Empty Post (`jawbrace-empty-post`), which
+`quests/dorthkor_road.tres` and `quests/deep_trial.tres` already require; an owner-approved narrative bridge
+and new Hollowmere set-piece tied to The Unanswered Roar; explicit entry/exit state,
+non-kill resolutions where approved, consequences and read-back. The Hollowmere encounter has
+only a PROVISIONAL working name until its bridge is approved; no encounter ID is assumed here.
 
-**Acceptance checks (binary, instrument named):** The chapter-journey harness must reach, enter,
-resolve and exit all three set-pieces under CT; `tools/quest_audit.gd` must report their approved
-consequences/read-backs. Any unreachable beat, ambient deployment path or missing consequence
+**Acceptance checks (binary, instrument named):** `test/e2e/test_first_chapter_journey.gd`, the
+encounter-catalog fixture and `tools/quest_audit.gd` must show exactly these three production
+main-ruling entries as unavoidable, each opening and resolving under CT at its approved quest
+beat with its consequence recorded. Promoting any other ambient encounter to mandatory, AP-only deployment,
+invented Hollowmere identifier, unreachable entry, extra mandatory fight or missing read-back
 fails.
 
-**Do-not-decide boundary:** Do not invent main-quest canon, alter ruling 6's ambient/set-piece
-boundary, create enemy abilities or rewrite Phase 3 templates.
+**Do-not-decide boundary:** Do not call the Hollowmere encounter “Drowned Watch,” introduce
+`hollowmere-roar-consequence`, invent its bridge to The Unanswered Roar, reuse
+`dorthkor-vanguard` as Dorthkor Dead Muster, choose unapproved resolutions, or alter ruling 6's
+ambient/set-piece boundary.
 
-**Depends on:** Fixed R8 = `hold`; Phase 3 and Phase 4 acceptance; owner-approved beats.
+**Depends on:** R14; fixed R8 = `hold`; Phase 3 and Phase 4 acceptance; owner-approved beats and
+Hollowmere bridge.
 
 ### P5.3 — Resolve every stub quest
 
@@ -819,6 +1046,41 @@ as a completed human playthrough.
 
 **Depends on:** Fixed R8 = `hold`; P5.1, P5.2 and P5.3; Phase 4 acceptance.
 
+### P5.5 — Talk, Tread or Soul bypass audit
+
+**Title:** [Roadmap P5.5] Talk, Tread or Soul bypass audit
+
+**Milestone:** Proposed `Roadmap Phase 5 — Hours`; confirm it exists before filing.
+
+**Labels:** None — route choice, thresholds, costs and prose remain owner/Claude-owned.
+
+**Objective:** Make every production encounter outside P5.2's three unavoidable set-pieces
+bypassable through an authored talk, Tread or Soul route, with a quest result rather than
+physical skirting or post-contact flight.
+
+**Scope:** `data/generated/encounter_ids.gd` as generated catalog evidence,
+`globals/quest_registry.gd`, existing production placements and dialogue, Phase 2 Soul routes,
+`test/unit/test_encounter_catalog.gd`, `test/e2e/test_first_chapter_journey.gd` and
+`tools/quest_audit.gd`.
+
+**Deliverables:** The per-encounter bypass matrix from the roadmap's Phase 5 item 5, one row per production encounter with its approved route, whether it exists now and the evidence path, kept current as routes land; verification of `trial-keeper`'s existing
+talk/Sway route; approved authored routes for `dorthkor-vanguard`, `bog-wight`, `loam-boar` and
+`trial-warden`; and an explicit test-only disposition for every `phase2-*` fixture until it gains
+a qualifying route.
+
+**Acceptance checks (binary, instrument named):** The encounter-bypass matrix,
+`test/unit/test_encounter_catalog.gd`, `test/e2e/test_first_chapter_journey.gd` and
+`tools/quest_audit.gd` must account for every catalog encounter and complete each production
+encounter outside P5.2 through at least one authored pre-contact talk, Tread or Soul route with a
+recorded outcome. Physical skirting, fleeing after contact, an unplaced fixture promoted to
+production, a route without outcome state or any unaccounted encounter fails.
+
+**Do-not-decide boundary:** Do not introduce a separate Stealth stat, choose Tread thresholds or
+Soul prices, write dialogue/canon, turn an ambient encounter into a fourth mandatory set-piece,
+hand-edit `data/generated/*`, or count skirting/fleeing as a qualifying bypass.
+
+**Depends on:** R14; P2.1; P3.5; P5.2's approved three-set-piece boundary; owner-approved routes.
+
 ## Phase 6 — proposed milestone: Roadmap Phase 6 — Teach, test, polish
 
 ### P6.1 — Codex teaching entries and first-spend beat
@@ -874,32 +1136,39 @@ direction, per-node theme overrides or unapproved fonts.
 
 **Depends on:** Phase 5 acceptance; existing FR-607 ratification. No R9 dependency.
 
-### P6.3 — Presentation pass and Chapter 1 language menu
+### P6.3 — PROVISIONAL functional presentation and Chapter 1 language menu
 
-**Title:** [Roadmap P6.3] Presentation pass and Chapter 1 language menu
+**Title:** [Roadmap P6.3] PROVISIONAL functional presentation and Chapter 1 language menu
 
 **Milestone:** Proposed `Roadmap Phase 6 — Teach, test, polish`; confirm it exists before filing.
 
 **Labels:** `delegated-to-codex`
 
-**Objective:** Apply approved audio/VFX/time-of-day polish and make the Chapter 1 language menu
-honest about translation availability.
+**Objective:** Meet the prose-first polish bar with only functional FR-109 battle feedback,
+minimum FR-308 Zhavar signaling and an honest Chapter 1 language menu.
 
-**Scope:** `audio/`, approved `assets/audio/`, existing casting/hit presentation, shared
-WorldClock/theme surfaces, `ui/screens/settings.gd`, `locale/`, captures and regression tests.
+**Scope:** Existing casting/hit presentation,
+`actors/zhavar_telegraph/zhavar_telegraph.gd`, `actors/zhavar_toll/zhavar_toll.gd`,
+`ui/screens/settings.gd`, `locale/es.po`, rendered captures and regression tests. The PROVISIONAL
+R16 cut removes ambient beds, new combat stingers and WorldClock tint from this issue and shrinks
+casting/hit VFX to functional coverage.
 
-**Deliverables:** Approved ambient beds and combat stingers, casting/hit VFX, WorldClock tint,
-R9-compliant menu visibility, and preserved Spanish assets.
+**Deliverables:** Readable casting and hit feedback required by FR-109, minimum Zhavar ambient
+signaling and one tolling event required by FR-308, R9-compliant menu visibility, and preserved
+Spanish assets; no ambient-bed, new-combat-stinger or WorldClock-tint deliverable.
 
-**Acceptance checks (binary, instrument named):** Rendered presentation captures, audio/VFX tests,
-WorldClock fixture and localization source scan must show each approved cue and no Chapter 1
-Spanish selector after R9; missing cue, inaccessible state, deleted translation asset or stale
-menu entry fails.
+**Acceptance checks (binary, instrument named):** Rendered presentation captures,
+`test/integration/test_combat_presentation.gd`, a Zhavar journey fixture and the localization
+source scan must show readable functional casting/hit feedback, the required ambient signal and
+tolling event, no Chapter 1 Spanish selector after R9, and an intact `locale/es.po`. Missing
+functional feedback or Zhavar signaling, inaccessible state, deleted translation asset or stale
+menu entry fails; omitted cinematic polish does not.
 
-**Do-not-decide boundary:** Do not compose unapproved music, invent VFX direction, change gameplay
-timing, translate prose, delete `locale/es.po` or make Spanish visible without a completed pass.
+**Do-not-decide boundary:** Do not implement the PROVISIONAL cuts before R16, add cinematic
+scope, compose ambient beds or new combat stingers, add WorldClock tint, invent VFX direction,
+change gameplay timing, translate prose, delete `locale/es.po` or weaken P6.2's FR-607 scope.
 
-**Depends on:** R9 = `defer`; P6.1 and P6.2; approved presentation assets/direction.
+**Depends on:** R16; R9 = `defer`; P6.1 and P6.2; approved functional presentation direction.
 
 ### P6.4 — Gate T-6 outside-tester evidence
 
