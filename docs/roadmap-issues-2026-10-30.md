@@ -29,6 +29,7 @@ rechecks the labels:
 # gh issue create --title '[Roadmap P2.3] Soul bands and world read-back' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.3)"
 # gh issue create --title '[Roadmap P2.4] Append-only Soul log and playtest export' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.4)"
 # gh issue create --title '[Roadmap P2.5] Make the hollowing recovery price legible' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.5)"
+# gh issue create --title '[Roadmap P2.6] Agreement-route unavoidable spend (R3 curve)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.6)"
 # gh issue create --title '[Roadmap P3.1] Intent-planner performance and legibility spike' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.1)"
 # gh issue create --title '[Roadmap P3.2] Retire the AP scheduler shim' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.2)"
 # gh issue create --title '[Roadmap P3.3] Implement the selected uncapped intent planner' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.3)"
@@ -49,6 +50,7 @@ rechecks the labels:
 # gh issue create --title '[Roadmap P6.3] Presentation pass and Chapter 1 language menu' --milestone 'Roadmap Phase 6 — Teach, test, polish' --label delegated-to-codex --body "$(body_for P6.3)"
 # gh issue create --title '[Roadmap P6.4] Gate T-6 outside-tester evidence' --milestone 'Roadmap Phase 6 — Teach, test, polish' --body "$(body_for P6.4)"
 # gh issue create --title '[Roadmap P6.5] Final FR-904 rendered reference run' --milestone 'Roadmap Phase 6 — Teach, test, polish' --body "$(body_for P6.5)"
+# gh issue create --title '[Roadmap P6.6] Four viable-build playthrough checklists' --milestone 'Roadmap Phase 6 — Teach, test, polish' --body "$(body_for P6.6)"
 ```
 
 ## Phase 1 — proposed milestone: Roadmap Phase 1 — Fallout-full field
@@ -195,13 +197,16 @@ implementation gap for a separately approved implementation issue.
 
 **Labels:** `delegated-to-codex`
 
-**Objective:** Make the already-authored toll, telegraph and rumour routes reachable through
-production quest/travel events.
+**Objective:** `raise_zhavar` is raised in production for the `wilds` zone only
+(`globals/quest_registry.gd:542`, `dialogue/sella_varn.dialogue:12`); make the already-authored
+toll, telegraph and rumour routes on the other zones reachable through production quest/travel
+events.
 
 **Scope:** `globals/save_game.gd`, `globals/quest_registry.gd`, existing travel/quest hooks,
 approved dialogue call sites, `tools/quest_audit.gd`, and focused tests.
 
-**Deliverables:** Idempotent production calls to `SaveGame.raise_zhavar()`, persistence coverage,
+**Deliverables:** Idempotent production calls to `SaveGame.raise_zhavar()` for the zones that lack
+one, persistence coverage,
 and journey evidence for each already-authored route.
 
 **Acceptance checks (binary, instrument named):** The chapter-journey harness and
@@ -261,8 +266,9 @@ planning point without changing refill cadence.
 **Deliverables:** Reproducible sweep, smallest approved value changes, and a results table in the
 existing economy document.
 
-**Acceptance checks (binary, instrument named):** The casting-economy sweep and T-harness must
-show approved set-pieces exhausting Breath by PROVISIONAL round 3–4 with per-scene refill intact;
+**Acceptance checks (binary, instrument named):** `tools/casting_economy_sweep.gd` and the Gate T
+harnesses (`test/integration/test_gate_t1_clearability.gd`,
+`test/integration/test_gate_t2_positional_depth.gd`) must show approved set-pieces exhausting Breath by PROVISIONAL round 3–4 with per-scene refill intact;
 outside the band or changed cadence fails.
 
 **Do-not-decide boundary:** Do not change refill cadence, invent new abilities, or ratify economy
@@ -352,6 +358,37 @@ band terminology or voice without an owner ruling.
 
 **Depends on:** R3; P2.3 and P2.4; owner prose approval.
 
+### P2.6 — Agreement-route unavoidable spend (R3 curve)
+
+**Title:** [Roadmap P2.6] Agreement-route unavoidable spend (R3 curve)
+
+**Milestone:** Proposed `Roadmap Phase 2 — Soul: make the meter mean it`; confirm it exists before
+filing.
+
+**Labels:** None — economy sizing is a design call reviewed by Claude; data edits may be delegated
+afterwards.
+
+**Objective:** Make the R3 curve reachable on the all-Agreement path: income is up to ~96 at the
+ruled +8 per act from a start of 50, so the chapter must carry unavoidable spend near the income
+(main-quest ruling costs and set-piece overreach) for that path to end PROVISIONAL 40–50 under R3
+`down` (55–65 under `55–65`).
+
+**Scope:** Main-quest ruling outcome data, set-piece Breath pools and overreach costs
+(`docs/casting-economy.md`), `globals/quest_registry.gd` outcome arrays, the chapter-journey
+harness play script, and the Soul log export.
+
+**Deliverables:** A sized table of unavoidable spends with their causes, the data edits that
+implement them, and the journey-harness all-Agreement script that exercises them.
+
+**Acceptance checks (binary, instrument named):** The chapter-journey harness on the all-Agreement
+script ends inside R3's band, the Soul log shows each unavoidable spend once with its cause, the
++8 per act of Agreement is unchanged, and no route reaches 100. Any miss fails.
+
+**Do-not-decide boundary:** Do not change the ruled +8 per act, invent new Soul-costing systems or
+set the final numbers; R3's answer fixes the band and owner item 5 fixes the costs.
+
+**Depends on:** R1, R3; P2.1 and P2.4; Phase 1 acceptance.
+
 ## Phase 3 — proposed milestone: Roadmap Phase 3 — Enemies that play the game
 
 ### P3.1 — Intent-planner performance and legibility spike
@@ -378,8 +415,11 @@ scripted capture of next actor, revealed intent and right response.
 three variants at the ratified capacity of up to ~100 present-and-alerted hostiles against the
 declared interim p95 ≤16.67 ms and battle-transition <2 s budget; D9 mean per decision is reported
 as advisory. This comparison does not consume or move the official Phase 6 FR-904 rendered gate.
-The legibility capture passes only at 3/3 named facts. Missing comparison, failed budget or any
-missed fact fails and returns the measured question to the owner.
+Every comparator must report; a comparator may fail its budget. The phase proceeds only if at
+least one owner-permitted uncapped candidate meets the budget and passes the legibility capture
+at PROVISIONAL 3/3 named facts (all three). If R10 supplies a number other than 24, that fallback
+is measured too. A missing comparator report, or no passing candidate, fails and returns the
+measured question to the owner.
 
 **Do-not-decide boundary:** Do not ship a ceiling, admission queue, new HUD rule, enemy content or
 permanent planner architecture. The PROVISIONAL 24 fallback is comparison-only.
@@ -411,7 +451,7 @@ AP selection path; any AP execution or direct scene change fails.
 **Do-not-decide boundary:** Do not redesign CT, alter initiative math, add an engaged ceiling or
 change encounter prose.
 
-**Depends on:** R4; P3.1 passes; Phase 2 acceptance.
+**Depends on:** ruling 6 (fixed; R4 needs no reply); P3.1 passes; Phase 2 acceptance.
 
 ### P3.3 — Implement the selected uncapped intent planner
 
@@ -541,14 +581,16 @@ identity or create a new combat resource without owner approval.
 and scripted deployment.
 
 **Scope:** `ui/screens/tavern.gd`, `ui/screens/party.gd`, party state/public APIs, follower scenes,
-HUD/deployment integration, T-1..T-5 and party tests.
+HUD/deployment integration, the Gate T-1..T-5 harnesses and party tests.
 
 **Deliverables:** PROVISIONAL three-of-six tavern recruitment chosen by the player (the hint
 "Choose exactly two" becomes three), PROVISIONAL four-member layout/placement, serialized party
 state and compatible travel/combat flow.
 
-**Acceptance checks (binary, instrument named):** T-1..T-5, party integration tests and the
-chapter journey must pass at PROVISIONAL party size four with one party-changed notification per
+**Acceptance checks (binary, instrument named):** The Gate T-1..T-5 harnesses
+(`test/integration/test_gate_t1_clearability.gd`, `test/integration/test_gate_t2_positional_depth.gd`,
+`test/integration/test_wavec_tactical_gates.gd`, `test/unit/test_combat_speech.gd`), party
+integration tests and the chapter journey must pass at PROVISIONAL party size four with one party-changed notification per
 mutation; overflow, overlap, lost member or bypassed `GameState.set_party()` fails.
 
 **Do-not-decide boundary:** Do not raise the PROVISIONAL Chapter 1 party above four, rewrite
@@ -626,9 +668,10 @@ write methods, `tools/quest_audit.gd`, save tests and approved read-back hooks.
 **Deliverables:** Outcome arrays, already-ruled +8 Agreement path, ledger writes, save round-trip
 and read-back coverage.
 
-**Acceptance checks (binary, instrument named):** `tools/quest_audit.gd` must report at least one
-approved outcome and read-back for every companion quest; the journey/save fixture must apply each
-write once. Zero-outcome quests, direct ledger mutation or duplicate reward fails.
+**Acceptance checks (binary, instrument named):** `tools/quest_audit.gd` in strict mode
+(`SOUL_METER_QUEST_AUDIT_STRICT=1`) and a journey fixture must both show at least one approved
+outcome and read-back for every companion quest (the audit's own header documents false passes,
+so the fixture is required); the journey/save fixture must apply each write once. Zero-outcome quests, direct ledger mutation or duplicate reward fails.
 
 **Do-not-decide boundary:** Do not invent outcomes, change the ruled +8 Agreement consequence,
 merge Reputation with Renown or write companion prose.
@@ -680,8 +723,10 @@ dialogue sources, existing ledgers, generators, `tools/quest_audit.gd`, and jour
 **Deliverables:** PROVISIONAL ≥4 side quests in each hub, two approved meaningful outcomes per
 quest, Agreement/Paradox routes using the Phase 2 economy, and complete read-backs.
 
-**Acceptance checks (binary, instrument named):** `tools/quest_audit.gd` must report PROVISIONAL
-≥8 quests, two outcomes and at least one read-back each; chapter-journey fixtures must reach both
+**Acceptance checks (binary, instrument named):** `tools/quest_audit.gd` (strict mode) must report
+PROVISIONAL ≥4 new Kesselford and ≥4 new Ashlaren quests, two outcomes and at least one read-back
+each, and the chapter total still meeting the PRD's ratified ≥10 side quests with ≥2 outcomes,
+every main-quest resolution and ≥60% of side-quest resolutions read back; chapter-journey fixtures must reach both
 outcomes without dead ends. Any lower count, missing consequence or soft lock fails.
 
 **Do-not-decide boundary:** Do not invent canon, select quest outcomes without owner approval,
@@ -870,12 +915,13 @@ finished chapter.
 **Scope:** `docs/playtest-recruitment.md`, `docs/playtest-protocol.md`,
 `docs/playtest-packet.md`, approved build packaging and attached Soul/playtime reports.
 
-**Deliverables:** Owner-run 6–8 outside-tester packets, updated CT/Soul questions that do not alter
-gate criteria, consolidated failures and traceable fixes/retests.
+**Deliverables:** 3–5 valid owner-run outside-tester packets from a 6–8-person recruitment pool,
+the protocol's four questions unchanged, Soul log and playtime reports attached as unscored
+context, consolidated failures and traceable fixes/retests.
 
 **Acceptance checks (binary, instrument named):** Gate T-6 passes only when every unchanged
-criterion in the playtest protocol is supported by real completed packets; simulated, agent-filled
-or incomplete evidence fails.
+criterion in the playtest protocol is supported by 3–5 valid real packets (majority correct per
+question, not averaged); simulated, agent-filled or incomplete evidence fails.
 
 **Do-not-decide boundary:** Agents may prepare materials and summarize evidence but may not act as
 outside testers, soften criteria, fabricate sessions or declare the human gate passed.
@@ -907,3 +953,29 @@ output, missing samples or a threshold miss fails; the D9 2 ms decision line rem
 outliers, introduce an engaged ceiling or declare a pass without owner-hardware evidence.
 
 **Depends on:** P3.1/P3.3 planner evidence; P6.2 and P6.3 complete; owner item 14.
+
+### P6.6 — Four viable-build playthrough checklists
+
+**Title:** [Roadmap P6.6] Four viable-build playthrough checklists
+
+**Milestone:** Proposed `Roadmap Phase 6 — Teach, test, polish`; confirm it exists before filing.
+
+**Labels:** None — manual playthroughs are owner-run evidence; agents prepare the checklists.
+
+**Objective:** Close PRD §3's "distinct viable builds" metric: four archetypes (martial, caster,
+talker, balanced/refusal) complete Chapter 1 without debug tools, separately from Gate T-6.
+
+**Scope:** `docs/playtest-packet.md` checklist templates, the four archetype build definitions,
+the session clock from P5.4, and the Soul log export.
+
+**Deliverables:** Four completed playthrough checklists with build, path, session time, Soul
+trajectory and any blocker, plus traceable fixes for blockers found.
+
+**Acceptance checks (binary, instrument named):** All four checklists are complete with zero
+critical-path blockers and each records a measured session time; an incomplete archetype or a
+check simulated by an agent fails.
+
+**Do-not-decide boundary:** Agents may not play as the owner, soften a checklist or merge this
+with Gate T-6's outside-tester evidence.
+
+**Depends on:** Phases 1–5 accepted; P5.4 (session clock); P6.1–P6.3.
