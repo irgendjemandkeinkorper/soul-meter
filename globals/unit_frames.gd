@@ -9,6 +9,8 @@ extends RefCounted
 ## (defaults to 1.0; non-1.0 race factors require an owner ruling).
 ## Existing output_sha256/source_sha256 provenance is unchanged. A future writer
 ## must hash every output and bump its generator_version when changing contracts.
+## A unit folder with art on disk but no manifest row keeps the legacy single-frame
+## contract (<id>--idle--se--f00.png, se only, mirrored); nothing else is guessed.
 
 const MANIFEST_PATH := "res://assets/generated/sprites/manifests/units.json"
 const ROOT := "res://assets/generated/sprites/units"
@@ -36,10 +38,9 @@ static func texture_path(unit_id: String, state: String = "idle", dir: String = 
 ## Missing states/frames and incomplete multi-direction sets return an empty path.
 ## Only se-only sets mirror: west-facing keys use the same frame with flip=true.
 static func lookup(unit_id: String, state: String = "idle", dir: String = "se", frame: int = 0) -> Frame:
-	_ensure_loaded()
 	if not DIRECTIONS.has(dir) or frame < 0:
 		return Frame.new()
-	var unit: Dictionary = _units.get(unit_id, {})
+	var unit := _entry(unit_id)
 	var frames: Dictionary = unit.get("frames", {})
 	var by_direction: Dictionary = frames.get(state, {})
 	var directions := directions_for(unit_id)
@@ -58,15 +59,13 @@ static func has_direction(unit_id: String, dir: String) -> bool:
 
 
 static func directions_for(unit_id: String) -> PackedStringArray:
-	_ensure_loaded()
-	var unit: Dictionary = _units.get(unit_id, {})
+	var unit := _entry(unit_id)
 	var directions: PackedStringArray = unit.get("directions", PackedStringArray())
 	return directions.duplicate()
 
 
 static func metadata_for(unit_id: String) -> Dictionary:
-	_ensure_loaded()
-	var unit: Dictionary = _units.get(unit_id, {})
+	var unit := _entry(unit_id)
 	var metadata: Dictionary = unit.get("metadata", {})
 	return metadata.duplicate(true)
 
@@ -83,6 +82,11 @@ static func unit_ids_for_race(race_id: String) -> PackedStringArray:
 	return ids
 
 
+static func _entry(unit_id: String) -> Dictionary:
+	_ensure_loaded()
+	return _units.get(unit_id, {})
+
+
 static func _ensure_loaded() -> void:
 	if _loaded:
 		return
@@ -90,8 +94,26 @@ static func _ensure_loaded() -> void:
 	var manifest := load(MANIFEST_PATH) as JSON
 	if manifest == null or not manifest.data is Dictionary:
 		push_error("UnitFrames: missing or invalid unit manifest.")
-		return
-	_units = _index_manifest(manifest.data)
+		_units = {}
+	else:
+		_units = _index_manifest(manifest.data)
+	_index_legacy_folders(_units)
+
+
+## Manifest rows win. A folder that only follows the legacy contract is indexed
+## once as an se-only idle frame, so units shipped without a row (the trial
+## enemies, d10f4506) keep resolving exactly as before. Nothing else is guessed.
+static func _index_legacy_folders(units: Dictionary[String, Dictionary]) -> void:
+	for unit_id: String in DirAccess.get_directories_at(ROOT):
+		if units.has(unit_id):
+			continue
+		var legacy_path := "%s/%s/%s--idle--se--f00.png" % [ROOT, unit_id, unit_id]
+		if ResourceLoader.exists(legacy_path):
+			units[unit_id] = {
+				"frames": {"idle": {"se": {0: legacy_path}}},
+				"directions": PackedStringArray(["se"]),
+				"metadata": {},
+			}
 
 
 static func _index_manifest(manifest: Dictionary) -> Dictionary[String, Dictionary]:

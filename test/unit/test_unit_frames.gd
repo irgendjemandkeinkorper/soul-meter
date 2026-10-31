@@ -27,6 +27,24 @@ func test_every_legacy_unit_preserves_its_path_and_all_eight_mirror_choices() ->
 			assert_bool(frame.flip).is_equal(dir.contains("w"))
 
 
+func test_unit_art_without_a_manifest_row_keeps_the_legacy_single_frame_contract() -> void:
+	# trial-keeper and trial-warden shipped art without a manifest row (d10f4506).
+	for unit_id: String in ["trial-keeper", "trial-warden"]:
+		var expected := _path(unit_id, "idle", "se", 0)
+		assert_bool(ResourceLoader.exists("res://" + expected)).is_true()
+		assert_str(UnitArt.texture_path(unit_id)).is_equal("res://" + expected)
+		assert_bool(UnitArt.has_unit(unit_id)).is_true()
+		assert_str(UnitArt.resolve(unit_id)).is_equal(unit_id)
+		assert_array(Array(UnitFrames.directions_for(unit_id))).contains_exactly(["se"])
+		var frame := UnitFrames.lookup(unit_id, "idle", "w", 0)
+		assert_str(frame.path).is_equal("res://" + expected)
+		assert_bool(frame.flip).is_true()
+		assert_str(UnitFrames.texture_path(unit_id, "walk", "se", 0)).is_empty()
+		assert_dict(UnitFrames.metadata_for(unit_id)).is_empty()
+	assert_str(UnitFrames.texture_path("no-such-unit")).is_empty()
+	assert_str(UnitFrames.texture_path("../vex")).is_empty()
+
+
 func test_direction_queries_report_authored_frames_and_return_independent_arrays() -> void:
 	assert_bool(UnitFrames.has_direction("vex", "se")).is_true()
 	assert_bool(UnitFrames.has_direction("vex", "w")).is_false()
