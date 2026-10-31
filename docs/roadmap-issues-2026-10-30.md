@@ -2,7 +2,7 @@
 
 ## 0. Filing boundary and commands
 
-Nothing in this packet is filed until the owner says so. The milestone names below are proposals;
+Nothing in this packet is filed until the owner says so. **Filed so far:** Phase 1 on 2026-10-31 at the owner's request, under milestone `Roadmap Phase 1 — Fallout-full field` (#31): P1.1 #530, P1.2 #531, P1.3 #532, P1.4 #533, P1.5 #534, P1.6 #535. Phases 2–6 remain unfiled. The milestone names below are proposals;
 do not assume they exist. Before filing, confirm or create them only with explicit owner
 authorization. The checked-in repository label list names `delegated-to-codex` and `jules`
 (`docs/fleet-roadmap.md`, `CONTRIBUTING.md`; both verified present with `gh label list` on
@@ -18,12 +18,12 @@ rechecks the labels:
 # gh label list --limit 200
 # gh api 'repos/{owner}/{repo}/milestones?state=open&per_page=100' --jq '.[].title'
 # body_for() { awk -v prefix="### $1 — " 'index($0,prefix)==1 {on=1} on && /^##/ && index($0,prefix)!=1 {exit} on {print}' docs/roadmap-issues-2026-10-30.md; }
-# gh issue create --title '[Roadmap P1.1] Developer-only Soul trace' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.1)"
-# gh issue create --title '[Roadmap P1.2] Field coverage audit and authoring pass' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.2)"
-# gh issue create --title '[Roadmap P1.3] Visible live barter ratio' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.3)"
-# gh issue create --title '[Roadmap P1.4] Equipment effects enter combat' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.4)"
-# gh issue create --title '[Roadmap P1.5] Verify region-map fast travel end to end' --milestone 'Roadmap Phase 1 — Fallout-full field' --label jules --body "$(body_for P1.5)"
-# gh issue create --title '[Roadmap P1.6] Production Zhavar writers' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.6)"
+# gh issue create --title '[Roadmap P1.1] Developer-only Soul trace' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.1)"   # filed as #530
+# gh issue create --title '[Roadmap P1.2] Field coverage audit and authoring pass' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.2)"   # filed as #531
+# gh issue create --title '[Roadmap P1.3] Visible live barter ratio' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.3)"   # filed as #532
+# gh issue create --title '[Roadmap P1.4] Equipment effects enter combat' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.4)"   # filed as #533
+# gh issue create --title '[Roadmap P1.5] Verify region-map fast travel end to end' --milestone 'Roadmap Phase 1 — Fallout-full field' --label jules --body "$(body_for P1.5)"   # filed as #534
+# gh issue create --title '[Roadmap P1.6] Production Zhavar writers' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.6)"   # filed as #535
 # gh issue create --title '[Roadmap P2.1] Authored Paradox routes with visible Soul costs' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.1)"
 # gh issue create --title '[Roadmap P2.2] Breath sizing against set-piece drain' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.2)"
 # gh issue create --title '[Roadmap P2.3] Soul bands and world read-back' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.3)"
@@ -64,6 +64,8 @@ rechecks the labels:
 
 ### P1.1 — Developer-only Soul trace
 
+**Filed:** #530 (2026-10-31).
+
 **Title:** [Roadmap P1.1] Developer-only Soul trace
 
 **Milestone:** Proposed `Roadmap Phase 1 — Fallout-full field`; confirm it exists before filing.
@@ -89,6 +91,8 @@ thresholds or NPC reactions.
 **Depends on:** Phase 0 / PR #529. No owner ruling.
 
 ### P1.2 — Field coverage audit and authoring pass
+
+**Filed:** #531 (2026-10-31).
 
 **Title:** [Roadmap P1.2] Field coverage audit and authoring pass
 
@@ -117,6 +121,8 @@ or silently replace R7/item 11c targets.
 
 ### P1.3 — Visible live barter ratio
 
+**Filed:** #532 (2026-10-31).
+
 **Title:** [Roadmap P1.3] Visible live barter ratio
 
 **Milestone:** Proposed `Roadmap Phase 1 — Fallout-full field`; confirm it exists before filing.
@@ -141,6 +147,8 @@ change R7 density targets.
 **Depends on:** R7; P1.1.
 
 ### P1.4 — Equipment effects enter combat
+
+**Filed:** #533 (2026-10-31).
 
 **Title:** [Roadmap P1.4] Equipment effects enter combat
 
@@ -167,6 +175,8 @@ equipment architecture. Return missing design data to the owner.
 **Depends on:** R7; P1.1; approved item definitions.
 
 ### P1.5 — Verify region-map fast travel end to end
+
+**Filed:** #534 (2026-10-31).
 
 **Title:** [Roadmap P1.5] Verify region-map fast travel end to end
 
@@ -197,6 +207,8 @@ implementation gap for a separately approved implementation issue.
 **Depends on:** R7; P1.1; the shipped region-map and fast-travel registries.
 
 ### P1.6 — Production Zhavar writers
+
+**Filed:** #535 (2026-10-31).
 
 **Title:** [Roadmap P1.6] Production Zhavar writers
 
