@@ -197,7 +197,7 @@ milestones or assignees; never commit `MESHY_API_KEY`.
 Sessions are PROVISIONAL Codex working sessions; owner time is review.
 
 **U0 — Resolver and data contracts (code only; may start on dispatch). ≈2 sessions.**
-**Filed:** #536 (2026-10-31), branch `codex/unit-art-u0`.
+**Filed:** #536 (2026-10-31), branch `codex/unit-art-u0`. **Delivered:** PR #538 (2026-10-31), reviewed; one regression fixed in review (unit folders without a manifest row now index as legacy se-only frames).
 Objective: make the runtime able to consume modular, multi-direction unit sets without changing
 any art. Scope: `globals/unit_art.gd`, `globals/chargen_data.gd` (read only), a new
 `globals/unit_frames.gd` (manifest-driven frame lookup `(unit_id, state, dir, frame) → path`),
@@ -213,7 +213,7 @@ Do not decide: race mix numbers for hubs other than Dom (ship the table empty wi
 canon); any state list beyond §5.
 
 **U1 — Identity sheets (Codex image tool; needs owner "go U1"). ≈3 sessions.**
-**Filed:** #537 (2026-10-31, batch approved `28: b go`), branch `codex/unit-art-u1`.
+**Filed:** #537 (2026-10-31, batch approved `28: b go`), branch `codex/unit-art-u1`. **Delivered:** PR #539 (2026-10-31), 17 sheets, 23/34 generations; owner rulings pending in `docs/qa/identity-sheets-2026-10-31/README.md`.
 Objective: one review sheet per Chapter 1 race (seven) and per class kit (ten) that *proposes*
 answers to the bible's Open lines so the owner can rule once, in pictures. Each race sheet: front,
 three-quarter and back turnaround; one healthy and one Waning-touched state; one Dom-dressed
