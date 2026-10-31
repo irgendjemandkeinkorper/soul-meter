@@ -197,6 +197,7 @@ milestones or assignees; never commit `MESHY_API_KEY`.
 Sessions are PROVISIONAL Codex working sessions; owner time is review.
 
 **U0 — Resolver and data contracts (code only; may start on dispatch). ≈2 sessions.**
+**Filed:** #536 (2026-10-31), branch `codex/unit-art-u0`.
 Objective: make the runtime able to consume modular, multi-direction unit sets without changing
 any art. Scope: `globals/unit_art.gd`, `globals/chargen_data.gd` (read only), a new
 `globals/unit_frames.gd` (manifest-driven frame lookup `(unit_id, state, dir, frame) → path`),
