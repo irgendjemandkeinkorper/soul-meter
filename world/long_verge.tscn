@@ -171,6 +171,23 @@ position = Vector2(180, 900)
 
 [node name="OutdoorTownsfolk" type="Node" parent="."]
 script = ExtResource("10_townsfolk")
+npc_pockets = {
+"long-verge-cairn-warden": {
+"pocket_id": "long-verge-cairn-warden-purse",
+"pocket_gp": 9,
+"pocket_faction": "iron-companies"
+},
+"long-verge-old-soldier": {
+"pocket_id": "long-verge-old-soldier-purse",
+"pocket_gp": 9,
+"pocket_faction": "iron-companies"
+},
+"long-verge-recruit": {
+"pocket_id": "long-verge-recruit-purse",
+"pocket_gp": 9,
+"pocket_faction": "iron-companies"
+}
+}
 
 [node name="LongVergeDressing" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -673,4 +690,40 @@ position = Vector2(2370, 1000)
 display_name = "SUPPLY CRATE"
 interaction_flag = "loot_opened_long_verge_camp_cache"
 container_id = "long-verge-camp-cache"
+loot_table_id = &"road-cache"
+
+[node name="ShoulderStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(1740, 520)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_shoulder_store"
+lock_skill = "slip"
+container_id = "long-verge-shoulder-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="ColumnStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(1930, 600)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_column_store"
+lock_skill = "slip"
+container_id = "long-verge-column-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="CartStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(2620, 640)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_cart_store"
+lock_skill = "strain"
+container_id = "long-verge-cart-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="CrateStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(2440, 780)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_crate_store"
+lock_skill = "slip"
+container_id = "long-verge-crate-store"
+owned_by_faction = "iron-companies"
 loot_table_id = &"road-cache"
