@@ -98,10 +98,30 @@ func test_trial_warden_fight_keeps_the_field_hud_and_grows_its_one_bar() -> void
 		).is_false()
 	assert_bool((root.get_node("EntranceInstruction") as CanvasItem).visible).is_false()
 
-	# 3. Field camera: no reframing, no stage window, no zoom change, no room-limit lifting.
-	assert_array([camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]) \
-		.is_equal(room_limits)
+	# 3. Field camera: no reframing, no stage window, no zoom change. The side limits are the
+	# room's; top and bottom account for the strip and the bar (plus clearance) so the room's
+	# edge can scroll clear of the HUD (review 2026-11-01).
 	assert_vector(camera.zoom).is_equal(room_zoom)
+	assert_int(camera.limit_left).is_equal(room_limits[0])
+	assert_int(camera.limit_right).is_equal(room_limits[2])
+	var top_inset := open_window.position.y
+	var bottom_inset := viewport.size.y - open_window.end.y
+	assert_int(camera.limit_top).is_equal(
+		room_limits[1] - int(ceil((top_inset + CombatOverlay.HUD_CLEARANCE) / camera.zoom.y))
+	)
+	assert_int(camera.limit_bottom).is_equal(
+		room_limits[3] + int(ceil((bottom_inset + CombatOverlay.HUD_CLEARANCE) / camera.zoom.y))
+	)
+	# The acting unit and its target are clear of the bar and the strip on the player's turn.
+	var overlay := field.combat_overlay() as CombatOverlay
+	assert_object(overlay).is_not_null()
+	var clear_window := open_window.grow(-1.0)
+	for actor: BattleActor in [Battle.current_ally(), Battle.current_target()]:
+		assert_object(actor).is_not_null()
+		var on_screen := _screen_rect(camera, overlay.body_rect_of(actor.combat_id))
+		assert_bool(clear_window.encloses(on_screen)).override_failure_message(
+			"%s drawn at %s touches the HUD (open window %s)" % [actor.display_name, on_screen, open_window]
+		).is_true()
 	var combatants: Array[Node2D] = [player]
 	for body: Hostile in Battle._spawned_hostiles:
 		combatants.append(body)
@@ -124,15 +144,15 @@ func test_trial_warden_fight_keeps_the_field_hud_and_grows_its_one_bar() -> void
 			continue
 		enemy_turns_seen += 1
 		var body := hostiles_by_id[acting_id] as Node2D
-		var on_screen := body.get_global_transform_with_canvas().origin
-		assert_bool(open_window.has_point(on_screen)).override_failure_message(
-			"acting enemy %s drawn at %s, outside the open window %s" % [body.name, on_screen, open_window]
+		var on_screen := _screen_rect(camera, overlay.body_rect_of(acting_id))
+		assert_bool(clear_window.encloses(on_screen)).override_failure_message(
+			"acting enemy %s drawn at %s touches the HUD (open window %s)" % [body.name, on_screen, open_window]
 		).is_true()
 	# The pan rule itself is pinned by test/unit/test_combat_overlay.gd; this run only checks
 	# the settled enemy turns it happened to present.
 	print("FRAMING enemy turns checked against the open window: ", enemy_turns_seen)
-	assert_array([camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]) \
-		.is_equal(room_limits)
+	assert_int(camera.limit_left).is_equal(room_limits[0])
+	assert_int(camera.limit_right).is_equal(room_limits[2])
 
 	# Combat end retracts the combat parts and hands the camera back.
 	GameFlow._on_battle_exited()
@@ -149,3 +169,8 @@ func test_trial_warden_fight_keeps_the_field_hud_and_grows_its_one_bar() -> void
 		.is_equal(room_limits)
 	assert_vector(camera.zoom).is_equal(room_zoom)
 	assert_vector(camera.offset).is_equal(Vector2.ZERO)
+
+
+## A world rect as drawn on screen through the camera's settled canvas transform.
+func _screen_rect(camera: Camera2D, world: Rect2) -> Rect2:
+	return camera.get_viewport().get_canvas_transform() * world

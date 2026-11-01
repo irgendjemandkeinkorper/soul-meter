@@ -69,6 +69,13 @@ var animate_events := true:
 var _camera: Camera2D
 var _camera_anchor: Node2D
 var _camera_tween: Tween
+## The camera's own (room) limits as bound; restored when the overlay hands the view back.
+var _base_limit_top := 0
+var _base_limit_bottom := 0
+var _base_limit_smoothed := false
+var _limits_extended := false
+## The actor the view was last framed for; a window change (the bar growing) re-checks it.
+var _focused_id: StringName = &""
 ## The viewport rect the HUD leaves open (viewport minus the bar and the turn strip).
 ## Visibility checks and pans use it, so an actor under the bar counts as off-screen.
 ## Empty means the whole viewport.
@@ -91,6 +98,13 @@ const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
 const CAMERA_MARGIN_SCREENS := 1.0
 ## Free-scroll speed on the player's turn, in viewport pixels per second.
 const SCROLL_PIXELS_PER_SECOND := 900.0
+## Owner review 2026-11-01: the acting unit and its target are never covered by, or
+## touching, the bar or the strip. The camera's top and bottom limits are extended by the
+## HUD insets plus this clearance (viewport px) so a room edge can scroll clear of the HUD,
+## and a body counts as framed only when it sits this far inside the open window.
+const HUD_CLEARANCE := 64.0
+## Fallback body size (world px above the feet) for a bound node without a Sprite2D.
+const FALLBACK_BODY := Vector2(48, 96)
 ## #281 G1: how long an action beat with a result card stays alone on screen before the next
 ## presented event. The card itself lives longer (combat_result.gd); the next card or the
 ## next turn cue retires it, so a card never sits over a beat it does not describe.
@@ -133,13 +147,89 @@ func bind_camera(camera: Camera2D, anchor: Node2D) -> void:
 	_camera = camera
 	_camera_anchor = anchor
 	# The fight starts from what the player was already looking at: the camera keeps its
-	# limits and zoom, and only the offset is driven from here on.
+	# zoom and side limits, and only the offset is driven from here on. Its top and bottom
+	# limits grow by the HUD insets (see HUD_CLEARANCE) and return on release.
 	camera.offset = Vector2.ZERO
+	_base_limit_top = camera.limit_top
+	_base_limit_bottom = camera.limit_bottom
+	_base_limit_smoothed = camera.limit_smoothed
+	# Limits tighten again on release; smoothing keeps that from snapping the view.
+	camera.limit_smoothed = true
+	_limits_extended = true
+	_apply_hud_limits()
 
 
 ## `window` is in viewport pixels; see `_view_window`.
 func set_view_window(window: Rect2) -> void:
+	if _view_window == window:
+		return
 	_view_window = window
+	_apply_hud_limits()
+	# The bar grows after the first beats are presented: if the framed actor now sits under
+	# the HUD, bring it back into the open window.
+	if _focused_id != &"" and is_instance_valid(_camera) and is_instance_valid(_camera_anchor):
+		var node := _node(_focused_id)
+		if is_instance_valid(node) and not _framed_rect().encloses(_body_rect(_focused_id, node)):
+			_pan_camera_to(_offset_framing(_body_rect(_focused_id, node).get_center()))
+
+
+## Camera limits that account for the strip and the bar: not a reframe (zoom, side limits
+## and the player's anchor are untouched), just room for the HUD over the room's edge.
+func _apply_hud_limits() -> void:
+	if not _limits_extended or not is_instance_valid(_camera):
+		return
+	var viewport := _camera.get_viewport_rect().size
+	var window := _window(viewport)
+	var top := window.position.y
+	var bottom := viewport.y - window.end.y
+	_camera.limit_top = _base_limit_top - int(ceilf((top + HUD_CLEARANCE) / _camera.zoom.y))
+	_camera.limit_bottom = _base_limit_bottom + int(ceilf((bottom + HUD_CLEARANCE) / _camera.zoom.y))
+
+
+func _restore_limits() -> void:
+	if not _limits_extended:
+		return
+	_limits_extended = false
+	if is_instance_valid(_camera):
+		_camera.limit_top = _base_limit_top
+		_camera.limit_bottom = _base_limit_bottom
+		_camera.limit_smoothed = _base_limit_smoothed
+
+
+## A bound body in world space: its sprite's bounds plus its cell diamond, so "framed" means
+## the whole figure and the ground it stands on, not just its feet.
+func _body_rect(id: StringName, node: Node2D) -> Rect2:
+	var feet := node.global_position
+	var rect := Rect2(feet - Vector2(32, 16), Vector2(64, 32))
+	if _ground != null:
+		var half := Vector2(_ground.tile_set.tile_size) * 0.5
+		rect = Rect2(feet - half, half * 2.0)
+	var sprite := node.get_node_or_null("Sprite2D") as Sprite2D
+	if sprite != null and sprite.texture != null:
+		rect = rect.merge(sprite.get_global_transform() * sprite.get_rect())
+	else:
+		rect = rect.merge(Rect2(feet - Vector2(FALLBACK_BODY.x * 0.5, FALLBACK_BODY.y), FALLBACK_BODY))
+	return rect
+
+
+## The open window shrunk by the clearance, in world space: where a body must lie to count
+## as clear of the HUD and the screen edges.
+func _framed_rect() -> Rect2:
+	return _view_rect().grow(-HUD_CLEARANCE * 0.5 / _camera.zoom.y)
+
+
+## A bound actor's body rect in world space, or an empty rect when it is not bound.
+func body_rect_of(id: StringName) -> Rect2:
+	var node := _node(id)
+	return _body_rect(id, node) if is_instance_valid(node) else Rect2()
+
+
+## Whether `id`'s body is framed (inside the open window with clearance).
+func is_framed(id: StringName) -> bool:
+	if not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
+		return true
+	var node := _node(id)
+	return node == null or _framed_rect().encloses(_body_rect(id, node))
 
 
 ## The player may scroll with the move keys while it is their turn to act.
@@ -305,6 +395,7 @@ func _present(event: CombatEvent) -> void:
 		&"action_resolved":
 			_active_id = event.actor_id
 			_target_id = event.target_id
+			_focus_pair(event.actor_id, event.target_id)
 		&"battle_finished":
 			_active_id = &""
 			_target_id = &""
@@ -424,8 +515,10 @@ func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
 	var node := _node(actor_id)
 	if not is_instance_valid(node):
 		return
+	_focused_id = actor_id
 	var view := _view_rect()
-	if view.has_point(node.global_position):
+	var body := _body_rect(actor_id, node)
+	if _framed_rect().encloses(body):
 		_suppressed.erase(actor_id)
 		return
 	if is_enemy and not view.grow_individual(
@@ -435,13 +528,33 @@ func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
 		_suppressed[actor_id] = true
 		return
 	_suppressed.erase(actor_id)
-	_pan_camera_to(_offset_framing(node.global_position))
+	_pan_camera_to(_offset_framing(body.get_center()))
+
+
+## An action beat frames both bodies: when the target is not clear of the HUD, the view
+## pans to hold attacker and target together (clamped to the camera's limits). A
+## suppressed attacker (D9) stays unframed.
+func _focus_pair(actor_id: StringName, target_id: StringName) -> void:
+	if not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
+		return
+	if _suppressed.has(actor_id) or target_id == &"" or target_id == actor_id:
+		return
+	var actor := _node(actor_id)
+	var target := _node(target_id)
+	if not is_instance_valid(actor) or not is_instance_valid(target):
+		return
+	var pair := _body_rect(actor_id, actor).merge(_body_rect(target_id, target))
+	if _framed_rect().encloses(pair):
+		return
+	_pan_camera_to(_offset_framing(pair.get_center()))
 
 
 func _release_camera(animated: bool) -> void:
 	_suppressed.clear()
+	_focused_id = &""
 	set_free_scroll(false)
 	if not is_instance_valid(_camera):
+		_limits_extended = false
 		return
 	if animated and is_instance_valid(_camera_anchor):
 		# Pan back onto the player, then settle: no snap.
@@ -456,6 +569,7 @@ func _release_camera(animated: bool) -> void:
 
 
 func _reset_camera_offset() -> void:
+	_restore_limits()
 	if not is_instance_valid(_camera):
 		return
 	_camera.offset = Vector2.ZERO

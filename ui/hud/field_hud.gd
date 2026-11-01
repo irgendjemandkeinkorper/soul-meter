@@ -15,7 +15,7 @@ const EXPLORE_HINTS := (
 	"WASD  MOVE    SHIFT  SPRINT    E  INTERACT    I  INVENTORY    P  PARTY    "
 	+ "Q  JOURNAL    R  STANDINGS    ESC  PAUSE"
 )
-const COMBAT_HINTS := "WASD  SCROLL    B  BREAKDOWN    ESC  PAUSE"
+const COMBAT_HINTS := "WASD  SCROLL    SPACE  END TURN    B  BREAKDOWN    ESC  PAUSE"
 
 var battle_interface: BattleInterface
 var combat_bar: CombatBar
@@ -142,6 +142,9 @@ func enter_combat(field: FieldMap) -> BattleInterface:
 	move_child(battle_interface, _bar.get_index())
 	if field != null:
 		battle_interface.stage.bind_field(field)
+	# The open window is the bar's full combat height from the first beat, so the opening
+	# pan already keeps the actor clear of where the bar will be.
+	_apply_insets()
 	# The one log line of the cue goes in before the replayed narration, so the window reads
 	# in order: the cue, then what has happened so far.
 	battle_interface.combat_bar.append_cue(tr("COMBAT BEGINS"))
@@ -226,7 +229,9 @@ func _set_bar_height(height: float, immediate: bool) -> void:
 func _apply_insets() -> void:
 	if not is_instance_valid(battle_interface):
 		return
-	battle_interface.set_hud_insets(battle_interface.turn_strip.size.y, _bar.size.y)
+	battle_interface.set_hud_insets(
+		battle_interface.turn_strip.size.y, maxf(_bar.size.y, COMBAT_BAR_HEIGHT)
+	)
 
 
 # --- exploration readouts -------------------------------------------------------------------

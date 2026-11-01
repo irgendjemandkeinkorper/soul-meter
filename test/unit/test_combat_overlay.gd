@@ -306,8 +306,9 @@ func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_th
 	add_child(player)
 	var camera := Camera2D.new()
 	player.add_child(camera)
-	# Owner 2026-11-01: the field camera keeps its own limits and zoom; the overlay never
-	# lifts or reframes them, it only pans within them.
+	# Owner 2026-11-01: the field camera keeps its zoom and side limits; the overlay never
+	# reframes it. Its top and bottom limits grow by the HUD insets plus the clearance
+	# (review 2026-11-01) so a room edge can scroll clear of the bar, and return on release.
 	camera.limit_left = -4000
 	camera.limit_top = -4000
 	camera.limit_right = 40000
@@ -316,6 +317,7 @@ func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_th
 	var limits_before := [camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]
 	var zoom_before := camera.zoom
 	var screen := camera.get_viewport_rect().size
+	var clearance := int(ceil(CombatOverlay.HUD_CLEARANCE / camera.zoom.y))
 	var near_ally := auto_free(Node2D.new()) as Node2D
 	var far_enemy := auto_free(Node2D.new()) as Node2D
 	add_child(near_ally)
@@ -330,7 +332,18 @@ func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_th
 	overlay.call("bind_actor", &"enemy", far_enemy)
 	overlay.call("bind_camera", camera, player)
 	assert_array([camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]) \
-		.is_equal(limits_before)
+		.override_failure_message("binding grows top and bottom by the clearance only") \
+		.is_equal([-4000, -4000 - clearance, 40000, 4000 + clearance])
+	var strip := 52.0
+	var bar := 196.0
+	overlay.call("set_view_window", Rect2(0, strip, screen.x, screen.y - strip - bar))
+	assert_array([camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]) \
+		.override_failure_message("the open window's insets extend the limits by inset + clearance") \
+		.is_equal([
+			-4000, -4000 - int(ceil((strip + CombatOverlay.HUD_CLEARANCE) / camera.zoom.y)),
+			40000, 4000 + int(ceil((bar + CombatOverlay.HUD_CLEARANCE) / camera.zoom.y)),
+		])
+	overlay.call("set_view_window", Rect2())
 	assert_vector(camera.zoom).is_equal(zoom_before)
 
 	var on_screen := CombatEvent.new()
@@ -345,9 +358,11 @@ func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_th
 	ally_turn.type = &"turn_started"
 	ally_turn.actor_id = &"ally"
 	overlay.call("consume_event", ally_turn)
+	var ally_body: Rect2 = overlay.call("body_rect_of", &"ally")
 	assert_vector(camera.offset).override_failure_message(
-		"an off-screen party member's turn pans the camera onto them"
-	).is_equal(near_ally.global_position - player.global_position)
+		"an off-screen party member's turn pans the camera onto their body"
+	).is_equal(ally_body.get_center() - player.global_position)
+	assert_bool(overlay.call("is_framed", &"ally")).is_true()
 
 	var enemy_turn := CombatEvent.new()
 	enemy_turn.type = &"enemy_turn_started"
@@ -355,7 +370,7 @@ func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_th
 	overlay.call("consume_event", enemy_turn)
 	assert_vector(camera.offset).override_failure_message(
 		"an enemy turn beyond one screen of margin resolves without a pan"
-	).is_equal(near_ally.global_position - player.global_position)
+	).is_equal(ally_body.get_center() - player.global_position)
 	assert_bool(overlay.call("pans_suppressed_for", &"enemy")).override_failure_message(
 		"a far enemy's turn resolves without move tweens"
 	).is_true()
