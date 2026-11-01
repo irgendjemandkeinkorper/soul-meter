@@ -39,6 +39,7 @@ const PROPERTIES: PackedStringArray = [
 	"dialogue_path", "item_id", "interaction_flag", "interaction_damage",
 	"exit_transition_id", "transition_id", "destination_scene", "destination_location_id",
 	"target_scene", "target_location_id",
+	"npc_pockets",
 ]
 const INDEX_PATH := "res://data/generated/location_index.json"
 const INTERIOR_SCRIPT := "res://world/interiors/building_interior.gd"
@@ -124,7 +125,7 @@ static func audit_sources(content: Dictionary) -> Dictionary:
 		var is_wild := wild_ids.has(String(location["id"]))
 		for node: Dictionary in worlds[path]:
 			_count_node(node, path, is_wild, tables, content.get("vendors", {}), local_counts[path], result)
-	_count_spawned_npcs(content, worlds, result)
+	_count_spawned_npcs(content, worlds, local_counts, result)
 	var dialogues: Dictionary = content.get("dialogues", {})
 	var dialogue_paths: Array = dialogues.keys()
 	dialogue_paths.sort()
@@ -296,7 +297,8 @@ static func _count_node(node: Dictionary, path: String, wild: bool, tables: Dict
 		_add_verb(result, "travel", site + ":Exit")
 
 
-static func _count_spawned_npcs(content: Dictionary, worlds: Dictionary, result: Dictionary) -> void:
+static func _count_spawned_npcs(content: Dictionary, worlds: Dictionary,
+		local_counts: Dictionary, result: Dictionary) -> void:
 	var rosters: Dictionary = content.get("rosters", {})
 	var placements: Dictionary = content.get("placements", {})
 	var vendors: Dictionary = content.get("vendors", {})
@@ -305,12 +307,17 @@ static func _count_spawned_npcs(content: Dictionary, worlds: Dictionary, result:
 		var nodes: Array = worlds[path]
 		var interior := false
 		var spawner := false
+		var pockets: Dictionary = {}
 		var interior_path := ""
 		var anchors: PackedStringArray = []
 		for node: Dictionary in nodes:
 			anchors.append(String(node["path"]).get_file())
 			var classes: PackedStringArray = node["classes"]
 			spawner = spawner or classes.has("TownNpcSpawner")
+			if classes.has("TownNpcSpawner"):
+				var value: Variant = node["props"].get("npc_pockets", {})
+				if value is Dictionary:
+					pockets.merge(value)
 			if classes.has("BuildingInterior"):
 				interior = true
 				var transition := String(node["props"].get("exit_transition_id", ""))
@@ -327,7 +334,19 @@ static func _count_spawned_npcs(content: Dictionary, worlds: Dictionary, result:
 				var dialogue: Dictionary = rosters[id].get("dialogue", {})
 				if not String(dialogue.get("path", "")).is_empty():
 					_add_verb(result, "talk", path + ":roster:" + id)
-			# Spawners do NOT copy pocket fields from roster rows: no invented pockets.
+				# Only scene-authored pocket settings reach NPC._ready(). Roster
+				# pocket-like fields and settings for unspawnable ids never count.
+				if spawner and not interior and pockets.has(id):
+					var pocket: Variant = pockets[id]
+					var offset: Variant = placement.get("offset", [])
+					if not pocket is Dictionary or not offset is Array or offset.size() != 2:
+						continue
+					if not rosters[id].get("portrait", {}) is Dictionary:
+						continue
+					_count_node({"path": "roster:" + id, "classes": PackedStringArray(["NPC"]),
+						"props": {"pocket_id": pocket.get("pocket_id", ""),
+							"pocket_skill": pocket.get("pocket_skill", "slip")}},
+						path, false, {}, vendors, local_counts[path], result)
 		if interior and anchors.has("VendorSpot"):
 			for id: String in vendor_sites.get(interior_path, []):
 				if vendors.has(id):

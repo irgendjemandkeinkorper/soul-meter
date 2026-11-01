@@ -17,6 +17,10 @@ static func _all_world_scenes() -> Array[String]:
 const EXPECTED_PLACEMENTS := {
 	"res://world/dorthkor_road.tscn": ["dorthkor-road-camp-cache", "dorthkor-road-roadside-cache"],
 	"res://world/hollowmere.tscn": ["hollowmere-landing-cache", "hollowmere-track-cache"],
+	"res://world/interiors/ashlaren_millhouse.tscn":
+	["ashlaren-millhouse-braced-supply-crate", "ashlaren-millhouse-locked-supply-crate"],
+	"res://world/interiors/ashlaren_weighing_hall.tscn":
+	["ashlaren-weighing-hall-braced-supply-crate", "ashlaren-weighing-hall-locked-supply-crate"],
 	"res://world/interiors/cask_warehouse.tscn":
 	["cask-warehouse-locked-stock-crate", "cask-warehouse-supply-crate"],
 	"res://world/interiors/chefs_pantry.tscn": ["chefs-pantry-supply-crate"],
@@ -25,6 +29,10 @@ const EXPECTED_PLACEMENTS := {
 	"res://world/interiors/iron_companies.tscn":
 	["iron-companies-locked-supply-crate", "iron-companies-supply-crate"],
 	"res://world/interiors/item_shop.tscn": ["item-shop-backroom-crate", "item-shop-latch-crate"],
+	"res://world/interiors/kesselford_chandlery.tscn":
+	["kesselford-chandlery-braced-supply-crate", "kesselford-chandlery-locked-supply-crate"],
+	"res://world/interiors/kesselford_wayhouse.tscn":
+	["kesselford-wayhouse-braced-supply-crate", "kesselford-wayhouse-locked-supply-crate"],
 	"res://world/interiors/players_house.tscn": ["players-house-provisions"],
 	"res://world/interiors/river_shrine.tscn": ["river-shrine-offering-box"],
 	"res://world/interiors/shrine_undercroft.tscn": ["shrine-undercroft-offering-box"],
@@ -72,9 +80,9 @@ func test_placed_containers_resolve_with_unique_repository_wide_ids() -> void:
 		scene_ids.sort()
 		found_by_scene[scene_path] = scene_ids
 
-	# 22 after the Phase 1 field-density slices. This count is a PIN: a container added
+	# 30 after the Phase 1 field-density slices. This count is a PIN: a container added
 	# without updating EXPECTED_PLACEMENTS above should fail here.
-	assert_int(scene_for_id.size()).is_equal(22)
+	assert_int(scene_for_id.size()).is_equal(30)
 	for scene_path: String in EXPECTED_PLACEMENTS:
 		var expected: Array = (EXPECTED_PLACEMENTS[scene_path] as Array).duplicate()
 		expected.sort()
