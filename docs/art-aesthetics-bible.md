@@ -446,6 +446,8 @@ crystal body, a machine body, or ordinary human anatomy.
 and how loss of rigidity reads on a living person. The acoustic B-flat has no assigned
 color. Solmarch's association with Hard Certainty can inform culture without settling biology.
 
+**Accepted 2026-10-31 (owner, item 28, `accept it all`):** every proposal in `assets/generated/models/races/vael/identity-sheet.md` (PR #539) answers this Open line, including the relative height factor 1.0× the Vael adult, now ruled. Measured on-screen heights follow in U3.
+
 ### Kes'reth — The Ashborn
 
 **Author foundation:** Nole's physician-like detachment, the "armor of apathy," and
@@ -463,6 +465,8 @@ is an acoustic inheritance, not a requirement to engrave 169 marks onto every mo
 the healthy-to-combusting transition. The older ash-to-red skin range is historical
 reference, not a newly confirmed restriction.
 
+**Accepted 2026-10-31 (owner, item 28, `accept it all`):** every proposal in `assets/generated/models/races/kes-reth/identity-sheet.md` (PR #539) answers this Open line, including the relative height factor 1.0× the Vael adult, now ruled. Measured on-screen heights follow in U3.
+
 ### Orthos — The Witnesses / Dragonborn
 
 **Author foundation:** **Puer**, the pilot; spatial awareness and rhythmic navigation
@@ -478,6 +482,8 @@ Kalyi/synthesis-frame account is not the basis for their anatomy in this pass.
 **Open:** head and muzzle, scales or other surface, horns, tail, limb proportions,
 and how strongly draconic the body reads. Wings and flight are not established by
 the label. Temporal drift is a condition, not a requirement for a permanently distorted mesh.
+
+**Accepted 2026-10-31 (owner, item 28, `accept it all`):** every proposal in `assets/generated/models/races/orthos/identity-sheet.md` (PR #539) answers this Open line, including the relative height factor 1.1× the Vael adult, now ruled. Measured on-screen heights follow in U3.
 
 ### Vaerin — The Archivists
 
@@ -495,6 +501,8 @@ The absence of sound is part of their identity; a glowing archive effect is unne
 ears, facial proportions, build, palette, and any visible consequence of lost lifespan.
 Age loss does not by itself establish transparency, spectral bodies, or a fixed wrinkle pattern.
 
+**Accepted 2026-10-31 (owner, item 28, `accept it all`):** every proposal in `assets/generated/models/races/vaerin/identity-sheet.md` (PR #539) answers this Open line, including the relative height factor 1.0× the Vael adult, now ruled. Measured on-screen heights follow in U3.
+
 ### Kaan — The Deepkin
 
 **Author foundation:** **Dieters's geological patience**, finding settled truth in
@@ -510,6 +518,8 @@ Deepkin account should not replace this stone-centered identity.
 **Open:** body proportions, mineral coverage and type, exposed flesh, hair/beard
 structure, joint behavior, and the progression from healthy body to inert stone.
 Specific minerals and an almost entirely stone body remain design choices.
+
+**Accepted 2026-10-31 (owner, item 28, `accept it all`):** every proposal in `assets/generated/models/races/kaan/identity-sheet.md` (PR #539) answers this Open line, including the relative height factor 0.9× the Vael adult, now ruled. Measured on-screen heights follow in U3.
 
 ### Shimari — The Sporeborn
 
@@ -542,6 +552,8 @@ Weftkin template automatically.
 **Open:** healthy anatomy and material, how signal is sensed or expressed, and the
 literal versus figurative appearance of the severed shadow-puppet state. Healthy
 Weftkin are not defined as already hollow or voiceless.
+
+**Accepted 2026-10-31 (owner, item 28, `accept it all`):** every proposal in `assets/generated/models/races/weftkin/identity-sheet.md` (PR #539) answers this Open line, including the relative height factor 1.0× the Vael adult, now ruled. Measured on-screen heights follow in U3.
 
 ### Fiel — The Liberated
 
@@ -585,6 +597,8 @@ as part of the Bloodbellows identity without prescribing every Ghorr as a soldie
 snout and tusks, leg posture, relative scale, and surface palette. The warthog reference
 does not yet fix a particular tusk pattern. Brittle decline is a separate state from
 the healthy body's capacity to carry weight.
+
+**Accepted 2026-10-31 (owner, item 28, `accept it all`):** every proposal in `assets/generated/models/races/ghorr/identity-sheet.md` (PR #539) answers this Open line, including the relative height factor 1.15× the Vael adult, now ruled. Measured on-screen heights follow in U3.
 
 ## Acoustic relationships to keep in mind
 

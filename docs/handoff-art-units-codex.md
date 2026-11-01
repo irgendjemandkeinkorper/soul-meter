@@ -96,7 +96,7 @@ no base form in canon: owner item 28 decides what Maura presents as.
 
 Relative heights are an owner decision; PROVISIONAL defaults for the identity sheets only:
 Ghorr 1.15×, Orthos 1.1×, Vael/Vaerin/Weftkin/Kes'reth 1.0×, Kaan 0.9×, Fiel 0.75× of the 112 px
-adult. Ship nothing at a non-1.0 factor without the ruling.
+adult. Ruled 2026-10-31 with the U1 sheets (item 28): these factors stand.
 
 ### 4.2 Class kits (ten)
 
@@ -213,7 +213,7 @@ Do not decide: race mix numbers for hubs other than Dom (ship the table empty wi
 canon); any state list beyond §5.
 
 **U1 — Identity sheets (Codex image tool; needs owner "go U1"). ≈3 sessions.**
-**Filed:** #537 (2026-10-31, batch approved `28: b go`), branch `codex/unit-art-u1`. **Delivered:** PR #539 (2026-10-31), 17 sheets, 23/34 generations; owner rulings pending in `docs/qa/identity-sheets-2026-10-31/README.md`.
+**Filed:** #537 (2026-10-31, batch approved `28: b go`), branch `codex/unit-art-u1`. **Delivered:** PR #539 (2026-10-31), 17 sheets, 23/34 generations; **all 78 rulings accepted by the owner the same day** (`accept it all`); the 17 sheets are the U3 reference.
 Objective: one review sheet per Chapter 1 race (seven) and per class kit (ten) that *proposes*
 answers to the bible's Open lines so the owner can rule once, in pictures. Each race sheet: front,
 three-quarter and back turnaround; one healthy and one Waning-touched state; one Dom-dressed
@@ -277,10 +277,10 @@ Stop and ask, never infer, on any of these:
    form or presents as another race.
 2. The Mirror-Veil conflict: the bible drops it; `chargen_data.gd`, two likeness labels, Serai-Lun's
    race string and the vault still carry it. Rename, re-race, or keep as a historical label.
-3. Relative race heights (§4.1 factors) and the Ghorr weapon-hand rule.
+3. ~~Relative race heights (§4.1 factors) and the Ghorr weapon-hand rule.~~ Ruled 2026-10-31 with the U1 sheets: factors as in §4.1; Ghorr arms per kit sidecar.
 4. Population mixes for Kesselford, Ashlaren, The Long Verge and Hollowmere (Dom's is canon).
-5. Kit colours for Haeren, Vhorr and Fickah (none in canon).
-6. Every **Open** line in bible Part III: U1 proposes, the owner rules, U3+ implements.
+5. ~~Kit colours for Haeren, Vhorr and Fickah (none in canon).~~ Ruled 2026-10-31: none; style-guide materials only.
+6. Every **Open** line in bible Part III: ~~U1 proposes, the owner rules~~ ruled 2026-10-31 for the seven Chapter 1 races (bible “Accepted” lines); U3+ implements. Fiel and Shimari stay open.
 7. Whether companions get portraits in this lane.
 8. Batch approvals: U1 (image tool), P0 Blender install, and each Meshy batch U3–U8.
 9. Standing: never depict Ofshütje; Pazzah's erased notch stays a mystery; no Hollow body; no new
