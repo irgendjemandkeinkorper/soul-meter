@@ -231,6 +231,45 @@ func test_runtime_rosters_and_vendor_sites_require_scene_spawners_and_anchors() 
 	assert_int((result["warnings"] as PackedStringArray).size()).is_equal(1)
 
 
+func test_generated_pockets_require_scene_settings_and_a_spawnable_roster_placement() -> void:
+	var fixture := _fixture()
+	var pockets := {
+		"placed": {"pocket_id": "placed-pocket", "pocket_skill": "tread"},
+		"default_skill": {"pocket_id": "default-pocket"},
+		"no_anchor": {"pocket_id": "missing-anchor"},
+		"bad_offset": {"pocket_id": "bad-offset"},
+		"elsewhere": {"pocket_id": "elsewhere"},
+		"unplaced": {"pocket_id": "unplaced"},
+		"no_roster": {"pocket_id": "no-roster"},
+		"empty_id": {"pocket_skill": "bellow"},
+		"malformed": "not a pocket",
+	}
+	fixture["rosters"] = {}
+	fixture["placements"] = {}
+	for id: String in pockets:
+		fixture["rosters"][id] = {"dialogue": {"path": "res://dialogue/fixture.dialogue"}}
+		fixture["placements"][id] = {"scene": DOM, "anchor": "Anchor", "offset": [0, 0]}
+	fixture["placements"]["no_anchor"]["anchor"] = "Missing"
+	fixture["placements"]["bad_offset"]["offset"] = []
+	fixture["placements"]["elsewhere"]["scene"] = WILD
+	fixture["placements"].erase("unplaced")
+	fixture["rosters"].erase("no_roster")
+	fixture["scenes"][DOM] = _scene([
+		_node("Spawn", "TownNpcSpawner", {"npc_pockets": pockets}), _node("Anchor", ""),
+	])
+	var result: Dictionary = Audit.audit_sources(fixture)
+	assert_int(_row(result, "Hub dom: pockets")["count"]).is_equal(2)
+	assert_int(result["verbs"]["pickpocket/steal"]).is_equal(2)
+	assert_int(result["skills"]["tread"]).is_equal(1)
+	assert_int(result["skills"]["slip"]).is_equal(1)
+	assert_int(result["skills"]["bellow"]).is_equal(0)
+	# The same serialized property on an ordinary node cannot create pockets.
+	fixture["scenes"][DOM] = _scene([
+		_node("NotASpawner", "", {"npc_pockets": pockets}), _node("Anchor", ""),
+	])
+	assert_int(_row(Audit.audit_sources(fixture), "Hub dom: pockets")["count"]).is_equal(0)
+
+
 func test_vendor_site_constant_resolves_ids_without_executing_gameplay() -> void:
 	var ids: Dictionary = Audit._string_constants('const ONE := "one"\nconst TWO := "two"')
 	var sites: Dictionary = Audit._dictionary_constant("""
