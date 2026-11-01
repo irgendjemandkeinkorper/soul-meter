@@ -995,7 +995,9 @@ func use_action(
 		return true
 	# CAST resource writes come from Resolution so forecast and commit cannot diverge.
 	if action.verb != CombatAction.Verb.CAST and action.class_resource_action.is_empty() and action.soul_cost > 0.0:
-		GameState.set_soul_meter(GameState.soul_meter - action.soul_cost)
+		GameState.set_soul_meter_with_cause(
+			GameState.soul_meter - action.soul_cost, "battle:soul_cost:%s" % action.id
+		)
 	var outcome := controller.submit_action(action_id, target, resolved_options)
 	return bool(outcome.get("allowed", false))
 

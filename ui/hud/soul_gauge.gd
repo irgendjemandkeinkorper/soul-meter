@@ -55,16 +55,7 @@ func _refresh_label() -> void:
 ## canon's bright/whole/frayed/guttering/husked vocabulary into an at-a-glance reading while
 ## the exact percentage remains authoritative for rules and dialogue checks.
 static func condition_for(value: float) -> String:
-	var clamped := clampf(value, 0.0, 100.0)
-	if clamped >= 75.0:
-		return "bright"
-	if clamped >= 50.0:
-		return "whole"
-	if clamped >= 25.0:
-		return "frayed"
-	if clamped > 0.0:
-		return "guttering"
-	return "husked"
+	return GameState.soul_band_id_for(value)
 
 
 static func condition_description(condition: String) -> String:

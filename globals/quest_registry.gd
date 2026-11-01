@@ -736,7 +736,9 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 	var tags: PackedStringArray = outcome["tags"]
 	if tags.has(DomSideQuest.ACT_OF_AGREEMENT_TAG):
 		var soul_before := GameState.soul_meter
-		GameState.set_soul_meter(soul_before + float(outcome["soul_delta"]))
+		GameState.set_soul_meter_with_cause(
+			soul_before + float(outcome["soul_delta"]), "quest:%s:%s" % [quest.id, outcome["id"]]
+		)
 		var soul_credited := GameState.soul_meter - soul_before
 		reward_entries.append(
 			_reward_entry(
@@ -867,7 +869,9 @@ func resolve_companion_quest(
 	# #519 (owner 2026-10-29): a companion quest resolved either way is an act of Agreement.
 	# Through set_soul_meter, so a husked Gauge still stops at its recovery ceiling.
 	var soul_before := GameState.soul_meter
-	GameState.set_soul_meter(soul_before + COMPANION_AGREEMENT_SOUL)
+	GameState.set_soul_meter_with_cause(
+		soul_before + COMPANION_AGREEMENT_SOUL, "quest:companion_agreement:%s" % companion_id
+	)
 	var soul_credited := GameState.soul_meter - soul_before
 	SaveGame.request_autosave("companion-quest-resolved")
 	_publish_reward_summary(
