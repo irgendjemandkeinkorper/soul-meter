@@ -520,6 +520,27 @@ static func build() -> Theme:
 	t.set_stylebox("pressed", "HudActionButton", _notched_style(12, DS.SPACE_1, DS.SPACE_3))
 	t.set_stylebox("focus", "HudActionButton", _notched_style(13, DS.SPACE_1, DS.SPACE_3))
 	t.set_stylebox("disabled", "HudActionButton", _notched_style(14, DS.SPACE_1, DS.SPACE_3))
+	# Hotbar slots (owner 2026-11-01): the command button with room on the left for its
+	# key number (HudSlotKey, bronze like the other key hints).
+	t.add_type("HudSlotButton")
+	t.set_type_variation("HudSlotButton", "Button")
+	t.set_font_size("font_size", "HudSlotButton", DS.FS_100)
+	var slot_states := ["normal", "hover", "pressed", "focus", "disabled"]
+	for state_index: int in slot_states.size():
+		var slot_style := _notched_style(10 + state_index, DS.SPACE_1, DS.SPACE_3)
+		slot_style.content_margin_left = DS.SPACE_3 + DS.SPACE_7
+		t.set_stylebox(slot_states[state_index], "HudSlotButton", slot_style)
+	t.add_type("HudSlotKey")
+	t.set_type_variation("HudSlotKey", "Label")
+	# Lining figures (the stat face): the display serif's old-style 3, 4, 5 and 7 drop below
+	# the label's line.
+	t.set_font("font", "HudSlotKey", numeric)
+	t.set_font_size("font_size", "HudSlotKey", DS.FS_100)
+	t.set_color("font_color", "HudSlotKey", DS.BRONZE_3)
+	# A dimmed slot's key does nothing, so its number dims with it.
+	t.add_type("HudSlotKeyDim")
+	t.set_type_variation("HudSlotKeyDim", "HudSlotKey")
+	t.set_color("font_color", "HudSlotKeyDim", DS.ASH_DIM)
 	# The message window: narration in the body serif, turn cues in the display face,
 	# refusals in cinder (consequence), each a semantic role rather than a per-node colour.
 	t.add_type("HudLogLine")

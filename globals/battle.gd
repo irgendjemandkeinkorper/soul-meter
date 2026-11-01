@@ -900,8 +900,14 @@ func can_use(action: CombatAction) -> bool:
 	return bool(action_refusal(action, null, _availability_options(action)).get("allowed", false))
 
 
+## The current ally's availability refusal for `action` ({"allowed", "blocked_by", "message"}),
+## for presentation that needs the lock's kind as well as its words (the hotbar).
+func action_lock(action: CombatAction) -> Dictionary:
+	return action_refusal(action, null, _availability_options(action))
+
+
 func action_lock_reason(action: CombatAction) -> String:
-	var refusal := action_refusal(action, null, _availability_options(action))
+	var refusal := action_lock(action)
 	return "" if bool(refusal.get("allowed", false)) else str(refusal.get("message", "Action unavailable."))
 
 

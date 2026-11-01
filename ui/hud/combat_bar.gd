@@ -17,11 +17,23 @@ var _enemy_lbl: Label
 var _balance_lbl: Label
 var _balance_bar: ProgressBar
 var _party_box: VBoxContainer
+## The hotbar: the active member's eight slotted commands, in slot order.
 var _actions_box: HFlowContainer
 var _action_scroll: ScrollContainer
-## Owner review 2026-11-01: ready actions sit in the flow at full label width; locked ones
-## wait behind the MORE toggle as rows that print their lock reason.
+## Behind MORE: usable commands that are not slotted, in catalog order.
+var _spare_box: HFlowContainer
+## Owner review 2026-11-01: locked commands wait behind the MORE toggle as rows that print
+## their lock reason.
 var _locked_box: VBoxContainer
+## Each command button's key label ("1"–"8"), shown while the command holds a slot.
+var _slot_keys: Array[Label] = []
+## Slotted action ids per member for this battle (combat id -> Array of ids, slot order).
+## The bar is built per battle, so this lives and dies with the fight; nothing is saved.
+var _slots: Dictionary = {}
+## Commands each member chose this battle (combat id -> {action id: count}).
+var _uses: Dictionary = {}
+## The member whose hotbar is showing (the last ally to act during an enemy phase).
+var _hotbar_owner: StringName = &""
 var _action_rows: Array[HBoxContainer] = []
 var _action_reasons: Array[Label] = []
 var _more_button: Button
@@ -57,6 +69,18 @@ const PARTY_WIDTH := 200
 const CONTROLS_WIDTH := 124
 ## Command buttons: 22 px rows so six rows of ready actions fit the column without scrolling.
 const ACTION_ROW := 22
+## Owner 2026-11-01: an eight-slot hotbar, auto-filled; keys 1–8 fire the slots and every
+## other command waits behind MORE.
+const HOTBAR_SIZE := 8
+## Refusals that mean "not this member's command": another class's action, an unowned perk.
+## Any other lock is momentary, so a slotted command keeps its slot, dimmed, with the reason.
+const NOT_IN_KIT: Array[StringName] = [&"class_resource", &"perk_missing"]
+## Fill order: one command per role, then the two cheapest usable weapon arts and spells.
+enum SlotRole { STRIKE, GUARD, SIGNATURE, DEFINING, WEAPON_ART, SPELL, OTHER }
+const ROLE_QUOTA := {
+	SlotRole.STRIKE: 1, SlotRole.GUARD: 1, SlotRole.SIGNATURE: 1, SlotRole.DEFINING: 1,
+	SlotRole.WEAPON_ART: 2, SlotRole.SPELL: 2,
+}
 
 
 func _ready() -> void:
@@ -171,10 +195,10 @@ func _build() -> void:
 	command_column.custom_minimum_size = Vector2(COMMAND_WIDTH, 0)
 	add_child(command_column)
 	_command_column = command_column
-	# Fallout's bar labels nothing: the ready actions are the command area. They wrap at
-	# full label width (never clipped); on a normal turn they fit without scrolling. The
-	# locked rest waits behind MORE with its lock reasons, and every command stays
-	# reachable from the same buttons with the same enabled/lock logic.
+	# Fallout's bar labels nothing: the hotbar is the command area, eight slots at full label
+	# width (never clipped) that fit without scrolling. Everything else waits behind MORE:
+	# the usable rest first, then the locked ones with their lock reasons. Every command
+	# stays reachable from the same buttons with the same enabled/lock logic.
 	_action_scroll = ScrollContainer.new()
 	_action_scroll.name = "ActionScroll"
 	_action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -190,6 +214,12 @@ func _build() -> void:
 	_actions_box.theme_type_variation = "HudActionFlow"
 	_actions_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stack.add_child(_actions_box)
+	_spare_box = HFlowContainer.new()
+	_spare_box.name = "Spare"
+	_spare_box.theme_type_variation = "HudActionFlow"
+	_spare_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_spare_box.visible = false
+	stack.add_child(_spare_box)
 	_locked_box = VBoxContainer.new()
 	_locked_box.name = "Locked"
 	_locked_box.theme_type_variation = "HudBarColumn"
@@ -203,6 +233,16 @@ func _build() -> void:
 		button.tooltip_text = _action_tooltip(action)
 		button.set_meta("index", _action_buttons.size())
 		_action_buttons.append(button)
+		var key := Label.new()
+		key.name = "SlotKey"
+		key.theme_type_variation = "HudSlotKey"
+		key.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		key.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		key.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
+		key.offset_left = DS.SPACE_3
+		key.visible = false
+		button.add_child(key)
+		_slot_keys.append(key)
 		var row := HBoxContainer.new()
 		row.name = "LockedRow"
 		row.theme_type_variation = "HudBarRow"
@@ -325,13 +365,39 @@ func command_footer() -> HBoxContainer:
 	return _command_footer
 
 
-## The ready (usable, visible) command buttons, in catalog order.
+## The usable command buttons on the hotbar, in slot order.
 func ready_buttons() -> Array[Button]:
 	var ready: Array[Button] = []
-	for button: Button in _action_buttons:
-		if button.visible and not button.disabled and button.get_parent() == _actions_box:
+	for button: Button in hotbar_buttons():
+		if not button.disabled:
 			ready.append(button)
 	return ready
+
+
+## Every hotbar button, usable or dimmed, in slot order (key 1 first).
+func hotbar_buttons() -> Array[Button]:
+	var slotted: Array[Button] = []
+	for child: Node in _actions_box.get_children():
+		if child is Button and (child as Button).visible:
+			slotted.append(child as Button)
+	return slotted
+
+
+## The showing member's slotted action ids, in slot order.
+func hotbar_ids() -> Array[StringName]:
+	var ids: Array[StringName] = []
+	for id: Variant in _slots.get(_hotbar_owner, []):
+		ids.append(StringName(id))
+	return ids
+
+
+## Key 1–8: fires the slot's command exactly as a click would. A dimmed or empty slot is
+## a no-op; the interface guards the turn and the focus.
+func press_slot(slot: int) -> void:
+	var slotted := hotbar_buttons()
+	if slot < 0 or slot >= slotted.size() or slotted[slot].disabled:
+		return
+	slotted[slot].pressed.emit()
 
 
 ## Every visible command button, ready or locked (the MORE list included when shown).
@@ -438,6 +504,7 @@ func _actor_name(event: CombatEvent) -> String:
 
 
 func _use_action(action_id: StringName) -> void:
+	_note_use(action_id)
 	var action: CombatAction = null
 	for candidate: CombatAction in Battle.available_actions():
 		if candidate.id == action_id:
@@ -589,38 +656,74 @@ func _refresh() -> void:
 
 	var actions := Battle.available_actions()
 	var cell_battlefield := _battlefield_has_cells()
-	var locked_count := 0
+	var offered: Array[bool] = []
+	var ready: Array[bool] = []
+	var in_kit: Array[bool] = []
+	var reasons := PackedStringArray()
 	for i in _action_buttons.size():
-		var button := _action_buttons[i]
 		if i >= actions.size():
-			button.disabled = true
-			button.visible = false
-			_action_rows[i].visible = false
+			offered.append(false)
+			ready.append(false)
+			in_kit.append(false)
+			reasons.append("")
 			continue
 		# #473: on a cell battlefield a move is a click on a cell; the zone MOVE cards
 		# (FRONT/BACK/FLANK, and the destination-less MOVE) have nothing to aim at there.
-		var offered := not (cell_battlefield and actions[i].kind == CombatAction.Kind.MOVE)
-		var reason := Battle.action_lock_reason(actions[i])
+		var is_offered := not (cell_battlefield and actions[i].kind == CombatAction.Kind.MOVE)
+		var refusal := Battle.action_lock(actions[i])
+		var allowed := bool(refusal.get("allowed", false))
+		var blocked_by := StringName(str(refusal.get("blocked_by", "")))
+		offered.append(is_offered)
+		ready.append(is_offered and allowed)
+		in_kit.append(is_offered and (allowed or not NOT_IN_KIT.has(blocked_by)))
+		reasons.append("" if allowed else str(refusal.get("message", "Action unavailable.")))
+	var slotted := _update_hotbar(actions, ready, in_kit)
+	var spare: Array[int] = []
+	var locked: Array[int] = []
+	for i in _action_buttons.size():
+		var button := _action_buttons[i]
+		if not offered[i]:
+			button.disabled = true
+			button.visible = false
+			_action_rows[i].visible = false
+			_slot_keys[i].visible = false
+			continue
+		var reason := reasons[i]
 		var forecast := (
 			Battle.action_forecast(actions[i])
 			if actions[i].kind == CombatAction.Kind.CAST and reason.is_empty()
 			else {}
 		)
-		button.disabled = not reason.is_empty()
+		button.disabled = not ready[i]
 		button.tooltip_text = _action_tooltip(actions[i], reason, forecast)
 		button.text = _short_action_text(actions[i], reason, forecast)
-		var ready := offered and reason.is_empty()
-		_place_action(i, ready)
-		button.visible = offered and (ready or _show_all)
-		_action_rows[i].visible = offered and not ready and _show_all
+		var slot := slotted.find(i)
+		_slot_keys[i].visible = slot >= 0
+		_slot_keys[i].text = str(slot + 1)
+		_slot_keys[i].theme_type_variation = "HudSlotKey" if ready[i] else "HudSlotKeyDim"
+		button.theme_type_variation = "HudSlotButton" if slot >= 0 else "HudActionButton"
+		if slot >= 0:
+			_place_action(i, _actions_box)
+		elif ready[i]:
+			_place_action(i, _spare_box)
+			spare.append(i)
+		else:
+			_place_action(i, _action_rows[i])
+			locked.append(i)
+		button.visible = slot >= 0 or _show_all
+		_action_rows[i].visible = slot < 0 and not ready[i] and _show_all
 		_action_reasons[i].text = reason
 		_action_reasons[i].tooltip_text = reason
-		if offered and not ready:
-			locked_count += 1
-	_locked_count = locked_count
-	_locked_box.visible = _show_all and locked_count > 0
-	_more_button.visible = (locked_count > 0 or _show_all) and not outcome_shown()
-	_more_button.text = tr("LESS") if _show_all else tr("MORE · %d") % locked_count
+	for slot: int in slotted.size():
+		_actions_box.move_child(_action_buttons[slotted[slot]], slot)
+	for place: int in spare.size():
+		_spare_box.move_child(_action_buttons[spare[place]], place)
+	var off_bar := spare.size() + locked.size()
+	_locked_count = off_bar
+	_spare_box.visible = _show_all and not spare.is_empty()
+	_locked_box.visible = _show_all and not locked.is_empty()
+	_more_button.visible = (off_bar > 0 or _show_all) and not outcome_shown()
+	_more_button.text = tr("LESS") if _show_all else tr("MORE · %d") % off_bar
 
 	var target := Battle.current_target()
 	_target_button.visible = Battle.living_enemies().size() > 1 and not outcome_shown()
@@ -633,25 +736,174 @@ func _refresh() -> void:
 		_breakdown_button.set_pressed_no_signal(_interface.breakdown_visible())
 
 
-## A ready action's button sits in the flow; a locked one sits in its MORE row beside the
-## lock reason. The button is the same node either way, so its wiring never changes.
-func _place_action(index: int, ready: bool) -> void:
+## A slotted command sits on the hotbar; a usable unslotted one in MORE's flow; a locked one
+## in its MORE row beside the lock reason. The button is the same node everywhere, so its
+## wiring never changes. `_refresh` orders the flows afterwards.
+func _place_action(index: int, home: Container) -> void:
 	var button := _action_buttons[index]
-	var row := _action_rows[index]
-	var home: Container = _actions_box if ready else row
 	if button.get_parent() == home:
 		return
 	button.get_parent().remove_child(button)
 	home.add_child(button)
-	if not ready:
+	if home == _action_rows[index]:
 		home.move_child(button, 0)
+
+
+# --- hotbar (owner 2026-11-01: eight slots, auto-filled, keys 1–8) ---------------------------
+
+
+## The showing member's slots for this refresh, as catalog indices in slot order. Slots stick
+## for the battle, so a key always fires the same command: a slotted command keeps its slot
+## while it is in the member's kit, dimmed when momentarily locked. Empty slots fill by role
+## (`_default_fill`); a resolution, Defining Strike or parley that opens up joins on its own.
+func _update_hotbar(
+	actions: Array[CombatAction], ready: Array[bool], in_kit: Array[bool]
+) -> Array[int]:
+	var ally := Battle.current_ally()
+	if ally != null:
+		_hotbar_owner = ally.combat_id
+	var count := mini(actions.size(), ready.size())
+	var index_of: Dictionary = {}
+	for i: int in count:
+		index_of[actions[i].id] = i
+	var slots: Array[StringName] = []
+	for id: StringName in hotbar_ids():
+		var i := int(index_of.get(id, -1))
+		if i >= 0 and in_kit[i]:
+			slots.append(id)
+	if ally != null:
+		slots.append_array(_default_fill(actions.slice(0, count), ready, in_kit, slots))
+	_slots[_hotbar_owner] = slots
+	if ally != null:
+		# Commands surfacing together protect each other, so two openers never trade one slot
+		# back and forth between refreshes.
+		var surfacing: Array[StringName] = []
+		for i: int in count:
+			if ready[i] and _always_surfaces(actions[i]):
+				surfacing.append(actions[i].id)
+		for id: StringName in surfacing:
+			_promote(_hotbar_owner, id, surfacing)
+		slots = hotbar_ids()
+	var indices: Array[int] = []
+	for id: StringName in slots:
+		indices.append(int(index_of[id]))
+	return indices
+
+
+## Fills the open slots: Strike, Guard, the class signature and Defining Strike, then the two
+## cheapest usable weapon arts and the two cheapest usable spells; any slot still open takes
+## the cheapest usable command left. Strike and the signature hold their slot while locked
+## (out of reach, nothing banked yet); every other role needs a command usable now.
+func _default_fill(
+	actions: Array[CombatAction], ready: Array[bool], in_kit: Array[bool], taken: Array[StringName]
+) -> Array[StringName]:
+	var picked: Array[StringName] = []
+	var room := HOTBAR_SIZE - taken.size()
+	if room <= 0:
+		return picked
+	var filled: Dictionary = {}
+	var candidates: Array[int] = []
+	for i: int in actions.size():
+		if taken.has(actions[i].id):
+			var role := _slot_role(actions[i])
+			filled[role] = int(filled.get(role, 0)) + 1
+		elif in_kit[i]:
+			candidates.append(i)
+	candidates.sort_custom(func(a: int, b: int) -> bool:
+		var role_a := _slot_role(actions[a])
+		var role_b := _slot_role(actions[b])
+		if role_a != role_b:
+			return role_a < role_b
+		if actions[a].ap_cost != actions[b].ap_cost:
+			return actions[a].ap_cost < actions[b].ap_cost
+		return a < b
+	)
+	for i: int in candidates:
+		if picked.size() >= room:
+			return picked
+		var role := _slot_role(actions[i])
+		if int(filled.get(role, 0)) >= int(ROLE_QUOTA.get(role, 0)):
+			continue
+		if not ready[i] and role != SlotRole.STRIKE and role != SlotRole.SIGNATURE:
+			continue
+		picked.append(actions[i].id)
+		filled[role] = int(filled.get(role, 0)) + 1
+	candidates.sort_custom(func(a: int, b: int) -> bool:
+		if actions[a].ap_cost != actions[b].ap_cost:
+			return actions[a].ap_cost < actions[b].ap_cost
+		return a < b
+	)
+	for i: int in candidates:
+		if picked.size() >= room:
+			break
+		if ready[i] and not picked.has(actions[i].id):
+			picked.append(actions[i].id)
+	return picked
+
+
+static func _slot_role(action: CombatAction) -> SlotRole:
+	if action.id == Battle.ACTION_STRIKE:
+		return SlotRole.STRIKE
+	if action.kind == CombatAction.Kind.GUARD:
+		return SlotRole.GUARD
+	if not action.class_resource_action.is_empty():
+		return SlotRole.SIGNATURE
+	if action.kind == CombatAction.Kind.DEFINING_STRIKE:
+		return SlotRole.DEFINING
+	if action.spell:
+		return SlotRole.SPELL
+	if action.kind == CombatAction.Kind.ATTACK:
+		return SlotRole.WEAPON_ART
+	return SlotRole.OTHER
+
+
+## Commands that open up mid-fight and must never hide behind MORE.
+static func _always_surfaces(action: CombatAction) -> bool:
+	return (
+		action.kind == CombatAction.Kind.RESOLUTION
+		or action.kind == CombatAction.Kind.DEFINING_STRIKE
+		or action.id == Battle.ACTION_SPEECH
+	)
+
+
+## A command chosen from MORE joins the bar: an open slot if there is one, else the slot its
+## member used least this battle (ties: the later slot). Slot 1 is never given up, nor is a
+## `protected` command.
+func _promote(
+	owner: StringName, action_id: StringName, protected: Array[StringName] = []
+) -> void:
+	var slots: Array[StringName] = []
+	for id: Variant in _slots.get(owner, []):
+		slots.append(StringName(id))
+	if slots.has(action_id):
 		return
-	# Back into the flow in catalog order, not at the end.
-	var slot := 0
-	for sibling: Node in _actions_box.get_children():
-		if sibling != button and int(sibling.get_meta("index", -1)) < index:
-			slot += 1
-	_actions_box.move_child(button, slot)
+	if slots.size() < HOTBAR_SIZE:
+		slots.append(action_id)
+	else:
+		var tally: Dictionary = _uses.get(owner, {})
+		var evict := -1
+		for slot: int in range(slots.size() - 1, 0, -1):
+			if protected.has(slots[slot]):
+				continue
+			if evict < 0 or int(tally.get(slots[slot], 0)) < int(tally.get(slots[evict], 0)):
+				evict = slot
+		if evict < 0:
+			return
+		slots[evict] = action_id
+	_slots[owner] = slots
+
+
+func _note_use(action_id: StringName) -> void:
+	var ally := Battle.current_ally()
+	if ally == null:
+		return
+	var tally: Dictionary = _uses.get(ally.combat_id, {})
+	tally[action_id] = int(tally.get(action_id, 0)) + 1
+	_uses[ally.combat_id] = tally
+	_hotbar_owner = ally.combat_id
+	if not hotbar_ids().has(action_id):
+		_promote(ally.combat_id, action_id)
+		_queue_refresh()
 
 
 func _battlefield_has_cells() -> bool:

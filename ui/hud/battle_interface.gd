@@ -126,10 +126,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		if end_turn_allowed():
 			combat_bar.press_end_turn()
 		get_viewport().set_input_as_handled()
+	else:
+		# Keys 1–8 fire the hotbar slots (owner 2026-11-01), under Space's guards.
+		for slot: int in CombatBar.HOTBAR_SIZE:
+			if event.is_action_pressed(StringName("combat_slot_%d" % (slot + 1))):
+				if end_turn_allowed():
+					combat_bar.press_slot(slot)
+				get_viewport().set_input_as_handled()
+				return
 
 
-## Space ends the turn only on the player's turn, and never while a text field or the
-## breakdown popover holds focus (owner 2026-11-01).
+## Space ends the turn, and keys 1–8 fire hotbar slots, only on the player's turn and never
+## while a text field or the breakdown popover holds focus (owner 2026-11-01).
 func end_turn_allowed() -> bool:
 	if _controller == null or _controller.state != CombatController.State.ALLY_TURN:
 		return false
