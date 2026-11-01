@@ -13,14 +13,13 @@ func after_test() -> void:
 
 
 func test_200_seeds_pass_confirm_validation_spend_every_point_and_vary_every_choice() -> void:
-	var pools := ChargenRandomizer.identity_pools()
-	assert_bool((pools["display_name"] as PackedStringArray).is_empty()).is_false()
-	assert_bool((pools["epithet"] as PackedStringArray).is_empty()).is_false()
+	var current := ChargenBuild.new()
+	current.display_name = "Sera"
 	var rng := RandomNumberGenerator.new()
 	var variants: Dictionary = {}
 	for seed_value: int in 200:
 		rng.seed = seed_value
-		var build := ChargenRandomizer.roll(rng, ChargenBuild.new(), pools)
+		var build := ChargenRandomizer.roll(rng, current)
 		# This is the exact model gate used by the screen's ACCEPT path.
 		assert_bool(build.is_complete()).override_failure_message("seed %d: %s" % [
 			seed_value, build.validate(&"summary")["message"]]).is_true()
@@ -35,16 +34,22 @@ func test_200_seeds_pass_confirm_validation_spend_every_point_and_vary_every_cho
 		for skill_id: String in build.creation_buys:
 			assert_bool(build.purchasable_skills().has(skill_id)).is_true()
 			assert_bool(build.preview_percent(skill_id) <= Advancement.EFFECTIVE_CAP).is_true()
-		assert_bool((pools["display_name"] as PackedStringArray).has(build.display_name)).is_true()
-		assert_bool((pools["epithet"] as PackedStringArray).has(build.epithet)).is_true()
-		assert_str(build.flaw).is_equal("")
+		assert_str(build.display_name).is_equal("Sera")
+		var people := str(ChargenData.likeness_by_id(build.likeness_id)["label"]).get_slice(" ", 0)
+		var ancestry_name := ""
+		for entry: Dictionary in ChargenData.ANCESTRIES:
+			if entry["id"] == build.ancestry_id:
+				ancestry_name = str(entry["name"])
+		assert_bool(ancestry_name.contains(people)).override_failure_message(
+			"seed %d: likeness %s outside ancestry %s" % [seed_value, build.likeness_id, ancestry_name]
+		).is_true()
 		var choices := {
 			"ancestry": build.ancestry_id, "discipline": build.discipline_id,
 			"class": build.class_id, "kit": build.kit_skill,
 			"major": build.major_element, "minor": build.minor_element,
 			"mastery": build.mastery_element, "attributes": str(build.attributes),
 			"background": build.background_id, "skills": str(build.creation_buys),
-			"name": build.display_name, "epithet": build.epithet, "likeness": build.likeness_id,
+			"likeness": build.likeness_id,
 		}
 		for choice: String in choices:
 			if not variants.has(choice):
@@ -56,44 +61,42 @@ func test_200_seeds_pass_confirm_validation_spend_every_point_and_vary_every_cho
 
 
 func test_same_seed_reproduces_every_field_and_purchase() -> void:
-	var pools := ChargenRandomizer.identity_pools()
 	var rng := RandomNumberGenerator.new()
 	var current := ChargenBuild.new()
 	for seed_value: int in [0, 37, 199]:
 		rng.seed = seed_value
-		var first := ChargenRandomizer.roll(rng, current, pools)
+		var first := ChargenRandomizer.roll(rng, current)
 		rng.seed = seed_value
-		var second := ChargenRandomizer.roll(rng, current, pools)
+		var second := ChargenRandomizer.roll(rng, current)
 		assert_dict(_snapshot(second)).is_equal(_snapshot(first))
 
 
-func test_empty_identity_sources_preserve_text_including_blank_fields() -> void:
+func test_identity_text_is_never_rolled_including_blank_fields() -> void:
 	var rng := RandomNumberGenerator.new()
 	var current := ChargenBuild.new()
 	current.display_name = " Sera "
 	current.epithet = "the unbowed"
 	current.flaw = "Will not leave a debt uncounted"
-	var rolled := ChargenRandomizer.roll(rng, current, {})
+	var rolled := ChargenRandomizer.roll(rng, current)
 	assert_str(rolled.display_name).is_equal(current.display_name)
 	assert_str(rolled.epithet).is_equal(current.epithet)
 	assert_str(rolled.flaw).is_equal(current.flaw)
 	assert_bool(rolled.is_complete()).is_true()
 
-	rolled = ChargenRandomizer.roll(rng, ChargenBuild.new(), {})
+	rolled = ChargenRandomizer.roll(rng, ChargenBuild.new())
 	assert_str(rolled.display_name).is_equal("")
 	assert_str(rolled.epithet).is_equal("")
 	assert_str(rolled.flaw).is_equal("")
-	# Missing data must not bypass the existing required-name rule.
+	# Randomize must not bypass the existing required-name rule.
 	assert_bool(rolled.validate(&"identity")["valid"]).is_false()
 
 
 func test_reroll_replaces_purchases_without_mutating_the_previous_build() -> void:
 	var rng := RandomNumberGenerator.new()
-	var pools := ChargenRandomizer.identity_pools()
 	rng.seed = 31
-	var current := ChargenRandomizer.roll(rng, ChargenBuild.new(), pools)
+	var current := ChargenRandomizer.roll(rng, ChargenBuild.new())
 	var original := _snapshot(current)
-	var rolled := ChargenRandomizer.roll(rng, current, pools)
+	var rolled := ChargenRandomizer.roll(rng, current)
 	assert_dict(_snapshot(current)).is_equal(original)
 	assert_bool(_snapshot(rolled) == original).is_false()
 	assert_int(rolled.points_remaining()).is_equal(0)

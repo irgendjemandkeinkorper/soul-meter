@@ -1,12 +1,14 @@
 class_name ChargenRandomizer
 extends RefCounted
-## Rolls through the same model API as the wizard. The caller supplies the RNG and
-## existing identity pools so a seed is reproducible and missing prose stays untouched.
+## Rolls through the same model API as the wizard. The caller supplies the RNG so a seed
+## is reproducible. Name, epithet and flaw are the player's own text and are carried over
+## unchanged: there is no player-name pool, and NPC identities must not be reused.
 
 
-static func roll(rng: RandomNumberGenerator, current: ChargenBuild, pools: Dictionary) -> ChargenBuild:
+static func roll(rng: RandomNumberGenerator, current: ChargenBuild) -> ChargenBuild:
 	var result := ChargenBuild.new()
-	result.select_ancestry(str(ChargenData.ANCESTRIES[rng.randi_range(0, ChargenData.ANCESTRIES.size() - 1)]["id"]))
+	var ancestry: Dictionary = ChargenData.ANCESTRIES[rng.randi_range(0, ChargenData.ANCESTRIES.size() - 1)]
+	result.select_ancestry(str(ancestry["id"]))
 	result.select_discipline(str(ChargenData.DISCIPLINES[rng.randi_range(0, ChargenData.DISCIPLINES.size() - 1)]["id"]))
 	var classes: Array[Dictionary] = []
 	for entry: Dictionary in ClassCatalog.ALL:
@@ -34,10 +36,11 @@ static func roll(rng: RandomNumberGenerator, current: ChargenBuild, pools: Dicti
 		result.step_attribute(available[rng.randi_range(0, available.size() - 1)], 1)
 	result.select_background(str(ChargenData.BACKGROUNDS[rng.randi_range(0, ChargenData.BACKGROUNDS.size() - 1)]["id"]))
 
-	result.display_name = _pick_text(rng, pools, "display_name", current.display_name)
-	result.epithet = _pick_text(rng, pools, "epithet", current.epithet)
-	result.flaw = _pick_text(rng, pools, "flaw", current.flaw)
-	result.likeness_id = str(ChargenData.LIKENESSES[rng.randi_range(0, ChargenData.LIKENESSES.size() - 1)]["id"])
+	result.display_name = current.display_name
+	result.epithet = current.epithet
+	result.flaw = current.flaw
+	var likenesses := _likenesses_for(str(ancestry["name"]))
+	result.likeness_id = str(likenesses[rng.randi_range(0, likenesses.size() - 1)]["id"])
 
 	# Buy last: changing ancestry, kit, elements, attributes or background refunds
 	# creation purchases. can_buy() owns the price bands, held-tone gate and cap.
@@ -52,29 +55,12 @@ static func roll(rng: RandomNumberGenerator, current: ChargenBuild, pools: Dicti
 	return result
 
 
-## Read only the existing NPC identity properties; never synthesize names or prose.
-## Sorting removes Pandora traversal order from seeded results. Empty pools leave
-## the corresponding current field unchanged (including an intentionally blank field).
-static func identity_pools() -> Dictionary:
-	var pools: Dictionary = {}
-	var properties := {"display_name": "Display Name", "epithet": "Epithet", "flaw": "Flaw"}
-	for field: String in properties:
-		var values: PackedStringArray = []
-		for root: PandoraCategory in Pandora.get_all_roots():
-			if root.get_entity_name() != "NPCs":
-				continue
-			for entity: PandoraEntity in Pandora.get_all_entities(root):
-				var property: String = properties[field]
-				if not entity.has_entity_property(property):
-					continue
-				var value := entity.get_string(property)
-				if not value.strip_edges().is_empty() and not values.has(value):
-					values.append(value)
-		values.sort()
-		pools[field] = values
-	return pools
-
-
-static func _pick_text(rng: RandomNumberGenerator, pools: Dictionary, field: String, fallback: String) -> String:
-	var values: PackedStringArray = pools.get(field, PackedStringArray())
-	return fallback if values.is_empty() else values[rng.randi_range(0, values.size() - 1)]
+## Likeness labels open with their people ("Kaan Liftwright"); keep the rolled likeness
+## within the rolled ancestry, falling back to the whole gallery if none match.
+static func _likenesses_for(ancestry_name: String) -> Array[Dictionary]:
+	var matches: Array[Dictionary] = []
+	for entry: Dictionary in ChargenData.LIKENESSES:
+		var people := str(entry["label"]).get_slice(" ", 0)
+		if ancestry_name.contains(people):
+			matches.append(entry)
+	return matches if not matches.is_empty() else ChargenData.LIKENESSES

@@ -193,6 +193,8 @@ func test_randomize_from_a_fresh_screen_advances_to_summary_and_registers_the_ro
 	var randomize_btn := runner.find_child("RandomizeButton", true, false) as Button
 	assert_object(randomize_btn).is_not_null()
 	assert_str(randomize_btn.text).is_equal(tr("RANDOMIZE"))
+	# Identity text is the player's own; randomize keeps it, so a name is still required.
+	screen.set_display_name("Sera")
 	randomize_btn.pressed.emit()
 	await runner.simulate_frames(2)
 	assert_str(screen.current_step_id()).is_equal("ancestry")
@@ -233,6 +235,8 @@ func test_randomize_is_reachable_on_every_leaf_and_refreshes_the_current_page() 
 	# A seeded stream makes rerolls reproducible without replacing the button handler.
 	screen._random_rng.seed = 64
 	screen.set_flaw("Will not leave a debt uncounted")
+	screen.set_display_name("Sera")
+	screen.set_epithet("the unbowed")
 	var previous: Dictionary = {}
 	for step_id: StringName in ChargenSteps.ids():
 		screen.go_to_step(step_id)
@@ -250,6 +254,8 @@ func test_randomize_is_reachable_on_every_leaf_and_refreshes_the_current_page() 
 		assert_int(screen.build.remaining_attribute_points()).is_equal(0)
 		assert_int(screen.build.points_remaining()).is_equal(0)
 		assert_str(screen.build.flaw).is_equal("Will not leave a debt uncounted")
+		assert_str(screen.build.display_name).is_equal("Sera")
+		assert_str(screen.build.epithet).is_equal("the unbowed")
 		var rolled := screen.build.to_party_member().to_dict()
 		assert_bool(rolled == previous).is_false()
 		previous = rolled

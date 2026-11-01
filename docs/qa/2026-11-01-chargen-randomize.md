@@ -12,13 +12,11 @@ It selects a permitted discipline/class pairing and kit, legal Major/Minor and
 held Mastery, ancestry, background, likeness, and fully spends both point pools.
 Skill purchases happen after choices that would refund them.
 
-Names and epithets are sampled verbatim from the existing Pandora **NPCs**
-category's `Display Name` and `Epithet` properties. These are existing NPC strings,
-not newly authored player identities. Pools are deduplicated and sorted for seeded
-reproducibility. There is no populated `Flaw` pool; the current flaw stays unchanged.
-Any missing identity pool preserves its field, including a blank value. If the
-name source is absent and the current name is blank, the existing required-name
-gate remains in force.
+Name, epithet and flaw are never rolled: they are the player's own text and carry over
+unchanged (Claude review: the first draft drew them from existing NPC names, which would
+hand the hero an NPC's identity). A blank name still blocks the summary, so a fresh
+character needs a typed name before ACCEPT. The likeness is rolled from the rolled
+ancestry's own likenesses.
 
 Randomization also cancels pending attribute-bar tweens: a regression test caught
 an old animation repainting a rolled Muster value of 2 as 4 after the roll.
@@ -26,7 +24,7 @@ an old animation repainting a rolled Muster value of 2 as 4 after the roll.
 ## Changed files
 
 - `ui/screens/character_creation.gd`: shared control, focus, refresh, and tween cancellation.
-- `globals/chargen/chargen_randomizer.gd` and `.gd.uid`: seeded model-based roller and read-only identity pools.
+- `globals/chargen/chargen_randomizer.gd` and `.gd.uid`: seeded model-based roller; likeness follows ancestry.
 - `test/unit/test_chargen_randomizer.gd` and `.gd.uid`: 200 seeds, exact budgets, variation of every sourced choice, determinism, identity fallback, immutable inputs, and purchase refund/replay.
 - `test/integration/test_character_creation.gd`: scene-runner button → Summary → Confirm, retained member fields/portrait/ledger, every-page rerolls/focus, and animation regression.
 - `locale/project.pot`, `locale/es.po`: matching untranslated draft entry; `docs/qa/2026-11-01-chargen-randomize.md`: this evidence.
@@ -118,3 +116,7 @@ data, vendor addons, or Pandora source data changed. Raw local runner logs are
 - Headless verification cannot establish visual appearance or pointer interaction.
 - No gameplay or canon rulings are needed. Identity fallback behavior is the
   requested exception, and the feature remains a player feature.
+
+## Claude review (2026-11-01)
+
+Under Xvfb: renders `docs/qa/chargen-randomize-attributes-2026-11-01.png` and `docs/qa/chargen-randomize-summary-2026-11-01.png` (seed 7, Weftkin with a Weftkin likeness).

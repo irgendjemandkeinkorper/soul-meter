@@ -1055,7 +1055,7 @@ func randomize_character() -> void:
 	for tween: Tween in _attribute_tweens.values():
 		tween.kill()
 	_attribute_tweens.clear()
-	build = ChargenRandomizer.roll(_random_rng, build, ChargenRandomizer.identity_pools())
+	build = ChargenRandomizer.roll(_random_rng, build)
 	_refresh_all()
 	_rebuild_skill_rows()
 	_wire_focus_for_current_step()
