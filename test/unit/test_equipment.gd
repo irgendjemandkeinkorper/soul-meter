@@ -94,6 +94,39 @@ func test_removing_the_equipped_item_clears_the_member_slot_and_notifies() -> vo
 	assert_int(BattleActor.from_party_member(_lead, 0).attack).is_equal(11)
 
 
+func test_separate_copies_can_be_equipped_but_a_physical_item_cannot_be_shared() -> void:
+	var first := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_FORGE_HAMMER)
+	var second := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_FORGE_HAMMER)
+	assert_bool(GameState.equip_item(_other, first, &"main")).is_true()
+	assert_bool(GameState.equip_item(_lead, first, &"main")).is_false()
+	assert_bool(GameState.equip_item(_lead, second, &"main")).is_true()
+	GameState.inventory.move_item(0, 1)
+	assert_object(GameState.equipment_owner(first)).is_same(_other)
+	assert_object(GameState.equipment_owner(second)).is_same(_lead)
+	assert_int(BattleActor.from_party_member(_lead, 0).attack).is_equal(13)
+	assert_int(BattleActor.from_party_member(_other, 1).attack).is_equal(_other.attack + 2)
+	GameState.inventory.remove_item(first)
+	assert_dict(_other.equipped_slots).is_empty()
+	assert_dict(_lead.equipped_slots).is_equal({"main": ItemIds.WEAPONS_FORGE_HAMMER})
+	assert_object(GameState.equipped_item(_lead, &"main")).is_same(second)
+
+
+func test_same_prototype_on_two_members_survives_save_restore_without_sharing() -> void:
+	var first := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_FORGE_HAMMER)
+	var second := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_FORGE_HAMMER)
+	GameState.equip_item(_lead, first, &"main")
+	GameState.equip_item(_other, second, &"main")
+	var saved := GameState.to_dict()
+	assert_bool(GameState.from_dict(saved)).is_true()
+	var restored_first := GameState.equipped_item(GameState.party[0], &"main")
+	var restored_second := GameState.equipped_item(GameState.party[1], &"main")
+	assert_object(restored_first).is_not_null()
+	assert_object(restored_second).is_not_null()
+	assert_bool(restored_first == restored_second).is_false()
+	assert_dict(GameState.to_dict()).is_equal(saved)
+	assert_int(GameState.inventory.get_item_count()).is_equal(2)
+
+
 func test_member_round_trip_and_duplicate_or_unknown_references_are_safe() -> void:
 	_lead.equipped_slots = {"main": ItemIds.WEAPONS_FORGE_HAMMER, "off": ItemIds.WEAPONS_FORGE_HAMMER, "head": "unknown/item"}
 	var restored := PartyMember.from_dict(_lead.to_dict())

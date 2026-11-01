@@ -43,7 +43,8 @@ func _capture(name: String) -> void:
 
 func test_populated_inventory() -> void:
 	GameState.inventory.clear()
-	GameState.equipped_slots.clear()
+	for member: PartyMember in GameState.party:
+		member.equipped_slots.clear()
 	var grid := GameState.inventory.get_constraint(GridConstraint)
 	if grid != null:
 		grid.free()
