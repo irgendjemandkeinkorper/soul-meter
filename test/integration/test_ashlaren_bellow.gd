@@ -64,7 +64,10 @@ func test_challenge_is_reachable_and_commits_bellow_once_across_save_load() -> v
 	press.pressed = true
 	# Same handler as E; this also runs under the CI headless input backend.
 	challenge._unhandled_input(press)
-	var checks := SkillCheck.recent_checks()
+	# Other live nodes can log checks while the full suite runs; count this lock only.
+	var checks: Array[Dictionary] = SkillCheck.recent_checks().filter(
+		func(entry: Dictionary) -> bool: return str(entry.get("scene_id", "")) == "lock-" + LOCK_ID
+	)
 	assert_int(checks.size()).is_equal(1)
 	if checks.is_empty():
 		return
@@ -83,7 +86,10 @@ func test_challenge_is_reachable_and_commits_bellow_once_across_save_load() -> v
 	GameState.flags.clear()
 	assert_bool(GameState.from_dict(saved)).is_true()
 	challenge._unhandled_input(press)
-	assert_array(SkillCheck.recent_checks()).is_equal(checks)
+	var after_reload: Array[Dictionary] = SkillCheck.recent_checks().filter(
+		func(entry: Dictionary) -> bool: return str(entry.get("scene_id", "")) == "lock-" + LOCK_ID
+	)
+	assert_array(after_reload).is_equal(checks)
 	assert_bool(GameState.flag_is_true(INTERACTION_FLAG)).is_equal(passed)
 
 
