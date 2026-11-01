@@ -12,6 +12,14 @@ var _selected: StringName = ElementWheel.ORDER[0]
 ## presentation uses its conditional quote so it cannot announce a future miss.
 var _payload_damage := -1
 var _class_command_text := ""
+## Inside the breakdown popover (owner 2026-11-01) the panel IS the details: the target
+## header, wheel, power chain and full accuracy terms stay visible and the in-panel
+## "Show combat details" toggle retires. Off (the default) keeps the docked behaviour.
+var details_pinned := false:
+	set(value):
+		details_pinned = value
+		if is_node_ready():
+			_update_details_visibility()
 @onready var wheel: Container = %ActWheel
 @onready var aim_row: Container = %AimRow
 @onready var target_header: Label = %TargetHeader
@@ -173,10 +181,11 @@ func show_aim_forecast(payload: Dictionary, selected: StringName, use_ct: bool) 
 
 func _update_details_visibility() -> void:
 	var has_accuracy := not accuracy_details.text.is_empty()
-	aim_details.visible = aim_row.visible or has_accuracy
-	accuracy_summary.visible = has_accuracy and not aim_details.button_pressed
-	accuracy_details.visible = has_accuracy and aim_details.button_pressed
-	var show_details := not aim_row.visible or aim_details.button_pressed
+	var expanded := details_pinned or aim_details.button_pressed
+	aim_details.visible = (aim_row.visible or has_accuracy) and not details_pinned
+	accuracy_summary.visible = has_accuracy and not expanded
+	accuracy_details.visible = has_accuracy and expanded
+	var show_details := details_pinned or not aim_row.visible or aim_details.button_pressed
 	for control: Control in [target_header, wheel, affinity, forecast]:
 		control.visible = show_details
 

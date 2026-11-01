@@ -459,6 +459,111 @@ static func build() -> Theme:
 	t.set_font_size("font_size", "ConsequenceNoticeLabel", DS.FS_200)
 	t.set_color("font_color", "ConsequenceNoticeLabel", DS.PARCHMENT)
 
+	# One bar, both modes (owner 2026-11-01): the field HUD's bottom bar grows its combat
+	# parts in place. Flat sections on the bar's own stone fill, iron rules between them;
+	# no notched panels inside the bar. The thin turn-order strip mirrors the bar's rule.
+	t.add_type("HudBarRow")
+	t.set_type_variation("HudBarRow", "HBoxContainer")
+	t.set_constant("separation", "HudBarRow", DS.SPACE_5)
+	t.add_type("HudBarColumn")
+	t.set_type_variation("HudBarColumn", "VBoxContainer")
+	t.set_constant("separation", "HudBarColumn", DS.SPACE_2)
+	t.add_type("HudBarRule")
+	t.set_type_variation("HudBarRule", "VSeparator")
+	var bar_rule := StyleBoxLine.new()
+	bar_rule.color = DS.IRON_1
+	bar_rule.thickness = 1
+	bar_rule.vertical = true
+	bar_rule.grow_begin = -float(DS.SPACE_2)
+	bar_rule.grow_end = -float(DS.SPACE_2)
+	t.set_stylebox("separator", "HudBarRule", bar_rule)
+	t.set_constant("separation", "HudBarRule", 1)
+	t.add_type("HudBarPlate")
+	t.set_type_variation("HudBarPlate", "PanelContainer")
+	t.set_stylebox("panel", "HudBarPlate", StyleBoxEmpty.new())
+	t.add_type("HudPlateName")
+	t.set_type_variation("HudPlateName", "Label")
+	t.set_font("font", "HudPlateName", display)
+	t.set_font_size("font_size", "HudPlateName", DS.FS_300)
+	t.set_color("font_color", "HudPlateName", DS.PARCHMENT)
+	t.add_type("HudActionGrid")
+	t.set_type_variation("HudActionGrid", "GridContainer")
+	t.set_constant("h_separation", "HudActionGrid", DS.SPACE_2)
+	t.set_constant("v_separation", "HudActionGrid", DS.SPACE_2)
+	t.add_type("HudActionButton")
+	t.set_type_variation("HudActionButton", "Button")
+	t.set_font_size("font_size", "HudActionButton", DS.FS_100)
+	t.set_stylebox("normal", "HudActionButton", _notched_style(10, DS.SPACE_1, DS.SPACE_3))
+	t.set_stylebox("hover", "HudActionButton", _notched_style(11, DS.SPACE_1, DS.SPACE_3))
+	t.set_stylebox("pressed", "HudActionButton", _notched_style(12, DS.SPACE_1, DS.SPACE_3))
+	t.set_stylebox("focus", "HudActionButton", _notched_style(13, DS.SPACE_1, DS.SPACE_3))
+	t.set_stylebox("disabled", "HudActionButton", _notched_style(14, DS.SPACE_1, DS.SPACE_3))
+	# The message window: narration in the body serif, turn cues in the display face,
+	# refusals in cinder (consequence), each a semantic role rather than a per-node colour.
+	t.add_type("HudLogLine")
+	t.set_type_variation("HudLogLine", "Label")
+	t.set_font("font", "HudLogLine", body)
+	t.set_font_size("font_size", "HudLogLine", DS.FS_300)
+	t.set_color("font_color", "HudLogLine", DS.PARCHMENT)
+	t.add_type("HudLogCue")
+	t.set_type_variation("HudLogCue", "Label")
+	t.set_font("font", "HudLogCue", display)
+	t.set_font_size("font_size", "HudLogCue", DS.FS_100)
+	t.set_color("font_color", "HudLogCue", DS.BRONZE_3)
+	t.add_type("HudLogRefusal")
+	t.set_type_variation("HudLogRefusal", "Label")
+	t.set_font("font", "HudLogRefusal", body)
+	t.set_font_size("font_size", "HudLogRefusal", DS.FS_300)
+	t.set_color("font_color", "HudLogRefusal", DS.CINDER_3)
+	t.add_type("HudTurnStrip")
+	t.set_type_variation("HudTurnStrip", "PanelContainer")
+	var strip_style := StyleBoxFlat.new()
+	strip_style.bg_color = Color(DS.STONE_0, 0.82)
+	strip_style.border_color = DS.BRONZE_1
+	strip_style.border_width_bottom = DS.BORDER_TRIM_W
+	strip_style.content_margin_left = DS.SPACE_6
+	strip_style.content_margin_right = DS.SPACE_6
+	strip_style.content_margin_top = DS.SPACE_2
+	strip_style.content_margin_bottom = DS.SPACE_2
+	t.set_stylebox("panel", "HudTurnStrip", strip_style)
+	t.add_type("HudTurnMarker")
+	t.set_type_variation("HudTurnMarker", "PanelContainer")
+	var marker_style := StyleBoxFlat.new()
+	marker_style.bg_color = Color(DS.STONE_1, 0.0)
+	marker_style.content_margin_left = DS.SPACE_3
+	marker_style.content_margin_right = DS.SPACE_3
+	marker_style.content_margin_top = DS.SPACE_1
+	marker_style.content_margin_bottom = DS.SPACE_1
+	t.set_stylebox("panel", "HudTurnMarker", marker_style)
+	t.add_type("HudTurnMarkerActive")
+	t.set_type_variation("HudTurnMarkerActive", "PanelContainer")
+	var active_marker_style := marker_style.duplicate() as StyleBoxFlat
+	active_marker_style.bg_color = Color(DS.BRONZE_0, 0.55)
+	active_marker_style.border_color = DS.BRONZE_3
+	active_marker_style.set_border_width_all(1)
+	t.set_stylebox("panel", "HudTurnMarkerActive", active_marker_style)
+	t.add_type("HudTurnName")
+	t.set_type_variation("HudTurnName", "Label")
+	t.set_font("font", "HudTurnName", display)
+	t.set_font_size("font_size", "HudTurnName", DS.FS_100)
+	t.set_color("font_color", "HudTurnName", DS.ASH)
+	t.add_type("HudTurnNameActive")
+	t.set_type_variation("HudTurnNameActive", "Label")
+	t.set_font("font", "HudTurnNameActive", display)
+	t.set_font_size("font_size", "HudTurnNameActive", DS.FS_100)
+	t.set_color("font_color", "HudTurnNameActive", DS.BRONZE_4)
+	t.add_type("HudTurnStat")
+	t.set_type_variation("HudTurnStat", "Label")
+	t.set_font("font", "HudTurnStat", numeric)
+	t.set_font_size("font_size", "HudTurnStat", DS.FS_100)
+	t.set_color("font_color", "HudTurnStat", DS.ASH_DIM)
+	t.add_type("HudPopover")
+	t.set_type_variation("HudPopover", "PanelContainer")
+	t.set_stylebox("panel", "HudPopover", _notched_style(27, DS.SPACE_5, DS.SPACE_6))
+	t.add_type("HudPopoverColumn")
+	t.set_type_variation("HudPopoverColumn", "VBoxContainer")
+	t.set_constant("separation", "HudPopoverColumn", DS.SPACE_4)
+
 	# ---- Inset wells: ItemList, ProgressBar track, LineEdit ----
 	var inset := _notched_style(19, DS.SPACE_4)
 	for cls in ["ItemList", "LineEdit"]:

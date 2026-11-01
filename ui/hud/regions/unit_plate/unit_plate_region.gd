@@ -15,6 +15,12 @@ const UnitArtScript := preload("res://globals/unit_art.gd")
 @onready var ct_label: Label = %CT
 @onready var resource_label: Label = %Resource
 @onready var injury_badges: HFlowContainer = %InjuryBadges
+## One bar, both modes (owner 2026-11-01): the plate sits in the bar's left slot, so HP
+## reads as a bar as well as a number, and AP shows as pips next to its count.
+@onready var hp_bar: ProgressBar = %HPBar
+@onready var ap_row: HBoxContainer = %APRow
+@onready var ap_label: Label = %APLabel
+@onready var ap_pips: EclipsePips = %APPips
 
 var _unit: Dictionary = {}
 var _follows_beats := false
@@ -52,7 +58,18 @@ func present_event(event: CombatEvent) -> void:
 	_unit = unit.duplicate(true)
 	_update_injury_badges()
 	name_label.text = str(unit.get("name", unit.get("display_name", unit.get("id", "ACTIVE UNIT"))))
-	hp_label.text = "HP %d / %d" % [int(unit.get("hp", 0)), int(unit.get("max_hp", unit.get("hp", 0)))]
+	var hp := int(unit.get("hp", 0))
+	var max_hp := int(unit.get("max_hp", unit.get("hp", 0)))
+	hp_label.text = "HP %d / %d" % [hp, max_hp]
+	hp_bar.max_value = maxi(1, max_hp)
+	hp_bar.value = clampi(hp, 0, maxi(1, max_hp))
+	# AP only when the payload carries it (the CT economy snapshots max_ap 0 or nothing).
+	var max_ap := int(unit.get("max_ap", 0))
+	ap_row.visible = max_ap > 0
+	if max_ap > 0:
+		var ap := clampi(int(unit.get("ap", unit.get("ap_remaining", 0))), 0, max_ap)
+		ap_label.text = "AP %d / %d" % [ap, max_ap]
+		ap_pips.set_ap(ap, max_ap)
 	breath_label.text = "BREATH %d" % int(unit.get("breath", 0))
 	aftertones_label.text = "AFTERTONES %s" % _aftertone_pips(unit.get("aftertones", []))
 	tempo_label.text = "TEMPO %d" % int(unit.get("tempo", 0))
@@ -99,6 +116,11 @@ func injury_button(location: String) -> Button:
 ## Snapshots carry portrait resource paths; missing portraits use painterly unit
 ## art the stage renders, resolved from the roster keys the payload does carry.
 func _portrait_for(unit: Dictionary) -> Texture2D:
+	return portrait_for(unit)
+
+
+## The same resolution for any roster row (the turn strip's small portraits use it too).
+static func portrait_for(unit: Dictionary) -> Texture2D:
 	var provided := unit.get("portrait", null) as Texture2D
 	if provided != null:
 		return provided

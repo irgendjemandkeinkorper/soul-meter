@@ -61,22 +61,27 @@ var animate_events := true:
 			for effect: Node in get_children():
 				effect.queue_free()
 ## D6 camera: the field camera belongs to the player and keeps following them. The overlay
-## only drives its `offset`, so limits and smoothing stay the player's, and clearing the
-## offset at the end is all it takes to hand the view back.
+## only drives its `offset`, so limits, zoom and smoothing stay the player's, and clearing
+## the offset at the end is all it takes to hand the view back. Owner 2026-11-01 ("field
+## camera, follow the actor"): no reframing, no stage window, no zoom change and no
+## room-limit lifting — the view pans to whoever acts and the player scrolls freely on
+## their own turn.
 var _camera: Camera2D
 var _camera_anchor: Node2D
 var _camera_tween: Tween
-## The screen rect the battle HUD leaves open over the field. Framing centres the fight in
-## it and visibility checks use it, so an actor behind a HUD panel counts as off-screen.
+## The viewport rect the HUD leaves open (viewport minus the bar and the turn strip).
+## Visibility checks and pans use it, so an actor under the bar counts as off-screen.
 ## Empty means the whole viewport.
 var _view_window := Rect2()
-## The camera's own limits, lifted for the fight so it can centre a fight at a room's edge,
-## and handed back once the release pan lands.
-var _saved_limits: Array[int] = []
-var _roster_framed := false
 ## Actor ids whose current turn began beyond one screen of margin (D9): no pan, no move
 ## tween — the actor snaps between cells until its next turn starts nearer the view.
 var _suppressed: Dictionary = {}
+## Player free scroll (their turn only): WASD / arrows nudge the offset inside the
+## camera's own limits; the next actor's turn cue pans away from wherever they left it.
+var _free_scroll := false
+## Move range (reachable cells) is drawn only while the player can act: it is what they
+## need now, not a permanent stage tint.
+var _range_visible := false
 const NUMERIC_FONT := preload(DS.FONT_NUMERIC)
 const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
 const SpellCastScript := preload("res://ui/hud/spell_cast_effect.gd")
@@ -84,6 +89,8 @@ const CombatMotionScript := preload("res://ui/hud/combat_motion.gd")
 const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
 ## D9: how far past the visible rect an enemy may start its turn and still earn a pan.
 const CAMERA_MARGIN_SCREENS := 1.0
+## Free-scroll speed on the player's turn, in viewport pixels per second.
+const SCROLL_PIXELS_PER_SECOND := 900.0
 ## #281 G1: how long an action beat with a result card stays alone on screen before the next
 ## presented event. The card itself lives longer (combat_result.gd); the next card or the
 ## next turn cue retires it, so a card never sits over a beat it does not describe.
@@ -102,6 +109,7 @@ const FACING_STEPS := {
 
 func _ready() -> void:
 	GameState.setting_changed.connect(_on_setting_changed)
+	set_process(_free_scroll)
 
 
 func set_preview_target(actor_id: StringName) -> void:
@@ -124,29 +132,54 @@ func bind_field(field: FieldMap) -> void:
 func bind_camera(camera: Camera2D, anchor: Node2D) -> void:
 	_camera = camera
 	_camera_anchor = anchor
-	_roster_framed = false
-	_saved_limits = [camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]
-	# Start the fight from what the player was already looking at: the clamped centre.
-	camera.offset = _clamped_center(anchor.global_position) - anchor.global_position
-	camera.limit_left = -10000000
-	camera.limit_top = -10000000
-	camera.limit_right = 10000000
-	camera.limit_bottom = 10000000
+	# The fight starts from what the player was already looking at: the camera keeps its
+	# limits and zoom, and only the offset is driven from here on.
+	camera.offset = Vector2.ZERO
 
 
 ## `window` is in viewport pixels; see `_view_window`.
 func set_view_window(window: Rect2) -> void:
-	if window == _view_window:
-		return
 	_view_window = window
-	# The HUD lays out after the session's first events are replayed; re-centre once it has.
-	if _roster_framed:
-		_roster_framed = false
-		_frame_roster()
+
+
+## The player may scroll with the move keys while it is their turn to act.
+func set_free_scroll(enabled: bool) -> void:
+	_free_scroll = enabled
+	set_process(enabled)
+
+
+func free_scroll_enabled() -> bool:
+	return _free_scroll
+
+
+## Reachable-cell tint is shown only while the player can act (owner 2026-11-01: show
+## what the player needs now, not a permanent stage tint).
+func set_range_visible(visible_now: bool) -> void:
+	if _range_visible == visible_now:
+		return
+	_range_visible = visible_now
+	queue_redraw()
+
+
+func range_visible() -> bool:
+	return _range_visible
 
 
 func pans_suppressed_for(actor_id: StringName) -> bool:
 	return _suppressed.has(actor_id)
+
+
+func _process(delta: float) -> void:
+	if not _free_scroll or not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
+		return
+	var direction := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
+	if direction.is_zero_approx():
+		return
+	if _camera_tween != null and _camera_tween.is_valid():
+		_camera_tween.kill()
+	_camera_tween = null
+	var step := direction * SCROLL_PIXELS_PER_SECOND * delta / _camera.zoom
+	_camera.offset = _limited_offset(_camera.offset + step)
 
 
 func cell_at_viewport(point: Vector2) -> Vector2i:
@@ -281,7 +314,6 @@ func _present(event: CombatEvent) -> void:
 		_pending_defeats[event.target_id] = event.get_instance_id()
 	_sync_actors(event)
 	_sync_hp()
-	_frame_roster()
 	var path: Array = event.data.get("path_cells", [])
 	if animate_events and event.type == &"action_resolved" and path.is_empty():
 		_play_action(event)
@@ -343,12 +375,12 @@ func _flush_queue() -> void:
 
 
 ## The rect the player currently sees, in world space, from the camera the overlay drives.
-## Uses the intended centre (anchor + offset) rather than the smoothed one so a pan already
-## in flight is not re-decided against a half-way frame.
+## Uses the intended centre (limited anchor + offset) rather than the smoothed one so a pan
+## already in flight is not re-decided against a half-way frame.
 func _view_rect() -> Rect2:
 	var viewport := _camera.get_viewport_rect().size
 	var window := _window(viewport)
-	var center := _camera_anchor.global_position + _camera.offset
+	var center := _limited_anchor() + _camera.offset
 	return Rect2(center + (window.position - viewport * 0.5) / _camera.zoom, window.size / _camera.zoom)
 
 
@@ -356,47 +388,34 @@ func _window(viewport: Vector2) -> Rect2:
 	return _view_window if _view_window.has_area() else Rect2(Vector2.ZERO, viewport)
 
 
-## The camera offset that puts world point `point` at the centre of the open window.
+## The camera offset that puts world point `point` at the centre of the open window, kept
+## inside the camera's own limits (Camera2D does not clamp `offset` itself).
 func _offset_framing(point: Vector2) -> Vector2:
 	var viewport := _camera.get_viewport_rect().size
 	var shift := (_window(viewport).get_center() - viewport * 0.5) / _camera.zoom
-	return point - shift - _camera_anchor.global_position
+	return _limited_offset(point - shift - _limited_anchor())
 
 
-## Once per session: centre every combatant in the window, so the opening shows both sides
-## rather than wherever the room camera happened to stop.
-func _frame_roster() -> void:
-	if _roster_framed or not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
-		return
-	var bounds := Rect2()
-	var found := false
-	for id: StringName in _actors:
-		var node := _node(id)
-		if not is_instance_valid(node):
-			continue
-		bounds = bounds.expand(node.global_position) if found else Rect2(node.global_position, Vector2.ZERO)
-		found = true
-	if not found:
-		return
-	_roster_framed = true
-	var view := _view_rect()
-	# A roster wider than the window frames the lead instead; turn focus pans to the rest.
-	var focus := bounds.get_center() if view.size.x >= bounds.size.x and view.size.y >= bounds.size.y \
-		else _camera_anchor.global_position
-	_pan_camera_to(_offset_framing(focus))
-
-
-## Where the camera would sit for `center` under its own (saved) limits.
-func _clamped_center(center: Vector2) -> Vector2:
-	if _saved_limits.size() != 4:
-		return center
+## Where the camera's own limits put `center` for this viewport and zoom.
+func _limited_center(center: Vector2) -> Vector2:
 	var half := _camera.get_viewport_rect().size * 0.5 / _camera.zoom
-	var low := Vector2(_saved_limits[0], _saved_limits[1]) + half
-	var high := Vector2(_saved_limits[2], _saved_limits[3]) - half
+	var low := Vector2(_camera.limit_left, _camera.limit_top) + half
+	var high := Vector2(_camera.limit_right, _camera.limit_bottom) - half
 	return Vector2(
 		center.x if low.x > high.x else clampf(center.x, low.x, high.x),
 		center.y if low.y > high.y else clampf(center.y, low.y, high.y),
 	)
+
+
+## The camera's base centre: the anchor under the camera's limits (what `offset` adds to).
+func _limited_anchor() -> Vector2:
+	return _limited_center(_camera_anchor.global_position)
+
+
+## `offset` clamped so the resulting view never leaves the camera's limits.
+func _limited_offset(offset: Vector2) -> Vector2:
+	var base := _limited_anchor()
+	return _limited_center(base + offset) - base
 
 
 func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
@@ -421,30 +440,24 @@ func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
 
 func _release_camera(animated: bool) -> void:
 	_suppressed.clear()
+	set_free_scroll(false)
 	if not is_instance_valid(_camera):
 		return
 	if animated and is_instance_valid(_camera_anchor):
-		# Pan to where the limited camera will sit, then restore the limits: no snap.
-		var anchor := _camera_anchor.global_position
-		_pan_camera_to(_clamped_center(anchor) - anchor)
+		# Pan back onto the player, then settle: no snap.
+		_pan_camera_to(Vector2.ZERO)
 		if _camera_tween != null and _camera_tween.is_valid():
-			_camera_tween.tween_callback(_restore_camera_limits)
+			_camera_tween.tween_callback(_reset_camera_offset)
 			return
 	if _camera_tween != null and _camera_tween.is_valid():
 		_camera_tween.kill()
 	_camera_tween = null
-	_restore_camera_limits()
+	_reset_camera_offset()
 
 
-func _restore_camera_limits() -> void:
+func _reset_camera_offset() -> void:
 	if not is_instance_valid(_camera):
 		return
-	if _saved_limits.size() == 4:
-		_camera.limit_left = _saved_limits[0]
-		_camera.limit_top = _saved_limits[1]
-		_camera.limit_right = _saved_limits[2]
-		_camera.limit_bottom = _saved_limits[3]
-		_saved_limits.clear()
 	_camera.offset = Vector2.ZERO
 	_camera.reset_smoothing()
 
@@ -789,7 +802,7 @@ func _draw() -> void:
 	for cell: Vector2i in _tiles:
 		var tile: Dictionary = _tiles[cell]
 		var diamond := _diamond(cell)
-		if _reachable.has(cell):
+		if _range_visible and _reachable.has(cell):
 			draw_colored_polygon(diamond, Color(DS.TILE_SELECT_RIM, 0.12))
 		if _shroud_cells.has(cell):
 			draw_colored_polygon(diamond, Color(0.22, 0.16, 0.36, 0.30))

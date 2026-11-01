@@ -306,6 +306,15 @@ func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_th
 	add_child(player)
 	var camera := Camera2D.new()
 	player.add_child(camera)
+	# Owner 2026-11-01: the field camera keeps its own limits and zoom; the overlay never
+	# lifts or reframes them, it only pans within them.
+	camera.limit_left = -4000
+	camera.limit_top = -4000
+	camera.limit_right = 40000
+	camera.limit_bottom = 4000
+	camera.zoom = Vector2(1.25, 1.25)
+	var limits_before := [camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]
+	var zoom_before := camera.zoom
 	var screen := camera.get_viewport_rect().size
 	var near_ally := auto_free(Node2D.new()) as Node2D
 	var far_enemy := auto_free(Node2D.new()) as Node2D
@@ -320,6 +329,9 @@ func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_th
 	overlay.call("bind_actor", &"ally", near_ally)
 	overlay.call("bind_actor", &"enemy", far_enemy)
 	overlay.call("bind_camera", camera, player)
+	assert_array([camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]) \
+		.is_equal(limits_before)
+	assert_vector(camera.zoom).is_equal(zoom_before)
 
 	var on_screen := CombatEvent.new()
 	on_screen.type = &"turn_started"
@@ -355,6 +367,9 @@ func test_camera_pans_to_off_screen_active_actor_and_returns_to_the_player_at_th
 		"the camera returns to the player when the fight ends"
 	).is_equal(Vector2.ZERO)
 	assert_bool(overlay.call("pans_suppressed_for", &"enemy")).is_false()
+	assert_array([camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]) \
+		.is_equal(limits_before)
+	assert_vector(camera.zoom).is_equal(zoom_before)
 
 
 func _hostile(root: Node, node_name: String) -> Hostile:
