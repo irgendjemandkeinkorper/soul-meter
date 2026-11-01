@@ -144,33 +144,33 @@ encounter_id = &"bog-wight"
 y_sort_enabled = true
 
 [node name="Dom" parent="DoorBoard" instance=ExtResource("10_exit")]
-position = Vector2(195, 210)
+position = Vector2(195, 300)
 label_text = "DEV DOM"
 
 [node name="Ashlaren" parent="DoorBoard" instance=ExtResource("10_exit")]
-position = Vector2(425, 210)
+position = Vector2(425, 300)
 label_text = "DEV ASHLAREN"
 
 [node name="Kesselford" parent="DoorBoard" instance=ExtResource("10_exit")]
-position = Vector2(655, 210)
+position = Vector2(655, 300)
 label_text = "DEV KESSELFORD"
 
 [node name="LongVerge" parent="DoorBoard" instance=ExtResource("10_exit")]
-position = Vector2(885, 210)
+position = Vector2(885, 300)
 label_text = "DEV LONG VERGE"
 
 [node name="Hollowmere" parent="DoorBoard" instance=ExtResource("10_exit")]
-position = Vector2(1115, 210)
+position = Vector2(1115, 300)
 label_text = "DEV HOLLOWMERE"
 
 [node name="Wilds" parent="DoorBoard" instance=ExtResource("10_exit")]
-position = Vector2(1345, 210)
+position = Vector2(1345, 300)
 label_text = "DEV WILDS"
 
 [node name="DorthkorRoad" parent="DoorBoard" instance=ExtResource("10_exit")]
-position = Vector2(1575, 210)
+position = Vector2(1575, 300)
 label_text = "DEV DORTHKOR"
 
 [node name="WoundLip" parent="DoorBoard" instance=ExtResource("10_exit")]
-position = Vector2(1805, 210)
+position = Vector2(1805, 300)
 label_text = "DEV WOUND LIP"
