@@ -13,6 +13,7 @@ signal flag_changed(flag: String, value: Variant)
 signal inventory_changed
 signal vendor_stock_changed(vendor_id: String, item_id: String, quantity: int)
 signal party_changed
+signal equipment_changed(member: PartyMember)
 signal milestone_level_granted(milestone_id: StringName, new_levels: Dictionary)
 signal xp_awarded(amount: int, cause: String, levels_gained: Dictionary)
 signal locale_changed(locale: String)
@@ -27,6 +28,8 @@ const REQUIRED_COMPANIONS := 2
 const DEFAULT_LOCALE := "en"
 const SUPPORTED_LOCALES := ["en", "es"]
 const DEFAULT_GP := 250
+const EQUIPMENT_SLOTS: Array[StringName] = [&"main", &"off", &"head", &"body", &"trinket"]
+const EQUIP_SLOT_ALIASES: Dictionary = {"main_hand": &"main", "off_hand": &"off"}
 const MIN_VAR_HARMONY := -5
 const MAX_VAR_HARMONY := 5
 const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
@@ -110,10 +113,9 @@ var var_harmony: Dictionary = {}
 ## Stable Pandora Combatant Id -> {encounters, weaknesses}. Weakness IDs are
 ## stable world-fact IDs from the generated Defining Strike table.
 var combat_knowledge: Dictionary = {}
-## Equipment slot name (String) -> equipped item prototype id (String). The items
-## themselves always live in `inventory`; the inventory screen re-seats them into its
-## ephemeral per-slot GLoot inventories from this record on open.
-var equipped_slots: Dictionary = {}
+## Unrecognized legacy equipment payload only. Never read for gameplay; retained
+## so an old unrelated/nested record survives re-saving without reinterpretation.
+var _legacy_equipped_slots: Dictionary = {}
 ## Serialized TravelPlan payload. GameFlow owns the live resource and lifecycle.
 var travel_plan: Dictionary = {}
 ## Stable loot-container id -> {items: [{item_id, quantity}], theft_recorded: bool}.
@@ -122,6 +124,7 @@ var loot_containers: Dictionary = {}
 var settings_path: String = SETTINGS_PATH
 
 var _settings := ConfigFile.new()
+var _restoring_inventory := false
 
 
 func _ready() -> void:
@@ -131,7 +134,7 @@ func _ready() -> void:
 	inventory.protoset = load("res://data/generated/gloot_prototree.json")
 	add_child(inventory)
 	inventory.item_added.connect(func(_item: InventoryItem) -> void: inventory_changed.emit())
-	inventory.item_removed.connect(func(_item: InventoryItem) -> void: inventory_changed.emit())
+	inventory.item_removed.connect(_on_inventory_item_removed)
 	inventory.item_property_changed.connect(
 		func(_item: InventoryItem, _property: String) -> void: inventory_changed.emit()
 	)
@@ -147,6 +150,66 @@ func refill_party_breath() -> void:
 			changed = true
 	if changed:
 		party_changed.emit()
+
+
+## Equipment state belongs to Systems. UI requests these operations; physical
+## items always stay in the shared bag. Slots store prototype identities, so a
+## prototype can have only one wearer until instance ids become part of saves.
+func can_equip_item(member: PartyMember, item: InventoryItem, slot: StringName) -> bool:
+	if member == null or not party.has(member) or not is_instance_valid(item):
+		return false
+	if not inventory.has_item(item) or slot not in EQUIPMENT_SLOTS or equipment_slot_of(item) != slot:
+		return false
+	var prototype_id := item.get_prototype().get_prototype_id()
+	var owner := equipment_owner(prototype_id)
+	return owner == null or owner == member
+
+
+func equip_item(member: PartyMember, item: InventoryItem, slot: StringName) -> bool:
+	if not can_equip_item(member, item, slot):
+		return false
+	var prototype_id := item.get_prototype().get_prototype_id()
+	if member.equipped_slots.get(String(slot), "") == prototype_id:
+		return true
+	for prior_slot: Variant in member.equipped_slots.keys():
+		if member.equipped_slots[prior_slot] == prototype_id:
+			member.equipped_slots.erase(prior_slot)
+	member.equipped_slots[String(slot)] = prototype_id
+	equipment_changed.emit(member)
+	party_changed.emit()
+	return true
+
+
+func unequip_item(member: PartyMember, slot: StringName) -> bool:
+	if member == null or not party.has(member) or not member.equipped_slots.erase(String(slot)):
+		return false
+	equipment_changed.emit(member)
+	party_changed.emit()
+	return true
+
+
+func equipment_owner(prototype_id: String) -> PartyMember:
+	for member: PartyMember in party:
+		if member.equipped_slots.values().has(prototype_id):
+			return member
+	return null
+
+
+static func equipment_slot_of(item: InventoryItem) -> StringName:
+	if not is_instance_valid(item):
+		return &""
+	var raw := str(item.get_property("slot", item.get_property("equip_slot", "")))
+	return EQUIP_SLOT_ALIASES.get(raw, StringName(raw))
+
+
+func _on_inventory_item_removed(item: InventoryItem) -> void:
+	var prototype_id := item.get_prototype().get_prototype_id()
+	if not _restoring_inventory and inventory.get_items_with_prototype_id(prototype_id).is_empty():
+		for member: PartyMember in party:
+			for slot: Variant in member.equipped_slots.keys():
+				if member.equipped_slots[slot] == prototype_id:
+					unequip_item(member, StringName(slot))
+	inventory_changed.emit()
 
 
 # --- Soul Meter and facts ----------------------------------------------------
@@ -1198,7 +1261,7 @@ func to_dict() -> Dictionary:
 	var custom_recruit_rows: Array[Dictionary] = []
 	for member in custom_recruits:
 		custom_recruit_rows.append(member.to_dict())
-	return {
+	var result: Dictionary = {
 		"flags": flags.duplicate(true),
 		"world_seed": world_seed,
 		"soul_meter": soul_meter,
@@ -1212,17 +1275,27 @@ func to_dict() -> Dictionary:
 		"skills": skills.duplicate(true),
 		"var_harmony": var_harmony.duplicate(true),
 		"combat_knowledge": combat_knowledge.duplicate(true),
-		"equipped_slots": equipped_slots.duplicate(true),
 		"travel_plan": travel_plan.duplicate(true),
 		"loot_containers": loot_containers.duplicate(true),
 	}
+	if not _legacy_equipped_slots.is_empty():
+		result["equipped_slots"] = _legacy_equipped_slots.duplicate(true)
+	return result
 
 
 func from_dict(data: Dictionary) -> bool:
 	if not _validate_save_data(data):
 		return false
+	data = SaveMigrations.migrate_equipment_state(data)
 	var inventory_data: Variant = data.get("inventory", {})
-	if not inventory_data is Dictionary or not inventory.deserialize(inventory_data):
+	if not inventory_data is Dictionary:
+		return false
+	# Deserialization removes the old bag before loading the new party. Those
+	# removals are a restore operation, not gameplay unequips of the old resources.
+	_restoring_inventory = true
+	var inventory_loaded := inventory.deserialize(inventory_data)
+	_restoring_inventory = false
+	if not inventory_loaded:
 		return false
 	flags.clear()
 	var raw_flags: Variant = data.get("flags", {})
@@ -1243,8 +1316,7 @@ func from_dict(data: Dictionary) -> bool:
 	skills = data.get("skills", {}).duplicate(true)
 	var_harmony = data.get("var_harmony", {}).duplicate(true)
 	combat_knowledge = data.get("combat_knowledge", {}).duplicate(true)
-	# Additive key: absent in saves written before the equipment rail persisted (defaults empty).
-	equipped_slots = data.get("equipped_slots", {}).duplicate(true)
+	_legacy_equipped_slots = data.get("equipped_slots", {}).duplicate(true)
 	# Additive key: absent when no journey is active and in saves from before world-map travel.
 	travel_plan = data.get("travel_plan", {}).duplicate(true)
 	# Additive key: absent in saves from before inspectable world containers.
@@ -1272,6 +1344,7 @@ func _validate_save_data(data: Dictionary) -> bool:
 		"vendor_stock",
 		"vendor_restock_cycles",
 		"loot_containers",
+		"equipped_slots",
 	]:
 		if data.has(key) and not data[key] is Dictionary:
 			return false
