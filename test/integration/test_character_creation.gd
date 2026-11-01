@@ -2,7 +2,8 @@ extends GdUnitTestSuite
 ## Integration coverage for the shared player/recruit Form 7 wizard on DRAMGID
 ## (docs/architecture-chargen-dramgid.md §7, §11). The player test still enters through
 ## the real main menu and GameFlow state; the recruit tests use the same scene in its
-## tavern-owned mode. Everything drives the screen's PUBLIC API — never private members.
+## tavern-owned mode. Tests drive the public API and live controls, then inspect the
+## displayed choices and registered PartyMember.
 
 var _original_party: Array[PartyMember]
 var _original_flags: Dictionary
@@ -183,6 +184,109 @@ func test_recruit_mode_cancels_through_the_production_ui_stack() -> void:
 		await get_tree().process_frame
 	assert_bool(not is_instance_valid(screen) or not screen.is_inside_tree()).is_true()
 	UIManager.close_all()
+
+
+func test_randomize_from_a_fresh_screen_advances_to_summary_and_registers_the_roll() -> void:
+	var runner := scene_runner("res://ui/screens/character_creation.tscn")
+	await runner.simulate_frames(2)
+	var screen := runner.scene() as CharacterCreationScreen
+	var randomize_btn := runner.find_child("RandomizeButton", true, false) as Button
+	assert_object(randomize_btn).is_not_null()
+	assert_str(randomize_btn.text).is_equal(tr("RANDOMIZE"))
+	randomize_btn.pressed.emit()
+	await runner.simulate_frames(2)
+	assert_str(screen.current_step_id()).is_equal("ancestry")
+	assert_bool(screen.build.is_complete()).is_true()
+	assert_int(screen.build.points_remaining()).is_equal(0)
+	var expected := screen.build.to_party_member().to_dict()
+	var likeness := screen.build.likeness_id
+	var spent := screen.build.points_spent()
+	for step: Dictionary in ChargenSteps.STEPS:
+		if step["id"] == &"summary":
+			break
+		assert_bool(screen._next_btn.disabled).is_false()
+		screen._next_btn.pressed.emit()
+	assert_str(screen.current_step_id()).is_equal("summary")
+	assert_bool(screen._accept_btn.disabled).is_false()
+	screen._accept_btn.pressed.emit()
+	await runner.simulate_frames(2)
+
+	assert_bool(GameState.has_created_character()).is_true()
+	var member: PartyMember = GameState.party[0]
+	var actual := member.to_dict()
+	for field: String in ["display_name", "epithet", "race", "discipline", "patron",
+		"class_id", "char_class", "kit_weapon_skill", "background", "major_element",
+		"minor_element", "mastery_element", "starting_mastery", "flaw", "attributes",
+		"skill_tiers", "skill_percentages", "advancement_points"]:
+		assert_bool(actual[field] == expected[field]).override_failure_message(
+			"Confirmed member must retain rolled %s" % field).is_true()
+	assert_int(Advancement.total_points_spent(member)).is_equal(spent)
+	assert_object(member.portrait).is_not_null()
+	assert_str(member.portrait.resource_path).contains("portraits/player/%s" % likeness)
+
+
+func test_randomize_is_reachable_on_every_leaf_and_refreshes_the_current_page() -> void:
+	var runner := scene_runner("res://ui/screens/character_creation.tscn")
+	await runner.simulate_frames(2)
+	var screen := runner.scene() as CharacterCreationScreen
+	var randomize_btn := runner.find_child("RandomizeButton", true, false) as Button
+	# A seeded stream makes rerolls reproducible without replacing the button handler.
+	screen._random_rng.seed = 64
+	screen.set_flaw("Will not leave a debt uncounted")
+	var previous: Dictionary = {}
+	for step_id: StringName in ChargenSteps.ids():
+		screen.go_to_step(step_id)
+		await runner.simulate_frames(2)
+		assert_bool(randomize_btn.is_visible_in_tree()).is_true()
+		assert_bool(randomize_btn.disabled).is_false()
+		var preceding := randomize_btn.get_node(randomize_btn.focus_previous) as Control
+		assert_object(preceding.get_node(preceding.focus_next)).is_same(randomize_btn)
+		randomize_btn.grab_focus()
+		randomize_btn.pressed.emit()
+		await runner.simulate_frames(2)
+		assert_str(screen.current_step_id()).is_equal(str(step_id))
+		assert_bool(randomize_btn.has_focus()).is_true()
+		assert_bool(screen.build.is_complete()).is_true()
+		assert_int(screen.build.remaining_attribute_points()).is_equal(0)
+		assert_int(screen.build.points_remaining()).is_equal(0)
+		assert_str(screen.build.flaw).is_equal("Will not leave a debt uncounted")
+		var rolled := screen.build.to_party_member().to_dict()
+		assert_bool(rolled == previous).is_false()
+		previous = rolled
+		assert_str(screen._name_edit.text).is_equal(screen.build.display_name)
+		assert_str(screen._epithet_edit.text).is_equal(screen.build.epithet)
+		assert_str(screen._summary_lbl.text).contains(screen.build.display_name)
+		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+			assert_str((screen._attribute_value_lbls[attribute_id] as Label).text).is_equal(
+				str(screen.build.attributes[attribute_id]))
+		if step_id == &"skills":
+			for element: StringName in ElementWheel.ORDER:
+				var tone := DramgidSchema.tone_skill_for(str(element))
+				var label := runner.find_child("Percent_%s" % tone, true, false) as Label
+				assert_bool(label != null).is_equal(screen.build.held_tones().has(tone))
+			for skill_id: String in screen.build.creation_buys:
+				var label := runner.find_child("Percent_%s" % skill_id, true, false) as Label
+				assert_bool(label.text.begins_with("%d%%" % roundi(screen.build.preview_percent(skill_id)))).is_true()
+		if step_id == &"summary":
+			assert_bool(screen._accept_btn.disabled).is_false()
+
+
+func test_randomize_during_an_attribute_animation_keeps_the_rolled_readout() -> void:
+	var runner := scene_runner("res://ui/screens/character_creation.tscn")
+	await runner.simulate_frames(2)
+	var screen := runner.scene() as CharacterCreationScreen
+	screen.go_to_step(&"attributes")
+	screen.set_attribute("muster", DramgidSchema.ATTRIBUTE_CAP)
+	await runner.simulate_frames(2)
+	var minus := runner.find_child("Minus_muster", true, false) as Button
+	minus.pressed.emit()
+	screen._random_rng.seed = 64
+	var randomize_btn := runner.find_child("RandomizeButton", true, false) as Button
+	randomize_btn.pressed.emit()
+	await runner.simulate_frames(20)
+	for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+		var bar := screen._attribute_bars[attribute_id] as ProgressBar
+		assert_float(bar.value).is_equal(float(screen.build.attributes[attribute_id]))
 
 
 func _fill_out_valid_build(screen: CharacterCreationScreen, name: String, epithet: String) -> void:
