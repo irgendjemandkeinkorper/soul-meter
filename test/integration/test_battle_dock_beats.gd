@@ -33,6 +33,8 @@ func after_test() -> void:
 func test_grid_battlefield_hides_the_zone_move_cards() -> void:
 	var session := await _grid_session("MoveCardWight")
 	var bar: CombatBar = session.bar
+	# MORE lists every offered command, locked or not; the zone cards stay out even there.
+	bar.set_show_all(true)
 	var buttons: Array = bar.get("_action_buttons")
 	var actions := Battle.available_actions()
 	var hidden := 0
@@ -66,7 +68,9 @@ func test_zone_battlefield_keeps_its_zone_move_cards() -> void:
 	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
 	add_child(screen)
 	await get_tree().process_frame
-	var buttons: Array = screen.call("combat_bar").get("_action_buttons")
+	var bar: CombatBar = screen.call("combat_bar")
+	bar.set_show_all(true)
+	var buttons: Array = bar.get("_action_buttons")
 	var actions := Battle.available_actions()
 	var zone_cards := 0
 	for index: int in actions.size():

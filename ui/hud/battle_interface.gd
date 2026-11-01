@@ -59,6 +59,7 @@ func _ready() -> void:
 	stage.pointer_cleared.connect(_on_pointer_cleared)
 	act_target_panel.aim_selected.connect(select_aim)
 	act_target_panel.details_pinned = true
+	act_target_panel.compact_aim = true
 	active_unit_plate.injury_selected.connect(_inspect_injury)
 	active_unit_plate.resized.connect(_position_injury_inspector)
 	# #473: the plate and the strip read the field's presented beats, not the live stream.
@@ -121,6 +122,25 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"combat_breakdown"):
 		toggle_breakdown()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"combat_end_turn"):
+		if end_turn_allowed():
+			combat_bar.press_end_turn()
+		get_viewport().set_input_as_handled()
+
+
+## Space ends the turn only on the player's turn, and never while a text field or the
+## breakdown popover holds focus (owner 2026-11-01).
+func end_turn_allowed() -> bool:
+	if _controller == null or _controller.state != CombatController.State.ALLY_TURN:
+		return false
+	if not Battle.session_active or Battle.ended or combat_bar.outcome_shown():
+		return false
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus is LineEdit or focus is TextEdit:
+		return false
+	if focus != null and tactical_popover.is_ancestor_of(focus):
+		return false
+	return true
 
 
 # --- layout around the field HUD's bar ------------------------------------------------------

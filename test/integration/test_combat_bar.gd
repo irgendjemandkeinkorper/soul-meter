@@ -186,6 +186,214 @@ func test_entry_cue_finishes_inside_half_a_second_and_honours_reduced_motion() -
 	await _close(still)
 
 
+## Review 2026-11-01: on a normal player turn the ready commands read at full label width
+## with no scrolling; the locked rest sits behind MORE with its lock reasons; every command
+## stays reachable. Owner: the bar must also fit at 1366 x 768.
+func test_ready_commands_fit_unclipped_without_scrolling_at_1920() -> void:
+	var session := await _session("FitWight")
+	await _assert_bar_fits(session)
+	await _close(session)
+
+
+## The project scales its 1920 x 1080 canvas to the window (canvas_items stretch), so the
+## owner's 1366 x 768 minimum renders the same layout at 0.71: it must still fit and clip
+## nothing.
+func test_the_bar_fits_unclipped_at_1366_by_768() -> void:
+	get_tree().root.size = Vector2i(1366, 768)
+	await get_tree().process_frame
+	assert_vector(get_tree().root.size).is_equal(Vector2i(1366, 768))
+	var session := await _session("NarrowWight")
+	await _assert_bar_fits(session)
+	var hud: FieldHUD = session.hud
+	var logical := get_tree().root.get_visible_rect()
+	assert_bool(logical.encloses(hud.bar().get_global_rect())).is_true()
+	await _close(session)
+	get_tree().root.size = Vector2i(1920, 1080)
+	await get_tree().process_frame
+
+
+func _assert_bar_fits(session: Dictionary) -> void:
+	var hud: FieldHUD = session.hud
+	var bar: CombatBar = hud.combat_bar
+	var interface := hud.battle_interface
+	await _until_presented(interface.stage)
+	_await_ally_turn()
+	await get_tree().create_timer(DS.DUR_BASE + 0.1).timeout
+	await get_tree().process_frame
+	var host := hud.bar()
+	var host_rect := host.get_global_rect()
+	assert_bool(host_rect.encloses(bar.get_global_rect())).override_failure_message(
+		"combat bar %s overflows the bar %s" % [bar.get_global_rect(), host_rect]
+	).is_true()
+	var gauge := host.find_child("SoulGauge", true, false) as Control
+	assert_bool(bar.get_global_rect().intersects(gauge.get_global_rect())).override_failure_message(
+		"combat bar overlaps the soul gauge"
+	).is_false()
+	# Ready commands: full label width, inside the command column, no scrolling needed.
+	var column := bar.find_child("CommandColumn", true, false) as Control
+	var scroll := bar.find_child("ActionScroll", true, false) as ScrollContainer
+	var stack := scroll.get_node("ActionStack") as Control
+	var ready := bar.ready_buttons()
+	assert_int(ready.size()).is_greater_equal(2)
+	var last_index := -1
+	for button: Button in ready:
+		var index := int(button.get_meta("index", -1))
+		assert_int(index).override_failure_message("ready actions keep catalog order").is_greater(last_index)
+		last_index = index
+		_assert_unclipped(button, column)
+	assert_float(stack.size.y).override_failure_message(
+		"ready commands need scrolling: stack %s in scroll %s" % [stack.size, scroll.size]
+	).is_less_equal(scroll.size.y + 0.5)
+	assert_int(bar.visible_action_buttons().size()).is_equal(ready.size())
+	# The plate, the party rows and the turn controls read whole too.
+	for label: Label in bar.active_unit_plate.find_children("*", "Label", true, false):
+		if label.is_visible_in_tree() and not label.text.is_empty():
+			_assert_label_fits(label)
+	for label: Label in (bar.find_child("PartyRows", true, false) as Node).find_children("*", "Label", true, false):
+		if label.is_visible_in_tree():
+			_assert_label_fits(label)
+	for name: String in ["EndTurnButton", "WithdrawButton", "BreakdownButton", "MoreButton", "TargetButton"]:
+		var button := bar.find_child(name, true, false) as Button
+		if button != null and button.is_visible_in_tree():
+			_assert_unclipped(button, bar)
+	# The footer line holds together: FOE readout, MORE and TARGET inside the column; while
+	# an aimed action quotes a hovered enemy, the AIM row takes that line instead.
+	var footer := bar.command_footer()
+	assert_bool(column.get_global_rect().grow(1.0).encloses(footer.get_global_rect())).is_true()
+	assert_float(footer.size.x).is_greater_equal(footer.get_combined_minimum_size().x - 0.5)
+	var foe := (session.hostile as Hostile).battle_actor()
+	var cell: Vector2i = Battle.controller.battlefield.cell_of(foe)
+	interface.select_pointer_action(&"strike")
+	interface._on_tile_hovered({"x": cell.x, "y": cell.y})
+	await get_tree().process_frame
+	var aim_row := bar.find_child("AimRow", true, false) as Control
+	assert_bool(aim_row.is_visible_in_tree()).override_failure_message("AIM shows for an aimed action").is_true()
+	assert_bool((bar.find_child("FoeReadout", true, false) as Control).visible).is_false()
+	assert_float(footer.size.x).override_failure_message("the AIM line spills").is_greater_equal(
+		footer.get_combined_minimum_size().x - 0.5
+	)
+	assert_bool(column.get_global_rect().grow(1.0).encloses(footer.get_global_rect())).is_true()
+	assert_float(stack.size.y).override_failure_message(
+		"aiming must not push the ready commands into a scroll: stack %s in scroll %s (footer %s)" % [
+			stack.size, scroll.size, footer.size
+		]
+	).is_less_equal(scroll.size.y + 0.5)
+	assert_float(footer.size.y).override_failure_message("the AIM line stays one row").is_less_equal(26.0)
+	# The armed aim outlives the hover (the player must leave the body to reach the row).
+	interface._on_pointer_cleared()
+	await get_tree().process_frame
+	assert_bool(aim_row.visible).is_true()
+	assert_bool((bar.find_child("MoreButton", true, false) as Control).visible).is_true()
+	# MORE shows every command: the locked ones as rows that print their lock reason.
+	var more := bar.find_child("MoreButton", true, false) as Button
+	var actions := Battle.available_actions()
+	var buttons: Array = bar.get("_action_buttons")
+	var locked_count := 0
+	for i: int in actions.size():
+		if actions[i].kind != CombatAction.Kind.MOVE and (buttons[i] as Button).disabled:
+			locked_count += 1
+	assert_bool(more.visible).is_equal(locked_count > 0)
+	if locked_count > 0:
+		assert_str(more.text).is_equal("MORE · %d" % locked_count)
+		more.button_pressed = true
+		await get_tree().process_frame
+		assert_bool(bar.showing_all()).is_true()
+		assert_str(more.text).is_equal("LESS")
+		for i: int in actions.size():
+			var button := buttons[i] as Button
+			if actions[i].kind == CombatAction.Kind.MOVE:
+				continue
+			assert_bool(button.is_visible_in_tree()).override_failure_message(
+				"MORE must offer every command; %s is missing" % button.text
+			).is_true()
+			# Listed rows scroll inside the bar: check width, not the scrolled-away height.
+			assert_bool(button.clip_text).is_false()
+			assert_float(button.size.x).is_greater_equal(button.get_combined_minimum_size().x - 0.5)
+			assert_float(button.global_position.x + button.size.x).is_less_equal(column.get_global_rect().end.x + 1.0)
+			if button.disabled:
+				var reason := button.get_parent().get_node("Reason") as Label
+				assert_bool(reason.is_visible_in_tree()).is_true()
+				assert_str(reason.text).override_failure_message("%s shows no lock reason" % button.text).is_not_empty()
+		more.button_pressed = false
+		await get_tree().process_frame
+		assert_bool(bar.showing_all()).is_false()
+		assert_int(bar.visible_action_buttons().size()).is_equal(ready.size())
+
+
+func _assert_unclipped(button: Button, within: Control) -> void:
+	assert_bool(button.clip_text).override_failure_message("%s clips its label" % button.text).is_false()
+	assert_float(button.size.x).override_failure_message(
+		"%s is narrower than its label" % button.text
+	).is_greater_equal(button.get_combined_minimum_size().x - 0.5)
+	assert_bool(within.get_global_rect().grow(1.0).encloses(button.get_global_rect())) \
+		.override_failure_message("%s at %s spills out of %s" % [button.text, button.get_global_rect(), within.name]) \
+		.is_true()
+
+
+func _assert_label_fits(label: Label) -> void:
+	var font := label.get_theme_font("font")
+	var width := font.get_string_size(
+		label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")
+	).x
+	assert_float(label.size.x).override_failure_message(
+		"label '%s' is clipped: needs %.0f px, has %.0f" % [label.text, width, label.size.x]
+	).is_greater_equal(width - 0.5)
+
+
+## Owner 2026-11-01: Space ends the turn, only on the player's turn and never while a text
+## field or the breakdown popover holds focus.
+func test_space_ends_the_turn_only_on_the_players_turn_and_without_focus() -> void:
+	var session := await _session("SpaceWight")
+	var hud: FieldHUD = session.hud
+	var interface := hud.battle_interface
+	await _until_presented(interface.stage)
+	_await_ally_turn()
+	assert_bool(interface.end_turn_allowed()).is_true()
+	var space := InputEventAction.new()
+	space.action = &"combat_end_turn"
+	space.pressed = true
+
+	var text_field := LineEdit.new()
+	hud.add_child(text_field)
+	text_field.grab_focus()
+	await get_tree().process_frame
+	assert_bool(interface.end_turn_allowed()).override_failure_message("a focused text field blocks Space").is_false()
+	var before := _enemy_turns()
+	get_tree().root.push_input(space)
+	await get_tree().process_frame
+	assert_int(_enemy_turns()).is_equal(before)
+	text_field.release_focus()
+	text_field.queue_free()
+
+	interface.set_breakdown_visible(true)
+	var popover_button := Button.new()
+	interface.tactical_popover.add_child(popover_button)
+	popover_button.grab_focus()
+	await get_tree().process_frame
+	assert_bool(interface.end_turn_allowed()).override_failure_message("a focused popover blocks Space").is_false()
+	get_tree().root.push_input(space)
+	await get_tree().process_frame
+	assert_int(_enemy_turns()).is_equal(before)
+	popover_button.release_focus()
+	popover_button.queue_free()
+	interface.set_breakdown_visible(false)
+	await get_tree().process_frame
+
+	assert_bool(interface.end_turn_allowed()).is_true()
+	get_tree().root.push_input(space)
+	await get_tree().process_frame
+	assert_int(_enemy_turns()).override_failure_message("Space on the player's turn ends it").is_equal(before + 1)
+	await _close(session)
+
+
+func _enemy_turns() -> int:
+	var count := 0
+	for event: CombatEvent in Battle._combat_history:
+		if event.type == &"enemy_turn_started":
+			count += 1
+	return count
+
+
 func _session(hostile_name: String, offset: Vector2i = Vector2i(1, 0)) -> Dictionary:
 	var scene: Node = (load(TEST_ROOM_SCENE) as PackedScene).instantiate()
 	add_child(scene)

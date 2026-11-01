@@ -253,12 +253,27 @@ func test_full_command_catalog_leaves_the_live_battlefield_visible() -> void:
 	var scroll := combat_bar.find_child("ActionScroll", true, false) as ScrollContainer
 	assert_object(scroll).is_not_null()
 	var buttons: Array = combat_bar.get("_action_buttons")
-	assert_float((buttons[0] as Button).size.x).is_greater(100.0)
-	var last_button := buttons.back() as Button
+	# Ready commands read at full label width; MORE lists the rest, scrolling inside the bar
+	# rather than growing it.
+	var first_ready := combat_bar.ready_buttons()[0]
+	assert_float(first_ready.size.x).is_greater_equal(first_ready.get_combined_minimum_size().x - 0.5)
+	combat_bar.set_show_all(true)
+	await get_tree().process_frame
+	# The MORE list sits under the ready flow; its last locked row is the farthest command.
+	var last_button: Button = null
+	for button: Button in buttons:
+		if button.is_visible_in_tree() and button.disabled:
+			last_button = button
+	assert_object(last_button).is_not_null()
 	scroll.ensure_control_visible(last_button)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	assert_int(scroll.scroll_vertical).is_greater(0)
+	assert_int(scroll.scroll_vertical).override_failure_message(
+		"MORE list must scroll to %s: scroll %s, stack %s, bar max %s, button %s" % [
+			last_button.text, scroll.size, (scroll.get_child(0) as Control).size,
+			scroll.get_v_scroll_bar().max_value, last_button.get_global_rect(),
+		]
+	).is_greater(0)
 	assert_bool(scroll.get_global_rect().intersects(last_button.get_global_rect())).is_true()
 	hud.exit_combat()
 	Battle._end_session(null)

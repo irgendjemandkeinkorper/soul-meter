@@ -295,7 +295,8 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	])
 	assert_bool(panel.forecast.visible).is_true()
 	assert_int(actor.action_points).is_equal(ap_before_preview)
-	assert_str(panel.aim_button(&"throat").theme_type_variation).is_equal("BronzeButton")
+	# Hosted on the bar the armed location reads in the bar's bronze aim style.
+	assert_str(panel.aim_button(&"throat").theme_type_variation).is_equal("HudAimButtonActive")
 
 	# Pressing the mark submits the armed aim and pays the surcharged AP.
 	var ap_before := actor.action_points

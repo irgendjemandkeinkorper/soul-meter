@@ -17,8 +17,18 @@ var _enemy_lbl: Label
 var _balance_lbl: Label
 var _balance_bar: ProgressBar
 var _party_box: VBoxContainer
-var _actions_box: GridContainer
+var _actions_box: HFlowContainer
 var _action_scroll: ScrollContainer
+## Owner review 2026-11-01: ready actions sit in the flow at full label width; locked ones
+## wait behind the MORE toggle as rows that print their lock reason.
+var _locked_box: VBoxContainer
+var _action_rows: Array[HBoxContainer] = []
+var _action_reasons: Array[Label] = []
+var _more_button: Button
+var _show_all := false
+var _locked_count := 0
+var _command_column: VBoxContainer
+var _command_footer: HBoxContainer
 var _aim_host: HBoxContainer
 var _target_button: Button
 var _end_turn_button: Button
@@ -35,6 +45,18 @@ var _refresh_queued := false
 ## #473: the result waits here until the field has presented the beats that led to it.
 var _pending_result: BattleResult
 var _built := false
+
+
+## Column minimums (px) on the 1920 x 1080 logical viewport: 240 plate, 240 log (grows),
+## 720 command, 200 party, 124 controls, plus the four rules, inside the bar's 1626 px.
+## The project scales the whole canvas (canvas_items stretch), so 1366 x 768 renders this
+## same layout at 0.71 and nothing reflows or clips.
+const LOG_WIDTH := 240
+const COMMAND_WIDTH := 720
+const PARTY_WIDTH := 200
+const CONTROLS_WIDTH := 124
+## Command buttons: 22 px rows so six rows of ready actions fit the column without scrolling.
+const ACTION_ROW := 22
 
 
 func _ready() -> void:
@@ -83,8 +105,15 @@ func host_aim_row(row: Control) -> void:
 		return
 	row.reparent(_aim_host, false)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_aim_host.visible = row.visible
-	row.visibility_changed.connect(func() -> void: _aim_host.visible = row.visible)
+	_set_aiming(row.visible)
+	row.visibility_changed.connect(func() -> void: _set_aiming(row.visible))
+
+
+## While the AIM row is up it takes the FOE readout's place on the footer line (the tooltip
+## at the body names the foe); MORE and TARGET stay reachable beside it.
+func _set_aiming(aiming: bool) -> void:
+	_aim_host.visible = aiming
+	_enemy_lbl.visible = not aiming
 
 
 ## Left to right, Fallout 2's reading order: who acts, what happened, what you can do, who
@@ -96,7 +125,7 @@ func _build() -> void:
 	var log_column := VBoxContainer.new()
 	log_column.name = "LogColumn"
 	log_column.theme_type_variation = "HudBarColumn"
-	log_column.custom_minimum_size = Vector2(280, 0)
+	log_column.custom_minimum_size = Vector2(LOG_WIDTH, 0)
 	log_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(log_column)
 	cursor_readout = Label.new()
@@ -139,71 +168,105 @@ func _build() -> void:
 	var command_column := VBoxContainer.new()
 	command_column.name = "CommandColumn"
 	command_column.theme_type_variation = "HudBarColumn"
-	command_column.custom_minimum_size = Vector2(560, 0)
+	command_column.custom_minimum_size = Vector2(COMMAND_WIDTH, 0)
 	add_child(command_column)
-	var command_title := Label.new()
-	command_title.text = "COMMAND"
-	command_title.theme_type_variation = "EyebrowLabel"
-	command_column.add_child(command_title)
-	# The action catalog grows with the class kits. Scroll its rows inside the bar so every
-	# command remains reachable without growing the bar.
+	_command_column = command_column
+	# Fallout's bar labels nothing: the ready actions are the command area. They wrap at
+	# full label width (never clipped); on a normal turn they fit without scrolling. The
+	# locked rest waits behind MORE with its lock reasons, and every command stays
+	# reachable from the same buttons with the same enabled/lock logic.
 	_action_scroll = ScrollContainer.new()
 	_action_scroll.name = "ActionScroll"
-	_action_scroll.custom_minimum_size = Vector2(0, 84)
 	_action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_action_scroll.follow_focus = true
 	command_column.add_child(_action_scroll)
-	_actions_box = GridContainer.new()
+	var stack := VBoxContainer.new()
+	stack.name = "ActionStack"
+	stack.theme_type_variation = "HudBarColumn"
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_action_scroll.add_child(stack)
+	_actions_box = HFlowContainer.new()
 	_actions_box.name = "Actions"
-	_actions_box.columns = 4
-	_actions_box.theme_type_variation = "HudActionGrid"
+	_actions_box.theme_type_variation = "HudActionFlow"
 	_actions_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_action_scroll.add_child(_actions_box)
+	stack.add_child(_actions_box)
+	_locked_box = VBoxContainer.new()
+	_locked_box.name = "Locked"
+	_locked_box.theme_type_variation = "HudBarColumn"
+	_locked_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_locked_box.visible = false
+	stack.add_child(_locked_box)
 	for action in Battle.available_actions():
 		var button := _button(_actions_box, _short_action_text(action), _use_action.bind(action.id))
-		# No autowrap: single-line labels keep the grid two rows tall.
 		button.theme_type_variation = "HudActionButton"
-		button.custom_minimum_size = Vector2(0, 26)
-		button.clip_text = true
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size = Vector2(0, ACTION_ROW)
 		button.tooltip_text = _action_tooltip(action)
+		button.set_meta("index", _action_buttons.size())
 		_action_buttons.append(button)
+		var row := HBoxContainer.new()
+		row.name = "LockedRow"
+		row.theme_type_variation = "HudBarRow"
+		row.visible = false
+		_locked_box.add_child(row)
+		_action_rows.append(row)
+		var reason := Label.new()
+		reason.name = "Reason"
+		reason.theme_type_variation = "HudLockReason"
+		reason.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		reason.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		row.add_child(reason)
+		_action_reasons.append(reason)
 	_outcome_box = VBoxContainer.new()
 	_outcome_box.name = "Outcome"
 	_outcome_box.theme_type_variation = "HudBarColumn"
 	_outcome_box.visible = false
 	command_column.add_child(_outcome_box)
-	_aim_host = HBoxContainer.new()
-	_aim_host.name = "AimRow"
-	_aim_host.theme_type_variation = "HudBarRow"
-	_aim_host.visible = false
-	command_column.add_child(_aim_host)
-	var aim_title := Label.new()
-	aim_title.text = tr("AIM")
-	aim_title.theme_type_variation = "EyebrowLabel"
-	_aim_host.add_child(aim_title)
+	# One footer line under the ready actions: the FOE readout, MORE and the target cycler;
+	# while an aimed action quotes a hovered enemy, the AIM row takes the readout's place on
+	# that same line (the tooltip at the body already names the foe).
 	var command_footer := HBoxContainer.new()
 	command_footer.name = "CommandFooter"
 	command_footer.theme_type_variation = "HudBarRow"
 	command_column.add_child(command_footer)
+	_command_footer = command_footer
+	_aim_host = HBoxContainer.new()
+	_aim_host.name = "AimRow"
+	_aim_host.theme_type_variation = "HudBarRow"
+	_aim_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_aim_host.visible = false
+	command_footer.add_child(_aim_host)
+	var aim_title := Label.new()
+	aim_title.text = tr("AIM")
+	aim_title.theme_type_variation = "EyebrowLabel"
+	_aim_host.add_child(aim_title)
 	_enemy_lbl = Label.new()
 	_enemy_lbl.name = "FoeReadout"
 	_enemy_lbl.theme_type_variation = "StatLabel"
 	_enemy_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_enemy_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	command_footer.add_child(_enemy_lbl)
-	_target_button = _button(command_footer, "", Battle.select_next_enemy)
+	_more_button = Button.new()
+	_more_button.name = "MoreButton"
+	_more_button.theme_type_variation = "HudActionButton"
+	_more_button.custom_minimum_size = Vector2(0, ACTION_ROW)
+	_more_button.toggle_mode = true
+	_more_button.focus_mode = Control.FOCUS_NONE
+	_more_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_more_button.tooltip_text = tr("Show every command, with why the locked ones cannot be used now.")
+	_more_button.toggled.connect(set_show_all)
+	command_footer.add_child(_more_button)
+	_target_button = _button(command_footer, tr("TARGET  〉"), Battle.select_next_enemy)
 	_target_button.name = "TargetButton"
 	_target_button.theme_type_variation = "HudActionButton"
-	_target_button.custom_minimum_size = Vector2(180, 26)
+	_target_button.custom_minimum_size = Vector2(0, ACTION_ROW)
+	_target_button.tooltip_text = tr("Cycle to the next enemy.")
 
 	add_child(_rule())
 
 	var party_column := VBoxContainer.new()
 	party_column.name = "PartyColumn"
 	party_column.theme_type_variation = "HudBarColumn"
-	party_column.custom_minimum_size = Vector2(220, 0)
+	party_column.custom_minimum_size = Vector2(PARTY_WIDTH, 0)
 	add_child(party_column)
 	var party_title := Label.new()
 	party_title.text = "PARTY"
@@ -220,19 +283,20 @@ func _build() -> void:
 	var controls := VBoxContainer.new()
 	controls.name = "TurnControls"
 	controls.theme_type_variation = "HudBarColumn"
-	controls.custom_minimum_size = Vector2(124, 0)
+	controls.custom_minimum_size = Vector2(CONTROLS_WIDTH, 0)
 	add_child(controls)
 	_end_turn_button = _button(controls, "END TURN", Battle.end_turn)
 	_end_turn_button.name = "EndTurnButton"
-	_end_turn_button.custom_minimum_size = Vector2(124, 40)
+	_end_turn_button.custom_minimum_size = Vector2(CONTROLS_WIDTH, 40)
 	_end_turn_button.theme_type_variation = "BronzeButton"
+	_end_turn_button.tooltip_text = tr("End your turn (Space).")
 	_withdraw_button = _button(controls, "WITHDRAW", Battle.flee)
 	_withdraw_button.name = "WithdrawButton"
-	_withdraw_button.custom_minimum_size = Vector2(124, 28)
+	_withdraw_button.custom_minimum_size = Vector2(CONTROLS_WIDTH, 28)
 	_withdraw_button.theme_type_variation = "DangerButton"
 	_breakdown_button = _button(controls, tr("BREAKDOWN"), _toggle_breakdown)
 	_breakdown_button.name = "BreakdownButton"
-	_breakdown_button.custom_minimum_size = Vector2(124, 28)
+	_breakdown_button.custom_minimum_size = Vector2(CONTROLS_WIDTH, 28)
 	_breakdown_button.toggle_mode = true
 	_breakdown_button.tooltip_text = tr("Accuracy and power breakdown, attunement and tactical data (B).")
 	_built = true
@@ -244,13 +308,56 @@ func _rule() -> VSeparator:
 	return rule
 
 
+## Bar buttons are mouse targets and never hold focus: Space stays END TURN (owner
+## 2026-11-01) instead of re-pressing whatever was clicked last.
 func _button(box: Container, text: String, cb: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.focus_mode = Control.FOCUS_NONE
 	button.pressed.connect(cb)
 	box.add_child(button)
 	return button
+
+
+## The command footer's rect (the AIM row, FOE readout, MORE and TARGET share it).
+func command_footer() -> HBoxContainer:
+	return _command_footer
+
+
+## The ready (usable, visible) command buttons, in catalog order.
+func ready_buttons() -> Array[Button]:
+	var ready: Array[Button] = []
+	for button: Button in _action_buttons:
+		if button.visible and not button.disabled and button.get_parent() == _actions_box:
+			ready.append(button)
+	return ready
+
+
+## Every visible command button, ready or locked (the MORE list included when shown).
+func visible_action_buttons() -> Array[Button]:
+	var shown: Array[Button] = []
+	for button: Button in _action_buttons:
+		if button.is_visible_in_tree():
+			shown.append(button)
+	return shown
+
+
+func showing_all() -> bool:
+	return _show_all
+
+
+func set_show_all(show_all: bool) -> void:
+	_show_all = show_all
+	_more_button.set_pressed_no_signal(show_all)
+	_refresh()
+
+
+## END TURN from the key (Space): the interface guards the turn and the focus.
+func press_end_turn() -> void:
+	if _end_turn_button.disabled or not _end_turn_button.visible:
+		return
+	_end_turn_button.pressed.emit()
 
 
 func _make_meter() -> ProgressBar:
@@ -482,27 +589,41 @@ func _refresh() -> void:
 
 	var actions := Battle.available_actions()
 	var cell_battlefield := _battlefield_has_cells()
+	var locked_count := 0
 	for i in _action_buttons.size():
+		var button := _action_buttons[i]
 		if i >= actions.size():
-			_action_buttons[i].disabled = true
+			button.disabled = true
+			button.visible = false
+			_action_rows[i].visible = false
 			continue
 		# #473: on a cell battlefield a move is a click on a cell; the zone MOVE cards
 		# (FRONT/BACK/FLANK, and the destination-less MOVE) have nothing to aim at there.
-		_action_buttons[i].visible = not (
-			cell_battlefield and actions[i].kind == CombatAction.Kind.MOVE
-		)
+		var offered := not (cell_battlefield and actions[i].kind == CombatAction.Kind.MOVE)
 		var reason := Battle.action_lock_reason(actions[i])
 		var forecast := (
 			Battle.action_forecast(actions[i])
 			if actions[i].kind == CombatAction.Kind.CAST and reason.is_empty()
 			else {}
 		)
-		_action_buttons[i].disabled = not reason.is_empty()
-		_action_buttons[i].tooltip_text = _action_tooltip(actions[i], reason, forecast)
-		_action_buttons[i].text = _short_action_text(actions[i], reason, forecast)
+		button.disabled = not reason.is_empty()
+		button.tooltip_text = _action_tooltip(actions[i], reason, forecast)
+		button.text = _short_action_text(actions[i], reason, forecast)
+		var ready := offered and reason.is_empty()
+		_place_action(i, ready)
+		button.visible = offered and (ready or _show_all)
+		_action_rows[i].visible = offered and not ready and _show_all
+		_action_reasons[i].text = reason
+		_action_reasons[i].tooltip_text = reason
+		if offered and not ready:
+			locked_count += 1
+	_locked_count = locked_count
+	_locked_box.visible = _show_all and locked_count > 0
+	_more_button.visible = (locked_count > 0 or _show_all) and not outcome_shown()
+	_more_button.text = tr("LESS") if _show_all else tr("MORE · %d") % locked_count
 
 	var target := Battle.current_target()
-	_target_button.text = "TARGET  •  %s  〉" % (target.display_name if target else "NONE")
+	_target_button.visible = Battle.living_enemies().size() > 1 and not outcome_shown()
 	_target_button.disabled = Battle.living_enemies().size() <= 1
 
 	if is_instance_valid(_interface):
@@ -510,6 +631,27 @@ func _refresh() -> void:
 		if not forecast_ctx.is_empty():
 			_interface.set_forecast_context(forecast_ctx)
 		_breakdown_button.set_pressed_no_signal(_interface.breakdown_visible())
+
+
+## A ready action's button sits in the flow; a locked one sits in its MORE row beside the
+## lock reason. The button is the same node either way, so its wiring never changes.
+func _place_action(index: int, ready: bool) -> void:
+	var button := _action_buttons[index]
+	var row := _action_rows[index]
+	var home: Container = _actions_box if ready else row
+	if button.get_parent() == home:
+		return
+	button.get_parent().remove_child(button)
+	home.add_child(button)
+	if not ready:
+		home.move_child(button, 0)
+		return
+	# Back into the flow in catalog order, not at the end.
+	var slot := 0
+	for sibling: Node in _actions_box.get_children():
+		if sibling != button and int(sibling.get_meta("index", -1)) < index:
+			slot += 1
+	_actions_box.move_child(button, slot)
 
 
 func _battlefield_has_cells() -> bool:
@@ -681,6 +823,7 @@ func _show_outcome() -> void:
 	_action_scroll.visible = false
 	_aim_host.visible = false
 	_target_button.visible = false
+	_more_button.visible = false
 	_end_turn_button.disabled = true
 	_withdraw_button.disabled = true
 	append_log(result.message)
