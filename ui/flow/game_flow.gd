@@ -64,8 +64,9 @@ const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
 const CHARACTER_CREATION_SCREEN := preload("res://ui/screens/character_creation.tscn")
 const INTRO_NARRATION_SCREEN := preload("res://ui/screens/intro_narration.tscn")
 const DEPLOYMENT_SCREEN := preload("res://ui/screens/deployment/deployment.tscn")
-## One field HUD shell: BattleInterface (including tactical data), command dock,
-## audio, and outcome controls. CombatOverlay renders the fight on the field.
+## Standalone combat shell for a fight with no field (tools and tests): hosts a FieldHUD in
+## combat over a backdrop. On a live field the field's own HUD grows its combat parts
+## instead (owner 2026-11-01); CombatOverlay renders the fight on the field.
 const BATTLE_HUD := preload("res://ui/screens/battle.tscn")
 const CHAPTER_COMPLETE_SCREEN := preload("res://ui/screens/chapter_complete.tscn")
 
@@ -825,6 +826,12 @@ func _on_battle_entered() -> void:
 		field.set_combat_mode(true)
 	if not resuming:
 		MusicDirector.push_context("battle")
+	# One bar, both modes: the field HUD stays up and grows its combat parts. No full-screen
+	# HUD layer opens over a live field; the shell is only for fights without one.
+	var hud: FieldHUD = field.field_hud() if field != null else null
+	if hud != null:
+		hud.enter_combat(field)
+		return
 	UIManager.open(BATTLE_HUD, false, true)
 
 
@@ -836,6 +843,9 @@ func _on_battle_exited() -> void:
 		return
 	var field: FieldMap = Battle._current_field_map()
 	if field != null:
+		var hud: FieldHUD = field.field_hud()
+		if hud != null:
+			hud.exit_combat()
 		field.set_combat_mode(false)
 	MusicDirector.pop_context()
 	SaveGame.flush_pending_autosave.call_deferred()

@@ -86,13 +86,8 @@ func set_combat_mode(active: bool) -> void:
 					canvas_label.set.bind("self_modulate", canvas_label.self_modulate)
 				)
 				canvas_label.self_modulate = Color(canvas_label.self_modulate, 0.0)
-	# The battle HUD replaces the field HUD; its hotkey bar and objective would show between
-	# the battle panels.
-	for node: Node in root.find_children("*", "CanvasLayer", true, false):
-		if node.scene_file_path == FIELD_HUD_SCENE:
-			var hud := node as CanvasLayer
-			_restore_controls.append(hud.set.bind("visible", hud.visible))
-			hud.visible = false
+	# The field HUD stays up: its one bar grows the combat parts (owner 2026-11-01), driven by
+	# GameFlow through FieldHUD.enter_combat()/exit_combat().
 	for node: Node in root.find_children("*", "TravelExit", true, false):
 		var travel_exit := node as TravelExit
 		if travel_exit != null:
@@ -102,6 +97,14 @@ func set_combat_mode(active: bool) -> void:
 
 func combat_mode_active() -> bool:
 	return _combat_mode_active
+
+
+## The field's own HUD (the one bottom bar), or null on a fixture without one.
+func field_hud() -> FieldHUD:
+	for node: Node in _field_root().find_children("*", "CanvasLayer", true, false):
+		if node.scene_file_path == FIELD_HUD_SCENE:
+			return node as FieldHUD
+	return null
 
 
 func _is_field_interactable(node: Node) -> bool:
