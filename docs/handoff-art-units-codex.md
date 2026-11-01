@@ -229,6 +229,7 @@ Ofshütje, or a Hollow body. Owner approves or annotates per sheet; approved she
 reference for U3+. Do not decide: anything the sidecar lists; these are drafts.
 
 **U2 — Shared pipeline P0–P1 (asset-forge; needs owner "go P0" and `MESHY_API_KEY`). ≈3 sessions.**
+**Filed:** #540 (2026-10-31, item 28 (c) `c go`); P0 rerun in the canonical asset-forge checkout, P1 on asset-forge branch `codex/p1-meshy-client`.
 Follow `/home/adamjroder/projects/_planning/asset-pipeline/CODEX_ACTION_PLAN.md` P0 (Linux Blender
 in WSL matching the Windows 5.2 major; headless cube→GLB proof) and P1 (Meshy client with an
 approval gate that refuses to generate without an owner-approved batch file). Soul Meter calls the
