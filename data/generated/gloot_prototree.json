@@ -218,6 +218,7 @@
     "rarity": "common",
     "flavour": "A tool until the moment it is not.",
     "equip_slot": "main_hand",
+    "attack_bonus": 2,
     "image": "res://assets/generated/sprites/items/forge_hammer--icon.png"
   },
   "weapons/roadwarden_spear": {
@@ -230,6 +231,8 @@
     "rarity": "common",
     "flavour": "Long enough to make a roadside disagreement reconsider.",
     "equip_slot": "main_hand",
+    "attack_bonus": 1,
+    "defense_bonus": 1,
     "image": "res://assets/generated/sprites/items/roadwarden_spear--icon.png"
   },
   "weapons/taubstummer_axe": {
@@ -242,6 +245,8 @@
     "rarity": "mythic",
     "flavour": "It does not ring when struck. Nothing it touches does.",
     "equip_slot": "main_hand",
+    "attack_bonus": 3,
+    "defense_bonus": -1,
     "image": "res://assets/generated/sprites/items/taubstummer_axe--icon.png"
   }
 }
