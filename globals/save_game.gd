@@ -162,6 +162,10 @@ func _is_valid_slot(slot: int) -> bool:
 
 
 func _write_current_payload(target_path: String, target_temp_path: String, target_backup_path: String) -> bool:
+	# Every write (autosave, quick save, manual slot) passes here, so a sandbox session
+	# such as the dev room can never write its throwaway state over a player save.
+	if _sandbox_sessions > 0:
+		return _fail("Saving is disabled during a sandbox session.")
 	var file := FileAccess.open(target_temp_path, FileAccess.WRITE)
 	if file == null:
 		return _fail("Could not open the save file for writing.")

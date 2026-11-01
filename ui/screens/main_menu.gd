@@ -70,6 +70,11 @@ func _build() -> void:
 	)
 	load_button.name = "LoadGameButton"
 	load_button.disabled = not (SaveGame.has_save() or any_manual_save)
+	if OS.is_debug_build():
+		var dev_button := _main_menu_button(
+			button_column, "DEV ROOM", func() -> void: GameFlow.send_event("dev_room")
+		)
+		dev_button.name = "DevRoomButton"
 	_main_menu_button(
 		button_column, "Settings", func() -> void: UIManager.open(UIManager.SETTINGS)
 	)
