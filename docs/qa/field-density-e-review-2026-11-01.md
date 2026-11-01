@@ -625,3 +625,7 @@ Commits: `6ba443acee438e5b8a8027ad66d88a47eb6cdcaf`;
 Claude's next action: review this report's scope mismatch before integrating
 the remaining changes and making the assigned rendered captures.
 
+
+## Rendered check (Claude, Xvfb, 2026-11-01)
+
+`field-density-e-hubs-2026-11-01.png`: top row Long Verge camp (two framings), bottom row Hollowmere west camp and DrownedShrine. All stores sit beside existing tents, carts, crates or the landing, clear of paths. FormationPlan and ShrineInscription render with the interactable placeholder marker (yellow square), not an art prop. Four crate labels cluster around the single Long Verge camp.
