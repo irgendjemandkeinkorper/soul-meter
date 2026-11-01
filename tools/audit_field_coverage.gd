@@ -22,11 +22,17 @@ const TARGETS: Dictionary = {
 ## Fixed by the handoff, not inferred from fast-travel membership. The last two
 ## are ALSO wild locations in the shipped index; report both views, do not reclassify.
 const HUB_IDS: PackedStringArray = ["dom", "ashlaren", "kesselford", "long_verge", "hollowmere"]
-const VERBS: PackedStringArray = [
+## Ruling 7's field verbs (skill checks on objects, lockpicking, stealing, barter, loot)
+## carry the PROVISIONAL >= 5 target. The other interactions are reported for context
+## only: a save point or a travel exit is not a Fallout-full field verb.
+const FIELD_VERBS: PackedStringArray = [
 	"lockpick", "pickpocket/steal", "loot container", "cache", "barter",
+]
+const INFO_VERBS: PackedStringArray = [
 	"talk", "pickup", "switch", "inspect/interact", "save", "travel", "party selection",
 	"damage structure",
 ]
+const VERBS: PackedStringArray = FIELD_VERBS + INFO_VERBS
 const PROPERTIES: PackedStringArray = [
 	"lock_skill", "lock_id", "pocket_id", "pocket_skill", "container_id", "loot",
 	"loot_table_id", "owned_by_faction", "vendor_id", "shop_type", "save_point",
@@ -141,8 +147,10 @@ static func audit_sources(content: Dictionary) -> Dictionary:
 	var rows: Array = result["rows"]
 	rows.append(measurement("Distinct field skills / %d" % Schema.FIELD_SKILL_IDS.size(), distinct, TARGETS["skills"]))
 	rows.append(measurement("Bellow checks", result["skills"]["bellow"], TARGETS["bellow"]))
-	for verb: String in VERBS:
+	for verb: String in FIELD_VERBS:
 		rows.append(measurement("Verb: " + verb, result["verbs"][verb], TARGETS["verb"]))
+	for verb: String in INFO_VERBS:
+		rows.append(info_row("Verb (info): " + verb, result["verbs"][verb]))
 	for id: String in HUB_IDS:
 		var location: Dictionary = locations_by_id.get(id, {})
 		var path := String(location.get("scene_path", ""))
@@ -168,6 +176,12 @@ static func audit_sources(content: Dictionary) -> Dictionary:
 static func measurement(label: String, count: int, target: int, has_scene: bool = true) -> Dictionary:
 	return {"label": label, "count": count, "target": target, "pass": has_scene and count >= target,
 		"gap": maxi(0, target - count), "has_scene": has_scene}
+
+
+## A context row: counted and printed, never a PASS/FAIL gate.
+static func info_row(label: String, count: int) -> Dictionary:
+	return {"label": label, "count": count, "target": 0, "pass": true, "gap": 0,
+		"has_scene": true, "info": true}
 
 
 static func report(result: Dictionary) -> String:
@@ -203,6 +217,8 @@ static func report(result: Dictionary) -> String:
 
 
 static func _report_row(row: Dictionary) -> String:
+	if row.get("info", false):
+		return "%s | %d | — | INFO" % [row["label"], row["count"]]
 	return "%s | %d%s | >= %d | %s" % [row["label"], row["count"],
 		" (no scene)" if not row["has_scene"] else "", row["target"], "PASS" if row["pass"] else "FAIL"]
 

@@ -301,7 +301,7 @@ func test_density_rows_fail_below_and_pass_at_their_thresholds() -> void:
 		for i: int in 40 + offset:
 			fixture["items"]["item%d" % i] = {}
 		var result: Dictionary = Audit.audit_sources(fixture)
-		for label: String in ["Hub dom: locks", "Hub dom: pockets", "Hub dom: loot-table containers", "Wild wilds: caches", "Verb: switch", "Loot tables", "Items"]:
+		for label: String in ["Hub dom: locks", "Hub dom: pockets", "Hub dom: loot-table containers", "Wild wilds: caches", "Loot tables", "Items"]:
 			var row := _row(result, label)
 			assert_bool(row["pass"]).override_failure_message("%s offset %d" % [label, offset]).is_equal(offset >= 0)
 			assert_int(row["gap"]).is_equal(1 if offset < 0 else 0)
@@ -399,3 +399,14 @@ func _skill_dialogue(count: int, repeats: int) -> String:
 		for _repeat: int in repeats:
 			lines.append('if check("%s", 40)' % Schema.FIELD_SKILL_IDS[i])
 	return "\n".join(lines)
+
+
+func test_only_ruling_seven_field_verbs_are_gated() -> void:
+	var result: Dictionary = Audit.audit_sources(_fixture())
+	for verb: String in Audit.FIELD_VERBS:
+		assert_bool(_row(result, "Verb: " + verb).has("info")).is_false()
+	for verb: String in Audit.INFO_VERBS:
+		var row := _row(result, "Verb (info): " + verb)
+		assert_bool(row["info"]).is_true()
+		assert_bool(row["pass"]).is_true()
+		assert_str(Audit._report_row(row)).ends_with("INFO")

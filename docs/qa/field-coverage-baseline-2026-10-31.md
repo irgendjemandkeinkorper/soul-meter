@@ -38,14 +38,14 @@ Verb: pickpocket/steal | 7 | >= 5 | PASS
 Verb: loot container | 12 | >= 5 | PASS
 Verb: cache | 4 | >= 5 | FAIL
 Verb: barter | 16 | >= 5 | PASS
-Verb: talk | 88 | >= 5 | PASS
-Verb: pickup | 5 | >= 5 | PASS
-Verb: switch | 1 | >= 5 | FAIL
-Verb: inspect/interact | 7 | >= 5 | PASS
-Verb: save | 1 | >= 5 | FAIL
-Verb: travel | 67 | >= 5 | PASS
-Verb: party selection | 1 | >= 5 | FAIL
-Verb: damage structure | 0 | >= 5 | FAIL
+Verb (info): talk | 88 | — | INFO
+Verb (info): pickup | 5 | — | INFO
+Verb (info): switch | 1 | — | INFO
+Verb (info): inspect/interact | 7 | — | INFO
+Verb (info): save | 1 | — | INFO
+Verb (info): travel | 67 | — | INFO
+Verb (info): party selection | 1 | — | INFO
+Verb (info): damage structure | 0 | — | INFO
 Hub dom: locks | 0 | >= 4 | FAIL
 Hub dom: pockets | 1 | >= 3 | FAIL
 Hub dom: loot-table containers | 0 | >= 4 | FAIL
@@ -130,6 +130,10 @@ NOTE: Classification discrepancy: brief hub hollowmere has no fast-travel facet 
 NOTE: Classification discrepancy: brief hub long_verge has no fast-travel facet (retained in both applicable views).
 NOTE: Source discrepancy: roadmap-2026-10-30.md is absent; targets are from the slice-A brief.
 NOTE: Source discrepancy: R7/11c answered density entries are absent; targets remain PROVISIONAL.
+SCRIPT ERROR: Parse Error: Could not preload resource file "res://ui/screens/main_menu_reflection.gdshader".
+   at: GDScript::reload (res://ui/screens/main_menu.gd:4)
+SCRIPT ERROR: Parse Error: Cannot infer the type of "REFLECTION_SHADER" constant because the value doesn't have a set type.
+   at: GDScript::reload (res://ui/screens/main_menu.gd:4)
 SCRIPT ERROR: Parse Error: Could not resolve external class member "LOAD_GAME".
    at: GDScript::reload (res://ui/screens/main_menu.gd:69)
 SCRIPT ERROR: Parse Error: Could not resolve external class member "SETTINGS".
@@ -140,13 +144,15 @@ ERROR: res://ui/screens/main_menu.tscn:7 - Parse Error: .
    at: _printerr (scene/resources/resource_format_text.cpp:41)
 ERROR: Failed loading resource: res://ui/screens/main_menu.tscn.
    at: _load (core/io/resource_loader.cpp:317)
-WARNING: 5065 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+WARNING: 5069 ObjectDB instances were leaked at exit (run with `--verbose` for details).
    at: cleanup (core/object/object.cpp:2536)
-ERROR: 13 resources still in use at exit (run with --verbose for details).
+ERROR: 15 resources still in use at exit (run with --verbose for details).
    at: clear (core/io/resource.cpp:822)
 ```
 
 ## Gap to target
+
+Corrected by Claude in review, 2026-10-31: only ruling 7's five field verbs (lockpick, pickpocket/steal, loot container, cache, barter) carry the ≥5 target. The other interactions are context rows marked INFO; their "more required" numbers below are not targets.
 
 “More required” is `max(0, target - measured)`. Skill-presence rows show the
 contribution of each skill to the **15 of 22** aggregate; they do not impose a
@@ -161,14 +167,14 @@ one-check quota on all 22 skills. Superseded rows are comparison only.
 | Provisional: Verb: loot container | 0 |
 | Provisional: Verb: cache | 1 |
 | Provisional: Verb: barter | 0 |
-| Provisional: Verb: talk | 0 |
-| Provisional: Verb: pickup | 0 |
-| Provisional: Verb: switch | 4 |
-| Provisional: Verb: inspect/interact | 0 |
-| Provisional: Verb: save | 4 |
-| Provisional: Verb: travel | 0 |
-| Provisional: Verb: party selection | 4 |
-| Provisional: Verb: damage structure | 5 |
+| Info only (not gated): Verb: talk | 0 |
+| Info only (not gated): Verb: pickup | 0 |
+| Info only (not gated): Verb: switch | 4 |
+| Info only (not gated): Verb: inspect/interact | 0 |
+| Info only (not gated): Verb: save | 4 |
+| Info only (not gated): Verb: travel | 0 |
+| Info only (not gated): Verb: party selection | 4 |
+| Info only (not gated): Verb: damage structure | 5 |
 | Provisional: Hub dom: locks | 4 |
 | Provisional: Hub dom: pockets | 2 |
 | Provisional: Hub dom: loot-table containers | 4 |
