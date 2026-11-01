@@ -82,9 +82,9 @@ func test_placed_containers_resolve_with_unique_repository_wide_ids() -> void:
 		scene_ids.sort()
 		found_by_scene[scene_path] = scene_ids
 
-	# 22 after the Phase 1 field-density slices. This count is a PIN: a container added
+	# 38 after the Phase 1 field-density slices. This count is a PIN: a container added
 	# without updating EXPECTED_PLACEMENTS above should fail here.
-	assert_int(scene_for_id.size()).is_equal(22)
+	assert_int(scene_for_id.size()).is_equal(38)
 	for scene_path: String in EXPECTED_PLACEMENTS:
 		var expected: Array = (EXPECTED_PLACEMENTS[scene_path] as Array).duplicate()
 		expected.sort()
