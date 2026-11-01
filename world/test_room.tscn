@@ -1,8 +1,9 @@
-[gd_scene load_steps=47 format=3]
+[gd_scene load_steps=48 format=3]
 
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="3_npc"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="51_chest"]
 [ext_resource type="PackedScene" path="res://actors/pickup/pickup.tscn" id="4_pickup"]
 [ext_resource type="PackedScene" path="res://actors/hostile/hostile.tscn" id="12_hostile"]
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="6_exit"]
@@ -574,3 +575,17 @@ initial_pause = 1.2
 
 [node name="SpawnSlotGladeSouth" type="Marker2D" parent="."]
 position = Vector2(1450, 900)
+
+[node name="WestCache" parent="." instance=ExtResource("51_chest")]
+position = Vector2(420, 560)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_wilds_west_cache"
+container_id = "wilds-west-cache"
+loot_table_id = &"road-cache"
+
+[node name="GladeCache" parent="." instance=ExtResource("51_chest")]
+position = Vector2(1560, 740)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_wilds_glade_cache"
+container_id = "wilds-glade-cache"
+loot_table_id = &"road-cache"
