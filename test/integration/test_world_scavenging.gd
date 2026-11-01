@@ -16,7 +16,8 @@ static func _all_world_scenes() -> Array[String]:
 
 const EXPECTED_PLACEMENTS := {
 	"res://world/dorthkor_road.tscn": ["dorthkor-road-camp-cache", "dorthkor-road-roadside-cache"],
-	"res://world/hollowmere.tscn": ["hollowmere-landing-cache", "hollowmere-track-cache"],
+	"res://world/hollowmere.tscn":
+	["hollowmere-crate-store", "hollowmere-landing-cache", "hollowmere-landing-store", "hollowmere-mender-store", "hollowmere-tent-store", "hollowmere-track-cache"],
 	"res://world/interiors/ashlaren_millhouse.tscn":
 	["ashlaren-millhouse-braced-supply-crate", "ashlaren-millhouse-locked-supply-crate"],
 	"res://world/interiors/ashlaren_weighing_hall.tscn":
@@ -36,7 +37,8 @@ const EXPECTED_PLACEMENTS := {
 	"res://world/interiors/players_house.tscn": ["players-house-provisions"],
 	"res://world/interiors/river_shrine.tscn": ["river-shrine-offering-box"],
 	"res://world/interiors/shrine_undercroft.tscn": ["shrine-undercroft-offering-box"],
-	"res://world/long_verge.tscn": ["long-verge-camp-cache", "long-verge-west-cache"],
+	"res://world/long_verge.tscn":
+	["long-verge-camp-cache", "long-verge-cart-store", "long-verge-column-store", "long-verge-crate-store", "long-verge-shoulder-store", "long-verge-west-cache"],
 	"res://world/test_room.tscn": ["wilds-glade-cache", "wilds-west-cache"],
 	"res://world/wound_lip.tscn": ["wound-lip-guard-kit", "wound-lip-ledge-cache"],
 }
@@ -80,9 +82,9 @@ func test_placed_containers_resolve_with_unique_repository_wide_ids() -> void:
 		scene_ids.sort()
 		found_by_scene[scene_path] = scene_ids
 
-	# 30 after the Phase 1 field-density slices. This count is a PIN: a container added
+	# 38 after the Phase 1 field-density slices. This count is a PIN: a container added
 	# without updating EXPECTED_PLACEMENTS above should fail here.
-	assert_int(scene_for_id.size()).is_equal(30)
+	assert_int(scene_for_id.size()).is_equal(38)
 	for scene_path: String in EXPECTED_PLACEMENTS:
 		var expected: Array = (EXPECTED_PLACEMENTS[scene_path] as Array).duplicate()
 		expected.sort()

@@ -51,3 +51,68 @@ msgstr ""
 msgctxt "quest_1/quest_description"
 msgid "Iris wants a few loamroot sprigs from the grove for her work."
 msgstr ""
+
+#. DRAFT: field-density E; scene-exported strings use SMInteractable.tr().
+#: world/long_verge.tscn:ShoulderStore
+msgid "OVERGROWN CACHE"
+msgstr ""
+
+#. DRAFT
+#: world/long_verge.tscn:ShoulderStore
+msgid "Find the opening beneath the roots."
+msgstr ""
+
+#. DRAFT
+#: world/long_verge.tscn:ShoulderStore
+msgid "You cannot find the opening."
+msgstr ""
+
+#. DRAFT
+#: world/long_verge.tscn:FormationPlan
+msgid "FORMATION PLAN"
+msgstr ""
+
+#. DRAFT
+#: world/long_verge.tscn:FormationPlan
+msgid "ASSESS FORMATION"
+msgstr ""
+
+#. DRAFT
+#: world/long_verge.tscn:FormationPlan
+msgid "Formation assessed."
+msgstr ""
+
+#. DRAFT
+#: world/long_verge.tscn:FormationPlan
+msgid "Read the formation."
+msgstr ""
+
+#. DRAFT
+#: world/long_verge.tscn:FormationPlan
+msgid "You cannot assess the formation."
+msgstr ""
+
+#. DRAFT
+#: world/hollowmere.tscn:ShrineInscription
+msgid "SHRINE INSCRIPTION"
+msgstr ""
+
+#. DRAFT
+#: world/hollowmere.tscn:ShrineInscription
+msgid "READ INSCRIPTION"
+msgstr ""
+
+#. DRAFT
+#: world/hollowmere.tscn:ShrineInscription
+msgid "Devotional marks identified."
+msgstr ""
+
+#. DRAFT
+#: world/hollowmere.tscn:ShrineInscription
+msgid "Interpret the devotional marks."
+msgstr ""
+
+#. DRAFT
+#: world/hollowmere.tscn:ShrineInscription
+msgid "You cannot interpret the marks."
+msgstr ""
