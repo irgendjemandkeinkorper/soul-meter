@@ -548,7 +548,8 @@ lines instead of engine errors.
 | --- | --- | --- |
 | `flag <name> [true\|false]` | `GameState.set_flag()` / `get_flag()` | Sets a flag; omitted value means `true`. |
 | `flags [filter]` | `GameState.flags` names plus `GameState.get_flag()` | Lists flags, optionally filtered by case-insensitive substring. |
-| `soul <value>` | `GameState.set_soul_meter()` | Sets the Soul Meter through its normal clamping and husking rules. |
+| `soul <value>` | `GameState.set_soul_meter_with_cause()` | Sets the Soul Meter through its normal clamping and husking rules; traces cause `dev_console:soul`. |
+| `soul trace` | `GameState.soul_trace_entries()` | Reads the last 512 Soul changes or blocked clamps, oldest first, as JSON. Does not mutate Soul or its trace. |
 | `gp <value>` | `GameState.set_gp()` | Sets GP through its normal non-negative clamp. |
 | `rep <faction> <delta>` | Generated `FactionIds` catalog, then `Reputation.record()` | Appends a tagged faction-consequence event. |
 | `standing <faction>` | `Reputation.standing()` / `band()` | Shows the derived standing and band. |
@@ -567,6 +568,10 @@ lines instead of engine errors.
 
 `quest complete` stays refused: `QuestRegistry.debug_force_complete(quest)` accepts no cause, and
 some resolvers append ledger events, so debug evidence would be indistinguishable from play.
+
+Soul traces are developer diagnostics in memory, omitted from saves and cleared on new game.
+Each entry also goes to verbose engine output (`--verbose`). The band identifier reuses the
+existing Soul Gauge condition; this command adds no player-facing log or band definitions.
 
 **Tagged provenance.** Every console-originated ledger write passes a cause beginning with the
 model's exported `DEBUG_CAUSE_PREFIX` (`[debug] `); `is_debug_caused(cause)` is the canonical test.
