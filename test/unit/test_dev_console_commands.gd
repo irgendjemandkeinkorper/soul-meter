@@ -58,6 +58,30 @@ func test_flag_flags_soul_and_gp_commands_use_game_state_public_apis() -> void:
 	assert_int(GameState.gp).is_equal(123)
 
 
+func test_soul_trace_reads_attributed_entries_without_mutating_soul_or_trace() -> void:
+	GameState.flags.erase(GameState.HUSKED_FLAG)
+	GameState.flags.erase(GameState.HUSKED_RECOVERY_CEILING_FLAG)
+	GameState.set_soul_meter_with_cause(50.0, "test:setup")
+	GameState.clear_soul_trace()
+	assert_bool(_execute("soul trace")).is_true()
+	assert_str(_last_text()).is_equal("Soul trace (0):")
+	assert_bool(_execute("soul 37.5")).is_true()
+	var entries := GameState.soul_trace_entries()
+	assert_int(entries.size()).is_equal(1)
+	assert_str(entries[0]["cause"]).is_equal("dev_console:soul")
+	var state_before := GameState.to_dict()
+
+	assert_bool(_execute("soul trace")).is_true()
+	var displayed: Dictionary = JSON.parse_string(_last_text())
+	assert_str(displayed["cause"]).is_equal("dev_console:soul")
+	assert_float(displayed["before"]).is_equal(50.0)
+	assert_float(displayed["after"]).is_equal(37.5)
+	assert_dict(GameState.to_dict()).is_equal(state_before)
+	assert_array(GameState.soul_trace_entries()).is_equal(entries)
+	assert_bool(_execute("soul trace extra")).is_false()
+	assert_array(GameState.soul_trace_entries()).is_equal(entries)
+
+
 func test_reputation_commands_write_tagged_ledger_events_and_read_them() -> void:
 	var standing_before := Reputation.standing(FactionIds.IRON_COMPANIES)
 

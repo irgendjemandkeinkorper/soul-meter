@@ -5,6 +5,7 @@ extends Node
 const VendorData := preload("res://globals/vendor_registry.gd")
 
 signal soul_meter_changed(value: float)
+signal soul_traced(entry: Dictionary)
 signal husked_state_changed(husked: bool)
 signal hollowing_state_changed(active: bool)
 signal gp_changed(value: int)
@@ -73,6 +74,7 @@ const HUSKED_RECOVERY_CEILING_FLAG := "soul_husked_recovery_ceiling"
 ## that shape and has had no balance sweep. The tactical amendment §1.1 records
 ## what happens when a magnitude is treated as settled without one.
 const HUSKED_CEILING_RATIO := 0.5
+const SOUL_TRACE_LIMIT := 512
 
 var flags: Dictionary = {}
 ## Per-save deterministic world seed. New games draw it explicitly; legacy
@@ -83,6 +85,10 @@ var soul_meter: float = 50.0:
 ## The lowest the Gauge has been this run. Chapter One's ledger reads it back beside the
 ## final value, so a chapter that went to the edge and came back says so.
 var soul_lowest: float = 50.0
+## Developer diagnostics only; deliberately absent from the save payload.
+var soul_trace: Array[Dictionary] = []
+var _soul_trace_index: int = 0
+var _pending_soul_cause: String = ""
 var gp: int = DEFAULT_GP:
 	set = set_gp
 var party: Array[PartyMember] = []
@@ -146,10 +152,20 @@ func refill_party_breath() -> void:
 # --- Soul Meter and facts ----------------------------------------------------
 
 
+func set_soul_meter_with_cause(value: float, cause: String) -> void:
+	_pending_soul_cause = cause
+	soul_meter = value
+
+
 func set_soul_meter(value: float) -> void:
+	var cause := _pending_soul_cause if not _pending_soul_cause.is_empty() else "unattributed"
+	# Consume before emitting any signals, including on a no-op assignment.
+	_pending_soul_cause = ""
 	var pre_zero_value := soul_meter
+	var husked_before := is_husked()
 	var ceiling := husked_recovery_ceiling() if has_been_husked() else 100.0
 	soul_meter = clampf(value, 0.0, ceiling)
+	var after := soul_meter
 	soul_lowest = minf(soul_lowest, soul_meter)
 	soul_meter_changed.emit(soul_meter)
 	if is_zero_approx(soul_meter):
@@ -157,6 +173,51 @@ func set_soul_meter(value: float) -> void:
 			_enter_husked_state(pre_zero_value)
 	elif is_husked():
 		_exit_husked_state()
+	if after != pre_zero_value or value != after:
+		_soul_trace_index += 1
+		var entry: Dictionary = {
+			"index": _soul_trace_index,
+			"cause": cause,
+			"requested": value,
+			"before": pre_zero_value,
+			"after": after,
+			"changed": after != pre_zero_value,
+			"clamped": after != value,
+			"ceiling": ceiling,
+			"husked_before": husked_before,
+			"husked_after": is_husked(),
+			"band_id": soul_band_id_for(after),
+		}
+		soul_trace.append(entry)
+		if soul_trace.size() > SOUL_TRACE_LIMIT:
+			soul_trace.pop_front()
+		print_verbose("Soul trace: %s" % JSON.stringify(entry))
+		soul_traced.emit(entry.duplicate(true))
+
+
+func soul_trace_entries() -> Array[Dictionary]:
+	return soul_trace.duplicate(true)
+
+
+func clear_soul_trace() -> void:
+	soul_trace.clear()
+	_soul_trace_index = 0
+	_pending_soul_cause = ""
+
+
+## Existing SoulGauge presentation identifiers, shared without changing their thresholds.
+## The exact percentage remains authoritative for rules and dialogue checks.
+static func soul_band_id_for(value: float) -> String:
+	var clamped := clampf(value, 0.0, 100.0)
+	if clamped >= 75.0:
+		return "bright"
+	if clamped >= 50.0:
+		return "whole"
+	if clamped >= 25.0:
+		return "frayed"
+	if clamped > 0.0:
+		return "guttering"
+	return "husked"
 
 
 ## True while the Soul Gauge is husked — casting is refused (see CastingGate).
@@ -1173,7 +1234,7 @@ func from_dict(data: Dictionary) -> bool:
 		world_seed = int(data["world_seed"])
 	else:
 		regenerate_world_seed()
-	soul_meter = float(data.get("soul_meter", 50.0))
+	set_soul_meter_with_cause(float(data.get("soul_meter", 50.0)), "save:from_dict")
 	# Additive key: a save from before the ledger read it back starts from the loaded value.
 	soul_lowest = minf(float(data.get("soul_lowest", soul_meter)), soul_meter)
 	gp = maxi(0, int(data.get("gp", DEFAULT_GP)))

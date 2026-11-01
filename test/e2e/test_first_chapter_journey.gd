@@ -95,7 +95,9 @@ func after_test() -> void:
 
 
 func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void:
+	GameState.set_soul_meter_with_cause(37.0, "test:previous_run")
 	SaveGame.new_game()
+	assert_array(GameState.soul_trace_entries()).is_empty()
 	GameFlow._on_intro_narration_entered()
 	var intro := UIManager._stack.back() as IntroNarrationScreen
 	assert_object(intro).is_not_null()
@@ -455,7 +457,7 @@ func test_extreme_soul_values_keep_an_unconditional_ruling_route() -> void:
 		_resolve_vanguard()
 		_resolve_muster(&"slain")
 		GameState.set_flag("reported_bloodbellow", true)
-		GameState.soul_meter = case["soul"]
+		GameState.set_soul_meter_with_cause(case["soul"], "test:setup")
 		assert_bool(QuestRegistry.resolve_broken_muster(case["ruling"])).is_true()
 		assert_int(ChapterOneProgress.current_stage()).is_equal(
 			ChapterOneProgress.Stage.COMPLETE
@@ -466,7 +468,7 @@ func test_extreme_soul_values_keep_an_unconditional_ruling_route() -> void:
 	_resolve_vanguard()
 	_resolve_muster(&"slain")
 	GameState.set_flag("reported_bloodbellow", true)
-	GameState.soul_meter = 0.0
+	GameState.set_soul_meter_with_cause(0.0, "test:setup")
 	assert_bool(QuestRegistry.resolve_broken_muster(&"hold-both")).is_false()
 	assert_bool(QuestRegistry.resolve_broken_muster(&"demons-first")).is_true()
 
@@ -724,12 +726,87 @@ func _winning_percentile_seed() -> int:
 
 func _reset_fixture() -> void:
 	GameState.flags.clear()
-	GameState.soul_meter = 50.0
+	GameState.set_soul_meter_with_cause(50.0, "test:setup")
+	GameState.clear_soul_trace()
 	GameState._seed_demo_data()
 	Reputation.from_dict({})
 	Renown.from_dict({})
 	QuestRegistry.reset()
 	SaveGame._pending_autosave_reason = ""
+
+
+func test_soul_touching_journey_paths_trace_each_mutation_once_with_its_cause() -> void:
+	_select_companions()
+	var iris := load(IRIS_DIALOGUE_PATH) as DialogueResource
+	var before := GameState.soul_meter
+	await _choose_response(iris, "hub", "Show me what the Loam remembers")
+	_assert_soul_trace_step(1, "dialogue:iris_illepah:loam_memory", before, before - 6.0)
+
+	await _choose_response(iris, "hub", "work I could do")
+	for i: int in 3:
+		GameState.inventory.create_and_add_item(ItemIds.MATERIALS_LOAMROOT_SPRIG)
+	QuestSystem.update_quest(QuestRegistry.LOAMROOT_SPRIGS)
+	before = GameState.soul_meter
+	await _choose_response(iris, "hub", "Use my pattern to root them")
+	_assert_soul_trace_step(2, "dialogue:iris_illepah:root_sprigs", before, before - 8.0)
+
+	var quest := QuestRegistry.COLD_BOWL
+	assert_bool(QuestRegistry.offer_side_quest(quest)).is_true()
+	for flag: String in quest.required_flags:
+		GameState.set_flag(flag, true)
+	before = GameState.soul_meter
+	assert_bool(QuestRegistry.resolve_side_quest(quest, &"bring-them-home")).is_true()
+	_assert_soul_trace_step(
+		3, "quest:%s:bring-them-home" % quest.id, before, before + 8.0
+	)
+	assert_bool(QuestRegistry.resolve_side_quest(quest, &"bring-them-home")).is_false()
+	assert_int(GameState.soul_trace_entries().size()).is_equal(3)
+
+	before = GameState.soul_meter
+	assert_bool(QuestRegistry.resolve_companion_quest(
+		"serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0, "test:companion_resolution"
+	)).is_true()
+	_assert_soul_trace_step(
+		4, "quest:companion_agreement:serai-lun",
+		before, before + QuestRegistry.COMPANION_AGREEMENT_SOUL,
+	)
+	assert_bool(QuestRegistry.resolve_companion_quest(
+		"serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0, "test:companion_resolution"
+	)).is_false()
+	assert_int(GameState.soul_trace_entries().size()).is_equal(4)
+
+	var battle: Node = auto_free(BattleScript.new())
+	battle.start(EncounterIds.BOG_WIGHT)
+	before = GameState.soul_meter
+	assert_bool(battle.use_action(BattleScript.ACTION_PARADOX)).is_true()
+	_assert_soul_trace_step(5, "battle:soul_cost:paradox", before, before - 3.0)
+
+	# The whole sequence is continuous: missing, duplicate, empty, or fallback
+	# entries fail independently of the individual final-value assertions.
+	var entries := GameState.soul_trace_entries()
+	var previous_after := 50.0
+	for i: int in entries.size():
+		assert_int(entries[i]["index"]).is_equal(i + 1)
+		assert_str(entries[i]["cause"]).is_not_empty()
+		assert_str(entries[i]["cause"]).is_not_equal("unattributed")
+		assert_float(entries[i]["before"]).is_equal(previous_after)
+		previous_after = entries[i]["after"]
+	assert_float(previous_after).is_equal(GameState.soul_meter)
+
+
+func _assert_soul_trace_step(count: int, cause: String, before: float, after: float) -> void:
+	var entries := GameState.soul_trace_entries()
+	assert_int(entries.size()).override_failure_message(
+		"%s must append exactly one Soul entry" % cause
+	).is_equal(count)
+	assert_float(GameState.soul_meter).is_equal(after)
+	var entry: Dictionary = entries.back()
+	assert_str(entry["cause"]).is_equal(cause)
+	assert_float(entry["before"]).is_equal(before)
+	assert_float(entry["after"]).is_equal(GameState.soul_meter)
+	assert_float(entry["requested"]).is_equal(after)
+	assert_bool(entry["changed"]).is_true()
+	assert_bool(entry["clamped"]).is_false()
 
 
 func _assert_journey_prerequisites() -> void:

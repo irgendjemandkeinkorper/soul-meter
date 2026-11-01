@@ -799,7 +799,9 @@ func submit_action(
 	if committed_action.kind == CombatAction.Kind.PASS and not committed_action.class_resource_action.is_empty():
 		var command_soul := _class_soul_cost(actor, committed_action)
 		if command_soul > 0.0:
-			_set_soul_meter(_soul_meter() - command_soul)
+			_set_soul_meter(
+				_soul_meter() - command_soul, "battle:soul_cost:%s" % committed_action.id
+			)
 		_class_resource_of(actor).execute_command(
 			committed_action.class_resource_action,
 			target.combat_id if target != null else &"",
@@ -2223,7 +2225,10 @@ func _apply_resolution_writes(
 				# tagged quest outcome. Combat may spend it and may never return it, so this
 				# write is clamped to a decrease rather than trusted. `Resolution` only ever
 				# emits a spend here; the clamp is the guard, not the mechanism.
-				_set_soul_meter(minf(float(write.get("after", _soul_meter())), _soul_meter()))
+				_set_soul_meter(
+					minf(float(write.get("after", _soul_meter())), _soul_meter()),
+					"battle:soul_cost:%s" % str(resolution.get("ability_id", cause)),
+				)
 			&"tile_state":
 				if not apply_tile_writes:
 					continue
@@ -2282,10 +2287,10 @@ func _soul_meter() -> float:
 	return float(game_state.get("soul_meter")) if game_state != null else 0.0
 
 
-func _set_soul_meter(value: float) -> void:
+func _set_soul_meter(value: float, cause: String) -> void:
 	var game_state := _game_state()
 	if game_state != null:
-		game_state.call("set_soul_meter", value)
+		game_state.call("set_soul_meter_with_cause", value, cause)
 
 
 func _resolve_attack(
