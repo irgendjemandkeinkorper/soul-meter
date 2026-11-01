@@ -1,158 +1,161 @@
 # Field density F review — 2026-11-01
 
-**Partial delivery: Part 2 is implemented; Part 1 is blocked by missing item inventory values and icons.** Branch: `codex/roadmap-p1-2f-items-tables`, on the supplied slice-E baseline. No network, branch changes, art changes, vendor-addon changes, owner-decision edits, or roadmap edits.
+**Part 1 is implemented and verified; Part 2 remains implemented in the prior commit.** Branch: `codex/roadmap-p1-2f-items-tables`. The owner accepted all of [the item/loot packet](item-loot-draft-packet-2026-10-31.md) on 2026-11-01 and then supplied the inventory rulings and one 18-icon generation authorization. Those instructions supersede the two blockers in this review's earlier version. The packet's historical DRAFT wording is retained as the original proposal.
 
 ## What now works
 
-`Ashlaren/WarehouseChallenge` adds an optional Bellow object check beside the existing yard brazier, directed at the existing warehouse watch. It uses `SMInteractable`, the existing **0.0** lock modifier, the existing single-attempt flags, ordinary feedback, and save serialization. Passing records `chapter_ashlaren_watch_challenged`; failure records the existing lock-failure flag. The outcome survives save/load and cannot be rerolled. It grants no access, loot, progression, reputation change, or combat modifier.
+The catalogue contains **40 items (22 → 40)** and the registry contains **8 loot tables (2 → 8)**. Eighteen existing containers now draw from the six accepted regional tables. **All 29 primary field-density measurements pass**; every previously passing count is unchanged. Bellow remains 1, distinct field skills remain 16, object locks remain 24, and Ashlaren locks remain 5.
 
-The actual field audit improves **Bellow 0 → 1**, **distinct skills 15 → 16**, **object locks 23 → 24**, and **Ashlaren locks 4 → 5**. Every previously passing primary density measurement still passes. **Items remain 22/40; tables remain 2/8. Slice F is not complete.**
+The new items comprise 10 materials, six tools and two consumables. Names, descriptions, prices, weights, loot rows and assignments match the accepted packet. All are `common`, following ordinary food, material and repair-tool peers. Consumables/materials are 1×1 and stack 10, except Forge Coal and Grain Meal stack 5. Tools are 1×1 and stack 1, except Tent Pegs stack 5 and Map Case is 1×2. Equipment slots are omitted in generated prototypes; flavour is the generator's empty string. These inventory goods introduce no use effects, equipment statistics or skill bonuses.
 
-## Part 1: accepted content and the precise blocker
+The original 22 prototypes and their icons, both original table definitions, vendor stock, and fixed loot are unchanged. The new tables retain two weighted draws without replacement plus one independent Sounding bonus at -10.0. Existing saved container contents retain the one-roll persistence contract; container IDs, ownership, locks and access gates are unchanged.
 
-The dispatch explicitly records owner item 30a, **accept all, 2026-11-01**, for [the 18-item / six-table packet](item-loot-draft-packet-2026-10-31.md). That approval is accepted here despite the packet's older DRAFT heading. The packet was not changed.
+## Pandora data path and localization
 
-**A documented headless Pandora write path exists. This is not an editor-only/API blocker.** [DEPENDENCIES.md](../../DEPENDENCIES.md), [the regeneration workflow](../skills/pandora-gloot-regeneration.md), [scripts/seed_town_npcs.sh](../../scripts/seed_town_npcs.sh), and the tools menu in [addons/soul_meter_tools/plugin.gd](../../addons/soul_meter_tools/plugin.gd) establish the supported pipeline:
+[tools/seed_field_items.gd](../../tools/seed_field_items.gd) is an idempotent migration using the same Pandora API pattern as [tools/seed_town_vendors.gd](../../tools/seed_town_vendors.gd): `Pandora.create_entity()`, `get_entity_property().set_default_value()`, then `Pandora.save_data()`. It matches named entities within the existing categories and does not create a new data schema.
 
-- [tools/seed_pandora.gd](../../tools/seed_pandora.gd) supplies six base items; [tools/seed_quest_content.gd](../../tools/seed_quest_content.gd) adds Loamroot Sprig; [tools/seed_town_vendors.gd](../../tools/seed_town_vendors.gd) adds 15 authored economy items, yielding 22. These migrations use `Pandora.create_entity()`, authored values through `get_entity_property().set_default_value()`, and `Pandora.save_data()`; the vendor migration upserts existing named entities.
-- [tools/generate_gloot.gd](../../tools/generate_gloot.gd) reads Pandora and emits the GLoot prototypes, typed item IDs, `items.pot`, and merged `locale/es.po`. [ItemLocalization](../../globals/item_localization.gd) supplies the existing translated-name/description path and English fallback.
-- [LootTableRegistry](../../globals/loot_table_registry.gd) owns the two authored runtime tables because no ratified Pandora loot-table entity contract exists. Extending that registry is the existing supported table path; introducing a new Pandora table schema is unnecessary.
+[scripts/seed_field_items.sh](../../scripts/seed_field_items.sh) uses the existing temporary-autoload approach. It restores `project.godot` on exit and runs these two tools in order:
 
-Two concrete constraints prevent a valid implementation without an additional owner decision:
+| Temporary autoload | Tool |
+|---|---|
+| `FieldItemSeed` | `res://tools/seed_field_items.gd` |
+| `FieldItemGenerator` | `res://tools/generate_gloot.gd` |
 
-1. **The accepted packet specifies neither Grid Size nor Max Stack Size for any new item.** The current Pandora Items schema defaults are `Grid Size = (0,0)` and `Max Stack Size = 0`. The generator emits both explicitly. GLoot therefore receives zero-sized items and zero stack capacity, rather than its absent-property defaults. Its stack setter rejects a stack of one against a maximum of zero. Copying another item's values or changing the generator to substitute values would choose unapproved inventory/economy behavior under this dispatch's “Do not decide: any value not in the accepted packet.”
-2. **All 18 mandatory item icons are missing.** The generator unconditionally emits `res://assets/generated/sprites/items/<slug>--icon.png`. The existing generated-data test requires each exact, distinct path to load a transparent 256×256 image. This handoff forbids art. Creating icons, borrowing another item's icon, or weakening that contract is outside the authorization.
+Exact command, exit **0**:
 
-References: generator lines 149–163; `test/unit/test_generated_data.gd:63`; `addons/gloot/core/constraints/grid_constraint.gd:168`; `addons/gloot/core/stack_manager.gd:25`. These vendor files were only read.
-
-Read-only preflight output:
-
-```text
-Packet item rows: 18; missing mandatory icons: 18
-Pandora inherited inventory defaults: [('Max Stack Size', 0), ('Grid Size', '(0,0)')]
+```bash
+GODOT_BIN=/home/adamjroder/.local/bin/godot LP_NUM_THREADS=1 timeout 180 bash scripts/seed_field_items.sh > /tmp/soul-meter-f1-seed.log 2>&1
 ```
 
-**No new item or loot-table data was inserted.** `data.pandora`, `globals/loot_table_registry.gd`, all generated artifacts, localization files, and the existing icon test remain unchanged. Adding tables that name absent items or switching containers to absent tables would create broken loot, so neither was done. The missing decisions are reported here, not added to the forbidden owner-decision file.
+Verbatim success lines:
 
-### Container switches by node path
+```text
+FIELD-ITEM-SEED: 18 accepted field items present.
+DATA-GEN: wrote 40 item prototypes, 14 vendors, 12 encounters, and 60 Dom NPCs.
+```
 
-**Actual switches: none.** Each of these 18 accepted assignments still points to `road-cache` pending the blocked item implementation.
+A second invocation with output at `/tmp/soul-meter-f1-seed-repeat.log` also exited **0**. SHA-256 comparisons proved `data.pandora`, `gloot_prototree.json`, `item_ids.gd`, `items.pot`, `locale/es.po` and `project.godot` byte-identical before and after that second migration.
 
-| Scene | Node paths, including root | Accepted destination, not applied |
+The canonical generator wrote all three changed `data/generated/*` files; none was hand-edited. It also merged **36 new name/description gettext keys** into `locale/es.po`, preserving existing translations. New Spanish entries are untranslated, matching the existing ordinary economy items; `ItemLocalization` uses the accepted English text as fallback. No Spanish prose was invented.
+
+The runtime registry remains the existing authored table path; Pandora still has no ratified loot-table entity contract. Independent comparison against the packet verified every new prototype field and all six table definitions. All 22 old prototypes and both old tables compare equal to the supplied baseline `350a8013`.
+
+## Container switches
+
+Each row changes only `loot_table_id`, from `road-cache` to the listed table. Comparison against baseline `350a8013` confirms **18 changed properties across 11 scenes and no other scene-byte changes** in this part.
+
+| Scene | Exact node path | New table |
 |---|---|---|
 | `world/interiors/item_shop.tscn` | `ItemShopInterior/LatchCrate` | `dom-workshop-stores` |
 | `world/interiors/cask_warehouse.tscn` | `CaskWarehouseInterior/LockedStockCrate` | `dom-workshop-stores` |
 | `world/interiors/equipment_forge.tscn` | `EquipmentForgeInterior/BracedStockCrate` | `dom-workshop-stores` |
 | `world/interiors/iron_companies.tscn` | `IronCompaniesInterior/LockedSupplyCrate` | `dom-workshop-stores` |
-| `world/interiors/ashlaren_millhouse.tscn` | `AshlarenMillhouseInterior/LockedSupplyCrate`, `AshlarenMillhouseInterior/BracedSupplyCrate` | `ashlaren-mill-stores` |
-| `world/interiors/ashlaren_weighing_hall.tscn` | `AshlarenWeighingHallInterior/LockedSupplyCrate`, `AshlarenWeighingHallInterior/BracedSupplyCrate` | `ashlaren-mill-stores` |
-| `world/interiors/kesselford_chandlery.tscn` | `KesselfordChandleryInterior/LockedSupplyCrate`, `KesselfordChandleryInterior/BracedSupplyCrate` | `kesselford-ferry-stores` |
-| `world/interiors/kesselford_wayhouse.tscn` | `KesselfordWayhouseInterior/LockedSupplyCrate`, `KesselfordWayhouseInterior/BracedSupplyCrate` | `kesselford-ferry-stores` |
-| `world/long_verge.tscn` | `LongVerge/WestCache`, `LongVerge/CampCache` | `verge-march-kit` |
-| `world/hollowmere.tscn` | `Hollowmere/TrackCache`, `Hollowmere/LandingCache` | `hollowmere-reed-kit` |
-| `world/test_room.tscn` | `TestRoom/WestCache`, `TestRoom/GladeCache` | `wilds-repair-cache` |
+| `world/interiors/ashlaren_millhouse.tscn` | `AshlarenMillhouseInterior/LockedSupplyCrate` | `ashlaren-mill-stores` |
+| `world/interiors/ashlaren_millhouse.tscn` | `AshlarenMillhouseInterior/BracedSupplyCrate` | `ashlaren-mill-stores` |
+| `world/interiors/ashlaren_weighing_hall.tscn` | `AshlarenWeighingHallInterior/LockedSupplyCrate` | `ashlaren-mill-stores` |
+| `world/interiors/ashlaren_weighing_hall.tscn` | `AshlarenWeighingHallInterior/BracedSupplyCrate` | `ashlaren-mill-stores` |
+| `world/interiors/kesselford_chandlery.tscn` | `KesselfordChandleryInterior/LockedSupplyCrate` | `kesselford-ferry-stores` |
+| `world/interiors/kesselford_chandlery.tscn` | `KesselfordChandleryInterior/BracedSupplyCrate` | `kesselford-ferry-stores` |
+| `world/interiors/kesselford_wayhouse.tscn` | `KesselfordWayhouseInterior/LockedSupplyCrate` | `kesselford-ferry-stores` |
+| `world/interiors/kesselford_wayhouse.tscn` | `KesselfordWayhouseInterior/BracedSupplyCrate` | `kesselford-ferry-stores` |
+| `world/long_verge.tscn` | `LongVerge/WestCache` | `verge-march-kit` |
+| `world/long_verge.tscn` | `LongVerge/CampCache` | `verge-march-kit` |
+| `world/hollowmere.tscn` | `Hollowmere/TrackCache` | `hollowmere-reed-kit` |
+| `world/hollowmere.tscn` | `Hollowmere/LandingCache` | `hollowmere-reed-kit` |
+| `world/test_room.tscn` | `TestRoom/WestCache` | `wilds-repair-cache` |
+| `world/test_room.tscn` | `TestRoom/GladeCache` | `wilds-repair-cache` |
 
-The eight additional slice-E containers in Long Verge and Hollowmere are not named in the packet and remain on `road-cache`. Fixed-loot containers are untouched.
+Dorthkor Road's roadside table, its fixed camp cache, Wound Lip's fixed caches, and every unlisted container retain their prior contents/assignments.
 
-## Part 2: Bellow grounding and DRAFT strings
+## Icon batch and provenance
 
-[DRAMGID brief, SKILL.BELLOW, line 57](../briefs/dramgid-brief.md) defines Bellow as **“Intimidation; receives the negative-Karma tier bonus and is not Loom-sensitive.”** This is a challenge meant to make a guard flinch, not loudness or force applied to an object.
+[Contact sheet](item-icons-2026-11-01.png): all 18 new icons in a labelled grid beside four existing references. [Provenance](../../assets/generated/sprites/items/provenance-2026-11-01.json) records the generator, full prompt, original source path and SHA-256, final destination and SHA-256, attempts, source/output dimensions, alpha counts, normalization, review status and batch for each icon.
 
-The existing [warehouse-watch record](../../canon/ashlaren/characters/ashlaren-warehouse-watch.json) establishes Pell Haskard as a phase-agnostic guard who stays in the warehouse yard. His existing [placement](../../data/generated/ashlaren_npc_placements.json) uses `SealedSackCrates`. The optional challenge is at `Ashlaren/WarehouseChallenge`, **(2300, 1380)**, south of `AshlarenDressing/SolidProps/YardBrazier` at (2300, 1300). It leaves the guard's dialogue, the sealed sack, all building gates, and the unresolved sack mystery unchanged. No lore source was edited.
+**18 generations used; one attempt per icon; no retries or discarded alternatives.** Every icon has generator `codex built-in image generation`, status `draft-for-owner-review`, and batch `owner 2026-11-01, 18 icons`.
 
-Minimal new player-facing string set — **DRAFT for owner review**, all passed through the existing `SMInteractable.tr()` path:
+Before generation, the existing Binding Thread, Hearthloaf, Field Needle and Lamp Oil icons were opened and inspected. Prompts explicitly described their warm upper-left directional key light, dark lower/right falloff, restrained cool edge reflections, dark brown/charcoal/iron palette, worn painterly surfaces, close three-quarter top-down framing and isolated transparent background. The Part I avoid-list was included: no black sticker outlines, flat/even lighting, cartoon/chibi proportions, bright generic fantasy, steampunk machinery, baked text or UI.
 
-| Property | DRAFT text |
-|---|---|
-| `display_name` | WAREHOUSE WATCH |
-| `prompt_text` | CHALLENGE THE WATCH |
-| `interaction_text` | The watch breaks eye contact. |
-| `locked_message` | Make the warehouse watch flinch. |
-| `lock_failed_message` | The watch holds your gaze. |
+The service returned 1254×1254 RGBA sources with genuine alpha. [tools/prepare_field_item_icons.py](../../tools/prepare_field_item_icons.py) only resamples them to 256×256 with Lanczos, records their provenance and composes the requested QA sheet. It does not repaint or remove backgrounds. Original sources remain at the recorded built-in generator paths.
 
-Durable technical IDs: `ashlaren-warehouse-challenge`, `lock_picked_ashlaren-warehouse-challenge`, `lock_failed_ashlaren-warehouse-challenge`, `chapter_ashlaren_watch_challenged`. There are no new translated item strings because Part 1 was not applied.
+Exact packaging command, exit **0**:
+
+```bash
+/usr/bin/python3 tools/prepare_field_item_icons.py /tmp/soul-meter-f1-icon-records.json
+```
+
+```text
+ICON-BATCH: 18 RGBA PNGs, 256x256, real transparent alpha; provenance and contact sheet written.
+ICON-BATCH: 18 generations used.
+```
+
+The initial `python3` invocation selected Homebrew Python 3.14, which lacks Pillow. Using the already installed `/usr/bin/python3` with Pillow resolved packaging without installation or downloads. The committed provenance can also serve as the manifest on this machine while its recorded original sources remain available:
+
+```bash
+/usr/bin/python3 tools/prepare_field_item_icons.py assets/generated/sprites/items/provenance-2026-11-01.json
+```
+
+All final PNGs were checked for RGBA mode, 256×256 size, alpha extrema 0/255 and matching hashes. The game contract test loaded all 40 icons successfully. The contact sheet was visually inspected; silhouettes, materials and style read coherently beside the references. **No particular icon requires a retry or has an unresolved identified defect.** All remain drafts for owner review. No other art was generated.
+
+| Item id | PNG | Attempts |
+|---|---|---:|
+| `materials/forge_coal` | `assets/generated/sprites/items/forge_coal--icon.png` | 1 |
+| `materials/leather_offcuts` | `assets/generated/sprites/items/leather_offcuts--icon.png` | 1 |
+| `tools/rivet_punch` | `assets/generated/sprites/items/rivet_punch--icon.png` | 1 |
+| `materials/grain_meal` | `assets/generated/sprites/items/grain_meal--icon.png` | 1 |
+| `materials/sackcloth` | `assets/generated/sprites/items/sackcloth--icon.png` | 1 |
+| `tools/grain_scoop` | `assets/generated/sprites/items/grain_scoop--icon.png` | 1 |
+| `materials/ferry_line` | `assets/generated/sprites/items/ferry_line--icon.png` | 1 |
+| `materials/lamp_wicks` | `assets/generated/sprites/items/lamp_wicks--icon.png` | 1 |
+| `materials/stopper_wax` | `assets/generated/sprites/items/stopper_wax--icon.png` | 1 |
+| `consumables/road_crusts` | `assets/generated/sprites/items/road_crusts--icon.png` | 1 |
+| `tools/tent_pegs` | `assets/generated/sprites/items/tent_pegs--icon.png` | 1 |
+| `tools/map_case` | `assets/generated/sprites/items/map_case--icon.png` | 1 |
+| `materials/cut_reeds` | `assets/generated/sprites/items/cut_reeds--icon.png` | 1 |
+| `materials/net_cord` | `assets/generated/sprites/items/net_cord--icon.png` | 1 |
+| `tools/netting_needle` | `assets/generated/sprites/items/netting_needle--icon.png` | 1 |
+| `consumables/cloth_bandage` | `assets/generated/sprites/items/cloth_bandage--icon.png` | 1 |
+| `materials/repair_splints` | `assets/generated/sprites/items/repair_splints--icon.png` | 1 |
+| `tools/stitching_thimble` | `assets/generated/sprites/items/stitching_thimble--icon.png` | 1 |
+
+Godot-generated import sidecars accompany the PNGs, following the 22 existing item icons and existing QA images. Their metadata was generated by the editor, not hand-authored.
 
 ## Commands and checks
 
-All commands ran from the repository root with `~/.local/bin/godot` (reported **4.7.1.stable.official.a13da4feb**). Each independent run received a fresh temporary user-data directory. Full raw logs are in `/tmp/soul-meter-f-*.log` for this worker session; excerpts below preserve engine/test output text, with terminal color escapes removed.
+Engine: `Godot Engine v4.7.1.stable.official.a13da4feb`. Runtime data directories were isolated with `mktemp`. No branch change, push, PR, `gh` command, vendor-addon edit, owner-decision edit or roadmap edit occurred.
 
-### Regeneration, followed by the required drift guard
+### Import and display limitation
 
-No import command was run and no Pandora write occurred. To regenerate the existing data through the documented temporary-autoload mechanism, the native patch tool temporarily added this line immediately after `Pandora=...` in `project.godot`:
-
-```ini
-SliceFGenerator="*res://tools/generate_gloot.gd"
-```
-
-Exact engine command:
+After packaging, the assets were imported using:
 
 ```bash
-XDG_DATA_HOME="$(mktemp -d /tmp/soul-meter-f-regenerate.XXXXXX)" LP_NUM_THREADS=1 timeout 120 "$HOME/.local/bin/godot" --headless --path . --quit-after 30 > /tmp/soul-meter-f-regenerate.log 2>&1
+LP_NUM_THREADS=1 XDG_DATA_HOME=$(mktemp -d /tmp/soul-meter-f1-import.XXXXXX) timeout 180 /home/adamjroder/.local/bin/godot --headless --editor --import --path . --quit > /tmp/soul-meter-f1-import.log 2>&1
 ```
 
-The native patch tool then removed that temporary line. `project.godot` and all generated files have zero net diff. Exit **0**, verbatim:
+Exit **0**, and the subsequent 40-icon load/size/alpha test passes. The editor emitted socket-creation restrictions, PhantomCamera/Pandora shutdown messages, an existing fixture UID duplicate, inability to save global editor settings outside this sandbox, and shutdown resource diagnostics. These are not presented as a clean rendered run.
 
-```text
-DATA-GEN: wrote 22 item prototypes, 14 vendors, 12 encounters, and 60 Dom NPCs.
-```
+The economy suite first attempted the default Xvfb path:
 
 ```bash
-GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 timeout 240 bash scripts/check_generated_data.sh > /tmp/soul-meter-f-drift.log 2>&1
+GODOT_BIN=/home/adamjroder/.local/bin/godot LP_NUM_THREADS=1 SOUL_METER_TEST_DATA_DIR=$(mktemp -d /tmp/soul-meter-f1-economy-xvfb.XXXXXX) timeout 600 bash scripts/test.sh -a test/unit/test_vendors.gd -a test/unit/test_vendor_pricing.gd -a test/unit/test_inventory.gd -a test/unit/test_game_state_inventory.gd -a test/unit/test_loot_tables.gd -a test/unit/test_loot_container.gd > /tmp/soul-meter-f1-economy-xvfb.log 2>&1
 ```
 
-Exit **0**, verbatim:
-
-```text
-GLOOT-GEN: no drift.
-CANON-SEED: no drift.
-LOCATIONS-GEN: no drift.
-ISO-SPRITE-GEN: no drift. 598 sprites verified.
-```
-
-The regeneration/drift processes also print resource-at-exit warnings (13 or 15 resources); no drift or parse failure is hidden by those summaries.
-
-### Xvfb attempt and headless fallback
-
-```bash
-GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 SOUL_METER_TEST_DATA_DIR="$(mktemp -d /tmp/soul-meter-f-bellow-xvfb.XXXXXX)" timeout 180 bash scripts/test.sh -a test/integration/test_ashlaren_bellow.gd > /tmp/soul-meter-f-bellow-xvfb.log 2>&1
-```
-
-Exit **1**, before test execution. Verbatim failure lines:
+Exit **1** before test execution. Verbatim display errors:
 
 ```text
 ERROR: X11 Display is not available
+WARNING: Display driver x11 failed, falling back to wayland.
 ERROR: Can't connect to a Wayland display.
 ERROR: Could not initialize the Wayland thread.
 ERROR: Can't create the Wayland display server.
 ERROR: Unable to create DisplayServer, all display drivers failed.
 ```
 
-The remaining tests use the explicitly authorized CI-equivalent fallback: `SOUL_METER_HEADLESS=1`, which makes `scripts/test.sh` pass `--ignoreHeadlessMode` to gdUnit4. **Rendered correctness and transported keyboard input remain unverified.** The new runtime test exercises the existing interaction handler directly after real scene loading, navigation lookup, physics range entry, and prompt checks.
+The authorized **headless fallback** was used for all successful suites below. The inspected contact sheet is art evidence; no rendered inventory-screen or pointer-input acceptance is claimed.
 
-### Bellow runtime suite
-
-```bash
-GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 SOUL_METER_HEADLESS=1 SOUL_METER_TEST_DATA_DIR="$(mktemp -d /tmp/soul-meter-f-bellow-headless.XXXXXX)" timeout 240 bash scripts/test.sh -a test/integration/test_ashlaren_bellow.gd > /tmp/soul-meter-f-bellow-headless.log 2>&1
-```
-
-Exit **0**, verbatim:
-
-```text
-Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |
-Executed test suites: (1/1)
-Executed test cases : (2/2)
-Total execution time: 593ms
-Exit code: 0
-```
-
-Coverage: a real path from the player to the challenge; physics range/prompt activation; separation from the guard's talk radius; Bellow/modifier/check-ID recording; one attempt; save/load persistence; restored success and failure prompts. The first test run waited only five frames after teleporting the test player and failed its range assertions. Waiting twenty frames, as the existing Ashlaren prompt test does, fixes the fixture; the scene needed no change. Existing empty Blocking-layer and resource-at-exit warnings remain.
-
-### Required unit, E2E, and vendor/inventory/loot suites
-
-Full unit command:
+### Required unit suite
 
 ```bash
-GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 SOUL_METER_HEADLESS=1 SOUL_METER_TEST_DATA_DIR="$(mktemp -d /tmp/soul-meter-f-unit.XXXXXX)" timeout 5400 bash scripts/test.sh -a test/unit > /tmp/soul-meter-f-unit.log 2>&1
+GODOT_BIN=/home/adamjroder/.local/bin/godot LP_NUM_THREADS=1 SOUL_METER_HEADLESS=1 SOUL_METER_TEST_DATA_DIR=$(mktemp -d /tmp/soul-meter-f1-unit.XXXXXX) timeout 5400 bash scripts/test.sh -a test/unit > /tmp/soul-meter-f1-unit.log 2>&1
 ```
 
 Exit **0**, verbatim:
@@ -161,21 +164,23 @@ Exit **0**, verbatim:
 Overall Summary: 1987 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |
 Executed test suites: (194/194)
 Executed test cases : (1987/1987)
-Total execution time: 3min 15s 948ms
+Total execution time: 2min 44s 746ms
 Exit code: 0
 ```
 
-The unit process also reports these shutdown diagnostics after its successful test summary:
+The only test-source change updates the catalogue count from 22 to 40 in both assertions of `test_generated_data.gd`; all existing icon-load, exact-path, dimension and alpha checks remain intact. The icon contract test passed for all 40 entries.
+
+Shutdown diagnostics, verbatim:
 
 ```text
-WARNING: 388132 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+WARNING: 400174 ObjectDB instances were leaked at exit (run with `--verbose` for details).
 ERROR: 74 resources still in use at exit (run with --verbose for details).
 ```
 
-E2E command:
+### Required E2E suite
 
 ```bash
-GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 SOUL_METER_HEADLESS=1 SOUL_METER_TEST_DATA_DIR="$(mktemp -d /tmp/soul-meter-f-e2e.XXXXXX)" timeout 1800 bash scripts/test.sh -a test/e2e > /tmp/soul-meter-f-e2e.log 2>&1
+GODOT_BIN=/home/adamjroder/.local/bin/godot LP_NUM_THREADS=1 SOUL_METER_HEADLESS=1 SOUL_METER_TEST_DATA_DIR=$(mktemp -d /tmp/soul-meter-f1-e2e.XXXXXX) timeout 1800 bash scripts/test.sh -a test/e2e > /tmp/soul-meter-f1-e2e.log 2>&1
 ```
 
 Exit **0**, verbatim:
@@ -184,16 +189,24 @@ Exit **0**, verbatim:
 Overall Summary: 21 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |
 Executed test suites: (2/2)
 Executed test cases : (21/21)
-Total execution time: 4s 60ms
+Total execution time: 4s 518ms
 Exit code: 0
 ```
 
-The E2E process reports 8305 ObjectDB leaks, 56 resources still in use, and 3 dummy-renderer texture RID leaks on shutdown after the successful summary.
+Shutdown diagnostics, verbatim:
 
-Explicit vendor/inventory/loot unit command:
+```text
+WARNING: 8485 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+ERROR: 56 resources still in use at exit (run with --verbose for details).
+ERROR: 3 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.
+```
+
+The E2E log includes 74 `ERROR: Parameter "data.tree" is null.` messages; the prior run's `/tmp/soul-meter-f-e2e.log` contains the same 74. Unit logs likewise contain 86 in both prior/current runs. These runtime diagnostics persist despite passing suite assertions and are disclosed rather than counted as newly passing behavior.
+
+### Vendor/inventory/loot suites
 
 ```bash
-GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 SOUL_METER_HEADLESS=1 SOUL_METER_TEST_DATA_DIR="$(mktemp -d /tmp/soul-meter-f-economy.XXXXXX)" timeout 600 bash scripts/test.sh -a test/unit/test_vendors.gd -a test/unit/test_vendor_pricing.gd -a test/unit/test_inventory.gd -a test/unit/test_game_state_inventory.gd -a test/unit/test_loot_tables.gd -a test/unit/test_loot_container.gd > /tmp/soul-meter-f-economy.log 2>&1
+GODOT_BIN=/home/adamjroder/.local/bin/godot LP_NUM_THREADS=1 SOUL_METER_HEADLESS=1 SOUL_METER_TEST_DATA_DIR=$(mktemp -d /tmp/soul-meter-f1-economy.XXXXXX) timeout 600 bash scripts/test.sh -a test/unit/test_vendors.gd -a test/unit/test_vendor_pricing.gd -a test/unit/test_inventory.gd -a test/unit/test_game_state_inventory.gd -a test/unit/test_loot_tables.gd -a test/unit/test_loot_container.gd > /tmp/soul-meter-f1-economy.log 2>&1
 ```
 
 Exit **0**, verbatim:
@@ -202,144 +215,59 @@ Exit **0**, verbatim:
 Overall Summary: 51 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |
 Executed test suites: (6/6)
 Executed test cases : (51/51)
-Total execution time: 621ms
+Total execution time: 590ms
 Exit code: 0
 ```
 
-The focused economy process reports the same 5067 ObjectDB / 15 resource shutdown warnings as the Bellow runtime run. `git diff --check` passed. A read-only check confirmed all 18 packet container paths still have `road-cache`, all relative links in this review resolve, and the world scenes contain exactly one authored Bellow lock.
-
-### Field audit commands
-
-```bash
-XDG_DATA_HOME="$(mktemp -d /tmp/soul-meter-f-audit-before.XXXXXX)" LP_NUM_THREADS=1 timeout 60 "$HOME/.local/bin/godot" --headless --path . --script res://tools/audit_field_coverage.gd > /tmp/soul-meter-f-audit-before.log 2>&1
-XDG_DATA_HOME="$(mktemp -d /tmp/soul-meter-f-audit-after.XXXXXX)" LP_NUM_THREADS=1 timeout 60 "$HOME/.local/bin/godot" --headless --path . --script res://tools/audit_field_coverage.gd > /tmp/soul-meter-f-audit-after.log 2>&1
-```
-
-Exit **0 both**. The printed audit is authoritative: Part 1 fails its two targets. Both standalone audit runs also report the same main-menu shutdown errors after printing the report; the initial run already had them before the change. Those are separate from the successful Bellow scene-runtime test. Verbatim error lines from both logs:
+Shutdown diagnostics, verbatim:
 
 ```text
-SCRIPT ERROR: Parse Error: Could not resolve external class member "LOAD_GAME".
-SCRIPT ERROR: Parse Error: Could not resolve external class member "SETTINGS".
-ERROR: Failed to load script "res://ui/screens/main_menu.gd" with error "Parse error".
-ERROR: res://ui/screens/main_menu.tscn:7 - Parse Error: .
-ERROR: Failed loading resource: res://ui/screens/main_menu.tscn.
+WARNING: 5243 ObjectDB instances were leaked at exit (run with `--verbose` for details).
 ERROR: 13 resources still in use at exit (run with --verbose for details).
 ```
 
-## Audit before (verbatim)
+### Required generated-data drift guard
 
-```text
-Field coverage audit — P1.2 slice A
-Judge the printed report, never the exit code.
-PROVISIONAL targets: brief citing owner-decisions R7 / item 11c; not ratified here.
-Shipped registry world scenes: 33 (templates and test fixtures excluded).
-
-PROVISIONAL density measurements
-Measurement | Count | Target | Result
-Distinct field skills / 22 | 15 | >= 15 | PASS
-Bellow checks | 0 | >= 1 | FAIL
-Verb: lockpick | 23 | >= 5 | PASS
-Verb: pickpocket/steal | 41 | >= 5 | PASS
-Verb: loot container | 38 | >= 5 | PASS
-Verb: cache | 18 | >= 5 | PASS
-Verb: barter | 16 | >= 5 | PASS
-Verb (info): talk | 88 | — | INFO
-Verb (info): pickup | 5 | — | INFO
-Verb (info): switch | 1 | — | INFO
-Verb (info): inspect/interact | 9 | — | INFO
-Verb (info): save | 1 | — | INFO
-Verb (info): travel | 67 | — | INFO
-Verb (info): party selection | 1 | — | INFO
-Verb (info): damage structure | 0 | — | INFO
-Hub dom: locks | 4 | >= 4 | PASS
-Hub dom: pockets | 3 | >= 3 | PASS
-Hub dom: loot-table containers | 4 | >= 4 | PASS
-Hub ashlaren: locks | 4 | >= 4 | PASS
-Hub ashlaren: pockets | 3 | >= 3 | PASS
-Hub ashlaren: loot-table containers | 4 | >= 4 | PASS
-Hub kesselford: locks | 4 | >= 4 | PASS
-Hub kesselford: pockets | 3 | >= 3 | PASS
-Hub kesselford: loot-table containers | 4 | >= 4 | PASS
-Hub long_verge: locks | 5 | >= 4 | PASS
-Hub long_verge: pockets | 3 | >= 3 | PASS
-Hub long_verge: loot-table containers | 6 | >= 4 | PASS
-Hub hollowmere: locks | 5 | >= 4 | PASS
-Hub hollowmere: pockets | 3 | >= 3 | PASS
-Hub hollowmere: loot-table containers | 6 | >= 4 | PASS
-Wild dorthkor_road: caches | 2 | >= 2 | PASS
-Wild hollowmere: caches | 6 | >= 2 | PASS
-Wild long_verge: caches | 6 | >= 2 | PASS
-Wild wilds: caches | 2 | >= 2 | PASS
-Wild wound_lip: caches | 2 | >= 2 | PASS
-Loot tables | 2 | >= 8 | FAIL
-Items | 22 | >= 40 | FAIL
-
-Field skill occurrences (>= 1 contributes to the 15/22 target; no quota for every skill)
-Skill | Checks | Presence contribution | Result
-Strain | 9 | >= 1 | PASS
-Lilt | 0 | >= 1 | FAIL
-Slip | 27 | >= 1 | PASS
-Tread | 1 | >= 1 | PASS
-Beastbond | 1 | >= 1 | PASS
-Varlore | 0 | >= 1 | FAIL
-Unweave | 2 | >= 1 | PASS
-Recall | 1 | >= 1 | PASS
-Wildlore | 1 | >= 1 | PASS
-Devotion | 1 | >= 1 | PASS
-Undertone | 3 | >= 1 | PASS
-Mending | 0 | >= 1 | FAIL
-Ear | 1 | >= 1 | PASS
-Wayfinding | 1 | >= 1 | PASS
-Sounding | 29 | >= 1 | PASS
-Falsetto | 0 | >= 1 | FAIL
-Bellow | 0 | >= 1 | FAIL
-Vārum | 1 | >= 1 | PASS
-Sway | 2 | >= 1 | PASS
-Downbeat | 0 | >= 1 | FAIL
-Brace | 0 | >= 1 | FAIL
-Vantage | 1 | >= 1 | PASS
-
-SUPERSEDED comparison only: >= 12/22 skills, each checked >= 3 times
-Skills with >= 3 checks / 22 | 4 | >= 12 | FAIL
-Strain | 9 | >= 3 | PASS
-Lilt | 0 | >= 3 | FAIL
-Slip | 27 | >= 3 | PASS
-Tread | 1 | >= 3 | FAIL
-Beastbond | 1 | >= 3 | FAIL
-Varlore | 0 | >= 3 | FAIL
-Unweave | 2 | >= 3 | FAIL
-Recall | 1 | >= 3 | FAIL
-Wildlore | 1 | >= 3 | FAIL
-Devotion | 1 | >= 3 | FAIL
-Undertone | 3 | >= 3 | PASS
-Mending | 0 | >= 3 | FAIL
-Ear | 1 | >= 3 | FAIL
-Wayfinding | 1 | >= 3 | FAIL
-Sounding | 29 | >= 3 | PASS
-Falsetto | 0 | >= 3 | FAIL
-Bellow | 0 | >= 3 | FAIL
-Vārum | 1 | >= 3 | FAIL
-Sway | 2 | >= 3 | FAIL
-Downbeat | 0 | >= 3 | FAIL
-Brace | 0 | >= 3 | FAIL
-Vantage | 1 | >= 3 | FAIL
-
-Counting rules: skill locks include force/strain; flag-only gates are not locks.
-Caches are Chest instances in wild scenes; hub containers require a live loot table (authored loot overrides it).
-Hub counts include recursively linked interiors. Pockets are NPC pockets; steal also includes owned loot/pickups.
-Barter counts placed vendor/shop access points; passive Sway pricing is not a rolled skill check.
-Loot searches count each distinct table skill once per placed container; unused tables add no checks.
-Dialogue counts executable check calls once per source site, not tags, prose, retries, or runtime reachability.
-Other verbs are explicit actor interactions; combat, automatic events, and UI-only actions are excluded.
-NOTE: Classification discrepancy: brief hub hollowmere has no fast-travel facet (retained in both applicable views).
-NOTE: Classification discrepancy: brief hub long_verge has no fast-travel facet (retained in both applicable views).
-NOTE: Source discrepancy: roadmap-2026-10-30.md is absent; targets are from the slice-A brief.
-NOTE: Source discrepancy: R7/11c answered density entries are absent; targets remain PROVISIONAL.
+```bash
+GODOT_BIN=/home/adamjroder/.local/bin/godot LP_NUM_THREADS=1 timeout 600 bash scripts/check_generated_data.sh > /tmp/soul-meter-f1-drift.log 2>&1
 ```
 
-## Audit after (verbatim)
+Exit **0**, verbatim success lines:
 
 ```text
+GLOOT-GEN: no drift.
+CANON-SEED: no drift.
+LOCATIONS-GEN: no drift.
+ISO-SPRITE-GEN: no drift. 598 sprites verified.
+```
+
+The four processes also report ObjectDB/resource-at-exit diagnostics (respectively 5539/15, 5595/15, 5245/15 and 5241/13). No drift stage failed. `project.godot` was restored exactly.
+
+`gdlint tools/seed_field_items.gd` reports `Success: no problems found`. `bash -n scripts/seed_field_items.sh` and `git diff --check` pass.
+
+### Field audit commands and before/after
+
+Before command, exit **0**:
+
+```bash
+LP_NUM_THREADS=1 XDG_DATA_HOME=$(mktemp -d /tmp/soul-meter-f1-audit-before.XXXXXX) timeout 60 /home/adamjroder/.local/bin/godot --headless --path . --script res://tools/audit_field_coverage.gd > /tmp/soul-meter-f1-audit-before.log 2>&1
+```
+
+After command, exit **0**:
+
+```bash
+LP_NUM_THREADS=1 XDG_DATA_HOME=$(mktemp -d /tmp/soul-meter-f1-audit-after.XXXXXX) timeout 60 /home/adamjroder/.local/bin/godot --headless --path . --script res://tools/audit_field_coverage.gd > /tmp/soul-meter-f1-audit-after.log 2>&1
+```
+
+The final after audit was rerun after importing assets because the earlier run also emitted a shader-preload cache error. That additional error is absent from the final run. The audit's existing main-menu class-resolution diagnostics remain in both baseline and final logs below.
+
+**Primary audit: 27/29 → 29/29 PASS.** Only Items (22 → 40) and Loot tables (2 → 8) change; all other primary counts, per-skill diagnostic rows and source/classification notes are unchanged. The zero-count skill rows and SUPERSEDED comparison are diagnostics, not requirements to fill every skill. The provisional target/source notes remain as printed; this task does not ratify global density targets.
+
+#### Audit before (verbatim)
+
+```text
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
 Field coverage audit — P1.2 slice A
 Judge the printed report, never the exit code.
 PROVISIONAL targets: brief citing owner-decisions R7 / item 11c; not ratified here.
@@ -446,37 +374,212 @@ NOTE: Classification discrepancy: brief hub hollowmere has no fast-travel facet 
 NOTE: Classification discrepancy: brief hub long_verge has no fast-travel facet (retained in both applicable views).
 NOTE: Source discrepancy: roadmap-2026-10-30.md is absent; targets are from the slice-A brief.
 NOTE: Source discrepancy: R7/11c answered density entries are absent; targets remain PROVISIONAL.
+SCRIPT ERROR: Parse Error: Could not resolve external class member "LOAD_GAME".
+   at: GDScript::reload (res://ui/screens/main_menu.gd:69)
+SCRIPT ERROR: Parse Error: Could not resolve external class member "SETTINGS".
+   at: GDScript::reload (res://ui/screens/main_menu.gd:74)
+ERROR: Failed to load script "res://ui/screens/main_menu.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+ERROR: res://ui/screens/main_menu.tscn:7 - Parse Error: .
+   at: _printerr (scene/resources/resource_format_text.cpp:41)
+ERROR: Failed loading resource: res://ui/screens/main_menu.tscn.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: 5065 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 13 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
 ```
 
-The per-skill zero-count rows and the explicitly SUPERSEDED comparison are diagnostic output, not requirements to populate every skill. The primary density measurements have only the two remaining item/table failures. The audit's PROVISIONAL/source-discrepancy notes are reproduced unchanged; this task does not alter the audit's target provenance.
+#### Audit after (verbatim)
 
-## Changed files and commits
+```text
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
 
-| File | Change |
+Field coverage audit — P1.2 slice A
+Judge the printed report, never the exit code.
+PROVISIONAL targets: brief citing owner-decisions R7 / item 11c; not ratified here.
+Shipped registry world scenes: 33 (templates and test fixtures excluded).
+
+PROVISIONAL density measurements
+Measurement | Count | Target | Result
+Distinct field skills / 22 | 16 | >= 15 | PASS
+Bellow checks | 1 | >= 1 | PASS
+Verb: lockpick | 24 | >= 5 | PASS
+Verb: pickpocket/steal | 41 | >= 5 | PASS
+Verb: loot container | 38 | >= 5 | PASS
+Verb: cache | 18 | >= 5 | PASS
+Verb: barter | 16 | >= 5 | PASS
+Verb (info): talk | 88 | — | INFO
+Verb (info): pickup | 5 | — | INFO
+Verb (info): switch | 1 | — | INFO
+Verb (info): inspect/interact | 10 | — | INFO
+Verb (info): save | 1 | — | INFO
+Verb (info): travel | 67 | — | INFO
+Verb (info): party selection | 1 | — | INFO
+Verb (info): damage structure | 0 | — | INFO
+Hub dom: locks | 4 | >= 4 | PASS
+Hub dom: pockets | 3 | >= 3 | PASS
+Hub dom: loot-table containers | 4 | >= 4 | PASS
+Hub ashlaren: locks | 5 | >= 4 | PASS
+Hub ashlaren: pockets | 3 | >= 3 | PASS
+Hub ashlaren: loot-table containers | 4 | >= 4 | PASS
+Hub kesselford: locks | 4 | >= 4 | PASS
+Hub kesselford: pockets | 3 | >= 3 | PASS
+Hub kesselford: loot-table containers | 4 | >= 4 | PASS
+Hub long_verge: locks | 5 | >= 4 | PASS
+Hub long_verge: pockets | 3 | >= 3 | PASS
+Hub long_verge: loot-table containers | 6 | >= 4 | PASS
+Hub hollowmere: locks | 5 | >= 4 | PASS
+Hub hollowmere: pockets | 3 | >= 3 | PASS
+Hub hollowmere: loot-table containers | 6 | >= 4 | PASS
+Wild dorthkor_road: caches | 2 | >= 2 | PASS
+Wild hollowmere: caches | 6 | >= 2 | PASS
+Wild long_verge: caches | 6 | >= 2 | PASS
+Wild wilds: caches | 2 | >= 2 | PASS
+Wild wound_lip: caches | 2 | >= 2 | PASS
+Loot tables | 8 | >= 8 | PASS
+Items | 40 | >= 40 | PASS
+
+Field skill occurrences (>= 1 contributes to the 15/22 target; no quota for every skill)
+Skill | Checks | Presence contribution | Result
+Strain | 9 | >= 1 | PASS
+Lilt | 0 | >= 1 | FAIL
+Slip | 27 | >= 1 | PASS
+Tread | 1 | >= 1 | PASS
+Beastbond | 1 | >= 1 | PASS
+Varlore | 0 | >= 1 | FAIL
+Unweave | 2 | >= 1 | PASS
+Recall | 1 | >= 1 | PASS
+Wildlore | 1 | >= 1 | PASS
+Devotion | 1 | >= 1 | PASS
+Undertone | 3 | >= 1 | PASS
+Mending | 0 | >= 1 | FAIL
+Ear | 1 | >= 1 | PASS
+Wayfinding | 1 | >= 1 | PASS
+Sounding | 29 | >= 1 | PASS
+Falsetto | 0 | >= 1 | FAIL
+Bellow | 1 | >= 1 | PASS
+Vārum | 1 | >= 1 | PASS
+Sway | 2 | >= 1 | PASS
+Downbeat | 0 | >= 1 | FAIL
+Brace | 0 | >= 1 | FAIL
+Vantage | 1 | >= 1 | PASS
+
+SUPERSEDED comparison only: >= 12/22 skills, each checked >= 3 times
+Skills with >= 3 checks / 22 | 4 | >= 12 | FAIL
+Strain | 9 | >= 3 | PASS
+Lilt | 0 | >= 3 | FAIL
+Slip | 27 | >= 3 | PASS
+Tread | 1 | >= 3 | FAIL
+Beastbond | 1 | >= 3 | FAIL
+Varlore | 0 | >= 3 | FAIL
+Unweave | 2 | >= 3 | FAIL
+Recall | 1 | >= 3 | FAIL
+Wildlore | 1 | >= 3 | FAIL
+Devotion | 1 | >= 3 | FAIL
+Undertone | 3 | >= 3 | PASS
+Mending | 0 | >= 3 | FAIL
+Ear | 1 | >= 3 | FAIL
+Wayfinding | 1 | >= 3 | FAIL
+Sounding | 29 | >= 3 | PASS
+Falsetto | 0 | >= 3 | FAIL
+Bellow | 1 | >= 3 | FAIL
+Vārum | 1 | >= 3 | FAIL
+Sway | 2 | >= 3 | FAIL
+Downbeat | 0 | >= 3 | FAIL
+Brace | 0 | >= 3 | FAIL
+Vantage | 1 | >= 3 | FAIL
+
+Counting rules: skill locks include force/strain; flag-only gates are not locks.
+Caches are Chest instances in wild scenes; hub containers require a live loot table (authored loot overrides it).
+Hub counts include recursively linked interiors. Pockets are NPC pockets; steal also includes owned loot/pickups.
+Barter counts placed vendor/shop access points; passive Sway pricing is not a rolled skill check.
+Loot searches count each distinct table skill once per placed container; unused tables add no checks.
+Dialogue counts executable check calls once per source site, not tags, prose, retries, or runtime reachability.
+Other verbs are explicit actor interactions; combat, automatic events, and UI-only actions are excluded.
+NOTE: Classification discrepancy: brief hub hollowmere has no fast-travel facet (retained in both applicable views).
+NOTE: Classification discrepancy: brief hub long_verge has no fast-travel facet (retained in both applicable views).
+NOTE: Source discrepancy: roadmap-2026-10-30.md is absent; targets are from the slice-A brief.
+NOTE: Source discrepancy: R7/11c answered density entries are absent; targets remain PROVISIONAL.
+SCRIPT ERROR: Parse Error: Could not resolve external class member "LOAD_GAME".
+   at: GDScript::reload (res://ui/screens/main_menu.gd:69)
+SCRIPT ERROR: Parse Error: Could not resolve external class member "SETTINGS".
+   at: GDScript::reload (res://ui/screens/main_menu.gd:74)
+ERROR: Failed to load script "res://ui/screens/main_menu.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+ERROR: res://ui/screens/main_menu.tscn:7 - Parse Error: .
+   at: _printerr (scene/resources/resource_format_text.cpp:41)
+ERROR: Failed loading resource: res://ui/screens/main_menu.tscn.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: 5245 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 13 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+```
+
+## Part 2: Bellow grounding and DRAFT strings
+
+[DRAMGID brief, SKILL.BELLOW, line 57](../briefs/dramgid-brief.md) defines Bellow as **“Intimidation; receives the negative-Karma tier bonus and is not Loom-sensitive.”** This is a challenge meant to make a guard flinch, not loudness or force applied to an object.
+
+The existing [warehouse-watch record](../../canon/ashlaren/characters/ashlaren-warehouse-watch.json) establishes Pell Haskard as a phase-agnostic guard who stays in the warehouse yard. His existing [placement](../../data/generated/ashlaren_npc_placements.json) uses `SealedSackCrates`. The optional challenge is at `Ashlaren/WarehouseChallenge`, **(2300, 1380)**, south of `AshlarenDressing/SolidProps/YardBrazier` at (2300, 1300). It leaves the guard's dialogue, the sealed sack, all building gates, and the unresolved sack mystery unchanged. No lore source was edited.
+
+Minimal new player-facing string set — **DRAFT for owner review**, all passed through the existing `SMInteractable.tr()` path:
+
+| Property | DRAFT text |
 |---|---|
-| `world/ashlaren.tscn` | One optional Bellow interaction; existing node paths and UIDs preserved. |
-| `test/integration/test_ashlaren_bellow.gd` | Runtime navigation, range, attempt persistence, and restored-prompt checks. |
-| `docs/qa/field-density-f-review-2026-11-01.md` | This blocker/evidence handoff. |
+| `display_name` | WAREHOUSE WATCH |
+| `prompt_text` | CHALLENGE THE WATCH |
+| `interaction_text` | The watch breaks eye contact. |
+| `locked_message` | Make the warehouse watch flinch. |
+| `lock_failed_message` | The watch holds your gaze. |
 
-Implementation commit: **`2c55b849568dc3dc3bddc30578266c2d06e265c5`** — `feat(field): add optional warehouse watch Bellow challenge`. The documentation commit hash is supplied in the final handoff.
+Durable technical IDs: `ashlaren-warehouse-challenge`, `lock_picked_ashlaren-warehouse-challenge`, `lock_failed_ashlaren-warehouse-challenge`, `chapter_ashlaren_watch_challenged`. Part 1 now adds 36 gettext keys for its accepted names and descriptions; these five Bellow strings retain their earlier draft status.
 
-Six untracked UID files existed before work and remain untouched: `test/integration/test_loom_field_verbs.gd.uid`, `test/unit/test_audit_field_coverage.gd.uid`, `test/unit/test_encounter_verb_audit.gd.uid`, `test/unit/test_soul_lowest.gd.uid`, `tools/audit_encounter_verbs.gd.uid`, `tools/audit_field_coverage.gd.uid`.
+The prior Bellow runtime suite passed 2/2 in commit `2c55b849568dc3dc3bddc30578266c2d06e265c5`; it was not rerun for this data/art-only part. Current field audit still counts the Bellow opportunity and all preceding density gains.
 
-## Risks
+## Changed files
 
-Part 1 is not implemented; accepting this change does not satisfy the item/table density target. The five Bellow strings need owner review. Xvfb is unavailable in this sandbox, so placement/readability and real keyboard dispatch have no rendered acceptance evidence. Existing audit shutdown and test-run resource warnings are disclosed above.
+| Area | Files |
+|---|---|
+| Authored migration and data | `tools/seed_field_items.gd`, its generated UID, `scripts/seed_field_items.sh`, `data.pandora` |
+| Canonical generator outputs | `data/generated/gloot_prototree.json`, `data/generated/item_ids.gd`, `data/generated/items.pot`, `locale/es.po` |
+| Runtime tables and contract | `globals/loot_table_registry.gd`, `test/unit/test_generated_data.gd` |
+| Scene assignments | The 11 scene files listed in Container switches |
+| Art and review | 18 PNGs and generated import sidecars listed above; `assets/generated/sprites/items/provenance-2026-11-01.json`; `tools/prepare_field_item_icons.py`; `docs/qa/item-icons-2026-11-01.png` and its generated import sidecar; this review |
 
-## Open decisions
+The six pre-existing untracked UID files remain untouched: `test/integration/test_loom_field_verbs.gd.uid`, `test/unit/test_audit_field_coverage.gd.uid`, `test/unit/test_encounter_verb_audit.gd.uid`, `test/unit/test_soul_lowest.gd.uid`, `tools/audit_encounter_verbs.gd.uid`, `tools/audit_field_coverage.gd.uid`.
 
-Supply the 18 items' approved grid sizes and stack limits, and authorize/provide their required icons (or explicitly approve a different icon contract). Review the five DRAFT Bellow strings.
+## Risks and open decisions
+
+The 18 icons await owner aesthetic review under their required draft status. The five prior Bellow strings retain their earlier draft status. Neither is a missing implementation value. There are no remaining Part 1 inventory/icon-generation blockers.
+
+Xvfb/display startup is unavailable; live rendered UI acceptance remains unverified. Existing main-menu audit teardown, null-tree, editor-plugin and resource-shutdown diagnostics are recorded above. The prototype/PNG contracts and all requested headless test assertions pass. New Spanish keys use English fallback until translated.
+
+The packet approval does not settle the audit's global provisional-density source discrepancy. No owner-decision entry was edited or silently resolved.
+
+## Commits
+
+Earlier Slice F commits, unchanged:
+
+- `2c55b849568dc3dc3bddc30578266c2d06e265c5` — optional warehouse-watch Bellow challenge.
+- `350a801356e1ba43b53ac345fb2941f0a25d37b4` — earlier Slice F blocker/review record.
+
+Part 1 implementation/art commit: `eb27c3f9516f1170d48bb71bd86e94680b48c878` — `feat(field): implement accepted item and loot packet` (61 files). Git metadata remained writable; the local commit succeeded. This review's documentation commit hash is supplied in the final handoff.
 
 ## Handoff back
 
-What now works: one natural intimidation check at Ashlaren's warehouse watch, persisted through the existing lock mechanism.
-Changed files: the three files listed above.
-Checks with results: unit 1987/1987, E2E 21/21, vendor/inventory/loot 51/51, Bellow runtime 2/2; all four drift stages report no drift; commands and verbatim summaries above; Xvfb failed before tests and the authorized headless fallback was used.
-Audit before/after: Bellow 0→1, distinct skills 15→16, items 22→22, tables 2→2; every other primary target passes.
-New strings: the five DRAFT strings above; no item strings added.
-Risks: Part 1 blocked; rendered validation unavailable; existing runtime shutdown warnings.
-Open decisions: approve missing inventory values and the icon path forward; review Bellow wording.
-Commits: implementation hash above; documentation hash in the final handoff.
+What now works: the accepted 18-item/six-table packet, all 18 container switches, generated gettext keys, and the approved 18-icon draft batch; catalogue 40, tables 8, all 29 primary density checks passing.
+
+Changed files: the scoped data, migration, registry, 11 scenes, contract-count update, icons/provenance/contact sheet and review listed above.
+
+Checks with results: unit 1987/1987; E2E 21/21; vendor/inventory/loot 51/51; all four drift stages pass. Exact commands, verbatim summaries, runtime diagnostics and complete audit logs are above. All successful test runs used the headless fallback after Xvfb failed.
+
+Audit before/after: items 22→40, tables 2→8; Bellow 1→1, distinct field skills 16→16; every other primary measurement unchanged and passing.
+
+Icon batch: 18 generations, one per icon, no retries; all 256×256 RGBA with genuine alpha. No identified icon requiring a retry; all remain draft-for-owner-review.
+
+Risks: rendered in-game UI acceptance unavailable; existing runtime/editor diagnostics persist; Spanish entries use English fallback.
+
+Open decisions: owner review of the draft icon batch and previously drafted Bellow strings; global density target provenance remains provisional.
+
+Commits: Part 1 `eb27c3f9516f1170d48bb71bd86e94680b48c878`; earlier Part 2 `2c55b849568dc3dc3bddc30578266c2d06e265c5`; earlier review `350a801356e1ba43b53ac345fb2941f0a25d37b4`. This review's documentation commit hash is supplied in the final handoff.
