@@ -15,17 +15,30 @@ static func _all_world_scenes() -> Array[String]:
 	return scenes
 
 const EXPECTED_PLACEMENTS := {
-	"res://world/dorthkor_road.tscn":
-	["dorthkor-road-camp-cache", "dorthkor-road-roadside-cache"],
-	"res://world/wound_lip.tscn": ["wound-lip-ledge-cache", "wound-lip-guard-kit"],
-	"res://world/interiors/cask_warehouse.tscn": ["cask-warehouse-supply-crate"],
+	"res://world/dorthkor_road.tscn": ["dorthkor-road-camp-cache", "dorthkor-road-roadside-cache"],
+	"res://world/hollowmere.tscn": ["hollowmere-landing-cache", "hollowmere-track-cache"],
+	"res://world/interiors/ashlaren_millhouse.tscn":
+	["ashlaren-millhouse-braced-supply-crate", "ashlaren-millhouse-locked-supply-crate"],
+	"res://world/interiors/ashlaren_weighing_hall.tscn":
+	["ashlaren-weighing-hall-braced-supply-crate", "ashlaren-weighing-hall-locked-supply-crate"],
+	"res://world/interiors/cask_warehouse.tscn":
+	["cask-warehouse-locked-stock-crate", "cask-warehouse-supply-crate"],
 	"res://world/interiors/chefs_pantry.tscn": ["chefs-pantry-supply-crate"],
-	"res://world/interiors/equipment_forge.tscn": ["equipment-forge-rivet-crate"],
-	"res://world/interiors/iron_companies.tscn": ["iron-companies-supply-crate"],
-	"res://world/interiors/item_shop.tscn": ["item-shop-backroom-crate"],
+	"res://world/interiors/equipment_forge.tscn":
+	["equipment-forge-braced-stock-crate", "equipment-forge-rivet-crate"],
+	"res://world/interiors/iron_companies.tscn":
+	["iron-companies-locked-supply-crate", "iron-companies-supply-crate"],
+	"res://world/interiors/item_shop.tscn": ["item-shop-backroom-crate", "item-shop-latch-crate"],
+	"res://world/interiors/kesselford_chandlery.tscn":
+	["kesselford-chandlery-braced-supply-crate", "kesselford-chandlery-locked-supply-crate"],
+	"res://world/interiors/kesselford_wayhouse.tscn":
+	["kesselford-wayhouse-braced-supply-crate", "kesselford-wayhouse-locked-supply-crate"],
 	"res://world/interiors/players_house.tscn": ["players-house-provisions"],
 	"res://world/interiors/river_shrine.tscn": ["river-shrine-offering-box"],
 	"res://world/interiors/shrine_undercroft.tscn": ["shrine-undercroft-offering-box"],
+	"res://world/long_verge.tscn": ["long-verge-camp-cache", "long-verge-west-cache"],
+	"res://world/test_room.tscn": ["wilds-glade-cache", "wilds-west-cache"],
+	"res://world/wound_lip.tscn": ["wound-lip-guard-kit", "wound-lip-ledge-cache"],
 }
 
 var _game_state_before: Dictionary = {}
@@ -67,10 +80,9 @@ func test_placed_containers_resolve_with_unique_repository_wide_ids() -> void:
 		scene_ids.sort()
 		found_by_scene[scene_path] = scene_ids
 
-	# 12 since #284 verb 4 added the table-driven RoadsideCache beside the
-	# hand-authored CampCache. This count is a PIN: a container added without
-	# updating EXPECTED_PLACEMENTS above should fail here, and did.
-	assert_int(scene_for_id.size()).is_equal(12)
+	# 22 after the Phase 1 field-density slices. This count is a PIN: a container added
+	# without updating EXPECTED_PLACEMENTS above should fail here.
+	assert_int(scene_for_id.size()).is_equal(22)
 	for scene_path: String in EXPECTED_PLACEMENTS:
 		var expected: Array = (EXPECTED_PLACEMENTS[scene_path] as Array).duplicate()
 		expected.sort()
