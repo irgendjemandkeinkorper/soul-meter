@@ -205,8 +205,12 @@ func test_the_bar_fits_unclipped_at_1366_by_768() -> void:
 	var session := await _session("NarrowWight")
 	await _assert_bar_fits(session)
 	var hud: FieldHUD = session.hud
-	var logical := get_tree().root.get_visible_rect()
-	assert_bool(logical.encloses(hud.bar().get_global_rect())).is_true()
+	# Half a pixel of slack: at 0.71 scale the bar can land at y = 884.0002 (bottom
+	# 1080.0002), float residue that a strict encloses() reads as overflow.
+	var logical := get_tree().root.get_visible_rect().grow(0.5)
+	assert_bool(logical.encloses(hud.bar().get_global_rect())).override_failure_message(
+		"bar %s leaves the visible rect %s" % [hud.bar().get_global_rect(), logical]
+	).is_true()
 	await _close(session)
 	get_tree().root.size = Vector2i(1920, 1080)
 	await get_tree().process_frame
