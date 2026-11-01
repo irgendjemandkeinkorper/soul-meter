@@ -25,6 +25,9 @@ extends Node
 ##         resume · to_main_menu · enter_battle · enter_set_piece · battle_end · travel
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
+## Strings only: the guarded debug route must not pull excluded assets into exports.
+const DEV_ROOM_SCENE := "res://dev/dev_room.tscn"
+const DEV_ROOM_BOOTSTRAP := "res://dev/dev_room_bootstrap.gd"
 const QUEST_AUDIT_SCRIPT := "res://tools/quest_audit.gd"
 ## The starting town (Dom) — the first gameplay scene loaded on a new game.
 const TOWN_SCENE := "res://world/starting_town.tscn"
@@ -91,6 +94,7 @@ var _pending_area_spawn: StringName = &"default"
 var _area_access_result := -1
 var _skip_next_breath_refill := false
 var travel_plan: TravelPlan = null
+var _dev_room_session: Node
 
 @onready var chart: StateChart = $StateChart
 
@@ -138,6 +142,7 @@ func _ready() -> void:
 	_sync_battle_guard()
 
 	$StateChart/Root/Menus/Title.state_entered.connect(_on_title_entered)
+	$StateChart/Root/Menus/DevRoom.state_entered.connect(_on_dev_room_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_entered.connect(_on_character_creation_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_exited.connect(_on_character_creation_exited)
 	$StateChart/Root/Menus/IntroNarration.state_entered.connect(_on_intro_narration_entered)
@@ -197,6 +202,10 @@ static func _is_quest_audit_cli(arguments: PackedStringArray) -> bool:
 ## The single entry point UI code uses to talk to the chart.
 func send_event(event: StringName) -> void:
 	_sync_battle_guard()
+	chart.set_expression_property(&"dev_room_available", OS.is_debug_build()
+		and ResourceLoader.exists(DEV_ROOM_BOOTSTRAP)
+		and ResourceLoader.exists(DEV_ROOM_SCENE)
+		and not SaveGame.runtime_sandbox_is_armed())
 	chart.send_event(event)
 
 
@@ -654,10 +663,35 @@ func notify_dialogue_closed() -> void:
 
 func _on_title_entered() -> void:
 	UIManager.close_all()
+	if is_instance_valid(_dev_room_session):
+		_dev_room_session.call("finish")
+		_dev_room_session.queue_free()
+		_dev_room_session = null
+		_restore_travel_plan()
+		_target_scene = TOWN_SCENE
 	MusicDirector.play_context("title")
 	var cur := get_tree().current_scene
 	if cur == null or cur.scene_file_path != MAIN_MENU_SCENE:
 		SceneLoader.load_scene(MAIN_MENU_SCENE)
+
+
+func _on_dev_room_entered() -> void:
+	# The chart owns availability; retain a release guard at the dynamic-load boundary.
+	if not OS.is_debug_build():
+		send_event("dev_room_failed")
+		return
+	var bootstrap := load(DEV_ROOM_BOOTSTRAP) as Script
+	if bootstrap == null:
+		send_event("dev_room_failed")
+		return
+	_dev_room_session = bootstrap.new() as Node
+	add_child(_dev_room_session)
+	if not bool(_dev_room_session.call("begin", DEV_ROOM_SCENE)):
+		send_event("dev_room_failed")
+		return
+	_restore_travel_plan()
+	if not travel(DEV_ROOM_SCENE):
+		send_event("dev_room_failed")
 
 
 func _on_character_creation_entered() -> void:

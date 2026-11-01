@@ -1,0 +1,34 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://dev/dev_room_preset.gd" id="1_preset"]
+
+[resource]
+script = ExtResource("1_preset")
+display_name = "DEV"
+ancestry_id = "vael"
+discipline_id = "chordblade"
+class_id = "mirrorblade"
+background_id = "dom-storm-coast"
+likeness_id = "likeness_01"
+attributes = {
+"doctrine": 3, "reason": 3, "alacrity": 4, "muster": 3,
+"grit": 3, "intuition": 3, "decorum": 3
+}
+companion_ids = PackedStringArray()
+items = {
+"weapons/forge_hammer": 1,
+"weapons/roadwarden_spear": 1,
+"weapons/taubstummer_axe": 1,
+"consumables/bitterleaf_poultice": 5,
+"consumables/hearthloaf": 5,
+"consumables/loam_bread": 5,
+"tools/field_needle": 1,
+"tools/lockpick_roll": 1,
+"tools/soul_gauge": 1,
+"tools/surveyors_chalk": 1
+}
+silver = 500
+level = 1
+xp = 0
+soul = 50.0
+flags = PackedStringArray()
