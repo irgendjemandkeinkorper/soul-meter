@@ -141,6 +141,24 @@ func test_combat_one_bar_as_the_player_sees_it() -> void:
 	interface._on_pointer_cleared()
 	print("LOG\n  ", "\n  ".join(hud.combat_bar.log_lines()))
 
+	# MORE: every command, the locked ones with their lock reasons.
+	var more := hud.combat_bar.find_child("MoreButton", true, false) as Button
+	more.button_pressed = true
+	await runner.simulate_frames(3)
+	print("MORE ready=", hud.combat_bar.ready_buttons().size(), " shown=", hud.combat_bar.visible_action_buttons().size())
+	await _capture("07-more-open")
+	more.button_pressed = false
+	await runner.simulate_frames(2)
+
+	# The owner's minimum: the same bar at 1366 x 768, compact columns, nothing clipped.
+	get_tree().root.size = Vector2i(1366, 768)
+	await runner.simulate_frames(6, 16)
+	print("BAR 1366 window=", get_tree().root.size, " logical bar=", hud.combat_bar.get_global_rect(),
+		" open=", stage.open_window())
+	await _capture("08-1366x768-player-turn")
+	get_tree().root.size = Vector2i(1920, 1080)
+	await runner.simulate_frames(6, 16)
+
 	GameFlow._on_battle_exited()
 	await runner.simulate_frames(30, 16)
 	await _capture("06-after-combat-bar-retracted")
