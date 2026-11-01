@@ -1,4 +1,4 @@
-[gd_scene load_steps=60 format=3]
+[gd_scene load_steps=61 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="9_hud"]
 [ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="10_townsfolk"]
 [ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="33_chest"]
+[ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="34_interactable"]
 
 [ext_resource type="Texture2D" uid="uid://cdnhwnogqihto" path="res://assets/generated/sprites/world/dom-wet-road--tile.png" id="1_weftlumin"]
 
@@ -1029,3 +1030,15 @@ lock_skill = "slip"
 container_id = "hollowmere-landing-store"
 owned_by_faction = "wayfare-menders"
 loot_table_id = &"road-cache"
+
+[node name="ShrineInscription" parent="." instance=ExtResource("34_interactable")]
+position = Vector2(1420, 1410)
+; DRAFT: read the existing shrine's religious marks without naming a faith or rite.
+display_name = "SHRINE INSCRIPTION"
+prompt_text = "READ INSCRIPTION"
+interaction_text = "Devotional marks identified."
+interaction_flag = "chapter_hollowmere_inscription_read"
+lock_skill = "devotion"
+lock_id = "hollowmere-shrine-inscription"
+locked_message = "Interpret the devotional marks."
+lock_failed_message = "You cannot interpret the marks."

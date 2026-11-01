@@ -132,11 +132,11 @@ func _refresh_prompt() -> void:
 	if _prompt == null:
 		return
 	if not _is_unlocked():
-		_prompt.text = "LOCKED — " + locked_message
+		_prompt.text = "LOCKED — " + tr(locked_message)
 	elif not container_id.is_empty() and GameState.loot_container_contents(container_id).is_empty():
 		_prompt.text = "E — EMPTY"
 	else:
-		_prompt.text = "E — " + prompt_text
+		_prompt.text = "E — " + tr(prompt_text)
 
 
 func _refresh_visual() -> void:
