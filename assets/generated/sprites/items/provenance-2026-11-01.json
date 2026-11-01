@@ -1,0 +1,460 @@
+{
+  "icons": [
+    {
+      "id": "materials/forge_coal",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/forge_coal (Forge Coal): A small sack of coal chips, black dust worked into the seams. Show a squat partly open worn coarse brown cloth sack filled with a few angular charcoal-black coal chips; mundane workshop stock, no other objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/forge_coal--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-c940aab2-2113-405c-8aa7-4b731dc8f6dc.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/forge_coal--icon.png",
+      "sha256": "9eb0b72f40bc13b8590d9cc3bc4d6f908564e8bc742e9a679379fcdbbaabb2a9",
+      "source_sha256": "f92118140da67b1fc3307e140056337d40f12dec8782c33d71da42ec7ccd5866",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 32036,
+      "opaque_pixels": 443,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "materials/leather_offcuts",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/leather_offcuts (Leather Offcuts): Trimmed leather scraps bundled for straps and small repairs. A compact stack of irregular russet and dark-brown leather offcuts, visibly cut uneven edges, tied once with plain twine. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/leather_offcuts--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-21ed6e83-e956-47bc-9972-744be86561d0.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/leather_offcuts--icon.png",
+      "sha256": "5babfe0e6e447a4509fa3844b1249ced6940442df28b799c69dc263dc3cf8cfc",
+      "source_sha256": "e81983a06d1a0bb512fcf4c678bb27edd517efca8afbd7e03004acc3bb4b3b84",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 37044,
+      "opaque_pixels": 465,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "tools/rivet_punch",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item tools/rivet_punch (Rivet Punch): A short iron punch with a head flattened by repeated blows. One short solid iron punch lying diagonally; blunt mushroomed struck head and narrowing working tip, worn grey dark iron, no handle and no hammer. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/rivet_punch--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-e6b91bd0-262e-4d5f-8dff-ed752a0ac39f.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/rivet_punch--icon.png",
+      "sha256": "6258050783ba3dd8152ceac2829c8e4012e08efcd99cb132839908a6a33a75c2",
+      "source_sha256": "d9d7a8d6d6722a8e0f092903b82f21865b8218340724334c9efa8da1353d18f5",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 51956,
+      "opaque_pixels": 398,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "materials/grain_meal",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/grain_meal (Grain Meal): A paper packet of coarsely ground grain, dust caught in every fold. One folded brown paper packet slightly open at top to show coarse beige grain meal, dust within folded seams, no printed markings. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/grain_meal--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-5a06e210-8162-4194-8f03-b5eed546346a.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/grain_meal--icon.png",
+      "sha256": "3d8cc5c4aeeed2468d50d0442d492c7185e1a54120c776b0f461a90d5e1ef0c9",
+      "source_sha256": "9b1c075707a37a004c57cd11aa456d365413dad502d6a1ef86d69f43416584b3",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 33643,
+      "opaque_pixels": 468,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "materials/sackcloth",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/sackcloth (Sackcloth): A folded square of coarse sacking with the old seam picked out. A small square of dark tan coarse burlap folded in layers, visible frayed picked-out seam at one edge, cloth only. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/sackcloth--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-e727a9f3-5693-4bc1-9173-85ca56399258.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/sackcloth--icon.png",
+      "sha256": "f737faf46b504eff2e3d6cf39e8991688a964069d0ad973954f3e3fdd7cc8a9f",
+      "source_sha256": "72e6251f53720e147792ce85403ae2760e4c59387086729f7bb161b2b084d025",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 32850,
+      "opaque_pixels": 436,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "tools/grain_scoop",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item tools/grain_scoop (Grain Scoop): A small wooden scoop, its lip worn smooth by grain. One plain hollow hand-carved wooden grain scoop with a short handle, dark worn wood, smooth polished lip, empty bowl. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/grain_scoop--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-61c30fb0-c0f0-4e2b-9947-6d6dd6d9ed91.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/grain_scoop--icon.png",
+      "sha256": "c5665b22253616d22f6ec6d1547bea06b4f5fe8341a9995d43afa61478c6adcd",
+      "source_sha256": "e9185e8b05c623c101851e83501e4087f5b60586c7fb984c28f4546e02d1e75b",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 40986,
+      "opaque_pixels": 435,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "materials/ferry_line",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/ferry_line (Ferry Line): A short coil of rough cord with both ends tightly bound. One short neatly coiled rough hemp rope with two clearly whipped tightly bound ends, thick practical ferry cordage. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/ferry_line--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-178a7253-67f5-435b-971d-a7d0978b6c08.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/ferry_line--icon.png",
+      "sha256": "e92a3ebaf6daef4c5cb983caa57584fe7042fcffd9d814b627cfd8bc38d59e0c",
+      "source_sha256": "b80c303befda719c6e0cd85c6a631f3a9d770f0b4334da891762156d3242fcc6",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 37465,
+      "opaque_pixels": 414,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "materials/lamp_wicks",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/lamp_wicks (Lamp Wicks): A bundle of trimmed wicks wrapped against the damp. A compact bundle of short off-white woven lamp wicks tucked into folded dark waxed paper, exposed wick ends visible; no lamps or flames. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/lamp_wicks--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-7050ec42-7621-41cf-9191-75ab2eee2d43.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/lamp_wicks--icon.png",
+      "sha256": "21719ca2f2084833449530dd69428d4e37248697ee846f8e3f5fe1a09874429a",
+      "source_sha256": "0db4076cfdad4f1957b3a90d73b8c8b869228f15eb955f43fb34baa5eb4dd74d",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 37688,
+      "opaque_pixels": 412,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "materials/stopper_wax",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/stopper_wax (Stopper Wax): A small cake of plain wax for sealing the necks of flasks. One small plain uneven round cake of dull ochre beeswax, rubbed and slightly nicked rim, no seal imprint, no writing, no flask, no candles. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/stopper_wax--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-f1005d09-a8de-4dcb-9e01-10b54b111e1f.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/stopper_wax--icon.png",
+      "sha256": "a2120d676667b8f38a047c0ba15757db8a753636f8a951bcc338c4c74a36e1a0",
+      "source_sha256": "5dee3e5f6ec1692a3222d01a7aa7ab28be1f2706e960d8862c38fe0e0b18a02f",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 34958,
+      "opaque_pixels": 451,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "consumables/road_crusts",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item consumables/road_crusts (Road Crusts): Dry brown loaf ends wrapped for a long walk. Two dry dark brown loaf heels with porous cut sides partly tucked in plain folded brown wrapping paper, frugal travelling ration. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/road_crusts--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-8778bd07-fa91-431a-97b8-258c135df5db.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/road_crusts--icon.png",
+      "sha256": "53ddfd9b9fac7af58de45afd77a1dca5c99775ff2bfb5f0d610d58a0bf385543",
+      "source_sha256": "a79197682359a3cdfd1e7ede0d6cbac5cdaa84f9cc1bbfc4eae2774d2e7adc94",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 37510,
+      "opaque_pixels": 405,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "tools/tent_pegs",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item tools/tent_pegs (Tent Pegs): A pair of short wooden pegs with old cord marks below the heads. Exactly two short hand-whittled dark wooden tent stakes with pointed ends and notched heads, old rope wear below heads, lying side by side diagonally. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/tent_pegs--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-caffb098-4181-4d8d-be98-9e8ad2d988a0.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/tent_pegs--icon.png",
+      "sha256": "04ac13483a8e27d81e17428cb98ab04772aef9d758ab5955339b74d7a911d0ba",
+      "source_sha256": "e47dc278eabeea4af7e7108a7dd29c498cdf4c22fc63f2f203ca51554cc52598",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 48691,
+      "opaque_pixels": 527,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "tools/map_case",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item tools/map_case (Map Case): A narrow leather case with a rubbed flap and a dry lining. One long narrow closed rectangular dark brown leather document case with a rubbed simple fold-over flap, faint glimpse of dry lining at the flap edge; no map, no writing, no embossed decoration. Orient nearly upright within square canvas. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/map_case--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-072f74b4-3f46-4af9-8b1b-41333c1cbdfe.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/map_case--icon.png",
+      "sha256": "0c59be5831a866ea5355ce6ad0ac65955b14224e38f01d7d771579d566c976e8",
+      "source_sha256": "9c5dded1c926c02b73dc814845e843e4c3de98d754a986d4028e77111f384105",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 45812,
+      "opaque_pixels": 486,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "materials/cut_reeds",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/cut_reeds (Cut Reeds): A hand-sized bundle of dried reeds, trimmed and tied at the butt. A hand-sized bundle of dry muted straw-brown reed stalks, neatly cut stems gathered and tied with plain thin twine at the butt, no flowers and no fresh greenery. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/cut_reeds--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-5406258e-f517-438b-876b-32c5175ff77c.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/cut_reeds--icon.png",
+      "sha256": "5c026d0cb7447f0ae70533e089e4fde92924f7e86c0f5de58f724bf1ed141e99",
+      "source_sha256": "a4b90be4c772a202c12ddfa0f1a3f19acab4124395dfef029747bd81a60013ff",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 39929,
+      "opaque_pixels": 691,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "materials/net_cord",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/net_cord (Net Cord): A short hank of fine cord with the old knots worked loose. One loose hank of fine muted tan fishing-net cord, much thinner than rope, a few curved creases from old undone knots, no net and no hooks. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/net_cord--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-836fa9d7-e6b2-4e67-9655-f4097b827b24.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/net_cord--icon.png",
+      "sha256": "d3ff1dbb4d8c2d44321179a4516bdf328aca86af8972ed10453676faf2065edb",
+      "source_sha256": "b2c3f135057f9e5747b4c1488778488cd7e5fc39be7711d7b2bf6271f5b2f9ae",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 44126,
+      "opaque_pixels": 892,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "tools/netting_needle",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item tools/netting_needle (Netting Needle): A flat wooden needle with a slot for carrying net cord. One flat wooden net-making shuttle needle, long narrow brown wooden tool with a visible long open slot around an integral central tongue for carrying net cord; plain worn edges, three-quarter view showing its thin flat construction. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/netting_needle--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-acde4822-ff16-4d71-805c-9a1168ffce95.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/netting_needle--icon.png",
+      "sha256": "4b50756332d3dd600be6b025f7f67037d1fd47f7b63fb47206fe8d0033fc797c",
+      "source_sha256": "1571b3a5f75e37b7c628c21f7e4c1cd49167d8a47b0d0359114b29d96fbf0a1c",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 51403,
+      "opaque_pixels": 602,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "consumables/cloth_bandage",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item consumables/cloth_bandage (Cloth Bandage): A clean strip of cloth rolled tightly for binding a small wound. One tightly rolled clean natural off-white linen strip, a short loose tail showing the cloth weave, no blood, no writing and no packaging. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/cloth_bandage--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-11b2f5df-0221-47b6-a96e-597a19d1352f.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/cloth_bandage--icon.png",
+      "sha256": "e58014259f83a6715409df52267dca44d205d5e752476f8e2ca366b05ccf985c",
+      "source_sha256": "3ecb7646e7ef7ebddeeb6724027ab4ac63db2c07df8721f78a52c65f299d781a",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 35663,
+      "opaque_pixels": 409,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "materials/repair_splints",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item materials/repair_splints (Repair Splints): Thin wooden strips bundled for patching cracked handles and cases. A compact tied bundle of thin flat wooden repair strips with squared ends, visibly narrow rectangular cross-sections, plain straight grain wood for patching handles and cases; not reeds and not pointed stakes. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/repair_splints--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-2842b769-909c-4e76-aa9e-b2f234148fe9.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/repair_splints--icon.png",
+      "sha256": "1f99dab1f3ba973ab769431183b0df1428377b7be7c2f4e807e5f370454a8301",
+      "source_sha256": "336fd4e4d2aecbc8fd486ac66688e03979c882ff0d6ad1a1d24d18e7b3ffe247",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 41878,
+      "opaque_pixels": 514,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    },
+    {
+      "id": "tools/stitching_thimble",
+      "prompt": "Create exactly ONE game inventory icon for Soul Meter, item tools/stitching_thimble (Stitching Thimble): A small metal finger cap, its crown pitted by a heavy needle. One small practical dark iron sewing thimble, hollow finger cap with rounded pitted crown, heavy needle indentations and worn lower rim, no decoration, no needle and no hands. Mundane practical goods; no extra objects. Deliver an actual 256x256 RGBA PNG, real transparent alpha outside the object, no opaque canvas, no checkerboard painted into pixels. Save output for assets/generated/sprites/items/stitching_thimble--icon.png. Style: gothic mythopunk, semi-realistic painterly digital illustration matching the provided existing item icons. The references show close, three-quarter top-down object framing, one isolated readable silhouette filling about 82% of a square with clean transparent margins. Warm directional key light from upper left picks out weathered edges, with deep dark falloff on lower/right surfaces; cool restrained edge reflections, no flat even lighting. Palette: desaturated peat brown cloth, warm ochre wear, charcoal and dark iron tones, small deliberate warm highlights. Rich tactile painted surface texture and believable material weight like the existing binding-thread spool, hearthloaf, fitted field-needle case, and lamp-oil flask. Background is completely transparent, no ground plane, no scenery, no cast shadow outside the subject, no vignette painted on the background. Avoid pure-black sticker outlines, flat vector or pixel art, hard cel shading, cartoon/chibi proportions, bright generic high fantasy, steampunk machinery, magical glow, text, letters, labels, UI, frames, watermarks. Preserve full silhouette with no cropping. This is one approved draft icon, not a contact sheet.",
+      "source_path": "/home/adamjroder/.codex/generated_images/01a196ce-788b-76a1-9adf-62f03f4fb8d9/exec-8b45d41f-7ccd-4ab4-908b-ad78a37c2c02.png",
+      "attempts_used": 1,
+      "generator": "codex built-in image generation",
+      "path": "assets/generated/sprites/items/stitching_thimble--icon.png",
+      "sha256": "942cbf5665c60b19c88459c7446a3fbfcc582389381841534a8f051eee93d03a",
+      "source_sha256": "c31766aa49583bbe7a3beea8eee90a9a3810f82ee128865bc7ab5f3504ca608b",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 40363,
+      "opaque_pixels": 428,
+      "normalization": "RGBA Lanczos resize to 256x256; no repainting or background removal",
+      "status": "draft-for-owner-review",
+      "batch": "owner 2026-11-01, 18 icons"
+    }
+  ],
+  "references": [
+    {
+      "id": "materials/binding_thread",
+      "path": "assets/generated/sprites/items/binding_thread--icon.png",
+      "sha256": "19a010e1d40d9bbae1af24076f32dde5c71270e7e27087de33d2a9efc14e255f"
+    },
+    {
+      "id": "consumables/hearthloaf",
+      "path": "assets/generated/sprites/items/hearthloaf--icon.png",
+      "sha256": "fa9903606971ac87bb2f9a728911458c480179aef33fb19cde541e1ccf2e1f2c"
+    },
+    {
+      "id": "tools/field_needle",
+      "path": "assets/generated/sprites/items/field_needle--icon.png",
+      "sha256": "9078ba7cbeecedfe3c44d4ea3dffad9500074aee01876eea5b9c3500793a4929"
+    },
+    {
+      "id": "materials/lamp_oil",
+      "path": "assets/generated/sprites/items/lamp_oil--icon.png",
+      "sha256": "e898a9083a3208deab69cb124accae4f999fe589a1e3c84ac137f719e5459f79"
+    }
+  ],
+  "contact_sheet": "docs/qa/item-icons-2026-11-01.png",
+  "generations_used": 18
+}

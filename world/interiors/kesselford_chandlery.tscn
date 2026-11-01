@@ -54,7 +54,7 @@ prompt_text = "Open"
 interaction_flag = "loot_opened_kesselford_chandlery_locked_supply_crate"
 container_id = "kesselford-chandlery-locked-supply-crate"
 owned_by_faction = "wayfare-menders"
-loot_table_id = &"road-cache"
+loot_table_id = &"kesselford-ferry-stores"
 lock_skill = "slip"
 lock_modifier = 0.0
 
@@ -65,6 +65,6 @@ prompt_text = "Open"
 interaction_flag = "loot_opened_kesselford_chandlery_braced_supply_crate"
 container_id = "kesselford-chandlery-braced-supply-crate"
 owned_by_faction = "wayfare-menders"
-loot_table_id = &"road-cache"
+loot_table_id = &"kesselford-ferry-stores"
 lock_skill = "strain"
 lock_modifier = 0.0

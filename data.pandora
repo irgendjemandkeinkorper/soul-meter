@@ -20231,6 +20231,816 @@
 						"value": ""
 					}
 				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "613.0",
+				"_index": 0,
+				"_name": "Forge Coal",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 8
+					},
+					"Description": {
+						"type": "string",
+						"value": "A small sack of coal chips, black dust worked into the seams."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Forge Coal"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.5
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "614.0",
+				"_index": 0,
+				"_name": "Leather Offcuts",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "Trimmed leather scraps bundled for straps and small repairs."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Leather Offcuts"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "615.0",
+				"_index": 0,
+				"_name": "Rivet Punch",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 13
+					},
+					"Description": {
+						"type": "string",
+						"value": "A short iron punch with a head flattened by repeated blows."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Rivet Punch"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.3
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "616.0",
+				"_index": 0,
+				"_name": "Grain Meal",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "A paper packet of coarsely ground grain, dust caught in every fold."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Grain Meal"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.5
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "617.0",
+				"_index": 0,
+				"_name": "Sackcloth",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "A folded square of coarse sacking with the old seam picked out."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Sackcloth"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "618.0",
+				"_index": 0,
+				"_name": "Grain Scoop",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 10
+					},
+					"Description": {
+						"type": "string",
+						"value": "A small wooden scoop, its lip worn smooth by grain."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Grain Scoop"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.3
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "619.0",
+				"_index": 0,
+				"_name": "Ferry Line",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 8
+					},
+					"Description": {
+						"type": "string",
+						"value": "A short coil of rough cord with both ends tightly bound."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Ferry Line"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.4
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "620.0",
+				"_index": 0,
+				"_name": "Lamp Wicks",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "A bundle of trimmed wicks wrapped against the damp."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Lamp Wicks"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "621.0",
+				"_index": 0,
+				"_name": "Stopper Wax",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "A small cake of plain wax for sealing the necks of flasks."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Stopper Wax"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "622.0",
+				"_index": 0,
+				"_name": "Road Crusts",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 5
+					},
+					"Description": {
+						"type": "string",
+						"value": "Dry brown loaf ends wrapped for a long walk."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Road Crusts"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "623.0",
+				"_index": 0,
+				"_name": "Tent Pegs",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 9
+					},
+					"Description": {
+						"type": "string",
+						"value": "A pair of short wooden pegs with old cord marks below the heads."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Tent Pegs"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 5
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.3
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "624.0",
+				"_index": 0,
+				"_name": "Map Case",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 13
+					},
+					"Description": {
+						"type": "string",
+						"value": "A narrow leather case with a rubbed flap and a dry lining."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Map Case"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,2)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "625.0",
+				"_index": 0,
+				"_name": "Cut Reeds",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "A hand-sized bundle of dried reeds, trimmed and tied at the butt."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Cut Reeds"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.3
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "626.0",
+				"_index": 0,
+				"_name": "Net Cord",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "A short hank of fine cord with the old knots worked loose."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Net Cord"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "627.0",
+				"_index": 0,
+				"_name": "Netting Needle",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 13
+					},
+					"Description": {
+						"type": "string",
+						"value": "A flat wooden needle with a slot for carrying net cord."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Netting Needle"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
+			},
+			{
+				"_category_id": "58",
+				"_icon_color": "ffffff00",
+				"_id": "628.0",
+				"_index": 0,
+				"_name": "Cloth Bandage",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 10
+					},
+					"Description": {
+						"type": "string",
+						"value": "A clean strip of cloth rolled tightly for binding a small wound."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Cloth Bandage"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "59",
+				"_icon_color": "ffffff00",
+				"_id": "629.0",
+				"_index": 0,
+				"_name": "Repair Splints",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 6
+					},
+					"Description": {
+						"type": "string",
+						"value": "Thin wooden strips bundled for patching cracked handles and cases."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Repair Splints"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 10
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.2
+					}
+				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "630.0",
+				"_index": 0,
+				"_name": "Stitching Thimble",
+				"_property_overrides": {
+					"Base Price": {
+						"type": "int",
+						"value": 9
+					},
+					"Description": {
+						"type": "string",
+						"value": "A small metal finger cap, its crown pitted by a heavy needle."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Stitching Thimble"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": ""
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 1
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "common"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 0.1
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -21946,7 +22756,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 612.0
+			"default": 630.0
 		}
 	},
 	"_version": 1
