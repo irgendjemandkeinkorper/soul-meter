@@ -475,3 +475,6 @@ loot-table expansion belongs to a separately authorized slice.
 Claude's next action for B1: capture the scene/node placements in the object
 table, including the existing Bellow stealing feedback.
 
+## Rendered check (Claude, Xvfb, 2026-10-31)
+
+`field-density-b1-placements-2026-10-31.png`: six close-ups, camera centred on each new object at zoom 1.5. Row 1: Long Verge WestCache, Long Verge CampCache. Row 2: Hollowmere TrackCache, Wilds GladeCache. Row 3: Equipment Forge BracedStockCrate, Dom at Sella Varn's post. Every chest renders on open ground with its interact label, clear of walls, doors and props. Sella Varn was off her post in this daytime capture, so her pocket was not seen on screen.
