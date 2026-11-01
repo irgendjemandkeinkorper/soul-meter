@@ -154,6 +154,29 @@ func test_hub_rollup_follows_nested_interior_registry_links() -> void:
 	assert_int(result["verbs"]["cache"]).is_equal(0)
 
 
+func test_scene_parser_ignores_node_shaped_multiline_prose_and_accepts_whitespace() -> void:
+	var fixture := _fixture()
+	fixture["scenes"][DOM] = """
+[gd_scene format=3]
+[ext_resource type = "Script" path = "res://actors/fixture/Chest.gd" id = "chest"]
+[node name="World" type="Node2D"]
+interaction_text = "This is prose.
+[node name=\\\"Pretend\\\" type=\\\"Area2D\\\" parent=\\\".\\\"]
+script = ExtResource(\\\"chest\\\")
+lock_skill = \\\"bellow\\\"
+container_id = \\\"pretend\\\"
+End of prose."
+[node name = "Real" type = "Area2D" parent = "."]
+script\t=\tExtResource( "chest" )
+container_id="real"
+lock_skill = "strain"
+"""
+	var result: Dictionary = Audit.audit_sources(fixture)
+	assert_int(result["verbs"]["loot container"]).is_equal(1)
+	assert_int(result["skills"]["strain"]).is_equal(1)
+	assert_bool(result["bellow"]).is_false()
+
+
 func test_no_scene_rows_cover_all_five_hubs_and_unbuilt_mapped_wilds() -> void:
 	var fixture := _fixture()
 	fixture["locations"].append(_location("unbuilt", "res://world/absent.tscn", true))

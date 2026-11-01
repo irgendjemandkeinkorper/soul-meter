@@ -6,6 +6,7 @@ extends SceneTree
 
 const Schema := preload("res://globals/stats/dramgid_schema.gd")
 const LootTables := preload("res://globals/loot_table_registry.gd")
+const SceneText := preload("res://addons/weftlumin/core/tscn_document.gd")
 
 ## PROVISIONAL: R7 and item 11c, docs/owner-decisions.md §5, as quoted in the
 ## #531 slice-A handoff. Those answered entries and roadmap-2026-10-30.md are
@@ -179,12 +180,12 @@ static func report(result: Dictionary) -> String:
 	for row: Dictionary in result["rows"]:
 		lines.append(_report_row(row))
 	lines.append("")
-	lines.append("Field skill occurrences (>= 1 contributes to the 15/22 target; no quota for every skill)")
+	lines.append("Field skill occurrences (>= 1 contributes to the %d/%d target; no quota for every skill)" % [TARGETS["skills"], Schema.FIELD_SKILL_IDS.size()])
 	lines.append("Skill | Checks | Presence contribution | Result")
 	for skill: String in Schema.FIELD_SKILL_IDS:
 		lines.append(_report_row(measurement(Schema.skill_label(skill), result["skills"][skill], 1)))
 	lines.append("")
-	lines.append("SUPERSEDED comparison only: >= 12/22 skills, each checked >= 3 times")
+	lines.append("SUPERSEDED comparison only: >= %d/%d skills, each checked >= %d times" % [TARGETS["superseded_skills"], Schema.FIELD_SKILL_IDS.size(), TARGETS["superseded_checks"]])
 	lines.append(_report_row(result["superseded"]))
 	for skill: String in Schema.FIELD_SKILL_IDS:
 		lines.append(_report_row(measurement(Schema.skill_label(skill), result["skills"][skill], TARGETS["superseded_checks"])))
@@ -416,18 +417,18 @@ static func scene_nodes(path: String, scenes: Dictionary, scripts: Dictionary,
 	var resources: Dictionary = {}
 	var nodes: Dictionary = {}
 	for block: Dictionary in blocks:
-		var header: String = block["header"]
-		if header.begins_with("[ext_resource "):
-			resources[_attribute(header, "id")] = _attribute(header, "path")
+		var attributes: Dictionary = block["attributes"]
+		if block["kind"] == "ext_resource":
+			resources[attributes.get("id", "")] = attributes.get("path", "")
 	for block: Dictionary in blocks:
-		var header: String = block["header"]
-		if not header.begins_with("[node "):
+		if block["kind"] != "node":
 			continue
-		var parent := _attribute(header, "parent")
-		var node_path := "." if parent.is_empty() else _attribute(header, "name")
+		var attributes: Dictionary = block["attributes"]
+		var parent := String(attributes.get("parent", ""))
+		var node_path := "." if parent.is_empty() else String(attributes.get("name", ""))
 		if not parent.is_empty() and parent != ".":
 			node_path = parent + "/" + node_path
-		var instance := _resource_reference(header)
+		var instance := _resource_reference(String(attributes.get("instance", "")))
 		if not instance.is_empty():
 			for child: Dictionary in scene_nodes(String(resources.get(instance, "")), scenes, scripts, cache, ancestry):
 				var child_path: String = child["path"]
@@ -456,24 +457,18 @@ static func scene_nodes(path: String, scenes: Dictionary, scripts: Dictionary,
 
 
 static func _scene_blocks(source: String) -> Array[Dictionary]:
+	# Use the existing lossless scene parser: multiline strings may contain
+	# apparent [node] headers, and Godot permits tabs/whitespace around '='.
+	# Its property-span reader is read-only; no vendor code or scene is mutated.
+	var document := SceneText.parse(source)
 	var blocks: Array[Dictionary] = []
-	var current: Dictionary = {}
-	var key := ""
-	var value := ""
-	for raw: String in source.split("\n"):
-		var line := raw.strip_edges()
-		if line.begins_with("[") and key.is_empty():
-			current = {"header": line, "props": {}}
-			blocks.append(current)
-		elif not current.is_empty():
-			if key.is_empty() and line.contains(" = "):
-				key = line.get_slice(" = ", 0)
-				value = line.substr(line.find(" = ") + 3)
-			elif not key.is_empty():
-				value += "\n" + line
-			if not key.is_empty() and _balanced(value):
-				current["props"][key] = value
-				key = ""
+	for section: Dictionary in document.sections:
+		if section["kind"] not in ["ext_resource", "node"]:
+			continue
+		var props: Dictionary = {}
+		for property: Dictionary in document._properties(section):
+			props[property["key"]] = source.substr(property["value_start"], property["value_end"] - property["value_start"])
+		blocks.append({"kind": section["kind"], "attributes": section["attributes"], "props": props})
 	return blocks
 
 
@@ -514,13 +509,8 @@ static func _class_name(source: String) -> String:
 	return found.get_string(1) if found != null else ""
 
 
-static func _attribute(header: String, key: String) -> String:
-	var found := RegEx.create_from_string("\\b" + key + "=\"((?:\\\\.|[^\"\\\\])*)\"").search(header)
-	return found.get_string(1) if found != null else ""
-
-
 static func _resource_reference(value: String) -> String:
-	var found := RegEx.create_from_string('ExtResource\\("([^\"]+)"\\)').search(value)
+	var found := RegEx.create_from_string('ExtResource\\(\\s*"([^\"]+)"\\s*\\)').search(value)
 	return found.get_string(1) if found != null else ""
 
 
@@ -539,16 +529,6 @@ static func _literal(value: String) -> Variant:
 
 static func _quoted_string(token: String) -> String:
 	return token.substr(1, token.length() - 2).c_unescape()
-
-
-static func _balanced(value: String) -> bool:
-	var depth := 0
-	for token: String in _tokens(value):
-		if token in ["[", "{", "("]:
-			depth += 1
-		elif token in ["]", "}", ")"]:
-			depth -= 1
-	return depth == 0
 
 
 static func _dictionary_constant(source: String, name: String, symbols: Dictionary) -> Dictionary:
