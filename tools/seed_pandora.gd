@@ -136,6 +136,7 @@ class CanonReader:
 				"flavour",
 			],
 			"integers": ["max_stack_size"],
+			"optional_integers": ["attack_bonus", "defense_bonus"],
 			"numbers": ["weight"],
 			"number_pairs": ["grid_size"],
 		},
@@ -272,6 +273,13 @@ class CanonReader:
 						% [document_path, field]
 					)
 					return false
+		for field: String in Array(contract.get("optional_integers", [])):
+			if not row.has(field):
+				continue
+			var value: Variant = row[field]
+			if typeof(value) != TYPE_FLOAT or not is_finite(value) or value != floorf(value):
+				push_error("CANON-SEED: %s requires integer '%s'." % [document_path, field])
+				return false
 		for field: String in Array(contract.get("booleans", [])) + Array(
 			scoped.get("booleans", [])
 		):
@@ -836,6 +844,8 @@ func _apply_items(items: Array[Dictionary]) -> void:
 		["Equip Slot", "string"],
 		["Rarity", "string"],
 		["Flavour", "string"],
+		["Attack Bonus", "int"],
+		["Defense Bonus", "int"],
 	]:
 		if not root.has_entity_property(property_spec[0]):
 			Pandora.create_property(root, property_spec[0], property_spec[1])
@@ -863,6 +873,9 @@ func _apply_items(items: Array[Dictionary]) -> void:
 		_assign(entity, "Equip Slot", row["equip_slot"])
 		_assign(entity, "Rarity", row["rarity"])
 		_assign(entity, "Flavour", row["flavour"])
+		# PROVISIONAL weapon bonuses: owner ruling 2026-11-01, roadmap P1.4 / #533.
+		_assign(entity, "Attack Bonus", int(row.get("attack_bonus", 0)))
+		_assign(entity, "Defense Bonus", int(row.get("defense_bonus", 0)))
 
 
 static func _vector2i(pair: Variant) -> Vector2i:
