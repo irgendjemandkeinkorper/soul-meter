@@ -149,6 +149,23 @@ position = Vector2(180, 900)
 
 [node name="OutdoorTownsfolk" type="Node" parent="."]
 script = ExtResource("10_townsfolk")
+npc_pockets = {
+"ashlaren-bell-warden": {
+"pocket_id": "ashlaren-bell-warden-purse",
+"pocket_gp": 9,
+"pocket_faction": "grain-factors-table"
+},
+"ashlaren-ghorr-steward": {
+"pocket_id": "ashlaren-ghorr-steward-purse",
+"pocket_gp": 9,
+"pocket_faction": "grain-factors-table"
+},
+"ashlaren-warehouse-watch": {
+"pocket_id": "ashlaren-warehouse-watch-purse",
+"pocket_gp": 9,
+"pocket_faction": "grain-factors-table"
+}
+}
 
 [node name="AshlarenDressing" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -491,4 +508,3 @@ transition_id = &"ashlaren_weighing_hall_enter"
 [node name="MillhouseDoor" parent="." instance=ExtResource("2_weftlumin")]
 position = Vector2(1900, 700)
 transition_id = &"ashlaren_millhouse_enter"
-

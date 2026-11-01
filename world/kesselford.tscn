@@ -125,6 +125,23 @@ position = Vector2(180, 900)
 
 [node name="OutdoorTownsfolk" type="Node" parent="."]
 script = ExtResource("10_townsfolk")
+npc_pockets = {
+"kesselford-bell-ringer": {
+"pocket_id": "kesselford-bell-ringer-purse",
+"pocket_gp": 9,
+"pocket_faction": "wayfare-menders"
+},
+"kesselford-ferry-keeper": {
+"pocket_id": "kesselford-ferry-keeper-purse",
+"pocket_gp": 9,
+"pocket_faction": "wayfare-menders"
+},
+"kesselford-mender-pair-junior": {
+"pocket_id": "kesselford-mender-pair-junior-purse",
+"pocket_gp": 9,
+"pocket_faction": "wayfare-menders"
+}
+}
 
 [node name="KesselfordDressing" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -419,4 +436,3 @@ position = Vector2(60, 1150)
 target_scene = "res://world/long_verge.tscn"
 label_text = "MOOR TRACK TO THE LONG VERGE"
 spawn_id = &"from_kesselford"
-

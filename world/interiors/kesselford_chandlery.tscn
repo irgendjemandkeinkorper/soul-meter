@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://world/interiors/building_interior.tscn" id="1_interior"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/interior/dom-interior-bench--plank.png" id="2_bench"]
 [ext_resource type="Texture2D" path="res://assets/generated/sprites/world/dom-hanging-lantern--decorative.png" id="3_lantern"]
 [ext_resource type="Script" path="res://world/ambient_prop_motion.gd" id="4_ambient_motion"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="5_chest"]
 
 [sub_resource type="RectangleShape2D" id="bench_footprint"]
 size = Vector2(82, 20)
@@ -45,3 +46,25 @@ offset = Vector2(0, -46)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KesselfordChandleryDressing/SolidProps/WallBench"]
 position = Vector2(0, -7)
 shape = SubResource("bench_footprint")
+
+[node name="LockedSupplyCrate" parent="." instance=ExtResource("5_chest")]
+position = Vector2(1450, 1000)
+display_name = "Supply Crate"
+prompt_text = "Open"
+interaction_flag = "loot_opened_kesselford_chandlery_locked_supply_crate"
+container_id = "kesselford-chandlery-locked-supply-crate"
+owned_by_faction = "wayfare-menders"
+loot_table_id = &"road-cache"
+lock_skill = "slip"
+lock_modifier = 0.0
+
+[node name="BracedSupplyCrate" parent="." instance=ExtResource("5_chest")]
+position = Vector2(400, 1000)
+display_name = "Supply Crate"
+prompt_text = "Open"
+interaction_flag = "loot_opened_kesselford_chandlery_braced_supply_crate"
+container_id = "kesselford-chandlery-braced-supply-crate"
+owned_by_faction = "wayfare-menders"
+loot_table_id = &"road-cache"
+lock_skill = "strain"
+lock_modifier = 0.0
