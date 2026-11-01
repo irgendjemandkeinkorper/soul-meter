@@ -1,4 +1,4 @@
-[gd_scene load_steps=42 format=3]
+[gd_scene load_steps=43 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="9_hud"]
 [ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="10_townsfolk"]
+[ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="20_interactable"]
 
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="1_weftlumin"]
 
@@ -508,3 +509,17 @@ transition_id = &"ashlaren_weighing_hall_enter"
 [node name="MillhouseDoor" parent="." instance=ExtResource("2_weftlumin")]
 position = Vector2(1900, 700)
 transition_id = &"ashlaren_millhouse_enter"
+
+[node name="WarehouseChallenge" parent="." instance=ExtResource("20_interactable")]
+position = Vector2(2300, 1380)
+; DRAFT: Bellow is intimidation (docs/briefs/dramgid-brief.md, SKILL.BELLOW).
+; Challenge the existing warehouse watch from beside the yard brazier; no access gate.
+display_name = "WAREHOUSE WATCH"
+prompt_text = "CHALLENGE THE WATCH"
+interaction_text = "The watch breaks eye contact."
+interaction_flag = "chapter_ashlaren_watch_challenged"
+lock_skill = "bellow"
+lock_modifier = 0.0
+lock_id = "ashlaren-warehouse-challenge"
+locked_message = "Make the warehouse watch flinch."
+lock_failed_message = "The watch holds your gaze."
