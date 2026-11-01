@@ -16,7 +16,8 @@ static func _all_world_scenes() -> Array[String]:
 
 const EXPECTED_PLACEMENTS := {
 	"res://world/dorthkor_road.tscn": ["dorthkor-road-camp-cache", "dorthkor-road-roadside-cache"],
-	"res://world/hollowmere.tscn": ["hollowmere-landing-cache", "hollowmere-track-cache"],
+	"res://world/hollowmere.tscn":
+	["hollowmere-crate-store", "hollowmere-landing-cache", "hollowmere-landing-store", "hollowmere-mender-store", "hollowmere-tent-store", "hollowmere-track-cache"],
 	"res://world/interiors/ashlaren_millhouse.tscn":
 	["ashlaren-millhouse-braced-supply-crate", "ashlaren-millhouse-locked-supply-crate"],
 	"res://world/interiors/ashlaren_weighing_hall.tscn":
@@ -36,7 +37,8 @@ const EXPECTED_PLACEMENTS := {
 	"res://world/interiors/players_house.tscn": ["players-house-provisions"],
 	"res://world/interiors/river_shrine.tscn": ["river-shrine-offering-box"],
 	"res://world/interiors/shrine_undercroft.tscn": ["shrine-undercroft-offering-box"],
-	"res://world/long_verge.tscn": ["long-verge-camp-cache", "long-verge-west-cache"],
+	"res://world/long_verge.tscn":
+	["long-verge-camp-cache", "long-verge-cart-store", "long-verge-column-store", "long-verge-crate-store", "long-verge-shoulder-store", "long-verge-west-cache"],
 	"res://world/test_room.tscn": ["wilds-glade-cache", "wilds-west-cache"],
 	"res://world/wound_lip.tscn": ["wound-lip-guard-kit", "wound-lip-ledge-cache"],
 }
