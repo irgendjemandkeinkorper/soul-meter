@@ -126,4 +126,4 @@ lock_skill = "slip"
 lock_modifier = 0.0
 container_id = "iron-companies-locked-supply-crate"
 owned_by_faction = "iron-companies"
-loot_table_id = &"road-cache"
+loot_table_id = &"dom-workshop-stores"

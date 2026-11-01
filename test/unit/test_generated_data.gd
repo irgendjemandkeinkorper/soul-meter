@@ -11,7 +11,7 @@ func test_committed_generated_data_matches_pandora() -> void:
 	# Twelve Dom vendors plus Kesselford's Ford Chandlery (C1 / #238) and Ashlaren's Flat Bell
 	# (C2 / #239).
 	assert_int(result.vendor_count).is_equal(14)
-	assert_int(result.count).is_equal(22)
+	assert_int(result.count).is_equal(40)
 
 
 func test_drift_probe_reports_both_matching_and_changed_content() -> void:
@@ -66,7 +66,7 @@ func test_every_item_prototype_references_a_loadable_transparent_icon() -> void:
 	)
 	assert_bool(parsed is Dictionary).is_true()
 	var protos := parsed as Dictionary
-	assert_int(protos.size()).is_equal(22)
+	assert_int(protos.size()).is_equal(40)
 	for item_path: String in protos:
 		var props: Dictionary = protos[item_path]
 		var image_path := str(props.get("image", ""))
