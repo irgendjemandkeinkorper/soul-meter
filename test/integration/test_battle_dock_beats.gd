@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
-## #473: grid combat leftovers on the battle screen.
+## #473: grid combat leftovers on the combat bar (the field HUD's one bar, owner 2026-11-01).
 ##   1. a cell battlefield has no zone MOVE cards (moves are clicks on cells); zones keep them;
-##   3. the dock, unit plate and CT strip follow the field's presented beats, and ENCOUNTER
+##   3. the bar, unit plate and turn strip follow the field's presented beats, and ENCOUNTER
 ##      RESOLVED waits for the field to present the finishing blow.
 
 const TEST_ROOM_SCENE := "res://world/test_room.tscn"
@@ -32,8 +32,8 @@ func after_test() -> void:
 
 func test_grid_battlefield_hides_the_zone_move_cards() -> void:
 	var session := await _grid_session("MoveCardWight")
-	var screen: Screen = session.screen
-	var buttons: Array = screen.get("_action_buttons")
+	var bar: CombatBar = session.bar
+	var buttons: Array = bar.get("_action_buttons")
 	var actions := Battle.available_actions()
 	var hidden := 0
 	for index: int in actions.size():
@@ -62,10 +62,11 @@ func test_zone_battlefield_keeps_its_zone_move_cards() -> void:
 	enemy.max_hp = 30
 	Battle.start(enemy)
 	assert_bool(Battle.controller.battlefield.capabilities().get("cells", false)).is_false()
+	# No field: the standalone shell hosts a field HUD in combat.
 	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
 	add_child(screen)
 	await get_tree().process_frame
-	var buttons: Array = screen.get("_action_buttons")
+	var buttons: Array = screen.call("combat_bar").get("_action_buttons")
 	var actions := Battle.available_actions()
 	var zone_cards := 0
 	for index: int in actions.size():
@@ -80,10 +81,11 @@ func test_dock_plate_and_ct_strip_follow_the_presented_enemy_phase() -> void:
 	# The demo company is the one the Bog Wight can actually wound (the rendered #281 pack).
 	GameState._seed_demo_data()
 	var session := await _grid_session("BeatWight", Vector2i(1, 0))
-	var screen: Screen = session.screen
-	var stage := (screen.get("_battle_interface") as BattleInterface).stage
-	var plate := (screen.get("_battle_interface") as BattleInterface).active_unit_plate
-	var timeline := (screen.get("_battle_interface") as BattleInterface).turn_timeline
+	var bar: CombatBar = session.bar
+	var interface := (session.hud as FieldHUD).battle_interface
+	var stage := interface.stage
+	var plate := interface.active_unit_plate
+	var timeline := interface.turn_timeline
 	var ally: BattleActor = Battle.allies[0]
 	# Fixture: combat rolls are seeded by the clock tick, so this seating misses every time.
 	# A keen, strong wight lands its strikes and wounds, giving the dock an end state it could
@@ -110,7 +112,7 @@ func test_dock_plate_and_ct_strip_follow_the_presented_enemy_phase() -> void:
 		assert_int(shown_hp).override_failure_message(
 			"the field has not presented the hit yet"
 		).is_equal(hp_before)
-		assert_str(_party_hp_text(screen, ally)).is_equal("HP %d / %d" % [hp_before, ally.max_hp])
+		assert_str(_party_hp_text(bar, ally)).is_equal("HP %d / %d" % [hp_before, ally.max_hp])
 		var active_row := _row(shown, StringName(str(shown.get("active_actor_id", ""))))
 		assert_int(int(plate.unit_snapshot().get("hp", -1))).is_equal(int(active_row.get("hp", -2)))
 		assert_str(plate.ct_label.text).is_equal(plate._ct_line(active_row))
@@ -120,7 +122,7 @@ func test_dock_plate_and_ct_strip_follow_the_presented_enemy_phase() -> void:
 				.is_equal(int((shown.get("turn_order", []) as Array)[0].get("charge", -2)))
 		await _until_presented(stage)
 		await get_tree().process_frame
-		assert_str(_party_hp_text(screen, ally)).is_equal("HP %d / %d" % [ally.hp, ally.max_hp])
+		assert_str(_party_hp_text(bar, ally)).is_equal("HP %d / %d" % [ally.hp, ally.max_hp])
 		var live_active := Battle.controller.snapshot()
 		assert_int(int(plate.unit_snapshot().get("hp", -1))).is_equal(
 			int(_row(live_active, StringName(str(live_active.get("active_actor_id", "")))).get("hp", -2))
@@ -133,8 +135,8 @@ func test_dock_plate_and_ct_strip_follow_the_presented_enemy_phase() -> void:
 
 func test_encounter_resolved_waits_for_the_presented_finishing_blow() -> void:
 	var session := await _grid_session("KoWight", Vector2i(1, 0))
-	var screen: Screen = session.screen
-	var stage := (screen.get("_battle_interface") as BattleInterface).stage
+	var bar: CombatBar = session.bar
+	var stage := (session.hud as FieldHUD).battle_interface.stage
 	var foe := (session.hostile as Hostile).battle_actor()
 	foe.hp = 1
 	for _attempt: int in 12:
@@ -153,14 +155,14 @@ func test_encounter_resolved_waits_for_the_presented_finishing_blow() -> void:
 	assert_bool(foe.is_alive()).is_false()
 	await get_tree().process_frame
 	assert_bool(stage.is_presenting_beats()).is_true()
-	assert_bool(screen.call("outcome_shown")).override_failure_message(
+	assert_bool(bar.outcome_shown()).override_failure_message(
 		"ENCOUNTER RESOLVED must wait for the field to present the finishing blow"
 	).is_false()
 	await _until_presented(stage)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	assert_bool(screen.call("outcome_shown")).is_true()
-	var outcome := screen.get("_outcome_box") as VBoxContainer
+	assert_bool(bar.outcome_shown()).is_true()
+	var outcome := bar.get("_outcome_box") as VBoxContainer
 	assert_str((outcome.get_child(0) as Label).text).is_equal("ENCOUNTER RESOLVED")
 	await _close(session)
 
@@ -180,14 +182,14 @@ func _grid_session(hostile_name: String, offset: Vector2i = Vector2i(4, 0)) -> D
 	hostile.sync_cell()
 	assert_bool(Battle.start_session(field, hostile).get("allowed", false)).is_true()
 	assert_bool(Battle.controller.battlefield.capabilities().get("cells", false)).is_true()
-	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
-	add_child(screen)
+	var hud := field.field_hud()
+	hud.enter_combat(field)
 	await get_tree().process_frame
-	return {"scene": scene, "field": field, "hostile": hostile, "screen": screen}
+	return {"scene": scene, "field": field, "hostile": hostile, "hud": hud, "bar": hud.combat_bar}
 
 
 func _close(session: Dictionary) -> void:
-	(session.screen as Node).free()
+	(session.hud as FieldHUD).exit_combat()
 	if Battle.session_active:
 		Battle._end_session(null)
 	(session.scene as Node).queue_free()
@@ -213,8 +215,8 @@ func _row(snapshot: Dictionary, id: StringName) -> Dictionary:
 	return {}
 
 
-## The HP label of `ally`'s dock row (rows follow Battle.allies order).
-func _party_hp_text(screen: Screen, ally: BattleActor) -> String:
-	var rows := (screen.get("_party_box") as Node).get_children()
-	var row := rows[Battle.allies.find(ally)]
-	return (row.get_child(2) as Label).text
+## The HP label of `ally`'s bar row (rows follow Battle.allies order).
+func _party_hp_text(bar: CombatBar, ally: BattleActor) -> String:
+	var entries := (bar.get("_party_box") as Node).get_children()
+	var entry := entries[Battle.allies.find(ally)] as Node
+	return (entry.get_node("HPRow/HP") as Label).text

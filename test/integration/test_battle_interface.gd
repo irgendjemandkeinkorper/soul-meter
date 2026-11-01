@@ -14,8 +14,16 @@ func test_battle_interface_renders_all_six_regions_from_scripted_state() -> void
 	interface.consume_event(event)
 	await runner.simulate_frames(1)
 
-	for node_name: String in ["ActiveUnitPlate", "Stage", "WeatherChip", "ActTargetPanel", "TurnTimeline", "HotbarSoulGauge"]:
+	# One bar, both modes (owner 2026-11-01): the plate rides in the CombatBar, the strip
+	# holds the turn order and the weather chip, and the forecast panel sits in the popover.
+	for node_name: String in [
+		"ActiveUnitPlate", "Stage", "WeatherChip", "ActTargetPanel", "TurnTimeline",
+		"CombatBar", "TurnStrip", "TacticalPopover",
+	]:
 		assert_object(runner.find_child(node_name, true, false)).is_not_null()
+	assert_object(runner.find_child("HotbarSoulGauge", true, false)).override_failure_message(
+		"the soul gauge belongs to the field HUD bar, not the interface"
+	).is_null()
 	assert_str((runner.find_child("HP", true, false) as Label).text).contains("31")
 	assert_int((runner.find_child("Stage", true, false) as BattleStageRegion).rendered_tile_count()).is_equal(1)
 	assert_str((runner.find_child("Value", true, false) as Label).text).contains("LUTH")
@@ -56,17 +64,24 @@ func test_region_e_renders_additive_ap_round_snapshot_payload() -> void:
 
 	var timeline := runner.find_child("TurnTimeline", true, false) as CTTimelineRegion
 	assert_int(timeline.marker_count()).is_equal(2)
-	assert_str((timeline.markers.get_child(0) as Label).text).contains("ACTIVE")
-	assert_str((timeline.markers.get_child(0) as Label).text).contains("●●○○")
-	assert_str((timeline.markers.get_child(1) as Label).text).contains("ACTED")
+	assert_str(timeline.marker_text(0)).contains("ACTIVE")
+	assert_str(timeline.marker_text(0)).contains("●●○○")
+	assert_str(timeline.marker_text(1)).contains("ACTED")
+	# The strip highlights the active actor and nobody else.
+	assert_bool(timeline.marker_is_active(0)).is_true()
+	assert_bool(timeline.marker_is_active(1)).is_false()
 
 
-func test_tactical_data_is_a_hidden_region_fed_by_the_interface_event_stream() -> void:
+## Owner 2026-11-01: the breakdown (tactical data, accuracy/power breakdown, attunement)
+## is one popover, closed by default, fed by the same event stream, opened by the bar's
+## button or the `combat_breakdown` key.
+func test_breakdown_popover_is_closed_by_default_and_fed_by_the_interface_event_stream() -> void:
 	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
 	var interface := runner.scene() as BattleInterface
 	var tactical := interface.tactical_data
 	assert_object(tactical).is_not_null()
-	assert_bool(interface.tactical_data_visible()).is_false()
+	assert_bool(interface.breakdown_visible()).is_false()
+	assert_bool(tactical.is_visible_in_tree()).is_false()
 	var event := CombatEvent.new()
 	event.type = &"action_resolved"
 	event.data = {"snapshot": {"balance": -35, "allies": [], "enemies": []}}
@@ -74,16 +89,41 @@ func test_tactical_data_is_a_hidden_region_fed_by_the_interface_event_stream() -
 	await runner.simulate_frames(1)
 	var balance := tactical.find_child("BalanceValue", true, false) as Label
 	assert_str(balance.text).contains("-35")
-	assert_bool(interface.toggle_tactical_data()).is_true()
-	assert_bool(tactical.visible).is_true()
-	assert_bool(interface.toggle_tactical_data()).is_false()
-	assert_bool(tactical.visible).is_false()
+	assert_bool(interface.toggle_breakdown()).is_true()
+	assert_bool(tactical.is_visible_in_tree()).is_true()
+	assert_bool(interface.act_target_panel.is_visible_in_tree()).is_true()
+	assert_bool(interface.toggle_breakdown()).is_false()
+	assert_bool(tactical.is_visible_in_tree()).is_false()
+	# The key (B, `combat_breakdown`) toggles it too.
+	assert_bool(InputMap.has_action(&"combat_breakdown")).is_true()
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_B
+	key.keycode = KEY_B
+	key.pressed = true
+	assert_bool(InputMap.event_is_action(key, &"combat_breakdown")).is_true()
+	get_tree().root.push_input(key)
+	await runner.simulate_frames(1)
+	assert_bool(interface.breakdown_visible()).is_true()
+	get_tree().root.push_input(key)
+	await runner.simulate_frames(1)
+	assert_bool(interface.breakdown_visible()).is_false()
+	# The bar's toggle mirrors the popover.
+	var button := interface.combat_bar.get("_breakdown_button") as Button
+	button.pressed.emit()
+	assert_bool(interface.breakdown_visible()).is_true()
+	assert_bool(button.button_pressed).is_true()
+	button.pressed.emit()
+	assert_bool(interface.breakdown_visible()).is_false()
 
 
-func test_production_battle_instantiates_the_overlay() -> void:
-	var source := FileAccess.get_file_as_string("res://ui/screens/battle.gd")
+func test_production_field_hud_instantiates_the_interface_over_the_field() -> void:
+	var source := FileAccess.get_file_as_string("res://ui/hud/field_hud.gd")
 	assert_str(source).contains("battle_interface.tscn")
-	assert_str(source).contains("Battle.combat_event.connect(_battle_interface.consume_event)")
+	assert_str(source).contains("Battle.combat_event.connect(battle_interface.consume_event)")
+	# GameFlow grows the field HUD's bar; it opens the standalone shell only without a field.
+	var flow := FileAccess.get_file_as_string("res://ui/flow/game_flow.gd")
+	assert_str(flow).contains("hud.enter_combat(field)")
+	assert_str(flow).contains("hud.exit_combat()")
 
 
 func test_dorthkor_grid_battle_uses_its_authored_environment_background() -> void:
@@ -219,6 +259,9 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	assert_bool(target_preview.visible).is_true()
 	assert_str((target_preview.get_node("Column/TargetName") as Label).text).is_equal("Mark")
 	assert_str(preview_quote.text).contains("ORDINARY · HIT")
+	# Owner 2026-11-01: the hover tooltip carries name, HP, hit chance and the damage forecast.
+	assert_str(preview_quote.text).contains("HP %d / %d" % [target.hp, target.max_hp])
+	assert_str(preview_quote.text).contains("DMG")
 
 	# Selection immediately quotes the inspected target and preserves keyboard focus.
 	panel.aim_button(&"throat").grab_focus()
@@ -230,26 +273,27 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	assert_str(panel.aim_button(&"throat").text).is_equal("[THROAT]")
 	assert_int(actor.action_points).is_equal(ap_before_preview)
 	var aimed := controller.forecast_action(action, target, {"aim_location": "throat"})
-	assert_str(preview_quote.text).is_equal("THROAT · HIT %d%%" % int(aimed["resolution"]["accuracy_breakdown"]["effective_hit_chance"]))
+	assert_str(preview_quote.text).contains("THROAT · HIT %d%% · %d DMG" % [
+		int(aimed["resolution"]["accuracy_breakdown"]["effective_hit_chance"]), int(aimed["damage_on_hit"]),
+	])
 	# The map quote remains while keyboard focus is on the aim controls.
 	assert_bool(target_preview.visible).is_true()
 	assert_str(panel.accuracy_summary.text).contains("Aim: Throat -25 pp")
 	assert_str(panel.accuracy_details.text).contains("Aim: Throat -25 pp")
 	assert_str(panel.accuracy_details.text).contains("Final hit chance %d%%" % int(aimed["resolution"]["accuracy_breakdown"]["effective_hit_chance"]))
-	assert_bool(panel.accuracy_details.visible).is_false()
+	# The panel lives in the breakdown popover, so its details are pinned open: no inner
+	# "show details" toggle, and the full accuracy breakdown is the popover's content.
+	assert_bool(panel.details_pinned).is_true()
+	assert_bool(panel.aim_details.visible).is_false()
+	assert_bool(panel.accuracy_details.visible).is_true()
+	assert_bool(panel.accuracy_summary.visible).is_false()
 	var injury_forecast: Dictionary = aimed["injury_forecast"]
 	assert_str(panel.aim_title.text).is_equal("AIM THROAT")
 	assert_str(panel.aim_stats.text).contains("COST %d AP" % int(aimed["ap_cost"]))
 	assert_str(panel.aim_consequence.text).contains("INJURY %d%% ON HIT · %d%% OVERALL" % [
 		int(injury_forecast["chance_on_hit"]), int(injury_forecast["overall_chance"]),
 	])
-	assert_bool(panel.forecast.visible).is_false()
-	panel.aim_details.grab_focus()
-	runner.simulate_action_pressed("ui_accept")
-	await runner.simulate_frames(1)
 	assert_bool(panel.forecast.visible).is_true()
-	assert_bool(panel.accuracy_details.visible).is_true()
-	assert_bool(panel.aim_details.has_focus()).is_true()
 	assert_int(actor.action_points).is_equal(ap_before_preview)
 	assert_str(panel.aim_button(&"throat").theme_type_variation).is_equal("BronzeButton")
 
@@ -290,7 +334,7 @@ func test_aim_row_arms_a_location_and_submits_it_through_the_interface() -> void
 	assert_bool(target_preview.visible).is_false()
 	interface._on_tile_hovered({"x": 1, "y": 0})
 	interface.select_aim(&"arm")
-	assert_str(preview_quote.text).is_equal("SHIELD ARM · UNAVAILABLE")
+	assert_str(preview_quote.text).contains("SHIELD ARM · UNAVAILABLE")
 	assert_bool(panel.accuracy_summary.visible).is_false()
 	interface._on_pointer_cleared()
 	assert_bool(target_preview.visible).is_false()

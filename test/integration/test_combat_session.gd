@@ -218,42 +218,49 @@ func test_ambient_hud_updates_without_the_legacy_stage() -> void:
 	var hostile := _hostile(field, "OverlayWight", Vector2i(30, 30))
 	var opened := Battle.start_session(field, hostile)
 	assert_bool(opened.get("allowed", false)).is_true()
-	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
-	add_child(screen)
-	assert_object(screen.get("_stage")).is_null()
-	assert_str((screen.get("_enemy_lbl") as Label).text).contains("BOG WIGHT")
-	assert_int((screen.get("_party_box") as VBoxContainer).get_child_count()).is_greater(0)
-	assert_bool((screen.get_node("Backdrop") as ColorRect).visible).is_false()
+	# The field HUD stays up and grows its bar (owner 2026-11-01); no screen opens.
+	var hud := field.field_hud()
+	assert_bool(hud.visible).is_true()
+	hud.enter_combat(field)
+	var bar := hud.combat_bar
+	assert_object(bar).is_not_null()
+	assert_str((bar.get("_enemy_lbl") as Label).text).contains("BOG WIGHT")
+	assert_int((bar.get("_party_box") as VBoxContainer).get_child_count()).is_greater(0)
 	assert_object(field.combat_overlay()).is_not_null()
-	screen.free()
+	assert_bool(hud.battle_interface.stage._backdrop.visible).is_false()
+	hud.exit_combat()
 	Battle._end_session(null)
 	field.get_parent().queue_free()
 	await get_tree().process_frame
 
 
 func test_full_command_catalog_leaves_the_live_battlefield_visible() -> void:
+	get_tree().root.size = Vector2i(1920, 1080)
 	var field := await _field()
 	var hostile := _hostile(field, "LayoutWight", Vector2i(30, 30))
 	assert_bool(Battle.start_session(field, hostile).get("allowed", false)).is_true()
-	var runner := scene_runner("res://ui/screens/battle.tscn")
-	var screen := runner.scene() as Screen
-	screen.theme = ThemeBuilder.build()
-	await runner.simulate_frames(3)
-	var dock := screen.find_child("CommandDock", true, false) as Control
-	var battlefield := screen.find_child("BattlefieldViewport", true, false) as Control
-	assert_float(dock.size.y).override_failure_message("Commands must not push the field off-screen").is_less(screen.size.y * 0.35)
-	assert_float(battlefield.size.y).is_greater(screen.size.y * 0.5)
-	assert_int((screen.get("_action_buttons") as Array).size()).is_equal(Battle.available_actions().size())
-	var scroll := screen.find_child("ActionScroll", true, false) as ScrollContainer
+	var hud := field.field_hud()
+	hud.enter_combat(field)
+	await get_tree().create_timer(DS.DUR_BASE + 0.1).timeout
+	await get_tree().process_frame
+	var bar := hud.bar()
+	var viewport := get_tree().root.get_visible_rect()
+	assert_float(bar.size.y).override_failure_message("Commands must not push the field off-screen").is_less(viewport.size.y * 0.35)
+	var open_window := hud.battle_interface.stage.open_window()
+	assert_float(open_window.size.y).is_greater(viewport.size.y * 0.5)
+	var combat_bar := hud.combat_bar
+	assert_int((combat_bar.get("_action_buttons") as Array).size()).is_equal(Battle.available_actions().size())
+	var scroll := combat_bar.find_child("ActionScroll", true, false) as ScrollContainer
 	assert_object(scroll).is_not_null()
-	var buttons: Array = screen.get("_action_buttons")
+	var buttons: Array = combat_bar.get("_action_buttons")
 	assert_float((buttons[0] as Button).size.x).is_greater(100.0)
 	var last_button := buttons.back() as Button
 	scroll.ensure_control_visible(last_button)
-	await runner.simulate_frames(2)
+	await get_tree().process_frame
+	await get_tree().process_frame
 	assert_int(scroll.scroll_vertical).is_greater(0)
 	assert_bool(scroll.get_global_rect().intersects(last_button.get_global_rect())).is_true()
-	screen.free()
+	hud.exit_combat()
 	Battle._end_session(null)
 	field.get_parent().queue_free()
 	await get_tree().process_frame
