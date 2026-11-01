@@ -98,3 +98,14 @@ interaction_flag = "loot_opened_equipment_forge_rivet_crate"
 loot = Array[Dictionary]([{"item_id": "materials/iron_rivets", "quantity": 2}])
 container_id = "equipment-forge-rivet-crate"
 owned_by_faction = "iron-companies"
+
+[node name="BracedStockCrate" parent="." instance=ExtResource("2_chest")]
+position = Vector2(1450, 1000)
+display_name = "Supply Crate"
+prompt_text = "Open"
+interaction_flag = "loot_opened_equipment_forge_braced_stock_crate"
+lock_skill = "strain"
+lock_modifier = 0.0
+container_id = "equipment-forge-braced-stock-crate"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"

@@ -825,6 +825,11 @@ position = Vector2(700, 535)
 npc_name = "Hadrik Vale"
 npc_id = "hadrik-vale"
 dialogue_path = "res://dialogue/hadrik_vale.dialogue"
+; Bellow makes this theft an intimidation attempt; uses the existing pocket outcome contract.
+pocket_id = "hadrik-vale-purse"
+pocket_skill = "bellow"
+pocket_gp = 9
+pocket_faction = "rennen"
 
 [node name="TomaReedhand" parent="." instance=ExtResource("5_npc")]
 position = Vector2(1820, 1280)
@@ -841,6 +846,10 @@ position = Vector2(2820, 1525)
 npc_name = "Sella Varn"
 npc_id = "sella-varn"
 dialogue_path = "res://dialogue/sella_varn.dialogue"
+pocket_id = "sella-varn-purse"
+pocket_skill = "tread"
+pocket_gp = 9
+pocket_faction = "trial-council"
 
 [node name="OutdoorTownsfolk" type="Node" parent="."]
 script = ExtResource("36_town_npcs")
@@ -1138,6 +1147,7 @@ label_text = "TO THE WILDS"
 required_flags = PackedStringArray("tutorial_road_open", "chapter_one_free_roam")
 locked_message = "Marshal Coiljaw must issue a field commission."
 spawn_id = &"from_dom"
+
 
 [node name="NorthRoad" parent="." instance=ExtResource("4_exit")]
 position = Vector2(2600, 100)
@@ -2396,4 +2406,3 @@ label_text = "MOOR ROAD TO THE LONG VERGE"
 required_flags = PackedStringArray("tutorial_road_open", "chapter_one_free_roam")
 locked_message = "Marshal Coiljaw must issue a field commission."
 spawn_id = &"from_dom"
-
