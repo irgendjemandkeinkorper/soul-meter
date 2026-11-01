@@ -1,6 +1,6 @@
 # Field coverage baseline — 2026-10-31
 
-P1.2 / #531, slice A. Content baseline: `45a83c5f`; instrument and fixtures: `fdb05c87`.
+P1.2 / #531, slice A. Content baseline: `45a83c5f`; instrument and fixtures: `a758b854`.
 No game content was authored for this measurement. All density targets below are **PROVISIONAL**.
 
 Godot version command: `~/.local/bin/godot --version`
@@ -281,3 +281,78 @@ Kesselford; Long Verge and Hollowmere are mapped wilds with no fast-travel facet
 Both requested hub rows and registry wild rows are retained. **Open:** reconcile
 the five-hub density scope with the three-hub registry; no membership was changed.
 
+
+## Verification
+
+The full unit run completed before the final scene-parser adapter and regression
+fixture. The affected audit suite was rerun afterward, with all 17 cases passing.
+No gameplay implementation changed between these runs. All commands ran from this
+worktree with Godot 4.7.1 and isolated temporary test data.
+
+Required unit command, attempted with the default Xvfb wrapper:
+
+```bash
+GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 SOUL_METER_TEST_DATA_DIR="$(mktemp -d /tmp/soul-meter-unit-xvfb.XXXXXX)" bash scripts/test.sh -a test/unit
+```
+
+Process exit status: 1. Relevant display errors, verbatim:
+
+```text
+ERROR: X11 Display is not available
+ERROR: Unable to create DisplayServer, all display drivers failed.
+```
+
+CI-equivalent headless fallback:
+
+```bash
+GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 SOUL_METER_HEADLESS=1 SOUL_METER_TEST_DATA_DIR="$(mktemp -d /tmp/soul-meter-unit-headless.XXXXXX)" timeout 5400 bash scripts/test.sh -a test/unit
+```
+
+Verbatim summary lines (terminal color escapes removed):
+
+```text
+Overall Summary: 1980 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |
+Executed test suites: (194/194)
+Executed test cases : (1980/1980)
+Exit code: 0
+```
+
+Final focused check:
+
+```bash
+GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 SOUL_METER_HEADLESS=1 SOUL_METER_TEST_DATA_DIR="$(mktemp -d /tmp/soul-meter-field-parser-tests.XXXXXX)" bash scripts/test.sh -a test/unit/test_audit_field_coverage.gd
+```
+
+Verbatim summary lines:
+
+```text
+Overall Summary: 17 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |
+Executed test suites: (1/1)
+Executed test cases : (17/17)
+Exit code: 0
+```
+
+Required generated-data check:
+
+```bash
+GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 bash scripts/check_generated_data.sh
+```
+
+Process exit status: 0. Verbatim result lines:
+
+```text
+GLOOT-GEN: no drift.
+CANON-SEED: no drift.
+LOCATIONS-GEN: no drift.
+ISO-SPRITE-GEN: no drift. 598 sprites verified.
+```
+
+Godot printed ObjectDB/resource leak diagnostics at teardown in these runs. The
+standalone audit also printed the main-menu preload errors preserved above.
+The unit summaries and generator completion markers passed; these diagnostics
+are not claimed to be resolved. No rendered behavior is changed or certified by
+this data-only instrument.
+
+The four untracked `.gd.uid` files present before work were preserved. There are
+no changes to scenes, dialogue, art, generated data, Pandora, owner decisions,
+roadmaps, or vendor code. The scene parser is used read-only.
