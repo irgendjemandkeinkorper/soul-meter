@@ -17,3 +17,9 @@ intro with the loading handler unhooked.
 Seen in `03` and left for the UI audit (not caused by this change): when a long roll wraps
 the CREATION POINTS line, the summary pushes the navigation row about 8 px past the bottom
 edge, and LIKENESS prints the raw id (`likeness_02`).
+
+**2026-11-02, UI rework U3 item 6** (`claude/chargen-summary-fix`):
+
+| File | What it shows |
+|---|---|
+| `05-summary-before-after-u3.jpg` | Before (left), the summary page grows past the frame (note the outer scrollbar) and LIKENESS prints the raw id `likeness_02`. After (right, a different roll), the record scrolls inside its own column, the page fits, and LIKENESS names the plate ("Vael Hospice Wayfarer"). |

@@ -295,6 +295,31 @@ func test_randomize_during_an_attribute_animation_keeps_the_rolled_readout() -> 
 		assert_float(bar.value).is_equal(float(screen.build.attributes[attribute_id]))
 
 
+## UI rework U3 item 6: the summary names the likeness by its label, and a long record scrolls
+## inside the page instead of pushing the navigation row off the 1080 p frame.
+func test_summary_names_the_likeness_and_keeps_its_navigation_on_screen() -> void:
+	var size_before := get_tree().root.size
+	get_tree().root.size = Vector2i(1920, 1080)
+	var runner := scene_runner("res://ui/screens/character_creation.tscn")
+	await runner.simulate_frames(2)
+	var screen := runner.scene() as CharacterCreationScreen
+	_fill_out_valid_build(screen, "Sera", "of the very long and thoroughly ledgered epithet")
+	# The longest flaw the field takes, so the record wraps as far as a real roll can.
+	screen.set_flaw("Will not leave a debt uncounted, nor a ledger unread, nor a bell unrung")
+	_drive_to_summary(screen)
+	await runner.simulate_frames(3)
+
+	var likeness: Dictionary = ChargenData.LIKENESSES[1]
+	assert_str(screen._summary_lbl.text).contains("LIKENESS\n%s" % likeness["label"])
+	assert_str(screen._summary_lbl.text).not_contains(str(likeness["id"]))
+	assert_object(screen._summary_lbl.get_parent()).is_instanceof(ScrollContainer)
+	var frame := Rect2(Vector2.ZERO, Vector2(1920, 1080))
+	assert_bool(frame.encloses(screen._accept_btn.get_global_rect())).override_failure_message(
+		"ACCEPT sits at %s, outside the frame" % screen._accept_btn.get_global_rect()
+	).is_true()
+	get_tree().root.size = size_before
+
+
 func _fill_out_valid_build(screen: CharacterCreationScreen, name: String, epithet: String) -> void:
 	screen.select_ancestry("vael")
 	screen.select_discipline("thamshaper")
