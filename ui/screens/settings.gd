@@ -1,6 +1,8 @@
 extends Screen
 ## Display + Audio settings. Applies live and persists to user://settings.cfg via GameState.
 
+const FieldHUDScript := preload("res://ui/hud/field_hud.gd")
+
 func _build() -> void:
 	var vbox := _make_shell_window("Settings")
 
@@ -26,6 +28,16 @@ func _build() -> void:
 	reduced_motion.toggled.connect(_on_reduced_motion_toggled)
 	vbox.add_child(reduced_motion)
 
+	vbox.add_child(_section("Interface"))
+	var hints := CheckButton.new()
+	hints.name = "ControlHints"
+	hints.text = "Control hints"
+	hints.tooltip_text = "Shows each control in the field until you have used it once."
+	hints.button_pressed = FieldHUDScript.control_hints_showing()
+	hints.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	hints.toggled.connect(_on_control_hints_toggled)
+	vbox.add_child(hints)
+
 	vbox.add_child(_section("Audio"))
 	for bus: StringName in GameState.AUDIO_BUSES:
 		vbox.add_child(_volume_row(bus))
@@ -49,6 +61,12 @@ func _build() -> void:
 func _on_fullscreen_toggled(on: bool) -> void:
 	GameState.apply_fullscreen(on)
 	GameState.set_setting("display", "fullscreen", on)
+
+
+## U2 (owner 2026-11-02): on brings every control hint back; off hides them all.
+func _on_control_hints_toggled(enabled: bool) -> void:
+	FieldHUDScript.set_control_hints(enabled)
+	get_tree().call_group(FieldHUDScript.GROUP, &"refresh_key_hints")
 
 
 func _on_reduced_motion_toggled(enabled: bool) -> void:

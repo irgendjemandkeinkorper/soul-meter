@@ -1,7 +1,7 @@
 # UI rework: audit and plan (2026-11-01)
 
-Status: **APPROVED by the owner, 2026-11-01.** U1 (conversation) is built, awaiting owner
-review; see "U1 as built" below. U2 and U3 follow as separate PRs.
+Status: **APPROVED by the owner, 2026-11-01.** U1 (conversation) and U2 (field HUD) are built,
+awaiting owner review; see "U1 as built" and "U2 as built" below. U3 follows as its own PR.
 
 Owner, 2026-11-01: *"we also need to do a heavy rework of all the UI buttons and info — it's so
 busy and doesn't really convey information we need, especially in conversations."* (Asked in a
@@ -129,6 +129,30 @@ Captures: `docs/qa/conversation-u1-2026-11-01/` (after), against `docs/qa/ui-aud
    another area.
 4. **World labels move to a DS type variation** (Cinzel, small caps), not the default sans.
 
+#### U2 as built (2026-11-02)
+
+Captures: `docs/qa/field-hud-u2-2026-11-02/`, before and after from the same harness, Dom with a
+party of six.
+
+- **Key hints** are one label per verb. A hint leaves on the first press of any of its actions;
+  learned verbs are saved in the settings file (`interface/control_hints_used`). Settings →
+  Interface → "Control hints" reads as on while any hint shows. Turning it on brings all eight
+  back; turning it off hides them.
+- **Party strip:** one card per member (196 px wide). Each card has a 40 px bust, the name, an HP
+  meter (cinder) and a Breath meter (mote, new `METER_BREATH_*` tokens). Hovering a card swaps
+  the name for `HP 10/30 · BR 3/15` on the same line. HP and Breath have no signal, so the HUD
+  compares the six members each frame and redraws on change. A member with only a walking
+  sprite gets a square bust cut from the top of the figure (`PartyMemberVisuals.bust_texture`,
+  read-only; it no longer writes the portrait back). The field has no UI focus, so the numbers
+  appear on pointer hover only.
+- **Objective:** one line, `<chapter> · <step>`. "GO TO <place>" is appended only when the
+  place is not the current area. The area comes from the location index; an interior resolves
+  through its door's source scene, e.g. Lower Trial Hall → Trial Hall → Dom. The stage's
+  separate action hint (often a restatement of the step) is no longer shown in the HUD.
+- **World labels:** FieldMap gives every world-space Label the UI theme. Labels that asked for
+  the eyebrow face, or for nothing, get `WorldLabel`. Labels added later (NPC prompts, exits)
+  are caught as they enter the tree.
+
 ### U3: panels (about 4–6 hours)
 
 1. **One shell for every panel** (`Screen._make_shell()`): header, body and HUD bar with the
@@ -155,3 +179,7 @@ Asked inline on 2026-11-01. Answers are recorded below and in `docs/owner-decisi
 | 3 | Show skill-check odds? | **Show your chance**, e.g. `[UNDERTONE 62%]`. A locked check names the bar. |
 | 4 | Approve the plan, and build order | **Approved; U1 first**, with before/after captures and owner review; then U2 and U3 as separate PRs. |
 | 5 | Showing odds and exact effects conflicts with the 2026-08-28 Wave 0 ruling 2 (`docs/fallout2-adoption-spec.md`: tagged checks, no numbers). Which wins? | **Today supersedes**, for conversations: odds and exact effect chips are shown. Ruling 2 is marked superseded. Field notices outside a conversation stay non-numeric, as built. |
+| 6 | PR #559's draft strings (2026-11-02) | **Approve all.** |
+| 7 | Build order after U1 (2026-11-02) | **U2 and U3 together:** U2, then U3 straight after, each its own PR, without waiting on #559's review. |
+| 8 | Key-hint strip (U2.1, 2026-11-02) | **Hide after first use.** Each hint goes once its key is pressed; a Settings toggle brings the strip back. |
+| 9 | Party line (U2.2, 2026-11-02) | **Portraits + bars.** A small portrait, an HP bar and a Breath bar per member, sized for six; numbers on hover or focus. |
