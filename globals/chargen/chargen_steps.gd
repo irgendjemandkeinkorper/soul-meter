@@ -38,6 +38,41 @@ const STEPS: Array[Dictionary] = [
 ]
 
 
+## The one-screen register (owner ruling 2026-11-02, docs/design/chargen-overhaul-plan-2026-11-02.md):
+## four tabs, each owning the leaves it shows and validates. Any tab can be visited in any
+## order; "summary" belongs to none because the entry column is always on screen.
+const TABS: Array[Dictionary] = [
+	{"id": &"origin", "name": "ORIGIN", "steps": [&"ancestry", &"background"]},
+	{"id": &"calling", "name": "CALLING", "steps": [&"discipline", &"patron", &"elements"]},
+	{"id": &"measures", "name": "MEASURES", "steps": [&"attributes", &"skills"]},
+	{"id": &"name", "name": "NAME", "steps": [&"identity"]},
+]
+
+
+static func tab_ids() -> Array[StringName]:
+	var result: Array[StringName] = []
+	for tab: Dictionary in TABS:
+		result.append(tab["id"])
+	return result
+
+
+## The tab that shows a leaf; "summary" maps to the first tab.
+static func tab_of(step_id: StringName) -> StringName:
+	for tab: Dictionary in TABS:
+		if (tab["steps"] as Array).has(step_id):
+			return tab["id"]
+	return TABS[0]["id"]
+
+
+static func tab_steps(tab_id: StringName) -> Array[StringName]:
+	var result: Array[StringName] = []
+	for tab: Dictionary in TABS:
+		if tab["id"] == tab_id:
+			for step_id: StringName in tab["steps"]:
+				result.append(step_id)
+	return result
+
+
 static func count() -> int:
 	return STEPS.size()
 
