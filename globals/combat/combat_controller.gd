@@ -1533,6 +1533,11 @@ func _drive_scheduler() -> void:
 			_emit_event(&"enemy_turn_started", actor, null, turn_payload)
 		if actor != _last_turn_actor or int(result.get("ticks_elapsed", 0)) != 0:
 			_class_resource_of(actor).on_turn_start()
+			_kit_steps.erase(actor.combat_id)
+			_kit_used.erase(actor.combat_id)
+			for other: BattleActor in enemies:
+				if other != actor and other.is_alive():
+					_class_resource_of(other).on_ally_turn_start(actor.combat_id)
 		_last_turn_actor = actor
 		_last_side = &"enemy"
 		_resolve_enemy_actor(actor)
@@ -1600,6 +1605,9 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 ## which enemy this is and when. Grid-capable battlefields plan a legal move before committing;
 ## attack affordability is checked only after a target is in range.
 func _resolve_enemy_actor(actor: BattleActor) -> void:
+	if KitAI.runs(actor):
+		_resolve_kit_enemy(actor)
+		return
 	var enemy_action := action_by_id(&"enemy-strike")
 	# #285 slice 5: the turn executes the enemy's plan, so a locked (read) intent and an unread
 	# enemy run the same path. The lock is spent by this turn whatever it does.
@@ -1661,6 +1669,82 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 	_emit_event(&"action_resolved", actor, target, outcome)
 	scheduler.release(actor)
 	_change_balance(actor.balance_affinity * actor.balance_pressure, actor)
+
+
+## Steps a class-kit enemy may take in one turn before it must pass: a guard against any
+## zero-cost loop, well above what an AP turn affords.
+const _KIT_MAX_STEPS := 8
+var _kit_steps: Dictionary = {}  ## combat_id -> steps taken this turn
+var _kit_used: Dictionary = {}  ## combat_id -> class command ids used this turn
+
+
+## Combat polish 2026-11-02 ("AI runs 5"): one step of a class-kit enemy's turn, planned by
+## KitAI through the same gates as the player's bar and committed by the same path. The drive
+## loop asks again while the actor has AP; a step that cannot be taken passes the turn.
+func _resolve_kit_enemy(actor: BattleActor) -> void:
+	var steps := int(_kit_steps.get(actor.combat_id, 0))
+	if steps >= _KIT_MAX_STEPS:
+		_force_pass(actor)
+		return
+	_kit_steps[actor.combat_id] = steps + 1
+	var used: Array = _kit_used.get(actor.combat_id, [])
+	var plan := KitAI.plan_step(self, actor, used)
+	var action: CombatAction = null
+	var target: BattleActor = null
+	var options: Dictionary = {}
+	match str(plan.get("kind", "pass")):
+		"act":
+			action = plan["action"] as CombatAction
+			target = plan.get("target") as BattleActor
+			options = plan.get("options", {})
+		"move":
+			action = action_by_id(ACTION_MOVE)
+			options = {"destination": plan["destination"]}
+		_:
+			_force_pass(actor)
+			return
+	var gate := query_action_for(actor, action, target, options)
+	if not bool(gate.get("allowed", false)):
+		_emit_event(&"action_refused", actor, target, {"action_id": action.id, "reason": gate})
+		_force_pass(actor)
+		return
+	if target != null and target != actor:
+		_face_toward(actor, target)
+	var outcome := _commit_for(actor, action, target, options, gate)
+	if bool(outcome.get("_commit_refused", false)):
+		_force_pass(actor)
+		return
+	if not action.class_resource_action.is_empty():
+		used.append(action.id)
+		_kit_used[actor.combat_id] = used
+
+
+## The actor's own side and the other side (read-only views for KitAI and the presentation).
+func friends_of(actor: BattleActor) -> Array[BattleActor]:
+	return _friends_of(actor)
+
+
+func foes_of(actor: BattleActor) -> Array[BattleActor]:
+	return _foes_of(actor)
+
+
+## Expected damage of `action` on `target` from the forecast the player sees (hit chance x
+## damage on hit, plus the injury weight). -1 when no forecast applies.
+func attack_value(actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary = {}) -> float:
+	return _enemy_attack_value(actor, target, action, options)
+
+
+func forecast_damage_on_hit(context: Dictionary, target: BattleActor) -> int:
+	return _forecast_damage_on_hit(context, target)
+
+
+func breath_room(actor: BattleActor) -> int:
+	return _breath_room(actor)
+
+
+## Every destination `actor` can afford to walk to now (any side), priced like a submit.
+func reachable_for(actor: BattleActor) -> Array[Dictionary]:
+	return _reachable_for(actor, _move_budget(actor))
 
 
 ## #285 slice 5: the enemy's next action, written down before its turn as `{kind, action_id,
