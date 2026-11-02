@@ -111,12 +111,19 @@ the visual proof of it, not a departure):
 
 ### Field-scene dressing contract
 
-Sparse field scenes use the same restrained three-layer composition established by
+**Density superseded 2026-11-02 (owner, lived-in maps):** towns and yards are dressed densely,
+Fallout-style: every wall base, doorstep and yard carries small greebles, and the ground
+changes underfoot. Small greebles are walkable decor; bigger pieces are solid and may give
+cover. Main routes, doors, spawns, interactables and travel exits stay clear. The palette,
+light and finish below are unchanged. Plan: `docs/design/map-lived-in-plan-2026-11-02.md`.
+The three layers and the rules after them still hold.
+
+Field scenes use the same three-layer composition established by
 Wound Lip and Dorthkor Road: flat `GroundDetails` below actors, non-colliding
 `SoftDetails`, and small-footprint colliders in `SolidProps`. The scene root, soft
 layer, and solid layer y-sort actors against standing art; ground decals remain
 unsorted at `z_index = -2`. Keep primary routes, spawn points, interactions, and
-travel triggers visually readable rather than filling every empty patch.
+travel triggers clear and visually readable inside the dense dressing.
 
 Before placing an existing texture, verify that it contains meaningful alpha instead
 of an opaque white plate. Scale large painted sprites independently; collision shapes
