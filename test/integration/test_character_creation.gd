@@ -72,6 +72,9 @@ func test_a_retired_pairing_and_an_opposed_pair_are_refused_and_named() -> void:
 	var screen := await _open_screen()
 	screen.set_display_name("Sera")
 	screen.select_discipline("chordblade")
+	# The register opens rolled and the roll may already be Ironbrand on other tones; pass
+	# through another class so picking Ironbrand is a real change that applies its tones.
+	screen.select_class("mirrorblade")
 	screen.select_class("ironbrand")
 	# Threadwalker x Chordblade is retired: the tile is disabled and the pick refused.
 	var threadwalker := screen.find_child("Class_threadwalker", true, false) as Button
