@@ -72,10 +72,16 @@ static func encounter_definition() -> Dictionary:
 static func prepare() -> bool:
 	if not EncounterCatalog.register_debug_encounter(ENCOUNTER_ID, encounter_definition()):
 		return false
+	seat_player_side()
+	return true
+
+
+## Seats the player's five as the live party, the first as the protagonist. The Kesselford
+## walk uses it alone: the same five, no fight.
+static func seat_player_side() -> void:
 	var members := party(PLAYER_SIDE)
 	members[0].id = GameState.PROTAGONIST_ID
 	GameState.set_party(members)
-	return true
 
 
 static func _likeness_for(class_id: String) -> String:

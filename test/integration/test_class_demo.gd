@@ -63,6 +63,43 @@ func test_the_title_opens_the_demo_on_a_sandbox_and_the_title_takes_it_back() ->
 	assert_dict(EncounterCatalog.definition(ClassDemo.ENCOUNTER_ID)).is_empty()
 
 
+## Owner 2026-11-02: a debug shortcut to walk the lived-in Kesselford. Same sandbox and player
+## five as the demo, Kesselford at the wayhouse, no fight registered; the title takes it back.
+func test_the_title_opens_a_kesselford_walk_on_a_sandbox_and_the_title_takes_it_back() -> void:
+	await _return_to_title()
+	_hold_loading()
+	var party_before := _party_ids()
+	assert_bool(GameFlow.start_kesselford_walk()).is_true()
+	await get_tree().process_frame
+
+	assert_bool(_state_is_active(LOADING_STATE_PATH)).is_true()
+	assert_str(GameFlow._target_scene).is_equal(GameFlow.KESSELFORD_WALK_SCENE)
+	assert_str(String(SaveGame.pending_spawn_id)).is_equal(String(GameFlow.KESSELFORD_WALK_SPAWN))
+	assert_bool(SaveGame.runtime_sandbox_is_armed()).is_true()
+	assert_bool(SaveGame.save()).override_failure_message("the sandbox must refuse saves").is_false()
+	var classes: Array[String] = []
+	for member: PartyMember in GameState.party:
+		classes.append(member.class_id)
+	assert_array(classes).is_equal(ClassDemo.PLAYER_SIDE)
+	assert_dict(EncounterCatalog.definition(ClassDemo.ENCOUNTER_ID)).override_failure_message("a walk opens no fight").is_empty()
+	assert_bool(GameFlow._class_demo_pending).is_false()
+	assert_bool(GameFlow.start_class_demo()).override_failure_message("one sandbox at a time").is_false()
+
+	await _return_to_title()
+	_release_loading()
+	assert_bool(GameFlow.class_demo_active()).is_false()
+	assert_bool(SaveGame.runtime_sandbox_is_armed()).is_false()
+	assert_array(_party_ids()).is_equal(party_before)
+
+
+func test_the_title_shows_the_walk_button_in_debug_builds() -> void:
+	var menu: Node = auto_free((load(GameFlow.MAIN_MENU_SCENE) as PackedScene).instantiate())
+	add_child(menu)
+	await get_tree().process_frame
+	assert_object(menu.find_child("WalkKesselfordButton", true, false)).is_not_null()
+	assert_object(menu.find_child("ClassDemoButton", true, false)).is_not_null()
+
+
 func test_the_demo_only_opens_from_the_title() -> void:
 	await _return_to_title()
 	_hold_loading()
