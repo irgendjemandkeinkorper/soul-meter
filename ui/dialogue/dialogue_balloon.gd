@@ -50,6 +50,7 @@ func _ready() -> void:
 	layer = 8  # under UIManager (10) so pause still stacks above dialogue
 	_build_ui()
 	get_tree().paused = true
+	GameFlow.notify_dialogue_opened()
 
 
 func _exit_tree() -> void:
