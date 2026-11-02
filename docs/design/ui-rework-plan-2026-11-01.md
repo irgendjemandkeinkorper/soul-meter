@@ -155,3 +155,7 @@ Asked inline on 2026-11-01. Answers are recorded below and in `docs/owner-decisi
 | 3 | Show skill-check odds? | **Show your chance**, e.g. `[UNDERTONE 62%]`. A locked check names the bar. |
 | 4 | Approve the plan, and build order | **Approved; U1 first**, with before/after captures and owner review; then U2 and U3 as separate PRs. |
 | 5 | Showing odds and exact effects conflicts with the 2026-08-28 Wave 0 ruling 2 (`docs/fallout2-adoption-spec.md`: tagged checks, no numbers). Which wins? | **Today supersedes**, for conversations: odds and exact effect chips are shown. Ruling 2 is marked superseded. Field notices outside a conversation stay non-numeric, as built. |
+| 6 | PR #559's draft strings (2026-11-02) | **Approve all.** |
+| 7 | Build order after U1 (2026-11-02) | **U2 and U3 together:** U2, then U3 straight after, each its own PR, without waiting on #559's review. |
+| 8 | Key-hint strip (U2.1, 2026-11-02) | **Hide after first use.** Each hint goes once its key is pressed; a Settings toggle brings the strip back. |
+| 9 | Party line (U2.2, 2026-11-02) | **Portraits + bars.** A small portrait, an HP bar and a Breath bar per member, sized for six; numbers on hover or focus. |
