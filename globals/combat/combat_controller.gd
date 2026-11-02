@@ -2154,7 +2154,9 @@ func _apply_action(
 			var movement := battlefield.move(actor, action.destination)
 			result.merge(movement, true)
 			result["path_cells"] = _describe_path_cells(result.get("path", []))
-			result["message"] = "%s moves to %s." % [actor.display_name, action.destination]
+			# The log names the walk's length; `destination` is the grid's internal position key.
+			var steps := maxi(0, (result.get("path", []) as Array).size() - 1)
+			result["message"] = "%s moves %d %s." % [actor.display_name, steps, "cell" if steps == 1 else "cells"]
 			if bool(movement.get("allowed", false)):
 				result["hazard"] = _hazard_on_path(actor, result["path_cells"])
 				# Threads read this: a Daylight contract fires on a MOVE ending inside its field.

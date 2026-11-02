@@ -37,6 +37,12 @@ const WILDS_SCENE := "res://world/test_room.tscn"
 const DORTHKOR_SCENE := "res://world/dorthkor_road.tscn"
 const WOUND_LIP_SCENE := "res://world/wound_lip.tscn"
 const TAVERN_SCENE := "res://world/interiors/dom_tavern.tscn"
+## The 5v5 class demo's arena (debug builds only): Kesselford's open ground. An exterior,
+## because only exteriors carry PartyFollowers (an interior gives four of the five no body),
+## and one with no authored hostiles; its spawn slot is left empty for the demo.
+const CLASS_DEMO_SCENE := "res://world/kesselford.tscn"
+## The open square outside the wayhouse, with room for two lines of five.
+const CLASS_DEMO_SPAWN := &"from_kesselford_wayhouse"
 ## Authored reputation-gated doorways → the chart expression property whose
 ## guard decides them. Keyed by the authored definition itself, so the id,
 ## destination and band requirement are all READ from the .tres rather than
@@ -92,6 +98,10 @@ var _pending_area_spawn: StringName = &"default"
 var _area_access_result := -1
 var _skip_next_breath_refill := false
 var travel_plan: TravelPlan = null
+## The runtime state from before the class demo, restored when the flow returns to the title.
+## Non-empty exactly while the demo owns the sandbox.
+var _class_demo_snapshot: Dictionary = {}
+var _class_demo_pending := false
 
 @onready var chart: StateChart = $StateChart
 
@@ -645,6 +655,52 @@ func load_destination(destination: LoadDestination) -> bool:
 	return true
 
 
+## Debug builds only (owner 2026-11-02: "a demo of 5 v 5 battle with 1 of each class"; "you
+## lead 5, AI runs 5"). From the title: snapshot the runtime state, open the save sandbox, seat
+## the ClassDemo party, load the arena, and open the AI five as a set-piece there once the
+## level is ready. Returning to the title restores the snapshot and closes the sandbox, so the
+## demo never reaches the player's save or their live party.
+func start_class_demo() -> bool:
+	if not OS.is_debug_build() or class_demo_active() or SaveGame.runtime_sandbox_is_armed():
+		return false
+	if not ($StateChart/Root/Menus/Title as StateChartState).active:
+		return false
+	_class_demo_snapshot = SaveGame.capture_runtime_state()
+	SaveGame.begin_runtime_sandbox()
+	if not ClassDemo.prepare():
+		_end_class_demo()
+		return false
+	_target_scene = CLASS_DEMO_SCENE
+	_target_spawn_id = CLASS_DEMO_SPAWN
+	SaveGame.pending_spawn_id = CLASS_DEMO_SPAWN
+	SaveGame.has_pending_player_position = false
+	_class_demo_pending = true
+	send_event("new_game")
+	return true
+
+
+func class_demo_active() -> bool:
+	return not _class_demo_snapshot.is_empty()
+
+
+func _open_class_demo() -> void:
+	var field: FieldMap = Battle._current_field_map()
+	var opened := Battle.start_set_piece(field, ClassDemo.ENCOUNTER_ID)
+	if not bool(opened.get("allowed", false)):
+		push_warning("Class demo refused: %s" % opened.get("message", ""))
+		return
+	send_event("enter_set_piece")
+
+
+func _end_class_demo() -> void:
+	_class_demo_pending = false
+	EncounterCatalog.clear_debug_encounter(ClassDemo.ENCOUNTER_ID)
+	if class_demo_active():
+		SaveGame.restore_runtime_state(_class_demo_snapshot)
+	_class_demo_snapshot = {}
+	SaveGame.end_runtime_sandbox()
+
+
 func notify_dialogue_closed() -> void:
 	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
 		send_event.call_deferred("chapter_complete")
@@ -655,6 +711,8 @@ func notify_dialogue_closed() -> void:
 
 func _on_title_entered() -> void:
 	UIManager.close_all()
+	if class_demo_active():
+		_end_class_demo()
 	MusicDirector.play_context("title")
 	var cur := get_tree().current_scene
 	if cur == null or cur.scene_file_path != MAIN_MENU_SCENE:
@@ -725,7 +783,9 @@ func _complete_scene_load() -> void:
 			UIManager.open(UIManager.REGION_MAP)
 		return
 	SaveGame.apply_pending_location(current)
-	SaveGame.populate_spawn_slots(current)
+	if not (_class_demo_pending and _target_scene == CLASS_DEMO_SCENE):
+		# The class demo is the only fight on its field: a slot spawn would join it.
+		SaveGame.populate_spawn_slots(current)
 	var hub := FastTravelRegistry.by_scene(_target_scene)
 	if not hub.is_empty():
 		GameState.discover_fast_travel_hub(StringName(hub["id"]))
@@ -738,6 +798,10 @@ func _complete_scene_load() -> void:
 	send_event("level_ready")
 	MusicDirector.play_context("field")
 	watch_field_hostiles()
+	if _class_demo_pending:
+		_class_demo_pending = false
+		if _target_scene == CLASS_DEMO_SCENE:
+			_open_class_demo.call_deferred()
 	SaveGame.flush_pending_autosave.call_deferred()
 	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
 		notify_dialogue_closed()

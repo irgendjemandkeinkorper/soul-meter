@@ -34,14 +34,18 @@ func test_a_strike_out_of_reach_walks_in_then_strikes_as_one_order() -> void:
 	assert_bool((plan["forecast"] as Dictionary).get("allowed", false)).is_true()
 
 	var resolved: Array[StringName] = []
+	var messages: Array[String] = []
 	controller.event_emitted.connect(func(event: CombatEvent) -> void:
 		if event.type == &"action_resolved" and event.actor_id == ally.combat_id:
 			resolved.append(StringName(str(event.data.get("action_id", ""))))
+			messages.append(str(event.data.get("message", "")))
 	)
 	var result := controller.submit_approach(&"strike", enemy)
 	assert_bool(bool(result.get("allowed", false))).override_failure_message(str(result)).is_true()
 	assert_that(controller.battlefield.cell_of(ally)).is_equal(Vector2i(2, 0))
 	assert_array(resolved).contains_exactly([&"move", &"strike"])
+	# The log names the walk in cells, never the grid's internal position key.
+	assert_str(messages[0]).is_equal("Approach Ally moves 2 cells.")
 
 
 func test_short_ap_previews_the_whole_order_and_refuses_without_moving() -> void:

@@ -70,6 +70,12 @@ func _build() -> void:
 	)
 	load_button.name = "LoadGameButton"
 	load_button.disabled = not (SaveGame.has_save() or any_manual_save)
+	if OS.is_debug_build():
+		# Debug builds only (owner 2026-11-02): one of each class, five a side, on a sandbox.
+		var demo_button := _main_menu_button(
+			button_column, "Class Demo (5v5)", func() -> void: GameFlow.start_class_demo()
+		)
+		demo_button.name = "ClassDemoButton"
 	_main_menu_button(
 		button_column, "Settings", func() -> void: UIManager.open(UIManager.SETTINGS)
 	)

@@ -392,6 +392,11 @@ func _spawn_set_piece_hostiles(field: FieldMap) -> void:
 		hostile.name = "SetPiece%d_%s" % [index, String(actor.archetype_id)]
 		hostile.group_id = encounter_id
 		hostile.adopt_actor(actor)
+		if actor.source_member != null:
+			# A member-built enemy (class demo) wears its member's field body, not an archetype's.
+			var member := actor.source_member
+			var portrait_path := member.portrait.resource_path if member.portrait != null else ""
+			hostile.unit_id = StringName(UnitArt.field_unit_id(member.id, portrait_path))
 		var seated: Variant = model.cell_of(actor)
 		var world: Vector2 = grid.cell_to_world(seated) if seated is Vector2i else Vector2.INF
 		if seated is Vector2i:
@@ -799,9 +804,17 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	var live_cells := field.party_cells()
 	if live_cells.is_empty():
 		return
+	var grid := field.iso_grid()
+	var formation_value: Variant = _definition.get("formation", {})
+	var formation: Dictionary = formation_value if formation_value is Dictionary else {}
+	var lines := bool(formation.get("lines", false)) and grid != null
+	var gap := int(formation.get("gap", SET_PIECE_ENEMY_SCREEN_STEPS))
 	var desired: Array[Vector2i] = []
 	for index in allies.size():
-		desired.append(live_cells[mini(index, live_cells.size() - 1)])
+		desired.append(
+			_line_cell(grid, live_cells[0], index) if lines
+			else live_cells[mini(index, live_cells.size() - 1)]
+		)
 	var placement := model.resolve_placement(desired)
 	if not bool(placement.get("allowed", false)):
 		return
@@ -812,14 +825,14 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 		initial[allies[index]] = seats[index]
 		taken[seats[index]] = true
 	var anchor: Vector2i = seats[0]
-	var grid := field.iso_grid()
 	var first_seat := (
-		_screen_steps(grid, anchor, Vector2.RIGHT, SET_PIECE_ENEMY_SCREEN_STEPS) if grid != null
+		_screen_steps(grid, anchor, Vector2.RIGHT, gap) if grid != null
 		else anchor + SET_PIECE_ENEMY_OFFSET
 	)
 	for index in enemies.size():
 		var wanted: Vector2i = (
-			_screen_steps(grid, first_seat, Vector2.DOWN, SET_PIECE_ENEMY_ROW_STEPS * index)
+			_line_cell(grid, first_seat, index) if lines
+			else _screen_steps(grid, first_seat, Vector2.DOWN, SET_PIECE_ENEMY_ROW_STEPS * index)
 			if grid != null else first_seat + Vector2i(0, index)
 		)
 		var found := model.seat_near(wanted, taken)
@@ -829,6 +842,17 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 		taken[found["cell"]] = true
 	if bool(model.configure_initial_cells(initial).get("allowed", false)):
 		_set_piece_seats.assign(seats)
+
+
+## An encounter may ask for two facing lines (`"formation": {"lines": true, "gap": <screen
+## steps>}`; the 5v5 class demo does): each side stands in a screen column centred on its first
+## seat, growing from the middle (below, above, below...), with the enemy column `gap` screen
+## steps right of the party's anchor. Without it the seating above is unchanged.
+func _line_cell(grid: IsoGrid, centre: Vector2i, index: int) -> Vector2i:
+	if index == 0:
+		return centre
+	var rows := ceili(index / 2.0) * SET_PIECE_ENEMY_ROW_STEPS
+	return _screen_steps(grid, centre, Vector2.DOWN if index % 2 == 1 else Vector2.UP, rows)
 
 
 ## The cell `steps` neighbour-steps from `from` in a screen direction; the field's TileMap owns

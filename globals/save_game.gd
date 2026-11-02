@@ -162,6 +162,11 @@ func _is_valid_slot(slot: int) -> bool:
 
 
 func _write_current_payload(target_path: String, target_temp_path: String, target_backup_path: String) -> bool:
+	if _sandbox_sessions > 0:
+		# begin_runtime_sandbox()'s promise ("nothing may reach the player's save") covers the
+		# manual slots and the chapter-end save too, not only autosaves: a debug session such as
+		# the class demo replaces the live party, and one Save press would write it to a slot.
+		return _fail("Saving is off during a sandbox session.")
 	var file := FileAccess.open(target_temp_path, FileAccess.WRITE)
 	if file == null:
 		return _fail("Could not open the save file for writing.")
