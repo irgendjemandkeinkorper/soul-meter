@@ -11,9 +11,14 @@ const FIELD_HUD_SCENE := "res://ui/hud/field_hud.tscn"
 
 var _combat_mode_active: bool = false
 var _restore_controls: Array[Callable] = []
+var _label_restore: Array[Callable] = []
+
+
+const GROUP := &"field_map"
 
 
 func _ready() -> void:
+	add_to_group(GROUP)
 	_connect_hostiles.call_deferred()
 
 
@@ -98,6 +103,27 @@ func set_combat_mode(active: bool) -> void:
 		if travel_exit != null:
 			_restore_controls.append(travel_exit.set.bind("monitoring", travel_exit.monitoring))
 			travel_exit.monitoring = false
+
+
+## U1 (owner 2026-11-01): while a conversation is open, field names and prompts
+## ("Loamroot Sprig", "RETURN TO DOM") fade like they do for combat, through their own
+## restore list so a parley inside a fight restores to the fight's state, not the field's.
+func set_world_labels_muted(muted: bool) -> void:
+	if not muted:
+		for restore: Callable in _label_restore:
+			restore.call()
+		_label_restore.clear()
+		return
+	if not _label_restore.is_empty():
+		return
+	# Every world-space label: interactable and exit names, and the building names a town
+	# paints over its facades. Screen-space UI lives in CanvasLayers and is left alone.
+	for node: Node in _field_root().find_children("*", "Label", true, false):
+		var label := node as Label
+		if label == null or label.get_canvas_layer_node() != null:
+			continue
+		_label_restore.append(label.set.bind("self_modulate", label.self_modulate))
+		label.self_modulate = Color(label.self_modulate, 0.0)
 
 
 func combat_mode_active() -> bool:
