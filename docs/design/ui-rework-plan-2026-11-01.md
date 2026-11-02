@@ -1,7 +1,7 @@
 # UI rework: audit and plan (2026-11-01)
 
-Status: **APPROVED by the owner, 2026-11-01.** U1 is built first; U2 and U3 follow as
-separate PRs. Nothing in this document is built yet.
+Status: **APPROVED by the owner, 2026-11-01.** U1 (conversation) is built, awaiting owner
+review; see "U1 as built" below. U2 and U3 follow as separate PRs.
 
 Owner, 2026-11-01: *"we also need to do a heavy rework of all the UI buttons and info — it's so
 busy and doesn't really convey information we need, especially in conversations."* (Asked in a
@@ -100,6 +100,25 @@ saves or flow. Styling stays in theme variations and DS tokens.
    the line, the gauge at the block's right, choices below without scrolling. The scrim
    becomes a soft gradient instead of a hard band.
 
+#### U1 as built (2026-11-01)
+
+Captures: `docs/qa/conversation-u1-2026-11-01/` (after), against `docs/qa/ui-audit-2026-11-01/`
+(before), from the same harness.
+
+- **Rows:** Iris's hub went from 15 rows (10 locked) to 6 (1 locked, with its reason). The
+  Council went from 8 (6 locked) to 3 (1 locked).
+- **Classification** reads the compiled condition tokens, not `condition_as_text`
+  (`ui/dialogue/dialogue_choice_info.gd`). Guard parts are evaluated first, in authored order,
+  so Dialogue Manager's `and` short-circuit still protects comparisons such as
+  `get_flag("quest_1_resolution") == "returned"`.
+- **Odds** render as the tag, then the chance (`[UNDERTONE] 62%`), on open checks only. A
+  locked check shows its bar in the reason line instead.
+- **Effect chips** are read from a branch's leading `do` lines. Karma is never shown, and it
+  is not marked as shown, so its field notice still appears after the conversation.
+- **Clearing the stage** hides the field HUD's children (not its layer, so combat's own hide
+  is untouched) and fades every world-space label, including the building names Dom paints
+  over its facades.
+
 ### U2: field HUD (about 2–3 hours)
 
 1. **The key-hint strip shows until each key has been used once**, then hides. A Settings
@@ -135,3 +154,4 @@ Asked inline on 2026-11-01. Answers are recorded below and in `docs/owner-decisi
 | 2 | What a choice shows about its effects | **Exact numbers.** Mono chips with the real deltas, read from the branch's own mutations. The prose promise shows on the focused choice only. |
 | 3 | Show skill-check odds? | **Show your chance**, e.g. `[UNDERTONE 62%]`. A locked check names the bar. |
 | 4 | Approve the plan, and build order | **Approved; U1 first**, with before/after captures and owner review; then U2 and U3 as separate PRs. |
+| 5 | Showing odds and exact effects conflicts with the 2026-08-28 Wave 0 ruling 2 (`docs/fallout2-adoption-spec.md`: tagged checks, no numbers). Which wins? | **Today supersedes**, for conversations: odds and exact effect chips are shown. Ruling 2 is marked superseded. Field notices outside a conversation stay non-numeric, as built. |

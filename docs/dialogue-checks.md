@@ -12,10 +12,42 @@ Put the deterministic gate on the response itself, using the self-closing form:
 ```
 
 Combine quest conditions inside the same `[if ... /]` tag when needed. The
-balloon renders `[#tag=Sway]` as `[SWAY]`. Do not author a numeric
-chance in response text, tags, or consequences. If a choice should remain
-visible but locked, use the existing balloon's shows-but-locked condition form
-and keep the same non-numeric tag.
+balloon renders `[#tag=Sway]` as `[SWAY]`, and when the choice is open it adds
+the player's chance (`[SWAY] 62%`, from `SkillCheck.preview`, the same number
+`resolve()` rolls against). Do not author a numeric chance in response text,
+tags, or consequences; the balloon computes it. A response with a check gate and
+no `#tag` gets the skill's label as its tag.
+
+### Which locked choices show (owner, 2026-11-01)
+
+A locked choice stays visible, dim, with a one-line reason
+(`Undertone 40 needed — you have 12.`) only when every failing part of its
+condition is one the player can earn:
+
+- `check(skill, N)`
+- `Reputation.standing(faction) >= N` (or `>`)
+- `GameState.soul_meter >= N` (or `>`)
+- `not GameState.is_hollowing()`
+
+Any other failing part (quest state, flags, NG+, patron, hollowed-only,
+low-Soul-only) hides the choice. The balloon splits the condition on its
+top-level `and`s; a top-level `or` keeps it whole. Guard parts are evaluated
+first, in authored order, stopping at the first that fails, so Dialogue
+Manager's short-circuit still protects comparisons such as
+`GameState.get_flag("x") == "returned"`. Override per response with
+`[#lock=show]` (always visible when locked) or `[#lock=hide]` (never).
+
+### Effect chips (owner, 2026-11-01)
+
+A choice's chips (`SOUL −6  ·  SSAE SEEDERS +3  ·  INFAMY +5`) are read from
+the branch's leading `do` lines, before its first spoken line or condition:
+`GameState.set_soul_meter(GameState.soul_meter ± n)`,
+`Reputation.record(..., faction, delta, ...)`, `Renown.gain_reputation` and
+`Renown.gain_infamy`. Put an effect there if the player should see it before
+choosing; an effect inside an `if` is a consequence of the roll and is not
+shown. Karma is never shown. `[#cost=...]` is only a fallback when no Soul
+mutation is read. After the choice, the reply shows what was recorded on its
+ledger strip, and the field notices skip those events.
 
 `check()` calls `preview()`. It is an RNG-free availability gate and does not
 consume an Expert reroll or append to `recent_checks()`.

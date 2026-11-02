@@ -3,7 +3,32 @@ extends CanvasLayer
 ## 2px bronze top rule; the SoulGauge is always the rightmost element in it.
 
 
+## U1 (owner 2026-11-01): a conversation clears the stage. The balloon calls this through
+## the group so the HUD bar, its second Soul gauge, the key hints and the notices step
+## aside while it is open. It toggles the children, not the layer: combat hides the layer
+## itself (world/field_map.gd), and a parley opened mid-fight must not bring it back.
+const GROUP := &"field_hud"
+
+var _conversation_restore: Dictionary = {}
+
+
+func set_conversation_open(open: bool) -> void:
+	if open:
+		if not _conversation_restore.is_empty():
+			return
+		for child: Node in get_children():
+			if child is CanvasItem:
+				_conversation_restore[child] = (child as CanvasItem).visible
+				(child as CanvasItem).visible = false
+		return
+	for child: Variant in _conversation_restore.keys():
+		if is_instance_valid(child):
+			(child as CanvasItem).visible = bool(_conversation_restore[child])
+	_conversation_restore.clear()
+
+
 func _ready() -> void:
+	add_to_group(GROUP)
 	var bar: Control = $Bar
 	bar.theme = UIManager.ui_theme  # CanvasLayer children don't inherit the root Window theme
 	bar.draw.connect(

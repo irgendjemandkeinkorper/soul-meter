@@ -49,6 +49,21 @@ func test_council_skill_check_menu() -> void:
 	balloon.free()
 
 
+## U1: the same menu with the check open, so its chance shows beside the tag.
+func test_council_open_check_shows_its_chance() -> void:
+	var hero := PartyMember.new()
+	hero.id = GameState.PROTAGONIST_ID
+	hero.display_name = "Tester"
+	hero.skill_percentages = {"undertone": 52.0}
+	GameState.set_party([hero] as Array[PartyMember])
+	var field := await _open_field("res://world/starting_town.tscn")
+	var balloon := await _start_balloon(field, "res://dialogue/council_elder.dialogue", "start")
+	await _advance(balloon)
+	_print_choices("council-open-check", balloon)
+	await _capture("04-council-open-check")
+	balloon.free()
+
+
 func _open_field(path: String) -> Node:
 	var runner := scene_runner(path)
 	var field := runner.scene()

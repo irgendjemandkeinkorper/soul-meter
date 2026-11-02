@@ -44,8 +44,9 @@ alongside these visual tokens when deciding whether a feature belongs in Soul Me
 - **Depth:** carved INTO stone — inset shadows for wells/slots/tracks; gradient bevels (not
   radius) for raised metal; glows only as edge-light on hover/selection/focus.
 - **States:** hover = edge lights up (no fill lift, no scale); press = inset + 1px down;
-  selected = violet edge; disabled = 42% opacity, still visible (locked dialogue options must
-  be seen).
+  selected = violet edge; disabled = 42% opacity, still visible (a locked dialogue option the
+  player could earn must be seen, with its reason; owner 2026-11-01: quest-state and flag
+  locks are hidden instead — see `docs/dialogue-checks.md`).
 - **Motion:** stone settles — 80/140/220/400ms + 2.4s ambient; no bounce, no overshoot.
 - **Layout:** fixed-frame **1920×1080** — the canonical design frame, matching every authored
   mockup. Spec pixel values map **1:1** to `ds.gd` constants and scene layout; never hand-divide
