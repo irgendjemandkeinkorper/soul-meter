@@ -50,6 +50,8 @@ var _hp_tweens: Dictionary = {}
 var _queue: Array[CombatEvent] = []
 var _holding := false
 var _presented_event: CombatEvent  ## #473 beat cursor: the last event presented (read-only)
+var _approach_path: Array[Vector2i] = []
+var _approach_affordable := true
 var _beat: Tween
 var _theme: Theme
 var animate_events := true:
@@ -327,6 +329,17 @@ func cell_center(cell: Vector2i) -> Vector2:
 
 func tile_at(cell: Vector2i) -> Dictionary:
 	return (_tiles.get(cell, {}) as Dictionary).duplicate(true)
+
+
+## Combat polish 2026-11-02: the walk of a hovered walk-in order. Empty clears it.
+func set_approach_path(cells: Array[Vector2i], affordable: bool) -> void:
+	_approach_path = cells
+	_approach_affordable = affordable
+	queue_redraw()
+
+
+func approach_path() -> Array[Vector2i]:
+	return _approach_path
 
 
 func set_pointer(selected: Variant, hovered: Variant) -> void:
@@ -930,6 +943,13 @@ func _draw() -> void:
 		if charge > 0:
 			var element_color := Color(str(tile.get("element_color", DS.MOTE_3.to_html())))
 			draw_colored_polygon(diamond, DS.charge_tint(element_color, charge))
+		if _approach_path.has(cell):
+			var walk_tint := DS.TILE_SELECT_RIM if _approach_affordable else DS.CINDER_3
+			draw_colored_polygon(diamond, Color(walk_tint, 0.26))
+			if cell == _approach_path.back():
+				var rim := diamond.duplicate()
+				rim.append(rim[0])
+				draw_polyline(rim, walk_tint, 2.0)
 		if cell == _selected or cell == _hovered:
 			diamond.append(diamond[0])
 			draw_polyline(diamond, DS.TILE_SELECT_RIM, 2.0)

@@ -619,6 +619,18 @@ func query_action(
 	var actor := active_actor()
 	if state != State.ALLY_TURN or actor == null or not actor.is_alive():
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
+	return query_action_for(actor, action, target, options)
+
+
+## The gates `query_action` runs, for any acting combatant: the player's party on its turn, or
+## a class-kit enemy on its own (combat polish 2026-11-02). Side words are relative to `actor`:
+## an "ally" target is on the actor's side and an "enemy" target is on the other side. Only
+## the player's side pays the Soul Gauge.
+func query_action_for(
+	actor: BattleActor, action: CombatAction, target: BattleActor = null, options: Dictionary = {}
+) -> Dictionary:
+	if actor == null or not actor.is_alive():
+		return _blocked(&"turn_state", "No combatant can act right now.", {})
 	if action == null:
 		return _blocked(&"action", "Unknown combat action.", {"type": &"known_action"})
 	if action.requires_voice:
@@ -651,7 +663,7 @@ func query_action(
 				{"type": &"patron", "patron": resource.patron_id},
 			)
 	if action.requires_ally_target():
-		if target == null or not target.is_alive() or not allies.has(target):
+		if target == null or not target.is_alive() or not _friends_of(actor).has(target):
 			return _blocked(&"no_target", "%s requires an explicit living ally target." % action.display_name, {"type": &"living_ally"})
 	if not action.effect_id.is_empty() or not action.effect_payload.is_empty() or action.targets_cells():
 		var effect_gate := _query_effect_gate(actor, action, options)
@@ -671,10 +683,10 @@ func query_action(
 			return _allowed({"cells_pending": int(action.effect_payload.get("cell_count", 3))})
 		return _query_cell_action(actor, action, options, target)
 	if action.targets_any_side():
-		if target == null or not target.is_alive() or (not allies.has(target) and not enemies.has(target)):
+		if target == null or not target.is_alive() or (not _friends_of(actor).has(target) and not _foes_of(actor).has(target)):
 			return _blocked(&"no_target", "%s requires a living creature target." % action.display_name, {"type": &"living_target"})
 	if not action.class_resource_action.is_empty():
-		if action.requires_enemy_target() and (target == null or not target.is_alive() or not enemies.has(target)):
+		if action.requires_enemy_target() and (target == null or not target.is_alive() or not _foes_of(actor).has(target)):
 			return _blocked(&"no_target", "%s requires a living enemy target." % action.display_name, {"type": &"living_enemy"})
 		var command_gate := _class_resource_of(actor).query_command(
 			action.class_resource_action, target.combat_id if target != null else &"",
@@ -683,7 +695,7 @@ func query_action(
 		if not bool(command_gate.get("allowed", false)):
 			return command_gate
 		var command_soul := _class_soul_cost(actor, action)
-		if _soul_meter() < command_soul:
+		if _pays_soul(actor) and _soul_meter() < command_soul:
 			return _blocked(&"soul", "Requires %d Soul." % int(command_soul), {
 				"type": &"soul", "minimum": command_soul,
 			})
@@ -770,8 +782,25 @@ func submit_action(
 		last_refusal = query.duplicate(true)
 		_emit_event(&"action_refused", active_actor(), target, {"action_id": action_id, "reason": query})
 		return query
+	var outcome := _commit_for(active_actor(), action, target, options, query)
+	if bool(outcome.get("_commit_refused", false)):
+		outcome.erase("_commit_refused")
+		return outcome
+	if action.kind == CombatAction.Kind.RESOLUTION:
+		_finish(ResultState.VICTORY, action.outcome_id)
+		return _allowed(outcome)
+	_drive_scheduler()
+	return _allowed(outcome)
 
-	var actor := active_actor()
+
+## Commits and resolves an action `query_action_for` already allowed, for any actor, and emits
+## its event. It never drives the scheduler: the player's submit does that afterwards, and a
+## class-kit enemy is already inside the drive loop. Returns the outcome, or the scheduler's
+## refusal (with "allowed": false) when the commit itself is refused.
+func _commit_for(
+	actor: BattleActor, action: CombatAction, target: BattleActor, options: Dictionary, query: Dictionary
+) -> Dictionary:
+	var action_id := action.id
 	var committed_action := _priced_move_action(action, query, options, actor)
 	committed_action = CalledShot.priced_action(
 		committed_action, StringName(str(options.get("aim_location", "")))
@@ -782,7 +811,9 @@ func submit_action(
 		# defensive re-check (e.g. a race between query and submit), not duplicated UX.
 		last_refusal = commit_result.duplicate(true)
 		_emit_event(&"action_refused", actor, target, {"action_id": action_id, "reason": commit_result})
-		return commit_result
+		var refused := commit_result.duplicate(true)
+		refused["_commit_refused"] = true
+		return refused
 	var resolved_options := options.duplicate(true)
 	if query.has("resolution"):
 		resolved_options["_resolution"] = query["resolution"]
@@ -798,7 +829,7 @@ func submit_action(
 		_refrain_uses[String(actor.combat_id)] = int(_refrain_uses.get(String(actor.combat_id), 0)) + 1
 	if committed_action.kind == CombatAction.Kind.PASS and not committed_action.class_resource_action.is_empty():
 		var command_soul := _class_soul_cost(actor, committed_action)
-		if command_soul > 0.0:
+		if command_soul > 0.0 and _pays_soul(actor):
 			_set_soul_meter(_soul_meter() - command_soul)
 		_class_resource_of(actor).execute_command(
 			committed_action.class_resource_action,
@@ -820,11 +851,7 @@ func submit_action(
 	_emit_event(&"action_resolved", actor, target, outcome)
 	last_refusal.clear()
 	scheduler.release(actor)
-	if action.kind == CombatAction.Kind.RESOLUTION:
-		_finish(ResultState.VICTORY, action.outcome_id)
-		return _allowed(outcome)
-	_drive_scheduler()
-	return _allowed(outcome)
+	return outcome
 
 
 func submit_speech(
@@ -1022,22 +1049,44 @@ func _movement_snapshot() -> Dictionary:
 	var capabilities: Dictionary = battlefield.capabilities()
 	if not bool(capabilities.get("cells", false)) or state != State.ALLY_TURN:
 		return {}
+	var raw_budget := _move_budget(actor)
+	return {
+		"action_id": ACTION_MOVE,
+		"per_cell_ap_cost": maxi(1, action.ap_cost),
+		"remaining_ap": actor.action_points,
+		"ct_budget": raw_budget,
+		"reachable": _reachable_for(actor, raw_budget),
+	}
+
+
+## The actor's move budget in path cost units, before injuries.
+func _move_budget(actor: BattleActor) -> int:
+	var action := action_by_id(ACTION_MOVE)
 	var base_move_cost := maxi(1, rules.move_ct_cost if rules != null else 1)
-	var per_cell_ap := maxi(1, action.ap_cost)
+	var per_cell_ap := maxi(1, action.ap_cost if action != null else 1)
 	# Under charge time the budget is the actor's banked charge (owner ruling 2026-10-10,
 	# #281 G6a); the AP economy keeps its per-cell AP budget. A scheduler that prices moves
 	# by charge exposes `move_ct_budget()`, so the controller never names a concrete scheduler.
 	var raw_budget := int(actor.action_points / per_cell_ap) * base_move_cost
 	if scheduler != null and scheduler.has_method("move_ct_budget"):
 		raw_budget = int(scheduler.call("move_ct_budget", actor))
-	var ct_budget := int(float(raw_budget) / CombatInjury.move_cost_multiplier(actor))
+	return raw_budget
+
+
+## Every destination `actor` can afford to walk to now, each priced by the same move gate a
+## submit runs: `{destination, ap_cost, ct_cost, path, path_cells}`.
+func _reachable_for(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
 	var reachable: Array[Dictionary] = []
+	var action := action_by_id(ACTION_MOVE)
+	if actor == null or action == null or battlefield == null:
+		return reachable
+	var ct_budget := int(float(raw_budget) / CombatInjury.move_cost_multiplier(actor))
 	# Every quote below starts from the actor's cell: one shared search, not one per cell (#282).
 	var memo := battlefield.has_method("begin_path_memo")
 	if memo:
 		battlefield.call("begin_path_memo", actor, ct_budget)
 	for destination: StringName in battlefield.reachable_positions(actor, ct_budget):
-		var query := move_query(destination)
+		var query := query_action_for(actor, action, null, {"destination": destination})
 		if not bool(query.get("allowed", false)):
 			continue
 		reachable.append({
@@ -1049,13 +1098,145 @@ func _movement_snapshot() -> Dictionary:
 		})
 	if memo:
 		battlefield.call("end_path_memo")
-	return {
-		"action_id": ACTION_MOVE,
-		"per_cell_ap_cost": per_cell_ap,
-		"remaining_ap": actor.action_points,
-		"ct_budget": raw_budget,
-		"reachable": reachable,
-	}
+	return reachable
+
+
+## Refusals a walk can cure: out of reach, not adjacent, blocked sight, too high, wrong side.
+const _APPROACHABLE_REFUSALS: Array[StringName] = [
+	&"position", &"blocked_by_range", &"blocked_by_elevation", &"blocked_by_obstacle",
+	&"blocked_by_occupancy", &"facing",
+]
+
+
+## Combat polish 2026-11-02 (owner: "click on a target outside melee range and have the unit
+## walk up adjacent and attack"). When `action` on `target` is refused only for where `actor`
+## stands, this finds the cheapest reachable cell from which every gate `query_action_for`
+## runs passes, and prices walk and action as one order (AP round economy: under charge time
+## a walk spends the banked charge an action needs, so the planner stays out of it).
+##
+## Returns {} when no walk is needed, or none can help and the refusal is not about distance
+## (the action's own reason stands). Otherwise `{allowed: true, destination, cell,
+## path_cells, move_ap, action_ap, total_ap, remaining_ap}`; or, ruled "preview, then
+## refuse", blocked_by `approach_ap` with the totals when the walk is affordable but walk +
+## action is not, and `approach_out_of_reach` when a distance refusal has no affordable cure.
+func approach_plan(
+	actor: BattleActor, action: CombatAction, target: BattleActor, options: Dictionary = {}
+) -> Dictionary:
+	if actor == null or action == null or target == null or battlefield == null:
+		return {}
+	if rules != null and rules.use_charge_time:
+		return {}
+	if not bool(battlefield.capabilities().get("cells", false)):
+		return {}
+	if action.kind == CombatAction.Kind.MOVE or action.targets_cells() or target == actor:
+		return {}
+	var direct := query_action_for(actor, action, target, options)
+	if bool(direct.get("allowed", false)):
+		return {}
+	if not _APPROACHABLE_REFUSALS.has(StringName(str(direct.get("blocked_by", "")))):
+		return {}
+	var action_ap := CalledShot.priced_action(
+		action, StringName(str(options.get("aim_location", "")))
+	).ap_cost
+	var best := {}
+	var short := {}
+	for row: Dictionary in _reachable_for(actor, _move_budget(actor)):
+		var described: Dictionary = battlefield.describe_position(StringName(row["destination"]))
+		if not described.has("cell"):
+			continue
+		var cell: Vector2i = described["cell"]
+		battlefield.probe_cell(actor, cell)
+		var gate := query_action_for(actor, action, target, options)
+		battlefield.clear_probe(actor)
+		if not bool(gate.get("allowed", false)):
+			continue
+		var move_ap := int(row.get("ap_cost", 0))
+		var entry := {
+			"destination": row["destination"], "cell": {"x": cell.x, "y": cell.y},
+			"path_cells": row.get("path_cells", []), "move_ap": move_ap,
+			"action_ap": action_ap, "total_ap": move_ap + action_ap,
+		}
+		if move_ap + action_ap <= actor.action_points:
+			best = _cheaper_approach(best, entry)
+		else:
+			short = _cheaper_approach(short, entry)
+	if not best.is_empty():
+		best["remaining_ap"] = actor.action_points - int(best["total_ap"])
+		best["needs_move"] = true
+		return _allowed(best)
+	if not short.is_empty():
+		# The refusal carries the order it priced (path, totals) so the hover can draw it.
+		var refusal := _blocked(
+			&"approach_ap",
+			"Move %d + %s %d = %d AP; %d AP left." % [
+				int(short["move_ap"]), action.display_name, action_ap, int(short["total_ap"]), actor.action_points,
+			],
+			{"type": &"ap", "required": int(short["total_ap"]), "available": actor.action_points},
+		)
+		refusal.merge(short)
+		return refusal
+	# Nothing reachable helps. Distance refusals say so ("out of reach this turn"); sight,
+	# height and facing keep their own reason, which says more than "out of reach".
+	if StringName(str(direct.get("blocked_by", ""))) in [&"position", &"blocked_by_range"]:
+		return _blocked(
+			&"approach_out_of_reach", "%s is out of reach this turn." % target.display_name, {"type": &"reach"},
+		)
+	return {}
+
+
+## Lower total AP, then the shorter path, then the lexically first destination (deterministic).
+static func _cheaper_approach(current: Dictionary, entry: Dictionary) -> Dictionary:
+	if current.is_empty():
+		return entry
+	if int(entry["total_ap"]) != int(current["total_ap"]):
+		return entry if int(entry["total_ap"]) < int(current["total_ap"]) else current
+	var entry_len := (entry["path_cells"] as Array).size()
+	var current_len := (current["path_cells"] as Array).size()
+	if entry_len != current_len:
+		return entry if entry_len < current_len else current
+	return entry if String(entry["destination"]) < String(current["destination"]) else current
+
+
+## The player's side of approach_plan: the active party member, on its turn, with the forecast
+## it would see from the destination (`forecast` and `context`, for the hover quote).
+func approach_query(action: CombatAction, target: BattleActor, options: Dictionary = {}) -> Dictionary:
+	var actor := active_actor()
+	if state != State.ALLY_TURN or actor == null:
+		return {}
+	var plan := approach_plan(actor, action, target, options)
+	if not bool(plan.get("allowed", false)):
+		return plan
+	var cell := Vector2i(int(plan["cell"]["x"]), int(plan["cell"]["y"]))
+	battlefield.probe_cell(actor, cell)
+	plan["forecast"] = forecast_action(action, target, options)
+	plan["context"] = forecast_context(actor, target, action, options)
+	battlefield.clear_probe(actor)
+	return plan
+
+
+## Walk into reach, then act, as one order. Falls through to submit_action when no walk is
+## needed. The walk resolves first (its own beat, holds and hazards included); the action is
+## then re-queried from where the unit really stands, so anything the walk changed is honoured.
+func submit_approach(action_id: StringName, target: BattleActor, options: Dictionary = {}) -> Dictionary:
+	var actor := active_actor()
+	var action := action_by_id(action_id)
+	var plan := approach_query(action, target, options)
+	if plan.is_empty():
+		return submit_action(action_id, target, options)
+	if not bool(plan.get("allowed", false)):
+		last_refusal = plan.duplicate(true)
+		_emit_event(&"action_refused", actor, target, {"action_id": action_id, "reason": plan})
+		return plan
+	var moved := submit_action(ACTION_MOVE, null, {"destination": plan["destination"]})
+	if not bool(moved.get("allowed", false)):
+		return moved
+	if state != State.ALLY_TURN or active_actor() != actor or not actor.is_alive():
+		return _blocked(
+			&"approach_interrupted",
+			"%s's walk ended before %s." % [actor.display_name, action.display_name],
+			{"type": &"turn"},
+		)
+	return submit_action(action_id, target, options)
 
 
 func _turn_order_snapshot() -> Array[Dictionary]:
@@ -2223,7 +2404,8 @@ func _apply_resolution_writes(
 				# tagged quest outcome. Combat may spend it and may never return it, so this
 				# write is clamped to a decrease rather than trusted. `Resolution` only ever
 				# emits a spend here; the clamp is the guard, not the mechanism.
-				_set_soul_meter(minf(float(write.get("after", _soul_meter())), _soul_meter()))
+				if _pays_soul(actor):
+					_set_soul_meter(minf(float(write.get("after", _soul_meter())), _soul_meter()))
 			&"tile_state":
 				if not apply_tile_writes:
 					continue
@@ -2473,7 +2655,9 @@ func forecast_context(
 		"facing": positional_context.get("facing", {}),
 		"height_advantage_steps": int(positional_context.get("height_advantage_steps", 0)),
 		"to_hit_enabled": not positional_context.is_empty(),
-		"soul_meter": _soul_meter(),
+		# Only the player's side spends the Gauge; a class-kit enemy has none, so it cannot
+		# overreach past its Breath.
+		"soul_meter": _soul_meter() if _pays_soul(actor) else 0.0,
 		"fizzle": _fizzle_context(actor, options),
 		"caster_context": (options.get("caster_context", {}) as Dictionary).duplicate(true),
 		"positioning": {
@@ -2501,8 +2685,8 @@ func forecast_context(
 		deep_merge(context, overrides)
 	# #285 slice 4: an ally's resource may add to this actor's cast (Debt of Arms' paid bonus).
 	# Same call at forecast and commit, like the owner's own channel above.
-	if allies.has(actor):
-		for other: BattleActor in allies:
+	if allies.has(actor) or enemies.has(actor):
+		for other: BattleActor in _friends_of(actor):
 			if other == actor:
 				continue
 			var ally_overrides := _class_resource_of(other).on_ally_cast_forecast(actor.combat_id, context.duplicate(true))
@@ -3593,7 +3777,7 @@ func _query_cell_action(
 	if bool(action.effect_payload.get("contract_target", false)):
 		# A cell working that also binds a creature (Term of Daylight): the contract half needs a
 		# living enemy at touch and a free Thread; the field half is the cells above.
-		if target == null or not target.is_alive() or not enemies.has(target):
+		if target == null or not target.is_alive() or not _foes_of(actor).has(target):
 			return _blocked(&"no_target", "%s needs a living enemy to bind." % action.display_name, {"type": &"living_enemy"})
 		var touch := battlefield.target_query(actor, target, &"melee")
 		if not bool(touch.get("allowed", false)):
@@ -4057,7 +4241,7 @@ func _tide_mode(action: CombatAction, options: Dictionary) -> String:
 ## Other living allies inside the refuge with Breath to fill, nearest to the center first.
 func _refuge_recipients(caster: BattleActor, center: Vector2i, radius: int, limit: int) -> Array[BattleActor]:
 	var found: Array[BattleActor] = []
-	for ally: BattleActor in _living(allies):
+	for ally: BattleActor in _living(_friends_of(caster)):
 		if ally == caster or _breath_room(ally) <= 0:
 			continue
 		var at: Variant = _actor_cell(ally)
@@ -4146,7 +4330,7 @@ func _apply_refuge(
 		var soaked: Array[String] = []
 		for creature: BattleActor in inside:
 			var washed := action.effect_id == EFFECT_WASH_THE_GEARS and cancelled.has(String(creature.combat_id))
-			if allies.has(creature) or FireField.is_burning(creature) or washed:
+			if _friends_of(actor).has(creature) or FireField.is_burning(creature) or washed:
 				_apply_douse(actor, creature)
 				soaked.append(String(creature.combat_id))
 		out["soaked"] = soaked
@@ -4163,7 +4347,7 @@ func _discharge_jam(actor: BattleActor, center: Vector2i, radius: int) -> Dictio
 	var breaker := resource as FickahRuleBreaker
 	var nearest: BattleActor = null
 	var nearest_distance := radius + 1
-	for enemy: BattleActor in _living(enemies):
+	for enemy: BattleActor in _living(_foes_of(actor)):
 		var at: Variant = _actor_cell(enemy)
 		if not (at is Vector2i):
 			continue
@@ -4284,7 +4468,7 @@ func _trigger_witness_contracts(actor: BattleActor, revealed: Array[String]) -> 
 	var triggered: Array[String] = []
 	for target_id: String in revealed:
 		var target := _actor_by_id(StringName(target_id))
-		if target == null or not enemies.has(target):
+		if target == null or not _foes_of(actor).has(target):
 			continue
 		for payoff: Dictionary in threads.release_witness(StringName(target_id)):
 			for raw: Variant in payoff.get("writes", []):
@@ -5310,6 +5494,23 @@ func _living_count(group: Array[BattleActor]) -> int:
 		if actor.is_alive():
 			count += 1
 	return count
+
+
+## The actor's own side (combat polish 2026-11-02): side words in shared rules are relative to
+## who acts, so a class-kit enemy's "ally" is another enemy. A combatant on neither list is
+## treated as the player's side, as before.
+func _friends_of(actor: BattleActor) -> Array[BattleActor]:
+	return enemies if actor != null and enemies.has(actor) else allies
+
+
+func _foes_of(actor: BattleActor) -> Array[BattleActor]:
+	return allies if actor != null and enemies.has(actor) else enemies
+
+
+## Only the player's side spends the Soul Gauge (game-identity ruling 3: it is the player's
+## soul). A class-kit enemy pays Breath alone.
+func _pays_soul(actor: BattleActor) -> bool:
+	return actor == null or not enemies.has(actor)
 
 
 func _first_living(group: Array[BattleActor]) -> BattleActor:

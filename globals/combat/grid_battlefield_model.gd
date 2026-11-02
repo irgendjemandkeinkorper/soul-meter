@@ -91,6 +91,8 @@ var _occupancy: Dictionary = {}  ## Vector2i -> BattleActor
 var _groups: Dictionary = {ALLY: [], ENEMY: []}
 ## Actor references are local setup inputs: combat IDs are assigned by Controller.start().
 var _initial_cells: Dictionary = {}
+## Live probes: combat_id -> the real cell, restored by clear_probe().
+var _probe_saved: Dictionary = {}
 
 
 func configure_initial_cells(cells: Dictionary) -> Dictionary:
@@ -827,6 +829,24 @@ func line_of_sight(actor: BattleActor, target: BattleActor) -> Dictionary:
 			&"blocked_by_range", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
 		)
 	return _line_of_sight_cells(_cells[actor.combat_id], _cells[target.combat_id], actor, target)
+
+
+## Combat polish 2026-11-02: the actor's cell reads as `cell` for targeting, range, sight and
+## positional forecasts until clear_probe(). Only `_cells` moves: occupancy and the shared
+## IsoGrid are untouched, so nothing a probe answers leaks into pathing or the board.
+func probe_cell(actor: BattleActor, cell: Vector2i) -> void:
+	if actor == null or not _cells.has(actor.combat_id):
+		return
+	if not _probe_saved.has(actor.combat_id):
+		_probe_saved[actor.combat_id] = _cells[actor.combat_id]
+	_cells[actor.combat_id] = cell
+
+
+func clear_probe(actor: BattleActor) -> void:
+	if actor == null or not _probe_saved.has(actor.combat_id):
+		return
+	_cells[actor.combat_id] = _probe_saved[actor.combat_id]
+	_probe_saved.erase(actor.combat_id)
 
 
 func occupant_of(position: StringName) -> BattleActor:

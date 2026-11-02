@@ -131,6 +131,22 @@ func show_target_preview(actor_id: StringName, actor_name: String, quote: String
 	queue_redraw()
 
 
+## Combat polish 2026-11-02: the walk a walk-in order would take, drawn on the field (or on
+## this stage's own board). `affordable` false draws it as a refusal.
+func show_approach_path(cells: Array, affordable: bool) -> void:
+	var path := _path_cells(cells)
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_approach_path(path, affordable)
+		return
+	_hover_path = path
+	queue_redraw()
+
+
+func clear_approach_path() -> void:
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_approach_path([], true)
+
+
 func clear_target_preview() -> void:
 	_preview_id = &""
 	if is_instance_valid(target_preview):

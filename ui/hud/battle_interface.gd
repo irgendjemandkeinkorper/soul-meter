@@ -396,10 +396,33 @@ func _show_target_forecast(action: CombatAction, target: BattleActor) -> void:
 	var options := _action_options(action)
 	var payload := _controller.forecast_action(action, target, options)
 	var context := _controller.forecast_context(_controller.active_actor(), target, action, options)
+	# Combat polish 2026-11-02: out of reach, the quote is the walk-in order, priced from the
+	# cell the unit would act from, with the path drawn ("preview, then refuse").
+	var approach := {} if bool(payload.get("allowed", false)) else _controller.approach_query(action, target, options)
+	if bool(approach.get("allowed", false)):
+		payload = approach["forecast"]
+		context = approach["context"]
 	act_target_panel.show_action_forecast(payload, context)
 	_append_cast_forecast(action, payload)
 	act_target_panel.show_aim_forecast(payload, _aim_location, _controller.rules.use_charge_time)
-	stage.show_target_preview(target.combat_id, target.display_name, target_quote(payload, context, target))
+	var quote := target_quote(payload, context, target)
+	if not approach.is_empty():
+		quote = "%s\n%s" % [quote, approach_line(approach, action)]
+		stage.show_approach_path(approach.get("path_cells", []), bool(approach.get("allowed", false)))
+	else:
+		stage.clear_approach_path()
+	stage.show_target_preview(target.combat_id, target.display_name, quote)
+
+
+## The walk-in line under a target quote: "WALK IN · MOVE 3 + STRIKE 2 = 5 AP" when the order
+## is affordable, else the refusal ("Move 3 + Strike 2 = 5 AP; 4 AP left.").
+func approach_line(approach: Dictionary, action: CombatAction) -> String:
+	if not bool(approach.get("allowed", false)):
+		return str(approach.get("message", ""))
+	return tr("WALK IN · MOVE %d + %s %d = %d AP") % [
+		int(approach.get("move_ap", 0)), action.display_name.to_upper(),
+		int(approach.get("action_ap", 0)), int(approach.get("total_ap", 0)),
+	]
 
 
 ## The tooltip's quote lines: "HP a / b" then "PART · HIT n% · d DMG" (or UNAVAILABLE with
@@ -436,6 +459,7 @@ func target_quote(payload: Dictionary, context: Dictionary, target: BattleActor)
 func _clear_target_preview() -> void:
 	_aim_target = null
 	stage.clear_target_preview()
+	stage.clear_approach_path()
 
 
 func _refuse(message: String) -> void:
@@ -461,6 +485,14 @@ func _on_pointer_pressed(tile: Dictionary, actor_id: StringName) -> void:
 		var payload := _controller.forecast_action(action, target, options)
 		if bool(payload.get("allowed", false)):
 			_controller.submit_action(_selected_action_id, target, options)
+			return
+		# Out of reach: walk in and act as one order, or refuse with the walk-in totals.
+		var approach := _controller.approach_query(action, target, options)
+		if bool(approach.get("allowed", false)):
+			_clear_target_preview()
+			_controller.submit_approach(_selected_action_id, target, options)
+		elif not approach.is_empty():
+			_refuse(str(approach.get("message", "Action blocked.")))
 		else:
 			_refuse(str(payload.get("message", "Action blocked.")))
 		return
