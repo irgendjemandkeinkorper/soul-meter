@@ -34,12 +34,14 @@ alongside these visual tokens when deciding whether a feature belongs in Soul Me
   horror. Numbers always mono, always exact, often uncomfortable ("91–93%", "-6 soul").
 - **Palette bands:** Stone (surfaces) · Metal (iron = structure, bronze = importance — ONE
   bronze-trimmed element per screen) · Arcane (violet = magic/selection, cinder =
-  damage/consequence, mote = energy/tempo — never two accents on one control) · Ink
+  damage/consequence, mote = energy/tempo, so Breath meters are mote (`METER_BREATH_*`) — never two
+  accents on one control) · Ink
   (parchment/ash). Closed sets: rarity (common/rare/mythic) and agreement states.
 - **The Wheel of Ten** is canon-ordered and closed: Sul, Vel, Luth, Khor, Tham, Vekh,
   Mozh, Khash, Zhem, Zhur. Adjacent = Chord; diametric = Clash. Never an 11th, never reorder.
 - **Type:** Cinzel for display + ALL tracked-uppercase labels/buttons; Cormorant Garamond for
-  body/dialogue (italic = flavour/quotes); Fira Code for numbers ONLY. No sans in menus.
+  body/dialogue (italic = flavour/quotes); Fira Code for numbers ONLY. No sans in menus, and none
+  over the field: world labels take `WorldLabel` (Cinzel, outlined), applied by FieldMap.
 - **Corners:** radii ~0; the corner language is a 45° **notch** (6/10/16px). Nothing rounded.
 - **Depth:** carved INTO stone — inset shadows for wells/slots/tracks; gradient bevels (not
   radius) for raised metal; glows only as edge-light on hover/selection/focus.
@@ -55,7 +57,9 @@ alongside these visual tokens when deciding whether a feature belongs in Soul Me
   size, not a design frame. (Was "1440×900 thinking" — stale, and 16:10 against the mockups'
   16:9; corrected 2026-08-05, see `docs/prd-amendment-tactical-layer.md` §7.)
   HUD pinned bottom with 2px bronze rule;
-  **SoulGauge is always the rightmost HUD element**; 64px item slots; grids use gap.
+  **SoulGauge is always the rightmost HUD element**; 64px item slots; grids use gap. The field
+  HUD bar is one objective line over a party strip (portrait, HP and Breath meters per member,
+  sized for six); control hints leave once each key is used (U2, owner 2026-11-02).
 - **No emoji, ever.** Element sigils are text-presentation unicode (✷⚘≈♫▲◑⁂☲○☇).
 
 ## The Balance UI language (FR-601 / FR-602 / FR-606)

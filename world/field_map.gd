@@ -17,9 +17,42 @@ var _label_restore: Array[Callable] = []
 const GROUP := &"field_map"
 
 
+## U2 (owner 2026-11-02): world labels speak in the DS display face. A Label under a
+## Node2D inherits no theme, so building names, prompts and exits drew in the engine's
+## sans. Each world-space label gets the UI theme and, unless it asks for something more
+## specific than the eyebrow face, the WorldLabel variation (Cinzel, outlined).
+const WORLD_LABEL_VARIATIONS: Array[StringName] = [&"", &"EyebrowLabel"]
+
+
 func _ready() -> void:
 	add_to_group(GROUP)
 	_connect_hostiles.call_deferred()
+	_theme_world_labels.call_deferred()
+	get_tree().node_added.connect(_on_node_added)
+
+
+func _theme_world_labels() -> void:
+	if not is_inside_tree():
+		return
+	for node: Node in _field_root().find_children("*", "Label", true, false):
+		_theme_world_label(node)
+
+
+func _on_node_added(node: Node) -> void:
+	if node is Label and is_inside_tree() and _field_root().is_ancestor_of(node):
+		_theme_world_label.call_deferred(node)
+
+
+func _theme_world_label(node: Node) -> void:
+	if not is_instance_valid(node) or not node.is_inside_tree():
+		return
+	var label := node as Label
+	if label == null or label.get_canvas_layer_node() != null:
+		return
+	if label.theme == null:
+		label.theme = UIManager.ui_theme
+	if StringName(label.theme_type_variation) in WORLD_LABEL_VARIATIONS:
+		label.theme_type_variation = &"WorldLabel"
 
 
 func ground() -> TileMapLayer:

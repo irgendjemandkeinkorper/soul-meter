@@ -64,6 +64,27 @@ func test_council_open_check_shows_its_chance() -> void:
 	balloon.free()
 
 
+## U2: the field HUD in Dom with a full party of six, one of them hurt and winded, so the
+## party line's width and the objective line are both under load.
+func test_field_hud_with_a_party_of_six() -> void:
+	var members: Array[PartyMember] = []
+	var hero := PartyMember.new()
+	hero.id = GameState.PROTAGONIST_ID
+	hero.display_name = "Tester"
+	members.append(hero)
+	for candidate: PartyMember in GameState.recruitable_candidates():
+		if members.size() >= 6:
+			break
+		members.append(candidate)
+	members[1].hp = maxi(1, members[1].max_hp / 3)
+	members[1].breath = maxi(0, members[1].breath_max / 4)
+	GameState.set_party(members)
+	var field := await _open_field("res://world/starting_town.tscn")
+	await _frames(10)
+	print("PARTY %d" % GameState.party.size())
+	await _capture("05-field-hud-party-of-six")
+
+
 func _open_field(path: String) -> Node:
 	var runner := scene_runner(path)
 	var field := runner.scene()
