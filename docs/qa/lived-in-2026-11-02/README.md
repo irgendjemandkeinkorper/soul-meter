@@ -6,7 +6,7 @@ Plan and as-built notes: `docs/design/map-lived-in-plan-2026-11-02.md`. Owner re
 ## Captures (1920×1080, camera zoom 1; overview at zoom 0.5)
 
 Rendered under Xvfb by `test/manual/lived_in_capture.gd` with the HUD and title screen hidden.
-"Before" is `origin/main` at `9e1ee0f9`; "after" is this branch, dressing seed 1102.
+"Before" is `origin/main` at `9e1ee0f9`; "after" is this branch: dressing seed 1102 and the calmed ground (`world/dressing/ground_calm.gdshader`).
 
 | Spot | Before | After |
 |---|---|---|
@@ -15,7 +15,9 @@ Rendered under Xvfb by `test/manual/lived_in_capture.gd` with the HUD and title 
 | Chandlery front (1900, 860) | `before-chandlery.jpg` | `after-chandlery.jpg` |
 | South yards (1500, 1400) | `before-south-yards.jpg` | `after-south-yards.jpg` |
 
-Draw calls on `main` (before): wayhouse 18, chandlery 28, south yards 16, overview 33.
+Draw calls per frame, before → after: wayhouse 18 → 226, chandlery 28 → 263, south yards
+16 → 213, overview 33 → 478 (84 separate textures; an atlas would batch them). The scene has
+767 nodes. Frame time on real hardware stays with FR-904 (owner item 14).
 
 Counts after: 211 ground decals, 272 standing pieces (79 solid, 11 cover), 284 contact
 shadows, 79 Blocking cells painted at load.

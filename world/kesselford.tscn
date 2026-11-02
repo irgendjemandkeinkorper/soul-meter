@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
@@ -38,6 +38,10 @@
 
 [ext_resource type="Texture2D" uid="uid://b6y1xsgnd0k5p" path="res://assets/generated/sprites/world/dom-stone-paving--tile.png" id="13_weftlumin"]
 [ext_resource type="PackedScene" path="res://world/dressing/kesselford_lived_in.tscn" id="40_lived_in"]
+[ext_resource type="Shader" path="res://world/dressing/ground_calm.gdshader" id="41_ground_calm"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ground_calm"]
+shader = ExtResource("41_ground_calm")
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(3000, 40)
@@ -72,6 +76,7 @@ script = ExtResource("0_location")
 script = ExtResource("1_field_map")
 
 [node name="TerrainBackdrop" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_ground_calm")
 z_index = -15
 position = Vector2(1500, 900)
 scale = Vector2(1.6, 1.6)

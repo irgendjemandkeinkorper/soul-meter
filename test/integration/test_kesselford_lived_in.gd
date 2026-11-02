@@ -61,6 +61,17 @@ func test_spawns_and_exits_stay_clear() -> void:
 				"%s crowds %s" % [sprite.name, point]).is_greater(40.0)
 
 
+## Owner 2026-11-02, "calm the ground first": the painted ground is calmed so props read on it.
+func test_the_painted_ground_is_calmed() -> void:
+	var runner := scene_runner(SCENE)
+	var root := runner.scene() as Node
+	await runner.simulate_frames(2)
+	var backdrop := root.get_node("TerrainBackdrop") as Sprite2D
+	var material := backdrop.material as ShaderMaterial
+	assert_object(material).is_not_null()
+	assert_str(material.shader.resource_path).is_equal("res://world/dressing/ground_calm.gdshader")
+
+
 func test_standing_props_cast_contact_shadows_and_buildings_do_not() -> void:
 	var runner := scene_runner(SCENE)
 	var root := runner.scene() as Node

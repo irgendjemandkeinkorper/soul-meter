@@ -57,9 +57,13 @@ captures, four contact sheets, the scale sheet).
 | M4 | 84 sprites, four parallel Codex lanes (`gpt-6-astra`), prepared by the new `tools/prepare_greeble_assets.gd`. Provenance and masters: `assets/generated/sources/kesselford-greebles-2026-11-02/` (`batch.json`; 117 MB of masters, as Dom kept). | A new prepare tool: ground decals need 512×256 canvases and noisy feathered edges, which the prop tool does not do. |
 | M5 | 211 ground decals, 272 standing pieces (79 solid, 11 give cover), 284 contact shadows. A cobble band replaces the eight paving stamps. A wet-bank pass (puddles, mud, reeds) replaces the ten ford-puddle and five mud-edge stamps. | About 480 generated nodes, above the 300–400 target. The 5v5 demo check runs where the demo lives (PR #564 / the playtest merge). |
 
+Ground calmed (owner item 32, `calm the ground first`): `world/dressing/ground_calm.gdshader`
+on Kesselford's `TerrainBackdrop` compresses the bright wet streaks (luminance above 0.2, by
+55%) and keeps 72% of the fine detail over a 2-texel low-pass. No hue shift, and the darks stay deep.
+Other maps that share the Dom backdrop get it in M6.
+
 Known and not changed here: the two brown door placeholders (`WayhouseDoor`,
-`ChandleryDoor`) come from the shared door scene; the bright, high-contrast backdrop still
-competes with small props. Both are candidates for the owner's look review.
+`ChandleryDoor`) come from the shared door scene.
 
 ## Asset list for approval (~84)
 
@@ -171,6 +175,5 @@ implies canon. Notes on paper are blank scraps. **S** = solid (blocks, may give 
 ## Open for the owner
 
 1. ~~Approve the asset list above~~ — approved 2026-11-02 (`approve all ~84`).
-2. Approve the finished sprites, or name the ones to redo, from the four contact sheets in
-   `docs/qa/lived-in-2026-11-02/`; then the Kesselford look from the before/after captures
-   (owner item 32).
+2. ~~Approve the finished sprites~~ — approved 2026-11-02 (item 32: `approve all`; masters
+   kept; `calm the ground first`). The look is judged in the owner's playtest.
