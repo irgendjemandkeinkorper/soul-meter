@@ -91,10 +91,16 @@ var _free_scroll := false
 ## Move range (reachable cells) is drawn only while the player can act: it is what they
 ## need now, not a permanent stage tint.
 var _range_visible := false
+## Poses on the current art (owner 2026-11-02): one pose tween per actor on its Sprite2D, the
+## sprite's resting transform, and who is slumped. Body positions stay the battlefield's.
+var _poses: Dictionary = {}
+var _sprite_base: Dictionary = {}
+var _slumped: Dictionary = {}
 const NUMERIC_FONT := preload(DS.FONT_NUMERIC)
 const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
 const SpellCastScript := preload("res://ui/hud/spell_cast_effect.gd")
 const CombatMotionScript := preload("res://ui/hud/combat_motion.gd")
+const CombatPosesScript := preload("res://world/combat_poses.gd")
 const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
 ## D9: how far past the visible rect an enemy may start its turn and still earn a pan.
 const CAMERA_MARGIN_SCREENS := 1.0
@@ -640,17 +646,32 @@ func _sync_actors(event: CombatEvent) -> void:
 			var tween := CombatMotionScript.along_path(self, points, _set_actor_position.bind(id))
 			_moves[id] = tween
 			tween.tween_callback(func() -> void: _moves.erase(id))
+			var pose := _pose(id)
+			if not pose.is_empty():
+				CombatPosesScript.step_bob(
+					pose["tween"], pose["sprite"], pose["base"], points.size() - 1,
+					DS.DUR_FAST * maxi(1, points.size() - 1)
+				)
 		elif not _moves.has(id):
 			node.global_position = _grid.cell_to_world(cell)
 		# Keep the actor's scene-authored art; facing is a presentation property only.
 		var sprite := node.find_child("Sprite2D", true, false) as Sprite2D
 		if sprite != null and actor.has("facing"):
-			sprite.flip_h = str(actor["facing"]).contains("w")
+			var flip := str(actor["facing"]).contains("w")
+			if sprite.flip_h != flip:
+				# A body already posing (walking, striking) or down just flips; one at rest turns.
+				var turning := {} if _poses.has(id) or _moves.has(id) or _slumped.has(id) else _pose(id)
+				if turning.is_empty():
+					sprite.flip_h = flip
+				else:
+					CombatPosesScript.turn(turning["tween"], turning["sprite"], turning["base"], flip)
 		if int(actor.get("hp", 1)) <= 0:
 			if not _pending_defeats.has(id):
 				_stop_flash(id)
 				_fall(id, node)
 		else:
+			if _slumped.has(id):
+				_rest_pose(id)
 			_downed.erase(id)
 			_stop_fade(id)
 			if not _flashes.has(id):
@@ -668,6 +689,12 @@ func _fall(id: StringName, node: Node2D) -> void:
 		_downed[id] = true
 		return
 	_downed[id] = true
+	var pose := _pose(id)
+	if not pose.is_empty():
+		var striker := _node(_active_id)
+		var away_x := node.global_position.x - striker.global_position.x if is_instance_valid(striker) and striker != node else 1.0
+		CombatPosesScript.slump(pose["tween"], pose["sprite"], pose["base"], away_x)
+		_slumped[id] = true
 	var fade := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_fades[id] = fade
 	fade.tween_property(node, "modulate", fallen, DS.DUR_SLOW * 2.0)
@@ -729,6 +756,14 @@ func _play_action(event: CombatEvent) -> void:
 			targets.append(cell_center.bind(cell))
 		if targets.is_empty():
 			targets.append(_result_anchor.bind(event.target_id if is_instance_valid(target) else event.actor_id))
+		var lift := _pose(event.actor_id)
+		if not lift.is_empty():
+			var palette := SpellCastScript.palette_for(event)
+			var glow: Color = palette[0]["glow"] if not palette.is_empty() else DS.PARCHMENT
+			CombatPosesScript.cast_lift(
+				lift["tween"], lift["sprite"], lift["base"], glow,
+				SpellCastScript.WINDUP + SpellCastScript.TRAVEL
+			)
 		var spell := SpellCastScript.new()
 		spell.name = "SpellCast"
 		spell.setup(event, _result_anchor.bind(event.actor_id), targets, 1.0)
@@ -748,6 +783,9 @@ func _play_action(event: CombatEvent) -> void:
 		lunge.tween_method(_set_actor_position.bind(event.actor_id), attacker.global_position, toward, DS.DUR_FAST)
 		lunge.tween_method(_set_actor_position.bind(event.actor_id), toward, home, DS.DUR_FAST)
 		lunge.tween_callback(func() -> void: _moves.erase(event.actor_id))
+		var lean := _pose(event.actor_id)
+		if not lean.is_empty():
+			CombatPosesScript.lunge(lean["tween"], lean["sprite"], lean["base"], target.global_position.x - home.x)
 	_present_action_result(event)
 
 
@@ -767,6 +805,14 @@ func _present_action_result(event: CombatEvent) -> void:
 		_stop_flash(event.target_id)
 		# A defeated target keeps its fallen opacity; feedback must not revive its tint.
 		if int((_actors.get(event.target_id, {}) as Dictionary).get("hp", 1)) > 0:
+			var struck := _pose(event.target_id)
+			if not struck.is_empty():
+				var striker := _node(event.actor_id)
+				var away := (
+					target.global_position - striker.global_position
+					if is_instance_valid(striker) and striker != target else Vector2.ZERO
+				)
+				CombatPosesScript.recoil(struck["tween"], struck["sprite"], struck["base"], away)
 			var color: Color = _original_colors.get(target, Color.WHITE)
 			var flash := create_tween()
 			_flashes[event.target_id] = flash
@@ -833,6 +879,8 @@ func _on_setting_changed(section: String, key: String, value: Variant) -> void:
 func _settle_motion() -> void:
 	for id: StringName in _moves.keys():
 		_stop_move(id)
+	for id: Variant in _poses.keys() + _slumped.keys():
+		_rest_pose(id)
 	for id: StringName in _flashes.keys():
 		_stop_flash(id)
 	for id: StringName in _fades.keys():
@@ -852,6 +900,46 @@ func _stop_move(id: StringName) -> void:
 	if tween != null and tween.is_valid():
 		tween.kill()
 	_moves.erase(id)
+
+
+## A fresh pose for `id` on its Sprite2D, as {tween, sprite, base}; empty when motion is off or
+## the body has no sprite. Any running pose stops and the sprite returns to rest first.
+func _pose(id: StringName) -> Dictionary:
+	if not animate_events or _reduced_motion() or not is_inside_tree():
+		return {}
+	var node := _node(id)
+	var sprite := node.find_child("Sprite2D", true, false) as Sprite2D if is_instance_valid(node) else null
+	if sprite == null:
+		return {}
+	_stop_pose(id)
+	if not _sprite_base.has(id):
+		_sprite_base[id] = CombatPosesScript.capture(sprite)
+	var base: Dictionary = _sprite_base[id]
+	CombatPosesScript.restore(sprite, base)
+	var tween := create_tween()
+	_poses[id] = tween
+	tween.finished.connect(func() -> void:
+		if _poses.get(id) == tween:
+			_poses.erase(id)
+	)
+	return {"tween": tween, "sprite": sprite, "base": base}
+
+
+func _stop_pose(id: StringName) -> void:
+	var tween := _poses.get(id) as Tween
+	if tween != null and tween.is_valid():
+		tween.kill()
+	_poses.erase(id)
+
+
+## Back to the resting transform, standing (a revive, reduced motion, or the fight's end).
+func _rest_pose(id: StringName) -> void:
+	_stop_pose(id)
+	_slumped.erase(id)
+	var node := _node(id)
+	var sprite := node.find_child("Sprite2D", true, false) as Sprite2D if is_instance_valid(node) else null
+	if sprite != null and _sprite_base.has(id):
+		CombatPosesScript.restore(sprite, _sprite_base[id])
 
 
 func _stop_flash(id: StringName) -> void:
