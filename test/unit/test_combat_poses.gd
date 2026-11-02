@@ -24,9 +24,18 @@ func test_a_strike_leans_the_attacker_and_knocks_the_target_back_then_both_rest(
 	var attacker_sprite := _sprite(duel["ally"])
 	var target_sprite := _sprite(duel["enemy"])
 	overlay.consume_event(_strike(&"ally", &"enemy", 5, 44, 13))
-	await get_tree().create_timer(DS.DUR_INSTANT + DS.DUR_FAST * 0.5).timeout
-	assert_float(absf(attacker_sprite.rotation)).override_failure_message("the attacker leans").is_greater(0.02)
-	assert_float(target_sprite.position.distance_to(BASE_POSITION)).override_failure_message("the target recoils").is_greater(1.0)
+	# Track the peak over the beat rather than one instant: under a loaded test run a frame can
+	# step past a short tween, so a single sample is timing luck.
+	var lean := 0.0
+	var recoil := 0.0
+	var deadline := Time.get_ticks_msec() + 1200
+	while Time.get_ticks_msec() < deadline:
+		lean = maxf(lean, absf(attacker_sprite.rotation))
+		recoil = maxf(recoil, target_sprite.position.distance_to(BASE_POSITION))
+		await get_tree().process_frame
+	assert_float(lean).override_failure_message("the attacker leans").is_greater(0.02)
+	assert_float(recoil).override_failure_message("the target recoils").is_greater(1.0)
+	await _await_presented(overlay)
 	await get_tree().create_timer(DS.DUR_SLOW * 2.0).timeout
 	_assert_at_rest(attacker_sprite)
 	_assert_at_rest(target_sprite)

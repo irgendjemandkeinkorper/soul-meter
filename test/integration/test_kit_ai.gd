@@ -3,21 +3,23 @@ extends GdUnitTestSuite
 ## Enemies built from roster members fight with their own class kit through the player's
 ## gates; the 5v5 class demo (one member per class) runs to an end.
 
-var _saved_soul := 0.0
+## The whole game state, not just the Soul number: a 5v5 run to its end can overreach the
+## allies' Soul to zero, which husks the save and leaves a recovery ceiling in the flags.
+var _game_state_before: Dictionary = {}
 var _controllers: Array[CombatController] = []
 
 
 func before_test() -> void:
-	_saved_soul = GameState.soul_meter
+	_game_state_before = GameState.to_dict().duplicate(true)
 
 
 func after_test() -> void:
-	GameState.soul_meter = _saved_soul
 	for controller: CombatController in _controllers:
 		for actor: BattleActor in controller.allies + controller.enemies:
 			if actor.class_resource != null:
 				actor.class_resource.host = null
 	_controllers.clear()
+	GameState.from_dict(_game_state_before)
 
 
 func test_every_demo_member_is_a_legal_character_of_their_class() -> void:
