@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 ## FR-505: the party screen is where a companion's personal quest is talked
-## through (see ui/screens/party.gd) — there's no field NPC for companions.
+## through — there's no field NPC for companions. Since U3 that screen is the Register of
+## Persons (ui/screens/character_sheet.gd), which P opens.
 
 var _original_party: Array[PartyMember]
 
@@ -34,7 +35,7 @@ func test_quest_button_hidden_for_a_companion_with_no_authored_quest() -> void:
 	no_quest.display_name = "Undecided"
 	GameState.party = [vex, no_quest]
 
-	var runner := scene_runner("res://ui/screens/party.tscn")
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
 	await runner.simulate_frames(2)
 	var list := runner.find_child("MemberList", true, false) as ItemList
 	list.select(1)
@@ -52,7 +53,7 @@ func test_quest_button_visible_and_labeled_for_serai_lun() -> void:
 	vex.display_name = "Vex"
 	GameState.party = [vex, _serai_lun()]
 
-	var runner := scene_runner("res://ui/screens/party.tscn")
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
 	await runner.simulate_frames(2)
 	var list := runner.find_child("MemberList", true, false) as ItemList
 	list.select(1)
@@ -80,7 +81,7 @@ func test_quest_button_is_available_for_each_new_companion() -> void:
 		assert_object(companion).is_not_null()
 		GameState.party = [vex, companion]
 
-		var runner := scene_runner("res://ui/screens/party.tscn")
+		var runner := scene_runner("res://ui/screens/character_sheet.tscn")
 		await runner.simulate_frames(2)
 		var list := runner.find_child("MemberList", true, false) as ItemList
 		list.select(1)

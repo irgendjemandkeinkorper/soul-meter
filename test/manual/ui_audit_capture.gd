@@ -85,6 +85,84 @@ func test_field_hud_with_a_party_of_six() -> void:
 	await _capture("05-field-hud-party-of-six")
 
 
+## U3: each panel opened the way play opens it (UIManager, over Dom), with enough state to fill
+## it. Written to run on either side of U3, so the same harness photographs before and after.
+func test_panels() -> void:
+	var members: Array[PartyMember] = []
+	var hero := PartyMember.new()
+	hero.id = GameState.PROTAGONIST_ID
+	hero.display_name = "Vex the Unbowed"
+	hero.race = "Ash-Bound Kes'reth"
+	hero.char_class = "Ironbrand"
+	hero.level = 2
+	hero.max_hp = 30
+	hero.hp = 22
+	hero.attributes = {"forge": 3, "edge": 4, "anchor": 3, "spark": 5, "pitch": 2, "voice": 4}
+	hero.skill_tiers = {"recall": "trained"}
+	members.append(hero)
+	for candidate: PartyMember in GameState.recruitable_candidates():
+		if members.size() >= 3:
+			break
+		members.append(candidate)
+	GameState.set_party(members)
+	GameState.inventory.clear()
+	GameState.equipped_slots = {}
+	var axe := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_TAUBSTUMMER_AXE)
+	var bread := GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_HEARTHLOAF)
+	GameState.inventory.create_and_add_item(ItemIds.WEAPONS_FORGE_HAMMER)
+	GameState.inventory.create_and_add_item(ItemIds.MATERIALS_LOAMROOT_SPRIG)
+	QuestRegistry.offer(QuestRegistry.FIELD_DEBT)
+	Reputation.from_dict({})
+	await _open_field("res://world/starting_town.tscn")
+	_hide_reward_reveal()
+
+	var party := UIManager.open(UIManager.PARTY, true)
+	await _frames(20)
+	await _capture("06-party")
+	if party.has_method("show_tab"):
+		party.call("show_tab", &"skills")
+		await _frames(10)
+		await _capture("07-party-skills")
+	UIManager.close_all()
+
+	UIManager.open(UIManager.JOURNAL, true)
+	await _frames(20)
+	_hide_reward_reveal()
+	await _capture("08-journal")
+	UIManager.close_all()
+
+	UIManager.open(UIManager.STANDING, true)
+	await _frames(20)
+	await _capture("09-standing-empty")
+	UIManager.close_all()
+	Reputation.record("player", "mirror-choir", 1.0, "Stood with the Choir at the bell", "starting_town")
+	Reputation.record("player", "ssae-seeders", -2.0, "Refused the Seeders' tithe", "starting_town")
+	UIManager.open(UIManager.STANDING, true)
+	await _frames(20)
+	await _capture("10-standing")
+	UIManager.close_all()
+
+	var inventory := UIManager.open(UIManager.INVENTORY, true)
+	await _frames(20)
+	await _capture("11-inventory-nothing-selected")
+	var grid := inventory.find_child("BagGrid", true, false) as CtrlInventoryGrid
+	grid.select_inventory_item(bread)
+	inventory.call("_on_item_selected", bread)
+	await _frames(10)
+	await _capture("12-inventory-selected")
+	grid.select_inventory_item(axe)
+	inventory.call("_on_item_selected", axe)
+	await _frames(10)
+	await _capture("13-inventory-mythic-selected")
+	UIManager.close_all()
+
+
+func _hide_reward_reveal() -> void:
+	var reveal := UIManager.get_node_or_null("RewardReveal")
+	if reveal is CanvasItem:
+		(reveal as CanvasItem).visible = false
+
+
 func _open_field(path: String) -> Node:
 	var runner := scene_runner(path)
 	var field := runner.scene()

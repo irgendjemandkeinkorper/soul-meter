@@ -9,7 +9,9 @@ extends CanvasLayer
 ## and closed by the chart; Esc on them sends "resume" instead of popping.
 
 const INVENTORY := preload("res://ui/screens/inventory.tscn")
-const PARTY := preload("res://ui/screens/party.tscn")
+## U3 (owner-approved plan, 2026-11-01): P opens the Register of Persons. The separate Party
+## screen repeated its roster with one HP bar and a bio, and was folded into it.
+const PARTY := preload("res://ui/screens/character_sheet.tscn")
 const STANDING := preload("res://ui/screens/standing.tscn")
 const CHARACTER_SHEET := preload("res://ui/screens/character_sheet.tscn")
 const TAVERN := preload("res://ui/screens/tavern.tscn")

@@ -1,7 +1,8 @@
 # UI rework: audit and plan (2026-11-01)
 
-Status: **APPROVED by the owner, 2026-11-01.** U1 (conversation) and U2 (field HUD) are built,
-awaiting owner review; see "U1 as built" and "U2 as built" below. U3 follows as its own PR.
+Status: **APPROVED by the owner, 2026-11-01.** U1 (conversation), U2 (field HUD) and U3 (panels,
+items 1–5) are built, awaiting owner review; see each "as built" note below. U3 item 6 (chargen
+summary) is draft PR #561 on the chargen stack (#550/#557), which owns those files.
 
 Owner, 2026-11-01: *"we also need to do a heavy rework of all the UI buttons and info — it's so
 busy and doesn't really convey information we need, especially in conversations."* (Asked in a
@@ -167,6 +168,37 @@ party of six.
 5. **Inventory:** selection becomes a violet edge, and EQUIP/DROP appear on selection.
 6. **Chargen summary:** the summary page scrolls instead of pushing its navigation row off
    screen, and LIKENESS shows the likeness label.
+
+#### U3 as built (2026-11-02)
+
+Captures: `docs/qa/panels-u3-2026-11-02/`, before and after side by side from the same harness
+(`test/manual/ui_audit_capture.gd`, `test_panels`), each panel opened through UIManager over Dom.
+
+- **One shell:** every screen with a shell now puts BACK first in its HUD bar, at the standard
+  width, with the gauge still rightmost (`Screen._add_back_button`). Journal and Standing take
+  the ledger style the sheet and inventory use (stone backdrop, framed panels). #149 itself was
+  already closed: the screens had moved to `_make_shell()`, and BACK placement was the gap left.
+- **Register of Persons:** P opens it (`UIManager.PARTY` now points at the sheet; `party.gd` and
+  its scene are gone). The roster shows names whole beside a bust, with the level on hover.
+  - The header holds the name and identity line, then two tabs (`SheetTab`; the open tab takes
+    the violet edge).
+  - **Summary:** HP and Breath meters with exact numbers, attributes, the calling line, the
+    hero's equipped items and a class Kit's skill, the bio, the companion's "Talk to …" button
+    (FR-505), injuries (the heading only when there are any), and the portrait, Wheel and perks.
+  - **Skills:** the five groups flow side by side as blocks, so the slate reads without
+    scrolling. The +5% column exists only while there are points to spend, and the tab says
+    so ("SKILLS · 2 TO SPEND"). The open tab survives a member switch and a purchase.
+- **Journal:** the thread is its title and one objective line (the "Current thread" and "NEXT
+  OBJECTIVE" headers are gone). Each quest is its title, its objective, and one who/where line.
+  The state shows only when it is not ACTIVE, and the authored description is on the title's
+  tooltip. The page opens at its top.
+- **Standing:** with no faction on record, one line replaces the empty list and sheet. With
+  factions, the list is a fixed-width framed column beside its reasons.
+- **Inventory:** EQUIP and DROP appear once something is selected. The selection is a violet
+  edge-light drawn just outside the tile (`ItemSelection`); it replaces GLoot's white outline.
+  **Correction to finding P6:** the solid bronze tile in the audit capture was not a selection.
+  It is the mythic rarity frame (atlas tile 24, a solid amber fill; the Taubstummer Axe is
+  mythic). Rarity framing is unchanged here; it is an open question for the owner.
 
 ## Owner decisions
 

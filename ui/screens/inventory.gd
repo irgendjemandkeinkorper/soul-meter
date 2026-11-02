@@ -27,6 +27,7 @@ var _flavour_label: Label
 var _requirement_label: Label
 var _value_label: Label
 var _selected_item: InventoryItem
+var _actions: HBoxContainer
 var _detail_column: Control
 var _equip_button: Button
 var _drop_button: Button
@@ -210,6 +211,7 @@ func _build_equipment_row(slot_name: StringName) -> Control:
 	grid.custom_minimum_size = Vector2.ONE * DS.SLOT_SIZE_SM
 	grid.item_dropped.connect(_on_equipment_drop.bind(slot_name))
 	grid.inventory_item_selected.connect(_on_item_selected)
+	grid.selection_style = _selection_style()
 	row.add_child(grid)
 	var labels := VBoxContainer.new()
 	labels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -257,6 +259,7 @@ func _build_bag_column() -> Control:
 	_bag_grid.item_spacing = DS.ITEM_GRID_GAP
 	_bag_grid.custom_item_control_scene = BAG_SLOT_SCENE
 	_bag_grid.inventory_item_selected.connect(_on_item_selected)
+	_bag_grid.selection_style = _selection_style()
 	scroll.add_child(_bag_grid)
 	scroll.resized.connect(func() -> void:
 		var cell := clampf(floorf((scroll.size.x - DS.SPACE_6) / 8.0) - DS.ITEM_GRID_GAP, DS.SLOT_SIZE_SM, DS.SLOT_SIZE)
@@ -279,7 +282,11 @@ func _build_detail_column() -> Control:
 	_value_label = _detail_label("ItemValue", "", "StatLabel")
 	for child: Control in [_name_label, _type_label, _stats, _flavour_label, _requirement_label, _value_label]:
 		column.add_child(child)
+	# U3: EQUIP and DROP belong to a selected item; with nothing selected they are hidden.
 	var actions := HBoxContainer.new()
+	actions.name = "ItemActions"
+	actions.visible = false
+	_actions = actions
 	var equip := Button.new()
 	_equip_button = equip
 	equip.name = "EquipButton"
@@ -296,6 +303,12 @@ func _build_detail_column() -> Control:
 	actions.add_child(drop)
 	column.add_child(actions)
 	return column
+
+
+## GLoot draws its own selection frame over the grid; the screen hands it the theme's
+## `ItemSelection` box (DS: selected = violet edge) instead of the vendor's white outline.
+func _selection_style() -> StyleBox:
+	return get_theme_stylebox("panel", "ItemSelection")
 
 
 func _detail_label(node_name: String, text: String, variation: String) -> Label:
@@ -317,6 +330,7 @@ func _refresh_detail() -> void:
 		_stats.remove_child(child)
 		child.queue_free()
 	var selected := is_instance_valid(_selected_item)
+	_actions.visible = selected
 	_equip_button.disabled = not selected or not _equipment.has(slot_of(_selected_item)) or _selected_item.get_inventory() != GameState.inventory
 	_drop_button.disabled = not selected or _selected_item.get_inventory() != GameState.inventory
 	if not selected:

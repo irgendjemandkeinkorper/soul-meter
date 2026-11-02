@@ -309,12 +309,16 @@ func _section(text: String) -> Label:
 	return l
 
 
+## U3 (owner-approved plan, 2026-11-01): every shell screen puts BACK at the left end of its
+## HUD bar at the standard width, opposite the gauge — never a full-width bar under the content.
+## A screen without a shell (a bare `_make_window`) still gets it at the foot of its box.
 func _add_back_button(box: Container, text: String = "Back") -> void:
-	if _uses_ledger_style() and shell_hud_bar != null:
+	if shell_hud_bar != null:
 		shell_back_button = _menu_button(shell_hud_bar, text, close)
-		shell_back_button.name = "LedgerBack"
-		shell_back_button.custom_minimum_size.y = DS.CONTROL_H_LG
+		shell_back_button.name = "ShellBack"
+		if _uses_ledger_style():
+			shell_back_button.custom_minimum_size.y = DS.CONTROL_H_LG
 		shell_hud_bar.move_child(shell_back_button, 0)
 		return
 	box.add_child(HSeparator.new())
-	_menu_button(box, text, close)
+	shell_back_button = _menu_button(box, text, close)
