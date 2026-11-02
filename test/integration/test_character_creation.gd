@@ -1,9 +1,10 @@
 extends GdUnitTestSuite
-## Integration coverage for the shared player/recruit Form 7 wizard on DRAMGID
-## (docs/architecture-chargen-dramgid.md §7, §11). The player test still enters through
-## the real main menu and GameFlow state; the recruit tests use the same scene in its
-## tavern-owned mode. Tests drive the public API and live controls, then inspect the
-## displayed choices and registered PartyMember.
+## Integration coverage for the one-screen register on DRAMGID (owner ruling 2026-11-02,
+## docs/design/chargen-overhaul-plan-2026-11-02.md; model rules in
+## docs/architecture-chargen-dramgid.md §7). The player test enters through the real main
+## menu and GameFlow state; the recruit tests use the same scene in its tavern-owned mode.
+## Tests drive the public API and live controls, then inspect what is shown and the
+## registered PartyMember.
 
 var _original_party: Array[PartyMember]
 var _original_flags: Dictionary
@@ -26,81 +27,145 @@ func after_test() -> void:
 	UIManager.close_all()
 
 
-func test_wizard_gates_each_leaf_in_canon_order_and_supports_back_and_summary_jumps() -> void:
-	var screen: CharacterCreationScreen = load("res://ui/screens/character_creation.tscn").instantiate()
-	add_child(screen)
+func test_the_register_opens_rolled_on_calling_with_only_the_name_left() -> void:
+	var screen := await _open_screen()
+	assert_int(ChargenSteps.TABS.size()).is_equal(4)
+	assert_str(screen.current_tab_id()).is_equal("calling")
+	assert_bool((screen.find_child("Page_calling", true, false) as Control).visible).is_true()
+	assert_bool((screen.find_child("Page_origin", true, false) as Control).visible).is_false()
+	assert_str(screen.build.display_name).is_empty()
+	for step_id: StringName in ChargenSteps.ids():
+		if step_id in [&"identity", &"summary"]:
+			continue
+		assert_bool(screen.build.validate(step_id)["valid"]).override_failure_message(String(step_id)).is_true()
+	assert_int(screen.build.points_remaining()).is_equal(0)
+	assert_str(screen._status_lbl.text).is_equal("Name the entry to begin")
+	assert_str((screen.find_child("Tab_name", true, false) as Button).text).contains("•")
+	screen.set_display_name("Sera")
+	assert_bool(screen.build.is_complete()).is_true()
+	assert_str(screen._status_lbl.text).is_equal("Entry ready — BEGIN when you are")
+	screen.queue_free()
+
+
+func test_tabs_open_in_any_order_and_begin_without_a_name_puts_the_cursor_in_it() -> void:
+	var screen := await _open_screen()
+	for tab_id: StringName in [&"name", &"origin", &"measures", &"calling", &"origin"]:
+		(screen.find_child("Tab_%s" % tab_id, true, false) as Button).pressed.emit()
+		assert_str(screen.current_tab_id()).is_equal(String(tab_id))
+		for other: StringName in ChargenSteps.tab_ids():
+			var page := screen.find_child("Page_%s" % other, true, false) as Control
+			assert_bool(page.visible).is_equal(other == tab_id)
+
+	var accepted: Array[PartyMember] = []
+	screen.recruit_created.connect(func(member: PartyMember) -> void: accepted.append(member))
+	var begin_btn := screen.find_child("BeginButton", true, false) as Button
+	begin_btn.pressed.emit()
 	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_int(accepted.size()).is_equal(0)
+	assert_object(screen.get_viewport().gui_get_focus_owner()).is_same(screen._name_edit)
+	assert_str(screen.current_tab_id()).is_equal("origin")
+	screen.queue_free()
 
-	assert_int(ChargenSteps.count()).is_equal(9)
-	assert_str(screen.current_step_id()).is_equal("ancestry")
-	assert_bool(screen.can_advance()).is_false()
-	screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("ancestry")
 
-	screen.select_ancestry("vael")
-	assert_bool(screen.can_advance()).is_true()
-	screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("discipline")
-	assert_bool(screen.can_advance()).is_false()
+func test_a_retired_pairing_and_an_opposed_pair_are_refused_and_named() -> void:
+	var screen := await _open_screen()
+	screen.set_display_name("Sera")
 	screen.select_discipline("chordblade")
-	screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("patron")
-
-	# Threadwalker x Chordblade is retired: the card is disabled and the pick refused.
-	screen.select_class("threadwalker")
-	assert_str(screen.build.class_id).is_equal("")
-	assert_bool(screen.can_advance()).is_false()
+	# The register opens rolled and the roll may already be Ironbrand on other tones; pass
+	# through another class so picking Ironbrand is a real change that applies its tones.
+	screen.select_class("mirrorblade")
 	screen.select_class("ironbrand")
-	assert_bool(screen.can_advance()).is_true()
+	# Threadwalker x Chordblade is retired: the tile is disabled and the pick refused.
+	var threadwalker := screen.find_child("Class_threadwalker", true, false) as Button
+	assert_bool(threadwalker.disabled).is_true()
+	screen.select_class("threadwalker")
+	assert_str(screen.build.class_id).is_equal("ironbrand")
+	# Picking a class applies its suggested tones, so its tiles show the spells it is built on.
+	assert_str(screen.build.major_element).is_equal("khash")
+	assert_str(screen.build.minor_element).is_equal("mozh")
 	assert_str(screen.build.kit_skill).is_equal("heft")
 	assert_bool(screen.select_kit("grip")).is_true()
 	assert_bool(screen.select_kit("loose")).is_false()
-	screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("elements")
 
-	# The class pre-filled its suggestion; an opposed pair invalidates the leaf.
-	assert_str(screen.build.major_element).is_equal("khash")
 	screen.select_major("sul")
 	screen.select_minor("vekh")
-	assert_bool(screen.can_advance()).is_false()
+	assert_bool(screen.build.validate(&"elements")["valid"]).is_false()
+	assert_str(screen._status_lbl.text).is_equal("CALLING  ·  Major and Minor cannot be an opposed pair.")
+	assert_str((screen.find_child("Tab_calling", true, false) as Button).text).contains("•")
+	var accepted: Array[PartyMember] = []
+	screen.recruit_created.connect(func(member: PartyMember) -> void: accepted.append(member))
+	screen.go_to_tab(&"name")
+	screen.begin()
+	assert_str(screen.current_tab_id()).is_equal("calling")
+	assert_int(accepted.size()).is_equal(0)
 	screen.select_minor("vel")
-	assert_bool(screen.can_advance()).is_true()
-	screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("attributes")
-	assert_bool(screen.can_advance()).is_false()
-	assert_bool(screen.set_attribute("muster", 5)).is_true()
-	assert_bool(screen.set_attribute("grit", 5)).is_true()
-	assert_bool(screen.set_attribute("reason", 4)).is_true()
-	assert_bool(screen.set_attribute("alacrity", 3)).is_false()
-	assert_bool(screen.can_advance()).is_true()
-	screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("background")
-	assert_bool(screen.can_advance()).is_false()
-	screen.select_background("verlossen-miner")
-	screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("skills")
-	assert_bool(screen.can_advance()).is_true()
-	var percent := screen.find_child("Percent_grip", true, false) as Label
-	assert_object(percent).is_not_null()
-	assert_str(percent.text).contains("%")
-	assert_object(screen.find_child("Percent_tone_luth", true, false)).is_null()
-	assert_bool(screen.buy_skill("grip")["allowed"]).is_true()
-	assert_bool(screen.buy_skill("tone_luth")["allowed"]).is_false()
-	screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("identity")
-	assert_bool(screen.can_advance()).is_false()
-	screen.set_display_name("Sera")
-	assert_bool(screen.can_advance()).is_true()
-	screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("summary")
-	assert_bool(screen._accept_btn.visible).is_true()
-	assert_bool(screen._accept_btn.disabled).is_false()
-
-	screen.go_to_step(&"patron")
-	assert_str(screen.current_step_id()).is_equal("patron")
-	screen.back_step()
-	assert_str(screen.current_step_id()).is_equal("discipline")
+	assert_bool(screen.build.is_complete()).is_true()
 	screen.queue_free()
+
+
+func test_ability_tiles_come_from_the_kit_preview_and_show_their_card() -> void:
+	var screen := await _open_screen()
+	screen.select_discipline("thamshaper")
+	screen.select_class("ironbrand")
+	# The roll may already be Ironbrand on other tones; pin its suggested pair.
+	screen.select_major("khash")
+	screen.select_minor("mozh")
+	var own := screen.find_child("ClassAbilities", true, false) as HFlowContainer
+	var names: Array[String] = []
+	for tile: Node in own.get_children():
+		names.append(String(tile.name))
+	assert_array(names).contains_exactly(["Ability_spend_scars", "Ability_debt_of_arms"])
+	var debt := own.get_node("Ability_debt_of_arms") as Button
+	assert_str(debt.theme_type_variation).is_equal("ChargenAbilityTileLocked")
+	var tones := screen.find_child("ToneAbilities", true, false) as HFlowContainer
+	assert_int(tones.get_child_count()).is_equal(
+		(KitPreview.for_member(screen.build.scratch_member())[KitPreview.TONES] as Array).size())
+	assert_object(tones.get_node_or_null("Ability_sentence_of_ash")).is_null()
+
+	var crown := tones.get_node("Ability_crown_of_embers") as Button
+	crown.mouse_entered.emit()
+	var card := screen.ability_card_text()
+	assert_str(str(card["title"])).is_equal("Crown of Embers")
+	assert_str(str(card["effect"])).is_equal(CombatActionCatalog.by_id(&"crown-of-embers").summary())
+	crown.mouse_exited.emit()
+	assert_bool(screen.ability_card_text().is_empty()).is_true()
+	debt.focus_entered.emit()
+	assert_str(str(screen.ability_card_text()["effect"])).contains("Needs the Debt of Arms perk.")
+	debt.focus_exited.emit()
+
+	# Stormbearer adds nothing of its own and has no Zhur spells: both gaps are said, not filled.
+	screen.select_class("stormbearer")
+	assert_int((screen.find_child("ClassAbilities", true, false) as HFlowContainer).get_child_count()).is_equal(0)
+	var texts: Array[String] = []
+	for label: Node in screen._ability_groups.get_children():
+		if label is Label:
+			texts.append((label as Label).text)
+	assert_array(texts).contains(["No actions of its own yet.", "No Zhur spells yet."])
+	screen.queue_free()
+
+
+func test_every_class_fits_its_tiles_inside_the_1080p_tab_panel() -> void:
+	var size_before := get_tree().root.size
+	get_tree().root.size = Vector2i(1920, 1080)
+	var runner := scene_runner("res://ui/screens/character_creation.tscn")
+	await runner.simulate_frames(2)
+	var screen := runner.scene() as CharacterCreationScreen
+	screen.select_discipline("thamshaper")
+	var panel := (screen.find_child("TabPages", true, false) as Control).get_parent() as Control
+	for entry: Dictionary in ClassCatalog.ALL:
+		screen.select_class(str(entry["id"]))
+		await runner.simulate_frames(2)
+		var tiles_bottom := screen._ability_groups.get_global_rect().end.y
+		var detail_bottom := (screen.find_child("ClassDetail", true, false) as Control).get_global_rect().end.y
+		assert_float(maxf(tiles_bottom, detail_bottom)).override_failure_message(
+			"%s overflows: %s > %s" % [entry["name"], maxf(tiles_bottom, detail_bottom), panel.get_global_rect().end.y]
+		).is_less_equal(panel.get_global_rect().end.y)
+	var frame := Rect2(Vector2.ZERO, Vector2(1920, 1080))
+	for name: String in ["BeginButton", "RandomizeButton", "RollTabButton"]:
+		var button := screen.find_child(name, true, false) as Control
+		assert_bool(frame.encloses(button.get_global_rect())).override_failure_message(name).is_true()
+	get_tree().root.size = size_before
 
 
 func test_player_chargen_boots_from_main_menu_and_writes_every_field() -> void:
@@ -117,12 +182,11 @@ func test_player_chargen_boots_from_main_menu_and_writes_every_field() -> void:
 	var screen := _find_chargen_screen()
 	assert_object(screen).is_not_null()
 	assert_bool(screen.flow_owned).is_true()
-	assert_bool(screen._back_btn.disabled).is_true()
+	assert_bool(screen._cancel_btn.visible).is_false()
 	_fill_out_valid_build(screen, "Sera", "the unbowed")
-	_drive_to_summary(screen)
-	assert_bool(screen._accept_btn.disabled).is_false()
+	assert_bool(screen.build.is_complete()).is_true()
 
-	screen.accept()
+	screen.begin()
 	await runner.simulate_frames(3)
 
 	assert_bool(GameState.has_created_character()).is_true()
@@ -135,19 +199,18 @@ func test_player_chargen_boots_from_main_menu_and_writes_every_field() -> void:
 	assert_float(SkillCheck.preview("heft", restored)).is_equal(SkillCheck.preview("heft", member))
 
 
-func test_recruit_mode_uses_the_same_leaves_and_only_writes_the_custom_roster() -> void:
+func test_recruit_mode_uses_the_same_register_and_only_writes_the_custom_roster() -> void:
 	var party_before := GameState.party.size()
 	var screen: CharacterCreationScreen = load("res://ui/screens/character_creation.tscn").instantiate()
 	screen.mode = CharacterCreationScreen.Mode.RECRUIT
 	add_child(screen)
 	await get_tree().process_frame
 	assert_bool(screen.flow_owned).is_false()
-	assert_bool(screen._back_btn.disabled).is_false()
+	assert_bool(screen._cancel_btn.visible).is_true()
 	_fill_out_valid_build(screen, "Tamsin", "the quiet")
-	_drive_to_summary(screen)
 	var emitted: Array[PartyMember] = []
 	screen.recruit_created.connect(func(member: PartyMember) -> void: emitted.append(member))
-	screen.accept()
+	screen.begin()
 	await get_tree().process_frame
 
 	assert_int(emitted.size()).is_equal(1)
@@ -166,18 +229,13 @@ func test_recruit_mode_cancels_through_the_production_ui_stack() -> void:
 	var screen := UIManager.open(load("res://ui/screens/character_creation.tscn")) as CharacterCreationScreen
 	screen.mode = CharacterCreationScreen.Mode.RECRUIT
 	await runner.simulate_frames(2)
-
-	screen.select_ancestry("vael")
-	screen.go_to_step(&"elements")
-	screen.back_step()
-	assert_str(screen.current_step_id()).is_equal("patron")
+	screen.go_to_tab(&"measures")
 	assert_bool(is_instance_valid(screen) and screen.is_inside_tree()).is_true()
 
-	# Page one: cancel closes the screen back to the caller. The close is animated
+	# CANCEL ENTRY closes the screen back to the caller from any tab. The close is animated
 	# (`DS.DUR_FAST`, and `UIManager.back()` awaits the exit tween before freeing), so a fixed
 	# handful of frames is not a wait — poll on the condition with a frame budget instead.
-	screen.go_to_step(&"ancestry")
-	screen.back_step()
+	(screen.find_child("CancelEntryButton", true, false) as Button).pressed.emit()
 	for _frame: int in 60:
 		if not is_instance_valid(screen) or not screen.is_inside_tree():
 			break
@@ -186,31 +244,38 @@ func test_recruit_mode_cancels_through_the_production_ui_stack() -> void:
 	UIManager.close_all()
 
 
-func test_randomize_from_a_fresh_screen_advances_to_summary_and_registers_the_roll() -> void:
+func test_randomize_all_keeps_the_players_words_and_registers_the_roll() -> void:
 	var runner := scene_runner("res://ui/screens/character_creation.tscn")
 	await runner.simulate_frames(2)
 	var screen := runner.scene() as CharacterCreationScreen
 	var randomize_btn := runner.find_child("RandomizeButton", true, false) as Button
-	assert_object(randomize_btn).is_not_null()
-	assert_str(randomize_btn.text).is_equal(tr("RANDOMIZE"))
-	# Identity text is the player's own; randomize keeps it, so a name is still required.
+	assert_str(randomize_btn.text).is_equal("RANDOMIZE ALL")
+	screen._random_rng.seed = 64
 	screen.set_display_name("Sera")
-	randomize_btn.pressed.emit()
-	await runner.simulate_frames(2)
-	assert_str(screen.current_step_id()).is_equal("ancestry")
-	assert_bool(screen.build.is_complete()).is_true()
-	assert_int(screen.build.points_remaining()).is_equal(0)
+	screen.set_epithet("the unbowed")
+	screen.set_flaw("Will not leave a debt uncounted")
+	var previous := screen.build.to_party_member().to_dict()
+	for tab_id: StringName in ChargenSteps.tab_ids():
+		screen.go_to_tab(tab_id)
+		randomize_btn.pressed.emit()
+		await runner.simulate_frames(2)
+		assert_str(screen.current_tab_id()).is_equal(String(tab_id))
+		assert_bool(screen.build.is_complete()).is_true()
+		assert_int(screen.build.points_remaining()).is_equal(0)
+		assert_str(screen.build.display_name).is_equal("Sera")
+		assert_str(screen.build.epithet).is_equal("the unbowed")
+		assert_str(screen.build.flaw).is_equal("Will not leave a debt uncounted")
+		var rolled := screen.build.to_party_member().to_dict()
+		assert_bool(rolled == previous).is_false()
+		previous = rolled
+		assert_str(screen._name_edit.text).is_equal("Sera")
+		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+			assert_str((screen._measure_value_lbls[attribute_id] as Label).text).is_equal(
+				str(screen.build.attributes[attribute_id]))
 	var expected := screen.build.to_party_member().to_dict()
 	var likeness := screen.build.likeness_id
 	var spent := screen.build.points_spent()
-	for step: Dictionary in ChargenSteps.STEPS:
-		if step["id"] == &"summary":
-			break
-		assert_bool(screen._next_btn.disabled).is_false()
-		screen._next_btn.pressed.emit()
-	assert_str(screen.current_step_id()).is_equal("summary")
-	assert_bool(screen._accept_btn.disabled).is_false()
-	screen._accept_btn.pressed.emit()
+	(runner.find_child("BeginButton", true, false) as Button).pressed.emit()
 	await runner.simulate_frames(2)
 
 	assert_bool(GameState.has_created_character()).is_true()
@@ -223,65 +288,54 @@ func test_randomize_from_a_fresh_screen_advances_to_summary_and_registers_the_ro
 		assert_bool(actual[field] == expected[field]).override_failure_message(
 			"Confirmed member must retain rolled %s" % field).is_true()
 	assert_int(Advancement.total_points_spent(member)).is_equal(spent)
-	assert_object(member.portrait).is_not_null()
 	assert_str(member.portrait.resource_path).contains("portraits/player/%s" % likeness)
 
 
-func test_randomize_is_reachable_on_every_leaf_and_refreshes_the_current_page() -> void:
+func test_roll_this_tab_rolls_only_the_open_tab() -> void:
 	var runner := scene_runner("res://ui/screens/character_creation.tscn")
 	await runner.simulate_frames(2)
 	var screen := runner.scene() as CharacterCreationScreen
-	var randomize_btn := runner.find_child("RandomizeButton", true, false) as Button
-	# A seeded stream makes rerolls reproducible without replacing the button handler.
-	screen._random_rng.seed = 64
-	screen.set_flaw("Will not leave a debt uncounted")
 	screen.set_display_name("Sera")
-	screen.set_epithet("the unbowed")
-	var previous: Dictionary = {}
-	for step_id: StringName in ChargenSteps.ids():
-		screen.go_to_step(step_id)
-		await runner.simulate_frames(2)
-		assert_bool(randomize_btn.is_visible_in_tree()).is_true()
-		assert_bool(randomize_btn.disabled).is_false()
-		var preceding := randomize_btn.get_node(randomize_btn.focus_previous) as Control
-		assert_object(preceding.get_node(preceding.focus_next)).is_same(randomize_btn)
-		randomize_btn.grab_focus()
-		randomize_btn.pressed.emit()
-		await runner.simulate_frames(2)
-		assert_str(screen.current_step_id()).is_equal(str(step_id))
-		assert_bool(randomize_btn.has_focus()).is_true()
-		assert_bool(screen.build.is_complete()).is_true()
-		assert_int(screen.build.remaining_attribute_points()).is_equal(0)
+	var roll_btn := runner.find_child("RollTabButton", true, false) as Button
+	screen._random_rng.seed = 11
+	screen.go_to_tab(&"origin")
+	var before := screen.build.copy()
+	var changed := false
+	for _attempt: int in 6:
+		roll_btn.pressed.emit()
+		changed = changed or screen.build.ancestry_id != before.ancestry_id or screen.build.background_id != before.background_id
+		for field: String in ["class_id", "discipline_id", "major_element", "minor_element", "attributes", "likeness_id", "display_name"]:
+			assert_that(screen.build.get(field)).override_failure_message(field).is_equal(before.get(field))
+		# Rolled creation points follow the entry: the refund the new origin forced is re-spent.
 		assert_int(screen.build.points_remaining()).is_equal(0)
-		assert_str(screen.build.flaw).is_equal("Will not leave a debt uncounted")
-		assert_str(screen.build.display_name).is_equal("Sera")
-		assert_str(screen.build.epithet).is_equal("the unbowed")
-		var rolled := screen.build.to_party_member().to_dict()
-		assert_bool(rolled == previous).is_false()
-		previous = rolled
-		assert_str(screen._name_edit.text).is_equal(screen.build.display_name)
-		assert_str(screen._epithet_edit.text).is_equal(screen.build.epithet)
-		assert_str(screen._summary_lbl.text).contains(screen.build.display_name)
-		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
-			assert_str((screen._attribute_value_lbls[attribute_id] as Label).text).is_equal(
-				str(screen.build.attributes[attribute_id]))
-		if step_id == &"skills":
-			for element: StringName in ElementWheel.ORDER:
-				var tone := DramgidSchema.tone_skill_for(str(element))
-				var label := runner.find_child("Percent_%s" % tone, true, false) as Label
-				assert_bool(label != null).is_equal(screen.build.held_tones().has(tone))
-			for skill_id: String in screen.build.creation_buys:
-				var label := runner.find_child("Percent_%s" % skill_id, true, false) as Label
-				assert_bool(label.text.begins_with("%d%%" % roundi(screen.build.preview_percent(skill_id)))).is_true()
-		if step_id == &"summary":
-			assert_bool(screen._accept_btn.disabled).is_false()
+	assert_bool(changed).is_true()
+	assert_str(screen.current_tab_id()).is_equal("origin")
+
+
+func test_points_bought_by_hand_are_never_re_spent_behind_the_player() -> void:
+	var screen := await _open_screen()
+	screen.set_display_name("Sera")
+	screen.select_discipline("thamshaper")
+	screen.select_class("ironbrand")
+	assert_int(screen.build.points_remaining()).is_equal(0)
+	# Changing class refunds creation points (model rule); rolled ones are re-spent at once.
+	screen.select_class("mirrorblade")
+	assert_int(screen.build.points_remaining()).is_equal(0)
+	# The first hand-made refund hands the pool to the player.
+	var bought: String = screen.build.creation_buys.keys()[0]
+	assert_bool(screen.refund_skill(bought)["allowed"]).is_true()
+	screen.select_class("ironbrand")
+	assert_int(screen.build.points_remaining()).is_equal(screen.build.creation_pool())
+	assert_str(screen._status_lbl.text).contains("unspent")
+	screen.queue_free()
 
 
 func test_randomize_during_an_attribute_animation_keeps_the_rolled_readout() -> void:
 	var runner := scene_runner("res://ui/screens/character_creation.tscn")
 	await runner.simulate_frames(2)
 	var screen := runner.scene() as CharacterCreationScreen
-	screen.go_to_step(&"attributes")
+	screen.go_to_tab(&"measures")
+	_reset_measures(screen)
 	screen.set_attribute("muster", DramgidSchema.ATTRIBUTE_CAP)
 	await runner.simulate_frames(2)
 	var minus := runner.find_child("Minus_muster", true, false) as Button
@@ -295,58 +349,42 @@ func test_randomize_during_an_attribute_animation_keeps_the_rolled_readout() -> 
 		assert_float(bar.value).is_equal(float(screen.build.attributes[attribute_id]))
 
 
-## UI rework U3 item 6: the summary names the likeness by its label, and a long record scrolls
-## inside the page instead of pushing the navigation row off the 1080 p frame.
-func test_summary_names_the_likeness_and_keeps_its_navigation_on_screen() -> void:
-	var size_before := get_tree().root.size
-	get_tree().root.size = Vector2i(1920, 1080)
-	var runner := scene_runner("res://ui/screens/character_creation.tscn")
-	await runner.simulate_frames(2)
-	var screen := runner.scene() as CharacterCreationScreen
-	_fill_out_valid_build(screen, "Sera", "of the very long and thoroughly ledgered epithet")
-	# The longest flaw the field takes, so the record wraps as far as a real roll can.
-	screen.set_flaw("Will not leave a debt uncounted, nor a ledger unread, nor a bell unrung")
-	_drive_to_summary(screen)
-	await runner.simulate_frames(3)
-
-	var likeness: Dictionary = ChargenData.LIKENESSES[1]
-	assert_str(screen._summary_lbl.text).contains("LIKENESS\n%s" % likeness["label"])
-	assert_str(screen._summary_lbl.text).not_contains(str(likeness["id"]))
-	assert_object(screen._summary_lbl.get_parent()).is_instanceof(ScrollContainer)
-	var frame := Rect2(Vector2.ZERO, Vector2(1920, 1080))
-	assert_bool(frame.encloses(screen._accept_btn.get_global_rect())).override_failure_message(
-		"ACCEPT sits at %s, outside the frame" % screen._accept_btn.get_global_rect()
-	).is_true()
-	get_tree().root.size = size_before
+func _open_screen() -> CharacterCreationScreen:
+	var screen: CharacterCreationScreen = load("res://ui/screens/character_creation.tscn").instantiate()
+	add_child(screen)
+	await get_tree().process_frame
+	return screen
 
 
+func _reset_measures(screen: CharacterCreationScreen) -> void:
+	for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+		screen.set_attribute(attribute_id, DramgidSchema.ATTRIBUTE_FLOOR)
+
+
+## The register opens rolled; pin every pick so the registered member is predictable. Rolled
+## creation points are refunded by hand first, which also stops them being re-spent.
 func _fill_out_valid_build(screen: CharacterCreationScreen, name: String, epithet: String) -> void:
 	screen.select_ancestry("vael")
 	screen.select_discipline("thamshaper")
 	screen.select_class("ironbrand")
+	screen.select_kit("heft")
 	screen.select_major("sul")
 	screen.select_minor("vel")
+	assert_bool(screen.select_mastery("sul")).is_true()
 	screen.select_background("verlossen-miner")
 	screen.set_display_name(name)
 	screen.set_epithet(epithet)
 	screen.set_flaw("Will not leave a debt uncounted")
 	screen.select_likeness(str(ChargenData.LIKENESSES[1]["id"]))
+	_reset_measures(screen)
 	screen.set_attribute("muster", 5)
 	screen.set_attribute("grit", 5)
 	screen.set_attribute("reason", 4)
+	for skill_id: String in screen.build.creation_buys.keys():
+		while screen.build.steps_bought(skill_id) > 0:
+			screen.refund_skill(skill_id)
 	# heft: 5 × 8 + Trained 20 = 60 → the step to 65 costs 2 points.
 	assert_int(screen.buy_skill("heft")["cost"]).is_equal(2)
-
-
-func _drive_to_summary(screen: CharacterCreationScreen) -> void:
-	screen.go_to_step(&"ancestry")
-	for step: Dictionary in ChargenSteps.STEPS:
-		if step["id"] == &"summary":
-			break
-		assert_bool(screen.can_advance()).override_failure_message(
-			"leaf %s should be valid" % step["id"]).is_true()
-		screen.next_step()
-	assert_str(screen.current_step_id()).is_equal("summary")
 
 
 func _assert_member_matches_picks(member: PartyMember, name: String, epithet: String) -> void:

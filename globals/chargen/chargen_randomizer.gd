@@ -44,6 +44,47 @@ static func roll(rng: RandomNumberGenerator, current: ChargenBuild) -> ChargenBu
 
 	# Buy last: changing ancestry, kit, elements, attributes or background refunds
 	# creation purchases. can_buy() owns the price bands, held-tone gate and cap.
+	spend_creation_points(rng, result)
+	return result
+
+
+## ROLL THIS TAB: rolls only the fields one register tab owns (ChargenSteps.TABS) and keeps
+## the rest. The result stays legal: the Calling roll is drawn as a whole (a class retired
+## with the rolled Discipline never comes up), and set_elements() keeps the Mastery on a held
+## tone. Purchases a change refunds are left unspent (they carry into play) rather than
+## re-bought behind the player's back; only the Measures roll spends the pool.
+static func roll_tab(rng: RandomNumberGenerator, current: ChargenBuild, tab_id: StringName) -> ChargenBuild:
+	var fresh := roll(rng, current)
+	var result := current.copy()
+	match tab_id:
+		&"origin":
+			result.select_ancestry(fresh.ancestry_id)
+			result.select_background(fresh.background_id)
+		&"calling":
+			result.select_discipline(fresh.discipline_id)
+			result.select_class(fresh.class_id)
+			result.select_kit(fresh.kit_skill)
+			result.set_elements(fresh.major_element, fresh.minor_element)
+			result.select_mastery(fresh.mastery_element)
+		&"measures":
+			for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+				result.set_attribute(attribute_id, DramgidSchema.ATTRIBUTE_FLOOR)
+			for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+				result.set_attribute(attribute_id, int(fresh.attributes[attribute_id]))
+			for skill_id: String in result.creation_buys.keys():
+				while result.steps_bought(skill_id) > 0:
+					result.refund(skill_id)
+			spend_creation_points(rng, result)
+		&"name":
+			var ancestry_name := str(ChargenData.ancestry_by_id(result.ancestry_id).get("name", ""))
+			var likenesses := _likenesses_for(ancestry_name)
+			result.likeness_id = str(likenesses[rng.randi_range(0, likenesses.size() - 1)]["id"])
+	return result
+
+
+## Spends whatever creation points are left on random legal buys (the roll's last step; the
+## register also re-spends rolled points a later choice refunded).
+static func spend_creation_points(rng: RandomNumberGenerator, result: ChargenBuild) -> void:
 	while result.points_remaining() > 0:
 		var affordable: PackedStringArray = []
 		for skill_id: String in result.purchasable_skills():
@@ -52,7 +93,6 @@ static func roll(rng: RandomNumberGenerator, current: ChargenBuild) -> ChargenBu
 		# The creation pool is smaller than the available one-point field/ARMS buys.
 		assert(not affordable.is_empty(), "Creation points must have a legal purchase.")
 		result.buy(affordable[rng.randi_range(0, affordable.size() - 1)])
-	return result
 
 
 ## Likeness labels open with their people ("Kaan Liftwright"); keep the rolled likeness

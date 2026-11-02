@@ -639,17 +639,13 @@ func query_action(
 		if not bool(aim.get("allowed", false)):
 			return aim
 	if not action.class_resource_action.is_empty():
-		# A class-resource action is authored once and offered to every actor, so
-		# the resource itself decides whether the command means anything for this
-		# patron. Before #236 a Lensbearer could press Record Name and nothing at
-		# all happened; now the button locks with a reason.
-		var resource := _class_resource_of(actor)
-		if not resource.accepts_command(action.class_resource_action):
-			return _blocked(
-				&"class_resource",
-				"%s cannot use that class action." % actor.display_name,
-				{"type": &"patron", "patron": resource.patron_id},
-			)
+		# Before #236 a Lensbearer could press Record Name and nothing at all happened;
+		# now the button locks with a reason. KitGate is shared with the chargen preview.
+		var command_refusal := KitGate.class_command_refusal(
+			action, _class_resource_of(actor), actor.display_name
+		)
+		if not command_refusal.is_empty():
+			return _kit_blocked(command_refusal)
 	if action.requires_ally_target():
 		if target == null or not target.is_alive() or not allies.has(target):
 			return _blocked(&"no_target", "%s requires an explicit living ally target." % action.display_name, {"type": &"living_ally"})
@@ -3388,12 +3384,9 @@ func _query_effect_gate(actor: BattleActor, action: CombatAction, options: Dicti
 			{"type": &"known_effect", "effect_id": String(action.effect_id)},
 		)
 	var resource := _class_resource_of(actor)
-	var required_patron := StringName(str(payload.get("requires_patron", "")))
-	if not required_patron.is_empty() and resource.patron_id != required_patron:
-		return _blocked(
-			&"class_resource", "%s belongs to the %s kit." % [action.display_name, String(required_patron).capitalize()],
-			{"type": &"patron", "patron": required_patron},
-		)
+	var patron_refusal := KitGate.patron_refusal(action, resource)
+	if not patron_refusal.is_empty():
+		return _kit_blocked(patron_refusal)
 	var required_tier := int(payload.get("requires_tier", 0))
 	if required_tier >= 2:
 		var breadth: StringName = &"triad" if required_tier >= 3 else &"chord"
@@ -3420,11 +3413,9 @@ func _query_effect_gate(actor: BattleActor, action: CombatAction, options: Dicti
 				{"type": &"refrain", "uses": REFRAIN_USES_PER_BATTLE},
 			)
 	if bool(payload.get("ledger_entry", false)):
-		if not (resource is PazzahLedger):
-			return _blocked(
-				&"class_resource", "%s files through the Pazzah Ledger." % action.display_name,
-				{"type": &"patron", "patron": &"pazzah"},
-			)
+		var ledger_refusal := KitGate.ledger_refusal(action, resource)
+		if not ledger_refusal.is_empty():
+			return _kit_blocked(ledger_refusal)
 		if (resource as PazzahLedger).entries.size() >= (resource as PazzahLedger).max_entries():
 			return _blocked(
 				&"ledger_full", "The Ledger holds %d entries; wait for one to fire." % (resource as PazzahLedger).max_entries(),
@@ -5335,6 +5326,13 @@ static func _allowed(extra: Dictionary = {}) -> Dictionary:
 	}
 	result.merge(extra, true)
 	return result
+
+
+## Wraps a KitGate refusal in the controller's refusal shape.
+static func _kit_blocked(refusal: Dictionary) -> Dictionary:
+	return _blocked(
+		StringName(refusal["blocked_by"]), str(refusal["message"]), refusal["nearest_unblock"]
+	)
 
 
 static func _blocked(

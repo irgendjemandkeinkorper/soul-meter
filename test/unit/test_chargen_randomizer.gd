@@ -120,3 +120,52 @@ static func _snapshot(build: ChargenBuild) -> Dictionary:
 	snapshot["likeness_id"] = build.likeness_id
 	snapshot["creation_buys"] = build.creation_buys.duplicate(true)
 	return snapshot
+
+
+func test_roll_tab_changes_only_the_fields_its_tab_owns_and_stays_legal() -> void:
+	var rng := RandomNumberGenerator.new()
+	var owned: Dictionary = {
+		&"origin": ["ancestry_id", "background_id"],
+		&"calling": ["discipline_id", "class_id", "kit_skill", "major_element", "minor_element", "mastery_element"],
+		&"measures": ["attributes"],
+		&"name": ["likeness_id"],
+	}
+	var fields: Array[String] = [
+		"ancestry_id", "background_id", "discipline_id", "class_id", "kit_skill", "major_element",
+		"minor_element", "mastery_element", "attributes", "likeness_id", "display_name", "epithet", "flaw",
+	]
+	for seed_value: int in 60:
+		rng.seed = seed_value
+		var current := ChargenRandomizer.roll(rng, _named("Sera"))
+		current.epithet = "the quiet"
+		for tab_id: StringName in ChargenSteps.tab_ids():
+			var rolled := ChargenRandomizer.roll_tab(rng, current, tab_id)
+			var label := "seed %d, tab %s" % [seed_value, tab_id]
+			for field: String in fields:
+				if not (owned[tab_id] as Array).has(field):
+					assert_that(rolled.get(field)).override_failure_message("%s kept %s" % [label, field]).is_equal(current.get(field))
+			for step_id: StringName in ChargenSteps.ids():
+				assert_bool(rolled.validate(step_id)["valid"]).override_failure_message(
+					"%s, leaf %s: %s" % [label, step_id, rolled.validate(step_id)["message"]]).is_true()
+			assert_int(rolled.points_remaining()).is_greater_equal(0)
+			if tab_id == &"measures":
+				assert_int(rolled.points_remaining()).override_failure_message(label).is_equal(0)
+			# The source build is never mutated.
+			assert_str(current.display_name).is_equal("Sera")
+
+
+func test_roll_tab_name_keeps_the_likeness_within_the_people() -> void:
+	var rng := RandomNumberGenerator.new()
+	for seed_value: int in 30:
+		rng.seed = seed_value
+		var current := ChargenRandomizer.roll(rng, _named(""))
+		var rolled := ChargenRandomizer.roll_tab(rng, current, &"name")
+		var people := str(ChargenData.likeness_by_id(rolled.likeness_id)["label"]).get_slice(" ", 0)
+		assert_str(str(ChargenData.ancestry_by_id(rolled.ancestry_id)["name"])).contains(people)
+		assert_str(rolled.display_name).is_empty()
+
+
+func _named(display_name: String) -> ChargenBuild:
+	var build := ChargenBuild.new()
+	build.display_name = display_name
+	return build

@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
-## QUICK START: the debug-build playtest path on page one of the player's own entry. One
-## press rolls every leaf, names an unnamed hero, accepts, and GameFlow begins the game.
+## QUICK START: the debug-build playtest path in the register's header, on every tab of the
+## player's own entry. One press rolls every leaf, names an unnamed hero, accepts, and
+## GameFlow begins the game.
 ## The flow tests enter chargen through the real chart and stop at the intro, with the
 ## loading handler unhooked so no level loads (as in test_intro_narration_flow).
 
@@ -65,7 +66,6 @@ func test_quick_start_rolls_every_leaf_names_the_hero_and_begins_the_game() -> v
 
 	quick.pressed.emit()
 	assert_bool(quick.disabled).override_failure_message("a second press must not accept twice").is_true()
-	assert_str(screen.current_step_id()).is_equal("summary")
 	await _await_state(INTRO_STATE_PATH)
 
 	assert_bool(_state_is_active(INTRO_STATE_PATH)).is_true()
@@ -91,19 +91,12 @@ func test_quick_start_keeps_a_name_the_player_typed() -> void:
 	assert_str(GameState.party[0].display_name).is_equal("Sera")
 
 
-func test_quick_start_shows_only_on_page_one_of_the_players_own_entry() -> void:
+func test_quick_start_shows_on_every_tab_of_the_players_own_entry_only() -> void:
 	var screen := await _open_player_chargen()
 	var quick := _quick_start_button(screen)
-	var randomize_btn := screen.find_child("RandomizeButton", true, false) as Button
-	# Page one's focus ring runs RANDOMIZE -> QUICK START -> NEXT LEAF.
-	assert_object(randomize_btn.get_node(randomize_btn.focus_next)).is_same(quick)
-	assert_object(quick.get_node(quick.focus_next)).is_same(screen._next_btn)
-
-	screen.go_to_step(&"discipline")
-	assert_bool(quick.visible).is_false()
-	assert_object(randomize_btn.get_node(randomize_btn.focus_next)).is_same(screen._next_btn)
-	screen.go_to_step(&"ancestry")
-	assert_bool(quick.visible).is_true()
+	for tab_id: StringName in ChargenSteps.tab_ids():
+		screen.go_to_tab(tab_id)
+		assert_bool(quick.is_visible_in_tree()).override_failure_message(String(tab_id)).is_true()
 
 	# The tavern switches the screen to RECRUIT after it opens; the button leaves with it.
 	screen.mode = CharacterCreationScreen.Mode.RECRUIT
@@ -125,7 +118,7 @@ func _open_player_chargen() -> CharacterCreationScreen:
 	var screen := _find_chargen_screen()
 	assert_object(screen).is_not_null()
 	assert_bool(screen.flow_owned).is_true()
-	assert_str(screen.current_step_id()).is_equal("ancestry")
+	assert_str(screen.current_tab_id()).is_equal("calling")
 	return screen
 
 
@@ -133,9 +126,11 @@ func _quick_start_button(screen: CharacterCreationScreen) -> Button:
 	return screen.find_child("QuickStartButton", true, false) as Button
 
 
-## ACCEPT waits out its stamp (0.35 s) before sending new_game; poll with a frame budget.
+## ACCEPT waits out its stamp (0.35 s) before sending new_game. Headless frames can run far
+## faster than that, so the budget is wall time, not a frame count.
 func _await_state(path: String) -> void:
-	for _frame: int in 240:
+	var deadline := Time.get_ticks_msec() + 3000
+	while Time.get_ticks_msec() < deadline:
 		if _state_is_active(path):
 			return
 		await get_tree().process_frame

@@ -74,7 +74,7 @@ func _print_nav_fit(screen: CharacterCreationScreen) -> void:
 	for name: String in ["RandomizeButton", "QuickStartButton"]:
 		var button := screen.find_child(name, true, false) as Button
 		print("NAV %s %s inside=%s" % [name, button.get_global_rect(), visible_rect.encloses(button.get_global_rect())])
-	print("NAV next %s inside=%s" % [screen._next_btn.get_global_rect(), visible_rect.encloses(screen._next_btn.get_global_rect())])
+	print("NAV begin %s inside=%s" % [screen._begin_btn.get_global_rect(), visible_rect.encloses(screen._begin_btn.get_global_rect())])
 
 
 func _frames(count: int) -> void:
