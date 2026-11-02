@@ -85,7 +85,9 @@ refusals. The preview must say exactly what combat will allow.
   from `CombatController._query_effect_gate` into a small static function that both call, with
   no behaviour change.
 - **Hotbar preview** calls the battle bar's existing default fill (made static). Fill order was
-  ruled "Keep as built", so the preview shows the bar the battle will slot.
+  ruled "Keep as built", so the preview shows the bar the battle will slot. That fill lives in
+  #556, which is not under this branch, so the entry column's "In a fight" row lands as a
+  follow-up once #556 is on `main`. Until then the column ends at the seven measures.
 - **Parity test**: for each of the 10 classes, every tile in "What <class> adds" is allowed by
   combat for a member of that class, and blocked for a member of every other class.
 
@@ -106,6 +108,9 @@ refusals. The preview must say exactly what combat will allow.
 4. **Patron-locked spells sit inside tone lists.** For example, Sentence of Ash and Verdict by
    Fire are Khash spells locked to Pazzah. They appear under their own class's "adds" group
    and never under another class's tones.
+5. **Stormbearer adds no actions of its own.** Ofshütje's Attribution is passive, with no class
+   command and no patron working. Its "What Stormbearer adds" group reads "No actions of its
+   own yet". `test_kit_preview.gd` pins this gap list.
 
 ## Build slices (about 1 day after approval)
 
@@ -125,6 +130,6 @@ styling goes through theme type variations and DS tokens.
 
 `ORIGIN`, `CALLING`, `MEASURES`, `NAME`, `ROLL THIS TAB`, `RANDOMIZE ALL`,
 `What %s adds`, `Your tones · %s and %s`, `Every body can`, `+%d more`,
-`+%d in other tones`, `No %s spells yet`, `In a fight — the hotbar this entry starts with`,
+`+%d in other tones`, `No %s spells yet`, `No actions of its own yet`, `In a fight — the hotbar this entry starts with`,
 `Name the entry to begin`, `%d skill points unspent — they carry into play`,
 `type a name — the one thing never rolled`.
