@@ -26,6 +26,23 @@ var _unit: Dictionary = {}
 var _follows_beats := false
 
 
+## Owner playtest 2026-11-02 ("too busy without telling you much"): the plate shows what a
+## turn spends or risks: HP, AP, Breath, the class resource and injuries. Tempo, CT and
+## facing, Aftertones and attunement wait behind BREAKDOWN (B) with the rest of the
+## tactical data.
+func _ready() -> void:
+	set_details_visible(false)
+
+
+func set_details_visible(show: bool) -> void:
+	for label: Label in [tempo_label, ct_label, aftertones_label, element_label]:
+		label.visible = show
+
+
+func details_visible() -> bool:
+	return tempo_label.visible
+
+
 func unit_snapshot() -> Dictionary:
 	return _unit.duplicate(true)
 

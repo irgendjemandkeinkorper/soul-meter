@@ -299,12 +299,16 @@ func _assert_bar_fits(session: Dictionary) -> void:
 	var actions := Battle.available_actions()
 	var buttons: Array = bar.get("_action_buttons")
 	var off_bar := 0
+	var usable_off_bar := 0
 	for i: int in actions.size():
 		if actions[i].kind != CombatAction.Kind.MOVE and not hotbar.has(buttons[i]):
 			off_bar += 1
+			if not (buttons[i] as Button).disabled:
+				usable_off_bar += 1
 	assert_bool(more.visible).is_equal(off_bar > 0)
 	if off_bar > 0:
-		assert_str(more.text).is_equal("MORE · %d" % off_bar)
+		# Owner playtest 2026-11-02: MORE counts what it adds that can be used now.
+		assert_str(more.text).is_equal("MORE · %d" % usable_off_bar if usable_off_bar > 0 else "MORE")
 		more.button_pressed = true
 		await get_tree().process_frame
 		assert_bool(bar.showing_all()).is_true()

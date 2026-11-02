@@ -524,7 +524,8 @@ static func build() -> Theme:
 	# key number (HudSlotKey, bronze like the other key hints).
 	t.add_type("HudSlotButton")
 	t.set_type_variation("HudSlotButton", "Button")
-	t.set_font_size("font_size", "HudSlotButton", DS.FS_100)
+	# FS_300: at FS_100 (12 px) the playtest found the commands too small to read at 1080p.
+	t.set_font_size("font_size", "HudSlotButton", DS.FS_300)
 	var slot_states := ["normal", "hover", "pressed", "focus", "disabled"]
 	for state_index: int in slot_states.size():
 		var slot_style := _notched_style(10 + state_index, DS.SPACE_1, DS.SPACE_3)
@@ -535,7 +536,7 @@ static func build() -> Theme:
 	# Lining figures (the stat face): the display serif's old-style 3, 4, 5 and 7 drop below
 	# the label's line.
 	t.set_font("font", "HudSlotKey", numeric)
-	t.set_font_size("font_size", "HudSlotKey", DS.FS_100)
+	t.set_font_size("font_size", "HudSlotKey", DS.FS_300)
 	t.set_color("font_color", "HudSlotKey", DS.BRONZE_3)
 	# A dimmed slot's key does nothing, so its number dims with it.
 	t.add_type("HudSlotKeyDim")

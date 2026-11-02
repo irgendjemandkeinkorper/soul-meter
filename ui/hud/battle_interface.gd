@@ -111,6 +111,7 @@ func set_breakdown_visible(visible_now: bool) -> void:
 	if tactical_popover.visible == visible_now:
 		return
 	tactical_popover.visible = visible_now
+	active_unit_plate.set_details_visible(visible_now)
 	breakdown_visibility_changed.emit(visible_now)
 
 
@@ -550,7 +551,7 @@ func _hover_cell_working(action: CombatAction, cell: Vector2i) -> void:
 
 
 func _on_pointer_cleared() -> void:
-	cursor_readout.text = "CURSOR —"
+	cursor_readout.text = ""
 	_clear_target_preview()
 	_clear_pending()
 

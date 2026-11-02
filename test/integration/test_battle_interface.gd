@@ -386,3 +386,26 @@ func test_cursor_strip_omits_empty_fields_and_reads_at_heading_size() -> void:
 	interface._on_tile_selected(plain)
 	assert_str(interface.cursor_readout.text).is_equal("(33,47) · HEIGHT 0")
 	assert_str(String(interface.cursor_readout.theme_type_variation)).is_equal("HeadingLabel")
+
+
+func test_the_plate_keeps_tactical_data_behind_breakdown_and_the_cursor_line_starts_empty() -> void:
+	# Owner playtest 2026-11-02, "too busy without telling you much": the plate shows what a
+	# turn spends (HP, AP, Breath, the class resource); Tempo, CT and facing, Aftertones and
+	# attunement open with BREAKDOWN. No idle "CURSOR —" heading.
+	var runner := scene_runner("res://ui/hud/battle_interface.tscn")
+	await runner.simulate_frames(1)
+	var interface := runner.scene() as BattleInterface
+	var plate := interface.active_unit_plate
+	for part: String in ["Tempo", "CT", "Aftertones", "Element"]:
+		assert_bool((plate.find_child(part, true, false) as Control).visible).override_failure_message(
+			"%s shows without BREAKDOWN" % part
+		).is_false()
+	for part: String in ["HP", "Breath", "Resource"]:
+		assert_bool((plate.find_child(part, true, false) as Control).visible).is_true()
+	assert_str(interface.cursor_readout.text).is_empty()
+
+	interface.set_breakdown_visible(true)
+	assert_bool(plate.details_visible()).is_true()
+	assert_bool((plate.find_child("CT", true, false) as Control).visible).is_true()
+	interface.set_breakdown_visible(false)
+	assert_bool(plate.details_visible()).is_false()

@@ -69,6 +69,9 @@ const PARTY_WIDTH := 200
 const CONTROLS_WIDTH := 124
 ## Command buttons: 22 px rows so six rows of ready actions fit the column without scrolling.
 const ACTION_ROW := 22
+## Hotbar slots stand taller than the footer's MORE and TARGET (owner playtest 2026-11-02:
+## the commands were too small to read).
+const SLOT_ROW := 30
 ## Owner 2026-11-01: an eight-slot hotbar, auto-filled; keys 1–8 fire the slots and every
 ## other command waits behind MORE.
 const HOTBAR_SIZE := 8
@@ -154,8 +157,9 @@ func _build() -> void:
 	add_child(log_column)
 	cursor_readout = Label.new()
 	cursor_readout.name = "CursorReadout"
+	# Empty until the pointer is over a cell: an idle "CURSOR —" told the player nothing.
 	cursor_readout.theme_type_variation = "HeadingLabel"
-	cursor_readout.text = "CURSOR —"
+	cursor_readout.text = ""
 	cursor_readout.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	log_column.add_child(cursor_readout)
 	var balance_row := HBoxContainer.new()
@@ -229,7 +233,7 @@ func _build() -> void:
 	for action in Battle.available_actions():
 		var button := _button(_actions_box, _short_action_text(action), _use_action.bind(action.id))
 		button.theme_type_variation = "HudActionButton"
-		button.custom_minimum_size = Vector2(0, ACTION_ROW)
+		button.custom_minimum_size = Vector2(0, SLOT_ROW)
 		button.tooltip_text = _action_tooltip(action)
 		button.set_meta("index", _action_buttons.size())
 		_action_buttons.append(button)
@@ -723,7 +727,14 @@ func _refresh() -> void:
 	_spare_box.visible = _show_all and not spare.is_empty()
 	_locked_box.visible = _show_all and not locked.is_empty()
 	_more_button.visible = (off_bar > 0 or _show_all) and not outcome_shown()
-	_more_button.text = tr("LESS") if _show_all else tr("MORE · %d") % off_bar
+	# The count is what MORE adds that can be used now; locked commands wait inside it with
+	# their reasons but are not a promise ("MORE · 50" counted every locked one).
+	if _show_all:
+		_more_button.text = tr("LESS")
+	elif spare.is_empty():
+		_more_button.text = tr("MORE")
+	else:
+		_more_button.text = tr("MORE · %d") % spare.size()
 
 	var target := Battle.current_target()
 	_target_button.visible = Battle.living_enemies().size() > 1 and not outcome_shown()
@@ -952,6 +963,12 @@ func _update_enemy_status() -> void:
 func _update_party_status() -> void:
 	for child in _party_box.get_children():
 		child.free()
+	# Alone, the column would repeat the unit plate; it shows once there is company.
+	var party_column := _party_box.get_parent() as Control
+	party_column.visible = Battle.allies.size() > 1
+	var rule := party_column.get_parent().get_child(party_column.get_index() - 1) as Control
+	if rule is VSeparator:
+		rule.visible = party_column.visible
 	var rows := _presented_rows()
 	for actor in Battle.allies:
 		var hp_now := _presented_hp(actor, rows)

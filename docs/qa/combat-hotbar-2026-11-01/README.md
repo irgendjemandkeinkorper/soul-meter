@@ -38,3 +38,17 @@ Presentation only: class kits, costs and rules are unchanged.
 `SOUL_METER_TEST_DATA_DIR=<fresh dir> bash scripts/test.sh -a test/manual/combat_hotbar_capture.gd`
 under Xvfb (Godot 4.7.1). Result: 1/1 passed. The harness starts the warden session with
 `GameFlow._on_battle_entered()`, the same path production uses.
+
+## Playtest declutter (owner playtest, 2026-11-02)
+
+The owner's note: "the UI/hotbar needs a lot of work, still way too busy without telling you
+much". Owner ruling the same day: every element must name something you act on, and the rest
+goes behind a toggle (BREAKDOWN, B). Same harness, same commit before and after; each image
+shows before on top (or left) and after below (or right).
+
+| Frame | What changed |
+|---|---|
+| `05-playtest-declutter-bar.jpg` | The bar at the player's first turn. The plate keeps what a turn spends: HP, AP, Breath and Scars. Tempo, CT and facing, Aftertones and attunement now open with BREAKDOWN. The idle `CURSOR —` heading is gone; the line fills only while the pointer is over a cell. The party column is gone in a solo fight (it repeated the plate). The hotbar commands are 15 px instead of 12, on 30 px slots. MORE counts what it adds that can be used now (`MORE · 13`), not every locked command (`MORE · 50`). |
+| `06-playtest-declutter-more-open.jpg` | MORE open. The usable commands, then the locked ones with their reasons, scrolling inside the command column as before. |
+| `07-playtest-declutter-full-frame.jpg` | The whole frame, for scale. |
+
