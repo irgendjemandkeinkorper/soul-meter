@@ -846,11 +846,20 @@ func _build_summary_page(step: Dictionary) -> Control:
 	var parts: Dictionary = _new_page(step,
 		"One copy for the Registry, one for the Company, and one for whichever archive denies receiving it.")
 	var form := parts["form"] as VBoxContainer
+	# UI rework U3 item 6 (owner-approved plan, 2026-11-01): a long roll wraps more lines than
+	# the page has room for, and the label used to grow the page until the navigation row fell
+	# off screen. The record scrolls in place instead.
+	var summary_scroll := ScrollContainer.new()
+	summary_scroll.name = "SummaryScroll"
+	summary_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	summary_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	form.add_child(summary_scroll)
 	_summary_lbl = Label.new()
+	_summary_lbl.name = "SummaryText"
 	_summary_lbl.theme_type_variation = "ChargenSummaryText"
 	_summary_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_summary_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	form.add_child(_summary_lbl)
+	_summary_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary_scroll.add_child(_summary_lbl)
 
 	var jump_heading := Label.new()
 	jump_heading.text = "Amend a leaf"
@@ -909,7 +918,8 @@ func _summary_text() -> String:
 		"  ·  ".join(bought_lines) if not bought_lines.is_empty() else "(none spent)",
 		maxi(build.points_remaining(), 0),
 		build.flaw if not build.flaw.is_empty() else "(none entered)",
-		build.likeness_id,
+		# The likeness's own label, never its id ("likeness_02" printed raw before U3).
+		str(ChargenData.likeness_by_id(build.likeness_id).get("label", "(none chosen)")),
 	]
 
 
