@@ -1,7 +1,9 @@
 # Character creation overhaul — plan (2026-11-02)
 
-Status: **approved by the owner 2026-11-02** ("approve; build it"). Tones in the preview: "show it
-honestly"; the mechanic is owner-list item 27. Stacked on `claude/chargen-summary-fix` (#561).
+Status: **approved by the owner 2026-11-02** ("approve; build it"); **B1–B5 built 2026-11-02** on
+the same PR. Tones in the preview: "show it honestly"; the mechanic is owner-list item 27.
+Stacked on `claude/chargen-summary-fix` (#561). Where the build differs from this plan, see
+"As built" below.
 
 Mockup: `docs/qa/chargen-overhaul-2026-11-02/01-mockup-calling-tab.jpg`, rendered from
 `mockup.html` in the same folder. The mockup's numbers are taken from the game data (classes,
@@ -126,10 +128,59 @@ Boundaries: the build does not change `ChargenBuild` fields, save data, `GameFlo
 randomizer's rules, or any combat behaviour beyond extracting the shared gate helper. All
 styling goes through theme type variations and DS tokens.
 
+## As built (2026-11-02)
+
+What changed from the plan above while building, and why:
+
+1. **The name field heads the entry column**, so it is visible from every tab. The NAME tab
+   holds the likeness, epithet, and flaw. BEGIN with a blank name focuses that field and does
+   not switch tabs.
+2. **Picking a class applies its suggested Major and Minor.** Before, the Elements step
+   pre-filled them only when blank. After a pre-roll they were never blank, so browsing the
+   class tiles kept the rolled tones. The tones can still be changed afterwards.
+3. **Rolled skill points are re-spent when browsing classes.** `select_class` refunds creation
+   buys, so browsing showed "12 PTS" unspent. While the purchases are rolled ones, the screen
+   re-spends them with the randomizer's own rule. Once the player buys or refunds a point by
+   hand, nothing is re-spent.
+4. **The class tiles show the name and the tone emblem.** The role moved to the tooltip and the
+   detail heading, so all ten tiles fit one row at 1080p. "Every body can" lists the whole
+   common kit (no "+N more"), because it fits.
+5. **Tier locks are on the card, not the tile.** Whether a chord or triad working can be cast
+   depends on Var Harmony in battle, so the tile stays open. The card reads "A chord working:
+   Var Harmony N or higher in battle." Only signature commands without their perk are dimmed.
+
+Still deferred: the "In a fight" hotbar row (it needs #556's fill on `main`).
+
+Code: `globals/combat/kit_gate.gd` (the shared gate), `globals/chargen/kit_preview.gd`,
+`ChargenSteps.TABS`, `ChargenBuild.copy()`, `ChargenRandomizer.roll_tab()` and
+`spend_creation_points()`, the `Chargen*` theme types in `ui/theme/theme_builder.gd`, and
+`ui/screens/character_creation.gd`. Tests: `test_kit_preview.gd` (5),
+`test_character_creation.gd` (13, rewritten), `test_chargen_quick_start.gd` (3),
+`test_chargen_randomizer.gd` (6). Captures: `docs/qa/chargen-overhaul-2026-11-02/`.
+
 ## New player-facing strings (for approval with the build)
 
-`ORIGIN`, `CALLING`, `MEASURES`, `NAME`, `ROLL THIS TAB`, `RANDOMIZE ALL`,
-`What %s adds`, `Your tones · %s and %s`, `Every body can`, `+%d more`,
-`+%d in other tones`, `No %s spells yet`, `No actions of its own yet`, `In a fight — the hotbar this entry starts with`,
-`Name the entry to begin`, `%d skill points unspent — they carry into play`,
-`type a name — the one thing never rolled`.
+Tabs and buttons: `ORIGIN`, `CALLING`, `MEASURES`, `NAME`, `ROLL THIS TAB`, `RANDOMIZE ALL`,
+`BEGIN`, `  ·  %d PTS` (on the MEASURES tab).
+
+Entry column: `Name this person`, `The one thing never rolled.`, `HP %d  ·  BREATH %d`,
+`%s of %s` (class of patron), `ENTRY READY`, `ENTRY PENDING`.
+
+CALLING: `PATRON  ·  CLASS`, `%s  ·  PATRON %s  ·  %s`, `%s — retired pairing with %s.`,
+`KIT  ·  TRAINS %s`, `KIT  ·  CHOOSE THE ARMS SKILL IT TRAINS`, `RESOURCE  ·  %s`,
+`SIGNATURE  ·  %s`, `TONES  ·  MAJOR AND MINOR BEGIN TRAINED`, `Root Note Mastery`,
+`DISCIPLINE  ·  HOW THE BODY MOVES`, `%s  %s  Favours %s.`, `WHAT %s ADDS`, `YOUR TONES`,
+`YOUR TONES  ·  %s` (joined with ` AND `), `EVERY BODY CAN`, `No actions of its own yet.`,
+`No %s spells yet.`, `+%d spells in other tones — every class can cast them today.`
+
+Hover card: `%d AP`, `Tone %s`, `Area %s`, `A %s working: Var Harmony %d or higher in battle.`
+(`chord` or `triad`).
+
+ORIGIN, MEASURES, NAME: `PEOPLE`, `BACKGROUND  ·  TWO TRADES TRAINED, THE ROOT NOTE MASTERED`,
+`%s\n%s\nLeanings: %s`, `THE SEVEN MEASURES  ·  FIXED AT CREATION`, `%d MEASURE POINTS UNSPENT`,
+`EVERY MEASURE POINT PLACED`, `SKILLS  ·  THE CREATION POOL`, `Each +5% step costs 1 point up
+to 50%, 2 to 75%, 3 to 95%. ◆ marks a Trained tag. Unspent points carry into play.`,
+`LIKENESS OF RECORD`, `THE PUBLIC RECORD`, `The name sits at the top of the entry, on every tab.`
+
+Status line: `Name the entry to begin`, `%d skill point(s) unspent — they carry into play`,
+`Entry ready — BEGIN when you are`.
