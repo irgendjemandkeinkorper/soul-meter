@@ -31,6 +31,10 @@ so `SoulGauge` is added last, whatever else the bar carries.
 full-width bar under the content (U3, owner-approved plan, 2026-11-02). `Screen._add_back_button()`
 places it there for every screen with a shell.
 
+**A screen opened on top draws on top.** `UIManager.open()` sets each screen `STACK_Z_STEP` (64)
+above the one beneath, because a screen may raise its own children (the battle HUD reaches z 10).
+The reward reveal stays above every screen.
+
 Implemented as `Screen._make_shell()` in `ui/screens/screen.gd`, which returns
 `[header, body, hud_bar]`. All spacing comes from theme type variations registered in
 `ui/theme/theme_builder.gd`; no per-node overrides, per the standing DS rule.

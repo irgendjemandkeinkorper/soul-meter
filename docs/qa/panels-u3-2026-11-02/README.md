@@ -16,3 +16,15 @@ before on the left and after on the right, each half at 960×540. Plan and rulin
 | `06-inventory-selected.jpg` | The selection is a violet edge (was GLoot's white outline). EQUIP and DROP show with a selection. |
 | `07-inventory-nothing-selected.jpg` | With nothing selected, EQUIP and DROP are hidden. The mythic axe was a solid amber tile (its rarity frame, not a selection); it is now an amber edge on the dark well (owner decision 10). |
 | `08-selection-edge-crop.jpg` | 1:1 crops, before and after: the selection edge on a common item, and the mythic axe (solid fill → amber edge, with the violet selection edge outside it). |
+
+## Playtest fixes (owner playtest, 2026-11-02)
+
+| File | What changed |
+|---|---|
+| `09-battle-spoils-over-battle.jpg` | Rendered by `test/manual/battle_spoils_capture.gd`: the battle open in UIManager's stack, spoils opened on top, as production does it. Before, the spoils drew under the combat HUD (it raises its own layers to z 10) and showed the battle through them. After, each screen opened on top draws above the one beneath, and the spoils are an opaque ledger window. |
+
+Inventory dragging has no image; the proof is four mouse-driven tests in
+`test/integration/test_panels_u3.gd`, which fail on the old code and pass on the fix. They
+cover drag to a slot, drag onto a filled slot (swap), drag to another bag cell, and click to
+select.
+

@@ -355,11 +355,13 @@ func _refresh_detail() -> void:
 
 
 func _on_equipment_drop(item: InventoryItem, _offset: Vector2, slot_name: StringName) -> void:
-	var target: Inventory = _equipment[slot_name]
 	if slot_of(item) != slot_name:
 		transfer_from_equipment(item, GameState.inventory)
 		return
-	_flash(find_child("Equipment_%s" % slot_name, true, false) as Control)
+	# GLoot's own transfer runs after this signal and fits the item into the slot's 1×1 grid,
+	# which refuses anything larger; equipping here sizes the slot to the item first.
+	if _equip(item, slot_name):
+		_flash(find_child("Equipment_%s" % slot_name, true, false) as Control)
 
 
 func _equip_selected() -> void:
@@ -369,8 +371,25 @@ func _equip_selected() -> void:
 	if not _equipment.has(slot_name):
 		_requirement_label.text = "THIS ITEM HAS NO COMPATIBLE SLOT"
 		return
-	if transfer_to_equipment(_selected_item, _equipment[slot_name], slot_name):
+	if _equip(_selected_item, slot_name):
 		_flash(find_child("Equipment_%s" % slot_name, true, false) as Control)
+
+
+## Equips `item`, sending whatever the slot held back to the bag first (a swap). Refuses, and
+## leaves both where they were, if the bag has no room for the old item.
+func _equip(item: InventoryItem, slot_name: StringName) -> bool:
+	var slot: Inventory = _equipment[slot_name]
+	if slot.has_item(item):
+		return true
+	var previous: Array[InventoryItem] = slot.get_items()
+	for old: InventoryItem in previous:
+		if not transfer_from_equipment(old, GameState.inventory):
+			return false
+	if transfer_to_equipment(item, slot, slot_name):
+		return true
+	for old: InventoryItem in previous:
+		transfer_to_equipment(old, slot, slot_name)
+	return false
 
 
 func _drop_selected() -> void:

@@ -203,6 +203,17 @@ Captures: `docs/qa/panels-u3-2026-11-02/`, before and after side by side from th
 - **Journal, decision 12:** the "Quests entered" column stays hidden until a quest is
   completed; the quests in motion take the full width.
 
+**Playtest fixes (owner playtest, 2026-11-02):**
+
+- **Inventory drag never worked.** The item slot's frame (a PanelContainer, which stops the
+  mouse by default) took every press, so GLoot's draggable wrapper saw no press, click or
+  drag. Dropping on a slot also never equipped anything: GLoot fits the item into the slot's
+  1×1 grid, which refuses anything larger. A drop now equips through the same path as EQUIP,
+  and a filled slot swaps its item back to the bag.
+- **Battle spoils opened under the combat HUD.** Screens opened through UIManager now draw in
+  stack order (`STACK_Z_STEP`), and the loot panel is an opaque ledger window with its own
+  scroll.
+
 ## Owner decisions
 
 Asked inline on 2026-11-01. Answers are recorded below and in `docs/owner-decisions.md` §5.
