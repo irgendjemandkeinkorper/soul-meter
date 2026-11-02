@@ -1,7 +1,8 @@
 # UI rework: audit and plan (2026-11-01)
 
-Status: **APPROVED by the owner, 2026-11-01.** U1 (conversation) and U2 (field HUD) are built,
-awaiting owner review; see "U1 as built" and "U2 as built" below. U3 follows as its own PR.
+Status: **APPROVED by the owner, 2026-11-01.** U1 (conversation), U2 (field HUD) and U3 (panels,
+items 1–5) are built, awaiting owner review; see each "as built" note below. U3 item 6 (chargen
+summary) is draft PR #561 on the chargen stack (#550/#557), which owns those files.
 
 Owner, 2026-11-01: *"we also need to do a heavy rework of all the UI buttons and info — it's so
 busy and doesn't really convey information we need, especially in conversations."* (Asked in a
@@ -168,6 +169,51 @@ party of six.
 6. **Chargen summary:** the summary page scrolls instead of pushing its navigation row off
    screen, and LIKENESS shows the likeness label.
 
+#### U3 as built (2026-11-02)
+
+Captures: `docs/qa/panels-u3-2026-11-02/`, before and after side by side from the same harness
+(`test/manual/ui_audit_capture.gd`, `test_panels`), each panel opened through UIManager over Dom.
+
+- **One shell:** every screen with a shell now puts BACK first in its HUD bar, at the standard
+  width, with the gauge still rightmost (`Screen._add_back_button`). Journal and Standing take
+  the ledger style the sheet and inventory use (stone backdrop, framed panels). #149 itself was
+  already closed: the screens had moved to `_make_shell()`, and BACK placement was the gap left.
+- **Register of Persons:** P opens it (`UIManager.PARTY` now points at the sheet; `party.gd` and
+  its scene are gone). The roster shows names whole beside a bust, with the level on hover.
+  - The header holds the name and identity line, then two tabs (`SheetTab`; the open tab takes
+    the violet edge).
+  - **Summary:** HP and Breath meters with exact numbers, attributes, the calling line, the
+    hero's equipped items and a class Kit's skill, the bio, the companion's "Talk to …" button
+    (FR-505), injuries (the heading only when there are any), and the portrait, Wheel and perks.
+  - **Skills:** the five groups flow side by side as blocks, so the slate reads without
+    scrolling. The +5% column exists only while there are points to spend, and the tab says
+    so ("SKILLS · 2 TO SPEND"). The open tab survives a member switch and a purchase.
+- **Journal:** the thread is its title and one objective line (the "Current thread" and "NEXT
+  OBJECTIVE" headers are gone). Each quest is its title, its objective, and one who/where line.
+  The state shows only when it is not ACTIVE, and the authored description is on the title's
+  tooltip. The page opens at its top.
+- **Standing:** with no faction on record, one line replaces the empty list and sheet. With
+  factions, the list is a fixed-width framed column beside its reasons.
+- **Inventory:** EQUIP and DROP appear once something is selected. The selection is a violet
+  edge-light drawn just outside the tile (`ItemSelection`); it replaces GLoot's white outline.
+  **Correction to finding P6:** the solid bronze tile in the audit capture was not a selection.
+  It is the mythic rarity frame (atlas tile 24, a solid amber fill; the Taubstummer Axe is
+  mythic). Owner, 2026-11-02 (decision 10): mythic becomes an amber edge on the dark well
+  (atlas tile 0), like rare's violet edge.
+- **Journal, decision 12:** the "Quests entered" column stays hidden until a quest is
+  completed; the quests in motion take the full width.
+
+**Playtest fixes (owner playtest, 2026-11-02):**
+
+- **Inventory drag never worked.** The item slot's frame (a PanelContainer, which stops the
+  mouse by default) took every press, so GLoot's draggable wrapper saw no press, click or
+  drag. Dropping on a slot also never equipped anything: GLoot fits the item into the slot's
+  1×1 grid, which refuses anything larger. A drop now equips through the same path as EQUIP,
+  and a filled slot swaps its item back to the bag.
+- **Battle spoils opened under the combat HUD.** Screens opened through UIManager now draw in
+  stack order (`STACK_Z_STEP`), and the loot panel is an opaque ledger window with its own
+  scroll.
+
 ## Owner decisions
 
 Asked inline on 2026-11-01. Answers are recorded below and in `docs/owner-decisions.md` §5.
@@ -183,3 +229,7 @@ Asked inline on 2026-11-01. Answers are recorded below and in `docs/owner-decisi
 | 7 | Build order after U1 (2026-11-02) | **U2 and U3 together:** U2, then U3 straight after, each its own PR, without waiting on #559's review. |
 | 8 | Key-hint strip (U2.1, 2026-11-02) | **Hide after first use.** Each hint goes once its key is pressed; a Settings toggle brings the strip back. |
 | 9 | Party line (U2.2, 2026-11-02) | **Portraits + bars.** A small portrait, an HP bar and a Breath bar per member, sized for six; numbers on hover or focus. |
+| 10 | Mythic rarity frame (U3, 2026-11-02; the audit had misread it as selection) | **Amber edge**, on the dark well like rare's violet edge, instead of the solid amber fill. |
+| 11 | PR #562 and #561 draft strings (2026-11-02) | **Approve all.** |
+| 12 | The journal's empty "Quests entered" column (2026-11-02) | **Hide while empty.** |
+| 13 | After U3 (2026-11-02) | **Wait for the owner's playtest** of U1–U3 before stacking more PRs; notes fold into the open PRs. |

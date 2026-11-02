@@ -106,6 +106,15 @@ static func build() -> Theme:
 	t.set_stylebox("pressed", "ChargenChoiceButton", _notched_style(29, DS.SPACE_4))
 	t.set_stylebox("focus", "ChargenChoiceButton", _notched_style(29, DS.SPACE_4))
 	t.set_stylebox("disabled", "ChargenChoiceButton", _notched_style(30, DS.SPACE_4))
+	# U3: the Register of Persons' Summary / Skills tabs. The open tab is selected, so it
+	# takes the violet edge (DS states); the others sit quiet in iron until hovered.
+	t.add_type("SheetTab")
+	t.set_type_variation("SheetTab", "Button")
+	t.set_stylebox("normal", "SheetTab", _notched_style(28, DS.SPACE_3, DS.SPACE_6))
+	t.set_stylebox("hover", "SheetTab", _notched_style(11, DS.SPACE_3, DS.SPACE_6))
+	t.set_stylebox("pressed", "SheetTab", _notched_style(29, DS.SPACE_3, DS.SPACE_6))
+	t.set_stylebox("hover_pressed", "SheetTab", _notched_style(29, DS.SPACE_3, DS.SPACE_6))
+	t.set_stylebox("focus", "SheetTab", _notched_style(13, DS.SPACE_3, DS.SPACE_6))
 	t.add_type("ChargenPortraitButton")
 	t.set_type_variation("ChargenPortraitButton", "Button")
 	t.set_stylebox("normal", "ChargenPortraitButton", _notched_style(26, DS.SPACE_2))
@@ -266,6 +275,11 @@ static func build() -> Theme:
 	t.add_type("LedgerHistory")
 	t.set_type_variation("LedgerHistory", "VBoxContainer")
 	t.set_constant("separation", "LedgerHistory", DS.SPACE_5)
+	# U3: a journal entry's title, objective and who/where lines sit close together; the
+	# column's own separation spaces one entry from the next.
+	t.add_type("JournalEntry")
+	t.set_type_variation("JournalEntry", "VBoxContainer")
+	t.set_constant("separation", "JournalEntry", DS.SPACE_2)
 
 	# Registry-driven world map. Screen nodes only select these semantic roles;
 	# route and marker geometry remains in the map control and uses DS tokens.
@@ -483,6 +497,17 @@ static func build() -> Theme:
 	t.set_color("font_hover_color", "ItemSlot", DS.PARCHMENT)
 	t.set_color("font_pressed_color", "ItemSlot", DS.PARCHMENT)
 
+	# U3: an inventory selection is violet edge-light drawn just outside the tile, so it
+	# reads apart from a rare item's own thin violet frame (DS: selected = violet edge).
+	var item_selection := StyleBoxFlat.new()
+	item_selection.draw_center = false
+	item_selection.set_border_width_all(2)
+	item_selection.border_color = DS.VIOLET_4
+	item_selection.set_expand_margin_all(2)
+	t.add_type("ItemSelection")
+	t.set_type_variation("ItemSelection", "PanelContainer")
+	t.set_stylebox("panel", "ItemSelection", item_selection)
+
 	# Reusable Badge and GLoot ItemSlot scenes choose only these semantic type
 	# variations; their nodes never carry local StyleBox overrides.
 	for badge_type: String in ["Badge", "BadgeZone", "BadgeWeak", "BadgeResist"]:
@@ -497,7 +522,10 @@ static func build() -> Theme:
 		t.set_type_variation(rarity_type, "PanelContainer")
 	t.set_stylebox("panel", "ItemSlotCommon", _notched_style(21, DS.SPACE_1))
 	t.set_stylebox("panel", "ItemSlotRare", _notched_style(22, DS.SPACE_1))
-	t.set_stylebox("panel", "ItemSlotMythic", _notched_style(24, DS.SPACE_1))
+	# Owner 2026-11-02: mythic is an amber edge on the dark well (atlas tile 0), like rare's
+	# violet edge. It was a solid amber fill (tile 24) that hid the art and competed with the
+	# screen's one bronze accent.
+	t.set_stylebox("panel", "ItemSlotMythic", _notched_style(0, DS.SPACE_1))
 
 	var track := inset.duplicate()
 	track.set_content_margin_all(0)
@@ -704,6 +732,10 @@ static func build_ledger() -> Theme:
 	t.set_constant("h_separation", "LedgerGrid", DS.SPACE_8)
 	t.set_constant("v_separation", "LedgerGrid", DS.SPACE_5)
 	t.set_type_variation("LedgerRow", "HBoxContainer")
+	t.add_type("LedgerFlow")
+	t.set_type_variation("LedgerFlow", "HFlowContainer")
+	t.set_constant("h_separation", "LedgerFlow", DS.SPACE_9)
+	t.set_constant("v_separation", "LedgerFlow", DS.SPACE_8)
 	t.set_constant("separation", "LedgerRow", DS.SPACE_6)
 	t.set_type_variation("LedgerSection", "Label")
 	t.set_font("font", "LedgerSection", load(DS.FONT_DISPLAY))

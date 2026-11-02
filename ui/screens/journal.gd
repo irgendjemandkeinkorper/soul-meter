@@ -7,25 +7,43 @@ const StandingScreen := preload("res://ui/screens/standing.gd")
 const RECENT_CONSEQUENCE_LIMIT := 6
 
 
+func _uses_ledger_style() -> bool:
+	return true
+
+
 func _build() -> void:
 	# Journal reads over the live scene; cover it like every other full-page screen.
 	_add_opaque_backdrop()
-	var vbox := _make_shell_window("Journal")
+	var shell := _make_shell_window("Journal")
+	# The ledger shell does not scroll on its own; the journal's record can outgrow a page.
+	var scroll := ScrollContainer.new()
+	scroll.name = "JournalScroll"
+	# The first focusable is the Standing button at the foot of the record; following focus
+	# would open the journal scrolled past its own thread.
+	scroll.follow_focus = false
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	shell.add_child(_ledger_panel(scroll, "JournalLedger"))
+	var vbox := VBoxContainer.new()
+	vbox.name = "JournalColumn"
+	vbox.theme_type_variation = "LedgerColumn"
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(vbox)
 
-	var thread := _section("Current thread  ·  " + ChapterOneProgress.title())
-	vbox.add_child(thread)
+	# U3: the thread reads like a quest entry, its title and one objective line. It used to
+	# carry a "Current thread" header and a "NEXT OBJECTIVE" header over the same two facts.
+	vbox.add_child(_section(ChapterOneProgress.title()))
 	var next := Label.new()
 	next.name = "NextObjective"
-	next.text = "NEXT OBJECTIVE\n" + ChapterOneProgress.objective()
+	next.text = ChapterOneProgress.objective()
 	next.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	next.theme_type_variation = "HeadingLabel"
 	vbox.add_child(next)
 	var explanation := Label.new()
 	explanation.text = "The record changes only when the world does. This page changes nothing."
 	explanation.theme_type_variation = "MutedLabel"
 	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(explanation)
-	vbox.add_child(HSeparator.new())
 
 	var quest_row := HBoxContainer.new()
 	quest_row.name = "QuestColumns"
@@ -37,7 +55,6 @@ func _build() -> void:
 		quest_row, "CompletedQuests", "Quests entered", _completed_quests(), true
 	)
 
-	vbox.add_child(HSeparator.new())
 	vbox.add_child(_section("What the world remembers"))
 	var consequence_note := Label.new()
 	consequence_note.text = (
@@ -60,7 +77,8 @@ func _build() -> void:
 	)
 	standing_button.name = "OpenStandingButton"
 	standing_button.theme_type_variation = "BronzeButton"
-	_add_back_button(vbox)
+	standing_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_add_back_button(shell)
 
 
 func _add_quest_column(
@@ -72,8 +90,12 @@ func _add_quest_column(
 ) -> void:
 	var panel := PanelContainer.new()
 	panel.name = column_name + "Panel"
+	panel.theme_type_variation = "LedgerInset"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.size_flags_stretch_ratio = 1.0
+	# Owner 2026-11-02: until a quest is completed, "Quests entered" stays hidden and the
+	# quests in motion take the full width. The node stays in the tree for lookups.
+	panel.visible = not (completed and quests.is_empty())
 	row.add_child(panel)
 
 	var column := VBoxContainer.new()
@@ -99,45 +121,50 @@ func _add_quest_column(
 		_add_quest(column, quest)
 
 
+## U3: an entry is its title, one objective line and one who/where line. The state shows
+## only when it is not ACTIVE (it used to print twice, as a badge and as "STATE · Active"),
+## and the authored description waits on the title's tooltip.
 func _add_quest(box: VBoxContainer, quest: Quest) -> void:
 	var entry := VBoxContainer.new()
 	entry.name = "Quest%d" % quest.id
-	entry.theme_type_variation = "LedgerColumn"
+	entry.theme_type_variation = "JournalEntry"
 	entry.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(entry)
 
-	var state := quest_state(quest)
-	var state_label := Label.new()
-	state_label.text = state
-	state_label.theme_type_variation = (
-		"PositiveLabel" if state == "ACTIVE" or state == "READY TO REPORT" else "MutedLabel"
-	)
-	entry.add_child(state_label)
-
+	var head := HBoxContainer.new()
+	head.theme_type_variation = "LedgerRow"
+	entry.add_child(head)
 	var title := Label.new()
+	title.name = "QuestTitle"
 	title.text = quest.quest_name
 	title.theme_type_variation = "HeadingLabel"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	entry.add_child(title)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.tooltip_text = quest.quest_description
+	title.mouse_filter = Control.MOUSE_FILTER_PASS
+	head.add_child(title)
+	var state := quest_state(quest)
+	if state != "ACTIVE":
+		var state_label := Label.new()
+		state_label.name = "QuestState"
+		state_label.text = state
+		state_label.theme_type_variation = (
+			"PositiveLabel" if state == "READY TO REPORT" else "MutedLabel"
+		)
+		head.add_child(state_label)
 
 	var objective := Label.new()
-	objective.text = "OBJECTIVE  ·  " + QuestRegistry.objective_for(quest)
+	objective.name = "QuestObjective"
+	objective.text = QuestRegistry.objective_for(quest)
 	objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	entry.add_child(objective)
 
 	var context := Label.new()
-	context.text = "GIVEN BY  ·  %s\nWHERE  ·  %s\nSTATE  ·  %s" % [
-		quest_giver(quest), quest_location(quest), state.capitalize()
-	]
+	context.name = "QuestContext"
+	context.text = "%s  ·  %s" % [quest_giver(quest), quest_location(quest)]
 	context.theme_type_variation = "EyebrowLabel"
 	context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	entry.add_child(context)
-
-	var description := Label.new()
-	description.text = quest.quest_description
-	description.theme_type_variation = "QuoteLabel"
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	entry.add_child(description)
 
 
 func _add_recent_consequences(container: VBoxContainer) -> void:
