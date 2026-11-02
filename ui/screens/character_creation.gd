@@ -19,8 +19,14 @@ const ATTRIBUTE_MARKS: Dictionary = {
 	"grit": "Gr", "intuition": "In", "decorum": "De",
 }
 const TIER_MARKS: Dictionary = {"untrained": "", "trained": "◆", "expert": "◆◆"}
+## Debug builds only: the stand-in name QUICK START gives a hero left unnamed.
+const QUICK_START_NAME := "Tester"
 
-var mode: Mode = Mode.PLAYER
+## The tavern sets RECRUIT after the screen opens, so a change re-checks the navigation.
+var mode: Mode = Mode.PLAYER:
+	set(value):
+		mode = value
+		_update_navigation()
 ## The in-progress character. Read freely; mutate through the select_*/set_* API so the
 ## screen refreshes.
 var build: ChargenBuild = ChargenBuild.new()
@@ -36,6 +42,7 @@ var _accept_btn: Button
 var _next_btn: Button
 var _back_btn: Button
 var _randomize_btn: Button
+var _quick_start_btn: Button
 var _random_rng := RandomNumberGenerator.new()
 var _step_status_lbl: Label
 var _validation_lbl: Label
@@ -921,6 +928,12 @@ func _build_navigation(parent: VBoxContainer) -> void:
 	_randomize_btn = _menu_button(navigation, tr("RANDOMIZE"), randomize_character)
 	_randomize_btn.name = "RandomizeButton"
 	_randomize_btn.theme_type_variation = "ChargenChoiceButton"
+	# Playtest shortcut, debug builds only like the title's DEV ROOM: roll every leaf,
+	# name the hero and accept in one press. The release export never builds it.
+	if OS.is_debug_build():
+		_quick_start_btn = _menu_button(navigation, "QUICK START", quick_start)
+		_quick_start_btn.name = "QuickStartButton"
+		_quick_start_btn.theme_type_variation = "ChargenChoiceButton"
 	_step_status_lbl = Label.new()
 	_step_status_lbl.theme_type_variation = "StatLabel"
 	_step_status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -969,6 +982,8 @@ func _update_navigation() -> void:
 	_accept_btn.disabled = not build.is_complete()
 	_back_btn.text = "CANCEL ENTRY" if _step_index == 0 else "BACK"
 	_back_btn.disabled = _step_index == 0 and flow_owned
+	if _quick_start_btn != null:
+		_quick_start_btn.visible = mode == Mode.PLAYER and _step_index == 0
 	_step_status_lbl.text = "LEAF %d OF %d  ·  %s" % [
 		_step_index + 1, ChargenSteps.count(), str(ChargenSteps.at(_step_index)["name"]).to_upper(),
 	]
@@ -1018,6 +1033,8 @@ func _wire_focus_for_current_step() -> void:
 	if not _back_btn.disabled:
 		controls.append(_back_btn)
 	controls.append(_randomize_btn)
+	if _quick_start_btn != null and _quick_start_btn.visible and not _quick_start_btn.disabled:
+		controls.append(_quick_start_btn)
 	controls.append(_accept_btn if current_step_id() == &"summary" else _next_btn)
 	if controls.is_empty():
 		return
@@ -1059,6 +1076,20 @@ func randomize_character() -> void:
 	_refresh_all()
 	_rebuild_skill_rows()
 	_wire_focus_for_current_step()
+
+
+## Debug playtest path for the player's own entry: roll every leaf, give an unnamed hero
+## the stand-in name (a typed name stays), show the summary and accept into the game.
+func quick_start() -> void:
+	if not OS.is_debug_build() or mode != Mode.PLAYER:
+		return
+	if _quick_start_btn != null:
+		_quick_start_btn.disabled = true
+	randomize_character()
+	if build.display_name.strip_edges().is_empty():
+		set_display_name(QUICK_START_NAME)
+	go_to_step(&"summary")
+	await accept()
 
 
 func select_ancestry(id: String) -> void:
