@@ -1,7 +1,7 @@
 # Character creation overhaul — plan (2026-11-02)
 
-Status: **plan + mockup for owner approval.** Nothing in `ui/` or `globals/` changes on this
-branch until the owner approves. Stacked on `claude/chargen-summary-fix` (#561).
+Status: **approved by the owner 2026-11-02** ("approve; build it"). Tones in the preview: "show it
+honestly"; the mechanic is owner-list item 27. Stacked on `claude/chargen-summary-fix` (#561).
 
 Mockup: `docs/qa/chargen-overhaul-2026-11-02/01-mockup-calling-tab.jpg`, rendered from
 `mockup.html` in the same folder. The mockup's numbers are taken from the game data (classes,
@@ -97,7 +97,7 @@ refusals. The preview must say exactly what combat will allow.
    example, can also cast 14 spells in other tones. The preview says so ("+14 in other tones")
    rather than implying a lock. The battle bar's fill also ignores tones, so the mockup's hotbar
    (all Khash/Mozh) is illustrative. The real preview shows whatever the fill picks.
-   **Owner question with this PR.**
+   Ruled 2026-11-02: show it honestly; the mechanic is owner-list item 27.
 2. **No class art.** The class tiles use the suggested Major's element glyph. Locksmirk has no
    suggested tones, so its tile shows a dash. Class plates go on the art list.
 3. **Vel and Zhur have no spells.** River-Mother and Lensbearer suggest a Vel minor, and
