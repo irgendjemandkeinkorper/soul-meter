@@ -91,6 +91,37 @@ func test_the_class_demo_as_the_player_sees_it() -> void:
 	else:
 		print("APPROACH none in reach this turn")
 
+	# A class command's flourish, then a tone cast at impact, on the live field.
+	var command: CombatAction = null
+	for _turn: int in 8:
+		controller.end_turn()
+		await runner.simulate_frames(10, 16)
+		await _settle(runner, stage)
+		await _to_ally_turn(runner, stage)
+		command = _first_allowed(controller, true)
+		if command != null or Battle.ended:
+			break
+	if command != null:
+		var used := controller.submit_action(command.id, _target_for(controller, command), {})
+		print("COMMAND ", controller.active_actor().display_name if controller.active_actor() else "", " ", command.id, " ", used.get("allowed", false))
+		print("FLOURISH seen=", await _await_effect(runner, field, "ClassFlourish", 0.25))
+		await _capture("05-class-flourish")
+		await _settle(runner, stage)
+	var cast: CombatAction = null
+	for _turn: int in 8:
+		cast = _first_allowed(controller, false)
+		if cast != null or Battle.ended:
+			break
+		controller.end_turn()
+		await runner.simulate_frames(10, 16)
+		await _settle(runner, stage)
+		await _to_ally_turn(runner, stage)
+	if cast != null:
+		var cast_result := controller.submit_action(cast.id, _target_for(controller, cast), {})
+		print("CAST ", cast.id, " ", cast.element_id, " ", cast_result.get("allowed", false))
+		print("SPELL seen=", await _await_effect(runner, field, "SpellCast", 0.5))
+		await _capture("06-tone-cast-impact")
+		await _settle(runner, stage)
 	for _turn: int in 40:
 		if Battle.ended or _enemy_actions() >= 8:
 			break
@@ -102,6 +133,53 @@ func test_the_class_demo_as_the_player_sees_it() -> void:
 	print("LOG\n", "\n".join(_log))
 	GameFlow._on_battle_exited()
 	await runner.simulate_frames(10, 16)
+
+
+## The active actor's first allowed class command (`class_command`) or tone cast.
+func _first_allowed(controller: CombatController, class_command: bool) -> CombatAction:
+	var actor := controller.active_actor()
+	if actor == null:
+		return null
+	for action: CombatAction in KitAI.kit_actions(actor):
+		var wanted := KitGate.is_class_command(action) if class_command else (
+			action.kind == CombatAction.Kind.CAST or action.spell
+		) and not String(action.element_id).is_empty() and not action.no_damage
+		if not wanted or action.targets_cells():
+			continue
+		if bool(controller.query_action(action, _target_for(controller, action)).get("allowed", false)):
+			return action
+	return null
+
+
+func _target_for(controller: CombatController, action: CombatAction) -> BattleActor:
+	var actor := controller.active_actor()
+	var foes := controller.foes_of(actor)
+	var friends := controller.friends_of(actor)
+	for pool: Array in [foes, friends, [actor]]:
+		for candidate: BattleActor in pool:
+			if candidate.hp > 0 and bool(controller.query_action(action, candidate).get("allowed", false)):
+				return candidate
+	return null
+
+
+## Waits for the overlay to mount an effect named `prefix`, then until that effect's own clock
+## reaches `at` seconds, with time slowed so a slow software-rendered frame cannot skip the beat.
+func _await_effect(runner: GdUnitSceneRunner, field: FieldMap, prefix: String, at: float) -> bool:
+	var overlay := field.combat_overlay()
+	Engine.time_scale = 0.15
+	var seen := false
+	for _frame: int in 400:
+		var effect: Node = null
+		if overlay != null:
+			for child: Node in overlay.get_children():
+				if child.name.begins_with(prefix) and not child.is_queued_for_deletion():
+					effect = child
+		if effect != null and float(effect.get("_elapsed")) >= at:
+			seen = true
+			break
+		await runner.simulate_frames(1, 16)
+	Engine.time_scale = 1.0
+	return seen
 
 
 func _enemy_actions() -> int:

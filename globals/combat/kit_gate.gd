@@ -9,6 +9,12 @@ extends RefCounted
 ## {"blocked_by", "message", "nearest_unblock"} for the caller to wrap as a refusal.
 
 
+## A class command: a class-resource action, or a working that names its patron. KitPreview
+## groups these as the CLASS tiles and the field overlay gives them their class's flourish.
+static func is_class_command(action: CombatAction) -> bool:
+	return not action.class_resource_action.is_empty() or action.effect_payload.has("requires_patron")
+
+
 ## A class-resource action is authored once and offered to every actor; the resource decides
 ## whether the command means anything for its patron.
 static func class_command_refusal(

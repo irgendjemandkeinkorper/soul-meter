@@ -101,6 +101,10 @@ const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
 const SpellCastScript := preload("res://ui/hud/spell_cast_effect.gd")
 const CombatMotionScript := preload("res://ui/hud/combat_motion.gd")
 const CombatPosesScript := preload("res://world/combat_poses.gd")
+const ClassFlourishScript := preload("res://ui/hud/class_flourish.gd")
+## Casts and flourishes on the field draw at this scale: bodies stand ~112 px tall at zoom 1
+## (UnitArt), and a look sized for the HUD stage read as a speck beside them (2026-11-02).
+const FIELD_EFFECT_SCALE := 2.0
 const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
 ## D9: how far past the visible rect an enemy may start its turn and still earn a pan.
 const CAMERA_MARGIN_SCREENS := 1.0
@@ -445,6 +449,9 @@ func _beat_seconds(event: CombatEvent, path: Array) -> float:
 				return SpellCastScript.DURATION + BEAT_READ_SECONDS
 			if HitPulseScript.has_result(event):
 				return BEAT_READ_SECONDS
+			# A class command's flourish gets most of its beat before the next one plays.
+			if _class_flourish_for(event) != "":
+				return ClassFlourishScript.LIFETIME * 0.75
 			if not event.target_id.is_empty():
 				return DS.DUR_FAST * 2.0
 	return 0.0
@@ -750,6 +757,14 @@ func _stop_hp(id: StringName) -> void:
 func _play_action(event: CombatEvent) -> void:
 	var attacker := _node(event.actor_id)
 	var target := _node(event.target_id)
+	var class_id := _class_flourish_for(event)
+	if not class_id.is_empty() and is_instance_valid(attacker) and not _reduced_motion():
+		var flourish := ClassFlourishScript.new()
+		flourish.name = "ClassFlourish"
+		if flourish.setup(class_id, _result_anchor.bind(event.actor_id), FIELD_EFFECT_SCALE):
+			add_child(flourish)
+		else:
+			flourish.free()
 	if is_instance_valid(attacker) and SpellCastScript.is_cast(event):
 		var targets: Array[Callable] = []
 		for cell: Vector2i in FireField.cells_from_data(event.data.get("cells", [])):
@@ -766,7 +781,7 @@ func _play_action(event: CombatEvent) -> void:
 			)
 		var spell := SpellCastScript.new()
 		spell.name = "SpellCast"
-		spell.setup(event, _result_anchor.bind(event.actor_id), targets, 1.0)
+		spell.setup(event, _result_anchor.bind(event.actor_id), targets, FIELD_EFFECT_SCALE)
 		spell.impact_reached.connect(_present_action_result.bind(event), CONNECT_ONE_SHOT)
 		add_child(spell)
 		return
@@ -900,6 +915,22 @@ func _stop_move(id: StringName) -> void:
 	if tween != null and tween.is_valid():
 		tween.kill()
 	_moves.erase(id)
+
+
+## The class whose flourish `event` plays: a class command (KitGate) by an actor whose class
+## resource names a patron. Empty for everything else (strikes, tone casts, moves, enemies).
+func _class_flourish_for(event: CombatEvent) -> String:
+	if event.type != &"action_resolved":
+		return ""
+	var action := CombatActionCatalog.by_id(StringName(str(event.data.get("action_id", ""))))
+	if action == null or not KitGate.is_class_command(action):
+		return ""
+	var actor: Dictionary = _actors.get(event.actor_id, {})
+	var resource: Variant = actor.get("class_resource", {})
+	var patron := str((resource as Dictionary).get("patron_id", "")) if resource is Dictionary else ""
+	if patron.is_empty():
+		return ""
+	return str(ClassCatalog.class_for_patron_value(patron).get("id", ""))
 
 
 ## A fresh pose for `id` on its Sprite2D, as {tween, sprite, base}; empty when motion is off or
