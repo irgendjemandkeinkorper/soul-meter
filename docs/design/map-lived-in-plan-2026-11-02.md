@@ -44,6 +44,23 @@ review.
 | M5 | **Kesselford dressed** | The tool dresses Kesselford with the new kit: route-aware ground patches and a continuous ford road, then clusters. Target about 300–400 dressing nodes, up from 38. Hand-tuned after. The 5v5 demo must still seat both lines and path cleanly. |
 | M6 | **Roll-out** | Other exteriors, then interiors with the 112 px rescale. Each location is its own PR. |
 
+## Built for Kesselford (2026-11-02, PR #565)
+
+M1–M5 are built for Kesselford. Evidence: `docs/qa/lived-in-2026-11-02/` (before/after
+captures, four contact sheets, the scale sheet).
+
+| # | As built | Differs from the plan |
+|---|---|---|
+| M1 | `world/dressing/dressing_shadows.gd` draws one soft contact shadow per visible standing sprite in a dressing layer, generated and old props alike. Sprites taller than 220 px (building facades) are skipped. | — |
+| M2 | `world/dressing/prop_scale.gd`: small 24, knee 42, waist 64, head 108, tall 150 px against the 112 px adult; ground decals by width. The three oversized old props are rescaled: the flood-bell sign ×0.52, the mender stone ×0.71, the chandlery bench ×0.4. | Adds a `tall` class (2.5 m) for landmarks. |
+| M3 | `tools/dress_location.gd` reads the map (walls, building colliders, markers, doors, exits, A* routes from the default spawn), runs the seeded `world/dressing/lived_in_dresser.gd`, and writes `world/dressing/kesselford_lived_in.tscn` (seed 1102). `kesselford.tscn` instances it once. At load `LivedIn` paints its solid cells into Blocking and the waist-high ones into Terrain cover. | Cluster recipes live as constants in the dresser for now. They move into the pattern format when the M6 roll-out needs a second map's recipes. |
+| M4 | 84 sprites, four parallel Codex lanes (`gpt-6-astra`), prepared by the new `tools/prepare_greeble_assets.gd`. Provenance and masters: `assets/generated/sources/kesselford-greebles-2026-11-02/` (`batch.json`; 117 MB of masters, as Dom kept). | A new prepare tool: ground decals need 512×256 canvases and noisy feathered edges, which the prop tool does not do. |
+| M5 | 211 ground decals, 272 standing pieces (79 solid, 11 give cover), 284 contact shadows. A cobble band replaces the eight paving stamps. A wet-bank pass (puddles, mud, reeds) replaces the ten ford-puddle and five mud-edge stamps. | About 480 generated nodes, above the 300–400 target. The 5v5 demo check runs where the demo lives (PR #564 / the playtest merge). |
+
+Known and not changed here: the two brown door placeholders (`WayhouseDoor`,
+`ChandleryDoor`) come from the shared door scene; the bright, high-contrast backdrop still
+competes with small props. Both are candidates for the owner's look review.
+
 ## Asset list for approval (~84)
 
 All painterly, gothic mythopunk, upper-left key light, 256×256 transparent, base-of-object
@@ -153,5 +170,7 @@ implies canon. Notes on paper are blank scraps. **S** = solid (blocks, may give 
 
 ## Open for the owner
 
-1. Approve the asset list above (add, cut or rename lines), which starts M4.
-2. After each batch: approve, or name the sprites to redo, from its contact sheet.
+1. ~~Approve the asset list above~~ — approved 2026-11-02 (`approve all ~84`).
+2. Approve the finished sprites, or name the ones to redo, from the four contact sheets in
+   `docs/qa/lived-in-2026-11-02/`; then the Kesselford look from the before/after captures
+   (owner item 32).
