@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
@@ -37,6 +37,11 @@
 [ext_resource type="Texture2D" uid="uid://bufrvpg6il5kf" path="res://assets/generated/sprites/world/dom-mud-edge--transition.png" id="12_weftlumin"]
 
 [ext_resource type="Texture2D" uid="uid://b6y1xsgnd0k5p" path="res://assets/generated/sprites/world/dom-stone-paving--tile.png" id="13_weftlumin"]
+[ext_resource type="PackedScene" path="res://world/dressing/kesselford_lived_in.tscn" id="40_lived_in"]
+[ext_resource type="Shader" path="res://world/dressing/ground_calm.gdshader" id="41_ground_calm"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ground_calm"]
+shader = ExtResource("41_ground_calm")
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(3000, 40)
@@ -71,6 +76,7 @@ script = ExtResource("0_location")
 script = ExtResource("1_field_map")
 
 [node name="TerrainBackdrop" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_ground_calm")
 z_index = -15
 position = Vector2(1500, 900)
 scale = Vector2(1.6, 1.6)
@@ -129,115 +135,140 @@ script = ExtResource("10_townsfolk")
 [node name="KesselfordDressing" type="Node2D" parent="."]
 y_sort_enabled = true
 
+[node name="LivedIn" parent="KesselfordDressing" instance=ExtResource("40_lived_in")]
+
 [node name="GroundDetails" type="Node2D" parent="KesselfordDressing"]
 z_index = -2
 
 [node name="PuddleFord01" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 160)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord02" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 330)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord03" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 500)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord04" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 670)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord05" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 840)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord06" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 1010)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord07" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 1180)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord08" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 1350)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord09" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 1520)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord10" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2650, 1690)
 scale = Vector2(1.5, 1.1)
 texture = ExtResource("11_weftlumin")
 
 [node name="MudEdge01" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2530, 250)
 texture = ExtResource("12_weftlumin")
 
 [node name="MudEdge02" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2530, 580)
 texture = ExtResource("12_weftlumin")
 
 [node name="MudEdge03" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2530, 910)
 texture = ExtResource("12_weftlumin")
 
 [node name="MudEdge04" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2530, 1240)
 texture = ExtResource("12_weftlumin")
 
 [node name="MudEdge05" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2530, 1570)
 texture = ExtResource("12_weftlumin")
 
 [node name="PavingFordRoad01" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(420, 900)
 scale = Vector2(1, 0.7)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad02" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(676, 900)
 scale = Vector2(1, 0.7)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad03" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(932, 900)
 scale = Vector2(1, 0.7)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad04" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(1188, 900)
 scale = Vector2(1, 0.7)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad05" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(1444, 900)
 scale = Vector2(1, 0.7)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad06" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(1700, 900)
 scale = Vector2(1, 0.7)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad07" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(1956, 900)
 scale = Vector2(1, 0.7)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad08" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
+visible = false
 position = Vector2(2212, 900)
 scale = Vector2(1, 0.7)
 texture = ExtResource("13_weftlumin")
@@ -293,6 +324,7 @@ shape = SubResource("RectangleShape2D_weftlumin1")
 
 [node name="FloodBell" type="StaticBody2D" parent="KesselfordDressing/SolidProps"]
 position = Vector2(1525, 760)
+scale = Vector2(0.52, 0.52)
 
 [node name="Sprite2D" type="Sprite2D" parent="KesselfordDressing/SolidProps/FloodBell"]
 texture = ExtResource("5_weftlumin")
@@ -303,6 +335,7 @@ shape = SubResource("RectangleShape2D_weftlumin2")
 
 [node name="MenderStone" type="StaticBody2D" parent="KesselfordDressing/SolidProps"]
 position = Vector2(1500, 1050)
+scale = Vector2(0.71, 0.71)
 
 [node name="Sprite2D" type="Sprite2D" parent="KesselfordDressing/SolidProps/MenderStone"]
 texture = ExtResource("6_weftlumin")
@@ -324,6 +357,7 @@ shape = SubResource("RectangleShape2D_weftlumin4")
 
 [node name="ChandleryBench" type="StaticBody2D" parent="KesselfordDressing/SolidProps"]
 position = Vector2(2110, 770)
+scale = Vector2(0.4, 0.4)
 
 [node name="Sprite2D" type="Sprite2D" parent="KesselfordDressing/SolidProps/ChandleryBench"]
 texture = ExtResource("8_weftlumin")
