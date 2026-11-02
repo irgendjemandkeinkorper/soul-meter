@@ -522,7 +522,10 @@ static func build() -> Theme:
 		t.set_type_variation(rarity_type, "PanelContainer")
 	t.set_stylebox("panel", "ItemSlotCommon", _notched_style(21, DS.SPACE_1))
 	t.set_stylebox("panel", "ItemSlotRare", _notched_style(22, DS.SPACE_1))
-	t.set_stylebox("panel", "ItemSlotMythic", _notched_style(24, DS.SPACE_1))
+	# Owner 2026-11-02: mythic is an amber edge on the dark well (atlas tile 0), like rare's
+	# violet edge. It was a solid amber fill (tile 24) that hid the art and competed with the
+	# screen's one bronze accent.
+	t.set_stylebox("panel", "ItemSlotMythic", _notched_style(0, DS.SPACE_1))
 
 	var track := inset.duplicate()
 	track.set_content_margin_all(0)

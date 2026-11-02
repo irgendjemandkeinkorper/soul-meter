@@ -180,6 +180,8 @@ func test_a_journal_entry_is_title_objective_and_one_who_where_line() -> void:
 	assert_str(context.text).contains("  ·  ")
 	var title := entry.find_child("QuestTitle", true, false) as Label
 	assert_str(title.tooltip_text).is_not_empty()
+	# Nothing completed yet: the "Quests entered" column waits (owner 2026-11-02).
+	assert_bool((runner.find_child("CompletedQuestsPanel", true, false) as Control).visible).is_false()
 
 
 func test_standing_with_no_factions_is_one_line() -> void:
@@ -218,6 +220,15 @@ func test_inventory_actions_wait_for_a_selection_and_selection_is_a_violet_edge(
 	assert_object(selection).is_not_null()
 	assert_bool(selection.draw_center).is_false()
 	assert_str(selection.border_color.to_html()).is_equal(DS.VIOLET_4.to_html())
+
+
+func test_a_mythic_item_is_framed_by_an_edge_not_a_fill() -> void:
+	# Owner 2026-11-02: amber edge on the dark well, like rare's violet edge.
+	var theme := ThemeBuilder.build()
+	var mythic := theme.get_stylebox("panel", "ItemSlotMythic") as StyleBoxTexture
+	var rare := theme.get_stylebox("panel", "ItemSlotRare") as StyleBoxTexture
+	assert_float((mythic.texture as AtlasTexture).region.position.x).is_equal(0.0)
+	assert_float((rare.texture as AtlasTexture).region.position.x).is_equal(22.0 * 64.0)
 
 
 # --- helpers ------------------------------------------------------------------------------------

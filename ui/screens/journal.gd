@@ -93,6 +93,9 @@ func _add_quest_column(
 	panel.theme_type_variation = "LedgerInset"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.size_flags_stretch_ratio = 1.0
+	# Owner 2026-11-02: until a quest is completed, "Quests entered" stays hidden and the
+	# quests in motion take the full width. The node stays in the tree for lookups.
+	panel.visible = not (completed and quests.is_empty())
 	row.add_child(panel)
 
 	var column := VBoxContainer.new()

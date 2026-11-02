@@ -198,7 +198,10 @@ Captures: `docs/qa/panels-u3-2026-11-02/`, before and after side by side from th
   edge-light drawn just outside the tile (`ItemSelection`); it replaces GLoot's white outline.
   **Correction to finding P6:** the solid bronze tile in the audit capture was not a selection.
   It is the mythic rarity frame (atlas tile 24, a solid amber fill; the Taubstummer Axe is
-  mythic). Rarity framing is unchanged here; it is an open question for the owner.
+  mythic). Owner, 2026-11-02 (decision 10): mythic becomes an amber edge on the dark well
+  (atlas tile 0), like rare's violet edge.
+- **Journal, decision 12:** the "Quests entered" column stays hidden until a quest is
+  completed; the quests in motion take the full width.
 
 ## Owner decisions
 
@@ -215,3 +218,7 @@ Asked inline on 2026-11-01. Answers are recorded below and in `docs/owner-decisi
 | 7 | Build order after U1 (2026-11-02) | **U2 and U3 together:** U2, then U3 straight after, each its own PR, without waiting on #559's review. |
 | 8 | Key-hint strip (U2.1, 2026-11-02) | **Hide after first use.** Each hint goes once its key is pressed; a Settings toggle brings the strip back. |
 | 9 | Party line (U2.2, 2026-11-02) | **Portraits + bars.** A small portrait, an HP bar and a Breath bar per member, sized for six; numbers on hover or focus. |
+| 10 | Mythic rarity frame (U3, 2026-11-02; the audit had misread it as selection) | **Amber edge**, on the dark well like rare's violet edge, instead of the solid amber fill. |
+| 11 | PR #562 and #561 draft strings (2026-11-02) | **Approve all.** |
+| 12 | The journal's empty "Quests entered" column (2026-11-02) | **Hide while empty.** |
+| 13 | After U3 (2026-11-02) | **Wait for the owner's playtest** of U1–U3 before stacking more PRs; notes fold into the open PRs. |
