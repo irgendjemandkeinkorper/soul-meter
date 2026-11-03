@@ -408,6 +408,39 @@ Make the blocking layer the **single source of truth for passability**. Derive t
 twice. Two authoring paths drift apart. The drift stays invisible until a player walks through
 a wall.
 
+**Painted from solids (2026-11-03).** That drift happened. Seven maps placed their buildings,
+rocks, doors and border walls as `StaticBody2D` shapes and left the blocking layer empty:
+
+- Maps: Kesselford, Ashlaren, Hollowmere, Long Verge, Dorthkor Road, Wound Lip and the Lower
+  Trial Hall.
+- Effect: the shapes stopped the walking player, but the grid did not know them, so a fight
+  walked through a facade or off the map.
+
+Those maps are now painted from their shapes:
+
+- **The rule.** `SolidFootprints` (`world/nav/solid_footprints.gd`) decides which ground
+  cells a solid covers:
+  - a solid is a `StaticBody2D` on collision layer 1;
+  - NPCs, a travel exit's `LockedBarrier` and switched-off bodies are left out;
+  - a shape covers the cells whose centres it contains, plus the cell under its own centre.
+- **The paint.** `tools/paint_blocking.gd` writes those cells into each map's `Blocking`
+  layer. The maps are listed in `SolidFootprints.PAINTED_MAPS`, and only the
+  `tile_map_data` line of each scene changes.
+- **The guard.** `test_blocking_paint` fails when a solid is moved, added or removed
+  without repainting.
+
+The shapes stay in the scenes, so walking collision is unchanged; the painted cells add the same
+footprint on the grid. Starting Town, the test room and the structure yard are still painted
+by hand.
+
+Two related fixes:
+
+- **Trial hall gates.** The Lower Trial Hall's three gates are painted shut. A gate lifts its
+  cells while it is open (`BlockingLayer.set_structure_footprint`). A cell a wall also covers
+  stays painted.
+- **Wound Lip ground.** Wound Lip's ground now covers its walled 1800×900 ledge. It was the
+  25×25 default at the origin, so the guard fight there had no floor.
+
 ### 2.4 Y-sorting — the depth rules
 
 Apply three rules. All three are necessary.

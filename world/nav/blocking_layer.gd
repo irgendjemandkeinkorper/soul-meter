@@ -10,6 +10,11 @@ extends TileMapLayer
 ## polygon), so the two can never drift apart. Adding a building means painting cells — never
 ## editing code, and never authoring an obstacle twice.
 ##
+## Maps that place their solids as StaticBody2D shapes are painted from those shapes by
+## `tools/paint_blocking.gd` (the maps in `SolidFootprints.PAINTED_MAPS`). The tool writes the
+## cells into this layer's `tile_map_data`; it does not generate them at runtime.
+## `test_blocking_paint` fails when a shape moves and the paint does not.
+##
 ## The layer is `visible = false`: it exists to be occupied, not seen.
 ##
 ## Cell data is authored in the scene. This script validates that contract and applies
