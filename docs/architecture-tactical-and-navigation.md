@@ -192,6 +192,9 @@ the flag.
 
 ### 1.6 How the grid model uses `AStarGrid2D`
 
+> **Hexes since 2026-11-03:** this section describes the square mode. For what changes on hexes,
+> see §2.2a.
+
 `GridBattlefieldModel` owns one `IsoGrid` (§2.2). It adds four combat concerns:
 
 - **Movement range.** Use an `AStarGrid2D` flood fill. Bound the fill by the CT budget. Use
@@ -273,6 +276,9 @@ bodies, and the procedural blockout does not author them.
 
 ### 2.2 `IsoGrid` — one grid for two layers
 
+> **Hexes since 2026-11-03:** the code below is the square mode. Hex mode keeps the same calls;
+> see §2.2a.
+
 D4 selects this design. It is the highest-leverage item in this document. **One `AStarGrid2D`
 construction serves overworld click-to-move and tactical movement range.** One technology. Two
 consumers. One set of defects.
@@ -338,6 +344,49 @@ CT".
 One system for both layers is worth more than the small gain in smoothness that a navigation
 mesh gives on the overworld. The overworld work therefore reduces the risk of Gate T. Keep
 `NavigationServer2D` available for later. Hub NPC routines (§4, D6) may need crowd avoidance.
+
+### 2.2a Hex mode (2026-11-03, owner item 34)
+
+The game walks and fights on hexes. The project setting `soul_meter/grid/hex` selects the mode;
+`project.godot` sets it to `true`. The square mode in §1.6 and §2.2 is still supported behind
+the same setting. Plan, rulings and slices: `docs/design/hex-grid-plan-2026-11-03.md` (PRs
+#571 to #575).
+
+D1 and D4 hold without change:
+
+- **D1 (one grid on the same map):** walking and fighting share the field's `IsoGrid`. A fight
+  opens on the hexes the party walks on. Each body walks the last step onto its seat
+  (`FieldMap.walk_to_seat`); nobody jumps.
+- **D4 (`IsoGrid` hides its pathfinder):** consumers call the same `IsoGrid` methods. In hex
+  mode `IsoGrid` uses `AStar2D` with explicit edges, because `AStarGrid2D` is square only.
+
+What changes inside the seam:
+
+- **Geometry.** `HexMath` holds axial coordinates, distance, the six directions, lines, rings
+  and ranges. `HexLayout` maps hexes to the 64×32 iso view: pointy-top rows from left to right,
+  squashed 2:1. A hex step is half a cell side on the ground, so there are about four hexes per
+  cell.
+- **Authoring stays square.** The `Ground`, `Blocking` and `Terrain` layers, accord zones and
+  set-piece cells stay in ground cells. A hex is solid if its centre, or any of its corners
+  pulled halfway in, lands on a solid cell. A step is also refused when its walk line crosses a
+  solid cell. A hex reads terrain and zones from the ground cell under its centre
+  (`IsoGrid.square_cell_of`, `FieldMap.ground_cell_of`). An authored cell maps to the hex at
+  its centre (`IsoGrid.cell_at_square`).
+- **One conversion point.** `GridMetric` is the only place that counts steps. Its `distance()`
+  is Chebyshev on squares and hex steps on hexes. Authored numbers stay in cells. A reach of 1
+  stays touching; a reach of 2 or more and every radius double. Do not add a raw Chebyshev
+  distance or a ×2 anywhere else.
+- **§1.6 on hexes:**
+  - Movement range is a flood fill over hex edges. A walk of n hexes costs what ⌈n/2⌉ cells
+    cost.
+  - Line of sight follows `HexMath.line` instead of the Bresenham line.
+  - Occupancy is one body for each hex.
+  - Facing has six directions (`hex_e` … `hex_se`): one FRONT, four SIDE, one BACK.
+- **Presentation.** `FieldGridLayer` draws the hex grid under the fighters during a fight. The
+  "Show hex grid while exploring" setting adds a faint grid while exploring; it is off by
+  default. `CombatOverlay` draws hex outlines and the reach ring.
+- **Tests.** `docs/testing.md` ("Which grid a test runs on") says when a test runs on hexes
+  and when it pins the square grid.
 
 ### 2.3 Obstacle authoring — the missing layer
 

@@ -1,5 +1,9 @@
 # Hex grid plan (2026-11-03)
 
+**Status (2026-11-03): built.** H0–H3b are draft PRs #571–#575 (stacked); H4 is this PR's docs
+and the FR-105a amendment, ratified 2026-11-03. The game walks and fights on hexes
+(`soul_meter/grid/hex = true`). What is still PROVISIONAL is on the owner list, item 34.
+
 **Owner request, 2026-11-02:** "wire the map up to a grid system like Fallout, probably
 hexagonal like they have, to calculate ranges better and have a more seamless transition
 between combat and the exploration/normal map."
