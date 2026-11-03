@@ -103,6 +103,19 @@ func test_the_trial_hall_fight_walks_onto_its_hexes_and_the_grid_fades_in_and_ou
 	assert_float(layer.modulate.a).is_equal_approx(FieldGridLayer.COMBAT_ALPHA, 0.001)
 	assert_int(layer.chunk_count()).is_greater(0)
 	assert_int(layer.z_index).is_equal(-1)
+	# Only the ground under the fight shows it: every fighter inside the masked area, which is far
+	# smaller than the hall.
+	var fighters: Array[Node2D] = [field.player()]
+	for hostile: Hostile in field.hostiles():
+		if hostile.state == Hostile.State.IN_COMBAT:
+			fighters.append(hostile)
+	assert_int(fighters.size()).is_greater(1)
+	for fighter: Node2D in fighters:
+		var ground_distance := ((fighter.global_position - layer.focus()) * Vector2(1.0, 2.0)).length()
+		assert_float(ground_distance).override_failure_message(
+			"%s stands outside the grid's area" % fighter.name
+		).is_less(layer.radius())
+	assert_float(layer.radius()).is_less(HexLayout.CELL_SIDE * 20.0)
 	# The fight ends: the grid fades out.
 	field.set_combat_mode(false)
 	assert_bool(layer.visible).is_true()

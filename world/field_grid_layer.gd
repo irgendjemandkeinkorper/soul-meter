@@ -8,6 +8,10 @@ extends Node2D
 ## FieldMap owns this layer. It sits at z -1: above the painted floor (z -15 to -20) and the ground
 ## details (z -2), below every body and prop (z 0 and up). The grid is drawn in chunks of square
 ## cells, each built once as the view first reaches it, so walking costs nothing per frame.
+##
+## It never covers the whole screen (owner 2026-11-03: the screen was too busy). A mask
+## (`field_grid_mask.gdshader`) shows it only on the ground under the fighters, a little past the
+## farthest of them, or around the lead while exploring, with a soft edge.
 
 const SETTING_SECTION := "display"
 const SETTING_KEY := "hex_grid_exploring"
@@ -17,17 +21,27 @@ const EXPLORE_ALPHA := 0.10
 ## Square cells per chunk side, and how many chunks may be built in one frame.
 const CHUNK_CELLS := 8
 const CHUNKS_PER_FRAME := 6
+## The masked area's radius on the ground, in cell sides: past the farthest fighter in a fight
+## (never less than COMBAT_MIN_CELLS), and around the lead while exploring.
+const COMBAT_MARGIN_CELLS := 3.0
+const COMBAT_MIN_CELLS := 5.0
+const EXPLORE_CELLS := 5.0
+const MaskShader := preload("res://world/field_grid_mask.gdshader")
 
 var _field: FieldMap
 var _grid: IsoGrid
 var _combat := false
 var _fade: Tween
 var _chunks: Dictionary = {}  ## Vector2i chunk -> _Chunk
+var _mask := ShaderMaterial.new()
 
 
 ## One chunk's lines, drawn once; the renderer culls it while it is off screen.
 class _Chunk extends Node2D:
 	var segments := PackedVector2Array()
+
+	func _init() -> void:
+		use_parent_material = true
 
 	func _draw() -> void:
 		if segments.size() >= 2:
@@ -40,6 +54,9 @@ func _init(field: FieldMap = null) -> void:
 	z_index = -1
 	modulate.a = 0.0
 	visible = false
+	_mask.shader = MaskShader
+	material = _mask
+	_set_mask(Vector2.ZERO, HexLayout.CELL_SIDE * COMBAT_MIN_CELLS)
 
 
 func _ready() -> void:
@@ -93,6 +110,7 @@ func _refresh(animated: bool) -> void:
 		visible = true
 		set_process(true)
 		_build_visible_chunks()
+		_update_mask()
 	var reduced := bool(GameState.get_setting("accessibility", "reduced_motion", false))
 	if not animated or reduced or not is_inside_tree():
 		modulate.a = target
@@ -119,6 +137,68 @@ func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
 
 func _process(_delta: float) -> void:
 	_build_visible_chunks()
+	_update_mask()
+
+
+## Where the masked area is centred, in world space.
+func focus() -> Vector2:
+	return _mask.get_shader_parameter("focus")
+
+
+## The masked area's radius on the ground (screen y doubled), in pixels.
+func radius() -> float:
+	return float(_mask.get_shader_parameter("radius"))
+
+
+## Centres the mask on the fighters (the middle of their spread, out past the farthest one) or,
+## while exploring, on the lead.
+func _update_mask() -> void:
+	if not is_instance_valid(_field) or not is_instance_valid(_grid):
+		return
+	var side := _cell_side()
+	var bodies := PackedVector2Array()
+	var lead := _field.player()
+	if is_instance_valid(lead):
+		bodies.append(lead.global_position)
+	if not _combat:
+		if not bodies.is_empty():
+			_set_mask(bodies[0], side * EXPLORE_CELLS)
+		return
+	var followers := _field.party_followers()
+	if followers != null:
+		for follower: PartyFollower in followers.followers():
+			bodies.append(follower.global_position)
+	for hostile: Hostile in _field.hostiles():
+		if is_instance_valid(hostile) and hostile.state == Hostile.State.IN_COMBAT:
+			bodies.append(hostile.global_position)
+	if bodies.is_empty():
+		return
+	var low := bodies[0]
+	var high := bodies[0]
+	for point: Vector2 in bodies:
+		low = low.min(point)
+		high = high.max(point)
+	var center := (low + high) * 0.5
+	var farthest := 0.0
+	for point: Vector2 in bodies:
+		farthest = maxf(farthest, ((point - center) * Vector2(1.0, 2.0)).length())
+	_set_mask(center, maxf(farthest + side * COMBAT_MARGIN_CELLS, side * COMBAT_MIN_CELLS))
+
+
+func _set_mask(center: Vector2, ground_radius: float) -> void:
+	_mask.set_shader_parameter("focus", center)
+	_mask.set_shader_parameter("radius", ground_radius)
+
+
+## A cell side on the ground, in pixels (an iso 64x32 cell is about 45 px a side).
+func _cell_side() -> float:
+	var ground := _field.ground() if is_instance_valid(_field) else null
+	if not is_instance_valid(ground):
+		return HexLayout.CELL_SIDE
+	var tile := Vector2(ground.tile_set.tile_size)
+	if ground.tile_set.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
+		return tile.x / sqrt(2.0)
+	return tile.x
 
 
 ## Builds the missing chunks the view touches, a few per frame.
