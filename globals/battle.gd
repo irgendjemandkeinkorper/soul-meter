@@ -935,6 +935,27 @@ func action_lock(action: CombatAction) -> Dictionary:
 	return action_refusal(action, null, _availability_options(action))
 
 
+## Refusals that only say where the selected target stands: out of reach, out of sight,
+## behind a body or a ledge, not adjacent for a melee blow. They never lock a command, because
+## another foe may be in reach and a far one is a walk-in order (owner 2026-11-02, item 33
+## follow-up: "couldn't use any ranged attacks" — the bar checked every command against the
+## selected enemy only, so at a fight's start every targeted command read as locked).
+const POSITIONAL_REFUSALS: Array[StringName] = [
+	&"blocked_by_range", &"blocked_by_obstacle", &"blocked_by_occupancy", &"blocked_by_elevation",
+]
+
+
+static func is_positional_refusal(refusal: Dictionary) -> bool:
+	if bool(refusal.get("allowed", false)):
+		return false
+	var blocked_by := StringName(str(refusal.get("blocked_by", "")))
+	var unblock: Variant = refusal.get("nearest_unblock", {})
+	var unblock_type := StringName(str((unblock as Dictionary).get("type", ""))) if unblock is Dictionary else &""
+	if unblock_type == &"present_combatant":
+		return false
+	return POSITIONAL_REFUSALS.has(blocked_by) or (blocked_by == &"position" and unblock_type == &"adjacency")
+
+
 func action_lock_reason(action: CombatAction) -> String:
 	var refusal := action_lock(action)
 	return "" if bool(refusal.get("allowed", false)) else str(refusal.get("message", "Action unavailable."))

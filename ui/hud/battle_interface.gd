@@ -9,6 +9,8 @@ const POPOVER_HEIGHT := 560.0
 signal refusal_pulsed(message: String)
 ## Emitted when the breakdown popover opens or closes (the bar's toggle mirrors it).
 signal breakdown_visibility_changed(visible_now: bool)
+## The armed command changed (a bar tile, a key, or the default after a turn).
+signal pointer_action_selected(action_id: StringName)
 
 ## Combat presentation on the field (owner 2026-11-01, "one bar, both modes"):
 ## - consume_event(CombatEvent) fans immutable presentation snapshots to every region.
@@ -300,6 +302,12 @@ func select_pointer_action(action_id: StringName, ability_id: String = "") -> vo
 	_clear_target_preview()
 	act_target_panel.clear_aim_options()
 	_clear_pending()
+	pointer_action_selected.emit(action_id)
+
+
+## The command a click on the field uses (the bar shows its tile armed).
+func selected_pointer_action() -> StringName:
+	return _selected_action_id
 
 
 ## Arms (or with an empty location, cancels) an anatomical aim for the selected action.

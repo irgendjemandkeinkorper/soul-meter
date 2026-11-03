@@ -199,6 +199,13 @@ func test_the_title_opens_the_demo_straight_into_a_fight_that_plays_itself() -> 
 		await get_tree().process_frame
 	print("AUTOPILOT party acts: ", party_acts)
 	assert_int(party_acts.size()).override_failure_message("the party must act on its own").is_greater_equal(4)
+	# Watching, no tile reads as armed or pressable.
+	var bar := hud.combat_bar
+	if bar != null and not Battle.ended:
+		await get_tree().process_frame
+		for button: Button in bar.hotbar_buttons():
+			assert_bool(button.disabled).override_failure_message("%s is pressable while watching" % button.text).is_true()
+			assert_str(button.theme_type_variation).override_failure_message("%s reads as armed while watching" % button.text).is_equal("HudCommandTile")
 	await _return_to_title()
 
 
