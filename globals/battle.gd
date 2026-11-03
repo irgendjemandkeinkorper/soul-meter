@@ -860,13 +860,10 @@ func _line_cell(grid: IsoGrid, centre: Vector2i, index: int) -> Vector2i:
 	return _screen_steps(grid, centre, Vector2.DOWN if index % 2 == 1 else Vector2.UP, rows)
 
 
-## The cell `steps` neighbour-steps from `from` in a screen direction; the field's TileMap owns
-## the projection, so this holds for any grid transform.
+## The cell `steps` cell-steps from `from` in a screen direction; the field's TileMap owns
+## the projection, so this holds for any grid transform. On hexes it covers the same ground.
 func _screen_steps(grid: IsoGrid, from: Vector2i, direction: Vector2, steps: int) -> Vector2i:
-	var cell := from
-	for _step in steps:
-		cell = grid.screen_direction_to_neighbor(cell, direction)
-	return cell
+	return grid.screen_steps(from, direction, steps)
 
 
 func _current_field_map() -> FieldMap:

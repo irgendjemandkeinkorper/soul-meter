@@ -126,10 +126,13 @@ const TURN_CUE_SECONDS := DS.DUR_SLOW
 ## #281 G9: a downed body is dimmed, not hidden; it must stay clearly visible on the field.
 const KO_TINT := Color(0.6, 0.6, 0.66, 0.8)
 ## #281 G7: CombatEvent facing ids are grid directions (GridBattlefieldModel._ORDER, by
-## atan2 over the cell delta), not screen directions.
+## atan2 over the cell delta), not screen directions. Hex facings (`hex_*`, owner item 34) are
+## the six hex steps of `HexMath.DIRECTIONS`.
 const FACING_STEPS := {
 	"e": Vector2i(1, 0), "se": Vector2i(1, 1), "s": Vector2i(0, 1), "sw": Vector2i(-1, 1),
 	"w": Vector2i(-1, 0), "nw": Vector2i(-1, -1), "n": Vector2i(0, -1), "ne": Vector2i(1, -1),
+	"hex_e": Vector2i(1, 0), "hex_ne": Vector2i(1, -1), "hex_nw": Vector2i(0, -1),
+	"hex_w": Vector2i(-1, 0), "hex_sw": Vector2i(-1, 1), "hex_se": Vector2i(0, 1),
 }
 
 
@@ -1026,20 +1029,18 @@ func _read_fields(snapshot: Dictionary) -> void:
 		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
 		if not (center is Vector2i):
 			continue
-		var radius := int((field as Dictionary).get("radius", 0))
-		for dy: int in range(-radius, radius + 1):
-			for dx: int in range(-radius, radius + 1):
-				_light_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+		var radius := GridMetric.radius(int((field as Dictionary).get("radius", 0)))
+		for cell: Vector2i in GridMetric.within(center as Vector2i, radius):
+			_light_cells[cell] = true
 	for field: Variant in light.get("shrouds", []):
 		if not (field is Dictionary):
 			continue
 		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
 		if not (center is Vector2i):
 			continue
-		var radius := int((field as Dictionary).get("radius", 0))
-		for dy: int in range(-radius, radius + 1):
-			for dx: int in range(-radius, radius + 1):
-				_shroud_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+		var radius := GridMetric.radius(int((field as Dictionary).get("radius", 0)))
+		for cell: Vector2i in GridMetric.within(center as Vector2i, radius):
+			_shroud_cells[cell] = true
 
 
 func _draw() -> void:
