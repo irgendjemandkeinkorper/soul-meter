@@ -815,11 +815,11 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	var lines := bool(formation.get("lines", false)) and grid != null
 	var gap := int(formation.get("gap", SET_PIECE_ENEMY_SCREEN_STEPS))
 	var desired: Array[Vector2i] = []
-	for index in allies.size():
-		desired.append(
-			_line_cell(grid, live_cells[0], index) if lines
-			else live_cells[mini(index, live_cells.size() - 1)]
-		)
+	if lines:
+		desired = _open_line(model, grid, live_cells[0], allies.size(), {})
+	else:
+		for index in allies.size():
+			desired.append(live_cells[mini(index, live_cells.size() - 1)])
 	var placement := model.resolve_placement(desired)
 	if not bool(placement.get("allowed", false)):
 		return
@@ -834,9 +834,15 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 		_screen_steps(grid, anchor, Vector2.RIGHT, gap) if grid != null
 		else anchor + SET_PIECE_ENEMY_OFFSET
 	)
+	var enemy_line: Array[Vector2i] = []
+	if lines:
+		var centre := model.seat_near(first_seat, taken)
+		if not bool(centre.get("ok", false)):
+			return
+		enemy_line = _open_line(model, grid, centre["cell"], enemies.size(), taken)
 	for index in enemies.size():
 		var wanted: Vector2i = (
-			_line_cell(grid, first_seat, index) if lines
+			enemy_line[index] if lines
 			else _screen_steps(grid, first_seat, Vector2.DOWN, SET_PIECE_ENEMY_ROW_STEPS * index)
 			if grid != null else first_seat + Vector2i(0, index)
 		)
@@ -853,11 +859,42 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 ## steps>}`; the 5v5 class demo does): each side stands in a screen column centred on its first
 ## seat, growing from the middle (below, above, below...), with the enemy column `gap` screen
 ## steps right of the party's anchor. Without it the seating above is unchanged.
-func _line_cell(grid: IsoGrid, centre: Vector2i, index: int) -> Vector2i:
-	if index == 0:
-		return centre
-	var rows := ceili(index / 2.0) * SET_PIECE_ENEMY_ROW_STEPS
-	return _screen_steps(grid, centre, Vector2.DOWN if index % 2 == 1 else Vector2.UP, rows)
+##
+## A column stops growing in a direction at the first wall on its way or at a seat it cannot
+## take, and grows on the other side instead, so nobody is seated inside a building or behind
+## it (2026-11-03: once Kesselford's walls were painted, the demo's party column ran into the
+## Wayhouse front, and the whole seating fell back to the model's default seats, off the map).
+## When both directions close early, the rest repeat the centre and the caller's nearest-free
+## search seats them around it. `centre` is a free cell.
+func _open_line(
+	model: GridBattlefieldModel, grid: IsoGrid, centre: Vector2i, count: int, taken: Dictionary
+) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = [centre]
+	var held := taken.duplicate()
+	held[centre] = true
+	var reached := {Vector2.DOWN: 0, Vector2.UP: 0}  # direction -> screen steps cleared so far
+	var index := 1
+	while cells.size() < count and not reached.is_empty():
+		var direction := Vector2.DOWN if index % 2 == 1 else Vector2.UP
+		index += 1
+		if not reached.has(direction):
+			continue
+		var steps: int = reached[direction] + SET_PIECE_ENEMY_ROW_STEPS
+		var open := true
+		for step in range(int(reached[direction]) + 1, steps + 1):
+			if grid.is_wall(_screen_steps(grid, centre, direction, step)):
+				open = false
+				break
+		var cell := _screen_steps(grid, centre, direction, steps)
+		if not open or model.seat_near(cell, held).get("cell", null) != cell:
+			reached.erase(direction)
+			continue
+		cells.append(cell)
+		held[cell] = true
+		reached[direction] = steps
+	while cells.size() < count:
+		cells.append(centre)
+	return cells
 
 
 ## The cell `steps` cell-steps from `from` in a screen direction; the field's TileMap owns
