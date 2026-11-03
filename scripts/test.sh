@@ -11,6 +11,9 @@ export XDG_DATA_HOME="$test_data_dir"
 # test_combat_lab_inert) read this variable directly and have no fallback: left unset, they
 # write into the working directory (an untracked weftlumin-console/ in the repo root).
 export SOUL_METER_TEST_DATA_DIR="$test_data_dir"
+# Every fight draws fresh dice in play (owner 2026-11-02, item 33); suites keep seed 0 so
+# their historical rolls stay put. A suite that needs other dice sets `FightDice.forced_seed`.
+export SOUL_METER_FIXED_DICE="${SOUL_METER_FIXED_DICE:-1}"
 
 # Some display backends emit errors before gdUnit4 starts when XDG_RUNTIME_DIR is
 # absent. Give test runs a private, permission-correct runtime directory while

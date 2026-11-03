@@ -1,7 +1,8 @@
 class_name ClassDemo
 extends RefCounted
 ## The 5v5 class demo (owner ruling 2026-11-02: "a demo of 5 v 5 battle with 1 of each class";
-## "you lead 5, AI runs 5"). Ten members, one per class, built through ChargenBuild so each is
+## then, after the playtest, "I'd like the 5v5 demo to be fully ai automated": KitAI runs both
+## fives and the player watches). Ten members, one per class, built through ChargenBuild so each is
 ## a legal character, deterministically (no rolls), and named for their class: a demo invents
 ## no names. Debug builds only; it never touches the player's party or save.
 ##
@@ -11,8 +12,11 @@ extends RefCounted
 ## Each member wears a different chargen likeness (the ten LIKENESSES, in class order) so the
 ## ten bodies on the field can be told apart; there is no per-class art yet.
 
-const PLAYER_SIDE: Array[String] = ["ironbrand", "river-mother", "lensbearer", "mirrorblade", "oathclock"]
-const AI_SIDE: Array[String] = ["husk-bearer", "flamebinder", "stormbearer", "locksmirk", "threadwalker"]
+## Oathclock and Threadwalker swapped sides after the AI-vs-AI sweep (2026-11-02): with both
+## Kindle users (Ironbrand, Oathclock) on one side, that side won 18 of 20 seeded fights; split,
+## the default sides went 4-6 over ten seeds. PROVISIONAL until the balance pass.
+const PLAYER_SIDE: Array[String] = ["ironbrand", "river-mother", "lensbearer", "mirrorblade", "threadwalker"]
+const AI_SIDE: Array[String] = ["husk-bearer", "flamebinder", "stormbearer", "locksmirk", "oathclock"]
 const ENCOUNTER_ID := &"debug_class_demo_5v5"
 ## Screen steps between the two lines (the first enemy seat is this many steps right of the lead).
 const FORMATION_GAP := 5
@@ -63,6 +67,11 @@ static func encounter_definition() -> Dictionary:
 		"id": String(ENCOUNTER_ID), "display_name": "Class demo", "enemies": rows, "spoils": [],
 		# Two facing lines with room between them, so the first round is a walk-in, not a scrum.
 		"formation": {"lines": true, "gap": FORMATION_GAP},
+		# Owner 2026-11-02: "the 5v5 demo [is] fully ai automated" — KitAI runs both fives.
+		"autoplay": true,
+		# A fair mirror: the party-only Balance band reaches both fives and speed ties alternate,
+		# so the winner is the fight's to decide, not the seating's.
+		"even_sides": true,
 	}
 
 

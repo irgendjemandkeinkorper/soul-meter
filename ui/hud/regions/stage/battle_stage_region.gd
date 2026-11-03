@@ -457,12 +457,18 @@ func clear_pointer() -> void:
 
 
 func pointer_input_available() -> bool:
+	return _pointer_turn_available and presentation_idle()
+
+
+## True once nothing on the field is still being presented: no body moving, no beat queued, no
+## cast in flight. Autoplay waits on this so every AI step is seen before the next one.
+func presentation_idle() -> bool:
 	if is_instance_valid(_field_overlay):
-		return _pointer_turn_available and not _field_overlay.is_animating()
+		return not _field_overlay.is_animating()
 	for effect: Node in _fx_layer.get_children():
 		if effect.get_script() == SpellCastScript and effect.is_animating():
 			return false
-	return _pointer_turn_available and Time.get_ticks_msec() >= _input_locked_until_msec
+	return Time.get_ticks_msec() >= _input_locked_until_msec
 
 
 func set_pointer_turn_available(available: bool) -> void:

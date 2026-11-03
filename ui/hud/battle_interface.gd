@@ -33,6 +33,9 @@ signal breakdown_visibility_changed(visible_now: bool)
 var cursor_readout: Label
 var _controller: CombatController
 var _selected_action_id: StringName = &"strike"
+## Seconds autoplay lets a settled field rest before the next AI step (PROVISIONAL pacing).
+const AUTOPLAY_BEAT_SECONDS := 0.45
+var _autoplay_wait := 0.0
 var _selected_ability_id := ""
 ## Cell working in progress: cells picked so far, and the creature a contract card bound.
 var _pending_cells: Array[Vector2i] = []
@@ -79,6 +82,7 @@ func consume_event(event: CombatEvent) -> void:
 	if snapshot_value is Dictionary and (snapshot_value as Dictionary).has("state"):
 		stage.set_pointer_turn_available(
 			int((snapshot_value as Dictionary).get("state")) == CombatController.State.ALLY_TURN
+			and not autoplaying()
 		)
 	stage.consume_event(event)
 	weather_chip.consume_event(event)
@@ -142,6 +146,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func end_turn_allowed() -> bool:
 	if _controller == null or _controller.state != CombatController.State.ALLY_TURN:
 		return false
+	if autoplaying():
+		return false
 	if not Battle.session_active or Battle.ended or combat_bar.outcome_shown():
 		return false
 	var focus := get_viewport().gui_get_focus_owner()
@@ -150,6 +156,32 @@ func end_turn_allowed() -> bool:
 	if focus != null and tactical_popover.is_ancestor_of(focus):
 		return false
 	return true
+
+
+# --- autoplay (owner 2026-11-02: the 5v5 demo is "fully ai automated") ----------------------
+
+
+## True when KitAI plays the party's turns too: the player watches and has no orders to give.
+func autoplaying() -> bool:
+	return _controller != null and _controller.autoplay_allies
+
+
+## Paces autoplay at the presentation's speed: once the field has shown the last beat, wait one
+## short reading beat, then take the next KitAI step of the party's turn.
+func _process(delta: float) -> void:
+	if not autoplaying() or _controller.state != CombatController.State.ALLY_TURN:
+		_autoplay_wait = 0.0
+		return
+	if not Battle.session_active or Battle.ended or combat_bar.outcome_shown():
+		return
+	if not stage.presentation_idle():
+		_autoplay_wait = 0.0
+		return
+	_autoplay_wait += delta
+	if _autoplay_wait < AUTOPLAY_BEAT_SECONDS:
+		return
+	_autoplay_wait = 0.0
+	_controller.autoplay_step()
 
 
 # --- layout around the field HUD's bar ------------------------------------------------------
@@ -222,7 +254,11 @@ func bind_controller(controller: CombatController) -> void:
 	stage._set_movement(controller.snapshot().get("movement", {}) if controller != null else {})
 	stage.set_pointer_turn_available(
 		controller != null and controller.state == CombatController.State.ALLY_TURN
+		and not autoplaying()
 	)
+	_autoplay_wait = 0.0
+	if autoplaying():
+		combat_bar.append_cue(tr("AI VS AI  ·  WATCHING"))
 
 
 func _inspect_injury(location: String) -> void:

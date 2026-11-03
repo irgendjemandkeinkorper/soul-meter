@@ -508,6 +508,8 @@ func _actor_name(event: CombatEvent) -> String:
 
 
 func _use_action(action_id: StringName) -> void:
+	if _watching():
+		return
 	_note_use(action_id)
 	var action: CombatAction = null
 	for candidate: CombatAction in Battle.available_actions():
@@ -527,6 +529,10 @@ func _use_action(action_id: StringName) -> void:
 		if action.requires_enemy_target():
 			_interface.select_pointer_action(action_id)
 	Battle.use_action(action_id)
+
+
+func _watching() -> bool:
+	return is_instance_valid(_interface) and _interface.autoplaying()
 
 
 func _open_weakness_dialog() -> void:
@@ -736,8 +742,17 @@ func _refresh() -> void:
 	else:
 		_more_button.text = tr("MORE · %d") % spare.size()
 
+	# Autoplay (owner 2026-11-02, AI vs AI): the bar shows the acting unit's kit, but the
+	# player has no orders to give, so nothing on it can be pressed.
+	var watching := _watching()
+	if watching:
+		for button: Button in _action_buttons:
+			button.disabled = true
+		_more_button.visible = false
+		_end_turn_button.disabled = true
+		_withdraw_button.disabled = true
 	var target := Battle.current_target()
-	_target_button.visible = Battle.living_enemies().size() > 1 and not outcome_shown()
+	_target_button.visible = Battle.living_enemies().size() > 1 and not outcome_shown() and not watching
 	_target_button.disabled = Battle.living_enemies().size() <= 1
 
 	if is_instance_valid(_interface):

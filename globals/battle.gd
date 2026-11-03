@@ -162,6 +162,9 @@ func start(encounter: Variant) -> void:
 				"Encounter '%s' authors unknown weather '%s'; battle starts calm."
 				% [encounter_id, weather_default]
 			)
+	controller.autoplay_allies = bool(_definition.get("autoplay", false))
+	controller.even_sides = bool(_definition.get("even_sides", false))
+	controller.fight_seed = FightDice.draw()
 	controller.start(allies, enemies, encounter_id)
 	if not _pending_class_resources.is_empty():
 		controller.restore_class_resources(_pending_class_resources)
@@ -268,6 +271,7 @@ func start_session(field: FieldMap, first: Hostile) -> Dictionary:
 		var weather_result := controller.configure_weather(weather)
 		if not bool(weather_result.get("allowed", false)):
 			push_warning("Field authors unknown weather '%s'; the session starts calm." % weather)
+	controller.fight_seed = FightDice.draw()
 	controller.start(allies, enemies, encounter_id)
 	if not _pending_class_resources.is_empty():
 		controller.restore_class_resources(_pending_class_resources)
@@ -334,9 +338,10 @@ func admit(hostile: Hostile) -> Dictionary:
 ## An authored encounter, fought on the field it is handed (#281 D5). The grid is the field's,
 ## the party is seated where it stands with the enemies across from it (`_seat_set_piece`),
 ## and every encounter enemy gets a Hostile body spawned for the fight
-## (`_spawn_set_piece_hostiles`). Whether deployment opens afterwards is the caller's call
-## (F0 D3 as read 2026-10-02): the Trial Hall sends `enter_set_piece` and keeps its slate, a
-## journey ambush sends `enter_battle` because an ambush gives no time to deploy. Either way
+## (`_spawn_set_piece_hostiles`). Whether deployment opens afterwards is the caller's call.
+## Owner 2026-11-02 (item 33, "drop it on the map"): a fight on a map starts where everyone
+## stands, so the Trial Hall and the class demo send `enter_battle` like a journey ambush; the
+## `enter_set_piece` deployment chain stays in the chart, unused by on-map fights. Either way
 ## everything that reads `session_active` sees a set-piece the same way it sees an ambient
 ## fight. `start(encounter_id)` stays underneath as the internal composition builder; no game
 ## scene calls it directly.

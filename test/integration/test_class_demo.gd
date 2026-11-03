@@ -9,6 +9,7 @@ const INTRO_STATE_PATH := "StateChart/Root/Menus/IntroNarration"
 const LOADING_STATE_PATH := "StateChart/Root/Playing/Loading"
 const ACTIVE_STATE_PATH := "StateChart/Root/Playing/Active"
 const PAUSED_STATE_PATH := "StateChart/Root/Playing/Paused"
+const BATTLE_STATE_PATH := "StateChart/Root/Playing/Battle"
 
 var _game_state_before: Dictionary = {}
 var _loading_handler_was_connected := false
@@ -30,6 +31,7 @@ func after_test() -> void:
 	if GameFlow.class_demo_active():
 		GameFlow._end_class_demo()
 	EncounterCatalog.clear_debug_encounter(ClassDemo.ENCOUNTER_ID)
+	FightDice.forced_seed = -1
 	GameState.from_dict(_game_state_before)
 	GameFlow._target_scene = _target_scene_before
 	GameFlow._target_spawn_id = _target_spawn_before
@@ -151,6 +153,119 @@ func test_the_arena_seats_ten_and_each_enemy_wears_its_members_body() -> void:
 	scene.queue_free()
 
 
+## Owner 2026-11-02: "I'd like the 5v5 demo to be fully ai automated and it shouldn't be a
+## predetermined outcome." KitAI plays both fives to an end; a fight's seed replays it exactly,
+## and another seed plays it differently (hits, dodges and criticals land elsewhere).
+func test_the_demo_plays_itself_and_fresh_dice_change_the_fight() -> void:
+	var first := await _autoplayed_fight(101)
+	var replay := await _autoplayed_fight(101)
+	var other := await _autoplayed_fight(202)
+	print("DEMO 101: %s, %d beats; 202: %s, %d beats" % [first["result"], first["log"].size(), other["result"], other["log"].size()])
+	for fight: Dictionary in [first, other]:
+		assert_bool(bool(fight["ended"])).override_failure_message("the fight must play to an end").is_true()
+		assert_int((fight["log"] as Array).size()).is_greater(10)
+		assert_int(int(fight["player_orders"])).override_failure_message("autoplay gives no player turn back").is_equal(0)
+	assert_array(replay["log"]).is_equal(first["log"])
+	assert_array(other["log"]).is_not_equal(first["log"])
+
+
+## The real path: the title opens the demo straight into the fight (owner 2026-11-02, item 33:
+## no deployment screens on a map), and the HUD's autopilot plays the party's turns with no
+## input at all, at the presentation's pace.
+func test_the_title_opens_the_demo_straight_into_a_fight_that_plays_itself() -> void:
+	await _return_to_title()
+	assert_bool(GameFlow.start_class_demo()).is_true()
+	var deadline := Time.get_ticks_msec() + 30000
+	while Time.get_ticks_msec() < deadline and not (Battle.session_active and _state_is_active(BATTLE_STATE_PATH)):
+		await get_tree().process_frame
+	assert_bool(_state_is_active(BATTLE_STATE_PATH)).override_failure_message("the fight must open in place").is_true()
+	assert_object(UIManager.get_node_or_null("Deployment")).override_failure_message("no deployment screen").is_null()
+	var hud: BattleInterface = null
+	while Time.get_ticks_msec() < deadline and hud == null:
+		hud = get_tree().root.find_child("BattleInterface", true, false) as BattleInterface
+		await get_tree().process_frame
+	assert_object(hud).is_not_null()
+	assert_bool(hud.autoplaying()).is_true()
+	assert_bool(hud.end_turn_allowed()).override_failure_message("the player has no orders to give").is_false()
+	var party_ids := {}
+	for ally: BattleActor in Battle.allies:
+		party_ids[ally.combat_id] = true
+	var party_acts: Array[String] = []
+	Battle.controller.event_emitted.connect(func(event: CombatEvent) -> void:
+		if event.type == &"action_resolved" and party_ids.has(event.actor_id):
+			party_acts.append(str(event.data.get("action_id", ""))))
+	deadline = Time.get_ticks_msec() + 40000
+	while Time.get_ticks_msec() < deadline and party_acts.size() < 4 and not Battle.ended:
+		await get_tree().process_frame
+	print("AUTOPILOT party acts: ", party_acts)
+	assert_int(party_acts.size()).override_failure_message("the party must act on its own").is_greater_equal(4)
+	await _return_to_title()
+
+
+func test_fresh_dice_are_drawn_unless_a_test_pins_them() -> void:
+	FightDice.forced_seed = 7
+	assert_int(FightDice.draw()).is_equal(7)
+	FightDice.forced_seed = -1
+	var fixed := OS.get_environment("SOUL_METER_FIXED_DICE")
+	OS.set_environment("SOUL_METER_FIXED_DICE", "1")
+	assert_int(FightDice.draw()).is_equal(0)
+	OS.set_environment("SOUL_METER_FIXED_DICE", "0")
+	var drawn := {}
+	for i in 6:
+		drawn[FightDice.draw()] = true
+	OS.set_environment("SOUL_METER_FIXED_DICE", fixed)
+	assert_bool(drawn.has(0)).is_false()
+	assert_int(drawn.size()).is_greater(4)
+
+
+## One whole demo fight under autoplay, with the dice pinned to `fight_seed`: what resolved, in
+## order, and how it ended. `player_orders` counts ally turns autoplay handed back unplayed.
+func _autoplayed_fight(fight_seed: int) -> Dictionary:
+	# Each fight starts from the same world (the Soul Gauge a cast spends lives in GameState).
+	var world_before := GameState.to_dict().duplicate(true)
+	FightDice.forced_seed = fight_seed
+	assert_bool(ClassDemo.prepare()).is_true()
+	var scene: Node = (load(GameFlow.CLASS_DEMO_SCENE) as PackedScene).instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	SaveGame.pending_spawn_id = GameFlow.CLASS_DEMO_SPAWN
+	SaveGame.has_pending_player_position = false
+	SaveGame.apply_pending_location(scene)
+	await get_tree().process_frame
+	var field := scene.find_child("FieldMap", true, false) as FieldMap
+	var log: Array[String] = []
+	var opened := Battle.start_set_piece(field, ClassDemo.ENCOUNTER_ID)
+	assert_bool(bool(opened.get("allowed", false))).override_failure_message(str(opened)).is_true()
+	var controller := Battle.controller
+	assert_bool(controller.autoplay_allies).is_true()
+	assert_int(controller.fight_seed).is_equal(fight_seed)
+	controller.event_emitted.connect(func(event: CombatEvent) -> void:
+		if event.type == &"action_resolved":
+			var resolution: Dictionary = event.data.get("resolution", {})
+			log.append("%s>%s %s d%d h%s c%s" % [
+				event.actor_id, event.target_id, event.data.get("action_id", ""),
+				int(event.data.get("damage", 0)), resolution.get("hit", "-"), resolution.get("critical", "-"),
+			]))
+	var player_orders := 0
+	var steps := 0
+	while not Battle.ended and steps < 4000:
+		if not controller.autoplay_step():
+			player_orders += 1
+			break
+		steps += 1
+	var result := {
+		"ended": Battle.ended, "log": log, "player_orders": player_orders,
+		"result": BattleResult.State.keys()[Battle.last_result.state] if Battle.last_result != null else "?",
+	}
+	if Battle.session_active:
+		Battle._end_session(null)
+	scene.queue_free()
+	await get_tree().process_frame
+	EncounterCatalog.clear_debug_encounter(ClassDemo.ENCOUNTER_ID)
+	GameState.from_dict(world_before)
+	return result
+
+
 func _party_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for member: PartyMember in GameState.party:
@@ -190,7 +305,8 @@ func _return_to_title() -> void:
 	if _state_is_active(LOADING_STATE_PATH):
 		GameFlow.send_event("level_ready")
 		await get_tree().process_frame
-	if _state_is_active(ACTIVE_STATE_PATH):
+	# Mid-fight, as a player would: pause (Esc) out of the battle, then the main menu.
+	if _state_is_active(ACTIVE_STATE_PATH) or _state_is_active(BATTLE_STATE_PATH):
 		GameFlow.send_event("pause")
 		await get_tree().process_frame
 	if _state_is_active(PAUSED_STATE_PATH):

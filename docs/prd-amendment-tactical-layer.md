@@ -432,7 +432,7 @@ Audited 2026-08-05, because playtester recruitment reads like it gates everythin
 
 | Criterion | Needs outside humans? | How it is actually evidenced |
 |---|---|---|
-| 1 five encounters × four archetypes | No | Integration tests plus self-play for clearability |
+| 1 five encounters × four archetypes | No | Integration tests plus self-play for clearability. Since owner item 33 (2026-11-03: fresh dice every fight, provisional crits) clearability is a win rate: each build wins at least 80% of 40 seeded fights per encounter (`test_gate_t1_clearability.gd`) |
 | 2 positional-depth | **Borderline** | Scripted AI comparison can demonstrate it; a human read is more convincing, not required |
 | 3 three orphaned P0s | No | Headless |
 | 4 CT-queue integrity | No | Headless, ≥8 combatants |

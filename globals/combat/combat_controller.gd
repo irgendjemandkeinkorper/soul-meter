@@ -173,6 +173,19 @@ var _actions: Dictionary = {}
 var _abilities: Dictionary = {}
 var _tactical_tables: TacticalTables
 var _sequence := 0
+## This fight's dice (owner 2026-11-02, item 33: fresh dice every fight). Battle sets it from
+## `FightDice.draw()` before `start()`; the controller itself never draws (it stays RNG-free).
+## It salts every roll key in `forecast_context()`, so forecast and commit still agree; 0 keeps
+## the historical keys, which is what a controller built directly (a test) rolls.
+var fight_seed := 0
+## AI vs AI (owner 2026-11-02: "I'd like the 5v5 demo to be fully ai automated"). When set, the
+## party's turns are KitAI's as well: the HUD's autopilot calls `autoplay_step()` once the field
+## has finished presenting, so every beat is still seen. Battle sets it from the encounter.
+var autoplay_allies := false
+## A fair mirror match (the AI-vs-AI demo). Two party-side edges are evened: the Balance band's
+## party-only effects reach both sides, and speed ties alternate sides instead of seating the
+## whole party first, with the fight's dice choosing who leads. Ordinary fights leave it off.
+var even_sides := false
 ## Seam v2 (#223 follow-up): effects queued by class resources for a later scheduler boundary.
 ## Fired by `_fire_due_deferred()` from `_drive_scheduler()` — the one place turns advance — and
 ## applied through `_apply_resolution_writes()`, the same path Resolution writes take.
@@ -452,7 +465,7 @@ func start(
 	_attach_class_resources(allies)
 	_attach_class_resources(enemies)
 	battlefield.setup(allies, enemies)
-	scheduler.setup(allies + enemies)
+	scheduler.setup(_even_seating() if even_sides else allies + enemies)
 	_reset_tile_states()
 	_apply_balance_band(false)
 	state = State.ROUND_START
@@ -1007,6 +1020,7 @@ func snapshot() -> Dictionary:
 	return {
 		"state": state,
 		"encounter_id": _encounter_id,
+		"fight_seed": fight_seed,
 		"round": round_number,
 		"balance": balance,
 		"revealed_until_round": revealed_until_round,
@@ -1444,12 +1458,15 @@ static func calculate_damage(
 			"CombatController.calculate_damage: Resolution refused (%s) — %s"
 			% [result.get("blocked_by", ""), result.get("message", "")]
 		)
-	return maxi(
-		1,
-		raw_damage
-		- target.effective_defense()
-		- int(target.balance_effects.get("defense_bonus", 0))
-		- cover_bonus,
+	return Resolution.critical_damage(
+		maxi(
+			1,
+			raw_damage
+			- target.effective_defense()
+			- int(target.balance_effects.get("defense_bonus", 0))
+			- cover_bonus,
+		),
+		bool(result.get("critical", false)),
 	)
 
 
@@ -1518,6 +1535,9 @@ func _drive_scheduler() -> void:
 		if actor.side == &"ally":
 			state = State.ALLY_TURN
 			if not is_continuation:
+				# Autoplay counts a turn's KitAI steps and commands like a kit enemy's.
+				_kit_steps.erase(actor.combat_id)
+				_kit_used.erase(actor.combat_id)
 				_emit_event(&"turn_started", actor, null, turn_payload)
 				_class_resource_of(actor).on_turn_start()
 				for other: BattleActor in allies:
@@ -1717,6 +1737,65 @@ func _resolve_kit_enemy(actor: BattleActor) -> void:
 	if not action.class_resource_action.is_empty():
 		used.append(action.id)
 		_kit_used[actor.combat_id] = used
+
+
+## Seat order for an even match: the sides alternate, and the fight's dice pick the side that
+## takes the first seat (speed ties go to the lower seat).
+func _even_seating() -> Array[BattleActor]:
+	var lead := allies if fight_seed % 2 == 0 else enemies
+	var follow := enemies if lead == allies else allies
+	var seating: Array[BattleActor] = []
+	for index in maxi(lead.size(), follow.size()):
+		if index < lead.size():
+			seating.append(lead[index])
+		if index < follow.size():
+			seating.append(follow[index])
+	return seating
+
+
+## One KitAI step of the active ally's turn under autoplay: act, walk, or end the turn, through
+## the same `submit_action()` / `end_turn()` a player uses. False when there is nothing to do.
+func autoplay_step() -> bool:
+	if not autoplay_allies or state != State.ALLY_TURN:
+		return false
+	var actor := active_actor()
+	if actor == null:
+		return false
+	var steps := int(_kit_steps.get(actor.combat_id, 0))
+	if steps >= _KIT_MAX_STEPS:
+		_autoplay_pass(actor)
+		return true
+	_kit_steps[actor.combat_id] = steps + 1
+	var used: Array = _kit_used.get(actor.combat_id, [])
+	var plan := KitAI.plan_step(self, actor, used)
+	var result := {}
+	match str(plan.get("kind", "pass")):
+		"act":
+			var action := plan["action"] as CombatAction
+			var target := plan.get("target") as BattleActor
+			if target != null and target != actor:
+				_face_toward(actor, target)
+			result = submit_action(action.id, target, plan.get("options", {}))
+			if bool(result.get("allowed", false)) and not action.class_resource_action.is_empty():
+				used.append(action.id)
+				_kit_used[actor.combat_id] = used
+		"move":
+			result = submit_action(ACTION_MOVE, null, {"destination": plan["destination"]})
+		_:
+			_autoplay_pass(actor)
+			return true
+	if not bool(result.get("allowed", false)) and state == State.ALLY_TURN and active_actor() == actor:
+		_autoplay_pass(actor)
+	return true
+
+
+## Ends an autoplayed turn. Charge time can refuse a third consecutive wait; the kit enemy's
+## bounded pass then ends it anyway, so autoplay can never stall on one actor.
+func _autoplay_pass(actor: BattleActor) -> void:
+	if end_turn():
+		return
+	_force_pass(actor)
+	_drive_scheduler()
 
 
 ## The actor's own side and the other side (read-only views for KitAI and the presentation).
@@ -2354,6 +2433,7 @@ func _finalize_resolution_damage(
 			- int(target.balance_effects.get("defense_bonus", 0))
 			- cover_bonus,
 		)
+		damage = Resolution.critical_damage(damage, bool(finalized.get("critical", false)))
 	finalized["damage"] = damage
 	var writes: Array = finalized.get("writes", [])
 	for write: Dictionary in writes:
@@ -2617,9 +2697,21 @@ func _resolve_attack(
 		"damage": total_damage,
 		"resolution": committed_resolution,
 		"positioning": positional_results,
-		"message": "%s uses %s for %d damage."
-		% [actor.display_name, action.display_name, total_damage],
+		"message": _attack_message(actor, target, action, committed_resolution, total_damage),
 	}
+
+
+## The log line for a committed attack. Owner 2026-11-02 (item 33): a rolled miss reads as a
+## dodge and a critical says so; every other line is the historical wording.
+func _attack_message(
+	actor: BattleActor, target: BattleActor, action: CombatAction, resolution: Dictionary, damage: int
+) -> String:
+	var rolled := int(resolution.get("hit_roll", 0)) > 0
+	if rolled and not bool(resolution.get("hit", true)) and not bool(resolution.get("fizzled", false)):
+		return "%s uses %s; %s dodges." % [actor.display_name, action.display_name, target.display_name]
+	if bool(resolution.get("critical", false)):
+		return "%s uses %s: critical hit for %d damage." % [actor.display_name, action.display_name, damage]
+	return "%s uses %s for %d damage." % [actor.display_name, action.display_name, damage]
 
 
 ## #209 forecast parity: the same Resolution context an actual strike will use — same
@@ -2708,6 +2800,7 @@ func forecast_context(
 		"battle_id": battle_id,
 		"tick": resolution_seed,
 		"seed": resolution_seed,
+		"fight_seed": fight_seed,
 		"unit": {
 			"id": String(actor.combat_id),
 			"harmony": actor.attribute_value(&"harmony"),
@@ -3244,7 +3337,7 @@ func _apply_balance_band(emit_change: bool = true) -> void:
 	var affected_ids: Array[StringName] = []
 	for actor: BattleActor in allies + enemies:
 		var actor_effects := effects
-		if not bool(band.get("global", false)) and actor not in allies:
+		if not bool(band.get("global", false)) and actor not in allies and not even_sides:
 			actor_effects = {}
 		actor.apply_balance_band(balance_band_id, actor_effects)
 		affected_ids.append(actor.combat_id)

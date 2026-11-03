@@ -10,17 +10,37 @@ const ENCOUNTER_IDS: Array[StringName] = [
 const BUILD_IDS: Array[StringName] = [&"martial", &"caster", &"talker", &"balanced-refusal"]
 
 
+## Owner 2026-11-03 (item 33): fights roll fresh dice and can crit, so clearability is a win
+## rate, not one roll: every build must win at least WIN_RATE_FLOOR of SEEDED_FIGHTS fights
+## per encounter, each seeded like a real fight's dice.
+const SEEDED_FIGHTS := 40
+const WIN_RATE_FLOOR := 0.8
+
+
 func test_all_four_build_fixtures_clear_all_five_gate_t1_encounters() -> void:
 	for build_id: StringName in BUILD_IDS:
 		for encounter_id: StringName in ENCOUNTER_IDS:
-			var result := _self_play(encounter_id, build_id, true)
-			assert_int(int(result.get("result", -1)))\
-				.override_failure_message("%s did not clear %s: %s" % [build_id, encounter_id, result])\
-				.is_equal(CombatController.ResultState.VICTORY)
-			if build_id == &"caster":
-				assert_int(int(result.get("cast_resolutions", 0)))\
-					.override_failure_message("Caster never resolved a spell in %s" % encounter_id)\
-					.is_greater(0)
+			var wins := 0
+			var lost: Dictionary = {}
+			for fight: int in SEEDED_FIGHTS:
+				var result := _self_play(encounter_id, build_id, true, _fight_seed(fight))
+				if int(result.get("result", -1)) == CombatController.ResultState.VICTORY:
+					wins += 1
+				elif lost.is_empty():
+					lost = result
+				if build_id == &"caster":
+					assert_int(int(result.get("cast_resolutions", 0)))\
+						.override_failure_message("Caster never resolved a spell in %s" % encounter_id)\
+						.is_greater(0)
+			assert_float(float(wins) / float(SEEDED_FIGHTS))\
+				.override_failure_message("%s cleared %s in %d of %d fights; first loss: %s" % [
+					build_id, encounter_id, wins, SEEDED_FIGHTS, lost])\
+				.is_greater_equal(WIN_RATE_FLOOR)
+
+
+## The n-th gate fight's dice: spread, non-zero, and the same every run.
+static func _fight_seed(fight: int) -> int:
+	return (fight + 1) * 104729
 
 
 func test_talker_uses_the_authored_speech_resolution() -> void:
@@ -39,7 +59,7 @@ func test_stabilizer_showcase_rewards_stillpoint_center_holding() -> void:
 
 
 func _self_play(
-	encounter_id: StringName, build_id: StringName, use_stillpoint: bool
+	encounter_id: StringName, build_id: StringName, use_stillpoint: bool, fight_seed: int = 0
 ) -> Dictionary:
 	var ally := _build_actor(build_id)
 	var enemies := EncounterCatalog.make_actors(encounter_id)
@@ -96,6 +116,7 @@ func _self_play(
 		cast_abilities,
 		tactical_tables,
 	)
+	controller.fight_seed = fight_seed
 	controller.start([ally], enemies, encounter_id)
 
 	var guard := 0

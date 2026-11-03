@@ -85,7 +85,8 @@ func _start_trial_encounter(encounter_id: StringName) -> void:
 			GameState.set_flag(KEEPER_STARTED_FLAG, false)
 		return
 	trial_encounter_started.emit(encounter_id)
-	GameFlow.send_event("enter_set_piece")
+	# Owner 2026-11-02 (item 33): fights on a map start in place, with no deployment screens.
+	GameFlow.send_event("enter_battle")
 
 
 func _on_warden_trigger_body_entered(body: Node2D) -> void:

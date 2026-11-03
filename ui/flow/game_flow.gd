@@ -714,7 +714,8 @@ func _open_class_demo() -> void:
 	if not bool(opened.get("allowed", false)):
 		push_warning("Class demo refused: %s" % opened.get("message", ""))
 		return
-	send_event("enter_set_piece")
+	# Owner 2026-11-02 (item 33): fights on a map start in place, with no deployment screens.
+	send_event("enter_battle")
 
 
 func _end_class_demo() -> void:

@@ -21,8 +21,13 @@ static func result_text(event: CombatEvent) -> String:
 	if bool(resolution.get("fizzled", false)):
 		return TranslationServer.translate("FIZZLE")
 	if not did_hit(event):
+		# Owner 2026-11-02 (item 33): a rolled miss is the target dodging; an unrolled one stays MISS.
+		if int(resolution.get("hit_roll", 0)) > 0:
+			return TranslationServer.translate("DODGED")
 		return TranslationServer.translate("MISS")
 	var damage := int(event.data.get("damage", 0))
+	if damage > 0 and bool(resolution.get("critical", false)):
+		return TranslationServer.translate("CRITICAL  ·  %d DAMAGE") % damage
 	return TranslationServer.translate("%d DAMAGE") % damage if damage > 0 else TranslationServer.translate("NO DAMAGE")
 
 
