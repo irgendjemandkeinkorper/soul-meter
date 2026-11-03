@@ -441,6 +441,34 @@ Two related fixes:
 - **Wound Lip ground.** Wound Lip's ground now covers its walled 1800×900 ledge. It was the
   25×25 default at the origin, so the guard fight there had no floor.
 
+**Art bases (2026-11-03, owner ruling "Full bases, all maps").** The copied shapes were thin. A
+house blocked only a line along its front wall, and most of Dorthkor Road's pillars, rocks,
+tents and carts had no shape at all. Each prop now blocks the whole base it stands on in its
+art. All sizes are PROVISIONAL.
+
+- **The table.** `ArtBases` (`world/nav/art_bases.gd`) gives each prop art file its base: one
+  or more convex polygons in the file's own pixels. A tree's base is its trunk and roots, so
+  its canopy can be walked under. The crenellated wall is an L of two strips, so the ground
+  inside the L stays open.
+  - Most bases were fitted from the art's alpha: the lowest opaque edge is the front of the
+    base, and the back mirrors it. Each was then checked by eye.
+  - Six were traced by hand, where the fit caught a shaft or a leg, or the art is not drawn at
+    2:1: the high cart, the bench, the brazier, the tent, the wall and the town hall.
+- **The rule.** On a painted map, every sprite showing one of those files is solid over its
+  base, unless it is in a `GroundDetails` or `SoftDetails` layer.
+- **The tool.** `tools/paint_blocking.gd` first writes each base into the scene as a
+  `ConvexPolygonShape2D`, then paints as before. A sprite that already has a body gets the
+  polygon in that body's `CollisionShape2D`. A sprite with no body gains a `Base`
+  `StaticBody2D` child, so no node path changes.
+- **The guards.** `test_blocking_paint` adds two tests:
+  - every based prop has its art base;
+  - from where the player arrives, the walk still reaches every arrival point, door, exit,
+    chest and person on each map. The trial hall is checked with its gates open.
+
+The walking body collides with the same base: the shape and the painted cells' tiles both stop
+it. Rendered check: `docs/qa/map-bases-2026-11-03/`. Each map shows its cells and bases, and
+`art-bases` shows every file with its base.
+
 ### 2.4 Y-sorting — the depth rules
 
 Apply three rules. All three are necessary.
