@@ -556,6 +556,28 @@ func is_edge_walled(from: Vector2i, to: Vector2i) -> bool:
 	return hex_mode and _is_hex_edge_walled(from, to)
 
 
+## Hex slice H3: a cell's outline in world space, clockwise. On the square grid it is the iso
+## diamond (top, right, bottom, left); on hexes the six corners of `HexLayout.corners()`, whose
+## edge `i` borders the neighbour `HexMath.DIRECTIONS[HexLayout.EDGE_NEIGHBOR[i]]`.
+func cell_outline(cell: Vector2i) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	if hex_mode:
+		for corner: Vector2 in _layout.corners(cell):
+			points.append(_ground.to_global(corner))
+		return points
+	var center := _ground.map_to_local(cell)
+	var half := Vector2(_ground.tile_set.tile_size) * 0.5
+	for offset: Vector2 in [Vector2(0, -half.y), Vector2(half.x, 0), Vector2(0, half.y), Vector2(-half.x, 0)]:
+		points.append(_ground.to_global(center + offset))
+	return points
+
+
+## Whether a wall fills the cell: the painted blocking layer, or on hexes a hex derived from it.
+## Bodies and solids set by callers do not count. A cell off the grid is not a wall.
+func is_wall(cell: Vector2i) -> bool:
+	return _in_region(cell) and _is_static(cell)
+
+
 ## The square cell under a hex's centre, where the hex's height, cover and terrain are authored.
 ## On the square grid, the cell itself.
 func square_cell_of(cell: Vector2i) -> Vector2i:

@@ -9,12 +9,31 @@ signal hostile_alerted(hostile: Hostile)
 
 const FIELD_HUD_SCENE := "res://ui/hud/field_hud.tscn"
 
+## Hex slice H3: a body walks the last step onto its combat seat at walking pace (the player
+## walks 260 px/s); a long way speeds up so no walk takes more than SEAT_WALK_LONGEST seconds.
+const SEAT_WALK_SPEED := 260.0
+const SEAT_WALK_LONGEST := DS.DUR_SLOW * 2.0
+## The most frame time one step of a seat walk uses. A hitch as the fight is set up (a long first
+## frame) therefore never turns the walk into a jump.
+const SEAT_WALK_MAX_FRAME := 1.0 / 30.0
+
 var _combat_mode_active: bool = false
 var _restore_controls: Array[Callable] = []
+var _grid_layer: FieldGridLayer
+## Node2D -> {"target": world seat, "speed": px/s}, while a body walks onto its seat.
+var _seat_walks: Dictionary = {}
 
 
 func _ready() -> void:
+	set_process(false)
 	_connect_hostiles.call_deferred()
+	_grid_layer = FieldGridLayer.new(self)
+	add_child(_grid_layer)
+
+
+## The hex grid drawn on this field's floor (see FieldGridLayer).
+func grid_layer() -> FieldGridLayer:
+	return _grid_layer
 
 
 func ground() -> TileMapLayer:
@@ -45,6 +64,8 @@ func set_combat_mode(active: bool) -> void:
 	if _combat_mode_active == active:
 		return
 	_combat_mode_active = active
+	if is_instance_valid(_grid_layer):
+		_grid_layer.set_combat(active)
 	var root: Node = _field_root()
 	var player := root.find_child("Player", true, false) as Player
 	if player != null:
@@ -142,10 +163,11 @@ func party_cells() -> Array[Vector2i]:
 	return cells
 
 
-## Snaps the presentation party onto the cells combat actually seated them on (F0 ruling 4).
-## Followers are presentation-only and CombatOverlay does not exist until migration step 6, so
-## without this the visible party and the battlefield model disagree for a whole session.
-## Entering combat mode first is what stops the trail from dragging them back off their cells.
+## Brings the presentation party onto the cells combat actually seated them on (F0 ruling 4).
+## Followers are presentation-only, so without this the visible party and the battlefield model
+## disagree for a whole session. Entering combat mode first is what stops the trail from dragging
+## them back off their cells. Hex slice H3: each body walks the last step to its seat instead of
+## jumping (`walk_to_seat()`); CombatOverlay counts the walks as animation, so input waits.
 func seat_party(cells: Array[Vector2i]) -> void:
 	if cells.is_empty():
 		return
@@ -156,7 +178,7 @@ func seat_party(cells: Array[Vector2i]) -> void:
 	var lead := player()
 	if lead != null:
 		# The anchor is never relocated; this only centres it on the cell it already holds.
-		lead.global_position = grid.cell_to_world(cells[0])
+		walk_to_seat(lead, grid.cell_to_world(cells[0]))
 	var followers := party_followers()
 	if followers == null:
 		return
@@ -165,7 +187,65 @@ func seat_party(cells: Array[Vector2i]) -> void:
 		var cell_index := index + 1
 		if cell_index >= cells.size():
 			break
-		seated[index].snap_to(grid.cell_to_world(cells[cell_index]))
+		walk_to_seat(seated[index], grid.cell_to_world(cells[cell_index]))
+
+
+## Walks a body (party or hostile) onto a seat at walking pace; CombatOverlay uses this too. A
+## second call retargets the walk from where the body is. Reduced motion, a body already there, or
+## a field outside the tree places it at once.
+func walk_to_seat(node: Node2D, target: Vector2) -> void:
+	_seat_walks.erase(node)
+	var distance := node.global_position.distance_to(target)
+	var reduced := bool(GameState.get_setting("accessibility", "reduced_motion", false))
+	if distance < 0.5 or reduced or not is_inside_tree():
+		_place_on_seat(node, target)
+		return
+	_seat_walks[node] = {
+		"target": target, "speed": maxf(SEAT_WALK_SPEED, distance / SEAT_WALK_LONGEST),
+	}
+	set_process(true)
+
+
+func is_seat_walking(node: Node2D) -> bool:
+	return _seat_walks.has(node)
+
+
+## Ends a walk where the body stands (an order that moves it takes over).
+func stop_seat_walk(node: Node2D) -> void:
+	_seat_walks.erase(node)
+
+
+## Puts every walking body on its seat now (reduced motion, replays, teardown).
+func finish_seat_walks() -> void:
+	for node: Variant in _seat_walks.keys():
+		if is_instance_valid(node):
+			_place_on_seat(node as Node2D, (_seat_walks[node] as Dictionary)["target"])
+	_seat_walks.clear()
+	set_process(false)
+
+
+func _process(delta: float) -> void:
+	var frame := minf(delta, SEAT_WALK_MAX_FRAME)
+	for node: Variant in _seat_walks.keys():
+		if not is_instance_valid(node):
+			_seat_walks.erase(node)
+			continue
+		var body := node as Node2D
+		var walk: Dictionary = _seat_walks[node]
+		var target: Vector2 = walk["target"]
+		body.global_position = body.global_position.move_toward(target, float(walk["speed"]) * frame)
+		if body.global_position.distance_to(target) < 0.01:
+			_seat_walks.erase(node)
+			_place_on_seat(body, target)
+	if _seat_walks.is_empty():
+		set_process(false)
+
+
+func _place_on_seat(node: Node2D, target: Vector2) -> void:
+	if node is PartyFollower:
+		(node as PartyFollower).snap_to(target)
+	else:
+		node.global_position = target
 
 
 func hostiles() -> Array[Hostile]:

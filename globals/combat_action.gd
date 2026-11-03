@@ -199,6 +199,20 @@ func reach_text() -> String:
 	return ""
 
 
+## Hex slice H3: the reach ring the field draws around the acting unit, in grid steps. A numeric
+## range converts through GridMetric; melee is the touching ring; line of sight and self-targeted
+## commands draw none (0).
+func reach_steps() -> int:
+	if target_profile == &"self" or kind == Kind.GUARD or kind == Kind.STABILIZE:
+		return 0
+	var reach := int(effect_payload.get("range", 0))
+	if reach > 0:
+		return GridMetric.reach(reach)
+	if not targets_cells() and target_profile == &"melee" and target_side == "enemy":
+		return 1
+	return 0
+
+
 ## Cell-targeted working: the player declares grid cells (`options.cells`), not a creature.
 func targets_cells() -> bool:
 	return target_profile == &"cells"

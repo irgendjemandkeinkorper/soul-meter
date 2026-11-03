@@ -96,9 +96,18 @@ func test_snapshot_moves_existing_actor_and_does_not_create_duplicate_units() ->
 		{"id": &"ally-test", "position": &"c:1,0,0", "hp": 9, "max_hp": 10},
 	]}}
 	overlay.call("consume_event", event)
+	# Hex slice H3: the first snapshot walks a body onto its cell instead of jumping it there.
+	assert_bool(overlay.call("is_animating")).is_true()
+	assert_vector(actor.global_position).is_not_equal(grid.cell_to_world(Vector2i(1, 0)))
+	await get_tree().create_timer(DS.DUR_SLOW * 2.0 + 0.1).timeout
 	assert_vector(actor.global_position).is_equal(grid.cell_to_world(Vector2i(1, 0)))
+	assert_bool(overlay.call("is_animating")).is_false()
 	assert_int(overlay.get_child_count()).is_equal(0)
 	assert_int(actor.get_child_count()).is_equal(0)
+	# Later snapshots place it at once, as before.
+	event.data["snapshot"]["allies"][0]["position"] = &"c:0,0,0"
+	overlay.call("consume_event", event)
+	assert_vector(actor.global_position).is_equal(grid.cell_to_world(Vector2i.ZERO))
 
 
 ## Field nodes are bound when the snapshot roster changes, not on every event, so a hostile
@@ -135,6 +144,8 @@ func test_hostile_admitted_mid_session_is_bound_by_the_first_snapshot_listing_it
 		{"id": second.combat_id, "position": &"c:0,0,0", "hp": 9, "max_hp": 10},
 	]}}
 	overlay.call("consume_event", admitted)
+	# Hex slice H3: each is walked onto its cell the first time it is placed, not jumped there.
+	await get_tree().create_timer(DS.DUR_SLOW * 2.0 + 0.1).timeout
 	assert_vector(first.global_position).is_equal(field.grid.cell_to_world(Vector2i(1, 0)))
 	assert_vector(second.global_position).is_equal(field.grid.cell_to_world(Vector2i.ZERO))
 
@@ -192,6 +203,9 @@ func test_action_feedback_uses_event_damage_without_changing_actor_state() -> vo
 	add_child(target)
 	overlay.call("bind_actor", &"ally", attacker)
 	overlay.call("bind_actor", &"enemy", target)
+	# Both already stand on their cells, as every body does once the fight's seating is done.
+	attacker.global_position = grid.cell_to_world(Vector2i.ZERO)
+	target.global_position = grid.cell_to_world(Vector2i(1, 0))
 	var event := CombatEvent.new()
 	event.type = &"action_resolved"
 	event.actor_id = &"ally"
