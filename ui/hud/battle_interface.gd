@@ -598,8 +598,8 @@ func _press_cell_working(action: CombatAction, cell: Vector2i, actor_id: StringN
 			_refuse("Touch the enemy to bind first, then pick the field.")
 			return
 		_pending_target = bound
-		act_target_panel.forecast.text = "BOUND %s · pick %d cell%s" % [
-			bound.display_name.to_upper(), _cell_count(action), "s" if _cell_count(action) > 1 else "",
+		act_target_panel.forecast.text = "BOUND %s · pick %d %s" % [
+			bound.display_name.to_upper(), _cell_count(action), GridMetric.step_word(_cell_count(action)),
 		]
 		return
 	if _pending_cells.has(cell):

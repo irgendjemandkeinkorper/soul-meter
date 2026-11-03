@@ -117,7 +117,7 @@ func configure_initial_cells(cells: Dictionary) -> Dictionary:
 			return _blocked(&"position", "Initial placement requires actors and cells.", {"type": &"known_position"})
 		var cell: Vector2i = cells[actor]
 		if not _grid.is_in_bounds(cell):
-			return _blocked(&"position", "That cell is outside the battlefield.", {"type": &"cell_in_bounds"})
+			return _blocked(&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"cell_in_bounds"})
 		if occupied.has(cell):
 			return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
 		if _grid.is_point_solid(cell):
@@ -148,7 +148,7 @@ func resolve_placement(desired: Array[Vector2i]) -> Dictionary:
 	if not _is_seatable(anchor):
 		return _blocked(
 			&"position",
-			"The party cannot enter combat from this cell.",
+			"The party cannot enter combat from this %s." % GridMetric.step_word(1),
 			{"type": &"anchor_placeable"},
 		)
 	var taken: Dictionary = {anchor: true}
@@ -163,7 +163,7 @@ func resolve_placement(desired: Array[Vector2i]) -> Dictionary:
 		if not bool(search.get("ok", false)):
 			return _blocked(
 				&"position",
-				"No free cell within %d of the party." % PLACEMENT_SEARCH_RADIUS,
+				"No free %s within %d of the party." % [GridMetric.step_word(1), PLACEMENT_SEARCH_RADIUS],
 				{"type": &"cell_free"},
 			)
 		var found: Vector2i = search["cell"]
@@ -405,7 +405,7 @@ func admit_combatant(actor: BattleActor, position: StringName, side: StringName)
 	var cell: Vector2i = parsed["cell"]
 	if not _grid.is_in_bounds(cell):
 		return _blocked(
-			&"position", "That cell is outside the battlefield.", {"type": &"cell_in_bounds"}
+			&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"cell_in_bounds"}
 		)
 	if _occupancy.has(cell):
 		return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
@@ -812,7 +812,7 @@ func _path_query(
 	var dest_cell: Vector2i = parsed["cell"]
 	if not _grid.is_in_bounds(dest_cell):
 		return _blocked(
-			&"position", "That cell is outside the battlefield.", {"type": &"in_bounds"}
+			&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"in_bounds"}
 		)
 	if _grid.is_point_solid(dest_cell) and _occupancy.get(dest_cell) == null:
 		return _blocked(&"position", "That cell is impassable.", {"type": &"cell_passable"})
@@ -831,7 +831,7 @@ func _path_query(
 	else:
 		path = _settled_path(tree, origin_cell, dest_cell)
 	if path.is_empty():
-		return _blocked(&"position", "No path to that cell.", {"type": &"reachable"})
+		return _blocked(&"position", "No path to that %s." % GridMetric.step_word(1), {"type": &"reachable"})
 	var handles: Array[StringName] = []
 	for point in path:
 		handles.append(_handle_for_cell(Vector2i(point)))
@@ -906,7 +906,7 @@ func cell_query(cell: Vector2i) -> Dictionary:
 		return _blocked(&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"})
 	if not _grid.is_in_bounds(cell):
 		return _blocked(
-			&"position", "That cell is outside the battlefield.", {"type": &"in_bounds", "cell": cell}
+			&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"in_bounds", "cell": cell}
 		)
 	var occupant: BattleActor = _occupancy.get(cell)
 	var passable := not _grid.is_point_solid(cell) or occupant != null
@@ -929,7 +929,7 @@ func displace(actor: BattleActor, cell: Vector2i) -> Dictionary:
 			&"position", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
 		)
 	if not _grid.is_in_bounds(cell):
-		return _blocked(&"position", "That cell is outside the battlefield.", {"type": &"in_bounds"})
+		return _blocked(&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"in_bounds"})
 	var occupant: BattleActor = _occupancy.get(cell)
 	if occupant != null and occupant != actor:
 		return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
@@ -968,7 +968,7 @@ func _line_of_sight_cells(
 ) -> Dictionary:
 	if not _grid.is_in_bounds(to_cell):
 		return _blocked(
-			&"blocked_by_range", "That cell is outside the battlefield.", {"type": &"in_bounds"}
+			&"blocked_by_range", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"in_bounds"}
 		)
 	var range_bonus := int(viewer.defining_effects.get("range_bonus", 0)) if viewer != null else 0
 	var max_range := float(GridMetric.reach(int(_LOS_MAX_RANGE) + range_bonus))

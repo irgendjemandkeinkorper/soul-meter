@@ -27,6 +27,28 @@ static func distance(a: Vector2i, b: Vector2i) -> int:
 	return maxi(absi(a.x - b.x), absi(a.y - b.y))
 
 
+## The word the player reads for a step of this grid: "cell" or "cells" on squares, "hex" or
+## "hexes" on hexes (hex slice H3b; the hex wording is a draft for the owner, item 34).
+static func step_word(count: int = 2) -> String:
+	if hex():
+		return "hex" if count == 1 else "hexes"
+	return "cell" if count == 1 else "cells"
+
+
+## A count of steps as the player reads it: "4 cells", "8 hexes", "1 hex".
+static func steps_text(count: int) -> String:
+	return "%d %s" % [count, step_word(count)]
+
+
+## A small count spelled out, as some refusals read it: "two cells", "four hexes".
+static func spelled_steps_text(count: int) -> String:
+	const NUMBERS := ["no", "one", "two", "three", "four", "five", "six"]
+	var number: String = str(count)
+	if count >= 0 and count < NUMBERS.size():
+		number = NUMBERS[count]
+	return "%s %s" % [number, step_word(count)]
+
+
 ## An authored reach in cells, in steps of this grid. Melee and touch (1) stay touching.
 static func reach(cells: int) -> int:
 	if not hex() or cells <= 1:
