@@ -76,10 +76,12 @@ func test_test_room_blocking_layer_is_authored_and_solid_in_the_shared_grid() ->
 	var painted: Array[Vector2i] = field.blocking().get_used_cells()
 	assert_array(painted).is_not_empty()
 	assert_array(painted).contains([TEST_ROOM_BLOCKED_CELL])
+	# Painted cells are ground cells; on hexes every hex whose centre lies on one is solid.
 	var grid: IsoGrid = field.iso_grid()
 	for cell: Vector2i in painted:
-		assert_bool(grid.is_point_solid(cell)).override_failure_message(str(cell)).is_true()
-	assert_bool(grid.is_point_solid(TEST_ROOM_OPEN_CELL)).is_false()
+		for grid_cell: Vector2i in grid.cells_on_square(cell):
+			assert_bool(grid.is_point_solid(grid_cell)).override_failure_message("%s (%s)" % [cell, grid_cell]).is_true()
+	assert_bool(grid.is_point_solid(grid.cell_at_square(TEST_ROOM_OPEN_CELL))).is_false()
 
 	scene.queue_free()
 	await get_tree().process_frame

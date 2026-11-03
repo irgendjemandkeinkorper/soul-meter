@@ -25,6 +25,15 @@ class RosterField extends FieldFixture:
 		return roster
 
 
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant = null
+
+
+func after_test() -> void:
+	if _grid_before != null:
+		GridMode.restore(_grid_before)
+		_grid_before = null
+
 func test_region_forwards_frozen_payload_and_picks_transformed_field_cell() -> void:
 	var ground := _ground()
 	ground.position = Vector2(91, 64)
@@ -510,8 +519,10 @@ func test_unit_overlay_rides_the_moving_body() -> void:
 
 
 ## #281 G7: facing ids are grid directions. Each chevron points at the grid neighbour it
-## names, so "e" points down-right on the iso screen, not along screen +x.
+## names, so "e" points down-right on the iso screen, not along screen +x. Square facings, so the
+## square grid (hex slice H3b; the hex chevrons follow).
 func test_facing_chevron_points_along_the_iso_grid() -> void:
+	_grid_before = GridMode.use_squares()
 	var fixture := _duel()
 	var overlay: CombatOverlay = fixture.overlay
 	var grid: IsoGrid = fixture.grid
@@ -525,6 +536,23 @@ func test_facing_chevron_points_along_the_iso_grid() -> void:
 	assert_float(rad_to_deg(east.angle())).is_equal_approx(rad_to_deg(atan2(16.0, 32.0)), 0.5)
 	assert_float(overlay.facing_vector(cell, "n").normalized().y).is_less(-0.3)
 	assert_vector(overlay.facing_vector(cell, "")).is_equal(Vector2.ZERO)
+
+
+## Hex slice H3b: each of the six hex facings points at the hex neighbour it names, and
+## "hex_e" points along screen +x (hex rows run left to right, ruling H-b).
+func test_hex_facing_chevrons_point_at_their_hex_neighbours() -> void:
+	_grid_before = GridMode.use_hexes()
+	var fixture := _duel()
+	var overlay: CombatOverlay = fixture.overlay
+	var grid: IsoGrid = fixture.grid
+	var cell: Vector2i = grid.cell_at_square(Vector2i(1, 1))
+	for facing: StringName in GridBattlefieldModel.HEX_ORDER:
+		var step: Vector2i = CombatOverlay.FACING_STEPS[String(facing)]
+		var expected := grid.cell_to_world(cell + step) - grid.cell_to_world(cell)
+		assert_vector(overlay.facing_vector(cell, String(facing))).override_failure_message(String(facing)).is_equal(expected)
+	var east := overlay.facing_vector(cell, "hex_e").normalized()
+	assert_float(east.x).is_equal_approx(1.0, 0.01)
+	assert_float(overlay.facing_vector(cell, "hex_nw").normalized().y).is_less(-0.3)
 
 
 ## #281 G10: the HP bar ticks down from the old value; the lost slice lingers, then drains.

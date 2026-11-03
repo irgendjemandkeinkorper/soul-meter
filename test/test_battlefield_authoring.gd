@@ -59,9 +59,11 @@ func test_authored_field_terrain_is_applied_to_the_battlefield() -> void:
 	var model: GridBattlefieldModel = Battle.controller.battlefield as GridBattlefieldModel
 	assert_object(model).is_not_null()
 	assert_object(model._grid).is_same(_field.iso_grid())
-	assert_bool(bool(_tile_at(model.tiles_snapshot(), Vector2i(2, 1)).get("cover", false))).is_true()
-	assert_int(int(_tile_at(model.tiles_snapshot(), Vector2i(3, 1)).get("height_delta", -1))).is_equal(1)
-	assert_int(int(_tile_at(model.tiles_snapshot(), Vector2i(4, 2)).get("height_delta", -1))).is_equal(2)
+	# Terrain is authored on ground cells; a hex reads the cell under its centre (hex slice H3b).
+	var grid: IsoGrid = _field.iso_grid()
+	assert_bool(bool(_tile_at(model.tiles_snapshot(), grid.cell_at_square(Vector2i(2, 1))).get("cover", false))).is_true()
+	assert_int(int(_tile_at(model.tiles_snapshot(), grid.cell_at_square(Vector2i(3, 1))).get("height_delta", -1))).is_equal(1)
+	assert_int(int(_tile_at(model.tiles_snapshot(), grid.cell_at_square(Vector2i(4, 2))).get("height_delta", -1))).is_equal(2)
 
 
 func test_every_catalog_encounter_fits_and_deploys_a_full_party() -> void:
@@ -88,8 +90,9 @@ func test_every_catalog_encounter_fits_and_deploys_a_full_party() -> void:
 		var occupied: Dictionary = {}
 		for actor: BattleActor in Battle.allies + Battle.enemies:
 			var position: Dictionary = model.describe_position(model.position_of(actor))
-			var cell: Vector2i = position.get("cell", Vector2i(-1, -1))
-			assert_bool(cell.x >= 0 and cell.y >= 0).override_failure_message(
+			# Hex cells can have negative coordinates; a placed combatant stands on the field.
+			var cell: Vector2i = position.get("cell", Vector2i(-9999, -9999))
+			assert_bool(_field.iso_grid().is_in_bounds(cell)).override_failure_message(
 				"%s failed to place %s" % [authored_id, actor.display_name]
 			).is_true()
 			assert_bool(occupied.has(cell)).override_failure_message(

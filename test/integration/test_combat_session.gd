@@ -44,6 +44,11 @@ func _field() -> FieldMap:
 	return scene.find_child("FieldMap", true, false) as FieldMap
 
 
+## The field grid's cell at an authored ground cell's centre: the cell itself on squares, the hex
+## there on hexes (hex slice H3b). The cells below are test_room ground cells.
+func _on_grid(field: FieldMap, ground_cell: Vector2i) -> Vector2i:
+	return field.iso_grid().cell_at_square(ground_cell)
+
 ## Seats a hostile on a named cell of the live field, so its battlefield position is the cell
 ## the scene put it on rather than a default column seat. A `group_id` names the encounter the
 ## ledger pays out for; a test that passes one must clear that group's `defeated_*` flag first,
@@ -58,7 +63,7 @@ func _hostile(
 	hostile.group_id = group_id
 	hostile.realert_cooldown = 0.0
 	field.get_parent().add_child(hostile)
-	hostile.global_position = field.iso_grid().cell_to_world(cell)
+	hostile.global_position = field.iso_grid().cell_to_world(_on_grid(field, cell))
 	hostile.sync_cell()
 	return hostile
 
@@ -195,8 +200,8 @@ func test_start_session_seats_a_stacked_party_on_distinct_cells() -> void:
 		distinct[seat] = true
 	# The hostile keeps the cell the scene authored; the party is spread around it, never
 	# through it. Read from the opening result: positions move as soon as the clock runs.
-	assert_that(opened["first_cell"]).is_equal(Vector2i(30, 30))
-	assert_bool(distinct.has(Vector2i(30, 30))).override_failure_message(
+	assert_that(opened["first_cell"]).is_equal(_on_grid(field, Vector2i(30, 30)))
+	assert_bool(distinct.has(_on_grid(field, Vector2i(30, 30)))).override_failure_message(
 		"a party member was seated on the hostile's cell"
 	).is_false()
 
@@ -309,8 +314,12 @@ func test_chain_alerts_spread_one_hop_per_measure_and_none_at_session_start() ->
 	var hop0 := _hostile(field, "Hop0", Vector2i(30, 30))
 	var hop1 := _hostile(field, "Hop1", Vector2i(32, 30))
 	var hop2 := _hostile(field, "Hop2", Vector2i(34, 30))
-	# Reach exactly one hop: hop1 from hop0, hop2 from hop1, never hop2 from hop0.
-	var one_hop := hop0.global_position.distance_to(hop1.global_position) + 1.0
+	# Reach exactly one hop: hop1 from hop0, hop2 from hop1, never hop2 from hop0. Hex centres
+	# are not evenly spaced along a row of ground cells, so the longer hop sets the reach.
+	var one_hop := maxf(
+		hop0.global_position.distance_to(hop1.global_position),
+		hop1.global_position.distance_to(hop2.global_position)
+	) + 1.0
 	assert_float(hop0.global_position.distance_to(hop2.global_position)).is_greater(one_hop)
 	for hostile: Hostile in [hop0, hop1, hop2]:
 		hostile.chain_radius = one_hop
@@ -485,7 +494,12 @@ func test_a_group_resolves_when_its_last_member_falls_while_the_session_continue
 			if Battle.session_active and GameState.flag_is_true("defeated_bog_wight"):
 				seen_live_resolution[0] = true
 	)
-	_drive_until_ended(foe, 60, false)
+	# Drive only until the wight falls. Left longer, the 999-HP boar can overrun the party and
+	# end the session, which is not what this test is about.
+	for _step: int in 60:
+		if wight.state == Hostile.State.DOWNED or Battle.ended:
+			break
+		_drive_until_ended(foe, 1, false)
 
 	assert_bool(seen_live_resolution[0]).override_failure_message(
 		"the bog-wight group must resolve while the boar keeps the session alive"
@@ -678,7 +692,7 @@ func test_a_spawn_slot_group_resolves_through_the_ledger_and_clears_its_slot() -
 	var anchor := Marker2D.new()
 	anchor.name = "SpawnSlotLedgerTest"
 	field.get_parent().add_child(anchor)
-	anchor.global_position = field.iso_grid().cell_to_world(Vector2i(30, 30))
+	anchor.global_position = field.iso_grid().cell_to_world(_on_grid(field, Vector2i(30, 30)))
 	SpawnDirector.set_tables_for_testing({TEST_ROOM_SCENE: [{
 		"schema": SpawnDirector.TABLE_SCHEMA,
 		"id": "ledger-test",
@@ -726,11 +740,11 @@ func test_a_spawn_slot_group_resolves_through_the_ledger_and_clears_its_slot() -
 ## the CI hang. The loop must commit an action instead, so the wight gets the clock back.
 func test_the_drive_loop_outlasts_the_wait_cap_when_the_foe_is_still_out_of_reach() -> void:
 	var field := await _field()
-	field.player().global_position = field.iso_grid().cell_to_world(Vector2i(35, 36))
+	field.player().global_position = field.iso_grid().cell_to_world(_on_grid(field, Vector2i(35, 36)))
 	var wight := _hostile(field, "Wight", Vector2i(30, 30))
 	var opened := Battle.start_session(field, wight)
 	assert_bool(opened.get("allowed", false)).is_true()
-	assert_that(opened["seats"][0]).is_equal(Vector2i(35, 36))
+	assert_that(opened["seats"][0]).is_equal(_on_grid(field, Vector2i(35, 36)))
 	var foe := wight.battle_actor()
 	foe.hp = 1
 
