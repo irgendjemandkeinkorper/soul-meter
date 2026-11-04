@@ -3,6 +3,20 @@ extends GdUnitTestSuite
 ## (Blocking) and `set_property()` (Terrain's #281 cell lists), and `normalize_blocking_scale` is
 ## a bake-only op whose result navigates exactly like the scaled layer it replaces.
 
+## The bake keeps walkability cell for cell on the square authoring layers, so this suite pins the
+## square grid (hex slice H3b); hexes derive from the same layers (test_iso_grid_hex).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
+
 const GROUND_TILES := preload("res://assets/generated/sprites/ground/ground_tileset.tres")
 const BLOCKING_TILES := preload("res://world/nav/blocking_tiles.tres")
 const FIXTURE_DIR := "user://weftlumin_bake_fixture"

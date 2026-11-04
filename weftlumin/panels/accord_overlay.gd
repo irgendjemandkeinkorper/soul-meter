@@ -135,7 +135,7 @@ static func sample(scene_root: Node, controller: CombatController = null) -> Dic
 	var zone_deltas: Dictionary = WeftluminScenesKind.covered_zone_deltas(field)
 	var cells: Dictionary = {}
 	for cell: Vector2i in zone_deltas:
-		cells[cell] = field.accord_at(cell, base)
+		cells[cell] = field.accord_at(_grid_cell(field, cell), base)
 	var zones: Array[Dictionary] = []
 	for zone: AccordZone in field.accord_zones():
 		zones.append({
@@ -154,7 +154,7 @@ static func sample(scene_root: Node, controller: CombatController = null) -> Dic
 		for tile: TileState in controller.tile_states:
 			if tile.charge_level > 0 or tile.hush:
 				charges.append({
-					"cell": Vector2i(tile.x, tile.y), "element": tile.charge_element_id,
+					"cell": field.ground_cell_of(Vector2i(tile.x, tile.y)), "element": tile.charge_element_id,
 					"level": tile.charge_level, "hush": tile.hush,
 				})
 	return {
@@ -174,6 +174,13 @@ static func live_controller(scene_root: Node) -> CombatController:
 	if field == null or not Battle.session_active or Battle.ended or not is_instance_valid(Battle.controller):
 		return null
 	return Battle.controller if Battle._current_field_map() == field else null
+
+
+## The field grid cell at a ground cell's centre (the cell itself on squares). The overlay draws
+## ground cells; `FieldMap` and the walk grid answer for grid cells, which are hexes on hexes.
+static func _grid_cell(field: FieldMap, ground_cell: Vector2i) -> Vector2i:
+	var grid := field.iso_grid()
+	return grid.cell_at_square(ground_cell) if grid != null else ground_cell
 
 
 ## Accord at `cell` in a sample: the covered cell's value, else the uncovered (base) value.
@@ -220,7 +227,7 @@ static func cell_text(sampled: Dictionary, cell: Vector2i) -> String:
 	var field: FieldMap = sampled["field"]
 	var text: String = "Cell %s · accord %.1f · zone delta %+.0f · element default %s" % [
 		cell, accord_in(sampled, cell), float((sampled["zone_deltas"] as Dictionary).get(cell, 0.0)),
-		element_style(field.element_default_at(cell))["name"],
+		element_style(field.element_default_at(_grid_cell(field, cell)))["name"],
 	]
 	for charge: Dictionary in sampled["charges"]:
 		if charge["cell"] == cell:
@@ -229,7 +236,7 @@ static func cell_text(sampled: Dictionary, cell: Vector2i) -> String:
 			]
 	var grid: IsoGrid = sampled["walk_grid"]
 	if grid != null:
-		text += " · %s" % ("blocked" if grid.is_blocked_for(cell) else "walkable")
+		text += " · %s" % ("blocked" if grid.is_blocked_for(grid.cell_at_square(cell)) else "walkable")
 	return text
 
 
@@ -296,7 +303,7 @@ func _draw_overlay(surface: Control) -> void:
 				continue
 			if heat:
 				surface.draw_colored_polygon(points, accord_color(accord_in(_sample, cell)))
-			if grid != null and grid.is_blocked_for(cell):
+			if grid != null and grid.is_blocked_for(grid.cell_at_square(cell)):
 				if not heat:
 					surface.draw_colored_polygon(points, COLORS["blocked"])
 				WeftluminPaintTools._outline(surface, points, COLORS["blocked_edge"])

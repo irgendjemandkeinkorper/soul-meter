@@ -1,6 +1,20 @@
 extends GdUnitTestSuite
 ## Live forecast/submit coverage for K3, T2, H3, Z3, Z4 and Hold Note's lifecycle.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
+
 const NO_FIZZLE := {"fizzle": {"harmonic_accord": 100.0, "pitch": 10}}
 
 

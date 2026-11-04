@@ -32,6 +32,9 @@ func test_all_four_build_fixtures_clear_all_five_gate_t1_encounters() -> void:
 					assert_int(int(result.get("cast_resolutions", 0)))\
 						.override_failure_message("Caster never resolved a spell in %s" % encounter_id)\
 						.is_greater(0)
+			print("GATE_T1 grid=%s build=%s encounter=%s wins=%d/%d" % [
+				"hex" if GridMetric.hex() else "square", build_id, encounter_id, wins, SEEDED_FIGHTS,
+			])
 			assert_float(float(wins) / float(SEEDED_FIGHTS))\
 				.override_failure_message("%s cleared %s in %d of %d fights; first loss: %s" % [
 					build_id, encounter_id, wins, SEEDED_FIGHTS, lost])\
@@ -137,6 +140,9 @@ func _self_play(
 			var options := (
 				{"ability_id": "note-zhur"} if action_id == &"gate-t1-cast" else {}
 			)
+			if _close_in(controller, ally, target, action_id, options):
+				guard += 1
+				continue
 			var submitted := controller.submit_action(action_id, target, options)
 			if not bool(submitted.get("allowed", false)):
 				result["refusal"] = submitted
@@ -148,12 +154,10 @@ func _self_play(
 	return result
 
 
-const _FACING_ORDER: Array[StringName] = [&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"]
-
-
 ## Positional competence (owner 2026-08-24, with #169's to-hit): a representative
 ## player faces their target. Without this the fixtures donate free flank arcs to
-## the live enemy positional AI and stop representing play.
+## the live enemy positional AI and stop representing play. The model names the facing, so
+## the same helper serves the square grid and hexes (owner item 34).
 func _face_toward(controller: CombatController, ally: BattleActor, target: BattleActor) -> void:
 	if target == null:
 		return
@@ -165,9 +169,47 @@ func _face_toward(controller: CombatController, ally: BattleActor, target: Battl
 	var delta: Vector2i = (target_position["cell"] as Vector2i) - (ally_position["cell"] as Vector2i)
 	if delta == Vector2i.ZERO:
 		return
-	var index := int(round(atan2(delta.y, delta.x) / (PI / 4.0)))
-	index = ((index % _FACING_ORDER.size()) + _FACING_ORDER.size()) % _FACING_ORDER.size()
-	battlefield.set_facing(ally, _FACING_ORDER[index])
+	battlefield.set_facing(ally, GridBattlefieldModel.facing_for_delta(delta))
+
+
+## Hexes (owner item 34): the board's two columns stand one cell apart, which is two hexes, and
+## melee needs touching hexes. A foe that holds back is then out of reach of a player who never
+## moves, so on hexes the representative player first walks to the cheapest stand from which
+## the action is allowed (or, failing that, as close as the turn allows). Squares seat the foes
+## adjacent, so this never runs there and the square gate is unchanged. True when it moved.
+func _close_in(
+	controller: CombatController, ally: BattleActor, target: BattleActor, action_id: StringName, options: Dictionary
+) -> bool:
+	if not GridMetric.hex() or target == null:
+		return false
+	var action := controller.action_by_id(action_id)
+	var direct := controller.query_action_for(ally, action, target, options)
+	if bool(direct.get("allowed", false)):
+		return false
+	if not StringName(str(direct.get("blocked_by", ""))) in [&"position", &"blocked_by_range"]:
+		return false
+	var battlefield := controller.battlefield
+	var target_cell: Variant = battlefield.cell_of(target)
+	var here: Variant = battlefield.cell_of(ally)
+	if not (target_cell is Vector2i) or not (here is Vector2i):
+		return false
+	var best := {}
+	var best_key := []
+	for row: Dictionary in controller.reachable_for(ally):
+		var cell: Vector2i = battlefield.describe_position(StringName(row["destination"]))["cell"]
+		battlefield.probe_cell(ally, cell)
+		var allowed := bool(controller.query_action_for(ally, action, target, options).get("allowed", false))
+		battlefield.clear_probe(ally)
+		var distance := GridMetric.distance(cell, target_cell as Vector2i)
+		# Allowed stands first, then nearer the foe, then cheaper, then by name.
+		var key := [0 if allowed else 1, distance, int(row.get("ct_cost", 0)), String(row["destination"])]
+		if best.is_empty() or key < best_key:
+			best = row
+			best_key = key
+	if best.is_empty() or (int(best_key[0]) == 1 and int(best_key[1]) >= GridMetric.distance(here as Vector2i, target_cell as Vector2i)):
+		return false
+	var moved := controller.submit_action(CombatController.ACTION_MOVE, null, {"destination": best["destination"]})
+	return bool(moved.get("allowed", false))
 
 
 func _build_actor(build_id: StringName) -> BattleActor:
