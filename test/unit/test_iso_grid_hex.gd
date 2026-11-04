@@ -50,9 +50,17 @@ func _hex_grid(size: Vector2i, walls: Array[Vector2i] = []) -> IsoGrid:
 	return grid
 
 
-func test_hex_mode_is_off_unless_the_project_turns_it_on() -> void:
-	assert_bool(IsoGrid.hex_enabled()).is_false()
+## H3b turned the hex grid on in project.godot; a new grid follows the setting it reads.
+func test_the_project_turns_hexes_on_and_a_new_grid_follows_the_setting() -> void:
+	var project := ConfigFile.new()
+	assert_int(project.load("res://project.godot")).is_equal(OK)
+	assert_bool(bool(project.get_value("soul_meter", "grid/hex", false))).is_true()
+	var before: Variant = ProjectSettings.get_setting(IsoGrid.HEX_SETTING, false)
+	ProjectSettings.set_setting(IsoGrid.HEX_SETTING, true)
+	assert_bool(IsoGrid.new().hex_mode).is_true()
+	ProjectSettings.set_setting(IsoGrid.HEX_SETTING, false)
 	assert_bool(IsoGrid.new().hex_mode).is_false()
+	ProjectSettings.set_setting(IsoGrid.HEX_SETTING, before)
 
 
 func test_world_positions_round_trip_through_hexes_on_the_painted_ground() -> void:

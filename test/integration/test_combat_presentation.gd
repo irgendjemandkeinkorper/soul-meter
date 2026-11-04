@@ -289,6 +289,10 @@ func _views() -> Dictionary:
 	var enemy_node := auto_free(Node2D.new()) as Node2D
 	add_child(ally_node)
 	add_child(enemy_node)
+	# Both stand on their cells, as every body does once the fight's seating is done (hex slice
+	# H3: a body off its cell walks there instead of jumping).
+	ally_node.global_position = grid.cell_to_world(Vector2i.ZERO)
+	enemy_node.global_position = grid.cell_to_world(Vector2i(1, 0))
 	overlay.bind_actor(owner.combat_id, ally_node)
 	overlay.bind_actor(enemy.combat_id, enemy_node)
 	controller.event_emitted.connect(stage.consume_event)

@@ -207,6 +207,8 @@ func _bake_obstacles() -> void:
 	# layout scales its authored collision layer). Bake in Ground cell space
 	# so AStar and the physics polygons describe the same world positions.
 	var occupied_ground_cells: Array[Vector2i] = []
+	# A thin solid (a walk-in building's wall or furniture) blocks its own cell only.
+	var thin := {}
 	if (
 		not _project_blocking_to_ground
 		or (
@@ -215,6 +217,9 @@ func _bake_obstacles() -> void:
 		)
 	):
 		occupied_ground_cells.assign(_blocking.get_used_cells())
+		for cell: Vector2i in occupied_ground_cells:
+			if _blocking.get_cell_alternative_tile(cell) == BlockingLayer.THIN_TILE:
+				thin[cell] = true
 	else:
 		var half_tile := Vector2(_ground.tile_set.tile_size) * 0.5
 		var sample_offsets: Array[Vector2] = [
@@ -232,10 +237,13 @@ func _bake_obstacles() -> void:
 				if _blocking.get_cell_source_id(blocking_cell) == -1:
 					continue
 				occupied_ground_cells.append(ground_cell)
+				if _blocking.get_cell_alternative_tile(blocking_cell) == BlockingLayer.THIN_TILE:
+					thin[ground_cell] = true
 				break
 	for occupied_cell in occupied_ground_cells:
-		for dx in range(-_static_clearance_cells, _static_clearance_cells + 1):
-			for dy in range(-_static_clearance_cells, _static_clearance_cells + 1):
+		var reach := 0 if thin.has(occupied_cell) else _static_clearance_cells
+		for dx in range(-reach, reach + 1):
+			for dy in range(-reach, reach + 1):
 				var cell := occupied_cell + Vector2i(dx, dy)
 				if not _astar.is_in_boundsv(cell):
 					continue
@@ -554,6 +562,28 @@ func neighbor_offsets() -> Array[Vector2i]:
 ## `_is_hex_edge_walled`). Always false on the square grid, whose own rule is the corner cut.
 func is_edge_walled(from: Vector2i, to: Vector2i) -> bool:
 	return hex_mode and _is_hex_edge_walled(from, to)
+
+
+## Hex slice H3: a cell's outline in world space, clockwise. On the square grid it is the iso
+## diamond (top, right, bottom, left); on hexes the six corners of `HexLayout.corners()`, whose
+## edge `i` borders the neighbour `HexMath.DIRECTIONS[HexLayout.EDGE_NEIGHBOR[i]]`.
+func cell_outline(cell: Vector2i) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	if hex_mode:
+		for corner: Vector2 in _layout.corners(cell):
+			points.append(_ground.to_global(corner))
+		return points
+	var center := _ground.map_to_local(cell)
+	var half := Vector2(_ground.tile_set.tile_size) * 0.5
+	for offset: Vector2 in [Vector2(0, -half.y), Vector2(half.x, 0), Vector2(0, half.y), Vector2(-half.x, 0)]:
+		points.append(_ground.to_global(center + offset))
+	return points
+
+
+## Whether a wall fills the cell: the painted blocking layer, or on hexes a hex derived from it.
+## Bodies and solids set by callers do not count. A cell off the grid is not a wall.
+func is_wall(cell: Vector2i) -> bool:
+	return _in_region(cell) and _is_static(cell)
 
 
 ## The square cell under a hex's centre, where the hex's height, cover and terrain are authored.
