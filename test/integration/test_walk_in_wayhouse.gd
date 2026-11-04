@@ -2,8 +2,9 @@ extends GdUnitTestSuite
 ## The Ferry Bell Wayhouse as a walk-in building on the Kesselford map (owner list item 35,
 ## 2026-11-03: "One prototype", "One-cell wall line", "Grow to 12 × 9", "Retire, redirect saves").
 ## Its wall line stands in the scene as `WallBody` shapes and on the painted grid, the walk goes
-## in through the doorway to the keeper, its two people stand on its floor, the roof lifts when
-## the player walks in, and a save made in the retired Wayhouse room loads inside the building.
+## in through the doorway to the keeper, its walls stop a line of fire, its two people stand on its
+## floor, the roof lifts when the player walks in, and a save made in the retired Wayhouse room
+## loads inside the building.
 
 const KESSELFORD := "res://world/kesselford.tscn"
 const RETIRED_ROOM := "res://world/interiors/kesselford_wayhouse.tscn"
@@ -117,6 +118,42 @@ func test_the_walk_goes_in_through_the_doorway_to_the_keeper() -> void:
 	await _unload(town)
 
 
+## Fights can happen inside (owner list item 35, 2026-11-03: "yeah fights can happen there"), so
+## the walls stop a line of fire as they stop a walk. paint_blocking.gd writes the wall line into
+## the map's combat terrain (`blocks_fire_cells`); window cells are wall cells and block too.
+func test_the_walls_stop_a_line_of_fire_and_the_doorway_lets_it_through() -> void:
+	var town := await _load_town()
+	var building := town.get_node(WAYHOUSE_PATH) as WalkInBuilding
+	var terrain := town.get_node("Terrain") as CombatTerrainLayer
+	assert_array(terrain.blocks_fire_cells).override_failure_message("Run tools/paint_blocking.gd.") \
+		.is_equal(building.wall_cells())
+	for cell: Vector2i in building.wall_cells():
+		assert_int(terrain.get_cell_alternative_tile(cell)).is_equal(CombatTerrainLayer.WALL_ALTERNATIVE)
+	var ground := SolidFootprints.find_ground(town)
+	var model := GridBattlefieldModel.new()
+	model.build_grid(ground, town.get_node("Blocking") as TileMapLayer)
+	var grid := (town.find_child("FieldMap", true, false) as FieldMap).iso_grid()
+	var origin := building.origin_cell
+	# Down the middle of the two-cell doorway (cells 9 and 10 of the front wall, row 8).
+	var through_door := model.line_of_sight_between_cells(
+		_fight_cell(grid, ground, origin, Vector2(9.5, 11)), _fight_cell(grid, ground, origin, Vector2(9.5, 5))
+	)
+	assert_bool(through_door["allowed"]).override_failure_message("doorway shot: %s" % str(through_door)).is_true()
+	# Through the front wall at cell 6, and through the back wall from behind the building.
+	var through_walls := {
+		"front wall": [Vector2(6, 11), Vector2(6, 5)],
+		"back wall": [Vector2(5, -3), Vector2(5, 3)],
+	}
+	for wall: String in through_walls:
+		var ends: Array = through_walls[wall]
+		var shot := model.line_of_sight_between_cells(
+			_fight_cell(grid, ground, origin, ends[0]), _fight_cell(grid, ground, origin, ends[1])
+		)
+		assert_str(String(shot["blocked_by"])).override_failure_message("%s shot: %s" % [wall, str(shot)]) \
+			.is_equal("blocked_by_obstacle")
+	await _unload(town)
+
+
 func test_the_keeper_and_the_grain_factor_stand_on_the_wayhouse_floor() -> void:
 	var runner := scene_runner(KESSELFORD)
 	await runner.simulate_frames(5)
@@ -190,6 +227,15 @@ func _load_town() -> Node:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	return scene
+
+
+## The fight grid's cell under a point given in the building's own cells, counted from its back
+## corner cell (`origin`); fractions fall between cells.
+func _fight_cell(grid: IsoGrid, ground: TileMapLayer, origin: Vector2i, at: Vector2) -> Vector2i:
+	var base := ground.map_to_local(origin)
+	var along_i := ground.map_to_local(origin + Vector2i(1, 0)) - base
+	var along_j := ground.map_to_local(origin + Vector2i(0, 1)) - base
+	return grid.world_to_cell(ground.to_global(base + along_i * at.x + along_j * at.y))
 
 
 func _unload(scene: Node) -> void:

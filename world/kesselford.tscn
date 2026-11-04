@@ -140,6 +140,7 @@ script = ExtResource("5_blocking_layer")
 [node name="Terrain" type="TileMapLayer" parent="."]
 visible = false
 script = ExtResource("6_terrain")
+blocks_fire_cells = Array[Vector2i]([Vector2i(29, 43), Vector2i(29, 44), Vector2i(29, 45), Vector2i(29, 46), Vector2i(29, 47), Vector2i(29, 48), Vector2i(29, 49), Vector2i(29, 50), Vector2i(29, 51), Vector2i(30, 43), Vector2i(30, 51), Vector2i(31, 43), Vector2i(31, 51), Vector2i(32, 43), Vector2i(32, 51), Vector2i(33, 43), Vector2i(33, 51), Vector2i(34, 43), Vector2i(34, 51), Vector2i(35, 43), Vector2i(35, 51), Vector2i(36, 43), Vector2i(36, 51), Vector2i(37, 43), Vector2i(37, 51), Vector2i(38, 43), Vector2i(39, 43), Vector2i(40, 43), Vector2i(40, 44), Vector2i(40, 45), Vector2i(40, 46), Vector2i(40, 47), Vector2i(40, 48), Vector2i(40, 49), Vector2i(40, 50), Vector2i(40, 51)])
 
 [node name="Walls" type="StaticBody2D" parent="."]
 

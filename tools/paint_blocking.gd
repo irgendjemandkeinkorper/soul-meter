@@ -10,6 +10,8 @@ extends SceneTree
 ##      with no body gains a `Base` StaticBody2D child. Rectangles nothing uses any more go.
 ##      Walk-in buildings (`WalkInBuilding`, item 35) get their wall line the same way: a
 ##      `WallBody` StaticBody2D child holding one ConvexPolygonShape2D per unbroken wall run.
+##      The wall cells also go into the map's combat terrain (`blocks_fire_cells`), so a
+##      fight's line of fire cannot cross them.
 ##   2. Paint: the layer's `tile_map_data` line is rewritten from the solids' cells. A cell inside
 ##      a walk-in building's footprint takes `BlockingLayer.THIN_TILE` (no walk clearance ring).
 ## Nothing else in the file changes. `--check` writes nothing and lists the maps whose bases or
@@ -28,6 +30,9 @@ const FOOTPRINTS_SCRIPT := "res://world/nav/solid_footprints.gd"
 const BASES_SCRIPT := "res://world/nav/art_bases.gd"
 const WALK_IN_SCRIPT := "res://world/buildings/walk_in_building.gd"
 const SHAPE_NODE := "CollisionShape2D"
+const TERRAIN_NODE := "Terrain"
+## CombatTerrainLayer.blocks_fire_cells.
+const FIRE_CELLS := "blocks_fire_cells"
 
 var _footprints: GDScript
 var _bases: GDScript
@@ -146,6 +151,10 @@ func shape_bases(scene_path: String, write: bool) -> Dictionary:
 		if error != "":
 			root.free()
 			return {"error": error}
+	var fire_error := _mark_fire_walls(scene, root, buildings)
+	if fire_error != "":
+		root.free()
+		return {"error": fire_error}
 	root.free()
 	scene.drop_unused_sub_resources()
 	var updated := scene.to_text()
@@ -171,6 +180,45 @@ func thin_cells(root: Node, cells: Array) -> Dictionary:
 			if footprint.has_point(cell):
 				thin[cell] = true
 	return thin
+
+
+## The map's combat terrain layer: the `Terrain` beside the ground, where the battlefield reads
+## it (GridBattlefieldModel._read_authored_terrain).
+func terrain_layer(root: Node) -> TileMapLayer:
+	var ground: TileMapLayer = _footprints.find_ground(root)
+	if ground == null or ground.get_parent() == null:
+		return null
+	return ground.get_parent().find_child(TERRAIN_NODE, true, false) as TileMapLayer
+
+
+## Every walk-in wall cell, sorted: what the terrain's `blocks_fire_cells` must hold.
+func fire_wall_cells(buildings: Array[Node2D]) -> Array[Vector2i]:
+	var found := {}
+	for building: Node2D in buildings:
+		for cell: Vector2i in building.call("wall_cells"):
+			found[cell] = true
+	var cells: Array[Vector2i] = []
+	cells.assign(found.keys())
+	cells.sort()
+	return cells
+
+
+func _mark_fire_walls(scene: SceneText, root: Node, buildings: Array[Node2D]) -> String:
+	var terrain := terrain_layer(root)
+	if terrain == null:
+		return "" if buildings.is_empty() else "no %s layer for the walk-in walls" % TERRAIN_NODE
+	var path := str(root.get_path_to(terrain))
+	if scene.find_node(path) < 0:
+		return "" if buildings.is_empty() else "%s is inside an instanced scene" % path
+	var cells := fire_wall_cells(buildings)
+	if cells.is_empty():
+		scene.remove_property(path, FIRE_CELLS)
+		return ""
+	var parts := PackedStringArray()
+	for cell: Vector2i in cells:
+		parts.append("Vector2i(%d, %d)" % [cell.x, cell.y])
+	scene.set_property(path, FIRE_CELLS, "Array[Vector2i]([%s])" % ", ".join(parts))
+	return ""
 
 
 ## Every walk-in building under `root` (nodes running `WALK_IN_SCRIPT`).

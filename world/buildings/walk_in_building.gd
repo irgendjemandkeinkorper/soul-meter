@@ -12,7 +12,9 @@ extends Node2D
 ## Blocking follows the owner's "one-cell wall line": the outermost ring of footprint cells is
 ## solid, except the doorway. `tools/paint_blocking.gd` writes that ring into the scene as the
 ## `WallBody` shapes (`wall_polygons()`), then paints the map's Blocking layer from them, so
-## walking, the grid and fights all see the walls with no code of their own. Every painted cell
+## walking, the grid and fights all see the walls with no code of their own. The tool also writes
+## the ring into the map's combat terrain (`CombatTerrainLayer.blocks_fire_cells`), so a fight's
+## line of fire cannot cross a wall (window cells included). Every painted cell
 ## inside the footprint is a thin solid (`BlockingLayer.THIN_TILE`): the walk grid gives it no
 ## clearance ring, so the two-cell doorway and the room stay open. Collision stands
 ## `WALL_INSET_PX` in from the cells' edges, so a body in the next cell clears it.
