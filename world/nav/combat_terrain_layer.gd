@@ -14,7 +14,8 @@ const WALL_ALTERNATIVE := 1
 @export var cover_cells: Array[Vector2i] = []
 @export var elevation_one_cells: Array[Vector2i] = []
 @export var elevation_two_cells: Array[Vector2i] = []
-## Walk-in building walls (owner list item 35): a fight's line of fire cannot cross them.
+## Walk-in building walls less their windows (owner list item 35): a fight's line of fire cannot
+## cross them.
 ## Written by tools/paint_blocking.gd from each building's wall line; never by hand.
 @export var blocks_fire_cells: Array[Vector2i] = []
 

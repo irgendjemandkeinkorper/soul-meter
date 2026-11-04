@@ -87,6 +87,29 @@ func test_a_door_on_another_side_moves_the_gap() -> void:
 	assert_bool(building.is_doorway(WalkInBuilding.Side.FRONT_LEFT, 9)).is_false()
 
 
+## Owner ruling 2026-11-03, "Shots pass windows": a window cell stops a walk but not a shot. A
+## corner cell holds a piece of two sides and lets a shot through only when both have a window.
+func test_a_shot_passes_a_window_but_not_a_wall() -> void:
+	var building := _building(_ground())
+	var front := WalkInBuilding.Side.FRONT_LEFT
+	var back_left := WalkInBuilding.Side.BACK_LEFT
+	var back_right := WalkInBuilding.Side.BACK_RIGHT
+	# Front cells 2 and 5; the back corner (0, 0) has a window on one of its two sides only.
+	building.windows = {front: [2, 5], back_left: [0]}
+	var walls := building.wall_cells()
+	var fire := building.blocks_fire_cells()
+	assert_int(fire.size()).is_equal(walls.size() - 2)
+	for cell: Vector2i in [Vector2i(2, 8), Vector2i(5, 8)]:
+		assert_bool(ORIGIN + cell in walls).override_failure_message("window %s walks" % str(cell)).is_true()
+		assert_bool(ORIGIN + cell in fire).override_failure_message("window %s shoots" % str(cell)).is_false()
+	assert_bool(ORIGIN in fire).override_failure_message("half-window corner").is_true()
+	building.windows = {front: [2, 5], back_left: [0], back_right: [0]}
+	assert_bool(ORIGIN in building.blocks_fire_cells()).override_failure_message("window corner").is_false()
+	# The doorway stops neither.
+	for cell: Vector2i in DOORWAY:
+		assert_bool(ORIGIN + cell in building.blocks_fire_cells()).is_false()
+
+
 func test_the_roof_lifts_for_the_party_and_fades_for_someone_behind() -> void:
 	var map: Node2D = auto_free(Node2D.new())
 	map.add_child(_ground(true))

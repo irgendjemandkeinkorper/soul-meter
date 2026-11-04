@@ -10,8 +10,8 @@ extends SceneTree
 ##      with no body gains a `Base` StaticBody2D child. Rectangles nothing uses any more go.
 ##      Walk-in buildings (`WalkInBuilding`, item 35) get their wall line the same way: a
 ##      `WallBody` StaticBody2D child holding one ConvexPolygonShape2D per unbroken wall run.
-##      The wall cells also go into the map's combat terrain (`blocks_fire_cells`), so a
-##      fight's line of fire cannot cross them.
+##      The wall cells, less the windows, also go into the map's combat terrain
+##      (`blocks_fire_cells`), so a fight's line of fire cannot cross a wall but passes a window.
 ##   2. Paint: the layer's `tile_map_data` line is rewritten from the solids' cells. A cell inside
 ##      a walk-in building's footprint takes `BlockingLayer.THIN_TILE` (no walk clearance ring).
 ## Nothing else in the file changes. `--check` writes nothing and lists the maps whose bases or
@@ -191,11 +191,12 @@ func terrain_layer(root: Node) -> TileMapLayer:
 	return ground.get_parent().find_child(TERRAIN_NODE, true, false) as TileMapLayer
 
 
-## Every walk-in wall cell, sorted: what the terrain's `blocks_fire_cells` must hold.
+## Every walk-in cell that stops a shot (walls less windows), sorted: what the terrain's
+## `blocks_fire_cells` must hold.
 func fire_wall_cells(buildings: Array[Node2D]) -> Array[Vector2i]:
 	var found := {}
 	for building: Node2D in buildings:
-		for cell: Vector2i in building.call("wall_cells"):
+		for cell: Vector2i in building.call("blocks_fire_cells"):
 			found[cell] = true
 	var cells: Array[Vector2i] = []
 	cells.assign(found.keys())

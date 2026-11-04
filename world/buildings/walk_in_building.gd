@@ -14,7 +14,7 @@ extends Node2D
 ## `WallBody` shapes (`wall_polygons()`), then paints the map's Blocking layer from them, so
 ## walking, the grid and fights all see the walls with no code of their own. The tool also writes
 ## the ring into the map's combat terrain (`CombatTerrainLayer.blocks_fire_cells`), so a fight's
-## line of fire cannot cross a wall (window cells included). Every painted cell
+## line of fire cannot cross a wall; it passes a window (`blocks_fire_cells()`). Every painted cell
 ## inside the footprint is a thin solid (`BlockingLayer.THIN_TILE`): the walk grid gives it no
 ## clearance ring, so the two-cell doorway and the room stay open. Collision stands
 ## `WALL_INSET_PX` in from the cells' edges, so a body in the next cell clears it.
@@ -158,6 +158,22 @@ func wall_cells() -> Array[Vector2i]:
 	for side: int in Side.values():
 		for index in side_length(side):
 			if not is_doorway(side, index):
+				found[origin_cell + ring_cell(side, index)] = true
+	var result: Array[Vector2i] = []
+	result.assign(found.keys())
+	result.sort()
+	return result
+
+
+## The wall cells that stop a shot in a fight: every wall cell but the windows (owner ruling
+## 2026-11-03, "Shots pass windows"). A window cell still stops a walk. A corner cell holds a
+## piece of two sides, so it lets a shot through only when both pieces have a window.
+func blocks_fire_cells() -> Array[Vector2i]:
+	var found := {}
+	for side: int in Side.values():
+		var window_cells: Array = windows.get(int(side), [])
+		for index in side_length(side):
+			if not is_doorway(side, index) and not index in window_cells:
 				found[origin_cell + ring_cell(side, index)] = true
 	var result: Array[Vector2i] = []
 	result.assign(found.keys())

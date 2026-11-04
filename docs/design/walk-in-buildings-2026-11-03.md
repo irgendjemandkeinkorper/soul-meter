@@ -9,6 +9,8 @@ Rulings of 2026-11-03 (owner list §5):
 - `One-cell wall line`
 - `Grow to 12 × 9`
 - `Retire, redirect saves`
+- Fights can happen inside ("yeah fights can happen there")
+- `Shots pass windows`
 
 Plan page with mockups: https://claude.ai/artifact/GJjChytsAWShKHGU9y1445
 
@@ -51,7 +53,7 @@ cp /tmp/project.godot.bak project.godot
   - Why: the player's walk grid keeps one cell of clearance round a solid cell, because the tile's collision is the whole diamond. With ordinary cells, that clearance would close a two-cell doorway and most of the room.
   - What changes: a thin cell gets no clearance ring, and its collision is an inset diamond. The `WallBody` strips and the furniture shapes stand 3 px in from their cells' edges, so the player's 30 × 22 box clears them from the next cell.
   - A fight on a live map uses the same grid as walking, so it sees the same open room. Cells outside walk-in buildings are unchanged.
-- **Line of fire:** fights can happen inside (ruled 2026-11-03). A painted cell stops a walk but not a shot, so the same tool also writes the wall cells into the map's combat terrain (`CombatTerrainLayer.blocks_fire_cells`, the `blocks_fire` alternative of the plain terrain tile). A shot through the doorway passes. A shot through a wall is blocked, window cells included (PROVISIONAL). Furniture does not block shots.
+- **Line of fire:** fights can happen inside (ruled 2026-11-03). A painted cell stops a walk but not a shot, so the same tool also writes the wall cells into the map's combat terrain (`CombatTerrainLayer.blocks_fire_cells`, the `blocks_fire` alternative of the plain terrain tile). A shot through the doorway or a window passes (`Shots pass windows`, 2026-11-03); a window still stops a walk. A corner cell passes a shot only when both of its wall pieces have a window. A shot through a wall is blocked. Furniture does not block shots.
 - **Furniture:** a piece of furniture is a `StaticBody2D` whose position is the centre of its footprint, so the y-sort sees people correctly on either side of it. Its shape covers whole cells, and it stands under the map's `SolidProps`.
 - **People:** a building's people use an outdoor placement anchor on the map, such as `kesselford_wayhouse_floor` → `WayhouseKeeperSpot` in `tools/seed_town_npcs.gd`, with zero jitter.
 

@@ -119,16 +119,18 @@ func test_the_walk_goes_in_through_the_doorway_to_the_keeper() -> void:
 
 
 ## Fights can happen inside (owner list item 35, 2026-11-03: "yeah fights can happen there"), so
-## the walls stop a line of fire as they stop a walk. paint_blocking.gd writes the wall line into
-## the map's combat terrain (`blocks_fire_cells`); window cells are wall cells and block too.
-func test_the_walls_stop_a_line_of_fire_and_the_doorway_lets_it_through() -> void:
+## the walls stop a line of fire as they stop a walk. paint_blocking.gd writes the wall line, less
+## its windows, into the map's combat terrain (`blocks_fire_cells`): "Shots pass windows" (2026-11-03).
+func test_the_walls_stop_a_line_of_fire_and_the_doorway_and_windows_let_it_through() -> void:
 	var town := await _load_town()
 	var building := town.get_node(WAYHOUSE_PATH) as WalkInBuilding
 	var terrain := town.get_node("Terrain") as CombatTerrainLayer
 	assert_array(terrain.blocks_fire_cells).override_failure_message("Run tools/paint_blocking.gd.") \
-		.is_equal(building.wall_cells())
-	for cell: Vector2i in building.wall_cells():
+		.is_equal(building.blocks_fire_cells())
+	for cell: Vector2i in building.blocks_fire_cells():
 		assert_int(terrain.get_cell_alternative_tile(cell)).is_equal(CombatTerrainLayer.WALL_ALTERNATIVE)
+	# The Wayhouse has windows, and none of them is in the terrain.
+	assert_int(building.blocks_fire_cells().size()).is_less(building.wall_cells().size())
 	var ground := SolidFootprints.find_ground(town)
 	var model := GridBattlefieldModel.new()
 	model.build_grid(ground, town.get_node("Blocking") as TileMapLayer)
@@ -139,6 +141,12 @@ func test_the_walls_stop_a_line_of_fire_and_the_doorway_lets_it_through() -> voi
 		_fight_cell(grid, ground, origin, Vector2(9.5, 11)), _fight_cell(grid, ground, origin, Vector2(9.5, 5))
 	)
 	assert_bool(through_door["allowed"]).override_failure_message("doorway shot: %s" % str(through_door)).is_true()
+	# Through the window at cell 5 of the front wall (row 8): walls stand on either side of it.
+	assert_bool(5 in building.windows.get(WalkInBuilding.Side.FRONT_LEFT, [])).is_true()
+	var through_window := model.line_of_sight_between_cells(
+		_fight_cell(grid, ground, origin, Vector2(5, 11)), _fight_cell(grid, ground, origin, Vector2(5, 5))
+	)
+	assert_bool(through_window["allowed"]).override_failure_message("window shot: %s" % str(through_window)).is_true()
 	# Through the front wall at cell 6, and through the back wall from behind the building.
 	var through_walls := {
 		"front wall": [Vector2(6, 11), Vector2(6, 5)],
