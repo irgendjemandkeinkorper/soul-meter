@@ -50,32 +50,37 @@ func test_catalog_start_builds_from_the_live_field_and_deploys_opposing_columns(
 	var snapshot: Dictionary = Battle.controller.snapshot()
 	var tiles: Array = snapshot.get("tiles", []) as Array
 	var used_rect: Rect2i = _field.ground().get_used_rect()
-	assert_int(tiles.size()).is_equal(used_rect.size.x * used_rect.size.y)
+	# The field grid's cells: one per painted cell on squares, about four per cell on hexes (hex
+	# slice H3b). Default columns stand on the corner ground cells, on the grid cell there.
+	var grid: IsoGrid = _field.iso_grid()
+	assert_int(tiles.size()).is_equal(grid.region_cells().size())
+	assert_int(tiles.size()).is_greater_equal(used_rect.size.x * used_rect.size.y)
 	var ally_position: Dictionary = Battle.controller.battlefield.describe_position(
 		Battle.controller.battlefield.position_of(Battle.allies[0])
 	)
 	var enemy_position: Dictionary = Battle.controller.battlefield.describe_position(
 		Battle.controller.battlefield.position_of(Battle.enemies[0])
 	)
-	assert_vector(ally_position.get("cell", Vector2i(-1, -1))).is_equal(used_rect.position)
+	assert_vector(ally_position.get("cell", Vector2i(-1, -1))).is_equal(grid.cell_at_square(used_rect.position))
 	assert_vector(enemy_position.get("cell", Vector2i(-1, -1))).is_equal(
-		Vector2i(used_rect.end.x - 1, used_rect.position.y)
+		grid.cell_at_square(Vector2i(used_rect.end.x - 1, used_rect.position.y))
 	)
 
 
 func test_finishing_a_battle_hands_the_field_grid_back_to_navigation() -> void:
 	var grid: IsoGrid = _field.iso_grid()
-	var corner: Vector2i = _field.ground().get_used_rect().position
+	var corner: Vector2i = grid.cell_at_square(_field.ground().get_used_rect().position)
+	var weighted: Vector2i = grid.cell_at_square(Vector2i(3, 1))
 	assert_bool(grid.is_point_solid(corner)).is_false()
 
 	Battle.start(TEST_ENCOUNTER)
 	assert_bool(grid.is_point_solid(corner)).is_true()
-	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_greater(1.0)
+	assert_float(grid.get_point_weight_scale(weighted)).is_greater(1.0)
 
 	Battle._finish(BattleResult.State.FLED, &"fled")
 
 	assert_bool(grid.is_point_solid(corner)).is_false()
-	assert_float(grid.get_point_weight_scale(Vector2i(3, 1))).is_equal(1.0)
+	assert_float(grid.get_point_weight_scale(weighted)).is_equal(1.0)
 
 
 func test_stage_renders_tiles_from_replayed_production_start_event() -> void:

@@ -50,6 +50,19 @@ var _hp_tweens: Dictionary = {}
 var _queue: Array[CombatEvent] = []
 var _holding := false
 var _presented_event: CombatEvent  ## #473 beat cursor: the last event presented (read-only)
+var _approach_path: Array[Vector2i] = []
+var _approach_affordable := true
+## Hex slice H3: cells whose snapshot tile carries an element charge, read once per tile set, so
+## a redraw visits only the cells it marks (a hex field has tens of thousands of tiles).
+var _charged_cells: Dictionary = {}
+## Hex slice H3: the armed command's reach in grid steps (0: no ring). Drawn around the acting
+## unit on the player's turn, on hexes only.
+var _reach_steps := 0
+## Actor ids already placed on their cells once this session. A body is walked onto its first
+## cell (no jump at the fight's start); later syncs place it as before.
+var _placed: Dictionary = {}
+## Actor id -> node, while FieldMap walks the body onto its seat (`FieldMap.walk_to_seat`).
+var _seat_walkers: Dictionary = {}
 var _beat: Tween
 var _theme: Theme
 var animate_events := true:
@@ -89,10 +102,20 @@ var _free_scroll := false
 ## Move range (reachable cells) is drawn only while the player can act: it is what they
 ## need now, not a permanent stage tint.
 var _range_visible := false
+## Poses on the current art (owner 2026-11-02): one pose tween per actor on its Sprite2D, the
+## sprite's resting transform, and who is slumped. Body positions stay the battlefield's.
+var _poses: Dictionary = {}
+var _sprite_base: Dictionary = {}
+var _slumped: Dictionary = {}
 const NUMERIC_FONT := preload(DS.FONT_NUMERIC)
 const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
 const SpellCastScript := preload("res://ui/hud/spell_cast_effect.gd")
 const CombatMotionScript := preload("res://ui/hud/combat_motion.gd")
+const CombatPosesScript := preload("res://world/combat_poses.gd")
+const ClassFlourishScript := preload("res://ui/hud/class_flourish.gd")
+## Casts and flourishes on the field draw at this scale: bodies stand ~112 px tall at zoom 1
+## (UnitArt), and a look sized for the HUD stage read as a speck beside them (2026-11-02).
+const FIELD_EFFECT_SCALE := 2.0
 const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
 ## D9: how far past the visible rect an enemy may start its turn and still earn a pan.
 const CAMERA_MARGIN_SCREENS := 1.0
@@ -113,11 +136,20 @@ const BEAT_READ_SECONDS := 1.2
 const TURN_CUE_SECONDS := DS.DUR_SLOW
 ## #281 G9: a downed body is dimmed, not hidden; it must stay clearly visible on the field.
 const KO_TINT := Color(0.6, 0.6, 0.66, 0.8)
+## Hex slice H3: a hex is about 23 px wide under a body about 40 px wide, so the acting unit's and
+## the target's rims draw at twice a hex. The square diamond already spans the body.
+const HEX_RIM_SCALE := 2.0
+## Hex slice H3: without a field (tests binding only a grid) a body walks onto its first cell at
+## FieldMap's pace.
+const SEAT_WALK_SPEED := FieldMap.SEAT_WALK_SPEED
 ## #281 G7: CombatEvent facing ids are grid directions (GridBattlefieldModel._ORDER, by
-## atan2 over the cell delta), not screen directions.
+## atan2 over the cell delta), not screen directions. Hex facings (`hex_*`, owner item 34) are
+## the six hex steps of `HexMath.DIRECTIONS`.
 const FACING_STEPS := {
 	"e": Vector2i(1, 0), "se": Vector2i(1, 1), "s": Vector2i(0, 1), "sw": Vector2i(-1, 1),
 	"w": Vector2i(-1, 0), "nw": Vector2i(-1, -1), "n": Vector2i(0, -1), "ne": Vector2i(1, -1),
+	"hex_e": Vector2i(1, 0), "hex_ne": Vector2i(1, -1), "hex_nw": Vector2i(0, -1),
+	"hex_w": Vector2i(-1, 0), "hex_sw": Vector2i(-1, 1), "hex_se": Vector2i(0, 1),
 }
 
 
@@ -255,6 +287,20 @@ func range_visible() -> bool:
 	return _range_visible
 
 
+## Hex slice H3: the ring of hexes the armed command reaches, in grid steps (0 clears it). It is
+## drawn around the acting unit while the player can act, and only on hexes.
+func set_reach(steps: int) -> void:
+	steps = maxi(steps, 0)
+	if _reach_steps == steps:
+		return
+	_reach_steps = steps
+	queue_redraw()
+
+
+func reach_steps() -> int:
+	return _reach_steps
+
+
 func pans_suppressed_for(actor_id: StringName) -> bool:
 	return _suppressed.has(actor_id)
 
@@ -313,6 +359,13 @@ func _exit_tree() -> void:
 ## True while bodies are in motion or presented beats are still waiting their turn. A lone
 ## beat's reading hold does not count: the result outlives motion without gating input.
 func is_animating() -> bool:
+	for id: StringName in _seat_walkers.keys():
+		var walker: Variant = _seat_walkers[id]
+		if not is_instance_valid(_field) or not is_instance_valid(walker) \
+				or not _field.is_seat_walking(walker as Node2D):
+			_seat_walkers.erase(id)
+	if not _seat_walkers.is_empty():
+		return true
 	if not _moves.is_empty() or not _flashes.is_empty() or not _queue.is_empty():
 		return true
 	for effect: Node in get_children():
@@ -327,6 +380,17 @@ func cell_center(cell: Vector2i) -> Vector2:
 
 func tile_at(cell: Vector2i) -> Dictionary:
 	return (_tiles.get(cell, {}) as Dictionary).duplicate(true)
+
+
+## Combat polish 2026-11-02: the walk of a hovered walk-in order. Empty clears it.
+func set_approach_path(cells: Array[Vector2i], affordable: bool) -> void:
+	_approach_path = cells
+	_approach_affordable = affordable
+	queue_redraw()
+
+
+func approach_path() -> Array[Vector2i]:
+	return _approach_path
 
 
 func set_pointer(selected: Variant, hovered: Variant) -> void:
@@ -364,9 +428,13 @@ func _present(event: CombatEvent) -> void:
 	if tiles is Array and not is_same(tiles, _tiles_source):
 		_tiles_source = tiles
 		_tiles.clear()
+		_charged_cells.clear()
 		for tile: Variant in tiles:
 			if tile is Dictionary:
-				_tiles[Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))] = tile
+				var tile_cell := Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))
+				_tiles[tile_cell] = tile
+				if int((tile as Dictionary).get("charge_level", 0)) > 0:
+					_charged_cells[tile_cell] = true
 	if snapshot.has("allies") or snapshot.has("enemies"):
 		_actors.clear()
 		var roster := PackedStringArray()
@@ -426,6 +494,9 @@ func _beat_seconds(event: CombatEvent, path: Array) -> float:
 				return SpellCastScript.DURATION + BEAT_READ_SECONDS
 			if HitPulseScript.has_result(event):
 				return BEAT_READ_SECONDS
+			# A class command's flourish gets most of its beat before the next one plays.
+			if _class_flourish_for(event) != "":
+				return ClassFlourishScript.LIFETIME * 0.75
 			if not event.target_id.is_empty():
 				return DS.DUR_FAST * 2.0
 	return 0.0
@@ -620,6 +691,7 @@ func _sync_actors(event: CombatEvent) -> void:
 			and id == event.actor_id and path.size() >= 2 and not _suppressed.has(id)
 		):
 			_stop_move(id)
+			_stop_seat_walk(id, node)
 			var points := PackedVector2Array([node.global_position])
 			for index: int in range(1, path.size()):
 				if path[index] is Vector2i:
@@ -627,17 +699,32 @@ func _sync_actors(event: CombatEvent) -> void:
 			var tween := CombatMotionScript.along_path(self, points, _set_actor_position.bind(id))
 			_moves[id] = tween
 			tween.tween_callback(func() -> void: _moves.erase(id))
+			var pose := _pose(id)
+			if not pose.is_empty():
+				CombatPosesScript.step_bob(
+					pose["tween"], pose["sprite"], pose["base"], points.size() - 1,
+					DS.DUR_FAST * maxi(1, points.size() - 1)
+				)
 		elif not _moves.has(id):
-			node.global_position = _grid.cell_to_world(cell)
+			_place(id, node, _grid.cell_to_world(cell))
 		# Keep the actor's scene-authored art; facing is a presentation property only.
 		var sprite := node.find_child("Sprite2D", true, false) as Sprite2D
 		if sprite != null and actor.has("facing"):
-			sprite.flip_h = str(actor["facing"]).contains("w")
+			var flip := str(actor["facing"]).contains("w")
+			if sprite.flip_h != flip:
+				# A body already posing (walking, striking) or down just flips; one at rest turns.
+				var turning := {} if _poses.has(id) or _moves.has(id) or _slumped.has(id) else _pose(id)
+				if turning.is_empty():
+					sprite.flip_h = flip
+				else:
+					CombatPosesScript.turn(turning["tween"], turning["sprite"], turning["base"], flip)
 		if int(actor.get("hp", 1)) <= 0:
 			if not _pending_defeats.has(id):
 				_stop_flash(id)
 				_fall(id, node)
 		else:
+			if _slumped.has(id):
+				_rest_pose(id)
 			_downed.erase(id)
 			_stop_fade(id)
 			if not _flashes.has(id):
@@ -655,6 +742,12 @@ func _fall(id: StringName, node: Node2D) -> void:
 		_downed[id] = true
 		return
 	_downed[id] = true
+	var pose := _pose(id)
+	if not pose.is_empty():
+		var striker := _node(_active_id)
+		var away_x := node.global_position.x - striker.global_position.x if is_instance_valid(striker) and striker != node else 1.0
+		CombatPosesScript.slump(pose["tween"], pose["sprite"], pose["base"], away_x)
+		_slumped[id] = true
 	var fade := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_fades[id] = fade
 	fade.tween_property(node, "modulate", fallen, DS.DUR_SLOW * 2.0)
@@ -710,15 +803,31 @@ func _stop_hp(id: StringName) -> void:
 func _play_action(event: CombatEvent) -> void:
 	var attacker := _node(event.actor_id)
 	var target := _node(event.target_id)
+	var class_id := _class_flourish_for(event)
+	if not class_id.is_empty() and is_instance_valid(attacker) and not _reduced_motion():
+		var flourish := ClassFlourishScript.new()
+		flourish.name = "ClassFlourish"
+		if flourish.setup(class_id, _result_anchor.bind(event.actor_id), FIELD_EFFECT_SCALE):
+			add_child(flourish)
+		else:
+			flourish.free()
 	if is_instance_valid(attacker) and SpellCastScript.is_cast(event):
 		var targets: Array[Callable] = []
 		for cell: Vector2i in FireField.cells_from_data(event.data.get("cells", [])):
 			targets.append(cell_center.bind(cell))
 		if targets.is_empty():
 			targets.append(_result_anchor.bind(event.target_id if is_instance_valid(target) else event.actor_id))
+		var lift := _pose(event.actor_id)
+		if not lift.is_empty():
+			var palette := SpellCastScript.palette_for(event)
+			var glow: Color = palette[0]["glow"] if not palette.is_empty() else DS.PARCHMENT
+			CombatPosesScript.cast_lift(
+				lift["tween"], lift["sprite"], lift["base"], glow,
+				SpellCastScript.WINDUP + SpellCastScript.TRAVEL
+			)
 		var spell := SpellCastScript.new()
 		spell.name = "SpellCast"
-		spell.setup(event, _result_anchor.bind(event.actor_id), targets, 1.0)
+		spell.setup(event, _result_anchor.bind(event.actor_id), targets, FIELD_EFFECT_SCALE)
 		spell.impact_reached.connect(_present_action_result.bind(event), CONNECT_ONE_SHOT)
 		add_child(spell)
 		return
@@ -735,6 +844,9 @@ func _play_action(event: CombatEvent) -> void:
 		lunge.tween_method(_set_actor_position.bind(event.actor_id), attacker.global_position, toward, DS.DUR_FAST)
 		lunge.tween_method(_set_actor_position.bind(event.actor_id), toward, home, DS.DUR_FAST)
 		lunge.tween_callback(func() -> void: _moves.erase(event.actor_id))
+		var lean := _pose(event.actor_id)
+		if not lean.is_empty():
+			CombatPosesScript.lunge(lean["tween"], lean["sprite"], lean["base"], target.global_position.x - home.x)
 	_present_action_result(event)
 
 
@@ -754,6 +866,14 @@ func _present_action_result(event: CombatEvent) -> void:
 		_stop_flash(event.target_id)
 		# A defeated target keeps its fallen opacity; feedback must not revive its tint.
 		if int((_actors.get(event.target_id, {}) as Dictionary).get("hp", 1)) > 0:
+			var struck := _pose(event.target_id)
+			if not struck.is_empty():
+				var striker := _node(event.actor_id)
+				var away := (
+					target.global_position - striker.global_position
+					if is_instance_valid(striker) and striker != target else Vector2.ZERO
+				)
+				CombatPosesScript.recoil(struck["tween"], struck["sprite"], struck["base"], away)
 			var color: Color = _original_colors.get(target, Color.WHITE)
 			var flash := create_tween()
 			_flashes[event.target_id] = flash
@@ -798,6 +918,51 @@ func _result_anchor(id: StringName) -> Variant:
 	return to_local(target.global_position) + Vector2(0, -DS.SPACE_8) if is_instance_valid(target) else null
 
 
+## Puts a body on its cell. The first time this session, a body away from its cell walks there
+## (hex slice H3: nobody jumps at the fight's start), through FieldMap's seat walk. A body still on
+## that walk keeps walking, toward wherever its cell now is. Seat walks are the field's present
+## motion, not a beat, so the replay that runs when the HUD binds does not cut them short; only
+## reduced motion does (`FieldMap.walk_to_seat` places at once then). Later syncs place a body at
+## once, as before.
+func _place(id: StringName, node: Node2D, target: Vector2) -> void:
+	var field_walks := is_instance_valid(_field)
+	if field_walks and _field.is_seat_walking(node):
+		_placed[id] = true
+		_seat_walkers[id] = node
+		_field.walk_to_seat(node, target)
+		return
+	var first := not _placed.has(id)
+	_placed[id] = true
+	var distance := node.global_position.distance_to(target)
+	if not first or distance < 0.5 or _reduced_motion() or not is_inside_tree():
+		node.global_position = target
+		return
+	if field_walks:
+		_field.walk_to_seat(node, target)
+		_seat_walkers[id] = node
+		return
+	if not animate_events:
+		node.global_position = target
+		return
+	var seconds := clampf(distance / SEAT_WALK_SPEED, DS.DUR_FAST, DS.DUR_SLOW * 2.0)
+	var walk := create_tween()
+	walk.tween_method(_set_actor_position.bind(id), node.global_position, target, seconds)
+	walk.tween_callback(_end_seat_walk.bind(id, walk))
+	_moves[id] = walk
+
+
+func _end_seat_walk(id: StringName, walk: Tween) -> void:
+	if _moves.get(id) == walk:
+		_moves.erase(id)
+	queue_redraw()
+
+
+func _stop_seat_walk(id: StringName, node: Node2D) -> void:
+	_seat_walkers.erase(id)
+	if is_instance_valid(_field) and is_instance_valid(node):
+		_field.stop_seat_walk(node)
+
+
 func _set_actor_position(value: Vector2, id: StringName) -> void:
 	var node := _node(id)
 	if is_instance_valid(node):
@@ -811,6 +976,9 @@ func _reduced_motion() -> bool:
 
 func _on_setting_changed(section: String, key: String, value: Variant) -> void:
 	if section == "accessibility" and key == "reduced_motion" and bool(value):
+		if is_instance_valid(_field):
+			_field.finish_seat_walks()
+		_seat_walkers.clear()
 		_settle_motion()
 		for effect: Node in get_children():
 			if effect.get_script() == HitPulseScript:
@@ -820,6 +988,9 @@ func _on_setting_changed(section: String, key: String, value: Variant) -> void:
 func _settle_motion() -> void:
 	for id: StringName in _moves.keys():
 		_stop_move(id)
+	# Seat walks are the field's and outlive a replay; reduced motion ends them (below).
+	for id: Variant in _poses.keys() + _slumped.keys():
+		_rest_pose(id)
 	for id: StringName in _flashes.keys():
 		_stop_flash(id)
 	for id: StringName in _fades.keys():
@@ -839,6 +1010,62 @@ func _stop_move(id: StringName) -> void:
 	if tween != null and tween.is_valid():
 		tween.kill()
 	_moves.erase(id)
+
+
+## The class whose flourish `event` plays: a class command (KitGate) by an actor whose class
+## resource names a patron. Empty for everything else (strikes, tone casts, moves, enemies).
+func _class_flourish_for(event: CombatEvent) -> String:
+	if event.type != &"action_resolved":
+		return ""
+	var action := CombatActionCatalog.by_id(StringName(str(event.data.get("action_id", ""))))
+	if action == null or not KitGate.is_class_command(action):
+		return ""
+	var actor: Dictionary = _actors.get(event.actor_id, {})
+	var resource: Variant = actor.get("class_resource", {})
+	var patron := str((resource as Dictionary).get("patron_id", "")) if resource is Dictionary else ""
+	if patron.is_empty():
+		return ""
+	return str(ClassCatalog.class_for_patron_value(patron).get("id", ""))
+
+
+## A fresh pose for `id` on its Sprite2D, as {tween, sprite, base}; empty when motion is off or
+## the body has no sprite. Any running pose stops and the sprite returns to rest first.
+func _pose(id: StringName) -> Dictionary:
+	if not animate_events or _reduced_motion() or not is_inside_tree():
+		return {}
+	var node := _node(id)
+	var sprite := node.find_child("Sprite2D", true, false) as Sprite2D if is_instance_valid(node) else null
+	if sprite == null:
+		return {}
+	_stop_pose(id)
+	if not _sprite_base.has(id):
+		_sprite_base[id] = CombatPosesScript.capture(sprite)
+	var base: Dictionary = _sprite_base[id]
+	CombatPosesScript.restore(sprite, base)
+	var tween := create_tween()
+	_poses[id] = tween
+	tween.finished.connect(func() -> void:
+		if _poses.get(id) == tween:
+			_poses.erase(id)
+	)
+	return {"tween": tween, "sprite": sprite, "base": base}
+
+
+func _stop_pose(id: StringName) -> void:
+	var tween := _poses.get(id) as Tween
+	if tween != null and tween.is_valid():
+		tween.kill()
+	_poses.erase(id)
+
+
+## Back to the resting transform, standing (a revive, reduced motion, or the fight's end).
+func _rest_pose(id: StringName) -> void:
+	_stop_pose(id)
+	_slumped.erase(id)
+	var node := _node(id)
+	var sprite := node.find_child("Sprite2D", true, false) as Sprite2D if is_instance_valid(node) else null
+	if sprite != null and _sprite_base.has(id):
+		CombatPosesScript.restore(sprite, _sprite_base[id])
 
 
 func _stop_flash(id: StringName) -> void:
@@ -862,13 +1089,36 @@ func _actor_cell(actor: Dictionary) -> Variant:
 	return null
 
 
-func _diamond(cell: Vector2i) -> PackedVector2Array:
-	var center := _ground.map_to_local(cell)
-	var half := Vector2(_ground.tile_set.tile_size) * 0.5
+## A cell's outline in this overlay's space: the iso diamond, or the hex (hex slice H3).
+func _cell_shape(cell: Vector2i) -> PackedVector2Array:
 	var points := PackedVector2Array()
-	for offset: Vector2 in [Vector2(0, -half.y), Vector2(half.x, 0), Vector2(0, half.y), Vector2(-half.x, 0)]:
-		points.append(to_local(_ground.to_global(center + offset)))
+	for point: Vector2 in _grid.cell_outline(cell):
+		points.append(to_local(point))
 	return points
+
+
+## The rim drawn around an acting unit or its target: the cell's outline, twice a hex on hexes.
+func _rim_shape(cell: Vector2i) -> PackedVector2Array:
+	var points := _cell_shape(cell)
+	if not _grid.hex_mode:
+		return points
+	var center := cell_center(cell)
+	for index: int in points.size():
+		points[index] = center + (points[index] - center) * HEX_RIM_SCALE
+	return points
+
+
+## The edges where a set of hexes ends, as segment pairs for `draw_multiline` (a reach ring).
+func _hex_boundary(cells: Dictionary) -> PackedVector2Array:
+	var segments := PackedVector2Array()
+	for cell: Vector2i in cells:
+		var outline := _cell_shape(cell)
+		for edge: int in outline.size():
+			if cells.has(cell + HexMath.DIRECTIONS[HexLayout.EDGE_NEIGHBOR[edge]]):
+				continue
+			segments.append(outline[edge])
+			segments.append(outline[(edge + 1) % outline.size()])
+	return segments
 
 
 func _read_fields(snapshot: Dictionary) -> void:
@@ -894,28 +1144,40 @@ func _read_fields(snapshot: Dictionary) -> void:
 		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
 		if not (center is Vector2i):
 			continue
-		var radius := int((field as Dictionary).get("radius", 0))
-		for dy: int in range(-radius, radius + 1):
-			for dx: int in range(-radius, radius + 1):
-				_light_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+		var radius := GridMetric.radius(int((field as Dictionary).get("radius", 0)))
+		for cell: Vector2i in GridMetric.within(center as Vector2i, radius):
+			_light_cells[cell] = true
 	for field: Variant in light.get("shrouds", []):
 		if not (field is Dictionary):
 			continue
 		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
 		if not (center is Vector2i):
 			continue
-		var radius := int((field as Dictionary).get("radius", 0))
-		for dy: int in range(-radius, radius + 1):
-			for dx: int in range(-radius, radius + 1):
-				_shroud_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+		var radius := GridMetric.radius(int((field as Dictionary).get("radius", 0)))
+		for cell: Vector2i in GridMetric.within(center as Vector2i, radius):
+			_shroud_cells[cell] = true
 
 
 func _draw() -> void:
 	if _grid == null or not is_instance_valid(_ground):
 		return
-	for cell: Vector2i in _tiles:
+	# Only cells something marks are visited: a hex field has tens of thousands of tiles.
+	var marked: Dictionary = {}
+	for layer: Dictionary in [
+		_reachable if _range_visible else {}, _shroud_cells, _light_cells, _fire_cells,
+		_mark_cells, _charged_cells,
+	]:
+		marked.merge(layer)
+	for cell: Vector2i in _approach_path:
+		marked[cell] = true
+	for pointer: Variant in [_selected, _hovered]:
+		if pointer is Vector2i:
+			marked[pointer] = true
+	for cell: Vector2i in marked:
+		if not _tiles.has(cell):
+			continue
 		var tile: Dictionary = _tiles[cell]
-		var diamond := _diamond(cell)
+		var diamond := _cell_shape(cell)
 		if _range_visible and _reachable.has(cell):
 			draw_colored_polygon(diamond, Color(DS.TILE_SELECT_RIM, 0.12))
 		if _shroud_cells.has(cell):
@@ -930,9 +1192,17 @@ func _draw() -> void:
 		if charge > 0:
 			var element_color := Color(str(tile.get("element_color", DS.MOTE_3.to_html())))
 			draw_colored_polygon(diamond, DS.charge_tint(element_color, charge))
+		if _approach_path.has(cell):
+			var walk_tint := DS.TILE_SELECT_RIM if _approach_affordable else DS.CINDER_3
+			draw_colored_polygon(diamond, Color(walk_tint, 0.26))
+			if cell == _approach_path.back():
+				var rim := diamond.duplicate()
+				rim.append(rim[0])
+				draw_polyline(rim, walk_tint, 2.0)
 		if cell == _selected or cell == _hovered:
 			diamond.append(diamond[0])
 			draw_polyline(diamond, DS.TILE_SELECT_RIM, 2.0)
+	_draw_reach_ring()
 	# #281 G2: everything attached to a combatant is drawn at its body, so it travels with a
 	# move slide or lunge instead of waiting at the destination cell.
 	for id: StringName in _actors:
@@ -953,12 +1223,27 @@ func _draw() -> void:
 			continue
 		var cell: Variant = _actor_cell(_actors[id])
 		if cell != null:
-			var diamond := _diamond(cell)
+			var diamond := _rim_shape(cell)
 			diamond.append(diamond[0])
 			var shift := _body_anchor(id, cell) - cell_center(cell)
 			for index: int in diamond.size():
 				diamond[index] += shift
 			draw_polyline(diamond, DS.BRONZE_3 if id == _active_id else DS.CINDER_3, 3.0)
+
+
+## Hex slice H3: the armed command's reach around the acting unit, on the player's turn.
+func _draw_reach_ring() -> void:
+	if not _grid.hex_mode or not _range_visible or _reach_steps <= 0 or not _actors.has(_active_id):
+		return
+	var center: Variant = _actor_cell(_actors[_active_id])
+	if not (center is Vector2i):
+		return
+	var inside: Dictionary = {}
+	for cell: Vector2i in GridMetric.within(center as Vector2i, _reach_steps):
+		inside[cell] = true
+	var segments := _hex_boundary(inside)
+	if segments.size() >= 2:
+		draw_multiline(segments, Color(DS.TILE_SELECT_RIM, 0.7), 1.5)
 
 
 ## Where a combatant's body stands now: its bound node (mid-slide or mid-lunge), else its cell.

@@ -16,6 +16,10 @@ const EXPLORE_HINTS := (
 	+ "Q  JOURNAL    R  STANDINGS    ESC  PAUSE"
 )
 const COMBAT_HINTS := "WASD  SCROLL    SPACE  END TURN    B  BREAKDOWN    ESC  PAUSE"
+## The AI-vs-AI demo takes no orders, so its hints leave END TURN out (item 33).
+const COMBAT_WATCH_HINTS := "WASD  SCROLL    B  BREAKDOWN    ESC  PAUSE"
+## The key hints' home, top left.
+const HINTS_AT := Vector2(24, 20)
 
 var battle_interface: BattleInterface
 var combat_bar: CombatBar
@@ -69,7 +73,7 @@ func _ready() -> void:
 
 	var tutorial := Label.new()
 	tutorial.name = "Tutorial"
-	tutorial.position = Vector2(24, 20)
+	tutorial.position = HINTS_AT
 	tutorial.size = Vector2(760, 72)
 	tutorial.theme_type_variation = "EyebrowLabel"
 	tutorial.text = EXPLORE_HINTS
@@ -167,7 +171,7 @@ func enter_combat(field: FieldMap) -> BattleInterface:
 	combat_bar.offset_right = -270.0
 	combat_bar.offset_bottom = -6.0
 	_bar_column.visible = false
-	_tutorial.text = tr(COMBAT_HINTS)
+	_tutorial.text = tr(COMBAT_WATCH_HINTS if battle_interface.autoplaying() else COMBAT_HINTS)
 	# The bar takes pointer input in combat (buttons); in exploration it lets clicks through.
 	_bar.mouse_filter = Control.MOUSE_FILTER_STOP
 	battle_interface.turn_strip.resized.connect(_apply_insets)
@@ -208,6 +212,7 @@ func exit_combat() -> void:
 	_combat_audio = null
 	_bar_column.visible = true
 	_tutorial.text = EXPLORE_HINTS
+	_tutorial.position = HINTS_AT
 	_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var reduced_motion := bool(GameState.get_setting("accessibility", "reduced_motion", false))
 	_set_bar_height(EXPLORE_BAR_HEIGHT, reduced_motion)
@@ -232,6 +237,20 @@ func _apply_insets() -> void:
 	battle_interface.set_hud_insets(
 		battle_interface.turn_strip.size.y, maxf(_bar.size.y, COMBAT_BAR_HEIGHT)
 	)
+	_place_hints()
+
+
+## Owner 2026-11-02 (item 33 follow-up): a full turn strip (the 5v5 demo's ten units) runs
+## under the top-left key hints, which printed over the first names. The hints drop below the
+## strip whenever the two would meet, and go home when the strip is short again.
+func _place_hints() -> void:
+	_tutorial.position = HINTS_AT
+	if not is_instance_valid(battle_interface):
+		return
+	var strip := battle_interface.turn_strip.get_global_rect()
+	var hints := Rect2(_tutorial.global_position, _tutorial.get_minimum_size())
+	if strip.intersects(hints):
+		_tutorial.global_position.y = strip.end.y + DS.SPACE_3
 
 
 # --- exploration readouts -------------------------------------------------------------------

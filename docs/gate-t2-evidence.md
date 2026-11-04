@@ -187,3 +187,27 @@ picked `phase2-mixed-whipsaw` (naive DEFEAT, 0/54); positional victory with both
 **Gate T-2: PASSED** on its first threshold clause. Sensitivity caveat: at Reason 1 (speed 6)
 the positional arm loses whipsaw, so the margin depends on the party being at least as fast as
 the enemies.
+
+## Run 7 — hexes (owner item 34, slice H2) — 2026-11-03
+
+The hex grid plan (`docs/design/hex-grid-plan-2026-11-03.md`) names this rerun as H2's proof.
+Same harness, seed and pre-registered rule, run once with `soul_meter/grid/hex` on (a
+temporary `override.cfg`; the setting itself stays off). Two harness facts had to hold first:
+
+- The harness board is plain 64×32 rectangles, not iso diamonds. Hexes are now sized from the
+  tile's real shape, half a cell side, so the board keeps about 4.6 hexes to a cell. Before that
+  fix it held about 9, and every move covered half the ground.
+- The ridge is authored on cells. It is now written through
+  `GridBattlefieldModel.cells_on_square()`, so on hexes it covers the hexes on those cells.
+  Written as raw `Vector2i(x, 2)` it marked six stray hexes, and the board had no ridge.
+
+Results under the unchanged rule:
+
+| Grid | Selected encounter | Positional arm | Naive arm | Gate |
+|---|---|---|---|---|
+| Squares (unchanged) | `phase2-mixed-whipsaw` | victory, both alive, 40 HP | DEFEAT | PASSED |
+| Hexes | `phase2-undead` | victory, both alive, 28 HP | DEFEAT | PASSED |
+
+**Gate T-2 holds on hexes** on its first threshold clause. The rule selected a different
+encounter on hexes (the one where naive play fared worst there), as pre-registered. Caveat:
+one seed, like every earlier run; the hex numbers stay PROVISIONAL with the rest of item 34.

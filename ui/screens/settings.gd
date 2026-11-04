@@ -11,6 +11,17 @@ func _build() -> void:
 	fs.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	fs.toggled.connect(_on_fullscreen_toggled)
 	vbox.add_child(fs)
+	# Owner item 34, ruling H-c: fights always show the hex grid; this keeps a faint one while
+	# exploring. Offered only when the grid is hexes (hex slice H3). Draft strings: owner list.
+	if IsoGrid.hex_enabled():
+		var hex_grid := CheckButton.new()
+		hex_grid.name = "HexGridExploring"
+		hex_grid.text = "Show hex grid while exploring"
+		hex_grid.tooltip_text = "A faint hex grid on the ground outside fights. Fights always show it."
+		hex_grid.button_pressed = FieldGridLayer.exploring_grid_enabled()
+		hex_grid.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		hex_grid.toggled.connect(_on_hex_grid_toggled)
+		vbox.add_child(hex_grid)
 
 	vbox.add_child(_section("Accessibility"))
 	var reduced_motion := CheckButton.new()
@@ -49,6 +60,10 @@ func _build() -> void:
 func _on_fullscreen_toggled(on: bool) -> void:
 	GameState.apply_fullscreen(on)
 	GameState.set_setting("display", "fullscreen", on)
+
+
+func _on_hex_grid_toggled(enabled: bool) -> void:
+	GameState.set_setting(FieldGridLayer.SETTING_SECTION, FieldGridLayer.SETTING_KEY, enabled)
 
 
 func _on_reduced_motion_toggled(enabled: bool) -> void:

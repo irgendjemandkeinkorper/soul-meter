@@ -61,10 +61,14 @@ func test_trial_warden_fight_keeps_the_field_hud_and_grows_its_one_bar() -> void
 	assert_object(combat_bar.get_parent()).is_same(bar)
 	assert_bool(bar.get_global_rect().encloses(combat_bar.get_global_rect())).is_true()
 	assert_object(bar.find_child("SoulGauge", true, false)).is_not_null()
-	for part: String in ["ActiveUnitPlate", "MessageLog", "Actions", "PartyRows", "EndTurnButton", "WithdrawButton", "BreakdownButton"]:
+	for part: String in ["ActiveUnitPlate", "MessageLog", "Actions", "EndTurnButton", "WithdrawButton", "BreakdownButton"]:
 		var node := combat_bar.find_child(part, true, false) as CanvasItem
 		assert_object(node).override_failure_message("the bar lost its %s" % part).is_not_null()
 		assert_bool(node.is_visible_in_tree()).override_failure_message("%s hidden" % part).is_true()
+	# Alone, the party column would repeat the plate (owner playtest 2026-11-02).
+	assert_bool((combat_bar.find_child("PartyRows", true, false) as CanvasItem).is_visible_in_tree()).is_equal(
+		Battle.allies.size() > 1
+	)
 	var labels := PackedStringArray()
 	for button: Button in combat_bar.get("_action_buttons"):
 		labels.append(button.text)

@@ -5,6 +5,10 @@ extends GdUnitTestSuite
 var _original_party: Array[PartyMember] = []
 
 
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant = null
+
+
 func before_test() -> void:
 	_original_party = GameState.party.duplicate()
 
@@ -12,9 +16,14 @@ func before_test() -> void:
 func after_test() -> void:
 	GameState.set_party(_original_party)
 	get_tree().paused = false
+	if _grid_before != null:
+		GridMode.restore(_grid_before)
+		_grid_before = null
 
 
 func test_field_scene_spawns_followers_and_tracks_successively_older_cells() -> void:
+	# Square cell trail; hexes: test_hex_walking's followers test (hex slice H3b).
+	_grid_before = GridMode.use_squares()
 	_set_companion_count(2)
 	var runner := scene_runner("res://world/test_room.tscn")
 	await runner.simulate_frames(2)
@@ -163,6 +172,8 @@ func _wait_physics_frames(frame_count: int) -> void:
 
 
 func test_teleporting_the_player_resets_the_cell_trail_to_the_new_position() -> void:
+	# Square cell trail; hexes: test_hex_walking's followers test (hex slice H3b).
+	_grid_before = GridMode.use_squares()
 	_set_companion_count(1)
 	var runner := scene_runner("res://world/test_room.tscn")
 	await runner.simulate_frames(3)

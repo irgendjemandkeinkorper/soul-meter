@@ -173,8 +173,7 @@ static func covers(field: Dictionary, cell: Vector2i) -> bool:
 	if field.is_empty():
 		return false
 	var center: Vector2i = field.get("center", Vector2i.ZERO)
-	var delta := cell - center
-	return maxi(absi(delta.x), absi(delta.y)) <= int(field.get("radius", 0))
+	return GridMetric.distance(cell, center) <= GridMetric.radius(int(field.get("radius", 0)))
 
 
 static func cell_to_data(cell: Vector2i) -> Dictionary:

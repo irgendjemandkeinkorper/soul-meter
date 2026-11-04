@@ -48,7 +48,7 @@ func is_empty() -> bool:
 ## skipped"). An empty cell list creates nothing and reports `{"allowed": false}`.
 func create_line(owner_id: StringName, cells: Array[Vector2i], round_number: int) -> Dictionary:
 	if cells.is_empty():
-		return {"allowed": false, "blocked_by": &"empty_line", "message": "No legal cell remains for the fire line."}
+		return {"allowed": false, "blocked_by": &"empty_line", "message": "No legal %s remains for the fire line." % GridMetric.step_word(1)}
 	_sequence += 1
 	var line := {
 		"id": _sequence,
@@ -171,7 +171,11 @@ static func is_cardinal_line(cells: Array[Vector2i]) -> bool:
 	var second: Vector2i = sorted[1]
 	var third: Vector2i = sorted[2]
 	var step := second - first
-	if step != Vector2i(1, 0) and step != Vector2i(0, 1):
+	# Squares: a row or a column. Hexes: any of the three hex axes (hex slice H3b).
+	var steps: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1)]
+	if GridMetric.hex():
+		steps = HexMath.DIRECTIONS
+	if not steps.has(step):
 		return false
 	return third - second == step
 

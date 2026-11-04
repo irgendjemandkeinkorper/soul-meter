@@ -520,6 +520,96 @@ static func build() -> Theme:
 	t.set_stylebox("pressed", "HudActionButton", _notched_style(12, DS.SPACE_1, DS.SPACE_3))
 	t.set_stylebox("focus", "HudActionButton", _notched_style(13, DS.SPACE_1, DS.SPACE_3))
 	t.set_stylebox("disabled", "HudActionButton", _notched_style(14, DS.SPACE_1, DS.SPACE_3))
+	# Hotbar slots (owner 2026-11-01): the command button with room on the left for its
+	# key number (HudSlotKey, bronze like the other key hints).
+	t.add_type("HudSlotButton")
+	t.set_type_variation("HudSlotButton", "Button")
+	# FS_300: at FS_100 (12 px) the playtest found the commands too small to read at 1080p.
+	t.set_font_size("font_size", "HudSlotButton", DS.FS_300)
+	var slot_states := ["normal", "hover", "pressed", "focus", "disabled"]
+	for state_index: int in slot_states.size():
+		var slot_style := _notched_style(10 + state_index, DS.SPACE_1, DS.SPACE_3)
+		slot_style.content_margin_left = DS.SPACE_3 + DS.SPACE_7
+		t.set_stylebox(slot_states[state_index], "HudSlotButton", slot_style)
+	t.add_type("HudSlotKey")
+	t.set_type_variation("HudSlotKey", "Label")
+	# Lining figures (the stat face): the display serif's old-style 3, 4, 5 and 7 drop below
+	# the label's line.
+	t.set_font("font", "HudSlotKey", numeric)
+	t.set_font_size("font_size", "HudSlotKey", DS.FS_300)
+	t.set_color("font_color", "HudSlotKey", DS.BRONZE_3)
+	# A dimmed slot's key does nothing, so its number dims with it.
+	t.add_type("HudSlotKeyDim")
+	t.set_type_variation("HudSlotKeyDim", "HudSlotKey")
+	t.set_color("font_color", "HudSlotKeyDim", DS.ASH_DIM)
+	# Command tiles (owner 2026-11-02, item 33 follow-up: "abilities behind icons with a hover
+	# tooltip"): glyph on top, the name under it, the key and the AP in the top corners; the
+	# rest of the command's detail is on its hover card. The armed tile takes the active-aim
+	# bronze so the player can see which command a click on the field will use.
+	for tile_type: String in ["HudCommandTile", "HudCommandTileArmed"]:
+		t.add_type(tile_type)
+		t.set_type_variation(tile_type, "Button")
+		t.set_font("font", tile_type, display)
+		t.set_font_size("font_size", tile_type, DS.FS_100)
+		t.set_constant("icon_max_width", tile_type, 26)
+		t.set_constant("h_separation", tile_type, DS.SPACE_1)
+		t.set_color("font_disabled_color", tile_type, DS.ASH_DIM)
+		t.set_color("icon_disabled_color", tile_type, DS.ASH_FAINT)
+	var tile_states := ["normal", "hover", "pressed", "focus", "disabled"]
+	# The glyph starts under the corner row (key, AP), so neither overlaps it.
+	for state_index: int in tile_states.size():
+		var tile_style := _notched_style(10 + state_index, DS.SPACE_8 - DS.SPACE_1, DS.SPACE_2)
+		tile_style.content_margin_bottom = DS.SPACE_2
+		t.set_stylebox(tile_states[state_index], "HudCommandTile", tile_style)
+	for state: String in tile_states:
+		var armed_style := _notched_style(18 if state == "hover" else 17, DS.SPACE_8 - DS.SPACE_1, DS.SPACE_2)
+		armed_style.content_margin_bottom = DS.SPACE_2
+		t.set_stylebox(state, "HudCommandTileArmed", armed_style)
+	t.set_color("font_color", "HudCommandTileArmed", DS.TEXT_ON_METAL)
+	t.set_color("font_hover_color", "HudCommandTileArmed", DS.TEXT_ON_METAL)
+	t.set_color("font_pressed_color", "HudCommandTileArmed", DS.TEXT_ON_METAL)
+	t.add_type("HudTileCost")
+	t.set_type_variation("HudTileCost", "Label")
+	t.set_font("font", "HudTileCost", numeric)
+	t.set_font_size("font_size", "HudTileCost", DS.FS_100)
+	t.set_color("font_color", "HudTileCost", DS.ASH)
+	t.add_type("HudTileKey")
+	t.set_type_variation("HudTileKey", "HudSlotKey")
+	t.set_font_size("font_size", "HudTileKey", DS.FS_100)
+	t.add_type("HudTileKeyDim")
+	t.set_type_variation("HudTileKeyDim", "HudTileKey")
+	t.set_color("font_color", "HudTileKeyDim", DS.ASH_DIM)
+	# The command card: the chargen ability card's layout at the bar's scale.
+	t.add_type("HudCommandCard")
+	t.set_type_variation("HudCommandCard", "PanelContainer")
+	t.set_stylebox("panel", "HudCommandCard", _notched_style(29, DS.SPACE_4, DS.SPACE_5))
+	t.add_type("HudCardTitle")
+	t.set_type_variation("HudCardTitle", "Label")
+	t.set_font("font", "HudCardTitle", display)
+	t.set_font_size("font_size", "HudCardTitle", DS.FS_400)
+	t.set_color("font_color", "HudCardTitle", DS.PARCHMENT)
+	t.add_type("HudCardStats")
+	t.set_type_variation("HudCardStats", "Label")
+	t.set_font("font", "HudCardStats", numeric)
+	t.set_font_size("font_size", "HudCardStats", DS.FS_200)
+	t.set_color("font_color", "HudCardStats", DS.BRONZE_3)
+	t.add_type("HudCardReach")
+	t.set_type_variation("HudCardReach", "Label")
+	t.set_font_size("font_size", "HudCardReach", DS.FS_200)
+	t.set_color("font_color", "HudCardReach", DS.ASH)
+	t.add_type("HudCardEffect")
+	t.set_type_variation("HudCardEffect", "Label")
+	t.set_font("font", "HudCardEffect", body)
+	t.set_font_size("font_size", "HudCardEffect", DS.FS_300)
+	t.set_color("font_color", "HudCardEffect", DS.PARCHMENT)
+	t.add_type("HudCardLock")
+	t.set_type_variation("HudCardLock", "Label")
+	t.set_font("font", "HudCardLock", body)
+	t.set_font_size("font_size", "HudCardLock", DS.FS_200)
+	t.set_color("font_color", "HudCardLock", DS.CINDER_3)
+	t.add_type("HudCardHint")
+	t.set_type_variation("HudCardHint", "HudCardLock")
+	t.set_color("font_color", "HudCardHint", DS.GILD_2)
 	# The message window: narration in the body serif, turn cues in the display face,
 	# refusals in cinder (consequence), each a semantic role rather than a per-node colour.
 	t.add_type("HudLogLine")
