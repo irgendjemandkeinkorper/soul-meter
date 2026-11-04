@@ -17,6 +17,11 @@ texture_region_size = Vector2i(64, 32)
 3:0/0 = 0
 3:0/0/custom_data_0 = false
 3:0/0/custom_data_1 = 2
+0:0/next_alternative_id = 2
+0:0/1 = 1
+0:0/1/custom_data_0 = false
+0:0/1/custom_data_1 = 0
+0:0/1/custom_data_2 = true
 
 [resource]
 tile_shape = 1
@@ -26,4 +31,6 @@ custom_data_layer_0/name = "cover"
 custom_data_layer_0/type = 1
 custom_data_layer_1/name = "elevation"
 custom_data_layer_1/type = 2
+custom_data_layer_2/name = "blocks_fire"
+custom_data_layer_2/type = 1
 sources/0 = SubResource("TileSetAtlasSource_combat_terrain")

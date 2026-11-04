@@ -105,7 +105,10 @@ func test_every_catalog_encounter_fits_and_deploys_a_full_party() -> void:
 func test_terrain_tileset_authors_cover_and_elevation_custom_data() -> void:
 	var terrain: TileMapLayer = _field_scene.get_node("Terrain") as TileMapLayer
 	assert_object(terrain).is_not_null()
-	assert_int(terrain.tile_set.get_custom_data_layers_count()).is_equal(2)
+	# Walk-in walls (item 35) added `blocks_fire`.
+	assert_int(terrain.tile_set.get_custom_data_layers_count()).is_equal(3)
+	assert_str(String(terrain.tile_set.get_custom_data_layer_name(2))).is_equal("blocks_fire")
+	assert_int(terrain.tile_set.get_custom_data_layer_type(2)).is_equal(TYPE_BOOL)
 	assert_str(String(terrain.tile_set.get_custom_data_layer_name(0))).is_equal("cover")
 	assert_int(terrain.tile_set.get_custom_data_layer_type(0)).is_equal(TYPE_BOOL)
 	assert_str(String(terrain.tile_set.get_custom_data_layer_name(1))).is_equal("elevation")

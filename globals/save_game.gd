@@ -455,6 +455,13 @@ func _prepare_for_load(payload: Variant) -> Dictionary:
 func _destination_from_payload(payload: Dictionary) -> LoadDestination:
 	var scene_path := str(payload.get("scene", ""))
 	var location_id := StringName(payload.get("location_id", ""))
+	var redirect := LocationRegistry.retired_redirect(scene_path, location_id)
+	if not redirect.is_empty():
+		var moved := LocationRegistry.by_id(redirect["location"])
+		if moved == null:
+			return null
+		# The retired room's coordinates mean nothing where it went: arrive at the spawn.
+		return LoadDestination.new(moved.id, moved.resolve_spawn(redirect["spawn"]))
 	var location := LocationRegistry.resolve(scene_path, location_id)
 	var spawn_id := StringName(payload.get("spawn_id", "default"))
 	var position: Vector2 = payload.get("player_position", Vector2.ZERO)

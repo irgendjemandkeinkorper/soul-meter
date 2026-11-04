@@ -50,6 +50,9 @@ var _spawned_hostiles: Array[Hostile] = []
 ## field-grid model seats the party where it stands and the enemies across from it.
 var _set_piece_pending: bool = false
 var _set_piece_seats: Array[Vector2i] = []
+## Why the set-piece being started could not seat everyone by the party; "" when it could, or
+## when the field has no placed party. `start()` stops on it and `start_set_piece` refuses.
+var _set_piece_seat_failure := ""
 ## PROVISIONAL: where a set-piece's enemies are seated when the encounter authors no cells of
 ## its own (authored set-piece cells are #348's contract). The first enemy stands this many
 ## grid steps to the player's right on screen, so the two read side by side rather than one
@@ -104,6 +107,7 @@ var _definition: Dictionary = {}
 
 func start(encounter: Variant) -> void:
 	_release_field_grid()
+	_set_piece_seat_failure = ""
 	_combat_history.clear()
 	allies.clear()
 	enemies.clear()
@@ -139,12 +143,25 @@ func start(encounter: Variant) -> void:
 		return
 	var rules := (load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
 	rules.use_charge_time = bool(_definition.get("use_charge_time", rules.use_charge_time))
+	var battlefield := _battlefield_for_definition(rules)
+	if not _set_piece_seat_failure.is_empty():
+		# A set-piece that cannot seat everyone by the party does not open (2026-11-04). The
+		# model's default seats lie off the map: the 5v5 demo fought from them beside the
+		# Wayhouse ran thousands of turns and grew past 7 GB instead of failing.
+		if battlefield is GridBattlefieldModel:
+			(battlefield as GridBattlefieldModel).release_field_grid()
+		ended = true
+		push_error(
+			"Encounter '%s' cannot seat its fighters by the party: %s"
+			% [encounter_id, _set_piece_seat_failure]
+		)
+		return
 	controller = CombatController.new()
 	controller.event_emitted.connect(_on_combat_event)
 	controller.battle_finished.connect(_on_controller_finished)
 	controller.configure(
 		available_actions(true),
-		_battlefield_for_definition(rules),
+		battlefield,
 		rules,
 		null,
 		_casting_abilities(),
@@ -360,6 +377,13 @@ func start_set_piece(field: FieldMap, encounter: StringName) -> Dictionary:
 	_set_piece_seats = []
 	start(encounter)
 	_set_piece_pending = false
+	if not _set_piece_seat_failure.is_empty():
+		var why := _set_piece_seat_failure
+		_set_piece_seat_failure = ""
+		_session_field = null
+		return _session_refusal(
+			&"seating", &"open_ground", "There is no open ground here to seat both sides (%s)." % why
+		)
 	if ended:
 		_session_field = null
 		return _session_refusal(
@@ -803,8 +827,9 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 ## A set-piece is fought where the party stands, like an ambient session (ruling 4), with the
 ## enemies seated on the nearest free cells across from the player. An encounter that authors
 ## its own cells is a later contract (#348); until then this is the one placement rule. When
-## the field has no placed party, or a seat cannot be found, the model keeps its default
-## column seating and the presentation party is left where it is.
+## the field has no placed party, the model keeps its default column seating and the
+## presentation party is left where it is. When a seat cannot be found, the reason goes in
+## `_set_piece_seat_failure` and the fight does not open: the default seats lie off the map.
 func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	var live_cells := field.party_cells()
 	if live_cells.is_empty():
@@ -822,6 +847,7 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 			desired.append(live_cells[mini(index, live_cells.size() - 1)])
 	var placement := model.resolve_placement(desired)
 	if not bool(placement.get("allowed", false)):
+		_set_piece_seat_failure = str(placement.get("message", "the party cannot be seated"))
 		return
 	var seats: Array = placement.get("cells", [])
 	var initial: Dictionary = {}
@@ -838,6 +864,7 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	if lines:
 		var centre := model.seat_near(first_seat, taken)
 		if not bool(centre.get("ok", false)):
+			_set_piece_seat_failure = "no open cell near the enemy line's first seat %s" % first_seat
 			return
 		enemy_line = _open_line(model, grid, centre["cell"], enemies.size(), taken)
 	for index in enemies.size():
@@ -848,11 +875,15 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 		)
 		var found := model.seat_near(wanted, taken)
 		if not bool(found.get("ok", false)):
+			_set_piece_seat_failure = "no open cell near %s for %s" % [wanted, enemies[index].display_name]
 			return
 		initial[enemies[index]] = found["cell"]
 		taken[found["cell"]] = true
-	if bool(model.configure_initial_cells(initial).get("allowed", false)):
-		_set_piece_seats.assign(seats)
+	var configured := model.configure_initial_cells(initial)
+	if not bool(configured.get("allowed", false)):
+		_set_piece_seat_failure = str(configured.get("message", "the seats were refused"))
+		return
+	_set_piece_seats.assign(seats)
 
 
 ## An encounter may ask for two facing lines (`"formation": {"lines": true, "gap": <screen
@@ -1215,6 +1246,7 @@ func abandon() -> void:
 	_measures_out_of_reach = 0
 	_set_piece_pending = false
 	_set_piece_seats.clear()
+	_set_piece_seat_failure = ""
 	active_ally_index = 0
 	target_enemy_index = 0
 	balance = 0
