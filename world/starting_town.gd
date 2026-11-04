@@ -25,6 +25,7 @@ const COUNCIL_NUDGE_SHOWN_FLAG := "chapter_council_nudge_shown"
 
 
 func _ready() -> void:
+	GroundBlend.apply(self)
 	for building_name: String in BUILDING_NAMES:
 		var building := get_node_or_null(building_name) as Node2D
 		if building == null:

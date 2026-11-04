@@ -84,16 +84,22 @@ static func _nearby_open_cell_center(
 			continue
 		occupied_cells[grid.world_to_cell((node as Node2D).global_position)] = true
 	var authored_cell: Vector2i = grid.world_to_cell(authored_position)
+	var candidates: Array[Vector2i] = []
+	if grid.hex_mode:
+		# A hex is half a cell (owner item 34), so the same ground is twice as many steps.
+		candidates = HexMath.within(authored_cell, MAX_SNAP_CELLS * 2)
+	else:
+		for y: int in range(authored_cell.y - MAX_SNAP_CELLS, authored_cell.y + MAX_SNAP_CELLS + 1):
+			for x: int in range(authored_cell.x - MAX_SNAP_CELLS, authored_cell.x + MAX_SNAP_CELLS + 1):
+				candidates.append(Vector2i(x, y))
 	var nearest_position: Variant = null
 	var nearest_distance_squared: float = INF
-	for y: int in range(authored_cell.y - MAX_SNAP_CELLS, authored_cell.y + MAX_SNAP_CELLS + 1):
-		for x: int in range(authored_cell.x - MAX_SNAP_CELLS, authored_cell.x + MAX_SNAP_CELLS + 1):
-			var cell := Vector2i(x, y)
-			if occupied_cells.has(cell) or grid.is_step_blocked(cell, actor):
-				continue
-			var candidate: Vector2 = grid.cell_to_world(cell)
-			var distance_squared: float = candidate.distance_squared_to(authored_position)
-			if distance_squared < nearest_distance_squared:
-				nearest_distance_squared = distance_squared
-				nearest_position = candidate
+	for cell: Vector2i in candidates:
+		if occupied_cells.has(cell) or grid.is_step_blocked(cell, actor):
+			continue
+		var candidate: Vector2 = grid.cell_to_world(cell)
+		var distance_squared: float = candidate.distance_squared_to(authored_position)
+		if distance_squared < nearest_distance_squared:
+			nearest_distance_squared = distance_squared
+			nearest_position = candidate
 	return nearest_position

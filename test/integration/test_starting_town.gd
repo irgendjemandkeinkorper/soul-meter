@@ -105,8 +105,9 @@ func test_party_followers_spawn_on_the_shared_grid_cell_center() -> void:
 	assert_object(manager).is_not_null()
 	assert_object(ground).is_not_null()
 	assert_int(manager.follower_count()).is_equal(1)
-	var player_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
-	var player_center: Vector2 = ground.to_global(ground.map_to_local(player_cell))
+	# The shared grid's cell: a hex on hexes (hex slice H3b).
+	var grid := (runner.find_child("FieldMap", true, false) as FieldMap).iso_grid()
+	var player_center: Vector2 = grid.cell_to_world(grid.world_to_cell(player.global_position))
 	assert_vector(manager.trail_target_for(0)).is_equal(player_center)
 	assert_vector(manager.followers()[0].global_position).is_equal(player_center)
 	var follower_node: Node = manager.followers()[0]
