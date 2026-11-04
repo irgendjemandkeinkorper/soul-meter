@@ -1,15 +1,15 @@
 extends GdUnitTestSuite
-## Kesselford, hub 2 (C1 / #238): the scene the Weftlumin `kesselford` package baked, its
-## chandlery interior and its walk-in Wayhouse (item 35, 2026-11-03: the Wayhouse room retired;
-## `test_walk_in_wayhouse.gd` covers the building), the Dom ↔ Kesselford exits, and the hub-widened townsfolk pipeline (per-hub roster,
-## spawner, routines). Pattern: `test/integration/test_field_room.gd`; checklist:
+## Kesselford, hub 2 (C1 / #238): the scene the Weftlumin `kesselford` package baked, its walk-in
+## buildings (item 35: the Wayhouse room retired 2026-11-03 and the Chandlery's 2026-11-04;
+## `test_walk_in_buildings.gd` covers the buildings), the Dom ↔ Kesselford exits, and the
+## hub-widened townsfolk pipeline (per-hub roster, spawner, routines). Pattern: `test/integration/test_field_room.gd`; checklist:
 ## `docs/templates/location.md`.
 
 const KESSELFORD := "res://world/kesselford.tscn"
 const DOM := "res://world/starting_town.tscn"
-## The retired Wayhouse room (item 35): saves made there load in the walk-in Wayhouse.
+## The retired Wayhouse and Chandlery rooms (item 35): saves made there load in the walk-in buildings.
 const RETIRED_WAYHOUSE := "res://world/interiors/kesselford_wayhouse.tscn"
-const CHANDLERY := "res://world/interiors/kesselford_chandlery.tscn"
+const RETIRED_CHANDLERY := "res://world/interiors/kesselford_chandlery.tscn"
 const OUTDOOR_IDS: Array[String] = [
 	"kesselford-bell-ringer", "kesselford-ferry-keeper",
 	"kesselford-mender-pair-elder", "kesselford-mender-pair-junior",
@@ -40,12 +40,12 @@ func test_scene_carries_the_location_contract() -> void:
 	for marker_name: String in [
 		"SpawnDefault", "SpawnFromDom", "SpawnFromKesselfordWayhouse",
 		"SpawnFromKesselfordChandlery", "SpawnSlotFarBank", "SpawnInKesselfordWayhouse",
-		"WayhouseDoor", "WayhouseKeeperSpot",
+		"SpawnInKesselfordChandlery", "WayhouseDoor", "WayhouseKeeperSpot",
 	]:
 		assert_object(town.get_node_or_null(marker_name) as Marker2D) \
 			.override_failure_message("Kesselford must carry the %s marker." % marker_name) \
 			.is_not_null()
-	for anchor_name: String in ["FerryStage", "FloodBell", "MenderStone", "WayhouseDoor", "ChandleryDoor"]:
+	for anchor_name: String in ["FerryStage", "FloodBell", "MenderStone", "WayhouseDoor"]:
 		assert_object(town.find_child(anchor_name, true, false)) \
 			.override_failure_message("Kesselford must carry the %s placement anchor." % anchor_name) \
 			.is_not_null()
@@ -56,22 +56,12 @@ func test_scene_carries_the_location_contract() -> void:
 		assert_str(exit_node.target_scene).is_equal(DOM)
 		assert_str(String(exit_node.spawn_id)).is_equal("from_kesselford")
 		assert_object(LocationRegistry.by_scene(exit_node.target_scene)).is_not_null()
-	assert_object(town.find_child("Wayhouse", true, false) as WalkInBuilding).is_not_null()
-	assert_object(town.get_node_or_null("WayhouseDoor") as BuildingDoor) \
-		.override_failure_message("The walk-in Wayhouse has no door transition.") \
-		.is_null()
-	for pair: Array in [["ChandleryDoor", &"kesselford_chandlery_enter"]]:
-		var door := town.get_node_or_null(String(pair[0])) as BuildingDoor
-		assert_object(door).is_not_null()
-		if door == null:
-			continue
-		assert_str(String(door.transition_id)).is_equal(String(pair[1]))
-		var transition := BuildingTransitionRegistry.by_id(pair[1])
-		assert_object(transition).is_not_null()
-		if transition != null:
-			assert_str(transition.source_scene).is_equal(KESSELFORD)
-			assert_str(String(transition.source_anchor)).is_equal(String(pair[0]))
-			assert_bool(ResourceLoader.exists(transition.destination_scene)).is_true()
+	for building_name: String in ["Wayhouse", "Chandlery"]:
+		assert_object(town.find_child(building_name, true, false) as WalkInBuilding).is_not_null()
+	# Both buildings are walk-in: Kesselford has no door transitions left.
+	assert_array(town.find_children("*", "BuildingDoor", true, false)).is_empty()
+	for transition: BuildingTransitionDefinition in BuildingTransitionRegistry.ALL:
+		assert_str(transition.source_scene).override_failure_message(String(transition.id)).is_not_equal(KESSELFORD)
 
 	var dressing := town.get_node_or_null("KesselfordDressing")
 	assert_object(dressing).is_not_null()
@@ -96,8 +86,11 @@ func test_registries_agree_on_kesselford() -> void:
 	assert_bool(location.spawns.has(&"from_kesselford_chandlery")).is_true()
 	assert_bool(LocationRegistry.no_combat_zone_by_scene(KESSELFORD)).is_false()
 	assert_bool(location.spawns.has(&"in_kesselford_wayhouse")).is_true()
+	assert_bool(location.spawns.has(&"in_kesselford_chandlery")).is_true()
 	assert_object(LocationRegistry.by_id(&"kesselford_wayhouse")).is_null()
 	assert_object(LocationRegistry.by_scene(RETIRED_WAYHOUSE)).is_null()
+	assert_object(LocationRegistry.by_id(&"kesselford_chandlery")).is_null()
+	assert_object(LocationRegistry.by_scene(RETIRED_CHANDLERY)).is_null()
 	assert_bool(ResourceLoader.exists(RETIRED_WAYHOUSE)).is_false()
 	assert_object(BuildingTransitionRegistry.by_id(&"kesselford_wayhouse_enter")).is_null()
 	assert_object(BuildingTransitionRegistry.by_id(&"kesselford_wayhouse_exit")).is_null()
@@ -207,23 +200,6 @@ func test_player_moves_right_when_holding_move_right() -> void:
 		if player.global_position.is_equal_approx(current_center):
 			break
 	assert_float(player.global_position.x).is_greater(start_x)
-
-
-func test_the_chandlery_populates_from_the_kesselford_roster() -> void:
-	var chandlery: Node2D = auto_free((load(CHANDLERY) as PackedScene).instantiate())
-	add_child(chandlery)
-	await get_tree().process_frame
-	var shop := chandlery.get_node_or_null("Room") as BuildingInterior
-	assert_object(shop).is_not_null()
-	if shop == null:
-		return
-	assert_str(String(shop.exit_transition_id)).is_equal("kesselford_chandlery_exit")
-	var vendors: Array[String] = []
-	for node: Node in shop.find_children("*", "NPC", true, false):
-		var npc := node as NPC
-		if npc != null and not npc.vendor_id.is_empty():
-			vendors.append(npc.vendor_id)
-	assert_array(vendors).contains_exactly(["ford-chandlery"])
 
 
 func _collect_group_members(node: Node, group: StringName, found: Array[Node]) -> void:

@@ -1,8 +1,8 @@
 extends Node
-## Rendered evidence for the walk-in Wayhouse (2026-11-03, owner list item 35,
-## world/buildings/walk_in_building.gd): the Kesselford map framed on the building with the
-## player outside its door, in the doorway, inside, and behind it, plus the painted blocking layer
-## shown over the inside frame.
+## Rendered evidence for the walk-in buildings on the Kesselford map (owner list item 35; layouts
+## ruled 2026-11-04, world/buildings/walk_in_building.gd): each building framed with the player
+## outside a front door, in every room ("Your room opens"), and behind it; the Wayhouse again with
+## the painted blocking layer shown; and the town with all four.
 ##
 ## Not a gdUnit suite: it is a temporary autoload, the recipe of the ground-blend capture.
 ## Run under Xvfb (not headless) from the repository root:
@@ -15,15 +15,10 @@ extends Node
 
 const CAPTURE_ENV := "SOUL_METER_WALK_IN_CAPTURE_DIR"
 const KESSELFORD := "res://world/kesselford.tscn"
-const WAYHOUSE_PATH := "KesselfordDressing/SolidProps/Wayhouse"
-const ZOOM := 1.45
-## Where the player stands for each frame, by marker name or scene point.
-const SHOTS: Array[Dictionary] = [
-	{"stem": "1-outside", "at": "SpawnFromKesselfordWayhouse", "look": WalkInBuilding.Look.OUTSIDE},
-	{"stem": "2-doorway", "at": Vector2(1132, 668), "look": WalkInBuilding.Look.INSIDE},
-	{"stem": "3-inside", "at": "SpawnInKesselfordWayhouse", "look": WalkInBuilding.Look.INSIDE},
-	{"stem": "4-behind", "at": Vector2(1100, 330), "look": WalkInBuilding.Look.SEEN_THROUGH},
-]
+const SOLID_PROPS := "KesselfordDressing/SolidProps/"
+const BUILDINGS: Array[String] = ["Wayhouse", "Chandlery", "Cottage", "Warehouse"]
+const ZOOM := 1.3
+const TOWN_ZOOM := 0.62
 
 var _dir := ""
 var _log: PackedStringArray = []
@@ -52,30 +47,41 @@ func _run() -> void:
 		await get_tree().process_frame
 	for hud: Node in town.find_children("*", "CanvasLayer", true, false):
 		(hud as CanvasLayer).visible = false
-	var building := town.get_node(WAYHOUSE_PATH) as WalkInBuilding
 	var player := town.get_node("Player") as Node2D
 	var camera := Camera2D.new()
 	town.add_child(camera)
-	camera.zoom = Vector2(ZOOM, ZOOM)
-	camera.global_position = building.to_global(building.corner(building.cells.x * 0.5, building.cells.y * 0.5)) \
-		+ Vector2(0, -60)
 	camera.make_current()
 	var ok := true
-	for shot: Dictionary in SHOTS:
-		var at: Variant = shot["at"]
-		var point: Vector2 = at if at is Vector2 else (town.get_node(String(at)) as Node2D).global_position
-		_place_party(town, player, point)
-		for i in 24:
-			await get_tree().physics_frame
-		var look := building.current_look()
-		var saved := await _save(String(shot["stem"]))
-		var right := look == int(shot["look"])
-		ok = ok and saved and right
-		_log.append("WALK-IN-CAPTURE: %s %s look=%s (expected %s)" % [
-			"ok" if saved and right else "FAILED", shot["stem"],
-			WalkInBuilding.Look.keys()[look], WalkInBuilding.Look.keys()[int(shot["look"])],
-		])
-	# The painted blocking layer over the inside frame: the wall line and the furniture.
+	for building_name: String in BUILDINGS:
+		var building := town.get_node(SOLID_PROPS + building_name) as WalkInBuilding
+		var plan := building.plan()
+		camera.zoom = Vector2(ZOOM, ZOOM)
+		camera.global_position = building.to_global(building.corner(plan.size.x * 0.5, plan.size.y * 0.5)) + Vector2(0, -70)
+		var shots: Array[Array] = [["1-outside", _outside_door(building), WalkInBuilding.Look.OUTSIDE]]
+		for room in range(1, plan.room_count + 1):
+			var cell := _room_cell(plan, room)
+			shots.append(["%d-room-%d" % [room + 1, room], building.to_global(building.corner(cell.x + 0.5, cell.y + 0.5)), WalkInBuilding.Look.INSIDE])
+		var back := plan.footprint_cells()[0]
+		for cell: Vector2i in plan.footprint_cells():
+			if cell.x + cell.y < back.x + back.y:
+				back = cell
+		shots.append(["%d-behind" % (plan.room_count + 2), building.to_global(building.corner(back.x, back.y) - Vector2(0, 40)), WalkInBuilding.Look.SEEN_THROUGH])
+		for shot: Array in shots:
+			_place_party(town, player, shot[1])
+			for i in 24:
+				await get_tree().physics_frame
+			var look := building.current_look()
+			var stem := "%s-%s" % [building_name.to_lower(), shot[0]]
+			var saved := await _save(stem)
+			var right := look == int(shot[2])
+			ok = ok and saved and right
+			_log.append("WALK-IN-CAPTURE: %s %s look=%s (expected %s) rooms=%s" % [
+				"ok" if saved and right else "FAILED", stem,
+				WalkInBuilding.Look.keys()[look], WalkInBuilding.Look.keys()[int(shot[2])], building.open_rooms(),
+			])
+	# The painted blocking layer over the Wayhouse common room: walls, windows and furniture.
+	var wayhouse := town.get_node(SOLID_PROPS + "Wayhouse") as WalkInBuilding
+	camera.global_position = wayhouse.to_global(wayhouse.corner(8, 6.5)) + Vector2(0, -70)
 	_place_party(town, player, (town.get_node("SpawnInKesselfordWayhouse") as Node2D).global_position)
 	var blocking := town.get_node("Blocking") as TileMapLayer
 	blocking.visible = true
@@ -83,11 +89,19 @@ func _run() -> void:
 	blocking.z_index = 50
 	for i in 24:
 		await get_tree().physics_frame
-	var shown := await _save("5-blocking")
+	var shown := await _save("wayhouse-blocking")
 	ok = ok and shown
-	_log.append("WALK-IN-CAPTURE: %s 5-blocking cells=%d" % [
-		"ok" if shown else "FAILED", blocking.get_used_cells().size(),
-	])
+	_log.append("WALK-IN-CAPTURE: %s wayhouse-blocking cells=%d" % ["ok" if shown else "FAILED", blocking.get_used_cells().size()])
+	blocking.visible = false
+	# The town: all four buildings with their roofs on.
+	_place_party(town, player, (town.get_node("SpawnDefault") as Node2D).global_position)
+	camera.zoom = Vector2(TOWN_ZOOM, TOWN_ZOOM)
+	camera.global_position = Vector2(1250, 900)
+	for i in 24:
+		await get_tree().physics_frame
+	var town_shot := await _save("town")
+	ok = ok and town_shot
+	_log.append("WALK-IN-CAPTURE: %s town" % ("ok" if town_shot else "FAILED"))
 	_log.append("WALK-IN-CAPTURE: %s" % ("ok" if ok else "FAILED"))
 	print("\n".join(_log))
 	var file := FileAccess.open(_dir.path_join("walk-in-capture.log"), FileAccess.WRITE)
@@ -95,6 +109,39 @@ func _run() -> void:
 		file.store_string("\n".join(_log) + "\n")
 		file.close()
 	get_tree().quit(0 if ok else 1)
+
+
+## Two cells out from a doorway in a front wall (the screen-bottom sides), on the map.
+func _outside_door(building: WalkInBuilding) -> Vector2:
+	var plan := building.plan()
+	for j in plan.size.y:
+		for i in plan.size.x:
+			var cell := Vector2i(i, j)
+			if plan.at(cell) != BuildingPlan.DOOR:
+				continue
+			for step: Vector2i in [Vector2i(0, 1), Vector2i(1, 0)]:
+				if not plan.is_footprint(cell + step):
+					var out := cell + step * 2
+					return building.to_global(building.corner(out.x + 0.5, out.y + 0.5))
+	return building.to_global(building.corner(plan.size.x + 2, plan.size.y + 2))
+
+
+## A plain floor cell of `room` away from the walls where possible: the one nearest the room's middle.
+func _room_cell(plan: BuildingPlan, room: int) -> Vector2i:
+	var cells: Array[Vector2i] = []
+	var middle := Vector2.ZERO
+	for j in plan.size.y:
+		for i in plan.size.x:
+			var cell := Vector2i(i, j)
+			if plan.at(cell) == BuildingPlan.FLOOR and plan.rooms_of(cell) == [room]:
+				cells.append(cell)
+				middle += Vector2(cell)
+	middle /= maxf(1.0, cells.size())
+	var best := cells[0]
+	for cell: Vector2i in cells:
+		if Vector2(cell).distance_to(middle) < Vector2(best).distance_to(middle):
+			best = cell
+	return best
 
 
 ## Stands the player at `point` and its followers in a short line behind it (screen down-left).

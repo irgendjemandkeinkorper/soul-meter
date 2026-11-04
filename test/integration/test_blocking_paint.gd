@@ -9,10 +9,10 @@ extends GdUnitTestSuite
 const KESSELFORD := "res://world/kesselford.tscn"
 const TRIAL_HALL := "res://world/interiors/lower_trial_hall.tscn"
 const WOUND_LIP := "res://world/wound_lip.tscn"
-## Scene coordinates on Kesselford: a cell of the walk-in Wayhouse's front wall line, one of its
-## doorway cells (item 35), and ground beyond the north border wall.
-const WAYHOUSE_FRONT := Vector2(988, 596)
-const WAYHOUSE_DOORWAY := Vector2(1116, 660)
+## Scene coordinates on Kesselford: a cell of the walk-in Wayhouse's front wall (tavern layout cell
+## (3, 12)), one of its front doorway cells ((5, 12); item 35), and ground beyond the north border wall.
+const WAYHOUSE_FRONT := Vector2(796, 500)
+const WAYHOUSE_DOORWAY := Vector2(860, 532)
 const BEYOND_NORTH_WALL := Vector2(1500, -120)
 const SKILL_DOOR_FLAG := "tutorial_skill_door_open"
 ## Instanced scenes that are not a place someone must be able to walk to.
