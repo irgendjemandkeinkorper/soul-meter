@@ -224,47 +224,58 @@ y_sort_enabled = true
 z_index = -2
 
 [node name="MoorRoad01" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(300, 900)
+position = Vector2(314, 907)
+scale = Vector2(1.01, 1.01)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad02" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(540, 900)
+position = Vector2(537, 896)
+scale = Vector2(1.05, 1.05)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad03" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(780, 900)
+position = Vector2(791, 905)
+scale = Vector2(1.03, 1.03)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad04" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1020, 900)
+position = Vector2(1013, 897)
+scale = Vector2(1.03, 1.03)
 texture = ExtResource("2_weftlumin")
 
 [node name="MoorRoad05" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1260, 900)
+position = Vector2(1251, 905)
+scale = Vector2(1.03, 1.03)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad06" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1500, 900)
+position = Vector2(1503, 894)
+scale = Vector2(0.99, 0.99)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad07" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1740, 900)
+position = Vector2(1745, 899)
+scale = Vector2(0.98, 0.98)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad08" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1980, 900)
+position = Vector2(1983, 889)
+scale = Vector2(1.03, 1.03)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad09" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(2220, 900)
+position = Vector2(2216, 909)
+scale = Vector2(0.96, 0.96)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad10" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(2460, 900)
+position = Vector2(2460, 917)
+scale = Vector2(1.05, 1.05)
 texture = ExtResource("2_weftlumin")
 
 [node name="MoorRoad11" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(2700, 900)
+position = Vector2(2703, 909)
+scale = Vector2(1.05, 1.05)
 texture = ExtResource("1_weftlumin")
 
 [node name="ThinStreakRipple01" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]

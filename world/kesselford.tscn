@@ -146,113 +146,123 @@ y_sort_enabled = true
 z_index = -2
 
 [node name="PuddleFord01" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 160)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2681, 188)
+scale = Vector2(1.61, 1.18)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord02" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 330)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2673, 311)
+scale = Vector2(1.59, 1.17)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord03" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 500)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2626, 480)
+scale = Vector2(1.47, 1.08)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord04" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 670)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2686, 698)
+scale = Vector2(1.32, 0.97)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord05" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 840)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2699, 829)
+scale = Vector2(1.56, 1.15)
+flip_h = true
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord06" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 1010)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2598, 1037)
+scale = Vector2(1.62, 1.19)
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord07" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 1180)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2659, 1181)
+scale = Vector2(1.35, 0.99)
+flip_h = true
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord08" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 1350)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2616, 1348)
+scale = Vector2(1.53, 1.12)
+flip_h = true
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord09" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 1520)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2641, 1515)
+scale = Vector2(1.57, 1.15)
+flip_h = true
 texture = ExtResource("11_weftlumin")
 
 [node name="PuddleFord10" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2650, 1690)
-scale = Vector2(1.5, 1.1)
+position = Vector2(2670, 1715)
+scale = Vector2(1.34, 0.98)
 texture = ExtResource("11_weftlumin")
 
 [node name="MudEdge01" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2530, 250)
+position = Vector2(2542, 257)
+scale = Vector2(0.9, 0.9)
 texture = ExtResource("12_weftlumin")
 
 [node name="MudEdge02" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2530, 580)
+position = Vector2(2536, 600)
+scale = Vector2(1.02, 1.02)
 texture = ExtResource("12_weftlumin")
 
 [node name="MudEdge03" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2530, 910)
+position = Vector2(2501, 872)
+scale = Vector2(0.95, 0.95)
 texture = ExtResource("12_weftlumin")
 
 [node name="MudEdge04" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2530, 1240)
+position = Vector2(2570, 1225)
+scale = Vector2(1.02, 1.02)
 texture = ExtResource("12_weftlumin")
 
 [node name="MudEdge05" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2530, 1570)
+position = Vector2(2569, 1601)
+scale = Vector2(1.08, 1.08)
 texture = ExtResource("12_weftlumin")
 
 [node name="PavingFordRoad01" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(420, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(397, 881)
+scale = Vector2(1.08, 0.75)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad02" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(676, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(674, 918)
+scale = Vector2(1.03, 0.72)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad03" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(932, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(918, 911)
+scale = Vector2(1.11, 0.78)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad04" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(1188, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1194, 923)
+scale = Vector2(1.09, 0.76)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad05" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(1444, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1427, 929)
+scale = Vector2(1.05, 0.73)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad06" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(1700, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1710, 892)
+scale = Vector2(1.04, 0.72)
+flip_h = true
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad07" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(1956, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1971, 890)
+scale = Vector2(1.1, 0.77)
 texture = ExtResource("13_weftlumin")
 
 [node name="PavingFordRoad08" type="Sprite2D" parent="KesselfordDressing/GroundDetails"]
-position = Vector2(2212, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(2209, 919)
+scale = Vector2(1.15, 0.8)
 texture = ExtResource("13_weftlumin")
 
 [node name="SoftDetails" type="Node2D" parent="KesselfordDressing"]
