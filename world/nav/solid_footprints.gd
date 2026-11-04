@@ -8,9 +8,10 @@ extends RefCounted
 ## A solid is a StaticBody2D on collision layer 1 that is not an NPC (an occupant, not an
 ## obstacle; see `NavOccupancy`), not inside an Area2D (a travel exit's LockedBarrier opens and
 ## shuts with the story) and not switched off (process mode disabled). An enabled shape covers
-## a ground cell when the cell's centre lies inside it. The cell under a shape's centre is always
-## covered, so a prop smaller than a cell still fills one. Shapes are read as authored, before
-## any node is ready.
+## a ground cell when the cell's centre lies inside it. The cell under a shape's centre (an art
+## base's middle) is always covered, so a prop smaller than a cell still fills one. Shapes are
+## read as authored, before any node is ready. A prop's shape is the base of its art
+## (`ArtBases`, 2026-11-03).
 ##
 ## `tools/paint_blocking.gd` paints these cells into the blocking layer of each map in
 ## PAINTED_MAPS, so the blocking layer stays the one source of static passability
@@ -78,7 +79,7 @@ static func shape_cells(shape_node: Node, root: Node, ground: TileMapLayer) -> A
 	var ground_to_root := transform_in(ground, root)
 	var root_to_ground := ground_to_root.affine_inverse()
 	var ground_rect := ground_bounds(ground)
-	var centre := ground.local_to_map(root_to_ground * to_root.origin)
+	var centre := ground.local_to_map(root_to_ground * (to_root * _local_centre(shape_node)))
 	if ground_rect.has_point(centre):
 		cells.append(centre)
 	# A cell coordinate is linear in local position, so the box's corners bound the candidates.
@@ -124,6 +125,19 @@ static func ground_bounds(ground: TileMapLayer) -> Rect2i:
 	return rect
 
 
+## Where the cell that is always covered sits, in the shape's own space: the middle of an art
+## base's corners (an art base is drawn away from its body's origin), else the shape's origin.
+static func _local_centre(shape_node: Node) -> Vector2:
+	var collision := shape_node as CollisionShape2D
+	if collision == null or not collision.shape is ConvexPolygonShape2D:
+		return Vector2.ZERO
+	var points := (collision.shape as ConvexPolygonShape2D).points
+	var total := Vector2.ZERO
+	for point: Vector2 in points:
+		total += point
+	return total / maxf(points.size(), 1.0)
+
+
 static func _local_bounds(shape_node: Node) -> Rect2:
 	if shape_node is CollisionPolygon2D:
 		var polygon := shape_node as CollisionPolygon2D
@@ -150,6 +164,14 @@ static func _local_bounds(shape_node: Node) -> Rect2:
 			Vector2(-capsule.radius, -capsule.height * 0.5),
 			Vector2(capsule.radius * 2.0, capsule.height),
 		)
+	if collision.shape is ConvexPolygonShape2D:
+		var points := (collision.shape as ConvexPolygonShape2D).points
+		if points.size() < 3:
+			return Rect2()
+		var hull := Rect2(points[0], Vector2.ZERO)
+		for point: Vector2 in points:
+			hull = hull.expand(point)
+		return hull
 	# Any other shape still fills the cell under its centre.
 	return Rect2(Vector2.ZERO, Vector2.ONE)
 
@@ -167,4 +189,6 @@ static func _contains(shape_node: Node, point: Vector2) -> bool:
 		var capsule := shape as CapsuleShape2D
 		var reach := maxf(capsule.height * 0.5 - capsule.radius, 0.0)
 		return Vector2(point.x, point.y - clampf(point.y, -reach, reach)).length() <= capsule.radius
+	if shape is ConvexPolygonShape2D:
+		return Geometry2D.is_point_in_polygon(point, (shape as ConvexPolygonShape2D).points)
 	return false

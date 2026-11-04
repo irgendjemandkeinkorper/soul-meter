@@ -1,7 +1,9 @@
 extends Node
 ## Rendered evidence for the painted map walls (2026-11-03, tools/paint_blocking.gd): each map in
 ## SolidFootprints.PAINTED_MAPS, framed whole, with its painted blocking cells in red and the
-## solid bodies' collision shapes outlined in yellow. The red should sit on the yellow.
+## solid bodies' collision shapes outlined in yellow. The red should sit on the yellow, and each
+## prop's yellow base on the foot of its art. Last, `art-bases.png`: every art file in
+## `ArtBases.BASES` with its base drawn on it, to check a base against its picture.
 ##
 ## Not a gdUnit suite: it is a temporary autoload, the recipe of scripts/check_generated_data.sh.
 ## Run under Xvfb (not headless) from the repository root:
@@ -41,6 +43,7 @@ func _run() -> void:
 			(layer as CanvasLayer).visible = false
 	for scene_path: String in SolidFootprints.PAINTED_MAPS:
 		ok = await _capture(scene_path, SolidFootprints.PAINTED_MAPS[scene_path]) and ok
+	ok = await _capture_bases_sheet() and ok
 	_log.append("BLOCKING-CAPTURE: %s" % ("ok" if ok else "FAILED"))
 	print("\n".join(_log))
 	var file := FileAccess.open(_dir.path_join("blocking-capture.log"), FileAccess.WRITE)
@@ -68,12 +71,12 @@ func _capture(scene_path: String, layer_path: String) -> bool:
 		if not SolidFootprints.is_solid(body, scene):
 			continue
 		for child: Node in body.get_children():
-			if child is CollisionShape2D and (child as CollisionShape2D).shape is RectangleShape2D:
-				var shape := child as CollisionShape2D
-				shapes.append(shape)
-				var size := (shape.shape as RectangleShape2D).size
-				var box := shape.global_transform * Rect2(-size * 0.5, size)
-				bounds = box if bounds.size == Vector2.ZERO else bounds.merge(box)
+			var shape := child as CollisionShape2D
+			if shape == null or _outline(shape).is_empty():
+				continue
+			shapes.append(shape)
+			var box := shape.global_transform * shape.shape.get_rect()
+			bounds = box if bounds.size == Vector2.ZERO else bounds.merge(box)
 	var overlay := Node2D.new()
 	overlay.z_index = 4000
 	overlay.z_as_relative = false
@@ -111,11 +114,74 @@ func _draw_overlay(overlay: Node2D, layer: TileMapLayer, shapes: Array[Collision
 			centre + Vector2(0, half.y), centre + Vector2(-half.x, 0),
 		]), CELL_FILL)
 	for shape: CollisionShape2D in shapes:
-		var size := (shape.shape as RectangleShape2D).size
 		var corners := PackedVector2Array()
-		for corner: Vector2 in [
-			Vector2(-0.5, -0.5), Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(-0.5, 0.5),
-			Vector2(-0.5, -0.5),
-		]:
-			corners.append(overlay.to_local(shape.global_transform * (corner * size)))
+		for corner: Vector2 in _outline(shape):
+			corners.append(overlay.to_local(shape.global_transform * corner))
+		corners.append(corners[0])
 		overlay.draw_polyline(corners, SHAPE_LINE, 3.0)
+
+
+## A rectangle's corners, or an art base's polygon (ArtBases), in the shape's own space.
+static func _outline(shape: CollisionShape2D) -> PackedVector2Array:
+	if shape.shape is ConvexPolygonShape2D:
+		return (shape.shape as ConvexPolygonShape2D).points
+	if shape.shape is RectangleShape2D:
+		var half := (shape.shape as RectangleShape2D).size * 0.5
+		return PackedVector2Array([
+			Vector2(-half.x, -half.y), Vector2(half.x, -half.y), Vector2(half.x, half.y),
+			Vector2(-half.x, half.y),
+		])
+	return PackedVector2Array()
+
+
+## Every based art file in a grid, each scaled into a square with its base polygons on it.
+func _capture_bases_sheet() -> bool:
+	var sheet := Node2D.new()
+	get_tree().root.add_child(sheet)
+	var view := Vector2(get_viewport().get_visible_rect().size)
+	var paths: Array = ArtBases.BASES.keys()
+	# Held for the sheet's life: a texture freed before the frame renders draws as a white box.
+	var textures: Array[Texture2D] = []
+	for path: String in paths:
+		textures.append(load(path) as Texture2D)
+	var columns := 8
+	var cell := minf(view.x / columns, view.y / ceilf(paths.size() / float(columns)))
+	sheet.draw.connect(_draw_bases_sheet.bind(sheet, paths, textures, columns, cell))
+	sheet.queue_redraw()
+	var camera := Camera2D.new()
+	camera.anchor_mode = Camera2D.ANCHOR_MODE_FIXED_TOP_LEFT
+	sheet.add_child(camera)
+	camera.make_current()
+	for i in 6:
+		await get_tree().process_frame
+	var out := _dir.path_join("art-bases.png")
+	var error := get_viewport().get_texture().get_image().save_png(out)
+	_log.append("BLOCKING-CAPTURE: %s art-bases files=%d -> %s" % [
+		"ok" if error == OK else "FAILED", paths.size(), out.get_file(),
+	])
+	sheet.queue_free()
+	await get_tree().process_frame
+	return error == OK
+
+
+func _draw_bases_sheet(
+	sheet: Node2D, paths: Array, textures: Array[Texture2D], columns: int, cell: float
+) -> void:
+	sheet.draw_rect(Rect2(Vector2.ZERO, Vector2(cell * columns, cell * 8)), Color(0.16, 0.17, 0.2))
+	var font := ThemeDB.fallback_font
+	for index in paths.size():
+		var texture := textures[index]
+		var origin := Vector2((index % columns) * cell, (index / columns) * cell)
+		var size := Vector2(texture.get_size())
+		var scale := (cell - 8.0) / maxf(size.x, size.y)
+		var at := origin + Vector2(4, 4)
+		sheet.draw_texture_rect(texture, Rect2(at, size * scale), false)
+		for polygon: Array in ArtBases.BASES[paths[index]]:
+			var points := PackedVector2Array()
+			for pixel: Vector2 in polygon:
+				points.append(at + pixel * scale)
+			points.append(points[0])
+			sheet.draw_polyline(points, SHAPE_LINE, 2.0)
+		var label: String = (paths[index] as String).get_file().get_basename().split("--")[0]
+		sheet.draw_string(font, origin + Vector2(6, cell - 8), label, HORIZONTAL_ALIGNMENT_LEFT,
+			cell - 12, 12, Color(0.9, 0.92, 0.95))
