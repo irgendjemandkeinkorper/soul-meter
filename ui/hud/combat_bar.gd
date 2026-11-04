@@ -22,11 +22,24 @@ var _actions_box: HFlowContainer
 var _action_scroll: ScrollContainer
 ## Behind MORE: usable commands that are not slotted, in catalog order.
 var _spare_box: HFlowContainer
-## Owner review 2026-11-01: locked commands wait behind the MORE toggle as rows that print
-## their lock reason.
-var _locked_box: VBoxContainer
-## Each command button's key label ("1"–"8"), shown while the command holds a slot.
+## Behind MORE, after the usable ones: locked commands as dimmed tiles. Owner 2026-11-02 (item
+## 33 follow-up): the lock reason moved from a row of text onto the tile's hover card.
+var _locked_box: HFlowContainer
+## Each command tile's key label ("1"–"8"), shown while the command holds a slot.
 var _slot_keys: Array[Label] = []
+## Each command tile's AP badge (top right).
+var _tile_costs: Array[Label] = []
+## Each command tile's hover-card content for this refresh: {title, stats, reach, effect,
+## lock, hint}. The card is the bar's one `_command_card`, filled from here on hover.
+var _cards: Array[Dictionary] = []
+var _command_card: PanelContainer
+var _card_title: Label
+var _card_stats: Label
+var _card_reach: Label
+var _card_effect: Label
+var _card_lock: Label
+var _card_hint: Label
+var _card_source: Control
 ## Slotted action ids per member for this battle (combat id -> Array of ids, slot order).
 ## The bar is built per battle, so this lives and dies with the fight; nothing is saved.
 var _slots: Dictionary = {}
@@ -34,8 +47,6 @@ var _slots: Dictionary = {}
 var _uses: Dictionary = {}
 ## The member whose hotbar is showing (the last ally to act during an enemy phase).
 var _hotbar_owner: StringName = &""
-var _action_rows: Array[HBoxContainer] = []
-var _action_reasons: Array[Label] = []
 var _more_button: Button
 var _show_all := false
 var _locked_count := 0
@@ -60,18 +71,24 @@ var _built := false
 
 
 ## Column minimums (px) on the 1920 x 1080 logical viewport: 240 plate, 240 log (grows),
-## 720 command, 200 party, 124 controls, plus the four rules, inside the bar's 1626 px.
+## 720 command, 250 party (a member's name and HP on one line), 124 controls, plus the four
+## rules, inside the bar's 1626 px.
 ## The project scales the whole canvas (canvas_items stretch), so 1366 x 768 renders this
 ## same layout at 0.71 and nothing reflows or clips.
 const LOG_WIDTH := 240
 const COMMAND_WIDTH := 720
-const PARTY_WIDTH := 200
+const PARTY_WIDTH := 250
 const CONTROLS_WIDTH := 124
 ## Command buttons: 22 px rows so six rows of ready actions fit the column without scrolling.
 const ACTION_ROW := 22
 ## Hotbar slots stand taller than the footer's MORE and TARGET (owner playtest 2026-11-02:
 ## the commands were too small to read).
 const SLOT_ROW := 30
+## A command tile (owner 2026-11-02, item 33 follow-up: "abilities behind icons with a hover
+## tooltip"): eight across fit the 720 px command column with their gaps; a two-line name.
+const TILE_SIZE := Vector2(84, 64)
+## The hover card's width: one short paragraph of effect text per line set.
+const CARD_WIDTH := 300.0
 ## Owner 2026-11-01: an eight-slot hotbar, auto-filled; keys 1–8 fire the slots and every
 ## other command waits behind MORE.
 const HOTBAR_SIZE := 8
@@ -105,6 +122,8 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
+	if _card_source != null:
+		_hide_card(_card_source)
 	if Battle.turn_resolved.is_connected(_queue_refresh):
 		Battle.turn_resolved.disconnect(_queue_refresh)
 	if Battle.balance_changed.is_connected(_on_balance_changed):
@@ -122,7 +141,14 @@ func bind(interface: BattleInterface) -> void:
 		interface.breakdown_visibility_changed.connect(_on_breakdown_visibility_changed)
 	if not interface.stage.beat_presented.is_connected(_on_beat_presented):
 		interface.stage.beat_presented.connect(_on_beat_presented)
+	if not interface.pointer_action_selected.is_connected(_on_pointer_action_selected):
+		interface.pointer_action_selected.connect(_on_pointer_action_selected)
 	_refresh()
+
+
+## The armed tile follows the interface's armed command (bronze), however it was armed.
+func _on_pointer_action_selected(_action_id: StringName) -> void:
+	_queue_refresh()
 
 
 ## The aim row (called shots) is a command, so it lives on the bar under the action grid
@@ -224,42 +250,17 @@ func _build() -> void:
 	_spare_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_spare_box.visible = false
 	stack.add_child(_spare_box)
-	_locked_box = VBoxContainer.new()
+	_locked_box = HFlowContainer.new()
 	_locked_box.name = "Locked"
-	_locked_box.theme_type_variation = "HudBarColumn"
+	_locked_box.theme_type_variation = "HudActionFlow"
 	_locked_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_locked_box.visible = false
 	stack.add_child(_locked_box)
 	for action in Battle.available_actions():
-		var button := _button(_actions_box, _short_action_text(action), _use_action.bind(action.id))
-		button.theme_type_variation = "HudActionButton"
-		button.custom_minimum_size = Vector2(0, SLOT_ROW)
-		button.tooltip_text = _action_tooltip(action)
-		button.set_meta("index", _action_buttons.size())
-		_action_buttons.append(button)
-		var key := Label.new()
-		key.name = "SlotKey"
-		key.theme_type_variation = "HudSlotKey"
-		key.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		key.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		key.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
-		key.offset_left = DS.SPACE_3
-		key.visible = false
-		button.add_child(key)
-		_slot_keys.append(key)
-		var row := HBoxContainer.new()
-		row.name = "LockedRow"
-		row.theme_type_variation = "HudBarRow"
-		row.visible = false
-		_locked_box.add_child(row)
-		_action_rows.append(row)
-		var reason := Label.new()
-		reason.name = "Reason"
-		reason.theme_type_variation = "HudLockReason"
-		reason.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		reason.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		row.add_child(reason)
-		_action_reasons.append(reason)
+		var tile := _command_tile(action)
+		_actions_box.add_child(tile)
+		_action_buttons.append(tile)
+		_cards.append({})
 	_outcome_box = VBoxContainer.new()
 	_outcome_box.name = "Outcome"
 	_outcome_box.theme_type_variation = "HudBarColumn"
@@ -343,7 +344,49 @@ func _build() -> void:
 	_breakdown_button.custom_minimum_size = Vector2(CONTROLS_WIDTH, 28)
 	_breakdown_button.toggle_mode = true
 	_breakdown_button.tooltip_text = tr("Accuracy and power breakdown, attunement and tactical data (B).")
+	_build_command_card()
 	_built = true
+
+
+## One command tile: the glyph, the name under it, the slot key top left and the AP top right.
+## Everything else about the command is on its hover card.
+func _command_tile(action: CombatAction) -> Button:
+	var tile := Button.new()
+	tile.text = action.display_name.to_upper()
+	tile.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	tile.focus_mode = Control.FOCUS_NONE
+	tile.pressed.connect(_use_action.bind(action.id))
+	tile.name = "Command_%s" % String(action.id).replace("-", "_")
+	tile.theme_type_variation = "HudCommandTile"
+	tile.custom_minimum_size = TILE_SIZE
+	tile.icon = CommandIcons.for_action(action)
+	tile.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tile.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+	tile.expand_icon = false
+	tile.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tile.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	tile.set_meta("index", _action_buttons.size())
+	tile.set_meta("action_id", action.id)
+	var key := Label.new()
+	key.name = "SlotKey"
+	key.theme_type_variation = "HudTileKey"
+	key.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	key.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, DS.SPACE_3)
+	key.visible = false
+	tile.add_child(key)
+	_slot_keys.append(key)
+	# AP round economy: the tile's badge is the same `ap_cost` the controller charges.
+	var cost := Label.new()
+	cost.name = "TileCost"
+	cost.theme_type_variation = "HudTileCost"
+	cost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cost.text = "%d AP" % action.ap_cost
+	cost.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, DS.SPACE_3)
+	tile.add_child(cost)
+	_tile_costs.append(cost)
+	tile.mouse_entered.connect(_show_card.bind(tile))
+	tile.mouse_exited.connect(_hide_card.bind(tile))
+	return tile
 
 
 func _rule() -> VSeparator:
@@ -508,6 +551,8 @@ func _actor_name(event: CombatEvent) -> String:
 
 
 func _use_action(action_id: StringName) -> void:
+	if _watching():
+		return
 	_note_use(action_id)
 	var action: CombatAction = null
 	for candidate: CombatAction in Battle.available_actions():
@@ -526,7 +571,15 @@ func _use_action(action_id: StringName) -> void:
 			return
 		if action.requires_enemy_target():
 			_interface.select_pointer_action(action_id)
+			if Battle.is_positional_refusal(Battle.action_lock(action)):
+				# Out of reach of the selected foe: the tile only arms. A click on the field
+				# picks a foe in reach, or walks in to a far one (item 33 follow-up).
+				return
 	Battle.use_action(action_id)
+
+
+func _watching() -> bool:
+	return is_instance_valid(_interface) and _interface.autoplaying()
 
 
 func _open_weakness_dialog() -> void:
@@ -664,12 +717,14 @@ func _refresh() -> void:
 	var ready: Array[bool] = []
 	var in_kit: Array[bool] = []
 	var reasons := PackedStringArray()
+	var hints := PackedStringArray()
 	for i in _action_buttons.size():
 		if i >= actions.size():
 			offered.append(false)
 			ready.append(false)
 			in_kit.append(false)
 			reasons.append("")
+			hints.append("")
 			continue
 		# #473: on a cell battlefield a move is a click on a cell; the zone MOVE cards
 		# (FRONT/BACK/FLANK, and the destination-less MOVE) have nothing to aim at there.
@@ -677,51 +732,65 @@ func _refresh() -> void:
 		var refusal := Battle.action_lock(actions[i])
 		var allowed := bool(refusal.get("allowed", false))
 		var blocked_by := StringName(str(refusal.get("blocked_by", "")))
+		# Where the selected foe stands never locks a command: the tile arms, and a click on
+		# the field picks a foe in reach or walks in to a far one (item 33 follow-up).
+		var positional := Battle.is_positional_refusal(refusal)
 		offered.append(is_offered)
-		ready.append(is_offered and allowed)
+		ready.append(is_offered and (allowed or positional))
 		in_kit.append(is_offered and (allowed or not NOT_IN_KIT.has(blocked_by)))
-		reasons.append("" if allowed else str(refusal.get("message", "Action unavailable.")))
+		var message := str(refusal.get("message", "Action unavailable."))
+		reasons.append("" if allowed or positional else message)
+		hints.append(message if positional else "")
 	var slotted := _update_hotbar(actions, ready, in_kit)
 	var spare: Array[int] = []
 	var locked: Array[int] = []
+	# Nobody arms a command while the demo plays itself (item 33: AI vs AI).
+	var armed := &"" if _watching() else _armed_action_id()
 	for i in _action_buttons.size():
 		var button := _action_buttons[i]
 		if not offered[i]:
 			button.disabled = true
 			button.visible = false
-			_action_rows[i].visible = false
 			_slot_keys[i].visible = false
+			_cards[i] = {}
 			continue
 		var reason := reasons[i]
 		var forecast := (
 			Battle.action_forecast(actions[i])
-			if actions[i].kind == CombatAction.Kind.CAST and reason.is_empty()
+			if actions[i].kind == CombatAction.Kind.CAST and reason.is_empty() and hints[i].is_empty()
 			else {}
 		)
 		button.disabled = not ready[i]
-		button.tooltip_text = _action_tooltip(actions[i], reason, forecast)
-		button.text = _short_action_text(actions[i], reason, forecast)
+		button.tooltip_text = ""
+		button.text = _tile_caption(actions[i], reason)
 		var slot := slotted.find(i)
 		_slot_keys[i].visible = slot >= 0
 		_slot_keys[i].text = str(slot + 1)
-		_slot_keys[i].theme_type_variation = "HudSlotKey" if ready[i] else "HudSlotKeyDim"
-		button.theme_type_variation = "HudSlotButton" if slot >= 0 else "HudActionButton"
+		_slot_keys[i].theme_type_variation = "HudTileKey" if ready[i] else "HudTileKeyDim"
+		_tile_costs[i].text = "%d AP" % actions[i].ap_cost
+		_cards[i] = _card_for(actions[i], reason, hints[i], forecast, slot)
+		button.theme_type_variation = (
+			"HudCommandTileArmed" if actions[i].id == armed and ready[i] else "HudCommandTile"
+		)
 		if slot >= 0:
 			_place_action(i, _actions_box)
 		elif ready[i]:
 			_place_action(i, _spare_box)
 			spare.append(i)
 		else:
-			_place_action(i, _action_rows[i])
+			_place_action(i, _locked_box)
 			locked.append(i)
 		button.visible = slot >= 0 or _show_all
-		_action_rows[i].visible = slot < 0 and not ready[i] and _show_all
-		_action_reasons[i].text = reason
-		_action_reasons[i].tooltip_text = reason
 	for slot: int in slotted.size():
 		_actions_box.move_child(_action_buttons[slotted[slot]], slot)
 	for place: int in spare.size():
 		_spare_box.move_child(_action_buttons[spare[place]], place)
+	for place: int in locked.size():
+		_locked_box.move_child(_action_buttons[locked[place]], place)
+	if _card_source != null and (not _card_source.is_visible_in_tree()):
+		_hide_card(_card_source)
+	elif _card_source != null:
+		_show_card(_card_source)
 	var off_bar := spare.size() + locked.size()
 	_locked_count = off_bar
 	_spare_box.visible = _show_all and not spare.is_empty()
@@ -736,8 +805,17 @@ func _refresh() -> void:
 	else:
 		_more_button.text = tr("MORE · %d") % spare.size()
 
+	# Autoplay (owner 2026-11-02, AI vs AI): the bar shows the acting unit's kit, but the
+	# player has no orders to give, so nothing on it can be pressed.
+	var watching := _watching()
+	if watching:
+		for button: Button in _action_buttons:
+			button.disabled = true
+		_more_button.visible = false
+		_end_turn_button.disabled = true
+		_withdraw_button.disabled = true
 	var target := Battle.current_target()
-	_target_button.visible = Battle.living_enemies().size() > 1 and not outcome_shown()
+	_target_button.visible = Battle.living_enemies().size() > 1 and not outcome_shown() and not watching
 	_target_button.disabled = Battle.living_enemies().size() <= 1
 
 	if is_instance_valid(_interface):
@@ -748,16 +826,14 @@ func _refresh() -> void:
 
 
 ## A slotted command sits on the hotbar; a usable unslotted one in MORE's flow; a locked one
-## in its MORE row beside the lock reason. The button is the same node everywhere, so its
-## wiring never changes. `_refresh` orders the flows afterwards.
+## in MORE's locked flow, dimmed, its reason on the hover card. The tile is the same node
+## everywhere, so its wiring never changes. `_refresh` orders the flows afterwards.
 func _place_action(index: int, home: Container) -> void:
 	var button := _action_buttons[index]
 	if button.get_parent() == home:
 		return
 	button.get_parent().remove_child(button)
 	home.add_child(button)
-	if home == _action_rows[index]:
-		home.move_child(button, 0)
 
 
 # --- hotbar (owner 2026-11-01: eight slots, auto-filled, keys 1–8) ---------------------------
@@ -957,9 +1033,11 @@ func _update_enemy_status() -> void:
 	_enemy_lbl.text = "FOE  %s  ·  HP %d / %d" % [target.display_name.to_upper(), hp.x, hp.y]
 
 
-## One slim entry per ally — name and HP on a line, a thin meter under it; the bar is a
-## readout, not a card stack, and the unit plate carries the active member's detail.
-## Entry children: [0] the name row (marker, name, HP label), [1] the meter.
+## One slim entry per ally — marker, name and HP on one line, a thin meter under it; the bar
+## is a readout, not a card stack, and the unit plate carries the active member's detail.
+## Owner 2026-11-02 (item 33 follow-up, "the screen is very busy"): a full party of five on
+## two lines each overflowed the bar upward over the map, so each member is one line now.
+## Entry children: [0] the HP row (marker, name, HP label), [1] the meter.
 func _update_party_status() -> void:
 	for child in _party_box.get_children():
 		child.free()
@@ -973,78 +1051,183 @@ func _update_party_status() -> void:
 	for actor in Battle.allies:
 		var hp_now := _presented_hp(actor, rows)
 		var entry := VBoxContainer.new()
-		entry.theme_type_variation = "HudBarColumn"
+		entry.theme_type_variation = "BattleTightColumn"
 		_party_box.add_child(entry)
-		var row := HBoxContainer.new()
-		row.name = "NameRow"
-		row.theme_type_variation = "BattlePartyRow"
-		entry.add_child(row)
+		var hp_row := HBoxContainer.new()
+		hp_row.name = "HPRow"
+		hp_row.theme_type_variation = "BattlePartyRow"
+		entry.add_child(hp_row)
 		var marker := Label.new()
 		marker.text = "▶" if actor == Battle.current_ally() and hp_now.x > 0 else "·"
 		marker.custom_minimum_size = Vector2(12, 0)
 		marker.theme_type_variation = "EyebrowLabel"
-		row.add_child(marker)
+		hp_row.add_child(marker)
 		var name_label := Label.new()
+		name_label.name = "Name"
 		name_label.text = actor.display_name.to_upper()
 		if hp_now.x <= 0:
 			name_label.text += "  ·  FALLEN"
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		name_label.tooltip_text = name_label.text
+		name_label.mouse_filter = Control.MOUSE_FILTER_PASS
 		name_label.theme_type_variation = "StatLabel"
-		row.add_child(name_label)
-		# Second row: the HP readout beside its meter, so the name above keeps the
-		# column's full width (Fallout's party cards read name first, then health).
-		var hp_row := HBoxContainer.new()
-		hp_row.name = "HPRow"
-		hp_row.theme_type_variation = "BattlePartyRow"
-		entry.add_child(hp_row)
+		hp_row.add_child(name_label)
 		var hp := Label.new()
 		hp.name = "HP"
 		hp.text = "HP %d / %d" % [hp_now.x, hp_now.y]
-		hp.custom_minimum_size = Vector2(92, 0)
 		hp.theme_type_variation = "StatLabel"
 		hp_row.add_child(hp)
 		var bar := _make_meter()
 		bar.name = "Meter"
 		bar.max_value = hp_now.y
 		bar.value = hp_now.x
-		bar.custom_minimum_size = Vector2(0, 6)
+		bar.custom_minimum_size = Vector2(0, 3)
 		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		hp_row.add_child(bar)
+		entry.add_child(bar)
 
 
-## AP round economy: every command label surfaces its AP cost (ratified
-## `docs/fallout2-adoption-spec.md` Wave 1) — this is the shipped scheduler's
-## live cost display, not a Gate T-10 compatibility remnant.
-func _short_action_text(
-	action: CombatAction, reason: String = "", forecast: Dictionary = {}
-) -> String:
-	var text := "%s · %d AP" % [action.display_name.to_upper(), action.ap_cost]
-	if action.kind == CombatAction.Kind.CAST and not forecast.is_empty():
-		text += " · BREATH %d · SOUL %d" % [
-			int(forecast.get("breath_cost", 0)), int(forecast.get("soul_cost", 0.0))
-		]
-	elif action.soul_cost > 0.0:
-		text += " · SOUL %d" % int(action.soul_cost)
+## AP round economy: every command tile surfaces its AP cost (ratified
+## `docs/fallout2-adoption-spec.md` Wave 1) on its badge and its card — this is the shipped
+## scheduler's live cost display, not a Gate T-10 compatibility remnant.
+func _tile_caption(action: CombatAction, reason: String = "") -> String:
+	var caption := action.display_name.to_upper()
 	if not reason.is_empty() and action.kind == CombatAction.Kind.RESOLUTION:
-		text += " · LOCKED"
-	return text
+		caption += " · LOCKED"
+	return caption
 
 
-func _action_tooltip(
-	action: CombatAction, reason: String = "", forecast: Dictionary = {}
-) -> String:
-	var text := action.summary()
+## The hover card's content for one command: name; costs; target, reach, tone and key; the
+## effect; and why it is locked, or how to use it when the selected foe is out of reach.
+func _card_for(
+	action: CombatAction, reason: String, hint: String, forecast: Dictionary, slot: int
+) -> Dictionary:
+	var stats := PackedStringArray(["%d AP" % action.ap_cost])
 	if action.kind == CombatAction.Kind.CAST and not forecast.is_empty():
-		text += "\nBreath %d · Soul %d · Fizzle %.0f%%" % [
-			int(forecast.get("breath_cost", 0)),
-			int(forecast.get("soul_cost", 0.0)),
-			float(forecast.get("fizzle_percent", 0.0)),
-		]
-	if not reason.is_empty():
-		text += "\nLocked: " + reason
-	return text
+		stats.append(tr("Breath %d") % int(forecast.get("breath_cost", 0)))
+		stats.append(tr("Soul %d") % int(forecast.get("soul_cost", 0.0)))
+		stats.append(tr("Fizzle %.0f%%") % float(forecast.get("fizzle_percent", 0.0)))
+	else:
+		if action.breath_cost > 0:
+			stats.append(tr("Breath %d") % action.breath_cost)
+		if action.soul_cost > 0.0:
+			stats.append(tr("Soul %d") % int(action.soul_cost))
+	var reach := PackedStringArray([action.target_text()])
+	if not action.reach_text().is_empty():
+		reach.append(action.reach_text())
+	var tone := _tone_name(action.element_id)
+	if not tone.is_empty():
+		reach.append(tr("tone %s") % tone)
+	if slot >= 0:
+		reach.append(tr("key %d") % (slot + 1))
+	return {
+		"title": action.display_name,
+		"stats": "  ·  ".join(stats),
+		"reach": "  ·  ".join(reach),
+		"effect": action.effect_text(),
+		"lock": reason,
+		"hint": "" if hint.is_empty() else tr("%s Click a foe on the field: out of reach, the unit walks in first.") % hint,
+	}
+
+
+static func _tone_name(element_id: StringName) -> String:
+	for tone: Dictionary in DS.WHEEL:
+		if tone["id"] == String(element_id):
+			return str(tone["name"])
+	return ""
+
+
+## The command a click on the field will use (the interface's armed pointer action).
+func _armed_action_id() -> StringName:
+	return _interface.selected_pointer_action() if is_instance_valid(_interface) else &""
+
+
+# --- the hover card (owner 2026-11-02, item 33 follow-up) -----------------------------------
+
+
+func _build_command_card() -> void:
+	_command_card = PanelContainer.new()
+	_command_card.name = "CommandCard"
+	_command_card.theme_type_variation = "HudCommandCard"
+	_command_card.top_level = true
+	_command_card.visible = false
+	_command_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_command_card.custom_minimum_size = Vector2(CARD_WIDTH, 0)
+	var column := VBoxContainer.new()
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_command_card.add_child(column)
+	_card_title = _card_label(column, "HudCardTitle")
+	_card_stats = _card_label(column, "HudCardStats")
+	_card_reach = _card_label(column, "HudCardReach")
+	_card_effect = _card_label(column, "HudCardEffect")
+	_card_lock = _card_label(column, "HudCardLock")
+	_card_hint = _card_label(column, "HudCardHint")
+	add_child(_command_card)
+
+
+func _card_label(parent: Container, type_variation: String) -> Label:
+	var label := Label.new()
+	label.theme_type_variation = type_variation
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(CARD_WIDTH - DS.SPACE_5 * 2, 0)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(label)
+	return label
+
+
+func _show_card(tile: Control) -> void:
+	var index := int(tile.get_meta("index", -1))
+	if index < 0 or index >= _cards.size() or _cards[index].is_empty():
+		return
+	var card: Dictionary = _cards[index]
+	_card_source = tile
+	_card_title.text = str(card["title"])
+	_card_stats.text = str(card["stats"])
+	_card_reach.text = str(card["reach"])
+	_card_effect.text = str(card["effect"])
+	_card_lock.text = str(card["lock"])
+	_card_lock.visible = not _card_lock.text.is_empty()
+	_card_hint.text = str(card["hint"])
+	_card_hint.visible = not _card_hint.text.is_empty()
+	_command_card.visible = true
+	_command_card.reset_size()
+	# The bar sits at the bottom of the screen, so the card opens above it, clear of the
+	# bar's top edge (the field HUD's bar hosts this one).
+	var rect := tile.get_global_rect()
+	var card_size := _command_card.get_combined_minimum_size()
+	var view := get_viewport_rect().size
+	var ceiling := rect.position.y
+	var host := get_parent_control()
+	if host != null:
+		ceiling = minf(ceiling, host.get_global_rect().position.y)
+	var at := Vector2(rect.position.x, ceiling - card_size.y - DS.SPACE_4)
+	if at.y < 0.0:
+		at.y = rect.end.y + DS.SPACE_2
+	at.x = clampf(at.x, 0.0, maxf(view.x - card_size.x, 0.0))
+	_command_card.global_position = at
+
+
+func _hide_card(tile: Control) -> void:
+	if _command_card != null and tile == _card_source:
+		_command_card.visible = false
+		_card_source = null
+
+
+## The card on screen, for tests and captures: {} when hidden.
+func command_card_text() -> Dictionary:
+	if _command_card == null or not _command_card.visible:
+		return {}
+	return {
+		"title": _card_title.text, "stats": _card_stats.text, "reach": _card_reach.text,
+		"effect": _card_effect.text, "lock": _card_lock.text if _card_lock.visible else "",
+		"hint": _card_hint.text if _card_hint.visible else "",
+	}
+
+
+## A tile's card content for this refresh without hovering it (tests): {} when not offered.
+func card_for_button(button: Button) -> Dictionary:
+	var index := int(button.get_meta("index", -1))
+	return _cards[index] if index >= 0 and index < _cards.size() else {}
 
 
 func _balance_text() -> String:

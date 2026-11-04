@@ -43,6 +43,8 @@ const TAVERN_SCENE := "res://world/interiors/dom_tavern.tscn"
 const CLASS_DEMO_SCENE := "res://world/kesselford.tscn"
 ## The open square outside the wayhouse, with room for two lines of five.
 const CLASS_DEMO_SPAWN := &"from_kesselford_wayhouse"
+const KESSELFORD_WALK_SCENE := "res://world/kesselford.tscn"
+const KESSELFORD_WALK_SPAWN := &"from_kesselford_wayhouse"
 ## Authored reputation-gated doorways → the chart expression property whose
 ## guard decides them. Keyed by the authored definition itself, so the id,
 ## destination and band requirement are all READ from the .tres rather than
@@ -661,35 +663,60 @@ func load_destination(destination: LoadDestination) -> bool:
 ## level is ready. Returning to the title restores the snapshot and closes the sandbox, so the
 ## demo never reaches the player's save or their live party.
 func start_class_demo() -> bool:
+	if not _open_debug_sandbox():
+		return false
+	if not ClassDemo.prepare():
+		_end_class_demo()
+		return false
+	_class_demo_pending = true
+	_start_debug_visit(CLASS_DEMO_SCENE, CLASS_DEMO_SPAWN)
+	return true
+
+
+## Debug builds only (owner 2026-11-02: a shortcut to playtest the lived-in Kesselford, which
+## a new game reaches only after the trial and Marshal Coiljaw's commission). From the title:
+## the class demo's sandbox and its player five, Kesselford at the wayhouse, and no fight.
+## Returning to the title restores the snapshot and closes the sandbox, as for the demo.
+func start_kesselford_walk() -> bool:
+	if not _open_debug_sandbox():
+		return false
+	ClassDemo.seat_player_side()
+	_start_debug_visit(KESSELFORD_WALK_SCENE, KESSELFORD_WALK_SPAWN)
+	return true
+
+
+## True while a debug sandbox (the class demo or the Kesselford walk) is open.
+func class_demo_active() -> bool:
+	return not _class_demo_snapshot.is_empty()
+
+
+func _open_debug_sandbox() -> bool:
 	if not OS.is_debug_build() or class_demo_active() or SaveGame.runtime_sandbox_is_armed():
 		return false
 	if not ($StateChart/Root/Menus/Title as StateChartState).active:
 		return false
 	_class_demo_snapshot = SaveGame.capture_runtime_state()
 	SaveGame.begin_runtime_sandbox()
-	if not ClassDemo.prepare():
-		_end_class_demo()
-		return false
-	_target_scene = CLASS_DEMO_SCENE
-	_target_spawn_id = CLASS_DEMO_SPAWN
-	SaveGame.pending_spawn_id = CLASS_DEMO_SPAWN
-	SaveGame.has_pending_player_position = false
-	_class_demo_pending = true
-	send_event("new_game")
 	return true
 
 
-func class_demo_active() -> bool:
-	return not _class_demo_snapshot.is_empty()
+func _start_debug_visit(scene: String, spawn: StringName) -> void:
+	_target_scene = scene
+	_target_spawn_id = spawn
+	SaveGame.pending_spawn_id = spawn
+	SaveGame.has_pending_player_position = false
+	send_event("new_game")
 
 
 func _open_class_demo() -> void:
 	var field: FieldMap = Battle._current_field_map()
 	var opened := Battle.start_set_piece(field, ClassDemo.ENCOUNTER_ID)
 	if not bool(opened.get("allowed", false)):
-		push_warning("Class demo refused: %s" % opened.get("message", ""))
+		# Stays in the sandbox at Kesselford; returning to the title ends the demo as usual.
+		push_error("Class demo cannot open here: %s" % opened.get("message", ""))
 		return
-	send_event("enter_set_piece")
+	# Owner 2026-11-02 (item 33): fights on a map start in place, with no deployment screens.
+	send_event("enter_battle")
 
 
 func _end_class_demo() -> void:

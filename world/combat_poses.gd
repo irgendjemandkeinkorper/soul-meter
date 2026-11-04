@@ -38,6 +38,19 @@ static func restore(sprite: Sprite2D, base: Dictionary) -> void:
 	sprite.self_modulate = base["self_modulate"]
 
 
+## The tween's closing restore. Leaving a fight mid-animation (back to the title, say, while
+## the AI-vs-AI demo plays) frees the sprite before its tween ends; a bound call would then
+## fail on the freed object, so the restore checks the sprite is still there.
+## A weak reference, because a lambda that captured the sprite itself reports the freed
+## capture as an engine error when it runs.
+static func _restore_later(sprite: Sprite2D, base: Dictionary) -> Callable:
+	var held: WeakRef = weakref(sprite)
+	return func() -> void:
+		var alive := held.get_ref() as Sprite2D
+		if alive != null:
+			restore(alive, base)
+
+
 ## One hop per cell, timed to the walk tween (`CombatMotion.along_path`).
 static func step_bob(tween: Tween, sprite: Sprite2D, base: Dictionary, steps: int, seconds: float) -> void:
 	var rest: Vector2 = base["position"]
@@ -46,7 +59,7 @@ static func step_bob(tween: Tween, sprite: Sprite2D, base: Dictionary, steps: in
 			sprite.position = rest + Vector2(0.0, -BOB_PX * absf(sin(progress * PI * maxi(1, steps)))),
 		0.0, 1.0, seconds
 	)
-	tween.tween_callback(restore.bind(sprite, base))
+	tween.tween_callback(_restore_later(sprite, base))
 
 
 ## Lean back, then into the strike, timed to the body lunge (two DUR_FAST halves).
@@ -57,7 +70,7 @@ static func lunge(tween: Tween, sprite: Sprite2D, base: Dictionary, toward_x: fl
 	tween.tween_property(sprite, "rotation", rest - WINDUP_LEAN * side, DS.DUR_INSTANT)
 	tween.tween_property(sprite, "rotation", rest + STRIKE_LEAN * side, DS.DUR_FAST)
 	tween.tween_property(sprite, "rotation", rest, DS.DUR_FAST)
-	tween.tween_callback(restore.bind(sprite, base))
+	tween.tween_callback(_restore_later(sprite, base))
 
 
 ## Knocked back from `away` (a world direction), then settles.
@@ -70,7 +83,7 @@ static func recoil(tween: Tween, sprite: Sprite2D, base: Dictionary, away: Vecto
 	tween.tween_property(sprite, "rotation", lean, DS.DUR_INSTANT).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.chain().tween_property(sprite, "position", rest, DS.DUR_BASE).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(sprite, "rotation", float(base["rotation"]), DS.DUR_BASE).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.chain().tween_callback(restore.bind(sprite, base))
+	tween.chain().tween_callback(_restore_later(sprite, base))
 
 
 ## The caster rises and swells while the cast gathers (`gather` seconds), lit by `glow`, then
@@ -86,7 +99,7 @@ static func cast_lift(tween: Tween, sprite: Sprite2D, base: Dictionary, glow: Co
 	tween.chain().tween_property(sprite, "position", rest, DS.DUR_BASE).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(sprite, "scale", size, DS.DUR_BASE)
 	tween.tween_property(sprite, "self_modulate", base["self_modulate"], DS.DUR_SLOW)
-	tween.chain().tween_callback(restore.bind(sprite, base))
+	tween.chain().tween_callback(_restore_later(sprite, base))
 
 
 ## A downed body leans away from its attacker and settles lower. It stays down (no restore):
@@ -106,4 +119,4 @@ static func turn(tween: Tween, sprite: Sprite2D, base: Dictionary, flip_to: bool
 	tween.tween_property(sprite, "scale", Vector2(size.x * 0.12, size.y), DS.DUR_INSTANT).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void: sprite.flip_h = flip_to)
 	tween.tween_property(sprite, "scale", size, DS.DUR_INSTANT).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_callback(restore.bind(sprite, base))
+	tween.tween_callback(_restore_later(sprite, base))

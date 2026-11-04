@@ -542,6 +542,74 @@ static func build() -> Theme:
 	t.add_type("HudSlotKeyDim")
 	t.set_type_variation("HudSlotKeyDim", "HudSlotKey")
 	t.set_color("font_color", "HudSlotKeyDim", DS.ASH_DIM)
+	# Command tiles (owner 2026-11-02, item 33 follow-up: "abilities behind icons with a hover
+	# tooltip"): glyph on top, the name under it, the key and the AP in the top corners; the
+	# rest of the command's detail is on its hover card. The armed tile takes the active-aim
+	# bronze so the player can see which command a click on the field will use.
+	for tile_type: String in ["HudCommandTile", "HudCommandTileArmed"]:
+		t.add_type(tile_type)
+		t.set_type_variation(tile_type, "Button")
+		t.set_font("font", tile_type, display)
+		t.set_font_size("font_size", tile_type, DS.FS_100)
+		t.set_constant("icon_max_width", tile_type, 26)
+		t.set_constant("h_separation", tile_type, DS.SPACE_1)
+		t.set_color("font_disabled_color", tile_type, DS.ASH_DIM)
+		t.set_color("icon_disabled_color", tile_type, DS.ASH_FAINT)
+	var tile_states := ["normal", "hover", "pressed", "focus", "disabled"]
+	# The glyph starts under the corner row (key, AP), so neither overlaps it.
+	for state_index: int in tile_states.size():
+		var tile_style := _notched_style(10 + state_index, DS.SPACE_8 - DS.SPACE_1, DS.SPACE_2)
+		tile_style.content_margin_bottom = DS.SPACE_2
+		t.set_stylebox(tile_states[state_index], "HudCommandTile", tile_style)
+	for state: String in tile_states:
+		var armed_style := _notched_style(18 if state == "hover" else 17, DS.SPACE_8 - DS.SPACE_1, DS.SPACE_2)
+		armed_style.content_margin_bottom = DS.SPACE_2
+		t.set_stylebox(state, "HudCommandTileArmed", armed_style)
+	t.set_color("font_color", "HudCommandTileArmed", DS.TEXT_ON_METAL)
+	t.set_color("font_hover_color", "HudCommandTileArmed", DS.TEXT_ON_METAL)
+	t.set_color("font_pressed_color", "HudCommandTileArmed", DS.TEXT_ON_METAL)
+	t.add_type("HudTileCost")
+	t.set_type_variation("HudTileCost", "Label")
+	t.set_font("font", "HudTileCost", numeric)
+	t.set_font_size("font_size", "HudTileCost", DS.FS_100)
+	t.set_color("font_color", "HudTileCost", DS.ASH)
+	t.add_type("HudTileKey")
+	t.set_type_variation("HudTileKey", "HudSlotKey")
+	t.set_font_size("font_size", "HudTileKey", DS.FS_100)
+	t.add_type("HudTileKeyDim")
+	t.set_type_variation("HudTileKeyDim", "HudTileKey")
+	t.set_color("font_color", "HudTileKeyDim", DS.ASH_DIM)
+	# The command card: the chargen ability card's layout at the bar's scale.
+	t.add_type("HudCommandCard")
+	t.set_type_variation("HudCommandCard", "PanelContainer")
+	t.set_stylebox("panel", "HudCommandCard", _notched_style(29, DS.SPACE_4, DS.SPACE_5))
+	t.add_type("HudCardTitle")
+	t.set_type_variation("HudCardTitle", "Label")
+	t.set_font("font", "HudCardTitle", display)
+	t.set_font_size("font_size", "HudCardTitle", DS.FS_400)
+	t.set_color("font_color", "HudCardTitle", DS.PARCHMENT)
+	t.add_type("HudCardStats")
+	t.set_type_variation("HudCardStats", "Label")
+	t.set_font("font", "HudCardStats", numeric)
+	t.set_font_size("font_size", "HudCardStats", DS.FS_200)
+	t.set_color("font_color", "HudCardStats", DS.BRONZE_3)
+	t.add_type("HudCardReach")
+	t.set_type_variation("HudCardReach", "Label")
+	t.set_font_size("font_size", "HudCardReach", DS.FS_200)
+	t.set_color("font_color", "HudCardReach", DS.ASH)
+	t.add_type("HudCardEffect")
+	t.set_type_variation("HudCardEffect", "Label")
+	t.set_font("font", "HudCardEffect", body)
+	t.set_font_size("font_size", "HudCardEffect", DS.FS_300)
+	t.set_color("font_color", "HudCardEffect", DS.PARCHMENT)
+	t.add_type("HudCardLock")
+	t.set_type_variation("HudCardLock", "Label")
+	t.set_font("font", "HudCardLock", body)
+	t.set_font_size("font_size", "HudCardLock", DS.FS_200)
+	t.set_color("font_color", "HudCardLock", DS.CINDER_3)
+	t.add_type("HudCardHint")
+	t.set_type_variation("HudCardHint", "HudCardLock")
+	t.set_color("font_color", "HudCardHint", DS.GILD_2)
 	# The message window: narration in the body serif, turn cues in the display face,
 	# refusals in cinder (consequence), each a semantic role rather than a per-node colour.
 	t.add_type("HudLogLine")

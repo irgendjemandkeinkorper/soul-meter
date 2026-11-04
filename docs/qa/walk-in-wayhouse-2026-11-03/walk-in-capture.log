@@ -1,0 +1,6 @@
+WALK-IN-CAPTURE: ok 1-outside look=OUTSIDE (expected OUTSIDE)
+WALK-IN-CAPTURE: ok 2-doorway look=INSIDE (expected INSIDE)
+WALK-IN-CAPTURE: ok 3-inside look=INSIDE (expected INSIDE)
+WALK-IN-CAPTURE: ok 4-behind look=SEEN_THROUGH (expected SEEN_THROUGH)
+WALK-IN-CAPTURE: ok 5-blocking cells=542
+WALK-IN-CAPTURE: ok

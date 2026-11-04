@@ -99,6 +99,7 @@ var _light_cells: Dictionary = {}
 var _shroud_cells: Dictionary = {}  # Vector2i -> true (inside a Shroud / Eclipse Procession)  # Vector2i -> true (inside a Witness Light)
 var _input_locked_until_msec := 0
 var _pointer_turn_available := true
+var _reach_steps := 0  ## hex slice H3: the armed command's reach ring, in grid steps
 var _fallen: Dictionary = {}
 var _pending_path_id: StringName = &""
 var _pending_path: Array[Vector2i] = []
@@ -140,6 +141,14 @@ func show_approach_path(cells: Array, affordable: bool) -> void:
 		return
 	_hover_path = path
 	queue_redraw()
+
+
+## Hex slice H3: the armed command's reach in grid steps (0: none); the field draws it as a ring
+## around the acting unit on the player's turn.
+func show_reach(steps: int) -> void:
+	_reach_steps = maxi(steps, 0)
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_reach(_reach_steps)
 
 
 func clear_approach_path() -> void:
@@ -187,6 +196,7 @@ func bind_field(field: FieldMap) -> void:
 	_field_overlay.bind_field(field)
 	_field_overlay.set_range_visible(_pointer_turn_available)
 	_field_overlay.set_free_scroll(_pointer_turn_available)
+	_field_overlay.set_reach(_reach_steps)
 	_sync_view_window()
 	if not resized.is_connected(_sync_view_window):
 		resized.connect(_sync_view_window)
@@ -457,12 +467,18 @@ func clear_pointer() -> void:
 
 
 func pointer_input_available() -> bool:
+	return _pointer_turn_available and presentation_idle()
+
+
+## True once nothing on the field is still being presented: no body moving, no beat queued, no
+## cast in flight. Autoplay waits on this so every AI step is seen before the next one.
+func presentation_idle() -> bool:
 	if is_instance_valid(_field_overlay):
-		return _pointer_turn_available and not _field_overlay.is_animating()
+		return not _field_overlay.is_animating()
 	for effect: Node in _fx_layer.get_children():
 		if effect.get_script() == SpellCastScript and effect.is_animating():
 			return false
-	return _pointer_turn_available and Time.get_ticks_msec() >= _input_locked_until_msec
+	return Time.get_ticks_msec() >= _input_locked_until_msec
 
 
 func set_pointer_turn_available(available: bool) -> void:
