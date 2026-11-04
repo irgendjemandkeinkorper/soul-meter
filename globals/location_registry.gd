@@ -63,9 +63,6 @@ const DOM_TAVERN: LocationDefinition = preload(
 )
 # Kesselford, hub 2 (C1 / #238): baked by the Weftlumin `kesselford` package.
 const KESSELFORD: LocationDefinition = preload("res://world/locations/kesselford.tres")
-const KESSELFORD_CHANDLERY: LocationDefinition = preload(
-	"res://world/locations/interiors/kesselford_chandlery.tres"
-)
 # Ashlaren, hub 3 (C2 / #239): baked by the Weftlumin `ashlaren` package.
 const ASHLAREN: LocationDefinition = preload("res://world/locations/ashlaren.tres")
 const ASHLAREN_WEIGHING_HALL: LocationDefinition = preload(
@@ -92,6 +89,11 @@ const RETIRED := {
 		"scene": "res://world/interiors/kesselford_wayhouse.tscn",
 		"location": &"kesselford",
 		"spawn": &"in_kesselford_wayhouse",
+	},
+	&"kesselford_chandlery": {
+		"scene": "res://world/interiors/kesselford_chandlery.tscn",
+		"location": &"kesselford",
+		"spawn": &"in_kesselford_chandlery",
 	},
 }
 
@@ -230,7 +232,8 @@ static func resolve(scene_path: String, location_id: StringName = &"") -> Locati
 ## Where a save made at a location that has left the game loads now: {"location", "spawn"}, or {}
 ## when the save's location (by id, or by its old scene) is still here. The Ferry Bell Wayhouse
 ## room retired when the Wayhouse became a walk-in building on the Kesselford map (owner list
-## item 35, "Retire, redirect saves", 2026-11-03).
+## item 35, "Retire, redirect saves", 2026-11-03), and the Ford Chandlery's room when it became the
+## walk-in shop (layouts ruling, 2026-11-04).
 static func retired_redirect(scene_path: String, location_id: StringName) -> Dictionary:
 	for retired_id: StringName in RETIRED:
 		var row: Dictionary = RETIRED[retired_id]

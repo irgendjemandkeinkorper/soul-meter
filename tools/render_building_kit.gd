@@ -5,13 +5,18 @@ extends Node
 ## kit's own pitch (KIT_PITCH_RADIANS), so these placeholders and the owner's later Blender
 ## captures sit on one grid. The spec:
 ##   - one model unit is one cell edge: a unit square on the floor is one 64 x 32 tile;
-##   - a wall is 1 unit long and 4 tall; its cutaway stub is 0.5 tall; a doorway is 3 tall;
-##   - a piece's pivot is on the floor at the middle of its base; a roof's is at the front corner
-##     of the footprint it covers; a piece of furniture's is the centre of its footprint. Each
-##     piece's pivot pixel is in building_kit.json.
-##   - the roof sits on the post tops (ROOF_SEAT), so no post or wall corner shows through it.
-## Furniture is built from plain boxes in wood tones, since the Kenney kits have no counter, table
-## or chest; like every piece here it is a placeholder for the Blender kit.
+##   - a wall is 1 unit long and 4 tall, and stands in the middle of the cell it blocks; a `-half`
+##     piece is half a cell long and meets a post at the cell's centre; its cutaway stub is 0.5
+##     tall; a doorway is 3 tall; a free-standing pillar is 0.5 square (BuildingPlan's constants);
+##   - a piece's pivot is on the floor at the middle of its base; a roof's is at the back corner of
+##     its layout's grid; a piece of furniture's is the centre of its footprint. Each piece's pivot
+##     pixel is in building_kit.json.
+##   - one roof per walk-in building on the maps (BUILDINGS), computed from the layout's outline
+##     (`BuildingPlan.roof_triangles()`): it rises from every outer wall and sits ROOF_SEAT above
+##     the post tops, so no post or wall corner shows through it.
+## Furniture is built from plain boxes, since the Kenney kits have none; like every piece here it
+## is a placeholder for the Blender kit. Each size a layout uses is rendered, its long side along x
+## or, for a piece longer along z, turned to run along z with its front still facing the camera.
 ## Wall pieces come in two runs: `-x` runs along the ground's +x cells (screen right and down),
 ## `-z` along its +y cells (screen left and down).
 ##
@@ -34,39 +39,37 @@ const MANIFEST := OUT_DIR + "building_kit.json"
 ## hides that, but a roof over 12 x 9 cells landed about 15 px off the ground grid, so its corner
 ## posts showed above it (item 35 polish, 2026-11-04).
 const KIT_PITCH_RADIANS := PI / 6.0
-const WALL_TIERS := 4
-const STUB_HEIGHT := 0.5
-const DOOR_HEIGHT := 3
-const WALL_THICKNESS := 0.2
-const POST_SIZE := 0.26
+const WALL_TIERS := int(BuildingPlan.WALL_HEIGHT)
+const STUB_HEIGHT := BuildingPlan.STUB_HEIGHT
+const DOOR_HEIGHT := int(BuildingPlan.DOOR_HEIGHT)
+const WALL_THICKNESS := BuildingPlan.WALL_THICKNESS
+const POST_SIZE := BuildingPlan.POST_SIZE
+const PILLAR_SIZE := BuildingPlan.PILLAR_SIZE
 const FLOOR_THICKNESS := 0.06
-const ROOF_PITCH_DEGREES := 35.0
-const ROOF_OVERHANG := 0.3
-## How far the roof plane stands above the wall tops: enough that its eaves clear the outer corners
-## of the posts (half a post out from the wall line), plus a little.
-const ROOF_SEAT := POST_SIZE * 0.5 * tan(deg_to_rad(ROOF_PITCH_DEGREES)) + 0.03
-## Roofs to render, by footprint in cells (+x, +y). The prototype has one: the Kesselford Wayhouse.
-const ROOFS: Array[Vector2i] = [Vector2i(12, 9)]
+## The walk-in buildings on the maps: layout and quarter turns, as each building node sets them.
+## A building whose roof is missing here reports it (WalkInBuilding) and the walk-in tests fail.
+const BUILDINGS: Array[Array] = [["tavern", 0], ["shop", 0], ["cottage", 1], ["warehouse", 1]]
+const LAYOUT_DIR := "res://world/buildings/layouts/"
 const ROOF_COLOUR := Color(0.34, 0.36, 0.4)
-const GABLE_COLOUR := Color(0.47, 0.34, 0.24)
+const FASCIA_COLOUR := Color(0.24, 0.17, 0.12)
+## The roof's edge board: how far it hangs below the roof surface at the eaves.
+const FASCIA_DEPTH := 0.12
+const STONE := Color(0.46, 0.44, 0.41)
 const GRADE_SATURATION := 0.7
 const GRADE_VALUE := 0.62
 
 const PIECE_VIEW := Vector2i(160, 256)
-const FURNITURE_VIEW := Vector2i(256, 192)
-## Furniture (item 35 polish): each piece covers whole cells, its long run along x, and stands
-## FURNITURE_MARGIN inside them. Sizes in cells; the map's furniture bodies block those cells.
-const FURNITURE := {
-	"counter-4x1": Vector2i(4, 1), "table-3x2": Vector2i(3, 2), "bench-3x1": Vector2i(3, 1),
-	"stool-1x1": Vector2i(1, 1), "chest-1x1": Vector2i(1, 1),
-}
+const FURNITURE_VIEW := Vector2i(320, 288)
+## Furniture covers whole cells and stands FURNITURE_MARGIN inside them.
 const FURNITURE_MARGIN := 0.1
 ## Dark, warm wood so the furniture reads against the pale plank floor after `_grade`.
 const WOOD := Color(0.4, 0.22, 0.11)
 const WOOD_DARK := Color(0.24, 0.13, 0.07)
 const WOOD_TOP := Color(0.5, 0.3, 0.16)
 const IRON := Color(0.16, 0.16, 0.18)
-const ROOF_VIEW := Vector2i(1024, 832)
+const FIRE := Color(0.95, 0.45, 0.12)
+const CLOTH := Color(0.5, 0.2, 0.16)
+const LINEN := Color(0.8, 0.76, 0.66)
 
 var _viewport: SubViewport
 var _camera: Camera3D
@@ -88,24 +91,44 @@ func _run() -> void:
 	_create_viewport()
 	var ok := true
 	for run: String in ["x", "z"]:
-		ok = await _piece("wall-" + run, _wall(run, false), PIECE_VIEW) and ok
-		ok = await _piece("wall-window-" + run, _wall(run, true), PIECE_VIEW) and ok
-		ok = await _piece("wall-stub-" + run, _stub(run), PIECE_VIEW) and ok
+		ok = await _piece("wall-" + run, _wall(run, false, 1.0), PIECE_VIEW) and ok
+		ok = await _piece("wall-half-" + run, _wall(run, false, 0.5), PIECE_VIEW) and ok
+		ok = await _piece("wall-window-" + run, _wall(run, true, 1.0), PIECE_VIEW) and ok
+		ok = await _piece("wall-stub-" + run, _stub(run, 1.0), PIECE_VIEW) and ok
+		ok = await _piece("wall-stub-half-" + run, _stub(run, 0.5), PIECE_VIEW) and ok
 		ok = await _piece("lintel-" + run, _lintel(run), PIECE_VIEW) and ok
-	ok = await _piece("post", _post(float(WALL_TIERS)), PIECE_VIEW) and ok
-	ok = await _piece("post-stub", _post(STUB_HEIGHT), PIECE_VIEW) and ok
+	ok = await _piece("post", _post("pillar-wood", POST_SIZE, float(WALL_TIERS)), PIECE_VIEW) and ok
+	ok = await _piece("post-stub", _post("pillar-wood", POST_SIZE, STUB_HEIGHT), PIECE_VIEW) and ok
+	ok = await _piece("pillar", _post("pillar-stone", PILLAR_SIZE, float(WALL_TIERS)), PIECE_VIEW) and ok
+	ok = await _piece("pillar-stub", _post("pillar-stone", PILLAR_SIZE, STUB_HEIGHT), PIECE_VIEW) and ok
 	ok = await _piece("floor-planks", _floor(), PIECE_VIEW) and ok
-	for size: Vector2i in ROOFS:
-		ok = await _piece("roof-%dx%d" % [size.x, size.y], _roof(size), ROOF_VIEW) and ok
-	for piece: String in FURNITURE:
-		ok = await _piece(piece, _furniture(piece, FURNITURE[piece]), FURNITURE_VIEW) and ok
+	ok = await _piece("floor-footing", _footing(), PIECE_VIEW) and ok
+	var furniture := {}
+	for building: Array in BUILDINGS:
+		var plan := (load(LAYOUT_DIR + str(building[0]) + ".tres") as BuildingLayout).plan(int(building[1]))
+		var problems := plan.problems()
+		if not problems.is_empty():
+			_log.append("BUILDING-KIT: FAILED %s: %s" % [building[0], "; ".join(problems)])
+			ok = false
+			continue
+		var roof_name := "roof-%s-t%d" % [building[0], building[1]]
+		ok = await _piece(roof_name, _roof(plan), _roof_view(plan)) and ok
+		for item: Dictionary in plan.furniture:
+			var rect: Rect2i = item["rect"]
+			furniture["%s-%dx%d" % [item["kind"], rect.size.x, rect.size.y]] = [item["kind"], rect.size]
+	var names := furniture.keys()
+	names.sort()
+	for piece: String in names:
+		ok = await _piece(piece, _furniture(furniture[piece][0], furniture[piece][1]), FURNITURE_VIEW) and ok
 	var manifest := {
 		"generator": "tools/render_building_kit.gd",
 		"note": "GENERATED by tools/render_building_kit.gd. Do not edit. Placeholder kit (item 35).",
 		"spec": {
 			"unit": "one cell edge", "wall_height": WALL_TIERS, "stub_height": STUB_HEIGHT,
-			"door_height": DOOR_HEIGHT, "roof_pitch_degrees": ROOF_PITCH_DEGREES,
-			"camera_pitch_degrees": rad_to_deg(KIT_PITCH_RADIANS), "roof_seat": snappedf(ROOF_SEAT, 0.001),
+			"door_height": DOOR_HEIGHT, "wall_thickness": WALL_THICKNESS, "post_size": POST_SIZE,
+			"pillar_size": PILLAR_SIZE, "roof_pitch_degrees": BuildingPlan.ROOF_PITCH_DEGREES,
+			"camera_pitch_degrees": rad_to_deg(KIT_PITCH_RADIANS),
+			"roof_seat": snappedf(BuildingPlan.ROOF_SEAT, 0.001),
 		},
 		"pieces": _manifest,
 	}
@@ -240,19 +263,19 @@ func _run_root(run: String) -> Node3D:
 	return root
 
 
-func _wall(run: String, window: bool) -> Node3D:
+func _wall(run: String, window: bool, length: float) -> Node3D:
 	var root := _run_root(run)
 	for tier in WALL_TIERS:
 		var model_name := "wall-wood-window-shutters" if window and tier == 1 else "wall-wood"
-		var module := _module(model_name, Vector3(1.0, 1.0, WALL_THICKNESS))
+		var module := _module(model_name, Vector3(length, 1.0, WALL_THICKNESS))
 		module.position.y = float(tier)
 		root.add_child(module)
 	return root
 
 
-func _stub(run: String) -> Node3D:
+func _stub(run: String, length: float) -> Node3D:
 	var root := _run_root(run)
-	root.add_child(_module("wall-wood", Vector3(1.0, STUB_HEIGHT, WALL_THICKNESS)))
+	root.add_child(_module("wall-wood", Vector3(length, STUB_HEIGHT, WALL_THICKNESS)))
 	return root
 
 
@@ -265,9 +288,9 @@ func _lintel(run: String) -> Node3D:
 	return root
 
 
-func _post(height: float) -> Node3D:
+func _post(model_name: String, width: float, height: float) -> Node3D:
 	var root := Node3D.new()
-	root.add_child(_module("pillar-wood", Vector3(POST_SIZE, height, POST_SIZE)))
+	root.add_child(_module(model_name, Vector3(width, height, width)))
 	return root
 
 
@@ -279,90 +302,83 @@ func _floor() -> Node3D:
 	return root
 
 
-## A gable roof over a footprint of `cells` (ridge along x), seated ROOF_SEAT above the wall tops.
-## Its origin is the footprint's front corner (largest x and z), so the footprint runs from
-## (-x, -z) to (0, 0).
-func _roof(cells: Vector2i) -> Node3D:
-	var length := float(cells.x)
-	var depth := float(cells.y)
-	var o := ROOF_OVERHANG
-	var slope := tan(deg_to_rad(ROOF_PITCH_DEGREES))
-	var seat := float(WALL_TIERS) + ROOF_SEAT
-	var eave := seat - o * slope
-	var ridge := seat + depth * 0.5 * slope
-	var mid := -depth * 0.5
-	var x0 := -length - o
-	var x1 := o
-	var z0 := -depth - o
-	var z1 := o
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Front slope (toward +z) and back slope (toward -z).
-	_quad(tool, Vector3(x0, eave, z1), Vector3(x1, eave, z1), Vector3(x1, ridge, mid), Vector3(x0, ridge, mid))
-	_quad(tool, Vector3(x1, eave, z0), Vector3(x0, eave, z0), Vector3(x0, ridge, mid), Vector3(x1, ridge, mid))
-	tool.generate_normals()
-	var roof_mesh := MeshInstance3D.new()
-	roof_mesh.mesh = tool.commit()
-	var roof_material := StandardMaterial3D.new()
-	roof_material.albedo_color = ROOF_COLOUR
-	roof_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	roof_mesh.material_override = roof_material
-	# Gable ends fill from the wall tops up to the roof, at both x ends: the seat strip and the
-	# triangle under the ridge, as one convex pentagon fanned from its back bottom corner.
-	var gable_tool := SurfaceTool.new()
-	gable_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var wall_top := float(WALL_TIERS)
-	for x: float in [-length, 0.0]:
-		var outline: Array[Vector3] = [
-			Vector3(x, wall_top, -depth), Vector3(x, wall_top, 0.0), Vector3(x, seat, 0.0),
-			Vector3(x, ridge, mid), Vector3(x, seat, -depth),
-		]
-		for corner in range(1, outline.size() - 1):
-			gable_tool.add_vertex(outline[0])
-			gable_tool.add_vertex(outline[corner])
-			gable_tool.add_vertex(outline[corner + 1])
-	gable_tool.generate_normals()
-	var gable_mesh := MeshInstance3D.new()
-	gable_mesh.mesh = gable_tool.commit()
-	var gable_material := StandardMaterial3D.new()
-	gable_material.albedo_color = GABLE_COLOUR
-	gable_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	gable_mesh.material_override = gable_material
+## The stone footing under a wall cell: the wall stands on its middle.
+func _footing() -> Node3D:
 	var root := Node3D.new()
-	root.add_child(roof_mesh)
-	root.add_child(gable_mesh)
-	# Shingle courses: thin darker strips across each slope.
-	var course_material := StandardMaterial3D.new()
-	course_material.albedo_color = ROOF_COLOUR.darkened(0.25)
-	for side: float in [1.0, -1.0]:
-		for step in range(1, 6):
-			var t := float(step) / 6.0
-			var z := lerpf(z1 if side > 0.0 else z0, mid, t)
-			var y := lerpf(eave, ridge, t) + 0.02
-			var strip := MeshInstance3D.new()
-			var box := BoxMesh.new()
-			box.size = Vector3(x1 - x0, 0.04, 0.06)
-			strip.mesh = box
-			strip.material_override = course_material
-			strip.position = Vector3((x0 + x1) * 0.5, y, z)
-			root.add_child(strip)
+	root.add_child(_box(Vector3(1.0, FLOOR_THICKNESS, 1.0), Vector3(0, -FLOOR_THICKNESS, 0), STONE))
 	return root
 
 
-## A piece of furniture `cells` in size, its origin the centre of its footprint on the floor. The
-## customer side of a counter and the lock of a chest face +z (toward the camera, screen left).
-func _furniture(piece: String, cells: Vector2i) -> Node3D:
+## The roof over `plan`: its outline roof (`BuildingPlan.roof_triangles()`) with flat faces, and
+## a fascia board hanging FASCIA_DEPTH below its edge. Its origin is the grid's back corner.
+func _roof(plan: BuildingPlan) -> Node3D:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	tool.set_smooth_group(-1)
+	for triangle: PackedVector3Array in plan.roof_triangles():
+		for point: Vector3 in triangle:
+			tool.add_vertex(point)
+	tool.generate_normals()
 	var root := Node3D.new()
-	var length := float(cells.x) - 2.0 * FURNITURE_MARGIN
-	var depth := float(cells.y) - 2.0 * FURNITURE_MARGIN
-	match piece.get_slice("-", 0):
+	root.add_child(_surface(tool.commit(), ROOF_COLOUR))
+	var fascia := SurfaceTool.new()
+	fascia.begin(Mesh.PRIMITIVE_TRIANGLES)
+	fascia.set_smooth_group(-1)
+	for cell: Vector2i in plan.footprint_cells():
+		for step: Vector2i in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+			if plan.is_footprint(cell + step):
+				continue
+			var mid := Vector2(cell.x + 0.5, cell.y + 0.5) + Vector2(step) * 0.5
+			var along := Vector2(absf(step.y), absf(step.x)) * 0.5
+			var a := mid - along
+			var b := mid + along
+			var top_a := Vector3(a.x, plan.roof_height(a.x, a.y), a.y)
+			var top_b := Vector3(b.x, plan.roof_height(b.x, b.y), b.y)
+			var down := Vector3(0.0, FASCIA_DEPTH, 0.0)
+			_quad(fascia, top_a, top_b, top_b - down, top_a - down)
+	fascia.generate_normals()
+	root.add_child(_surface(fascia.commit(), FASCIA_COLOUR))
+	return root
+
+
+## A view that holds `plan`'s whole roof at the kit's scale, with a margin.
+static func _roof_view(plan: BuildingPlan) -> Vector2i:
+	var span := float(plan.size.x + plan.size.y)
+	var top := 0.0
+	for cell: Vector2i in plan.footprint_cells():
+		top = maxf(top, plan.roof_top(cell))
+	return Vector2i(int(span * BuildingPlan.HALF_WIDTH) + 128, int(span * BuildingPlan.HALF_HEIGHT + top * BuildingPlan.PIXELS_PER_UNIT) + 128)
+
+
+static func _surface(mesh: Mesh, colour: Color) -> MeshInstance3D:
+	var instance := MeshInstance3D.new()
+	instance.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = colour
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	instance.material_override = material
+	return instance
+
+
+## A piece of furniture of `kind` covering `cells`, its origin the centre of its footprint on the
+## floor. It is built along x with its front (a counter's customer side, a chest's lock, a hearth's
+## fire) facing +z; a piece longer along z turns a quarter so it runs along z, front to +x. Both
+## faces are towards the camera.
+func _furniture(kind: String, cells: Vector2i) -> Node3D:
+	var root := Node3D.new()
+	var long_cells := maxi(cells.x, cells.y)
+	if cells.y > cells.x:
+		root.rotation.y = PI / 2.0
+	var length := float(long_cells) - 2.0 * FURNITURE_MARGIN
+	var depth := float(mini(cells.x, cells.y)) - 2.0 * FURNITURE_MARGIN
+	match kind:
 		"counter":
 			var body_depth := depth - 0.25
 			root.add_child(_box(Vector3(length - 0.06, 0.08, body_depth), Vector3.ZERO, WOOD_DARK))
 			root.add_child(_box(Vector3(length - 0.1, 0.95, body_depth - 0.06), Vector3(0, 0.08, 0), WOOD))
 			root.add_child(_box(Vector3(length, 0.07, depth - 0.1), Vector3(0, 1.03, 0), WOOD_TOP))
-			for stile in cells.x + 1:
-				var x := lerpf(-(length - 0.1) * 0.5, (length - 0.1) * 0.5, float(stile) / float(cells.x))
+			for stile in long_cells + 1:
+				var x := lerpf(-(length - 0.1) * 0.5, (length - 0.1) * 0.5, float(stile) / float(long_cells))
 				root.add_child(_box(Vector3(0.07, 0.95, 0.03), Vector3(x, 0.08, (body_depth - 0.06) * 0.5), WOOD_DARK))
 		"table":
 			var height := 0.8
@@ -375,26 +391,48 @@ func _furniture(piece: String, cells: Vector2i) -> Node3D:
 				for sz: float in [-1.0, 1.0]:
 					var leg_at := Vector3(sx * (length * 0.5 - 0.16), 0, sz * (depth * 0.5 - 0.16))
 					root.add_child(_box(Vector3(0.12, height - 0.08, 0.12), leg_at, WOOD_DARK))
-		"bench":
-			var seat_depth := 0.42
-			root.add_child(_box(Vector3(length, 0.07, seat_depth), Vector3(0, 0.42, 0), WOOD_TOP))
-			for sx: float in [-1.0, 1.0]:
-				root.add_child(_box(Vector3(0.08, 0.42, seat_depth - 0.06), Vector3(sx * (length * 0.5 - 0.3), 0, 0), WOOD_DARK))
-			root.add_child(_box(Vector3(length - 0.6, 0.06, 0.06), Vector3(0, 0.14, 0), WOOD_DARK))
-		"stool":
-			root.add_child(_cylinder(0.24, 0.06, Vector3(0, 0.56, 0), WOOD_TOP))
-			for leg in 3:
-				var angle := TAU * float(leg) / 3.0 + PI / 6.0
-				var leg_at := Vector3(cos(angle) * 0.15, 0, sin(angle) * 0.15)
-				root.add_child(_box(Vector3(0.06, 0.56, 0.06), leg_at, WOOD_DARK))
 		"chest":
-			var width := 0.8
-			var chest_depth := 0.56
-			root.add_child(_box(Vector3(width, 0.42, chest_depth), Vector3.ZERO, WOOD))
-			root.add_child(_box(Vector3(width + 0.03, 0.18, chest_depth + 0.03), Vector3(0, 0.42, 0), WOOD_TOP))
+			# One chest or crate per cell, the middle ones stacked for a store's look.
+			for k in long_cells:
+				var x := float(k) - float(long_cells - 1) * 0.5
+				var width := 0.8
+				var chest_depth := minf(0.56, depth)
+				root.add_child(_box(Vector3(width, 0.42, chest_depth), Vector3(x, 0, 0), WOOD))
+				root.add_child(_box(Vector3(width + 0.03, 0.18, chest_depth + 0.03), Vector3(x, 0.42, 0), WOOD_TOP))
+				for sx: float in [-1.0, 1.0]:
+					root.add_child(_box(Vector3(0.06, 0.61, chest_depth + 0.05), Vector3(x + sx * width * 0.3, -0.005, 0), IRON))
+				root.add_child(_box(Vector3(0.12, 0.14, 0.03), Vector3(x, 0.33, chest_depth * 0.5 + 0.015), IRON))
+		"shelves":
+			var height := 2.2
+			var shelf_depth := minf(0.45, depth)
 			for sx: float in [-1.0, 1.0]:
-				root.add_child(_box(Vector3(0.06, 0.61, chest_depth + 0.05), Vector3(sx * width * 0.3, -0.005, 0), IRON))
-			root.add_child(_box(Vector3(0.12, 0.14, 0.03), Vector3(0, 0.33, chest_depth * 0.5 + 0.015), IRON))
+				root.add_child(_box(Vector3(0.08, height, shelf_depth), Vector3(sx * (length * 0.5 - 0.04), 0, 0), WOOD_DARK))
+			root.add_child(_box(Vector3(length, height, 0.04), Vector3(0, 0, -shelf_depth * 0.5 + 0.02), WOOD_DARK))
+			for board in 4:
+				var y := 0.1 + float(board) * 0.68
+				root.add_child(_box(Vector3(length - 0.12, 0.05, shelf_depth), Vector3(0, y, 0), WOOD))
+				if board < 3:
+					for k in long_cells * 2:
+						var x := lerpf(-length * 0.5 + 0.3, length * 0.5 - 0.3, (float(k) + 0.5) / float(long_cells * 2))
+						var colour := LINEN if (k + board) % 3 == 0 else (CLOTH if (k + board) % 3 == 1 else WOOD_TOP)
+						root.add_child(_box(Vector3(0.22, 0.26 + 0.08 * float((k * 7 + board) % 3), 0.24), Vector3(x, y + 0.05, 0.02), colour))
+		"hearth":
+			var height := 1.3
+			root.add_child(_box(Vector3(length, height, depth * 0.9), Vector3(0, 0, -depth * 0.05), STONE))
+			root.add_child(_box(Vector3(length + 0.08, 0.1, depth), Vector3(0, height, 0), STONE.darkened(0.2)))
+			root.add_child(_box(Vector3(length * 0.6, 0.55, 0.06), Vector3(0, 0.12, depth * 0.4), IRON))
+			root.add_child(_box(Vector3(length * 0.45, 0.3, 0.07), Vector3(0, 0.14, depth * 0.41), FIRE))
+		"stove":
+			root.add_child(_box(Vector3(length, 0.85, depth * 0.85), Vector3.ZERO, IRON))
+			root.add_child(_box(Vector3(length + 0.04, 0.06, depth * 0.9), Vector3(0, 0.85, 0), IRON.lightened(0.15)))
+			root.add_child(_box(Vector3(0.18, 0.9, 0.18), Vector3(length * 0.5 - 0.2, 0.91, -depth * 0.25), IRON))
+			root.add_child(_box(Vector3(0.3, 0.16, 0.04), Vector3(-length * 0.2, 0.3, depth * 0.43), FIRE))
+		"bed":
+			root.add_child(_box(Vector3(length, 0.32, depth), Vector3.ZERO, WOOD_DARK))
+			root.add_child(_box(Vector3(length - 0.06, 0.14, depth - 0.06), Vector3(0, 0.32, 0), LINEN))
+			root.add_child(_box(Vector3(length * 0.66, 0.06, depth - 0.02), Vector3(length * 0.16, 0.44, 0), CLOTH))
+			root.add_child(_box(Vector3(0.3, 0.1, depth * 0.7), Vector3(-length * 0.5 + 0.22, 0.46, 0), LINEN.lightened(0.1)))
+			root.add_child(_box(Vector3(0.08, 0.75, depth), Vector3(-length * 0.5 + 0.04, 0, 0), WOOD_DARK))
 	return root
 
 

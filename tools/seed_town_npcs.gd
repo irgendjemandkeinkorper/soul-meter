@@ -96,9 +96,6 @@ const PLACEMENT_ANCHORS := {
 	"kesselford_wayhouse_floor": {
 		"scene": KESSELFORD_SCENE, "anchor": "WayhouseKeeperSpot", "town": "kesselford",
 	},
-	"kesselford_chandlery_i": {
-		"scene": "res://world/interiors/kesselford_chandlery.tscn", "anchor": "NpcSpot", "town": "kesselford",
-	},
 	"kesselford_ferry": {"scene": KESSELFORD_SCENE, "anchor": "FerryStage", "town": "kesselford"},
 	"kesselford_bell": {"scene": KESSELFORD_SCENE, "anchor": "FloodBell", "town": "kesselford"},
 	"kesselford_square": {"scene": KESSELFORD_SCENE, "anchor": "MenderStone", "town": "kesselford"},

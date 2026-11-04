@@ -100,9 +100,10 @@ func test_npc_body_collision_matches_the_character_feet_footprint() -> void:
 	npc.queue_free()
 
 
-func test_all_fourteen_generated_vendors_are_reachable_in_interiors() -> void:
-	# Twelve Dom vendors plus Kesselford's Ford Chandlery (C1 / #238) and Ashlaren's Flat Bell
-	# (C2 / #239).
+func test_all_fourteen_generated_vendors_are_reachable_indoors() -> void:
+	# Twelve Dom vendors and Ashlaren's Flat Bell (C2 / #239) in interiors, plus Kesselford's Ford
+	# Chandlery (C1 / #238), which keeps shop in its walk-in building on the map since item 35
+	# (2026-11-04; `test_walk_in_buildings.gd` places the vendor).
 	var placed_ids := {}
 	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
 		var interior := _instantiate_interior(entry.destination_scene)
@@ -117,6 +118,17 @@ func test_all_fourteen_generated_vendors_are_reachable_in_interiors() -> void:
 			assert_float(npc.interaction_radius).is_greater(0.0)
 			placed_ids[npc.vendor_id] = true
 		_free_interior(interior)
+	assert_int(placed_ids.size()).is_equal(13)
+	var kesselford: Node = (load("res://world/kesselford.tscn") as PackedScene).instantiate()
+	for node: Node in kesselford.find_children("*", "Node2D", true, false):
+		var building := node as WalkInBuilding
+		if building == null:
+			continue
+		for vendor_id: String in building.vendor_ids:
+			assert_bool(VendorData.vendor(vendor_id).is_empty()).is_false()
+			assert_bool(placed_ids.has(vendor_id)).is_false()
+			placed_ids[vendor_id] = true
+	kesselford.free()
 	assert_int(placed_ids.size()).is_equal(14)
 	for row: Dictionary in VendorData.all_vendors():
 		assert_bool(placed_ids.has(str(row["id"]))).is_true()

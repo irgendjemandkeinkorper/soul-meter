@@ -8,12 +8,13 @@ extends SceneTree
 ##   1. Bases (2026-11-03): every prop sprite whose art has a base in `ArtBases` gets that base as
 ##      its collision: its body's CollisionShape2D takes a ConvexPolygonShape2D, and a sprite
 ##      with no body gains a `Base` StaticBody2D child. Rectangles nothing uses any more go.
-##      Walk-in buildings (`WalkInBuilding`, item 35) get their wall line the same way: a
-##      `WallBody` StaticBody2D child holding one ConvexPolygonShape2D per unbroken wall run.
-##      The wall cells, less the windows, also go into the map's combat terrain
-##      (`blocks_fire_cells`), so a fight's line of fire cannot cross a wall but passes a window.
-##   2. Paint: the layer's `tile_map_data` line is rewritten from the solids' cells. A cell inside
-##      a walk-in building's footprint takes `BlockingLayer.THIN_TILE` (no walk clearance ring).
+##      Walk-in buildings (`WalkInBuilding`, item 35) get their walls, windows and furniture the
+##      same way: a `WallBody` StaticBody2D child holding one ConvexPolygonShape2D per rectangle
+##      of `BuildingPlan.solid_rects()`. The wall cells, less the windows, also go into the map's
+##      combat terrain (`blocks_fire_cells`), so a fight's line of fire cannot cross a wall but
+##      passes a window or doorway.
+##   2. Paint: the layer's `tile_map_data` line is rewritten from the solids' cells. A cell on a
+##      walk-in building's footprint takes `BlockingLayer.THIN_TILE` (no walk clearance ring).
 ## Nothing else in the file changes. `--check` writes nothing and lists the maps whose bases or
 ## paint are out of date. Run it after moving, adding or removing a prop or a solid on one of
 ## those maps; `test_blocking_paint` fails until you do. Judge the printed lines, not the exit
@@ -22,7 +23,7 @@ extends SceneTree
 const TILE_SOURCE := 0
 const TILE_ATLAS := Vector2i.ZERO
 ## `BlockingLayer.THIN_TILE`. The tool names no project class at compile time (see
-## FOOTPRINTS_SCRIPT); `test_walk_in_wayhouse` checks that the two agree.
+## FOOTPRINTS_SCRIPT); `test_walk_in_buildings` checks that the two agree.
 const THIN_TILE := 1
 ## Loaded at runtime, never preloaded: map scripts name autoloads (GameState), which do not exist
 ## yet when a `--script` harness is compiled (as in tools/populated_field_benchmark.gd).
@@ -168,17 +169,17 @@ func shape_bases(scene_path: String, write: bool) -> Dictionary:
 	return {"props": sprites.size() + buildings.size(), "changed": changed}
 
 
-## The cells of `cells` that lie inside a walk-in building's footprint: its walls and furniture,
-## painted as thin solids.
+## The cells of `cells` that lie on a walk-in building's footprint: its walls, windows and
+## furniture, painted as thin solids.
 func thin_cells(root: Node, cells: Array) -> Dictionary:
-	var thin := {}
+	var footprint := {}
 	for building: Node2D in walk_in_buildings(root):
-		var origin: Vector2i = building.get("origin_cell")
-		var size: Vector2i = building.get("cells")
-		var footprint := Rect2i(origin, size)
-		for cell: Vector2i in cells:
-			if footprint.has_point(cell):
-				thin[cell] = true
+		for cell: Vector2i in building.call("footprint_cells"):
+			footprint[cell] = true
+	var thin := {}
+	for cell: Vector2i in cells:
+		if footprint.has(cell):
+			thin[cell] = true
 	return thin
 
 
@@ -232,22 +233,22 @@ func walk_in_buildings(root: Node) -> Array[Node2D]:
 	return found
 
 
-## The building's wall line as its `WallBody` shapes, in the building's own space: one convex
-## strip per unbroken run, from `WalkInBuilding.wall_polygons()` bound to the scene's ground.
-func wall_polygons_in_scene(root: Node, building: Node2D) -> Array:
+## The building's solids as its `WallBody` shapes, in the building's own space: one convex shape
+## per rectangle, from `WalkInBuilding.solid_polygons()` bound to the scene's ground.
+func solid_polygons_in_scene(root: Node, building: Node2D) -> Array:
 	var ground: TileMapLayer = _footprints.find_ground(root)
 	if ground == null:
 		return []
 	var to_building: Transform2D = _footprints.transform_in(building, root).affine_inverse()
 	building.call("bind", ground, to_building * _footprints.transform_in(ground, root))
-	return building.call("wall_polygons")
+	return building.call("solid_polygons")
 
 
 func _shape_walls(scene: SceneText, root: Node, building: Node2D) -> String:
 	var building_path := str(root.get_path_to(building))
 	if scene.find_node(building_path) < 0:
 		return "%s is inside an instanced scene; give its walls in that scene" % building_path
-	var polygons := wall_polygons_in_scene(root, building)
+	var polygons := solid_polygons_in_scene(root, building)
 	if polygons.is_empty():
 		return "%s has no ground to stand its walls on" % building_path
 	var wall_body: String = _walk_in.get_script_constant_map()["WALL_BODY"]
