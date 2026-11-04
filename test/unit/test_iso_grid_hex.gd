@@ -50,9 +50,17 @@ func _hex_grid(size: Vector2i, walls: Array[Vector2i] = []) -> IsoGrid:
 	return grid
 
 
-func test_hex_mode_is_off_unless_the_project_turns_it_on() -> void:
-	assert_bool(IsoGrid.hex_enabled()).is_false()
+## H3b turned the hex grid on in project.godot; a new grid follows the setting it reads.
+func test_the_project_turns_hexes_on_and_a_new_grid_follows_the_setting() -> void:
+	var project := ConfigFile.new()
+	assert_int(project.load("res://project.godot")).is_equal(OK)
+	assert_bool(bool(project.get_value("soul_meter", "grid/hex", false))).is_true()
+	var before: Variant = ProjectSettings.get_setting(IsoGrid.HEX_SETTING, false)
+	ProjectSettings.set_setting(IsoGrid.HEX_SETTING, true)
+	assert_bool(IsoGrid.new().hex_mode).is_true()
+	ProjectSettings.set_setting(IsoGrid.HEX_SETTING, false)
 	assert_bool(IsoGrid.new().hex_mode).is_false()
+	ProjectSettings.set_setting(IsoGrid.HEX_SETTING, before)
 
 
 func test_world_positions_round_trip_through_hexes_on_the_painted_ground() -> void:
@@ -340,3 +348,25 @@ func test_a_rebuild_over_the_same_ground_keeps_the_hex_graph_and_forgets_marks()
 	var other := _make_layer(_square(Vector2i(6, 6)), tile_set)
 	grid.build(other)
 	assert_object(grid._hex_astar).is_null()
+
+
+## Harness boards (Gate T-1, Gate T-2) use plain 64x32 rectangles. Hexes are sized from the
+## tile's real shape, so they hold about 4.6 hexes to a cell there too (H2, item 34).
+func test_a_rectangular_board_keeps_about_four_hexes_to_a_cell() -> void:
+	var tile_set := TileSet.new()
+	tile_set.tile_size = TILE_SIZE
+	var atlas_source := TileSetAtlasSource.new()
+	atlas_source.texture = ImageTexture.create_from_image(
+		Image.create(TILE_SIZE.x, TILE_SIZE.y, false, Image.FORMAT_RGBA8)
+	)
+	atlas_source.texture_region_size = TILE_SIZE
+	atlas_source.create_tile(Vector2i(0, 0))
+	tile_set.add_source(atlas_source, 0)
+	var grid := IsoGrid.new()
+	grid.hex_mode = true
+	grid.build(_make_layer(_square(Vector2i(8, 8)), tile_set))
+	assert_int(grid.region_cells().size()).is_between(64 * 4, 64 * 5)
+	# Two hex steps still cover one cell step (64 px across on this board).
+	var a := grid.cell_at_square(Vector2i(3, 3))
+	var hex_step := grid.cell_to_world(a + HexMath.DIRECTIONS[0]) - grid.cell_to_world(a)
+	assert_float(hex_step.x * 2.0).is_equal_approx(float(TILE_SIZE.x), 0.01)

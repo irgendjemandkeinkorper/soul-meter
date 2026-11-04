@@ -81,9 +81,17 @@ static func hex_enabled() -> bool:
 ## The hexes over a ground layer, in the layer's local space: a hex step is half a cell side
 ## (ruling H-a2: two hex steps cover one cell step). Anything else that places things on hexes
 ## (party followers) uses this, so every consumer sees the same hexes.
+##
+## A cell side is measured in flat space (screen with y doubled): an isometric 64x32 diamond is
+## a square of side 64 / sqrt(2) there, as on every shipped map. A plain rectangular 64x32 tile,
+## which only test and harness boards use, is a square of side 64. Measuring the real shape
+## keeps about 4.6 hexes to a cell either way, so a move covers the same ground on both.
 static func hex_layout_for(ground: TileMapLayer) -> HexLayout:
 	var tile := Vector2(ground.tile_set.tile_size)
-	return HexLayout.new(ground.map_to_local(Vector2i.ZERO), tile.x / sqrt(2.0) / 2.0)
+	var side := tile.x
+	if ground.tile_set.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
+		side = tile.x / sqrt(2.0)
+	return HexLayout.new(ground.map_to_local(Vector2i.ZERO), side / 2.0)
 
 
 const NEIGHBOR_OFFSETS: Array[Vector2i] = [
@@ -199,6 +207,8 @@ func _bake_obstacles() -> void:
 	# layout scales its authored collision layer). Bake in Ground cell space
 	# so AStar and the physics polygons describe the same world positions.
 	var occupied_ground_cells: Array[Vector2i] = []
+	# A thin solid (a walk-in building's wall or furniture) blocks its own cell only.
+	var thin := {}
 	if (
 		not _project_blocking_to_ground
 		or (
@@ -207,6 +217,9 @@ func _bake_obstacles() -> void:
 		)
 	):
 		occupied_ground_cells.assign(_blocking.get_used_cells())
+		for cell: Vector2i in occupied_ground_cells:
+			if _blocking.get_cell_alternative_tile(cell) == BlockingLayer.THIN_TILE:
+				thin[cell] = true
 	else:
 		var half_tile := Vector2(_ground.tile_set.tile_size) * 0.5
 		var sample_offsets: Array[Vector2] = [
@@ -224,10 +237,13 @@ func _bake_obstacles() -> void:
 				if _blocking.get_cell_source_id(blocking_cell) == -1:
 					continue
 				occupied_ground_cells.append(ground_cell)
+				if _blocking.get_cell_alternative_tile(blocking_cell) == BlockingLayer.THIN_TILE:
+					thin[ground_cell] = true
 				break
 	for occupied_cell in occupied_ground_cells:
-		for dx in range(-_static_clearance_cells, _static_clearance_cells + 1):
-			for dy in range(-_static_clearance_cells, _static_clearance_cells + 1):
+		var reach := 0 if thin.has(occupied_cell) else _static_clearance_cells
+		for dx in range(-reach, reach + 1):
+			for dy in range(-reach, reach + 1):
 				var cell := occupied_cell + Vector2i(dx, dy)
 				if not _astar.is_in_boundsv(cell):
 					continue
@@ -532,6 +548,114 @@ func get_used_rect() -> Rect2i:
 			_hex_bounds = Rect2i(low, high - low + Vector2i.ONE)
 		_hex_bounds_ready = true
 	return _hex_bounds
+
+
+# --- what combat needs from the grid (hex slice H2): the same answers on cells and hexes ---
+
+
+## The steps one move can take: the six hex directions, or the eight square neighbours.
+func neighbor_offsets() -> Array[Vector2i]:
+	return _neighbor_offsets()
+
+
+## Whether the straight step between two neighbouring hexes crosses a painted wall (see
+## `_is_hex_edge_walled`). Always false on the square grid, whose own rule is the corner cut.
+func is_edge_walled(from: Vector2i, to: Vector2i) -> bool:
+	return hex_mode and _is_hex_edge_walled(from, to)
+
+
+## Hex slice H3: a cell's outline in world space, clockwise. On the square grid it is the iso
+## diamond (top, right, bottom, left); on hexes the six corners of `HexLayout.corners()`, whose
+## edge `i` borders the neighbour `HexMath.DIRECTIONS[HexLayout.EDGE_NEIGHBOR[i]]`.
+func cell_outline(cell: Vector2i) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	if hex_mode:
+		for corner: Vector2 in _layout.corners(cell):
+			points.append(_ground.to_global(corner))
+		return points
+	var center := _ground.map_to_local(cell)
+	var half := Vector2(_ground.tile_set.tile_size) * 0.5
+	for offset: Vector2 in [Vector2(0, -half.y), Vector2(half.x, 0), Vector2(0, half.y), Vector2(-half.x, 0)]:
+		points.append(_ground.to_global(center + offset))
+	return points
+
+
+## Whether a wall fills the cell: the painted blocking layer, or on hexes a hex derived from it.
+## Bodies and solids set by callers do not count. A cell off the grid is not a wall.
+func is_wall(cell: Vector2i) -> bool:
+	return _in_region(cell) and _is_static(cell)
+
+
+## The square cell under a hex's centre, where the hex's height, cover and terrain are authored.
+## On the square grid, the cell itself.
+func square_cell_of(cell: Vector2i) -> Vector2i:
+	if not hex_mode:
+		return cell
+	return _ground.local_to_map(_layout.hex_to_world(cell))
+
+
+## The hexes whose centre lies on one square cell (four or five of them). They take that cell's
+## authored terrain. On the square grid, the cell itself.
+func cells_on_square(square_cell: Vector2i) -> Array[Vector2i]:
+	if not hex_mode:
+		return [square_cell]
+	var tile := Vector2(_ground.tile_set.tile_size)
+	var center := _ground.map_to_local(square_cell)
+	var result: Array[Vector2i] = []
+	for hex: Vector2i in _layout.hexes_in_rect(Rect2(center - tile * 0.5, tile)):
+		if _ground.local_to_map(_layout.hex_to_world(hex)) == square_cell:
+			result.append(hex)
+	return result
+
+
+## The painted square region, in cells, on either grid.
+func square_rect() -> Rect2i:
+	return _astar.region
+
+
+## The cell of this grid at a square cell's centre: the cell itself, or the hex under its centre.
+## Anything authored on cells (default seats) lands here.
+func cell_at_square(square_cell: Vector2i) -> Vector2i:
+	if not hex_mode:
+		return square_cell
+	return _layout.world_to_hex(_ground.map_to_local(square_cell))
+
+
+## Every cell, or every hex, on the grid.
+func region_cells() -> Array[Vector2i]:
+	if hex_mode:
+		return _hex_region_hexes()
+	var cells: Array[Vector2i] = []
+	var rect: Rect2i = _astar.region
+	for y in range(rect.position.y, rect.end.y):
+		for x in range(rect.position.x, rect.end.x):
+			cells.append(Vector2i(x, y))
+	return cells
+
+
+## The cell or hex `cell_steps` square steps from `from` toward a screen direction. On the square
+## grid each step is the best-matching neighbour, as before. On hexes it covers the same ground:
+## the best-matching square step's offset, `cell_steps` times, then the hex under that point. Set
+## pieces therefore keep the spacing they were authored with.
+func screen_steps(from: Vector2i, screen_direction: Vector2, cell_steps: int) -> Vector2i:
+	if not hex_mode:
+		var cell := from
+		for _step in cell_steps:
+			cell = screen_direction_to_neighbor(cell, screen_direction)
+		return cell
+	if screen_direction.is_zero_approx():
+		return from
+	var requested := screen_direction.normalized()
+	var origin := _ground.map_to_local(Vector2i.ZERO)
+	var best := Vector2.ZERO
+	var best_score := -INF
+	for offset: Vector2i in NEIGHBOR_OFFSETS:
+		var step := _ground.map_to_local(offset) - origin
+		var score := requested.dot(step.normalized())
+		if score > best_score:
+			best_score = score
+			best = step
+	return _layout.world_to_hex(_layout.hex_to_world(from) + best * float(cell_steps))
 
 
 # --- one set of calls over two grids: square cells, or hexes in hex mode ---
