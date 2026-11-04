@@ -11,6 +11,10 @@ const RETIRED_ROOM := "res://world/interiors/kesselford_wayhouse.tscn"
 const PAINT_TOOL := "res://tools/paint_blocking.gd"
 const WAYHOUSE_PATH := "KesselfordDressing/SolidProps/Wayhouse"
 const WAYHOUSE_IDS: Array[String] = ["kesselford-wayhouse-keeper", "kesselford-grain-factor"]
+const WAYHOUSE_FURNITURE := {
+	"WayhouseCounter": "counter-4x1", "WayhouseTable": "table-3x2", "WayhouseBench": "bench-3x1",
+	"WayhouseStool": "stool-1x1", "WayhouseChest": "chest-1x1",
+}
 
 var _saved_state: Dictionary
 
@@ -160,6 +164,38 @@ func test_the_walls_stop_a_line_of_fire_and_the_doorway_and_windows_let_it_throu
 		assert_str(String(shot["blocked_by"])).override_failure_message("%s shot: %s" % [wall, str(shot)]) \
 			.is_equal("blocked_by_obstacle")
 	await _unload(town)
+
+
+## Item 35 polish (2026-11-04): the Wayhouse furniture is kit art drawn at the map's camera, not
+## the old room's painted props. Each sprite stands on its piece's pivot, the centre of the
+## footprint its body blocks, and the body's shape spans the piece's cells.
+func test_the_furniture_is_kit_art_on_its_footprint() -> void:
+	var root: Node = auto_free((load(KESSELFORD) as PackedScene).instantiate())
+	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(WalkInBuilding.KIT_MANIFEST))
+	var pieces: Dictionary = manifest["pieces"]
+	for node_name: String in WAYHOUSE_FURNITURE:
+		var piece: String = WAYHOUSE_FURNITURE[node_name]
+		var body := root.get_node("KesselfordDressing/SolidProps/" + node_name) as StaticBody2D
+		var sprite := body.get_node("Sprite2D") as Sprite2D
+		var entry: Dictionary = pieces[piece]
+		var pivot: Array = entry["pivot"]
+		assert_str(sprite.texture.resource_path).is_equal(WalkInBuilding.KIT_DIR + str(entry["file"]))
+		assert_bool(sprite.centered).is_false()
+		assert_vector(sprite.scale).is_equal(Vector2.ONE)
+		assert_vector(sprite.offset).override_failure_message("%s offset" % node_name) \
+			.is_equal_approx(-Vector2(float(pivot[0]), float(pivot[1])), Vector2.ONE * 0.01)
+		# A footprint of a x b cells is 32 (a + b) px wide on the 64 x 32 grid. The shape stands
+		# 3 px in from each edge, which pulls each side corner in by 3 / sin(26.57°), about 6.7 px.
+		var size := piece.get_slice("-", 1).split("x")
+		var span := 32.0 * (float(size[0]) + float(size[1]))
+		var polygon := ((body.get_node("CollisionShape2D") as CollisionShape2D).shape as ConvexPolygonShape2D).points
+		var low := polygon[0]
+		var high := polygon[0]
+		for point: Vector2 in polygon:
+			low = low.min(point)
+			high = high.max(point)
+		assert_float(high.x - low.x).override_failure_message("%s shape width" % node_name).is_between(span - 16.0, span)
+		assert_vector((low + high) * 0.5).is_equal_approx(Vector2.ZERO, Vector2.ONE * 0.5)
 
 
 func test_the_keeper_and_the_grain_factor_stand_on_the_wayhouse_floor() -> void:

@@ -18,7 +18,9 @@ All looks, sizes and pieces are PROVISIONAL.
 
 ## Kit spec for the Blender pieces
 
-The kit uses the camera of `tools/render_isometric_sprites.gd`: yaw 45°, pitch atan(½) (26.57°), orthographic. One model unit is one cell edge, so a 1 × 1 floor tile renders as the 64 × 32 ground diamond. One unit of height is about 40.5 px on screen.
+The kit uses the yaw (45°), orthographic projection and scale of `tools/render_isometric_sprites.gd` at its own pitch: 30° (asin ½). One model unit is one cell edge, and at 30° a 1 × 1 floor tile renders as the exact 64 × 32 ground diamond. One unit of height is about 39.2 px on screen.
+
+Why not the sprite tool's pitch: its atan(½) (26.57°) draws a floor tile 64 × 28.6. A small prop hides that, but the 12 × 9 roof landed about 15 px off the ground grid at its corners, so the corner posts showed above it (fixed 2026-11-04). Units and props keep the sprite tool's pitch.
 
 | Piece | Model size (units) | Notes |
 |---|---|---|
@@ -27,11 +29,16 @@ The kit uses the camera of `tools/render_isometric_sprites.gd`: yaw 45°, pitch 
 | Wall stub | 1 long, 0.5 tall | the cutaway form of every front wall piece |
 | Lintel | 1 long, the top 1 of 4 | stands over each doorway cell; the doorway opening is 3 tall |
 | Post | 4 tall (stub 0.5) | at the corners and the door jambs |
-| Roof | the whole footprint, 35° pitch, 0.3 overhang | one piece per footprint size (`roof-12x9`) |
+| Roof | the whole footprint, 35° pitch, 0.3 overhang | one piece per footprint size (`roof-12x9`); its plane sits about 0.12 above the wall tops so it clears the posts' outer corners |
+| Counter | 4 × 1 cells, about 1.1 tall | `counter-4x1`; the panelled side faces +z (toward the camera, screen left) |
+| Table | 3 × 2 cells, 0.8 tall | `table-3x2` |
+| Bench | 3 × 1 cells, about 0.5 tall | `bench-3x1` |
+| Stool | 1 × 1 cell, about 0.6 tall | `stool-1x1` |
+| Chest | 1 × 1 cell, about 0.6 tall | `chest-1x1`; the lock faces +z |
 
-Each piece is a transparent PNG with a pivot in `building_kit.json`. A floor tile's pivot is its centre. A wall, stub, lintel or post's pivot is the middle of its base. The roof's pivot is the footprint's front (bottom) corner, so a person inside the building draws under it. To replace a placeholder, keep the file name, write the new image, and set its pivot in the manifest.
+Each piece is a transparent PNG with a pivot in `building_kit.json`. A floor tile's pivot is its centre. A wall, stub, lintel or post's pivot is the middle of its base. The roof's pivot is the footprint's front (bottom) corner, so a person inside the building draws under it. A piece of furniture's pivot is the centre of its footprint, where its body stands on the map. Each piece of furniture stands 0.1 in from its cells' edges and runs along x; the map turns nothing. To replace a placeholder, keep the file name, write the new image, and set its pivot in the manifest.
 
-The placeholders come from `tools/render_building_kit.gd`, which renders the Kenney Fantasy Town models (CC0, already in the repository):
+The placeholders come from `tools/render_building_kit.gd`, which renders the Kenney Fantasy Town models (CC0, already in the repository). The furniture is plain boxes in wood tones, because the Kenney kits have no counter, table or chest:
 
 ```
 cp project.godot /tmp/project.godot.bak
@@ -54,7 +61,7 @@ cp /tmp/project.godot.bak project.godot
   - What changes: a thin cell gets no clearance ring, and its collision is an inset diamond. The `WallBody` strips and the furniture shapes stand 3 px in from their cells' edges, so the player's 30 × 22 box clears them from the next cell.
   - A fight on a live map uses the same grid as walking, so it sees the same open room. Cells outside walk-in buildings are unchanged.
 - **Line of fire:** fights can happen inside (ruled 2026-11-03). A painted cell stops a walk but not a shot, so the same tool also writes the wall cells into the map's combat terrain (`CombatTerrainLayer.blocks_fire_cells`, the `blocks_fire` alternative of the plain terrain tile). A shot through the doorway or a window passes (`Shots pass windows`, 2026-11-03); a window still stops a walk. A corner cell passes a shot only when both of its wall pieces have a window. A shot through a wall is blocked. Furniture does not block shots.
-- **Furniture:** a piece of furniture is a `StaticBody2D` whose position is the centre of its footprint, so the y-sort sees people correctly on either side of it. Its shape covers whole cells, and it stands under the map's `SolidProps`.
+- **Furniture:** a piece of furniture is a `StaticBody2D` whose position is the centre of its footprint, so the y-sort sees people correctly on either side of it. Its shape covers whole cells, and it stands under the map's `SolidProps`. Its `Sprite2D` is the kit piece of that size (`centered = false`, `offset` = minus the piece's pivot); `test_walk_in_wayhouse` checks the match.
 - **People:** a building's people use an outdoor placement anchor on the map, such as `kesselford_wayhouse_floor` → `WayhouseKeeperSpot` in `tools/seed_town_npcs.gd`, with zero jitter.
 
 ## Retiring a building's room

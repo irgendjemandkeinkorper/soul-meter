@@ -110,6 +110,75 @@ func test_a_shot_passes_a_window_but_not_a_wall() -> void:
 		assert_bool(ORIGIN + cell in building.blocks_fire_cells()).is_false()
 
 
+## Item 35 polish (2026-11-04): the kit renders at a pitch where a floor cell is the 64 x 32 ground
+## diamond, so a roof spanning the footprint lands on the grid at all four corners.
+func test_a_kit_floor_tile_is_one_ground_cell() -> void:
+	var manifest := _manifest()
+	assert_float(float(manifest["spec"]["camera_pitch_degrees"])).is_equal_approx(30.0, 0.001)
+	var size: Array = manifest["pieces"]["floor-planks"]["size"]
+	assert_int(int(size[0])).is_equal(64)
+	# The 32 px diamond plus the plank edge below it.
+	assert_int(int(size[1])).is_between(32, 34)
+
+
+## Item 35 polish (2026-11-04): the roof sits on the post tops, so no pixel of a front post or
+## front wall shows above its outline (the corner posts used to).
+func test_the_roof_covers_the_posts_and_front_walls() -> void:
+	var building := _building(_ground())
+	var pieces: Dictionary = _manifest()["pieces"]
+	var roof_entry: Dictionary = pieces["roof-%dx%d" % [SIZE.x, SIZE.y]]
+	var roof := _kit_image(roof_entry)
+	var roof_at := building.corner(SIZE.x, SIZE.y) - _pivot(roof_entry)
+	var roof_top := PackedInt32Array()
+	for x in roof.get_width():
+		roof_top.append(_first_opaque_row(roof, x))
+	var placed: Array = []
+	for point: Vector2 in [building.corner(SIZE.x, 0), building.corner(SIZE.x, SIZE.y), building.corner(0, SIZE.y)]:
+		placed.append(["post", point])
+	for i in SIZE.x:
+		placed.append(["wall-x", building.corner(i + 0.5, SIZE.y)])
+	for j in SIZE.y:
+		placed.append(["wall-z", building.corner(SIZE.x, j + 0.5)])
+	for item: Array in placed:
+		var entry: Dictionary = pieces[item[0]]
+		var image := _kit_image(entry)
+		var at: Vector2 = (item[1] as Vector2) - _pivot(entry)
+		var showing := 0
+		for x in image.get_width():
+			var top := _first_opaque_row(image, x)
+			if top < 0:
+				continue
+			var roof_x := roundi(at.x + x - roof_at.x)
+			var covered := roof_x >= 0 and roof_x < roof.get_width() and roof_top[roof_x] >= 0 \
+				and at.y + top >= roof_at.y + roof_top[roof_x] - 0.5
+			showing += 0 if covered else 1
+		assert_int(showing).override_failure_message("%s at %s shows above the roof" % [item[0], item[1]]).is_equal(0)
+
+
+func _manifest() -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string(WalkInBuilding.KIT_MANIFEST))
+
+
+func _kit_image(entry: Dictionary) -> Image:
+	var image := (load(WalkInBuilding.KIT_DIR + str(entry["file"])) as Texture2D).get_image()
+	if image.is_compressed():
+		image.decompress()
+	return image
+
+
+func _pivot(entry: Dictionary) -> Vector2:
+	var pivot: Array = entry["pivot"]
+	return Vector2(float(pivot[0]), float(pivot[1]))
+
+
+## The first row of column `x` with an opaque pixel, or -1.
+func _first_opaque_row(image: Image, x: int) -> int:
+	for y in image.get_height():
+		if image.get_pixel(x, y).a > 0.0:
+			return y
+	return -1
+
+
 func test_the_roof_lifts_for_the_party_and_fades_for_someone_behind() -> void:
 	var map: Node2D = auto_free(Node2D.new())
 	map.add_child(_ground(true))

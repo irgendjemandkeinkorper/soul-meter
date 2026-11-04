@@ -38,15 +38,15 @@
 
 [ext_resource type="Script" path="res://world/buildings/walk_in_building.gd" id="14_walk_in"]
 
-[ext_resource type="Texture2D" uid="uid://bn1yigoryh3pu" path="res://assets/generated/sprites/interior/dom-interior-counter--bar.png" id="15_counter"]
+[ext_resource type="Texture2D" uid="uid://2h261yal8gky" path="res://assets/generated/sprites/building-kit/counter-4x1.png" id="15_counter"]
 
-[ext_resource type="Texture2D" uid="uid://d2yh60av667m4" path="res://assets/generated/sprites/interior/dom-interior-table--long.png" id="16_table"]
+[ext_resource type="Texture2D" uid="uid://dgc2k8go2oss5" path="res://assets/generated/sprites/building-kit/table-3x2.png" id="16_table"]
 
-[ext_resource type="Texture2D" uid="uid://bktjcg8xefla3" path="res://assets/generated/sprites/interior/dom-interior-bench--plank.png" id="17_bench"]
+[ext_resource type="Texture2D" uid="uid://dlmgm4i278iot" path="res://assets/generated/sprites/building-kit/bench-3x1.png" id="17_bench"]
 
-[ext_resource type="Texture2D" uid="uid://q4cjb2fw3c70" path="res://assets/generated/sprites/interior/dom-interior-stool--round.png" id="18_stool"]
+[ext_resource type="Texture2D" uid="uid://bmoqx8xff46r2" path="res://assets/generated/sprites/building-kit/stool-1x1.png" id="18_stool"]
 
-[ext_resource type="Texture2D" uid="uid://ckacknt70nb" path="res://assets/generated/sprites/interior/dom-interior-chest--closed.png" id="19_chest"]
+[ext_resource type="Texture2D" uid="uid://cw3py4bbu3e1f" path="res://assets/generated/sprites/building-kit/chest-1x1.png" id="19_chest"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(3000, 40)
@@ -362,9 +362,9 @@ shape = SubResource("wall_KesselfordDressing_SolidProps_Wayhouse_WallBody_5")
 position = Vector2(1196, 508)
 
 [node name="Sprite2D" type="Sprite2D" parent="KesselfordDressing/SolidProps/WayhouseCounter"]
-scale = Vector2(0.55, 0.55)
 texture = ExtResource("15_counter")
-offset = Vector2(0, -2)
+centered = false
+offset = Vector2(-72, -79.56)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KesselfordDressing/SolidProps/WayhouseCounter"]
 shape = SubResource("wayhouse_counter")
@@ -373,9 +373,9 @@ shape = SubResource("wayhouse_counter")
 position = Vector2(1068, 492)
 
 [node name="Sprite2D" type="Sprite2D" parent="KesselfordDressing/SolidProps/WayhouseTable"]
-scale = Vector2(0.55, 0.55)
 texture = ExtResource("16_table")
-offset = Vector2(0, -59)
+centered = false
+offset = Vector2(-74, -68.79)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KesselfordDressing/SolidProps/WayhouseTable"]
 shape = SubResource("wayhouse_table")
@@ -384,9 +384,9 @@ shape = SubResource("wayhouse_table")
 position = Vector2(1020, 516)
 
 [node name="Sprite2D" type="Sprite2D" parent="KesselfordDressing/SolidProps/WayhouseBench"]
-scale = Vector2(0.42, 0.42)
 texture = ExtResource("17_bench")
-offset = Vector2(0, -53)
+centered = false
+offset = Vector2(-52, -45.6)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KesselfordDressing/SolidProps/WayhouseBench"]
 shape = SubResource("wayhouse_bench")
@@ -395,9 +395,9 @@ shape = SubResource("wayhouse_bench")
 position = Vector2(1244, 564)
 
 [node name="Sprite2D" type="Sprite2D" parent="KesselfordDressing/SolidProps/WayhouseStool"]
-scale = Vector2(0.2, 0.2)
 texture = ExtResource("18_stool")
-offset = Vector2(0, -110)
+centered = false
+offset = Vector2(-11, -30.15)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KesselfordDressing/SolidProps/WayhouseStool"]
 shape = SubResource("wayhouse_one_cell")
@@ -406,9 +406,9 @@ shape = SubResource("wayhouse_one_cell")
 position = Vector2(1372, 564)
 
 [node name="Sprite2D" type="Sprite2D" parent="KesselfordDressing/SolidProps/WayhouseChest"]
-scale = Vector2(0.3, 0.3)
 texture = ExtResource("19_chest")
-offset = Vector2(0, -84)
+centered = false
+offset = Vector2(-23.08, -34.72)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KesselfordDressing/SolidProps/WayhouseChest"]
 shape = SubResource("wayhouse_one_cell")
