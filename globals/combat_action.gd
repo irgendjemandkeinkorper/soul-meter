@@ -155,7 +155,7 @@ func target_text() -> String:
 	if not class_resource_action.is_empty():
 		target = class_resource_target.capitalize()
 	if targets_cells():
-		target = "Cells"
+		target = GridMetric.step_word().capitalize()
 	elif target_side == "ally":
 		target = "Ally"
 	elif target_side == "any":
@@ -182,21 +182,36 @@ func effect_text() -> String:
 	return balance_effect_summary()
 
 
-## How far the command reaches, in cells: "melee", "reach 4 cells", "line of sight", or ""
+## How far the command reaches, in steps of the grid: "melee", "reach 4 cells" (on hexes
+## "reach 8 hexes"), "line of sight", or ""
 ## for a command with no target on the field (Guard, a class spend on the user).
 func reach_text() -> String:
 	var reach := int(effect_payload.get("range", 0))
 	if targets_cells():
-		return "reach %d cells" % reach if reach > 0 else ""
+		return "reach %s" % GridMetric.steps_text(GridMetric.reach(reach)) if reach > 0 else ""
 	if target_profile == &"self" or kind == Kind.GUARD or kind == Kind.STABILIZE:
 		return ""
 	if reach > 0:
-		return "reach %d cells" % reach
+		return "reach %s" % GridMetric.steps_text(GridMetric.reach(reach))
 	if target_profile == &"melee" and target_side == "enemy":
 		return "melee"
 	if target_profile == &"ranged":
 		return "line of sight"
 	return ""
+
+
+## Hex slice H3: the reach ring the field draws around the acting unit, in grid steps. A numeric
+## range converts through GridMetric; melee is the touching ring; line of sight and self-targeted
+## commands draw none (0).
+func reach_steps() -> int:
+	if target_profile == &"self" or kind == Kind.GUARD or kind == Kind.STABILIZE:
+		return 0
+	var reach := int(effect_payload.get("range", 0))
+	if reach > 0:
+		return GridMetric.reach(reach)
+	if not targets_cells() and target_profile == &"melee" and target_side == "enemy":
+		return 1
+	return 0
 
 
 ## Cell-targeted working: the player declares grid cells (`options.cells`), not a creature.

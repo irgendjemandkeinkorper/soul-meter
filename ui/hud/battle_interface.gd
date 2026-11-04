@@ -87,6 +87,7 @@ func consume_event(event: CombatEvent) -> void:
 			and not autoplaying()
 		)
 	stage.consume_event(event)
+	_sync_reach()
 	weather_chip.consume_event(event)
 	act_target_panel.consume_event(event)
 	turn_timeline.consume_event(event)
@@ -258,6 +259,7 @@ func bind_controller(controller: CombatController) -> void:
 		controller != null and controller.state == CombatController.State.ALLY_TURN
 		and not autoplaying()
 	)
+	_sync_reach()
 	_autoplay_wait = 0.0
 	if autoplaying():
 		combat_bar.append_cue(tr("AI VS AI  ·  WATCHING"))
@@ -302,7 +304,14 @@ func select_pointer_action(action_id: StringName, ability_id: String = "") -> vo
 	_clear_target_preview()
 	act_target_panel.clear_aim_options()
 	_clear_pending()
+	_sync_reach()
 	pointer_action_selected.emit(action_id)
+
+
+## Hex slice H3: the field rings what the armed command reaches around the acting unit.
+func _sync_reach() -> void:
+	var action := _controller.action_by_id(_selected_action_id) if _controller != null else null
+	stage.show_reach(action.reach_steps() if action != null else 0)
 
 
 ## The command a click on the field uses (the bar shows its tile armed).
@@ -589,8 +598,8 @@ func _press_cell_working(action: CombatAction, cell: Vector2i, actor_id: StringN
 			_refuse("Touch the enemy to bind first, then pick the field.")
 			return
 		_pending_target = bound
-		act_target_panel.forecast.text = "BOUND %s · pick %d cell%s" % [
-			bound.display_name.to_upper(), _cell_count(action), "s" if _cell_count(action) > 1 else "",
+		act_target_panel.forecast.text = "BOUND %s · pick %d %s" % [
+			bound.display_name.to_upper(), _cell_count(action), GridMetric.step_word(_cell_count(action)),
 		]
 		return
 	if _pending_cells.has(cell):

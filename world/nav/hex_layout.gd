@@ -22,6 +22,10 @@ const DEFAULT_STEP := CELL_SIDE / 2.0
 const SQRT3 := 1.7320508075688772
 ## Screen y is flat y times this (the 2:1 iso squash).
 const SQUASH := 0.5
+## Hex slice H3: edge `i` of `corners()` runs from corner `i` to corner `i + 1`. It is shared with
+## the neighbour `HexMath.DIRECTIONS[EDGE_NEIGHBOR[i]]`: NE, E, SE, SW, W, NW, clockwise from the
+## top. The field grid and the reach rings draw an edge once, or only where a set of hexes ends.
+const EDGE_NEIGHBOR: Array[int] = [1, 0, 5, 4, 3, 2]
 
 ## World position of hex (0, 0)'s centre.
 var origin := Vector2.ZERO

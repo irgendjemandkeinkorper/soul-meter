@@ -560,9 +560,9 @@ func test_all_fourteen_additional_transitions_complete_a_real_scene_round_trip()
 			continue
 		_round_trip(entry.building_id)
 		round_trip_count += 1
-	# Dom's ten plus Kesselford's wayhouse and chandlery (C1 / #238) and Ashlaren's weighing hall
-	# and millhouse (C2 / #239).
-	assert_int(round_trip_count).is_equal(14)
+	# Dom's ten plus Ashlaren's weighing hall and millhouse (C2 / #239). Kesselford's Wayhouse and
+	# Chandlery are walk-in since item 35 (C1 / #238).
+	assert_int(round_trip_count).is_equal(12)
 
 
 func test_starting_town_hides_debug_markers_behind_rendered_props() -> void:
