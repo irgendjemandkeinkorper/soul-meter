@@ -408,6 +408,67 @@ Make the blocking layer the **single source of truth for passability**. Derive t
 twice. Two authoring paths drift apart. The drift stays invisible until a player walks through
 a wall.
 
+**Painted from solids (2026-11-03).** That drift happened. Seven maps placed their buildings,
+rocks, doors and border walls as `StaticBody2D` shapes and left the blocking layer empty:
+
+- Maps: Kesselford, Ashlaren, Hollowmere, Long Verge, Dorthkor Road, Wound Lip and the Lower
+  Trial Hall.
+- Effect: the shapes stopped the walking player, but the grid did not know them, so a fight
+  walked through a facade or off the map.
+
+Those maps are now painted from their shapes:
+
+- **The rule.** `SolidFootprints` (`world/nav/solid_footprints.gd`) decides which ground
+  cells a solid covers:
+  - a solid is a `StaticBody2D` on collision layer 1;
+  - NPCs, a travel exit's `LockedBarrier` and switched-off bodies are left out;
+  - a shape covers the cells whose centres it contains, plus the cell under its own centre.
+- **The paint.** `tools/paint_blocking.gd` writes those cells into each map's `Blocking`
+  layer. The maps are listed in `SolidFootprints.PAINTED_MAPS`, and only the
+  `tile_map_data` line of each scene changes.
+- **The guard.** `test_blocking_paint` fails when a solid is moved, added or removed
+  without repainting.
+
+The shapes stay in the scenes, so walking collision is unchanged; the painted cells add the same
+footprint on the grid. Starting Town, the test room and the structure yard are still painted
+by hand.
+
+Two related fixes:
+
+- **Trial hall gates.** The Lower Trial Hall's three gates are painted shut. A gate lifts its
+  cells while it is open (`BlockingLayer.set_structure_footprint`). A cell a wall also covers
+  stays painted.
+- **Wound Lip ground.** Wound Lip's ground now covers its walled 1800×900 ledge. It was the
+  25×25 default at the origin, so the guard fight there had no floor.
+
+**Art bases (2026-11-03, owner ruling "Full bases, all maps").** The copied shapes were thin. A
+house blocked only a line along its front wall, and most of Dorthkor Road's pillars, rocks,
+tents and carts had no shape at all. Each prop now blocks the whole base it stands on in its
+art. All sizes are PROVISIONAL.
+
+- **The table.** `ArtBases` (`world/nav/art_bases.gd`) gives each prop art file its base: one
+  or more convex polygons in the file's own pixels. A tree's base is its trunk and roots, so
+  its canopy can be walked under. The crenellated wall is an L of two strips, so the ground
+  inside the L stays open.
+  - Most bases were fitted from the art's alpha: the lowest opaque edge is the front of the
+    base, and the back mirrors it. Each was then checked by eye.
+  - Six were traced by hand, where the fit caught a shaft or a leg, or the art is not drawn at
+    2:1: the high cart, the bench, the brazier, the tent, the wall and the town hall.
+- **The rule.** On a painted map, every sprite showing one of those files is solid over its
+  base, unless it is in a `GroundDetails` or `SoftDetails` layer.
+- **The tool.** `tools/paint_blocking.gd` first writes each base into the scene as a
+  `ConvexPolygonShape2D`, then paints as before. A sprite that already has a body gets the
+  polygon in that body's `CollisionShape2D`. A sprite with no body gains a `Base`
+  `StaticBody2D` child, so no node path changes.
+- **The guards.** `test_blocking_paint` adds two tests:
+  - every based prop has its art base;
+  - from where the player arrives, the walk still reaches every arrival point, door, exit,
+    chest and person on each map. The trial hall is checked with its gates open.
+
+The walking body collides with the same base: the shape and the painted cells' tiles both stop
+it. Rendered check: `docs/qa/map-bases-2026-11-03/`. Each map shows its cells and bases, and
+`art-bases` shows every file with its base.
+
 ### 2.4 Y-sorting — the depth rules
 
 Apply three rules. All three are necessary.
