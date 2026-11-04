@@ -25,6 +25,15 @@ class RosterField extends FieldFixture:
 		return roster
 
 
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant = null
+
+
+func after_test() -> void:
+	if _grid_before != null:
+		GridMode.restore(_grid_before)
+		_grid_before = null
+
 func test_region_forwards_frozen_payload_and_picks_transformed_field_cell() -> void:
 	var ground := _ground()
 	ground.position = Vector2(91, 64)
@@ -96,9 +105,18 @@ func test_snapshot_moves_existing_actor_and_does_not_create_duplicate_units() ->
 		{"id": &"ally-test", "position": &"c:1,0,0", "hp": 9, "max_hp": 10},
 	]}}
 	overlay.call("consume_event", event)
+	# Hex slice H3: the first snapshot walks a body onto its cell instead of jumping it there.
+	assert_bool(overlay.call("is_animating")).is_true()
+	assert_vector(actor.global_position).is_not_equal(grid.cell_to_world(Vector2i(1, 0)))
+	await get_tree().create_timer(DS.DUR_SLOW * 2.0 + 0.1).timeout
 	assert_vector(actor.global_position).is_equal(grid.cell_to_world(Vector2i(1, 0)))
+	assert_bool(overlay.call("is_animating")).is_false()
 	assert_int(overlay.get_child_count()).is_equal(0)
 	assert_int(actor.get_child_count()).is_equal(0)
+	# Later snapshots place it at once, as before.
+	event.data["snapshot"]["allies"][0]["position"] = &"c:0,0,0"
+	overlay.call("consume_event", event)
+	assert_vector(actor.global_position).is_equal(grid.cell_to_world(Vector2i.ZERO))
 
 
 ## Field nodes are bound when the snapshot roster changes, not on every event, so a hostile
@@ -135,6 +153,8 @@ func test_hostile_admitted_mid_session_is_bound_by_the_first_snapshot_listing_it
 		{"id": second.combat_id, "position": &"c:0,0,0", "hp": 9, "max_hp": 10},
 	]}}
 	overlay.call("consume_event", admitted)
+	# Hex slice H3: each is walked onto its cell the first time it is placed, not jumped there.
+	await get_tree().create_timer(DS.DUR_SLOW * 2.0 + 0.1).timeout
 	assert_vector(first.global_position).is_equal(field.grid.cell_to_world(Vector2i(1, 0)))
 	assert_vector(second.global_position).is_equal(field.grid.cell_to_world(Vector2i.ZERO))
 
@@ -192,6 +212,9 @@ func test_action_feedback_uses_event_damage_without_changing_actor_state() -> vo
 	add_child(target)
 	overlay.call("bind_actor", &"ally", attacker)
 	overlay.call("bind_actor", &"enemy", target)
+	# Both already stand on their cells, as every body does once the fight's seating is done.
+	attacker.global_position = grid.cell_to_world(Vector2i.ZERO)
+	target.global_position = grid.cell_to_world(Vector2i(1, 0))
 	var event := CombatEvent.new()
 	event.type = &"action_resolved"
 	event.actor_id = &"ally"
@@ -496,8 +519,10 @@ func test_unit_overlay_rides_the_moving_body() -> void:
 
 
 ## #281 G7: facing ids are grid directions. Each chevron points at the grid neighbour it
-## names, so "e" points down-right on the iso screen, not along screen +x.
+## names, so "e" points down-right on the iso screen, not along screen +x. Square facings, so the
+## square grid (hex slice H3b; the hex chevrons follow).
 func test_facing_chevron_points_along_the_iso_grid() -> void:
+	_grid_before = GridMode.use_squares()
 	var fixture := _duel()
 	var overlay: CombatOverlay = fixture.overlay
 	var grid: IsoGrid = fixture.grid
@@ -511,6 +536,23 @@ func test_facing_chevron_points_along_the_iso_grid() -> void:
 	assert_float(rad_to_deg(east.angle())).is_equal_approx(rad_to_deg(atan2(16.0, 32.0)), 0.5)
 	assert_float(overlay.facing_vector(cell, "n").normalized().y).is_less(-0.3)
 	assert_vector(overlay.facing_vector(cell, "")).is_equal(Vector2.ZERO)
+
+
+## Hex slice H3b: each of the six hex facings points at the hex neighbour it names, and
+## "hex_e" points along screen +x (hex rows run left to right, ruling H-b).
+func test_hex_facing_chevrons_point_at_their_hex_neighbours() -> void:
+	_grid_before = GridMode.use_hexes()
+	var fixture := _duel()
+	var overlay: CombatOverlay = fixture.overlay
+	var grid: IsoGrid = fixture.grid
+	var cell: Vector2i = grid.cell_at_square(Vector2i(1, 1))
+	for facing: StringName in GridBattlefieldModel.HEX_ORDER:
+		var step: Vector2i = CombatOverlay.FACING_STEPS[String(facing)]
+		var expected := grid.cell_to_world(cell + step) - grid.cell_to_world(cell)
+		assert_vector(overlay.facing_vector(cell, String(facing))).override_failure_message(String(facing)).is_equal(expected)
+	var east := overlay.facing_vector(cell, "hex_e").normalized()
+	assert_float(east.x).is_equal_approx(1.0, 0.01)
+	assert_float(overlay.facing_vector(cell, "hex_nw").normalized().y).is_less(-0.3)
 
 
 ## #281 G10: the HP bar ticks down from the old value; the lost slice lingers, then drains.

@@ -70,6 +70,17 @@ func _build() -> void:
 	)
 	load_button.name = "LoadGameButton"
 	load_button.disabled = not (SaveGame.has_save() or any_manual_save)
+	if OS.is_debug_build():
+		# Debug builds only (owner 2026-11-02): one of each class, five a side, on a sandbox.
+		var demo_button := _main_menu_button(
+			button_column, "Class Demo (5v5)", func() -> void: GameFlow.start_class_demo()
+		)
+		demo_button.name = "ClassDemoButton"
+		# Debug builds only (owner 2026-11-02): walk the lived-in Kesselford on the same sandbox.
+		var walk_button := _main_menu_button(
+			button_column, "Walk Kesselford", func() -> void: GameFlow.start_kesselford_walk()
+		)
+		walk_button.name = "WalkKesselfordButton"
 	_main_menu_button(
 		button_column, "Settings", func() -> void: UIManager.open(UIManager.SETTINGS)
 	)
