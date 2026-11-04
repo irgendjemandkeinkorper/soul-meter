@@ -2,6 +2,13 @@ class_name PartyFollowers
 extends Node
 ## Maintains the player's visited isometric cells and places each
 ## presentation-only companion at a successively older cell center.
+##
+## Hex mode (owner item 34, `soul_meter/grid/hex`): the trail runs through the field's hexes
+## (`IsoGrid.hex_layout_for`), and each place in line is two hexes, the ground one cell covers, so
+## the party keeps the spacing it has on cells.
+
+## Hexes per place in line in hex mode: a hex is half a cell.
+const HEX_STEPS_PER_PLACE := 2
 
 const FOLLOWER_SCENE: PackedScene = preload(
 	"res://actors/party_followers/party_follower.tscn"
@@ -21,6 +28,7 @@ var _player_cell: Vector2i
 var _has_player_cell: bool = false
 var _cell_history: Array[Vector2i] = []
 var _followers: Array[PartyFollower] = []
+var _hex: HexLayout = null
 
 
 func _ready() -> void:
@@ -30,6 +38,8 @@ func _ready() -> void:
 		set_physics_process(false)
 		return
 	_ground = _find_ground()
+	if _ground != null and IsoGrid.hex_enabled():
+		_hex = IsoGrid.hex_layout_for(_ground)
 	_last_player_position = _player.global_position
 	_fallback_target = _last_player_position
 	if _ground != null:
@@ -74,7 +84,7 @@ func trail_target_for(follower_index: int) -> Vector2:
 		return _fallback_target
 	if follower_index < 0:
 		return _cell_to_world(_player_cell)
-	var history_index: int = mini(follower_index + 1, _cell_history.size() - 1)
+	var history_index: int = mini((follower_index + 1) * _steps_per_place(), _cell_history.size() - 1)
 	return _cell_to_world(_cell_history[history_index])
 
 
@@ -158,14 +168,22 @@ func _reset_cell_trail(cell: Vector2i) -> void:
 
 
 func _trim_cell_history() -> void:
-	var maximum_history: int = maxi(_followers.size() + 1, 1)
+	var maximum_history: int = maxi((_followers.size() + 1) * _steps_per_place(), 1)
 	if _cell_history.size() > maximum_history:
 		_cell_history.resize(maximum_history)
 
 
+func _steps_per_place() -> int:
+	return HEX_STEPS_PER_PLACE if _hex != null else 1
+
+
 func _world_to_cell(world_position: Vector2) -> Vector2i:
+	if _hex != null:
+		return _hex.world_to_hex(_ground.to_local(world_position))
 	return _ground.local_to_map(_ground.to_local(world_position))
 
 
 func _cell_to_world(cell: Vector2i) -> Vector2:
+	if _hex != null:
+		return _ground.to_global(_hex.hex_to_world(cell))
 	return _ground.to_global(_ground.map_to_local(cell))

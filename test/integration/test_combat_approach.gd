@@ -4,6 +4,20 @@ extends GdUnitTestSuite
 ## action, the order is previewed and refused ("preview, then refuse"). Strike costs 2 AP, a
 ## flat cell 1 AP, and a bare actor has 4 AP; actors start at the row's two ends.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
+
 var _silenced_controls: Array[Dictionary] = []
 
 

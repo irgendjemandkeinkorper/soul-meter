@@ -2,6 +2,19 @@ extends GdUnitTestSuite
 ## Task 11B: production aim profiles on `strike` against real catalog archetypes, under
 ## both schedulers. PROVISIONAL numbers mirror the lab fixture until the balance pass.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
 
 func test_strike_offers_torso_arm_and_throat_against_the_bog_wight_under_both_schedulers() -> void:
 	for charge_time: bool in [false, true]:
