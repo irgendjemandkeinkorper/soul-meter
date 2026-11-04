@@ -15,6 +15,12 @@ const WARDEN_ENCOUNTER_ID := &"trial-warden"
 const KEEPER_ENCOUNTER_ID := &"trial-keeper"
 
 var _active_trial_encounter: StringName = &""
+## Gate shape -> the blocking cells it fills while shut, as BlockingLayer footprint rows. The
+## gates are painted shut (tools/paint_blocking.gd); an open gate lifts its cells, so the walk
+## grid and the fights in this hall pass a gate only while it is open. Cells a wall also covers
+## stay painted.
+var _gate_tiles: Dictionary = {}
+var _blocking: BlockingLayer
 
 @onready var _interaction_gate_shape: CollisionShape2D = $InteractionGate/CollisionShape2D
 @onready var _interaction_gate_visual: Polygon2D = $InteractionGate/Visual
@@ -30,6 +36,7 @@ func _ready() -> void:
 	GameState.flag_changed.connect(_on_flag_changed)
 	Battle.battle_ended.connect(_on_battle_ended)
 	_warden_trigger.body_entered.connect(_on_warden_trigger_body_entered)
+	_capture_gate_tiles()
 	_refresh_progression()
 	if GameState.flag_is_true(KEEPER_FIGHT_REQUESTED_FLAG):
 		request_keeper_encounter()
@@ -148,4 +155,31 @@ func _refresh_progression() -> void:
 
 func _set_gate_open(shape: CollisionShape2D, visual: Polygon2D, is_open: bool) -> void:
 	shape.set_deferred("disabled", is_open)
+	if _blocking != null and _gate_tiles.has(shape):
+		_blocking.set_structure_footprint(_gate_tiles[shape], not is_open)
 	visual.modulate = Color(1.0, 1.0, 1.0, 0.18 if is_open else 1.0)
+
+
+func _capture_gate_tiles() -> void:
+	var field := find_child("FieldMap", true, false) as FieldMap
+	if field == null:
+		return
+	_blocking = field.blocking() as BlockingLayer
+	var ground := field.ground()
+	if _blocking == null or ground == null:
+		return
+	var shapes: Array[CollisionShape2D] = [
+		_interaction_gate_shape, _skill_door_shape, _keeper_gate_shape,
+	]
+	var gates: Array = shapes.map(func(shape: CollisionShape2D) -> Node: return shape.get_parent())
+	var walls := SolidFootprints.ground_cells(self, ground, gates)
+	for shape: CollisionShape2D in shapes:
+		var tiles := {}
+		for cell: Vector2i in SolidFootprints.shape_cells(shape, self, ground):
+			if walls.has(cell) or _blocking.get_cell_source_id(cell) == -1:
+				continue
+			tiles[cell] = [
+				_blocking.get_cell_source_id(cell), _blocking.get_cell_atlas_coords(cell),
+				_blocking.get_cell_alternative_tile(cell),
+			]
+		_gate_tiles[shape] = tiles

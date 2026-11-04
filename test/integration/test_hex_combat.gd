@@ -5,6 +5,10 @@ extends GdUnitTestSuite
 ## an end by both AIs, with the dice still deciding it. The setting is restored after each test.
 
 const SEEDS: Array[int] = [11, 22, 33, 44, 55, 66, 77, 88, 99, 110]
+## The farthest a demo seat stands from the player. A line that a wall closes on one side grows
+## on the other only (five bodies reach 26 hexes past Kesselford's Wayhouse); the broken fallback
+## this guards against put the lines about 170 hexes apart.
+const MAX_SEAT_HEXES := 40
 
 var _game_state_before: Dictionary = {}
 var _target_scene_before := ""
@@ -70,6 +74,7 @@ func _autoplayed_fight(fight_seed: int) -> Dictionary:
 	SaveGame.apply_pending_location(scene)
 	await get_tree().process_frame
 	var field := scene.find_child("FieldMap", true, false) as FieldMap
+	var player_cell: Vector2i = field.party_cells()[0]
 	var started := Time.get_ticks_msec()
 	var opened := Battle.start_set_piece(field, ClassDemo.ENCOUNTER_ID)
 	assert_bool(bool(opened.get("allowed", false))).override_failure_message(str(opened)).is_true()
@@ -82,6 +87,10 @@ func _autoplayed_fight(fight_seed: int) -> Dictionary:
 	for actor: BattleActor in controller.allies + controller.enemies:
 		var at: Variant = model.cell_of(actor)
 		if not (at is Vector2i) or seats.has(at) or not grid.is_in_bounds(at as Vector2i):
+			seats_ok = false
+		# Both lines stand by the player. A seating that fails falls back to the model's default
+		# seats at the grid origin, far off Kesselford (what the painted walls first caused).
+		elif GridMetric.distance(at as Vector2i, player_cell) > MAX_SEAT_HEXES or grid.is_wall(at as Vector2i):
 			seats_ok = false
 		seats[at] = actor.combat_id
 	var log: Array[String] = []

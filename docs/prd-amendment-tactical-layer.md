@@ -1,6 +1,7 @@
 # PRD Amendment 1 — The Tactical Layer
 
 **Status:** **RATIFIED 2026-08-05** — owner sign-off, with one item deliberately still open (§9.2)
+**Amended:** 2026-11-03 — FR-105a positions on hexes, not squares (owner item 34; ratified 2026-11-03)
 **Date:** 2026-08-05 · **Owner:** Adam (solo dev)
 **Amends:** `docs/prd-chapter-one.md` (RATIFIED 2026-08-03, zero ⚑) and
 `soul-meter-crpg-design-doc.md` §7
@@ -14,7 +15,7 @@ https://claude.ai/design/p/e9041b0a-90c3-43af-95c7-fe8bef3185fa
 
 This amendment retires two **ratified P0 requirements** — FR-102 (Action Point economy) and
 FR-105 (Zones, not grids) — and replaces them with a charge-time turn order and a square grid
-with elevation and facing.
+with elevation and facing. (Since 2026-11-03 the grid is hexes; see FR-105a.)
 
 **It pre-empts a gate rather than deferring one, and says so.** The ratified PRD is explicit:
 
@@ -60,7 +61,15 @@ never lie: the UI reads the scheduler's CT values, never a parallel estimate.
 
 ### FR-105a (P0) — Grid, elevation and facing
 
-Square grid positioning. **Elevation 0–3**: melee requires `|Δh| ≤ jump`, arcs require
+**Hex grid positioning** (amended and ratified 2026-11-03, owner item 34; was "Square grid
+positioning"). Pointy-top hexes in rows from left to right, squashed 2:1 under the iso view,
+about four to a floor cell. One AP walks two hexes, so a turn covers the same ground. Authored
+reaches of two cells or more and every radius count double in hexes; melee is touching hexes.
+One body to a hex. Six facings: one FRONT, four SIDE, one BACK. The grid is derived at load
+from each map's square layers, and a fight opens on the hexes the party walks on. Plan and
+rulings: `docs/design/hex-grid-plan-2026-11-03.md`.
+
+**Elevation 0–3**: melee requires `|Δh| ≤ jump`, arcs require
 clearance, and height advantage adds +10% damage per step. **Facing**: FRONT ×1.00 / SIDE
 ×1.10 / BACK ×1.25, with hit bonuses +0 / +8 / +15. Positioning stays behind the
 `BattlefieldModel` interface — the seam is retained, not retired (see §2).
