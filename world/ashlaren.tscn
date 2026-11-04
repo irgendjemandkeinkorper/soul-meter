@@ -182,53 +182,59 @@ y_sort_enabled = true
 z_index = -2
 
 [node name="PavingGrainRoad01" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(420, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(429, 880)
+scale = Vector2(1.13, 0.79)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad02" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(676, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(698, 927)
+scale = Vector2(1.07, 0.75)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad03" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(932, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(956, 900)
+scale = Vector2(1.01, 0.71)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad04" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(1188, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1175, 883)
+scale = Vector2(0.9, 0.63)
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad05" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(1444, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1445, 928)
+scale = Vector2(0.98, 0.69)
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad06" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(1700, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1679, 880)
+scale = Vector2(1.08, 0.76)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad07" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(1956, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1941, 883)
+scale = Vector2(0.95, 0.66)
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad08" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(2212, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(2223, 882)
+scale = Vector2(1.05, 0.73)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad09" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(2468, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(2484, 895)
+scale = Vector2(0.94, 0.66)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad10" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(2724, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(2707, 908)
+scale = Vector2(0.97, 0.68)
 texture = ExtResource("16_weftlumin")
 
 [node name="CobbleMarket01" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]

@@ -1,0 +1,21 @@
+WALK-IN-CAPTURE: ok wayhouse-1-outside look=OUTSIDE (expected OUTSIDE) rooms=[]
+WALK-IN-CAPTURE: ok wayhouse-2-room-1 look=INSIDE (expected INSIDE) rooms=[1]
+WALK-IN-CAPTURE: ok wayhouse-3-room-2 look=INSIDE (expected INSIDE) rooms=[2]
+WALK-IN-CAPTURE: ok wayhouse-4-room-3 look=INSIDE (expected INSIDE) rooms=[3]
+WALK-IN-CAPTURE: ok wayhouse-5-room-4 look=INSIDE (expected INSIDE) rooms=[4]
+WALK-IN-CAPTURE: ok wayhouse-6-room-5 look=INSIDE (expected INSIDE) rooms=[5]
+WALK-IN-CAPTURE: ok wayhouse-7-behind look=SEEN_THROUGH (expected SEEN_THROUGH) rooms=[]
+WALK-IN-CAPTURE: ok chandlery-1-outside look=OUTSIDE (expected OUTSIDE) rooms=[]
+WALK-IN-CAPTURE: ok chandlery-2-room-1 look=INSIDE (expected INSIDE) rooms=[1]
+WALK-IN-CAPTURE: ok chandlery-3-room-2 look=INSIDE (expected INSIDE) rooms=[2]
+WALK-IN-CAPTURE: ok chandlery-4-behind look=SEEN_THROUGH (expected SEEN_THROUGH) rooms=[]
+WALK-IN-CAPTURE: ok cottage-1-outside look=OUTSIDE (expected OUTSIDE) rooms=[]
+WALK-IN-CAPTURE: ok cottage-2-room-1 look=INSIDE (expected INSIDE) rooms=[1]
+WALK-IN-CAPTURE: ok cottage-3-room-2 look=INSIDE (expected INSIDE) rooms=[2]
+WALK-IN-CAPTURE: ok cottage-4-behind look=SEEN_THROUGH (expected SEEN_THROUGH) rooms=[]
+WALK-IN-CAPTURE: ok warehouse-1-outside look=OUTSIDE (expected OUTSIDE) rooms=[]
+WALK-IN-CAPTURE: ok warehouse-2-room-1 look=INSIDE (expected INSIDE) rooms=[1]
+WALK-IN-CAPTURE: ok warehouse-3-behind look=SEEN_THROUGH (expected SEEN_THROUGH) rooms=[]
+WALK-IN-CAPTURE: ok wayhouse-blocking cells=705
+WALK-IN-CAPTURE: ok town
+WALK-IN-CAPTURE: ok

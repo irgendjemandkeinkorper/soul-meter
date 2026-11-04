@@ -246,23 +246,30 @@ y_sort_enabled = true
 z_index = -2
 
 [node name="ReedTrack01" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(300, 900)
+position = Vector2(297, 924)
+scale = Vector2(1.45, 1.07)
 texture = ExtResource("1_weftlumin")
 
 [node name="ReedTrack02" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(550, 900)
+position = Vector2(543, 890)
+scale = Vector2(1.43, 1.06)
+flip_h = true
 texture = ExtResource("1_weftlumin")
 
 [node name="ReedTrack03" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(800, 900)
+position = Vector2(798, 917)
+scale = Vector2(1.43, 1.06)
 texture = ExtResource("1_weftlumin")
 
 [node name="ReedTrack04" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1050, 900)
+position = Vector2(1059, 923)
+scale = Vector2(1.37, 1.01)
+flip_h = true
 texture = ExtResource("1_weftlumin")
 
 [node name="ReedTrack05" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1300, 900)
+position = Vector2(1310, 919)
+scale = Vector2(1.41, 1.05)
 texture = ExtResource("1_weftlumin")
 
 [node name="ApproachPuddle01" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
@@ -314,238 +321,259 @@ texture = ExtResource("3_weftlumin")
 flip_h = true
 
 [node name="ShoreMud01" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1420, 400)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1396, 423)
+scale = Vector2(1.2, 1.2)
 texture = ExtResource("4_weftlumin")
 
 [node name="ShoreMud02" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1420, 656)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1542, 656)
+scale = Vector2(1.21, 1.21)
+flip_h = true
 texture = ExtResource("4_weftlumin")
 
 [node name="ShoreMud03" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1420, 912)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1457, 929)
+scale = Vector2(1.28, 1.28)
 texture = ExtResource("4_weftlumin")
 
 [node name="ShoreMud04" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1420, 1168)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1561, 1164)
+scale = Vector2(1.2, 1.2)
 texture = ExtResource("4_weftlumin")
 
 [node name="ShoreMud05" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1420, 1424)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1477, 1373)
+scale = Vector2(1.24, 1.24)
 texture = ExtResource("4_weftlumin")
 
 [node name="MereWater11" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1660, 400)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1840, 488)
+scale = Vector2(1.17, 1.17)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater12" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1916, 400)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1632, 479)
+scale = Vector2(1.27, 1.27)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater13" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2172, 400)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1531, 431)
+scale = Vector2(1.29, 1.29)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater14" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2428, 400)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1747, 430)
+scale = Vector2(1.21, 1.21)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater15" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2684, 400)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2077, 382)
+scale = Vector2(1.26, 1.26)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater16" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2900, 400)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2068, 270)
+scale = Vector2(1.31, 1.31)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater21" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1660, 656)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2178, 337)
+scale = Vector2(1.22, 1.22)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater22" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1916, 656)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2529, 355)
+scale = Vector2(1.21, 1.21)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater23" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2172, 656)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2521, 476)
+scale = Vector2(1.34, 1.34)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater24" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2428, 656)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2420, 418)
+scale = Vector2(1.3, 1.3)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater25" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2684, 656)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2623, 420)
+scale = Vector2(1.32, 1.32)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater26" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2900, 656)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1963, 914)
+scale = Vector2(1.2, 1.2)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater31" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1660, 912)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1832, 848)
+scale = Vector2(1.31, 1.31)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater32" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1916, 912)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1950, 805)
+scale = Vector2(1.33, 1.33)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater33" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2172, 912)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2385, 825)
+scale = Vector2(1.15, 1.15)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater34" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2428, 912)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2384, 710)
+scale = Vector2(1.34, 1.34)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater35" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2684, 912)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2580, 822)
+scale = Vector2(1.3, 1.3)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater36" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2900, 912)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2492, 753)
+scale = Vector2(1.31, 1.31)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater41" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1660, 1168)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2880, 992)
+scale = Vector2(1.35, 1.35)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater42" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1916, 1168)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2880, 1058)
+scale = Vector2(1.23, 1.23)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater43" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2172, 1168)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2876, 993)
+scale = Vector2(1.34, 1.34)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater44" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2428, 1168)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1584, 1226)
+scale = Vector2(1.31, 1.31)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater45" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2684, 1168)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1882, 1173)
+scale = Vector2(1.27, 1.27)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater46" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2900, 1168)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1777, 1229)
+scale = Vector2(1.26, 1.26)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater51" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1660, 1424)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2446, 1187)
+scale = Vector2(1.18, 1.18)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater52" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1916, 1424)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2538, 1241)
+scale = Vector2(1.16, 1.16)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater53" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2172, 1424)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2335, 1244)
+scale = Vector2(1.34, 1.34)
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater54" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2428, 1424)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2880, 1475)
+scale = Vector2(1.33, 1.33)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater55" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2684, 1424)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2857, 1427)
+scale = Vector2(1.21, 1.21)
+flip_h = true
 texture = ExtResource("5_weftlumin")
 
 [node name="MereWater56" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2900, 1424)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2761, 1472)
+scale = Vector2(1.25, 1.25)
 texture = ExtResource("5_weftlumin")
 
 [node name="NorthBank01" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1660, 170)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1498, 380)
+scale = Vector2(1.2, 1.2)
 texture = ExtResource("6_weftlumin")
 
 [node name="SouthBank01" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1660, 1660)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1749, 1060)
+scale = Vector2(1.02, 1.02)
+flip_h = true
 texture = ExtResource("6_weftlumin")
 
 [node name="NorthBank02" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1916, 170)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2715, 828)
+scale = Vector2(1.14, 1.14)
+flip_h = true
 texture = ExtResource("6_weftlumin")
 
 [node name="SouthBank02" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(1916, 1660)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2418, 218)
+scale = Vector2(1.03, 1.03)
 texture = ExtResource("6_weftlumin")
 
 [node name="NorthBank03" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2172, 170)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2702, 1349)
+scale = Vector2(1.21, 1.21)
 texture = ExtResource("6_weftlumin")
 
 [node name="SouthBank03" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2172, 1660)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2624, 953)
+scale = Vector2(1.08, 1.08)
+flip_h = true
 texture = ExtResource("6_weftlumin")
 
 [node name="NorthBank04" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2428, 170)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2161, 672)
+scale = Vector2(1.24, 1.24)
+flip_h = true
 texture = ExtResource("6_weftlumin")
 
 [node name="SouthBank04" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2428, 1660)
-scale = Vector2(1.1, 1.1)
+position = Vector2(1999, 489)
+scale = Vector2(1.19, 1.19)
 texture = ExtResource("6_weftlumin")
 
 [node name="NorthBank05" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2684, 170)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2093, 1193)
+scale = Vector2(1.19, 1.19)
 texture = ExtResource("6_weftlumin")
 
 [node name="SouthBank05" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2684, 1660)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2435, 610)
+scale = Vector2(1.09, 1.09)
+flip_h = true
 texture = ExtResource("6_weftlumin")
 
 [node name="NorthBank06" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2900, 170)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2869, 484)
+scale = Vector2(1.21, 1.21)
 texture = ExtResource("6_weftlumin")
 
 [node name="SouthBank06" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]
-position = Vector2(2900, 1660)
-scale = Vector2(1.1, 1.1)
+position = Vector2(2880, 1384)
+scale = Vector2(1.06, 1.06)
 texture = ExtResource("6_weftlumin")
 
 [node name="WrongSkyPool" type="Sprite2D" parent="HollowmereDressing/GroundDetails"]

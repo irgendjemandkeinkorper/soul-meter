@@ -271,24 +271,29 @@ func _read_authored_terrain(ground: TileMapLayer) -> void:
 	var terrain: TileMapLayer = (
 		parent.find_child("Terrain", true, false) as TileMapLayer if parent != null else null
 	)
-	if terrain == null:
+	if terrain == null or terrain.tile_set == null:
 		return
+	# A tile set need not carry every layer (the map terrain set has no `visibility`), and asking
+	# a tile for a layer its set lacks logs an engine error, so only present layers are read.
+	var present := {}
+	for layer: StringName in [&"cover", &"blocks_fire", &"visibility", &"elevation"]:
+		present[layer] = terrain.tile_set.get_custom_data_layer_by_name(layer) >= 0
 	for square_cell: Vector2i in terrain.get_used_cells():
 		var tile_data: TileData = terrain.get_cell_tile_data(square_cell)
 		if tile_data == null:
 			continue
+		var cover_value: Variant = tile_data.get_custom_data(&"cover") if present[&"cover"] else null
+		var obstacle_value: Variant = tile_data.get_custom_data(&"blocks_fire") if present[&"blocks_fire"] else null
+		var visibility_value: Variant = tile_data.get_custom_data(&"visibility") if present[&"visibility"] else null
+		var elevation_value: Variant = tile_data.get_custom_data(&"elevation") if present[&"elevation"] else null
 		# On hexes, every hex whose centre lies on the authored cell takes its terrain.
 		for cell: Vector2i in _grid.cells_on_square(square_cell):
-			var cover_value: Variant = tile_data.get_custom_data(&"cover")
 			if cover_value is bool and cover_value:
 				set_cover(cell)
-			var obstacle_value: Variant = tile_data.get_custom_data(&"blocks_fire")
 			if obstacle_value is bool and obstacle_value:
 				set_obstacle(cell)
-			var visibility_value: Variant = tile_data.get_custom_data(&"visibility")
 			if visibility_value is String and not (visibility_value as String).is_empty():
 				set_visibility(cell, StringName(visibility_value))
-			var elevation_value: Variant = tile_data.get_custom_data(&"elevation")
 			if elevation_value is int and elevation_value != 0:
 				set_elevation(cell, clampi(elevation_value, 0, DS.ELEVATION_MAX))
 

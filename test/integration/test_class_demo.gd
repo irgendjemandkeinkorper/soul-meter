@@ -153,6 +153,50 @@ func test_the_arena_seats_ten_and_each_enemy_wears_its_members_body() -> void:
 	scene.queue_free()
 
 
+## 2026-11-04: with the arrival beside the Wayhouse, the enemy line's first seat fell inside the
+## walls, the seating failed, and the demo fought from the model's default seats off the map (the
+## hex suite grew past 7 GB). A set-piece that cannot seat both sides by the party does not open:
+## Battle refuses it at once and leaves no session, controller or enemy bodies behind.
+func test_a_demo_that_cannot_seat_its_ten_does_not_open() -> void:
+	assert_bool(ClassDemo.prepare()).is_true()
+	var scene: Node = (load(GameFlow.CLASS_DEMO_SCENE) as PackedScene).instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	SaveGame.pending_spawn_id = GameFlow.CLASS_DEMO_SPAWN
+	SaveGame.has_pending_player_position = false
+	SaveGame.apply_pending_location(scene)
+	await get_tree().process_frame
+	var field := scene.find_child("FieldMap", true, false) as FieldMap
+	var grid := field.iso_grid()
+	var lead: Vector2i = field.party_cells()[0]
+	# Wall in the enemy line's first seat and the cells round it, as the Wayhouse walls did.
+	var first_seat := grid.screen_steps(lead, Vector2.RIGHT, ClassDemo.FORMATION_GAP)
+	var walled: Array[Vector2i] = []
+	for dx in range(-2, 3):
+		for dy in range(-2, 3):
+			var cell := first_seat + Vector2i(dx, dy)
+			if cell != lead and grid.is_in_bounds(cell) and not grid.is_point_solid(cell):
+				grid.set_point_solid(cell, true)
+				walled.append(cell)
+	Battle.ended = true
+	Battle.controller = null
+	var started := Time.get_ticks_msec()
+	var opened := Battle.start_set_piece(field, ClassDemo.ENCOUNTER_ID)
+	var took := Time.get_ticks_msec() - started
+	for cell: Vector2i in walled:
+		grid.set_point_solid(cell, false)
+
+	assert_bool(bool(opened.get("allowed", true))).override_failure_message(str(opened)).is_false()
+	assert_str(String(opened.get("blocked_by", ""))).is_equal("seating")
+	assert_str(str(opened.get("message", ""))).contains("enemy line's first seat")
+	assert_bool(Battle.session_active).is_false()
+	assert_bool(Battle.ended).is_true()
+	assert_object(Battle.controller).is_null()
+	assert_bool(Battle._spawned_hostiles.is_empty()).is_true()
+	assert_int(took).override_failure_message("refused in %d ms" % took).is_less(2000)
+	scene.queue_free()
+
+
 ## Owner 2026-11-02: "I'd like the 5v5 demo to be fully ai automated and it shouldn't be a
 ## predetermined outcome." KitAI plays both fives to an end; a fight's seed replays it exactly,
 ## and another seed plays it differently (hits, dodges and criticals land elsewhere).
