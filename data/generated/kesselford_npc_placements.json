@@ -24,13 +24,13 @@
       "model_index": 24
     },
     "kesselford-grain-factor": {
-      "scene": "res://world/interiors/kesselford_wayhouse.tscn",
-      "anchor": "NpcSpot",
+      "scene": "res://world/kesselford.tscn",
+      "anchor": "WayhouseKeeperSpot",
       "offset": [
-        240.0,
-        24.0
+        -128.0,
+        32.0
       ],
-      "facing": "west",
+      "facing": "east",
       "idle_phase": 0.15,
       "model_index": 1
     },
@@ -57,8 +57,8 @@
       "model_index": 5
     },
     "kesselford-wayhouse-keeper": {
-      "scene": "res://world/interiors/kesselford_wayhouse.tscn",
-      "anchor": "NpcSpot",
+      "scene": "res://world/kesselford.tscn",
+      "anchor": "WayhouseKeeperSpot",
       "offset": [
         0.0,
         0.0

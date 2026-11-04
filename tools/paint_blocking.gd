@@ -8,7 +8,10 @@ extends SceneTree
 ##   1. Bases (2026-11-03): every prop sprite whose art has a base in `ArtBases` gets that base as
 ##      its collision: its body's CollisionShape2D takes a ConvexPolygonShape2D, and a sprite
 ##      with no body gains a `Base` StaticBody2D child. Rectangles nothing uses any more go.
-##   2. Paint: the layer's `tile_map_data` line is rewritten from the solids' cells.
+##      Walk-in buildings (`WalkInBuilding`, item 35) get their wall line the same way: a
+##      `WallBody` StaticBody2D child holding one ConvexPolygonShape2D per unbroken wall run.
+##   2. Paint: the layer's `tile_map_data` line is rewritten from the solids' cells. A cell inside
+##      a walk-in building's footprint takes `BlockingLayer.THIN_TILE` (no walk clearance ring).
 ## Nothing else in the file changes. `--check` writes nothing and lists the maps whose bases or
 ## paint are out of date. Run it after moving, adding or removing a prop or a solid on one of
 ## those maps; `test_blocking_paint` fails until you do. Judge the printed lines, not the exit
@@ -16,14 +19,19 @@ extends SceneTree
 
 const TILE_SOURCE := 0
 const TILE_ATLAS := Vector2i.ZERO
+## `BlockingLayer.THIN_TILE`. The tool names no project class at compile time (see
+## FOOTPRINTS_SCRIPT); `test_walk_in_wayhouse` checks that the two agree.
+const THIN_TILE := 1
 ## Loaded at runtime, never preloaded: map scripts name autoloads (GameState), which do not exist
 ## yet when a `--script` harness is compiled (as in tools/populated_field_benchmark.gd).
 const FOOTPRINTS_SCRIPT := "res://world/nav/solid_footprints.gd"
 const BASES_SCRIPT := "res://world/nav/art_bases.gd"
+const WALK_IN_SCRIPT := "res://world/buildings/walk_in_building.gd"
 const SHAPE_NODE := "CollisionShape2D"
 
 var _footprints: GDScript
 var _bases: GDScript
+var _walk_in: GDScript
 
 
 func _initialize() -> void:
@@ -34,6 +42,7 @@ func _run() -> void:
 	await process_frame
 	_footprints = load(FOOTPRINTS_SCRIPT) as GDScript
 	_bases = load(BASES_SCRIPT) as GDScript
+	_walk_in = load(WALK_IN_SCRIPT) as GDScript
 	var check_only := "--check" in OS.get_cmdline_user_args()
 	var stale := 0
 	var maps: Dictionary = _footprints.PAINTED_MAPS
@@ -90,19 +99,21 @@ func paint(scene_path: String, layer_path: String, write: bool) -> Dictionary:
 	var found: Dictionary = _footprints.ground_cells(root, ground)
 	var cells: Array = found.keys()
 	cells.sort()
+	var thin := thin_cells(root, cells)
 	var painted := {}
 	for cell: Vector2i in layer.get_used_cells():
-		painted[cell] = true
+		painted[cell] = layer.get_cell_alternative_tile(cell)
 	var changed := painted.size() != cells.size()
 	for cell: Vector2i in cells:
-		if not painted.has(cell):
+		var tile := THIN_TILE if thin.has(cell) else 0
+		if not painted.has(cell) or int(painted[cell]) != tile:
 			changed = true
 	if changed and write:
 		# A fresh layer: clearing the loaded one keeps its old cells in the data as erased rows.
 		var fresh := TileMapLayer.new()
 		fresh.tile_set = layer.tile_set
 		for cell: Vector2i in cells:
-			fresh.set_cell(cell, TILE_SOURCE, TILE_ATLAS, 0)
+			fresh.set_cell(cell, TILE_SOURCE, TILE_ATLAS, THIN_TILE if thin.has(cell) else 0)
 		var data := fresh.tile_map_data
 		fresh.free()
 		var written := data if not cells.is_empty() else PackedByteArray()
@@ -129,6 +140,12 @@ func shape_bases(scene_path: String, write: bool) -> Dictionary:
 		if error != "":
 			root.free()
 			return {"error": error}
+	var buildings := walk_in_buildings(root)
+	for building: Node2D in buildings:
+		var error := _shape_walls(scene, root, building)
+		if error != "":
+			root.free()
+			return {"error": error}
 	root.free()
 	scene.drop_unused_sub_resources()
 	var updated := scene.to_text()
@@ -139,7 +156,75 @@ func shape_bases(scene_path: String, write: bool) -> Dictionary:
 			return {"error": "cannot write %s" % scene_path}
 		file.store_string(updated)
 		file.close()
-	return {"props": sprites.size(), "changed": changed}
+	return {"props": sprites.size() + buildings.size(), "changed": changed}
+
+
+## The cells of `cells` that lie inside a walk-in building's footprint: its walls and furniture,
+## painted as thin solids.
+func thin_cells(root: Node, cells: Array) -> Dictionary:
+	var thin := {}
+	for building: Node2D in walk_in_buildings(root):
+		var origin: Vector2i = building.get("origin_cell")
+		var size: Vector2i = building.get("cells")
+		var footprint := Rect2i(origin, size)
+		for cell: Vector2i in cells:
+			if footprint.has_point(cell):
+				thin[cell] = true
+	return thin
+
+
+## Every walk-in building under `root` (nodes running `WALK_IN_SCRIPT`).
+func walk_in_buildings(root: Node) -> Array[Node2D]:
+	var found: Array[Node2D] = []
+	for node: Node in root.find_children("*", "Node2D", true, false):
+		var script := node.get_script() as Script
+		if script != null and script.resource_path == WALK_IN_SCRIPT:
+			found.append(node as Node2D)
+	return found
+
+
+## The building's wall line as its `WallBody` shapes, in the building's own space: one convex
+## strip per unbroken run, from `WalkInBuilding.wall_polygons()` bound to the scene's ground.
+func wall_polygons_in_scene(root: Node, building: Node2D) -> Array:
+	var ground: TileMapLayer = _footprints.find_ground(root)
+	if ground == null:
+		return []
+	var to_building: Transform2D = _footprints.transform_in(building, root).affine_inverse()
+	building.call("bind", ground, to_building * _footprints.transform_in(ground, root))
+	return building.call("wall_polygons")
+
+
+func _shape_walls(scene: SceneText, root: Node, building: Node2D) -> String:
+	var building_path := str(root.get_path_to(building))
+	if scene.find_node(building_path) < 0:
+		return "%s is inside an instanced scene; give its walls in that scene" % building_path
+	var polygons := wall_polygons_in_scene(root, building)
+	if polygons.is_empty():
+		return "%s has no ground to stand its walls on" % building_path
+	var wall_body: String = _walk_in.get_script_constant_map()["WALL_BODY"]
+	var holder := building_path + "/" + wall_body
+	scene.ensure_node(holder, "StaticBody2D", building_path)
+	var names: Array[String] = []
+	for index in polygons.size():
+		names.append(SHAPE_NODE if index == 0 else "%s%d" % [SHAPE_NODE, index + 1])
+	var existing := building.get_node_or_null(wall_body)
+	if existing != null:
+		for child: Node in existing.get_children():
+			if not String(child.name) in names:
+				scene.remove_node(holder + "/" + String(child.name))
+	var previous := holder
+	for index in polygons.size():
+		var shape_path := holder + "/" + names[index]
+		var id := "wall_" + holder.replace("/", "_").validate_node_name().replace(" ", "_")
+		if index > 0:
+			id += "_%d" % (index + 1)
+		scene.set_sub_resource(id, "ConvexPolygonShape2D", [
+			"points = PackedVector2Array(%s)" % _format_points(polygons[index]),
+		])
+		scene.ensure_node(shape_path, SHAPE_NODE, previous)
+		scene.set_property(shape_path, "shape", 'SubResource("%s")' % id)
+		previous = shape_path
+	return ""
 
 
 func _shape_one(scene: SceneText, root: Node, sprite: Sprite2D) -> String:
@@ -296,6 +381,13 @@ class SceneText:
 			if _node_path(_sections[index]["head"]) == path:
 				return index
 		return -1
+
+	## Removes the node section at `path` and every section below it.
+	func remove_node(path: String) -> void:
+		for index in range(_sections.size() - 1, -1, -1):
+			var at := _node_path(_sections[index]["head"])
+			if at == path or at.begins_with(path + "/"):
+				_sections.remove_at(index)
 
 	## Adds an empty node section right after `after`'s section unless `path` has one.
 	func ensure_node(path: String, type: String, after: String) -> void:

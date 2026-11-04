@@ -23,8 +23,20 @@ extends TileMapLayer
 ## wall with nothing in the log. It is the guard #187 asked for in place of the 221-element
 ## constant it replaced.
 ##
+## A cell holds one of two tiles (source 0, atlas (0, 0)). Alternative 0 is a solid cell: its
+## collision is the whole diamond, and the player's walk grid keeps a body's width of clearance
+## round it (`ClickMoveController.STATIC_CLEARANCE_CELLS`). `THIN_TILE` is a thin solid, a wall
+## or a piece of furniture inside a walk-in building (owner list item 35): its collision is an
+## inset diamond and the walk grid gives it no clearance ring, so a one-cell wall line leaves its
+## doorway and the room open. `tools/paint_blocking.gd` paints every cell inside a
+## `WalkInBuilding` footprint as `THIN_TILE`.
+##
 ## Actors (NPCs, townsfolk) are NOT painted here. They are dynamic and are layered on top of
 ## this static set as occupancy — see `world/nav/nav_occupancy.gd` and `IsoGrid.set_occupant()`.
+
+
+## The alternative tile of a thin solid (see above).
+const THIN_TILE := 1
 
 
 ## Each row is the authored [source_id, atlas_coords, alternative_tile]. Notify

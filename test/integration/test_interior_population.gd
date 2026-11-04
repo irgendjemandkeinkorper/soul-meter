@@ -26,9 +26,10 @@ func after_test() -> void:
 	SaveGame.zhavar = _zhavar_before.duplicate(true)
 
 
-func test_all_thirty_five_indoor_npcs_use_generated_positions_and_dialogue_titles() -> void:
-	# Every hub's placements, merged: Dom's thirty indoor townsfolk plus the two in
-	# Kesselford's wayhouse (C1 / #238) and the three in Ashlaren's hall and millhouse (C2 / #239).
+func test_all_thirty_three_indoor_npcs_use_generated_positions_and_dialogue_titles() -> void:
+	# Every hub's placements, merged: Dom's thirty indoor townsfolk plus the three in Ashlaren's
+	# hall and millhouse (C2 / #239). Kesselford's Wayhouse pair stand in its walk-in building on
+	# the map since item 35 (2026-11-03); `test_kesselford.gd` places them.
 	var placements: Dictionary = NpcRosterScript.placements()
 	var placed_ids := {}
 	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
@@ -57,7 +58,7 @@ func test_all_thirty_five_indoor_npcs_use_generated_positions_and_dialogue_title
 			assert_bool(npc.is_in_group(&"indoor_npc")).is_true()
 			placed_ids[npc_id] = true
 		_free_interior(interior)
-	assert_int(placed_ids.size()).is_equal(35)
+	assert_int(placed_ids.size()).is_equal(33)
 
 
 func test_marshal_uses_story_dialogue_and_generated_isometric_model() -> void:

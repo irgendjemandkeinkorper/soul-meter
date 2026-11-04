@@ -74,9 +74,9 @@ func test_canon_holds_the_eight_macro_and_twenty_five_interior_scenes_plus_the_c
 	for row: Dictionary in scenes:
 		if String(row["definition_path"]).begins_with("res://world/locations/interiors/"):
 			interiors += 1
-	# Dom's twenty-one plus Kesselford's wayhouse and chandlery (C1 / #238) and Ashlaren's
-	# weighing hall and millhouse (C2 / #239).
-	assert_int(interiors).is_equal(25)
+	# Dom's twenty-one plus Kesselford's chandlery (C1 / #238; its Wayhouse is a walk-in building
+	# on the map since item 35) and Ashlaren's weighing hall and millhouse (C2 / #239).
+	assert_int(interiors).is_equal(24)
 	assert_int(scenes.size() - interiors).is_equal(MACRO_IDS.size())
 	# The twelve gazetteer cities stay; Dom is the one location carrying both facets.
 	var gazetteer: int = 0
@@ -181,11 +181,12 @@ func test_index_rows_cover_every_canon_location_with_both_facets() -> void:
 	assert_bool(rows["long_verge"]["fast_travel"] == null).is_true()
 	assert_bool(rows["dom"]["transition"] == null).is_true()
 	assert_bool(rows["dom_tavern_interior"]["transition"] == null).is_true()
-	assert_str(String(rows["kesselford_wayhouse"]["transition"]["building_id"])).is_equal("kesselford_wayhouse")
+	assert_str(String(rows["kesselford_chandlery"]["transition"]["building_id"])).is_equal("kesselford_chandlery")
+	assert_bool(rows.has("kesselford_wayhouse")).is_false()
 	var doors: int = 0
 	for row: Dictionary in parsed["locations"]:
 		doors += 1 if row["transition"] is Dictionary else 0
-	assert_int(doors).is_equal(24)
+	assert_int(doors).is_equal(23)
 	assert_int((parsed["routes"] as Array).size()).is_equal(8)
 
 
@@ -442,7 +443,7 @@ func _door_batch() -> Array[Dictionary]:
 	var interior: Dictionary = _valid_scene_document()
 	interior["id"] = "probe_interior"
 	interior["definition_path"] = "res://world/locations/interiors/probe_interior.tres"
-	interior["scene_path"] = "res://world/interiors/kesselford_wayhouse.tscn"
+	interior["scene_path"] = "res://world/interiors/kesselford_chandlery.tscn"
 	interior["transition"] = {
 		"building_id": "probe_house", "building_name": "Probe House",
 		"source_scene": "res://world/test_room.tscn", "source_anchor": "ProbeDoor",
@@ -475,7 +476,7 @@ func test_a_door_facet_bakes_an_enter_and_a_derived_exit() -> void:
 	var root: String = WeftluminLocationsKind.TRANSITIONS_ROOT
 	assert_array(texts.keys()).contains_exactly([root + "probe_house_enter.tres", root + "probe_house_exit.tres"])
 	var enter: String = texts[root + "probe_house_enter.tres"]
-	assert_str(enter).contains('destination_scene = "res://world/interiors/kesselford_wayhouse.tscn"')
+	assert_str(enter).contains('destination_scene = "res://world/interiors/kesselford_chandlery.tscn"')
 	assert_str(enter).contains('destination_location_id = &"probe_interior"')
 	assert_str(enter).contains("source_position = Vector2(10, 20.5)")
 	assert_str(enter).contains('required_flag = "probe_open"')
@@ -483,7 +484,7 @@ func test_a_door_facet_bakes_an_enter_and_a_derived_exit() -> void:
 	assert_bool(enter.contains("locked_message")).is_false()
 	var exit: String = texts[root + "probe_house_exit.tres"]
 	assert_str(exit).contains('id = &"probe_house_exit"')
-	assert_str(exit).contains('source_scene = "res://world/interiors/kesselford_wayhouse.tscn"')
+	assert_str(exit).contains('source_scene = "res://world/interiors/kesselford_chandlery.tscn"')
 	assert_str(exit).contains('destination_scene = "res://world/test_room.tscn"')
 	assert_str(exit).contains('destination_location_id = &"probe_location"')
 	assert_str(exit).contains('building_name = "Probe House"')

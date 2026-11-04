@@ -9,8 +9,10 @@ extends GdUnitTestSuite
 const KESSELFORD := "res://world/kesselford.tscn"
 const TRIAL_HALL := "res://world/interiors/lower_trial_hall.tscn"
 const WOUND_LIP := "res://world/wound_lip.tscn"
-## Scene coordinates on Kesselford: the Wayhouse front, and ground beyond the north border wall.
-const WAYHOUSE_FRONT := Vector2(1150, 700)
+## Scene coordinates on Kesselford: a cell of the walk-in Wayhouse's front wall line, one of its
+## doorway cells (item 35), and ground beyond the north border wall.
+const WAYHOUSE_FRONT := Vector2(988, 596)
+const WAYHOUSE_DOORWAY := Vector2(1116, 660)
 const BEYOND_NORTH_WALL := Vector2(1500, -120)
 const SKILL_DOOR_FLAG := "tutorial_skill_door_open"
 ## Instanced scenes that are not a place someone must be able to walk to.
@@ -110,6 +112,10 @@ func test_kesselford_grid_stops_at_a_facade_and_at_the_border() -> void:
 	assert_bool(grid.is_blocked_for(facade)).override_failure_message(
 		"the Wayhouse front %s is open on the grid" % str(facade)
 	).is_true()
+	var doorway := grid.world_to_cell(WAYHOUSE_DOORWAY)
+	assert_bool(grid.is_blocked_for(doorway)).override_failure_message(
+		"the Wayhouse doorway %s is shut on the grid" % str(doorway)
+	).is_false()
 	var player := scene.find_child("Player", true, false) as Node2D
 	var start := grid.world_to_cell(player.global_position)
 	var beyond := grid.world_to_cell(BEYOND_NORTH_WALL)
