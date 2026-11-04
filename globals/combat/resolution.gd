@@ -35,6 +35,27 @@ const PROVISIONAL_TO_HIT := {
 	"visibility_obscured_pp": -25,
 }
 
+## PROVISIONAL critical hits (owner 2026-11-02, item 33: "add a provisional crit"). A landed
+## to-hit roll in the lowest tenth of the hit chance is a critical, and the target takes 1.5x
+## the damage it would otherwise take (applied after mitigation, by `critical_damage()`). Only
+## rolled hits can crit: an auto-hit, a forced hit or an on-hit preview cannot. Balance pending.
+const PROVISIONAL_CRITICAL := {
+	"chance_fraction": 0.1,
+	"damage_multiplier": 1.5,
+}
+
+
+## The highest hit roll that is still a critical for `hit_chance` (never below 1).
+static func critical_threshold(hit_chance: int) -> int:
+	return maxi(1, int(floor(float(hit_chance) * float(PROVISIONAL_CRITICAL["chance_fraction"]))))
+
+
+## The damage a target takes from a hit after mitigation: 1.5x (rounded) when it is a critical.
+static func critical_damage(mitigated: int, critical: bool) -> int:
+	if not critical or mitigated <= 0:
+		return mitigated
+	return roundi(float(mitigated) * float(PROVISIONAL_CRITICAL["damage_multiplier"]))
+
 
 ## Data-only explanation of the existing curve. Values are percentage points,
 ## not damage multipliers; constructing this record never rolls or mutates state.
@@ -219,6 +240,10 @@ static func resolve(context: Dictionary) -> Dictionary:
 		else:
 			hit_roll = _deterministic_hit_roll(context, ability_id, unit, target)
 			hit = hit_roll <= hit_chance
+	var critical := (
+		to_hit_enabled and hit and not fizzled and hit_roll > 0
+		and hit_roll <= critical_threshold(hit_chance)
+	)
 	var power := maxi(int(ability.get("power", 0)), 0)
 	if not direct_damage_enabled:
 		power = 0
@@ -390,6 +415,7 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var damage := maxi(roundi(scaled_damage) + detonation_bonus + draw_bonus + paid_bonus, 0)
 	if fizzled:
 		hit = false
+		critical = false
 		damage = 0
 	elif not hit:
 		# A miss still pays CT and still leaves source residue (the cast happened), but deals
@@ -542,6 +568,8 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"hit_chance": hit_chance,
 		"accuracy_breakdown": accuracy,
 		"hit_roll": hit_roll,
+		"critical": critical,
+		"critical_threshold": critical_threshold(hit_chance) if to_hit_enabled else 0,
 		"hit_bonus": hit_bonus,
 		"positioning": positioning.duplicate(true),
 		"breakdown": breakdown,
@@ -619,6 +647,7 @@ static func resolve_action(
 		"battle_id": str(battle_unit.get("battle_id", target_tile.get("battle_id", ""))),
 		"tick": int(battle_unit.get("tick", 0)),
 		"seed": seed,
+		"fight_seed": int(battle_unit.get("fight_seed", 0)),
 		"unit": battle_unit,
 		"ability": ability,
 		"target": _dictionary(target_tile.get("target", target_tile.get("unit", {}))),
@@ -651,6 +680,15 @@ static func positional_modifiers(
 	}
 
 
+## Every fight's dice (owner 2026-11-02, item 33: "every fight"): a fight seed drawn when the
+## fight opens salts each roll key, so the same moves roll differently from fight to fight while
+## forecast and commit, which share the context, still agree. Seed 0 (tests, `SOUL_METER_FIXED_DICE`)
+## keeps the historical keys byte for byte.
+static func _fight_key(context: Dictionary, key: String) -> String:
+	var fight_seed := int(context.get("fight_seed", 0))
+	return key if fight_seed == 0 else "fight%d|%s" % [fight_seed, key]
+
+
 ## Deterministic 1..100 roll. Pure function of the identifying context so that repeated
 ## resolution of the same action (forecast, replay, the 64x determinism test) always returns
 ## the same result, while distinct ticks/actors/seeds decorrelate.
@@ -666,7 +704,7 @@ static func _deterministic_hit_roll(
 		str(target.get("id", "")),
 	]
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(key)
+	rng.seed = hash(_fight_key(context, key))
 	return rng.randi_range(1, 100)
 
 
@@ -682,7 +720,7 @@ static func _deterministic_injury_roll(
 		str(target.get("id", "")),
 	]
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(key)
+	rng.seed = hash(_fight_key(context, key))
 	return rng.randi_range(1, 100)
 
 
@@ -698,7 +736,7 @@ static func _deterministic_fizzle_roll(
 		str(target.get("id", "")),
 	]
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(key)
+	rng.seed = hash(_fight_key(context, key))
 	return rng.randi_range(1, 100)
 
 
@@ -717,7 +755,7 @@ static func _deterministic_draw_roll(
 		str(target.get("id", "")),
 	]
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(key)
+	rng.seed = hash(_fight_key(context, key))
 	return rng.randi_range(1, 100)
 
 

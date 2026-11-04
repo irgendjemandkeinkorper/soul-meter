@@ -1,0 +1,9 @@
+BLOCKING-CAPTURE: ok kesselford cells=533 solids=16 -> walls-kesselford.png (kept as 01-bases-kesselford.jpg)
+BLOCKING-CAPTURE: ok ashlaren cells=513 solids=24 -> walls-ashlaren.png (kept as 02-bases-ashlaren.jpg)
+BLOCKING-CAPTURE: ok hollowmere cells=537 solids=35 -> walls-hollowmere.png (kept as 03-bases-hollowmere.jpg)
+BLOCKING-CAPTURE: ok long_verge cells=649 solids=32 -> walls-long_verge.png (kept as 04-bases-long-verge.jpg)
+BLOCKING-CAPTURE: ok dorthkor_road cells=605 solids=43 -> walls-dorthkor_road.png (kept as 05-bases-dorthkor-road.jpg)
+BLOCKING-CAPTURE: ok wound_lip cells=287 solids=11 -> walls-wound_lip.png (kept as 06-bases-wound-lip.jpg)
+BLOCKING-CAPTURE: ok lower_trial_hall cells=897 solids=14 -> walls-lower_trial_hall.png (kept as 07-bases-lower-trial-hall.jpg)
+BLOCKING-CAPTURE: ok art-bases files=31 -> art-bases.png (kept as 08-art-bases.jpg)
+BLOCKING-CAPTURE: ok

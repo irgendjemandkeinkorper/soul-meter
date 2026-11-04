@@ -233,8 +233,8 @@ func _assert_bar_fits(session: Dictionary) -> void:
 	assert_bool(bar.get_global_rect().intersects(gauge.get_global_rect())).override_failure_message(
 		"combat bar overlaps the soul gauge"
 	).is_false()
-	# The hotbar: eight slots at full label width, keyed 1–8 in order, inside the command
-	# column, no scrolling needed.
+	# The hotbar: eight icon tiles, keyed 1–8 in order, inside the command column, no
+	# scrolling needed (owner 2026-11-02, item 33 follow-up).
 	var column := bar.find_child("CommandColumn", true, false) as Control
 	var scroll := bar.find_child("ActionScroll", true, false) as ScrollContainer
 	var stack := scroll.get_node("ActionStack") as Control
@@ -246,10 +246,12 @@ func _assert_bar_fits(session: Dictionary) -> void:
 		assert_bool(key.is_visible_in_tree()).is_true()
 		assert_str(key.text).is_equal(str(slot + 1))
 		_assert_unclipped(hotbar[slot], column)
-		# The key number sits in the slot's left margin, clear of the label.
-		assert_float(key.get_minimum_size().x).is_less_equal(
-			float(hotbar[slot].get_theme_stylebox("normal").content_margin_left) - DS.SPACE_3
-		)
+		# The key number and the AP badge sit in the tile's top corners, clear of each other.
+		var cost := hotbar[slot].get_node("TileCost") as Label
+		assert_bool(hotbar[slot].get_global_rect().grow(0.5).encloses(key.get_global_rect())).is_true()
+		assert_bool(hotbar[slot].get_global_rect().grow(0.5).encloses(cost.get_global_rect())).is_true()
+		assert_bool(key.get_global_rect().intersects(cost.get_global_rect())).is_false()
+		assert_object(hotbar[slot].icon).override_failure_message("%s has no glyph" % hotbar[slot].text).is_not_null()
 	assert_float(stack.size.y).override_failure_message(
 		"the hotbar needs scrolling: stack %s in scroll %s" % [stack.size, scroll.size]
 	).is_less_equal(scroll.size.y + 0.5)
@@ -293,8 +295,8 @@ func _assert_bar_fits(session: Dictionary) -> void:
 	await get_tree().process_frame
 	assert_bool(aim_row.visible).is_true()
 	assert_bool((bar.find_child("MoreButton", true, false) as Control).visible).is_true()
-	# MORE shows every command off the hotbar: the usable ones as buttons, the locked ones as
-	# rows that print their lock reason.
+	# MORE shows every command off the hotbar as tiles: the usable ones first, then the locked
+	# ones dimmed, each with its lock reason on its hover card.
 	var more := bar.find_child("MoreButton", true, false) as Button
 	var actions := Battle.available_actions()
 	var buttons: Array = bar.get("_action_buttons")
@@ -327,9 +329,10 @@ func _assert_bar_fits(session: Dictionary) -> void:
 			if hotbar.has(button):
 				continue
 			if button.disabled:
-				var reason := button.get_parent().get_node("Reason") as Label
-				assert_bool(reason.is_visible_in_tree()).is_true()
-				assert_str(reason.text).override_failure_message("%s shows no lock reason" % button.text).is_not_empty()
+				assert_str(String(button.get_parent().name)).is_equal("Locked")
+				assert_str(str(bar.card_for_button(button).get("lock", ""))).override_failure_message(
+					"%s shows no lock reason" % button.text
+				).is_not_empty()
 			else:
 				assert_str(String(button.get_parent().name)).override_failure_message(
 					"usable %s should sit in MORE's flow" % button.text
@@ -516,7 +519,7 @@ func test_slots_hold_their_commands_while_momentarily_locked() -> void:
 	assert_int(slotted.size()).is_equal(CombatBar.HOTBAR_SIZE)
 	for button: Button in slotted:
 		assert_bool(button.disabled).override_failure_message("%s should be dimmed" % button.text).is_true()
-		assert_str(button.tooltip_text).contains("Locked:")
+		assert_str(str(bar.card_for_button(button).get("lock", ""))).is_not_empty()
 	var history_before := Battle._combat_history.size()
 	bar.press_slot(0)
 	assert_int(Battle._combat_history.size()).is_equal(history_before)
@@ -525,6 +528,148 @@ func test_slots_hold_their_commands_while_momentarily_locked() -> void:
 	assert_array(bar.hotbar_ids()).is_equal(before)
 	assert_bool(bar.hotbar_buttons()[1].disabled).override_failure_message("Guard is usable again").is_false()
 	await _close(session)
+
+
+## Owner 2026-11-02 (item 33 follow-up): "abilities behind icons with a hover tooltip". A tile
+## with a Wheel tone shows that tone's glyph; hovering a tile opens one card above the bar with
+## the name, the AP, the target and reach, and the effect; leaving the tile closes it.
+func test_command_tiles_show_glyphs_and_a_hover_card() -> void:
+	var session := await _session("CardWight")
+	var hud: FieldHUD = session.hud
+	var bar: CombatBar = hud.combat_bar
+	await _until_presented(hud.battle_interface.stage)
+	_await_ally_turn()
+	await get_tree().process_frame
+	var buttons: Array = bar.get("_action_buttons")
+	var actions := Battle.available_actions()
+	var toned := 0
+	for i: int in actions.size():
+		var tile := buttons[i] as Button
+		assert_object(tile.icon).override_failure_message("%s has no glyph" % tile.text).is_not_null()
+		if not String(actions[i].element_id).is_empty():
+			toned += 1
+			assert_str(tile.icon.resource_path).contains("/elements/%s." % actions[i].element_id)
+	assert_int(toned).override_failure_message("the catalog's spells carry tones").is_greater(0)
+	var strike := _tile(bar, "STRIKE")
+	assert_dict(bar.command_card_text()).is_empty()
+	strike.mouse_entered.emit()
+	var card := bar.command_card_text()
+	assert_str(str(card.get("title", ""))).is_equal("Strike")
+	assert_str(str(card.get("stats", ""))).starts_with("%d AP" % _action("strike").ap_cost)
+	assert_str(str(card.get("reach", ""))).contains("melee")
+	assert_str(str(card.get("effect", ""))).is_not_empty()
+	var card_node := bar.find_child("CommandCard", true, false) as Control
+	assert_float(card_node.get_global_rect().end.y).override_failure_message(
+		"the card opens above the bar"
+	).is_less_equal(strike.get_global_rect().position.y)
+	strike.mouse_exited.emit()
+	assert_dict(bar.command_card_text()).is_empty()
+	await _close(session)
+
+
+## The reported "couldn't use any ranged attacks" (owner 2026-11-02): the bar checked every
+## targeted command against the selected foe only, so with that foe out of reach Strike and
+## the spells read as locked. A refusal about where the foe stands now arms the tile: pressing
+## it fires nothing, the tile shows armed, and its card says to click a foe (a far one is a
+## walk-in order).
+func test_a_foe_out_of_reach_arms_the_command_instead_of_locking_it() -> void:
+	var session := await _session("FarWight")
+	var hud: FieldHUD = session.hud
+	var bar: CombatBar = hud.combat_bar
+	await _until_presented(hud.battle_interface.stage)
+	_await_ally_turn()
+	# Push the foe out of melee reach: the first free cell three or more steps from the ally.
+	var model := Battle.controller.battlefield as GridBattlefieldModel
+	var foe := (session.hostile as Hostile).battle_actor()
+	var from: Vector2i = model.cell_of(Battle.controller.active_actor())
+	var pushed := false
+	for step: Vector2i in [Vector2i(4, 0), Vector2i(0, 4), Vector2i(-4, 0), Vector2i(0, -4), Vector2i(3, 3), Vector2i(-3, -3)]:
+		if bool(model.displace(foe, from + step).get("allowed", false)):
+			pushed = true
+			break
+	assert_bool(pushed).override_failure_message("no free cell out of reach").is_true()
+	bar._refresh()
+	await get_tree().process_frame
+	var refusal := Battle.action_lock(_action("strike"))
+	assert_bool(Battle.is_positional_refusal(refusal)).override_failure_message(str(refusal)).is_true()
+	var strike := _tile(bar, "STRIKE")
+	assert_bool(strike.disabled).override_failure_message("a far foe must not lock Strike").is_false()
+	assert_str(str(bar.card_for_button(strike).get("lock", ""))).is_empty()
+	assert_str(str(bar.card_for_button(strike).get("hint", ""))).contains("walks in")
+	hud.battle_interface.select_pointer_action(&"guard")
+	await get_tree().process_frame
+	assert_str(strike.theme_type_variation).is_equal("HudCommandTile")
+	var history_before := Battle._combat_history.size()
+	strike.pressed.emit()
+	await get_tree().process_frame
+	assert_int(Battle._combat_history.size()).override_failure_message("arming fires nothing").is_equal(history_before)
+	assert_str(String(hud.battle_interface.selected_pointer_action())).is_equal("strike")
+	assert_str(strike.theme_type_variation).is_equal("HudCommandTileArmed")
+	await _close(session)
+
+
+## Owner 2026-11-02 (item 33 follow-up): the 5v5 demo's ten-unit turn strip ran under the
+## top-left key hints, which printed over the first names. The hints now drop below the
+## strip when the two would meet, and go home when the strip is short again.
+func test_key_hints_clear_a_full_turn_strip() -> void:
+	var session := await _session("StripWight")
+	var hud: FieldHUD = session.hud
+	await _until_presented(hud.battle_interface.stage)
+	var hints := hud.find_child("Tutorial", true, false) as Control
+	var strip := hud.battle_interface.turn_strip
+	var home := hints.global_position
+	strip.custom_minimum_size.x = 1880.0
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var strip_rect := strip.get_global_rect()
+	assert_bool(strip_rect.intersects(Rect2(hints.global_position, hints.get_minimum_size()))).override_failure_message(
+		"hints %s under strip %s" % [Rect2(hints.global_position, hints.get_minimum_size()), strip_rect]
+	).is_false()
+	assert_float(hints.global_position.y).is_greater_equal(strip_rect.end.y)
+	strip.custom_minimum_size.x = 0.0
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if not strip.get_global_rect().intersects(Rect2(home, hints.get_minimum_size())):
+		assert_vector(hints.global_position).is_equal(home)
+	await _close(session)
+
+
+## Only where the foe stands is positional: a cost, a class lock or a missing target still locks.
+func test_only_refusals_about_position_arm_instead_of_lock() -> void:
+	var shapes := {
+		"range": {"blocked_by": &"blocked_by_range", "nearest_unblock": {"type": &"range"}},
+		"sight": {"blocked_by": &"blocked_by_obstacle", "nearest_unblock": {"type": &"obstacle"}},
+		"ledge": {"blocked_by": &"blocked_by_elevation", "nearest_unblock": {"type": &"jump"}},
+		"adjacent": {"blocked_by": &"position", "nearest_unblock": {"type": &"adjacency"}},
+	}
+	for name: String in shapes:
+		var refusal: Dictionary = shapes[name]
+		refusal["allowed"] = false
+		assert_bool(Battle.is_positional_refusal(refusal)).override_failure_message(name).is_true()
+	var locks := [
+		{"allowed": false, "blocked_by": &"ap", "nearest_unblock": {"type": &"ap"}},
+		{"allowed": false, "blocked_by": &"class_resource", "nearest_unblock": {}},
+		{"allowed": false, "blocked_by": &"position", "nearest_unblock": {"type": &"grid_ready"}},
+		{"allowed": false, "blocked_by": &"blocked_by_range", "nearest_unblock": {"type": &"present_combatant"}},
+		{"allowed": true, "blocked_by": &"", "nearest_unblock": {}},
+	]
+	for refusal: Dictionary in locks:
+		assert_bool(Battle.is_positional_refusal(refusal)).override_failure_message(str(refusal)).is_false()
+
+
+func _tile(bar: CombatBar, caption: String) -> Button:
+	for button: Button in bar.get("_action_buttons"):
+		if button.text == caption:
+			return button
+	fail("no %s tile on the bar" % caption)
+	return null
+
+
+func _action(action_id: StringName) -> CombatAction:
+	for action: CombatAction in Battle.available_actions():
+		if action.id == action_id:
+			return action
+	return null
 
 
 func _enemy_turns() -> int:

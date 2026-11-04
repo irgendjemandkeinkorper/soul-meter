@@ -183,12 +183,15 @@ static func _cell_patterns(
 	var count := maxi(1, int(action.effect_payload.get("cell_count", 3)))
 	var cluster: Array[Vector2i] = [at]
 	for ring: int in range(1, 3):
-		for dy: int in range(-ring, ring + 1):
-			for dx: int in range(-ring, ring + 1):
-				if maxi(absi(dx), absi(dy)) == ring and cluster.size() < count:
-					cluster.append(at + Vector2i(dx, dy))
+		for cell: Vector2i in GridMetric.ring(at, ring):
+			if cluster.size() < count:
+				cluster.append(cell)
 	patterns.append(cluster)
-	for axis: Vector2i in [Vector2i(1, 0), Vector2i(0, 1)]:
+	# Two straight lines through the foe: the square axes, or two of the three hex axes.
+	var axes: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1)]
+	if GridMetric.hex():
+		axes = [HexMath.DIRECTIONS[0], HexMath.DIRECTIONS[5]]
+	for axis: Vector2i in axes:
 		var line: Array[Vector2i] = [at]
 		var step := 1
 		while line.size() < count:
@@ -207,6 +210,8 @@ static func _walk_in(
 ) -> Dictionary:
 	var nearest := _by_distance(controller, actor, foes).slice(0, 2)
 	var best := {}
+	# Every try below plans from the same board: price the reachable stands once.
+	controller.begin_reach_memo()
 	for action: CombatAction in kit:
 		if action.kind != CombatAction.Kind.ATTACK or action.targets_cells() or action.requires_ally_target():
 			continue
@@ -218,6 +223,7 @@ static func _walk_in(
 			if best.is_empty() or int(entry["total_ap"]) < int(best["total_ap"]) \
 					or (int(entry["total_ap"]) == int(best["total_ap"]) and str(entry["key"]) < str(best["key"])):
 				best = entry
+	controller.end_reach_memo()
 	return best
 
 
@@ -251,8 +257,7 @@ static func _distance_to_nearest(controller: CombatController, cell: Vector2i, f
 	for foe: BattleActor in foes:
 		var at: Variant = controller.battlefield.cell_of(foe)
 		if at is Vector2i:
-			var delta: Vector2i = (at as Vector2i) - cell
-			nearest = mini(nearest, maxi(absi(delta.x), absi(delta.y)))
+			nearest = mini(nearest, GridMetric.distance(at as Vector2i, cell))
 	return nearest
 
 
@@ -260,8 +265,7 @@ static func _distance_between(controller: CombatController, cell: Vector2i, othe
 	var at: Variant = controller.battlefield.cell_of(other)
 	if not (at is Vector2i):
 		return 1 << 30
-	var delta: Vector2i = (at as Vector2i) - cell
-	return maxi(absi(delta.x), absi(delta.y))
+	return GridMetric.distance(at as Vector2i, cell)
 
 
 static func _by_distance(controller: CombatController, actor: BattleActor, foes: Array[BattleActor]) -> Array[BattleActor]:

@@ -712,9 +712,11 @@ func _open_class_demo() -> void:
 	var field: FieldMap = Battle._current_field_map()
 	var opened := Battle.start_set_piece(field, ClassDemo.ENCOUNTER_ID)
 	if not bool(opened.get("allowed", false)):
-		push_warning("Class demo refused: %s" % opened.get("message", ""))
+		# Stays in the sandbox at Kesselford; returning to the title ends the demo as usual.
+		push_error("Class demo cannot open here: %s" % opened.get("message", ""))
 		return
-	send_event("enter_set_piece")
+	# Owner 2026-11-02 (item 33): fights on a map start in place, with no deployment screens.
+	send_event("enter_battle")
 
 
 func _end_class_demo() -> void:

@@ -50,6 +50,9 @@ var _spawned_hostiles: Array[Hostile] = []
 ## field-grid model seats the party where it stands and the enemies across from it.
 var _set_piece_pending: bool = false
 var _set_piece_seats: Array[Vector2i] = []
+## Why the set-piece being started could not seat everyone by the party; "" when it could, or
+## when the field has no placed party. `start()` stops on it and `start_set_piece` refuses.
+var _set_piece_seat_failure := ""
 ## PROVISIONAL: where a set-piece's enemies are seated when the encounter authors no cells of
 ## its own (authored set-piece cells are #348's contract). The first enemy stands this many
 ## grid steps to the player's right on screen, so the two read side by side rather than one
@@ -104,6 +107,7 @@ var _definition: Dictionary = {}
 
 func start(encounter: Variant) -> void:
 	_release_field_grid()
+	_set_piece_seat_failure = ""
 	_combat_history.clear()
 	allies.clear()
 	enemies.clear()
@@ -139,12 +143,25 @@ func start(encounter: Variant) -> void:
 		return
 	var rules := (load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
 	rules.use_charge_time = bool(_definition.get("use_charge_time", rules.use_charge_time))
+	var battlefield := _battlefield_for_definition(rules)
+	if not _set_piece_seat_failure.is_empty():
+		# A set-piece that cannot seat everyone by the party does not open (2026-11-04). The
+		# model's default seats lie off the map: the 5v5 demo fought from them beside the
+		# Wayhouse ran thousands of turns and grew past 7 GB instead of failing.
+		if battlefield is GridBattlefieldModel:
+			(battlefield as GridBattlefieldModel).release_field_grid()
+		ended = true
+		push_error(
+			"Encounter '%s' cannot seat its fighters by the party: %s"
+			% [encounter_id, _set_piece_seat_failure]
+		)
+		return
 	controller = CombatController.new()
 	controller.event_emitted.connect(_on_combat_event)
 	controller.battle_finished.connect(_on_controller_finished)
 	controller.configure(
 		available_actions(true),
-		_battlefield_for_definition(rules),
+		battlefield,
 		rules,
 		null,
 		_casting_abilities(),
@@ -162,6 +179,9 @@ func start(encounter: Variant) -> void:
 				"Encounter '%s' authors unknown weather '%s'; battle starts calm."
 				% [encounter_id, weather_default]
 			)
+	controller.autoplay_allies = bool(_definition.get("autoplay", false))
+	controller.even_sides = bool(_definition.get("even_sides", false))
+	controller.fight_seed = FightDice.draw()
 	controller.start(allies, enemies, encounter_id)
 	if not _pending_class_resources.is_empty():
 		controller.restore_class_resources(_pending_class_resources)
@@ -268,6 +288,7 @@ func start_session(field: FieldMap, first: Hostile) -> Dictionary:
 		var weather_result := controller.configure_weather(weather)
 		if not bool(weather_result.get("allowed", false)):
 			push_warning("Field authors unknown weather '%s'; the session starts calm." % weather)
+	controller.fight_seed = FightDice.draw()
 	controller.start(allies, enemies, encounter_id)
 	if not _pending_class_resources.is_empty():
 		controller.restore_class_resources(_pending_class_resources)
@@ -334,9 +355,10 @@ func admit(hostile: Hostile) -> Dictionary:
 ## An authored encounter, fought on the field it is handed (#281 D5). The grid is the field's,
 ## the party is seated where it stands with the enemies across from it (`_seat_set_piece`),
 ## and every encounter enemy gets a Hostile body spawned for the fight
-## (`_spawn_set_piece_hostiles`). Whether deployment opens afterwards is the caller's call
-## (F0 D3 as read 2026-10-02): the Trial Hall sends `enter_set_piece` and keeps its slate, a
-## journey ambush sends `enter_battle` because an ambush gives no time to deploy. Either way
+## (`_spawn_set_piece_hostiles`). Whether deployment opens afterwards is the caller's call.
+## Owner 2026-11-02 (item 33, "drop it on the map"): a fight on a map starts where everyone
+## stands, so the Trial Hall and the class demo send `enter_battle` like a journey ambush; the
+## `enter_set_piece` deployment chain stays in the chart, unused by on-map fights. Either way
 ## everything that reads `session_active` sees a set-piece the same way it sees an ambient
 ## fight. `start(encounter_id)` stays underneath as the internal composition builder; no game
 ## scene calls it directly.
@@ -355,6 +377,13 @@ func start_set_piece(field: FieldMap, encounter: StringName) -> Dictionary:
 	_set_piece_seats = []
 	start(encounter)
 	_set_piece_pending = false
+	if not _set_piece_seat_failure.is_empty():
+		var why := _set_piece_seat_failure
+		_set_piece_seat_failure = ""
+		_session_field = null
+		return _session_refusal(
+			&"seating", &"open_ground", "There is no open ground here to seat both sides (%s)." % why
+		)
 	if ended:
 		_session_field = null
 		return _session_refusal(
@@ -798,8 +827,9 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 ## A set-piece is fought where the party stands, like an ambient session (ruling 4), with the
 ## enemies seated on the nearest free cells across from the player. An encounter that authors
 ## its own cells is a later contract (#348); until then this is the one placement rule. When
-## the field has no placed party, or a seat cannot be found, the model keeps its default
-## column seating and the presentation party is left where it is.
+## the field has no placed party, the model keeps its default column seating and the
+## presentation party is left where it is. When a seat cannot be found, the reason goes in
+## `_set_piece_seat_failure` and the fight does not open: the default seats lie off the map.
 func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	var live_cells := field.party_cells()
 	if live_cells.is_empty():
@@ -810,13 +840,14 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	var lines := bool(formation.get("lines", false)) and grid != null
 	var gap := int(formation.get("gap", SET_PIECE_ENEMY_SCREEN_STEPS))
 	var desired: Array[Vector2i] = []
-	for index in allies.size():
-		desired.append(
-			_line_cell(grid, live_cells[0], index) if lines
-			else live_cells[mini(index, live_cells.size() - 1)]
-		)
+	if lines:
+		desired = _open_line(model, grid, live_cells[0], allies.size(), {})
+	else:
+		for index in allies.size():
+			desired.append(live_cells[mini(index, live_cells.size() - 1)])
 	var placement := model.resolve_placement(desired)
 	if not bool(placement.get("allowed", false)):
+		_set_piece_seat_failure = str(placement.get("message", "the party cannot be seated"))
 		return
 	var seats: Array = placement.get("cells", [])
 	var initial: Dictionary = {}
@@ -829,39 +860,78 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 		_screen_steps(grid, anchor, Vector2.RIGHT, gap) if grid != null
 		else anchor + SET_PIECE_ENEMY_OFFSET
 	)
+	var enemy_line: Array[Vector2i] = []
+	if lines:
+		var centre := model.seat_near(first_seat, taken)
+		if not bool(centre.get("ok", false)):
+			_set_piece_seat_failure = "no open cell near the enemy line's first seat %s" % first_seat
+			return
+		enemy_line = _open_line(model, grid, centre["cell"], enemies.size(), taken)
 	for index in enemies.size():
 		var wanted: Vector2i = (
-			_line_cell(grid, first_seat, index) if lines
+			enemy_line[index] if lines
 			else _screen_steps(grid, first_seat, Vector2.DOWN, SET_PIECE_ENEMY_ROW_STEPS * index)
 			if grid != null else first_seat + Vector2i(0, index)
 		)
 		var found := model.seat_near(wanted, taken)
 		if not bool(found.get("ok", false)):
+			_set_piece_seat_failure = "no open cell near %s for %s" % [wanted, enemies[index].display_name]
 			return
 		initial[enemies[index]] = found["cell"]
 		taken[found["cell"]] = true
-	if bool(model.configure_initial_cells(initial).get("allowed", false)):
-		_set_piece_seats.assign(seats)
+	var configured := model.configure_initial_cells(initial)
+	if not bool(configured.get("allowed", false)):
+		_set_piece_seat_failure = str(configured.get("message", "the seats were refused"))
+		return
+	_set_piece_seats.assign(seats)
 
 
 ## An encounter may ask for two facing lines (`"formation": {"lines": true, "gap": <screen
 ## steps>}`; the 5v5 class demo does): each side stands in a screen column centred on its first
 ## seat, growing from the middle (below, above, below...), with the enemy column `gap` screen
 ## steps right of the party's anchor. Without it the seating above is unchanged.
-func _line_cell(grid: IsoGrid, centre: Vector2i, index: int) -> Vector2i:
-	if index == 0:
-		return centre
-	var rows := ceili(index / 2.0) * SET_PIECE_ENEMY_ROW_STEPS
-	return _screen_steps(grid, centre, Vector2.DOWN if index % 2 == 1 else Vector2.UP, rows)
+##
+## A column stops growing in a direction at the first wall on its way or at a seat it cannot
+## take, and grows on the other side instead, so nobody is seated inside a building or behind
+## it (2026-11-03: once Kesselford's walls were painted, the demo's party column ran into the
+## Wayhouse front, and the whole seating fell back to the model's default seats, off the map).
+## When both directions close early, the rest repeat the centre and the caller's nearest-free
+## search seats them around it. `centre` is a free cell.
+func _open_line(
+	model: GridBattlefieldModel, grid: IsoGrid, centre: Vector2i, count: int, taken: Dictionary
+) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = [centre]
+	var held := taken.duplicate()
+	held[centre] = true
+	var reached := {Vector2.DOWN: 0, Vector2.UP: 0}  # direction -> screen steps cleared so far
+	var index := 1
+	while cells.size() < count and not reached.is_empty():
+		var direction := Vector2.DOWN if index % 2 == 1 else Vector2.UP
+		index += 1
+		if not reached.has(direction):
+			continue
+		var steps: int = reached[direction] + SET_PIECE_ENEMY_ROW_STEPS
+		var open := true
+		for step in range(int(reached[direction]) + 1, steps + 1):
+			if grid.is_wall(_screen_steps(grid, centre, direction, step)):
+				open = false
+				break
+		var cell := _screen_steps(grid, centre, direction, steps)
+		if not open or model.seat_near(cell, held).get("cell", null) != cell:
+			reached.erase(direction)
+			continue
+		cells.append(cell)
+		held[cell] = true
+		reached[direction] = steps
+	while cells.size() < count:
+		cells.append(centre)
+	return cells
 
 
-## The cell `steps` neighbour-steps from `from` in a screen direction; the field's TileMap owns
-## the projection, so this holds for any grid transform.
+## The cell `steps` cell-steps from `from` in a screen direction; the field's TileMap owns
+## the projection, so this holds for any grid transform. On hexes it covers the same ground.
 func _screen_steps(grid: IsoGrid, from: Vector2i, direction: Vector2, steps: int) -> Vector2i:
-	var cell := from
-	for _step in steps:
-		cell = grid.screen_direction_to_neighbor(cell, direction)
-	return cell
+	return grid.screen_steps(from, direction, steps)
 
 
 func _current_field_map() -> FieldMap:
@@ -928,6 +998,27 @@ func can_use(action: CombatAction) -> bool:
 ## for presentation that needs the lock's kind as well as its words (the hotbar).
 func action_lock(action: CombatAction) -> Dictionary:
 	return action_refusal(action, null, _availability_options(action))
+
+
+## Refusals that only say where the selected target stands: out of reach, out of sight,
+## behind a body or a ledge, not adjacent for a melee blow. They never lock a command, because
+## another foe may be in reach and a far one is a walk-in order (owner 2026-11-02, item 33
+## follow-up: "couldn't use any ranged attacks" — the bar checked every command against the
+## selected enemy only, so at a fight's start every targeted command read as locked).
+const POSITIONAL_REFUSALS: Array[StringName] = [
+	&"blocked_by_range", &"blocked_by_obstacle", &"blocked_by_occupancy", &"blocked_by_elevation",
+]
+
+
+static func is_positional_refusal(refusal: Dictionary) -> bool:
+	if bool(refusal.get("allowed", false)):
+		return false
+	var blocked_by := StringName(str(refusal.get("blocked_by", "")))
+	var unblock: Variant = refusal.get("nearest_unblock", {})
+	var unblock_type := StringName(str((unblock as Dictionary).get("type", ""))) if unblock is Dictionary else &""
+	if unblock_type == &"present_combatant":
+		return false
+	return POSITIONAL_REFUSALS.has(blocked_by) or (blocked_by == &"position" and unblock_type == &"adjacency")
 
 
 func action_lock_reason(action: CombatAction) -> String:
@@ -1155,6 +1246,7 @@ func abandon() -> void:
 	_measures_out_of_reach = 0
 	_set_piece_pending = false
 	_set_piece_seats.clear()
+	_set_piece_seat_failure = ""
 	active_ally_index = 0
 	target_enemy_index = 0
 	balance = 0

@@ -37,9 +37,9 @@ func test_viewport_left_click_reaches_click_move_controller() -> void:
 	var screen_position := Vector2.INF
 	var viewport_rect := Rect2(Vector2.ZERO, Vector2(VIEWPORT_SIZE)).grow(-32.0)
 	for cell in ground.get_used_cells():
-		if not grid.is_point_solid(cell):
+		if not grid.is_point_solid(grid.cell_at_square(cell)):
 			continue
-		var candidate_world := grid.cell_to_world(cell)
+		var candidate_world := grid.cell_to_world(grid.cell_at_square(cell))
 		var candidate_screen := player.get_canvas_transform() * candidate_world
 		if viewport_rect.has_point(candidate_screen):
 			blocked_world = candidate_world
