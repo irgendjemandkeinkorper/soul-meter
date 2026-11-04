@@ -877,7 +877,7 @@ shape = SubResource("base_KesselfordDressing_SolidProps_RockFarBankSouth")
 position = Vector2(260, 900)
 
 [node name="SpawnFromKesselfordWayhouse" type="Marker2D" parent="."]
-position = Vector2(796, 564)
+position = Vector2(1150, 790)
 
 [node name="SpawnFromKesselfordChandlery" type="Marker2D" parent="."]
 position = Vector2(1692, 596)

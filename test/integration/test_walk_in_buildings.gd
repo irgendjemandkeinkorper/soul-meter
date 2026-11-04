@@ -43,6 +43,23 @@ func test_the_map_holds_the_four_layouts() -> void:
 		assert_int(building.quarter_turns).is_equal(row[1])
 
 
+## The class demo (GameFlow.CLASS_DEMO_SPAWN) arrives at `SpawnFromKesselfordWayhouse` and seats ten
+## fighters round the player. Beside a building's walls the seating fails and the fight runs from
+## far-off default seats, which swelled the hex demo suite past 7 GB (found 2026-11-04). The arrival
+## stays on open ground, at least three cells from every footprint.
+func test_the_class_demo_arrival_stays_clear_of_the_buildings() -> void:
+	var root: Node = auto_free((load(KESSELFORD) as PackedScene).instantiate())
+	assert_str(String(GameFlow.CLASS_DEMO_SPAWN)).is_equal("from_kesselford_wayhouse")
+	var ground := SolidFootprints.find_ground(root)
+	var marker := root.get_node("SpawnFromKesselfordWayhouse") as Node2D
+	var arrival := ground.local_to_map(SolidFootprints.transform_in(ground, root).affine_inverse() * SolidFootprints.transform_in(marker, root).origin)
+	for building_name: String in BUILDINGS:
+		for cell: Vector2i in _bound(root, building_name).footprint_cells():
+			var gap := maxi(absi(cell.x - arrival.x), absi(cell.y - arrival.y))
+			assert_int(gap).override_failure_message("%s cell %s is %d from the demo arrival %s" % [building_name, cell, gap, arrival]) \
+				.is_greater_equal(3)
+
+
 ## paint_blocking.gd writes each building's solid cells into the scene; this fails when a building
 ## changed (layout, turn, place) and the tool was not run again.
 func test_each_wall_body_holds_its_building_s_solid_cells() -> void:
