@@ -105,9 +105,9 @@ func test_heatmap_reads_field_accord_and_zone_deltas() -> void:
 	assert_object(thinned).is_not_null()
 	assert_object(blessed).is_not_null()
 	for cell: Vector2i in [player_cell, player_cell + Vector2i(2, 2), player_cell + Vector2i(3, 0), player_cell + Vector2i(4, 1)]:
-		assert_float(WeftluminAccordOverlayPanel.accord_in(sampled, cell)).override_failure_message(str(cell)).is_equal(field.accord_at(cell))
+		assert_float(WeftluminAccordOverlayPanel.accord_in(sampled, cell)).override_failure_message(str(cell)).is_equal(field.accord_at(_on_grid(cell)))
 	var far := player_cell + Vector2i(9, 9)
-	assert_float(WeftluminAccordOverlayPanel.accord_in(sampled, far)).is_equal(field.accord_at(far))
+	assert_float(WeftluminAccordOverlayPanel.accord_in(sampled, far)).is_equal(field.accord_at(_on_grid(far)))
 	# The overlap of the two zones sums, as FieldMap.zone_delta() does.
 	assert_float(float((sampled["zone_deltas"] as Dictionary)[player_cell + Vector2i(2, 0)])).is_equal(-25.0)
 	assert_vector(sampled["zone_range"] as Vector2).is_equal(Vector2(-40, 15))
@@ -144,7 +144,7 @@ func test_live_battle_supplies_weather_and_charge_without_mutating_tiles() -> vo
 	# Seeding is the test's own write (as Combat Lab's tile seed does); the overlay never calls
 	# `tile_state_at()`, which creates tiles.
 	var cell: Vector2i = _player_cell()
-	var seeded: TileState = controller.tile_state_at(cell)
+	var seeded: TileState = controller.tile_state_at(_on_grid(cell))
 	assert_object(seeded).is_not_null()
 	assert_bool(bool(seeded.apply_residue(&"khash").get("allowed", false))).is_true()
 	assert_bool(bool(seeded.apply_residue(&"khash").get("allowed", false))).is_true()
@@ -179,13 +179,13 @@ func test_walkability_reads_the_players_own_grid() -> void:
 	await _open_shell()
 	var sampled: Dictionary = panel.current_sample()
 	assert_object(sampled["walk_grid"]).is_same(field.iso_grid())
+	# The overlay reads ground cells; the walk grid answers for the grid cell at each one's
+	# centre (a hex on hexes, hex slice H3b).
 	var grid: IsoGrid = field.iso_grid()
-	var region: Rect2i = grid.get_used_rect()
 	var blocked: Variant = null
-	for y: int in range(region.position.y, region.end.y):
-		for x: int in range(region.position.x, region.end.x):
-			if blocked == null and grid.is_blocked_for(Vector2i(x, y)):
-				blocked = Vector2i(x, y)
+	for cell: Vector2i in field.ground().get_used_cells():
+		if blocked == null and grid.is_blocked_for(grid.cell_at_square(cell)):
+			blocked = cell
 	assert_object(blocked).is_not_null()
 	assert_str(WeftluminAccordOverlayPanel.cell_text(sampled, blocked as Vector2i)).ends_with("blocked")
 
@@ -231,7 +231,7 @@ func test_rendered_heatmap_over_an_accord_zone_capture() -> void:
 	var centre: Vector2i = _player_cell()
 	_zone(centre + Vector2i(-2, 0), -40, 2, &"")
 	_zone(centre + Vector2i(4, 0), 15, 1, &"mozh")
-	var charged: TileState = controller.tile_state_at(centre + Vector2i(1, 3))
+	var charged: TileState = controller.tile_state_at(_on_grid(centre + Vector2i(1, 3)))
 	if charged != null:
 		charged.apply_residue(&"khash")
 		charged.apply_residue(&"khash")
@@ -263,15 +263,26 @@ func _open_shell() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	panel = shell.bottom_tabs.find_child("Accord overlay", false, false) as WeftluminAccordOverlayPanel
-	var focus: Vector2 = field.iso_grid().cell_to_world(_player_cell())
+	var focus: Vector2 = _ground_world(_player_cell())
 	shell.camera.zoom = Vector2.ONE
 	shell.camera.position = focus - (shell.viewport_surface.get_global_rect().get_center() - get_viewport().get_visible_rect().size / 2.0)
 	shell.camera.force_update_scroll()
 
 
+## The player's ground cell. The overlay draws and reads ground cells (hex slice H3b).
 func _player_cell() -> Vector2i:
 	var player := world.find_child("Player", true, false) as Node2D
-	return field.iso_grid().world_to_cell(player.global_position)
+	return field.ground_cell_of(field.iso_grid().world_to_cell(player.global_position))
+
+
+## A ground cell's centre in world space.
+func _ground_world(cell: Vector2i) -> Vector2:
+	return field.ground().to_global(field.ground().map_to_local(cell))
+
+
+## The field grid cell at a ground cell's centre: the cell itself on squares, a hex on hexes.
+func _on_grid(cell: Vector2i) -> Vector2i:
+	return field.iso_grid().cell_at_square(cell)
 
 
 func _zone(cell: Vector2i, delta: int, half: int, element: StringName) -> AccordZone:
@@ -282,7 +293,7 @@ func _zone(cell: Vector2i, delta: int, half: int, element: StringName) -> Accord
 	zone.half_height_cells = half
 	zone.element_default = element
 	field.add_child(zone)
-	zone.global_position = field.iso_grid().cell_to_world(cell)
+	zone.global_position = _ground_world(cell)
 	return zone
 
 
@@ -292,7 +303,7 @@ func _start_battle() -> CombatController:
 	hostile.unit_id = &"bog-wight"
 	hostile.alert_radius = 0.0
 	world.add_child(hostile)
-	hostile.global_position = field.iso_grid().cell_to_world(_player_cell() + Vector2i(3, 3))
+	hostile.global_position = _ground_world(_player_cell() + Vector2i(3, 3))
 	hostile.sync_cell()
 	var opened := Battle.start_session(field, hostile)
 	assert_bool(opened.get("allowed", false)).override_failure_message(str(opened)).is_true()
@@ -300,7 +311,7 @@ func _start_battle() -> CombatController:
 
 
 func _screen(cell: Vector2i) -> Vector2:
-	return get_viewport().canvas_transform * field.iso_grid().cell_to_world(cell)
+	return get_viewport().canvas_transform * _ground_world(cell)
 
 
 func _render() -> Image:

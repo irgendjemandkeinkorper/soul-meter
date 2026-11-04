@@ -386,14 +386,26 @@ func _advance_weather(ticks_elapsed: int) -> void:
 		})
 
 
+## `tile_state_at()`'s terrain rows by cell, for the snapshot it was built from.
+var _terrain_index: Dictionary = {}
+var _terrain_index_source: Array[Dictionary] = []
+
+
 func tile_state_at(cell: Vector2i) -> TileState:
 	if _tile_by_cell.has(cell):
 		return _tile_by_cell[cell]
 	if battlefield == null:
 		return null
-	for terrain: Dictionary in battlefield.tiles_snapshot():
-		if Vector2i(int(terrain.get("x", 0)), int(terrain.get("y", 0))) != cell:
-			continue
+	# One index per terrain snapshot: a scan per touched cell grew with the map, and hexes
+	# (owner item 34) put about 4.6 rows where one cell was.
+	var rows := battlefield.tiles_snapshot()
+	if not is_same(rows, _terrain_index_source):
+		_terrain_index_source = rows
+		_terrain_index = {}
+		for row: Dictionary in rows:
+			_terrain_index[Vector2i(int(row.get("x", 0)), int(row.get("y", 0)))] = row
+	if _terrain_index.has(cell):
+		var terrain: Dictionary = _terrain_index[cell]
 		var tile := TileState.create(
 			_encounter_id, cell.x, cell.y,
 			int(terrain.get("height_delta", 0)), bool(terrain.get("cover", false))
@@ -1083,9 +1095,36 @@ func _move_budget(actor: BattleActor) -> int:
 	return raw_budget
 
 
+## `begin_reach_memo()`'s stands: `{actor_id, budget, rows}`, or empty.
+var _reach_memo: Dictionary = {}
+
+
+## While a caller plans many walk-ins for one actor on a board nothing changes (KitAI tries
+## every attack against the nearest foes), the stands it can reach are the same for each try:
+## `_reachable_for()` prices them once. Nothing may move between begin and end. On hexes a
+## turn's reach holds about three times the stands, and pricing them again for every try was
+## most of an AI turn (owner item 34).
+func begin_reach_memo() -> void:
+	_reach_memo = {"rows": {}}
+
+
+func end_reach_memo() -> void:
+	_reach_memo = {}
+
+
 ## Every destination `actor` can afford to walk to now, each priced by the same move gate a
 ## submit runs: `{destination, ap_cost, ct_cost, path, path_cells}`.
 func _reachable_for(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
+	if not _reach_memo.is_empty() and actor != null:
+		var key := "%s|%d" % [actor.combat_id, raw_budget]
+		var rows: Dictionary = _reach_memo["rows"]
+		if not rows.has(key):
+			rows[key] = _price_reachable(actor, raw_budget)
+		return (rows[key] as Array[Dictionary]).duplicate()
+	return _price_reachable(actor, raw_budget)
+
+
+func _price_reachable(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
 	var reachable: Array[Dictionary] = []
 	var action := action_by_id(ACTION_MOVE)
 	if actor == null or action == null or battlefield == null:
@@ -1150,7 +1189,20 @@ func approach_plan(
 	).ap_cost
 	var best := {}
 	var short := {}
-	for row: Dictionary in _reachable_for(actor, _move_budget(actor)):
+	# Try the stands in `_cheaper_approach()`'s order: the first that allows the action is the
+	# cheapest approach, affordable or not, so the probing stops there. On hexes a turn's reach
+	# holds about three times as many stands as on cells (owner item 34).
+	var rows := _reachable_for(actor, _move_budget(actor))
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a.get("ap_cost", 0)) != int(b.get("ap_cost", 0)):
+			return int(a.get("ap_cost", 0)) < int(b.get("ap_cost", 0))
+		var a_len := (a.get("path_cells", []) as Array).size()
+		var b_len := (b.get("path_cells", []) as Array).size()
+		if a_len != b_len:
+			return a_len < b_len
+		return String(a["destination"]) < String(b["destination"])
+	)
+	for row: Dictionary in rows:
 		var described: Dictionary = battlefield.describe_position(StringName(row["destination"]))
 		if not described.has("cell"):
 			continue
@@ -1167,9 +1219,10 @@ func approach_plan(
 			"action_ap": action_ap, "total_ap": move_ap + action_ap,
 		}
 		if move_ap + action_ap <= actor.action_points:
-			best = _cheaper_approach(best, entry)
+			best = entry
 		else:
-			short = _cheaper_approach(short, entry)
+			short = entry
+		break
 	if not best.is_empty():
 		best["remaining_ap"] = actor.action_points - int(best["total_ap"])
 		best["needs_move"] = true
@@ -2027,7 +2080,7 @@ func _enemy_position_score(
 	var candidate_cell: Vector2i = candidate.get("cell", Vector2i.ZERO)
 	var target_cell: Vector2i = target_position.get("cell", Vector2i.ZERO)
 	var delta := candidate_cell - target_cell
-	var distance := maxi(absi(delta.x), absi(delta.y))
+	var distance := GridMetric.distance(candidate_cell, target_cell)
 	var score := int(candidate.get("elevation", 0)) * 1000 - distance
 	if distance <= 1:
 		score += 500
@@ -2089,19 +2142,11 @@ func _face_toward(actor: BattleActor, target: BattleActor) -> void:
 
 
 func _facing_for_delta(delta: Vector2i) -> StringName:
-	if delta == Vector2i.ZERO:
-		return &""
-	var order: Array[StringName] = [&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"]
-	var angle := atan2(delta.y, delta.x)
-	var index := int(round(angle / (PI / 4.0)))
-	index = ((index % order.size()) + order.size()) % order.size()
-	return order[index]
+	return GridBattlefieldModel.facing_for_delta(delta)
 
 
 func _opposite_facing(facing: StringName) -> StringName:
-	var order: Array[StringName] = [&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"]
-	var index := order.find(facing)
-	return &"" if index == -1 else order[(index + 4) % order.size()]
+	return GridBattlefieldModel.opposite_facing(facing)
 
 
 ## An enemy that cannot afford its action or cannot reach a target still has to leave
@@ -2235,7 +2280,7 @@ func _apply_action(
 			result["path_cells"] = _describe_path_cells(result.get("path", []))
 			# The log names the walk's length; `destination` is the grid's internal position key.
 			var steps := maxi(0, (result.get("path", []) as Array).size() - 1)
-			result["message"] = "%s moves %d %s." % [actor.display_name, steps, "cell" if steps == 1 else "cells"]
+			result["message"] = "%s moves %s." % [actor.display_name, GridMetric.steps_text(steps)]
 			if bool(movement.get("allowed", false)):
 				result["hazard"] = _hazard_on_path(actor, result["path_cells"])
 				# Threads read this: a Daylight contract fires on a MOVE ending inside its field.
@@ -3682,7 +3727,8 @@ func delay_actor(actor_id: StringName, ct: int) -> Dictionary:
 
 
 ## #285 slice 3: how many OTHER living allies of `actor_id` stand within `radius` cells
-## (Chebyshev, the grid's own measure). A model without cells counts allies sharing the zone.
+## (`GridMetric`: Chebyshev cells, or hex steps with the radius converted). A model without
+## cells counts allies sharing the zone.
 func allies_within(actor_id: StringName, radius: int) -> int:
 	var actor := _actor_by_id(actor_id)
 	if actor == null:
@@ -3695,8 +3741,7 @@ func allies_within(actor_id: StringName, radius: int) -> int:
 			continue
 		var cell: Variant = battlefield.cell_of(other) if battlefield != null else null
 		if origin is Vector2i and cell is Vector2i:
-			var delta: Vector2i = (cell as Vector2i) - (origin as Vector2i)
-			if maxi(absi(delta.x), absi(delta.y)) <= radius:
+			if GridMetric.distance(cell as Vector2i, origin as Vector2i) <= GridMetric.radius(radius):
 				count += 1
 		elif origin == null and battlefield != null and battlefield.position_of(other) == battlefield.position_of(actor):
 			count += 1
@@ -3801,8 +3846,19 @@ func _query_effect_gate(actor: BattleActor, action: CombatAction, options: Dicti
 	return _allowed()
 
 
-## Creature-targeted effect geometry: payload range in Chebyshev cells, plus the pull rule
-## (target exactly two cells away on a cardinal, middle cell free).
+## Open ground a shove or a drag can cross: on the grid, passable, and nobody standing there.
+func _open_cell(cell: Vector2i) -> bool:
+	var query := battlefield.cell_query(cell)
+	return (
+		bool(query.get("allowed", false)) and bool(query.get("passable", false))
+		and StringName(query.get("occupant_id", &"")) == &""
+	)
+
+
+## Creature-targeted effect geometry: payload range in authored cells (`GridMetric.reach`), plus
+## the pull rule (target exactly two cells away on a cardinal, middle cell free). On hexes the
+## same ground: a pull takes a target four hexes away on a hex axis to the touching hex, and a
+## push shoves two hexes. PROVISIONAL (owner item 34).
 func _query_effect_target(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
 	if not bool(battlefield.capabilities().get("cells", false)):
 		return _allowed()
@@ -3810,8 +3866,7 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 	var to: Variant = _actor_cell(target)
 	if not (from is Vector2i) or not (to is Vector2i):
 		return _allowed()
-	var delta: Vector2i = (to as Vector2i) - (from as Vector2i)
-	var distance := maxi(absi(delta.x), absi(delta.y))
+	var distance := GridMetric.distance(from as Vector2i, to as Vector2i)
 	if bool(action.effect_payload.get("self_only", false)) and target != actor:
 		return _blocked(
 			&"target", "%s prepares only its user." % action.display_name, {"type": &"self"},
@@ -3821,10 +3876,10 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 			&"facing", "%s needs the target's side or rear, or a Blindside Bite on a Blinded target." % action.display_name,
 			{"type": &"side_or_rear"},
 		)
-	var range_cells := int(action.effect_payload.get("range", 0))
+	var range_cells := GridMetric.reach(int(action.effect_payload.get("range", 0)))
 	if range_cells > 0 and distance > range_cells:
 		return _blocked(
-			&"blocked_by_range", "%s reaches %d cells; the target is %d away." % [action.display_name, range_cells, distance],
+			&"blocked_by_range", "%s reaches %s; the target is %d away." % [action.display_name, GridMetric.steps_text(range_cells), distance],
 			{"type": &"range", "range": range_cells, "distance": distance},
 		)
 	if action.effect_id == EFFECT_SECOND_BREATH or action.effect_id == EFFECT_OPENED_SLUICE:
@@ -3842,33 +3897,45 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 			)
 		return _allowed()
 	if action.effect_id == EFFECT_PUSH:
-		var away: Vector2i = (to as Vector2i) + delta.sign()
+		var shove := GridMetric.step_toward(from as Vector2i, to as Vector2i)
+		var away: Vector2i = (to as Vector2i) + shove * GridMetric.radius(1)
+		# On hexes the shove crosses one hex on the way; it must be open ground.
+		for passed in range(1, GridMetric.radius(1)):
+			if not _open_cell((to as Vector2i) + shove * passed):
+				away = (to as Vector2i) + shove * passed
+				break
 		var push_cell := battlefield.cell_query(away)
 		if not bool(push_cell.get("allowed", false)):
 			return _blocked(
-				&"push_destination", "There is no open cell to shove %s into." % target.display_name,
+				&"push_destination", "There is no open %s to shove %s into." % [GridMetric.step_word(1), target.display_name],
 				{"type": &"open_cell", "cell": {"x": away.x, "y": away.y}},
 			)
 		return _allowed({"push_destination": away})
 	if action.effect_id != EFFECT_PULL:
 		return _allowed()
-	var cardinal := (delta.x == 0) != (delta.y == 0)
-	if not cardinal or distance != 2:
+	var line_step := GridMetric.straight_step(from as Vector2i, to as Vector2i)
+	var pull_distance := GridMetric.reach(2)
+	if line_step == Vector2i.ZERO or distance != pull_distance:
 		return _blocked(
-			&"pull_geometry", "%s needs an enemy exactly two cells away on a straight line." % action.display_name,
-			{"type": &"cardinal_distance", "distance": 2},
+			&"pull_geometry", "%s needs an enemy exactly %s away on a straight line." % [action.display_name, GridMetric.spelled_steps_text(pull_distance)],
+			{"type": &"cardinal_distance", "distance": pull_distance},
 		)
-	var destination: Vector2i = (to as Vector2i) - delta.sign()
+	var destination: Vector2i = (from as Vector2i) + line_step
 	var cell := battlefield.cell_query(destination)
-	if not bool(cell.get("allowed", false)):
+	var dragged_clear := true
+	# On hexes the target is dragged across the hexes between; they must be open ground.
+	for passed in range(2, pull_distance):
+		if not _open_cell((from as Vector2i) + line_step * passed):
+			dragged_clear = false
+	if not bool(cell.get("allowed", false)) or not dragged_clear:
 		return _blocked(
-			&"pull_destination", "The cell between you is not open.",
+			&"pull_destination", "The %s between you %s not open." % [GridMetric.step_word(pull_distance - 1), "is" if pull_distance <= 2 else "are"],
 			{"type": &"open_cell", "cell": {"x": destination.x, "y": destination.y}},
 		)
 	if not bool(action.effect_payload.get("allow_marked_destination", false)):
 		if fire.is_burning_cell(destination) or _mark_cells().has(destination):
 			return _blocked(
-				&"pull_destination", "Only the Herd can drag someone onto a filed cell.",
+				&"pull_destination", "Only the Herd can drag someone onto a filed %s." % GridMetric.step_word(1),
 				{"type": &"unmarked_cell", "cell": {"x": destination.x, "y": destination.y}},
 			)
 	return _allowed({"pull_destination": destination})
@@ -3882,13 +3949,13 @@ func _query_cell_action(
 	var cells: Array[Vector2i] = FireField.cells_from_data(options.get("cells", []))
 	if cells.is_empty():
 		return _blocked(
-			&"no_target", "%s needs target cells." % action.display_name,
+			&"no_target", "%s needs target %s." % [action.display_name, GridMetric.step_word()],
 			{"type": &"cells", "count": int(action.effect_payload.get("cell_count", 3))},
 		)
 	var origin: Variant = _actor_cell(actor)
 	if not (origin is Vector2i):
 		return _blocked(&"position", "%s is not standing on the grid." % actor.display_name, {"type": &"cells"})
-	var range_cells := int(action.effect_payload.get("range", 0))
+	var range_cells := GridMetric.reach(int(action.effect_payload.get("range", 0)))
 	var count := int(action.effect_payload.get("cell_count", 3))
 	var distinct: Array[Vector2i] = []
 	for cell: Vector2i in cells:
@@ -3896,15 +3963,14 @@ func _query_cell_action(
 			distinct.append(cell)
 	if distinct.size() != count:
 		return _blocked(
-			&"cell_count", "%s marks exactly %d distinct cells." % [action.display_name, count],
+			&"cell_count", "%s marks exactly %d distinct %s." % [action.display_name, count, GridMetric.step_word(count)],
 			{"type": &"cells", "count": count},
 		)
 	for cell: Vector2i in distinct:
-		var delta: Vector2i = cell - (origin as Vector2i)
-		var distance := maxi(absi(delta.x), absi(delta.y))
+		var distance := GridMetric.distance(cell, origin as Vector2i)
 		if range_cells > 0 and distance > range_cells:
 			return _blocked(
-				&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells],
+				&"blocked_by_range", "%s reaches %s." % [action.display_name, GridMetric.steps_text(range_cells)],
 				{"type": &"range", "range": range_cells, "cell": {"x": cell.x, "y": cell.y}},
 			)
 		var legality := battlefield.cell_query(cell)
@@ -3916,14 +3982,14 @@ func _query_cell_action(
 		)
 		if not bool(legality.get("in_bounds", false)) or (not bool(legality.get("passable", false)) and not across_timber):
 			return _blocked(
-				&"cell_illegal", "That cell cannot hold a working.",
+				&"cell_illegal", "That %s cannot hold a working." % GridMetric.step_word(1),
 				{"type": &"open_cell", "cell": {"x": cell.x, "y": cell.y}},
 			)
 	match action.effect_id:
 		EFFECT_FIRE_LINE, EFFECT_SENTENCE_OF_ASH:
 			if not FireField.is_cardinal_line(distinct):
 				return _blocked(
-					&"line_shape", "%s burns three cells in a straight, touching line." % action.display_name,
+					&"line_shape", "%s burns three %s in a straight, touching line." % [action.display_name, GridMetric.step_word(3)],
 					{"type": &"cardinal_line", "count": count},
 				)
 		EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST:
@@ -4417,13 +4483,10 @@ func _refuge_recipients(caster: BattleActor, center: Vector2i, radius: int, limi
 		var at: Variant = _actor_cell(ally)
 		if not (at is Vector2i):
 			continue
-		var delta: Vector2i = (at as Vector2i) - center
-		if maxi(absi(delta.x), absi(delta.y)) <= radius:
+		if GridMetric.distance(at as Vector2i, center) <= GridMetric.radius(radius):
 			found.append(ally)
 	found.sort_custom(func(a: BattleActor, b: BattleActor) -> bool:
-		var da: Vector2i = (_actor_cell(a) as Vector2i) - center
-		var db: Vector2i = (_actor_cell(b) as Vector2i) - center
-		return maxi(absi(da.x), absi(da.y)) < maxi(absi(db.x), absi(db.y)))
+		return GridMetric.distance(_actor_cell(a) as Vector2i, center) < GridMetric.distance(_actor_cell(b) as Vector2i, center))
 	if found.size() > limit:
 		found.resize(limit)
 	return found
@@ -4482,8 +4545,7 @@ func _apply_refuge(
 	for creature: BattleActor in _living(allies) + _living(enemies):
 		var at: Variant = _actor_cell(creature)
 		if at is Vector2i:
-			var delta: Vector2i = (at as Vector2i) - center
-			if maxi(absi(delta.x), absi(delta.y)) <= radius:
+			if GridMetric.distance(at as Vector2i, center) <= GridMetric.radius(radius):
 				inside.append(creature)
 	var restores_and_quenches := action.effect_id == EFFECT_GREAT_CONFLUENCE or action.effect_id == EFFECT_FLOODGATE
 	if mode == "A" or restores_and_quenches:
@@ -4516,14 +4578,14 @@ func _discharge_jam(actor: BattleActor, center: Vector2i, radius: int) -> Dictio
 		return {}
 	var breaker := resource as FickahRuleBreaker
 	var nearest: BattleActor = null
-	var nearest_distance := radius + 1
+	var radius_steps := GridMetric.radius(radius)
+	var nearest_distance := radius_steps + 1
 	for enemy: BattleActor in _living(_foes_of(actor)):
 		var at: Variant = _actor_cell(enemy)
 		if not (at is Vector2i):
 			continue
-		var delta: Vector2i = (at as Vector2i) - center
-		var distance := maxi(absi(delta.x), absi(delta.y))
-		if distance <= radius and distance < nearest_distance:
+		var distance := GridMetric.distance(at as Vector2i, center)
+		if distance <= radius_steps and distance < nearest_distance:
 			nearest = enemy
 			nearest_distance = distance
 	if nearest == null:
@@ -4616,8 +4678,7 @@ func _noonday(actor: BattleActor, center: Vector2i) -> Array[String]:
 		var at: Variant = _actor_cell(creature)
 		if not (at is Vector2i):
 			continue
-		var delta: Vector2i = (at as Vector2i) - center
-		if maxi(absi(delta.x), absi(delta.y)) > NOONDAY_RADIUS:
+		if GridMetric.distance(at as Vector2i, center) > GridMetric.radius(NOONDAY_RADIUS):
 			continue
 		if not bool(battlefield.line_of_sight_between_cells(center, at as Vector2i).get("allowed", false)):
 			continue
@@ -4725,8 +4786,7 @@ func _note_in_reach(actor: BattleActor, note: Dictionary, reach: int = 4) -> boo
 			if at is Vector2i:
 				cells.append(at as Vector2i)
 	for cell: Vector2i in cells:
-		var delta: Vector2i = cell - (origin as Vector2i)
-		if maxi(absi(delta.x), absi(delta.y)) <= reach:
+		if GridMetric.distance(cell, origin as Vector2i) <= GridMetric.reach(reach):
 			return true
 	return false
 
@@ -4753,7 +4813,10 @@ func _query_note_action(actor: BattleActor, action: CombatAction, options: Dicti
 	if action.effect_id == EFFECT_ANCHOR and kind != "aftertone":
 		return _blocked(&"not_aftertone", "Anchor only protects an Aftertone.", {"type": &"aftertone"})
 	if not _note_in_reach(actor, note):
-		return _blocked(&"blocked_by_range", "%s reaches 4 cells." % action.display_name, {"type": &"range", "range": 4})
+		return _blocked(
+			&"blocked_by_range", "%s reaches %s." % [action.display_name, GridMetric.steps_text(GridMetric.reach(4))],
+			{"type": &"range", "range": GridMetric.reach(4)},
+		)
 	# Older Aftertones have no source id. Their carrier supplies legacy ownership; new
 	# Resolution lays always record the caster, including lays on hostile creatures.
 	var owner_id := String(row.get("owner_id", note.get("target_id", "")))
@@ -4920,7 +4983,7 @@ func _query_object_action(actor: BattleActor, action: CombatAction, options: Dic
 	var origin: Variant = _actor_cell(actor)
 	if not (origin is Vector2i):
 		return _blocked(&"position", "%s is not standing on the grid." % actor.display_name, {"type": &"cells"})
-	var range_cells := int(action.effect_payload.get("range", 4))
+	var range_cells := GridMetric.reach(int(action.effect_payload.get("range", 4)))
 	var preview := {}
 	if action.effect_id == EFFECT_SEVER:
 		var line: Dictionary = fire.line_by_id(int(options.get("line_id", 0)))
@@ -4928,21 +4991,19 @@ func _query_object_action(actor: BattleActor, action: CombatAction, options: Dic
 			return _blocked(&"no_target", "%s needs a working to end." % action.display_name, {"type": &"working"})
 		var reachable := false
 		for cell: Vector2i in FireField.cells_from_data(line.get("cells", [])):
-			var delta: Vector2i = cell - (origin as Vector2i)
-			if maxi(absi(delta.x), absi(delta.y)) <= range_cells:
+			if GridMetric.distance(cell, origin as Vector2i) <= range_cells:
 				reachable = true
 				break
 		if not reachable:
-			return _blocked(&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells], {"type": &"range", "range": range_cells})
+			return _blocked(&"blocked_by_range", "%s reaches %s." % [action.display_name, GridMetric.steps_text(range_cells)], {"type": &"range", "range": range_cells})
 		preview = {"kind": "line", "line_id": int(line.get("id", 0)), "cells": FireField.cells_to_data(FireField.cells_from_data(line.get("cells", [])))}
 	else:
 		var row := material.object(String(options.get("object_id", "")))
 		if row.is_empty():
 			return _blocked(&"no_target", "%s needs an object to work on." % action.display_name, {"type": &"object"})
 		var cell: Vector2i = row.get("cell", Vector2i.ZERO)
-		var delta: Vector2i = cell - (origin as Vector2i)
-		if maxi(absi(delta.x), absi(delta.y)) > range_cells:
-			return _blocked(&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells], {"type": &"range", "range": range_cells})
+		if GridMetric.distance(cell, origin as Vector2i) > range_cells:
+			return _blocked(&"blocked_by_range", "%s reaches %s." % [action.display_name, GridMetric.steps_text(range_cells)], {"type": &"range", "range": range_cells})
 		var sight := battlefield.line_of_sight_to_cell(actor, cell)
 		if not bool(sight.get("allowed", false)):
 			return sight
@@ -5119,8 +5180,7 @@ func _shroud_center(field: Dictionary) -> Vector2i:
 
 
 func _shroud_covers(field: Dictionary, cell: Vector2i) -> bool:
-	var delta := cell - _shroud_center(field)
-	return maxi(absi(delta.x), absi(delta.y)) <= int(field.get("radius", 0))
+	return GridMetric.distance(cell, _shroud_center(field)) <= GridMetric.radius(int(field.get("radius", 0)))
 
 
 ## The first shroud raised by the creature's own side that covers its cell, or `{}`.

@@ -7,6 +7,8 @@ extends GdUnitTestSuite
 const COMBAT_BAR_SCRIPT := "res://ui/hud/combat_bar.gd"
 
 
+## Since the icon tiles (owner 2026-11-02, item 33 follow-up) the AP sits on the tile's badge
+## and leads its hover card.
 func test_every_battle_command_label_includes_its_ap_cost() -> void:
 	var bar_script := load(COMBAT_BAR_SCRIPT) as GDScript
 	var bar: Variant = bar_script.new()
@@ -14,7 +16,11 @@ func test_every_battle_command_label_includes_its_ap_cost() -> void:
 	action.display_name = "Measured Strike"
 	action.ap_cost = 3
 
-	assert_str(bar._short_action_text(action)).is_equal("MEASURED STRIKE · 3 AP")
+	var tile: Button = bar._command_tile(action)
+	assert_str(tile.text).is_equal("MEASURED STRIKE")
+	assert_str((tile.get_node("TileCost") as Label).text).is_equal("3 AP")
+	assert_str(str(bar._card_for(action, "", "", {}, -1)["stats"])).starts_with("3 AP")
+	tile.free()
 	bar.free()
 
 
