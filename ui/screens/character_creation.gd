@@ -35,6 +35,8 @@ var _points_lbl: Label
 var _accept_btn: Button
 var _next_btn: Button
 var _back_btn: Button
+var _randomize_btn: Button
+var _random_rng := RandomNumberGenerator.new()
 var _step_status_lbl: Label
 var _validation_lbl: Label
 var _flash_rect: ColorRect
@@ -60,6 +62,7 @@ var _elements_note: Label
 
 var _attribute_bars: Dictionary = {}
 var _attribute_value_lbls: Dictionary = {}
+var _attribute_tweens: Dictionary = {}
 var _attribute_readout: Label
 
 var _background_rows: Dictionary = {}
@@ -81,6 +84,7 @@ var _summary_lbl: Label
 # --- build ----------------------------------------------------------------------------------
 
 func _build() -> void:
+	_random_rng.randomize()
 	# Player chargen remains flow-owned and uncancellable. Recruit chargen remains a
 	# normal stack screen, so cancelling page one returns to the tavern as before.
 	allow_back = false
@@ -591,7 +595,11 @@ func _animate_attribute_change(attribute_id: String) -> void:
 	var bar := _attribute_bars.get(attribute_id) as ProgressBar
 	if bar == null:
 		return
+	var previous := _attribute_tweens.get(attribute_id) as Tween
+	if previous != null:
+		previous.kill()
 	var tween := create_tween()
+	_attribute_tweens[attribute_id] = tween
 	tween.tween_property(bar, "value", build.attributes[attribute_id], DS.DUR_INSTANT)
 
 
@@ -910,6 +918,9 @@ func _build_navigation(parent: VBoxContainer) -> void:
 	navigation.theme_type_variation = "ChargenNavigation"
 	parent.add_child(navigation)
 	_back_btn = _menu_button(navigation, "BACK", back_step)
+	_randomize_btn = _menu_button(navigation, tr("RANDOMIZE"), randomize_character)
+	_randomize_btn.name = "RandomizeButton"
+	_randomize_btn.theme_type_variation = "ChargenChoiceButton"
 	_step_status_lbl = Label.new()
 	_step_status_lbl.theme_type_variation = "StatLabel"
 	_step_status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1006,6 +1017,7 @@ func _wire_focus_for_current_step() -> void:
 			controls.append(control)
 	if not _back_btn.disabled:
 		controls.append(_back_btn)
+	controls.append(_randomize_btn)
 	controls.append(_accept_btn if current_step_id() == &"summary" else _next_btn)
 	if controls.is_empty():
 		return
@@ -1038,6 +1050,16 @@ func _control_is_disabled(control: Control) -> bool:
 
 
 # --- public driving API (docs §7.4) ---------------------------------------------------------
+
+func randomize_character() -> void:
+	for tween: Tween in _attribute_tweens.values():
+		tween.kill()
+	_attribute_tweens.clear()
+	build = ChargenRandomizer.roll(_random_rng, build)
+	_refresh_all()
+	_rebuild_skill_rows()
+	_wire_focus_for_current_step()
+
 
 func select_ancestry(id: String) -> void:
 	build.select_ancestry(id)
