@@ -52,6 +52,9 @@ enum Look { OUTSIDE, SEEN_THROUGH, INSIDE }
 @export var vendor_ids := PackedStringArray()
 ## The plan cell (after the turn) the first vendor stands on; any others stand beside, along x.
 @export var vendor_cell := Vector2i.ZERO
+## False for a building with no sky over it (the Lower Trial Hall's rooms, 2026-11-04): no roof
+## is placed, so no roof piece needs rendering, and the walls cut away room by room as usual.
+@export var roofed := true
 
 var _plan: BuildingPlan
 var _ground: TileMapLayer
@@ -283,6 +286,8 @@ func _build(kit: Dictionary) -> void:
 		var point := corner(cell.x + 1, cell.y + 1)
 		if point.y > front.y:
 			front = point
+	if not roofed:
+		return
 	_roof = _place(self, kit, roof_piece(), front)
 	if _roof == null:
 		push_error("WalkInBuilding '%s': the kit has no %s." % [name, roof_piece()])
