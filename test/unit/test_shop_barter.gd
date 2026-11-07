@@ -68,6 +68,24 @@ func test_replacing_the_leader_updates_the_name_sway_and_prices_while_open() -> 
 	assert_bool(_fixture.leader.changed.is_connected(_shop._render_catalog)).is_false()
 
 
+func test_a_leaving_shop_does_not_rebuild_on_a_party_change() -> void:
+	assert_bool(_fixture.advance_to(50.0)).is_true()
+	await _open_shop()
+	var readout := Fixture.readout(_shop).text
+	var first_row := _shop._catalog.get_child(0)
+	var row_count := _shop._catalog.get_child_count()
+	_shop.play_exit()
+	var replacement := PartyMember.new()
+	replacement.id = GameState.PROTAGONIST_ID
+	replacement.display_name = "New Leader"
+	GameState.set_party([replacement])
+	# The fade-out keeps what it shows: same readout, same rows, none detached.
+	assert_str(Fixture.readout(_shop).text).is_equal(readout)
+	assert_int(_shop._catalog.get_child_count()).is_equal(row_count)
+	assert_object(_shop._catalog.get_child(0)).is_same(first_row)
+	assert_bool(first_row.is_inside_tree()).is_true()
+
+
 func test_party_reordering_names_the_same_subject_that_sets_the_price() -> void:
 	assert_bool(_fixture.advance_to(50.0)).is_true()
 	await _open_shop()
