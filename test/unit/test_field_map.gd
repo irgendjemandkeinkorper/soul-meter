@@ -58,7 +58,11 @@ func test_dom_interiors_are_no_combat_zones_and_streets_and_wilds_are_not() -> v
 		var field: FieldMap = _find_field_map(scene)
 		assert_object(field).override_failure_message(scene_path).is_not_null()
 		if field != null:
-			var expected_no_combat: bool = scene_path.begins_with("res://world/interiors/")
+			# The Lower Trial Hall's side rooms hold fights (owner rulings of 2026-11-04).
+			var expected_no_combat: bool = (
+				scene_path.begins_with("res://world/interiors/")
+				and scene_path != "res://world/interiors/lower_trial_hall.tscn"
+			)
 			assert_bool(field.no_combat_zone()).override_failure_message(scene_path).is_equal(
 				expected_no_combat
 			)
