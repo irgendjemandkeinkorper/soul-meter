@@ -19,6 +19,8 @@ var _treatment_notice: TreatmentNoticeScript
 var _barter_label: Label
 var _barter_hint: Label
 var _barter_subject: PartyMember
+## Set once the exit transition starts. The shop is freed when it ends.
+var _leaving := false
 
 
 func _uses_ledger_style() -> bool:
@@ -86,6 +88,14 @@ func _build() -> void:
 	Renown.renown_changed.connect(_on_renown_changed)
 	Reputation.reputation_changed.connect(_on_reputation_changed)
 	_on_party_changed()
+
+
+## A leaving shop keeps the rows it shows. The barter readout listens to party, Renown and
+## Reputation changes, which can still arrive during the exit fade; rebuilding then would only
+## detach rows that are about to be freed with the screen.
+func play_exit() -> void:
+	_leaving = true
+	super()
 
 
 func _exit_tree() -> void:
@@ -212,7 +222,7 @@ func _on_mirror_rewriting() -> void:
 
 
 func _render_catalog() -> void:
-	if _catalog == null or not is_inside_tree():
+	if _catalog == null or _leaving or not is_inside_tree():
 		return
 	_update_barter_readout()
 	var focused := get_viewport().gui_get_focus_owner()
