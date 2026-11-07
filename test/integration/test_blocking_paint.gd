@@ -31,14 +31,20 @@ const SPOT_REACH_PX := 96.0
 const HALL_OPEN_FLAG := "tutorial_gauntlet_complete"
 
 var _saved_state: Dictionary
+var _saved_clock: Dictionary
 
 
 func before_test() -> void:
 	_saved_state = GameState.to_dict().duplicate(true)
+	# Routine NPCs stand where their WorldClock phase puts them, and the clock is an autoload
+	# that earlier suites can leave in any phase. Every map is checked at the default phase.
+	_saved_clock = WorldClock.to_dict()
+	WorldClock.reset()
 
 
 func after_test() -> void:
 	GameState.from_dict(_saved_state)
+	WorldClock.from_dict(_saved_clock)
 
 
 func test_every_painted_map_holds_exactly_its_solids_cells() -> void:
@@ -102,6 +108,33 @@ func test_every_arrival_door_and_person_can_be_reached() -> void:
 			% [scene_path, ", ".join(cut_off)]
 		).is_true()
 		await _unload(scene)
+
+
+## Routine people move with the WorldClock (FR-504a). In every other phase, each one present on a
+## painted map is still reached by the walk from the player's arrival. (2026-11-07: the Long Verge
+## paymaster's afternoon spot stood on blocked ground south of the Split Stone.)
+func test_every_routine_person_can_be_reached_in_every_phase() -> void:
+	for phase: StringName in WorldClock.PHASES:
+		if phase == WorldClock.DEFAULT_PHASE:
+			continue
+		assert_bool(WorldClock.set_phase(phase, "test")).is_true()
+		for scene_path: String in SolidFootprints.PAINTED_MAPS:
+			var scene := await _load_map(scene_path)
+			var grid := (scene.find_child("FieldMap", true, false) as FieldMap).iso_grid()
+			var player := scene.find_child("Player", true, false) as Node2D
+			var walked := _walked_points(grid, grid.world_to_cell(player.global_position))
+			var cut_off: Array[String] = []
+			for target: Node2D in _destinations(scene):
+				var person := target as NPC
+				if person == null or not person.visible or not NpcRoutines.has_routine(person._stable_actor_id()):
+					continue
+				if not _reaches(person, walked):
+					cut_off.append("%s %s" % [scene.get_path_to(person), person.global_position])
+			assert_bool(cut_off.is_empty()).override_failure_message(
+				"%s in the %s: the walk from the player's arrival cannot reach %s"
+				% [scene_path, phase, ", ".join(cut_off)]
+			).is_true()
+			await _unload(scene)
 
 
 func test_kesselford_grid_stops_at_a_facade_and_at_the_border() -> void:
