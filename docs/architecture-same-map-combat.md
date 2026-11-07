@@ -68,8 +68,10 @@ a test asserts identity.
   battlefield model and places allies on authored set-piece cells.
 - `Battle —battle_end→ Active` unchanged.
 - `_on_battle_entered()` no longer sets `get_tree().paused = true`. It calls
-  `field.set_combat_mode(true)`, pushes the music context, and opens the battle HUD
-  (`UIManager.open(BATTLE_HUD, false, true)`). `_on_battle_exited()` mirrors it.
+  `field.set_combat_mode(true)`, pushes the music context, and grows the field HUD's bar
+  (`FieldHUD.enter_combat(field)`; owner 2026-11-01, "one bar, both modes"). The
+  standalone shell `ui/screens/battle.tscn` opens only for a fight with no field (tools
+  and tests). `_on_battle_exited()` mirrors it with `exit_combat()`.
   `Paused` (the pause menu) keeps pausing the tree as today; pausing from `Battle` is
   allowed and returns to `Battle`.
 - Guards, not ifs: `enter_battle` carries an `ExpressionGuard` on `can_fight_here`
@@ -141,9 +143,13 @@ nodes; region B moves them cell-to-cell on `move` events with the existing tween
 
 The legacy battle stage is deleted; FR-603 tactical data lives in
 `ui/hud/regions/tactical_data/tactical_data_region.tscn`, folded into `BattleInterface`
-as planned by D4/#263. `ui/screens/battle.tscn` remains the single HUD shell mounted by
-`GameFlow`: it owns the command dock, audio, and outcome/loot controls, while
-`BattleInterface` is its only visual combat-event consumer. The
+as planned by D4/#263. Since the owner's 2026-11-01 combat-presentation ruling the field
+HUD (`ui/hud/field_hud.gd`) is the shell: its one bottom bar hosts `BattleInterface`'s
+`CombatBar` (`ui/hud/combat_bar.gd`: command grid, message window, party readout, END
+TURN / WITHDRAW / BREAKDOWN) in combat and retracts it after; the thin turn strip is the
+only top chrome, and the accuracy/power breakdown, attunement wheel and tactical data sit
+in one popover closed by default. `ui/screens/battle.tscn` is the standalone fallback for
+a fight without a field. `BattleInterface` is the only visual combat-event consumer. The
 camera (Phantom Camera) follows the player by default and pans to the active actor for
 the duration of that actor's turn when it is off-screen; enemy turns entirely off-screen
 resolve without a pan (F2 budget).
@@ -264,8 +270,10 @@ enemy gets a `Hostile` body that adopts the actor `start()` built (`Hostile.adop
 are untouched. `can_fight_here(field, set_piece = true)` skips the no-combat-zone rule, because
 an authored encounter is placed by design (the Trial Hall is an interior); ambient alerts still
 honour it. The Lower Trial Hall gained a hidden `IsometricGround` so its `FieldMap` has a walk
-grid, and it keeps its deployment slate (`enter_set_piece`). The journey ambush sends
-`enter_battle` as it did before this slice, so it still opens without deployment.
+grid. The journey ambush sends `enter_battle` as it did before this slice, so it still opens
+without deployment. **Amended 2026-11-02 (owner item 33, "drop it on the map"):** the Trial Hall
+and the class demo send `enter_battle` too, so every fight on a map starts where everyone stands.
+The `enter_set_piece` deployment chain stays in the chart, unused by on-map fights.
 
 Enemy seating is PROVISIONAL (`SET_PIECE_ENEMY_OFFSET`, three cells east of the player, nearest
 free cell otherwise); authored set-piece cells are #348. Evidence:

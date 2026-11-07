@@ -63,12 +63,6 @@ const DOM_TAVERN: LocationDefinition = preload(
 )
 # Kesselford, hub 2 (C1 / #238): baked by the Weftlumin `kesselford` package.
 const KESSELFORD: LocationDefinition = preload("res://world/locations/kesselford.tres")
-const KESSELFORD_WAYHOUSE: LocationDefinition = preload(
-	"res://world/locations/interiors/kesselford_wayhouse.tres"
-)
-const KESSELFORD_CHANDLERY: LocationDefinition = preload(
-	"res://world/locations/interiors/kesselford_chandlery.tres"
-)
 # Ashlaren, hub 3 (C2 / #239): baked by the Weftlumin `ashlaren` package.
 const ASHLAREN: LocationDefinition = preload("res://world/locations/ashlaren.tres")
 const ASHLAREN_WEIGHING_HALL: LocationDefinition = preload(
@@ -88,6 +82,20 @@ const HOLLOWMERE: LocationDefinition = preload("res://world/locations/hollowmere
 const INDEX_PATH := "res://data/generated/location_index.json"
 const INDEX_SCHEMA := "weftlumin.location_index.v2"
 const _INTERIOR_SCENES_ROOT := "res://world/interiors/"
+## Retired locations, by id: the scene a save there names, and where it loads now
+## (`retired_redirect()`).
+const RETIRED := {
+	&"kesselford_wayhouse": {
+		"scene": "res://world/interiors/kesselford_wayhouse.tscn",
+		"location": &"kesselford",
+		"spawn": &"in_kesselford_wayhouse",
+	},
+	&"kesselford_chandlery": {
+		"scene": "res://world/interiors/kesselford_chandlery.tscn",
+		"location": &"kesselford",
+		"spawn": &"in_kesselford_chandlery",
+	},
+}
 
 
 ## Static classes cannot declare signals, so the registry's lives on one shared emitter.
@@ -243,6 +251,19 @@ static func resolve(scene_path: String, location_id: StringName = &"") -> Locati
 		if by_name != null and (scene_path.is_empty() or by_name.scene_path == scene_path):
 			return by_name
 	return by_scene(scene_path)
+
+
+## Where a save made at a location that has left the game loads now: {"location", "spawn"}, or {}
+## when the save's location (by id, or by its old scene) is still here. The Ferry Bell Wayhouse
+## room retired when the Wayhouse became a walk-in building on the Kesselford map (owner list
+## item 35, "Retire, redirect saves", 2026-11-03), and the Ford Chandlery's room when it became the
+## walk-in shop (layouts ruling, 2026-11-04).
+static func retired_redirect(scene_path: String, location_id: StringName) -> Dictionary:
+	for retired_id: StringName in RETIRED:
+		var row: Dictionary = RETIRED[retired_id]
+		if location_id == retired_id or (not scene_path.is_empty() and scene_path == row["scene"]):
+			return row
+	return {}
 
 
 static func is_gameplay_scene(scene_path: String) -> bool:

@@ -94,7 +94,7 @@ func test_production_encounter_place_writes_a_spawn_position() -> void:
 	var before: StringName = Battle.controller.battlefield.position_of(ally)
 	var options: Array[StringName] = Battle.controller.battlefield.reachable_positions(ally, 100)
 	assert_bool(options.is_empty()).is_false()
-	var placed: Dictionary = screen.place_unit(options[0], &"e")
+	var placed: Dictionary = screen.place_unit(options[0], GridBattlefieldModel.facing_order()[0])
 	assert_bool(bool(placed.get("allowed", false)))\
 		.override_failure_message("place_unit refused: %s" % str(placed.get("blocked_by", ""))).is_true()
 	assert_str(String(Battle.controller.battlefield.position_of(ally))).is_not_equal(String(before))
@@ -128,7 +128,7 @@ func test_place_step_receives_the_live_battlefield_and_writes_a_spawn_position()
 	var before := Battle.controller.battlefield.position_of(ally)
 	var options := Battle.controller.battlefield.reachable_positions(ally, 100)
 	assert_bool(options.is_empty()).is_false()
-	var placed: Dictionary = screen.place_unit(options[0], &"e")
+	var placed: Dictionary = screen.place_unit(options[0], GridBattlefieldModel.facing_order()[0])
 	assert_bool(bool(placed.get("allowed", false)))\
 		.override_failure_message("place_unit refused: %s" % str(placed.get("blocked_by", ""))).is_true()
 	assert_str(String(Battle.controller.battlefield.position_of(ally))).is_equal(String(options[0]))

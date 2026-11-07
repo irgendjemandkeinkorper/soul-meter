@@ -1,6 +1,11 @@
+class_name FieldHUD
 extends CanvasLayer
-## Field HUD — the bottom bar. Per the DS layout rules: pinned to the bottom edge with a
-## 2px bronze top rule; the SoulGauge is always the rightmost element in it.
+## Field HUD — the one bottom bar, in both modes (owner 2026-11-01). Per the DS layout rules:
+## pinned to the bottom edge with a 2px bronze top rule; the SoulGauge is always the
+## rightmost element in it. In exploration the bar carries the objective and the party
+## strip. On combat start the same bar grows its combat parts (BattleInterface's CombatBar:
+## active member, message window, commands, party, turn controls) and the thin turn strip
+## appears at the top; on combat end they retract. The map underneath stays full-screen.
 ##
 ## U2 (owner 2026-11-02, docs/design/ui-rework-plan-2026-11-01.md):
 ##  - Key hints leave once learned: each hint hides after its key is first used, saved in
@@ -8,14 +13,25 @@ extends CanvasLayer
 ##  - The party is a strip of portraits with HP and Breath meters, sized for six; a card's
 ##    numbers show while the pointer is over it.
 ##  - The objective is one line. "GO TO" appears only when the target is in another area.
+## In combat the exploration hints give way to the combat hints, which follow the same
+## "Control hints" setting.
 
 ## U1 (owner 2026-11-01): a conversation clears the stage. The balloon calls this through
 ## the group so the HUD bar, its second Soul gauge, the key hints and the notices step
-## aside while it is open. It toggles the children, not the layer: combat hides the layer
-## itself (world/field_map.gd), and a parley opened mid-fight must not bring it back.
+## aside while it is open. It toggles the children, not the layer, so a parley opened
+## mid-fight hides the combat parts too and brings them back when it closes.
 const GROUP := &"field_hud"
 
 const PartyMemberVisualsScript := preload("res://actors/party_followers/party_member_visuals.gd")
+const BATTLE_INTERFACE_SCENE := preload("res://ui/hud/battle_interface.tscn")
+const COMBAT_AUDIO := preload("res://audio/combat_audio.gd")
+const EXPLORE_BAR_HEIGHT := 84.0
+const COMBAT_BAR_HEIGHT := 196.0
+const COMBAT_HINTS := "WASD  SCROLL    SPACE  END TURN    B  BREAKDOWN    ESC  PAUSE"
+## The AI-vs-AI demo takes no orders, so its hints leave END TURN out (item 33).
+const COMBAT_WATCH_HINTS := "WASD  SCROLL    B  BREAKDOWN    ESC  PAUSE"
+## The combat hints' home, top left.
+const HINTS_AT := Vector2(24, 20)
 
 const SETTINGS_SECTION := "interface"
 const SETTING_HINTS := "control_hints"
@@ -34,6 +50,16 @@ const KEY_HINTS: Array[Dictionary] = [
 ## Six members fit beside the gauge at the 1920 design width.
 const PARTY_CARD_WIDTH := 196.0
 const PARTY_PORTRAIT_SIZE := 40.0
+
+var battle_interface: BattleInterface
+var combat_bar: CombatBar
+var _combat_audio: CombatAudio
+var _bar: Control
+var _bar_column: VBoxContainer
+## The combat hints (one line, top left); hidden in exploration, where the key hints show.
+var _tutorial: Label
+var _bar_tween: Tween
+var _combat_active := false
 
 var _conversation_restore: Dictionary = {}
 var _key_hints: HBoxContainer
@@ -62,6 +88,7 @@ func set_conversation_open(open: bool) -> void:
 func _ready() -> void:
 	add_to_group(GROUP)
 	var bar: Control = $Bar
+	_bar = bar
 	bar.theme = UIManager.ui_theme  # CanvasLayer children don't inherit the root Window theme
 	bar.draw.connect(
 		func() -> void:
@@ -73,6 +100,7 @@ func _ready() -> void:
 			)
 	)
 	bar.queue_redraw()
+	bar.resized.connect(_apply_insets)
 	# Objective over party strip; the right edge stays reserved for the SoulGauge.
 	var column := VBoxContainer.new()
 	column.name = "BarColumn"
@@ -84,6 +112,7 @@ func _ready() -> void:
 	column.offset_bottom = -DS.SPACE_2
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(column)
+	_bar_column = column
 	_objective = Label.new()
 	_objective.name = "Objective"
 	_objective.theme_type_variation = "HUDObjectiveLabel"
@@ -111,6 +140,17 @@ func _ready() -> void:
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_key_hints.add_child(label)
 	add_child(_key_hints)
+
+	var tutorial := Label.new()
+	tutorial.name = "Tutorial"
+	tutorial.theme = UIManager.ui_theme
+	tutorial.position = HINTS_AT
+	tutorial.size = Vector2(760, 72)
+	tutorial.theme_type_variation = "EyebrowLabel"
+	tutorial.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tutorial.visible = false
+	add_child(tutorial)
+	_tutorial = tutorial
 	refresh_key_hints()
 
 	var autosave := Label.new()
@@ -171,9 +211,150 @@ func _input(event: InputEvent) -> void:
 		refresh_key_hints()
 
 
+# --- combat: the bar grows, the strip appears ----------------------------------------------
+
+
+func combat_active() -> bool:
+	return _combat_active
+
+
+func bar() -> Control:
+	return _bar
+
+
+func bar_height() -> float:
+	return _bar.size.y
+
+
+## Grows the bar's combat parts over the live field (owner 2026-11-01). `field` is the map
+## the fight runs on; null hosts the stage's own battlefield drawing (standalone tools and
+## tests). Idempotent: resuming from the pause menu keeps the parts that are already up.
+func enter_combat(field: FieldMap) -> BattleInterface:
+	if _combat_active:
+		return battle_interface
+	_combat_active = true
+	var reduced_motion := bool(GameState.get_setting("accessibility", "reduced_motion", false))
+	battle_interface = BATTLE_INTERFACE_SCENE.instantiate() as BattleInterface
+	battle_interface.name = "BattleInterface"
+	battle_interface.theme = UIManager.ui_theme
+	add_child(battle_interface)
+	# Under the bar in draw order: the bar hosts the combat parts and must stay on top.
+	move_child(battle_interface, _bar.get_index())
+	if field != null:
+		battle_interface.stage.bind_field(field)
+	# The open window is the bar's full combat height from the first beat, so the opening
+	# pan already keeps the actor clear of where the bar will be.
+	_apply_insets()
+	# The one log line of the cue goes in before the replayed narration, so the window reads
+	# in order: the cue, then what has happened so far.
+	battle_interface.combat_bar.append_cue(tr("COMBAT BEGINS"))
+	Battle.combat_event.connect(battle_interface.consume_event)
+	battle_interface.stage.set_replaying(true)
+	Battle.replay_combat_events(battle_interface.consume_event)
+	battle_interface.stage.set_replaying(false)
+	if Battle.controller != null and Battle.controller.scheduler != null:
+		battle_interface.bind_controller(Battle.controller)
+	_combat_audio = COMBAT_AUDIO.new() as CombatAudio
+	_combat_audio.name = "CombatAudio"
+	add_child(_combat_audio)
+	Battle.combat_event.connect(_combat_audio.consume_event)
+
+	combat_bar = battle_interface.combat_bar
+	combat_bar.reparent(_bar, false)
+	combat_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	combat_bar.offset_left = 24.0
+	combat_bar.offset_top = float(DS.BORDER_TRIM_W) + 6.0
+	combat_bar.offset_right = -270.0
+	combat_bar.offset_bottom = -6.0
+	_bar_column.visible = false
+	_tutorial.text = tr(COMBAT_WATCH_HINTS if battle_interface.autoplaying() else COMBAT_HINTS)
+	refresh_key_hints()
+	# The bar takes pointer input in combat (buttons); in exploration it lets clicks through.
+	_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+	battle_interface.turn_strip.resized.connect(_apply_insets)
+	_apply_insets()
+
+	# The cue: the combat parts slide in with the bar, a brief edge vignette, one sound and one
+	# log line — under 0.5 s in all, and no motion at all under reduced motion.
+	_set_bar_height(COMBAT_BAR_HEIGHT, reduced_motion)
+	if not reduced_motion:
+		combat_bar.modulate = Color(1, 1, 1, 0)
+		var fade := create_tween()
+		fade.tween_property(combat_bar, "modulate:a", 1.0, DS.DUR_BASE)
+	battle_interface.play_entry_cue(reduced_motion)
+	_combat_audio.play_cue(CombatAudio.CUE_COMBAT_START)
+	return battle_interface
+
+
+## Retracts the combat parts and frees the interface (and with it the field's CombatOverlay,
+## which releases the camera). The bar returns to its exploration height.
+func exit_combat() -> void:
+	if not _combat_active:
+		return
+	_combat_active = false
+	if is_instance_valid(battle_interface):
+		if Battle.combat_event.is_connected(battle_interface.consume_event):
+			Battle.combat_event.disconnect(battle_interface.consume_event)
+		if is_instance_valid(combat_bar) and combat_bar.get_parent() == _bar:
+			combat_bar.reparent(battle_interface, false)
+		remove_child(battle_interface)
+		battle_interface.queue_free()
+	if is_instance_valid(_combat_audio):
+		if Battle.combat_event.is_connected(_combat_audio.consume_event):
+			Battle.combat_event.disconnect(_combat_audio.consume_event)
+		remove_child(_combat_audio)
+		_combat_audio.queue_free()
+	battle_interface = null
+	combat_bar = null
+	_combat_audio = null
+	_bar_column.visible = true
+	_tutorial.position = HINTS_AT
+	refresh_key_hints()
+	_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var reduced_motion := bool(GameState.get_setting("accessibility", "reduced_motion", false))
+	_set_bar_height(EXPLORE_BAR_HEIGHT, reduced_motion)
+
+
+func _set_bar_height(height: float, immediate: bool) -> void:
+	if _bar_tween != null and _bar_tween.is_valid():
+		_bar_tween.kill()
+	if immediate:
+		_bar.offset_top = -height
+		return
+	_bar_tween = create_tween()
+	_bar_tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	_bar_tween.tween_property(_bar, "offset_top", -height, DS.DUR_BASE)
+
+
+## The interface keeps its visibility checks, tooltip and notices inside the viewport minus
+## the strip and the bar.
+func _apply_insets() -> void:
+	if not is_instance_valid(battle_interface):
+		return
+	battle_interface.set_hud_insets(
+		battle_interface.turn_strip.size.y, maxf(_bar.size.y, COMBAT_BAR_HEIGHT)
+	)
+	_place_hints()
+
+
+## Owner 2026-11-02 (item 33 follow-up): a full turn strip (the 5v5 demo's ten units) runs
+## under the top-left key hints, which printed over the first names. The hints drop below the
+## strip whenever the two would meet, and go home when the strip is short again.
+func _place_hints() -> void:
+	_tutorial.position = HINTS_AT
+	if not is_instance_valid(battle_interface):
+		return
+	var strip := battle_interface.turn_strip.get_global_rect()
+	var hints := Rect2(_tutorial.global_position, _tutorial.get_minimum_size())
+	if strip.intersects(hints):
+		_tutorial.global_position.y = strip.end.y + DS.SPACE_3
+
+
 # --- key hints ---------------------------------------------------------------------------
 
-## Re-reads the settings; Settings calls this through the group after its toggle.
+## Re-reads the settings; Settings calls this through the group after its toggle. In
+## exploration the per-verb hints show until learned; in combat the one combat line shows.
+## "Control hints" off hides both.
 func refresh_key_hints() -> void:
 	if _key_hints == null:
 		return
@@ -183,6 +364,9 @@ func refresh_key_hints() -> void:
 		var label := _key_hints.get_node_or_null("Hint_%s" % hint["id"]) as Label
 		if label != null:
 			label.visible = enabled and not used.has(hint["id"])
+	_key_hints.visible = not _combat_active
+	if _tutorial != null:
+		_tutorial.visible = enabled and _combat_active
 
 
 ## Settings → Interface → "Control hints": on brings every hint back, off hides them all.

@@ -99,6 +99,7 @@ var _light_cells: Dictionary = {}
 var _shroud_cells: Dictionary = {}  # Vector2i -> true (inside a Shroud / Eclipse Procession)  # Vector2i -> true (inside a Witness Light)
 var _input_locked_until_msec := 0
 var _pointer_turn_available := true
+var _reach_steps := 0  ## hex slice H3: the armed command's reach ring, in grid steps
 var _fallen: Dictionary = {}
 var _pending_path_id: StringName = &""
 var _pending_path: Array[Vector2i] = []
@@ -114,6 +115,8 @@ var _falls: Dictionary = {}
 var _pending_defeats: Dictionary = {}
 var _preview_id: StringName = &""
 var target_preview: PanelContainer
+var _hud_inset_top := 0.0
+var _hud_inset_bottom := 0.0
 
 
 ## Receives a public quote from the interface; no combat arithmetic or rolls here.
@@ -127,6 +130,30 @@ func show_target_preview(actor_id: StringName, actor_name: String, quote: String
 		_field_overlay.set_preview_target(actor_id)
 	_process(0.0)
 	queue_redraw()
+
+
+## Combat polish 2026-11-02: the walk a walk-in order would take, drawn on the field (or on
+## this stage's own board). `affordable` false draws it as a refusal.
+func show_approach_path(cells: Array, affordable: bool) -> void:
+	var path := _path_cells(cells)
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_approach_path(path, affordable)
+		return
+	_hover_path = path
+	queue_redraw()
+
+
+## Hex slice H3: the armed command's reach in grid steps (0: none); the field draws it as a ring
+## around the acting unit on the player's turn.
+func show_reach(steps: int) -> void:
+	_reach_steps = maxi(steps, 0)
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_reach(_reach_steps)
+
+
+func clear_approach_path() -> void:
+	if is_instance_valid(_field_overlay):
+		_field_overlay.set_approach_path([], true)
 
 
 func clear_target_preview() -> void:
@@ -146,13 +173,15 @@ func _process(_delta: float) -> void:
 		clear_target_preview()
 		return
 	# Project through the field's canvas transform too, so camera motion keeps the
-	# quote beside its target while text remains at HUD scale.
+	# quote beside its target while text remains at HUD scale. The tooltip stays inside
+	# the open window, never under the bar or the turn strip.
 	var anchor := cell_center(cell)
 	var desired := anchor + Vector2(DS.SPACE_8, -target_preview.size.y - DS.SPACE_8)
 	if desired.x + target_preview.size.x > size.x - DS.SPACE_4:
 		desired.x = anchor.x - target_preview.size.x - DS.SPACE_8
-	target_preview.position = desired.clamp(Vector2.ONE * DS.SPACE_4,
-		(size - target_preview.size - Vector2.ONE * DS.SPACE_4).max(Vector2.ONE * DS.SPACE_4))
+	var low := Vector2(DS.SPACE_4, _hud_inset_top + DS.SPACE_4)
+	var high := size - target_preview.size - Vector2(DS.SPACE_4, _hud_inset_bottom + DS.SPACE_4)
+	target_preview.position = desired.clamp(low, high.max(low))
 
 
 ## Migration step 6: the region retains its frozen input/payload API while the
@@ -165,6 +194,9 @@ func bind_field(field: FieldMap) -> void:
 	_field_overlay.beat_presented.connect(beat_presented.emit)
 	field.add_child(_field_overlay)
 	_field_overlay.bind_field(field)
+	_field_overlay.set_range_visible(_pointer_turn_available)
+	_field_overlay.set_free_scroll(_pointer_turn_available)
+	_field_overlay.set_reach(_reach_steps)
 	_sync_view_window()
 	if not resized.is_connected(_sync_view_window):
 		resized.connect(_sync_view_window)
@@ -174,10 +206,28 @@ func bind_field(field: FieldMap) -> void:
 	queue_redraw()
 
 
-## The field shows through this region only; the overlay frames the fight inside it.
+## The part of this region the HUD leaves open: the viewport minus the turn strip above and
+## the bar below. The overlay's visibility checks and pans use it (owner 2026-11-01); the
+## region itself spans the whole map so pointer input reaches every visible cell.
 func _sync_view_window() -> void:
 	if is_instance_valid(_field_overlay):
-		_field_overlay.set_view_window(get_global_rect())
+		_field_overlay.set_view_window(open_window())
+
+
+## Viewport pixels the HUD keeps clear of the strip and the bar (see set_hud_insets).
+func open_window() -> Rect2:
+	var rect := get_global_rect()
+	var top := minf(_hud_inset_top, rect.size.y)
+	var bottom := minf(_hud_inset_bottom, maxf(0.0, rect.size.y - top))
+	return Rect2(rect.position + Vector2(0.0, top), rect.size - Vector2(0.0, top + bottom))
+
+
+## How much of the region's top (turn strip) and bottom (bar) the HUD covers.
+func set_hud_insets(top: float, bottom: float) -> void:
+	_hud_inset_top = maxf(0.0, top)
+	_hud_inset_bottom = maxf(0.0, bottom)
+	_sync_view_window()
+	queue_redraw()
 
 
 func _exit_tree() -> void:
@@ -417,16 +467,26 @@ func clear_pointer() -> void:
 
 
 func pointer_input_available() -> bool:
+	return _pointer_turn_available and presentation_idle()
+
+
+## True once nothing on the field is still being presented: no body moving, no beat queued, no
+## cast in flight. Autoplay waits on this so every AI step is seen before the next one.
+func presentation_idle() -> bool:
 	if is_instance_valid(_field_overlay):
-		return _pointer_turn_available and not _field_overlay.is_animating()
+		return not _field_overlay.is_animating()
 	for effect: Node in _fx_layer.get_children():
 		if effect.get_script() == SpellCastScript and effect.is_animating():
 			return false
-	return _pointer_turn_available and Time.get_ticks_msec() >= _input_locked_until_msec
+	return Time.get_ticks_msec() >= _input_locked_until_msec
 
 
 func set_pointer_turn_available(available: bool) -> void:
 	_pointer_turn_available = available
+	if is_instance_valid(_field_overlay):
+		# The player's turn is when the range matters and when they may scroll the field.
+		_field_overlay.set_range_visible(available)
+		_field_overlay.set_free_scroll(available)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

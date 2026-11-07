@@ -12,6 +12,9 @@ func test_damage_zero_miss_and_fizzle_are_distinct_and_only_resolved_attacks_qua
 		{"damage": 0, "hit": true, "expected": "NO DAMAGE"},
 		{"damage": 0, "resolution": {"hit": false}, "expected": "MISS"},
 		{"damage": 0, "resolution": {"hit": true, "fizzled": true}, "expected": "FIZZLE"},
+		# Owner 2026-11-02 (item 33): a rolled miss is a dodge; a rolled critical says so.
+		{"damage": 0, "resolution": {"hit": false, "hit_roll": 81}, "expected": "DODGED"},
+		{"damage": 20, "resolution": {"hit": true, "hit_roll": 3, "critical": true}, "expected": "CRITICAL  ·  20 DAMAGE"},
 	]:
 		event.data = row.duplicate(true)
 		assert_bool(Feedback.has_result(event)).is_true()

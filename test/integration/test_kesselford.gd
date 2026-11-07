@@ -1,17 +1,21 @@
 extends GdUnitTestSuite
-## Kesselford, hub 2 (C1 / #238): the scene the Weftlumin `kesselford` package baked, its two
-## interiors, the Dom ↔ Kesselford exits, and the hub-widened townsfolk pipeline (per-hub roster,
-## spawner, routines). Pattern: `test/integration/test_field_room.gd`; checklist:
+## Kesselford, hub 2 (C1 / #238): the scene the Weftlumin `kesselford` package baked, its walk-in
+## buildings (item 35: the Wayhouse room retired 2026-11-03 and the Chandlery's 2026-11-04;
+## `test_walk_in_buildings.gd` covers the buildings), the Dom ↔ Kesselford exits, and the
+## hub-widened townsfolk pipeline (per-hub roster, spawner, routines). Pattern: `test/integration/test_field_room.gd`; checklist:
 ## `docs/templates/location.md`.
 
 const KESSELFORD := "res://world/kesselford.tscn"
 const DOM := "res://world/starting_town.tscn"
-const WAYHOUSE := "res://world/interiors/kesselford_wayhouse.tscn"
-const CHANDLERY := "res://world/interiors/kesselford_chandlery.tscn"
+## The retired Wayhouse and Chandlery rooms (item 35): saves made there load in the walk-in buildings.
+const RETIRED_WAYHOUSE := "res://world/interiors/kesselford_wayhouse.tscn"
+const RETIRED_CHANDLERY := "res://world/interiors/kesselford_chandlery.tscn"
 const OUTDOOR_IDS: Array[String] = [
 	"kesselford-bell-ringer", "kesselford-ferry-keeper",
 	"kesselford-mender-pair-elder", "kesselford-mender-pair-junior",
 ]
+## The Wayhouse's people stand on its floor, on the Kesselford map.
+const WAYHOUSE_IDS: Array[String] = ["kesselford-wayhouse-keeper", "kesselford-grain-factor"]
 
 var _game_state_before_test: Dictionary = {}
 
@@ -35,12 +39,13 @@ func test_scene_carries_the_location_contract() -> void:
 	assert_bool(town.y_sort_enabled).is_true()
 	for marker_name: String in [
 		"SpawnDefault", "SpawnFromDom", "SpawnFromKesselfordWayhouse",
-		"SpawnFromKesselfordChandlery", "SpawnSlotFarBank",
+		"SpawnFromKesselfordChandlery", "SpawnSlotFarBank", "SpawnInKesselfordWayhouse",
+		"SpawnInKesselfordChandlery", "WayhouseDoor", "WayhouseKeeperSpot",
 	]:
 		assert_object(town.get_node_or_null(marker_name) as Marker2D) \
 			.override_failure_message("Kesselford must carry the %s marker." % marker_name) \
 			.is_not_null()
-	for anchor_name: String in ["FerryStage", "FloodBell", "MenderStone", "WayhouseDoor", "ChandleryDoor"]:
+	for anchor_name: String in ["FerryStage", "FloodBell", "MenderStone", "WayhouseDoor"]:
 		assert_object(town.find_child(anchor_name, true, false)) \
 			.override_failure_message("Kesselford must carry the %s placement anchor." % anchor_name) \
 			.is_not_null()
@@ -51,18 +56,12 @@ func test_scene_carries_the_location_contract() -> void:
 		assert_str(exit_node.target_scene).is_equal(DOM)
 		assert_str(String(exit_node.spawn_id)).is_equal("from_kesselford")
 		assert_object(LocationRegistry.by_scene(exit_node.target_scene)).is_not_null()
-	for pair: Array in [["WayhouseDoor", &"kesselford_wayhouse_enter"], ["ChandleryDoor", &"kesselford_chandlery_enter"]]:
-		var door := town.get_node_or_null(String(pair[0])) as BuildingDoor
-		assert_object(door).is_not_null()
-		if door == null:
-			continue
-		assert_str(String(door.transition_id)).is_equal(String(pair[1]))
-		var transition := BuildingTransitionRegistry.by_id(pair[1])
-		assert_object(transition).is_not_null()
-		if transition != null:
-			assert_str(transition.source_scene).is_equal(KESSELFORD)
-			assert_str(String(transition.source_anchor)).is_equal(String(pair[0]))
-			assert_bool(ResourceLoader.exists(transition.destination_scene)).is_true()
+	for building_name: String in ["Wayhouse", "Chandlery"]:
+		assert_object(town.find_child(building_name, true, false) as WalkInBuilding).is_not_null()
+	# Both buildings are walk-in: Kesselford has no door transitions left.
+	assert_array(town.find_children("*", "BuildingDoor", true, false)).is_empty()
+	for transition: BuildingTransitionDefinition in BuildingTransitionRegistry.ALL:
+		assert_str(transition.source_scene).override_failure_message(String(transition.id)).is_not_equal(KESSELFORD)
 
 	var dressing := town.get_node_or_null("KesselfordDressing")
 	assert_object(dressing).is_not_null()
@@ -86,7 +85,15 @@ func test_registries_agree_on_kesselford() -> void:
 	assert_bool(location.spawns.has(&"from_kesselford_wayhouse")).is_true()
 	assert_bool(location.spawns.has(&"from_kesselford_chandlery")).is_true()
 	assert_bool(LocationRegistry.no_combat_zone_by_scene(KESSELFORD)).is_false()
-	assert_bool(LocationRegistry.no_combat_zone_by_scene(WAYHOUSE)).is_true()
+	assert_bool(location.spawns.has(&"in_kesselford_wayhouse")).is_true()
+	assert_bool(location.spawns.has(&"in_kesselford_chandlery")).is_true()
+	assert_object(LocationRegistry.by_id(&"kesselford_wayhouse")).is_null()
+	assert_object(LocationRegistry.by_scene(RETIRED_WAYHOUSE)).is_null()
+	assert_object(LocationRegistry.by_id(&"kesselford_chandlery")).is_null()
+	assert_object(LocationRegistry.by_scene(RETIRED_CHANDLERY)).is_null()
+	assert_bool(ResourceLoader.exists(RETIRED_WAYHOUSE)).is_false()
+	assert_object(BuildingTransitionRegistry.by_id(&"kesselford_wayhouse_enter")).is_null()
+	assert_object(BuildingTransitionRegistry.by_id(&"kesselford_wayhouse_exit")).is_null()
 	assert_bool(LocationRegistry.DOM.spawns.has(&"from_kesselford")).is_true()
 
 	var hub := FastTravelRegistry.by_id(&"kesselford")
@@ -98,7 +105,7 @@ func test_registries_agree_on_kesselford() -> void:
 	var town_ids := NpcRoster.town_ids()
 	assert_array(town_ids).contains(["dom", "kesselford"])
 	var placements := NpcRoster.placements_for_scene(KESSELFORD)
-	assert_array(placements.keys()).contains_exactly_in_any_order(OUTDOOR_IDS)
+	assert_array(placements.keys()).contains_exactly_in_any_order(OUTDOOR_IDS + WAYHOUSE_IDS)
 	for npc_id: String in ["kesselford-ferry-keeper", "kesselford-bell-ringer", "kesselford-mender-pair-elder"]:
 		assert_str(NpcRoutines.hub_scene(npc_id)).is_equal(KESSELFORD)
 
@@ -124,8 +131,8 @@ func test_townsfolk_spawn_from_the_kesselford_roster_at_their_anchors() -> void:
 	var spawned: Array[Node] = []
 	_collect_group_members(town, &"generated_townsfolk", spawned)
 	assert_int(spawned.size()) \
-		.override_failure_message("Kesselford's four outdoor townsfolk must spawn from its roster.") \
-		.is_equal(OUTDOOR_IDS.size())
+		.override_failure_message("Kesselford's six townsfolk (four outdoors, two in the Wayhouse) must spawn from its roster.") \
+		.is_equal(OUTDOOR_IDS.size() + WAYHOUSE_IDS.size())
 	var placements := NpcRoster.placements_for_scene(KESSELFORD)
 	var seen: Array[String] = []
 	for node: Node in spawned:
@@ -159,7 +166,7 @@ func test_townsfolk_spawn_from_the_kesselford_roster_at_their_anchors() -> void:
 		assert_float(npc.global_position.distance_to(expected)) \
 			.override_failure_message("%s must stand at its %s." % [npc_id, where]) \
 			.is_less(180.0)
-	assert_array(seen).contains_exactly_in_any_order(OUTDOOR_IDS)
+	assert_array(seen).contains_exactly_in_any_order(OUTDOOR_IDS + WAYHOUSE_IDS)
 
 
 func test_npc_talk_prompt_only_shows_when_player_is_in_range() -> void:
@@ -193,45 +200,6 @@ func test_player_moves_right_when_holding_move_right() -> void:
 		if player.global_position.is_equal_approx(current_center):
 			break
 	assert_float(player.global_position.x).is_greater(start_x)
-
-
-func test_interiors_populate_from_the_kesselford_roster() -> void:
-	var wayhouse: Node2D = auto_free((load(WAYHOUSE) as PackedScene).instantiate())
-	add_child(wayhouse)
-	await get_tree().process_frame
-	var room := wayhouse.get_node_or_null("Room") as BuildingInterior
-	assert_object(room).is_not_null()
-	if room == null:
-		return
-	assert_str(String(room.exit_transition_id)).is_equal("kesselford_wayhouse_exit")
-	var exit_transition := BuildingTransitionRegistry.by_id(&"kesselford_wayhouse_exit")
-	assert_object(exit_transition).is_not_null()
-	if exit_transition != null:
-		assert_str(exit_transition.destination_scene).is_equal(KESSELFORD)
-		assert_str(String(exit_transition.spawn_id)).is_equal("from_kesselford_wayhouse")
-		assert_object(room.get_node_or_null(NodePath(String(exit_transition.source_anchor).trim_prefix("Room/")))) \
-			.is_not_null()
-	var indoor: Array[String] = []
-	for node: Node in room.find_children("*", "NPC", true, false):
-		var npc := node as NPC
-		if npc != null and npc.npc_id.begins_with("kesselford-"):
-			indoor.append(npc.npc_id)
-	assert_array(indoor).contains_exactly_in_any_order(["kesselford-wayhouse-keeper", "kesselford-grain-factor"])
-
-	var chandlery: Node2D = auto_free((load(CHANDLERY) as PackedScene).instantiate())
-	add_child(chandlery)
-	await get_tree().process_frame
-	var shop := chandlery.get_node_or_null("Room") as BuildingInterior
-	assert_object(shop).is_not_null()
-	if shop == null:
-		return
-	assert_str(String(shop.exit_transition_id)).is_equal("kesselford_chandlery_exit")
-	var vendors: Array[String] = []
-	for node: Node in shop.find_children("*", "NPC", true, false):
-		var npc := node as NPC
-		if npc != null and not npc.vendor_id.is_empty():
-			vendors.append(npc.vendor_id)
-	assert_array(vendors).contains_exactly(["ford-chandlery"])
 
 
 func _collect_group_members(node: Node, group: StringName, found: Array[Node]) -> void:

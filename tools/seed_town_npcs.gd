@@ -30,6 +30,8 @@ const OUTDOOR_JITTER_BY_PLACEMENT := {
 	"town_shrine": Vector2i(30, 26),
 	"town_north_road": Vector2i(22, 32),
 	"town_wound_lip": Vector2i(34, 16),
+	# Indoors, on the Wayhouse floor: people stand where they were placed, not scattered.
+	"kesselford_wayhouse_floor": Vector2i.ZERO,
 }
 const NPC_PROPERTIES := [
 	["Display Name", "string"],
@@ -89,11 +91,10 @@ const PLACEMENT_ANCHORS := {
 	"town_wound_lip": {"scene": TOWN_SCENE, "anchor": "WoundLip"},
 	# Kesselford (hub 2, C1 / #238). Rows without a `town` are Dom's; a row's town decides the
 	# roster its NPCs land in. Outdoor anchors name dressing props and doors in `kesselford.tscn`.
-	"kesselford_wayhouse_i": {
-		"scene": "res://world/interiors/kesselford_wayhouse.tscn", "anchor": "NpcSpot", "town": "kesselford",
-	},
-	"kesselford_chandlery_i": {
-		"scene": "res://world/interiors/kesselford_chandlery.tscn", "anchor": "NpcSpot", "town": "kesselford",
+	# The Ferry Bell Wayhouse is a walk-in building on the map (item 35, 2026-11-03): its people
+	# stand on its floor in `kesselford.tscn`, around the keeper's spot behind the counter.
+	"kesselford_wayhouse_floor": {
+		"scene": KESSELFORD_SCENE, "anchor": "WayhouseKeeperSpot", "town": "kesselford",
 	},
 	"kesselford_ferry": {"scene": KESSELFORD_SCENE, "anchor": "FerryStage", "town": "kesselford"},
 	"kesselford_bell": {"scene": KESSELFORD_SCENE, "anchor": "FloodBell", "town": "kesselford"},

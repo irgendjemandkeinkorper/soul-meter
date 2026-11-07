@@ -11,7 +11,9 @@ const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
 const LOADING_SCREEN := (
 	"res://addons/maaacks_game_template/base/nodes/loading_screen/loading_screen.tscn"
 )
-const BATTLE_SCREEN := "res://ui/screens/battle.tscn"
+## The field HUD grows its combat parts in place (owner 2026-11-01); the interface scene it
+## instantiates is the node whose readiness marks the HUD as up.
+const BATTLE_SCREEN := "res://ui/hud/battle_interface.tscn"
 const TOWN_SPAWNER_SCRIPT := "res://world/town_npc_spawner.gd"
 const BATTLE_ACTOR_SCRIPT := "res://globals/battle_actor.gd"
 const DEPLOYMENT_EVENTS := [
@@ -267,7 +269,8 @@ func _on_battle_interactive_frame() -> void:
 	if not is_instance_valid(_battle_overlay) or not _battle_overlay.is_visible_in_tree():
 		_add_error("Battle overlay was not visible on its first post-ready frame.")
 		return
-	if not _has_enabled_visible_button(_battle_overlay):
+	# The command buttons sit in the HUD bar that hosts the interface, not under the interface.
+	if not _has_enabled_visible_button(_battle_overlay.get_parent()):
 		_add_error("Battle overlay had no visible enabled input control.")
 		return
 	_battle_hud_interactive_usec = Time.get_ticks_usec()

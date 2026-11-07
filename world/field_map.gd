@@ -9,9 +9,20 @@ signal hostile_alerted(hostile: Hostile)
 
 const FIELD_HUD_SCENE := "res://ui/hud/field_hud.tscn"
 
+## Hex slice H3: a body walks the last step onto its combat seat at walking pace (the player
+## walks 260 px/s); a long way speeds up so no walk takes more than SEAT_WALK_LONGEST seconds.
+const SEAT_WALK_SPEED := 260.0
+const SEAT_WALK_LONGEST := DS.DUR_SLOW * 2.0
+## The most frame time one step of a seat walk uses. A hitch as the fight is set up (a long first
+## frame) therefore never turns the walk into a jump.
+const SEAT_WALK_MAX_FRAME := 1.0 / 30.0
+
 var _combat_mode_active: bool = false
 var _restore_controls: Array[Callable] = []
 var _label_restore: Array[Callable] = []
+var _grid_layer: FieldGridLayer
+## Node2D -> {"target": world seat, "speed": px/s}, while a body walks onto its seat.
+var _seat_walks: Dictionary = {}
 
 
 const GROUP := &"field_map"
@@ -25,10 +36,18 @@ const WORLD_LABEL_VARIATIONS: Array[StringName] = [&"", &"EyebrowLabel"]
 
 
 func _ready() -> void:
+	set_process(false)
 	add_to_group(GROUP)
 	_connect_hostiles.call_deferred()
 	_theme_world_labels.call_deferred()
 	get_tree().node_added.connect(_on_node_added)
+	_grid_layer = FieldGridLayer.new(self)
+	add_child(_grid_layer)
+
+
+## The hex grid drawn on this field's floor (see FieldGridLayer).
+func grid_layer() -> FieldGridLayer:
+	return _grid_layer
 
 
 func _theme_world_labels() -> void:
@@ -83,6 +102,8 @@ func set_combat_mode(active: bool) -> void:
 	if _combat_mode_active == active:
 		return
 	_combat_mode_active = active
+	if is_instance_valid(_grid_layer):
+		_grid_layer.set_combat(active)
 	var root: Node = _field_root()
 	var player := root.find_child("Player", true, false) as Player
 	if player != null:
@@ -124,13 +145,8 @@ func set_combat_mode(active: bool) -> void:
 					canvas_label.set.bind("self_modulate", canvas_label.self_modulate)
 				)
 				canvas_label.self_modulate = Color(canvas_label.self_modulate, 0.0)
-	# The battle HUD replaces the field HUD; its hotkey bar and objective would show between
-	# the battle panels.
-	for node: Node in root.find_children("*", "CanvasLayer", true, false):
-		if node.scene_file_path == FIELD_HUD_SCENE:
-			var hud := node as CanvasLayer
-			_restore_controls.append(hud.set.bind("visible", hud.visible))
-			hud.visible = false
+	# The field HUD stays up: its one bar grows the combat parts (owner 2026-11-01), driven by
+	# GameFlow through FieldHUD.enter_combat()/exit_combat().
 	for node: Node in root.find_children("*", "TravelExit", true, false):
 		var travel_exit := node as TravelExit
 		if travel_exit != null:
@@ -161,6 +177,14 @@ func set_world_labels_muted(muted: bool) -> void:
 
 func combat_mode_active() -> bool:
 	return _combat_mode_active
+
+
+## The field's own HUD (the one bottom bar), or null on a fixture without one.
+func field_hud() -> FieldHUD:
+	for node: Node in _field_root().find_children("*", "CanvasLayer", true, false):
+		if node.scene_file_path == FIELD_HUD_SCENE:
+			return node as FieldHUD
+	return null
 
 
 func _is_field_interactable(node: Node) -> bool:
@@ -198,10 +222,11 @@ func party_cells() -> Array[Vector2i]:
 	return cells
 
 
-## Snaps the presentation party onto the cells combat actually seated them on (F0 ruling 4).
-## Followers are presentation-only and CombatOverlay does not exist until migration step 6, so
-## without this the visible party and the battlefield model disagree for a whole session.
-## Entering combat mode first is what stops the trail from dragging them back off their cells.
+## Brings the presentation party onto the cells combat actually seated them on (F0 ruling 4).
+## Followers are presentation-only, so without this the visible party and the battlefield model
+## disagree for a whole session. Entering combat mode first is what stops the trail from dragging
+## them back off their cells. Hex slice H3: each body walks the last step to its seat instead of
+## jumping (`walk_to_seat()`); CombatOverlay counts the walks as animation, so input waits.
 func seat_party(cells: Array[Vector2i]) -> void:
 	if cells.is_empty():
 		return
@@ -212,7 +237,7 @@ func seat_party(cells: Array[Vector2i]) -> void:
 	var lead := player()
 	if lead != null:
 		# The anchor is never relocated; this only centres it on the cell it already holds.
-		lead.global_position = grid.cell_to_world(cells[0])
+		walk_to_seat(lead, grid.cell_to_world(cells[0]))
 	var followers := party_followers()
 	if followers == null:
 		return
@@ -221,7 +246,65 @@ func seat_party(cells: Array[Vector2i]) -> void:
 		var cell_index := index + 1
 		if cell_index >= cells.size():
 			break
-		seated[index].snap_to(grid.cell_to_world(cells[cell_index]))
+		walk_to_seat(seated[index], grid.cell_to_world(cells[cell_index]))
+
+
+## Walks a body (party or hostile) onto a seat at walking pace; CombatOverlay uses this too. A
+## second call retargets the walk from where the body is. Reduced motion, a body already there, or
+## a field outside the tree places it at once.
+func walk_to_seat(node: Node2D, target: Vector2) -> void:
+	_seat_walks.erase(node)
+	var distance := node.global_position.distance_to(target)
+	var reduced := bool(GameState.get_setting("accessibility", "reduced_motion", false))
+	if distance < 0.5 or reduced or not is_inside_tree():
+		_place_on_seat(node, target)
+		return
+	_seat_walks[node] = {
+		"target": target, "speed": maxf(SEAT_WALK_SPEED, distance / SEAT_WALK_LONGEST),
+	}
+	set_process(true)
+
+
+func is_seat_walking(node: Node2D) -> bool:
+	return _seat_walks.has(node)
+
+
+## Ends a walk where the body stands (an order that moves it takes over).
+func stop_seat_walk(node: Node2D) -> void:
+	_seat_walks.erase(node)
+
+
+## Puts every walking body on its seat now (reduced motion, replays, teardown).
+func finish_seat_walks() -> void:
+	for node: Variant in _seat_walks.keys():
+		if is_instance_valid(node):
+			_place_on_seat(node as Node2D, (_seat_walks[node] as Dictionary)["target"])
+	_seat_walks.clear()
+	set_process(false)
+
+
+func _process(delta: float) -> void:
+	var frame := minf(delta, SEAT_WALK_MAX_FRAME)
+	for node: Variant in _seat_walks.keys():
+		if not is_instance_valid(node):
+			_seat_walks.erase(node)
+			continue
+		var body := node as Node2D
+		var walk: Dictionary = _seat_walks[node]
+		var target: Vector2 = walk["target"]
+		body.global_position = body.global_position.move_toward(target, float(walk["speed"]) * frame)
+		if body.global_position.distance_to(target) < 0.01:
+			_seat_walks.erase(node)
+			_place_on_seat(body, target)
+	if _seat_walks.is_empty():
+		set_process(false)
+
+
+func _place_on_seat(node: Node2D, target: Vector2) -> void:
+	if node is PartyFollower:
+		(node as PartyFollower).snap_to(target)
+	else:
+		node.global_position = target
 
 
 func hostiles() -> Array[Hostile]:
@@ -296,21 +379,34 @@ func accord_base() -> float:
 ## is what keeps zone-less maps on their exact pre-#349 numbers. A re-Agreed zone (#520)
 ## contributes its `effective_delta()`. Hush/Waning Loom pressure is
 ## derived from this same value (`AccordMath.loom_strength()`).
+##
+## `cell` is a cell of the field grid, which is a hex when the grid is hexes. Zones are authored
+## in ground cells (`half_width_cells`), so a hex reads the zones of the ground cell under its
+## centre (hex slice H3b).
 func zone_delta(cell: Vector2i) -> float:
+	var ground_cell := ground_cell_of(cell)
 	var total := 0.0
 	for zone: AccordZone in accord_zones():
-		if zone.covers(cell, zone_anchor_cell(zone)):
+		if zone.covers(ground_cell, zone_anchor_cell(zone)):
 			total += float(zone.effective_delta())
 	return total
 
 
-## The elemental default at `cell`: the first covering zone (tree order) that authors one,
-## otherwise the location's `weather_default`.
+## The elemental default at `cell` (a field grid cell, as in `zone_delta()`): the first covering
+## zone (tree order) that authors one, otherwise the location's `weather_default`.
 func element_default_at(cell: Vector2i) -> StringName:
+	var ground_cell := ground_cell_of(cell)
 	for zone: AccordZone in accord_zones():
-		if zone.element_default != &"" and zone.covers(cell, zone_anchor_cell(zone)):
+		if zone.element_default != &"" and zone.covers(ground_cell, zone_anchor_cell(zone)):
 			return zone.element_default
 	return weather_default()
+
+
+## The ground cell under a field grid cell: the cell itself on squares, the cell under the hex's
+## centre on hexes.
+func ground_cell_of(cell: Vector2i) -> Vector2i:
+	var grid := iso_grid()
+	return grid.square_cell_of(cell) if grid != null else cell
 
 
 ## Every AccordZone placed in this field, in tree order.
@@ -322,10 +418,11 @@ func accord_zones() -> Array[AccordZone]:
 	return result
 
 
-## The cell a zone is anchored on, in the field's (and the battle grid's) cell space.
+## The ground cell a zone is anchored on. Zones are authored in ground cells; on squares this is
+## also the battle grid's cell, and on hexes `zone_delta()` reads a hex through its ground cell.
 func zone_anchor_cell(zone: AccordZone) -> Vector2i:
 	var grid := iso_grid()
-	if grid != null:
+	if grid != null and not grid.hex_mode:
 		return grid.world_to_cell(zone.global_position)
 	var layer := ground()
 	if layer != null:
