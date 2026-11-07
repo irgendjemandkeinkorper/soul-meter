@@ -453,12 +453,6 @@ func _equip_selected() -> void:
 	if GameState.equip_item(_selected_member, _selected_item, slot_name):
 		_flash(find_child("Equipment_%s" % slot_name, true, false) as Control)
 
-	if transfer_to_equipment(item, slot, slot_name):
-		return true
-	for old: InventoryItem in previous:
-		transfer_to_equipment(old, slot, slot_name)
-	return false
-
 
 func _drop_selected() -> void:
 	if is_instance_valid(_selected_item) and _selected_item.get_inventory() == GameState.inventory and GameState.equipment_owner(_selected_item) == null:
