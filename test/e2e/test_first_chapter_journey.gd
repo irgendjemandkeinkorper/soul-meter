@@ -868,7 +868,7 @@ func _assert_objective_surfaces(runner: GdUnitSceneRunner) -> void:
 	await runner.simulate_frames(2)
 	var journal_objective := journal.find_child("NextObjective", true, false) as Label
 	assert_object(journal_objective).is_not_null()
-	assert_str(journal_objective.text).is_equal("NEXT OBJECTIVE\n" + expected)
+	assert_str(journal_objective.text).is_equal(expected)
 	UIManager.back()
 	await runner.simulate_frames(2)
 
