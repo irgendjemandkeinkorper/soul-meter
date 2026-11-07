@@ -25,6 +25,9 @@ extends Node
 ##         resume · to_main_menu · enter_battle · enter_set_piece · battle_end · travel
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
+## Strings only: the guarded debug route must not pull excluded assets into exports.
+const DEV_ROOM_SCENE := "res://dev/dev_room.tscn"
+const DEV_ROOM_BOOTSTRAP := "res://dev/dev_room_bootstrap.gd"
 const QUEST_AUDIT_SCRIPT := "res://tools/quest_audit.gd"
 ## The starting town (Dom) — the first gameplay scene loaded on a new game.
 const TOWN_SCENE := "res://world/starting_town.tscn"
@@ -104,6 +107,11 @@ var travel_plan: TravelPlan = null
 ## Non-empty exactly while the demo owns the sandbox.
 var _class_demo_snapshot: Dictionary = {}
 var _class_demo_pending := false
+## Open dialogue balloons (each one reports its open and close). A fight a conversation asks
+## for waits in `_after_conversation` until the last one closes and the tree is unpaused.
+var _open_conversations := 0
+var _after_conversation: Array[Callable] = []
+var _dev_room_session: Node
 
 @onready var chart: StateChart = $StateChart
 
@@ -151,6 +159,7 @@ func _ready() -> void:
 	_sync_battle_guard()
 
 	$StateChart/Root/Menus/Title.state_entered.connect(_on_title_entered)
+	$StateChart/Root/Menus/DevRoom.state_entered.connect(_on_dev_room_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_entered.connect(_on_character_creation_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_exited.connect(_on_character_creation_exited)
 	$StateChart/Root/Menus/IntroNarration.state_entered.connect(_on_intro_narration_entered)
@@ -210,6 +219,10 @@ static func _is_quest_audit_cli(arguments: PackedStringArray) -> bool:
 ## The single entry point UI code uses to talk to the chart.
 func send_event(event: StringName) -> void:
 	_sync_battle_guard()
+	chart.set_expression_property(&"dev_room_available", OS.is_debug_build()
+		and ResourceLoader.exists(DEV_ROOM_BOOTSTRAP)
+		and ResourceLoader.exists(DEV_ROOM_SCENE)
+		and not SaveGame.runtime_sandbox_is_armed())
 	chart.send_event(event)
 
 
@@ -728,7 +741,41 @@ func _end_class_demo() -> void:
 	SaveGame.end_runtime_sandbox()
 
 
+func notify_dialogue_opened() -> void:
+	_open_conversations += 1
+
+
 func notify_dialogue_closed() -> void:
+	_open_conversations = maxi(0, _open_conversations - 1)
+	if _open_conversations == 0 and not _after_conversation.is_empty():
+		var actions := _after_conversation.duplicate()
+		_after_conversation.clear()
+		_run_after_conversation.call_deferred(actions)
+	_check_chapter_complete()
+
+
+func conversation_open() -> bool:
+	return _open_conversations > 0
+
+
+## Runs `action` now, or once the open conversation closes. A conversation that asks for a
+## fight ("Fight me, then.") must not open it under the balloon: the balloon pauses the tree
+## and the battle HUD covers it, so its last line could never be dismissed (owner playtest
+## 2026-11-02, the Trial Keeper).
+func after_conversation(action: Callable) -> void:
+	if conversation_open():
+		_after_conversation.append(action)
+	else:
+		action.call()
+
+
+func _run_after_conversation(actions: Array[Callable]) -> void:
+	for action: Callable in actions:
+		if action.is_valid():
+			action.call()
+
+
+func _check_chapter_complete() -> void:
 	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
 		send_event.call_deferred("chapter_complete")
 
@@ -740,10 +787,35 @@ func _on_title_entered() -> void:
 	UIManager.close_all()
 	if class_demo_active():
 		_end_class_demo()
+	if is_instance_valid(_dev_room_session):
+		_dev_room_session.call("finish")
+		_dev_room_session.queue_free()
+		_dev_room_session = null
+		_restore_travel_plan()
+		_target_scene = TOWN_SCENE
 	MusicDirector.play_context("title")
 	var cur := get_tree().current_scene
 	if cur == null or cur.scene_file_path != MAIN_MENU_SCENE:
 		SceneLoader.load_scene(MAIN_MENU_SCENE)
+
+
+func _on_dev_room_entered() -> void:
+	# The chart owns availability; retain a release guard at the dynamic-load boundary.
+	if not OS.is_debug_build():
+		send_event("dev_room_failed")
+		return
+	var bootstrap := load(DEV_ROOM_BOOTSTRAP) as Script
+	if bootstrap == null:
+		send_event("dev_room_failed")
+		return
+	_dev_room_session = bootstrap.new() as Node
+	add_child(_dev_room_session)
+	if not bool(_dev_room_session.call("begin", DEV_ROOM_SCENE)):
+		send_event("dev_room_failed")
+		return
+	_restore_travel_plan()
+	if not travel(DEV_ROOM_SCENE):
+		send_event("dev_room_failed")
 
 
 func _on_character_creation_entered() -> void:
@@ -830,8 +902,7 @@ func _complete_scene_load() -> void:
 		if _target_scene == CLASS_DEMO_SCENE:
 			_open_class_demo.call_deferred()
 	SaveGame.flush_pending_autosave.call_deferred()
-	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
-		notify_dialogue_closed()
+	_check_chapter_complete()
 
 
 ## F1 (#281): the first accepted alert on a field opens the ambient session. Battle only
