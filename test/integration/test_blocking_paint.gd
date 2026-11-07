@@ -31,14 +31,20 @@ const SPOT_REACH_PX := 96.0
 const HALL_OPEN_FLAG := "tutorial_gauntlet_complete"
 
 var _saved_state: Dictionary
+var _saved_clock: Dictionary
 
 
 func before_test() -> void:
 	_saved_state = GameState.to_dict().duplicate(true)
+	# Routine NPCs stand where their WorldClock phase puts them, and the clock is an autoload
+	# that earlier suites can leave in any phase. Every map is checked at the default phase.
+	_saved_clock = WorldClock.to_dict()
+	WorldClock.reset()
 
 
 func after_test() -> void:
 	GameState.from_dict(_saved_state)
+	WorldClock.from_dict(_saved_clock)
 
 
 func test_every_painted_map_holds_exactly_its_solids_cells() -> void:
